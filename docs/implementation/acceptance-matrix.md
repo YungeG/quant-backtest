@@ -95,7 +95,7 @@ artifact_hashes: []
 | WP-05J | PASSED | trading-kernel | WP-02F, WP-03A | none |
 | G05 | PASSED | trading-kernel | G04, WP-05A–WP-05J | none |
 | WP-06A | PASSED | market-data-contracts | G02 | none |
-| WP-06B | DRAFT | backtest-runtime | WP-01B, WP-06A | Timeline fixtures |
+| WP-06B | READY | backtest-runtime | WP-01B, WP-06A | none |
 | WP-06C | DRAFT | backtest-runtime | G04, WP-06A–WP-06B | TargetStream fixtures |
 | WP-06D | DRAFT | backtest-runtime | WP-02G, WP-03C | Slippage fixtures |
 | WP-06E | DRAFT | backtest-runtime | G05, WP-06A–WP-06D | Next-open fixtures |
@@ -3852,7 +3852,79 @@ uv lock --check                                                     PASS
 Python                                                              3.13.5
 ```
 
-## 47. PASSED 记录格式
+## 47. WP-06B Acceptance Card
+
+```yaml
+id: WP-06B
+status: READY
+depends_on:
+  - WP-01B
+  - WP-06A
+owner_package: backtest-runtime
+public_interface:
+  - crypto_quant_backtest.TimelineSegment
+  - crypto_quant_backtest.TimelineWindow
+  - crypto_quant_backtest.TimelineEvent
+  - crypto_quant_backtest.TimelineStreamCursor
+  - crypto_quant_backtest.TimelineCursor
+  - crypto_quant_backtest.TimelineBatch
+  - crypto_quant_backtest.TimelineFailureCode
+  - crypto_quant_backtest.TimelineFailure
+  - crypto_quant_backtest.TimelineReadOutcome
+  - crypto_quant_backtest.DeterministicTimeline
+  - crypto_quant_backtest.TimelineError
+  - crypto_quant_backtest.TimelineCursorError
+test_commands:
+  contract: uv run pytest -q tests/runtime/timeline/test_deterministic_timeline.py
+  fixture: uv run pytest -q tests/runtime/timeline/test_deterministic_timeline_golden.py
+  boundary: uv run pytest -q tests/architecture/test_public_api_imports.py tests/architecture/test_repository_cleanliness.py
+fixture_ids:
+  - deterministic-multi-stream-timeline-v1
+expected_artifacts:
+  - tests/fixtures/runtime/deterministic-multi-stream-timeline-v1.json
+  - build/acceptance/wp-06b-pytest.xml
+  - build/acceptance/wp-06b-import-boundary-report.json
+failure_contracts:
+  - invalid-timeline-window
+  - duplicate-or-empty-stream-selection
+  - missing-market-stream
+  - cursor-bundle-or-window-mismatch
+  - cursor-source-position-mismatch
+  - malformed-market-event-from-reader
+  - missing-typed-source-sequence
+  - duplicate-global-timeline-ordering-key
+  - per-stream-or-global-order-regression
+  - event-after-end-boundary-consumed
+  - timeline-wall-clock-read
+allowed_grade: development
+evidence:
+  - pytest-report
+  - deterministic-timeline-fixture-hash
+  - output-batch-size-parity-hashes
+  - source-cursor-continuation-hashes
+  - public-api-import-report
+  - import-boundary-report
+  - static-type-report
+passed_commit: null
+artifact_hashes: []
+```
+
+### WP-06B Readiness
+
+冻结以下实现边界：
+
+1. `DeterministicTimeline` 只消费一个只读 `MarketBundleReader` 和显式、唯一、非空的 Stream key 集；它不导入 Builder/Source Adapter，不读取文件、网络或 wall clock；
+2. `TimelineWindow` 明确 `data_start <= trading_start < end_exclusive`。按 Event 的 `available_time` 划分：`[data_start, trading_start)` 为 Warmup，`[trading_start, end_exclusive)` 为 Active Trading；早于 data_start 的 Event 只推进源 Cursor，不输出，等于或晚于 end_exclusive 的 Event 不得被消费；
+3. Timeline 对各 Stream 的当前头 Event 按 `(available_time.epoch_nanoseconds, phase.rank, phase.code, source_sequence.value)` merge。同一完整 ordering key 在任意两个 Stream/事件中重复，或后续 key 不严格递增，均返回结构化 `TimelineFailure`，不使用 Stream 注册顺序或容器顺序解歧；
+4. “缺失 source sequence” 指 Reader 违反 typed `MarketEvent` contract、返回没有合法 `SourceSequence` 的事件；合法 sequence 数值不要求连续，避免把供应商过滤、分区或预留编号误判为数据缺口；
+5. `TimelineCursor` 保存 Bundle/Window identity、逐 Stream 的精确 `EventCursor` position、已消费的最后 ordering key 和累计输出数。每次只从每个 Stream 读取有界头部证据，输出 batch size 或底层 Reader page size 都不得改变完整事件 ID/hash/segment 序列；
+6. `TimelineBatch` 保存带 Warmup/Active segment 的 immutable `TimelineEvent`、下一 Cursor 和 window-complete 标志。Window 完成时 Cursor 停在第一个 end-exclusive 外 Event 之前，可用于后续确定性 continuation；
+7. 缺失 Stream 继续使用 WP-06A `InputValidationFailure` 作为构造失败证据；读取期间的 malformed Event、ordering ambiguity/regression 和 Cursor 篡改使用 Timeline 自有 typed fail-closed failure/error，不映射 Run Outcome；
+8. 本 WP 不实现 ObservationView、TargetStream、Strategy invocation、Slippage/Execution、Profile Resolver、Semantic Run/Attempt、Run Outcome、EngineCheckpoint 或 Evidence publication。
+
+WP-06B 已满足依赖和测试 seam，状态为 `READY`。
+
+## 48. PASSED 记录格式
 
 ```yaml
 id: WP-00A
