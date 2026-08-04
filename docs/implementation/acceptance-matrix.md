@@ -70,7 +70,7 @@ artifact_hashes: []
 | WP-02G | PASSED | backtest-runtime | WP-02A–WP-02D, WP-02F | none |
 | WP-02H | PASSED | trading-domain | WP-02A–WP-02G | none |
 | G02 | PASSED | trading-domain + trading-kernel + backtest-runtime | WP-02A–WP-02H | none |
-| WP-03A | DRAFT | trading-kernel | G02 | Journal replay fixtures |
+| WP-03A | READY | trading-kernel | G02 | none |
 | WP-03B | DRAFT | trading-kernel | WP-03A | Ledger projection fixtures |
 | WP-03C | DRAFT | trading-kernel | WP-02F | PricePurpose/Mark fixtures |
 | WP-03D | DRAFT | trading-kernel | WP-03C | Currency graph fixtures |
@@ -1580,7 +1580,68 @@ uv lock --check                                                         PASS
 Python                                                                  3.13.5
 ```
 
-## 22. PASSED 记录格式
+## 22. WP-03A Acceptance Card
+
+```yaml
+id: WP-03A
+status: READY
+depends_on:
+  - G02
+owner_package: trading-kernel
+public_interface:
+  - crypto_quant_trading.AccountingJournal
+  - crypto_quant_trading.JournalReplayCursor
+  - crypto_quant_trading.JournalReplay
+  - crypto_quant_trading.JournalError
+  - crypto_quant_trading.JournalEntryConflictError
+  - crypto_quant_trading.JournalOrderingError
+  - crypto_quant_trading.JournalCursorError
+test_commands:
+  contract: uv run pytest -q tests/kernel/journal/test_immutable_journal.py
+  fixture: uv run pytest -q tests/kernel/journal/test_journal_replay_golden.py
+  boundary: uv run pytest -q tests/architecture/test_public_api_imports.py tests/architecture/test_repository_cleanliness.py
+fixture_ids:
+  - immutable-journal-replay-v1
+expected_artifacts:
+  - tests/fixtures/kernel/immutable-journal-replay-v1.json
+  - build/acceptance/wp-03a-pytest.xml
+  - build/acceptance/wp-03a-import-boundary-report.json
+failure_contracts:
+  - non-journal-entry-append
+  - conflicting-journal-entry-identity
+  - late-journal-entry-insertion
+  - invalid-replay-cursor-position
+  - mismatched-replay-prefix-hash
+  - reversed-replay-range
+  - mutable-journal-update
+  - journal-economic-projection-leakage
+  - journal-profile-or-market-dependency
+allowed_grade: development
+evidence:
+  - pytest-report
+  - immutable-journal-replay-fixture-hash
+  - public-api-import-report
+  - import-boundary-report
+  - static-type-report
+passed_commit: null
+artifact_hashes: []
+```
+
+### WP-03A Readiness
+
+已冻结以下边界：
+
+1. `AccountingJournal` 是 immutable、in-memory、append-only value。它只拥有 Entry validation/order/deduplication/hash/replay，不拥有 Cash、Position、PnL 或外部持久化；
+2. Entry order 固定为 `(recorded_at, journal_entry_id.value)`。无序 batch 在 append 前稳定排序；已发布 Journal prefix 之后的 late insert 被拒绝，不能静默重写旧 cursor；
+3. 相同 `journal_entry_id` + 相同 canonical hash 是 idempotent no-op；相同 ID + 不同 canonical hash 抛出结构化 `JournalEntryConflictError`；
+4. 空 Journal 使用固定 genesis hash，后续 prefix 通过前一 prefix hash 与 Entry canonical hash 形成确定性 hash chain；
+5. `JournalReplayCursor` 包含 position 和 prefix hash。`replay()` 使用半开区间 `[start, stop)`，同时验证两个字段，并返回 immutable `JournalReplay`；
+6. Golden fixture 使用无经济语义 reducer 验证 genesis→cursor→end 与 genesis→end parity，不提前实现 WP-03B Ledger projection；
+7. 本 WP 不实现 Accounting translation、市场/Profile 读取、Mark/Valuation、Settlement mutation、mutable store、EngineCheckpoint 或 Run Outcome。
+
+WP-03A 当前状态为 `READY`，可以按卡片定义实施。
+
+## 23. PASSED 记录格式
 
 ```yaml
 id: WP-00A

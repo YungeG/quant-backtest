@@ -494,14 +494,28 @@ v1 canonical reason code 固定为：
 
 ### WP-03A Immutable Journal store/replay
 
-拥有：Journal append validation、稳定顺序、幂等 apply 和 replay cursor。
+拥有：Journal append validation、稳定顺序、幂等 apply、hash-chain identity 和 replay cursor。
+
+冻结语义：
+
+- `AccountingJournal` 是 immutable append-only value；append 返回新 Journal，不修改旧实例，也不拥有外部持久化；
+- entry 顺序固定为 `recorded_at` 后接 `journal_entry_id.value`。单次 batch 先按该 key 排序；已发布 cursor 之后禁止插入更早 entry；
+- 相同 Entry ID 与相同 canonical content 是幂等 no-op；相同 ID 与不同 canonical content 是冲突；
+- `JournalReplayCursor` 由已消费 entry 数量和该 prefix 的 hash-chain identity 组成。Cursor 必须同时匹配 position 和 prefix hash，不能只按整数 offset 信任；
+- replay 使用半开区间 `[start_cursor, stop_cursor)`，返回 immutable entry slice 和经验证的 start/end cursor；
+- 空 Journal 有固定 genesis hash；每个后续 prefix hash 只由前一 prefix hash 和当前 entry canonical hash 推导；
+- 本 WP 可以用无经济语义的测试 reducer 证明任意 cursor replay parity，但不实现 Ledger State projection。
 
 验收：
 
-- 相同 Entry ID 与相同内容重复应用不改变状态；
-- 相同 Entry ID 与不同内容导致失败；
-- replay 到任意稳定位置产生相同 Ledger State；
+- 相同 Entry ID 与相同内容重复应用不改变 Journal identity；
+- 相同 Entry ID 与不同内容导致结构化冲突；
+- reverse/batch 输入产生相同稳定 Journal 顺序和 hash；
+- replay 到任意稳定位置并继续 replay 产生与从 genesis replay 相同的 entry sequence/reducer state；
+- 篡改 position/prefix hash、反向 range 或已发布 cursor 前的 late insert fail closed；
 - Journal 顺序不依赖 Mapping/set 遍历。
+
+不拥有：Generic Ledger economic projection、Accounting translation、Market/Profile 读取、Mark resolution、Valuation、Settlement mutation、mutable external persistence 或 EngineCheckpoint。
 
 ### WP-03B Generic Ledger projection
 

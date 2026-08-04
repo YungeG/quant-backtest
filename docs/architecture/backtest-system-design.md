@@ -1447,6 +1447,8 @@ PricePurpose Streams → MarkResolver
 
 Generic Ledger 不包含 `if instrument_type` 分支，不读取 MarketSemanticsProfile、ExecutionAccountProfile 或 Risk Policy。它只保证 Journal Entry schema、稳定 Entry ID 幂等、已注册 Account/Balance Key、Debit/Credit 或等价财务不变量以及确定性 replay。
 
+Immutable Journal 使用 `(recorded_at, journal_entry_id.value)` 作为唯一稳定顺序。单次 append batch 可以无序输入，但在发布 cursor 后不得向既有 prefix 插入更早 Entry；否则历史 cursor 和 projection identity 将失去含义。相同 Entry ID 与相同 canonical content 是 no-op，相同 ID 与不同 content 是冲突。Replay cursor 同时携带已消费 Entry 数量和 prefix hash-chain identity，所有 replay range 使用半开区间并校验 position/hash，不能只信任整数 offset。空 Journal 从固定 genesis hash 开始，每个 prefix identity 只由前一 prefix hash 与当前 Entry canonical hash 推导。Journal Store/Replay 本身不计算 Cash、Position 或 PnL，也不拥有外部 mutable persistence。
+
 `PositionAccountingModel`、`FinancingModel`、`SettlementModel` 和 `CorporateActionModel` 负责把市场特有经济事实翻译为 Journal Entry，但不能直接修改 Ledger State。是否允许负现金、Short Position、Margin exposure 或某项账户权限由 ExecutionAccountProfile、PreTradeRisk、MarginModel 和 AvailabilityProjection 决定，不由 Ledger 决定。
 
 实际 Fill 即使暴露风险或权限违规也必须如实入账；系统随后产生 `PostTradeRiskBreach` 或 `IntegrityFinding`。禁止为了维持“合法状态”而丢弃已发生 Fill 或拒绝 Accounting。
