@@ -64,7 +64,7 @@ artifact_hashes: []
 | WP-02A | PASSED | trading-domain | G01 | none |
 | WP-02B | PASSED | trading-domain | WP-02A | none |
 | WP-02C | PASSED | trading-domain | WP-02A, WP-02B | none |
-| WP-02D | READY | trading-domain | WP-02A, WP-02C | none |
+| WP-02D | PASSED | trading-domain | WP-02A, WP-02C | none |
 | WP-02E | DRAFT | trading-domain | WP-01D | Envelope/Catalog fixtures |
 | WP-02F | DRAFT | trading-kernel | WP-02A–WP-02D | Kernel Profile Port contracts |
 | WP-02G | DRAFT | backtest-runtime | WP-02A–WP-02D | Simulation Port contracts |
@@ -1061,7 +1061,7 @@ Python                                                                  3.13.5
 
 ```yaml
 id: WP-02D
-status: READY
+status: PASSED
 depends_on:
   - WP-02A
   - WP-02C
@@ -1114,8 +1114,11 @@ evidence:
   - pytest-report
   - accounting-contracts-fixture-hash
   - public-api-import-report
-passed_commit: null
-artifact_hashes: []
+passed_commit: d11ffc9383d75971f0c69d1dd91b2e27f904e67d
+artifact_hashes:
+  tests/fixtures/domain/accounting-contracts-v1.json: sha256:b63ea512fd5b43043b8b82a0c2fe66cd7ebceabb8825fba52904f9497e5fad17
+  build/acceptance/wp-02d-pytest.xml: sha256:904dd9c420200b3dc3b79d105b59420b53d05a1ee29cf07d812b0c669764dc9f
+  build/acceptance/wp-02d-import-boundary-report.json: sha256:fae03a69508b799943297546c47f2092fbb835be13af3a2843f2cec61d2cdc97
 ```
 
 ### WP-02D Acceptance
@@ -1133,7 +1136,19 @@ artifact_hashes: []
 9. Snapshot 保存 Journal State、Valuation Staleness Report 和 Currency Valuation Graph 的 `sha256:` identity；Snapshot 不进入 `AccountingJournalEntry` 字段，不能覆盖或修改 Journal history；
 10. 本 WP 不实现 Journal store/replay、Ledger mutation/projection、Accounting model、Lot selector/consumption、MarkResolver、CurrencyValuationGraph、PortfolioSnapshotProjector、Margin Snapshot 或 mutable state。
 
-WP-02D 当前为 `READY`，可按持续实施授权直接进入 TDD。
+WP-02D 的实现已冻结在 immutable commit `d11ffc9383d75971f0c69d1dd91b2e27f904e67d`，状态为 `PASSED`。
+
+验证记录：
+
+```text
+Accounting contract tests                                               8 passed
+Canonical golden fixtures                                               2 passed
+Execution compatibility + public API + cleanliness boundaries          15 passed
+Trading-domain import boundary                                          PASS (17 files)
+Full test suite                                                        146 passed
+mypy                                                                    no issues (17 files)
+Python                                                                  3.13.5
+```
 
 ## 17. PASSED 记录格式
 
