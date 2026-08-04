@@ -1,5 +1,17 @@
 """Shared trading kernel."""
 
+from .accounting import (
+    CashAccountingFailure,
+    CashAccountingFailureCode,
+    CashFillAccountingOutcome,
+    CashFillAccountingResult,
+    CashInstrumentAccounting,
+    CostBasisMethod,
+    CostBasisPolicy,
+    FeeChargeAccountingOutcome,
+    FeeChargeAccountingResult,
+    LotConsumption,
+)
 from .journal import (
     AccountingJournal,
     JournalCursorError,
@@ -71,7 +83,14 @@ __version__ = "0.1.0"
 
 __all__ = [
     "AccountingJournal",
+    "CashAccountingFailure",
+    "CashAccountingFailureCode",
+    "CashFillAccountingOutcome",
+    "CashFillAccountingResult",
+    "CashInstrumentAccounting",
     "CorporateActionModel",
+    "CostBasisMethod",
+    "CostBasisPolicy",
     "CurrencyValuationEdge",
     "CurrencyValuationFailure",
     "CurrencyValuationFailureCode",
@@ -83,6 +102,8 @@ __all__ = [
     "CurrencyValuationPolicy",
     "CurrencyValuationResolution",
     "FeeAssessmentPolicy",
+    "FeeChargeAccountingOutcome",
+    "FeeChargeAccountingResult",
     "FinancingModel",
     "GenericLedger",
     "InstrumentModel",
@@ -99,6 +120,7 @@ __all__ = [
     "LedgerState",
     "LedgerStateMismatchError",
     "LiquidationRules",
+    "LotConsumption",
     "MarginModel",
     "MarkObservation",
     "MarkResolutionFailure",
