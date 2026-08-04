@@ -86,7 +86,7 @@ artifact_hashes: []
 | WP-05A | PASSED | trading-kernel | G02 | none |
 | WP-05B | PASSED | trading-kernel | WP-05A | none |
 | WP-05C | PASSED | trading-kernel | WP-03B, WP-05B | none |
-| WP-05D | READY | trading-kernel | G04, WP-05A–WP-05C | none |
+| WP-05D | PASSED | trading-kernel | G04, WP-05A–WP-05C | none |
 | WP-05E | DRAFT | trading-kernel | WP-05D | Capability fixtures |
 | WP-05F | DRAFT | trading-kernel | WP-05E | Translation fixtures |
 | WP-05G | DRAFT | trading-kernel | WP-05F, WP-02F | Market rule fixtures |
@@ -3006,7 +3006,7 @@ Python                                                            3.13.5
 
 ```yaml
 id: WP-05D
-status: READY
+status: PASSED
 depends_on:
   - G04
   - WP-05A
@@ -3056,8 +3056,11 @@ evidence:
   - public-api-import-report
   - import-boundary-report
   - static-type-report
-passed_commit: null
-artifact_hashes: []
+passed_commit: aa998012fffc0c92925f285a636144735f1b2692
+artifact_hashes:
+  tests/fixtures/kernel/rebalance-coordination-v1.json: sha256:b463238c2aa830f1de0386a825e47fc523fe21f2dca7d0374e5e7cbf23c1c7c1
+  build/acceptance/wp-05d-pytest.xml: sha256:03d09ea183aba05e6374074d5923faffc51ab815ee4df85109e90f4310d9b52c
+  build/acceptance/wp-05d-import-boundary-report.json: sha256:10eed38c7e6476142efcfe038a92afb85d5a96fb45886459b7201621a3c91bb8
 ```
 
 ### WP-05D Acceptance
@@ -3074,6 +3077,26 @@ artifact_hashes: []
 8. `RebalancePolicy` 显式提供 execution style、Venue TIF、urgency 和 Plan validity；没有默认 Policy。OrderIntent 的 reduce-only/position-effect 由 current→target 阶段显式记录，后续 Capability/Translation/MarketRule 才判断支持性；
 9. Target/Position/Working Order/Reservation/Availability 的 account、Instrument、Quantity Scale、time/hash context 必须一致。重复 Order、终态 Order 作为 Working 输入、伪造 prior Plan 或 evidence mismatch 返回结构化 `RebalanceFailure`，不产生部分 Plan；
 10. 本 WP 不实现 Capability Validation、Translation、Market Rules、Fee Reservation、Pre-trade Risk、Execution Simulation、Fee/Accounting、Ledger/Reservation/Settlement mutation、Profile/Market data 读取或 Runtime orchestration。
+
+WP-05D 的实现已冻结在 immutable commit `aa998012fffc0c92925f285a636144735f1b2692`，状态为 `PASSED`。
+
+验证记录：
+
+```text
+Rebalance Coordinator contract tests                              8 passed
+Rebalance Coordinator canonical golden fixture                    1 passed
+Public API + repository cleanliness boundaries                    5 passed
+Acceptance test report                                           14 passed
+Trading-kernel import boundary                                    PASS (36 files)
+Full test suite                                                  353 passed
+mypy                                                              no issues (6 files)
+Primary LSP                                                       clean
+pi-lens full scoped review                                        no blocking findings
+uv lock --check                                                   PASS
+Python                                                            3.13.5
+```
+
+三个小型 contract-local validation duplicate warnings 已在本 session defer；当前不抽取共享 abstraction，以免在 Rebalance/Allocation/Mark Policy 尚未稳定时扩大耦合。
 
 ## 39. PASSED 记录格式
 
