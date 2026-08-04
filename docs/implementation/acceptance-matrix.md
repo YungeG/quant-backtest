@@ -89,7 +89,7 @@ artifact_hashes: []
 | WP-05D | PASSED | trading-kernel | G04, WP-05A–WP-05C | none |
 | WP-05E | PASSED | trading-kernel | WP-05D | none |
 | WP-05F | PASSED | trading-kernel | WP-05E | none |
-| WP-05G | DRAFT | trading-kernel | WP-05F, WP-02F | Market rule fixtures |
+| WP-05G | READY | trading-kernel | WP-05F, WP-02F | none |
 | WP-05H | DRAFT | trading-kernel | WP-05G, WP-02F | Fee reservation fixtures |
 | WP-05I | DRAFT | trading-kernel | WP-05B, WP-05H | Pre-trade Risk fixtures |
 | WP-05J | DRAFT | trading-kernel | WP-02F, WP-03A | Fee assessment fixtures |
@@ -3267,7 +3267,87 @@ Python                                                                 3.13.5
 
 一个小型 module-local canonical text validation helper 与 Rebalance 模块形状相同，已在本 session defer；当前不抽取跨模块共享 abstraction，以免为了 11 行验证代码扩大不稳定 contract 之间的耦合。
 
-## 41. PASSED 记录格式
+## 41. WP-05G MarketRuleEvaluator Acceptance Card
+
+```yaml
+id: WP-05G
+status: READY
+depends_on:
+  - WP-05F
+  - WP-02F
+owner_package: trading-kernel
+public_interface:
+  - crypto_quant_trading.MarketSessionState
+  - crypto_quant_trading.NotionalPriceBasis
+  - crypto_quant_trading.OrderRuleNotionalEvidence
+  - crypto_quant_trading.SupplementalOrderRuleDecision
+  - crypto_quant_trading.OrderRuleSnapshot
+  - crypto_quant_trading.OrderRuleInterval
+  - crypto_quant_trading.OrderRuleTimeline
+  - crypto_quant_trading.OrderRuleEvaluationInput
+  - crypto_quant_trading.MarketRuleIssueCode
+  - crypto_quant_trading.MarketRuleIssue
+  - crypto_quant_trading.MarketRuleApproval
+  - crypto_quant_trading.MarketRuleRejection
+  - crypto_quant_trading.MarketRuleDataIntegrityCode
+  - crypto_quant_trading.MarketRuleDataIntegrityFailure
+  - crypto_quant_trading.MarketRuleDecision
+  - crypto_quant_trading.MarketRuleEvaluator
+test_commands:
+  contract: uv run pytest -q tests/kernel/market_rules/test_market_rule_evaluator.py
+  fixture: uv run pytest -q tests/kernel/market_rules/test_market_rule_golden.py
+  boundary: uv run pytest -q tests/architecture/test_public_api_imports.py tests/architecture/test_repository_cleanliness.py
+fixture_ids:
+  - point-in-time-market-rule-evaluation-v1
+expected_artifacts:
+  - tests/fixtures/kernel/point-in-time-market-rule-evaluation-v1.json
+  - build/acceptance/wp-05g-pytest.xml
+  - build/acceptance/wp-05g-import-boundary-report.json
+failure_contracts:
+  - missing-effective-rule-interval
+  - overlapping-effective-rule-intervals
+  - current-rule-fallback
+  - forged-rule-snapshot-or-timeline-hash
+  - executable-spec-or-instrument-context-mismatch
+  - evaluation-before-translation
+  - quantity-scale-step-or-minimum-violation
+  - missing-or-invalid-notional-price-evidence
+  - minimum-notional-violation
+  - price-scale-tick-or-limit-violation
+  - closed-session-or-order-permission-violation
+  - rejected-supplemental-order-rule-decision
+  - order-rule-input-order-dependent-decision
+  - order-mutation-or-rule-rounding
+  - concrete-market-profile-fee-risk-execution-accounting-or-runtime-leakage
+allowed_grade: development
+evidence:
+  - pytest-report
+  - point-in-time-market-rule-canonical-golden-fixture-hash
+  - deterministic-timeline-snapshot-interval-and-decision-hashes
+  - public-api-import-report
+  - import-boundary-report
+  - static-type-report
+passed_commit: null
+artifact_hashes: []
+```
+
+### WP-05G Acceptance
+
+冻结以下边界：
+
+1. `MarketRuleEvaluator` 只消费 immutable `ExecutableOrderSpec`、显式 `OrderRuleTimeline` 和 `OrderRuleEvaluationInput`；不调用 `OrderRuleModel`、Profile Resolver、Reader、网络或当前规则服务；
+2. `OrderRuleTimeline` 使用 key/version/config hash，并保存同一 Instrument 的 `OrderRuleInterval`。每个 Interval 使用半开 `[effective_from, effective_to_exclusive)`，保存 `OrderRuleSnapshot`、Interval identity 和有效区间；输入顺序不改变 Timeline identity；
+3. `OrderRuleSnapshot` 绑定 `ProfileComponentRef(port_type=ORDER_RULE_MODEL)`、Instrument、Session 状态、`QuantityLattice`、Price Scale/Tick、可选 Price Limits、允许 Side/PositionEffect、reduce-only requirement 和 canonical supplemental rule decisions；Generic Evaluator 不包含 A 股、Binance 或 Vendor 分支；
+4. Evaluation Instant 必须不早于 Translation Time。恰好一个有效 Interval 才能继续；零个产生 `missing_rule_interval`，多个产生 `overlapping_rule_intervals` 的 `MarketRuleDataIntegrityFailure`。禁止回退到 Timeline 最后一个或“当前”规则；
+5. Evaluator 只验证，不修改或舍入 Order：Quantity Scale、Side-specific lot/step、minimum Quantity、Price Scale/Tick、Price Limit、Session 和 Permission 任一违规都产生 canonical-sorted `MarketRuleIssue`；
+6. Minimum Notional 使用显式 `OrderRuleNotionalEvidence`。Basis 必须说明来自 limit constraint、trigger constraint 或 supplied reference；constraint basis 必须 exact 等于 source Intent Price，reference basis 必须携带 source hash。Evaluator 按 Snapshot 显式 Notional rounding 计算，不自行选价、FX 或 stablecoin peg；
+7. `SupplementalOrderRuleDecision` 是 `OrderRuleModel` 已显式给出的 typed pass/reject evidence；Evaluator 只聚合 rejected decision，不解释 Vendor 字段或未知 metadata；
+8. Approval/Rejection/DataIntegrityFailure 是互斥结果。Approval/Rejection 保存未修改 Spec、Timeline、resolved Interval/Snapshot、Notional evidence 和各自 hashes；Data Integrity 与合法 Market Rule rejection 分类不同；
+9. 本 WP 不实现具体 A-share/Binance rules、Profile resolution、Price/Quantity rounding、Fee Reservation、Pre-trade Risk、Submission、Execution、Accounting、数据读取或 Runtime orchestration。
+
+WP-05G 的 TDD seam 和 fixture 已冻结，状态为 `READY`。
+
+## 42. PASSED 记录格式
 
 ```yaml
 id: WP-00A

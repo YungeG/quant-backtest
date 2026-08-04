@@ -851,15 +851,25 @@ v1 Candidate Schema 固定为：
 
 ### WP-05G MarketRuleEvaluator
 
-拥有：时点有效 tick、step、min quantity/notional、price limit、Session、permission 和其他 OrderRuleModel 检查。
+拥有：从 supplied immutable `OrderRuleTimeline` 在 Evaluation Instant 唯一解析时点有效 `OrderRuleInterval`，并对未修改的 `ExecutableOrderSpec` 执行 tick、step/side-specific lot、min quantity/notional、price limit、Session、permission 和显式 supplemental `OrderRuleModel` decision 检查。
 
-不拥有：Portfolio Risk、账户资源判断、Fill 或 Fee 入账。
+冻结语义：
+
+- Timeline 使用 key/version/config hash；Interval 使用半开有效区间并保存 Snapshot/Interval identity。输入顺序不改变 Timeline 或 Decision identity；
+- Snapshot 绑定 `ORDER_RULE_MODEL` Component、Instrument、Session、`QuantityLattice`、Price Scale/Tick、可选 Price Limits、Side/PositionEffect/reduce-only permission 和 supplemental decisions；Generic Evaluator 不包含具体市场分支；
+- Evaluation Instant 早于 Translation Time、缺失 Interval、重叠 Interval 或 evidence/context mismatch 产生结构化 `MarketRuleDataIntegrityFailure`；禁止回退当前规则；
+- Evaluator 只验证，不执行 Price/Quantity rounding 或 Order mutation；
+- Minimum Notional 使用显式 `OrderRuleNotionalEvidence`，其 basis 必须是 exact Intent limit/trigger Price 或带 source hash 的 supplied reference Price；Notional rounding 由 Snapshot 显式声明；
+- 合法但不满足规则的订单产生 canonical-sorted `MarketRuleRejection`，Data Integrity 与 Market Rule rejection 保持不同分类。
+
+不拥有：具体 A 股/Binance/Vendor rule Adapter、Profile Resolver、Portfolio Risk、账户资源判断、Fee Reservation、Submission、Fill、Fee/Accounting、数据读取或 Runtime orchestration。
 
 验收：
 
-- 只产生 MarketRuleApproval 或结构化 MarketRuleRejection；
-- Rule Timeline identity 和 effective interval 进入 Decision；
+- 只产生 `MarketRuleApproval`、结构化 `MarketRuleRejection` 或 `MarketRuleDataIntegrityFailure`；
+- Rule Timeline identity、effective interval、Snapshot/Component identity 和 Notional evidence 进入 Decision；
 - 缺失/重叠规则产生 DataIntegrityFailure，不使用当前规则回退；
+- tick/step/minimum/price-limit/Session/permission/supplemental rejection 完整分类且不修改订单；
 - A 股/Binance 具体规则通过后续 Profile Adapter 提供，不写入 Generic Evaluator 分支。
 
 ### WP-05H FeeReservationEstimator
