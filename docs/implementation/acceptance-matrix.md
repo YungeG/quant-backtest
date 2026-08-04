@@ -61,7 +61,7 @@ artifact_hashes: []
 | WP-01C | PASSED | trading-domain | WP-01B | none |
 | WP-01D | PASSED | trading-domain | WP-01A–WP-01C | none |
 | G01 | PASSED | trading-domain | WP-01A, WP-01B, WP-01C, WP-01D | none |
-| WP-02A | READY | trading-domain | G01 | none |
+| WP-02A | PASSED | trading-domain | G01 | none |
 | WP-02B | DRAFT | trading-domain | WP-02A | Candidate/Validated wire fixtures |
 | WP-02C | DRAFT | trading-domain | WP-02A | Order/Execution schema fixtures |
 | WP-02D | DRAFT | trading-domain | WP-02A | Accounting schema fixtures |
@@ -808,7 +808,7 @@ Python                                                                   3.13.5
 
 ```yaml
 id: WP-02A
-status: READY
+status: PASSED
 depends_on:
   - G01
 owner_package: trading-domain
@@ -844,11 +844,13 @@ evidence:
   - pytest-report
   - instrument-fixture-hash
   - public-api-import-report
-passed_commit: null
-artifact_hashes: []
+passed_commit: 642cf363d35293bb7c3adf69ccbe0f6801567e09
+artifact_hashes:
+  tests/fixtures/domain/instrument-identity-timeline-v1.json: sha256:c883d97d59e9b118ba92aada03527b35408057758756e1109609ece0600803a7
+  build/acceptance/wp-02a-pytest.xml: sha256:5aa39d4e844f890862b80c3994dfe16a043007f48e8e43f9c85aaeb74fa35ebb
 ```
 
-### WP-02A Readiness
+### WP-02A Acceptance
 
 已冻结 v1 Instrument identity：
 
@@ -860,7 +862,18 @@ artifact_hashes: []
 6. `InstrumentCatalog` 是引用完整性边界，拒绝重复 Currency/Instrument、未知 Currency reference 和未知 Timeline Instrument；
 7. Instrument rule、lot、tick、margin 和 fee 不属于本 WP。
 
-WP-02A 当前状态为 `READY`，根据持续推进授权可直接实施。
+WP-02A 的实现已冻结在 immutable commit `642cf363d35293bb7c3adf69ccbe0f6801567e09`，状态为 `PASSED`。
+
+验证记录：
+
+```text
+Instrument identity/catalog contracts                                    5 passed
+Symbol timeline fixtures                                                  4 passed
+Boundary tests                                                            5 passed
+Full test suite                                                         117 passed
+mypy                                                                     no issues (12 files)
+Python                                                                   3.13.5
+```
 
 ## 14. PASSED 记录格式
 
