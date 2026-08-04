@@ -7,6 +7,16 @@ from .canonical import (
     canonical_bytes,
     canonical_sha256,
 )
+from .decisions import (
+    ActivePortfolioTarget,
+    DecisionBatch,
+    StrategyDecision,
+    StrategyDecisionCandidate,
+    StrategyDecisionPayload,
+    StrategySleeveId,
+    TargetExposureFraction,
+    TargetSnapshot,
+)
 from .identity import (
     DomainId,
     DomainIdKind,
@@ -48,10 +58,12 @@ from .time import (
 __version__ = "0.1.0"
 
 __all__ = [
+    "ActivePortfolioTarget",
     "CanonicalEnvelope",
     "CanonicalSchema",
     "CanonicalizationError",
     "DomainId",
+    "DecisionBatch",
     "DomainIdKind",
     "CurrencyId",
     "ExposureFraction",
@@ -70,9 +82,15 @@ __all__ = [
     "RoundingPolicy",
     "Scale",
     "SessionId",
+    "StrategyDecision",
+    "StrategyDecisionCandidate",
+    "StrategyDecisionPayload",
+    "StrategySleeveId",
     "SimulationInstant",
     "SourceSequence",
     "TimelinePhase",
+    "TargetExposureFraction",
+    "TargetSnapshot",
     "TradingDate",
     "UtcInstant",
     "SymbolInterval",
