@@ -65,7 +65,7 @@ artifact_hashes: []
 | WP-02B | PASSED | trading-domain | WP-02A | none |
 | WP-02C | PASSED | trading-domain | WP-02A, WP-02B | none |
 | WP-02D | PASSED | trading-domain | WP-02A, WP-02C | none |
-| WP-02E | READY | trading-domain | WP-01D | none |
+| WP-02E | PASSED | trading-domain | WP-01D | none |
 | WP-02F | DRAFT | trading-kernel | WP-02A–WP-02D | Kernel Profile Port contracts |
 | WP-02G | DRAFT | backtest-runtime | WP-02A–WP-02D | Simulation Port contracts |
 | WP-02H | DRAFT | trading-domain | WP-02A–WP-02E | Error taxonomy catalog |
@@ -1154,7 +1154,7 @@ Python                                                                  3.13.5
 
 ```yaml
 id: WP-02E
-status: READY
+status: PASSED
 depends_on:
   - WP-01D
 owner_package: trading-domain
@@ -1196,22 +1196,37 @@ evidence:
   - pytest-report
   - artifact-envelope-fixture-hash
   - public-api-import-report
-passed_commit: null
-artifact_hashes: []
+passed_commit: d156b7ac33ebe7aab05506da7740045726d47df8
+artifact_hashes:
+  tests/fixtures/domain/artifact-envelope-catalog-v1.json: sha256:ec5138bcc003ecd59a1821f20999bfea3072493e3dfccf8cd781b4f4963b7e16
+  build/acceptance/wp-02e-pytest.xml: sha256:5cb07d1c01d8af527f83be70d77de9d80ee1059c9553a11d3b71e38da3cb1f56
+  build/acceptance/wp-02e-import-boundary-report.json: sha256:a6887199571593873df1cc38818cdf3caa900c5bf889cfd0d1e2d9e3fe03045d
 ```
 
-### WP-02E Readiness
+### WP-02E Acceptance
 
 已冻结 v1 Artifact Envelope 与 Schema Catalog seam：
 
-1. `ArtifactEnvelope` 的 canonical 形状固定为 `artifact_type`、`schema_version`、`payload` 和 `content_hash`；`content_hash` 是 `{artifact_type, schema_version, payload}` canonical body 的 SHA-256，不递归覆盖自身；
-2. `SchemaCatalog` 每个 Artifact type 只注册一个当前版本和一个 payload reader；构造后不可增加、替换或回退版本；
-3. `write_current()` 由 Catalog 选择已注册当前版本，调用方不能覆盖 schema version；输出必须是 canonical UTF-8 JSON bytes；
+1. `ArtifactEnvelope` 的 canonical 形状固定为 `artifact_type`、`schema_version`、`payload` 和 `content_hash`；`content_hash` 是 `{artifact_type, schema_version, payload}` canonical body 的 SHA-256，不递归覆盖自身；Payload 在 Envelope 内物化为 immutable canonical data tree；
+2. `SchemaCatalog` 每个 Artifact type 只注册一个当前版本和一个 payload reader；Catalog 构造后不可增加、替换或回退版本；
+3. `write_current()` 由 Catalog 选择已注册当前版本，调用方不能覆盖 schema version；输出是 canonical UTF-8 JSON bytes；
 4. `read()` 只接受 canonical UTF-8 JSON，先验证 Envelope、content hash、Artifact type 和当前 schema version，再 dispatch payload reader；未知 type/version、重复 JSON key、非 canonical bytes 和 reader failure 均 fail closed；
 5. `ArtifactWriteResult` 和 `ArtifactReadResult` 保存完整原始 `source_bytes` 及其独立 `source_hash`；raw bytes 不进入 canonical domain graph，不允许被重新编码后冒充原始证据；
-6. 本 WP 只实现 current-version read/write，不实现 Migration、version negotiation、fallback reader、Artifact store、filesystem layout、compression、signing 或 encryption；首个真实 immutable 旧 Artifact 出现前不得发明 v0 fixture。
+6. 本 WP 只实现 current-version read/write，不实现 Migration、version negotiation、fallback reader、Artifact store、filesystem layout、compression、signing 或 encryption；没有发明 v0 fixture。
 
-WP-02E 当前状态为 `READY`。
+WP-02E 的实现已冻结在 immutable commit `d156b7ac33ebe7aab05506da7740045726d47df8`，状态为 `PASSED`。
+
+验证记录：
+
+```text
+Artifact catalog contract tests                                         7 passed
+Canonical envelope golden fixture                                       1 passed
+Canonical compatibility + public API + cleanliness boundaries          18 passed
+Trading-domain import boundary                                          PASS (18 files)
+Full test suite                                                        154 passed
+mypy                                                                    no issues (16 files)
+Python                                                                  3.13.5
+```
 
 ## 18. PASSED 记录格式
 
