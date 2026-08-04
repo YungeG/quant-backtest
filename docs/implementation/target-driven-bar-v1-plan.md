@@ -140,7 +140,38 @@ G06 是第一条可执行 Engine 纵向切片，但不产生正式 Run Outcome�
 
 ### WP-00B Dependency boundary checks
 
-拥有：禁止 import 规则和架构测试。
+工具基线：仓库自有、仅依赖 Python 标准库的 AST checker；不引入 `import-linter` 或网络测试插件。
+
+拥有：
+
+```text
+architecture/import-boundaries.toml
+                         # versioned policy、package ownership、允许依赖、禁用前缀和 dynamic import allowlist
+tools/architecture/check_import_boundaries.py
+                         # fail-closed AST checker 和 deterministic JSON report
+tests/conftest.py        # 全局 DNS/socket/HTTP 底层网络阻断
+tests/architecture/test_import_boundary_mutations.py
+tests/architecture/test_network_isolation.py
+tests/architecture/test_public_api_imports.py
+tests/fixtures/architecture/import-boundary-mutations-v1/
+```
+
+Policy 要求：
+
+- checker 无外部依赖，不 import 任何 Workspace Package；
+- Policy schema/version 不识别时失败；
+- 静态 `import`、`from ... import ...` 和可识别的 `importlib.import_module`/`__import__` 均进入检查；
+- 受保护目录中的非字面量 dynamic import 默认拒绝，只能通过包含 caller path、target prefix 和 reason 的精确 allowlist 放行；
+- 跨 Package import 只能指向目标 package root Public API，不允许依赖其内部模块；
+- Report 按 rule、source path、line、import target 稳定排序，且不包含 wall-clock time。
+
+验收命令：
+
+```text
+uv run python tools/architecture/check_import_boundaries.py --root . --policy architecture/import-boundaries.toml --report build/acceptance/wp-00b-boundary-report.json
+uv run pytest -q tests/architecture/test_import_boundary_mutations.py
+uv run pytest -q tests/architecture/test_network_isolation.py tests/architecture/test_public_api_imports.py tests/architecture/test_repository_cleanliness.py
+```
 
 验收：
 
@@ -148,8 +179,10 @@ G06 是第一条可执行 Engine 纵向切片，但不产生正式 Run Outcome�
 - 人为加入 `trading-kernel -> pandas/hummingbot/vendor SDK` import 时测试失败；
 - 人为加入 Generic Kernel module → concrete `profiles/binance_usdm` 或 `profiles/cn_a_share` import 时测试失败；
 - 人为加入 `market-data-contracts -> vendor SDK` 或 `backtest-runtime -> market-bundle-builder` import 时测试失败；
-- Runtime 的在线网络调用在测试中被阻断；
-- package public API 不要求调用方导入内部目录。
+- Runtime 的在线网络调用在测试中被阻断，测试不得为了证明阻断而先执行真实网络 syscall；
+- package public API 不要求调用方导入内部目录；
+- 非字面量 dynamic import 未在精确 allowlist 中登记时失败；
+- Checker 和网络阻断测试不修改 tracked worktree。
 
 ### WP-00C Legacy Baseline and Migration Harness
 
@@ -1544,7 +1577,7 @@ G02: WP-02A → WP-02B → WP-02C → WP-02D → WP-02E → WP-02F → WP-02G �
 G03: WP-03A → WP-03B → WP-03C → WP-03D → WP-03E → WP-03F → review
 ```
 
-当前真正的首个实现任务只应是 `WP-00A Workspace skeleton`。WP-00A 验收后再授权 WP-00B，随后冻结来源并完成 WP-00C；每个 Gate 都允许停止、修改接口或回滚，不默认继续后续 Gate。
+`WP-00A Workspace skeleton` 已通过验收。当前唯一处于 `READY` 的下一实现候选是 WP-00B；仍须用户明确授权后才能开始。WP-00B 通过后再冻结来源并准备 WP-00C；每个 Gate 都允许停止、修改接口或回滚，不默认继续后续 Gate。
 
 到 G03 再做一次 Foundation Release Review：
 

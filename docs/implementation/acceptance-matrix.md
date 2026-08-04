@@ -53,7 +53,7 @@ artifact_hashes: []
 | ID | Status | Owner | Depends On | Readiness blocker |
 |---|---|---|---|---|
 | WP-00A | PASSED | repository root | none | none |
-| WP-00B | DRAFT | repository root | WP-00A | Import rule implementation/test paths |
+| WP-00B | READY | repository root | WP-00A | none |
 | WP-00C | DRAFT | repository root + parity tooling | WP-00B | 三个来源项目 immutable identity |
 | WP-01A | DRAFT | trading-domain | G00 | Numeric Interface/fixtures/commands |
 | WP-01B | DRAFT | trading-domain | WP-01A | Time/DST fixtures/commands |
@@ -218,7 +218,65 @@ Python                                                                   3.13.5
 uv.lock sha256                                                           87fee7ebf7f6a14f158d4e3826fee358f04de8974bc63554d46decc7086e0979
 ```
 
-## 5. PASSED 记录格式
+## 5. WP-00B Acceptance Card
+
+```yaml
+id: WP-00B
+status: READY
+depends_on:
+  - WP-00A
+owner_package: repository-root
+public_interface:
+  - architecture/import-boundaries.toml policy schema v1
+  - tools/architecture/check_import_boundaries.py CLI
+  - deterministic boundary report schema v1
+  - global pytest network isolation
+  - package-root-only cross-package import contract
+test_commands:
+  contract: uv run python tools/architecture/check_import_boundaries.py --root . --policy architecture/import-boundaries.toml --report build/acceptance/wp-00b-boundary-report.json
+  fixture: uv run pytest -q tests/architecture/test_import_boundary_mutations.py
+  boundary: uv run pytest -q tests/architecture/test_network_isolation.py tests/architecture/test_public_api_imports.py tests/architecture/test_repository_cleanliness.py
+fixture_ids:
+  - import-boundary-mutations-v1
+expected_artifacts:
+  - architecture/import-boundaries.toml
+  - tests/fixtures/architecture/import-boundary-mutations-v1/
+  - build/acceptance/wp-00b-boundary-report.json
+failure_contracts:
+  - unsupported-policy-schema
+  - forbidden-workspace-import
+  - forbidden-external-import
+  - generic-kernel-concrete-profile-import
+  - runtime-builder-import
+  - runtime-network-import
+  - undeclared-dynamic-import
+  - cross-package-internal-import
+  - real-network-access-attempt
+  - checker-mutates-worktree
+allowed_grade: development
+evidence:
+  - pytest-report
+  - deterministic-boundary-report
+  - policy-hash
+passed_commit: null
+artifact_hashes: []
+```
+
+### WP-00B Readiness
+
+已确认使用仓库自有的标准库 AST checker，不引入 `import-linter` 或 `pytest-socket`。Policy 和 Checker 必须满足：
+
+1. Policy schema/version 未识别时 fail closed；
+2. 普通 import、from import、字面量 dynamic import 均被检查；
+3. 受保护目录中的非字面量 dynamic import 默认拒绝，allowlist 必须精确记录 caller path、target prefix 和 reason；
+4. 跨 Package 只能导入目标 package root Public API；
+5. Runtime 的 DNS/socket/HTTP 网络入口在 pytest 进程中全局阻断；阻断测试先确认 guard 已安装，再触发 guard，不允许执行真实网络 syscall；
+6. JSON report 按 rule、source path、line、target 稳定排序，不包含 wall-clock time；
+7. Checker、Fixture 和报告生成不得修改 tracked worktree。
+
+WP-00B 当前状态为 `READY`，只有用户明确要求开始实现后才执行。
+
+## 6. PASSED 记录格式
 
 ```yaml
 id: WP-00A
