@@ -1,0 +1,45 @@
+{
+  "fixture_id": "profile-component-errors-v1",
+  "schema_version": 1,
+  "reason_codes": [
+    "profile_lookup_failed",
+    "component_incompatible",
+    "capability_missing",
+    "applicability_violation",
+    "unsupported_semantics"
+  ],
+  "examples": {
+    "profile_lookup_failed": {
+      "type": "profile_component_failure",
+      "reason_code": "profile_lookup_failed",
+      "subject_key": "market-semantics:cn-a-share.v1"
+    },
+    "component_incompatible": {
+      "type": "profile_component_failure",
+      "reason_code": "component_incompatible",
+      "subject_key": "position_accounting_model"
+    },
+    "capability_missing": {
+      "type": "profile_component_failure",
+      "reason_code": "capability_missing",
+      "subject_key": "prices.execution_reference"
+    },
+    "applicability_violation": {
+      "type": "profile_component_failure",
+      "reason_code": "applicability_violation",
+      "subject_key": "bar.execution-model.applicability"
+    },
+    "unsupported_semantics": {
+      "type": "profile_component_failure",
+      "reason_code": "unsupported_semantics",
+      "subject_key": "order.execution-style.trailing-stop"
+    }
+  },
+  "expected_sha256": {
+    "profile_lookup_failed": "sha256:2cf0674bd22850c0e001952f120f1ab569586c915e666bf8af3045dcf5f7bbd1",
+    "component_incompatible": "sha256:dd648f77afb01887173fd8ed6fc4cabd69ca598d79d7b8262e568c800d32e66e",
+    "capability_missing": "sha256:d9dd91286608fe6d4e5073dba73db6074b3c77d93ce0859f26442bf6060e3b03",
+    "applicability_violation": "sha256:a3402095f751eaef893e134d4762388f191709752ca280847ec56d2eb7e937c4",
+    "unsupported_semantics": "sha256:b0f976468a11813eb0b84544ff75d4ff3fd36ecfe0b87342c1abe5e4934f46d6"
+  }
+}

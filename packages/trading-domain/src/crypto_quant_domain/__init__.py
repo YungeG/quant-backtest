@@ -90,6 +90,7 @@ from .numeric import (
     RoundingPolicy,
     Scale,
 )
+from .profile_errors import ProfileComponentFailure, ProfileComponentFailureCode
 from .time import (
     LocalTimeDisambiguation,
     SessionId,
@@ -153,6 +154,8 @@ __all__ = [
     "Price",
     "PricePurpose",
     "PriceConstraint",
+    "ProfileComponentFailure",
+    "ProfileComponentFailureCode",
     "Quantity",
     "QuantizationPolicy",
     "Rate",
