@@ -622,6 +622,15 @@ Cash/Accounting 迁移必须在本 Gate 立即对固定来源 Fixture 生成模�
 
 黄金财务 Fixture：Deposit → Buy → Fee → Mark Resolution → Currency Valuation → Partial Sell → Fee → Final Snapshot。删除 Snapshot 后必须通过 Journal、Resolved Marks 和 CurrencyValuationGraph 得到 exact 相同结果。
 
+Gate 冻结验收：
+
+- 只组合 WP-03A–WP-03F 已通过的公开接口，不新增旁路财务状态或测试专用生产 API；
+- Journal replay 的最终 Cash、Position、gross realized PnL 和 Fee attribution 与 CashInstrumentAccounting outputs 一致；
+- MarkResolver 只消费 supplied Valuation observation，CurrencyValuationGraph 使用显式 Reporting Currency identity path；
+- PortfolioSnapshot Equity 等于 converted Cash + Position market value；gross realized、unrealized 和 fees 分离，Fixture 的 net economics 只减一次 Fee；
+- 删除 Snapshot 后，以同一 Journal-derived LedgerState、ResolvedMark、Valuation path evidence 和 supplied valuations exact 重建相同 canonical Snapshot/hash；
+- `core-accounting` ParityReport 必须为 `MATCH`，且 Aggregate Gate 同时重跑 WP-03A–WP-03F fixtures、import boundary、mypy 和完整 test suite。
+
 ---
 
 ## 9. G04：Target 校验、批次和组合物化

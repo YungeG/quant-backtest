@@ -76,7 +76,7 @@ artifact_hashes: []
 | WP-03D | PASSED | trading-kernel | WP-03C | none |
 | WP-03E | PASSED | trading-kernel | WP-03B–WP-03D | none |
 | WP-03F | PASSED | trading-kernel | WP-03A–WP-03E | none |
-| G03 | DRAFT | trading-kernel + parity | WP-03A–WP-03F | Golden financial journey + aggregate review card |
+| G03 | READY | trading-kernel + parity | WP-03A–WP-03F | none |
 | WP-04A | DRAFT | trading-kernel | G02 | Candidate validation fixtures |
 | WP-04B | DRAFT | trading-kernel | WP-04A | Atomic batch fixtures |
 | WP-04C | DRAFT | trading-kernel | WP-04B, G03 | Allocation/netting fixtures |
@@ -2096,7 +2096,82 @@ uv lock --check                                                        PASS
 Python                                                                 3.13.5
 ```
 
-## 28. PASSED 记录格式
+## 28. G03 Foundation Financial Kernel Acceptance Card
+
+```yaml
+id: G03
+status: READY
+depends_on:
+  - WP-03A
+  - WP-03B
+  - WP-03C
+  - WP-03D
+  - WP-03E
+  - WP-03F
+owner_package: trading-kernel + parity
+public_interface:
+  - AccountingJournal -> GenericLedger replay
+  - CashInstrumentAccounting Fill/Fee translation
+  - MarkResolver valuation resolution
+  - CurrencyValuationGraph reporting-currency path evidence
+  - PortfolioSnapshotProjector rebuild
+  - core-accounting Comparator Contract
+test_commands:
+  contract: uv run pytest -q tests/kernel/integration/test_foundation_financial_journey.py
+  fixture: uv run pytest -q tests/kernel/journal/test_journal_replay_golden.py tests/kernel/ledger/test_generic_ledger_golden.py tests/kernel/marks/test_mark_resolver_golden.py tests/kernel/valuation/test_currency_valuation_graph_golden.py tests/kernel/snapshots/test_portfolio_snapshot_golden.py tests/kernel/accounting/test_cash_instrument_accounting_golden.py
+  parity: uv run pytest -q tests/parity/test_core_accounting_parity.py
+  boundary: uv run pytest -q tests/architecture/test_public_api_imports.py tests/architecture/test_repository_cleanliness.py
+fixture_ids:
+  - foundation-financial-journey-v1
+  - immutable-journal-replay-v1
+  - generic-ledger-projection-v1
+  - deterministic-mark-resolution-v1
+  - currency-valuation-graph-v1
+  - portfolio-snapshot-projection-v1
+  - cash-instrument-accounting-v1
+  - core-accounting-wp03f-v1
+expected_artifacts:
+  - tests/fixtures/kernel/foundation-financial-journey-v1.json
+  - build/acceptance/g03-pytest.xml
+  - build/acceptance/g03-import-boundary-report.json
+  - build/acceptance/wp-03f-core-accounting-parity.json
+failure_contracts:
+  - journal-ledger-cash-position-or-attribution-divergence
+  - fee-counted-more-or-less-than-once
+  - missing-or-wrong-purpose-valuation-mark
+  - implicit-or-nonidentity-reporting-currency-path
+  - snapshot-equity-or-pnl-component-divergence
+  - snapshot-delete-rebuild-hash-mismatch
+  - module-level-legacy-parity-not-match
+  - aggregate-import-boundary-or-static-type-regression
+  - test-only-financial-state-or-production-api
+allowed_grade: development
+evidence:
+  - pytest-report
+  - foundation-financial-journey-fixture-hash
+  - core-accounting-parity-report
+  - public-api-import-report
+  - import-boundary-report
+  - static-type-report
+  - full-regression-report
+passed_commit: null
+artifact_hashes: []
+```
+
+### G03 Readiness
+
+已冻结以下 aggregate seam：
+
+1. Gate 只组合 WP-03A–WP-03F 的公开 API，不新增旁路财务状态；
+2. 固定旅程为 Deposit → Buy → Buy Fee → Valuation Mark/identity Currency path → Partial Sell → Sell Fee → Final Snapshot；
+3. 最终 Journal-derived Ledger 必须精确得到 Cash、Position、gross realized PnL 和独立 Fee attribution；Fee 在 net economics 中只减一次；
+4. Snapshot 使用 supplied ResolvedMark 和显式 Reporting Currency identity path，Equity = Cash + Position market value，realized/unrealized/fees 分开；
+5. 删除 Snapshot 后，以相同 immutable evidence exact 重建相同 canonical Snapshot/hash；
+6. `core-accounting` frozen-source Comparator 必须为 `MATCH`，并同时重跑全部 G03 component golden fixtures、Boundary、mypy 和完整 suite。
+
+G03 当前为 `READY`，可以按连续实施授权进入 aggregate TDD。
+
+## 29. PASSED 记录格式
 
 ```yaml
 id: WP-00A
