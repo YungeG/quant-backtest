@@ -81,7 +81,8 @@ artifact_hashes: []
 | WP-04B | PASSED | trading-kernel | WP-04A | none |
 | WP-04C | PASSED | trading-kernel | WP-04B, G03 | none |
 | WP-04D | PASSED | trading-kernel | WP-04C | none |
-| WP-04E | DRAFT | trading-kernel | WP-04D, WP-03C | Sizing/materialization fixtures |
+| WP-04E | READY | trading-kernel | WP-04D, WP-03C | none |
+| G04 | DRAFT | trading-kernel | WP-04A–WP-04E | Two-Sleeve target-materialization aggregate evidence |
 | WP-05A | DRAFT | trading-kernel | G02 | Order lifecycle fixtures |
 | WP-05B | DRAFT | trading-kernel | WP-05A | Reservation replay fixtures |
 | WP-05C | DRAFT | trading-kernel | WP-03B, WP-05B | Settlement/availability fixtures |
@@ -2547,7 +2548,83 @@ uv lock --check                                                       PASS
 Python                                                                3.13.5
 ```
 
-## 33. PASSED 记录格式
+## 33. WP-04E Position Sizing and Active Target Acceptance Card
+
+```yaml
+id: WP-04E
+status: READY
+depends_on:
+  - WP-04D
+  - WP-03C
+owner_package: trading-kernel
+public_interface:
+  - crypto_quant_trading.ResidualPositionPolicy
+  - crypto_quant_trading.PositionSizingAction
+  - crypto_quant_trading.PositionSizingReasonCode
+  - crypto_quant_trading.PositionSizingFailureCode
+  - crypto_quant_trading.PositionSizingPolicy
+  - crypto_quant_trading.QuantityLattice
+  - crypto_quant_trading.InstrumentSizingInput
+  - crypto_quant_trading.PositionSizingDecision
+  - crypto_quant_trading.NormalizedInstrumentTarget
+  - crypto_quant_trading.NormalizedPortfolioTarget
+  - crypto_quant_trading.PositionSizingFailure
+  - crypto_quant_trading.PositionSizingOutcome
+  - crypto_quant_trading.PositionSizer
+test_commands:
+  contract: uv run pytest -q tests/kernel/sizing/test_position_sizing.py
+  fixture: uv run pytest -q tests/kernel/sizing/test_position_sizing_golden.py
+  boundary: uv run pytest -q tests/architecture/test_public_api_imports.py tests/architecture/test_repository_cleanliness.py
+fixture_ids:
+  - position-sizing-active-target-v1
+expected_artifacts:
+  - tests/fixtures/kernel/position-sizing-active-target-v1.json
+  - build/acceptance/wp-04e-pytest.xml
+  - build/acceptance/wp-04e-import-boundary-report.json
+failure_contracts:
+  - missing-or-implicit-position-sizing-policy
+  - policy-identity-config-hash-mismatch
+  - unsupported-non-toward-zero-rounding
+  - missing-duplicate-or-unexpected-instrument-sizing-input
+  - approved-target-mark-lattice-current-quantity-context-mismatch
+  - sizing-mark-not-at-approved-instant-wrong-price-purpose-or-nonpositive-price
+  - approved-notional-price-currency-mismatch-or-implicit-fx
+  - invalid-lattice-step-lot-minimum-or-config-hash
+  - normalized-absolute-notional-exceeds-approved-notional-without-explicit-hold-dust
+  - minimum-quantity-or-minimum-notional-without-explicit-decision
+  - odd-lot-full-close-without-explicit-capability-and-residual-policy
+  - residual-fail-returns-partial-active-target
+  - missing-mark-lattice-current-raw-final-or-residual-provenance
+  - input-or-lattice-order-dependent-result
+  - later-price-nav-or-cash-flow-recomputes-materialized-quantity
+  - mark-resolver-profile-reader-risk-order-ledger-or-runtime-leakage
+allowed_grade: development
+evidence:
+  - pytest-report
+  - position-sizing-canonical-golden-fixture-hash
+  - deterministic-normalized-and-active-target-hashes
+  - public-api-import-report
+  - import-boundary-report
+  - static-type-report
+passed_commit: null
+artifact_hashes: []
+```
+
+### WP-04E Readiness
+
+冻结以下边界：
+
+1. Sizer 只消费 immutable Approved Target、权威 source DecisionBatch identity、显式版本化 PositionSizingPolicy，以及每个 Instrument 恰好一个 supplied Mark/Current Quantity/QuantityLattice input；没有默认 Policy/Lattice，也不执行 callback；
+2. v1 只允许 `RoundingPolicy.TOWARD_ZERO`；Notional/Price 和 buy/sell lot 量化均使用整数运算，普通量化不能使规范化目标的绝对名义暴露超过已审批值；显式 `hold_dust` 是唯一允许保留既有超目标 odd-lot 的例外，并必须记录 before/after/residual；
+3. supplied `ResolvedMark.resolved_at` 必须等于 `ApprovedPortfolioTarget.approved_at`，Mark purpose 必须等于 Policy sizing purpose，Price quote Currency 必须等于 approved Notional Currency；本 WP 不执行 FX；
+4. Lattice 绑定 Instrument、key/version/config hash、atomic Scale、step、可选 buy/sell lot、minimum Quantity/Notional 与 odd-lot full-close capability；缺失或不一致 fail closed；
+5. toward-zero、lot、minimum、odd-lot 和 residual 处理都形成 canonical Decision。Residual Policy 显式为 `hold_dust | close_if_permitted | fail`；任一 Instrument 无法物化时整个账户级结果失败；
+6. `NormalizedPortfolioTarget` 保留 Approved Target、Batch、Mark、Lattice、current/raw/final/residual 与 Policy provenance；domain `ActivePortfolioTarget` 保存 materialized exact Quantity，后续 Mark/NAV/Cash Flow 不能改写它；
+7. 不实现 contract multiplier、跨币种换算、Mark/Profile/Data 查询、Risk、Order Planning、Ledger mutation 或 Runtime orchestration；Order Planner 不得第二次 rounding。
+
+WP-04E 当前状态为 `READY`。
+
+## 34. PASSED 记录格式
 
 ```yaml
 id: WP-00A

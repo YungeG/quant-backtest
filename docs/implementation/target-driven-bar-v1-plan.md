@@ -721,13 +721,25 @@ v1 Candidate Schema 固定为：
 
 ### WP-04E Position sizing 与 ActivePortfolioTarget
 
-拥有：Exposure → Notional → QuantityLattice → ActivePortfolioTarget。
+拥有：approved Notional + supplied Decision-Instant Mark → versioned `QuantityLattice` → exact Quantity → `ActivePortfolioTarget`。
+
+冻结边界：
+
+- `PositionSizer` 只消费 immutable `ApprovedPortfolioTarget`、权威 `source_decision_batch_id`、显式 `PositionSizingPolicy`，以及每个 approved Instrument 恰好一个 supplied `InstrumentSizingInput`；它不调用 MarkResolver、Profile、Reader 或 Policy callback，也不提供默认 Policy/Lattice；
+- `InstrumentSizingInput` 绑定 Instrument、同一 `approved_at` 的 supplied `ResolvedMark`、当前 exact Quantity 和版本化 `QuantityLattice`。Mark 必须为正，PricePurpose 必须等于 Policy 声明的 sizing purpose，Price quote Currency 必须等于 approved Notional Currency；跨币种换算不能隐式发生；
+- v1 `PositionSizingPolicy.rounding` 只允许 `toward_zero`。Notional/Price 使用整数除法直接量化到 Lattice atomic Scale，再按 signed target 对应的 buy/sell lot（缺省时为 step）向零量化；普通量化禁止物化后绝对名义暴露超过 approved Notional。唯一例外是显式 `hold_dust` 保留无法合法关闭的既有 odd-lot Position，且 before/after/residual 必须完整记录；
+- `QuantityLattice` 显式记录 key/version/config hash、atomic Scale、step、buy/sell lot、minimum Quantity、minimum Notional 和 odd-lot full-close capability；所有 lot/minimum 必须与 Instrument/Scale/Currency 一致，且不存在隐式当前规则 fallback；
+- 量化差异、minimum Quantity、minimum Notional、toward-zero、odd-lot full-close 和 residual action 均形成 canonical `PositionSizingDecision`。`ResidualPositionPolicy` 必须显式选择 `hold_dust`、`close_if_permitted` 或 `fail`；无法按声明规则形成完整账户级目标时原子失败，不返回部分 Active Target；
+- `NormalizedPortfolioTarget` 保留 source Batch、Approved Target/Policy、Mark、Lattice、当前 Quantity、raw/final Quantity 和 residual provenance；`ActivePortfolioTarget` 只保存已物化的 exact Quantity，后续 Price/NAV/Cash Flow 变化不能重新解释旧对象；
+- input/Lattice 顺序不影响 normalized/active identity。Order Planner 只消费 exact Active Quantity，不得执行第二次数量舍入；
+- 本 WP 不读取市场数据/Profile，不执行 Risk、Order Planning、Ledger mutation、contract-multiplier sizing、跨币种转换或 Runtime orchestration。
 
 验收：
 
-- 使用 Decision Instant 的 Allocation NAV 和 Price；
+- 使用 Decision Instant 的 Allocation NAV/approved Notional 和 supplied Price；
 - Price/NAV 后续变化不重算旧 Active Target；
-- toward-zero、odd-lot 和 residual 结果有明确 Decision；
+- toward-zero、buy/sell lot、minimum Quantity/Notional、odd-lot close 和 residual 结果有明确 Decision；
+- 缺少/重复/额外 Sizing Input、context mismatch、隐式 Policy 或 residual=`fail` 均不产生部分 Active Target；
 - Order Planner 不执行第二次数量舍入。
 
 ### Gate G04

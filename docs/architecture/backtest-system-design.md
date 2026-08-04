@@ -647,28 +647,35 @@ v1 的 Target-level absolute-notional limit 可以向零 clamp 或 reject 为显
 
 ### 8.9 NormalizedPortfolioTarget
 
-Position Sizing 使用时点有效的 `QuantityLattice` 将已审批目标名义暴露转换为市场可交易的定点整数数量。
+Position Sizing 使用 supplied Decision-Instant Mark 和时点有效、版本化的 `QuantityLattice`，将已审批目标名义暴露转换为市场可交易的定点整数数量。Sizer 不查询 MarkResolver、Market Profile 或 Reader；Composition Root 必须把已解析的 Mark/Lattice 作为 immutable input 提供。
 
 规则：
 
-- 目标暴露绝对值默认向零量化，禁止规格化后超过已审批暴露。
-- 平仓尽可能关闭全部当前仓位，并使用 MarketSemanticsProfile 允许的 odd-lot/close 规则。
-- 反向持仓拆为 close 和 open 两阶段，禁止一个含糊净订单隐式穿越零点。
-- 无法交易的残余仓位由显式 `ResidualPositionPolicy` 处理：`hold_dust`、`close_if_permitted` 或 `fail`。
-- Normalized target、量化差异、RoundingPolicy 和 Residual decision 都属于权威证据。
+- v1 `PositionSizingPolicy` 必须显式声明 key/version/config hash、Sizing PricePurpose、`RoundingPolicy.TOWARD_ZERO` 和 `ResidualPositionPolicy`；不允许隐式默认 Policy。
+- Notional/Price 先直接量化到 Lattice atomic Scale，再按 signed target 对应的 buy/sell lot（未声明时为 step）向零量化。普通规格化禁止绝对名义暴露超过已审批暴露；显式 `hold_dust` 可以保留无法合法关闭的既有 odd-lot，但必须记录该 approved-target 偏差，不能伪装成已达到目标。
+- Mark resolved instant 必须等于 Approved Target instant，Price 必须为正，Price quote Currency 必须等于 approved Notional Currency；本边界不发明 FX path 或 stablecoin peg。
+- 每个 Instrument 同时提供当前 exact Quantity。正常目标按 buy/sell lattice 物化；完整平仓若遇到 odd lot，只能按 Lattice 的显式 full-close capability 和 Residual Policy 处理。
+- 反向持仓的 exact Active Target 可以被物化，但后续 Order Planner 必须拆为 close/open 两阶段，禁止一个含糊净订单隐式穿越零点。
+- 无法交易的残余仓位由显式 `ResidualPositionPolicy` 处理：`hold_dust`、`close_if_permitted` 或 `fail`。任一 Instrument 失败时不产生部分账户级 Active Target。
+- Normalized target、current/raw/final Quantity、量化差异、Mark/Lattice identity、RoundingPolicy 和 Residual decision 都属于权威证据。
 
 ```python
 @dataclass(frozen=True)
 class QuantityLattice:
-    atomic_scale: int
+    instrument_id: InstrumentId
+    lattice_key: str
+    lattice_version: int
+    config_hash: str
+    atomic_scale: Scale
     step_units: int
     buy_lot_units: int | None
     sell_lot_units: int | None
     min_quantity_units: int
-    min_notional_units: int
+    min_notional: Money
+    odd_lot_close_permitted: bool
 ```
 
-Order Planner 只消费 `NormalizedPortfolioTarget`，不得再次执行数量舍入。
+Order Planner 只消费已经物化的 exact `ActivePortfolioTarget` Quantity，不得再次执行数量舍入。Contract multiplier 或非 quote-currency sizing 必须由后续显式 Instrument/Profile Gate 扩展，不能在 v1 内隐式猜测。
 
 ### 8.10 ActivePortfolioTarget
 
