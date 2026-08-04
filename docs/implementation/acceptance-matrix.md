@@ -85,7 +85,7 @@ artifact_hashes: []
 | G04 | PASSED | trading-kernel | WP-04A–WP-04E | none |
 | WP-05A | PASSED | trading-kernel | G02 | none |
 | WP-05B | PASSED | trading-kernel | WP-05A | none |
-| WP-05C | READY | trading-kernel | WP-03B, WP-05B | none |
+| WP-05C | PASSED | trading-kernel | WP-03B, WP-05B | none |
 | WP-05D | DRAFT | trading-kernel | G04, WP-05A–WP-05C | Rebalance fixtures |
 | WP-05E | DRAFT | trading-kernel | WP-05D | Capability fixtures |
 | WP-05F | DRAFT | trading-kernel | WP-05E | Translation fixtures |
@@ -2903,7 +2903,7 @@ Python                                                             3.13.5
 
 ```yaml
 id: WP-05C
-status: READY
+status: PASSED
 depends_on:
   - WP-03B
   - WP-05B
@@ -2963,11 +2963,14 @@ evidence:
   - public-api-import-report
   - import-boundary-report
   - static-type-report
-passed_commit: null
-artifact_hashes: []
+passed_commit: 46a8b3cb05ce35220a08f53b31388f1f3878bf37
+artifact_hashes:
+  tests/fixtures/kernel/settlement-availability-replay-v1.json: sha256:37ec8f992013d3380871458105bb822df9d82d8eec4467314675f8bd4a024e31
+  build/acceptance/wp-05c-pytest.xml: sha256:83cd0ce30268bde0347797e915af85ab5efd97a8e556c7477773f95b5cf9d673
+  build/acceptance/wp-05c-import-boundary-report.json: sha256:5844fa0a0b55fd56d1b509209b8f75e92642e7a2b3586066bc1182f3fd3c7154
 ```
 
-### WP-05C Readiness
+### WP-05C Acceptance
 
 冻结以下边界：
 
@@ -2981,7 +2984,23 @@ artifact_hashes: []
 8. Projection 必须保留 Ledger state hash、Settlement state hash、Reservation state hash 和 Market Settlement Rules hash。输入顺序、full replay/rebuild 不改变 Availability state hash；Pre-trade Risk 后续只消费该 typed Available Resources；
 9. 本 WP 不实现市场特定 T+1/Crypto 规则、Profile 读取、SettlementModel 义务计算、Accounting translation、Journal 写入、Order Planning、Pre-trade Risk 行为、mutable persistence 或 Runtime orchestration。
 
-WP-05C 的 Acceptance Card 已达到 `READY`，允许按上述 seam 实施。
+WP-05C 的实现已冻结在 immutable commit `46a8b3cb05ce35220a08f53b31388f1f3878bf37`，状态为 `PASSED`。
+
+验证记录：
+
+```text
+Settlement/Availability contract tests                             9 passed
+Settlement/Availability canonical golden fixture                  1 passed
+Public API + repository cleanliness boundaries                    5 passed
+Acceptance test report                                           15 passed
+Trading-kernel import boundary                                    PASS (35 files)
+Full test suite                                                  344 passed
+mypy                                                              no issues (20 files)
+Primary LSP                                                       clean
+pi-lens full scoped review                                        no findings
+uv lock --check                                                   PASS
+Python                                                            3.13.5
+```
 
 ## 38. PASSED 记录格式
 
