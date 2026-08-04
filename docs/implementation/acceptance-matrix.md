@@ -77,7 +77,7 @@ artifact_hashes: []
 | WP-03E | PASSED | trading-kernel | WP-03B–WP-03D | none |
 | WP-03F | PASSED | trading-kernel | WP-03A–WP-03E | none |
 | G03 | PASSED | trading-kernel + parity | WP-03A–WP-03F | none |
-| WP-04A | READY | trading-kernel | G02 | none |
+| WP-04A | PASSED | trading-kernel | G02 | none |
 | WP-04B | DRAFT | trading-kernel | WP-04A | Atomic batch fixtures |
 | WP-04C | DRAFT | trading-kernel | WP-04B, G03 | Allocation/netting fixtures |
 | WP-04D | DRAFT | trading-kernel | WP-04C | Portfolio Risk fixtures |
@@ -2197,7 +2197,7 @@ Python                                                                 3.13.5
 
 ```yaml
 id: WP-04A
-status: READY
+status: PASSED
 depends_on:
   - G02
 owner_package: trading-kernel
@@ -2242,11 +2242,14 @@ evidence:
   - public-api-import-report
   - import-boundary-report
   - static-type-report
-passed_commit: null
-artifact_hashes: []
+passed_commit: e92d7c561306c1d5bcfd9b1c19d038f68246468e
+artifact_hashes:
+  tests/fixtures/kernel/strategy-output-validation-v1.json: sha256:eaf7831685f6acab217dc6f6a8619cdda8477c679f4aeae01c37fb0db08b782c
+  build/acceptance/wp-04a-pytest.xml: sha256:31663deef5005e8ca15d75ed8a9a771b1784a0731f9bb027c14c25cd1da6c144
+  build/acceptance/wp-04a-import-boundary-report.json: sha256:81ad7a6bccc347c5910b1aff63a099df5957d5713ac56d201753f38718767ac4
 ```
 
-### WP-04A Readiness
+### WP-04A Acceptance
 
 已冻结以下边界：
 
@@ -2257,8 +2260,25 @@ artifact_hashes: []
 5. Unknown Instrument、Universe 外 Instrument、重复 Target、identity/time causality、reason/evidence canonical failure 均作为稳定排序的 `StrategyValidationIssue` 返回；不静默删除 Target，不产生部分 Decision；
 6. `StrategyValidationFailure` 保存稳定 type-tagged Candidate payload evidence hash；原始 `StrategyDecisionCandidate` 由调用者作为失败证据保留，但 Candidate/Failure 都不能进入 canonical execution trace；
 7. Validator 既不接收 `InputOrigin`，也不映射 FAILED/BLOCKED，不实现 DecisionBatch、Allocation/Netting、Risk、Sizing、Order Planning、Strategy invocation 或 Runtime orchestration。
+8. Decimal-to-scale conversion 使用 Decimal tuple 的精确整数运算，不依赖进程 Decimal Context；高精度 Candidate 不得被静默 rounding。
 
-WP-04A 当前状态为 `READY`。
+WP-04A 的实现已冻结在 immutable commit `e92d7c561306c1d5bcfd9b1c19d038f68246468e`，状态为 `PASSED`。
+
+验证记录：
+
+```text
+Strategy output validator contract tests                              18 passed
+Strategy output validation canonical golden fixture                    2 passed
+Public API + repository cleanliness boundaries                         5 passed
+Acceptance test report                                                25 passed
+Trading-kernel import boundary                                         PASS (28 files)
+Full test suite                                                       270 passed
+mypy                                                                   no issues (6 files)
+Primary LSP                                                            clean
+pi-lens scoped review                                                  no findings
+uv lock --check                                                        PASS
+Python                                                                 3.13.5
+```
 
 ## 30. PASSED 记录格式
 
