@@ -1,0 +1,86 @@
+{
+  "batch_orders": {
+    "1": [
+      "evt-1",
+      "evt-2",
+      "evt-3"
+    ],
+    "10": [
+      "evt-1",
+      "evt-2",
+      "evt-3"
+    ],
+    "2": [
+      "evt-1",
+      "evt-2",
+      "evt-3"
+    ]
+  },
+  "bundle_ref": {
+    "bundle_key": "fixture.market.v1",
+    "manifest_hash": "sha256:b1ac4285a52c7502b8d52b12b9cf9fb33fe27644b6bd348ba258160ce5190eb8",
+    "type": "market_bundle_ref"
+  },
+  "event_hashes": [
+    "sha256:e0be9af9a63972cd47fcdbd86747cccf0d5544dacf8e2825ab2ce797162c1adc",
+    "sha256:d4b54290557405a41b4035f87e928b179006a07a751f4ab30ca746f608d5281a",
+    "sha256:d021927551d6f2e68c52db0c26f47e4b1261ab111f4e816c8a6ebe273060915b"
+  ],
+  "manifest": {
+    "bundle_key": "fixture.market.v1",
+    "capabilities": [
+      {
+        "key": "market_availability",
+        "type": "market_bundle_capability",
+        "version": 1
+      },
+      {
+        "key": "price_bars",
+        "type": "market_bundle_capability",
+        "version": 1
+      }
+    ],
+    "content_hash": "sha256:5314166736abe12d94ff88e0d1baa8e236a4d664ab41bfd8cfb14d2a2a0935f9",
+    "coverage_end_exclusive": {
+      "epoch_nanoseconds": 400,
+      "type": "utc_instant"
+    },
+    "coverage_start": {
+      "epoch_nanoseconds": 100,
+      "type": "utc_instant"
+    },
+    "instrument_catalog_hash": "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+    "schema_version": 1,
+    "streams": [
+      {
+        "capability": {
+          "key": "price_bars",
+          "type": "market_bundle_capability",
+          "version": 1
+        },
+        "content_hash": "sha256:911009eab3f0fb120f02e2c9387fb68480018037873d2d27d4b5f50578ad061b",
+        "event_count": 3,
+        "event_type": "bar",
+        "stream_key": "bars.1m",
+        "type": "market_stream_manifest"
+      }
+    ],
+    "type": "market_bundle_manifest"
+  },
+  "missing_capability": {
+    "bundle_ref": {
+      "bundle_key": "fixture.market.v1",
+      "manifest_hash": "sha256:b1ac4285a52c7502b8d52b12b9cf9fb33fe27644b6bd348ba258160ce5190eb8",
+      "type": "market_bundle_ref"
+    },
+    "issues": [
+      {
+        "code": "missing_required_capability",
+        "subject_key": "funding_publications@1",
+        "type": "input_validation_issue"
+      }
+    ],
+    "type": "market_bundle_input_validation_failure"
+  },
+  "schema_version": 1
+}
