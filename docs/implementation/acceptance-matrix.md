@@ -99,7 +99,7 @@ artifact_hashes: []
 | WP-06C | PASSED | backtest-runtime | G04, WP-06A–WP-06B | none |
 | WP-06D | PASSED | backtest-runtime | WP-02G, WP-03C | none |
 | WP-06E | PASSED | backtest-runtime | G05, WP-06A–WP-06D | none |
-| WP-06F | DRAFT | backtest-runtime | WP-03E, WP-05A–WP-05C, WP-06B, WP-06E | Run-end fixtures |
+| WP-06F | READY | backtest-runtime | WP-03E, WP-05A–WP-05C, WP-06B, WP-06E | none |
 | WP-06G | DRAFT | backtest-runtime | WP-06A–WP-06F | Engine harness fixtures |
 | WP-06H | DRAFT | tests/support | WP-02F–WP-02G | Synthetic profile/golden artifacts |
 | WP-07A | DRAFT | backtest-runtime | G06 | Resolver/semantic ID fixtures |
@@ -4240,7 +4240,97 @@ uv lock --check                                                    PASS
 Python                                                             3.13.5
 ```
 
-## 51. PASSED 记录格式
+## 51. WP-06F RunEndCoordinator Acceptance Card
+
+```yaml
+id: WP-06F
+status: READY
+depends_on:
+  - WP-03E
+  - WP-05A
+  - WP-05B
+  - WP-05C
+  - WP-06B
+  - WP-06E
+owner_package: backtest-runtime
+public_interface:
+  - crypto_quant_backtest.RunEndEvidence
+  - crypto_quant_backtest.RunEndCloseoutMode
+  - crypto_quant_backtest.RunEndCloseoutStatus
+  - crypto_quant_backtest.RunEndCloseoutRequest
+  - crypto_quant_backtest.RunEndCloseoutDecision
+  - crypto_quant_backtest.RunEndCloseoutFailure
+  - crypto_quant_backtest.MarkToMarketCloseoutPolicy
+  - crypto_quant_backtest.OrderTerminatedByRunEnd
+  - crypto_quant_backtest.RunEndReservationRelease
+  - crypto_quant_backtest.PendingFeeAssessmentRef
+  - crypto_quant_backtest.RunEndReport
+  - crypto_quant_backtest.EngineTerminationCode
+  - crypto_quant_backtest.EngineTermination
+  - crypto_quant_backtest.RunEndOutcome
+  - crypto_quant_backtest.RunEndCoordinator
+  - existing crypto_quant_backtest.CloseoutPolicy port
+  - existing Timeline/Order/Reservation/Settlement/Snapshot contracts
+  - canonical run-end report schema v1
+  - deterministic run-end golden fixture v1
+test_commands:
+  contract: uv run pytest -q tests/runtime/run_end/test_run_end_coordinator.py
+  fixture: uv run pytest -q tests/runtime/run_end/test_run_end_golden.py
+  boundary: uv run pytest -q tests/architecture/test_public_api_imports.py tests/architecture/test_repository_cleanliness.py
+fixture_ids:
+  - deterministic-run-end-report-v1
+expected_artifacts:
+  - tests/fixtures/runtime/deterministic-run-end-report-v1.json
+  - build/acceptance/wp-06f-pytest.xml
+  - build/acceptance/wp-06f-import-boundary-report.json
+failure_contracts:
+  - incomplete-or-mismatched-timeline-boundary-evidence
+  - business-event-at-or-after-end-exclusive
+  - final-snapshot-account-time-or-mark-context-mismatch
+  - duplicate-or-conflicting-order-stream-evidence
+  - nonterminal-order-without-authoritative-state
+  - reservation-without-matching-working-order
+  - closeout-component-or-request-hash-mismatch
+  - closeout-policy-structured-failure
+  - mark-to-market-decision-that-mutates-or-closes-position
+  - liquidate-before-end-with-open-position-working-order-or-reservation
+  - liquidation-completion-without-full-chain-evidence
+  - future-pending-settlement-or-fee-evidence
+  - implicit-fill-or-final-price-selection
+  - input-order-or-wall-clock-dependent-report
+allowed_grade: development
+evidence:
+  - pytest-report
+  - run-end-report-golden-fixture-hash
+  - end-exclusive-gating-evidence
+  - working-order-termination-and-reservation-release-evidence
+  - explicit-closeout-policy-outcome-evidence
+  - mark-to-market-no-implicit-fill-evidence
+  - liquidate-before-end-incomplete-engine-termination-evidence
+  - pending-settlement-fee-and-last-mark-evidence
+  - public-api-import-report
+  - import-boundary-report
+  - static-type-report
+passed_commit: null
+artifact_hashes: []
+```
+
+### WP-06F Readiness
+
+冻结以下实现边界：
+
+1. Coordinator 只接受已完成的 `TimelineCursor`，其 Window hash 必须匹配且 `end_exclusive` 是唯一 Run End boundary；所有 Order 业务事件和估值 Mark 必须严格早于该边界；
+2. `RunEndEvidence` 只组合 immutable Final `PortfolioSnapshot`、Order streams、`ResourceReservationState`、`SettlementBookState` 和尚未处理的 Fee basis evidence，不读取 Journal/Ledger/Data/Profile/网络或 wall clock；
+3. 所有非终态 Order 在 Run End 产生独立 `OrderTerminatedByRunEnd` evidence；存在的 active Reservation 产生精确 `RunEndReservationRelease` evidence。二者不伪造 OrderEvent、Fill、Journal Entry 或可被 replay 的 ReservationBook state；
+4. Coordinator 通过现有 `CloseoutPolicy` port 执行显式 Policy。Outcome 必须使用 `CLOSEOUT_POLICY` component、匹配 Request hash，且 result/failure 均为 canonical typed evidence；
+5. `MarkToMarketCloseoutPolicy` 是显式提供的 `mark_to_market.v1` component；它保留 Final Snapshot 中的非零 Position，不创建 Fill、不选择价格、不修改 Snapshot；Coordinator 不隐式实例化任何 Policy；
+6. `LIQUIDATE_BEFORE_END` 只有在边界前已通过完整订单/成交/Fee/Accounting 链，且 Final Snapshot 无 open Position、无 Working Order、无 active Reservation，并提供非空 completion evidence hashes 时才为 completed；否则返回结构化 `EngineTermination`；
+7. `RunEndReport` 记录 terminated Orders、released Reservations、open Positions、pending Settlement obligations、pending Fee assessment references、last valuation Mark IDs、Closeout component/outcome/status 和所有输入 state hashes；输入顺序不得影响 Report ID/hash；
+8. 本 WP 不拥有最终价格选择、Accounting/Journal/Ledger/Settlement/Reservation mutation、Run Outcome、Semantic Run/Attempt、Evidence finalize 或完整 Engine orchestration。
+
+WP-06F 已具备实现所需的固定 public seam、Fixture 和 failure contract，状态为 `READY`。
+
+## 52. PASSED 记录格式
 
 ```yaml
 id: WP-00A
