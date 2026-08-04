@@ -85,7 +85,7 @@ artifact_hashes: []
 | G04 | PASSED | trading-kernel | WP-04A–WP-04E | none |
 | WP-05A | PASSED | trading-kernel | G02 | none |
 | WP-05B | PASSED | trading-kernel | WP-05A | none |
-| WP-05C | DRAFT | trading-kernel | WP-03B, WP-05B | Settlement/availability fixtures |
+| WP-05C | READY | trading-kernel | WP-03B, WP-05B | none |
 | WP-05D | DRAFT | trading-kernel | G04, WP-05A–WP-05C | Rebalance fixtures |
 | WP-05E | DRAFT | trading-kernel | WP-05D | Capability fixtures |
 | WP-05F | DRAFT | trading-kernel | WP-05E | Translation fixtures |
@@ -2899,7 +2899,91 @@ uv lock --check                                                    PASS
 Python                                                             3.13.5
 ```
 
-## 37. PASSED 记录格式
+## 37. WP-05C SettlementBook/AvailabilityProjection Acceptance Card
+
+```yaml
+id: WP-05C
+status: READY
+depends_on:
+  - WP-03B
+  - WP-05B
+owner_package: trading-kernel
+public_interface:
+  - crypto_quant_trading.SettlementEventType
+  - crypto_quant_trading.AccountSettlementObligation
+  - crypto_quant_trading.SettlementEvent
+  - crypto_quant_trading.SettlementBookCursor
+  - crypto_quant_trading.SettlementBookState
+  - crypto_quant_trading.SettlementBook
+  - crypto_quant_trading.CashReservationUse
+  - crypto_quant_trading.CashAvailabilityRule
+  - crypto_quant_trading.PositionAvailabilityRule
+  - crypto_quant_trading.MarketSettlementRules
+  - crypto_quant_trading.CashAvailability
+  - crypto_quant_trading.PositionAvailability
+  - crypto_quant_trading.AvailabilityState
+  - crypto_quant_trading.AvailabilityProjection
+  - crypto_quant_trading.SettlementBookError
+  - crypto_quant_trading.SettlementEventConflictError
+  - crypto_quant_trading.SettlementLifecycleError
+  - crypto_quant_trading.SettlementStateMismatchError
+  - crypto_quant_trading.AvailabilityProjectionError
+  - crypto_quant_trading.AvailabilityEvidenceError
+test_commands:
+  contract: uv run pytest -q tests/kernel/settlement/test_settlement_availability.py
+  fixture: uv run pytest -q tests/kernel/settlement/test_settlement_availability_golden.py
+  boundary: uv run pytest -q tests/architecture/test_public_api_imports.py tests/architecture/test_repository_cleanliness.py
+fixture_ids:
+  - settlement-availability-replay-v1
+expected_artifacts:
+  - tests/fixtures/kernel/settlement-availability-replay-v1.json
+  - build/acceptance/wp-05c-pytest.xml
+  - build/acceptance/wp-05c-import-boundary-report.json
+failure_contracts:
+  - obligation-account-venue-or-balance-key-mismatch
+  - missing-or-invalid-recorded-event
+  - settlement-applied-before-contractual-settlement-time
+  - duplicate-settlement-application
+  - identical-event-id-with-conflicting-content
+  - late-event-insertion-before-published-prefix
+  - unknown-or-forward-settlement-causation
+  - forged-prefix-cursor-or-prior-state
+  - input-order-dependent-settlement-state
+  - ledger-settlement-reservation-account-mismatch
+  - missing-duplicate-or-extra-balance-rule
+  - pending-obligation-balance-key-unregistered
+  - reservation-currency-without-unique-cash-rule-owner
+  - availability-identity-or-scale-mismatch
+  - implicit-market-rule-default
+allowed_grade: development
+evidence:
+  - pytest-report
+  - settlement-availability-replay-golden-fixture-hash
+  - deterministic-prefix-resume-and-state-hashes
+  - public-api-import-report
+  - import-boundary-report
+  - static-type-report
+passed_commit: null
+artifact_hashes: []
+```
+
+### WP-05C Readiness
+
+冻结以下边界：
+
+1. `AccountSettlementObligation` 只把既有 immutable `SettlementObligation` 显式绑定到一个 `CashBalanceKey` 或 `PositionBalanceKey`；该 wrapper 补足 Account/Venue projection context，不改变 Domain obligation，也不计算义务；
+2. 每个 Obligation 必须先有发生于 `trade_time` 的 `SettlementObligationRecorded` Event，随后至多有一个发生于或晚于 `settlement_time` 的 `SettlementApplied` Event。Event 使用稳定 ID、Obligation ID、Causation ID 和 `SimulationInstant`；Applied 必须直接因果引用 Recorded；
+3. `SettlementBook` 是 immutable append/replay value。Event stable order 为 `(occurred_at, event_id)`；identical Event 重放幂等，相同 Event ID 不同内容、第二个 Applied Event、已发布 prefix 前 late insertion、未知/前向 causation 均 fail closed；
+4. `SettlementBookState` 明确分离 pending 和 applied Obligation，并保存可验证 prefix cursor/hash。`resume()` 必须独立重建并验证 prior prefix，full replay 与 prefix resume 得到 exact 相同 state hash；
+5. Fill 的经济 Cash/Position 已经进入 `LedgerState`。Availability 只对仍 pending 的 positive receivable leg 限制可用性；negative delivery leg 不二次扣减已经立即反映在 Ledger 的经济余额；
+6. `MarketSettlementRules` 是调用方提供的 immutable、版本化规则证据，并对 Ledger 中每个 Cash/Position balance key exact 覆盖。Cash rule 分别声明 pending receivable 是否可 tradable/withdrawable/margin-eligible，以及 Cash/Margin/Fee Reserve 哪些类别扣减各可用维度；Position rule 显式声明 pending receivable 是否 sellable；禁止 implicit stablecoin、T+0、T+1 或 no-op default；
+7. `AvailabilityProjection` 产生 Total Position、Sellable Quantity、Total Cash、Settled Cash、Tradable Cash、Withdrawable Cash 和 Available Margin。Sellable Quantity 还扣除同 Instrument 的 Reservation；Cash Reservation 必须由规则显式且唯一映射到一个相同 Currency 的 Cash key，类别之间不隐式净额化或换算；
+8. Projection 必须保留 Ledger state hash、Settlement state hash、Reservation state hash 和 Market Settlement Rules hash。输入顺序、full replay/rebuild 不改变 Availability state hash；Pre-trade Risk 后续只消费该 typed Available Resources；
+9. 本 WP 不实现市场特定 T+1/Crypto 规则、Profile 读取、SettlementModel 义务计算、Accounting translation、Journal 写入、Order Planning、Pre-trade Risk 行为、mutable persistence 或 Runtime orchestration。
+
+WP-05C 的 Acceptance Card 已达到 `READY`，允许按上述 seam 实施。
+
+## 38. PASSED 记录格式
 
 ```yaml
 id: WP-00A
