@@ -23,6 +23,7 @@ from crypto_quant_domain import (
     OrderTranslationReport,
     PositionEffect,
     Price,
+    PricePurpose,
     PriceConstraint,
     Quantity,
     Scale,
@@ -45,7 +46,12 @@ FIXTURE = ROOT / "tests/fixtures/domain/order-execution-contracts-v1.json"
 
 
 def load_fixture() -> dict[str, Any]:
-    return cast(dict[str, Any], json.loads(FIXTURE.read_text(encoding="utf-8")))
+    try:
+        return cast(
+            dict[str, Any], json.loads(FIXTURE.read_text(encoding="utf-8"))
+        )
+    except (OSError, json.JSONDecodeError) as error:
+        raise AssertionError(f"invalid execution fixture: {FIXTURE}") from error
 
 
 def domain_id(kind: DomainIdKind, digit: str) -> DomainId:
@@ -101,7 +107,7 @@ def build_fill(fill_id: DomainId, quantity_units: int, time: int) -> Fill:
         side=OrderSide.BUY,
         quantity=quantity(quantity_units),
         reference_price=price(6_250_000),
-        reference_price_purpose="execution_reference",
+        reference_price_purpose=PricePurpose.EXECUTION_REFERENCE,
         price=price(6_251_000),
         slippage_amount=Money(500_000, Scale(2), "USDT"),
         slippage_decision_id=f"slippage:{fill_id.value[-1]}",

@@ -4,6 +4,7 @@ from dataclasses import dataclass
 from enum import Enum
 from typing import Any
 
+from .accounting import PricePurpose
 from .canonical import canonical_bytes
 from .identity import DomainId, DomainIdKind, require_canonical_text
 from .instruments import CurrencyId, InstrumentId, VenueId
@@ -334,7 +335,7 @@ class Fill:
     side: OrderSide
     quantity: Quantity
     reference_price: Price
-    reference_price_purpose: str
+    reference_price_purpose: PricePurpose
     price: Price
     slippage_amount: Money
     slippage_decision_id: str
@@ -374,7 +375,8 @@ class Fill:
             raise TypeError("slippage_amount must be Money")
         if self.slippage_amount.currency != self.price.quote_currency:
             raise ValueError("Fill slippage quote currency mismatch")
-        _require_text("reference_price_purpose", self.reference_price_purpose)
+        if not isinstance(self.reference_price_purpose, PricePurpose):
+            raise TypeError("reference_price_purpose must be PricePurpose")
         _require_text("slippage_decision_id", self.slippage_decision_id)
         _require_text("slippage_model_key", self.slippage_model_key)
         _require_optional_text("slippage_calibration_id", self.slippage_calibration_id)
@@ -393,7 +395,7 @@ class Fill:
             "side": self.side.value,
             "quantity": self.quantity,
             "reference_price": self.reference_price,
-            "reference_price_purpose": self.reference_price_purpose,
+            "reference_price_purpose": self.reference_price_purpose.value,
             "price": self.price,
             "slippage_amount": self.slippage_amount,
             "slippage_decision_id": self.slippage_decision_id,

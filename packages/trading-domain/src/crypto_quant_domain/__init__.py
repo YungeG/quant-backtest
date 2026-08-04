@@ -1,5 +1,18 @@
 """Framework-independent trading domain contracts."""
 
+from .accounting import (
+    AccountingEntryType,
+    AccountingJournalEntry,
+    BalanceChange,
+    CashBalance,
+    CashBalanceKey,
+    PortfolioSnapshot,
+    PositionBalance,
+    PositionBalanceKey,
+    PositionLot,
+    PricePurpose,
+    ValuationMarkReference,
+)
 from .canonical import (
     CanonicalEnvelope,
     CanonicalSchema,
@@ -79,10 +92,15 @@ from .time import (
 __version__ = "0.1.0"
 
 __all__ = [
+    "AccountingEntryType",
+    "AccountingJournalEntry",
     "ActivePortfolioTarget",
+    "BalanceChange",
     "CanonicalEnvelope",
     "CanonicalSchema",
     "CanonicalizationError",
+    "CashBalance",
+    "CashBalanceKey",
     "DomainId",
     "DecisionBatch",
     "DomainIdKind",
@@ -108,8 +126,13 @@ __all__ = [
     "OrderState",
     "OrderStatus",
     "OrderTranslationReport",
+    "PortfolioSnapshot",
+    "PositionBalance",
+    "PositionBalanceKey",
     "PositionEffect",
+    "PositionLot",
     "Price",
+    "PricePurpose",
     "PriceConstraint",
     "Quantity",
     "QuantizationPolicy",
@@ -133,6 +156,7 @@ __all__ = [
     "TranslationStatus",
     "UnsupportedCapability",
     "UtcInstant",
+    "ValuationMarkReference",
     "SymbolInterval",
     "SymbolTimeline",
     "VenueId",
