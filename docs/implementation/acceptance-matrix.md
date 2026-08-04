@@ -53,7 +53,7 @@ artifact_hashes: []
 | ID | Status | Owner | Depends On | Readiness blocker |
 |---|---|---|---|---|
 | WP-00A | PASSED | repository root | none | none |
-| WP-00B | READY | repository root | WP-00A | none |
+| WP-00B | PASSED | repository root | WP-00A | none |
 | WP-00C | DRAFT | repository root + parity tooling | WP-00B | 三个来源项目 immutable identity |
 | WP-01A | DRAFT | trading-domain | G00 | Numeric Interface/fixtures/commands |
 | WP-01B | DRAFT | trading-domain | WP-01A | Time/DST fixtures/commands |
@@ -222,7 +222,7 @@ uv.lock sha256                                                           87fee7e
 
 ```yaml
 id: WP-00B
-status: READY
+status: PASSED
 depends_on:
   - WP-00A
 owner_package: repository-root
@@ -258,11 +258,15 @@ evidence:
   - pytest-report
   - deterministic-boundary-report
   - policy-hash
-passed_commit: null
-artifact_hashes: []
+passed_commit: 99db3a9f31a102c27045739645fae7cb0da5032f
+artifact_hashes:
+  architecture/import-boundaries.toml: sha256:d209981299381c7815e1da25be271675cbe30dd67a84ce157699ccb682e66ea9
+  tests/fixtures/architecture/import-boundary-mutations-v1/cases.json: sha256:05f064ef9b161d8dc78e6eae493e05f1a8ccae3aca32ba18ee9888a093a178b2
+  build/acceptance/wp-00b-boundary-report.json: sha256:ebf690868ee9dedb91b429ad2677ca11834c33d88a08400e5d806431794f08f6
+  build/acceptance/wp-00b-pytest.xml: sha256:2a1f0f5ea27bb918dd369d5a93ff2c78b50c3d25852730e3f796dd04b15bfee2
 ```
 
-### WP-00B Readiness
+### WP-00B Acceptance
 
 已确认使用仓库自有的标准库 AST checker，不引入 `import-linter` 或 `pytest-socket`。Policy 和 Checker 必须满足：
 
@@ -274,7 +278,18 @@ artifact_hashes: []
 6. JSON report 按 rule、source path、line、target 稳定排序，不包含 wall-clock time；
 7. Checker、Fixture 和报告生成不得修改 tracked worktree。
 
-WP-00B 当前状态为 `READY`，只有用户明确要求开始实现后才执行。
+WP-00B 的实现已冻结在 immutable commit `99db3a9f31a102c27045739645fae7cb0da5032f`，状态为 `PASSED`。
+
+验证记录：
+
+```text
+Boundary checker contract                                             PASS (5 files)
+Import mutation fixtures                                              18 passed
+Network/Public API/Cleanliness boundaries                              7 passed
+Full test suite                                                        28 passed
+Python                                                                 3.13.5
+Policy sha256                                                          d209981299381c7815e1da25be271675cbe30dd67a84ce157699ccb682e66ea9
+```
 
 ## 6. PASSED 记录格式
 

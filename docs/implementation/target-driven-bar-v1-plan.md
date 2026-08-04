@@ -1577,7 +1577,7 @@ G02: WP-02A → WP-02B → WP-02C → WP-02D → WP-02E → WP-02F → WP-02G �
 G03: WP-03A → WP-03B → WP-03C → WP-03D → WP-03E → WP-03F → review
 ```
 
-`WP-00A Workspace skeleton` 已通过验收。当前唯一处于 `READY` 的下一实现候选是 WP-00B；仍须用户明确授权后才能开始。WP-00B 通过后再冻结来源并准备 WP-00C；每个 Gate 都允许停止、修改接口或回滚，不默认继续后续 Gate。
+`WP-00A Workspace skeleton` 和 WP-00B Dependency boundary checks 已通过验收。WP-00C 仍为 `DRAFT`，必须先冻结三个迁移来源的 immutable identity 并补齐 Acceptance Card，不能直接开始实现；每个 Gate 都允许停止、修改接口或回滚，不默认继续后续 Gate。
 
 到 G03 再做一次 Foundation Release Review：
 
