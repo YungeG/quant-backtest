@@ -55,7 +55,7 @@ artifact_hashes: []
 | WP-00A | PASSED | repository root | none | none |
 | WP-00B | PASSED | repository root | WP-00A | none |
 | WP-00C | PASSED | repository root + parity tooling | WP-00B | none |
-| G00 | READY | repository root | WP-00A, WP-00B, WP-00C | none |
+| G00 | PASSED | repository root | WP-00A, WP-00B, WP-00C | none |
 | WP-01A | DRAFT | trading-domain | G00 | Numeric Interface/fixtures/commands |
 | WP-01B | DRAFT | trading-domain | WP-01A | Time/DST fixtures/commands |
 | WP-01C | DRAFT | trading-domain | WP-01B | ID namespace/version fixtures |
@@ -394,7 +394,7 @@ Source Map sha256                                                       8a0be053
 
 ```yaml
 id: G00
-status: READY
+status: PASSED
 depends_on:
   - WP-00A
   - WP-00B
@@ -436,13 +436,29 @@ evidence:
   - source-map-hash
   - pytest-report
   - boundary-reports
-passed_commit: null
-artifact_hashes: []
+passed_commit: 35913d151c68c8e9ef9e93db48c2db5711ce688a
+artifact_hashes:
+  uv.lock: sha256:afa595beed6c70d7a0124844d450e6b157b365ce6fa7c7fd0d2df9b70aff97c5
+  architecture/import-boundaries.toml: sha256:d209981299381c7815e1da25be271675cbe30dd67a84ce157699ccb682e66ea9
+  docs/migration/source-map.yaml: sha256:8a0be053f538f6277e35b0908c25398a989cd52e499c1cd911742aebfd1a8cf5
+  build/acceptance/g00-import-boundary-report.json: sha256:ebf690868ee9dedb91b429ad2677ca11834c33d88a08400e5d806431794f08f6
+  build/acceptance/g00-source-baseline-report.json: sha256:75082323356fd9554c3bc782b33552c7f58c3992876b703cd24b9a8b50e9cfd1
+  build/acceptance/g00-pytest.xml: sha256:afbf14f6933b51db27d770156286e4769859634e29d1c1a02de86bb3c9d94a59
 ```
 
-### G00 Readiness
+### G00 Acceptance
 
-WP-00A、WP-00B 和 WP-00C 均已通过各自 Acceptance Card。G00 只聚合验证现有基础设施，不增加交易语义或新 external seam。当前状态为 `READY`；用户已授权按 Gate 顺序持续推进，因此可直接执行本 Card，但任何失败都必须先诊断并恢复基线，不能绕过。
+WP-00A、WP-00B 和 WP-00C 均已通过各自 Acceptance Card。G00 聚合验证冻结在 immutable commit `35913d151c68c8e9ef9e93db48c2db5711ce688a`，状态为 `PASSED`。
+
+验证记录：
+
+```text
+Locked workspace sync                                                   PASS
+Architecture + parity suite                                              50 passed
+Import boundary report                                                   PASS
+Offline source baseline                                                  PASS (3 sources / 48 files)
+Python                                                                   3.13.5
+```
 
 ## 8. PASSED 记录格式
 
