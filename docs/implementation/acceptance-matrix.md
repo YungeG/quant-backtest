@@ -63,7 +63,7 @@ artifact_hashes: []
 | G01 | PASSED | trading-domain | WP-01A, WP-01B, WP-01C, WP-01D | none |
 | WP-02A | PASSED | trading-domain | G01 | none |
 | WP-02B | PASSED | trading-domain | WP-02A | none |
-| WP-02C | READY | trading-domain | WP-02A, WP-02B | none |
+| WP-02C | PASSED | trading-domain | WP-02A, WP-02B | none |
 | WP-02D | DRAFT | trading-domain | WP-02A | Accounting schema fixtures |
 | WP-02E | DRAFT | trading-domain | WP-01D | Envelope/Catalog fixtures |
 | WP-02F | DRAFT | trading-kernel | WP-02A–WP-02D | Kernel Profile Port contracts |
@@ -958,7 +958,7 @@ Python                                                                   3.13.5
 
 ```yaml
 id: WP-02C
-status: READY
+status: PASSED
 depends_on:
   - WP-02A
   - WP-02B
@@ -1021,11 +1021,14 @@ evidence:
   - pytest-report
   - order-execution-fixture-hash
   - public-api-import-report
-passed_commit: null
-artifact_hashes: []
+passed_commit: e2ca080c79a676ea6e2bed303cf30be9ead38d10
+artifact_hashes:
+  tests/fixtures/domain/order-execution-contracts-v1.json: sha256:f113a7d34dbfe196202fc7d8effb0e427517cc3dfe2ebfb75c1577b828c8b4d5
+  build/acceptance/wp-02c-pytest.xml: sha256:2cafbf6fd1a4e9b1679b295d6ea7cf2cc360453d9b2b041c9c318f7846ad48db
+  build/acceptance/wp-02c-import-boundary-report.json: sha256:30885625eec2e0a85ea4fec528804a443c6e92d1cb5d29541d7186a5fbece945
 ```
 
-### WP-02C Readiness
+### WP-02C Acceptance
 
 已冻结 v1 Order/Execution 数据契约：
 
@@ -1040,7 +1043,19 @@ artifact_hashes: []
 9. `OrderTranslationReport` 只记录 Translation 证据，不包含 Venue Request；translated report 不得包含 unsupported capability，rejected report 必须包含结构化 `UnsupportedCapability`；field mapping 保留 canonical/target field/value，重复 canonical field 被拒绝；
 10. 本 WP 不实现 Capability Validator、Translator、Order Event replay、FeeAssessmentEngine、SettlementBook 或 Accounting。
 
-WP-02C 当前状态为 `READY`。
+WP-02C 的实现已冻结在 immutable commit `e2ca080c79a676ea6e2bed303cf30be9ead38d10`，状态为 `PASSED`。
+
+验证记录：
+
+```text
+Order/Execution contract tests                                          8 passed
+Canonical golden fixtures                                               2 passed
+Public API + repository cleanliness boundaries                          5 passed
+Trading-domain import boundary                                          PASS (16 files)
+Full test suite                                                        136 passed
+mypy                                                                    no issues (14 files)
+Python                                                                  3.13.5
+```
 
 ## 16. PASSED 记录格式
 
