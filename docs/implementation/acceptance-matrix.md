@@ -79,7 +79,7 @@ artifact_hashes: []
 | G03 | PASSED | trading-kernel + parity | WP-03A–WP-03F | none |
 | WP-04A | PASSED | trading-kernel | G02 | none |
 | WP-04B | PASSED | trading-kernel | WP-04A | none |
-| WP-04C | READY | trading-kernel | WP-04B, G03 | none |
+| WP-04C | PASSED | trading-kernel | WP-04B, G03 | none |
 | WP-04D | DRAFT | trading-kernel | WP-04C | Portfolio Risk fixtures |
 | WP-04E | DRAFT | trading-kernel | WP-04D, WP-03C | Sizing/materialization fixtures |
 | WP-05A | DRAFT | trading-kernel | G02 | Order lifecycle fixtures |
@@ -2368,7 +2368,7 @@ Python                                                                 3.13.5
 
 ```yaml
 id: WP-04C
-status: READY
+status: PASSED
 depends_on:
   - WP-04B
   - G03
@@ -2416,11 +2416,14 @@ evidence:
   - public-api-import-report
   - import-boundary-report
   - static-type-report
-passed_commit: null
-artifact_hashes: []
+passed_commit: d899198c9762268cd39de602d2baa2b31b433465
+artifact_hashes:
+  tests/fixtures/kernel/capital-allocation-netting-v1.json: sha256:277c9955cdcf0f30f80d13c3c01f345636e0ae94c677267dfbc43742bde8a542
+  build/acceptance/wp-04c-pytest.xml: sha256:b768b49f65c78020ce1919905db50bcc5a635d35377a2a6cccb4cf5ebb1ae5ba
+  build/acceptance/wp-04c-import-boundary-report.json: sha256:fc7e436e626b9c53148e480d3fc6a41314ae9352abbfea2c0cf2f52ad78911e7
 ```
 
-### WP-04C Readiness
+### WP-04C Acceptance
 
 已冻结以下边界：
 
@@ -2432,7 +2435,23 @@ artifact_hashes: []
 6. State、Allocation tuple、Target 和 Mapping 顺序不影响 allocation identity、result hash 或 net target；
 7. 本 WP 不执行 Allocation Policy、读取 Price/Market/Profile，不实现 Quantity sizing、Portfolio Risk、ActivePortfolioTarget、Order Planning、Strategy invocation 或 Ledger mutation。
 
-WP-04C 当前状态为 `READY`。
+WP-04C 的实现已冻结在 immutable commit `d899198c9762268cd39de602d2baa2b31b433465`，状态为 `PASSED`。
+
+验证记录：
+
+```text
+Portfolio Allocator contract tests                                    8 passed
+Capital allocation/netting canonical golden fixture                   2 passed
+Public API + repository cleanliness boundaries                        5 passed
+Acceptance test report                                               15 passed
+Trading-kernel import boundary                                        PASS (30 files)
+Full test suite                                                       290 passed
+mypy                                                                  no issues (15 files)
+Primary LSP                                                           clean
+pi-lens scoped review                                                 no findings
+uv lock --check                                                       PASS
+Python                                                                3.13.5
+```
 
 ## 32. PASSED 记录格式
 
