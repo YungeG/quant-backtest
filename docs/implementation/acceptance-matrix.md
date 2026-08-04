@@ -74,7 +74,7 @@ artifact_hashes: []
 | WP-03B | PASSED | trading-kernel | WP-03A | none |
 | WP-03C | PASSED | trading-kernel | WP-02F | none |
 | WP-03D | PASSED | trading-kernel | WP-03C | none |
-| WP-03E | DRAFT | trading-kernel | WP-03B–WP-03D | Snapshot fixtures |
+| WP-03E | READY | trading-kernel | WP-03B–WP-03D | none |
 | WP-03F | DRAFT | trading-kernel | WP-03A–WP-03E | Cash accounting + legacy parity |
 | WP-04A | DRAFT | trading-kernel | G02 | Candidate validation fixtures |
 | WP-04B | DRAFT | trading-kernel | WP-04A | Atomic batch fixtures |
@@ -1906,7 +1906,74 @@ uv lock --check                                                        PASS
 Python                                                                 3.13.5
 ```
 
-## 26. PASSED 记录格式
+## 26. WP-03E Acceptance Card
+
+```yaml
+id: WP-03E
+status: READY
+depends_on:
+  - WP-03B
+  - WP-03C
+  - WP-03D
+owner_package: trading-kernel
+public_interface:
+  - crypto_quant_trading.PortfolioValueKind
+  - crypto_quant_trading.PortfolioValueRef
+  - crypto_quant_trading.ReportingCurrencyValuation
+  - crypto_quant_trading.SnapshotProjectionFailureCode
+  - crypto_quant_trading.SnapshotProjectionFailure
+  - crypto_quant_trading.SnapshotProjectionOutcome
+  - crypto_quant_trading.PortfolioSnapshotProjector
+test_commands:
+  contract: uv run pytest -q tests/kernel/snapshots/test_portfolio_snapshot_projector.py
+  fixture: uv run pytest -q tests/kernel/snapshots/test_portfolio_snapshot_golden.py
+  boundary: uv run pytest -q tests/architecture/test_public_api_imports.py tests/architecture/test_repository_cleanliness.py
+fixture_ids:
+  - portfolio-snapshot-projection-v1
+expected_artifacts:
+  - tests/fixtures/kernel/portfolio-snapshot-projection-v1.json
+  - build/acceptance/wp-03e-pytest.xml
+  - build/acceptance/wp-03e-import-boundary-report.json
+failure_contracts:
+  - multiple-execution-accounts
+  - missing-duplicate-or-unexpected-valuation
+  - native-ledger-value-mismatch
+  - reporting-currency-or-scale-mismatch
+  - valuation-path-source-target-mismatch
+  - valuation-time-or-price-purpose-mismatch
+  - currency-valuation-graph-mismatch
+  - missing-extra-or-future-mark
+  - position-mark-or-notional-mismatch
+  - implicit-currency-path-selection-or-rate-invention
+  - snapshot-data-query-or-ledger-mutation
+  - lot-cost-basis-margin-or-accounting-leakage
+allowed_grade: development
+evidence:
+  - pytest-report
+  - portfolio-snapshot-projection-fixture-hash
+  - public-api-import-report
+  - import-boundary-report
+  - static-type-report
+passed_commit: null
+artifact_hashes: []
+```
+
+### WP-03E Acceptance
+
+已冻结以下边界：
+
+1. Projector 是纯函数式组件，只消费 immutable `LedgerState`、supplied `ResolvedMark` 和 supplied `ReportingCurrencyValuation`；不查询 MarkResolver、Graph、Reader、Bundle、网络或文件；
+2. `PortfolioValueRef` 用 typed balance key 标识 Cash、Position market value、Realized PnL、Unrealized PnL、Fee 和 Financing。每个 expected ref 必须有且仅有一个 valuation，不能按金额、Mapping 或输入顺序匹配；
+3. 每个 `ReportingCurrencyValuation` 保存 native/reporting `Money`、已解析 `CurrencyValuationResolution`、统一 graph hash 和显式 Position notional quantization（仅 Position market value）。Projector 验证 path、currency、time、purpose 和 identity，但不重新选择 path 或发明 FX rate；
+4. Position market value 必须由 Ledger Quantity × 对应 Valuation `ResolvedMark` 按显式 QuantizationPolicy exact 重算；Unrealized PnL 是 supplied native fact，Lot/Cost Basis 计算留给 WP-03F；
+5. supplied mark set 必须精确等于 Position marks 与所有 valuation path edge marks 的并集。Future、缺失或额外 Mark fail closed；mark-set 和 staleness report identity 从完整 Mark provenance 确定性生成；
+6. v1 只允许一个 account、一个 reporting currency 和一个 reporting Scale。Equity = converted Cash + converted Position market value；Realized/Unrealized/Fee/Financing 独立汇总且保留原始符号；
+7. Snapshot 保留 Ledger state hash、mark-set hash、staleness report hash 和 currency graph hash；相同 inputs 的任意输入顺序产生 exact 相同 canonical Snapshot；
+8. 本 WP 不实现 data read、Mark/path resolution、隐式 Stablecoin peg、Journal/Ledger mutation、Lot/Cost Basis、Margin Snapshot、instrument-specific accounting 或 Run Outcome mapping。
+
+WP-03E 已达到 `READY`，可以按本 Card 实施。
+
+## 27. PASSED 记录格式
 
 ```yaml
 id: WP-00A

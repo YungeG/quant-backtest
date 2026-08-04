@@ -570,16 +570,26 @@ v1 canonical reason code 固定为：
 
 ### WP-03E PortfolioSnapshotProjector
 
-拥有：Ledger State + Resolved Marks + Reporting Currency Valuations → PortfolioSnapshot。
+拥有：Ledger State + Resolved Marks + supplied Reporting Currency Valuations → PortfolioSnapshot 的纯确定性投影。
 
-不拥有：数据读取、MarkResolver、换算路径选择或 Journal mutation。
+冻结语义：
+
+- `PortfolioValueRef` 用 typed Cash/Position balance key 区分 Cash、Position market value、Realized PnL、Unrealized PnL、Fee 和 Financing；每个 ledger fact 必须有且仅有一个对应 valuation，禁止按金额或容器顺序猜测来源；
+- `ReportingCurrencyValuation` 保存 native `Money`、reporting-currency `Money`、`CurrencyValuationResolution`、Graph hash 和稳定 source identity。Projector 验证币种、时点、PricePurpose、path source/target 和统一 graph identity，但不重新选择路径或发明汇率；
+- Position market value 必须由对应 `ResolvedMark`、Ledger Quantity 和显式 `QuantizationPolicy` 精确重算。Unrealized PnL 作为 supplied native valuation fact 输入；Lot/Cost Basis 计算属于 WP-03F；
+- supplied Marks 必须精确覆盖 Position marks 和所有 CurrencyValuationPath edge marks；future、额外或缺失 Mark 均失败关闭。Snapshot 记录每个 Mark identity，并从 mark age/policy evidence 生成稳定 staleness report hash；
+- v1 只允许一个 account、一个 reporting currency 和一个 reporting `Scale`。Equity 由 converted Cash + converted Position market value 得到；Realized/Unrealized/Fee/Financing 分别汇总，Fee 和 Financing 的符号按 Journal truth 原样保留；
+- 同一 Ledger state、Marks 和 Valuations 的输入顺序不影响 Snapshot canonical identity；删除 Snapshot 后可以从相同 immutable inputs exact 重建。
+
+不拥有：数据读取、MarkResolver、换算路径/Policy 调用、Currency conversion 发明、Journal/Ledger mutation、Lot/Cost Basis 计算、Margin Snapshot、instrument-specific accounting 或 Run Outcome mapping。
 
 验收：
 
-- realized 与 unrealized PnL 分离；
-- Mark identity、PricePurpose 和 UtcInstant 被记录；
-- Equity、Cash、Position value 和 Margin exposure 使用同一 Reporting Currency valuation；
-- Snapshot 可删除并由 Journal、Marks 和 Valuation Graph 重建。
+- realized 与 unrealized PnL 分离，且 reporting currency/scale 精确一致；
+- Mark identity、PricePurpose、UtcInstant、staleness 和 Currency Graph identity 被记录；
+- Equity、Cash 和 Position market value 使用同一 Reporting Currency valuation context；Margin exposure 留给独立 Margin Snapshot；
+- 缺失/重复/额外 valuation、Mark mismatch、graph/path/time/purpose mismatch、Position notional mismatch 或多 account 均返回结构化失败；
+- Snapshot 可删除并由 Journal-derived Ledger State、Marks 和 supplied Valuations exact 重建。
 
 ### WP-03F Cash Instrument Accounting model（最小）
 
