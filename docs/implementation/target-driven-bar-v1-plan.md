@@ -205,8 +205,10 @@ tests/parity/fixtures/
 
 验收：
 
-- `crypto-quant-core` 和 `cycle-rotation-platform` 使用 immutable commit + source file hash；
-- dirty `crypt-gemini` 不能作为来源身份，必须先冻结 commit/tag 或内容寻址 Source Snapshot；
+- 三个来源仓库都按显式 include scope 生成内容寻址 Source Snapshot、逐文件 SHA-256 Manifest 和 aggregate hash；
+- 来源仓库是否 dirty 不构成阻断；范围内读取 Snapshot 时的实际文件字节并纳入 modified/untracked 文件，范围外 dirty 内容一律忽略；
+- Base commit、remote 和 clean/dirty 状态只记录为 provenance，不能替代 aggregate snapshot hash；
+- Snapshot 归档和 Manifest 作为受控 Golden Fixture 提交，后续验证不依赖原来源仓库仍然存在；
 - `intentional_semantic_change` 必须引用 ADR；
 - Comparator 按字段声明 exact、quantized、sequence、explicit tolerance 或 approved change，禁止全局 epsilon；
 - 来源后续变化不能改写旧 Migration Evidence。

@@ -2184,7 +2184,7 @@ Hummingbot DTO 不进入 Trading Domain。迁移完成后应选择单一权威 p
 - Binance historical rule evidence
 - Funding 和因果性实现
 
-迁移必须保留源 commit、源文件 hash、Migration Mode、Comparator contract 和 parity Fixture。Dirty workspace 不能直接作为来源身份，必须先冻结 commit/tag 或内容寻址 Source Snapshot。
+迁移必须保留 base commit、源文件 hash、Migration Mode、Comparator contract 和 parity Fixture。迁移来源仓库是否 dirty 不构成资格条件；所有来源都按声明范围冻结内容寻址 Source Snapshot。范围内使用 Snapshot 时的实际文件字节，可以包含 modified/untracked 文件；范围外 dirty 内容不进入 Snapshot。Base commit 和 clean/dirty 状态只作为 provenance，aggregate snapshot hash 是唯一权威来源身份。
 
 基础数值、契约和 Accounting 的 Parity 必须在对应 G01–G03 Work Package 中完成模块级验证，不能等待市场 Profile 或端到端 G12。G12 只承担真实 MarketBundle、完整策略和端到端 Parity。
 

@@ -91,7 +91,7 @@ Strategy 为形成首个合法决策所声明的最小历史数据范围和数�
 
 ## 来源快照（Source Snapshot）
 
-从供应商、交易所、数据库或文件系统取得并以内容摘要冻结的原始输入证据。它先于规范化和 MarketBundle 构建。
+从供应商、交易所、数据库、文件系统或迁移来源仓库取得，并以内容摘要冻结的原始输入证据。来源仓库是否 dirty 不影响资格；Snapshot 按声明范围捕获当时的实际文件字节，范围内 modified/untracked 文件可以被纳入，范围外文件一律忽略。Base commit 和 clean/dirty 状态只属于 provenance，Snapshot aggregate hash 才是权威身份。它先于规范化、迁移比较或 MarketBundle 构建。
 
 ## 市场数据包构建器（Market Bundle Builder）
 
