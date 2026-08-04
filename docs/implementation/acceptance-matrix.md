@@ -71,7 +71,7 @@ artifact_hashes: []
 | WP-02H | PASSED | trading-domain | WP-02A–WP-02G | none |
 | G02 | PASSED | trading-domain + trading-kernel + backtest-runtime | WP-02A–WP-02H | none |
 | WP-03A | PASSED | trading-kernel | G02 | none |
-| WP-03B | READY | trading-kernel | WP-03A | none |
+| WP-03B | PASSED | trading-kernel | WP-03A | none |
 | WP-03C | DRAFT | trading-kernel | WP-02F | PricePurpose/Mark fixtures |
 | WP-03D | DRAFT | trading-kernel | WP-03C | Currency graph fixtures |
 | WP-03E | DRAFT | trading-kernel | WP-03B–WP-03D | Snapshot fixtures |
@@ -1664,7 +1664,7 @@ Python                                                                  3.13.5
 
 ```yaml
 id: WP-03B
-status: READY
+status: PASSED
 depends_on:
   - WP-03A
 owner_package: trading-kernel
@@ -1705,11 +1705,14 @@ evidence:
   - public-api-import-report
   - import-boundary-report
   - static-type-report
-passed_commit: null
-artifact_hashes: []
+passed_commit: 0f5f2bf3416594b527603e4dc836a5a230ff9340
+artifact_hashes:
+  tests/fixtures/kernel/generic-ledger-projection-v1.json: sha256:e1f728f2117348331c8866f0ee44fdb38d47e41402f01a09fc7c529694c8f338
+  build/acceptance/wp-03b-pytest.xml: sha256:dbe05eb39014c9a2cb8592a26bdb627e6606f9d9c4d3c1629cf1c173029e4255
+  build/acceptance/wp-03b-import-boundary-report.json: sha256:326fd0a94f53ebe76ac8005b7eee36137dc39806426234d5f6e94ac3df131e74
 ```
 
-### WP-03B Readiness
+### WP-03B Acceptance
 
 已冻结以下边界：
 
@@ -1720,7 +1723,23 @@ artifact_hashes: []
 5. Cash 注册 key 保留显式零值；零 Position 被移除；负 Cash 和 Short Position 是 truthful state，不由 Ledger 拒绝；
 6. Ledger 不读取价格/Profile/Risk，不计算 unrealized PnL，不修改 Journal，不实现 Accounting translation、Lot/Cost Basis、Mark 或 Valuation。
 
-WP-03B 当前状态为 `READY`，可以进入 TDD 实现。
+WP-03B 的实现已冻结在 immutable commit `0f5f2bf3416594b527603e4dc836a5a230ff9340`，状态为 `PASSED`。
+
+验证记录：
+
+```text
+Generic Ledger contract tests                                          8 passed
+Canonical projection golden fixture                                    1 passed
+Public API + repository cleanliness boundaries                         5 passed
+Acceptance test report                                                 14 passed
+Trading-kernel import boundary                                         PASS (23 files)
+Full test suite                                                         214 passed
+mypy                                                                    no issues (7 files)
+Primary LSP                                                             clean
+pi-lens scoped review                                                   no findings
+uv lock --check                                                         PASS
+Python                                                                  3.13.5
+```
 
 ## 24. PASSED 记录格式
 
