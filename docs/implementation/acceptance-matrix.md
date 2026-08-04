@@ -69,7 +69,7 @@ artifact_hashes: []
 | WP-02F | PASSED | trading-kernel | WP-02A–WP-02D | none |
 | WP-02G | PASSED | backtest-runtime | WP-02A–WP-02D, WP-02F | none |
 | WP-02H | PASSED | trading-domain | WP-02A–WP-02G | none |
-| G02 | DRAFT | trading-domain + trading-kernel + backtest-runtime | WP-02A–WP-02H | Aggregate review and evidence |
+| G02 | READY | trading-domain + trading-kernel + backtest-runtime | WP-02A–WP-02H | none |
 | WP-03A | DRAFT | trading-kernel | G02 | Journal replay fixtures |
 | WP-03B | DRAFT | trading-kernel | WP-03A | Ledger projection fixtures |
 | WP-03C | DRAFT | trading-kernel | WP-02F | PricePurpose/Mark fixtures |
@@ -1483,7 +1483,83 @@ uv lock --check                                                         PASS
 Python                                                                  3.13.5
 ```
 
-## 21. PASSED 记录格式
+## 21. G02 Acceptance Card
+
+```yaml
+id: G02
+status: READY
+depends_on:
+  - WP-02A
+  - WP-02B
+  - WP-02C
+  - WP-02D
+  - WP-02E
+  - WP-02F
+  - WP-02G
+  - WP-02H
+owner_package: trading-domain + trading-kernel + backtest-runtime
+public_interface:
+  - canonical Instrument, Target, Decision, Order, Execution, Accounting and Artifact contracts
+  - generic Market/Account Profile Ports
+  - type-separated Simulation Profile Ports
+  - shared profile component failure taxonomy
+test_commands:
+  contract: uv run pytest -q tests/domain/instruments tests/domain/decisions tests/domain/execution tests/domain/accounting tests/domain/artifacts tests/domain/profile_errors tests/kernel/ports tests/runtime/ports
+  fixture: uv run pytest -q tests/domain/instruments tests/domain/decisions tests/domain/execution tests/domain/accounting tests/domain/artifacts tests/domain/profile_errors tests/kernel/ports tests/runtime/ports --junitxml=build/acceptance/g02-contracts-pytest.xml
+  boundary: uv run python tools/architecture/check_import_boundaries.py --root . --policy architecture/import-boundaries.toml --report build/acceptance/g02-import-boundary-report.json
+fixture_ids:
+  - instrument-identity-timeline-v1
+  - target-decision-contracts-v1
+  - order-execution-contracts-v1
+  - accounting-contracts-v1
+  - artifact-envelope-catalog-v1
+  - kernel-profile-ports-v1
+  - simulation-profile-ports-v1
+  - profile-component-errors-v1
+expected_artifacts:
+  - tests/fixtures/domain/instrument-identity-timeline-v1.json
+  - tests/fixtures/domain/target-decision-contracts-v1.json
+  - tests/fixtures/domain/order-execution-contracts-v1.json
+  - tests/fixtures/domain/accounting-contracts-v1.json
+  - tests/fixtures/domain/artifact-envelope-catalog-v1.json
+  - tests/fixtures/kernel/kernel-profile-ports-v1.json
+  - tests/fixtures/runtime/simulation-profile-ports-v1.json
+  - tests/fixtures/domain/profile-component-errors-v1.json
+  - build/acceptance/g02-contracts-pytest.xml
+  - build/acceptance/g02-import-boundary-report.json
+failure_contracts:
+  - g02-domain-contract-regression
+  - g02-canonical-hash-drift
+  - g02-profile-port-contract-regression
+  - g02-market-simulation-port-conflation
+  - g02-unstructured-profile-failure
+  - g02-domain-runtime-reverse-dependency
+  - g02-generic-kernel-concrete-profile-import
+  - g02-external-framework-or-vendor-dto-leakage
+  - g02-implicit-profile-or-simulation-default
+allowed_grade: development
+evidence:
+  - eight-fixture-hashes
+  - pytest-report
+  - import-boundary-report
+  - static-type-report
+passed_commit: null
+artifact_hashes: []
+```
+
+### G02 Readiness
+
+WP-02A 至 WP-02H 已分别通过。G02 聚合 Gate 只验证已冻结契约的组合完整性、canonical 稳定性和 package 方向，不新增领域对象、Profile 实现、Resolver、Runtime 行为或市场语义。通过条件：
+
+1. 八组 WP fixture 和 contract test 在同一 Python 3.13 workspace 中共同通过；
+2. 所有已发布 Domain 对象继续支持稳定 canonical serialization/hash；Candidate 和 raw Artifact source bytes 等明确非 canonical 对象保持在各自审计边界；
+3. `trading-domain` 不依赖 Kernel/Runtime/Pandas/Hummingbot/Vendor SDK，Generic Kernel 不导入具体市场 Profile，Runtime 不反向污染 Domain/Kernel；
+4. Market/Account Profile Ports、Simulation Ports 和 shared failure taxonomy 保持类型分离但可结构化组合；
+5. 未配置组件不存在 no-op、零滑点、无限流动性、零延迟或其他隐式默认。
+
+G02 当前状态为 `READY`。
+
+## 22. PASSED 记录格式
 
 ```yaml
 id: WP-00A
