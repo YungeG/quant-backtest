@@ -659,14 +659,23 @@ v1 Candidate Schema 固定为：
 
 ### WP-04B Atomic DecisionBatch
 
-拥有：同一 Decision Instant 的 Validated StrategyDecision 原子收集与稳定 batch identity。
+拥有：同一 Decision Instant 的 Validated StrategyDecision 原子收集、稳定 batch identity，以及跨不同 Decision Instant 的 latest-per-Sleeve Decision State 更新。
+
+冻结边界：
+
+- Caller 先提供规范化的 expected `(strategy_id, sleeve_id)` 集合，再一次性提交已经独立完成的 `StrategyValidationResult`；Collector 不接收 Strategy callback、Context 或逐个可见的 staged Batch；
+- 每个 expected Sleeve 必须有且只有一个 Submission；missing、duplicate、unexpected、ValidationFailure、Strategy/Sleeve identity mismatch 或 Decision Time mismatch 均返回规范化 Failure，且 `batch=None/state=None`；
+- `decision_batch_id` 由 versioned canonical identity payload（Decision Instant + canonical-sorted Validated Decisions）确定性派生，不使用注册顺序、Mapping 顺序、Attempt ID 或 wall-clock time；
+- `LatestSleeveDecisionState` 只保存每个 Sleeve 最近一次 Validated Decision。新 Batch 原子替换本 Batch 中的 Sleeve，并保留不同 Instant 未调度 Sleeve 的最近 Decision；Target expiry/stale policy 不在 Collector 内解释；
+- 同一 Instant 不允许通过多次 Collector 调用拼接部分 Batch；已有非空 State 的 `as_of` 必须早于新 Batch Decision Instant。
 
 验收：
 
-- Strategy 注册顺序变化不改变 batch hash；
-- Candidate validation 有任一 Failure 时不产生部分 Batch；
-- Strategy 互相看不到同 Batch 输出；
-- 不同 Instant 保留其他 Sleeve 最近有效目标。
+- Strategy 注册顺序和 Submission 顺序变化不改变 batch ID、batch hash 或 latest-Sleeve state hash；
+- Candidate validation 有任一 Failure，或 expected/submission completeness 不成立时，不产生部分 Batch 或部分 State；
+- Collector API 只消费已完成 Result，Strategy 互相看不到同 Batch 输出；
+- 不同 Instant 原子更新被调度 Sleeve，并保留其他 Sleeve 最近 Validated Decision；
+- 不实现 Allocation、Netting、Risk、Sizing、Order Planning、Strategy invocation、InputOrigin 或 Run Outcome mapping。
 
 ### WP-04C Capital allocation 与 Sleeve netting
 

@@ -78,7 +78,7 @@ artifact_hashes: []
 | WP-03F | PASSED | trading-kernel | WP-03A–WP-03E | none |
 | G03 | PASSED | trading-kernel + parity | WP-03A–WP-03F | none |
 | WP-04A | PASSED | trading-kernel | G02 | none |
-| WP-04B | DRAFT | trading-kernel | WP-04A | Atomic batch fixtures |
+| WP-04B | READY | trading-kernel | WP-04A | none |
 | WP-04C | DRAFT | trading-kernel | WP-04B, G03 | Allocation/netting fixtures |
 | WP-04D | DRAFT | trading-kernel | WP-04C | Portfolio Risk fixtures |
 | WP-04E | DRAFT | trading-kernel | WP-04D, WP-03C | Sizing/materialization fixtures |
@@ -2280,7 +2280,72 @@ uv lock --check                                                        PASS
 Python                                                                 3.13.5
 ```
 
-## 30. PASSED 记录格式
+## 30. WP-04B Acceptance Card
+
+```yaml
+id: WP-04B
+status: READY
+depends_on:
+  - WP-04A
+owner_package: trading-kernel
+public_interface:
+  - crypto_quant_trading.DecisionBatchExpectation
+  - crypto_quant_trading.DecisionBatchSubmission
+  - crypto_quant_trading.DecisionBatchIssueCode
+  - crypto_quant_trading.DecisionBatchIssue
+  - crypto_quant_trading.DecisionBatchFailure
+  - crypto_quant_trading.LatestSleeveDecisionState
+  - crypto_quant_trading.AtomicDecisionBatchResult
+  - crypto_quant_trading.AtomicDecisionBatchCollector
+test_commands:
+  contract: uv run pytest -q tests/kernel/decisions/test_atomic_decision_batch.py
+  fixture: uv run pytest -q tests/kernel/decisions/test_atomic_decision_batch_golden.py
+  boundary: uv run pytest -q tests/architecture/test_public_api_imports.py tests/architecture/test_repository_cleanliness.py
+fixture_ids:
+  - atomic-decision-batch-v1
+expected_artifacts:
+  - tests/fixtures/kernel/atomic-decision-batch-v1.json
+  - build/acceptance/wp-04b-pytest.xml
+  - build/acceptance/wp-04b-import-boundary-report.json
+failure_contracts:
+  - empty-or-duplicate-expected-sleeve
+  - missing-duplicate-or-unexpected-submission
+  - submitted-validation-failure
+  - strategy-or-sleeve-identity-mismatch
+  - decision-time-mismatch
+  - prior-state-from-same-or-future-instant
+  - partial-batch-or-partial-state-on-failure
+  - registration-or-submission-order-dependent-identity
+  - strategy-callback-or-same-batch-output-visibility
+  - attempt-id-wall-clock-or-runtime-origin-in-identity
+  - allocation-netting-risk-sizing-or-order-planning-leakage
+allowed_grade: development
+evidence:
+  - pytest-report
+  - atomic-decision-batch-golden-fixture-hash
+  - deterministic-batch-and-state-hashes
+  - public-api-import-report
+  - import-boundary-report
+  - static-type-report
+passed_commit: null
+artifact_hashes: []
+```
+
+### WP-04B Readiness
+
+已冻结以下边界：
+
+1. `DecisionBatchExpectation` 规范化 expected Strategy/Sleeve membership；每个 Sleeve 唯一且 expected 集合非空；
+2. `DecisionBatchSubmission` 只包裹 caller 已独立完成的 `StrategyValidationResult`。Collector 不接收 Strategy callback、Observation Context 或逐个可见的 staged Batch，因此不提供 same-Batch output visibility seam；
+3. 每个 expected Sleeve 必须有且只有一个 Submission。Missing、duplicate、unexpected、ValidationFailure、Strategy/Sleeve identity mismatch 或 Decision Time mismatch 统一形成稳定排序的 `DecisionBatchIssue`；任一 Issue 时 Result 必须同时 `batch=None`、`state=None`；
+4. `decision_batch_id` 由 versioned canonical identity payload（authoritative Decision Time + canonical-sorted Validated Decisions）确定性派生。注册顺序、Submission 顺序、Mapping 顺序、Attempt ID 和 wall-clock time 不参与 identity；
+5. `LatestSleeveDecisionState` 保存每个 Sleeve 最近一次 Validated Decision。成功 Batch 原子替换本 Batch Sleeve 并保留不同 Instant 未调度 Sleeve；它不解释 Target expiry、StaleTargetPolicy 或经济有效性；
+6. 为禁止同一 Instant 被多次拼成部分 Batch，非空 prior State 的 `as_of` 必须严格早于新 Batch Decision Time；
+7. 本 WP 不实现 Candidate validation、Allocation/Netting、Risk、Sizing、ActivePortfolioTarget、Order Planning、Strategy invocation、InputOrigin 或 Run Outcome mapping。
+
+WP-04B 当前状态为 `READY`，可以按本 Card 实施。
+
+## 31. PASSED 记录格式
 
 ```yaml
 id: WP-00A
