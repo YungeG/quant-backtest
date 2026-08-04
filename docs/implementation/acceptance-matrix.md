@@ -71,7 +71,7 @@ artifact_hashes: []
 | WP-02H | PASSED | trading-domain | WP-02A–WP-02G | none |
 | G02 | PASSED | trading-domain + trading-kernel + backtest-runtime | WP-02A–WP-02H | none |
 | WP-03A | PASSED | trading-kernel | G02 | none |
-| WP-03B | DRAFT | trading-kernel | WP-03A | Ledger projection fixtures |
+| WP-03B | READY | trading-kernel | WP-03A | none |
 | WP-03C | DRAFT | trading-kernel | WP-02F | PricePurpose/Mark fixtures |
 | WP-03D | DRAFT | trading-kernel | WP-03C | Currency graph fixtures |
 | WP-03E | DRAFT | trading-kernel | WP-03B–WP-03D | Snapshot fixtures |
@@ -1660,7 +1660,69 @@ uv lock --check                                                         PASS
 Python                                                                  3.13.5
 ```
 
-## 23. PASSED 记录格式
+## 23. WP-03B Acceptance Card
+
+```yaml
+id: WP-03B
+status: READY
+depends_on:
+  - WP-03A
+owner_package: trading-kernel
+public_interface:
+  - crypto_quant_trading.LedgerBalanceRegistration
+  - crypto_quant_trading.LedgerSchema
+  - crypto_quant_trading.LedgerState
+  - crypto_quant_trading.GenericLedger
+  - crypto_quant_trading.LedgerError
+  - crypto_quant_trading.UnregisteredBalanceKeyError
+  - crypto_quant_trading.LedgerFinancialInvariantError
+  - crypto_quant_trading.LedgerStateMismatchError
+test_commands:
+  contract: uv run pytest -q tests/kernel/ledger/test_generic_ledger.py
+  fixture: uv run pytest -q tests/kernel/ledger/test_generic_ledger_golden.py
+  boundary: uv run pytest -q tests/architecture/test_public_api_imports.py tests/architecture/test_repository_cleanliness.py
+fixture_ids:
+  - generic-ledger-projection-v1
+expected_artifacts:
+  - tests/fixtures/kernel/generic-ledger-projection-v1.json
+  - build/acceptance/wp-03b-pytest.xml
+  - build/acceptance/wp-03b-import-boundary-report.json
+failure_contracts:
+  - invalid-ledger-schema
+  - duplicate-ledger-balance-registration
+  - unregistered-balance-key
+  - unregistered-attribution-currency
+  - balance-identity-or-scale-mismatch
+  - forged-ledger-cursor
+  - forged-ledger-resume-state
+  - ledger-market-or-profile-dependency
+  - ledger-unrealized-pnl-leakage
+  - ledger-economic-policy-rejection
+allowed_grade: development
+evidence:
+  - pytest-report
+  - generic-ledger-golden-fixture-hash
+  - public-api-import-report
+  - import-boundary-report
+  - static-type-report
+passed_commit: null
+artifact_hashes: []
+```
+
+### WP-03B Readiness
+
+已冻结以下边界：
+
+1. `LedgerSchema` 显式注册 typed Cash/Position balance key 与唯一 Scale；注册顺序 canonical 化，未知 key 或未知 attribution currency fail closed；
+2. v1 的 generic financial invariant 是 closed registered dimensions 与 exact identity/scale arithmetic。Ledger 不做跨资产估值配平；具体 PositionAccountingModel 的经济配平、Lot 和 Cost Basis 留给 WP-03F；
+3. `LedgerState` 是 immutable projection，保存 schema hash、经验证 Journal cursor、Cash/Position 及 realized PnL/fee/financing 原生币种累计，并提供确定性 state hash；
+4. `project()` 从 genesis replay；`resume()` 重新验证 prefix state parity 后继续，伪造 cursor 或 state 不能被信任；
+5. Cash 注册 key 保留显式零值；零 Position 被移除；负 Cash 和 Short Position 是 truthful state，不由 Ledger 拒绝；
+6. Ledger 不读取价格/Profile/Risk，不计算 unrealized PnL，不修改 Journal，不实现 Accounting translation、Lot/Cost Basis、Mark 或 Valuation。
+
+WP-03B 当前状态为 `READY`，可以进入 TDD 实现。
+
+## 24. PASSED 记录格式
 
 ```yaml
 id: WP-00A

@@ -519,16 +519,26 @@ v1 canonical reason code 固定为：
 
 ### WP-03B Generic Ledger projection
 
-拥有：Cash、Position、Realized PnL 等 Ledger State 投影；不包含市场类型 `if/elif`，不读取 MarketSemanticsProfile、ExecutionAccountProfile 或 Risk Policy。
+拥有：Cash、Position、Realized PnL、Fee 和 Financing 的 immutable `LedgerState` 投影；不包含市场类型 `if/elif`，不读取 MarketSemanticsProfile、ExecutionAccountProfile 或 Risk Policy。
+
+冻结语义：
+
+- `LedgerSchema` 显式注册每个 `CashBalanceKey` / `PositionBalanceKey` 及其唯一 `Scale`；注册顺序不影响 schema hash；
+- v1 的 Debit/Credit 等价财务不变量定义为 closed registered dimensions：每个 BalanceChange 和 attribution 必须落在已注册的 account/venue/currency/instrument key，且 identity 与 Scale 精确匹配；Ledger 禁止隐式 rescale、跨 key 抵消或未知维度创建。跨资产经济配平证明由产生 Entry 的 PositionAccountingModel 在 WP-03F 负责；
+- `GenericLedger.project()` 只消费经 `AccountingJournal.replay()` 验证的 prefix；`resume()` 同时验证 schema hash、cursor/prefix hash 和已有 state 的 genesis replay parity，不能信任伪造 checkpoint；
+- Cash key 始终保留显式零余额；零 Position 从 state 中移除，非零 Position 使用 `PositionBalance(lots=())`，Lot/cost-basis projection 留给 WP-03F；
+- Realized PnL、Fee 和 Financing 按注册 Cash key 的原生币种与 Scale 独立累计；未实现 PnL 不进入 Ledger State；
+- State canonical identity 包含 schema hash、Journal cursor、Cash/Position 和三类 attribution，Mapping/注册/Entry 输入顺序不能影响 state hash；
+- 对同一 Journal prefix 重复 project/resume 是幂等 no-op；负现金、Short Position 和已发生风险暴露是合法 truthful state。
 
 验收：
 
 - 初始资本、买入、费用、卖出、实现损益可通过 Journal replay 重建；
 - Ledger 不读取市场价格计算未实现损益；
-- 重放产生 exact 相同 State hash；
-- 未注册 Account/Balance Key、不合法 Schema 或不满足 Debit/Credit 等价财务不变量的 Entry 明确失败；
+- genesis→end 与 genesis→cursor→resume 产生 exact 相同 State hash；
+- 未注册 Account/Balance Key、Scale/identity 不匹配、伪造 cursor 或伪造 resume state 明确失败；
 - 负现金、Short Position 或 Margin breach 不由 Ledger 拒绝，已发生 Fill 必须如实入账；
-- 经济权限违规由独立 PostTradeRiskBreach/IntegrityFinding Fixture 验证。
+- 经济权限违规、具体 Fill-to-Journal 配平、Lot 和 CostBasisPolicy 不在本 WP 实现。
 
 ### WP-03C MarkResolver
 
