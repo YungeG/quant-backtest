@@ -65,7 +65,7 @@ artifact_hashes: []
 | WP-02B | PASSED | trading-domain | WP-02A | none |
 | WP-02C | PASSED | trading-domain | WP-02A, WP-02B | none |
 | WP-02D | PASSED | trading-domain | WP-02A, WP-02C | none |
-| WP-02E | DRAFT | trading-domain | WP-01D | Envelope/Catalog fixtures |
+| WP-02E | READY | trading-domain | WP-01D | none |
 | WP-02F | DRAFT | trading-kernel | WP-02A–WP-02D | Kernel Profile Port contracts |
 | WP-02G | DRAFT | backtest-runtime | WP-02A–WP-02D | Simulation Port contracts |
 | WP-02H | DRAFT | trading-domain | WP-02A–WP-02E | Error taxonomy catalog |
@@ -1150,7 +1150,70 @@ mypy                                                                    no issue
 Python                                                                  3.13.5
 ```
 
-## 17. PASSED 记录格式
+## 17. WP-02E Acceptance Card
+
+```yaml
+id: WP-02E
+status: READY
+depends_on:
+  - WP-01D
+owner_package: trading-domain
+public_interface:
+  - crypto_quant_domain.ArtifactEnvelope
+  - crypto_quant_domain.ArtifactSchemaRegistration
+  - crypto_quant_domain.ArtifactWriteResult
+  - crypto_quant_domain.ArtifactReadResult
+  - crypto_quant_domain.SchemaCatalog
+  - crypto_quant_domain.ArtifactCatalogError
+  - crypto_quant_domain.UnknownArtifactTypeError
+  - crypto_quant_domain.UnsupportedSchemaVersionError
+  - crypto_quant_domain.ArtifactIntegrityError
+  - crypto_quant_domain.ArtifactDecodeError
+test_commands:
+  contract: uv run pytest -q tests/domain/artifacts/test_schema_catalog.py
+  fixture: uv run pytest -q tests/domain/artifacts/test_artifact_envelope_golden.py
+  boundary: uv run pytest -q tests/domain/canonical/test_canonical_encoding.py tests/domain/canonical/test_canonical_golden.py tests/architecture/test_public_api_imports.py tests/architecture/test_repository_cleanliness.py
+fixture_ids:
+  - artifact-envelope-catalog-v1
+expected_artifacts:
+  - tests/fixtures/domain/artifact-envelope-catalog-v1.json
+  - build/acceptance/wp-02e-pytest.xml
+failure_contracts:
+  - invalid-artifact-type
+  - invalid-artifact-schema-version
+  - invalid-artifact-content-hash
+  - artifact-content-hash-mismatch
+  - duplicate-artifact-type-registration
+  - unknown-artifact-type
+  - unsupported-artifact-schema-version
+  - writer-version-override
+  - malformed-artifact-json
+  - duplicate-artifact-json-key
+  - noncanonical-artifact-source-bytes
+  - artifact-payload-decode-failure
+allowed_grade: development
+evidence:
+  - pytest-report
+  - artifact-envelope-fixture-hash
+  - public-api-import-report
+passed_commit: null
+artifact_hashes: []
+```
+
+### WP-02E Readiness
+
+已冻结 v1 Artifact Envelope 与 Schema Catalog seam：
+
+1. `ArtifactEnvelope` 的 canonical 形状固定为 `artifact_type`、`schema_version`、`payload` 和 `content_hash`；`content_hash` 是 `{artifact_type, schema_version, payload}` canonical body 的 SHA-256，不递归覆盖自身；
+2. `SchemaCatalog` 每个 Artifact type 只注册一个当前版本和一个 payload reader；构造后不可增加、替换或回退版本；
+3. `write_current()` 由 Catalog 选择已注册当前版本，调用方不能覆盖 schema version；输出必须是 canonical UTF-8 JSON bytes；
+4. `read()` 只接受 canonical UTF-8 JSON，先验证 Envelope、content hash、Artifact type 和当前 schema version，再 dispatch payload reader；未知 type/version、重复 JSON key、非 canonical bytes 和 reader failure 均 fail closed；
+5. `ArtifactWriteResult` 和 `ArtifactReadResult` 保存完整原始 `source_bytes` 及其独立 `source_hash`；raw bytes 不进入 canonical domain graph，不允许被重新编码后冒充原始证据；
+6. 本 WP 只实现 current-version read/write，不实现 Migration、version negotiation、fallback reader、Artifact store、filesystem layout、compression、signing 或 encryption；首个真实 immutable 旧 Artifact 出现前不得发明 v0 fixture。
+
+WP-02E 当前状态为 `READY`。
+
+## 18. PASSED 记录格式
 
 ```yaml
 id: WP-00A
