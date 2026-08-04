@@ -763,15 +763,19 @@ v1 Candidate Schema 固定为：
 
 ### WP-05B ResourceReservationBook
 
-拥有：Working Order 的 Cash、Sellable Quantity、Margin 和额度承诺投影。
+拥有：Working Order 的 Cash、Sellable Quantity、Margin、Fee Reserve、Order Capacity 和 Exposure Capacity 承诺投影。
+
+本 WP 的 Book 不计算 Reservation。调用方必须提供与 Order Event 对齐的 immutable `OrderReservationSchedule`：一个明确的 Accepted/Activated activation update，以及每个 Partial Fill 后的 exact remaining commitment。不同资源类别不做隐式比例缩放、币种转换或相互净额化。
 
 验收：
 
-- Submit/accept 增加预留；
-- Partial Fill 按剩余承诺缩减；
-- Cancel/expire/reject/fill 终态零泄漏；
-- Reservation 不是 Journal Entry；
-- replay 重建 exact 相同状态。
+- 显式 Accepted/Activated activation update 增加预留但不会重复冻结；
+- 每个 Partial Fill 必须提供与 exact remaining Quantity 对齐、各资源维度不增加的 replacement commitment；
+- Cancel/expire/reject/fill 终态释放该 Order 的全部预留，零泄漏；
+- Book 保留逐 Order commitment 和 account-level typed totals，输入/Stream/Schedule 顺序不改变 state hash；
+- 重复 identical Event replay 幂等；冲突 Event 继续由 OrderEventStream fail closed；
+- prefix resume 必须先重建并验证 prior state，再得到与 full replay exact 相同的最终 state hash；
+- Reservation 不是 Journal、Settlement 或 Availability，也不读取 Profile，不自行计算 commitment。
 
 ### WP-05C SettlementBook/AvailabilityProjection
 

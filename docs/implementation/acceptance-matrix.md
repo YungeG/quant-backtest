@@ -84,7 +84,7 @@ artifact_hashes: []
 | WP-04E | PASSED | trading-kernel | WP-04D, WP-03C | none |
 | G04 | PASSED | trading-kernel | WP-04A–WP-04E | none |
 | WP-05A | PASSED | trading-kernel | G02 | none |
-| WP-05B | DRAFT | trading-kernel | WP-05A | Reservation replay fixtures |
+| WP-05B | READY | trading-kernel | WP-05A | none |
 | WP-05C | DRAFT | trading-kernel | WP-03B, WP-05B | Settlement/availability fixtures |
 | WP-05D | DRAFT | trading-kernel | G04, WP-05A–WP-05C | Rebalance fixtures |
 | WP-05E | DRAFT | trading-kernel | WP-05D | Capability fixtures |
@@ -2809,7 +2809,76 @@ uv lock --check                                                    PASS
 Python                                                             3.13.5
 ```
 
-## 36. PASSED 记录格式
+## 36. WP-05B ResourceReservationBook Acceptance Card
+
+```yaml
+id: WP-05B
+status: READY
+depends_on:
+  - WP-05A
+owner_package: trading-kernel
+public_interface:
+  - crypto_quant_trading.ReservationCommitment
+  - crypto_quant_trading.OrderReservationUpdate
+  - crypto_quant_trading.OrderReservationSchedule
+  - crypto_quant_trading.ActiveOrderReservation
+  - crypto_quant_trading.OrderReservationCursor
+  - crypto_quant_trading.ResourceReservationState
+  - crypto_quant_trading.ResourceReservationBook
+  - crypto_quant_trading.ResourceReservationError
+  - crypto_quant_trading.ReservationEvidenceError
+  - crypto_quant_trading.ReservationStateMismatchError
+test_commands:
+  contract: uv run pytest -q tests/kernel/reservations/test_resource_reservation_book.py
+  fixture: uv run pytest -q tests/kernel/reservations/test_resource_reservation_golden.py
+  boundary: uv run pytest -q tests/architecture/test_public_api_imports.py tests/architecture/test_repository_cleanliness.py
+fixture_ids:
+  - resource-reservation-replay-v1
+expected_artifacts:
+  - tests/fixtures/kernel/resource-reservation-replay-v1.json
+  - build/acceptance/wp-05b-pytest.xml
+  - build/acceptance/wp-05b-import-boundary-report.json
+failure_contracts:
+  - empty-or-negative-resource-entry
+  - duplicate-resource-dimension
+  - account-order-or-quantity-context-mismatch
+  - missing-duplicate-or-extra-order-schedule
+  - missing-or-multiple-activation-update
+  - activation-update-not-bound-to-accepted-or-activated-event
+  - missing-duplicate-or-extra-partial-fill-update
+  - update-remaining-quantity-mismatch
+  - partial-update-increases-or-introduces-resource-dimension
+  - update-source-evidence-hash-invalid
+  - terminal-order-reservation-leak
+  - reservation-evidence-used-as-journal-settlement-or-availability
+  - forged-prefix-cursor-or-prior-state
+  - input-order-dependent-reservation-state
+allowed_grade: development
+evidence:
+  - pytest-report
+  - resource-reservation-replay-golden-fixture-hash
+  - deterministic-prefix-resume-and-state-hashes
+  - public-api-import-report
+  - import-boundary-report
+  - static-type-report
+passed_commit: null
+artifact_hashes: []
+```
+
+### WP-05B Acceptance
+
+冻结以下边界：
+
+1. `ReservationCommitment` 分别保存 positive Cash、Sellable Quantity、Margin、Fee Reserve、Order Capacity 和 Exposure Capacity；零值通过省略表达，类别之间不隐式净额化、换算或共享 identity；
+2. `OrderReservationSchedule` 是调用方提供的 immutable evidence，不是 Book 计算结果。它绑定一个 Order、一个 canonical source proposal hash、恰好一个 `OrderAccepted` 或 `OrderActivated` activation update，以及该 Order 每个 Partial Fill 的 exact replacement update；
+3. 每个 update 的 remaining Quantity 必须与对应 Event replay 后的 `OrderState.remaining_quantity` exact identity/Scale/units 一致。Partial update 不得增加已有资源单位或引入新资源维度；固定 Order Capacity/Fee 类承诺可以保持不变；
+4. Activation 只发生一次。后续 Accepted/Activated Event 不重复冻结；Cancel、Reject、Expire 或 Final Fill 进入终态时无条件释放该 Order 全部 remaining commitment；
+5. `ResourceReservationBook` 只接受同一显式 Execution Account 的 `OrderEventStream`，保留逐 Order active reservation，并产生按 Currency/Instrument 分类的 account-level exact totals。Stream、Schedule 和资源 tuple 输入顺序不改变 canonical state hash；
+6. 相同 Event 由 `OrderEventStream` 幂等去重，因此重复 replay 不重复冻结。Book 的 prefix resume 必须从 supplied Stream prefix 独立重建 prior state 并验证 cursor/state hash；伪造或陈旧 state fail closed；
+7. Reservation 不进入 Accounting Journal，不表示 Settlement Obligation 或 Availability，不读取 Market/Account Profile，也不自行推导 worst-case commitment。具体 proposal 由后续 Market Rule、Fee Reservation 和 Account semantics 组合提供；
+8. 本 WP 不实现 Settlement/Availability、Rebalance、Capability/Translation/MarketRule/PreTradeRisk 行为、Fee Assessment、Accounting、Ledger mutation 或 Runtime orchestration。
+
+## 37. PASSED 记录格式
 
 ```yaml
 id: WP-00A

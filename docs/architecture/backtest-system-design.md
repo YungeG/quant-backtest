@@ -820,6 +820,8 @@ Fill                    → convert to Accounting Journal facts
 
 Reservation 必须引用 Order ID，并可从 Order Event Stream 重建。MarketSemanticsProfile 和 ExecutionAccountProfile 共同定义具体 Reservation 计算规则。终态订单不得继续占用资源，重复 Event 不得重复冻结。
 
+Generic `ResourceReservationBook` 只投影 supplied immutable reservation evidence，不实现上述规则计算。每个 Order 的 `OrderReservationSchedule` 必须指定恰好一个 Accepted 或 Activated Event 作为 activation point，并为每个后续 Partial Fill 提供与 exact remaining Quantity 对齐的 replacement commitment。Cash、Sellable Quantity、Margin、Fee Reserve、Order Capacity 和 Exposure Capacity 分类别保留；Partial Fill 更新不得增加任何既有维度或引入新维度，固定承诺可以保持不变。Cancel、Reject、Expire 或 Final Fill 无条件释放全部剩余 commitment。Book 只能在同一 Execution Account 内聚合 typed totals，不把 Reservation 写入 Journal、SettlementBook 或 AvailabilityProjection。
+
 ### 8.15 SettlementBook 与 AvailabilityProjection
 
 Fill 发生后立即记录经济风险和 PnL，但资产或现金是否可卖、可交易或可提现由 Settlement 状态决定。
