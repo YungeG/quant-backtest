@@ -94,7 +94,7 @@ artifact_hashes: []
 | WP-05I | PASSED | trading-kernel | WP-05B, WP-05H | none |
 | WP-05J | PASSED | trading-kernel | WP-02F, WP-03A | none |
 | G05 | PASSED | trading-kernel | G04, WP-05A–WP-05J | none |
-| WP-06A | DRAFT | market-data-contracts | G02 | Reader/Cursor contract commands |
+| WP-06A | READY | market-data-contracts | G02 | none |
 | WP-06B | DRAFT | backtest-runtime | WP-01B, WP-06A | Timeline fixtures |
 | WP-06C | DRAFT | backtest-runtime | G04, WP-06A–WP-06B | TargetStream fixtures |
 | WP-06D | DRAFT | backtest-runtime | WP-02G, WP-03C | Slippage fixtures |
@@ -3760,7 +3760,78 @@ uv lock --check                                                    PASS
 Python                                                             3.13.5
 ```
 
-## 46. PASSED 记录格式
+## 46. WP-06A Acceptance Card
+
+```yaml
+id: WP-06A
+status: READY
+depends_on:
+  - G02
+owner_package: market-data-contracts
+public_interface:
+  - crypto_quant_market_data.MarketBundleCapability
+  - crypto_quant_market_data.MarketStreamManifest
+  - crypto_quant_market_data.MarketBundleManifest
+  - crypto_quant_market_data.MarketBundleRef
+  - crypto_quant_market_data.MarketEvent
+  - crypto_quant_market_data.InputValidationIssueCode
+  - crypto_quant_market_data.InputValidationIssue
+  - crypto_quant_market_data.InputValidationFailure
+  - crypto_quant_market_data.MarketBundleReader
+  - crypto_quant_market_data.EventCursor
+  - crypto_quant_market_data.InMemoryMarketBundleReader
+  - crypto_quant_market_data.MarketBundleError
+  - crypto_quant_market_data.MarketBundleIntegrityError
+  - crypto_quant_market_data.MarketBundleStreamError
+test_commands:
+  contract: uv run pytest -q tests/market_data/bundles/test_market_bundle_reader.py
+  fixture: uv run pytest -q tests/market_data/bundles/test_market_bundle_reader_golden.py
+  boundary: uv run pytest -q tests/architecture/test_public_api_imports.py tests/architecture/test_repository_cleanliness.py
+fixture_ids:
+  - in-memory-market-bundle-reader-v1
+expected_artifacts:
+  - tests/fixtures/market_data/in-memory-market-bundle-reader-v1.json
+  - build/acceptance/wp-06a-pytest.xml
+  - build/acceptance/wp-06a-import-boundary-report.json
+failure_contracts:
+  - malformed-market-event-envelope
+  - noncanonical-market-event-payload
+  - invalid-event-availability-causality
+  - duplicate-stream-ordering-key
+  - manifest-stream-set-mismatch
+  - stream-content-hash-mismatch
+  - bundle-reference-hash-mismatch
+  - missing-required-bundle-capability
+  - unknown-market-stream
+  - invalid-cursor-batch-size
+  - cursor-position-out-of-range
+  - cursor-cross-bundle-or-stream-resume
+  - reader-source-adapter-or-network-leakage
+allowed_grade: development
+evidence:
+  - pytest-report
+  - in-memory-market-bundle-reader-fixture-hash
+  - deterministic-page-size-parity-hashes
+  - public-api-import-report
+  - import-boundary-report
+  - static-type-report
+passed_commit: null
+artifact_hashes: []
+```
+
+### WP-06A Acceptance
+
+冻结以下实现边界：
+
+1. `MarketBundleManifest` 是当前读取侧最小不可变 Manifest：声明 Bundle key/schema、半开覆盖区间、Instrument Catalog hash、canonical capability 集和逐 Stream 的 event count/content hash；`MarketBundleRef` 以 Manifest canonical hash 作为内容地址，不包含文件路径、供应商连接或可变 repository 状态；
+2. `MarketBundleCapability` 与 Stream key 都是 canonical NFC text。Capability 只声明读取方可验证的语义能力；本 WP 不定义真实市场 coverage report，也不推断 Profile requirements；
+3. `MarketEvent` 是 immutable typed envelope，保存 deterministic Market Event ID、Stream/Event type、可选 typed Instrument、event time、available time、Timeline phase/source sequence、revision/source identity/hash 和 canonical payload。Timeline ordering 使用 `(available_time.epoch_nanoseconds, phase.rank, phase.code, source_sequence.value)`；同一 Stream 的 ordering key 必须唯一，`available_time < event_time` fail closed；
+4. `MarketBundleReader` 是只读 Protocol。`EventCursor` 只保存 immutable Bundle/Stream/position/batch-size token，不携带完整事件集合；Reader 以 Cursor 返回有界 batch 和新 Cursor。不同正 batch size 拼接后必须得到相同 event ID/hash 序列，Cursor/Reader 不读取 wall clock；
+5. `InMemoryMarketBundleReader` 只用于 Fixture/development：构造时验证 Ref→Manifest hash、Manifest→Stream set/count/content hash、Event stream identity 和 ordering-key uniqueness。输入 Mapping/tuple 顺序不得改变 Bundle、Manifest、Cursor 或 event sequence identity；
+6. 缺少 required capability 或请求未知 Stream 返回 canonical structured `InputValidationFailure`，不在本层映射为 `BLOCKED`。Malformed envelope、hash mismatch、重复 ordering key、非法 Cursor position/cross-stream resume 作为 fail-closed typed reader/integrity error；
+7. Runtime 后续只能依赖 `market-data-contracts` 的这些读取接口，不得依赖 `market-bundle-builder`、Source Adapter、Pandas/Parquet/Vendor SDK 或网络。Parquet/columnar Adapter、Builder/Repository publish、Timeline merge、ObservationView、TargetStream、Bar Execution、Run Outcome 和 Evidence publication 不属于本 WP。
+
+## 47. PASSED 记录格式
 
 ```yaml
 id: WP-00A
