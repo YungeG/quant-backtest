@@ -590,6 +590,8 @@ Backtest Runtime 根据 `InputOrigin` 映射失败：Runtime Strategy 的未处�
 
 Contract violation 包括未知或未上市 Instrument、重复 Target、observed-through 越过 Decision Time、非法 effective time、Schema 错误和 float-to-fixed quantization 失败。合法但超出风险预算的 economic target 不属于 Contract violation，应交给 Portfolio Risk approve、clamp 或 reject。非法 Candidate 不进入 canonical execution trace，但 payload hash 和 Validation Report 必须进入失败证据。
 
+Validator 的可信输入使用 `StrategyOutputValidationContext` 固定 expected Strategy/Sleeve identity、authoritative Decision Time、InstrumentCatalog 和已在该时点解析完成的 Universe。Validator 不自行查询或推断 Universe。Candidate v1 目标数值仅允许 integer、`Decimal` 或 canonical decimal string exact 转换到 scale 12；bool/float、非有限值和需要 rounding 的值均 fail closed。ValidationFailure 只保存稳定 type-tagged payload evidence hash 和规范排序 Issue，不获得 Candidate 的 canonical execution authority。
+
 ### 8.6 StrategyAllocation
 
 ```python

@@ -77,7 +77,7 @@ artifact_hashes: []
 | WP-03E | PASSED | trading-kernel | WP-03B–WP-03D | none |
 | WP-03F | PASSED | trading-kernel | WP-03A–WP-03E | none |
 | G03 | PASSED | trading-kernel + parity | WP-03A–WP-03F | none |
-| WP-04A | DRAFT | trading-kernel | G02 | Candidate validation fixtures |
+| WP-04A | READY | trading-kernel | G02 | none |
 | WP-04B | DRAFT | trading-kernel | WP-04A | Atomic batch fixtures |
 | WP-04C | DRAFT | trading-kernel | WP-04B, G03 | Allocation/netting fixtures |
 | WP-04D | DRAFT | trading-kernel | WP-04C | Portfolio Risk fixtures |
@@ -2193,7 +2193,74 @@ uv lock --check                                                        PASS
 Python                                                                 3.13.5
 ```
 
-## 29. PASSED 记录格式
+## 29. WP-04A Acceptance Card
+
+```yaml
+id: WP-04A
+status: READY
+depends_on:
+  - G02
+owner_package: trading-kernel
+public_interface:
+  - crypto_quant_trading.StrategyOutputValidationContext
+  - crypto_quant_trading.StrategyValidationIssueCode
+  - crypto_quant_trading.StrategyValidationIssue
+  - crypto_quant_trading.StrategyValidationFailure
+  - crypto_quant_trading.StrategyValidationResult
+  - crypto_quant_trading.StrategyOutputValidator
+test_commands:
+  contract: uv run pytest -q tests/kernel/validation/test_strategy_output_validator.py
+  fixture: uv run pytest -q tests/kernel/validation/test_strategy_output_validator_golden.py
+  boundary: uv run pytest -q tests/architecture/test_public_api_imports.py tests/architecture/test_repository_cleanliness.py
+fixture_ids:
+  - strategy-output-validation-v1
+expected_artifacts:
+  - tests/fixtures/kernel/strategy-output-validation-v1.json
+  - build/acceptance/wp-04a-pytest.xml
+  - build/acceptance/wp-04a-import-boundary-report.json
+failure_contracts:
+  - missing-or-unexpected-candidate-schema-field
+  - invalid-field-type-or-canonical-text
+  - strategy-or-sleeve-identity-mismatch
+  - candidate-decision-time-mismatch
+  - observed-through-after-decision-time
+  - effective-time-before-decision-time
+  - expiry-not-after-effective-time
+  - unknown-instrument
+  - instrument-outside-point-in-time-universe
+  - duplicate-target-instrument
+  - float-or-inexact-fixed-scale-quantization
+  - invalid-confidence-scale-or-range
+  - noncanonical-reason-or-evidence
+  - invalid-candidate-entering-canonical-execution-trace
+  - input-origin-or-run-outcome-mapping-leakage
+allowed_grade: development
+evidence:
+  - pytest-report
+  - strategy-output-validation-golden-fixture-hash
+  - candidate-payload-evidence-hash
+  - public-api-import-report
+  - import-boundary-report
+  - static-type-report
+passed_commit: null
+artifact_hashes: []
+```
+
+### WP-04A Readiness
+
+已冻结以下边界：
+
+1. `StrategyOutputValidationContext` 是 Validator 的可信调用上下文，只包含 expected Strategy/Sleeve identity、authoritative Decision Time、`InstrumentCatalog` 和该时点已解析的 point-in-time Universe；Validator 不推断 Universe 或上市状态；
+2. Candidate v1 顶层 Schema 固定为 `schema_version/strategy_id/sleeve_id/decision_time/observed_through/effective_time/expires_at/targets/confidence/reason/evidence`。未知或缺失字段产生结构化 Issue，不被忽略；
+3. 每个 Target 固定使用 `instrument_id: {venue, stable_key}` 与 `value`。`value` 仅接受 integer、`Decimal` 或 canonical decimal string，并 exact 转换为 scale-12 units；bool/float、NaN/Infinity 和超过 12 位不可精确量化的值 fail closed，禁止隐式 rounding；
+4. Confidence 使用相同 exact decimal-to-scale-12 边界并额外限制 `[0, 1]`；Target 的经济杠杆范围不属于 Validator；
+5. Unknown Instrument、Universe 外 Instrument、重复 Target、identity/time causality、reason/evidence canonical failure 均作为稳定排序的 `StrategyValidationIssue` 返回；不静默删除 Target，不产生部分 Decision；
+6. `StrategyValidationFailure` 保存稳定 type-tagged Candidate payload evidence hash；原始 `StrategyDecisionCandidate` 由调用者作为失败证据保留，但 Candidate/Failure 都不能进入 canonical execution trace；
+7. Validator 既不接收 `InputOrigin`，也不映射 FAILED/BLOCKED，不实现 DecisionBatch、Allocation/Netting、Risk、Sizing、Order Planning、Strategy invocation 或 Runtime orchestration。
+
+WP-04A 当前状态为 `READY`。
+
+## 30. PASSED 记录格式
 
 ```yaml
 id: WP-00A

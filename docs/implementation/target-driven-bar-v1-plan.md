@@ -649,6 +649,14 @@ Gate 冻结验收：
 - 只有 Validated StrategyDecision 可以进入 DecisionBatch；
 - 正常经济风险超限不在此模块处理。
 
+v1 Candidate Schema 固定为：
+
+- 顶层字段：`schema_version/strategy_id/sleeve_id/decision_time/observed_through/effective_time/expires_at/targets/confidence/reason/evidence`，缺失或未知字段 fail closed；
+- Target 字段：`instrument_id: {venue, stable_key}` 与 `value`；value 仅接受 integer、`Decimal` 或 canonical decimal string，exact 转为 scale-12 units；
+- bool/float、NaN/Infinity、超过 12 位且不能 exact 量化的数值禁止隐式 rounding；
+- Validator 接收可信 `StrategyOutputValidationContext`：expected Strategy/Sleeve、authoritative Decision Time、InstrumentCatalog 和该时点已解析 Universe；它不读取 InputOrigin、不推断 Universe；
+- ValidationFailure 保存稳定 Candidate payload evidence hash 和规范排序 Issue；Candidate/Failure 均不进入 canonical execution trace。
+
 ### WP-04B Atomic DecisionBatch
 
 拥有：同一 Decision Instant 的 Validated StrategyDecision 原子收集与稳定 batch identity。
