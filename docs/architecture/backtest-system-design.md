@@ -557,7 +557,7 @@ observed_through <= decision_time
 real_value = units / 10**scale
 ```
 
-其 canonical scale 由 Trading Domain schema version 固定，不由单个 Strategy 任意选择。
+其 canonical scale 由 Trading Domain schema version 固定，不由单个 Strategy 任意选择。v1 固定为 12 位小数（`real_value = units / 10**12`），足以 exact 表达现有 round-12 Strategy weight；经济杠杆范围由 Portfolio Risk 而不是数据契约限制。
 
 第一阶段它是 Portfolio Strategy 唯一允许的目标单位：
 
@@ -938,7 +938,7 @@ Event ordering 只使用 UtcInstant。Exchange local time 仅用于 Source parsi
 系统必须区分：
 
 | 时间 | 含义 |
-|---|---|
+| --- | --- |
 | `event_time` | 市场事件实际发生时间 |
 | `available_time` | 数据对策略可见的时间 |
 | `decision_time` | 策略作出决策的时间 |

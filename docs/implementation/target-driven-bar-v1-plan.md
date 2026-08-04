@@ -343,8 +343,9 @@ crypto_quant_domain.numeric
 
 验收：
 
-- Candidate 可以保留重复 Instrument、未知 Instrument、非法时间和未量化值，用于结构化验证；
-- Validated TargetSnapshot 是完整、绝对、原子集合，不能包含重复 Instrument；
+- Candidate 使用 immutable decoded-data tree，可以保留重复 Instrument、未知 Instrument、非法时间和未量化值，用于结构化验证，但拒绝 DataFrame、Broker DTO、Engine reference 和其他非数据对象；
+- TargetExposureFraction 使用 InstrumentId 和 signed integer units，v1 canonical scale 固定为 12；
+- Validated TargetSnapshot 是完整、绝对、原子集合，允许空集合表示全部归零，不能包含重复 Instrument；
 - Candidate 不是权威执行对象，不进入 canonical execution trace；
 - Decision Time、Observed Through、Effective Time 使用 UtcInstant；
 - 数据契约不包含 DataFrame、Broker DTO 或 Engine reference。

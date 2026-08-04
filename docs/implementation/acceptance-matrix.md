@@ -51,7 +51,7 @@ artifact_hashes: []
 所有项目默认 `DRAFT`。`TBD before READY` 是明确阻断，不是可在实现中补充的占位符。
 
 | ID | Status | Owner | Depends On | Readiness blocker |
-|---|---|---|---|---|
+| --- | --- | --- | --- | --- |
 | WP-00A | PASSED | repository root | none | none |
 | WP-00B | PASSED | repository root | WP-00A | none |
 | WP-00C | PASSED | repository root + parity tooling | WP-00B | none |
@@ -62,7 +62,7 @@ artifact_hashes: []
 | WP-01D | PASSED | trading-domain | WP-01A–WP-01C | none |
 | G01 | PASSED | trading-domain | WP-01A, WP-01B, WP-01C, WP-01D | none |
 | WP-02A | PASSED | trading-domain | G01 | none |
-| WP-02B | DRAFT | trading-domain | WP-02A | Candidate/Validated wire fixtures |
+| WP-02B | READY | trading-domain | WP-02A | none |
 | WP-02C | DRAFT | trading-domain | WP-02A | Order/Execution schema fixtures |
 | WP-02D | DRAFT | trading-domain | WP-02A | Accounting schema fixtures |
 | WP-02E | DRAFT | trading-domain | WP-01D | Envelope/Catalog fixtures |
@@ -875,7 +875,69 @@ mypy                                                                     no issu
 Python                                                                   3.13.5
 ```
 
-## 14. PASSED 记录格式
+## 14. WP-02B Acceptance Card
+
+```yaml
+id: WP-02B
+status: READY
+depends_on:
+  - WP-02A
+owner_package: trading-domain
+public_interface:
+  - crypto_quant_domain.StrategyDecisionPayload
+  - crypto_quant_domain.StrategyDecisionCandidate
+  - crypto_quant_domain.StrategySleeveId
+  - crypto_quant_domain.TargetExposureFraction
+  - crypto_quant_domain.TargetSnapshot
+  - crypto_quant_domain.StrategyDecision
+  - crypto_quant_domain.DecisionBatch
+  - crypto_quant_domain.ActivePortfolioTarget
+test_commands:
+  contract: uv run pytest -q tests/domain/decisions/test_decision_contracts.py
+  fixture: uv run pytest -q tests/domain/decisions/test_target_decision_golden.py
+  boundary: uv run pytest -q tests/architecture/test_public_api_imports.py tests/architecture/test_repository_cleanliness.py
+fixture_ids:
+  - target-decision-contracts-v1
+expected_artifacts:
+  - tests/fixtures/domain/target-decision-contracts-v1.json
+  - build/acceptance/wp-02b-pytest.xml
+failure_contracts:
+  - unsupported-candidate-payload-value
+  - candidate-enters-canonical-trace
+  - invalid-strategy-sleeve-id
+  - noncanonical-target-exposure-scale
+  - duplicate-target-instrument
+  - observed-through-after-decision
+  - effective-time-before-decision
+  - invalid-target-expiry
+  - noncanonical-decision-evidence
+  - mixed-decision-batch-time
+  - duplicate-decision-batch-sleeve
+  - active-target-quantity-identity-mismatch
+  - duplicate-active-target-instrument
+allowed_grade: development
+evidence:
+  - pytest-report
+  - target-decision-fixture-hash
+  - public-api-import-report
+passed_commit: null
+artifact_hashes: []
+```
+
+### WP-02B Readiness
+
+已冻结 v1 Target/Decision 数据契约：
+
+1. `StrategyDecisionPayload` 是 immutable decoded-data tree；它保留重复 Target、未知 Instrument、非法时间和尚未量化的 `float`/字符串值，但拒绝 DataFrame、Broker DTO、Engine reference 和其他非数据对象；
+2. `StrategyDecisionCandidate` 只包装 Payload，不提供 canonical serialization，因此不能进入权威 execution trace；
+3. `StrategySleeveId` 使用 canonical non-empty text；`TargetExposureFraction` 使用 `InstrumentId + signed integer units`，v1 canonical scale 固定为 12，不在本 WP 限制经济杠杆；
+4. Validated `TargetSnapshot` 是同一 Sleeve 的完整、绝对、原子替换集合；允许空集合表示全部归零，拒绝重复 Instrument，`expires_at` 必须晚于 `effective_time`；
+5. Validated `StrategyDecision` 使用 `UtcInstant`，强制 `observed_through <= decision_time <= effective_time`；confidence 使用 basis=`confidence`、scale=12、范围 `[0, 1]` 的 `Rate`，evidence 必须是 immutable canonical mapping；
+6. `DecisionBatch` 数据契约要求非空、同一 Decision Time、每个 Sleeve 唯一；`decision_batch_id` 由调用方提供 canonical text，稳定派生属于 WP-04B；
+7. `ActivePortfolioTarget` 保存 materialization instant、source decision batch identity 和按 `InstrumentId` 绑定的 exact `Quantity`；typed InstrumentId 必须与既有 Quantity canonical string identity 一致，重复 Instrument 被拒绝；
+8. 本 WP 不拥有 Candidate→Validated 校验流程、Capital Allocation、Portfolio Risk、Position Sizing 或 DecisionBatch 构建算法。
+
+## 15. PASSED 记录格式
 
 ```yaml
 id: WP-00A
