@@ -326,7 +326,7 @@ crypto_quant_domain.numeric
 
 ### WP-02A Instrument 与 Currency identity
 
-拥有：InstrumentId、VenueId、CurrencyId、InstrumentDefinition、SymbolTimeline 和基础 Instrument type discriminator。
+拥有：InstrumentId、VenueId、CurrencyId、InstrumentDefinition、SymbolTimeline、InstrumentCatalog 和基础 Instrument type discriminator。InstrumentId 使用 Venue + stable key，Symbol 仅存在于 half-open SymbolTimeline；Catalog 拥有 Currency/Instrument 引用完整性。
 
 验收：
 

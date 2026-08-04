@@ -61,7 +61,7 @@ artifact_hashes: []
 | WP-01C | PASSED | trading-domain | WP-01B | none |
 | WP-01D | PASSED | trading-domain | WP-01A–WP-01C | none |
 | G01 | PASSED | trading-domain | WP-01A, WP-01B, WP-01C, WP-01D | none |
-| WP-02A | DRAFT | trading-domain | G01 | Instrument identity fixtures |
+| WP-02A | READY | trading-domain | G01 | none |
 | WP-02B | DRAFT | trading-domain | WP-02A | Candidate/Validated wire fixtures |
 | WP-02C | DRAFT | trading-domain | WP-02A | Order/Execution schema fixtures |
 | WP-02D | DRAFT | trading-domain | WP-02A | Accounting schema fixtures |
@@ -804,7 +804,65 @@ Trading-domain import boundary                                           PASS (1
 Python                                                                   3.13.5
 ```
 
-## 13. PASSED 记录格式
+## 13. WP-02A Acceptance Card
+
+```yaml
+id: WP-02A
+status: READY
+depends_on:
+  - G01
+owner_package: trading-domain
+public_interface:
+  - crypto_quant_domain.CurrencyId
+  - crypto_quant_domain.VenueId
+  - crypto_quant_domain.InstrumentId
+  - crypto_quant_domain.InstrumentType
+  - crypto_quant_domain.InstrumentDefinition
+  - crypto_quant_domain.SymbolInterval
+  - crypto_quant_domain.SymbolTimeline
+  - crypto_quant_domain.InstrumentCatalog
+test_commands:
+  contract: uv run pytest -q tests/domain/instruments/test_identities.py
+  fixture: uv run pytest -q tests/domain/instruments/test_symbol_timeline.py
+  boundary: uv run pytest -q tests/architecture/test_public_api_imports.py tests/architecture/test_repository_cleanliness.py
+fixture_ids:
+  - instrument-identity-timeline-v1
+expected_artifacts:
+  - tests/fixtures/domain/instrument-identity-timeline-v1.json
+failure_contracts:
+  - invalid-currency-id
+  - invalid-venue-id
+  - invalid-instrument-id
+  - unknown-currency-reference
+  - unknown-instrument-reference
+  - duplicate-instrument-definition
+  - overlapping-symbol-interval
+  - missing-symbol-at-instant
+  - symbol-rename-changes-identity
+allowed_grade: development
+evidence:
+  - pytest-report
+  - instrument-fixture-hash
+  - public-api-import-report
+passed_commit: null
+artifact_hashes: []
+```
+
+### WP-02A Readiness
+
+已冻结 v1 Instrument identity：
+
+1. `CurrencyId` 使用 uppercase canonical code；`VenueId` 使用 lowercase canonical code；
+2. `InstrumentId` 由 `VenueId + stable_key` 构成，stable key 不是交易 Symbol，允许字母、数字、`.`、`_`、`:`、`/`、`-`；
+3. `InstrumentType` v1 支持 spot、equity、linear_perpetual、inverse_perpetual、future、option 和 fx；
+4. `InstrumentDefinition` 包含 immutable identity、type、可选 base currency、quote currency 和 settlement currency；
+5. `SymbolTimeline` 使用按 `effective_from` 排序的 half-open interval，同一 Instrument 不允许重叠；Symbol 改名不改变 InstrumentId；
+6. `InstrumentCatalog` 是引用完整性边界，拒绝重复 Currency/Instrument、未知 Currency reference 和未知 Timeline Instrument；
+7. Instrument rule、lot、tick、margin 和 fee 不属于本 WP。
+
+WP-02A 当前状态为 `READY`，根据持续推进授权可直接实施。
+
+## 14. PASSED 记录格式
 
 ```yaml
 id: WP-00A
