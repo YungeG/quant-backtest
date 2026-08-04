@@ -1611,7 +1611,7 @@ G02: WP-02A → WP-02B → WP-02C → WP-02D → WP-02E → WP-02F → WP-02G �
 G03: WP-03A → WP-03B → WP-03C → WP-03D → WP-03E → WP-03F → review
 ```
 
-`WP-00A Workspace skeleton`、WP-00B Dependency boundary checks 和 WP-00C Legacy Baseline/Migration Harness 均已通过验收，G00 聚合 Acceptance Card 已建立。用户已授权按 Gate 顺序持续推进；Agent 可以在每个 WP 的 Acceptance Card 达到 `READY` 后直接实施、验收和提交，不再逐项等待确认。任何测试、Parity、Boundary 或 Evidence 失败仍必须先停止并修复；外部供应商、真实数据或不可逆市场语义未被现有文档决定时必须明确阻断，不能自行猜测。
+G00 与 G01 已通过验收；Workspace、Dependency Boundary、Legacy Baseline、Typed Scaled Integer、权威时间、确定性 ID 和 Canonical Hash 均已有不可变实现基线。用户已授权按 Gate 顺序持续推进；Agent 可以在每个 WP 的 Acceptance Card 达到 `READY` 后直接实施、验收和提交，不再逐项等待确认。任何测试、Parity、Boundary 或 Evidence 失败仍必须先停止并修复；外部供应商、真实数据或不可逆市场语义未被现有文档决定时必须明确阻断，不能自行猜测。
 
 到 G03 再做一次 Foundation Release Review：
 

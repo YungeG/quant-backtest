@@ -60,7 +60,7 @@ artifact_hashes: []
 | WP-01B | PASSED | trading-domain | WP-01A | none |
 | WP-01C | PASSED | trading-domain | WP-01B | none |
 | WP-01D | PASSED | trading-domain | WP-01A–WP-01C | none |
-| G01 | READY | trading-domain | WP-01A, WP-01B, WP-01C, WP-01D | none |
+| G01 | PASSED | trading-domain | WP-01A, WP-01B, WP-01C, WP-01D | none |
 | WP-02A | DRAFT | trading-domain | G01 | Instrument identity fixtures |
 | WP-02B | DRAFT | trading-domain | WP-02A | Candidate/Validated wire fixtures |
 | WP-02C | DRAFT | trading-domain | WP-02A | Order/Execution schema fixtures |
@@ -743,7 +743,7 @@ Python                                                                   3.13.5
 
 ```yaml
 id: G01
-status: READY
+status: PASSED
 depends_on:
   - WP-01A
   - WP-01B
@@ -782,13 +782,27 @@ evidence:
   - four-fixture-hashes
   - pytest-report
   - import-boundary-report
-passed_commit: null
-artifact_hashes: []
+passed_commit: fb50a193956464430dc573c05a654023eaa872cc
+artifact_hashes:
+  tests/fixtures/domain/numeric-boundaries-v1.json: sha256:f74f4f5d4870de6d5977b3b65d317b0d7e6aac5816e54df7115c0e0287e3941b
+  tests/fixtures/domain/time-dst-boundaries-v1.json: sha256:70554c97f2ae43c0e6fdae26d435a40e0ef619b97769e95d0d882a668c3ef901
+  tests/fixtures/domain/deterministic-domain-ids-v1.json: sha256:4691c2467d6c8d16fead46f79f5602ceae1e561ace4990ae055f306f77fe48e4
+  tests/fixtures/domain/canonical-envelope-v1.json: sha256:b60ffff75d09be85cef3fe6b1d8293691d565583095c82510b2397d4722d5031
+  build/acceptance/g01-domain-pytest.xml: sha256:8670e6ed4e7ea56ca9b1700339520b90e3810577762293d5950a4c1d8c84caf7
+  build/acceptance/g01-import-boundary-report.json: sha256:43a990caf66f8800daa8500d29f158cffbd5df3cc732687717c0aade4340575b
 ```
 
-### G01 Readiness
+### G01 Acceptance
 
-WP-01A 至 WP-01D 已分别通过。G01 只聚合验证 exact numeric、time ordering、identity 和 canonical hash，不增加 Instrument、Order、Ledger 或 Runtime 语义。当前状态为 `READY`，根据持续推进授权可直接执行。
+WP-01A 至 WP-01D 已分别通过。G01 聚合验证冻结在 immutable commit `fb50a193956464430dc573c05a654023eaa872cc`，状态为 `PASSED`。
+
+验证记录：
+
+```text
+Domain foundation contracts + fixtures                                  58 passed
+Trading-domain import boundary                                           PASS (13 files)
+Python                                                                   3.13.5
+```
 
 ## 13. PASSED 记录格式
 
