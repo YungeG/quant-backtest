@@ -679,7 +679,16 @@ v1 Candidate Schema 固定为：
 
 ### WP-04C Capital allocation 与 Sleeve netting
 
-拥有：Allocation NAV、Strategy Sleeve 状态和账户级净额化。
+拥有：显式版本化 Allocation Policy evidence、每个 Strategy Sleeve 的 supplied Allocation NAV、精确 Target Notional 转换和账户级净额化。
+
+冻结边界：
+
+- Allocator 只消费 `LatestSleeveDecisionState`、同一 valuation instant 的权威 `PortfolioSnapshot`、显式 `CapitalAllocationPolicyRef`、每个 active Sleeve 恰好一个 `StrategyAllocation` 和显式 target-notional Scale；它不调用 Policy callback，也不发明默认 Allocation；
+- `StrategyAllocation` 必须绑定 Strategy/Sleeve、valuation time/currency、source Snapshot hash 和非负 Allocation NAV；总 Allocation NAV 不能超过 Snapshot Equity，违反约束返回结构化 Decision 且不产生部分结果；
+- Target Exposure Fraction 到 native Target Notional 使用整数精确换算到调用方声明的 Scale；需要 rounding 的输入 fail closed，rounding 只允许在 WP-04E Position Sizing 的显式边界发生；
+- 每个 Instrument 保留完整 Sleeve attribution，并在账户级求和；完全相反的 Sleeve target 产生显式零净目标而不丢失 attribution；
+- 输入、Mapping、Strategy 注册和 Allocation tuple 顺序不影响 allocation identity、net target 或 evidence hash；
+- 不实现 Price/Quantity conversion、Portfolio Risk、ActivePortfolioTarget、Order、Ledger mutation、Strategy invocation 或 allocation policy execution。
 
 验收：
 

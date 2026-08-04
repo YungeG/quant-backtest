@@ -79,7 +79,7 @@ artifact_hashes: []
 | G03 | PASSED | trading-kernel + parity | WP-03A–WP-03F | none |
 | WP-04A | PASSED | trading-kernel | G02 | none |
 | WP-04B | PASSED | trading-kernel | WP-04A | none |
-| WP-04C | DRAFT | trading-kernel | WP-04B, G03 | Allocation/netting fixtures |
+| WP-04C | READY | trading-kernel | WP-04B, G03 | none |
 | WP-04D | DRAFT | trading-kernel | WP-04C | Portfolio Risk fixtures |
 | WP-04E | DRAFT | trading-kernel | WP-04D, WP-03C | Sizing/materialization fixtures |
 | WP-05A | DRAFT | trading-kernel | G02 | Order lifecycle fixtures |
@@ -2364,7 +2364,77 @@ uv lock --check                                                        PASS
 Python                                                                 3.13.5
 ```
 
-## 31. PASSED 记录格式
+## 31. WP-04C Acceptance Card
+
+```yaml
+id: WP-04C
+status: READY
+depends_on:
+  - WP-04B
+  - G03
+owner_package: trading-kernel
+public_interface:
+  - crypto_quant_trading.CapitalAllocationPolicyRef
+  - crypto_quant_trading.StrategyAllocation
+  - crypto_quant_trading.SleeveTargetNotional
+  - crypto_quant_trading.NetInstrumentTarget
+  - crypto_quant_trading.PortfolioAllocation
+  - crypto_quant_trading.AllocationConstraintCode
+  - crypto_quant_trading.AllocationConstraintDecision
+  - crypto_quant_trading.CapitalAllocationFailure
+  - crypto_quant_trading.PortfolioAllocationOutcome
+  - crypto_quant_trading.PortfolioAllocator
+test_commands:
+  contract: uv run pytest -q tests/kernel/allocation/test_portfolio_allocator.py
+  fixture: uv run pytest -q tests/kernel/allocation/test_portfolio_allocator_golden.py
+  boundary: uv run pytest -q tests/architecture/test_public_api_imports.py tests/architecture/test_repository_cleanliness.py
+fixture_ids:
+  - capital-allocation-netting-v1
+expected_artifacts:
+  - tests/fixtures/kernel/capital-allocation-netting-v1.json
+  - build/acceptance/wp-04c-pytest.xml
+  - build/acceptance/wp-04c-import-boundary-report.json
+failure_contracts:
+  - empty-or-unbound-latest-sleeve-state
+  - missing-duplicate-or-unexpected-sleeve-allocation
+  - strategy-or-sleeve-allocation-identity-mismatch
+  - allocation-valuation-time-currency-scale-or-snapshot-mismatch
+  - negative-allocation-nav
+  - total-allocation-nav-exceeds-portfolio-equity
+  - target-not-yet-effective-or-expired
+  - target-notional-inexact-at-declared-scale
+  - partial-allocation-result-on-constraint-failure
+  - lost-sleeve-attribution-or-zero-net-target
+  - registration-mapping-or-input-order-dependent-result
+  - allocation-policy-callback-or-default-policy
+  - price-quantity-risk-active-target-order-or-ledger-leakage
+allowed_grade: development
+evidence:
+  - pytest-report
+  - capital-allocation-netting-golden-fixture-hash
+  - deterministic-allocation-and-net-target-hashes
+  - public-api-import-report
+  - import-boundary-report
+  - static-type-report
+passed_commit: null
+artifact_hashes: []
+```
+
+### WP-04C Readiness
+
+已冻结以下边界：
+
+1. `PortfolioAllocator` 只消费 immutable `LatestSleeveDecisionState`、同一 valuation instant 的权威 `PortfolioSnapshot`、显式版本化 `CapitalAllocationPolicyRef`、每个 active Sleeve 恰好一个 supplied `StrategyAllocation` 和显式 target-notional Scale；没有 Policy callback 或默认 Policy；
+2. `StrategyAllocation` 绑定 expected Strategy/Sleeve、valuation time/currency、非负 Allocation NAV 与 source Snapshot hash。缺失、重复、unexpected、identity/time/currency/scale/hash 不一致均返回稳定排序的 `AllocationConstraintDecision`，不能产生部分 Portfolio Allocation；
+3. 全部 Allocation NAV 使用 Snapshot reporting Currency/Scale，总量不能超过 Snapshot Equity；负 Equity 不允许隐式正 Allocation，违反约束返回显式 failure；
+4. `TargetExposureFraction × Allocation NAV` 使用整数运算 exact 转换到调用方声明的 target-notional Scale；不能整除时 fail closed，不在本 WP rounding；
+5. 每个 Instrument 的 account-level target 保存 canonical-sorted Sleeve attribution。相反目标完全抵消时仍保留显式零 `NetInstrumentTarget`，Sleeve attribution 不建立虚拟 Cash、Ledger 或 Equity；
+6. State、Allocation tuple、Target 和 Mapping 顺序不影响 allocation identity、result hash 或 net target；
+7. 本 WP 不执行 Allocation Policy、读取 Price/Market/Profile，不实现 Quantity sizing、Portfolio Risk、ActivePortfolioTarget、Order Planning、Strategy invocation 或 Ledger mutation。
+
+WP-04C 当前状态为 `READY`。
+
+## 32. PASSED 记录格式
 
 ```yaml
 id: WP-00A
