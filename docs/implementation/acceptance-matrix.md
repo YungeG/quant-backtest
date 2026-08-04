@@ -87,7 +87,7 @@ artifact_hashes: []
 | WP-05B | PASSED | trading-kernel | WP-05A | none |
 | WP-05C | PASSED | trading-kernel | WP-03B, WP-05B | none |
 | WP-05D | PASSED | trading-kernel | G04, WP-05A–WP-05C | none |
-| WP-05E | READY | trading-kernel | WP-05D | none |
+| WP-05E | PASSED | trading-kernel | WP-05D | none |
 | WP-05F | DRAFT | trading-kernel | WP-05E | Translation fixtures |
 | WP-05G | DRAFT | trading-kernel | WP-05F, WP-02F | Market rule fixtures |
 | WP-05H | DRAFT | trading-kernel | WP-05G, WP-02F | Fee reservation fixtures |
@@ -3102,7 +3102,7 @@ Python                                                            3.13.5
 
 ```yaml
 id: WP-05E
-status: READY
+status: PASSED
 depends_on:
   - WP-05D
 owner_package: trading-kernel
@@ -3145,11 +3145,14 @@ evidence:
   - public-api-import-report
   - import-boundary-report
   - static-type-report
-passed_commit: null
-artifact_hashes: []
+passed_commit: 7230fbd75ed73c42ea663b9e500ff8d8f4b32b02
+artifact_hashes:
+  tests/fixtures/kernel/order-capability-validation-v1.json: sha256:78e15472aa2469f675d302ee1a89883ed2d75852c1be7c111c6d750038b08a22
+  build/acceptance/wp-05e-pytest.xml: sha256:95a59c78f42984946ae11b0492276cd2ed3eca19976c5e2164d5d764c583782b
+  build/acceptance/wp-05e-import-boundary-report.json: sha256:57f48c3ec8e5dab13ec3fe2651a3b34b1701dd7d9b4c3e2f00e8482cd9316ee8
 ```
 
-### WP-05E Readiness
+### WP-05E Acceptance
 
 冻结以下边界：
 
@@ -3162,7 +3165,23 @@ artifact_hashes: []
 7. Validator 返回的新对象不得修改或替换 Intent 字段，不允许 Market→Limit、TIF、reduce-only、position-effect 或其他语义降级；
 8. 本 WP 不实现 Order Translation、ExecutableOrderSpec、Market Rules、Fee Reservation、Pre-trade Risk、quantity/price rounding、Profile resolution、Venue DTO、Submission 或 Runtime orchestration。
 
-WP-05E 当前状态为 `READY`。
+WP-05E 的实现已冻结在 immutable commit `7230fbd75ed73c42ea663b9e500ff8d8f4b32b02`，状态为 `PASSED`。
+
+验证记录：
+
+```text
+Order Capability Validator contract tests                          9 passed
+Order Capability canonical golden fixture                          1 passed
+Public API + repository cleanliness boundaries                     5 passed
+Acceptance test report                                            15 passed
+Trading-kernel import boundary                                     PASS (37 files)
+Full test suite                                                   363 passed
+mypy                                                               no issues (22 files)
+Primary LSP                                                        clean
+pi-lens scoped review                                              no findings after 2 signature-shape false positives
+uv lock --check                                                    PASS
+Python                                                             3.13.5
+```
 
 ## 40. PASSED 记录格式
 
