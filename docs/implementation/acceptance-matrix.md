@@ -56,7 +56,7 @@ artifact_hashes: []
 | WP-00B | PASSED | repository root | WP-00A | none |
 | WP-00C | PASSED | repository root + parity tooling | WP-00B | none |
 | G00 | PASSED | repository root | WP-00A, WP-00B, WP-00C | none |
-| WP-01A | DRAFT | trading-domain | G00 | Numeric Interface/fixtures/commands |
+| WP-01A | READY | trading-domain | G00 | none |
 | WP-01B | DRAFT | trading-domain | WP-01A | Time/DST fixtures/commands |
 | WP-01C | DRAFT | trading-domain | WP-01B | ID namespace/version fixtures |
 | WP-01D | DRAFT | trading-domain | WP-01A–WP-01C | Canonical golden bytes/hash |
@@ -460,7 +460,67 @@ Offline source baseline                                                  PASS (3
 Python                                                                   3.13.5
 ```
 
-## 8. PASSED 记录格式
+## 8. WP-01A Acceptance Card
+
+```yaml
+id: WP-01A
+status: READY
+depends_on:
+  - G00
+owner_package: trading-domain
+public_interface:
+  - crypto_quant_domain.Scale
+  - crypto_quant_domain.RoundingPolicy
+  - crypto_quant_domain.QuantizationPolicy
+  - crypto_quant_domain.Price
+  - crypto_quant_domain.Quantity
+  - crypto_quant_domain.Money
+  - crypto_quant_domain.Rate
+  - crypto_quant_domain.ExposureFraction
+  - canonical typed scaled integer dictionaries
+test_commands:
+  contract: uv run pytest -q tests/domain/numeric/test_scaled_values.py
+  fixture: uv run pytest -q tests/domain/numeric/test_rounding.py tests/domain/numeric/test_quantization.py
+  boundary: uv run pytest -q tests/architecture/test_public_api_imports.py tests/architecture/test_repository_cleanliness.py
+fixture_ids:
+  - numeric-boundaries-v1
+expected_artifacts:
+  - tests/fixtures/domain/numeric-boundaries-v1.json
+failure_contracts:
+  - implicit-cross-domain-arithmetic
+  - identity-mismatch
+  - implicit-scale-conversion
+  - rounding-policy-required
+  - invalid-scale
+  - non-finite-analytics-value
+  - unversioned-quantization
+  - floating-point-in-canonical-value
+allowed_grade: development
+evidence:
+  - pytest-report
+  - numeric-boundary-fixture-hash
+  - public-api-import-report
+passed_commit: null
+artifact_hashes: []
+```
+
+### WP-01A Readiness
+
+已冻结 v1 数值语义：
+
+1. `Scale` 是十进制小数位数，范围 `0..18`；超出范围 fail closed；
+2. 权威存储只有 Python integer `units`，拒绝 bool/float units；
+3. 加减要求完全相同的领域类型、identity 和 Scale，不执行隐式对齐；
+4. Scale 提升、降低、乘法、除法均必须显式传入 `RoundingPolicy`；
+5. v1 Rounding 包含 toward-zero、away-from-zero、floor、ceiling、half-even 和 half-up；
+6. `QuantizationPolicy` 必须包含非空 version、目标 Scale 和 RoundingPolicy；float/Decimal 只能通过该边界进入；
+7. `Money` 使用 currency identity，`Quantity` 使用 instrument identity，`Price` 使用 instrument + quote currency identity；WP-02A 会将字符串 identity 收紧为正式领域 ID，但不改变 canonical 字段；
+8. Canonical dictionary 只包含 type、units、scale 和相应 identity，不包含 float 或 Decimal；
+9. `Price.notional(Quantity)` 和 `Money.quantity_at(Price)` 是 v1 唯一跨类型乘除入口，必须显式结果 Scale 和 RoundingPolicy。
+
+WP-01A 当前状态为 `READY`，根据持续推进授权可直接实施。
+
+## 9. PASSED 记录格式
 
 ```yaml
 id: WP-00A

@@ -269,7 +269,7 @@ crypto_quant_domain.numeric
 └── quantization
 ```
 
-拥有：Price、Quantity、Money、Rate、ExposureFraction、Scale、RoundingPolicy 和 QuantizationPolicy。
+拥有：Price、Quantity、Money、Rate、ExposureFraction、Scale、RoundingPolicy 和 QuantizationPolicy。v1 Scale 是 `0..18` 的十进制小数位数；identity 暂以非空 canonical string 表达，WP-02A 收紧为正式领域 ID 时不得改变序列化字段。跨类型运算只开放 `Price.notional(Quantity)` 和 `Money.quantity_at(Price)`。
 
 不拥有：Instrument rule、Position sizing 或 Accounting。
 
