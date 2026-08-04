@@ -96,7 +96,7 @@ artifact_hashes: []
 | G05 | PASSED | trading-kernel | G04, WP-05A–WP-05J | none |
 | WP-06A | PASSED | market-data-contracts | G02 | none |
 | WP-06B | PASSED | backtest-runtime | WP-01B, WP-06A | none |
-| WP-06C | READY | backtest-runtime | G04, WP-06A–WP-06B | none |
+| WP-06C | PASSED | backtest-runtime | G04, WP-06A–WP-06B | none |
 | WP-06D | DRAFT | backtest-runtime | WP-02G, WP-03C | Slippage fixtures |
 | WP-06E | DRAFT | backtest-runtime | G05, WP-06A–WP-06D | Next-open fixtures |
 | WP-06F | DRAFT | backtest-runtime | WP-03E, WP-05A–WP-05C, WP-06B, WP-06E | Run-end fixtures |
@@ -3947,7 +3947,7 @@ Python                                                              3.13.5
 
 ```yaml
 id: WP-06C
-status: READY
+status: PASSED
 depends_on:
   - G04
   - WP-06A
@@ -3998,8 +3998,11 @@ evidence:
   - public-api-import-report
   - import-boundary-report
   - static-type-report
-passed_commit: null
-artifact_hashes: []
+passed_commit: 1ff4e74f2021579563560bfa7a4e8c821636400e
+artifact_hashes:
+  tests/fixtures/runtime/precomputed-target-stream-injection-v1.json: sha256:1f88bb2b3260bfc80bb375e2d877ae18d5e049c80e0682f5ecbc0d137cbbd980
+  build/acceptance/wp-06c-pytest.xml: sha256:f58fd9401089d34be4bd32f83824ea6a1e138b62a62702cbbc1e98b6b70c0ba5
+  build/acceptance/wp-06c-import-boundary-report.json: sha256:06ee1b9241ba00ec8818e22e0c1cf0af902532364a7249bac0662e0fbeb584e7
 ```
 
 ### WP-06C Acceptance
@@ -4014,6 +4017,24 @@ artifact_hashes: []
 6. Active Event 成功后只返回 `TargetStreamBatchInjection`，其中保存完整 Stream digest、源 Event identities/hashes、Batch/State identity。它仅替代 Strategy computation；Allocation、Risk、Sizing、Planning、Execution、Settlement 和 Accounting 仍必须使用 G04/G05 之后的共享权威路径；
 7. Warmup Event 仍执行 Envelope decode 和 Candidate validation，使 malformed immutable input 不被隐藏；全部成功后只返回 `TargetStreamWarmupSuppression`。Warmup 不调用 Batch Collector、不修改 prior Sleeve State，也不产生 DecisionBatch 或任何交易副作用；
 8. 本 WP 不实现 Strategy invocation、ObservationView、ExecutionCase Builder、Semantic Run/Attempt、InputOrigin→Run Outcome mapping、Profile Resolver、Bar execution、Evidence publication 或任何 Builder/Source Adapter/network read。
+
+WP-06C 的实现已冻结在 immutable commit `1ff4e74f2021579563560bfa7a4e8c821636400e`，状态为 `PASSED`。
+
+验证记录：
+
+```text
+Precomputed TargetStream contract tests                              8 passed
+Canonical TargetStream golden fixture                                1 passed
+Public API + repository cleanliness boundaries                       5 passed
+Acceptance test report                                              14 passed
+Backtest-runtime import boundary                                     PASS (45 files)
+Full test suite                                                     448 passed
+mypy                                                                 no issues (7 files)
+Primary LSP                                                          clean
+pi-lens scoped review                                                no unresolved findings
+uv lock --check                                                      PASS
+Python                                                               3.13.5
+```
 
 ## 49. PASSED 记录格式
 
