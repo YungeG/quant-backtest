@@ -90,7 +90,7 @@ artifact_hashes: []
 | WP-05E | PASSED | trading-kernel | WP-05D | none |
 | WP-05F | PASSED | trading-kernel | WP-05E | none |
 | WP-05G | PASSED | trading-kernel | WP-05F, WP-02F | none |
-| WP-05H | READY | trading-kernel | WP-05G, WP-02F | none |
+| WP-05H | PASSED | trading-kernel | WP-05G, WP-02F | none |
 | WP-05I | DRAFT | trading-kernel | WP-05B, WP-05H | Pre-trade Risk fixtures |
 | WP-05J | DRAFT | trading-kernel | WP-02F, WP-03A | Fee assessment fixtures |
 | WP-06A | DRAFT | market-data-contracts | G02 | Reader/Cursor contract commands |
@@ -3372,7 +3372,7 @@ Python                                                            3.13.5
 
 ```yaml
 id: WP-05H
-status: READY
+status: PASSED
 depends_on:
   - WP-05G
   - WP-02F
@@ -3423,11 +3423,14 @@ evidence:
   - public-api-import-report
   - import-boundary-report
   - static-type-report
-passed_commit: null
-artifact_hashes: []
+passed_commit: 0ea60de5cb646e5c4e407f4e16de8aebca0d4967
+artifact_hashes:
+  tests/fixtures/kernel/worst-case-fee-reservation-v1.json: sha256:65c1b8991d5cb83099dca99c077faa28713e6a86efa0829b6fb425dea7571c6a
+  build/acceptance/wp-05h-pytest.xml: sha256:30932ab129bede780de41af77a347e8565a231c2826eb1912a50e4bd12e9ea31
+  build/acceptance/wp-05h-import-boundary-report.json: sha256:2a6fa0a28e27e20d4e118059fd6f6e88ebf0c9cf915410f8f843d9824754a8af
 ```
 
-### WP-05H Readiness
+### WP-05H Acceptance
 
 冻结以下边界：
 
@@ -3441,7 +3444,25 @@ artifact_hashes: []
 8. 订单终态的 release 由 `ResourceReservationBook` lifecycle 使用 Proposal commitment 完成；差额释放不是 FeeAssessment、Cash 变化或 Journal Entry；
 9. 本 WP 不实现最终 `FeeAssessment`、FeeCharged Journal、per-fill/order/session 聚合、具体市场 Fee/Tax schedule、Profile resolution、Pre-trade Risk、Submission、Execution、Accounting 或 Runtime orchestration。
 
-WP-05H 的 Acceptance Card 已满足实现准备条件，状态为 `READY`。
+WP-05H 的实现已冻结在 immutable commit `0ea60de5cb646e5c4e407f4e16de8aebca0d4967`，状态为 `PASSED`。
+
+验证记录：
+
+```text
+Fee Reservation Estimator contract tests                         10 passed
+Worst-case Fee Reservation canonical golden fixture               1 passed
+Public API + repository cleanliness boundaries                    5 passed
+Acceptance test report                                           16 passed
+Trading-kernel import boundary                                    PASS (40 files)
+Full test suite                                                  393 passed
+mypy                                                              no issues (25 files)
+Primary LSP                                                       clean
+pi-lens scoped review                                             no unresolved findings; 1 local helper duplicate deferred
+uv lock --check                                                   PASS
+Python                                                            3.13.5
+```
+
+一个 module-local canonical text/hash validation helper 与 `reservations.py` 形状相同，已在本 session defer；当前不为两个仍在演进的 Reservation contract 引入共享内部抽象。
 
 ## 43. PASSED 记录格式
 
