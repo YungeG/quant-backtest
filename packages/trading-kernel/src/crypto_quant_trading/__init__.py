@@ -46,13 +46,33 @@ from .ports import (
     SettlementModel,
     TaxPolicy,
 )
+from .valuation import (
+    CurrencyValuationEdge,
+    CurrencyValuationFailure,
+    CurrencyValuationFailureCode,
+    CurrencyValuationGraph,
+    CurrencyValuationOutcome,
+    CurrencyValuationPath,
+    CurrencyValuationPathRequest,
+    CurrencyValuationPathSelection,
+    CurrencyValuationResolution,
+)
 
 __version__ = "0.1.0"
 
 __all__ = [
     "AccountingJournal",
     "CorporateActionModel",
+    "CurrencyValuationEdge",
+    "CurrencyValuationFailure",
+    "CurrencyValuationFailureCode",
+    "CurrencyValuationGraph",
+    "CurrencyValuationOutcome",
+    "CurrencyValuationPath",
+    "CurrencyValuationPathRequest",
+    "CurrencyValuationPathSelection",
     "CurrencyValuationPolicy",
+    "CurrencyValuationResolution",
     "FeeAssessmentPolicy",
     "FinancingModel",
     "GenericLedger",
