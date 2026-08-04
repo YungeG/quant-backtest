@@ -67,7 +67,7 @@ artifact_hashes: []
 | WP-02D | PASSED | trading-domain | WP-02A, WP-02C | none |
 | WP-02E | PASSED | trading-domain | WP-01D | none |
 | WP-02F | PASSED | trading-kernel | WP-02A–WP-02D | none |
-| WP-02G | READY | backtest-runtime | WP-02A–WP-02D, WP-02F | none |
+| WP-02G | PASSED | backtest-runtime | WP-02A–WP-02D, WP-02F | none |
 | WP-02H | DRAFT | trading-domain | WP-02A–WP-02E | Error taxonomy catalog |
 | WP-03A | DRAFT | trading-kernel | G02 | Journal replay fixtures |
 | WP-03B | DRAFT | trading-kernel | WP-03A | Ledger projection fixtures |
@@ -1321,7 +1321,7 @@ Python                                                                  3.13.5
 
 ```yaml
 id: WP-02G
-status: READY
+status: PASSED
 depends_on:
   - WP-02A
   - WP-02B
@@ -1372,8 +1372,11 @@ evidence:
   - pytest-report
   - simulation-profile-port-fixture-hash
   - public-api-import-report
-passed_commit: null
-artifact_hashes: []
+passed_commit: 4d06d91079c68fdd281cae3a43f31cc77af9d4ff
+artifact_hashes:
+  tests/fixtures/runtime/simulation-profile-ports-v1.json: sha256:18b95808f7b71e59cbe1d5f53a0b7e7b31177fed2a37f6b396ff6cab61173f5c
+  build/acceptance/wp-02g-pytest.xml: sha256:f4ffd560997786b646eef9b8504f79e396df376b1370dca542619a6fa9879d6b
+  build/acceptance/wp-02g-import-boundary-report.json: sha256:5fac8c61736931791c9d8e552034ef09d526549b7641c50530247bf686394e0d
 ```
 
 ### WP-02G Readiness
@@ -1388,7 +1391,23 @@ artifact_hashes: []
 6. 没有 concrete/no-op/zero-slippage/unlimited-liquidity/zero-latency/automatic-closeout model。Test Adapter 只验证调用 seam，不进入任何 Production Registry；
 7. `backtest-runtime` 发布 PEP 561 `py.typed`；`trading-domain` 和 `trading-kernel` 不能反向导入它，未来 Live Runtime 也不依赖它。
 
-WP-02G 当前为 `READY`，用户的连续授权允许直接进入实现。
+WP-02G 的实现已冻结在 immutable commit `4d06d91079c68fdd281cae3a43f31cc77af9d4ff`，状态为 `PASSED`。
+
+验证记录：
+
+```text
+Simulation Profile Port contract tests                                 17 passed
+Canonical golden fixture                                                1 passed
+Public API + repository cleanliness boundaries                         5 passed
+Acceptance test report                                                 23 passed
+Backtest-runtime import boundary                                        PASS (20 files)
+Full test suite                                                        184 passed
+mypy                                                                    no issues (4 files)
+Primary LSP                                                             clean
+pi-lens scoped review                                                   no blocking findings; 2 intentional type-separation duplication warnings deferred
+uv lock --check                                                         PASS
+Python                                                                  3.13.5
+```
 
 ## 20. PASSED 记录格式
 
