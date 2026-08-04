@@ -93,7 +93,7 @@ artifact_hashes: []
 | WP-05H | PASSED | trading-kernel | WP-05G, WP-02F | none |
 | WP-05I | PASSED | trading-kernel | WP-05B, WP-05H | none |
 | WP-05J | PASSED | trading-kernel | WP-02F, WP-03A | none |
-| G05 | DRAFT | trading-kernel | G04, WP-05A–WP-05J | Target-to-accepted-order aggregate journey |
+| G05 | READY | trading-kernel | G04, WP-05A–WP-05J | none |
 | WP-06A | DRAFT | market-data-contracts | G02 | Reader/Cursor contract commands |
 | WP-06B | DRAFT | backtest-runtime | WP-01B, WP-06A | Timeline fixtures |
 | WP-06C | DRAFT | backtest-runtime | G04, WP-06A–WP-06B | TargetStream fixtures |
@@ -3669,7 +3669,77 @@ Python                                                            3.13.5
 
 Reservation and final Fee contracts intentionally remain nominally separate so a worst-case reservation can never become Accounting authority. Six jscpd findings on their parallel version/hash/canonical shapes were marked structural false positives. One small explicit FeeCharged Journal construction duplicate remains session-deferred until aggregate G05 confirms the final composition seam.
 
-## 45. PASSED 记录格式
+## 45. G05 Target-to-Accepted-Order Aggregate Acceptance Card
+
+```yaml
+id: G05
+status: READY
+depends_on:
+  - G04
+  - WP-05A
+  - WP-05B
+  - WP-05C
+  - WP-05D
+  - WP-05E
+  - WP-05F
+  - WP-05G
+  - WP-05H
+  - WP-05I
+  - WP-05J
+owner_package: trading-kernel
+public_interface:
+  - no-new-production-api
+  - tests.kernel.integration.test_order_acceptance_journey
+  - tests/fixtures/kernel/target-to-accepted-order-journey-v1.json
+test_commands:
+  journey: uv run pytest -q tests/kernel/integration/test_order_acceptance_journey.py
+  component_fixtures: uv run pytest -q tests/kernel/rebalance/test_rebalance_coordinator_golden.py tests/kernel/capabilities/test_order_capability_golden.py tests/kernel/translation/test_order_translator_golden.py tests/kernel/market_rules/test_market_rule_golden.py tests/kernel/fee_reservations/test_fee_reservation_golden.py tests/kernel/pretrade_risk/test_pretrade_risk_golden.py tests/kernel/orders/test_order_event_stream_golden.py tests/kernel/fees/test_fee_assessment_golden.py
+  boundary: uv run pytest -q tests/architecture/test_public_api_imports.py tests/architecture/test_repository_cleanliness.py
+fixture_ids:
+  - target-to-accepted-order-journey-v1
+expected_artifacts:
+  - tests/fixtures/kernel/target-to-accepted-order-journey-v1.json
+  - build/acceptance/g05-pytest.xml
+  - build/acceptance/g05-import-boundary-report.json
+failure_contracts:
+  - active-target-quantity-rounded-again-by-order-path
+  - duplicate-working-order-created-on-repeated-evidence
+  - capability-rejection-misclassified-as-translation-market-rule-risk-or-execution
+  - translation-rejection-misclassified-as-capability-market-rule-risk-or-execution
+  - market-rule-rejection-or-data-integrity-misclassified-as-capability-translation-risk-or-execution
+  - fee-reservation-failure-reused-as-final-fee-or-misclassified
+  - pretrade-economic-rejection-misclassified-as-contract-or-upstream-failure
+  - rejected-stage-still-produces-submission-or-accepted-order-state
+  - accepted-order-state-bypasses-required-gate-event-order
+  - synthetic-fill-mutated-to-carry-final-fee
+  - duplicate-final-fee-basis-double-charged-in-journal
+  - timeline-bar-engine-runtime-profile-resolver-or-network-leakage
+allowed_grade: development
+evidence:
+  - pytest-report
+  - target-to-accepted-order-canonical-golden-fixture-hash
+  - deterministic-plan-order-gate-state-fee-and-journal-hashes
+  - distinct-stage-failure-type-report
+  - public-api-import-report
+  - import-boundary-report
+  - static-type-report
+passed_commit: null
+artifact_hashes: []
+```
+
+### G05 Acceptance
+
+冻结以下 aggregate 边界：
+
+1. Fixture 从 G04 已物化的 `NormalizedPortfolioTarget/ActivePortfolioTarget` 开始，经 `RebalanceCoordinator` 产生 exact `PlannedOrder`；Order path 必须逐字保留已物化 Quantity，不执行第二次 rounding/sizing/risk；
+2. 每个 Order 依次通过 Capability、Translation、MarketRule、Fee Reservation、PreTradeRisk，再以对应 immutable decision/evidence 创建 Order Events。`OrderEventStream` 必须按 Gate 顺序到达 `ACCEPTED`；任一 rejected/failure stage 都不能产生 Submission 或 Accepted state；
+3. 相同 Target/Snapshot/Working/Reservation/Availability/Policy evidence 的 repeated tick 返回同一 Plan，不产生重复 working coverage；
+4. Capability rejection、Translation rejection、MarketRule rejection、MarketRule DataIntegrityFailure、Fee Reservation failure、PreTrade economic rejection 与 Contract Failure 保持 nominal 类型和 canonical reason code 隔离，不映射为 Execution/Run Outcome；
+5. FeeReservationEstimate 只进入 Reservation proposal。独立 supplied Synthetic Fill 保持 immutable 且无最终 fee 字段，随后由 WP-05J 产生 deterministic `FeeAssessment` 和 `FeeCharged` Journal Entry；相同 basis/IDs 重放由 Assessment identity + immutable Journal ID/hash 幂等；
+6. Journey Golden 记录 Active Target、Plan、Order、全部 Gate decision、Accepted OrderState、independent Fill、FeeAssessment 和 FeeCharged Journal 的稳定 ID/hash；输入 tuple/mapping/registration 顺序不改变权威结果；
+7. 本 Gate 不需要 Market Timeline、Bar/Execution Engine、Profile Resolver、具体市场规则、数据/网络读取、Ledger replay、Runtime Outcome、Semantic Run 或 Evidence publication，也不新增 Production API。
+
+## 46. PASSED 记录格式
 
 ```yaml
 id: WP-00A
