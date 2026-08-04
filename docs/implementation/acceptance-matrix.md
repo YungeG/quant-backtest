@@ -60,6 +60,7 @@ artifact_hashes: []
 | WP-01B | PASSED | trading-domain | WP-01A | none |
 | WP-01C | PASSED | trading-domain | WP-01B | none |
 | WP-01D | PASSED | trading-domain | WP-01A–WP-01C | none |
+| G01 | READY | trading-domain | WP-01A, WP-01B, WP-01C, WP-01D | none |
 | WP-02A | DRAFT | trading-domain | G01 | Instrument identity fixtures |
 | WP-02B | DRAFT | trading-domain | WP-02A | Candidate/Validated wire fixtures |
 | WP-02C | DRAFT | trading-domain | WP-02A | Order/Execution schema fixtures |
@@ -738,7 +739,58 @@ mypy                                                                     no issu
 Python                                                                   3.13.5
 ```
 
-## 12. PASSED 记录格式
+## 12. G01 Acceptance Card
+
+```yaml
+id: G01
+status: READY
+depends_on:
+  - WP-01A
+  - WP-01B
+  - WP-01C
+  - WP-01D
+owner_package: trading-domain
+public_interface:
+  - exact typed scaled integer foundation
+  - nanosecond UTC and deterministic simulation ordering
+  - versioned deterministic domain identities
+  - canonical bytes and SHA-256 envelopes
+test_commands:
+  contract: uv run pytest -q tests/domain/numeric tests/domain/time tests/domain/identity tests/domain/canonical
+  fixture: uv run pytest -q tests/domain --junitxml=build/acceptance/g01-domain-pytest.xml
+  boundary: uv run python tools/architecture/check_import_boundaries.py --root . --policy architecture/import-boundaries.toml --report build/acceptance/g01-import-boundary-report.json
+fixture_ids:
+  - numeric-boundaries-v1
+  - time-dst-boundaries-v1
+  - deterministic-domain-ids-v1
+  - canonical-envelope-v1
+expected_artifacts:
+  - tests/fixtures/domain/numeric-boundaries-v1.json
+  - tests/fixtures/domain/time-dst-boundaries-v1.json
+  - tests/fixtures/domain/deterministic-domain-ids-v1.json
+  - tests/fixtures/domain/canonical-envelope-v1.json
+  - build/acceptance/g01-domain-pytest.xml
+  - build/acceptance/g01-import-boundary-report.json
+failure_contracts:
+  - numeric-regression
+  - temporal-regression
+  - identity-drift
+  - canonical-hash-drift
+  - trading-domain-dependency-violation
+allowed_grade: development
+evidence:
+  - four-fixture-hashes
+  - pytest-report
+  - import-boundary-report
+passed_commit: null
+artifact_hashes: []
+```
+
+### G01 Readiness
+
+WP-01A 至 WP-01D 已分别通过。G01 只聚合验证 exact numeric、time ordering、identity 和 canonical hash，不增加 Instrument、Order、Ledger 或 Runtime 语义。当前状态为 `READY`，根据持续推进授权可直接执行。
+
+## 13. PASSED 记录格式
 
 ```yaml
 id: WP-00A
