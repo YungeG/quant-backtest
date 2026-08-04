@@ -91,7 +91,7 @@ artifact_hashes: []
 | WP-05F | PASSED | trading-kernel | WP-05E | none |
 | WP-05G | PASSED | trading-kernel | WP-05F, WP-02F | none |
 | WP-05H | PASSED | trading-kernel | WP-05G, WP-02F | none |
-| WP-05I | DRAFT | trading-kernel | WP-05B, WP-05H | Pre-trade Risk fixtures |
+| WP-05I | READY | trading-kernel | WP-05B, WP-05H | none |
 | WP-05J | DRAFT | trading-kernel | WP-02F, WP-03A | Fee assessment fixtures |
 | WP-06A | DRAFT | market-data-contracts | G02 | Reader/Cursor contract commands |
 | WP-06B | DRAFT | backtest-runtime | WP-01B, WP-06A | Timeline fixtures |
@@ -3464,7 +3464,85 @@ Python                                                            3.13.5
 
 一个 module-local canonical text/hash validation helper 与 `reservations.py` 形状相同，已在本 session defer；当前不为两个仍在演进的 Reservation contract 引入共享内部抽象。
 
-## 43. PASSED 记录格式
+## 43. WP-05I PreTradeRisk Acceptance Card
+
+```yaml
+id: WP-05I
+status: READY
+depends_on:
+  - WP-05B
+  - WP-05H
+owner_package: trading-kernel
+public_interface:
+  - crypto_quant_trading.FeeReserveFundingSource
+  - crypto_quant_trading.ExposureCapacityLimit
+  - crypto_quant_trading.AccountRiskPolicy
+  - crypto_quant_trading.PreTradeResourceRequirement
+  - crypto_quant_trading.PreTradeRiskEvaluationInput
+  - crypto_quant_trading.PreTradeRiskReasonCode
+  - crypto_quant_trading.PreTradeRiskCheck
+  - crypto_quant_trading.PreTradeRiskApproval
+  - crypto_quant_trading.PreTradeRiskRejection
+  - crypto_quant_trading.PreTradeRiskContractIssueCode
+  - crypto_quant_trading.PreTradeRiskContractIssue
+  - crypto_quant_trading.PreTradeRiskContractFailure
+  - crypto_quant_trading.PreTradeRiskOutcome
+  - crypto_quant_trading.PreTradeRiskEvaluator
+test_commands:
+  contract: uv run pytest -q tests/kernel/pretrade_risk/test_pretrade_risk.py
+  fixture: uv run pytest -q tests/kernel/pretrade_risk/test_pretrade_risk_golden.py
+  boundary: uv run pytest -q tests/architecture/test_public_api_imports.py tests/architecture/test_repository_cleanliness.py
+fixture_ids:
+  - exact-pretrade-risk-decision-v1
+expected_artifacts:
+  - tests/fixtures/kernel/exact-pretrade-risk-decision-v1.json
+  - build/acceptance/wp-05i-pytest.xml
+  - build/acceptance/wp-05i-import-boundary-report.json
+failure_contracts:
+  - non-approved-market-rule-or-mismatched-fee-proposal
+  - pretrade-evaluation-before-fee-estimation
+  - forged-account-risk-policy-or-resource-requirement
+  - account-venue-order-or-source-evidence-context-mismatch
+  - stale-reservation-hash-in-availability-state
+  - fee-reserve-not-exactly-included-in-resource-requirement
+  - missing-cash-position-margin-or-capacity-dimension
+  - resource-currency-instrument-or-scale-mismatch
+  - missing-exposure-capacity-policy-coverage
+  - account-order-permission-economic-rejection
+  - insufficient-tradable-cash-sellable-quantity-or-available-margin
+  - order-or-exposure-capacity-exceeded
+  - valid-economic-rejection-misclassified-as-contract-failure
+  - pretrade-clamp-order-mutation-or-replanning
+  - market-rule-execution-profile-resolution-submission-accounting-or-runtime-leakage
+allowed_grade: development
+evidence:
+  - pytest-report
+  - exact-pretrade-risk-canonical-golden-fixture-hash
+  - deterministic-policy-requirement-input-check-decision-and-failure-hashes
+  - public-api-import-report
+  - import-boundary-report
+  - static-type-report
+passed_commit: null
+artifact_hashes: []
+```
+
+### WP-05I Readiness
+
+冻结以下边界：
+
+1. `PreTradeRiskEvaluator` 只消费 immutable `MarketRuleApproval`、匹配的 WP-05H `ResourceReservationProposal`、supplied `PreTradeResourceRequirement`、当前 `ResourceReservationState`、当前 `AvailabilityState`、显式版本化 `AccountRiskPolicy` 和 authoritative Evaluation Instant；不调用 Profile/Rule/Reader/账户服务；
+2. `PreTradeResourceRequirement` 保存 source Order、Market Rule decision/hash、Fee Proposal/hash、完整 `ReservationCommitment` 和版本化 source evidence。Requirement 的 `fee_reserve` 必须 exact 等于 Fee Proposal；Generic Evaluator 不推导 Spot/Margin/Derivative resource formula；
+3. `AccountRiskPolicy` 绑定 Account/Venue、允许 Side/PositionEffect/reduce-only 值、Fee Reserve 使用 `tradable_cash` 或 `available_margin`、Order Capacity 上限和逐 Currency/Scale Exposure Capacity 上限。所有配置进入 config hash，不存在 no-op/default policy；
+4. Availability 必须 exact 引用 supplied Reservation State hash。Cash commitment 与使用 Tradable Cash 的 Fee Reserve 按 Currency/Scale 合并比较 `CashAvailability.tradable`；Margin 与使用 Available Margin 的 Fee Reserve合并比较 `available_margin`；Sellable Quantity 按 Instrument/Scale 比较 `PositionAvailability.sellable`；禁止跨 Currency、Instrument 或资源类别 netting；
+5. Order Capacity 使用 current reservation units + proposed units 与 Policy 上限比较；Exposure Capacity 按 Currency/Scale使用 current + proposed 与显式 Policy limit 比较。缺少 limit/resource dimension 或 identity/scale mismatch 是 Contract Failure，不是经济拒绝；
+6. 合法且完整的输入只产生 Approval 或 `PreTradeRiskRejection`。账户权限、资源不足和容量超限是 canonical Economic checks/rejection；它们不变成 Validation/MarketRule/DataIntegrity/Execution rejection；
+7. Approval/Rejection 保存 unchanged source Order/Executable Spec、Market Rule、Fee Proposal、完整 requirement、Reservation/Availability hashes、Policy identity 和全部 checks。相同输入及 tuple 顺序变化产生相同 Decision identity；
+8. 任一 Contract/Data Failure 都不产生部分 Approval/Rejection；Evaluator 不能 clamp、修改 Order、回到 Rebalance 或生成替代订单；
+9. 本 WP 不实现 Portfolio Risk、Capability/Translation/MarketRule/Fee estimation、Profile resolution、Submission、Execution、Accounting、Ledger mutation 或 Runtime Outcome mapping。
+
+WP-05I 已满足 Readiness 条件，状态为 `READY`。
+
+## 44. PASSED 记录格式
 
 ```yaml
 id: WP-00A

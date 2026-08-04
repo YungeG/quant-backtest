@@ -769,7 +769,7 @@ OrderCapabilityValidator 只判断 canonical 语义是否受支持；OrderTransl
 
 `MarketRuleEvaluator` 只消费 supplied immutable `OrderRuleTimeline`。Timeline 按 Evaluation Instant 从半开有效区间中解析且必须恰好命中一个 `OrderRuleInterval`；缺失或重叠产生 `DataIntegrityFailure`，禁止回退最后规则或当前交易所规则。Snapshot 绑定 `ORDER_RULE_MODEL` Component identity、Instrument、Session、`QuantityLattice`、Price tick/limits、permissions 和显式 supplemental rule decisions。Evaluator 只验证，不能再次舍入或修改 Price/Quantity。Minimum Notional 使用显式 `OrderRuleNotionalEvidence`：constraint basis 必须 exact 引用 Intent Price，supplied reference basis 必须携带 source hash；Generic Kernel 不自行选择市场价、FX path 或 stablecoin peg。具体 A 股/Binance 规则只由后续 Profile Adapter 构造 Snapshot/Timeline，Generic Evaluator 不含市场条件分支。
 
-Portfolio Risk 位于上游目标层，可以显式 approve、clamp 或 reject。Pre-trade Risk 位于具体订单层，只能 approve 或 reject，不得修改 Price、Quantity 或 TIF。它使用 Accounting Ledger State、现有 Resource Reservations 和拟议订单的 worst-case reservation 进行判断。若拒绝后允许重试，由 RebalanceCoordinator 根据显式 RebalancePolicy 重新规划。
+Portfolio Risk 位于上游目标层，可以显式 approve、clamp 或 reject。Pre-trade Risk 位于具体订单层，只能 approve 或 reject，不得修改 Price、Quantity 或 TIF。它使用当前 Availability、现有 Resource Reservations、Fee 的 worst-case `ResourceReservationProposal` 以及 supplied immutable 完整 `ReservationCommitment` requirement 进行判断。完整 requirement 由 Market/Account Profile 组合提供并绑定 source Order、Market Rule 和 Fee Proposal identity；Generic PreTradeRisk 不自行猜测 Spot、Margin 或 Derivative 的资源公式。Cash、Sellable Quantity、Margin、Fee Reserve、Order Capacity 和 Exposure Capacity 必须分类比较；Fee Reserve 使用 Tradable Cash 还是 Available Margin 由显式版本化 Account Risk Policy 声明。若拒绝后允许重试，由 RebalanceCoordinator 根据显式 RebalancePolicy 重新规划。
 
 ```text
 OrderIntentCreated

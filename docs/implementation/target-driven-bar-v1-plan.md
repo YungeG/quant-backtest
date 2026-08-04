@@ -897,16 +897,20 @@ v1 Candidate Schema 固定为：
 
 ### WP-05I PreTradeRisk
 
-拥有：使用 ExecutableOrderSpec、Available Resources 和 worst-case Reservation Proposal 进行 approve/reject。
+拥有：使用 unchanged approved `ExecutableOrderSpec`、`MarketRuleApproval`、Fee 的 worst-case `ResourceReservationProposal`、supplied immutable 完整 `ReservationCommitment` requirement、当前 `ResourceReservationState`、`AvailabilityState` 和显式版本化 `AccountRiskPolicy` 进行 approve/reject。完整 requirement 是后续 Market/Account Profile 组合产生的输入证据；Generic PreTradeRisk 只验证其来源绑定并比较资源，不自行推导 Spot/Margin/Derivative 公式。
 
 不拥有：修改 Quantity、Price、TIF、Order Type 或上游 Target。
 
 验收：
 
-- 只能返回 Approval 或 PreTradeRiskRejection；
-- 决策记录账户/Reservation State hash 和 Policy identity；
-- 相同状态和订单产生相同 Decision；
-- MarketRule、PreTradeRisk 和 Execution rejection 分类不同。
+- 只能返回 Approval 或 PreTradeRiskRejection；合法经济不足不是 Contract/Data Failure；
+- `AccountRiskPolicy` 显式声明 Account/Venue、Order permissions、Fee Reserve 使用 Tradable Cash 或 Available Margin、Order Capacity 上限和逐 Currency Exposure Capacity 上限；不存在 implicit default；
+- 完整 requirement 的 Fee Reserve 必须 exact 等于 WP-05H Proposal，Cash、Sellable Quantity、Margin、Fee、Order Capacity 和 Exposure Capacity 保持分类比较，禁止跨维度或跨 Currency netting；
+- Cash requirement 使用 `tradable`，Sellable Quantity 使用 `sellable`，Margin 使用 `available_margin`；Fee Reserve 按 Policy 指定维度比较。当前 Availability 必须 exact 引用当前 Reservation State hash；
+- 决策记录 Order、MarketRule、Fee Proposal、完整 requirement、Availability/Reservation State hash 和 Policy identity；
+- 相同状态和订单产生相同 Decision，输入 tuple 顺序不改变 identity；
+- MarketRule、PreTradeRisk 和 Execution rejection 分类不同；
+- Context/hash mismatch、缺失资源维度、Currency/Scale mismatch 或未覆盖 Exposure limit 产生结构化 Contract Failure，不得降级为经济拒绝。
 
 ### WP-05J FeeAssessmentEngine
 
