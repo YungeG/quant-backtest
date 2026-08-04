@@ -98,7 +98,7 @@ artifact_hashes: []
 | WP-06B | PASSED | backtest-runtime | WP-01B, WP-06A | none |
 | WP-06C | PASSED | backtest-runtime | G04, WP-06A–WP-06B | none |
 | WP-06D | PASSED | backtest-runtime | WP-02G, WP-03C | none |
-| WP-06E | DRAFT | backtest-runtime | G05, WP-06A–WP-06D | Next-open fixtures |
+| WP-06E | READY | backtest-runtime | G05, WP-06A–WP-06D | none |
 | WP-06F | DRAFT | backtest-runtime | WP-03E, WP-05A–WP-05C, WP-06B, WP-06E | Run-end fixtures |
 | WP-06G | DRAFT | backtest-runtime | WP-06A–WP-06F | Engine harness fixtures |
 | WP-06H | DRAFT | tests/support | WP-02F–WP-02G | Synthetic profile/golden artifacts |
@@ -4131,7 +4131,96 @@ uv lock --check                                                     PASS
 Python                                                              3.13.5
 ```
 
-## 50. PASSED 记录格式
+## 50. WP-06E `next_eligible_bar_open.v1` Acceptance Card
+
+```yaml
+id: WP-06E
+status: READY
+depends_on:
+  - G05
+  - WP-06A
+  - WP-06B
+  - WP-06C
+  - WP-06D
+owner_package: backtest-runtime
+public_interface:
+  - crypto_quant_backtest.BAR_OPEN_CAPABILITY
+  - crypto_quant_backtest.BAR_OPEN_EVENT_TYPE
+  - crypto_quant_backtest.BarOpenKind
+  - crypto_quant_backtest.BarIneligibilityReason
+  - crypto_quant_backtest.NoEligibleBarAction
+  - crypto_quant_backtest.BarOpenObservation
+  - crypto_quant_backtest.BarLiquidityEvidence
+  - crypto_quant_backtest.BarOpenCandidate
+  - crypto_quant_backtest.NextBarOpenApplicability
+  - crypto_quant_backtest.NextBarOpenRequest
+  - crypto_quant_backtest.NextBarOpenDecision
+  - crypto_quant_backtest.NextBarOpenFailureCode
+  - crypto_quant_backtest.NextBarOpenFailure
+  - crypto_quant_backtest.NextEligibleBarOpenModel
+  - crypto_quant_backtest.FullFillConstructionFailure
+  - crypto_quant_backtest.FullFillResult
+  - crypto_quant_backtest.FullFillBuilder
+  - crypto_quant_backtest.ExecutionModel
+  - crypto_quant_backtest.SimulationPortOutcome
+test_commands:
+  contract: uv run pytest -q tests/runtime/execution/test_next_eligible_bar_open.py
+  fixture: uv run pytest -q tests/runtime/execution/test_next_eligible_bar_open_golden.py
+  boundary: uv run pytest -q tests/architecture/test_public_api_imports.py tests/architecture/test_repository_cleanliness.py
+fixture_ids:
+  - next-eligible-bar-open-v1
+expected_artifacts:
+  - tests/fixtures/runtime/next-eligible-bar-open-v1.json
+  - build/acceptance/wp-06e-pytest.xml
+  - build/acceptance/wp-06e-import-boundary-report.json
+failure_contracts:
+  - malformed-or-wrong-capability-bar-open-event
+  - non-real-gap-placeholder-or-forward-filled-bar-is-ineligible
+  - same-bar-or-pre-activation-fill-attempt
+  - order-stream-not-accepted-active-or-already-partially-filled
+  - candidate-order-instrument-or-time-context-mismatch
+  - missing-or-mismatched-session-market-rule-or-funding-approval
+  - stale-or-out-of-interval-market-rule-approval
+  - missing-or-forged-liquidity-evidence
+  - future-market-state-evidence
+  - no-eligible-bar-without-explicit-tif-action
+  - fill-created-before-successful-independent-slippage-decision
+  - slippage-request-or-decision-mismatch
+  - non-full-fill-quantity
+  - input-order-or-wall-clock-dependent-decision
+allowed_grade: development
+evidence:
+  - pytest-report
+  - next-eligible-bar-open-golden-fixture-hash
+  - same-bar-and-future-field-isolation-evidence
+  - real-vs-placeholder-bar-eligibility-evidence
+  - explicit-tif-keep-expire-evidence
+  - independent-slippage-before-fill-evidence
+  - public-api-import-report
+  - import-boundary-report
+  - static-type-report
+passed_commit: null
+artifact_hashes: []
+```
+
+### WP-06E Readiness
+
+冻结以下实现边界：
+
+1. `BarOpenObservation` 只从 capability `bar_open@1`、event type `bar_open` 的 immutable `MarketEvent` 解码 `schema_version`、`bar_kind` 和 Open Price。合格 Open 必须在 `event_time == available_time` 时可见；接口不包含 high/low/close/volume，因此 Execution Model 无法读取未来 Bar 字段；
+2. `BarOpenKind.REAL` 才可能成交。`GAP_PLACEHOLDER` 和 `FORWARD_FILLED` 产生显式 ineligibility evidence，不能贡献 Execution Reference Price；
+3. Model 是逐 Bar、bounded、无状态的。调用方按 Deterministic Timeline 顺序重复调用，直至第一根合格 Bar 或显式 TIF eligibility window 结束；Request 不接收未来 Bar 序列，不使用 wall clock；
+4. Order 必须已有 authoritative `OrderEventStream` 且处于 `ACCEPTED`/`ACTIVE`、尚无 Fill。Candidate Bar Open 必须严格晚于当前 Order State instant，禁止 same-bar/pre-activation Fill；
+5. 合格 Candidate 必须携带同一 Order、同一 Instrument、同一 Bar instant 的 `MarketRuleApproval` 和 `PreTradeRiskApproval`。Rule interval 必须覆盖 Bar instant，Session 必须 OPEN，PreTrade approval 必须引用同一 MarketRule approval；二者分别作为 Market Rule 与资金/账户资源批准证据；
+6. 流动性/方向限制由 supplied immutable versioned `BarLiquidityEvidence` 显式给出。Blocked 只产生 no-fill/liquidity evidence，不伪装为 MarketRuleRejection；本 WP 不实现 A 股或其他具体市场判断；
+7. `NextBarOpenApplicability` 显式完整映射全部 `TimeInForce` 到 eligibility-window 结束时的 `KEEP_ACTIVE` 或 `EXPIRE`，没有默认。非合格 Bar 在窗口尚未结束时只保持 Working；窗口结束后严格采用该映射；
+8. 第一根合格真实 Bar 只生成 full remaining Quantity、由 Open 构造的 `ExecutionReferencePrice` 和 deterministic eligibility decision，不直接生成 Fill。`FullFillBuilder` 只有在获得与 Reference/Side/Quantity/Market State 精确匹配的独立成功 `SlippageDecision` 后才能构造 immutable full Fill；Slippage failure/mismatch 不得生成 Fill；
+9. Open Reference 通过 exact source Event/Revision identity 构造 `PricePurpose.EXECUTION_REFERENCE` Mark。Fill 保存 Reference、Slippage decision/model/calibration 和执行 Bar instant；Fill ID 由调用方提供，本 WP 不生成 Semantic Run ID；
+10. 本 WP 不实现 Partial Fill/Queue/Participation、Fee/Accounting、concrete Market Profile/Resolver、Run Outcome、Evidence publication 或完整 Engine orchestration。
+
+WP-06E 已具备实现所需的 Fixture、失败边界和接口约束，状态为 `READY`。
+
+## 51. PASSED 记录格式
 
 ```yaml
 id: WP-00A

@@ -1002,13 +1002,21 @@ G06 只实现可重复的执行 Harness。它不拥有 BacktestRequest resolutio
 
 不拥有：Slippage 数值、Fee、Accounting 或 Bar 内 Queue/Partial Fill 推断。
 
+冻结边界：
+
+- Bar Engine 消费独立 `bar_open@1` Event；payload 只暴露 `schema_version`、`bar_kind` 和 Open Price，ExecutionModel 接口不接收 high/low/close/volume；
+- Model 按 Timeline 逐 Bar、bounded、无状态调用，不接收未来 Bar 序列；
+- 合格 Bar 必须携带同 Order/Instrument/Instant 的 MarketRuleApproval、PreTradeRiskApproval 和 versioned BarLiquidityEvidence；Rule interval 必须覆盖 Open，Session 必须 OPEN；
+- `NextBarOpenApplicability` 显式完整映射全部 TIF 在 eligibility-window 结束时的 keep/expire，不提供默认；
+- 第一根合格真实 Bar 只产生 full remaining Quantity 和 ExecutionReferencePrice；Fill ID 由调用方提供，且只有匹配的独立成功 SlippageDecision 才能进入 FullFillBuilder。
+
 验收：
 
-- 禁止 same-bar fill；
+- 禁止 same-bar 或 pre-activation fill；
 - 不使用未来 high/low/close/volume；
 - gap placeholder、forward-filled Bar 不成交；
-- 规则/资金通过后按 Profile full fill；
-- no eligible bar 按 TIF keep/expire；
+- 规则/资金/流动性通过后按 Profile full fill；
+- no eligible bar 按显式 TIF mapping keep/expire；
 - ExecutionModel 输出 reference price 后必须调用独立 SlippageModel 才能构造 Fill。
 
 ### WP-06F RunEndCoordinator
