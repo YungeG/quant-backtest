@@ -188,6 +188,15 @@ from .snapshots import (
     SnapshotProjectionFailureCode,
     SnapshotProjectionOutcome,
 )
+from .translation import (
+    ExecutableOrderSpec,
+    OrderTranslationError,
+    OrderTranslationEvidenceError,
+    OrderTranslationFieldRule,
+    OrderTranslationMapping,
+    OrderTranslationResult,
+    OrderTranslator,
+)
 from .validation import (
     StrategyOutputValidationContext,
     StrategyOutputValidator,
@@ -255,6 +264,7 @@ __all__ = [
     "DecisionBatchIssue",
     "DecisionBatchIssueCode",
     "DecisionBatchSubmission",
+    "ExecutableOrderSpec",
     "FeeAssessmentPolicy",
     "FeeChargeAccountingOutcome",
     "FeeChargeAccountingResult",
@@ -304,6 +314,12 @@ __all__ = [
     "OrderPlan",
     "OrderRuleModel",
     "OrderStyleCapability",
+    "OrderTranslationError",
+    "OrderTranslationEvidenceError",
+    "OrderTranslationFieldRule",
+    "OrderTranslationMapping",
+    "OrderTranslationResult",
+    "OrderTranslator",
     "OrderTransitionError",
     "PlannedOrder",
     "PlanningOmission",
