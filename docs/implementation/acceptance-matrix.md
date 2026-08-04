@@ -52,7 +52,7 @@ artifact_hashes: []
 
 | ID | Status | Owner | Depends On | Readiness blocker |
 |---|---|---|---|---|
-| WP-00A | READY | repository root | none | none |
+| WP-00A | PASSED | repository root | none | none |
 | WP-00B | DRAFT | repository root | WP-00A | Import rule implementation/test paths |
 | WP-00C | DRAFT | repository root + parity tooling | WP-00B | 三个来源项目 immutable identity |
 | WP-01A | DRAFT | trading-domain | G00 | Numeric Interface/fixtures/commands |
@@ -153,7 +153,7 @@ artifact_hashes: []
 
 ```yaml
 id: WP-00A
-status: READY
+status: PASSED
 depends_on: []
 owner_package: repository-root
 public_interface:
@@ -184,11 +184,15 @@ evidence:
   - package-build-manifest
   - dependency-lock-hash
   - exact-python-patch-version
-passed_commit: null
-artifact_hashes: []
+passed_commit: 77f70227fdb0edc2837b059e43fb2e1fd242778f
+artifact_hashes:
+  uv.lock: sha256:87fee7ebf7f6a14f158d4e3826fee358f04de8974bc63554d46decc7086e0979
+  tests/fixtures/architecture/five-package-workspace-v1.expected.json: sha256:dceec5a831a68ece8ba1cd3967f44783e88c92c5c7457657414c5ec52cca8f4e
+  build/acceptance/wp-00a-package-build-manifest.json: sha256:7f9e3c6dfdf56e37f5ad9bc1e0953f5688c301a48ceb23a55ec02d6109d5fd24
+  build/acceptance/wp-00a-pytest.xml: sha256:e25a02561f74f75d983eaff730c41092c5d6dc1609e72815e7b663e5b1f763b1
 ```
 
-### WP-00A Readiness
+### WP-00A Acceptance
 
 第二轮拆解审阅已完成。Workspace 使用 `uv workspace + root uv.lock + setuptools.build_meta`，v1 仅支持 Python 3.13（`>=3.13,<3.14`，`.python-version = 3.13`）。目录约定为：
 
@@ -200,9 +204,9 @@ tests/fixtures/     # Git 跟踪的静态 Golden
 runs/               # Backtest canonical evidence
 ```
 
-`build/` 全部 gitignored；CI 可以上传 `build/acceptance/`。WP-00A 已完成未提交实现并通过全部验收命令，但在获得 immutable commit 前保持 `READY`，不能标记 `PASSED`。
+`build/` 全部 gitignored；CI 可以上传 `build/acceptance/`。WP-00A 的实现已冻结在 immutable commit `77f70227fdb0edc2837b059e43fb2e1fd242778f`，状态为 `PASSED`。
 
-未提交验证记录：
+验证记录：
 
 ```text
 uv sync --all-packages --group dev                                      PASS
