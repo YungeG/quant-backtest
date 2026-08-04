@@ -80,7 +80,7 @@ artifact_hashes: []
 | WP-04A | PASSED | trading-kernel | G02 | none |
 | WP-04B | PASSED | trading-kernel | WP-04A | none |
 | WP-04C | PASSED | trading-kernel | WP-04B, G03 | none |
-| WP-04D | DRAFT | trading-kernel | WP-04C | Portfolio Risk fixtures |
+| WP-04D | READY | trading-kernel | WP-04C | none |
 | WP-04E | DRAFT | trading-kernel | WP-04D, WP-03C | Sizing/materialization fixtures |
 | WP-05A | DRAFT | trading-kernel | G02 | Order lifecycle fixtures |
 | WP-05B | DRAFT | trading-kernel | WP-05A | Reservation replay fixtures |
@@ -2453,7 +2453,82 @@ uv lock --check                                                       PASS
 Python                                                                3.13.5
 ```
 
-## 32. PASSED 记录格式
+## 32. WP-04D Portfolio Risk Acceptance Card
+
+```yaml
+id: WP-04D
+status: READY
+depends_on:
+  - WP-04C
+owner_package: trading-kernel
+public_interface:
+  - crypto_quant_trading.PortfolioRiskAction
+  - crypto_quant_trading.PortfolioRiskScope
+  - crypto_quant_trading.PortfolioRiskPolicyRef
+  - crypto_quant_trading.PortfolioRiskLimit
+  - crypto_quant_trading.PortfolioRiskPolicy
+  - crypto_quant_trading.PortfolioRiskReasonCode
+  - crypto_quant_trading.PortfolioRiskDecision
+  - crypto_quant_trading.ApprovedInstrumentTarget
+  - crypto_quant_trading.ApprovedPortfolioTarget
+  - crypto_quant_trading.PortfolioRiskContractIssueCode
+  - crypto_quant_trading.PortfolioRiskContractIssue
+  - crypto_quant_trading.PortfolioRiskContractFailure
+  - crypto_quant_trading.PortfolioRiskOutcome
+  - crypto_quant_trading.PortfolioRiskEvaluator
+test_commands:
+  contract: uv run pytest -q tests/kernel/risk/test_portfolio_risk.py
+  fixture: uv run pytest -q tests/kernel/risk/test_portfolio_risk_golden.py
+  boundary: uv run pytest -q tests/architecture/test_public_api_imports.py tests/architecture/test_repository_cleanliness.py
+fixture_ids:
+  - portfolio-risk-decisions-v1
+expected_artifacts:
+  - tests/fixtures/kernel/portfolio-risk-decisions-v1.json
+  - build/acceptance/wp-04d-pytest.xml
+  - build/acceptance/wp-04d-import-boundary-report.json
+failure_contracts:
+  - missing-or-implicit-risk-policy
+  - policy-identity-config-hash-mismatch
+  - policy-valuation-currency-or-scale-mismatch
+  - missing-duplicate-or-unexpected-instrument-limit
+  - invalid-negative-or-mismatched-limit
+  - unsupported-aggregate-clamp
+  - target-decision-without-before-after-limit-reason-policy-evidence
+  - target-clamp-away-from-zero-or-beyond-limit
+  - target-reject-with-nonzero-approved-notional
+  - aggregate-gross-or-absolute-net-reject-with-nonzero-final-target
+  - economic-reject-misclassified-as-contract-failure
+  - lost-sleeve-attribution
+  - input-or-policy-rule-order-dependent-result
+  - price-quantity-margin-profile-order-or-ledger-leakage
+allowed_grade: development
+evidence:
+  - pytest-report
+  - portfolio-risk-canonical-golden-fixture-hash
+  - deterministic-approved-target-and-risk-decision-hashes
+  - public-api-import-report
+  - import-boundary-report
+  - static-type-report
+passed_commit: null
+artifact_hashes: []
+```
+
+### WP-04D Acceptance
+
+冻结以下边界：
+
+1. `PortfolioRiskEvaluator` 只消费 immutable `PortfolioAllocation` 与显式 `PortfolioRiskPolicy`，不调用 Policy callback，也不提供默认 Policy；
+2. Policy 使用版本化 key/version/config hash，并绑定 Allocation valuation Currency/Scale；每个输入 Instrument 必须恰好有一个 target absolute-notional limit，同时显式声明 gross 与 absolute-net aggregate limit；
+3. Target limit 未超限时 approve；超限时按规则向零 clamp 到 limit，或 reject 为显式零 approved target；每次 Decision 必须保存 scope/action/before/after/limit/reason/Policy identity；
+4. v1 aggregate gross/absolute-net rule 只允许 approve/reject，不支持 proportional clamp；任一 aggregate reject 将 whole target set 显式置零，避免隐式 Instrument 优先级、rounding 或 residual 分配；
+5. `ApprovedInstrumentTarget` 保留原 `NetInstrumentTarget` 及完整 Sleeve attribution；Risk 不创建新的虚拟 Sleeve、Cash、Position、Quantity 或 Order；
+6. `gross_exposure` 精确等于最终 target absolute-notional 总和，`net_exposure` 精确等于最终 signed target 总和；结果 identity 与 input/rule 顺序无关；
+7. Policy coverage/context/schema 错误进入 `PortfolioRiskContractFailure`；合法 economic target 的 clamp/reject 进入成功 `ApprovedPortfolioTarget`，不能伪装为 Strategy Contract violation 或 Run Outcome；
+8. 本 WP 不读取 Price/Market/Profile，不实现 Position sizing、Margin requirement、ActivePortfolioTarget、Order、Pre-trade Risk、Ledger mutation 或 Runtime orchestration。
+
+WP-04D 状态为 `READY`。
+
+## 33. PASSED 记录格式
 
 ```yaml
 id: WP-00A

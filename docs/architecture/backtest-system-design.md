@@ -643,6 +643,8 @@ class ApprovedPortfolioTarget:
 
 它负责表达组合聚合和 Portfolio Risk 审批后的最大允许目标，而非原始策略观点。Portfolio Risk 可以 approve、clamp 或 reject Target，但每次变换必须记录原目标、应用规则和最终目标。
 
+v1 的 Target-level absolute-notional limit 可以向零 clamp 或 reject 为显式零目标；aggregate gross/absolute-net limit 只做 approve 或 reject whole target set。v1 不做 proportional aggregate clamp，因为该行为必须额外冻结 Instrument 优先级、离散 rounding 和 residual 分配语义。Risk Policy 必须覆盖每个输入 Instrument 并绑定 valuation Currency/Scale；coverage 或 context 错误属于 Contract Failure，合法 economic target 的 clamp/reject 则是成功的 Risk Assessment。`ApprovedPortfolioTarget` 保留原始 `NetInstrumentTarget` 的 Sleeve attribution；Risk 不创建 Quantity、Venue Order 或 Margin 值。
+
 ### 8.9 NormalizedPortfolioTarget
 
 Position Sizing 使用时点有效的 `QuantityLattice` 将已审批目标名义暴露转换为市场可交易的定点整数数量。

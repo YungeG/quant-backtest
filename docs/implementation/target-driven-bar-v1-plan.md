@@ -701,12 +701,23 @@ v1 Candidate Schema 固定为：
 
 拥有：Target-level approve、clamp、reject；不拥有 Order 修改。
 
+冻结边界：
+
+- `PortfolioRiskEvaluator` 只消费 immutable `PortfolioAllocation` 和显式 `PortfolioRiskPolicy`；Policy 绑定版本化 identity/config hash、valuation Currency/Scale、每个 Instrument 恰好一个 target absolute-notional limit，以及显式 gross/absolute-net aggregate limits；没有默认 Policy、回调或未覆盖 Instrument；
+- Target limit 对超限结果显式选择 `clamp` 或 `reject`：clamp 只向零截断到 limit，reject 物化为显式零 approved target；未超限产生 approve Decision；
+- v1 aggregate gross/absolute-net limit 只允许 approve 或 reject whole target set，不实现会隐式分配 Instrument 优先级或 rounding 的 proportional clamp；aggregate reject 将全部最终 approved targets 显式置零；
+- 每个 Decision 记录 scope、action、before、after、limit、reason、Policy identity；`ApprovedPortfolioTarget` 保存原 `NetInstrumentTarget`（含 Sleeve attribution）及最终 approved notional；
+- `gross_exposure = Σ abs(approved target)`，`net_exposure = Σ approved target`，均使用 Allocation valuation Currency/Scale；输入与 Policy rule 顺序不影响 identity/hash；
+- Policy coverage/context/identity/scale 错误是 Contract Failure；合法经济 target 的 clamp/reject 是成功的 Risk Assessment，不映射为 Candidate ValidationFailure 或 Run Outcome；
+- 不实现 Price/Quantity sizing、Margin requirement、Market/Profile read、ActivePortfolioTarget、Order、Pre-trade Risk、Ledger mutation 或 Runtime orchestration。
+
 验收：
 
 - 每次 clamp 记录 before/after/reason/policy identity；
 - Risk 不能产生 Venue Order；
 - Risk reject 不等同于 Contract violation；
-- 未声明 Policy 不使用隐式默认值。
+- gross/net limit 的经济拒绝可重建且 input/rule 顺序无关；
+- 未声明或 coverage 不完整的 Policy 不使用隐式默认值。
 
 ### WP-04E Position sizing 与 ActivePortfolioTarget
 
