@@ -94,7 +94,7 @@ artifact_hashes: []
 | WP-05I | PASSED | trading-kernel | WP-05B, WP-05H | none |
 | WP-05J | PASSED | trading-kernel | WP-02F, WP-03A | none |
 | G05 | PASSED | trading-kernel | G04, WP-05A–WP-05J | none |
-| WP-06A | READY | market-data-contracts | G02 | none |
+| WP-06A | PASSED | market-data-contracts | G02 | none |
 | WP-06B | DRAFT | backtest-runtime | WP-01B, WP-06A | Timeline fixtures |
 | WP-06C | DRAFT | backtest-runtime | G04, WP-06A–WP-06B | TargetStream fixtures |
 | WP-06D | DRAFT | backtest-runtime | WP-02G, WP-03C | Slippage fixtures |
@@ -3764,7 +3764,7 @@ Python                                                             3.13.5
 
 ```yaml
 id: WP-06A
-status: READY
+status: PASSED
 depends_on:
   - G02
 owner_package: market-data-contracts
@@ -3815,8 +3815,11 @@ evidence:
   - public-api-import-report
   - import-boundary-report
   - static-type-report
-passed_commit: null
-artifact_hashes: []
+passed_commit: 15555539d6be77532d6958184750e5718585d4e1
+artifact_hashes:
+  tests/fixtures/market_data/in-memory-market-bundle-reader-v1.json: sha256:8af4e06b83e9764a49102b2c865076707688e37fea6ef059efd9c4d5f965df50
+  build/acceptance/wp-06a-pytest.xml: sha256:a1de74f8bd79a49c8535a189d9b73a9cfc7d810110ff199f72ff7a9f264b9cb1
+  build/acceptance/wp-06a-import-boundary-report.json: sha256:20598ca6ff1d4b0f701e6ffa37b34cfd0e36f7b031ab1bd11a4a14896c0583f5
 ```
 
 ### WP-06A Acceptance
@@ -3830,6 +3833,24 @@ artifact_hashes: []
 5. `InMemoryMarketBundleReader` 只用于 Fixture/development：构造时验证 Ref→Manifest hash、Manifest→Stream set/count/content hash、Event stream identity 和 ordering-key uniqueness。输入 Mapping/tuple 顺序不得改变 Bundle、Manifest、Cursor 或 event sequence identity；
 6. 缺少 required capability 或请求未知 Stream 返回 canonical structured `InputValidationFailure`，不在本层映射为 `BLOCKED`。Malformed envelope、hash mismatch、重复 ordering key、非法 Cursor position/cross-stream resume 作为 fail-closed typed reader/integrity error；
 7. Runtime 后续只能依赖 `market-data-contracts` 的这些读取接口，不得依赖 `market-bundle-builder`、Source Adapter、Pandas/Parquet/Vendor SDK 或网络。Parquet/columnar Adapter、Builder/Repository publish、Timeline merge、ObservationView、TargetStream、Bar Execution、Run Outcome 和 Evidence publication 不属于本 WP。
+
+WP-06A 的实现已冻结在 immutable commit `15555539d6be77532d6958184750e5718585d4e1`，状态为 `PASSED`。
+
+验证记录：
+
+```text
+MarketBundle Reader contract tests                                  6 passed
+InMemory Reader canonical golden fixture                            1 passed
+Public API + repository cleanliness boundaries                      5 passed
+Acceptance test report                                             12 passed
+Market-data-contracts import boundary                               PASS (43 files)
+Full test suite                                                    428 passed
+mypy                                                                no issues (6 files)
+Primary LSP                                                         clean
+pi-lens scoped review                                               no unresolved findings; Protocol ellipsis warnings marked false-positive
+uv lock --check                                                     PASS
+Python                                                              3.13.5
+```
 
 ## 47. PASSED 记录格式
 
