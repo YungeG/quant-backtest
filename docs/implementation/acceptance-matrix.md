@@ -92,7 +92,7 @@ artifact_hashes: []
 | WP-05G | PASSED | trading-kernel | WP-05F, WP-02F | none |
 | WP-05H | PASSED | trading-kernel | WP-05G, WP-02F | none |
 | WP-05I | PASSED | trading-kernel | WP-05B, WP-05H | none |
-| WP-05J | READY | trading-kernel | WP-02F, WP-03A | none |
+| WP-05J | PASSED | trading-kernel | WP-02F, WP-03A | none |
 | G05 | DRAFT | trading-kernel | G04, WP-05A–WP-05J | Target-to-accepted-order aggregate journey |
 | WP-06A | DRAFT | market-data-contracts | G02 | Reader/Cursor contract commands |
 | WP-06B | DRAFT | backtest-runtime | WP-01B, WP-06A | Timeline fixtures |
@@ -3568,7 +3568,7 @@ Python                                                            3.13.5
 
 ```yaml
 id: WP-05J
-status: READY
+status: PASSED
 depends_on:
   - WP-02F
   - WP-03A
@@ -3627,8 +3627,11 @@ evidence:
   - public-api-import-report
   - import-boundary-report
   - static-type-report
-passed_commit: null
-artifact_hashes: []
+passed_commit: 41b7811236a6d2f0d53d6a4a76d9271a37f7e4fa
+artifact_hashes:
+  tests/fixtures/kernel/final-fee-assessment-v1.json: sha256:22281cf7aa4b9fdfe67c1ff347fc2771cb97bc817b7d859d8c0c2916fd370533
+  build/acceptance/wp-05j-pytest.xml: sha256:36952381f8c674805009eb047789041549d9a4f6d972984d6c49c72de35e82a4
+  build/acceptance/wp-05j-import-boundary-report.json: sha256:66f6e9463491891465ae8150ee2a6088bbc0aadb27e833d49e30a65520045c13
 ```
 
 ### WP-05J Acceptance
@@ -3645,6 +3648,26 @@ artifact_hashes: []
 8. `FinalFeeAssessmentResult` 保存 Basis、Rule Set、逐 rule line、minimum adjustment、全部 rule/component identity 和最终 `FeeAssessment`。重复相同 authoritative 输入产生相同 Assessment/Result hash；任一 failure 不产生部分 Assessment；
 9. `FeeChargedJournalTranslator` 只把正的最终 Assessment 翻译为一个 `FeeCharged` `AccountingJournalEntry`，引用 Assessment ID、全部 basis/rule/minimum/component identity，并记录单一 Cash debit 与 Fee attribution。重复相同 Assessment/Journal ID 产生相同 Entry，实际幂等 apply 由 immutable Journal 的相同 ID/hash 规则保证；
 10. 本 WP 不修改 Fill/Order/OrderEventStream/Journal/Ledger，不实现 Fee Reservation、Lot allocation、具体市场 Fee/Tax schedule、Profile resolution、Submission、Execution 或 Runtime orchestration。
+
+WP-05J 的实现已冻结在 immutable commit `41b7811236a6d2f0d53d6a4a76d9271a37f7e4fa`，状态为 `PASSED`。
+
+验证记录：
+
+```text
+Final Fee Assessment contract tests                              13 passed
+Final Fee Assessment canonical golden fixture                     1 passed
+Public API + repository cleanliness boundaries                    5 passed
+Acceptance test report                                           19 passed
+Trading-kernel import boundary                                    PASS (42 files)
+Full test suite                                                  418 passed
+mypy                                                              no issues (27 files)
+Primary LSP                                                       clean
+pi-lens scoped review                                             no unresolved findings after 6 structural false-positive dispositions; 1 local Journal-construction duplicate deferred
+uv lock --check                                                   PASS
+Python                                                            3.13.5
+```
+
+Reservation and final Fee contracts intentionally remain nominally separate so a worst-case reservation can never become Accounting authority. Six jscpd findings on their parallel version/hash/canonical shapes were marked structural false positives. One small explicit FeeCharged Journal construction duplicate remains session-deferred until aggregate G05 confirms the final composition seam.
 
 ## 45. PASSED 记录格式
 
