@@ -82,7 +82,7 @@ artifact_hashes: []
 | WP-04C | PASSED | trading-kernel | WP-04B, G03 | none |
 | WP-04D | PASSED | trading-kernel | WP-04C | none |
 | WP-04E | PASSED | trading-kernel | WP-04D, WP-03C | none |
-| G04 | READY | trading-kernel | WP-04A–WP-04E | none |
+| G04 | PASSED | trading-kernel | WP-04A–WP-04E | none |
 | WP-05A | DRAFT | trading-kernel | G02 | Order lifecycle fixtures |
 | WP-05B | DRAFT | trading-kernel | WP-05A | Reservation replay fixtures |
 | WP-05C | DRAFT | trading-kernel | WP-03B, WP-05B | Settlement/availability fixtures |
@@ -2647,7 +2647,7 @@ Python                                                             3.13.5
 
 ```yaml
 id: G04
-status: READY
+status: PASSED
 depends_on:
   - WP-04A
   - WP-04B
@@ -2684,11 +2684,14 @@ evidence:
   - public-api-import-report
   - import-boundary-report
   - static-type-report
-passed_commit: null
-artifact_hashes: []
+passed_commit: 51789b8d9b355460d051338a37aa94d0f3065324
+artifact_hashes:
+  tests/fixtures/kernel/target-materialization-journey-v1.json: sha256:91d7c57f828dc06539426726b5a1a7c7ebb5fc81dfd3d802c1b1b58974d222ae
+  build/acceptance/g04-pytest.xml: sha256:37f9673d39fd4a953458240b9c74369f25088094900443304bacb71688fb1f18
+  build/acceptance/g04-import-boundary-report.json: sha256:b97c4aec16f8e96314d4886266e8b2ce60600396bb151776ee734596d8742ff4
 ```
 
-### G04 Readiness
+### G04 Acceptance
 
 冻结 aggregate journey：
 
@@ -2700,7 +2703,22 @@ artifact_hashes: []
 6. 后续 Mark/NAV/External Cash Flow 只能成为未来新 Decision/Reallocation 的输入，不能修改已经物化的 immutable Active Target；
 7. 本 Gate 不新增生产 API，也不实现 Rebalance/Order/Execution/Runtime。
 
-G04 当前状态为 `READY`。
+G04 aggregate journey 已冻结在 immutable commit `51789b8d9b355460d051338a37aa94d0f3065324`，状态为 `PASSED`。
+
+验证记录：
+
+```text
+Two-Sleeve target materialization journey                            4 passed
+Public API + repository cleanliness boundaries                       5 passed
+Acceptance test report                                               9 passed
+Trading-kernel import boundary                                       PASS (32 files)
+Full test suite                                                     314 passed
+mypy                                                                no issues (14 files)
+Primary LSP                                                         clean
+pi-lens scoped review                                               no findings
+uv lock --check                                                     PASS
+Python                                                              3.13.5
+```
 
 ## 35. PASSED 记录格式
 
