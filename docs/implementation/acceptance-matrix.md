@@ -93,7 +93,7 @@ artifact_hashes: []
 | WP-05H | PASSED | trading-kernel | WP-05G, WP-02F | none |
 | WP-05I | PASSED | trading-kernel | WP-05B, WP-05H | none |
 | WP-05J | PASSED | trading-kernel | WP-02F, WP-03A | none |
-| G05 | READY | trading-kernel | G04, WP-05A–WP-05J | none |
+| G05 | PASSED | trading-kernel | G04, WP-05A–WP-05J | none |
 | WP-06A | DRAFT | market-data-contracts | G02 | Reader/Cursor contract commands |
 | WP-06B | DRAFT | backtest-runtime | WP-01B, WP-06A | Timeline fixtures |
 | WP-06C | DRAFT | backtest-runtime | G04, WP-06A–WP-06B | TargetStream fixtures |
@@ -3673,7 +3673,7 @@ Reservation and final Fee contracts intentionally remain nominally separate so a
 
 ```yaml
 id: G05
-status: READY
+status: PASSED
 depends_on:
   - G04
   - WP-05A
@@ -3723,8 +3723,11 @@ evidence:
   - public-api-import-report
   - import-boundary-report
   - static-type-report
-passed_commit: null
-artifact_hashes: []
+passed_commit: 37c46de51e3582ca0db0d44c904d0033be8f826a
+artifact_hashes:
+  tests/fixtures/kernel/target-to-accepted-order-journey-v1.json: sha256:671400b757fd26ed0b938dcb0343d239188a1ce4e6004f83158faf64ddc83c00
+  build/acceptance/g05-pytest.xml: sha256:3cacfe1ea911f488c639604ff9fea9d98b4c9b88841f18a9357330c8038d409c
+  build/acceptance/g05-import-boundary-report.json: sha256:66f6e9463491891465ae8150ee2a6088bbc0aadb27e833d49e30a65520045c13
 ```
 
 ### G05 Acceptance
@@ -3738,6 +3741,24 @@ artifact_hashes: []
 5. FeeReservationEstimate 只进入 Reservation proposal。独立 supplied Synthetic Fill 保持 immutable 且无最终 fee 字段，随后由 WP-05J 产生 deterministic `FeeAssessment` 和 `FeeCharged` Journal Entry；相同 basis/IDs 重放由 Assessment identity + immutable Journal ID/hash 幂等；
 6. Journey Golden 记录 Active Target、Plan、Order、全部 Gate decision、Accepted OrderState、independent Fill、FeeAssessment 和 FeeCharged Journal 的稳定 ID/hash；输入 tuple/mapping/registration 顺序不改变权威结果；
 7. 本 Gate 不需要 Market Timeline、Bar/Execution Engine、Profile Resolver、具体市场规则、数据/网络读取、Ledger replay、Runtime Outcome、Semantic Run 或 Evidence publication，也不新增 Production API。
+
+G05 aggregate journey 已冻结在 immutable commit `37c46de51e3582ca0db0d44c904d0033be8f826a`，状态为 `PASSED`。
+
+验证记录：
+
+```text
+Target-to-Accepted-Order aggregate journey                         3 passed
+G05 component canonical golden fixtures                            8 passed
+Public API + repository cleanliness boundaries                     5 passed
+Acceptance test report                                            16 passed
+Trading-kernel import boundary                                     PASS (42 files)
+Full test suite                                                   421 passed
+mypy                                                               no issues (24 files)
+Primary LSP                                                        clean
+pi-lens scoped review                                              no findings
+uv lock --check                                                    PASS
+Python                                                             3.13.5
+```
 
 ## 46. PASSED 记录格式
 
