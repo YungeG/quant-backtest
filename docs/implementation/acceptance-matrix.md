@@ -55,6 +55,7 @@ artifact_hashes: []
 | WP-00A | PASSED | repository root | none | none |
 | WP-00B | PASSED | repository root | WP-00A | none |
 | WP-00C | PASSED | repository root + parity tooling | WP-00B | none |
+| G00 | READY | repository root | WP-00A, WP-00B, WP-00C | none |
 | WP-01A | DRAFT | trading-domain | G00 | Numeric Interface/fixtures/commands |
 | WP-01B | DRAFT | trading-domain | WP-01A | Time/DST fixtures/commands |
 | WP-01C | DRAFT | trading-domain | WP-01B | ID namespace/version fixtures |
@@ -389,7 +390,61 @@ Python                                                                  3.13.5
 Source Map sha256                                                       8a0be053f538f6277e35b0908c25398a989cd52e499c1cd911742aebfd1a8cf5
 ```
 
-## 7. PASSED 记录格式
+## 7. G00 Acceptance Card
+
+```yaml
+id: G00
+status: READY
+depends_on:
+  - WP-00A
+  - WP-00B
+  - WP-00C
+owner_package: repository-root
+public_interface:
+  - locked Python 3.13 workspace
+  - five-package dependency boundary policy
+  - offline legacy source baseline
+  - root architecture and parity test entrypoint
+test_commands:
+  contract: uv sync --locked --all-packages --group dev
+  fixture: uv run pytest -q tests/architecture tests/parity
+  boundary: uv run python tools/architecture/check_import_boundaries.py --root . --policy architecture/import-boundaries.toml --report build/acceptance/g00-import-boundary-report.json && uv run python tools/migration/verify_legacy_baseline.py --root . --source-map docs/migration/source-map.yaml --report build/acceptance/g00-source-baseline-report.json
+fixture_ids:
+  - five-package-workspace-v1
+  - import-boundary-mutations-v1
+  - legacy-source-snapshots-v1
+  - comparator-contract-v1
+expected_artifacts:
+  - uv.lock
+  - architecture/import-boundaries.toml
+  - docs/migration/source-map.yaml
+  - build/acceptance/g00-import-boundary-report.json
+  - build/acceptance/g00-source-baseline-report.json
+  - build/acceptance/g00-pytest.xml
+failure_contracts:
+  - unlocked-dependency-environment
+  - workspace-package-missing
+  - architecture-boundary-violation
+  - runtime-network-access
+  - legacy-source-evidence-invalid
+  - comparator-harness-regression
+  - test-mutates-worktree
+allowed_grade: development
+evidence:
+  - dependency-lock-hash
+  - import-policy-hash
+  - source-map-hash
+  - pytest-report
+  - boundary-reports
+passed_commit: null
+artifact_hashes: []
+```
+
+### G00 Readiness
+
+WP-00A、WP-00B 和 WP-00C 均已通过各自 Acceptance Card。G00 只聚合验证现有基础设施，不增加交易语义或新 external seam。当前状态为 `READY`；用户已授权按 Gate 顺序持续推进，因此可直接执行本 Card，但任何失败都必须先诊断并恢复基线，不能绕过。
+
+## 8. PASSED 记录格式
 
 ```yaml
 id: WP-00A
