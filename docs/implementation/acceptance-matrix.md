@@ -73,7 +73,7 @@ artifact_hashes: []
 | WP-03A | PASSED | trading-kernel | G02 | none |
 | WP-03B | PASSED | trading-kernel | WP-03A | none |
 | WP-03C | PASSED | trading-kernel | WP-02F | none |
-| WP-03D | DRAFT | trading-kernel | WP-03C | Currency graph fixtures |
+| WP-03D | READY | trading-kernel | WP-03C | none |
 | WP-03E | DRAFT | trading-kernel | WP-03B–WP-03D | Snapshot fixtures |
 | WP-03F | DRAFT | trading-kernel | WP-03A–WP-03E | Cash accounting + legacy parity |
 | WP-04A | DRAFT | trading-kernel | G02 | Candidate validation fixtures |
@@ -1822,7 +1822,72 @@ uv lock --check                                                         PASS
 Python                                                                  3.13.5
 ```
 
-## 25. PASSED 记录格式
+## 25. WP-03D Acceptance Card
+
+```yaml
+id: WP-03D
+status: READY
+depends_on:
+  - WP-03C
+owner_package: trading-kernel
+public_interface:
+  - crypto_quant_trading.CurrencyValuationEdge
+  - crypto_quant_trading.CurrencyValuationGraph
+  - crypto_quant_trading.CurrencyValuationPath
+  - crypto_quant_trading.CurrencyValuationPathRequest
+  - crypto_quant_trading.CurrencyValuationPathSelection
+  - crypto_quant_trading.CurrencyValuationResolution
+  - crypto_quant_trading.CurrencyValuationFailureCode
+  - crypto_quant_trading.CurrencyValuationFailure
+  - crypto_quant_trading.CurrencyValuationOutcome
+test_commands:
+  contract: uv run pytest -q tests/kernel/valuation/test_currency_valuation_graph.py
+  fixture: uv run pytest -q tests/kernel/valuation/test_currency_valuation_graph_golden.py
+  boundary: uv run pytest -q tests/architecture/test_public_api_imports.py tests/architecture/test_repository_cleanliness.py
+fixture_ids:
+  - currency-valuation-graph-v1
+expected_artifacts:
+  - tests/fixtures/kernel/currency-valuation-graph-v1.json
+  - build/acceptance/wp-03d-pytest.xml
+  - build/acceptance/wp-03d-import-boundary-report.json
+failure_contracts:
+  - valuation-edge-currency-or-purpose-mismatch
+  - valuation-edge-not-point-in-time
+  - duplicate-valuation-edge
+  - missing-valuation-path
+  - non-unique-valuation-path-without-policy
+  - valuation-policy-rejected
+  - valuation-policy-wrong-port-or-input-hash
+  - valuation-policy-selected-unknown-path
+  - implicit-stablecoin-peg
+  - graph-mark-resolution-or-data-query
+  - graph-money-conversion-or-snapshot-leakage
+allowed_grade: development
+evidence:
+  - pytest-report
+  - currency-valuation-graph-fixture-hash
+  - public-api-import-report
+  - import-boundary-report
+  - static-type-report
+passed_commit: null
+artifact_hashes: []
+```
+
+### WP-03D Readiness
+
+已冻结以下边界：
+
+1. `CurrencyValuationEdge` 是调用方提供的 immutable 有向边：一个 source `CurrencyId` 通过一个 `ResolvedMark` 指向该 Mark 的 quote `CurrencyId`；它保存完整 Mark/PricePurpose/source-event/revision provenance，不从 Instrument symbol 猜测币种关系；
+2. `CurrencyValuationGraph` 只包含同一 `UtcInstant`、同一 `PricePurpose` 的 supplied edges；Graph 不查询 MarkResolver、Reader、Bundle、网络或文件，也不自行生成逆向 Edge；
+3. Graph 只枚举无重复 Currency 的简单有向路径。输入 Edge 顺序不影响 graph/path identity；重复 Edge identity fail closed；
+4. source 等于 reporting currency 时必须返回显式 zero-edge identity path；不同 Currency 之间没有 Edge 时返回 `missing_path`，因此 Stablecoin 不存在隐式 1:1 peg；
+5. 唯一路径可直接解析；存在多个 candidate paths 时只能由显式版本化 `CurrencyValuationPolicy` 的 typed `ProfilePortOutcome` 选择，未提供 Policy 时返回 `non_unique_path`；
+6. Graph 验证 Policy component type、request hash 和 selected path hash；Policy failure 或伪造/未知选择均结构化失败，不按输入顺序猜测；
+7. 本 WP 只产出 point-in-time path/provenance evidence，不计算 `Money`、不决定数值舍入、不构建市场特定 FX/Stablecoin Edge、不选择 Mark、不修改 Ledger，也不计算 `PortfolioSnapshot`。
+
+WP-03D 当前状态为 `READY`，可以按上述公共 seam 实施。
+
+## 26. PASSED 记录格式
 
 ```yaml
 id: WP-00A

@@ -555,17 +555,18 @@ v1 canonical reason code 固定为：
 
 ### WP-03D CurrencyValuationGraph
 
-拥有：Native Currency Valuation → Reporting Currency Valuation 的唯一 point-in-time 路径解析。
+拥有：从调用方提供的 immutable、ResolvedMark-backed 有向 Edge 中解析 Native Currency → Reporting Currency 的唯一 point-in-time 路径及 provenance evidence。
 
-不拥有：Ledger mutation、Mark 选择或隐式 Stablecoin peg。
+不拥有：Ledger mutation、Mark 选择、Money 换算/舍入、市场特定 Graph 构建或隐式 Stablecoin peg。
 
 验收：
 
-- 每条 Edge 引用 Resolved Mark 和 PricePurpose；
-- 多路径按显式 CurrencyValuationPolicy 唯一选择；
-- 缺失或非唯一路径 fail closed；
-- Stablecoin 只有在版本化 Peg Policy 下才能按 1:1；
-- Synthetic 单币种 Fixture 也经过 Reporting Currency identity path。
+- 每条有向 Edge 引用完整 Resolved Mark 和 PricePurpose，不从 Instrument symbol 猜测 Currency relation，也不自动生成 inverse Edge；
+- Graph 中所有 Edge 属于同一 UtcInstant 和 PricePurpose，Edge 输入顺序不影响 graph/path identity；
+- 唯一路径直接解析；多路径只能由显式版本化 CurrencyValuationPolicy 的 typed outcome 唯一选择；
+- 缺失路径、未提供 Policy 的非唯一路径、Policy failure 或未知 path selection 均 fail closed；
+- Stablecoin 只有未来 Profile 显式提供版本化、Mark-backed Edge 时才能按 1:1，本 WP 不发明 Peg；
+- Synthetic 单币种 Fixture 也返回显式 zero-edge Reporting Currency identity path。
 
 ### WP-03E PortfolioSnapshotProjector
 
