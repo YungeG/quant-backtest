@@ -1,0 +1,20 @@
+{
+  "schema_version": 1,
+  "id": "mixed-contract-v1",
+  "rules": [
+    {"path": "/events", "comparison": "sequence"},
+    {
+      "path": "/fee",
+      "comparison": "quantized",
+      "quantum": "0.01",
+      "rounding": "ROUND_HALF_EVEN"
+    },
+    {
+      "path": "/legacy_metric",
+      "comparison": "explicit_tolerance",
+      "absolute_tolerance": "0.001",
+      "relative_tolerance": "0"
+    },
+    {"path": "/symbol", "comparison": "exact"}
+  ]
+}

@@ -1,0 +1,9 @@
+{
+  "events": [
+    {"sequence": 1, "type": "submitted"},
+    {"sequence": 2, "type": "filled"}
+  ],
+  "fee": "1.232",
+  "legacy_metric": "10.0009",
+  "symbol": "BTC-USDT"
+}

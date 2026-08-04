@@ -1,0 +1,87 @@
+{
+  "archive_file": "crypto-quant-core-33ca4055b16fd966d92263248289fcd960a1cb93f52c4d8a0db00030b3e3d0d1.tar.gz",
+  "archive_sha256": "33ca4055b16fd966d92263248289fcd960a1cb93f52c4d8a0db00030b3e3d0d1",
+  "content_tree_sha256": "6b4a8531bca29d9d0e52cb154826bb2fed644f1e59e238c9db9191bae5f984a2",
+  "files": [
+    {
+      "mode": "0644",
+      "path": "README.md",
+      "sha256": "8c90e9ff731d5c68d5ae654d603d5a4b45abaacb7b24da3a4c42ca100484a150",
+      "size": 744
+    },
+    {
+      "mode": "0644",
+      "path": "pyproject.toml",
+      "sha256": "2e57036bcb133dfe4c5c3a686cf49bd3b8af1c683a08854b26aa3fe9a86cf7dc",
+      "size": 539
+    },
+    {
+      "mode": "0644",
+      "path": "src/crypto_quant_core/__init__.py",
+      "sha256": "dd136f2f6862f4c3150f1c5a85ee71c2d9f608301e8db27d06ee9618c02f4f6a",
+      "size": 931
+    },
+    {
+      "mode": "0644",
+      "path": "src/crypto_quant_core/accounting.py",
+      "sha256": "4750b2f02403624bb810649836361bf286978fbc72f65e3fe1087362893bcb28",
+      "size": 2251
+    },
+    {
+      "mode": "0644",
+      "path": "src/crypto_quant_core/adapters/__init__.py",
+      "sha256": "43f7ed1328836d939f7f6a0dad0b13b162a960613916074729f70456bc5a9754",
+      "size": 90
+    },
+    {
+      "mode": "0644",
+      "path": "src/crypto_quant_core/adapters/hummingbot.py",
+      "sha256": "3755b0bbbb8358535b1887fa5abb11d2c3b5d8f1c8054fecf7bf95600b7ecfd3",
+      "size": 1147
+    },
+    {
+      "mode": "0644",
+      "path": "src/crypto_quant_core/causality.py",
+      "sha256": "9c32c5c25827833ec1f4116a8f9379b4d25ce05a096019ebaff38f5d34accc92",
+      "size": 1076
+    },
+    {
+      "mode": "0644",
+      "path": "src/crypto_quant_core/contracts.py",
+      "sha256": "7784520fecbb5123266d9e3c52eb239384105e017c83609372972ef49598d380",
+      "size": 4088
+    },
+    {
+      "mode": "0644",
+      "path": "src/crypto_quant_core/exchange_rules.py",
+      "sha256": "cada73ceb9b820ebe7b5a0b13857a23e07c31178a163d8bda06e724e5d61e63b",
+      "size": 5606
+    },
+    {
+      "mode": "0644",
+      "path": "src/crypto_quant_core/portfolio.py",
+      "sha256": "226271ba7089a03b38badefe9c2637d18b1cc314124acb20887acc2cd430ad03",
+      "size": 2923
+    },
+    {
+      "mode": "0644",
+      "path": "tests/test_core.py",
+      "sha256": "908adb2b4620e9ba09a0da80fc0e309571a3b64d3d9f86ea2abaf7e2d77a541a",
+      "size": 3245
+    },
+    {
+      "mode": "0644",
+      "path": "tests/test_crypt_gemini_parity.py",
+      "sha256": "b72f304a6ec56ab08ba14a0daba96ea1b45fe993caddff959c068e7ff2d514df",
+      "size": 1518
+    }
+  ],
+  "provenance": {
+    "base_commit": "348b9e56b99c8ee2999aa8cdfcf91a18ecce9019",
+    "remote": null,
+    "worktree_state": "clean"
+  },
+  "schema_version": 1,
+  "snapshot_id": "sha256:33ca4055b16fd966d92263248289fcd960a1cb93f52c4d8a0db00030b3e3d0d1",
+  "source_id": "crypto-quant-core"
+}

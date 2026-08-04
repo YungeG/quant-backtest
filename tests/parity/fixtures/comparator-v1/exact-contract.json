@@ -1,0 +1,8 @@
+{
+  "schema_version": 1,
+  "id": "exact-contract-v1",
+  "rules": [
+    {"path": "/cash_units", "comparison": "exact"},
+    {"path": "/currency", "comparison": "exact"}
+  ]
+}
