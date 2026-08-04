@@ -54,7 +54,7 @@ artifact_hashes: []
 |---|---|---|---|---|
 | WP-00A | PASSED | repository root | none | none |
 | WP-00B | PASSED | repository root | WP-00A | none |
-| WP-00C | DRAFT | repository root + parity tooling | WP-00B | 三个来源项目 immutable identity |
+| WP-00C | READY | repository root + parity tooling | WP-00B | none |
 | WP-01A | DRAFT | trading-domain | G00 | Numeric Interface/fixtures/commands |
 | WP-01B | DRAFT | trading-domain | WP-01A | Time/DST fixtures/commands |
 | WP-01C | DRAFT | trading-domain | WP-01B | ID namespace/version fixtures |
@@ -291,7 +291,83 @@ Python                                                                 3.13.5
 Policy sha256                                                          d209981299381c7815e1da25be271675cbe30dd67a84ce157699ccb682e66ea9
 ```
 
-## 6. PASSED 记录格式
+## 6. WP-00C Acceptance Card
+
+```yaml
+id: WP-00C
+status: READY
+depends_on:
+  - WP-00B
+owner_package: repository-root-and-parity-tooling
+public_interface:
+  - docs/migration/source-map.yaml schema v1
+  - deterministic source snapshot manifest schema v1
+  - tools/migration/freeze_source_snapshot.py CLI
+  - tools/migration/verify_legacy_baseline.py CLI
+  - comparator contract schema v1
+  - tools/migration/run_parity.py CLI
+  - first-divergence parity report schema v1
+test_commands:
+  contract: uv run python tools/migration/verify_legacy_baseline.py --root . --source-map docs/migration/source-map.yaml --report build/acceptance/wp-00c-source-baseline-report.json
+  fixture: uv run pytest -q tests/parity/test_source_snapshots.py tests/parity/test_comparator_contract.py
+  boundary: uv run pytest -q tests/parity/test_parity_report_harness.py tests/architecture/test_repository_cleanliness.py
+fixture_ids:
+  - legacy-source-snapshots-v1
+  - comparator-contract-v1
+  - first-divergence-parity-report-v1
+expected_artifacts:
+  - docs/migration/source-map.yaml
+  - tests/parity/contracts/comparator-contract-v1.schema.json
+  - tests/parity/fixtures/legacy-sources/*.tar.gz
+  - tests/parity/fixtures/legacy-sources/*.manifest.json
+  - tests/parity/fixtures/comparator-v1/
+  - build/acceptance/wp-00c-source-baseline-report.json
+  - build/acceptance/wp-00c-pytest.xml
+failure_contracts:
+  - unsupported-source-map-schema
+  - undeclared-source-path
+  - missing-source-member
+  - duplicate-source-member
+  - unsafe-archive-member
+  - snapshot-hash-mismatch
+  - manifest-hash-mismatch
+  - unsupported-migration-mode
+  - intentional-change-without-adr
+  - global-epsilon-forbidden
+  - unclassified-comparator-field
+  - invalid-quantization-policy
+  - invalid-explicit-tolerance
+  - sequence-first-divergence
+  - approved-change-without-reference
+  - migration-evidence-mutated
+allowed_grade: development
+evidence:
+  - source-map-hash
+  - three-snapshot-hashes
+  - three-manifest-hashes
+  - comparator-contract-hash
+  - pytest-report
+  - source-baseline-report
+passed_commit: null
+artifact_hashes: []
+```
+
+### WP-00C Readiness
+
+已冻结以下决策：
+
+1. 来源仓库 clean/dirty 状态不影响资格；Snapshot 捕获 `include_files` 中当时的实际文件字节；
+2. 首批范围为 `crypto-quant-core` 12 文件、`cycle-rotation-platform` 8 文件、`crypt-gemini` 28 文件；
+3. 三个确定性归档及 Manifest 都作为 Git 跟踪的 Golden Fixture 提交；
+4. Base commit、remote、worktree state 仅为 provenance，Archive SHA-256 才是 Source Snapshot identity；
+5. 验证完全离线，不能依赖三个原来源仓库继续存在；
+6. `PyYAML` 是本 WP 唯一新增 external seam；Comparator 和 Snapshot 算法只使用标准库；
+7. Comparator 禁止 global epsilon，字段必须逐项声明比较语义；
+8. `intentional_semantic_change` 和 `approved_change` 必须引用已提交 ADR。
+
+WP-00C 当前状态为 `READY`，只有用户明确要求开始实现后才执行。
+
+## 7. PASSED 记录格式
 
 ```yaml
 id: WP-00A

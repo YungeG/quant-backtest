@@ -186,15 +186,36 @@ uv run pytest -q tests/architecture/test_network_isolation.py tests/architecture
 
 ### WP-00C Legacy Baseline and Migration Harness
 
+工具基线：`PyYAML` 是本 WP 唯一新增 external seam，只用于读取受控 `source-map.yaml`；Snapshot、Comparator 和 ParityReport 使用标准库 `tarfile`、`gzip`、`hashlib`、`decimal` 和 JSON。
+
 拥有：冻结迁移来源身份、Migration Source Map、Comparator Contract 目录和模块级 ParityReport Harness。
 
 产物：
 
 ```text
 docs/migration/source-map.yaml
-tests/parity/contracts/
-tests/parity/fixtures/
+                         # Source Map schema v1、显式 include_files、provenance 和 migration units
+tools/migration/freeze_source_snapshot.py
+                         # 从声明文件列表捕获实际 worktree bytes，生成 deterministic tar.gz + manifest
+tools/migration/verify_legacy_baseline.py
+                         # 完全离线验证 Source Map、archive、manifest 和 aggregate identity
+tools/migration/run_parity.py
+                         # Comparator Contract v1 和 first-divergence ParityReport CLI
+tests/parity/contracts/comparator-contract-v1.schema.json
+tests/parity/fixtures/legacy-sources/
+tests/parity/fixtures/comparator-v1/
+tests/parity/test_source_snapshots.py
+tests/parity/test_comparator_contract.py
+tests/parity/test_parity_report_harness.py
 ```
+
+首批 Snapshot scope：
+
+- `crypto-quant-core`：12 个核心源码、测试及 package metadata 文件；base commit `348b9e56b99c8ee2999aa8cdfcf91a18ecce9019`；
+- `cycle-rotation-platform`：8 个架构、Strategy contract 和交易语义文件；base commit `91cd8e182b736a07319e0f504e64572b32ea7dea`；
+- `crypt-gemini`：28 个 `hummingbot_audited`、`blend_v2/execution.py` 和 `mm_l1_replay` 文件；base commit `ba36e8a2b9ca1b1a949cf71cc93e175c9ef5e014`。
+
+Snapshot archive 规则：成员按路径排序，mtime/uid/gid 固定为零，owner/group 为空，只保留 regular file bytes 和 executable bit；禁止 symlink、absolute path、`..`、重复成员及 scope 外文件。Archive SHA-256 是 Snapshot ID，Manifest 另含逐文件 SHA-256、size、mode 和 canonical content-tree hash。
 
 允许 Migration Mode：
 
@@ -210,8 +231,19 @@ tests/parity/fixtures/
 - Base commit、remote 和 clean/dirty 状态只记录为 provenance，不能替代 aggregate snapshot hash；
 - Snapshot 归档和 Manifest 作为受控 Golden Fixture 提交，后续验证不依赖原来源仓库仍然存在；
 - `intentional_semantic_change` 必须引用 ADR；
-- Comparator 按字段声明 exact、quantized、sequence、explicit tolerance 或 approved change，禁止全局 epsilon；
-- 来源后续变化不能改写旧 Migration Evidence。
+- Comparator 按字段声明 `exact`、`quantized`、`sequence`、`explicit_tolerance` 或 `approved_change`，禁止全局 epsilon；
+- `quantized` 必须声明 Decimal quantum 和 rounding；`explicit_tolerance` 必须逐字段声明 absolute/relative tolerance；
+- 所有未分类字段、重复规则、非法 tolerance、sequence 首个差异和 approved change 缺失引用均 fail closed；
+- ParityReport 固定记录 contract hash、expected/actual hash、first divergence、Migration Mode 和 verdict；
+- 来源后续变化不能改写旧 Migration Evidence；验证命令不读取原来源仓库。
+
+验收命令：
+
+```text
+uv run python tools/migration/verify_legacy_baseline.py --root . --source-map docs/migration/source-map.yaml --report build/acceptance/wp-00c-source-baseline-report.json
+uv run pytest -q tests/parity/test_source_snapshots.py tests/parity/test_comparator_contract.py
+uv run pytest -q tests/parity/test_parity_report_harness.py tests/architecture/test_repository_cleanliness.py
+```
 
 ### Gate G00
 
@@ -1579,7 +1611,7 @@ G02: WP-02A → WP-02B → WP-02C → WP-02D → WP-02E → WP-02F → WP-02G �
 G03: WP-03A → WP-03B → WP-03C → WP-03D → WP-03E → WP-03F → review
 ```
 
-`WP-00A Workspace skeleton` 和 WP-00B Dependency boundary checks 已通过验收。WP-00C 仍为 `DRAFT`，必须先冻结三个迁移来源的 immutable identity 并补齐 Acceptance Card，不能直接开始实现；每个 Gate 都允许停止、修改接口或回滚，不默认继续后续 Gate。
+`WP-00A Workspace skeleton` 和 WP-00B Dependency boundary checks 已通过验收。三个来源 scope、Snapshot identity、Comparator 和 Evidence 规则已冻结，WP-00C 当前为 `READY`；仍须用户明确授权后才能开始实现。每个 Gate 都允许停止、修改接口或回滚，不默认继续后续 Gate。
 
 到 G03 再做一次 Foundation Release Review：
 
