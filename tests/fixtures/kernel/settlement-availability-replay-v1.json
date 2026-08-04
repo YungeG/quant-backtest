@@ -1,0 +1,36 @@
+{
+  "after_cash_settlement_hash": "sha256:5b0cafab75250537868e14d6c750e4426b6d5715b9414dc9b4d8c2cca64cd57f",
+  "after_cash_units": {
+    "settled": 15000,
+    "tradable": 12900,
+    "withdrawable": 11400
+  },
+  "applied_final": [
+    "stl_1111111111111111111111111111111111111111111111111111111111111111",
+    "stl_2222222222222222222222222222222222222222222222222222222222222222",
+    "stl_3333333333333333333333333333333333333333333333333333333333333333"
+  ],
+  "before_cash_settlement_hash": "sha256:f761f09c05034833afc30a606a1f25f115127ce31cfc9f1c9395987467531b36",
+  "before_cash_units": {
+    "available_margin": 13500,
+    "settled": 10000,
+    "total": 15000,
+    "tradable": 12900,
+    "withdrawable": 6400
+  },
+  "before_position_units": {
+    "sellable": 13,
+    "total": 15
+  },
+  "book_hash": "sha256:cc5a5e55e3485012305d573768cffd956376a36e234b4054393d10e65f563a10",
+  "canonical_final_hash": "sha256:fc1855442af671fb92a2ffa387d1e87b96fd7a55769c4ed2f0e4efc7a82975f7",
+  "final_state_hash": "sha256:fc1855442af671fb92a2ffa387d1e87b96fd7a55769c4ed2f0e4efc7a82975f7",
+  "fixture_id": "settlement-availability-replay-v1",
+  "pending_after_position_apply": [
+    "stl_2222222222222222222222222222222222222222222222222222222222222222",
+    "stl_3333333333333333333333333333333333333333333333333333333333333333"
+  ],
+  "position_applied_state_hash": "sha256:99f11af287bdad68b93faf4af3c1663a1c7c4322dc39805e620ef60f43829d52",
+  "recorded_state_hash": "sha256:18c350568f13080bfa80ff53a2180966f2a958ff4fd4658420c193dea1de2056",
+  "rules_hash": "sha256:945208236971074523038cb0cd0db135d3e632fa29934ade2d22d410be8dbaba"
+}
