@@ -452,10 +452,13 @@ v1 Port seam 使用三参数 generic Protocol：`RequestT`、`ResultT` 和 `Fail
 
 验收：
 
-- Simulation Port 与 Market Semantics Port 类型上分离；
-- Slippage/Liquidity 等模型必须暴露 version、capability requirements 和 applicability；
-- Live Runtime 不需要安装或导入这些 Ports；
-- 未配置模型不能使用隐式零值或 no-op 降级。
+- Simulation Port 与 Market Semantics Port 类型上分离，使用独立 `SimulationPortType`、`SimulationComponentRef`、`SimulationPortSpec` 和 `SimulationPortOutcome`；
+- 六个模型均为 `runtime_checkable` generic Protocol，并分别使用 `simulate_execution()`、`decide_slippage()`、`resolve_latency()`、`evaluate_liquidity()`、`audit_liquidation()` 和 `resolve_closeout()`；
+- 每个模型必须通过 `SimulationPortSpec` 暴露 versioned component identity、显式 `SimulationCapabilityRequirement` 集合和 typed canonical applicability contract；空 capability 集合必须显式存在，不能通过缺失属性表示；
+- 每次调用返回保存 canonical input hash 的 exactly-one result/failure outcome；不得返回裸值、`None`、日志文本或抛出预期业务失败；
+- Live Runtime 不需要安装或导入这些 Ports；`trading-domain`、`trading-kernel` 和未来 Live composition 不能反向依赖 `backtest-runtime`；
+- 未配置模型不能使用隐式零值、零滑点、无限流动性、零延迟、自动 closeout 或 no-op 降级；
+- 本 WP 不实现 CalibrationEvidence 内容、具体 Applicability 条件、RandomStream、Profile composition/registry/resolver、next-open execution 或任何 concrete/synthetic model。
 
 ### WP-02H Profile Component Error Taxonomy
 

@@ -67,7 +67,7 @@ artifact_hashes: []
 | WP-02D | PASSED | trading-domain | WP-02A, WP-02C | none |
 | WP-02E | PASSED | trading-domain | WP-01D | none |
 | WP-02F | PASSED | trading-kernel | WP-02A–WP-02D | none |
-| WP-02G | DRAFT | backtest-runtime | WP-02A–WP-02D | Simulation Port contracts |
+| WP-02G | READY | backtest-runtime | WP-02A–WP-02D, WP-02F | none |
 | WP-02H | DRAFT | trading-domain | WP-02A–WP-02E | Error taxonomy catalog |
 | WP-03A | DRAFT | trading-kernel | G02 | Journal replay fixtures |
 | WP-03B | DRAFT | trading-kernel | WP-03A | Ledger projection fixtures |
@@ -1317,7 +1317,80 @@ pi-lens full scoped scan                                                no findi
 Python                                                                  3.13.5
 ```
 
-## 19. PASSED 记录格式
+## 19. WP-02G Acceptance Card
+
+```yaml
+id: WP-02G
+status: READY
+depends_on:
+  - WP-02A
+  - WP-02B
+  - WP-02C
+  - WP-02D
+  - WP-02F
+owner_package: backtest-runtime
+public_interface:
+  - crypto_quant_backtest.SimulationPortType
+  - crypto_quant_backtest.SimulationPortContract
+  - crypto_quant_backtest.SimulationComponentRef
+  - crypto_quant_backtest.SimulationCapabilityRequirement
+  - crypto_quant_backtest.SimulationPortSpec
+  - crypto_quant_backtest.SimulationPortOutcome
+  - crypto_quant_backtest.ExecutionModel
+  - crypto_quant_backtest.SlippageModel
+  - crypto_quant_backtest.LatencyModel
+  - crypto_quant_backtest.LiquidityModel
+  - crypto_quant_backtest.LiquidationAuditModel
+  - crypto_quant_backtest.CloseoutPolicy
+test_commands:
+  contract: uv run pytest -q tests/runtime/ports/test_simulation_port_contracts.py
+  fixture: uv run pytest -q tests/runtime/ports/test_simulation_port_golden.py
+  boundary: uv run pytest -q tests/architecture/test_public_api_imports.py tests/architecture/test_repository_cleanliness.py
+fixture_ids:
+  - simulation-profile-ports-v1
+expected_artifacts:
+  - tests/fixtures/runtime/simulation-profile-ports-v1.json
+  - build/acceptance/wp-02g-pytest.xml
+failure_contracts:
+  - invalid-simulation-port-type
+  - invalid-simulation-component-key
+  - invalid-simulation-component-version
+  - invalid-simulation-component-digest
+  - invalid-simulation-capability-key
+  - invalid-simulation-capability-version
+  - duplicate-simulation-capability
+  - noncanonical-simulation-applicability
+  - simulation-result-and-failure
+  - simulation-result-and-failure-missing
+  - invalid-simulation-input-hash
+  - missing-simulation-port-method
+  - market-port-identity-reused-for-simulation
+  - implicit-zero-or-noop-simulation-default
+  - live-runtime-depends-on-backtest-runtime
+allowed_grade: development
+evidence:
+  - pytest-report
+  - simulation-profile-port-fixture-hash
+  - public-api-import-report
+passed_commit: null
+artifact_hashes: []
+```
+
+### WP-02G Readiness
+
+已冻结以下边界：
+
+1. Simulation Ports 由 `backtest-runtime` 独占，使用独立于 `ProfilePortType/ProfileComponentRef/ProfilePortOutcome` 的 identity、spec 和 outcome contracts；Market/Account semantics 仍只属于 `trading-kernel`；
+2. 六个 Port 是 `runtime_checkable` generic Protocol，每个有独立语义方法名和 typed Request/Result/Failure；这些值必须满足 immutable canonical `SimulationPortContract`，不能使用 DataFrame、Vendor DTO、Runtime mutable state、裸 `dict` 或 `Any`；
+3. `SimulationPortSpec` 固定 component ref、canonical applicability contract 及 canonical-sorted unique capability requirements；它显式允许空 requirements，但没有缺失属性或隐式 default；
+4. `SimulationPortOutcome` 保存 component identity、canonical input hash 和 exactly-one-of result/failure；预期不适用、能力不足或无法模拟必须走 typed failure seam，具体共享 reason code 在 WP-02H 冻结；
+5. 本 WP 不冻结 CalibrationEvidence payload、具体 applicability 条件、RandomStream derivation、ResolvedSimulationProfile、registry/resolver、next-open/slippage 数值、bar liquidation 或 closeout 行为；这些属于后续独立 Gate；
+6. 没有 concrete/no-op/zero-slippage/unlimited-liquidity/zero-latency/automatic-closeout model。Test Adapter 只验证调用 seam，不进入任何 Production Registry；
+7. `backtest-runtime` 发布 PEP 561 `py.typed`；`trading-domain` 和 `trading-kernel` 不能反向导入它，未来 Live Runtime 也不依赖它。
+
+WP-02G 当前为 `READY`，用户的连续授权允许直接进入实现。
+
+## 20. PASSED 记录格式
 
 ```yaml
 id: WP-00A
