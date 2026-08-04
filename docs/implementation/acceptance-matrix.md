@@ -58,7 +58,7 @@ artifact_hashes: []
 | G00 | PASSED | repository root | WP-00A, WP-00B, WP-00C | none |
 | WP-01A | PASSED | trading-domain | G00 | none |
 | WP-01B | PASSED | trading-domain | WP-01A | none |
-| WP-01C | DRAFT | trading-domain | WP-01B | ID namespace/version fixtures |
+| WP-01C | READY | trading-domain | WP-01B | none |
 | WP-01D | DRAFT | trading-domain | WP-01A–WP-01C | Canonical golden bytes/hash |
 | WP-02A | DRAFT | trading-domain | G01 | Instrument identity fixtures |
 | WP-02B | DRAFT | trading-domain | WP-02A | Candidate/Validated wire fixtures |
@@ -603,7 +603,60 @@ mypy                                                                      no iss
 Python                                                                    3.13.5
 ```
 
-## 10. PASSED 记录格式
+## 10. WP-01C Acceptance Card
+
+```yaml
+id: WP-01C
+status: READY
+depends_on:
+  - WP-01B
+owner_package: trading-domain
+public_interface:
+  - crypto_quant_domain.IdentityNamespace
+  - crypto_quant_domain.IdentityManifest
+  - crypto_quant_domain.DomainIdKind
+  - crypto_quant_domain.DomainId
+  - crypto_quant_domain.derive_domain_id
+test_commands:
+  contract: uv run pytest -q tests/domain/identity/test_domain_ids.py
+  fixture: uv run pytest -q tests/domain/identity/test_identity_golden.py
+  boundary: uv run pytest -q tests/architecture/test_public_api_imports.py tests/architecture/test_repository_cleanliness.py
+fixture_ids:
+  - deterministic-domain-ids-v1
+expected_artifacts:
+  - tests/fixtures/domain/deterministic-domain-ids-v1.json
+failure_contracts:
+  - noncanonical-semantic-run-id
+  - empty-semantic-key
+  - invalid-domain-ordinal
+  - invalid-domain-id
+  - attempt-id-contamination
+  - identity-algorithm-drift
+  - identity-namespace-version-drift
+allowed_grade: development
+evidence:
+  - pytest-report
+  - identity-golden-hash
+  - public-api-import-report
+passed_commit: null
+artifact_hashes: []
+```
+
+### WP-01C Readiness
+
+已冻结 identity algorithm v1：
+
+1. 输入仅包含 `IdentityNamespace`、`DomainIdKind`、Semantic Run ID、canonical semantic key bytes 和 non-negative ordinal；Attempt ID 不存在于接口中；
+2. SHA-256 payload 使用固定 magic `crypto-quant-domain-id\\0`，随后依次写入 algorithm、namespace、namespace version、kind、semantic run ID 和 semantic key 的 4-byte big-endian length-prefixed UTF-8/bytes，ordinal 使用 8-byte unsigned big-endian；
+3. algorithm 标识为 `sha256-length-prefixed-v1`；
+4. ID 使用固定 kind prefix + 64 lowercase hex digest；
+5. v1 支持 decision、order、fill、fee、settlement、journal 和 reservation kind；
+6. Semantic Run ID、namespace 和 version 必须是无首尾空白的 canonical text；semantic key 必须是非空 immutable bytes；
+7. Namespace/version/algorithm 进入 `IdentityManifest` 和 hash payload，任何变化必须显式改变 ID。
+
+WP-01C 当前状态为 `READY`，根据持续推进授权可直接实施。
+
+## 11. PASSED 记录格式
 
 ```yaml
 id: WP-00A

@@ -296,7 +296,7 @@ crypto_quant_domain.numeric
 
 ### WP-01C Deterministic identity
 
-拥有：Semantic namespace 下 Order、Fill、Fee、Settlement、Journal 等领域 ID 的确定性派生算法。
+拥有：Semantic namespace 下 Decision、Order、Fill、Fee、Settlement、Journal 和 Reservation 领域 ID 的确定性派生算法。v1 使用 `sha256-length-prefixed-v1`：固定 magic、versioned namespace、kind、Semantic Run ID、canonical semantic key bytes 和 unsigned ordinal 均进入无歧义 length-prefixed payload；Attempt ID 不属于接口。
 
 验收：
 
