@@ -90,7 +90,7 @@ artifact_hashes: []
 | WP-05E | PASSED | trading-kernel | WP-05D | none |
 | WP-05F | PASSED | trading-kernel | WP-05E | none |
 | WP-05G | PASSED | trading-kernel | WP-05F, WP-02F | none |
-| WP-05H | DRAFT | trading-kernel | WP-05G, WP-02F | Fee reservation fixtures |
+| WP-05H | READY | trading-kernel | WP-05G, WP-02F | none |
 | WP-05I | DRAFT | trading-kernel | WP-05B, WP-05H | Pre-trade Risk fixtures |
 | WP-05J | DRAFT | trading-kernel | WP-02F, WP-03A | Fee assessment fixtures |
 | WP-06A | DRAFT | market-data-contracts | G02 | Reader/Cursor contract commands |
@@ -3368,7 +3368,82 @@ Python                                                            3.13.5
 
 四个 jscpd findings 属于 canonical payload/factory 显式字段列表与 typed signature 的结构性 false positive；两个小型 module-local validation helper 与既有 Kernel 模块形状相同，已在本 session defer，避免在独立 contract 稳定前引入共享内部抽象。
 
-## 42. PASSED 记录格式
+## 42. WP-05H FeeReservationEstimator Acceptance Card
+
+```yaml
+id: WP-05H
+status: READY
+depends_on:
+  - WP-05G
+  - WP-02F
+owner_package: trading-kernel
+public_interface:
+  - crypto_quant_trading.FeeReservationRuleSource
+  - crypto_quant_trading.FeeReservationBasis
+  - crypto_quant_trading.FeeReservationApplicability
+  - crypto_quant_trading.AccountFeeScheduleRef
+  - crypto_quant_trading.FeeReservationChargeRule
+  - crypto_quant_trading.FeeReservationMinimum
+  - crypto_quant_trading.FeeReservationRuleSet
+  - crypto_quant_trading.FeeReservationLine
+  - crypto_quant_trading.FeeReservationEstimate
+  - crypto_quant_trading.ResourceReservationProposal
+  - crypto_quant_trading.FeeReservationFailureCode
+  - crypto_quant_trading.FeeReservationFailure
+  - crypto_quant_trading.FeeReservationOutcome
+  - crypto_quant_trading.FeeReservationEstimator
+test_commands:
+  contract: uv run pytest -q tests/kernel/fee_reservations/test_fee_reservation_estimator.py
+  fixture: uv run pytest -q tests/kernel/fee_reservations/test_fee_reservation_golden.py
+  boundary: uv run pytest -q tests/architecture/test_public_api_imports.py tests/architecture/test_repository_cleanliness.py
+fixture_ids:
+  - worst-case-fee-reservation-v1
+expected_artifacts:
+  - tests/fixtures/kernel/worst-case-fee-reservation-v1.json
+  - build/acceptance/wp-05h-pytest.xml
+  - build/acceptance/wp-05h-import-boundary-report.json
+failure_contracts:
+  - non-approved-market-rule-input
+  - fee-estimation-before-market-rule-evaluation
+  - forged-market-tax-or-account-fee-component-identity
+  - missing-explicit-market-tax-or-account-rule-source
+  - unknown-fee-reservation-basis
+  - unknown-fee-applicability
+  - fee-rule-currency-scale-or-quantization-mismatch
+  - duplicate-fee-rule-or-minimum-identity
+  - invalid-minimum-rule-scope
+  - per-order-minimum-multiplied-by-possible-fills
+  - fee-estimate-or-proposal-input-order-dependent-identity
+  - fee-reservation-final-assessment-journal-profile-resolution-risk-execution-or-runtime-leakage
+allowed_grade: development
+evidence:
+  - pytest-report
+  - worst-case-fee-reservation-canonical-golden-fixture-hash
+  - deterministic-rule-set-estimate-proposal-and-failure-hashes
+  - public-api-import-report
+  - import-boundary-report
+  - static-type-report
+passed_commit: null
+artifact_hashes: []
+```
+
+### WP-05H Readiness
+
+冻结以下边界：
+
+1. `FeeReservationEstimator` 只消费已通过 `MarketRuleApproval` 的未修改 Order、权威估算时点和显式 immutable `FeeReservationRuleSet`；不调用 Fee/Tax Profile Port、Profile Resolver、Reader、网络或账户服务；
+2. Rule Set 显式绑定 `FEE_ASSESSMENT_POLICY`、`TAX_POLICY` 和版本化 `AccountFeeScheduleRef`，并要求 Market Fee、Tax 和 Account Schedule 三类来源均有明确 rule（可以显式 `not_applicable`，不能因缺失而默认为零）；
+3. v1 `FeeReservationBasis` 只支持 `order_notional` 与 `flat_per_order`。未知 basis 和 `unknown` applicability 返回结构化 failure，不猜测金额；
+4. 所有 charge 使用同一显式 reservation Currency/Scale。Notional rate 通过整数算术和 rule 自带 `QuantizationPolicy` 计算；不允许 float、隐式 rescale、FX 或 Stablecoin 假设；
+5. `FeeReservationMinimum` 显式列出覆盖的 charge rule IDs。Estimator 先计算 scope subtotal，再只添加一次 `max(minimum - subtotal, 0)` adjustment；Estimate 不接受 possible-fill-count，因此 minimum 不可能按潜在 Fill 次数重复预留；
+6. `FeeReservationEstimate` 保存 source Approval、Rule Set、逐 rule line、minimum adjustment、总最坏 Fee、估算时点及全部 identity/hash。`ResourceReservationProposal` 只把总 Fee 写入 `ReservationCommitment.fee_reserve`，不创建 Cash/Margin/Sellable/Capacity 承诺；
+7. Rule、minimum 和输入 tuple 顺序不改变 Rule Set、Estimate、Proposal 或 Failure identity；任一结构化 failure 都不产生部分 Estimate/Proposal；
+8. 订单终态的 release 由 `ResourceReservationBook` lifecycle 使用 Proposal commitment 完成；差额释放不是 FeeAssessment、Cash 变化或 Journal Entry；
+9. 本 WP 不实现最终 `FeeAssessment`、FeeCharged Journal、per-fill/order/session 聚合、具体市场 Fee/Tax schedule、Profile resolution、Pre-trade Risk、Submission、Execution、Accounting 或 Runtime orchestration。
+
+WP-05H 的 Acceptance Card 已满足实现准备条件，状态为 `READY`。
+
+## 43. PASSED 记录格式
 
 ```yaml
 id: WP-00A

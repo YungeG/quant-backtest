@@ -874,16 +874,26 @@ v1 Candidate Schema 固定为：
 
 ### WP-05H FeeReservationEstimator
 
-拥有：下单前基于 Order、市场/税费/账户 Policy 的最坏 Fee Reservation Estimate。
+拥有：下单前基于已通过 `MarketRuleApproval` 的 Order 和显式 immutable 市场/税费/账户规则，计算最坏 `FeeReservationEstimate` 与仅包含 Fee reserve 的 `ResourceReservationProposal`。
 
-不拥有：最终 FeeAssessment 或 Journal Entry。
+冻结语义：
+
+- Rule Set 显式绑定 `FEE_ASSESSMENT_POLICY`、`TAX_POLICY` 和版本化 `AccountFeeScheduleRef`；Market Fee、Tax、Account Schedule 三类来源都必须具有明确 rule，显式 `not_applicable` 可以表示不收费，缺失不能默认为零；
+- v1 只解释 `order_notional` 和 `flat_per_order` basis。未知 basis 或 `unknown` applicability 结构化失败，不调用 Profile callback 或自行推断；
+- 所有收费使用同一显式 reservation Currency/Scale。Notional rate 采用 Typed Scaled Integer 与 rule 自带 `QuantizationPolicy`，禁止 float、隐式 rescale、FX 或 Stablecoin 假设；
+- `FeeReservationMinimum` 显式声明覆盖的 charge rule IDs。Estimator 对 scope subtotal 只添加一次 minimum adjustment，API 不接受 possible Fill count；
+- Estimate 保存 source Approval、Rule Set、逐 rule line、minimum adjustment、总 Fee、估算时点和全部 identity/hash；Proposal 只填充 `ReservationCommitment.fee_reserve`，不生成其他资源承诺；
+- 输入顺序不改变 Rule Set/Estimate/Proposal/Failure identity；任一 failure 都不产生部分权威输出。
+
+不拥有：最终 FeeAssessment、FeeCharged/Journal、per-fill/order/session 最终聚合、具体市场 Fee/Tax schedule、Profile Resolver、Pre-trade Risk、Submission、Execution、Accounting 或 Runtime orchestration。
 
 验收：
 
 - Estimate 只影响 Reservation Proposal 和 Available Resources；
 - per-order minimum fee 不被按潜在 Fill 次数重复预留；
-- 未知 fee basis 或 applicability 产生结构化失败；
-- 订单终态释放最终 Fee 与预留之间的差额。
+- 未知 fee basis、未知 applicability、缺失 source coverage 或 context/hash mismatch 产生结构化失败；
+- 订单终态由 ResourceReservation lifecycle 释放 Proposal，释放差额不构成 Accounting；
+- Market/Tax/Account rules 与 input 顺序变化具有 canonical identity parity。
 
 ### WP-05I PreTradeRisk
 
