@@ -98,7 +98,7 @@ artifact_hashes: []
 | WP-06B | PASSED | backtest-runtime | WP-01B, WP-06A | none |
 | WP-06C | PASSED | backtest-runtime | G04, WP-06A–WP-06B | none |
 | WP-06D | PASSED | backtest-runtime | WP-02G, WP-03C | none |
-| WP-06E | READY | backtest-runtime | G05, WP-06A–WP-06D | none |
+| WP-06E | PASSED | backtest-runtime | G05, WP-06A–WP-06D | none |
 | WP-06F | DRAFT | backtest-runtime | WP-03E, WP-05A–WP-05C, WP-06B, WP-06E | Run-end fixtures |
 | WP-06G | DRAFT | backtest-runtime | WP-06A–WP-06F | Engine harness fixtures |
 | WP-06H | DRAFT | tests/support | WP-02F–WP-02G | Synthetic profile/golden artifacts |
@@ -4135,7 +4135,7 @@ Python                                                              3.13.5
 
 ```yaml
 id: WP-06E
-status: READY
+status: PASSED
 depends_on:
   - G05
   - WP-06A
@@ -4200,11 +4200,14 @@ evidence:
   - public-api-import-report
   - import-boundary-report
   - static-type-report
-passed_commit: null
-artifact_hashes: []
+passed_commit: 71c8fb1db3472549f43afc4b9ac79ce2c58923f9
+artifact_hashes:
+  tests/fixtures/runtime/next-eligible-bar-open-v1.json: sha256:f05ef9e5762878c4d51d1b6ea43b6c2094258c95142683e4a045315bdc66d3bd
+  build/acceptance/wp-06e-pytest.xml: sha256:cba3e8569eb95b47460966bb931ec9cf7f07bc556e8e100c80d34dfacadf617f
+  build/acceptance/wp-06e-import-boundary-report.json: sha256:0bacbc5e615f8647c54eb0e9e3af2419a0d35d397be16b199e5f17c781e182c3
 ```
 
-### WP-06E Readiness
+### WP-06E Acceptance
 
 冻结以下实现边界：
 
@@ -4219,7 +4222,23 @@ artifact_hashes: []
 9. Open Reference 通过 exact source Event/Revision identity 构造 `PricePurpose.EXECUTION_REFERENCE` Mark。Fill 保存 Reference、Slippage decision/model/calibration 和执行 Bar instant；Fill ID 由调用方提供，本 WP 不生成 Semantic Run ID；
 10. 本 WP 不实现 Partial Fill/Queue/Participation、Fee/Accounting、concrete Market Profile/Resolver、Run Outcome、Evidence publication 或完整 Engine orchestration。
 
-WP-06E 已具备实现所需的 Fixture、失败边界和接口约束，状态为 `READY`。
+WP-06E 的实现已冻结在 immutable commit `71c8fb1db3472549f43afc4b9ac79ce2c58923f9`，状态为 `PASSED`。
+
+验证记录：
+
+```text
+Next Eligible Bar Open contract tests                              9 passed
+Canonical next-open golden fixture                                 1 passed
+Public API + repository cleanliness boundaries                     5 passed
+Acceptance test report                                            15 passed
+Backtest-runtime import boundary                                   PASS (47 files)
+Full test suite                                                   467 passed
+mypy                                                               no issues (9 files)
+Primary LSP                                                        clean
+pi-lens scoped review                                              no unresolved findings
+uv lock --check                                                    PASS
+Python                                                             3.13.5
+```
 
 ## 51. PASSED 记录格式
 
