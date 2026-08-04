@@ -100,7 +100,7 @@ artifact_hashes: []
 | WP-06D | PASSED | backtest-runtime | WP-02G, WP-03C | none |
 | WP-06E | PASSED | backtest-runtime | G05, WP-06A–WP-06D | none |
 | WP-06F | PASSED | backtest-runtime | WP-03E, WP-05A–WP-05C, WP-06B, WP-06E | none |
-| WP-06G | DRAFT | backtest-runtime | WP-06A–WP-06F | Engine harness fixtures |
+| WP-06G | READY | backtest-runtime | WP-06A–WP-06F | none |
 | WP-06H | DRAFT | tests/support | WP-02F–WP-02G | Synthetic profile/golden artifacts |
 | WP-07A | DRAFT | backtest-runtime | G06 | Resolver/semantic ID fixtures |
 | WP-07B | DRAFT | backtest-runtime | WP-07A | Attempt/Outcome fixtures |
@@ -4349,7 +4349,100 @@ uv lock --check                                                    PASS
 Python                                                             3.13.5
 ```
 
-## 52. PASSED 记录格式
+## 52. WP-06G Engine orchestration harness Acceptance Card
+
+```yaml
+id: WP-06G
+status: READY
+depends_on:
+  - WP-06A
+  - WP-06B
+  - WP-06C
+  - WP-06D
+  - WP-06E
+  - WP-06F
+owner_package: backtest-runtime
+public_interface:
+  - crypto_quant_backtest.ResolvedExecutionCase
+  - crypto_quant_backtest.ResolvedDecisionCycle
+  - crypto_quant_backtest.ResolvedOrderAdmission
+  - crypto_quant_backtest.ResolvedBarExecution
+  - crypto_quant_backtest.ResolvedFinancialState
+  - crypto_quant_backtest.SnapshotProjectionPlan
+  - crypto_quant_backtest.ExecutionTraceEntry
+  - crypto_quant_backtest.ExecutionTrace
+  - crypto_quant_backtest.EngineExecutionResult
+  - crypto_quant_backtest.EngineFailureCode
+  - crypto_quant_backtest.EngineFailure
+  - crypto_quant_backtest.EngineCancellationRequest
+  - crypto_quant_backtest.EngineCancellation
+  - crypto_quant_backtest.EngineExecutionOutcome
+  - crypto_quant_backtest.DeterministicBarEngine
+  - deterministic Timeline + TargetStream + G04/G05 + execution/accounting + RunEnd composition
+  - exact repeat-run trace/Ledger/Snapshot/RunEnd hash parity
+test_commands:
+  contract: uv run pytest -q tests/runtime/engine/test_engine_harness.py
+  fixture: uv run pytest -q tests/runtime/engine/test_engine_harness_golden.py
+  boundary: uv run pytest -q tests/architecture/test_public_api_imports.py tests/architecture/test_repository_cleanliness.py && uv run python tools/architecture/check_import_boundaries.py --root . --policy architecture/import-boundaries.toml --report build/acceptance/wp-06g-import-boundary-report.json
+fixture_ids:
+  - deterministic-engine-orchestration-v1
+expected_artifacts:
+  - tests/fixtures/runtime/deterministic-engine-orchestration-v1.json
+  - build/acceptance/wp-06g-pytest.xml
+  - build/acceptance/wp-06g-import-boundary-report.json
+failure_contracts:
+  - unresolved-or-noncanonical-execution-case
+  - target-stream-input-decode-or-validation-failure-collapsed
+  - warmup-target-causes-trading-side-effect
+  - allocation-risk-sizing-or-planning-failure-hidden
+  - capability-translation-market-rule-fee-or-pretrade-failure-hidden
+  - supplied-order-does-not-match-planned-intent
+  - same-bar-or-pre-activation-fill
+  - slippage-or-fill-evidence-mismatch
+  - fill-fee-or-accounting-failure-hidden
+  - journal-ledger-reservation-or-availability-state-mismatch
+  - final-snapshot-projection-input-mismatch
+  - run-end-termination-hidden
+  - timeline-or-case-order-dependent-trace
+  - repeat-run-hash-drift
+  - wall-clock-network-or-filesystem-output
+  - engine-creates-semantic-run-attempt-outcome-or-evidence
+allowed_grade: development
+evidence:
+  - pytest-report
+  - engine-orchestration-golden-fixture-hash
+  - resolved-execution-case-hash
+  - target-stream-digest
+  - execution-trace-hash
+  - final-journal-and-ledger-state-hashes
+  - final-portfolio-snapshot-hash
+  - run-end-report-hash
+  - structured-input-failure-engine-failure-cancellation-evidence
+  - public-api-import-report
+  - import-boundary-report
+  - static-type-report
+passed_commit: null
+artifact_hashes: []
+```
+
+### WP-06G Readiness
+
+冻结以下实现边界：
+
+1. `ResolvedExecutionCase` 是已经完成 Profile/规则/模型选择后的单账户、单 Reporting Currency、cash-instrument Bar Engine 输入；它只组合 immutable Bundle/Timeline、TargetStream schedules、G04/G05 policy/evidence plans、显式领域 ID、初始财务状态、最终估值输入和 Run End Policy，不执行 Registry lookup、BacktestRequest normalization 或 Semantic Run ID 生成；
+2. Engine 按 Timeline canonical order bounded 读取。Warmup Target 只能产生 suppression trace；Active Target 必须通过现有 `PrecomputedTargetStreamAdapter → Allocation → Portfolio Risk → Position Sizing → Rebalance → Capability → Translation → MarketRule → Fee Reservation → PreTradeRisk → Accepted OrderState`，任一阶段失败都产生结构化 `EngineFailure` 且不得保留部分权威 Batch/Order；
+3. Case Builder 必须提供与 Rebalance Planned Intent 完全一致的 immutable `Order`、Admission evidence 和 Pre-trade resource commitment；Engine 不推断市场/账户资源公式、不更改 Quantity、不降级订单语义；
+4. 每个 Bar Event 逐个调用现有 `next_eligible_bar_open.v1`。只有匹配的 MarketRule/PreTrade approval、独立 Slippage outcome 和 FullFillBuilder 成功后才生成 Fill；禁止 same-bar、未来 Bar 字段、隐式 Slippage 或部分成交；
+5. Fill 通过 CashInstrumentAccounting 产生 FillBooked Journal Entry；最终 Fee 由 FeeAssessmentEngine 从实际 Fill basis 独立计算并由 FeeChargedJournalTranslator 入账。Reservation、Journal、Ledger、Availability 和 open-lot state 按 immutable replay 重建，不使用隐藏 mutable external state；
+6. Final `PortfolioSnapshot` 仍由现有 Projector 消费 Case Builder 提供的 Resolved Marks/Reporting Currency Valuations；Engine 不调用 MarkResolver/Graph policy、不发明 FX、成本或缺失估值；
+7. Timeline 完成后必须调用 RunEndCoordinator。RunEnd termination 不被转成 Run Outcome；成功 Result 保存完整 Trace、Decision/Allocation/Risk/Target/Order/Fill/Fee/Journal、Final Ledger、Final Snapshot 和 RunEndReport；
+8. `ExecutionTrace` 使用稳定 sequence、stage、Simulation Instant、subject identity 和 canonical evidence hash；同一 Case 在不同 Timeline batch size 或输入 tuple order 下产生完全相同 Trace、Journal、Ledger、Snapshot 和 RunEnd hashes；
+9. `InputValidationFailure`、`EngineFailure` 和显式 deterministic `EngineCancellation` 是 nominally distinct branches。Engine 不映射 BLOCKED/FAILED/CANCELLED，不重试，不读取 wall clock/网络，不创建 Result/Evidence 目录；
+10. 本 WP 不拥有 Synthetic Profile Registry、Semantic Run/Attempt、Run Outcome、Evidence publication/integrity、真实市场 Profile、partial fill/queue 或 derivatives accounting。
+
+WP-06G 当前状态为 `READY`。
+
+## 53. PASSED 记录格式
 
 ```yaml
 id: WP-00A
