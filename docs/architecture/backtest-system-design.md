@@ -598,11 +598,12 @@ Validator 的可信输入使用 `StrategyOutputValidationContext` 固定 expecte
 @dataclass(frozen=True)
 class StrategyAllocation:
     strategy_id: str
+    sleeve_id: StrategySleeveId
     valuation_time: UtcInstant
-    valuation_currency: str
+    valuation_currency: CurrencyId
     allocation_nav: Money
-    policy_key: str
-    source_portfolio_snapshot_id: str
+    policy_ref: CapitalAllocationPolicyRef
+    source_portfolio_snapshot_hash: str
 ```
 
 `CapitalAllocationPolicy` 在每个决策点为每个 Strategy Sleeve 生成 `StrategyAllocation`。第一阶段至少支持：
@@ -610,7 +611,7 @@ class StrategyAllocation:
 - `fixed_initial_allocation`：以运行开始时的固定资本为基准，不随盈亏复利。
 - `current_equity_fraction`：以当前权威 Portfolio Equity 的配置比例为基准，随盈亏复利。
 
-Allocation Policy、比例和估值货币必须进入规范化请求和 request hash，不允许由 Strategy 隐式决定。
+Allocation Policy、比例和估值货币必须进入规范化请求和 request hash，不允许由 Strategy 隐式决定。WP-04C 的 Allocator 消费带有完整 Policy/Snapshot provenance 的 supplied `StrategyAllocation`；具体 Policy 执行由组合层显式完成，Kernel 不提供隐式默认 Allocation。
 
 ### 8.7 StrategySleeve
 

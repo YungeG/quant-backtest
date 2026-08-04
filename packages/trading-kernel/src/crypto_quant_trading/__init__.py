@@ -1,5 +1,17 @@
 """Shared trading kernel."""
 
+from .allocation import (
+    AllocationConstraintCode,
+    AllocationConstraintDecision,
+    CapitalAllocationFailure,
+    CapitalAllocationPolicyRef,
+    NetInstrumentTarget,
+    PortfolioAllocation,
+    PortfolioAllocationOutcome,
+    PortfolioAllocator,
+    SleeveTargetNotional,
+    StrategyAllocation,
+)
 from .accounting import (
     CashAccountingFailure,
     CashAccountingFailureCode,
@@ -101,6 +113,8 @@ __version__ = "0.1.0"
 
 __all__ = [
     "AccountingJournal",
+    "AllocationConstraintCode",
+    "AllocationConstraintDecision",
     "AtomicDecisionBatchCollector",
     "AtomicDecisionBatchResult",
     "CashAccountingFailure",
@@ -108,6 +122,8 @@ __all__ = [
     "CashFillAccountingOutcome",
     "CashFillAccountingResult",
     "CashInstrumentAccounting",
+    "CapitalAllocationFailure",
+    "CapitalAllocationPolicyRef",
     "CorporateActionModel",
     "CostBasisMethod",
     "CostBasisPolicy",
@@ -153,7 +169,11 @@ __all__ = [
     "MarkResolutionFailureCode",
     "MarkResolutionOutcome",
     "MarkResolver",
+    "NetInstrumentTarget",
     "OrderRuleModel",
+    "PortfolioAllocation",
+    "PortfolioAllocationOutcome",
+    "PortfolioAllocator",
     "PortfolioSnapshotProjector",
     "PortfolioValueKind",
     "PortfolioValueRef",
@@ -168,8 +188,10 @@ __all__ = [
     "SnapshotProjectionFailure",
     "SnapshotProjectionFailureCode",
     "SnapshotProjectionOutcome",
+    "SleeveTargetNotional",
     "SettlementModel",
     "StaleMarkPolicy",
+    "StrategyAllocation",
     "StrategyOutputValidationContext",
     "StrategyOutputValidator",
     "StrategyValidationFailure",
