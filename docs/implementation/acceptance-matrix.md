@@ -78,7 +78,7 @@ artifact_hashes: []
 | WP-03F | PASSED | trading-kernel | WP-03A–WP-03E | none |
 | G03 | PASSED | trading-kernel + parity | WP-03A–WP-03F | none |
 | WP-04A | PASSED | trading-kernel | G02 | none |
-| WP-04B | READY | trading-kernel | WP-04A | none |
+| WP-04B | PASSED | trading-kernel | WP-04A | none |
 | WP-04C | DRAFT | trading-kernel | WP-04B, G03 | Allocation/netting fixtures |
 | WP-04D | DRAFT | trading-kernel | WP-04C | Portfolio Risk fixtures |
 | WP-04E | DRAFT | trading-kernel | WP-04D, WP-03C | Sizing/materialization fixtures |
@@ -2284,7 +2284,7 @@ Python                                                                 3.13.5
 
 ```yaml
 id: WP-04B
-status: READY
+status: PASSED
 depends_on:
   - WP-04A
 owner_package: trading-kernel
@@ -2327,11 +2327,14 @@ evidence:
   - public-api-import-report
   - import-boundary-report
   - static-type-report
-passed_commit: null
-artifact_hashes: []
+passed_commit: 4ac6ed0a23229755e6eaa5b8949828e4dde13982
+artifact_hashes:
+  tests/fixtures/kernel/atomic-decision-batch-v1.json: sha256:e24e0e52e6a8b4c62b6105e4c09251f4abeac22e0902df60e491f0623009c6a0
+  build/acceptance/wp-04b-pytest.xml: sha256:51053d890b4d10aabe6df6a0d3ccea1a0db6a771d4132f83e0b181f1e52174c3
+  build/acceptance/wp-04b-import-boundary-report.json: sha256:681980b2645e7194998a6aba208ec577ab8bda647a4d9f71741fd1b1be00c681
 ```
 
-### WP-04B Readiness
+### WP-04B Acceptance
 
 已冻结以下边界：
 
@@ -2343,7 +2346,23 @@ artifact_hashes: []
 6. 为禁止同一 Instant 被多次拼成部分 Batch，非空 prior State 的 `as_of` 必须严格早于新 Batch Decision Time；
 7. 本 WP 不实现 Candidate validation、Allocation/Netting、Risk、Sizing、ActivePortfolioTarget、Order Planning、Strategy invocation、InputOrigin 或 Run Outcome mapping。
 
-WP-04B 当前状态为 `READY`，可以按本 Card 实施。
+WP-04B 的实现已冻结在 immutable commit `4ac6ed0a23229755e6eaa5b8949828e4dde13982`，状态为 `PASSED`。
+
+验证记录：
+
+```text
+Atomic DecisionBatch contract tests                                    8 passed
+Atomic DecisionBatch canonical golden fixture                          2 passed
+Public API + repository cleanliness boundaries                         5 passed
+Acceptance test report                                                15 passed
+Trading-kernel import boundary                                         PASS (29 files)
+Full test suite                                                       280 passed
+mypy                                                                   no issues (14 files)
+Primary LSP                                                            clean
+pi-lens scoped review                                                  no findings
+uv lock --check                                                        PASS
+Python                                                                 3.13.5
+```
 
 ## 31. PASSED 记录格式
 
