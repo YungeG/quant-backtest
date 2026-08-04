@@ -80,7 +80,7 @@ artifact_hashes: []
 | WP-04A | PASSED | trading-kernel | G02 | none |
 | WP-04B | PASSED | trading-kernel | WP-04A | none |
 | WP-04C | PASSED | trading-kernel | WP-04B, G03 | none |
-| WP-04D | READY | trading-kernel | WP-04C | none |
+| WP-04D | PASSED | trading-kernel | WP-04C | none |
 | WP-04E | DRAFT | trading-kernel | WP-04D, WP-03C | Sizing/materialization fixtures |
 | WP-05A | DRAFT | trading-kernel | G02 | Order lifecycle fixtures |
 | WP-05B | DRAFT | trading-kernel | WP-05A | Reservation replay fixtures |
@@ -2457,7 +2457,7 @@ Python                                                                3.13.5
 
 ```yaml
 id: WP-04D
-status: READY
+status: PASSED
 depends_on:
   - WP-04C
 owner_package: trading-kernel
@@ -2509,8 +2509,11 @@ evidence:
   - public-api-import-report
   - import-boundary-report
   - static-type-report
-passed_commit: null
-artifact_hashes: []
+passed_commit: a44a636a4d9299bd3a2872508c28790aac5a2178
+artifact_hashes:
+  tests/fixtures/kernel/portfolio-risk-decisions-v1.json: sha256:08b293a76b662b6a187294b38fdb08dfc26f8f034ba6fed74d73e27395bc6a7f
+  build/acceptance/wp-04d-pytest.xml: sha256:30882ecede4dc3530bce872eb4347f5d2ab483e34f2ec218bf0bab5260c5382a
+  build/acceptance/wp-04d-import-boundary-report.json: sha256:f1ba308e67848b7fd2805d4a2a781ef843ba6d17a53e15f3d75698b5c6c89593
 ```
 
 ### WP-04D Acceptance
@@ -2526,7 +2529,23 @@ artifact_hashes: []
 7. Policy coverage/context/schema 错误进入 `PortfolioRiskContractFailure`；合法 economic target 的 clamp/reject 进入成功 `ApprovedPortfolioTarget`，不能伪装为 Strategy Contract violation 或 Run Outcome；
 8. 本 WP 不读取 Price/Market/Profile，不实现 Position sizing、Margin requirement、ActivePortfolioTarget、Order、Pre-trade Risk、Ledger mutation 或 Runtime orchestration。
 
-WP-04D 状态为 `READY`。
+WP-04D 的实现已冻结在 immutable commit `a44a636a4d9299bd3a2872508c28790aac5a2178`，状态为 `PASSED`。
+
+验证记录：
+
+```text
+Portfolio Risk contract tests                                         8 passed
+Portfolio Risk canonical golden fixture                               2 passed
+Public API + repository cleanliness boundaries                        5 passed
+Acceptance test report                                                15 passed
+Trading-kernel import boundary                                        PASS (31 files)
+Full test suite                                                       300 passed
+mypy                                                                  no issues (6 files)
+Primary LSP                                                           clean
+pi-lens scoped review                                                 no blocking findings; 2 local nominal/helper duplicate warnings deferred
+uv lock --check                                                       PASS
+Python                                                                3.13.5
+```
 
 ## 33. PASSED 记录格式
 
