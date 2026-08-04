@@ -59,7 +59,7 @@ artifact_hashes: []
 | WP-01A | PASSED | trading-domain | G00 | none |
 | WP-01B | PASSED | trading-domain | WP-01A | none |
 | WP-01C | PASSED | trading-domain | WP-01B | none |
-| WP-01D | READY | trading-domain | WP-01A–WP-01C | none |
+| WP-01D | PASSED | trading-domain | WP-01A–WP-01C | none |
 | WP-02A | DRAFT | trading-domain | G01 | Instrument identity fixtures |
 | WP-02B | DRAFT | trading-domain | WP-02A | Candidate/Validated wire fixtures |
 | WP-02C | DRAFT | trading-domain | WP-02A | Order/Execution schema fixtures |
@@ -673,7 +673,7 @@ Python                                                                   3.13.5
 
 ```yaml
 id: WP-01D
-status: READY
+status: PASSED
 depends_on:
   - WP-01A
   - WP-01B
@@ -707,11 +707,13 @@ evidence:
   - pytest-report
   - canonical-golden-hash
   - public-api-import-report
-passed_commit: null
-artifact_hashes: []
+passed_commit: b2d5254d0190f0ba1758068c05ab7a57222d0dfe
+artifact_hashes:
+  tests/fixtures/domain/canonical-envelope-v1.json: sha256:b60ffff75d09be85cef3fe6b1d8293691d565583095c82510b2397d4722d5031
+  build/acceptance/wp-01d-pytest.xml: sha256:e84acdb8ee1e4e3b699c6eb71aeee62637a3290dfc2086269d389c34dded7d64
 ```
 
-### WP-01D Readiness
+### WP-01D Acceptance
 
 已冻结 canonical encoding v1：
 
@@ -723,7 +725,18 @@ artifact_hashes: []
 6. `canonical_sha256()` 返回 `sha256:<64 lowercase hex>`；
 7. WP-01C 的 semantic key 应由 `canonical_bytes()` 产生，但 Identity 模块继续只消费 immutable bytes，避免反向耦合。
 
-WP-01D 当前状态为 `READY`，根据持续推进授权可直接实施。
+WP-01D 的实现已冻结在 immutable commit `b2d5254d0190f0ba1758068c05ab7a57222d0dfe`，状态为 `PASSED`。
+
+验证记录：
+
+```text
+Canonical encoding contracts                                            12 passed
+Golden bytes/hash fixture                                                 1 passed
+Boundary tests                                                            5 passed
+Full test suite                                                         108 passed
+mypy                                                                     no issues (11 files)
+Python                                                                   3.13.5
+```
 
 ## 12. PASSED 记录格式
 
