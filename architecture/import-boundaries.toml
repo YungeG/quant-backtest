@@ -1,0 +1,103 @@
+schema_version = 1
+report_schema_version = 1
+
+[dynamic_imports]
+nonliteral_default = "deny"
+
+[[packages]]
+id = "trading-domain"
+module = "crypto_quant_domain"
+source = "packages/trading-domain/src"
+allowed_workspace_modules = []
+
+[[packages]]
+id = "trading-kernel"
+module = "crypto_quant_trading"
+source = "packages/trading-kernel/src"
+allowed_workspace_modules = ["crypto_quant_domain"]
+
+[[packages]]
+id = "market-data-contracts"
+module = "crypto_quant_market_data"
+source = "packages/market-data-contracts/src"
+allowed_workspace_modules = ["crypto_quant_domain"]
+
+[[packages]]
+id = "market-bundle-builder"
+module = "crypto_quant_bundle_builder"
+source = "packages/market-bundle-builder/src"
+allowed_workspace_modules = ["crypto_quant_market_data"]
+
+[[packages]]
+id = "backtest-runtime"
+module = "crypto_quant_backtest"
+source = "packages/backtest-runtime/src"
+allowed_workspace_modules = [
+  "crypto_quant_domain",
+  "crypto_quant_market_data",
+  "crypto_quant_trading",
+]
+
+[[forbidden_import_rules]]
+id = "forbidden-external-import"
+source_packages = ["trading-kernel", "market-data-contracts"]
+include = ["*.py", "**/*.py"]
+exclude = []
+targets = [
+  "aiohttp",
+  "binance",
+  "ccxt",
+  "httpx",
+  "hummingbot",
+  "paho",
+  "pandas",
+  "requests",
+  "websockets",
+]
+
+[[forbidden_import_rules]]
+id = "generic-kernel-concrete-profile-import"
+source_packages = ["trading-kernel"]
+include = ["crypto_quant_trading/*.py", "crypto_quant_trading/**/*.py"]
+exclude = [
+  "crypto_quant_trading/profiles/*.py",
+  "crypto_quant_trading/profiles/**/*.py",
+]
+targets = [
+  "crypto_quant_trading.profiles.binance_usdm",
+  "crypto_quant_trading.profiles.cn_a_share",
+]
+
+[[forbidden_import_rules]]
+id = "runtime-builder-import"
+source_packages = ["backtest-runtime"]
+include = ["*.py", "**/*.py"]
+exclude = []
+targets = ["crypto_quant_bundle_builder"]
+
+[[forbidden_import_rules]]
+id = "runtime-network-import"
+source_packages = ["backtest-runtime"]
+include = ["*.py", "**/*.py"]
+exclude = []
+targets = [
+  "aiohttp",
+  "binance",
+  "ccxt",
+  "ftplib",
+  "http.client",
+  "httpx",
+  "hummingbot",
+  "paho.mqtt",
+  "requests",
+  "smtplib",
+  "socket",
+  "urllib.request",
+  "websockets",
+]
+
+# Non-literal dynamic imports are denied by default. A future exception must use:
+# [[dynamic_import_allowlist]]
+# caller = "packages/.../module.py"
+# target_prefix = "fully.qualified.prefix"
+# reason = "audited reason"
