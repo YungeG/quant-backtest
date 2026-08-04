@@ -69,7 +69,7 @@ artifact_hashes: []
 | WP-02F | PASSED | trading-kernel | WP-02A–WP-02D | none |
 | WP-02G | PASSED | backtest-runtime | WP-02A–WP-02D, WP-02F | none |
 | WP-02H | PASSED | trading-domain | WP-02A–WP-02G | none |
-| G02 | READY | trading-domain + trading-kernel + backtest-runtime | WP-02A–WP-02H | none |
+| G02 | PASSED | trading-domain + trading-kernel + backtest-runtime | WP-02A–WP-02H | none |
 | WP-03A | DRAFT | trading-kernel | G02 | Journal replay fixtures |
 | WP-03B | DRAFT | trading-kernel | WP-03A | Ledger projection fixtures |
 | WP-03C | DRAFT | trading-kernel | WP-02F | PricePurpose/Mark fixtures |
@@ -1487,7 +1487,7 @@ Python                                                                  3.13.5
 
 ```yaml
 id: G02
-status: READY
+status: PASSED
 depends_on:
   - WP-02A
   - WP-02B
@@ -1543,11 +1543,21 @@ evidence:
   - pytest-report
   - import-boundary-report
   - static-type-report
-passed_commit: null
-artifact_hashes: []
+passed_commit: 0df9b63d0198742a097920441b506905a312818e
+artifact_hashes:
+  tests/fixtures/domain/instrument-identity-timeline-v1.json: sha256:c883d97d59e9b118ba92aada03527b35408057758756e1109609ece0600803a7
+  tests/fixtures/domain/target-decision-contracts-v1.json: sha256:e871629a26cb1fca0d72dd1561a71efd36ac6878f2dd5bd2e307982bb3aca9e7
+  tests/fixtures/domain/order-execution-contracts-v1.json: sha256:f113a7d34dbfe196202fc7d8effb0e427517cc3dfe2ebfb75c1577b828c8b4d5
+  tests/fixtures/domain/accounting-contracts-v1.json: sha256:b63ea512fd5b43043b8b82a0c2fe66cd7ebceabb8825fba52904f9497e5fad17
+  tests/fixtures/domain/artifact-envelope-catalog-v1.json: sha256:ec5138bcc003ecd59a1821f20999bfea3072493e3dfccf8cd781b4f4963b7e16
+  tests/fixtures/kernel/kernel-profile-ports-v1.json: sha256:36f5ec3428083bd4eefddeeee5bfdac50cfe353d89197c7654375630bd4a4904
+  tests/fixtures/runtime/simulation-profile-ports-v1.json: sha256:18b95808f7b71e59cbe1d5f53a0b7e7b31177fed2a37f6b396ff6cab61173f5c
+  tests/fixtures/domain/profile-component-errors-v1.json: sha256:e90995c6ee0aabcca576780547d588f85ef6b6be8d7d5663e560d5c0892fe20a
+  build/acceptance/g02-contracts-pytest.xml: sha256:00575ca52113a950568792783cbd443d3fcdcfca636866143e9291219ca86a42
+  build/acceptance/g02-import-boundary-report.json: sha256:d785d2fe7b2331272e1f686196a32f47f5924ef65e880d77c4c2b5b9b08237bb
 ```
 
-### G02 Readiness
+### G02 Acceptance
 
 WP-02A 至 WP-02H 已分别通过。G02 聚合 Gate 只验证已冻结契约的组合完整性、canonical 稳定性和 package 方向，不新增领域对象、Profile 实现、Resolver、Runtime 行为或市场语义。通过条件：
 
@@ -1557,7 +1567,18 @@ WP-02A 至 WP-02H 已分别通过。G02 聚合 Gate 只验证已冻结契约的�
 4. Market/Account Profile Ports、Simulation Ports 和 shared failure taxonomy 保持类型分离但可结构化组合；
 5. 未配置组件不存在 no-op、零滑点、无限流动性、零延迟或其他隐式默认。
 
-G02 当前状态为 `READY`。
+G02 聚合验收冻结在 immutable acceptance commit `0df9b63d0198742a097920441b506905a312818e`，状态为 `PASSED`。
+
+验证记录：
+
+```text
+G02 domain/kernel/runtime contracts and fixtures                       89 passed
+Workspace import boundary                                               PASS (21 files)
+Full test suite                                                        197 passed
+mypy                                                                    no issues (19 files)
+uv lock --check                                                         PASS
+Python                                                                  3.13.5
+```
 
 ## 22. PASSED 记录格式
 
