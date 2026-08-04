@@ -14,11 +14,26 @@ from .ports import (
     SimulationPortType,
     SlippageModel,
 )
+from .timeline import (
+    DeterministicTimeline,
+    TimelineBatch,
+    TimelineCursor,
+    TimelineCursorError,
+    TimelineError,
+    TimelineEvent,
+    TimelineFailure,
+    TimelineFailureCode,
+    TimelineReadOutcome,
+    TimelineSegment,
+    TimelineStreamCursor,
+    TimelineWindow,
+)
 
 __version__ = "0.1.0"
 
 __all__ = [
     "CloseoutPolicy",
+    "DeterministicTimeline",
     "ExecutionModel",
     "LatencyModel",
     "LiquidationAuditModel",
@@ -30,4 +45,15 @@ __all__ = [
     "SimulationPortSpec",
     "SimulationPortType",
     "SlippageModel",
+    "TimelineBatch",
+    "TimelineCursor",
+    "TimelineCursorError",
+    "TimelineError",
+    "TimelineEvent",
+    "TimelineFailure",
+    "TimelineFailureCode",
+    "TimelineReadOutcome",
+    "TimelineSegment",
+    "TimelineStreamCursor",
+    "TimelineWindow",
 ]
