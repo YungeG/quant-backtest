@@ -1611,7 +1611,7 @@ G02: WP-02A → WP-02B → WP-02C → WP-02D → WP-02E → WP-02F → WP-02G �
 G03: WP-03A → WP-03B → WP-03C → WP-03D → WP-03E → WP-03F → review
 ```
 
-`WP-00A Workspace skeleton` 和 WP-00B Dependency boundary checks 已通过验收。三个来源 scope、Snapshot identity、Comparator 和 Evidence 规则已冻结，WP-00C 当前为 `READY`；仍须用户明确授权后才能开始实现。每个 Gate 都允许停止、修改接口或回滚，不默认继续后续 Gate。
+`WP-00A Workspace skeleton`、WP-00B Dependency boundary checks 和 WP-00C Legacy Baseline/Migration Harness 均已通过验收。下一步必须先建立并审阅 G00 聚合 Acceptance Card，确认三个基础 WP 的证据仍有效；WP-01A 保持 `DRAFT`，不能直接开始实现。每个 Gate 都允许停止、修改接口或回滚，不默认继续后续 Gate。
 
 到 G03 再做一次 Foundation Release Review：
 

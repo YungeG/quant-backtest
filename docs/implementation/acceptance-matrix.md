@@ -54,7 +54,7 @@ artifact_hashes: []
 |---|---|---|---|---|
 | WP-00A | PASSED | repository root | none | none |
 | WP-00B | PASSED | repository root | WP-00A | none |
-| WP-00C | READY | repository root + parity tooling | WP-00B | none |
+| WP-00C | PASSED | repository root + parity tooling | WP-00B | none |
 | WP-01A | DRAFT | trading-domain | G00 | Numeric Interface/fixtures/commands |
 | WP-01B | DRAFT | trading-domain | WP-01A | Time/DST fixtures/commands |
 | WP-01C | DRAFT | trading-domain | WP-01B | ID namespace/version fixtures |
@@ -295,7 +295,7 @@ Policy sha256                                                          d20998129
 
 ```yaml
 id: WP-00C
-status: READY
+status: PASSED
 depends_on:
   - WP-00B
 owner_package: repository-root-and-parity-tooling
@@ -348,11 +348,21 @@ evidence:
   - comparator-contract-hash
   - pytest-report
   - source-baseline-report
-passed_commit: null
-artifact_hashes: []
+passed_commit: e298a2ce9f2a4214bc7eb4e68dc87ef0a860b331
+artifact_hashes:
+  docs/migration/source-map.yaml: sha256:8a0be053f538f6277e35b0908c25398a989cd52e499c1cd911742aebfd1a8cf5
+  tests/parity/contracts/comparator-contract-v1.schema.json: sha256:4e36d823efeae635b0cbff84271e691615920c0f28dc37a009acb68ecd7948ca
+  tests/parity/fixtures/legacy-sources/crypto-quant-core-33ca4055b16fd966d92263248289fcd960a1cb93f52c4d8a0db00030b3e3d0d1.tar.gz: sha256:33ca4055b16fd966d92263248289fcd960a1cb93f52c4d8a0db00030b3e3d0d1
+  tests/parity/fixtures/legacy-sources/crypto-quant-core-33ca4055b16fd966d92263248289fcd960a1cb93f52c4d8a0db00030b3e3d0d1.manifest.json: sha256:58fc5e0b8b96515e506e885406e37a9dde2f4f7f0c3e9435aeea6d68d5177a01
+  tests/parity/fixtures/legacy-sources/cycle-rotation-platform-1fea4f5a4ec8ab12ddb25c6c5bb525f91f8bac9e887f3e5b382b641a948c91c3.tar.gz: sha256:1fea4f5a4ec8ab12ddb25c6c5bb525f91f8bac9e887f3e5b382b641a948c91c3
+  tests/parity/fixtures/legacy-sources/cycle-rotation-platform-1fea4f5a4ec8ab12ddb25c6c5bb525f91f8bac9e887f3e5b382b641a948c91c3.manifest.json: sha256:5074f0b6f1130a6bc6b755e8dc9c582dbf15631ef92520b6f7a601eb763c03e2
+  tests/parity/fixtures/legacy-sources/crypt-gemini-d6e6feca46b61586e890a441443738dc9e911a58428c940e86055459361eda80.tar.gz: sha256:d6e6feca46b61586e890a441443738dc9e911a58428c940e86055459361eda80
+  tests/parity/fixtures/legacy-sources/crypt-gemini-d6e6feca46b61586e890a441443738dc9e911a58428c940e86055459361eda80.manifest.json: sha256:002fbec9fad3de169fd91be99078c316b2a0896fad890c3e2004518dc6e6eac4
+  build/acceptance/wp-00c-source-baseline-report.json: sha256:75082323356fd9554c3bc782b33552c7f58c3992876b703cd24b9a8b50e9cfd1
+  build/acceptance/wp-00c-pytest.xml: sha256:539389342c0a6e8cdc6358a47365f7b178bd27111dc4a1430ebedace46022a92
 ```
 
-### WP-00C Readiness
+### WP-00C Acceptance
 
 已冻结以下决策：
 
@@ -365,7 +375,19 @@ artifact_hashes: []
 7. Comparator 禁止 global epsilon，字段必须逐项声明比较语义；
 8. `intentional_semantic_change` 和 `approved_change` 必须引用已提交 ADR。
 
-WP-00C 当前状态为 `READY`，只有用户明确要求开始实现后才执行。
+WP-00C 的实现已冻结在 immutable commit `e298a2ce9f2a4214bc7eb4e68dc87ef0a860b331`，状态为 `PASSED`。
+
+验证记录：
+
+```text
+Offline source baseline verifier                                      PASS (3 sources / 48 files)
+Source Snapshot + Comparator fixtures                                  17 passed
+Parity report + repository cleanliness                                  7 passed
+Full test suite                                                        50 passed
+mypy                                                                    no issues (11 files)
+Python                                                                  3.13.5
+Source Map sha256                                                       8a0be053f538f6277e35b0908c25398a989cd52e499c1cd911742aebfd1a8cf5
+```
 
 ## 7. PASSED 记录格式
 
