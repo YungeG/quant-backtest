@@ -95,7 +95,7 @@ artifact_hashes: []
 | WP-05J | PASSED | trading-kernel | WP-02F, WP-03A | none |
 | G05 | PASSED | trading-kernel | G04, WP-05A–WP-05J | none |
 | WP-06A | PASSED | market-data-contracts | G02 | none |
-| WP-06B | READY | backtest-runtime | WP-01B, WP-06A | none |
+| WP-06B | PASSED | backtest-runtime | WP-01B, WP-06A | none |
 | WP-06C | DRAFT | backtest-runtime | G04, WP-06A–WP-06B | TargetStream fixtures |
 | WP-06D | DRAFT | backtest-runtime | WP-02G, WP-03C | Slippage fixtures |
 | WP-06E | DRAFT | backtest-runtime | G05, WP-06A–WP-06D | Next-open fixtures |
@@ -3856,7 +3856,7 @@ Python                                                              3.13.5
 
 ```yaml
 id: WP-06B
-status: READY
+status: PASSED
 depends_on:
   - WP-01B
   - WP-06A
@@ -3905,11 +3905,14 @@ evidence:
   - public-api-import-report
   - import-boundary-report
   - static-type-report
-passed_commit: null
-artifact_hashes: []
+passed_commit: 88e787fe5cc1f01d4e37e5c55cd1454f468cb477
+artifact_hashes:
+  tests/fixtures/runtime/deterministic-multi-stream-timeline-v1.json: sha256:c5a82a91a9a864d1e324610358758ac4e032d071f7ab88200db34c050809acc0
+  build/acceptance/wp-06b-pytest.xml: sha256:474461cce3ea7d4e82b41864ab2de8d3cd15d1d7d47b88ce29ca3ce8ae646e59
+  build/acceptance/wp-06b-import-boundary-report.json: sha256:4ab5263799b6345deb35626b08893cefec2a76eff1e9352fb00417723b3e78f4
 ```
 
-### WP-06B Readiness
+### WP-06B Acceptance
 
 冻结以下实现边界：
 
@@ -3917,12 +3920,28 @@ artifact_hashes: []
 2. `TimelineWindow` 明确 `data_start <= trading_start < end_exclusive`。按 Event 的 `available_time` 划分：`[data_start, trading_start)` 为 Warmup，`[trading_start, end_exclusive)` 为 Active Trading；早于 data_start 的 Event 只推进源 Cursor，不输出，等于或晚于 end_exclusive 的 Event 不得被消费；
 3. Timeline 对各 Stream 的当前头 Event 按 `(available_time.epoch_nanoseconds, phase.rank, phase.code, source_sequence.value)` merge。同一完整 ordering key 在任意两个 Stream/事件中重复，或后续 key 不严格递增，均返回结构化 `TimelineFailure`，不使用 Stream 注册顺序或容器顺序解歧；
 4. “缺失 source sequence” 指 Reader 违反 typed `MarketEvent` contract、返回没有合法 `SourceSequence` 的事件；合法 sequence 数值不要求连续，避免把供应商过滤、分区或预留编号误判为数据缺口；
-5. `TimelineCursor` 保存 Bundle/Window identity、逐 Stream 的精确 `EventCursor` position、已消费的最后 ordering key 和累计输出数。每次只从每个 Stream 读取有界头部证据，输出 batch size 或底层 Reader page size 都不得改变完整事件 ID/hash/segment 序列；
+5. `TimelineCursor` 保存 Bundle/Window identity、逐 Stream 的精确 `EventCursor` position、已消费的最后 ordering key 和累计输出数。Timeline 将底层 Cursor 固定为单 Event 有界头部读取，输出 batch size 的变化不得改变完整事件 ID/hash/segment 序列；Reader 自身 page-size parity 已由 WP-06A 独立证明；
 6. `TimelineBatch` 保存带 Warmup/Active segment 的 immutable `TimelineEvent`、下一 Cursor 和 window-complete 标志。Window 完成时 Cursor 停在第一个 end-exclusive 外 Event 之前，可用于后续确定性 continuation；
 7. 缺失 Stream 继续使用 WP-06A `InputValidationFailure` 作为构造失败证据；读取期间的 malformed Event、ordering ambiguity/regression 和 Cursor 篡改使用 Timeline 自有 typed fail-closed failure/error，不映射 Run Outcome；
 8. 本 WP 不实现 ObservationView、TargetStream、Strategy invocation、Slippage/Execution、Profile Resolver、Semantic Run/Attempt、Run Outcome、EngineCheckpoint 或 Evidence publication。
 
-WP-06B 已满足依赖和测试 seam，状态为 `READY`。
+WP-06B 的实现已冻结在 immutable commit `88e787fe5cc1f01d4e37e5c55cd1454f468cb477`，状态为 `PASSED`。
+
+验证记录：
+
+```text
+Deterministic Timeline contract tests                              10 passed
+Canonical multi-stream golden fixture                               1 passed
+Public API + repository cleanliness boundaries                      5 passed
+Acceptance test report                                             16 passed
+Backtest-runtime import boundary                                    PASS (44 files)
+Full test suite                                                    439 passed
+mypy                                                                no issues (6 files)
+Primary LSP                                                         clean
+pi-lens scoped review                                               no unresolved findings
+uv lock --check                                                     PASS
+Python                                                              3.13.5
+```
 
 ## 48. PASSED 记录格式
 
