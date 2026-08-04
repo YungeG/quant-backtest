@@ -1,5 +1,12 @@
 """Framework-independent trading domain contracts."""
 
+from .identity import (
+    DomainId,
+    DomainIdKind,
+    IdentityManifest,
+    IdentityNamespace,
+    derive_domain_id,
+)
 from .numeric import (
     ExposureFraction,
     Money,
@@ -24,7 +31,11 @@ from .time import (
 __version__ = "0.1.0"
 
 __all__ = [
+    "DomainId",
+    "DomainIdKind",
     "ExposureFraction",
+    "IdentityManifest",
+    "IdentityNamespace",
     "LocalTimeDisambiguation",
     "Money",
     "Price",
@@ -39,5 +50,6 @@ __all__ = [
     "TimelinePhase",
     "TradingDate",
     "UtcInstant",
+    "derive_domain_id",
     "resolve_local_datetime",
 ]
