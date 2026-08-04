@@ -92,7 +92,8 @@ artifact_hashes: []
 | WP-05G | PASSED | trading-kernel | WP-05F, WP-02F | none |
 | WP-05H | PASSED | trading-kernel | WP-05G, WP-02F | none |
 | WP-05I | PASSED | trading-kernel | WP-05B, WP-05H | none |
-| WP-05J | DRAFT | trading-kernel | WP-02F, WP-03A | Fee assessment fixtures |
+| WP-05J | READY | trading-kernel | WP-02F, WP-03A | none |
+| G05 | DRAFT | trading-kernel | G04, WP-05A–WP-05J | Target-to-accepted-order aggregate journey |
 | WP-06A | DRAFT | market-data-contracts | G02 | Reader/Cursor contract commands |
 | WP-06B | DRAFT | backtest-runtime | WP-01B, WP-06A | Timeline fixtures |
 | WP-06C | DRAFT | backtest-runtime | G04, WP-06A–WP-06B | TargetStream fixtures |
@@ -3563,7 +3564,89 @@ Python                                                            3.13.5
 
 四个 jscpd findings 属于 frozen policy config/factory 显式字段列表与 nominal Approval/Rejection 类型的结构性 false positive；一个 module-local canonical validation helper 与既有 Kernel 模块形状相同，已在本 session defer，避免在 Order Gate contracts 稳定前引入共享内部抽象。
 
-## 44. PASSED 记录格式
+## 44. WP-05J FeeAssessmentEngine Acceptance Card
+
+```yaml
+id: WP-05J
+status: READY
+depends_on:
+  - WP-02F
+  - WP-03A
+owner_package: trading-kernel
+public_interface:
+  - crypto_quant_trading.FinalFeeRuleSource
+  - crypto_quant_trading.FinalFeeCalculationBasis
+  - crypto_quant_trading.FinalFeeApplicability
+  - crypto_quant_trading.FinalFeeChargeRule
+  - crypto_quant_trading.FinalFeeMinimum
+  - crypto_quant_trading.FinalFeeRuleSet
+  - crypto_quant_trading.FeeBasisClosureRef
+  - crypto_quant_trading.FeeAssessmentBasisEvidence
+  - crypto_quant_trading.FinalFeeLine
+  - crypto_quant_trading.FinalFeeMinimumAdjustment
+  - crypto_quant_trading.FinalFeeAssessmentResult
+  - crypto_quant_trading.FinalFeeAssessmentFailureCode
+  - crypto_quant_trading.FinalFeeAssessmentFailure
+  - crypto_quant_trading.FinalFeeAssessmentOutcome
+  - crypto_quant_trading.FeeAssessmentEngine
+  - crypto_quant_trading.FeeChargedJournalFailureCode
+  - crypto_quant_trading.FeeChargedJournalFailure
+  - crypto_quant_trading.FeeChargedJournalResult
+  - crypto_quant_trading.FeeChargedJournalOutcome
+  - crypto_quant_trading.FeeChargedJournalTranslator
+test_commands:
+  contract: uv run pytest -q tests/kernel/fees/test_fee_assessment_engine.py
+  fixture: uv run pytest -q tests/kernel/fees/test_fee_assessment_golden.py
+  boundary: uv run pytest -q tests/architecture/test_public_api_imports.py tests/architecture/test_repository_cleanliness.py
+fixture_ids:
+  - final-fee-assessment-v1
+expected_artifacts:
+  - tests/fixtures/kernel/final-fee-assessment-v1.json
+  - build/acceptance/wp-05j-pytest.xml
+  - build/acceptance/wp-05j-import-boundary-report.json
+failure_contracts:
+  - missing-explicit-market-tax-or-account-final-fee-rule-source
+  - unknown-final-fee-calculation-basis-or-applicability
+  - rule-basis-currency-scale-or-quantization-mismatch
+  - incomplete-fill-order-or-session-basis
+  - ambiguous-order-session-membership-or-conflicting-fill-identity
+  - nonterminal-order-used-as-completed-order-basis
+  - maker-taker-applicability-with-missing-or-unknown-liquidity-role
+  - duplicate-basis-double-charge
+  - minimum-commission-applied-more-than-once-per-aggregate-basis
+  - sell-only-tax-applied-to-buy-fill
+  - forged-rule-set-closure-basis-result-or-journal-identity
+  - fee-reservation-estimate-reused-as-final-assessment
+  - fee-assessment-fill-order-journal-or-ledger-mutation
+  - concrete-market-profile-resolution-submission-execution-or-runtime-leakage
+allowed_grade: development
+evidence:
+  - pytest-report
+  - final-fee-assessment-canonical-golden-fixture-hash
+  - deterministic-basis-rule-line-minimum-assessment-journal-and-failure-hashes
+  - public-api-import-report
+  - import-boundary-report
+  - static-type-report
+passed_commit: null
+artifact_hashes: []
+```
+
+### WP-05J Acceptance
+
+冻结以下边界：
+
+1. `FeeAssessmentEngine` 只消费 immutable `FeeAssessmentBasisEvidence`、显式版本化 `FinalFeeRuleSet`、caller-supplied deterministic Fee ID 和 authoritative Assessment Instant；不调用 Fee/Tax Profile Port、Profile Resolver、Reader、网络、Order submission 或账户服务；
+2. Basis Evidence 精确表达 Fill、Completed Order 或 Closed Session：Fill basis 绑定单一 Fill；Order basis 绑定单一 terminal `OrderEventStream` 并从其权威 Fill records 重建；Session basis 绑定同一 Account/Venue 的 terminal Order streams 和显式版本化 `FeeBasisClosureRef`。不完整 basis 返回结构化 failure；
+3. 相同 Fill/Order stream 的重复证据按 canonical hash 幂等折叠，不重复收费；同一 Fill/Order ID 的冲突内容、重复 Session membership 或不唯一 basis 返回 `ambiguous_basis`，不得猜测；
+4. `FinalFeeRuleSet` 显式绑定 `FEE_ASSESSMENT_POLICY`、`TAX_POLICY` 和 `AccountFeeScheduleRef`。每个被评估 basis 必须由 Market Fee、Tax 和 Account 三类 source 显式覆盖，`not_applicable` 是合法显式规则，缺失不能默认为零；
+5. v1 calculation basis 只支持 `notional_rate` 与 `flat_per_basis`；applicability 只支持 always、maker_only、taker_only、sell_only、not_applicable。Maker/Taker 使用 immutable Fill liquidity role；缺失或未知 role 在相关 rule 下 fail closed。Sell-only Tax 只选择 Sell Fill；
+6. Notional 使用 Fill execution Price × Quantity 和 rule 自带 `QuantizationPolicy`，再按 Rate 以 Typed Scaled Integer 计算。所有 charge/minimum 使用 Rule Set 的单一 Currency/Scale；禁止 float、隐式 rescale、FX、stablecoin peg 或复用最坏 FeeReservationEstimate；
+7. `FinalFeeMinimum` 只允许 Order/Session aggregate basis，显式列出 scoped rule IDs，并在该 basis 的 subtotal 上只添加一次 `max(minimum - subtotal, 0)`。取消/部分成交后的 terminal Order 使用实际 Fill 集，而不是预留 Notional；
+8. `FinalFeeAssessmentResult` 保存 Basis、Rule Set、逐 rule line、minimum adjustment、全部 rule/component identity 和最终 `FeeAssessment`。重复相同 authoritative 输入产生相同 Assessment/Result hash；任一 failure 不产生部分 Assessment；
+9. `FeeChargedJournalTranslator` 只把正的最终 Assessment 翻译为一个 `FeeCharged` `AccountingJournalEntry`，引用 Assessment ID、全部 basis/rule/minimum/component identity，并记录单一 Cash debit 与 Fee attribution。重复相同 Assessment/Journal ID 产生相同 Entry，实际幂等 apply 由 immutable Journal 的相同 ID/hash 规则保证；
+10. 本 WP 不修改 Fill/Order/OrderEventStream/Journal/Ledger，不实现 Fee Reservation、Lot allocation、具体市场 Fee/Tax schedule、Profile resolution、Submission、Execution 或 Runtime orchestration。
+
+## 45. PASSED 记录格式
 
 ```yaml
 id: WP-00A
