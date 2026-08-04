@@ -881,7 +881,7 @@ v1 Candidate Schema 固定为：
 - Rule Set 显式绑定 `FEE_ASSESSMENT_POLICY`、`TAX_POLICY` 和版本化 `AccountFeeScheduleRef`；Market Fee、Tax、Account Schedule 三类来源都必须具有明确 rule，显式 `not_applicable` 可以表示不收费，缺失不能默认为零；
 - v1 只解释 `order_notional` 和 `flat_per_order` basis。未知 basis 或 `unknown` applicability 结构化失败，不调用 Profile callback 或自行推断；
 - 所有收费使用同一显式 reservation Currency/Scale。Notional rate 采用 Typed Scaled Integer 与 rule 自带 `QuantizationPolicy`，禁止 float、隐式 rescale、FX 或 Stablecoin 假设；
-- `FeeReservationMinimum` 显式声明覆盖的 charge rule IDs。Estimator 对 scope subtotal 只添加一次 minimum adjustment，API 不接受 possible Fill count；
+- `FeeReservationMinimum` 显式声明覆盖的 charge rule IDs。只有至少一个 scoped charge 明确适用时，Estimator 才对 scope subtotal 添加一次 minimum adjustment；API 不接受 possible Fill count；
 - Estimate 保存 source Approval、Rule Set、逐 rule line、minimum adjustment、总 Fee、估算时点和全部 identity/hash；Proposal 只填充 `ReservationCommitment.fee_reserve`，不生成其他资源承诺；
 - 输入顺序不改变 Rule Set/Estimate/Proposal/Failure identity；任一 failure 都不产生部分权威输出。
 
