@@ -75,7 +75,8 @@ artifact_hashes: []
 | WP-03C | PASSED | trading-kernel | WP-02F | none |
 | WP-03D | PASSED | trading-kernel | WP-03C | none |
 | WP-03E | PASSED | trading-kernel | WP-03B–WP-03D | none |
-| WP-03F | DRAFT | trading-kernel | WP-03A–WP-03E | Cash accounting + legacy parity |
+| WP-03F | READY | trading-kernel | WP-03A–WP-03E | none |
+| G03 | DRAFT | trading-kernel + parity | WP-03A–WP-03F | Golden financial journey + aggregate review card |
 | WP-04A | DRAFT | trading-kernel | G02 | Candidate validation fixtures |
 | WP-04B | DRAFT | trading-kernel | WP-04A | Atomic batch fixtures |
 | WP-04C | DRAFT | trading-kernel | WP-04B, G03 | Allocation/netting fixtures |
@@ -1992,7 +1993,86 @@ uv lock --check                                                        PASS
 Python                                                                 3.13.5
 ```
 
-## 27. PASSED 记录格式
+## 27. WP-03F Acceptance Card
+
+```yaml
+id: WP-03F
+status: READY
+depends_on:
+  - WP-03A
+  - WP-03B
+  - WP-03C
+  - WP-03D
+  - WP-03E
+owner_package: trading-kernel
+public_interface:
+  - crypto_quant_trading.CostBasisMethod
+  - crypto_quant_trading.CostBasisPolicy
+  - crypto_quant_trading.LotConsumption
+  - crypto_quant_trading.CashFillAccountingResult
+  - crypto_quant_trading.FeeChargeAccountingResult
+  - crypto_quant_trading.CashAccountingFailureCode
+  - crypto_quant_trading.CashAccountingFailure
+  - crypto_quant_trading.CashFillAccountingOutcome
+  - crypto_quant_trading.FeeChargeAccountingOutcome
+  - crypto_quant_trading.CashInstrumentAccounting
+test_commands:
+  contract: uv run pytest -q tests/kernel/accounting/test_cash_instrument_accounting.py
+  fixture: uv run pytest -q tests/kernel/accounting/test_cash_instrument_accounting_golden.py
+  parity: uv run pytest -q tests/parity/test_core_accounting_parity.py
+  boundary: uv run pytest -q tests/architecture/test_public_api_imports.py tests/architecture/test_repository_cleanliness.py
+fixture_ids:
+  - cash-instrument-accounting-v1
+  - core-accounting-wp03f-v1
+expected_artifacts:
+  - tests/fixtures/kernel/cash-instrument-accounting-v1.json
+  - tests/parity/contracts/core-accounting-wp03f-v1.json
+  - tests/parity/fixtures/core-accounting-wp03f-v1.expected.json
+  - build/acceptance/wp-03f-core-accounting-parity.json
+  - build/acceptance/wp-03f-pytest.xml
+  - build/acceptance/wp-03f-import-boundary-report.json
+failure_contracts:
+  - missing-or-unsupported-cost-basis-policy
+  - cash-position-fill-identity-or-scale-mismatch
+  - malformed-or-duplicate-open-lot-state
+  - insufficient-long-lot-quantity
+  - implicit-short-or-reverse-crossing
+  - unsupported-fee-basis-or-missing-related-fill
+  - fee-currency-or-rule-provenance-mismatch
+  - buy-fee-missing-acquisition-lot
+  - fee-double-counted-in-gross-realized-pnl
+  - mutable-journal-ledger-or-lot-store-side-effect
+  - market-profile-settlement-tax-funding-or-derivative-leakage
+  - missing-module-level-legacy-parity
+allowed_grade: development
+evidence:
+  - pytest-report
+  - cash-accounting-golden-fixture-hash
+  - core-accounting-comparator-contract-hash
+  - core-accounting-parity-report
+  - public-api-import-report
+  - import-boundary-report
+  - static-type-report
+passed_commit: null
+artifact_hashes: []
+```
+
+### WP-03F Readiness
+
+已冻结以下边界：
+
+1. `CashInstrumentAccounting` 是纯翻译组件，只消费 supplied immutable facts/keys/lots/policies/IDs/time；不读取 Profile、Market、Journal、Ledger 或外部状态；
+2. v1 唯一资格化方法是显式版本化 FIFO；没有默认 CostBasisPolicy。FIFO order 固定为 `opened_at` 后接 `lot_id`，输入 tuple 顺序不能改变结果；
+3. Buy 建立 source-Fill acquisition Lot；Sell 只消费现有正 Long Lots。部分/全部卖出保留 Lot/source Fill provenance；超过可用数量不能形成隐式 Short；
+4. Gross realized PnL 是 price-only proceeds 减 price cost basis。FeeAssessment 独立生成 FeeCharged Cash/fee attribution，因此 net economics 中 Fee 只出现一次；
+5. 单 Fill Buy Fee 可分配到 acquisition Lot 的 allocated-fee provenance。Partial consumption 按 Policy rounding 拆分且守恒，但不重复改变 gross realized PnL；
+6. v1 Fee translation 只资格化单一 Fill basis、非零、同 quote currency assessment，并在 source IDs 中记录 FeeAssessment、basis 和全部 rule identity；
+7. `core-accounting` migration unit 已激活 `copy_with_parity` Comparator。Legacy expected 必须由冻结 archive 内真实 `accounting.py` 行为复核，新实现通过 exact closed-trade gross/fee/funding/net comparison；
+8. 本 WP 不实现 Derivative、Settlement、Tax/Funding/Corporate Action、mutable Lot store、Runtime orchestration、Profile lookup 或 Order/Session aggregate fee allocation。
+
+WP-03F 当前为 `READY`，可以按连续实施授权进入 TDD。
+
+## 28. PASSED 记录格式
 
 ```yaml
 id: WP-00A

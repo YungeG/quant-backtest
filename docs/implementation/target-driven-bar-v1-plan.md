@@ -593,14 +593,28 @@ v1 canonical reason code 固定为：
 
 ### WP-03F Cash Instrument Accounting model（最小）
 
-拥有：Cash Instrument Fill 到 Journal Entry 的纯翻译，以及一个最小可插拔 Lot selector（首个 Fixture 只要求一个已声明 Policy）。
+拥有：Cash Instrument Fill 到 Journal Entry 的纯翻译、独立 FeeAssessment 到 FeeCharged Journal Entry 的纯翻译，以及显式版本化 FIFO CostBasisPolicy/Lot selector。
+
+冻结语义：
+
+- `CashInstrumentAccounting` 只消费调用方提供的 immutable Fill、FeeAssessment、typed balance keys、当前 PositionLot、显式 QuantizationPolicy、CostBasisPolicy、Journal ID 和 recorded SimulationInstant；它不读取 Profile、Market、Journal、Ledger 或外部状态；
+- v1 CostBasisMethod 只实现显式 `fifo`，没有隐式默认。Policy 缺失返回结构化 block；FIFO 顺序固定为 `opened_at` 后接 `lot_id`；
+- Buy 产生负 quote Cash、正 Position 和一个以 source Fill 为 provenance 的 immutable acquisition Lot；Sell 产生正 quote Cash、负 Position，按 FIFO 消耗现有 Long Lot，并记录每个 consumed Lot/source Fill；
+- Sell 数量超过可用 Long Lot 是非法反向路径并 fail closed；Cash accounting v1 不通过负 Lot 偷渡 Short；
+- Gross realized PnL 只等于 Sell proceeds 减被消耗 Lot 的 price cost basis。Fee 不嵌入 Fill，也不重复折入 gross realized PnL；FeeCharged 通过 Cash 变化和独立 `fees` attribution 只计一次，`net_pnl = gross_realized_pnl - fees + financing`；
+- Fill-based Buy Fee 可以明确分配到对应 acquisition Lot 的 `allocated_fees` provenance；后续 partial/full Lot consumption 按 Policy rounding 精确拆分并保持总额守恒，但该分配不改变 Journal 中独立 Fee attribution；
+- FeeCharged Entry 引用 FeeAssessment ID、basis ID 和全部非空 rule identity。v1 只资格化单一 Fill basis 的非零同币种费用；Order/Session 聚合费用留给 WP-05J；
+- Journal Entry 和 Lot Result 均为 immutable output；本组件不能直接修改 Journal、Ledger 或 Lot store。
 
 验收：
 
 - 买入、加仓、部分卖出、全部卖出和反向非法路径有 Fixture；
-- FeeAssessment 独立入账并正确影响成本/PnL；
-- Lot consumption 可追踪到 source Fill；
-- 未声明 CostBasisPolicy 时运行被阻断。
+- FeeAssessment 独立入账并正确影响 Cash、Fee attribution、Lot fee provenance 和 net PnL，且不双计；
+- Lot consumption 可追踪到 source Fill，输入 Lot 顺序不改变 FIFO result/canonical identity；
+- 未声明 CostBasisPolicy、key/scale/identity 不匹配、unsupported fee basis 或 Buy Fee 找不到 acquisition Lot 时结构化阻断；
+- 固定 crypto-quant-core `accounting.py` source snapshot 通过 Comparator Contract 证明 closed-trade gross/fee/funding/net exact parity。
+
+不拥有：Derivative accounting、Market/Profile 读取、Settlement mutation、Tax/Funding/Corporate Action、mutable Lot store、Runtime orchestration、implicit Policy/default 或 Order/Session aggregate fee allocation。
 
 ### Gate G03
 

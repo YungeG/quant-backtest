@@ -95,9 +95,9 @@ migration_units:
     target_owner: trading-kernel
     target_module: crypto_quant_trading.accounting
     mode: copy_with_parity
-    status: planned
+    status: active
     qualification_gate: WP-03F
-    comparator_contract: null
+    comparator_contract: tests/parity/contracts/core-accounting-wp03f-v1.json
   - id: core-contracts
     source_id: crypto-quant-core
     source_paths:
