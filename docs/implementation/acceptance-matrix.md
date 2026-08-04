@@ -88,7 +88,7 @@ artifact_hashes: []
 | WP-05C | PASSED | trading-kernel | WP-03B, WP-05B | none |
 | WP-05D | PASSED | trading-kernel | G04, WP-05A–WP-05C | none |
 | WP-05E | PASSED | trading-kernel | WP-05D | none |
-| WP-05F | DRAFT | trading-kernel | WP-05E | Translation fixtures |
+| WP-05F | READY | trading-kernel | WP-05E | none |
 | WP-05G | DRAFT | trading-kernel | WP-05F, WP-02F | Market rule fixtures |
 | WP-05H | DRAFT | trading-kernel | WP-05G, WP-02F | Fee reservation fixtures |
 | WP-05I | DRAFT | trading-kernel | WP-05B, WP-05H | Pre-trade Risk fixtures |
@@ -3183,7 +3183,70 @@ uv lock --check                                                    PASS
 Python                                                             3.13.5
 ```
 
-## 40. PASSED 记录格式
+## 40. WP-05F OrderTranslator Acceptance Card
+
+```yaml
+id: WP-05F
+status: READY
+depends_on:
+  - WP-05E
+owner_package: trading-kernel
+public_interface:
+  - crypto_quant_trading.OrderTranslationFieldRule
+  - crypto_quant_trading.OrderTranslationMapping
+  - crypto_quant_trading.ExecutableOrderSpec
+  - crypto_quant_trading.OrderTranslationResult
+  - crypto_quant_trading.OrderTranslationError
+  - crypto_quant_trading.OrderTranslationEvidenceError
+  - crypto_quant_trading.OrderTranslator
+test_commands:
+  contract: uv run pytest -q tests/kernel/translation/test_order_translator.py
+  fixture: uv run pytest -q tests/kernel/translation/test_order_translator_golden.py
+  boundary: uv run pytest -q tests/architecture/test_public_api_imports.py tests/architecture/test_repository_cleanliness.py
+fixture_ids:
+  - order-translation-v1
+expected_artifacts:
+  - tests/fixtures/kernel/order-translation-v1.json
+  - build/acceptance/wp-05f-pytest.xml
+  - build/acceptance/wp-05f-import-boundary-report.json
+failure_contracts:
+  - capability-approval-intent-mismatch
+  - translation-before-order-creation
+  - forged-translation-config-hash
+  - missing-canonical-field-mapping
+  - unknown-canonical-field-mapping
+  - duplicate-canonical-or-target-field-mapping
+  - source-intent-field-mutation-or-silent-semantic-downgrade
+  - executable-spec-venue-dto-or-arbitrary-extension
+  - market-rule-rounding-risk-submission-or-runtime-leakage
+allowed_grade: development
+evidence:
+  - pytest-report
+  - order-translation-canonical-golden-fixture-hash
+  - deterministic-spec-report-mapping-and-result-hashes
+  - public-api-import-report
+  - import-boundary-report
+  - static-type-report
+passed_commit: null
+artifact_hashes: []
+```
+
+### WP-05F Readiness
+
+冻结以下边界：
+
+1. `OrderTranslator` 只消费 immutable `Order`、同一 source `OrderIntent` 的 `OrderCapabilityApproval`、显式版本化 `OrderTranslationMapping` 和权威 `translation_time`；没有默认 Mapping、Profile Resolver、callback 或外部状态读取；
+2. canonical Intent 字段集合固定为 `instrument_id`、`side`、`quantity`、`execution_style`、`price_constraint`、`time_in_force`、`reduce_only`、`position_effect`、`urgency`、`reason`、`parent_id`。Mapping 必须为每个字段提供唯一 target field；missing/unknown 字段产生结构化 rejected `OrderTranslationReport`，不产生部分 `ExecutableOrderSpec`；
+3. `OrderTranslationFieldRule` 只重命名 target field。`ExecutableOrderSpec` 继续保存原始 typed canonical 语义；它不允许 value rewrite，因此不能把 Market→Limit、TIF、reduce-only、position-effect、Price 或 Quantity 静默降级；
+4. `OrderTranslationMapping` 使用 canonical key、正整数 version、target Profile identity、canonical-sorted field rules 和 config hash；规则输入顺序不改变 Mapping、Spec、Report 或 Result identity；
+5. translated Report 为全部字段生成 `TranslationFieldMapping`，canonical/target value 都来自同一个原始 typed field 的 canonical bytes；rejected Report 保留所有可解析 mapping，并使用 canonical-sorted `UnsupportedCapability` 记录每个 missing/unknown 字段；
+6. `ExecutableOrderSpec` 是 venue-neutral resolved execution contract：保存 source Order/Intent、Capability approval、Translator/Profile identity、完整 field mappings 和 translation time，不包含 Hummingbot/Broker/Vendor DTO、任意 extensions/metadata 或提交命令；
+7. source Intent、Capability Decision 和 Mapping/config hashes 全部进入 Spec/Result identity；Capability approval Intent mismatch、伪造 config hash 或早于 Order creation 的 translation time fail closed；
+8. 本 WP 不实现 MarketRule、Price/Quantity rounding、Fee Reservation、Pre-trade Risk、Venue submission、Execution Simulation、Accounting 或 Runtime orchestration。
+
+WP-05F 当前为 `READY`。
+
+## 41. PASSED 记录格式
 
 ```yaml
 id: WP-00A
