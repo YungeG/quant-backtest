@@ -59,7 +59,7 @@ artifact_hashes: []
 | WP-01A | PASSED | trading-domain | G00 | none |
 | WP-01B | PASSED | trading-domain | WP-01A | none |
 | WP-01C | PASSED | trading-domain | WP-01B | none |
-| WP-01D | DRAFT | trading-domain | WP-01A–WP-01C | Canonical golden bytes/hash |
+| WP-01D | READY | trading-domain | WP-01A–WP-01C | none |
 | WP-02A | DRAFT | trading-domain | G01 | Instrument identity fixtures |
 | WP-02B | DRAFT | trading-domain | WP-02A | Candidate/Validated wire fixtures |
 | WP-02C | DRAFT | trading-domain | WP-02A | Order/Execution schema fixtures |
@@ -669,7 +669,63 @@ mypy                                                                     no issu
 Python                                                                   3.13.5
 ```
 
-## 11. PASSED 记录格式
+## 11. WP-01D Acceptance Card
+
+```yaml
+id: WP-01D
+status: READY
+depends_on:
+  - WP-01A
+  - WP-01B
+  - WP-01C
+owner_package: trading-domain
+public_interface:
+  - crypto_quant_domain.CanonicalizationError
+  - crypto_quant_domain.CanonicalSchema
+  - crypto_quant_domain.CanonicalEnvelope
+  - crypto_quant_domain.canonical_bytes
+  - crypto_quant_domain.canonical_sha256
+test_commands:
+  contract: uv run pytest -q tests/domain/canonical/test_canonical_encoding.py
+  fixture: uv run pytest -q tests/domain/canonical/test_canonical_golden.py
+  boundary: uv run pytest -q tests/architecture/test_public_api_imports.py tests/architecture/test_repository_cleanliness.py
+fixture_ids:
+  - canonical-envelope-v1
+expected_artifacts:
+  - tests/fixtures/domain/canonical-envelope-v1.json
+failure_contracts:
+  - floating-point-canonical-value
+  - decimal-canonical-value
+  - datetime-canonical-value
+  - non-string-mapping-key
+  - non-normalized-unicode
+  - unsupported-canonical-type
+  - invalid-schema-identity
+  - canonical-hash-drift
+allowed_grade: development
+evidence:
+  - pytest-report
+  - canonical-golden-hash
+  - public-api-import-report
+passed_commit: null
+artifact_hashes: []
+```
+
+### WP-01D Readiness
+
+已冻结 canonical encoding v1：
+
+1. 输出为 UTF-8 JSON、mapping key 按 Unicode codepoint 排序、无多余空白、末尾无换行；
+2. 允许 `null`、bool、integer、NFC string、list/tuple、string-key mapping，以及显式 `to_canonical_dict()` 领域对象；
+3. 禁止 float、Decimal、datetime/date、bytes、set、非字符串 key、非 NFC string 和未知对象；
+4. `CanonicalSchema` 使用 lowercase canonical name 和 `version >= 1` integer；
+5. `CanonicalEnvelope` 固定为 `{schema: {name, version}, payload: ...}`，Schema version 必须进入 bytes/hash；
+6. `canonical_sha256()` 返回 `sha256:<64 lowercase hex>`；
+7. WP-01C 的 semantic key 应由 `canonical_bytes()` 产生，但 Identity 模块继续只消费 immutable bytes，避免反向耦合。
+
+WP-01D 当前状态为 `READY`，根据持续推进授权可直接实施。
+
+## 12. PASSED 记录格式
 
 ```yaml
 id: WP-00A

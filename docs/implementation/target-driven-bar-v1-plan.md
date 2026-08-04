@@ -307,7 +307,7 @@ crypto_quant_domain.numeric
 
 ### WP-01D Canonical serialization/hash
 
-拥有：canonical encoder、hash envelope、schema/version metadata；不拥有具体 Run evidence。
+拥有：canonical encoder、hash envelope、schema/version metadata；不拥有具体 Run evidence。v1 使用 UTF-8、sorted-key、compact JSON，只允许 null/bool/integer/NFC string/array/string-key mapping 和显式 canonical domain object；float、Decimal、datetime、bytes、set 与未知对象 fail closed。
 
 验收：
 
