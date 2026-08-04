@@ -81,7 +81,7 @@ artifact_hashes: []
 | WP-04B | PASSED | trading-kernel | WP-04A | none |
 | WP-04C | PASSED | trading-kernel | WP-04B, G03 | none |
 | WP-04D | PASSED | trading-kernel | WP-04C | none |
-| WP-04E | READY | trading-kernel | WP-04D, WP-03C | none |
+| WP-04E | PASSED | trading-kernel | WP-04D, WP-03C | none |
 | G04 | DRAFT | trading-kernel | WP-04A–WP-04E | Two-Sleeve target-materialization aggregate evidence |
 | WP-05A | DRAFT | trading-kernel | G02 | Order lifecycle fixtures |
 | WP-05B | DRAFT | trading-kernel | WP-05A | Reservation replay fixtures |
@@ -2552,7 +2552,7 @@ Python                                                                3.13.5
 
 ```yaml
 id: WP-04E
-status: READY
+status: PASSED
 depends_on:
   - WP-04D
   - WP-03C
@@ -2606,11 +2606,14 @@ evidence:
   - public-api-import-report
   - import-boundary-report
   - static-type-report
-passed_commit: null
-artifact_hashes: []
+passed_commit: ab99e3ac0990052a5f2c3d1b3ecac7503ae56001
+artifact_hashes:
+  tests/fixtures/kernel/position-sizing-active-target-v1.json: sha256:d425532da4269b74ce6139a886246bf4b173b8ce59c9c5a38adc36425667897a
+  build/acceptance/wp-04e-pytest.xml: sha256:993ef392e923c19d43e426d7a51bdd925fd4969e040c4c18e81d8e2a5fde30ef
+  build/acceptance/wp-04e-import-boundary-report.json: sha256:b97c4aec16f8e96314d4886266e8b2ce60600396bb151776ee734596d8742ff4
 ```
 
-### WP-04E Readiness
+### WP-04E Acceptance
 
 冻结以下边界：
 
@@ -2622,7 +2625,23 @@ artifact_hashes: []
 6. `NormalizedPortfolioTarget` 保留 Approved Target、Batch、Mark、Lattice、current/raw/final/residual 与 Policy provenance；domain `ActivePortfolioTarget` 保存 materialized exact Quantity，后续 Mark/NAV/Cash Flow 不能改写它；
 7. 不实现 contract multiplier、跨币种换算、Mark/Profile/Data 查询、Risk、Order Planning、Ledger mutation 或 Runtime orchestration；Order Planner 不得第二次 rounding。
 
-WP-04E 当前状态为 `READY`。
+WP-04E 的实现已冻结在 immutable commit `ab99e3ac0990052a5f2c3d1b3ecac7503ae56001`，状态为 `PASSED`。
+
+验证记录：
+
+```text
+Position Sizing contract tests                                      8 passed
+Position Sizing canonical golden fixture                            2 passed
+Public API + repository cleanliness boundaries                     5 passed
+Acceptance test report                                             15 passed
+Trading-kernel import boundary                                     PASS (32 files)
+Full test suite                                                    310 passed
+mypy                                                               no issues (5 files)
+Primary/auxiliary LSP                                              clean
+pi-lens scoped review                                              no findings
+uv lock --check                                                    PASS
+Python                                                             3.13.5
+```
 
 ## 34. PASSED 记录格式
 
