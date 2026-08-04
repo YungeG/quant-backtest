@@ -57,7 +57,7 @@ artifact_hashes: []
 | WP-00C | PASSED | repository root + parity tooling | WP-00B | none |
 | G00 | PASSED | repository root | WP-00A, WP-00B, WP-00C | none |
 | WP-01A | PASSED | trading-domain | G00 | none |
-| WP-01B | DRAFT | trading-domain | WP-01A | Time/DST fixtures/commands |
+| WP-01B | READY | trading-domain | WP-01A | none |
 | WP-01C | DRAFT | trading-domain | WP-01B | ID namespace/version fixtures |
 | WP-01D | DRAFT | trading-domain | WP-01A–WP-01C | Canonical golden bytes/hash |
 | WP-02A | DRAFT | trading-domain | G01 | Instrument identity fixtures |
@@ -533,7 +533,64 @@ mypy                                                                     no issu
 Python                                                                   3.13.5
 ```
 
-## 9. PASSED 记录格式
+## 9. WP-01B Acceptance Card
+
+```yaml
+id: WP-01B
+status: READY
+depends_on:
+  - WP-01A
+owner_package: trading-domain
+public_interface:
+  - crypto_quant_domain.UtcInstant
+  - crypto_quant_domain.LocalTimeDisambiguation
+  - crypto_quant_domain.resolve_local_datetime
+  - crypto_quant_domain.TradingDate
+  - crypto_quant_domain.SessionId
+  - crypto_quant_domain.TimelinePhase
+  - crypto_quant_domain.SourceSequence
+  - crypto_quant_domain.SimulationInstant
+test_commands:
+  contract: uv run pytest -q tests/domain/time/test_utc_instant.py tests/domain/time/test_simulation_instant.py
+  fixture: uv run pytest -q tests/domain/time/test_local_time_resolution.py
+  boundary: uv run pytest -q tests/architecture/test_public_api_imports.py tests/architecture/test_repository_cleanliness.py
+fixture_ids:
+  - time-dst-boundaries-v1
+expected_artifacts:
+  - tests/fixtures/domain/time-dst-boundaries-v1.json
+failure_contracts:
+  - naive-datetime-rejected
+  - ambiguous-local-time-unresolved
+  - nonexistent-local-time
+  - lossy-nanosecond-conversion
+  - inferred-trading-date
+  - invalid-source-sequence
+  - unstable-simulation-order
+allowed_grade: development
+evidence:
+  - pytest-report
+  - dst-fixture-hash
+  - public-api-import-report
+passed_commit: null
+artifact_hashes: []
+```
+
+### WP-01B Readiness
+
+已冻结 v1 时间语义：
+
+1. `UtcInstant` 只存 signed integer `epoch_nanoseconds`；aware datetime 输入用整数运算转换，naive datetime 拒绝；
+2. Python datetime 只有 microsecond 精度，`to_datetime()` 遇到非 1000ns 对齐值时 fail closed，不允许静默截断；
+3. 本地时间解析必须提供 IANA ZoneInfo 和 `LocalTimeDisambiguation`；重复时间支持 earlier/later/reject，缺失时间始终拒绝；
+4. `TradingDate` 是显式 `calendar_id + date` 值，不提供从 UTC/local date 推断的 API；
+5. `SessionId` 是显式 `calendar_id + value`；
+6. `TimelinePhase` 使用非负 rank 和 canonical code，不预先硬编码市场/Engine phase 集合；
+7. `SourceSequence` 是 `0..2^63-1` 的整数；
+8. `SimulationInstant` 总顺序为 `(epoch_nanoseconds, phase.rank, phase.code, source_sequence)`；Profile/Runtime 后续必须保证同一 registry 内 phase rank 唯一。
+
+WP-01B 当前状态为 `READY`，根据持续推进授权可直接实施。
+
+## 10. PASSED 记录格式
 
 ```yaml
 id: WP-00A

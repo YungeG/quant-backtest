@@ -284,7 +284,7 @@ crypto_quant_domain.numeric
 
 ### WP-01B UtcInstant 与 SimulationInstant
 
-拥有：UtcInstant、TradingDate、SessionId、TimelinePhase、SourceSequence 和 SimulationInstant 排序。
+拥有：UtcInstant、TradingDate、SessionId、TimelinePhase、SourceSequence 和 SimulationInstant 排序。`TimelinePhase` v1 是 `rank + canonical code` 值对象，不在 Domain 中提前固化市场阶段枚举；`SimulationInstant` 使用 `(epoch_nanoseconds, phase.rank, phase.code, source_sequence)` 总顺序。
 
 验收：
 
