@@ -964,6 +964,14 @@ G06 只实现可重复的执行 Harness。它不拥有 BacktestRequest resolutio
 
 拥有：不可变 TargetStream 的读取、Validation 和 DecisionBatch 注入。
 
+冻结边界：
+
+- Target Stream v1 是 canonical `MarketEvent` 序列，capability 为 `precomputed_target_stream@1`、event type 为 `strategy_decision_candidate`；每个事件 Payload 使用精确 Envelope `schema_version + candidate`，Envelope decode 与 Candidate contract validation 分层；
+- `PrecomputedTargetStream` 对完整事件序列计算稳定 `target_stream_digest`，供后续 ExecutionCase Builder 引用，但本 WP 不生成 Semantic Run ID；
+- 一个 `TargetStreamDecisionSchedule` 显式绑定同一 Decision Time 的 Expected Strategy/Sleeve、源 Event ID 和可信 Validation Context；Adapter 不从不受信任 Payload 推断 Universe 或可信路由；
+- Adapter 先保存 InputDecodeFailure 或 Candidate ValidationFailure，再把全部成功结果交给同一个 `AtomicDecisionBatchCollector`；任一失败均不产生部分 Batch；
+- Warmup Event 仍经过 decode/validation，但成功后只产生显式 suppression evidence，不修改 Sleeve State、不产生 DecisionBatch 或任何下游交易权威对象。
+
 验收：
 
 - 只能绕过 Strategy 计算，不能绕过 Risk/Planning/Execution/Accounting；

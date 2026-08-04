@@ -96,7 +96,7 @@ artifact_hashes: []
 | G05 | PASSED | trading-kernel | G04, WP-05A–WP-05J | none |
 | WP-06A | PASSED | market-data-contracts | G02 | none |
 | WP-06B | PASSED | backtest-runtime | WP-01B, WP-06A | none |
-| WP-06C | DRAFT | backtest-runtime | G04, WP-06A–WP-06B | TargetStream fixtures |
+| WP-06C | READY | backtest-runtime | G04, WP-06A–WP-06B | none |
 | WP-06D | DRAFT | backtest-runtime | WP-02G, WP-03C | Slippage fixtures |
 | WP-06E | DRAFT | backtest-runtime | G05, WP-06A–WP-06D | Next-open fixtures |
 | WP-06F | DRAFT | backtest-runtime | WP-03E, WP-05A–WP-05C, WP-06B, WP-06E | Run-end fixtures |
@@ -3943,7 +3943,79 @@ uv lock --check                                                     PASS
 Python                                                              3.13.5
 ```
 
-## 48. PASSED 记录格式
+## 48. WP-06C Precomputed TargetStream Acceptance Card
+
+```yaml
+id: WP-06C
+status: READY
+depends_on:
+  - G04
+  - WP-06A
+  - WP-06B
+owner_package: backtest-runtime
+public_interface:
+  - crypto_quant_backtest.TARGET_STREAM_CAPABILITY
+  - crypto_quant_backtest.TARGET_STREAM_EVENT_TYPE
+  - crypto_quant_backtest.PrecomputedTargetStream
+  - crypto_quant_backtest.TargetStreamScheduleEntry
+  - crypto_quant_backtest.TargetStreamDecisionSchedule
+  - crypto_quant_backtest.InputDecodeIssueCode
+  - crypto_quant_backtest.InputDecodeIssue
+  - crypto_quant_backtest.InputDecodeFailure
+  - crypto_quant_backtest.TargetCandidateValidationFailure
+  - crypto_quant_backtest.TargetStreamWarmupSuppression
+  - crypto_quant_backtest.TargetStreamBatchInjection
+  - crypto_quant_backtest.TargetStreamInjectionOutcome
+  - crypto_quant_backtest.PrecomputedTargetStreamAdapter
+test_commands:
+  contract: uv run pytest -q tests/runtime/target_stream/test_precomputed_target_stream.py
+  fixture: uv run pytest -q tests/runtime/target_stream/test_precomputed_target_stream_golden.py
+  boundary: uv run pytest -q tests/architecture/test_public_api_imports.py tests/architecture/test_repository_cleanliness.py
+fixture_ids:
+  - precomputed-target-stream-injection-v1
+expected_artifacts:
+  - tests/fixtures/runtime/precomputed-target-stream-injection-v1.json
+  - build/acceptance/wp-06c-pytest.xml
+  - build/acceptance/wp-06c-import-boundary-report.json
+failure_contracts:
+  - unsupported-target-stream-capability-or-event-type
+  - malformed-target-stream-envelope
+  - duplicate-or-unknown-envelope-field
+  - unsupported-target-stream-schema-version
+  - schedule-event-or-context-mismatch
+  - missing-or-duplicate-scheduled-event
+  - candidate-validation-failure-preserved
+  - atomic-decision-batch-failure-preserved
+  - mixed-warmup-active-decision-group
+  - warmup-produced-authoritative-batch-or-state
+allowed_grade: development
+evidence:
+  - pytest-report
+  - precomputed-target-stream-fixture-hash
+  - target-stream-digest-order-parity
+  - candidate-validation-failure-evidence
+  - warmup-suppression-evidence
+  - public-api-import-report
+  - import-boundary-report
+  - static-type-report
+passed_commit: null
+artifact_hashes: []
+```
+
+### WP-06C Acceptance
+
+冻结以下实现边界：
+
+1. `PrecomputedTargetStream` 只接收 immutable `MarketEvent`。事件必须使用 `precomputed_target_stream@1` capability、`strategy_decision_candidate` event type、空 Instrument identity、`event_time == available_time`，并按 canonical Market Event ordering 严格排序；构造时可接受任意输入顺序，但 canonical Stream 和 `target_stream_digest` 不得受输入顺序影响；
+2. Target Event Payload v1 的 Adapter Envelope 精确为 `schema_version` 和 `candidate`。Envelope 字段、版本或 Candidate container 无法解码时产生 canonical `InputDecodeFailure`；已成功解码的 Candidate 内部 schema、identity、time、Universe、Target、confidence 等错误必须由既有 `StrategyOutputValidator` 返回并原样保存在 `TargetCandidateValidationFailure`，不得降格成 decode failure；
+3. `TargetStreamDecisionSchedule` 显式绑定同一 `UtcInstant` 的 expected Strategy/Sleeve、源 Event ID 和可信 `StrategyOutputValidationContext`。Context 必须与 expectation/Decision Time 一致；Adapter 不从不受信任 Candidate Payload 推断可信 Strategy 路由、InstrumentCatalog 或 Universe；
+4. 每个 Schedule Entry 恰好对应一个同 Decision Time 的 Timeline Event。缺失 Event 由同一个 `AtomicDecisionBatchCollector` 产生 missing submission failure；重复/额外 Event、源 hash 不一致、错误 Timeline instant 或 mixed Warmup/Active segment 在 Adapter 层 fail closed；
+5. 所有 Candidate 先独立 decode/validate；只有全部 Validation 通过后才一次性交给既有 `AtomicDecisionBatchCollector`。任一 decode、validation 或 batch failure 都不产生部分 `DecisionBatch`、`LatestSleeveDecisionState` 或下游对象；
+6. Active Event 成功后只返回 `TargetStreamBatchInjection`，其中保存完整 Stream digest、源 Event identities/hashes、Batch/State identity。它仅替代 Strategy computation；Allocation、Risk、Sizing、Planning、Execution、Settlement 和 Accounting 仍必须使用 G04/G05 之后的共享权威路径；
+7. Warmup Event 仍执行 Envelope decode 和 Candidate validation，使 malformed immutable input 不被隐藏；全部成功后只返回 `TargetStreamWarmupSuppression`。Warmup 不调用 Batch Collector、不修改 prior Sleeve State，也不产生 DecisionBatch 或任何交易副作用；
+8. 本 WP 不实现 Strategy invocation、ObservationView、ExecutionCase Builder、Semantic Run/Attempt、InputOrigin→Run Outcome mapping、Profile Resolver、Bar execution、Evidence publication 或任何 Builder/Source Adapter/network read。
+
+## 49. PASSED 记录格式
 
 ```yaml
 id: WP-00A
