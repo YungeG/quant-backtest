@@ -88,7 +88,7 @@ artifact_hashes: []
 | WP-05C | PASSED | trading-kernel | WP-03B, WP-05B | none |
 | WP-05D | PASSED | trading-kernel | G04, WP-05A–WP-05C | none |
 | WP-05E | PASSED | trading-kernel | WP-05D | none |
-| WP-05F | READY | trading-kernel | WP-05E | none |
+| WP-05F | PASSED | trading-kernel | WP-05E | none |
 | WP-05G | DRAFT | trading-kernel | WP-05F, WP-02F | Market rule fixtures |
 | WP-05H | DRAFT | trading-kernel | WP-05G, WP-02F | Fee reservation fixtures |
 | WP-05I | DRAFT | trading-kernel | WP-05B, WP-05H | Pre-trade Risk fixtures |
@@ -3187,7 +3187,7 @@ Python                                                             3.13.5
 
 ```yaml
 id: WP-05F
-status: READY
+status: PASSED
 depends_on:
   - WP-05E
 owner_package: trading-kernel
@@ -3227,11 +3227,14 @@ evidence:
   - public-api-import-report
   - import-boundary-report
   - static-type-report
-passed_commit: null
-artifact_hashes: []
+passed_commit: 053d2490303d539935e4ef22ae2fac77eb099060
+artifact_hashes:
+  tests/fixtures/kernel/order-translation-v1.json: sha256:94a4aee0c3d593ac812debb87f47884ba004aec0dc2b98970e595b0e41b903b5
+  build/acceptance/wp-05f-pytest.xml: sha256:450ff7d6e7a7b83fe7fea46e917fcce59333ffc852838145389fc4b5fda15073
+  build/acceptance/wp-05f-import-boundary-report.json: sha256:04f58c902d15add4154acd7e085f85e878edad75a843f28fab2f4f1d2e0b0992
 ```
 
-### WP-05F Readiness
+### WP-05F Acceptance
 
 冻结以下边界：
 
@@ -3244,7 +3247,25 @@ artifact_hashes: []
 7. source Intent、Capability Decision 和 Mapping/config hashes 全部进入 Spec/Result identity；Capability approval Intent mismatch、伪造 config hash 或早于 Order creation 的 translation time fail closed；
 8. 本 WP 不实现 MarketRule、Price/Quantity rounding、Fee Reservation、Pre-trade Risk、Venue submission、Execution Simulation、Accounting 或 Runtime orchestration。
 
-WP-05F 当前为 `READY`。
+WP-05F 的实现已冻结在 immutable commit `053d2490303d539935e4ef22ae2fac77eb099060`，状态为 `PASSED`。
+
+验证记录：
+
+```text
+Order Translator contract tests                                      8 passed
+Order Translation canonical golden fixture                           1 passed
+Public API + repository cleanliness boundaries                        5 passed
+Acceptance test report                                                14 passed
+Trading-kernel import boundary                                        PASS (38 files)
+Full test suite                                                       372 passed
+mypy                                                                   no issues (38 files)
+Primary LSP                                                            clean
+pi-lens scoped review                                                  no findings after one local helper duplicate defer
+uv lock --check                                                        PASS
+Python                                                                 3.13.5
+```
+
+一个小型 module-local canonical text validation helper 与 Rebalance 模块形状相同，已在本 session defer；当前不抽取跨模块共享 abstraction，以免为了 11 行验证代码扩大不稳定 contract 之间的耦合。
 
 ## 41. PASSED 记录格式
 
