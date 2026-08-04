@@ -97,7 +97,7 @@ artifact_hashes: []
 | WP-06A | PASSED | market-data-contracts | G02 | none |
 | WP-06B | PASSED | backtest-runtime | WP-01B, WP-06A | none |
 | WP-06C | PASSED | backtest-runtime | G04, WP-06A–WP-06B | none |
-| WP-06D | READY | backtest-runtime | WP-02G, WP-03C | none |
+| WP-06D | PASSED | backtest-runtime | WP-02G, WP-03C | none |
 | WP-06E | DRAFT | backtest-runtime | G05, WP-06A–WP-06D | Next-open fixtures |
 | WP-06F | DRAFT | backtest-runtime | WP-03E, WP-05A–WP-05C, WP-06B, WP-06E | Run-end fixtures |
 | WP-06G | DRAFT | backtest-runtime | WP-06A–WP-06F | Engine harness fixtures |
@@ -4040,7 +4040,7 @@ Python                                                               3.13.5
 
 ```yaml
 id: WP-06D
-status: READY
+status: PASSED
 depends_on:
   - WP-02G
   - WP-03C
@@ -4093,8 +4093,11 @@ evidence:
   - public-api-import-report
   - import-boundary-report
   - static-type-report
-passed_commit: null
-artifact_hashes: []
+passed_commit: 5f140bf495e21cb1ec86682e2c937002f8a79684
+artifact_hashes:
+  tests/fixtures/runtime/deterministic-bps-slippage-v1.json: sha256:09c1e6f7be45f1b156d6ae1f9f9e3efe5e23bc00dfc2a6ff08c460b78ef2d8b5
+  build/acceptance/wp-06d-pytest.xml: sha256:f64c24ab7699b7b9d5c36cd80051e83e44841b994e76eebd324b77c0c72f7093
+  build/acceptance/wp-06d-import-boundary-report.json: sha256:af3d930c5040c414a663681fa24e61cef37598c290bd83a8d96802543ca973ab
 ```
 
 ### WP-06D Acceptance
@@ -4110,7 +4113,23 @@ artifact_hashes: []
 7. `DeterministicBpsSlippageModel` 实现既有 `SlippageModel` Protocol，其 `SimulationPortSpec` 使用同一 component 和 Applicability Envelope，其结果使用既有 `SimulationPortOutcome`；不存在隐式默认 Model、Calibration 或 Envelope；
 8. 本 WP 不决定成交资格、Bar 选择、Fill Quantity、Fee、MarketRule、Liquidity、Latency、concrete Profile resolution、Run Outcome 或 Runtime orchestration。
 
-WP-06D 当前状态为 `READY`。
+WP-06D 的实现已冻结在 immutable commit `5f140bf495e21cb1ec86682e2c937002f8a79684`，状态为 `PASSED`。
+
+验证记录：
+
+```text
+Deterministic Slippage contract tests                              8 passed
+Canonical Slippage golden fixture                                  1 passed
+Public API + repository cleanliness boundaries                     5 passed
+Acceptance test report                                             14 passed
+Backtest-runtime import boundary                                   PASS (46 files)
+Full test suite                                                    457 passed
+mypy                                                                no issues (8 files)
+Primary LSP                                                         clean
+pi-lens scoped review                                               no unresolved findings
+uv lock --check                                                     PASS
+Python                                                              3.13.5
+```
 
 ## 50. PASSED 记录格式
 
