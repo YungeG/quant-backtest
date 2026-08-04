@@ -462,16 +462,27 @@ v1 Port seam 使用三参数 generic Protocol：`RequestT`、`ResultT` 和 `Fail
 
 ### WP-02H Profile Component Error Taxonomy
 
-拥有：Profile lookup、component incompatibility、capability missing、applicability violation 和 unsupported semantics 的稳定 reason code。
+拥有：`ProfileComponentFailureCode` 和 `ProfileComponentFailure`，覆盖 Profile lookup、component incompatibility、capability missing、applicability violation 和 unsupported semantics 的稳定 reason code。
 
-不拥有：Run Outcome 映射或具体 Profile 行为。
+v1 canonical reason code 固定为：
+
+- `profile_lookup_failed`；
+- `component_incompatible`；
+- `capability_missing`；
+- `applicability_violation`；
+- `unsupported_semantics`。
+
+`ProfileComponentFailure` 只保存 typed reason code 和 non-empty NFC `subject_key`。Subject 标识失败主体，不承载日志、异常文本、任意 metadata 或 Vendor DTO。
+
+不拥有：Run Outcome 映射、Resolver/Registry、compatibility/capability/applicability 算法、具体 Profile 行为、异常层或日志呈现。
 
 验收：
 
 - Kernel、Runtime 和 Resolver 可以共享结构化 reason code，不依赖日志文本判断；
-- 新错误不能通过 `None` 或通用 `ValueError` 静默表达；
-- Reason code canonical serialization 稳定；
-- Error taxonomy 不引用具体供应商 DTO。
+- 新错误不能通过 `None`、通用 `ValueError`、exception text 或 log matching 静默表达；
+- Reason code 与 failure value 的 canonical serialization 稳定；
+- Error taxonomy 不引用具体市场或供应商 DTO；
+- 新增或重定义 reason code 必须通过显式 schema/version 变更。
 
 ### Gate G02
 

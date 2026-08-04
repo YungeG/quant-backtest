@@ -68,7 +68,8 @@ artifact_hashes: []
 | WP-02E | PASSED | trading-domain | WP-01D | none |
 | WP-02F | PASSED | trading-kernel | WP-02A–WP-02D | none |
 | WP-02G | PASSED | backtest-runtime | WP-02A–WP-02D, WP-02F | none |
-| WP-02H | DRAFT | trading-domain | WP-02A–WP-02E | Error taxonomy catalog |
+| WP-02H | READY | trading-domain | WP-02A–WP-02G | none |
+| G02 | DRAFT | trading-domain + trading-kernel + backtest-runtime | WP-02A–WP-02H | Aggregate review and evidence |
 | WP-03A | DRAFT | trading-kernel | G02 | Journal replay fixtures |
 | WP-03B | DRAFT | trading-kernel | WP-03A | Ledger projection fixtures |
 | WP-03C | DRAFT | trading-kernel | WP-02F | PricePurpose/Mark fixtures |
@@ -1409,7 +1410,62 @@ uv lock --check                                                         PASS
 Python                                                                  3.13.5
 ```
 
-## 20. PASSED 记录格式
+## 20. WP-02H Acceptance Card
+
+```yaml
+id: WP-02H
+status: READY
+depends_on:
+  - WP-02A
+  - WP-02B
+  - WP-02C
+  - WP-02D
+  - WP-02E
+  - WP-02F
+  - WP-02G
+owner_package: trading-domain
+public_interface:
+  - crypto_quant_domain.ProfileComponentFailureCode
+  - crypto_quant_domain.ProfileComponentFailure
+test_commands:
+  contract: uv run pytest -q tests/domain/profile_errors/test_profile_component_failures.py
+  fixture: uv run pytest -q tests/domain/profile_errors/test_profile_component_error_golden.py
+  boundary: uv run pytest -q tests/architecture/test_public_api_imports.py tests/architecture/test_repository_cleanliness.py
+fixture_ids:
+  - profile-component-errors-v1
+expected_artifacts:
+  - tests/fixtures/domain/profile-component-errors-v1.json
+  - build/acceptance/wp-02h-pytest.xml
+failure_contracts:
+  - invalid-profile-component-failure-code
+  - invalid-profile-component-failure-subject
+  - noncanonical-profile-component-failure-subject
+  - freeform-profile-error-message
+  - profile-failure-exception-text-protocol
+  - market-or-vendor-specific-profile-error
+allowed_grade: development
+evidence:
+  - pytest-report
+  - profile-component-error-fixture-hash
+  - public-api-import-report
+passed_commit: null
+artifact_hashes: []
+```
+
+### WP-02H Readiness
+
+已冻结以下边界：
+
+1. `ProfileComponentFailureCode` 只包含五个跨 Kernel、Runtime 和未来 Resolver 共用的稳定 canonical code：`profile_lookup_failed`、`component_incompatible`、`capability_missing`、`applicability_violation` 和 `unsupported_semantics`；
+2. `ProfileComponentFailure` 是 immutable canonical value，只包含 typed reason code 和 non-empty NFC `subject_key`。`subject_key` 标识失败主体，不承载日志、异常消息、Vendor DTO、任意 metadata 或用户显示文本；
+3. Kernel `ProfilePortOutcome.failure` 与 Runtime `SimulationPortOutcome.failure` 可以使用该值作为具体 `FailureT`，无需由 Trading Domain 反向依赖两个 Port package；
+4. 预期业务失败必须显式返回 `ProfileComponentFailure` 或未来更具体的 typed failure，不能以 `None`、通用 `ValueError`、exception text 或 log matching 作为跨模块协议；
+5. 本 WP 不实现 Profile Registry/Resolver、component compatibility 算法、capability/applicability 检查、Run Outcome 映射、异常层、日志呈现或具体市场/供应商错误；
+6. 新增更细 reason code 属于显式 schema/version 变更，不能静默复用现有 code 改变语义。
+
+WP-02H 当前状态为 `READY`。
+
+## 21. PASSED 记录格式
 
 ```yaml
 id: WP-00A
