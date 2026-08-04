@@ -352,15 +352,35 @@ crypto_quant_domain.numeric
 
 ### WP-02C Order/Execution contracts
 
-拥有：OrderIntent、Order、OrderEvent、OrderState、Fill、FeeAssessment、SettlementObligation 和 TranslationReport 契约。
+拥有：venue-neutral `OrderIntent`、identity-bearing `Order`、`OrderEvent`、`OrderState`、`Fill`、`FeeAssessment`、`SettlementObligation`、`OrderTranslationReport` 及其最小 canonical enum/value contracts。
+
+不拥有：Order capability 判断、Translation 算法、Order Event replay/state transition、Market Rule、Fee 计算、Settlement 应用、Accounting mutation 或 Venue DTO。
+
+v1 canonical semantics：
+
+- `OrderSide = buy | sell`；
+- `ExecutionStyle = market | limit | stop | stop_limit`；
+- `TimeInForce = day | gtc | ioc | fok | gtx`；
+- `PositionEffect = auto | open | close`；
+- `PriceConstraint` 只承载 typed limit/trigger price；具体 style/constraint 组合由后续 Capability/Market Rule Gate 判断；
+- `OrderIntent` 不提供 extensions/metadata 字段，Venue symbol、board、position action、client DTO 和 Adapter payload 只能出现在 Translation evidence 或 Adapter 内；
+- `Order` 绑定 `DomainIdKind.ORDER`、Execution Account identity、创建时 `SimulationInstant` 和 immutable Intent；
+- `OrderEvent` 具有独立 canonical event ID、typed Order ID、causation ID 和 `SimulationInstant`；Fill event 必须引用 typed Fill ID；
+- `OrderState` 只是 immutable projection contract，保存 ordered/cumulative/remaining Quantity，状态转换和 replay 属于 WP-05C；
+- `Fill` 使用 typed Order/Fill ID、Instrument/Venue、Quantity/Price/Money 和 UtcInstant，且不含最终 Fee；
+- `FeeAssessment` 使用 `fill | order | session` typed basis，并独立引用 Fee/Tax/Account rule identity；
+- `SettlementObligation` 必须恰好表达 Instrument Quantity 或 Currency Money 之一；
+- `OrderTranslationReport` 明确 translated/rejected，记录 field mapping，并以 `UnsupportedCapability` 结构化表达无法精确映射的语义。
 
 验收：
 
 - Fill 不含唯一最终 Fee；
-- FeeAssessment 可以引用 Fill、Order 或 Session basis；
-- Order Event 具有 event/order/causation identity；
+- FeeAssessment 可以引用一个或多个 Fill、Order 或 Session basis，basis 类型不匹配时 fail closed；
+- Order Event 具有 event/order/causation identity，Fill event 缺少 Fill ID 时拒绝；
+- OrderState Quantity identity、Scale 和总量不变量成立；
 - Venue-specific 字段不能进入 canonical OrderIntent；
-- unsupported capability 有结构化表达。
+- unsupported capability 有结构化表达，rejected Translation 不得伪装为 translated；
+- canonical round-trip/hash 不受 tuple 输入顺序影响的集合字段必须稳定排序。
 
 ### WP-02D Accounting contracts
 

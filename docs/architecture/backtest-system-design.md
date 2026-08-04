@@ -730,7 +730,9 @@ class OrderPlan:
 - Reason
 - Parent decision/target ID
 
-Canonical OrderIntent 不包含 trading pair、Hummingbot `PositionAction`、券商 Board 或其他 Venue DTO 字段。OrderTranslator 将其解析为 `ExecutableOrderSpec` 并生成 OrderTranslationReport；ExecutableOrderSpec 可以包含已解析的 Profile capability 和账户约束，但仍不是 Hummingbot 或券商 DTO。
+v1 canonical values 为 `OrderSide = buy | sell`、`ExecutionStyle = market | limit | stop | stop_limit`、`TimeInForce = day | gtc | ioc | fok | gtx`、`PositionEffect = auto | open | close`。`PriceConstraint` 只承载可选 typed limit/trigger price；Style 与 Constraint 的合法组合由 Capability/Market Rule 判断。
+
+Canonical OrderIntent 不包含任意 extensions/metadata、trading pair、Hummingbot `PositionAction`、券商 Board 或其他 Venue DTO 字段。OrderTranslator 将其解析为 `ExecutableOrderSpec` 并生成 OrderTranslationReport；ExecutableOrderSpec 可以包含已解析的 Profile capability 和账户约束，但仍不是 Hummingbot 或券商 DTO。
 
 ### 8.13 OrderEventStream 与 ExecutionReport
 
@@ -815,13 +817,17 @@ Fill 发生后立即记录经济风险和 PnL，但资产或现金是否可卖�
 ```python
 @dataclass(frozen=True)
 class SettlementObligation:
-    settlement_obligation_id: str
-    source_fill_id: str
+    settlement_obligation_id: DomainId  # SETTLEMENT
+    source_fill_id: DomainId             # FILL
     trade_time: UtcInstant
     settlement_time: UtcInstant
-    asset_or_currency: str
-    quantity_or_amount: ScaledValue
+    instrument_id: InstrumentId | None
+    quantity: Quantity | None
+    currency_id: CurrencyId | None
+    amount: Money | None
 ```
+
+恰好一个 `(instrument_id, quantity)` 或 `(currency_id, amount)` pair 必须存在；signed units 表达收付方向，零义务非法。
 
 `AvailabilityProjection` 根据 Accounting Ledger、SettlementBook、ResourceReservationBook 和 Market Settlement Rules 计算：
 
@@ -841,15 +847,15 @@ Settlement 到达时产生明确 `SettlementApplied` Event 和对应 Journal/Ava
 ```python
 @dataclass(frozen=True)
 class Fill:
-    fill_id: str
-    order_id: str
+    fill_id: DomainId   # FILL
+    order_id: DomainId  # ORDER
     account_id: str
-    venue_id: str
-    instrument_id: str
-    side: str
+    venue_id: VenueId
+    instrument_id: InstrumentId
+    side: OrderSide
     quantity: Quantity
     reference_price: Price
-    reference_price_purpose: PricePurpose
+    reference_price_purpose: str  # PricePurpose canonical value; typed enum owned by WP-02D
     price: Price
     slippage_amount: Money
     slippage_decision_id: str
@@ -866,9 +872,9 @@ Fill 是成交事实，不直接拥有唯一最终 Fee。`FeeAssessment` 独立�
 ```python
 @dataclass(frozen=True)
 class FeeAssessment:
-    fee_assessment_id: str
-    basis_type: str
-    basis_ids: tuple[str, ...]
+    fee_assessment_id: DomainId  # FEE
+    basis_type: FeeBasisType
+    basis_ids: tuple[DomainId | SessionId, ...]
     market_fee_rule_id: str | None
     account_fee_schedule_id: str | None
     tax_rule_id: str | None

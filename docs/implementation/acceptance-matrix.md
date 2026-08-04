@@ -63,7 +63,7 @@ artifact_hashes: []
 | G01 | PASSED | trading-domain | WP-01A, WP-01B, WP-01C, WP-01D | none |
 | WP-02A | PASSED | trading-domain | G01 | none |
 | WP-02B | PASSED | trading-domain | WP-02A | none |
-| WP-02C | DRAFT | trading-domain | WP-02A | Order/Execution schema fixtures |
+| WP-02C | READY | trading-domain | WP-02A, WP-02B | none |
 | WP-02D | DRAFT | trading-domain | WP-02A | Accounting schema fixtures |
 | WP-02E | DRAFT | trading-domain | WP-01D | Envelope/Catalog fixtures |
 | WP-02F | DRAFT | trading-kernel | WP-02A–WP-02D | Kernel Profile Port contracts |
@@ -954,7 +954,95 @@ mypy                                                                     no issu
 Python                                                                   3.13.5
 ```
 
-## 15. PASSED 记录格式
+## 15. WP-02C Acceptance Card
+
+```yaml
+id: WP-02C
+status: READY
+depends_on:
+  - WP-02A
+  - WP-02B
+owner_package: trading-domain
+public_interface:
+  - crypto_quant_domain.OrderSide
+  - crypto_quant_domain.ExecutionStyle
+  - crypto_quant_domain.TimeInForce
+  - crypto_quant_domain.PositionEffect
+  - crypto_quant_domain.PriceConstraint
+  - crypto_quant_domain.OrderIntent
+  - crypto_quant_domain.Order
+  - crypto_quant_domain.OrderEventType
+  - crypto_quant_domain.OrderEvent
+  - crypto_quant_domain.OrderStatus
+  - crypto_quant_domain.OrderState
+  - crypto_quant_domain.Fill
+  - crypto_quant_domain.FeeBasisType
+  - crypto_quant_domain.FeeAssessment
+  - crypto_quant_domain.SettlementObligation
+  - crypto_quant_domain.TranslationStatus
+  - crypto_quant_domain.UnsupportedCapability
+  - crypto_quant_domain.TranslationFieldMapping
+  - crypto_quant_domain.OrderTranslationReport
+test_commands:
+  contract: uv run pytest -q tests/domain/execution/test_order_execution_contracts.py
+  fixture: uv run pytest -q tests/domain/execution/test_order_execution_golden.py
+  boundary: uv run pytest -q tests/architecture/test_public_api_imports.py tests/architecture/test_repository_cleanliness.py
+fixture_ids:
+  - order-execution-contracts-v1
+expected_artifacts:
+  - tests/fixtures/domain/order-execution-contracts-v1.json
+  - build/acceptance/wp-02c-pytest.xml
+failure_contracts:
+  - invalid-order-enum
+  - nonpositive-order-quantity
+  - order-quantity-identity-mismatch
+  - order-price-constraint-identity-mismatch
+  - venue-specific-order-intent-field
+  - wrong-order-domain-id-kind
+  - fill-event-without-fill-id
+  - non-fill-event-with-fill-id
+  - rejection-event-without-reason
+  - order-state-quantity-identity-mismatch
+  - order-state-quantity-scale-mismatch
+  - order-state-total-mismatch
+  - filled-state-with-remaining-quantity
+  - fill-identity-mismatch
+  - fill-contains-final-fee
+  - fee-basis-type-mismatch
+  - duplicate-fee-basis
+  - fee-assessment-without-rule-identity
+  - invalid-settlement-obligation-shape
+  - settlement-identity-mismatch
+  - translated-report-with-unsupported-capability
+  - rejected-report-without-unsupported-capability
+  - duplicate-translation-mapping
+allowed_grade: development
+evidence:
+  - pytest-report
+  - order-execution-fixture-hash
+  - public-api-import-report
+passed_commit: null
+artifact_hashes: []
+```
+
+### WP-02C Readiness
+
+已冻结 v1 Order/Execution 数据契约：
+
+1. `OrderIntent` 只表达 venue-neutral canonical semantics；固定字段为 Instrument、Side、Quantity、Execution Style、可选 Price Constraint、Time-in-Force、Reduce-only、Position Effect、Urgency、Reason 和 Parent identity，不提供任意 extensions/metadata；
+2. v1 支持 `buy/sell`、`market/limit/stop/stop_limit`、`day/gtc/ioc/fok/gtx` 和 `auto/open/close`；style、constraint 和 profile capability 的组合合法性不属于本 WP；
+3. `Order` 使用 `DomainIdKind.ORDER`，绑定单一 Execution Account、immutable Intent 和创建时 `SimulationInstant`；
+4. `OrderEvent` 使用独立 canonical event ID、typed Order ID、causation ID 和 `SimulationInstant`；Fill lifecycle event 必须且只能引用 `DomainIdKind.FILL`，拒绝类 Event 必须携带 reason code；
+5. `OrderState` 是 immutable projection data contract，使用 ordered/cumulative/remaining Quantity 并验证 identity、Scale 和总量；状态转换、幂等应用和 replay 推迟到 WP-05C；
+6. `Fill` 保存 reference price、execution price 和 Slippage provenance，所有 Quantity/Price/Money identity 必须一致；Fill 不含 Fee 字段；
+7. `FeeAssessment` 的 basis 类型为 Fill、Order 或 Session，basis 使用对应 typed `DomainId`/`SessionId`，允许一个或多个唯一 basis，且至少引用一个 Fee/Tax/Account rule identity；
+8. `SettlementObligation` 使用 source Fill identity，并恰好承载 `(InstrumentId, Quantity)` 或 `(CurrencyId, Money)` 一种义务；signed units 表达收付方向，零义务被拒绝；
+9. `OrderTranslationReport` 只记录 Translation 证据，不包含 Venue Request；translated report 不得包含 unsupported capability，rejected report 必须包含结构化 `UnsupportedCapability`；field mapping 保留 canonical/target field/value，重复 canonical field 被拒绝；
+10. 本 WP 不实现 Capability Validator、Translator、Order Event replay、FeeAssessmentEngine、SettlementBook 或 Accounting。
+
+WP-02C 当前状态为 `READY`。
+
+## 16. PASSED 记录格式
 
 ```yaml
 id: WP-00A
