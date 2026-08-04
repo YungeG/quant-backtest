@@ -1,0 +1,33 @@
+{
+  "accepted_state_hash": "sha256:527fc87c5d504bacbe6d3701ac18703cd238755cb8e93887648ae7765e025c41",
+  "canonical_final_hash": "sha256:75293f3265b3716f6b388f7778d1cb809bbd1e6cf4fa1f48a015dc1fcfe3baaa",
+  "final_active_count": 0,
+  "final_cursor_hashes": [
+    "sha256:22f9086dc9a282d366c03f203b6acfe68616daae703828d4a86d9df00e589910",
+    "sha256:f6930bc63cf8bfe015d08b03b620d85672b8c06c9a73d3166f103c2397502b60"
+  ],
+  "final_state_hash": "sha256:75293f3265b3716f6b388f7778d1cb809bbd1e6cf4fa1f48a015dc1fcfe3baaa",
+  "final_totals_hash": "sha256:2578145a9173755170d78a9e00d0c58f63f2aa203e0f4b5166716991312715fa",
+  "fixture_id": "resource-reservation-replay-v1",
+  "partial_active_order_ids": [
+    "ord_1111111111111111111111111111111111111111111111111111111111111111",
+    "ord_9999999999999999999999999999999999999999999999999999999999999999"
+  ],
+  "partial_cash_units": [
+    6300
+  ],
+  "partial_exposure_units": [
+    12000
+  ],
+  "partial_fee_units": [
+    500
+  ],
+  "partial_margin_units": [
+    1200
+  ],
+  "partial_order_capacity_units": 2,
+  "partial_sellable_units": [
+    600
+  ],
+  "partial_state_hash": "sha256:68481a530e8cdab6807fa8c35599165262fb49b0ef8065796f3c89499683802f"
+}

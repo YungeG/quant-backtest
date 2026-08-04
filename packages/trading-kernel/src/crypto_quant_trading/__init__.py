@@ -90,6 +90,18 @@ from .ports import (
     SettlementModel,
     TaxPolicy,
 )
+from .reservations import (
+    ActiveOrderReservation,
+    OrderReservationCursor,
+    OrderReservationSchedule,
+    OrderReservationUpdate,
+    ReservationCommitment,
+    ReservationEvidenceError,
+    ReservationStateMismatchError,
+    ResourceReservationBook,
+    ResourceReservationError,
+    ResourceReservationState,
+)
 from .risk import (
     ApprovedInstrumentTarget,
     ApprovedPortfolioTarget,
@@ -154,6 +166,7 @@ __version__ = "0.1.0"
 
 __all__ = [
     "AccountingJournal",
+    "ActiveOrderReservation",
     "ApprovedInstrumentTarget",
     "ApprovedPortfolioTarget",
     "AllocationConstraintCode",
@@ -218,6 +231,9 @@ __all__ = [
     "NormalizedInstrumentTarget",
     "NormalizedPortfolioTarget",
     "OrderEventConflictError",
+    "OrderReservationCursor",
+    "OrderReservationSchedule",
+    "OrderReservationUpdate",
     "OrderEventOrderingError",
     "OrderEventRecord",
     "OrderEventStream",
@@ -257,7 +273,13 @@ __all__ = [
     "ProfilePortOutcome",
     "ProfilePortType",
     "QuantityLattice",
+    "ReservationCommitment",
+    "ReservationEvidenceError",
+    "ReservationStateMismatchError",
     "ReportingCurrencyValuation",
+    "ResourceReservationBook",
+    "ResourceReservationError",
+    "ResourceReservationState",
     "ResidualPositionPolicy",
     "ResolvedMark",
     "SessionModel",
