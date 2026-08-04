@@ -70,7 +70,7 @@ artifact_hashes: []
 | WP-02G | PASSED | backtest-runtime | WP-02A–WP-02D, WP-02F | none |
 | WP-02H | PASSED | trading-domain | WP-02A–WP-02G | none |
 | G02 | PASSED | trading-domain + trading-kernel + backtest-runtime | WP-02A–WP-02H | none |
-| WP-03A | READY | trading-kernel | G02 | none |
+| WP-03A | PASSED | trading-kernel | G02 | none |
 | WP-03B | DRAFT | trading-kernel | WP-03A | Ledger projection fixtures |
 | WP-03C | DRAFT | trading-kernel | WP-02F | PricePurpose/Mark fixtures |
 | WP-03D | DRAFT | trading-kernel | WP-03C | Currency graph fixtures |
@@ -1584,7 +1584,7 @@ Python                                                                  3.13.5
 
 ```yaml
 id: WP-03A
-status: READY
+status: PASSED
 depends_on:
   - G02
 owner_package: trading-kernel
@@ -1623,11 +1623,14 @@ evidence:
   - public-api-import-report
   - import-boundary-report
   - static-type-report
-passed_commit: null
-artifact_hashes: []
+passed_commit: c0c95cf822cd23751f0e77e37eab8739dc51757f
+artifact_hashes:
+  tests/fixtures/kernel/immutable-journal-replay-v1.json: sha256:107f291470008c1de90133ecadc08839367a086368cbaf9a992c4475dd7a81b8
+  build/acceptance/wp-03a-pytest.xml: sha256:1538ea54d33ca451b919fd32a3f7a3b3d14756bfdf4c2584799ebbb2d0032216
+  build/acceptance/wp-03a-import-boundary-report.json: sha256:092a85810d8de5a8fc4805b518760ffbf3499931ee502496d5206cc9eb4121c1
 ```
 
-### WP-03A Readiness
+### WP-03A Acceptance
 
 已冻结以下边界：
 
@@ -1639,7 +1642,23 @@ artifact_hashes: []
 6. Golden fixture 使用无经济语义 reducer 验证 genesis→cursor→end 与 genesis→end parity，不提前实现 WP-03B Ledger projection；
 7. 本 WP 不实现 Accounting translation、市场/Profile 读取、Mark/Valuation、Settlement mutation、mutable store、EngineCheckpoint 或 Run Outcome。
 
-WP-03A 当前状态为 `READY`，可以按卡片定义实施。
+WP-03A 的实现已冻结在 immutable commit `c0c95cf822cd23751f0e77e37eab8739dc51757f`，状态为 `PASSED`。
+
+验证记录：
+
+```text
+Immutable Journal contract tests                                       7 passed
+Canonical replay golden fixture                                        1 passed
+Public API + repository cleanliness boundaries                         5 passed
+Acceptance test report                                                13 passed
+Trading-kernel import boundary                                         PASS (22 files)
+Full test suite                                                        205 passed
+mypy                                                                    no issues (7 files)
+Primary LSP                                                             clean
+pi-lens scoped review                                                   no findings
+uv lock --check                                                         PASS
+Python                                                                  3.13.5
+```
 
 ## 23. PASSED 记录格式
 
