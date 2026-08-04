@@ -97,7 +97,7 @@ artifact_hashes: []
 | WP-06A | PASSED | market-data-contracts | G02 | none |
 | WP-06B | PASSED | backtest-runtime | WP-01B, WP-06A | none |
 | WP-06C | PASSED | backtest-runtime | G04, WP-06A–WP-06B | none |
-| WP-06D | DRAFT | backtest-runtime | WP-02G, WP-03C | Slippage fixtures |
+| WP-06D | READY | backtest-runtime | WP-02G, WP-03C | none |
 | WP-06E | DRAFT | backtest-runtime | G05, WP-06A–WP-06D | Next-open fixtures |
 | WP-06F | DRAFT | backtest-runtime | WP-03E, WP-05A–WP-05C, WP-06B, WP-06E | Run-end fixtures |
 | WP-06G | DRAFT | backtest-runtime | WP-06A–WP-06F | Engine harness fixtures |
@@ -4036,7 +4036,83 @@ uv lock --check                                                      PASS
 Python                                                               3.13.5
 ```
 
-## 49. PASSED 记录格式
+## 49. WP-06D Deterministic Slippage Model Acceptance Card
+
+```yaml
+id: WP-06D
+status: READY
+depends_on:
+  - WP-02G
+  - WP-03C
+owner_package: backtest-runtime
+public_interface:
+  - crypto_quant_backtest.SlippageModelKind
+  - crypto_quant_backtest.SlippageLimitation
+  - crypto_quant_backtest.SlippageApplicabilityDimension
+  - crypto_quant_backtest.SlippageCalibrationRef
+  - crypto_quant_backtest.SlippageApplicabilityEnvelope
+  - crypto_quant_backtest.SlippageMarketState
+  - crypto_quant_backtest.ExecutionReferencePrice
+  - crypto_quant_backtest.SlippageRequest
+  - crypto_quant_backtest.SlippageApplicabilityResult
+  - crypto_quant_backtest.SlippageDecision
+  - crypto_quant_backtest.SlippageApplicabilityViolation
+  - crypto_quant_backtest.DeterministicBpsSlippageModel
+  - crypto_quant_backtest.SimulationPortOutcome
+  - crypto_quant_backtest.SlippageModel
+test_commands:
+  contract: uv run pytest -q tests/runtime/slippage/test_deterministic_slippage.py
+  fixture: uv run pytest -q tests/runtime/slippage/test_deterministic_slippage_golden.py
+  boundary: uv run pytest -q tests/architecture/test_public_api_imports.py tests/architecture/test_repository_cleanliness.py
+fixture_ids:
+  - deterministic-bps-slippage-v1
+expected_artifacts:
+  - tests/fixtures/runtime/deterministic-bps-slippage-v1.json
+  - build/acceptance/wp-06d-pytest.xml
+  - build/acceptance/wp-06d-import-boundary-report.json
+failure_contracts:
+  - non-execution-reference-price-purpose
+  - request-instrument-or-quantity-mismatch
+  - future-market-state-evidence
+  - applicability-instrument-violation
+  - applicability-time-window-violation
+  - applicability-quantity-violation
+  - applicability-market-state-violation
+  - invalid-component-calibration-or-envelope-identity
+  - implicit-zero-slippage-configuration
+  - missing-zero-slippage-development-limitation
+  - nonpositive-computed-execution-price
+allowed_grade: development
+evidence:
+  - pytest-report
+  - deterministic-slippage-fixture-hash
+  - buy-sell-direction-evidence
+  - integer-bps-rounding-evidence
+  - applicability-violation-evidence
+  - explicit-zero-slippage-development-limitation
+  - public-api-import-report
+  - import-boundary-report
+  - static-type-report
+passed_commit: null
+artifact_hashes: []
+```
+
+### WP-06D Acceptance
+
+冻结以下实现边界：
+
+1. `ExecutionReferencePrice` 必须包装一个 `PricePurpose.EXECUTION_REFERENCE` 的既有 `ResolvedMark`；Slippage Model 不选择 Bar、不解析价格流、不调用 `MarkResolver`，也不接受 high/low/close/volume 字段；
+2. `SlippageRequest` 只包含 Execution Reference、`OrderSide`、正 `Quantity` 和 supplied immutable `SlippageMarketState`。Quantity Instrument 必须与 Reference Instrument 一致，市场状态证据的 `available_at` 不得晚于 Reference 的 `resolved_at`；
+3. `SlippageApplicabilityEnvelope` 是显式版本化且内容寻址的单 Instrument 半开时间窗口，声明最大 Quantity 和 canonical allowed market-state keys。Model 必须逐项验证 Instrument、Time、Quantity 和 Market State；任一越界返回结构化 `SlippageApplicabilityViolation`，不得猜测或 fallback；
+4. `deterministic_bps.v1` 显式声明非负 BPS units、BPS `Scale` 和 `RoundingPolicy`。Slippage amount 只使用 Python integer ratio arithmetic；Buy 为正偏移，Sell 为负偏移，且 `execution_price == reference_price + signed_amount`；
+5. `SlippageDecision` 保存原始 Request、signed amount、execution price、Simulation component identity、Calibration identity、Applicability result、BPS/Scale/Rounding 配置和 limitation。Decision identity 不含 wall clock、Attempt ID 或输入对象顺序；
+6. `deterministic_bps.v1` 禁止配置零 BPS。零滑点只能通过精确 key `zero_slippage.development.v1` 和零 BPS 显式配置，并必须携带 canonical `zero_slippage_development_only` limitation；该结果只能是 development-grade；
+7. `DeterministicBpsSlippageModel` 实现既有 `SlippageModel` Protocol，其 `SimulationPortSpec` 使用同一 component 和 Applicability Envelope，其结果使用既有 `SimulationPortOutcome`；不存在隐式默认 Model、Calibration 或 Envelope；
+8. 本 WP 不决定成交资格、Bar 选择、Fill Quantity、Fee、MarketRule、Liquidity、Latency、concrete Profile resolution、Run Outcome 或 Runtime orchestration。
+
+WP-06D 当前状态为 `READY`。
+
+## 50. PASSED 记录格式
 
 ```yaml
 id: WP-00A
