@@ -3,7 +3,7 @@ from __future__ import annotations
 import re
 from dataclasses import dataclass
 from enum import Enum
-from typing import Any
+from typing import Any, cast
 
 from crypto_quant_domain import (
     CashBalanceKey,
@@ -341,11 +341,11 @@ class PortfolioSnapshotProjector:
                     market,
                     unrealized,
                 )
-            assert market.quantization_policy is not None
+            quantization = cast(QuantizationPolicy, market.quantization_policy)
             expected_market_value = mark.price.notional(
                 position.quantity,
                 result_scale=market.native_value.scale,
-                rounding=market.quantization_policy.rounding,
+                rounding=quantization.rounding,
             )
             if market.native_value != expected_market_value:
                 return self._failure(
