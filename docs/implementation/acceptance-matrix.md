@@ -57,7 +57,7 @@ artifact_hashes: []
 | WP-00C | PASSED | repository root + parity tooling | WP-00B | none |
 | G00 | PASSED | repository root | WP-00A, WP-00B, WP-00C | none |
 | WP-01A | PASSED | trading-domain | G00 | none |
-| WP-01B | READY | trading-domain | WP-01A | none |
+| WP-01B | PASSED | trading-domain | WP-01A | none |
 | WP-01C | DRAFT | trading-domain | WP-01B | ID namespace/version fixtures |
 | WP-01D | DRAFT | trading-domain | WP-01A–WP-01C | Canonical golden bytes/hash |
 | WP-02A | DRAFT | trading-domain | G01 | Instrument identity fixtures |
@@ -537,7 +537,7 @@ Python                                                                   3.13.5
 
 ```yaml
 id: WP-01B
-status: READY
+status: PASSED
 depends_on:
   - WP-01A
 owner_package: trading-domain
@@ -571,11 +571,13 @@ evidence:
   - pytest-report
   - dst-fixture-hash
   - public-api-import-report
-passed_commit: null
-artifact_hashes: []
+passed_commit: 3da5ee1fa99debe3d3c3b6e987d0468d2e8c601b
+artifact_hashes:
+  tests/fixtures/domain/time-dst-boundaries-v1.json: sha256:70554c97f2ae43c0e6fdae26d435a40e0ef619b97769e95d0d882a668c3ef901
+  build/acceptance/wp-01b-pytest.xml: sha256:4b268f6fccddcaf75a2688381df77ca811dcacbb5a15d80fc9b6cf5a29fbd35a
 ```
 
-### WP-01B Readiness
+### WP-01B Acceptance
 
 已冻结 v1 时间语义：
 
@@ -588,7 +590,18 @@ artifact_hashes: []
 7. `SourceSequence` 是 `0..2^63-1` 的整数；
 8. `SimulationInstant` 总顺序为 `(epoch_nanoseconds, phase.rank, phase.code, source_sequence)`；Profile/Runtime 后续必须保证同一 registry 内 phase rank 唯一。
 
-WP-01B 当前状态为 `READY`，根据持续推进授权可直接实施。
+WP-01B 的实现已冻结在 immutable commit `3da5ee1fa99debe3d3c3b6e987d0468d2e8c601b`，状态为 `PASSED`。
+
+验证记录：
+
+```text
+UtcInstant + SimulationInstant contracts                                 9 passed
+DST resolution fixtures                                                   3 passed
+Boundary tests                                                            5 passed
+Full test suite                                                          85 passed
+mypy                                                                      no issues (10 files)
+Python                                                                    3.13.5
+```
 
 ## 10. PASSED 记录格式
 
