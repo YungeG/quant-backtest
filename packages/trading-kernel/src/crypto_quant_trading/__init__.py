@@ -67,6 +67,14 @@ from .snapshots import (
     SnapshotProjectionFailureCode,
     SnapshotProjectionOutcome,
 )
+from .validation import (
+    StrategyOutputValidationContext,
+    StrategyOutputValidator,
+    StrategyValidationFailure,
+    StrategyValidationIssue,
+    StrategyValidationIssueCode,
+    StrategyValidationResult,
+)
 from .valuation import (
     CurrencyValuationEdge,
     CurrencyValuationFailure,
@@ -144,6 +152,12 @@ __all__ = [
     "SnapshotProjectionOutcome",
     "SettlementModel",
     "StaleMarkPolicy",
+    "StrategyOutputValidationContext",
+    "StrategyOutputValidator",
+    "StrategyValidationFailure",
+    "StrategyValidationIssue",
+    "StrategyValidationIssueCode",
+    "StrategyValidationResult",
     "TaxPolicy",
     "UnregisteredBalanceKeyError",
 ]

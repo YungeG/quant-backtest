@@ -1,0 +1,1 @@
+"""Strategy output validation tests."""
