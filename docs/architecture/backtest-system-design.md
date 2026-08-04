@@ -855,7 +855,7 @@ class Fill:
     side: OrderSide
     quantity: Quantity
     reference_price: Price
-    reference_price_purpose: str  # PricePurpose canonical value; typed enum owned by WP-02D
+    reference_price_purpose: PricePurpose
     price: Price
     slippage_amount: Money
     slippage_decision_id: str
@@ -913,15 +913,16 @@ FeeAssessment 通过 basis IDs 引用 Fill/Order，而不是事后修改 immutab
 class PortfolioSnapshot:
     account_id: str
     timestamp: UtcInstant
-    reporting_currency: str
-    cash: tuple[CashBalance, ...]
-    positions: tuple[Position, ...]
-    realized_pnl: tuple[Money, ...]
-    unrealized_pnl: tuple[Money, ...]
-    fees: tuple[Money, ...]
-    financing: tuple[Money, ...]
-    margin: MarginSnapshot | None
-    equity: tuple[Money, ...]
+    reporting_currency: CurrencyId
+    cash: tuple[CashBalance, ...]               # native currency balances
+    positions: tuple[PositionBalance, ...]      # native instrument quantities/lots
+    realized_pnl: Money                         # reporting currency
+    unrealized_pnl: Money                       # reporting currency
+    fees: Money                                 # reporting currency
+    financing: Money                            # reporting currency
+    equity: Money                               # reporting currency
+    valuation_marks: tuple[ValuationMarkReference, ...]
+    journal_state_hash: str
     valuation_mark_set_hash: str
     valuation_staleness_report_hash: str
     currency_valuation_graph_hash: str

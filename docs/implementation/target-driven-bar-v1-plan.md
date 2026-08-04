@@ -384,14 +384,28 @@ v1 canonical semantics：
 
 ### WP-02D Accounting contracts
 
-拥有：AccountingJournalEntry、Cash/Position balance key、PositionLot、PortfolioSnapshot 和 PricePurpose 契约。
+拥有：`PricePurpose`、`AccountingEntryType`、`CashBalanceKey`、`PositionBalanceKey`、typed `BalanceChange`、`PositionLot`、`CashBalance`、`PositionBalance`、`ValuationMarkReference`、`AccountingJournalEntry` 和 `PortfolioSnapshot` 数据契约。
+
+冻结语义：
+
+- `PricePurpose` v1 固定为 `execution_reference | valuation | margin | liquidation | settlement | funding`；`Fill.reference_price_purpose` 必须升级为该 typed enum，但 canonical value 保持原字符串；
+- Journal Entry 使用 `DomainIdKind.JOURNAL`、`SimulationInstant` 和非空 source identities；同一 Entry ID 的幂等 apply/replay 属于 WP-03A；
+- Balance Change 只能是 `CashBalanceKey + Money` 或 `PositionBalanceKey + Quantity`，identity、account、venue 和 native currency/instrument 必须一致；
+- `PositionLot` 保存 stable lot ID、Position key、source identity、signed non-zero Quantity、可选 typed unit cost、allocated native fees 和 opened time；具体 Cash CostBasisPolicy、Lot selection/consumption 和 Derivative Entry Price 算法不属于本 WP；
+- `PortfolioSnapshot` 保存 native Cash/Position state，但 Realized PnL、Unrealized PnL、Fees、Financing 和 Equity 都是单一 Reporting Currency `Money`；Snapshot 引用 Journal State hash、实际 Valuation Mark identities/set hash、Staleness Report hash 和 Currency Valuation Graph hash；
+- Snapshot 只是 immutable derived projection，不能进入 Journal Entry schema，也不能修改 Journal。
 
 验收：
 
 - Journal Entry immutable 且具有幂等 identity；
 - Native Currency 保留到 Journal；
+- Balance key/value、Position Lot 和 Snapshot identity 不匹配时 fail closed；
+- Set-like source、balance、lot 和 mark inputs 具有顺序无关 canonical hash；
 - PortfolioSnapshot 明确 realized/unrealized PnL 和 valuation mark identity；
+- Future valuation mark、错误 Reporting Currency 和不一致 mark-set hash 被拒绝；
 - Snapshot 不能作为修改历史 Journal 的输入。
+
+不拥有：Journal store/replay、Ledger projection、Accounting translation、CostBasisPolicy、Lot consumption、Mark resolution、Currency valuation、Snapshot calculation、Margin Snapshot 或任何 mutable state。
 
 ### WP-02E Artifact Envelope and Schema Catalog v1
 

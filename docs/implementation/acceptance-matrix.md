@@ -64,7 +64,7 @@ artifact_hashes: []
 | WP-02A | PASSED | trading-domain | G01 | none |
 | WP-02B | PASSED | trading-domain | WP-02A | none |
 | WP-02C | PASSED | trading-domain | WP-02A, WP-02B | none |
-| WP-02D | DRAFT | trading-domain | WP-02A | Accounting schema fixtures |
+| WP-02D | READY | trading-domain | WP-02A, WP-02C | none |
 | WP-02E | DRAFT | trading-domain | WP-01D | Envelope/Catalog fixtures |
 | WP-02F | DRAFT | trading-kernel | WP-02A–WP-02D | Kernel Profile Port contracts |
 | WP-02G | DRAFT | backtest-runtime | WP-02A–WP-02D | Simulation Port contracts |
@@ -1057,7 +1057,85 @@ mypy                                                                    no issue
 Python                                                                  3.13.5
 ```
 
-## 16. PASSED 记录格式
+## 16. WP-02D Acceptance Card
+
+```yaml
+id: WP-02D
+status: READY
+depends_on:
+  - WP-02A
+  - WP-02C
+owner_package: trading-domain
+public_interface:
+  - crypto_quant_domain.PricePurpose
+  - crypto_quant_domain.AccountingEntryType
+  - crypto_quant_domain.CashBalanceKey
+  - crypto_quant_domain.PositionBalanceKey
+  - crypto_quant_domain.BalanceChange
+  - crypto_quant_domain.PositionLot
+  - crypto_quant_domain.CashBalance
+  - crypto_quant_domain.PositionBalance
+  - crypto_quant_domain.ValuationMarkReference
+  - crypto_quant_domain.AccountingJournalEntry
+  - crypto_quant_domain.PortfolioSnapshot
+test_commands:
+  contract: uv run pytest -q tests/domain/accounting/test_accounting_contracts.py
+  fixture: uv run pytest -q tests/domain/accounting/test_accounting_golden.py
+  boundary: uv run pytest -q tests/domain/execution/test_order_execution_contracts.py tests/domain/execution/test_order_execution_golden.py tests/architecture/test_public_api_imports.py tests/architecture/test_repository_cleanliness.py
+fixture_ids:
+  - accounting-contracts-v1
+expected_artifacts:
+  - tests/fixtures/domain/accounting-contracts-v1.json
+  - build/acceptance/wp-02d-pytest.xml
+failure_contracts:
+  - invalid-price-purpose
+  - untyped-fill-price-purpose
+  - wrong-journal-domain-id-kind
+  - journal-source-identity-missing
+  - journal-effective-time-after-recorded-time
+  - duplicate-journal-source
+  - balance-key-value-kind-mismatch
+  - balance-identity-mismatch
+  - journal-account-venue-mismatch
+  - duplicate-balance-change
+  - invalid-position-lot-quantity
+  - position-lot-identity-mismatch
+  - duplicate-position-lot-fee-currency
+  - position-balance-lot-total-mismatch
+  - duplicate-snapshot-balance
+  - snapshot-reporting-currency-mismatch
+  - future-valuation-mark
+  - duplicate-valuation-mark
+  - valuation-mark-set-hash-mismatch
+  - invalid-content-hash
+  - snapshot-in-journal-schema
+allowed_grade: development
+evidence:
+  - pytest-report
+  - accounting-contracts-fixture-hash
+  - public-api-import-report
+passed_commit: null
+artifact_hashes: []
+```
+
+### WP-02D Acceptance
+
+已冻结 v1 Accounting 数据契约：
+
+1. `PricePurpose` 固定为 `execution_reference`、`valuation`、`margin`、`liquidation`、`settlement` 和 `funding`；既有 `Fill.reference_price_purpose` 改为 typed enum，同时保持原 canonical string value；
+2. `CashBalanceKey` 使用 Execution Account、Venue 和 typed `CurrencyId`；`PositionBalanceKey` 使用 Execution Account、Venue 和 typed `InstrumentId`，且 Instrument Venue 必须匹配；
+3. `BalanceChange` 只能组合 Cash key + matching native `Money` 或 Position key + matching `Quantity`，零变化和跨 identity 变化被拒绝；
+4. `AccountingJournalEntry` 使用 `DomainIdKind.JOURNAL`，保存固定 `AccountingEntryType`、effective `UtcInstant`、recorded `SimulationInstant`、一个或多个 source identity、typed balance changes 及 native-currency realized PnL/fee/financing attribution；Entry 本身 immutable，source/change 集合 canonical 排序；
+5. `PositionLot` 保存 stable lot/source identity、typed Position key、signed non-zero Quantity、可选正 unit cost、allocated native fees 和 opened time；本 WP 不定义 Cash CostBasisPolicy 或 Derivative PnL 公式；
+6. `CashBalance` 和 `PositionBalance` 是 immutable state values；Position lots 如果存在，必须与 Position key/Scale 一致并 exact 合计为 Position Quantity；没有 generic lots 的 Derivative projection 仍可显式使用空 tuple；
+7. `PortfolioSnapshot` 保存 native Cash/Position state；Realized PnL、Unrealized PnL、Fees、Financing 和 Equity 均为单一 Reporting Currency `Money`；
+8. `ValuationMarkReference` 保存 mark identity、typed Instrument、PricePurpose 和 observed time；Snapshot 拒绝未来 Mark、重复 identity/(Instrument,Purpose) 及与 references 不一致的 mark-set hash；
+9. Snapshot 保存 Journal State、Valuation Staleness Report 和 Currency Valuation Graph 的 `sha256:` identity；Snapshot 不进入 `AccountingJournalEntry` 字段，不能覆盖或修改 Journal history；
+10. 本 WP 不实现 Journal store/replay、Ledger mutation/projection、Accounting model、Lot selector/consumption、MarkResolver、CurrencyValuationGraph、PortfolioSnapshotProjector、Margin Snapshot 或 mutable state。
+
+WP-02D 当前为 `READY`，可按持续实施授权直接进入 TDD。
+
+## 17. PASSED 记录格式
 
 ```yaml
 id: WP-00A
