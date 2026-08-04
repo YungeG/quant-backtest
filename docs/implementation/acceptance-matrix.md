@@ -89,7 +89,7 @@ artifact_hashes: []
 | WP-05D | PASSED | trading-kernel | G04, WP-05A–WP-05C | none |
 | WP-05E | PASSED | trading-kernel | WP-05D | none |
 | WP-05F | PASSED | trading-kernel | WP-05E | none |
-| WP-05G | READY | trading-kernel | WP-05F, WP-02F | none |
+| WP-05G | PASSED | trading-kernel | WP-05F, WP-02F | none |
 | WP-05H | DRAFT | trading-kernel | WP-05G, WP-02F | Fee reservation fixtures |
 | WP-05I | DRAFT | trading-kernel | WP-05B, WP-05H | Pre-trade Risk fixtures |
 | WP-05J | DRAFT | trading-kernel | WP-02F, WP-03A | Fee assessment fixtures |
@@ -3271,7 +3271,7 @@ Python                                                                 3.13.5
 
 ```yaml
 id: WP-05G
-status: READY
+status: PASSED
 depends_on:
   - WP-05F
   - WP-02F
@@ -3327,8 +3327,11 @@ evidence:
   - public-api-import-report
   - import-boundary-report
   - static-type-report
-passed_commit: null
-artifact_hashes: []
+passed_commit: 63bbec453a8d3ed36a63731f452eac6018abb7b5
+artifact_hashes:
+  tests/fixtures/kernel/point-in-time-market-rule-evaluation-v1.json: sha256:3f6a72aa3f61a17dede39d4cd0e0c330074467a6291ef5bc75d177ec82df1f80
+  build/acceptance/wp-05g-pytest.xml: sha256:a19ea985c11655c79ac76cc6536ab540b35be370ce9f533dc7a62da7d6689597
+  build/acceptance/wp-05g-import-boundary-report.json: sha256:26e822f14f2bf2a7124831c838808fbb9e17e04864362c8e99ccf6ffccf377eb
 ```
 
 ### WP-05G Acceptance
@@ -3345,7 +3348,25 @@ artifact_hashes: []
 8. Approval/Rejection/DataIntegrityFailure 是互斥结果。Approval/Rejection 保存未修改 Spec、Timeline、resolved Interval/Snapshot、Notional evidence 和各自 hashes；Data Integrity 与合法 Market Rule rejection 分类不同；
 9. 本 WP 不实现具体 A-share/Binance rules、Profile resolution、Price/Quantity rounding、Fee Reservation、Pre-trade Risk、Submission、Execution、Accounting、数据读取或 Runtime orchestration。
 
-WP-05G 的 TDD seam 和 fixture 已冻结，状态为 `READY`。
+WP-05G 的实现已冻结在 immutable commit `63bbec453a8d3ed36a63731f452eac6018abb7b5`，状态为 `PASSED`。
+
+验证记录：
+
+```text
+Market Rule Evaluator contract tests                              9 passed
+Point-in-time Market Rule canonical golden fixture                1 passed
+Public API + repository cleanliness boundaries                    5 passed
+Acceptance test report                                           15 passed
+Trading-kernel import boundary                                    PASS (39 files)
+Full test suite                                                  382 passed
+mypy                                                              no issues (24 files)
+Primary LSP                                                       clean
+pi-lens scoped review                                             no findings after explicit duplicate dispositions
+uv lock --check                                                   PASS
+Python                                                            3.13.5
+```
+
+四个 jscpd findings 属于 canonical payload/factory 显式字段列表与 typed signature 的结构性 false positive；两个小型 module-local validation helper 与既有 Kernel 模块形状相同，已在本 session defer，避免在独立 contract 稳定前引入共享内部抽象。
 
 ## 42. PASSED 记录格式
 
