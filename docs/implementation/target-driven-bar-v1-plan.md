@@ -817,16 +817,24 @@ v1 Candidate Schema 固定为：
 
 ### WP-05E OrderCapabilityValidator
 
-拥有：Canonical OrderIntent 与 OrderCapabilitySet 的兼容性判断。
+拥有：Canonical `OrderIntent` 与显式版本化 `OrderCapabilitySet` 的兼容性判断。
 
-不拥有：订单翻译、市场规则、账户风险或订单修改。
+冻结语义：
+
+- Capability Set 使用 key/version/config hash，并按每个 `ExecutionStyle` 显式声明允许的 `PriceConstraintShape` 与 `TimeInForce`；不能使用跨 Style 全局并集猜测组合支持性；
+- Capability Set 必须显式声明 execution style、price constraint、TIF、reduce-only 和 position effect 五个 capability key。缺失或未知 key 均 fail closed；
+- `None`、limit-only、trigger-only、limit+trigger 是不同 Price Constraint shape；Validator 只判断 exact 支持性；
+- Approval/Rejection 保存未修改的 source Intent、Capability Set、各自 canonical hash 和稳定 Decision ID；set-like 输入顺序不影响 identity；
+- 所有不兼容维度汇总为 canonical-sorted `UnsupportedCapability` evidence，不返回部分 Approval。
+
+不拥有：订单翻译、ExecutableOrderSpec、市场规则、费用预留、账户风险、Price/Quantity rounding、Profile resolution、Venue DTO、订单修改、提交或 Runtime orchestration。
 
 验收：
 
-- unsupported execution style、price constraint、TIF、reduce-only 或 position effect 产生结构化 CapabilityRejection；
+- unsupported execution style、style-specific price constraint、style-specific TIF、reduce-only 或 position effect 产生结构化 `CapabilityRejection`；
 - Validator 不修改 Intent；
 - 相同 Intent/CapabilitySet 产生相同 Decision；
-- 禁止 unknown capability 隐式降级。
+- 禁止 missing/unknown capability 隐式降级。
 
 ### WP-05F OrderTranslator
 

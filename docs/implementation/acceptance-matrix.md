@@ -87,7 +87,7 @@ artifact_hashes: []
 | WP-05B | PASSED | trading-kernel | WP-05A | none |
 | WP-05C | PASSED | trading-kernel | WP-03B, WP-05B | none |
 | WP-05D | PASSED | trading-kernel | G04, WP-05A–WP-05C | none |
-| WP-05E | DRAFT | trading-kernel | WP-05D | Capability fixtures |
+| WP-05E | READY | trading-kernel | WP-05D | none |
 | WP-05F | DRAFT | trading-kernel | WP-05E | Translation fixtures |
 | WP-05G | DRAFT | trading-kernel | WP-05F, WP-02F | Market rule fixtures |
 | WP-05H | DRAFT | trading-kernel | WP-05G, WP-02F | Fee reservation fixtures |
@@ -3098,7 +3098,73 @@ Python                                                            3.13.5
 
 三个小型 contract-local validation duplicate warnings 已在本 session defer；当前不抽取共享 abstraction，以免在 Rebalance/Allocation/Mark Policy 尚未稳定时扩大耦合。
 
-## 39. PASSED 记录格式
+## 39. WP-05E OrderCapabilityValidator Acceptance Card
+
+```yaml
+id: WP-05E
+status: READY
+depends_on:
+  - WP-05D
+owner_package: trading-kernel
+public_interface:
+  - crypto_quant_trading.OrderCapabilityKey
+  - crypto_quant_trading.PriceConstraintShape
+  - crypto_quant_trading.OrderStyleCapability
+  - crypto_quant_trading.OrderCapabilitySet
+  - crypto_quant_trading.OrderCapabilityApproval
+  - crypto_quant_trading.CapabilityRejection
+  - crypto_quant_trading.OrderCapabilityDecision
+  - crypto_quant_trading.OrderCapabilityValidator
+test_commands:
+  contract: uv run pytest -q tests/kernel/capabilities/test_order_capability_validator.py
+  fixture: uv run pytest -q tests/kernel/capabilities/test_order_capability_golden.py
+  boundary: uv run pytest -q tests/architecture/test_public_api_imports.py tests/architecture/test_repository_cleanliness.py
+fixture_ids:
+  - order-capability-validation-v1
+expected_artifacts:
+  - tests/fixtures/kernel/order-capability-validation-v1.json
+  - build/acceptance/wp-05e-pytest.xml
+  - build/acceptance/wp-05e-import-boundary-report.json
+failure_contracts:
+  - missing-declared-capability-dimension
+  - unknown-declared-capability-key
+  - unsupported-execution-style
+  - unsupported-price-constraint-shape
+  - unsupported-time-in-force-for-style
+  - unsupported-reduce-only
+  - unsupported-position-effect
+  - duplicate-style-capability-or-config-hash-mismatch
+  - intent-or-capability-input-order-dependent-decision
+  - intent-mutation-or-silent-semantic-downgrade
+  - translation-market-rule-account-risk-rounding-profile-or-runtime-leakage
+allowed_grade: development
+evidence:
+  - pytest-report
+  - order-capability-canonical-golden-fixture-hash
+  - deterministic-intent-capability-and-decision-hashes
+  - public-api-import-report
+  - import-boundary-report
+  - static-type-report
+passed_commit: null
+artifact_hashes: []
+```
+
+### WP-05E Readiness
+
+冻结以下边界：
+
+1. `OrderCapabilityValidator` 只消费 immutable canonical `OrderIntent` 与显式版本化 `OrderCapabilitySet`；Capability Set 使用 key/version/config hash，Validator 没有默认 Set、Profile Resolver 或 callback；
+2. `OrderCapabilitySet` 以 `OrderStyleCapability` 显式声明每个 `ExecutionStyle` 允许的 `PriceConstraintShape` 与 `TimeInForce`，并独立声明 reduce-only 和 `PositionEffect` 支持；Validator 不把跨字段组合退化为全局 capability 并集；
+3. Capability Set 必须通过 canonical `declared_capability_keys` 显式覆盖 execution style、price constraint、TIF、reduce-only 和 position effect 五个维度。缺失或未知 key 均返回结构化 rejection，禁止忽略未知维度；
+4. `None`、limit-only、trigger-only 和 limit+trigger 映射为不同 `PriceConstraintShape`。Validator 只判断 exact shape 支持，不调整 Price、Quantity 或 Constraint；
+5. unsupported execution style、style-specific Price Constraint、style-specific TIF、requested reduce-only 或 position effect 汇总为 canonical-sorted `UnsupportedCapability` evidence；任一问题都不产生 Approval；
+6. Approval/Rejection 均保存原始 Intent、Capability Set、各自 canonical hash 和稳定 Decision ID；输入 tuple 顺序变化不改变 Capability Set 或 Decision identity；
+7. Validator 返回的新对象不得修改或替换 Intent 字段，不允许 Market→Limit、TIF、reduce-only、position-effect 或其他语义降级；
+8. 本 WP 不实现 Order Translation、ExecutableOrderSpec、Market Rules、Fee Reservation、Pre-trade Risk、quantity/price rounding、Profile resolution、Venue DTO、Submission 或 Runtime orchestration。
+
+WP-05E 当前状态为 `READY`。
+
+## 40. PASSED 记录格式
 
 ```yaml
 id: WP-00A
