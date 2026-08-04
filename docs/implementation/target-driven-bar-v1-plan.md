@@ -791,15 +791,29 @@ v1 Candidate Schema 固定为：
 
 ### WP-05D RebalanceCoordinator
 
-拥有：ActivePortfolioTarget、当前 Position、Working Orders → RebalanceDecision。
+拥有：`NormalizedPortfolioTarget`、显式 `TargetValidity`、当前 `PortfolioSnapshot`、非终态 `OrderEventStream`、`ResourceReservationState`、`AvailabilityState` 和版本化 `RebalancePolicy` → immutable `OrderPlan` / `CancelIntent` / `PlanningOmission`。
+
+冻结语义：
+
+- Coordinator 只消费 supplied immutable state；Reservation/Availability 仅用于 account/context evidence，不在本 WP 重新计算资源或执行 Pre-trade Risk；
+- Working Order coverage 使用其 exact remaining Quantity 和 side。相同 evidence + 尚有效 prior Plan 返回同一 Plan；已有 Working coverage 不重复规划；
+- 对每个 Instrument 计算 `target - current - retained working coverage`。Partial Fill 后 remaining working Quantity 继续覆盖目标；终态 Order 不得作为 Working Order 输入；
+- 新 Target 下，方向相反或会超过当前阶段目标的 Working Order 是 conflict。Coordinator 先生成 CancelIntent；该 Instrument 在取消完成前不得同时生成 replacement PlannedOrder；
+- 当前 Position 与 Target 异号时，当前阶段只允许精确减仓到零。Opening opposite exposure 必须等待 close Fill 已反映到新的 PortfolioSnapshot 后重新规划；
+- `TargetValidity`、`OrderPlan.valid_until` 和 Planned `OrderIntent.time_in_force` 分别保存并独立校验；Order expiry/Plan supersession 不删除仍有效 Target；
+- Plan 必须绑定 Target hash、PortfolioSnapshot hash、Working Order set hash、Reservation State hash、Availability State hash、Policy hash 和创建时点；任一前提变化使 prior Plan superseded；
+- 所有 Instrument、Working Order 和 input 顺序变化不得改变 Plan/Decision identity。Order Planner 只使用已物化 exact Quantity，不再次舍入。
 
 验收：
 
-- 重复 tick 不重复规划已被 Working Order 覆盖的数量；
-- Partial Fill 后只规划剩余差额；
-- 新目标替换时先取消冲突订单；
-- close-before-open 对反向仓位生效；
-- target validity、plan supersession 和 venue TIF 独立。
+- 重复 tick 不重复规划已被 prior Plan 或 Working Order 覆盖的数量；
+- Partial Fill 后只保留/规划 exact remaining delta；
+- 新目标替换时先取消冲突订单，取消完成前没有 replacement；
+- close-before-open 对 Long→Short 和 Short→Long 生效；
+- target validity、plan supersession 和 venue TIF 独立；
+- account/time/hash/quantity Scale、duplicate/terminal Working Order 或 prior Plan context mismatch 结构化失败。
+
+不拥有：Capability/Translation/MarketRule/Fee Reservation/Pre-trade Risk、Execution Simulation、Fee/Accounting、Ledger/Reservation/Settlement mutation、Profile/Market data 读取或 Runtime orchestration。
 
 ### WP-05E OrderCapabilityValidator
 

@@ -86,7 +86,7 @@ artifact_hashes: []
 | WP-05A | PASSED | trading-kernel | G02 | none |
 | WP-05B | PASSED | trading-kernel | WP-05A | none |
 | WP-05C | PASSED | trading-kernel | WP-03B, WP-05B | none |
-| WP-05D | DRAFT | trading-kernel | G04, WP-05A–WP-05C | Rebalance fixtures |
+| WP-05D | READY | trading-kernel | G04, WP-05A–WP-05C | none |
 | WP-05E | DRAFT | trading-kernel | WP-05D | Capability fixtures |
 | WP-05F | DRAFT | trading-kernel | WP-05E | Translation fixtures |
 | WP-05G | DRAFT | trading-kernel | WP-05F, WP-02F | Market rule fixtures |
@@ -3002,7 +3002,80 @@ uv lock --check                                                   PASS
 Python                                                            3.13.5
 ```
 
-## 38. PASSED 记录格式
+## 38. WP-05D RebalanceCoordinator Acceptance Card
+
+```yaml
+id: WP-05D
+status: READY
+depends_on:
+  - G04
+  - WP-05A
+  - WP-05B
+  - WP-05C
+owner_package: trading-kernel
+public_interface:
+  - crypto_quant_trading.RebalancePolicy
+  - crypto_quant_trading.TargetValidity
+  - crypto_quant_trading.PlannedOrder
+  - crypto_quant_trading.CancelIntent
+  - crypto_quant_trading.PlanningOmissionCode
+  - crypto_quant_trading.PlanningOmission
+  - crypto_quant_trading.OrderPlan
+  - crypto_quant_trading.RebalanceDecision
+  - crypto_quant_trading.RebalanceFailureCode
+  - crypto_quant_trading.RebalanceFailure
+  - crypto_quant_trading.RebalanceOutcome
+  - crypto_quant_trading.RebalanceCoordinator
+test_commands:
+  contract: uv run pytest -q tests/kernel/rebalance/test_rebalance_coordinator.py
+  fixture: uv run pytest -q tests/kernel/rebalance/test_rebalance_coordinator_golden.py
+  boundary: uv run pytest -q tests/architecture/test_public_api_imports.py tests/architecture/test_repository_cleanliness.py
+fixture_ids:
+  - rebalance-coordination-v1
+expected_artifacts:
+  - tests/fixtures/kernel/rebalance-coordination-v1.json
+  - build/acceptance/wp-05d-pytest.xml
+  - build/acceptance/wp-05d-import-boundary-report.json
+failure_contracts:
+  - missing-rebalance-policy
+  - target-validity-identity-or-time-mismatch
+  - target-snapshot-reservation-or-availability-context-mismatch
+  - duplicate-or-terminal-working-order
+  - working-order-instrument-or-quantity-scale-mismatch
+  - reservation-or-availability-evidence-hash-mismatch
+  - stale-or-forged-prior-plan-context
+  - duplicate-working-coverage-on-repeated-tick
+  - replacement-created-before-conflicting-cancel-completes
+  - sign-reversal-opens-before-current-position-closes
+  - input-order-dependent-plan-identity
+allowed_grade: development
+evidence:
+  - pytest-report
+  - rebalance-coordination-golden-fixture-hash
+  - deterministic-plan-and-decision-hashes
+  - public-api-import-report
+  - import-boundary-report
+  - static-type-report
+passed_commit: null
+artifact_hashes: []
+```
+
+### WP-05D Acceptance
+
+冻结以下边界：
+
+1. `RebalanceCoordinator` 只消费 immutable `NormalizedPortfolioTarget`、显式 `TargetValidity`、当前 `PortfolioSnapshot`、非终态 `OrderEventStream`、`ResourceReservationState`、`AvailabilityState` 和显式版本化 `RebalancePolicy`；它不读取 Profile、Market Data、Journal 或外部状态；
+2. `TargetValidity` 绑定唯一 normalized Target，并独立保存 `valid_from`/`valid_until`。`OrderPlan.valid_until` 由 RebalancePolicy 决定，Planned `OrderIntent.time_in_force` 也是独立证据；三者不得互相替代；
+3. Working Order coverage 使用 `OrderState.remaining_quantity` 和 Order side。相同 evidence 且 prior Plan 仍有效时返回相同 Plan；已有 Planned/Working coverage 不得在重复 tick 中产生重复新 Quantity；
+4. 每个 Instrument 使用 exact `target - current - retained working coverage`。Partial Fill 的 remaining Quantity 继续覆盖目标；Order terminal 后由新的 Position Snapshot 决定 exact remainder。Coordinator 不执行 Quantity rounding；
+5. 新 Target 下方向相反或超过当前阶段 delta 的 Working Order 必须产生 canonical `CancelIntent`。同一 Instrument 在 conflict cancellation 完成前不得同时产生 replacement PlannedOrder；
+6. Long→Short 或 Short→Long 必须 close-before-open：当前阶段至多规划到零。只有 close Fill 已反映到新的 PortfolioSnapshot 后，后续 tick 才能规划 opposite opening Quantity；
+7. Plan identity 绑定 Target、PortfolioSnapshot、Working Order set、Reservation、Availability、Policy 和 planning time。任一前提变化使 prior Plan 显式 superseded；Plan supersession 不让已提交 Order 消失，也不删除仍有效 Target；
+8. `RebalancePolicy` 显式提供 execution style、Venue TIF、urgency 和 Plan validity；没有默认 Policy。OrderIntent 的 reduce-only/position-effect 由 current→target 阶段显式记录，后续 Capability/Translation/MarketRule 才判断支持性；
+9. Target/Position/Working Order/Reservation/Availability 的 account、Instrument、Quantity Scale、time/hash context 必须一致。重复 Order、终态 Order 作为 Working 输入、伪造 prior Plan 或 evidence mismatch 返回结构化 `RebalanceFailure`，不产生部分 Plan；
+10. 本 WP 不实现 Capability Validation、Translation、Market Rules、Fee Reservation、Pre-trade Risk、Execution Simulation、Fee/Accounting、Ledger/Reservation/Settlement mutation、Profile/Market data 读取或 Runtime orchestration。
+
+## 39. PASSED 记录格式
 
 ```yaml
 id: WP-00A
