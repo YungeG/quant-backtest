@@ -84,7 +84,7 @@ artifact_hashes: []
 | WP-04E | PASSED | trading-kernel | WP-04D, WP-03C | none |
 | G04 | PASSED | trading-kernel | WP-04A–WP-04E | none |
 | WP-05A | PASSED | trading-kernel | G02 | none |
-| WP-05B | READY | trading-kernel | WP-05A | none |
+| WP-05B | PASSED | trading-kernel | WP-05A | none |
 | WP-05C | DRAFT | trading-kernel | WP-03B, WP-05B | Settlement/availability fixtures |
 | WP-05D | DRAFT | trading-kernel | G04, WP-05A–WP-05C | Rebalance fixtures |
 | WP-05E | DRAFT | trading-kernel | WP-05D | Capability fixtures |
@@ -2813,7 +2813,7 @@ Python                                                             3.13.5
 
 ```yaml
 id: WP-05B
-status: READY
+status: PASSED
 depends_on:
   - WP-05A
 owner_package: trading-kernel
@@ -2861,8 +2861,11 @@ evidence:
   - public-api-import-report
   - import-boundary-report
   - static-type-report
-passed_commit: null
-artifact_hashes: []
+passed_commit: e3db8e565b82b43e516cea2294e5f35a98280ef9
+artifact_hashes:
+  tests/fixtures/kernel/resource-reservation-replay-v1.json: sha256:6b0c92b211c6d7501c1848df6d5d88181b1d722fff7a1df938bfceeee068e56a
+  build/acceptance/wp-05b-pytest.xml: sha256:dfad7f3863c842c98b3a91ba16d2c29d28794682f04193efa03e6d75e7d41f44
+  build/acceptance/wp-05b-import-boundary-report.json: sha256:a5c565f3897dfab03f3784086a97bdeeb760c0e2c1eceba5357c0d64402860e7
 ```
 
 ### WP-05B Acceptance
@@ -2877,6 +2880,24 @@ artifact_hashes: []
 6. 相同 Event 由 `OrderEventStream` 幂等去重，因此重复 replay 不重复冻结。Book 的 prefix resume 必须从 supplied Stream prefix 独立重建 prior state 并验证 cursor/state hash；伪造或陈旧 state fail closed；
 7. Reservation 不进入 Accounting Journal，不表示 Settlement Obligation 或 Availability，不读取 Market/Account Profile，也不自行推导 worst-case commitment。具体 proposal 由后续 Market Rule、Fee Reservation 和 Account semantics 组合提供；
 8. 本 WP 不实现 Settlement/Availability、Rebalance、Capability/Translation/MarketRule/PreTradeRisk 行为、Fee Assessment、Accounting、Ledger mutation 或 Runtime orchestration。
+
+WP-05B 的实现已冻结在 immutable commit `e3db8e565b82b43e516cea2294e5f35a98280ef9`，状态为 `PASSED`。
+
+验证记录：
+
+```text
+Resource Reservation contract tests                               10 passed
+Resource Reservation canonical golden fixture                      1 passed
+Public API + repository cleanliness boundaries                     5 passed
+Acceptance test report                                            16 passed
+Trading-kernel import boundary                                     PASS (34 files)
+Full test suite                                                   334 passed
+mypy                                                               no issues (5 files)
+Primary LSP                                                        clean
+pi-lens scoped review                                              no findings
+uv lock --check                                                    PASS
+Python                                                             3.13.5
+```
 
 ## 37. PASSED 记录格式
 
