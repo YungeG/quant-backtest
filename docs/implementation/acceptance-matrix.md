@@ -66,7 +66,7 @@ artifact_hashes: []
 | WP-02C | PASSED | trading-domain | WP-02A, WP-02B | none |
 | WP-02D | PASSED | trading-domain | WP-02A, WP-02C | none |
 | WP-02E | PASSED | trading-domain | WP-01D | none |
-| WP-02F | READY | trading-kernel | WP-02A–WP-02D | none |
+| WP-02F | PASSED | trading-kernel | WP-02A–WP-02D | none |
 | WP-02G | DRAFT | backtest-runtime | WP-02A–WP-02D | Simulation Port contracts |
 | WP-02H | DRAFT | trading-domain | WP-02A–WP-02E | Error taxonomy catalog |
 | WP-03A | DRAFT | trading-kernel | G02 | Journal replay fixtures |
@@ -1232,7 +1232,7 @@ Python                                                                  3.13.5
 
 ```yaml
 id: WP-02F
-status: READY
+status: PASSED
 depends_on:
   - WP-02A
   - WP-02B
@@ -1282,11 +1282,14 @@ evidence:
   - pytest-report
   - kernel-profile-port-fixture-hash
   - public-api-import-report
-passed_commit: null
-artifact_hashes: []
+passed_commit: 878a70d88722e3c88ae3547d5eb463d374cbb99b
+artifact_hashes:
+  tests/fixtures/kernel/kernel-profile-ports-v1.json: sha256:36f5ec3428083bd4eefddeeee5bfdac50cfe353d89197c7654375630bd4a4904
+  build/acceptance/wp-02f-pytest.xml: sha256:40bceeb8c6680afe19bbf14fd0e981f7bf820713116c00e3788cd5fb53244273
+  build/acceptance/wp-02f-import-boundary-report.json: sha256:8f17d0760d246b7c1d5f29327209afa6930ae3134be210ac3f6d8f44457a0a5c
 ```
 
-### WP-02F Readiness
+### WP-02F Acceptance
 
 已冻结以下实现边界：
 
@@ -1295,9 +1298,24 @@ artifact_hashes: []
 3. `ProfileComponentRef` 固定 `ProfilePortType`、canonical component key、正整数 version 和 `sha256:` component digest；Profile Registry、component compatibility 和 resolved profile digest 不属于本 WP；
 4. `ProfilePortOutcome` 保存 component ref、canonical input hash 和 exactly-one-of result/failure；它不把 exception text、log text 或隐式 `None` 当失败协议；
 5. 共享 Profile lookup/incompatibility/applicability reason code 属于 WP-02H，本 WP 只保留 typed `FailureT` seam，避免提前冻结错误 taxonomy；
-6. 本 WP 只有 Protocol、identity/outcome value contracts 和 tests 内 Test Adapter；没有 concrete A-share/Binance/Synthetic Profile、registry/resolver、no-op default、simulation assumption、DataFrame、Vendor SDK、网络或可变运行状态。
+6. 本 WP 只有 Protocol、identity/outcome value contracts 和 tests 内 Test Adapter；没有 concrete A-share/Binance/Synthetic Profile、registry/resolver、no-op default、simulation assumption、DataFrame、Vendor SDK、网络或可变运行状态；
+7. `trading-domain` 与 `trading-kernel` 均发布 PEP 561 `py.typed` marker，使跨 package Protocol 类型检查不依赖 `ignore_missing_imports`。
 
-WP-02F 当前状态为 `READY`，已获持续实施授权。
+WP-02F 的实现已冻结在 immutable commit `878a70d88722e3c88ae3547d5eb463d374cbb99b`，状态为 `PASSED`。
+
+验证记录：
+
+```text
+Kernel Profile Port contract tests                                     11 passed
+Canonical golden fixture                                                1 passed
+Public API + repository cleanliness boundaries                         5 passed
+Trading-kernel import boundary                                          PASS (19 files)
+Full test suite                                                        166 passed
+mypy                                                                    no issues (18 files)
+Primary LSP                                                             clean
+pi-lens full scoped scan                                                no findings
+Python                                                                  3.13.5
+```
 
 ## 19. PASSED 记录格式
 
