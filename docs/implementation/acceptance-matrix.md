@@ -91,7 +91,7 @@ artifact_hashes: []
 | WP-05F | PASSED | trading-kernel | WP-05E | none |
 | WP-05G | PASSED | trading-kernel | WP-05F, WP-02F | none |
 | WP-05H | PASSED | trading-kernel | WP-05G, WP-02F | none |
-| WP-05I | READY | trading-kernel | WP-05B, WP-05H | none |
+| WP-05I | PASSED | trading-kernel | WP-05B, WP-05H | none |
 | WP-05J | DRAFT | trading-kernel | WP-02F, WP-03A | Fee assessment fixtures |
 | WP-06A | DRAFT | market-data-contracts | G02 | Reader/Cursor contract commands |
 | WP-06B | DRAFT | backtest-runtime | WP-01B, WP-06A | Timeline fixtures |
@@ -3468,7 +3468,7 @@ Python                                                            3.13.5
 
 ```yaml
 id: WP-05I
-status: READY
+status: PASSED
 depends_on:
   - WP-05B
   - WP-05H
@@ -3522,25 +3522,46 @@ evidence:
   - public-api-import-report
   - import-boundary-report
   - static-type-report
-passed_commit: null
-artifact_hashes: []
+passed_commit: a3c29dd1eeaf476bcbe333398977b5c2b755ee29
+artifact_hashes:
+  tests/fixtures/kernel/exact-pretrade-risk-decision-v1.json: sha256:2699652fc4a85f2bd8594f86a34df8cce8f1576bc341e2e7aaf5a72dbac34870
+  build/acceptance/wp-05i-pytest.xml: sha256:88df1a8618275f1207b7ec6d5244b1b6b73c8b3f7953d6de5164f449a4f6c930
+  build/acceptance/wp-05i-import-boundary-report.json: sha256:49b95a5395124f8c37a2b9fecb404e95dfd75b38f2ec7b89819d568a6b505936
 ```
 
-### WP-05I Readiness
+### WP-05I Acceptance
 
 冻结以下边界：
 
 1. `PreTradeRiskEvaluator` 只消费 immutable `MarketRuleApproval`、匹配的 WP-05H `ResourceReservationProposal`、supplied `PreTradeResourceRequirement`、当前 `ResourceReservationState`、当前 `AvailabilityState`、显式版本化 `AccountRiskPolicy` 和 authoritative Evaluation Instant；不调用 Profile/Rule/Reader/账户服务；
 2. `PreTradeResourceRequirement` 保存 source Order、Market Rule decision/hash、Fee Proposal/hash、完整 `ReservationCommitment` 和版本化 source evidence。Requirement 的 `fee_reserve` 必须 exact 等于 Fee Proposal；Generic Evaluator 不推导 Spot/Margin/Derivative resource formula；
 3. `AccountRiskPolicy` 绑定 Account/Venue、允许 Side/PositionEffect/reduce-only 值、Fee Reserve 使用 `tradable_cash` 或 `available_margin`、Order Capacity 上限和逐 Currency/Scale Exposure Capacity 上限。所有配置进入 config hash，不存在 no-op/default policy；
-4. Availability 必须 exact 引用 supplied Reservation State hash。Cash commitment 与使用 Tradable Cash 的 Fee Reserve 按 Currency/Scale 合并比较 `CashAvailability.tradable`；Margin 与使用 Available Margin 的 Fee Reserve合并比较 `available_margin`；Sellable Quantity 按 Instrument/Scale 比较 `PositionAvailability.sellable`；禁止跨 Currency、Instrument 或资源类别 netting；
-5. Order Capacity 使用 current reservation units + proposed units 与 Policy 上限比较；Exposure Capacity 按 Currency/Scale使用 current + proposed 与显式 Policy limit 比较。缺少 limit/resource dimension 或 identity/scale mismatch 是 Contract Failure，不是经济拒绝；
+4. Availability 必须 exact 引用 supplied Reservation State hash。Cash commitment 与使用 Tradable Cash 的 Fee Reserve 按 Currency/Scale 合并比较 `CashAvailability.tradable`；Margin 与使用 Available Margin 的 Fee Reserve 合并比较 `available_margin`；Sellable Quantity 按 Instrument/Scale 比较 `PositionAvailability.sellable`；禁止跨 Currency、Instrument 或资源类别 netting；
+5. Order Capacity 使用 current reservation units + proposed units 与 Policy 上限比较；Exposure Capacity 按 Currency/Scale 使用 current + proposed 与显式 Policy limit 比较。缺少 limit/resource dimension 或 identity/scale mismatch 是 Contract Failure，不是经济拒绝；
 6. 合法且完整的输入只产生 Approval 或 `PreTradeRiskRejection`。账户权限、资源不足和容量超限是 canonical Economic checks/rejection；它们不变成 Validation/MarketRule/DataIntegrity/Execution rejection；
 7. Approval/Rejection 保存 unchanged source Order/Executable Spec、Market Rule、Fee Proposal、完整 requirement、Reservation/Availability hashes、Policy identity 和全部 checks。相同输入及 tuple 顺序变化产生相同 Decision identity；
 8. 任一 Contract/Data Failure 都不产生部分 Approval/Rejection；Evaluator 不能 clamp、修改 Order、回到 Rebalance 或生成替代订单；
 9. 本 WP 不实现 Portfolio Risk、Capability/Translation/MarketRule/Fee estimation、Profile resolution、Submission、Execution、Accounting、Ledger mutation 或 Runtime Outcome mapping。
 
-WP-05I 已满足 Readiness 条件，状态为 `READY`。
+WP-05I 的实现已冻结在 immutable commit `a3c29dd1eeaf476bcbe333398977b5c2b755ee29`，状态为 `PASSED`。
+
+验证记录：
+
+```text
+PreTrade Risk contract tests                                      10 passed
+Exact PreTrade Risk canonical golden fixture                       1 passed
+Public API + repository cleanliness boundaries                     5 passed
+Acceptance test report                                            16 passed
+Trading-kernel import boundary                                    PASS (41 files)
+Full test suite                                                  404 passed
+mypy                                                              no issues (26 files)
+Primary LSP                                                       clean
+pi-lens scoped review                                             no unresolved findings after 4 structural false-positive dispositions; 1 local helper duplicate deferred
+uv lock --check                                                   PASS
+Python                                                            3.13.5
+```
+
+四个 jscpd findings 属于 frozen policy config/factory 显式字段列表与 nominal Approval/Rejection 类型的结构性 false positive；一个 module-local canonical validation helper 与既有 Kernel 模块形状相同，已在本 session defer，避免在 Order Gate contracts 稳定前引入共享内部抽象。
 
 ## 44. PASSED 记录格式
 
