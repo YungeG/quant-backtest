@@ -66,7 +66,7 @@ artifact_hashes: []
 | WP-02C | PASSED | trading-domain | WP-02A, WP-02B | none |
 | WP-02D | PASSED | trading-domain | WP-02A, WP-02C | none |
 | WP-02E | PASSED | trading-domain | WP-01D | none |
-| WP-02F | DRAFT | trading-kernel | WP-02A–WP-02D | Kernel Profile Port contracts |
+| WP-02F | READY | trading-kernel | WP-02A–WP-02D | none |
 | WP-02G | DRAFT | backtest-runtime | WP-02A–WP-02D | Simulation Port contracts |
 | WP-02H | DRAFT | trading-domain | WP-02A–WP-02E | Error taxonomy catalog |
 | WP-03A | DRAFT | trading-kernel | G02 | Journal replay fixtures |
@@ -1228,7 +1228,78 @@ mypy                                                                    no issue
 Python                                                                  3.13.5
 ```
 
-## 18. PASSED 记录格式
+## 18. WP-02F Acceptance Card
+
+```yaml
+id: WP-02F
+status: READY
+depends_on:
+  - WP-02A
+  - WP-02B
+  - WP-02C
+  - WP-02D
+owner_package: trading-kernel
+public_interface:
+  - crypto_quant_trading.ProfilePortType
+  - crypto_quant_trading.ProfilePortContract
+  - crypto_quant_trading.ProfileComponentRef
+  - crypto_quant_trading.ProfilePortOutcome
+  - crypto_quant_trading.SessionModel
+  - crypto_quant_trading.InstrumentModel
+  - crypto_quant_trading.OrderRuleModel
+  - crypto_quant_trading.FeeAssessmentPolicy
+  - crypto_quant_trading.TaxPolicy
+  - crypto_quant_trading.SettlementModel
+  - crypto_quant_trading.PositionAccountingModel
+  - crypto_quant_trading.FinancingModel
+  - crypto_quant_trading.MarginModel
+  - crypto_quant_trading.LiquidationRules
+  - crypto_quant_trading.CorporateActionModel
+  - crypto_quant_trading.CurrencyValuationPolicy
+test_commands:
+  contract: uv run pytest -q tests/kernel/ports/test_profile_port_contracts.py
+  fixture: uv run pytest -q tests/kernel/ports/test_profile_port_golden.py
+  boundary: uv run pytest -q tests/architecture/test_public_api_imports.py tests/architecture/test_repository_cleanliness.py
+fixture_ids:
+  - kernel-profile-ports-v1
+expected_artifacts:
+  - tests/fixtures/kernel/kernel-profile-ports-v1.json
+  - build/acceptance/wp-02f-pytest.xml
+failure_contracts:
+  - invalid-profile-port-type
+  - invalid-profile-component-key
+  - invalid-profile-component-version
+  - invalid-profile-component-digest
+  - noncanonical-profile-port-contract
+  - profile-port-result-and-failure
+  - profile-port-result-and-failure-missing
+  - invalid-profile-port-input-hash
+  - missing-profile-port-method
+  - implicit-profile-port-default
+  - profile-port-vendor-dto
+allowed_grade: development
+evidence:
+  - pytest-report
+  - kernel-profile-port-fixture-hash
+  - public-api-import-report
+passed_commit: null
+artifact_hashes: []
+```
+
+### WP-02F Readiness
+
+已冻结以下实现边界：
+
+1. 十二个 Market/Account semantics Port 均为 `runtime_checkable` generic Protocol；每个 Port 有独立语义方法名，不使用一个万能 `evaluate()` 或 arbitrary payload；
+2. 每个 Protocol 显式绑定 `RequestT`、`ResultT`、`FailureT`，三者必须满足 immutable/canonical `ProfilePortContract`；未来具体规则 WP 必须用 Trading Domain 类型组成这些 contract，不能传入 DataFrame、Vendor DTO、Runtime State、裸 `dict[str, object]` 或 `Any`；
+3. `ProfileComponentRef` 固定 `ProfilePortType`、canonical component key、正整数 version 和 `sha256:` component digest；Profile Registry、component compatibility 和 resolved profile digest 不属于本 WP；
+4. `ProfilePortOutcome` 保存 component ref、canonical input hash 和 exactly-one-of result/failure；它不把 exception text、log text 或隐式 `None` 当失败协议；
+5. 共享 Profile lookup/incompatibility/applicability reason code 属于 WP-02H，本 WP 只保留 typed `FailureT` seam，避免提前冻结错误 taxonomy；
+6. 本 WP 只有 Protocol、identity/outcome value contracts 和 tests 内 Test Adapter；没有 concrete A-share/Binance/Synthetic Profile、registry/resolver、no-op default、simulation assumption、DataFrame、Vendor SDK、网络或可变运行状态。
+
+WP-02F 当前状态为 `READY`，已获持续实施授权。
+
+## 19. PASSED 记录格式
 
 ```yaml
 id: WP-00A

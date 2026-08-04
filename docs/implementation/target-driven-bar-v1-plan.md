@@ -430,12 +430,17 @@ v1 canonical semantics：
 
 不拥有：具体 A 股/Binance 实现、Profile Registry、Backtest Simulation 假设。
 
+v1 Port seam 使用三参数 generic Protocol：`RequestT`、`ResultT` 和 `FailureT`。三者都必须实现 immutable canonical `ProfilePortContract`，并由具体规则 WP 使用 Trading Domain 类型组成；禁止 `Any`、裸 `object` payload、任意 metadata/extensions 或 Vendor DTO 作为语义逃生口。每次调用返回 exactly-one-of result/failure 的 `ProfilePortOutcome`，同时记录 `ProfileComponentRef` 和 canonical input hash。共享稳定 reason code 延后由 WP-02H 统一，WP-02F 不提前发明错误 taxonomy。
+
 验收：
 
 - Generic Kernel 只依赖 Ports，不导入具体市场 Profile；
 - Ports 使用 Trading Domain 类型，不暴露 DataFrame、Vendor DTO 或 Runtime State；
-- 每个 Interface 声明输入、不变量、失败类型和确定性要求；
-- Test Adapter 可独立验证调用方，不成为生产默认实现。
+- 每个 Interface 使用独立语义方法名并声明 typed Request、Result、Failure 和确定性要求；
+- `ProfileComponentRef` 固定 component key、正版本、Port type 和 `sha256:` digest；
+- `ProfilePortOutcome` 拒绝 result/failure 同时存在或同时缺失，并保存 canonical input hash；
+- Test Adapter 可独立验证调用方，不成为生产默认实现；
+- 本 WP 不实现具体规则请求/结果、共享 reason code、Profile composition/registry/resolution、no-op component 或任何市场/模拟行为。
 
 ### WP-02G Simulation Profile Ports
 
