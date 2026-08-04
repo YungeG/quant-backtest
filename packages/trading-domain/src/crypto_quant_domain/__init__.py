@@ -1,5 +1,12 @@
 """Framework-independent trading domain contracts."""
 
+from .canonical import (
+    CanonicalEnvelope,
+    CanonicalSchema,
+    CanonicalizationError,
+    canonical_bytes,
+    canonical_sha256,
+)
 from .identity import (
     DomainId,
     DomainIdKind,
@@ -31,6 +38,9 @@ from .time import (
 __version__ = "0.1.0"
 
 __all__ = [
+    "CanonicalEnvelope",
+    "CanonicalSchema",
+    "CanonicalizationError",
     "DomainId",
     "DomainIdKind",
     "ExposureFraction",
@@ -50,6 +60,8 @@ __all__ = [
     "TimelinePhase",
     "TradingDate",
     "UtcInstant",
+    "canonical_bytes",
+    "canonical_sha256",
     "derive_domain_id",
     "resolve_local_datetime",
 ]
