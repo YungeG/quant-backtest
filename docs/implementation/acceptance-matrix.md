@@ -68,7 +68,7 @@ artifact_hashes: []
 | WP-02E | PASSED | trading-domain | WP-01D | none |
 | WP-02F | PASSED | trading-kernel | WP-02A–WP-02D | none |
 | WP-02G | PASSED | backtest-runtime | WP-02A–WP-02D, WP-02F | none |
-| WP-02H | READY | trading-domain | WP-02A–WP-02G | none |
+| WP-02H | PASSED | trading-domain | WP-02A–WP-02G | none |
 | G02 | DRAFT | trading-domain + trading-kernel + backtest-runtime | WP-02A–WP-02H | Aggregate review and evidence |
 | WP-03A | DRAFT | trading-kernel | G02 | Journal replay fixtures |
 | WP-03B | DRAFT | trading-kernel | WP-03A | Ledger projection fixtures |
@@ -1414,7 +1414,7 @@ Python                                                                  3.13.5
 
 ```yaml
 id: WP-02H
-status: READY
+status: PASSED
 depends_on:
   - WP-02A
   - WP-02B
@@ -1448,11 +1448,14 @@ evidence:
   - pytest-report
   - profile-component-error-fixture-hash
   - public-api-import-report
-passed_commit: null
-artifact_hashes: []
+passed_commit: 620d52031e900e5c4516a80588b324a2d7c6146d
+artifact_hashes:
+  tests/fixtures/domain/profile-component-errors-v1.json: sha256:e90995c6ee0aabcca576780547d588f85ef6b6be8d7d5663e560d5c0892fe20a
+  build/acceptance/wp-02h-pytest.xml: sha256:4216e1ef79b42f0dde467a9edef94ebdfe17feea43fc8c414a3bdf1f0cc27cb5
+  build/acceptance/wp-02h-import-boundary-report.json: sha256:d785d2fe7b2331272e1f686196a32f47f5924ef65e880d77c4c2b5b9b08237bb
 ```
 
-### WP-02H Readiness
+### WP-02H Acceptance
 
 已冻结以下边界：
 
@@ -1463,7 +1466,22 @@ artifact_hashes: []
 5. 本 WP 不实现 Profile Registry/Resolver、component compatibility 算法、capability/applicability 检查、Run Outcome 映射、异常层、日志呈现或具体市场/供应商错误；
 6. 新增更细 reason code 属于显式 schema/version 变更，不能静默复用现有 code 改变语义。
 
-WP-02H 当前状态为 `READY`。
+WP-02H 的实现已冻结在 immutable commit `620d52031e900e5c4516a80588b324a2d7c6146d`，状态为 `PASSED`。
+
+验证记录：
+
+```text
+Profile component failure contract tests                               12 passed
+Canonical golden fixture                                                1 passed
+Public API + repository cleanliness boundaries                         5 passed
+Trading-domain import boundary                                          PASS (21 files)
+Full test suite                                                        197 passed
+mypy                                                                    no issues (17 files)
+Primary LSP                                                             clean
+pi-lens scoped review                                                   no findings
+uv lock --check                                                         PASS
+Python                                                                  3.13.5
+```
 
 ## 21. PASSED 记录格式
 
