@@ -99,7 +99,7 @@ artifact_hashes: []
 | WP-06C | PASSED | backtest-runtime | G04, WP-06A–WP-06B | none |
 | WP-06D | PASSED | backtest-runtime | WP-02G, WP-03C | none |
 | WP-06E | PASSED | backtest-runtime | G05, WP-06A–WP-06D | none |
-| WP-06F | READY | backtest-runtime | WP-03E, WP-05A–WP-05C, WP-06B, WP-06E | none |
+| WP-06F | PASSED | backtest-runtime | WP-03E, WP-05A–WP-05C, WP-06B, WP-06E | none |
 | WP-06G | DRAFT | backtest-runtime | WP-06A–WP-06F | Engine harness fixtures |
 | WP-06H | DRAFT | tests/support | WP-02F–WP-02G | Synthetic profile/golden artifacts |
 | WP-07A | DRAFT | backtest-runtime | G06 | Resolver/semantic ID fixtures |
@@ -4244,7 +4244,7 @@ Python                                                             3.13.5
 
 ```yaml
 id: WP-06F
-status: READY
+status: PASSED
 depends_on:
   - WP-03E
   - WP-05A
@@ -4311,11 +4311,14 @@ evidence:
   - public-api-import-report
   - import-boundary-report
   - static-type-report
-passed_commit: null
-artifact_hashes: []
+passed_commit: 976fca04d259302a4073404ef14184de673ecc9e
+artifact_hashes:
+  tests/fixtures/runtime/deterministic-run-end-report-v1.json: sha256:eb2c1a8ea615247ec2ff513504adc4eacc8ffc2440464db25f148e53d4bfa4f3
+  build/acceptance/wp-06f-pytest.xml: sha256:ba6e1f7128dce451832c426abadd34c9cdeb60d007d78000d56383dd8c979348
+  build/acceptance/wp-06f-import-boundary-report.json: sha256:cdf9ee259f92f48f706c56c8f9f83dcf4d2e188afc54c186d5aa6a991c4dd9fd
 ```
 
-### WP-06F Readiness
+### WP-06F Acceptance
 
 冻结以下实现边界：
 
@@ -4324,11 +4327,27 @@ artifact_hashes: []
 3. 所有非终态 Order 在 Run End 产生独立 `OrderTerminatedByRunEnd` evidence；存在的 active Reservation 产生精确 `RunEndReservationRelease` evidence。二者不伪造 OrderEvent、Fill、Journal Entry 或可被 replay 的 ReservationBook state；
 4. Coordinator 通过现有 `CloseoutPolicy` port 执行显式 Policy。Outcome 必须使用 `CLOSEOUT_POLICY` component、匹配 Request hash，且 result/failure 均为 canonical typed evidence；
 5. `MarkToMarketCloseoutPolicy` 是显式提供的 `mark_to_market.v1` component；它保留 Final Snapshot 中的非零 Position，不创建 Fill、不选择价格、不修改 Snapshot；Coordinator 不隐式实例化任何 Policy；
-6. `LIQUIDATE_BEFORE_END` 只有在边界前已通过完整订单/成交/Fee/Accounting 链，且 Final Snapshot 无 open Position、无 Working Order、无 active Reservation，并提供非空 completion evidence hashes 时才为 completed；否则返回结构化 `EngineTermination`；
+6. `LIQUIDATE_BEFORE_END` 只有在边界前已通过完整订单/成交/Fee/Accounting 链，且 Final Snapshot 无 open Position、无 Working Order、无 active Reservation、无 pending Fee assessment，并提供非空 completion evidence hashes 时才为 completed；否则返回结构化 `EngineTermination`；
 7. `RunEndReport` 记录 terminated Orders、released Reservations、open Positions、pending Settlement obligations、pending Fee assessment references、last valuation Mark IDs、Closeout component/outcome/status 和所有输入 state hashes；输入顺序不得影响 Report ID/hash；
 8. 本 WP 不拥有最终价格选择、Accounting/Journal/Ledger/Settlement/Reservation mutation、Run Outcome、Semantic Run/Attempt、Evidence finalize 或完整 Engine orchestration。
 
-WP-06F 已具备实现所需的固定 public seam、Fixture 和 failure contract，状态为 `READY`。
+WP-06F 的实现已冻结在 immutable commit `976fca04d259302a4073404ef14184de673ecc9e`，状态为 `PASSED`。
+
+验证记录：
+
+```text
+Run End Coordinator contract tests                                  6 passed
+Canonical Run End golden fixture                                    1 passed
+Public API + repository cleanliness boundaries                     5 passed
+Acceptance test report                                            12 passed
+Backtest-runtime import boundary                                   PASS (48 files)
+Full test suite                                                   474 passed
+mypy                                                               no issues (10 files)
+Primary LSP                                                        clean
+pi-lens scoped review                                              no unresolved findings
+uv lock --check                                                    PASS
+Python                                                             3.13.5
+```
 
 ## 52. PASSED 记录格式
 
