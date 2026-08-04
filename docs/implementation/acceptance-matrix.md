@@ -75,7 +75,7 @@ artifact_hashes: []
 | WP-03C | PASSED | trading-kernel | WP-02F | none |
 | WP-03D | PASSED | trading-kernel | WP-03C | none |
 | WP-03E | PASSED | trading-kernel | WP-03B–WP-03D | none |
-| WP-03F | READY | trading-kernel | WP-03A–WP-03E | none |
+| WP-03F | PASSED | trading-kernel | WP-03A–WP-03E | none |
 | G03 | DRAFT | trading-kernel + parity | WP-03A–WP-03F | Golden financial journey + aggregate review card |
 | WP-04A | DRAFT | trading-kernel | G02 | Candidate validation fixtures |
 | WP-04B | DRAFT | trading-kernel | WP-04A | Atomic batch fixtures |
@@ -1997,7 +1997,7 @@ Python                                                                 3.13.5
 
 ```yaml
 id: WP-03F
-status: READY
+status: PASSED
 depends_on:
   - WP-03A
   - WP-03B
@@ -2053,11 +2053,17 @@ evidence:
   - public-api-import-report
   - import-boundary-report
   - static-type-report
-passed_commit: null
-artifact_hashes: []
+passed_commit: c68c470c1cf33a4140c6055e88f5d6b292cbf22f
+artifact_hashes:
+  tests/fixtures/kernel/cash-instrument-accounting-v1.json: sha256:9285111fcaa429c60d6cd789f6ad7955c99351ffc520675a1890792996496c3e
+  tests/parity/contracts/core-accounting-wp03f-v1.json: sha256:83bcceefe77b30176a009693e1b216d18119b29f9816bf683c7e60fa1322b0f5
+  tests/parity/fixtures/core-accounting-wp03f-v1.expected.json: sha256:fc3e0a4e52d052264bcb5be77bb4e91bc137a322280d18d26e5713d533f135a8
+  build/acceptance/wp-03f-core-accounting-parity.json: sha256:c44c622511a9e461c62eb255e99fb5d242fee5b37416ed51e1faaa86cc0af063
+  build/acceptance/wp-03f-pytest.xml: sha256:08dbe34767bdb0479ba393baac0b702b70d8cadd7e257aafaa607562dc0e30e6
+  build/acceptance/wp-03f-import-boundary-report.json: sha256:233ed74067f3321f4508811ce729fca60e2dab1132396ec9e8a38879e675c9ae
 ```
 
-### WP-03F Readiness
+### WP-03F Acceptance
 
 已冻结以下边界：
 
@@ -2070,7 +2076,25 @@ artifact_hashes: []
 7. `core-accounting` migration unit 已激活 `copy_with_parity` Comparator。Legacy expected 必须由冻结 archive 内真实 `accounting.py` 行为复核，新实现通过 exact closed-trade gross/fee/funding/net comparison；
 8. 本 WP 不实现 Derivative、Settlement、Tax/Funding/Corporate Action、mutable Lot store、Runtime orchestration、Profile lookup 或 Order/Session aggregate fee allocation。
 
-WP-03F 当前为 `READY`，可以按连续实施授权进入 TDD。
+WP-03F 的实现已冻结在 immutable commit `c68c470c1cf33a4140c6055e88f5d6b292cbf22f`，状态为 `PASSED`。
+
+验证记录：
+
+```text
+Cash accounting contract tests                                         8 passed
+Cash accounting canonical golden fixture                               1 passed
+Frozen crypto-quant-core accounting parity                             1 passed / MATCH
+Public API + repository cleanliness boundaries                         5 passed
+Acceptance test report                                                15 passed
+Trading-kernel import boundary                                         PASS (27 files)
+Legacy source baseline                                                 PASS (3 sources)
+Full test suite                                                       249 passed
+mypy                                                                   no issues (7 files)
+Primary LSP                                                            clean
+pi-lens scoped review                                                  no findings
+uv lock --check                                                        PASS
+Python                                                                 3.13.5
+```
 
 ## 28. PASSED 记录格式
 
