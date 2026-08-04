@@ -74,7 +74,7 @@ artifact_hashes: []
 | WP-03B | PASSED | trading-kernel | WP-03A | none |
 | WP-03C | PASSED | trading-kernel | WP-02F | none |
 | WP-03D | PASSED | trading-kernel | WP-03C | none |
-| WP-03E | READY | trading-kernel | WP-03B–WP-03D | none |
+| WP-03E | PASSED | trading-kernel | WP-03B–WP-03D | none |
 | WP-03F | DRAFT | trading-kernel | WP-03A–WP-03E | Cash accounting + legacy parity |
 | WP-04A | DRAFT | trading-kernel | G02 | Candidate validation fixtures |
 | WP-04B | DRAFT | trading-kernel | WP-04A | Atomic batch fixtures |
@@ -1910,7 +1910,7 @@ Python                                                                 3.13.5
 
 ```yaml
 id: WP-03E
-status: READY
+status: PASSED
 depends_on:
   - WP-03B
   - WP-03C
@@ -1954,8 +1954,11 @@ evidence:
   - public-api-import-report
   - import-boundary-report
   - static-type-report
-passed_commit: null
-artifact_hashes: []
+passed_commit: 230bec2b166639595198a31fa5f6cba4fc158fe0
+artifact_hashes:
+  tests/fixtures/kernel/portfolio-snapshot-projection-v1.json: sha256:39712c45f722761829718c52694bbf4e341b5e273a3d70a303bf25f7b1bd1d41
+  build/acceptance/wp-03e-pytest.xml: sha256:120a3e294c16ca4b18ddcc5f0f65e92e14a923708be5c428ee15e63e43588fb2
+  build/acceptance/wp-03e-import-boundary-report.json: sha256:99cb806a96b60753379bb04b9a7ac6ef67d7f3428e6307bfc5ce12c8c24d4954
 ```
 
 ### WP-03E Acceptance
@@ -1971,7 +1974,23 @@ artifact_hashes: []
 7. Snapshot 保留 Ledger state hash、mark-set hash、staleness report hash 和 currency graph hash；相同 inputs 的任意输入顺序产生 exact 相同 canonical Snapshot；
 8. 本 WP 不实现 data read、Mark/path resolution、隐式 Stablecoin peg、Journal/Ledger mutation、Lot/Cost Basis、Margin Snapshot、instrument-specific accounting 或 Run Outcome mapping。
 
-WP-03E 已达到 `READY`，可以按本 Card 实施。
+WP-03E 的实现已冻结在 immutable commit `230bec2b166639595198a31fa5f6cba4fc158fe0`，状态为 `PASSED`。
+
+验证记录：
+
+```text
+PortfolioSnapshotProjector contract tests                              7 passed
+Portfolio snapshot golden fixture                                      1 passed
+Public API + repository cleanliness boundaries                         5 passed
+Acceptance test report                                                13 passed
+Trading-kernel import boundary                                         PASS (26 files)
+Full test suite                                                       239 passed
+mypy                                                                   no issues (26 files)
+Primary LSP                                                            clean
+pi-lens scoped review                                                  no findings
+uv lock --check                                                        PASS
+Python                                                                 3.13.5
+```
 
 ## 27. PASSED 记录格式
 
