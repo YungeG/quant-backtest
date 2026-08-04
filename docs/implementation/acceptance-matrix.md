@@ -72,7 +72,7 @@ artifact_hashes: []
 | G02 | PASSED | trading-domain + trading-kernel + backtest-runtime | WP-02A–WP-02H | none |
 | WP-03A | PASSED | trading-kernel | G02 | none |
 | WP-03B | PASSED | trading-kernel | WP-03A | none |
-| WP-03C | READY | trading-kernel | WP-02F | none |
+| WP-03C | PASSED | trading-kernel | WP-02F | none |
 | WP-03D | DRAFT | trading-kernel | WP-03C | Currency graph fixtures |
 | WP-03E | DRAFT | trading-kernel | WP-03B–WP-03D | Snapshot fixtures |
 | WP-03F | DRAFT | trading-kernel | WP-03A–WP-03E | Cash accounting + legacy parity |
@@ -1745,7 +1745,7 @@ Python                                                                  3.13.5
 
 ```yaml
 id: WP-03C
-status: READY
+status: PASSED
 depends_on:
   - WP-02F
 owner_package: trading-kernel
@@ -1785,11 +1785,14 @@ evidence:
   - public-api-import-report
   - import-boundary-report
   - static-type-report
-passed_commit: null
-artifact_hashes: []
+passed_commit: 1e465930838738804ef1c09b9b3198361fb005ff
+artifact_hashes:
+  tests/fixtures/kernel/deterministic-mark-resolution-v1.json: sha256:bbdda823a1d75e0ac08f38872faf3f73a31f5c5f34dac3db2c699f8352026ea4
+  build/acceptance/wp-03c-pytest.xml: sha256:e96b80711ad21c8949bf8efd2d41a180e950992b15351e89b3736568198af15a
+  build/acceptance/wp-03c-import-boundary-report.json: sha256:c4f3489717fa193c3ef70ce4bd2745f180fd0d731abd2beb0a91eb3ee1722e1f
 ```
 
-### WP-03C Readiness
+### WP-03C Acceptance
 
 已冻结以下边界：
 
@@ -1801,7 +1804,23 @@ artifact_hashes: []
 6. `ResolvedMark` 保留 source stream/event/revision identity、event/available/requested time、typed PricePurpose/Price、age、Policy identity，并由这些 canonical facts 产生稳定 mark identity；
 7. 本 WP 不实现数据读取、market-specific stream mapping、revision timeline selection、Execution Price fallback、币种换算、PortfolioSnapshot、Profile Resolver 或 Run Outcome mapping。
 
-WP-03C 状态为 `READY`，可按上述 seam 实施。
+WP-03C 的实现已冻结在 immutable commit `1e465930838738804ef1c09b9b3198361fb005ff`，状态为 `PASSED`。
+
+验证记录：
+
+```text
+MarkResolver contract tests                                             7 passed
+Deterministic mark-resolution golden fixture                            1 passed
+Public API + repository cleanliness boundaries                         5 passed
+Acceptance test report                                                 13 passed
+Trading-kernel import boundary                                         PASS (24 files)
+Full test suite                                                         222 passed
+mypy                                                                    no issues (7 files)
+Primary LSP                                                             clean
+pi-lens scoped review                                                   no findings
+uv lock --check                                                         PASS
+Python                                                                  3.13.5
+```
 
 ## 25. PASSED 记录格式
 
