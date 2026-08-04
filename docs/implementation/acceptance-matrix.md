@@ -82,7 +82,7 @@ artifact_hashes: []
 | WP-04C | PASSED | trading-kernel | WP-04B, G03 | none |
 | WP-04D | PASSED | trading-kernel | WP-04C | none |
 | WP-04E | PASSED | trading-kernel | WP-04D, WP-03C | none |
-| G04 | DRAFT | trading-kernel | WP-04A–WP-04E | Two-Sleeve target-materialization aggregate evidence |
+| G04 | READY | trading-kernel | WP-04A–WP-04E | none |
 | WP-05A | DRAFT | trading-kernel | G02 | Order lifecycle fixtures |
 | WP-05B | DRAFT | trading-kernel | WP-05A | Reservation replay fixtures |
 | WP-05C | DRAFT | trading-kernel | WP-03B, WP-05B | Settlement/availability fixtures |
@@ -2643,7 +2643,66 @@ uv lock --check                                                    PASS
 Python                                                             3.13.5
 ```
 
-## 34. PASSED 记录格式
+## 34. G04 Target Materialization Aggregate Acceptance Card
+
+```yaml
+id: G04
+status: READY
+depends_on:
+  - WP-04A
+  - WP-04B
+  - WP-04C
+  - WP-04D
+  - WP-04E
+owner_package: trading-kernel
+public_interface:
+  - no-new-production-interface
+  - existing Validator/Batch/Allocation/Risk/Sizing public seams only
+test_commands:
+  journey: uv run pytest -q tests/kernel/integration/test_target_materialization_journey.py
+  boundary: uv run pytest -q tests/architecture/test_public_api_imports.py tests/architecture/test_repository_cleanliness.py
+fixture_ids:
+  - target-materialization-journey-v1
+expected_artifacts:
+  - tests/fixtures/kernel/target-materialization-journey-v1.json
+  - build/acceptance/g04-pytest.xml
+  - build/acceptance/g04-import-boundary-report.json
+failure_contracts:
+  - candidate-validation-failure-produces-partial-batch-or-target
+  - missing-duplicate-or-unexpected-sleeve-produces-partial-target
+  - allocation-or-risk-failure-bypassed-by-sizing
+  - sleeve-targets-not-netted-before-risk-and-sizing
+  - strategy-registration-candidate-mapping-submission-allocation-rule-or-sizing-input-order-dependent-result
+  - approved-notional-to-quantity-materialization-loses-batch-sleeve-policy-mark-or-lattice-provenance
+  - later-mark-nav-or-external-cash-flow-mutates-existing-active-target
+  - order-created-before-complete-account-level-active-target
+allowed_grade: development
+evidence:
+  - pytest-report
+  - target-materialization-journey-golden-fixture-hash
+  - exact-active-target-and-stage-hashes
+  - public-api-import-report
+  - import-boundary-report
+  - static-type-report
+passed_commit: null
+artifact_hashes: []
+```
+
+### G04 Readiness
+
+冻结 aggregate journey：
+
+1. 两个独立 Sleeve Candidate 分别通过 `StrategyOutputValidator`，在同一 Decision Instant 原子形成一个 `DecisionBatch` 和 `LatestSleeveDecisionState`；
+2. supplied Strategy Allocations 将两个 Sleeve Target 转为 native Notional，并在账户级按 Instrument 净额化；Portfolio Risk 在净额化后产生 Approved Target；
+3. Position Sizer 使用同一 Decision Instant 的 supplied Mark/Lattice 将 Approved Notional 一次性物化为一个 account-level exact `ActivePortfolioTarget`；
+4. Strategy 注册、Candidate Mapping、Submission、Allocation、Risk rule 和 Sizing Input 顺序变化不改变各阶段 canonical hash、Active Quantity 或最终 aggregate fixture；
+5. 任一 Validator/Batch/Allocation/Risk/Sizing failure 都不能产生部分 Active Target，也不能提前创建 Order；
+6. 后续 Mark/NAV/External Cash Flow 只能成为未来新 Decision/Reallocation 的输入，不能修改已经物化的 immutable Active Target；
+7. 本 Gate 不新增生产 API，也不实现 Rebalance/Order/Execution/Runtime。
+
+G04 当前状态为 `READY`。
+
+## 35. PASSED 记录格式
 
 ```yaml
 id: WP-00A
