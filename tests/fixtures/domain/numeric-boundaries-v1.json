@@ -1,0 +1,70 @@
+{
+  "fixture_id": "numeric-boundaries-v1",
+  "schema_version": 1,
+  "rescale_cases": [
+    {
+      "id": "positive-tie-half-even",
+      "units": 145,
+      "source_scale": 2,
+      "target_scale": 1,
+      "rounding": "half_even",
+      "expected_units": 14
+    },
+    {
+      "id": "positive-tie-half-up",
+      "units": 145,
+      "source_scale": 2,
+      "target_scale": 1,
+      "rounding": "half_up",
+      "expected_units": 15
+    },
+    {
+      "id": "negative-toward-zero",
+      "units": -155,
+      "source_scale": 2,
+      "target_scale": 1,
+      "rounding": "toward_zero",
+      "expected_units": -15
+    },
+    {
+      "id": "negative-away-from-zero",
+      "units": -155,
+      "source_scale": 2,
+      "target_scale": 1,
+      "rounding": "away_from_zero",
+      "expected_units": -16
+    },
+    {
+      "id": "negative-floor",
+      "units": -151,
+      "source_scale": 2,
+      "target_scale": 1,
+      "rounding": "floor",
+      "expected_units": -16
+    },
+    {
+      "id": "negative-ceiling",
+      "units": -159,
+      "source_scale": 2,
+      "target_scale": 1,
+      "rounding": "ceiling",
+      "expected_units": -15
+    },
+    {
+      "id": "zero",
+      "units": 0,
+      "source_scale": 18,
+      "target_scale": 0,
+      "rounding": "half_even",
+      "expected_units": 0
+    },
+    {
+      "id": "scale-increase-large-integer",
+      "units": 123456789012345678901234567890,
+      "source_scale": 0,
+      "target_scale": 18,
+      "rounding": "toward_zero",
+      "expected_units": 123456789012345678901234567890000000000000000000
+    }
+  ]
+}
