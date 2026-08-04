@@ -56,7 +56,7 @@ artifact_hashes: []
 | WP-00B | PASSED | repository root | WP-00A | none |
 | WP-00C | PASSED | repository root + parity tooling | WP-00B | none |
 | G00 | PASSED | repository root | WP-00A, WP-00B, WP-00C | none |
-| WP-01A | READY | trading-domain | G00 | none |
+| WP-01A | PASSED | trading-domain | G00 | none |
 | WP-01B | DRAFT | trading-domain | WP-01A | Time/DST fixtures/commands |
 | WP-01C | DRAFT | trading-domain | WP-01B | ID namespace/version fixtures |
 | WP-01D | DRAFT | trading-domain | WP-01A–WP-01C | Canonical golden bytes/hash |
@@ -464,7 +464,7 @@ Python                                                                   3.13.5
 
 ```yaml
 id: WP-01A
-status: READY
+status: PASSED
 depends_on:
   - G00
 owner_package: trading-domain
@@ -500,11 +500,13 @@ evidence:
   - pytest-report
   - numeric-boundary-fixture-hash
   - public-api-import-report
-passed_commit: null
-artifact_hashes: []
+passed_commit: d0330c211e772230bda1da59dca4f314ebe64b52
+artifact_hashes:
+  tests/fixtures/domain/numeric-boundaries-v1.json: sha256:f74f4f5d4870de6d5977b3b65d317b0d7e6aac5816e54df7115c0e0287e3941b
+  build/acceptance/wp-01a-pytest.xml: sha256:c612dbad5a0027b38a76ae170b6e9368e91d2bd9bdd00bd731d4d9d0be3a2169
 ```
 
-### WP-01A Readiness
+### WP-01A Acceptance
 
 已冻结 v1 数值语义：
 
@@ -518,7 +520,18 @@ artifact_hashes: []
 8. Canonical dictionary 只包含 type、units、scale 和相应 identity，不包含 float 或 Decimal；
 9. `Price.notional(Quantity)` 和 `Money.quantity_at(Price)` 是 v1 唯一跨类型乘除入口，必须显式结果 Scale 和 RoundingPolicy。
 
-WP-01A 当前状态为 `READY`，根据持续推进授权可直接实施。
+WP-01A 的实现已冻结在 immutable commit `d0330c211e772230bda1da59dca4f314ebe64b52`，状态为 `PASSED`。
+
+验证记录：
+
+```text
+Typed scaled value contracts                                            8 passed
+Rounding + quantization fixtures                                        15 passed
+Boundary tests                                                           5 passed
+Full test suite                                                         73 passed
+mypy                                                                     no issues (9 files)
+Python                                                                   3.13.5
+```
 
 ## 9. PASSED 记录格式
 
