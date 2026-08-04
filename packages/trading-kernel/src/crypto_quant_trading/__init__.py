@@ -12,6 +12,16 @@ from .accounting import (
     FeeChargeAccountingResult,
     LotConsumption,
 )
+from .decisions import (
+    AtomicDecisionBatchCollector,
+    AtomicDecisionBatchResult,
+    DecisionBatchExpectation,
+    DecisionBatchFailure,
+    DecisionBatchIssue,
+    DecisionBatchIssueCode,
+    DecisionBatchSubmission,
+    LatestSleeveDecisionState,
+)
 from .journal import (
     AccountingJournal,
     JournalCursorError,
@@ -91,6 +101,8 @@ __version__ = "0.1.0"
 
 __all__ = [
     "AccountingJournal",
+    "AtomicDecisionBatchCollector",
+    "AtomicDecisionBatchResult",
     "CashAccountingFailure",
     "CashAccountingFailureCode",
     "CashFillAccountingOutcome",
@@ -109,6 +121,11 @@ __all__ = [
     "CurrencyValuationPathSelection",
     "CurrencyValuationPolicy",
     "CurrencyValuationResolution",
+    "DecisionBatchExpectation",
+    "DecisionBatchFailure",
+    "DecisionBatchIssue",
+    "DecisionBatchIssueCode",
+    "DecisionBatchSubmission",
     "FeeAssessmentPolicy",
     "FeeChargeAccountingOutcome",
     "FeeChargeAccountingResult",
@@ -127,6 +144,7 @@ __all__ = [
     "LedgerSchema",
     "LedgerState",
     "LedgerStateMismatchError",
+    "LatestSleeveDecisionState",
     "LiquidationRules",
     "LotConsumption",
     "MarginModel",
