@@ -72,7 +72,7 @@ artifact_hashes: []
 | G02 | PASSED | trading-domain + trading-kernel + backtest-runtime | WP-02A–WP-02H | none |
 | WP-03A | PASSED | trading-kernel | G02 | none |
 | WP-03B | PASSED | trading-kernel | WP-03A | none |
-| WP-03C | DRAFT | trading-kernel | WP-02F | PricePurpose/Mark fixtures |
+| WP-03C | READY | trading-kernel | WP-02F | none |
 | WP-03D | DRAFT | trading-kernel | WP-03C | Currency graph fixtures |
 | WP-03E | DRAFT | trading-kernel | WP-03B–WP-03D | Snapshot fixtures |
 | WP-03F | DRAFT | trading-kernel | WP-03A–WP-03E | Cash accounting + legacy parity |
@@ -1741,7 +1741,69 @@ uv lock --check                                                         PASS
 Python                                                                  3.13.5
 ```
 
-## 24. PASSED 记录格式
+## 24. WP-03C Acceptance Card
+
+```yaml
+id: WP-03C
+status: READY
+depends_on:
+  - WP-02F
+owner_package: trading-kernel
+public_interface:
+  - crypto_quant_trading.MarkObservation
+  - crypto_quant_trading.StaleMarkPolicy
+  - crypto_quant_trading.ResolvedMark
+  - crypto_quant_trading.MarkResolutionFailureCode
+  - crypto_quant_trading.MarkResolutionFailure
+  - crypto_quant_trading.MarkResolutionOutcome
+  - crypto_quant_trading.MarkResolver
+test_commands:
+  contract: uv run pytest -q tests/kernel/marks/test_mark_resolver.py
+  fixture: uv run pytest -q tests/kernel/marks/test_mark_resolver_golden.py
+  boundary: uv run pytest -q tests/architecture/test_public_api_imports.py tests/architecture/test_repository_cleanliness.py
+fixture_ids:
+  - deterministic-mark-resolution-v1
+expected_artifacts:
+  - tests/fixtures/kernel/deterministic-mark-resolution-v1.json
+  - build/acceptance/wp-03c-pytest.xml
+  - build/acceptance/wp-03c-import-boundary-report.json
+failure_contracts:
+  - missing-mark-at-requested-time
+  - unavailable-price-purpose
+  - ambiguous-latest-mark
+  - stale-mark-max-age
+  - forward-fill-policy-violation
+  - future-observation-or-revision-selection
+  - price-instrument-or-currency-identity-mismatch
+  - implicit-cross-purpose-fallback
+  - mark-data-source-query
+  - mark-currency-conversion-or-snapshot-leakage
+allowed_grade: development
+evidence:
+  - pytest-report
+  - deterministic-mark-resolution-fixture-hash
+  - public-api-import-report
+  - import-boundary-report
+  - static-type-report
+passed_commit: null
+artifact_hashes: []
+```
+
+### WP-03C Readiness
+
+已冻结以下边界：
+
+1. `MarkObservation` 是调用方提供的 immutable Price Stream fact，包含 typed Instrument/Currency/PricePurpose/Price、`observed_at`、`available_at`、stream/source-event/revision identity；Resolver 不查询 Reader、Bundle、网络或文件；
+2. `StaleMarkPolicy` 绑定单一 `PricePurpose`，以整数纳秒声明 `max_age` 和是否允许同用途 forward-fill，并具有稳定 key/version/hash；它不能授权跨用途 fallback；
+3. Resolver 只考虑 `observed_at <= requested_at` 且 `available_at <= requested_at` 的同 Instrument、同 Purpose observations。输入顺序不影响结果，未来 event/revision 不可见；
+4. 最新合法 event time 必须唯一；同一最新 event time 存在多个合法 revision 时返回 `ambiguous_mark`，Revision winner selection 不在本 WP 猜测；
+5. 无 Instrument fact 返回 `missing_mark`；存在 Instrument fact 但未提供所需 Purpose 返回 `price_purpose_unavailable`；无 point-in-time 合法 observation 返回 `missing_mark`；max-age 或 forward-fill 约束不满足返回 `stale_mark`；
+6. `ResolvedMark` 保留 source stream/event/revision identity、event/available/requested time、typed PricePurpose/Price、age、Policy identity，并由这些 canonical facts 产生稳定 mark identity；
+7. 本 WP 不实现数据读取、market-specific stream mapping、revision timeline selection、Execution Price fallback、币种换算、PortfolioSnapshot、Profile Resolver 或 Run Outcome mapping。
+
+WP-03C 状态为 `READY`，可按上述 seam 实施。
+
+## 25. PASSED 记录格式
 
 ```yaml
 id: WP-00A
