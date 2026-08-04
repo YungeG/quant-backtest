@@ -83,7 +83,7 @@ artifact_hashes: []
 | WP-04D | PASSED | trading-kernel | WP-04C | none |
 | WP-04E | PASSED | trading-kernel | WP-04D, WP-03C | none |
 | G04 | PASSED | trading-kernel | WP-04A–WP-04E | none |
-| WP-05A | READY | trading-kernel | G02 | none |
+| WP-05A | PASSED | trading-kernel | G02 | none |
 | WP-05B | DRAFT | trading-kernel | WP-05A | Reservation replay fixtures |
 | WP-05C | DRAFT | trading-kernel | WP-03B, WP-05B | Settlement/availability fixtures |
 | WP-05D | DRAFT | trading-kernel | G04, WP-05A–WP-05C | Rebalance fixtures |
@@ -2724,7 +2724,7 @@ Python                                                              3.13.5
 
 ```yaml
 id: WP-05A
-status: READY
+status: PASSED
 depends_on:
   - G02
 owner_package: trading-kernel
@@ -2771,11 +2771,14 @@ evidence:
   - public-api-import-report
   - import-boundary-report
   - static-type-report
-passed_commit: null
-artifact_hashes: []
+passed_commit: 47f9d279ae3eec6b099862ea15e6a9b5b232d4c6
+artifact_hashes:
+  tests/fixtures/kernel/order-event-state-replay-v1.json: sha256:59ccdb91e6ffd6fd23a40ceb230eab36f8cca13b737738c692f924558ea0a247
+  build/acceptance/wp-05a-pytest.xml: sha256:f74d0e59306957495208d3764406f0eee6d7b2fa5735732f9cace2ade38d5760
+  build/acceptance/wp-05a-import-boundary-report.json: sha256:60f733f85fa55eadb0a1013f49b321bfd6589a1917704fed1100d431ba563cb6
 ```
 
-### WP-05A Readiness
+### WP-05A Acceptance
 
 冻结以下边界：
 
@@ -2788,7 +2791,23 @@ artifact_hashes: []
 7. 每条后续 Event 的 `causation_id` 必须引用同一 Stream 中已经发生的 Event。`CancelReplaceCausation` 只接受已显式 CancelRequested→Cancelled 的旧 Order，以及首个 Created Event 由旧 Cancelled Event 直接导致的新 Order；不支持原地修改；
 8. 本 WP 不实现 Reservation、Settlement/Availability、Rebalance、Capability/Translation/MarketRule/PreTradeRisk 行为、Execution simulation、Fee/Accounting、Ledger mutation 或 Runtime orchestration。
 
-WP-05A 状态为 `READY`。
+WP-05A 的实现已冻结在 immutable commit `47f9d279ae3eec6b099862ea15e6a9b5b232d4c6`，状态为 `PASSED`。
+
+验证记录：
+
+```text
+Order Event Stream contract tests                                  8 passed
+Order Event replay canonical golden fixture                        1 passed
+Public API + repository cleanliness boundaries                     5 passed
+Acceptance test report                                            14 passed
+Trading-kernel import boundary                                     PASS (33 files)
+Full test suite                                                   323 passed
+mypy                                                               no issues (5 files)
+Primary LSP                                                        clean
+pi-lens scoped review                                              no findings
+uv lock --check                                                    PASS
+Python                                                             3.13.5
+```
 
 ## 36. PASSED 记录格式
 
