@@ -76,7 +76,7 @@ artifact_hashes: []
 | WP-03D | PASSED | trading-kernel | WP-03C | none |
 | WP-03E | PASSED | trading-kernel | WP-03B–WP-03D | none |
 | WP-03F | PASSED | trading-kernel | WP-03A–WP-03E | none |
-| G03 | READY | trading-kernel + parity | WP-03A–WP-03F | none |
+| G03 | PASSED | trading-kernel + parity | WP-03A–WP-03F | none |
 | WP-04A | DRAFT | trading-kernel | G02 | Candidate validation fixtures |
 | WP-04B | DRAFT | trading-kernel | WP-04A | Atomic batch fixtures |
 | WP-04C | DRAFT | trading-kernel | WP-04B, G03 | Allocation/netting fixtures |
@@ -2100,7 +2100,7 @@ Python                                                                 3.13.5
 
 ```yaml
 id: G03
-status: READY
+status: PASSED
 depends_on:
   - WP-03A
   - WP-03B
@@ -2154,11 +2154,15 @@ evidence:
   - import-boundary-report
   - static-type-report
   - full-regression-report
-passed_commit: null
-artifact_hashes: []
+passed_commit: 055a33a9d287859dcf77dbb47bd49a01c2dd6a01
+artifact_hashes:
+  tests/fixtures/kernel/foundation-financial-journey-v1.json: sha256:a4ea9c56939a10aa09326a019999ddfd6d2b4737fdae1ad1095505ad2765cc90
+  build/acceptance/g03-pytest.xml: sha256:2e0edc2c656388ab1bbba82e78cdad97e2fd44a3b0bd435304eed62e636d04d7
+  build/acceptance/g03-import-boundary-report.json: sha256:233ed74067f3321f4508811ce729fca60e2dab1132396ec9e8a38879e675c9ae
+  build/acceptance/wp-03f-core-accounting-parity.json: sha256:c44c622511a9e461c62eb255e99fb5d242fee5b37416ed51e1faaa86cc0af063
 ```
 
-### G03 Readiness
+### G03 Acceptance
 
 已冻结以下 aggregate seam：
 
@@ -2169,7 +2173,25 @@ artifact_hashes: []
 5. 删除 Snapshot 后，以相同 immutable evidence exact 重建相同 canonical Snapshot/hash；
 6. `core-accounting` frozen-source Comparator 必须为 `MATCH`，并同时重跑全部 G03 component golden fixtures、Boundary、mypy 和完整 suite。
 
-G03 当前为 `READY`，可以按连续实施授权进入 aggregate TDD。
+G03 的 aggregate verification 已冻结在 immutable commit `055a33a9d287859dcf77dbb47bd49a01c2dd6a01`，状态为 `PASSED`。
+
+验证记录：
+
+```text
+Foundation financial journey contract                                  1 passed
+WP-03A–WP-03F canonical golden fixtures                                 6 passed
+Frozen crypto-quant-core accounting parity                             1 passed / MATCH
+Public API + repository cleanliness boundaries                         5 passed
+Aggregate acceptance test report                                      13 passed
+Trading-kernel import boundary                                         PASS (27 files)
+Full test suite                                                       250 passed
+mypy                                                                   no issues (28 files)
+Primary LSP                                                            clean
+pi-lens aggregate review                                               no blocking findings
+Intentional Kernel/Runtime nominal-port duplication                    2 deferred
+uv lock --check                                                        PASS
+Python                                                                 3.13.5
+```
 
 ## 29. PASSED 记录格式
 
