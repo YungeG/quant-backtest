@@ -83,7 +83,7 @@ artifact_hashes: []
 | WP-04D | PASSED | trading-kernel | WP-04C | none |
 | WP-04E | PASSED | trading-kernel | WP-04D, WP-03C | none |
 | G04 | PASSED | trading-kernel | WP-04A–WP-04E | none |
-| WP-05A | DRAFT | trading-kernel | G02 | Order lifecycle fixtures |
+| WP-05A | READY | trading-kernel | G02 | none |
 | WP-05B | DRAFT | trading-kernel | WP-05A | Reservation replay fixtures |
 | WP-05C | DRAFT | trading-kernel | WP-03B, WP-05B | Settlement/availability fixtures |
 | WP-05D | DRAFT | trading-kernel | G04, WP-05A–WP-05C | Rebalance fixtures |
@@ -2720,7 +2720,77 @@ uv lock --check                                                     PASS
 Python                                                              3.13.5
 ```
 
-## 35. PASSED 记录格式
+## 35. WP-05A Order Event Stream/State Projection Acceptance Card
+
+```yaml
+id: WP-05A
+status: READY
+depends_on:
+  - G02
+owner_package: trading-kernel
+public_interface:
+  - crypto_quant_trading.OrderEventRecord
+  - crypto_quant_trading.OrderEventStream
+  - crypto_quant_trading.CancelReplaceCausation
+  - crypto_quant_trading.OrderEventStreamError
+  - crypto_quant_trading.OrderEventConflictError
+  - crypto_quant_trading.OrderEventOrderingError
+  - crypto_quant_trading.OrderTransitionError
+  - crypto_quant_trading.OrderFillError
+test_commands:
+  contract: uv run pytest -q tests/kernel/orders/test_order_event_stream.py
+  fixture: uv run pytest -q tests/kernel/orders/test_order_event_stream_golden.py
+  boundary: uv run pytest -q tests/architecture/test_public_api_imports.py tests/architecture/test_repository_cleanliness.py
+fixture_ids:
+  - order-event-state-replay-v1
+expected_artifacts:
+  - tests/fixtures/kernel/order-event-state-replay-v1.json
+  - build/acceptance/wp-05a-pytest.xml
+  - build/acceptance/wp-05a-import-boundary-report.json
+failure_contracts:
+  - first-event-is-not-order-intent-created
+  - event-order-id-or-created-context-mismatch
+  - invalid-gate-or-lifecycle-transition
+  - terminal-state-regression
+  - late-event-insertion-before-published-prefix
+  - identical-event-id-with-conflicting-content
+  - duplicate-fill-identity
+  - missing-extra-or-mismatched-fill-fact
+  - fill-quantity-identity-scale-or-side-mismatch
+  - cumulative-fill-exceeds-order-quantity
+  - partial-fill-completes-order-or-final-fill-leaves-remainder
+  - unknown-or-forward-causation
+  - in-place-order-modification
+  - invalid-cancel-replace-causation
+  - input-order-dependent-replay
+allowed_grade: development
+evidence:
+  - pytest-report
+  - order-event-state-replay-golden-fixture-hash
+  - deterministic-stream-and-state-hashes
+  - public-api-import-report
+  - import-boundary-report
+  - static-type-report
+passed_commit: null
+artifact_hashes: []
+```
+
+### WP-05A Readiness
+
+冻结以下边界：
+
+1. `OrderEventStream` 是单一 `Order` 的 immutable authoritative lifecycle evidence；每个 `OrderEventRecord` 恰好包含一个 Event，并且 Fill Event 恰好携带与 `fill_id` 一致的 immutable `Fill` fact，非 Fill Event 不得携带 Fill；
+2. Stream stable order 为 `(occurred_at, event_id)`。相同 Event ID + 相同 record canonical hash 是幂等 no-op；相同 ID + 不同内容结构化冲突；已发布 prefix 之前的 late insertion 被拒绝；
+3. 第一条 Event 必须是与 `Order.created_at`/`Order.order_id` 对齐的 `OrderIntentCreated`；其 `causation_id` 是可审计的外部 root cause，而 `OrderIntent.parent_id` 继续保留 source Decision/Target identity，两者不得被隐式等同。门控顺序固定为 Capability → Translation → Market Rule → Fee Reservation → Pre-trade Risk → Submission；拒绝事件进入终态且不能回退；
+4. Submission 后支持 Submitted → Accepted → Active，以及 Accepted/Active → PartiallyFilled → Filled；CancelRequested 可来自 Working 状态，Cancellation/Expiry/Fill race 必须通过显式 Event 记录，终态之后不得追加新事实；
+5. Fill context 必须与 Order 的 ID、Account、Instrument、Side、Quantity identity/Scale 一致，Fill execution time 必须等于 Event instant；Partial Fill 必须保留正 remaining Quantity，Final Fill 必须 exact 清零，不允许 overfill；
+6. `OrderState` 只能由完整 Stream replay 得到。无序初始输入 canonical 排序后必须得到相同 Stream/State hash；prefix `state_at()` 与完整 replay 的同一 prefix exact parity；
+7. 每条后续 Event 的 `causation_id` 必须引用同一 Stream 中已经发生的 Event。`CancelReplaceCausation` 只接受已显式 CancelRequested→Cancelled 的旧 Order，以及首个 Created Event 由旧 Cancelled Event 直接导致的新 Order；不支持原地修改；
+8. 本 WP 不实现 Reservation、Settlement/Availability、Rebalance、Capability/Translation/MarketRule/PreTradeRisk 行为、Execution simulation、Fee/Accounting、Ledger mutation 或 Runtime orchestration。
+
+WP-05A 状态为 `READY`。
+
+## 36. PASSED 记录格式
 
 ```yaml
 id: WP-00A
