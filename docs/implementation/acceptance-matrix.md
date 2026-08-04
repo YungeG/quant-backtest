@@ -73,7 +73,7 @@ artifact_hashes: []
 | WP-03A | PASSED | trading-kernel | G02 | none |
 | WP-03B | PASSED | trading-kernel | WP-03A | none |
 | WP-03C | PASSED | trading-kernel | WP-02F | none |
-| WP-03D | READY | trading-kernel | WP-03C | none |
+| WP-03D | PASSED | trading-kernel | WP-03C | none |
 | WP-03E | DRAFT | trading-kernel | WP-03B–WP-03D | Snapshot fixtures |
 | WP-03F | DRAFT | trading-kernel | WP-03A–WP-03E | Cash accounting + legacy parity |
 | WP-04A | DRAFT | trading-kernel | G02 | Candidate validation fixtures |
@@ -1826,7 +1826,7 @@ Python                                                                  3.13.5
 
 ```yaml
 id: WP-03D
-status: READY
+status: PASSED
 depends_on:
   - WP-03C
 owner_package: trading-kernel
@@ -1869,11 +1869,14 @@ evidence:
   - public-api-import-report
   - import-boundary-report
   - static-type-report
-passed_commit: null
-artifact_hashes: []
+passed_commit: 885189644dab25a4156410aa9d17839044f19d38
+artifact_hashes:
+  tests/fixtures/kernel/currency-valuation-graph-v1.json: sha256:8480953669aa0244a8916d7ba45fae3b821af596231dc2c472682b71d0d28fc0
+  build/acceptance/wp-03d-pytest.xml: sha256:e8a32c8d6616beb1b0ba514e4b5d01c6ddf5b9270f53ad466ff6babe4a632fc0
+  build/acceptance/wp-03d-import-boundary-report.json: sha256:5733bbd7ba24b5718da4b68025ae0c7723c6f4af8c71674da95b38ce986225f1
 ```
 
-### WP-03D Readiness
+### WP-03D Acceptance
 
 已冻结以下边界：
 
@@ -1885,7 +1888,23 @@ artifact_hashes: []
 6. Graph 验证 Policy component type、request hash 和 selected path hash；Policy failure 或伪造/未知选择均结构化失败，不按输入顺序猜测；
 7. 本 WP 只产出 point-in-time path/provenance evidence，不计算 `Money`、不决定数值舍入、不构建市场特定 FX/Stablecoin Edge、不选择 Mark、不修改 Ledger，也不计算 `PortfolioSnapshot`。
 
-WP-03D 当前状态为 `READY`，可以按上述公共 seam 实施。
+WP-03D 的实现已冻结在 immutable commit `885189644dab25a4156410aa9d17839044f19d38`，状态为 `PASSED`。
+
+验证记录：
+
+```text
+CurrencyValuationGraph contract tests                                  8 passed
+Currency valuation golden fixture                                      1 passed
+Public API + repository cleanliness boundaries                         5 passed
+Acceptance test report                                                14 passed
+Trading-kernel import boundary                                         PASS (25 files)
+Full test suite                                                       231 passed
+mypy                                                                   no issues (8 files)
+Primary LSP                                                            clean
+pi-lens scoped review                                                  no findings
+uv lock --check                                                        PASS
+Python                                                                 3.13.5
+```
 
 ## 26. PASSED 记录格式
 
