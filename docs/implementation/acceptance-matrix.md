@@ -58,7 +58,7 @@ artifact_hashes: []
 | G00 | PASSED | repository root | WP-00A, WP-00B, WP-00C | none |
 | WP-01A | PASSED | trading-domain | G00 | none |
 | WP-01B | PASSED | trading-domain | WP-01A | none |
-| WP-01C | READY | trading-domain | WP-01B | none |
+| WP-01C | PASSED | trading-domain | WP-01B | none |
 | WP-01D | DRAFT | trading-domain | WP-01A–WP-01C | Canonical golden bytes/hash |
 | WP-02A | DRAFT | trading-domain | G01 | Instrument identity fixtures |
 | WP-02B | DRAFT | trading-domain | WP-02A | Candidate/Validated wire fixtures |
@@ -607,7 +607,7 @@ Python                                                                    3.13.5
 
 ```yaml
 id: WP-01C
-status: READY
+status: PASSED
 depends_on:
   - WP-01B
 owner_package: trading-domain
@@ -638,11 +638,13 @@ evidence:
   - pytest-report
   - identity-golden-hash
   - public-api-import-report
-passed_commit: null
-artifact_hashes: []
+passed_commit: 1ff4bdccbb48af5bd651d918ee257d8eb6c3bfa8
+artifact_hashes:
+  tests/fixtures/domain/deterministic-domain-ids-v1.json: sha256:4691c2467d6c8d16fead46f79f5602ceae1e561ace4990ae055f306f77fe48e4
+  build/acceptance/wp-01c-pytest.xml: sha256:0ea8e3580b4fecbd0ee2f2cccbb407070d6f2a90ef2b467b16492a521918cf01
 ```
 
-### WP-01C Readiness
+### WP-01C Acceptance
 
 已冻结 identity algorithm v1：
 
@@ -654,7 +656,18 @@ artifact_hashes: []
 6. Semantic Run ID、namespace 和 version 必须是无首尾空白的 canonical text；semantic key 必须是非空 immutable bytes；
 7. Namespace/version/algorithm 进入 `IdentityManifest` 和 hash payload，任何变化必须显式改变 ID。
 
-WP-01C 当前状态为 `READY`，根据持续推进授权可直接实施。
+WP-01C 的实现已冻结在 immutable commit `1ff4bdccbb48af5bd651d918ee257d8eb6c3bfa8`，状态为 `PASSED`。
+
+验证记录：
+
+```text
+Deterministic ID contracts                                               5 passed
+Golden identity fixtures                                                 5 passed
+Boundary tests                                                           5 passed
+Full test suite                                                         95 passed
+mypy                                                                     no issues (10 files)
+Python                                                                   3.13.5
+```
 
 ## 11. PASSED 记录格式
 
