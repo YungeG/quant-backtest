@@ -62,7 +62,7 @@ artifact_hashes: []
 | WP-01D | PASSED | trading-domain | WP-01A–WP-01C | none |
 | G01 | PASSED | trading-domain | WP-01A, WP-01B, WP-01C, WP-01D | none |
 | WP-02A | PASSED | trading-domain | G01 | none |
-| WP-02B | READY | trading-domain | WP-02A | none |
+| WP-02B | PASSED | trading-domain | WP-02A | none |
 | WP-02C | DRAFT | trading-domain | WP-02A | Order/Execution schema fixtures |
 | WP-02D | DRAFT | trading-domain | WP-02A | Accounting schema fixtures |
 | WP-02E | DRAFT | trading-domain | WP-01D | Envelope/Catalog fixtures |
@@ -879,7 +879,7 @@ Python                                                                   3.13.5
 
 ```yaml
 id: WP-02B
-status: READY
+status: PASSED
 depends_on:
   - WP-02A
 owner_package: trading-domain
@@ -920,11 +920,14 @@ evidence:
   - pytest-report
   - target-decision-fixture-hash
   - public-api-import-report
-passed_commit: null
-artifact_hashes: []
+passed_commit: 4175549ac76884e498258fd8d8656250769771ab
+artifact_hashes:
+  tests/fixtures/domain/target-decision-contracts-v1.json: sha256:e871629a26cb1fca0d72dd1561a71efd36ac6878f2dd5bd2e307982bb3aca9e7
+  build/acceptance/wp-02b-pytest.xml: sha256:8a47b0dc91700bb564ad31e360ff7b70851f2c1dd6b6f66e16c0575ba225ea59
+  build/acceptance/wp-02b-import-boundary-report.json: sha256:e413a2d4e64e81f92a85e26ba40e3736ed2d69a65ff10d033960fd20f4a8171e
 ```
 
-### WP-02B Readiness
+### WP-02B Acceptance
 
 已冻结 v1 Target/Decision 数据契约：
 
@@ -936,6 +939,20 @@ artifact_hashes: []
 6. `DecisionBatch` 数据契约要求非空、同一 Decision Time、每个 Sleeve 唯一；`decision_batch_id` 由调用方提供 canonical text，稳定派生属于 WP-04B；
 7. `ActivePortfolioTarget` 保存 materialization instant、source decision batch identity 和按 `InstrumentId` 绑定的 exact `Quantity`；typed InstrumentId 必须与既有 Quantity canonical string identity 一致，重复 Instrument 被拒绝；
 8. 本 WP 不拥有 Candidate→Validated 校验流程、Capital Allocation、Portfolio Risk、Position Sizing 或 DecisionBatch 构建算法。
+
+WP-02B 的实现已冻结在 immutable commit `4175549ac76884e498258fd8d8656250769771ab`，状态为 `PASSED`。
+
+验证记录：
+
+```text
+Target/Decision contract tests                                           7 passed
+Candidate/Validated golden fixtures                                      2 passed
+Public API + repository cleanliness boundaries                           5 passed
+Trading-domain import boundary                                           PASS (15 files)
+Full test suite                                                         126 passed
+mypy                                                                     no issues (13 files)
+Python                                                                   3.13.5
+```
 
 ## 15. PASSED 记录格式
 
