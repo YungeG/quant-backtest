@@ -239,7 +239,6 @@ _RequestT_contra = TypeVar(
 
 
 class _SimulationPort(Protocol):
-    @property
     @abstractmethod
     def spec(self) -> SimulationPortSpec:
         raise TypeError("Simulation port has no spec implementation")

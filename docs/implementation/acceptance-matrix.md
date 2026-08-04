@@ -4158,6 +4158,7 @@ public_interface:
   - crypto_quant_backtest.NextBarOpenFailureCode
   - crypto_quant_backtest.NextBarOpenFailure
   - crypto_quant_backtest.NextEligibleBarOpenModel
+  - crypto_quant_backtest.FullFillConstructionFailureCode
   - crypto_quant_backtest.FullFillConstructionFailure
   - crypto_quant_backtest.FullFillResult
   - crypto_quant_backtest.FullFillBuilder
