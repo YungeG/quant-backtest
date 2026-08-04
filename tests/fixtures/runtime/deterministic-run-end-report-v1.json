@@ -1,0 +1,27 @@
+{
+  "closeout_status": "positions_preserved",
+  "evidence_hash": "sha256:07d1c92bd070e9653e123f4e1435864817f29e3edf22aa236ab2d87008b4c092",
+  "fixture_id": "deterministic-run-end-report-v1",
+  "last_valuation_mark_ids": [
+    "sha256:16e3228fd261401afe2a7c2d2050975ed9c53bd7623f9a9523376d8c6f436698"
+  ],
+  "open_position_instruments": [
+    "synthetic:cash-asset-1"
+  ],
+  "outcome_hash": "sha256:460e558b5158a03b816c779da08b55f147ee11e373b3bf8d104903681765b477",
+  "pending_fee_basis_hashes": [
+    "sha256:bfcddfeca23e3a7c85e930441f0e40a31e4913622a8151957206c3d17dc89209"
+  ],
+  "pending_settlement_ids": [
+    "stl_aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+  ],
+  "policy_spec_hash": "sha256:28dc354de0195018541031a4da3289b8718f890cebd89afc3c604e6e6cd1c06d",
+  "released_reservation_hashes": [
+    "sha256:505717fdc6edbd4bc0f896cd0779ffcfde3b3b4a0fab8a5d43c33b297cbd7b71"
+  ],
+  "report_hash": "sha256:3494f85ff95bc678308f4b00bc19b31be6ae41ce23e757770b22168595137df5",
+  "report_id": "sha256:b4d92d78ace923a35dd3d6fe57cdad8809ab0ae6cd8301ced21e89a5f23f4744",
+  "terminated_order_ids": [
+    "ord_8888888888888888888888888888888888888888888888888888888888888888"
+  ]
+}
