@@ -1631,10 +1631,12 @@ Decision-grade 永久保存权威决策、执行、财务和完整性轨迹；�
 
 ```text
 runs/<semantic-run-id>/
-├── canonical/                         # immutable COMPLETED evidence
+├── canonical/                         # atomic、immutable COMPLETED publication
+│   ├── integrity.json
+│   ├── result.json
 │   └── canonical-attempt-ref.json
 └── attempts/
-    └── <attempt-id>/
+    └── <attempt-id>/                   # independently atomic、immutable Attempt evidence
 ```
 
 每个 Attempt 目录包含：

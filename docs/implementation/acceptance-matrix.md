@@ -107,7 +107,8 @@ artifact_hashes: []
 | WP-07B | PASSED | backtest-runtime | WP-07A | none |
 | WP-07C | PASSED | backtest-runtime | WP-07B | none |
 | WP-07D | PASSED | backtest-runtime | WP-07B–WP-07C | none |
-| WP-07E | DRAFT | backtest-runtime | WP-07C–WP-07D | Integrity/grade fixtures |
+| WP-07E | READY | backtest-runtime | WP-07C–WP-07D | none |
+| G07 | DRAFT | backtest-runtime integration | WP-07A–WP-07E | WP-07E must pass before aggregate execution |
 | G08A | DRAFT | trading-kernel profiles/cn_a_share | G07 | Calendar fixtures |
 | G08B | DRAFT | trading-kernel profiles/cn_a_share | G08A | T+1 fixtures |
 | G08C | DRAFT | trading-kernel profiles/cn_a_share | G08A | Lattice/odd-lot fixtures |
@@ -5073,7 +5074,146 @@ uv lock --check                                                     PASS
 Python                                                              3.13.5
 ```
 
-## 59. PASSED 记录格式
+## 59. WP-07E Integrity and Canonical Result Publication Acceptance Card
+
+```yaml
+id: WP-07E
+status: READY
+depends_on:
+  - WP-07C
+  - WP-07D
+owner_package: backtest-runtime
+public_interface:
+  - crypto_quant_backtest.IntegrityIssueSeverity
+  - crypto_quant_backtest.IntegrityIssueCode
+  - crypto_quant_backtest.IntegrityTraceLevel
+  - crypto_quant_backtest.ResultGrade
+  - crypto_quant_backtest.IntegrityIssue
+  - crypto_quant_backtest.IntegrityEvaluationContext
+  - crypto_quant_backtest.IntegrityReport
+  - crypto_quant_backtest.IntegrityEvaluator
+  - crypto_quant_backtest.CanonicalAttemptRef
+  - crypto_quant_backtest.CompletedBacktestResult
+  - crypto_quant_backtest.FinalizedCanonicalResult
+  - crypto_quant_backtest.CanonicalPublicationFailureCode
+  - crypto_quant_backtest.CanonicalPublicationFailure
+  - crypto_quant_backtest.CanonicalPublicationOutcome
+  - crypto_quant_backtest.CanonicalResultPublisher
+  - canonical integrity/report/result schemas v1
+  - static integrity and canonical publication golden fixture v1
+test_commands:
+  contract: uv run pytest -q tests/runtime/integrity/test_integrity_report.py
+  fixture: uv run pytest -q tests/runtime/integrity/test_integrity_report_golden.py
+  boundary: uv run pytest -q tests/architecture/test_public_api_imports.py tests/architecture/test_repository_cleanliness.py && uv run python tools/architecture/check_import_boundaries.py --root . --policy architecture/import-boundaries.toml --report build/acceptance/wp-07e-import-boundary-report.json
+fixture_ids:
+  - integrity-canonical-result-publication-v1
+expected_artifacts:
+  - tests/fixtures/runtime/integrity-canonical-result-publication-v1.json
+  - build/acceptance/wp-07e-pytest.xml
+  - build/acceptance/wp-07e-import-boundary-report.json
+failure_contracts:
+  - integrity-context-attempt-evidence-or-execution-hash-identity-mismatch
+  - execution-hash-mismatch-does-not-create-blocking-integrity-issue
+  - development-profile-build-or-environment-limitation-is-hidden
+  - summary-trace-market-bundle-retention-or-deterministic-rebuild-deficit-is-hidden
+  - decision-grade-published-with-development-profile-editable-build-summary-trace-unrebuildable-bundle-or-blocking-issue
+  - integrity-report-or-result-authorizes-deployment
+  - canonical-result-published-before-attempt-evidence-atomic-finalize
+  - blocked-failed-or-cancelled-attempt-is-converted-to-completed
+  - canonical-publication-overwrites-existing-result-or-mutates-attempt-evidence
+  - canonical-result-attempt-ref-integrity-or-source-hash-mismatch
+  - canonical-publication-failure-leaves-visible-final-result
+  - execution-hash-mismatch-is-published-as-completed-or-silently-selects-an-attempt
+  - publisher-accesses-network-wall-clock-cache-external-database-or-reruns-engine
+allowed_grade: development
+evidence:
+  - pytest-report
+  - static-integrity-publication-golden-hash
+  - blocking-versus-limitation-classification-evidence
+  - development-and-decision-grade-rule-evidence
+  - full-trace-and-summary-trace-grade-evidence
+  - finalized-attempt-and-execution-hash-binding-evidence
+  - execution-hash-mismatch-failed-publication-evidence
+  - atomic-canonical-directory-and-read-only-evidence
+  - completed-result-and-canonical-attempt-reference-hashes
+  - deployment-authorized-false-evidence
+  - public-api-import-report
+  - import-boundary-report
+  - static-type-report
+passed_commit: null
+artifact_hashes: []
+```
+
+### WP-07E Acceptance
+
+冻结以下实现边界：
+
+1. `IntegrityEvaluator` 只接受已经通过 WP-07C atomic finalize 的 `READY_FOR_INTEGRITY` Attempt、WP-07D `AttemptExecutionHash`/same-run check、Resolved Request/Environment 和显式 Trace/MarketBundle retention evidence；不重跑 Engine、不修改经济对象；
+2. `IntegrityIssue` 只使用稳定 code、blocking/limitation severity 和 canonical subject keys。Synthetic/development Profile、editable/unidentified Build、Environment limitation、summary trace、MarketBundle retention 和 deterministic rebuild 缺失不得隐藏；
+3. Development request 可以在没有 blocking issue 时得到 `ResultGrade.DEVELOPMENT`，但必须完整保留 limitation。Decision grade 只允许 immutable Build、decision-grade Profile、兼容 Environment、可取回 Bundle、`full_trace`/`microstructure_trace`、同一 Semantic Run 确定性一致且无 blocking issue；summary trace 永远不能 decision-grade；
+4. WP-07D `ExecutionHashMismatch` 必须成为 blocking issue，并在发布层确定性映射 `FAILED`；其他预期完整性 blocking issue 映射 `BLOCKED`。不得选择任一 Attempt 静默发布；
+5. `CompletedBacktestResult` 只有在 Attempt evidence 已存在、Execution hash 一致、Integrity 无 blocking issue 后才能构造；Outcome 固定 `COMPLETED`，`deployment_authorized=false`；BLOCKED/FAILED/CANCELLED Attempt 不进入该构造路径；
+6. Canonical publication 使用 caller-supplied local root，在独立 staging 目录写入当前版本 ArtifactEnvelope 的 `integrity.json`、`result.json` 和 `canonical-attempt-ref.json`，read-back 验证后原子 rename 为 `runs/<semantic_run_id>/canonical/`；不得修改只读 Attempt evidence；
+7. Canonical 目录和文件 finalize 后只读，已存在 destination 禁止覆盖。任一写入、验证、permission 或 rename 失败不得留下 final canonical Result，并返回结构化 FAILED publication；
+8. 本 WP 不实现 cache/concurrency dedup、promotion、Metrics、network、wall clock、外部数据库、真实交易或任何 deployment authorization。
+
+## 60. G07 Auditable Development Run Acceptance Card
+
+```yaml
+id: G07
+status: DRAFT
+depends_on:
+  - WP-07A
+  - WP-07B
+  - WP-07C
+  - WP-07D
+  - WP-07E
+owner_package: backtest-runtime integration
+public_interface:
+  - two-attempt synthetic Semantic Run through Resolver/Runner/Evidence/ExecutionHash/Integrity/Canonical publication
+  - exact Semantic Run/domain/execution hash parity with distinct Attempt and Evidence identities
+  - deterministic mismatch-to-FAILED path
+  - canonical COMPLETED development Result only after atomic Attempt Evidence and Integrity
+  - static G07 auditable run golden fixture v1
+test_commands:
+  contract: uv run pytest -q tests/runtime/integration/test_g07_auditable_run.py
+  fixture: uv run pytest -q tests/runtime/integration/test_g07_auditable_run_golden.py
+  boundary: uv run pytest -q tests/architecture/test_public_api_imports.py tests/architecture/test_repository_cleanliness.py && uv run python tools/architecture/check_import_boundaries.py --root . --policy architecture/import-boundaries.toml --report build/acceptance/g07-import-boundary-report.json
+fixture_ids:
+  - g07-auditable-synthetic-run-v1
+expected_artifacts:
+  - tests/fixtures/runtime/g07-auditable-synthetic-run-v1.json
+  - build/acceptance/g07-pytest.xml
+  - build/acceptance/g07-import-boundary-report.json
+failure_contracts:
+  - attempts-share-attempt-id-or-overwrite-evidence
+  - same-semantic-run-attempts-change-domain-id-or-execution-result-hash
+  - evidence-manifests-are-incomplete-identical-or-path-overlapping
+  - completed-result-exists-before-attempt-evidence-and-integrity
+  - synthetic-development-limitation-or-deployment-false-evidence-is-hidden
+  - execution-hash-mismatch-selects-winner-or-publishes-completed
+  - canonical-attempt-ref-result-integrity-or-evidence-binding-mismatch
+  - engine-runner-evidence-or-integrity-object-is-mutated-during-publication
+allowed_grade: development
+evidence:
+  - pytest-report
+  - static-g07-golden-hash
+  - two-attempt-semantic-domain-and-execution-hash-parity
+  - distinct-attempt-and-evidence-manifest-identities
+  - atomic-attempt-evidence-before-completed-publication
+  - development-integrity-limitations-and-result-grade
+  - deterministic-mismatch-failed-publication
+  - canonical-result-and-attempt-reference-hashes
+  - deployment-authorized-false-evidence
+  - import-boundary-report
+  - static-type-report
+passed_commit: null
+artifact_hashes: []
+```
+
+G07 在 WP-07E `PASSED` 前保持 `DRAFT`。
+
+## 61. PASSED 记录格式
 
 ```yaml
 id: WP-00A
