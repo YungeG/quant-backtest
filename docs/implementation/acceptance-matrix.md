@@ -102,7 +102,7 @@ artifact_hashes: []
 | WP-06F | PASSED | backtest-runtime | WP-03E, WP-05A–WP-05C, WP-06B, WP-06E | none |
 | WP-06G | PASSED | backtest-runtime | WP-06A–WP-06F | none |
 | WP-06H | PASSED | tests/support | WP-02F–WP-02G | none |
-| G06 | DRAFT | tests/support + backtest-runtime integration | WP-06A–WP-06H, G03–G05 | Aggregate card must be frozen |
+| G06 | READY | tests/support + backtest-runtime integration | WP-06A–WP-06H, G03–G05 | none |
 | WP-07A | DRAFT | backtest-runtime | G06 | Resolver/semantic ID fixtures |
 | WP-07B | DRAFT | backtest-runtime | WP-07A | Attempt/Outcome fixtures |
 | WP-07C | DRAFT | backtest-runtime | WP-07B | Evidence atomicity fixtures |
@@ -4564,7 +4564,91 @@ uv lock --check                                                   PASS
 Python                                                            3.13.5
 ```
 
-## 54. PASSED 记录格式
+## 54. G06 Engine Cash Happy Path Acceptance Card
+
+```yaml
+id: G06
+status: READY
+depends_on:
+  - G03
+  - G04
+  - G05
+  - WP-06A
+  - WP-06B
+  - WP-06C
+  - WP-06D
+  - WP-06E
+  - WP-06F
+  - WP-06G
+  - WP-06H
+owner_package: tests/support + backtest-runtime integration
+public_interface:
+  - tests.support.synthetic_market.build_synthetic_execution_case
+  - crypto_quant_backtest.DeterministicBarEngine.run
+  - development-only Deposit -> Target 50% -> next real Bar open -> Slippage -> Fill -> FeeAssessment -> Journal/Ledger -> Final Snapshot -> RunEnd journey
+  - exact repeat-run ExecutionTrace/Ledger/Snapshot/RunEnd parity
+  - explicit synthetic_market_profile limitation and development-only qualification
+  - no Semantic Run ID, Attempt ID, Run Outcome, COMPLETED Result, decision-grade claim, or deployment authorization
+test_commands:
+  contract: uv run pytest -q tests/runtime/engine/test_g06_synthetic_cash_journey.py
+  fixture: uv run pytest -q tests/runtime/engine/test_g06_synthetic_cash_golden.py
+  boundary: uv run pytest -q tests/architecture/test_public_api_imports.py tests/architecture/test_repository_cleanliness.py && uv run python tools/architecture/check_import_boundaries.py --root . --policy architecture/import-boundaries.toml --report build/acceptance/g06-import-boundary-report.json
+fixture_ids:
+  - g06-synthetic-cash-happy-path-v1
+expected_artifacts:
+  - tests/fixtures/runtime/g06-synthetic-cash-happy-path-v1.json
+  - build/acceptance/g06-pytest.xml
+  - build/acceptance/g06-import-boundary-report.json
+failure_contracts:
+  - synthetic-profile-not-loaded-through-explicit-development-opt-in
+  - synthetic-profile-limitation-or-grade-evidence-missing
+  - same-bar-or-non-real-bar-fill
+  - fill-reference-slippage-or-execution-price-lineage-mismatch
+  - target-order-fill-fee-journal-id-chain-broken
+  - journal-ledger-mark-or-currency-valuation-rebuild-does-not-match-final-snapshot
+  - run-end-report-inconsistent-with-working-order-position-or-pending-state
+  - repeat-run-trace-ledger-snapshot-or-run-end-hash-drift
+  - timeline-batch-size-changes-economic-or-trace-result
+  - engine-result-contains-semantic-run-id-attempt-id-run-outcome-or-completed-result
+  - synthetic-gate-claims-decision-grade-real-market-or-deployment-authorization
+  - test-generates-or-rewrites-static-golden
+allowed_grade: development
+evidence:
+  - pytest-report
+  - static-g06-golden-hash
+  - synthetic-profile-and-component-digests
+  - synthetic-market-profile-limitation
+  - execution-case-and-target-stream-digests
+  - execution-trace-hash
+  - fill-reference-slippage-execution-lineage
+  - journal-and-ledger-state-hashes
+  - final-portfolio-snapshot-hash
+  - run-end-report-hash
+  - repeat-run-and-batch-size-parity
+  - no-semantic-run-attempt-outcome-evidence
+  - deployment-authorized-false-evidence
+  - import-boundary-report
+  - static-type-report
+passed_commit: null
+artifact_hashes: []
+```
+
+### G06 Readiness
+
+冻结以下 Aggregate 边界：
+
+1. G06 只从 `TestProfileRegistry(allow_development_profiles=True)` 取得 `synthetic.cash.development.v1`，再由 WP-06H 固定 factory 构造 `ResolvedExecutionCase`；不允许直接拼装未注册 Profile 或在 Engine 中添加 Synthetic 分支；
+2. Journey 必须实际通过 WP-06G Engine Harness：Deposit → 50% Target → G04 materialization → G05 admission → 下一真实 eligible Bar Open → independent Slippage → Fill → final FeeAssessment/FeeCharged → immutable Journal/Ledger → supplied Mark/Valuation → Final Snapshot → mark-to-market RunEnd；
+3. Fill 的 Reference Price、signed Slippage amount 和 Execution Price 必须逐项核对；Target/Order/Fill/Fee/Journal IDs 与 trace evidence 保持完整链路；禁止 same-bar、gap placeholder、forward-fill 或未来 Bar 字段；
+4. Final Snapshot 必须与 immutable Journal/Ledger、Resolved Mark、CurrencyValuationGraph evidence 一致；RunEndReport 必须与 Working Orders、Open Positions、Reservation、pending Settlement/Fee 状态一致；
+5. 相同 Case 重复执行及 Timeline batch size 变化必须产生相同 case/trace/Ledger/Snapshot/RunEnd hashes；
+6. G06 仍是无 Run Outcome 的 Engine Gate。Result 对象和 canonical evidence 中不得出现 Semantic Run ID、Attempt ID、COMPLETED/BLOCKED/FAILED/CANCELLED；这些属于 G07；
+7. Gate Evidence 必须显式记录 `synthetic_market_profile`、`grade=development`、`decision_grade_eligible=false` 和 `deployment_authorized=false`。G06 不声称真实 A 股、Binance 或 decision-grade；
+8. Golden Artifact 是静态 committed 文件，测试不能现场重写 expected。
+
+G06 当前状态为 `READY`。
+
+## 55. PASSED 记录格式
 
 ```yaml
 id: WP-00A
