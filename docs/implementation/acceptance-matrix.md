@@ -101,8 +101,8 @@ artifact_hashes: []
 | WP-06E | PASSED | backtest-runtime | G05, WP-06A–WP-06D | none |
 | WP-06F | PASSED | backtest-runtime | WP-03E, WP-05A–WP-05C, WP-06B, WP-06E | none |
 | WP-06G | PASSED | backtest-runtime | WP-06A–WP-06F | none |
-| WP-06H | READY | tests/support | WP-02F–WP-02G | none |
-| G06 | DRAFT | tests/support + backtest-runtime integration | WP-06A–WP-06H, G03–G05 | WP-06H must pass first |
+| WP-06H | PASSED | tests/support | WP-02F–WP-02G | none |
+| G06 | DRAFT | tests/support + backtest-runtime integration | WP-06A–WP-06H, G03–G05 | Aggregate card must be frozen |
 | WP-07A | DRAFT | backtest-runtime | G06 | Resolver/semantic ID fixtures |
 | WP-07B | DRAFT | backtest-runtime | WP-07A | Attempt/Outcome fixtures |
 | WP-07C | DRAFT | backtest-runtime | WP-07B | Evidence atomicity fixtures |
@@ -4471,7 +4471,7 @@ Python                                                              3.13.5
 
 ```yaml
 id: WP-06H
-status: READY
+status: PASSED
 depends_on:
   - WP-02F
   - WP-02G
@@ -4526,11 +4526,14 @@ evidence:
   - public-api-import-report
   - import-boundary-report
   - static-type-report
-passed_commit: null
-artifact_hashes: []
+passed_commit: dc3d2f40a054cb3bed6ded35ede1cdbe5f097caf
+artifact_hashes:
+  tests/fixtures/support/synthetic-cash-development-profile-v1.json: sha256:85454b76b1706e11ef3a55f92dd2e3ca5972acf500074d6efffdc573a0fa8729
+  build/acceptance/wp-06h-pytest.xml: sha256:6894b7f5c34dc750d00addbe1135c0c4446d1cbb793dcd328555f78c2c5454c4
+  build/acceptance/wp-06h-import-boundary-report.json: sha256:84e7a5ee390aada767ce3c8e2d6eaa4e4d24296c455f698c2d9ece95b419eb9d
 ```
 
-### WP-06H Readiness
+### WP-06H Acceptance
 
 冻结以下实现边界：
 
@@ -4543,7 +4546,23 @@ artifact_hashes: []
 7. Golden Artifact 是手工审阅并提交的静态文件。测试只生成 ignored actual output 做比较，禁止写回 expected；
 8. 本 WP 不拥有 Semantic Run ID、Attempt、Run Outcome、Evidence writer/finalize、真实市场 Profile、供应商数据、Runtime 网络行为或任何真实订单能力。
 
-WP-06H 当前状态为 `READY`。
+WP-06H 的实现已冻结在 immutable commit `dc3d2f40a054cb3bed6ded35ede1cdbe5f097caf`，状态为 `PASSED`。
+
+验证记录：
+
+```text
+Synthetic profile contract tests                                  7 passed
+Canonical synthetic profile golden fixture                        1 passed
+Public API + repository cleanliness boundaries                    5 passed
+Acceptance test report                                           13 passed
+Import boundary                                                   PASS (49 files)
+Full test suite                                                  491 passed
+mypy                                                              no issues (3 files)
+Primary LSP                                                       clean
+pi-lens scoped review                                             no unresolved findings
+uv lock --check                                                   PASS
+Python                                                            3.13.5
+```
 
 ## 54. PASSED 记录格式
 
