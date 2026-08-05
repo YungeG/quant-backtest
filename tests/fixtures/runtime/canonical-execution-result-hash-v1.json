@@ -1,0 +1,99 @@
+{
+  "attempt_independence": {
+    "execution_hashes_equal": true,
+    "first_attempt_id": "attempt_e43ba4ac2bb95c4d4a31f5781b748183b6e2967959351257449d15a0b0972c8f",
+    "manifest_hashes_differ": true,
+    "second_attempt_id": "attempt_d31b8d7b146ce3d6fdf073e3ba1a036cbfd363dc2d30e2b426b254c0fd64c712"
+  },
+  "authoritative_mutation": {
+    "changed_execution_result_hash": "sha256:a84f7be06309363335d7f4c21344d3d9c314c287bc76f1b904ff6f0893abe2ed",
+    "hash_changed": true,
+    "mismatch": {
+      "attempts": [
+        {
+          "attempt_id": "attempt_94214beaaee08579194a7452187dff5f9b0edc4e49ac13ae3b40a970c5a7d88f",
+          "evidence_manifest_hash": "sha256:fb36d774832258ee16d963581840a842ccb452c0aabcdf963c9b88283176081a",
+          "execution_result_hash": "sha256:a84f7be06309363335d7f4c21344d3d9c314c287bc76f1b904ff6f0893abe2ed",
+          "semantic_run_id": "run_d247878ce79ea21aa16258494bbf718e99f5280cef619a443b572b6bad6badaf"
+        },
+        {
+          "attempt_id": "attempt_e43ba4ac2bb95c4d4a31f5781b748183b6e2967959351257449d15a0b0972c8f",
+          "evidence_manifest_hash": "sha256:d5000fc58becf3cad49310e72acc013354f382de1a0590d4c0023a550040c772",
+          "execution_result_hash": "sha256:4a3fdda125455bab87389be65794102559fa33e89736c13d1618903224717ae3",
+          "semantic_run_id": "run_d247878ce79ea21aa16258494bbf718e99f5280cef619a443b572b6bad6badaf"
+        }
+      ],
+      "schema_version": 1,
+      "semantic_run_id": "run_d247878ce79ea21aa16258494bbf718e99f5280cef619a443b572b6bad6badaf",
+      "type": "execution_hash_mismatch"
+    }
+  },
+  "canonical_summary_component_hashes": {
+    "allocations": [
+      "sha256:c34b3297f55bcb6ea2cd39f601219c4f243a92930a66900b774ca37af951a7c5"
+    ],
+    "approved_targets": [
+      "sha256:2995a7d4e21950b222211896ad927e76610f1b4d5e078ad3bc4e7e596334be83"
+    ],
+    "decision_batches": [
+      "sha256:43699c7592376ceee4222cafe7fa4f57005675ab1ade3ecab1315c29944b7cd9"
+    ],
+    "fee_assessments": [
+      "sha256:dccebe61ed07608224ffa59246d597295a50884a1b443e8fb7e9585f5eed88e2"
+    ],
+    "fills": [
+      "sha256:455339a97f5d9fdf83fd441f68e7a39adca5aafd6c5a2c10dbdd3799a0fd355e"
+    ],
+    "final_journal": "sha256:84f7a95fa7d0beca4d5abbe661dc0c85de03a635aa2bf85a956b2a50a47a4e9a",
+    "final_ledger_state": "sha256:c26b0b2af14db37b1d2d6f93148a636c687dff9906ff1e675c72677b967fa5b4",
+    "final_portfolio_snapshot": "sha256:17b397fdfd2c18dfa1ebd0c7a66cb43d06a7d3fabee7b81adb548b8da5b7472c",
+    "normalized_targets": [
+      "sha256:dcdb94e391c817225763c1576529ff3e92216268223ab9f031c3e47892392228"
+    ],
+    "order_plans": [
+      "sha256:477413dd957451c21f58d15c3ade237419174a0dbfa7e8777ef1cbc9858be907"
+    ],
+    "order_streams": [
+      "sha256:243668f6e74418d264dd973be0c7581ed8e452f5207c8a2e501c2da41ef6ab0f"
+    ],
+    "run_end_report": "sha256:f49636b7c22583ba478e29084223e6b379ac44d7ebd195573a69e8868296244c",
+    "slippage_decisions": [
+      "sha256:2a6cf649a17d4e080109a651694fa0a6e7748664a947ae64c79795d17ab1d73b"
+    ],
+    "trace": "sha256:42dc24c31f1ad8f47b3ae4761fba02687d3132f4f933f8379b8350b159bc74f6"
+  },
+  "consistent_attempts": {
+    "attempts": [
+      {
+        "attempt_id": "attempt_d31b8d7b146ce3d6fdf073e3ba1a036cbfd363dc2d30e2b426b254c0fd64c712",
+        "evidence_manifest_hash": "sha256:7dd66cb177faa186086e1734c275b1496ff9f8969cf61f537beb9a674e3d07ce",
+        "execution_result_hash": "sha256:4a3fdda125455bab87389be65794102559fa33e89736c13d1618903224717ae3",
+        "semantic_run_id": "run_d247878ce79ea21aa16258494bbf718e99f5280cef619a443b572b6bad6badaf"
+      },
+      {
+        "attempt_id": "attempt_e43ba4ac2bb95c4d4a31f5781b748183b6e2967959351257449d15a0b0972c8f",
+        "evidence_manifest_hash": "sha256:d5000fc58becf3cad49310e72acc013354f382de1a0590d4c0023a550040c772",
+        "execution_result_hash": "sha256:4a3fdda125455bab87389be65794102559fa33e89736c13d1618903224717ae3",
+        "semantic_run_id": "run_d247878ce79ea21aa16258494bbf718e99f5280cef619a443b572b6bad6badaf"
+      }
+    ],
+    "execution_result_hash": "sha256:4a3fdda125455bab87389be65794102559fa33e89736c13d1618903224717ae3",
+    "schema_version": 1,
+    "semantic_run_id": "run_d247878ce79ea21aa16258494bbf718e99f5280cef619a443b572b6bad6badaf",
+    "type": "execution_hash_consistency"
+  },
+  "deployment_authorized": false,
+  "excluded_from_execution_hash": [
+    "attempt_id",
+    "semantic_run_id",
+    "evidence_manifest_hash",
+    "evidence_relative_directory",
+    "logs",
+    "charts",
+    "derived_metrics",
+    "presentation"
+  ],
+  "execution_result_hash": "sha256:4a3fdda125455bab87389be65794102559fa33e89736c13d1618903224717ae3",
+  "no_integrity_or_completed_result": true,
+  "schema_version": 1
+}
