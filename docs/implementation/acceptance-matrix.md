@@ -100,7 +100,7 @@ artifact_hashes: []
 | WP-06D | PASSED | backtest-runtime | WP-02G, WP-03C | none |
 | WP-06E | PASSED | backtest-runtime | G05, WP-06A–WP-06D | none |
 | WP-06F | PASSED | backtest-runtime | WP-03E, WP-05A–WP-05C, WP-06B, WP-06E | none |
-| WP-06G | READY | backtest-runtime | WP-06A–WP-06F | none |
+| WP-06G | PASSED | backtest-runtime | WP-06A–WP-06F | none |
 | WP-06H | DRAFT | tests/support | WP-02F–WP-02G | Synthetic profile/golden artifacts |
 | WP-07A | DRAFT | backtest-runtime | G06 | Resolver/semantic ID fixtures |
 | WP-07B | DRAFT | backtest-runtime | WP-07A | Attempt/Outcome fixtures |
@@ -4353,7 +4353,7 @@ Python                                                             3.13.5
 
 ```yaml
 id: WP-06G
-status: READY
+status: PASSED
 depends_on:
   - WP-06A
   - WP-06B
@@ -4426,11 +4426,14 @@ evidence:
   - public-api-import-report
   - import-boundary-report
   - static-type-report
-passed_commit: null
-artifact_hashes: []
+passed_commit: 06bbaa36fc2143c241f125c18dd44880a3de6ab1
+artifact_hashes:
+  tests/fixtures/runtime/deterministic-engine-orchestration-v1.json: sha256:cb766f3a4f2dddc76cf9cb91cf003caddab6155c724d05670df362fdcda654bf
+  build/acceptance/wp-06g-pytest.xml: sha256:6d55d3ab8820f4126824fb4a305ae4c251a31eccb454ec3b69819469bc14895a
+  build/acceptance/wp-06g-import-boundary-report.json: sha256:84e7a5ee390aada767ce3c8e2d6eaa4e4d24296c455f698c2d9ece95b419eb9d
 ```
 
-### WP-06G Readiness
+### WP-06G Acceptance
 
 冻结以下实现边界：
 
@@ -4445,7 +4448,23 @@ artifact_hashes: []
 9. `InputValidationFailure`、`EngineFailure` 和显式 deterministic `EngineCancellation` 是 nominally distinct branches。Engine 不映射 BLOCKED/FAILED/CANCELLED，不重试，不读取 wall clock/网络，不创建 Result/Evidence 目录；
 10. 本 WP 不拥有 Synthetic Profile Registry、Semantic Run/Attempt、Run Outcome、Evidence publication/integrity、真实市场 Profile、partial fill/queue 或 derivatives accounting。
 
-WP-06G 当前状态为 `READY`。
+WP-06G 的实现已冻结在 immutable commit `06bbaa36fc2143c241f125c18dd44880a3de6ab1`，状态为 `PASSED`。
+
+验证记录：
+
+```text
+Engine orchestration contract tests                                 8 passed
+Canonical Engine golden fixture                                     1 passed
+Public API + repository cleanliness boundaries                      5 passed
+Acceptance test report                                             14 passed
+Backtest-runtime import boundary                                    PASS (49 files)
+Full test suite                                                    483 passed
+mypy                                                                no issues (11 files)
+Primary LSP                                                         clean
+pi-lens scoped review                                               no unresolved findings
+uv lock --check                                                     PASS
+Python                                                              3.13.5
+```
 
 ## 53. PASSED 记录格式
 
