@@ -1,0 +1,101 @@
+{
+  "blocked": {
+    "issue": {
+      "code": "target_input_decode",
+      "evidence_hashes": [
+        "sha256:10481954914e964232987def86cc3d052dc4b5a5ba38ded181128512b72f84b3"
+      ],
+      "source": "engine_failure",
+      "source_evidence": {
+        "case_hash": "sha256:b445b42147b77bd0b5d1d267a5f178d13f45f32d41cdc636eddc463ef0036690",
+        "code": "target_input_decode",
+        "evidence_hashes": [
+          "sha256:10481954914e964232987def86cc3d052dc4b5a5ba38ded181128512b72f84b3"
+        ],
+        "subject_keys": [
+          "target_input_decode"
+        ],
+        "termination": null,
+        "trace_hash": "sha256:e309c17136bd3860126a639df4ef71b84ba600e8445ad7c4b335fecf83420d74",
+        "type": "engine_failure"
+      },
+      "source_hash": "sha256:4f308dc0692922511ed6212f0f0766cd73e1a34dfe9e39515c65f93a19886b42",
+      "subject_keys": [
+        "target_input_decode"
+      ],
+      "type": "attempt_issue"
+    },
+    "record_hash": "sha256:196f55457b3b2d56952c9ac75c97c2155921ccfa18ef84a2e9277c6190a6dd6a",
+    "report_hash": "sha256:f903f2516f3774390e4a7bcbea40927bf279b04139fbfd68562d0abac2219a0f",
+    "status": "BLOCKED",
+    "terminal_outcome": "BLOCKED"
+  },
+  "cancelled": {
+    "cancellation_hash": "sha256:1644650033c4ccbb329d870570683d79c79717a6944edbf5b46d20c0ceffa429",
+    "record_hash": "sha256:5fae14f578c8d2e9f84eb7f6ab47e3aa0f19aac0409f6a9027cadc2fc11b0019",
+    "report_hash": "sha256:c13709bdade2a7bd31a32a20c752dd1bf61dcc983e4216d1451f7e7f028af012",
+    "status": "CANCELLED",
+    "terminal_outcome": "CANCELLED"
+  },
+  "engine_failure_mapping": {
+    "accounting_failure": "FAILED",
+    "allocation": "FAILED",
+    "capability_rejected": "BLOCKED",
+    "case_evidence_mismatch": "FAILED",
+    "decision_batch": "BLOCKED",
+    "execution_failure": "BLOCKED",
+    "fee_accounting_failure": "FAILED",
+    "fee_assessment_failure": "BLOCKED",
+    "fee_reservation": "BLOCKED",
+    "fill_construction": "FAILED",
+    "market_rule_data_failure": "BLOCKED",
+    "market_rule_rejected": "BLOCKED",
+    "missing_scheduled_event": "BLOCKED",
+    "order_plan_mismatch": "FAILED",
+    "portfolio_risk": "FAILED",
+    "position_sizing": "BLOCKED",
+    "pretrade_contract_failure": "FAILED",
+    "pretrade_rejected": "BLOCKED",
+    "rebalance": "FAILED",
+    "run_end_terminated": "BLOCKED",
+    "slippage_failure": "BLOCKED",
+    "snapshot_projection_failure": "BLOCKED",
+    "target_input_decode": "BLOCKED",
+    "target_validation": "BLOCKED",
+    "timeline_failure": "BLOCKED",
+    "translation_rejected": "BLOCKED"
+  },
+  "engine_result_hash": "sha256:87509b2dc808db465666d388d56bb5dd664516df31e143a4b839947092132a8e",
+  "first": {
+    "attempt": {
+      "attempt_id": "attempt_e43ba4ac2bb95c4d4a31f5781b748183b6e2967959351257449d15a0b0972c8f",
+      "ordinal": 1,
+      "parent_attempt_id": null,
+      "schema_version": 1,
+      "semantic_run_id": "run_d247878ce79ea21aa16258494bbf718e99f5280cef619a443b572b6bad6badaf",
+      "type": "attempt_identity"
+    },
+    "ready_hash": "sha256:830a74a06a920266674a2729968e34722260b65f1936930d5f816ea7f937138c",
+    "record_hash": "sha256:a4573ffe826902084d4f4aac925373eb46b1816f5631cdea0ea3361a3eff97f6",
+    "status": "READY_TO_FINALIZE",
+    "terminal_outcome": null
+  },
+  "precomputed_target_failure_outcome": "BLOCKED",
+  "retry": {
+    "attempt": {
+      "attempt_id": "attempt_d31b8d7b146ce3d6fdf073e3ba1a036cbfd363dc2d30e2b426b254c0fd64c712",
+      "ordinal": 2,
+      "parent_attempt_id": "attempt_e43ba4ac2bb95c4d4a31f5781b748183b6e2967959351257449d15a0b0972c8f",
+      "schema_version": 1,
+      "semantic_run_id": "run_d247878ce79ea21aa16258494bbf718e99f5280cef619a443b572b6bad6badaf",
+      "type": "attempt_identity"
+    },
+    "ready_hash": "sha256:abea94efa2990a81aa3f63b4280f1718c1220172e50ba35b67455d3fccf8107c",
+    "record_hash": "sha256:c7b8387fc54b0b993cdd98386fbef5d07e8028a64ba99e9114cd0aaf622a2990",
+    "status": "READY_TO_FINALIZE",
+    "terminal_outcome": null
+  },
+  "runtime_strategy_target_failure_outcome": "FAILED",
+  "schema_version": 1,
+  "semantic_run_id": "run_d247878ce79ea21aa16258494bbf718e99f5280cef619a443b572b6bad6badaf"
+}
