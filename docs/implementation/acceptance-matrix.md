@@ -106,7 +106,7 @@ artifact_hashes: []
 | WP-07A | PASSED | backtest-runtime | G06 | none |
 | WP-07B | PASSED | backtest-runtime | WP-07A | none |
 | WP-07C | PASSED | backtest-runtime | WP-07B | none |
-| WP-07D | READY | backtest-runtime | WP-07B–WP-07C | none |
+| WP-07D | PASSED | backtest-runtime | WP-07B–WP-07C | none |
 | WP-07E | DRAFT | backtest-runtime | WP-07C–WP-07D | Integrity/grade fixtures |
 | G08A | DRAFT | trading-kernel profiles/cn_a_share | G07 | Calendar fixtures |
 | G08B | DRAFT | trading-kernel profiles/cn_a_share | G08A | T+1 fixtures |
@@ -4985,7 +4985,7 @@ Python                                                              3.13.5
 
 ```yaml
 id: WP-07D
-status: READY
+status: PASSED
 depends_on:
   - WP-07B
   - WP-07C
@@ -5036,11 +5036,14 @@ evidence:
   - public-api-import-report
   - import-boundary-report
   - static-type-report
-passed_commit: null
-artifact_hashes: []
+passed_commit: a12821ebb38f9c5a69b2a64a566b7b35b6172268
+artifact_hashes:
+  tests/fixtures/runtime/canonical-execution-result-hash-v1.json: sha256:1fbcbb7950042f49985c45b1e54d523edd1ae425f07349777cbd103c79e40d14
+  build/acceptance/wp-07d-pytest.xml: sha256:7f0533edba958c8e500d52b3c9f87cf154a4f1399b2972abb4e517d50ff74da6
+  build/acceptance/wp-07d-import-boundary-report.json: sha256:e90779a66ff3ddf5728d538df19db62d9a43ff3b746e201dbb2176c5946a2180
 ```
 
-### WP-07D Readiness
+### WP-07D Acceptance
 
 冻结以下实现边界：
 
@@ -5052,7 +5055,23 @@ artifact_hashes: []
 6. 任一权威 Decision、Allocation、Risk、Target、Order/Event、Fill、Slippage、Fee、Journal、Ledger、Snapshot、RunEnd 或 Trace 变化必须改变 hash；仅 Attempt 或 Evidence path/Manifest 变化不得改变 hash；
 7. 本 WP 不实现 Integrity/ResultGrade、发布 `COMPLETED`、canonical Attempt ref、cache/dedup、Metrics、network、wall clock 或 deployment authorization。
 
-WP-07D 已满足依赖且 Acceptance Card 完整，状态为 `READY`。
+WP-07D 的实现已冻结在 immutable commit `a12821ebb38f9c5a69b2a64a566b7b35b6172268`，状态为 `PASSED`。
+
+验证记录：
+
+```text
+Execution result hash contract tests                                6 passed
+Canonical execution hash golden fixture                             1 passed
+Public API + repository cleanliness boundaries                      5 passed
+Acceptance test report                                             12 passed
+Backtest-runtime import boundary                                    PASS (53 files)
+Full test suite                                                    525 passed
+mypy                                                                no issues (4 files)
+Primary LSP                                                         clean
+pi-lens scoped/full review                                          no unresolved findings
+uv lock --check                                                     PASS
+Python                                                              3.13.5
+```
 
 ## 59. PASSED 记录格式
 
