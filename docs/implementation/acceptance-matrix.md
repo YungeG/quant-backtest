@@ -104,7 +104,7 @@ artifact_hashes: []
 | WP-06H | PASSED | tests/support | WP-02F–WP-02G | none |
 | G06 | PASSED | tests/support + backtest-runtime integration | WP-06A–WP-06H, G03–G05 | none |
 | WP-07A | PASSED | backtest-runtime | G06 | none |
-| WP-07A-R1 | READY | backtest-runtime | WP-07A, G06 | none |
+| WP-07A-R1 | PASSED | backtest-runtime | WP-07A, G06 | none |
 | WP-07B | PASSED | backtest-runtime | WP-07A | none |
 | WP-07C | PASSED | backtest-runtime | WP-07B | none |
 | WP-07D | PASSED | backtest-runtime | WP-07B–WP-07C | none |
@@ -5079,7 +5079,7 @@ Python                                                              3.13.5
 
 ```yaml
 id: WP-07A-R1
-status: READY
+status: PASSED
 depends_on:
   - WP-07A
   - G06
@@ -5134,8 +5134,11 @@ evidence:
   - public-api-import-report
   - import-boundary-report
   - static-type-report
-passed_commit: null
-artifact_hashes: []
+passed_commit: defe0785222910279120dbfa43e7b06e299b2c23
+artifact_hashes:
+  tests/fixtures/runtime/pre-id-execution-case-identity-v1.json: sha256:a252bace904d5a35cc504983b716a7e0710d51ca650ccf22665a76ef5f6a4aa8
+  build/acceptance/wp-07a-r1-pytest.xml: sha256:9eb204f1966aac623e9ec3030cbc3d2fe75edd5eb9a3ce880486362da99ebb39
+  build/acceptance/wp-07a-r1-import-boundary-report.json: sha256:928857fbb845ae3c7094edd4bac17c6610680de5e2b537cd2c566b881d00f599
 ```
 
 ### WP-07A-R1 Acceptance
@@ -5151,6 +5154,23 @@ artifact_hashes: []
 7. G07 路径必须通过 production `ExecutionCaseComposer`/`derive_domain_id()` 生成 Deposit/Fill/Fee Journal、Order、Fill、FeeAssessment 和模拟 OrderEvent identities。现有早期 Component Fixture 可保留显式 compatibility identity，但不得作为 G07 Auditable path；
 8. Compatibility path 必须显式命名；G07-facing Resolver/Runner fixtures 默认使用 derived identity。Cross-run relabel、wrong target digest、execution-policy/slippage/parent substitution、identity role/key/ordinal swap、missing Manifest、stateful builder 和 non-exact identity plan 必须在 Engine 调用前失败；
 9. 本修正不改变交易经济行为、Execution result、Profile、Bundle、Engine orchestration 或 Run Outcome；ID scrub 后完整 Engine result 必须与 compatibility baseline 一致，只打破身份循环并补充可审计 lineage。
+
+WP-07A-R1 的实现已冻结在 immutable commit `defe0785222910279120dbfa43e7b06e299b2c23`，状态为 `PASSED`。
+
+验证记录：
+
+```text
+Pre-ID identity contract tests                                      19 passed
+Static pre-ID identity golden fixture                                1 passed
+Public API + repository cleanliness boundaries                      5 passed
+Full test suite                                                    545 passed
+Backtest-runtime import boundary                                    PASS (54 files)
+mypy                                                                no issues (20 files)
+Primary LSP + pi-lens                                               clean
+Multi-agent blocker reviews                                         prior findings resolved
+uv lock --check                                                     PASS
+Python                                                              3.13.5
+```
 
 ## 60. WP-07E Integrity and Canonical Result Publication Acceptance Card
 
