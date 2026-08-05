@@ -109,7 +109,7 @@ artifact_hashes: []
 | WP-07C | PASSED | backtest-runtime | WP-07B | none |
 | WP-07D | PASSED | backtest-runtime | WP-07B–WP-07C | none |
 | WP-07E | PASSED | backtest-runtime | WP-07A-R1, WP-07C–WP-07D | none |
-| G07 | READY | backtest-runtime integration | WP-07A-R1, WP-07A–WP-07E | none |
+| G07 | PASSED | backtest-runtime integration | WP-07A-R1, WP-07A–WP-07E | none |
 | G08A | DRAFT | trading-kernel profiles/cn_a_share | G07 | Calendar fixtures |
 | G08B | DRAFT | trading-kernel profiles/cn_a_share | G08A | T+1 fixtures |
 | G08C | DRAFT | trading-kernel profiles/cn_a_share | G08A | Lattice/odd-lot fixtures |
@@ -5308,7 +5308,7 @@ Python                                                              3.13.5
 
 ```yaml
 id: G07
-status: READY
+status: PASSED
 depends_on:
   - WP-07A-R1
   - WP-07A
@@ -5355,11 +5355,43 @@ evidence:
   - deployment-authorized-false-evidence
   - import-boundary-report
   - static-type-report
-passed_commit: null
-artifact_hashes: []
+passed_commit: 63eff046fb847d10c5d91a8c45953217e865cd98
+artifact_hashes:
+  tests/fixtures/runtime/g07-auditable-synthetic-run-v1.json: sha256:550141a1a2795320a65b272bd54684d5a2948554fb0eb282b48413d1cdd7e3ec
+  build/acceptance/g07-pytest.xml: sha256:bc1d4d394632d04fd8a0c28d8981dfcfbbbe28c5ec38dec40bf472f4c9d5f307
+  build/acceptance/g07-import-boundary-report.json: sha256:31e5356f0766adb358334ffa4520d58fa71f8e210246d6624b3f1ada2d3e04a3
 ```
 
-WP-07E 已 `PASSED`；G07 的语义、依赖与失败契约均已冻结，现为 `READY`，可实施 aggregate integration。
+### G07 Acceptance
+
+冻结以下 aggregate integration 证据：
+
+1. 同一 Synthetic Semantic Run 通过 production `ProfileResolver`、`ExecutionCaseComposer` 和 `AuditableBacktestRunner` 执行两个独立 Attempt；recording delegate 证明 `DeterministicBarEngine` 对同一 immutable `ResolvedExecutionCase` 实际调用两次，不允许复制或重贴第一次结果冒充 retry；
+2. 两个 Attempt 的 Attempt ID、Evidence Manifest hash 和 final relative directory 各自独立且不覆盖；Evidence Writer 对两个只读目录分别通过 exact-coverage 验证，全部 Artifact path 集合互不相交；
+3. 两个 Attempt 的 Semantic Run ID、final ExecutionCase hash、Order/Fill/Fee/Journal Domain ID 全集和 canonical execution result hash 完全一致。Attempt/Evidence identity 不进入权威经济结果 hash；
+4. Canonical publication 前不存在 `canonical/`。Publisher 只在两个 finalized `READY_FOR_INTEGRITY` Evidence 和一致 execution hash 后发布 development-grade `COMPLETED`；canonical Attempt 固定为 ordinal 1，Result、Integrity、AttemptRef 与 Publication Manifest hash DAG exact-cover；
+5. Synthetic/development Profile、Environment、summary trace、Bundle retention 和 deterministic rebuild limitation 全部保留，`deployment_authorized=false`；发布前后 ExecutionCase、Resolved Request、AttemptConsistencySet、Engine result 和 Attempt Evidence bytes 不变；
+6. Canonical publication 封闭 Semantic Run 后，Runner 验证 canonical Artifact/hash chain 并返回 cache hit，Engine 调用数为零，完整 run tree 前后逐字节一致，且不产生第三 Attempt 目录；
+7. 人为改变第二次 production Runner outcome 的权威 Trace 后，两个 execution result hash 不同；Publisher 确定性原子发布 durable `FAILED` Integrity Evaluation，不选择 winner、不创建 `canonical/` 或 Completed Result，也不修改 Attempt Evidence；
+8. Static golden 同时冻结 completed 与 mismatch 路径的 Semantic/Domain/Attempt/Evidence/Execution/Integrity/Result identity，以及 canonical/evaluation 目录全部源文件 byte hash。
+
+G07 的 aggregate integration 已冻结在 immutable commit `63eff046fb847d10c5d91a8c45953217e865cd98`，状态为 `PASSED`。G00–G07 至此形成通用、可审计的 development-grade Bar Runtime 基线。
+
+验证记录：
+
+```text
+G07 auditable run contract tests                                  3 passed
+Static G07 auditable run golden fixture                           1 passed
+G07 acceptance JUnit report                                      4 passed
+Public API + repository cleanliness boundaries                   5 passed
+Full test suite                                                 600 passed
+Backtest-runtime import boundary                                 PASS (56 files)
+mypy                                                             no issues (18 files)
+Primary LSP + pi-lens                                            clean
+Multi-agent blocker reviews                                      no unresolved P0/P1
+uv lock --check                                                  PASS
+Python                                                           3.13.5
+```
 
 ## 62. PASSED 记录格式
 

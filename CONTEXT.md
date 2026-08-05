@@ -58,6 +58,10 @@ _Avoid_: final-case preimage, placeholder semantic hash
 
 一个已完成语义运行通过原子 finalize 发布的不可变权威证据集合。只有 COMPLETED 可以创建 `canonical/`；post-integrity BLOCKED/FAILED 使用独立 immutable Integrity Evaluation。
 
+## 可审计开发级运行（Auditable Development Run）
+
+G07 冻结的首条完整回测运行：同一 Synthetic Semantic Run 必须实际执行至少两个独立 Attempt，保持全部 Domain ID、ExecutionCase 和 execution result hash 一致，分别原子发布 Evidence，再经 Integrity 发布 development-grade `COMPLETED`；Mismatch 只能发布 durable `FAILED` Evaluation。它始终 `deployment_authorized=false`。
+
 ## 权威结果缓存命中（Canonical Result Cache Hit）
 
 Auditable Runner 在 run-level lock 内验证已发布只读 `canonical/` Artifact、Manifest exact coverage 和 Result hash chain 后返回的 `COMPLETED` 复用结果。它不创建新 Attempt、不写 Evidence，也不重跑 Engine；缺少 publication root 时 Runner fail closed。
