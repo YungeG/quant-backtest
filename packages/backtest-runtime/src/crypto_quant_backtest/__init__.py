@@ -1,5 +1,6 @@
 """Deterministic historical backtest runtime."""
 
+from .composition import ExecutionCaseComposer
 from .engine import (
     CashFillAccountingPlan,
     DeterministicBarEngine,
@@ -10,6 +11,11 @@ from .engine import (
     EngineFailure,
     EngineFailureCode,
     EngineStage,
+    ExecutionCaseIdentityBinding,
+    ExecutionCaseIdentityFactory,
+    ExecutionCaseIdentityManifest,
+    ExecutionCaseIdentityRule,
+    ExecutionCaseSemanticSpec,
     ExecutionTrace,
     ExecutionTraceEntry,
     OrderEventPlan,
@@ -223,6 +229,12 @@ __all__ = [
     "EngineFailure",
     "EngineFailureCode",
     "EngineStage",
+    "ExecutionCaseComposer",
+    "ExecutionCaseIdentityBinding",
+    "ExecutionCaseIdentityFactory",
+    "ExecutionCaseIdentityManifest",
+    "ExecutionCaseIdentityRule",
+    "ExecutionCaseSemanticSpec",
     "EngineTermination",
     "EngineTerminationCode",
     "EvidenceArtifactEntry",

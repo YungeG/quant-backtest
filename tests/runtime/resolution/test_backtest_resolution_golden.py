@@ -25,7 +25,7 @@ ROOT = Path(__file__).resolve().parents[3]
 GOLDEN = ROOT / "tests/fixtures/runtime/backtest-request-profile-resolution-v1.json"
 
 
-def test_backtest_request_profile_resolution_matches_canonical_golden() -> None:
+def build_actual() -> dict[str, object]:
     resolver = ProfileResolver()
     bundle = bundle_manifest()
     build = build_manifest()
@@ -81,7 +81,7 @@ def test_backtest_request_profile_resolution_matches_canonical_golden() -> None:
         build_artifact_manifest=editable_build,
     )
 
-    actual = json.loads(
+    return json.loads(
         canonical_bytes(
             {
                 "fixture_id": "backtest-request-profile-resolution-v1",
@@ -94,5 +94,8 @@ def test_backtest_request_profile_resolution_matches_canonical_golden() -> None:
             }
         )
     )
+
+
+def test_backtest_request_profile_resolution_matches_canonical_golden() -> None:
     expected = json.loads(GOLDEN.read_text(encoding="utf-8"))
-    assert actual == expected
+    assert build_actual() == expected

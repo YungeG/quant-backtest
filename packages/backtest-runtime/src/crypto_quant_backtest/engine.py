@@ -5,6 +5,7 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 from enum import Enum
 from typing import Any, cast
+import unicodedata
 
 from crypto_quant_domain import (
     CashBalanceKey,
@@ -13,6 +14,7 @@ from crypto_quant_domain import (
     DomainId,
     DomainIdKind,
     FeeAssessment,
+    IdentityNamespace,
     Fill,
     Order,
     OrderEvent,
@@ -28,6 +30,7 @@ from crypto_quant_domain import (
     UtcInstant,
     canonical_bytes,
     canonical_sha256,
+    derive_domain_id,
 )
 from crypto_quant_market_data import InputValidationFailure
 from crypto_quant_trading import (
@@ -146,7 +149,12 @@ _REQUIRED_ADMISSION_EVENTS = (
 
 
 def _text(name: str, value: str) -> str:
-    if not isinstance(value, str) or not value or value != value.strip():
+    if (
+        not isinstance(value, str)
+        or not value
+        or value != value.strip()
+        or unicodedata.normalize("NFC", value) != value
+    ):
         raise ValueError(f"{name} must be nonempty canonical text")
     value.encode("utf-8")
     return value
@@ -161,6 +169,14 @@ def _hash(name: str, value: str) -> str:
     ):
         raise ValueError(f"{name} must be canonical sha256 digest")
     return value
+
+
+def _namespace_dict(value: IdentityNamespace) -> dict[str, str]:
+    return {
+        "algorithm": value.algorithm,
+        "value": value.value,
+        "version": value.version,
+    }
 
 
 def _domain_id(name: str, value: DomainId, kind: DomainIdKind) -> DomainId:
@@ -662,9 +678,326 @@ class SnapshotProjectionPlan:
 
 
 @dataclass(frozen=True, slots=True)
+class ExecutionCaseIdentityRule:
+    binding_key: str
+    semantic_key: str
+    ordinal: int
+    domain_kind: DomainIdKind | None = None
+
+    def __post_init__(self) -> None:
+        _text("binding_key", self.binding_key)
+        _text("semantic_key", self.semantic_key)
+        if isinstance(self.ordinal, bool) or not isinstance(self.ordinal, int):
+            raise TypeError("ordinal must be integer")
+        if self.ordinal < 0:
+            raise ValueError("ordinal must be nonnegative")
+        if self.domain_kind is not None and not isinstance(
+            self.domain_kind, DomainIdKind
+        ):
+            raise TypeError("domain_kind must be DomainIdKind or None")
+
+    def to_canonical_dict(self) -> dict[str, object]:
+        return {
+            "binding_key": self.binding_key,
+            "identity_type": "domain_id" if self.domain_kind is not None else "event_id",
+            "domain_kind": (
+                self.domain_kind.value if self.domain_kind is not None else None
+            ),
+            "semantic_key": self.semantic_key,
+            "ordinal": self.ordinal,
+        }
+
+
+@dataclass(frozen=True, slots=True)
+class ExecutionCaseSemanticSpec:
+    schema_version: int
+    spec_key: str
+    spec_version: int
+    case_key: str
+    case_version: int
+    identity_namespace: IdentityNamespace
+    identity_plan: tuple[ExecutionCaseIdentityRule, ...]
+    timeline_semantic_hash: str
+    target_stream_digest: str
+    decision_inputs_hash: str
+    execution_inputs_hash: str
+    financial_inputs_hash: str
+    snapshot_inputs_hash: str
+    run_end_inputs_hash: str
+
+    def __post_init__(self) -> None:
+        if type(self.schema_version) is not int or self.schema_version != 1:
+            raise ValueError("ExecutionCaseSemanticSpec schema_version must be 1")
+        _text("spec_key", self.spec_key)
+        _text("case_key", self.case_key)
+        for name in ("spec_version", "case_version"):
+            value = getattr(self, name)
+            if isinstance(value, bool) or not isinstance(value, int) or value <= 0:
+                raise ValueError(f"{name} must be positive integer")
+        if not isinstance(self.identity_namespace, IdentityNamespace):
+            raise TypeError("identity_namespace must be IdentityNamespace")
+        if not isinstance(self.identity_plan, tuple) or not self.identity_plan:
+            raise ValueError("identity_plan must be a nonempty tuple")
+        if not all(
+            isinstance(value, ExecutionCaseIdentityRule)
+            for value in self.identity_plan
+        ):
+            raise TypeError("identity_plan must contain ExecutionCaseIdentityRule")
+        ordered_plan = tuple(
+            sorted(self.identity_plan, key=lambda value: value.binding_key)
+        )
+        if len({value.binding_key for value in ordered_plan}) != len(ordered_plan):
+            raise ValueError("identity_plan binding keys must be unique")
+        domain_coordinates = tuple(
+            (value.domain_kind, value.semantic_key, value.ordinal)
+            for value in ordered_plan
+            if value.domain_kind is not None
+        )
+        if len(set(domain_coordinates)) != len(domain_coordinates):
+            raise ValueError("Domain ID identity_plan coordinates must be unique")
+        object.__setattr__(self, "identity_plan", ordered_plan)
+        for name in (
+            "timeline_semantic_hash",
+            "target_stream_digest",
+            "decision_inputs_hash",
+            "execution_inputs_hash",
+            "financial_inputs_hash",
+            "snapshot_inputs_hash",
+            "run_end_inputs_hash",
+        ):
+            _hash(name, getattr(self, name))
+
+    @property
+    def semantic_spec_hash(self) -> str:
+        return canonical_sha256(self)
+
+    def to_canonical_dict(self) -> dict[str, object]:
+        return {
+            "type": "execution_case_semantic_spec",
+            "schema_version": self.schema_version,
+            "spec_key": self.spec_key,
+            "spec_version": self.spec_version,
+            "case_key": self.case_key,
+            "case_version": self.case_version,
+            "identity_namespace": _namespace_dict(self.identity_namespace),
+            "identity_plan": self.identity_plan,
+            "timeline_semantic_hash": self.timeline_semantic_hash,
+            "target_stream_digest": self.target_stream_digest,
+            "decision_inputs_hash": self.decision_inputs_hash,
+            "execution_inputs_hash": self.execution_inputs_hash,
+            "financial_inputs_hash": self.financial_inputs_hash,
+            "snapshot_inputs_hash": self.snapshot_inputs_hash,
+            "run_end_inputs_hash": self.run_end_inputs_hash,
+        }
+
+
+def _derive_event_id(
+    *,
+    namespace: IdentityNamespace,
+    semantic_run_id: str,
+    binding_key: str,
+    semantic_key: str,
+    ordinal: int,
+) -> str:
+    digest = canonical_sha256(
+        {
+            "type": "execution_case_event_identity_v1",
+            "namespace": _namespace_dict(namespace),
+            "semantic_run_id": semantic_run_id,
+            "binding_key": binding_key,
+            "semantic_key": semantic_key,
+            "ordinal": ordinal,
+        }
+    )
+    return f"evt_{digest.removeprefix('sha256:')}"
+
+
+@dataclass(frozen=True, slots=True)
+class ExecutionCaseIdentityBinding:
+    binding_key: str
+    semantic_key: str
+    ordinal: int
+    value: str
+    domain_kind: DomainIdKind | None = None
+
+    def __post_init__(self) -> None:
+        _text("binding_key", self.binding_key)
+        _text("semantic_key", self.semantic_key)
+        if isinstance(self.ordinal, bool) or not isinstance(self.ordinal, int):
+            raise TypeError("ordinal must be integer")
+        if self.ordinal < 0:
+            raise ValueError("ordinal must be nonnegative")
+        _text("value", self.value)
+        if self.domain_kind is not None and not isinstance(
+            self.domain_kind, DomainIdKind
+        ):
+            raise TypeError("domain_kind must be DomainIdKind or None")
+
+    def to_canonical_dict(self) -> dict[str, object]:
+        return {
+            "binding_key": self.binding_key,
+            "identity_type": "domain_id" if self.domain_kind is not None else "event_id",
+            "domain_kind": (
+                self.domain_kind.value if self.domain_kind is not None else None
+            ),
+            "semantic_key": self.semantic_key,
+            "ordinal": self.ordinal,
+            "value": self.value,
+        }
+
+
+@dataclass(frozen=True, slots=True)
+class ExecutionCaseIdentityManifest:
+    semantic_run_id: str
+    namespace: IdentityNamespace
+    bindings: tuple[ExecutionCaseIdentityBinding, ...]
+
+    def __post_init__(self) -> None:
+        _text("semantic_run_id", self.semantic_run_id)
+        if not isinstance(self.namespace, IdentityNamespace):
+            raise TypeError("namespace must be IdentityNamespace")
+        if not isinstance(self.bindings, tuple) or not self.bindings:
+            raise ValueError("bindings must be a nonempty tuple")
+        if not all(
+            isinstance(value, ExecutionCaseIdentityBinding) for value in self.bindings
+        ):
+            raise TypeError("bindings must contain ExecutionCaseIdentityBinding")
+        ordered = tuple(sorted(self.bindings, key=lambda value: value.binding_key))
+        if len({value.binding_key for value in ordered}) != len(ordered):
+            raise ValueError("identity binding keys must be unique")
+        if len({value.value for value in ordered}) != len(ordered):
+            raise ValueError("identity binding values must be unique")
+        for binding in ordered:
+            if binding.domain_kind is not None:
+                expected = derive_domain_id(
+                    namespace=self.namespace,
+                    kind=binding.domain_kind,
+                    semantic_run_id=self.semantic_run_id,
+                    semantic_key=binding.semantic_key.encode("utf-8"),
+                    ordinal=binding.ordinal,
+                ).value
+            else:
+                expected = _derive_event_id(
+                    namespace=self.namespace,
+                    semantic_run_id=self.semantic_run_id,
+                    binding_key=binding.binding_key,
+                    semantic_key=binding.semantic_key,
+                    ordinal=binding.ordinal,
+                )
+            if binding.value != expected:
+                raise ValueError(f"identity binding mismatch: {binding.binding_key}")
+        object.__setattr__(self, "bindings", ordered)
+
+    @property
+    def manifest_hash(self) -> str:
+        return canonical_sha256(self)
+
+    def to_canonical_dict(self) -> dict[str, object]:
+        return {
+            "type": "execution_case_identity_manifest",
+            "schema_version": 1,
+            "semantic_run_id": self.semantic_run_id,
+            "namespace": _namespace_dict(self.namespace),
+            "bindings": self.bindings,
+        }
+
+
+class ExecutionCaseIdentityFactory:
+    def __init__(
+        self,
+        *,
+        semantic_run_id: str,
+        namespace: IdentityNamespace,
+        identity_plan: tuple[ExecutionCaseIdentityRule, ...],
+    ) -> None:
+        _text("semantic_run_id", semantic_run_id)
+        if not isinstance(namespace, IdentityNamespace):
+            raise TypeError("namespace must be IdentityNamespace")
+        if not isinstance(identity_plan, tuple) or not identity_plan:
+            raise ValueError("identity_plan must be a nonempty tuple")
+        if not all(
+            isinstance(value, ExecutionCaseIdentityRule) for value in identity_plan
+        ):
+            raise TypeError("identity_plan must contain ExecutionCaseIdentityRule")
+        rules = {value.binding_key: value for value in identity_plan}
+        if len(rules) != len(identity_plan):
+            raise ValueError("identity_plan binding keys must be unique")
+        domain_coordinates = tuple(
+            (value.domain_kind, value.semantic_key, value.ordinal)
+            for value in identity_plan
+            if value.domain_kind is not None
+        )
+        if len(set(domain_coordinates)) != len(domain_coordinates):
+            raise ValueError("Domain ID identity_plan coordinates must be unique")
+        self._semantic_run_id = semantic_run_id
+        self._namespace = namespace
+        self._rules = rules
+        self._bindings: dict[str, ExecutionCaseIdentityBinding] = {}
+
+    def domain_id(self, binding_key: str) -> DomainId:
+        rule = self._rule(binding_key)
+        if rule.domain_kind is None:
+            raise ValueError(f"identity rule is not a Domain ID: {binding_key}")
+        identity = derive_domain_id(
+            namespace=self._namespace,
+            kind=rule.domain_kind,
+            semantic_run_id=self._semantic_run_id,
+            semantic_key=rule.semantic_key.encode("utf-8"),
+            ordinal=rule.ordinal,
+        )
+        self._record(rule, identity.value)
+        return identity
+
+    def event_id(self, binding_key: str) -> str:
+        rule = self._rule(binding_key)
+        if rule.domain_kind is not None:
+            raise ValueError(f"identity rule is not an Event ID: {binding_key}")
+        value = _derive_event_id(
+            namespace=self._namespace,
+            semantic_run_id=self._semantic_run_id,
+            binding_key=rule.binding_key,
+            semantic_key=rule.semantic_key,
+            ordinal=rule.ordinal,
+        )
+        self._record(rule, value)
+        return value
+
+    def manifest(self) -> ExecutionCaseIdentityManifest:
+        if set(self._bindings) != set(self._rules):
+            missing = sorted(set(self._rules) - set(self._bindings))
+            raise ValueError(f"identity_plan was not exact-covered: {missing}")
+        return ExecutionCaseIdentityManifest(
+            semantic_run_id=self._semantic_run_id,
+            namespace=self._namespace,
+            bindings=tuple(self._bindings.values()),
+        )
+
+    def _rule(self, binding_key: str) -> ExecutionCaseIdentityRule:
+        _text("binding_key", binding_key)
+        try:
+            return self._rules[binding_key]
+        except KeyError as error:
+            raise ValueError(f"unknown identity binding key: {binding_key}") from error
+
+    def _record(self, rule: ExecutionCaseIdentityRule, value: str) -> None:
+        binding = ExecutionCaseIdentityBinding(
+            binding_key=rule.binding_key,
+            semantic_key=rule.semantic_key,
+            ordinal=rule.ordinal,
+            value=value,
+            domain_kind=rule.domain_kind,
+        )
+        existing = self._bindings.get(rule.binding_key)
+        if existing is not None and existing != binding:
+            raise ValueError(f"identity binding key reused: {rule.binding_key}")
+        self._bindings[rule.binding_key] = binding
+
+
+@dataclass(frozen=True, slots=True)
 class ResolvedExecutionCase:
     case_key: str
     case_version: int
+    semantic_spec_hash: str
     timeline: DeterministicTimeline
     timeline_batch_size: int
     target_stream: PrecomputedTargetStream
@@ -676,6 +1009,8 @@ class ResolvedExecutionCase:
     closeout_policy: CloseoutPolicy[
         RunEndCloseoutRequest, RunEndCloseoutDecision, RunEndCloseoutFailure
     ]
+    identity_manifest: ExecutionCaseIdentityManifest | None = None
+    semantic_spec: ExecutionCaseSemanticSpec | None = None
 
     def __post_init__(self) -> None:
         _text("case_key", self.case_key)
@@ -685,6 +1020,7 @@ class ResolvedExecutionCase:
             or self.case_version <= 0
         ):
             raise ValueError("case_version must be positive integer")
+        _hash("semantic_spec_hash", self.semantic_spec_hash)
         if not isinstance(self.timeline, DeterministicTimeline):
             raise TypeError("timeline must be DeterministicTimeline")
         if (
@@ -713,6 +1049,23 @@ class ResolvedExecutionCase:
             getattr(self.closeout_policy, "resolve_closeout", None)
         ):
             raise TypeError("closeout_policy must satisfy CloseoutPolicy")
+        if self.identity_manifest is not None and not isinstance(
+            self.identity_manifest, ExecutionCaseIdentityManifest
+        ):
+            raise TypeError(
+                "identity_manifest must be ExecutionCaseIdentityManifest or None"
+            )
+        if self.semantic_spec is not None and not isinstance(
+            self.semantic_spec, ExecutionCaseSemanticSpec
+        ):
+            raise TypeError(
+                "semantic_spec must be ExecutionCaseSemanticSpec or None"
+            )
+        if (
+            self.semantic_spec is not None
+            and self.semantic_spec.semantic_spec_hash != self.semantic_spec_hash
+        ):
+            raise ValueError("semantic_spec does not match semantic_spec_hash")
         if self.snapshot_plan.timestamp != self.timeline.window.end_exclusive:
             raise ValueError("Snapshot plan timestamp must equal Timeline end_exclusive")
         cycle_times = tuple(value.schedule.decision_time for value in self.decision_cycles)
@@ -748,8 +1101,84 @@ class ResolvedExecutionCase:
     def case_hash(self) -> str:
         return canonical_sha256(self)
 
+    def verify_identity_manifest(self, semantic_run_id: str) -> bool:
+        manifest = self.identity_manifest
+        spec = self.semantic_spec
+        if (
+            manifest is None
+            or spec is None
+            or manifest.semantic_run_id != semantic_run_id
+            or spec.semantic_spec_hash != self.semantic_spec_hash
+        ):
+            return False
+        actual_plan = {
+            binding.binding_key: (
+                binding.semantic_key,
+                binding.ordinal,
+                binding.domain_kind,
+            )
+            for binding in manifest.bindings
+        }
+        expected_plan = {
+            rule.binding_key: (
+                rule.semantic_key,
+                rule.ordinal,
+                rule.domain_kind,
+            )
+            for rule in spec.identity_plan
+        }
+        if actual_plan != expected_plan:
+            return False
+        actual = {
+            binding.binding_key: (binding.value, binding.domain_kind)
+            for binding in manifest.bindings
+        }
+        return actual == self._expected_identity_bindings()
+
+    def _expected_identity_bindings(
+        self,
+    ) -> dict[str, tuple[str, DomainIdKind | None]]:
+        expected: dict[str, tuple[str, DomainIdKind | None]] = {}
+        for index, entry in enumerate(self.financial_state.journal.entries):
+            expected[f"journal.initial.{index}"] = (
+                entry.journal_entry_id.value,
+                DomainIdKind.JOURNAL,
+            )
+        for cycle_index, cycle in enumerate(self.decision_cycles):
+            for admission_index, admission in enumerate(cycle.admissions):
+                expected[f"order.{cycle_index}.{admission_index}"] = (
+                    admission.order.order_id.value,
+                    DomainIdKind.ORDER,
+                )
+                for event_index, event in enumerate(admission.event_plan):
+                    expected[
+                        f"order-event.{cycle_index}.{admission_index}.{event_index}"
+                    ] = (event.event_id, None)
+        for bar_index, execution in enumerate(self.bar_executions):
+            expected[f"fill.{bar_index}"] = (
+                execution.fill_id.value,
+                DomainIdKind.FILL,
+            )
+            expected[f"journal.fill.{bar_index}"] = (
+                execution.accounting_plan.fill_journal_entry_id.value,
+                DomainIdKind.JOURNAL,
+            )
+            expected[f"fee.{bar_index}"] = (
+                execution.accounting_plan.fee_assessment_id.value,
+                DomainIdKind.FEE,
+            )
+            expected[f"journal.fee.{bar_index}"] = (
+                execution.accounting_plan.fee_journal_entry_id.value,
+                DomainIdKind.JOURNAL,
+            )
+            expected[f"order-event.fill.{bar_index}"] = (
+                execution.fill_event_id,
+                None,
+            )
+        return expected
+
     def to_canonical_dict(self) -> dict[str, object]:
-        return {
+        payload: dict[str, object] = {
             "type": "resolved_execution_case",
             "schema_version": 1,
             "case_key": self.case_key,
@@ -769,6 +1198,10 @@ class ResolvedExecutionCase:
             "snapshot_plan": self.snapshot_plan,
             "closeout_policy_spec": self.closeout_policy.spec(),
         }
+        if self.identity_manifest is not None:
+            payload["semantic_spec_hash"] = self.semantic_spec_hash
+            payload["identity_manifest_hash"] = self.identity_manifest.manifest_hash
+        return payload
 
 
 class EngineStage(str, Enum):

@@ -1116,9 +1116,10 @@ Deposit
 验收：
 
 - Semantic Run ID preimage 只包含 ID-free Spec，不包含 final Case hash 或派生领域 ID；
-- Runner 校验 Request spec hash 与 `ResolvedExecutionCase.semantic_spec_hash`，final case hash 单独进入 Attempt/Engine evidence；
+- Spec exact-cover 全部行为相关 typed inputs，并冻结 role → identity type/Domain kind/semantic key/ordinal 的 identity plan；Factory 只能按 role 派生，builder 不能替换 key 或 ordinal；
+- Composer 与 Runner 都从最终 Case 重算 ID-free Spec，校验 Request/Spec/Case、Slippage 完整配置、Order parent→NormalizedTarget 关系、Manifest derivation plan 和 role exact coverage；
 - G07 使用 production `derive_domain_id()`，两个 Attempt 的领域 ID 和 final case hash 完全一致；
-- Spec 改变会改变 Semantic Run ID；Attempt/hostname/path/time 不进入；
+- Spec、identity plan 或行为配置改变会改变 Semantic Run ID；Attempt/hostname/path/time 不进入；
 - 身份修正不得改变 Engine 的经济行为。
 
 ### WP-07B Auditable runner 与 Outcome mapping

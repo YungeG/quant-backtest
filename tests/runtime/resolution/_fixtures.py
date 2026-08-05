@@ -21,6 +21,7 @@ from crypto_quant_backtest import (
 from crypto_quant_domain import CurrencyId, UtcInstant, canonical_sha256
 from crypto_quant_market_data import MarketBundleCapability, MarketBundleManifest, MarketBundleRef
 from crypto_quant_trading import ProfileComponentRef
+from tests.runtime.engine._fixtures import SyntheticExecutionCaseBuilder
 from tests.support.synthetic_market import (
     SYNTHETIC_PROFILE_KEY,
     SyntheticCashDevelopmentProfile,
@@ -223,6 +224,9 @@ def request(
 ) -> BacktestRequest:
     profile = development_profile()
     case = build_synthetic_execution_case(profile, timeline_batch_size=1)
+    spec = SyntheticExecutionCaseBuilder().semantic_spec()
+    if target_stream_digest is not None:
+        spec = replace(spec, target_stream_digest=target_stream_digest)
     selected_build = manifest or build_manifest()
     selected_bundle = bundle or bundle_manifest()
     return BacktestRequest(
@@ -235,9 +239,8 @@ def request(
         execution_account_id=profile.execution_account.account_id,
         reporting_currency=USD,
         market_bundle_ref=MarketBundleRef.from_manifest(selected_bundle),
-        target_stream_digest=target_stream_digest
-        or build_synthetic_target_stream(profile).target_stream_digest,
-        execution_case_semantic_hash=case.case_hash,
+        target_stream_digest=spec.target_stream_digest,
+        execution_case_semantic_hash=spec.semantic_spec_hash,
         master_random_seed=7,
         build_artifact_manifest_hash=selected_build.manifest_hash,
         strategy_family=StrategyFamily.PRECOMPUTED_TARGET,

@@ -1766,8 +1766,10 @@ semantic_run_id = hash(
 - 已有 Completed canonical result 时，Runner 可以返回 cache hit，或创建新 Attempt 做 parity verification。
 - 并发相同 semantic run ID 必须 lock 或 deduplicate。
 - 同一 Semantic Run 的两个 Completed Attempt 若 execution result hash 不同，产生确定性 `FAILED`，不得选择其中一个静默覆盖。
-- `ExecutionCaseSemanticSpec` 必须在领域 ID 派生前冻结，且不得包含 Order、OrderEvent、Fill、FeeAssessment、SettlementObligation、JournalEntry 等派生 ID 或 final ExecutionCase hash。
-- Composition root 先由 ID-free Spec 生成 Semantic Run ID，再用 semantic run namespace、causation 和稳定 ordinal 确定性派生领域 ID，最后构造完整 `ResolvedExecutionCase`。Final case hash 独立进入 Attempt/Engine evidence，不回流到 Semantic Run ID preimage。
+- `ExecutionCaseSemanticSpec` 必须在领域 ID 派生前冻结，且不得包含 Order、OrderEvent、Fill、FeeAssessment、SettlementObligation、JournalEntry 等派生 ID 或 final ExecutionCase hash。它必须 exact-cover 所有行为相关的 typed execution input，包括 Slippage calibration/configuration，而不能只绑定省略参数的端口描述。
+- Spec 同时冻结 role-aware `identity_plan`：每个 Case role 显式绑定 identity type、Domain kind、semantic key 和 ordinal。Factory 只能按 role 请求身份，不能由 builder 在派生时重新选择 key/ordinal；Plan 任一变化都会先改变 Semantic Run ID。
+- Composition root 先由 ID-free Spec 生成 Semantic Run ID，再用 semantic run namespace、role-aware identity plan 和稳定 ordinal 确定性派生领域 ID，最后构造完整 `ResolvedExecutionCase`。Final case hash 独立进入 Attempt/Engine evidence，不回流到 Semantic Run ID preimage。
+- `ResolvedExecutionCase` 同时保存完整 Semantic Spec、其 hash 和 Identity Manifest。Composer 与 Runner 都从最终 Case 重新计算 ID-free Spec，校验 Request/Spec/Case、Order parent→NormalizedTarget 关系、Manifest derivation plan 和 Case role exact coverage 后，才允许 Engine 执行。
 - Order、OrderEvent、Fill、FeeAssessment、SettlementObligation 和 JournalEntry 等模拟领域 ID 使用 semantic run namespace、causation 和稳定 ordinal 确定性派生。
 - Attempt ID 是独立操作身份，不进入模拟领域 ID。
 - Live Adapter 同时保存内部 canonical ID 和 Venue ID。

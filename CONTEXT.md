@@ -33,6 +33,19 @@ _Avoid_: Exact float, naked scaled integer
 
 由规范化请求、不可变数据引用、Profile 摘要和 Strategy/代码身份计算的内容标识。相同语义输入必须产生相同标识。
 
+## 执行案例语义规格（Execution Case Semantic Spec）
+
+在领域 ID 派生前冻结的 ID-free typed composition input。它 exact-cover Timeline、Target、Decision、Execution、Financial、Snapshot、RunEnd、完整行为配置和 Identity Plan；其 hash 进入 Semantic Run ID，final ExecutionCase hash 不回流。
+_Avoid_: final-case preimage, placeholder semantic hash
+
+## 身份计划（Identity Plan）
+
+按 ExecutionCase role 冻结 identity type、Domain kind、semantic key 和 ordinal 的 ID-free 派生计划。Identity Factory 只能按 role 执行该计划，builder 不能在派生阶段替换 key 或 ordinal。
+
+## 身份清单（Identity Manifest）
+
+记录一个最终 ExecutionCase 中每个 role 实际派生的身份值及其 Identity Plan 输入的不可变证据。Composer 和 Runner 必须验证其 Semantic Run、derivation plan 和 Case role exact coverage。
+
 ## 执行尝试（Execution Attempt）
 
 对一个语义运行进行的一次实际计算，具有独立 Attempt ID 和 Outcome，不得覆盖其他尝试的证据。Bar Engine v1 的重试从初始状态创建新尝试。

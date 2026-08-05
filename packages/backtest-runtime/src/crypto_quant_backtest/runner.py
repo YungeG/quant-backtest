@@ -12,6 +12,7 @@ import unicodedata
 from crypto_quant_domain import canonical_sha256
 from crypto_quant_market_data import InputValidationFailure
 
+from .composition import ExecutionCaseComposer
 from .engine import (
     DeterministicBarEngine,
     EngineCancellation,
@@ -823,10 +824,46 @@ class AuditableBacktestRunner:
         input_origin: InputOrigin,
     ) -> AttemptIssue | None:
         request = resolved_request.request
-        if request.execution_case_semantic_hash != execution_case.case_hash:
+        spec = execution_case.semantic_spec
+        if (
+            spec is None
+            or request.execution_case_semantic_hash
+            != execution_case.semantic_spec_hash
+        ):
             return AuditableBacktestRunner._runner_issue(
-                "execution_case_mismatch",
+                "execution_case_semantic_spec_mismatch",
+                (
+                    request.execution_case_semantic_hash,
+                    execution_case.semantic_spec_hash,
+                ),
+            )
+        try:
+            recomputed = ExecutionCaseComposer.semantic_spec_from_case(
+                execution_case,
+                spec_key=spec.spec_key,
+                spec_version=spec.spec_version,
+                identity_namespace=spec.identity_namespace,
+                identity_plan=spec.identity_plan,
+            )
+        except (TypeError, ValueError):
+            recomputed = None
+        if recomputed != spec:
+            return AuditableBacktestRunner._runner_issue(
+                "execution_case_semantic_spec_mismatch",
                 (request.execution_case_semantic_hash, execution_case.case_hash),
+            )
+        manifest = execution_case.identity_manifest
+        if manifest is None:
+            return AuditableBacktestRunner._runner_issue(
+                "execution_case_identity_manifest_missing",
+                (request.execution_case_semantic_hash, execution_case.case_hash),
+            )
+        if not execution_case.verify_identity_manifest(
+            resolved_request.semantic_run_id
+        ):
+            return AuditableBacktestRunner._runner_issue(
+                "execution_case_identity_manifest_mismatch",
+                (resolved_request.semantic_run_id, manifest.manifest_hash),
             )
         if request.target_stream_digest != execution_case.target_stream.target_stream_digest:
             return AuditableBacktestRunner._runner_issue(

@@ -90,10 +90,10 @@
           "sha256:3476a32b6367eabaed1ae4e2d5e2748ab236f333f03196335374948b14a6f02f",
           "sha256:45915d737732c3d6b4a75f3b80049b0c8fd0abc0c64a415f69f5ddf33037974f"
         ],
-        "request_hash": "sha256:e9103d92e528e7e576a907e2037de3e50854c6a26c0483ed2c1c91f90d0ffc87",
+        "request_hash": "sha256:a7d6e732a241395265c37c9dee2b073071fa9125f180f64d2adf8f046647ee76",
         "type": "environment_compatibility_report"
       },
-      "request_hash": "sha256:e9103d92e528e7e576a907e2037de3e50854c6a26c0483ed2c1c91f90d0ffc87",
+      "request_hash": "sha256:a7d6e732a241395265c37c9dee2b073071fa9125f180f64d2adf8f046647ee76",
       "subjects": [
         "crypto-quant-backtest",
         "synthetic.cash.development.v1.account",
@@ -189,7 +189,7 @@
             "sha256:3476a32b6367eabaed1ae4e2d5e2748ab236f333f03196335374948b14a6f02f",
             "sha256:45915d737732c3d6b4a75f3b80049b0c8fd0abc0c64a415f69f5ddf33037974f"
           ],
-          "request_hash": "sha256:cab43e4864b5af4d5447f2ff83e0cf9444c33ad24dc970417416b21b5fc0ed8a",
+          "request_hash": "sha256:80a56597b6c52856bfb6c7c2a86ac1aea3ef87c20e39a9e2c4ca8f61b984547c",
           "type": "environment_compatibility_report"
         },
         "deployment_authorized": false,
@@ -405,7 +405,7 @@
           "engine_kind": "bar",
           "execution_account_id": "account:primary",
           "execution_account_profile_key": "synthetic.cash.development.v1.account",
-          "execution_case_semantic_hash": "sha256:d405a464a9f397d426abe811f8ed3093167f2b440ebd25bf1889a5218e365e94",
+          "execution_case_semantic_hash": "sha256:c8d76968460cf754ce424f295b3b33f1e4adeb0ec82e1a326911a4b1d3813ed1",
           "experiment_id": "synthetic-cash-resolution",
           "market_bundle_ref": {
             "bundle_key": "fixture.engine.bundle.v1",
@@ -440,7 +440,7 @@
           },
           "type": "backtest_request"
         },
-        "request_hash": "sha256:cab43e4864b5af4d5447f2ff83e0cf9444c33ad24dc970417416b21b5fc0ed8a",
+        "request_hash": "sha256:80a56597b6c52856bfb6c7c2a86ac1aea3ef87c20e39a9e2c4ca8f61b984547c",
         "type": "normalized_backtest_request"
       },
       "request": {
@@ -448,7 +448,7 @@
         "engine_kind": "bar",
         "execution_account_id": "account:primary",
         "execution_account_profile_key": "synthetic.cash.development.v1.account",
-        "execution_case_semantic_hash": "sha256:d405a464a9f397d426abe811f8ed3093167f2b440ebd25bf1889a5218e365e94",
+        "execution_case_semantic_hash": "sha256:c8d76968460cf754ce424f295b3b33f1e4adeb0ec82e1a326911a4b1d3813ed1",
         "experiment_id": "synthetic-cash-resolution",
         "market_bundle_ref": {
           "bundle_key": "fixture.engine.bundle.v1",
@@ -483,7 +483,7 @@
         },
         "type": "backtest_request"
       },
-      "semantic_run_id": "run_d2b84fa649102ac628886227fac797a9d53e3baf9a2b8d80804fff0a65f77450",
+      "semantic_run_id": "run_21680a5bf8aae5008d431b81ef5d1d3d5c7483b8dea41cb807d23a53af74419d",
       "type": "resolved_backtest_request"
     },
     "type": "backtest_resolution_outcome"
@@ -572,10 +572,10 @@
           "sha256:3476a32b6367eabaed1ae4e2d5e2748ab236f333f03196335374948b14a6f02f",
           "sha256:45915d737732c3d6b4a75f3b80049b0c8fd0abc0c64a415f69f5ddf33037974f"
         ],
-        "request_hash": "sha256:77f70fdb01642c6e89f292be1b2d9ddf2790df340c0ca5385796e5d46eb898a4",
+        "request_hash": "sha256:09c288652a65de5348a1e06b727bff9a2779ec11b8fd6c9e302e4acddd0b4a1a",
         "type": "environment_compatibility_report"
       },
-      "request_hash": "sha256:77f70fdb01642c6e89f292be1b2d9ddf2790df340c0ca5385796e5d46eb898a4",
+      "request_hash": "sha256:09c288652a65de5348a1e06b727bff9a2779ec11b8fd6c9e302e4acddd0b4a1a",
       "subjects": [
         "order_book_l2@1"
       ],
@@ -588,7 +588,7 @@
     "failure": {
       "code": "profile_not_found",
       "compatibility_report": null,
-      "request_hash": "sha256:77f70fdb01642c6e89f292be1b2d9ddf2790df340c0ca5385796e5d46eb898a4",
+      "request_hash": "sha256:09c288652a65de5348a1e06b727bff9a2779ec11b8fd6c9e302e4acddd0b4a1a",
       "subjects": [
         "synthetic.cash.development.v1.account",
         "synthetic.cash.development.v1.market",
@@ -680,7 +680,7 @@
             "sha256:3476a32b6367eabaed1ae4e2d5e2748ab236f333f03196335374948b14a6f02f",
             "sha256:45915d737732c3d6b4a75f3b80049b0c8fd0abc0c64a415f69f5ddf33037974f"
           ],
-          "request_hash": "sha256:77f70fdb01642c6e89f292be1b2d9ddf2790df340c0ca5385796e5d46eb898a4",
+          "request_hash": "sha256:09c288652a65de5348a1e06b727bff9a2779ec11b8fd6c9e302e4acddd0b4a1a",
           "type": "environment_compatibility_report"
         },
         "deployment_authorized": false,
@@ -893,7 +893,7 @@
           "engine_kind": "bar",
           "execution_account_id": "account:primary",
           "execution_account_profile_key": "synthetic.cash.development.v1.account",
-          "execution_case_semantic_hash": "sha256:d405a464a9f397d426abe811f8ed3093167f2b440ebd25bf1889a5218e365e94",
+          "execution_case_semantic_hash": "sha256:c8d76968460cf754ce424f295b3b33f1e4adeb0ec82e1a326911a4b1d3813ed1",
           "experiment_id": "synthetic-cash-resolution",
           "market_bundle_ref": {
             "bundle_key": "fixture.engine.bundle.v1",
@@ -928,7 +928,7 @@
           },
           "type": "backtest_request"
         },
-        "request_hash": "sha256:77f70fdb01642c6e89f292be1b2d9ddf2790df340c0ca5385796e5d46eb898a4",
+        "request_hash": "sha256:09c288652a65de5348a1e06b727bff9a2779ec11b8fd6c9e302e4acddd0b4a1a",
         "type": "normalized_backtest_request"
       },
       "request": {
@@ -936,7 +936,7 @@
         "engine_kind": "bar",
         "execution_account_id": "account:primary",
         "execution_account_profile_key": "synthetic.cash.development.v1.account",
-        "execution_case_semantic_hash": "sha256:d405a464a9f397d426abe811f8ed3093167f2b440ebd25bf1889a5218e365e94",
+        "execution_case_semantic_hash": "sha256:c8d76968460cf754ce424f295b3b33f1e4adeb0ec82e1a326911a4b1d3813ed1",
         "experiment_id": "synthetic-cash-resolution",
         "market_bundle_ref": {
           "bundle_key": "fixture.engine.bundle.v1",
@@ -971,7 +971,7 @@
         },
         "type": "backtest_request"
       },
-      "semantic_run_id": "run_911cef81d318206abcef38d31d7699cfcbe5acbc1f53224652ac72d6c99f8f3d",
+      "semantic_run_id": "run_bcd7541b70103251a5fd994baa620a7e58d6978c8975ff1f9aa6c6e9ea8fb90c",
       "type": "resolved_backtest_request"
     },
     "type": "backtest_resolution_outcome"
@@ -1057,7 +1057,7 @@
             "sha256:3476a32b6367eabaed1ae4e2d5e2748ab236f333f03196335374948b14a6f02f",
             "sha256:45915d737732c3d6b4a75f3b80049b0c8fd0abc0c64a415f69f5ddf33037974f"
           ],
-          "request_hash": "sha256:77f70fdb01642c6e89f292be1b2d9ddf2790df340c0ca5385796e5d46eb898a4",
+          "request_hash": "sha256:09c288652a65de5348a1e06b727bff9a2779ec11b8fd6c9e302e4acddd0b4a1a",
           "type": "environment_compatibility_report"
         },
         "deployment_authorized": false,
@@ -1270,7 +1270,7 @@
           "engine_kind": "bar",
           "execution_account_id": "account:primary",
           "execution_account_profile_key": "synthetic.cash.development.v1.account",
-          "execution_case_semantic_hash": "sha256:d405a464a9f397d426abe811f8ed3093167f2b440ebd25bf1889a5218e365e94",
+          "execution_case_semantic_hash": "sha256:c8d76968460cf754ce424f295b3b33f1e4adeb0ec82e1a326911a4b1d3813ed1",
           "experiment_id": "synthetic-cash-resolution",
           "market_bundle_ref": {
             "bundle_key": "fixture.engine.bundle.v1",
@@ -1305,7 +1305,7 @@
           },
           "type": "backtest_request"
         },
-        "request_hash": "sha256:77f70fdb01642c6e89f292be1b2d9ddf2790df340c0ca5385796e5d46eb898a4",
+        "request_hash": "sha256:09c288652a65de5348a1e06b727bff9a2779ec11b8fd6c9e302e4acddd0b4a1a",
         "type": "normalized_backtest_request"
       },
       "request": {
@@ -1313,7 +1313,7 @@
         "engine_kind": "bar",
         "execution_account_id": "account:primary",
         "execution_account_profile_key": "synthetic.cash.development.v1.account",
-        "execution_case_semantic_hash": "sha256:d405a464a9f397d426abe811f8ed3093167f2b440ebd25bf1889a5218e365e94",
+        "execution_case_semantic_hash": "sha256:c8d76968460cf754ce424f295b3b33f1e4adeb0ec82e1a326911a4b1d3813ed1",
         "experiment_id": "synthetic-cash-resolution",
         "market_bundle_ref": {
           "bundle_key": "fixture.engine.bundle.v1",
@@ -1348,7 +1348,7 @@
         },
         "type": "backtest_request"
       },
-      "semantic_run_id": "run_911cef81d318206abcef38d31d7699cfcbe5acbc1f53224652ac72d6c99f8f3d",
+      "semantic_run_id": "run_bcd7541b70103251a5fd994baa620a7e58d6978c8975ff1f9aa6c6e9ea8fb90c",
       "type": "resolved_backtest_request"
     },
     "type": "backtest_resolution_outcome"

@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from dataclasses import replace
+from dataclasses import dataclass, replace
 
 from crypto_quant_backtest import (
     BAR_OPEN_CAPABILITY,
@@ -20,6 +20,10 @@ from crypto_quant_backtest import (
     PrecomputedTargetStream,
     ResolvedBarExecution,
     ResolvedDecisionCycle,
+    ExecutionCaseComposer,
+    ExecutionCaseIdentityFactory,
+    ExecutionCaseIdentityRule,
+    ExecutionCaseSemanticSpec,
     ResolvedExecutionCase,
     ResolvedFinancialState,
     ResolvedOrderAdmission,
@@ -44,6 +48,7 @@ from crypto_quant_domain import (
     CurrencyId,
     DomainId,
     DomainIdKind,
+    IdentityNamespace,
     ExecutionStyle,
     FeeBasisType,
     InstrumentCatalog,
@@ -166,6 +171,55 @@ FILL_ID = DomainId(DomainIdKind.FILL, "fil_" + "2" * 64)
 FILL_JOURNAL_ID = DomainId(DomainIdKind.JOURNAL, "jnl_" + "3" * 64)
 FEE_ID = DomainId(DomainIdKind.FEE, "fee_" + "4" * 64)
 FEE_JOURNAL_ID = DomainId(DomainIdKind.JOURNAL, "jnl_" + "5" * 64)
+
+
+@dataclass(frozen=True, slots=True)
+class EngineDomainIds:
+    deposit_journal_id: DomainId
+    order_id: DomainId
+    fill_id: DomainId
+    fill_journal_id: DomainId
+    fee_assessment_id: DomainId
+    fee_journal_id: DomainId
+
+
+@dataclass(frozen=True, slots=True)
+class EngineEventIds:
+    admission_event_ids: tuple[str, ...]
+    fill_event_id: str
+
+
+LEGACY_DOMAIN_IDS = EngineDomainIds(
+    deposit_journal_id=DomainId(DomainIdKind.JOURNAL, "jnl_" + "0" * 64),
+    order_id=ORDER_ID,
+    fill_id=FILL_ID,
+    fill_journal_id=FILL_JOURNAL_ID,
+    fee_assessment_id=FEE_ID,
+    fee_journal_id=FEE_JOURNAL_ID,
+)
+# Compatibility identity for component fixtures accepted before WP-07A-R1.
+# G07 uses an explicit ID-free ExecutionCaseSemanticSpec instead.
+LEGACY_EXECUTION_CASE_SEMANTIC_HASH = (
+    "sha256:b445b42147b77bd0b5d1d267a5f178d13f45f32d41cdc636eddc463ef0036690"
+)
+LEGACY_EVENT_IDS = EngineEventIds(
+    admission_event_ids=tuple(
+        f"engine-order:{index}:{event_type.value}"
+        for index, event_type in enumerate(
+            (
+                OrderEventType.ORDER_INTENT_CREATED,
+                OrderEventType.ORDER_CAPABILITY_APPROVED,
+                OrderEventType.ORDER_TRANSLATED,
+                OrderEventType.MARKET_RULE_APPROVED,
+                OrderEventType.FEE_RESERVATION_ESTIMATED,
+                OrderEventType.PRE_TRADE_RISK_APPROVED,
+                OrderEventType.ORDER_SUBMITTED,
+                OrderEventType.ORDER_ACCEPTED,
+            )
+        )
+    ),
+    fill_event_id="engine-order:fill",
+)
 
 
 def sim(
@@ -311,9 +365,11 @@ def timeline(*, include_warmup: bool = False) -> DeterministicTimeline:
     return opened
 
 
-def deposit_entry() -> AccountingJournalEntry:
+def deposit_entry(
+    journal_entry_id: DomainId = LEGACY_DOMAIN_IDS.deposit_journal_id,
+) -> AccountingJournalEntry:
     return AccountingJournalEntry(
-        journal_entry_id=DomainId(DomainIdKind.JOURNAL, "jnl_" + "0" * 64),
+        journal_entry_id=journal_entry_id,
         entry_type=AccountingEntryType.CAPITAL_DEPOSITED,
         account_id=ACCOUNT,
         venue_id=VENUE,
@@ -336,8 +392,10 @@ def ledger_schema() -> LedgerSchema:
     )
 
 
-def initial_journal() -> AccountingJournal:
-    return AccountingJournal.from_entries((deposit_entry(),))
+def initial_journal(
+    journal_entry_id: DomainId = LEGACY_DOMAIN_IDS.deposit_journal_id,
+) -> AccountingJournal:
+    return AccountingJournal.from_entries((deposit_entry(journal_entry_id),))
 
 
 def empty_settlement_rules() -> MarketSettlementRules:
@@ -371,8 +429,10 @@ def empty_settlement_rules() -> MarketSettlementRules:
     )
 
 
-def initial_snapshot() -> PortfolioSnapshot:
-    ledger = GenericLedger(ledger_schema()).project(initial_journal())
+def initial_snapshot(
+    journal_entry_id: DomainId = LEGACY_DOMAIN_IDS.deposit_journal_id,
+) -> PortfolioSnapshot:
+    ledger = GenericLedger(ledger_schema()).project(initial_journal(journal_entry_id))
     zero = Money(0, MONEY_SCALE, "USD")
     graph = CurrencyValuationGraph(
         valuation_at=TARGET_TIME,
@@ -454,8 +514,10 @@ def allocation_policy_ref() -> CapitalAllocationPolicyRef:
     )
 
 
-def allocations() -> tuple[StrategyAllocation, ...]:
-    snapshot = initial_snapshot()
+def allocations(
+    journal_entry_id: DomainId = LEGACY_DOMAIN_IDS.deposit_journal_id,
+) -> tuple[StrategyAllocation, ...]:
+    snapshot = initial_snapshot(journal_entry_id)
     return (
         StrategyAllocation(
             strategy_id=STRATEGY_ID,
@@ -569,11 +631,13 @@ def rebalance_policy() -> RebalancePolicy:
     )
 
 
-def _empty_resources():
+def _empty_resources(
+    journal_entry_id: DomainId = LEGACY_DOMAIN_IDS.deposit_journal_id,
+):
     state = ResourceReservationBook(ACCOUNT).project((), ())
     settlement = SettlementBook(ACCOUNT).project()
     availability = AvailabilityProjection().project(
-        GenericLedger(ledger_schema()).project(initial_journal()),
+        GenericLedger(ledger_schema()).project(initial_journal(journal_entry_id)),
         settlement,
         state,
         empty_settlement_rules(),
@@ -581,7 +645,10 @@ def _empty_resources():
     return state, availability
 
 
-def expected_order() -> tuple[Order, TargetValidity]:
+def expected_order(
+    order_id: DomainId = LEGACY_DOMAIN_IDS.order_id,
+    deposit_journal_id: DomainId = LEGACY_DOMAIN_IDS.deposit_journal_id,
+) -> tuple[Order, TargetValidity]:
     from crypto_quant_backtest import PrecomputedTargetStreamAdapter
 
     stream = PrecomputedTargetStream("targets", (target_event(),))
@@ -593,8 +660,8 @@ def expected_order() -> tuple[Order, TargetValidity]:
     assert injected.injection is not None
     allocated = PortfolioAllocator().allocate(
         sleeve_state=injected.injection.state,
-        portfolio_snapshot=initial_snapshot(),
-        allocations=allocations(),
+        portfolio_snapshot=initial_snapshot(deposit_journal_id),
+        allocations=allocations(deposit_journal_id),
         target_notional_scale=MONEY_SCALE,
     )
     assert allocated.allocation is not None
@@ -616,11 +683,11 @@ def expected_order() -> tuple[Order, TargetValidity]:
         valid_from=TARGET_TIME,
         valid_until=UtcInstant(250),
     )
-    reservations, availability = _empty_resources()
+    reservations, availability = _empty_resources(deposit_journal_id)
     planned = RebalanceCoordinator().coordinate(
         target=sized.normalized_target,
         target_validity=validity,
-        portfolio_snapshot=initial_snapshot(),
+        portfolio_snapshot=initial_snapshot(deposit_journal_id),
         working_orders=(),
         reservations=reservations,
         availability=availability,
@@ -631,7 +698,7 @@ def expected_order() -> tuple[Order, TargetValidity]:
     assert len(planned.decision.plan.planned_orders) == 1
     return (
         Order(
-            order_id=ORDER_ID,
+            order_id=order_id,
             account_id=ACCOUNT,
             intent=planned.decision.plan.planned_orders[0].intent,
             created_at=sim(110, ORDER_PHASE, 1),
@@ -742,12 +809,20 @@ def pretrade_plan(
     )
 
 
-def admission(*, reject_capability: bool = False) -> ResolvedOrderAdmission:
-    order, _ = expected_order()
+def admission(
+    *,
+    reject_capability: bool = False,
+    domain_ids: EngineDomainIds = LEGACY_DOMAIN_IDS,
+    event_ids: EngineEventIds = LEGACY_EVENT_IDS,
+) -> ResolvedOrderAdmission:
+    order, _ = expected_order(
+        domain_ids.order_id,
+        domain_ids.deposit_journal_id,
+    )
     plans = tuple(
         OrderEventPlan(
             event_type=event_type,
-            event_id=f"engine-order:{index}:{event_type.value}",
+            event_id=event_ids.admission_event_ids[index],
             occurred_at=sim(110 + index, ORDER_PHASE, index + 1),
             external_evidence_id=(
                 f"external:{event_type.value}"
@@ -779,11 +854,19 @@ def admission(*, reject_capability: bool = False) -> ResolvedOrderAdmission:
     )
 
 
-def decision_cycle(*, reject_capability: bool = False) -> ResolvedDecisionCycle:
-    _, validity = expected_order()
+def decision_cycle(
+    *,
+    reject_capability: bool = False,
+    domain_ids: EngineDomainIds = LEGACY_DOMAIN_IDS,
+    event_ids: EngineEventIds = LEGACY_EVENT_IDS,
+) -> ResolvedDecisionCycle:
+    _, validity = expected_order(
+        domain_ids.order_id,
+        domain_ids.deposit_journal_id,
+    )
     return ResolvedDecisionCycle(
         schedule=target_schedule(),
-        allocations=allocations(),
+        allocations=allocations(domain_ids.deposit_journal_id),
         target_notional_scale=MONEY_SCALE,
         risk_policy=risk_policy(),
         sizing_policy=sizing_policy(),
@@ -791,12 +874,21 @@ def decision_cycle(*, reject_capability: bool = False) -> ResolvedDecisionCycle:
         target_validity=validity,
         rebalance_policy=rebalance_policy(),
         planning_at=UtcInstant(105),
-        admissions=(admission(reject_capability=reject_capability),),
+        admissions=(
+            admission(
+                reject_capability=reject_capability,
+                domain_ids=domain_ids,
+                event_ids=event_ids,
+            ),
+        ),
     )
 
 
-def warmup_cycle() -> ResolvedDecisionCycle:
-    active = decision_cycle()
+def warmup_cycle(
+    domain_ids: EngineDomainIds = LEGACY_DOMAIN_IDS,
+    event_ids: EngineEventIds = LEGACY_EVENT_IDS,
+) -> ResolvedDecisionCycle:
+    active = decision_cycle(domain_ids=domain_ids, event_ids=event_ids)
     return replace(
         active,
         schedule=warmup_schedule(),
@@ -848,7 +940,9 @@ def final_fee_rule_set():
     return final_fee_rules(rules=rules, minimums=())
 
 
-def cash_accounting_plan() -> CashFillAccountingPlan:
+def cash_accounting_plan(
+    domain_ids: EngineDomainIds = LEGACY_DOMAIN_IDS,
+) -> CashFillAccountingPlan:
     return CashFillAccountingPlan(
         cash_key=CASH_KEY,
         position_key=POSITION_KEY,
@@ -863,22 +957,25 @@ def cash_accounting_plan() -> CashFillAccountingPlan:
             target_scale=MONEY_SCALE,
             rounding=RoundingPolicy.HALF_EVEN,
         ),
-        fill_journal_entry_id=FILL_JOURNAL_ID,
+        fill_journal_entry_id=domain_ids.fill_journal_id,
         fill_recorded_at=sim(210, ACCOUNTING_PHASE, 1),
         final_fee_rule_set=final_fee_rule_set(),
-        fee_assessment_id=FEE_ID,
+        fee_assessment_id=domain_ids.fee_assessment_id,
         fee_assessment_time=UtcInstant(211),
-        fee_journal_entry_id=FEE_JOURNAL_ID,
+        fee_journal_entry_id=domain_ids.fee_journal_id,
         fee_recorded_at=sim(212, ACCOUNTING_PHASE, 3),
     )
 
 
-def bar_execution() -> ResolvedBarExecution:
-    order, _ = expected_order()
+def bar_execution(
+    domain_ids: EngineDomainIds = LEGACY_DOMAIN_IDS,
+    event_ids: EngineEventIds = LEGACY_EVENT_IDS,
+) -> ResolvedBarExecution:
+    order, _ = expected_order(domain_ids.order_id)
     event = bar_event()
     return ResolvedBarExecution(
         event_id=BAR_EVENT_ID,
-        order_id=ORDER_ID,
+        order_id=domain_ids.order_id,
         pretrade_plan=pretrade_plan(
             order, price_units=10_500, market_time=200, same_instant=True
         ),
@@ -900,10 +997,10 @@ def bar_execution() -> ResolvedBarExecution:
             evidence_hash=event.event_hash,
         ),
         slippage_model=slippage_model(),
-        fill_id=FILL_ID,
-        fill_event_id="engine-order:fill",
+        fill_id=domain_ids.fill_id,
+        fill_event_id=event_ids.fill_event_id,
         fill_event_at=sim(200, TimelinePhase(70, "fill"), 1),
-        accounting_plan=cash_accounting_plan(),
+        accounting_plan=cash_accounting_plan(domain_ids),
     )
 
 
@@ -980,11 +1077,13 @@ def execution_model() -> NextEligibleBarOpenModel:
     )
 
 
-def financial_state() -> ResolvedFinancialState:
+def financial_state(
+    domain_ids: EngineDomainIds = LEGACY_DOMAIN_IDS,
+) -> ResolvedFinancialState:
     return ResolvedFinancialState(
-        journal=initial_journal(),
+        journal=initial_journal(domain_ids.deposit_journal_id),
         ledger_schema=ledger_schema(),
-        initial_snapshot=initial_snapshot(),
+        initial_snapshot=initial_snapshot(domain_ids.deposit_journal_id),
         lot_books=(PositionLotBook(POSITION_KEY),),
         order_streams=(),
         reservation_schedules=(),
@@ -998,6 +1097,9 @@ def execution_case(
     batch_size: int = 1,
     reject_capability: bool = False,
     include_warmup: bool = False,
+    semantic_spec_hash: str = LEGACY_EXECUTION_CASE_SEMANTIC_HASH,
+    domain_ids: EngineDomainIds = LEGACY_DOMAIN_IDS,
+    event_ids: EngineEventIds = LEGACY_EVENT_IDS,
 ) -> ResolvedExecutionCase:
     target_events = (
         (warmup_target_event(), target_event())
@@ -1005,23 +1107,146 @@ def execution_case(
         else (target_event(),)
     )
     cycles = (
-        (warmup_cycle(), decision_cycle(reject_capability=reject_capability))
+        (
+            warmup_cycle(domain_ids, event_ids),
+            decision_cycle(
+                reject_capability=reject_capability,
+                domain_ids=domain_ids,
+                event_ids=event_ids,
+            ),
+        )
         if include_warmup
-        else (decision_cycle(reject_capability=reject_capability),)
+        else (
+            decision_cycle(
+                reject_capability=reject_capability,
+                domain_ids=domain_ids,
+                event_ids=event_ids,
+            ),
+        )
     )
     return ResolvedExecutionCase(
         case_key="engine.cash.fixture.v1",
         case_version=1,
+        semantic_spec_hash=semantic_spec_hash,
         timeline=timeline(include_warmup=include_warmup),
         timeline_batch_size=batch_size,
         target_stream=PrecomputedTargetStream("targets", target_events),
         decision_cycles=cycles,
-        bar_executions=(bar_execution(),),
-        financial_state=financial_state(),
+        bar_executions=(bar_execution(domain_ids, event_ids),),
+        financial_state=financial_state(domain_ids),
         execution_model=execution_model(),
         snapshot_plan=snapshot_plan(),
         closeout_policy=MarkToMarketCloseoutPolicy(),
     )
+
+
+@dataclass(frozen=True, slots=True)
+class SyntheticExecutionCaseBuilder:
+    reject_capability: bool = False
+    include_warmup: bool = False
+    batch_size: int = 1
+
+    def identity_plan(self) -> tuple[ExecutionCaseIdentityRule, ...]:
+        cycle_index = 1 if self.include_warmup else 0
+        return (
+            ExecutionCaseIdentityRule(
+                "journal.initial.0", "engine.cash.deposit", 0, DomainIdKind.JOURNAL
+            ),
+            ExecutionCaseIdentityRule(
+                f"order.{cycle_index}.0", "engine.cash.order", 0, DomainIdKind.ORDER
+            ),
+            ExecutionCaseIdentityRule(
+                "fill.0", "engine.cash.fill", 0, DomainIdKind.FILL
+            ),
+            ExecutionCaseIdentityRule(
+                "journal.fill.0",
+                "engine.cash.fill-journal",
+                0,
+                DomainIdKind.JOURNAL,
+            ),
+            ExecutionCaseIdentityRule(
+                "fee.0", "engine.cash.fee", 0, DomainIdKind.FEE
+            ),
+            ExecutionCaseIdentityRule(
+                "journal.fee.0",
+                "engine.cash.fee-journal",
+                0,
+                DomainIdKind.JOURNAL,
+            ),
+            *(
+                ExecutionCaseIdentityRule(
+                    f"order-event.{cycle_index}.0.{index}",
+                    f"engine.cash.order-event.{event_type.value}",
+                    index,
+                )
+                for index, event_type in enumerate(
+                    _REQUIRED_ADMISSION_EVENTS_FOR_FIXTURE
+                )
+            ),
+            ExecutionCaseIdentityRule(
+                "order-event.fill.0", "engine.cash.order-event.fill", 0
+            ),
+        )
+
+    def semantic_spec(self) -> ExecutionCaseSemanticSpec:
+        template = execution_case(
+            batch_size=self.batch_size,
+            reject_capability=self.reject_capability,
+            include_warmup=self.include_warmup,
+        )
+        return ExecutionCaseComposer.semantic_spec_from_case(
+            template,
+            spec_key="synthetic.cash.execution-case.v1",
+            spec_version=1,
+            identity_namespace=IdentityNamespace("backtest", "1"),
+            identity_plan=self.identity_plan(),
+        )
+
+    def build(
+        self,
+        identities: ExecutionCaseIdentityFactory,
+        semantic_spec_hash: str,
+    ) -> ResolvedExecutionCase:
+        domain_ids = EngineDomainIds(
+            deposit_journal_id=identities.domain_id("journal.initial.0"),
+            order_id=identities.domain_id(
+                f"order.{1 if self.include_warmup else 0}.0"
+            ),
+            fill_id=identities.domain_id("fill.0"),
+            fill_journal_id=identities.domain_id("journal.fill.0"),
+            fee_assessment_id=identities.domain_id("fee.0"),
+            fee_journal_id=identities.domain_id("journal.fee.0"),
+        )
+        admission_event_ids = tuple(
+            identities.event_id(
+                f"order-event.{1 if self.include_warmup else 0}.0.{index}"
+            )
+            for index, event_type in enumerate(_REQUIRED_ADMISSION_EVENTS_FOR_FIXTURE)
+        )
+        event_ids = EngineEventIds(
+            admission_event_ids=admission_event_ids,
+            fill_event_id=identities.event_id("order-event.fill.0"),
+        )
+        return execution_case(
+            batch_size=self.batch_size,
+            reject_capability=self.reject_capability,
+            include_warmup=self.include_warmup,
+            semantic_spec_hash=semantic_spec_hash,
+            domain_ids=domain_ids,
+            event_ids=event_ids,
+        )
+
+
+_REQUIRED_ADMISSION_EVENTS_FOR_FIXTURE = (
+    OrderEventType.ORDER_INTENT_CREATED,
+    OrderEventType.ORDER_CAPABILITY_APPROVED,
+    OrderEventType.ORDER_TRANSLATED,
+    OrderEventType.MARKET_RULE_APPROVED,
+    OrderEventType.FEE_RESERVATION_ESTIMATED,
+    OrderEventType.PRE_TRADE_RISK_APPROVED,
+    OrderEventType.ORDER_SUBMITTED,
+    OrderEventType.ORDER_ACCEPTED,
+)
 
 
 def input_validation_failure() -> InputValidationFailure:
