@@ -1,0 +1,764 @@
+{
+  "case_hash": "sha256:b445b42147b77bd0b5d1d267a5f178d13f45f32d41cdc636eddc463ef0036690",
+  "counts": {
+    "allocations": 1,
+    "approved_targets": 1,
+    "decision_batches": 1,
+    "fee_assessments": 1,
+    "fills": 1,
+    "journal_entries": 3,
+    "normalized_targets": 1,
+    "order_plans": 1,
+    "order_streams": 1,
+    "slippage_decisions": 1,
+    "trace_entries": 22
+  },
+  "final_ledger_state": {
+    "cash_balances": [
+      {
+        "amount": {
+          "currency": "USD",
+          "scale": 2,
+          "type": "money",
+          "units": 47392
+        },
+        "key": {
+          "account_id": "account:primary",
+          "currency_id": {
+            "type": "currency_id",
+            "value": "USD"
+          },
+          "type": "cash_balance_key",
+          "venue_id": {
+            "type": "venue_id",
+            "value": "synthetic"
+          }
+        },
+        "type": "cash_balance"
+      }
+    ],
+    "cursor": {
+      "position": 3,
+      "prefix_hash": "sha256:d039d79d7102af83205be8f4a9ce853e05e8b633359888800edc1213f563cfa3",
+      "type": "journal_replay_cursor"
+    },
+    "fees": [
+      {
+        "amount": {
+          "currency": "USD",
+          "scale": 2,
+          "type": "money",
+          "units": 53
+        },
+        "key": {
+          "account_id": "account:primary",
+          "currency_id": {
+            "type": "currency_id",
+            "value": "USD"
+          },
+          "type": "cash_balance_key",
+          "venue_id": {
+            "type": "venue_id",
+            "value": "synthetic"
+          }
+        },
+        "type": "cash_balance"
+      }
+    ],
+    "financing": [],
+    "position_balances": [
+      {
+        "key": {
+          "account_id": "account:primary",
+          "instrument_id": {
+            "stable_key": "cash:btc-usd",
+            "type": "instrument_id",
+            "venue": "synthetic"
+          },
+          "type": "position_balance_key",
+          "venue_id": {
+            "type": "venue_id",
+            "value": "synthetic"
+          }
+        },
+        "lots": [],
+        "quantity": {
+          "instrument_id": "synthetic:cash:btc-usd",
+          "scale": 3,
+          "type": "quantity",
+          "units": 5000
+        },
+        "type": "position_balance"
+      }
+    ],
+    "realized_pnl": [],
+    "schema_hash": "sha256:d2f72817e1cc8211d92511eca52e518fc4df4d108c7a44848368a9f77a27bb72",
+    "type": "ledger_state"
+  },
+  "final_snapshot": {
+    "account_id": "account:primary",
+    "cash": [
+      {
+        "amount": {
+          "currency": "USD",
+          "scale": 2,
+          "type": "money",
+          "units": 47392
+        },
+        "key": {
+          "account_id": "account:primary",
+          "currency_id": {
+            "type": "currency_id",
+            "value": "USD"
+          },
+          "type": "cash_balance_key",
+          "venue_id": {
+            "type": "venue_id",
+            "value": "synthetic"
+          }
+        },
+        "type": "cash_balance"
+      }
+    ],
+    "currency_valuation_graph_hash": "sha256:7271c5e689282c390123c4253c8f7d143a134af08bc848d6c714f534034b5b76",
+    "equity": {
+      "currency": "USD",
+      "scale": 2,
+      "type": "money",
+      "units": 102392
+    },
+    "fees": {
+      "currency": "USD",
+      "scale": 2,
+      "type": "money",
+      "units": 53
+    },
+    "financing": {
+      "currency": "USD",
+      "scale": 2,
+      "type": "money",
+      "units": 0
+    },
+    "journal_state_hash": "sha256:c26b0b2af14db37b1d2d6f93148a636c687dff9906ff1e675c72677b967fa5b4",
+    "positions": [
+      {
+        "key": {
+          "account_id": "account:primary",
+          "instrument_id": {
+            "stable_key": "cash:btc-usd",
+            "type": "instrument_id",
+            "venue": "synthetic"
+          },
+          "type": "position_balance_key",
+          "venue_id": {
+            "type": "venue_id",
+            "value": "synthetic"
+          }
+        },
+        "lots": [],
+        "quantity": {
+          "instrument_id": "synthetic:cash:btc-usd",
+          "scale": 3,
+          "type": "quantity",
+          "units": 5000
+        },
+        "type": "position_balance"
+      }
+    ],
+    "realized_pnl": {
+      "currency": "USD",
+      "scale": 2,
+      "type": "money",
+      "units": 0
+    },
+    "reporting_currency": {
+      "type": "currency_id",
+      "value": "USD"
+    },
+    "timestamp": {
+      "epoch_nanoseconds": 300,
+      "type": "utc_instant"
+    },
+    "type": "portfolio_snapshot",
+    "unrealized_pnl": {
+      "currency": "USD",
+      "scale": 2,
+      "type": "money",
+      "units": 2445
+    },
+    "valuation_mark_set_hash": "sha256:9e548cf192ddf1ac285e107ba159a058a572c96c643831d566985b2e7c8055be",
+    "valuation_marks": [
+      {
+        "instrument_id": {
+          "stable_key": "cash:btc-usd",
+          "type": "instrument_id",
+          "venue": "synthetic"
+        },
+        "mark_id": "sha256:1b7e4749dc51652d5b18a6084b91fac7e16b58b4bdc0971618be6cbc403db170",
+        "observed_at": {
+          "epoch_nanoseconds": 290,
+          "type": "utc_instant"
+        },
+        "price_purpose": "valuation",
+        "type": "valuation_mark_reference"
+      }
+    ],
+    "valuation_staleness_report_hash": "sha256:ecae20c3c3dc9326563281e2cc4fd3e7873f324d4b7973a1e709894d89e45bbe"
+  },
+  "fixture_id": "deterministic-engine-orchestration-v1",
+  "journal_hash": "sha256:d039d79d7102af83205be8f4a9ce853e05e8b633359888800edc1213f563cfa3",
+  "ledger_state_hash": "sha256:c26b0b2af14db37b1d2d6f93148a636c687dff9906ff1e675c72677b967fa5b4",
+  "result_hash": "sha256:87509b2dc808db465666d388d56bb5dd664516df31e143a4b839947092132a8e",
+  "run_end_report": {
+    "account_id": "account:primary",
+    "closeout_component_ref": {
+      "component_digest": "sha256:d9be291bff3147a191296ec5b3d37cc79aecc9ee2bff4877d7bca86f9aeb0ea8",
+      "component_key": "mark_to_market.v1",
+      "component_version": 1,
+      "port_type": "closeout_policy",
+      "type": "simulation_component_ref"
+    },
+    "closeout_mode": "mark_to_market",
+    "closeout_outcome_hash": "sha256:ce8049fd76b645aef15d95adc19871b1271a7c3a1e357f7d3099d676323a36f7",
+    "closeout_status": "positions_preserved",
+    "final_snapshot_hash": "sha256:17b397fdfd2c18dfa1ebd0c7a66cb43d06a7d3fabee7b81adb548b8da5b7472c",
+    "journal_state_hash": "sha256:c26b0b2af14db37b1d2d6f93148a636c687dff9906ff1e675c72677b967fa5b4",
+    "last_valuation_mark_ids": [
+      "sha256:1b7e4749dc51652d5b18a6084b91fac7e16b58b4bdc0971618be6cbc403db170"
+    ],
+    "open_positions": [
+      {
+        "key": {
+          "account_id": "account:primary",
+          "instrument_id": {
+            "stable_key": "cash:btc-usd",
+            "type": "instrument_id",
+            "venue": "synthetic"
+          },
+          "type": "position_balance_key",
+          "venue_id": {
+            "type": "venue_id",
+            "value": "synthetic"
+          }
+        },
+        "lots": [],
+        "quantity": {
+          "instrument_id": "synthetic:cash:btc-usd",
+          "scale": 3,
+          "type": "quantity",
+          "units": 5000
+        },
+        "type": "position_balance"
+      }
+    ],
+    "pending_fee_assessments": [],
+    "pending_settlements": [],
+    "released_reservations": [],
+    "report_id": "sha256:95beb6cda7c0ddf032e8d4ee95e01b5b420add0f95913105fa28fe69bbd2c5f7",
+    "reservation_state_hash": "sha256:a57b2b67e201ceecb9089a1f11a8a81df647221e8375c107e539690078871a18",
+    "run_end_evidence_hash": "sha256:c900e8cab209c25ae04d5e3dcea58a58ae90d8866e558d724c341f99c9174237",
+    "schema_version": 1,
+    "settlement_state_hash": "sha256:9549d058d74a8dc1e147c4defdd78bb25264194f70f7a861a29ebaa84b6810b5",
+    "terminated_orders": [],
+    "timeline_cursor_hash": "sha256:dd23caf22b229d2b4d4208f7a6be0d005c7b5a9fdf187b0c08ba65c8af7b7257",
+    "trading_end_exclusive": {
+      "epoch_nanoseconds": 300,
+      "type": "utc_instant"
+    },
+    "type": "run_end_report"
+  },
+  "run_end_report_hash": "sha256:f49636b7c22583ba478e29084223e6b379ac44d7ebd195573a69e8868296244c",
+  "snapshot_hash": "sha256:17b397fdfd2c18dfa1ebd0c7a66cb43d06a7d3fabee7b81adb548b8da5b7472c",
+  "target_stream_digest": "sha256:ead473aba908a5d2ace5745a648d357c16666c47a726743b86dbde42768a539f",
+  "trace": {
+    "entries": [
+      {
+        "evidence_hash": "sha256:d8ce3cd92509e2f0f4cfce2f4e77783e99de2e5e33ad97610c8fc259ba3dc3a0",
+        "instant": {
+          "instant": {
+            "epoch_nanoseconds": 100,
+            "type": "utc_instant"
+          },
+          "phase": {
+            "code": "strategy_decision",
+            "rank": 30,
+            "type": "timeline_phase"
+          },
+          "source_sequence": {
+            "type": "source_sequence",
+            "value": 1
+          },
+          "type": "simulation_instant"
+        },
+        "sequence": 0,
+        "stage": "timeline_event",
+        "subject_id": "engine-target-100"
+      },
+      {
+        "evidence_hash": "sha256:43699c7592376ceee4222cafe7fa4f57005675ab1ade3ecab1315c29944b7cd9",
+        "instant": {
+          "instant": {
+            "epoch_nanoseconds": 100,
+            "type": "utc_instant"
+          },
+          "phase": {
+            "code": "strategy_decision",
+            "rank": 30,
+            "type": "timeline_phase"
+          },
+          "source_sequence": {
+            "type": "source_sequence",
+            "value": 1
+          },
+          "type": "simulation_instant"
+        },
+        "sequence": 1,
+        "stage": "decision_batch",
+        "subject_id": "decision-batch-v1:sha256:c9126ea400897e9cd53d5bfa8640f6199db37db7a77435de15141d429d871d52"
+      },
+      {
+        "evidence_hash": "sha256:c34b3297f55bcb6ea2cd39f601219c4f243a92930a66900b774ca37af951a7c5",
+        "instant": {
+          "instant": {
+            "epoch_nanoseconds": 100,
+            "type": "utc_instant"
+          },
+          "phase": {
+            "code": "strategy_decision",
+            "rank": 30,
+            "type": "timeline_phase"
+          },
+          "source_sequence": {
+            "type": "source_sequence",
+            "value": 1
+          },
+          "type": "simulation_instant"
+        },
+        "sequence": 2,
+        "stage": "capital_allocation",
+        "subject_id": "portfolio-allocation-v1:sha256:dc3545f016637f2dcd3e8d6d44e511c1dda08a53d02f5a17a71bc5a3fb10913b"
+      },
+      {
+        "evidence_hash": "sha256:2995a7d4e21950b222211896ad927e76610f1b4d5e078ad3bc4e7e596334be83",
+        "instant": {
+          "instant": {
+            "epoch_nanoseconds": 100,
+            "type": "utc_instant"
+          },
+          "phase": {
+            "code": "strategy_decision",
+            "rank": 30,
+            "type": "timeline_phase"
+          },
+          "source_sequence": {
+            "type": "source_sequence",
+            "value": 1
+          },
+          "type": "simulation_instant"
+        },
+        "sequence": 3,
+        "stage": "portfolio_risk",
+        "subject_id": "approved-portfolio-target-v1:sha256:7dc75b54d25a66b86001ea7e53e36a70a0510d23141adeb80879934ff1bf17c7"
+      },
+      {
+        "evidence_hash": "sha256:dcdb94e391c817225763c1576529ff3e92216268223ab9f031c3e47892392228",
+        "instant": {
+          "instant": {
+            "epoch_nanoseconds": 100,
+            "type": "utc_instant"
+          },
+          "phase": {
+            "code": "strategy_decision",
+            "rank": 30,
+            "type": "timeline_phase"
+          },
+          "source_sequence": {
+            "type": "source_sequence",
+            "value": 1
+          },
+          "type": "simulation_instant"
+        },
+        "sequence": 4,
+        "stage": "position_sizing",
+        "subject_id": "normalized-portfolio-target-v1:sha256:c0fc2dc76849ff8c2858d10e08d562c9a61b22d3d43334231e16c0cf6dc7a188"
+      },
+      {
+        "evidence_hash": "sha256:477413dd957451c21f58d15c3ade237419174a0dbfa7e8777ef1cbc9858be907",
+        "instant": {
+          "instant": {
+            "epoch_nanoseconds": 100,
+            "type": "utc_instant"
+          },
+          "phase": {
+            "code": "strategy_decision",
+            "rank": 30,
+            "type": "timeline_phase"
+          },
+          "source_sequence": {
+            "type": "source_sequence",
+            "value": 1
+          },
+          "type": "simulation_instant"
+        },
+        "sequence": 5,
+        "stage": "order_plan",
+        "subject_id": "order-plan-v1:sha256:d7d0e1e6dae77e99bcfd1fe2fe580a39d49c66efdcfa773a7bfc10165deae39b"
+      },
+      {
+        "evidence_hash": "sha256:65f92b9a95273c06a790e3bd751fae5bb7669f7741b47effacf9c0624bd935c3",
+        "instant": {
+          "instant": {
+            "epoch_nanoseconds": 111,
+            "type": "utc_instant"
+          },
+          "phase": {
+            "code": "order_admission",
+            "rank": 80,
+            "type": "timeline_phase"
+          },
+          "source_sequence": {
+            "type": "source_sequence",
+            "value": 2
+          },
+          "type": "simulation_instant"
+        },
+        "sequence": 6,
+        "stage": "order_capability",
+        "subject_id": "ord_1111111111111111111111111111111111111111111111111111111111111111"
+      },
+      {
+        "evidence_hash": "sha256:7a8fb9d975462611f6de2e52c131ea9c9915d2fbe44967c604a447517ec9f637",
+        "instant": {
+          "instant": {
+            "epoch_nanoseconds": 112,
+            "type": "utc_instant"
+          },
+          "phase": {
+            "code": "order_admission",
+            "rank": 80,
+            "type": "timeline_phase"
+          },
+          "source_sequence": {
+            "type": "source_sequence",
+            "value": 3
+          },
+          "type": "simulation_instant"
+        },
+        "sequence": 7,
+        "stage": "order_translation",
+        "subject_id": "ord_1111111111111111111111111111111111111111111111111111111111111111"
+      },
+      {
+        "evidence_hash": "sha256:0e5881058833d60f2d2a2e292ff108f660b51690623fb7cde0a1eb6769b1bb71",
+        "instant": {
+          "instant": {
+            "epoch_nanoseconds": 113,
+            "type": "utc_instant"
+          },
+          "phase": {
+            "code": "order_admission",
+            "rank": 80,
+            "type": "timeline_phase"
+          },
+          "source_sequence": {
+            "type": "source_sequence",
+            "value": 4
+          },
+          "type": "simulation_instant"
+        },
+        "sequence": 8,
+        "stage": "market_rule",
+        "subject_id": "ord_1111111111111111111111111111111111111111111111111111111111111111"
+      },
+      {
+        "evidence_hash": "sha256:f6062c4ce6753ec1de5815a5071572cc0dd8948f2bdf13091486ed8440d07598",
+        "instant": {
+          "instant": {
+            "epoch_nanoseconds": 114,
+            "type": "utc_instant"
+          },
+          "phase": {
+            "code": "order_admission",
+            "rank": 80,
+            "type": "timeline_phase"
+          },
+          "source_sequence": {
+            "type": "source_sequence",
+            "value": 5
+          },
+          "type": "simulation_instant"
+        },
+        "sequence": 9,
+        "stage": "fee_reservation",
+        "subject_id": "ord_1111111111111111111111111111111111111111111111111111111111111111"
+      },
+      {
+        "evidence_hash": "sha256:77d77dfb8156c77b3f2e27ac5c3d07b9be412751e947c76b99907e8e312d248a",
+        "instant": {
+          "instant": {
+            "epoch_nanoseconds": 115,
+            "type": "utc_instant"
+          },
+          "phase": {
+            "code": "order_admission",
+            "rank": 80,
+            "type": "timeline_phase"
+          },
+          "source_sequence": {
+            "type": "source_sequence",
+            "value": 6
+          },
+          "type": "simulation_instant"
+        },
+        "sequence": 10,
+        "stage": "pretrade_risk",
+        "subject_id": "ord_1111111111111111111111111111111111111111111111111111111111111111"
+      },
+      {
+        "evidence_hash": "sha256:d18cc789117786b61353035e038c8fbba7260ef6a1e2a1ff0961e8babf35e8c3",
+        "instant": {
+          "instant": {
+            "epoch_nanoseconds": 117,
+            "type": "utc_instant"
+          },
+          "phase": {
+            "code": "order_admission",
+            "rank": 80,
+            "type": "timeline_phase"
+          },
+          "source_sequence": {
+            "type": "source_sequence",
+            "value": 8
+          },
+          "type": "simulation_instant"
+        },
+        "sequence": 11,
+        "stage": "order_accepted",
+        "subject_id": "ord_1111111111111111111111111111111111111111111111111111111111111111"
+      },
+      {
+        "evidence_hash": "sha256:f2b8b826ea288cade860431bb1468d05054a1839a94f7ba28e55fe898b740d18",
+        "instant": {
+          "instant": {
+            "epoch_nanoseconds": 200,
+            "type": "utc_instant"
+          },
+          "phase": {
+            "code": "bar_open",
+            "rank": 60,
+            "type": "timeline_phase"
+          },
+          "source_sequence": {
+            "type": "source_sequence",
+            "value": 2
+          },
+          "type": "simulation_instant"
+        },
+        "sequence": 12,
+        "stage": "timeline_event",
+        "subject_id": "engine-bar-open-200"
+      },
+      {
+        "evidence_hash": "sha256:5ef13106984461bd473e3cb18727833c5266b67ca92a11bb6fef0e17e12ee4ac",
+        "instant": {
+          "instant": {
+            "epoch_nanoseconds": 200,
+            "type": "utc_instant"
+          },
+          "phase": {
+            "code": "bar_open",
+            "rank": 60,
+            "type": "timeline_phase"
+          },
+          "source_sequence": {
+            "type": "source_sequence",
+            "value": 2
+          },
+          "type": "simulation_instant"
+        },
+        "sequence": 13,
+        "stage": "execution_decision",
+        "subject_id": "ord_1111111111111111111111111111111111111111111111111111111111111111"
+      },
+      {
+        "evidence_hash": "sha256:2a6cf649a17d4e080109a651694fa0a6e7748664a947ae64c79795d17ab1d73b",
+        "instant": {
+          "instant": {
+            "epoch_nanoseconds": 200,
+            "type": "utc_instant"
+          },
+          "phase": {
+            "code": "bar_open",
+            "rank": 60,
+            "type": "timeline_phase"
+          },
+          "source_sequence": {
+            "type": "source_sequence",
+            "value": 2
+          },
+          "type": "simulation_instant"
+        },
+        "sequence": 14,
+        "stage": "slippage",
+        "subject_id": "ord_1111111111111111111111111111111111111111111111111111111111111111"
+      },
+      {
+        "evidence_hash": "sha256:455339a97f5d9fdf83fd441f68e7a39adca5aafd6c5a2c10dbdd3799a0fd355e",
+        "instant": {
+          "instant": {
+            "epoch_nanoseconds": 200,
+            "type": "utc_instant"
+          },
+          "phase": {
+            "code": "fill",
+            "rank": 70,
+            "type": "timeline_phase"
+          },
+          "source_sequence": {
+            "type": "source_sequence",
+            "value": 1
+          },
+          "type": "simulation_instant"
+        },
+        "sequence": 15,
+        "stage": "fill",
+        "subject_id": "fil_2222222222222222222222222222222222222222222222222222222222222222"
+      },
+      {
+        "evidence_hash": "sha256:f72fbe070a40c48bff787b2be3dd329601d7af28b696a3b77e100748b737187c",
+        "instant": {
+          "instant": {
+            "epoch_nanoseconds": 210,
+            "type": "utc_instant"
+          },
+          "phase": {
+            "code": "accounting",
+            "rank": 90,
+            "type": "timeline_phase"
+          },
+          "source_sequence": {
+            "type": "source_sequence",
+            "value": 1
+          },
+          "type": "simulation_instant"
+        },
+        "sequence": 16,
+        "stage": "fill_accounting",
+        "subject_id": "jnl_3333333333333333333333333333333333333333333333333333333333333333"
+      },
+      {
+        "evidence_hash": "sha256:1c314508135b6e16c1968ed85e6848c82945579269e23e231a02a252d076b9cf",
+        "instant": {
+          "instant": {
+            "epoch_nanoseconds": 211,
+            "type": "utc_instant"
+          },
+          "phase": {
+            "code": "accounting",
+            "rank": 90,
+            "type": "timeline_phase"
+          },
+          "source_sequence": {
+            "type": "source_sequence",
+            "value": 2
+          },
+          "type": "simulation_instant"
+        },
+        "sequence": 17,
+        "stage": "fee_assessment",
+        "subject_id": "fee_4444444444444444444444444444444444444444444444444444444444444444"
+      },
+      {
+        "evidence_hash": "sha256:8a32310571ed2fc5f8c64102dcd5ef479b354d4cd9f9e5336e58de79445370d7",
+        "instant": {
+          "instant": {
+            "epoch_nanoseconds": 212,
+            "type": "utc_instant"
+          },
+          "phase": {
+            "code": "accounting",
+            "rank": 90,
+            "type": "timeline_phase"
+          },
+          "source_sequence": {
+            "type": "source_sequence",
+            "value": 3
+          },
+          "type": "simulation_instant"
+        },
+        "sequence": 18,
+        "stage": "fee_accounting",
+        "subject_id": "jnl_5555555555555555555555555555555555555555555555555555555555555555"
+      },
+      {
+        "evidence_hash": "sha256:c26b0b2af14db37b1d2d6f93148a636c687dff9906ff1e675c72677b967fa5b4",
+        "instant": {
+          "instant": {
+            "epoch_nanoseconds": 212,
+            "type": "utc_instant"
+          },
+          "phase": {
+            "code": "accounting",
+            "rank": 90,
+            "type": "timeline_phase"
+          },
+          "source_sequence": {
+            "type": "source_sequence",
+            "value": 3
+          },
+          "type": "simulation_instant"
+        },
+        "sequence": 19,
+        "stage": "ledger_state",
+        "subject_id": "account:primary"
+      },
+      {
+        "evidence_hash": "sha256:17b397fdfd2c18dfa1ebd0c7a66cb43d06a7d3fabee7b81adb548b8da5b7472c",
+        "instant": {
+          "instant": {
+            "epoch_nanoseconds": 300,
+            "type": "utc_instant"
+          },
+          "phase": {
+            "code": "engine_finalize",
+            "rank": 1000000,
+            "type": "timeline_phase"
+          },
+          "source_sequence": {
+            "type": "source_sequence",
+            "value": 0
+          },
+          "type": "simulation_instant"
+        },
+        "sequence": 20,
+        "stage": "portfolio_snapshot",
+        "subject_id": "account:primary"
+      },
+      {
+        "evidence_hash": "sha256:f49636b7c22583ba478e29084223e6b379ac44d7ebd195573a69e8868296244c",
+        "instant": {
+          "instant": {
+            "epoch_nanoseconds": 300,
+            "type": "utc_instant"
+          },
+          "phase": {
+            "code": "engine_finalize",
+            "rank": 1000000,
+            "type": "timeline_phase"
+          },
+          "source_sequence": {
+            "type": "source_sequence",
+            "value": 0
+          },
+          "type": "simulation_instant"
+        },
+        "sequence": 21,
+        "stage": "run_end",
+        "subject_id": "account:primary"
+      }
+    ],
+    "schema_version": 1,
+    "type": "execution_trace"
+  },
+  "trace_hash": "sha256:42dc24c31f1ad8f47b3ae4761fba02687d3132f4f933f8379b8350b159bc74f6"
+}

@@ -4366,9 +4366,14 @@ public_interface:
   - crypto_quant_backtest.ResolvedExecutionCase
   - crypto_quant_backtest.ResolvedDecisionCycle
   - crypto_quant_backtest.ResolvedOrderAdmission
+  - crypto_quant_backtest.ResolvedPreTradePlan
+  - crypto_quant_backtest.OrderEventPlan
   - crypto_quant_backtest.ResolvedBarExecution
+  - crypto_quant_backtest.CashFillAccountingPlan
   - crypto_quant_backtest.ResolvedFinancialState
+  - crypto_quant_backtest.PositionLotBook
   - crypto_quant_backtest.SnapshotProjectionPlan
+  - crypto_quant_backtest.EngineStage
   - crypto_quant_backtest.ExecutionTraceEntry
   - crypto_quant_backtest.ExecutionTrace
   - crypto_quant_backtest.EngineExecutionResult
