@@ -1145,14 +1145,16 @@ v1 固定目录为 `runs/<semantic_run_id>/attempts/.staging/<attempt_id>/` → 
 
 ### WP-07D Execution result hash
 
-拥有：Decision、Allocation、Risk、Order、Fill、Fee、Journal 和 Final Snapshot 的规范执行摘要。
+拥有：`EngineExecutionResult` 的规范执行摘要、Attempt Evidence 绑定和同一 Semantic Run 的执行一致性检查。
 
 验收：
 
-- 图表、日志格式和派生 Metrics 不改变 execution result hash；
-- 任一权威交易事件变化必须改变 hash；
-- 同 Semantic Run 的 Completed Attempts hash 不同会确定性失败；
-- Attempt ID 不影响 execution result hash。
+- `CanonicalExecutionSummary` exact-cover `ExecutionTrace`、DecisionBatch、Allocation、Portfolio Risk approvals/decisions、Normalized/Active Target、Order Plan/Event、Fill、Slippage、FeeAssessment、Accounting Journal、Final Ledger/Snapshot 和 RunEnd；
+- summary/hash 不包含 Attempt ID、Evidence path/Manifest hash、日志、图表、Metrics 或展示字段；
+- `AttemptExecutionHash` 只允许绑定 `READY_FOR_INTEGRITY` Evidence，验证 Attempt/Semantic Run 和 `engine-execution-result.json` envelope content hash，但其 `execution_result_hash` 只来自 canonical summary；
+- 任一权威交易或财务事实变化必须改变 execution result hash；图表、日志格式、派生 Metrics、Attempt identity 或 Evidence relative directory 变化不得改变 hash；
+- 同一 Semantic Run 的多个 ready/completed-candidate Attempt 必须产生同一 execution result hash；不同 hash 返回 canonical `ExecutionHashMismatch`，不得按 Attempt 顺序或时间静默选择；
+- 本 WP 不实现 Integrity/ResultGrade、发布 COMPLETED、canonical Attempt ref、cache/dedup、Metrics、network 或 deployment authorization。
 
 ### WP-07E Integrity report
 

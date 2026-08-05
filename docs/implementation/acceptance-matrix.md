@@ -106,7 +106,7 @@ artifact_hashes: []
 | WP-07A | PASSED | backtest-runtime | G06 | none |
 | WP-07B | PASSED | backtest-runtime | WP-07A | none |
 | WP-07C | PASSED | backtest-runtime | WP-07B | none |
-| WP-07D | DRAFT | backtest-runtime | WP-07B–WP-07C | Execution hash fixtures |
+| WP-07D | READY | backtest-runtime | WP-07B–WP-07C | none |
 | WP-07E | DRAFT | backtest-runtime | WP-07C–WP-07D | Integrity/grade fixtures |
 | G08A | DRAFT | trading-kernel profiles/cn_a_share | G07 | Calendar fixtures |
 | G08B | DRAFT | trading-kernel profiles/cn_a_share | G08A | T+1 fixtures |
@@ -4981,7 +4981,80 @@ uv lock --check                                                     PASS
 Python                                                              3.13.5
 ```
 
-## 58. PASSED 记录格式
+## 58. WP-07D Execution Result Hash Acceptance Card
+
+```yaml
+id: WP-07D
+status: READY
+depends_on:
+  - WP-07B
+  - WP-07C
+owner_package: backtest-runtime
+public_interface:
+  - crypto_quant_backtest.CanonicalExecutionSummary
+  - crypto_quant_backtest.AttemptExecutionHash
+  - crypto_quant_backtest.ExecutionHashAttemptRef
+  - crypto_quant_backtest.ExecutionHashConsistency
+  - crypto_quant_backtest.ExecutionHashMismatch
+  - crypto_quant_backtest.ExecutionHashCheck
+  - crypto_quant_backtest.ExecutionHashEvidenceErrorCode
+  - crypto_quant_backtest.ExecutionHashEvidenceError
+  - crypto_quant_backtest.ExecutionResultHasher
+  - canonical authoritative execution-result hash schema v1
+  - static execution-result hash golden fixture v1
+test_commands:
+  contract: uv run pytest -q tests/runtime/execution_hash/test_execution_result_hash.py
+  fixture: uv run pytest -q tests/runtime/execution_hash/test_execution_result_hash_golden.py
+  boundary: uv run pytest -q tests/architecture/test_public_api_imports.py tests/architecture/test_repository_cleanliness.py && uv run python tools/architecture/check_import_boundaries.py --root . --policy architecture/import-boundaries.toml --report build/acceptance/wp-07d-import-boundary-report.json
+fixture_ids:
+  - canonical-execution-result-hash-v1
+expected_artifacts:
+  - tests/fixtures/runtime/canonical-execution-result-hash-v1.json
+  - build/acceptance/wp-07d-pytest.xml
+  - build/acceptance/wp-07d-import-boundary-report.json
+failure_contracts:
+  - execution-summary-omits-authoritative-decision-allocation-risk-target-order-fill-slippage-fee-journal-ledger-snapshot-or-run-end-fact
+  - execution-summary-includes-attempt-id-evidence-path-manifest-log-chart-metric-or-presentation-field
+  - attempt-execution-hash-binds-non-ready-evidence
+  - attempt-ready-record-and-finalized-evidence-identity-mismatch
+  - engine-result-artifact-missing-wrong-role-type-schema-or-content-hash
+  - execution-result-hash-changes-with-attempt-or-evidence-directory
+  - authoritative-execution-or-financial-change-does-not-change-hash
+  - same-semantic-run-execution-hash-mismatch-is-silently-selected
+  - consistency-check-depends-on-attempt-input-order
+  - execution-hash-check-publishes-completed-integrity-grade-or-deployment-authorization
+  - execution-hash-layer-reads-network-wall-clock-or-derived-metrics
+allowed_grade: development
+evidence:
+  - pytest-report
+  - static-execution-hash-golden-hash
+  - canonical-summary-coverage-and-exclusion-report
+  - authoritative-mutation-sensitivity-evidence
+  - attempt-and-evidence-path-independence-evidence
+  - engine-result-artifact-envelope-binding-evidence
+  - same-semantic-run-consistency-and-mismatch-evidence
+  - public-api-import-report
+  - import-boundary-report
+  - static-type-report
+passed_commit: null
+artifact_hashes: []
+```
+
+### WP-07D Readiness
+
+冻结以下实现边界：
+
+1. `CanonicalExecutionSummary` 必须逐项保存 `ExecutionTrace`、DecisionBatch、Capital Allocation、Portfolio Risk Approval/Decision、Normalized/Active Target、Order Plan/Event Stream、Fill、SlippageDecision、FeeAssessment、Accounting Journal、Final Ledger State、Final PortfolioSnapshot 和 RunEndReport；不以日志、图表、Metrics 或 presentation artifact 替代权威对象；
+2. `execution_result_hash` 只由该 canonical summary 产生，不包含 Attempt ID、Semantic Run ID、Evidence relative directory/Manifest hash、日志、图表、派生 Metrics、wall clock 或 hostname。Attempt 绑定对象可以保存这些操作身份，但不能把它们混入 execution hash；
+3. `ExecutionResultHasher.bind()` 只接受 WP-07B ready branch 与 WP-07C `READY_FOR_INTEGRITY` finalized evidence，要求 Attempt/Semantic Run 完全匹配，并验证 Manifest 中唯一 `engine-execution-result.json` entry 的 role/type/schema/content hash 与原始 `EngineExecutionResult` 一致；
+4. `AttemptExecutionHash` 保存原始 immutable Engine Result、canonical summary、execution hash、Attempt 和 Evidence Manifest identity；构造时独立重算 summary/hash，防止 caller 伪造；
+5. 同一 Semantic Run 的 Attempt refs canonical-sort。全部 hash 相同产生 `ExecutionHashConsistency`；存在多个 hash 产生 canonical `ExecutionHashMismatch`，不得按 Attempt ordinal、输入顺序、完成时间或路径选择 winner；
+6. 任一权威 Decision、Allocation、Risk、Target、Order/Event、Fill、Slippage、Fee、Journal、Ledger、Snapshot、RunEnd 或 Trace 变化必须改变 hash；仅 Attempt 或 Evidence path/Manifest 变化不得改变 hash；
+7. 本 WP 不实现 Integrity/ResultGrade、发布 `COMPLETED`、canonical Attempt ref、cache/dedup、Metrics、network、wall clock 或 deployment authorization。
+
+WP-07D 已满足依赖且 Acceptance Card 完整，状态为 `READY`。
+
+## 59. PASSED 记录格式
 
 ```yaml
 id: WP-00A
