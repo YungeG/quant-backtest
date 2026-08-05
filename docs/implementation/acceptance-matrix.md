@@ -109,7 +109,7 @@ artifact_hashes: []
 | WP-07C | PASSED | backtest-runtime | WP-07B | none |
 | WP-07D | PASSED | backtest-runtime | WP-07B–WP-07C | none |
 | WP-07E | PASSED | backtest-runtime | WP-07A-R1, WP-07C–WP-07D | none |
-| G07 | DRAFT | backtest-runtime integration | WP-07A-R1, WP-07A–WP-07E | none |
+| G07 | READY | backtest-runtime integration | WP-07A-R1, WP-07A–WP-07E | none |
 | G08A | DRAFT | trading-kernel profiles/cn_a_share | G07 | Calendar fixtures |
 | G08B | DRAFT | trading-kernel profiles/cn_a_share | G08A | T+1 fixtures |
 | G08C | DRAFT | trading-kernel profiles/cn_a_share | G08A | Lattice/odd-lot fixtures |
@@ -5308,7 +5308,7 @@ Python                                                              3.13.5
 
 ```yaml
 id: G07
-status: DRAFT
+status: READY
 depends_on:
   - WP-07A-R1
   - WP-07A
@@ -5359,7 +5359,7 @@ passed_commit: null
 artifact_hashes: []
 ```
 
-WP-07E 已 `PASSED`；G07 仍保持 `DRAFT`，等待独立 READY transition 后实施 aggregate integration。
+WP-07E 已 `PASSED`；G07 的语义、依赖与失败契约均已冻结，现为 `READY`，可实施 aggregate integration。
 
 ## 62. PASSED 记录格式
 
