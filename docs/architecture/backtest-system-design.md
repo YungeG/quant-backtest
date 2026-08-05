@@ -1631,13 +1631,22 @@ Decision-grade 永久保存权威决策、执行、财务和完整性轨迹；�
 
 ```text
 runs/<semantic-run-id>/
-├── canonical/                         # atomic、immutable COMPLETED publication
+├── .publication.lock                  # operational exclusive lock；不进入 canonical hash
+├── canonical/                         # 仅 atomic、immutable COMPLETED publication
+│   ├── canonical-attempt-ref.json
 │   ├── integrity.json
 │   ├── result.json
-│   └── canonical-attempt-ref.json
+│   └── publication-manifest.json
+├── integrity-evaluations/
+│   └── <evaluation-id>/               # post-integrity BLOCKED/FAILED immutable record
+│       ├── integrity.json
+│       ├── evaluation-outcome.json
+│       └── publication-manifest.json
 └── attempts/
     └── <attempt-id>/                   # independently atomic、immutable Attempt evidence
 ```
+
+只有 `COMPLETED` 可以创建 `canonical/`。Integrity 的预期 blocking 产生独立 `BLOCKED` evaluation，execution-hash mismatch 产生独立 `FAILED` evaluation；二者都不得写 `result.json` 或占用 canonical destination。Evaluation 目录与 canonical 目录分别通过同一文件系统内 staging→rename 原子发布。
 
 每个 Attempt 目录包含：
 
@@ -1713,7 +1722,7 @@ runs/<semantic-run-id>/
 └── evidence-manifest.json
 ```
 
-`integrity.json`、`result.json` 和 `canonical-attempt-ref.json` 只属于 run-level terminal publication，不得追加到 WP-07C 已 atomic-finalize 的 Attempt 目录。上表中的细粒度 full-trace 文件是后续 Evidence schema 扩展目标；G07 v1 Attempt exact coverage 以 WP-07C ArtifactEnvelope 集合为准。
+`integrity.json`、`result.json`、`canonical-attempt-ref.json`、evaluation outcome 和 publication manifest 只属于 run-level publication，不得追加到 WP-07C 已 atomic-finalize 的 Attempt 目录。上表中的细粒度 full-trace 文件是后续 Evidence schema 扩展目标；G07 v1 Attempt exact coverage 以 WP-07C ArtifactEnvelope 集合为准。
 
 派生分析独立存放，不修改 immutable canonical evidence：
 
@@ -1725,7 +1734,7 @@ analyses/<semantic-run-id>/<metric-profile-digest>/
 └── analysis-artifact-hash.json
 ```
 
-MarketBundle 必须在 Retention Policy 下保持可取回。如果引用的数据包已经丢失，即使运行目录仍存在，该运行也不再是 Rebuildable。
+MarketBundle 必须在 Retention Policy 下保持可取回。如果引用的数据包已经丢失，即使运行目录仍存在，该运行也不再是 Rebuildable。G07 v1 的 caller-supplied `DeterministicRebuildEvidence` 必须 canonically 绑定 Request、Resolved Environment、BuildArtifactManifest、MarketBundle manifest/retention proof、TargetStream digest、ExecutionCase identity manifest、Execution trace hash/level 和 execution result hash；`CanonicalAttemptRef` 绑定该 evidence hash，不能只保存布尔 `rebuildable=true`。
 
 ### 15.1 Completed Result 最小结构
 
@@ -1749,7 +1758,29 @@ MarketBundle 必须在 Retention Policy 下保持可取回。如果引用的数�
 
 只有 Auditable Runner 可以发布 BacktestRunOutcome。EngineExecutionResult 不是 Completed Result；Evidence atomic finalize 和 Integrity validation 成功前不得发布 `COMPLETED`。
 
-### 15.2 Semantic Run、Attempt 与领域 ID
+### 15.2 Canonical publication hash DAG
+
+```text
+finalized Attempt evidence + AttemptExecutionHash + DeterministicRebuildEvidence
+                              ↓
+                 canonical-attempt-ref.json
+                              ↓ ref hash
+integrity closed-attempt-set + canonical ref + retention/rebuild checks
+                              ↓
+                       integrity.json
+                              ↓ integrity hash
+                         result.json
+                              ↓
+                 publication-manifest.json
+```
+
+- `canonical-attempt-ref.json` 不引用 Integrity、Result 或 Publication Manifest；它绑定 canonical Attempt identity/ordinal、Attempt Evidence Manifest hash、AttemptExecutionHash artifact/content hash、execution result hash、Bundle/Trace/Rebuild evidence 和 final ExecutionCase identity。
+- `integrity.json` 绑定 closed Attempt set hash、全部 eligible Attempt 的 evidence/execution hash tuple、canonical Attempt ref hash、blocking/limitation 和 grade inputs；不引用 Result 或 Publication Manifest。
+- `result.json` 绑定 canonical Attempt ref hash、Integrity hash、request/execution identity、Outcome/grade 和 `deployment_authorized=false`；不引用 Publication Manifest。
+- `publication-manifest.json` exact-cover 同目录其他权威文件及其 schema/content hash，是 DAG root；任何子文件都不得反向引用 manifest hash。
+- BLOCKED/FAILED integrity evaluation 使用独立 DAG：closed Attempt set → Integrity → EvaluationOutcome → evaluation PublicationManifest；它没有 `canonical-attempt-ref.json` 或 `result.json`。
+
+### 15.3 Semantic Run、Attempt 与领域 ID
 
 ```text
 semantic_run_id = hash(
@@ -1763,9 +1794,10 @@ semantic_run_id = hash(
 - 相同语义输入必须得到相同 semantic run ID。
 - 每次实际执行使用不同 attempt ID，Attempt 之间不得覆盖。
 - Bar Engine v1 的 FAILED/CANCELLED Attempt 不支持 in-place resume；Auditable Runner 重试时创建新 Attempt 并从初始 ResolvedExecutionCase 运行。
-- 已有 Completed canonical result 时，Runner 可以返回 cache hit，或创建新 Attempt 做 parity verification。
-- 并发相同 semantic run ID 必须 lock 或 deduplicate。
-- 同一 Semantic Run 的两个 Completed Attempt 若 execution result hash 不同，产生确定性 `FAILED`，不得选择其中一个静默覆盖。
+- G07 v1 的 `COMPLETED` closure 至少需要两个 finalized `READY_FOR_INTEGRITY` Attempt。Publisher 在获取 run-level exclusive lock 后 exact-cover 当时全部 eligible Attempt；execution result hash 必须完全一致，canonical Attempt 固定选择最小 ordinal。
+- `canonical/` 原子发布后 Semantic Run 永久关闭：Evidence Writer 拒绝新 Attempt，Runner 只能返回 cache hit；同一 Semantic Run 的 post-publication parity/revocation 不在 v1 内，不能绕过 closure 继续写入。
+- closure 前发现 execution hash mismatch 产生独立 durable `FAILED` integrity evaluation，不得选择 winner。少于两个 eligible Attempt 或其他预期 Integrity deficit 产生独立 durable `BLOCKED` evaluation。
+- v1 filesystem threat model 固定为 trusted cooperative single-writer：受控本地同一文件系统、同一个 run-level exclusive lock 和 staging→rename。锁不得按 wall clock 自动回收；shared/adversarial filesystem、NFS/object-store rename 语义、symlink 攻击和恶意并发写者明确不支持，不能用于 decision-grade publication。
 - `ExecutionCaseSemanticSpec` 必须在领域 ID 派生前冻结，且不得包含 Order、OrderEvent、Fill、FeeAssessment、SettlementObligation、JournalEntry 等派生 ID 或 final ExecutionCase hash。它必须 exact-cover 所有行为相关的 typed execution input，包括 Slippage calibration/configuration，而不能只绑定省略参数的端口描述。
 - Spec 同时冻结 role-aware `identity_plan`：每个 Case role 显式绑定 identity type、Domain kind、semantic key 和 ordinal。Factory 只能按 role 请求身份，不能由 builder 在派生时重新选择 key/ordinal；Plan 任一变化都会先改变 Semantic Run ID。
 - Composition root 先由 ID-free Spec 生成 Semantic Run ID，再用 semantic run namespace、role-aware identity plan 和稳定 ordinal 确定性派生领域 ID，最后构造完整 `ResolvedExecutionCase`。Final case hash 独立进入 Attempt/Engine evidence，不回流到 Semantic Run ID preimage。
@@ -1775,7 +1807,7 @@ semantic_run_id = hash(
 - Live Adapter 同时保存内部 canonical ID 和 Venue ID。
 - ID algorithm 和 namespace version 进入 Schema/Build identity。
 
-### 15.3 Schema 演进
+### 15.4 Schema 演进
 
 每个权威 Artifact 都有独立 `schema_version`。第一阶段先实现 Artifact Envelope v1、Schema Catalog、当前版本 Writer/Reader dispatch 和 unknown-version fail-closed。只有出现真实 immutable 旧 Artifact 和明确 source/target Schema 后，Reader 才增加显式、纯、单向的 migration chain；禁止为了框架测试发明虚构旧版本。
 
@@ -1789,7 +1821,7 @@ canonical view v3 + migration manifest
 
 Schema Migration 只能处理结构表达变化。如果 Instrument、Accounting、Order 或其他经济语义发生变化，必须建立新领域类型、Profile 或语义版本，不能通过 migration 静默重新解释旧证据。Parity 工具可以把不同版本显式迁移到共同 Canonical View 后比较。
 
-### 15.4 权威 Hash
+### 15.5 权威 Hash
 
 - `request_hash`：覆盖全部规范化语义输入及其引用 identity。
 - `execution_result_hash`：覆盖影响交易和财务结果的规范化 Decision、Allocation、Risk、Order、Fill、Journal 和最终 Snapshot 轨迹。
@@ -1797,7 +1829,7 @@ Schema Migration 只能处理结构表达变化。如果 Instrument、Accounting
 
 图表、展示格式和可重建 Metrics 的变化不应改变 `execution_result_hash`。
 
-### 15.5 派生 Metrics
+### 15.6 派生 Metrics
 
 Metrics 不属于 Backtest Engine 的权威状态，而是以下输入的版本化派生分析：
 
@@ -1814,7 +1846,7 @@ Derived Metrics
 
 同一个 execution result 可以派生多个 MetricProfile 结果。Promotion Gate 必须指定接受的 MetricProfile；跨市场比较前必须验证 Profile 兼容性。派生分析不能回写或改变 immutable canonical run evidence。
 
-### 15.6 Trace Level
+### 15.7 Trace Level
 
 - `summary`：仅允许 completed development-grade，保存请求、引用、最终结果和限制。
 - `full_trace`：保存权威决策、执行、Journal、Checkpoint 和完整性证据。

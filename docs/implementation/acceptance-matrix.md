@@ -108,7 +108,7 @@ artifact_hashes: []
 | WP-07B | PASSED | backtest-runtime | WP-07A | none |
 | WP-07C | PASSED | backtest-runtime | WP-07B | none |
 | WP-07D | PASSED | backtest-runtime | WP-07B–WP-07C | none |
-| WP-07E | DRAFT | backtest-runtime | WP-07A-R1, WP-07C–WP-07D | Post-integrity terminal persistence, consistency-set closure, canonical hash DAG, filesystem threat model |
+| WP-07E | READY | backtest-runtime | WP-07A-R1, WP-07C–WP-07D | none |
 | G07 | DRAFT | backtest-runtime integration | WP-07A-R1, WP-07A–WP-07E | WP-07E must pass |
 | G08A | DRAFT | trading-kernel profiles/cn_a_share | G07 | Calendar fixtures |
 | G08B | DRAFT | trading-kernel profiles/cn_a_share | G08A | T+1 fixtures |
@@ -5176,7 +5176,7 @@ Python                                                              3.13.5
 
 ```yaml
 id: WP-07E
-status: DRAFT
+status: READY
 depends_on:
   - WP-07A-R1
   - WP-07C
@@ -5188,10 +5188,15 @@ public_interface:
   - crypto_quant_backtest.IntegrityTraceLevel
   - crypto_quant_backtest.ResultGrade
   - crypto_quant_backtest.IntegrityIssue
+  - crypto_quant_backtest.DeterministicRebuildEvidence
+  - crypto_quant_backtest.AttemptConsistencySet
   - crypto_quant_backtest.IntegrityEvaluationContext
   - crypto_quant_backtest.IntegrityReport
+  - crypto_quant_backtest.IntegrityEvaluationRecord
+  - crypto_quant_backtest.FinalizedIntegrityEvaluation
   - crypto_quant_backtest.IntegrityEvaluator
   - crypto_quant_backtest.CanonicalAttemptRef
+  - crypto_quant_backtest.CanonicalPublicationManifest
   - crypto_quant_backtest.CompletedBacktestResult
   - crypto_quant_backtest.FinalizedCanonicalResult
   - crypto_quant_backtest.CanonicalPublicationFailureCode
@@ -5221,6 +5226,16 @@ failure_contracts:
   - blocked-failed-or-cancelled-attempt-is-converted-to-completed
   - canonical-publication-overwrites-existing-result-or-mutates-attempt-evidence
   - canonical-result-attempt-ref-integrity-or-source-hash-mismatch
+  - fewer-than-two-eligible-attempts-publishes-completed
+  - eligible-attempt-set-is-not-exact-covered-under-publication-lock
+  - canonical-attempt-is-not-lowest-ordinal
+  - post-integrity-blocked-or-failed-outcome-has-no-durable-evaluation-record
+  - blocked-or-failed-evaluation-creates-canonical-directory-or-result-json
+  - canonical-attempt-ref-integrity-result-or-publication-manifest-forms-hash-cycle
+  - trace-bundle-retention-or-rebuild-evidence-is-not-bound-by-canonical-attempt-ref
+  - post-publication-attempt-is-accepted-for-closed-semantic-run
+  - shared-adversarial-or-cross-filesystem-publication-is-treated-as-supported-v1
+  - stale-lock-is-broken-using-wall-clock-time
   - canonical-publication-failure-leaves-visible-final-result
   - execution-hash-mismatch-is-published-as-completed-or-silently-selects-an-attempt
   - publisher-accesses-network-wall-clock-cache-external-database-or-reruns-engine
@@ -5232,8 +5247,13 @@ evidence:
   - development-and-decision-grade-rule-evidence
   - full-trace-and-summary-trace-grade-evidence
   - finalized-attempt-and-execution-hash-binding-evidence
-  - execution-hash-mismatch-failed-publication-evidence
-  - atomic-canonical-directory-and-read-only-evidence
+  - execution-hash-mismatch-failed-evaluation-evidence
+  - insufficient-attempt-blocked-evaluation-evidence
+  - closed-attempt-set-exact-coverage-and-lowest-ordinal-selection
+  - atomic-integrity-evaluation-and-canonical-directory-evidence
+  - canonical-publication-hash-dag-and-manifest-exact-coverage
+  - deterministic-rebuild-bundle-retention-and-trace-binding-evidence
+  - trusted-single-writer-filesystem-and-run-closure-evidence
   - completed-result-and-canonical-attempt-reference-hashes
   - deployment-authorized-false-evidence
   - public-api-import-report
@@ -5247,24 +5267,18 @@ artifact_hashes: []
 
 冻结以下实现边界：
 
-1. `IntegrityEvaluator` 只接受已经通过 WP-07C atomic finalize 的 `READY_FOR_INTEGRITY` Attempt、WP-07D `AttemptExecutionHash`/same-run check、Resolved Request/Environment 和显式 Trace/MarketBundle retention evidence；不重跑 Engine、不修改经济对象；
-2. `IntegrityIssue` 只使用稳定 code、blocking/limitation severity 和 canonical subject keys。Synthetic/development Profile、editable/unidentified Build、Environment limitation、summary trace、MarketBundle retention 和 deterministic rebuild 缺失不得隐藏；
-3. Development request 可以在没有 blocking issue 时得到 `ResultGrade.DEVELOPMENT`，但必须完整保留 limitation。Decision grade 只允许 immutable Build、decision-grade Profile、兼容 Environment、可取回 Bundle、`full_trace`/`microstructure_trace`、同一 Semantic Run 确定性一致且无 blocking issue；summary trace 永远不能 decision-grade；
-4. WP-07D `ExecutionHashMismatch` 必须成为 blocking issue，并在发布层确定性映射 `FAILED`；其他预期完整性 blocking issue 映射 `BLOCKED`。不得选择任一 Attempt 静默发布；
-5. `CompletedBacktestResult` 只有在 Attempt evidence 已存在、Execution hash 一致、Integrity 无 blocking issue 后才能构造；Outcome 固定 `COMPLETED`，`deployment_authorized=false`；BLOCKED/FAILED/CANCELLED Attempt 不进入该构造路径；
-6. Canonical publication 使用 caller-supplied local root，在独立 staging 目录写入当前版本 ArtifactEnvelope 的 `integrity.json`、`result.json` 和 `canonical-attempt-ref.json`，read-back 验证后原子 rename 为 `runs/<semantic_run_id>/canonical/`；不得修改只读 Attempt evidence；
-7. Canonical 目录和文件 finalize 后只读，已存在 destination 禁止覆盖。任一写入、验证、permission 或 rename 失败不得留下 final canonical Result，并返回结构化 FAILED publication；
-8. 本 WP 不实现 cache/concurrency dedup、promotion、Metrics、network、wall clock、外部数据库、真实交易或任何 deployment authorization。
+1. Publisher 在 caller-supplied root 获取 run-level exclusive lock 后，构造 `AttemptConsistencySet` exact-cover 当时全部 finalized `READY_FOR_INTEGRITY` Attempt。`COMPLETED` 至少需要两个 eligible Attempt；全部 execution result hash 必须一致，canonical Attempt 固定选择最小 ordinal；
+2. `IntegrityEvaluator` 只接受 closed Attempt set、WP-07D `AttemptExecutionHash`、Resolved Request/Environment 和 caller-supplied canonical `DeterministicRebuildEvidence`；不重跑 Engine、不修改经济对象。Rebuild evidence exact 绑定 Request、Environment、Build、Bundle manifest/retention proof、Target digest、ExecutionCase identity、Trace hash/level 和 execution result hash；
+3. `IntegrityIssue` 只使用稳定 code、blocking/limitation severity 和 canonical subject keys。Synthetic/development Profile、editable/unidentified Build、Environment limitation、summary trace、MarketBundle retention 和 deterministic rebuild 缺失不得隐藏；
+4. Development request 可以在没有 blocking issue 时得到 `ResultGrade.DEVELOPMENT`，但必须完整保留 limitation。Decision grade 只允许 immutable Build、decision-grade Profile、兼容 Environment、可取回 Bundle、`full_trace`/`microstructure_trace`、同一 Semantic Run 确定性一致且无 blocking issue；summary trace 永远不能 decision-grade；
+5. WP-07D `ExecutionHashMismatch` 必须成为 blocking issue，并原子发布到 `runs/<semantic_run_id>/integrity-evaluations/<evaluation_id>/` 的 durable `FAILED` evaluation；少于两个 eligible Attempt 或其他预期完整性 blocking 原子发布 durable `BLOCKED` evaluation。Evaluation 目录只含 `integrity.json`、`evaluation-outcome.json` 和 exact-cover `publication-manifest.json`，不得创建 `canonical/`、`result.json` 或 canonical Attempt ref；
+6. `CompletedBacktestResult` 只有在 closed Attempt set、Execution hash 一致、Integrity 无 blocking issue 后才能构造；Outcome 固定 `COMPLETED`，`deployment_authorized=false`。Canonical hash DAG 固定为 `canonical-attempt-ref.json` → `integrity.json` → `result.json` → `publication-manifest.json`；Manifest exact-cover 其他三个文件，任何子文件不得反向引用 Manifest；
+7. Canonical publication 使用同一 local filesystem 的独立 staging，read-back 验证后原子 rename 为 `runs/<semantic_run_id>/canonical/`；不得修改只读 Attempt evidence。Canonical/evaluation 目录 finalize 后只读且禁止覆盖；任一写入、验证、permission 或 rename 失败不得留下 final destination，并返回结构化 FAILED publication；
+8. `canonical/` 发布后 Semantic Run 永久关闭。WP-07C Evidence Writer 使用同一 run-level lock 并拒绝新 Attempt；Runner 只能返回 cache hit。Post-publication same-run parity/revocation 不在 v1；
+9. Filesystem threat model 固定为 trusted cooperative single-writer：受控本地同一文件系统、排他 lockfile、staging→rename；锁不得按 wall clock 自动回收。Shared/adversarial filesystem、NFS/object-store rename 语义、symlink attack 和 malicious concurrent writer 明确不支持；
+10. 本 WP 不实现 cache eviction、promotion、Metrics、network、wall clock、外部数据库、真实交易或任何 deployment authorization。
 
-并行独立审阅确认以下问题必须在恢复 `READY` 前冻结：
-
-- post-integrity `BLOCKED`/`FAILED` 的 durable immutable publication path 和 schema；
-- 一致性 Attempt set 的最小数量、closure、canonical Attempt 选择和 post-publication parity 边界；
-- `integrity.json`、`result.json`、`canonical-attempt-ref.json` 的无环 hash DAG 与 exact fields；
-- Trace/Bundle retention/rebuild evidence 的 canonical binding；
-- trusted cooperative single-writer 与 shared/adversarial filesystem threat model 二选一。
-
-因此 WP-07E 暂时恢复为 `DRAFT`，不得开始 production implementation。
+上述 durable evaluation、双 Attempt closure、lowest-ordinal selection、无环 DAG、Rebuild/Trace/Bundle binding 和 trusted single-writer filesystem 决策已经冻结，WP-07E 恢复为 `READY`，可以开始 production implementation。
 
 ## 61. G07 Auditable Development Run Acceptance Card
 

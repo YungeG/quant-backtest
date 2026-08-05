@@ -48,7 +48,7 @@ _Avoid_: final-case preimage, placeholder semantic hash
 
 ## 执行尝试（Execution Attempt）
 
-对一个语义运行进行的一次实际计算，具有独立 Attempt ID 和 Outcome，不得覆盖其他尝试的证据。Bar Engine v1 的重试从初始状态创建新尝试。
+对一个语义运行进行的一次实际计算，具有独立 Attempt ID 和 Outcome，不得覆盖其他尝试的证据。Bar Engine v1 的重试从初始状态创建新尝试；canonical publication 封闭 Semantic Run 后不得再创建同 Run Attempt。
 
 ## 引擎检查点（Engine Checkpoint）
 
@@ -56,7 +56,23 @@ _Avoid_: final-case preimage, placeholder semantic hash
 
 ## 权威运行证据（Canonical Run Evidence）
 
-一个已完成语义运行通过原子 finalize 发布的不可变权威证据集合。
+一个已完成语义运行通过原子 finalize 发布的不可变权威证据集合。只有 COMPLETED 可以创建 `canonical/`；post-integrity BLOCKED/FAILED 使用独立 immutable Integrity Evaluation。
+
+## 封闭 Attempt 集（Closed Attempt Set）
+
+Publisher 在 run-level exclusive lock 下 exact-cover 的全部 finalized `READY_FOR_INTEGRITY` Attempt。G07 v1 的 COMPLETED 至少需要两个 execution hash 一致的 Attempt，canonical Attempt 固定选择最小 ordinal；canonical 发布后同一 Semantic Run 不再接受新 Attempt。
+
+## 完整性评估记录（Integrity Evaluation Record）
+
+对一个 Closed Attempt Set 产生的 immutable post-integrity BLOCKED 或 FAILED 记录。它原子发布在 `integrity-evaluations/`，不包含 `result.json`，不能冒充 Completed canonical result。
+
+## 确定性重建证据（Deterministic Rebuild Evidence）
+
+Canonically 绑定 Request、Resolved Environment、Build、MarketBundle manifest/retention proof、Target digest、ExecutionCase identity、Trace hash/level 和 execution result hash 的 caller-supplied 证据。CanonicalAttemptRef 必须绑定其 hash。
+
+## Canonical Publication Manifest
+
+Canonical 或 Integrity Evaluation 目录的无环 hash DAG root，exact-cover 同目录其他权威文件的路径、schema 和 content hash。子文件不得反向引用 Manifest hash。
 
 ## 构建产物清单（Build Artifact Manifest）
 

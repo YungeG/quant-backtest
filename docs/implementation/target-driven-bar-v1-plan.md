@@ -1175,14 +1175,16 @@ v1 固定目录为 `runs/<semantic_run_id>/attempts/.staging/<attempt_id>/` → 
 
 验收：
 
-- Integrity 只绑定 `READY_FOR_INTEGRITY` Attempt evidence、WP-07D execution hash/check 和 Resolved Environment；不得重跑 Engine；
+- Publisher 获取 trusted local filesystem 上的 run-level exclusive lock，并 exact-cover 当时全部 finalized `READY_FOR_INTEGRITY` Attempt；`COMPLETED` 至少需要两个 execution hash 一致的 Attempt，canonical Attempt 固定选择最小 ordinal；
+- Integrity 只绑定 closed Attempt set、WP-07D execution hash/check、Resolved Environment 和 caller-supplied canonical `DeterministicRebuildEvidence`；不得重跑 Engine；
 - `deployment_authorized` 永远为 false；
 - Development Profile、Build/Environment、summary trace、Bundle retention 和 deterministic rebuild limitation 不得隐藏；
 - Decision grade 要求 immutable Build、decision-grade Profile、可取回 Bundle、full/microstructure trace、same-run execution hash 一致且无 blocking issue；Summary trace 永远不能 decision-grade；
-- execution hash mismatch 是 blocking Integrity issue，并在发布层确定性映射 FAILED；其他预期 Integrity blocking 映射 BLOCKED；
-- 只有 finalized Attempt Evidence + 一致 execution hash + 无 blocking Integrity 才能产生 COMPLETED Result；BLOCKED/FAILED/CANCELLED 不得转换成 COMPLETED；
-- Canonical publication 在独立 staging 中写 `integrity.json`、`result.json`、`canonical-attempt-ref.json`，read-back 后原子 rename 到 `runs/<semantic_run_id>/canonical/`；不得修改 Attempt evidence；
-- final canonical 目录只读且不可覆盖；任何失败不得留下可见 Completed Result。
+- execution hash mismatch 在 `integrity-evaluations/<evaluation_id>/` 原子发布 durable `FAILED`；少于两个 eligible Attempt 或其他预期 blocking 原子发布 durable `BLOCKED`。二者都不创建 `canonical/` 或 `result.json`；
+- 只有 closed Attempt set + 一致 execution hash + 无 blocking Integrity 才能产生 COMPLETED Result。Canonical DAG 固定为 AttemptRef → Integrity → Result → PublicationManifest，manifest exact-cover 同目录其他三个文件；
+- Canonical publication 在独立 staging 中写 `canonical-attempt-ref.json`、`integrity.json`、`result.json`、`publication-manifest.json`，read-back 后原子 rename 到 `runs/<semantic_run_id>/canonical/`；不得修改 Attempt evidence；
+- final canonical 目录和 evaluation 目录只读且不可覆盖。Canonical 发布后 Semantic Run 封闭，Evidence Writer 拒绝新 Attempt；post-publication same-run parity 不在 v1；
+- v1 只支持 trusted cooperative single-writer、受控本地同一文件系统和同一排他锁；不支持 shared/adversarial filesystem、NFS/object-store rename 语义或基于 wall clock 的 stale-lock 自动回收。任何失败不得留下可见 Completed Result。
 
 ### Gate G07
 
