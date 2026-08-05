@@ -105,7 +105,7 @@ artifact_hashes: []
 | G06 | PASSED | tests/support + backtest-runtime integration | WP-06A–WP-06H, G03–G05 | none |
 | WP-07A | PASSED | backtest-runtime | G06 | none |
 | WP-07B | PASSED | backtest-runtime | WP-07A | none |
-| WP-07C | READY | backtest-runtime | WP-07B | none |
+| WP-07C | PASSED | backtest-runtime | WP-07B | none |
 | WP-07D | DRAFT | backtest-runtime | WP-07B–WP-07C | Execution hash fixtures |
 | WP-07E | DRAFT | backtest-runtime | WP-07C–WP-07D | Integrity/grade fixtures |
 | G08A | DRAFT | trading-kernel profiles/cn_a_share | G07 | Calendar fixtures |
@@ -4887,7 +4887,7 @@ Python                                                                3.13.5
 
 ```yaml
 id: WP-07C
-status: READY
+status: PASSED
 depends_on:
   - WP-07B
 owner_package: backtest-runtime
@@ -4943,8 +4943,11 @@ evidence:
   - public-api-import-report
   - import-boundary-report
   - static-type-report
-passed_commit: null
-artifact_hashes: []
+passed_commit: 174e11fcb14cd72e4045de8fc548e968cdc270e3
+artifact_hashes:
+  tests/fixtures/runtime/atomic-attempt-evidence-publication-v1.json: sha256:5810950d35c91759fb9e2184cda4869403d12680de90e03717dd05333b0ce804
+  build/acceptance/wp-07c-pytest.xml: sha256:976757432b069828cf1f5d4139557f4bd9cbeca35e76683e0c58958b65a414e4
+  build/acceptance/wp-07c-import-boundary-report.json: sha256:2633b569d2bdbad32d94d5ad18fd4acb254d301b5fe77c55510597d4c476fe91
 ```
 
 ### WP-07C Acceptance
@@ -4959,6 +4962,24 @@ artifact_hashes: []
 6. Ready 分支发布状态固定为 `READY_FOR_INTEGRITY`，保留 exact `EngineExecutionResult`，但不创建 `result.json`、`BacktestRunOutcome.COMPLETED`、canonical Attempt ref、execution result summary/hash、Integrity 或 ResultGrade。BLOCKED/FAILED/CANCELLED 分支保持 Runner 的原始 terminal Outcome；
 7. 任一 staging 创建、Artifact 写入、Manifest 写入、read-back、permission 或 rename 失败返回 canonical `EvidenceWriteFailure`，Outcome 固定 FAILED，只记录稳定 failure code、Attempt identity、相对 artifact subject 和异常类型 identity；异常 message、stack、hostname 和绝对 path 不进入 protocol。失败不得留下 final Attempt；
 8. 本 WP 不重跑 Engine、不修改 Runner/Engine economic objects、不做 cache/concurrent dedup、不访问 network 或 mutable external database，并保持 `deployment_authorized=false`。
+
+WP-07C 的实现已冻结在 immutable commit `174e11fcb14cd72e4045de8fc548e968cdc270e3`，状态为 `PASSED`。
+
+验证记录：
+
+```text
+Evidence writer contract tests                                      6 passed
+Canonical atomic publication golden fixture                         1 passed
+Public API + repository cleanliness boundaries                      5 passed
+Acceptance test report                                             12 passed
+Backtest-runtime import boundary                                    PASS (52 files)
+Full test suite                                                    518 passed
+mypy                                                                no issues (4 files)
+Primary LSP                                                         clean
+pi-lens scoped/full review                                          no unresolved findings; 2 small G07-local helper duplicates deferred
+uv lock --check                                                     PASS
+Python                                                              3.13.5
+```
 
 ## 58. PASSED 记录格式
 
