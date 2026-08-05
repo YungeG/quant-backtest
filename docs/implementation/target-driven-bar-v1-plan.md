@@ -1183,7 +1183,7 @@ v1 固定目录为 `runs/<semantic_run_id>/attempts/.staging/<attempt_id>/` → 
 - execution hash mismatch 在 `integrity-evaluations/<evaluation_id>/` 原子发布 durable `FAILED`；少于两个 eligible Attempt 或其他预期 blocking 原子发布 durable `BLOCKED`。二者都不创建 `canonical/` 或 `result.json`；
 - 只有 closed Attempt set + 一致 execution hash + 无 blocking Integrity 才能产生 COMPLETED Result。Canonical DAG 固定为 AttemptRef → Integrity → Result → PublicationManifest，manifest exact-cover 同目录其他三个文件；
 - Canonical publication 在独立 staging 中写 `canonical-attempt-ref.json`、`integrity.json`、`result.json`、`publication-manifest.json`，read-back 后原子 rename 到 `runs/<semantic_run_id>/canonical/`；不得修改 Attempt evidence；
-- final canonical 目录和 evaluation 目录只读且不可覆盖。Canonical 发布后 Semantic Run 封闭，Evidence Writer 拒绝新 Attempt；post-publication same-run parity 不在 v1；
+- final canonical 目录和 evaluation 目录只读且不可覆盖。Canonical 发布后 Semantic Run 封闭，Evidence Writer 拒绝新 Attempt；Auditable Runner 必须绑定 publication root，并在锁内验证 existing canonical Artifact/Manifest/hash chain 后返回 cache hit，不能创建 Attempt、返回 FAILED 或重跑 Engine；post-publication same-run parity 不在 v1；
 - v1 只支持 trusted cooperative single-writer、受控本地同一文件系统和同一排他锁；不支持 shared/adversarial filesystem、NFS/object-store rename 语义或基于 wall clock 的 stale-lock 自动回收。任何失败不得留下可见 Completed Result。
 
 ### Gate G07

@@ -3,14 +3,11 @@ from __future__ import annotations
 import json
 from pathlib import Path
 
-from crypto_quant_backtest import (
-    AttemptIdentity,
-    AuditableBacktestRunner,
-    InputOrigin,
-)
+from crypto_quant_backtest import AttemptIdentity, InputOrigin
 from crypto_quant_domain import canonical_bytes
 from tests.runtime.engine._fixtures import SyntheticExecutionCaseBuilder
 from tests.runtime.resolution.test_execution_case_identity import resolved_for
+from tests.runtime.runner._fixtures import auditable_runner
 
 
 FIXTURE = Path("tests/fixtures/runtime/pre-id-execution-case-identity-v1.json")
@@ -21,7 +18,7 @@ def build_actual() -> dict[str, object]:
     spec = builder.semantic_spec()
     first_resolved, first_case = resolved_for(builder)
     second_resolved, second_case = resolved_for(builder)
-    runner = AuditableBacktestRunner()
+    runner = auditable_runner()
     first = runner.execute(
         resolved_request=first_resolved,
         execution_case=first_case,

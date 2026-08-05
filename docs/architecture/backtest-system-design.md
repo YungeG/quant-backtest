@@ -1795,7 +1795,7 @@ semantic_run_id = hash(
 - 每次实际执行使用不同 attempt ID，Attempt 之间不得覆盖。
 - Bar Engine v1 的 FAILED/CANCELLED Attempt 不支持 in-place resume；Auditable Runner 重试时创建新 Attempt 并从初始 ResolvedExecutionCase 运行。
 - G07 v1 的 `COMPLETED` closure 至少需要两个 finalized `READY_FOR_INTEGRITY` Attempt。Publisher 在获取 run-level exclusive lock 后 exact-cover 当时全部 eligible Attempt；execution result hash 必须完全一致，canonical Attempt 固定选择最小 ordinal。
-- `canonical/` 原子发布后 Semantic Run 永久关闭：Evidence Writer 拒绝新 Attempt，Runner 只能返回 cache hit；同一 Semantic Run 的 post-publication parity/revocation 不在 v1 内，不能绕过 closure 继续写入。
+- `canonical/` 原子发布后 Semantic Run 永久关闭：Evidence Writer 拒绝新 Attempt；Auditable Runner 必须绑定 publication root，在同一锁内验证只读 canonical 目录、Artifact Envelope、Publication Manifest exact coverage 和 Result hash chain 后返回 cache hit，不得创建 Attempt、映射 FAILED 或重跑 Engine；同一 Semantic Run 的 post-publication parity/revocation 不在 v1 内，不能绕过 closure 继续写入。
 - closure 前发现 execution hash mismatch 产生独立 durable `FAILED` integrity evaluation，不得选择 winner。少于两个 eligible Attempt 或其他预期 Integrity deficit 产生独立 durable `BLOCKED` evaluation。
 - v1 filesystem threat model 固定为 trusted cooperative single-writer：受控本地同一文件系统、同一个 run-level exclusive lock 和 staging→rename。锁不得按 wall clock 自动回收；shared/adversarial filesystem、NFS/object-store rename 语义、symlink 攻击和恶意并发写者明确不支持，不能用于 decision-grade publication。
 - `ExecutionCaseSemanticSpec` 必须在领域 ID 派生前冻结，且不得包含 Order、OrderEvent、Fill、FeeAssessment、SettlementObligation、JournalEntry 等派生 ID 或 final ExecutionCase hash。它必须 exact-cover 所有行为相关的 typed execution input，包括 Slippage calibration/configuration，而不能只绑定省略参数的端口描述。

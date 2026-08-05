@@ -3,15 +3,21 @@
 from __future__ import annotations
 
 from abc import abstractmethod
+from collections.abc import Mapping
 from dataclasses import dataclass
 from enum import Enum
+import hashlib
+import json
+import os
+from pathlib import Path
 import re
 from typing import Protocol
 import unicodedata
 
-from crypto_quant_domain import canonical_sha256
+from crypto_quant_domain import ArtifactEnvelope, canonical_bytes, canonical_sha256
 from crypto_quant_market_data import InputValidationFailure
 
+from ._publication import RunPublicationLock, verify_read_only
 from .composition import ExecutionCaseComposer
 from .engine import (
     DeterministicBarEngine,
@@ -69,6 +75,29 @@ def _canonical_hashes(name: str, values: tuple[str, ...]) -> tuple[str, ...]:
     return checked
 
 
+def _source_hash(source: bytes) -> str:
+    return f"sha256:{hashlib.sha256(source).hexdigest()}"
+
+
+def _read_canonical_artifact(
+    path: Path,
+    expected_artifact_type: str,
+) -> tuple[dict[str, object], ArtifactEnvelope, str]:
+    source = path.read_bytes()
+    try:
+        decoded = json.loads(source)
+    except json.JSONDecodeError as error:
+        raise ValueError("canonical artifact is not valid JSON") from error
+    if not isinstance(decoded, dict):
+        raise ValueError("canonical artifact must be a JSON object")
+    envelope = ArtifactEnvelope(**decoded)
+    if source != canonical_bytes(envelope):
+        raise ValueError("canonical artifact source bytes are not canonical")
+    if envelope.artifact_type != expected_artifact_type:
+        raise ValueError("canonical artifact type mismatch")
+    return dict(envelope.payload), envelope, _source_hash(source)
+
+
 class InputOrigin(str, Enum):
     PRECOMPUTED_TARGET_STREAM = "precomputed_target_stream"
     RUNTIME_STRATEGY = "runtime_strategy"
@@ -82,6 +111,7 @@ class BacktestRunOutcome(str, Enum):
 
 
 class AttemptExecutionStatus(str, Enum):
+    CACHE_HIT = "CACHE_HIT"
     READY_TO_FINALIZE = "READY_TO_FINALIZE"
     BLOCKED = "BLOCKED"
     FAILED = "FAILED"
@@ -375,7 +405,79 @@ class ReadyToFinalizeAttempt:
 
 
 @dataclass(frozen=True, slots=True)
+class CanonicalResultCacheHit:
+    canonical_attempt: AttemptIdentity
+    resolved_request: ResolvedBacktestRequest
+    input_origin: InputOrigin
+    execution_case_hash: str
+    execution_result_hash: str
+    canonical_attempt_ref_hash: str
+    integrity_report_hash: str
+    result_hash: str
+    publication_manifest_hash: str
+    publication_manifest_source_hash: str
+    result_grade: str
+    relative_directory: str
+    deployment_authorized: bool = False
+
+    def __post_init__(self) -> None:
+        _validate_attempt_context(
+            self.canonical_attempt,
+            self.resolved_request,
+            self.input_origin,
+            self.execution_case_hash,
+        )
+        for name in (
+            "execution_result_hash",
+            "canonical_attempt_ref_hash",
+            "integrity_report_hash",
+            "result_hash",
+            "publication_manifest_hash",
+            "publication_manifest_source_hash",
+        ):
+            _hash(name, getattr(self, name))
+        if self.result_grade not in {"development", "decision_grade"}:
+            raise ValueError("result_grade is unsupported")
+        expected = f"runs/{self.canonical_attempt.semantic_run_id}/canonical"
+        if self.relative_directory != expected:
+            raise ValueError("relative_directory does not match canonical layout")
+        if type(self.deployment_authorized) is not bool:
+            raise TypeError("deployment_authorized must be bool")
+        if self.deployment_authorized:
+            raise ValueError("cache hit never authorizes deployment")
+
+    @property
+    def outcome(self) -> BacktestRunOutcome:
+        return BacktestRunOutcome.COMPLETED
+
+    @property
+    def cache_hit_hash(self) -> str:
+        return canonical_sha256(self)
+
+    def to_canonical_dict(self) -> dict[str, object]:
+        return {
+            "type": "canonical_result_cache_hit",
+            "schema_version": 1,
+            "canonical_attempt": self.canonical_attempt,
+            "resolved_request_hash": canonical_sha256(self.resolved_request),
+            "input_origin": self.input_origin.value,
+            "execution_case_hash": self.execution_case_hash,
+            "execution_result_hash": self.execution_result_hash,
+            "canonical_attempt_ref_hash": self.canonical_attempt_ref_hash,
+            "integrity_report_hash": self.integrity_report_hash,
+            "result_hash": self.result_hash,
+            "publication_manifest_hash": self.publication_manifest_hash,
+            "publication_manifest_source_hash": self.publication_manifest_source_hash,
+            "result_grade": self.result_grade,
+            "relative_directory": self.relative_directory,
+            "outcome": self.outcome.value,
+            "deployment_authorized": self.deployment_authorized,
+        }
+
+
+@dataclass(frozen=True, slots=True)
 class AttemptExecutionRecord:
+    cache_hit: CanonicalResultCacheHit | None = None
     ready_to_finalize: ReadyToFinalizeAttempt | None = None
     blocked_report: BlockedAttemptReport | None = None
     failed_report: FailedAttemptReport | None = None
@@ -383,6 +485,7 @@ class AttemptExecutionRecord:
 
     def __post_init__(self) -> None:
         branches = (
+            self.cache_hit is not None,
             self.ready_to_finalize is not None,
             self.blocked_report is not None,
             self.failed_report is not None,
@@ -391,6 +494,7 @@ class AttemptExecutionRecord:
         if sum(branches) != 1:
             raise ValueError("Attempt execution requires exactly one branch")
         expected_types = (
+            (self.cache_hit, CanonicalResultCacheHit),
             (self.ready_to_finalize, ReadyToFinalizeAttempt),
             (self.blocked_report, BlockedAttemptReport),
             (self.failed_report, FailedAttemptReport),
@@ -402,6 +506,8 @@ class AttemptExecutionRecord:
 
     @property
     def status(self) -> AttemptExecutionStatus:
+        if self.cache_hit is not None:
+            return AttemptExecutionStatus.CACHE_HIT
         if self.ready_to_finalize is not None:
             return AttemptExecutionStatus.READY_TO_FINALIZE
         if self.blocked_report is not None:
@@ -412,6 +518,8 @@ class AttemptExecutionRecord:
 
     @property
     def terminal_outcome(self) -> BacktestRunOutcome | None:
+        if self.cache_hit is not None:
+            return BacktestRunOutcome.COMPLETED
         if self.blocked_report is not None:
             return BacktestRunOutcome.BLOCKED
         if self.failed_report is not None:
@@ -422,6 +530,8 @@ class AttemptExecutionRecord:
 
     @property
     def attempt(self) -> AttemptIdentity:
+        if self.cache_hit is not None:
+            return self.cache_hit.canonical_attempt
         for branch in (
             self.ready_to_finalize,
             self.blocked_report,
@@ -435,6 +545,7 @@ class AttemptExecutionRecord:
     @property
     def resolved_request(self) -> ResolvedBacktestRequest:
         for branch in (
+            self.cache_hit,
             self.ready_to_finalize,
             self.blocked_report,
             self.failed_report,
@@ -447,6 +558,7 @@ class AttemptExecutionRecord:
     @property
     def input_origin(self) -> InputOrigin:
         for branch in (
+            self.cache_hit,
             self.ready_to_finalize,
             self.blocked_report,
             self.failed_report,
@@ -459,6 +571,7 @@ class AttemptExecutionRecord:
     @property
     def execution_case_hash(self) -> str:
         for branch in (
+            self.cache_hit,
             self.ready_to_finalize,
             self.blocked_report,
             self.failed_report,
@@ -469,7 +582,7 @@ class AttemptExecutionRecord:
         raise RuntimeError("Attempt execution has no branch")
 
     def to_canonical_dict(self) -> dict[str, object]:
-        return {
+        payload: dict[str, object] = {
             "type": "attempt_execution_record",
             "status": self.status.value,
             "terminal_outcome": (
@@ -482,6 +595,161 @@ class AttemptExecutionRecord:
             "failed_report": self.failed_report,
             "cancelled_report": self.cancelled_report,
         }
+        if self.cache_hit is not None:
+            payload["cache_hit"] = self.cache_hit
+        return payload
+
+
+def _read_canonical_cache_hit(
+    *,
+    root: Path,
+    resolved_request: ResolvedBacktestRequest,
+    input_origin: InputOrigin,
+    execution_case_hash: str,
+) -> CanonicalResultCacheHit:
+    semantic_run_id = resolved_request.semantic_run_id
+    relative = f"runs/{semantic_run_id}/canonical"
+    directory = root / relative
+    if not directory.is_dir():
+        raise ValueError("canonical publication is not a directory")
+    verify_read_only(directory)
+    expected_files = {
+        "canonical-attempt-ref.json",
+        "integrity.json",
+        "result.json",
+        "publication-manifest.json",
+    }
+    if {path.name for path in directory.iterdir()} != expected_files:
+        raise ValueError("canonical publication file coverage mismatch")
+    artifact_specs = {
+        "canonical-attempt-ref.json": "canonical_attempt_ref",
+        "integrity.json": "integrity_report",
+        "result.json": "completed_backtest_result",
+    }
+    artifacts = {
+        name: _read_canonical_artifact(directory / name, artifact_type)
+        for name, artifact_type in artifact_specs.items()
+    }
+    manifest_payload, _, manifest_source_hash = _read_canonical_artifact(
+        directory / "publication-manifest.json",
+        "canonical_publication_manifest",
+    )
+    manifest_authorized = manifest_payload.get("deployment_authorized")
+    if (
+        manifest_payload.get("semantic_run_id") != semantic_run_id
+        or manifest_payload.get("publication_kind") != "canonical"
+        or manifest_payload.get("publication_id") != "canonical"
+        or type(manifest_authorized) is not bool
+        or manifest_authorized
+    ):
+        raise ValueError("canonical publication manifest identity mismatch")
+    manifest_entries = manifest_payload.get("artifacts")
+    if not isinstance(manifest_entries, tuple) or not all(
+        isinstance(value, Mapping) for value in manifest_entries
+    ):
+        raise ValueError("canonical publication manifest entries are invalid")
+    entries = tuple(dict(value) for value in manifest_entries)
+    paths = tuple(value.get("relative_path") for value in entries)
+    if len(set(paths)) != len(paths):
+        raise ValueError("canonical publication manifest paths are not unique")
+    by_path = {value["relative_path"]: value for value in entries}
+    if set(by_path) != set(artifact_specs):
+        raise ValueError("canonical publication manifest does not exact-cover")
+    for name, expected_type in artifact_specs.items():
+        _, envelope, source_hash = artifacts[name]
+        entry = by_path[name]
+        if (
+            entry.get("artifact_type") != expected_type
+            or entry.get("schema_version") != envelope.schema_version
+            or entry.get("content_hash") != envelope.content_hash
+            or entry.get("source_hash") != source_hash
+            or entry.get("byte_count") != (directory / name).stat().st_size
+        ):
+            raise ValueError("canonical publication artifact binding mismatch")
+
+    reference_payload = artifacts["canonical-attempt-ref.json"][0]
+    integrity_payload = artifacts["integrity.json"][0]
+    result_payload = artifacts["result.json"][0]
+    reference_hash = canonical_sha256(reference_payload)
+    integrity_hash = canonical_sha256(integrity_payload)
+    result_hash = canonical_sha256(result_payload)
+    authorization_values = (
+        reference_payload.get("deployment_authorized"),
+        integrity_payload.get("deployment_authorized"),
+        result_payload.get("deployment_authorized"),
+    )
+    result_integrity = result_payload.get("integrity")
+    attempt_payload = reference_payload.get("attempt")
+    if not isinstance(result_integrity, Mapping):
+        raise ValueError("canonical Result integrity summary is invalid")
+    if not isinstance(attempt_payload, Mapping):
+        raise ValueError("canonical Attempt payload is invalid")
+    result_grade_value = result_payload.get("result_grade")
+    integrity_grade_value = integrity_payload.get("result_grade")
+    requested_grade = integrity_payload.get("requested_grade")
+    expected_grade = resolved_request.request.result_grade_requested.value
+    if (
+        any(type(value) is not bool or value for value in authorization_values)
+        or result_payload.get("outcome") != BacktestRunOutcome.COMPLETED.value
+        or result_payload.get("semantic_run_id") != semantic_run_id
+        or integrity_payload.get("semantic_run_id") != semantic_run_id
+        or result_payload.get("canonical_attempt_ref_hash") != reference_hash
+        or integrity_payload.get("canonical_attempt_ref_hash") != reference_hash
+        or result_payload.get("integrity_report_hash") != integrity_hash
+        or result_payload.get("request_hash")
+        != canonical_sha256(resolved_request.request)
+        or canonical_sha256(result_payload.get("resolved_request"))
+        != canonical_sha256(resolved_request)
+        or result_grade_value != integrity_grade_value
+        or result_grade_value != expected_grade
+        or requested_grade != expected_grade
+        or result_grade_value
+        not in {"development", "decision_grade"}
+        or (
+            result_grade_value == "decision_grade"
+            and requested_grade != "decision_grade"
+        )
+        or result_integrity.get("blocking") not in ((), [])
+        or result_payload.get("execution_result_hash")
+        != reference_payload.get("execution_result_hash")
+        or result_payload.get("consistency_set_hash")
+        != reference_payload.get("consistency_set_hash")
+        or result_payload.get("attempt_id") != attempt_payload.get("attempt_id")
+        or result_payload.get("evidence_manifest_hash")
+        != reference_payload.get("evidence_manifest_hash")
+    ):
+        raise ValueError("canonical Result trust chain mismatch")
+    canonical_attempt = AttemptIdentity(
+        semantic_run_id=attempt_payload["semantic_run_id"],
+        ordinal=attempt_payload["ordinal"],
+        parent_attempt_id=attempt_payload["parent_attempt_id"],
+        attempt_id=attempt_payload["attempt_id"],
+    )
+    if (
+        canonical_attempt.semantic_run_id != semantic_run_id
+        or reference_payload.get("execution_case_hash") != execution_case_hash
+    ):
+        raise ValueError("canonical cache identity mismatch")
+    execution_result_hash = reference_payload.get("execution_result_hash")
+    result_grade = result_grade_value
+    if not isinstance(execution_result_hash, str) or not isinstance(
+        result_grade, str
+    ):
+        raise ValueError("canonical cache result fields are invalid")
+    return CanonicalResultCacheHit(
+        canonical_attempt=canonical_attempt,
+        resolved_request=resolved_request,
+        input_origin=input_origin,
+        execution_case_hash=execution_case_hash,
+        execution_result_hash=execution_result_hash,
+        canonical_attempt_ref_hash=reference_hash,
+        integrity_report_hash=integrity_hash,
+        result_hash=result_hash,
+        publication_manifest_hash=canonical_sha256(manifest_payload),
+        publication_manifest_source_hash=manifest_source_hash,
+        result_grade=result_grade,
+        relative_directory=relative,
+    )
 
 
 class _Engine(Protocol):
@@ -540,8 +808,16 @@ if _ORIGIN_SENSITIVE_CODES | _BLOCKED_ENGINE_CODES | _FAILED_ENGINE_CODES != fro
 
 
 class AuditableBacktestRunner:
-    def __init__(self, *, engine: _Engine | None = None) -> None:
+    def __init__(
+        self,
+        *,
+        engine: _Engine | None = None,
+        publication_root: Path | None = None,
+    ) -> None:
+        if publication_root is not None and not isinstance(publication_root, Path):
+            raise TypeError("publication_root must be Path or None")
         self._engine: _Engine = engine or DeterministicBarEngine()
+        self._publication_root = publication_root
 
     @staticmethod
     def classify_engine_failure(
@@ -596,6 +872,78 @@ class AuditableBacktestRunner:
                 execution_case.case_hash,
                 contract_issue,
             )
+        if self._publication_root is None:
+            return self._failed_record(
+                attempt,
+                resolved_request,
+                input_origin,
+                execution_case.case_hash,
+                self._runner_issue(
+                    "publication_root_required",
+                    (resolved_request.semantic_run_id,),
+                ),
+            )
+        try:
+            with RunPublicationLock(
+                root=self._publication_root,
+                semantic_run_id=resolved_request.semantic_run_id,
+            ):
+                canonical = (
+                    self._publication_root
+                    / "runs"
+                    / resolved_request.semantic_run_id
+                    / "canonical"
+                )
+                if os.path.lexists(canonical):
+                    try:
+                        cache_hit = _read_canonical_cache_hit(
+                            root=self._publication_root,
+                            resolved_request=resolved_request,
+                            input_origin=input_origin,
+                            execution_case_hash=execution_case.case_hash,
+                        )
+                    except (OSError, TypeError, ValueError, KeyError) as error:
+                        return self._failed_record(
+                            attempt,
+                            resolved_request,
+                            input_origin,
+                            execution_case.case_hash,
+                            self._runner_issue(
+                                "canonical_cache_invalid",
+                                (
+                                    resolved_request.semantic_run_id,
+                                    f"{type(error).__module__}.{type(error).__qualname__}",
+                                ),
+                            ),
+                        )
+                    return AttemptExecutionRecord(cache_hit=cache_hit)
+                return self._execute_engine(
+                    resolved_request,
+                    execution_case,
+                    attempt,
+                    input_origin,
+                    cancellation,
+                )
+        except OSError:
+            return self._failed_record(
+                attempt,
+                resolved_request,
+                input_origin,
+                execution_case.case_hash,
+                self._runner_issue(
+                    "run_lock_unavailable",
+                    (resolved_request.semantic_run_id,),
+                ),
+            )
+
+    def _execute_engine(
+        self,
+        resolved_request: ResolvedBacktestRequest,
+        execution_case: ResolvedExecutionCase,
+        attempt: AttemptIdentity,
+        input_origin: InputOrigin,
+        cancellation: EngineCancellationRequest | None,
+    ) -> AttemptExecutionRecord:
         try:
             outcome = self._engine.run(execution_case, cancellation=cancellation)
         except Exception as error:
@@ -653,6 +1001,8 @@ class AuditableBacktestRunner:
     ) -> AttemptExecutionRecord:
         if not isinstance(previous, AttemptExecutionRecord):
             raise TypeError("previous must be AttemptExecutionRecord")
+        if previous.cache_hit is not None:
+            return previous
         if previous.resolved_request.semantic_run_id != resolved_request.semantic_run_id:
             raise ValueError("retry must remain in the previous Semantic Run")
         if canonical_sha256(previous.resolved_request) != canonical_sha256(
@@ -932,6 +1282,7 @@ __all__ = [
     "BacktestRunOutcome",
     "BlockedAttemptReport",
     "CancelledAttemptReport",
+    "CanonicalResultCacheHit",
     "FailedAttemptReport",
     "InputOrigin",
     "ReadyToFinalizeAttempt",

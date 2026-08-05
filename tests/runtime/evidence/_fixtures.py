@@ -1,5 +1,8 @@
 from __future__ import annotations
 
+from pathlib import Path
+from tempfile import TemporaryDirectory
+
 from crypto_quant_backtest import (
     AttemptExecutionRecord,
     AttemptIdentity,
@@ -57,15 +60,17 @@ def attempt_record(branch: str) -> AttemptExecutionRecord:
     else:
         raise ValueError(f"unknown branch: {branch}")
 
-    return AuditableBacktestRunner(
-        engine=RecordingEngine(outcome=engine_outcome)
-    ).execute(
-        resolved_request=resolved,
-        execution_case=case,
-        attempt=attempt,
-        input_origin=InputOrigin.PRECOMPUTED_TARGET_STREAM,
-        cancellation=cancellation,
-    )
+    with TemporaryDirectory() as temporary:
+        return AuditableBacktestRunner(
+            engine=RecordingEngine(outcome=engine_outcome),
+            publication_root=Path(temporary),
+        ).execute(
+            resolved_request=resolved,
+            execution_case=case,
+            attempt=attempt,
+            input_origin=InputOrigin.PRECOMPUTED_TARGET_STREAM,
+            cancellation=cancellation,
+        )
 
 
 __all__ = ["attempt_record"]

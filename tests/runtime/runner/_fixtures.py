@@ -1,8 +1,11 @@
 from __future__ import annotations
 
 from dataclasses import dataclass, replace
+from pathlib import Path
+from tempfile import TemporaryDirectory
 
 from crypto_quant_backtest import (
+    AuditableBacktestRunner,
     BacktestResolutionOutcome,
     EngineExecutionOutcome,
     ExecutionCaseComposer,
@@ -66,7 +69,20 @@ class RecordingEngine:
         return self.outcome
 
 
+_RUNNER_ROOT = TemporaryDirectory()
+
+
+def auditable_runner(
+    engine: RecordingEngine | None = None,
+) -> AuditableBacktestRunner:
+    return AuditableBacktestRunner(
+        engine=engine,
+        publication_root=Path(_RUNNER_ROOT.name),
+    )
+
+
 __all__ = [
+    "auditable_runner",
     "RecordingEngine",
     "execution_case",
     "resolved_request",

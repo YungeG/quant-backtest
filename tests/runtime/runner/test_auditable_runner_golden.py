@@ -5,7 +5,6 @@ from pathlib import Path
 
 from crypto_quant_backtest import (
     AttemptIdentity,
-    AuditableBacktestRunner,
     DeterministicBarEngine,
     EngineCancellation,
     EngineCancellationRequest,
@@ -15,7 +14,12 @@ from crypto_quant_backtest import (
     InputOrigin,
 )
 from crypto_quant_domain import canonical_bytes, canonical_sha256
-from tests.runtime.runner._fixtures import RecordingEngine, execution_case, resolved_request
+from tests.runtime.runner._fixtures import (
+    RecordingEngine,
+    auditable_runner,
+    execution_case,
+    resolved_request,
+)
 from tests.runtime.runner.test_auditable_runner import engine_failure
 
 
@@ -27,7 +31,7 @@ def build_actual() -> dict[str, object]:
     case = execution_case()
     engine_outcome = DeterministicBarEngine().run(case)
     assert engine_outcome.result is not None
-    runner = AuditableBacktestRunner(engine=RecordingEngine(outcome=engine_outcome))
+    runner = auditable_runner(RecordingEngine(outcome=engine_outcome))
     first = runner.execute(
         resolved_request=resolved,
         execution_case=case,
@@ -42,8 +46,8 @@ def build_actual() -> dict[str, object]:
         input_origin=InputOrigin.PRECOMPUTED_TARGET_STREAM,
     )
 
-    blocked = AuditableBacktestRunner(
-        engine=RecordingEngine(
+    blocked = auditable_runner(
+        RecordingEngine(
             outcome=EngineExecutionOutcome(
                 engine_failure=engine_failure(EngineFailureCode.TARGET_INPUT_DECODE)
             )
@@ -62,8 +66,8 @@ def build_actual() -> dict[str, object]:
         processed_timeline_events=1,
         trace_hash=ExecutionTrace().trace_hash,
     )
-    cancelled = AuditableBacktestRunner(
-        engine=RecordingEngine(
+    cancelled = auditable_runner(
+        RecordingEngine(
             outcome=EngineExecutionOutcome(cancellation=cancellation)
         )
     ).execute(
@@ -80,7 +84,7 @@ def build_actual() -> dict[str, object]:
     assert blocked.terminal_outcome is not None
     assert cancelled.cancelled_report is not None
     assert cancelled.terminal_outcome is not None
-    classifier = AuditableBacktestRunner()
+    classifier = auditable_runner()
     actual = {
         "schema_version": 1,
         "semantic_run_id": resolved.semantic_run_id,

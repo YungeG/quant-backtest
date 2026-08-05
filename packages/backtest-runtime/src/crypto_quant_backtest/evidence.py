@@ -2,13 +2,12 @@
 
 from __future__ import annotations
 
+from contextlib import suppress
 from dataclasses import dataclass
 from enum import Enum
 import os
 from pathlib import Path, PurePosixPath
 import re
-import shutil
-import unicodedata
 from typing import Final
 
 from crypto_quant_domain import (
@@ -18,6 +17,18 @@ from crypto_quant_domain import (
     canonical_sha256,
 )
 
+from ._publication import (
+    RunPublicationLock,
+    canonical_hash as _hash,
+    canonical_text as _text,
+    ensure_directory,
+    force_remove,
+    fsync_directory,
+    hide_and_remove,
+    prepare_read_only_directory,
+    verify_read_only,
+    write_file,
+)
 from .runner import (
     AttemptExecutionRecord,
     AttemptExecutionStatus,
@@ -26,27 +37,8 @@ from .runner import (
 )
 
 
-_HASH_PATTERN = re.compile(r"sha256:[0-9a-f]{64}")
 _RUN_PATTERN = re.compile(r"run_[0-9a-f]{64}")
 _ATTEMPT_PATTERN = re.compile(r"attempt_[0-9a-f]{64}")
-
-
-def _text(name: str, value: object) -> str:
-    if type(value) is not str:
-        raise TypeError(f"{name} must be str")
-    if (
-        not value
-        or value.strip() != value
-        or unicodedata.normalize("NFC", value) != value
-    ):
-        raise ValueError(f"{name} must be nonempty canonical text")
-    return value
-
-
-def _hash(name: str, value: object) -> str:
-    if type(value) is not str or _HASH_PATTERN.fullmatch(value) is None:
-        raise ValueError(f"{name} must be canonical sha256 identity")
-    return value
 
 
 def _relative_path(name: str, value: object) -> str:
@@ -84,6 +76,8 @@ class EvidencePublicationStatus(str, Enum):
 
 
 class EvidenceWriteFailureCode(str, Enum):
+    RUN_LOCK_UNAVAILABLE = "run_lock_unavailable"
+    SEMANTIC_RUN_CLOSED = "semantic_run_closed"
     STAGING_PREPARE_FAILED = "staging_prepare_failed"
     STAGING_EXISTS = "staging_exists"
     FINAL_DESTINATION_EXISTS = "final_destination_exists"
@@ -401,9 +395,46 @@ class AttemptEvidenceWriter:
         if not isinstance(record, AttemptExecutionRecord):
             raise TypeError("record must be AttemptExecutionRecord")
         attempt = record.attempt
+        try:
+            with RunPublicationLock(
+                root=self._root,
+                semantic_run_id=attempt.semantic_run_id,
+            ):
+                canonical = (
+                    self._root
+                    / "runs"
+                    / attempt.semantic_run_id
+                    / "canonical"
+                )
+                if os.path.lexists(canonical):
+                    return self._failure(
+                        attempt,
+                        EvidenceWriteFailureCode.SEMANTIC_RUN_CLOSED,
+                        f"runs/{attempt.semantic_run_id}/canonical",
+                    )
+                return self._publish_locked(record)
+        except FileExistsError as error:
+            return self._failure(
+                attempt,
+                EvidenceWriteFailureCode.RUN_LOCK_UNAVAILABLE,
+                f"runs/{attempt.semantic_run_id}/.publication.lock",
+                error,
+            )
+        except OSError as error:
+            return self._failure(
+                attempt,
+                EvidenceWriteFailureCode.STAGING_PREPARE_FAILED,
+                f"runs/{attempt.semantic_run_id}/attempts",
+                error,
+            )
+
+    def _publish_locked(
+        self, record: AttemptExecutionRecord
+    ) -> EvidencePublicationOutcome:
+        attempt = record.attempt
         paths = self._paths(attempt)
         try:
-            paths.attempts.mkdir(parents=True, exist_ok=True)
+            ensure_directory(paths.attempts)
         except OSError as error:
             return self._failure(
                 attempt,
@@ -504,8 +535,7 @@ class AttemptEvidenceWriter:
                 error,
             )
         try:
-            self._make_files_read_only(paths.staging)
-            self._verify_files_read_only(paths.staging)
+            self._prepare_read_only_directory(paths.staging)
         except OSError as error:
             self._force_remove(paths.staging)
             return self._failure(
@@ -515,27 +545,52 @@ class AttemptEvidenceWriter:
                 error,
             )
         try:
+            # Cooperative readers hold the run lock; this filesystem requires
+            # the source directory writable for rename.
+            paths.staging.chmod(0o755)
             paths.staging.rename(paths.final)
-        except OSError as error:
-            self._force_remove(paths.staging)
-            return self._failure(
-                attempt,
-                EvidenceWriteFailureCode.ATOMIC_FINALIZE_FAILED,
-                paths.final_relative,
-                error,
-            )
-        try:
             paths.final.chmod(0o555)
             self._verify_read_only(paths.final)
+        except OSError as error:
+            if os.path.lexists(paths.final):
+                if not self._hide_and_remove(paths.final):
+                    self._verify_directory(
+                        paths.final, manifest, manifest_result.source_hash
+                    )
+                    self._verify_read_only(paths.final)
+                    raise RuntimeError("Attempt publication rollback could not hide final")
+                else:
+                    return self._failure(
+                        attempt,
+                        EvidenceWriteFailureCode.ATOMIC_FINALIZE_FAILED,
+                        paths.final_relative,
+                        error,
+                    )
+            else:
+                self._force_remove(paths.staging)
+                return self._failure(
+                    attempt,
+                    EvidenceWriteFailureCode.ATOMIC_FINALIZE_FAILED,
+                    paths.final_relative,
+                    error,
+                )
+        try:
             self._fsync_directory(paths.attempts)
         except OSError as error:
-            self._force_remove(paths.final)
-            return self._failure(
-                attempt,
-                EvidenceWriteFailureCode.IMMUTABILITY_FAILED,
-                paths.final_relative,
-                error,
+            if self._hide_and_remove(paths.final):
+                with suppress(OSError):
+                    self._fsync_directory(paths.attempts)
+                return self._failure(
+                    attempt,
+                    EvidenceWriteFailureCode.ATOMIC_FINALIZE_FAILED,
+                    paths.final_relative,
+                    error,
+                )
+            self._verify_directory(
+                paths.final, manifest, manifest_result.source_hash
             )
+            self._verify_read_only(paths.final)
+            raise RuntimeError("Attempt publication rollback could not hide final")
 
         finalized = FinalizedAttemptEvidence(
             attempt=attempt,
@@ -685,14 +740,7 @@ class AttemptEvidenceWriter:
             )
         return tuple(sorted(plans, key=lambda value: value.relative_path))
 
-    @staticmethod
-    def _write_file(path: Path, source_bytes: bytes) -> None:
-        temporary = path.with_name(f".{path.name}.tmp")
-        with temporary.open("xb") as file:
-            file.write(source_bytes)
-            file.flush()
-            os.fsync(file.fileno())
-        temporary.replace(path)
+    _write_file = staticmethod(write_file)
 
     @staticmethod
     def _verify_directory(
@@ -733,41 +781,11 @@ class AttemptEvidenceWriter:
         if canonical_sha256(manifest_result.artifact) != canonical_sha256(manifest):
             raise ValueError("manifest payload does not match publication")
 
-    @staticmethod
-    def _make_files_read_only(directory: Path) -> None:
-        for path in directory.iterdir():
-            path.chmod(0o444)
-
-    @staticmethod
-    def _verify_files_read_only(directory: Path) -> None:
-        for path in directory.iterdir():
-            if path.stat().st_mode & 0o222:
-                raise PermissionError("evidence artifact is writable")
-
-    @classmethod
-    def _verify_read_only(cls, directory: Path) -> None:
-        if directory.stat().st_mode & 0o222:
-            raise PermissionError("evidence directory is writable")
-        cls._verify_files_read_only(directory)
-
-    @staticmethod
-    def _fsync_directory(directory: Path) -> None:
-        descriptor = os.open(directory, os.O_RDONLY)
-        try:
-            os.fsync(descriptor)
-        finally:
-            os.close(descriptor)
-
-    @staticmethod
-    def _force_remove(directory: Path) -> bool:
-        try:
-            directory.chmod(0o755)
-            for path in directory.rglob("*"):
-                path.chmod(0o644 if path.is_file() else 0o755)
-            shutil.rmtree(directory)
-        except OSError:
-            return False
-        return not directory.exists()
+    _prepare_read_only_directory = staticmethod(prepare_read_only_directory)
+    _verify_read_only = staticmethod(verify_read_only)
+    _fsync_directory = staticmethod(fsync_directory)
+    _force_remove = staticmethod(force_remove)
+    _hide_and_remove = staticmethod(hide_and_remove)
 
 
 __all__ = [

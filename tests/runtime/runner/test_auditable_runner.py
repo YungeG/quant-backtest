@@ -8,7 +8,6 @@ from crypto_quant_backtest import (
     AttemptExecutionRecord,
     AttemptExecutionStatus,
     AttemptIdentity,
-    AuditableBacktestRunner,
     BacktestRunOutcome,
     DeterministicBarEngine,
     EngineCancellation,
@@ -21,7 +20,12 @@ from crypto_quant_backtest import (
 )
 from crypto_quant_domain import canonical_bytes, canonical_sha256
 from tests.runtime.engine._fixtures import input_validation_failure
-from tests.runtime.runner._fixtures import RecordingEngine, execution_case, resolved_request
+from tests.runtime.runner._fixtures import (
+    RecordingEngine,
+    auditable_runner,
+    execution_case,
+    resolved_request,
+)
 
 
 BLOCKED_ENGINE_CODES = {
@@ -75,7 +79,7 @@ def test_success_is_ready_to_finalize_and_preserves_exact_engine_result() -> Non
     engine_result = DeterministicBarEngine().run(case).result
     assert engine_result is not None
     engine = RecordingEngine(outcome=EngineExecutionOutcome(result=engine_result))
-    runner = AuditableBacktestRunner(engine=engine)
+    runner = auditable_runner(engine)
     attempt = AttemptIdentity.first(resolved.semantic_run_id)
 
     record = runner.execute(
@@ -105,7 +109,7 @@ def test_success_is_ready_to_finalize_and_preserves_exact_engine_result() -> Non
 
 
 def test_engine_failure_mapping_is_explicit_exhaustive_and_origin_aware() -> None:
-    runner = AuditableBacktestRunner()
+    runner = auditable_runner()
     assert (
         BLOCKED_ENGINE_CODES | FAILED_ENGINE_CODES | ORIGIN_SENSITIVE_CODES
         == set(EngineFailureCode)
@@ -143,8 +147,8 @@ def test_input_validation_engine_failure_and_cancellation_are_nominally_distinct
     case = execution_case()
     attempt = AttemptIdentity.first(resolved.semantic_run_id)
 
-    blocked_input = AuditableBacktestRunner(
-        engine=RecordingEngine(
+    blocked_input = auditable_runner(
+        RecordingEngine(
             outcome=EngineExecutionOutcome(
                 input_validation_failure=input_validation_failure()
             )
@@ -159,8 +163,8 @@ def test_input_validation_engine_failure_and_cancellation_are_nominally_distinct
     assert blocked_input.blocked_report is not None
     assert blocked_input.blocked_report.issue.code == "market_bundle_input_validation"
 
-    blocked_target = AuditableBacktestRunner(
-        engine=RecordingEngine(
+    blocked_target = auditable_runner(
+        RecordingEngine(
             outcome=EngineExecutionOutcome(
                 engine_failure=engine_failure(EngineFailureCode.TARGET_VALIDATION)
             )
@@ -182,8 +186,8 @@ def test_input_validation_engine_failure_and_cancellation_are_nominally_distinct
         processed_timeline_events=1,
         trace_hash=ExecutionTrace().trace_hash,
     )
-    cancelled = AuditableBacktestRunner(
-        engine=RecordingEngine(
+    cancelled = auditable_runner(
+        RecordingEngine(
             outcome=EngineExecutionOutcome(cancellation=cancellation)
         )
     ).execute(
@@ -205,7 +209,7 @@ def test_origin_mismatch_fails_before_engine_and_exception_message_is_not_canoni
     attempt = AttemptIdentity.first(resolved.semantic_run_id)
     engine = RecordingEngine(outcome=DeterministicBarEngine().run(case))
 
-    mismatch = AuditableBacktestRunner(engine=engine).execute(
+    mismatch = auditable_runner(engine).execute(
         resolved_request=resolved,
         execution_case=case,
         attempt=attempt,
@@ -217,7 +221,7 @@ def test_origin_mismatch_fails_before_engine_and_exception_message_is_not_canoni
     assert not engine.calls
 
     exploding = RecordingEngine(error=RuntimeError("secret host/path/detail"))
-    failed = AuditableBacktestRunner(engine=exploding).execute(
+    failed = auditable_runner(exploding).execute(
         resolved_request=resolved,
         execution_case=case,
         attempt=attempt,
@@ -229,8 +233,8 @@ def test_origin_mismatch_fails_before_engine_and_exception_message_is_not_canoni
     assert b"secret host/path/detail" not in canonical_bytes(failed)
     assert b"builtins.RuntimeError" in canonical_bytes(failed)
 
-    ready = AuditableBacktestRunner(
-        engine=RecordingEngine(outcome=DeterministicBarEngine().run(case))
+    ready = auditable_runner(
+        RecordingEngine(outcome=DeterministicBarEngine().run(case))
     ).execute(
         resolved_request=resolved,
         execution_case=case,
@@ -251,7 +255,7 @@ def test_retry_creates_child_attempt_and_reinvokes_the_same_initial_case() -> No
     engine_outcome = DeterministicBarEngine().run(case)
     assert engine_outcome.result is not None
     engine = RecordingEngine(outcome=engine_outcome)
-    runner = AuditableBacktestRunner(engine=engine)
+    runner = auditable_runner(engine)
     first = runner.execute(
         resolved_request=resolved,
         execution_case=case,
@@ -296,7 +300,7 @@ def test_attempt_identity_rejects_wrong_semantic_run() -> None:
 
     wrong_attempt = AttemptIdentity.first("run_" + "e" * 64)
     with pytest.raises(ValueError, match="Attempt semantic run"):
-        AuditableBacktestRunner().execute(
+        auditable_runner().execute(
             resolved_request=resolved,
             execution_case=execution_case(),
             attempt=wrong_attempt,

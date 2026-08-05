@@ -8,7 +8,6 @@ import pytest
 
 from crypto_quant_backtest import (
     AttemptIdentity,
-    AuditableBacktestRunner,
     BacktestRunOutcome,
     DeterministicBarEngine,
     ExecutionCaseComposer,
@@ -27,7 +26,7 @@ from tests.runtime.resolution._fixtures import (
     profile_registry,
     request,
 )
-from tests.runtime.runner._fixtures import RecordingEngine
+from tests.runtime.runner._fixtures import RecordingEngine, auditable_runner
 
 
 _DOMAIN_OR_EVENT_ID = re.compile(r"^(ord|fil|fee|jnl|evt)_[0-9a-f]{64}$")
@@ -113,7 +112,7 @@ def test_semantic_input_change_changes_semantic_run_and_final_case() -> None:
 
 def test_runner_validates_manifest_and_spec_instead_of_final_case_preimage() -> None:
     resolved, case = resolved_for(SyntheticExecutionCaseBuilder())
-    record = AuditableBacktestRunner().execute(
+    record = auditable_runner().execute(
         resolved_request=resolved,
         execution_case=case,
         attempt=AttemptIdentity.first(resolved.semantic_run_id),
@@ -138,7 +137,7 @@ def test_cross_run_relabel_is_rejected_before_engine() -> None:
     expected_outcome = DeterministicBarEngine().run(changed_case)
     recording = RecordingEngine(outcome=expected_outcome)
 
-    record = AuditableBacktestRunner(engine=recording).execute(
+    record = auditable_runner(recording).execute(
         resolved_request=changed_resolved,
         execution_case=relabelled,
         attempt=AttemptIdentity.first(changed_resolved.semantic_run_id),
@@ -214,7 +213,7 @@ def test_runner_rejects_missing_manifest_before_engine() -> None:
     expected_outcome = DeterministicBarEngine().run(case)
     recording = RecordingEngine(outcome=expected_outcome)
 
-    record = AuditableBacktestRunner(engine=recording).execute(
+    record = auditable_runner(recording).execute(
         resolved_request=resolved,
         execution_case=stripped,
         attempt=AttemptIdentity.first(resolved.semantic_run_id),
@@ -334,7 +333,7 @@ def test_runner_rejects_identity_role_swap_before_engine() -> None:
     swapped = replace(case, bar_executions=(swapped_execution,))
     recording = RecordingEngine(outcome=DeterministicBarEngine().run(case))
 
-    record = AuditableBacktestRunner(engine=recording).execute(
+    record = auditable_runner(recording).execute(
         resolved_request=resolved,
         execution_case=swapped,
         attempt=AttemptIdentity.first(resolved.semantic_run_id),
@@ -360,7 +359,7 @@ def test_independent_recomposition_and_attempts_preserve_ids() -> None:
         semantic_spec=None,
     ).case_hash != first_case.case_hash
 
-    runner = AuditableBacktestRunner()
+    runner = auditable_runner()
     first = runner.execute(
         resolved_request=first_resolved,
         execution_case=first_case,
@@ -450,7 +449,7 @@ def test_runner_rejects_slippage_parameter_substitution_before_engine() -> None:
     changed = replace(case, bar_executions=(changed_execution,))
     recording = RecordingEngine(outcome=DeterministicBarEngine().run(case))
 
-    record = AuditableBacktestRunner(engine=recording).execute(
+    record = auditable_runner(recording).execute(
         resolved_request=resolved,
         execution_case=changed,
         attempt=AttemptIdentity.first(resolved.semantic_run_id),
@@ -482,7 +481,7 @@ def test_runner_rejects_order_parent_substitution_before_engine() -> None:
     )
     recording = RecordingEngine(outcome=DeterministicBarEngine().run(case))
 
-    record = AuditableBacktestRunner(engine=recording).execute(
+    record = auditable_runner(recording).execute(
         resolved_request=resolved,
         execution_case=changed,
         attempt=AttemptIdentity.first(resolved.semantic_run_id),

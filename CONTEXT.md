@@ -58,6 +58,10 @@ _Avoid_: final-case preimage, placeholder semantic hash
 
 一个已完成语义运行通过原子 finalize 发布的不可变权威证据集合。只有 COMPLETED 可以创建 `canonical/`；post-integrity BLOCKED/FAILED 使用独立 immutable Integrity Evaluation。
 
+## 权威结果缓存命中（Canonical Result Cache Hit）
+
+Auditable Runner 在 run-level lock 内验证已发布只读 `canonical/` Artifact、Manifest exact coverage 和 Result hash chain 后返回的 `COMPLETED` 复用结果。它不创建新 Attempt、不写 Evidence，也不重跑 Engine；缺少 publication root 时 Runner fail closed。
+
 ## 封闭 Attempt 集（Closed Attempt Set）
 
 Publisher 在 run-level exclusive lock 下 exact-cover 的全部 finalized `READY_FOR_INTEGRITY` Attempt。G07 v1 的 COMPLETED 至少需要两个 execution hash 一致的 Attempt，canonical Attempt 固定选择最小 ordinal；canonical 发布后同一 Semantic Run 不再接受新 Attempt。

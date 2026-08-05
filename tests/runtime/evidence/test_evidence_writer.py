@@ -7,6 +7,7 @@ from pathlib import Path
 
 import pytest
 
+import crypto_quant_backtest._publication as publication_helpers
 from crypto_quant_backtest import (
     BacktestRunOutcome,
     EvidencePublicationOutcome,
@@ -69,7 +70,7 @@ def test_ready_attempt_is_atomically_finalized_without_completed_result(
     finalized = outcome.finalized
     assert finalized.status is EvidencePublicationStatus.READY_FOR_INTEGRITY
     assert finalized.terminal_outcome is None
-    assert finalized.deployment_authorized is False
+    assert not finalized.deployment_authorized
     assert finalized.attempt == record.attempt
     assert finalized.manifest.attempt_record_hash == canonical_sha256(record)
 
@@ -117,7 +118,41 @@ def test_all_runner_branches_publish_exact_common_and_branch_evidence(
         assert finalized.manifest.market_bundle_ref_hash == canonical_sha256(
             record.resolved_request.environment.market_bundle_ref
         )
-        assert finalized.manifest.deployment_authorized is False
+        assert not finalized.manifest.deployment_authorized
+
+
+def test_publication_fsyncs_each_created_hierarchy_entry(
+    tmp_path: Path,
+    monkeypatch,
+) -> None:
+    root = tmp_path / "publication-root"
+    record = attempt_record("ready")
+    synced: list[Path] = []
+    original_fsync = publication_helpers.fsync_directory
+
+    def record_fsync(directory: Path) -> None:
+        synced.append(directory)
+        original_fsync(directory)
+
+    monkeypatch.setattr(
+        publication_helpers,
+        "fsync_directory",
+        record_fsync,
+    )
+    monkeypatch.setattr(
+        AttemptEvidenceWriter,
+        "_fsync_directory",
+        staticmethod(record_fsync),
+    )
+    outcome = AttemptEvidenceWriter(root=root).publish(record)
+
+    run = root / "runs" / record.attempt.semantic_run_id
+    assert outcome.finalized is not None
+    assert tmp_path in synced
+    assert root in synced
+    assert root / "runs" in synced
+    assert run in synced
+    assert run / "attempts" in synced
 
 
 def test_existing_final_attempt_and_stale_staging_fail_without_overwrite(
@@ -195,7 +230,7 @@ def test_writer_failure_is_failed_evidence_and_never_exposes_absolute_path(
     failure = outcome.failure
     assert failure.code is EvidenceWriteFailureCode.STAGING_PREPARE_FAILED
     assert failure.outcome is BacktestRunOutcome.FAILED
-    assert failure.deployment_authorized is False
+    assert not failure.deployment_authorized
     encoded = canonical_bytes(failure)
     assert os.fsencode(str(tmp_path)) not in encoded
     assert b"NotADirectoryError" in encoded
@@ -225,6 +260,109 @@ def test_evidence_contracts_reject_forged_paths_coverage_and_branches(
         )
     with pytest.raises(ValueError, match="never authorizes deployment"):
         replace(finalized, deployment_authorized=True)
+
+
+def test_post_rename_permission_failure_hides_attempt_destination(
+    tmp_path: Path,
+    monkeypatch,
+) -> None:
+    record = attempt_record("ready")
+    original_chmod = Path.chmod
+
+    def fail_final_chmod(path: Path, mode: int, *args, **kwargs) -> None:
+        if (
+            path.name == record.attempt.attempt_id
+            and path.parent.name == "attempts"
+            and mode == 0o555
+        ):
+            raise PermissionError("forced final chmod failure")
+        original_chmod(path, mode, *args, **kwargs)
+
+    monkeypatch.setattr(Path, "chmod", fail_final_chmod)
+    outcome = AttemptEvidenceWriter(root=tmp_path).publish(record)
+
+    final = (
+        tmp_path
+        / "runs"
+        / record.attempt.semantic_run_id
+        / "attempts"
+        / record.attempt.attempt_id
+    )
+    assert outcome.failure is not None
+    assert outcome.failure.code is EvidenceWriteFailureCode.ATOMIC_FINALIZE_FAILED
+    assert not final.exists()
+
+
+def test_failed_primary_rollback_rename_uses_fallback_and_hides_attempt(
+    tmp_path: Path,
+    monkeypatch,
+) -> None:
+    record = attempt_record("ready")
+    original_chmod = Path.chmod
+    original_replace = publication_helpers.os.replace
+
+    def fail_final_chmod(path: Path, mode: int, *args, **kwargs) -> None:
+        if (
+            path.name == record.attempt.attempt_id
+            and path.parent.name == "attempts"
+            and mode == 0o555
+        ):
+            raise PermissionError("forced final chmod failure")
+        original_chmod(path, mode, *args, **kwargs)
+
+    def fail_rollback_replace(source, target) -> None:
+        if Path(source).name == record.attempt.attempt_id:
+            raise OSError("forced rollback rename failure")
+        original_replace(source, target)
+
+    monkeypatch.setattr(Path, "chmod", fail_final_chmod)
+    monkeypatch.setattr(publication_helpers.os, "replace", fail_rollback_replace)
+    outcome = AttemptEvidenceWriter(root=tmp_path).publish(record)
+
+    assert outcome.failure is not None
+    final = (
+        tmp_path
+        / "runs"
+        / record.attempt.semantic_run_id
+        / "attempts"
+        / record.attempt.attempt_id
+    )
+    assert not final.exists()
+
+
+def test_parent_fsync_and_partial_rollback_delete_leave_no_visible_attempt(
+    tmp_path: Path,
+    monkeypatch,
+) -> None:
+    record = attempt_record("ready")
+    original_fsync = AttemptEvidenceWriter._fsync_directory
+
+    def fail_parent(directory: Path) -> None:
+        if directory.name == "attempts":
+            raise OSError("forced parent fsync failure")
+        original_fsync(directory)
+
+    def fail_remove(directory: Path) -> None:
+        (directory / "evidence-manifest.json").unlink()
+        raise OSError("forced partial rollback deletion failure")
+
+    monkeypatch.setattr(
+        AttemptEvidenceWriter,
+        "_fsync_directory",
+        staticmethod(fail_parent),
+    )
+    monkeypatch.setattr(publication_helpers.shutil, "rmtree", fail_remove)
+    outcome = AttemptEvidenceWriter(root=tmp_path).publish(record)
+
+    assert outcome.failure is not None
+    final = (
+        tmp_path
+        / "runs"
+        / record.attempt.semantic_run_id
+        / "attempts"
+        / record.attempt.attempt_id
+    )
+    assert not final.exists()
 
 
 def test_manifest_verification_fails_closed_on_extra_or_changed_file(

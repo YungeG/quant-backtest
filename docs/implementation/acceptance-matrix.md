@@ -5183,6 +5183,7 @@ depends_on:
   - WP-07D
 owner_package: backtest-runtime
 public_interface:
+  - crypto_quant_backtest.CanonicalResultCacheHit
   - crypto_quant_backtest.IntegrityIssueSeverity
   - crypto_quant_backtest.IntegrityIssueCode
   - crypto_quant_backtest.IntegrityTraceLevel
@@ -5234,6 +5235,8 @@ failure_contracts:
   - canonical-attempt-ref-integrity-result-or-publication-manifest-forms-hash-cycle
   - trace-bundle-retention-or-rebuild-evidence-is-not-bound-by-canonical-attempt-ref
   - post-publication-attempt-is-accepted-for-closed-semantic-run
+  - auditable-runner-executes-without-publication-root
+  - closed-run-cache-hit-is-unvalidated-or-reruns-engine
   - shared-adversarial-or-cross-filesystem-publication-is-treated-as-supported-v1
   - stale-lock-is-broken-using-wall-clock-time
   - canonical-publication-failure-leaves-visible-final-result
@@ -5274,7 +5277,7 @@ artifact_hashes: []
 5. WP-07D `ExecutionHashMismatch` 必须成为 blocking issue，并原子发布到 `runs/<semantic_run_id>/integrity-evaluations/<evaluation_id>/` 的 durable `FAILED` evaluation；少于两个 eligible Attempt 或其他预期完整性 blocking 原子发布 durable `BLOCKED` evaluation。Evaluation 目录只含 `integrity.json`、`evaluation-outcome.json` 和 exact-cover `publication-manifest.json`，不得创建 `canonical/`、`result.json` 或 canonical Attempt ref；
 6. `CompletedBacktestResult` 只有在 closed Attempt set、Execution hash 一致、Integrity 无 blocking issue 后才能构造；Outcome 固定 `COMPLETED`，`deployment_authorized=false`。Canonical hash DAG 固定为 `canonical-attempt-ref.json` → `integrity.json` → `result.json` → `publication-manifest.json`；Manifest exact-cover 其他三个文件，任何子文件不得反向引用 Manifest；
 7. Canonical publication 使用同一 local filesystem 的独立 staging，read-back 验证后原子 rename 为 `runs/<semantic_run_id>/canonical/`；不得修改只读 Attempt evidence。Canonical/evaluation 目录 finalize 后只读且禁止覆盖；任一写入、验证、permission 或 rename 失败不得留下 final destination，并返回结构化 FAILED publication；
-8. `canonical/` 发布后 Semantic Run 永久关闭。WP-07C Evidence Writer 使用同一 run-level lock 并拒绝新 Attempt；Runner 只能返回 cache hit。Post-publication same-run parity/revocation 不在 v1；
+8. `canonical/` 发布后 Semantic Run 永久关闭。WP-07C Evidence Writer 使用同一 run-level lock 并拒绝新 Attempt；Auditable Runner 执行必须绑定 publication root，缺失时 fail closed；已有 `canonical/` 时验证只读目录、Artifact envelope、Manifest exact coverage 和 Result hash chain 后返回 `CanonicalResultCacheHit`，不得创建 Attempt、重跑 Engine 或把 cache hit 映射成 FAILED。Post-publication same-run parity/revocation 不在 v1；
 9. Filesystem threat model 固定为 trusted cooperative single-writer：受控本地同一文件系统、排他 lockfile、staging→rename；锁不得按 wall clock 自动回收。Shared/adversarial filesystem、NFS/object-store rename 语义、symlink attack 和 malicious concurrent writer 明确不支持；
 10. 本 WP 不实现 cache eviction、promotion、Metrics、network、wall clock、外部数据库、真实交易或任何 deployment authorization。
 
