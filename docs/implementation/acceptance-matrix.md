@@ -101,7 +101,8 @@ artifact_hashes: []
 | WP-06E | PASSED | backtest-runtime | G05, WP-06A–WP-06D | none |
 | WP-06F | PASSED | backtest-runtime | WP-03E, WP-05A–WP-05C, WP-06B, WP-06E | none |
 | WP-06G | PASSED | backtest-runtime | WP-06A–WP-06F | none |
-| WP-06H | DRAFT | tests/support | WP-02F–WP-02G | Synthetic profile/golden artifacts |
+| WP-06H | READY | tests/support | WP-02F–WP-02G | none |
+| G06 | DRAFT | tests/support + backtest-runtime integration | WP-06A–WP-06H, G03–G05 | WP-06H must pass first |
 | WP-07A | DRAFT | backtest-runtime | G06 | Resolver/semantic ID fixtures |
 | WP-07B | DRAFT | backtest-runtime | WP-07A | Attempt/Outcome fixtures |
 | WP-07C | DRAFT | backtest-runtime | WP-07B | Evidence atomicity fixtures |
@@ -4466,7 +4467,85 @@ uv lock --check                                                     PASS
 Python                                                              3.13.5
 ```
 
-## 53. PASSED 记录格式
+## 53. WP-06H Synthetic Development Profile Acceptance Card
+
+```yaml
+id: WP-06H
+status: READY
+depends_on:
+  - WP-02F
+  - WP-02G
+owner_package: tests/support
+public_interface:
+  - tests.support.synthetic_market.SYNTHETIC_PROFILE_KEY
+  - tests.support.synthetic_market.SYNTHETIC_PROFILE_LIMITATION
+  - tests.support.synthetic_market.SyntheticCashDevelopmentProfile
+  - tests.support.synthetic_market.SyntheticMarketSemanticsProfile
+  - tests.support.synthetic_market.SyntheticSimulationProfile
+  - tests.support.synthetic_market.SyntheticExecutionAccountProfile
+  - tests.support.synthetic_market.TestProfileRegistry
+  - tests.support.synthetic_market.build_synthetic_bundle
+  - tests.support.synthetic_market.build_synthetic_target_stream
+  - tests.support.synthetic_market.build_synthetic_execution_case
+  - formal structural implementations of all Kernel Profile Ports
+  - formal structural implementations of all Simulation Profile Ports
+  - explicit development-profile opt-in and default lookup rejection
+  - static offline synthetic Profile and factory identity
+  - no production registry membership or Generic Kernel/Runtime special branch
+test_commands:
+  contract: uv run pytest -q tests/support/synthetic_market/test_synthetic_cash_profile.py
+  fixture: uv run pytest -q tests/support/synthetic_market/test_synthetic_cash_profile_golden.py
+  boundary: uv run pytest -q tests/architecture/test_public_api_imports.py tests/architecture/test_repository_cleanliness.py && uv run python tools/architecture/check_import_boundaries.py --root . --policy architecture/import-boundaries.toml --report build/acceptance/wp-06h-import-boundary-report.json
+fixture_ids:
+  - synthetic-cash-development-profile-v1
+expected_artifacts:
+  - tests/fixtures/support/synthetic-cash-development-profile-v1.json
+  - build/acceptance/wp-06h-pytest.xml
+  - build/acceptance/wp-06h-import-boundary-report.json
+failure_contracts:
+  - synthetic-profile-loads-without-explicit-development-opt-in
+  - production-default-registry-resolves-synthetic-profile
+  - profile-key-version-or-digest-is-not-stable
+  - kernel-or-simulation-port-missing-or-not-structurally-conformant
+  - profile-component-manifest-incomplete-duplicate-or-mismatched
+  - fixed-bundle-or-target-factory-reads-network-wall-clock-or-mutable-source
+  - synthetic-profile-bypasses-generic-kernel-or-runtime-interface
+  - synthetic-profile-claims-real-market-or-decision-grade-semantics
+  - synthetic-profile-omits-synthetic-market-profile-limitation
+  - static-golden-is-generated-or-rewritten-by-test
+allowed_grade: development
+evidence:
+  - pytest-report
+  - static-synthetic-profile-golden-hash
+  - profile-and-component-digests
+  - kernel-port-structural-conformance-report
+  - simulation-port-structural-conformance-report
+  - explicit-opt-in-and-production-default-rejection-evidence
+  - fixed-offline-bundle-and-target-digests
+  - synthetic-market-profile-limitation
+  - public-api-import-report
+  - import-boundary-report
+  - static-type-report
+passed_commit: null
+artifact_hashes: []
+```
+
+### WP-06H Readiness
+
+冻结以下实现边界：
+
+1. `synthetic.cash.development.v1` 只允许位于 `tests/support/synthetic_market/`，通过 `TestProfileRegistry(allow_development_profiles=True)` 显式加载；默认 Registry 不包含该 key，lookup 必须返回结构化拒绝，不能自动 opt-in；
+2. Profile 是 Market Semantics、Simulation 和 Execution Account 三个 test-only resolved plane 的不可变组合。Market plane 必须 exact-cover WP-02F 的十二个 Kernel Ports；Simulation plane 必须 exact-cover WP-02G 的六个 Simulation Ports；组件 key/version/digest 和 manifest 必须稳定、唯一且 canonical；
+3. WP-06E 的 `NextEligibleBarOpenModel`、WP-06D 的 `DeterministicBpsSlippageModel` 和 WP-06F 的 `MarkToMarketCloseoutPolicy` 作为正式 Simulation Port 实现注入。其余 development-only Port 必须返回 typed deterministic outcome，不得通过 `None`、隐式 no-op 或 Runtime 特判表达；
+4. 固定 Bundle、TargetStream 和 ExecutionCase factories 只能组合 committed immutable test facts，不访问网络、文件数据源、wall clock 或环境变量。ExecutionCase 仍通过现有 Generic Engine contracts；不得在 Kernel/Runtime 添加 `if synthetic` 分支；
+5. Profile 必须携带 `synthetic_market_profile` limitation，grade 固定为 development，`decision_grade_eligible=false`、`deployment_authorized=false`；它不模拟真实 A 股、Binance、交易所账户或部署权限；
+6. 默认生产路径 lookup 失败是测试契约，不要求在本 WP 引入生产 `ProfileResolver`；正式 Resolver 属于 WP-07A；
+7. Golden Artifact 是手工审阅并提交的静态文件。测试只生成 ignored actual output 做比较，禁止写回 expected；
+8. 本 WP 不拥有 Semantic Run ID、Attempt、Run Outcome、Evidence writer/finalize、真实市场 Profile、供应商数据、Runtime 网络行为或任何真实订单能力。
+
+WP-06H 当前状态为 `READY`。
+
+## 54. PASSED 记录格式
 
 ```yaml
 id: WP-00A
