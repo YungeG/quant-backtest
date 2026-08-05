@@ -104,7 +104,7 @@ artifact_hashes: []
 | WP-06H | PASSED | tests/support | WP-02F–WP-02G | none |
 | G06 | PASSED | tests/support + backtest-runtime integration | WP-06A–WP-06H, G03–G05 | none |
 | WP-07A | PASSED | backtest-runtime | G06 | none |
-| WP-07B | DRAFT | backtest-runtime | WP-07A | Attempt/Outcome fixtures |
+| WP-07B | READY | backtest-runtime | WP-07A | none |
 | WP-07C | DRAFT | backtest-runtime | WP-07B | Evidence atomicity fixtures |
 | WP-07D | DRAFT | backtest-runtime | WP-07B–WP-07C | Execution hash fixtures |
 | WP-07E | DRAFT | backtest-runtime | WP-07C–WP-07D | Integrity/grade fixtures |
@@ -4781,7 +4781,90 @@ uv lock --check                                                        PASS
 Python                                                                 3.13.5
 ```
 
-## 56. PASSED 记录格式
+## 56. WP-07B Auditable Runner and Outcome Mapping Acceptance Card
+
+```yaml
+id: WP-07B
+status: READY
+depends_on:
+  - WP-07A
+owner_package: backtest-runtime
+public_interface:
+  - crypto_quant_backtest.InputOrigin
+  - crypto_quant_backtest.BacktestRunOutcome
+  - crypto_quant_backtest.AttemptExecutionStatus
+  - crypto_quant_backtest.AttemptIdentity
+  - crypto_quant_backtest.AttemptIssueSource
+  - crypto_quant_backtest.AttemptIssue
+  - crypto_quant_backtest.BlockedAttemptReport
+  - crypto_quant_backtest.FailedAttemptReport
+  - crypto_quant_backtest.CancelledAttemptReport
+  - crypto_quant_backtest.ReadyToFinalizeAttempt
+  - crypto_quant_backtest.AttemptExecutionRecord
+  - crypto_quant_backtest.AuditableBacktestRunner
+  - deterministic retry-from-start policy v1
+  - static auditable-runner outcome-mapping golden fixture v1
+test_commands:
+  contract: uv run pytest -q tests/runtime/runner/test_auditable_runner.py
+  fixture: uv run pytest -q tests/runtime/runner/test_auditable_runner_golden.py
+  boundary: uv run pytest -q tests/architecture/test_public_api_imports.py tests/architecture/test_repository_cleanliness.py && uv run python tools/architecture/check_import_boundaries.py --root . --policy architecture/import-boundaries.toml --report build/acceptance/wp-07b-import-boundary-report.json
+fixture_ids:
+  - auditable-runner-outcome-mapping-v1
+expected_artifacts:
+  - tests/fixtures/runtime/auditable-runner-outcome-mapping-v1.json
+  - build/acceptance/wp-07b-pytest.xml
+  - build/acceptance/wp-07b-import-boundary-report.json
+failure_contracts:
+  - attempt-identity-semantic-run-or-parent-mismatch
+  - resolved-request-execution-case-or-target-digest-mismatch
+  - request-strategy-family-and-input-origin-mismatch
+  - precomputed-target-decode-or-validation-mapped-to-failed
+  - runtime-strategy-candidate-failure-mapped-to-blocked
+  - engine-cancellation-not-mapped-to-cancelled
+  - blocked-failed-cancelled-or-ready-to-finalize-branches-overlap
+  - completed-outcome-published-before-evidence-atomic-finalize
+  - retry-reuses-or-mutates-prior-attempt
+  - retry-resumes-partial-engine-state-instead-of-running-initial-case
+  - runner-mutates-engine-result-trace-ledger-snapshot-or-run-end
+  - engine-failure-code-not-exactly-covered-by-outcome-mapping
+  - unhandled-engine-exception-text-used-as-canonical-protocol
+  - attempt-id-enters-semantic-run-or-simulated-domain-identity
+  - evidence-writer-result-hash-integrity-grade-network-or-deployment-leakage
+allowed_grade: development
+evidence:
+  - pytest-report
+  - static-outcome-mapping-golden-hash
+  - deterministic-attempt-and-parent-identity-hashes
+  - exact-engine-failure-classification-coverage
+  - input-origin-target-failure-mapping-evidence
+  - retry-attempt-isolation-and-from-start-engine-call-evidence
+  - engine-result-object-and-economic-hash-preservation
+  - ready-to-finalize-has-no-completed-outcome-evidence
+  - public-api-import-report
+  - import-boundary-report
+  - static-type-report
+passed_commit: null
+artifact_hashes: []
+```
+
+### WP-07B Readiness
+
+冻结以下实现边界：
+
+1. `AttemptIdentity` 绑定一个已解析的 `semantic_run_id`、正整数 Attempt ordinal、确定性 `attempt_<sha256>` identity 和可选 parent Attempt。Retry 必须使用更大的 ordinal、新 Attempt ID、同一 Semantic Run，并记录直接 parent；Attempt identity 不进入 Engine case、模拟领域 ID 或经济结果；
+2. `InputOrigin` v1 只区分 `precomputed_target_stream` 与 `runtime_strategy`。Precomputed Request 必须使用前者；Portfolio/Liquidity Strategy Request 必须使用后者，调用者不能伪造 origin 以改变 Outcome；
+3. Runner 只接受 PASSED WP-07A `ResolvedBacktestRequest`、完全匹配的初始 `ResolvedExecutionCase`、Attempt 和可选 deterministic Engine cancellation request。Request 的 execution-case semantic hash、target-stream digest 和 Semantic Run 必须逐字匹配；Runner 不解析 Profile、不修改 Case；
+4. Engine `InputValidationFailure` 固定映射 `BLOCKED`。`TARGET_INPUT_DECODE`、`TARGET_VALIDATION` 和 `DECISION_BATCH` 对 Precomputed origin 映射 `BLOCKED`，对 Runtime Strategy origin 映射 `FAILED`；Engine cancellation 固定映射 `CANCELLED`；
+5. 其他 `EngineFailureCode` 必须由显式、穷尽、可测试的 mapping table 分类，禁止 default/fallthrough：预期数据、市场适用性、规则歧义和模型阻断映射 `BLOCKED`；Case/Contract 不一致、Accounting/Journal/构造不变量和未处理实现异常映射 `FAILED`；
+6. Runner 捕获的未处理 Engine exception 只以异常类型和版本化类型 hash 进入 `FailedAttemptReport`，异常 message/stack/log 不成为 canonical protocol；
+7. 成功 Engine result 只能产生 `ReadyToFinalizeAttempt`。该对象逐字保存原 `EngineExecutionResult`，不规范化或重算 WP-07D execution result hash，不得暴露 `COMPLETED`；WP-07C Evidence atomic finalize 与后续 Integrity 成功前不存在 published Completed result；
+8. `AttemptExecutionRecord` 在 ready-to-finalize、blocked、failed、cancelled 四个分支中严格互斥。`BacktestRunOutcome.COMPLETED` 仅作为后续发布状态机值存在，本 WP 的 Runner 不产生它；
+9. `retry_from_start` 必须重新调用同一个初始 immutable Case，创建 child Attempt，并且不得复用前一 Attempt 的 Timeline Cursor、Journal、Ledger、Reservation、Snapshot 或其他 partial state；前一 Attempt/Report 不可修改；
+10. 本 WP 不实现 Evidence 目录/writer/atomic finalize、canonical execution-result summary/hash、Integrity/ResultGrade、cache/concurrency dedup、retry scheduling、network、wall clock或 deployment authorization。
+
+WP-07B 当前状态为 `READY`。
+
+## 57. PASSED 记录格式
 
 ```yaml
 id: WP-00A

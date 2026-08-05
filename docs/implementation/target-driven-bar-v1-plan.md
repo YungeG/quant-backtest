@@ -1113,13 +1113,17 @@ Deposit
 
 拥有：Attempt identity、G06 Engine 调用、InputOrigin-aware failure mapping、Run Outcome state machine 和 retry-from-start policy。
 
+v1 `InputOrigin` 只区分 `precomputed_target_stream` 与 `runtime_strategy`，并必须与 Request 的 Strategy Family 一致。Attempt 使用同一 Semantic Run 下显式递增的 ordinal 生成独立 `attempt_<sha256>` identity；Retry 创建直接 child Attempt 并从同一个初始 immutable ExecutionCase 重跑，不恢复旧 Attempt 的任何部分状态。
+
 验收：
 
 - Runtime Strategy Candidate failure → FAILED；预计算 Payload decode/validation failure → BLOCKED；Engine cancellation → CANCELLED；
-- COMPLETED/BLOCKED/FAILED/CANCELLED 互斥；
+- 所有 EngineFailureCode 由显式穷尽 mapping table 分类，禁止 default/fallthrough；
+- ready-to-finalize/BLOCKED/FAILED/CANCELLED 四个 Runner 分支互斥；
 - Bar retry 创建新 Attempt 并从初始状态执行；
-- Runner 不修改 EngineExecutionResult 的经济轨迹；
-- Evidence atomic finalize 成功前不得发布 COMPLETED Result。
+- Runner 逐字保存且不修改 EngineExecutionResult 的经济轨迹；
+- 成功 Engine result 只产生 `ReadyToFinalizeAttempt`，Evidence atomic finalize 成功前不得发布 COMPLETED Result；
+- 本 WP 不实现 Evidence writer、canonical execution result hash、Integrity 或 ResultGrade。
 
 ### WP-07C Evidence writer
 
