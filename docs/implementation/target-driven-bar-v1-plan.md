@@ -1127,15 +1127,21 @@ v1 `InputOrigin` 只区分 `precomputed_target_stream` 与 `runtime_strategy`，
 
 ### WP-07C Evidence writer
 
-拥有：Attempt 临时目录、Artifact writer、content hash 和 atomic finalize。
+拥有：Attempt staging 目录、Canonical Artifact writer、content hash、EvidenceManifest exact coverage 和 atomic finalize。
+
+v1 固定目录为 `runs/<semantic_run_id>/attempts/.staging/<attempt_id>/` → `runs/<semantic_run_id>/attempts/<attempt_id>/`。Writer 对 WP-07B 四个分支都发布 Attempt evidence；成功 Engine 分支在本 WP 只能标记 `READY_FOR_INTEGRITY`，不能产生 `COMPLETED`、`result.json`、Integrity 或 ResultGrade。
 
 验收：
 
-- 未完成 Attempt 不可冒充 canonical result；
-- finalize 后 Artifact 不可修改；
-- Evidence Manifest 覆盖全部权威文件；
-- 大型 MarketBundle 使用不可变 hash reference；
-- 写入失败产生 FAILED evidence，不发布 Result。
+- 每个 Artifact 使用当前版本 `ArtifactEnvelope` 的 canonical UTF-8 bytes，记录 envelope content hash、exact source hash、schema version、role、relative path 和 byte count；
+- Common evidence 固定包含 Request、Resolved Environment、BuildArtifactManifest、MarketBundleRef、Compatibility Report 和原始 `AttemptExecutionRecord`；四个分支分别增加 EngineExecutionResult、Blocked、Failure 或 Cancellation report；
+- EvidenceManifest 覆盖 staging 中除自身外的全部权威文件；未列出文件、缺失文件、hash/schema/path/role 不一致均 fail closed；
+- Manifest 最后写入并 read-back 验证，随后通过同一 filesystem 的 directory rename 原子 finalize；final destination 已存在时禁止覆盖；
+- 未完成 staging 不可冒充 canonical Attempt；finalize 后 Writer 拒绝重写并把文件设为只读；
+- 大型 MarketBundle 只写 `MarketBundleRef` immutable hash reference，不复制 Bundle events/partitions；
+- ready-to-finalize 只发布 `READY_FOR_INTEGRITY` evidence；BLOCKED/FAILED/CANCELLED 保持原 Outcome，不转换成 COMPLETED；
+- 任何 staging、Artifact、Manifest、rename 或 read-back 失败返回结构化 `EvidenceWriteFailure(outcome=FAILED)`，不得留下 final Attempt 或发布 Result；
+- 本 WP 不生成 WP-07D execution result summary/hash，不执行 WP-07E Integrity/grade，不创建 canonical Attempt ref，不重跑 Engine，也不实现 cache/dedup/network/外部数据库。
 
 ### WP-07D Execution result hash
 

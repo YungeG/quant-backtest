@@ -105,7 +105,7 @@ artifact_hashes: []
 | G06 | PASSED | tests/support + backtest-runtime integration | WP-06A–WP-06H, G03–G05 | none |
 | WP-07A | PASSED | backtest-runtime | G06 | none |
 | WP-07B | PASSED | backtest-runtime | WP-07A | none |
-| WP-07C | DRAFT | backtest-runtime | WP-07B | Evidence atomicity fixtures |
+| WP-07C | READY | backtest-runtime | WP-07B | none |
 | WP-07D | DRAFT | backtest-runtime | WP-07B–WP-07C | Execution hash fixtures |
 | WP-07E | DRAFT | backtest-runtime | WP-07C–WP-07D | Integrity/grade fixtures |
 | G08A | DRAFT | trading-kernel profiles/cn_a_share | G07 | Calendar fixtures |
@@ -4883,7 +4883,84 @@ uv lock --check                                                       PASS
 Python                                                                3.13.5
 ```
 
-## 57. PASSED 记录格式
+## 57. WP-07C Evidence Writer Acceptance Card
+
+```yaml
+id: WP-07C
+status: READY
+depends_on:
+  - WP-07B
+owner_package: backtest-runtime
+public_interface:
+  - crypto_quant_backtest.EvidenceArtifactRole
+  - crypto_quant_backtest.EvidenceArtifactEntry
+  - crypto_quant_backtest.EvidenceManifest
+  - crypto_quant_backtest.EvidencePublicationStatus
+  - crypto_quant_backtest.FinalizedAttemptEvidence
+  - crypto_quant_backtest.EvidenceWriteFailureCode
+  - crypto_quant_backtest.EvidenceWriteFailure
+  - crypto_quant_backtest.EvidencePublicationOutcome
+  - crypto_quant_backtest.AttemptEvidenceWriter
+  - canonical attempt staging and atomic-finalize layout v1
+  - static atomic Attempt evidence golden fixture v1
+test_commands:
+  contract: uv run pytest -q tests/runtime/evidence/test_evidence_writer.py
+  fixture: uv run pytest -q tests/runtime/evidence/test_evidence_writer_golden.py
+  boundary: uv run pytest -q tests/architecture/test_public_api_imports.py tests/architecture/test_repository_cleanliness.py && uv run python tools/architecture/check_import_boundaries.py --root . --policy architecture/import-boundaries.toml --report build/acceptance/wp-07c-import-boundary-report.json
+fixture_ids:
+  - atomic-attempt-evidence-publication-v1
+expected_artifacts:
+  - tests/fixtures/runtime/atomic-attempt-evidence-publication-v1.json
+  - build/acceptance/wp-07c-pytest.xml
+  - build/acceptance/wp-07c-import-boundary-report.json
+failure_contracts:
+  - attempt-staging-or-final-path-escapes-canonical-run-layout
+  - existing-final-attempt-is-overwritten-or-mutated
+  - unfinished-staging-is-visible-as-final-attempt
+  - artifact-is-not-current-version-canonical-envelope-bytes
+  - evidence-manifest-omits-or-misstates-authoritative-file
+  - unlisted-authoritative-file-exists-at-finalize
+  - artifact-content-source-schema-role-path-or-byte-count-mismatch
+  - market-bundle-content-is-copied-instead-of-hash-referenced
+  - ready-attempt-publishes-completed-result-before-integrity
+  - blocked-failed-or-cancelled-attempt-loses-original-outcome
+  - writer-failure-leaves-final-attempt-or-publishes-result
+  - writer-failure-uses-exception-message-path-or-stack-as-canonical-protocol
+  - execution-summary-hash-integrity-grade-or-canonical-attempt-ref-implemented-early
+  - evidence-writer-reruns-engine-or-accesses-network-external-database-or-wall-clock
+allowed_grade: development
+evidence:
+  - pytest-report
+  - static-evidence-publication-golden-hash
+  - common-and-branch-artifact-coverage-report
+  - canonical-envelope-content-and-source-hashes
+  - manifest-exact-coverage-and-readback-evidence
+  - staging-to-final-atomic-rename-and-immutability-evidence
+  - market-bundle-reference-only-evidence
+  - all-four-runner-branch-publication-status-evidence
+  - writer-failure-failed-outcome-and-no-final-publication-evidence
+  - no-completed-result-execution-summary-integrity-or-grade-evidence
+  - public-api-import-report
+  - import-boundary-report
+  - static-type-report
+passed_commit: null
+artifact_hashes: []
+```
+
+### WP-07C Acceptance
+
+冻结以下实现边界：
+
+1. `AttemptEvidenceWriter` 只接受 WP-07B 的 immutable `AttemptExecutionRecord` 和 caller-supplied local evidence root。规范相对目录固定为 `runs/<semantic_run_id>/attempts/.staging/<attempt_id>/`，成功后原子 rename 到 `runs/<semantic_run_id>/attempts/<attempt_id>/`；绝对 root 是操作配置，不进入 canonical identity；
+2. 每个证据文件通过 WP-02E `SchemaCatalog.write_current()` 生成当前版本 `ArtifactEnvelope` canonical bytes。Common 文件固定为 `request.json`、`environment.json`、`build-artifact-manifest.json`、`market-bundle-ref.json`、`environment-compatibility-report.json` 和 `attempt-execution-record.json`；分支文件分别是 `engine-execution-result.json`、`blocked-run-report.json`、`failure-report.json` 或 `cancellation-report.json`；
+3. `EvidenceArtifactEntry` 记录 canonical relative path、Artifact role/type/schema version、envelope content hash、exact source SHA-256 和 byte count。`EvidenceManifest` canonical-sort entries，覆盖 staging 中除 `evidence-manifest.json` 自身外的全部权威文件；文件缺失、额外文件、内容、hash、schema、role、path 或大小不一致均 fail closed；
+4. Writer 最后写入 `evidence-manifest.json`，read-back 全部 Artifact 和 Manifest，验证 exact coverage 后才执行同一 filesystem 的 atomic directory rename。final Attempt 已存在或 stale staging 已存在时拒绝覆盖；成功 Artifact 设为只读，重复 publish 不得改变任何 bytes；
+5. `market-bundle-ref.json` 只保存 WP-06A immutable `MarketBundleRef`；Writer API 不接受或复制 Bundle events、stream partitions 或 Builder/source data；
+6. Ready 分支发布状态固定为 `READY_FOR_INTEGRITY`，保留 exact `EngineExecutionResult`，但不创建 `result.json`、`BacktestRunOutcome.COMPLETED`、canonical Attempt ref、execution result summary/hash、Integrity 或 ResultGrade。BLOCKED/FAILED/CANCELLED 分支保持 Runner 的原始 terminal Outcome；
+7. 任一 staging 创建、Artifact 写入、Manifest 写入、read-back、permission 或 rename 失败返回 canonical `EvidenceWriteFailure`，Outcome 固定 FAILED，只记录稳定 failure code、Attempt identity、相对 artifact subject 和异常类型 identity；异常 message、stack、hostname 和绝对 path 不进入 protocol。失败不得留下 final Attempt；
+8. 本 WP 不重跑 Engine、不修改 Runner/Engine economic objects、不做 cache/concurrent dedup、不访问 network 或 mutable external database，并保持 `deployment_authorized=false`。
+
+## 58. PASSED 记录格式
 
 ```yaml
 id: WP-00A
