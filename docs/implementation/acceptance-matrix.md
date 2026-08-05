@@ -108,8 +108,8 @@ artifact_hashes: []
 | WP-07B | PASSED | backtest-runtime | WP-07A | none |
 | WP-07C | PASSED | backtest-runtime | WP-07B | none |
 | WP-07D | PASSED | backtest-runtime | WP-07B–WP-07C | none |
-| WP-07E | READY | backtest-runtime | WP-07A-R1, WP-07C–WP-07D | none |
-| G07 | DRAFT | backtest-runtime integration | WP-07A-R1, WP-07A–WP-07E | WP-07E must pass |
+| WP-07E | PASSED | backtest-runtime | WP-07A-R1, WP-07C–WP-07D | none |
+| G07 | DRAFT | backtest-runtime integration | WP-07A-R1, WP-07A–WP-07E | none |
 | G08A | DRAFT | trading-kernel profiles/cn_a_share | G07 | Calendar fixtures |
 | G08B | DRAFT | trading-kernel profiles/cn_a_share | G08A | T+1 fixtures |
 | G08C | DRAFT | trading-kernel profiles/cn_a_share | G08A | Lattice/odd-lot fixtures |
@@ -5176,7 +5176,7 @@ Python                                                              3.13.5
 
 ```yaml
 id: WP-07E
-status: READY
+status: PASSED
 depends_on:
   - WP-07A-R1
   - WP-07C
@@ -5262,8 +5262,11 @@ evidence:
   - public-api-import-report
   - import-boundary-report
   - static-type-report
-passed_commit: null
-artifact_hashes: []
+passed_commit: 0aa059145f79bf49432b14f3ad9c415880db591a
+artifact_hashes:
+  tests/fixtures/runtime/integrity-canonical-result-publication-v1.json: sha256:58954ba13e3d9ae211d70a47ce7b4fb921119dd5b96600433209964bcbfcf4ef
+  build/acceptance/wp-07e-pytest.xml: sha256:878c35b7c433f40f4e454a4c9d38c120b3ef3c342de03a658a52d05dcd7b101e
+  build/acceptance/wp-07e-import-boundary-report.json: sha256:31e5356f0766adb358334ffa4520d58fa71f8e210246d6624b3f1ada2d3e04a3
 ```
 
 ### WP-07E Acceptance
@@ -5281,7 +5284,25 @@ artifact_hashes: []
 9. Filesystem threat model 固定为 trusted cooperative single-writer：受控本地同一文件系统、排他 lockfile、staging→rename；锁不得按 wall clock 自动回收。Shared/adversarial filesystem、NFS/object-store rename 语义、symlink attack 和 malicious concurrent writer 明确不支持；
 10. 本 WP 不实现 cache eviction、promotion、Metrics、network、wall clock、外部数据库、真实交易或任何 deployment authorization。
 
-上述 durable evaluation、双 Attempt closure、lowest-ordinal selection、无环 DAG、Rebuild/Trace/Bundle binding 和 trusted single-writer filesystem 决策已经冻结，WP-07E 恢复为 `READY`，可以开始 production implementation。
+上述 durable evaluation、双 Attempt closure、lowest-ordinal selection、无环 DAG、Rebuild/Trace/Bundle binding、validated cache hit 和 trusted single-writer filesystem 语义已由 production implementation 与 fault-injection coverage 固化。
+
+WP-07E 的实现已冻结在 immutable commit `0aa059145f79bf49432b14f3ad9c415880db591a`，状态为 `PASSED`。
+
+验证记录：
+
+```text
+Integrity and canonical publication contract tests                  46 passed
+Static integrity/publication golden fixture                          1 passed
+WP-07E acceptance JUnit report                                      47 passed
+Public API + repository cleanliness boundaries                      5 passed
+Full test suite                                                    596 passed
+Backtest-runtime import boundary                                    PASS (56 files)
+mypy                                                                no issues (32 files)
+Primary LSP + pi-lens                                               clean
+Multi-agent blocker reviews                                         no unresolved P0/P1
+uv lock --check                                                     PASS
+Python                                                              3.13.5
+```
 
 ## 61. G07 Auditable Development Run Acceptance Card
 
@@ -5338,7 +5359,7 @@ passed_commit: null
 artifact_hashes: []
 ```
 
-G07 在 WP-07E `PASSED` 前保持 `DRAFT`。
+WP-07E 已 `PASSED`；G07 仍保持 `DRAFT`，等待独立 READY transition 后实施 aggregate integration。
 
 ## 62. PASSED 记录格式
 
