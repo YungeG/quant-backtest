@@ -1753,7 +1753,7 @@ MarketBundle 必须在 Retention Policy 下保持可取回。如果引用的数�
 
 ```text
 semantic_run_id = hash(
-    normalized request
+    normalized request including ID-free ExecutionCaseSemanticSpec hash
     + MarketBundle hash
     + all profile digests
     + BuildArtifactManifest hash
@@ -1766,6 +1766,8 @@ semantic_run_id = hash(
 - 已有 Completed canonical result 时，Runner 可以返回 cache hit，或创建新 Attempt 做 parity verification。
 - 并发相同 semantic run ID 必须 lock 或 deduplicate。
 - 同一 Semantic Run 的两个 Completed Attempt 若 execution result hash 不同，产生确定性 `FAILED`，不得选择其中一个静默覆盖。
+- `ExecutionCaseSemanticSpec` 必须在领域 ID 派生前冻结，且不得包含 Order、OrderEvent、Fill、FeeAssessment、SettlementObligation、JournalEntry 等派生 ID 或 final ExecutionCase hash。
+- Composition root 先由 ID-free Spec 生成 Semantic Run ID，再用 semantic run namespace、causation 和稳定 ordinal 确定性派生领域 ID，最后构造完整 `ResolvedExecutionCase`。Final case hash 独立进入 Attempt/Engine evidence，不回流到 Semantic Run ID preimage。
 - Order、OrderEvent、Fill、FeeAssessment、SettlementObligation 和 JournalEntry 等模拟领域 ID 使用 semantic run namespace、causation 和稳定 ordinal 确定性派生。
 - Attempt ID 是独立操作身份，不进入模拟领域 ID。
 - Live Adapter 同时保存内部 canonical ID 和 Venue ID。

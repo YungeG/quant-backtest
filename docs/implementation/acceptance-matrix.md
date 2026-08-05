@@ -104,11 +104,12 @@ artifact_hashes: []
 | WP-06H | PASSED | tests/support | WP-02F–WP-02G | none |
 | G06 | PASSED | tests/support + backtest-runtime integration | WP-06A–WP-06H, G03–G05 | none |
 | WP-07A | PASSED | backtest-runtime | G06 | none |
+| WP-07A-R1 | READY | backtest-runtime | WP-07A, G06 | none |
 | WP-07B | PASSED | backtest-runtime | WP-07A | none |
 | WP-07C | PASSED | backtest-runtime | WP-07B | none |
 | WP-07D | PASSED | backtest-runtime | WP-07B–WP-07C | none |
-| WP-07E | DRAFT | backtest-runtime | WP-07C–WP-07D | Post-integrity terminal persistence, consistency-set closure, canonical hash DAG, filesystem threat model |
-| G07 | DRAFT | backtest-runtime integration | WP-07A–WP-07E | Semantic Run/Domain ID/ExecutionCase identity cycle; WP-07E must pass |
+| WP-07E | DRAFT | backtest-runtime | WP-07A-R1, WP-07C–WP-07D | Post-integrity terminal persistence, consistency-set closure, canonical hash DAG, filesystem threat model |
+| G07 | DRAFT | backtest-runtime integration | WP-07A-R1, WP-07A–WP-07E | WP-07E must pass |
 | G08A | DRAFT | trading-kernel profiles/cn_a_share | G07 | Calendar fixtures |
 | G08B | DRAFT | trading-kernel profiles/cn_a_share | G08A | T+1 fixtures |
 | G08C | DRAFT | trading-kernel profiles/cn_a_share | G08A | Lattice/odd-lot fixtures |
@@ -5074,12 +5075,76 @@ uv lock --check                                                     PASS
 Python                                                              3.13.5
 ```
 
-## 59. WP-07E Integrity and Canonical Result Publication Acceptance Card
+## 59. WP-07A-R1 Pre-ID ExecutionCase Semantic Identity Acceptance Card
+
+```yaml
+id: WP-07A-R1
+status: READY
+depends_on:
+  - WP-07A
+  - G06
+owner_package: backtest-runtime
+public_interface:
+  - crypto_quant_backtest.ExecutionCaseSemanticSpec
+  - crypto_quant_backtest.ResolvedExecutionCase.semantic_spec_hash
+  - BacktestRequest.execution_case_semantic_hash is the ID-free ExecutionCaseSemanticSpec hash
+  - deterministic two-phase composition: semantic spec -> Semantic Run ID -> domain IDs -> ResolvedExecutionCase
+  - static pre-ID case identity golden fixture v1
+test_commands:
+  contract: uv run pytest -q tests/runtime/resolution/test_execution_case_identity.py
+  fixture: uv run pytest -q tests/runtime/resolution/test_execution_case_identity_golden.py
+  boundary: uv run pytest -q tests/architecture/test_public_api_imports.py tests/architecture/test_repository_cleanliness.py && uv run python tools/architecture/check_import_boundaries.py --root . --policy architecture/import-boundaries.toml --report build/acceptance/wp-07a-r1-import-boundary-report.json
+fixture_ids:
+  - pre-id-execution-case-identity-v1
+expected_artifacts:
+  - tests/fixtures/runtime/pre-id-execution-case-identity-v1.json
+  - build/acceptance/wp-07a-r1-pytest.xml
+  - build/acceptance/wp-07a-r1-import-boundary-report.json
+failure_contracts:
+  - semantic-run-id-preimage-includes-final-execution-case-or-derived-domain-id
+  - execution-case-semantic-spec-contains-attempt-wall-clock-hostname-or-absolute-path
+  - runner-compares-request-semantic-spec-hash-to-final-case-hash
+  - order-fill-fee-or-journal-id-is-not-derived-from-semantic-run-namespace
+  - distinct-attempts-change-domain-id-or-final-execution-case-hash
+  - semantic-spec-change-does-not-change-semantic-run-id
+  - final-case-change-is-not-preserved-by-final-case-hash-and-evidence
+  - compatibility-shim-becomes-default-auditable-g07-path
+  - identity-correction-changes-engine-economic-result
+allowed_grade: development
+evidence:
+  - pytest-report
+  - static-pre-id-identity-golden-hash
+  - id-free-spec-and-semantic-run-preimage-evidence
+  - semantic-run-domain-id-final-case-two-phase-lineage
+  - production-derive-domain-id-evidence
+  - two-attempt-domain-and-final-case-hash-parity
+  - semantic-spec-change-sensitivity
+  - unchanged-economic-execution-result-evidence
+  - public-api-import-report
+  - import-boundary-report
+  - static-type-report
+passed_commit: null
+artifact_hashes: []
+```
+
+### WP-07A-R1 Acceptance
+
+冻结以下修正：
+
+1. `ExecutionCaseSemanticSpec` 是不包含 Order、OrderEvent、Fill、FeeAssessment、SettlementObligation、Journal Entry 等派生领域 ID 的 immutable composition input；其 hash 进入 `BacktestRequest.execution_case_semantic_hash` 和 Semantic Run ID preimage；
+2. composition root 必须先由 Request、Bundle、Profile、Build、Target 和 `ExecutionCaseSemanticSpec` 生成 Semantic Run ID，再用 WP-01C `derive_domain_id()` 生成领域 ID，最后构造 `ResolvedExecutionCase`；
+3. `ResolvedExecutionCase` 保存 `semantic_spec_hash` 作为 composition binding。Runner 比较 Request 的 spec hash 与该 binding；final `case_hash` 继续独立覆盖完整已解析 Case，并进入 Attempt/Engine evidence，但不回流到 Semantic Run ID；
+4. 同一 Semantic Spec 的不同 Attempt 必须拥有相同 Semantic Run ID、领域 ID 和 final case hash。Spec 语义变化必须改变 Semantic Run ID；Attempt、wall clock、hostname、绝对路径不得进入；
+5. G07 路径必须实际使用 production `derive_domain_id()`。现有早期 Component Fixture 可保留显式 compatibility identity，但不得作为 G07 Auditable path；
+6. 本修正不改变交易经济行为、Execution result、Profile、Bundle、Engine orchestration 或 Run Outcome，只打破身份循环并补充可审计 lineage。
+
+## 60. WP-07E Integrity and Canonical Result Publication Acceptance Card
 
 ```yaml
 id: WP-07E
 status: DRAFT
 depends_on:
+  - WP-07A-R1
   - WP-07C
   - WP-07D
 owner_package: backtest-runtime
@@ -5167,12 +5232,13 @@ artifact_hashes: []
 
 因此 WP-07E 暂时恢复为 `DRAFT`，不得开始 production implementation。
 
-## 60. G07 Auditable Development Run Acceptance Card
+## 61. G07 Auditable Development Run Acceptance Card
 
 ```yaml
 id: G07
 status: DRAFT
 depends_on:
+  - WP-07A-R1
   - WP-07A
   - WP-07B
   - WP-07C
@@ -5223,7 +5289,7 @@ artifact_hashes: []
 
 G07 在 WP-07E `PASSED` 前保持 `DRAFT`。
 
-## 61. PASSED 记录格式
+## 62. PASSED 记录格式
 
 ```yaml
 id: WP-00A

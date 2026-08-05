@@ -1109,6 +1109,18 @@ Deposit
 - hostname、绝对路径、attempt start time 不进入 ID；
 - editable/dirty code 没有 immutable artifact identity 时只能 development-grade 或 BLOCKED。
 
+### WP-07A-R1 Pre-ID ExecutionCase Semantic Identity
+
+修正 Semantic Run、领域 ID 和 final ExecutionCase hash 的循环依赖。Composition root 先冻结不含派生领域 ID 的 `ExecutionCaseSemanticSpec`，其 hash 进入 Semantic Run ID；再使用 Semantic Run namespace 派生 Order/Fill/Fee/Journal 等 ID，最后构造完整 `ResolvedExecutionCase`。
+
+验收：
+
+- Semantic Run ID preimage 只包含 ID-free Spec，不包含 final Case hash 或派生领域 ID；
+- Runner 校验 Request spec hash 与 `ResolvedExecutionCase.semantic_spec_hash`，final case hash 单独进入 Attempt/Engine evidence；
+- G07 使用 production `derive_domain_id()`，两个 Attempt 的领域 ID 和 final case hash 完全一致；
+- Spec 改变会改变 Semantic Run ID；Attempt/hostname/path/time 不进入；
+- 身份修正不得改变 Engine 的经济行为。
+
 ### WP-07B Auditable runner 与 Outcome mapping
 
 拥有：Attempt identity、G06 Engine 调用、InputOrigin-aware failure mapping、Run Outcome state machine 和 retry-from-start policy。
