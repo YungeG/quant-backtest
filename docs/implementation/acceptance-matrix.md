@@ -104,7 +104,7 @@ artifact_hashes: []
 | WP-06H | PASSED | tests/support | WP-02F–WP-02G | none |
 | G06 | PASSED | tests/support + backtest-runtime integration | WP-06A–WP-06H, G03–G05 | none |
 | WP-07A | PASSED | backtest-runtime | G06 | none |
-| WP-07B | READY | backtest-runtime | WP-07A | none |
+| WP-07B | PASSED | backtest-runtime | WP-07A | none |
 | WP-07C | DRAFT | backtest-runtime | WP-07B | Evidence atomicity fixtures |
 | WP-07D | DRAFT | backtest-runtime | WP-07B–WP-07C | Execution hash fixtures |
 | WP-07E | DRAFT | backtest-runtime | WP-07C–WP-07D | Integrity/grade fixtures |
@@ -4785,7 +4785,7 @@ Python                                                                 3.13.5
 
 ```yaml
 id: WP-07B
-status: READY
+status: PASSED
 depends_on:
   - WP-07A
 owner_package: backtest-runtime
@@ -4843,11 +4843,14 @@ evidence:
   - public-api-import-report
   - import-boundary-report
   - static-type-report
-passed_commit: null
-artifact_hashes: []
+passed_commit: c16499ba9afc83f189d61241bba4d31a013d9e6d
+artifact_hashes:
+  tests/fixtures/runtime/auditable-runner-outcome-mapping-v1.json: sha256:3dfea82a2469753e2fff0d132805aeff9e425e7c69074ee7ffe285141d442542
+  build/acceptance/wp-07b-pytest.xml: sha256:7c086cba09a70285a092a85368385278a78ee664429b077d5c844951c2310d97
+  build/acceptance/wp-07b-import-boundary-report.json: sha256:388901cda9ecd44fb747f95324e3c6737eb2c87d940e41e0274846a180fbd5b0
 ```
 
-### WP-07B Readiness
+### WP-07B Acceptance
 
 冻结以下实现边界：
 
@@ -4862,7 +4865,23 @@ artifact_hashes: []
 9. `retry_from_start` 必须重新调用同一个初始 immutable Case，创建 child Attempt，并且不得复用前一 Attempt 的 Timeline Cursor、Journal、Ledger、Reservation、Snapshot 或其他 partial state；前一 Attempt/Report 不可修改；
 10. 本 WP 不实现 Evidence 目录/writer/atomic finalize、canonical execution-result summary/hash、Integrity/ResultGrade、cache/concurrency dedup、retry scheduling、network、wall clock或 deployment authorization。
 
-WP-07B 当前状态为 `READY`。
+WP-07B 的实现已冻结在 immutable commit `c16499ba9afc83f189d61241bba4d31a013d9e6d`，状态为 `PASSED`。
+
+验证记录：
+
+```text
+Auditable Runner contract tests                                      6 passed
+Canonical outcome-mapping golden fixture                             1 passed
+Public API + repository cleanliness boundaries                       5 passed
+Acceptance test report                                               12 passed
+Backtest-runtime import boundary                                     PASS (51 files)
+Full test suite                                                      511 passed
+mypy                                                                  no issues (13 files)
+Primary LSP                                                           clean
+pi-lens scoped review                                                 no unresolved findings; 1 small runtime-local helper duplicate deferred
+uv lock --check                                                       PASS
+Python                                                                3.13.5
+```
 
 ## 57. PASSED 记录格式
 
