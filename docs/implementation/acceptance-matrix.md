@@ -102,7 +102,7 @@ artifact_hashes: []
 | WP-06F | PASSED | backtest-runtime | WP-03E, WP-05A–WP-05C, WP-06B, WP-06E | none |
 | WP-06G | PASSED | backtest-runtime | WP-06A–WP-06F | none |
 | WP-06H | PASSED | tests/support | WP-02F–WP-02G | none |
-| G06 | READY | tests/support + backtest-runtime integration | WP-06A–WP-06H, G03–G05 | none |
+| G06 | PASSED | tests/support + backtest-runtime integration | WP-06A–WP-06H, G03–G05 | none |
 | WP-07A | DRAFT | backtest-runtime | G06 | Resolver/semantic ID fixtures |
 | WP-07B | DRAFT | backtest-runtime | WP-07A | Attempt/Outcome fixtures |
 | WP-07C | DRAFT | backtest-runtime | WP-07B | Evidence atomicity fixtures |
@@ -4568,7 +4568,7 @@ Python                                                            3.13.5
 
 ```yaml
 id: G06
-status: READY
+status: PASSED
 depends_on:
   - G03
   - G04
@@ -4629,11 +4629,14 @@ evidence:
   - deployment-authorized-false-evidence
   - import-boundary-report
   - static-type-report
-passed_commit: null
-artifact_hashes: []
+passed_commit: 0e481d4f9e06f073446749149756f38ea0054739
+artifact_hashes:
+  tests/fixtures/runtime/g06-synthetic-cash-happy-path-v1.json: sha256:47d5654547b826cebd9c1b86214128999f02982c796c1c79ba635a08bd092ab9
+  build/acceptance/g06-pytest.xml: sha256:7ffccc47f4ddab90ec5ad2905914fd57ca5a500c852ca54e1d43632818707e95
+  build/acceptance/g06-import-boundary-report.json: sha256:84e7a5ee390aada767ce3c8e2d6eaa4e4d24296c455f698c2d9ece95b419eb9d
 ```
 
-### G06 Readiness
+### G06 Acceptance
 
 冻结以下 Aggregate 边界：
 
@@ -4646,7 +4649,23 @@ artifact_hashes: []
 7. Gate Evidence 必须显式记录 `synthetic_market_profile`、`grade=development`、`decision_grade_eligible=false` 和 `deployment_authorized=false`。G06 不声称真实 A 股、Binance 或 decision-grade；
 8. Golden Artifact 是静态 committed 文件，测试不能现场重写 expected。
 
-G06 当前状态为 `READY`。
+G06 的实现已冻结在 immutable commit `0e481d4f9e06f073446749149756f38ea0054739`，状态为 `PASSED`。
+
+验证记录：
+
+```text
+Synthetic cash Engine journey contract tests                       5 passed
+Canonical G06 static golden fixture                                1 passed
+Public API + repository cleanliness boundaries                    5 passed
+Acceptance test report                                           11 passed
+Import boundary                                                   PASS (49 files)
+Full test suite                                                  497 passed
+mypy                                                              no issues (5 files)
+Primary LSP                                                       clean
+pi-lens scoped review                                             no unresolved findings
+uv lock --check                                                   PASS
+Python                                                            3.13.5
+```
 
 ## 55. PASSED 记录格式
 
