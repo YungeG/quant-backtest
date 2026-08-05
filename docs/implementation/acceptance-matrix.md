@@ -107,8 +107,8 @@ artifact_hashes: []
 | WP-07B | PASSED | backtest-runtime | WP-07A | none |
 | WP-07C | PASSED | backtest-runtime | WP-07B | none |
 | WP-07D | PASSED | backtest-runtime | WP-07B–WP-07C | none |
-| WP-07E | READY | backtest-runtime | WP-07C–WP-07D | none |
-| G07 | DRAFT | backtest-runtime integration | WP-07A–WP-07E | WP-07E must pass before aggregate execution |
+| WP-07E | DRAFT | backtest-runtime | WP-07C–WP-07D | Post-integrity terminal persistence, consistency-set closure, canonical hash DAG, filesystem threat model |
+| G07 | DRAFT | backtest-runtime integration | WP-07A–WP-07E | Semantic Run/Domain ID/ExecutionCase identity cycle; WP-07E must pass |
 | G08A | DRAFT | trading-kernel profiles/cn_a_share | G07 | Calendar fixtures |
 | G08B | DRAFT | trading-kernel profiles/cn_a_share | G08A | T+1 fixtures |
 | G08C | DRAFT | trading-kernel profiles/cn_a_share | G08A | Lattice/odd-lot fixtures |
@@ -5078,7 +5078,7 @@ Python                                                              3.13.5
 
 ```yaml
 id: WP-07E
-status: READY
+status: DRAFT
 depends_on:
   - WP-07C
   - WP-07D
@@ -5156,6 +5156,16 @@ artifact_hashes: []
 6. Canonical publication 使用 caller-supplied local root，在独立 staging 目录写入当前版本 ArtifactEnvelope 的 `integrity.json`、`result.json` 和 `canonical-attempt-ref.json`，read-back 验证后原子 rename 为 `runs/<semantic_run_id>/canonical/`；不得修改只读 Attempt evidence；
 7. Canonical 目录和文件 finalize 后只读，已存在 destination 禁止覆盖。任一写入、验证、permission 或 rename 失败不得留下 final canonical Result，并返回结构化 FAILED publication；
 8. 本 WP 不实现 cache/concurrency dedup、promotion、Metrics、network、wall clock、外部数据库、真实交易或任何 deployment authorization。
+
+并行独立审阅确认以下问题必须在恢复 `READY` 前冻结：
+
+- post-integrity `BLOCKED`/`FAILED` 的 durable immutable publication path 和 schema；
+- 一致性 Attempt set 的最小数量、closure、canonical Attempt 选择和 post-publication parity 边界；
+- `integrity.json`、`result.json`、`canonical-attempt-ref.json` 的无环 hash DAG 与 exact fields；
+- Trace/Bundle retention/rebuild evidence 的 canonical binding；
+- trusted cooperative single-writer 与 shared/adversarial filesystem threat model 二选一。
+
+因此 WP-07E 暂时恢复为 `DRAFT`，不得开始 production implementation。
 
 ## 60. G07 Auditable Development Run Acceptance Card
 

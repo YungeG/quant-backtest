@@ -1705,15 +1705,15 @@ runs/<semantic-run-id>/
 ├── funding-events.jsonl
 ├── financing.jsonl
 ├── liquidation-audit.jsonl
-├── integrity.json
-├── final-portfolio-snapshot.json        # COMPLETED only
-├── run-end-report.json
-├── result.json                          # COMPLETED only
+├── final-portfolio-snapshot.json        # future full-trace expansion; G07 v1 is inside Engine result envelope
+├── run-end-report.json                  # future full-trace expansion; G07 v1 is inside Engine result envelope
 ├── blocked-run-report.json              # BLOCKED only
 ├── failure-report.json                  # FAILED only
 ├── cancellation-report.json             # CANCELLED only
 └── evidence-manifest.json
 ```
+
+`integrity.json`、`result.json` 和 `canonical-attempt-ref.json` 只属于 run-level terminal publication，不得追加到 WP-07C 已 atomic-finalize 的 Attempt 目录。上表中的细粒度 full-trace 文件是后续 Evidence schema 扩展目标；G07 v1 Attempt exact coverage 以 WP-07C ArtifactEnvelope 集合为准。
 
 派生分析独立存放，不修改 immutable canonical evidence：
 
