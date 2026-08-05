@@ -103,7 +103,7 @@ artifact_hashes: []
 | WP-06G | PASSED | backtest-runtime | WP-06A–WP-06F | none |
 | WP-06H | PASSED | tests/support | WP-02F–WP-02G | none |
 | G06 | PASSED | tests/support + backtest-runtime integration | WP-06A–WP-06H, G03–G05 | none |
-| WP-07A | READY | backtest-runtime | G06 | none |
+| WP-07A | PASSED | backtest-runtime | G06 | none |
 | WP-07B | DRAFT | backtest-runtime | WP-07A | Attempt/Outcome fixtures |
 | WP-07C | DRAFT | backtest-runtime | WP-07B | Evidence atomicity fixtures |
 | WP-07D | DRAFT | backtest-runtime | WP-07B–WP-07C | Execution hash fixtures |
@@ -4671,7 +4671,7 @@ Python                                                            3.13.5
 
 ```yaml
 id: WP-07A
-status: READY
+status: PASSED
 depends_on:
   - G06
 owner_package: backtest-runtime
@@ -4743,11 +4743,14 @@ evidence:
   - public-api-import-report
   - import-boundary-report
   - static-type-report
-passed_commit: null
-artifact_hashes: []
+passed_commit: 04da782b84703094b5351bebe51e0d7e46afb53b
+artifact_hashes:
+  tests/fixtures/runtime/backtest-request-profile-resolution-v1.json: sha256:7f8f16a87e6dccfe94cbe2e0e13f1855407e436399a687f715c02e070b76e221
+  build/acceptance/wp-07a-pytest.xml: sha256:6b08d1ba7e2151602e2c1fdf2f932f9b41e1e3a7a620e827491665fe192e23e9
+  build/acceptance/wp-07a-import-boundary-report.json: sha256:1f1181038ee8b518c6dec3156b0dab8ace218a9dcb3ef5d5771160b8856c0925
 ```
 
-### WP-07A Readiness
+### WP-07A Acceptance
 
 冻结以下实现边界：
 
@@ -4760,7 +4763,23 @@ artifact_hashes: []
 7. `semantic_run_id` 使用 versioned canonical schema，由 normalized request、MarketBundle identity、三个 Profile digest、BuildArtifactManifest identity 和 target-stream digest 共同确定。code/profile/bundle/target/request semantic input 变化必须改变 ID；Registry 顺序和 Build provenance 的 hostname/绝对路径/git commit/build time 变化不得改变 ID；
 8. Resolved output 保存 immutable Environment、Compatibility Report、Normalized Request、Build Manifest identity 和 Semantic Run ID，但不创建 Attempt、不执行 Engine、不映射 Run Outcome、不写 Evidence、不重试且始终不授予部署权限。
 
-WP-07A 已满足实现前置条件，状态为 `READY`。
+WP-07A 的实现已冻结在 immutable commit `04da782b84703094b5351bebe51e0d7e46afb53b`，状态为 `PASSED`。
+
+验证记录：
+
+```text
+BacktestRequest/Profile resolution contract tests                    6 passed
+Canonical request-resolution golden fixture                          1 passed
+Public API + repository cleanliness boundaries                       5 passed
+Acceptance test report                                               12 passed
+Backtest-runtime import boundary                                      PASS (50 files)
+Full test suite                                                       504 passed
+mypy                                                                   no issues (12 files)
+Primary LSP                                                            clean
+pi-lens scoped review                                                  no unresolved findings
+uv lock --check                                                        PASS
+Python                                                                 3.13.5
+```
 
 ## 56. PASSED 记录格式
 
