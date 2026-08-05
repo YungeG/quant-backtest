@@ -5086,7 +5086,12 @@ depends_on:
 owner_package: backtest-runtime
 public_interface:
   - crypto_quant_backtest.ExecutionCaseSemanticSpec
+  - crypto_quant_backtest.ExecutionCaseIdentityBinding
+  - crypto_quant_backtest.ExecutionCaseIdentityManifest
+  - crypto_quant_backtest.ExecutionCaseIdentityFactory
+  - crypto_quant_backtest.ExecutionCaseComposer
   - crypto_quant_backtest.ResolvedExecutionCase.semantic_spec_hash
+  - crypto_quant_backtest.ResolvedExecutionCase.identity_manifest
   - BacktestRequest.execution_case_semantic_hash is the ID-free ExecutionCaseSemanticSpec hash
   - deterministic two-phase composition: semantic spec -> Semantic Run ID -> domain IDs -> ResolvedExecutionCase
   - static pre-ID case identity golden fixture v1
@@ -5133,10 +5138,13 @@ artifact_hashes: []
 
 1. `ExecutionCaseSemanticSpec` 是不包含 Order、OrderEvent、Fill、FeeAssessment、SettlementObligation、Journal Entry 等派生领域 ID 的 immutable composition input；其 hash 进入 `BacktestRequest.execution_case_semantic_hash` 和 Semantic Run ID preimage；
 2. composition root 必须先由 Request、Bundle、Profile、Build、Target 和 `ExecutionCaseSemanticSpec` 生成 Semantic Run ID，再用 WP-01C `derive_domain_id()` 生成领域 ID，最后构造 `ResolvedExecutionCase`；
-3. `ResolvedExecutionCase` 保存 `semantic_spec_hash` 作为 composition binding。Runner 比较 Request 的 spec hash 与该 binding；final `case_hash` 继续独立覆盖完整已解析 Case，并进入 Attempt/Engine evidence，但不回流到 Semantic Run ID；
-4. 同一 Semantic Spec 的不同 Attempt 必须拥有相同 Semantic Run ID、领域 ID 和 final case hash。Spec 语义变化必须改变 Semantic Run ID；Attempt、wall clock、hostname、绝对路径不得进入；
-5. G07 路径必须实际使用 production `derive_domain_id()`。现有早期 Component Fixture 可保留显式 compatibility identity，但不得作为 G07 Auditable path；
-6. 本修正不改变交易经济行为、Execution result、Profile、Bundle、Engine orchestration 或 Run Outcome，只打破身份循环并补充可审计 lineage。
+3. `ExecutionCaseComposer` 是唯一 auditable two-phase composition entry point：它验证 Resolved Request/Spec、创建绑定 Semantic Run/IdentityNamespace 的 `ExecutionCaseIdentityFactory`、调用 caller-supplied pure Case builder、exact-cover builder 发出的 Domain/Event identities，并冻结 `ExecutionCaseIdentityManifest`；测试不得复制该算法冒充 production composition；
+4. `ResolvedExecutionCase` 保存 `semantic_spec_hash` 和 `identity_manifest`。Auditable final `case_hash` 必须覆盖二者；Runner 比较 Request spec hash、Manifest Semantic Run 和 Case exact identity coverage。Final case hash 进入 Attempt/Engine evidence，但不回流到 Semantic Run ID；
+5. `ExecutionCaseSemanticSpec` 必须由构造最终 Case 的同一组 ID-free typed inputs产生；至少绑定 Timeline、TargetStream、Decision、Execution、Financial、Snapshot、RunEnd 和 IdentityNamespace。Spec target digest 与 Request/Case 必须一致，禁止可重贴的 placeholder digest；
+6. 同一 Semantic Spec 的独立重新 composition 以及不同 Attempt 必须拥有相同 Semantic Run ID、领域 ID 和 final case hash。Spec 语义变化必须改变 Semantic Run ID；Attempt、wall clock、hostname、绝对路径不得进入；
+7. G07 路径必须通过 production `ExecutionCaseComposer`/`derive_domain_id()` 生成 Deposit/Fill/Fee Journal、Order、Fill、FeeAssessment 和模拟 OrderEvent identities。现有早期 Component Fixture 可保留显式 compatibility identity，但不得作为 G07 Auditable path；
+8. Compatibility path 必须显式命名；G07-facing Resolver/Runner fixtures 默认使用 derived identity。Cross-run relabel、wrong target digest、execution-policy substitution 和 missing Manifest 必须在 Engine 调用前失败；
+9. 本修正不改变交易经济行为、Execution result、Profile、Bundle、Engine orchestration 或 Run Outcome，只打破身份循环并补充可审计 lineage。
 
 ## 60. WP-07E Integrity and Canonical Result Publication Acceptance Card
 
