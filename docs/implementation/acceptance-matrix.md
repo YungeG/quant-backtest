@@ -103,7 +103,7 @@ artifact_hashes: []
 | WP-06G | PASSED | backtest-runtime | WP-06A–WP-06F | none |
 | WP-06H | PASSED | tests/support | WP-02F–WP-02G | none |
 | G06 | PASSED | tests/support + backtest-runtime integration | WP-06A–WP-06H, G03–G05 | none |
-| WP-07A | DRAFT | backtest-runtime | G06 | Resolver/semantic ID fixtures |
+| WP-07A | READY | backtest-runtime | G06 | none |
 | WP-07B | DRAFT | backtest-runtime | WP-07A | Attempt/Outcome fixtures |
 | WP-07C | DRAFT | backtest-runtime | WP-07B | Evidence atomicity fixtures |
 | WP-07D | DRAFT | backtest-runtime | WP-07B–WP-07C | Execution hash fixtures |
@@ -4667,7 +4667,102 @@ uv lock --check                                                   PASS
 Python                                                            3.13.5
 ```
 
-## 55. PASSED 记录格式
+## 55. WP-07A BacktestRequest/Profile Resolution Acceptance Card
+
+```yaml
+id: WP-07A
+status: READY
+depends_on:
+  - G06
+owner_package: backtest-runtime
+public_interface:
+  - crypto_quant_backtest.BacktestRequest
+  - crypto_quant_backtest.RequestedResultGrade
+  - crypto_quant_backtest.StrategyFamily
+  - crypto_quant_backtest.BuildArtifactRole
+  - crypto_quant_backtest.ArtifactInstallMode
+  - crypto_quant_backtest.SourceTreeState
+  - crypto_quant_backtest.BuildArtifactRef
+  - crypto_quant_backtest.RuntimeLibraryRef
+  - crypto_quant_backtest.BuildProvenance
+  - crypto_quant_backtest.BuildArtifactManifest
+  - crypto_quant_backtest.MarketSemanticsProfileRegistration
+  - crypto_quant_backtest.SimulationProfileRegistration
+  - crypto_quant_backtest.ExecutionAccountProfileRegistration
+  - crypto_quant_backtest.BacktestProfileRegistry
+  - crypto_quant_backtest.EnvironmentCompatibilityCheckCode
+  - crypto_quant_backtest.EnvironmentCompatibilityCheck
+  - crypto_quant_backtest.EnvironmentCompatibilityReport
+  - crypto_quant_backtest.ResolvedBacktestEnvironment
+  - crypto_quant_backtest.NormalizedBacktestRequest
+  - crypto_quant_backtest.BacktestResolutionFailureCode
+  - crypto_quant_backtest.BacktestResolutionFailure
+  - crypto_quant_backtest.ResolvedBacktestRequest
+  - crypto_quant_backtest.BacktestResolutionOutcome
+  - crypto_quant_backtest.ProfileResolver
+  - deterministic semantic_run_id schema v1
+  - static BacktestRequest/Profile resolution golden fixture v1
+test_commands:
+  contract: uv run pytest -q tests/runtime/resolution/test_backtest_resolution.py
+  fixture: uv run pytest -q tests/runtime/resolution/test_backtest_resolution_golden.py
+  boundary: uv run pytest -q tests/architecture/test_public_api_imports.py tests/architecture/test_repository_cleanliness.py && uv run python tools/architecture/check_import_boundaries.py --root . --policy architecture/import-boundaries.toml --report build/acceptance/wp-07a-import-boundary-report.json
+fixture_ids:
+  - backtest-request-profile-resolution-v1
+expected_artifacts:
+  - tests/fixtures/runtime/backtest-request-profile-resolution-v1.json
+  - build/acceptance/wp-07a-pytest.xml
+  - build/acceptance/wp-07a-import-boundary-report.json
+failure_contracts:
+  - invalid-or-noncanonical-backtest-request
+  - profile-plane-not-found-or-duplicate-registry-key
+  - profile-registration-digest-or-component-manifest-mismatch
+  - market-bundle-reference-or-coverage-mismatch
+  - market-bundle-capability-missing
+  - market-account-venue-or-account-context-incompatible
+  - simulation-engine-or-strategy-family-incompatible
+  - reporting-currency-not-supported
+  - build-manifest-reference-or-profile-artifact-mismatch
+  - decision-grade-request-with-development-profile
+  - decision-grade-request-with-editable-or-unidentified-build-artifact
+  - semantic-run-id-omits-target-stream-bundle-profile-or-build-identity
+  - semantic-run-id-includes-hostname-absolute-path-build-time-or-attempt-time
+  - resolver-reads-network-wall-clock-or-executes-engine
+allowed_grade: development
+evidence:
+  - pytest-report
+  - static-request-resolution-golden-hash
+  - normalized-request-hash
+  - target-stream-digest
+  - market-bundle-manifest-hash-and-capability-report
+  - three-profile-and-component-digests
+  - build-artifact-manifest-identity-hash
+  - development-profile-and-editable-build-limitations
+  - semantic-run-id-repeat-and-change-sensitivity
+  - operational-provenance-exclusion-parity
+  - production-empty-registry-and-test-registry-lookup-evidence
+  - public-api-import-report
+  - import-boundary-report
+  - static-type-report
+passed_commit: null
+artifact_hashes: []
+```
+
+### WP-07A Readiness
+
+冻结以下实现边界：
+
+1. `BacktestRequest` 是 TargetStream Bar v1 的单账户、单 Reporting Currency composition-root 请求；它显式引用 Timeline 半开区间、三个 Profile key、MarketBundleRef、target-stream digest、execution-case semantic input hash、master seed、BuildArtifactManifest identity 和 requested grade；不接受 hostname、绝对路径、Attempt time 或任意 metadata escape hatch；
+2. `BacktestProfileRegistry` 是不可变、精确 key lookup 的 composition-root Registry。默认空 Registry 代表 Production 不注册 Synthetic Profile；测试可显式注册 development Profile。Generic Trading Kernel 不导入或感知 Registry；
+3. Market、Simulation 和 Execution Account 三个 Registration 分别验证 Profile digest、完整且唯一的 Kernel/Simulation component manifest、Venue/Account/Engine/Strategy family/Reporting Currency 约束和 required MarketBundle capabilities；Resolver 只组合、验证和报告，不调用任何市场规则、Fee、Accounting、Slippage 或 Engine；
+4. `BuildArtifactManifest` 以内容身份记录 Decision Source、Trading Domain、Trading Kernel、Market Data Contracts、Backtest Runtime 和三个 Profile plane，以及 dependency lock、Python/结果相关运行库和可选 container digest。Git commit/hostname/source root/build time 只属于 provenance，不进入 Manifest identity 或 Semantic Run ID；
+5. Development request 可以显式携带 development Profile、editable 或缺失 immutable content identity 的 BuildArtifact，但必须在 Compatibility Report 中保留 limitation。Decision-grade request 对 development Profile、editable install、缺失 content identity 或不匹配 Profile artifact identity 结构化失败关闭；
+6. Resolver 必须验证 Bundle ref/hash、时间覆盖、required capabilities、Market/Account Venue、Account ID、Simulation engine/Strategy family、Reporting Currency、Profile grade 和 Build identity；任何 incompatibility 在 Engine 运行前返回结构化 `BacktestResolutionFailure`，本 WP 不映射 BLOCKED；
+7. `semantic_run_id` 使用 versioned canonical schema，由 normalized request、MarketBundle identity、三个 Profile digest、BuildArtifactManifest identity 和 target-stream digest 共同确定。code/profile/bundle/target/request semantic input 变化必须改变 ID；Registry 顺序和 Build provenance 的 hostname/绝对路径/git commit/build time 变化不得改变 ID；
+8. Resolved output 保存 immutable Environment、Compatibility Report、Normalized Request、Build Manifest identity 和 Semantic Run ID，但不创建 Attempt、不执行 Engine、不映射 Run Outcome、不写 Evidence、不重试且始终不授予部署权限。
+
+WP-07A 已满足实现前置条件，状态为 `READY`。
+
+## 56. PASSED 记录格式
 
 ```yaml
 id: WP-00A
