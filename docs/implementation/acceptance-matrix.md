@@ -111,7 +111,7 @@ artifact_hashes: []
 | WP-07E | PASSED | backtest-runtime | WP-07A-R1, WP-07C–WP-07D | none |
 | G07 | PASSED | backtest-runtime integration | WP-07A-R1, WP-07A–WP-07E | none |
 | G08A | PASSED | trading-kernel profiles/cn_a_share | G07 | none |
-| G08B | READY | trading-kernel profiles/cn_a_share | G08A | none |
+| G08B | PASSED | trading-kernel profiles/cn_a_share | G08A | none |
 | G08C | DRAFT | trading-kernel profiles/cn_a_share | G08A | Lattice/odd-lot fixtures |
 | G08D | DRAFT | trading-kernel profiles/cn_a_share | G08A, G08C, WP-05G | Historical rule fixtures |
 | G08E | DRAFT | trading-kernel profiles/cn_a_share | WP-05H, WP-05J | Fee/tax fixtures |
@@ -5577,7 +5577,7 @@ Python                                                             3.13.5
 
 ```yaml
 id: G08B
-status: READY
+status: PASSED
 depends_on:
   - G08A
   - WP-01C
@@ -5646,13 +5646,16 @@ evidence:
   - network-market-bundle-runtime-and-generic-kernel-import-absence
   - import-boundary-report
   - static-type-report
-passed_commit: null
-artifact_hashes: []
+passed_commit: dc941e960c26db298da9f600d7d747725ee26402
+artifact_hashes:
+  tests/fixtures/kernel/profiles/cn_a_share/settlement-availability-v1.json: sha256:4b66c6ed6594c05de8723f11b69839507ba5991b8b913b6fe32f61d6960ba800
+  build/acceptance/g08b-pytest.xml: sha256:48658fa8b66f5209231c9a71c0705b82ff0fb62fb170f0405e21a99b912cb80e
+  build/acceptance/g08b-import-boundary-report.json: sha256:a4c47ac240df0219ac8d7a6e2e2f024e25b13657132c23bbf0a64467a21c39f7
 ```
 
 ### G08B Acceptance
 
-以下语义、接口、Fixture、failure 和 purity contract 已冻结，G08B 可进入 TDD 实现：
+以下语义、接口、Fixture、failure 和 purity contract 已冻结并实现：
 
 1. G08B 只在 `crypto_quant_trading.profiles.cn_a_share` 增加一个 concrete Settlement Adapter；不修改 generic `SettlementModel`、`SettlementBook`、`MarketSettlementRules` 或 `AvailabilityProjection` seam，不 root re-export concrete 类型，不创建 partial `MarketSemanticsProfileRegistration`。完整 Profile composition 仍属于 G08H；
 2. v1 scope 仅含 `VenueId("xshg")`/`CN.XSHG` 与 `VenueId("xshe")`/`CN.XSHE` 的普通人民币 A 股现金账户。Adapter 可从 Query 直接验证的范围只有 Venue、broad `InstrumentType.EQUITY`、Instrument identity 和 CNY quote/settlement currency；普通 A 股而非 ETF/REIT/Stock Connect、现金而非融资账户等不可由当前 Contract 观察的区分，必须作为 caller/G08H precondition，G08B 不得声称已验证。BSE、B 股、基金、债券、跨境、融资融券、卖空、质押/冻结、参与人违约和 Broker/Bank transfer cut-off 均不在 scope；
@@ -5748,6 +5751,35 @@ Official primary references：
 - CSRC JR/T 0300—2023 separate available/withdrawable balance terminology：`https://www.csrc.gov.cn/csrc/c101954/c7445425/content.shtml`。
 
 SSE/SZSE 投教材料中存在当日可用/次日可取的产品示例，但不作为普通 A 股规范依据；G08B 的 retail Tradable/Withdrawable 行为明确属于版本化现金账户系统约定。
+
+G08B 的实现边界如下：
+
+1. `CnAShareCashSettlementModel` 在 concrete profile package 中结构化实现 `SettlementModel`，只接受 XSHG/XSHE、broad EQUITY 和 CNY 可观察上下文；Query constructor 保持 type-only，Model 按冻结 precedence 返回 exactly-one `ProfilePortOutcome`；
+2. Adapter 对 `FILL_BOOKED` Entry 做 account、venue、source exact set、Cash/Position cardinality、identity、currency、Scale、signed effect、fee/financing 和 timing 完整绑定；BUY/SELL off-notional sentinel 证明 Cash obligation 逐字使用 Journal Money，禁止从 Fill 重算 Notional；
+3. 下一 TradingDate 只扫描 caller-injected G08A Frozen Calendar。Negative delivery 在 Fill instant 完成，positive Position 在下一交易日本地 00:00 成熟，positive Cash 在本地 16:00 成熟；公开 Resolution constructor 同时拒绝非 CNY、同号 legs、重复 ID、跨 Account/Venue、trade-date 和 boundary 矛盾；
+4. `availability_rules()` 只 materialize 固定 cash-account policy；pending cash 可交易但不可提现/不可用于 margin，pending position 不可卖，Cash/Fee reservation ownership 与 Margin fail-closed 均由 generic `AvailabilityProjection` 验证；
+5. Fixture 严格按 authoritative Journal → full-prefix Ledger → Settlement Resolution → Recorded/Applied events → SettlementBook → Availability 顺序构造。Recorded event source hash 绑定 Resolution；Accounting/Recorded/Applied 使用 phase 50/60/61 和递增 SourceSequence，reverse-lexical Journal/Event IDs 证明不依赖 ID 排序；
+6. Frozen journey 证明四条 obligation 的 immediate/deferred lifecycle、`boundary-1ns`/boundary 状态、full replay/resume、Book/Rules/Availability input-order parity、Reservation isolation 和 SettlementApplied 不重复记账；
+7. XSHG/XSHE normalized signed economics相同，但 Calendar/Session/Settlement component、SettlementBook、Rules 与 Availability identities 不同。Golden 保存 development-only qualification、caller preconditions、系统 maturity conventions、全部关键对象与 hash；
+8. Concrete package 未 root re-export，不修改 generic seams；alias-aware AST mutation contract 拒绝 filesystem、network/provider/process/database/cloud SDK 和 wall clock，并保持 Runtime/MarketBundle/G08C–G08H 语义隔离。
+
+G08B 已冻结在 immutable commit `dc941e960c26db298da9f600d7d747725ee26402`，状态为 `PASSED`。
+
+验证记录：
+
+```text
+G08B settlement/availability contract tests                         52 passed
+Static A-share settlement/availability golden fixture                1 passed
+G08B acceptance JUnit report                                        53 passed
+Public API, generic port/settlement and calendar boundaries          50 passed
+Full test suite                                                     680 passed
+Trading-kernel import boundary                                      PASS (60 files)
+mypy                                                                 no issues (8 files)
+Primary LSP + pi-lens                                                clean
+Multi-agent blocker reviews                                          no unresolved P0/P1
+uv lock --check                                                      PASS
+Python                                                               3.13.5
+```
 
 ## 64. PASSED 记录格式
 

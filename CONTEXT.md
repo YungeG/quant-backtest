@@ -630,6 +630,10 @@ _Avoid_: Strategy sizing
 
 普通人民币 A 股在 T 日买入后立即形成经济持仓，但 T 日不可卖；只有下一已声明交易日才进入可卖数量。下一交易日必须来自权威 Calendar，不得用自然日或工作日猜测。
 
+## A 股现金账户交付约定（A-share Cash-account Delivery Convention）
+
+G08B development-grade Profile 中，买入负现金和卖出负持仓在 Fill 时完成交付；买入正持仓在下一 Frozen TradingDate 本地 00:00 成熟，卖出正现金在本地 16:00 成熟。后两者是版本化客户账户约定，不冒充逐 Fill 中央净额交收、法律权属登记或所有券商统一提现承诺。
+
 ## 卖出资金可交易/可提现分离（Sale Proceeds Tradability/Withdrawability）
 
 卖出所得在现金账户中的再投资能力与向外提现能力是两个独立可用性维度；不同 Market/Account Profile 必须分别声明其成熟条件，不能把“可用”自动解释为“可取”。
