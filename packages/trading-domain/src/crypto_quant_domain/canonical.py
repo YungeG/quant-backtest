@@ -128,6 +128,41 @@ def normalize(value: Any, path: str, active: set[int]) -> Any:
     )
 
 
+def _integer_text(value: int) -> str:
+    if value == 0:
+        return "0"
+    sign = "-" if value < 0 else ""
+    remaining = abs(value)
+    chunks: list[int] = []
+    while remaining:
+        remaining, chunk = divmod(remaining, 1_000_000_000)
+        chunks.append(chunk)
+    head = str(chunks.pop())
+    tail = "".join(f"{chunk:09d}" for chunk in reversed(chunks))
+    return sign + head + tail
+
+
+def _encode_normalized(value: Any) -> str:
+    if value is None:
+        return "null"
+    if type(value) is bool:
+        return "true" if value else "false"
+    if isinstance(value, int):
+        return _integer_text(value)
+    if isinstance(value, str):
+        return json.dumps(value, ensure_ascii=False)
+    if isinstance(value, list):
+        return "[" + ",".join(_encode_normalized(child) for child in value) + "]"
+    if isinstance(value, dict):
+        return "{" + ",".join(
+            json.dumps(key, ensure_ascii=False) + ":" + _encode_normalized(value[key])
+            for key in sorted(value)
+        ) + "}"
+    raise CanonicalizationError(
+        f"unsupported normalized canonical type {type(value).__name__}"
+    )
+
+
 def canonical_bytes(value: Any) -> bytes:
     normalized = normalize(value, "$", set())
     try:
@@ -138,8 +173,11 @@ def canonical_bytes(value: Any) -> bytes:
             separators=(",", ":"),
             sort_keys=True,
         )
+    except ValueError:
+        encoded = _encode_normalized(normalized)
+    try:
         return encoded.encode("utf-8")
-    except (TypeError, ValueError, UnicodeEncodeError) as error:
+    except (TypeError, UnicodeEncodeError) as error:
         raise CanonicalizationError(f"canonical JSON encoding failed: {error}") from error
 
 

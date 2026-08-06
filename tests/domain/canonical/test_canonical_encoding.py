@@ -54,6 +54,15 @@ def test_forbidden_canonical_values_fail_closed(value: object, reason: str) -> N
         canonical_bytes({"value": value})
 
 
+def test_arbitrary_size_integers_have_canonical_decimal_encoding() -> None:
+    magnitude = 10**5000
+    digits = b"1" + b"0" * 5000
+
+    assert canonical_bytes(
+        {"positive": magnitude, "negative": -magnitude}
+    ) == b'{"negative":-' + digits + b',"positive":' + digits + b"}"
+
+
 def test_unknown_object_is_rejected() -> None:
     with pytest.raises(CanonicalizationError, match="unsupported"):
         canonical_bytes({"value": object()})
