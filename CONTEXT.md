@@ -593,6 +593,10 @@ _Avoid_: Strategy account, virtual account
 
 从当前 Position 以单一交易方向调整，在合法可达集合中选择不扩大 raw target 绝对暴露且距离 raw target 最近的 Quantity。减仓时允许越过 raw target 继续向零，但禁止先背离目标、穿越零点或通过反向多腿扩大可达集合。它不自动等于从零开始的静态 Lot 整数倍。
 
+## 仓位相对可达性过期（Position-relative Reachability Stale）
+
+一个 Normalized Target 的合法可达性绑定 Sizing 时的当前仓位和 Lattice；若仓位随后变化且原订单 remainder 不再由同一 Target lineage exact-cover，Coordinator 必须停止重新规划并要求重新 Sizing，不能把新出现的 odd delta 当作合法 successor order。Signed legacy/cross-zero path 不使用该状态。
+
 ## 规格化残差（Sizing Residual）
 
 Position Sizing 中 raw target Quantity 与 final target Quantity 的差。它不同于当前持仓的 Sell Residual Component，两者不能都简称为“余股”。

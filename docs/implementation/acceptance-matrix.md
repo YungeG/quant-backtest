@@ -112,7 +112,7 @@ artifact_hashes: []
 | G07 | PASSED | backtest-runtime integration | WP-07A-R1, WP-07A–WP-07E | none |
 | G08A | PASSED | trading-kernel profiles/cn_a_share | G07 | none |
 | G08B | PASSED | trading-kernel profiles/cn_a_share | G08A | none |
-| G08C | READY | trading-kernel profiles/cn_a_share | G08A, WP-04E, WP-05D, WP-05G | none |
+| G08C | PASSED | trading-kernel profiles/cn_a_share | G08A, WP-04E, WP-05D, WP-05G | none |
 | G08D | DRAFT | trading-kernel profiles/cn_a_share | G08A, G08C, WP-05G | Historical rule and authoritative position-evidence fixtures |
 | G08E | DRAFT | trading-kernel profiles/cn_a_share | WP-05H, WP-05J | Fee/tax fixtures |
 | G08F | DRAFT | trading-kernel profiles/cn_a_share | G08A, WP-06B | Announcement/entitlement fixtures |
@@ -5785,7 +5785,7 @@ Python                                                               3.13.5
 
 ```yaml
 id: G08C
-status: READY
+status: PASSED
 depends_on:
   - G08A
   - WP-04E
@@ -5855,13 +5855,16 @@ evidence:
   - network-market-bundle-runtime-and-generic-kernel-import-absence
   - import-boundary-report
   - static-type-report
-passed_commit: null
-artifact_hashes: []
+passed_commit: d20e2d252cec1efc566c8bbfee48d52948dc88a3
+artifact_hashes:
+  tests/fixtures/kernel/profiles/cn_a_share/quantity-lattice-odd-lot-v1.json: sha256:7b6a4e76260955735ea62a81c897dfb11eecc0af89b571143bbfcea244cecd1c
+  build/acceptance/g08c-pytest.xml: sha256:dcc042a2d805a7375001493352b43d2d39f88a020dbe949dc9f14f4d7f5dc732
+  build/acceptance/g08c-import-boundary-report.json: sha256:cc096b1b0a027ed924a524020d986f5aedafaa91228c360e1b9ae7a4bc042e7f
 ```
 
 ### G08C Acceptance
 
-以下接口、规则分类、Fixture、identity、lifecycle 和 purity contract 已通过最终只读审阅，G08C 状态为 `READY`；实现不得改变这些语义：
+以下接口、规则分类、Fixture、identity、lifecycle 和 purity contract 在 readiness 阶段已通过最终只读审阅；G08C implementation 逐项保持这些冻结语义：
 
 1. G08C 只增加一个 concrete public seam：`CnAShareCashQuantityLatticeModel`，位置固定在 `crypto_quant_trading.profiles.cn_a_share`，结构化实现既有 `InstrumentModel.resolve_instrument()`。不得增加新的 generic port、partial `MarketSemanticsProfileRegistration` 或 root re-export；`OrderRuleModel` 与历史规则仍属于 G08D。本 Card 同时冻结 `QuantityLattice`、`PositionSizer`、`RebalanceCoordinator` 的 market-neutral backward-compatible extension，但 generic implementation 不得 import、引用或 branch on `cn_a_share` identity；
 2. Model 由 `venue_id: VenueId` 和 `notional_scale: Scale` 构造，只允许 `xshg`/`xshe`。Query 只携带 supplied `InstrumentDefinition`；Result 只携带该 Instrument 的 generic static v1 `QuantityLattice` template。`ResidualPositionPolicy`、Sizing `PricePurpose` 和 approved/current/mark evidence 继续由 caller 通过 generic `PositionSizingPolicy`/`InstrumentSizingInput` 提供。未来 G08D/G08H 组合时，Sizing lattice 必须来自 Approved Target instant 的唯一 `OrderRuleSnapshot.quantity_lattice` 或与 template 具有相同 lattice hash，不匹配 fail closed；InstrumentModel result 不是第二个 runtime lattice authority；
@@ -5925,6 +5928,39 @@ Failure.to_canonical_dict()
 15. 本 Gate 不拥有历史 effective interval、board/STAR/ChiNext rule、single-order cap、price limit、suspension、T+1、Fee/Tax、Corporate Action、Registry/Resolver、Runtime、MarketBundle source、short/margin 或 deployment authorization。Official source provenance 记录在 `docs/research/cn-a-share-quantity-lattice-primary-sources.md`，不进入 result-affecting digest。
 
 G08C readiness 已由 primary-source research、parallel architecture/mutation/source reviews 和最终 cross-validation 冻结；无未解决 P0/P1 blocker。相关既有回归 115 passed，import boundary PASS（60 files），`uv lock --check` PASS，Python 3.13.5。
+
+### G08C Implementation Acceptance
+
+冻结以下实现边界：
+
+1. `QuantityLattice.whole_sell_residual_permitted=false` 完整保留 schema-v1 canonical bytes、config hash 和 lattice hash；true 才发布 schema v2，并 fail closed 要求显式 Sell Lot、Odd Close 能力和零 Minimum Quantity/Notional；
+2. Concrete `CnAShareCashQuantityLatticeModel` 仅位于 `profiles.cn_a_share`，结构化实现既有 `InstrumentModel`。XSHG/XSHE、EQUITY 和双 CNY predicate、failure precedence、subject key、固定 component digest preimage 与完整 A 股 cash template 均由 public value invariants 约束；Generic root 无 concrete re-export/import；
+3. PositionSizer 对非负 long-cash applicability 使用 position-relative integer arithmetic。Buy 只按 delta 应用 Buy Lot；Sell 只允许 normal Sell Lot 或一次完整消费 holding residual；negative/cross-zero 与 capability=false 路径保持 legacy quantity、action、reason 和 identity；
+4. Frozen matrix exact-cover flat/odd-holding Buy、normal Sell、完整余股单独/合并、invalid odd target、one-share residual、regular/full odd close、unequal Buy/Sell Lot、sub-lot Buy no-op 和 legacy signed controls。`applied_lot_units`、Action、Reason、Sizing Residual 与 final Quantity 全部静态冻结；
+5. `FAIL` 对 unreachable residual 原子失败，不返回 partial target；`HOLD_DUST` 与 `CLOSE_IF_PERMITTED` 在可达 Quantity 相同但 policy/decision/normalized identity 不同；forward/reversed target/input 保持同一 canonical identity；
+6. RebalanceCoordinator 逐字消费 normalized Quantity，不二次舍入。BUY 200/100 与 SELL 99/199/1/55 的 OrderIntent、PositionEffect、reduce-only、delta 和 plan hash 固定。Position-relative baseline 改变且 remainder 不再由同一 target lineage exact-cover 时返回 `POSITION_RELATIVE_REACHABILITY_STALE`，不得重发 SELL/BUY 99；unchanged、reached、active/partial exact coverage、cancel-pending、expired 和 signed legacy progression 保持各自原语义；
+7. MarketRuleEvaluator 不凭 Sizing evidence 放宽 Order admission：SELL100 继续获批，SELL99/199/1/55 继续以 quantity-step 拒绝，直到 G08D 提供权威 holding/sellable evidence；
+8. Concrete package purity 使用 per-file import allowlist 与 conservative fail-closed AST scanner，覆盖 bare/assigned/builtins/importlib/`__builtins__`/nonliteral dynamic imports、alias rebinding、annotation、walrus、unpacking、relative depth、filesystem/network/process/provider/database/cloud/clock。Workspace boundary checker同步绑定 assigned/rebound dynamic-import alias，防止 Runtime→Builder 绕过；
+9. Static CNY golden 冻结 XSHG 10.00、XSHE 20.00 的 component/lattice/policy/mark/decision/normalized/active/order-plan identities、全部 arithmetic cases、Residual policy outcomes、development-only qualification、caller preconditions 和 G08D/G08H limitations；
+10. 本 Gate 未声称 historical effective rule、board/STAR/ChiNext classification、single-order cap、odd-sell end-to-end admission、T+1/Fee/Tax/Runtime 或 deployment authorization。
+
+G08C 的实现已冻结在 immutable commit `d20e2d252cec1efc566c8bbfee48d52948dc88a3`，状态为 `PASSED`。
+
+验证记录：
+
+```text
+G08C quantity-lattice contract tests                              70 passed
+Static quantity-lattice/odd-lot golden fixture                     1 passed
+G08C acceptance JUnit report                                      71 passed
+Frozen boundary command                                          142 passed
+Full test suite                                                   783 passed
+Trading-kernel import boundary                                    PASS (61 files)
+mypy                                                               no issues (11 files)
+Primary LSP + pi-lens                                              clean
+Multi-agent blocker reviews                                       no unresolved P0/P1
+uv lock --check                                                    PASS
+Python                                                             3.13.5
+```
 
 ## 65. PASSED 记录格式
 
