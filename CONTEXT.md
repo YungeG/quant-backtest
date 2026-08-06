@@ -106,6 +106,22 @@ Canonical 或 Integrity Evaluation 目录的无环 hash DAG root，exact-cover �
 
 允许产生交易和绩效的半开时间区间 `[trading_start, trading_end_exclusive)`。
 
+## 冻结交易日历（Frozen Trading Calendar）
+
+在显式有限覆盖区间内逐日声明交易日、周末和已知节假日的 immutable Calendar。相同内容必须产生相同摘要；覆盖区间外不能按工作日规则外推。
+
+## 已知无 Session（Known No-Session）
+
+Frozen Trading Calendar 明确声明的周末或休市日。它是成功解析出的市场关闭事实，不等同于 Calendar 数据缺失。
+
+## Calendar 覆盖缺失（Calendar Coverage Missing）
+
+查询日期不在 Frozen Trading Calendar 覆盖内，或覆盖内缺少唯一日期记录。它必须 fail closed，不能被解释为周末、节假日或普通交易日。
+
+## 市场 Session 阶段（Market Session Phase）
+
+交易场所在一个 TradingDate 内具有市场语义的半开时间段，例如集合竞价、连续竞价、暂停、午休和收盘后。它不同于 Engine 事件排序使用的 `TimelinePhase`。
+
 ## 结束策略（Closeout Policy）
 
 规定运行结束前是否通过正常交易链平仓，或在结束边界保留仓位并按市值估值的显式规则。

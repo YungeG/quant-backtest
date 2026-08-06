@@ -1200,16 +1200,34 @@ G07 完成后才算拥有“可审计 development-grade 回测运行器”。
 
 ### Gate G08A Calendar and Session
 
-拥有：A 股交易 Calendar、Session phase 和 TradingDate 归属 Adapter。
+拥有：`xshg`/`xshe` 标准现金股票竞价市场的有限 Frozen Calendar、`Asia/Shanghai` 本地时区转换、Session phase、Known Closure 和 TradingDate 归属 Adapter。每个 concrete `CnAShareCashSessionModel` 只绑定一个 Venue Calendar，并实现已有 `SessionModel.resolve_session()` seam；不构造 partial `MarketSemanticsProfileRegistration`。
 
-不拥有：T+1、价格限制、费用或公司行为。
+不拥有：T+1、价格限制、费用、公司行为、DecisionSchedule、Timeline/MarketEvent 生成、Registry composition、运行时网络/provider 读取或 G12 MarketBundle。
+
+v1 official-source-backed phase table 使用半开区间工程约定：
+
+```text
+[00:00, 09:15)  pre_open             CLOSED
+[09:15, 09:25)  opening_call         OPEN
+[09:25, 09:30)  opening_pause        CLOSED
+[09:30, 11:30)  continuous_morning   OPEN
+[11:30, 13:00)  lunch_break          CLOSED
+[13:00, 14:57)  continuous_afternoon OPEN
+[14:57, 15:00)  closing_call         OPEN
+[15:00, 24:00)  post_close           CLOSED
+```
+
+上海与深圳 2023 修订交易规则均给出相同现金股票竞价时段；区间端点的半开表达、pause/lunch/pre/post 名称是系统解释约定。2024 春节 Frozen Fixture 固定 2024-02-09 至 2024-02-17 休市、2024-02-18 周末休市、2024-02-19 恢复交易。
 
 验收：
 
-- 开盘、午休、收盘阶段正确；
-- 周末和冻结节假日 Fixture 不产生交易 Session；
-- TradingDate 不由 UTC date 猜测；
-- 相同 Calendar input 产生稳定 Session IDs。
+- 开盘集合竞价、开盘暂停、上午连续竞价、午休、下午连续竞价、收盘集合竞价和收盘后边界正确；
+- 周末和已声明 Frozen Holiday 是成功的 known no-session resolution；未知日期或 coverage 外查询是结构化 failure，禁止把缺失数据解释成休市；
+- TradingDate 由 `Asia/Shanghai` local date 和 Frozen Calendar 显式赋值，不由 UTC date 猜测；
+- `SessionId(calendar_id, YYYY-MM-DD.regular)` 在同一交易日全部 phase 内稳定，相同 Calendar input 与不同构造顺序产生相同 Calendar/component digest；
+- `VenueId("xshg")` 使用 `calendar_id="CN.XSHG"`，`VenueId("xshe")` 使用 `calendar_id="CN.XSHE"`；BSE、基金、债券、盘后固定价格、港股通和特殊临时 Session 不在 v1 scope；
+- concrete profile 只从 `crypto_quant_trading.profiles.cn_a_share` 导出，generic Kernel 不依赖它；
+- Fixture 和 Model 只允许 development-grade，不声称 current-live 或 decision-grade calendar。
 
 ### Gate G08B T+1 Settlement and Availability
 

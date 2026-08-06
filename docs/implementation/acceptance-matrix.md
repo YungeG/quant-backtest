@@ -110,7 +110,7 @@ artifact_hashes: []
 | WP-07D | PASSED | backtest-runtime | WP-07B–WP-07C | none |
 | WP-07E | PASSED | backtest-runtime | WP-07A-R1, WP-07C–WP-07D | none |
 | G07 | PASSED | backtest-runtime integration | WP-07A-R1, WP-07A–WP-07E | none |
-| G08A | DRAFT | trading-kernel profiles/cn_a_share | G07 | Calendar fixtures |
+| G08A | READY | trading-kernel profiles/cn_a_share | G07 | none |
 | G08B | DRAFT | trading-kernel profiles/cn_a_share | G08A | T+1 fixtures |
 | G08C | DRAFT | trading-kernel profiles/cn_a_share | G08A | Lattice/odd-lot fixtures |
 | G08D | DRAFT | trading-kernel profiles/cn_a_share | G08A, G08C, WP-05G | Historical rule fixtures |
@@ -5393,7 +5393,155 @@ uv lock --check                                                  PASS
 Python                                                           3.13.5
 ```
 
-## 62. PASSED 记录格式
+## 62. G08A A-Share Calendar and Session Acceptance Card
+
+```yaml
+id: G08A
+status: READY
+depends_on:
+  - G07
+owner_package: trading-kernel profiles/cn_a_share
+public_interface:
+  - crypto_quant_trading.profiles.cn_a_share.CnAShareCalendarDayKind
+  - crypto_quant_trading.profiles.cn_a_share.CnAShareSessionPhase
+  - crypto_quant_trading.profiles.cn_a_share.CnAShareSessionFailureCode
+  - crypto_quant_trading.profiles.cn_a_share.CnAShareFrozenCalendarDay
+  - crypto_quant_trading.profiles.cn_a_share.CnAShareFrozenCalendar
+  - crypto_quant_trading.profiles.cn_a_share.CnAShareSessionQuery
+  - crypto_quant_trading.profiles.cn_a_share.CnAShareSessionResolution
+  - crypto_quant_trading.profiles.cn_a_share.CnAShareSessionFailure
+  - crypto_quant_trading.profiles.cn_a_share.CnAShareCashSessionModel
+  - structural implementation of crypto_quant_trading.SessionModel
+  - static A-share frozen calendar/session golden fixture v1
+test_commands:
+  contract: uv run pytest -q tests/kernel/profiles/cn_a_share/test_calendar_session.py
+  fixture: uv run pytest -q tests/kernel/profiles/cn_a_share/test_calendar_session_golden.py
+  boundary: uv run pytest -q tests/architecture/test_import_boundary_mutations.py tests/architecture/test_public_api_imports.py tests/architecture/test_network_isolation.py tests/architecture/test_repository_cleanliness.py && uv run python tools/architecture/check_import_boundaries.py --root . --policy architecture/import-boundaries.toml --report build/acceptance/g08a-import-boundary-report.json
+fixture_ids:
+  - cn-a-share-calendar-session-v1
+expected_artifacts:
+  - tests/fixtures/kernel/profiles/cn_a_share/calendar-session-v1.json
+  - build/acceptance/g08a-pytest.xml
+  - build/acceptance/g08a-import-boundary-report.json
+failure_contracts:
+  - partial-market-profile-or-placeholder-component-created
+  - unsupported-cn-cash-venue-or-calendar-identity
+  - invalid-noncanonical-or-duplicate-calendar-day
+  - calendar-coverage-gap-or-out-of-range-query-is-extrapolated
+  - known-weekend-or-holiday-is-treated-as-coverage-failure
+  - missing-calendar-data-is-treated-as-known-market-closure
+  - weekend-or-frozen-holiday-produces-session
+  - phase-overlap-gap-or-non-half-open-boundary
+  - opening-call-opening-pause-lunch-or-closing-call-boundary-drift
+  - trading-date-is-derived-from-utc-date
+  - session-id-changes-with-phase-input-order-attempt-or-semantic-run
+  - calendar-or-component-digest-is-circular-or-order-dependent
+  - concrete-profile-is-root-reexported-or-imported-by-generic-kernel
+  - decision-schedule-timeline-market-event-t1-rule-fee-tax-or-corporate-action-leak
+  - runtime-network-wall-clock-provider-filesystem-or-market-bundle-read
+  - development-fixture-claims-current-live-or-decision-grade-calendar
+allowed_grade: development
+evidence:
+  - pytest-report
+  - static-calendar-session-golden-hash
+  - official-rule-and-holiday-source-reference-table
+  - xshg-xshe-calendar-and-component-digests
+  - exact-half-open-phase-boundary-table
+  - known-closure-versus-coverage-missing-evidence
+  - local-trading-date-versus-utc-date-evidence
+  - stable-session-id-repeat-resolution-and-input-order-evidence
+  - profile-port-outcome-result-and-failure-evidence
+  - network-market-bundle-and-generic-kernel-import-absence
+  - import-boundary-report
+  - static-type-report
+passed_commit: null
+artifact_hashes: []
+```
+
+### G08A Acceptance
+
+冻结以下实现边界：
+
+1. G08A 只新增一个 concrete `SessionModel` Adapter，位置固定在 `crypto_quant_trading.profiles.cn_a_share`；不修改 generic `SessionModel` seam、不 root re-export concrete profile、不创建 partial `MarketSemanticsProfileRegistration`。完整 Profile composition 属于 G08H；
+2. v1 scope 仅含 `VenueId("xshg")`/`calendar_id="CN.XSHG"` 和 `VenueId("xshe")`/`calendar_id="CN.XSHE"` 的标准现金股票竞价 Session。BSE、基金、债券、港股通、盘后固定价格和临时特殊 Session 均不在 scope；
+3. 全部 public value 使用 `schema_version=1` canonical form，并冻结为以下字段和值；实现不得在 READY 后自行发明字段、枚举或 optional 语义：
+
+```text
+CnAShareCalendarDayKind
+  trading | weekend | frozen_holiday
+
+CnAShareSessionPhase
+  pre_open | opening_call | opening_pause | continuous_morning |
+  lunch_break | continuous_afternoon | closing_call | post_close
+
+CnAShareSessionFailureCode
+  unsupported_venue | calendar_coverage_missing
+
+CnAShareFrozenCalendarDay
+  local_date: date
+  kind: CnAShareCalendarDayKind
+
+CnAShareFrozenCalendar
+  venue_id: VenueId
+  calendar_id: str
+  timezone_name: str = "Asia/Shanghai"
+  coverage_start: date
+  coverage_end_exclusive: date
+  days: tuple[CnAShareFrozenCalendarDay, ...]
+  calendar_hash: derived property
+
+CnAShareSessionQuery
+  venue_id: VenueId
+  instant: UtcInstant
+
+CnAShareSessionResolution
+  venue_id: VenueId
+  instant: UtcInstant
+  local_date: date
+  day_kind: CnAShareCalendarDayKind
+  session_id: SessionId | None
+  trading_date: TradingDate | None
+  phase: CnAShareSessionPhase | None
+  phase_start: UtcInstant | None
+  phase_end_exclusive: UtcInstant | None
+  is_open: bool
+
+CnAShareSessionFailure
+  code: CnAShareSessionFailureCode
+  venue_id: VenueId
+  instant: UtcInstant
+  calendar_id: str
+  subject_key: str
+
+CnAShareCashSessionModel
+  component_ref: ProfileComponentRef
+  resolve_session(query) -> ProfilePortOutcome[CnAShareSessionResolution, CnAShareSessionFailure]
+```
+
+1. Trading-day resolution 必须同时具有 non-null SessionId、TradingDate、phase 和 phase bounds，`day_kind=trading`。Known weekend/holiday resolution 必须保留 venue/instant/local_date/day_kind，其他五个 Session fields 全为 null 且 `is_open=false`。Failure branch 不得携带 result；result branch 不得携带 failure；
+2. Calendar 是 caller-injected、finite、immutable、逐日 exact-cover 的 `CnAShareFrozenCalendar`，统一使用 `Asia/Shanghai`。输入顺序 canonical 化，重复日期、coverage gap、错误 timezone 和 calendar/venue pair 在构造时拒绝；unsupported query venue 返回 `unsupported_venue`，coverage 外或缺失日期返回 `calendar_coverage_missing`；
+3. Market phase 使用独立 `CnAShareSessionPhase`，禁止复用 Engine ordering 的 `TimelinePhase`。系统半开区间固定为：`pre_open [00:00,09:15)`、`opening_call [09:15,09:25)`、`opening_pause [09:25,09:30)`、`continuous_morning [09:30,11:30)`、`lunch_break [11:30,13:00)`、`continuous_afternoon [13:00,14:57)`、`closing_call [14:57,15:00)`、`post_close [15:00,24:00)`；
+4. `opening_call`、两个 continuous phase 和 `closing_call` 为 OPEN；pre/opening pause/lunch/post-close 为 CLOSED。Known weekend/holiday 返回成功的 no-session resolution；unsupported venue 或 coverage missing 返回结构化 failure。缺失数据绝不能伪装成市场关闭；
+5. TradingDate 必须由 `Asia/Shanghai` local date 和 Calendar row 显式解析。Fixture 必须包含 local date 已进入次日而 UTC date 仍为前一日的 pre-open 查询，证明禁止 UTC-date inference；
+6. `SessionId` 固定使用现有 explicit identity：`SessionId(calendar_id, "YYYY-MM-DD.regular")`。同一 Venue/TradingDate 的全部 phase 共用一个 Session ID；它不包含 Attempt、Semantic Run、query instant 或 phase；
+7. Calendar hash preimage 固定为 `{type="cn_a_share_frozen_calendar", schema_version=1, venue_id, calendar_id, timezone_name, coverage_start, coverage_end_exclusive, canonical_sorted_days}`，排除自身 hash。`ProfileComponentRef` 固定为 `port_type=session_model`、`component_key="equity.cn_a_share.cash.session.v1"`、`component_version=1`；component digest preimage 固定为 `{type="cn_a_share_cash_session_component", schema_version=1, component_key, component_version, algorithm_key="cn-a-share-cash-session-resolution-v1", venue_id, calendar_id, timezone_name, calendar_hash, phase_table}`。因此 XSHG/XSHE digest 必须不同，且任何 identity、Calendar 或 phase 变化都会改变 digest；
+8. Frozen Fixture 对两个 Venue exact-cover `[2024-02-08, 2024-02-20)`：2024-02-08 与 2024-02-19 为 trading，2024-02-09 至 2024-02-17 为 official frozen holiday closure，2024-02-18 为 weekend closure。2024-02-20 查询必须 coverage failure；
+9. Official fact references 固定为 SSE/SZSE 2023 revised trading rules中的现金股票竞价时段，以及 SSE 上证公告〔2023〕47号、SZSE 深证会〔2023〕409号/2024 春节通知中的休市安排。Exchange facts 只提供 clock ranges；半开端点与 pause/lunch/pre/post phase 名称是本系统显式解释，不冒充交易所原文；
+10. G08A 不拥有 DecisionSchedule、Warmup、Timeline/MarketEvent、T+1、Quantity Lattice、Price Limit、Fee/Tax、Corporate Action、Registry、Resolver 或 Runtime orchestration；不得访问 network、wall clock、provider SDK、filesystem source repository、MarketBundle Builder 或 G12 runtime data。Contract test 必须用 AST 扫描 concrete profile source，拒绝 `open`、`os`、`pathlib`、`socket`、`urllib`、`http.client`、已知 network SDK，以及 `datetime.now/utcnow`、`date.today`、`time.time/time_ns`；
+11. Frozen Fixture 和 Model 仅允许 development-grade，不声明 current-live 或 decision-grade calendar。Legacy `cycle-rotation-platform` 没有可用 Calendar/Session oracle，G08H 不得对 G08A 语义声称 legacy parity。
+
+Official primary references：
+
+- SSE《上海证券交易所交易规则（2023年修订）》Rule 2.4.2/3.3.1：`https://www.sse.com.cn/lawandrules/sselawsrules2025/repeal/rules/c/10824490/files/dcbe58edb194451d93f19b1f7dd8fb4c.docx`；
+- SZSE《深圳证券交易所交易规则（2023年修订）》Rule 2.3.2/3.3.1：`https://docs.static.szse.cn/www/lawrules/rule/repeal/rules/W020230217564423808793.pdf`；
+- SSE 2024 休市通知（上证公告〔2023〕47号）：`https://www.sse.com.cn/disclosure/announcement/general/c/c_20231226_5733939.shtml`；
+- SZSE 2024 休市通知（深证会〔2023〕409号）：`https://www.szse.cn/disclosure/notice/t20231226_605108.html`；
+- SZSE 2024 春节休市通知：`https://www.szse.cn/disclosure/notice/general/t20240201_605828.html`；
+- IANA `Asia/Shanghai` mapping：`https://data.iana.org/time-zones/tzdb/zone1970.tab`。
+
+上述接口、范围、phase、closure/coverage、identity、digest、provenance 和 ownership 语义已完整冻结；G08A 现为 `READY`。
+
+## 63. PASSED 记录格式
 
 ```yaml
 id: WP-00A

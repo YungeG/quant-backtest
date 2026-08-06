@@ -1260,7 +1260,11 @@ FeeReservationEstimator 和 FeeAssessmentEngine 共同消费 MarketFeeRules、Ta
 
 ### 11.5 SessionModel
 
-负责时区、交易日历、Session 阶段、Decision schedule、开盘、午休、收盘和夜盘。
+负责时区、有限交易日历、Session 阶段、TradingDate 归属、开盘、午休、收盘和夜盘语义。G08A concrete Adapter 只实现 point-in-time Session query；DecisionSchedule、Warmup schedule 和 Timeline/MarketEvent 生成属于 G11E/Runtime，不由 concrete SessionModel 拥有。
+
+已知周末或已声明节假日与 Calendar coverage 缺失必须分离：前者是 canonical known no-session result，后者是 fail-closed component failure。Concrete SessionModel 只能消费注入的 immutable calendar，不得在运行时查询网络、provider、wall clock 或 G12 Builder。Market-specific phase enum 不得复用 Engine ordering 的 `TimelinePhase`。
+
+A 股 G08A v1 固定 `VenueId("xshg")`/`calendar_id="CN.XSHG"` 与 `VenueId("xshe")`/`calendar_id="CN.XSHE"`，统一使用 IANA `Asia/Shanghai`。现金股票竞价阶段按 official exchange clock ranges 解释为系统半开区间：09:15–09:25 opening call、09:25–09:30 opening pause、09:30–11:30 morning continuous、11:30–13:00 lunch、13:00–14:57 afternoon continuous、14:57–15:00 closing call；15:00 起 closed。`SessionId` 在同一 Venue/TradingDate 全部 phase 内保持稳定，Calendar/phase semantics 进入 component digest。
 
 ### 11.6 InstrumentModel
 
