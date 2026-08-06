@@ -652,12 +652,14 @@ Position Sizing 使用 supplied Decision-Instant Mark 和时点有效、版本�
 规则：
 
 - v1 `PositionSizingPolicy` 必须显式声明 key/version/config hash、Sizing PricePurpose、`RoundingPolicy.TOWARD_ZERO` 和 `ResidualPositionPolicy`；不允许隐式默认 Policy。
-- Notional/Price 先直接量化到 Lattice atomic Scale，再按 signed target 对应的 buy/sell lot（未声明时为 step）向零量化。普通规格化禁止绝对名义暴露超过已审批暴露；显式 `hold_dust` 可以保留无法合法关闭的既有 odd-lot，但必须记录该 approved-target 偏差，不能伪装成已达到目标。
+- Notional/Price 先直接量化到 Lattice atomic Scale。静态 Lattice 沿用 signed target 的 buy/sell lot 向零量化；声明 `whole_sell_residual_permitted=true` 的 Lattice 必须使用 current-position-relative 可达数量，不能把订单方向规则误写成 absolute target multiple。
+- 对 G08C non-negative cash Position，增加仓位只能使用 buy-lot 整数倍的 delta；减少仓位时，sell delta 可以是 sell-lot 整数倍，或在 capability 允许时一次包含当前完整 Sell Residual Component。Sizer 只朝 raw target 单向调整，不通过先卖后买或先买后卖扩大可达集合，并选择不超过 raw target、且最接近 raw target 的 final Quantity；这是系统 toward-zero sizing 约定，不冒充交易所规定的目标仓位算法。
+- 普通规格化禁止绝对名义暴露超过已审批暴露；显式 `hold_dust` 可以保留无法合法关闭的既有 odd-lot，但必须记录该 approved-target 偏差，不能伪装成已达到目标。
 - Mark resolved instant 必须等于 Approved Target instant，Price 必须为正，Price quote Currency 必须等于 approved Notional Currency；本边界不发明 FX path 或 stablecoin peg。
-- 每个 Instrument 同时提供当前 exact Quantity。正常目标按 buy/sell lattice 物化；完整平仓若遇到 odd lot，只能按 Lattice 的显式 full-close capability 和 Residual Policy 处理。
-- 反向持仓的 exact Active Target 可以被物化，但后续 Order Planner 必须拆为 close/open 两阶段，禁止一个含糊净订单隐式穿越零点。
-- 无法交易的残余仓位由显式 `ResidualPositionPolicy` 处理：`hold_dust`、`close_if_permitted` 或 `fail`。任一 Instrument 失败时不产生部分账户级 Active Target。
-- Normalized target、current/raw/final Quantity、量化差异、Mark/Lattice identity、RoundingPolicy 和 Residual decision 都属于权威证据。
+- 每个 Instrument 同时提供当前 exact Quantity。完整平仓若遇到 odd lot，只能按 Lattice 的显式 full-close capability 和 Residual Policy 处理。Sizing 使用 current Quantity 证明 target reachability；最终订单准入仍必须使用 OrderRuleModel 冻结的权威 holding/sellable evidence。
+- 反向持仓的 exact Active Target 可以被物化，但后续 Order Planner 必须拆为 close/open 两阶段，禁止一个含糊净订单隐式穿越零点。G08C 的 position-relative capability 只声明普通 A 股 long-cash applicability，不扩展 short sizing。
+- 无法交易的 Sizing Residual 由显式 `ResidualPositionPolicy` 处理：`hold_dust`、`close_if_permitted` 或 `fail`。任一 Instrument 失败时不产生部分账户级 Active Target。
+- Normalized target、current/raw/final Quantity、Sizing Residual、Sell Residual Component action、Mark/Lattice identity、RoundingPolicy 和 Residual decision 都属于权威证据。
 
 ```python
 @dataclass(frozen=True)
@@ -665,7 +667,6 @@ class QuantityLattice:
     instrument_id: InstrumentId
     lattice_key: str
     lattice_version: int
-    config_hash: str
     atomic_scale: Scale
     step_units: int
     buy_lot_units: int | None
@@ -673,7 +674,11 @@ class QuantityLattice:
     min_quantity_units: int
     min_notional: Money
     odd_lot_close_permitted: bool
+    config_hash: str
+    whole_sell_residual_permitted: bool = False
 ```
+
+`QuantityLattice.create(..., whole_sell_residual_permitted: bool = False)` 把新参数置于 keyword-only 参数末尾。false 保持既有 canonical schema v1 和 hash；schema 选择只取决于该字段。true 使用 canonical schema v2，并要求显式 `sell_lot_units`、`odd_lot_close_permitted=true`、`min_quantity_units=0` 和 `min_notional.units=0`；它表示完整 Sell Residual Component 可以单独或与正常卖出 Lot 合并，不表示任意 odd quantity 合法。
 
 Order Planner 只消费已经物化的 exact `ActivePortfolioTarget` Quantity，不得再次执行数量舍入。Contract multiplier 或非 quote-currency sizing 必须由后续显式 Instrument/Profile Gate 扩展，不能在 v1 内隐式猜测。
 
@@ -708,6 +713,8 @@ Order Planner 只消费已经物化的 exact `ActivePortfolioTarget` Quantity，
 - Account state change
 
 新 TargetSnapshot 原子替换旧目标，并取消与新目标冲突的 Working Orders。Planner 必须将 Working Order 剩余数量计入预期仓位，禁止对相同未完成目标重复下单。
+
+使用 position-relative Lattice 的 Normalized Target 绑定 sizing 时的 current Quantity 与 lattice hash。兼容的 active/partially-filled Working Order remainder 可以继续覆盖该 Target；但 Partial Fill 后若 remainder cancel/expire 并从 working set 消失、current 已变化且未到 target，Planner 不得从 stale target 重新推导新的 odd quantity，即使该 delta 看似合法，也必须返回 `PlanningOmissionCode.POSITION_RELATIVE_REACHABILITY_STALE` 等待新的 Normalized Target。Target expired 与 cancel-requested precedence 高于 stale；current 已到 target 不 stale；zero-fill order 消失且 current 仍等于 sizing baseline 可正常重发。Fixture 固定 `H=299,R=199→SELL100`，若只成交 1 股后取消剩余，则 `H=298` 时不得重发 `SELL99`。Effective-lattice change 的 current rule evidence 不在 RebalanceCoordinator 现有 seam 中，留给 G08D/H 扩展，G08C 不宣称验证。
 
 OrderPlan 必须引用生成时的 Target Snapshot、Portfolio Snapshot 和 Working Order set hash；任一前提变化后旧 Plan 进入 `superseded`，不能继续产生新订单。Plan superseded 不会让已提交订单静默消失，必须通过 CancelIntent 处理。
 
@@ -1288,6 +1295,8 @@ A 股 G08A v1 固定 `VenueId("xshg")`/`calendar_id="CN.XSHG"` 与 `VenueId("xsh
 
 Instrument 使用跨 Symbol 变化稳定的 `instrument_id`。Symbol、listing、delisting、分类和 Universe membership 是 point-in-time 属性；上市前 Instrument 不可观察，退市 Instrument 不得从历史 Bundle 删除。Delisting Position 必须由 SettlementModel 或 CorporateActionModel 明确处理。
 
+G08C concrete A-share Adapter 复用 `InstrumentModel` seam 解析 supplied `InstrumentDefinition` 对应的 immutable static v1 `QuantityLattice` template；它不创建新的 lattice port，也不把 caller-selected `ResidualPositionPolicy` 伪装成交易所事实。当前 `InstrumentDefinition` 只能观察 Venue、broad InstrumentType 和 Currency，普通 A 股/STAR/ETF/Stock Connect 等细分资格仍由 G08H/G08D caller precondition 提供。未来 G08D/G08H 组合时，`InstrumentSizingInput.lattice` 必须来自 Approved Target instant 的唯一 `OrderRuleSnapshot.quantity_lattice`，或与 static template 具有相同 lattice hash；不匹配时 fail closed，InstrumentModel result 不能成为第二个 runtime lattice authority。
+
 ### 11.7 OrderRuleModel
 
 MarketSemanticsProfile 必须通过 `required_rule_dimensions()` 声明会影响结果的历史规则维度。MarketBundle 使用这些要求生成 `RuleCoverageReport`。
@@ -1304,7 +1313,7 @@ source_hash
 
 Decision-grade 要求每个必需维度在回测有效区间内无缺口、无重叠，并且任一模拟时点只能解析到唯一有效规则。禁止缺失时回退到当前规则或估算值。
 
-OrderRuleModel 负责 `OrderCapabilitySet`、合法 Execution style、Price constraint、Time-in-Force、时点有效 `QuantityLattice`、最小数量、最小名义金额、Price limit、T+1 可卖数量、Suspension、Reduce-only、odd-lot close 和保证金前置规则。
+OrderRuleModel 负责 `OrderCapabilitySet`、合法 Execution style、Price constraint、Time-in-Force、时点有效 `QuantityLattice`、最小数量、最小名义金额、Price limit、T+1 可卖数量、Suspension、Reduce-only、odd-lot close 和保证金前置规则。依赖当前余额的 Sell Residual Component 准入必须绑定权威 holding/sellable evidence；仅凭 `PositionEffect.CLOSE`、target Quantity 或静态 lot 不能批准任意 odd sell。G08C 只证明 sizing 与 planner quantity preservation；G08D 必须为 `OrderRuleEvaluationInput` 冻结向后兼容的 canonical position-evidence 扩展，exact 绑定 evaluated-at Portfolio/Availability/Reservation/WorkingOrder evidence、total/sellable Quantity 和 lattice hash，缺失或不一致 fail closed。
 
 ### 11.8 ExecutionModel
 
@@ -2328,7 +2337,7 @@ Hummingbot DTO 不进入 Trading Domain。迁移完成后应选择单一权威 p
 
 - G08A–G08H：A 股 Calendar、T+1、Lot/Price Limit、Fee/Tax、Corporate Action 和 `cycle-rotation-platform` parity。
 - G09A–G09H：通用 Linear Perpetual Position、Funding、Margin 和 LiquidationAudit。
-- 两个分支都不得修改 Generic Kernel、Runner 或 Bar Engine 主循环。
+- 两个分支不得在 Generic Kernel、Runner 或 Bar Engine 主循环增加 market-specific 分支。若真实市场语义暴露出可复用的 market-neutral contract 缺口，Gate 可以在 Acceptance Card 中显式冻结向后兼容的 generic extension；旧 schema/hash/行为必须保持，且 generic implementation 不得引用具体市场 package 或 identity。
 
 ### 阶段 5：Binance USD-M Profile（G10）
 

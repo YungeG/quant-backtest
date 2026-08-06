@@ -112,8 +112,8 @@ artifact_hashes: []
 | G07 | PASSED | backtest-runtime integration | WP-07A-R1, WP-07A–WP-07E | none |
 | G08A | PASSED | trading-kernel profiles/cn_a_share | G07 | none |
 | G08B | PASSED | trading-kernel profiles/cn_a_share | G08A | none |
-| G08C | DRAFT | trading-kernel profiles/cn_a_share | G08A | Lattice/odd-lot fixtures |
-| G08D | DRAFT | trading-kernel profiles/cn_a_share | G08A, G08C, WP-05G | Historical rule fixtures |
+| G08C | READY | trading-kernel profiles/cn_a_share | G08A, WP-04E, WP-05D, WP-05G | none |
+| G08D | DRAFT | trading-kernel profiles/cn_a_share | G08A, G08C, WP-05G | Historical rule and authoritative position-evidence fixtures |
 | G08E | DRAFT | trading-kernel profiles/cn_a_share | WP-05H, WP-05J | Fee/tax fixtures |
 | G08F | DRAFT | trading-kernel profiles/cn_a_share | G08A, WP-06B | Announcement/entitlement fixtures |
 | G08G | DRAFT | trading-kernel profiles/cn_a_share | G08F, G03 | Adjustment/payment fixtures |
@@ -5781,7 +5781,152 @@ uv lock --check                                                      PASS
 Python                                                               3.13.5
 ```
 
-## 64. PASSED 记录格式
+## 64. G08C Quantity Lattice and Odd Lot Acceptance Card
+
+```yaml
+id: G08C
+status: READY
+depends_on:
+  - G08A
+  - WP-04E
+  - WP-05D
+  - WP-05G
+owner_package: trading-kernel profiles/cn_a_share
+public_interface:
+  - crypto_quant_trading.profiles.cn_a_share.CnAShareQuantityLatticeFailureCode
+  - crypto_quant_trading.profiles.cn_a_share.CnAShareQuantityLatticeQuery
+  - crypto_quant_trading.profiles.cn_a_share.CnAShareQuantityLatticeResolution
+  - crypto_quant_trading.profiles.cn_a_share.CnAShareQuantityLatticeFailure
+  - crypto_quant_trading.profiles.cn_a_share.CnAShareCashQuantityLatticeModel
+  - CnAShareCashQuantityLatticeModel.component_ref
+  - CnAShareCashQuantityLatticeModel.resolve_instrument
+  - structural implementation of crypto_quant_trading.InstrumentModel
+  - crypto_quant_trading.QuantityLattice.whole_sell_residual_permitted
+  - crypto_quant_trading.PositionSizingAction.SELL_RESIDUAL_COMPONENT
+  - crypto_quant_trading.PositionSizingReasonCode.SELL_RESIDUAL_COMPONENT_PERMITTED
+  - crypto_quant_trading.PlanningOmissionCode.POSITION_RELATIVE_REACHABILITY_STALE
+  - position-relative QuantityLattice schema v2 with schema-v1 hash compatibility
+  - static A-share quantity-lattice/odd-lot golden fixture v1
+test_commands:
+  contract: uv run pytest -q tests/kernel/profiles/cn_a_share/test_quantity_lattice.py
+  fixture: uv run pytest -q tests/kernel/profiles/cn_a_share/test_quantity_lattice_golden.py
+  boundary: uv run pytest -q tests/architecture/test_public_api_imports.py tests/architecture/test_repository_cleanliness.py tests/kernel/ports/test_profile_port_contracts.py tests/kernel/sizing/test_position_sizing.py tests/kernel/sizing/test_position_sizing_golden.py tests/kernel/rebalance/test_rebalance_coordinator.py tests/kernel/market_rules/test_market_rule_evaluator.py tests/kernel/profiles/cn_a_share/test_calendar_session.py tests/kernel/profiles/cn_a_share/test_settlement_availability.py && uv run python tools/architecture/check_import_boundaries.py --root . --policy architecture/import-boundaries.toml --report build/acceptance/g08c-import-boundary-report.json
+fixture_ids:
+  - cn-a-share-quantity-lattice-odd-lot-v1
+expected_artifacts:
+  - tests/fixtures/kernel/profiles/cn_a_share/quantity-lattice-odd-lot-v1.json
+  - build/acceptance/g08c-pytest.xml
+  - build/acceptance/g08c-import-boundary-report.json
+failure_contracts:
+  - unsupported-venue-instrument-or-currency-is-accepted
+  - ordinary-a-share-or-board-classification-is-claimed-from-unobservable-fields
+  - buy-order-lot-is-applied-to-absolute-target-instead-of-buy-delta
+  - sell-order-lot-is-modeled-as-arbitrary-one-share-sells
+  - legal-whole-residual-sale-is-rejected-by-sizing
+  - current-residual-is-split-across-orders
+  - exact-reachable-target-is-rounded-away
+  - normalized-target-exceeds-approved-notional-without-explicit-hold-dust
+  - residual-fail-returns-partial-normalized-or-active-target
+  - quantity-lattice-schema-v1-bytes-or-hash-changes-when-new-capability-is-false
+  - xshg-and-xshe-component-or-lattice-identities-collide
+  - component-digest-contains-source-url-clock-build-attempt-or-profile-parent
+  - rebalance-coordinator-rounds-or-resizes-normalized-quantity
+  - partial-fill-cancel-replans-position-relative-target-with-stale-reachability
+  - odd-sell-is-claimed-end-to-end-approved-without-authoritative-balance-evidence
+  - broker-auto-rounding-splitting-retry-or-fill-behavior-is-claimed-as-exchange-rule
+  - concrete-profile-reads-network-filesystem-provider-process-database-or-wall-clock
+  - concrete-profile-is-root-reexported-or-imported-by-generic-kernel
+  - g08d-history-price-limit-session-settlement-fee-tax-or-runtime-semantics-leak
+allowed_grade: development
+evidence:
+  - pytest-report
+  - static-quantity-lattice-odd-lot-golden-hash
+  - official-rule-notice-and-example-reference-table
+  - official-fact-versus-system-sizing-convention-classification
+  - xshg-xshe-component-config-lattice-policy-mark-decision-target-and-plan-hashes
+  - flat-buy-odd-holding-buy-and-position-relative-sell-arithmetic
+  - whole-residual-alone-combined-and-full-close-evidence
+  - arbitrary-odd-sell-negative-control
+  - unequal-buy-sell-lot-side-selection-control
+  - residual-policy-atomic-failure-and-input-order-parity
+  - downstream-no-second-rounding-order-plan-evidence
+  - current-market-rule-odd-sell-limitation-regression
+  - profile-port-outcome-result-and-failure-evidence
+  - network-market-bundle-runtime-and-generic-kernel-import-absence
+  - import-boundary-report
+  - static-type-report
+passed_commit: null
+artifact_hashes: []
+```
+
+### G08C Acceptance
+
+以下接口、规则分类、Fixture、identity、lifecycle 和 purity contract 已通过最终只读审阅，G08C 状态为 `READY`；实现不得改变这些语义：
+
+1. G08C 只增加一个 concrete public seam：`CnAShareCashQuantityLatticeModel`，位置固定在 `crypto_quant_trading.profiles.cn_a_share`，结构化实现既有 `InstrumentModel.resolve_instrument()`。不得增加新的 generic port、partial `MarketSemanticsProfileRegistration` 或 root re-export；`OrderRuleModel` 与历史规则仍属于 G08D。本 Card 同时冻结 `QuantityLattice`、`PositionSizer`、`RebalanceCoordinator` 的 market-neutral backward-compatible extension，但 generic implementation 不得 import、引用或 branch on `cn_a_share` identity；
+2. Model 由 `venue_id: VenueId` 和 `notional_scale: Scale` 构造，只允许 `xshg`/`xshe`。Query 只携带 supplied `InstrumentDefinition`；Result 只携带该 Instrument 的 generic static v1 `QuantityLattice` template。`ResidualPositionPolicy`、Sizing `PricePurpose` 和 approved/current/mark evidence 继续由 caller 通过 generic `PositionSizingPolicy`/`InstrumentSizingInput` 提供。未来 G08D/G08H 组合时，Sizing lattice 必须来自 Approved Target instant 的唯一 `OrderRuleSnapshot.quantity_lattice` 或与 template 具有相同 lattice hash，不匹配 fail closed；InstrumentModel result 不是第二个 runtime lattice authority；
+3. v1 applicability 仅为 XSHG/XSHE 普通人民币 A 股标准现金竞价。Concrete Model 可观察并验证的只有 matching Venue、broad `InstrumentType.EQUITY`、CNY quote/settlement currency。普通 A 股而非 STAR/ChiNext/ETF/REIT/B 股/Stock Connect、标准竞价而非 after-hours、现金账户、long-only 权限，以及 Fixture 中 current holding 等于 authoritative sellable balance、无 working order/Reservation，全部是 caller/G08H precondition，不得声称由 G08C seam 验证；single-order maximum、board/product-specific quantity cap 与 historical parameter 由 G08D/G08H 拥有；
+4. 官方事实固定为：买入申报数量是 100 股或其整数倍；正常卖出数量是 100 股整数倍；若交易所文本所称持有余额 `H` 的完整余股 `r=H mod 100` 位于 `1..99`，该完整 `r` 可单独一次申报或与 100 股整数倍合并一次申报，不得拆分。`H=299` 因此允许 `SELL 99/100/199/200/299`，不允许 `SELL 1/101/198/298`。交易所文本不定义应用系统的 authoritative sellable balance；Fixture 把 current Position 映射为该余额且声明无 Working Order/Reservation，属于 system precondition。“一次性申报”是一张 exchange order，不是 guaranteed one-fill，也不定义 cancel/re-entry；
+5. Exchange 文本约束 order quantity，不规定 target-position rounding、最大可达 target 选择、ResidualPositionPolicy、自动卖出全部、自动拆单、retry 或 broker UI。G08C 的“只朝 raw target 单向调整，并选择不超过 raw target 的最大 reachable final Quantity”是 explicit internal toward-zero convention，不冒充交易所事实；
+6. Public canonical schema v1 固定为：
+
+```text
+CnAShareQuantityLatticeFailureCode
+  unsupported_venue | unsupported_instrument | unsupported_currency
+
+CnAShareQuantityLatticeQuery
+  instrument: InstrumentDefinition
+
+CnAShareQuantityLatticeResolution
+  venue_id: VenueId
+  instrument_id: InstrumentId
+  quantity_lattice: QuantityLattice
+
+CnAShareQuantityLatticeFailure
+  code: CnAShareQuantityLatticeFailureCode
+  venue_id: VenueId
+  instrument_id: InstrumentId
+  subject_key: str
+
+CnAShareCashQuantityLatticeModel
+  venue_id: VenueId
+  notional_scale: Scale
+  component_ref: ProfileComponentRef
+  resolve_instrument(query) -> ProfilePortOutcome[CnAShareQuantityLatticeResolution, CnAShareQuantityLatticeFailure]
+```
+
+Canonical serialization exact 为：
+
+```text
+Query.to_canonical_dict()
+  {type:"cn_a_share_quantity_lattice_query", schema_version:1, instrument}
+Resolution.to_canonical_dict()
+  {type:"cn_a_share_quantity_lattice_resolution", schema_version:1,
+   venue_id, instrument_id, quantity_lattice}
+Failure.to_canonical_dict()
+  {type:"cn_a_share_quantity_lattice_failure", schema_version:1,
+   code:<enum value>, venue_id, instrument_id, subject_key}
+```
+
+1. Enum value exact 为 `UNSUPPORTED_VENUE="unsupported_venue"`、`UNSUPPORTED_INSTRUMENT="unsupported_instrument"`、`UNSUPPORTED_CURRENCY="unsupported_currency"`。`resolve_instrument()` failure precedence 固定为该顺序；Predicate exact 为 query Instrument venue 不等于 model venue、Instrument type 不是 EQUITY、quote 或 settlement currency 任一不是 CNY。每个 Failure 保存 query `instrument_id` 与 query `venue_id`；subject exact 为 venue failure 的 `venue:<query venue value>`，其他为 `instrument:<str(query instrument_id)>`。Outcome 的 `component_ref` 标识 configured model；多缺陷只返回第一项。Query constructor 只做 type validation；Model constructor 对 unsupported configured Venue 或错误 Scale type 直接拒绝；
+2. G08C 对 generic `QuantityLattice` 在现有 `config_hash` 之后增加唯一 dataclass default 字段 `whole_sell_residual_permitted: bool = False`；`QuantityLattice.create(..., whole_sell_residual_permitted: bool = False)` 把它置于 keyword-only 参数末尾。Schema 选择只取决于该字段：false 时 canonical schema、bytes、`config_hash` 和 `lattice_hash` 与既有 schema v1 完全相同且 payload 不出现新字段；true 时 config/value payload 使用 schema v2。true 要求 non-null `sell_lot_units`、`odd_lot_close_permitted=true`、`min_quantity_units=0`、`min_notional.units=0`，否则 construction fail；
+3. Concrete lattice exact 为 `lattice_key="equity.cn_a_share.cash.quantity-lattice.v1"`、version 1、`atomic_scale=Scale(0)`、step 1、buy lot 100、sell lot 100、minimum quantity 0、minimum notional `Money(0, model.notional_scale, "CNY")`、odd-lot full close true、whole sell residual true。Scale 0/step 1 是整股 canonical encoding；本 Gate 不发明额外 minimum；
+4. 对 capability=true 且 Fixture applicability 内 `H>=0,R>=0` 的 lattice，令 `B=buy_lot_units or step_units`、`S=sell_lot_units`、`r=H mod S`。Branch order 固定为 `H==R` no-op → `R==0` close → `R>H` increase → `0<R<H` decrease。Increase 使用 `F=H+floor((R-H)/B)*B`；decrease reachable candidate 包含 `r+floor((R-r)/S)*S`（当 `R>=r`）与 `floor(R/S)*S`，取不超过 `R` 的最大值。算法只使用整数运算，不先反向交易。`H<0` 或 `R<0` 保持 legacy static-lattice path 不变，Concrete G08C/G08H long-cash applicability 排除这些状态；
+5. Enum value exact 为 `SELL_RESIDUAL_COMPONENT="sell_residual_component"` 与 `SELL_RESIDUAL_COMPONENT_PERMITTED="sell_residual_component_permitted"`。Increase delta 必须是 B 的整数倍；decrease delta `Q=H-F` 必须满足 `Q mod S=0`，或在 `r>0` 时满足 `Q mod S=r` 并完整消费余股。`applied_lot_units` no-op 使用 step、buy 使用 B、所有 sell/close 使用 S。Base action 在 `F==R` 时为 EXACT/EXACT_LATTICE，否则为 ROUNDED_TOWARD_ZERO + QUANTITY_STEP + delta-side BUY_LOT/SELL_LOT；non-zero final 使用余股分支时追加新的 action/reason；off-lot `F=0` 只追加 existing ODD_LOT_CLOSE pair。`residual_quantity=R-F` 是 Sizing Residual；
+6. Existing `QuantityLattice` schema-v1 golden bytes/hash 必须硬编码回归不变，且 capability=false + odd-lot-close=true 仍不得出现 v2 字段。Mutation controls exact-cover：capability=false legacy `B=S=100,H55,R251→F200`；capability=true `B100,S10,H55,R251→F155,BUY100` 与 sub-lot buy `H55,R56→F55,no order`；`H500,R451→F450,SELL50`；`H55,R49→F45,SELL10`；`H55,R50→F50,SELL5+residual action`；nonzero no-op `H55,R55→F55` 使用 step；`R==r` control `H55,R5→F5,SELL50` 且不带 residual action。Capability=true 分别用两个独立 construction tests 拒绝 `min_quantity_units>0,min_notional=0` 与 `min_quantity_units=0,min_notional.units>0`，并另拒绝 missing sell lot、disabled odd close；legacy exact controls 固定 `H=-55,R=-251,B100,S10→F=-250`、`H=-251,R=-55→F=-50`、`H55,R=-251→F=-250`、`H=-55,R251→F200`，证明 negative/cross-zero 路径逐字不变；
+7. Fixture policy 固定 key `equity.cn_a_share.cash.position-sizing.v1`、version 1、PricePurpose VALUATION、TOWARD_ZERO。Success 使用 `CLOSE_IF_PERMITTED`；另有 `FAIL` 和 `HOLD_DUST` controls，policy hash 必须反映选择，任一 failure 不返回 partial normalized/active target；
+8. Frozen XSHG `xshg:600000` 使用 CNY 10.00 Mark，XSHE `xshe:000001` 使用 CNY 20.00 Mark，Quantity Scale 0、Money/Price Scale 2。至少 exact-cover：`H0,R0→F0` no-op；`H0,R251→F200,BUY200`；`H55,R251→F155,BUY100`；`H500,R451→F400,SELL100`；`H299,R200→F200,SELL99`；`H299,R100→F100,SELL199`；`H299,R199→F199,SELL100`；`H299,R298→F200,SELL99` 而非 SELL1；`H299,R198→F100,SELL199`；`H299,R98→F0,SELL299`；`H101,R100→F100,SELL1`；`H200,R199→F100,SELL100`；`H200,R0→F0,SELL200`；`H55,R0→F0,SELL55`，并冻结各自 applied lot/action/reason；
+9. `FAIL` control 必须证明 legal `H299,R200` 因 raw==final 成功，`H299,R298→F200,residual+98` 则原子失败；另以 `H500,R401→F400,residual+1` 捕获普通 unreachable failure。Buy policy controls 固定 `H55,R251` 在 `CLOSE_IF_PERMITTED`/`HOLD_DUST` 下都得到 F155 但 policy/decision identity 不同，在 `FAIL` 下因 Sizing Residual 96 原子失败；任一 failure 不返回 partial normalized/active target。Forward/reversed Instrument inputs 与 approved targets 产生相同 normalized/active identity；
+10. Concrete Model 还须对每个 Venue 接受第二个 opaque Instrument stable key，并接受 `xshg:000001` 与 `xshe:600000` controls，证明既不使用 symbol allowlist 也不从代码推断 Venue/Board；Query/Resolution/Lattice Instrument identity exact 绑定，cross-wired Venue fail closed。XSHG/XSHE scalar economics一致，但 component digest、per-Instrument config/lattice hashes不同；
+11. Component 固定 `port_type=instrument_model`、key `equity.cn_a_share.cash.quantity-lattice.v1`、version 1。Digest preimage exact 为 `{type:"cn_a_share_cash_quantity_lattice_component", schema_version:1, component_key, component_version, algorithm_key:"cn-a-share-cash-position-relative-lattice-v1", venue_id, applicability_key:"ordinary-rmb-a-share-cny-cash-v1", notional_scale:model.notional_scale.places, lattice_policy:{atomic_scale:0, step_units:1, buy_lot_units:100, sell_lot_units:100, min_quantity_units:0, min_notional_units:0, odd_lot_close_permitted:true, whole_sell_residual_permitted:true}}`；source URL、clock、build、Attempt、Semantic Run、registry order 和 parent profile digest 不进入；
+12. RebalanceCoordinator 必须逐字消费 normalized target，不进行第二次数量舍入。Fixture 至少冻结 BUY 200、BUY 100、SELL 99、SELL 199、SELL 1、SELL 55 的 exact target/current/delta、PositionEffect、reduce-only 和 OrderPlan hash。Position-relative target 绑定 sizing current Quantity 与 lattice hash；G08C static fixture 不模拟 effective-lattice change，该检查属于 G08D/H。Lifecycle matrix exact 为：baseline 未变且 order 消失可正常重发；active/partially-filled compatible remainder exact-cover 时 `ALREADY_COVERED`；cancel-requested 时 `CANCELLATION_PENDING`；target expired 时 `TARGET_EXPIRED`；full fill 已到 target 时 `ALREADY_COVERED` 而非 stale；current 已变化、remainder 已从 working set 消失且未到 target 时一律 `POSITION_RELATIVE_REACHABILITY_STALE="position_relative_reachability_stale"`，即使重算 delta 看似合法。Sell killer 固定 `H299,R199→SELL100` 只成交 1 股并取消剩余后，在 `H298` 不得重发 `SELL99`；Buy killer 固定 `H55,R251→F155,BUY100` 只成交 1 股并取消剩余后，在 `H56` 不得重发 `BUY99`；
+13. G08C 不修改 MarketRuleEvaluator 来接受 odd sells。Regression 必须在同一 schema-v2 lattice 下证明普通 `SELL100` CLOSE/reduce-only 获批且无 issue，同时 planner 产生的 `SELL99/199/1/55` 因 quantity-step evidence 被拒绝；缺少 authoritative holding/sellable evidence 记录为 G08D blocker，不得把 Sizing/Planner preservation 宣称为 end-to-end order admission approval；
+14. Concrete package purity沿用并强化 G08B alias-aware AST scanner。Per-file allowlist 固定：G08C 新 module 只允许 stdlib `__future__|dataclasses|enum|typing|unicodedata`、`crypto_quant_domain`、`crypto_quant_trading.ports`、`crypto_quant_trading.sizing`；calendar/settlement modules 继续使用各自 G08B allowlist；package `__init__` 只允许 relative exports。Package-wide scanner 拒绝 filesystem、network/provider/process/database/cloud SDK、MarketBundle、Runtime 和 wall-clock direct/aliased access，并额外拒绝 bare `__import__(...)`、assigned alias `loader=__import__; loader(...)`、`builtins.__import__`、aliased builtins import、`importlib.import_module` direct/alias、nonliteral dynamic import、`__builtins__["__import__"]` 和 `getattr(__builtins__, "__import__")`；mutation 至少覆盖动态加载 `time` 与 `urllib.request`。Concrete symbols只从 `profiles.cn_a_share` export，generic root不得 re-export/import；
+15. 本 Gate 不拥有历史 effective interval、board/STAR/ChiNext rule、single-order cap、price limit、suspension、T+1、Fee/Tax、Corporate Action、Registry/Resolver、Runtime、MarketBundle source、short/margin 或 deployment authorization。Official source provenance 记录在 `docs/research/cn-a-share-quantity-lattice-primary-sources.md`，不进入 result-affecting digest。
+
+G08C readiness 已由 primary-source research、parallel architecture/mutation/source reviews 和最终 cross-validation 冻结；无未解决 P0/P1 blocker。相关既有回归 115 passed，import boundary PASS（60 files），`uv lock --check` PASS，Python 3.13.5。
+
+## 65. PASSED 记录格式
 
 ```yaml
 id: WP-00A

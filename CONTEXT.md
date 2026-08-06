@@ -583,7 +583,19 @@ _Avoid_: Strategy account, virtual account
 
 ## 数量格点（Quantity Lattice）
 
-一个 Instrument 在特定时点允许的原子 Scale、Step、买卖 Lot、最小数量、最小名义金额和 odd-lot 规则集合。
+一个 Instrument 在特定时点允许的原子 Scale、Step、买卖 Lot、最小数量、最小名义金额和 odd-lot 规则集合。若订单数量规则依赖当前持仓或可卖余额，Lattice 必须显式声明该状态依赖，不能把它伪装成静态目标数量倍数。
+
+## 卖出余股成分（Sell Residual Component）
+
+在权威可卖余额 `H` 下，相对于正常卖出 Lot `L` 的严格小于 `L` 的余数 `H mod L`。完整余股可以单独或与正常 Lot 合并在一次订单申报中；它不表示任意小于 `L` 的卖出数量都合法，也不保证一次成交完成。
+
+## 仓位可达数量（Reachable Position Quantity）
+
+从当前 Position 以单一交易方向调整，在合法可达集合中选择不扩大 raw target 绝对暴露且距离 raw target 最近的 Quantity。减仓时允许越过 raw target 继续向零，但禁止先背离目标、穿越零点或通过反向多腿扩大可达集合。它不自动等于从零开始的静态 Lot 整数倍。
+
+## 规格化残差（Sizing Residual）
+
+Position Sizing 中 raw target Quantity 与 final target Quantity 的差。它不同于当前持仓的 Sell Residual Component，两者不能都简称为“余股”。
 
 ## 仓位规格化（Position Sizing）
 

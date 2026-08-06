@@ -1251,22 +1251,25 @@ v1 将 `SettlementObligation.settlement_time` 保持为账户交付义务的完�
 
 ### Gate G08C Quantity Lattice and Odd Lot
 
-依赖：G08A。
+依赖：G08A、WP-04E、WP-05D、WP-05G。
 
-拥有：A 股 QuantityLattice、100 股买入手数、odd-lot close 和 ResidualPositionPolicy Adapter。
+拥有：concrete A-share `InstrumentModel` Adapter、position-relative `QuantityLattice` capability、100 股买入手数、完整 Sell Residual Component、odd-lot close 和 generic ResidualPositionPolicy integration。
 
 验收：
 
-- 正常买入按 100 股手 toward-zero sizing；
-- 卖出余股和 odd-lot close 规则明确；
-- residual decision 可审计；
-- OrderPlanner 不执行第二次数量舍入。
+- 普通 A 股竞价买入 order delta 按 100 股手向目标方向 toward-zero；卖出 normal delta 为 100 股整数倍，当前完整 `H mod 100` 余股可以单独或与 normal lot 合并一次申报，不能拆分；
+- G08C 使用 current Position-relative reachable target，不把 order-side lot 误写成 absolute target multiple；existing schema-v1 lattice bytes/hash 保持兼容；
+- XSHG/XSHE concrete Adapter 只验证 Venue、broad EQUITY 和 CNY，可观察不到的普通 A 股/STAR/ETF/Stock Connect/cash-account classification 保持 caller/G08H precondition；
+- Sizing Decision 区分 Sizing Residual 与 Sell Residual Component，`close_if_permitted`、`hold_dust`、`fail` 结果可审计，任一失败原子拒绝账户级 target；
+- Frozen fixture 覆盖 flat buy、odd holding buy、normal sell、完整余股单独/合并、one-share residual、full close、arbitrary odd negative control、unequal buy/sell-lot generic control、input-order parity 和 one-share boundaries；
+- RebalanceCoordinator 逐字消费 exact normalized Quantity，证明 `SELL 99`、`SELL 1` 等合法 delta 不被第二次舍入；position-relative target 在 partial fill 后失去 working coverage时必须 stale-omit 并要求重新 sizing，不能从旧 target 生成新的 odd order；effective-lattice change evidence 留给 G08D/H；
+- Order admission 对 authoritative sellable balance 的验证仍属于 G08D；G08C 不声称 arbitrary odd sell 已通过 MarketRuleEvaluator。
 
 ### Gate G08D Historical Order Rules and Price Limits
 
-依赖：G08A、G08C、G05G。
+依赖：G08A、G08C、WP-05G。
 
-拥有：Board-aware historical OrderRule timeline、Suspension 和方向敏感 Price Limit Adapter。
+拥有：Board-aware historical OrderRule timeline、Suspension、方向敏感 Price Limit Adapter，以及 residual-sell admission 所需的 canonical authoritative position evidence seam。G08D 必须为 `OrderRuleEvaluationInput` 冻结向后兼容的版本化扩展，exact 绑定 evaluated-at Portfolio/Availability/Reservation/WorkingOrder evidence、total/sellable Quantity 和所用 lattice hash；没有该 evidence 时不得批准 odd sell。
 
 验收：
 
