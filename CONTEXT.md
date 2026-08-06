@@ -9,6 +9,10 @@
 以整数 units 和十进制 scale 精确表示交易数值，并携带 Price、Quantity、Money、Rate 或 Exposure 等领域身份的值。它是权威交易和核算数值表示。
 _Avoid_: Exact float, naked scaled integer
 
+## 规范任意精度整数（Canonical Arbitrary-Precision Integer）
+
+Trading Domain 接受的 signed integer 不受 Python 十进制字符串位数限制。Canonical JSON 使用确定性十进制编码，不修改 process-global digit limit；普通整数既有 bytes/hash 保持不变。
+
 ## 量化策略（Quantization Policy）
 
 将分析浮点值或高精度中间结果转换为目标定点 Scale 或市场格点的显式规则。
@@ -121,6 +125,10 @@ Frozen Trading Calendar 明确声明的周末或休市日。它是成功解析�
 ## 市场 Session 阶段（Market Session Phase）
 
 交易场所在一个 TradingDate 内具有市场语义的半开时间段，例如集合竞价、连续竞价、暂停、午休和收盘后。它不同于 Engine 事件排序使用的 `TimelinePhase`。
+
+## A 股现金竞价 Session Model（A-Share Cash Auction Session Model）
+
+G08A 冻结的 XSHG/XSHE development-grade `SessionModel`：使用 caller-injected finite Calendar 和 `Asia/Shanghai` local date，解析开盘集合竞价、暂停、上午/下午连续竞价、午休、收盘集合竞价与收盘后阶段。已知周末/节假日是成功的 no-session；覆盖缺失必须结构化失败。
 
 ## 结束策略（Closeout Policy）
 

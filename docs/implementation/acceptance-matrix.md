@@ -110,7 +110,7 @@ artifact_hashes: []
 | WP-07D | PASSED | backtest-runtime | WP-07B–WP-07C | none |
 | WP-07E | PASSED | backtest-runtime | WP-07A-R1, WP-07C–WP-07D | none |
 | G07 | PASSED | backtest-runtime integration | WP-07A-R1, WP-07A–WP-07E | none |
-| G08A | READY | trading-kernel profiles/cn_a_share | G07 | none |
+| G08A | PASSED | trading-kernel profiles/cn_a_share | G07 | none |
 | G08B | DRAFT | trading-kernel profiles/cn_a_share | G08A | T+1 fixtures |
 | G08C | DRAFT | trading-kernel profiles/cn_a_share | G08A | Lattice/odd-lot fixtures |
 | G08D | DRAFT | trading-kernel profiles/cn_a_share | G08A, G08C, WP-05G | Historical rule fixtures |
@@ -5397,7 +5397,7 @@ Python                                                           3.13.5
 
 ```yaml
 id: G08A
-status: READY
+status: PASSED
 depends_on:
   - G07
 owner_package: trading-kernel profiles/cn_a_share
@@ -5454,8 +5454,11 @@ evidence:
   - network-market-bundle-and-generic-kernel-import-absence
   - import-boundary-report
   - static-type-report
-passed_commit: null
-artifact_hashes: []
+passed_commit: cafd55d80b4e686dc6ad779f1bd03d2f6092b119
+artifact_hashes:
+  tests/fixtures/kernel/profiles/cn_a_share/calendar-session-v1.json: sha256:ef2ed7296ca9da16791ca7839583b93f151b1425734f53b02dd6e8556c0dd26d
+  build/acceptance/g08a-pytest.xml: sha256:aa79fb78a0df3597a7b548db8d107c6d282ce7f76c0c51ebb41951cab499b18d
+  build/acceptance/g08a-import-boundary-report.json: sha256:265205da492c1e2bc5cf838dc11c6f90c060c2827574e7f895e897a864fcc53c
 ```
 
 ### G08A Acceptance
@@ -5539,7 +5542,36 @@ Official primary references：
 - SZSE 2024 春节休市通知：`https://www.szse.cn/disclosure/notice/general/t20240201_605828.html`；
 - IANA `Asia/Shanghai` mapping：`https://data.iana.org/time-zones/tzdb/zone1970.tab`。
 
-上述接口、范围、phase、closure/coverage、identity、digest、provenance 和 ownership 语义已完整冻结；G08A 现为 `READY`。
+上述接口、范围、phase、closure/coverage、identity、digest、provenance 和 ownership 语义已由实现与固定 Golden 固化。
+
+G08A 的实现边界如下：
+
+1. `CnAShareFrozenCalendar` 对 caller-supplied 日期行排序后 exact-cover 有限区间，拒绝重复、缺口、错误 timezone 和错误 Venue/Calendar identity；Calendar hash 使用独立 `canonical_sorted_days` preimage，不把自身 hash 纳入；
+2. XSHG/XSHE frozen fixture 精确覆盖 `[2024-02-08, 2024-02-20)`，Calendar hash 与 Session component digest 由硬编码 spec literal 独立校验。Golden 保存两个 Venue 的完整日期行、组件身份和全部解析证据；
+3. `CnAShareCashSessionModel` 结构化实现 generic `SessionModel`，返回 exactly-one `ProfilePortOutcome`。交易日 Resolution 强制 SessionId、TradingDate、phase、canonical bounds 和 open state 彼此一致；Known holiday/weekend 成功返回 no-session closure；
+4. Phase resolution 使用 `Asia/Shanghai` local date 和整数 nanosecond half-open comparison。Fixture 证明本地 2024-02-19 pre-open 对应 UTC 2024-02-18，且每个 phase start 和边界前一 nanosecond 均按冻结表解析；
+5. Query 先以整数 epoch nanoseconds 对 Calendar UTC coverage 做 fail-closed range check，再执行 datetime/timezone conversion。任意大小的正负 `UtcInstant` 和 `datetime.max` 均返回 `calendar_coverage_missing`，不会泄漏 OverflowError；bounded subject key 与 canonical input hash 保持可审计；
+6. 为保持 Trading Domain 已接受的无界 signed-integer 契约，canonical encoder 增加无 process-global 设置的 base-1e9 decimal fallback；正常整数的既有 canonical bytes/hash 不变，正负 5001 位整数具有确定 canonical JSON 表达；
+7. Concrete profile 只从 `crypto_quant_trading.profiles.cn_a_share` 导出，generic root 不 re-export，generic Kernel 不反向依赖。AST contract 递归扫描 concrete package，拒绝 filesystem、network SDK 和 wall-clock 入口；
+8. 实现不创建 partial Market Profile，不接入 Runtime/Registry/MarketBundle，不包含 G08B–G08H 的 T+1、Lattice、Price Limit、Fee/Tax、Corporate Action 或部署资格语义；结果只允许 development-grade。
+
+G08A 已冻结在 immutable commit `cafd55d80b4e686dc6ad779f1bd03d2f6092b119`，状态为 `PASSED`。
+
+验证记录：
+
+```text
+G08A calendar/session contract tests                              25 passed
+Static A-share calendar/session golden fixture                     1 passed
+G08A acceptance JUnit report                                      26 passed
+Architecture and isolation boundaries                             25 passed
+Full test suite                                                  627 passed
+Trading-kernel import boundary                                    PASS (59 files)
+mypy                                                               no issues (8 files)
+Primary LSP + pi-lens                                              clean
+Multi-agent blocker reviews                                        no unresolved P0/P1
+uv lock --check                                                    PASS
+Python                                                             3.13.5
+```
 
 ## 63. PASSED 记录格式
 
