@@ -70,6 +70,7 @@ class PositionSizingAction(str, Enum):
     BELOW_MINIMUM_QUANTITY = "below_minimum_quantity"
     BELOW_MINIMUM_NOTIONAL = "below_minimum_notional"
     ODD_LOT_CLOSE = "odd_lot_close"
+    SELL_RESIDUAL_COMPONENT = "sell_residual_component"
     RESIDUAL_HELD = "residual_held"
 
 
@@ -81,6 +82,7 @@ class PositionSizingReasonCode(str, Enum):
     MINIMUM_QUANTITY = "minimum_quantity"
     MINIMUM_NOTIONAL = "minimum_notional"
     ODD_LOT_CLOSE_PERMITTED = "odd_lot_close_permitted"
+    SELL_RESIDUAL_COMPONENT_PERMITTED = "sell_residual_component_permitted"
     ODD_LOT_CLOSE_NOT_PERMITTED = "odd_lot_close_not_permitted"
     RESIDUAL_POLICY_HOLD = "residual_policy_hold"
 
@@ -188,6 +190,7 @@ class QuantityLattice:
     min_notional: Money
     odd_lot_close_permitted: bool
     config_hash: str
+    whole_sell_residual_permitted: bool = False
 
     def __post_init__(self) -> None:
         if not isinstance(self.instrument_id, InstrumentId):
@@ -214,6 +217,17 @@ class QuantityLattice:
             raise ValueError("min_notional cannot be negative")
         if not isinstance(self.odd_lot_close_permitted, bool):
             raise TypeError("odd_lot_close_permitted must be bool")
+        if not isinstance(self.whole_sell_residual_permitted, bool):
+            raise TypeError("whole_sell_residual_permitted must be bool")
+        if self.whole_sell_residual_permitted and (
+            self.sell_lot_units is None
+            or not self.odd_lot_close_permitted
+            or self.min_quantity_units != 0
+            or self.min_notional.units != 0
+        ):
+            raise ValueError(
+                "whole sell residual requires sell lot, odd close, and zero minimums"
+            )
         _require_hash("config_hash", self.config_hash)
         if self.config_hash != canonical_sha256(self.config_payload()):
             raise ValueError("config_hash does not match quantity lattice")
@@ -232,10 +246,11 @@ class QuantityLattice:
         min_quantity_units: int,
         min_notional: Money,
         odd_lot_close_permitted: bool,
+        whole_sell_residual_permitted: bool = False,
     ) -> Self:
         payload = {
             "type": "quantity_lattice_config",
-            "schema_version": 1,
+            "schema_version": 2 if whole_sell_residual_permitted else 1,
             "instrument_id": instrument_id,
             "lattice_key": lattice_key,
             "lattice_version": lattice_version,
@@ -247,6 +262,8 @@ class QuantityLattice:
             "min_notional": min_notional,
             "odd_lot_close_permitted": odd_lot_close_permitted,
         }
+        if whole_sell_residual_permitted:
+            payload["whole_sell_residual_permitted"] = True
         return cls(
             instrument_id=instrument_id,
             lattice_key=lattice_key,
@@ -259,12 +276,13 @@ class QuantityLattice:
             min_notional=min_notional,
             odd_lot_close_permitted=odd_lot_close_permitted,
             config_hash=canonical_sha256(payload),
+            whole_sell_residual_permitted=whole_sell_residual_permitted,
         )
 
     def config_payload(self) -> dict[str, Any]:
-        return {
+        payload: dict[str, Any] = {
             "type": "quantity_lattice_config",
-            "schema_version": 1,
+            "schema_version": 2 if self.whole_sell_residual_permitted else 1,
             "instrument_id": self.instrument_id,
             "lattice_key": self.lattice_key,
             "lattice_version": self.lattice_version,
@@ -276,6 +294,9 @@ class QuantityLattice:
             "min_notional": self.min_notional,
             "odd_lot_close_permitted": self.odd_lot_close_permitted,
         }
+        if self.whole_sell_residual_permitted:
+            payload["whole_sell_residual_permitted"] = True
+        return payload
 
     @property
     def lattice_hash(self) -> str:
@@ -842,8 +863,48 @@ class PositionSizer:
             result_scale=lattice.atomic_scale,
             rounding=policy.rounding,
         )
-        lot_units = lattice.lot_units_for_target(raw.units)
-        final_units = _signed_multiple_toward_zero(raw.units, lot_units)
+        current_units = sizing_input.current_quantity.units
+        used_sell_residual = False
+        position_relative = (
+            lattice.whole_sell_residual_permitted
+            and current_units >= 0
+            and raw.units >= 0
+        )
+        if position_relative:
+            if current_units == raw.units:
+                lot_units = lattice.step_units
+                final_units = raw.units
+            elif raw.units == 0:
+                lot_units = lattice.sell_lot_units or lattice.step_units
+                final_units = 0
+            elif raw.units > current_units:
+                lot_units = lattice.buy_lot_units or lattice.step_units
+                final_units = current_units + (
+                    (raw.units - current_units) // lot_units
+                ) * lot_units
+            else:
+                lot_units = lattice.sell_lot_units or lattice.step_units
+                residual_units = current_units % lot_units
+                candidates = [(raw.units // lot_units) * lot_units]
+                if raw.units >= residual_units:
+                    candidates.append(
+                        residual_units
+                        + ((raw.units - residual_units) // lot_units) * lot_units
+                    )
+                final_units = max(candidates)
+                sold_units = current_units - final_units
+                used_sell_residual = (
+                    final_units != 0
+                    and residual_units > 0
+                    and sold_units % lot_units == residual_units
+                )
+        else:
+            lot_units = lattice.lot_units_for_target(raw.units)
+            final_units = _signed_multiple_toward_zero(raw.units, lot_units)
+
+        buy_lot_reason = (
+            raw.units > current_units if position_relative else raw.units > 0
+        )
         actions: list[PositionSizingAction] = []
         reasons: list[PositionSizingReasonCode] = []
         if final_units == raw.units:
@@ -855,7 +916,7 @@ class PositionSizer:
                 (
                     PositionSizingReasonCode.QUANTITY_STEP,
                     PositionSizingReasonCode.BUY_LOT
-                    if raw.units > 0
+                    if buy_lot_reason
                     else PositionSizingReasonCode.SELL_LOT,
                 )
             )
@@ -875,7 +936,6 @@ class PositionSizer:
             reasons.append(PositionSizingReasonCode.MINIMUM_NOTIONAL)
             final_units = 0
 
-        current_units = sizing_input.current_quantity.units
         if final_units == 0 and current_units != 0:
             close_lot = lattice.lot_units_for_close(current_units)
             odd_close = abs(current_units) % close_lot != 0
@@ -895,6 +955,11 @@ class PositionSizer:
                             PositionSizingReasonCode.RESIDUAL_POLICY_HOLD,
                         )
                     )
+        if used_sell_residual:
+            actions.append(PositionSizingAction.SELL_RESIDUAL_COMPONENT)
+            reasons.append(
+                PositionSizingReasonCode.SELL_RESIDUAL_COMPONENT_PERMITTED
+            )
 
         final = Quantity(final_units, lattice.atomic_scale, str(instrument_id))
         residual = Quantity(

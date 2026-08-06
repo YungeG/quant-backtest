@@ -272,27 +272,137 @@ def resolve_from_import(module: str | None, level: int, package: str) -> str:
         return relative_name
 
 
-def dynamic_call_names(tree: ast.AST) -> tuple[set[str], set[str], set[str]]:
+def dynamic_call_names(
+    tree: ast.AST,
+) -> tuple[set[str], set[str], set[str], set[int]]:
     importlib_names = {"importlib"}
-    builtins_names = {"builtins"}
-    import_function_names: set[str] = set()
-    for node in ast.walk(tree):
+    builtins_names = {"builtins", "__builtins__"}
+    import_function_names: set[str] = {"__import__"}
+    nodes = tuple(ast.walk(tree))
+
+    def target_names(target: ast.expr) -> tuple[str, ...]:
+        if isinstance(target, ast.Name):
+            return (target.id,)
+        if isinstance(target, ast.Starred):
+            return target_names(target.value)
+        if isinstance(target, (ast.Tuple, ast.List)):
+            return tuple(
+                name for value in target.elts for name in target_names(value)
+            )
+        return ()
+
+    def is_importlib_module(expression: ast.expr) -> bool:
+        return isinstance(expression, ast.Name) and expression.id in importlib_names
+
+    def is_builtins_module(expression: ast.expr) -> bool:
+        return isinstance(expression, ast.Name) and expression.id in builtins_names
+
+    def is_dynamic(expression: ast.expr) -> bool:
+        if isinstance(expression, ast.Name):
+            return expression.id in import_function_names
+        if isinstance(expression, ast.Attribute):
+            return expression.attr in {"import_module", "__import__"}
+        if isinstance(expression, ast.Subscript):
+            return (
+                isinstance(expression.slice, ast.Constant)
+                and expression.slice.value == "__import__"
+            )
+        if isinstance(expression, ast.Call):
+            return (
+                isinstance(expression.func, ast.Name)
+                and expression.func.id == "getattr"
+                and bool(expression.args)
+                and is_builtins_module(expression.args[0])
+            )
+        if isinstance(expression, ast.NamedExpr):
+            return is_dynamic(expression.value)
+        if isinstance(expression, (ast.Tuple, ast.List, ast.Set)):
+            return any(is_dynamic(value) for value in expression.elts)
+        return False
+
+    for node in nodes:
         if isinstance(node, ast.Import):
             for alias in node.names:
                 if alias.name == "importlib":
                     importlib_names.add(alias.asname or alias.name)
                 elif alias.name == "builtins":
                     builtins_names.add(alias.asname or alias.name)
-        elif isinstance(node, ast.ImportFrom) and node.module in {
-            "builtins",
-            "importlib",
-        }:
+        elif isinstance(node, ast.ImportFrom):
             for alias in node.names:
-                if (
-                    node.module == "importlib" and alias.name == "import_module"
-                ) or (node.module == "builtins" and alias.name == "__import__"):
-                    import_function_names.add(alias.asname or alias.name)
-    return importlib_names, builtins_names, import_function_names
+                local = alias.asname or alias.name
+                if alias.name == "import_module":
+                    import_function_names.add(local)
+                elif alias.name == "__import__":
+                    import_function_names.add(local)
+                elif alias.name == "__builtins__":
+                    builtins_names.add(local)
+
+    changed = True
+    while changed:
+        changed = False
+        for node in nodes:
+            targets: tuple[str, ...] = ()
+            value: ast.expr | None = None
+            if isinstance(node, ast.Assign):
+                targets = tuple(
+                    name
+                    for target in node.targets
+                    for name in target_names(target)
+                )
+                value = node.value
+            elif isinstance(node, ast.AnnAssign) and node.value is not None:
+                targets = target_names(node.target)
+                value = node.value
+            elif isinstance(node, ast.NamedExpr):
+                targets = target_names(node.target)
+                value = node.value
+            if value is not None:
+                if is_dynamic(value):
+                    before = len(import_function_names)
+                    import_function_names.update(targets)
+                    changed |= len(import_function_names) != before
+                if is_importlib_module(value):
+                    before = len(importlib_names)
+                    importlib_names.update(targets)
+                    changed |= len(importlib_names) != before
+                if is_builtins_module(value):
+                    before = len(builtins_names)
+                    builtins_names.update(targets)
+                    changed |= len(builtins_names) != before
+            if isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef)):
+                positional = (*node.args.posonlyargs, *node.args.args)
+                for argument, default in zip(
+                    reversed(positional),
+                    reversed(node.args.defaults),
+                    strict=False,
+                ):
+                    if is_dynamic(default) and argument.arg not in import_function_names:
+                        import_function_names.add(argument.arg)
+                        changed = True
+                for argument, kw_default in zip(
+                    node.args.kwonlyargs,
+                    node.args.kw_defaults,
+                    strict=True,
+                ):
+                    if (
+                        kw_default is not None
+                        and is_dynamic(kw_default)
+                        and argument.arg not in import_function_names
+                    ):
+                        import_function_names.add(argument.arg)
+                        changed = True
+
+    dynamic_call_ids = {
+        id(node)
+        for node in nodes
+        if isinstance(node, ast.Call) and is_dynamic(node.func)
+    }
+    return (
+        importlib_names,
+        builtins_names,
+        import_function_names,
+        dynamic_call_ids,
+    )
 
 
 def infer_dynamic_prefix(expression: ast.expr) -> str | None:
@@ -317,7 +427,7 @@ def collect_imports(source_root: Path, source_path: Path) -> list[ImportOccurren
     source = source_path.read_text(encoding="utf-8")
     tree = ast.parse(source, filename=str(source_path))
     _, current_package = module_context(source_root, source_path)
-    importlib_names, builtins_names, import_function_names = dynamic_call_names(tree)
+    dynamic_call_ids = dynamic_call_names(tree)[3]
     occurrences: list[ImportOccurrence] = []
 
     for node in ast.walk(tree):
@@ -365,20 +475,7 @@ def collect_imports(source_root: Path, source_path: Path) -> list[ImportOccurren
                     )
                 )
         elif isinstance(node, ast.Call):
-            is_dynamic = False
-            if isinstance(node.func, ast.Name):
-                is_dynamic = node.func.id == "__import__" or node.func.id in import_function_names
-            elif isinstance(node.func, ast.Attribute) and isinstance(
-                node.func.value, ast.Name
-            ):
-                is_dynamic = (
-                    node.func.attr == "import_module"
-                    and node.func.value.id in importlib_names
-                ) or (
-                    node.func.attr == "__import__"
-                    and node.func.value.id in builtins_names
-                )
-            if is_dynamic:
+            if id(node) in dynamic_call_ids:
                 target = None
                 dynamic_prefix = None
                 if node.args:
@@ -428,7 +525,8 @@ def explicit_rule_violations(
     repository_relative: str,
     occurrence: ImportOccurrence,
 ) -> list[Violation]:
-    assert occurrence.target is not None
+    if occurrence.target is None:
+        raise ValueError("explicit rule requires a resolved import target")
     violations: list[Violation] = []
     for rule in policy.forbidden_import_rules:
         if source_package.id not in rule.source_packages:
@@ -554,6 +652,22 @@ def check_occurrence(
     return []
 
 
+def _source_read_violation(
+    repository_relative: str,
+    error: SyntaxError | UnicodeError | OSError,
+) -> Violation:
+    line = error.lineno if isinstance(error, SyntaxError) else 0
+    column = error.offset if isinstance(error, SyntaxError) else 0
+    return Violation(
+        rule="python-source-unreadable",
+        source_path=repository_relative,
+        line=line or 0,
+        column=column or 0,
+        import_target="<source>",
+        message=str(error),
+    )
+
+
 def check_repository(root: Path, policy: Policy) -> tuple[int, list[Violation]]:
     violations: list[Violation] = []
     files_scanned = 0
@@ -567,19 +681,14 @@ def check_repository(root: Path, policy: Policy) -> tuple[int, list[Violation]]:
             source_relative = source_path.relative_to(source_root).as_posix()
             try:
                 occurrences = collect_imports(source_root, source_path)
-            except (SyntaxError, UnicodeError, OSError) as error:
-                line = error.lineno if isinstance(error, SyntaxError) else 0
-                column = error.offset if isinstance(error, SyntaxError) else 0
-                violations.append(
-                    Violation(
-                        rule="python-source-unreadable",
-                        source_path=repository_relative,
-                        line=line or 0,
-                        column=column or 0,
-                        import_target="<source>",
-                        message=str(error),
-                    )
-                )
+            except SyntaxError as error:
+                violations.append(_source_read_violation(repository_relative, error))
+                continue
+            except UnicodeError as error:
+                violations.append(_source_read_violation(repository_relative, error))
+                continue
+            except OSError as error:
+                violations.append(_source_read_violation(repository_relative, error))
                 continue
             for occurrence in occurrences:
                 violations.extend(

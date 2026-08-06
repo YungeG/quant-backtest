@@ -1220,8 +1220,56 @@ _ALLOWED_IMPORTS = {
     "crypto_quant_trading.ledger",
     "crypto_quant_trading.ports",
     "crypto_quant_trading.settlement",
+    "crypto_quant_trading.sizing",
 }
-_ALLOWED_RELATIVE_IMPORTS = {"calendar", "settlement"}
+_ALLOWED_RELATIVE_IMPORTS = {"calendar", "quantity_lattice", "settlement"}
+_ALLOWED_IMPORTS_BY_FILE = {
+    "__init__.py": set(),
+    "calendar.py": {
+        "__future__",
+        "dataclasses",
+        "datetime",
+        "enum",
+        "unicodedata",
+        "zoneinfo",
+        "crypto_quant_domain",
+        "crypto_quant_trading.ports",
+    },
+    "quantity_lattice.py": {
+        "__future__",
+        "dataclasses",
+        "enum",
+        "unicodedata",
+        "crypto_quant_domain",
+        "crypto_quant_trading.ports",
+        "crypto_quant_trading.sizing",
+    },
+    "settlement.py": {
+        "__future__",
+        "dataclasses",
+        "datetime",
+        "enum",
+        "typing",
+        "unicodedata",
+        "zoneinfo",
+        "crypto_quant_domain",
+        "crypto_quant_trading.ledger",
+        "crypto_quant_trading.ports",
+        "crypto_quant_trading.settlement",
+    },
+}
+_ALLOWED_RELATIVE_IMPORTS_BY_FILE = {
+    "__init__.py": {"calendar", "quantity_lattice", "settlement"},
+    "calendar.py": set(),
+    "quantity_lattice.py": set(),
+    "settlement.py": {"calendar"},
+}
+_DYNAMIC_IMPORT_CALLS = {
+    "__import__",
+    "__builtins__.__import__",
+    "builtins.__import__",
+    "importlib.import_module",
+}
 _FORBIDDEN_MODULES = {
     "aiohttp",
     "boto3",
@@ -1269,45 +1317,157 @@ def _qualified_name(node: ast.expr, aliases: dict[str, str]) -> str | None:
     return None
 
 
-def _purity_violations(source: str) -> set[str]:
+def _builtins_member(
+    node: ast.expr,
+    aliases: dict[str, str],
+    member: str,
+) -> bool:
+    if isinstance(node, ast.Subscript):
+        owner = _qualified_name(node.value, aliases)
+        return (
+            owner == "__builtins__"
+            and isinstance(node.slice, ast.Constant)
+            and node.slice.value == member
+        )
+    if isinstance(node, ast.Call) and _qualified_name(node.func, aliases) == "getattr":
+        return (
+            len(node.args) >= 2
+            and _qualified_name(node.args[0], aliases) == "__builtins__"
+            and isinstance(node.args[1], ast.Constant)
+            and node.args[1].value == member
+        )
+    return False
+
+
+def _dynamic_import_call(node: ast.expr, aliases: dict[str, str]) -> bool:
+    if isinstance(node, ast.NamedExpr):
+        return _dynamic_import_call(node.value, aliases)
+    qualified = _qualified_name(node, aliases)
+    if qualified in _DYNAMIC_IMPORT_CALLS:
+        return True
+    return _builtins_member(node, aliases, "__import__")
+
+
+def _bind_purity_alias(
+    target: ast.expr,
+    value: ast.expr,
+    aliases: dict[str, str],
+) -> None:
+    if (
+        isinstance(target, (ast.Tuple, ast.List))
+        and isinstance(value, (ast.Tuple, ast.List))
+        and len(target.elts) == len(value.elts)
+    ):
+        for target_value, source_value in zip(
+            target.elts,
+            value.elts,
+            strict=True,
+        ):
+            _bind_purity_alias(target_value, source_value, aliases)
+        return
+    if not isinstance(target, ast.Name):
+        return
+    qualified = _qualified_name(value, aliases)
+    if _dynamic_import_call(value, aliases):
+        aliases[target.id] = "__import__"
+    elif _builtins_member(value, aliases, "open"):
+        aliases[target.id] = "builtins.open"
+    elif qualified is not None:
+        aliases[target.id] = qualified
+    else:
+        aliases.pop(target.id, None)
+
+
+def _purity_violations(
+    source: str,
+    *,
+    allowed_imports: set[str] | None = None,
+    allowed_relative_imports: set[str] | None = None,
+) -> set[str]:
     tree = ast.parse(source)
     aliases: dict[str, str] = {}
     violations: set[str] = set()
     for node in ast.walk(tree):
+        if isinstance(node, ast.Name) and node.id in {
+            "__builtins__",
+            "__import__",
+            "open",
+        }:
+            violations.add(f"symbol:{node.id}")
+        elif isinstance(node, ast.Attribute) and node.attr == "__import__":
+            violations.add("symbol:__import__")
+        elif isinstance(node, ast.Subscript) and isinstance(
+            node.slice, ast.Constant
+        ) and node.slice.value in {"__import__", "open"}:
+            violations.add(f"symbol:{node.slice.value}")
+        elif isinstance(node, ast.ImportFrom) and any(
+            alias.name in {"__builtins__", "__import__"}
+            for alias in node.names
+        ):
+            violations.add("import:dynamic_builtins")
+    allowed = _ALLOWED_IMPORTS if allowed_imports is None else allowed_imports
+    relative_allowed = (
+        _ALLOWED_RELATIVE_IMPORTS
+        if allowed_relative_imports is None
+        else allowed_relative_imports
+    )
+    ordered_nodes = sorted(
+        ast.walk(tree),
+        key=lambda node: (
+            getattr(node, "lineno", 0),
+            getattr(node, "col_offset", 0),
+        ),
+    )
+    for node in ordered_nodes:
         if isinstance(node, ast.Import):
             for alias in node.names:
                 local = alias.asname or alias.name.split(".", 1)[0]
                 aliases[local] = alias.name
-                if alias.name not in _ALLOWED_IMPORTS:
+                if alias.name not in allowed:
                     violations.add(f"import:{alias.name}")
         elif isinstance(node, ast.ImportFrom):
             module = node.module or ""
-            allowed = (
-                module in _ALLOWED_RELATIVE_IMPORTS
+            permitted = (
+                node.level == 1 and module in relative_allowed
                 if node.level
-                else module in _ALLOWED_IMPORTS
+                else module in allowed
             )
-            if not allowed:
+            if not permitted:
                 violations.add(f"import:{module}")
             for alias in node.names:
                 aliases[alias.asname or alias.name] = (
                     f"{module}.{alias.name}" if module else alias.name
                 )
-    for node in ast.walk(tree):
-        if not isinstance(node, ast.Call):
-            continue
-        qualified = _qualified_name(node.func, aliases)
-        if qualified is None:
-            continue
-        if qualified in {"open", "builtins.open"}:
-            violations.add(f"call:{qualified}")
-        if qualified in _WALL_CLOCK_CALLS:
-            violations.add(f"call:{qualified}")
-        if any(
-            qualified == module or qualified.startswith(f"{module}.")
-            for module in _FORBIDDEN_MODULES
-        ):
-            violations.add(f"call:{qualified}")
+        elif isinstance(node, ast.Assign):
+            for target in node.targets:
+                _bind_purity_alias(target, node.value, aliases)
+        elif isinstance(node, ast.AnnAssign):
+            if node.value is None:
+                if isinstance(node.target, ast.Name):
+                    aliases.pop(node.target.id, None)
+            else:
+                _bind_purity_alias(node.target, node.value, aliases)
+        elif isinstance(node, ast.NamedExpr):
+            _bind_purity_alias(node.target, node.value, aliases)
+        elif isinstance(node, ast.Call):
+            if isinstance(node.func, ast.NamedExpr):
+                _bind_purity_alias(node.func.target, node.func.value, aliases)
+            qualified = _qualified_name(node.func, aliases)
+            if _dynamic_import_call(node.func, aliases):
+                violations.add("call:dynamic_import")
+            if _builtins_member(node.func, aliases, "open"):
+                violations.add("call:builtins.open")
+            if qualified is None:
+                continue
+            if qualified in {"open", "builtins.open"}:
+                violations.add(f"call:{qualified}")
+            if qualified in _WALL_CLOCK_CALLS:
+                violations.add(f"call:{qualified}")
+            if any(
+                qualified == module or qualified.startswith(f"{module}.")
+                for module in _FORBIDDEN_MODULES
+            ):
+                violations.add(f"call:{qualified}")
     return violations
 
 
@@ -1318,11 +1478,18 @@ def test_concrete_profile_source_is_pure_and_not_root_reexported() -> None:
         / "packages/trading-kernel/src/crypto_quant_trading/profiles/cn_a_share"
     )
     for source_path in sorted(profile_root.rglob("*.py")):
-        assert not _purity_violations(_read_text(source_path)), source_path
+        allowed = _ALLOWED_IMPORTS_BY_FILE[source_path.name]
+        relative_allowed = _ALLOWED_RELATIVE_IMPORTS_BY_FILE[source_path.name]
+        assert not _purity_violations(
+            _read_text(source_path),
+            allowed_imports=allowed,
+            allowed_relative_imports=relative_allowed,
+        ), source_path
     generic_root = root / "packages/trading-kernel/src/crypto_quant_trading"
     for source_path in generic_root.glob("*.py"):
         assert "profiles.cn_a_share" not in _read_text(source_path)
         assert "CnAShareCashSettlementModel" not in _read_text(source_path)
+        assert "CnAShareCashQuantityLatticeModel" not in _read_text(source_path)
 
 
 @pytest.mark.parametrize(
@@ -1352,6 +1519,28 @@ def test_concrete_profile_source_is_pure_and_not_root_reexported() -> None:
         'from datetime import datetime as dt\ndt.now()',
         'from datetime import datetime as dt\ndt.utcnow()',
         'from datetime import date as d\nd.today()',
+        '__import__("time")',
+        'loader = __import__\nloader("urllib.request")',
+        'import builtins as b\nb.__import__("time")',
+        'import importlib\nimportlib.import_module("time")',
+        '__builtins__["__import__"]("time")',
+        'getattr(__builtins__, "__import__")("urllib.request")',
+        'loader = __builtins__["__import__"]\nloader("time")',
+        'loader = getattr(__builtins__, "__import__")\nloader("urllib.request")',
+        'b = __builtins__\nloader = b["__import__"]\nloader("time")',
+        'loader = __import__\nloader("time")\nloader = None',
+        'loader = __import__\nloader = loader("time")',
+        'loader = __import__\nloader: object\nloader("time")',
+        'loader = __import__\nif False:\n    loader = None\nloader("time")',
+        'loader: object = __import__\nloader("time")',
+        '(loader := __import__)("time")',
+        '(loader,) = (__import__,)\nloader("time")',
+        'b = __builtins__\nloader = getattr(b, "__import__")\nloader("urllib.request")\nloader = object',
+        '__builtins__["open"]("x")',
+        '((b := __builtins__)["__import__"])("time")',
+        'from .calendar import __builtins__ as b\nb["open"]("x")',
+        'from calendar import timegm\ntimegm((1, 2, 3))',
+        'from ...settlement import AvailabilityState\nAvailabilityState',
     ),
 )
 def test_purity_scanner_rejects_direct_and_aliased_forbidden_access(

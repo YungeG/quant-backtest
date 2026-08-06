@@ -301,6 +301,9 @@ class PlanningOmissionCode(str, Enum):
     ALREADY_COVERED = "already_covered"
     CANCELLATION_PENDING = "cancellation_pending"
     TARGET_EXPIRED = "target_expired"
+    POSITION_RELATIVE_REACHABILITY_STALE = (
+        "position_relative_reachability_stale"
+    )
 
 
 @dataclass(frozen=True, slots=True)
@@ -749,6 +752,9 @@ class RebalanceCoordinator:
         if isinstance(maps, RebalanceOutcome):
             return maps
         target_units, current_units, streams_by_instrument, scales = maps
+        normalized_by_instrument = {
+            value.instrument_id: value for value in target.targets
+        }
 
         planned: list[PlannedOrder] = []
         cancels: list[CancelIntent] = []
@@ -809,6 +815,38 @@ class RebalanceCoordinator:
                     )
                 )
                 continue
+
+            normalized = normalized_by_instrument.get(instrument_id)
+            if (
+                normalized is not None
+                and normalized.sizing_input.lattice.whole_sell_residual_permitted
+                and normalized.sizing_input.current_quantity.units >= 0
+                and normalized.decision.raw_quantity.units >= 0
+                and current != normalized.sizing_input.current_quantity
+                and current != desired
+            ):
+                lineage_streams = tuple(
+                    value
+                    for value in instrument_streams
+                    if value.order.intent.parent_id
+                    == target.normalized_target_id
+                )
+                lineage_coverage = self._signed_coverage(lineage_streams)
+                if lineage_coverage != desired.units - current.units:
+                    omissions.append(
+                        PlanningOmission(
+                            instrument_id,
+                            PlanningOmissionCode.POSITION_RELATIVE_REACHABILITY_STALE,
+                            current,
+                            desired,
+                            _quantity(
+                                instrument_id,
+                                scale,
+                                lineage_coverage,
+                            ),
+                        )
+                    )
+                    continue
 
             full_delta = desired.units - current.units
             if current.units and desired.units and (
