@@ -612,7 +612,7 @@ _Avoid_: Strategy sizing
 
 ## 结算义务（Settlement Obligation）
 
-由成交产生、将在明确结算时点完成的资产或现金交付要求。它具有稳定身份并引用来源 Fill。
+由成交产生、将在版本化账户语义所声明的结算时点完成的资产或现金交付要求。它具有稳定身份并引用来源 Fill；该账户层时点不自动等同于中央结算参与人批次、法律权属登记或银行服务时点。
 
 ## 结算簿（Settlement Book）
 
@@ -621,6 +621,18 @@ _Avoid_: Strategy sizing
 ## 可用性投影（Availability Projection）
 
 根据账户账本、结算簿、资源预留簿和市场规则计算总持仓、可卖数量、已结算现金、可交易现金、可提现现金和可用保证金的派生状态。
+
+## 可用性成熟时点（Availability Maturation Instant）
+
+一个已入账经济权益或账户交付义务完成、因而开始计入特定可用资源维度的明确时点。它不自动等同于中央交收批次、法律权属登记或银行服务时点，必须由版本化市场/账户语义显式声明。
+
+## A 股 T+1 可卖（A-share T+1 Sellability）
+
+普通人民币 A 股在 T 日买入后立即形成经济持仓，但 T 日不可卖；只有下一已声明交易日才进入可卖数量。下一交易日必须来自权威 Calendar，不得用自然日或工作日猜测。
+
+## 卖出资金可交易/可提现分离（Sale Proceeds Tradability/Withdrawability）
+
+卖出所得在现金账户中的再投资能力与向外提现能力是两个独立可用性维度；不同 Market/Account Profile 必须分别声明其成熟条件，不能把“可用”自动解释为“可取”。
 
 ## 资源预留簿（Resource Reservation Book）
 

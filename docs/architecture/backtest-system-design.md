@@ -854,7 +854,23 @@ class SettlementObligation:
 - Withdrawable Cash
 - Available Margin
 
-Settlement 到达时产生明确 `SettlementApplied` Event 和对应 Journal/Availability 状态转换。Pre-trade Risk 使用 Available Resources，而不是只查看总 Cash 或 Position。Settlement Obligation 与 Working Order Reservation 是不同概念。
+Settlement 到达时产生明确 `SettlementApplied` Event 和对应 Availability 状态转换；Fill 的经济 Cash/Position 已由 Journal/Ledger 入账，SettlementApplied 不重复写经济事实。Pre-trade Risk 使用 Available Resources，而不是只查看总 Cash 或 Position。Settlement Obligation 与 Working Order Reservation 是不同概念。
+
+#### A 股现金账户 availability maturation
+
+普通人民币 A 股的 G08B Adapter 把官方规则与系统约定分开：交易所规则规定普通 A 股 T 日买入不得 T 日卖出，中国结算规则与公告提供下一交易日及参与人层资金交收证据；客户账户的 exact intraday availability 则由显式版本化 Profile 约定。
+
+```text
+Fill economic booking on T
+├── negative Cash/Position delivery       → mature at Fill time
+├── positive bought Position receivable   → sellable next TradingDate 00:00 CST
+└── positive sale Cash receivable         → tradable on T,
+                                            withdrawable next TradingDate 16:00 CST
+```
+
+这里的 `SettlementObligation.settlement_time` 是版本化客户现金账户中该交付义务完成并进入相应可用资源维度的 account-settlement/availability-maturation instant；本 Adapter 不模拟中央结算参与人层净额交收、法定权属登记或所有券商统一提现时点。Position 00:00 允许开盘前 Planning/Reservation 看到 T+1 可卖数量；Cash 16:00 是参考中国结算最晚参与人资金交收边界而选择的保守 development-grade 客户账户约定，不是逐 Fill 的中央交收事实。改变任一时点或 pending-receivable policy 必须改变 component digest。
+
+Concrete Adapter 必须消费 supplied immutable `FILL_BOOKED` Accounting Entry，直接映射其中 signed Cash/Position effects，禁止独立重算 Notional。Adapter 只能验证 Entry 结构与 Fill context；该 Entry 已包含于权威 Journal、所消费 LedgerState 引用同一 Journal prefix，以及 Settlement Recorded evidence 绑定该 Resolution hash，必须由 G08B integration/G08H composition 证明。Adapter 只产生 caller-ID-bound `AccountSettlementObligation` 与固定 `MarketSettlementRules`；`SettlementBook`、`AvailabilityProjection`、Event identity/scheduling 和 Ledger 仍由已有共享模块拥有。
 
 ### 8.16 Fill
 
@@ -914,7 +930,7 @@ FeeAssessment 通过 basis IDs 引用 Fill/Order，而不是事后修改 immutab
 - `FeeCharged`
 - `FundingApplied`
 - `BorrowFeeCharged`
-- `SettlementApplied`
+- `SettlementApplied`（仅当 Settlement 独立产生新的经济 Cash/Position 事实；availability-only maturation 不写 Journal）
 - `CorporateActionEntitlementBooked`
 - `CorporateActionPositionAdjusted`
 - `CorporateActionCashPaid`
@@ -1469,7 +1485,7 @@ Generic Ledger 不包含 `if instrument_type` 分支，不读取 MarketSemantics
 
 Immutable Journal 使用 `(recorded_at, journal_entry_id.value)` 作为唯一稳定顺序。单次 append batch 可以无序输入，但在发布 cursor 后不得向既有 prefix 插入更早 Entry；否则历史 cursor 和 projection identity 将失去含义。相同 Entry ID 与相同 canonical content 是 no-op，相同 ID 与不同 content 是冲突。Replay cursor 同时携带已消费 Entry 数量和 prefix hash-chain identity，所有 replay range 使用半开区间并校验 position/hash，不能只信任整数 offset。空 Journal 从固定 genesis hash 开始，每个 prefix identity 只由前一 prefix hash 与当前 Entry canonical hash 推导。Journal Store/Replay 本身不计算 Cash、Position 或 PnL，也不拥有外部 mutable persistence。
 
-`PositionAccountingModel`、`FinancingModel`、`SettlementModel` 和 `CorporateActionModel` 负责把市场特有经济事实翻译为 Journal Entry，但不能直接修改 Ledger State。是否允许负现金、Short Position、Margin exposure 或某项账户权限由 ExecutionAccountProfile、PreTradeRisk、MarginModel 和 AvailabilityProjection 决定，不由 Ledger 决定。
+`PositionAccountingModel`、`FinancingModel`、`SettlementModel` 和 `CorporateActionModel` 只在市场事件产生新的经济 Cash/Position/PnL 事实时把它翻译为 Journal Entry，且不能直接修改 Ledger State。若 Fill 已完整入账，后续 SettlementBook Event 只使既有账户交付义务成熟并改变 Availability，则不得再写 `SettlementApplied` Journal Entry；该名称保留给确有独立经济变化的 Settlement。是否允许负现金、Short Position、Margin exposure 或某项账户权限由 ExecutionAccountProfile、PreTradeRisk、MarginModel 和 AvailabilityProjection 决定，不由 Ledger 决定。
 
 实际 Fill 即使暴露风险或权限违规也必须如实入账；系统随后产生 `PostTradeRiskBreach` 或 `IntegrityFinding`。禁止为了维持“合法状态”而丢弃已发生 Fill 或拒绝 Accounting。
 

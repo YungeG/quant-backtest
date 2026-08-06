@@ -1233,14 +1233,21 @@ v1 official-source-backed phase table 使用半开区间工程约定：
 
 依赖：G08A。
 
-拥有：Cash T+0/Position T+1 SettlementModel 和 AvailabilityProjection Adapter。
+拥有：普通人民币 A 股现金账户的 concrete `SettlementModel`；其 `availability_rules()` materialize 既有 generic `MarketSettlementRules` value，并与 generic `SettlementBook`/`AvailabilityProjection` 形成组合证据。准确语义是：成交经济事实在 T 日立即入账；T 日买入的普通 A 股在下一交易日才可卖；T 日卖出所得可继续用于证券买入，但按 v1 保守账户约定在下一交易日资金可用性成熟后才可提现。禁止把它简称为法律意义上的“Cash T+0 settlement”。
+
+v1 将 `SettlementObligation.settlement_time` 保持为账户交付义务的完成时点，并在该现金账户 Adapter 中令完成时点同时成为相应资源的 availability-maturation instant：负 Cash/Position delivery leg 在 Fill time 完成；正 Position receivable 在下一交易日 `00:00 Asia/Shanghai` 完成，以支持开盘前规划；正 Cash receivable 在下一交易日 `16:00 Asia/Shanghai` 完成。后者只是参考中国结算最晚参与人资金交收边界的保守 development-grade 客户账户约定，不是逐 Fill 中央交收或所有券商提现承诺。两个时点均进入 component digest。
 
 验收：
 
-- T 日买入立即承担经济风险但 T 日不可卖；
-- T+1 SettlementApplied 后进入 Sellable Quantity；
-- Tradable Cash 与 Withdrawable Cash 分离；
-- Settlement Obligation 与 Working Order Reservation 分离并可 replay。
+- T 日买入立即增加 Ledger total Position，但 positive Position receivable 在下一 Frozen TradingDate 的 00:00 前从 Sellable Quantity 扣除；禁止使用 calendar-day 或 weekday `+1`；
+- T 日卖出立即增加 Ledger total Cash。Positive Cash receivable 在 pending 时计入 Tradable Cash、不计入 Settled/Withdrawable Cash，并在下一 Frozen TradingDate 的 16:00 `SettlementApplied` 后成熟；
+- Buy negative Cash leg 与 Sell negative Position leg 在 Fill time 成熟，不能因 generic Projection 只扣 positive receivable 而永久留在 pending；SettlementApplied 不重复写 Ledger；
+- concrete Adapter 从 supplied `FILL_BOOKED` Accounting Entry 取得 exact signed Cash/Position effects，不独立重算 Notional 或舍入；Entry 必须 exact 绑定 Fill/Order source、effective time、Account/Venue 和空 Fee/Financing。Bare Entry 的 Journal inclusion 不是五类型 seam 可证明的事实，G08B fixture/G08H 必须把该 Entry hash、authoritative Journal/Ledger prefix 和 Settlement Recorded evidence 显式绑定；
+- Fixed rules 为 `pending_receivable_tradable=true`、`pending_receivable_withdrawable=false`、`pending_receivable_margin_eligible=false`、`pending_receivable_sellable=false`；Cash/Fee Reservation 与 Sellable Reservation 继续由独立 `ResourceReservationBook` evidence 扣减。Generic `available_margin` 输出不构成 Margin 授权，G08H cash-account policy 必须禁止使用；
+- Settlement Obligation、Settlement Event 与 Working Order Reservation 保持不同身份/状态流；Adapter 不生成 Event。Fixture 对同一 UTC instant 的 Recorded/Immediate-Applied 使用显式递增 `SimulationInstant` phase/source sequence，禁止依赖 Event ID lexical ordering；full replay、prefix resume 和输入顺序变化产生相同 Book/Availability hash；
+- XSHG/XSHE 共享算法和经济语义，但 Calendar/component digest 独立；Fixture 使用 2024 春节 02-08 → 02-19 跨休市结算，并在 Calendar coverage 无法证明下一交易日时 fail closed；
+- Adapter 只验证 Contract 可观察的 Venue、broad Equity type、Instrument identity 和 CNY currency。普通 A 股/Stock Connect/cash-account classification 是 G08H caller precondition，G08B 不得声称已验证；
+- 不修改 generic Settlement/Availability seam，不生成 Runtime Event ID，不实现 Fees/Tax、Margin、Stock Connect、B 股/基金/债券、Broker transfer cut-off、Registry 或 Runtime orchestration。
 
 ### Gate G08C Quantity Lattice and Odd Lot
 

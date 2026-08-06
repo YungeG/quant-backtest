@@ -111,7 +111,7 @@ artifact_hashes: []
 | WP-07E | PASSED | backtest-runtime | WP-07A-R1, WP-07C–WP-07D | none |
 | G07 | PASSED | backtest-runtime integration | WP-07A-R1, WP-07A–WP-07E | none |
 | G08A | PASSED | trading-kernel profiles/cn_a_share | G07 | none |
-| G08B | DRAFT | trading-kernel profiles/cn_a_share | G08A | T+1 fixtures |
+| G08B | READY | trading-kernel profiles/cn_a_share | G08A | none |
 | G08C | DRAFT | trading-kernel profiles/cn_a_share | G08A | Lattice/odd-lot fixtures |
 | G08D | DRAFT | trading-kernel profiles/cn_a_share | G08A, G08C, WP-05G | Historical rule fixtures |
 | G08E | DRAFT | trading-kernel profiles/cn_a_share | WP-05H, WP-05J | Fee/tax fixtures |
@@ -5573,7 +5573,183 @@ uv lock --check                                                    PASS
 Python                                                             3.13.5
 ```
 
-## 63. PASSED 记录格式
+## 63. G08B T+1 Settlement and Availability Acceptance Card
+
+```yaml
+id: G08B
+status: READY
+depends_on:
+  - G08A
+  - WP-01C
+  - WP-02C
+  - WP-03F
+  - WP-05B
+  - WP-05C
+owner_package: trading-kernel profiles/cn_a_share
+public_interface:
+  - crypto_quant_trading.profiles.cn_a_share.CnAShareSettlementFailureCode
+  - crypto_quant_trading.profiles.cn_a_share.CnAShareSettlementQuery
+  - crypto_quant_trading.profiles.cn_a_share.CnAShareSettlementResolution
+  - crypto_quant_trading.profiles.cn_a_share.CnAShareSettlementFailure
+  - crypto_quant_trading.profiles.cn_a_share.CnAShareCashSettlementModel
+  - CnAShareCashSettlementModel.component_ref
+  - CnAShareCashSettlementModel.resolve_settlement
+  - CnAShareCashSettlementModel.availability_rules
+  - canonical A-share settlement/availability schemas v1
+  - static A-share settlement/availability golden fixture v1
+test_commands:
+  contract: uv run pytest -q tests/kernel/profiles/cn_a_share/test_settlement_availability.py
+  fixture: uv run pytest -q tests/kernel/profiles/cn_a_share/test_settlement_availability_golden.py
+  boundary: uv run pytest -q tests/architecture/test_public_api_imports.py tests/architecture/test_repository_cleanliness.py tests/kernel/ports/test_profile_port_contracts.py tests/kernel/settlement/test_settlement_availability.py tests/kernel/profiles/cn_a_share/test_calendar_session.py && uv run python tools/architecture/check_import_boundaries.py --root . --policy architecture/import-boundaries.toml --report build/acceptance/g08b-import-boundary-report.json
+fixture_ids:
+  - cn-a-share-settlement-availability-v1
+expected_artifacts:
+  - tests/fixtures/kernel/profiles/cn_a_share/settlement-availability-v1.json
+  - build/acceptance/g08b-pytest.xml
+  - build/acceptance/g08b-import-boundary-report.json
+failure_contracts:
+  - ordinary-a-share-buy-is-sellable-on-trade-date
+  - next-trading-date-is-inferred-by-calendar-day-or-weekday-arithmetic
+  - calendar-coverage-missing-is-treated-as-a-known-closure-or-next-date
+  - sale-cash-receivable-is-withdrawable-before-maturation
+  - sale-cash-receivable-is-not-tradable-on-trade-date
+  - negative-delivery-leg-remains-pending-after-fill-time
+  - settlement-applied-rebooks-ledger-economics
+  - settlement-model-recomputes-notional-or-rounding-instead-of-binding-fill-accounting
+  - accounting-entry-fill-account-venue-instrument-currency-or-sign-mismatch-is-accepted
+  - settlement-domain-id-kind-duplicate-or-source-fill-mismatch-is-accepted
+  - working-order-reservation-is-merged-with-settlement-obligation
+  - pending-position-or-cash-receivable-policy-is-caller-configurable
+  - xshg-and-xshe-component-identity-collide
+  - profile-component-digest-omits-calendar-timing-or-availability-policy
+  - profile-adapter-mutates-settlement-book-ledger-reservation-or-runtime-state
+  - profile-adapter-reads-network-wall-clock-provider-or-filesystem-source
+  - observable-non-equity-or-non-cny-context-is-treated-as-supported
+  - g08h-caller-precondition-is-claimed-as-g08b-validated
+allowed_grade: development
+evidence:
+  - pytest-report
+  - static-settlement-availability-golden-hash
+  - official-t-plus-one-and-holiday-source-references
+  - official-fact-versus-system-convention-classification
+  - fill-accounting-to-obligation-exact-binding
+  - authoritative-journal-ledger-prefix-and-settlement-source-binding
+  - buy-position-t-plus-one-sellability-evidence
+  - sale-cash-t-zero-tradability-and-t-plus-one-withdrawability-evidence
+  - next-frozen-trading-date-and-boundary-nanosecond-evidence
+  - immediate-negative-delivery-and-deferred-positive-receivable-evidence
+  - settlement-book-full-replay-and-prefix-resume-parity
+  - settlement-versus-reservation-state-and-hash-isolation
+  - fixed-market-settlement-rules-and-availability-state-hashes
+  - xshg-xshe-economic-parity-and-component-identity-separation
+  - profile-port-outcome-result-and-failure-evidence
+  - network-market-bundle-runtime-and-generic-kernel-import-absence
+  - import-boundary-report
+  - static-type-report
+passed_commit: null
+artifact_hashes: []
+```
+
+### G08B Acceptance
+
+以下语义、接口、Fixture、failure 和 purity contract 已冻结，G08B 可进入 TDD 实现：
+
+1. G08B 只在 `crypto_quant_trading.profiles.cn_a_share` 增加一个 concrete Settlement Adapter；不修改 generic `SettlementModel`、`SettlementBook`、`MarketSettlementRules` 或 `AvailabilityProjection` seam，不 root re-export concrete 类型，不创建 partial `MarketSemanticsProfileRegistration`。完整 Profile composition 仍属于 G08H；
+2. v1 scope 仅含 `VenueId("xshg")`/`CN.XSHG` 与 `VenueId("xshe")`/`CN.XSHE` 的普通人民币 A 股现金账户。Adapter 可从 Query 直接验证的范围只有 Venue、broad `InstrumentType.EQUITY`、Instrument identity 和 CNY quote/settlement currency；普通 A 股而非 ETF/REIT/Stock Connect、现金而非融资账户等不可由当前 Contract 观察的区分，必须作为 caller/G08H precondition，G08B 不得声称已验证。BSE、B 股、基金、债券、跨境、融资融券、卖空、质押/冻结、参与人违约和 Broker/Bank transfer cut-off 均不在 scope；
+3. 官方事实与系统约定必须分开：SSE/SZSE 规则证明普通 A 股 T 日买入不得 T 日卖出；中国结算规则、DVP 生效公告与 2024 春节公告证明下一交易日和 2024-02-08 → 2024-02-19 参与人层资金交收关系。Sale proceeds 的 retail tradable/withdrawable bucket 和 exact intraday instant 是账户/Profile 约定，不得冒充逐 Fill 中央净额交收或所有券商的法定统一时点；
+4. G08B 保持 `SettlementObligation.settlement_time` 的通用含义：它是版本化客户账户中该 Cash/Position 交付义务完成的时点；在本 Adapter 中，账户交付完成同时使该资源 Availability 成熟。Buy negative Cash leg 与 Sell negative Position leg 在 Fill execution time 完成；Buy positive Position receivable 在下一 Frozen TradingDate `00:00 Asia/Shanghai` 完成；Sell positive Cash receivable 在下一 Frozen TradingDate `16:00 Asia/Shanghai` 完成。本 Adapter 不模拟中央参与人净额交收、法定权属登记或银行服务时点；
+5. `00:00` Position convention 使 pre-open Planning/Reservation 可看到 T+1 可卖数量；`16:00` Cash convention 只是参考中国结算最晚参与人资金交收边界的保守 development-grade 客户账户约定。两个 convention、immediate-negative-leg policy、G08A Session component identity 和 fixed availability policy 全部进入 component digest；任一改变必须改变 digest；
+6. Public canonical schema v1 固定如下，READY 后实现不得新增字段、枚举或 optional 解释：
+
+```text
+CnAShareSettlementFailureCode
+  unsupported_venue | unsupported_instrument | unsupported_currency |
+  trade_time_not_open | calendar_coverage_missing |
+  accounting_effect_mismatch | settlement_identity_mismatch
+
+CnAShareSettlementQuery
+  fill: Fill
+  instrument: InstrumentDefinition
+  fill_accounting_entry: AccountingJournalEntry
+  cash_obligation_id: DomainId
+  position_obligation_id: DomainId
+
+CnAShareSettlementResolution
+  venue_id: VenueId
+  fill_id: DomainId
+  trade_date: TradingDate
+  next_trading_date: TradingDate
+  position_availability_time: UtcInstant
+  cash_withdrawal_time: UtcInstant
+  fill_accounting_entry_hash: str
+  obligations: tuple[AccountSettlementObligation, ...]
+
+CnAShareSettlementFailure
+  code: CnAShareSettlementFailureCode
+  fill_id: DomainId
+  venue_id: VenueId
+  calendar_id: str
+  subject_key: str
+
+CnAShareCashSettlementModel
+  calendar: CnAShareFrozenCalendar
+  component_ref: ProfileComponentRef
+  resolve_settlement(query) -> ProfilePortOutcome[CnAShareSettlementResolution, CnAShareSettlementFailure]
+  availability_rules(schema: LedgerSchema) -> MarketSettlementRules
+```
+
+Canonical serialization exact 为：
+
+```text
+Query.to_canonical_dict()
+  {type:"cn_a_share_settlement_query", schema_version:1,
+   fill, instrument, fill_accounting_entry,
+   cash_obligation_id, position_obligation_id}
+
+Resolution.to_canonical_dict()
+  {type:"cn_a_share_settlement_resolution", schema_version:1,
+   venue_id, fill_id, trade_date, next_trading_date,
+   position_availability_time, cash_withdrawal_time,
+   fill_accounting_entry_hash, obligations}
+
+Failure.to_canonical_dict()
+  {type:"cn_a_share_settlement_failure", schema_version:1,
+   code:<enum value>, fill_id, venue_id, calendar_id, subject_key}
+```
+
+`fill_accounting_entry_hash` 必须等于 `canonical_sha256(query.fill_accounting_entry)`；`ProfilePortOutcome.input_hash` 继续由 generic port 对完整 Query canonical bytes 计算。所有 tuple 保持上述字段语义，Domain value 使用其现有 canonical encoding。
+
+1. Query constructor 只验证字段类型，不把错误 Domain kind 变成 construction exception。`resolve_settlement()` 的 deterministic failure precedence 固定为：`unsupported_venue` → `unsupported_instrument` → `unsupported_currency` → `settlement_identity_mismatch` → `accounting_effect_mismatch` → `calendar_coverage_missing` → `trade_time_not_open`。两个 obligation ID 必须是 caller-generated、彼此不同的 `DomainIdKind.SETTLEMENT`；Adapter 不在缺少 Semantic Run namespace 时发明领域 ID；
+2. Predicate-to-code mapping exact 为：`fill.venue_id != model.calendar.venue_id` → unsupported venue；`instrument.instrument_id != fill.instrument_id`、`instrument.instrument_id.venue != fill.venue_id` 或 `instrument.instrument_type != EQUITY` → unsupported instrument；Instrument quote/settlement currency 或 Fill price quote currency 任一不是 CNY → unsupported currency；ID kind 不是 SETTLEMENT 或两个 ID 相同 → settlement identity mismatch；Accounting predicate 任一失败 → accounting effect mismatch；Session failure/无下一 trading row → calendar coverage missing；Session 成功但非 trading/open phase → trade time not open。多缺陷只返回 precedence 中第一个；
+3. Failure `subject_key` 固定为稳定 identity：unsupported venue 使用 `fill.venue_id.value`；unsupported instrument/currency、identity mismatch、trade-time failure 和 coverage failure 使用 `fill.fill_id.value`；accounting mismatch 使用 `fill_accounting_entry.journal_entry_id.value`。Failure 不保存 free-form message。Result obligations 顺序固定为 Cash leg、Position leg；
+4. `fill_accounting_entry` 是 Adapter 唯一消费的 Fill economic evidence；Adapter 只验证其结构与 Query exact binding，不能仅凭 bare Entry 证明它已进入 authoritative Journal。Caller/G08H 必须保证并在组合证据中验证该 Entry 已包含于所消费 LedgerState 对应的 Journal prefix。Entry 本身必须满足：`entry_type=FILL_BOOKED`、`effective_time == fill.execution_time`、`recorded_at.instant >= fill.execution_time`、account/venue exact 匹配、`source_ids` 是 `{fill.fill_id.value, fill.order_id.value}` 的 exact two-element set（输入顺序无语义）、`fees=()`、`financing=()`，并 exact 含一个 matching `CashBalanceKey/Money` 与一个 matching `PositionBalanceKey/Quantity` change。Position effect 必须保留 Fill Quantity 的 Instrument identity/Scale，且 BUY 等于 `+fill.quantity`、SELL 等于 `-fill.quantity`；Cash effect currency 必须 CNY 且 BUY 为负、SELL 为正。Adapter 直接使用 signed values，禁止用 Fill price×quantity 重算 Notional、Scale 或 rounding；
+5. Fill 必须与 supplied `InstrumentDefinition` exact 匹配，且可观察检查仅允许 `InstrumentType.EQUITY`、CNY quote/settlement currency、matching XSHG/XSHE Venue。Fixture 声明普通人民币 A 股是 caller precondition；Stock Connect、margin account、ETF/REIT 等当前 Contract 不可观察的上下文不得产生“已验证”证据；
+6. TradingDate 必须通过 G08A concrete SessionModel 在 Fill instant 解析，且 Fill 必须处于 OPEN phase。下一 TradingDate 只能扫描同一 injected Frozen Calendar 中后续 `trading` row；2024-02-09–17 holiday 和 02-18 weekend 必须跳过。Coverage 无法证明下一 TradingDate 时返回 `calendar_coverage_missing`，禁止 extrapolation；
+7. `availability_rules(schema)` 不是 ProfilePortOutcome：非 `LedgerSchema` 输入抛 `TypeError`；多 Account、其他 Venue、非 CNY Cash 或缺少 Cash/Position registration 抛既有 `AvailabilityEvidenceError`。它 materialize fixed `MarketSettlementRules(policy_key="equity.cn_a_share.cash.availability.v1", policy_version=1)`，规则严格为：Cash pending receivable tradable=true、withdrawable=false、margin-eligible=false；Tradable/Withdrawable reservation uses 均为 `(cash, fee_reserve)`；Available-margin reservation uses 为空；Position pending receivable sellable=false。Margin Reservation 因没有 owner 而 fail closed；
+8. Availability 仍由 generic `AvailabilityProjection` 计算。Ledger total 在 Fill 时立即反映经济 Cash/Position；Projection 只对 pending positive receivable 限制可用性，negative delivery 不二次扣减。Cash-account `available_margin` 维度在本 Gate 只是 generic projection 输出，不授权 Margin；Fixture 固定 cash maturation 前为 CNY 9,000、之后为 CNY 10,200，G08H 的 Account/Risk Policy 必须禁止使用该维度；
+9. Frozen fixture 对 XSHG/XSHE 使用 G08A `[2024-02-08, 2024-02-20)` Calendar：初始 CNY 10,000.00、200 settled shares；T 日 BUY 100 @ 10.00、SELL existing 100 @ 12.00，无 Fee/Tax；另有 CNY 200 Cash、CNY 10 Fee Reserve 和 20 shares Sellable Reservation。两次 Fill 后 total Cash=10,200、settled Cash=9,000、tradable Cash=9,990、withdrawable Cash=8,790、available margin=9,000、total Position=200、sellable=80；
+10. 在 2024-02-19 00:00 前一 nanosecond，Buy Position 仍 pending；边界应用后 sellable=180。Cash receivable 在 2024-02-19 16:00 前一 nanosecond 仍 pending；边界应用后 settled Cash=10,200、tradable Cash=9,990、withdrawable Cash=9,990、available margin=10,200。Tradable Cash 在 Cash maturation 时不得二次增加；
+11. Adapter 不生成 `SettlementEvent`。Fixture 的 caller-owned lifecycle 固定使用 Accounting `SimulationInstant(fill_time, TimelinePhase(50, "accounting"), SourceSequence(1))`，ObligationRecorded 使用 phase `(60, "settlement_recorded")`，同 UTC instant 的 immediate SettlementApplied 使用更晚 phase `(61, "settlement_applied")`；同 phase 的事件使用递增 SourceSequence。不得依赖 `event_id` lexical order 建立因果；early Applied 必须触发 generic lifecycle failure；
+12. Fixture 必须先把两个 exact `FILL_BOOKED` Entry append 到 authoritative `AccountingJournal`，由同一完整 Journal cursor/prefix 投影 `LedgerState`，再解析 Settlement；每个 ObligationRecorded Event 的 `source_evidence_hash` 必须等于对应 `canonical_sha256(CnAShareSettlementResolution)`，从而间接绑定 resolution 内的 accounting-entry hash。Accounting phase 必须早于 Settlement Recorded/Applied phase，Availability 只能消费引用该完整 Journal prefix 的 LedgerState。该 Journal-inclusion/order 约束是 G08B fixture 与 G08H caller precondition，不由五类型 SettlementModel seam 单独证明；
+13. Fixture 还必须证明四条 obligation 的 recorded/immediate/deferred lifecycle、full replay 与 cursor/resume parity、输入顺序不影响 Book/Rules/Availability hash、Reservation 变化不改变 Settlement state/hash，以及 Settlement obligation 与 Reservation identity/path 永不混用。`SettlementApplied` 只推进 Book/Availability，不创建 Journal Entry；Profile Adapter 不拥有 Event ID、Simulation phase、mutable Book/Ledger/Reservation state 或 Runtime scheduling；
+14. XSHG/XSHE 共享 normalized signed amounts、maturation schedule 和 availability arithmetic；因为 Venue/Instrument/Balance identities 不同，SettlementBook、Rules 和 Availability hashes 预期不同。Calendar/session/settlement component digest 必须不同；
+15. Component 固定为 `port_type=settlement_model`、`component_key="equity.cn_a_share.cash.settlement.v1"`、`component_version=1`。Digest preimage exact 为 `{type="cn_a_share_cash_settlement_component", schema_version=1, component_key, component_version, algorithm_key="cn-a-share-cash-settlement-availability-v1", session_component_ref=<完整 G08A ProfileComponentRef>, applicability_key="ordinary-rmb-a-share-cny-cash-v1", leg_timing={negative_delivery:"fill-execution-time", positive_position:"next-trading-date-local-00:00", positive_cash:"next-trading-date-local-16:00"}, availability_policy={policy_key:"equity.cn_a_share.cash.availability.v1", policy_version:1, cash={pending_receivable_tradable:true, pending_receivable_withdrawable:false, pending_receivable_margin_eligible:false, tradable_reservation_uses:["cash","fee_reserve"], withdrawable_reservation_uses:["cash","fee_reserve"], available_margin_reservation_uses:[]}, position={pending_receivable_sellable:false}}}`；
+16. Concrete package purity test 必须使用 exact import allowlist `{__future__, dataclasses, datetime, enum, typing, unicodedata, zoneinfo, crypto_quant_domain, crypto_quant_trading.ledger, crypto_quant_trading.ports, crypto_quant_trading.settlement}` 加同 package relative `{calendar, settlement}`，其他 import 一律失败。AST scanner 必须解析 `import`/`from import` alias 到 qualified call，并用 mutation cases覆盖 direct/aliased `open`、`builtins`、`io`、`tempfile`、`pathlib`、`os`、`sqlite3`、`subprocess`、`importlib.resources`、`socket`、`http.client`、`urllib`、`requests`、`httpx`、`aiohttp`、`websockets`、`fsspec`、`boto3`、`botocore`、`time`，以及 direct/aliased `datetime.now/utcnow/today`、`date.today`、`time.time/time_ns`。禁止 MarketBundle/Runtime；
+17. Fixture 和 Adapter 仅允许 development-grade。Settlement Domain IDs 由 caller/Runtime identity plan 生成；`SettlementEvent.event_id` 是 caller-owned canonical string。Official source URL/document number 只属于 provenance/Acceptance，不进入 result-affecting component digest；G08B 不实现 Fees/Tax、Quantity Lattice、Price Limit、Corporate Action、Registry、Resolver、Runtime scheduling、真实交易或 deployment authorization。
+
+Official primary references：
+
+- SSE《上海证券交易所交易规则（2023年修订）》Rules 3.1.4–3.1.5：`https://www.sse.com.cn/lawandrules/sselawsrules2025/repeal/rules/c/10824490/files/dcbe58edb194451d93f19b1f7dd8fb4c.docx`；
+- SZSE《深圳证券交易所交易规则（2023年修订）》Rules 3.1.4–3.1.5：`https://docs.static.szse.cn/www/lawrules/rule/repeal/rules/W020230217564423808793.pdf`；
+- 中国结算《证券结算规则》Articles 10–22、45–46：`https://www.chinaclear.cn/zdjs/editor_file/20220620141248275.pdf`；
+- 中国结算货银对付改革 2022-12-26 全面实施公告：`https://www.chinaclear.cn/zdjs/gszb/202303/25835600a00f4909a61e16daf4158a62.shtml`；
+- 中国结算 2024 春节期间证券资金清算交收安排：`https://www.chinaclear.cn/zdjs/gszb/202402/55414758160a4efdacfb89d6f4a82518.shtml`；
+- 证监会《证券登记结算管理办法》Articles 45、50–55：`https://www.csrc.gov.cn/csrc/c101953/c2801304/content.shtml`；
+- CSRC JR/T 0300—2023 separate available/withdrawable balance terminology：`https://www.csrc.gov.cn/csrc/c101954/c7445425/content.shtml`。
+
+SSE/SZSE 投教材料中存在当日可用/次日可取的产品示例，但不作为普通 A 股规范依据；G08B 的 retail Tradable/Withdrawable 行为明确属于版本化现金账户系统约定。
+
+## 64. PASSED 记录格式
 
 ```yaml
 id: WP-00A
