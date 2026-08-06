@@ -11,9 +11,17 @@ from .calendar import (
     CnAShareSessionQuery,
     CnAShareSessionResolution,
 )
+from .settlement import (
+    CnAShareCashSettlementModel,
+    CnAShareSettlementFailure,
+    CnAShareSettlementFailureCode,
+    CnAShareSettlementQuery,
+    CnAShareSettlementResolution,
+)
 
 __all__ = [
     "CnAShareCalendarDayKind",
+    "CnAShareCashSettlementModel",
     "CnAShareCashSessionModel",
     "CnAShareFrozenCalendar",
     "CnAShareFrozenCalendarDay",
@@ -22,4 +30,8 @@ __all__ = [
     "CnAShareSessionPhase",
     "CnAShareSessionQuery",
     "CnAShareSessionResolution",
+    "CnAShareSettlementFailure",
+    "CnAShareSettlementFailureCode",
+    "CnAShareSettlementQuery",
+    "CnAShareSettlementResolution",
 ]
