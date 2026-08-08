@@ -105,7 +105,9 @@ The following are versioned simulation/accounting conventions, not claims that e
 - final market fees and stamp duty use `FeeBasisType.FILL`, so each immutable Fill is assessed with the rule effective at its execution time;
 - final broker commission uses `FeeBasisType.ORDER`, so actual fills are aggregated only after the Order reaches a terminal state and the CNY 5.00 minimum is applied once;
 - reservation uses the approved full-order notional and the same explicit account minimum once, but remains a non-financial `FeeReservationEstimate`;
-- partial cancellation releases the difference between the reservation and final assessments; a no-fill cancellation has zero final commission and no `FeeCharged` entry;
+- because final market/tax components round independently per Fill, caller supplies a positive `maximum_fill_count=N`; the canonical reservation buffer adds `floor(N/2)` CNY cents for each applicable final component (three market components, plus stamp duty for SELL). This is a mathematical rounding bound, not an official fee;
+- an Attempt whose actual Fill count exceeds N fails closed before canonical publication; the system may not call an unbounded aggregate estimate conservative;
+- partial cancellation releases the difference between the buffered reservation and final assessments; a no-fill cancellation has zero final commission and no `FeeCharged` entry;
 - a market/tax rule-book gap or overlap fails closed; no current-rule, nearest-rule, container-order, or account-schedule fallback is allowed;
 - official URLs, retrieval timestamps, and local download paths are provenance. Result-affecting identities bind immutable source key/hash values, finite bands, rates, side, basis, quantization, and component/rule-set hashes.
 

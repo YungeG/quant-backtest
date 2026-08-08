@@ -1297,15 +1297,15 @@ v1 只批准 XSHG/XSHE standard domestic CNY cash-auction A-share fixture，并�
 
 Broker commission 不属于 MarketSemantics。Golden 使用 caller-supplied synthetic development net-commission schedule：双边 0.3‰、每个有 Fill 的 terminal Order 最低 CNY 5.00，并明确不代表任何真实券商或“佣金已包含规费”的统一做法。
 
-最终 market fee/stamp duty 按 `FeeBasisType.FILL` 和 Fill execution time 解析/量化；最终 broker commission 按 terminal `FeeBasisType.ORDER` 聚合实际 Fills，minimum 只应用一次。Reservation 则按获批完整订单 notional 保守估算，不能复用为最终 Assessment。
+最终 market fee/stamp duty 按 `FeeBasisType.FILL` 和 Fill execution time 解析/量化；最终 broker commission 按 terminal `FeeBasisType.ORDER` 聚合实际 Fills，minimum 只应用一次。Reservation 按获批完整订单 notional 估算，并必须组合 caller-supplied `maximum_fill_count` 的 canonical rounding buffer：每个 applicable final component 额外预留 `floor(N/2)` 个 CNY cent；实际 Fill 数超过 N 时 fail closed。Reservation 不能复用为最终 Assessment。
 
 验收：
 
 - per-order minimum commission 不按 Fill 重复收取，无 Fill cancel 不收费；
 - 多 Fill、部分成交和取消后按实际 Fill 产生 per-Fill market/tax 与单一 per-Order commission；
-- 10,000 CNY 获批订单只成交两个 1,000 CNY Fill 后取消，Reservation 与 final total exact 不同并释放差额；
+- `maximum_fill_count=2` 时，10,000 CNY 获批订单只成交两个 1,000 CNY Fill 后取消，Reservation CNY 10.68、final CNY 6.12、terminal Reservation 清零并释放相对最终费用 CNY 4.56；
 - BUY 的印花税是 `NOT_APPLICABLE`，SELL 才应用；
-- 每个 component 使用 CNY Scale 2、explicit `HALF_UP`；独立 CNY 2,000 fully-filled/two-Fill sentinel 冻结 aggregate reservation CNY 6.13 与 per-Fill final CNY 6.12 的一分差异；
+- 每个 component 使用 CNY Scale 2、explicit `HALF_UP`；独立 CNY 2,000 fully-filled/two-Fill sentinel 冻结未缓冲 aggregate CNY 6.13、bounded reservation CNY 6.17 与 per-Fill final CNY 6.12；
 - Tax/Fee component、active band、charge rule、RuleSet、basis 和 AccountFeeSchedule identity 进入 Assessment result 与 `FeeCharged` Journal source IDs；
 - exact 2023-08-28 local boundary 选新规则；RuleBook 缺失/重叠时 fail closed，不回退 current/nearest rule；
 - concrete Adapter 不读取 network/filesystem/provider/process/database/wall clock，不拥有账户佣金或 deployment authorization。

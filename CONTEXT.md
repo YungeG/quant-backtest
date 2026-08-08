@@ -818,6 +818,10 @@ A 股 Buy 在 upper-limit open 或 Sell 在 lower-limit open 时，由保守 Bar
 
 市场费用和印花税按每个不可变 Fill 及其执行时点规则最终评估；券商佣金按终态 Order 的实际 Fill 聚合并只应用一次账户最低佣金。下单前 Fee Reservation 仍按完整获批订单保守估算，不是上述任一最终费用事实。
 
+## 费用预留舍入缓冲（Fee Reservation Rounding Buffer）
+
+当最终费用逐 Fill、逐 component 舍入而预留按聚合订单名义金额估算时，基于 caller-supplied 最大 Fill 数 N 增加的 canonical 非财务缓冲。A 股 G08E 对每个适用 component 预留 `floor(N/2)` 个 CNY cent；实际 Fill 数超过 N 必须 fail closed，不能继续声称预留是保守上界。
+
 ## Microstructure Replay Engine
 
 基于 Quote、Trade 或订单簿事件模拟撮合、队列、部分成交和高频执行的回放模块。

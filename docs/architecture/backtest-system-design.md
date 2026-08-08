@@ -929,6 +929,8 @@ G08E 将 A 股公共市场收费、国家税项和账户合同 exact 分开：�
 
 A 股 v1 最终市场费用与印花税使用 `FeeBasisType.FILL`，按每个 Fill 的 execution time 重新解析有限历史区间并逐 component 量化；最终券商佣金使用 terminal `FeeBasisType.ORDER`，按实际 Fill notional 聚合后只应用一次 minimum。这样跨规则切换时点的长生命周期 Order 不会把 acceptance-time Rule 错套到后续 Fill，partial cancel 也不会按原始订单名义金额最终收费。
 
+Aggregate Reservation 在多 Fill 独立舍入下可能低于 final charge，因此 caller 必须提供由 Execution/Simulation Profile 证明的 positive `maximum_fill_count=N`。`CnAShareFeeReservationBuffer` 对每个 applicable final component 额外预留 `floor(N/2)` 个 CNY cent，并把 N、Market/Tax resolution identities 和公式写入 canonical identity；实际 Fill 数超过 N 的 Attempt 必须 fail closed，不能发布低于已发生费用上界的“保守预留”声明。
+
 G08E 的 CNY Scale 2、逐 component `HALF_UP` 和 final Fill/Order basis 是 development-grade system convention，不冒充所有交易所结算参与人或券商的账单舍入。Rule gap/overlap、unsupported block-trade mechanism 或非 CNY/非 A 股输入必须 fail closed；current-rule page、最近区间和账户 schedule 都不能补市场/税费历史缺口。
 
 FeeAssessment 通过 basis IDs 引用 Fill/Order，而不是事后修改 immutable Fill。Cash Instrument Lot 的 fee allocation 可以在 FeeAssessment 完成后通过明确 Journal Entry 更新成本基础。
