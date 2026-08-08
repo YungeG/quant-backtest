@@ -1383,16 +1383,18 @@ Bar Engine v1：
 
 负责现金分红、拆股和送转、除权除息生效时间、配股、Symbol migration 和合约换月。
 
-公司行为使用生命周期事件：
+公司行为使用同一稳定 `corporate_action_id` 的生命周期，但必须区分市场观察与账户事实：
 
-- `CorporateActionAnnounced`：在 available time 后对 Strategy 可见。
-- `EntitlementCaptured`：在 Record/Eligibility Instant 锁定历史合格 Position quantity。
-- `PositionAdjustmentApplied`：在 Effective Instant 调整 Position Lot quantity 和 unit cost。
-- `CashDistributionPaid`：在 Payment Instant 产生 Cash Journal Entry。
+- `CorporateActionAnnounced`：普通 immutable `MarketEvent`，只在完整 `SimulationInstant(available_time, phase, source_sequence)` boundary 后可见；未来 Record/Ex/Payment/Listing 日期是 Announcement payload terms，不得用 `available_time < future event_time` 的提前 Future Event 绕过 causality。
+- `EntitlementCaptured`：以 Record/Eligibility Instant 的权威历史 registered-position snapshot 锁定账户权利。Snapshot 可以在 Record boundary 后才可用，因此 Entitlement 同时记录 eligibility instant 与 captured-at；当前 Portfolio/Ledger Position 不能替代历史 Register。
+- `PositionAdjustmentApplied`：在独立 Effective/Listing trigger 下调整 Position Lot quantity 和 cost basis。
+- `CashDistributionPaid`：在独立 Payment trigger 下产生 Cash Journal Entry。
 
-每个生命周期共享稳定 `corporate_action_id`。当前 Position 不能替代历史 Entitlement。拆股/送转默认保持总 Cost Basis 不变；Tax/withholding 由 Market Tax Rules 和 ExecutionAccountProfile 共同决定。
+G08F 的 A 股 development convention 使用 Record TradingDate local 15:00 session-close 作为 engine eligibility ordering boundary，但不声称 ChinaClear 在 15:00 完成登记。Plan-only、late、cancelled、supplied revision、negative、fractional 或缺少 Register evidence 的 Action fail closed；complete closed revision-set 与 Candidate 不可观察的账户上下文由 G08H/Profile composition 验证。G08F 只产生 immutable gross Entitlement，不修改 Journal、Ledger、Lot、Settlement 或 Availability。
 
-Execution、Market Rules 和 Accounting 必须使用原始可交易价格。拆股、送转和分红通过明确生命周期经济事实生成 Accounting Journal Entry，调整 Position quantity、cost basis 或 cash。
+Position Adjustment 必须以 Journal-replayable Lot effect 为权威，并保存可精确守恒的 total Cost Basis；fixed-scale unit cost 只能是派生值。Account-level integer entitlement 不证明每个 Lot allocation 都是整数，必须有 authoritative per-Lot evidence 或显式单 Lot scope。若 Generic Ledger 仍拒绝 Lot、Runtime 仍维护未由 Journal 重建的 mutable lot side-state，则 Adjustment/Payment Gate 不得 READY。Tax/withholding 由 Market Tax Rules、ExecutionAccountProfile 与账户持有期事实共同决定，不能从 gross Entitlement 推断；deferred-tax disposition 必须由 G08G typed 输出并由 G08H/Runtime 阻断尚未支持的后续 taxable transfer。
+
+Execution、Market Rules 和 Accounting 必须使用原始可交易价格。Ex reference price 只属于 Market Rule/reference metadata；不得 retroactively rewrite OHLC、Fill 或 accounting price。拆股、送转和分红只能通过明确 lifecycle trigger 生成 Accounting Journal Entry，调整 Position quantity、exact cost basis 或 cash。
 
 Strategy 可以通过 ObservationView 请求 point-in-time adjusted series，但调整只能使用在当前模拟时点已经公布或生效的公司行为。Vendor 预先生成的全历史复权序列不能直接作为 decision-grade 执行证据。
 

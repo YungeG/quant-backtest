@@ -1312,39 +1312,51 @@ Broker commission 不属于 MarketSemantics。Golden 使用 caller-supplied synt
 
 ### Gate G08F Corporate Action Observation and Entitlement
 
-依赖：G08A、Observation/Timeline contracts。
+依赖：G08A、WP-06A Market Event、WP-06B Deterministic Timeline。
 
-拥有：Announcement event/available time、Record/Eligibility Instant 和 Entitlement capture；不拥有 Strategy-facing ObservationView。
+拥有：final implementation Announcement event/available time、Record/Eligibility Instant、authoritative historical registered-position snapshot 和 immutable gross Entitlement capture；不拥有 Strategy-facing ObservationView、Journal mutation、Adjustment、Payment 或 Tax。
 
 验收：
 
-- Announcement 在 available time 前不能由 point-in-time event query 返回；Strategy-facing 集成由 G11B 验证；
-- Record Instant 使用历史合格 Position 锁定 Entitlement；
-- 后续当前 Position 不能替代历史 Entitlement；
-- 缺少 Announcement/Record 证据时 fail closed。
+- Announcement 保持普通 `MarketEvent` causality：未来 Record/Ex/Payment/Listing 只在 payload，available boundary 使用完整 `SimulationInstant(available_time, phase, source_sequence)`，边界前不能由 Timeline 返回；Strategy-facing 集成由 G11B 验证；
+- Record eligibility 使用 local 15:00 session-close 的 explicit development ordering convention；registered-position snapshot 可以稍后可用，但必须 exact 绑定 Record instant、account、instrument 和 source hash；
+- Entitlement 只使用历史 `R`-close registered quantity，后续当前 Portfolio/Ledger/Order/Fill/Bar 不能替代或重算；
+- 支持 strictly positive final cash/bonus/capitalization terms 与 non-negative registered quantity；cash 要求 Payment date，bonus/capitalization 要求 Listing date；fractional share、sub-cent cash、negative input、supplied revision/cancellation、late Announcement、缺少 Announcement/Register/Calendar/Rule coverage 均 fail closed；complete closed announcement/register revision-set 与 Query 不可观察的 security/account/distribution scope 由 G08H/Profile composition 阻断；
+- zero registered quantity 产生 canonical zero entitlement；G08F 不产生任何 Journal/Ledger/Lot/Settlement/Availability mutation。
 
 ### Gate G08G Corporate Action Adjustment and Payment
 
-依赖：G08F、G03 Accounting。
+依赖：G08F、G03 Accounting；当前状态 `DRAFT`。
 
 拥有：Ex/Effective position adjustment、Payment cash、withholding/tax Journal translation。
 
-验收：
+READY 前阻断：
 
-- 拆股/送转调整 Lot quantity 和 unit cost；
-- 除规则另有规定外总 Cost Basis 保持；
-- Payment Instant 才产生 Cash Journal Entry；
+- Generic Journal/Ledger 必须拥有 replayable Position Lot create/replace/close effects，Runtime mutable lot side-state 不能作为权威；
+- `PositionLot` 必须拥有 exact authoritative total Cost Basis，不能只靠 fixed-scale unit cost 声称任意 ratio 守恒；
+- 新股 sellability、支付现金 tradable/withdrawable availability、fractional delivered quantity、gross/deferred tax 和 delayed/suspended lifecycle evidence必须冻结；
+- Fill accounting 与 Corporate Action 必须共享 Lot-effect contract并通过 full/prefix/resume replay；多 Lot 的 entitlement allocation 必须有 authoritative per-Lot evidence，或 v1 exact 限制为单一 eligible Lot；
+- Corporate Action tax disposition 至少区分 NOT_APPLICABLE/APPLIED/DEFERRED_UNSUPPORTED；G08G owns disposition，G08H/Runtime 对 deferred unsupported 后续 taxable transfer fail closed。
+
+最终验收仍包括：
+
+- 送股/转增调整 Lot quantity，并从 exact total Cost Basis 派生 unit cost；
+- 除显式规则另有规定外总 Cost Basis 保持；
+- Payment trigger 前不得产生 Cash Journal Entry；
 - adjustment/payment 幂等并可 Journal replay；
-- 缺少 Effective/Payment 证据时 fail closed。
+- 缺少 Effective/Payment/Listing 或 availability evidence 时 fail closed；
+- raw tradable prices 不被 ex-reference metadata 改写。
 
 ### Gate G08H A-share Profile Composition and Parity
 
 依赖：G08A–G08G。
 
-拥有：`equity.cn_a_share.v1` component composition、完整黄金 Fixture 和 `cycle-rotation-platform` ParityReport。
+拥有：`equity.cn_a_share.v1` component composition、完整黄金 Fixture、announcement/register complete closed revision-set validation、跨 Query identity-history validation、不可由 G08F Query 表达的 security/account/distribution scope qualification，以及 `cycle-rotation-platform` ParityReport。
 
 验收：
 
+- Profile composition exact 证明没有遗漏 later announcement cancellation/revision 或 register correction，并对跨 Query stable ID conflicting reuse fail closed；
+- Profile composition 在调用 G08F 前阻断 ordinary-vs-preferred、cash-auction mechanism、B/H、Stock Connect、margin/short、lending/repo、pledge/freeze、restricted/pre-IPO、differential distribution 和 issuer self-distribution 等 Query 不可观察上下文；
 - Timeline、Runner、Generic Ledger 和 Bar Engine 不新增 A 股条件分支；
 - ProfileResolver 对全部 component/capability 兼容性验证通过；
 - 完整 Fixture 覆盖 T+1、100 股手、价格限制、费用、税和公司行为；

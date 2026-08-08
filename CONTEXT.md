@@ -285,11 +285,23 @@ Price 或 Market Event Stream 在预期覆盖区间中的缺失，并具有明�
 
 ## 公司行为时间线（Corporate Action Timeline）
 
-按公布、资格、有效和支付时点记录分红、拆股、送转及其他公司行为完整生命周期的历史证据序列。
+按公布、资格、有效和支付时点记录分红、拆股、送转及其他公司行为完整生命周期的历史证据序列。Announcement 是 available time 驱动的市场观察；Record、Adjustment 和 Payment 是独立账户 lifecycle facts，不能把未来日期伪装成提前可用的 Market Event。
+
+## 公司行为登记持仓快照（Corporate Action Registered Position Snapshot）
+
+在 Record/Eligibility boundary 由权威登记来源冻结的账户持仓证据，携带 account、instrument、record instant、available time 和 source hash。它不同于后续当前 Portfolio、Ledger balance、sellable quantity、Order 或 Fill。
 
 ## 公司行为资格（Corporate Action Entitlement）
 
-在 Record 或 Eligibility Instant 根据历史合格 Position 锁定的公司行为权利，不能用后续当前持仓替代。
+在 Record 或 Eligibility Instant 根据历史 registered-position snapshot 锁定的公司行为权利，并同时记录 evidence captured-at。当前持仓不能替代或重算；零登记持仓仍可产生 canonical zero entitlement。
+
+## 公司行为生效触发（Corporate Action Effective Trigger）
+
+独立证明送股、转增、拆分或其他 Position adjustment 何时生效/上市的账户 lifecycle evidence。Announcement 中的未来日期不等于已经发生的 Adjustment。
+
+## 公司行为支付触发（Corporate Action Payment Trigger）
+
+独立证明现金分配到达 Payment lifecycle boundary 的账户证据。Entitlement 本身不能自动推导 Payment，延迟或暂停必须显式表达。
 
 ## Funding 费率发布（Funding Rate Publication）
 

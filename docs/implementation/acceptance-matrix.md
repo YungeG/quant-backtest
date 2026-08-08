@@ -114,9 +114,9 @@ artifact_hashes: []
 | G08B | PASSED | trading-kernel profiles/cn_a_share | G08A | none |
 | G08C | PASSED | trading-kernel profiles/cn_a_share | G08A, WP-04E, WP-05D, WP-05G | none |
 | G08D | PASSED | trading-kernel profiles/cn_a_share | G08A, G08C, WP-05G | none |
-| G08E | READY | trading-kernel profiles/cn_a_share | WP-05H, WP-05J | none |
-| G08F | DRAFT | trading-kernel profiles/cn_a_share | G08A, WP-06B | Announcement/entitlement fixtures |
-| G08G | DRAFT | trading-kernel profiles/cn_a_share | G08F, G03 | Adjustment/payment fixtures |
+| G08E | PASSED | trading-kernel profiles/cn_a_share | WP-05H, WP-05J | none |
+| G08F | READY | trading-kernel profiles/cn_a_share | G08A, WP-06A, WP-06B | none |
+| G08G | DRAFT | trading-domain + trading-kernel + backtest-runtime | G08F, G03 | Journal-replayable Lot effects, exact total Cost Basis, availability/tax/fractional-share fixtures |
 | G08H | DRAFT | trading-kernel profiles/cn_a_share + parity | G08A–G08G | Composition/parity commands |
 | G09A | DRAFT | trading-kernel derivatives | G03 | Position model fixtures |
 | G09B | DRAFT | trading-kernel accounting | G09A, G03 | Fill/PnL fixtures |
@@ -6243,7 +6243,116 @@ uv lock --check                                                    PASS
 Python                                                             3.13.5
 ```
 
-## 67. PASSED 记录格式
+## 67. G08F Corporate Action Observation and Entitlement Acceptance Card
+
+```yaml
+id: G08F
+status: READY
+depends_on:
+  - G08A
+  - WP-06A
+  - WP-06B
+owner_package: trading-kernel profiles/cn_a_share
+public_interface:
+  - crypto_quant_trading.profiles.cn_a_share.CnAShareCorporateActionAnnouncementStatus
+  - crypto_quant_trading.profiles.cn_a_share.CnAShareCorporateActionSourceRef
+  - crypto_quant_trading.profiles.cn_a_share.CnAShareCorporateActionAnnouncementCandidate
+  - crypto_quant_trading.profiles.cn_a_share.CnAShareCorporateActionEntitlementBand
+  - crypto_quant_trading.profiles.cn_a_share.CnAShareCorporateActionEntitlementRuleBook
+  - crypto_quant_trading.profiles.cn_a_share.CnAShareRegisteredPositionSnapshot
+  - crypto_quant_trading.profiles.cn_a_share.CnAShareCorporateActionEntitlementQuery
+  - crypto_quant_trading.profiles.cn_a_share.CnAShareCorporateActionEntitlement
+  - crypto_quant_trading.profiles.cn_a_share.CnAShareCorporateActionFailureCode
+  - crypto_quant_trading.profiles.cn_a_share.CnAShareCorporateActionFailure
+  - crypto_quant_trading.profiles.cn_a_share.CnAShareCorporateActionEntitlementModel
+  - structural implementation of crypto_quant_trading.CorporateActionModel
+  - static A-share corporate-action entitlement golden fixture v1
+test_commands:
+  contract: uv run pytest -q tests/kernel/profiles/cn_a_share/test_corporate_action_entitlement.py
+  fixture: uv run pytest -q tests/kernel/profiles/cn_a_share/test_corporate_action_entitlement_golden.py
+  boundary: uv run pytest -q tests/architecture/test_public_api_imports.py tests/architecture/test_repository_cleanliness.py tests/kernel/ports/test_profile_port_contracts.py tests/market_data/bundles/test_market_bundle_reader.py tests/runtime/timeline/test_deterministic_timeline.py tests/kernel/profiles/cn_a_share/test_settlement_availability.py && uv run python tools/architecture/check_import_boundaries.py --root . --policy architecture/import-boundaries.toml --report build/acceptance/g08f-import-boundary-report.json
+fixture_ids:
+  - cn-a-share-corporate-action-entitlement-v1
+expected_artifacts:
+  - tests/fixtures/kernel/profiles/cn_a_share/corporate-action-entitlement-v1.json
+  - build/acceptance/g08f-pytest.xml
+  - build/acceptance/g08f-import-boundary-report.json
+failure_contracts:
+  - plan-only-cancelled-revised-incomplete-or-component-empty-announcement-is-accepted
+  - future-lifecycle-date-is-modeled-as-a-premature-market-event
+  - announcement-is-visible-before-available-time
+  - announcement-available-time-precedes-event-time
+  - current-position-ledger-order-fill-or-bar-substitutes-for-r-close-register
+  - registered-position-snapshot-is-available-before-eligibility-or-after-capture
+  - account-instrument-record-date-or-venue-evidence-mismatch
+  - record-date-calendar-is-missing-closed-or-not-post-close
+  - current-or-nearest-corporate-action-rule-fills-a-gap
+  - overlapping-rule-intervals-are-selected-by-container-order
+  - negative-fractional-share-or-sub-cent-entitlement-is-locally-rounded
+  - late-after-record-announcement-backdates-entitlement
+  - later-current-position-recalculates-captured-entitlement
+  - entitlement-capture-mutates-journal-ledger-lots-settlement-or-availability
+  - market-event-or-register-source-identity-is-missing-from-result
+  - concrete-profile-reads-network-filesystem-provider-process-database-or-wall-clock
+  - generic-kernel-imports-or-branches-on-cn-a-share-identity
+  - profile-composition-claims-unobservable-account-or-distribution-scope-is-qualified
+allowed_grade: development
+evidence:
+  - pytest-report
+  - static-corporate-action-entitlement-golden-hash
+  - official-primary-source-note-and-source-document-hashes
+  - announcement-market-event-causality-and-timeline-parity
+  - finite-rule-book-band-component-and-resolution-hashes
+  - historical-registered-position-snapshot-hash
+  - eligibility-versus-capture-instant-evidence
+  - later-position-non-substitution-evidence
+  - zero-entitlement-evidence
+  - no-accounting-mutation-evidence
+  - import-boundary-report
+  - static-type-report
+```
+
+### G08F Acceptance
+
+1. G08F 只在 `crypto_quant_trading.profiles.cn_a_share.corporate_actions` 增加 concrete Entitlement Model，并结构化实现既有 `CorporateActionModel.apply_corporate_action()`；不得新增 generic port、修改 `MarketEvent` 的 causality contract、创建 partial Profile registration 或在 generic Kernel/Timeline/Ledger 中增加 `cn_a_share` branch；
+2. Announcement 是普通 immutable `MarketEvent`。`event_time` 表示公告发布事件，`available_time` 表示首次合法/数据可用时点，未来 Record/Ex/Payment/Listing 日期只作为 payload term；合法 invariant 为 `available_time >= event_time`，且 `available_time < event_time` 必须 fail closed。G08F Candidate 保存 Event 的完整 `timeline_instant = SimulationInstant(available_time, phase, source_sequence)`，visibility/capture 比较使用完整总序而不只比较 UTC instant。Golden 必须通过既有 `InMemoryMarketBundleReader` 与 `DeterministicTimeline` 证明 available boundary 前不可见、边界时可见、不同 reader/timeline batch size 与输入顺序产生相同 Event ID/hash 序列；
+3. Trading-kernel concrete Model 不导入 `crypto_quant_market_data` 或 `crypto_quant_backtest`，也不直接消费 `MarketEvent`。Caller/G08H 将已验证 Event payload 映射为 `CnAShareCorporateActionAnnouncementCandidate`；G08F golden exact 绑定 Candidate hash 与 source MarketEvent ID/hash，但跨 Package handoff和 complete closed revision-set validation 属于 G08H/Profile composition。G08F 只验证 supplied Candidate 自身的 revision identity，并拒绝 non-null supersession reference；
+4. `CnAShareCorporateActionAnnouncementStatus` enum values exact 为 `FINAL_IMPLEMENTATION`、`PLAN_ONLY`、`CANCELLED`。`CnAShareCorporateActionAnnouncementCandidate` exact 保存 caller-owned canonical non-empty NFC `corporate_action_id`、`InstrumentDefinition`、status、announcement event/source/revision identity、`event_time: UtcInstant`、`announcement_available_at: SimulationInstant`、Record/Ex terms、conditional Payment/Listing terms、可选 CNY cash-per-share、bonus-share Rate 与 capitalization-share Rate。Cash component 要求 Payment date；bonus/capitalization component 要求 Listing date；所有 final Action 要求 Ex date。Constructor 只做 typed/canonical validation；只有 `FINAL_IMPLEMENTATION`、component-required lifecycle terms、每个 supplied distribution component strictly positive、至少一个 component present、`supersedes_revision_id=None` 的 Candidate 可成为 authority；plan-only、cancelled 或 supplied revision chain 在 v1 structured fail closed；
+5. Model 可直接验证的 supported scope exact 为 XSHG/XSHE、`InstrumentType.EQUITY`、quote/settlement CNY、final cash/bonus/capitalization terms。InstrumentDefinition/Candidate 无法表达 ordinary-vs-preferred、cash-auction mechanism、B/H classification、Stock Connect、margin/short、lending/repo、pledge/freeze、restricted/pre-IPO shares、differential distribution、issuer self-distribution、rights issue、merger、capital reduction、reverse split 或 generic split classification；这些全部属于 G08H/Profile composition caller precondition。G08F 只验证 supplied cash/bonus/capitalization Candidate 本身，不得自行推断或声称任何 unobservable security/account/action context 已获资格；
+6. `CnAShareCorporateActionSourceRef` 使用 canonical NFC trimmed `source_key` 与 `sha256:<64 lowercase hex>`。XSHG Band exact 绑定 SSE 2026 Trading Rules、SSE Distribution Guide Document 5、SSE Announcement Format 36 和 ChinaClear Shanghai Issuer Guide；XSHE Band exact 绑定 SZSE 2026 Trading Rules、SZSE Announcement Format 7 和 ChinaClear Shenzhen Issuer Guide。source key/hash pairs 必须与 `docs/research/cn-a-share-corporate-actions-primary-sources.md` 一致；
+7. `CnAShareCorporateActionEntitlementRuleBook` 是 caller-injected finite canonical evidence，按 Venue 与 Record eligibility UTC instant 保存 half-open Band。Frozen coverage exact 为 `[2026-07-06T00:00:00+08:00, 2026-07-31T00:00:00+08:00)`；窗口外、gap 或 overlap fail closed，不使用 current/nearest rule 或 container order；
+8. Record/Eligibility Instant exact 为公告 Record TradingDate 的 XSHG/XSHE local 15:00 session-close boundary，使用 `TimelinePhase(rank=100, code=corporate_action_record)` 与 `SourceSequence(0)`。Model 必须通过 caller-injected G08A finite Calendar/Session Model 证明该日是同 Venue known Trading Day 且边界进入 `POST_CLOSE`。这是 engine ordering convention，不声称 ChinaClear 在 15:00 完成登记；
+9. `CnAShareRegisteredPositionSnapshot` 是唯一 entitlement quantity authority，exact 保存 caller-owned canonical snapshot ID、register series/revision identity、`supersedes_revision_id`、account、`PositionBalanceKey`、Record/Eligibility Instant、available `SimulationInstant`、non-negative Scale-0 registered Quantity、source key/hash 与 snapshot hash。Snapshot 可以在 eligibility 后才可用，但不能在 eligibility 前声称 register complete，也不能晚于 Query `captured_at`；G08F 拒绝 supplied non-null supersession reference，complete closed register-revision-set validation 属于 G08H/Profile composition。Portfolio/Ledger current Position、Availability、Order、Fill、Target 或 Bar 不能替代 Snapshot；
+10. `CnAShareCorporateActionEntitlementQuery` exact 保存 Instrument、account、optional Candidate、optional registered snapshot 和 `captured_at: SimulationInstant`。缺 Announcement 或 Snapshot 必须返回 structured failure；`position_key.account_id == snapshot.account_id == query.account_id`；Candidate、Snapshot 与 Query 的 Venue/Instrument/Record instant 必须 exact 一致。Announcement、Snapshot 与 capture 的 availability 比较使用完整 `SimulationInstant` total order；`captured_at` 不得早于 Announcement availability、eligibility 或 Snapshot availability；Announcement available after eligibility is `LATE_ANNOUNCEMENT`，不得 backdate；
+11. Entitlement exact 保存 component/band/Candidate/source Event/snapshot identities、account/position key、eligibility instant、captured-at、registered quantity、gross cash、bonus quantity 和 capitalization quantity。后续当前 Position、Ledger 或 Snapshot 不得重算同一 result；相同 canonical input/hash 返回相同 result。G08F 只验证单个 Query 内的 ID/hash consistency；`corporate_action_id` uniqueness scope 为 `(venue_id, instrument_id, corporate_action_id)`；`snapshot_id` scope 为 `(account_id, position_key, snapshot_id)`；register revision scope 为 `(account_id, position_key, register_series_id, revision_id)`。跨 Query conflicting reuse 或 omitted later revision 统一由 G08H/Profile-composition identity-history validation fail closed；
+12. Cash entitlement只支持 strictly positive supplied CNY Scale 2 component 与 exact arithmetic；share ratios 使用 strictly positive typed `Rate`，并只接受 exact integer Scale-0 delivered quantity sentinel；registered quantity 允许 zero 但禁止 negative。任何 negative term/quantity、sub-cent cash 或 fractional share result 均 structured fail closed，不得发明 floor、half-up、pro-rata、cash-in-lieu 或 ChinaClear population/random allocation；
+13. Zero registered quantity 产生 canonical zero-entitlement result，而不是缺失 evidence。Frozen XSHE control 必须证明 Account A Record quantity `700` 产生 gross CNY `70.00`、bonus `70`、capitalization `140`；Account B Record quantity `0` 在 Ex date 后买入 `500` 仍保持 zero entitlement；
+14. Frozen XSHG cash-only control 必须证明 Record quantity `1,000` 产生 gross CNY `200.00`，之后当前持仓变为 zero 也不改变 entitlement；
+15. G08F 只捕获 gross entitlement，不产生 `CORPORATE_ACTION_ENTITLEMENT_BOOKED`、Position adjustment、Cash payment、Tax/withholding、Journal Entry、Ledger/Lot/Settlement/Availability mutation。G08G 才能在其独立 READY/PASSED contract 下翻译 account lifecycle；
+16. Candidate、SourceRef、Band、RuleBook、Registered Snapshot、Query、Entitlement 和 Failure 均使用 explicit `schema_version=1`、canonical tuple order 与 content hash。`type` literal exact 为 SourceRef `cn_a_share_corporate_action_source_ref`、Band `cn_a_share_corporate_action_entitlement_band`、RuleBook `cn_a_share_corporate_action_entitlement_rule_book`、Candidate `cn_a_share_corporate_action_announcement_candidate`、Snapshot `cn_a_share_registered_position_snapshot`、Query `cn_a_share_corporate_action_entitlement_query`、Entitlement `cn_a_share_corporate_action_entitlement`、Failure `cn_a_share_corporate_action_failure`。Canonical preimage exact 分别为：SourceRef `{type,schema_version,source_key,source_hash}`；Band `{type,schema_version,venue_id,effective_start,effective_end,source_refs}`；RuleBook `{type,schema_version,bands}`；Candidate `{type,schema_version,corporate_action_id,instrument,status,event_id,event_hash,event_time,announcement_available_at,revision_id,supersedes_revision_id,record_date,ex_date,payment_date,listing_date,cash_per_share,bonus_rate,capitalization_rate,source_refs}`；Snapshot `{type,schema_version,snapshot_id,register_series_id,revision_id,supersedes_revision_id,account_id,position_key,eligibility_instant,available_at,registered_quantity,source_ref}`；Query `{type,schema_version,instrument,account_id,announcement,snapshot,captured_at}`；Entitlement `{type,schema_version,component_ref,band_hash,query_hash,candidate_hash,event_id,event_hash,snapshot_hash,account_id,position_key,eligibility_instant,captured_at,registered_quantity,gross_cash,bonus_quantity,capitalization_quantity}`；Failure `{type,schema_version,component_ref,query_hash,code,subject_ids}`。每个 Failure 的 ordered `subject_ids` exact 固定为 `(code.value, candidate.corporate_action_id or "missing-corporate-action", snapshot.snapshot_id or "missing-register-snapshot", query.account_id, str(query.instrument.instrument_id))`。`ProfilePortOutcome.input_hash` exact 为 Query hash；Failure 和 Result 都绑定同一 component ref 与完整 Query identities；
+17. `CnAShareCorporateActionFailureCode` enum 与 first-failure precedence exact 为：`MISSING_ANNOUNCEMENT` → `UNSUPPORTED_VENUE` → `UNSUPPORTED_INSTRUMENT` → `UNSUPPORTED_CURRENCY` → `UNSUPPORTED_ANNOUNCEMENT_STATUS` → `UNSUPPORTED_ANNOUNCEMENT_REVISION` → `INVALID_ANNOUNCEMENT_CAUSALITY` → `MISSING_DISTRIBUTION_COMPONENT` → `MISSING_LIFECYCLE_TERM` → `NON_POSITIVE_DISTRIBUTION_TERM` → `ANNOUNCEMENT_NOT_AVAILABLE` → `LATE_ANNOUNCEMENT` → `MISSING_RULE_INTERVAL` → `OVERLAPPING_RULE_INTERVALS` → `INVALID_RECORD_SESSION` → `MISSING_REGISTERED_POSITION` → `UNSUPPORTED_REGISTER_REVISION` → `ACCOUNT_MISMATCH` → `INSTRUMENT_MISMATCH` → `RECORD_INSTANT_MISMATCH` → `INVALID_REGISTER_CAUSALITY` → `REGISTER_NOT_AVAILABLE` → `NEGATIVE_REGISTERED_QUANTITY` → `UNSUPPORTED_CASH_PRECISION` → `UNSUPPORTED_FRACTIONAL_SHARE`。多缺陷只返回第一项；Constructor type/canonical errors 不冒充 business failure；
+18. Component key 固定 `equity.cn_a_share.corporate-action-entitlement.v1`、version 1、algorithm key 固定 `cn-a-share-record-register-entitlement-v1`。Component digest exact 绑定 RuleBook hash、G08A Session component digest、record phase convention、supported numeric policies 与 development-only grade；
+19. Concrete purity沿用 G08D/G08E scanner，只允许必要 stdlib、`crypto_quant_domain`、generic `crypto_quant_trading.ports` 与 sibling G08A calendar contract；拒绝 filesystem、network/provider/process/database/cloud、dynamic import、MarketBundle/Runtime import 和 wall clock。Official URL、本地下载和 retrieval time 只属于 research provenance；
+20. Static golden 至少冻结 exact official source refs、finite Bands、component/rulebook/band hashes、enum values/failure precedence、canonical preimages、Announcement Candidate/Event identity、available boundary、Record phase、registered snapshot revision identity、XSHE 700/0 与 XSHG 1000 controls、gap/overlap、missing/revised/cancelled/late/mismatched/negative/fractional/sub-cent failures、later-position non-substitution、Timeline page/batch parity 和 no-mutation evidence；
+21. G08F 始终 development-grade、`deployment_authorized=false`，不拥有 Strategy-facing ObservationView、G11 point-in-time adjusted series、MarketBundle Builder/source adapter、Runtime scheduling、Corporate Action payment/adjustment/tax、real account register provider parity、真实交易或部署授权。
+
+Official source facts、canonical source identities、fixture dates、system conventions 和 G08G blockers 冻结在 `docs/research/cn-a-share-corporate-actions-primary-sources.md`。若官方来源证明 Record eligibility、supported action classification 或 source identity 错误，必须先把 G08F 退回 DRAFT 并以独立 docs commit 修订；READY 前不得实现，PASSED 时 implementation commit 与 acceptance-record commit 继续分离。
+
+## 68. G08G Corporate Action Adjustment and Payment Readiness Blockers
+
+G08G 保持 `DRAFT`。在以下 blockers 全部冻结前不得实现：
+
+1. Immutable Accounting Journal 与 Generic Ledger 必须拥有 typed Position Lot create/replace/close effects；当前 Generic Ledger 明确拒绝 Position lots，Runtime mutable `lot_books` 不是权威 replay source；
+2. `PositionLot` 必须增加可精确守恒的 authoritative total Cost Basis；仅有 fixed-scale `unit_cost` 无法对 3-for-2 等 repeating ratio 保证总 Cost Basis exact 不变；
+3. Cash Fill accounting 与 Corporate Action adjustment 必须共用同一 replayable Lot-effect contract，并证明 full replay、prefix/resume、duplicate idempotency 与 conflict rejection；Account-level entitlement 即使为整数也可能在多个 Lot 间产生 fractional allocation，因此 READY 前必须冻结 authoritative per-Lot allocation evidence，或将 v1 收窄为 exactly-one eligible Lot 并对多 Lot fail closed；
+4. 新增股份的 sellability/settlement 与支付现金的 tradable/withdrawable/margin availability 必须显式冻结，不能因 Ledger balance 变化而隐式全部可用；
+5. Fractional share 必须有 authoritative delivered-quantity evidence；Shanghai sub-cent cash、延迟/暂停支付和 self-distribution 需要独立 facts；
+6. G08E 明确不拥有 Corporate Action tax。G08G 仍拥有 Corporate Action tax disposition/translation，但 READY 前必须冻结 typed disposition（至少区分 `NOT_APPLICABLE`、`APPLIED`、`DEFERRED_UNSUPPORTED`）及 owner：G08G 产生 account-tax disposition，G08H/Runtime composition 对 `DEFERRED_UNSUPPORTED` 后续 taxable transfer fail closed。若不冻结该 guard，G08G v1 必须收窄为有明确 `NOT_APPLICABLE` 证据的 gross payment，并排除普通个人 deferred-tax case；
+7. Ex/Effective/Payment/Listing trigger identity 与 revised/suspended lifecycle evidence必须独立于 Entitlement。Entitlement 不得自动推导支付或调整；
+8. Raw tradable prices 保持不变。Ex reference price 只能进入 Market Rule/reference metadata，不能 retroactively rewrite OHLC、Fill 或 accounting price；
+9. 完整成功 Fixture、精确验收命令、public interface、failure precedence、canonical identity chain 和 artifact list 仍未冻结。
+
+## 69. PASSED 记录格式
 
 ```yaml
 id: WP-00A
