@@ -6109,7 +6109,7 @@ Python                                                             3.13.5
 
 ```yaml
 id: G08E
-status: READY
+status: PASSED
 depends_on:
   - WP-05H
   - WP-05J
@@ -6181,6 +6181,11 @@ evidence:
   - account-schedule-ownership-and-development-limitation
   - import-boundary-report
   - static-type-report
+passed_commit: aa7f38d62524ddd1941d4c7c948eb22317b9bda7
+artifact_hashes:
+  tests/fixtures/kernel/profiles/cn_a_share/commission-tax-v1.json: sha256:3ef26743bc9cebfe546f77812c6773cbdf3353e0337d03ed512d5f1c396f702b
+  build/acceptance/g08e-pytest.xml: sha256:2dd347fafbf97cc6d328a633e4da997e43e6539ba6f3bb012431b685fe064413
+  build/acceptance/g08e-import-boundary-report.json: sha256:4935811e0ec0564410ccca6d0b5d289cc03ebaed26279d958a3e963f3ac06cdc
 ```
 
 ### G08E Acceptance
@@ -6211,6 +6216,32 @@ evidence:
 24. G08E 不拥有真实 broker schedule/provider statement parity、Block Trade discount、B 股/基金/债券/Stock Connect、VAT、返佣、Margin/Short financing、Corporate Action tax、cost-basis fee allocation、Runtime orchestration、Profile composition、网络 source adapter、真实交易或 deployment authorization。G08H 只能组合本 Gate 冻结能力，不能补写历史费率或账户合同。
 
 Official primary references、fact/account ownership 和 system-convention classification 冻结在 `docs/research/cn-a-share-commission-tax-primary-sources.md`。若官方来源证明任一费率、方向或生效边界错误，必须先把 G08E 退回 DRAFT 并以独立 docs commit 修订；READY 前不得实现，PASSED 时 implementation commit 与 acceptance-record commit 继续分离。
+
+### G08E Implementation Acceptance
+
+1. Concrete finite Market Fee/Stamp Duty RuleBooks 按 XSHG/XSHE 与窄历史 UTC interval fail closed 解析，冻结 2023-08-28 handling/stamp-duty transition、双边 regulatory/transfer fee、SELL-only tax 和 BLOCK/gap/overlap precedence；
+2. Query、Failure 与两类 Resolution 保存并重新验证完整 canonical Query；active Band、生成 rules、RuleBook/component/resolution identities 和 canonical order 均防止 same-venue Instrument、mechanism、source、reorder 或 forged-hash 替换；
+3. `CnAShareFeeReservationBuffer` 绑定同 Query Market/Tax resolution、`maximum_fill_count` 与公式。N=2 时冻结 market CNY 0.03、SELL tax CNY 0.01 buffer；`require_covers_fills()` 对第三个 Fill fail closed；
+4. Frozen reservation controls exact 为 Old SELL CNY 15.83、New SELL CNY 10.68、New BUY CNY 5.67、two-Fill CNY 6.17；final controls exact 为 Old SELL CNY 15.79、New BUY CNY 5.64、partial/two-Fill CNY 6.12；adversarial 200+400 split 证明 unbuffered CNY 8.38 < final CNY 8.39，而 buffered CNY 8.42 覆盖；
+5. Partial-cancel state exact 冻结 accepted CNY 10.68、partial CNY 9.00、terminal empty 和相对 final CNY 6.12 的释放 CNY 4.56；no-fill cancel final zero，minimum commission 仅在有 Fill 的 terminal Order 应用一次；
+6. Per-Fill market/tax、per-Order synthetic account commission、minimum adjustment、FeeAssessment identity、Journal source IDs 与 duplicate Journal append idempotency 均复用 generic Kernel，无 `cn_a_share` branch、runtime source read 或 deployment authorization；
+7. Public export、profile purity allowlist、63-file Import Boundary、static golden、full mypy/LSP/pi-lens 和只读 targeted blocker recheck 均通过。
+
+G08E implementation 已冻结在 immutable commit `aa7f38d62524ddd1941d4c7c948eb22317b9bda7`，状态为 `PASSED`。
+
+验证记录：
+
+```text
+G08E contract + static golden                                    16 passed
+Frozen public/boundary regression command                       120 passed
+Full test suite                                                  817 passed
+Trading-kernel import boundary                                   PASS (63 files)
+mypy                                                              no issues (63 source files)
+Primary LSP + pi-lens                                             clean
+Read-only blocker recheck                                          NONE
+uv lock --check                                                    PASS
+Python                                                             3.13.5
+```
 
 ## 67. PASSED 记录格式
 
