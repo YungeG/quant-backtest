@@ -30,8 +30,8 @@ from crypto_quant_trading import (
     ApprovedPortfolioTarget,
     InstrumentModel,
     InstrumentSizingInput,
+    MarketRuleDataIntegrityCode,
     MarketRuleEvaluator,
-    MarketRuleIssueCode,
     NetInstrumentTarget,
     PortfolioRiskAction,
     PortfolioRiskDecision,
@@ -753,7 +753,7 @@ def test_unchanged_or_reached_position_relative_target_is_not_stale() -> None:
     ("quantity_units", "approved"),
     ((100, True), (99, False), (199, False), (1, False), (55, False)),
 )
-def test_market_rule_evaluator_does_not_claim_odd_sell_admission(
+def test_market_rule_evaluator_requires_g08d_position_evidence_for_odd_sell(
     quantity_units: int,
     approved: bool,
 ) -> None:
@@ -794,11 +794,10 @@ def test_market_rule_evaluator_does_not_claim_odd_sell_admission(
     if approved:
         assert decision.rejection is None
     else:
-        assert decision.rejection is not None
-        assert len(decision.rejection.issues) == 1
+        assert decision.data_integrity_failure is not None
         assert (
-            decision.rejection.issues[0].code
-            is MarketRuleIssueCode.QUANTITY_STEP
+            decision.data_integrity_failure.code
+            is MarketRuleDataIntegrityCode.MISSING_POSITION_EVIDENCE
         )
 
 

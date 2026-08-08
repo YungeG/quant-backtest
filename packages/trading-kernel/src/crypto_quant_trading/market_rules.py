@@ -8,11 +8,15 @@ from enum import Enum
 from typing import Any, Self
 
 from crypto_quant_domain import (
+    ExecutionStyle,
     InstrumentId,
     Money,
     OrderSide,
+    OrderStatus,
+    PortfolioSnapshot,
     PositionEffect,
     Price,
+    Quantity,
     RoundingPolicy,
     Scale,
     SessionId,
@@ -21,7 +25,10 @@ from crypto_quant_domain import (
     canonical_sha256,
 )
 
+from .orders import OrderEventStream
 from .ports import ProfileComponentRef, ProfilePortType
+from .reservations import ResourceReservationState
+from .settlement import AvailabilityState
 from .sizing import QuantityLattice
 from .translation import ExecutableOrderSpec
 
@@ -58,6 +65,7 @@ def _tagged_id(prefix: str, payload: Any) -> str:
 class MarketSessionState(str, Enum):
     OPEN = "open"
     CLOSED = "closed"
+    SUSPENDED = "suspended"
 
 
 class NotionalPriceBasis(str, Enum):
@@ -173,10 +181,17 @@ def _snapshot_config_payload(
     reduce_only_required: bool,
     notional_rounding: RoundingPolicy,
     supplemental_decisions: tuple[SupplementalOrderRuleDecision, ...],
+    max_limit_order_quantity_units: int | None,
+    max_market_order_quantity_units: int | None,
 ) -> dict[str, Any]:
-    return {
+    payload: dict[str, Any] = {
         "type": "order_rule_snapshot_config",
-        "schema_version": 1,
+        "schema_version": (
+            2
+            if max_limit_order_quantity_units is not None
+            or max_market_order_quantity_units is not None
+            else 1
+        ),
         "component_ref": component_ref,
         "instrument_id": instrument_id,
         "session_id": session_id,
@@ -194,6 +209,11 @@ def _snapshot_config_payload(
         "notional_rounding": notional_rounding.value,
         "supplemental_decisions": supplemental_decisions,
     }
+    if max_limit_order_quantity_units is not None:
+        payload["max_limit_order_quantity_units"] = max_limit_order_quantity_units
+    if max_market_order_quantity_units is not None:
+        payload["max_market_order_quantity_units"] = max_market_order_quantity_units
+    return payload
 
 
 @dataclass(frozen=True, slots=True)
@@ -213,6 +233,8 @@ class OrderRuleSnapshot:
     notional_rounding: RoundingPolicy
     supplemental_decisions: tuple[SupplementalOrderRuleDecision, ...]
     config_hash: str
+    max_limit_order_quantity_units: int | None = None
+    max_market_order_quantity_units: int | None = None
 
     def __post_init__(self) -> None:
         if not isinstance(self.component_ref, ProfileComponentRef):
@@ -247,6 +269,14 @@ class OrderRuleSnapshot:
             raise TypeError("reduce_only_required must be bool")
         if not isinstance(self.notional_rounding, RoundingPolicy):
             raise TypeError("notional_rounding must be RoundingPolicy")
+        for name, value in (
+            ("max_limit_order_quantity_units", self.max_limit_order_quantity_units),
+            ("max_market_order_quantity_units", self.max_market_order_quantity_units),
+        ):
+            if value is not None:
+                _positive_integer(name, value)
+                if value % self.quantity_lattice.step_units:
+                    raise ValueError(f"{name} must be a multiple of lattice step")
         object.__setattr__(self, "permitted_sides", sides)
         object.__setattr__(self, "permitted_position_effects", effects)
         object.__setattr__(self, "supplemental_decisions", decisions)
@@ -286,6 +316,8 @@ class OrderRuleSnapshot:
         reduce_only_required: bool,
         notional_rounding: RoundingPolicy,
         supplemental_decisions: tuple[SupplementalOrderRuleDecision, ...],
+        max_limit_order_quantity_units: int | None = None,
+        max_market_order_quantity_units: int | None = None,
     ) -> Self:
         sides = _ordered_sides(permitted_sides)
         effects = _ordered_position_effects(permitted_position_effects)
@@ -305,6 +337,8 @@ class OrderRuleSnapshot:
             reduce_only_required=reduce_only_required,
             notional_rounding=notional_rounding,
             supplemental_decisions=decisions,
+            max_limit_order_quantity_units=max_limit_order_quantity_units,
+            max_market_order_quantity_units=max_market_order_quantity_units,
         )
         return cls(
             component_ref=component_ref,
@@ -322,6 +356,8 @@ class OrderRuleSnapshot:
             notional_rounding=notional_rounding,
             supplemental_decisions=decisions,
             config_hash=canonical_sha256(payload),
+            max_limit_order_quantity_units=max_limit_order_quantity_units,
+            max_market_order_quantity_units=max_market_order_quantity_units,
         )
 
     def config_payload(self) -> dict[str, Any]:
@@ -340,6 +376,8 @@ class OrderRuleSnapshot:
             reduce_only_required=self.reduce_only_required,
             notional_rounding=self.notional_rounding,
             supplemental_decisions=self.supplemental_decisions,
+            max_limit_order_quantity_units=self.max_limit_order_quantity_units,
+            max_market_order_quantity_units=self.max_market_order_quantity_units,
         )
 
     @property
@@ -522,10 +560,70 @@ class OrderRuleTimeline:
 
 
 @dataclass(frozen=True, slots=True)
+class OrderRulePositionEvidence:
+    account_id: str
+    evaluated_at: UtcInstant
+    instrument_id: InstrumentId
+    portfolio_snapshot: PortfolioSnapshot
+    working_orders: tuple[OrderEventStream, ...]
+    working_order_set_hash: str
+    reservations: ResourceReservationState
+    availability: AvailabilityState
+    total_quantity: Quantity
+    sellable_quantity: Quantity
+    quantity_lattice_hash: str
+
+    def __post_init__(self) -> None:
+        _canonical_text("account_id", self.account_id)
+        if not isinstance(self.evaluated_at, UtcInstant):
+            raise TypeError("evaluated_at must be UtcInstant")
+        if not isinstance(self.instrument_id, InstrumentId):
+            raise TypeError("instrument_id must be InstrumentId")
+        if not isinstance(self.portfolio_snapshot, PortfolioSnapshot):
+            raise TypeError("portfolio_snapshot must be PortfolioSnapshot")
+        if not isinstance(self.working_orders, tuple) or not all(
+            isinstance(value, OrderEventStream) for value in self.working_orders
+        ):
+            raise TypeError("working_orders must contain OrderEventStream")
+        if not isinstance(self.reservations, ResourceReservationState):
+            raise TypeError("reservations must be ResourceReservationState")
+        if not isinstance(self.availability, AvailabilityState):
+            raise TypeError("availability must be AvailabilityState")
+        if not isinstance(self.total_quantity, Quantity) or not isinstance(
+            self.sellable_quantity, Quantity
+        ):
+            raise TypeError("position evidence quantities must be Quantity")
+        _require_hash("working_order_set_hash", self.working_order_set_hash)
+        _require_hash("quantity_lattice_hash", self.quantity_lattice_hash)
+
+    @property
+    def evidence_hash(self) -> str:
+        return canonical_sha256(self)
+
+    def to_canonical_dict(self) -> dict[str, Any]:
+        return {
+            "type": "order_rule_position_evidence",
+            "schema_version": 1,
+            "account_id": self.account_id,
+            "evaluated_at": self.evaluated_at,
+            "instrument_id": self.instrument_id,
+            "portfolio_snapshot": self.portfolio_snapshot,
+            "working_orders": self.working_orders,
+            "working_order_set_hash": self.working_order_set_hash,
+            "reservations": self.reservations,
+            "availability": self.availability,
+            "total_quantity": self.total_quantity,
+            "sellable_quantity": self.sellable_quantity,
+            "quantity_lattice_hash": self.quantity_lattice_hash,
+        }
+
+
+@dataclass(frozen=True, slots=True)
 class OrderRuleEvaluationInput:
     executable_order_spec: ExecutableOrderSpec
     evaluated_at: UtcInstant
     notional_evidence: OrderRuleNotionalEvidence
+    position_evidence: OrderRulePositionEvidence | None = None
 
     def __post_init__(self) -> None:
         if not isinstance(self.executable_order_spec, ExecutableOrderSpec):
@@ -534,24 +632,33 @@ class OrderRuleEvaluationInput:
             raise TypeError("evaluated_at must be UtcInstant")
         if not isinstance(self.notional_evidence, OrderRuleNotionalEvidence):
             raise TypeError("notional_evidence must be OrderRuleNotionalEvidence")
+        if self.position_evidence is not None and not isinstance(
+            self.position_evidence, OrderRulePositionEvidence
+        ):
+            raise TypeError("position_evidence must be OrderRulePositionEvidence or None")
 
     @property
     def input_hash(self) -> str:
         return canonical_sha256(self)
 
     def to_canonical_dict(self) -> dict[str, Any]:
-        return {
+        payload: dict[str, Any] = {
             "type": "order_rule_evaluation_input",
-            "schema_version": 1,
+            "schema_version": 2 if self.position_evidence is not None else 1,
             "executable_order_spec": self.executable_order_spec,
             "evaluated_at": self.evaluated_at,
             "notional_evidence": self.notional_evidence,
         }
+        if self.position_evidence is not None:
+            payload["position_evidence"] = self.position_evidence
+        return payload
 
 
 class MarketRuleIssueCode(str, Enum):
+    MAXIMUM_QUANTITY = "maximum_quantity"
     MINIMUM_NOTIONAL = "minimum_notional"
     MINIMUM_QUANTITY = "minimum_quantity"
+    INSTRUMENT_SUSPENDED = "instrument_suspended"
     POSITION_EFFECT_NOT_PERMITTED = "position_effect_not_permitted"
     PRICE_CURRENCY = "price_currency"
     PRICE_LIMIT = "price_limit"
@@ -559,6 +666,8 @@ class MarketRuleIssueCode(str, Enum):
     PRICE_TICK = "price_tick"
     QUANTITY_SCALE = "quantity_scale"
     QUANTITY_STEP = "quantity_step"
+    SELLABLE_QUANTITY = "sellable_quantity"
+    SELL_RESIDUAL_NOT_PERMITTED = "sell_residual_not_permitted"
     REDUCE_ONLY_REQUIRED = "reduce_only_required"
     SESSION_CLOSED = "session_closed"
     SIDE_NOT_PERMITTED = "side_not_permitted"
@@ -597,6 +706,8 @@ class MarketRuleDataIntegrityCode(str, Enum):
     EVALUATION_BEFORE_TRANSLATION = "evaluation_before_translation"
     INSTRUMENT_CONTEXT_MISMATCH = "instrument_context_mismatch"
     INVALID_NOTIONAL_EVIDENCE = "invalid_notional_evidence"
+    INVALID_POSITION_EVIDENCE = "invalid_position_evidence"
+    MISSING_POSITION_EVIDENCE = "missing_position_evidence"
     MISSING_RULE_INTERVAL = "missing_rule_interval"
     OVERLAPPING_RULE_INTERVALS = "overlapping_rule_intervals"
 
@@ -995,6 +1106,201 @@ def _price_issues(
     return tuple(issues)
 
 
+def _working_order_set_hash(streams: tuple[OrderEventStream, ...]) -> str:
+    return canonical_sha256(
+        tuple(
+            {
+                "order_id": stream.order.order_id,
+                "stream_hash": stream.stream_hash,
+                "state_hash": stream.state_hash,
+                "remaining_quantity": (
+                    stream.state.remaining_quantity if stream.state else None
+                ),
+            }
+            for stream in streams
+        )
+    )
+
+
+def _valid_position_evidence(
+    evaluation_input: OrderRuleEvaluationInput,
+    snapshot: OrderRuleSnapshot,
+) -> bool:
+    evidence = evaluation_input.position_evidence
+    if evidence is None:
+        return False
+    if (
+        evidence.account_id
+        != evaluation_input.executable_order_spec.source_order.account_id
+        or evidence.evaluated_at != evaluation_input.evaluated_at
+        or evidence.instrument_id != snapshot.instrument_id
+        or evidence.quantity_lattice_hash != snapshot.quantity_lattice.lattice_hash
+        or evidence.portfolio_snapshot.account_id != evidence.account_id
+        or evidence.portfolio_snapshot.timestamp != evidence.evaluated_at
+        or evidence.reservations.account_id != evidence.account_id
+        or evidence.availability.account_id != evidence.account_id
+        or evidence.availability.ledger_state_hash
+        != evidence.portfolio_snapshot.journal_state_hash
+        or evidence.availability.reservation_state_hash
+        != evidence.reservations.state_hash
+        or evidence.total_quantity.instrument_id != str(evidence.instrument_id)
+        or evidence.sellable_quantity.instrument_id != str(evidence.instrument_id)
+        or evidence.total_quantity.scale != snapshot.quantity_lattice.atomic_scale
+        or evidence.sellable_quantity.scale != snapshot.quantity_lattice.atomic_scale
+        or not 0 <= evidence.sellable_quantity.units <= evidence.total_quantity.units
+    ):
+        return False
+    working_order_ids = tuple(
+        value.order.order_id for value in evidence.working_orders
+    )
+    if (
+        len(set(working_order_ids)) != len(working_order_ids)
+        or evidence.working_orders
+        != tuple(
+            sorted(
+                evidence.working_orders,
+                key=lambda value: value.order.order_id.value,
+            )
+        )
+        or evidence.working_order_set_hash
+        != _working_order_set_hash(evidence.working_orders)
+    ):
+        return False
+    portfolio_positions = tuple(
+        value
+        for value in evidence.portfolio_snapshot.positions
+        if value.key.account_id == evidence.account_id
+        and value.key.instrument_id == evidence.instrument_id
+    )
+    availability_positions = tuple(
+        value
+        for value in evidence.availability.positions
+        if value.key.account_id == evidence.account_id
+        and value.key.instrument_id == evidence.instrument_id
+    )
+    if (
+        len(portfolio_positions) != 1
+        or portfolio_positions[0].quantity != evidence.total_quantity
+        or len(availability_positions) != 1
+        or availability_positions[0].total != evidence.total_quantity
+        or availability_positions[0].sellable != evidence.sellable_quantity
+    ):
+        return False
+    streams_by_id = {stream.order.order_id: stream for stream in evidence.working_orders}
+    active_by_id = {
+        value.order_id: value for value in evidence.reservations.active_reservations
+    }
+    if set(streams_by_id) != set(active_by_id):
+        return False
+    cursors_by_id = {
+        value.order_id: value for value in evidence.reservations.cursors
+    }
+    for stream in evidence.working_orders:
+        state = stream.state
+        active = active_by_id.get(stream.order.order_id)
+        cursor = cursors_by_id.get(stream.order.order_id)
+        if (
+            stream.order.account_id != evidence.account_id
+            or state is None
+            or state.status not in {OrderStatus.ACTIVE, OrderStatus.PARTIALLY_FILLED}
+            or any(
+                record.event.occurred_at.instant > evidence.evaluated_at
+                for record in stream.records
+            )
+            or (
+                stream.order.intent.instrument_id == evidence.instrument_id
+                and (
+                    stream.order.intent.quantity.scale
+                    != snapshot.quantity_lattice.atomic_scale
+                    or state.remaining_quantity.scale
+                    != snapshot.quantity_lattice.atomic_scale
+                    or state.remaining_quantity.instrument_id
+                    != str(evidence.instrument_id)
+                )
+            )
+            or active is None
+            or active.remaining_quantity != state.remaining_quantity
+            or cursor is None
+            or cursor.stream_hash != stream.stream_hash
+            or cursor.event_count != stream.event_count
+        ):
+            return False
+    return True
+
+
+def _position_exception_requested(
+    evaluation_input: OrderRuleEvaluationInput,
+    lattice: QuantityLattice,
+) -> bool:
+    intent = evaluation_input.executable_order_spec.intent
+    quantity = intent.quantity
+    if intent.side is not OrderSide.SELL or quantity.scale != lattice.atomic_scale:
+        return False
+    lot_units = lattice.sell_lot_units or lattice.step_units
+    return (
+        lattice.whole_sell_residual_permitted and quantity.units % lot_units != 0
+    ) or (
+        lattice.odd_lot_close_permitted
+        and lattice.min_quantity_units > 0
+        and quantity.units < lattice.min_quantity_units
+    )
+
+
+def _position_exception_issue(
+    evaluation_input: OrderRuleEvaluationInput,
+    snapshot: OrderRuleSnapshot,
+) -> MarketRuleIssue | None:
+    evidence = evaluation_input.position_evidence
+    if evidence is None:  # pragma: no cover - guarded by evaluator
+        raise AssertionError("position evidence is required")
+    intent = evaluation_input.executable_order_spec.intent
+    quantity = intent.quantity
+    lattice = snapshot.quantity_lattice
+    if quantity.units > evidence.sellable_quantity.units:
+        return MarketRuleIssue(
+            MarketRuleIssueCode.SELLABLE_QUANTITY,
+            "quantity",
+            f"<={evidence.sellable_quantity.units}",
+            str(quantity.units),
+        )
+    if intent.position_effect is not PositionEffect.CLOSE or not intent.reduce_only:
+        return MarketRuleIssue(
+            MarketRuleIssueCode.SELL_RESIDUAL_NOT_PERMITTED,
+            "quantity",
+            "close-and-reduce-only",
+            str(quantity.units),
+        )
+    lot_units = lattice.sell_lot_units or lattice.step_units
+    active_odd_sell = any(
+        stream.order.intent.instrument_id == intent.instrument_id
+        and stream.order.intent.side is OrderSide.SELL
+        and stream.state is not None
+        and stream.state.remaining_quantity.units % lot_units != 0
+        for stream in evidence.working_orders
+    )
+    permitted = False
+    if lattice.whole_sell_residual_permitted:
+        residual = evidence.total_quantity.units % lot_units
+        permitted = (
+            residual > 0
+            and quantity.units % lot_units == residual
+            and not active_odd_sell
+        )
+    elif lattice.odd_lot_close_permitted:
+        permitted = (
+            evidence.total_quantity.units < lattice.min_quantity_units
+            and quantity == evidence.total_quantity == evidence.sellable_quantity
+        )
+    if permitted:
+        return None
+    return MarketRuleIssue(
+        MarketRuleIssueCode.SELL_RESIDUAL_NOT_PERMITTED,
+        "quantity",
+        "complete-unreserved-residual",
+        str(quantity.units),
+    )
+
+
 class MarketRuleEvaluator:
     def evaluate(
         self,
@@ -1041,6 +1347,28 @@ class MarketRuleEvaluator:
                 rule_timeline,
                 MarketRuleDataIntegrityCode.INVALID_NOTIONAL_EVIDENCE,
             )
+        position_exception = _position_exception_requested(
+            evaluation_input, snapshot.quantity_lattice
+        )
+        if position_exception and evaluation_input.position_evidence is None:
+            return _data_failure(
+                evaluation_input,
+                rule_timeline,
+                MarketRuleDataIntegrityCode.MISSING_POSITION_EVIDENCE,
+            )
+        if position_exception and not _valid_position_evidence(
+            evaluation_input, snapshot
+        ):
+            return _data_failure(
+                evaluation_input,
+                rule_timeline,
+                MarketRuleDataIntegrityCode.INVALID_POSITION_EVIDENCE,
+            )
+        position_issue = (
+            _position_exception_issue(evaluation_input, snapshot)
+            if position_exception
+            else None
+        )
 
         quantity = intent.quantity
         calculated_notional = evaluation_input.notional_evidence.price.notional(
@@ -1065,24 +1393,47 @@ class MarketRuleEvaluator:
                 if intent.side is OrderSide.BUY
                 else lattice.sell_lot_units
             ) or lattice.step_units
-            if quantity.units % lot_units:
-                issues.append(
-                    MarketRuleIssue(
-                        MarketRuleIssueCode.QUANTITY_STEP,
-                        "quantity",
-                        str(lot_units),
-                        str(quantity.units),
+            if position_exception:
+                if position_issue is not None:
+                    issues.append(position_issue)
+            else:
+                if quantity.units % lot_units:
+                    issues.append(
+                        MarketRuleIssue(
+                            MarketRuleIssueCode.QUANTITY_STEP,
+                            "quantity",
+                            str(lot_units),
+                            str(quantity.units),
+                        )
                     )
-                )
-            if quantity.units < lattice.min_quantity_units:
-                issues.append(
-                    MarketRuleIssue(
-                        MarketRuleIssueCode.MINIMUM_QUANTITY,
-                        "quantity",
-                        f">={lattice.min_quantity_units}",
-                        str(quantity.units),
+                if quantity.units < lattice.min_quantity_units:
+                    issues.append(
+                        MarketRuleIssue(
+                            MarketRuleIssueCode.MINIMUM_QUANTITY,
+                            "quantity",
+                            f">={lattice.min_quantity_units}",
+                            str(quantity.units),
+                        )
                     )
+        quantity_cap = (
+            snapshot.max_limit_order_quantity_units
+            if intent.execution_style
+            in {ExecutionStyle.LIMIT, ExecutionStyle.STOP_LIMIT}
+            else snapshot.max_market_order_quantity_units
+        )
+        if (
+            quantity.scale == lattice.atomic_scale
+            and quantity_cap is not None
+            and quantity.units > quantity_cap
+        ):
+            issues.append(
+                MarketRuleIssue(
+                    MarketRuleIssueCode.MAXIMUM_QUANTITY,
+                    "quantity",
+                    f"<={quantity_cap}",
+                    str(quantity.units),
                 )
+            )
         if calculated_notional.units < lattice.min_notional.units:
             issues.append(
                 MarketRuleIssue(
@@ -1104,6 +1455,15 @@ class MarketRuleEvaluator:
             issues.append(
                 MarketRuleIssue(
                     MarketRuleIssueCode.SESSION_CLOSED,
+                    "session",
+                    MarketSessionState.OPEN.value,
+                    snapshot.session_state.value,
+                )
+            )
+        elif snapshot.session_state is MarketSessionState.SUSPENDED:
+            issues.append(
+                MarketRuleIssue(
+                    MarketRuleIssueCode.INSTRUMENT_SUSPENDED,
                     "session",
                     MarketSessionState.OPEN.value,
                     snapshot.session_state.value,

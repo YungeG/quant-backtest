@@ -1218,11 +1218,12 @@ _ALLOWED_IMPORTS = {
     "zoneinfo",
     "crypto_quant_domain",
     "crypto_quant_trading.ledger",
+    "crypto_quant_trading.market_rules",
     "crypto_quant_trading.ports",
     "crypto_quant_trading.settlement",
     "crypto_quant_trading.sizing",
 }
-_ALLOWED_RELATIVE_IMPORTS = {"calendar", "quantity_lattice", "settlement"}
+_ALLOWED_RELATIVE_IMPORTS = {"calendar", "order_rules", "quantity_lattice", "settlement"}
 _ALLOWED_IMPORTS_BY_FILE = {
     "__init__.py": set(),
     "calendar.py": {
@@ -1234,6 +1235,17 @@ _ALLOWED_IMPORTS_BY_FILE = {
         "zoneinfo",
         "crypto_quant_domain",
         "crypto_quant_trading.ports",
+    },
+    "order_rules.py": {
+        "__future__",
+        "dataclasses",
+        "datetime",
+        "enum",
+        "typing",
+        "crypto_quant_domain",
+        "crypto_quant_trading.market_rules",
+        "crypto_quant_trading.ports",
+        "crypto_quant_trading.sizing",
     },
     "quantity_lattice.py": {
         "__future__",
@@ -1259,8 +1271,9 @@ _ALLOWED_IMPORTS_BY_FILE = {
     },
 }
 _ALLOWED_RELATIVE_IMPORTS_BY_FILE = {
-    "__init__.py": {"calendar", "quantity_lattice", "settlement"},
+    "__init__.py": {"calendar", "order_rules", "quantity_lattice", "settlement"},
     "calendar.py": set(),
+    "order_rules.py": {"calendar", "quantity_lattice"},
     "quantity_lattice.py": set(),
     "settlement.py": {"calendar"},
 }

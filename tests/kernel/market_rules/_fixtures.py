@@ -24,6 +24,7 @@ from crypto_quant_trading import (
     OrderRuleEvaluationInput,
     OrderRuleInterval,
     OrderRuleNotionalEvidence,
+    OrderRulePositionEvidence,
     OrderRuleSnapshot,
     OrderRuleTimeline,
     OrderTranslator,
@@ -121,6 +122,8 @@ def snapshot(
     ),
     reduce_only_required: bool = False,
     supplemental: tuple[SupplementalOrderRuleDecision, ...] | None = None,
+    max_limit_order_quantity_units: int | None = None,
+    max_market_order_quantity_units: int | None = None,
 ) -> OrderRuleSnapshot:
     return OrderRuleSnapshot.create(
         component_ref=component_ref(),
@@ -147,6 +150,8 @@ def snapshot(
         supplemental_decisions=(
             supplemental_decisions() if supplemental is None else supplemental
         ),
+        max_limit_order_quantity_units=max_limit_order_quantity_units,
+        max_market_order_quantity_units=max_market_order_quantity_units,
     )
 
 
@@ -209,6 +214,7 @@ def evaluation_input(
     spec: ExecutableOrderSpec | None = None,
     evaluated_at: int = 150,
     notional_evidence: OrderRuleNotionalEvidence | None = None,
+    position_evidence: OrderRulePositionEvidence | None = None,
 ) -> OrderRuleEvaluationInput:
     return OrderRuleEvaluationInput(
         executable_order_spec=translated_spec() if spec is None else spec,
@@ -218,4 +224,5 @@ def evaluation_input(
             if notional_evidence is None
             else notional_evidence
         ),
+        position_evidence=position_evidence,
     )
