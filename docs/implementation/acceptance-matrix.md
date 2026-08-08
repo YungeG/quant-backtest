@@ -6247,7 +6247,7 @@ Python                                                             3.13.5
 
 ```yaml
 id: G08F
-status: READY
+status: PASSED
 depends_on:
   - G08A
   - WP-06A
@@ -6311,6 +6311,11 @@ evidence:
   - no-accounting-mutation-evidence
   - import-boundary-report
   - static-type-report
+passed_commit: bdeaf9da8a69926473ff5f66ed7bc5ecb05d5bcb
+artifact_hashes:
+  tests/fixtures/kernel/profiles/cn_a_share/corporate-action-entitlement-v1.json: sha256:dd489fc4488414f1a3d1d493ea7781952bad707d0c4df839ec8645466c33b011
+  build/acceptance/g08f-pytest.xml: sha256:c834845a0f1eb3fefdb78b4fef91403ef2b15323978167dadd4658df21022379
+  build/acceptance/g08f-import-boundary-report.json: sha256:a27d45b0fc0c107aee4e8899b5dccf1d3ae345f712fa4363faf24b7731d89695
 ```
 
 ### G08F Acceptance
@@ -6338,6 +6343,33 @@ evidence:
 21. G08F 始终 development-grade、`deployment_authorized=false`，不拥有 Strategy-facing ObservationView、G11 point-in-time adjusted series、MarketBundle Builder/source adapter、Runtime scheduling、Corporate Action payment/adjustment/tax、real account register provider parity、真实交易或部署授权。
 
 Official source facts、canonical source identities、fixture dates、system conventions 和 G08G blockers 冻结在 `docs/research/cn-a-share-corporate-actions-primary-sources.md`。若官方来源证明 Record eligibility、supported action classification 或 source identity 错误，必须先把 G08F 退回 DRAFT 并以独立 docs commit 修订；READY 前不得实现，PASSED 时 implementation commit 与 acceptance-record commit 继续分离。
+
+### G08F Implementation Acceptance
+
+1. Concrete `corporate_actions` module 结构化实现既有 `CorporateActionModel`，权威输入仅为完整 Announcement Candidate、G08A finite Calendar/Session、finite RuleBook 与历史 Registered Position Snapshot；generic Port、MarketEvent、Timeline、Journal、Ledger、Lot、Settlement 和 Availability 均未加入 A 股分支；
+2. Announcement 可见性使用完整 `SimulationInstant`，Candidate exact 绑定真实 source `MarketEvent` ID/hash；Reader page size、Timeline batch size、输入顺序、同 UTC phase/sequence ordering 与 availability boundary 均由 frozen controls 证明确定；
+3. Result/Failure 嵌入 RuleBook、G08A Calendar 与完整 Query，重建 component ref、唯一 exact-window Band、Record post-close session、next-known TradingDate、Candidate/Event/Snapshot/account/position/numeric identities 和 frozen Failure subject IDs；
+4. XSHG v1 cash-only、XSHE cash/bonus/capitalization、`shares_per_share`、strictly-positive terms、CNY Scale 2、Scale-0 exact shares、zero entitlement、late/revised/cancelled/missing/mismatched/negative/sub-cent/fractional controls及 first-failure precedence 全部 fail closed；
+5. XSHE Record quantity 700 exact 产生 gross CNY 70.00、bonus 70、capitalization 140；zero-register/later-current-500 保持 zero；XSHG Record quantity 1,000 exact 产生 gross CNY 200.00；
+6. Recursive purity scanner 覆盖 nested mutable values/constructors、module/class suites、named expressions、decorator-time mutation、attribute/subscript mutation 与 mutating methods；no-mutation golden 证明输入、RuleBook、Calendar、Model 与 module state 均不变；
+7. Public exports、official source tuples、64-file Import Boundary、64-source mypy、LSP/pi-lens、static golden、full regression、`uv lock --check` 和只读 blocker recheck 均通过。
+
+G08F implementation 已冻结在 immutable commit `bdeaf9da8a69926473ff5f66ed7bc5ecb05d5bcb`，状态为 `PASSED`。
+
+验证记录：
+
+```text
+G08F contract                                                     12 passed
+G08F static golden                                                 1 passed
+Frozen public/boundary regression command                        120 passed
+Full test suite                                                   844 passed
+Trading-kernel import boundary                                    PASS (64 files)
+mypy                                                               no issues (64 source files)
+Primary LSP + pi-lens                                              clean
+Read-only blocker recheck                                           NONE
+uv lock --check                                                     PASS
+Python                                                              3.13.5
+```
 
 ## 68. G08G Corporate Action Adjustment and Payment Readiness Blockers
 
