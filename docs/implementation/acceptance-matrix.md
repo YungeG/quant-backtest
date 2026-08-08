@@ -114,7 +114,7 @@ artifact_hashes: []
 | G08B | PASSED | trading-kernel profiles/cn_a_share | G08A | none |
 | G08C | PASSED | trading-kernel profiles/cn_a_share | G08A, WP-04E, WP-05D, WP-05G | none |
 | G08D | PASSED | trading-kernel profiles/cn_a_share | G08A, G08C, WP-05G | none |
-| G08E | DRAFT | trading-kernel profiles/cn_a_share | WP-05H, WP-05J | Fee/tax fixtures |
+| G08E | READY | trading-kernel profiles/cn_a_share | WP-05H, WP-05J | none |
 | G08F | DRAFT | trading-kernel profiles/cn_a_share | G08A, WP-06B | Announcement/entitlement fixtures |
 | G08G | DRAFT | trading-kernel profiles/cn_a_share | G08F, G03 | Adjustment/payment fixtures |
 | G08H | DRAFT | trading-kernel profiles/cn_a_share + parity | G08A–G08G | Composition/parity commands |
@@ -6105,7 +6105,110 @@ uv lock --check                                                    PASS
 Python                                                             3.13.5
 ```
 
-## 66. PASSED 记录格式
+## 66. G08E Commission and Tax Acceptance Card
+
+```yaml
+id: G08E
+status: READY
+depends_on:
+  - WP-05H
+  - WP-05J
+owner_package: trading-kernel profiles/cn_a_share
+public_interface:
+  - crypto_quant_trading.profiles.cn_a_share.CnAShareFeeTradeMechanism
+  - crypto_quant_trading.profiles.cn_a_share.CnAShareFeeRuleSourceRef
+  - crypto_quant_trading.profiles.cn_a_share.CnAShareCashFeeRuleQuery
+  - crypto_quant_trading.profiles.cn_a_share.CnAShareMarketFeeBand
+  - crypto_quant_trading.profiles.cn_a_share.CnAShareMarketFeeRuleBook
+  - crypto_quant_trading.profiles.cn_a_share.CnAShareStampDutyBand
+  - crypto_quant_trading.profiles.cn_a_share.CnAShareStampDutyRuleBook
+  - crypto_quant_trading.profiles.cn_a_share.CnAShareMarketFeeRuleResolution
+  - crypto_quant_trading.profiles.cn_a_share.CnAShareStampDutyRuleResolution
+  - crypto_quant_trading.profiles.cn_a_share.CnAShareFeeRuleFailureCode
+  - crypto_quant_trading.profiles.cn_a_share.CnAShareFeeRuleFailure
+  - crypto_quant_trading.profiles.cn_a_share.CnAShareCashMarketFeePolicy
+  - crypto_quant_trading.profiles.cn_a_share.CnAShareCashStampDutyTaxPolicy
+  - structural implementation of crypto_quant_trading.FeeAssessmentPolicy
+  - structural implementation of crypto_quant_trading.TaxPolicy
+  - static A-share commission-tax golden fixture v1
+test_commands:
+  contract: uv run pytest -q tests/kernel/profiles/cn_a_share/test_commission_tax.py
+  fixture: uv run pytest -q tests/kernel/profiles/cn_a_share/test_commission_tax_golden.py
+  boundary: uv run pytest -q tests/architecture/test_public_api_imports.py tests/architecture/test_repository_cleanliness.py tests/kernel/ports/test_profile_port_contracts.py tests/kernel/fee_reservations/test_fee_reservation_estimator.py tests/kernel/fees/test_fee_assessment_engine.py tests/kernel/journal/test_immutable_journal.py tests/kernel/profiles/cn_a_share/test_settlement_availability.py && uv run python tools/architecture/check_import_boundaries.py --root . --policy architecture/import-boundaries.toml --report build/acceptance/g08e-import-boundary-report.json
+fixture_ids:
+  - cn-a-share-commission-tax-v1
+expected_artifacts:
+  - tests/fixtures/kernel/profiles/cn_a_share/commission-tax-v1.json
+  - build/acceptance/g08e-pytest.xml
+  - build/acceptance/g08e-import-boundary-report.json
+failure_contracts:
+  - market-or-tax-policy-owns-or-infers-broker-commission
+  - account-schedule-is-presented-as-an-exchange-wide-fact
+  - current-or-nearest-rule-fallback-fills-a-historical-gap
+  - overlapping-rule-intervals-are-resolved-by-container-order
+  - unsupported-block-trade-uses-auction-fee-rates
+  - unsupported-venue-instrument-or-currency-is-partially-assessed
+  - buy-order-stamp-duty-is-applied-or-hidden-as-applied-zero-tax
+  - fill-after-a-rule-transition-uses-order-acceptance-time-market-or-tax-rate
+  - per-fill-market-or-tax-charge-is-rounded-only-after-cross-fill-aggregation
+  - final-order-commission-uses-original-notional-instead-of-actual-fills
+  - per-order-minimum-commission-is-repeated-per-fill
+  - no-fill-cancel-is-charged-the-minimum-commission
+  - reservation-estimate-is-reused-or-journaled-as-final-fee
+  - partial-cancel-reservation-difference-is-not-released
+  - fee-arithmetic-uses-float-decimal-context-or-half-even-rounding
+  - market-tax-account-band-rule-set-or-basis-identity-is-missing-from-result-or-journal
+  - duplicate-final-assessment-or-journal-entry-is-not-idempotently-detected
+  - concrete-profile-reads-network-filesystem-provider-process-database-or-wall-clock
+  - generic-kernel-imports-or-branches-on-cn-a-share-identity
+  - block-trade-b-share-fund-stock-connect-margin-corporate-action-or-deployment-semantics-leak
+allowed_grade: development
+evidence:
+  - pytest-report
+  - static-commission-tax-golden-hash
+  - official-primary-source-note-and-source-document-hashes
+  - market-fee-and-stamp-duty-rule-book-component-band-and-resolution-hashes
+  - exact-2023-08-28-asia-shanghai-transition-evidence
+  - xshg-xshe-market-fee-parity-and-distinct-source-evidence
+  - buy-sell-tax-applicability-evidence
+  - reservation-versus-final-partial-cancel-evidence
+  - per-fill-versus-per-order-rounding-and-minimum-evidence
+  - assessment-result-and-journal-rule-identity-chain
+  - account-schedule-ownership-and-development-limitation
+  - import-boundary-report
+  - static-type-report
+```
+
+### G08E Acceptance
+
+1. G08E 增加同一 concrete `commission_tax` module 下的 `CnAShareCashMarketFeePolicy` 与 `CnAShareCashStampDutyTaxPolicy`，分别结构化实现既有 `FeeAssessmentPolicy.assess_fees()` 与 `TaxPolicy.assess_taxes()`；不得新增 generic port、修改 generic Fee/Tax/Journal arithmetic、创建 partial profile registration 或在 generic root 中增加 `cn_a_share` branch；
+2. 两个 Policy 共用 `CnAShareCashFeeRuleQuery`。Query exact 携带 `InstrumentDefinition`、`OrderSide`、`effective_at: UtcInstant` 和 `CnAShareFeeTradeMechanism`；constructor 只做 type validation。v1 Model 支持 `AUCTION`，显式 `BLOCK` 返回 structured unsupported failure，不能静默使用 auction rate；
+3. 支持范围 exact 为 XSHG/XSHE、`InstrumentType.EQUITY`、quote/settlement currency 都为 CNY 的 standard domestic cash-auction A-share fixture。Board 不影响本 Gate 冻结费率，但 Model 不能从 symbol prefix 猜 Instrument type、Currency 或交易机制。Stock Connect、Margin/Short、B 股、基金、债券和 after-hours classification 不在 Query 中表达，属于 G08H/Profile composition 的 caller precondition；G08E 不得据此声称支持或自行推断这些上下文；
+4. `CnAShareFeeRuleSourceRef` exact 保存 immutable `source_key/source_hash`，hash 必须使用 canonical `sha256:<64 lowercase hex>`；每个 charge component 绑定 canonical non-empty source-ref tuple，以便复合事实保留全部来源。`CnAShareMarketFeeRuleBook` 与 `CnAShareStampDutyRuleBook` 是 caller-injected finite canonical evidence，分别按 Venue 与 half-open `UtcInstant` interval 保存 Band；Band/RuleBook 输入 canonical sort 后计算 content hash，component digest exact 绑定 RuleBook hash、algorithm key、CNY Scale 2 和 `HALF_UP` quantization；
+5. Market-fee Band exact 包含三条独立 `fee_fraction`：exchange transaction handling fee、CSRC securities-business regulatory fee、ChinaClear transaction transfer fee。Handling 绑定 venue-specific 2023 notice；regulatory 对 XSHG 绑定 NDRC rate + ChinaClear Shanghai bilateral table，对 XSHE 绑定 NDRC rate + SZSE bilateral collection page；transfer 绑定 ChinaClear 2022 notice。不得在进入 typed rules 前把三者相加为一个匿名 blended rate；Tax Band exact 只有 sell-side securities transaction stamp duty，New Band 同时绑定 2008 baseline 与 2023 halving；
+6. Frozen fixture interval 使用 Asia/Shanghai local midnight 对应的 canonical UTC half-open instant：old `[2023-08-25T00:00+08:00, 2023-08-28T00:00+08:00)`，new `[2023-08-28T00:00+08:00, 2023-08-30T00:00+08:00)`。窗口外即 missing coverage，不得把 post-2023 Band 开成无界 current rule；
+7. Old Band 对 XSHG/XSHE exact 冻结 handling `0.0487‰` 双边、regulatory `0.02‰` 双边、transfer `0.01‰` 双边、stamp duty `1‰` seller-only；New Band exact 冻结 handling `0.0341‰` 双边、regulatory `0.02‰` 双边、transfer `0.01‰` 双边、stamp duty `0.5‰` seller-only；禁止把 `‰` 误作 `%`；
+8. Model failure precedence exact 为 `unsupported_venue` → `unsupported_instrument` → `unsupported_currency` → `unsupported_trade_mechanism` → `missing_rule_interval` → `overlapping_rule_intervals`。多缺陷只返回第一项；gap、overlap 和 unsupported input 都通过 canonical `ProfilePortOutcome.failure` 返回，不读取 current fee page 或 nearest interval；
+9. Market resolution exact 产生三条 reservation `ORDER_NOTIONAL/APPLIES` rules、三条 final `FILL/ALWAYS` rules 和一条 final `ORDER/NOT_APPLICABLE` source-coverage rule。Tax resolution exact 对 SELL 产生 reservation `ORDER_NOTIONAL/APPLIES`，对 BUY 产生 `NOT_APPLICABLE`；final Fill rule 始终为 `SELL_ONLY`，final Order rule 为 `NOT_APPLICABLE`；
+10. 每条 applicable market/tax rule 使用其自身 `QuantizationPolicy(target_scale=Scale(2), rounding=HALF_UP)`。Final market/tax 只以单个 Fill 为 `FeeAssessmentBasisEvidence.for_fill()` 评估，先对每个 component 每 Fill 量化，再求 Assessment total；禁止跨 Fill 先聚合 market/tax notional 后只舍入一次；
+11. Market/tax Policy 不产生 `ACCOUNT_SCHEDULE` rule、minimum 或 `AccountFeeScheduleRef`。Golden 的 caller-supplied development AccountFeeSchedule 独立冻结 `schedule_key=development.cn-a-share.cash-broker.net-commission.v1`、version 1、net broker commission `0.3‰` 双边、terminal Order minimum CNY 5.00，并明确排除 separately modeled market charges/tax；schedule digest preimage exact 为 `{type=development_cn_a_share_cash_broker_net_commission_schedule, schema_version=1, schedule_key, schedule_version=1, commission_rate, minimum_amount, assessment_scale=2, rounding=half_up, excluded_charge_keys=(exchange_handling, regulatory, transfer, stamp_duty)}`。它无真实 broker/provider provenance且始终 development-only；
+12. Reservation RuleSet 由 caller 把 active market resolution、active tax resolution 和 account schedule rules 显式组合。Reservation exact 使用 MarketRuleApproval 的完整获批订单 notional；account minimum 只作用于 commission rule 一次。Estimate/Proposal 只进入 Resource Reservation，不产生 FeeAssessment、Journal Entry、Ledger fee 或已实现 PnL；
+13. Final Fill RuleSet 只包含 active execution-time market rules、tax `SELL_ONLY` rule 和 account `FILL/NOT_APPLICABLE` coverage rule。每个 Fill 必须以其 execution time 重新解析 active Band；Order acceptance time、first Fill rule 或 terminal time 都不能替代后续 Fill 的 rule resolution；
+14. Final Order RuleSet 只包含 market/tax `ORDER/NOT_APPLICABLE` coverage rules、account commission `ORDER/ALWAYS` rule 和 `FinalFeeMinimum(basis_type=ORDER)`。只有 terminal Order 可评估；commission notional 是 canonical actual Fill set 的总额，minimum 只应用一次；没有 Fill 的 cancelled Order 产生 zero final assessment，不调用 `FeeChargedJournalTranslator`；
+15. Frozen partial-cancel sentinel exact 为：获批 SELL notional CNY 10,000.00，New Band reservation CNY 10.64；实际只有两个各 CNY 1,000.00 Fill 后取消。每 Fill market+tax 为 CNY 0.56，两个 Fill 合计 CNY 1.12；Order commission raw CNY 0.60、minimum adjustment CNY 4.40、final commission CNY 5.00；final total CNY 6.12，释放 CNY 4.52；
+16. 独立 rounding sentinel 使用获批/最终 notional 都为 CNY 2,000.00、两个各 CNY 1,000.00 Fill：aggregate Reservation handling 为 CNY 0.07、reservation total CNY 6.13；final 每 Fill handling 各 CNY 0.03、final total CNY 6.12。该一分差异是 expected basis/quantization consequence，不能通过复用 reservation 或跨 Fill 聚合消除；
+17. Frozen side/boundary controls 至少证明：Old Band SELL CNY 10,000.00 total reservation/final single-fill cost CNY 15.79；New Band SELL 为 CNY 10.64；New Band BUY 为 CNY 5.64 且没有 applied tax line；exact `2023-08-28T00:00+08:00` 解析 New Band，前一纳秒解析 Old Band；
+18. 保持既有 identity split：`FinalFeeAssessmentResult.rule_identity_ids` exact 包含 market/tax component identities、active RuleSet hash、active charge/minimum IDs 和 basis hash；`FeeChargedJournalTranslator` 再把 FeeAssessment ID 与 Fill/Order basis IDs 加入 Journal source IDs。`FeeAssessment.market_fee_rule_id/tax_rule_id/account_fee_schedule_id` 继续保存三类 component/schedule identity，不把账户 schedule 冒充 market/tax identity；
+19. 每个 positive Fill/Order Assessment 产生独立 stable Fee Domain ID 和独立 `FeeCharged` Journal Entry。相同 Assessment/Journal identity 的重复应用沿用既有 fail-closed/idempotent Journal contract；不得合并两个 Fill 和一个 Order Assessment 为一条失去 basis provenance 的费用事实；
+20. Query、SourceRef、Band、RuleBook、Resolution 和 Failure 均须有 explicit `schema_version=1`、construction invariants、canonical tuple order 和 content hash；`ProfilePortOutcome` 沿用既有无 schema-version 字段的 frozen generic canonical contract，只 exact 绑定 component ref、input hash 与 exactly-one result/failure。Market component key 固定 `equity.cn_a_share.cash.market-fees.v1`、algorithm key 固定 `cn-a-share-historical-market-fees-v1`；Tax component key 固定 `equity.cn_a_share.cash.stamp-duty.v1`、algorithm key 固定 `cn-a-share-historical-stamp-duty-v1`；各 version 1；
+21. Component digest preimage exact 为 `{type, schema_version=1, component_key, component_version=1, algorithm_key, rule_book_hash, assessment_scale=2, rounding=half_up}`；Market `type=cn_a_share_cash_market_fee_component`，Tax `type=cn_a_share_cash_stamp_duty_component`，并使用第 20 条各自 key/algorithm。每个 generated market/tax charge-rule ID 使用 canonical tagged hash，tag 分别固定 `cn-a-share-market-fee-rule-v1`/`cn-a-share-stamp-duty-rule-v1`，preimage exact 包含 `{component_key, band_hash, source_refs, charge_key, purpose, basis_type}`；Resolution hash 再绑定 active band hash、生成的完整 rules 和 Query identities，禁止 rule-ID↔resolution-hash 循环。Account fixture 的 commission/minimum IDs 不使用 market/tax Band preimage：tags 固定 `cn-a-share-development-commission-rule-v1` 与 `cn-a-share-development-commission-minimum-v1`，preimage 分别绑定 `{account_fee_schedule_ref, purpose, basis}` 与 `{account_fee_schedule_ref, charge_rule_id, purpose, minimum_amount}`；
+22. Concrete package purity沿用 G08D fail-closed scanner。新 module allowlist 仅包含必要 stdlib、`crypto_quant_domain`、generic `crypto_quant_trading.fee_reservations|fees|orders|ports`；拒绝 filesystem、network/provider/process/database/cloud、dynamic import、MarketBundle、Runtime 和 wall clock。Official URL、下载时间和本地路径只在 research provenance 中，运行时不存在 source fetch；
+23. Static golden 至少冻结 exact source-key/hash pairs、XSHG/XSHE old/new Bands、exact transition、BUY/SELL applicability、gap/overlap/unsupported-mechanism failures、RuleBook/component/rule/resolution/RuleSet hashes、CNY integer rounding、partial/no-fill cancel、Reservation/final split、per-Fill/per-Order assessments、minimum adjustment、Journal source IDs 和 development-only limitations；
+24. G08E 不拥有真实 broker schedule/provider statement parity、Block Trade discount、B 股/基金/债券/Stock Connect、VAT、返佣、Margin/Short financing、Corporate Action tax、cost-basis fee allocation、Runtime orchestration、Profile composition、网络 source adapter、真实交易或 deployment authorization。G08H 只能组合本 Gate 冻结能力，不能补写历史费率或账户合同。
+
+Official primary references、fact/account ownership 和 system-convention classification 冻结在 `docs/research/cn-a-share-commission-tax-primary-sources.md`。若官方来源证明任一费率、方向或生效边界错误，必须先把 G08E 退回 DRAFT 并以独立 docs commit 修订；READY 前不得实现，PASSED 时 implementation commit 与 acceptance-record commit 继续分离。
+
+## 67. PASSED 记录格式
 
 ```yaml
 id: WP-00A

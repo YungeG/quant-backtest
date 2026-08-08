@@ -810,6 +810,14 @@ A 股 Buy 在 upper-limit open 或 Sell 在 lower-limit open 时，由保守 Bar
 
 执行账户 Profile 规定的费率等级、返佣、券商佣金和最低佣金合同。
 
+## A 股历史税费规则簿（A-share Historical Fee and Tax Rule Book）
+
+按 Venue 与半开有效时点区间冻结证券交易经手费、监管费、过户费和卖方印花税的 caller-injected immutable evidence。缺口或重叠必须 fail closed；不能从当前网页、最近区间或账户佣金反推历史市场税费。
+
+## 每 Fill 市场税费 / 每 Order 账户佣金（Per-Fill Market Charges / Per-Order Account Commission）
+
+市场费用和印花税按每个不可变 Fill 及其执行时点规则最终评估；券商佣金按终态 Order 的实际 Fill 聚合并只应用一次账户最低佣金。下单前 Fee Reservation 仍按完整获批订单保守估算，不是上述任一最终费用事实。
+
 ## Microstructure Replay Engine
 
 基于 Quote、Trade 或订单簿事件模拟撮合、队列、部分成交和高频执行的回放模块。

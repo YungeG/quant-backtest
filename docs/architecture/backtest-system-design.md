@@ -925,6 +925,12 @@ Per-fill maker/taker fee、per-order minimum commission、sell-only tax 和 orde
 
 FeeReservationEstimate 是下单前最坏费用承诺，只影响 Reservation 和 Available Resources；它不是 FeeAssessment 或 Accounting Journal。最终 Fee 可以低于预留，终态订单必须释放差额。
 
+G08E 将 A 股公共市场收费、国家税项和账户合同 exact 分开：证券交易经手费、证券业务监管费和交易过户费属于 immutable `MarketFeePolicy` RuleBook；卖方证券交易印花税属于独立 `TaxPolicy` RuleBook；券商净佣金和每 Order 最低佣金只属于 caller-supplied `ExecutionAccountProfile.account_fee_schedule`。Concrete market/tax Adapter 不得生成或猜测账户佣金，也不得把 synthetic development schedule 伪装成统一券商规则。
+
+A 股 v1 最终市场费用与印花税使用 `FeeBasisType.FILL`，按每个 Fill 的 execution time 重新解析有限历史区间并逐 component 量化；最终券商佣金使用 terminal `FeeBasisType.ORDER`，按实际 Fill notional 聚合后只应用一次 minimum。这样跨规则切换时点的长生命周期 Order 不会把 acceptance-time Rule 错套到后续 Fill，partial cancel 也不会按原始订单名义金额最终收费。
+
+G08E 的 CNY Scale 2、逐 component `HALF_UP` 和 final Fill/Order basis 是 development-grade system convention，不冒充所有交易所结算参与人或券商的账单舍入。Rule gap/overlap、unsupported block-trade mechanism 或非 CNY/非 A 股输入必须 fail closed；current-rule page、最近区间和账户 schedule 都不能补市场/税费历史缺口。
+
 FeeAssessment 通过 basis IDs 引用 Fill/Order，而不是事后修改 immutable Fill。Cash Instrument Lot 的 fee allocation 可以在 FeeAssessment 完成后通过明确 Journal Entry 更新成本基础。
 
 ### 8.18 AccountingJournal

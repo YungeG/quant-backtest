@@ -1289,17 +1289,26 @@ Authoritative odd-sell evidence exact 绑定 evaluated-at PortfolioSnapshot、Av
 
 ### Gate G08E Commission and Tax
 
-依赖：G05H、G05J。
+依赖：WP-05H、WP-05J。
 
-拥有：Broker minimum commission、Market fee 和 historical sell-only stamp duty Adapter。
+拥有：caller-injected finite A-share market-fee/stamp-duty RuleBooks、structural `FeeAssessmentPolicy`/`TaxPolicy` Adapter，以及与其严格分离的 caller-supplied AccountFeeSchedule fixture。Generic `FeeReservationEstimator`、`FeeAssessmentEngine`、`FeeChargedJournalTranslator` 和 Journal/Ledger 不新增 A 股分支。
+
+v1 只批准 XSHG/XSHE standard domestic CNY cash-auction A-share fixture，并冻结窄历史窗口：2023-08-25 使用交易经手费 0.0487‰、卖方印花税 1‰；自 2023-08-28 使用交易经手费 0.0341‰、卖方印花税 0.5‰。两个区间都显式包含双边证券业务监管费 0.02‰ 与交易过户费 0.01‰。Block trade 与窗口外日期在本 Adapter 内 fail closed；B 股、基金、Stock Connect、Margin 和真实券商合同不由 Query 表达，必须由 G08H/Profile composition 作为 caller precondition 阻断，G08E 不得声称支持或自行推断。
+
+Broker commission 不属于 MarketSemantics。Golden 使用 caller-supplied synthetic development net-commission schedule：双边 0.3‰、每个有 Fill 的 terminal Order 最低 CNY 5.00，并明确不代表任何真实券商或“佣金已包含规费”的统一做法。
+
+最终 market fee/stamp duty 按 `FeeBasisType.FILL` 和 Fill execution time 解析/量化；最终 broker commission 按 terminal `FeeBasisType.ORDER` 聚合实际 Fills，minimum 只应用一次。Reservation 则按获批完整订单 notional 保守估算，不能复用为最终 Assessment。
 
 验收：
 
-- per-order minimum commission 不按 Fill 重复收取；
-- 多 Fill、部分成交和取消后的最终费用正确；
-- FeeReservationEstimate 与最终 FeeAssessment 分离；
-- Tax/Fee rule identity 进入 FeeAssessment 和 Journal；
-- Rule timeline 缺失时 fail closed。
+- per-order minimum commission 不按 Fill 重复收取，无 Fill cancel 不收费；
+- 多 Fill、部分成交和取消后按实际 Fill 产生 per-Fill market/tax 与单一 per-Order commission；
+- 10,000 CNY 获批订单只成交两个 1,000 CNY Fill 后取消，Reservation 与 final total exact 不同并释放差额；
+- BUY 的印花税是 `NOT_APPLICABLE`，SELL 才应用；
+- 每个 component 使用 CNY Scale 2、explicit `HALF_UP`；独立 CNY 2,000 fully-filled/two-Fill sentinel 冻结 aggregate reservation CNY 6.13 与 per-Fill final CNY 6.12 的一分差异；
+- Tax/Fee component、active band、charge rule、RuleSet、basis 和 AccountFeeSchedule identity 进入 Assessment result 与 `FeeCharged` Journal source IDs；
+- exact 2023-08-28 local boundary 选新规则；RuleBook 缺失/重叠时 fail closed，不回退 current/nearest rule；
+- concrete Adapter 不读取 network/filesystem/provider/process/database/wall clock，不拥有账户佣金或 deployment authorization。
 
 ### Gate G08F Corporate Action Observation and Entitlement
 
