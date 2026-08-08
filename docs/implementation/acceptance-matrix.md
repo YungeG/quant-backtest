@@ -113,7 +113,7 @@ artifact_hashes: []
 | G08A | PASSED | trading-kernel profiles/cn_a_share | G07 | none |
 | G08B | PASSED | trading-kernel profiles/cn_a_share | G08A | none |
 | G08C | PASSED | trading-kernel profiles/cn_a_share | G08A, WP-04E, WP-05D, WP-05G | none |
-| G08D | READY | trading-kernel profiles/cn_a_share | G08A, G08C, WP-05G | Historical rule and authoritative position-evidence fixtures |
+| G08D | PASSED | trading-kernel profiles/cn_a_share | G08A, G08C, WP-05G | none |
 | G08E | DRAFT | trading-kernel profiles/cn_a_share | WP-05H, WP-05J | Fee/tax fixtures |
 | G08F | DRAFT | trading-kernel profiles/cn_a_share | G08A, WP-06B | Announcement/entitlement fixtures |
 | G08G | DRAFT | trading-kernel profiles/cn_a_share | G08F, G03 | Adjustment/payment fixtures |
@@ -5966,7 +5966,7 @@ Python                                                             3.13.5
 
 ```yaml
 id: G08D
-status: READY
+status: PASSED
 depends_on:
   - G08A
   - G08C
@@ -6043,6 +6043,11 @@ evidence:
   - schema-v1-compatibility-goldens
   - import-boundary-report
   - static-type-report
+passed_commit: 9e514025d0973b7bd6ec7c89e03ee172d00fb52a
+artifact_hashes:
+  tests/fixtures/kernel/profiles/cn_a_share/historical-order-rules-v1.json: sha256:af74733a438d35a6d58712ee8f66f371af87f53dbb2f39692d22eaf5231d817d
+  build/acceptance/g08d-pytest.xml: sha256:f81a5d18016de77b6d3127414fb9aa7688635d11c6d5ce53ab5b1f606a0523cd
+  build/acceptance/g08d-import-boundary-report.json: sha256:53d3a3342ed9c2a478c585999a031e414dc0ee34e201beb0c17a89c42f90fa39
 ```
 
 ### G08D Acceptance
@@ -6073,7 +6078,32 @@ evidence:
 24. Static golden 至少冻结 XSHG Main 2024、XSHG STAR 2024、XSHE Main 2024、ChiNext 2020-08-21/2020-08-24 transition、closed/suspended/no-trade/data-missing、rounding sentinels、Limit/Market quantity caps、direction-sensitive limit-open decisions、ordinary/STAR odd-sale evidence、all component/rule/band/timeline/snapshot/evaluation/decision hashes和 development-only limitations；
 25. G08D 不拥有 Fee/Tax、Corporate Action、Broker commission、MarketBundle Builder/source adapter、Runtime Engine integration、Queue/Volume Fill、Risk-warning累计买入、无涨跌幅股票价格笼子/临停、Stock Connect、margin/short、Profile composition、真实交易或 deployment authorization。G08H 只可组合已冻结能力，不能补写历史事实。
 
-Official primary references and fact/system classification are frozen in `docs/research/cn-a-share-order-rules-primary-sources.md`。Readiness review 允许后续实现按 TDD 填充代码与 fixture，但不得改变上述 public seam、schema compatibility、historical bands、failure precedence 或 conservative scope；若官方来源证明某条冻结事实错误，必须先把 G08D 退回 DRAFT 并以独立 docs commit 修订。
+Official primary references and fact/system classification are frozen in `docs/research/cn-a-share-order-rules-primary-sources.md`。若官方来源证明某条冻结事实错误，必须先把 G08D 退回 DRAFT 并以独立 docs commit 修订。
+
+### G08D Implementation Acceptance
+
+1. `OrderRuleSnapshot` execution-style caps 与 `OrderRuleEvaluationInput.position_evidence` 使用 optional schema-v2 extension；legacy snapshot/evaluation schema-v1 canonical bytes 与固定 hash 保持不变。LIMIT/STOP_LIMIT 和 MARKET/STOP 分别使用对应 cap；
+2. `OrderRulePositionEvidence` exact 校验 order Account、evaluated-at、Portfolio/Availability/Reservation/WorkingOrder chain、duplicate Order ID、target Working Order Scale、total/sellable 与 current lattice。Odd residual SELL 缺证据为 DataIntegrityFailure；split、超 sellable 与 active residual reservation 为 stable rejection；
+3. Concrete RuleBook/Model 冻结 Main/STAR/ChiNext historical bands、ChiNext 2020-08-24 transition、CNY tick HALF_UP rounding、one-tick floor、single-order caps、G08C Main lattice parity、STAR step-one/minimum-200 和 gap/overlap fail-closed；
+4. Known no-session、closed phase、explicit suspension 与 missing status/previous-close 分离。Trade-status effective interval exact 收窄 published OrderRuleInterval，禁止 phase-wide extrapolation；closed phase precedence 高于 supplied suspended status；
+5. Limit liquidity Adapter 无 Volume input，按 data-missing → no-trade → suspended → side-sensitive limit check → continue 决策。Corrupt supplied Price 不能被 no-trade/suspended 掩盖；upper-limit BUY/lower-limit SELL blocked，反方向 continue；
+6. Concrete package purity allowlist、generic/concrete import boundary、public package exports、source provenance、static golden 和 development-only limitation 均冻结；未增加 Runtime/Builder/network/filesystem/wall-clock 或 deployment authorization。
+
+G08D implementation 已冻结在 immutable commit `9e514025d0973b7bd6ec7c89e03ee172d00fb52a`，状态为 `PASSED`。
+
+验证记录：
+
+```text
+G08D contract + static golden JUnit                              18 passed
+Frozen public/boundary regression command                       212 passed
+Full test suite                                                  801 passed
+Trading-kernel import boundary                                   PASS (62 files)
+mypy                                                               no issues (3 source files)
+Primary LSP + pi-lens                                             clean
+Read-only blocker reviews                              all reported P1 fixed
+uv lock --check                                                    PASS
+Python                                                             3.13.5
+```
 
 ## 66. PASSED 记录格式
 
