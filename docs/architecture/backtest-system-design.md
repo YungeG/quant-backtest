@@ -1313,7 +1313,15 @@ source_hash
 
 Decision-grade 要求每个必需维度在回测有效区间内无缺口、无重叠，并且任一模拟时点只能解析到唯一有效规则。禁止缺失时回退到当前规则或估算值。
 
-OrderRuleModel 负责 `OrderCapabilitySet`、合法 Execution style、Price constraint、Time-in-Force、时点有效 `QuantityLattice`、最小数量、最小名义金额、Price limit、T+1 可卖数量、Suspension、Reduce-only、odd-lot close 和保证金前置规则。依赖当前余额的 Sell Residual Component 准入必须绑定权威 holding/sellable evidence；仅凭 `PositionEffect.CLOSE`、target Quantity 或静态 lot 不能批准任意 odd sell。G08C 只证明 sizing 与 planner quantity preservation；G08D 必须为 `OrderRuleEvaluationInput` 冻结向后兼容的 canonical position-evidence 扩展，exact 绑定 evaluated-at Portfolio/Availability/Reservation/WorkingOrder evidence、total/sellable Quantity 和 lattice hash，缺失或不一致 fail closed。
+OrderRuleModel 负责 `OrderCapabilitySet`、合法 Execution style、Price constraint、Time-in-Force、时点有效 `QuantityLattice`、最小/最大数量、最小名义金额、Price limit、T+1 可卖数量、Suspension、Reduce-only、odd-lot close 和保证金前置规则。依赖当前余额的 Sell Residual Component 准入必须绑定权威 holding/sellable evidence；仅凭 `PositionEffect.CLOSE`、target Quantity 或静态 lot 不能批准任意 odd sell。
+
+G08D 的 generic `OrderRulePositionEvidence` exact 包含 evaluated-at `PortfolioSnapshot`、canonical ACTIVE/PARTIALLY_FILLED `OrderEventStream` set、`ResourceReservationState`、`AvailabilityState`、explicit total/sellable Quantity 和 resolved lattice hash。其内部 hash chain 必须证明 Portfolio Journal prefix、Availability Ledger/Reservation refs、Working Order remaining 与 Reservation cursor/commitment 一致。缺失证据或 chain/lattice/account/instrument/time mismatch 是 DataIntegrityFailure；证据有效但 residual 被拆分、已由 active odd order 保留或超过 sellable 是 MarketRuleRejection。
+
+`OrderRuleEvaluationInput.position_evidence` 默认 None；None 时保留 schema-v1 bytes/hash，只有 non-None 使用 schema v2。`OrderRuleSnapshot` 的 execution-style maximum Quantity 同样使用 optional schema-v2 extension，cap 缺失时 legacy schema-v1 不变。Regular lot order 不因新增 seam 强制携带 Position evidence。
+
+A 股 concrete `CnAShareOrderRuleBook` 是 caller-injected finite immutable evidence，按 Venue、Board 和 half-open TradingDate interval 解析。Board/risk/listing phase、Previous Close 和 Trade Status 都由 point-in-time source evidence提供，不得从 symbol、缺 Bar、零 Volume 或 current rule 推断。Known G08A no-session 是成功的 NoTrade；explicit instrument suspension 与 missing status/session/rule evidence 分离。Rule gap/overlap 一律 fail closed。
+
+G08D v1 只批准 standard seasoned Main/STAR/ChiNext cash auction。Risk-warning投资者累计买入、无涨跌幅新股价格笼子与盘中临停在缺少完整 seam 时结构化阻断。这样可以冻结历史 daily-limit、tick rounding、single-order cap 和 suspension，而不把部分规则包装成完整 decision-grade support。
 
 ### 11.8 ExecutionModel
 
@@ -1427,8 +1435,8 @@ ExecutionModel 只决定成交资格、ExecutionReferencePrice 和 full/partial/
 - 停牌、价格限制、数据终止或无合格 Bar 时，根据明确 TIF 产生 keep-active、liquidity-blocked 或 expire；流动性阻断不等同于 MarketRuleRejection。
 - 不使用未来 Bar close、high 或 low 决定开盘成交价格。
 - 不使用 forward-filled、合成或 gap placeholder Bar 成交。
-- A 股方向敏感价格限制：Buy 在 upper-limit open、Sell 在 lower-limit open 时产生 `LiquidityBlockedAtLimit`；反方向可以继续评估。
-- 不使用全天 Volume 推断涨跌停 Queue 成交；日频模型不在盘中打开价格限制后补成交。
+- A 股方向敏感价格限制：G08D pure Adapter 只消费 resolved OrderRuleSnapshot、Side 与 contemporaneous bar open；Buy 在 upper-limit open、Sell 在 lower-limit open 时产生 `LiquidityBlockedAtLimit`，反方向可以继续评估。该结果是 `next_eligible_bar_open.v1` 的 conservative Simulation convention，不是“所有涨跌停订单永不成交”的交易所事实。
+- Adapter input 不含全天 Volume；不得用全天 Volume 推断涨跌停 Queue 成交，日频模型也不在盘中打开价格限制后补成交。未来只有携带 L1/L2 contemporaneous Queue evidence 的独立 Simulation Profile 才能放宽。
 - Bar 内 Stop、Limit、Queue、Partial Fill 和精确 Liquidation 不属于该 Profile 的能力。
 
 后续可以增加 Limit、Stop、OHLC path 或 participation model，但在获得独立验证前只能产生 development-grade 结果。Liquidity Strategy 和做市不能使用 Bar Engine。

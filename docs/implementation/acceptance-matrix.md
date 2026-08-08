@@ -113,7 +113,7 @@ artifact_hashes: []
 | G08A | PASSED | trading-kernel profiles/cn_a_share | G07 | none |
 | G08B | PASSED | trading-kernel profiles/cn_a_share | G08A | none |
 | G08C | PASSED | trading-kernel profiles/cn_a_share | G08A, WP-04E, WP-05D, WP-05G | none |
-| G08D | DRAFT | trading-kernel profiles/cn_a_share | G08A, G08C, WP-05G | Historical rule and authoritative position-evidence fixtures |
+| G08D | READY | trading-kernel profiles/cn_a_share | G08A, G08C, WP-05G | Historical rule and authoritative position-evidence fixtures |
 | G08E | DRAFT | trading-kernel profiles/cn_a_share | WP-05H, WP-05J | Fee/tax fixtures |
 | G08F | DRAFT | trading-kernel profiles/cn_a_share | G08A, WP-06B | Announcement/entitlement fixtures |
 | G08G | DRAFT | trading-kernel profiles/cn_a_share | G08F, G03 | Adjustment/payment fixtures |
@@ -5962,7 +5962,120 @@ uv lock --check                                                    PASS
 Python                                                             3.13.5
 ```
 
-## 65. PASSED 记录格式
+## 65. G08D Historical Order Rules and Price Limits Acceptance Card
+
+```yaml
+id: G08D
+status: READY
+depends_on:
+  - G08A
+  - G08C
+  - WP-05G
+owner_package: trading-kernel profiles/cn_a_share
+public_interface:
+  - crypto_quant_trading.OrderRulePositionEvidence
+  - backward-compatible crypto_quant_trading.OrderRuleEvaluationInput.position_evidence
+  - backward-compatible OrderRuleSnapshot execution-style quantity caps
+  - crypto_quant_trading.MarketSessionState.SUSPENDED
+  - crypto_quant_trading.MarketRuleIssueCode.MAXIMUM_QUANTITY
+  - crypto_quant_trading.MarketRuleIssueCode.INSTRUMENT_SUSPENDED
+  - crypto_quant_trading.MarketRuleIssueCode.SELL_RESIDUAL_NOT_PERMITTED
+  - crypto_quant_trading.MarketRuleIssueCode.SELLABLE_QUANTITY
+  - crypto_quant_trading.MarketRuleDataIntegrityCode.MISSING_POSITION_EVIDENCE
+  - crypto_quant_trading.MarketRuleDataIntegrityCode.INVALID_POSITION_EVIDENCE
+  - crypto_quant_trading.profiles.cn_a_share.CnAShareBoard
+  - crypto_quant_trading.profiles.cn_a_share.CnAShareInstrumentRuleContext
+  - crypto_quant_trading.profiles.cn_a_share.CnAShareOrderRuleBook
+  - crypto_quant_trading.profiles.cn_a_share.CnAShareOrderRuleQuery
+  - crypto_quant_trading.profiles.cn_a_share.CnAShareOrderRuleResolution
+  - crypto_quant_trading.profiles.cn_a_share.CnAShareOrderRuleFailure
+  - crypto_quant_trading.profiles.cn_a_share.CnAShareCashOrderRuleModel
+  - crypto_quant_trading.profiles.cn_a_share.CnAShareBarLimitLiquidityEvaluator
+  - structural implementation of crypto_quant_trading.OrderRuleModel
+  - static A-share historical-order-rule golden fixture v1
+test_commands:
+  contract: uv run pytest -q tests/kernel/profiles/cn_a_share/test_order_rules.py tests/kernel/market_rules/test_market_rule_position_evidence.py
+  fixture: uv run pytest -q tests/kernel/profiles/cn_a_share/test_order_rules_golden.py
+  boundary: uv run pytest -q tests/architecture/test_public_api_imports.py tests/architecture/test_repository_cleanliness.py tests/kernel/ports/test_profile_port_contracts.py tests/kernel/market_rules/test_market_rule_evaluator.py tests/kernel/profiles/cn_a_share/test_calendar_session.py tests/kernel/profiles/cn_a_share/test_quantity_lattice.py tests/kernel/profiles/cn_a_share/test_settlement_availability.py && uv run python tools/architecture/check_import_boundaries.py --root . --policy architecture/import-boundaries.toml --report build/acceptance/g08d-import-boundary-report.json
+fixture_ids:
+  - cn-a-share-historical-order-rules-v1
+expected_artifacts:
+  - tests/fixtures/kernel/profiles/cn_a_share/historical-order-rules-v1.json
+  - build/acceptance/g08d-pytest.xml
+  - build/acceptance/g08d-import-boundary-report.json
+failure_contracts:
+  - board-or-risk-class-is-inferred-from-symbol-text
+  - current-rule-fallback-fills-a-historical-gap
+  - overlapping-rule-intervals-are-resolved-by-order
+  - known-no-session-is-classified-as-suspension-or-data-missing
+  - absent-bar-or-zero-volume-is-classified-as-suspension
+  - missing-status-or-previous-close-evidence-is-treated-as-no-trade
+  - price-limit-rounding-uses-float-or-bankers-rounding
+  - no-limit-listing-phase-is-approved-without-price-cage-semantics
+  - execution-style-single-order-cap-is-not-enforced
+  - intraday-or-investor-cumulative-cap-is-misrepresented-as-single-order-cap
+  - upper-limit-open-buy-or-lower-limit-open-sell-is-filled-from-full-day-volume
+  - opposite-direction-limit-open-order-is-blocked
+  - odd-sell-is-approved-from-close-effect-target-or-sizing-evidence-alone
+  - odd-sell-position-evidence-is-missing-stale-cross-account-or-cross-instrument
+  - portfolio-availability-reservation-or-working-order-hashes-do-not-chain
+  - residual-component-is-split-or-already-reserved-by-an-active-order
+  - odd-sell-exceeds-authoritative-sellable-quantity
+  - ordinary-main-board-lattice-diverges-from-g08c
+  - order-rule-evaluation-schema-v1-bytes-change-when-position-evidence-is-absent
+  - order-rule-snapshot-schema-v1-bytes-change-when-quantity-caps-are-absent
+  - concrete-profile-reads-network-filesystem-provider-process-database-or-wall-clock
+  - generic-kernel-imports-or-branches-on-cn-a-share-identity
+  - fee-tax-corporate-action-runtime-queue-or-deployment-semantics-leak
+allowed_grade: development
+evidence:
+  - pytest-report
+  - static-historical-order-rule-golden-hash
+  - official-rule-source-note-and-source-document-hashes
+  - rule-book-component-and-interval-hashes
+  - chi-next-2020-transition-evidence
+  - xshg-main-star-xshe-main-chinext-board-cap-evidence
+  - price-limit-integer-rounding-and-one-tick-floor-controls
+  - suspension-no-trade-data-missing-classification
+  - directional-bar-open-limit-liquidity-decisions
+  - authoritative-position-reservation-working-order-hash-chain
+  - residual-sell-positive-and-killer-controls
+  - schema-v1-compatibility-goldens
+  - import-boundary-report
+  - static-type-report
+```
+
+### G08D Acceptance
+
+1. G08D 增加一个 concrete `CnAShareCashOrderRuleModel`，位置固定在 `crypto_quant_trading.profiles.cn_a_share`，结构化实现既有 `OrderRuleModel.resolve_order_rules()`；不得新增 generic port、partial profile registration 或 generic `cn_a_share` branch。一个同 package pure `CnAShareBarLimitLiquidityEvaluator` 只把已解析 Snapshot 与 bar-open observation 转成结构化 conservative decision，不进入 generic root；
+2. v1 classification 由 caller-supplied `CnAShareInstrumentRuleContext` 提供，至少 exact 包含 `board=main|star|chinext`、`risk_class=standard`、`listing_phase=seasoned`、context source key/hash。Model 不从 Instrument ID、symbol prefix 或 Venue 猜 Board。Risk-warning、退市整理、IPO 前五交易日、重新上市首日和退市整理首日虽记录于官方来源，但 v1 因缺少累计买入/无涨跌幅价格笼子与临停完整语义而结构化 `unsupported_classification`，不得部分批准；
+3. `CnAShareOrderRuleBook` 是 caller-injected finite immutable rule evidence。每个 Band exact 记录 board、Venue、half-open local TradingDate interval、daily-limit `Rate`、price tick、Limit/Market 单笔上限、QuantityLattice template、source key/hash。RuleBook canonical order 后计算 `rule_book_hash`；component digest exact 绑定其 hash。Official URL、下载时间和本地路径只属于 provenance，不进入 result-affecting digest；
+4. Frozen historical bands 至少包括：XSHG Main `[2023-04-10, fixture_end)` 10%、1,000,000/1,000,000；XSHG STAR `[2019-07-22, fixture_end)` 20%、100,000/50,000、minimum 200、step 1；XSHE Main `[2023-04-10, fixture_end)` 10%、1,000,000/1,000,000；XSHE ChiNext standard seasoned 在 `[fixture_start, 2020-08-24)` 为 10%、1,000,000/1,000,000，自 `2020-08-24` 为 20%、300,000/150,000。Fixture 不伪造未验证的早期 Risk/IPO interval；
+5. Ordinary Main Board Snapshot 的 QuantityLattice 必须逐字等于相同 Instrument 的 G08C template/lattice hash。ChiNext 使用 100-share buy/sell lot、whole-residual capability 和 board-specific lattice key；STAR 使用 step 1、minimum 200、odd full-close capability，不把“至少 200 股”错误建模为 200 的整数倍；
+6. Query exact 携带 InstrumentDefinition、G08A `CnAShareSessionResolution`、InstrumentRuleContext、optional TradeStatusEvidence、optional PreviousCloseEvidence 和 `evaluated_at`。Query constructor 只做 type validation，缺失 Evidence 必须到 Model 内形成 canonical failure，不能用 construction exception 隐藏；
+7. Known G08A weekend/holiday no-session 是 successful `CnAShareOrderRuleResolution(kind="no_trade", timeline=None)`；TradingDate 内 closed phase 仍可产生唯一 Snapshot，`session_state=closed`；OPEN phase + explicit suspended status 产生 `session_state=suspended`。Session coverage failure、缺少 status/previous-close 或证据 identity/time mismatch 是 failure/data missing，三类不得互换；
+8. Model failure precedence exact 为：`unsupported_venue` → `unsupported_instrument` → `unsupported_currency` → `unsupported_board` → `unsupported_classification` → `session_evidence_mismatch` → known no-session result → `missing_rule_interval` → `overlapping_rule_intervals` → `missing_trade_status_evidence` → `invalid_trade_status_evidence` → `missing_previous_close_evidence` → `invalid_previous_close_evidence`。多缺陷只返回第一项；禁止使用 interval insertion order 或 current rule fallback；
+9. Previous-close evidence 必须 exact 匹配 Instrument/CNY/Scale，`available_at <= evaluated_at`，并绑定 reference TradingDate 与 source hash。Trade-status evidence 必须 exact 匹配 Instrument/Session/effective interval/source hash。Model 不读取 Bar presence、Volume、provider API、filesystem、network 或 wall clock；
+10. Daily limit 只用 typed integer arithmetic：`raw = previous_close × (1 ± ratio)`，按 `RoundingPolicy.HALF_UP` 取至 CNY 0.01 tick；limit 与 previous close 的差绝对值低于一 tick 时使用 previous close ± one tick，lower 低于 one tick 时取 one tick。禁止 float、HALF_EVEN 或隐藏 Decimal context。Snapshot lower/upper、ratio/tick、Band hash 和 previous-close evidence hash 全部进入 golden；
+11. Generic `OrderRuleSnapshot` 在现有字段之后增加 optional `max_limit_order_quantity_units` 与 `max_market_order_quantity_units`，默认 `None`。两者都为 `None` 时 config canonical schema v1 bytes/config/snapshot hashes完全不变且 payload 不出现新字段；任一存在时 schema v2，正整数且是 lattice step 的整数倍。Evaluator 对 LIMIT/STOP_LIMIT 使用 limit cap，对 MARKET/STOP 使用 market cap，超过时返回 `MAXIMUM_QUANTITY`；
+12. `MarketSessionState.SUSPENDED="suspended"` 与 `MarketRuleIssueCode.INSTRUMENT_SUSPENDED="instrument_suspended"` 是 market-neutral extension。CLOSED 继续只产生 `SESSION_CLOSED`；SUSPENDED 只产生 `INSTRUMENT_SUSPENDED`，不能双报或静默映射；
+13. `OrderRulePositionEvidence` canonical v1 exact 包含 `account_id, evaluated_at, instrument_id, portfolio_snapshot, working_orders, working_order_set_hash, reservations, availability, total_quantity, sellable_quantity, quantity_lattice_hash`。Working Orders 只允许 ACTIVE/PARTIALLY_FILLED streams、按 Order ID canonical order，全部 Event time 不晚于 evaluated_at；其 set hash 使用 G08C Rebalance 已冻结的 order-id/stream/state/remaining preimage；
+14. Position evidence invariants exact 为：Portfolio timestamp/evaluated_at 相等；Account/Instrument/Scale 全部匹配；Portfolio matching Position quantity 等于 explicit total；Availability matching Position total/sellable 等于 explicit values；`0 <= sellable <= total`；Availability ledger hash 等于 Portfolio journal hash；Availability reservation hash 等于 supplied Reservation state hash；每个 active Working Order 与 ActiveReservation/cursor exact one-to-one，remaining Quantity 与 stream state相等；lattice hash 等于 resolved Snapshot lattice hash；
+15. Generic `OrderRuleEvaluationInput` 在现有字段后增加 `position_evidence: OrderRulePositionEvidence | None = None`。None 时 canonical schema v1 bytes/input hash完全不变且不出现字段；non-None 时 schema v2。Regular lot BUY/SELL 的 legacy evaluation 不要求 Position evidence；只有需要 residual/odd-close exception 的 SELL 才进入该证据路径；
+16. 对 `whole_sell_residual_permitted=true` 的 non-multiple SELL，令 authoritative total `H`、sell lot `L`、`r=H mod L`、order `Q`。批准 exact 要求 `r>0`、`Q mod L == r`、`Q <= sellable`、PositionEffect=CLOSE、reduce-only=true，并且不存在已消费/保留该 residual 的 active odd SELL。`Q` 可为完整 `r` 或 `r+kL`；拆分 residual、arbitrary odd、超 sellable 或 active odd reservation 分别产生 stable issue；
+17. 对 STAR 的 `odd_lot_close_permitted=true` 且 whole-residual capability=false，只有 `H < min_quantity`、`Q == H == sellable` 的 full close 可以豁免 minimum；`H>=200` 的订单遵守 step 1 和 minimum 200。不得把 STAR 规则套为 200-share multiple；
+18. Missing position evidence 在 odd path 产生 `MISSING_POSITION_EVIDENCE` DataIntegrityFailure；cross-account/instrument/time/hash/lattice、Portfolio/Availability/Reservation/WorkingOrder chain mismatch 产生 `INVALID_POSITION_EVIDENCE`。证据有效但数量不合法是 MarketRuleRejection，不得把业务拒绝伪装成数据缺失；
+19. Frozen ordinary controls 对 H=299、sellable=299 至少证明 SELL99/199/299 获批，SELL1/55/101/198/298 拒绝；sellable=98 时 SELL99 拒绝；已有 active SELL199 residual reservation 时第二张 odd SELL 拒绝；regular SELL100 在无 Position evidence 时继续获批。G08C planner 的 SELL99/199/1/55 中只有与当时 authoritative H/sellable exact 匹配的申请可通过；
+20. `CnAShareBarLimitLiquidityEvaluator` input 不包含全天 Volume。Decision precedence exact 为 `data_missing` → `no_trade` → `suspended` → side-sensitive price-limit check → `continue`。Available bar open 等于 upper limit且 Side=BUY 返回 `liquidity_blocked_at_limit`；等于 lower limit且 Side=SELL 同样 blocked；反方向继续。它不声称 Queue 一定无成交，只冻结 `next_eligible_bar_open.v1` 的 conservative no-fill eligibility；
+21. Limit liquidity decision exact 绑定 side、bar-open Price、Snapshot hash、observation state 和 decision code。Price identity/currency/scale mismatch 是 data missing/failure；无 daily limit、盘中重新打开、L1/L2 Queue、Limit/Stop/OHLC path、partial fill 与全天 Volume inference 不属于本 Gate；
+22. Public canonical Query/Resolution/Failure、RuleBook/Band/Evidence、position evidence 与 liquidity decision 均须有 explicit `schema_version=1`、construction invariants、canonical tuple order 和 content hash。ProfilePortOutcome request/result/failure exact 绑定；Model component key 固定 `equity.cn_a_share.cash.order-rules.v1`、version 1、algorithm key `cn-a-share-historical-order-rules-v1`；
+23. Concrete package purity沿用 G08C fail-closed scanner。新 module allowlist 仅包含必要 stdlib、`crypto_quant_domain`、generic `crypto_quant_trading.market_rules|orders|ports|reservations|settlement|sizing` 和 same-package `calendar|quantity_lattice`；拒绝 filesystem、network/provider/process/database/cloud、dynamic import、MarketBundle、Runtime 和 wall clock。Generic kernel 不得 import concrete profile；
+24. Static golden 至少冻结 XSHG Main 2024、XSHG STAR 2024、XSHE Main 2024、ChiNext 2020-08-21/2020-08-24 transition、closed/suspended/no-trade/data-missing、rounding sentinels、Limit/Market quantity caps、direction-sensitive limit-open decisions、ordinary/STAR odd-sale evidence、all component/rule/band/timeline/snapshot/evaluation/decision hashes和 development-only limitations；
+25. G08D 不拥有 Fee/Tax、Corporate Action、Broker commission、MarketBundle Builder/source adapter、Runtime Engine integration、Queue/Volume Fill、Risk-warning累计买入、无涨跌幅股票价格笼子/临停、Stock Connect、margin/short、Profile composition、真实交易或 deployment authorization。G08H 只可组合已冻结能力，不能补写历史事实。
+
+Official primary references and fact/system classification are frozen in `docs/research/cn-a-share-order-rules-primary-sources.md`。Readiness review 允许后续实现按 TDD 填充代码与 fixture，但不得改变上述 public seam、schema compatibility、historical bands、failure precedence 或 conservative scope；若官方来源证明某条冻结事实错误，必须先把 G08D 退回 DRAFT 并以独立 docs commit 修订。
+
+## 66. PASSED 记录格式
 
 ```yaml
 id: WP-00A

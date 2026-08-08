@@ -1269,15 +1269,23 @@ v1 将 `SettlementObligation.settlement_time` 保持为账户交付义务的完�
 
 依赖：G08A、G08C、WP-05G。
 
-拥有：Board-aware historical OrderRule timeline、Suspension、方向敏感 Price Limit Adapter，以及 residual-sell admission 所需的 canonical authoritative position evidence seam。G08D 必须为 `OrderRuleEvaluationInput` 冻结向后兼容的版本化扩展，exact 绑定 evaluated-at Portfolio/Availability/Reservation/WorkingOrder evidence、total/sellable Quantity 和所用 lattice hash；没有该 evidence 时不得批准 odd sell。
+拥有：caller-injected finite `CnAShareOrderRuleBook`、Board-aware historical `OrderRuleTimeline`、explicit Suspension、方向敏感 bar-open Price Limit decision，以及 residual-sell admission 所需的 canonical authoritative position evidence seam。G08D 为 `OrderRuleEvaluationInput` 和 `OrderRuleSnapshot` 冻结向后兼容的版本化扩展；legacy evidence/cap 为空时 schema-v1 bytes/hash 不变。
+
+v1 只批准 standard seasoned XSHG Main/STAR、XSHE Main/ChiNext cash auction。Board、listing/risk classification、previous close 和 trade status 都是 supplied point-in-time evidence，禁止从 symbol、缺 Bar、零 Volume 或 current rule 推断。Risk-warning累计买入和无涨跌幅股票价格笼子/临停因 seam 不完整而 fail closed，不做部分实现。
+
+冻结历史事实至少包括：ChiNext standard seasoned 在 2020-08-24 从 10% 切换到 20%；2023-04-10 后 XSHG/XSHE Main 为 10%；STAR 为 20%；Main/STAR/ChiNext Limit/Market 单笔上限分别为 1,000,000/1,000,000、100,000/50,000、300,000/150,000。Limit 使用 previous close、CNY 0.01 tick 和 HALF_UP integer rounding。
+
+Authoritative odd-sell evidence exact 绑定 evaluated-at PortfolioSnapshot、AvailabilityState、ResourceReservationState、ACTIVE/PARTIALLY_FILLED Working Orders、total/sellable Quantity 和 resolved lattice hash。缺失/链不一致是 DataIntegrityFailure；证据有效但拆分 residual、重复预留或超 sellable 是 MarketRuleRejection。STAR “至少 200 股”使用 step 1 + minimum 200，不得误建模为 200 股整数倍。
 
 验收：
 
-- upper-limit open Buy 与 lower-limit open Sell 产生 LiquidityBlockedAtLimit；
-- 反方向继续进入后续 Gate；
-- 不使用全天 Volume 推断 Queue 成交；
-- Suspension、NoTrade 和 DataMissing 分类不同；
-- 历史 Rule 缺失/重叠时 fail closed，不回退当前规则。
+- upper-limit open Buy 与 lower-limit open Sell 产生 `liquidity_blocked_at_limit`，反方向继续；
+- conservative input 不含全天 Volume，不从日内后续成交补 Queue fill；
+- Suspension、known NoTrade 和 DataMissing 分类不同；
+- 历史 Rule 缺失/重叠时 fail closed，不回退 current rule；
+- execution-style 单笔上限、HALF_UP tick rounding、ChiNext transition 与 ordinary/STAR quantity semantics exact；
+- H=299 的 SELL99/199/299 仅在 evaluated-at evidence 支持时获批，arbitrary odd、超 sellable 和 active residual reservation fail closed；
+- G08C ordinary Main lattice hash exact 复用，schema-v1 compatibility golden 保持。
 
 ### Gate G08E Commission and Tax
 

@@ -231,6 +231,18 @@ _Avoid_: Market Profile
 
 Price 或 Market Event Stream 在预期覆盖区间中的缺失，并具有明确的市场可用状态和来源证据。
 
+## A 股历史订单规则簿（A-Share Historical Order Rule Book）
+
+按 Venue、Board 和半开 TradingDate 区间冻结 daily price limit、tick、Execution-style 单笔数量上限与 QuantityLattice 的 caller-injected immutable evidence。缺口或重叠必须 fail closed，禁止回退 current rule。
+
+## 权威订单规则仓位证据（Authoritative Order-Rule Position Evidence）
+
+为 residual/odd SELL 准入在同一 evaluated-at exact 绑定 PortfolioSnapshot、AvailabilityState、ResourceReservationState、active Working Orders、total/sellable Quantity 和 resolved lattice hash 的 canonical hash chain。Sizing、Target 或 `PositionEffect.CLOSE` 不能替代它。
+
+## 涨跌停流动性阻断（Liquidity Blocked at Limit）
+
+`next_eligible_bar_open.v1` 在 contemporaneous bar open 等于 upper limit 的 BUY 或等于 lower limit 的 SELL 上使用的 conservative no-fill eligibility。它不使用全天 Volume，也不声称具备真实 Queue 模拟能力。
+
 ## 陈旧估值策略（Stale Mark Policy）
 
 规定在停牌或无成交等允许原因下，估值价格可以沿用的最大年龄和 Price Purpose。它不能授权使用旧价格模拟成交。
