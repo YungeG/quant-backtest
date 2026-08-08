@@ -1390,7 +1390,7 @@ Bar Engine v1：
 - `PositionAdjustmentApplied`：在独立 Effective/Listing trigger 下调整 Position Lot quantity 和 cost basis。
 - `CashDistributionPaid`：在独立 Payment trigger 下产生 Cash Journal Entry。
 
-G08F 的 A 股 development convention 使用 Record TradingDate local 15:00 session-close 作为 engine eligibility ordering boundary，但不声称 ChinaClear 在 15:00 完成登记。Plan-only、late、cancelled、supplied revision、negative、fractional 或缺少 Register evidence 的 Action fail closed；complete closed revision-set 与 Candidate 不可观察的账户上下文由 G08H/Profile composition 验证。G08F 只产生 immutable gross Entitlement，不修改 Journal、Ledger、Lot、Settlement 或 Availability。
+G08F 的 A 股 development convention 使用 Record TradingDate local 15:00 session-close 作为 engine eligibility ordering boundary，但不声称 ChinaClear 在 15:00 完成登记。Frozen current-rule scope 要求 declared Ex/适用 Payment/适用 Listing date exact 等于 Record 后首个 known G08A TradingDate，且 share Rate basis 为 `shares_per_share`；日期字段必须由 Announcement 提供，不能因规则可推导而省略。Plan-only、late、cancelled、supplied revision、invalid lifecycle/basis、negative、fractional 或缺少 Register evidence 的 Action fail closed；complete closed revision-set 与 Candidate 不可观察的账户上下文由 G08H/Profile composition 验证。G08F 只产生 immutable gross Entitlement，不修改 Journal、Ledger、Lot、Settlement 或 Availability。
 
 Position Adjustment 必须以 Journal-replayable Lot effect 为权威，并保存可精确守恒的 total Cost Basis；fixed-scale unit cost 只能是派生值。Account-level integer entitlement 不证明每个 Lot allocation 都是整数，必须有 authoritative per-Lot evidence 或显式单 Lot scope。若 Generic Ledger 仍拒绝 Lot、Runtime 仍维护未由 Journal 重建的 mutable lot side-state，则 Adjustment/Payment Gate 不得 READY。Tax/withholding 由 Market Tax Rules、ExecutionAccountProfile 与账户持有期事实共同决定，不能从 gross Entitlement 推断；deferred-tax disposition 必须由 G08G typed 输出并由 G08H/Runtime 阻断尚未支持的后续 taxable transfer。
 
