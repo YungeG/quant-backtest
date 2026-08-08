@@ -1226,6 +1226,7 @@ _ALLOWED_IMPORTS = {
 _ALLOWED_RELATIVE_IMPORTS = {
     "calendar",
     "commission_tax",
+    "corporate_actions",
     "order_rules",
     "quantity_lattice",
     "settlement",
@@ -1251,6 +1252,18 @@ _ALLOWED_IMPORTS_BY_FILE = {
         "crypto_quant_domain",
         "crypto_quant_trading.fee_reservations",
         "crypto_quant_trading.fees",
+        "crypto_quant_trading.ports",
+    },
+    "corporate_actions.py": {
+        "__future__",
+        "dataclasses",
+        "datetime",
+        "enum",
+        "re",
+        "typing",
+        "unicodedata",
+        "zoneinfo",
+        "crypto_quant_domain",
         "crypto_quant_trading.ports",
     },
     "order_rules.py": {
@@ -1291,12 +1304,14 @@ _ALLOWED_RELATIVE_IMPORTS_BY_FILE = {
     "__init__.py": {
         "calendar",
         "commission_tax",
+        "corporate_actions",
         "order_rules",
         "quantity_lattice",
         "settlement",
     },
     "calendar.py": set(),
     "commission_tax.py": set(),
+    "corporate_actions.py": {"calendar"},
     "order_rules.py": {"calendar", "quantity_lattice"},
     "quantity_lattice.py": set(),
     "settlement.py": {"calendar"},
@@ -1508,6 +1523,139 @@ def _purity_violations(
     return violations
 
 
+def _module_mutation_violations(source: str) -> set[str]:
+    tree = ast.parse(source)
+    violations = {
+        f"scope:{type(node).__name__}"
+        for node in ast.walk(tree)
+        if isinstance(node, (ast.Global, ast.Nonlocal))
+    }
+    mutable_values = (
+        ast.Dict,
+        ast.DictComp,
+        ast.List,
+        ast.ListComp,
+        ast.Set,
+        ast.SetComp,
+    )
+    mutable_constructors = {"dict", "list", "set", "defaultdict"}
+    mutating_methods = {
+        "add",
+        "append",
+        "clear",
+        "discard",
+        "extend",
+        "insert",
+        "pop",
+        "remove",
+        "setdefault",
+        "sort",
+        "update",
+    }
+
+    def mutable_expression(value: ast.AST | None) -> bool:
+        if value is None:
+            return False
+        for nested in ast.walk(value):
+            if isinstance(nested, mutable_values):
+                return True
+            if isinstance(nested, ast.Call):
+                name = (
+                    nested.func.id
+                    if isinstance(nested.func, ast.Name)
+                    else (
+                        nested.func.attr
+                        if isinstance(nested.func, ast.Attribute)
+                        else ""
+                    )
+                )
+                if name in mutable_constructors:
+                    return True
+        return False
+
+    def module_suite(statements: list[ast.stmt]) -> list[ast.stmt]:
+        values: list[ast.stmt] = []
+        for statement in statements:
+            values.append(statement)
+            if isinstance(statement, (ast.FunctionDef, ast.AsyncFunctionDef)):
+                continue
+            nested_suites: list[list[ast.stmt]] = []
+            for name in ("body", "orelse", "finalbody"):
+                nested = getattr(statement, name, None)
+                if isinstance(nested, list):
+                    nested_suites.append(nested)
+            handlers = getattr(statement, "handlers", ())
+            nested_suites.extend(handler.body for handler in handlers)
+            cases = getattr(statement, "cases", ())
+            nested_suites.extend(case.body for case in cases)
+            for nested in nested_suites:
+                values.extend(module_suite(nested))
+        return values
+
+    for node in module_suite(tree.body):
+        value = None
+        targets: tuple[ast.expr, ...] = ()
+        executed_expressions: list[ast.expr] = []
+        if isinstance(node, (ast.If, ast.While)):
+            executed_expressions.append(node.test)
+        elif isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef, ast.ClassDef)):
+            executed_expressions.extend(node.decorator_list)
+        elif isinstance(node, (ast.With, ast.AsyncWith)):
+            executed_expressions.extend(item.context_expr for item in node.items)
+        for expression in executed_expressions:
+            if mutable_expression(expression):
+                violations.add("module_state:mutable_expression")
+            if any(
+                isinstance(nested, ast.Call)
+                and isinstance(nested.func, ast.Attribute)
+                and nested.func.attr in mutating_methods
+                for nested in ast.walk(expression)
+            ):
+                violations.add("module_mutation:expression")
+        if isinstance(node, ast.Assign):
+            value = node.value
+            targets = tuple(node.targets)
+        elif isinstance(node, ast.AnnAssign):
+            value = node.value
+            targets = (node.target,)
+        elif isinstance(node, ast.AugAssign):
+            targets = (node.target,)
+        elif isinstance(node, ast.Expr) and isinstance(node.value, ast.Call):
+            function = node.value.func
+            if isinstance(function, ast.Attribute) and function.attr in mutating_methods:
+                violations.add(f"module_mutation:{function.attr}")
+        if mutable_expression(value):
+            violations.add("module_state:mutable_expression")
+        if any(isinstance(target, (ast.Attribute, ast.Subscript)) for target in targets):
+            violations.add("module_mutation:assignment")
+    return violations
+
+
+@pytest.mark.parametrize(
+    "source",
+    (
+        "STATE = ({'values': []},)",
+        "STATE = dict()",
+        "STATE = tuple([1])",
+        "STATE = object()\nSTATE.value = 1",
+        "STATE = []\nSTATE.append(1)",
+        "STATE = {}\nSTATE['x'] = 1",
+        "STATE = 0\ndef change():\n    global STATE",
+        "if True:\n    STATE = []",
+        "try:\n    STATE = dict()\nexcept Exception:\n    pass",
+        "for _ in ():\n    STATE = set()",
+        "with open('x'):\n    STATE = []",
+        "if (STATE := []):\n    pass",
+        "class State:\n    values = []",
+        "STATE = []\n@STATE.append(1)\ndef decorated():\n    pass",
+    ),
+)
+def test_module_mutation_scanner_rejects_nested_and_indirect_state(
+    source: str,
+) -> None:
+    assert _module_mutation_violations(source)
+
+
 def test_concrete_profile_source_is_pure_and_not_root_reexported() -> None:
     root = Path(__file__).resolve().parents[4]
     profile_root = (
@@ -1517,11 +1665,14 @@ def test_concrete_profile_source_is_pure_and_not_root_reexported() -> None:
     for source_path in sorted(profile_root.rglob("*.py")):
         allowed = _ALLOWED_IMPORTS_BY_FILE[source_path.name]
         relative_allowed = _ALLOWED_RELATIVE_IMPORTS_BY_FILE[source_path.name]
+        source = _read_text(source_path)
         assert not _purity_violations(
-            _read_text(source_path),
+            source,
             allowed_imports=allowed,
             allowed_relative_imports=relative_allowed,
         ), source_path
+        if source_path.name == "corporate_actions.py":
+            assert not _module_mutation_violations(source), source_path
     generic_root = root / "packages/trading-kernel/src/crypto_quant_trading"
     for source_path in generic_root.glob("*.py"):
         assert "profiles.cn_a_share" not in _read_text(source_path)
@@ -1529,6 +1680,7 @@ def test_concrete_profile_source_is_pure_and_not_root_reexported() -> None:
         assert "CnAShareCashQuantityLatticeModel" not in _read_text(source_path)
         assert "CnAShareCashMarketFeePolicy" not in _read_text(source_path)
         assert "CnAShareCashStampDutyTaxPolicy" not in _read_text(source_path)
+        assert "CnAShareCorporateActionEntitlementModel" not in _read_text(source_path)
 
 
 @pytest.mark.parametrize(
