@@ -1223,7 +1223,13 @@ _ALLOWED_IMPORTS = {
     "crypto_quant_trading.settlement",
     "crypto_quant_trading.sizing",
 }
-_ALLOWED_RELATIVE_IMPORTS = {"calendar", "order_rules", "quantity_lattice", "settlement"}
+_ALLOWED_RELATIVE_IMPORTS = {
+    "calendar",
+    "commission_tax",
+    "order_rules",
+    "quantity_lattice",
+    "settlement",
+}
 _ALLOWED_IMPORTS_BY_FILE = {
     "__init__.py": set(),
     "calendar.py": {
@@ -1234,6 +1240,17 @@ _ALLOWED_IMPORTS_BY_FILE = {
         "unicodedata",
         "zoneinfo",
         "crypto_quant_domain",
+        "crypto_quant_trading.ports",
+    },
+    "commission_tax.py": {
+        "__future__",
+        "dataclasses",
+        "enum",
+        "typing",
+        "unicodedata",
+        "crypto_quant_domain",
+        "crypto_quant_trading.fee_reservations",
+        "crypto_quant_trading.fees",
         "crypto_quant_trading.ports",
     },
     "order_rules.py": {
@@ -1271,8 +1288,15 @@ _ALLOWED_IMPORTS_BY_FILE = {
     },
 }
 _ALLOWED_RELATIVE_IMPORTS_BY_FILE = {
-    "__init__.py": {"calendar", "order_rules", "quantity_lattice", "settlement"},
+    "__init__.py": {
+        "calendar",
+        "commission_tax",
+        "order_rules",
+        "quantity_lattice",
+        "settlement",
+    },
     "calendar.py": set(),
+    "commission_tax.py": set(),
     "order_rules.py": {"calendar", "quantity_lattice"},
     "quantity_lattice.py": set(),
     "settlement.py": {"calendar"},
@@ -1503,6 +1527,8 @@ def test_concrete_profile_source_is_pure_and_not_root_reexported() -> None:
         assert "profiles.cn_a_share" not in _read_text(source_path)
         assert "CnAShareCashSettlementModel" not in _read_text(source_path)
         assert "CnAShareCashQuantityLatticeModel" not in _read_text(source_path)
+        assert "CnAShareCashMarketFeePolicy" not in _read_text(source_path)
+        assert "CnAShareCashStampDutyTaxPolicy" not in _read_text(source_path)
 
 
 @pytest.mark.parametrize(
