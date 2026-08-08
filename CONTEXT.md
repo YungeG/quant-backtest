@@ -730,6 +730,22 @@ G08B development-grade Profile 中，买入负现金和卖出负持仓在 Fill �
 
 将特定 Instrument 的成交和仓位经济事实翻译为会计流水项的规则。它不能直接修改账户账本状态。
 
+## 线性永续合约（Linear Perpetual Contract）
+
+以结算币计价、盈亏与价格变化和合约乘数线性相关、没有固定到期日的衍生 Instrument。合约乘数明确表示每份合约对应的基础资产数量。
+
+## 精确平均入场基础（Exact Average Entry Basis）
+
+线性净持仓未平仓部分的正有理数平均入场价格。它以约分后的整数分子和正分母表达，不是舍入后的固定小数价格，也不是现金类取得批次。
+
+## 线性仓位投影（Linear Position Projection）
+
+按 caller 给定顺序从成交序列确定性重建单向净 Long、Short 或 Flat 状态及 OPEN、ADD、REDUCE、CLOSE、FLIP 转换的不可变证据。它不是会计流水、账户账本或保证金投影。
+
+## 仓位翻转（Position Flip）
+
+单个反向成交完全关闭原方向后仍有剩余数量并立即建立相反方向净持仓的转换。新方向的入场基础只来自该 crossing Fill，不继承已关闭方向的基础。
+
 ## 取得批次（Acquisition Lot）
 
 现金类 Instrument 由一次买入成交取得的不可变数量、单位成本、费用和时间来源记录。

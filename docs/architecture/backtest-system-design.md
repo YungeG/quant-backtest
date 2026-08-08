@@ -1345,6 +1345,10 @@ Cash Instrument Accounting 保留不可变 `AcquisitionLot`：lot ID、source fi
 
 Derivative Entry Price 和 PnL 由具体 PositionAccountingModel 定义，不强行套用 Cash Instrument Lot 模型。
 
+G09A 在 Accounting translation 之前增加 market-neutral `LinearPositionProjector` deep module：caller 提供 `LinearPerpetualContract`、Position key 与 ordered Fill tuple，Projector 从 Flat state确定性产生 signed net Position、exact rational average-entry basis 和 OPEN/ADD/REDUCE/CLOSE/FLIP transitions。它不读取 Ledger/Lot/Runtime mutable state，也不产生 Journal。Average entry 禁止 fixed-scale rounding；contract multiplier 使用 `base_quantity_per_contract` typed Rate 并进入 State identity。G09B 的 `LinearDerivativeAccounting` 消费 G09A Transition，独立负责 realized PnL Money boundary 与 Journal translation；G09E 消费同一 Contract/State identity计算 multiplier-aware margin notional。
+
+该 seam 保持 Generic Ledger branchless：G09A State 是 projection evidence，不冒充 `PositionBalance` 或 Cash `PositionLot`。只有 G09B 冻结 replayable derivative Journal effects 后，Ledger/Snapshot composition 才能持有 authoritative derivative Position。Funding eligibility、MarginProjection 和 LiquidationAudit 同样等待各自 Gate，不在 Position Projector 中累积可选字段。
+
 ### 11.10 SettlementModel
 
 负责 T+0/T+1、Settlement Obligation、可交易/可提现资金、可卖数量、Futures daily settlement、Contract expiry 和 rollover。T+1 等规则必须通过 SettlementBook 和 AvailabilityProjection 实现，不能只作为 Strategy 条件判断。

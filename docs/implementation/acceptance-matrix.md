@@ -115,10 +115,10 @@ artifact_hashes: []
 | G08C | PASSED | trading-kernel profiles/cn_a_share | G08A, WP-04E, WP-05D, WP-05G | none |
 | G08D | PASSED | trading-kernel profiles/cn_a_share | G08A, G08C, WP-05G | none |
 | G08E | PASSED | trading-kernel profiles/cn_a_share | WP-05H, WP-05J | none |
-| G08F | READY | trading-kernel profiles/cn_a_share | G08A, WP-06A, WP-06B | none |
+| G08F | PASSED | trading-kernel profiles/cn_a_share | G08A, WP-06A, WP-06B | none |
 | G08G | DRAFT | trading-domain + trading-kernel + backtest-runtime | G08F, G03 | Journal-replayable Lot effects, exact total Cost Basis, availability/tax/fractional-share fixtures |
 | G08H | DRAFT | trading-kernel profiles/cn_a_share + parity | G08A–G08G | Composition/parity commands |
-| G09A | DRAFT | trading-kernel derivatives | G03 | Position model fixtures |
+| G09A | READY | trading-kernel derivatives | G03 | none |
 | G09B | DRAFT | trading-kernel accounting | G09A, G03 | Fill/PnL fixtures |
 | G09C | DRAFT | trading-kernel financing | G09A, WP-06B | Funding eligibility fixtures |
 | G09D | DRAFT | trading-kernel financing/accounting | G09B–G09C | Funding settlement fixtures |
@@ -6385,7 +6385,99 @@ G08G 保持 `DRAFT`。在以下 blockers 全部冻结前不得实现：
 8. Raw tradable prices 保持不变。Ex reference price 只能进入 Market Rule/reference metadata，不能 retroactively rewrite OHLC、Fill 或 accounting price；
 9. 完整成功 Fixture、精确验收命令、public interface、failure precedence、canonical identity chain 和 artifact list 仍未冻结。
 
-## 69. PASSED 记录格式
+## 69. G09A Linear Derivative Position Model Acceptance Card
+
+```yaml
+id: G09A
+status: READY
+depends_on:
+  - G03
+owner_package: trading-kernel derivatives
+public_interface:
+  - crypto_quant_trading.LinearPositionTransitionKind
+  - crypto_quant_trading.LinearPerpetualContract
+  - crypto_quant_trading.ExactAverageEntryBasis
+  - crypto_quant_trading.LinearPositionState
+  - crypto_quant_trading.LinearPositionProjectionRequest
+  - crypto_quant_trading.LinearPositionTransition
+  - crypto_quant_trading.LinearPositionProjection
+  - crypto_quant_trading.LinearPositionProjectionFailureCode
+  - crypto_quant_trading.LinearPositionProjectionFailure
+  - crypto_quant_trading.LinearPositionProjectionOutcome
+  - crypto_quant_trading.LinearPositionProjector
+  - static synthetic linear-position golden fixture v1
+test_commands:
+  contract: uv run pytest -q tests/kernel/derivatives/test_linear_positions.py
+  fixture: uv run pytest -q tests/kernel/derivatives/test_linear_positions_golden.py
+  boundary: uv run pytest -q tests/architecture/test_public_api_imports.py tests/architecture/test_network_isolation.py tests/architecture/test_repository_cleanliness.py tests/architecture/test_derivative_boundary.py tests/kernel/ledger/test_generic_ledger.py tests/kernel/snapshots/test_portfolio_snapshot_projector.py && uv run python tools/architecture/check_import_boundaries.py --root . --policy architecture/import-boundaries.toml --report build/acceptance/g09a-import-boundary-report.json
+fixture_ids:
+  - synthetic-linear-position-v1
+expected_artifacts:
+  - tests/fixtures/kernel/derivatives/linear-position-v1.json
+  - build/acceptance/g09a-pytest.xml
+  - build/acceptance/g09a-import-boundary-report.json
+failure_contracts:
+  - current-state-or-average-price-is-read-from-ledger-lots-or-runtime-mutable-state
+  - fill-order-is-sorted-or-equal-time-order-is-discarded
+  - duplicate-fill-id-or-execution-time-regression-is-accepted
+  - account-venue-instrument-quantity-price-or-currency-context-is-partially-projected
+  - quantity-or-price-is-implicitly-rescaled
+  - weighted-average-entry-is-rounded-or-stored-as-float-decimal
+  - partial-reduce-reprices-the-surviving-position
+  - close-retains-an-entry-basis
+  - flip-blends-the-closed-side-entry-basis-into-the-new-side
+  - contract-multiplier-is-omitted-from-state-identity
+  - failure-returns-a-partial-transition-prefix
+  - generic-ledger-snapshot-engine-or-runtime-branches-on-derivative-instrument-type
+  - g09a-books-realized-pnl-fee-funding-margin-or-liquidation
+allowed_grade: development
+evidence:
+  - pytest-report
+  - static-linear-position-golden-hash
+  - exact-rational-average-entry-evidence
+  - long-short-open-add-reduce-close-flip-evidence
+  - deterministic-fill-prefix-and-ordering-evidence
+  - multiplier-and-scale-identity-evidence
+  - atomic-failure-precedence-evidence
+  - no-ledger-runtime-mutation-evidence
+  - import-boundary-report
+  - static-type-report
+```
+
+### G09A Acceptance
+
+1. G09A 只在 `crypto_quant_trading.derivatives` 增加 pure in-process deep module，并从 `crypto_quant_trading` root 公开 frozen interface；不得新增 generic Port、Adapter、Package、Profile registration、依赖或在 Generic Ledger、PortfolioSnapshotProjector、Engine、Runner、Timeline 中增加 `InstrumentType.LINEAR_PERPETUAL` branch；
+2. `LinearPerpetualContract` exact 保存 `InstrumentDefinition`、authoritative Quantity Scale、authoritative Price Scale 与 positive typed `Rate` contract multiplier。Instrument 必须为 `LINEAR_PERPETUAL`、base currency 非空且 quote currency exact 等于 settlement currency；multiplier basis exact 为 `base_quantity_per_contract`。Constructor 只接受 explicit evidence，不从 symbol、Venue 或 provider metadata 推断；
+3. G09A v1 是单 Execution Account、单 Instrument 的 one-way net Position。Signed `Quantity` 的正值表示 Long、负值表示 Short、零表示 Flat；不新增 Long/Short enum，不表达 hedge-mode 双腿、reduce-only、`PositionEffect`、isolated/cross margin 或多账户净额；
+4. `ExactAverageEntryBasis` 保存 Instrument ID、quote Currency、strictly-positive GCD-reduced integer numerator 与 positive denominator，经济含义 exact 为 quote Price `numerator / denominator`。禁止 float、Decimal、quantization、rounding 或固定小数截断；unreduced、零/负 denominator、non-positive numerator 或 identity mismatch 在 constructor fail closed；
+5. `LinearPositionState` exact 保存 `PositionBalanceKey`、完整 Contract、signed Quantity 与 optional exact basis。Invariant exact 为 `quantity.units == 0 iff average_entry_basis is None`；non-flat 必须有 basis。Position key/Contract/Quantity/Basis 的 account、Venue、Instrument、Currency 和 Scale identity 必须一致。G09A 不复用 cash `PositionLot` 或 Generic Ledger balance 作为平均入场权威；
+6. `LinearPositionProjectionRequest` exact 保存 Position key、Contract 与 caller-ordered immutable Fill tuple。Empty tuple 合法并产生 canonical Flat state；tuple order 是业务语义，Projector 不排序。Execution time 必须 non-decreasing；相同 execution time 合法并由 tuple order 决定，完整 Fill bytes 进入 Request/Transition/Projection identity；
+7. 每个 Fill 的 signed delta exact 为 BUY `+fill.quantity.units`、SELL `-fill.quantity.units`。令 prior units `q0`、delta `d`、after `q1=q0+d`，transition precedence exact 为：`q0==0 -> OPEN`；`sign(q0)==sign(d) -> ADD`；`abs(d)<abs(q0) -> REDUCE`；`abs(d)==abs(q0) -> CLOSE`；`abs(d)>abs(q0) -> FLIP`；
+8. `closed_quantity` 对 OPEN/ADD exact 为 zero positive-direction sentinel Quantity，对 REDUCE/CLOSE/FLIP exact 为 `min(abs(q0), abs(d))`，Scale 与 Instrument identity 不变。After signed Quantity exact 为 `q1`；REDUCE 保留 prior basis，CLOSE 设 basis None，FLIP 的新方向 basis exact 等于 crossing Fill Price，不把已关闭方向 basis 混入新方向；
+9. OPEN basis exact 为 reduced `fill.price.units / 10^price_scale.places`。ADD 使用 Quantity raw units 作为同 Scale 权重；若 prior basis 为 `N/D`、Fill Price units 为 `p`、Price scale factor 为 `S=10^places`、同向 prior/fill raw quantities 为 `a/b`，new basis exact 为 reduced `(N*a*S + p*b*D) / (D*(a+b)*S)`。固定 Contract multiplier 在 weighted average 中代数消去，但必须保留在 Contract/State identity，供 G09B 使用 `signed closed quantity × multiplier × (exit price - prior basis)`；
+10. `LinearPositionProjector.project(request)` 是唯一行为 interface，一次从 Flat state投影完整 Fill sequence并返回 exactly-one Projection/Failure；不额外公开 `apply_fill()`、`replay()` 或 mutable accumulator。每个 Transition 保存 kind、完整 Fill、before/after State 与 closed Quantity；Projection 保存完整 Request、request hash、ordered Transitions 与 final State；
+11. Failure enum values exact 为 `position_context_mismatch`、`duplicate_fill_id`、`non_monotonic_execution_time`、`fill_context_mismatch`、`quantity_scale_mismatch`、`price_context_mismatch`、`price_scale_mismatch`，first-failure precedence exact 为：Request-level `POSITION_CONTEXT_MISMATCH` → 对每个最早 failing Fill 依次 `DUPLICATE_FILL_ID` → `NON_MONOTONIC_EXECUTION_TIME` → `FILL_CONTEXT_MISMATCH` → `QUANTITY_SCALE_MISMATCH` → `PRICE_CONTEXT_MISMATCH` → `PRICE_SCALE_MISMATCH`。Duplicate exact 归因于最早的 repeated occurrence，不归因于首次出现；同一 Fill 多缺陷只返回该顺序第一项。任何 business failure 原子返回且不暴露 partial Projection/Transition prefix。Malformed constructor type/canonical errors 不冒充 business failure；
+12. Position context exact 要求 Position key Venue/Instrument 与 Contract Instrument 一致。Fill context exact 要求 account/Venue/Instrument 与 Position key 一致；Quantity Instrument/Scale、execution Price Instrument/quote Currency/Scale 与 Contract 一致。Fill `reference_price`、slippage、liquidity 和 Order metadata 保留在 identity，但不参与 G09A entry basis；
+13. Duplicate Fill ID 在同一 Request 内 fail closed；execution-time regression fail closed；跨 Request Journal idempotency/conflict detection属于 G09B。相同 Request bytes 必须返回相同 hashes；相同最终经济状态但不同 Fill order/metadata 允许 state hash相同。Request/Projection hash 必须随完整 Request identity 改变；某一 Transition hash 只在该 Transition 自身 `{kind,fill,before,after,closed_quantity}` canonical preimage 改变时改变，later Fill metadata 不 retroactively 改写 earlier Transition identity；
+14. Transition、Projection constructor 必须从 embedded Request/Fill/before State 重算 transition kind、closed Quantity、after State 与 final State，拒绝 forged prefix/final result。Failure 保存完整 Request、request hash、code、zero-based fill index 与 conditional Fill ID：Request-level Position mismatch exact 使用 `(fill_index=None, fill_id=None)`；Fill-level Failure exact 指向 offending Fill；Failure constructor 必须从 embedded Request 重算完整 first failure，而不只验证 index/ID shape。Outcome 保存 request hash并只允许 exactly-one result/failure；
+15. Transition kind enum values exact 为 `open`、`add`、`reduce`、`close`、`flip`。所有 public values 使用 `schema_version=1` 与 canonical tuple order。Canonical `type` exact 为 Contract `linear_perpetual_contract`、Basis `exact_average_entry_basis`、State `linear_position_state`、Request `linear_position_projection_request`、Transition `linear_position_transition`、Projection `linear_position_projection`、Failure `linear_position_projection_failure`、Outcome `linear_position_projection_outcome`。Canonical preimage exact 分别为：Contract `{type,schema_version,instrument,quantity_scale,price_scale,contract_multiplier}`，其中 `quantity_scale`/`price_scale` exact 编码为各自 `Scale.places` integer；Basis `{type,schema_version,instrument_id,quote_currency,numerator,denominator}`；State `{type,schema_version,position_key,contract,quantity,average_entry_basis}`；Request `{type,schema_version,position_key,contract,fills}`；Transition `{type,schema_version,kind,fill,before,after,closed_quantity}`；Projection `{type,schema_version,request,request_hash,transitions,final_state}`；Failure `{type,schema_version,request,request_hash,code,fill_index,fill_id}`；Outcome `{type,schema_version,request_hash,result,failure}`；
+16. `contract_hash`、`basis_hash`、`state_hash`、`request_hash`、`transition_hash`、`projection_hash`、`failure_hash` 与 `outcome_hash` exact 使用 `canonical_sha256(value)`。Scale canonical 继续沿用 Domain `Scale` contract，不新增替代 schema。Constructor/Projector 不 mutate Request、Fill、Contract 或 State，也不创建 mutable module state；
+17. Static synthetic golden exact 使用非 unit multiplier `Rate(125, Scale(3), "base_quantity_per_contract")`、Quantity Scale 3、Price Scale 2，至少冻结：Long/Short OPEN、ADD、REDUCE、CLOSE、FLIP；Long `1.000 @ 100.00` 加 `2.000 @ 100.50` 后 basis `301/3`；partial reduce保持 `301/3`；crossing Fill 后新 side basis等于 Fill；empty projection；prefix parity；equal-time permutation identity；cross-zero permutation economics；multiplier/Scale mutation；request-level failure null attribution、earliest repeated duplicate attribution、全部 failure precedence/atomicity、constructor rejection、canonical bytes/hash 与 no-mutation controls。`test_derivative_boundary.py` 必须 AST/source 扫描 Generic Ledger、SnapshotProjector、Engine、Runner 和 Timeline，拒绝 `InstrumentType.LINEAR_PERPETUAL` 或 `linear_perpetual` branch/reference；
+18. G09A 不拥有 Accounting Journal、PositionAccountingModel、Ledger replay、realized/unrealized PnL、Money quantization、Fee、Funding、Margin、Liquidation、Settlement、Mark、Runtime orchestration、Binance metadata/provider quantity interpretation、真实交易或 deployment authorization。G09B 必须独立冻结 exact rational PnL-to-Money boundary 和 Journal evidence；G09E 必须独立冻结 multiplier-aware notional/margin semantics。
+
+## 70. G09B–G09H Readiness Blockers
+
+G09B–G09H 保持 `DRAFT`。当前 blockers：
+
+1. G09B 必须冻结 G09A exact basis/transition 到 realized PnL `Money` 的 quantization boundary、Journal entry/effect schema、transition hash provenance、direct projection vs Journal replay parity，以及 derivative Position state 如何成为 replayable Ledger authority；
+2. G09C 必须冻结 Funding publication MarketEvent causality、stable Slot ID、eligibility instant 的历史 G09A Position capture、revision/idempotency 和缺失 evidence failure precedence；
+3. G09D 必须冻结 applied Rate、Funding `PricePurpose` Mark、cash direction、settlement Currency/Scale、Slot duplicate/conflict contract 和 Journal identity chain；
+4. G09E 必须冻结 caller-injected historical leverage/tier RuleBook、multiplier-aware notional公式、initial/maintenance requirement、tier boundary/gap/overlap precedence 和 current-tier fallback rejection；
+5. G09F 必须冻结单 Execution Account Equity、Derivative unrealized PnL、Fee/Funding、Maintenance Margin、Working Order Reservation 的 authoritative inputs与独立 immutable `MarginProjection`；不得把 Margin 数值塞入 Generic Ledger balance；
+6. G09G 必须冻结 Liquidation Mark Bar evidence、long-low/short-high conservative evaluation、`SAFE`/`AMBIGUOUS_BREACH` canonical audit与 decision-grade fail-closed routing；
+7. G09H 必须冻结 branchless injected composition、Synthetic E2E commands/artifacts、Journal/MarginProjection/PortfolioSnapshot reconstruction与 development-only limitation；Generic Engine accounting/event dispatch 尚不能按 resolved profile 注入 derivative accounting，因此不得提前组合。
+
+## 71. PASSED 记录格式
 
 ```yaml
 id: WP-00A

@@ -1383,6 +1383,12 @@ READY 前阻断：
 - Position state 可从 Fill sequence 确定性重建；
 - Generic Ledger 不增加 Instrument type 条件分支。
 
+冻结实现 seam：G09A 只新增 pure `crypto_quant_trading.derivatives` deep module，唯一行为 interface 为 `LinearPositionProjector.project(LinearPositionProjectionRequest)`；不新增 Port、Adapter、Profile 或 Runtime integration。Request 使用 caller-ordered immutable Fill tuple，从 Flat state 原子投影完整 sequence；signed Quantity 正/负/零分别表达 Long/Short/Flat，同 execution time 由 tuple order 决定且 Projector 不排序。
+
+Average entry 使用 GCD-reduced exact rational `ExactAverageEntryBasis(numerator, denominator)`，禁止 float、Decimal 或固定 Scale rounding。OPEN 使用 Fill Price；ADD 按同 Scale raw Quantity 加权；REDUCE 保持 prior basis；CLOSE 清空 basis；FLIP 的新方向只使用 crossing Fill Price。Contract multiplier 是 positive `Rate`，basis exact 为 `base_quantity_per_contract`，进入 Contract/State identity但在 weighted average 中代数消去。G09A 不计算 PnL；G09B 再冻结 `signed closed quantity × multiplier × (exit price - prior basis)` 到 Money 的量化边界。
+
+G09A Result/Failure 嵌入完整 Request 并使用 canonical schema v1/hash；Transition constructor 重算 kind、closed Quantity 和 after State，Projection 重放全部 Transition。Duplicate Fill、time regression、context/Scale mismatch 按 Acceptance Matrix first-failure precedence 原子 fail closed，不返回 partial prefix。Cash PositionLot、Generic Ledger、SnapshotProjector、Engine 和 Runner 不感知 derivative type。
+
 ### Gate G09B Fill-to-Journal and PnL
 
 依赖：G09A、G03 Accounting。
