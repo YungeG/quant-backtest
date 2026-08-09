@@ -11,6 +11,7 @@ DERIVATIVE_MODULES = (
     ROOT / "packages/trading-kernel/src/crypto_quant_trading/derivatives.py",
     ROOT / "packages/trading-kernel/src/crypto_quant_trading/derivative_accounting.py",
     ROOT / "packages/trading-kernel/src/crypto_quant_trading/funding.py",
+    ROOT / "packages/trading-kernel/src/crypto_quant_trading/funding_accounting.py",
 )
 GENERIC_MODULES = (
     ROOT / "packages/trading-kernel/src/crypto_quant_trading/ledger.py",
@@ -149,8 +150,10 @@ def _purity_violations(source: str) -> set[str]:
         "crypto_quant_domain",
         "derivative_accounting",
         "derivatives",
+        "funding",
         "journal",
         "ledger",
+        "marks",
         "ports",
     }
     mutable_values = (

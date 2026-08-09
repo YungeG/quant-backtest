@@ -232,6 +232,30 @@ def test_journal_entry_has_stable_identity_sources_time_and_typed_changes() -> N
         cast(Any, entry).account_id = "account:other"
 
 
+def test_zero_effect_allowlist_only_adds_funding_applied() -> None:
+    base = replace(
+        journal_entry(),
+        entry_type=AccountingEntryType.CORPORATE_ACTION_ENTITLEMENT_BOOKED,
+        balance_changes=(),
+        realized_pnl=(),
+        fees=(),
+        financing=(),
+    )
+
+    for allowed in (
+        AccountingEntryType.CORPORATE_ACTION_ENTITLEMENT_BOOKED,
+        AccountingEntryType.FUNDING_APPLIED,
+    ):
+        assert replace(base, entry_type=allowed).entry_type is allowed
+
+    for rejected in set(AccountingEntryType) - {
+        AccountingEntryType.CORPORATE_ACTION_ENTITLEMENT_BOOKED,
+        AccountingEntryType.FUNDING_APPLIED,
+    }:
+        with pytest.raises(ValueError, match="economic effect"):
+            replace(base, entry_type=rejected)
+
+
 def test_position_lot_and_position_balance_preserve_lot_provenance() -> None:
     value = lot()
     balance = PositionBalance(position_key(), quantity(), (value,))

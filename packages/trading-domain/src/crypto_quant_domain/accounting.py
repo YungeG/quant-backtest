@@ -320,7 +320,10 @@ class AccountingJournalEntry:
             and not self.fees
             and not self.financing
             and self.entry_type
-            is not AccountingEntryType.CORPORATE_ACTION_ENTITLEMENT_BOOKED
+            not in (
+                AccountingEntryType.CORPORATE_ACTION_ENTITLEMENT_BOOKED,
+                AccountingEntryType.FUNDING_APPLIED,
+            )
         ):
             raise ValueError("AccountingJournalEntry requires an economic effect")
 
