@@ -10,6 +10,7 @@ ROOT = Path(__file__).resolve().parents[2]
 DERIVATIVE_MODULES = (
     ROOT / "packages/trading-kernel/src/crypto_quant_trading/derivatives.py",
     ROOT / "packages/trading-kernel/src/crypto_quant_trading/derivative_accounting.py",
+    ROOT / "packages/trading-kernel/src/crypto_quant_trading/funding.py",
 )
 GENERIC_MODULES = (
     ROOT / "packages/trading-kernel/src/crypto_quant_trading/ledger.py",
@@ -24,6 +25,9 @@ DERIVATIVE_SYMBOL_PREFIXES = (
     "ExactAverageEntryBasis",
     "ExactLinearRealizedPnl",
     "LinearDerivative",
+    "LinearFunding",
+    "FundingSlotId",
+    "Funding",
 )
 DERIVATIVE_LITERALS = (
     "linear_perpetual",
@@ -36,6 +40,15 @@ DERIVATIVE_LITERALS = (
     "linearderivative",
     "exact_linear_realized_pnl",
     "exactlinearrealizedpnl",
+    "linear_funding",
+    "linearfunding",
+    "funding_eligibility",
+    "fundingslotid",
+    "funding_slot_id",
+    "funding_applied",
+    "fundingapplied",
+    "funding",
+    "__import__",
 )
 
 
@@ -64,7 +77,11 @@ def _generic_derivative_violations(source: str) -> set[str]:
     violations: set[str] = set()
     for node in ast.walk(tree):
         if isinstance(node, ast.ImportFrom):
-            if "derivatives" in (node.module or ""):
+            module = node.module or ""
+            if any(
+                marker in module
+                for marker in ("derivatives", "derivative_accounting", "funding")
+            ):
                 violations.add(f"import:{node.module}")
             for alias in node.names:
                 if alias.name == "*" and node.module == "crypto_quant_trading":
@@ -73,15 +90,22 @@ def _generic_derivative_violations(source: str) -> set[str]:
                     violations.add(f"symbol:{alias.name}")
         elif isinstance(node, ast.Import):
             for alias in node.names:
-                if "derivatives" in alias.name:
+                if any(
+                    marker in alias.name
+                    for marker in ("derivatives", "derivative_accounting", "funding")
+                ):
                     violations.add(f"import:{alias.name}")
-        elif isinstance(node, ast.Name) and node.id.startswith(
-            DERIVATIVE_SYMBOL_PREFIXES
+        elif isinstance(node, ast.Name) and (
+            node.id.startswith(DERIVATIVE_SYMBOL_PREFIXES)
+            or "funding" in node.id.lower()
         ):
             violations.add(f"name:{node.id}")
+        elif isinstance(node, ast.Name) and node.id == "__import__":
+            violations.add("dynamic:__import__")
         elif isinstance(node, ast.Attribute) and (
-            node.attr == "LINEAR_PERPETUAL"
+            node.attr in {"LINEAR_PERPETUAL", "FUNDING_APPLIED"}
             or node.attr.startswith(DERIVATIVE_SYMBOL_PREFIXES)
+            or "funding" in node.attr.lower()
         ):
             violations.add(f"attribute:{node.attr}")
         else:
@@ -121,7 +145,9 @@ def _purity_violations(source: str) -> set[str]:
         "math",
         "typing",
         "re",
+        "unicodedata",
         "crypto_quant_domain",
+        "derivative_accounting",
         "derivatives",
         "journal",
         "ledger",
@@ -136,6 +162,7 @@ def _purity_violations(source: str) -> set[str]:
         ast.SetComp,
     )
     mutable_constructors = {"bytearray", "defaultdict", "dict", "list", "set"}
+    immutable_module_constructors = {"SourceSequence", "TimelinePhase", "dataclass"}
     mutating_methods = {
         "add",
         "append",
@@ -180,6 +207,10 @@ def _purity_violations(source: str) -> set[str]:
             or (
                 isinstance(node, ast.Call)
                 and call_name(node) in mutable_constructors
+            )
+            or (
+                isinstance(node, ast.Call)
+                and call_name(node) not in immutable_module_constructors
             )
             for node in ast.walk(value)
         )
@@ -264,6 +295,11 @@ def test_generic_financial_and_runtime_modules_do_not_reference_derivatives() ->
         "VALUE = 'linear_perpetual'",
         "VALUE = getattr(module, 'Exact' + 'AverageEntryBasis')",
         "VALUE = module.__dict__['Linear' + 'PositionState']",
+        "VALUE = 'funding_applied'",
+        "VALUE = getattr(module, 'Funding' + 'SlotId')",
+        "VALUE = __import__('crypto_quant_trading.funding')",
+        "loader = getattr(__builtins__, '__im' + 'port__')\nVALUE = loader('safe_name')",
+        "funding_state = object()",
     ),
 )
 def test_generic_derivative_scanner_rejects_import_and_reference_bypasses(
@@ -282,6 +318,7 @@ def test_derivative_modules_are_pure_and_have_no_mutable_module_state() -> None:
     (
         "CACHE = bytearray()",
         "CACHE = dict()",
+        "CACHE = CustomMutableSingleton()",
         "if True:\n    CACHE = []",
         "class Cache:\n    values = set()",
         "CACHE = []\n@CACHE.append(1)\ndef decorated():\n    pass",
