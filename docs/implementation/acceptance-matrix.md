@@ -6628,7 +6628,7 @@ Python                                                               3.13.5
 
 ```yaml
 id: G09C
-status: READY
+status: PASSED
 depends_on:
   - G09A
   - G09B
@@ -6689,6 +6689,11 @@ evidence:
   - no-accounting-obligation-or-runtime-mutation-evidence
   - import-boundary-report
   - static-type-report
+passed_commit: a5b90fbeac829953873f4ce4774eba7ab2d6ce11
+artifact_hashes:
+  tests/fixtures/kernel/derivatives/linear-funding-eligibility-v1.json: sha256:cb2dcf1060f9eff7dc681766975118ffe9ca2e18bc343b4cb38e0d10ecf7cfe5
+  build/acceptance/g09c-pytest.xml: sha256:380c1f0989062dc687fbf9c4ecda086a9ac3f62c3ceb4e6a99eba83bd7777c11
+  build/acceptance/g09c-import-boundary-report.json: sha256:26d838737f9915a57c563ed18cc3601af19649352e708caa87ca105d42f49e3d
 ```
 
 ### G09C Acceptance
@@ -6713,6 +6718,33 @@ evidence:
 18. G09C 不拥有 Strategy ObservationView、provider stream/schedule、estimated/final rate mapping、Applied Rate选择、Funding Mark、settlement Currency/Scale、cash direction、obligation、Funding Journal、Ledger mutation、Fee、Margin、Liquidation、Runtime dispatch、Binance parity、真实交易或 deployment authorization。G09D拥有 settlement/accounting；G09H拥有 closed cross-Query identity-history与 composition completeness；G10E拥有 Binance publication/finality/correction/source Adapter。
 
 G09C 的 Slot、revision chain、historical cutoff与 system ordering convention已冻结，无外部 provider选择。若 provider证据要求不同 publication finality或 eligibility boundary，必须由 G10E mapping或先将 G09C退回 DRAFT修订，不能静默改写历史 Result。
+
+### G09C Implementation Acceptance
+
+1. Pure `funding` deep module与 root exports实现 dedicated funding eligibility seam；未新增/占用 Financing Port、Profile、Adapter、Package、依赖或 Generic Ledger/Snapshot/Engine/Runner/Timeline funding branch；
+2. Stable Slot只绑定 Instrument与target funding UTC；signed/zero final Rate、cancelled status、actual MarketEvent ID/hash/full availability、strict closed revision chain与same-UTC phase visibility均按 frozen contract fail closed；
+3. Historical Position Snapshot嵌入完整 G09B availability projection与最大 `recorded_at < eligibility_instant` Journal prefix；constructor和Resolver均重新执行full/cutoff replay与canonical hash检查，later close/flip/current State不能替代历史 cutoff；
+4. Resolver按 frozen 18-code precedence处理publication/slot/position/eligibility/revision/causality/visibility/cancellation/snapshot context与capture failures；Result/Failure/Outcome重算完整 Request、component、Slot、publication、snapshot与State identities；
+5. Static golden冻结positive/negative/zero Rates、Slot sensitivity/invariance、MarketEvent reader/timeline parity、root/corrected/cancelled与invalid chains、Long/Short/Flat及same-UTC cutoff、每个prefix cursor/hash、全部18 failures、forgery/idempotency与no Journal/Ledger/Timeline/module mutation；
+6. Enhanced derivative boundary scanner拒绝broad funding literals/identifiers、computed/dynamic imports、custom mutable module singleton与generic funding/derivative references，同时只允许frozen immutable module constructors；
+7. Public exports、67-file Import Boundary、67-source mypy、LSP/pi-lens、static golden、full regression、`uv lock --check`与只读 blocker verdict均通过。
+
+G09C implementation 已冻结在 immutable commit `a5b90fbeac829953873f4ce4774eba7ab2d6ce11`，状态为 `PASSED`。
+
+验证记录：
+
+```text
+G09C contract                                                       4 passed
+G09C static golden                                                  1 passed
+Frozen public/boundary regression command                          77 passed
+Full test suite                                                    898 passed
+Trading-kernel import boundary                                     PASS (67 files)
+mypy                                                                no issues (67 source files)
+Primary LSP + pi-lens                                               clean
+Read-only blocker recheck                                            NONE
+uv lock --check                                                      PASS
+Python                                                               3.13.5
+```
 
 ## 72. G09D–G09H Readiness Blockers
 
