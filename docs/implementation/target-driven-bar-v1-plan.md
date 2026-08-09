@@ -1429,14 +1429,20 @@ Historical Position Snapshot 嵌入 G09B availability projection、同一 Journa
 
 依赖：G09B、G09C。
 
-拥有：Applied Rate、Funding Mark、cash direction 和 Funding Journal translation。
+拥有：Applied Rate、Funding Mark、cash direction、account/Slot application identity 和 Funding Journal translation。
 
 验收：
 
-- Long/Short 现金方向正确；
-- Funding Mark 使用明确 PricePurpose；
-- 同一 Funding Slot 幂等结算；
-- Journal Entry 引用 publication、eligibility、rate 和 mark identity。
+- Long/Short/Flat在正、负、零Rate下现金方向正确，exact Funding amount只在Money boundary量化一次；
+- Funding Mark exact 使用 `PricePurpose.FUNDING`，完整 StaleMarkPolicy、resolution identity与Mark Resolver authoritative UTC availability进入证据，不允许caller伪造full phase或使用其他Price Purpose fallback；
+- 同一Account/Funding Slot使用同一canonical SETTLEMENT/JOURNAL ID幂等结算，changed evidence触发native Journal conflict；alternate ID重复/冲突由full-Journal projector fail closed；
+- Journal Entry引用publication、eligibility、historical Position、applied Rate、mark/policy、settlement source、quantization和application identity，Generic Ledger保持branchless。
+
+冻结实现 seam：G09D只新增 pure `crypto_quant_trading.funding_accounting` 并结构化实现既有 `FinancingModel`。Application Key exact为`(account_id, funding_slot_id)`；caller提供Identity Namespace与Semantic Run，module以Application Key value、ordinal 0分别重新派生SETTLEMENT/JOURNAL ID。Translator不读取prior Journal、不append/mutate authority；existing Journal负责same-ID no-op/conflict，独立Funding Journal Projector负责完整Journal中的alternate-ID duplicate/conflict与ordinary/non-exact funding Entry拒绝。
+
+G09D v1 Applied Rate必须exact等于G09C final published Rate，basis为`funding_fraction_of_notional`。对signed eligibility Quantity `q/Q`、positive multiplier `m/M`、positive Funding Mark `p/P`、signed Rate `r/R`，账户Cash exact为`-(q*m*p*r)/(Q*M*P*R)`，GCD约分后仅调用一次`round_ratio`映射到caller-supplied settlement Cash Scale。Positive Rate时Long支付、Short收取；negative反向；Flat、zero Rate和rounded zero仍发布唯一specialized `FUNDING_APPLIED` evidence Entry。
+
+Funding Mark必须在target Funding UTC以`PricePurpose.FUNDING`解析，Instrument、settlement Currency、Price Scale、Stale Policy与`ResolvedMark.available_at` UTC均exact匹配；G09D不增加caller-supplied mark phase/sequence。Settlement `effective_time` exact为Slot target UTC，`recorded_at` exact为account settlement evidence `applied_at`，且Eligibility captured-at与Mark available UTC必须不晚于该booking boundary。Generic Ledger只消费Entry继承的Cash/financing字段，不增加Funding分支。G09D不拥有provider mapping、Mark query/fallback、SettlementBook、Margin/Liquidation、Runtime dispatch或deployment authorization。
 
 ### Gate G09E Instrument Margin Requirement
 

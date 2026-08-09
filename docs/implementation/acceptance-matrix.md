@@ -121,7 +121,7 @@ artifact_hashes: []
 | G09A | PASSED | trading-kernel derivatives | G03 | none |
 | G09B | PASSED | trading-kernel derivative accounting | G09A, G03 | none |
 | G09C | READY | trading-kernel funding eligibility | G09A, G09B, WP-06A, WP-06B | none |
-| G09D | DRAFT | trading-kernel financing/accounting | G09B–G09C | Funding settlement fixtures |
+| G09D | READY | trading-kernel financing/accounting | G09B–G09C | none |
 | G09E | DRAFT | trading-kernel margin | G09A | Instrument margin fixtures |
 | G09F | DRAFT | trading-kernel margin | G09B, G09E, WP-05B | Cross-margin fixtures |
 | G09G | DRAFT | backtest-runtime liquidation audit | G09E–G09F | SAFE/AMBIGUOUS fixtures |
@@ -6746,17 +6746,116 @@ uv lock --check                                                      PASS
 Python                                                               3.13.5
 ```
 
-## 72. G09D–G09H Readiness Blockers
+## 72. G09D Funding Settlement and Accounting Acceptance Card
 
-G09D–G09H 保持 `DRAFT`。当前 blockers：
+```yaml
+id: G09D
+status: READY
+depends_on:
+  - G09B
+  - G09C
+owner_package: trading-kernel financing/accounting
+public_interface:
+  - crypto_quant_trading.LinearFundingApplicationKey
+  - crypto_quant_trading.LinearFundingApplicationIdentity
+  - crypto_quant_trading.LinearFundingMarkEvidence
+  - crypto_quant_trading.LinearFundingSettlementEvidence
+  - crypto_quant_trading.ExactLinearFundingCashFlow
+  - crypto_quant_trading.LinearFundingSettlementRequest
+  - crypto_quant_trading.LinearFundingJournalEntry
+  - crypto_quant_trading.LinearFundingSettlementResult
+  - crypto_quant_trading.LinearFundingSettlementFailureCode
+  - crypto_quant_trading.LinearFundingSettlementFailure
+  - crypto_quant_trading.LinearFundingAccounting
+  - crypto_quant_trading.LinearFundingJournalReplayRequest
+  - crypto_quant_trading.LinearFundingJournalProjection
+  - crypto_quant_trading.LinearFundingJournalReplayFailureCode
+  - crypto_quant_trading.LinearFundingJournalReplayFailure
+  - crypto_quant_trading.LinearFundingJournalReplayOutcome
+  - crypto_quant_trading.LinearFundingJournalProjector
+  - static synthetic linear-funding-accounting golden fixture v1
+test_commands:
+  contract: uv run pytest -q tests/kernel/derivatives/test_linear_funding_accounting.py
+  fixture: uv run pytest -q tests/kernel/derivatives/test_linear_funding_accounting_golden.py
+  boundary: uv run pytest -q tests/architecture/test_public_api_imports.py tests/architecture/test_network_isolation.py tests/architecture/test_repository_cleanliness.py tests/architecture/test_derivative_boundary.py tests/domain/accounting/test_accounting_contracts.py tests/kernel/derivatives/test_linear_positions.py tests/kernel/derivatives/test_linear_derivative_accounting.py tests/kernel/derivatives/test_linear_funding_eligibility.py tests/kernel/marks/test_mark_resolver.py tests/kernel/journal/test_immutable_journal.py tests/kernel/ledger/test_generic_ledger.py && uv run python tools/architecture/check_import_boundaries.py --root . --policy architecture/import-boundaries.toml --report build/acceptance/g09d-import-boundary-report.json
+fixture_ids:
+  - synthetic-linear-funding-accounting-v1
+expected_artifacts:
+  - tests/fixtures/kernel/derivatives/linear-funding-accounting-v1.json
+  - build/acceptance/g09d-pytest.xml
+  - build/acceptance/g09d-import-boundary-report.json
+failure_contracts:
+  - applied-rate-differs-from-g09c-final-published-rate
+  - funding-payment-uses-current-position-or-average-entry-basis
+  - funding-mark-uses-non-funding-purpose-fallback-or-post-slot-observation
+  - funding-mark-policy-context-scale-or-availability-is-invalid
+  - funding-cash-is-pre-rounded-or-rounded-more-than-once
+  - long-short-positive-negative-or-zero-rate-cash-direction-is-wrong
+  - settlement-cash-currency-account-venue-or-scale-mismatch
+  - funding-application-id-depends-on-rate-mark-amount-or-request-hash
+  - same-account-slot-is-applied-twice-under-different-journal-identity
+  - changed-evidence-for-the-same-account-slot-is-silently-rebooked
+  - ordinary-or-subclassed-funding-journal-entry-bypasses-specialized-replay
+  - zero-funding-application-loses-journal-identity
+  - generic-ledger-adds-a-funding-or-derivative-branch
+  - settlement-publication-eligibility-mark-journal-or-ledger-authority-is-mutated
+  - provider-runtime-margin-liquidation-or-deployment-semantics-leak-into-g09d
+allowed_grade: development
+evidence:
+  - pytest-report
+  - static-linear-funding-accounting-golden-hash
+  - exact-rational-funding-cash-flow-and-single-quantization-evidence
+  - long-short-flat-positive-negative-zero-rate-direction-evidence
+  - funding-purpose-mark-and-stale-policy-identity-evidence
+  - deterministic-account-slot-settlement-and-journal-id-evidence
+  - same-id-journal-idempotency-and-conflict-evidence
+  - alternate-id-full-journal-duplicate-and-conflict-audit
+  - publication-eligibility-rate-mark-and-settlement-source-lineage
+  - branchless-generic-ledger-cash-financing-and-position-parity
+  - zero-and-rounded-zero-funding-entry-evidence
+  - import-boundary-report
+  - static-type-report
+passed_commit: null
+artifact_hashes: []
+```
 
-1. G09D 必须冻结 applied Rate、Funding `PricePurpose` Mark、cash direction、settlement Currency/Scale、Slot duplicate/conflict contract 和 Journal identity chain；
-2. G09E 必须冻结 caller-injected historical leverage/tier RuleBook、multiplier-aware notional公式、initial/maintenance requirement、tier boundary/gap/overlap precedence 和 current-tier fallback rejection；
-3. G09F 必须冻结单 Execution Account Equity、Derivative unrealized PnL、Fee/Funding、Maintenance Margin、Working Order Reservation 的 authoritative inputs与独立 immutable `MarginProjection`；不得把 Margin 数值塞入 Generic Ledger balance；
-4. G09G 必须冻结 Liquidation Mark Bar evidence、long-low/short-high conservative evaluation、`SAFE`/`AMBIGUOUS_BREACH` canonical audit与 decision-grade fail-closed routing；
-5. G09H 必须冻结 branchless injected composition、Synthetic E2E commands/artifacts、Journal/MarginProjection/PortfolioSnapshot reconstruction与 development-only limitation；Generic Engine accounting/event dispatch 尚不能按 resolved profile 注入 derivative accounting，因此不得提前组合。
+### G09D Acceptance
 
-## 73. PASSED 记录格式
+1. G09D 只新增 pure `crypto_quant_trading.funding_accounting` deep module、必要 root exports，以及通用 `AccountingJournalEntry` 对 `FUNDING_APPLIED` zero-effect evidence 的最小允许项；不得新增 Port、Profile、Adapter、Package、依赖，或修改 Generic Ledger、SnapshotProjector、Engine、Runner、Timeline。`LinearFundingAccounting.assess_financing(request)` 结构化实现既有 `FinancingModel`，exact 消费 `LinearFundingSettlementRequest` 并返回 `ProfilePortOutcome[LinearFundingSettlementResult, LinearFundingSettlementFailure]`；它只翻译 Entry，不 append/mutate Journal；
+2. `LinearFundingApplicationKey` exact 保存 account ID、G09C `FundingSlotId` 与稳定 value。Value exact 为 `funding-application-v1:` 加 `canonical_sha256({type="linear_funding_application_semantic_key",schema_version=1,account_id,funding_slot_id})` 去掉 `sha256:` 前缀；constructor/classmethod 重算并拒绝 forged value。语义唯一性 exact 为 `(account_id, funding_slot_id)`，Rate、Mark、Money、Currency、Scale、timing、revision、source、Request/Entry/Journal hash均不进入 key；
+3. `LinearFundingApplicationIdentity` exact 保存 Application Key、`IdentityNamespace`、Semantic Run ID、`settlement_id: DomainIdKind.SETTLEMENT` 与 `journal_entry_id: DomainIdKind.JOURNAL`。两个 ID 都使用既有 `derive_domain_id()`、同一 Namespace/Run、`semantic_key=application_key.value.encode("utf-8")` 与 ordinal `0`，仅 kind 不同；constructor必须重新派生并拒绝 caller提供的非规范 ID，不允许由 Entry 或 Journal hash反向派生。Identity canonical payload不直接传入不可序列化对象，而把Namespace exact编码为 `{value: identity_namespace.value, version: identity_namespace.version, algorithm: identity_namespace.algorithm}`；
+4. `LinearFundingSettlementEvidence` 是账户经济事件证据，exact 保存 Application Key、`effective_time=slot.target_funding_time`、`applied_at: SimulationInstant`、Applied Rate、event ID/hash、revision/supersession、source key/hash。Applied Rate必须 exact 等于 G09C Eligibility 的 final `published_rate`，包括 units、Scale 与 basis；v1 basis exact 为 `funding_fraction_of_notional`。Settlement evidence不拥有 provider Rate转换或 finality选择；这些仍由 G09C/G10E caller mapping完成；
+5. `LinearFundingMarkEvidence` exact 只保存完整 `ResolvedMark` 与用于该 resolution 的完整 `StaleMarkPolicy`；不增加caller可伪造的full-phase availability字段。Resolved Mark与Policy purpose都必须 exact 为 `PricePurpose.FUNDING`；Instrument、quote/settlement Currency和Price Scale必须匹配 Contract；Price units必须 strictly positive；`resolved_at` exact 等于 Slot target funding UTC；authoritative mark availability exact 使用既有 Mark Resolver冻结的 `ResolvedMark.available_at: UtcInstant`，并要求不晚于 Settlement `applied_at.instant`。Policy key/version/hash、`age_nanoseconds == resolved_at - observed_at`、age/max-age与 forward-fill allowance必须重新验证；禁止用 `SETTLEMENT`、`VALUATION`、`MARGIN`、`LIQUIDATION`、execution/trade/bar price fallback；
+6. `LinearFundingSettlementRequest` exact 保存 optional Eligibility、optional Settlement Evidence、optional Funding Mark Evidence、Application Identity、Position key、完整 G09A Contract、settlement Cash `LedgerBalanceRegistration` 与 payment `QuantizationPolicy`。Optional evidence只为构造 structured missing-evidence failures；Result/Entry必须嵌入无 business failure的完整 Request。Application Key account/Slot、Position key、Eligibility、Contract、Settlement Evidence、Mark与Cash registration必须全部 context-equal；尤其 `request.contract == eligibility.request.contract == eligibility.position_state.contract` 使用完整 `LinearPerpetualContract` exact equality，不能只比较 Instrument；
+7. Funding exact cash flow只使用 G09C historical cutoff `position_state.quantity`，不读 current Ledger/Portfolio/Fill、availability projection terminal State或 average-entry basis。若 signed Quantity 为 `q/Q`、positive contract multiplier为 `m/M`、positive Funding Mark为 `p/P`、signed Applied Rate为 `r/R`，账户 settlement-currency cash exact 为 `F = -(q*m*p*r)/(Q*M*P*R)`。`ExactLinearFundingCashFlow` 保存 Currency、GCD-reduced signed numerator与positive denominator；zero canonical 为 `0/1`；
+8. Money boundary每个 Application Key只调用 public `round_ratio(exact.numerator * target_scale.factor, exact.denominator, rounding)` 一次。Quantity、Multiplier、Mark、Rate、Notional和中间 Funding amount不得预先量化、float/Decimal转换或 aggregate 后统一舍入。Positive Rate时 Long支付/Short收取，Negative Rate反向，Flat或zero Rate exact 为零；rounded zero仍是已应用的 Funding经济事实；
+9. Settlement Cash registration必须是 exact account/Venue/Contract settlement Currency的 `CashBalanceKey`，Registration Scale必须等于 Quantization target Scale；Money Currency/Scale由该 authority唯一决定，不进行 FX、stablecoin peg、隐式 rescale或从 Mark自行选择 Currency。`applied_at` 是唯一 booking/recording boundary：必须不早于 Eligibility captured-at，且`ResolvedMark.available_at <= applied_at.instant`；Journal `effective_time=slot.target_funding_time`、`recorded_at=applied_at`；
+10. Result exact 保存 component ref、完整 Request/request hash、Application Key、Exact Cash Flow、quantized payment Money和 frozen `LinearFundingJournalEntry`。Entry继承 `AccountingJournalEntry`，entry type exact 为 `FUNDING_APPLIED`，ID来自 Application Identity，account/Venue/effective/recorded exact 按上述规则；nonzero payment同时产生同额 Cash `BalanceChange` 与单一 `financing` attribution，`realized_pnl=fees=()` 且无 Position effect；exact zero或rounded zero保留 specialized Entry但全部经济 tuple为空；
+11. 通用 `AccountingJournalEntry` 的 empty-effect allowlist只从既有 `CORPORATE_ACTION_ENTITLEMENT_BOOKED`扩展到 `FUNDING_APPLIED`，不改变其他 Entry type。普通或任意 subclass `FUNDING_APPLIED` 即使可被构造，也不能成为 G09D authoritative funding entry；`LinearFundingJournalProjector` 必须在调用 Generic Ledger前按 `type(entry) is LinearFundingJournalEntry` fail closed。Generic Ledger继续只读取 inherited `balance_changes/financing`，zero Entry只推进 Journal/Ledger cursor，不改变 balance或attribution；
+12. Specialized Entry嵌入 component、完整 Request/request hash、Application Key、Settlement ID、Eligibility、publication、historical State、Applied Rate、Funding Mark/Policy、Settlement source、Quantization、Exact Cash Flow与Money。Canonical `source_ids` exact 为 `tuple(sorted(set((application_key.value, settlement_id.value, slot_id.value, eligibility.eligibility_hash, eligibility.publication_hash, eligibility.event_id, eligibility.event_hash, eligibility.publication_revision_id, eligibility.snapshot_hash, eligibility.state_hash, resolved_mark.mark_id, stale_policy.policy_hash, settlement.event_id, settlement.event_hash, settlement.revision_id, settlement.source_key, settlement.source_hash, request_hash))))`；不得增加 Journal ID、Entry hash、application-body hash或Ledger hash。Constructor重算该 exact tuple及全部 inherited/specialized fields；
+13. 同一 Namespace/Run/account/Slot的 retry产生同 SETTLEMENT/JOURNAL IDs与同 Entry；既有 `AccountingJournal.append()` 对 same-ID identical Entry是 no-op，对 same-ID changed Rate/Mark/evidence/amount是 native `JournalEntryConflictError`。Translator不接收 prior Journal、不自行查询“是否已结算”并不吞掉 native conflict；different accounts可独立结算同一 Slot；
+14. `LinearFundingJournalProjector.project(LinearFundingJournalReplayRequest)` 对完整 immutable Journal做两阶段审计：先按 published order拒绝所有 ordinary或non-exact specialized `FUNDING_APPLIED`；再按 Application Key检查 exact specialized Entries。不同 IDs但 normalized application-body hash相同返回 `DUPLICATE_FUNDING_APPLICATION`，body不同返回 `CONFLICTING_FUNDING_APPLICATION`。Normalized body preimage exact 为 `{type="linear_funding_application_body",schema_version=1,application_key,eligibility,settlement_evidence,funding_mark_evidence,position_key,contract,settlement_cash_registration,payment_quantization,exact_cash_flow,payment}`：它排除整个 nested `application_identity`（Namespace、Semantic Run、SETTLEMENT/JOURNAL IDs）、Request/request hash、base Journal ID/source IDs及所有由这些G09D identity字段派生的hash，但保留G09C Eligibility、publication、historical State、Mark/Policy和Settlement source authority。只有唯一性通过后才调用 branchless `GenericLedger.project()`；Projection保存 Journal cursor、Application Keys、Journal IDs与完整 Ledger State，不把 mixed Journal的generic financing aggregate误称为 funding-only aggregate；
+15. Settlement business failure enum与 first-failure precedence exact 为：`MISSING_ELIGIBILITY` → `MISSING_SETTLEMENT_EVIDENCE` → `MISSING_FUNDING_MARK` → `SLOT_CONTEXT_MISMATCH` → `POSITION_CONTEXT_MISMATCH` → `UNSUPPORTED_RATE_BASIS` → `APPLIED_RATE_MISMATCH` → `INVALID_SETTLEMENT_EFFECTIVE_TIME` → `SETTLEMENT_EVIDENCE_NOT_AVAILABLE` → `FUNDING_MARK_PURPOSE_MISMATCH` → `FUNDING_MARK_CONTEXT_MISMATCH` → `FUNDING_MARK_INSTANT_MISMATCH` → `FUNDING_MARK_SCALE_MISMATCH` → `NON_POSITIVE_FUNDING_MARK` → `FUNDING_MARK_POLICY_MISMATCH` → `FUNDING_MARK_NOT_AVAILABLE` → `SETTLEMENT_CASH_CONTEXT_MISMATCH` → `QUANTIZATION_SCALE_MISMATCH`。Enum wire values exact 分别为 `missing_eligibility`、`missing_settlement_evidence`、`missing_funding_mark`、`slot_context_mismatch`、`position_context_mismatch`、`unsupported_rate_basis`、`applied_rate_mismatch`、`invalid_settlement_effective_time`、`settlement_evidence_not_available`、`funding_mark_purpose_mismatch`、`funding_mark_context_mismatch`、`funding_mark_instant_mismatch`、`funding_mark_scale_mismatch`、`non_positive_funding_mark`、`funding_mark_policy_mismatch`、`funding_mark_not_available`、`settlement_cash_context_mismatch`、`quantization_scale_mismatch`。多缺陷只返回第一项；
+16. Exact failure predicates分别覆盖：(1–3) optional evidence缺失；(4) Request/Application/Eligibility/Settlement各自Slot、Slot Instrument或Contract Instrument任一不一致；(5) account/Venue/Instrument Position authority不一致，或 `request.contract != eligibility.request.contract`，或 `request.contract != eligibility.position_state.contract` 的任一完整Contract/InstrumentDefinition/multiplier/Scale lineage差异；(6) Eligibility published Rate basis或Settlement applied Rate basis任一非 frozen basis；(7) Applied Rate不等于Eligibility published Rate；(8) Settlement effective UTC不等于Slot target；(9) `applied_at < eligibility.captured_at`；(10) Mark或Policy purpose非FUNDING；(11) Mark Instrument/quote Currency不等于Contract；(12) Mark `resolved_at`非target；(13) Price Scale不等于Contract price Scale；(14) Price units非正；(15) Policy key/version/hash、ResolvedMark `age_nanoseconds` equality、age/max-age或forward-fill不匹配；(16) `ResolvedMark.available_at > applied_at.instant`；(17) Cash key非exact account/Venue/settlement Currency或不是Cash key；(18) Quantization target Scale不等于Registration Scale。Candidate value自身的exact type、canonical text/hash、positive denominator、Domain ID derivation和source shape错误是constructor `TypeError`/`ValueError`，不是business failure；
+17. Settlement Failure嵌入 component、完整 Request/request hash、code与 ordered `subject_ids=(code.value, application_key.value, settlement_id.value, journal_entry_id.value, eligibility_hash or "missing-funding-eligibility", mark_id or "missing-funding-mark", settlement_event_id or "missing-funding-settlement")` 并重算first failure。`ProfilePortOutcome` component/input hash必须与Request及exactly-one Result/Failure匹配。Journal replay Failure独立使用 `UNAUTHORIZED_FUNDING_ENTRY` → `DUPLICATE_FUNDING_APPLICATION`/`CONFLICTING_FUNDING_APPLICATION` precedence，wire values exact 为 `unauthorized_funding_entry`、`duplicate_funding_application`、`conflicting_funding_application`；unauthorized exact subject IDs为 `(code.value, str(published_index), journal_entry_id.value, entry_type.value)`，duplicate/conflict exact subject IDs为 `(code.value, application_key.value, first_journal_entry_id.value, second_journal_entry_id.value)`，总是选择published order首个offending Entry/第二次Application occurrence；
+18. Component ref exact 使用 `ProfilePortType.FINANCING_MODEL`、key `instrument.linear-perpetual.funding-accounting.v1`、version 1。Digest preimage exact 为 `{type="linear_funding_accounting_component",schema_version=1,component_key,component_version=1,algorithm_key="linear-funding-settlement-accounting-v1",application_key="account_id+funding_slot_id",settlement_id_kind="settlement",journal_id_kind="journal",identity_ordinal=0,rate_basis="funding_fraction_of_notional",mark_purpose="funding",formula="-(signed_quantity*multiplier*mark*rate)",quantization="one_round_ratio_per_application",effective_time="slot.target_funding_time",recorded_at="settlement.applied_at",allowed_grade="development"}`；
+19. 所有新增 public values使用 `schema_version=1`、exact types、canonical tuple order与 `canonical_sha256`。Canonical preimages exact 为：Application Key `{type="linear_funding_application_key",schema_version,account_id,slot_id,value}`；Identity `{type="linear_funding_application_identity",schema_version,application_key,identity_namespace={value,version,algorithm},semantic_run_id,settlement_id,journal_entry_id}`；Mark Evidence `{type="linear_funding_mark_evidence",schema_version,resolved_mark,stale_policy}`；Settlement Evidence `{type="linear_funding_settlement_evidence",schema_version,application_key,effective_time,applied_at,applied_rate,event_id,event_hash,revision_id,supersedes_revision_id,source_key,source_hash}`；Exact Cash `{type="exact_linear_funding_cash_flow",schema_version,currency_id,numerator,denominator}`；Request `{type="linear_funding_settlement_request",schema_version,eligibility,settlement_evidence,funding_mark_evidence,application_identity,position_key,contract,settlement_cash_registration,payment_quantization}`；Result `{type="linear_funding_settlement_result",schema_version,component_ref,request,request_hash,application_key,exact_cash_flow,payment,journal_entry}`；Failure `{type="linear_funding_settlement_failure",schema_version,component_ref,request,request_hash,code,subject_ids}`；Entry `{type="linear_funding_journal_entry",schema_version,component_ref,request,request_hash,application_key,settlement_id,exact_cash_flow,payment,application_body_hash,journal_entry}`，其中`journal_entry`是base `AccountingJournalEntry.to_canonical_dict()`；Replay Request `{type="linear_funding_journal_replay_request",schema_version,journal,ledger_schema}`；Projection `{type="linear_funding_journal_projection",schema_version,component_ref,request,request_hash,journal_cursor,application_keys,journal_entry_ids,ledger_state}`，Application/Journal tuple均按published order；Replay Failure `{type="linear_funding_journal_replay_failure",schema_version,component_ref,request,request_hash,code,subject_ids}`；Replay Outcome `{type="linear_funding_journal_replay_outcome",schema_version,component_ref,request_hash,projection,failure}`且exactly one Projection/Failure；所有constructor重算对应body/hash、first failure与embedded authority；
+20. Static golden沿用 G09A–G09C synthetic Contract，至少冻结：Long/Short/Flat × positive/negative/zero Rate；multiplier `0.125`、Funding Mark `100.00 USDT`、Quantity Scale 3、settlement Scale 2，Rate `±0.0008` 对一张 Long exact 产生 `∓0.01 USDT`；`±0.005/±0.015/±0.025` 的 HALF_EVEN/HALF_UP tie controls；adversarial no-pre-quantization；later close/flip/current State non-substitution；每个18-code failure至少一个case，并为独立predicate分别增加Request/Application/Eligibility/Settlement每个Slot authority、完整Contract InstrumentDefinition/multiplier/quantity-price Scale lineage、Position account/Venue/Instrument、Eligibility published Rate basis与Settlement applied Rate basis、Settlement effective/applied-at exact/full boundary、Mark purpose/Instrument/Currency/resolved-at/available-at UTC/Price Scale/positivity/`age_nanoseconds`、Policy key/version/hash/max-age/forward-fill、Cash key type/account/Venue/Currency和Quantization Scale controls；multi-defect precedence；same-ID no-op/conflict、只改变G09D Namespace/Run的normalized alternate-ID duplicate、改变Rate/Mark/Policy/source/registration/quantization任一body字段的conflict、different-account independence；flat/zero-rate/rounded-zero specialized Entry；Generic Ledger cash/financing parity与Position unchanged；constructor/hash/ID forgery、ordinary/subclass funding Entry rejection、canonical golden stability和input/module authority不变；
+21. Purity沿用并扩展 derivative scanner：`tests/architecture/test_derivative_boundary.py` 必须显式扫描新 `funding_accounting.py`，允许它导入 frozen `funding`、`marks`、G09A/G09B与generic Journal/Ledger/Ports seams，同时拒绝 filesystem、network/provider/process/database/cloud、dynamic import、MarketBundle/Runtime import、mutable module/class/decorator state与wall clock；该 scanner继续拒绝 Generic Ledger、SnapshotProjector、Engine、Runner、Timeline 的 funding/linear derivative branch或reference。`tests/domain/accounting/test_accounting_contracts.py` 必须增加 focused assertion：generic zero-effect allowlist相对既有合同只增加 `FUNDING_APPLIED`，其他 Entry type仍拒绝empty effect；G09D replay tests再证明ordinary/subclass funding Entry不可成为authoritative specialized replay；
+22. G09D 不拥有 publication selection/finality、provider Rate transformation/schedule/correction/source mapping、Mark stream resolution/query/fallback、Journal append/mutation、Runtime dispatch、cross-Query history completeness、SettlementBook obligation、Fee、average-entry basis、Unrealized PnL、Margin、Liquidation、Binance semantics、真实交易、result grade或deployment authorization。G09H拥有composition completeness与Runtime injection；G10E拥有provider publication/finality/source mapping。
+
+G09D 的 applied Rate、Funding Mark、exact cash、settlement Currency/Scale、Application/Journal identity与full-Journal duplicate/conflict语义已冻结，无需选择外部 provider。若 provider实际需要不同 Rate transformation、Funding Mark stream或settlement availability mapping，必须由 G10E caller Adapter明确转换，或先将 G09D退回 DRAFT；不得在 FinancingModel 内新增 provider分支。
+
+## 73. G09E–G09H Readiness Blockers
+
+G09E–G09H 保持 `DRAFT`。当前 blockers：
+
+1. G09E 必须冻结 caller-injected historical leverage/tier RuleBook、multiplier-aware notional公式、initial/maintenance requirement、tier boundary/gap/overlap precedence 和 current-tier fallback rejection；
+2. G09F 必须冻结单 Execution Account Equity、Derivative unrealized PnL、Fee/Funding、Maintenance Margin、Working Order Reservation 的 authoritative inputs与独立 immutable `MarginProjection`；不得把 Margin 数值塞入 Generic Ledger balance；
+3. G09G 必须冻结 Liquidation Mark Bar evidence、long-low/short-high conservative evaluation、`SAFE`/`AMBIGUOUS_BREACH` canonical audit与 decision-grade fail-closed routing；
+4. G09H 必须冻结 branchless injected composition、Synthetic E2E commands/artifacts、Journal/MarginProjection/PortfolioSnapshot reconstruction与 development-only limitation；Generic Engine accounting/event dispatch 尚不能按 resolved profile 注入 derivative accounting，因此不得提前组合。
+
+## 74. PASSED 记录格式
 
 ```yaml
 id: WP-00A

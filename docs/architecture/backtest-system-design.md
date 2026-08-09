@@ -1372,6 +1372,10 @@ G09C 在经济结算前增加 pure Funding eligibility seam。`FundingSlotId` �
 
 Eligibility Position不是 current Ledger读取。`LinearFundingEligibilityPositionSnapshot` 嵌入 G09B availability projection、同一 Journal 的 eligibility cursor和 cutoff State；cutoff exact 为最大 `entry.recorded_at < eligibility_instant` prefix，因此 same-UTC earlier phase/sequence进入、eligibility boundary及之后的 Entry排除。Snapshot constructor用 G09B projector重放 prefix并绑定完整 Journal/cursor/state identity；availability projection中后续 close/flip不改变已捕获 eligibility。Cross-Query revision/history completeness由 G09H拥有，Binance publication/finality mapping由 G10E拥有。
 
+G09D 以既有 `FinancingModel` 把G09C Eligibility翻译为唯一`FUNDING_APPLIED` specialized Journal Entry。Funding Application identity exact为Account与Funding Slot；同一canonical semantic key在同一Identity Namespace/Semantic Run下分别派生SETTLEMENT/JOURNAL ID，因此same-ID retry由Accounting Journal原生实现no-op/conflict，完整Journal中的alternate-ID duplicate/conflict由dedicated funding projector审计。Translator不读取prior Journal，也不append或mutate authority。
+
+Linear Funding账户Cash exact为`-(signed eligibility quantity × contract multiplier × Funding Mark × applied Rate)`；所有Scale保持有理数，直到每个Application的单一Money quantization boundary。Applied Rate必须exact等于G09C final published Rate。Funding Mark必须使用`PricePurpose.FUNDING`并绑定完整StaleMarkPolicy、target Funding UTC resolution、settlement Currency/Price Scale和既有Mark Resolver authoritative UTC availability；G09D不伪造额外phase/sequence，也不得由Settlement、Valuation、Margin、Liquidation、execution或trade price替代。Entry只写同额Cash change和financing attribution，不修改Position；zero/rounded-zero仍保留Application identity evidence。Generic Ledger保持branchless。
+
 ### 11.12 MarginRules 与 LiquidationRules
 
 属于 MarketSemanticsProfile，表达真实 Initial Margin、Maintenance Margin、保证金层级和强平条件，不包含 Bar 数据下的近似判断。

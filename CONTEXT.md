@@ -309,7 +309,19 @@ Price 或 Market Event Stream 在预期覆盖区间中的缺失，并具有明�
 
 ## Funding 结算（Funding Settlement）
 
-在明确结算时点按 Eligibility Instant 的合格仓位、Applied Rate 和 Funding Mark 产生账户经济影响的事件。
+在明确结算时点按 Eligibility Instant 的合格仓位、Applied Rate 和 Funding Mark 产生账户经济影响的事件。G09D v1 的 effective time 是目标 Funding UTC，recorded-at 是账户结算证据完整可用的 `SimulationInstant`。
+
+## Funding Application Key
+
+由 Execution Account 与 Funding Slot 唯一决定的一次账户级 Funding 应用身份。Rate、Mark、Money、Currency、Scale、revision、source 和 Request hash不进入该语义 key；同一 Namespace/Semantic Run使用它分别派生SETTLEMENT/JOURNAL ID。
+
+## 精确线性 Funding Cash Flow（Exact Linear Funding Cash Flow）
+
+由signed eligibility Quantity、contract multiplier、Funding Mark和signed Applied Rate形成的约分有理数账户现金：`-(quantity × multiplier × mark × rate)`。它只在每个Funding Application的Money boundary调用一次显式QuantizationPolicy。
+
+## Funding Mark
+
+仅用于Funding payment notional的`PricePurpose.FUNDING`价格证据，必须绑定target Funding UTC、Instrument、settlement Currency、Price Scale、完整StaleMarkPolicy和既有Mark Resolver的authoritative UTC availability。G09D不附加caller伪造的phase/sequence；Settlement、Valuation、Margin、Liquidation或execution价格不能静默替代。
 
 ## Funding Slot ID
 
