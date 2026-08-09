@@ -120,8 +120,8 @@ artifact_hashes: []
 | G08H | DRAFT | trading-kernel profiles/cn_a_share + parity | G08A–G08G | Composition/parity commands |
 | G09A | PASSED | trading-kernel derivatives | G03 | none |
 | G09B | PASSED | trading-kernel derivative accounting | G09A, G03 | none |
-| G09C | READY | trading-kernel funding eligibility | G09A, G09B, WP-06A, WP-06B | none |
-| G09D | READY | trading-kernel financing/accounting | G09B–G09C | none |
+| G09C | PASSED | trading-kernel funding eligibility | G09A, G09B, WP-06A, WP-06B | none |
+| G09D | PASSED | trading-kernel financing/accounting | G09B–G09C | none |
 | G09E | DRAFT | trading-kernel margin | G09A | Instrument margin fixtures |
 | G09F | DRAFT | trading-kernel margin | G09B, G09E, WP-05B | Cross-margin fixtures |
 | G09G | DRAFT | backtest-runtime liquidation audit | G09E–G09F | SAFE/AMBIGUOUS fixtures |
@@ -6750,7 +6750,7 @@ Python                                                               3.13.5
 
 ```yaml
 id: G09D
-status: READY
+status: PASSED
 depends_on:
   - G09B
   - G09C
@@ -6815,8 +6815,11 @@ evidence:
   - zero-and-rounded-zero-funding-entry-evidence
   - import-boundary-report
   - static-type-report
-passed_commit: null
-artifact_hashes: []
+passed_commit: 913e3ac81cc68a454f32a3f48b6444ac4604bb0e
+artifact_hashes:
+  tests/fixtures/kernel/derivatives/linear-funding-accounting-v1.json: sha256:047dc67b5c3a8191057d8c14166596a66c4b282ebe08b1cd9e9141c868a6bea9
+  build/acceptance/g09d-pytest.xml: sha256:f263714ea4a93bb7c8c4f9fb0edc4ceda6a180563e255c54f4055bfb58b92397
+  build/acceptance/g09d-import-boundary-report.json: sha256:b6fb0460ddc08a04f9c2117a02a4cddec9802774c92b9ecc34f137d7e32b93c1
 ```
 
 ### G09D Acceptance
@@ -6845,6 +6848,33 @@ artifact_hashes: []
 22. G09D 不拥有 publication selection/finality、provider Rate transformation/schedule/correction/source mapping、Mark stream resolution/query/fallback、Journal append/mutation、Runtime dispatch、cross-Query history completeness、SettlementBook obligation、Fee、average-entry basis、Unrealized PnL、Margin、Liquidation、Binance semantics、真实交易、result grade或deployment authorization。G09H拥有composition completeness与Runtime injection；G10E拥有provider publication/finality/source mapping。
 
 G09D 的 applied Rate、Funding Mark、exact cash、settlement Currency/Scale、Application/Journal identity与full-Journal duplicate/conflict语义已冻结，无需选择外部 provider。若 provider实际需要不同 Rate transformation、Funding Mark stream或settlement availability mapping，必须由 G10E caller Adapter明确转换，或先将 G09D退回 DRAFT；不得在 FinancingModel 内新增 provider分支。
+
+### G09D Implementation Acceptance
+
+1. Pure `funding_accounting` deep module、root exports和generic zero-effect allowlist最小扩展已实现；未新增Port、Profile、Adapter、Package、依赖或Generic Ledger/Snapshot/Engine/Runner/Timeline funding branch；
+2. Account/Slot Application Key、Namespace/Semantic Run SETTLEMENT/JOURNAL身份、完整Eligibility/Settlement/Mark/Policy lineage和canonical hashes均由constructor重新派生并fail closed；
+3. Signed historical eligibility Quantity、multiplier、Funding Mark与Applied Rate形成GCD-reduced exact cash，且每个Application仅在Money boundary调用一次`round_ratio`；Long/Short/Flat、正负零Rate、tie和rounded-zero均由static golden冻结；
+4. Settlement translator按frozen 18-code precedence返回`ProfilePortOutcome`，成功时只生成specialized `FUNDING_APPLIED` Entry；same-ID retry/conflict继续由immutable Journal原生处理；
+5. Full-Journal projector先拒绝ordinary/subclass funding Entry，再按normalized Application body审计alternate-ID duplicate/conflict，最后调用branchless Generic Ledger并保存完整Ledger State；
+6. Static golden、constructor/identity forgery、source IDs、economic authority conflict controls、zero Entry、cash/financing parity、boundary purity、public exports和input authority不变性均通过；
+7. 68-file Import Boundary、68-source mypy、LSP/scoped pi-lens、full regression与`uv lock --check`全部通过。
+
+G09D implementation 已冻结在 immutable commit `913e3ac81cc68a454f32a3f48b6444ac4604bb0e`，状态为 `PASSED`。
+
+验证记录：
+
+```text
+G09D contract                                                      24 passed
+G09D static golden                                                  1 passed
+Frozen public/boundary regression command                         89 passed
+Combined G09D acceptance report                                  114 passed
+Full test suite                                                   924 passed
+Trading-kernel import boundary                                     PASS (68 files)
+mypy                                                                 no issues (68 source files)
+Primary LSP + scoped pi-lens                                        clean
+uv lock --check                                                     PASS
+Python                                                               3.13.5
+```
 
 ## 73. G09E–G09H Readiness Blockers
 
