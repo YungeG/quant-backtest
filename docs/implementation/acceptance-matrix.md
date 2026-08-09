@@ -6389,7 +6389,7 @@ G08G 保持 `DRAFT`。在以下 blockers 全部冻结前不得实现：
 
 ```yaml
 id: G09A
-status: READY
+status: PASSED
 depends_on:
   - G03
 owner_package: trading-kernel derivatives
@@ -6442,6 +6442,11 @@ evidence:
   - no-ledger-runtime-mutation-evidence
   - import-boundary-report
   - static-type-report
+passed_commit: 190efba252b5353267cdc336698d93fd3b3b524c
+artifact_hashes:
+  tests/fixtures/kernel/derivatives/linear-position-v1.json: sha256:98106e5acc8cb1ed11ef1d46e364cdb06c1156a1d01ade99fb45cfb48aaafe60
+  build/acceptance/g09a-pytest.xml: sha256:0b8a29671a05886519bc310f3ac757a0463d35131cf4460a6cfdfd018c3ef658
+  build/acceptance/g09a-import-boundary-report.json: sha256:13c7981d9d9faec783922a863239bf7b4242dc87a959053420db04a83072e79e
 ```
 
 ### G09A Acceptance
@@ -6464,6 +6469,33 @@ evidence:
 16. `contract_hash`、`basis_hash`、`state_hash`、`request_hash`、`transition_hash`、`projection_hash`、`failure_hash` 与 `outcome_hash` exact 使用 `canonical_sha256(value)`。Scale canonical 继续沿用 Domain `Scale` contract，不新增替代 schema。Constructor/Projector 不 mutate Request、Fill、Contract 或 State，也不创建 mutable module state；
 17. Static synthetic golden exact 使用非 unit multiplier `Rate(125, Scale(3), "base_quantity_per_contract")`、Quantity Scale 3、Price Scale 2，至少冻结：Long/Short OPEN、ADD、REDUCE、CLOSE、FLIP；Long `1.000 @ 100.00` 加 `2.000 @ 100.50` 后 basis `301/3`；partial reduce保持 `301/3`；crossing Fill 后新 side basis等于 Fill；empty projection；prefix parity；equal-time permutation identity；cross-zero permutation economics；multiplier/Scale mutation；request-level failure null attribution、earliest repeated duplicate attribution、全部 failure precedence/atomicity、constructor rejection、canonical bytes/hash 与 no-mutation controls。`test_derivative_boundary.py` 必须 AST/source 扫描 Generic Ledger、SnapshotProjector、Engine、Runner 和 Timeline，拒绝 `InstrumentType.LINEAR_PERPETUAL` 或 `linear_perpetual` branch/reference；
 18. G09A 不拥有 Accounting Journal、PositionAccountingModel、Ledger replay、realized/unrealized PnL、Money quantization、Fee、Funding、Margin、Liquidation、Settlement、Mark、Runtime orchestration、Binance metadata/provider quantity interpretation、真实交易或 deployment authorization。G09B 必须独立冻结 exact rational PnL-to-Money boundary 和 Journal evidence；G09E 必须独立冻结 multiplier-aware notional/margin semantics。
+
+### G09A Implementation Acceptance
+
+1. Pure `crypto_quant_trading.derivatives` deep module 与 root exports 实现 frozen interface；未新增 Port、Adapter、Package、Profile、依赖或 Generic Ledger/Snapshot/Engine/Runner/Timeline derivative branch；
+2. Linear perpetual Contract、exact reduced rational Basis、signed one-way State、caller-ordered Request、OPEN/ADD/REDUCE/CLOSE/FLIP Transition、Projection、Failure 与 Outcome 均使用 frozen schema v1 与 canonical hashes；
+3. Long/Short open/add/reduce/close/flip、long-to-short/short-to-long crossing、closed Quantity、empty/prefix/equal-time/cross-zero semantics全部确定；Long 1@100 + 2@100.50 exact basis 为 `301/3`；
+4. Duplicate occurrence、time regression、account/Venue/Instrument/Quantity/Price/Currency/Scale mismatch 按 frozen first-failure precedence 原子 fail closed，不返回 partial transition prefix；Result/Failure constructors 从 embedded Request 重算；
+5. Exact-type closure 拒绝 tuple、Domain ID、Venue、Instrument、numeric/time/metadata 等 subclass forgery；Projector/constructors不排序、不 round、不使用 float/Decimal，也不 mutate 输入或 module state；
+6. `test_derivative_boundary.py` 与 purity controls 拒绝 generic derivative branch、filesystem/network/process/dynamic import、mutable module/class/decorator state及 computed-string/alias/wildcard bypass；
+7. Public export、65-file Import Boundary、65-source mypy、LSP/pi-lens、static golden、full regression、`uv lock --check` 与只读 blocker recheck 均通过。
+
+G09A implementation 已冻结在 immutable commit `190efba252b5353267cdc336698d93fd3b3b524c`，状态为 `PASSED`。
+
+验证记录：
+
+```text
+G09A contract                                                       7 passed
+G09A static golden                                                  1 passed
+Frozen public/boundary regression command                          44 passed
+Full test suite                                                    874 passed
+Trading-kernel import boundary                                     PASS (65 files)
+mypy                                                                no issues (65 source files)
+Primary LSP + pi-lens                                               clean
+Read-only blocker recheck                                            NONE
+uv lock --check                                                      PASS
+Python                                                               3.13.5
+```
 
 ## 70. G09B–G09H Readiness Blockers
 
