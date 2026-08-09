@@ -6501,7 +6501,7 @@ Python                                                               3.13.5
 
 ```yaml
 id: G09B
-status: READY
+status: PASSED
 depends_on:
   - G09A
   - G03
@@ -6565,6 +6565,11 @@ evidence:
   - no-fee-funding-unrealized-or-runtime-mutation-evidence
   - import-boundary-report
   - static-type-report
+passed_commit: 8896fc3acba1644e17a780bd64f151989d670bec
+artifact_hashes:
+  tests/fixtures/kernel/derivatives/linear-derivative-accounting-v1.json: sha256:3d507ce1387155dba88f0a4cccbc4a2572d2856112238c414d94c1c1ff946283
+  build/acceptance/g09b-pytest.xml: sha256:984e892e0c90147407bc8556641074c374e6185746929c109788d051db85f037
+  build/acceptance/g09b-import-boundary-report.json: sha256:7d6cecac1c5b1a22056300f323e04e4db6349bca3fd9307e77a44d63698fb1e3
 ```
 
 ### G09B Acceptance
@@ -6591,6 +6596,33 @@ evidence:
 20. G09B 不拥有 Unrealized PnL/Mark/Snapshot valuation、Fee、Funding、Margin、Liquidation、Settlement availability、Runtime dispatch、Profile composition、Binance metadata/provider parity、真实交易或 deployment authorization。G09D拥有 Funding accounting，G09F拥有 account MarginProjection，G09H才注入 Runtime composition。
 
 G09B 的公式、Journal subclass seam、system conventions与非拥有范围冻结在本 Acceptance Card 和 architecture/plan；无外部 provider选择。若后续 Profile 需要不同 realized-PnL settlement/rounding policy，必须由 caller-injected QuantizationPolicy/Profile identity显式区分，不能修改历史 G09B Result。
+
+### G09B Implementation Acceptance
+
+1. Pure `derivative_accounting` deep module 与 public `round_ratio` export 实现 frozen G09B interface；AccountingJournal、GenericLedger、Snapshot、Engine、Runner、Timeline 与 Ports 均未加入 derivative branch；
+2. Exact signed rational PnL 使用 before basis、closed quantity、non-unit multiplier与 Fill exit price一次计算，Money 只在每 Transition 最终 boundary 通过 caller QuantizationPolicy量化；OPEN/ADD、zero与rounded-zero不产生 Cash/PnL zero effects；
+3. Frozen specialized `LinearDerivativeJournalEntry` 继承并重验完整 base economics，保存 component/Request/exact PnL authority；Journal order/hash/idempotency/conflict与 Generic Ledger branchless projection继续复用既有实现；
+4. Replay 先验证 request context、全 Journal exact specialized Fill uniqueness与 unauthorized subclass，再按 Journal order检查 ordinary target mutation、entry context与 G09A lineage，随后保留 Generic Ledger原生异常并验证 signed Position parity；
+5. Replay Projection冻结每个 prefix direct-state parity、exact rational aggregate、per-transition quantized Money aggregate、terminal cursor、target Journal IDs与 Ledger state hash；mixed cash/other entries不污染 target attribution；
+6. Static golden冻结 long/short REDUCE/CLOSE/FLIP gain/loss、prior basis `301/3`、正负 rounding ties、rounded zero、per-transition-vs-aggregate、large integers、全部 prefixes、booking permutation/misorder、idempotency/conflict、mixed/native precedence、failure/forgery与真实 no-mutation controls；
+7. Public exports、66-file Import Boundary、66-source mypy、LSP/pi-lens、static golden、full regression、`uv lock --check` 与只读 blocker verdict均通过。
+
+G09B implementation 已冻结在 immutable commit `8896fc3acba1644e17a780bd64f151989d670bec`，状态为 `PASSED`。
+
+验证记录：
+
+```text
+G09B contract                                                      12 passed
+G09B static golden                                                  1 passed
+Frozen public/boundary regression command                          51 passed
+Full test suite                                                    887 passed
+Trading-kernel import boundary                                     PASS (66 files)
+mypy                                                                no issues (66 source files)
+Primary LSP + pi-lens                                               clean
+Read-only blocker recheck                                            NONE
+uv lock --check                                                      PASS
+Python                                                               3.13.5
+```
 
 ## 71. G09C–G09H Readiness Blockers
 
