@@ -7,8 +7,9 @@ import pytest
 
 
 ROOT = Path(__file__).resolve().parents[2]
-DERIVATIVE_MODULE = (
-    ROOT / "packages/trading-kernel/src/crypto_quant_trading/derivatives.py"
+DERIVATIVE_MODULES = (
+    ROOT / "packages/trading-kernel/src/crypto_quant_trading/derivatives.py",
+    ROOT / "packages/trading-kernel/src/crypto_quant_trading/derivative_accounting.py",
 )
 GENERIC_MODULES = (
     ROOT / "packages/trading-kernel/src/crypto_quant_trading/ledger.py",
@@ -21,6 +22,8 @@ DERIVATIVE_SYMBOL_PREFIXES = (
     "LinearPerpetual",
     "LinearPosition",
     "ExactAverageEntryBasis",
+    "ExactLinearRealizedPnl",
+    "LinearDerivative",
 )
 DERIVATIVE_LITERALS = (
     "linear_perpetual",
@@ -29,6 +32,10 @@ DERIVATIVE_LITERALS = (
     "linearposition",
     "exact_average_entry_basis",
     "exactaverageentrybasis",
+    "linear_derivative",
+    "linearderivative",
+    "exact_linear_realized_pnl",
+    "exactlinearrealizedpnl",
 )
 
 
@@ -115,6 +122,10 @@ def _purity_violations(source: str) -> set[str]:
         "typing",
         "re",
         "crypto_quant_domain",
+        "derivatives",
+        "journal",
+        "ledger",
+        "ports",
     }
     mutable_values = (
         ast.Dict,
@@ -261,8 +272,9 @@ def test_generic_derivative_scanner_rejects_import_and_reference_bypasses(
     assert _generic_derivative_violations(source)
 
 
-def test_linear_position_module_is_pure_and_has_no_mutable_module_state() -> None:
-    assert not _purity_violations(DERIVATIVE_MODULE.read_text(encoding="utf-8"))
+def test_derivative_modules_are_pure_and_have_no_mutable_module_state() -> None:
+    for path in DERIVATIVE_MODULES:
+        assert not _purity_violations(path.read_text(encoding="utf-8")), path.name
 
 
 @pytest.mark.parametrize(

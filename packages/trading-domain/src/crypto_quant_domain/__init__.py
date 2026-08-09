@@ -89,6 +89,7 @@ from .numeric import (
     Rate,
     RoundingPolicy,
     Scale,
+    round_ratio,
 )
 from .profile_errors import ProfileComponentFailure, ProfileComponentFailureCode
 from .time import (
@@ -189,4 +190,5 @@ __all__ = [
     "canonical_sha256",
     "derive_domain_id",
     "resolve_local_datetime",
+    "round_ratio",
 ]
