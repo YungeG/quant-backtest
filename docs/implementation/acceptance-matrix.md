@@ -119,8 +119,8 @@ artifact_hashes: []
 | G08G | DRAFT | trading-domain + trading-kernel + backtest-runtime | G08F, G03 | Journal-replayable Lot effects, exact total Cost Basis, availability/tax/fractional-share fixtures |
 | G08H | DRAFT | trading-kernel profiles/cn_a_share + parity | G08A–G08G | Composition/parity commands |
 | G09A | PASSED | trading-kernel derivatives | G03 | none |
-| G09B | READY | trading-kernel derivative accounting | G09A, G03 | none |
-| G09C | DRAFT | trading-kernel financing | G09A, WP-06B | Funding eligibility fixtures |
+| G09B | PASSED | trading-kernel derivative accounting | G09A, G03 | none |
+| G09C | READY | trading-kernel funding eligibility | G09A, G09B, WP-06A, WP-06B | none |
 | G09D | DRAFT | trading-kernel financing/accounting | G09B–G09C | Funding settlement fixtures |
 | G09E | DRAFT | trading-kernel margin | G09A | Instrument margin fixtures |
 | G09F | DRAFT | trading-kernel margin | G09B, G09E, WP-05B | Cross-margin fixtures |
@@ -6624,18 +6624,107 @@ uv lock --check                                                      PASS
 Python                                                               3.13.5
 ```
 
-## 71. G09C–G09H Readiness Blockers
+## 71. G09C Funding Publication and Eligibility Acceptance Card
 
-G09C–G09H 保持 `DRAFT`。当前 blockers：
+```yaml
+id: G09C
+status: READY
+depends_on:
+  - G09A
+  - G09B
+  - WP-06A
+  - WP-06B
+owner_package: trading-kernel funding eligibility
+public_interface:
+  - crypto_quant_trading.LinearFundingEligibilityComponentRef
+  - crypto_quant_trading.FundingSlotId
+  - crypto_quant_trading.LinearFundingPublicationStatus
+  - crypto_quant_trading.LinearFundingRatePublicationCandidate
+  - crypto_quant_trading.LinearFundingEligibilityPositionSnapshot
+  - crypto_quant_trading.LinearFundingEligibilityRequest
+  - crypto_quant_trading.LinearFundingEligibility
+  - crypto_quant_trading.LinearFundingEligibilityFailureCode
+  - crypto_quant_trading.LinearFundingEligibilityFailure
+  - crypto_quant_trading.LinearFundingEligibilityOutcome
+  - crypto_quant_trading.LinearFundingEligibilityResolver
+  - static synthetic linear-funding-eligibility golden fixture v1
+test_commands:
+  contract: uv run pytest -q tests/kernel/derivatives/test_linear_funding_eligibility.py
+  fixture: uv run pytest -q tests/kernel/derivatives/test_linear_funding_eligibility_golden.py
+  boundary: uv run pytest -q tests/architecture/test_public_api_imports.py tests/architecture/test_network_isolation.py tests/architecture/test_repository_cleanliness.py tests/architecture/test_derivative_boundary.py tests/market_data/bundles/test_market_bundle_reader.py tests/runtime/timeline/test_deterministic_timeline.py tests/kernel/derivatives/test_linear_positions.py tests/kernel/derivatives/test_linear_derivative_accounting.py tests/kernel/journal/test_immutable_journal.py && uv run python tools/architecture/check_import_boundaries.py --root . --policy architecture/import-boundaries.toml --report build/acceptance/g09c-import-boundary-report.json
+fixture_ids:
+  - synthetic-linear-funding-eligibility-v1
+expected_artifacts:
+  - tests/fixtures/kernel/derivatives/linear-funding-eligibility-v1.json
+  - build/acceptance/g09c-pytest.xml
+  - build/acceptance/g09c-import-boundary-report.json
+failure_contracts:
+  - funding-rate-is-visible-before-full-publication-availability
+  - slot-id-depends-on-account-rate-revision-or-source
+  - publication-revision-chain-is-branched-gapped-reordered-or-duplicated
+  - publication-after-target-funding-utc-is-backdated
+  - cancelled-final-publication-creates-eligibility
+  - eligibility-uses-current-position-after-the-cutoff
+  - same-utc-later-phase-journal-entry-enters-the-cutoff-prefix
+  - shortened-or-forged-journal-prefix-is-accepted
+  - availability-projection-or-cutoff-state-is-not-authoritative-g09b-replay
+  - missing-publication-or-position-evidence-produces-partial-success
+  - publication-or-position-revision-conflict-is-silently-selected
+  - result-creates-funding-obligation-cash-journal-ledger-or-margin-effect
+  - market-event-timeline-journal-or-ledger-is-mutated
+  - generic-ledger-snapshot-engine-runner-or-timeline-branches-on-funding
+  - profile-or-provider-specific-schedule-finality-mark-or-accounting-leaks-into-g09c
+allowed_grade: development
+evidence:
+  - pytest-report
+  - static-linear-funding-eligibility-golden-hash
+  - market-event-publication-id-and-hash-binding
+  - full-simulation-instant-visibility-and-timeline-parity
+  - stable-funding-slot-identity-evidence
+  - closed-publication-revision-chain-evidence
+  - g09b-journal-prefix-cutoff-and-replay-evidence
+  - long-short-flat-historical-position-capture
+  - later-position-non-substitution-evidence
+  - deterministic-idempotent-slot-observation
+  - no-accounting-obligation-or-runtime-mutation-evidence
+  - import-boundary-report
+  - static-type-report
+```
 
-1. G09C 必须冻结 Funding publication MarketEvent causality、stable Slot ID、eligibility instant 的历史 G09A Position capture、revision/idempotency 和缺失 evidence failure precedence；
-2. G09D 必须冻结 applied Rate、Funding `PricePurpose` Mark、cash direction、settlement Currency/Scale、Slot duplicate/conflict contract 和 Journal identity chain；
-3. G09E 必须冻结 caller-injected historical leverage/tier RuleBook、multiplier-aware notional公式、initial/maintenance requirement、tier boundary/gap/overlap precedence 和 current-tier fallback rejection；
-4. G09F 必须冻结单 Execution Account Equity、Derivative unrealized PnL、Fee/Funding、Maintenance Margin、Working Order Reservation 的 authoritative inputs与独立 immutable `MarginProjection`；不得把 Margin 数值塞入 Generic Ledger balance；
-5. G09G 必须冻结 Liquidation Mark Bar evidence、long-low/short-high conservative evaluation、`SAFE`/`AMBIGUOUS_BREACH` canonical audit与 decision-grade fail-closed routing；
-6. G09H 必须冻结 branchless injected composition、Synthetic E2E commands/artifacts、Journal/MarginProjection/PortfolioSnapshot reconstruction与 development-only limitation；Generic Engine accounting/event dispatch 尚不能按 resolved profile 注入 derivative accounting，因此不得提前组合。
+### G09C Acceptance
 
-## 72. PASSED 记录格式
+1. G09C 只新增 pure `crypto_quant_trading.funding` deep module与必要 root exports；不得新增 Port、Adapter、Profile、Package、依赖，或修改 MarketEvent、Timeline、AccountingJournal、GenericLedger、SnapshotProjector、Engine、Runner。`LinearFundingEligibilityResolver.resolve(request)` 是唯一行为 interface，返回 dedicated `LinearFundingEligibilityOutcome`，不使用 `ProfilePortOutcome`、不占用 `FINANCING_MODEL` port identity且不结构化实现 `FinancingModel`；G09D 才实现 Funding settlement/accounting；
+2. `FundingSlotId` exact 保存 `InstrumentId`、`target_funding_time: UtcInstant` 与稳定 value。Value exact 为 `funding-slot-v1:` 加 `canonical_sha256({type="funding_slot_semantic_key",schema_version=1,instrument_id,target_funding_time})` 去掉 `sha256:` 前缀。Slot identity 只绑定 Instrument 与目标 Funding UTC，不绑定 account、rate、revision、Event/source、availability、eligibility phase、Position或 capture；constructor/classmethod 必须重算并拒绝 forged value；
+3. `LinearFundingPublicationStatus` enum values exact 为 `FINAL_RATE` 与 `CANCELLED`。`LinearFundingRatePublicationCandidate` 保存 Slot、status、optional published Rate、source MarketEvent ID/hash、event time、完整 `publication_available_at=SimulationInstant(available_time,phase,source_sequence)`、revision/supersession和 source key/hash。`FINAL_RATE` 必须有 Rate，`CANCELLED` 必须没有 Rate；Rate 可正、负或零，basis exact 为 `funding_fraction_of_notional`，G09C不量化、不应用且不声称 provider最终性；
+4. Publication 是普通 immutable `MarketEvent` handoff evidence。Candidate 只接受 caller已映射的 Event fields，production module 不导入 market-data/runtime。Event time与available UTC均不得晚于 Slot target funding UTC；同一目标 UTC的 publication可在 eligibility phase之前或之后变得可用，但 Strategy/caller在完整 `publication_available_at` 前不能观察 Rate。Golden通过实际 `MarketEvent`、`InMemoryMarketBundleReader` 与 `DeterministicTimeline`冻结 Event ID/hash、同 UTC phase/sequence visibility、reader page size、timeline batch size和输入顺序 parity；
+5. Request 的 `publications` 是 caller-supplied exact tuple与 supplied closed linear revision chain，按 `(publication_available_at,event_id,revision_id)` 已排序。Chain exact 要求同一 Slot、Event ID唯一、revision ID唯一、第一项 `supersedes_revision_id=None`，后续每项 exact supersede紧邻前一 revision，完整 `publication_available_at` 严格递增且无 branch/gap/reorder/duplicate；相同 availability instant不得依靠 Event ID tie-break绕过 WP-06A/WP-06B ordering identity。Resolver选最后一项；final `CANCELLED` 返回 structured cancellation failure。Cross-Request omitted later revision、same identity conflicting reuse与 provider correction/finality history由 G09H/G10E fail closed，但单 Request 内完整 chain由 G09C验证；
+6. `LinearFundingEligibilityRequest` exact 保存 Slot、Position key、完整 G09A Contract、Eligibility Instant、Publication tuple、optional Position Snapshot与 captured-at。Position key必须匹配 Contract；Eligibility UTC exact 等于 Slot target funding time，并使用 frozen `TimelinePhase(rank=100,code=funding_eligibility)` 与 `SourceSequence(0)`；`captured_at >= eligibility_instant`。该 phase是 deterministic engine ordering convention，不声称任何 provider在此 phase完成结算；
+7. `LinearFundingEligibilityPositionSnapshot` 是唯一 historical eligibility Position authority。它保存 snapshot/eligibility-series/revision identity、optional supersession、Slot、Eligibility Instant、available-at、`eligibility_cursor: JournalReplayCursor`、完整 G09B `availability_projection: LinearDerivativeLedgerProjection` 与 cutoff `position_state: LinearPositionState`。Snapshot constructor必须验证 exact types和 hashes，并从 availability projection嵌入的同一 authoritative Journal重建 cutoff prefix；不得接受裸 State、current Ledger Position、PortfolioSnapshot、Fill tuple或 opaque source hash替代；
+8. Eligibility cutoff exact 为 availability Journal 中所有 `entry.recorded_at < eligibility_instant` 的最大 prefix，比较完整 `SimulationInstant`。同 UTC较早 phase/sequence进入，exact eligibility或更晚 phase/sequence排除。`eligibility_cursor` 必须等于 availability Journal在该最大位置的 cursor/hash；constructor用该 prefix构造 immutable AccountingJournal并调用 G09B `LinearDerivativeLedgerProjector`，重算结果必须等于 snapshot `position_state`。Availability projection必须在 Snapshot内部匹配同 Position/Contract/Cash authority；Journal entries相对 available-at的时间因果由 Resolver而非 constructor判断；
+9. Resolver要求 Snapshot `available_at >= eligibility_instant`、availability Journal全部 entries `recorded_at <= available_at`且 Snapshot不得晚于 Request captured-at；不满足时按 frozen business failure返回。Snapshot只声明 caller提供的 authoritative Journal在 available-at时的完整 prefix；跨 Snapshot identity-history与外部 Journal completeness由 G09H composition拥有。Root与superseding snapshot revision均可表达，但 G09C v1只接受 supplied `supersedes_revision_id=None`；后续 current close/flip/position、availability projection terminal State或额外 Journal entries不得替代或重算已冻结 cutoff State。Flat State是成功 evidence，不等于 missing；
+10. Result exact 保存 dedicated component ref、完整 Request/request hash、Slot、selected Publication hash/Event/revision identities、Snapshot hash、historical Position State/state hash、published Rate、eligibility instant与 captured-at。Result constructor从 embedded Request执行完整 first-failure evaluation并要求结果为 `None`，随后重算 selected final Publication、cutoff replay与全部 identities；相同 canonical Request产生相同 Result/Outcome hash。G09C只产生一个 immutable Slot/account eligibility observation，不创建 Funding obligation、Journal Entry、Cash/Ledger effect、Fee、Funding payment、Margin或Settlement mutation；
+11. Business Failure enum values与 first-failure precedence exact 为：`MISSING_PUBLICATION` → `SLOT_CONTEXT_MISMATCH` → `POSITION_CONTEXT_MISMATCH` → `INVALID_ELIGIBILITY_INSTANT` → `PUBLICATION_SLOT_MISMATCH` → `UNSUPPORTED_RATE_BASIS` → `INVALID_PUBLICATION_REVISION_SET` → `INVALID_PUBLICATION_CAUSALITY` → `LATE_PUBLICATION` → `PUBLICATION_NOT_AVAILABLE` → `FUNDING_SLOT_CANCELLED` → `MISSING_ELIGIBILITY_POSITION` → `UNSUPPORTED_POSITION_REVISION` → `SNAPSHOT_SLOT_MISMATCH` → `SNAPSHOT_POSITION_CONTEXT_MISMATCH` → `ELIGIBILITY_INSTANT_MISMATCH` → `INVALID_POSITION_CAPTURE_CAUSALITY` → `POSITION_SNAPSHOT_NOT_AVAILABLE`。Exact predicates分别为：(1) publications empty；(2) Request Slot Instrument不等于 Contract Instrument；(3) Request Position key Venue/Instrument不等于 Contract；(4) Request eligibility UTC/phase/sequence不等于 Slot target UTC与 frozen boundary，或 captured-at早于 eligibility；(5) 任一 Publication Slot不等于 Request Slot；(6) 任一 `FINAL_RATE` published Rate basis不等于 `funding_fraction_of_notional`；(7) publications非 strict canonical order、Event/revision重复、root supersedes非空、任一 successor未紧邻 supersede前一 revision，或完整 availability不严格递增；(8) 任一 publication available UTC早于 event time；(9) 任一 event time或available UTC晚于 Slot target funding UTC；(10) 任一 supplied publication完整 availability晚于 Request captured-at；(11) selected final status为 `CANCELLED`；(12) Position Snapshot缺失；(13) Snapshot `supersedes_revision_id`非空；(14) Snapshot Slot不等于 Request Slot；(15) Snapshot cutoff State或availability projection的Position/Contract/Cash authority不等于 Request context；(16) Snapshot eligibility instant不等于 Request eligibility；(17) Snapshot available-at早于 eligibility，或availability Journal任一 Entry recorded-at晚于 Snapshot available-at；(18) Snapshot available-at晚于 Request captured-at。多缺陷只返回第一项。Candidate/Snapshot/Request constructors只验证 exact type、canonical/hash/status-rate shape与 Snapshot内部 cursor/prefix/G09B replay完整性，不验证上述跨对象 business规则；全部 18 项必须可构造并由 Resolver structured fail closed；
+12. Failure ordered `subject_ids` exact 为 `(code.value, slot_id.value, selected_or_last_event_id or "missing-funding-publication", snapshot_id or "missing-eligibility-position", position_key.account_id, str(contract.instrument.instrument_id))`。Failure嵌入完整 Request并重算首个 failure；`LinearFundingEligibilityOutcome` exact 保存 dedicated component ref、Request hash与 exactly-one Result/Failure，并重验 component/request identities；
+13. Dedicated `LinearFundingEligibilityComponentRef` 不含 port type；component key exact 为 `instrument.linear-perpetual.funding-eligibility.v1`、version 1、algorithm key exact 为 `linear-funding-publication-eligibility-v1`。Component digest preimage exact 为 `{type="linear_funding_eligibility_component",schema_version=1,component_key,component_version=1,algorithm_key,slot_key="instrument_id+target_funding_time",rate_basis="funding_fraction_of_notional",eligibility_phase=TimelinePhase(100,"funding_eligibility"),eligibility_sequence=SourceSequence(0),eligibility_cutoff="journal.recorded_at<eligibility_instant",publication_revision_policy="closed_linear_chain",position_revision_policy="supplied_root_only",allowed_grade="development"}`；ComponentRef canonical preimage exact 为 `{type="linear_funding_eligibility_component_ref",schema_version=1,component_key,component_version,component_digest}`；
+14. 所有新增 public values使用 `schema_version=1`、exact types、canonical tuple order与 `canonical_sha256` hashes。Canonical type/preimage exact 为：Slot `funding_slot_id {type,schema_version,instrument_id,target_funding_time,value}`；Publication `linear_funding_rate_publication_candidate {type,schema_version,slot_id,status,published_rate,event_id,event_hash,event_time,publication_available_at,revision_id,supersedes_revision_id,source_key,source_hash}`；Snapshot `linear_funding_eligibility_position_snapshot {type,schema_version,snapshot_id,eligibility_series_id,revision_id,supersedes_revision_id,slot_id,eligibility_instant,available_at,eligibility_cursor,availability_projection,position_state}`；Request `linear_funding_eligibility_request {type,schema_version,slot_id,position_key,contract,eligibility_instant,publications,position_snapshot,captured_at}`；Result `linear_funding_eligibility {type,schema_version,component_ref,request,request_hash,slot_id,publication_hash,event_id,event_hash,publication_revision_id,snapshot_hash,position_state,state_hash,published_rate,eligibility_instant,captured_at}`；Failure `linear_funding_eligibility_failure {type,schema_version,component_ref,request,request_hash,code,subject_ids}`；Outcome `linear_funding_eligibility_outcome {type,schema_version,component_ref,request_hash,result,failure}`；
+15. Publication hash、snapshot hash、request hash、eligibility hash与failure hash exact 为 `canonical_sha256(value)`。Publication Candidate event/source hashes使用 canonical `sha256:<64 lowercase hex>`；Slot/Event/revision/source tuple顺序固定。Snapshot hash绑定完整 availability projection和 cutoff State，因此 Journal extension、cursor、late current Position或 G09B replay identity变化都会显式改变新 Snapshot identity，而不会 retroactively改变历史 Result；
+16. Static golden沿用 G09A/G09B synthetic Contract，至少冻结：positive/negative/zero Rates；Slot derivation/sensitivity及对 account/rate/revision/source/capture的不变性；actual MarketEvent-to-Candidate ID/hash；same-UTC pre-availability invisibility与 boundary visibility；Reader/Timeline parity；root/corrected/cancelled chains；branch/gap/reorder/duplicate revision failures；Long/Short/Flat cutoff States；same-UTC earlier/later Journal phases；每个 prefix cursor/hash；later close/flip/current State non-substitution；all 18 failures与 multi-defect precedence；constructor/result/failure/slot/cursor/hash forgery；same Request idempotency及 no Journal/Ledger/Timeline/module mutation；
+17. Purity沿用 derivative scanner：production只允许 stdlib、`crypto_quant_domain`、G09A derivatives、G09B derivative-accounting、generic Journal/Ports imports；拒绝 filesystem、network/provider/process/database/cloud、dynamic import、MarketBundle/Runtime import、mutable module/class/decorator state与 wall clock。`test_derivative_boundary.py` 继续拒绝 Generic Ledger、SnapshotProjector、Engine、Runner、Timeline 的 funding/linear derivative branch或 reference；
+18. G09C 不拥有 Strategy ObservationView、provider stream/schedule、estimated/final rate mapping、Applied Rate选择、Funding Mark、settlement Currency/Scale、cash direction、obligation、Funding Journal、Ledger mutation、Fee、Margin、Liquidation、Runtime dispatch、Binance parity、真实交易或 deployment authorization。G09D拥有 settlement/accounting；G09H拥有 closed cross-Query identity-history与 composition completeness；G10E拥有 Binance publication/finality/correction/source Adapter。
+
+G09C 的 Slot、revision chain、historical cutoff与 system ordering convention已冻结，无外部 provider选择。若 provider证据要求不同 publication finality或 eligibility boundary，必须由 G10E mapping或先将 G09C退回 DRAFT修订，不能静默改写历史 Result。
+
+## 72. G09D–G09H Readiness Blockers
+
+G09D–G09H 保持 `DRAFT`。当前 blockers：
+
+1. G09D 必须冻结 applied Rate、Funding `PricePurpose` Mark、cash direction、settlement Currency/Scale、Slot duplicate/conflict contract 和 Journal identity chain；
+2. G09E 必须冻结 caller-injected historical leverage/tier RuleBook、multiplier-aware notional公式、initial/maintenance requirement、tier boundary/gap/overlap precedence 和 current-tier fallback rejection；
+3. G09F 必须冻结单 Execution Account Equity、Derivative unrealized PnL、Fee/Funding、Maintenance Margin、Working Order Reservation 的 authoritative inputs与独立 immutable `MarginProjection`；不得把 Margin 数值塞入 Generic Ledger balance；
+4. G09G 必须冻结 Liquidation Mark Bar evidence、long-low/short-high conservative evaluation、`SAFE`/`AMBIGUOUS_BREACH` canonical audit与 decision-grade fail-closed routing；
+5. G09H 必须冻结 branchless injected composition、Synthetic E2E commands/artifacts、Journal/MarginProjection/PortfolioSnapshot reconstruction与 development-only limitation；Generic Engine accounting/event dispatch 尚不能按 resolved profile 注入 derivative accounting，因此不得提前组合。
+
+## 73. PASSED 记录格式
 
 ```yaml
 id: WP-00A

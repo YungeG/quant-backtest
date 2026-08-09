@@ -1410,16 +1410,20 @@ Realized PnL先形成 GCD-reduced signed exact rational。对 before sign `s`、
 
 ### Gate G09C Funding Publication and Eligibility
 
-依赖：G09A、Timeline contracts。
+依赖：G09A、G09B、WP-06A MarketEvent 与 WP-06B Timeline contracts。
 
-拥有：Funding publication available time、Funding Slot ID 和 Eligibility Position capture。
+拥有：Funding publication available time、stable Funding Slot ID、closed publication revision chain 和 Eligibility Position capture。
 
 验收：
 
-- Strategy 不能在 publication available time 前观察费率；
-- Eligibility Instant 锁定历史 Position，不使用后续当前 Position；
-- Slot ID 稳定且重复 publication 不重复创建义务；
-- 缺少 publication/eligibility 证据时 fail closed。
+- Strategy 不能在完整 `SimulationInstant` publication available boundary 前观察费率；
+- Eligibility Instant exact 使用 `TimelinePhase(100, "funding_eligibility")/SourceSequence(0)`，锁定同一 authoritative Journal 的最大 `recorded_at < eligibility` prefix，不使用后续 current Position；
+- Slot ID 只绑定 Instrument 与 target funding UTC，重复/修订 publication 对同一 Slot只产生一个 immutable eligibility observation，不创建 obligation；
+- root/correction/cancellation chain、missing publication/position、late/unavailable evidence按 frozen precedence fail closed。
+
+冻结实现 seam：G09C 只新增 pure `crypto_quant_trading.funding`。Caller/G09H/G10E把普通 MarketEvent映射为 `LinearFundingRatePublicationCandidate`；production Kernel不导入 MarketBundle或Runtime。`LinearFundingEligibilityResolver.resolve()`消费 Slot、Contract、Position key、完整 publication chain、Eligibility Instant、historical Position Snapshot和 captured-at，返回 dedicated `LinearFundingEligibilityOutcome`；它不使用 Profile Port identity，也不实现 FinancingModel accounting。
+
+Historical Position Snapshot 嵌入 G09B availability projection、同一 Journal 的 eligibility cursor与 cutoff `LinearPositionState`。Snapshot constructor按完整 SimulationInstant找到 Journal最大 `< eligibility` prefix，验证 cursor/prefix hash，并以 G09B projector重放该 prefix；availability projection可包含 eligibility后的 close/flip，但不得替代已冻结 cutoff State。G09C只返回 Rate publication + historical State eligibility evidence；Applied Rate、Funding Mark、cash direction、Journal/Ledger mutation仍由 G09D拥有。
 
 ### Gate G09D Funding Settlement and Accounting
 

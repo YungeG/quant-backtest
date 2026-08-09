@@ -1368,6 +1368,10 @@ Funding 使用两个不同事件：
 
 Funding Payment 使用 eligibility instant 的合格 Position 计算，并由 FinancingModel 生成唯一 `FundingApplied` Accounting Journal Entry。Applied Rate 不得在 available time 前暴露给 Strategy，不允许按 Bar 隐式均摊 Funding。
 
+G09C 在经济结算前增加 pure Funding eligibility seam。`FundingSlotId` 只由 Instrument 与 target funding UTC 派生；MarketEvent publication以完整 `SimulationInstant`控制可见性，caller提供同 Slot 的 closed linear revision chain，Resolver选择唯一 final Rate或显式取消。该 Resolver不实现 FinancingModel，不创建 obligation。
+
+Eligibility Position不是 current Ledger读取。`LinearFundingEligibilityPositionSnapshot` 嵌入 G09B availability projection、同一 Journal 的 eligibility cursor和 cutoff State；cutoff exact 为最大 `entry.recorded_at < eligibility_instant` prefix，因此 same-UTC earlier phase/sequence进入、eligibility boundary及之后的 Entry排除。Snapshot constructor用 G09B projector重放 prefix并绑定完整 Journal/cursor/state identity；availability projection中后续 close/flip不改变已捕获 eligibility。Cross-Query revision/history completeness由 G09H拥有，Binance publication/finality mapping由 G10E拥有。
+
 ### 11.12 MarginRules 与 LiquidationRules
 
 属于 MarketSemanticsProfile，表达真实 Initial Margin、Maintenance Margin、保证金层级和强平条件，不包含 Bar 数据下的近似判断。

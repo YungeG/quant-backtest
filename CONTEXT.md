@@ -305,7 +305,7 @@ Price 或 Market Event Stream 在预期覆盖区间中的缺失，并具有明�
 
 ## Funding 费率发布（Funding Rate Publication）
 
-市场在特定可用时间向 Strategy 暴露某个未来 Funding 时点费率的观察事件。它本身不改变账户现金。
+市场在完整可用时点向 Strategy 暴露某个目标 Funding UTC 的费率观察事件；该可用时点可在同一 UTC 的较晚 phase。它本身不改变账户现金。
 
 ## Funding 结算（Funding Settlement）
 
@@ -313,7 +313,15 @@ Price 或 Market Event Stream 在预期覆盖区间中的缺失，并具有明�
 
 ## Funding Slot ID
 
-唯一标识一次 Instrument Funding 结算时隙并保证幂等入账的稳定身份。
+只由 Instrument 与目标 Funding UTC 派生、唯一标识一次 Funding 时隙的稳定身份。Account、Rate、revision、source 和 Position 不进入 Slot identity。
+
+## Funding 发布修订链（Funding Publication Revision Chain）
+
+同一 Funding Slot 的 caller-supplied、按完整 availability 顺序闭合的线性 MarketEvent revision chain。每个 revision 只能紧邻 supersede 前一项，final item 唯一决定 published Rate 或 cancellation；它本身不创建账户义务。
+
+## Funding 资格持仓快照（Funding Eligibility Position Snapshot）
+
+绑定 G09B authoritative Journal、最大 `recorded_at < eligibility_instant` cursor/prefix 与重放后 `LinearPositionState` 的历史资格证据。Snapshot available 后的 current close、flip 或其他 Position 不能替代 cutoff State。
 
 ## 资格时点（Eligibility Instant）
 
