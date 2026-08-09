@@ -1385,7 +1385,7 @@ READY 前阻断：
 
 冻结实现 seam：G09A 只新增 pure `crypto_quant_trading.derivatives` deep module，唯一行为 interface 为 `LinearPositionProjector.project(LinearPositionProjectionRequest)`；不新增 Port、Adapter、Profile 或 Runtime integration。Request 使用 caller-ordered immutable Fill tuple，从 Flat state 原子投影完整 sequence；signed Quantity 正/负/零分别表达 Long/Short/Flat，同 execution time 由 tuple order 决定且 Projector 不排序。
 
-Average entry 使用 GCD-reduced exact rational `ExactAverageEntryBasis(numerator, denominator)`，禁止 float、Decimal 或固定 Scale rounding。OPEN 使用 Fill Price；ADD 按同 Scale raw Quantity 加权；REDUCE 保持 prior basis；CLOSE 清空 basis；FLIP 的新方向只使用 crossing Fill Price。Contract multiplier 是 positive `Rate`，basis exact 为 `base_quantity_per_contract`，进入 Contract/State identity但在 weighted average 中代数消去。G09A 不计算 PnL；G09B 再冻结 `signed closed quantity × multiplier × (exit price - prior basis)` 到 Money 的量化边界。
+Average entry 使用 GCD-reduced exact rational `ExactAverageEntryBasis(numerator, denominator)`，禁止 float、Decimal 或固定 Scale rounding。OPEN 使用 Fill Price；ADD 按同 Scale raw Quantity 加权；REDUCE 保持 prior basis；CLOSE 清空 basis；FLIP 的新方向只使用 crossing Fill Price。Contract multiplier 是 positive `Rate`，basis exact 为 `base_quantity_per_contract`，进入 Contract/State identity但在 weighted average 中代数消去。G09A 不计算 PnL；G09B 再冻结 `sign(before.quantity.units) × closed_quantity × multiplier × (exit price - prior basis)` 到 Money 的量化边界。
 
 G09A Result/Failure 嵌入完整 Request 并使用 canonical schema v1/hash；Transition constructor 重算 kind、closed Quantity 和 after State，Projection 重放全部 Transition。Duplicate Fill、time regression、context/Scale mismatch 按 Acceptance Matrix first-failure precedence 原子 fail closed，不返回 partial prefix。Cash PositionLot、Generic Ledger、SnapshotProjector、Engine 和 Runner 不感知 derivative type。
 
@@ -1401,6 +1401,12 @@ G09A Result/Failure 嵌入完整 Request 并使用 canonical schema v1/hash；Tr
 - Unrealized PnL 只由 SnapshotProjector + Mark 派生；
 - Fee 保持独立 FeeAssessment/Journal Entry；
 - Journal replay 与 direct projection exact parity。
+
+冻结实现 seam：G09B 只新增 `crypto_quant_trading.derivative_accounting`。`LinearDerivativeAccounting.translate_position_fact()` 每次消费一个完整 G09A Transition、settlement Cash registration、QuantizationPolicy 与 Journal context，产生一条 frozen `LinearDerivativeJournalEntry`。该类型继承 `AccountingJournalEntry`：既有 `AccountingJournal` 直接保存完整 derivative evidence并继续拥有排序/哈希/幂等/冲突语义；Generic Ledger只读取继承的通用经济字段，不增加 derivative branch。
+
+Realized PnL先形成 GCD-reduced signed exact rational。对 before sign `s`、closed raw Quantity `C`/factor `Q`、multiplier `m/M`、exit Price `p/P` 与 before basis `N/D`，公式 exact 为 `s*C*m*(p*D-N*P)/(Q*M*P*D)`；OPEN/ADD 为 `0/1`，FLIP 只结算旧方向 closed portion。Money只在每个 Transition 末端通过 caller-supplied QuantizationPolicy 和 public `round_ratio` 量化一次。Perpetual principal notional不改变 Cash；只有非零 quantized realized PnL 同时进入 Cash BalanceChange与 gross realized attribution，Fee/Funding/Unrealized PnL保持独立。
+
+`LinearDerivativeLedgerProjector` 从 immutable Journal 的 specialized Entries按 published order重建 target exact State；caller必须使同一 target 的 `(recorded_at, journal_entry_id.value)` 按 G09A Transition lineage严格递增，Projector不排序或修复错误 booking context。Replay先拒绝 Journal-wide specialized duplicate Fill，再拒绝普通 Entry 改写 target Position和 transition lineage mismatch；随后调用 branchless Generic Ledger验证 signed Position Quantity 和 state hash。Replay Projection保存 exact PnL aggregate与逐 Transition 已量化 Money aggregate，后者禁止重新 aggregate-quantize。Runtime dispatch/Profile composition继续由 G09H拥有。
 
 ### Gate G09C Funding Publication and Eligibility
 

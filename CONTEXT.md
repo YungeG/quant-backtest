@@ -746,6 +746,18 @@ G08B development-grade Profile 中，买入负现金和卖出负持仓在 Fill �
 
 单个反向成交完全关闭原方向后仍有剩余数量并立即建立相反方向净持仓的转换。新方向的入场基础只来自该 crossing Fill，不继承已关闭方向的基础。
 
+## 精确线性已实现盈亏（Exact Linear Realized PnL）
+
+由线性仓位转换的旧方向符号、关闭数量、合约乘数、退出价格与转换前精确平均入场基础计算出的约分有理数结算币金额。它在进入 caller-supplied Money QuantizationPolicy 前不进行舍入。
+
+## 线性衍生品会计流水项（Linear Derivative Journal Entry）
+
+继承通用 AccountingJournalEntry 并把完整线性仓位转换、会计请求、量化策略和精确已实现盈亏直接纳入同一不可变流水身份的 specialized Entry。Generic Ledger 只读取其通用经济字段，不按衍生品类型分支。
+
+## 线性衍生品账本投影（Linear Derivative Ledger Projection）
+
+按 Accounting Journal 已发布顺序从 specialized Entries 重建精确平均入场仓位状态，并与 Generic Ledger 的 signed Position Quantity 核对的不可变投影。它是 Journal 的确定性视图，不是第二财务权威。
+
 ## 取得批次（Acquisition Lot）
 
 现金类 Instrument 由一次买入成交取得的不可变数量、单位成本、费用和时间来源记录。

@@ -1349,6 +1349,10 @@ G09A 在 Accounting translation 之前增加 market-neutral `LinearPositionProje
 
 该 seam 保持 Generic Ledger branchless：G09A State 是 projection evidence，不冒充 `PositionBalance` 或 Cash `PositionLot`。只有 G09B 冻结 replayable derivative Journal effects 后，Ledger/Snapshot composition 才能持有 authoritative derivative Position。Funding eligibility、MarginProjection 和 LiquidationAudit 同样等待各自 Gate，不在 Position Projector 中累积可选字段。
 
+G09B 使用 specialized-Journal-subclass seam：`LinearDerivativeJournalEntry` 继承通用 `AccountingJournalEntry`，因此完整 G09A Transition、exact realized-PnL、QuantizationPolicy 与 translation Request 直接进入 immutable Journal Entry identity；同时 Generic Ledger 只消费 inherited `balance_changes/realized_pnl/fees/financing`，不需要识别 Instrument type。这个 subclass 不是第二套 Journal，也不是外部 evidence map：它由既有 `AccountingJournal` 排序、哈希、幂等与冲突检测，并由 derivative replay projector按 Journal published order重建 exact average-entry State。
+
+Linear perpetual Fill 不交换 principal notional。每个 Transition 的 Position change exact 为 after-before；只有 per-transition quantized realized PnL 非零时，才产生同额 settlement Cash change与 gross realized-PnL attribution。Exact PnL 使用 prior sign、closed Quantity、contract multiplier、exit Price 与 before exact basis形成单一有理数，最后通过 caller-injected `QuantizationPolicy` 和 public `round_ratio` 一次映射到 Money。Fee、Funding 与 Unrealized PnL 保持独立事实。`LinearDerivativeLedgerProjector` 同时验证 Journal specialized-entry lineage与 branchless Generic Ledger signed Quantity parity；mixed Journal 只做 target per-entry parity，不把整个 Cash-key attribution误当成单一 Instrument PnL。
+
 ### 11.10 SettlementModel
 
 负责 T+0/T+1、Settlement Obligation、可交易/可提现资金、可卖数量、Futures daily settlement、Contract expiry 和 rollover。T+1 等规则必须通过 SettlementBook 和 AvailabilityProjection 实现，不能只作为 Strategy 条件判断。
