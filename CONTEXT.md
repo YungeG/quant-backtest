@@ -242,7 +242,7 @@ G10A已实现并通过冻结验收的纯离线Profile Adapter：caller-supplied 
 
 ## Binance USDⓈ-M Order Rule Model
 
-G10B已冻结但尚未实现的纯离线Profile Adapter：caller-supplied finite historical RuleBook → style-specific Quantity lattices、Price tick/bounds、MIN_NOTIONAL、Admission Mode、generic Rule Timeline与Capability evidence。Readiness contract位于Acceptance Matrix G10B；它不查询current exchange info，也不拥有Mark、account、translation、execution或deployment。
+G10B已实现并通过冻结验收的纯离线Profile Adapter：caller-supplied finite historical RuleBook → style-specific Quantity lattices、Price tick/bounds、MIN_NOTIONAL、Admission Mode、generic Rule Timeline与Capability evidence。它只使用`captured_at`已可见且finite exact-cover的Band，保留raw decimal/source/deferred authority并structured fail closed；implementation commit为`11072289a9dda708a185ae2edcbf5fcdf0c7bd55`。它不查询current exchange info，也不拥有Mark、account、translation、execution或deployment。
 
 ## Binance USDⓈ-M Order Rule Band
 

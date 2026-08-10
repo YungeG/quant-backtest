@@ -7513,7 +7513,7 @@ Python                                                                3.13.5
 
 ```yaml
 id: G10B
-status: READY
+status: PASSED
 depends_on:
   - G10A
   - WP-05G
@@ -7574,6 +7574,12 @@ evidence:
   - import-boundary-report
   - static-type-report
   - dependency-lock-report
+passed_commit: 11072289a9dda708a185ae2edcbf5fcdf0c7bd55
+artifact_hashes:
+  tests/fixtures/profiles/binance-usdm-historical-order-rule-source-v1.json: sha256:d95ecf2c821e73433bf1929d9378aad2efbd57b6c421ef47db2ab7d1ea69376b
+  tests/fixtures/profiles/binance-usdm-historical-order-rules-v1.json: sha256:dfdc28535e1a1388cb92318bfb725ebbe96027c674b0122be0c3bdd5e7db3911
+  build/acceptance/g10b-pytest.xml: sha256:631818b35a930dd568985bd489ace86272367c8f1337220a00ce620d28afd122
+  build/acceptance/g10b-import-boundary-report.json: sha256:1bb4275a40d165e1b6b1baf97c9f62bd3da3024ca852e0b304d6c47b19243b1c
 ```
 
 ### G10B Acceptance
@@ -7604,6 +7610,8 @@ evidence:
 22. Concrete purity scanner allowlist只允许stdlib、`crypto_quant_domain`、generic `market_rules|capabilities|ports|sizing`和same-package G10A types；拒绝filesystem/network/provider/process/database/cloud、dynamic import、MarketBundle、Runtime和wall clock。Generic Kernel不得import/branch on Binance；Production Runtime不得importconcrete profile；不新增dependency；
 23. G10B不拥有PERCENT_PRICE final decision、Mark streams、open/algo order count、Account/Hedge mode、GTD/RPI/trailing/close-all/STP/price-match wire semantics、marketTakeBound Fill、fees、funding、margin、liquidation、Bundle Builder、Profile composition、live、deployment或parity。任何后续Gate必须消费G10B canonical evidence，不能重抓current rules补洞。
 
+G10B已由immutable implementation commit `11072289a9dda708a185ae2edcbf5fcdf0c7bd55`实现并通过冻结验收，状态为`PASSED`。
+
 Primary-source contract：`docs/research/binance-usdm-order-rules-primary-sources.md`。
 
 Readiness baseline：
@@ -7626,6 +7634,18 @@ Full test suite                                                    1001 passed
 Workspace import boundary                                           PASS (74 files)
 mypy 2.3.0                                                           no issues (74 source files)
 Markdown + git diff checks                                           PASS
+uv lock --check                                                      PASS
+Python                                                                3.13.5
+```
+
+PASSED validation：
+
+```text
+G10B frozen acceptance command                                      80 passed
+Full test suite                                                    1027 passed
+Workspace import boundary                                           PASS (75 files)
+mypy 2.3.0                                                           no issues (75 source files)
+Primary LSP + scoped pi-lens                                         no errors
 uv lock --check                                                      PASS
 Python                                                                3.13.5
 ```

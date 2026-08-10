@@ -1579,7 +1579,7 @@ G10A纯离线Adapter、source revision/captured-at、stable lineage、Symbol tim
 
 ### Gate G10B Historical Order Rules
 
-状态：READINESS FROZEN；实现前必须通过Acceptance Matrix G10B readiness validation。
+状态：PASSED；implementation commit `11072289a9dda708a185ae2edcbf5fcdf0c7bd55`已通过Acceptance Matrix G10B frozen validation。
 
 依赖：G10A、G05G。
 
@@ -1604,6 +1604,8 @@ G10A纯离线Adapter、source revision/captured-at、stable lineage、Symbol tim
 - Production module无filesystem/network/process/database/cloud SDK/wall clock，不修改Generic Engine/Runner增加Binance branch。
 
 Primary source note：`docs/research/binance-usdm-order-rules-primary-sources.md`。
+
+G10B generic schema-v3 style lattice extension、historical source Band/RuleBook、decimal/filter geometry、Admission Mode、Capability/Deferred evidence、failure precedence、golden与purity boundaries已由implementation commit `11072289a9dda708a185ae2edcbf5fcdf0c7bd55`冻结通过。
 
 ### Gate G10C Historical Margin and Leverage Tiers
 
