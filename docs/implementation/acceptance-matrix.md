@@ -7382,7 +7382,114 @@ uv lock --check                                                       PASS
 Python                                                                3.13.5
 ```
 
-## 77. PASSED 记录格式
+## 77. G10A Binance USDⓈ-M Instrument Identity and Contract Metadata Acceptance Card
+
+```yaml
+id: G10A
+status: READY
+depends_on:
+  - WP-02A
+owner_package: trading-kernel profile adapter
+public_interface:
+  - crypto_quant_trading.profiles.binance_usdm.BINANCE_USDM_OPEN_ENDED_DELIVERY_AT
+  - crypto_quant_trading.profiles.binance_usdm.BinanceUsdmContractStatus
+  - crypto_quant_trading.profiles.binance_usdm.BinanceUsdmInstrumentMetadataSourceRef
+  - crypto_quant_trading.profiles.binance_usdm.BinanceUsdmInstrumentMetadataRevision
+  - crypto_quant_trading.profiles.binance_usdm.BinanceUsdmInstrumentMetadataQuery
+  - crypto_quant_trading.profiles.binance_usdm.BinanceUsdmListingInterval
+  - crypto_quant_trading.profiles.binance_usdm.BinanceUsdmLinearContractMetadata
+  - crypto_quant_trading.profiles.binance_usdm.BinanceUsdmInstrumentMetadataResolution
+  - crypto_quant_trading.profiles.binance_usdm.BinanceUsdmInstrumentMetadataFailureCode
+  - crypto_quant_trading.profiles.binance_usdm.BinanceUsdmInstrumentMetadataFailure
+  - crypto_quant_trading.profiles.binance_usdm.BinanceUsdmInstrumentMetadataOutcome
+  - crypto_quant_trading.profiles.binance_usdm.BinanceUsdmInstrumentModel
+test_commands:
+  contract: uv run pytest -q tests/profiles/binance_usdm/test_instrument_metadata.py
+  fixture: uv run pytest -q tests/profiles/binance_usdm/test_instrument_metadata_golden.py
+  boundary: uv run pytest -q tests/architecture/test_binance_usdm_profile_boundary.py tests/architecture/test_public_api_imports.py tests/architecture/test_repository_cleanliness.py
+  regression: uv run pytest -q tests/domain/instruments/test_identities.py tests/domain/instruments/test_symbol_timeline.py tests/kernel/derivatives/test_linear_positions.py
+  acceptance: uv run pytest -q tests/profiles/binance_usdm/test_instrument_metadata.py tests/profiles/binance_usdm/test_instrument_metadata_golden.py tests/architecture/test_binance_usdm_profile_boundary.py tests/architecture/test_public_api_imports.py tests/architecture/test_repository_cleanliness.py tests/domain/instruments/test_identities.py tests/domain/instruments/test_symbol_timeline.py tests/kernel/derivatives/test_linear_positions.py --junitxml=build/acceptance/g10a-pytest.xml
+fixture_ids:
+  - binance-usdm-exchange-info-revisions-v1
+  - binance-usdm-instrument-metadata-v1
+expected_artifacts:
+  - docs/research/binance-usdm-instrument-metadata-primary-sources.md
+  - tests/fixtures/profiles/binance-usdm-exchange-info-revisions-v1.json
+  - tests/fixtures/profiles/binance-usdm-instrument-metadata-v1.json
+  - build/acceptance/g10a-pytest.xml
+  - build/acceptance/g10a-import-boundary-report.json
+failure_contracts:
+  - missing-revision-set
+  - invalid-forked-cyclic-or-noncanonical-revision-chain
+  - revision-not-visible-by-captured-at
+  - stable-lineage-key-or-revision-identity-mismatch
+  - unsupported-contract-type
+  - unsupported-or-unknown-contract-status
+  - base-quote-margin-currency-context-mismatch
+  - invalid-onboard-delivery-or-open-ended-sentinel
+  - query-before-listing-or-at-after-finite-delivery
+  - overlapping-gapped-or-conflicting-symbol-timeline
+  - conflicting-provider-metadata
+  - current-symbol-pair-or-currency-derived-identity
+  - precision-used-as-tick-step-or-contract-scale
+  - source-query-filesystem-network-wall-clock-or-runtime-leakage
+allowed_grade: development
+evidence:
+  - readiness-contract-tests
+  - static-source-and-golden-fixture-hashes
+  - public-api-import-report
+  - import-boundary-report
+  - static-type-report
+  - dependency-lock-report
+```
+
+### G10A Acceptance
+
+冻结边界：
+
+1. G10A是纯离线`crypto_quant_trading.profiles.binance_usdm` Instrument Model，只消费caller-supplied immutable revisions。Production code不得创建provider client、发HTTP、读filesystem/database、读取wall clock或fallback到current API；G12拥有acquisition、parsing、retention和MarketBundle construction；
+2. `BinanceUsdmInstrumentMetadataRevision` exact保存`revision_id`、`supersedes_revision_id`、stable lineage key、`symbol`、`pair`、`contract_type`、`status`、`onboard_at`、`delivery_at`、base/quote/margin asset、`effective_from`、`available_at`及source key/hash。Revision hash覆盖全部字段；source key/hash不是可选display metadata；
+3. Query exact绑定stable lineage key、economic `effective_at`、knowledge `captured_at`及按`effective_from`/`available_at`/`revision_id`规范排序的revision hashes。Resolver只使用`available_at <= captured_at`的唯一closed linear chain；missing、late-only、fork、cycle、duplicate ID、broken supersedes或输入顺序依赖fail closed；
+4. Stable `InstrumentId`只由`VenueId("binance_usdm")`和caller-supplied lineage key确定。禁止从current `symbol`、`pair`、base/quote拼接、去后缀或rebranding关系猜identity。Revision lineage key与Query不一致structured reject；
+5. 显式same-lineage Symbol变化形成half-open `SymbolTimeline`且Instrument ID不变；没有显式same-lineage evidence时相似pair、asset或rebranding contract必须产生不同Instrument。Current symbol不能反向覆盖历史interval；
+6. v1只资格化`contract_type="PERPETUAL"`的USDⓈ-M Linear subset。Result的`InstrumentDefinition`必须为`InstrumentType.LINEAR_PERPETUAL`，base currency来自`baseAsset`，quote来自`quoteAsset`，settlement来自`marginAsset`，且quote=margin；delivery/quarterly、COIN-M/inverse、quanto或currency conflict structured reject；
+7. `BinanceUsdmLinearContractMetadata`只冻结currency context和exact `Rate(1, Scale(0), "base_quantity_per_contract")` multiplier。G10A不得从`pricePrecision`/`quantityPrecision`、decimal display或current filters猜quantity/price scale；G10B拥有historical tick/step/notional，G10G组合G09A `LinearPerpetualContract`；
+8. `onboard_at`是listing lower bound。`BINANCE_USDM_OPEN_ENDED_DELIVERY_AT`精确等于official perpetual sentinel `4133404800000` epoch milliseconds，并映射`delisted_at=None`；任何其他finite `delivery_at`形成exclusive delisting boundary。Invalid order、mixed sentinel interpretation或revision conflict fail closed；
+9. `effective_at < listed_at`或`effective_at >= finite delisted_at`返回`NOT_LISTED_AT_QUERY_INSTANT` failure，不返回synthetic symbol或current fallback。Delisting不删除Instrument ID、historical `SymbolTimeline`、Revision或source provenance；
+10. `BinanceUsdmContractStatus` exact冻结：`PENDING_TRADING`、`TRADING`、`PRE_DELIVERING`、`DELIVERING`、`DELIVERED`、`PRE_SETTLE`、`SETTLING`、`CLOSE`、`TRADING_HALT`、`TRADING_CANCEL_ONLY`。仅active revision的`TRADING`产生`tradable=true`；其他known状态保留为`tradable=false` evidence。G10A不推断reduce-only/no-new-position窗口，G10B拥有该规则；unknown raw status structured reject；
+11. Resolver产出`ProfileComponentRef(ProfilePortType.INSTRUMENT_MODEL, "crypto.binance_usdm.instrument_metadata.v1")`、stable `InstrumentDefinition`、full visible `SymbolTimeline`、`BinanceUsdmListingInterval`、linear metadata、active symbol/pair/status/tradability及exact source/revision provenance；相同logical inputs任意tuple顺序必须得到相同canonical outcome；
+12. `BinanceUsdmInstrumentMetadataFailureCode` precedence固定为：`MISSING_REVISION_SET`、`INVALID_REVISION_SET`、`REVISION_NOT_AVAILABLE`、`STABLE_IDENTITY_MISMATCH`、`UNSUPPORTED_CONTRACT_TYPE`、`UNSUPPORTED_CONTRACT_STATUS`、`INVALID_CURRENCY_CONTEXT`、`INVALID_LISTING_INTERVAL`、`NOT_LISTED_AT_QUERY_INSTANT`、`SYMBOL_TIMELINE_CONFLICT`、`METADATA_CONFLICT`；
+13. Constructor必须重算source/revision/query/result/failure identity，并重验证InstrumentDefinition、SymbolTimeline、listing interval、multiplier、active revision与source exact coverage。`dataclasses.replace`伪造hash、active symbol/status、Instrument ID、timeline、boundary、multiplier、source或failure code/message必须被拒绝；
+14. Source fixture固定覆盖：BTCUSDT-like open-ended perpetual、finite-delisting revision、explicit same-lineage symbol change、missing-lineage old/new split、corrected onboard metadata only after`available_at`、known non-trading status、pre-listing、post-delisting及unsupported type/status/currency。Golden固定完整success/failure canonical dictionaries和hash；
+15. Public values immutable、canonical、input-order independent且idempotent。Production module禁止callbacks、implementation objects、runtime addresses、Attempt IDs、wall-clock identity、generic Engine/Runner分支、fees/funding/margin/liquidation/account-mode或deployment authorization语义。
+
+Primary-source contract：`docs/research/binance-usdm-instrument-metadata-primary-sources.md`。
+
+Readiness baseline：
+
+```text
+G09H frozen acceptance command                                      79 passed
+Full test suite                                                     977 passed
+Workspace import boundary                                           PASS (72 files)
+mypy                                                                  no issues (71 source files)
+Primary LSP                                                          clean
+uv lock --check                                                      PASS
+Python                                                                3.13.5
+```
+
+Readiness validation：
+
+```text
+G09H frozen acceptance command                                      79 passed
+Full test suite                                                     977 passed
+Workspace import boundary                                           PASS (72 files)
+mypy 2.3.0                                                           no issues (72 source files)
+Markdown + git diff checks                                           PASS
+uv lock --check                                                      PASS
+Python                                                                3.13.5
+```
+
+## 78. PASSED 记录格式
 
 ```yaml
 id: WP-00A

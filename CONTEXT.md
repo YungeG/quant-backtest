@@ -178,6 +178,22 @@ Strategy 为形成首个合法决策所声明的最小历史数据范围和数�
 
 跨 Symbol 改名、合约迁移和历史引用保持稳定的交易标的身份。Symbol 是可随时间变化的属性，不是权威身份。
 
+## Binance USDⓈ-M 稳定标的谱系（Binance USDⓈ-M Stable Instrument Lineage）
+
+G10A caller显式提供、由冻结source evidence支持的稳定provider lineage key。它与`VenueId("binance_usdm")`共同确定`InstrumentId`，不能从current symbol、pair、base/quote拼接、去后缀或rebranding名称猜测。没有显式same-lineage evidence时old/new contract保持不同Instrument。
+
+## Binance USDⓈ-M Instrument Metadata Revision
+
+对一条USDⓈ-M `exchangeInfo` metadata状态的immutable、bi-temporal source revision，保存effective/available instant、revision/supersedes identity、source key/hash、symbol/pair、contract type/status、onboard/delivery和currency context。G10A只解析`captured_at`已可见的closed revision chain，不查询current API。
+
+## Binance USDⓈ-M Open-ended Delivery Sentinel
+
+Official perpetual `exchangeInfo` example中的`deliveryDate=4133404800000` epoch milliseconds。G10A只把该精确值解释为没有finite delisting boundary；其他finite delivery revision形成exclusive delisting boundary，不能把sentinel当作真实2100年退市时间。
+
+## Binance USDⓈ-M Linear Contract Metadata
+
+G10A冻结的base quantity、quote price、margin/settlement currency与exact `1 base quantity per contract` multiplier。它不包含tick/step/scale；G10B提供historical rules后，G10G才组合G09A `LinearPerpetualContract`。
+
 ## 可交易 Universe（Tradable Universe）
 
 在一个模拟时点已经上市、当时已知并满足 UniverseSpec 的 Instrument 集合。
@@ -219,6 +235,10 @@ Engine Result中由Financial Dispatch Plan exact覆盖的canonical typed evidenc
 ## Synthetic Linear Perpetual Development Profile
 
 G09H tests/support中的显式opt-in Profile composition，用同一Generic Financial Dispatcher seam组合G09A–G09G并冻结Long/Short、partial close、Funding、Margin、Liquidation与Snapshot Journey。它始终记录`synthetic_market_profile` limitation，`decision_grade_eligible=false`且`deployment_authorized=false`。G09H已由实现提交`e0f2bc767dc87513d562becd9907262628b788e6`通过冻结验收。
+
+## Binance USDⓈ-M Instrument Model
+
+G10A冻结但尚未实现的纯离线Profile Adapter：caller-supplied frozen `exchangeInfo` revisions → stable Instrument、point-in-time Symbol timeline、listing/delisting interval和Linear currency/multiplier metadata。Readiness contract位于Acceptance Matrix G10A，primary-source note位于`docs/research/binance-usdm-instrument-metadata-primary-sources.md`；实现前不得扩展到G10B rules、G12 acquisition、live或deployment。
 
 ## 已解析回测环境（Resolved Backtest Environment）
 

@@ -1552,14 +1552,28 @@ Synthetic chronology使用single Account/Venue/Currency/Contract：三次determi
 
 ### Gate G10A Instrument Identity and Contract Metadata
 
-拥有：Binance USD-M 稳定 Instrument ID、Symbol timeline、linear contract metadata、listing/delisting Adapter。
+状态：READINESS FROZEN；实现前必须通过Acceptance Matrix G10A readiness validation。
+
+拥有：纯离线`crypto_quant_trading.profiles.binance_usdm.instrument_metadata` Adapter；caller-supplied frozen USDⓈ-M `exchangeInfo` revision evidence → stable Instrument ID、Symbol timeline、linear contract metadata与listing/delisting lifecycle。
+
+不拥有：HTTP/provider client、MarketBundle Builder、current API fallback、tick/step/min-notional、margin tier、price stream、funding、fee/account mode、Liquidation execution、live/deployment或decision-grade provider completeness。
 
 验收：
 
-- Symbol 变化不改变 Instrument ID；
-- Contract multiplier、base/quote/settlement currency 和 listing interval 明确；
-- 上市前不可交易，退市处理不删除历史 identity；
-- 不使用当前 Symbol 反向解释全部历史。
+- Stable lineage key由caller显式提供并进入canonical identity；不得从current `symbol`、`pair`、base/quote拼接、去后缀或rebranding名称猜测Instrument identity；
+- 完整Revision exact保存effective/available instant、revision/supersedes identity与source key/hash；`captured_at`只选择已可见closed chain，missing/fork/cycle/late/conflict fail closed；
+- Symbol变化更新同一`SymbolTimeline`但不改变Instrument ID；没有显式lineage evidence时old/new contract必须保持不同Instrument；
+- 仅支持USDⓈ-M `contractType=PERPETUAL`、base quantity、quote price和quote=margin/settlement currency的Linear scope；COIN-M、delivery futures、quanto或currency conflict structured reject；
+- USDⓈ-M不提供COIN-M `contractSize`，Adapter冻结multiplier为exact `1 base quantity per contract`；G10A不从precision字段猜scale；
+- `onboardDate`形成listing lower bound；official perpetual sentinel `deliveryDate=4133404800000`映射open-ended，finite visible revision关闭delisting boundary；
+- 上市前、finite delivery之后或没有唯一visible metadata时structured failure；退市不删除历史Instrument、Symbol或source evidence；
+- `TRADING`才标记普通tradable；其他known Contract status保留为non-tradable provider evidence，reduce-only/no-new-position语义留给G10B；
+- `pricePrecision`/`quantityPrecision`不得替代G10B `PRICE_FILTER.tickSize`/`LOT_SIZE.stepSize`；
+- Constructor重算revision chain、source hash、InstrumentDefinition、SymbolTimeline、listing interval、contract metadata与result/failure identity；公开对象immutable/canonical/idempotent；
+- static Fixture覆盖open-ended BTCUSDT-like perpetual、finite delist revision、symbol lineage、onboard correction visibility、pre-listing/post-delisting、unsupported contract type/status/currency与forgery；
+- Production module无filesystem/network/process/database/cloud SDK或wall clock；source acquisition和historical retention由G12拥有。
+
+Primary source note：`docs/research/binance-usdm-instrument-metadata-primary-sources.md`。
 
 ### Gate G10B Historical Order Rules
 

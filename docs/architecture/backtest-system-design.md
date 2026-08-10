@@ -2021,6 +2021,16 @@ account:
     short: true
 ```
 
+G10A 的 Binance USDⓈ-M Instrument Model 是纯离线 Profile Adapter。它只消费caller-supplied frozen `exchangeInfo` revisions与source hashes，不创建HTTP client、不读取current API、不扫描本地文件。每条Revision绑定stable lineage key、`symbol`/`pair`、`contractType`、`status`、`onboardDate`、`deliveryDate`、base/quote/margin assets、effective/available instant和revision lineage。`captured_at`只允许选择已可见的closed revision set；当前response不得反向重写历史。
+
+Stable `InstrumentId`由caller-supplied lineage key派生，不能从current `symbol`、`pair`、base/quote拼接或去后缀猜测。Symbol变更只更新同一Instrument的`SymbolTimeline`；若缺少显式lineage evidence，则rebranding前后contract保持不同Instrument。退市只关闭listing interval，不删除历史identity、Symbol interval或Bundle evidence。上市前、有限delivery边界之后或无唯一visible metadata时fail closed。
+
+USDⓈ-M官方schema把base asset定义为quantity asset、quote asset定义为price asset、margin asset定义为margin asset，并且不提供COIN-M `contractSize`。G10A仅在`contractType=PERPETUAL`且quote asset等于margin/settlement asset的冻结scope内产生`InstrumentType.LINEAR_PERPETUAL`与exact multiplier `1 base quantity per contract`。`deliveryDate=4133404800000`按官方perpetual example处理为open-ended sentinel；delist announcement后的finite `deliveryDate`才关闭interval。`pricePrecision`/`quantityPrecision`明确不能替代tick/step，历史Price/Quantity lattice仍由G10B拥有。G10G结合G10A currency/multiplier与G10B scales构造G09A `LinearPerpetualContract`。
+
+Contract status保存为provider evidence。只有`TRADING`为普通tradable；`PENDING_TRADING`、delivery/settlement、`CLOSE`、`TRADING_HALT`和`TRADING_CANCEL_ONLY`均不由G10A伪装为普通可交易。Reduce-only/no-new-position窗口属于G10B historical order rules，不能仅从G10A status猜测。
+
+Primary-source boundary记录于`docs/research/binance-usdm-instrument-metadata-primary-sources.md`。Binance first-party public-data repository记录了部分`onboardDate`更正和consumer对expired-contract retention的风险报告，因此source revision、availability与retention provenance是decision-grade前置条件；后者不冒充official API completeness guarantee。
+
 关键场景：
 
 - Funding 跨期持仓
