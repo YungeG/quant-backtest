@@ -7386,7 +7386,7 @@ Python                                                                3.13.5
 
 ```yaml
 id: G10A
-status: READY
+status: PASSED
 depends_on:
   - WP-02A
 owner_package: trading-kernel profile adapter
@@ -7441,6 +7441,12 @@ evidence:
   - import-boundary-report
   - static-type-report
   - dependency-lock-report
+passed_commit: 613c319b2dbba9962d4867dcfb3d1b19067d16cf
+artifact_hashes:
+  tests/fixtures/profiles/binance-usdm-exchange-info-revisions-v1.json: sha256:99030c1dfc9bd0105ce44614494b71753abd6756bf36731b6fa2de8f2bfbdb70
+  tests/fixtures/profiles/binance-usdm-instrument-metadata-v1.json: sha256:107b5b57bc0f102552bc986f6363280302d6e3f2ff4fb2e472b380469729c0b6
+  build/acceptance/g10a-pytest.xml: sha256:6605797277e79e3716d86bc5c549fad7925bf0ceaa021f30aeb54b328d23afb3
+  build/acceptance/g10a-import-boundary-report.json: sha256:078e5ff9eedb95818d2c270a0b630280054eab665f2879944e90267bf6b30e13
 ```
 
 ### G10A Acceptance
@@ -7462,6 +7468,8 @@ evidence:
 13. Constructor必须重算source/revision/query/result/failure identity，并重验证InstrumentDefinition、SymbolTimeline、listing interval、multiplier、active revision与source exact coverage。`dataclasses.replace`伪造hash、active symbol/status、Instrument ID、timeline、boundary、multiplier、source或failure code/message必须被拒绝；
 14. Source fixture固定覆盖：BTCUSDT-like open-ended perpetual、finite-delisting revision、explicit same-lineage symbol change、missing-lineage old/new split、corrected onboard metadata only after`available_at`、known non-trading status、pre-listing、post-delisting及unsupported type/status/currency。Golden固定完整success/failure canonical dictionaries和hash；
 15. Public values immutable、canonical、input-order independent且idempotent。Production module禁止callbacks、implementation objects、runtime addresses、Attempt IDs、wall-clock identity、generic Engine/Runner分支、fees/funding/margin/liquidation/account-mode或deployment authorization语义。
+
+G10A已由immutable implementation commit `613c319b2dbba9962d4867dcfb3d1b19067d16cf`实现并通过冻结验收，状态为`PASSED`。
 
 Primary-source contract：`docs/research/binance-usdm-instrument-metadata-primary-sources.md`。
 
@@ -7485,6 +7493,18 @@ Full test suite                                                     977 passed
 Workspace import boundary                                           PASS (72 files)
 mypy 2.3.0                                                           no issues (72 source files)
 Markdown + git diff checks                                           PASS
+uv lock --check                                                      PASS
+Python                                                                3.13.5
+```
+
+PASSED validation：
+
+```text
+G10A frozen acceptance command                                      45 passed
+Full test suite                                                    1001 passed
+Workspace import boundary                                           PASS (74 files)
+mypy 2.3.0                                                           no issues (74 source files)
+Primary LSP + scoped pi-lens                                         no issues
 uv lock --check                                                      PASS
 Python                                                                3.13.5
 ```

@@ -238,7 +238,7 @@ G09H tests/support中的显式opt-in Profile composition，用同一Generic Fina
 
 ## Binance USDⓈ-M Instrument Model
 
-G10A冻结但尚未实现的纯离线Profile Adapter：caller-supplied frozen `exchangeInfo` revisions → stable Instrument、point-in-time Symbol timeline、listing/delisting interval和Linear currency/multiplier metadata。Readiness contract位于Acceptance Matrix G10A，primary-source note位于`docs/research/binance-usdm-instrument-metadata-primary-sources.md`；实现前不得扩展到G10B rules、G12 acquisition、live或deployment。
+G10A已实现并通过冻结验收的纯离线Profile Adapter：caller-supplied frozen `exchangeInfo` revisions → stable Instrument、point-in-time Symbol timeline、listing/delisting interval和Linear currency/multiplier metadata。它只解析`captured_at`已可见的closed revision chain，保留source provenance并structured fail closed；implementation commit为`613c319b2dbba9962d4867dcfb3d1b19067d16cf`。它不扩展到G10B rules、G12 acquisition、live或deployment。
 
 ## 已解析回测环境（Resolved Backtest Environment）
 

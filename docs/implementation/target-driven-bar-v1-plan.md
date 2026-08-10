@@ -1552,7 +1552,7 @@ Synthetic chronology使用single Account/Venue/Currency/Contract：三次determi
 
 ### Gate G10A Instrument Identity and Contract Metadata
 
-状态：READINESS FROZEN；实现前必须通过Acceptance Matrix G10A readiness validation。
+状态：PASSED；implementation commit `613c319b2dbba9962d4867dcfb3d1b19067d16cf`已通过Acceptance Matrix G10A frozen validation。
 
 拥有：纯离线`crypto_quant_trading.profiles.binance_usdm.instrument_metadata` Adapter；caller-supplied frozen USDⓈ-M `exchangeInfo` revision evidence → stable Instrument ID、Symbol timeline、linear contract metadata与listing/delisting lifecycle。
 
@@ -1574,6 +1574,8 @@ Synthetic chronology使用single Account/Venue/Currency/Contract：三次determi
 - Production module无filesystem/network/process/database/cloud SDK或wall clock；source acquisition和historical retention由G12拥有。
 
 Primary source note：`docs/research/binance-usdm-instrument-metadata-primary-sources.md`。
+
+G10A纯离线Adapter、source revision/captured-at、stable lineage、Symbol timeline、listing/delisting、Linear currency/multiplier、structured failure、forgery和purity boundaries已由implementation commit `613c319b2dbba9962d4867dcfb3d1b19067d16cf`冻结通过。
 
 ### Gate G10B Historical Order Rules
 
