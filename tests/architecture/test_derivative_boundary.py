@@ -13,6 +13,7 @@ DERIVATIVE_MODULES = (
     ROOT / "packages/trading-kernel/src/crypto_quant_trading/funding.py",
     ROOT / "packages/trading-kernel/src/crypto_quant_trading/funding_accounting.py",
     ROOT / "packages/trading-kernel/src/crypto_quant_trading/margin.py",
+    ROOT / "packages/trading-kernel/src/crypto_quant_trading/account_margin.py",
 )
 GENERIC_MODULES = (
     ROOT / "packages/trading-kernel/src/crypto_quant_trading/ledger.py",
@@ -21,6 +22,17 @@ GENERIC_MODULES = (
     ROOT / "packages/backtest-runtime/src/crypto_quant_backtest/runner.py",
     ROOT / "packages/backtest-runtime/src/crypto_quant_backtest/timeline.py",
 )
+ACCOUNT_MARGIN_GENERIC_MODULES = GENERIC_MODULES + (
+    ROOT / "packages/trading-kernel/src/crypto_quant_trading/pretrade_risk.py",
+    ROOT / "packages/trading-kernel/src/crypto_quant_trading/reservations.py",
+)
+ACCOUNT_MARGIN_PREFIXES = (
+    "LinearAccountMargin",
+    "LinearPositionValuation",
+    "LinearPositionUnrealized",
+    "ExactLinearUnrealized",
+)
+
 DERIVATIVE_SYMBOL_PREFIXES = (
     "LinearPerpetual",
     "LinearPosition",
@@ -31,6 +43,10 @@ DERIVATIVE_SYMBOL_PREFIXES = (
     "LinearInstrumentMargin",
     "LinearMargin",
     "ExactLinearMargin",
+    "LinearAccountMargin",
+    "LinearPositionValuation",
+    "LinearPositionUnrealized",
+    "ExactLinearUnrealized",
     "FundingSlotId",
     "Funding",
 )
@@ -56,6 +72,8 @@ DERIVATIVE_LITERALS = (
     "linearmargin",
     "margin_requirement",
     "marginrequirement",
+    "account_margin",
+    "accountmargin",
     "funding",
     "__import__",
 )
@@ -134,6 +152,32 @@ def _generic_derivative_violations(source: str) -> set[str]:
     return violations
 
 
+def _generic_account_margin_violations(source: str) -> set[str]:
+    tree = ast.parse(source)
+    violations: set[str] = set()
+    for node in ast.walk(tree):
+        if isinstance(node, ast.ImportFrom) and "account_margin" in (node.module or ""):
+            violations.add(f"import:{node.module}")
+        elif isinstance(node, ast.Import):
+            for alias in node.names:
+                if "account_margin" in alias.name:
+                    violations.add(f"import:{alias.name}")
+        elif isinstance(node, ast.Name) and node.id.startswith(ACCOUNT_MARGIN_PREFIXES):
+            violations.add(f"name:{node.id}")
+        elif isinstance(node, ast.Attribute) and node.attr.startswith(
+            ACCOUNT_MARGIN_PREFIXES
+        ):
+            violations.add(f"attribute:{node.attr}")
+        else:
+            literal = _constant_string(node)
+            if literal is not None and any(
+                marker in literal.lower()
+                for marker in ("account_margin", "accountmargin")
+            ):
+                violations.add(f"literal:{literal}")
+    return violations
+
+
 def _module_suite(statements: list[ast.stmt]) -> list[ast.stmt]:
     values: list[ast.stmt] = []
     for statement in statements:
@@ -174,6 +218,7 @@ def _purity_violations(source: str) -> set[str]:
         "margin",
         "marks",
         "ports",
+        "reservations",
     }
     mutable_values = (
         ast.Dict,
@@ -302,6 +347,13 @@ def _purity_violations(source: str) -> set[str]:
 def test_generic_financial_and_runtime_modules_do_not_reference_derivatives() -> None:
     for path in GENERIC_MODULES:
         assert not _generic_derivative_violations(
+            path.read_text(encoding="utf-8")
+        ), path.relative_to(ROOT)
+
+
+def test_generic_modules_do_not_reference_account_margin_projection() -> None:
+    for path in ACCOUNT_MARGIN_GENERIC_MODULES:
+        assert not _generic_account_margin_violations(
             path.read_text(encoding="utf-8")
         ), path.relative_to(ROOT)
 
