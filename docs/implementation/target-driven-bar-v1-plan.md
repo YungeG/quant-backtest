@@ -1494,16 +1494,26 @@ Reservation evidence保存完整`ResourceReservationState`、projected-through/f
 
 依赖：G09E、G09F。
 
-拥有：Bar 粒度下 SAFE 或 AMBIGUOUS_BREACH 分类。
+拥有：Bar粒度下single Account/Venue/Currency的`SAFE`或`AMBIGUOUS_BREACH` conservative classification，以及decision-grade ambiguity fail-closed。
 
-不拥有：伪造精确 liquidation time、queue、partial liquidation 或 bankruptcy fill。
+不拥有：伪造精确liquidation time/price、queue、partial liquidation、bankruptcy fill、ADL或provider closeout。
 
 验收：
 
-- 最不利 Bar extreme 仍满足要求时为 SAFE；
-- 可能突破但 Bar 内路径未知时为 AMBIGUOUS_BREACH；
-- decision-grade 遇到 ambiguity fail closed；
-- development-grade 保留完整 limitation/audit evidence。
+- Long-low/Short-high adverse extremes下重新计算Unrealized PnL与Maintenance requirement；
+- 最不利Bar extremes同时发生仍满足要求时为SAFE；
+- 可能突破但Bar内路径未知时为AMBIGUOUS_BREACH；
+- decision-grade遇到ambiguity structured fail closed，development-grade保留完整limitation/audit evidence。
+
+冻结实现 seam：G09G只新增pure `crypto_quant_backtest.liquidation_audit`与runtime root exports，结构化实现既有`LiquidationAuditModel`；不得修改Generic Engine/Runner/Timeline、Ledger、G09E/G09F、Resolution或Integrity。Request exact保存optional Account Window Evidence、ordered optional Liquidation Mark Bars、audit-at与existing `RequestedResultGrade`；optional只用于structured missing-evidence failures。
+
+Account Window Evidence嵌入完整G09F Projection、half-open bar start/end、full available-at和source key/hash，证明Projection authority在整个bar interval内无Journal、Fill、Funding、Fee或Reservation mutation。Projection evaluated-at exact等于bar start；window end/availability不晚于audit-at。G09G不读取current Engine/Ledger/Reservation state，也不允许caller用bar结束后的Projection回填历史。
+
+每个non-flat Position必须exact有一个`PricePurpose.LIQUIDATION` closed Mark Bar。Evidence保存Instrument、half-open interval、positive low/high Price、closed-at、完整`available_at: SimulationInstant`、stream/event/revision/source identity；所有Bars interval相同且exact等于Account Window，`low <= high`，Instrument/Currency/Scale匹配Contract。Trade、Execution、Valuation、Margin、Settlement或Funding Bar不得替代。
+
+Long选择low，Short选择high。以G09F Wallet为不变量，按adverse Price重新计算每Position exact/quantized Unrealized PnL；再使用对应G09E Result的resolved historical Interval/Tiers和未量化adverse notional重新选择Tier，按G09E formula/CEILING重算adverse Maintenance。`adverse_equity = wallet + Σ adverse_unrealized`，`adverse_maintenance = Σ adverse_maintenance`。若前者大于等于后者则SAFE，否则AMBIGUOUS_BREACH；Working Order reservation与Available Margin不进入Liquidation threshold。
+
+Development-grade返回两种classification并记录每Position direction/extreme/Tier/exact+Money adverse values、Account totals、limitation和`decision_grade_eligible`。Decision-grade SAFE可返回Result；Decision-grade AMBIGUOUS必须返回`AMBIGUOUS_BREACH_NOT_DECISION_GRADE` Failure，不生成精确trigger或closeout side effect。
 
 ### Gate G09H Generic Linear Perpetual Composition
 

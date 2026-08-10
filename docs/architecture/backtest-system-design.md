@@ -1396,16 +1396,13 @@ G09F exact coverage要求每个non-flat authoritative Position恰有一个matchi
 
 属于 SimulationProfile，决定如何根据当前数据粒度检查真实 LiquidationRules。
 
-Bar Engine v1：
+G09G Bar Engine v1只做conservative audit。Caller提供bar开始时的G09F Account Margin Projection、证明该账户状态在完整bar interval内无Journal/Reservation mutation的Account Window evidence，以及每个non-flat Position唯一的historical `PricePurpose.LIQUIDATION` closed Mark Bar。所有Bar必须同interval、full availability不晚于audit-at，且Account Window exact覆盖该interval；缺口、重复、extra、未closed或未来available均fail closed。
 
-- Long 使用历史 Liquidation Mark Bar low 作为最不利价格检查。
-- Short 使用历史 Liquidation Mark Bar high 作为最不利价格检查。
-- 最不利价格下仍满足 Maintenance Margin 时结果为 `SAFE`。
-- 可能跌破 Maintenance Margin 时结果为 `AMBIGUOUS_BREACH`。
-- `AMBIGUOUS_BREACH` 使 decision-grade 运行失败关闭。
-- Development-grade 可以显式选择近似强平模型，但必须记录模型和限制。
+Long使用Liquidation Mark low，Short使用high。Audit以G09F Wallet为不变量，对每个Position按adverse extreme重新计算`signed quantity × multiplier × (extreme - exact average entry)`，并用G09E resolved historical Rule Interval/Tiers在adverse exact notional重新选择Tier、计算Maintenance requirement；不能把current G09F Maintenance固定值用于Short上行，也不能使用G09E MARGIN Mark替代LIQUIDATION Bar。Per-Instrument Unrealized继续HALF_EVEN，Maintenance继续CEILING，Scale/Currency沿用G09F authority。
 
-精确 Liquidation 需要足够粒度的历史 Liquidation Mark Price 或 Microstructure 数据。Trade Price OHLC 不得静默替代 Mark Price OHLC。
+Adverse Account Equity为`wallet + Σ adverse unrealized`，Adverse Maintenance为`Σ adverse maintenance`。若`equity >= maintenance`则`SAFE`；否则只证明bar内存在可能breach，返回`AMBIGUOUS_BREACH`，不声明精确Liquidation time、trigger price、fill、partial close、bankruptcy或ADL。Decision-grade Request遇到ambiguity返回structured failure；Development-grade保留完整adverse Position audit、limitation和`decision_grade_eligible=false`。
+
+精确 Liquidation 需要足够粒度的历史 Liquidation Mark Price 或 Microstructure 数据。Trade、Execution Reference、Valuation、Margin或Settlement OHLC不得静默替代Liquidation Mark OHLC；Generic Bar Engine/Runner不增加derivative分支，G09H才注入该Model。
 
 ### 11.14 CorporateActionModel
 

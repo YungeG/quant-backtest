@@ -124,7 +124,7 @@ artifact_hashes: []
 | G09D | PASSED | trading-kernel financing/accounting | G09B–G09C | none |
 | G09E | PASSED — immutable commit `e1e4c810b67f8f911b33ef8d7302f33933fc1e32` | trading-kernel margin requirement | G09A | none |
 | G09F | PASSED — immutable commit `107b41aafee00195ec0ae0031800a1409e016264` | trading-kernel account margin projection | G09B, G09E, WP-05B | none |
-| G09G | DRAFT | backtest-runtime liquidation audit | G09E–G09F | SAFE/AMBIGUOUS fixtures |
+| G09G | READY | backtest-runtime liquidation audit | G09E–G09F | none |
 | G09H | DRAFT | tests/support + profile composition | G09A–G09G | Synthetic perpetual E2E |
 | G10A | DRAFT | trading-kernel profiles/binance_usdm | G09H | Instrument metadata fixtures |
 | G10B | DRAFT | trading-kernel profiles/binance_usdm | G10A, WP-05G | Rule timeline fixtures |
@@ -7124,14 +7124,99 @@ uv lock --check                                                     PASS
 Python                                                               3.13.5
 ```
 
-## 75. G09G–G09H Readiness Blockers
+## 75. G09G Conservative Liquidation Audit Acceptance Card
 
-G09G–G09H保持`DRAFT`。当前blockers：
+```yaml
+id: G09G
+status: READY
+depends_on:
+  - G09E
+  - G09F
+owner_package: backtest-runtime liquidation audit
+public_interface:
+  - crypto_quant_backtest.LinearLiquidationAccountWindowEvidence
+  - crypto_quant_backtest.LinearLiquidationMarkBarEvidence
+  - crypto_quant_backtest.LinearLiquidationAuditClassification
+  - crypto_quant_backtest.LinearLiquidationPositionAudit
+  - crypto_quant_backtest.LinearLiquidationAuditRequest
+  - crypto_quant_backtest.LinearLiquidationAuditResult
+  - crypto_quant_backtest.LinearLiquidationAuditFailureCode
+  - crypto_quant_backtest.LinearLiquidationAuditFailure
+  - crypto_quant_backtest.ConservativeLinearLiquidationAuditModel
+  - static synthetic conservative-linear-liquidation-audit golden fixture v1
+test_commands:
+  contract: uv run pytest -q tests/runtime/liquidation/test_conservative_linear_liquidation_audit.py
+  fixture: uv run pytest -q tests/runtime/liquidation/test_conservative_linear_liquidation_audit_golden.py
+  boundary: uv run pytest -q tests/architecture/test_public_api_imports.py tests/architecture/test_network_isolation.py tests/architecture/test_repository_cleanliness.py tests/architecture/test_derivative_boundary.py tests/runtime/ports/test_simulation_port_contracts.py tests/kernel/derivatives/test_linear_margin_requirement.py tests/kernel/derivatives/test_linear_account_margin_projection.py tests/runtime/engine/test_engine_harness.py tests/runtime/runner/test_auditable_runner.py && uv run python tools/architecture/check_import_boundaries.py --root . --policy architecture/import-boundaries.toml --report build/acceptance/g09g-import-boundary-report.json
+fixture_ids:
+  - synthetic-conservative-linear-liquidation-audit-v1
+expected_artifacts:
+  - tests/fixtures/runtime/liquidation/conservative-linear-liquidation-audit-v1.json
+  - build/acceptance/g09g-pytest.xml
+  - build/acceptance/g09g-import-boundary-report.json
+failure_contracts:
+  - current-engine-ledger-reservation-or-position-state-is-read-implicitly
+  - account-window-does-not-cover-the-whole-audited-bar
+  - liquidation-bar-gap-duplicate-extra-future-or-unclosed-evidence-is-guessed
+  - trade-execution-valuation-margin-settlement-or-funding-bar-substitutes-liquidation-mark
+  - long-does-not-use-low-or-short-does-not-use-high
+  - contract-multiplier-or-exact-average-entry-is-omitted-from-adverse-pnl
+  - current-maintenance-margin-is-reused-at-the-adverse-short-high
+  - adverse-notional-is-quantized-before-tier-selection
+  - adverse-unrealized-or-maintenance-is-rounded-with-the-wrong-policy
+  - working-order-reservation-or-available-margin-is-used-as-liquidation-threshold
+  - ambiguous-bar-path-is-labelled-as-an-exact-liquidation
+  - decision-grade-ambiguous-breach-is-returned-as-a-success
+  - liquidation-trigger-fill-partial-close-bankruptcy-adl-or-journal-side-effect-is-created
+  - provider-symbol-wallet-mode-or-closeout-semantics-leak-into-g09g
+allowed_grade: development
+evidence:
+  - pytest-report
+  - static-conservative-liquidation-audit-golden-hash
+  - account-window-full-interval-authority-evidence
+  - liquidation-mark-bar-purpose-source-and-availability-evidence
+  - long-low-short-high-adverse-extreme-evidence
+  - exact-adverse-unrealized-pnl-evidence
+  - adverse-notional-tier-and-maintenance-recalculation-evidence
+  - safe-and-ambiguous-account-total-evidence
+  - decision-grade-ambiguity-fail-closed-evidence
+  - no-trigger-time-closeout-or-account-mutation-evidence
+  - import-boundary-report
+  - static-type-report
+passed_commit: null
+artifact_hashes: []
+```
 
-1. G09G必须冻结Liquidation Mark Bar evidence、long-low/short-high conservative evaluation、`SAFE`/`AMBIGUOUS_BREACH` canonical audit与decision-grade fail-closed routing；
-2. G09H必须冻结branchless injected composition、Synthetic E2E commands/artifacts、Journal/MarginProjection/PortfolioSnapshot reconstruction与development-only limitation；Generic Engine accounting/event dispatch尚不能按resolved profile注入derivative accounting，因此不得提前组合。
+### G09G Acceptance
 
-## 76. PASSED 记录格式
+1. G09G只新增pure `crypto_quant_backtest.liquidation_audit` deep module与runtime root exports，结构化实现既有`LiquidationAuditModel.audit_liquidation(request)`并返回`SimulationPortOutcome[LinearLiquidationAuditResult,LinearLiquidationAuditFailure]`；不得新增Port/Profile/Adapter/Package/依赖，或修改Engine、Runner、Timeline、Resolution、Integrity、Generic Ledger、G09E/G09F；
+2. `LinearLiquidationAuditRequest` exact保存optional Account Window Evidence、optional ordered Liquidation Mark Bar tuple、`audit_at: SimulationInstant`与既有`RequestedResultGrade`。Optional只用于structured missing-evidence failures；Model不接收Engine/current Ledger/current Reservation/current Position或future Bar stream；
+3. `LinearLiquidationAccountWindowEvidence` exact保存完整G09F Projection、half-open `interval_start/interval_end_exclusive`、完整`available_at: SimulationInstant`与source key/hash。Interval必须nonempty，Projection Request evaluated-at exact等于interval start；evidence声明该Projection的Ledger/Position/Margin/Reservation authority在整个interval无mutation，且interval end不晚于evidence available-at UTC；audit-at不得早于available-at；
+4. `LinearLiquidationMarkBarEvidence` exact保存stable bar ID、Instrument、Price purpose、同一half-open interval、low/high Price、`closed_at: SimulationInstant`、`available_at: SimulationInstant`、stream/event/revision/supersession/source key/hash。Constructor只验证exact types、canonical text/hash与nonempty interval，并保留purpose、nonpositive/reversed extremes、timing和Contract context defects供Request structured business validation；
+5. 每个G09F non-flat Position exact有且只有一个matching Bar，不允许duplicate、missing或extra。所有Bars interval必须exact等于Account Window，`closed_at.instant >= interval_end_exclusive`、closed-at不晚于available-at、available-at不晚于audit-at；不同interval、future/unclosed evidence不按最近Bar、tuple最后项或current stream fallback；Flat account允许empty Bar tuple并返回SAFE；
+6. Bar purpose必须LIQUIDATION；Instrument、settlement/quote Currency和Price Scale匹配Position Contract。Trade、Execution Reference、Valuation、Margin、Settlement、Funding或generic OHLC不得替代。Long (`quantity.units > 0`) adverse Price exact为low；Short (`< 0`) exact为high；
+7. 每Position adverse Unrealized复用G09F exact formula：若Quantity `q/Q`、multiplier `m/M`、adverse Price `p/P`、average entry `a/A`，则`U=q*m*(p*A-a*P)/(Q*M*P*A)`，GCD约分后按G09F `unrealized_pnl_quantization`在每Instrument调用一次HALF_EVEN。不得从current valuation PnL做delta rounding、使用float/Decimal或忽略multiplier；
+8. 每Position adverse Maintenance使用matching G09E Result内resolved historical Interval/Tier tuple和Request Quantization authority。先以adverse exact notional `N=abs(q)*m*p/(Q*M*P)`重新选择lower-inclusive/upper-exclusive Tier，再按`N*maintenance_rate-maintenance_deduction`计算GCD-reduced exact amount并CEILING一次。不得复用G09F current Maintenance，尤其Short-high必须允许notional跨Tier；negative adverse Maintenance是authority inconsistency并structured fail closed；
+9. `LinearLiquidationPositionAudit` exact保存Position key、direction、Bar、adverse Price、resolved adverse Tier、exact/quantized adverse Unrealized与Maintenance。Tuple按Position key canonical order；constructor从Account Projection、Bar与G09E authority重算全部字段；
+10. Account adverse totals exact为：Wallet Balance继续使用G09F Projection wallet；`adverse_unrealized = Σ per-position adverse unrealized Money`；`adverse_equity = wallet + adverse_unrealized`；`adverse_maintenance = Σ per-position adverse maintenance Money`。Working Order Margin Reservation、Initial Margin、Available Margin、Fee/Funding attribution不得加减Liquidation threshold；
+11. `LinearLiquidationAuditClassification` wire values exact为`safe`与`ambiguous_breach`。若`adverse_equity.units >= adverse_maintenance.units`则SAFE，否则AMBIGUOUS_BREACH；equality为SAFE。Classification只证明在同时方向最不利extremes下是否仍安全，不证明extremes同时发生或bar内path/time；
+12. Development-grade SAFE/AMBIGUOUS均返回Result；Result保存component、完整Request/hash、classification、ordered Position audits、Wallet、adverse totals、`decision_grade_eligible=(classification is SAFE)`与exact limitation `bar-extremes-do-not-identify-intrabar-path-or-liquidation-time`。Decision-grade SAFE返回Result；Decision-grade AMBIGUOUS返回`AMBIGUOUS_BREACH_NOT_DECISION_GRADE` Failure；
+13. Business failure first precedence exact为：`MISSING_ACCOUNT_WINDOW` → `MISSING_LIQUIDATION_BARS` → `PROJECTION_CONTEXT_MISMATCH` → `ACCOUNT_WINDOW_INTERVAL_MISMATCH` → `ACCOUNT_WINDOW_NOT_AVAILABLE` → `DUPLICATE_LIQUIDATION_BAR` → `LIQUIDATION_BAR_COVERAGE_MISMATCH` → `LIQUIDATION_BAR_INTERVAL_MISMATCH` → `LIQUIDATION_BAR_NOT_CLOSED` → `LIQUIDATION_BAR_NOT_AVAILABLE` → `LIQUIDATION_BAR_PURPOSE_MISMATCH` → `LIQUIDATION_BAR_CONTEXT_MISMATCH` → `LIQUIDATION_BAR_SCALE_MISMATCH` → `INVALID_LIQUIDATION_BAR_EXTREMES` → `NEGATIVE_ADVERSE_MAINTENANCE` → `AMBIGUOUS_BREACH_NOT_DECISION_GRADE`；wire values对应lower-snake-case，多缺陷只返回第一项；
+14. Exact predicates分别覆盖：(1) Window缺失；(2) non-flat Projection下Bars缺失，Flat+empty成功；(3) G09F component/request/result/context/hash不闭合；(4–5) Window start/end/evaluated-at或full availability错误；(6–7) Bar duplicate/coverage；(8–10) interval/closed/full availability错误；(11–14) purpose/Instrument/Currency/Scale/positivity/low-high错误；(15) adverse Maintenance exact负；(16) requested Decision Grade且classification ambiguous。Candidate exact type、canonical text/hash、interval nonempty与nested authority shape错误是constructor exception；
+15. Failure exact保存component、完整Request/input hash、code与`subject_ids=(code.value,account_projection_hash or "missing-account-window",str(request.audit_at.instant.epoch_nanoseconds),requested_grade.value)`并重算first failure。Result/Failure满足`SimulationPortContract`；`SimulationPortOutcome` component/input hash/exactly-one value必须匹配；
+16. Component ref exact使用`SimulationPortType.LIQUIDATION_AUDIT_MODEL`、key `conservative.linear-perpetual.liquidation-audit.v1`、version 1。Digest preimage exact为`{type="conservative_linear_liquidation_audit_component",schema_version=1,component_key,component_version=1,account_scope="g09f-single-account-projection",bar_purpose="liquidation",long_extreme="low",short_extreme="high",unrealized="g09f-formula-half-even",maintenance="g09e-adverse-notional-tier-ceiling",classification="safe-or-ambiguous-breach",decision_grade="ambiguous-fails-closed",limitation="bar-extremes-do-not-identify-intrabar-path-or-liquidation-time",allowed_grade="development"}`；
+17. Canonical preimages exact为：Window `{type="linear_liquidation_account_window_evidence",schema_version,account_projection,interval_start,interval_end_exclusive,available_at,source_key,source_hash}`；Bar `{type="linear_liquidation_mark_bar_evidence",schema_version,bar_id,instrument_id,price_purpose,interval_start,interval_end_exclusive,low,high,closed_at,available_at,stream_id,event_id,revision_id,supersedes_revision_id,source_key,source_hash}`；Position Audit `{type="linear_liquidation_position_audit",schema_version,position_key,direction,bar,adverse_price,resolved_tier,exact_adverse_unrealized,adverse_unrealized,exact_adverse_maintenance,adverse_maintenance}`；Request `{type="linear_liquidation_audit_request",schema_version,account_window,liquidation_bars,audit_at,requested_grade}`；Result `{type="linear_liquidation_audit_result",schema_version,component_ref,request,input_hash,classification,position_audits,wallet_balance,adverse_unrealized,adverse_equity,adverse_maintenance,decision_grade_eligible,limitation}`；Failure `{type="linear_liquidation_audit_failure",schema_version,component_ref,request,input_hash,code,subject_ids}`；所有constructor重算identity、first failure、position/audit totals与classification；
+18. Static golden沿用G09A–G09F fixtures，至少冻结：Long low safe/breach、Short high safe/breach、equality SAFE、mixed Long/Short simultaneous extremes、adverse notional同Tier与跨Tier、multiplier/average-entry/no-pre-quantization、HALF_EVEN Unrealized与CEILING Maintenance ties、Flat empty Bars、full availability/closed boundary、全部16 failures与multi-defect precedence、development ambiguous Result、decision-grade ambiguous Failure、constructor/hash/aggregate forgery、same Request idempotency和input/module authority不变；
+19. Purity scanner显式扫描`liquidation_audit.py`，只允许stdlib、domain、market-data contracts identity types、G09E/G09F、runtime Ports/RequestedResultGrade imports；拒绝filesystem、network/provider/process/database/cloud、dynamic import、Engine/Runner/Timeline/Integrity/Profile import、mutable module/class/decorator state与wall clock。Engine、Runner、Timeline、Ledger、G09E/G09F不得新增Liquidation branch/reference；
+20. G09G不创建Liquidation Trigger/Fill/Order/Journal、精确trigger time/price、partial liquidation、bankruptcy、insurance fund、ADL、closeout、provider leverage/wallet/mode mapping、Runtime dispatch、真实交易、result authorization或deployment authorization。G09H拥有injected composition/audit artifact routing，G10F拥有provider semantics，未来tick/microstructure model才可提供更精确path evidence。
+
+G09G Account Window、Liquidation Mark Bar、adverse PnL/Maintenance与SAFE/AMBIGUOUS/decision-grade routing已冻结，可实现synthetic development-grade conservative audit。
+
+## 76. G09H Readiness Blockers
+
+G09H保持`DRAFT`。当前blocker：必须冻结branchless injected composition、Synthetic E2E commands/artifacts、Journal/MarginProjection/PortfolioSnapshot reconstruction与development-only limitation；Generic Engine accounting/event dispatch尚不能按resolved profile注入derivative accounting，因此不得提前组合。
+
+## 77. PASSED 记录格式
 
 ```yaml
 id: WP-00A

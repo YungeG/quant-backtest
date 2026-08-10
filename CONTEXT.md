@@ -379,6 +379,14 @@ Account Margin Projection中的`Equity - Position Initial Margin - Working Order
 
 ResourceReservationState中active Orders的`ReservationCommitment.margin`聚合。它只减少Available Margin，不减少Equity，也不进入Generic Ledger balance。
 
+## Liquidation Mark Bar
+
+只由`PricePurpose.LIQUIDATION` Mark stream形成、带完整source/revision/availability的closed Bar extreme evidence。Long审计使用low，Short审计使用high；Trade、Execution、Valuation或Margin OHLC不能替代。
+
+## Conservative Liquidation Audit
+
+以bar开始时保持到bar结束的authoritative Account Margin Projection为基础，对每个Position同时应用方向最不利的Liquidation Mark extreme，重新计算multiplier-aware Unrealized PnL与Maintenance Margin。最不利状态仍满足Maintenance时为`SAFE`；否则因bar内路径未知而为`AMBIGUOUS_BREACH`，不伪造精确强平时点。
+
 ## 资格时点（Eligibility Instant）
 
 决定某个 Position 是否参与 Funding、分红或其他离散经济事件的规范模拟时点。
