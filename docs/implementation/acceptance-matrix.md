@@ -122,7 +122,7 @@ artifact_hashes: []
 | G09B | PASSED | trading-kernel derivative accounting | G09A, G03 | none |
 | G09C | PASSED | trading-kernel funding eligibility | G09A, G09B, WP-06A, WP-06B | none |
 | G09D | PASSED | trading-kernel financing/accounting | G09B–G09C | none |
-| G09E | READY | trading-kernel margin requirement | G09A | none |
+| G09E | PASSED — immutable commit `e1e4c810b67f8f911b33ef8d7302f33933fc1e32` | trading-kernel margin requirement | G09A | none |
 | G09F | DRAFT | trading-kernel margin | G09B, G09E, WP-05B | Cross-margin fixtures |
 | G09G | DRAFT | backtest-runtime liquidation audit | G09E–G09F | SAFE/AMBIGUOUS fixtures |
 | G09H | DRAFT | tests/support + profile composition | G09A–G09G | Synthetic perpetual E2E |
@@ -6880,7 +6880,7 @@ Python                                                               3.13.5
 
 ```yaml
 id: G09E
-status: READY
+status: PASSED
 depends_on:
   - G09A
 owner_package: trading-kernel margin requirement
@@ -6939,8 +6939,11 @@ evidence:
   - no-account-aggregation-reservation-liquidation-or-runtime-mutation
   - import-boundary-report
   - static-type-report
-passed_commit: null
-artifact_hashes: []
+passed_commit: e1e4c810b67f8f911b33ef8d7302f33933fc1e32
+artifact_hashes:
+  tests/fixtures/kernel/derivatives/linear-margin-requirement-v1.json: sha256:4065e57d1eea682e75da5d5ea00ca8e694b1cd0294020a28c31e2738e0f80718
+  build/acceptance/g09e-pytest.xml: sha256:c8a0b2ce2376abd72213223ad994d035f3e0493547d7306bbd1ab232ccfd8527
+  build/acceptance/g09e-import-boundary-report.json: sha256:c030a815511d9e501c7c4c467bbe828c48bb71ff1e497c7cfe9ec8b994e414e2
 ```
 
 ### G09E Acceptance
@@ -6969,6 +6972,33 @@ artifact_hashes: []
 22. G09E不拥有account Equity、Available Margin、Margin Ratio、Derivative Unrealized PnL、Fee/Funding aggregate、Working Order Reservation、cross-Instrument/cross-Venue/cross-account collateral、isolated/cross mode、Liquidation、bankruptcy、provider tier query/current config、Runtime dispatch、真实交易、result grade或deployment authorization。G09F拥有单Execution Account aggregate，G09G拥有conservative Liquidation audit；G10C/G10F拥有provider tier/leverage source mapping。若provider需要不同notional basis、maintenance formula或availability语义，必须由Adapter明确映射或先把G09E退回DRAFT，不能在Model加入provider分支。
 
 G09E的single-Instrument exposure、historical leverage/rule resolution、multiplier-aware exact notional、tier boundary、Initial/Maintenance公式、maintenance deduction与CEILING Money boundary已冻结。无需选择具体provider即可实现synthetic development-grade seam；G10C/G10F只能映射source facts，不能改写这些generic economics。
+
+### G09E Implementation Acceptance
+
+1. Pure `margin` deep module与root exports已实现；未新增Port、Profile、Adapter、Package、依赖，也未修改Generic Ledger、SnapshotProjector、ReservationBook、PreTradeRiskEvaluator或Runtime；
+2. Caller-supplied signed exposure、historical leverage evidence、historical RuleBook Interval/Tier与MARGIN Mark/Policy均以exact immutable authority消费；past gap不使用later/current rule fallback；
+3. Multiplier-aware absolute exact notional、lower-inclusive/upper-exclusive Tier选择、selected/maximum leverage cross-multiplication、Initial与Maintenance deduction公式均使用GCD-reduced rational arithmetic；
+4. Initial与Maintenance各自只在Money boundary使用CEILING quantization；Long/Short、Flat、below/at/above Tier boundary与sub-cent controls由static golden冻结；
+5. Frozen 30-code first-failure precedence、ordered subjects、RuleBook config identity、Result/Failure/Exact constructor forgery rejection与current fallback rejection全部通过；
+6. Derivative boundary scanner显式覆盖`margin.py`并继续拒绝Generic Ledger、SnapshotProjector、Engine、Runner、Timeline derivative-margin branch；
+7. 69-file Import Boundary、69-source mypy、Primary LSP、scoped pi-lens blocking diagnostics、full regression与`uv lock --check`全部通过。
+
+G09E implementation 已冻结在 immutable commit `e1e4c810b67f8f911b33ef8d7302f33933fc1e32`，状态为 `PASSED`。
+
+验证记录：
+
+```text
+G09E contract                                                      12 passed
+G09E static golden                                                  1 passed
+Frozen public/boundary regression command                         117 passed
+Combined G09E acceptance report                                  130 passed
+Full test suite                                                   937 passed
+Trading-kernel import boundary                                     PASS (69 files)
+mypy                                                                 no issues (69 source files)
+Primary LSP + scoped pi-lens                                        no blocking issues
+uv lock --check                                                     PASS
+Python                                                               3.13.5
+```
 
 ## 74. G09F–G09H Readiness Blockers
 
