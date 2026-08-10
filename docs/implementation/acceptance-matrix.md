@@ -123,7 +123,7 @@ artifact_hashes: []
 | G09C | PASSED | trading-kernel funding eligibility | G09A, G09B, WP-06A, WP-06B | none |
 | G09D | PASSED | trading-kernel financing/accounting | G09B–G09C | none |
 | G09E | PASSED — immutable commit `e1e4c810b67f8f911b33ef8d7302f33933fc1e32` | trading-kernel margin requirement | G09A | none |
-| G09F | READY | trading-kernel account margin projection | G09B, G09E, WP-05B | none |
+| G09F | PASSED — immutable commit `107b41aafee00195ec0ae0031800a1409e016264` | trading-kernel account margin projection | G09B, G09E, WP-05B | none |
 | G09G | DRAFT | backtest-runtime liquidation audit | G09E–G09F | SAFE/AMBIGUOUS fixtures |
 | G09H | DRAFT | tests/support + profile composition | G09A–G09G | Synthetic perpetual E2E |
 | G10A | DRAFT | trading-kernel profiles/binance_usdm | G09H | Instrument metadata fixtures |
@@ -7004,7 +7004,7 @@ Python                                                               3.13.5
 
 ```yaml
 id: G09F
-status: READY
+status: PASSED
 depends_on:
   - G09B
   - G09E
@@ -7064,8 +7064,11 @@ evidence:
   - immutable-ledger-reservation-and-input-authority-evidence
   - import-boundary-report
   - static-type-report
-passed_commit: null
-artifact_hashes: []
+passed_commit: 107b41aafee00195ec0ae0031800a1409e016264
+artifact_hashes:
+  tests/fixtures/kernel/derivatives/linear-account-margin-projection-v1.json: sha256:3a18e0feb8ba49efdf7629b117d87a2266d1e493e1c8bedf1866e6eca42753be
+  build/acceptance/g09f-pytest.xml: sha256:915482e5567cd16a862a4a46c9ef4c8e6b198ad56368d0f1e47d89fab7242393
+  build/acceptance/g09f-import-boundary-report.json: sha256:4fd8a69189fa8d7228becdd1318ea3c210589da2381199e673b302b45c432570
 ```
 
 ### G09F Acceptance
@@ -7092,6 +7095,34 @@ artifact_hashes: []
 20. G09F不拥有provider wallet balance mapping、cross/isolated mode、multi-asset collateral、FX/stablecoin peg、haircut、Margin Ratio、Liquidation/Bankruptcy price、ADL、order acceptance、reservation creation、Journal replay composition、PortfolioSnapshot replacement、Runtime dispatch、真实交易、result grade或deployment authorization。G09G拥有conservative Liquidation audit，G09H拥有injected reconstruction/composition，G10F拥有provider account mapping。
 
 G09F authoritative Wallet、Unrealized formula、G09E coverage、Reservation margin、Equity与Available Margin semantics已冻结，可在不选择provider的情况下实现synthetic development-grade seam。
+
+### G09F Implementation Acceptance
+
+1. Pure `account_margin` deep module与root exports已实现；未新增Port、Profile、Adapter、Package、依赖，也未修改Generic Ledger、PortfolioSnapshotProjector、ReservationBook、PreTradeRiskEvaluator或Runtime；
+2. Full-availability Ledger/Reservation evidence、single Account/Venue/Currency context与settlement Cash authority均fail closed，Wallet/Realized/Fee/Funding exact取既有Ledger State且不double count attribution；
+3. G09A signed Position、multiplier、exact average entry与VALUATION Mark形成GCD-reduced exact Unrealized PnL，并在每Instrument Money boundaryHALF_EVEN量化一次；Long/Short方向与large integer-safe arithmetic通过；
+4. Non-flat Position、Ledger quantity、G09E Result与VALUATION Evidence使用exact coverage；multi-Instrument同账户aggregate、duplicate/missing/extra/context mismatch均fail closed；
+5. Equity、Initial/Maintenance totals、Working Order Margin Reservation与Available Margin按frozen公式聚合；Reservation其他dimensions不进入aggregate，negative Available Margin保留为Projection状态；
+6. Frozen 25-code precedence、ordered subjects、component/canonical identity、Projection/per-Position/Exact constructor forgery、same Request idempotency与input authority不变全部通过；
+7. Boundary scanner显式覆盖`account_margin.py`并继续拒绝Ledger、SnapshotProjector、ReservationBook、PreTradeRiskEvaluator与Runtime account-margin branch；
+8. 70-file Import Boundary、70-source mypy、Primary LSP、scoped pi-lens blocking diagnostics、full regression与`uv lock --check`全部通过。
+
+G09F implementation 已冻结在 immutable commit `107b41aafee00195ec0ae0031800a1409e016264`，状态为 `PASSED`。
+
+验证记录：
+
+```text
+G09F contract                                                       9 passed
+G09F static golden                                                  1 passed
+Frozen public/boundary regression command                         109 passed
+Combined G09F acceptance report                                  119 passed
+Full test suite                                                   948 passed
+Trading-kernel import boundary                                     PASS (70 files)
+mypy                                                                 no issues (70 source files)
+Primary LSP + scoped pi-lens                                        no blocking issues
+uv lock --check                                                     PASS
+Python                                                               3.13.5
+```
 
 ## 75. G09G–G09H Readiness Blockers
 
