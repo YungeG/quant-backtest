@@ -568,7 +568,7 @@ def test_all_failures_follow_frozen_precedence() -> None:
         assert outcome.failure.subject_ids[0] == expected.value
 
 
-def test_multiple_instruments_aggregate_without_cross_account_or_currency_netting() -> None:
+def _multi_instrument_projection(second_quantity_units: int = 1_000):
     request = _request()
     first_valuation = request.position_valuations[0]
     first_state = first_valuation.position_state
@@ -585,7 +585,11 @@ def test_multiple_instruments_aggregate_without_cross_account_or_currency_nettin
     second_state = LinearPositionState(
         second_key,
         second_contract,
-        Quantity(1_000, QUANTITY_SCALE, str(second_instrument)),
+        Quantity(
+            second_quantity_units,
+            QUANTITY_SCALE,
+            str(second_instrument),
+        ),
         ExactAverageEntryBasis(second_instrument, QUOTE_CURRENCY, 90, 1),
     )
     second_mark = replace(
@@ -614,7 +618,9 @@ def test_multiple_instruments_aggregate_without_cross_account_or_currency_nettin
         position_key=second_key,
         contract=second_contract,
         exposure_quantity=Quantity(
-            1_000, QUANTITY_SCALE, str(second_instrument)
+            second_quantity_units,
+            QUANTITY_SCALE,
+            str(second_instrument),
         ),
         leverage_evidence=replace(
             base_margin_request.leverage_evidence,
@@ -685,7 +691,12 @@ def test_multiple_instruments_aggregate_without_cross_account_or_currency_nettin
     )
 
     assert outcome.projection is not None
-    projection = outcome.projection
+    return outcome.projection
+
+
+def test_multiple_instruments_aggregate_without_cross_account_or_currency_netting() -> None:
+    projection = _multi_instrument_projection()
+
     assert len(projection.position_unrealized_pnl) == 2
     assert projection.total_unrealized_pnl.units == 250
     assert projection.equity.units == 100_250
