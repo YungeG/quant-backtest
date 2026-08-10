@@ -10,6 +10,9 @@ from crypto_quant_backtest import (
     BarLiquidityEvidence,
     CashFillAccountingPlan,
     DeterministicBarEngine,
+    FeeAccountingDispatchPlan,
+    FillAccountingDispatchPlan,
+    FinancialDispatchPlan,
     DeterministicBpsSlippageModel,
     DeterministicTimeline,
     MarkToMarketCloseoutPolicy,
@@ -39,6 +42,7 @@ from crypto_quant_backtest import (
     TimelineEvent,
     TimelineSegment,
     TimelineWindow,
+    default_cash_financial_dispatcher_spec,
 )
 from crypto_quant_domain import (
     AccountingEntryType,
@@ -940,10 +944,27 @@ def final_fee_rule_set():
     return final_fee_rules(rules=rules, minimums=())
 
 
+@dataclass(frozen=True, slots=True)
+class CashAccountingSemanticPayload:
+    cash_key: CashBalanceKey
+    position_key: PositionBalanceKey
+    cost_basis_policy: CostBasisPolicy
+    notional_quantization: QuantizationPolicy
+
+    def to_canonical_dict(self) -> dict[str, object]:
+        return {
+            "type": "cash_accounting_semantic_payload",
+            "cash_key": self.cash_key,
+            "position_key": self.position_key,
+            "cost_basis_policy": self.cost_basis_policy,
+            "notional_quantization": self.notional_quantization,
+        }
+
+
 def cash_accounting_plan(
     domain_ids: EngineDomainIds = LEGACY_DOMAIN_IDS,
-) -> CashFillAccountingPlan:
-    return CashFillAccountingPlan(
+) -> FillAccountingDispatchPlan:
+    payload = CashFillAccountingPlan(
         cash_key=CASH_KEY,
         position_key=POSITION_KEY,
         cost_basis_policy=CostBasisPolicy(
@@ -964,6 +985,30 @@ def cash_accounting_plan(
         fee_assessment_time=UtcInstant(211),
         fee_journal_entry_id=domain_ids.fee_journal_id,
         fee_recorded_at=sim(212, ACCOUNTING_PHASE, 3),
+    )
+    spec = default_cash_financial_dispatcher_spec()
+    return FillAccountingDispatchPlan(
+        source_event_id=BAR_EVENT_ID,
+        expected_fill_id=domain_ids.fill_id,
+        position_accounting_component=spec.position_accounting_component,
+        position_payload=payload,
+        semantic_payload=CashAccountingSemanticPayload(
+            payload.cash_key,
+            payload.position_key,
+            payload.cost_basis_policy,
+            payload.notional_quantization,
+        ),
+        fill_journal_entry_id=domain_ids.fill_journal_id,
+        fill_recorded_at=payload.fill_recorded_at,
+        fee_plan=FeeAccountingDispatchPlan(
+            payload.cash_key,
+            payload.final_fee_rule_set,
+            payload.fee_assessment_id,
+            payload.fee_assessment_time,
+            payload.fee_journal_entry_id,
+            payload.fee_recorded_at,
+        ),
+        expected_artifact_roles=("position_accounting",),
     )
 
 
@@ -1086,9 +1131,19 @@ def financial_state(
         initial_snapshot=initial_snapshot(domain_ids.deposit_journal_id),
         lot_books=(PositionLotBook(POSITION_KEY),),
         order_streams=(),
+        order_admissions=(),
         reservation_schedules=(),
         settlement_book=SettlementBook(ACCOUNT),
         settlement_rules=empty_settlement_rules(),
+    )
+
+
+def financial_dispatch_plan() -> FinancialDispatchPlan:
+    return FinancialDispatchPlan(
+        default_cash_financial_dispatcher_spec(),
+        (),
+        snapshot_plan(),
+        ("final_snapshot", "position_accounting"),
     )
 
 
@@ -1134,6 +1189,7 @@ def execution_case(
         decision_cycles=cycles,
         bar_executions=(bar_execution(domain_ids, event_ids),),
         financial_state=financial_state(domain_ids),
+        financial_dispatch_plan=financial_dispatch_plan(),
         execution_model=execution_model(),
         snapshot_plan=snapshot_plan(),
         closeout_policy=MarkToMarketCloseoutPolicy(),

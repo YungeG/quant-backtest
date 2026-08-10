@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass, replace
 from enum import Enum
-from typing import ClassVar
+from typing import TYPE_CHECKING, ClassVar
 import unicodedata
 
 from crypto_quant_backtest import (
@@ -31,6 +31,11 @@ from crypto_quant_trading import (
     ProfilePortType,
 )
 from tests.runtime.engine import _fixtures as engine_fixtures
+
+if TYPE_CHECKING:
+    from tests.support.synthetic_market.linear_perpetual import (
+        SyntheticLinearPerpetualDevelopmentProfile,
+    )
 
 
 SYNTHETIC_PROFILE_KEY = "synthetic.cash.development.v1"
@@ -553,7 +558,7 @@ class SyntheticProfileLookupFailure:
 
 @dataclass(frozen=True, slots=True)
 class SyntheticProfileLookupResult:
-    profile: SyntheticCashDevelopmentProfile | None
+    profile: SyntheticCashDevelopmentProfile | SyntheticLinearPerpetualDevelopmentProfile | None
     failure: SyntheticProfileLookupFailure | None
 
     def __post_init__(self) -> None:
@@ -581,7 +586,12 @@ class TestProfileRegistry:
 
     def lookup(self, profile_key: str) -> SyntheticProfileLookupResult:
         _text("profile_key", profile_key)
-        if profile_key != SYNTHETIC_PROFILE_KEY:
+        from tests.support.synthetic_market.linear_perpetual import (
+            PROFILE_KEY as LINEAR_PROFILE_KEY,
+            SyntheticLinearPerpetualDevelopmentProfile,
+        )
+
+        if profile_key not in (SYNTHETIC_PROFILE_KEY, LINEAR_PROFILE_KEY):
             return SyntheticProfileLookupResult(
                 profile=None,
                 failure=SyntheticProfileLookupFailure(
@@ -597,10 +607,12 @@ class TestProfileRegistry:
                     profile_key,
                 ),
             )
-        return SyntheticProfileLookupResult(
-            profile=SyntheticCashDevelopmentProfile._create(),
-            failure=None,
+        profile = (
+            SyntheticCashDevelopmentProfile._create()
+            if profile_key == SYNTHETIC_PROFILE_KEY
+            else SyntheticLinearPerpetualDevelopmentProfile._create()
         )
+        return SyntheticProfileLookupResult(profile=profile, failure=None)
 
 
 def _require_profile(
@@ -661,6 +673,19 @@ def build_synthetic_execution_case(
     )
 
 
+def __getattr__(name: str) -> object:
+    linear_exports = {
+        "SyntheticLinearPerpetualDevelopmentProfile",
+        "build_synthetic_linear_perpetual_execution_case",
+        "build_synthetic_linear_perpetual_resolved_request",
+    }
+    if name not in linear_exports:
+        raise AttributeError(name)
+    from tests.support.synthetic_market import linear_perpetual
+
+    return getattr(linear_perpetual, name)
+
+
 __all__ = [
     "SYNTHETIC_PROFILE_KEY",
     "SYNTHETIC_PROFILE_LIMITATION",
@@ -673,7 +698,10 @@ __all__ = [
     "SyntheticProfileLookupFailureCode",
     "SyntheticProfileLookupResult",
     "SyntheticSimulationProfile",
+    "SyntheticLinearPerpetualDevelopmentProfile",
     "TestProfileRegistry",
+    "build_synthetic_linear_perpetual_execution_case",
+    "build_synthetic_linear_perpetual_resolved_request",
     "build_synthetic_bundle",
     "build_synthetic_execution_case",
     "build_synthetic_target_stream",

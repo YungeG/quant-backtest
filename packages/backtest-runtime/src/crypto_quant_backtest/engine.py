@@ -8,7 +8,6 @@ from typing import Any, cast
 import unicodedata
 
 from crypto_quant_domain import (
-    CashBalanceKey,
     CurrencyId,
     DecisionBatch,
     DomainId,
@@ -22,7 +21,6 @@ from crypto_quant_domain import (
     PortfolioSnapshot,
     PositionBalanceKey,
     PositionLot,
-    QuantizationPolicy,
     Scale,
     SimulationInstant,
     SourceSequence,
@@ -39,15 +37,12 @@ from crypto_quant_trading import (
     ApprovedPortfolioTarget,
     AvailabilityProjection,
     AvailabilityState,
-    CashInstrumentAccounting,
-    CostBasisPolicy,
     ExecutableOrderSpec,
     FeeAssessmentBasisEvidence,
     FeeAssessmentEngine,
     FeeChargedJournalTranslator,
     FeeReservationEstimator,
     FeeReservationRuleSet,
-    FinalFeeRuleSet,
     GenericLedger,
     InstrumentSizingInput,
     JournalError,
@@ -73,7 +68,6 @@ from crypto_quant_trading import (
     PortfolioAllocator,
     PortfolioRiskEvaluator,
     PortfolioRiskPolicy,
-    PortfolioSnapshotProjector,
     PositionSizer,
     PositionSizingPolicy,
     PreTradeResourceRequirement,
@@ -93,6 +87,17 @@ from crypto_quant_trading import (
     TargetValidity,
 )
 
+from .financial_dispatch import (
+    DefaultCashFinancialDispatcher,
+    FillAccountingDispatchPlan,
+    FinancialDispatchArtifact,
+    FinancialDispatchFailureCode,
+    FinancialDispatchOutcome,
+    FinancialDispatchPlan,
+    FinancialDispatchResult,
+    FinancialEventDispatcher,
+    FinancialStateView,
+)
 from .execution import (
     BAR_OPEN_CAPABILITY,
     BarLiquidityEvidence,
@@ -135,6 +140,7 @@ from .timeline import (
 
 
 _HASH_PREFIX = "sha256:"
+_DEFAULT_FINANCIAL_DISPATCHER = object()
 _FINALIZE_PHASE = TimelinePhase(1_000_000, "engine_finalize")
 _REQUIRED_ADMISSION_EVENTS = (
     OrderEventType.ORDER_INTENT_CREATED,
@@ -421,71 +427,6 @@ class ResolvedDecisionCycle:
 
 
 @dataclass(frozen=True, slots=True)
-class CashFillAccountingPlan:
-    """Explicit cash-instrument accounting and final Fill-fee identities."""
-
-    cash_key: CashBalanceKey
-    position_key: PositionBalanceKey
-    cost_basis_policy: CostBasisPolicy
-    notional_quantization: QuantizationPolicy
-    fill_journal_entry_id: DomainId
-    fill_recorded_at: SimulationInstant
-    final_fee_rule_set: FinalFeeRuleSet
-    fee_assessment_id: DomainId
-    fee_assessment_time: UtcInstant
-    fee_journal_entry_id: DomainId
-    fee_recorded_at: SimulationInstant
-
-    def __post_init__(self) -> None:
-        if not isinstance(self.cash_key, CashBalanceKey):
-            raise TypeError("cash_key must be CashBalanceKey")
-        if not isinstance(self.position_key, PositionBalanceKey):
-            raise TypeError("position_key must be PositionBalanceKey")
-        if (
-            self.cash_key.account_id != self.position_key.account_id
-            or self.cash_key.venue_id != self.position_key.venue_id
-        ):
-            raise ValueError("Cash/Position accounting context mismatch")
-        if not isinstance(self.cost_basis_policy, CostBasisPolicy):
-            raise TypeError("cost_basis_policy must be CostBasisPolicy")
-        if not isinstance(self.notional_quantization, QuantizationPolicy):
-            raise TypeError("notional_quantization must be QuantizationPolicy")
-        _domain_id("fill_journal_entry_id", self.fill_journal_entry_id, DomainIdKind.JOURNAL)
-        _domain_id("fee_assessment_id", self.fee_assessment_id, DomainIdKind.FEE)
-        _domain_id("fee_journal_entry_id", self.fee_journal_entry_id, DomainIdKind.JOURNAL)
-        if not isinstance(self.fill_recorded_at, SimulationInstant) or not isinstance(
-            self.fee_recorded_at, SimulationInstant
-        ):
-            raise TypeError("recorded times must be SimulationInstant")
-        if not isinstance(self.final_fee_rule_set, FinalFeeRuleSet):
-            raise TypeError("final_fee_rule_set must be FinalFeeRuleSet")
-        if not isinstance(self.fee_assessment_time, UtcInstant):
-            raise TypeError("fee_assessment_time must be UtcInstant")
-        if not (
-            self.fill_recorded_at.instant
-            <= self.fee_assessment_time
-            <= self.fee_recorded_at.instant
-        ):
-            raise ValueError("Fill/Fee accounting times must be monotonic")
-
-    def to_canonical_dict(self) -> dict[str, object]:
-        return {
-            "type": "cash_fill_accounting_plan",
-            "cash_key": self.cash_key,
-            "position_key": self.position_key,
-            "cost_basis_policy": self.cost_basis_policy,
-            "notional_quantization": self.notional_quantization,
-            "fill_journal_entry_id": self.fill_journal_entry_id,
-            "fill_recorded_at": self.fill_recorded_at,
-            "final_fee_rule_set": self.final_fee_rule_set,
-            "fee_assessment_id": self.fee_assessment_id,
-            "fee_assessment_time": self.fee_assessment_time,
-            "fee_journal_entry_id": self.fee_journal_entry_id,
-            "fee_recorded_at": self.fee_recorded_at,
-        }
-
-
-@dataclass(frozen=True, slots=True)
 class ResolvedBarExecution:
     """One exact Bar Event/order execution and accounting plan."""
 
@@ -498,7 +439,7 @@ class ResolvedBarExecution:
     fill_id: DomainId
     fill_event_id: str
     fill_event_at: SimulationInstant
-    accounting_plan: CashFillAccountingPlan
+    accounting_plan: FillAccountingDispatchPlan
 
     def __post_init__(self) -> None:
         _text("event_id", self.event_id)
@@ -515,8 +456,13 @@ class ResolvedBarExecution:
         _text("fill_event_id", self.fill_event_id)
         if not isinstance(self.fill_event_at, SimulationInstant):
             raise TypeError("fill_event_at must be SimulationInstant")
-        if not isinstance(self.accounting_plan, CashFillAccountingPlan):
-            raise TypeError("accounting_plan must be CashFillAccountingPlan")
+        if not isinstance(self.accounting_plan, FillAccountingDispatchPlan):
+            raise TypeError("accounting_plan must be FillAccountingDispatchPlan")
+        if (
+            self.accounting_plan.source_event_id != self.event_id
+            or self.accounting_plan.expected_fill_id != self.fill_id
+        ):
+            raise ValueError("accounting plan must match resolved Bar execution")
 
     @property
     def execution_hash(self) -> str:
@@ -581,6 +527,7 @@ class ResolvedFinancialState:
     initial_snapshot: PortfolioSnapshot
     lot_books: tuple[PositionLotBook, ...]
     order_streams: tuple[OrderEventStream, ...]
+    order_admissions: tuple[ResolvedOrderAdmission, ...]
     reservation_schedules: tuple[OrderReservationSchedule, ...]
     settlement_book: SettlementBook
     settlement_rules: MarketSettlementRules
@@ -595,6 +542,7 @@ class ResolvedFinancialState:
         for name, values, expected_type in (
             ("lot_books", self.lot_books, PositionLotBook),
             ("order_streams", self.order_streams, OrderEventStream),
+            ("order_admissions", self.order_admissions, ResolvedOrderAdmission),
             ("reservation_schedules", self.reservation_schedules, OrderReservationSchedule),
         ):
             if not isinstance(values, tuple) or not all(
@@ -616,7 +564,12 @@ class ResolvedFinancialState:
         if len(set(lot_keys)) != len(lot_keys):
             raise ValueError("duplicate Position Lot book")
         object.__setattr__(self, "lot_books", _stable_tuple(self.lot_books))
+        stream_ids = {value.order.order_id for value in self.order_streams}
+        admission_ids = {value.order.order_id for value in self.order_admissions}
+        if stream_ids != admission_ids:
+            raise ValueError("initial Order streams and admissions must exact-cover")
         object.__setattr__(self, "order_streams", _stable_tuple(self.order_streams))
+        object.__setattr__(self, "order_admissions", _stable_tuple(self.order_admissions))
         object.__setattr__(
             self, "reservation_schedules", _stable_tuple(self.reservation_schedules)
         )
@@ -630,6 +583,7 @@ class ResolvedFinancialState:
             "initial_snapshot": self.initial_snapshot,
             "lot_books": self.lot_books,
             "order_streams": self.order_streams,
+            "order_admissions": self.order_admissions,
             "reservation_schedules": self.reservation_schedules,
             "settlement_book_hash": self.settlement_book.book_hash,
             "settlement_state": settlement_state,
@@ -934,6 +888,14 @@ class ExecutionCaseIdentityFactory:
         self._rules = rules
         self._bindings: dict[str, ExecutionCaseIdentityBinding] = {}
 
+    @property
+    def semantic_run_id(self) -> str:
+        return self._semantic_run_id
+
+    @property
+    def namespace(self) -> IdentityNamespace:
+        return self._namespace
+
     def domain_id(self, binding_key: str) -> DomainId:
         rule = self._rule(binding_key)
         if rule.domain_kind is None:
@@ -1004,6 +966,7 @@ class ResolvedExecutionCase:
     decision_cycles: tuple[ResolvedDecisionCycle, ...]
     bar_executions: tuple[ResolvedBarExecution, ...]
     financial_state: ResolvedFinancialState
+    financial_dispatch_plan: FinancialDispatchPlan
     execution_model: NextEligibleBarOpenModel
     snapshot_plan: SnapshotProjectionPlan
     closeout_policy: CloseoutPolicy[
@@ -1041,6 +1004,10 @@ class ResolvedExecutionCase:
             raise TypeError("bar_executions must contain ResolvedBarExecution")
         if not isinstance(self.financial_state, ResolvedFinancialState):
             raise TypeError("financial_state must be ResolvedFinancialState")
+        if not isinstance(self.financial_dispatch_plan, FinancialDispatchPlan):
+            raise TypeError("financial_dispatch_plan must be FinancialDispatchPlan")
+        if self.financial_dispatch_plan.final_snapshot_payload != self.snapshot_plan:
+            raise ValueError("financial dispatch final Snapshot payload mismatch")
         if not isinstance(self.execution_model, NextEligibleBarOpenModel):
             raise TypeError("execution_model must be NextEligibleBarOpenModel")
         if not isinstance(self.snapshot_plan, SnapshotProjectionPlan):
@@ -1078,12 +1045,13 @@ class ResolvedExecutionCase:
             admission.order.order_id.value
             for cycle in self.decision_cycles
             for admission in cycle.admissions
+        ) + tuple(
+            admission.order.order_id.value
+            for admission in self.financial_state.order_admissions
         )
         if len(set(order_ids)) != len(order_ids):
             raise ValueError("resolved admission Order IDs must be globally unique")
-        known_orders = set(order_ids) | {
-            stream.order.order_id.value for stream in self.financial_state.order_streams
-        }
+        known_orders = set(order_ids)
         if any(value.order_id.value not in known_orders for value in self.bar_executions):
             raise ValueError("bar execution references unknown Order")
         target_event_ids = {value.event_id for value in self.target_stream.events}
@@ -1144,16 +1112,33 @@ class ResolvedExecutionCase:
                 entry.journal_entry_id.value,
                 DomainIdKind.JOURNAL,
             )
+        initial_streams = sorted(
+            self.financial_state.order_streams,
+            key=lambda stream: (
+                stream.order.created_at,
+                stream.order.intent.parent_id,
+            ),
+        )
+        for order_index, stream in enumerate(initial_streams):
+            expected[f"order.initial.{order_index}"] = (
+                stream.order.order_id.value,
+                DomainIdKind.ORDER,
+            )
+            for event_index, record in enumerate(stream.records):
+                expected[f"order-event.initial.{order_index}.{event_index}"] = (
+                    record.event.event_id,
+                    None,
+                )
         for cycle_index, cycle in enumerate(self.decision_cycles):
             for admission_index, admission in enumerate(cycle.admissions):
                 expected[f"order.{cycle_index}.{admission_index}"] = (
                     admission.order.order_id.value,
                     DomainIdKind.ORDER,
                 )
-                for event_index, event in enumerate(admission.event_plan):
+                for event_index, event_plan in enumerate(admission.event_plan):
                     expected[
                         f"order-event.{cycle_index}.{admission_index}.{event_index}"
-                    ] = (event.event_id, None)
+                    ] = (event_plan.event_id, None)
         for bar_index, execution in enumerate(self.bar_executions):
             expected[f"fill.{bar_index}"] = (
                 execution.fill_id.value,
@@ -1164,17 +1149,22 @@ class ResolvedExecutionCase:
                 DomainIdKind.JOURNAL,
             )
             expected[f"fee.{bar_index}"] = (
-                execution.accounting_plan.fee_assessment_id.value,
+                execution.accounting_plan.fee_plan.fee_assessment_id.value,
                 DomainIdKind.FEE,
             )
             expected[f"journal.fee.{bar_index}"] = (
-                execution.accounting_plan.fee_journal_entry_id.value,
+                execution.accounting_plan.fee_plan.fee_journal_entry_id.value,
                 DomainIdKind.JOURNAL,
             )
             expected[f"order-event.fill.{bar_index}"] = (
                 execution.fill_event_id,
                 None,
             )
+        for account_event in self.financial_dispatch_plan.scheduled_account_events:
+            for binding_key, value in account_event.identity_bindings:
+                if binding_key in expected:
+                    raise ValueError("duplicate financial identity binding key")
+                expected[binding_key] = (value.value, value.kind)
         return expected
 
     def to_canonical_dict(self) -> dict[str, object]:
@@ -1194,6 +1184,7 @@ class ResolvedExecutionCase:
             "decision_cycles": self.decision_cycles,
             "bar_executions": self.bar_executions,
             "financial_state": self.financial_state,
+            "financial_dispatch_plan": self.financial_dispatch_plan,
             "execution_model_spec": self.execution_model.spec(),
             "snapshot_plan": self.snapshot_plan,
             "closeout_policy_spec": self.closeout_policy.spec(),
@@ -1222,6 +1213,7 @@ class EngineStage(str, Enum):
     SLIPPAGE = "slippage"
     FILL = "fill"
     FILL_ACCOUNTING = "fill_accounting"
+    FINANCIAL_EVENT = "financial_event"
     FEE_ASSESSMENT = "fee_assessment"
     FEE_ACCOUNTING = "fee_accounting"
     LEDGER_STATE = "ledger_state"
@@ -1308,6 +1300,7 @@ class EngineFailureCode(str, Enum):
     SLIPPAGE_FAILURE = "slippage_failure"
     FILL_CONSTRUCTION = "fill_construction"
     ACCOUNTING_FAILURE = "accounting_failure"
+    FINANCIAL_DISPATCH_FAILURE = "financial_dispatch_failure"
     FEE_ASSESSMENT_FAILURE = "fee_assessment_failure"
     FEE_ACCOUNTING_FAILURE = "fee_accounting_failure"
     SNAPSHOT_PROJECTION_FAILURE = "snapshot_projection_failure"
@@ -1423,6 +1416,7 @@ class EngineExecutionResult:
     fills: tuple[Fill, ...]
     slippage_decisions: tuple[SlippageDecision, ...]
     fee_assessments: tuple[FeeAssessment, ...]
+    financial_artifacts: tuple[FinancialDispatchArtifact, ...]
     final_journal: AccountingJournal
     final_ledger_state: LedgerState
     final_portfolio_snapshot: PortfolioSnapshot
@@ -1443,6 +1437,7 @@ class EngineExecutionResult:
             ("fills", self.fills, Fill),
             ("slippage_decisions", self.slippage_decisions, SlippageDecision),
             ("fee_assessments", self.fee_assessments, FeeAssessment),
+            ("financial_artifacts", self.financial_artifacts, FinancialDispatchArtifact),
         ):
             if not isinstance(values, tuple) or not all(
                 isinstance(value, expected_type) for value in values
@@ -1466,6 +1461,20 @@ class EngineExecutionResult:
             self, "slippage_decisions", _stable_tuple(self.slippage_decisions)
         )
         object.__setattr__(self, "fee_assessments", _stable_tuple(self.fee_assessments))
+        object.__setattr__(
+            self,
+            "financial_artifacts",
+            tuple(
+                sorted(
+                    self.financial_artifacts,
+                    key=lambda value: (
+                        canonical_bytes(value.occurred_at),
+                        value.source_event_id,
+                        value.role,
+                    ),
+                )
+            ),
+        )
 
     @property
     def result_hash(self) -> str:
@@ -1487,6 +1496,7 @@ class EngineExecutionResult:
             "fills": self.fills,
             "slippage_decisions": self.slippage_decisions,
             "fee_assessments": self.fee_assessments,
+            "financial_artifacts": self.financial_artifacts,
             "final_journal": self.final_journal,
             "final_ledger_state": self.final_ledger_state,
             "final_portfolio_snapshot": self.final_portfolio_snapshot,
@@ -1546,10 +1556,21 @@ class _EngineState:
     fills: list[Fill] = field(default_factory=list)
     slippage_decisions: list[SlippageDecision] = field(default_factory=list)
     fee_assessments: list[FeeAssessment] = field(default_factory=list)
+    financial_artifacts: list[FinancialDispatchArtifact] = field(default_factory=list)
 
 
 class DeterministicBarEngine:
     """Pure orchestration over a fully resolved immutable execution case."""
+
+    def __init__(
+        self,
+        financial_dispatcher: FinancialEventDispatcher | object = _DEFAULT_FINANCIAL_DISPATCHER,
+    ) -> None:
+        if financial_dispatcher is _DEFAULT_FINANCIAL_DISPATCHER:
+            financial_dispatcher = DefaultCashFinancialDispatcher()
+        if not isinstance(financial_dispatcher, FinancialEventDispatcher):
+            raise TypeError("financial_dispatcher must satisfy FinancialEventDispatcher")
+        self._financial_dispatcher = financial_dispatcher
 
     def run(
         self,
@@ -1585,6 +1606,21 @@ class DeterministicBarEngine:
         cancellation: EngineCancellationRequest | None,
     ) -> EngineExecutionOutcome:
         state = self._initial_state(case)
+        if self._financial_dispatcher.spec != case.financial_dispatch_plan.dispatcher_spec:
+            return self._failed(
+                case,
+                state,
+                EngineFailureCode.FINANCIAL_DISPATCH_FAILURE,
+                (FinancialDispatchFailureCode.DISPATCHER_SPEC_MISMATCH.value,),
+                (
+                    canonical_sha256(
+                        {
+                            "dispatcher_spec": self._financial_dispatcher.spec,
+                            "case_dispatcher_spec": case.financial_dispatch_plan.dispatcher_spec,
+                        }
+                    ),
+                ),
+            )
         cycles_by_event: dict[str, ResolvedDecisionCycle] = {}
         cycle_buffers: dict[str, list[TimelineEvent]] = {}
         for resolved_cycle in case.decision_cycles:
@@ -1592,9 +1628,14 @@ class DeterministicBarEngine:
             for entry in resolved_cycle.schedule.entries:
                 cycles_by_event[entry.event_id] = resolved_cycle
         bars_by_event = {value.event_id: value for value in case.bar_executions}
+        account_events_by_event = {
+            value.event_id: value
+            for value in case.financial_dispatch_plan.scheduled_account_events
+        }
         processed_events = 0
         processed_cycles: set[str] = set()
         processed_bars: set[str] = set()
+        processed_account_events: set[str] = set()
         timeline_cursor = case.timeline.open_cursor(batch_size=case.timeline_batch_size)
 
         while not timeline_cursor.window_complete:
@@ -1653,6 +1694,30 @@ class DeterministicBarEngine:
                         return failure
                     processed_bars.add(bar.execution_hash)
 
+                account_event = account_events_by_event.get(event.event_id)
+                if account_event is not None:
+                    if account_event.event_at != event.timeline_instant:
+                        return self._failed(
+                            case,
+                            state,
+                            EngineFailureCode.FINANCIAL_DISPATCH_FAILURE,
+                            (FinancialDispatchFailureCode.EVENT_PLAN_MISMATCH.value,),
+                            (canonical_sha256(account_event), event.event_hash),
+                        )
+                    dispatch = self._financial_dispatcher.dispatch_scheduled_event(
+                        account_event,
+                        self._financial_state_view(state),
+                    )
+                    failure = self._apply_financial_dispatch(
+                        case,
+                        state,
+                        dispatch,
+                        expected_snapshot=None,
+                    )
+                    if failure is not None:
+                        return failure
+                    processed_account_events.add(account_event.event_id)
+
         missing_cycles = tuple(
             cycle.cycle_hash
             for cycle in case.decision_cycles
@@ -1663,35 +1728,47 @@ class DeterministicBarEngine:
             for value in case.bar_executions
             if value.execution_hash not in processed_bars
         )
-        if missing_cycles or missing_bars:
+        missing_account_events = tuple(
+            value.event_id
+            for value in case.financial_dispatch_plan.scheduled_account_events
+            if value.event_id not in processed_account_events
+        )
+        if missing_cycles or missing_bars or missing_account_events:
             return self._failed(
                 case,
                 state,
                 EngineFailureCode.MISSING_SCHEDULED_EVENT,
-                missing_cycles + missing_bars,
+                missing_cycles + missing_bars + missing_account_events,
             )
 
         # Cursor batch size is an operational read concern, not economic evidence.
         timeline_cursor = case.timeline.resume_cursor(timeline_cursor, batch_size=1)
-        snapshot_outcome = PortfolioSnapshotProjector().project(
-            ledger_state=state.ledger_state,
-            resolved_marks=case.snapshot_plan.resolved_marks,
-            valuations=case.snapshot_plan.valuations,
-            reporting_currency=case.snapshot_plan.reporting_currency,
-            reporting_scale=case.snapshot_plan.reporting_scale,
-            timestamp=case.snapshot_plan.timestamp,
-            currency_valuation_graph_hash=case.snapshot_plan.currency_valuation_graph_hash,
+        snapshot_dispatch = self._financial_dispatcher.project_final_snapshot(
+            case.financial_dispatch_plan,
+            self._financial_state_view(state),
         )
-        if snapshot_outcome.snapshot is None:
-            failure = cast(Any, snapshot_outcome.failure)
+        failure = self._apply_financial_dispatch(
+            case,
+            state,
+            snapshot_dispatch,
+            expected_snapshot=True,
+        )
+        if failure is not None:
+            return failure
+        actual_roles = tuple(sorted(value.role for value in state.financial_artifacts))
+        if actual_roles != case.financial_dispatch_plan.expected_artifact_roles:
             return self._failed(
                 case,
                 state,
-                EngineFailureCode.SNAPSHOT_PROJECTION_FAILURE,
-                (failure.code.value,),
-                (canonical_sha256(failure),),
+                EngineFailureCode.FINANCIAL_DISPATCH_FAILURE,
+                (FinancialDispatchFailureCode.ARTIFACT_COVERAGE_MISMATCH.value,),
+                (
+                    canonical_sha256(actual_roles),
+                    canonical_sha256(
+                        case.financial_dispatch_plan.expected_artifact_roles
+                    ),
+                ),
             )
-        state.snapshot = snapshot_outcome.snapshot
         finalize_instant = SimulationInstant(
             case.timeline.window.end_exclusive,
             _FINALIZE_PHASE,
@@ -1747,6 +1824,7 @@ class DeterministicBarEngine:
             fills=tuple(state.fills),
             slippage_decisions=tuple(state.slippage_decisions),
             fee_assessments=tuple(state.fee_assessments),
+            financial_artifacts=tuple(state.financial_artifacts),
             final_journal=state.journal,
             final_ledger_state=state.ledger_state,
             final_portfolio_snapshot=state.snapshot,
@@ -1788,7 +1866,107 @@ class DeterministicBarEngine:
             availability=availability,
             order_streams=order_streams,
             reservation_schedules=schedules,
+            admissions={
+                value.order.order_id.value: value
+                for value in financial.order_admissions
+            },
         )
+
+    @staticmethod
+    def _financial_state_view(state: _EngineState) -> FinancialStateView:
+        lot_books = tuple(
+            sorted(state.lot_books.items(), key=lambda value: canonical_bytes(value[0]))
+        )
+        return FinancialStateView(
+            state.journal,
+            state.ledger_state,
+            state.reservation_state,
+            lot_books,
+            tuple(state.financial_artifacts),
+        )
+
+    def _apply_financial_dispatch(
+        self,
+        case: ResolvedExecutionCase,
+        state: _EngineState,
+        outcome: FinancialDispatchOutcome,
+        *,
+        expected_snapshot: bool | None,
+    ) -> EngineExecutionOutcome | None:
+        if (
+            not isinstance(outcome, FinancialDispatchOutcome)
+            or outcome.dispatcher_spec != self._financial_dispatcher.spec
+        ):
+            return self._failed(
+                case,
+                state,
+                EngineFailureCode.FINANCIAL_DISPATCH_FAILURE,
+                (FinancialDispatchFailureCode.DISPATCHER_SPEC_MISMATCH.value,),
+            )
+        if outcome.failure is not None:
+            return self._failed(
+                case,
+                state,
+                EngineFailureCode.FINANCIAL_DISPATCH_FAILURE,
+                (outcome.failure.code.value,) + outcome.failure.subject_ids,
+                (outcome.failure.failure_hash,),
+            )
+        result = outcome.result
+        if not isinstance(result, FinancialDispatchResult) or (
+            expected_snapshot is not None
+            and expected_snapshot != (result.snapshot is not None)
+        ):
+            return self._failed(
+                case,
+                state,
+                EngineFailureCode.FINANCIAL_DISPATCH_FAILURE,
+                (FinancialDispatchFailureCode.PROFILE_COMPONENT_FAILURE.value,),
+                (canonical_sha256(outcome),),
+            )
+        if expected_snapshot and result.journal_entries:
+            return self._failed(
+                case,
+                state,
+                EngineFailureCode.FINANCIAL_DISPATCH_FAILURE,
+                (FinancialDispatchFailureCode.SNAPSHOT_PROJECTION_FAILURE.value,),
+                (canonical_sha256(result),),
+            )
+        try:
+            for entry in result.journal_entries:
+                state.journal = state.journal.append(entry)
+        except JournalError:
+            return self._failed(
+                case,
+                state,
+                EngineFailureCode.FINANCIAL_DISPATCH_FAILURE,
+                (FinancialDispatchFailureCode.JOURNAL_APPEND_FAILURE.value,),
+                (canonical_sha256(result),),
+            )
+        state.lot_books = dict(result.position_lot_books)
+        existing_roles = {value.role for value in state.financial_artifacts}
+        if existing_roles.intersection(value.role for value in result.artifacts):
+            return self._failed(
+                case,
+                state,
+                EngineFailureCode.FINANCIAL_DISPATCH_FAILURE,
+                (FinancialDispatchFailureCode.ARTIFACT_COVERAGE_MISMATCH.value,),
+                (canonical_sha256(result.artifacts),),
+            )
+        state.financial_artifacts.extend(result.artifacts)
+        if result.journal_entries:
+            state.ledger_state = state.ledger.project(state.journal)
+            self._refresh_resources(case, state)
+        if result.snapshot is not None:
+            state.snapshot = result.snapshot
+        for artifact in result.artifacts:
+            self._trace_add(
+                state,
+                EngineStage.FINANCIAL_EVENT,
+                artifact.occurred_at,
+                artifact.source_event_id,
+                artifact.artifact_hash,
+            )
+        return None
 
     def _decision_cycle(
         self,
@@ -2394,41 +2572,35 @@ class DeterministicBarEngine:
         self._refresh_resources(case, state)
 
         accounting = plan.accounting_plan
-        open_lots = state.lot_books.get(accounting.position_key, ())
-        booked = CashInstrumentAccounting().book_fill(
-            fill=fill,
-            cash_key=accounting.cash_key,
-            position_key=accounting.position_key,
-            open_lots=open_lots,
-            cost_basis_policy=accounting.cost_basis_policy,
-            notional_quantization=accounting.notional_quantization,
-            journal_entry_id=accounting.fill_journal_entry_id,
-            recorded_at=accounting.fill_recorded_at,
+        dispatch = self._financial_dispatcher.book_fill(
+            accounting,
+            fill,
+            self._financial_state_view(state),
         )
-        if booked.result is None:
-            failure = cast(Any, booked.failure)
-            return self._failed(
-                case,
-                state,
-                EngineFailureCode.ACCOUNTING_FAILURE,
-                (failure.code.value, failure.subject_id),
-                (canonical_sha256(failure),),
-            )
-        state.journal = state.journal.append(booked.result.journal_entry)
-        state.lot_books[accounting.position_key] = booked.result.open_lots
+        failure = self._apply_financial_dispatch(
+            case,
+            state,
+            dispatch,
+            expected_snapshot=False,
+        )
+        if failure is not None:
+            return failure
+        if dispatch.result is None:
+            raise ValueError("successful financial dispatch lacks result")
         self._trace_add(
             state,
             EngineStage.FILL_ACCOUNTING,
             accounting.fill_recorded_at,
             accounting.fill_journal_entry_id.value,
-            canonical_sha256(booked.result),
+            canonical_sha256(dispatch.result),
         )
 
+        fee = accounting.fee_plan
         fee_outcome = FeeAssessmentEngine().assess(
             basis=FeeAssessmentBasisEvidence.for_fill(fill),
-            rule_set=accounting.final_fee_rule_set,
-            fee_assessment_id=accounting.fee_assessment_id,
-            assessment_time=accounting.fee_assessment_time,
+            rule_set=fee.final_fee_rule_set,
+            fee_assessment_id=fee.fee_assessment_id,
+            assessment_time=fee.fee_assessment_time,
         )
         if fee_outcome.result is None:
             failure = cast(Any, fee_outcome.failure)
@@ -2444,18 +2616,18 @@ class DeterministicBarEngine:
             state,
             EngineStage.FEE_ASSESSMENT,
             SimulationInstant(
-                accounting.fee_assessment_time,
-                accounting.fee_recorded_at.phase,
-                SourceSequence(max(0, accounting.fee_recorded_at.source_sequence.value - 1)),
+                fee.fee_assessment_time,
+                fee.fee_recorded_at.phase,
+                SourceSequence(max(0, fee.fee_recorded_at.source_sequence.value - 1)),
             ),
-            accounting.fee_assessment_id.value,
+            fee.fee_assessment_id.value,
             fee_outcome.result.result_hash,
         )
         fee_journal = FeeChargedJournalTranslator().translate(
             result=fee_outcome.result,
-            cash_key=accounting.cash_key,
-            journal_entry_id=accounting.fee_journal_entry_id,
-            recorded_at=accounting.fee_recorded_at,
+            cash_key=fee.cash_key,
+            journal_entry_id=fee.fee_journal_entry_id,
+            recorded_at=fee.fee_recorded_at,
         )
         if fee_journal.result is None:
             failure = cast(Any, fee_journal.failure)
@@ -2470,8 +2642,8 @@ class DeterministicBarEngine:
         self._trace_add(
             state,
             EngineStage.FEE_ACCOUNTING,
-            accounting.fee_recorded_at,
-            accounting.fee_journal_entry_id.value,
+            fee.fee_recorded_at,
+            fee.fee_journal_entry_id.value,
             fee_journal.result.result_hash,
         )
         state.ledger_state = state.ledger.project(state.journal)
@@ -2479,7 +2651,7 @@ class DeterministicBarEngine:
         self._trace_add(
             state,
             EngineStage.LEDGER_STATE,
-            accounting.fee_recorded_at,
+            fee.fee_recorded_at,
             state.snapshot.account_id,
             state.ledger_state.state_hash,
         )

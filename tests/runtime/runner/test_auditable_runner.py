@@ -52,6 +52,7 @@ FAILED_ENGINE_CODES = {
     EngineFailureCode.PRETRADE_CONTRACT_FAILURE,
     EngineFailureCode.FILL_CONSTRUCTION,
     EngineFailureCode.ACCOUNTING_FAILURE,
+    EngineFailureCode.FINANCIAL_DISPATCH_FAILURE,
     EngineFailureCode.FEE_ACCOUNTING_FAILURE,
     EngineFailureCode.CASE_EVIDENCE_MISMATCH,
 }

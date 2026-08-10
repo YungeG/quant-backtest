@@ -1,5 +1,5 @@
 {
-  "case_hash": "sha256:d405a464a9f397d426abe811f8ed3093167f2b440ebd25bf1889a5218e365e94",
+  "case_hash": "sha256:bb8fc4be36bc3fdfc4236237deace870c50513f1d4f2c3457d2c5d7f4bac4eb6",
   "decision_batch_id": "decision-batch-v1:sha256:c9126ea400897e9cd53d5bfa8640f6199db37db7a77435de15141d429d871d52",
   "fee": {
     "amount_scale": 2,
@@ -79,7 +79,7 @@
     "profile_version": 1,
     "simulation_profile_digest": "sha256:45915d737732c3d6b4a75f3b80049b0c8fd0abc0c64a415f69f5ddf33037974f"
   },
-  "result_hash": "sha256:49551f773b9fd4b8d2a4a7e59363239b13ffcdcb7963512964432b18c6f6a1e5",
+  "result_hash": "sha256:13a553b1ddf80220a4aca29cf8ecc044e5f30409dc977ad15981cb2ffb67024c",
   "run_end": {
     "closeout_mode": "mark_to_market",
     "closeout_status": "positions_preserved",
@@ -116,7 +116,7 @@
     ]
   },
   "target_stream_digest": "sha256:ead473aba908a5d2ace5745a648d357c16666c47a726743b86dbde42768a539f",
-  "trace_hash": "sha256:42dc24c31f1ad8f47b3ae4761fba02687d3132f4f933f8379b8350b159bc74f6",
+  "trace_hash": "sha256:d9bdf6b275c23bd2ebb95752dc8b68f577d7d38e026dba00cd4f2028b0488887",
   "trace_stages": [
     "timeline_event",
     "decision_batch",
@@ -134,10 +134,12 @@
     "execution_decision",
     "slippage",
     "fill",
+    "financial_event",
     "fill_accounting",
     "fee_assessment",
     "fee_accounting",
     "ledger_state",
+    "financial_event",
     "portfolio_snapshot",
     "run_end"
   ]

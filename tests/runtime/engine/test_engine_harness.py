@@ -122,13 +122,22 @@ def test_final_snapshot_evidence_mismatch_fails_structurally() -> None:
             for value in case.snapshot_plan.valuations
         ),
     )
-    outcome = DeterministicBarEngine().run(replace(case, snapshot_plan=bad_plan))
+    outcome = DeterministicBarEngine().run(
+        replace(
+            case,
+            snapshot_plan=bad_plan,
+            financial_dispatch_plan=replace(
+                case.financial_dispatch_plan,
+                final_snapshot_payload=bad_plan,
+            ),
+        )
+    )
 
     assert outcome.result is None
     assert outcome.engine_failure is not None
     assert (
         outcome.engine_failure.code
-        is EngineFailureCode.SNAPSHOT_PROJECTION_FAILURE
+        == EngineFailureCode.FINANCIAL_DISPATCH_FAILURE
     )
 
 

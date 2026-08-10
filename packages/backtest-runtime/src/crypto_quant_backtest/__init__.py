@@ -2,7 +2,6 @@
 
 from .composition import ExecutionCaseComposer
 from .engine import (
-    CashFillAccountingPlan,
     DeterministicBarEngine,
     EngineCancellation,
     EngineCancellationRequest,
@@ -38,6 +37,23 @@ from .evidence import (
     EvidenceWriteFailure,
     EvidenceWriteFailureCode,
     FinalizedAttemptEvidence,
+)
+from .financial_dispatch import (
+    CashFillAccountingPlan,
+    DefaultCashFinancialDispatcher,
+    FeeAccountingDispatchPlan,
+    FillAccountingDispatchPlan,
+    FinancialDispatchArtifact,
+    FinancialDispatchFailure,
+    FinancialDispatchFailureCode,
+    FinancialDispatchOutcome,
+    FinancialDispatchPlan,
+    FinancialDispatchResult,
+    FinancialDispatcherSpec,
+    FinancialEventDispatcher,
+    FinancialStateView,
+    ScheduledAccountEvent,
+    default_cash_financial_dispatcher_spec,
 )
 from .execution_hash import (
     AttemptExecutionHash,
@@ -261,6 +277,20 @@ __all__ = [
     "CanonicalResultPublisher",
     "CanonicalExecutionSummary",
     "CashFillAccountingPlan",
+    "DefaultCashFinancialDispatcher",
+    "FeeAccountingDispatchPlan",
+    "FillAccountingDispatchPlan",
+    "FinancialDispatchArtifact",
+    "FinancialDispatchFailure",
+    "FinancialDispatchFailureCode",
+    "FinancialDispatchOutcome",
+    "FinancialDispatchPlan",
+    "FinancialDispatchResult",
+    "FinancialDispatcherSpec",
+    "FinancialEventDispatcher",
+    "FinancialStateView",
+    "ScheduledAccountEvent",
+    "default_cash_financial_dispatcher_spec",
     "CloseoutPolicy",
     "DeterministicBarEngine",
     "DeterministicBpsSlippageModel",

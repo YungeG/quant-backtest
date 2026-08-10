@@ -1,5 +1,5 @@
 {
-  "case_hash": "sha256:b445b42147b77bd0b5d1d267a5f178d13f45f32d41cdc636eddc463ef0036690",
+  "case_hash": "sha256:2eefbaf92c312d623ce0ef65aacb90fe269fe234e8e0d41002aef41a3570cbf8",
   "counts": {
     "allocations": 1,
     "approved_targets": 1,
@@ -11,7 +11,7 @@
     "order_plans": 1,
     "order_streams": 1,
     "slippage_decisions": 1,
-    "trace_entries": 22
+    "trace_entries": 24
   },
   "final_ledger_state": {
     "cash_balances": [
@@ -208,7 +208,7 @@
   "fixture_id": "deterministic-engine-orchestration-v1",
   "journal_hash": "sha256:d039d79d7102af83205be8f4a9ce853e05e8b633359888800edc1213f563cfa3",
   "ledger_state_hash": "sha256:c26b0b2af14db37b1d2d6f93148a636c687dff9906ff1e675c72677b967fa5b4",
-  "result_hash": "sha256:87509b2dc808db465666d388d56bb5dd664516df31e143a4b839947092132a8e",
+  "result_hash": "sha256:153719f6f9a618c35cb81c82c0fb5bf7b21d71bf29c4b6e15fee05b1f9a14e13",
   "run_end_report": {
     "account_id": "account:primary",
     "closeout_component_ref": {
@@ -625,7 +625,7 @@
         "subject_id": "fil_2222222222222222222222222222222222222222222222222222222222222222"
       },
       {
-        "evidence_hash": "sha256:f72fbe070a40c48bff787b2be3dd329601d7af28b696a3b77e100748b737187c",
+        "evidence_hash": "sha256:6f861ee9eb35c091bc5043bbdfa7ee8774db24186ea5e6aff91bb7b5000d7aa4",
         "instant": {
           "instant": {
             "epoch_nanoseconds": 210,
@@ -643,6 +643,28 @@
           "type": "simulation_instant"
         },
         "sequence": 16,
+        "stage": "financial_event",
+        "subject_id": "engine-bar-open-200"
+      },
+      {
+        "evidence_hash": "sha256:3b468c0957e46a2cbbb102b43393c18bee9db03daaa1bcbc3d83a2bc3a6c85ff",
+        "instant": {
+          "instant": {
+            "epoch_nanoseconds": 210,
+            "type": "utc_instant"
+          },
+          "phase": {
+            "code": "accounting",
+            "rank": 90,
+            "type": "timeline_phase"
+          },
+          "source_sequence": {
+            "type": "source_sequence",
+            "value": 1
+          },
+          "type": "simulation_instant"
+        },
+        "sequence": 17,
         "stage": "fill_accounting",
         "subject_id": "jnl_3333333333333333333333333333333333333333333333333333333333333333"
       },
@@ -664,7 +686,7 @@
           },
           "type": "simulation_instant"
         },
-        "sequence": 17,
+        "sequence": 18,
         "stage": "fee_assessment",
         "subject_id": "fee_4444444444444444444444444444444444444444444444444444444444444444"
       },
@@ -686,7 +708,7 @@
           },
           "type": "simulation_instant"
         },
-        "sequence": 18,
+        "sequence": 19,
         "stage": "fee_accounting",
         "subject_id": "jnl_5555555555555555555555555555555555555555555555555555555555555555"
       },
@@ -708,9 +730,31 @@
           },
           "type": "simulation_instant"
         },
-        "sequence": 19,
+        "sequence": 20,
         "stage": "ledger_state",
         "subject_id": "account:primary"
+      },
+      {
+        "evidence_hash": "sha256:87d5553b358a4643e9e8d62ced68a0f09c9fda87ea9e0b8529d84691ef60d12e",
+        "instant": {
+          "instant": {
+            "epoch_nanoseconds": 300,
+            "type": "utc_instant"
+          },
+          "phase": {
+            "code": "accounting",
+            "rank": 90,
+            "type": "timeline_phase"
+          },
+          "source_sequence": {
+            "type": "source_sequence",
+            "value": 3
+          },
+          "type": "simulation_instant"
+        },
+        "sequence": 21,
+        "stage": "financial_event",
+        "subject_id": "engine-finalize"
       },
       {
         "evidence_hash": "sha256:17b397fdfd2c18dfa1ebd0c7a66cb43d06a7d3fabee7b81adb548b8da5b7472c",
@@ -730,7 +774,7 @@
           },
           "type": "simulation_instant"
         },
-        "sequence": 20,
+        "sequence": 22,
         "stage": "portfolio_snapshot",
         "subject_id": "account:primary"
       },
@@ -752,7 +796,7 @@
           },
           "type": "simulation_instant"
         },
-        "sequence": 21,
+        "sequence": 23,
         "stage": "run_end",
         "subject_id": "account:primary"
       }
@@ -760,5 +804,5 @@
     "schema_version": 1,
     "type": "execution_trace"
   },
-  "trace_hash": "sha256:42dc24c31f1ad8f47b3ae4761fba02687d3132f4f933f8379b8350b159bc74f6"
+  "trace_hash": "sha256:d9bdf6b275c23bd2ebb95752dc8b68f577d7d38e026dba00cd4f2028b0488887"
 }

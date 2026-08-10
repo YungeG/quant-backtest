@@ -16,13 +16,13 @@ from crypto_quant_trading import StrategyAllocation
 
 from .slippage import DeterministicBpsSlippageModel
 from .engine import (
-    CashFillAccountingPlan,
     ExecutionCaseIdentityFactory,
     ExecutionCaseIdentityRule,
     ExecutionCaseSemanticSpec,
     ResolvedExecutionCase,
     ResolvedOrderAdmission,
 )
+from .financial_dispatch import FillAccountingDispatchPlan, FinancialDispatchPlan
 from .resolution import ResolvedBacktestRequest
 from .timeline import DeterministicTimeline
 
@@ -113,17 +113,19 @@ def _decision_semantics(case: ResolvedExecutionCase) -> tuple[dict[str, object],
 
 
 def _accounting_plan_semantics(
-    plan: CashFillAccountingPlan,
+    plan: FillAccountingDispatchPlan,
 ) -> dict[str, object]:
+    fee = plan.fee_plan
     return {
-        "cash_key": plan.cash_key,
-        "position_key": plan.position_key,
-        "cost_basis_policy": plan.cost_basis_policy,
-        "notional_quantization": plan.notional_quantization,
+        "source_event_id": plan.source_event_id,
+        "position_accounting_component": plan.position_accounting_component,
+        "semantic_payload": plan.semantic_payload,
         "fill_recorded_at": plan.fill_recorded_at,
-        "final_fee_rule_set": plan.final_fee_rule_set,
-        "fee_assessment_time": plan.fee_assessment_time,
-        "fee_recorded_at": plan.fee_recorded_at,
+        "fee_cash_key": fee.cash_key,
+        "final_fee_rule_set": fee.final_fee_rule_set,
+        "fee_assessment_time": fee.fee_assessment_time,
+        "fee_recorded_at": fee.fee_recorded_at,
+        "expected_artifact_roles": plan.expected_artifact_roles,
     }
 
 
@@ -204,16 +206,35 @@ def _snapshot_semantics(snapshot: PortfolioSnapshot) -> dict[str, object]:
     }
 
 
+def _financial_dispatch_semantics(
+    plan: FinancialDispatchPlan,
+) -> dict[str, object]:
+    return {
+        "dispatcher_spec": plan.dispatcher_spec,
+        "scheduled_account_events": tuple(
+            {
+                "event_id": value.event_id,
+                "event_at": value.event_at,
+                "operation_key": value.operation_key,
+                "component_keys": value.component_keys,
+                "semantic_payload": value.semantic_payload,
+                "expected_artifact_roles": value.expected_artifact_roles,
+            }
+            for value in plan.scheduled_account_events
+        ),
+        "final_snapshot_payload": plan.final_snapshot_payload,
+        "expected_artifact_roles": plan.expected_artifact_roles,
+    }
+
+
 def _financial_semantics(case: ResolvedExecutionCase) -> dict[str, object]:
     financial = case.financial_state
     if (
-        financial.order_streams
-        or financial.reservation_schedules
-        or financial.settlement_book.obligations
+        financial.settlement_book.obligations
         or financial.settlement_book.events
     ):
         raise ValueError(
-            "ExecutionCaseSemanticSpec v1 requires pristine initial runtime state"
+            "ExecutionCaseSemanticSpec v1 requires pristine initial settlement state"
         )
     return {
         "journal_entries": tuple(
@@ -222,8 +243,39 @@ def _financial_semantics(case: ResolvedExecutionCase) -> dict[str, object]:
         "ledger_schema": financial.ledger_schema,
         "initial_snapshot": _snapshot_semantics(financial.initial_snapshot),
         "lot_books": financial.lot_books,
+        "initial_order_admissions": tuple(
+            _admission_semantics(value)
+            for value in sorted(
+                financial.order_admissions,
+                key=lambda admission: (
+                    admission.order.created_at,
+                    admission.order.intent.parent_id,
+                ),
+            )
+        ),
+        "initial_reservation_schedules": tuple(
+            {
+                "source_proposal_hash": value.source_proposal_hash,
+                "updates": tuple(
+                    {
+                        "event_type": update.event_type.value,
+                        "remaining_quantity": update.remaining_quantity,
+                        "commitment": update.commitment,
+                        "source_evidence_hash": update.source_evidence_hash,
+                    }
+                    for update in value.updates
+                ),
+            }
+            for value in sorted(
+                financial.reservation_schedules,
+                key=lambda schedule: schedule.source_proposal_hash,
+            )
+        ),
         "settlement_account_id": financial.settlement_book.account_id,
         "settlement_rules": financial.settlement_rules,
+        "financial_dispatch_plan": _financial_dispatch_semantics(
+            case.financial_dispatch_plan
+        ),
     }
 
 

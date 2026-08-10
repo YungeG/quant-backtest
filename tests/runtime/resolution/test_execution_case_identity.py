@@ -46,6 +46,8 @@ def _scrub_identity(value):
     if isinstance(value, list):
         return [_scrub_identity(item) for item in value]
     if isinstance(value, str):
+        if value.startswith("lot:"):
+            return "lot:" + _scrub_identity(value[4:])
         match = _DOMAIN_OR_EVENT_ID.fullmatch(value)
         if match is not None:
             return f"<{match.group(1)}_id>"
@@ -326,8 +328,11 @@ def test_runner_rejects_identity_role_swap_before_engine() -> None:
     accounting = execution.accounting_plan
     swapped_accounting = replace(
         accounting,
-        fill_journal_entry_id=accounting.fee_journal_entry_id,
-        fee_journal_entry_id=accounting.fill_journal_entry_id,
+        fill_journal_entry_id=accounting.fee_plan.fee_journal_entry_id,
+        fee_plan=replace(
+            accounting.fee_plan,
+            fee_journal_entry_id=accounting.fill_journal_entry_id,
+        ),
     )
     swapped_execution = replace(execution, accounting_plan=swapped_accounting)
     swapped = replace(case, bar_executions=(swapped_execution,))
