@@ -1380,6 +1380,12 @@ Linear Funding账户Cash exact为`-(signed eligibility quantity × contract mult
 
 属于 MarketSemanticsProfile，表达真实 Initial Margin、Maintenance Margin、保证金层级和强平条件，不包含 Bar 数据下的近似判断。
 
+G09E增加pure单Instrument Margin requirement seam。Caller提供signed Margin Exposure Quantity、historical account leverage evidence、historical Margin Rule Book、`PricePurpose.MARGIN` ResolvedMark、settlement Cash registration和conservative Money quantization；module不从current Position、Order、Working Order、symbol或provider current-tier API推导任何authority。
+
+对Quantity `q/Q`、positive contract multiplier `m/M`和positive Margin Mark `p/P`，exact absolute notional为`abs(q)*m*p/(Q*M*P)`。Selected leverage `l/L`下initial requirement exact为`notional*L/l`；selected leverage不得超过resolved tier maximum。Maintenance requirement exact为`notional*maintenance_rate-maintenance_deduction`，不得为负。Tier按未量化notional使用lower-inclusive/upper-exclusive区间选择，随后Initial与Maintenance各只在自身Money boundary执行一次`round_ratio(..., CEILING)`。
+
+Historical leverage和Rule interval均按`SimulationInstant` availability fail closed；Rule timeline缺口、重叠、tier order/gap/overlap或未来/current rule回填历史均不能产生Requirement。G09E只返回单Instrument exact/quantized Initial与Maintenance结果，不创建Reservation、不读取Ledger/Snapshot Equity、不聚合账户、不决定Available Margin或Liquidation；这些分别由G09F/G09G拥有。G10C/G10F后续Adapter可把provider tier `maximum leverage`、maintenance ratio/deduction与account leverage evidence映射到该generic seam，但不得在G09E加入provider分支。
+
 ### 11.13 LiquidationAuditModel
 
 属于 SimulationProfile，决定如何根据当前数据粒度检查真实 LiquidationRules。

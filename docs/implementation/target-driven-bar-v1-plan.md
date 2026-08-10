@@ -1459,6 +1459,16 @@ Funding Mark必须在target Funding UTC以`PricePurpose.FUNDING`解析，Instrum
 - 缺失/重叠 tier fail closed；
 - 不回退到当前交易所 tier。
 
+冻结实现 seam：G09E只新增pure `crypto_quant_trading.margin`并结构化实现既有`MarginModel`。Request exact消费Position key、完整G09A Contract、caller-supplied signed Margin Exposure Quantity、evaluated-at、optional historical leverage evidence、optional historical Margin Rule Book、optional Margin Mark evidence、settlement Cash registration和requirement QuantizationPolicy；optional只用于structured missing-evidence failure。它不读取current Position/Ledger/Portfolio/Order/Working Order，也不创建Reservation或账户Projection。
+
+Historical leverage evidence绑定Account、Instrument、selected leverage、半开effective interval、完整`SimulationInstant` available-at与source key/hash。Rule Book绑定Instrument、settlement Currency、authoritative tier Scale和caller-injected historical intervals；每个interval保存半开effective range、full availability、source identity和ordered Tiers。查询必须命中唯一effective interval且evidence已available；历史缺口即使存在later/current interval也fail closed，重叠不按版本、顺序或最新来源猜测。
+
+Margin Tier以exact Money floor与optional cap定义lower-inclusive/upper-exclusive notional区间，并保存maximum leverage、maintenance margin rate和nonnegative maintenance deduction。Tier集合必须按floor严格递增，从zero连续覆盖到unbounded；order mismatch、gap、overlap、Currency/Scale/Basis mismatch分别按frozen precedence失败。Provider `initialLeverage`、maintenance ratio与`cum`等字段只能由G10C Adapter显式映射为generic maximum leverage/rate/deduction；G09E不识别provider字段或symbol。
+
+对signed Quantity `q/Q`、positive multiplier `m/M`和positive `PricePurpose.MARGIN` Mark `p/P`，exact notional为`abs(q)*m*p/(Q*M*P)`。Selected leverage `l/L`下Initial exact为`notional*L/l`；Maintenance exact为`notional*rate-deduction`。Tier选择使用未量化notional；selected leverage不得超过tier maximum；negative Maintenance fail closed。Initial/Maintenance各自只调用一次public `round_ratio(exact*target_scale.factor, denominator, CEILING)`，禁止float/Decimal、pre-quantization、FX或隐式rescale。
+
+Result保存component、完整Request/hash、resolved historical Interval/Tier、exact notional、exact Initial/Maintenance及quantized Money。G09E不聚合Equity、Unrealized PnL、Fee/Funding、跨Instrument requirement或Working Order reservation，不写Journal/Ledger，也不决定Available Margin/Liquidation；G09F/G09G拥有这些后续语义。
+
 ### Gate G09F Cross-account Margin Projection
 
 依赖：G09B、G09E、ReservationBook。

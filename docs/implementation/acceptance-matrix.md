@@ -122,7 +122,7 @@ artifact_hashes: []
 | G09B | PASSED | trading-kernel derivative accounting | G09A, G03 | none |
 | G09C | PASSED | trading-kernel funding eligibility | G09A, G09B, WP-06A, WP-06B | none |
 | G09D | PASSED | trading-kernel financing/accounting | G09B–G09C | none |
-| G09E | DRAFT | trading-kernel margin | G09A | Instrument margin fixtures |
+| G09E | READY | trading-kernel margin requirement | G09A | none |
 | G09F | DRAFT | trading-kernel margin | G09B, G09E, WP-05B | Cross-margin fixtures |
 | G09G | DRAFT | backtest-runtime liquidation audit | G09E–G09F | SAFE/AMBIGUOUS fixtures |
 | G09H | DRAFT | tests/support + profile composition | G09A–G09G | Synthetic perpetual E2E |
@@ -6876,16 +6876,109 @@ uv lock --check                                                     PASS
 Python                                                               3.13.5
 ```
 
-## 73. G09E–G09H Readiness Blockers
+## 73. G09E Instrument Margin Requirement Acceptance Card
 
-G09E–G09H 保持 `DRAFT`。当前 blockers：
+```yaml
+id: G09E
+status: READY
+depends_on:
+  - G09A
+owner_package: trading-kernel margin requirement
+public_interface:
+  - crypto_quant_trading.LinearMarginLeverageEvidence
+  - crypto_quant_trading.LinearMarginTier
+  - crypto_quant_trading.LinearMarginRuleInterval
+  - crypto_quant_trading.LinearMarginRuleBook
+  - crypto_quant_trading.LinearMarginMarkEvidence
+  - crypto_quant_trading.ExactLinearMarginAmount
+  - crypto_quant_trading.LinearInstrumentMarginRequest
+  - crypto_quant_trading.LinearInstrumentMarginResult
+  - crypto_quant_trading.LinearInstrumentMarginFailureCode
+  - crypto_quant_trading.LinearInstrumentMarginFailure
+  - crypto_quant_trading.LinearInstrumentMarginModel
+  - static synthetic linear-margin-requirement golden fixture v1
+test_commands:
+  contract: uv run pytest -q tests/kernel/derivatives/test_linear_margin_requirement.py
+  fixture: uv run pytest -q tests/kernel/derivatives/test_linear_margin_requirement_golden.py
+  boundary: uv run pytest -q tests/architecture/test_public_api_imports.py tests/architecture/test_network_isolation.py tests/architecture/test_repository_cleanliness.py tests/architecture/test_derivative_boundary.py tests/kernel/derivatives/test_linear_positions.py tests/kernel/derivatives/test_linear_derivative_accounting.py tests/kernel/derivatives/test_linear_funding_eligibility.py tests/kernel/derivatives/test_linear_funding_accounting.py tests/kernel/marks/test_mark_resolver.py tests/kernel/reservations/test_resource_reservation_book.py tests/kernel/pretrade_risk/test_pretrade_risk.py tests/kernel/ledger/test_generic_ledger.py && uv run python tools/architecture/check_import_boundaries.py --root . --policy architecture/import-boundaries.toml --report build/acceptance/g09e-import-boundary-report.json
+fixture_ids:
+  - synthetic-linear-margin-requirement-v1
+expected_artifacts:
+  - tests/fixtures/kernel/derivatives/linear-margin-requirement-v1.json
+  - build/acceptance/g09e-pytest.xml
+  - build/acceptance/g09e-import-boundary-report.json
+failure_contracts:
+  - current-position-order-working-order-or-target-is-used-as-implicit-margin-exposure
+  - current-account-leverage-or-current-exchange-tier-backfills-a-historical-gap
+  - historical-leverage-or-rule-evidence-is-used-before-full-availability
+  - rule-interval-or-notional-tier-gap-overlap-or-order-is-guessed
+  - contract-multiplier-is-omitted-from-margin-notional
+  - signed-short-quantity-produces-negative-notional
+  - margin-mark-uses-non-margin-purpose-wrong-context-or-post-evaluation-observation
+  - notional-is-quantized-before-tier-selection
+  - selected-leverage-exceeds-the-resolved-tier-maximum
+  - maintenance-rate-or-deduction-produces-a-negative-requirement
+  - initial-or-maintenance-margin-is-rounded-down-or-rounded-more-than-once
+  - settlement-cash-account-venue-currency-or-scale-is-inferred-or-rescaled
+  - result-aggregates-equity-unrealized-pnl-fee-funding-or-working-order-reservation
+  - result-mutates-journal-ledger-portfolio-rulebook-mark-or-leverage-authority
+  - provider-symbol-tier-api-current-config-or-liquidation-semantics-leak-into-g09e
+allowed_grade: development
+evidence:
+  - pytest-report
+  - static-linear-margin-requirement-golden-hash
+  - historical-leverage-and-rule-interval-identity-evidence
+  - exact-multiplier-aware-notional-evidence
+  - lower-inclusive-upper-exclusive-tier-boundary-evidence
+  - tier-order-gap-overlap-and-current-fallback-rejection
+  - exact-initial-and-maintenance-requirement-evidence
+  - maintenance-rate-and-deduction-evidence
+  - margin-purpose-mark-and-stale-policy-evidence
+  - conservative-ceiling-quantization-evidence
+  - long-short-flat-and-scale-adversarial-controls
+  - no-account-aggregation-reservation-liquidation-or-runtime-mutation
+  - import-boundary-report
+  - static-type-report
+passed_commit: null
+artifact_hashes: []
+```
 
-1. G09E 必须冻结 caller-injected historical leverage/tier RuleBook、multiplier-aware notional公式、initial/maintenance requirement、tier boundary/gap/overlap precedence 和 current-tier fallback rejection；
-2. G09F 必须冻结单 Execution Account Equity、Derivative unrealized PnL、Fee/Funding、Maintenance Margin、Working Order Reservation 的 authoritative inputs与独立 immutable `MarginProjection`；不得把 Margin 数值塞入 Generic Ledger balance；
-3. G09G 必须冻结 Liquidation Mark Bar evidence、long-low/short-high conservative evaluation、`SAFE`/`AMBIGUOUS_BREACH` canonical audit与 decision-grade fail-closed routing；
-4. G09H 必须冻结 branchless injected composition、Synthetic E2E commands/artifacts、Journal/MarginProjection/PortfolioSnapshot reconstruction与 development-only limitation；Generic Engine accounting/event dispatch 尚不能按 resolved profile 注入 derivative accounting，因此不得提前组合。
+### G09E Acceptance
 
-## 74. PASSED 记录格式
+1. G09E只新增pure `crypto_quant_trading.margin` deep module与必要root exports；不得新增Port、Profile、Adapter、Package、依赖，或修改Generic Ledger、SnapshotProjector、ReservationBook、PreTradeRiskEvaluator、Engine、Runner、Timeline。`LinearInstrumentMarginModel.evaluate_margin(request)`结构化实现既有`MarginModel`，exact消费`LinearInstrumentMarginRequest`并返回`ProfilePortOutcome[LinearInstrumentMarginResult, LinearInstrumentMarginFailure]`；它不读取或mutate Journal/Ledger/Portfolio/Reservation authority；
+2. `LinearInstrumentMarginRequest` exact保存Position key、完整G09A Contract、caller-supplied signed `exposure_quantity: Quantity`、`evaluated_at: SimulationInstant`、optional `LinearMarginLeverageEvidence`、optional `LinearMarginRuleBook`、optional `LinearMarginMarkEvidence`、settlement Cash `LedgerBalanceRegistration`与`requirement_quantization: QuantizationPolicy`。Exposure Quantity只声明本次单Instrument requirement评估对象；G09E不从current Position、Order、Working Order、Target、Fill或average-entry basis推导它；
+3. `LinearMarginLeverageEvidence` exact保存account ID、Instrument ID、selected leverage、半开`effective_from/effective_to_exclusive`、完整`available_at: SimulationInstant`与source key/hash。Selected leverage basis frozen为`notional_per_initial_margin`。Evidence必须context匹配Request，在`evaluated_at.instant`有效且完整available-at不晚于evaluated-at；later/current account leverage不能回填历史；
+4. `LinearMarginTier` exact保存stable `tier_id`、settlement-currency `notional_floor: Money`、optional `notional_cap: Money`、`maximum_leverage: Rate`、`maintenance_margin_rate: Rate`与nonnegative `maintenance_margin_deduction: Money`。Tier区间exact为lower-inclusive/upper-exclusive；maximum leverage basis为`notional_per_initial_margin`，maintenance basis为`maintenance_margin_fraction_of_notional`。Deduction是从`notional × maintenance rate`减去的固定累计额，不是Fee、Funding或Cash movement；
+5. `LinearMarginRuleInterval` exact保存stable interval ID、半开effective UTC interval、完整`available_at: SimulationInstant`、caller-ordered Tier tuple与source key/hash。`LinearMarginRuleBook` exact保存rule-book key/version、Instrument、settlement Currency、authoritative tier Scale、按`(effective_from,effective_to_exclusive-or-unbounded,interval_id)`排序的historical Interval tuple与config hash。RuleBook constructor只验证exact types/canonical/hash shape、规范化Interval顺序并保留可结构化评估的gap/overlap/tier defects；Model在Request时间解析；
+6. Historical Rule resolution exact使用`evaluated_at.instant`查找effective Interval：zero active返回`MISSING_HISTORICAL_RULE`，multiple active返回`OVERLAPPING_HISTORICAL_RULES`，unique Interval的full availability晚于evaluated-at返回`HISTORICAL_RULE_NOT_AVAILABLE`。禁止选择最近过去、最近未来、tuple最后一项、最高version或caller当前API Tier作为fallback；
+7. Resolved Interval的Tier tuple必须按notional floor严格递增，第一项floor exact为zero，相邻`previous.cap == next.floor`，最后一项cap为None。Tuple order错误、首尾/相邻缺口和相邻重叠分别返回`TIER_ORDER_MISMATCH`、`TIER_GAP`、`TIER_OVERLAP`；所有floor/cap/deduction Currency与Scale必须匹配RuleBook，Rate basis必须匹配frozen basis。只有完整Tier集合通过后才按未量化exact notional选择唯一Tier；
+8. `LinearMarginMarkEvidence` exact只保存完整`ResolvedMark`与完整`StaleMarkPolicy`。Mark与Policy purpose必须为`PricePurpose.MARGIN`；Instrument、quote/settlement Currency、Price Scale匹配Contract；Price strictly positive；`resolved_at == evaluated_at.instant`；authoritative`ResolvedMark.available_at <= evaluated_at.instant`。Policy key/version/hash、age equality、max-age与forward-fill allowance全部重新验证；Valuation、Funding、Settlement、Liquidation、execution/trade/bar price不得替代；
+9. 若signed exposure Quantity为`q/Q`、positive contract multiplier为`m/M`、positive Margin Mark为`p/P`，exact settlement-currency notional为`N=abs(q)*m*p/(Q*M*P)`。`ExactLinearMarginAmount`保存Currency、GCD-reduced signed numerator与positive denominator；notional与成功requirements均nonnegative，zero canonical为`0/1`；禁止float、Decimal、Money pre-quantization或从average-entry basis推导notional；
+10. Selected leverage为`l/L`时Initial Margin exact为`I=N*L/l`。Resolved Tier maximum leverage为`u/U`，必须以cross-multiplication验证`l/L <= u/U`；超过返回`LEVERAGE_EXCEEDS_TIER_MAXIMUM`，不得clamp到maximum或选择其他Tier；
+11. Resolved Tier maintenance rate为`r/R`、deduction Money为`c/C`时Maintenance Margin exact为`M=N*r/R-c/C`，以共同denominator GCD约分。若exact结果为负返回`NEGATIVE_MAINTENANCE_REQUIREMENT`；不得隐式clamp为zero。Provider `cum`或等价字段只能由后续Adapter显式映射为maintenance deduction；
+12. Tier选择前不得quantize notional。Initial和Maintenance各自在自己的Money boundary恰好调用一次public `round_ratio(exact.numerator * target_scale.factor, exact.denominator, RoundingPolicy.CEILING)`；`requirement_quantization.rounding`非CEILING返回`UNSAFE_MARGIN_ROUNDING`。Quantity、multiplier、Mark、leverage、rate、deduction与中间值不得提前round、aggregate或隐式rescale；
+13. Settlement Cash registration必须是exact account/Venue/Contract settlement Currency的`CashBalanceKey`，Registration Scale等于Quantization target Scale。Initial/Maintenance Money Currency与Scale仅由该authority决定；不执行FX、stablecoin peg、cross-collateral haircut或从Mark/Rule阈值自行选择Scale；
+14. Result exact保存component ref、完整Request/request hash、resolved historical Interval/Tier、exact Notional、exact Initial/Maintenance与quantized Initial/Maintenance Money。Result不返回Equity、Available Margin、Margin Ratio、Unrealized PnL、Fee、Funding、Reservation、Liquidation status或Journal/Ledger effect；G09F才聚合单Execution Account，G09G才评估Liquidation；
+15. Business failure enum与first-failure precedence exact为：`MISSING_LEVERAGE_EVIDENCE` → `MISSING_MARGIN_RULE_BOOK` → `MISSING_MARGIN_MARK` → `POSITION_CONTEXT_MISMATCH` → `LEVERAGE_CONTEXT_MISMATCH` → `UNSUPPORTED_LEVERAGE_BASIS` → `NON_POSITIVE_LEVERAGE` → `LEVERAGE_NOT_EFFECTIVE` → `LEVERAGE_NOT_AVAILABLE` → `RULE_BOOK_CONTEXT_MISMATCH` → `MISSING_HISTORICAL_RULE` → `OVERLAPPING_HISTORICAL_RULES` → `HISTORICAL_RULE_NOT_AVAILABLE` → `TIER_ORDER_MISMATCH` → `TIER_CONTEXT_MISMATCH` → `TIER_GAP` → `TIER_OVERLAP` → `UNSUPPORTED_TIER_BASIS` → `MARGIN_MARK_PURPOSE_MISMATCH` → `MARGIN_MARK_CONTEXT_MISMATCH` → `MARGIN_MARK_INSTANT_MISMATCH` → `MARGIN_MARK_SCALE_MISMATCH` → `NON_POSITIVE_MARGIN_MARK` → `MARGIN_MARK_POLICY_MISMATCH` → `MARGIN_MARK_NOT_AVAILABLE` → `LEVERAGE_EXCEEDS_TIER_MAXIMUM` → `NEGATIVE_MAINTENANCE_REQUIREMENT` → `SETTLEMENT_CASH_CONTEXT_MISMATCH` → `QUANTIZATION_SCALE_MISMATCH` → `UNSAFE_MARGIN_ROUNDING`；wire values为对应lower-snake-case；多缺陷只返回第一项；
+16. Exact failure predicates分别为：(1–3) optional evidence缺失；(4) Position key/Quantity/Contract的account、Venue、Instrument或Quantity Scale不一致；(5) leverage account/Instrument context不一致；(6–7) selected leverage basis错误或units非正；(8) evaluated UTC不在leverage半开effective interval；(9) leverage full available-at晚于evaluated-at；(10) RuleBook Instrument/settlement Currency/tier Scale不匹配Contract；(11–13) historical active Interval zero/multiple/未available；(14) Tier floor tuple非严格递增；(15) Tier floor/cap/deduction Currency或Scale不匹配RuleBook；(16) first floor非zero、final cap非None或相邻cap小于next floor；(17) 相邻cap大于next floor；(18) maximum leverage或maintenance Rate basis错误；(19–25) Margin Mark purpose/context/instant/Scale/positivity/Policy/availability错误；(26) selected leverage大于resolved maximum；(27) maintenance exact为负；(28) Cash key非exact account/Venue/settlement Currency或不是Cash key；(29) Quantization target Scale不等于Registration Scale；(30) rounding非CEILING。Candidate exact type、canonical text/hash、interval nonempty、nonnegative Tier thresholds/rates/deduction、positive denominator等shape错误是constructor`TypeError`/`ValueError`，不是business failure；
+17. Failure exact保存component、完整Request/request hash、code与ordered `subject_ids=(code.value, position_key.account_id, str(contract.instrument.instrument_id), leverage.source_key or "missing-margin-leverage", rule_book.rule_book_key or "missing-margin-rule-book", interval.interval_id or "missing-margin-rule-interval", tier.tier_id or "missing-margin-tier", mark.mark_id or "missing-margin-mark")`并从Request重算first failure与resolved subjects；`ProfilePortOutcome` component/input hash与exactly-one Result/Failure必须匹配；
+18. Component ref exact使用`ProfilePortType.MARGIN_MODEL`、key `instrument.linear-perpetual.margin-requirement.v1`、version 1。Digest preimage exact为`{type="linear_margin_requirement_component",schema_version=1,component_key,component_version=1,algorithm_key="linear-instrument-margin-requirement-v1",exposure="caller-supplied-signed-quantity",notional="abs(quantity)*multiplier*margin_mark",tier_interval="lower-inclusive-upper-exclusive",rule_resolution="exact-one-historical-interval",initial_margin="notional/selected_leverage",maintenance_margin="notional*maintenance_rate-maintenance_deduction",quantization="independent-ceiling-boundaries",allowed_grade="development"}`；
+19. Canonical preimages exact为：Leverage Evidence `{type="linear_margin_leverage_evidence",schema_version,account_id,instrument_id,selected_leverage,effective_from,effective_to_exclusive,available_at,source_key,source_hash}`；Tier `{type="linear_margin_tier",schema_version,tier_id,notional_floor,notional_cap,maximum_leverage,maintenance_margin_rate,maintenance_margin_deduction}`；Interval `{type="linear_margin_rule_interval",schema_version,interval_id,effective_from,effective_to_exclusive,available_at,tiers,source_key,source_hash}`；RuleBook config `{type="linear_margin_rule_book_config",schema_version,rule_book_key,rule_book_version,instrument_id,settlement_currency_id,tier_scale,intervals}`，`config_hash=canonical_sha256(config)`；RuleBook `{type="linear_margin_rule_book",schema_version,rule_book_key,rule_book_version,instrument_id,settlement_currency_id,tier_scale,intervals,config_hash}`；Mark Evidence `{type="linear_margin_mark_evidence",schema_version,resolved_mark,stale_policy}`；Exact Amount `{type="exact_linear_margin_amount",schema_version,currency_id,numerator,denominator}`；Request `{type="linear_instrument_margin_request",schema_version,position_key,contract,exposure_quantity,evaluated_at,leverage_evidence,rule_book,margin_mark_evidence,settlement_cash_registration,requirement_quantization}`；Result `{type="linear_instrument_margin_result",schema_version,component_ref,request,request_hash,resolved_interval,resolved_tier,exact_notional,exact_initial_margin,exact_maintenance_margin,initial_margin,maintenance_margin}`；Failure `{type="linear_instrument_margin_failure",schema_version,component_ref,request,request_hash,code,subject_ids}`；其余hash exact为`canonical_sha256(value)`；
+20. Static golden沿用G09A synthetic Contract：multiplier `0.125`、Quantity Scale 3、Margin Mark `100.00 USDT`、settlement Scale 2、selected leverage `10`。至少冻结Long/Short相同absolute notional、Flat zero、`1.000` contracts notional `12.5`、tier boundary `4.000` contracts exact notional `50`、below/at/above boundary、maximum leverage equality/exceed、maintenance rate/deduction连续控制、CEILING sub-cent、large integer/no-pre-quantization、historical interval boundary/full availability、past gap with later/current interval rejection、interval overlap、tier order/gap/overlap、全部30 failures与multi-defect precedence、constructor/hash/config forgery、same Request idempotency、input/module authority不变；
+21. Purity扩展derivative scanner显式扫描`margin.py`，只允许stdlib、`crypto_quant_domain`、frozen G09A derivatives、marks、generic Ledger registration与Ports imports；拒绝filesystem、network/provider/process/database/cloud、dynamic import、MarketBundle/Runtime/Profile import、mutable module/class/decorator state与wall clock。Generic Ledger、SnapshotProjector、ReservationBook、PreTradeRiskEvaluator、Engine、Runner、Timeline不得出现`LinearMargin`/`LinearInstrumentMargin`/`ExactLinearMargin` branch或reference；既有generic `margin` Money字段不因此被禁止；
+22. G09E不拥有account Equity、Available Margin、Margin Ratio、Derivative Unrealized PnL、Fee/Funding aggregate、Working Order Reservation、cross-Instrument/cross-Venue/cross-account collateral、isolated/cross mode、Liquidation、bankruptcy、provider tier query/current config、Runtime dispatch、真实交易、result grade或deployment authorization。G09F拥有单Execution Account aggregate，G09G拥有conservative Liquidation audit；G10C/G10F拥有provider tier/leverage source mapping。若provider需要不同notional basis、maintenance formula或availability语义，必须由Adapter明确映射或先把G09E退回DRAFT，不能在Model加入provider分支。
+
+G09E的single-Instrument exposure、historical leverage/rule resolution、multiplier-aware exact notional、tier boundary、Initial/Maintenance公式、maintenance deduction与CEILING Money boundary已冻结。无需选择具体provider即可实现synthetic development-grade seam；G10C/G10F只能映射source facts，不能改写这些generic economics。
+
+## 74. G09F–G09H Readiness Blockers
+
+G09F–G09H保持`DRAFT`。当前blockers：
+
+1. G09F必须冻结单Execution Account Equity、Derivative unrealized PnL、Fee/Funding、Maintenance Margin、Working Order Reservation的authoritative inputs与独立immutable `MarginProjection`；不得把Margin数值塞入Generic Ledger balance；
+2. G09G必须冻结Liquidation Mark Bar evidence、long-low/short-high conservative evaluation、`SAFE`/`AMBIGUOUS_BREACH` canonical audit与decision-grade fail-closed routing；
+3. G09H必须冻结branchless injected composition、Synthetic E2E commands/artifacts、Journal/MarginProjection/PortfolioSnapshot reconstruction与development-only limitation；Generic Engine accounting/event dispatch尚不能按resolved profile注入derivative accounting，因此不得提前组合。
+
+## 75. PASSED 记录格式
 
 ```yaml
 id: WP-00A

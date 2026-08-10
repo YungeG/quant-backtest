@@ -335,6 +335,30 @@ Price 或 Market Event Stream 在预期覆盖区间中的缺失，并具有明�
 
 绑定 G09B authoritative Journal、最大 `recorded_at < eligibility_instant` cursor/prefix 与重放后 `LinearPositionState` 的历史资格证据。Snapshot available 后的 current close、flip 或其他 Position 不能替代 cutoff State。
 
+## Instrument Margin Exposure Quantity
+
+Caller要求评估Initial/Maintenance Margin的单Instrument signed Quantity。其绝对值决定margin notional；它不声明自己来自当前Position、Order、Working Order或Target，来源组合由后续Gate拥有。
+
+## Historical Margin Rule Book
+
+按半开生效区间保存Instrument Margin Tier历史事实的immutable RuleBook。查询时必须命中唯一historical interval；缺口、重叠或用当前tier回填历史都必须fail closed。
+
+## Margin Tier
+
+按exact settlement-currency notional半开区间定义maximum leverage、maintenance margin rate和maintenance deduction的历史规则层级。Tier选择发生在notional量化之前。
+
+## Initial Margin Requirement
+
+单Instrument exposure notional按caller提供的historical selected leverage计算出的最低初始抵押要求。它不是账户Available Margin，也不证明订单可接受。
+
+## Maintenance Margin Requirement
+
+单Instrument exposure按historical Margin Tier计算出的最低持续抵押要求。它不包含账户Equity聚合、跨Instrument净额或Liquidation结论。
+
+## Maintenance Margin Deduction
+
+Margin Tier中从`notional × maintenance margin rate`扣除的非负累计固定额，用于表达连续的分层Maintenance Margin曲线；它不是Fee、Funding或Cash movement。
+
 ## 资格时点（Eligibility Instant）
 
 决定某个 Position 是否参与 Funding、分红或其他离散经济事件的规范模拟时点。
