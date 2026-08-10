@@ -1,0 +1,175 @@
+{
+  "cases": {
+    "above_tier_boundary": {
+      "config_hash": "sha256:78c801cd8279d79e3c750b64799955674c6bd3f4a8f59be758b91f6ac65f829a",
+      "exact_initial_margin": [
+        4001,
+        800
+      ],
+      "exact_maintenance_margin": [
+        2001,
+        4000
+      ],
+      "exact_notional": [
+        4001,
+        80
+      ],
+      "initial_margin_units": 501,
+      "interval_hash": "sha256:69495ad82e96a2120ea8f741de1a446a0c54d8f3afd19601d5ee25f50206913c",
+      "leverage_hash": "sha256:60db40c32e0126ef22968065f8cfdf303a08717032c83fe5cd912cd84f6a695c",
+      "maintenance_margin_units": 51,
+      "mark_evidence_hash": "sha256:21d2a6005156f680dff3d20358a65891ddfedc3bbac3e7ae0621e2a92a8c8e09",
+      "quantity_units": 4001,
+      "request_hash": "sha256:5282e105dda33e31d0af75ad167fe25e350e5a9de825c0cce9ffb26c62bf8bc5",
+      "result_canonical_hash": "sha256:ee86a872174c413635a16612b8b203dafbece2b6ec18affdcf83103f7ee50104",
+      "result_hash": "sha256:ee86a872174c413635a16612b8b203dafbece2b6ec18affdcf83103f7ee50104",
+      "rule_book_hash": "sha256:2f4bffc82560866b4f5b882b2eace9b343e03293f0dfcab13aab4c3a4fb7e863",
+      "tier_hash": "sha256:ea86dfc287c178d0804d61da1786a8eafe34f8824057e177d25a80cf704952be",
+      "tier_id": "synthetic-margin-tier-2"
+    },
+    "at_tier_boundary": {
+      "config_hash": "sha256:78c801cd8279d79e3c750b64799955674c6bd3f4a8f59be758b91f6ac65f829a",
+      "exact_initial_margin": [
+        5,
+        1
+      ],
+      "exact_maintenance_margin": [
+        1,
+        2
+      ],
+      "exact_notional": [
+        50,
+        1
+      ],
+      "initial_margin_units": 500,
+      "interval_hash": "sha256:69495ad82e96a2120ea8f741de1a446a0c54d8f3afd19601d5ee25f50206913c",
+      "leverage_hash": "sha256:60db40c32e0126ef22968065f8cfdf303a08717032c83fe5cd912cd84f6a695c",
+      "maintenance_margin_units": 50,
+      "mark_evidence_hash": "sha256:21d2a6005156f680dff3d20358a65891ddfedc3bbac3e7ae0621e2a92a8c8e09",
+      "quantity_units": 4000,
+      "request_hash": "sha256:7f7b60ab4e58fa4ac9a84ed1c682ea78cf3efa0f410ca40a7d397a1188fb5490",
+      "result_canonical_hash": "sha256:49c411aad0992bce74948b54187d86f6982f194ef4fd1843a41d66d60579eb2b",
+      "result_hash": "sha256:49c411aad0992bce74948b54187d86f6982f194ef4fd1843a41d66d60579eb2b",
+      "rule_book_hash": "sha256:2f4bffc82560866b4f5b882b2eace9b343e03293f0dfcab13aab4c3a4fb7e863",
+      "tier_hash": "sha256:ea86dfc287c178d0804d61da1786a8eafe34f8824057e177d25a80cf704952be",
+      "tier_id": "synthetic-margin-tier-2"
+    },
+    "below_tier_boundary": {
+      "config_hash": "sha256:78c801cd8279d79e3c750b64799955674c6bd3f4a8f59be758b91f6ac65f829a",
+      "exact_initial_margin": [
+        3999,
+        800
+      ],
+      "exact_maintenance_margin": [
+        3999,
+        8000
+      ],
+      "exact_notional": [
+        3999,
+        80
+      ],
+      "initial_margin_units": 500,
+      "interval_hash": "sha256:69495ad82e96a2120ea8f741de1a446a0c54d8f3afd19601d5ee25f50206913c",
+      "leverage_hash": "sha256:60db40c32e0126ef22968065f8cfdf303a08717032c83fe5cd912cd84f6a695c",
+      "maintenance_margin_units": 50,
+      "mark_evidence_hash": "sha256:21d2a6005156f680dff3d20358a65891ddfedc3bbac3e7ae0621e2a92a8c8e09",
+      "quantity_units": 3999,
+      "request_hash": "sha256:3d41604ed3c16e53627d954b723a9401f2fd0bcc80d757c3463922080631b34a",
+      "result_canonical_hash": "sha256:780004bf86485107a756724edc90eb2f838174895abd5977b009c2d73665dd34",
+      "result_hash": "sha256:780004bf86485107a756724edc90eb2f838174895abd5977b009c2d73665dd34",
+      "rule_book_hash": "sha256:2f4bffc82560866b4f5b882b2eace9b343e03293f0dfcab13aab4c3a4fb7e863",
+      "tier_hash": "sha256:075ab209c431752227d38a76943e83f1914ffb3cb1775c2acb7cd6732806e9cb",
+      "tier_id": "synthetic-margin-tier-1"
+    },
+    "flat": {
+      "config_hash": "sha256:78c801cd8279d79e3c750b64799955674c6bd3f4a8f59be758b91f6ac65f829a",
+      "exact_initial_margin": [
+        0,
+        1
+      ],
+      "exact_maintenance_margin": [
+        0,
+        1
+      ],
+      "exact_notional": [
+        0,
+        1
+      ],
+      "initial_margin_units": 0,
+      "interval_hash": "sha256:69495ad82e96a2120ea8f741de1a446a0c54d8f3afd19601d5ee25f50206913c",
+      "leverage_hash": "sha256:60db40c32e0126ef22968065f8cfdf303a08717032c83fe5cd912cd84f6a695c",
+      "maintenance_margin_units": 0,
+      "mark_evidence_hash": "sha256:21d2a6005156f680dff3d20358a65891ddfedc3bbac3e7ae0621e2a92a8c8e09",
+      "quantity_units": 0,
+      "request_hash": "sha256:7acd404a5a1f1b6f99caf8e8adc2dd0a794dd17f363d1b0671db3057f15897b3",
+      "result_canonical_hash": "sha256:09b9e4bd0c9b0d023d1b436b1f611043a1865136a1a436620f556707aa4a1883",
+      "result_hash": "sha256:09b9e4bd0c9b0d023d1b436b1f611043a1865136a1a436620f556707aa4a1883",
+      "rule_book_hash": "sha256:2f4bffc82560866b4f5b882b2eace9b343e03293f0dfcab13aab4c3a4fb7e863",
+      "tier_hash": "sha256:075ab209c431752227d38a76943e83f1914ffb3cb1775c2acb7cd6732806e9cb",
+      "tier_id": "synthetic-margin-tier-1"
+    },
+    "long_lower_tier": {
+      "config_hash": "sha256:78c801cd8279d79e3c750b64799955674c6bd3f4a8f59be758b91f6ac65f829a",
+      "exact_initial_margin": [
+        5,
+        4
+      ],
+      "exact_maintenance_margin": [
+        1,
+        8
+      ],
+      "exact_notional": [
+        25,
+        2
+      ],
+      "initial_margin_units": 125,
+      "interval_hash": "sha256:69495ad82e96a2120ea8f741de1a446a0c54d8f3afd19601d5ee25f50206913c",
+      "leverage_hash": "sha256:60db40c32e0126ef22968065f8cfdf303a08717032c83fe5cd912cd84f6a695c",
+      "maintenance_margin_units": 13,
+      "mark_evidence_hash": "sha256:21d2a6005156f680dff3d20358a65891ddfedc3bbac3e7ae0621e2a92a8c8e09",
+      "quantity_units": 1000,
+      "request_hash": "sha256:e0709ce12aad6b2ae801e60163ab40d048cf552d960f3e5c2f39c393cdf98db1",
+      "result_canonical_hash": "sha256:0004fa3d6bdb2d01472bc59add0e5d749c2c5524106d4b0f7940398e57c3c0f6",
+      "result_hash": "sha256:0004fa3d6bdb2d01472bc59add0e5d749c2c5524106d4b0f7940398e57c3c0f6",
+      "rule_book_hash": "sha256:2f4bffc82560866b4f5b882b2eace9b343e03293f0dfcab13aab4c3a4fb7e863",
+      "tier_hash": "sha256:075ab209c431752227d38a76943e83f1914ffb3cb1775c2acb7cd6732806e9cb",
+      "tier_id": "synthetic-margin-tier-1"
+    },
+    "short_lower_tier": {
+      "config_hash": "sha256:78c801cd8279d79e3c750b64799955674c6bd3f4a8f59be758b91f6ac65f829a",
+      "exact_initial_margin": [
+        5,
+        4
+      ],
+      "exact_maintenance_margin": [
+        1,
+        8
+      ],
+      "exact_notional": [
+        25,
+        2
+      ],
+      "initial_margin_units": 125,
+      "interval_hash": "sha256:69495ad82e96a2120ea8f741de1a446a0c54d8f3afd19601d5ee25f50206913c",
+      "leverage_hash": "sha256:60db40c32e0126ef22968065f8cfdf303a08717032c83fe5cd912cd84f6a695c",
+      "maintenance_margin_units": 13,
+      "mark_evidence_hash": "sha256:21d2a6005156f680dff3d20358a65891ddfedc3bbac3e7ae0621e2a92a8c8e09",
+      "quantity_units": -1000,
+      "request_hash": "sha256:8ab3d54da7fe5e27ad0d70a0290643cb324f31b038287bf2571edcf5a14a32c6",
+      "result_canonical_hash": "sha256:1c23a2e5f72e8693454a2490deac3cf3e87019945abb4f76054f144d8fb29359",
+      "result_hash": "sha256:1c23a2e5f72e8693454a2490deac3cf3e87019945abb4f76054f144d8fb29359",
+      "rule_book_hash": "sha256:2f4bffc82560866b4f5b882b2eace9b343e03293f0dfcab13aab4c3a4fb7e863",
+      "tier_hash": "sha256:075ab209c431752227d38a76943e83f1914ffb3cb1775c2acb7cd6732806e9cb",
+      "tier_id": "synthetic-margin-tier-1"
+    }
+  },
+  "component_ref": {
+    "component_digest": "sha256:433cccd21931c54d90bf90b75ea171be37f3723ec5cecd8d17e1c9b5c21de551",
+    "component_key": "instrument.linear-perpetual.margin-requirement.v1",
+    "component_version": 1,
+    "port_type": "margin_model",
+    "type": "profile_component_ref"
+  },
+  "fixture_id": "synthetic-linear-margin-requirement-v1",
+  "schema_version": 1
+}

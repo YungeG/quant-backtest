@@ -12,6 +12,7 @@ DERIVATIVE_MODULES = (
     ROOT / "packages/trading-kernel/src/crypto_quant_trading/derivative_accounting.py",
     ROOT / "packages/trading-kernel/src/crypto_quant_trading/funding.py",
     ROOT / "packages/trading-kernel/src/crypto_quant_trading/funding_accounting.py",
+    ROOT / "packages/trading-kernel/src/crypto_quant_trading/margin.py",
 )
 GENERIC_MODULES = (
     ROOT / "packages/trading-kernel/src/crypto_quant_trading/ledger.py",
@@ -27,6 +28,9 @@ DERIVATIVE_SYMBOL_PREFIXES = (
     "ExactLinearRealizedPnl",
     "LinearDerivative",
     "LinearFunding",
+    "LinearInstrumentMargin",
+    "LinearMargin",
+    "ExactLinearMargin",
     "FundingSlotId",
     "Funding",
 )
@@ -48,6 +52,10 @@ DERIVATIVE_LITERALS = (
     "funding_slot_id",
     "funding_applied",
     "fundingapplied",
+    "linear_margin",
+    "linearmargin",
+    "margin_requirement",
+    "marginrequirement",
     "funding",
     "__import__",
 )
@@ -81,7 +89,12 @@ def _generic_derivative_violations(source: str) -> set[str]:
             module = node.module or ""
             if any(
                 marker in module
-                for marker in ("derivatives", "derivative_accounting", "funding")
+                for marker in (
+                    "derivatives",
+                    "derivative_accounting",
+                    "funding",
+                    "margin",
+                )
             ):
                 violations.add(f"import:{node.module}")
             for alias in node.names:
@@ -93,7 +106,12 @@ def _generic_derivative_violations(source: str) -> set[str]:
             for alias in node.names:
                 if any(
                     marker in alias.name
-                    for marker in ("derivatives", "derivative_accounting", "funding")
+                    for marker in (
+                        "derivatives",
+                        "derivative_accounting",
+                        "funding",
+                        "margin",
+                    )
                 ):
                     violations.add(f"import:{alias.name}")
         elif isinstance(node, ast.Name) and (
@@ -153,6 +171,7 @@ def _purity_violations(source: str) -> set[str]:
         "funding",
         "journal",
         "ledger",
+        "margin",
         "marks",
         "ports",
     }
