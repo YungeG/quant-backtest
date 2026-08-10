@@ -124,7 +124,7 @@ artifact_hashes: []
 | G09D | PASSED | trading-kernel financing/accounting | G09B–G09C | none |
 | G09E | PASSED — immutable commit `e1e4c810b67f8f911b33ef8d7302f33933fc1e32` | trading-kernel margin requirement | G09A | none |
 | G09F | PASSED — immutable commit `107b41aafee00195ec0ae0031800a1409e016264` | trading-kernel account margin projection | G09B, G09E, WP-05B | none |
-| G09G | READY | backtest-runtime liquidation audit | G09E–G09F | none |
+| G09G | PASSED — immutable commit `1a8428530133a7c9173dd9afc800d7dd5e8d304e` | backtest-runtime liquidation audit | G09E–G09F | none |
 | G09H | DRAFT | tests/support + profile composition | G09A–G09G | Synthetic perpetual E2E |
 | G10A | DRAFT | trading-kernel profiles/binance_usdm | G09H | Instrument metadata fixtures |
 | G10B | DRAFT | trading-kernel profiles/binance_usdm | G10A, WP-05G | Rule timeline fixtures |
@@ -7128,7 +7128,7 @@ Python                                                               3.13.5
 
 ```yaml
 id: G09G
-status: READY
+status: PASSED
 depends_on:
   - G09E
   - G09F
@@ -7183,8 +7183,11 @@ evidence:
   - no-trigger-time-closeout-or-account-mutation-evidence
   - import-boundary-report
   - static-type-report
-passed_commit: null
-artifact_hashes: []
+passed_commit: 1a8428530133a7c9173dd9afc800d7dd5e8d304e
+artifact_hashes:
+  tests/fixtures/runtime/liquidation/conservative-linear-liquidation-audit-v1.json: sha256:4942cd57de4b80430fd8640ef6d5e768dce7c5d377d4e8c58b057fa0a4ddcf91
+  build/acceptance/g09g-pytest.xml: sha256:6a401907cc94c2061e2547c547cefa2df59fab560153e5082068eeec8bc758df
+  build/acceptance/g09g-import-boundary-report.json: sha256:bcc88ff37de79f9c27fe4a419fc59e3fc3033bf14ea618301710a784a660160e
 ```
 
 ### G09G Acceptance
@@ -7211,6 +7214,34 @@ artifact_hashes: []
 20. G09G不创建Liquidation Trigger/Fill/Order/Journal、精确trigger time/price、partial liquidation、bankruptcy、insurance fund、ADL、closeout、provider leverage/wallet/mode mapping、Runtime dispatch、真实交易、result authorization或deployment authorization。G09H拥有injected composition/audit artifact routing，G10F拥有provider semantics，未来tick/microstructure model才可提供更精确path evidence。
 
 G09G Account Window、Liquidation Mark Bar、adverse PnL/Maintenance与SAFE/AMBIGUOUS/decision-grade routing已冻结，可实现synthetic development-grade conservative audit。
+
+### G09G Implementation Acceptance
+
+1. Pure `liquidation_audit` runtime deep module与root exports已实现，结构化满足既有`LiquidationAuditModel`/`SimulationPortOutcome`；未新增Port、Profile、Adapter、Package、依赖或修改Engine、Runner、Timeline、Resolution、Integrity、Ledger、G09E/G09F；
+2. G09F Account Window full-interval authority与LIQUIDATION Mark closed Bar purpose/context/coverage/availability全部fail closed；current state、其他Price purpose与最近/current Bar不作fallback；
+3. Long-low、Short-high、mixed Long/Short simultaneous extremes、multiplier-aware exact adverse Unrealized与HALF_EVEN Money boundary均通过；
+4. Adverse exact notional在未量化状态重新选择G09E historical Tier并按Maintenance rate/deduction与CEILING重算；Short-high跨Tier和negative adverse Maintenance均有独立控制；
+5. Wallet、adverse Unrealized/Equity/Maintenance totals与equality SAFE按frozen公式分类；Working Order Reservation、Available Margin与attributions不进入threshold；
+6. Development SAFE/AMBIGUOUS均保存完整Position audit与limitation；Decision-grade AMBIGUOUS structured fail closed，不生成trigger time/price、Fill、Journal、partial close、bankruptcy或ADL；
+7. Frozen 16-code precedence、ordered subjects、component/canonical identity、Result/Position/Failure forgery、same Request idempotency与input authority不变全部通过；
+8. Dedicated purity scanner覆盖`liquidation_audit.py`并拒绝Engine、Runner、Timeline、Ledger、G09E/G09F liquidation branch；71-file Import Boundary、71-source mypy、Primary LSP、scoped pi-lens blocking diagnostics、full regression与`uv lock --check`全部通过。
+
+G09G implementation 已冻结在 immutable commit `1a8428530133a7c9173dd9afc800d7dd5e8d304e`，状态为 `PASSED`。
+
+验证记录：
+
+```text
+G09G contract                                                      10 passed
+G09G static golden                                                  1 passed
+Frozen public/boundary regression command                          90 passed
+Combined G09G acceptance report                                  101 passed
+Full test suite                                                   961 passed
+Workspace import boundary                                          PASS (71 files)
+mypy                                                                 no issues (71 source files)
+Primary LSP + scoped pi-lens                                        no blocking issues
+uv lock --check                                                     PASS
+Python                                                               3.13.5
+```
 
 ## 76. G09H Readiness Blockers
 
