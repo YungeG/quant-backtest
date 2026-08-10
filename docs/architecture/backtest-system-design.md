@@ -1386,6 +1386,12 @@ G09E增加pure单Instrument Margin requirement seam。Caller提供signed Margin 
 
 Historical leverage和Rule interval均按`SimulationInstant` availability fail closed；Rule timeline缺口、重叠、tier order/gap/overlap或未来/current rule回填历史均不能产生Requirement。G09E只返回单Instrument exact/quantized Initial与Maintenance结果，不创建Reservation、不读取Ledger/Snapshot Equity、不聚合账户、不决定Available Margin或Liquidation；这些分别由G09F/G09G拥有。G10C/G10F后续Adapter可把provider tier `maximum leverage`、maintenance ratio/deduction与account leverage evidence映射到该generic seam，但不得在G09E加入provider分支。
 
+G09F增加pure单Execution Account Margin Projection seam。v1限定同一Account、同一Venue、同一settlement Currency/Scale：caller提供完整Ledger State authority及其full availability、G09A Position States、`PricePurpose.VALUATION` Marks/Policies、G09E Margin Results和ResourceReservationState authority。Module不读取Runtime current state，也不把Margin或Unrealized PnL写入Generic Ledger。
+
+Derivative Wallet Balance exact取Ledger settlement Cash；Realized PnL、Fee与Funding attribution只作为audit components返回，因为它们已进入Cash，Equity不得重复相加。逐Instrument Unrealized PnL exact为`signed_quantity × multiplier × (valuation_mark - exact_average_entry)`，在每个Instrument Money boundary按frozen HALF_EVEN量化；`Equity = Wallet Balance + Σ Unrealized PnL`，`Available Margin = Equity - Σ Position Initial Margin - Working Order Margin Reservation`。Aggregate Maintenance Margin独立保存给G09G conservative Liquidation audit；negative Available Margin是状态而不是Projection failure。
+
+G09F exact coverage要求每个non-flat authoritative Position恰有一个matching G09E Result和一个VALUATION Mark，G09E exposure必须等于Position quantity，所有evidence必须在evaluated-at完整可用。Working Order Margin只来自ResourceReservationState active commitment totals；Cash、fee reserve、sellable quantity、order/exposure capacity不得静默当作margin。跨Currency FX、stablecoin peg、cross-Venue/cross-account collateral、isolated/cross mode、Margin Ratio、Liquidation和provider wallet mapping均不属于G09F。
+
 ### 11.13 LiquidationAuditModel
 
 属于 SimulationProfile，决定如何根据当前数据粒度检查真实 LiquidationRules。

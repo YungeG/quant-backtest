@@ -123,7 +123,7 @@ artifact_hashes: []
 | G09C | PASSED | trading-kernel funding eligibility | G09A, G09B, WP-06A, WP-06B | none |
 | G09D | PASSED | trading-kernel financing/accounting | G09B–G09C | none |
 | G09E | PASSED — immutable commit `e1e4c810b67f8f911b33ef8d7302f33933fc1e32` | trading-kernel margin requirement | G09A | none |
-| G09F | DRAFT | trading-kernel margin | G09B, G09E, WP-05B | Cross-margin fixtures |
+| G09F | READY | trading-kernel account margin projection | G09B, G09E, WP-05B | none |
 | G09G | DRAFT | backtest-runtime liquidation audit | G09E–G09F | SAFE/AMBIGUOUS fixtures |
 | G09H | DRAFT | tests/support + profile composition | G09A–G09G | Synthetic perpetual E2E |
 | G10A | DRAFT | trading-kernel profiles/binance_usdm | G09H | Instrument metadata fixtures |
@@ -7000,15 +7000,107 @@ uv lock --check                                                     PASS
 Python                                                               3.13.5
 ```
 
-## 74. G09F–G09H Readiness Blockers
+## 74. G09F Single Execution Account Margin Projection Acceptance Card
 
-G09F–G09H保持`DRAFT`。当前blockers：
+```yaml
+id: G09F
+status: READY
+depends_on:
+  - G09B
+  - G09E
+  - WP-05B
+owner_package: trading-kernel account margin projection
+public_interface:
+  - crypto_quant_trading.LinearMarginLedgerEvidence
+  - crypto_quant_trading.LinearMarginReservationEvidence
+  - crypto_quant_trading.LinearPositionValuationEvidence
+  - crypto_quant_trading.ExactLinearUnrealizedPnl
+  - crypto_quant_trading.LinearPositionUnrealizedPnl
+  - crypto_quant_trading.LinearAccountMarginProjectionRequest
+  - crypto_quant_trading.LinearAccountMarginProjection
+  - crypto_quant_trading.LinearAccountMarginProjectionFailureCode
+  - crypto_quant_trading.LinearAccountMarginProjectionFailure
+  - crypto_quant_trading.LinearAccountMarginProjectionOutcome
+  - crypto_quant_trading.LinearAccountMarginProjector
+  - static synthetic linear-account-margin-projection golden fixture v1
+test_commands:
+  contract: uv run pytest -q tests/kernel/derivatives/test_linear_account_margin_projection.py
+  fixture: uv run pytest -q tests/kernel/derivatives/test_linear_account_margin_projection_golden.py
+  boundary: uv run pytest -q tests/architecture/test_public_api_imports.py tests/architecture/test_network_isolation.py tests/architecture/test_repository_cleanliness.py tests/architecture/test_derivative_boundary.py tests/kernel/derivatives/test_linear_derivative_accounting.py tests/kernel/derivatives/test_linear_funding_accounting.py tests/kernel/derivatives/test_linear_margin_requirement.py tests/kernel/reservations/test_resource_reservation_book.py tests/kernel/ledger/test_generic_ledger.py tests/kernel/snapshots/test_portfolio_snapshot_projector.py && uv run python tools/architecture/check_import_boundaries.py --root . --policy architecture/import-boundaries.toml --report build/acceptance/g09f-import-boundary-report.json
+fixture_ids:
+  - synthetic-linear-account-margin-projection-v1
+expected_artifacts:
+  - tests/fixtures/kernel/derivatives/linear-account-margin-projection-v1.json
+  - build/acceptance/g09f-pytest.xml
+  - build/acceptance/g09f-import-boundary-report.json
+failure_contracts:
+  - ledger-or-reservation-current-state-is-read-implicitly
+  - ledger-or-reservation-evidence-is-used-before-full-availability
+  - multiple-accounts-venues-or-settlement-currencies-are-netted
+  - derivative-unrealized-pnl-omits-contract-multiplier-or-signed-direction
+  - generic-portfolio-snapshot-spot-market-value-substitutes-derivative-pnl
+  - realized-pnl-fee-or-funding-is-double-counted-on-top-of-wallet-cash
+  - non-valuation-mark-or-post-evaluation-observation-is-used
+  - position-margin-or-valuation-coverage-gap-duplicate-or-extra-is-guessed
+  - g09e-exposure-does-not-equal-authoritative-position
+  - initial-maintenance-or-unrealized-values-are-rescaled-or-rounded-twice
+  - working-order-margin-uses-non-margin-reservation-dimensions
+  - working-order-margin-reservation-reduces-equity
+  - negative-equity-or-available-margin-is-clamped-or-treated-as-projection-failure
+  - margin-or-unrealized-pnl-is-written-into-generic-ledger-or-portfolio-snapshot
+  - provider-wallet-cross-margin-liquidation-or-runtime-semantics-leak-into-g09f
+allowed_grade: development
+evidence:
+  - pytest-report
+  - static-linear-account-margin-projection-golden-hash
+  - ledger-wallet-and-attribution-authority-evidence
+  - exact-multiplier-aware-unrealized-pnl-evidence
+  - position-margin-valuation-exact-coverage-evidence
+  - single-account-venue-currency-context-evidence
+  - wallet-plus-unrealized-equity-evidence
+  - initial-maintenance-and-working-order-margin-aggregation-evidence
+  - available-margin-and-negative-state-evidence
+  - no-attribution-double-counting-evidence
+  - immutable-ledger-reservation-and-input-authority-evidence
+  - import-boundary-report
+  - static-type-report
+passed_commit: null
+artifact_hashes: []
+```
 
-1. G09F必须冻结单Execution Account Equity、Derivative unrealized PnL、Fee/Funding、Maintenance Margin、Working Order Reservation的authoritative inputs与独立immutable `MarginProjection`；不得把Margin数值塞入Generic Ledger balance；
-2. G09G必须冻结Liquidation Mark Bar evidence、long-low/short-high conservative evaluation、`SAFE`/`AMBIGUOUS_BREACH` canonical audit与decision-grade fail-closed routing；
-3. G09H必须冻结branchless injected composition、Synthetic E2E commands/artifacts、Journal/MarginProjection/PortfolioSnapshot reconstruction与development-only limitation；Generic Engine accounting/event dispatch尚不能按resolved profile注入derivative accounting，因此不得提前组合。
+### G09F Acceptance
 
-## 75. PASSED 记录格式
+1. G09F只新增pure `crypto_quant_trading.account_margin` deep module与必要root exports；不得新增Port、Profile、Adapter、Package、依赖，或修改Generic Ledger、PortfolioSnapshotProjector、ReservationBook、PreTradeRiskEvaluator、Engine、Runner、Timeline。`LinearAccountMarginProjector.project(request)`只读取embedded immutable authority并返回`LinearAccountMarginProjectionOutcome`；不查询或mutate Journal/Ledger/Reservation/Runtime；
+2. v1 exact限定单Execution Account、单Venue、单settlement Currency/Scale。Request保存account ID、Venue ID、`evaluated_at: SimulationInstant`、optional Ledger Evidence、ordered Position Valuation Evidence tuple、ordered G09E Margin Result tuple、optional Reservation Evidence、settlement Cash `LedgerBalanceRegistration`和Unrealized PnL `QuantizationPolicy`。Optional只用于structured missing-evidence failures；跨Account、跨Venue、跨Currency collateral或FX不是v1 fallback；
+3. `LinearMarginLedgerEvidence`保存完整`LedgerState`、`projected_through: SimulationInstant`、`available_at: SimulationInstant`与source key/hash。Projected-through必须exact等于Request evaluated-at，available-at不得晚于evaluated-at；Ledger Schema全部Registration必须属于同Account/Venue，Cash/Position registrations及balances不得被caller current state替代；
+4. Settlement Cash registration必须是exact Request account/Venue/settlement Currency的`CashBalanceKey`，且exact存在于Ledger Schema。Derivative Wallet Balance exact取`ledger_state.cash_amount(key)`；Realized PnL、Fee、Funding audit exact分别取同key的`realized_pnl_amount`、`fee_amount`、`financing_amount`。这些attributions已通过Journal进入Wallet Cash，Equity公式不得再次相加；
+5. `LinearMarginReservationEvidence`保存完整`ResourceReservationState`、projected-through/full available-at与source key/hash。State account必须匹配Request，projected-through exact等于evaluated-at，available-at不晚于evaluated-at；active Orders、cursors和totals继续由既有ReservationBook authority验证，G09F不重建working Orders；
+6. Working Order Margin Reservation只聚合`reservation_state.totals.margin`。每项必须匹配settlement Currency与Cash registration Scale；`cash`、`fee_reserve`、`sellable_quantities`、`order_capacity_units`、`exposure_capacity`不得进入该aggregate。Reservation只减少Available Margin，不减少Wallet Balance或Equity；
+7. `LinearPositionValuationEvidence` exact保存non-flat G09A `LinearPositionState`、完整`ResolvedMark`与完整`StaleMarkPolicy`。State account/Venue/Instrument/Contract必须匹配Request与Ledger Position balance；Ledger quantity必须exact等于State quantity。Flat State不得作为valuation evidence输入，也不得携带G09E Result；
+8. VALUATION Mark与Policy purpose必须为`PricePurpose.VALUATION`；Instrument、quote/settlement Currency与Price Scale匹配Contract；Price strictly positive；`resolved_at == evaluated_at.instant`；`ResolvedMark.available_at <= evaluated_at.instant`。Policy key/version/hash、age equality、max-age与forward-fill全部重验；MARGIN、FUNDING、LIQUIDATION、SETTLEMENT或execution price不能替代；
+9. 每个non-flat Position exact有且只有一个matching G09E Result和一个Valuation Evidence，不允许duplicate、missing或extra。Matching Result必须成功、Request Position key/Contract/evaluated-at与G09F相同，`exposure_quantity == position_state.quantity`，Initial/Maintenance Currency/Scale匹配settlement Cash authority；G09F不得重新选择leverage/Tier或重算G09E requirement；
+10. 若signed Position为`q/Q`、positive multiplier为`m/M`、Valuation Mark为`p/P`、exact average entry为`a/A`，Unrealized PnL exact为`U=q*m*(p*A-a*P)/(Q*M*P*A)`。`ExactLinearUnrealizedPnl`保存settlement Currency、GCD-reduced signed numerator与positive denominator，zero canonical为`0/1`；Long price rise为正、Short price rise为负；禁止float、Decimal、generic spot Position market value或average-entry Money rounding；
+11. 每个Instrument Unrealized PnL只调用一次`round_ratio(exact.numerator * target_scale.factor, exact.denominator, RoundingPolicy.HALF_EVEN)`映射到Money。Quantization target Scale必须等于settlement Cash registration Scale，rounding非HALF_EVEN返回`UNSAFE_UNREALIZED_PNL_ROUNDING`；不得先round Mark、entry、multiplier或aggregate后统一round；
+12. Projection exact保存component、完整Request/hash、Wallet Balance、Realized PnL、Fees、Funding、ordered per-Position exact/quantized Unrealized PnL、total Unrealized、Equity、total Initial Margin、total Maintenance Margin、Working Order Margin Reservation与Available Margin。所有Money使用唯一settlement Currency/Scale；ordered tuples按Position key canonical order；
+13. Aggregate formulas exact为：`total_unrealized = Σ instrument_unrealized_money`；`equity = wallet_balance + total_unrealized`；`total_initial_margin = Σ g09e.initial_margin`；`total_maintenance_margin = Σ g09e.maintenance_margin`；`working_order_margin_reservation = Σ reservation_state.totals.margin`；`available_margin = equity - total_initial_margin - working_order_margin_reservation`。Negative Equity或Available Margin保留signed Money，不clamp、不返回business failure、不自行产生Liquidation；
+14. Business failure first precedence exact为：`MISSING_LEDGER_EVIDENCE` → `MISSING_RESERVATION_EVIDENCE` → `ACCOUNT_CONTEXT_MISMATCH` → `LEDGER_PROJECTION_INSTANT_MISMATCH` → `LEDGER_NOT_AVAILABLE` → `RESERVATION_PROJECTION_INSTANT_MISMATCH` → `RESERVATION_NOT_AVAILABLE` → `SETTLEMENT_CASH_CONTEXT_MISMATCH` → `DUPLICATE_POSITION` → `POSITION_CONTEXT_MISMATCH` → `DUPLICATE_MARGIN_RESULT` → `MARGIN_COVERAGE_MISMATCH` → `MARGIN_CONTEXT_MISMATCH` → `VALUATION_COVERAGE_MISMATCH` → `VALUATION_MARK_PURPOSE_MISMATCH` → `VALUATION_MARK_CONTEXT_MISMATCH` → `VALUATION_MARK_INSTANT_MISMATCH` → `VALUATION_MARK_SCALE_MISMATCH` → `NON_POSITIVE_VALUATION_MARK` → `VALUATION_MARK_POLICY_MISMATCH` → `VALUATION_MARK_NOT_AVAILABLE` → `QUANTIZATION_SCALE_MISMATCH` → `UNSAFE_UNREALIZED_PNL_ROUNDING` → `RESERVATION_CONTEXT_MISMATCH` → `RESERVATION_MARGIN_CONTEXT_MISMATCH`；wire values为对应lower-snake-case，多缺陷只返回第一项；
+15. Exact predicates分别覆盖：(1–2) optional evidence缺失；(3) Ledger Schema/keys含其他Account/Venue/Cash Currency authority；(4–7) Ledger/Reservation projected-through或full availability错误；(8) Cash key/type/schema/Scale错误；(9–10) Position duplicate、flat、Contract/Quantity/Ledger mismatch；(11–13) G09E Result duplicate、coverage或Position/Contract/time/exposure/Currency/Scale mismatch；(14) Valuation coverage mismatch；(15–21) Mark/Policy错误；(22–23) Quantization错误；(24–25) Reservation account/state或margin Currency/Scale错误。Candidate exact type、canonical text/hash、positive denominator与existing nested authority shape错误是constructor exception；
+16. Failure保存component、完整Request/request hash、code与exact `subject_ids=(code.value,request.account_id,str(request.venue_id),canonical_sha256(request.settlement_cash_registration),ledger_state_hash or "missing-margin-ledger",reservation_state_hash or "missing-margin-reservation")`；constructor重算first failure。Outcome保存component/request hash与exactly-one Projection/Failure并重验identity。Component ref使用`ProfilePortType.MARGIN_MODEL`、key `account.linear-perpetual.margin-projection.v1`、version 1；digest preimage exact为`{type="linear_account_margin_projection_component",schema_version=1,component_key,component_version=1,scope="single-account-single-venue-single-settlement-currency",wallet_balance="ledger-settlement-cash",unrealized_pnl="signed-quantity*multiplier*(valuation-mark-average-entry)",equity="wallet-balance+instrument-unrealized-pnl",position_margin="g09e-results",working_order_margin="reservation-state-totals-margin",available_margin="equity-position-initial-margin-working-order-margin",pnl_quantization="half-even-per-instrument",allowed_grade="development"}`；
+17. 所有新增public values使用`schema_version=1`、exact types、canonical tuple order与`canonical_sha256`。Canonical preimages exact为：Ledger Evidence `{type="linear_margin_ledger_evidence",schema_version,ledger_state,projected_through,available_at,source_key,source_hash}`；Reservation Evidence `{type="linear_margin_reservation_evidence",schema_version,reservation_state,projected_through,available_at,source_key,source_hash}`；Position Valuation `{type="linear_position_valuation_evidence",schema_version,position_state,resolved_mark,stale_policy}`；Exact PnL `{type="exact_linear_unrealized_pnl",schema_version,currency_id,numerator,denominator}`；per-Position PnL `{type="linear_position_unrealized_pnl",schema_version,valuation_evidence,valuation_evidence_hash,exact_unrealized_pnl,unrealized_pnl}`；Request `{type="linear_account_margin_projection_request",schema_version,account_id,venue_id,evaluated_at,ledger_evidence,position_valuations,margin_results,reservation_evidence,settlement_cash_registration,unrealized_pnl_quantization}`；Projection `{type="linear_account_margin_projection",schema_version,component_ref,request,request_hash,wallet_balance,realized_pnl,fees,funding,position_unrealized_pnl,total_unrealized_pnl,equity,total_initial_margin,total_maintenance_margin,working_order_margin_reservation,available_margin}`；Failure `{type="linear_account_margin_projection_failure",schema_version,component_ref,request,request_hash,code,subject_ids}`；Outcome `{type="linear_account_margin_projection_outcome",schema_version,component_ref,request_hash,projection,failure}`。Constructor拒绝forged aggregate、hash、coverage与component；
+18. Static golden沿用G09A–G09E synthetic linear perpetual fixtures，至少冻结：Long/Short price up/down、Flat omission、multiplier `0.125`、exact average entry与VALUATION Mark；multi-Instrument same account aggregation；Wallet Cash含Realized/Fee/Funding attribution但Equity不double count；G09E Initial/Maintenance totals；zero/nonzero/multiple Working Order margin reservations；positive/zero/negative Available Margin；HALF_EVEN ties、large integer/no-pre-quantization；full availability边界；全部25 failures与multi-defect precedence；constructor/hash/aggregate forgery、same Request idempotency和input/module authority不变；
+19. Purity scanner显式扫描`account_margin.py`，只允许stdlib、domain、G09A/G09E、marks、generic Ledger/Reservation/Ports imports；拒绝filesystem、network/provider/process/database/cloud、dynamic import、PortfolioSnapshot/Runtime/Profile import、mutable module/class/decorator state与wall clock。Generic Ledger、PortfolioSnapshotProjector、ReservationBook、PreTradeRiskEvaluator、Engine、Runner、Timeline不得增加Linear Account Margin branch/reference；
+20. G09F不拥有provider wallet balance mapping、cross/isolated mode、multi-asset collateral、FX/stablecoin peg、haircut、Margin Ratio、Liquidation/Bankruptcy price、ADL、order acceptance、reservation creation、Journal replay composition、PortfolioSnapshot replacement、Runtime dispatch、真实交易、result grade或deployment authorization。G09G拥有conservative Liquidation audit，G09H拥有injected reconstruction/composition，G10F拥有provider account mapping。
+
+G09F authoritative Wallet、Unrealized formula、G09E coverage、Reservation margin、Equity与Available Margin semantics已冻结，可在不选择provider的情况下实现synthetic development-grade seam。
+
+## 75. G09G–G09H Readiness Blockers
+
+G09G–G09H保持`DRAFT`。当前blockers：
+
+1. G09G必须冻结Liquidation Mark Bar evidence、long-low/short-high conservative evaluation、`SAFE`/`AMBIGUOUS_BREACH` canonical audit与decision-grade fail-closed routing；
+2. G09H必须冻结branchless injected composition、Synthetic E2E commands/artifacts、Journal/MarginProjection/PortfolioSnapshot reconstruction与development-only limitation；Generic Engine accounting/event dispatch尚不能按resolved profile注入derivative accounting，因此不得提前组合。
+
+## 76. PASSED 记录格式
 
 ```yaml
 id: WP-00A

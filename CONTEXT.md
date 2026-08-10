@@ -359,6 +359,26 @@ Caller要求评估Initial/Maintenance Margin的单Instrument signed Quantity。�
 
 Margin Tier中从`notional × maintenance margin rate`扣除的非负累计固定额，用于表达连续的分层Maintenance Margin曲线；它不是Fee、Funding或Cash movement。
 
+## Derivative Wallet Balance
+
+单Execution Account、单Venue、单settlement Currency在权威Ledger State中的Cash balance。Realized PnL、Fee与Funding已经通过Journal进入该Cash；账户Equity计算不得再次把这些attribution重复相加。
+
+## Derivative Unrealized PnL
+
+由G09A authoritative signed Position、exact average-entry basis、contract multiplier与`PricePurpose.VALUATION` Mark形成的未结算盈亏。它在单Instrument Money boundary量化后进入Account Margin Projection，不写入Generic Ledger。
+
+## Account Margin Projection
+
+同一Execution Account与Venue下，把Derivative Wallet Balance、逐Instrument Unrealized PnL、G09E Initial/Maintenance requirements和Working Order Margin Reservation聚合成immutable账户视图。v1不执行跨Venue、跨Currency或跨Account collateral netting。
+
+## Available Margin
+
+Account Margin Projection中的`Equity - Position Initial Margin - Working Order Margin Reservation`。它可以为负，负值是账户状态而不是Projection失败，也不等同于Liquidation结论。
+
+## Working Order Margin Reservation
+
+ResourceReservationState中active Orders的`ReservationCommitment.margin`聚合。它只减少Available Margin，不减少Equity，也不进入Generic Ledger balance。
+
 ## 资格时点（Eligibility Instant）
 
 决定某个 Position 是否参与 Funding、分红或其他离散经济事件的规范模拟时点。

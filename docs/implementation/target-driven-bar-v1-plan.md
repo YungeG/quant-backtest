@@ -1469,18 +1469,26 @@ Margin Tier以exact Money floor与optional cap定义lower-inclusive/upper-exclus
 
 Result保存component、完整Request/hash、resolved historical Interval/Tier、exact notional、exact Initial/Maintenance及quantized Money。G09E不聚合Equity、Unrealized PnL、Fee/Funding、跨Instrument requirement或Working Order reservation，不写Journal/Ledger，也不决定Available Margin/Liquidation；G09F/G09G拥有这些后续语义。
 
-### Gate G09F Cross-account Margin Projection
+### Gate G09F Single Execution Account Margin Projection
 
 依赖：G09B、G09E、ReservationBook。
 
-拥有：单 Execution Account 的 Equity、聚合 Maintenance Margin、Available Margin 和 Working Order margin reservation。
+拥有：单 Execution Account、单Venue、单settlement Currency的Derivative Wallet Balance、Unrealized PnL、Equity、聚合Initial/Maintenance Margin、Available Margin和Working Order Margin Reservation。
 
 验收：
 
-- 多 Instrument requirement 正确聚合；
-- Unrealized PnL 和 Fee/Funding 通过权威 Ledger/Snapshot 输入；
-- Working Order Reservation 降低 Available Margin；
-- 不实现多账户或跨 Venue collateral netting。
+- 多Instrument Position、Unrealized PnL与G09E requirements exact coverage并正确聚合；
+- Ledger Cash、Realized PnL、Fee/Funding attribution和ResourceReservationState通过immutable authority输入；
+- Working Order Margin Reservation只降低Available Margin，不降低Equity；
+- 不实现多Currency、多账户或跨Venue collateral netting。
+
+冻结实现 seam：G09F只新增pure `crypto_quant_trading.account_margin`与必要root exports，不新增Port/Profile/Adapter/Package或依赖。Request exact保存Account、Venue、evaluated-at、optional Ledger evidence、G09A Position tuple、VALUATION Mark evidence tuple、G09E Result tuple、optional Reservation evidence、settlement Cash registration和Unrealized PnL quantization。Optional只用于structured missing-evidence failures；Projection不查询Journal、Runtime、provider current account或working Orders。
+
+Ledger evidence保存完整`LedgerState`、`projected_through: SimulationInstant`、`available_at: SimulationInstant`与source key/hash；两者不得晚于evaluated-at，projected-through必须exact等于evaluated-at，Ledger Schema仅允许同Account/Venue authority。Wallet Balance、Realized PnL、Fee与Funding分别使用Ledger settlement Cash key的cash/attribution values；后3项已进入Wallet Cash，只用于audit，Equity不得重复相加。
+
+每个non-flat G09A Position必须exact匹配一个G09E Result和一个VALUATION Mark/Policy；Result exposure等于Position quantity且evaluated-at相同。若entry basis为`a/A`、Mark为`p/P`、signed Quantity为`q/Q`、multiplier为`m/M`，Unrealized exact为`q*m*(p*A-a*P)/(Q*M*P*A)`，GCD约分后每Instrument只调用一次HALF_EVEN映射到settlement Scale。Flat Position不得携带Requirement或Mark；不得使用generic PortfolioSnapshot的spot-style Position market value替代该multiplier-aware derivative formula。
+
+Reservation evidence保存完整`ResourceReservationState`、projected-through/full availability和source identity。Working Order Margin exact只聚合`state.totals.margin`中matching settlement Currency/Scale；任何其他Margin Currency/Scale fail closed，其他commitment dimensions不进入Projection。`Equity = Wallet Balance + Σ Unrealized PnL`；`Available Margin = Equity - Σ Initial Margin - Working Order Margin Reservation`；聚合Maintenance Margin独立保存。Negative Equity或Available Margin是可审计Projection状态，G09G才决定conservative Liquidation。
 
 ### Gate G09G Conservative Liquidation Audit
 
