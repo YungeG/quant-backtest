@@ -7147,7 +7147,7 @@ public_interface:
 test_commands:
   contract: uv run pytest -q tests/runtime/liquidation/test_conservative_linear_liquidation_audit.py
   fixture: uv run pytest -q tests/runtime/liquidation/test_conservative_linear_liquidation_audit_golden.py
-  boundary: uv run pytest -q tests/architecture/test_public_api_imports.py tests/architecture/test_network_isolation.py tests/architecture/test_repository_cleanliness.py tests/architecture/test_derivative_boundary.py tests/runtime/ports/test_simulation_port_contracts.py tests/kernel/derivatives/test_linear_margin_requirement.py tests/kernel/derivatives/test_linear_account_margin_projection.py tests/runtime/engine/test_engine_harness.py tests/runtime/runner/test_auditable_runner.py && uv run python tools/architecture/check_import_boundaries.py --root . --policy architecture/import-boundaries.toml --report build/acceptance/g09g-import-boundary-report.json
+  boundary: uv run pytest -q tests/architecture/test_public_api_imports.py tests/architecture/test_network_isolation.py tests/architecture/test_repository_cleanliness.py tests/architecture/test_derivative_boundary.py tests/architecture/test_liquidation_audit_boundary.py tests/runtime/ports/test_simulation_port_contracts.py tests/kernel/derivatives/test_linear_margin_requirement.py tests/kernel/derivatives/test_linear_account_margin_projection.py tests/runtime/engine/test_engine_harness.py tests/runtime/runner/test_auditable_runner.py && uv run python tools/architecture/check_import_boundaries.py --root . --policy architecture/import-boundaries.toml --report build/acceptance/g09g-import-boundary-report.json
 fixture_ids:
   - synthetic-conservative-linear-liquidation-audit-v1
 expected_artifacts:
