@@ -125,7 +125,7 @@ artifact_hashes: []
 | G09E | PASSED — immutable commit `e1e4c810b67f8f911b33ef8d7302f33933fc1e32` | trading-kernel margin requirement | G09A | none |
 | G09F | PASSED — immutable commit `107b41aafee00195ec0ae0031800a1409e016264` | trading-kernel account margin projection | G09B, G09E, WP-05B | none |
 | G09G | PASSED — immutable commit `1a8428530133a7c9173dd9afc800d7dd5e8d304e` | backtest-runtime liquidation audit | G09E–G09F | none |
-| G09H | DRAFT | tests/support + profile composition | G09A–G09G | Synthetic perpetual E2E |
+| G09H | READY | tests/support + profile composition | G09A–G09G | none |
 | G10A | DRAFT | trading-kernel profiles/binance_usdm | G09H | Instrument metadata fixtures |
 | G10B | DRAFT | trading-kernel profiles/binance_usdm | G10A, WP-05G | Rule timeline fixtures |
 | G10C | DRAFT | trading-kernel profiles/binance_usdm | G10A, G09E | Margin tier fixtures |
@@ -7243,9 +7243,129 @@ uv lock --check                                                     PASS
 Python                                                               3.13.5
 ```
 
-## 76. G09H Readiness Blockers
+## 76. G09H Generic Linear Perpetual Composition Acceptance Card
 
-G09H保持`DRAFT`。当前blocker：必须冻结branchless injected composition、Synthetic E2E commands/artifacts、Journal/MarginProjection/PortfolioSnapshot reconstruction与development-only limitation；Generic Engine accounting/event dispatch尚不能按resolved profile注入derivative accounting，因此不得提前组合。
+```yaml
+id: G09H
+status: READY
+depends_on:
+  - G09A
+  - G09B
+  - G09C
+  - G09D
+  - G09E
+  - G09F
+  - G09G
+owner_package: tests/support + backtest-runtime profile composition
+public_interface:
+  - crypto_quant_backtest.FinancialDispatcherSpec
+  - crypto_quant_backtest.FeeAccountingDispatchPlan
+  - crypto_quant_backtest.FillAccountingDispatchPlan
+  - crypto_quant_backtest.ScheduledAccountEvent
+  - crypto_quant_backtest.FinancialDispatchPlan
+  - crypto_quant_backtest.FinancialDispatchArtifact
+  - crypto_quant_backtest.FinancialDispatchResult
+  - crypto_quant_backtest.FinancialDispatchFailureCode
+  - crypto_quant_backtest.FinancialDispatchFailure
+  - crypto_quant_backtest.FinancialDispatchOutcome
+  - crypto_quant_backtest.FinancialEventDispatcher
+  - existing crypto_quant_backtest.ResolvedExecutionCase canonical financial dispatch plan extension
+  - existing crypto_quant_backtest.ResolvedBarExecution profile-neutral fill accounting dispatch extension
+  - existing crypto_quant_backtest.DeterministicBarEngine injected financial dispatcher seam
+  - existing crypto_quant_backtest.EngineFailureCode.FINANCIAL_DISPATCH_FAILURE
+  - existing crypto_quant_backtest.EngineExecutionResult canonical financial artifacts extension
+  - existing crypto_quant_backtest.ExecutionCaseComposer semantic identity coverage
+  - existing crypto_quant_backtest.AuditableBacktestRunner unchanged execution interface
+  - tests.support.synthetic_market.SyntheticLinearPerpetualDevelopmentProfile
+  - tests.support.synthetic_market.build_synthetic_linear_perpetual_execution_case
+  - tests.support.synthetic_market.build_synthetic_linear_perpetual_resolved_request
+  - static synthetic linear-perpetual development journey golden fixture v1
+test_commands:
+  contract: uv run pytest -q tests/support/synthetic_market/test_synthetic_linear_perpetual_profile.py tests/runtime/engine/test_g09h_synthetic_linear_perpetual_journey.py
+  fixture: uv run pytest -q tests/runtime/engine/test_g09h_synthetic_linear_perpetual_golden.py
+  boundary: uv run pytest -q tests/architecture/test_public_api_imports.py tests/architecture/test_network_isolation.py tests/architecture/test_repository_cleanliness.py tests/architecture/test_derivative_boundary.py tests/architecture/test_liquidation_audit_boundary.py tests/architecture/test_g09h_composition_boundary.py tests/runtime/engine/test_engine_harness.py tests/runtime/engine/test_g06_synthetic_cash_journey.py tests/runtime/runner/test_auditable_runner.py tests/runtime/resolution/test_backtest_resolution.py && uv run python tools/architecture/check_import_boundaries.py --root . --policy architecture/import-boundaries.toml --report build/acceptance/g09h-import-boundary-report.json
+fixture_ids:
+  - synthetic-linear-perpetual-development-journey-v1
+expected_artifacts:
+  - tests/fixtures/runtime/engine/synthetic-linear-perpetual-development-journey-v1.json
+  - build/acceptance/g09h-pytest.xml
+  - build/acceptance/g09h-import-boundary-report.json
+failure_contracts:
+  - financial-dispatcher-is-missing-or-does-not-match-the-canonical-case-plan
+  - dispatcher-implementation-object-or-runtime-address-enters-case-or-semantic-identity
+  - cash-versus-linear-derivative-branch-is-added-to-engine-runner-ledger-or-composer
+  - fill-accounting-plan-does-not-exact-match-the-produced-fill-or-profile-component
+  - derivative-fill-exchanges-principal-notional-or-uses-cash-lot-accounting
+  - scheduled-account-event-is-missing-duplicated-reordered-or-dispatched-before-availability
+  - funding-uses-current-position-or-non-funding-mark-instead-of-eligibility-evidence
+  - margin-or-liquidation-reads-current-engine-state-without-a-frozen-authority-window
+  - dispatcher-journal-output-is-not-append-only-replayable-or-generic-ledger-compatible
+  - financial-artifact-is-partial-unordered-unbound-to-source-event-or-not-canonical
+  - final-margin-projection-cannot-be-rebuilt-from-final-journal-and-frozen-inputs
+  - final-portfolio-snapshot-cannot-be-rebuilt-from-final-ledger-margin-and-mark-authority
+  - liquidation-audit-artifact-is-omitted-or-creates-closeout-side-effects
+  - execution-case-semantic-spec-omits-dispatcher-plan-events-or-snapshot-authority
+  - retry-batch-size-or-input-registration-order-changes-economic-or-artifact-hashes
+  - synthetic-profile-loads-without-explicit-development-opt-in
+  - synthetic-profile-accepts-decision-grade-or-authorizes-deployment
+  - binance-symbol-fee-rule-wallet-mode-tier-adapter-or-provider-semantics-leak-into-g09h
+allowed_grade: development
+evidence:
+  - pytest-report
+  - static-synthetic-linear-perpetual-journey-golden-hash
+  - resolved-profile-and-financial-dispatcher-spec-hashes
+  - open-reduce-flip-position-transition-evidence
+  - funding-eligibility-settlement-and-specialized-journal-evidence
+  - generic-ledger-and-linear-derivative-replay-parity-evidence
+  - current-and-final-margin-projection-reconstruction-evidence
+  - long-low-and-short-high-liquidation-audit-artifacts
+  - final-portfolio-snapshot-reconstruction-evidence
+  - execution-case-semantic-spec-and-identity-manifest-coverage
+  - auditable-runner-development-only-evidence
+  - no-derivative-branch-boundary-report
+  - import-boundary-report
+  - static-type-report
+passed_commit: null
+artifact_hashes: []
+```
+
+### G09H Acceptance
+
+1. G09H只拥有Synthetic Linear Perpetual development Profile、profile-neutral Runtime financial dispatch composition与完整Journey Fixture；不新增Binance/provider Adapter、真实fee/tier/wallet/margin-mode语义、live/deployment权限或decision-grade声明；
+2. Generic `DeterministicBarEngine`只新增单一injected financial dispatcher seam。Engine按canonical Plan调用`book_fill`、`dispatch_scheduled_event`与`project_final_snapshot`，不得导入、`isinstance`、match或按名称判断G09A–G09G、Linear Perpetual、Cash Instrument、Binance、Funding、Margin或Liquidation concrete types；`AuditableBacktestRunner`、Timeline、Generic Ledger同样不得新增derivative条件分支；
+3. 既有Cash journey必须通过同一dispatcher interface迁移，不保留`None`分支或绕过dispatcher的inline accounting path。无参数Engine constructor可构造immutable default Cash dispatcher以保持既有调用兼容；Synthetic Linear必须显式注入。至少两个实现证明该seam不是单实现包装；显式传入`None`/invalid dispatcher、dispatcher spec与Case Plan不匹配或dispatcher方法缺失均在执行前fail closed；
+4. `ResolvedExecutionCase` exact携带immutable canonical `FinancialDispatchPlan`；Plan只包含versioned dispatcher spec、ordered scheduled Account Events、final Snapshot authority与expected artifact roles，不包含implementation object、callback、module path、memory address、Attempt ID或wall clock。Per-Fill Plan继续由对应`ResolvedBarExecution`保存。Case canonical hash和ExecutionCaseSemanticSpec financial/snapshot inputs exact覆盖Dispatcher Plan和全部Fill Plans；
+5. Canonical v1 preimages exact为：Dispatcher Spec `{type="financial_dispatcher_spec",schema_version=1,dispatcher_key,dispatcher_version,config_hash,position_accounting_component,financing_component,margin_component,liquidation_audit_component,snapshot_projection_key,snapshot_projection_version}`；Fee Plan `{type="fee_accounting_dispatch_plan",schema_version=1,cash_key,final_fee_rule_set,fee_assessment_id,fee_assessment_time,fee_journal_entry_id,fee_recorded_at}`；Fill Plan `{type="fill_accounting_dispatch_plan",schema_version=1,source_event_id,expected_fill_id,position_accounting_component,position_payload,fill_journal_entry_id,fill_recorded_at,fee_plan,expected_artifact_roles}`；Scheduled Event `{type="scheduled_account_event",schema_version=1,event_id,event_at,operation_key,component_keys,payload,expected_artifact_roles}`；Financial Plan `{type="financial_dispatch_plan",schema_version=1,dispatcher_spec,scheduled_account_events,final_snapshot_payload,expected_artifact_roles}`；Artifact `{type="financial_dispatch_artifact",schema_version=1,role,source_event_id,occurred_at,component_key,component_version,component_digest,input_hash,result_hash,payload}`；Result `{type="financial_dispatch_result",schema_version=1,dispatcher_spec,source_event_id,journal_entries,position_lot_books,artifacts,snapshot}`；Failure `{type="financial_dispatch_failure",schema_version=1,dispatcher_spec,source_event_id,input_hash,code,subject_ids}`；Outcome `{type="financial_dispatch_outcome",schema_version=1,dispatcher_spec,input_hash,result,failure}`。Tuple按`(occurred_at,source_event_id,role)`canonical排序；payload必须满足canonical contract且constructor重算全部hash；
+6. `ResolvedBarExecution`只保存profile-neutral `FillAccountingDispatchPlan`。共同字段exact绑定source Bar Event、expected Fill ID、Position Accounting component ref、Journal ID/recorded-at与Fee accounting authority；payload可由Cash或Linear dispatcher解释，但Engine不得读取concrete payload字段。实际Fill identity/hash/context不匹配时不得产生Journal或partial artifact；
+7. Scheduled Account Event由stable Event ID、完整`SimulationInstant`、versioned operation key、component refs、canonical payload与expected artifact roles组成，并由Timeline Event exact触发。缺失、duplicate、extra、已处理重放、event instant/context mismatch、available-at晚于dispatch或运行结束仍未处理均structured fail closed；Engine不根据operation key做经济分支，只把事件和immutable state view交给injected dispatcher；
+8. `FinancialEventDispatcher` exact提供immutable `spec`及`book_fill(plan,fill,state_view)`、`dispatch_scheduled_event(event,state_view)`、`project_final_snapshot(plan,state_view)`。它只接收immutable Plan与当前Journal、Generic Ledger State、ResourceReservationState、已有canonical financial artifacts及必要Cash lot state；统一返回`FinancialDispatchOutcome`。Result可返回append-only Journal Entries、replacement Cash lot state、ordered canonical artifacts或Final PortfolioSnapshot；Fill/Event调用snapshot必须None，Snapshot调用journal entries必须empty。Outcome必须exactly one Result/Failure并绑定Spec/input hash；Failure codes first precedence exact为`DISPATCHER_SPEC_MISMATCH` → `FILL_PLAN_MISMATCH` → `EVENT_PLAN_MISMATCH` → `PROFILE_COMPONENT_FAILURE` → `JOURNAL_APPEND_FAILURE` → `ARTIFACT_COVERAGE_MISMATCH` → `SNAPSHOT_PROJECTION_FAILURE`。任一Failure或Result shape/append/coverage mismatch由Engine统一映射`EngineFailureCode.FINANCIAL_DISPATCH_FAILURE`并保留dispatcher failure hash，不发布partial Result；Engine负责Journal append与Generic Ledger重放；dispatcher不得mutate Engine state、读取filesystem/network/provider/current profile registry或调用wall clock；
+9. Cash dispatcher必须保持G06/G07现有`CashInstrumentAccounting`、Fee、Lot、Ledger、Snapshot和result hash语义；Linear dispatcher对Fill exact调用G09A projector产生OPEN/ADD/REDUCE/CLOSE/FLIP Transition，再调用G09B translator生成specialized Journal Entry。Linear Fill不得交换principal notional、不得创建Cash acquisition lot；Fee仍沿既有generic fee assessment/journal path独立记账；
+10. Fixture chronology冻结为single Account/Venue/settlement Currency、single Linear Perpetual Contract、三次deterministic full Fill形成Long OPEN → partial REDUCE → FLIP to Short。每次Transition、G09B Entry、Generic Ledger signed Position和`LinearDerivativeLedgerProjector` exact state/hash必须一致；
+11. Funding Event发生在Long position之后和partial close之前。Linear dispatcher使用G09C supplied closed publication revision chain、historical eligibility Journal prefix/Snapshot和FUNDING Mark解析唯一Eligibility，再调用G09D FinancingModel产生唯一Funding specialized Entry；不得读取current/final Position、使用Valuation/Margin/Liquidation/Execution price或按Bar均摊；
+12. Margin audit events至少覆盖Long与final Short。每次由当前immutable Journal/Generic Ledger重建G09B Position authority，使用同Instant的VALUATION Mark、MARGIN Mark、historical leverage/rule book和Reservation authority调用G09E/G09F；Working Order Margin只降低Available Margin。Final G09F Projection必须能仅凭Final Journal、frozen marks/rules/reservations与Plan重建并取得exact同一projection hash；
+13. Liquidation audit events分别覆盖Long-low与Short-high closed LIQUIDATION Mark Bar，且Account Window证明对应full bar interval无Journal/Reservation mutation。Dispatcher调用G09G并保存SAFE或development AMBIGUOUS完整artifact；不得产生trigger time/price、Order、Fill、Journal、partial close、bankruptcy、ADL或run-end closeout side effect；
+14. `EngineExecutionResult.financial_artifacts`是canonical ordered tuple。每个artifact exact保存role、source Timeline Event ID/instant、component ref、request/input hash、result/failure hash与完整typed payload；Plan expected roles必须exact覆盖，禁止missing/duplicate/extra、partial success、tuple order-dependent identity或只保存裸hash而丢失重建authority；
+15. Final PortfolioSnapshot由dispatcher在Timeline完成后从Final Generic Ledger、Final G09F Projection、VALUATION Mark references与versioned derivative Snapshot Plan构造；Cash/Position balances和Journal state hash exact等于Final Ledger，realized/fees/financing来自Ledger attribution，unrealized/equity exact等于G09F。Generic spot-style `quantity × mark` projector不得用于Linear derivative equity；
+16. Reconstruction tests必须独立完成：(a) Final Journal → Generic Ledger；(b) Final Journal specialized entries → G09B exact Position State；(c) Ledger + Position + frozen marks/rules/reservations → Final G09F Projection；(d) Ledger + Final G09F + Snapshot authority → Final PortfolioSnapshot。四者各自hash与Engine Result exact一致，禁止从Engine mutable side-state抄回；
+17. Synthetic Profile key exact为`synthetic.linear-perpetual.development.v1`，必须通过`TestProfileRegistry(allow_development_profiles=True)`显式加载；Market、Simulation、Execution Account registrations及dispatcher spec均固定`grade=development`、`decision_grade_eligible=false`、`deployment_authorized=false`并至少记录`synthetic_market_profile`与`bar-extremes-do-not-identify-intrabar-path-or-liquidation-time` limitations；默认Registry lookup与decision-grade Request必须在Engine执行前structured拒绝；
+18. `ExecutionCaseComposer`必须把dispatcher spec、Fill payloads、scheduled Account Events、final Snapshot authority和expected artifact roles纳入ID-free Semantic Spec；Identity Plan exact覆盖新增Funding Settlement/Journal等Domain identities，artifact roles由Financial Dispatch Plan identity覆盖。相同semantic input、不同registration order、Timeline batch size和至少两次独立Attempt产生相同Semantic Run、Case、Manifest、Trace、Journal、Ledger、Margin、Snapshot、artifact与Result hashes；
+19. Static golden至少冻结Profile/registration/dispatcher digests、Case semantic hash、identity manifest、三Fill/Transition、partial close realized PnL、Funding eligibility/application、all Journal Entry types、Generic Ledger、G09B final State、Long/Short G09E/G09F、Long-low/Short-high G09G、Final Snapshot、financial artifact roles/hashes、Run End、development limitations与repeat parity；
+20. Boundary scanner显式拒绝Engine、Runner、Timeline、Generic Ledger、ExecutionCaseComposer中的`LinearDerivative*`、`LinearPerpetual*`、`Funding*`、`Margin*`、`Liquidation*` imports/name branches；仅tests/support synthetic linear dispatcher可导入G09A–G09G concrete modules。Production runtime不能导入tests/support；test profile不能使用filesystem/network/process/database/cloud/provider SDK或新增dependency；
+21. G09H不拥有historical provider completeness、Binance symbol/contract/order/fee/tier/funding/wallet/margin-mode mapping、真实Liquidation、multi-currency collateral、cross/isolated semantics、ADL、live trading、deployment authorization或parity。G10A–G10F拥有provider adapters，G10G才拥有resolved Binance E2E，G10H拥有parity。
+
+G09H branchless dispatcher、event chronology、artifact routing、reconstruction、identity、development-only与boundary contracts已冻结，可实现Synthetic Linear Perpetual E2E；冻结后不得以test-only callback绕过Generic Engine/Runner canonical composition。
+
+Readiness baseline：
+
+```text
+G09A–G09G + Engine/Runner/Resolution/Profile focused baseline      141 passed
+Full test suite                                                     961 passed
+Workspace import boundary                                           PASS (71 files)
+mypy                                                                  no issues (71 source files)
+Primary/scoped document diagnostics                                  no blocking issues
+uv lock --check                                                      PASS
+Python                                                                3.13.5
+```
 
 ## 77. PASSED 记录格式
 

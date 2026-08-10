@@ -1519,15 +1519,28 @@ Development-grade返回两种classification并记录每Position direction/extrem
 
 依赖：G09A–G09G。
 
-拥有：Synthetic Linear Perpetual Profile composition 和完整黄金 Fixture。
+拥有：Synthetic Linear Perpetual Profile composition、profile-neutral Financial Dispatcher injection、canonical financial artifacts和完整黄金 Fixture。
+
+不拥有：Binance/provider Adapter、真实账户/费用/tier/wallet/margin-mode语义、精确Liquidation、live/deployment或decision-grade qualification。
 
 验收：
 
-- Generic Runner、Ledger 和 Bar Engine 不新增 derivative 条件分支；
-- 完整 Fixture 覆盖 long/short、partial close、Funding、Margin 和 LiquidationAudit；
-- Journal、MarginProjection 和 Final PortfolioSnapshot 可重建；
-- Profile 明确标记 synthetic/development，不能产生 decision-grade；
-- 不包含 Binance symbol、fee 或 rule Adapter。
+- Generic Runner、Timeline、Ledger、Composer和Bar Engine不新增Cash/Linear/Binance derivative条件分支；
+- Cash与Linear至少两个实现通过同一Dispatcher interface，Case保存canonical Dispatcher Plan而不保存callback/implementation object；
+- 完整Fixture覆盖Long OPEN、partial REDUCE、FLIP to Short、Funding、Long/Short Margin与Long-low/Short-high LiquidationAudit；
+- Journal、Generic Ledger、G09B exact Position、G09F MarginProjection和Final PortfolioSnapshot可从immutable authority独立重建；
+- Scheduled Account Event exact绑定Timeline Event/availability，Engine只dispatch opaque payload并验证complete artifacts；
+- Financial artifacts、Semantic Spec、Identity Manifest、Trace、Journal、Margin、Snapshot和Result在repeat Attempt、batch size与input order间hash parity；
+- Profile显式opt-in并标记synthetic/development、`decision_grade_eligible=false`、`deployment_authorized=false`；
+- 不包含Binance symbol、fee、rule、wallet、tier或provider Adapter。
+
+冻结实现seam：`ResolvedExecutionCase`新增versioned Financial Dispatch Plan，exact保存Dispatcher Spec、per-Fill opaque accounting payload、ordered Scheduled Account Events、Final Snapshot authority与expected artifact roles。`ResolvedBarExecution`的accounting plan变为profile-neutral，公共字段绑定expected Fill、Position Accounting component、Journal/recorded-at和Fee authority；Engine不得读取payload concrete fields。
+
+`DeterministicBarEngine`构造时必须显式注入匹配Case Spec的Financial Dispatcher，不保留`None`或implicit Cash default。Engine只调用`book_fill`、`dispatch_scheduled_event`和`project_final_snapshot`，继续拥有Journal append、Generic Ledger replay、Reservation/Settlement refresh、Trace与Run End；Dispatcher只返回append-only Entries、replacement Cash lot state、ordered typed artifacts或Final Snapshot。Cash dispatcher迁移现有G06/G07行为；Synthetic Linear dispatcher只存在tests/support并组合G09A–G09G。
+
+Synthetic chronology使用single Account/Venue/Currency/Contract：三次deterministic Fill形成Long OPEN → partial REDUCE → FLIP Short；Funding在Long之后、partial close之前，使用G09C historical eligibility和G09D specialized Entry；Long与Short各有G09E/G09F audit，且分别用closed LIQUIDATION Mark Bar执行G09G。Linear Fill不交换principal notional，Fee独立走existing generic path。
+
+`EngineExecutionResult.financial_artifacts` exact保存role、source Timeline Event/instant、component/request/result identity和完整typed payload，Plan expected roles exact覆盖。Final Snapshot从Final Ledger、Final G09F、VALUATION Mark references与versioned derivative Snapshot Plan构造，realized/fees/financing来自Ledger attribution，unrealized/equity exact等于G09F；禁止generic spot `quantity × mark`估值替代。
 
 ---
 

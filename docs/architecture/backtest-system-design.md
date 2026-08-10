@@ -1404,6 +1404,20 @@ Adverse Account Equity为`wallet + Σ adverse unrealized`，Adverse Maintenance�
 
 精确 Liquidation 需要足够粒度的历史 Liquidation Mark Price 或 Microstructure 数据。Trade、Execution Reference、Valuation、Margin或Settlement OHLC不得静默替代Liquidation Mark OHLC；Generic Bar Engine/Runner不增加derivative分支，G09H才注入该Model。
 
+### 11.13.1 G09H Financial Dispatcher Composition
+
+G09H以单一profile-neutral Financial Dispatcher seam把Position Accounting、Financing、Margin Projection、Liquidation Audit和Final Snapshot composition注入Generic Bar Engine。Engine只认识canonical Financial Dispatch Plan、Fill Accounting Plan、Scheduled Account Event、immutable Financial State View与canonical Dispatch Outcome；不得认识Cash/Linear/Binance concrete type或按Instrument kind、Profile key、operation key执行经济分支。
+
+ResolvedExecutionCase保存versioned Dispatcher Spec、每个planned Fill的opaque canonical accounting payload、按Timeline Event绑定的ordered Account Events、final Snapshot authority与expected artifact roles。Implementation object、callback、module path、runtime address、Attempt ID和wall clock不进入Case；ExecutionCaseSemanticSpec与Case hash必须覆盖所有Plan bytes，Engine启动时验证injected Dispatcher Spec exact匹配Case。
+
+Cash和Linear Perpetual都走相同调用顺序：Engine产生Fill后调用`book_fill`；Timeline触发Account Event时调用`dispatch_scheduled_event`；Timeline完成后调用`project_final_snapshot`。Dispatcher只返回append-only Accounting Journal Entries、replacement Cash lot state、ordered typed artifacts或Final PortfolioSnapshot；Engine继续拥有Journal append、Generic Ledger replay、Reservation/Settlement refresh、Trace和Run End。Cash dispatcher保留G06/G07现有CashInstrumentAccounting/Lot语义；Linear dispatcher由test Profile composition调用G09A–G09G，不允许Linear Fill交换principal notional或创建Cash Lot。
+
+Scheduled Account Event不等同Market Event经济解释。它是resolved composition plan对一个已存在Timeline Event的账户操作绑定：stable Event ID、完整SimulationInstant、versioned operation key、component refs、canonical payload和expected artifact roles必须exact匹配，且available-at不得晚于dispatch。Engine不解释payload；Synthetic Linear dispatcher内部完成Funding eligibility/application、Margin Projection与Liquidation Audit。未处理、duplicate、extra、reordered或partial artifact均fail closed。
+
+EngineExecutionResult保存canonical ordered Financial Dispatch Artifacts。每个Artifact携带role、source Timeline Event、component/request/result identity及完整typed payload，使Final Journal→Generic Ledger、specialized Journal→Linear Position、Ledger+Marks/Rules/Reservations→G09F MarginProjection、Ledger+G09F+Mark authority→PortfolioSnapshot四条重建路径可独立验证。Generic spot-style Position market value projector不能用于Linear derivative equity。
+
+Synthetic Linear Perpetual Profile只存在于tests/support并通过显式development opt-in加载；固定`decision_grade_eligible=false`、`deployment_authorized=false`，记录`synthetic_market_profile`与Bar liquidation ambiguity limitations。Generic Runner接口不变，至少两个独立Attempt、不同Timeline batch size与input registration order必须保持Case、Trace、Journal、Ledger、Margin、Snapshot、Artifact和Result hash parity。
+
 ### 11.14 CorporateActionModel
 
 负责现金分红、拆股和送转、除权除息生效时间、配股、Symbol migration 和合约换月。

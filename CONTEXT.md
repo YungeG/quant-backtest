@@ -199,6 +199,27 @@ _Avoid_: Market Profile
 
 描述回测如何近似历史成交、滑点、延迟、流动性和数据粒度歧义的版本化假设集合。它不表示真实市场规则。
 
+## 财务分派器（Financial Dispatcher）
+
+由已解析Profile composition注入Generic Bar Engine的账户经济编排接口。Engine只向它提交canonical Fill Accounting Plan、Scheduled Account Event和immutable Financial State View，并接收append-only Journal Entries、typed Financial Artifacts或Final PortfolioSnapshot；Engine不得按Cash、Derivative、Provider或operation key解释经济语义。
+_Avoid_: derivative engine branch, profile callback in case identity
+
+## 财务分派计划（Financial Dispatch Plan）
+
+ResolvedExecutionCase中的versioned immutable composition authority，exact保存Dispatcher Spec、per-Fill opaque accounting payload、ordered Scheduled Account Events、Final Snapshot authority和expected artifact roles。Implementation object、runtime address、Attempt ID和wall clock不进入Plan或Semantic Spec。
+
+## 计划账户事件（Scheduled Account Event）
+
+把一个已存在Timeline Event exact绑定到Profile-owned账户操作payload的resolved plan。它携带stable Event ID、完整SimulationInstant、versioned operation key、component refs、availability和expected artifact roles；Engine只负责唯一、按时dispatch，不解释Funding、Margin或Liquidation含义。
+
+## 财务分派产物（Financial Dispatch Artifact）
+
+Engine Result中由Financial Dispatch Plan exact覆盖的canonical typed evidence。它绑定source Timeline Event、component/request/result identity和完整payload，用于独立重建Journal、Derivative Position、MarginProjection、LiquidationAudit或Final Snapshot；裸hash不能替代重建authority。
+
+## Synthetic Linear Perpetual Development Profile
+
+G09H tests/support中的显式opt-in Profile composition，用同一Generic Financial Dispatcher seam组合G09A–G09G并冻结Long/Short、partial close、Funding、Margin、Liquidation与Snapshot Journey。它始终记录`synthetic_market_profile` limitation，`decision_grade_eligible=false`且`deployment_authorized=false`。
+
 ## 已解析回测环境（Resolved Backtest Environment）
 
 由已解析市场语义 Profile、模拟 Profile 和市场数据包引用组成，并通过兼容性验证的不可变运行环境。
