@@ -218,7 +218,7 @@ Engine Result中由Financial Dispatch Plan exact覆盖的canonical typed evidenc
 
 ## Synthetic Linear Perpetual Development Profile
 
-G09H tests/support中的显式opt-in Profile composition，用同一Generic Financial Dispatcher seam组合G09A–G09G并冻结Long/Short、partial close、Funding、Margin、Liquidation与Snapshot Journey。它始终记录`synthetic_market_profile` limitation，`decision_grade_eligible=false`且`deployment_authorized=false`。
+G09H tests/support中的显式opt-in Profile composition，用同一Generic Financial Dispatcher seam组合G09A–G09G并冻结Long/Short、partial close、Funding、Margin、Liquidation与Snapshot Journey。它始终记录`synthetic_market_profile` limitation，`decision_grade_eligible=false`且`deployment_authorized=false`。G09H已由实现提交`e0f2bc767dc87513d562becd9907262628b788e6`通过冻结验收。
 
 ## 已解析回测环境（Resolved Backtest Environment）
 

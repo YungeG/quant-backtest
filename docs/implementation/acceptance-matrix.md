@@ -7247,7 +7247,7 @@ Python                                                               3.13.5
 
 ```yaml
 id: G09H
-status: READY
+status: PASSED
 depends_on:
   - G09A
   - G09B
@@ -7281,7 +7281,7 @@ public_interface:
   - tests.support.synthetic_market.build_synthetic_linear_perpetual_resolved_request
   - static synthetic linear-perpetual development journey golden fixture v1
 test_commands:
-  contract: uv run pytest -q tests/support/synthetic_market/test_synthetic_linear_perpetual_profile.py tests/runtime/engine/test_g09h_synthetic_linear_perpetual_journey.py
+  contract: uv run pytest -q tests/runtime/engine/test_financial_dispatch_contracts.py tests/support/synthetic_market/test_synthetic_linear_perpetual_profile.py tests/runtime/engine/test_g09h_synthetic_linear_perpetual_journey.py
   fixture: uv run pytest -q tests/runtime/engine/test_g09h_synthetic_linear_perpetual_golden.py
   boundary: uv run pytest -q tests/architecture/test_public_api_imports.py tests/architecture/test_network_isolation.py tests/architecture/test_repository_cleanliness.py tests/architecture/test_derivative_boundary.py tests/architecture/test_liquidation_audit_boundary.py tests/architecture/test_g09h_composition_boundary.py tests/runtime/engine/test_engine_harness.py tests/runtime/engine/test_g06_synthetic_cash_journey.py tests/runtime/runner/test_auditable_runner.py tests/runtime/resolution/test_backtest_resolution.py && uv run python tools/architecture/check_import_boundaries.py --root . --policy architecture/import-boundaries.toml --report build/acceptance/g09h-import-boundary-report.json
 fixture_ids:
@@ -7325,8 +7325,11 @@ evidence:
   - no-derivative-branch-boundary-report
   - import-boundary-report
   - static-type-report
-passed_commit: null
-artifact_hashes: []
+passed_commit: e0f2bc767dc87513d562becd9907262628b788e6
+artifact_hashes:
+  - tests/fixtures/runtime/engine/synthetic-linear-perpetual-development-journey-v1.json: sha256:162af5d5e236def3333d2bc5e3485f52c24a763405f58c004204e5ee143d271c
+  - build/acceptance/g09h-pytest.xml: sha256:3d1d53a620726b3cbbe239fc58b68fe2ea74035b901def834a25c84316aba185
+  - build/acceptance/g09h-import-boundary-report.json: sha256:9d36601649bcc115d18a47f56362257f058b142d4bac608279231e9ee32641b5
 ```
 
 ### G09H Acceptance
@@ -7364,6 +7367,18 @@ Workspace import boundary                                           PASS (71 fil
 mypy                                                                  no issues (71 source files)
 Primary/scoped document diagnostics                                  no blocking issues
 uv lock --check                                                      PASS
+Python                                                                3.13.5
+```
+
+PASSED validation：
+
+```text
+G09H contract + fixture + frozen boundary command                    79 passed
+Full test suite                                                     977 passed
+Workspace import boundary                                           PASS (72 files)
+mypy                                                                  no issues (71 source files)
+Primary LSP + scoped pi-lens                                          no blocking errors
+uv lock --check                                                       PASS
 Python                                                                3.13.5
 ```
 

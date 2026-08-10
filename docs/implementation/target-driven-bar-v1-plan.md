@@ -1536,9 +1536,11 @@ Development-grade返回两种classification并记录每Position direction/extrem
 
 冻结实现seam：`ResolvedExecutionCase`新增versioned Financial Dispatch Plan，exact保存Dispatcher Spec、per-Fill opaque accounting payload、ordered Scheduled Account Events、Final Snapshot authority与expected artifact roles。`ResolvedBarExecution`的accounting plan变为profile-neutral，公共字段绑定expected Fill、Position Accounting component、Journal/recorded-at和Fee authority；Engine不得读取payload concrete fields。
 
-`DeterministicBarEngine`构造时必须显式注入匹配Case Spec的Financial Dispatcher，不保留`None`或implicit Cash default。Engine只调用`book_fill`、`dispatch_scheduled_event`和`project_final_snapshot`，继续拥有Journal append、Generic Ledger replay、Reservation/Settlement refresh、Trace与Run End；Dispatcher只返回append-only Entries、replacement Cash lot state、ordered typed artifacts或Final Snapshot。Cash dispatcher迁移现有G06/G07行为；Synthetic Linear dispatcher只存在tests/support并组合G09A–G09G。
+`DeterministicBarEngine`执行时必须拥有匹配Case Spec的Financial Dispatcher；无参数构造只创建immutable default Cash dispatcher以保持既有调用兼容，显式`None`/invalid dispatcher拒绝，且不存在inline accounting bypass。Engine只调用`book_fill`、`dispatch_scheduled_event`和`project_final_snapshot`，继续拥有Journal append、Generic Ledger replay、Reservation/Settlement refresh、Trace与Run End；Dispatcher只返回append-only Entries、replacement Cash lot state、ordered typed artifacts或Final Snapshot。Cash dispatcher迁移现有G06/G07行为；Synthetic Linear dispatcher只存在tests/support并组合G09A–G09G。
 
 Synthetic chronology使用single Account/Venue/Currency/Contract：三次deterministic Fill形成Long OPEN → partial REDUCE → FLIP Short；Funding在Long之后、partial close之前，使用G09C historical eligibility和G09D specialized Entry；Long与Short各有G09E/G09F audit，且分别用closed LIQUIDATION Mark Bar执行G09G。Linear Fill不交换principal notional，Fee独立走existing generic path。
+
+状态：PASSED；实现提交`e0f2bc767dc87513d562becd9907262628b788e6`，79项冻结G09H验收、977项完整suite、72文件import boundary与71源文件mypy均通过。
 
 `EngineExecutionResult.financial_artifacts` exact保存role、source Timeline Event/instant、component/request/result identity和完整typed payload，Plan expected roles exact覆盖。Final Snapshot从Final Ledger、Final G09F、VALUATION Mark references与versioned derivative Snapshot Plan构造，realized/fees/financing来自Ledger attribution，unrealized/equity exact等于G09F；禁止generic spot `quantity × mark`估值替代。
 
