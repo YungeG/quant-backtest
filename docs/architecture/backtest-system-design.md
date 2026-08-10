@@ -2031,6 +2031,20 @@ Contract status保存为provider evidence。只有`TRADING`为普通tradable；`
 
 Primary-source boundary记录于`docs/research/binance-usdm-instrument-metadata-primary-sources.md`。Binance first-party public-data repository记录了部分`onboardDate`更正和consumer对expired-contract retention的风险报告，因此source revision、availability与retention provenance是decision-grade前置条件；后者不冒充official API completeness guarantee。
 
+G10B 的 Binance USDⓈ-M Order Rule Model 同样是纯离线 Adapter。它消费caller-supplied finite `BinanceUsdmOrderRuleBook`，每个half-open Band绑定G10A stable Instrument、economic interval、`available_at`、source key/hash、raw canonical decimal filter strings、provider order type/TIF集合、symbol-time admission mode和显式deferred rule keys。`captured_at`只允许使用已公布Band；coverage gap、overlap、late-only evidence或current `exchangeInfo` fallback均fail closed。
+
+Static rule projection exact覆盖`PRICE_FILTER`、`LOT_SIZE`、`MARKET_LOT_SIZE`和`MIN_NOTIONAL`。Provider decimal string用整数/字符串算术映射到最小exact Scale，不使用float、process Decimal context、`pricePrecision`或`quantityPrecision`。Enabled `minPrice`必须位于zero-origin tick lattice；Limit与Market quantity filter必须各自满足minimum/maximum/step geometry，不能把不同的`MARKET_LOT_SIZE`压成普通`LOT_SIZE`。
+
+Generic `OrderRuleSnapshot`因此增加backward-compatible optional `market_quantity_lattice`：缺失时v1/v2 canonical bytes与hash不变；存在时使用schema v3。`LIMIT`/`STOP_LIMIT`使用primary lattice和limit cap，`MARKET`/`STOP`使用market lattice和market cap；notional、position evidence与quantity issue均使用selected lattice。两条lattice必须属于同Instrument、共享exact atomic Scale和MIN_NOTIONAL authority。
+
+Provider admission mode exact区分`normal`、`reduce_only`与`closed`。Reduce-only只允许`PositionEffect.CLOSE`并要求`reduce_only=true`；closed或G10A non-tradable status产生suspended admission，不推断Order或Fill。Account one-way/hedge compatibility仍由G10F拥有，G10B不能因为provider支持reduceOnly就授权Hedge Mode参数。
+
+`PERCENT_PRICE`、open/algo-order counts、`marketTakeBound`、`triggerProtect`和advanced order/TIF组合不能被静默忽略。Band必须声明known deferred keys；Resolution保存未解析keys并在非空时`decision_grade_eligible=false`。G10D/G10F/G10G必须补齐对应Mark、account-state或translation evidence后才能升级；unknown key直接fail closed。
+
+Tick transition只影响transition后新admission。Transition前已获批Order保留原MarketRuleDecision、resolved interval和rule hash，不按current tick重新解释；官方声明的temporary suspension必须由独立Band/G10A status evidence表达，不能由“tick changed”猜测。
+
+Primary-source boundary记录于`docs/research/binance-usdm-order-rules-primary-sources.md`。G10B不拥有HTTP/JSON/file parsing、MarketBundle Builder、Mark lookup、account lookup、open-order counting、wire translation、fill behavior、Engine branch、live或deployment。
+
 关键场景：
 
 - Funding 跨期持仓

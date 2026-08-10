@@ -7509,7 +7509,128 @@ uv lock --check                                                      PASS
 Python                                                                3.13.5
 ```
 
-## 78. PASSED 记录格式
+## 78. G10B Binance USDⓈ-M Historical Order Rules Acceptance Card
+
+```yaml
+id: G10B
+status: READY
+depends_on:
+  - G10A
+  - WP-05G
+owner_package: trading-kernel + trading-kernel profile adapter
+public_interface:
+  - backward-compatible crypto_quant_trading.OrderRuleSnapshot.market_quantity_lattice
+  - backward-compatible crypto_quant_trading.MarketRuleEvaluator style-specific quantity lattice selection
+  - crypto_quant_trading.profiles.binance_usdm.BinanceUsdmOrderAdmissionMode
+  - crypto_quant_trading.profiles.binance_usdm.BinanceUsdmDeferredRuleKey
+  - crypto_quant_trading.profiles.binance_usdm.BinanceUsdmOrderRuleSourceRef
+  - crypto_quant_trading.profiles.binance_usdm.BinanceUsdmOrderRuleBand
+  - crypto_quant_trading.profiles.binance_usdm.BinanceUsdmOrderRuleBook
+  - crypto_quant_trading.profiles.binance_usdm.BinanceUsdmOrderRuleQuery
+  - crypto_quant_trading.profiles.binance_usdm.BinanceUsdmOrderRuleResolution
+  - crypto_quant_trading.profiles.binance_usdm.BinanceUsdmOrderRuleFailureCode
+  - crypto_quant_trading.profiles.binance_usdm.BinanceUsdmOrderRuleFailure
+  - crypto_quant_trading.profiles.binance_usdm.BinanceUsdmOrderRuleOutcome
+  - crypto_quant_trading.profiles.binance_usdm.BinanceUsdmOrderRuleModel
+test_commands:
+  contract: uv run pytest -q tests/profiles/binance_usdm/test_order_rules.py tests/kernel/market_rules/test_market_rule_style_lattices.py
+  fixture: uv run pytest -q tests/profiles/binance_usdm/test_order_rules_golden.py
+  boundary: uv run pytest -q tests/architecture/test_binance_usdm_profile_boundary.py tests/architecture/test_public_api_imports.py tests/architecture/test_repository_cleanliness.py
+  regression: uv run pytest -q tests/profiles/binance_usdm/test_instrument_metadata.py tests/kernel/market_rules/test_market_rule_evaluator.py tests/kernel/market_rules/test_market_rule_position_evidence.py tests/kernel/capabilities/test_order_capability_validator.py
+  acceptance: uv run pytest -q tests/profiles/binance_usdm/test_order_rules.py tests/profiles/binance_usdm/test_order_rules_golden.py tests/kernel/market_rules/test_market_rule_style_lattices.py tests/architecture/test_binance_usdm_profile_boundary.py tests/architecture/test_public_api_imports.py tests/architecture/test_repository_cleanliness.py tests/profiles/binance_usdm/test_instrument_metadata.py tests/kernel/market_rules/test_market_rule_evaluator.py tests/kernel/market_rules/test_market_rule_position_evidence.py tests/kernel/capabilities/test_order_capability_validator.py --junitxml=build/acceptance/g10b-pytest.xml
+fixture_ids:
+  - binance-usdm-historical-order-rule-source-v1
+  - binance-usdm-historical-order-rules-v1
+expected_artifacts:
+  - docs/research/binance-usdm-order-rules-primary-sources.md
+  - tests/fixtures/profiles/binance-usdm-historical-order-rule-source-v1.json
+  - tests/fixtures/profiles/binance-usdm-historical-order-rules-v1.json
+  - build/acceptance/g10b-pytest.xml
+  - build/acceptance/g10b-import-boundary-report.json
+failure_contracts:
+  - missing-rule-bands
+  - instrument-metadata-query-or-rule-book-mismatch
+  - no-rule-evidence-visible-by-captured-at
+  - missing-rule-interval-or-incomplete-declared-coverage
+  - overlapping-rule-intervals-or-input-order-selection
+  - missing-price-lot-market-lot-or-min-notional-filter
+  - unknown-or-undeclared-provider-filter
+  - noncanonical-negative-exponent-overflow-or-inexact-decimal
+  - disabled-tick-step-offset-or-incompatible-filter-geometry
+  - missing-limit-market-or-unknown-order-tif-capability
+  - g10a-tradability-and-admission-mode-conflict
+  - unresolved-provider-rule-is-omitted-or-marked-decision-grade
+  - current-rule-fallback-rewrites-historical-or-working-order-identity
+  - limit-and-market-quantity-lattices-are-collapsed
+  - market-notional-uses-trade-bar-close-or-wrong-price-purpose
+  - source-query-filesystem-network-wall-clock-runtime-or-account-leakage
+allowed_grade: development
+evidence:
+  - readiness-contract-tests
+  - official-source-note
+  - static-source-and-golden-fixture-hashes
+  - legacy-schema-and-hash-compatibility-golden
+  - public-api-import-report
+  - import-boundary-report
+  - static-type-report
+  - dependency-lock-report
+```
+
+### G10B Acceptance
+
+冻结边界：
+
+1. G10B是纯离线`crypto_quant_trading.profiles.binance_usdm.order_rules` Adapter，结构化实现既有`OrderRuleModel.resolve_order_rules()`；只消费caller-supplied immutable G10A Resolution、RuleBook、Session和time inputs。Production code不得创建provider client、发HTTP、解析JSON/file、读filesystem/database/wall clock或fallback到current `/fapi/v1/exchangeInfo`；G12拥有acquisition/parsing/retention；
+2. `BinanceUsdmOrderRuleBand` exact保存`band_id`、Instrument ID、half-open`effective_from/effective_to_exclusive`、`available_at`、raw canonical decimal strings：`min_price/max_price/tick_size`、Limit `min_qty/max_qty/step_size`、Market `min_qty/max_qty/step_size`、`min_notional`，以及provider `order_types`、`time_in_forces`、Admission Mode、deferred rule keys和source key/hash；全部字段进入Band hash；
+3. `BinanceUsdmOrderRuleBook` exact保存key/version、Instrument、finite`coverage_from/coverage_to_exclusive`与canonical-sorted Bands。Query绑定G10A Resolution、Session ID、`evaluated_at`、`captured_at`和RuleBook hash；G10A economic instant必须等于evaluated-at，G10A captured-at不得晚于Query captured-at，Instrument/settlement currency必须exact匹配；
+4. Resolver只使用`available_at <= captured_at`的Band。Failure precedence exact为：`MISSING_RULE_BANDS`、`INSTRUMENT_METADATA_MISMATCH`、`RULE_NOT_AVAILABLE`、`MISSING_RULE_INTERVAL`、`OVERLAPPING_RULE_INTERVALS`、`MISSING_REQUIRED_FILTER`、`UNSUPPORTED_FILTER`、`INVALID_DECIMAL_FIELD`、`INVALID_FILTER_GEOMETRY`、`UNSUPPORTED_ORDER_CAPABILITY`、`ADMISSION_STATUS_CONFLICT`、`METADATA_CONFLICT`；多缺陷只返回第一项；
+5. Visible Bands必须从RuleBook coverage start到end exact形成连续half-open coverage；首尾缺失、内部gap、overlap、duplicate Band ID、cross-Instrument Band或按tuple顺序选winner均fail closed。Query instant必须命中唯一Band；不得nearest/current fallback；
+6. Provider decimal grammar exact限定non-negative ordinary decimal string，不允许sign、exponent、NaN/Infinity、leading plus、whitespace、Unicode alternative或超过18 fractional places。Mapping只用string/integer arithmetic；raw string（含provider trailing zeros）保留在Band identity，behavior使用smallest exact common Scale；禁止float、ambient Decimal context、`pricePrecision`与`quantityPrecision`；
+7. `PRICE_FILTER` tick必须positive。Zero `minPrice`/`maxPrice`分别映射disabled bound；nonzero bounds必须positive且lower<=upper。Generic evaluator使用zero-origin tick，因此enabled min必须exact位于tick lattice；需要unrepresented offset、zero tick、scale overflow或bound incompatibility返回`INVALID_FILTER_GEOMETRY`，不得round；
+8. `LOT_SIZE`和`MARKET_LOT_SIZE`各自要求positive min/max/step、min<=max且min exact位于step lattice。两者映射独立Limit/Market `QuantityLattice`与max cap，不得copy、fallback或取交集。两条lattice必须同Instrument、同exact atomic Scale、同quote-currency MIN_NOTIONAL authority；raw filter差异进入hash；
+9. Generic `OrderRuleSnapshot`在现有字段后增加optional `market_quantity_lattice: QuantityLattice | None = None`。None时现有无cap schema-v1与有cap schema-v2 canonical bytes/config/snapshot hashes完全不变且payload不出现字段；non-None时schema-v3并exact保存该lattice；
+10. Generic Evaluator对`LIMIT`/`STOP_LIMIT`使用primary lattice及limit cap，对`MARKET`/`STOP`使用market lattice（缺失时保持legacy primary fallback）及market cap。Quantity Scale/Step/Minimum/Maximum、position-exception lattice hash、notional currency/scale和calculated notional均绑定selected lattice；Market cap按market step验证，Limit cap按primary step验证；
+11. `MIN_NOTIONAL`必须positive，exact转换到`price_scale + quantity_scale`（总Scale<=18）的quote-currency Money；Limit/Stop-Limit使用对应constraint price evidence；Market/Stop要求caller-supplied `NotionalPriceBasis.SUPPLIED_REFERENCE`且其Price Purpose由G10D/G10G证明为historical MARK_PRICE。G10B不查询Mark，不允许Trade/Bar Close/Valuation/Liquidation/current price替代；
+12. Source `order_types`和`time_in_forces` canonical-sort并进入Band identity。v1要求source至少声明`LIMIT`和`MARKET`；Limit generic capability exact为`PriceConstraintShape.LIMIT`及source与`GTC/IOC/FOK/GTX`的intersection且不得为空；Market capability exact为`PriceConstraintShape.NONE`与`TimeInForce.IOC`，表达immediate non-resting semantic而非要求wire发送TIF。Unknown provider values structured reject；STOP/TAKE_PROFIT/TRAILING、GTD/RPI、close-all、price-match与STP不是静默capability；
+13. `BinanceUsdmDeferredRuleKey` exact冻结：`PERCENT_PRICE`、`MAX_NUM_ORDERS`、`MAX_NUM_ALGO_ORDERS`、`MARKET_TAKE_BOUND`、`TRIGGER_PROTECT`、`ADVANCED_ORDER_CAPABILITIES`。Normalized source必须声明所有存在但本Gate未解析的known rules；unknown key返回`UNSUPPORTED_FILTER`；Resolution exact保留active及full visible deferred set；
+14. Resolution只有在deferred set为空时可`decision_grade_eligible=true`。任何deferred key被遗漏、结果伪造为空或非空仍标decision-grade必须constructor拒绝。G10D拥有PERCENT_PRICE/trigger Mark evidence，G10F拥有account working-order counts与mode，G10G拥有最终coverage intersection；G10B本身只允许development；
+15. `BinanceUsdmOrderAdmissionMode` exact为`NORMAL`、`REDUCE_ONLY`、`CLOSED`。NORMAL Snapshot允许BUY/SELL与AUTO/OPEN/CLOSE且不要求reduce-only；REDUCE_ONLY只允许CLOSE并`reduce_only_required=true`；CLOSED使用`MarketSessionState.SUSPENDED`且不产生普通approval。G10A active metadata非tradable时active Band必须CLOSED，否则`ADMISSION_STATUS_CONFLICT`；TRADING可由explicit source进入REDUCE_ONLY/CLOSED；
+16. Provider支持`reduceOnly`不等于任意Account可发送该wire field。Capability Set记录symbol-level support；Hedge/One-way、positionSide、closePosition、existing-order conflict与account restriction由G10F/intersection拥有，G10B不得授权或查询account；
+17. Resolution exact包含Component Ref `ProfileComponentRef(ORDER_RULE_MODEL,"crypto.binance_usdm.order-rules.v1")`、visible Bands、active Band、full generic OrderRuleTimeline、active Snapshot、Limit/Market lattices、price/quantity scales、active OrderCapabilitySet、deferred keys、decision-grade flag和source coverage。相同logical inputs任意tuple顺序得到相同canonical outcome；
+18. 每个Band形成exact matching `OrderRuleInterval`，interval identity/hash与Band/source绑定。Tick change只影响boundary后新admission；transition前已接受Order保留原MarketRuleDecision、resolved interval与rule hash，Generic Engine/Runner不得按current timeline重新解释Working Order。Official temporary suspension只有显式CLOSED Band/G10A status evidence时生效，不能从tick change猜测；
+19. Constructor必须重算Band/RuleBook/Query/Resolution/Failure、Component、generic Snapshot/Interval/Timeline/Capability identities，并重验证active Band、style lattices、scale/cap、admission mode、deferred set和source exact coverage。`dataclasses.replace`伪造任一authority必须拒绝；
+20. Static source/golden至少覆盖：distinct Limit/Market max与step、exact trailing-zero decimal normalization、MIN_NOTIONAL、tick transition before/at/after、one-minute CLOSED suspension、TRADING+REDUCE_ONLY delist window、captured-at late Band、coverage gap/overlap、missing filter、invalid decimal/offset geometry、unknown order/TIF/deferred key、G10A mismatch、source conflict、forgery、input-order parity与all hashes；
+21. Generic compatibility golden固定：(a) no market lattice/no caps schema-v1 bytes/hash；(b) no market lattice/with caps schema-v2 bytes/hash；(c) market lattice schema-v3；(d) legacy Evaluator decisions unchanged；(e) style-specific killer证明same Quantity在Limit lattice通过但Market lattice因step/min/max拒绝，及反向case；
+22. Concrete purity scanner allowlist只允许stdlib、`crypto_quant_domain`、generic `market_rules|capabilities|ports|sizing`和same-package G10A types；拒绝filesystem/network/provider/process/database/cloud、dynamic import、MarketBundle、Runtime和wall clock。Generic Kernel不得import/branch on Binance；Production Runtime不得importconcrete profile；不新增dependency；
+23. G10B不拥有PERCENT_PRICE final decision、Mark streams、open/algo order count、Account/Hedge mode、GTD/RPI/trailing/close-all/STP/price-match wire semantics、marketTakeBound Fill、fees、funding、margin、liquidation、Bundle Builder、Profile composition、live、deployment或parity。任何后续Gate必须消费G10B canonical evidence，不能重抓current rules补洞。
+
+Primary-source contract：`docs/research/binance-usdm-order-rules-primary-sources.md`。
+
+Readiness baseline：
+
+```text
+G10A frozen acceptance command                                      45 passed
+Full test suite                                                    1001 passed
+Workspace import boundary                                           PASS (74 files)
+mypy 2.3.0                                                           no issues (74 source files)
+Primary LSP + scoped pi-lens                                         no issues
+uv lock --check                                                      PASS
+Python                                                                3.13.5
+```
+
+Readiness validation：
+
+```text
+G10A frozen acceptance command                                      45 passed
+Full test suite                                                    1001 passed
+Workspace import boundary                                           PASS (74 files)
+mypy 2.3.0                                                           no issues (74 source files)
+Markdown + git diff checks                                           PASS
+uv lock --check                                                      PASS
+Python                                                                3.13.5
+```
+
+## 79. PASSED 记录格式
 
 ```yaml
 id: WP-00A

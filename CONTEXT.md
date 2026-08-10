@@ -240,6 +240,26 @@ G09H tests/support中的显式opt-in Profile composition，用同一Generic Fina
 
 G10A已实现并通过冻结验收的纯离线Profile Adapter：caller-supplied frozen `exchangeInfo` revisions → stable Instrument、point-in-time Symbol timeline、listing/delisting interval和Linear currency/multiplier metadata。它只解析`captured_at`已可见的closed revision chain，保留source provenance并structured fail closed；implementation commit为`613c319b2dbba9962d4867dcfb3d1b19067d16cf`。它不扩展到G10B rules、G12 acquisition、live或deployment。
 
+## Binance USDⓈ-M Order Rule Model
+
+G10B已冻结但尚未实现的纯离线Profile Adapter：caller-supplied finite historical RuleBook → style-specific Quantity lattices、Price tick/bounds、MIN_NOTIONAL、Admission Mode、generic Rule Timeline与Capability evidence。Readiness contract位于Acceptance Matrix G10B；它不查询current exchange info，也不拥有Mark、account、translation、execution或deployment。
+
+## Binance USDⓈ-M Order Rule Band
+
+对一个stable Instrument在half-open economic interval内生效的历史下单规则证据，保存可用时间、source provenance、raw PRICE_FILTER/LOT_SIZE/MARKET_LOT_SIZE/MIN_NOTIONAL、provider capability和admission mode。它是新Order admission authority，不反向修改旧Order已保存的rule decision。
+
+## Style-specific Quantity Lattice
+
+同一Instrument按Execution Style选择的数量格点。Limit/Stop-Limit使用primary lattice，Market/Stop使用market lattice；两者共享atomic Scale与MIN_NOTIONAL authority，但minimum、maximum和step可以不同。
+
+## Binance USDⓈ-M Order Admission Mode
+
+Symbol-time规则状态：`normal`允许普通开平仓，`reduce_only`只允许显式CLOSE且要求reduce-only，`closed`禁止新admission。它不同于Account的one-way/hedge mode，也不同于Order最终Fill结果。
+
+## Deferred Provider Rule
+
+已在冻结source中出现、但当前Gate缺少所需Mark、account state、translation或execution semantics而不能安全判定的provider rule。它必须保留identity和owner；存在未解析Deferred Rule时不得声明decision-grade eligibility。
+
 ## 已解析回测环境（Resolved Backtest Environment）
 
 由已解析市场语义 Profile、模拟 Profile 和市场数据包引用组成，并通过兼容性验证的不可变运行环境。

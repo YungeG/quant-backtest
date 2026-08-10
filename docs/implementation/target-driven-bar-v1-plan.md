@@ -1579,16 +1579,31 @@ G10A纯离线Adapter、source revision/captured-at、stable lineage、Symbol tim
 
 ### Gate G10B Historical Order Rules
 
+状态：READINESS FROZEN；实现前必须通过Acceptance Matrix G10B readiness validation。
+
 依赖：G10A、G05G。
 
-拥有：tick、step、min quantity/notional、reduce-only、TIF capability 的历史 Rule Timeline Adapter。
+拥有：纯离线`crypto_quant_trading.profiles.binance_usdm.order_rules` Adapter；caller-supplied finite historical Band/RuleBook → style-specific Quantity lattice、Price tick/bounds、MIN_NOTIONAL、admission mode、generic OrderRuleTimeline与OrderCapabilitySet。
+
+不拥有：provider client/JSON parser、current-rule fallback、PERCENT_PRICE mark resolution、open/algo-order account counts、account-mode permission、wire translation、marketTakeBound execution、triggerProtect、fill simulation、Runtime/Bundle Builder、live/deployment。
 
 验收：
 
-- 每个有效区间无缺口、无重叠且唯一解析；
-- Rule identity 进入 MarketRuleDecision；
-- 缺失历史规则产生结构化阻断；
-- 禁止回退当前交易所规则。
+- RuleBook exact绑定G10A stable Instrument、finite coverage、half-open Bands、`available_at`、source key/hash；canonical排序后只使用`captured_at`已可见Band；gap、overlap、late-only、source conflict fail closed；
+- Band保存raw canonical decimal strings，不用float、global Decimal context、`pricePrecision`或`quantityPrecision`；decimal grammar/scale/overflow、zero step/tick、incompatible min/max和offset geometry structured reject；
+- `PRICE_FILTER`映射exact Price Scale、tick、optional min/max；`LOT_SIZE`与`MARKET_LOT_SIZE`分别映射Limit/Market min/max/step，不得合并；
+- Generic `OrderRuleSnapshot`增加optional `market_quantity_lattice` schema-v3 extension；字段缺失时既有schema-v1/v2 bytes/hash不变；LIMIT/STOP_LIMIT与MARKET/STOP按style选择对应lattice/cap/notional/position evidence；
+- 两条quantity lattice共享Instrument、atomic Scale、quote currency和MIN_NOTIONAL authority；G10B输出price/quantity scales供G10G组合G09A contract；
+- `MIN_NOTIONAL`按exact `price × quantity`评估；Market/Stop必须由后续G10D/G10G提供MARK_PRICE purpose evidence，不得使用Trade/Bar Close/Valuation/current fallback；
+- Provider order types/TIF source集合完整进入identity；v1 generic capability至少资格化LIMIT与MARKET、Limit GTC/IOC/FOK/GTX intersection及reduce-only support；unknown values fail closed，GTD/RPI/trailing/close-all等显式defer；
+- Admission mode exact为NORMAL/REDUCE_ONLY/CLOSED；REDUCE_ONLY只允许CLOSE且要求`reduce_only=true`，CLOSED和G10A non-tradable status不得产生普通admission；Hedge/One-way compatibility留给G10F；
+- `PERCENT_PRICE`、MAX_NUM_ORDERS、MAX_NUM_ALGO_ORDERS、marketTakeBound、triggerProtect和advanced order capability必须进入known deferred keys；未解析时`decision_grade_eligible=false`，unknown/omitted key不允许静默成功；
+- Tick transition前已获批Order保留原MarketRuleDecision和interval hash；新Band只约束transition后新admission，temporary suspension需显式source evidence；
+- Constructor重算RuleBook/Query/Resolution/Failure、generic Snapshot/Timeline/Capability identities，伪造active Band、lattice、scale、cap、admission、deferred keys或source coverage拒绝；
+- static Fixture覆盖independent Limit/Market geometry、MIN_NOTIONAL、tick transition、one-minute suspension、reduce-only window、gap/overlap/late evidence、unknown capability/deferred key、forgery与legacy snapshot/evaluator hash compatibility；
+- Production module无filesystem/network/process/database/cloud SDK/wall clock，不修改Generic Engine/Runner增加Binance branch。
+
+Primary source note：`docs/research/binance-usdm-order-rules-primary-sources.md`。
 
 ### Gate G10C Historical Margin and Leverage Tiers
 
