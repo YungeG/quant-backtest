@@ -1,0 +1,76 @@
+{
+  "counter_replay": {
+    "next_hash_matches": true,
+    "value_matches": true
+  },
+  "draw_values": [
+    4185877640117093455,
+    473125739100027668,
+    13320779369770347481
+  ],
+  "failure_controls": {
+    "negative_counter": true,
+    "negative_seed": true,
+    "noncanonical_key": true,
+    "unsupported_algorithm": true,
+    "unsupported_version": true,
+    "wrong_strategy_type": true
+  },
+  "fixture_id": "named-random-stream-isolation-v1",
+  "identity_separation": {
+    "different_counter": {
+      "first_value": 473125739100027668,
+      "stream_hash": "sha256:6a4d8a3c84c338320353c462c34087faeddb6e26dd9190f02c611a82de392048"
+    },
+    "different_key": {
+      "first_value": 5066551152546896807,
+      "stream_hash": "sha256:37f4105181435bbab489ca37578a0bfcfa6f34a4261ecf319c5d1f966b7f9964"
+    },
+    "different_seed": {
+      "first_value": 18366897812411268547,
+      "stream_hash": "sha256:6a6f6e478ba01e1341da2ffce060d3a176e21af06e30468ae2cbd7173f10283c"
+    },
+    "different_strategy": {
+      "first_value": 9988053011969590036,
+      "stream_hash": "sha256:fa4e1843dc7cc5cf4c97ddf58de56675d8eb192dcc250c8c316e5544e605d384"
+    }
+  },
+  "initial_stream": {
+    "algorithm": "sha256-counter",
+    "algorithm_version": 1,
+    "counter": 0,
+    "master_random_seed": 42,
+    "schema_version": 1,
+    "strategy_id": {
+      "type": "strategy_sleeve_id",
+      "value": "portfolio.momentum"
+    },
+    "stream_hash": "sha256:80635f1dc8378888ac06b5336c0a71edbb8bbe048f2f84c82dd2121ded496b5b",
+    "stream_key": "signal-selection",
+    "type": "named_random_stream"
+  },
+  "limitations": [
+    "raw_u64_only",
+    "no_distribution_contract",
+    "no_statistical-certification",
+    "no-security-or-entropy-claim",
+    "no-global-rng"
+  ],
+  "repeat_parity": {
+    "next_hash_matches": true,
+    "value_matches": true
+  },
+  "schema_version": 1,
+  "stream_hashes": [
+    "sha256:80635f1dc8378888ac06b5336c0a71edbb8bbe048f2f84c82dd2121ded496b5b",
+    "sha256:6a4d8a3c84c338320353c462c34087faeddb6e26dd9190f02c611a82de392048",
+    "sha256:51870483b734613926c2ca884a44315763c14ce8af06dc390ae25bfd2615ce7b",
+    "sha256:21f4144b8dad3dab4d032d214da6a1ce916b118f9bda28c1e30afefd5fb91d6c"
+  ],
+  "unrelated_stream_noninterference": {
+    "original_hash_unchanged": true,
+    "original_next_value_unchanged": true,
+    "unrelated_next_hash": "sha256:27d3603a5f5e8eab77a0631f87534163173c7ec8cb3372203128370ca604f4c7",
+    "unrelated_value": 5066551152546896807
+  }
+}

@@ -162,6 +162,7 @@ from .ports import (
     SimulationPortType,
     SlippageModel,
 )
+from .random_streams import NamedRandomStream
 from .resolution import (
     ArtifactInstallMode,
     BacktestProfileRegistry,
@@ -420,6 +421,7 @@ __all__ = [
     "NextEligibleBarOpenModel",
     "NoEligibleBarAction",
     "NormalizedBacktestRequest",
+    "NamedRandomStream",
     "ObservationCausalityFailure",
     "ObservationCausalityFailureCode",
     "ObservationCausalityTrace",
