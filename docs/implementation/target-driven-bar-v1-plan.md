@@ -1714,6 +1714,8 @@ G10E Funding Rate History Regular-only source、stable Slot、fixed post-eligibi
 
 Primary source note：`docs/research/binance-usdm-fee-account-profile-primary-sources.md`。
 
+G10F Historical Account Profile Book、normalized mode、selected Leverage Evidence、shared Account Fee Schedule、Reservation/Final Rule Sets、18项failure precedence、static golden与purity boundaries已由implementation commit `07cc15823ec3790b0491220f248a64c334e3a81b`冻结通过。
+
 ### Gate G10G Binance Profile Composition
 
 依赖：G10A–G10F、G09H。

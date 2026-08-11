@@ -342,7 +342,7 @@ G10E caller-supplied的纯离线immutable Funding Rate History authority。Exact
 
 ## Binance USDⓈ-M 历史账户配置簿（Binance USDⓈ-M Historical Account Profile Book）
 
-G10F caller-supplied的纯离线immutable account authority，对齐Account Config、Symbol Config、User Commission Rate与feeBurn snapshots。v1只支持standard UM、tradable、One-way、Single-Asset、CROSSED、no-auto-add、feeBurn off与USDT-only；输出selected Leverage Evidence及共享AccountFeeScheduleRef的Reservation/Final Fee Rule Sets。Current authenticated state不能补历史。
+G10F已实现并通过冻结验收的纯离线immutable account authority，对齐Account Config、Symbol Config、User Commission Rate与feeBurn snapshots。v1只支持standard UM、tradable、One-way、Single-Asset、CROSSED、no-auto-add、feeBurn off与USDT-only；输出selected Leverage Evidence及共享AccountFeeScheduleRef的Reservation/Final Fee Rule Sets。Current authenticated state不能补历史。Implementation commit为`07cc15823ec3790b0491220f248a64c334e3a81b`。
 
 ## Binance USDⓈ-M 手续费账户规则（Binance USDⓈ-M Account Fee Rules）
 

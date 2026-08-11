@@ -8082,7 +8082,7 @@ Python                                                                3.13.5
 
 ```yaml
 id: G10F
-status: READY
+status: PASSED
 depends_on:
   - WP-05H
   - WP-05J
@@ -8143,8 +8143,12 @@ evidence:
   - import-boundary-report
   - static-type-report
   - dependency-lock-report
-passed_commit: null
-artifact_hashes: []
+passed_commit: 07cc15823ec3790b0491220f248a64c334e3a81b
+artifact_hashes:
+  tests/fixtures/profiles/binance-usdm-historical-account-profile-source-v1.json: sha256:919e5e1c2e09b45986d38fa9a741293432ae6daf7af83b5904ad0afd80d555d0
+  tests/fixtures/profiles/binance-usdm-fee-account-profile-v1.json: sha256:f82592ee7c56a016fa9637c9592f2e3d493a8c5f2f7fb4f34e03cd2077f4980d
+  build/acceptance/g10f-pytest.xml: sha256:0f8146cb52987ba22ace28249b504a841af140a4330b70cfaa46cd2432a6d346
+  build/acceptance/g10f-import-boundary-report.json: sha256:a0c85d591d5035e2cbac3b3392bd72caf4fa0b65188e5754f45417a2488daa43
 ```
 
 ### G10F Acceptance
@@ -8200,6 +8204,31 @@ G10E frozen acceptance command                                     112 passed
 Full test suite                                                    1072 passed
 Workspace import boundary                                           PASS (78 files)
 mypy 2.3.0                                                           no issues (78 source files)
+Primary LSP + scoped pi-lens                                         no blocking errors
+Markdown + git diff checks                                           PASS
+uv lock --check                                                      PASS
+Python                                                                3.13.5
+```
+
+### G10F Implementation Acceptance
+
+1. Caller-supplied finite Account Profile Book按economic/knowledge time解析exact visible Band；coverage gap/overlap、late-only、cross Account/Instrument、duplicate Band ID与source revision branch/gap/conflict均按冻结precedence fail closed；
+2. Standard UM、tradable、One-way、Single-Asset、CROSSED、no-auto-add、feeBurn-off、USDT-only成功；Portfolio Margin、Hedge、Multi-Assets、isolated/unknown、auto-add、BNB discount与negative commission structured fail closed；
+3. Selected integral leverage映射existing `LinearMarginLeverageEvidence`；maker/taker direct映射共享`AccountFeeScheduleRef`的Reservation/Final Rule Sets。Reservation使用`max(maker,taker)`、Scale 8 CEILING；Final使用actual Fill maker/taker、Scale 8 TOWARD_ZERO；
+4. Market Fee/Tax N/A coverage rules使用generic Estimator/Engine可执行的zero-rate basis；generic Fee Reservation、Fee Assessment、Margin、Account Margin与PreTradeRisk modules未修改且regression通过；
+5. Public exports、exact import allowlist、79-file Import Boundary、static source/golden、full mypy/LSP/pi-lens与dependency lock checks通过；Adapter不读取network/filesystem/wall clock且未增加Runtime/provider branch；
+6. Account Trade List parity、historical archive completeness、full `AccountRiskPolicy`、multi-asset/isolated/BNB/negative rebate与deployment继续由G10H/G10G/G12拥有，Resolution固定`decision_grade_eligible=false`。
+
+G10F implementation已冻结在immutable commit `07cc15823ec3790b0491220f248a64c334e3a81b`，状态为`PASSED`。
+
+验证记录：
+
+```text
+G10F frozen acceptance command                                     140 passed
+G10F contract + golden + boundary                                   16 passed
+Full test suite                                                    1085 passed
+Workspace import boundary                                           PASS (79 files)
+mypy 2.3.0                                                           no issues (79 source files)
 Primary LSP + scoped pi-lens                                         no blocking errors
 Markdown + git diff checks                                           PASS
 uv lock --check                                                      PASS
