@@ -1,0 +1,33 @@
+{
+  "schema_version": 1,
+  "projection_id": "binance-usdm-g10h-provider-record-projection-v1",
+  "case_id": "binance-usdm-g10h-case-v1",
+  "source_role": "BINANCE_ACCOUNT_RECORDS",
+  "layers": {
+    "00_SOURCE_IDENTITY": {"account_id": "account:g10h-pseudonymous", "instrument_id": "binance_usdm:BTCUSDT", "parity_case": "binance-usdm-g10h-case-v1"},
+    "01_DECISION": {"available": false, "reason": "provider account records do not preserve strategy decision authority"},
+    "02_ORDER_INTENT": {"available": false, "reason": "provider records do not prove original strategy intent"},
+    "03_ORDER_EVENT": [
+      {"event_time": 200, "execution_type": "TRADE", "order_id": 1001, "status": "FILLED", "trade_id": 2001, "transaction_time": 200},
+      {"event_time": 400, "execution_type": "TRADE", "order_id": 1002, "status": "FILLED", "trade_id": 2002, "transaction_time": 400},
+      {"event_time": 600, "execution_type": "TRADE", "order_id": 1003, "status": "FILLED", "trade_id": 2003, "transaction_time": 600}
+    ],
+    "04_FILL": [
+      {"account_id": "account:g10h-pseudonymous", "commission": "0.31", "commission_asset": "USDT", "maker": false, "order_id": 1001, "position_side": "BOTH", "price": "100.10", "quantity": "3.000", "quote_quantity": "300.30", "realized_pnl": "0.00", "side": "BUY", "symbol": "BTCUSDT", "trade_id": 2001, "trade_time": 200},
+      {"account_id": "account:g10h-pseudonymous", "commission": "0.15", "commission_asset": "USDT", "maker": true, "order_id": 1002, "position_side": "BOTH", "price": "99.90", "quantity": "1.000", "quote_quantity": "99.90", "realized_pnl": "-0.20", "side": "SELL", "symbol": "BTCUSDT", "trade_id": 2002, "trade_time": 400},
+      {"account_id": "account:g10h-pseudonymous", "commission": "0.45", "commission_asset": "USDT", "maker": false, "order_id": 1003, "position_side": "BOTH", "price": "99.90", "quantity": "3.000", "quote_quantity": "299.70", "realized_pnl": "-0.40", "side": "SELL", "symbol": "BTCUSDT", "trade_id": 2003, "trade_time": 600}
+    ],
+    "05_FEE": [
+      {"amount": "0.31", "asset": "USDT", "income_time": 211, "income_tran_id": 5001, "income_type": "COMMISSION", "maker": false, "trade_id": 2001},
+      {"amount": "0.15", "asset": "USDT", "income_time": 411, "income_tran_id": 5002, "income_type": "COMMISSION", "maker": true, "trade_id": 2002},
+      {"amount": "0.45", "asset": "USDT", "income_time": 611, "income_tran_id": 5003, "income_type": "COMMISSION", "maker": false, "trade_id": 2003}
+    ],
+    "06_POSITION_PNL": {"final_position": "-1.000", "income_rows": [{"amount": "-0.20", "asset": "USDT", "income_time": 400, "income_tran_id": 6001, "income_type": "REALIZED_PNL", "symbol": "BTCUSDT"}, {"amount": "-0.40", "asset": "USDT", "income_time": 600, "income_tran_id": 6002, "income_type": "REALIZED_PNL", "symbol": "BTCUSDT"}], "realized_pnl": "-0.60", "transitions": ["OPEN", "REDUCE", "FLIP"]},
+    "07_FUNDING": [{"amount": "-0.03", "asset": "USDT", "funding_time": 300, "income_tran_id": 7001, "income_type": "FUNDING_FEE", "rate": "0.0001", "symbol": "BTCUSDT"}],
+    "08_JOURNAL_LEDGER": {"available": false, "reason": "provider records are not the generic Journal or Ledger"},
+    "09_MARGIN_SNAPSHOT": {"account_update_balance_change": "0.00", "account_update_event_reason": "ORDER", "account_update_event_time": 612, "account_update_transaction_time": 612, "cash_units": 99846, "equity_units": 99836, "fee_units": 91, "financing_units": -3, "position_units": -1000, "realized_pnl_units": -60, "scale": 2, "unrealized_pnl_units": -10},
+    "10_LIQUIDATION_AUDIT": {"available": false, "reason": "provider records do not contain conservative audit output"},
+    "11_LIQUIDATION_EXECUTION": {"available": false, "reason": "static schema example has no user force order"},
+    "12_FINAL_RESULT": {"available": false, "reason": "archive completeness and initial state are unproved"}
+  }
+}
