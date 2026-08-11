@@ -53,6 +53,19 @@ from .funding_sources import (
     BinanceUsdmFundingSourceResolution,
     BinanceUsdmHistoricalFundingBook,
 )
+from .account_profile import (
+    BinanceUsdmAccountProfileBand,
+    BinanceUsdmAccountProfileFailure,
+    BinanceUsdmAccountProfileFailureCode,
+    BinanceUsdmAccountProfileModel,
+    BinanceUsdmAccountProfileOutcome,
+    BinanceUsdmAccountProfileQuery,
+    BinanceUsdmAccountProfileResolution,
+    BinanceUsdmAccountProfileScope,
+    BinanceUsdmAccountProfileSourceRef,
+    BinanceUsdmAccountSourceKind,
+    BinanceUsdmHistoricalAccountProfileBook,
+)
 from .instrument_metadata import (
     BINANCE_USDM_OPEN_ENDED_DELIVERY_AT,
     BinanceUsdmContractStatus,
@@ -126,4 +139,15 @@ __all__ = [
     "BinanceUsdmFundingSourceFailure",
     "BinanceUsdmFundingSourceOutcome",
     "BinanceUsdmFundingSourceModel",
+    "BinanceUsdmAccountSourceKind",
+    "BinanceUsdmAccountProfileSourceRef",
+    "BinanceUsdmAccountProfileScope",
+    "BinanceUsdmAccountProfileBand",
+    "BinanceUsdmHistoricalAccountProfileBook",
+    "BinanceUsdmAccountProfileQuery",
+    "BinanceUsdmAccountProfileResolution",
+    "BinanceUsdmAccountProfileFailureCode",
+    "BinanceUsdmAccountProfileFailure",
+    "BinanceUsdmAccountProfileOutcome",
+    "BinanceUsdmAccountProfileModel",
 ]
