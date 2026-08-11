@@ -142,7 +142,7 @@ artifact_hashes: []
 | G11C | DRAFT | backtest-runtime observations | G11A–G11B | Universe fixtures |
 | G11D | DRAFT | backtest-runtime observations | G11A–G11B | Bar/window fixtures |
 | G11E | DRAFT | backtest-runtime strategy | G11B, G11D | Schedule/warmup fixtures |
-| G11F | READY | backtest-runtime strategy | G02 | State/checkpoint fixtures |
+| G11F | PASSED | backtest-runtime strategy | G02 | State/checkpoint fixtures |
 | G11G | DRAFT | backtest-runtime strategy | G11F | Random stream fixtures |
 | G11H | DRAFT | backtest-runtime strategy | G11B, G11F | Model revision fixtures |
 | G11I | DRAFT | backtest-runtime strategy | G11A–G11H, G04 | Invocation/batch fixtures |
@@ -8833,7 +8833,7 @@ Implementation commit：`c40de40a8e9117b95f3155ac2ebd5d3b4c7a95c8`。
 
 ```yaml
 id: G11F
-status: READY
+status: PASSED
 depends_on:
   - G02
 owner_package: backtest-runtime strategy
@@ -8881,6 +8881,11 @@ evidence:
   - import-boundary-report
   - static-type-report
   - dependency-lock-report
+passed_commit: af2897e11fedf3c0807e0f60435be9e700269c03
+artifact_hashes:
+  tests/fixtures/runtime/strategy-state/strategy-state-checkpoint-v1.json: sha256:11154be924005081b65dd4d0433e3dcde9c4e4ad94e6e3bb9310a151a18d1911
+  build/acceptance/g11f-pytest.xml: sha256:5053b7560b0e95883074f2c6bc99597dd22964890bb947a6131d9c573bcc5089
+  build/acceptance/g11f-import-boundary-report.json: sha256:d8c1dd51b7b852547a9df0e73804729b614219742ecd9d598a2633771e4f4835
 ```
 
 ### G11F Acceptance
@@ -8938,6 +8943,24 @@ Python                                                                3.13.5
 ```
 
 Contract freeze commit：`fdf22c2fa64a97f8c3be1b4c9ea080c575b53845`。
+
+Acceptance validation：
+
+```text
+G11F frozen acceptance command                                      61 passed
+StrategyState contract/golden/boundary                              21 passed
+Full test suite                                                    1158 passed
+Workspace import boundary                                           PASS (82 files)
+mypy 2.3.0                                                           no issues (82 package source files)
+Primary LSP                                                          clean (6 files)
+pi-lens scoped review                                                no findings across 6 changed files
+Static golden/deep-freeze/restore/forgery controls                   PASS
+Markdown + git diff checks                                           PASS
+uv lock --check                                                      PASS
+Python                                                                3.13.5
+```
+
+Implementation commit：`af2897e11fedf3c0807e0f60435be9e700269c03`。
 
 ## 88. PASSED 记录格式
 
