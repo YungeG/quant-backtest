@@ -134,7 +134,7 @@ artifact_hashes: []
 | G10C | PASSED — immutable commit `50fa838f901385498ce18d65a897d4eb1dc31337` | trading-kernel margin requirement + profiles/binance_usdm | G10A, G09E | none |
 | G10D | PASSED — immutable commit `790469d80ddcf3797f03c96c975b77d75a3d49a5` | trading-kernel profiles/binance_usdm | G10A, WP-03C | none |
 | G10E | PASSED — immutable commit `195265b1ed830e62b91882ff315b115e7ac80597` | trading-kernel profiles/binance_usdm | G09C–G09D, G10D | Funding source fixtures |
-| G10F | READY | trading-kernel profiles/binance_usdm | WP-05H, WP-05J, G09F, G10A | Fee/account fixtures |
+| G10F | PASSED | trading-kernel profiles/binance_usdm | WP-05H, WP-05J, G09F, G10A | Fee/account fixtures |
 | G10G | PASSED — immutable commit `12286dbf6b7289fcb2f6069c46fc648d8f5a5be0` | backtest-runtime composition | G10A–G10F | Resolved profile E2E |
 | G10H | PASSED — immutable commit `468c91ad3fdbad221c959182f8751300f20a2424` | parity tooling | G10G, WP-00C | none |
 | G11A | PASSED — immutable commit `72fe31f5b10d785340b11ca0fd3d0fec8c1c4a34` | backtest-runtime observations | G07, WP-06A | none |
