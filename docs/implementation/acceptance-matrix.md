@@ -134,7 +134,7 @@ artifact_hashes: []
 | G10F | READY | trading-kernel profiles/binance_usdm | WP-05H, WP-05J, G09F, G10A | Fee/account fixtures |
 | G10G | PASSED — immutable commit `12286dbf6b7289fcb2f6069c46fc648d8f5a5be0` | backtest-runtime composition | G10A–G10F | Resolved profile E2E |
 | G10H | PASSED — immutable commit `468c91ad3fdbad221c959182f8751300f20a2424` | parity tooling | G10G, WP-00C | none |
-| G11A | READY | backtest-runtime observations | G07, WP-06A | none |
+| G11A | PASSED — immutable commit `72fe31f5b10d785340b11ca0fd3d0fec8c1c4a34` | backtest-runtime observations | G07, WP-06A | none |
 | G11B | DRAFT | backtest-runtime observations | G11A | Revision/causality fixtures |
 | G11C | DRAFT | backtest-runtime observations | G11A–G11B | Universe fixtures |
 | G11D | DRAFT | backtest-runtime observations | G11A–G11B | Bar/window fixtures |
@@ -8553,7 +8553,7 @@ Implementation commit：`468c91ad3fdbad221c959182f8751300f20a2424`。
 
 ```yaml
 id: G11A
-status: READY
+status: PASSED
 depends_on:
   - G07
   - WP-06A
@@ -8604,6 +8604,11 @@ evidence:
   - import-boundary-report
   - static-type-report
   - dependency-lock-report
+passed_commit: 72fe31f5b10d785340b11ca0fd3d0fec8c1c4a34
+artifact_hashes:
+  tests/fixtures/runtime/observations/observation-view-capability-isolation-v1.json: sha256:7bcea67e6c5eb9fd023411e30b5980c007c4722a3835b5808d9c9b43c50c9978
+  build/acceptance/g11a-pytest.xml: sha256:c27e60ee276e53691bc251e9ce48690ba15b4c6e254b4019431c5656d61cdacb
+  build/acceptance/g11a-import-boundary-report.json: sha256:638223017e9fcec58200226a92610dc39dd20a59d443e4a733f2ecf919aef6cd
 ```
 
 ### G11A Acceptance
@@ -8658,6 +8663,24 @@ Markdown + git diff checks                                           PASS
 uv lock --check                                                      PASS
 Python                                                                3.13.5
 ```
+
+Acceptance validation：
+
+```text
+G11A frozen acceptance command                                      34 passed
+ObservationView public-seam tests                                   12 passed
+Full test suite                                                    1120 passed
+Workspace import boundary                                           PASS (81 files)
+mypy 2.3.0                                                           no issues (83 source files)
+Primary LSP                                                          clean (6 files)
+pi-lens scoped review                                                no findings across 6 changed files
+Static golden/input-order/hidden-record controls                     PASS
+Markdown + git diff checks                                           PASS
+uv lock --check                                                      PASS
+Python                                                                3.13.5
+```
+
+Implementation commit：`72fe31f5b10d785340b11ca0fd3d0fec8c1c4a34`。
 
 ## 86. PASSED 记录格式
 

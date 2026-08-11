@@ -1793,6 +1793,8 @@ G11 不属于第一条 Target-driven 切片的前置条件。Strategy Runtime �
 
 Frozen seam note：`docs/research/g11a-observation-view-capability-isolation.md`。
 
+G11A exact query allowlist、hidden-record noninterference、cross-purpose isolation、structured failure precedence与canonical static golden已由implementation commit `72fe31f5b10d785340b11ca0fd3d0fec8c1c4a34`冻结通过。View仍不接收Decision Instant，不可在G11B前用于point-in-time Strategy invocation。
+
 ### Gate G11B Revision Selection and Causality Audit
 
 依赖：G11A。

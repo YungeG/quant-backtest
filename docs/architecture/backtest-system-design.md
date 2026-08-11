@@ -370,7 +370,7 @@ Strategy 不接收原始 `MarketBundle`，不得自行读取市场数据文件�
 
 G11A先冻结capability isolation seam：每个query exact声明dataset、single Instrument、versioned semantic Purpose与exact MarketBundle capability；View从caller-supplied immutable `MarketEvent` records中只保留allowlist exact授权的selector。Unauthorized backing records不能进入View state、改变View/Result identity或被返回；同一source Event跨Purpose必须separate explicit record/grant。Authorization failure只按Dataset→Instrument→Purpose→Capability precedence检查allowlist，authorized empty是成功而不是coverage结论。V1不实现cache，使用deterministic linear scan；若未来加入private cache，必须在authorization后按exact query identity工作且不改变visibility或canonical output。
 
-G11A不接收Decision Instant，也不执行availability cutoff、revision selection或causality trace，因此不能单独提供完整point-in-time Strategy context。G11B在同一seam上补这些规则；G11C/G11D再增加Universe和Bar/window typed queries。G11A module及Strategy-facing interface不暴露MarketBundle/Reader/Manifest/Cursor、Ledger/Snapshot/Account、filesystem/network/process/clock或callback。该接口隔离不冒充arbitrary in-process Python sandbox；可执行Strategy artifact qualification由later build/invocation gates负责。Frozen seam记录于`docs/research/g11a-observation-view-capability-isolation.md`。
+G11A不接收Decision Instant，也不执行availability cutoff、revision selection或causality trace，因此不能单独提供完整point-in-time Strategy context。G11B在同一seam上补这些规则；G11C/G11D再增加Universe和Bar/window typed queries。G11A module及Strategy-facing interface不暴露MarketBundle/Reader/Manifest/Cursor、Ledger/Snapshot/Account、filesystem/network/process/clock或callback。该接口隔离不冒充arbitrary in-process Python sandbox；可执行Strategy artifact qualification由later build/invocation gates负责。Frozen seam记录于`docs/research/g11a-observation-view-capability-isolation.md`；implementation commit为`72fe31f5b10d785340b11ca0fd3d0fec8c1c4a34`。
 
 每次 Strategy 调用必须记录：
 
