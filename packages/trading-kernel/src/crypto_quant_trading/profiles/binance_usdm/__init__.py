@@ -41,6 +41,18 @@ from .price_streams import (
     BinanceUsdmPriceStreamModel,
     BinanceUsdmPriceStreamOutcome,
 )
+from .funding_sources import (
+    BinanceUsdmFundingCoverage,
+    BinanceUsdmFundingRateRecord,
+    BinanceUsdmFundingSourceFailure,
+    BinanceUsdmFundingSourceFailureCode,
+    BinanceUsdmFundingSourceModel,
+    BinanceUsdmFundingSourceOutcome,
+    BinanceUsdmFundingSourceQuery,
+    BinanceUsdmFundingSourceRef,
+    BinanceUsdmFundingSourceResolution,
+    BinanceUsdmHistoricalFundingBook,
+)
 from .instrument_metadata import (
     BINANCE_USDM_OPEN_ENDED_DELIVERY_AT,
     BinanceUsdmContractStatus,
@@ -104,4 +116,14 @@ __all__ = [
     "BinanceUsdmPriceStreamFailure",
     "BinanceUsdmPriceStreamOutcome",
     "BinanceUsdmPriceStreamModel",
+    "BinanceUsdmFundingSourceRef",
+    "BinanceUsdmFundingRateRecord",
+    "BinanceUsdmFundingCoverage",
+    "BinanceUsdmHistoricalFundingBook",
+    "BinanceUsdmFundingSourceQuery",
+    "BinanceUsdmFundingSourceResolution",
+    "BinanceUsdmFundingSourceFailureCode",
+    "BinanceUsdmFundingSourceFailure",
+    "BinanceUsdmFundingSourceOutcome",
+    "BinanceUsdmFundingSourceModel",
 ]

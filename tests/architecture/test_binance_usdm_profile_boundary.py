@@ -15,6 +15,8 @@ PROFILES = (
     / "packages/trading-kernel/src/crypto_quant_trading/profiles/binance_usdm/margin_tiers.py",
     ROOT
     / "packages/trading-kernel/src/crypto_quant_trading/profiles/binance_usdm/price_streams.py",
+    ROOT
+    / "packages/trading-kernel/src/crypto_quant_trading/profiles/binance_usdm/funding_sources.py",
 )
 GENERIC_MODULES = (
     ROOT / "packages/trading-kernel/src/crypto_quant_trading/ledger.py",
@@ -99,6 +101,16 @@ PUBLIC_NAMES = (
     "BinanceUsdmPriceStreamFailure",
     "BinanceUsdmPriceStreamOutcome",
     "BinanceUsdmPriceStreamModel",
+    "BinanceUsdmFundingSourceRef",
+    "BinanceUsdmFundingRateRecord",
+    "BinanceUsdmFundingCoverage",
+    "BinanceUsdmHistoricalFundingBook",
+    "BinanceUsdmFundingSourceQuery",
+    "BinanceUsdmFundingSourceResolution",
+    "BinanceUsdmFundingSourceFailureCode",
+    "BinanceUsdmFundingSourceFailure",
+    "BinanceUsdmFundingSourceOutcome",
+    "BinanceUsdmFundingSourceModel",
 )
 
 
@@ -154,3 +166,4 @@ def test_generic_kernel_and_runtime_do_not_branch_on_binance_metadata() -> None:
         assert "binance_usdm.order_rules" not in source
         assert "binance_usdm.margin_tiers" not in source
         assert "binance_usdm.price_streams" not in source
+        assert "binance_usdm.funding_sources" not in source
