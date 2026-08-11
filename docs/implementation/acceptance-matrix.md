@@ -143,7 +143,7 @@ artifact_hashes: []
 | G11D | DRAFT | backtest-runtime observations | G11A–G11B | Bar/window fixtures |
 | G11E | DRAFT | backtest-runtime strategy | G11B, G11D | Schedule/warmup fixtures |
 | G11F | PASSED | backtest-runtime strategy | G02 | State/checkpoint fixtures |
-| G11G | READY | backtest-runtime strategy | G11F | Random stream fixtures |
+| G11G | PASSED | backtest-runtime strategy | G11F | Random stream fixtures |
 | G11H | DRAFT | backtest-runtime strategy | G11B, G11F | Model revision fixtures |
 | G11I | DRAFT | backtest-runtime strategy | G11A–G11H, G04 | Invocation/batch fixtures |
 | G11J | DRAFT | parity tooling | G11I, G07 | Dual-entry parity |
@@ -8966,7 +8966,7 @@ Implementation commit：`af2897e11fedf3c0807e0f60435be9e700269c03`。
 
 ```yaml
 id: G11G
-status: READY
+status: PASSED
 depends_on:
   - G11F
 owner_package: backtest-runtime strategy
@@ -9012,6 +9012,11 @@ evidence:
   - import-boundary-report
   - static-type-report
   - dependency-lock-report
+passed_commit: 91571d219b432348f5fc04e63d72ce54d3ff024b
+artifact_hashes:
+  tests/fixtures/runtime/random-streams/named-random-stream-isolation-v1.json: sha256:7d9c4b8b1d7a65f8fbd2a0c25b343dd6bdd257282bfd08c1fe6982a0dcf04aee
+  build/acceptance/g11g-pytest.xml: sha256:ad68f0d0869b00b78a3a51a170f22c50d35a2ebe48b9705185b3289cebc95ce0
+  build/acceptance/g11g-import-boundary-report.json: sha256:a5779a7e94bce8f6222149655a41462d5272ba56f9c2ceb07cbc72b96005e3c3
 ```
 
 ### G11G Acceptance
@@ -9068,6 +9073,24 @@ Python                                                                3.13.5
 ```
 
 Contract freeze commit：`b4d3d3622c41b567429939868d5e868860b4a67b`。
+
+Acceptance validation：
+
+```text
+G11G frozen acceptance command                                      61 passed
+NamedRandomStream contract/golden/boundary                          21 passed
+Full test suite                                                    1179 passed
+Workspace import boundary                                           PASS (83 files)
+mypy 2.3.0                                                           no issues (83 package source files)
+Primary LSP                                                          clean (6 files)
+pi-lens scoped review                                                no findings across 6 changed files
+Static golden/replay/isolation/forgery controls                      PASS
+Markdown + git diff checks                                           PASS
+uv lock --check                                                      PASS
+Python                                                                3.13.5
+```
+
+Implementation commit：`91571d219b432348f5fc04e63d72ce54d3ff024b`。
 
 ## 89. PASSED 记录格式
 
