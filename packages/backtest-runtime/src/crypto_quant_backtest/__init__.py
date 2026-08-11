@@ -131,6 +131,16 @@ from .liquidation_audit import (
     LinearLiquidationMarkBarEvidence,
     LinearLiquidationPositionAudit,
 )
+from .observations import (
+    ObservationPurposeRef,
+    ObservationQuery,
+    ObservationQueryFailure,
+    ObservationQueryFailureCode,
+    ObservationQueryOutcome,
+    ObservationQueryResult,
+    ObservationRecord,
+    ObservationView,
+)
 from .ports import (
     CloseoutPolicy,
     ExecutionModel,
@@ -398,6 +408,14 @@ __all__ = [
     "NextEligibleBarOpenModel",
     "NoEligibleBarAction",
     "NormalizedBacktestRequest",
+    "ObservationPurposeRef",
+    "ObservationQuery",
+    "ObservationQueryFailure",
+    "ObservationQueryFailureCode",
+    "ObservationQueryOutcome",
+    "ObservationQueryResult",
+    "ObservationRecord",
+    "ObservationView",
     "OrderEventPlan",
     "OrderTerminatedByRunEnd",
     "PendingFeeAssessmentRef",
