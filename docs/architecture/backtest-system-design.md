@@ -368,6 +368,10 @@ observation.available_time <= current decision/simulation time
 
 Strategy 不接收原始 `MarketBundle`，不得自行读取市场数据文件、访问网络或读取系统当前时间。Strategy 只能通过 ObservationView 的 point-in-time universe query 获取可交易 Instrument，并通过命名 BarDefinition key 查询 canonical Bar Stream；不能扫描数据目录推断 Universe，也不能执行未经版本化的时间 Resample。ObservationView 内部可以使用向量化或缓存优化，但不能扩大可见数据范围。
 
+G11A先冻结capability isolation seam：每个query exact声明dataset、single Instrument、versioned semantic Purpose与exact MarketBundle capability；View从caller-supplied immutable `MarketEvent` records中只保留allowlist exact授权的selector。Unauthorized backing records不能进入View state、改变View/Result identity或被返回；同一source Event跨Purpose必须separate explicit record/grant。Authorization failure只按Dataset→Instrument→Purpose→Capability precedence检查allowlist，authorized empty是成功而不是coverage结论。V1不实现cache，使用deterministic linear scan；若未来加入private cache，必须在authorization后按exact query identity工作且不改变visibility或canonical output。
+
+G11A不接收Decision Instant，也不执行availability cutoff、revision selection或causality trace，因此不能单独提供完整point-in-time Strategy context。G11B在同一seam上补这些规则；G11C/G11D再增加Universe和Bar/window typed queries。G11A module及Strategy-facing interface不暴露MarketBundle/Reader/Manifest/Cursor、Ledger/Snapshot/Account、filesystem/network/process/clock或callback。该接口隔离不冒充arbitrary in-process Python sandbox；可执行Strategy artifact qualification由later build/invocation gates负责。Frozen seam记录于`docs/research/g11a-observation-view-capability-isolation.md`。
+
 每次 Strategy 调用必须记录：
 
 - 调用时间和 Timeline Phase

@@ -1774,14 +1774,24 @@ G11 不属于第一条 Target-driven 切片的前置条件。Strategy Runtime �
 
 ### Gate G11A ObservationView Capability Isolation
 
-拥有：Strategy-facing read-only ObservationView 和 query capability checks。
+依赖：G07、WP-06A。
+
+拥有：Strategy-facing read-only `ObservationView`、exact query allowlist与capability-isolated immutable `MarketEvent` results。Production seam固定在`crypto_quant_backtest.observations`，不读取MarketBundle Reader或执行Strategy。
 
 验收：
 
-- Strategy 无法取得 MarketBundle、Ledger、网络、文件系统或 wall clock；
-- 查询显式声明 dataset、Instrument 和 purpose；
-- 未授权 capability 产生结构化 failure；
-- Observation cache 不扩大可见数据范围。
+- `ObservationQuery` exact声明dataset key、single stable Instrument、versioned semantic Purpose与exact `MarketBundleCapability`；query不接收callback、predicate、Reader、path、current time或runtime object；
+- View只保留selector在allowlist中的records。Unauthorized backing record不进入state、不影响view/result hash、不能被query返回；same source Event跨Purpose必须分别显式包装与授权；
+- Authorization failure precedence固定Dataset→Instrument→Purpose→Capability，且只由allowlist决定，不泄露hidden record existence；exact authorized empty query成功，coverage/gap解释留给G11C/G11D/G12；
+- Record复用existing immutable `MarketEvent`的stream、Instrument、capability、event/available/revision/source provenance；G11A不从payload猜context，不允许Instrument-less global query；
+- Input order与exact duplicates不改变identity；authorized same Purpose+Event ID conflicting content fail closed；deterministic result order使用existing Event ordering加stable identity tie-break；
+- View的Strategy-facing surface只暴露`view_hash`与`query`，不暴露records、allowlist、Bundle Ref/Manifest、Reader/Cursor、Ledger/Snapshot/Account或mutable cache；
+- V1不实现cache，linear scan足够。未来internal cache必须authorization后按exact query hash工作且不改变visibility/canonical result；
+- G11A不接收Decision Instant，不执行availability cutoff、revision selection或causality trace（G11B）；不实现Universe（G11C）、Bar/window（G11D）、schedule/state/RNG/model/invocation（G11E–I）或parity（G11J）；
+- Interface isolation不冒充arbitrary Python sandbox。Production module/static fixtures不import或传递network/filesystem/process/clock handles；Strategy artifact qualification留给later build/invocation gates；
+- All outputs development-only；Engine/Runner/Timeline/TargetStream/Journal/Ledger/Profile保持不变。
+
+Frozen seam note：`docs/research/g11a-observation-view-capability-isolation.md`。
 
 ### Gate G11B Revision Selection and Causality Audit
 

@@ -570,7 +570,19 @@ ResourceReservationState中active Orders的`ReservationCommitment.margin`聚合�
 
 ## 观察视图（Observation View）
 
-Strategy 在当前模拟时点可查询的只读市场信息边界，只包含已经到达可用时间的数据。Strategy 不直接访问市场数据包。
+Strategy 在当前模拟时点可查询的只读市场信息边界，只包含已经到达可用时间的数据。Strategy 不直接访问市场数据包、账户财务状态或外部系统。
+
+## 观察用途（Observation Purpose）
+
+Strategy 请求某项市场证据的显式版本化语义用途。它不同于 Dataset、Event Type 和 Price Purpose；同一来源记录用于多个观察用途时，每个用途必须分别授权，不能隐式替代。
+
+## 观察查询（Observation Query）
+
+由 Dataset、稳定 Instrument、Observation Purpose 和所需数据 Capability 共同标识的一次只读请求。缺少任一维度都不是合法查询。
+
+## 观察查询授权集（Observation Query Allowlist）
+
+Observation View 可以执行的 exact Observation Query 集合。授权只扩大明确列出的 Dataset/Instrument/Purpose/Capability 组合；底层存有其他记录不代表 Strategy 可以观察它们。
 
 ## 决策计划（Decision Schedule）
 

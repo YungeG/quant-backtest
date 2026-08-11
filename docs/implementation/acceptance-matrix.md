@@ -134,7 +134,7 @@ artifact_hashes: []
 | G10F | READY | trading-kernel profiles/binance_usdm | WP-05H, WP-05J, G09F, G10A | Fee/account fixtures |
 | G10G | PASSED — immutable commit `12286dbf6b7289fcb2f6069c46fc648d8f5a5be0` | backtest-runtime composition | G10A–G10F | Resolved profile E2E |
 | G10H | PASSED — immutable commit `468c91ad3fdbad221c959182f8751300f20a2424` | parity tooling | G10G, WP-00C | none |
-| G11A | DRAFT | backtest-runtime observations | G07 | Capability isolation fixtures |
+| G11A | READY | backtest-runtime observations | G07, WP-06A | none |
 | G11B | DRAFT | backtest-runtime observations | G11A | Revision/causality fixtures |
 | G11C | DRAFT | backtest-runtime observations | G11A–G11B | Universe fixtures |
 | G11D | DRAFT | backtest-runtime observations | G11A–G11B | Bar/window fixtures |
@@ -8549,7 +8549,117 @@ Python                                                                3.13.5
 
 Implementation commit：`468c91ad3fdbad221c959182f8751300f20a2424`。
 
-## 85. PASSED 记录格式
+## 85. G11A ObservationView Capability Isolation Acceptance Card
+
+```yaml
+id: G11A
+status: READY
+depends_on:
+  - G07
+  - WP-06A
+owner_package: backtest-runtime observations
+public_interface:
+  - crypto_quant_backtest.ObservationPurposeRef
+  - crypto_quant_backtest.ObservationQuery
+  - crypto_quant_backtest.ObservationRecord
+  - crypto_quant_backtest.ObservationQueryFailureCode
+  - crypto_quant_backtest.ObservationQueryFailure
+  - crypto_quant_backtest.ObservationQueryResult
+  - crypto_quant_backtest.ObservationQueryOutcome
+  - crypto_quant_backtest.ObservationView
+test_commands:
+  readiness: uv run pytest -q tests/parity/test_binance_usdm_parity.py tests/parity/test_binance_usdm_parity_golden.py tests/parity/test_comparator_contract.py tests/parity/test_source_snapshots.py tests/runtime/engine/test_g10g_binance_usdm_journey.py tests/runtime/engine/test_g10g_binance_usdm_golden.py tests/runtime/runner/test_g10g_binance_usdm_runner.py tests/architecture/test_g10h_parity_boundary.py tests/architecture/test_g10g_binance_composition_boundary.py tests/architecture/test_repository_cleanliness.py
+  contract: uv run pytest -q tests/runtime/observations/test_observation_view.py
+  fixture: uv run pytest -q tests/runtime/observations/test_observation_view_golden.py
+  boundary: uv run pytest -q tests/architecture/test_g11a_observation_boundary.py tests/architecture/test_public_api_imports.py tests/architecture/test_repository_cleanliness.py
+  acceptance: uv run pytest -q tests/runtime/observations/test_observation_view.py tests/runtime/observations/test_observation_view_golden.py tests/market_data/bundles/test_market_bundle_reader.py tests/market_data/bundles/test_market_bundle_reader_golden.py tests/runtime/timeline/test_deterministic_timeline.py tests/architecture/test_g11a_observation_boundary.py tests/architecture/test_public_api_imports.py tests/architecture/test_repository_cleanliness.py --junitxml=build/acceptance/g11a-pytest.xml
+fixture_ids:
+  - observation-view-capability-isolation-v1
+expected_artifacts:
+  - docs/research/g11a-observation-view-capability-isolation.md
+  - tests/fixtures/runtime/observations/observation-view-capability-isolation-v1.json
+  - build/acceptance/g11a-pytest.xml
+  - build/acceptance/g11a-import-boundary-report.json
+failure_contracts:
+  - dataset-is-not-authorized
+  - instrument-is-not-authorized-for-dataset
+  - purpose-is-not-authorized-for-dataset-and-instrument
+  - exact-market-bundle-capability-is-not-authorized
+  - unauthorized-backing-record-is-returned-or-affects-view-result-identity
+  - shared-source-event-implicitly-substitutes-an-ungranted-purpose
+  - duplicate-authorized-record-identity-conflicts
+  - input-order-changes-view-or-result-identity
+  - authorized-empty-result-is-misclassified-as-coverage-failure
+  - bundle-reader-manifest-cursor-ledger-account-or-clock-is-exposed
+  - callback-implementation-module-path-runtime-address-or-wall-clock-enters-identity
+  - g11a-performs-unfrozen-revision-universe-window-resample-or-schedule-semantics
+  - development-view-claims-point-in-time-decision-grade-or-deployment-authorization
+allowed_grade: development
+evidence:
+  - readiness-contract-tests
+  - exact-query-capability-and-failure-precedence-tests
+  - hidden-record-noninterference-and-cross-purpose-isolation-tests
+  - deterministic-static-golden-hash
+  - public-api-import-report
+  - import-boundary-report
+  - static-type-report
+  - dependency-lock-report
+```
+
+### G11A Acceptance
+
+1. G11A只拥有single production module `crypto_quant_backtest.observations`及root exports。它是pure in-memory Strategy-facing read seam，只消费caller-supplied immutable query allowlist与`MarketEvent` records；不得读取MarketBundle/Reader/Manifest/Cursor、filesystem、network、database、process、environment、wall clock、Ledger、Snapshot、Account或Strategy implementation；
+2. `ObservationPurposeRef` exact保存canonical nonempty key与positive integral version。Purpose是独立semantic identity，不等于Event type、stream key、PricePurpose fallback或payload field；canonical dict/hash固定schema version 1；
+3. `ObservationQuery` exact声明nonempty `dataset_key`、stable `InstrumentId`、`ObservationPurposeRef`与exact `MarketBundleCapability` key/version。Query不包含callback、predicate、arbitrary callable、Reader、path、current time、Decision Time、Attempt ID或runtime address；query hash由完整selector确定；
+4. `ObservationRecord`只包装一个existing immutable `MarketEvent`与一个explicit Purpose。Record dataset exact来自`event.stream_key`，Instrument exact来自non-None `event.instrument_id`，capability exact来自`event.capability`；G11A不解析payload来猜dataset/Instrument/purpose/capability，也不接受Instrument-less global record；
+5. `ObservationView` constructor接收iterable allowed queries与records，立即冻结、canonical sort并只保留exact selector出现在allowlist中的records。Public interface exact只有`view_hash`与`query(query)`；不得返回或暴露backing records/allowlist、Reader、Bundle Ref/Manifest、Cursor或mutable cache；
+6. Unauthorized backing records在construction时被discard：不能进入view state、不能影响`view_hash`、不能出现在authorized result，也不能改变authorized result/outcome hash。Adding/reordering any unauthorized record must produce exact same view/query result bytes；
+7. G11A v1不实现result cache。Authorized query对retained immutable tuple做deterministic linear scan；未来cache只有在profiling需要时才可private加入，且必须在authorization后按exact query hash读取/写入，不能改变visibility、ordering、canonical bytes或hash；
+8. Authorization只检查allowlist，且failure precedence exact为`DATASET_NOT_AUTHORIZED` → `INSTRUMENT_NOT_AUTHORIZED` → `PURPOSE_NOT_AUTHORIZED` → `CAPABILITY_NOT_AUTHORIZED`。Failure不能根据hidden record existence改变code或message；多缺陷只返回第一项；
+9. Exact authorized query即使没有matching records也成功返回empty tuple。G11A不得把empty解释为No Session、Suspended、No Trades、Missing、Source Outage、window coverage failure或revision gap；G11C/G11D/G12拥有这些语义；
+10. Matching result只包含dataset、Instrument、Purpose和capability四项全部exact相等的records。Capability key相同/version不同不fallback；相邻dataset、same Instrument/different purpose、same purpose/different Instrument均不可替代；
+11. 同一`MarketEvent`只有通过separate explicit `ObservationRecord`才能服务多个Purpose，且每个Purpose必须有separate authorized query。Shared source row、payload shape或Event type不能自动授权cross-purpose reuse；
+12. Record canonical identity exact为Purpose identity+Event ID；authorized duplicate identity with exact canonical content collapses为一个record，same identity/different content constructor fail closed。Unauthorized conflicting duplicates被discard且不能影响view identity；
+13. Retained result order固定为MarketEvent `ordering_key`后接Event ID、Revision ID与record hash稳定tie-break。Allowed-query/record input order、Mapping order或duplicate exact inputs不能改变view/result/outcome hash；
+14. `ObservationQueryResult` exact保存view hash、Query与ordered `MarketEvent` tuple；`ObservationQueryFailure` exact保存view hash、Query与failure code；`ObservationQueryOutcome`必须result xor failure，并保存canonical outcome hash。Constructor重算derived hashes并拒绝forged result/failure context；
+15. Strategy-facing result可以看到matching Event payload与既有event/available/revision/source provenance，但看不到其他records或container internals。No `to_canonical_dict()`/manifest accessor on `ObservationView` may serialize hidden state to Strategy；only result/failure values are canonical artifacts；
+16. G11A不接收Decision/Simulation Instant，不执行`available_time <= decision_time`、latest revision selection、supersession resolution或causality trace。它因此不能单独满足完整point-in-time Observation View；G11B必须在Strategy invocation前补齐这些规则；
+17. G11A不拥有Universe membership/listing/delisting/StaticUniverse（G11C）、BarDefinition/window/lookback/resample（G11D）、DecisionSchedule/Warmup（G11E）、StrategyState/RNG/Model（G11F–H）、Strategy invocation/DecisionBatch（G11I）或downstream parity（G11J）。Engine/Runner/Timeline/TargetStream/Journal/Ledger/Profile保持不变；
+18. Python ambient-library sandbox不属于G11A。Frozen guarantee是Strategy-facing interface不给出filesystem/network/process/clock对象，且production module/static fixture无这些imports/handles；arbitrary Strategy artifact qualification留给G11I/build gates，不能由G11A虚假声明；
+19. Static golden至少冻结：two Instruments、two datasets、two purposes、two capability versions；all four authorization failures及precedence；authorized empty；same-event explicit multi-purpose；hidden unauthorized record addition/order noninterference；authorized exact duplicate collapse/conflict；record/query input-order parity；view/query/result/failure/outcome hashes；public interface non-exposure与forgery controls；
+20. Production import allowlist仅stdlib、`crypto_quant_domain`与`crypto_quant_market_data` public contracts。Module不得import Builder、Trading Kernel、Engine/Runner/Timeline/TargetStream、provider SDK、network/filesystem/process/database/cloud/dynamic import。G11A outputs固定development-only，且不拥有`decision_grade_eligible`或`deployment_authorized`升级权。
+
+Frozen seam note：`docs/research/g11a-observation-view-capability-isolation.md`。
+
+Readiness baseline：
+
+```text
+G10H frozen acceptance command                                      33 passed
+Full test suite                                                    1108 passed
+Workspace import boundary                                           PASS (80 files)
+mypy 2.3.0                                                           no issues (82 source files)
+Primary LSP                                                          clean
+pi-lens scoped review                                                no blocking errors
+Markdown + git diff checks                                           PASS
+uv lock --check                                                      PASS
+Python                                                                3.13.5
+```
+
+Readiness validation：
+
+```text
+G10H frozen acceptance command                                      33 passed
+Full test suite                                                    1108 passed
+Workspace import boundary                                           PASS (80 files)
+mypy 2.3.0                                                           no issues (82 source files)
+Primary LSP                                                          no diagnostics (5 Markdown files unconfirmed on silent clean)
+pi-lens scoped review                                                no new findings; 8 pre-existing Protocol ellipsis warnings
+Markdown + git diff checks                                           PASS
+uv lock --check                                                      PASS
+Python                                                                3.13.5
+```
+
+## 86. PASSED 记录格式
 
 ```yaml
 id: WP-00A
