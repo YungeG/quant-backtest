@@ -348,6 +348,14 @@ G10F已实现并通过冻结验收的纯离线immutable account authority，对�
 
 Per-symbol maker/taker commission是authority，feeTier只作evidence。Reservation使用`max(maker,taker)`和USDT Scale 8 CEILING；Final按actual Fill liquidity逐Fill使用maker-only/taker-only与TOWARD_ZERO。Market fee/Tax的显式N/A coverage rules使用generic Estimator/Engine可执行的zero-rate basis，不使用会被generic unknown-basis检查拒绝的UNKNOWN。Negative rebate、BNB discount和rounding parity未冻结为decision-grade，必须fail closed或保留development limitation。
 
+## Binance USDⓈ-M Profile 组合（Binance USDⓈ-M Resolved Profile Composition）
+
+G10G只组合caller-supplied immutable G10A–G10F authorities，不重新查询provider。Market key固定`crypto.binance_usdm.v1`，Simulation固定`bar.next_eligible_open.conservative.v1`，Execution Account固定`binance.usdm.standard-cross.v1`；旧`vip0`标签不再使用，因为account-specific maker/taker才是fee authority。Profile digest绑定all provider resolution hashes、G09A Contract、AccountRiskPolicy、Price/Funding purpose coverage、component manifests、FinancialDispatcherSpec与limitations。
+
+## Binance USDⓈ-M 保守账户容量（Binance USDⓈ-M Conservative Account Capacity）
+
+G10G caller-supplied Account Capacity Evidence保存同G10B active source的`MAX_NUM_ORDERS`与`MAX_NUM_ALGO_ORDERS`历史values。Generic AccountRiskPolicy只有一个order-cap dimension，v1显式保守取二者minimum。Exposure cap取G10F selected-leverage `maxNotionalValue`与G10C finite terminal tier coverage的USDT minimum；Working Order count、current Exposure、Available Margin与Reservation仍由generic PreTradeRisk point-in-time input提供。
+
 ## 资金发布与应用时点（Funding Publication and Application Instant）
 
 Binance只提供millisecond funding UTC，repository冻结target UTC `TimelinePhase(110,"funding_settlement")/SourceSequence(0)`作为system ordering convention：位于G09C eligibility phase 100之后，同时作为Publication availability与G09D `applied_at`。Archive capture/revision visibility另行保存，不能与economic funding time合并。

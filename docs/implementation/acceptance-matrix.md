@@ -132,7 +132,7 @@ artifact_hashes: []
 | G10D | PASSED — immutable commit `790469d80ddcf3797f03c96c975b77d75a3d49a5` | trading-kernel profiles/binance_usdm | G10A, WP-03C | none |
 | G10E | PASSED — immutable commit `195265b1ed830e62b91882ff315b115e7ac80597` | trading-kernel profiles/binance_usdm | G09C–G09D, G10D | Funding source fixtures |
 | G10F | READY | trading-kernel profiles/binance_usdm | WP-05H, WP-05J, G09F, G10A | Fee/account fixtures |
-| G10G | DRAFT | backtest-runtime composition | G10A–G10F | Resolved profile E2E |
+| G10G | READY | backtest-runtime composition | G10A–G10F | Resolved profile E2E |
 | G10H | DRAFT | parity tooling | G10G, WP-00C | crypt-gemini parity |
 | G11A | DRAFT | backtest-runtime observations | G07 | Capability isolation fixtures |
 | G11B | DRAFT | backtest-runtime observations | G11A | Revision/causality fixtures |
@@ -8235,7 +8235,141 @@ uv lock --check                                                      PASS
 Python                                                                3.13.5
 ```
 
-## 83. PASSED 记录格式
+## 83. G10G Binance USDⓈ-M Resolved Profile Composition Acceptance Card
+
+```yaml
+id: G10G
+status: READY
+depends_on:
+  - G09H
+  - G10A
+  - G10B
+  - G10C
+  - G10D
+  - G10E
+  - G10F
+owner_package: backtest-runtime composition + tests/support
+public_interface:
+  - crypto_quant_backtest.BinanceUsdmAccountCapacityEvidence
+  - crypto_quant_backtest.BinanceUsdmProfileCompositionRequest
+  - crypto_quant_backtest.BinanceUsdmMarketSemanticsProfile
+  - crypto_quant_backtest.BinanceUsdmSimulationProfile
+  - crypto_quant_backtest.BinanceUsdmExecutionAccountProfile
+  - crypto_quant_backtest.BinanceUsdmResolvedProfile
+  - crypto_quant_backtest.BinanceUsdmProfileCompositionFailureCode
+  - crypto_quant_backtest.BinanceUsdmProfileCompositionFailure
+  - crypto_quant_backtest.BinanceUsdmProfileCompositionOutcome
+  - crypto_quant_backtest.BinanceUsdmProfileComposer
+  - tests.support.binance_usdm.BinanceUsdmDevelopmentFinancialDispatcher
+  - tests.support.binance_usdm.build_binance_usdm_resolved_request
+  - tests.support.binance_usdm.build_binance_usdm_execution_case
+  - static Binance USDⓈ-M resolved-profile development journey golden fixture v1
+test_commands:
+  contract: uv run pytest -q tests/runtime/profiles/binance_usdm/test_profile_composition.py tests/support/binance_usdm/test_binance_usdm_profile.py
+  fixture: uv run pytest -q tests/runtime/engine/test_g10g_binance_usdm_golden.py
+  journey: uv run pytest -q tests/runtime/engine/test_g10g_binance_usdm_journey.py tests/runtime/runner/test_g10g_binance_usdm_runner.py
+  boundary: uv run pytest -q tests/architecture/test_binance_usdm_profile_boundary.py tests/architecture/test_g10g_binance_composition_boundary.py tests/architecture/test_g09h_composition_boundary.py tests/architecture/test_public_api_imports.py tests/architecture/test_repository_cleanliness.py tests/runtime/resolution/test_backtest_resolution.py tests/runtime/runner/test_auditable_runner.py
+  acceptance: uv run pytest -q tests/runtime/profiles/binance_usdm/test_profile_composition.py tests/support/binance_usdm/test_binance_usdm_profile.py tests/runtime/engine/test_g10g_binance_usdm_journey.py tests/runtime/engine/test_g10g_binance_usdm_golden.py tests/runtime/runner/test_g10g_binance_usdm_runner.py tests/runtime/resolution/test_backtest_resolution.py tests/runtime/engine/test_g09h_synthetic_linear_perpetual_journey.py tests/kernel/pretrade_risk/test_pretrade_risk.py tests/profiles/binance_usdm/test_instrument_metadata.py tests/profiles/binance_usdm/test_order_rules.py tests/profiles/binance_usdm/test_margin_tiers.py tests/profiles/binance_usdm/test_price_streams.py tests/profiles/binance_usdm/test_funding_sources.py tests/profiles/binance_usdm/test_account_profile.py tests/architecture/test_binance_usdm_profile_boundary.py tests/architecture/test_g10g_binance_composition_boundary.py tests/architecture/test_g09h_composition_boundary.py tests/architecture/test_public_api_imports.py tests/architecture/test_repository_cleanliness.py --junitxml=build/acceptance/g10g-pytest.xml
+fixture_ids:
+  - binance-usdm-resolved-profile-development-journey-v1
+expected_artifacts:
+  - docs/research/binance-usdm-profile-composition-primary-sources.md
+  - tests/fixtures/runtime/engine/binance-usdm-resolved-profile-development-journey-v1.json
+  - build/acceptance/g10g-pytest.xml
+  - build/acceptance/g10g-import-boundary-report.json
+failure_contracts:
+  - required-g10a-through-g10f-authority-is-missing
+  - provider-resolution-instrument-account-time-or-coverage-context-mismatch
+  - current-or-neighboring-provider-state-fills-composition-gap
+  - required-price-purpose-is-missing-duplicated-or-substituted
+  - funding-source-is-missing-outside-window-or-not-the-g10e-authority
+  - active-deferred-order-rule-is-silently-erased
+  - closed-admission-is-composed-as-executable
+  - order-capacity-evidence-does-not-match-active-g10b-source
+  - separate-binance-order-counters-are-expanded-into-a-larger-generic-limit
+  - account-max-notional-or-g10c-terminal-coverage-is-malformed-or-bypassed
+  - complete-account-risk-policy-omits-source-capacity-or-fee-funding-dimension
+  - linear-contract-uses-precision-hints-instead-of-g10b-scales
+  - profile-component-manifest-is-partial-duplicated-or-forged
+  - profile-digest-omits-provider-resolution-risk-simulation-or-limitation-identity
+  - profile-resolver-accepts-wrong-venue-account-currency-capability-or-grade
+  - engine-runner-ledger-timeline-or-composer-adds-a-binance-branch
+  - dispatcher-object-callback-module-path-or-runtime-address-enters-case-identity
+  - development-profile-claims-decision-grade-live-or-deployment-authorization
+allowed_grade: development
+evidence:
+  - readiness-contract-tests
+  - inherited-official-primary-source-notes
+  - composed-contract-account-risk-component-and-registration-hashes
+  - exact-price-purpose-and-funding-coverage-evidence
+  - resolved-environment-and-build-artifact-identity
+  - full-funding-margin-fee-liquidation-journey-and-reconstruction
+  - static-golden-hash
+  - import-boundary-report
+  - static-type-report
+  - dependency-lock-report
+passed_commit: null
+artifact_hashes: []
+```
+
+### G10G Acceptance
+
+1. G10G只拥有pure production composition authority、development-only Binance test dispatcher/Journey与现有profile-neutral Runtime seam的组合；不得修改G10A–G10F source facts、调用provider/current API、解析JSON/file、读取filesystem/database/wall clock、构建MarketBundle、证明archive completeness、授权live/deployment或执行G10H parity；
+2. Production seam固定为单一`crypto_quant_backtest.binance_usdm_profile` module及root exports。它只消费caller-supplied immutable G10A Instrument Resolution、G10B Order Rule Resolution、G10C Margin Tier Resolution、G10D Price Purpose Resolutions、G10E Funding Source Resolutions、G10F Account Profile Resolution、Account Capacity Evidence、finite Timeline Window与composition `SimulationInstant`；不得重新运行provider Model或读取Runtime current state；
+3. `BinanceUsdmAccountCapacityEvidence` exact保存evidence key/version、Account、stable Instrument、finite half-open effective interval、full available-at、positive raw `max_num_orders`/`max_num_algo_orders`、active G10B source key/hash与revision ID。Constructor exact types/canonical identity；它不是Working Order count或current account query；
+4. Generic `AccountRiskPolicy`只有一个order-capacity dimension。V1 exact使用`min(max_num_orders,max_num_algo_orders)`作为conservative development convention；不得取max、相加、忽略algo cap或声称与Binance split counters parity。Working Order count仍由generic PreTradeRisk input提供；
+5. Exposure capacity exact把G10F active Band raw `max_notional_value`按ordinary string/integer arithmetic映射USDT Scale 8 Money，并与G10C `finite_terminal_notional_cap`取minimum。两者必须positive、same USDT/Scale且覆盖run window；不得把account value替代G10C tier selection，也不得从`ma/mi/initialLeverage`、current position、wallet或stablecoin peg构造cap；
+6. Composed `AccountRiskPolicy` exact使用G10F Account/Venue、G10B active Snapshot allowed sides/effects/reduce-only semantics、G10F `FeeReserveFundingSource.AVAILABLE_MARGIN`、第4条order cap与第5条single-USDT exposure cap。NORMAL可按active capability允许ordinary/reduce-only；REDUCE_ONLY只允许CLOSE与`reduce_only=true`；CLOSED composition structured fail；
+7. `BinanceUsdmProfileCompositionRequest` exact保存optional六类provider authorities、canonical Price Resolution tuple、Funding Resolution tuple、optional Capacity Evidence、finite `TimelineWindow`与`composed_at`。Optional只用于structured missing-authority failures；constructor不隐藏业务缺失；tuple按purpose/target/source identity canonical sort；
+8. G10A Instrument/listing、G10B active Band、G10C active Band、G10F active Band与Capacity interval必须exact覆盖完整run window；各query economic Instrument/Account/time、capture/availability与composition instant必须相容。Later/current resolution不能补历史窗口，单点active Band不能越过transition外推；
+9. Generic G09A `LinearPerpetualContract`只由G10A Instrument/`base_quantity_per_contract` multiplier与G10B exact `quantity_scale`/`price_scale`构造。`pricePrecision`、`quantityPrecision`、mark decimals、display hints或G10D Price不得进入Scale；
+10. Required Price Purpose set exact为`EXECUTION_REFERENCE`、`VALUATION`、`MARGIN`、`LIQUIDATION`各一个successful G10D Resolution。Purpose、Instrument、coverage、requested/available time或source identity缺失/duplicate/mismatch fail closed；不得在Purpose之间fallback。`FUNDING`只由G10E提供，`SETTLEMENT`固定unsupported；
+11. Funding tuple至少包含Journey内每个scheduled Slot唯一successful G10E Resolution，且Instrument、Account/Application Key、Slot target、coverage、publication/mark/settlement identity和availability exact匹配。G10G不得重算rate、cadence、mark或cash flow；
+12. Active G10B deferred set只允许`MAX_NUM_ORDERS`与`MAX_NUM_ALGO_ORDERS`，且两者必须同时存在并由matching Capacity Evidence完成；Result显式保存source deferred keys与composed resolved keys，绝不改写G10B Resolution identity。`PERCENT_PRICE`、`MARKET_TAKE_BOUND`、`TRIGGER_PROTECT`与advanced capabilities v1 structured unsupported，不能被G10D marks、Capacity Evidence或generic policy silently erased；
+13. Market Profile key exact为`crypto.binance_usdm.v1`、version 1；Simulation key exact为`bar.next_eligible_open.conservative.v1`、version 1；Execution Account key exact为`binance.usdm.standard-cross.v1`、version 1。旧planning label `binance.usdm.vip0.cross.v1`不得使用，因为feeTier不是rate authority；
+14. `BinanceUsdmMarketSemanticsProfile` exact-cover全部现有`ProfilePortType`且不新增generic port。Manifest包含：UTC-continuous development Session、G10A Instrument、G10B Order Rules、G10F account-fee composition、explicit no Tax、no delivery Settlement、G09A/G09B Position Accounting、G10E+G09D Financing、G10C+G09E+G09F Margin、G10D+G09G conservative Liquidation Rules、no Corporate Action与single-USDT identity Valuation；
+15. Reused G10A/G10B component refs必须exact等于source Model refs；composed Fee/Margin/Liquidation refs的digest必须绑定对应G10 resolution hashes、generic G09 component refs、contract/risk identity、Price Purpose coverage与limitations。No-op components也必须versioned/digested，不能用`None`、empty string或synthetic identity；
+16. `BinanceUsdmSimulationProfile` exact-cover全部`SimulationPortType`：`NextEligibleBarOpenModel`、fixed deterministic zero-bps Slippage、zero-latency development component、conservative bar-open Liquidity、G09G conservative Liquidation Audit与Mark-to-Market Closeout。上述均为repository convention，不声称Binance matching-engine、queue、latency或liquidation parity；
+17. Market required capabilities exact至少包含`bar_open@1`、`account.financial-event@1`、`binance_usdm.price-purpose-streams@1`与`binance_usdm.funding-publications@1`；Simulation required capability为`bar_open@1`。ProfileResolver继续自动要求precomputed Target capability；缺少/低版本capability structured incompatibility；
+18. `BinanceUsdmExecutionAccountProfile` exact保存Account、Venue `binance_usdm`、account type `linear_perpetual`、margin mode `cross_single_asset_one_way`、USDT-only reporting、G10F Account Schedule、AccountRiskPolicy与provider resolution manifest；profile digest任一输入变化必须变化；
+19. Market、Simulation、Execution Account implementations structural满足existing registration protocols。Composer exact产生三个registrations与`BacktestProfileRegistry`；Registration header/digest/component manifest必须与implementation重算一致。ProfileResolver在matching Bundle/Build/Request下成功，wrong Venue/Account/Currency/engine/capability/build/profile key或decision-grade request沿既有generic checks fail；
+20. Overall `BinanceUsdmResolvedProfile` exact包含model key/version/digest、完整Request、provider resolution hash manifest、Linear Contract、AccountRiskPolicy、three profile implementations/registrations、Registry、FinancialDispatcherSpec、required capabilities、limitations、`decision_grade_eligible=false`与`deployment_authorized=false`。Constructor重算全部derived fields并拒绝`dataclasses.replace`伪造；
+21. Financial Dispatcher key exact为`crypto.binance_usdm.linear-financial-dispatch.v1`。Spec config hash绑定overall Profile、Contract、Risk Policy、provider Resolution manifest、Market/Simulation component manifests与limitations；position/financing/margin/liquidation refs exact对应Profile。Case/semantic identity仍只保存Spec/plans/payloads，不保存implementation object/callback/module path/runtime address/Attempt ID/wall clock；
+22. Provider composition failure precedence exact为：`MISSING_INSTRUMENT_METADATA` → `MISSING_ORDER_RULES` → `MISSING_MARGIN_TIERS` → `MISSING_ACCOUNT_PROFILE` → `MISSING_ACCOUNT_CAPACITY` → `MISSING_PRICE_PURPOSE` → `MISSING_FUNDING_SOURCE` → `INSTRUMENT_CONTEXT_MISMATCH` → `ACCOUNT_CONTEXT_MISMATCH` → `TIMELINE_COVERAGE_MISMATCH` → `EVIDENCE_NOT_AVAILABLE` → `ORDER_ADMISSION_CLOSED` → `DEFERRED_ORDER_RULE_UNSUPPORTED` → `ORDER_CAPACITY_SOURCE_MISMATCH` → `ORDER_CAPACITY_UNREPRESENTABLE` → `EXPOSURE_CAPACITY_INVALID` → `PRICE_PURPOSE_COVERAGE_MISMATCH` → `FUNDING_CONTEXT_MISMATCH` → `COMPONENT_IDENTITY_CONFLICT`；多缺陷只返回第一项；
+23. Test-support `BinanceUsdmDevelopmentFinancialDispatcher`可导入G09A–G09G generic implementations和G10 normalized evidence，但不得读取provider/network/filesystem/current Registry。它实现existing `FinancialEventDispatcher`，Engine/Runner/Timeline/Journal/Ledger/Composer不新增Binance imports、`isinstance`、name match或operation branch；
+24. Frozen Journey使用single Binance Account/Instrument/USDT、One-way cross mode、normal order admission、three deterministic full Fills形成Long OPEN→partial REDUCE→FLIP Short，并包含Long期间一个G10E Funding Event、Long-low和Short-high G10D Liquidation bars、G10C/G10F Margin inputs、G10F maker/taker Fees与final Snapshot。全部走G09H canonical plans/events/artifacts；
+25. Reconstruction exact重复G09H四路径：Final Journal→Generic Ledger；specialized Journal→G09B Position；Ledger+Position+G10C/G10D/G10F/Reservations→G09F Projection；Ledger+Projection+VALUATION authority→PortfolioSnapshot。Funding、Fee、Margin、Liquidation artifacts保存完整provider resolution/result identities，不能只保存裸hash或从Engine mutable side-state抄回；
+26. Profile/Resolution/Failure/Outcome/Capacity Evidence全部explicit `schema_version=1`、canonical tuple order/content hashes。Static golden至少冻结all G10 resolution/model hashes、capacity/risk/contract/component/profile/registration/registry/dispatcher/resolved-environment identities、failure precedence、wrong-grade/capability controls、three-Fill/Funding/Fee/Margin/Liquidation/Journal/Ledger/Snapshot/artifact/repeat parity；
+27. Production purity allowlist仅允许stdlib、`crypto_quant_domain`、`crypto_quant_market_data` contracts、generic `crypto_quant_trading` seams、G10A–G10F public values与same-package Runtime resolution/financial-dispatch/simulation refs；拒绝filesystem/network/provider SDK/process/database/cloud/dynamic import/MarketBundle Reader/Engine/Runner/mutable global state/wall clock。G10G不拥有archive completeness、matching-engine parity、Account Trade parity、real liquidation/ADL/bankruptcy/insurance fund、multi-assets/isolated/Hedge/BNB/negative rebate/Portfolio Margin、live或deployment；全部output固定development-grade。
+
+Primary-source and system-convention boundary：`docs/research/binance-usdm-profile-composition-primary-sources.md`。
+
+Readiness baseline：
+
+```text
+G10F frozen acceptance command                                     140 passed
+Full test suite                                                    1085 passed
+Workspace import boundary                                           PASS (79 files)
+mypy 2.3.0                                                           no issues (79 source files)
+Primary LSP + scoped pi-lens                                         no blocking errors
+uv lock --check                                                      PASS
+Python                                                                3.13.5
+```
+
+Readiness validation：
+
+```text
+G10F frozen acceptance command                                     140 passed
+Full test suite                                                    1085 passed
+Workspace import boundary                                           PASS (79 files)
+mypy 2.3.0                                                           no issues (79 source files)
+Primary LSP + scoped pi-lens                                         no blocking errors
+Markdown + git diff checks                                           PASS
+uv lock --check                                                      PASS
+Python                                                                3.13.5
+```
+
+## 84. PASSED 记录格式
 
 ```yaml
 id: WP-00A

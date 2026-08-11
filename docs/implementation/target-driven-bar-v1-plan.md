@@ -1720,14 +1720,26 @@ G10F Historical Account Profile Book、normalized mode、selected Leverage Evide
 
 依赖：G10A–G10F、G09H。
 
-拥有：`crypto.binance_usdm.v1`、`binance.usdm.vip0.cross.v1` 和 `bar.next_eligible_open.conservative.v1` 的 ResolvedEnvironment composition。
+拥有：`crypto.binance_usdm.v1`、`binance.usdm.standard-cross.v1`和`bar.next_eligible_open.conservative.v1`的development-only ResolvedEnvironment composition、single-instrument `AccountRiskPolicy`、Financial Dispatcher Spec与完整Binance Journey Fixture。
 
 验收：
 
-- ProfileResolver 对 components、capabilities 和 PricePurpose coverage 验证通过；
-- Binance Fixture 与 A 股 Fixture 共享 Runner、OrderEventStream、SettlementBook 和 AccountingJournal Interface；
-- Generic Kernel、Runner 和 Bar Engine 不增加 Binance 条件分支；
-- Frozen Fixture 产生完整 Funding、Margin、Fee 和 LiquidationAudit Evidence。
+- Production composition只消费caller-supplied immutable G10A–G10F successful Resolutions、finite Timeline Window、composition instant与matching historical Account Capacity Evidence；不重新查询provider/current state、不构建MarketBundle、不修改G10 source facts；
+- G10A Instrument/multiplier与G10B exact price/quantity Scales组成G09A Contract；不得使用precision hints、display decimals或Mark decimals；
+- Required Price Purpose exact为Execution Reference、Valuation、Margin、Liquidation各一个G10D Resolution；Funding只来自G10E，Settlement unsupported，Purpose之间不fallback；
+- G10B active deferred set只允许MAX_NUM_ORDERS/MAX_NUM_ALGO_ORDERS且必须由matching Account Capacity Evidence完成；Result同时保存source deferred与composed resolved keys。其他deferred rule structured unsupported；generic单order-cap exact保守取两个provider limits的minimum，不扩大Binance split limits；
+- Exposure cap exact取G10F selected-leverage `maxNotionalValue`与G10C finite terminal tier coverage的USDT minimum；G09F current exposure/Available Margin和Reservation继续作为generic PreTradeRisk runtime state，不进入static Policy；
+- `AccountRiskPolicy`从G10B allowed sides/effects/reduce-only、G10F `AVAILABLE_MARGIN` fee source、order/exposure caps组成；NORMAL与REDUCE_ONLY exact区分，CLOSED不产生executable Profile；
+- Market Profile exact-cover全部Profile ports；Simulation exact-cover全部Simulation ports。No Tax/Corporate Action/automatic Settlement与single-USDT valuation均使用explicit versioned component，不用`None`；
+- Profile digest exact绑定all G10 model/resolution hashes、Contract、Risk Policy、Price/Funding coverage、component manifests、simulation conventions、Dispatcher Spec和limitations；任一输入变化必须改变identity；
+- ProfileResolver对matching Bundle/Build/Request成功；wrong Venue/Account/Currency/capability/build/profile/grade沿generic compatibility checks失败。Market capabilities至少包含bar-open、account financial-event、Binance price-purpose streams与funding publications；
+- Financial Dispatcher Spec固定`crypto.binance_usdm.linear-financial-dispatch.v1`。Engine Case只保存Spec/plans/payloads，不保存implementation object、callback、module path、runtime address、Attempt ID或wall clock；
+- Test-support Binance dispatcher通过同一G09H branchless seam产生Long OPEN→partial REDUCE→FLIP Short、G10E Funding、G10F maker/taker Fee、G10C/G10F Margin、G10D Long-low/Short-high Liquidation Audit与Final Snapshot；
+- Final Journal→Generic Ledger、specialized Journal→G09B Position、Ledger+provider evidence→G09F Projection、Ledger+Projection→Snapshot四条重建路径与Engine exact parity；
+- Binance Fixture与A股/Synthetic Fixture共享ProfileResolver、Runner、OrderEventStream、Reservation/Settlement、Journal、Ledger、Timeline、Engine和Composer接口；Generic modules不得增加Binance import/name branch；
+- Production module纯offline且不import Engine/Runner/MarketBundle Reader；test dispatcher不读取network/filesystem/provider current state。G12 archive completeness与G10H Account Trade/matching-engine/liquidation parity前固定development-only、`decision_grade_eligible=false`、`deployment_authorized=false`。
+
+Primary source and composition convention note：`docs/research/binance-usdm-profile-composition-primary-sources.md`。
 
 ### Gate G10H `crypt-gemini` Parity
 

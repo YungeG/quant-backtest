@@ -1583,6 +1583,12 @@ G10F以caller-supplied immutable Historical Account Profile Book统一对齐Acco
 
 G10F把selected integral leverage映射既有`LinearMarginLeverageEvidence`；把account-specific maker/taker映射共享一个`AccountFeeScheduleRef`的Fee Reservation/Final Rule Sets。Reservation按`max(maker,taker)`、USDT Scale 8、CEILING预留；Final按actual Fill maker/taker、USDT Scale 8、TOWARD_ZERO逐Fill计算。Market fee与Tax显式not-applicable，并分别使用generic Estimator/Engine可执行的zero-rate `ORDER_NOTIONAL`/`NOTIONAL_RATE` coverage rule，而不是会被generic unknown-basis检查拒绝的UNKNOWN；negative maker rebate不clip为zero。Rounding在Account Trade List parity前是development limitation。G10F只输出后续G10G组合所需的normalized mode与`AVAILABLE_MARGIN` fee-reserve source，不独立创建缺少G10B capacity/G09F state的完整`AccountRiskPolicy`。Primary-source boundary记录于`docs/research/binance-usdm-fee-account-profile-primary-sources.md`；implementation commit为`07cc15823ec3790b0491220f248a64c334e3a81b`。
 
+G10G是pure offline composition boundary。它把G10A Instrument/multiplier与G10B exact scales组成G09A Linear Contract；要求G10D Execution Reference、Valuation、Margin、Liquidation purpose exact coverage及G10E Funding authority；把G10F account mode/fee schedule/leverage与G10C finite tier coverage、matching historical Account Capacity Evidence组成single-instrument generic `AccountRiskPolicy`。任何deferred G10B rule都不能在composition时被静默清空。
+
+Binance的`MAX_NUM_ORDERS`与`MAX_NUM_ALGO_ORDERS`是不同provider counters，而generic Policy当前只有一个order-cap dimension。G10G v1保守取二者minimum并把该lossy mapping写入digest/limitations；它可能过度拒绝但不能扩大权限。Exposure ceiling exact取G10F raw selected-leverage `maxNotionalValue`与G10C finite terminal cap的USDT minimum；G09F current exposure、Available Margin、Working Orders与Reservation仍在PreTradeRisk evaluation time supplied，不成为static Profile state。
+
+Resolved registrations固定Market `crypto.binance_usdm.v1`、Simulation `bar.next_eligible_open.conservative.v1`、Execution Account `binance.usdm.standard-cross.v1`。Market/Simulation manifests exact-cover全部existing ports；no Tax、no Corporate Action、no automatic delivery Settlement与single-USDT valuation都必须有versioned component identity。Financial dispatcher spec固定`crypto.binance_usdm.linear-financial-dispatch.v1`并绑定all provider resolutions、Contract、Risk Policy、component manifests和limitations；Engine/Runner继续只识别profile-neutral Spec/Plan/Payload。Bar-open execution、zero-bps deterministic slippage与bar-extreme liquidation audit是repository development conventions，不是Binance parity。Primary-source/system boundary记录于`docs/research/binance-usdm-profile-composition-primary-sources.md`。
+
 `CurrencyValuationGraph` 把原生 Currency Balance 转换为 Reporting Currency。每条转换边引用 point-in-time Price Stream；存在多条路径时由版本化 `CurrencyValuationPolicy` 选择。Stablecoin 不默认 1:1，除非 Profile 明确提供版本化 Peg Valuation Policy。缺少路径或路径不唯一时 decision-grade 失败关闭。
 
 `PortfolioSnapshotProjector` 只消费 Ledger State、Resolved Marks 和 Reporting Currency Valuations；它不查询数据源、不选择价格、不决定换算路径。
@@ -2006,12 +2012,12 @@ semantics:
   instrument_model: linear_perpetual
   order_rule_model: binance_historical_rules
   position_accounting_model: linear_derivative
-  settlement_model: realtime
+  settlement_model: perpetual_delivery_not_applicable
   financing_model: historical_funding
-  market_fee_rules: binance_usdm_fee_structure
+  market_fee_rules: account_specific_maker_taker
   tax_rules: none
   margin_rules: exchange_margin_tiers
-  liquidation_rules: binance_usdm_tiered
+  liquidation_rules: conservative_bar_extreme_audit
   corporate_action_model: none
   price_streams:
     execution_reference: historical_aggregate_trade_price
@@ -2029,12 +2035,12 @@ simulation:
   liquidity_model: full_fill_after_rules.v1
   liquidation_audit_model: conservative_intrabar_audit.v1
 
-execution_account_profile: binance.usdm.vip0.cross.v1
+execution_account_profile: binance.usdm.standard-cross.v1
 account:
   account_type: derivatives
-  margin_mode: cross
+  margin_mode: cross_single_asset_one_way
   leverage_policy: configured_per_instrument
-  account_fee_schedule: vip0_timeline
+  account_fee_schedule: account_specific_symbol_timeline
   cost_basis_policy: not_applicable
   permissions:
     long: true
