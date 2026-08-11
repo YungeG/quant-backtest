@@ -11,9 +11,12 @@ PROFILES = (
     / "packages/trading-kernel/src/crypto_quant_trading/profiles/binance_usdm/instrument_metadata.py",
     ROOT
     / "packages/trading-kernel/src/crypto_quant_trading/profiles/binance_usdm/order_rules.py",
+    ROOT
+    / "packages/trading-kernel/src/crypto_quant_trading/profiles/binance_usdm/margin_tiers.py",
 )
 GENERIC_MODULES = (
     ROOT / "packages/trading-kernel/src/crypto_quant_trading/ledger.py",
+    ROOT / "packages/trading-kernel/src/crypto_quant_trading/margin.py",
     ROOT / "packages/trading-kernel/src/crypto_quant_trading/market_rules.py",
     ROOT / "packages/trading-kernel/src/crypto_quant_trading/ports.py",
     ROOT / "packages/backtest-runtime/src/crypto_quant_backtest/engine.py",
@@ -70,6 +73,17 @@ PUBLIC_NAMES = (
     "BinanceUsdmOrderRuleFailure",
     "BinanceUsdmOrderRuleOutcome",
     "BinanceUsdmOrderRuleModel",
+    "BinanceUsdmMarginTierScope",
+    "BinanceUsdmMarginTierSourceRef",
+    "BinanceUsdmMarginTierBracket",
+    "BinanceUsdmMarginTierBand",
+    "BinanceUsdmMarginTierRuleBook",
+    "BinanceUsdmMarginTierQuery",
+    "BinanceUsdmMarginTierResolution",
+    "BinanceUsdmMarginTierFailureCode",
+    "BinanceUsdmMarginTierFailure",
+    "BinanceUsdmMarginTierOutcome",
+    "BinanceUsdmMarginTierModel",
 )
 
 
@@ -123,3 +137,4 @@ def test_generic_kernel_and_runtime_do_not_branch_on_binance_metadata() -> None:
         assert "BinanceUsdm" not in source
         assert "binance_usdm.instrument_metadata" not in source
         assert "binance_usdm.order_rules" not in source
+        assert "binance_usdm.margin_tiers" not in source

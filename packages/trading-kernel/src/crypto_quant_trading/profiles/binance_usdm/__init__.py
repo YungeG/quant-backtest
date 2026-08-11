@@ -13,6 +13,19 @@ from .order_rules import (
     BinanceUsdmOrderRuleResolution,
     BinanceUsdmOrderRuleSourceRef,
 )
+from .margin_tiers import (
+    BinanceUsdmMarginTierBand,
+    BinanceUsdmMarginTierBracket,
+    BinanceUsdmMarginTierFailure,
+    BinanceUsdmMarginTierFailureCode,
+    BinanceUsdmMarginTierModel,
+    BinanceUsdmMarginTierOutcome,
+    BinanceUsdmMarginTierQuery,
+    BinanceUsdmMarginTierResolution,
+    BinanceUsdmMarginTierRuleBook,
+    BinanceUsdmMarginTierScope,
+    BinanceUsdmMarginTierSourceRef,
+)
 from .instrument_metadata import (
     BINANCE_USDM_OPEN_ENDED_DELIVERY_AT,
     BinanceUsdmContractStatus,
@@ -52,4 +65,15 @@ __all__ = [
     "BinanceUsdmOrderRuleFailure",
     "BinanceUsdmOrderRuleOutcome",
     "BinanceUsdmOrderRuleModel",
+    "BinanceUsdmMarginTierScope",
+    "BinanceUsdmMarginTierSourceRef",
+    "BinanceUsdmMarginTierBracket",
+    "BinanceUsdmMarginTierBand",
+    "BinanceUsdmMarginTierRuleBook",
+    "BinanceUsdmMarginTierQuery",
+    "BinanceUsdmMarginTierResolution",
+    "BinanceUsdmMarginTierFailureCode",
+    "BinanceUsdmMarginTierFailure",
+    "BinanceUsdmMarginTierOutcome",
+    "BinanceUsdmMarginTierModel",
 ]

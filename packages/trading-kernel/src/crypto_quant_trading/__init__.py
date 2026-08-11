@@ -186,6 +186,7 @@ from .margin import (
     LinearMarginRuleBook,
     LinearMarginRuleInterval,
     LinearMarginTier,
+    LinearMarginTierBoundaryConvention,
 )
 from .marks import (
     MarkObservation,

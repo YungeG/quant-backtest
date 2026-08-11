@@ -1,0 +1,2360 @@
+{
+  "fixture_id": "binance-usdm-contract-info-margin-tier-source-v1",
+  "provider": "binance_usdm",
+  "rule_books": {
+    "account_adjusted": {
+      "bands": [
+        {
+          "available_at": {
+            "instant": {
+              "epoch_nanoseconds": 1700000000000000001,
+              "type": "utc_instant"
+            },
+            "phase": {
+              "code": "margin_tier_evidence",
+              "rank": 60,
+              "type": "timeline_phase"
+            },
+            "source_sequence": {
+              "type": "source_sequence",
+              "value": 0
+            },
+            "type": "simulation_instant"
+          },
+          "band_id": "margin-tiers-v1",
+          "brackets": [
+            {
+              "bracket_id": "1",
+              "maintenance_margin_deduction": "0",
+              "maintenance_margin_rate": "0.0100",
+              "maximum_leverage": "50",
+              "minimum_leverage_range": "21",
+              "notional_cap": "5000.000",
+              "notional_floor": "0",
+              "schema_version": 1,
+              "type": "binance_usdm_margin_tier_bracket"
+            },
+            {
+              "bracket_id": "2",
+              "maintenance_margin_deduction": "75.000",
+              "maintenance_margin_rate": "0.025",
+              "maximum_leverage": "20",
+              "minimum_leverage_range": "11",
+              "notional_cap": "25000",
+              "notional_floor": "5000.000",
+              "schema_version": 1,
+              "type": "binance_usdm_margin_tier_bracket"
+            },
+            {
+              "bracket_id": "3",
+              "maintenance_margin_deduction": "700",
+              "maintenance_margin_rate": "0.05",
+              "maximum_leverage": "10",
+              "minimum_leverage_range": "1",
+              "notional_cap": "100000",
+              "notional_floor": "25000",
+              "schema_version": 1,
+              "type": "binance_usdm_margin_tier_bracket"
+            }
+          ],
+          "effective_from": {
+            "epoch_nanoseconds": 1700000000000000000,
+            "type": "utc_instant"
+          },
+          "effective_to_exclusive": {
+            "epoch_nanoseconds": 1710000000000000000,
+            "type": "utc_instant"
+          },
+          "instrument_id": {
+            "stable_key": "btc-usdt-perpetual",
+            "type": "instrument_id",
+            "venue": "binance_usdm"
+          },
+          "notional_coef": null,
+          "schema_version": 1,
+          "scope": "DEFAULT_SYMBOL",
+          "source_ref": {
+            "schema_version": 1,
+            "source_hash": "sha256:f3678668f814cc28625fdaeabf25cfdb7b651449b415e92fb8cf8ba3d0742707",
+            "source_key": "contract-info/margin-tiers-v1.json",
+            "source_kind": "CONTRACT_INFO_BRACKET_UPDATE",
+            "type": "binance_usdm_margin_tier_source_ref"
+          },
+          "type": "binance_usdm_margin_tier_band"
+        },
+        {
+          "available_at": {
+            "instant": {
+              "epoch_nanoseconds": 1710000000000000001,
+              "type": "utc_instant"
+            },
+            "phase": {
+              "code": "margin_tier_evidence",
+              "rank": 60,
+              "type": "timeline_phase"
+            },
+            "source_sequence": {
+              "type": "source_sequence",
+              "value": 0
+            },
+            "type": "simulation_instant"
+          },
+          "band_id": "margin-tiers-v2",
+          "brackets": [
+            {
+              "bracket_id": "1",
+              "maintenance_margin_deduction": "0",
+              "maintenance_margin_rate": "0.0200",
+              "maximum_leverage": "25",
+              "minimum_leverage_range": "21",
+              "notional_cap": "10000.00",
+              "notional_floor": "0",
+              "schema_version": 1,
+              "type": "binance_usdm_margin_tier_bracket"
+            },
+            {
+              "bracket_id": "2",
+              "maintenance_margin_deduction": "300.0",
+              "maintenance_margin_rate": "0.05",
+              "maximum_leverage": "10",
+              "minimum_leverage_range": "6",
+              "notional_cap": "50000",
+              "notional_floor": "10000.00",
+              "schema_version": 1,
+              "type": "binance_usdm_margin_tier_bracket"
+            },
+            {
+              "bracket_id": "3",
+              "maintenance_margin_deduction": "2800",
+              "maintenance_margin_rate": "0.10",
+              "maximum_leverage": "5",
+              "minimum_leverage_range": "1",
+              "notional_cap": "200000",
+              "notional_floor": "50000",
+              "schema_version": 1,
+              "type": "binance_usdm_margin_tier_bracket"
+            }
+          ],
+          "effective_from": {
+            "epoch_nanoseconds": 1710000000000000000,
+            "type": "utc_instant"
+          },
+          "effective_to_exclusive": {
+            "epoch_nanoseconds": 1720000000000000000,
+            "type": "utc_instant"
+          },
+          "instrument_id": {
+            "stable_key": "btc-usdt-perpetual",
+            "type": "instrument_id",
+            "venue": "binance_usdm"
+          },
+          "notional_coef": null,
+          "schema_version": 1,
+          "scope": "ACCOUNT_ADJUSTED",
+          "source_ref": {
+            "schema_version": 1,
+            "source_hash": "sha256:13dbd0e9b1688acae44f17dbecf88ac5116b4ba896d4dc47a5fb6504954da5cf",
+            "source_key": "contract-info/margin-tiers-v2.json",
+            "source_kind": "CONTRACT_INFO_BRACKET_UPDATE",
+            "type": "binance_usdm_margin_tier_source_ref"
+          },
+          "type": "binance_usdm_margin_tier_band"
+        }
+      ],
+      "coverage_from": {
+        "epoch_nanoseconds": 1700000000000000000,
+        "type": "utc_instant"
+      },
+      "coverage_to_exclusive": {
+        "epoch_nanoseconds": 1720000000000000000,
+        "type": "utc_instant"
+      },
+      "instrument_id": {
+        "stable_key": "btc-usdt-perpetual",
+        "type": "instrument_id",
+        "venue": "binance_usdm"
+      },
+      "rule_book_key": "binance-usdm-btc-usdt-margin-tiers-v1",
+      "rule_book_version": 1,
+      "schema_version": 1,
+      "settlement_currency_id": {
+        "type": "currency_id",
+        "value": "USDT"
+      },
+      "type": "binance_usdm_margin_tier_rule_book"
+    },
+    "after_update": {
+      "bands": [
+        {
+          "available_at": {
+            "instant": {
+              "epoch_nanoseconds": 1700000000000000001,
+              "type": "utc_instant"
+            },
+            "phase": {
+              "code": "margin_tier_evidence",
+              "rank": 60,
+              "type": "timeline_phase"
+            },
+            "source_sequence": {
+              "type": "source_sequence",
+              "value": 0
+            },
+            "type": "simulation_instant"
+          },
+          "band_id": "margin-tiers-v1",
+          "brackets": [
+            {
+              "bracket_id": "1",
+              "maintenance_margin_deduction": "0",
+              "maintenance_margin_rate": "0.0100",
+              "maximum_leverage": "50",
+              "minimum_leverage_range": "21",
+              "notional_cap": "5000.000",
+              "notional_floor": "0",
+              "schema_version": 1,
+              "type": "binance_usdm_margin_tier_bracket"
+            },
+            {
+              "bracket_id": "2",
+              "maintenance_margin_deduction": "75.000",
+              "maintenance_margin_rate": "0.025",
+              "maximum_leverage": "20",
+              "minimum_leverage_range": "11",
+              "notional_cap": "25000",
+              "notional_floor": "5000.000",
+              "schema_version": 1,
+              "type": "binance_usdm_margin_tier_bracket"
+            },
+            {
+              "bracket_id": "3",
+              "maintenance_margin_deduction": "700",
+              "maintenance_margin_rate": "0.05",
+              "maximum_leverage": "10",
+              "minimum_leverage_range": "1",
+              "notional_cap": "100000",
+              "notional_floor": "25000",
+              "schema_version": 1,
+              "type": "binance_usdm_margin_tier_bracket"
+            }
+          ],
+          "effective_from": {
+            "epoch_nanoseconds": 1700000000000000000,
+            "type": "utc_instant"
+          },
+          "effective_to_exclusive": {
+            "epoch_nanoseconds": 1710000000000000000,
+            "type": "utc_instant"
+          },
+          "instrument_id": {
+            "stable_key": "btc-usdt-perpetual",
+            "type": "instrument_id",
+            "venue": "binance_usdm"
+          },
+          "notional_coef": null,
+          "schema_version": 1,
+          "scope": "DEFAULT_SYMBOL",
+          "source_ref": {
+            "schema_version": 1,
+            "source_hash": "sha256:f3678668f814cc28625fdaeabf25cfdb7b651449b415e92fb8cf8ba3d0742707",
+            "source_key": "contract-info/margin-tiers-v1.json",
+            "source_kind": "CONTRACT_INFO_BRACKET_UPDATE",
+            "type": "binance_usdm_margin_tier_source_ref"
+          },
+          "type": "binance_usdm_margin_tier_band"
+        },
+        {
+          "available_at": {
+            "instant": {
+              "epoch_nanoseconds": 1710000000000000001,
+              "type": "utc_instant"
+            },
+            "phase": {
+              "code": "margin_tier_evidence",
+              "rank": 60,
+              "type": "timeline_phase"
+            },
+            "source_sequence": {
+              "type": "source_sequence",
+              "value": 0
+            },
+            "type": "simulation_instant"
+          },
+          "band_id": "margin-tiers-v2",
+          "brackets": [
+            {
+              "bracket_id": "1",
+              "maintenance_margin_deduction": "0",
+              "maintenance_margin_rate": "0.0200",
+              "maximum_leverage": "25",
+              "minimum_leverage_range": "21",
+              "notional_cap": "10000.00",
+              "notional_floor": "0",
+              "schema_version": 1,
+              "type": "binance_usdm_margin_tier_bracket"
+            },
+            {
+              "bracket_id": "2",
+              "maintenance_margin_deduction": "300.0",
+              "maintenance_margin_rate": "0.05",
+              "maximum_leverage": "10",
+              "minimum_leverage_range": "6",
+              "notional_cap": "50000",
+              "notional_floor": "10000.00",
+              "schema_version": 1,
+              "type": "binance_usdm_margin_tier_bracket"
+            },
+            {
+              "bracket_id": "3",
+              "maintenance_margin_deduction": "2800",
+              "maintenance_margin_rate": "0.10",
+              "maximum_leverage": "5",
+              "minimum_leverage_range": "1",
+              "notional_cap": "200000",
+              "notional_floor": "50000",
+              "schema_version": 1,
+              "type": "binance_usdm_margin_tier_bracket"
+            }
+          ],
+          "effective_from": {
+            "epoch_nanoseconds": 1710000000000000000,
+            "type": "utc_instant"
+          },
+          "effective_to_exclusive": {
+            "epoch_nanoseconds": 1720000000000000000,
+            "type": "utc_instant"
+          },
+          "instrument_id": {
+            "stable_key": "btc-usdt-perpetual",
+            "type": "instrument_id",
+            "venue": "binance_usdm"
+          },
+          "notional_coef": null,
+          "schema_version": 1,
+          "scope": "DEFAULT_SYMBOL",
+          "source_ref": {
+            "schema_version": 1,
+            "source_hash": "sha256:13dbd0e9b1688acae44f17dbecf88ac5116b4ba896d4dc47a5fb6504954da5cf",
+            "source_key": "contract-info/margin-tiers-v2.json",
+            "source_kind": "CONTRACT_INFO_BRACKET_UPDATE",
+            "type": "binance_usdm_margin_tier_source_ref"
+          },
+          "type": "binance_usdm_margin_tier_band"
+        }
+      ],
+      "coverage_from": {
+        "epoch_nanoseconds": 1700000000000000000,
+        "type": "utc_instant"
+      },
+      "coverage_to_exclusive": {
+        "epoch_nanoseconds": 1720000000000000000,
+        "type": "utc_instant"
+      },
+      "instrument_id": {
+        "stable_key": "btc-usdt-perpetual",
+        "type": "instrument_id",
+        "venue": "binance_usdm"
+      },
+      "rule_book_key": "binance-usdm-btc-usdt-margin-tiers-v1",
+      "rule_book_version": 1,
+      "schema_version": 1,
+      "settlement_currency_id": {
+        "type": "currency_id",
+        "value": "USDT"
+      },
+      "type": "binance_usdm_margin_tier_rule_book"
+    },
+    "at_update": {
+      "bands": [
+        {
+          "available_at": {
+            "instant": {
+              "epoch_nanoseconds": 1700000000000000001,
+              "type": "utc_instant"
+            },
+            "phase": {
+              "code": "margin_tier_evidence",
+              "rank": 60,
+              "type": "timeline_phase"
+            },
+            "source_sequence": {
+              "type": "source_sequence",
+              "value": 0
+            },
+            "type": "simulation_instant"
+          },
+          "band_id": "margin-tiers-v1",
+          "brackets": [
+            {
+              "bracket_id": "1",
+              "maintenance_margin_deduction": "0",
+              "maintenance_margin_rate": "0.0100",
+              "maximum_leverage": "50",
+              "minimum_leverage_range": "21",
+              "notional_cap": "5000.000",
+              "notional_floor": "0",
+              "schema_version": 1,
+              "type": "binance_usdm_margin_tier_bracket"
+            },
+            {
+              "bracket_id": "2",
+              "maintenance_margin_deduction": "75.000",
+              "maintenance_margin_rate": "0.025",
+              "maximum_leverage": "20",
+              "minimum_leverage_range": "11",
+              "notional_cap": "25000",
+              "notional_floor": "5000.000",
+              "schema_version": 1,
+              "type": "binance_usdm_margin_tier_bracket"
+            },
+            {
+              "bracket_id": "3",
+              "maintenance_margin_deduction": "700",
+              "maintenance_margin_rate": "0.05",
+              "maximum_leverage": "10",
+              "minimum_leverage_range": "1",
+              "notional_cap": "100000",
+              "notional_floor": "25000",
+              "schema_version": 1,
+              "type": "binance_usdm_margin_tier_bracket"
+            }
+          ],
+          "effective_from": {
+            "epoch_nanoseconds": 1700000000000000000,
+            "type": "utc_instant"
+          },
+          "effective_to_exclusive": {
+            "epoch_nanoseconds": 1710000000000000000,
+            "type": "utc_instant"
+          },
+          "instrument_id": {
+            "stable_key": "btc-usdt-perpetual",
+            "type": "instrument_id",
+            "venue": "binance_usdm"
+          },
+          "notional_coef": null,
+          "schema_version": 1,
+          "scope": "DEFAULT_SYMBOL",
+          "source_ref": {
+            "schema_version": 1,
+            "source_hash": "sha256:f3678668f814cc28625fdaeabf25cfdb7b651449b415e92fb8cf8ba3d0742707",
+            "source_key": "contract-info/margin-tiers-v1.json",
+            "source_kind": "CONTRACT_INFO_BRACKET_UPDATE",
+            "type": "binance_usdm_margin_tier_source_ref"
+          },
+          "type": "binance_usdm_margin_tier_band"
+        },
+        {
+          "available_at": {
+            "instant": {
+              "epoch_nanoseconds": 1710000000000000001,
+              "type": "utc_instant"
+            },
+            "phase": {
+              "code": "margin_tier_evidence",
+              "rank": 60,
+              "type": "timeline_phase"
+            },
+            "source_sequence": {
+              "type": "source_sequence",
+              "value": 0
+            },
+            "type": "simulation_instant"
+          },
+          "band_id": "margin-tiers-v2",
+          "brackets": [
+            {
+              "bracket_id": "1",
+              "maintenance_margin_deduction": "0",
+              "maintenance_margin_rate": "0.0200",
+              "maximum_leverage": "25",
+              "minimum_leverage_range": "21",
+              "notional_cap": "10000.00",
+              "notional_floor": "0",
+              "schema_version": 1,
+              "type": "binance_usdm_margin_tier_bracket"
+            },
+            {
+              "bracket_id": "2",
+              "maintenance_margin_deduction": "300.0",
+              "maintenance_margin_rate": "0.05",
+              "maximum_leverage": "10",
+              "minimum_leverage_range": "6",
+              "notional_cap": "50000",
+              "notional_floor": "10000.00",
+              "schema_version": 1,
+              "type": "binance_usdm_margin_tier_bracket"
+            },
+            {
+              "bracket_id": "3",
+              "maintenance_margin_deduction": "2800",
+              "maintenance_margin_rate": "0.10",
+              "maximum_leverage": "5",
+              "minimum_leverage_range": "1",
+              "notional_cap": "200000",
+              "notional_floor": "50000",
+              "schema_version": 1,
+              "type": "binance_usdm_margin_tier_bracket"
+            }
+          ],
+          "effective_from": {
+            "epoch_nanoseconds": 1710000000000000000,
+            "type": "utc_instant"
+          },
+          "effective_to_exclusive": {
+            "epoch_nanoseconds": 1720000000000000000,
+            "type": "utc_instant"
+          },
+          "instrument_id": {
+            "stable_key": "btc-usdt-perpetual",
+            "type": "instrument_id",
+            "venue": "binance_usdm"
+          },
+          "notional_coef": null,
+          "schema_version": 1,
+          "scope": "DEFAULT_SYMBOL",
+          "source_ref": {
+            "schema_version": 1,
+            "source_hash": "sha256:13dbd0e9b1688acae44f17dbecf88ac5116b4ba896d4dc47a5fb6504954da5cf",
+            "source_key": "contract-info/margin-tiers-v2.json",
+            "source_kind": "CONTRACT_INFO_BRACKET_UPDATE",
+            "type": "binance_usdm_margin_tier_source_ref"
+          },
+          "type": "binance_usdm_margin_tier_band"
+        }
+      ],
+      "coverage_from": {
+        "epoch_nanoseconds": 1700000000000000000,
+        "type": "utc_instant"
+      },
+      "coverage_to_exclusive": {
+        "epoch_nanoseconds": 1720000000000000000,
+        "type": "utc_instant"
+      },
+      "instrument_id": {
+        "stable_key": "btc-usdt-perpetual",
+        "type": "instrument_id",
+        "venue": "binance_usdm"
+      },
+      "rule_book_key": "binance-usdm-btc-usdt-margin-tiers-v1",
+      "rule_book_version": 1,
+      "schema_version": 1,
+      "settlement_currency_id": {
+        "type": "currency_id",
+        "value": "USDT"
+      },
+      "type": "binance_usdm_margin_tier_rule_book"
+    },
+    "before_update": {
+      "bands": [
+        {
+          "available_at": {
+            "instant": {
+              "epoch_nanoseconds": 1700000000000000001,
+              "type": "utc_instant"
+            },
+            "phase": {
+              "code": "margin_tier_evidence",
+              "rank": 60,
+              "type": "timeline_phase"
+            },
+            "source_sequence": {
+              "type": "source_sequence",
+              "value": 0
+            },
+            "type": "simulation_instant"
+          },
+          "band_id": "margin-tiers-v1",
+          "brackets": [
+            {
+              "bracket_id": "1",
+              "maintenance_margin_deduction": "0",
+              "maintenance_margin_rate": "0.0100",
+              "maximum_leverage": "50",
+              "minimum_leverage_range": "21",
+              "notional_cap": "5000.000",
+              "notional_floor": "0",
+              "schema_version": 1,
+              "type": "binance_usdm_margin_tier_bracket"
+            },
+            {
+              "bracket_id": "2",
+              "maintenance_margin_deduction": "75.000",
+              "maintenance_margin_rate": "0.025",
+              "maximum_leverage": "20",
+              "minimum_leverage_range": "11",
+              "notional_cap": "25000",
+              "notional_floor": "5000.000",
+              "schema_version": 1,
+              "type": "binance_usdm_margin_tier_bracket"
+            },
+            {
+              "bracket_id": "3",
+              "maintenance_margin_deduction": "700",
+              "maintenance_margin_rate": "0.05",
+              "maximum_leverage": "10",
+              "minimum_leverage_range": "1",
+              "notional_cap": "100000",
+              "notional_floor": "25000",
+              "schema_version": 1,
+              "type": "binance_usdm_margin_tier_bracket"
+            }
+          ],
+          "effective_from": {
+            "epoch_nanoseconds": 1700000000000000000,
+            "type": "utc_instant"
+          },
+          "effective_to_exclusive": {
+            "epoch_nanoseconds": 1710000000000000000,
+            "type": "utc_instant"
+          },
+          "instrument_id": {
+            "stable_key": "btc-usdt-perpetual",
+            "type": "instrument_id",
+            "venue": "binance_usdm"
+          },
+          "notional_coef": null,
+          "schema_version": 1,
+          "scope": "DEFAULT_SYMBOL",
+          "source_ref": {
+            "schema_version": 1,
+            "source_hash": "sha256:f3678668f814cc28625fdaeabf25cfdb7b651449b415e92fb8cf8ba3d0742707",
+            "source_key": "contract-info/margin-tiers-v1.json",
+            "source_kind": "CONTRACT_INFO_BRACKET_UPDATE",
+            "type": "binance_usdm_margin_tier_source_ref"
+          },
+          "type": "binance_usdm_margin_tier_band"
+        },
+        {
+          "available_at": {
+            "instant": {
+              "epoch_nanoseconds": 1710000000000000001,
+              "type": "utc_instant"
+            },
+            "phase": {
+              "code": "margin_tier_evidence",
+              "rank": 60,
+              "type": "timeline_phase"
+            },
+            "source_sequence": {
+              "type": "source_sequence",
+              "value": 0
+            },
+            "type": "simulation_instant"
+          },
+          "band_id": "margin-tiers-v2",
+          "brackets": [
+            {
+              "bracket_id": "1",
+              "maintenance_margin_deduction": "0",
+              "maintenance_margin_rate": "0.0200",
+              "maximum_leverage": "25",
+              "minimum_leverage_range": "21",
+              "notional_cap": "10000.00",
+              "notional_floor": "0",
+              "schema_version": 1,
+              "type": "binance_usdm_margin_tier_bracket"
+            },
+            {
+              "bracket_id": "2",
+              "maintenance_margin_deduction": "300.0",
+              "maintenance_margin_rate": "0.05",
+              "maximum_leverage": "10",
+              "minimum_leverage_range": "6",
+              "notional_cap": "50000",
+              "notional_floor": "10000.00",
+              "schema_version": 1,
+              "type": "binance_usdm_margin_tier_bracket"
+            },
+            {
+              "bracket_id": "3",
+              "maintenance_margin_deduction": "2800",
+              "maintenance_margin_rate": "0.10",
+              "maximum_leverage": "5",
+              "minimum_leverage_range": "1",
+              "notional_cap": "200000",
+              "notional_floor": "50000",
+              "schema_version": 1,
+              "type": "binance_usdm_margin_tier_bracket"
+            }
+          ],
+          "effective_from": {
+            "epoch_nanoseconds": 1710000000000000000,
+            "type": "utc_instant"
+          },
+          "effective_to_exclusive": {
+            "epoch_nanoseconds": 1720000000000000000,
+            "type": "utc_instant"
+          },
+          "instrument_id": {
+            "stable_key": "btc-usdt-perpetual",
+            "type": "instrument_id",
+            "venue": "binance_usdm"
+          },
+          "notional_coef": null,
+          "schema_version": 1,
+          "scope": "DEFAULT_SYMBOL",
+          "source_ref": {
+            "schema_version": 1,
+            "source_hash": "sha256:13dbd0e9b1688acae44f17dbecf88ac5116b4ba896d4dc47a5fb6504954da5cf",
+            "source_key": "contract-info/margin-tiers-v2.json",
+            "source_kind": "CONTRACT_INFO_BRACKET_UPDATE",
+            "type": "binance_usdm_margin_tier_source_ref"
+          },
+          "type": "binance_usdm_margin_tier_band"
+        }
+      ],
+      "coverage_from": {
+        "epoch_nanoseconds": 1700000000000000000,
+        "type": "utc_instant"
+      },
+      "coverage_to_exclusive": {
+        "epoch_nanoseconds": 1720000000000000000,
+        "type": "utc_instant"
+      },
+      "instrument_id": {
+        "stable_key": "btc-usdt-perpetual",
+        "type": "instrument_id",
+        "venue": "binance_usdm"
+      },
+      "rule_book_key": "binance-usdm-btc-usdt-margin-tiers-v1",
+      "rule_book_version": 1,
+      "schema_version": 1,
+      "settlement_currency_id": {
+        "type": "currency_id",
+        "value": "USDT"
+      },
+      "type": "binance_usdm_margin_tier_rule_book"
+    },
+    "bracket_order": {
+      "bands": [
+        {
+          "available_at": {
+            "instant": {
+              "epoch_nanoseconds": 1700000000000000001,
+              "type": "utc_instant"
+            },
+            "phase": {
+              "code": "margin_tier_evidence",
+              "rank": 60,
+              "type": "timeline_phase"
+            },
+            "source_sequence": {
+              "type": "source_sequence",
+              "value": 0
+            },
+            "type": "simulation_instant"
+          },
+          "band_id": "margin-tiers-v1",
+          "brackets": [
+            {
+              "bracket_id": "1",
+              "maintenance_margin_deduction": "0",
+              "maintenance_margin_rate": "0.0100",
+              "maximum_leverage": "50",
+              "minimum_leverage_range": "21",
+              "notional_cap": "5000.000",
+              "notional_floor": "0",
+              "schema_version": 1,
+              "type": "binance_usdm_margin_tier_bracket"
+            },
+            {
+              "bracket_id": "2",
+              "maintenance_margin_deduction": "75.000",
+              "maintenance_margin_rate": "0.025",
+              "maximum_leverage": "20",
+              "minimum_leverage_range": "11",
+              "notional_cap": "25000",
+              "notional_floor": "5000.000",
+              "schema_version": 1,
+              "type": "binance_usdm_margin_tier_bracket"
+            },
+            {
+              "bracket_id": "3",
+              "maintenance_margin_deduction": "700",
+              "maintenance_margin_rate": "0.05",
+              "maximum_leverage": "10",
+              "minimum_leverage_range": "1",
+              "notional_cap": "100000",
+              "notional_floor": "25000",
+              "schema_version": 1,
+              "type": "binance_usdm_margin_tier_bracket"
+            }
+          ],
+          "effective_from": {
+            "epoch_nanoseconds": 1700000000000000000,
+            "type": "utc_instant"
+          },
+          "effective_to_exclusive": {
+            "epoch_nanoseconds": 1710000000000000000,
+            "type": "utc_instant"
+          },
+          "instrument_id": {
+            "stable_key": "btc-usdt-perpetual",
+            "type": "instrument_id",
+            "venue": "binance_usdm"
+          },
+          "notional_coef": null,
+          "schema_version": 1,
+          "scope": "DEFAULT_SYMBOL",
+          "source_ref": {
+            "schema_version": 1,
+            "source_hash": "sha256:f3678668f814cc28625fdaeabf25cfdb7b651449b415e92fb8cf8ba3d0742707",
+            "source_key": "contract-info/margin-tiers-v1.json",
+            "source_kind": "CONTRACT_INFO_BRACKET_UPDATE",
+            "type": "binance_usdm_margin_tier_source_ref"
+          },
+          "type": "binance_usdm_margin_tier_band"
+        },
+        {
+          "available_at": {
+            "instant": {
+              "epoch_nanoseconds": 1710000000000000001,
+              "type": "utc_instant"
+            },
+            "phase": {
+              "code": "margin_tier_evidence",
+              "rank": 60,
+              "type": "timeline_phase"
+            },
+            "source_sequence": {
+              "type": "source_sequence",
+              "value": 0
+            },
+            "type": "simulation_instant"
+          },
+          "band_id": "margin-tiers-v2",
+          "brackets": [
+            {
+              "bracket_id": "3",
+              "maintenance_margin_deduction": "2800",
+              "maintenance_margin_rate": "0.10",
+              "maximum_leverage": "5",
+              "minimum_leverage_range": "1",
+              "notional_cap": "200000",
+              "notional_floor": "50000",
+              "schema_version": 1,
+              "type": "binance_usdm_margin_tier_bracket"
+            },
+            {
+              "bracket_id": "2",
+              "maintenance_margin_deduction": "300.0",
+              "maintenance_margin_rate": "0.05",
+              "maximum_leverage": "10",
+              "minimum_leverage_range": "6",
+              "notional_cap": "50000",
+              "notional_floor": "10000.00",
+              "schema_version": 1,
+              "type": "binance_usdm_margin_tier_bracket"
+            },
+            {
+              "bracket_id": "1",
+              "maintenance_margin_deduction": "0",
+              "maintenance_margin_rate": "0.0200",
+              "maximum_leverage": "25",
+              "minimum_leverage_range": "21",
+              "notional_cap": "10000.00",
+              "notional_floor": "0",
+              "schema_version": 1,
+              "type": "binance_usdm_margin_tier_bracket"
+            }
+          ],
+          "effective_from": {
+            "epoch_nanoseconds": 1710000000000000000,
+            "type": "utc_instant"
+          },
+          "effective_to_exclusive": {
+            "epoch_nanoseconds": 1720000000000000000,
+            "type": "utc_instant"
+          },
+          "instrument_id": {
+            "stable_key": "btc-usdt-perpetual",
+            "type": "instrument_id",
+            "venue": "binance_usdm"
+          },
+          "notional_coef": null,
+          "schema_version": 1,
+          "scope": "DEFAULT_SYMBOL",
+          "source_ref": {
+            "schema_version": 1,
+            "source_hash": "sha256:13dbd0e9b1688acae44f17dbecf88ac5116b4ba896d4dc47a5fb6504954da5cf",
+            "source_key": "contract-info/margin-tiers-v2.json",
+            "source_kind": "CONTRACT_INFO_BRACKET_UPDATE",
+            "type": "binance_usdm_margin_tier_source_ref"
+          },
+          "type": "binance_usdm_margin_tier_band"
+        }
+      ],
+      "coverage_from": {
+        "epoch_nanoseconds": 1700000000000000000,
+        "type": "utc_instant"
+      },
+      "coverage_to_exclusive": {
+        "epoch_nanoseconds": 1720000000000000000,
+        "type": "utc_instant"
+      },
+      "instrument_id": {
+        "stable_key": "btc-usdt-perpetual",
+        "type": "instrument_id",
+        "venue": "binance_usdm"
+      },
+      "rule_book_key": "binance-usdm-btc-usdt-margin-tiers-v1",
+      "rule_book_version": 1,
+      "schema_version": 1,
+      "settlement_currency_id": {
+        "type": "currency_id",
+        "value": "USDT"
+      },
+      "type": "binance_usdm_margin_tier_rule_book"
+    },
+    "coverage_gap": {
+      "bands": [
+        {
+          "available_at": {
+            "instant": {
+              "epoch_nanoseconds": 1700000000000000001,
+              "type": "utc_instant"
+            },
+            "phase": {
+              "code": "margin_tier_evidence",
+              "rank": 60,
+              "type": "timeline_phase"
+            },
+            "source_sequence": {
+              "type": "source_sequence",
+              "value": 0
+            },
+            "type": "simulation_instant"
+          },
+          "band_id": "margin-tiers-v1",
+          "brackets": [
+            {
+              "bracket_id": "1",
+              "maintenance_margin_deduction": "0",
+              "maintenance_margin_rate": "0.0100",
+              "maximum_leverage": "50",
+              "minimum_leverage_range": "21",
+              "notional_cap": "5000.000",
+              "notional_floor": "0",
+              "schema_version": 1,
+              "type": "binance_usdm_margin_tier_bracket"
+            },
+            {
+              "bracket_id": "2",
+              "maintenance_margin_deduction": "75.000",
+              "maintenance_margin_rate": "0.025",
+              "maximum_leverage": "20",
+              "minimum_leverage_range": "11",
+              "notional_cap": "25000",
+              "notional_floor": "5000.000",
+              "schema_version": 1,
+              "type": "binance_usdm_margin_tier_bracket"
+            },
+            {
+              "bracket_id": "3",
+              "maintenance_margin_deduction": "700",
+              "maintenance_margin_rate": "0.05",
+              "maximum_leverage": "10",
+              "minimum_leverage_range": "1",
+              "notional_cap": "100000",
+              "notional_floor": "25000",
+              "schema_version": 1,
+              "type": "binance_usdm_margin_tier_bracket"
+            }
+          ],
+          "effective_from": {
+            "epoch_nanoseconds": 1700000000000000000,
+            "type": "utc_instant"
+          },
+          "effective_to_exclusive": {
+            "epoch_nanoseconds": 1709999999999999999,
+            "type": "utc_instant"
+          },
+          "instrument_id": {
+            "stable_key": "btc-usdt-perpetual",
+            "type": "instrument_id",
+            "venue": "binance_usdm"
+          },
+          "notional_coef": null,
+          "schema_version": 1,
+          "scope": "DEFAULT_SYMBOL",
+          "source_ref": {
+            "schema_version": 1,
+            "source_hash": "sha256:f3678668f814cc28625fdaeabf25cfdb7b651449b415e92fb8cf8ba3d0742707",
+            "source_key": "contract-info/margin-tiers-v1.json",
+            "source_kind": "CONTRACT_INFO_BRACKET_UPDATE",
+            "type": "binance_usdm_margin_tier_source_ref"
+          },
+          "type": "binance_usdm_margin_tier_band"
+        },
+        {
+          "available_at": {
+            "instant": {
+              "epoch_nanoseconds": 1710000000000000001,
+              "type": "utc_instant"
+            },
+            "phase": {
+              "code": "margin_tier_evidence",
+              "rank": 60,
+              "type": "timeline_phase"
+            },
+            "source_sequence": {
+              "type": "source_sequence",
+              "value": 0
+            },
+            "type": "simulation_instant"
+          },
+          "band_id": "margin-tiers-v2",
+          "brackets": [
+            {
+              "bracket_id": "1",
+              "maintenance_margin_deduction": "0",
+              "maintenance_margin_rate": "0.0200",
+              "maximum_leverage": "25",
+              "minimum_leverage_range": "21",
+              "notional_cap": "10000.00",
+              "notional_floor": "0",
+              "schema_version": 1,
+              "type": "binance_usdm_margin_tier_bracket"
+            },
+            {
+              "bracket_id": "2",
+              "maintenance_margin_deduction": "300.0",
+              "maintenance_margin_rate": "0.05",
+              "maximum_leverage": "10",
+              "minimum_leverage_range": "6",
+              "notional_cap": "50000",
+              "notional_floor": "10000.00",
+              "schema_version": 1,
+              "type": "binance_usdm_margin_tier_bracket"
+            },
+            {
+              "bracket_id": "3",
+              "maintenance_margin_deduction": "2800",
+              "maintenance_margin_rate": "0.10",
+              "maximum_leverage": "5",
+              "minimum_leverage_range": "1",
+              "notional_cap": "200000",
+              "notional_floor": "50000",
+              "schema_version": 1,
+              "type": "binance_usdm_margin_tier_bracket"
+            }
+          ],
+          "effective_from": {
+            "epoch_nanoseconds": 1710000000000000000,
+            "type": "utc_instant"
+          },
+          "effective_to_exclusive": {
+            "epoch_nanoseconds": 1720000000000000000,
+            "type": "utc_instant"
+          },
+          "instrument_id": {
+            "stable_key": "btc-usdt-perpetual",
+            "type": "instrument_id",
+            "venue": "binance_usdm"
+          },
+          "notional_coef": null,
+          "schema_version": 1,
+          "scope": "DEFAULT_SYMBOL",
+          "source_ref": {
+            "schema_version": 1,
+            "source_hash": "sha256:13dbd0e9b1688acae44f17dbecf88ac5116b4ba896d4dc47a5fb6504954da5cf",
+            "source_key": "contract-info/margin-tiers-v2.json",
+            "source_kind": "CONTRACT_INFO_BRACKET_UPDATE",
+            "type": "binance_usdm_margin_tier_source_ref"
+          },
+          "type": "binance_usdm_margin_tier_band"
+        }
+      ],
+      "coverage_from": {
+        "epoch_nanoseconds": 1700000000000000000,
+        "type": "utc_instant"
+      },
+      "coverage_to_exclusive": {
+        "epoch_nanoseconds": 1720000000000000000,
+        "type": "utc_instant"
+      },
+      "instrument_id": {
+        "stable_key": "btc-usdt-perpetual",
+        "type": "instrument_id",
+        "venue": "binance_usdm"
+      },
+      "rule_book_key": "binance-usdm-btc-usdt-margin-tiers-v1",
+      "rule_book_version": 1,
+      "schema_version": 1,
+      "settlement_currency_id": {
+        "type": "currency_id",
+        "value": "USDT"
+      },
+      "type": "binance_usdm_margin_tier_rule_book"
+    },
+    "coverage_overlap": {
+      "bands": [
+        {
+          "available_at": {
+            "instant": {
+              "epoch_nanoseconds": 1700000000000000001,
+              "type": "utc_instant"
+            },
+            "phase": {
+              "code": "margin_tier_evidence",
+              "rank": 60,
+              "type": "timeline_phase"
+            },
+            "source_sequence": {
+              "type": "source_sequence",
+              "value": 0
+            },
+            "type": "simulation_instant"
+          },
+          "band_id": "margin-tiers-v1",
+          "brackets": [
+            {
+              "bracket_id": "1",
+              "maintenance_margin_deduction": "0",
+              "maintenance_margin_rate": "0.0100",
+              "maximum_leverage": "50",
+              "minimum_leverage_range": "21",
+              "notional_cap": "5000.000",
+              "notional_floor": "0",
+              "schema_version": 1,
+              "type": "binance_usdm_margin_tier_bracket"
+            },
+            {
+              "bracket_id": "2",
+              "maintenance_margin_deduction": "75.000",
+              "maintenance_margin_rate": "0.025",
+              "maximum_leverage": "20",
+              "minimum_leverage_range": "11",
+              "notional_cap": "25000",
+              "notional_floor": "5000.000",
+              "schema_version": 1,
+              "type": "binance_usdm_margin_tier_bracket"
+            },
+            {
+              "bracket_id": "3",
+              "maintenance_margin_deduction": "700",
+              "maintenance_margin_rate": "0.05",
+              "maximum_leverage": "10",
+              "minimum_leverage_range": "1",
+              "notional_cap": "100000",
+              "notional_floor": "25000",
+              "schema_version": 1,
+              "type": "binance_usdm_margin_tier_bracket"
+            }
+          ],
+          "effective_from": {
+            "epoch_nanoseconds": 1700000000000000000,
+            "type": "utc_instant"
+          },
+          "effective_to_exclusive": {
+            "epoch_nanoseconds": 1710000000000000001,
+            "type": "utc_instant"
+          },
+          "instrument_id": {
+            "stable_key": "btc-usdt-perpetual",
+            "type": "instrument_id",
+            "venue": "binance_usdm"
+          },
+          "notional_coef": null,
+          "schema_version": 1,
+          "scope": "DEFAULT_SYMBOL",
+          "source_ref": {
+            "schema_version": 1,
+            "source_hash": "sha256:f3678668f814cc28625fdaeabf25cfdb7b651449b415e92fb8cf8ba3d0742707",
+            "source_key": "contract-info/margin-tiers-v1.json",
+            "source_kind": "CONTRACT_INFO_BRACKET_UPDATE",
+            "type": "binance_usdm_margin_tier_source_ref"
+          },
+          "type": "binance_usdm_margin_tier_band"
+        },
+        {
+          "available_at": {
+            "instant": {
+              "epoch_nanoseconds": 1710000000000000001,
+              "type": "utc_instant"
+            },
+            "phase": {
+              "code": "margin_tier_evidence",
+              "rank": 60,
+              "type": "timeline_phase"
+            },
+            "source_sequence": {
+              "type": "source_sequence",
+              "value": 0
+            },
+            "type": "simulation_instant"
+          },
+          "band_id": "margin-tiers-v2",
+          "brackets": [
+            {
+              "bracket_id": "1",
+              "maintenance_margin_deduction": "0",
+              "maintenance_margin_rate": "0.0200",
+              "maximum_leverage": "25",
+              "minimum_leverage_range": "21",
+              "notional_cap": "10000.00",
+              "notional_floor": "0",
+              "schema_version": 1,
+              "type": "binance_usdm_margin_tier_bracket"
+            },
+            {
+              "bracket_id": "2",
+              "maintenance_margin_deduction": "300.0",
+              "maintenance_margin_rate": "0.05",
+              "maximum_leverage": "10",
+              "minimum_leverage_range": "6",
+              "notional_cap": "50000",
+              "notional_floor": "10000.00",
+              "schema_version": 1,
+              "type": "binance_usdm_margin_tier_bracket"
+            },
+            {
+              "bracket_id": "3",
+              "maintenance_margin_deduction": "2800",
+              "maintenance_margin_rate": "0.10",
+              "maximum_leverage": "5",
+              "minimum_leverage_range": "1",
+              "notional_cap": "200000",
+              "notional_floor": "50000",
+              "schema_version": 1,
+              "type": "binance_usdm_margin_tier_bracket"
+            }
+          ],
+          "effective_from": {
+            "epoch_nanoseconds": 1710000000000000000,
+            "type": "utc_instant"
+          },
+          "effective_to_exclusive": {
+            "epoch_nanoseconds": 1720000000000000000,
+            "type": "utc_instant"
+          },
+          "instrument_id": {
+            "stable_key": "btc-usdt-perpetual",
+            "type": "instrument_id",
+            "venue": "binance_usdm"
+          },
+          "notional_coef": null,
+          "schema_version": 1,
+          "scope": "DEFAULT_SYMBOL",
+          "source_ref": {
+            "schema_version": 1,
+            "source_hash": "sha256:13dbd0e9b1688acae44f17dbecf88ac5116b4ba896d4dc47a5fb6504954da5cf",
+            "source_key": "contract-info/margin-tiers-v2.json",
+            "source_kind": "CONTRACT_INFO_BRACKET_UPDATE",
+            "type": "binance_usdm_margin_tier_source_ref"
+          },
+          "type": "binance_usdm_margin_tier_band"
+        }
+      ],
+      "coverage_from": {
+        "epoch_nanoseconds": 1700000000000000000,
+        "type": "utc_instant"
+      },
+      "coverage_to_exclusive": {
+        "epoch_nanoseconds": 1720000000000000000,
+        "type": "utc_instant"
+      },
+      "instrument_id": {
+        "stable_key": "btc-usdt-perpetual",
+        "type": "instrument_id",
+        "venue": "binance_usdm"
+      },
+      "rule_book_key": "binance-usdm-btc-usdt-margin-tiers-v1",
+      "rule_book_version": 1,
+      "schema_version": 1,
+      "settlement_currency_id": {
+        "type": "currency_id",
+        "value": "USDT"
+      },
+      "type": "binance_usdm_margin_tier_rule_book"
+    },
+    "input_order_reverse": {
+      "bands": [
+        {
+          "available_at": {
+            "instant": {
+              "epoch_nanoseconds": 1700000000000000001,
+              "type": "utc_instant"
+            },
+            "phase": {
+              "code": "margin_tier_evidence",
+              "rank": 60,
+              "type": "timeline_phase"
+            },
+            "source_sequence": {
+              "type": "source_sequence",
+              "value": 0
+            },
+            "type": "simulation_instant"
+          },
+          "band_id": "margin-tiers-v1",
+          "brackets": [
+            {
+              "bracket_id": "1",
+              "maintenance_margin_deduction": "0",
+              "maintenance_margin_rate": "0.0100",
+              "maximum_leverage": "50",
+              "minimum_leverage_range": "21",
+              "notional_cap": "5000.000",
+              "notional_floor": "0",
+              "schema_version": 1,
+              "type": "binance_usdm_margin_tier_bracket"
+            },
+            {
+              "bracket_id": "2",
+              "maintenance_margin_deduction": "75.000",
+              "maintenance_margin_rate": "0.025",
+              "maximum_leverage": "20",
+              "minimum_leverage_range": "11",
+              "notional_cap": "25000",
+              "notional_floor": "5000.000",
+              "schema_version": 1,
+              "type": "binance_usdm_margin_tier_bracket"
+            },
+            {
+              "bracket_id": "3",
+              "maintenance_margin_deduction": "700",
+              "maintenance_margin_rate": "0.05",
+              "maximum_leverage": "10",
+              "minimum_leverage_range": "1",
+              "notional_cap": "100000",
+              "notional_floor": "25000",
+              "schema_version": 1,
+              "type": "binance_usdm_margin_tier_bracket"
+            }
+          ],
+          "effective_from": {
+            "epoch_nanoseconds": 1700000000000000000,
+            "type": "utc_instant"
+          },
+          "effective_to_exclusive": {
+            "epoch_nanoseconds": 1710000000000000000,
+            "type": "utc_instant"
+          },
+          "instrument_id": {
+            "stable_key": "btc-usdt-perpetual",
+            "type": "instrument_id",
+            "venue": "binance_usdm"
+          },
+          "notional_coef": null,
+          "schema_version": 1,
+          "scope": "DEFAULT_SYMBOL",
+          "source_ref": {
+            "schema_version": 1,
+            "source_hash": "sha256:f3678668f814cc28625fdaeabf25cfdb7b651449b415e92fb8cf8ba3d0742707",
+            "source_key": "contract-info/margin-tiers-v1.json",
+            "source_kind": "CONTRACT_INFO_BRACKET_UPDATE",
+            "type": "binance_usdm_margin_tier_source_ref"
+          },
+          "type": "binance_usdm_margin_tier_band"
+        },
+        {
+          "available_at": {
+            "instant": {
+              "epoch_nanoseconds": 1710000000000000001,
+              "type": "utc_instant"
+            },
+            "phase": {
+              "code": "margin_tier_evidence",
+              "rank": 60,
+              "type": "timeline_phase"
+            },
+            "source_sequence": {
+              "type": "source_sequence",
+              "value": 0
+            },
+            "type": "simulation_instant"
+          },
+          "band_id": "margin-tiers-v2",
+          "brackets": [
+            {
+              "bracket_id": "1",
+              "maintenance_margin_deduction": "0",
+              "maintenance_margin_rate": "0.0200",
+              "maximum_leverage": "25",
+              "minimum_leverage_range": "21",
+              "notional_cap": "10000.00",
+              "notional_floor": "0",
+              "schema_version": 1,
+              "type": "binance_usdm_margin_tier_bracket"
+            },
+            {
+              "bracket_id": "2",
+              "maintenance_margin_deduction": "300.0",
+              "maintenance_margin_rate": "0.05",
+              "maximum_leverage": "10",
+              "minimum_leverage_range": "6",
+              "notional_cap": "50000",
+              "notional_floor": "10000.00",
+              "schema_version": 1,
+              "type": "binance_usdm_margin_tier_bracket"
+            },
+            {
+              "bracket_id": "3",
+              "maintenance_margin_deduction": "2800",
+              "maintenance_margin_rate": "0.10",
+              "maximum_leverage": "5",
+              "minimum_leverage_range": "1",
+              "notional_cap": "200000",
+              "notional_floor": "50000",
+              "schema_version": 1,
+              "type": "binance_usdm_margin_tier_bracket"
+            }
+          ],
+          "effective_from": {
+            "epoch_nanoseconds": 1710000000000000000,
+            "type": "utc_instant"
+          },
+          "effective_to_exclusive": {
+            "epoch_nanoseconds": 1720000000000000000,
+            "type": "utc_instant"
+          },
+          "instrument_id": {
+            "stable_key": "btc-usdt-perpetual",
+            "type": "instrument_id",
+            "venue": "binance_usdm"
+          },
+          "notional_coef": null,
+          "schema_version": 1,
+          "scope": "DEFAULT_SYMBOL",
+          "source_ref": {
+            "schema_version": 1,
+            "source_hash": "sha256:13dbd0e9b1688acae44f17dbecf88ac5116b4ba896d4dc47a5fb6504954da5cf",
+            "source_key": "contract-info/margin-tiers-v2.json",
+            "source_kind": "CONTRACT_INFO_BRACKET_UPDATE",
+            "type": "binance_usdm_margin_tier_source_ref"
+          },
+          "type": "binance_usdm_margin_tier_band"
+        }
+      ],
+      "coverage_from": {
+        "epoch_nanoseconds": 1700000000000000000,
+        "type": "utc_instant"
+      },
+      "coverage_to_exclusive": {
+        "epoch_nanoseconds": 1720000000000000000,
+        "type": "utc_instant"
+      },
+      "instrument_id": {
+        "stable_key": "btc-usdt-perpetual",
+        "type": "instrument_id",
+        "venue": "binance_usdm"
+      },
+      "rule_book_key": "binance-usdm-btc-usdt-margin-tiers-v1",
+      "rule_book_version": 1,
+      "schema_version": 1,
+      "settlement_currency_id": {
+        "type": "currency_id",
+        "value": "USDT"
+      },
+      "type": "binance_usdm_margin_tier_rule_book"
+    },
+    "invalid_decimal": {
+      "bands": [
+        {
+          "available_at": {
+            "instant": {
+              "epoch_nanoseconds": 1700000000000000001,
+              "type": "utc_instant"
+            },
+            "phase": {
+              "code": "margin_tier_evidence",
+              "rank": 60,
+              "type": "timeline_phase"
+            },
+            "source_sequence": {
+              "type": "source_sequence",
+              "value": 0
+            },
+            "type": "simulation_instant"
+          },
+          "band_id": "margin-tiers-v1",
+          "brackets": [
+            {
+              "bracket_id": "1",
+              "maintenance_margin_deduction": "0",
+              "maintenance_margin_rate": "0.0100",
+              "maximum_leverage": "50",
+              "minimum_leverage_range": "21",
+              "notional_cap": "5000.000",
+              "notional_floor": "0",
+              "schema_version": 1,
+              "type": "binance_usdm_margin_tier_bracket"
+            },
+            {
+              "bracket_id": "2",
+              "maintenance_margin_deduction": "75.000",
+              "maintenance_margin_rate": "0.025",
+              "maximum_leverage": "20",
+              "minimum_leverage_range": "11",
+              "notional_cap": "25000",
+              "notional_floor": "5000.000",
+              "schema_version": 1,
+              "type": "binance_usdm_margin_tier_bracket"
+            },
+            {
+              "bracket_id": "3",
+              "maintenance_margin_deduction": "700",
+              "maintenance_margin_rate": "0.05",
+              "maximum_leverage": "10",
+              "minimum_leverage_range": "1",
+              "notional_cap": "100000",
+              "notional_floor": "25000",
+              "schema_version": 1,
+              "type": "binance_usdm_margin_tier_bracket"
+            }
+          ],
+          "effective_from": {
+            "epoch_nanoseconds": 1700000000000000000,
+            "type": "utc_instant"
+          },
+          "effective_to_exclusive": {
+            "epoch_nanoseconds": 1710000000000000000,
+            "type": "utc_instant"
+          },
+          "instrument_id": {
+            "stable_key": "btc-usdt-perpetual",
+            "type": "instrument_id",
+            "venue": "binance_usdm"
+          },
+          "notional_coef": null,
+          "schema_version": 1,
+          "scope": "DEFAULT_SYMBOL",
+          "source_ref": {
+            "schema_version": 1,
+            "source_hash": "sha256:f3678668f814cc28625fdaeabf25cfdb7b651449b415e92fb8cf8ba3d0742707",
+            "source_key": "contract-info/margin-tiers-v1.json",
+            "source_kind": "CONTRACT_INFO_BRACKET_UPDATE",
+            "type": "binance_usdm_margin_tier_source_ref"
+          },
+          "type": "binance_usdm_margin_tier_band"
+        },
+        {
+          "available_at": {
+            "instant": {
+              "epoch_nanoseconds": 1710000000000000001,
+              "type": "utc_instant"
+            },
+            "phase": {
+              "code": "margin_tier_evidence",
+              "rank": 60,
+              "type": "timeline_phase"
+            },
+            "source_sequence": {
+              "type": "source_sequence",
+              "value": 0
+            },
+            "type": "simulation_instant"
+          },
+          "band_id": "margin-tiers-v2",
+          "brackets": [
+            {
+              "bracket_id": "1",
+              "maintenance_margin_deduction": "0",
+              "maintenance_margin_rate": "0.0200",
+              "maximum_leverage": "25",
+              "minimum_leverage_range": "21",
+              "notional_cap": "1E4",
+              "notional_floor": "0",
+              "schema_version": 1,
+              "type": "binance_usdm_margin_tier_bracket"
+            },
+            {
+              "bracket_id": "2",
+              "maintenance_margin_deduction": "300.0",
+              "maintenance_margin_rate": "0.05",
+              "maximum_leverage": "10",
+              "minimum_leverage_range": "6",
+              "notional_cap": "50000",
+              "notional_floor": "10000.00",
+              "schema_version": 1,
+              "type": "binance_usdm_margin_tier_bracket"
+            },
+            {
+              "bracket_id": "3",
+              "maintenance_margin_deduction": "2800",
+              "maintenance_margin_rate": "0.10",
+              "maximum_leverage": "5",
+              "minimum_leverage_range": "1",
+              "notional_cap": "200000",
+              "notional_floor": "50000",
+              "schema_version": 1,
+              "type": "binance_usdm_margin_tier_bracket"
+            }
+          ],
+          "effective_from": {
+            "epoch_nanoseconds": 1710000000000000000,
+            "type": "utc_instant"
+          },
+          "effective_to_exclusive": {
+            "epoch_nanoseconds": 1720000000000000000,
+            "type": "utc_instant"
+          },
+          "instrument_id": {
+            "stable_key": "btc-usdt-perpetual",
+            "type": "instrument_id",
+            "venue": "binance_usdm"
+          },
+          "notional_coef": null,
+          "schema_version": 1,
+          "scope": "DEFAULT_SYMBOL",
+          "source_ref": {
+            "schema_version": 1,
+            "source_hash": "sha256:13dbd0e9b1688acae44f17dbecf88ac5116b4ba896d4dc47a5fb6504954da5cf",
+            "source_key": "contract-info/margin-tiers-v2.json",
+            "source_kind": "CONTRACT_INFO_BRACKET_UPDATE",
+            "type": "binance_usdm_margin_tier_source_ref"
+          },
+          "type": "binance_usdm_margin_tier_band"
+        }
+      ],
+      "coverage_from": {
+        "epoch_nanoseconds": 1700000000000000000,
+        "type": "utc_instant"
+      },
+      "coverage_to_exclusive": {
+        "epoch_nanoseconds": 1720000000000000000,
+        "type": "utc_instant"
+      },
+      "instrument_id": {
+        "stable_key": "btc-usdt-perpetual",
+        "type": "instrument_id",
+        "venue": "binance_usdm"
+      },
+      "rule_book_key": "binance-usdm-btc-usdt-margin-tiers-v1",
+      "rule_book_version": 1,
+      "schema_version": 1,
+      "settlement_currency_id": {
+        "type": "currency_id",
+        "value": "USDT"
+      },
+      "type": "binance_usdm_margin_tier_rule_book"
+    },
+    "late_band_hidden": {
+      "bands": [
+        {
+          "available_at": {
+            "instant": {
+              "epoch_nanoseconds": 1700000000000000001,
+              "type": "utc_instant"
+            },
+            "phase": {
+              "code": "margin_tier_evidence",
+              "rank": 60,
+              "type": "timeline_phase"
+            },
+            "source_sequence": {
+              "type": "source_sequence",
+              "value": 0
+            },
+            "type": "simulation_instant"
+          },
+          "band_id": "margin-tiers-v1",
+          "brackets": [
+            {
+              "bracket_id": "1",
+              "maintenance_margin_deduction": "0",
+              "maintenance_margin_rate": "0.0100",
+              "maximum_leverage": "50",
+              "minimum_leverage_range": "21",
+              "notional_cap": "5000.000",
+              "notional_floor": "0",
+              "schema_version": 1,
+              "type": "binance_usdm_margin_tier_bracket"
+            },
+            {
+              "bracket_id": "2",
+              "maintenance_margin_deduction": "75.000",
+              "maintenance_margin_rate": "0.025",
+              "maximum_leverage": "20",
+              "minimum_leverage_range": "11",
+              "notional_cap": "25000",
+              "notional_floor": "5000.000",
+              "schema_version": 1,
+              "type": "binance_usdm_margin_tier_bracket"
+            },
+            {
+              "bracket_id": "3",
+              "maintenance_margin_deduction": "700",
+              "maintenance_margin_rate": "0.05",
+              "maximum_leverage": "10",
+              "minimum_leverage_range": "1",
+              "notional_cap": "100000",
+              "notional_floor": "25000",
+              "schema_version": 1,
+              "type": "binance_usdm_margin_tier_bracket"
+            }
+          ],
+          "effective_from": {
+            "epoch_nanoseconds": 1700000000000000000,
+            "type": "utc_instant"
+          },
+          "effective_to_exclusive": {
+            "epoch_nanoseconds": 1710000000000000000,
+            "type": "utc_instant"
+          },
+          "instrument_id": {
+            "stable_key": "btc-usdt-perpetual",
+            "type": "instrument_id",
+            "venue": "binance_usdm"
+          },
+          "notional_coef": null,
+          "schema_version": 1,
+          "scope": "DEFAULT_SYMBOL",
+          "source_ref": {
+            "schema_version": 1,
+            "source_hash": "sha256:f3678668f814cc28625fdaeabf25cfdb7b651449b415e92fb8cf8ba3d0742707",
+            "source_key": "contract-info/margin-tiers-v1.json",
+            "source_kind": "CONTRACT_INFO_BRACKET_UPDATE",
+            "type": "binance_usdm_margin_tier_source_ref"
+          },
+          "type": "binance_usdm_margin_tier_band"
+        },
+        {
+          "available_at": {
+            "instant": {
+              "epoch_nanoseconds": 1710000000000000100,
+              "type": "utc_instant"
+            },
+            "phase": {
+              "code": "margin_tier_evidence",
+              "rank": 60,
+              "type": "timeline_phase"
+            },
+            "source_sequence": {
+              "type": "source_sequence",
+              "value": 0
+            },
+            "type": "simulation_instant"
+          },
+          "band_id": "margin-tiers-v2",
+          "brackets": [
+            {
+              "bracket_id": "1",
+              "maintenance_margin_deduction": "0",
+              "maintenance_margin_rate": "0.0200",
+              "maximum_leverage": "25",
+              "minimum_leverage_range": "21",
+              "notional_cap": "10000.00",
+              "notional_floor": "0",
+              "schema_version": 1,
+              "type": "binance_usdm_margin_tier_bracket"
+            },
+            {
+              "bracket_id": "2",
+              "maintenance_margin_deduction": "300.0",
+              "maintenance_margin_rate": "0.05",
+              "maximum_leverage": "10",
+              "minimum_leverage_range": "6",
+              "notional_cap": "50000",
+              "notional_floor": "10000.00",
+              "schema_version": 1,
+              "type": "binance_usdm_margin_tier_bracket"
+            },
+            {
+              "bracket_id": "3",
+              "maintenance_margin_deduction": "2800",
+              "maintenance_margin_rate": "0.10",
+              "maximum_leverage": "5",
+              "minimum_leverage_range": "1",
+              "notional_cap": "200000",
+              "notional_floor": "50000",
+              "schema_version": 1,
+              "type": "binance_usdm_margin_tier_bracket"
+            }
+          ],
+          "effective_from": {
+            "epoch_nanoseconds": 1710000000000000000,
+            "type": "utc_instant"
+          },
+          "effective_to_exclusive": {
+            "epoch_nanoseconds": 1720000000000000000,
+            "type": "utc_instant"
+          },
+          "instrument_id": {
+            "stable_key": "btc-usdt-perpetual",
+            "type": "instrument_id",
+            "venue": "binance_usdm"
+          },
+          "notional_coef": null,
+          "schema_version": 1,
+          "scope": "DEFAULT_SYMBOL",
+          "source_ref": {
+            "schema_version": 1,
+            "source_hash": "sha256:13dbd0e9b1688acae44f17dbecf88ac5116b4ba896d4dc47a5fb6504954da5cf",
+            "source_key": "contract-info/margin-tiers-v2.json",
+            "source_kind": "CONTRACT_INFO_BRACKET_UPDATE",
+            "type": "binance_usdm_margin_tier_source_ref"
+          },
+          "type": "binance_usdm_margin_tier_band"
+        }
+      ],
+      "coverage_from": {
+        "epoch_nanoseconds": 1700000000000000000,
+        "type": "utc_instant"
+      },
+      "coverage_to_exclusive": {
+        "epoch_nanoseconds": 1720000000000000000,
+        "type": "utc_instant"
+      },
+      "instrument_id": {
+        "stable_key": "btc-usdt-perpetual",
+        "type": "instrument_id",
+        "venue": "binance_usdm"
+      },
+      "rule_book_key": "binance-usdm-btc-usdt-margin-tiers-v1",
+      "rule_book_version": 1,
+      "schema_version": 1,
+      "settlement_currency_id": {
+        "type": "currency_id",
+        "value": "USDT"
+      },
+      "type": "binance_usdm_margin_tier_rule_book"
+    },
+    "late_band_visible": {
+      "bands": [
+        {
+          "available_at": {
+            "instant": {
+              "epoch_nanoseconds": 1700000000000000001,
+              "type": "utc_instant"
+            },
+            "phase": {
+              "code": "margin_tier_evidence",
+              "rank": 60,
+              "type": "timeline_phase"
+            },
+            "source_sequence": {
+              "type": "source_sequence",
+              "value": 0
+            },
+            "type": "simulation_instant"
+          },
+          "band_id": "margin-tiers-v1",
+          "brackets": [
+            {
+              "bracket_id": "1",
+              "maintenance_margin_deduction": "0",
+              "maintenance_margin_rate": "0.0100",
+              "maximum_leverage": "50",
+              "minimum_leverage_range": "21",
+              "notional_cap": "5000.000",
+              "notional_floor": "0",
+              "schema_version": 1,
+              "type": "binance_usdm_margin_tier_bracket"
+            },
+            {
+              "bracket_id": "2",
+              "maintenance_margin_deduction": "75.000",
+              "maintenance_margin_rate": "0.025",
+              "maximum_leverage": "20",
+              "minimum_leverage_range": "11",
+              "notional_cap": "25000",
+              "notional_floor": "5000.000",
+              "schema_version": 1,
+              "type": "binance_usdm_margin_tier_bracket"
+            },
+            {
+              "bracket_id": "3",
+              "maintenance_margin_deduction": "700",
+              "maintenance_margin_rate": "0.05",
+              "maximum_leverage": "10",
+              "minimum_leverage_range": "1",
+              "notional_cap": "100000",
+              "notional_floor": "25000",
+              "schema_version": 1,
+              "type": "binance_usdm_margin_tier_bracket"
+            }
+          ],
+          "effective_from": {
+            "epoch_nanoseconds": 1700000000000000000,
+            "type": "utc_instant"
+          },
+          "effective_to_exclusive": {
+            "epoch_nanoseconds": 1710000000000000000,
+            "type": "utc_instant"
+          },
+          "instrument_id": {
+            "stable_key": "btc-usdt-perpetual",
+            "type": "instrument_id",
+            "venue": "binance_usdm"
+          },
+          "notional_coef": null,
+          "schema_version": 1,
+          "scope": "DEFAULT_SYMBOL",
+          "source_ref": {
+            "schema_version": 1,
+            "source_hash": "sha256:f3678668f814cc28625fdaeabf25cfdb7b651449b415e92fb8cf8ba3d0742707",
+            "source_key": "contract-info/margin-tiers-v1.json",
+            "source_kind": "CONTRACT_INFO_BRACKET_UPDATE",
+            "type": "binance_usdm_margin_tier_source_ref"
+          },
+          "type": "binance_usdm_margin_tier_band"
+        },
+        {
+          "available_at": {
+            "instant": {
+              "epoch_nanoseconds": 1710000000000000100,
+              "type": "utc_instant"
+            },
+            "phase": {
+              "code": "margin_tier_evidence",
+              "rank": 60,
+              "type": "timeline_phase"
+            },
+            "source_sequence": {
+              "type": "source_sequence",
+              "value": 0
+            },
+            "type": "simulation_instant"
+          },
+          "band_id": "margin-tiers-v2",
+          "brackets": [
+            {
+              "bracket_id": "1",
+              "maintenance_margin_deduction": "0",
+              "maintenance_margin_rate": "0.0200",
+              "maximum_leverage": "25",
+              "minimum_leverage_range": "21",
+              "notional_cap": "10000.00",
+              "notional_floor": "0",
+              "schema_version": 1,
+              "type": "binance_usdm_margin_tier_bracket"
+            },
+            {
+              "bracket_id": "2",
+              "maintenance_margin_deduction": "300.0",
+              "maintenance_margin_rate": "0.05",
+              "maximum_leverage": "10",
+              "minimum_leverage_range": "6",
+              "notional_cap": "50000",
+              "notional_floor": "10000.00",
+              "schema_version": 1,
+              "type": "binance_usdm_margin_tier_bracket"
+            },
+            {
+              "bracket_id": "3",
+              "maintenance_margin_deduction": "2800",
+              "maintenance_margin_rate": "0.10",
+              "maximum_leverage": "5",
+              "minimum_leverage_range": "1",
+              "notional_cap": "200000",
+              "notional_floor": "50000",
+              "schema_version": 1,
+              "type": "binance_usdm_margin_tier_bracket"
+            }
+          ],
+          "effective_from": {
+            "epoch_nanoseconds": 1710000000000000000,
+            "type": "utc_instant"
+          },
+          "effective_to_exclusive": {
+            "epoch_nanoseconds": 1720000000000000000,
+            "type": "utc_instant"
+          },
+          "instrument_id": {
+            "stable_key": "btc-usdt-perpetual",
+            "type": "instrument_id",
+            "venue": "binance_usdm"
+          },
+          "notional_coef": null,
+          "schema_version": 1,
+          "scope": "DEFAULT_SYMBOL",
+          "source_ref": {
+            "schema_version": 1,
+            "source_hash": "sha256:13dbd0e9b1688acae44f17dbecf88ac5116b4ba896d4dc47a5fb6504954da5cf",
+            "source_key": "contract-info/margin-tiers-v2.json",
+            "source_kind": "CONTRACT_INFO_BRACKET_UPDATE",
+            "type": "binance_usdm_margin_tier_source_ref"
+          },
+          "type": "binance_usdm_margin_tier_band"
+        }
+      ],
+      "coverage_from": {
+        "epoch_nanoseconds": 1700000000000000000,
+        "type": "utc_instant"
+      },
+      "coverage_to_exclusive": {
+        "epoch_nanoseconds": 1720000000000000000,
+        "type": "utc_instant"
+      },
+      "instrument_id": {
+        "stable_key": "btc-usdt-perpetual",
+        "type": "instrument_id",
+        "venue": "binance_usdm"
+      },
+      "rule_book_key": "binance-usdm-btc-usdt-margin-tiers-v1",
+      "rule_book_version": 1,
+      "schema_version": 1,
+      "settlement_currency_id": {
+        "type": "currency_id",
+        "value": "USDT"
+      },
+      "type": "binance_usdm_margin_tier_rule_book"
+    },
+    "notional_coef": {
+      "bands": [
+        {
+          "available_at": {
+            "instant": {
+              "epoch_nanoseconds": 1700000000000000001,
+              "type": "utc_instant"
+            },
+            "phase": {
+              "code": "margin_tier_evidence",
+              "rank": 60,
+              "type": "timeline_phase"
+            },
+            "source_sequence": {
+              "type": "source_sequence",
+              "value": 0
+            },
+            "type": "simulation_instant"
+          },
+          "band_id": "margin-tiers-v1",
+          "brackets": [
+            {
+              "bracket_id": "1",
+              "maintenance_margin_deduction": "0",
+              "maintenance_margin_rate": "0.0100",
+              "maximum_leverage": "50",
+              "minimum_leverage_range": "21",
+              "notional_cap": "5000.000",
+              "notional_floor": "0",
+              "schema_version": 1,
+              "type": "binance_usdm_margin_tier_bracket"
+            },
+            {
+              "bracket_id": "2",
+              "maintenance_margin_deduction": "75.000",
+              "maintenance_margin_rate": "0.025",
+              "maximum_leverage": "20",
+              "minimum_leverage_range": "11",
+              "notional_cap": "25000",
+              "notional_floor": "5000.000",
+              "schema_version": 1,
+              "type": "binance_usdm_margin_tier_bracket"
+            },
+            {
+              "bracket_id": "3",
+              "maintenance_margin_deduction": "700",
+              "maintenance_margin_rate": "0.05",
+              "maximum_leverage": "10",
+              "minimum_leverage_range": "1",
+              "notional_cap": "100000",
+              "notional_floor": "25000",
+              "schema_version": 1,
+              "type": "binance_usdm_margin_tier_bracket"
+            }
+          ],
+          "effective_from": {
+            "epoch_nanoseconds": 1700000000000000000,
+            "type": "utc_instant"
+          },
+          "effective_to_exclusive": {
+            "epoch_nanoseconds": 1710000000000000000,
+            "type": "utc_instant"
+          },
+          "instrument_id": {
+            "stable_key": "btc-usdt-perpetual",
+            "type": "instrument_id",
+            "venue": "binance_usdm"
+          },
+          "notional_coef": null,
+          "schema_version": 1,
+          "scope": "DEFAULT_SYMBOL",
+          "source_ref": {
+            "schema_version": 1,
+            "source_hash": "sha256:f3678668f814cc28625fdaeabf25cfdb7b651449b415e92fb8cf8ba3d0742707",
+            "source_key": "contract-info/margin-tiers-v1.json",
+            "source_kind": "CONTRACT_INFO_BRACKET_UPDATE",
+            "type": "binance_usdm_margin_tier_source_ref"
+          },
+          "type": "binance_usdm_margin_tier_band"
+        },
+        {
+          "available_at": {
+            "instant": {
+              "epoch_nanoseconds": 1710000000000000001,
+              "type": "utc_instant"
+            },
+            "phase": {
+              "code": "margin_tier_evidence",
+              "rank": 60,
+              "type": "timeline_phase"
+            },
+            "source_sequence": {
+              "type": "source_sequence",
+              "value": 0
+            },
+            "type": "simulation_instant"
+          },
+          "band_id": "margin-tiers-v2",
+          "brackets": [
+            {
+              "bracket_id": "1",
+              "maintenance_margin_deduction": "0",
+              "maintenance_margin_rate": "0.0200",
+              "maximum_leverage": "25",
+              "minimum_leverage_range": "21",
+              "notional_cap": "10000.00",
+              "notional_floor": "0",
+              "schema_version": 1,
+              "type": "binance_usdm_margin_tier_bracket"
+            },
+            {
+              "bracket_id": "2",
+              "maintenance_margin_deduction": "300.0",
+              "maintenance_margin_rate": "0.05",
+              "maximum_leverage": "10",
+              "minimum_leverage_range": "6",
+              "notional_cap": "50000",
+              "notional_floor": "10000.00",
+              "schema_version": 1,
+              "type": "binance_usdm_margin_tier_bracket"
+            },
+            {
+              "bracket_id": "3",
+              "maintenance_margin_deduction": "2800",
+              "maintenance_margin_rate": "0.10",
+              "maximum_leverage": "5",
+              "minimum_leverage_range": "1",
+              "notional_cap": "200000",
+              "notional_floor": "50000",
+              "schema_version": 1,
+              "type": "binance_usdm_margin_tier_bracket"
+            }
+          ],
+          "effective_from": {
+            "epoch_nanoseconds": 1710000000000000000,
+            "type": "utc_instant"
+          },
+          "effective_to_exclusive": {
+            "epoch_nanoseconds": 1720000000000000000,
+            "type": "utc_instant"
+          },
+          "instrument_id": {
+            "stable_key": "btc-usdt-perpetual",
+            "type": "instrument_id",
+            "venue": "binance_usdm"
+          },
+          "notional_coef": "1",
+          "schema_version": 1,
+          "scope": "DEFAULT_SYMBOL",
+          "source_ref": {
+            "schema_version": 1,
+            "source_hash": "sha256:13dbd0e9b1688acae44f17dbecf88ac5116b4ba896d4dc47a5fb6504954da5cf",
+            "source_key": "contract-info/margin-tiers-v2.json",
+            "source_kind": "CONTRACT_INFO_BRACKET_UPDATE",
+            "type": "binance_usdm_margin_tier_source_ref"
+          },
+          "type": "binance_usdm_margin_tier_band"
+        }
+      ],
+      "coverage_from": {
+        "epoch_nanoseconds": 1700000000000000000,
+        "type": "utc_instant"
+      },
+      "coverage_to_exclusive": {
+        "epoch_nanoseconds": 1720000000000000000,
+        "type": "utc_instant"
+      },
+      "instrument_id": {
+        "stable_key": "btc-usdt-perpetual",
+        "type": "instrument_id",
+        "venue": "binance_usdm"
+      },
+      "rule_book_key": "binance-usdm-btc-usdt-margin-tiers-v1",
+      "rule_book_version": 1,
+      "schema_version": 1,
+      "settlement_currency_id": {
+        "type": "currency_id",
+        "value": "USDT"
+      },
+      "type": "binance_usdm_margin_tier_rule_book"
+    },
+    "status_only_source": {
+      "bands": [
+        {
+          "available_at": {
+            "instant": {
+              "epoch_nanoseconds": 1700000000000000001,
+              "type": "utc_instant"
+            },
+            "phase": {
+              "code": "margin_tier_evidence",
+              "rank": 60,
+              "type": "timeline_phase"
+            },
+            "source_sequence": {
+              "type": "source_sequence",
+              "value": 0
+            },
+            "type": "simulation_instant"
+          },
+          "band_id": "margin-tiers-v1",
+          "brackets": [
+            {
+              "bracket_id": "1",
+              "maintenance_margin_deduction": "0",
+              "maintenance_margin_rate": "0.0100",
+              "maximum_leverage": "50",
+              "minimum_leverage_range": "21",
+              "notional_cap": "5000.000",
+              "notional_floor": "0",
+              "schema_version": 1,
+              "type": "binance_usdm_margin_tier_bracket"
+            },
+            {
+              "bracket_id": "2",
+              "maintenance_margin_deduction": "75.000",
+              "maintenance_margin_rate": "0.025",
+              "maximum_leverage": "20",
+              "minimum_leverage_range": "11",
+              "notional_cap": "25000",
+              "notional_floor": "5000.000",
+              "schema_version": 1,
+              "type": "binance_usdm_margin_tier_bracket"
+            },
+            {
+              "bracket_id": "3",
+              "maintenance_margin_deduction": "700",
+              "maintenance_margin_rate": "0.05",
+              "maximum_leverage": "10",
+              "minimum_leverage_range": "1",
+              "notional_cap": "100000",
+              "notional_floor": "25000",
+              "schema_version": 1,
+              "type": "binance_usdm_margin_tier_bracket"
+            }
+          ],
+          "effective_from": {
+            "epoch_nanoseconds": 1700000000000000000,
+            "type": "utc_instant"
+          },
+          "effective_to_exclusive": {
+            "epoch_nanoseconds": 1710000000000000000,
+            "type": "utc_instant"
+          },
+          "instrument_id": {
+            "stable_key": "btc-usdt-perpetual",
+            "type": "instrument_id",
+            "venue": "binance_usdm"
+          },
+          "notional_coef": null,
+          "schema_version": 1,
+          "scope": "DEFAULT_SYMBOL",
+          "source_ref": {
+            "schema_version": 1,
+            "source_hash": "sha256:f3678668f814cc28625fdaeabf25cfdb7b651449b415e92fb8cf8ba3d0742707",
+            "source_key": "contract-info/margin-tiers-v1.json",
+            "source_kind": "CONTRACT_INFO_BRACKET_UPDATE",
+            "type": "binance_usdm_margin_tier_source_ref"
+          },
+          "type": "binance_usdm_margin_tier_band"
+        },
+        {
+          "available_at": {
+            "instant": {
+              "epoch_nanoseconds": 1710000000000000001,
+              "type": "utc_instant"
+            },
+            "phase": {
+              "code": "margin_tier_evidence",
+              "rank": 60,
+              "type": "timeline_phase"
+            },
+            "source_sequence": {
+              "type": "source_sequence",
+              "value": 0
+            },
+            "type": "simulation_instant"
+          },
+          "band_id": "margin-tiers-v2",
+          "brackets": [
+            {
+              "bracket_id": "1",
+              "maintenance_margin_deduction": "0",
+              "maintenance_margin_rate": "0.0200",
+              "maximum_leverage": "25",
+              "minimum_leverage_range": "21",
+              "notional_cap": "10000.00",
+              "notional_floor": "0",
+              "schema_version": 1,
+              "type": "binance_usdm_margin_tier_bracket"
+            },
+            {
+              "bracket_id": "2",
+              "maintenance_margin_deduction": "300.0",
+              "maintenance_margin_rate": "0.05",
+              "maximum_leverage": "10",
+              "minimum_leverage_range": "6",
+              "notional_cap": "50000",
+              "notional_floor": "10000.00",
+              "schema_version": 1,
+              "type": "binance_usdm_margin_tier_bracket"
+            },
+            {
+              "bracket_id": "3",
+              "maintenance_margin_deduction": "2800",
+              "maintenance_margin_rate": "0.10",
+              "maximum_leverage": "5",
+              "minimum_leverage_range": "1",
+              "notional_cap": "200000",
+              "notional_floor": "50000",
+              "schema_version": 1,
+              "type": "binance_usdm_margin_tier_bracket"
+            }
+          ],
+          "effective_from": {
+            "epoch_nanoseconds": 1710000000000000000,
+            "type": "utc_instant"
+          },
+          "effective_to_exclusive": {
+            "epoch_nanoseconds": 1720000000000000000,
+            "type": "utc_instant"
+          },
+          "instrument_id": {
+            "stable_key": "btc-usdt-perpetual",
+            "type": "instrument_id",
+            "venue": "binance_usdm"
+          },
+          "notional_coef": null,
+          "schema_version": 1,
+          "scope": "DEFAULT_SYMBOL",
+          "source_ref": {
+            "schema_version": 1,
+            "source_hash": "sha256:3c5e00388aac85817104b7fcf00a87f9c33e6db9fac72eb57abb7d8f3901ac10",
+            "source_key": "contract-info/margin-tiers-v2.json",
+            "source_kind": "CONTRACT_INFO_STATUS_UPDATE",
+            "type": "binance_usdm_margin_tier_source_ref"
+          },
+          "type": "binance_usdm_margin_tier_band"
+        }
+      ],
+      "coverage_from": {
+        "epoch_nanoseconds": 1700000000000000000,
+        "type": "utc_instant"
+      },
+      "coverage_to_exclusive": {
+        "epoch_nanoseconds": 1720000000000000000,
+        "type": "utc_instant"
+      },
+      "instrument_id": {
+        "stable_key": "btc-usdt-perpetual",
+        "type": "instrument_id",
+        "venue": "binance_usdm"
+      },
+      "rule_book_key": "binance-usdm-btc-usdt-margin-tiers-v1",
+      "rule_book_version": 1,
+      "schema_version": 1,
+      "settlement_currency_id": {
+        "type": "currency_id",
+        "value": "USDT"
+      },
+      "type": "binance_usdm_margin_tier_rule_book"
+    }
+  },
+  "source_contract": "archived-contract-info-bracket-update-bands"
+}

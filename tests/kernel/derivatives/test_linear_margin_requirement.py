@@ -616,7 +616,7 @@ def _failure_cases() -> list[
 
 
 def test_all_failures_follow_frozen_precedence() -> None:
-    assert len(LinearInstrumentMarginFailureCode) == 30
+    assert len(LinearInstrumentMarginFailureCode) == 31
 
     for expected, request in _failure_cases():
         outcome = LinearInstrumentMarginModel().evaluate_margin(request)

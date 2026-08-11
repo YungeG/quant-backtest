@@ -183,6 +183,11 @@ class LinearMarginTier:
         }
 
 
+class LinearMarginTierBoundaryConvention(str, Enum):
+    LOWER_INCLUSIVE_UPPER_EXCLUSIVE = "lower_inclusive_upper_exclusive"
+    LOWER_EXCLUSIVE_UPPER_INCLUSIVE = "lower_exclusive_upper_inclusive"
+
+
 @dataclass(frozen=True, slots=True)
 class LinearMarginRuleInterval:
     interval_id: str
@@ -192,6 +197,9 @@ class LinearMarginRuleInterval:
     tiers: tuple[LinearMarginTier, ...]
     source_key: str
     source_hash: str
+    tier_boundary_convention: LinearMarginTierBoundaryConvention = (
+        LinearMarginTierBoundaryConvention.LOWER_INCLUSIVE_UPPER_EXCLUSIVE
+    )
 
     def __post_init__(self) -> None:
         _text("interval_id", self.interval_id)
@@ -209,6 +217,10 @@ class LinearMarginRuleInterval:
             raise TypeError("tiers must be an exact tuple of LinearMarginTier")
         _text("source_key", self.source_key)
         _hash("source_hash", self.source_hash)
+        if type(self.tier_boundary_convention) is not LinearMarginTierBoundaryConvention:
+            raise TypeError(
+                "tier_boundary_convention must be exact LinearMarginTierBoundaryConvention"
+            )
 
     @property
     def interval_hash(self) -> str:
@@ -221,7 +233,7 @@ class LinearMarginRuleInterval:
         )
 
     def to_canonical_dict(self) -> dict[str, Any]:
-        return {
+        payload = {
             "type": "linear_margin_rule_interval",
             "schema_version": _SCHEMA_VERSION,
             "interval_id": self.interval_id,
@@ -232,6 +244,12 @@ class LinearMarginRuleInterval:
             "source_key": self.source_key,
             "source_hash": self.source_hash,
         }
+        if self.tier_boundary_convention is not (
+            LinearMarginTierBoundaryConvention.LOWER_INCLUSIVE_UPPER_EXCLUSIVE
+        ):
+            payload["schema_version"] = 2
+            payload["tier_boundary_convention"] = self.tier_boundary_convention.value
+        return payload
 
 
 def _interval_order(
@@ -474,6 +492,7 @@ class LinearInstrumentMarginFailureCode(str, Enum):
     NON_POSITIVE_MARGIN_MARK = "non_positive_margin_mark"
     MARGIN_MARK_POLICY_MISMATCH = "margin_mark_policy_mismatch"
     MARGIN_MARK_NOT_AVAILABLE = "margin_mark_not_available"
+    NOTIONAL_OUTSIDE_TIER_COVERAGE = "notional_outside_tier_coverage"
     LEVERAGE_EXCEEDS_TIER_MAXIMUM = "leverage_exceeds_tier_maximum"
     NEGATIVE_MAINTENANCE_REQUIREMENT = "negative_maintenance_requirement"
     SETTLEMENT_CASH_CONTEXT_MISMATCH = "settlement_cash_context_mismatch"
@@ -523,8 +542,17 @@ def _tier_context_invalid(
     return any(value.currency != currency or value.scale != scale for value in values)
 
 
-def _tier_gap(tiers: tuple[LinearMarginTier, ...]) -> bool:
-    if not tiers or tiers[0].notional_floor.units != 0 or tiers[-1].notional_cap is not None:
+def _tier_gap(
+    tiers: tuple[LinearMarginTier, ...],
+    convention: LinearMarginTierBoundaryConvention,
+) -> bool:
+    if not tiers or tiers[0].notional_floor.units != 0:
+        return True
+    if (
+        convention
+        is LinearMarginTierBoundaryConvention.LOWER_INCLUSIVE_UPPER_EXCLUSIVE
+        and tiers[-1].notional_cap is not None
+    ):
         return True
     return any(
         previous.notional_cap is not None
@@ -592,22 +620,52 @@ def _amount_below_money(
     )
 
 
+def _amount_above_money(
+    amount: ExactLinearMarginAmount, money: Money
+) -> bool:
+    return (
+        amount.numerator * money.scale.factor
+        > money.units * amount.denominator
+    )
+
+
+def _amount_at_most_money(
+    amount: ExactLinearMarginAmount, money: Money
+) -> bool:
+    return not _amount_above_money(amount, money)
+
+
 def _selected_tier(
     tiers: tuple[LinearMarginTier, ...],
     notional: ExactLinearMarginAmount,
-) -> LinearMarginTier:
-    matches = tuple(
-        tier
-        for tier in tiers
-        if _amount_at_least_money(notional, tier.notional_floor)
-        and (
-            tier.notional_cap is None
-            or _amount_below_money(notional, tier.notional_cap)
+    convention: LinearMarginTierBoundaryConvention,
+) -> LinearMarginTier | None:
+    if convention is LinearMarginTierBoundaryConvention.LOWER_EXCLUSIVE_UPPER_INCLUSIVE:
+        matches = tuple(
+            tier
+            for tier in tiers
+            if (
+                _amount_above_money(notional, tier.notional_floor)
+                or (notional.numerator == 0 and tier.notional_floor.units == 0)
+            )
+            and (
+                tier.notional_cap is None
+                or _amount_at_most_money(notional, tier.notional_cap)
+            )
         )
-    )
-    if len(matches) != 1:
-        raise AssertionError("valid complete Tier set must select exactly one Tier")
-    return matches[0]
+    else:
+        matches = tuple(
+            tier
+            for tier in tiers
+            if _amount_at_least_money(notional, tier.notional_floor)
+            and (
+                tier.notional_cap is None
+                or _amount_below_money(notional, tier.notional_cap)
+            )
+        )
+    if len(matches) > 1:
+        raise AssertionError("valid Tier set cannot select multiple Tiers")
+    return matches[0] if matches else None
 
 
 def _exact_initial(
@@ -707,7 +765,7 @@ def _evaluate(
         return LinearInstrumentMarginFailureCode.TIER_ORDER_MISMATCH, None
     if _tier_context_invalid(rule_book, tiers):
         return LinearInstrumentMarginFailureCode.TIER_CONTEXT_MISMATCH, None
-    if _tier_gap(tiers):
+    if _tier_gap(tiers, interval.tier_boundary_convention):
         return LinearInstrumentMarginFailureCode.TIER_GAP, None
     if _tier_overlap(tiers):
         return LinearInstrumentMarginFailureCode.TIER_OVERLAP, None
@@ -748,7 +806,9 @@ def _evaluate(
         return LinearInstrumentMarginFailureCode.MARGIN_MARK_NOT_AVAILABLE, None
 
     notional = _exact_notional(request)
-    tier = _selected_tier(tiers, notional)
+    tier = _selected_tier(tiers, notional, interval.tier_boundary_convention)
+    if tier is None:
+        return LinearInstrumentMarginFailureCode.NOTIONAL_OUTSIDE_TIER_COVERAGE, None
     if _leverage_exceeds(leverage.selected_leverage, tier.maximum_leverage):
         return LinearInstrumentMarginFailureCode.LEVERAGE_EXCEEDS_TIER_MAXIMUM, None
     initial = _exact_initial(notional, leverage.selected_leverage)
@@ -802,13 +862,15 @@ def _subject_values(
                 include_tier
                 and not _tier_order_invalid(tiers)
                 and not _tier_context_invalid(rule_book, tiers)
-                and not _tier_gap(tiers)
+                and not _tier_gap(tiers, interval.tier_boundary_convention)
                 and not _tier_overlap(tiers)
                 and not _tier_basis_invalid(tiers)
                 and request.margin_mark_evidence is not None
             ):
                 notional = _exact_notional(request)
-                tier = _selected_tier(tiers, notional)
+                tier = _selected_tier(
+                    tiers, notional, interval.tier_boundary_convention
+                )
     return interval, tier
 
 
