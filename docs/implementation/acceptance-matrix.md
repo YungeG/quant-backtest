@@ -8962,7 +8962,96 @@ Python                                                                3.13.5
 
 Implementation commit：`af2897e11fedf3c0807e0f60435be9e700269c03`。
 
-## 88. PASSED 记录格式
+## 88. G11G Named Random Streams Acceptance Card
+
+```yaml
+id: G11G
+status: DRAFT
+depends_on:
+  - G11F
+owner_package: backtest-runtime strategy
+public_interface:
+  - crypto_quant_backtest.NamedRandomStream
+test_commands:
+  readiness: uv run pytest -q tests/runtime/strategy_state/test_strategy_state.py tests/runtime/strategy_state/test_strategy_state_golden.py tests/domain/canonical tests/architecture/test_g11f_strategy_state_boundary.py tests/architecture/test_public_api_imports.py tests/architecture/test_repository_cleanliness.py
+  contract: uv run pytest -q tests/runtime/random_streams/test_named_random_stream.py
+  fixture: uv run pytest -q tests/runtime/random_streams/test_named_random_stream_golden.py
+  boundary: uv run pytest -q tests/architecture/test_g11g_random_stream_boundary.py tests/architecture/test_g11f_strategy_state_boundary.py tests/architecture/test_public_api_imports.py tests/architecture/test_repository_cleanliness.py
+  acceptance: uv run pytest -q tests/runtime/random_streams/test_named_random_stream.py tests/runtime/random_streams/test_named_random_stream_golden.py tests/runtime/strategy_state/test_strategy_state.py tests/runtime/strategy_state/test_strategy_state_golden.py tests/domain/canonical tests/architecture/test_g11g_random_stream_boundary.py tests/architecture/test_g11f_strategy_state_boundary.py tests/architecture/test_public_api_imports.py tests/architecture/test_repository_cleanliness.py --junitxml=build/acceptance/g11g-pytest.xml
+fixture_ids:
+  - named-random-stream-isolation-v1
+expected_artifacts:
+  - docs/research/g11g-named-random-streams.md
+  - tests/fixtures/runtime/random-streams/named-random-stream-isolation-v1.json
+  - build/acceptance/g11g-pytest.xml
+  - build/acceptance/g11g-import-boundary-report.json
+failure_contracts:
+  - global-or-process-rng-state-affects-draws
+  - ambient-entropy-time-attempt-or-runtime-address-enters-stream
+  - seed-strategy-key-algorithm-version-or-counter-is-missing-from-identity
+  - unrelated-strategy-or-stream-draw-advances-this-stream
+  - saved-counter-does-not-replay-the-same-suffix
+  - draw-mutates-the-current-stream
+  - draw-preimage-or-u64-byte-order-is-implicit
+  - bool-negative-or-noninteger-seed-or-counter-is-accepted
+  - empty-padded-or-noncanonical-stream-key-is-accepted
+  - unsupported-algorithm-or-version-silently-falls-back
+  - rng-counter-is-hidden-inside-strategy-business-state
+  - random-stream-claims-unfrozen-distribution-statistical-or-security-guarantees
+  - numpy-provider-sdk-filesystem-network-or-callback-enters-g11g
+  - g11g-mutates-engine-runner-timeline-observation-or-financial-kernel
+allowed_grade: development
+evidence:
+  - exact-sha256-counter-preimage-tests
+  - immutable-draw-and-counter-replay-tests
+  - seed-strategy-key-counter-isolation-tests
+  - unrelated-stream-noninterference-tests
+  - deterministic-static-golden-hash
+  - constructor-forgery-controls
+  - public-api-import-report
+  - import-boundary-report
+  - static-type-report
+  - dependency-lock-report
+```
+
+### G11G Acceptance
+
+1. G11G只新增one production module `crypto_quant_backtest.random_streams`与root export `NamedRandomStream`。它是pure immutable、provider-neutral、offline deterministic simulation value，不读取global RNG、OS entropy、wall clock、filesystem、network、database、process、environment、Attempt或runtime address；
+2. `NamedRandomStream` exact保存`master_random_seed: int`、`strategy_id: StrategySleeveId`、canonical nonempty `stream_key: str`、`algorithm: str`、`algorithm_version: int`与nonnegative `counter: int`。bool不属于integer seed/counter；
+3. G11G v1 algorithm exact只允许`algorithm="sha256-counter"`与`algorithm_version=1`。Constructor不得fallback、alias、lookup current version、load plugin或接受未冻结algorithm；future algorithm必须通过new frozen version/type演进；
+4. Stream key必须nonempty、trimmed、NFC canonical text。Master seed exact沿用BacktestRequest nonnegative integer contract，不自行截断、salt、读取entropy或使用process hash randomization；
+5. Stream canonical body exact为`{type="named_random_stream",schema_version=1,algorithm,algorithm_version,master_random_seed,strategy_id,stream_key,counter}`。`stream_hash=canonical_sha256(body)`且`to_canonical_dict()`只追加non-recursive stream hash；任一identity field变化必须改变canonical identity；
+6. Counter命名the next draw。`draw_u64()`无参数，不能mutate current stream，并返回exact `(value: int,next_stream: NamedRandomStream)`；`0 <= value < 2**64`且`next_stream.counter == self.counter + 1`，其他identity fields exact unchanged；
+7. Draw preimage exact为`{type="named_random_stream_draw",schema_version=1,algorithm,algorithm_version,master_random_seed,strategy_id,stream_key,counter}`，其中counter使用draw前current value。不得加入wall clock、draw order outside this stream、Attempt、thread/process、object identity或hidden nonce；
+8. Draw algorithm exact为`hashlib.sha256(canonical_bytes(preimage)).digest()`，value exact取digest前8 bytes并按unsigned big-endian解释。不得使用Python `hash()`、`random`、`secrets`、NumPy、provider SDK或platform-dependent available algorithm alias；
+9. Same exact stream fields/counter必须跨construction/input order产生same draw、next stream canonical bytes/hash与suffix。Reconstruct saved counter后next draw及continuation必须与uninterrupted stream exact一致；
+10. Strategy isolation exact由StrategySleeveId进入stream/draw preimage保证；stream-purpose isolation exact由stream key进入preimage保证。Different seed、Strategy、key或counter必须产生separate identity；fixture冻结代表样本差异但不把hash collision impossibility当业务证明；
+11. Draw unrelated Strategy/key stream不能advance或改变original immutable stream、its hash、next draw或suffix。G11G不维护mutable registry/pool/global counter/singleton/cache；
+12. `NamedRandomStream` current value本身是G11G counter checkpoint。G11F `StrategyCheckpoint`与G11G stream保持separate immutable authorities；G11I later可绑定两者hash。G11F generic values不吸收hidden RNG counter，G11G也不吸收Strategy business fields；
+13. Constructor与`dataclasses.replace`必须重新验证seed/key/algorithm/version/counter。Derived stream hash不接受caller input；invalid identity fail closed且不能silent normalize为another stream；
+14. SHA-256在此仅是frozen deterministic bit derivation primitive。G11G不声明cryptographic unpredictability、security token/key generation、gambling suitability、independent statistical distribution certification或Monte Carlo convergence；
+15. G11G v1不提供`draw_below`、float、normal/lognormal、shuffle、choice、distribution registry或sampling policy。Exact unbiased bounded/distribution semantics需要later separate frozen Gate；raw u64是当前最小independently useful seam；
+16. Parameter search、calibration、model selection、Walk-forward、experiment scheduling、Strategy invocation、Observation access、Target/Decision production、financial accounting与EngineCheckpoint均不属于G11G；
+17. Production imports exact只允许stdlib `hashlib`/dataclass support及`crypto_quant_domain` public canonical/identity contracts。Engine、Runner、Timeline、Observation、TargetStream、StrategyState production modules与Trading Kernel不得获得G11G branch；
+18. Static golden至少冻结first draws、counter progression、saved-counter replay、same-stream repeat parity、different seed/Strategy/key/counter separation、unrelated-stream noninterference、canonical stream/draw hashes与constructor/forgery controls；
+19. G11G outputs固定development-only，不创建decision-grade eligibility、live randomness、deployment authorization、external artifact publication或child Attempt recovery。
+
+Frozen seam note：`docs/research/g11g-named-random-streams.md`。
+
+Readiness baseline：
+
+```text
+G11F frozen contracts                                                pending validation
+Workspace import boundary                                           pending validation
+mypy 2.3.0                                                           pending validation
+Primary LSP                                                          pending validation
+pi-lens scoped review                                                pending validation
+Markdown + git diff checks                                           PASS
+uv lock --check                                                      pending validation
+Python                                                                3.13.5
+```
+
+## 89. PASSED 记录格式
 
 ```yaml
 id: WP-00A
