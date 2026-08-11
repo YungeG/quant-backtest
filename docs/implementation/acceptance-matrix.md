@@ -8829,7 +8829,99 @@ Python                                                                3.13.5
 
 Implementation commit：`c40de40a8e9117b95f3155ac2ebd5d3b4c7a95c8`。
 
-## 87. PASSED 记录格式
+## 87. G11F Strategy State and Checkpoint Acceptance Card
+
+```yaml
+id: G11F
+status: DRAFT
+depends_on:
+  - G02
+owner_package: backtest-runtime strategy
+public_interface:
+  - crypto_quant_backtest.StrategyState
+  - crypto_quant_backtest.StrategyStateTransition
+  - crypto_quant_backtest.StrategyCheckpoint
+test_commands:
+  readiness: uv run pytest -q tests/domain/canonical tests/domain/decisions tests/domain/artifacts tests/domain/time tests/architecture/test_public_api_imports.py tests/architecture/test_repository_cleanliness.py
+  contract: uv run pytest -q tests/runtime/strategy_state/test_strategy_state.py
+  fixture: uv run pytest -q tests/runtime/strategy_state/test_strategy_state_golden.py
+  boundary: uv run pytest -q tests/architecture/test_g11f_strategy_state_boundary.py tests/architecture/test_public_api_imports.py tests/architecture/test_repository_cleanliness.py
+  acceptance: uv run pytest -q tests/runtime/strategy_state/test_strategy_state.py tests/runtime/strategy_state/test_strategy_state_golden.py tests/domain/canonical tests/domain/decisions tests/domain/time tests/architecture/test_g11f_strategy_state_boundary.py tests/architecture/test_public_api_imports.py tests/architecture/test_repository_cleanliness.py --junitxml=build/acceptance/g11f-pytest.xml
+fixture_ids:
+  - strategy-state-checkpoint-v1
+expected_artifacts:
+  - docs/research/g11f-strategy-state-checkpoint.md
+  - tests/fixtures/runtime/strategy-state/strategy-state-checkpoint-v1.json
+  - build/acceptance/g11f-pytest.xml
+  - build/acceptance/g11f-import-boundary-report.json
+failure_contracts:
+  - strategy-state-accepts-noncanonical-or-hidden-runtime-value
+  - caller-container-mutation-changes-frozen-state
+  - equal-state-hash-exposes-different-mapping-iteration-order
+  - strategy-or-state-schema-is-implicit-or-omitted-from-identity
+  - transition-crosses-strategy-or-schema-without-explicit-migration
+  - transition-before-or-after-hash-does-not-match-state
+  - checkpoint-uses-utc-only-or-wall-clock-capture-identity
+  - checkpoint-hash-does-not-bind-full-canonical-state
+  - restore-returns-mutable-or-different-state
+  - continuation-after-restore-diverges-from-uninterrupted-continuation
+  - financial-account-inventory-rng-model-or-engine-state-becomes-g11f-authority
+  - filesystem-network-process-database-cache-or-callback-enters-state-seam
+  - g11f-mutates-engine-runner-timeline-target-stream-or-domain-contracts
+  - g11f-claims-engine-checkpoint-decision-grade-live-or-deployment-authority
+allowed_grade: development
+evidence:
+  - canonical-json-state-contract-tests
+  - deep-immutability-and-input-order-parity-tests
+  - before-after-transition-hash-tests
+  - full-simulation-instant-checkpoint-tests
+  - continuation-after-restore-static-golden
+  - constructor-forgery-controls
+  - public-api-import-report
+  - import-boundary-report
+  - static-type-report
+  - dependency-lock-report
+```
+
+### G11F Acceptance
+
+1. G11F只新增one production module `crypto_quant_backtest.strategy_state`与root exports，保持pure in-memory、provider-neutral、Strategy-owned value seam。它只消费caller-supplied immutable/canonical Domain values，不读取Observation、Bundle、Profile、filesystem、network、database、process、environment、wall clock、Ledger、Account、Engine或Strategy callback；
+2. `StrategyState` exact保存`strategy_id: StrategySleeveId`、`state_schema: CanonicalSchema`与`values: Mapping[str, CanonicalJsonValue]`。State没有Attempt ID、runtime address、module path、implementation object、callback、path、current time或mutable store handle；
+3. `CanonicalJsonValue` v1 exact只允许`None`、bool、int、NFC str、string-keyed Mapping及ordered list/tuple递归组合。float、Decimal、date/datetime、bytes、set/frozenset、callable、file/socket/process/database/client object、arbitrary `to_canonical_dict()` object、cycle及unsupported runtime value全部fail closed；
+4. Every Mapping key必须canonical nonempty trimmed NFC string。Constructor立即deep-freeze：Mapping变只读mapping、list/tuple变tuple，并在每一层按key排序后暴露。Caller后续mutate原始容器不能改变State；相同canonical values必须具有相同mapping iteration order、canonical bytes与hash；
+5. `StrategyState` canonical body exact为`{type="strategy_state",schema_version=1,strategy_id,state_schema,values}`，其中identity values分别使用existing Domain canonical dict。`state_hash=canonical_sha256(body)`且`to_canonical_dict()`只追加non-recursive `state_hash`；schema name/version与Strategy identity必须进入hash；
+6. State schema升级/迁移不属于G11F v1。不同schema name/version产生不同State identity；G11F不提供fallback、default schema、migration registry、plugin、serializer registry或current-version lookup；
+7. `StrategyStateTransition` exact保存canonical nonempty `transition_key`、`occurred_at: SimulationInstant`及exact before/after `StrategyState`。Before/after必须属于same Strategy与same exact state schema；cross-Strategy或implicit schema migration fail closed；
+8. Transition canonical body exact为`{type="strategy_state_transition",schema_version=1,transition_key,occurred_at,strategy_id,state_schema,before_state_hash,after_state_hash}`。Before/after hashes只能从embedded State派生，不能由caller伪造；`transition_hash`由该body派生且non-recursive；
+9. Transition不调用Strategy、不解释fields、不判断change是否经济合理，也不拥有Observation、Target、Decision、Schedule、RNG或Model semantics。No-op transition允许且仍由transition key/instant/identities形成deterministic evidence；
+10. `StrategyCheckpoint` exact保存canonical nonempty `checkpoint_key`、`captured_at: SimulationInstant`及one exact `StrategyState`。Capture instant使用full `(UtcInstant,TimelinePhase,SourceSequence)` total order；不得降级为UTC-only、event time、wall-clock time或Attempt time；
+11. Checkpoint canonical body exact为`{type="strategy_checkpoint",schema_version=1,checkpoint_key,captured_at,state}`，其中state使用包含state hash的canonical dict。`checkpoint_hash=canonical_sha256(body)`且无caller-supplied digest。相同canonical input/order产生exact same hash；phase/sequence、state/schema或key改变必须改变identity；
+12. `StrategyCheckpoint.restore()`无参数并返回checkpoint内exact immutable `StrategyState`。不得访问外部store、Reader、file、network、clock、Journal/Event log或cache，不得构造新的默认State或静默升级schema；
+13. Continuation golden exact证明external pure step的`S0→S1→S2`与`S0→S1→checkpoint→restore(S1)→S2`产生same final State canonical bytes/hash。该fixture只验证Strategy business-state continuation，不声称Order/Journal/Ledger/Runner execution parity；
+14. Constructor与`dataclasses.replace`必须重新验证nested canonical values、Strategy/schema alignment与exact derived hashes。Unsupported values、mutated/wrong identity transition、forged checkpoint/state context均fail closed；derived hash properties不接受caller input；
+15. StrategyState可以保存Strategy自身影响未来决策的业务字段与later G11H explicit model-revision identity，但不得成为Cash、NAV、Margin、Position、Working Order、Ledger、Journal、Reservation、Settlement或Liquidity Inventory的第二权威来源；这些财务值仍来自PortfolioSnapshot/Kernel authorities；
+16. RandomStream algorithm/counter/checkpoint由G11G单独拥有，不嵌入G11F generic checkpoint identity。DecisionSchedule/Warmup由G11E拥有，Model lookup/revision switching由G11H拥有，Strategy invocation/aggregate audit/DecisionBatch由G11I拥有；
+17. Rebuildable performance cache留在State外；若某cache内容会影响未来Decision，它就是business state，必须作为canonical values显式进入State。G11F v1不实现mutable cache、memoization、global registry或external persistence；
+18. Public API boundary、import architecture与static source tests必须证明production module只依赖stdlib immutable/JSON support与`crypto_quant_domain` public contracts；Engine、Runner、Timeline、TargetStream、Observation、Trading Kernel及provider modules保持无G11F branch；
+19. Static golden至少冻结nested Mapping/list deep freeze、input/mapping-order parity、schema/Strategy isolation、unsupported/cyclic value failures、before/after transition hashes、same-UTC different phase/sequence checkpoint identity、restore parity、continuation parity、repeat parity及forgery controls；
+20. G11F outputs固定development-only。它不创建EngineCheckpoint、child Attempt、resume cursor、artifact publication、decision-grade eligibility、live trading或deployment authorization。
+
+Frozen seam note：`docs/research/g11f-strategy-state-checkpoint.md`。
+
+Readiness baseline：
+
+```text
+G02 canonical/decision/artifact/time contracts                       pending validation
+Workspace import boundary                                           pending validation
+mypy 2.3.0                                                           pending validation
+Primary LSP                                                          pending validation
+pi-lens scoped review                                                pending validation
+Markdown + git diff checks                                           PASS
+uv lock --check                                                      pending validation
+Python                                                                3.13.5
+```
+
+## 88. PASSED 记录格式
 
 ```yaml
 id: WP-00A
