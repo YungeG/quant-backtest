@@ -336,6 +336,14 @@ Price 或 Market Event Stream 在预期覆盖区间中的缺失，并具有明�
 
 G10D caller-supplied的纯离线immutable source authority：aggregate trades只映射Execution Reference；closed mark-price klines的close分别映射Valuation、Margin与Liquidation point stream，low/high映射Liquidation Bar。每个Purpose独立声明finite coverage与source/revision identity，current API不能补洞。冻结实现commit为`790469d80ddcf3797f03c96c975b77d75a3d49a5`。
 
+## Binance USDⓈ-M 历史资金簿（Binance USDⓈ-M Historical Funding Book）
+
+G10E caller-supplied的纯离线immutable Funding Rate History authority。Exact `fundingTime`派生G09C Slot；`fundingRate`直接映射final applied fraction；同row `markPrice`唯一映射Funding Mark。v1只接受一个visible `Regular` root row，`Special`、duplicate/conflict/supersession、missing rate/mark/type或current/predicted fallback都structured fail closed。
+
+## 资金发布与应用时点（Funding Publication and Application Instant）
+
+Binance只提供millisecond funding UTC，repository冻结target UTC `TimelinePhase(110,"funding_settlement")/SourceSequence(0)`作为system ordering convention：位于G09C eligibility phase 100之后，同时作为Publication availability与G09D `applied_at`。Archive capture/revision visibility另行保存，不能与economic funding time合并。
+
 ## 价格事实时间与可用时间（Price Fact Time and Availability Time）
 
 Provider trade time或closed Mark Bar时间描述经济事实发生/闭合；caller-supplied available-at描述回放何时可见。两者不得合并。若late knowledge只能靠same-UTC phase/sequence表达而目标generic contract只有UtcInstant，必须fail closed，不能抹平顺序制造lookahead。

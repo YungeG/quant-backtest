@@ -1664,14 +1664,27 @@ G10D fixed purpose mapping、point-in-time availability、generic MarkResolver d
 
 依赖：G09C、G09D、G10D。
 
-拥有：Binance Funding publication time、settlement time、applied rate、mark 和 Slot ID Adapter。
+拥有：Binance Funding publication time、settlement time、applied rate、associated mark 和 Slot ID Adapter。
 
 验收：
 
-- Publication/settlement causality 与 G09 Interface 一致；
-- Funding Slot ID 稳定；
-- Rate/mark source identity 完整；
-- 缺失 publication、rate 或 mark 时 fail closed。
+- Production只消费caller-supplied immutable G10A Resolution、完整G09A Contract、G09D Application Key、finite Historical Funding Book、target Funding UTC与capture instant；不得调用REST/WebSocket、解析provider文件、读取filesystem/wall clock或用current endpoint补历史；
+- accepted v1 source exact为USDⓈ-M Funding Rate History `GET /fapi/v1/fundingRate` row；`fundingTime`是Slot/effective UTC，`fundingRate`是直接applied fraction，`markPrice`是该funding-fee charge关联Mark；
+- `FundingSlotId`只由stable Instrument与exact `fundingTime`派生，不假设8h cadence、不从`fundingIntervalHours`或邻近row推断missing slot；
+- 只接受exact一个visible immutable `Regular` row。`Special` additional funding、missing/unknown rate type、same-slot duplicate、superseding revision或conflicting bytes structured fail closed，不sum/net或改写G09C Slot identity；
+- Mark Price Stream `r/T`、REST `lastFundingRate/nextFundingTime`、Funding Info cap/floor/interval、interest/premium formula不得替代或重算historical final rate；
+- same row的associated `markPrice`唯一映射`PricePurpose.FUNDING`；nearby G10D Mark Kline、ordinary mark update、index、moving-average mark、estimated settlement、trade或last price均不得fallback；
+- Funding Mark使用frozen zero-age、zero-max-age、no-forward-fill StaleMarkPolicy，并通过generic MarkResolver；raw Mark必须positive且exact representable at supplied G09A Contract price Scale，不round、不pre-quantize；
+- provider只给millisecond UTC；simulation convention冻结为target UTC `TimelinePhase(110,"funding_settlement")/SourceSequence(0)`，位于G09C eligibility phase 100之后。Publication availability与G09D `applied_at`使用该instant，archive captured-at独立保存；
+- exact raw decimal保留trailing zeros/source identity；Rate允许signed/zero ordinary decimal，Mark只允许positive ordinary decimal；mapping只用string/integer arithmetic，不用float、ambient Decimal或precision hint；
+- Resolution直接产生derived Slot、G09C final-rate Publication Candidate、G09D Funding Mark Evidence与绑定caller Application Key的Settlement Evidence；不拥有Position snapshot、Eligibility resolution、cash-flow calculation、Journal append或Ledger mutation；
+- Query/G10A effective/capture、Contract Instrument/Currency/Scale、Application Key account/Slot、Coverage、source event/revision与natural slot identity必须exact匹配；tuple order不得选winner；
+- model digest exact包含accepted source、Regular-only policy、fixed phase/sequence、rate basis、associated-mark-only policy、revision policy、decimal/scale rules与limitations，G10G必须纳入final Profile digest；
+- static Fixture覆盖positive/negative/zero Rate、exact associated Mark、dynamic/non-8h target times、before/at/after archive capture、missing rate/mark/type、Special、duplicate/conflict/supersession、coverage gap/overlap、current/predicted source rejection、inexact Mark Scale、forgery与input-order parity；
+- G12证明funding archive initial state、all files/checksums/revisions与slot-gap classification前，Resolution固定`decision_grade_eligible=false`；
+- Production module无filesystem/network/process/database/cloud SDK/wall clock，不修改G09C、G09D、MarkResolver、Journal、Ledger、Engine、Runner或Timeline增加Binance branch。
+
+Primary source note：`docs/research/binance-usdm-funding-source-semantics-primary-sources.md`。
 
 ### Gate G10F Fee and Account Profile
 

@@ -130,7 +130,7 @@ artifact_hashes: []
 | G10B | PASSED — immutable commit `11072289a9dda708a185ae2edcbf5fcdf0c7bd55` | trading-kernel profiles/binance_usdm | G10A, WP-05G | none |
 | G10C | PASSED — immutable commit `50fa838f901385498ce18d65a897d4eb1dc31337` | trading-kernel margin requirement + profiles/binance_usdm | G10A, G09E | none |
 | G10D | PASSED — immutable commit `790469d80ddcf3797f03c96c975b77d75a3d49a5` | trading-kernel profiles/binance_usdm | G10A, WP-03C | none |
-| G10E | DRAFT | trading-kernel profiles/binance_usdm | G09C–G09D, G10D | Funding source fixtures |
+| G10E | READY | trading-kernel profiles/binance_usdm | G09C–G09D, G10D | Funding source fixtures |
 | G10F | DRAFT | trading-kernel profiles/binance_usdm | WP-05H, WP-05J, G09F | Fee/account fixtures |
 | G10G | DRAFT | backtest-runtime composition | G10A–G10F | Resolved profile E2E |
 | G10H | DRAFT | parity tooling | G10G, WP-00C | crypt-gemini parity |
@@ -7938,7 +7938,129 @@ uv lock --check                                                      PASS
 Python                                                                3.13.5
 ```
 
-## 81. PASSED 记录格式
+## 81. G10E Binance USDⓈ-M Funding Source Semantics Acceptance Card
+
+```yaml
+id: G10E
+status: READY
+depends_on:
+  - G09C
+  - G09D
+  - G10D
+owner_package: trading-kernel profiles/binance_usdm
+public_interface:
+  - crypto_quant_trading.profiles.binance_usdm.BinanceUsdmFundingSourceRef
+  - crypto_quant_trading.profiles.binance_usdm.BinanceUsdmFundingRateRecord
+  - crypto_quant_trading.profiles.binance_usdm.BinanceUsdmFundingCoverage
+  - crypto_quant_trading.profiles.binance_usdm.BinanceUsdmHistoricalFundingBook
+  - crypto_quant_trading.profiles.binance_usdm.BinanceUsdmFundingSourceQuery
+  - crypto_quant_trading.profiles.binance_usdm.BinanceUsdmFundingSourceResolution
+  - crypto_quant_trading.profiles.binance_usdm.BinanceUsdmFundingSourceFailureCode
+  - crypto_quant_trading.profiles.binance_usdm.BinanceUsdmFundingSourceFailure
+  - crypto_quant_trading.profiles.binance_usdm.BinanceUsdmFundingSourceOutcome
+  - crypto_quant_trading.profiles.binance_usdm.BinanceUsdmFundingSourceModel
+test_commands:
+  contract: uv run pytest -q tests/profiles/binance_usdm/test_funding_sources.py
+  fixture: uv run pytest -q tests/profiles/binance_usdm/test_funding_sources_golden.py
+  boundary: uv run pytest -q tests/architecture/test_binance_usdm_profile_boundary.py tests/architecture/test_derivative_boundary.py tests/architecture/test_public_api_imports.py tests/architecture/test_repository_cleanliness.py
+  regression: uv run pytest -q tests/kernel/derivatives/test_linear_funding_eligibility.py tests/kernel/derivatives/test_linear_funding_eligibility_golden.py tests/kernel/derivatives/test_linear_funding_accounting.py tests/kernel/derivatives/test_linear_funding_accounting_golden.py tests/kernel/marks/test_mark_resolver.py tests/kernel/marks/test_mark_resolver_golden.py tests/profiles/binance_usdm/test_instrument_metadata.py tests/profiles/binance_usdm/test_price_streams.py
+  acceptance: uv run pytest -q tests/profiles/binance_usdm/test_funding_sources.py tests/profiles/binance_usdm/test_funding_sources_golden.py tests/kernel/derivatives/test_linear_funding_eligibility.py tests/kernel/derivatives/test_linear_funding_eligibility_golden.py tests/kernel/derivatives/test_linear_funding_accounting.py tests/kernel/derivatives/test_linear_funding_accounting_golden.py tests/kernel/marks/test_mark_resolver.py tests/kernel/marks/test_mark_resolver_golden.py tests/profiles/binance_usdm/test_instrument_metadata.py tests/profiles/binance_usdm/test_price_streams.py tests/architecture/test_binance_usdm_profile_boundary.py tests/architecture/test_derivative_boundary.py tests/architecture/test_public_api_imports.py tests/architecture/test_repository_cleanliness.py --junitxml=build/acceptance/g10e-pytest.xml
+fixture_ids:
+  - binance-usdm-historical-funding-source-v1
+  - binance-usdm-funding-source-semantics-v1
+expected_artifacts:
+  - docs/research/binance-usdm-funding-source-semantics-primary-sources.md
+  - tests/fixtures/profiles/binance-usdm-historical-funding-source-v1.json
+  - tests/fixtures/profiles/binance-usdm-funding-source-semantics-v1.json
+  - build/acceptance/g10e-pytest.xml
+  - build/acceptance/g10e-import-boundary-report.json
+failure_contracts:
+  - instrument-metadata-contract-or-application-key-context-mismatch
+  - missing-funding-source-row-rate-mark-or-rate-type
+  - source-row-not-visible-by-captured-at
+  - missing-or-overlapping-funding-coverage
+  - special-additional-or-unknown-funding-rate-type
+  - duplicate-conflicting-or-superseding-same-slot-source
+  - malformed-overflow-or-inexact-rate-or-mark-decimal
+  - source-funding-time-or-archive-causality-invalid
+  - current-predicted-neighboring-or-recomputed-rate-substitutes-history
+  - nearby-mark-index-trade-or-estimated-settlement-substitutes-associated-mark
+  - funding-mark-cannot-exactly-use-contract-price-scale
+  - fixed-publication-or-settlement-phase-is-changed
+  - generic-mark-resolution-failure-is-hidden-or-reinterpreted
+  - model-digest-omits-source-mapping-revision-or-timing-policy
+  - source-query-filesystem-network-wall-clock-runtime-or-engine-leakage
+allowed_grade: development
+evidence:
+  - readiness-contract-tests
+  - official-source-note
+  - static-source-and-golden-fixture-hashes
+  - slot-publication-associated-mark-and-settlement-evidence
+  - g09c-g09d-generic-mark-compatibility-evidence
+  - public-api-import-report
+  - import-boundary-report
+  - static-type-report
+  - dependency-lock-report
+passed_commit: null
+artifact_hashes: []
+```
+
+### G10E Acceptance
+
+冻结边界：
+
+1. G10E是纯离线`crypto_quant_trading.profiles.binance_usdm.funding_sources` Adapter。Production code只消费caller-supplied immutable G10A Instrument Resolution、完整G09A `LinearPerpetualContract`、G09D `LinearFundingApplicationKey`、finite Historical Funding Book、target Funding UTC与capture instant；不得创建provider client、发HTTP/WebSocket、解析JSON/CSV/ZIP、读取filesystem/database/wall clock或fallback到current REST/WebSocket/Data Vision directory。G12拥有acquisition/parsing/checksum/retention与complete slot-gap proof；
+2. `BinanceUsdmFundingSourceRef` exact保存source key、SHA-256 content hash、revision ID、optional superseded revision、archive key/path与captured provenance。Source kind固定为USDⓈ-M Funding Rate History；Mark Price Stream、premiumIndex、Funding Info、Account Update、Income History、G10D Mark Kline或third-party funding feed不得伪装成accepted source；
+3. `BinanceUsdmFundingRateRecord` exact保存stable Instrument、raw `funding_time_milliseconds`、optional raw `funding_rate`、optional raw `mark_price`、optional raw `rate_type`、caller-supplied `archive_available_at: SimulationInstant`、source event ID/revision lineage与Source Ref。Optional字段只为structured missing-evidence failure；constructor仍验证exact types、nonnegative millisecond、canonical source identity与hash；
+4. `BinanceUsdmFundingCoverage`按stable Instrument保存finite half-open UTC coverage、stream key/version与source lineage。`BinanceUsdmHistoricalFundingBook` exact保存一个Instrument、canonical-sorted Coverages和Records；首尾缺失、内部gap、overlap、duplicate coverage ID、cross-Instrument或按tuple input order选winner均fail closed；
+5. `BinanceUsdmFundingSourceQuery` exact绑定G10A Resolution、完整G09A Contract、G09D Application Key、Historical Funding Book、`target_funding_time: UtcInstant`与`captured_at: SimulationInstant`。G10A query effective-at必须等于target，listing interval必须覆盖target，G10A captured-at不得晚于Query captured-at.instant；Contract Instrument/Currencies/multiplier lineage、Application Key Slot Instrument与derived target Slot、Book Instrument必须exact匹配；
+6. Slot mapping exact为`FundingSlotId.derive(stable InstrumentId,target_funding_time)`，其中target必须exact等于accepted row `fundingTime`。Slot identity不得包含symbol、rate、mark、rate type、interval、account、revision、source或capture；不得假设8h/4h/1h cadence，不得从Funding Info `fundingIntervalHours`或neighboring rows推断missing target；
+7. V1只接受target上exact一个visible immutable `rateType="Regular"` root row。Missing rate type返回structured failure；`Special` additional funding与unknown type均unsupported。任何visible `Special` row都不能被忽略，即使同时存在Regular；不得sum、net、merge或为Special复用同一G09C Slot/Application identity。任一record/source `supersedes_revision_id`非空、same-slot duplicate或same natural event/revision changed bytes均fail closed；
+8. Provider `fundingTime`只提供millisecond UTC，不提供repository phase。System ordering convention exact冻结为`SimulationInstant(target_funding_time,TimelinePhase(110,"funding_settlement"),SourceSequence(0))`。它同时成为G09C Publication `publication_available_at`和G09D Settlement `applied_at`，位于G09C frozen eligibility phase rank 100之后；这不声称provider matching-engine内部phase。Archive availability/capture独立保存且不得早于target settlement instant；
+9. Accepted raw `fundingRate`直接映射exact `Rate(...,basis="funding_fraction_of_notional")`，允许negative、zero、positive，不做percentage conversion、interval annualization、cap/floor、interest/premium formula、sign inversion或recalculation。Mark Price Stream `r/T`、REST `lastFundingRate/nextFundingTime`、Funding Info、current API或neighboring row不能成为historical final publication；
+10. Accepted raw `markPrice`只映射same row、same target的`PricePurpose.FUNDING` `MarkObservation`。Frozen StaleMarkPolicy key/version/digest使用zero max age与`allow_forward_fill=false`；Adapter调用generic `MarkResolver`并保存完整`ResolvedMark`/Policy为G09D `LinearFundingMarkEvidence`。Nearby G10D Mark Kline、ordinary mark update、index、moving-average mark、estimated settlement、contract trade/last price不得fallback；
+11. Funding Mark必须strictly positive且raw decimal必须在supplied G09A Contract `price_scale` exact representable；Adapter不得round、truncate或修改Contract Scale。Mark observed/resolved UTC exact为target，economic age exact为0；generic Mark availability只表达UTC，full phase causality由nested source record、fixed settlement instant与Query captured-at共同重验；
+12. Resolution exact包含model key/version/digest、完整Query/Book与selected source row、derived Slot、G09C `LinearFundingRatePublicationCandidate(FINAL_RATE)`、Funding `MarkObservation`/`LinearFundingMarkEvidence`、绑定caller Application Key的G09D `LinearFundingSettlementEvidence`、coverage、limitations与`decision_grade_eligible=false`。Publication/Settlement event/hash/revision/source identity必须来自same selected row；Applied Rate必须exact等于Publication Rate；
+13. Visible source只允许`archive_available_at <= query.captured_at`。Target band存在但没有visible exact row返回not-available，不得选择前一/后一Slot。V1接受一个root immutable source revision；later supersession不能伪装成original-target publication revision，也不能由current API retroactively rewrite frozen output；
+14. Provider failure precedence exact为：`INSTRUMENT_METADATA_MISMATCH` → `CONTRACT_CONTEXT_MISMATCH` → `APPLICATION_KEY_MISMATCH` → `MISSING_FUNDING_SOURCE_RECORDS` → `SOURCE_NOT_AVAILABLE` → `MISSING_FUNDING_COVERAGE` → `OVERLAPPING_FUNDING_COVERAGE` → `MISSING_RATE_TYPE` → `UNSUPPORTED_RATE_TYPE` → `MISSING_FUNDING_RATE` → `MISSING_FUNDING_MARK` → `INVALID_DECIMAL_FIELD` → `INVALID_SOURCE_TIMING` → `UNSUPPORTED_SOURCE_REVISION` → `SOURCE_IDENTITY_CONFLICT` → `MARK_SCALE_MISMATCH` → `MARK_RESOLUTION_FAILED` → `METADATA_CONFLICT`；多缺陷只返回第一项；
+15. Exact predicates分别覆盖G10A query/resolution/Book/target mismatch；Contract Instrument/base/quote/settlement/multiplier/quantity-price Scale lineage mismatch；Application Key Slot/account shape mismatch；no rows、late-only rows、coverage gap/overlap；missing/unsupported type/rate/mark；noncanonical signed Rate或positive Mark；fundingTime非target、archive before economic target、nonfixed derived phase；supersession/duplicate/conflict；Mark不能在Contract Scale exact表示；generic Mark failure；constructor output与recomputed authority不一致；
+16. Decimal grammar exact为ASCII ordinary decimal string。Rate允许optional leading `-`与canonical zero，Mark禁止sign且必须positive；两者禁止leading plus、whitespace、exponent、NaN/Infinity、Unicode alternative、empty integer/fraction或超过18 fractional places。Mapping只用string/integer arithmetic；raw trailing zeros进入source identity；禁止float、ambient Decimal context、`pricePrecision`与pre-quantization；
+17. Model digest preimage exact包含schema、accepted endpoint/source kind、Regular-only policy、Special unsupported policy、Slot key、fixed phase/sequence、rate basis/direct mapping、associated-mark-only mapping、frozen stale policy、root-only revision policy、coverage/visibility、decimal/scale rules、development grade与limitations。G10E不新增generic `ProfilePortType`；G10G按model digest与Resolution hashes组合final Profile identity；
+18. 所有新增public values使用`schema_version=1`、exact types、canonical tuple order与`canonical_sha256` hashes。Constructor必须重算Source Ref、Record、Coverage、Book、Query、Resolution、Failure、Outcome、Slot、Publication、MarkObservation/ResolvedMark/Policy/MarkEvidence与Settlement Evidence identities，并拒绝`dataclasses.replace`伪造任一authority；
+19. 相同logical inputs任意tuple order产生相同canonical Outcome。Natural key exact为stable Instrument + fundingTime + rateType；same event ID/revision/source hash changed bytes、duplicate target Regular、Regular+Special、supersession或coverage overlap不得按输入顺序选winner；
+20. Static source/golden至少覆盖：positive/negative/zero Regular Rate；non-8h target times；exact Slot sensitivity/invariance；same row Publication/Mark/Settlement identity；before/at/after archive capture；missing source/rate/mark/type；Special与unknown type；duplicate/conflict/supersession；coverage exact/gap/overlap；current/predicted/Funding Info/nearby Mark rejection；Mark Scale exact/inexact；generic Mark zero-age/no-forward-fill；all 18 failures、multi-defect precedence、forgery、idempotency、input-order parity与all hashes；
+21. Generic compatibility golden固定G09C `FundingSlotId`/Publication/Resolver、G09D Mark/Settlement Evidence/Accounting、generic MarkResolver schema/bytes/hash/behavior不变。G10E只生成accepted generic evidence，不修改G09C、G09D、MarkResolver、Journal、Ledger、Engine、Runner或Timeline增加Binance branch；
+22. Concrete purity scanner allowlist只允许stdlib、`crypto_quant_domain`、generic `marks`、G09A/G09C/G09D frozen types和same-package G10A types；拒绝filesystem/network/provider SDK/process/database/cloud、dynamic import、MarketBundle、Runtime、Engine、Runner、mutable module/class/decorator state与wall clock。Production Runtime不得import concrete profile；不新增dependency；
+23. G10E不拥有Funding archive acquisition/parser/checksum/completeness、historical funding formula/cap/interval reconstruction、Position Snapshot/Eligibility resolution、account user-data/Income parity、cash-flow formula、Money quantization、Journal append、Ledger mutation、Fee、Margin、Liquidation、Bundle Builder、Profile composition、live、deployment或parity。G12完成funding archive initial state、all revisions/checksums与slot-gap proof前，Resolution固定development-grade。
+
+Primary-source contract：`docs/research/binance-usdm-funding-source-semantics-primary-sources.md`。
+
+Readiness baseline：
+
+```text
+G10D frozen acceptance command                                     117 passed
+Full test suite                                                    1063 passed
+Workspace import boundary                                           PASS (77 files)
+mypy 2.3.0                                                           no issues (77 source files)
+Primary LSP + scoped pi-lens                                         no blocking errors
+uv lock --check                                                      PASS
+Python                                                                3.13.5
+```
+
+Readiness validation：
+
+```text
+G10D frozen acceptance command                                     117 passed
+Full test suite                                                    1063 passed
+Workspace import boundary                                           PASS (77 files)
+mypy 2.3.0                                                           no issues (77 source files)
+Primary LSP + scoped pi-lens                                         no blocking errors
+Markdown + git diff checks                                           PASS
+uv lock --check                                                      PASS
+Python                                                                3.13.5
+```
+
+## 82. PASSED 记录格式
 
 ```yaml
 id: WP-00A
