@@ -142,7 +142,7 @@ artifact_hashes: []
 | G11C | DRAFT | backtest-runtime observations | G11A–G11B | Universe fixtures |
 | G11D | DRAFT | backtest-runtime observations | G11A–G11B | Bar/window fixtures |
 | G11E | DRAFT | backtest-runtime strategy | G11B, G11D | Schedule/warmup fixtures |
-| G11F | DRAFT | backtest-runtime strategy | G02 | State/checkpoint fixtures |
+| G11F | READY | backtest-runtime strategy | G02 | State/checkpoint fixtures |
 | G11G | DRAFT | backtest-runtime strategy | G11F | Random stream fixtures |
 | G11H | DRAFT | backtest-runtime strategy | G11B, G11F | Model revision fixtures |
 | G11I | DRAFT | backtest-runtime strategy | G11A–G11H, G04 | Invocation/batch fixtures |
@@ -8833,7 +8833,7 @@ Implementation commit：`c40de40a8e9117b95f3155ac2ebd5d3b4c7a95c8`。
 
 ```yaml
 id: G11F
-status: DRAFT
+status: READY
 depends_on:
   - G02
 owner_package: backtest-runtime strategy
@@ -8911,15 +8911,33 @@ Frozen seam note：`docs/research/g11f-strategy-state-checkpoint.md`。
 Readiness baseline：
 
 ```text
-G02 canonical/decision/artifact/time contracts                       pending validation
-Workspace import boundary                                           pending validation
-mypy 2.3.0                                                           pending validation
-Primary LSP                                                          pending validation
-pi-lens scoped review                                                pending validation
+G02 canonical/decision/artifact/time readiness command               48 passed
+Workspace import boundary                                           PASS (81 files)
+mypy 2.3.0                                                           no issues (81 package source files)
+Primary LSP                                                          no diagnostics (2 Markdown files unconfirmed on silent clean)
+pi-lens scoped review                                                no findings across 3 planning/research files
 Markdown + git diff checks                                           PASS
-uv lock --check                                                      pending validation
+uv lock --check                                                      PASS
 Python                                                                3.13.5
 ```
+
+Readiness validation：
+
+```text
+Frozen readiness command                                             48 passed
+Workspace import boundary                                           PASS (81 files)
+mypy 2.3.0                                                           no issues (81 package source files)
+Primary LSP                                                          no diagnostics (2 Markdown files unconfirmed on silent clean)
+pi-lens scoped review                                                no findings across 3 planning/research files
+Research note hash                                                   sha256:d4f859cc767d8a8c89b78c94e3236e3abf080be99108777fbd8b88408c7ac4a5
+Import boundary report hash                                          sha256:638223017e9fcec58200226a92610dc39dd20a59d443e4a733f2ecf919aef6cd
+Dependency lock hash                                                 sha256:afa595beed6c70d7a0124844d450e6b157b365ce6fa7c7fd0d2df9b70aff97c5
+Markdown + git diff checks                                           PASS
+uv lock --check                                                      PASS
+Python                                                                3.13.5
+```
+
+Contract freeze commit：`fdf22c2fa64a97f8c3be1b4c9ea080c575b53845`。
 
 ## 88. PASSED 记录格式
 
