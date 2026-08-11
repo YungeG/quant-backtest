@@ -135,7 +135,7 @@ artifact_hashes: []
 | G10G | PASSED — immutable commit `12286dbf6b7289fcb2f6069c46fc648d8f5a5be0` | backtest-runtime composition | G10A–G10F | Resolved profile E2E |
 | G10H | PASSED — immutable commit `468c91ad3fdbad221c959182f8751300f20a2424` | parity tooling | G10G, WP-00C | none |
 | G11A | PASSED — immutable commit `72fe31f5b10d785340b11ca0fd3d0fec8c1c4a34` | backtest-runtime observations | G07, WP-06A | none |
-| G11B | DRAFT | backtest-runtime observations | G11A | Revision/causality fixtures |
+| G11B | READY | backtest-runtime observations | G11A | none |
 | G11C | DRAFT | backtest-runtime observations | G11A–G11B | Universe fixtures |
 | G11D | DRAFT | backtest-runtime observations | G11A–G11B | Bar/window fixtures |
 | G11E | DRAFT | backtest-runtime strategy | G11B, G11D | Schedule/warmup fixtures |
@@ -8682,7 +8682,128 @@ Python                                                                3.13.5
 
 Implementation commit：`72fe31f5b10d785340b11ca0fd3d0fec8c1c4a34`。
 
-## 86. PASSED 记录格式
+## 86. G11B Point-in-time Revision Selection and Causality Acceptance Card
+
+```yaml
+id: G11B
+status: READY
+depends_on:
+  - G11A
+owner_package: backtest-runtime observations
+public_interface:
+  - crypto_quant_backtest.RevisionedObservationRecord
+  - crypto_quant_backtest.ObservationCausalityFailureCode
+  - crypto_quant_backtest.ObservationCausalityFailure
+  - crypto_quant_backtest.ObservationCausalityTrace
+  - crypto_quant_backtest.PointInTimeObservationQueryResult
+  - crypto_quant_backtest.PointInTimeObservationQueryOutcome
+  - crypto_quant_backtest.PointInTimeObservationView
+test_commands:
+  readiness: uv run pytest -q tests/runtime/observations/test_observation_view.py tests/runtime/observations/test_observation_view_golden.py tests/market_data/bundles/test_market_bundle_reader.py tests/market_data/bundles/test_market_bundle_reader_golden.py tests/runtime/timeline/test_deterministic_timeline.py tests/architecture/test_g11a_observation_boundary.py tests/architecture/test_public_api_imports.py tests/architecture/test_repository_cleanliness.py
+  contract: uv run pytest -q tests/runtime/observations/test_point_in_time_observation_view.py
+  fixture: uv run pytest -q tests/runtime/observations/test_point_in_time_observation_view_golden.py
+  boundary: uv run pytest -q tests/architecture/test_g11b_observation_causality_boundary.py tests/architecture/test_g11a_observation_boundary.py tests/architecture/test_public_api_imports.py tests/architecture/test_repository_cleanliness.py
+  acceptance: uv run pytest -q tests/runtime/observations/test_point_in_time_observation_view.py tests/runtime/observations/test_point_in_time_observation_view_golden.py tests/runtime/observations/test_observation_view.py tests/runtime/observations/test_observation_view_golden.py tests/market_data/bundles/test_market_bundle_reader.py tests/market_data/bundles/test_market_bundle_reader_golden.py tests/runtime/timeline/test_deterministic_timeline.py tests/architecture/test_g11b_observation_causality_boundary.py tests/architecture/test_g11a_observation_boundary.py tests/architecture/test_public_api_imports.py tests/architecture/test_repository_cleanliness.py --junitxml=build/acceptance/g11b-pytest.xml
+fixture_ids:
+  - observation-revision-causality-v1
+expected_artifacts:
+  - docs/research/g11b-observation-revision-causality.md
+  - tests/fixtures/runtime/observations/observation-revision-causality-v1.json
+  - build/acceptance/g11b-pytest.xml
+  - build/acceptance/g11b-import-boundary-report.json
+failure_contracts:
+  - unauthorized-query-inspects-or-leaks-revision-evidence
+  - utc-only-cutoff-exposes-a-later-same-time-phase-or-sequence
+  - future-record-or-conflict-affects-a-prior-view-or-result-identity
+  - event-id-revision-id-time-payload-or-input-position-is-used-as-observation-lineage
+  - same-observation-revision-identity-has-conflicting-content
+  - visible-revision-parent-is-missing
+  - visible-revision-chain-forks-cycles-has-multiple-roots-or-terminals
+  - revision-chain-query-event-type-or-event-time-context-changes
+  - child-revision-availability-does-not-strictly-follow-parent
+  - latest-visible-terminal-revision-is-not-selected
+  - source-revision-id-reuse-across-independent-observations-is-rejected
+  - selected-result-contains-future-wrong-context-duplicate-or-noncanonical-event
+  - causality-trace-maxima-revision-source-or-dataset-hash-does-not-match-result
+  - empty-authorized-result-is-misclassified-as-coverage-failure
+  - input-order-exact-duplicate-hidden-or-future-record-changes-canonical-output
+  - g11a-canonical-artifact-or-authorization-precedence-regresses
+  - backing-revisions-decision-instant-reader-timeline-ledger-account-or-cache-is-exposed
+  - g11b-performs-universe-window-gap-resample-schedule-strategy-or-bundle-semantics
+  - point-in-time-view-claims-decision-grade-live-or-deployment-authorization
+allowed_grade: development
+evidence:
+  - readiness-contract-tests
+  - full-simulation-instant-visibility-tests
+  - future-and-unauthorized-noninterference-tests
+  - revision-lineage-selection-and-failure-precedence-tests
+  - causality-trace-maxima-revision-source-and-dataset-hashes
+  - deterministic-static-golden-hash
+  - g11a-backward-compatibility-report
+  - public-api-import-report
+  - import-boundary-report
+  - static-type-report
+  - dependency-lock-report
+```
+
+### G11B Acceptance
+
+1. G11B只deepens existing single production module `crypto_quant_backtest.observations`与root exports，保持pure in-memory Strategy-facing read seam且只消费caller-supplied immutable values；G11A public classes、constructor behavior、canonical bytes/hashes、authorization outcomes与static golden必须exact unchanged；
+2. `RevisionedObservationRecord` exact保存canonical nonempty `observation_key`与one exact G11A `ObservationRecord`。Observation key是在one exact Query内跨修订稳定的logical fact identity；Event ID仍是immutable version-record identity，Revision ID仍是source/provider revision provenance。G11B不得从Event ID、Revision ID、event time、payload、source hash或input order猜observation key；
+3. `PointInTimeObservationView` constructor exact只接收`allowed_queries`、`RevisionedObservationRecord` iterable和one `decision_instant: SimulationInstant`。Public interface exact只有`view_hash`与`query(ObservationQuery)`；不得暴露decision instant、allowlist、backing/superseded revisions、Bundle/Reader/Manifest/Cursor、Timeline、clock、Ledger/Snapshot/Account、cache或runtime object；
+4. Construction processing order exact为：先按G11A exact query allowlist discard unauthorized records；再discard `record.event.timeline_instant > decision_instant`的future records；最后canonical deduplicate/freeze visible authorized revision records。Unauthorized或future conflict不能阻断、更改或泄露past view/result；
+5. Visibility必须使用full `SimulationInstant` total order `(UtcInstant, TimelinePhase, SourceSequence)`。只比较`available_time` UTC或`event_time`不合格；same UTC但later phase/source sequence对当前Decision仍是future；
+6. `PointInTimeObservationView.view_hash` exact绑定schema/model identity、decision instant、canonical allowlist与visible authorized revision records。Adding/reordering unauthorized records、future records或future exact/conflicting revisions必须产生相同past view/result/trace/outcome bytes和hash；later correction不得retroactively rewrite earlier DecisionContext；
+7. Revision version identity exact为`(ObservationQuery, observation_key, MarketEvent.revision_id)`。Exact duplicate canonical records collapse；same identity/different record content produces`REVISION_ID_CONFLICT`。Independent observation keys允许复用同一个source Revision ID，不能被误判为冲突；
+8. Revision selection independent按exact `(ObservationQuery, observation_key)` lineage执行。每个visible legal lineage exact有one root (`supersedes_revision_id=None`)、unique revision IDs、每个child引用same lineage existing visible parent、no fork/cycle/disconnected second root、one terminal；
+9. Lineage内Query selector、Event type与Event Time必须exact stable。Instrument/dataset/purpose/capability fallback或correction改变economic fact time产生`REVISION_CONTEXT_MISMATCH`；G11B不解析payload决定lineage/context；
+10. Child `MarketEvent.timeline_instant`必须strictly greater than parent。Same UTC可由later phase/sequence形成合法later revision；equal/earlier full instant产生`REVISION_AVAILABILITY_REGRESSION`。Available predecessor不能因future child存在而停止被选择；
+11. 成功selection exact返回每个visible legal lineage的unique terminal revision。Before correction availability返回predecessor；at/after exact correction Simulation Instant返回correction。Superseded versions保持immutable trace evidence但不向Strategy暴露payload；
+12. G11A authorization failure precedence exact保持`DATASET_NOT_AUTHORIZED`→`INSTRUMENT_NOT_AUTHORIZED`→`PURPOSE_NOT_AUTHORIZED`→`CAPABILITY_NOT_AUTHORIZED`，且在检查revision evidence前返回existing `ObservationQueryFailure`。Unauthorized query不能因hidden/future/malformed lineage改变failure code/hash或泄露candidate identity；
+13. Authorized query causality failure precedence exact为`REVISION_ID_CONFLICT`→`REVISION_PARENT_MISSING`→`REVISION_CHAIN_CONFLICT`→`REVISION_CONTEXT_MISMATCH`→`REVISION_AVAILABILITY_REGRESSION`。`ObservationCausalityFailure` exact保存point-in-time view hash、Query、decision instant、code及sorted observation keys/revision IDs/candidate record hashes；多缺陷只返回第一项；
+14. Exact authorized query没有visible record时成功返回empty events与empty causality trace。G11B不得把empty解释为No Session、Suspended、No Trades、Missing、Source Outage、Universe exclusion、window/lookback gap或decision-grade coverage；
+15. `ObservationCausalityTrace` exact保存view hash、Query、decision instant、sorted all-visible candidate record hashes、由其派生的revision-set hash、selected observation keys/Event hashes/Revision IDs/source hashes、selected dataset hash、max event time、max available `SimulationInstant`、event count与trace hash；
+16. Candidate record hashes只覆盖该authorized Query在decision instant可见的revision evidence；不得包含其他Query、unauthorized或future records。Selected tuple fields与returned Event canonical order逐项align；dataset hash exact由Query、selected observation keys和selected Event canonical values派生，不从Manifest/current file或payload shortcut读取；
+17. `PointInTimeObservationQueryResult` exact保存view hash、Query、decision instant、canonical selected `MarketEvent` tuple与matching trace。Constructor验证event context、unique Event IDs、canonical order、`timeline_instant <= decision_instant`、trace selected fields/maxima/count/dataset hash；`dataclasses.replace`伪造future/wrong trace/result context fail closed；
+18. `PointInTimeObservationQueryOutcome`必须result xor failure；failure union exact只允许existing `ObservationQueryFailure`或G11B `ObservationCausalityFailure`。Outcome/result/failure/trace全部schema version 1并使用non-recursive canonical hashes；
+19. Selected event order沿G11A convention固定为MarketEvent `ordering_key`后接Event ID、Revision ID与stable record/hash tie-break。Allowed-query/record/lineage input order、Mapping order和exact duplicates不能改变view/result/trace/failure/outcome identity；
+20. Static golden至少冻结：two observation keys sharing source Revision ID；v1→v2 correction before/at exact same-UTC later phase cutoff；independent unchanged record；unauthorized and future conflicting revisions noninterference；all four authorization failures；all five causality failures and precedence；empty success；trace candidate/selected hashes、revision/source IDs、dataset hash、maxima；input-order/repeat parity与forgery controls；
+21. G11B v1不实现cache。Query可对visible immutable tuple做deterministic linear grouping/selection；未来private cache only after measured need，按exact view/query identity工作且不能扩大visibility、改变failure precedence或canonical output；
+22. G11B不拥有MarketBundle read/acquisition、revision completeness/gap validation（G12）、Universe/listing/membership（G11C）、BarDefinition/window/lookback/resample（G11D）、DecisionSchedule/Warmup（G11E）、StrategyState/RNG/Model（G11F–H）、Strategy invocation/aggregate audit/DecisionBatch（G11I）或parity（G11J）。Engine/Runner/Timeline/TargetStream/Journal/Ledger/Profile保持不变；
+23. Production import allowlist仍仅stdlib、`crypto_quant_domain`与`crypto_quant_market_data` public contracts。Module不得import Builder、Trading Kernel、Engine/Runner/Timeline/TargetStream、provider SDK、filesystem/network/process/database/cloud/environment/dynamic import/wall clock。All outputs固定development-only，G12 completeness与later invocation qualification前不得声明decision-grade/live/deployment authorization。
+
+Frozen seam note：`docs/research/g11b-observation-revision-causality.md`。
+
+Readiness baseline：
+
+```text
+G11A frozen acceptance command                                      34 passed
+ObservationView public-seam tests                                   12 passed
+Full test suite                                                    1120 passed
+Workspace import boundary                                           PASS (81 files)
+mypy 2.3.0                                                           no issues (83 source files)
+Primary LSP                                                          clean
+pi-lens scoped review                                                no blocking errors
+Markdown + git diff checks                                           PASS
+uv lock --check                                                      PASS
+Python                                                                3.13.5
+```
+
+Readiness validation：
+
+```text
+G11A frozen acceptance command                                      34 passed
+Full test suite                                                    1120 passed
+Workspace import boundary                                           PASS (81 files)
+mypy 2.3.0                                                           no issues (83 source files)
+Primary LSP                                                          no diagnostics (5 Markdown files unconfirmed on silent clean)
+pi-lens scoped review                                                no new findings; 8 pre-existing Protocol ellipsis warnings
+Markdown + git diff checks                                           PASS
+uv lock --check                                                      PASS
+Python                                                                3.13.5
+```
+
+## 87. PASSED 记录格式
 
 ```yaml
 id: WP-00A

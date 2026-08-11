@@ -372,6 +372,10 @@ G11A先冻结capability isolation seam：每个query exact声明dataset、single
 
 G11A不接收Decision Instant，也不执行availability cutoff、revision selection或causality trace，因此不能单独提供完整point-in-time Strategy context。G11B在同一seam上补这些规则；G11C/G11D再增加Universe和Bar/window typed queries。G11A module及Strategy-facing interface不暴露MarketBundle/Reader/Manifest/Cursor、Ledger/Snapshot/Account、filesystem/network/process/clock或callback。该接口隔离不冒充arbitrary in-process Python sandbox；可执行Strategy artifact qualification由later build/invocation gates负责。Frozen seam记录于`docs/research/g11a-observation-view-capability-isolation.md`；implementation commit为`72fe31f5b10d785340b11ca0fd3d0fec8c1c4a34`。
 
+G11B新增独立`PointInTimeObservationView`，由caller注入one `SimulationInstant`。Construction必须先丢弃unauthorized records，再用full `(UtcInstant, TimelinePhase, SourceSequence)` cutoff丢弃future records，最后冻结visible revision evidence；因此same UTC later phase/sequence仍不可见，future correction或future conflict不能改变prior view/hash。G11A no-time View与canonical artifacts保持不变，Strategy invocation只可接收G11B safe view。
+
+`MarketEvent.event_id`标识immutable version record，`revision_id`是可被多个事实共享的source revision provenance，二者都不是logical observation lineage。G11B由caller-supplied canonical observation key显式分组。每个exact Query+observation key的visible chain必须one root、existing same-lineage parents、no fork/cycle/disconnected root、stable Event type/time与strictly increasing availability Simulation Instant；选择unique terminal revision。Causality trace保存all visible candidate record hashes/revision-set hash、selected observation/Event/Revision/source identities、selected dataset hash、max event time与max available Simulation Instant。Primary seam note为`docs/research/g11b-observation-revision-causality.md`。
+
 每次 Strategy 调用必须记录：
 
 - 调用时间和 Timeline Phase

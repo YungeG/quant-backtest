@@ -1795,18 +1795,25 @@ Frozen seam note：`docs/research/g11a-observation-view-capability-isolation.md`
 
 G11A exact query allowlist、hidden-record noninterference、cross-purpose isolation、structured failure precedence与canonical static golden已由implementation commit `72fe31f5b10d785340b11ca0fd3d0fec8c1c4a34`冻结通过。View仍不接收Decision Instant，不可在G11B前用于point-in-time Strategy invocation。
 
-### Gate G11B Revision Selection and Causality Audit
+### Gate G11B Point-in-time Revision Selection and Causality Audit
 
 依赖：G11A。
 
-拥有：`available_time <= decision_time`、point-in-time revision selection 和 observation causality trace。
+拥有：caller-supplied `SimulationInstant` cutoff、explicit logical observation lineage、latest visible legal Revision selection与per-query canonical causality trace。G11B在同一`crypto_quant_backtest.observations` module新增safe `PointInTimeObservationView`；G11A no-time View与all hashes保持不变。
 
 验收：
 
-- Vendor correction 不原地覆盖旧 Revision；
-- 同 Decision Instant 选择最新合法 Revision；
-- 记录最大 event/available time、revision IDs 和 dataset hashes；
-- Future revision access fail closed。
+- `RevisionedObservationRecord`显式保存canonical `observation_key`+G11A ObservationRecord。Event ID是immutable version identity，Revision ID可被多个independent observations共享；不得按Event ID、Revision ID alone、time、payload或tuple position猜lineage；
+- Construction先discard unauthorized，再按full `MarketEvent.timeline_instant <= decision_instant`discard future，最后冻结visible revisions。Same UTC later phase/sequence仍future；unauthorized/future conflict不能影响past view或泄露identity；
+- 每个exact Query+observation key的visible chain必须one root、unique revisions、same-lineage parent、no fork/cycle/disconnected root、one terminal、stable Event type/time与strictly increasing availability Simulation Instant；
+- Selection返回每条legal chain的latest visible terminal。Future correction加入archive不能重写prior DecisionContext；at exact correction Simulation Instant才切换；
+- Authorization继续沿G11A Dataset→Instrument→Purpose→Capability先失败。Authorized revision failure precedence固定ID conflict→missing parent→chain conflict→context mismatch→availability regression；
+- Empty authorized query成功并产生empty trace，不发明coverage/gap semantics；
+- Trace保存visible candidate record hashes/revision-set hash、selected observation/Event/Revision/source hashes、dataset hash、max event time、max available Simulation Instant与count；Result constructor exact验证future/context/order/maxima/hash，forged trace/result fail closed；
+- `PointInTimeObservationView` public surface只含`view_hash`与`query`，不暴露decision instant、backing/superseded records、Bundle/Reader/Timeline/clock/cache；
+- G11B不实现Universe、Bar/window、gap classification、Schedule、Strategy invocation、aggregate Decision audit或Bundle revision completeness。G12与G11C–I前固定development-only。
+
+Frozen seam note：`docs/research/g11b-observation-revision-causality.md`。
 
 ### Gate G11C Point-in-time Universe
 

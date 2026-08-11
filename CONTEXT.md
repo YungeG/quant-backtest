@@ -570,7 +570,23 @@ ResourceReservationState中active Orders的`ReservationCommitment.margin`聚合�
 
 ## 观察视图（Observation View）
 
-Strategy 在当前模拟时点可查询的只读市场信息边界，只包含已经到达可用时间的数据。Strategy 不直接访问市场数据包、账户财务状态或外部系统。
+Strategy 在当前模拟时点可查询的只读市场信息边界，只包含已经到达可用时间的数据。Strategy 不直接访问市场数据包、账户财务状态或外部系统。仅有查询授权隔离但没有Decision Simulation Instant cutoff的视图，不是完整的时点观察视图。
+
+## 时点观察视图（Point-in-time Observation View）
+
+绑定一个明确Decision Simulation Instant的Observation View。它先隔离未授权记录，再排除该Simulation Instant之后才可见的版本，并为每个逻辑观察谱系只返回最新合法版本；未来修订不能重写此前Decision Context。
+
+## 观察谱系键（Observation Lineage Key）
+
+在一个exact Observation Query内标识同一logical observation跨多个修订版本的caller-supplied稳定键。Event ID标识immutable version record，Revision ID标识source revision provenance；两者都不能替代Observation Lineage Key。
+
+## 修订观察记录（Revisioned Observation Record）
+
+由一个Observation Lineage Key和一个immutable Observation Record组成的版本事实。其版本身份由Query、Lineage Key和Revision ID共同决定；独立Lineage可以合法共享source Revision ID。
+
+## 观察因果性轨迹（Observation Causality Trace）
+
+记录一次时点Observation Query所见revision candidate identity、selected observations/revisions/sources、dataset hash、最大Event Time和最大Available Simulation Instant的canonical evidence。它证明Strategy在该Decision Instant实际可见并选择了什么，不等于Bundle completeness或Strategy invocation aggregate audit。
 
 ## 观察用途（Observation Purpose）
 
