@@ -354,7 +354,7 @@ G10G只组合caller-supplied immutable G10A–G10F authorities，不重新查询
 
 ## Binance USDⓈ-M 保守账户容量（Binance USDⓈ-M Conservative Account Capacity）
 
-G10G caller-supplied Account Capacity Evidence保存同G10B active source的`MAX_NUM_ORDERS`与`MAX_NUM_ALGO_ORDERS`历史values。Generic AccountRiskPolicy只有一个order-cap dimension，v1显式保守取二者minimum。Exposure cap取G10F selected-leverage `maxNotionalValue`与G10C finite terminal tier coverage的USDT minimum；Working Order count、current Exposure、Available Margin与Reservation仍由generic PreTradeRisk point-in-time input提供。
+G10G caller-supplied Account Capacity Evidence保存同G10B active source的`MAX_NUM_ORDERS`与`MAX_NUM_ALGO_ORDERS`历史values。Generic AccountRiskPolicy只有一个order-cap dimension，v1显式保守取二者minimum。Exposure cap取G10F selected-leverage `maxNotionalValue`与G10C finite terminal tier coverage的USDT minimum；Working Order count、current Exposure、Available Margin与Reservation仍由generic PreTradeRisk point-in-time input提供。G10G pure composition、development-only dispatcher/Journey、static goldens、ProfileResolver/Runner integration已由implementation commit `12286dbf6b7289fcb2f6069c46fc648d8f5a5be0`冻结通过。
 
 ## 资金发布与应用时点（Funding Publication and Application Instant）
 

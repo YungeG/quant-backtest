@@ -1739,6 +1739,8 @@ G10F Historical Account Profile Book、normalized mode、selected Leverage Evide
 - Binance Fixture与A股/Synthetic Fixture共享ProfileResolver、Runner、OrderEventStream、Reservation/Settlement、Journal、Ledger、Timeline、Engine和Composer接口；Generic modules不得增加Binance import/name branch；
 - Production module纯offline且不import Engine/Runner/MarketBundle Reader；test dispatcher不读取network/filesystem/provider current state。G12 archive completeness与G10H Account Trade/matching-engine/liquidation parity前固定development-only、`decision_grade_eligible=false`、`deployment_authorized=false`。
 
+G10G pure composition authority、three profile registrations、conservative AccountRiskPolicy、FinancialDispatcherSpec、development Journey、Runner repeatability与static goldens已由implementation commit `12286dbf6b7289fcb2f6069c46fc648d8f5a5be0`冻结通过。
+
 Primary source and composition convention note：`docs/research/binance-usdm-profile-composition-primary-sources.md`。
 
 ### Gate G10H `crypt-gemini` Parity

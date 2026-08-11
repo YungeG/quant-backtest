@@ -132,7 +132,7 @@ artifact_hashes: []
 | G10D | PASSED — immutable commit `790469d80ddcf3797f03c96c975b77d75a3d49a5` | trading-kernel profiles/binance_usdm | G10A, WP-03C | none |
 | G10E | PASSED — immutable commit `195265b1ed830e62b91882ff315b115e7ac80597` | trading-kernel profiles/binance_usdm | G09C–G09D, G10D | Funding source fixtures |
 | G10F | READY | trading-kernel profiles/binance_usdm | WP-05H, WP-05J, G09F, G10A | Fee/account fixtures |
-| G10G | READY | backtest-runtime composition | G10A–G10F | Resolved profile E2E |
+| G10G | PASSED — immutable commit `12286dbf6b7289fcb2f6069c46fc648d8f5a5be0` | backtest-runtime composition | G10A–G10F | Resolved profile E2E |
 | G10H | DRAFT | parity tooling | G10G, WP-00C | crypt-gemini parity |
 | G11A | DRAFT | backtest-runtime observations | G07 | Capability isolation fixtures |
 | G11B | DRAFT | backtest-runtime observations | G11A | Revision/causality fixtures |
@@ -8239,7 +8239,7 @@ Python                                                                3.13.5
 
 ```yaml
 id: G10G
-status: READY
+status: PASSED
 depends_on:
   - G09H
   - G10A
@@ -8308,8 +8308,12 @@ evidence:
   - import-boundary-report
   - static-type-report
   - dependency-lock-report
-passed_commit: null
-artifact_hashes: []
+passed_commit: 12286dbf6b7289fcb2f6069c46fc648d8f5a5be0
+artifact_hashes:
+  tests/fixtures/runtime/profiles/binance-usdm-resolved-profile-composition-v1.json: sha256:e9e329b4cd2dfd990a8eec8460767b6b05fffcc126e876a2cdf86f15a6d06bd9
+  tests/fixtures/runtime/engine/binance-usdm-resolved-profile-development-journey-v1.json: sha256:179e63dc6d56b52ee3bd9bd0751ef0480bbdfb3bd344ca1de60b393d9e4efb16
+  build/acceptance/g10g-pytest.xml: sha256:6b866349c9ca875ceefae8db1668376c8a88869581c4ce9b7d034c1d2ddc3ede
+  build/acceptance/g10g-import-boundary-report.json: sha256:78b4760264f9ffdf1fb5cb206c847e98165f9593c5ea5eaba6859843b8e44499
 ```
 
 ### G10G Acceptance
@@ -8368,6 +8372,21 @@ Markdown + git diff checks                                           PASS
 uv lock --check                                                      PASS
 Python                                                                3.13.5
 ```
+
+Acceptance validation：
+
+```text
+G10G frozen acceptance command                                     131 passed
+Full test suite                                                    1101 passed
+Workspace import boundary                                           PASS (80 files)
+mypy 2.3.0                                                           no issues (80 source files)
+Primary LSP + scoped pi-lens                                         no blocking errors
+Markdown + git diff checks                                           PASS
+uv lock --check                                                      PASS
+Python                                                                3.13.5
+```
+
+Implementation commit：`12286dbf6b7289fcb2f6069c46fc648d8f5a5be0`。
 
 ## 84. PASSED 记录格式
 
