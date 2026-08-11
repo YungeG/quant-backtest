@@ -358,7 +358,7 @@ G10G caller-supplied Account Capacity Evidence保存同G10B active source的`MAX
 
 ## Binance USDⓈ-M 分层 Parity（Binance USDⓈ-M Layered Parity）
 
-G10H在Runtime外对固定`crypt-gemini` projection、G10G development-run projection与caller-supplied canonical Binance account-record projection进行13层比较。层顺序从Source Identity、Decision、Order、Fill、Fee、Position/PnL、Funding、Journal/Ledger、Margin/Snapshot到Liquidation与Final Result；较早divergence不能被最终PnL或aggregate match隐藏。它只复用WP-00C Comparator Contract v1，不新增第二套exchange simulator。
+G10H在Runtime外对固定`crypt-gemini` projection、G10G development-run projection与caller-supplied canonical Binance account-record projection进行13层比较。层顺序从Source Identity、Decision、Order、Fill、Fee、Position/PnL、Funding、Journal/Ledger、Margin/Snapshot到Liquidation与Final Result；较早divergence不能被最终PnL或aggregate match隐藏。它只复用WP-00C Comparator Contract v1，不新增第二套exchange simulator。Implementation commit为`468c91ad3fdbad221c959182f8751300f20a2424`；frozen report为`APPROVED_CHANGE`、coverage incomplete、decision/deployment flags false。
 
 ## Parity 覆盖分类（Parity Coverage Classification）
 

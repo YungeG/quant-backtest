@@ -1764,6 +1764,8 @@ Primary source and composition convention note：`docs/research/binance-usdm-pro
 
 Primary-source and parity boundary：`docs/research/binance-usdm-parity-primary-sources.md`。
 
+G10H layered parity tooling、strict plan/source/coverage validation、two pair reports、root-independent static golden与first-divergence aggregate已由implementation commit `468c91ad3fdbad221c959182f8751300f20a2424`冻结通过。Frozen composite verdict为`APPROVED_CHANGE`：Legacy→G10G有11项ADR-backed approved changes，provider-record→G10G有8项exact matches；archive coverage仍不完整，全部资格标志保持false。
+
 ---
 
 ## 16. G11A–G11J：Portfolio Strategy Runtime

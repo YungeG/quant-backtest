@@ -133,7 +133,7 @@ artifact_hashes: []
 | G10E | PASSED — immutable commit `195265b1ed830e62b91882ff315b115e7ac80597` | trading-kernel profiles/binance_usdm | G09C–G09D, G10D | Funding source fixtures |
 | G10F | READY | trading-kernel profiles/binance_usdm | WP-05H, WP-05J, G09F, G10A | Fee/account fixtures |
 | G10G | PASSED — immutable commit `12286dbf6b7289fcb2f6069c46fc648d8f5a5be0` | backtest-runtime composition | G10A–G10F | Resolved profile E2E |
-| G10H | READY | parity tooling | G10G, WP-00C | none |
+| G10H | PASSED — immutable commit `468c91ad3fdbad221c959182f8751300f20a2424` | parity tooling | G10G, WP-00C | none |
 | G11A | DRAFT | backtest-runtime observations | G07 | Capability isolation fixtures |
 | G11B | DRAFT | backtest-runtime observations | G11A | Revision/causality fixtures |
 | G11C | DRAFT | backtest-runtime observations | G11A–G11B | Universe fixtures |
@@ -8392,7 +8392,7 @@ Implementation commit：`12286dbf6b7289fcb2f6069c46fc648d8f5a5be0`。
 
 ```yaml
 id: G10H
-status: READY
+status: PASSED
 depends_on:
   - G10G
   - WP-00C
@@ -8459,6 +8459,18 @@ evidence:
   - import-boundary-report
   - static-type-report
   - dependency-lock-report
+passed_commit: 468c91ad3fdbad221c959182f8751300f20a2424
+artifact_hashes:
+  tests/parity/contracts/binance-usdm-g10h-legacy-to-g10g-v1.json: sha256:6fed59076275ae9608c1f32976fe8a6c613976971713f53dc534184ec1da2dfb
+  tests/parity/contracts/binance-usdm-g10h-provider-to-g10g-v1.json: sha256:5b54d27ce0c7abb3035f13a4acd60d3d8ea60f4d6100577940258f23cd3e9cd5
+  tests/parity/fixtures/binance-usdm-g10h-v1/plan.json: sha256:24ae05535c68dc930e78d41da2bfd7c1596be5227cbee0b9d3dd79f953eb02c9
+  tests/parity/fixtures/binance-usdm-g10h-v1/legacy.expected.json: sha256:c0e2eae246cafa2dfd9440470503ae6a364afbb62ce82ebd50a3d51b53dee65e
+  tests/parity/fixtures/binance-usdm-g10h-v1/g10g.actual.json: sha256:6f35b75ccace175ca0c9dba0e6462bcc31a14b9a1332bc29ee0b5bc44870c0f3
+  tests/parity/fixtures/binance-usdm-g10h-v1/provider.expected.json: sha256:e10437121a562180f6535e9043370a1a150ac29453843e384b10868683b0f291
+  tests/parity/fixtures/binance-usdm-g10h-v1/report.expected.json: sha256:1c18dfd593dee26389453cc25c0e0fc0b6d1e0988bcd581c4048590b15f70335
+  build/acceptance/g10h-parity-report.json: sha256:1c18dfd593dee26389453cc25c0e0fc0b6d1e0988bcd581c4048590b15f70335
+  build/acceptance/g10h-pytest.xml: sha256:610c980c966b7a4501e319418984d7ecef8694c2eba1a88616db241a919c6f30
+  build/acceptance/g10h-import-boundary-report.json: sha256:78b4760264f9ffdf1fb5cb206c847e98165f9593c5ea5eaba6859843b8e44499
 ```
 
 ### G10H Acceptance
@@ -8514,6 +8526,28 @@ Markdown + git diff checks                                           PASS
 uv lock --check                                                      PASS
 Python                                                                3.13.5
 ```
+
+Acceptance validation：
+
+```text
+G10H frozen acceptance command                                      33 passed
+Composite parity report                                    APPROVED_CHANGE
+Legacy → G10G                                           APPROVED_CHANGE (11)
+Provider record → G10G                                             MATCH (8)
+Coverage complete                                                    false
+First divergence                                      LEGACY_TO_G10G / DECISION
+Full test suite                                                    1108 passed
+Workspace import boundary                                           PASS (80 files)
+mypy 2.3.0                                                           no issues (82 source files)
+Primary LSP                                                          clean (5 files)
+pi-lens scoped review                                                no blocking errors; 3 non-blocking quality warnings
+Static golden/root independence                                      PASS
+Markdown + git diff checks                                           PASS
+uv lock --check                                                      PASS
+Python                                                                3.13.5
+```
+
+Implementation commit：`468c91ad3fdbad221c959182f8751300f20a2424`。
 
 ## 85. PASSED 记录格式
 
