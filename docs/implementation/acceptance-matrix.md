@@ -6,6 +6,9 @@
 
 - `docs/architecture/backtest-system-design.md`
 - `docs/implementation/target-driven-bar-v1-plan.md`
+- `docs/implementation/plans/README.md`
+
+本文件在计划拆分迁移期间仍是唯一 Gate 状态来源。子计划不得维护第二份独立状态；迁移规则见上述 plans README。
 
 ## 1. 状态规则
 

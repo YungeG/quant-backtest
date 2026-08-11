@@ -4,6 +4,8 @@
 
 关联设计：`docs/architecture/backtest-system-design.md`
 
+计划拆分、依赖 DAG、受控并行与风险分级验证规则：`docs/implementation/plans/README.md`。本文件暂作为已完成历史和未迁移计划的聚合索引；后续优先迁移活跃 G11/G12 sections，不重写已冻结历史。
+
 ## 1. 目标
 
 将 Target-driven Bar v1 拆成可以独立开发、测试、评审和回滚的小模块，避免把“完整回测系统”作为一个任务交付。
