@@ -125,10 +125,10 @@ artifact_hashes: []
 | G09E | PASSED — immutable commit `e1e4c810b67f8f911b33ef8d7302f33933fc1e32` | trading-kernel margin requirement | G09A | none |
 | G09F | PASSED — immutable commit `107b41aafee00195ec0ae0031800a1409e016264` | trading-kernel account margin projection | G09B, G09E, WP-05B | none |
 | G09G | PASSED — immutable commit `1a8428530133a7c9173dd9afc800d7dd5e8d304e` | backtest-runtime liquidation audit | G09E–G09F | none |
-| G09H | READY | tests/support + profile composition | G09A–G09G | none |
-| G10A | DRAFT | trading-kernel profiles/binance_usdm | G09H | Instrument metadata fixtures |
-| G10B | DRAFT | trading-kernel profiles/binance_usdm | G10A, WP-05G | Rule timeline fixtures |
-| G10C | DRAFT | trading-kernel profiles/binance_usdm | G10A, G09E | Margin tier fixtures |
+| G09H | PASSED — immutable commit `e0f2bc767dc87513d562becd9907262628b788e6` | tests/support + profile composition | G09A–G09G | none |
+| G10A | PASSED — immutable commit `613c319b2dbba9962d4867dcfb3d1b19067d16cf` | trading-kernel profiles/binance_usdm | G09H | none |
+| G10B | PASSED — immutable commit `11072289a9dda708a185ae2edcbf5fcdf0c7bd55` | trading-kernel profiles/binance_usdm | G10A, WP-05G | none |
+| G10C | READY | trading-kernel margin requirement + profiles/binance_usdm | G10A, G09E | none |
 | G10D | DRAFT | trading-kernel profiles/binance_usdm | G10A, WP-03C | PricePurpose fixtures |
 | G10E | DRAFT | trading-kernel profiles/binance_usdm | G09C–G09D, G10D | Funding source fixtures |
 | G10F | DRAFT | trading-kernel profiles/binance_usdm | WP-05H, WP-05J, G09F | Fee/account fixtures |
@@ -7650,7 +7650,128 @@ uv lock --check                                                      PASS
 Python                                                                3.13.5
 ```
 
-## 79. PASSED 记录格式
+## 79. G10C Binance USDⓈ-M Historical Margin and Leverage Tiers Acceptance Card
+
+```yaml
+id: G10C
+status: READY
+depends_on:
+  - G10A
+  - G09E
+owner_package: trading-kernel margin requirement + trading-kernel profile adapter
+public_interface:
+  - backward-compatible crypto_quant_trading.LinearMarginTierBoundaryConvention
+  - backward-compatible crypto_quant_trading.LinearMarginRuleInterval.tier_boundary_convention
+  - backward-compatible crypto_quant_trading.LinearInstrumentMarginFailureCode.NOTIONAL_OUTSIDE_TIER_COVERAGE
+  - crypto_quant_trading.profiles.binance_usdm.BinanceUsdmMarginTierScope
+  - crypto_quant_trading.profiles.binance_usdm.BinanceUsdmMarginTierSourceRef
+  - crypto_quant_trading.profiles.binance_usdm.BinanceUsdmMarginTierBracket
+  - crypto_quant_trading.profiles.binance_usdm.BinanceUsdmMarginTierBand
+  - crypto_quant_trading.profiles.binance_usdm.BinanceUsdmMarginTierRuleBook
+  - crypto_quant_trading.profiles.binance_usdm.BinanceUsdmMarginTierQuery
+  - crypto_quant_trading.profiles.binance_usdm.BinanceUsdmMarginTierResolution
+  - crypto_quant_trading.profiles.binance_usdm.BinanceUsdmMarginTierFailureCode
+  - crypto_quant_trading.profiles.binance_usdm.BinanceUsdmMarginTierFailure
+  - crypto_quant_trading.profiles.binance_usdm.BinanceUsdmMarginTierOutcome
+  - crypto_quant_trading.profiles.binance_usdm.BinanceUsdmMarginTierModel
+test_commands:
+  contract: uv run pytest -q tests/profiles/binance_usdm/test_margin_tiers.py tests/kernel/derivatives/test_linear_margin_tier_boundaries.py
+  fixture: uv run pytest -q tests/profiles/binance_usdm/test_margin_tiers_golden.py
+  boundary: uv run pytest -q tests/architecture/test_binance_usdm_profile_boundary.py tests/architecture/test_derivative_boundary.py tests/architecture/test_public_api_imports.py tests/architecture/test_repository_cleanliness.py
+  regression: uv run pytest -q tests/profiles/binance_usdm/test_instrument_metadata.py tests/kernel/derivatives/test_linear_margin_requirement.py tests/kernel/derivatives/test_linear_margin_requirement_golden.py tests/kernel/derivatives/test_linear_account_margin_projection.py tests/runtime/liquidation/test_conservative_linear_liquidation_audit.py
+  acceptance: uv run pytest -q tests/profiles/binance_usdm/test_margin_tiers.py tests/profiles/binance_usdm/test_margin_tiers_golden.py tests/kernel/derivatives/test_linear_margin_tier_boundaries.py tests/architecture/test_binance_usdm_profile_boundary.py tests/architecture/test_derivative_boundary.py tests/architecture/test_public_api_imports.py tests/architecture/test_repository_cleanliness.py tests/profiles/binance_usdm/test_instrument_metadata.py tests/kernel/derivatives/test_linear_margin_requirement.py tests/kernel/derivatives/test_linear_margin_requirement_golden.py tests/kernel/derivatives/test_linear_account_margin_projection.py tests/runtime/liquidation/test_conservative_linear_liquidation_audit.py --junitxml=build/acceptance/g10c-pytest.xml
+fixture_ids:
+  - binance-usdm-contract-info-margin-tier-source-v1
+  - binance-usdm-historical-margin-tiers-v1
+expected_artifacts:
+  - docs/research/binance-usdm-margin-tiers-primary-sources.md
+  - tests/fixtures/profiles/binance-usdm-contract-info-margin-tier-source-v1.json
+  - tests/fixtures/profiles/binance-usdm-historical-margin-tiers-v1.json
+  - build/acceptance/g10c-pytest.xml
+  - build/acceptance/g10c-import-boundary-report.json
+failure_contracts:
+  - missing-margin-tier-bands
+  - instrument-metadata-query-or-tier-rule-book-mismatch
+  - no-tier-evidence-visible-by-captured-at
+  - missing-tier-interval-or-incomplete-declared-coverage
+  - overlapping-tier-intervals-or-input-order-selection
+  - account-adjusted-tier-or-notional-coef-is-accepted
+  - noncanonical-negative-exponent-overflow-or-inexact-decimal
+  - bracket-id-floor-cap-leverage-rate-or-deduction-geometry-is-guessed
+  - shared-cap-equality-is-assigned-to-the-next-binance-tier
+  - finite-terminal-cap-is-rewritten-as-unbounded
+  - notional-above-terminal-cap-asserts-clamps-or-falls-back
+  - provider-mi-is-enforced-as-selected-account-minimum-leverage
+  - provider-ma-or-initial-leverage-is-used-as-selected-account-leverage
+  - current-authenticated-bracket-backfills-history
+  - source-query-filesystem-network-wall-clock-runtime-or-account-leakage
+allowed_grade: development
+evidence:
+  - readiness-contract-tests
+  - official-source-note
+  - static-source-and-golden-fixture-hashes
+  - legacy-g09e-schema-bytes-hash-and-behavior-compatibility-golden
+  - upper-inclusive-boundary-and-finite-terminal-cap-evidence
+  - public-api-import-report
+  - import-boundary-report
+  - static-type-report
+  - dependency-lock-report
+```
+
+### G10C Acceptance
+
+冻结边界：
+
+1. G10C是纯离线`crypto_quant_trading.profiles.binance_usdm.margin_tiers` Adapter，并拥有最小backward-compatible G09E generic extension。Production code只消费caller-supplied immutable G10A Resolution、Margin Tier RuleBook与time inputs；不得创建provider client、发HTTP、解析JSON/file、读filesystem/database/wall clock、调用authenticated current leverage-bracket endpoint或读取Account/Position/Wallet；G12拥有acquisition/parsing/retention，G10F拥有account leverage/mode；
+2. `BinanceUsdmMarginTierBracket` exact保存raw canonical strings `bracket_id`/`bs`、`notional_floor`/`bnf`、`notional_cap`/`bnc`、`maintenance_margin_rate`/`mmr`、`maintenance_margin_deduction`/`cf`、`minimum_leverage_range`/`mi`与`maximum_leverage`/`ma`。Raw provider trailing zeros及全部字段进入Bracket hash；不得只保存mapped generic值；
+3. `BinanceUsdmMarginTierBand` exact保存Band ID、Instrument ID、half-open`effective_from/effective_to_exclusive`、完整`available_at: SimulationInstant`、`BinanceUsdmMarginTierScope`、optional raw `notional_coef`、caller-ordered Bracket tuple及source key/hash。`BinanceUsdmMarginTierScope` exact为`DEFAULT_SYMBOL`和`ACCOUNT_ADJUSTED`；v1只有Contract Info `DEFAULT_SYMBOL`可成功解析；
+4. `BinanceUsdmMarginTierRuleBook` exact保存key/version、stable G10A Instrument、settlement Currency、finite`coverage_from/coverage_to_exclusive`与canonical-sorted Bands。Query绑定G10A Resolution、economic `evaluated_at`、knowledge `captured_at`和RuleBook hash；G10A effective-at必须等于Query evaluated-at，G10A captured-at不得晚于Query captured-at，Instrument/settlement Currency必须exact匹配；
+5. Resolver只使用`available_at <= captured_at`的Band。Provider failure precedence exact为：`MISSING_TIER_BANDS`、`INSTRUMENT_METADATA_MISMATCH`、`TIER_NOT_AVAILABLE`、`MISSING_TIER_INTERVAL`、`OVERLAPPING_TIER_INTERVALS`、`ACCOUNT_ADJUSTED_TIER_UNSUPPORTED`、`INVALID_DECIMAL_FIELD`、`INVALID_BRACKET_GEOMETRY`、`UNSUPPORTED_MARGIN_SEMANTICS`、`METADATA_CONFLICT`；多缺陷只返回第一项；
+6. Visible Bands必须从RuleBook coverage start到end exact形成连续half-open time coverage；首尾缺失、内部gap、overlap、duplicate Band ID、cross-Instrument Band或按tuple顺序选winner均fail closed。Query instant必须命中唯一Band；不得nearest/current/latest fallback；
+7. Provider decimal grammar exact限定non-negative ordinary decimal string，不允许sign、exponent、NaN/Infinity、leading plus、whitespace、Unicode alternative或超过18 fractional places。Mapping只用string/integer arithmetic；raw string保留identity，behavior使用smallest exact Scale；禁止float、ambient Decimal context、`pricePrecision`与`quantityPrecision`；
+8. Bracket ID、`mi`与`ma`必须是positive integral exact values；Bracket ID按数值strict递增且第一项为1；`0 <= floor < cap`，第一floor exact为zero，相邻`previous.cap == next.floor`，`mi <= ma`，maximum leverage不得随notional上升而增加，rate/deduction nonnegative，Currency/Scale/Basis必须一致。Order、gap、overlap、duplicate、zero/negative cap、fractional leverage或unsupported geometry返回`INVALID_BRACKET_GEOMETRY`，不得sort后掩盖source defect；
+9. Generic增加`LinearMarginTierBoundaryConvention` exact值`LOWER_INCLUSIVE_UPPER_EXCLUSIVE`与`LOWER_EXCLUSIVE_UPPER_INCLUSIVE`。`LinearMarginRuleInterval.tier_boundary_convention`的existing/default convention不出现在legacy schema-v1 canonical payload，既有Interval/RuleBook/Request/Result bytes、hash和lower-inclusive选择完全不变；non-default Binance convention使用schema-v2并进入identity；
+10. Binance notional Tier exact使用zero-degenerate first Tier及positive-notional lower-exclusive/upper-inclusive选择：notional zero选择第一Tier；shared cap equality选择前一Tier；above cap选择后一Tier；不得加epsilon、移动floor/cap、按Money Scale加一或提前quantize notional；
+11. Binance final `bnc` exact映射finite terminal `notional_cap`，不得改成`None`。Generic G09E允许valid finite terminal coverage；exact notional高于terminal cap返回新增`NOTIONAL_OUTSIDE_TIER_COVERAGE`，其precedence在Margin Mark验证与exact notional计算后、`LEVERAGE_EXCEEDS_TIER_MAXIMUM`前。No matching Tier不得AssertionError、clamp、选择final Tier或current rule fallback；
+12. Mapping exact为：`bnf`→settlement-currency `notional_floor`、`bnc`→finite `notional_cap`、`ma`→`maximum_leverage` basis `notional_per_initial_margin`、`mmr`→`maintenance_margin_rate` basis `maintenance_margin_fraction_of_notional`、`cf`→nonnegative `maintenance_margin_deduction`。Official formula `notional × rate - Maintenance Amount`保持G09E；source `cf`原值优先，不从rounded rates重算；
+13. `mi`只保留为provider显示的leverage-range evidence和source identity，不映射minimum selected leverage，不拒绝低于`mi`的caller account leverage。`ma`/authenticated `initialLeverage`只表示Tier maximum，也不得创建`LinearMarginLeverageEvidence`；selected account leverage及其effective/available source由G10F拥有；
+14. `ACCOUNT_ADJUSTED` Band、任何non-null `notional_coef`或authenticated USER_DATA bracket source返回`ACCOUNT_ADJUSTED_TIER_UNSUPPORTED`。G10C v1不解释、乘算、归一化或跨Account共享`notionalCoef`；即使数值为1也不能把current account response冒充public historical Contract Info revision；
+15. Current `/fapi/v1/leverageBracket`或Portfolio Margin UM bracket response不提供G10C historical authority。Contract Info archived event/Band必须携带explicit effective/available/source lineage；status-only event无`bks`不能创建Tier revision；announcement表可验证boundary/change但缺少`cf`时不能单独形成v1 normalized Band；
+16. Resolution exact包含Component Ref `ProfileComponentRef(MARGIN_MODEL,"crypto.binance_usdm.margin-tiers.v1")`、visible Bands、active Band、完整generic `LinearMarginRuleBook`、active generic Interval/Tiers、boundary convention、finite terminal cap、source coverage与`decision_grade_eligible=false`。相同logical inputs任意tuple顺序得到相同canonical outcome；Adapter不调用`LinearInstrumentMarginModel.evaluate_margin()`；
+17. Generic Component仍为provider-neutral且不识别Binance。Existing G09E component digest和legacy interval payload保持不变；non-default boundary convention与finite-cap selection只由generic fields驱动。Generic Margin Model、G09F、G09G、Engine、Runner不得import/branch on Binance profile types；
+18. Constructor必须重算Bracket/Band/RuleBook/Query/Resolution/Failure、generic Interval/Tier/RuleBook identities，并重验证active Band、visible coverage、boundary convention、finite cap、mapped rate/leverage/deduction、raw source exact coverage与decision-grade flag。`dataclasses.replace`伪造任一authority必须拒绝；
+19. Static source/golden至少覆盖：two historical Contract Info updates、before/at/after update、shared cap below/at/above、zero notional、finite final cap equality/overflow、`cf` deduction、`mi < selected leverage < ma`及selected leverage below `mi`仍合法、selected leverage above `ma`失败、late-only Band、coverage gap/overlap、Bracket order/gap/overlap、malformed decimal/fractional leverage、account-adjusted/non-null notionalCoef、status-only source、G10A mismatch、source conflict、forgery、input-order parity与all hashes；
+20. Generic compatibility golden固定：(a) legacy lower-inclusive/unbounded schema-v1 Interval/RuleBook/Request/Result bytes与hash；(b) existing exact shared boundary仍选后一Tier；(c) Binance schema-v2 shared boundary选前一Tier；(d) finite final cap equality成功且overflow structured fail；(e)既有G09E、G09F、G09G synthetic outputs不变；
+21. Concrete purity scanner allowlist只允许stdlib、`crypto_quant_domain`、generic `margin|ports`和same-package G10A types；拒绝filesystem/network/provider client/process/database/cloud、dynamic import、MarketBundle、Runtime、account module和wall clock。Generic `margin.py`不得import concrete profile；Production Runtime不得import concrete profile；不新增dependency；
+22. G10C不拥有selected account leverage、cross/isolated/multi-asset/portfolio margin、Wallet/Equity/Available Margin、working-order margin、Mark stream、fee、funding、Liquidation execution、Bundle Builder、Profile composition、live、deployment或parity。G12完成initial state与全update archive coverage proof前，Resolution固定development-grade且`decision_grade_eligible=false`。
+
+Primary-source contract：`docs/research/binance-usdm-margin-tiers-primary-sources.md`。
+
+Readiness baseline：
+
+```text
+G10B frozen acceptance command                                      80 passed
+Full test suite                                                    1027 passed
+Workspace import boundary                                           PASS (75 files)
+mypy 2.3.0                                                           no issues (75 source files)
+Primary LSP + scoped pi-lens                                         no blocking errors
+uv lock --check                                                      PASS
+Python                                                                3.13.5
+```
+
+Readiness validation：
+
+```text
+G10B frozen acceptance command                                      80 passed
+Full test suite                                                    1027 passed
+Workspace import boundary                                           PASS (75 files)
+mypy 2.3.0                                                           no issues (75 source files)
+Markdown + git diff checks                                           PASS
+uv lock --check                                                      PASS
+Python                                                                3.13.5
+```
+
+## 80. PASSED 记录格式
 
 ```yaml
 id: WP-00A

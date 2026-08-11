@@ -244,6 +244,18 @@ G10A已实现并通过冻结验收的纯离线Profile Adapter：caller-supplied 
 
 G10B已实现并通过冻结验收的纯离线Profile Adapter：caller-supplied finite historical RuleBook → style-specific Quantity lattices、Price tick/bounds、MIN_NOTIONAL、Admission Mode、generic Rule Timeline与Capability evidence。它只使用`captured_at`已可见且finite exact-cover的Band，保留raw decimal/source/deferred authority并structured fail closed；implementation commit为`11072289a9dda708a185ae2edcbf5fcdf0c7bd55`。它不查询current exchange info，也不拥有Mark、account、translation、execution或deployment。
 
+## Binance USDⓈ-M Historical Margin Tier Model
+
+G10C冻结的纯离线Profile Adapter：caller-supplied archived Contract Info bracket-update Bands → generic Historical Margin Rule Book。它保留raw `bs/bnf/bnc/mmr/cf/mi/ma`和source lineage，使用upper-inclusive bracket、finite terminal cap与point-in-time availability；current authenticated bracket、`notionalCoef`和account-adjusted tier不能补历史。G12拥有archive completeness，G10F拥有selected account leverage。
+
+## Binance USDⓈ-M Margin Tier Band
+
+对一个stable Instrument在half-open economic interval内生效的immutable bracket-update evidence，保存`available_at`、source provenance和完整raw bracket set。其notional bracket本身使用upper-inclusive provider convention；time interval仍为half-open。
+
+## Binance USDⓈ-M Account-adjusted Notional Coefficient
+
+Authenticated UM bracket evidence中的`notionalCoef`。G10C v1不解释或乘算该account-scoped字段，任何携带它的normalized tier source都structured reject；只有G10F/G12未来冻结Account identity、历史effective/available time与变换语义后才可扩展。
+
 ## Binance USDⓈ-M Order Rule Band
 
 对一个stable Instrument在half-open economic interval内生效的历史下单规则证据，保存可用时间、source provenance、raw PRICE_FILTER/LOT_SIZE/MARKET_LOT_SIZE/MIN_NOTIONAL、provider capability和admission mode。它是新Order admission authority，不反向修改旧Order已保存的rule decision。
@@ -402,11 +414,15 @@ Caller要求评估Initial/Maintenance Margin的单Instrument signed Quantity。�
 
 ## Historical Margin Rule Book
 
-按半开生效区间保存Instrument Margin Tier历史事实的immutable RuleBook。查询时必须命中唯一historical interval；缺口、重叠或用当前tier回填历史都必须fail closed。
+按半开生效时间区间保存Instrument Margin Tier历史事实的immutable RuleBook。查询时必须命中唯一historical interval；缺口、重叠或用当前tier回填历史都必须fail closed。每个Rule Interval显式或按backward-compatible default声明notional Tier Boundary Convention。
+
+## Margin Tier Boundary Convention
+
+声明共享notional boundary归属哪一Tier的provider-neutral规则。G09E既有schema-v1保持lower-inclusive/upper-exclusive；G10C Binance规则使用zero-degenerate first Tier以及positive notional lower-exclusive/upper-inclusive。Boundary选择发生在notional量化之前，不能用epsilon或Scale shift伪造。
 
 ## Margin Tier
 
-按exact settlement-currency notional半开区间定义maximum leverage、maintenance margin rate和maintenance deduction的历史规则层级。Tier选择发生在notional量化之前。
+按exact settlement-currency notional floor/cap定义maximum leverage、maintenance margin rate和maintenance deduction的历史规则层级。Terminal cap可以unbounded或finite；超过finite terminal cap必须structured fail closed，不能映射为unbounded。
 
 ## Initial Margin Requirement
 

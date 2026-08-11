@@ -1463,7 +1463,7 @@ Funding Mark必须在target Funding UTC以`PricePurpose.FUNDING`解析，Instrum
 
 Historical leverage evidence绑定Account、Instrument、selected leverage、半开effective interval、完整`SimulationInstant` available-at与source key/hash。Rule Book绑定Instrument、settlement Currency、authoritative tier Scale和caller-injected historical intervals；每个interval保存半开effective range、full availability、source identity和ordered Tiers。查询必须命中唯一effective interval且evidence已available；历史缺口即使存在later/current interval也fail closed，重叠不按版本、顺序或最新来源猜测。
 
-Margin Tier以exact Money floor与optional cap定义lower-inclusive/upper-exclusive notional区间，并保存maximum leverage、maintenance margin rate和nonnegative maintenance deduction。Tier集合必须按floor严格递增，从zero连续覆盖到unbounded；order mismatch、gap、overlap、Currency/Scale/Basis mismatch分别按frozen precedence失败。Provider `initialLeverage`、maintenance ratio与`cum`等字段只能由G10C Adapter显式映射为generic maximum leverage/rate/deduction；G09E不识别provider字段或symbol。
+Margin Tier以exact Money floor与optional cap保存maximum leverage、maintenance margin rate和nonnegative maintenance deduction。G09E原始schema-v1区间保持lower-inclusive/upper-exclusive并从zero连续覆盖到unbounded；G10C只可增加backward-compatible provider-neutral boundary convention，使Binance upper-inclusive bracket与finite terminal cap可被exact表达，既有canonical bytes/hash与选择结果不得变化。Tier集合必须按floor严格递增并连续；order mismatch、gap、overlap、finite coverage overflow、Currency/Scale/Basis mismatch分别按frozen precedence失败。Provider `ma`/`initialLeverage`、maintenance ratio与`cf`/`cum`等字段只能由G10C Adapter显式映射为generic maximum leverage/rate/deduction；G09E不识别provider字段或symbol。
 
 对signed Quantity `q/Q`、positive multiplier `m/M`和positive `PricePurpose.MARGIN` Mark `p/P`，exact notional为`abs(q)*m*p/(Q*M*P)`。Selected leverage `l/L`下Initial exact为`notional*L/l`；Maintenance exact为`notional*rate-deduction`。Tier选择使用未量化notional；selected leverage不得超过tier maximum；negative Maintenance fail closed。Initial/Maintenance各自只调用一次public `round_ratio(exact*target_scale.factor, denominator, CEILING)`，禁止float/Decimal、pre-quantization、FX或隐式rescale。
 
@@ -1611,14 +1611,23 @@ G10B generic schema-v3 style lattice extension、historical source Band/RuleBook
 
 依赖：G10A、G09E。
 
-拥有：Binance historical margin/leverage tier Adapter。
+拥有：Binance historical margin/leverage tier Adapter，以及G09E backward-compatible finite-cap/upper-inclusive generic extension。
 
 验收：
 
-- Maintenance rate、notional bracket 和 leverage limit 与 G09E Interface 兼容；
-- Tier boundary Fixture 精确；
-- 缺失/重叠 tier fail closed；
-- 不把当前 tier 应用于历史区间。
+- 只消费caller-supplied immutable archived Contract Info bracket-update Bands、G10A Resolution与time inputs；不发HTTP、不读file/database/wall clock、不调用authenticated current bracket endpoint；
+- raw `bs/bnf/bnc/mmr/cf/mi/ma` canonical decimal/source evidence全部进入identity；`bnf/bnc`映射exact settlement Money，`ma`映射maximum leverage，`mmr`映射maintenance rate，`cf`映射maintenance deduction；
+- `mi`只保留为provider leverage-range evidence，不成为minimum selected account leverage；selected leverage仍由G10F提供`LinearMarginLeverageEvidence`；
+- Generic `LinearMarginRuleInterval`增加backward-compatible boundary convention：既有lower-inclusive/upper-exclusive schema-v1 bytes/hash不变；Binance使用zero-degenerate first tier及lower-exclusive/upper-inclusive positive-notional bracket；
+- Binance final `bnc`保持finite terminal cap；exact shared cap归前一tier，超过terminal cap返回structured outside-tier-coverage failure，不改成unbounded、不fallback；
+- RuleBook绑定stable G10A Instrument、finite coverage、half-open economic Bands、`available_at`、revision/source lineage；只使用`captured_at`已可见Band，gap、overlap、late-only、source conflict或current/latest回填历史fail closed；
+- decimal grammar、Scale、positive integral bracket/leverage、strict bracket order、contiguous floors/caps、nonnegative rate/deduction及Currency/Basis exact验证，不使用float或ambient Decimal context；
+- authenticated/account-adjusted source或任何`notionalCoef` structured reject；G10C v1不解释、乘算或跨Account共享该字段；
+- Resolution输出完整generic historical `LinearMarginRuleBook`和provider source evidence，但不创建account leverage、Margin Result、Mark、Wallet、Liquidation或Runtime composition；
+- static Fixture覆盖upper-inclusive shared boundary、finite terminal cap/overflow、tier update before/at/after、late evidence、gap/overlap、malformed decimal、`cf`、`mi/ma`、notionalCoef rejection、forgery、input-order parity与legacy G09E hash compatibility；
+- Production module无filesystem/network/process/database/cloud SDK/wall clock，不修改Generic Engine/Runner增加Binance branch；仅development-grade，G12 archive completeness前不得decision-grade。
+
+Primary source note：`docs/research/binance-usdm-margin-tiers-primary-sources.md`。
 
 ### Gate G10D Price Purpose Streams
 
