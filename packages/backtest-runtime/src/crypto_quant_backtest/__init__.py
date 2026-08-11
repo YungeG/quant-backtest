@@ -234,6 +234,11 @@ from .slippage import (
     SlippageModelKind,
     SlippageRequest,
 )
+from .strategy_state import (
+    StrategyCheckpoint,
+    StrategyState,
+    StrategyStateTransition,
+)
 from .target_stream import (
     TARGET_STREAM_CAPABILITY,
     TARGET_STREAM_EVENT_TYPE,
@@ -468,6 +473,9 @@ __all__ = [
     "SlippageRequest",
     "SourceTreeState",
     "SnapshotProjectionPlan",
+    "StrategyCheckpoint",
+    "StrategyState",
+    "StrategyStateTransition",
     "RunEndCloseoutDecision",
     "RunEndCloseoutFailure",
     "RunEndCloseoutMode",
