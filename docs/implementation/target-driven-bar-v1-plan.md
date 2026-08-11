@@ -1609,6 +1609,8 @@ G10B generic schema-v3 style lattice extension、historical source Band/RuleBook
 
 ### Gate G10C Historical Margin and Leverage Tiers
 
+状态：PASSED；implementation commit `50fa838f901385498ce18d65a897d4eb1dc31337`已通过Acceptance Matrix G10C frozen validation。
+
 依赖：G10A、G09E。
 
 拥有：Binance historical margin/leverage tier Adapter，以及G09E backward-compatible finite-cap/upper-inclusive generic extension。
@@ -1628,6 +1630,8 @@ G10B generic schema-v3 style lattice extension、historical source Band/RuleBook
 - Production module无filesystem/network/process/database/cloud SDK/wall clock，不修改Generic Engine/Runner增加Binance branch；仅development-grade，G12 archive completeness前不得decision-grade。
 
 Primary source note：`docs/research/binance-usdm-margin-tiers-primary-sources.md`。
+
+G10C generic schema-v2 boundary convention、finite terminal coverage、historical source Band/RuleBook、exact bracket mapping、failure precedence、golden与purity boundaries已由implementation commit `50fa838f901385498ce18d65a897d4eb1dc31337`冻结通过。
 
 ### Gate G10D Price Purpose Streams
 

@@ -128,7 +128,7 @@ artifact_hashes: []
 | G09H | PASSED — immutable commit `e0f2bc767dc87513d562becd9907262628b788e6` | tests/support + profile composition | G09A–G09G | none |
 | G10A | PASSED — immutable commit `613c319b2dbba9962d4867dcfb3d1b19067d16cf` | trading-kernel profiles/binance_usdm | G09H | none |
 | G10B | PASSED — immutable commit `11072289a9dda708a185ae2edcbf5fcdf0c7bd55` | trading-kernel profiles/binance_usdm | G10A, WP-05G | none |
-| G10C | READY | trading-kernel margin requirement + profiles/binance_usdm | G10A, G09E | none |
+| G10C | PASSED — immutable commit `50fa838f901385498ce18d65a897d4eb1dc31337` | trading-kernel margin requirement + profiles/binance_usdm | G10A, G09E | none |
 | G10D | DRAFT | trading-kernel profiles/binance_usdm | G10A, WP-03C | PricePurpose fixtures |
 | G10E | DRAFT | trading-kernel profiles/binance_usdm | G09C–G09D, G10D | Funding source fixtures |
 | G10F | DRAFT | trading-kernel profiles/binance_usdm | WP-05H, WP-05J, G09F | Fee/account fixtures |
@@ -7654,7 +7654,7 @@ Python                                                                3.13.5
 
 ```yaml
 id: G10C
-status: READY
+status: PASSED
 depends_on:
   - G10A
   - G09E
@@ -7716,6 +7716,12 @@ evidence:
   - import-boundary-report
   - static-type-report
   - dependency-lock-report
+passed_commit: 50fa838f901385498ce18d65a897d4eb1dc31337
+artifact_hashes:
+  tests/fixtures/profiles/binance-usdm-contract-info-margin-tier-source-v1.json: sha256:b4c6d311d7784a6d09f8f6801aa94a61cbf80476d5b770d8612bd32358c7aee2
+  tests/fixtures/profiles/binance-usdm-historical-margin-tiers-v1.json: sha256:04adb8c46c87f82d4a2a988570d66baa79d3063c74fd3c5e51e7ec6f95f625b0
+  build/acceptance/g10c-pytest.xml: sha256:dc53052029659e77be00db09137e9b26cad865cf528074bb46440a08bf3ab78a
+  build/acceptance/g10c-import-boundary-report.json: sha256:0d9f6c984f231e0517b02fe1980148d5acbedb8d1142ff38b39db175d2dcc4d4
 ```
 
 ### G10C Acceptance
@@ -7745,6 +7751,8 @@ evidence:
 21. Concrete purity scanner allowlist只允许stdlib、`crypto_quant_domain`、generic `margin|ports`和same-package G10A types；拒绝filesystem/network/provider client/process/database/cloud、dynamic import、MarketBundle、Runtime、account module和wall clock。Generic `margin.py`不得import concrete profile；Production Runtime不得import concrete profile；不新增dependency；
 22. G10C不拥有selected account leverage、cross/isolated/multi-asset/portfolio margin、Wallet/Equity/Available Margin、working-order margin、Mark stream、fee、funding、Liquidation execution、Bundle Builder、Profile composition、live、deployment或parity。G12完成initial state与全update archive coverage proof前，Resolution固定development-grade且`decision_grade_eligible=false`。
 
+G10C已由immutable implementation commit `50fa838f901385498ce18d65a897d4eb1dc31337`实现并通过冻结验收，状态为`PASSED`。
+
 Primary-source contract：`docs/research/binance-usdm-margin-tiers-primary-sources.md`。
 
 Readiness baseline：
@@ -7767,6 +7775,19 @@ Full test suite                                                    1027 passed
 Workspace import boundary                                           PASS (75 files)
 mypy 2.3.0                                                           no issues (75 source files)
 Markdown + git diff checks                                           PASS
+uv lock --check                                                      PASS
+Python                                                                3.13.5
+```
+
+PASSED validation：
+
+```text
+G10C frozen acceptance command                                     113 passed
+Full test suite                                                    1052 passed
+Workspace import boundary                                           PASS (76 files)
+mypy 2.3.0                                                           no issues (76 source files)
+Primary LSP                                                          no diagnostics
+Scoped pi-lens                                                       no blocking errors; duplicate-code warnings only
 uv lock --check                                                      PASS
 Python                                                                3.13.5
 ```

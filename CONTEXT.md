@@ -246,7 +246,7 @@ G10B已实现并通过冻结验收的纯离线Profile Adapter：caller-supplied 
 
 ## Binance USDⓈ-M Historical Margin Tier Model
 
-G10C冻结的纯离线Profile Adapter：caller-supplied archived Contract Info bracket-update Bands → generic Historical Margin Rule Book。它保留raw `bs/bnf/bnc/mmr/cf/mi/ma`和source lineage，使用upper-inclusive bracket、finite terminal cap与point-in-time availability；current authenticated bracket、`notionalCoef`和account-adjusted tier不能补历史。G12拥有archive completeness，G10F拥有selected account leverage。
+G10C已实现并通过冻结验收的纯离线Profile Adapter：caller-supplied archived Contract Info bracket-update Bands → generic Historical Margin Rule Book。它保留raw `bs/bnf/bnc/mmr/cf/mi/ma`和source lineage，使用upper-inclusive bracket、finite terminal cap与point-in-time availability；current authenticated bracket、`notionalCoef`和account-adjusted tier不能补历史。Implementation commit为`50fa838f901385498ce18d65a897d4eb1dc31337`。G12拥有archive completeness，G10F拥有selected account leverage。
 
 ## Binance USDⓈ-M Margin Tier Band
 
