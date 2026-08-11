@@ -131,6 +131,7 @@ from .liquidation_audit import (
     LinearLiquidationMarkBarEvidence,
     LinearLiquidationPositionAudit,
 )
+from .model_revisions import ModelArtifactRef, ModelRevisionTimeline
 from .observations import (
     ObservationCausalityFailure,
     ObservationCausalityFailureCode,
@@ -411,6 +412,8 @@ __all__ = [
     "LiquidationAuditModel",
     "MarketSemanticsProfileRegistration",
     "MarkToMarketCloseoutPolicy",
+    "ModelArtifactRef",
+    "ModelRevisionTimeline",
     "LiquidityModel",
     "PrecomputedTargetStream",
     "NextBarOpenApplicability",
