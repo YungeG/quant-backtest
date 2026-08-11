@@ -1658,6 +1658,8 @@ G10C generic schema-v2 boundary convention、finite terminal coverage、historic
 
 Primary source note：`docs/research/binance-usdm-price-purpose-streams-primary-sources.md`。
 
+G10D fixed purpose mapping、point-in-time availability、generic MarkResolver delegation、Liquidation OHLC coverage、unsupported Settlement/G10E-owned Funding、model digest、golden与purity boundaries已由implementation commit `790469d80ddcf3797f03c96c975b77d75a3d49a5`冻结通过。
+
 ### Gate G10E Funding Source Semantics
 
 依赖：G09C、G09D、G10D。

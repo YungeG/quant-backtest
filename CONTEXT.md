@@ -334,7 +334,7 @@ Price 或 Market Event Stream 在预期覆盖区间中的缺失，并具有明�
 
 ## Binance USDⓈ-M 历史价格簿（Binance USDⓈ-M Historical Price Book）
 
-G10D caller-supplied的纯离线immutable source authority：aggregate trades只映射Execution Reference；closed mark-price klines的close分别映射Valuation、Margin与Liquidation point stream，low/high映射Liquidation Bar。每个Purpose独立声明finite coverage与source/revision identity，current API不能补洞。
+G10D caller-supplied的纯离线immutable source authority：aggregate trades只映射Execution Reference；closed mark-price klines的close分别映射Valuation、Margin与Liquidation point stream，low/high映射Liquidation Bar。每个Purpose独立声明finite coverage与source/revision identity，current API不能补洞。冻结实现commit为`790469d80ddcf3797f03c96c975b77d75a3d49a5`。
 
 ## 价格事实时间与可用时间（Price Fact Time and Availability Time）
 
