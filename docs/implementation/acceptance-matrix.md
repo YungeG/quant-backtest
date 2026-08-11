@@ -131,7 +131,7 @@ artifact_hashes: []
 | G10C | PASSED — immutable commit `50fa838f901385498ce18d65a897d4eb1dc31337` | trading-kernel margin requirement + profiles/binance_usdm | G10A, G09E | none |
 | G10D | PASSED — immutable commit `790469d80ddcf3797f03c96c975b77d75a3d49a5` | trading-kernel profiles/binance_usdm | G10A, WP-03C | none |
 | G10E | PASSED — immutable commit `195265b1ed830e62b91882ff315b115e7ac80597` | trading-kernel profiles/binance_usdm | G09C–G09D, G10D | Funding source fixtures |
-| G10F | DRAFT | trading-kernel profiles/binance_usdm | WP-05H, WP-05J, G09F | Fee/account fixtures |
+| G10F | READY | trading-kernel profiles/binance_usdm | WP-05H, WP-05J, G09F, G10A | Fee/account fixtures |
 | G10G | DRAFT | backtest-runtime composition | G10A–G10F | Resolved profile E2E |
 | G10H | DRAFT | parity tooling | G10G, WP-00C | crypt-gemini parity |
 | G11A | DRAFT | backtest-runtime observations | G07 | Capability isolation fixtures |
@@ -8078,7 +8078,135 @@ uv lock --check                                                      PASS
 Python                                                                3.13.5
 ```
 
-## 82. PASSED 记录格式
+## 82. G10F Binance USDⓈ-M Fee and Account Profile Acceptance Card
+
+```yaml
+id: G10F
+status: READY
+depends_on:
+  - WP-05H
+  - WP-05J
+  - G09F
+  - G10A
+owner_package: trading-kernel profiles/binance_usdm
+public_interface:
+  - crypto_quant_trading.profiles.binance_usdm.BinanceUsdmAccountSourceKind
+  - crypto_quant_trading.profiles.binance_usdm.BinanceUsdmAccountProfileSourceRef
+  - crypto_quant_trading.profiles.binance_usdm.BinanceUsdmAccountProfileScope
+  - crypto_quant_trading.profiles.binance_usdm.BinanceUsdmAccountProfileBand
+  - crypto_quant_trading.profiles.binance_usdm.BinanceUsdmHistoricalAccountProfileBook
+  - crypto_quant_trading.profiles.binance_usdm.BinanceUsdmAccountProfileQuery
+  - crypto_quant_trading.profiles.binance_usdm.BinanceUsdmAccountProfileResolution
+  - crypto_quant_trading.profiles.binance_usdm.BinanceUsdmAccountProfileFailureCode
+  - crypto_quant_trading.profiles.binance_usdm.BinanceUsdmAccountProfileFailure
+  - crypto_quant_trading.profiles.binance_usdm.BinanceUsdmAccountProfileOutcome
+  - crypto_quant_trading.profiles.binance_usdm.BinanceUsdmAccountProfileModel
+test_commands:
+  contract: uv run pytest -q tests/profiles/binance_usdm/test_account_profile.py
+  fixture: uv run pytest -q tests/profiles/binance_usdm/test_account_profile_golden.py
+  boundary: uv run pytest -q tests/architecture/test_binance_usdm_profile_boundary.py tests/architecture/test_derivative_boundary.py tests/architecture/test_public_api_imports.py tests/architecture/test_repository_cleanliness.py
+  regression: uv run pytest -q tests/kernel/fee_reservations/test_fee_reservation_estimator.py tests/kernel/fees/test_fee_assessment_engine.py tests/kernel/derivatives/test_linear_margin_requirement.py tests/kernel/derivatives/test_linear_account_margin_projection.py tests/kernel/pretrade_risk/test_pretrade_risk_evaluator.py tests/profiles/binance_usdm/test_instrument_metadata.py tests/profiles/binance_usdm/test_margin_tiers.py
+  acceptance: uv run pytest -q tests/profiles/binance_usdm/test_account_profile.py tests/profiles/binance_usdm/test_account_profile_golden.py tests/kernel/fee_reservations/test_fee_reservation_estimator.py tests/kernel/fees/test_fee_assessment_engine.py tests/kernel/derivatives/test_linear_margin_requirement.py tests/kernel/derivatives/test_linear_account_margin_projection.py tests/kernel/pretrade_risk/test_pretrade_risk_evaluator.py tests/profiles/binance_usdm/test_instrument_metadata.py tests/profiles/binance_usdm/test_margin_tiers.py tests/architecture/test_binance_usdm_profile_boundary.py tests/architecture/test_derivative_boundary.py tests/architecture/test_public_api_imports.py tests/architecture/test_repository_cleanliness.py --junitxml=build/acceptance/g10f-pytest.xml
+fixture_ids:
+  - binance-usdm-historical-account-profile-source-v1
+  - binance-usdm-fee-account-profile-v1
+expected_artifacts:
+  - docs/research/binance-usdm-fee-account-profile-primary-sources.md
+  - tests/fixtures/profiles/binance-usdm-historical-account-profile-source-v1.json
+  - tests/fixtures/profiles/binance-usdm-fee-account-profile-v1.json
+  - build/acceptance/g10f-pytest.xml
+  - build/acceptance/g10f-import-boundary-report.json
+failure_contracts:
+  - missing-late-gapped-or-overlapping-account-profile-band
+  - instrument-account-or-source-context-mismatch
+  - account-trading-disabled
+  - portfolio-margin-hedge-multi-asset-isolated-or-auto-add-mode
+  - bnb-fee-discount-requires-unmodeled-discount-asset-and-fx
+  - reporting-fee-or-settlement-currency-is-not-exact-usdt
+  - malformed-commission-max-notional-or-leverage-field
+  - zero-or-nonintegral-selected-leverage
+  - negative-maker-rebate-or-taker-commission
+  - current-account-response-vip-table-or-neighboring-symbol-backfills-history
+  - commission-fee-tier-source-or-quantization-change-does-not-change-schedule
+  - reservation-and-final-rule-sets-do-not-share-account-schedule-ref
+  - tuple-order-source-revision-or-natural-band-conflict-selects-winner
+  - complete-account-risk-policy-is-fabricated-without-capacity-and-state
+  - source-query-filesystem-network-wall-clock-runtime-or-engine-leakage
+allowed_grade: development
+evidence:
+  - readiness-contract-tests
+  - official-source-note
+  - static-source-and-golden-fixture-hashes
+  - selected-leverage-fee-rule-and-account-mode-evidence
+  - generic-fee-margin-and-pretrade-compatibility-evidence
+  - public-api-import-report
+  - import-boundary-report
+  - static-type-report
+  - dependency-lock-report
+passed_commit: null
+artifact_hashes: []
+```
+
+### G10F Acceptance
+
+冻结边界：
+
+1. G10F是纯离线`crypto_quant_trading.profiles.binance_usdm.account_profile` Adapter。Production code只消费caller-supplied immutable G10A Instrument Resolution、Account ID、finite Historical Account Profile Book、evaluated/captured instant与requested Reporting Currency；不得创建provider client、发authenticated request、解析JSON/file、读filesystem/database/wall clock或fallback到current Account Config/Symbol Config/Commission Rate/feeBurn/Position response。G12拥有acquisition/encrypted retention/checksum/initial state/all revisions与coverage proof；
+2. `BinanceUsdmAccountSourceKind` exact为`ACCOUNT_CONFIG`、`SYMBOL_CONFIG`、`COMMISSION_RATE`与`FEE_BURN`。`BinanceUsdmAccountProfileSourceRef` exact保存kind、source key、SHA-256 content hash、revision ID、optional superseded revision与archive/evidence key；Band必须exact包含四个不同kind各一个Ref，不能用VIP public table、announcement、Account Trade、G10C bracket、other symbol或third-party fee feed伪装；
+3. `BinanceUsdmAccountProfileScope` exact为`STANDARD_UM`与`PORTFOLIO_MARGIN_UM`。V1只有STANDARD_UM可成功；Portfolio Margin response即使字段相似也structured unsupported，不能作为standard cross account；
+4. `BinanceUsdmAccountProfileBand` exact保存Band ID、Account ID、stable Instrument ID、finite half-open effective interval、full `available_at: SimulationInstant`、scope、raw `fee_tier`、`can_trade`、`dual_side_position`、`multi_assets_margin`、raw `trade_group_id`、raw `margin_type`、`is_auto_add_margin`、raw selected `leverage`、raw `max_notional_value`、raw maker/taker commission、`fee_burn`与four Source Refs。Raw provider fields、trailing zeros与source tuple进入Band hash；
+5. `BinanceUsdmHistoricalAccountProfileBook` exact保存Book key/version、Account、Instrument、finite coverage与canonical-sorted Bands。Visible Bands必须从coverage start到end形成连续half-open coverage；首尾缺失、internal gap/overlap、duplicate Band ID、cross-account/instrument或按tuple order选winner均fail closed；
+6. `BinanceUsdmAccountProfileQuery` exact绑定G10A Resolution、Account ID、Book、economic `evaluated_at: UtcInstant`、knowledge `captured_at: SimulationInstant`与requested `reporting_currency_id`。G10A query effective-at必须等于evaluated-at，listing覆盖evaluated-at，G10A captured-at不得晚于Query captured-at.instant；Book/Account/Instrument必须exact匹配；
+7. Resolver只使用`band.available_at <= captured_at`的evidence，并要求evaluated-at命中exact一个visible Band。Later/current Band不能补past gap；same effective Band later revision只有在caller-supplied point-in-time capture内可见，branch/gap/duplicate/conflicting revision不得按input order选择；
+8. Accepted account mode exact为`can_trade=true`、scope STANDARD_UM、`dual_side_position=false`、`multi_assets_margin=false`、`margin_type="CROSSED"`、`is_auto_add_margin=false`、`fee_burn=false`。Trading disabled、Portfolio Margin、Hedge、Multi-Assets、isolated/unknown margin type、auto-add或BNB fee discount各自structured fail closed；
+9. G10A quote Currency、settlement Currency、Fee Currency与requested Reporting Currency必须exact为`CurrencyId("USDT")`。Fee Scale exact为8。不得用USDC/BUSD/BNB、stablecoin label、peg、FX或Multi-Assets asset index满足USDT约束；
+10. Raw selected leverage必须positive integral ASCII ordinary decimal with zero fractional part and范围`1..125`；exact映射`LinearMarginLeverageEvidence.selected_leverage=Rate(value,Scale(0),"notional_per_initial_margin")`，effective interval/available/source来自active Band及SYMBOL_CONFIG Ref。G10C `ma/mi/initialLeverage`、`maxNotionalValue`、current leverage response或neighboring symbol不得替代；
+11. Raw `max_notional_value`只作为non-negative ordinary decimal source evidence进入identity；不映射G10C Tier cap、不改变selected leverage、不在G10F计算Margin。G10C active Tier maximum仍由G09E在evaluated-at验证；
+12. maker/taker commission grammar exact为non-negative ASCII ordinary decimal、最多18 fractional places，允许zero。Mapping直接使用account-specific per-symbol rates，不按feeTier/VIP table/promotion重新计算。任一negative rate或market-maker rebate structured `NEGATIVE_COMMISSION_UNSUPPORTED`，不得clip、转Financing或伪装not-applicable；
+13. `AccountFeeScheduleRef` key/version/digest exact绑定Account、Instrument、active Band、maker/taker raw+mapped Rate、feeTier、feeBurn、mode、four source refs、USDT Scale 8、reservation/final quantization与limitations。Reservation/Final Rule Sets必须exact共享同一Ref；Band/source/rate/mode/quantization任一变化必须改变digest；
+14. Fee Reservation Rule Set exact使用fixed `ProfileComponentRef(FEE_ASSESSMENT_POLICY,"crypto.binance_usdm.market-fee-not-applicable.v1")`与`ProfileComponentRef(TAX_POLICY,"crypto.binance_usdm.tax-not-applicable.v1")`，并explicit exact-cover三个`FeeReservationRuleSource`：Market Fee UNKNOWN+NOT_APPLICABLE、Tax UNKNOWN+NOT_APPLICABLE、Account Schedule ORDER_NOTIONAL+APPLIES。Account rate为`max(maker,taker)` basis `fee_fraction`，Quantization为USDT Scale 8 CEILING，无minimum；
+15. Final Fee Rule Set exact共享上述component refs/Account Schedule Ref，全部basis type为FILL：Market Fee UNKNOWN+NOT_APPLICABLE、Tax UNKNOWN+NOT_APPLICABLE、Account Schedule maker NOTIONAL_RATE+MAKER_ONLY与taker NOTIONAL_RATE+TAKER_ONLY；Quantization为USDT Scale 8 TOWARD_ZERO，无minimum。Generic FeeAssessmentEngine按actual Fill `liquidity`与price×quantity逐Fill应用，不按Order style猜maker/taker；
+16. Account Trade List `commission/commissionAsset/maker`是G10H parity evidence，不是G10F rule source或synthetic Fill future amount。Final rounding在first-party universal rounding rule缺失时固定development convention；G10H未逐Fill parity前`decision_grade_eligible=false`；
+17. Resolution exact包含model key/version/digest、完整Query/Book、visible/active Bands、normalized account mode、selected Leverage Evidence、AccountFeeScheduleRef、Reservation Rule Set、Final Rule Set、Fee/Reporting Currency和Scale、`FeeReserveFundingSource.AVAILABLE_MARGIN`、limitations与`decision_grade_eligible=false`。G10F不调用Estimator、FeeAssessmentEngine、Margin Model或Account Margin Projector；
+18. G10F不创建完整`AccountRiskPolicy`。Order capacity需要G10B active MAX_NUM_ORDERS/ALGO rules与current Working Orders，Exposure capacity需要G09F/G10C/portfolio policy，Availability需要Journal/Reservation state；G10G才组合allowed sides/effects/reduce-only、capacity与source coverage；
+19. Provider failure precedence exact为：`MISSING_PROFILE_BANDS` → `INSTRUMENT_METADATA_MISMATCH` → `ACCOUNT_CONTEXT_MISMATCH` → `PROFILE_NOT_AVAILABLE` → `MISSING_PROFILE_INTERVAL` → `OVERLAPPING_PROFILE_INTERVALS` → `ACCOUNT_TRADING_DISABLED` → `PORTFOLIO_MARGIN_UNSUPPORTED` → `HEDGE_MODE_UNSUPPORTED` → `MULTI_ASSET_MODE_UNSUPPORTED` → `ISOLATED_MARGIN_UNSUPPORTED` → `AUTO_ADD_MARGIN_UNSUPPORTED` → `BNB_FEE_DISCOUNT_UNSUPPORTED` → `REPORTING_CURRENCY_MISMATCH` → `INVALID_DECIMAL_FIELD` → `INVALID_LEVERAGE` → `NEGATIVE_COMMISSION_UNSUPPORTED` → `SOURCE_IDENTITY_CONFLICT`；多缺陷只返回第一项；
+20. Exact predicates分别覆盖no Bands；G10A/Book/Instrument/evaluated/capture mismatch；Account mismatch；late-only Band；coverage gap/overlap；disabled/unsupported modes；non-USDT Currency；malformed commission/maxNotional；zero/nonintegral/out-of-range leverage；negative rate；four source kind missing/duplicate、source revision branch/gap、same natural Band/event changed bytes或duplicate identity。Constructor forged output直接`TypeError`/`ValueError`；
+21. Decimal mapping只用string/integer arithmetic；raw trailing zeros保留identity；禁止float、ambient Decimal context、current fee table、implicit percent conversion或precision hint。Commission Rate basis exact `fee_fraction`；Leverage basis exact `notional_per_initial_margin`；
+22. Model digest exact包含schema、supported account/margin/asset/position/feeBurn scope、source-kind exact coverage、leverage mapping、maker/taker authority、reservation max-rate/CEILING、final per-fill/TOWARD_ZERO、USDT Scale 8、negative-rebate policy、AccountRiskPolicy non-ownership、development limitations与grade。G10F不新增generic `ProfilePortType`；G10G纳入final Profile digest；
+23. 所有新增public values使用`schema_version=1`、exact types、canonical tuple order与`canonical_sha256` hashes。Constructor必须重算Source Ref、Band、Book、Query、Resolution、Failure、Outcome、Leverage Evidence、AccountFeeScheduleRef、component refs与两Rule Sets，并拒绝`dataclasses.replace`伪造任一authority；
+24. Static source/golden至少覆盖：maker<taker、maker>taker、zero fee；selected leverage before/at/after update及1/125边界；fee-rate and feeTier transitions；before/at/after available-at；coverage exact/gap/overlap；disabled trading；Portfolio/Hedge/Multi-Assets/isolated/auto-add/feeBurn；USDT mismatch；malformed/negative commission、maxNotional和leverage；source kind/revision/conflict；Reservation max rate与CEILING；Final maker/taker/TOWARD_ZERO per-Fill；shared Schedule Ref；all 18 failures、multi-defect precedence、forgery、idempotency、input-order parity与all hashes；
+25. Generic compatibility golden固定AccountFeeScheduleRef、FeeReservationRuleSet/Estimator、FinalFeeRuleSet/FeeAssessmentEngine、LinearMarginLeverageEvidence/G09E、G09F与PreTradeRisk schemas/hashes/behavior不变。G10F只生成accepted generic evidence，不修改generic modules或failure precedence；
+26. Concrete purity scanner allowlist只允许stdlib、`crypto_quant_domain`、generic `fee_reservations|fees|margin|ports|pretrade_risk`和same-package G10A types；拒绝filesystem/network/provider SDK/process/database/cloud、dynamic import、MarketBundle、Runtime、Engine、Runner、mutable module/class/decorator state与wall clock。Production Runtime不得import concrete profile；不新增dependency；
+27. G10F不拥有account source acquisition/secrets/storage/completeness、Wallet/Ledger initial state、actual commission parity、VIP qualification、BNB conversion、negative rebate accounting、multi-currency collateral/FX/haircut、isolated wallet、Position reconstruction、Margin calculation、working-order count、Order/Exposure capacity、AccountRiskPolicy completion、Fee evaluation/Journal、Bundle Builder、Profile composition、live、deployment或parity。G12与G10H完成前固定development-grade。
+
+Primary-source contract：`docs/research/binance-usdm-fee-account-profile-primary-sources.md`。
+
+Readiness baseline：
+
+```text
+G10E frozen acceptance command                                     112 passed
+Full test suite                                                    1072 passed
+Workspace import boundary                                           PASS (78 files)
+mypy 2.3.0                                                           no issues (78 source files)
+Primary LSP + scoped pi-lens                                         no blocking errors
+uv lock --check                                                      PASS
+Python                                                                3.13.5
+```
+
+Readiness validation：
+
+```text
+G10E frozen acceptance command                                     112 passed
+Full test suite                                                    1072 passed
+Workspace import boundary                                           PASS (78 files)
+mypy 2.3.0                                                           no issues (78 source files)
+Primary LSP + scoped pi-lens                                         no blocking errors
+Markdown + git diff checks                                           PASS
+uv lock --check                                                      PASS
+Python                                                                3.13.5
+```
+
+## 83. PASSED 记录格式
 
 ```yaml
 id: WP-00A

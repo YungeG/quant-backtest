@@ -1690,16 +1690,29 @@ G10E Funding Rate History Regular-only source、stable Slot、fixed post-eligibi
 
 ### Gate G10F Fee and Account Profile
 
-依赖：G05H、G05J、G09F。
+依赖：G05H、G05J、G09F、G10A。
 
-拥有：VIP fee timeline、maker/taker、cross-margin account、leverage policy 和 USDT Reporting Currency 约束。
+拥有：historical account-specific maker/taker fee timeline、cross/single-asset/one-way account mode、selected leverage evidence和USDT Reporting Currency约束。
 
 验收：
 
-- Fee Reservation 与最终 FeeAssessment 使用相同版本化规则来源；
-- Account/Profile identity 进入 Evidence；
-- unsupported isolated、multi-asset 或非声明模式明确 reject；
-- Stablecoin 不因 USDT Reporting Currency 配置而获得隐式 1:1 peg。
+- Production只消费caller-supplied immutable G10A Resolution、Account ID、finite Historical Account Profile Book、evaluated/captured instant与requested Reporting Currency；不得调用authenticated current API、解析provider payload、读取filesystem/wall clock或用current Account/Symbol/Commission response补历史；
+- 一个Profile Band exact保存account/symbol/commission/feeBurn四类first-party snapshot的独立source/revision lineage、finite half-open effective interval与full available-at；Book必须canonical-sort并exact-cover请求窗口；
+- account-specific per-symbol `makerCommissionRate`/`takerCommissionRate`是Fee authority；`feeTier`只保留raw evidence，不从VIP公开表、announcement、tradeGroup或neighboring symbol推导rate；
+- accepted v1 account exact为`canTrade=true`、standard UM scope、One-way (`dualSidePosition=false`)、Single-Asset (`multiAssetsMargin=false`)、`CROSSED`、`isAutoAddMargin=false`、`feeBurn=false`；Hedge、Multi-Assets、isolated、auto-add、Portfolio Margin或BNB fee discount structured fail closed；
+- selected positive integral leverage direct映射G09E `LinearMarginLeverageEvidence` basis `notional_per_initial_margin`，effective/available interval来自Band；不得使用G10C `ma/mi/initialLeverage`、current Symbol Config、`maxNotionalValue`或neighboring symbol替代selected leverage；
+- Commission Rate允许non-negative ordinary decimal与zero。Negative maker rebate/LP program不clip为zero、不写negative fee，v1 structured unsupported；raw trailing zeros进入source identity；
+- Fee currency、G10A quote/settlement Currency和requested Reporting Currency必须exact `USDT`；固定Fee Scale 8，不为USDC/BUSD/BNB建立隐式peg、FX或stablecoin conversion；
+- `AccountFeeScheduleRef` digest绑定Account/Instrument、maker/taker、feeTier、feeBurn、mode、source revisions、Currency/Scale与quantization；Reservation与Final Rule Set exact共享该Ref；
+- Fee Reservation Rule Set显式包含market-fee/tax `not_applicable`及account-schedule `order_notional` rule，rate exact为`max(maker,taker)`且USDT Scale 8 `CEILING`；不得按可能Fill数重复预留；
+- Final Fee Rule Set显式包含market-fee/tax `not_applicable`及separate account-schedule maker-only/taker-only per-Fill notional rules，USDT Scale 8 `TOWARD_ZERO`。Fill liquidity role与actual price×quantity仍由generic FeeAssessmentEngine拥有；
+- final fee rounding是development convention，G10H必须与archived Account Trade List `commission/commissionAsset/maker`逐Fill parity后才能升级；G10F不把actual historical commission amount作为未来synthetic Fill fee；
+- Resolution保存active Band、selected leverage、Leverage Evidence、AccountFeeScheduleRef、Reservation/Final Rule Sets、normalized mode、Reporting/Fee Currency、`FeeReserveFundingSource.AVAILABLE_MARGIN`、limitations与`decision_grade_eligible=false`；
+- G10F不创建完整`AccountRiskPolicy`：order capacity/exposure limits、G10B deferred counts、G09F available margin与capability intersection由G10G组合；不映射Wallet/Ledger state；
+- failure precedence、constructor/hash forgery、source conflict、input-order parity、before/at/after update、fee/leverage/mode transitions、all unsupported modes与negative rebate均由static source/golden冻结；
+- G12证明account initial state、all config/commission/leverage/feeBurn revisions与coverage前固定development-grade；Production module不修改generic Fee Estimator/Engine、Margin、Account Margin、PreTradeRisk、Journal、Ledger、Engine、Runner或Timeline增加Binance branch。
+
+Primary source note：`docs/research/binance-usdm-fee-account-profile-primary-sources.md`。
 
 ### Gate G10G Binance Profile Composition
 

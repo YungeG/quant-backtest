@@ -340,6 +340,14 @@ G10D caller-supplied的纯离线immutable source authority：aggregate trades只
 
 G10E caller-supplied的纯离线immutable Funding Rate History authority。Exact `fundingTime`派生G09C Slot；`fundingRate`直接映射final applied fraction；同row `markPrice`唯一映射Funding Mark。v1只接受一个visible `Regular` root row，`Special`、duplicate/conflict/supersession、missing rate/mark/type或current/predicted fallback都structured fail closed。冻结实现commit为`195265b1ed830e62b91882ff315b115e7ac80597`。
 
+## Binance USDⓈ-M 历史账户配置簿（Binance USDⓈ-M Historical Account Profile Book）
+
+G10F caller-supplied的纯离线immutable account authority，对齐Account Config、Symbol Config、User Commission Rate与feeBurn snapshots。v1只支持standard UM、tradable、One-way、Single-Asset、CROSSED、no-auto-add、feeBurn off与USDT-only；输出selected Leverage Evidence及共享AccountFeeScheduleRef的Reservation/Final Fee Rule Sets。Current authenticated state不能补历史。
+
+## Binance USDⓈ-M 手续费账户规则（Binance USDⓈ-M Account Fee Rules）
+
+Per-symbol maker/taker commission是authority，feeTier只作evidence。Reservation使用`max(maker,taker)`和USDT Scale 8 CEILING；Final按actual Fill liquidity逐Fill使用maker-only/taker-only与TOWARD_ZERO。Negative rebate、BNB discount和rounding parity未冻结为decision-grade，必须fail closed或保留development limitation。
+
 ## 资金发布与应用时点（Funding Publication and Application Instant）
 
 Binance只提供millisecond funding UTC，repository冻结target UTC `TimelinePhase(110,"funding_settlement")/SourceSequence(0)`作为system ordering convention：位于G09C eligibility phase 100之后，同时作为Publication availability与G09D `applied_at`。Archive capture/revision visibility另行保存，不能与economic funding time合并。
