@@ -138,7 +138,7 @@ artifact_hashes: []
 | G10G | PASSED — immutable commit `12286dbf6b7289fcb2f6069c46fc648d8f5a5be0` | backtest-runtime composition | G10A–G10F | Resolved profile E2E |
 | G10H | PASSED — immutable commit `468c91ad3fdbad221c959182f8751300f20a2424` | parity tooling | G10G, WP-00C | none |
 | G11A | PASSED — immutable commit `72fe31f5b10d785340b11ca0fd3d0fec8c1c4a34` | backtest-runtime observations | G07, WP-06A | none |
-| G11B | READY | backtest-runtime observations | G11A | none |
+| G11B | PASSED | backtest-runtime observations | G11A | none |
 | G11C | DRAFT | backtest-runtime observations | G11A–G11B | Universe fixtures |
 | G11D | DRAFT | backtest-runtime observations | G11A–G11B | Bar/window fixtures |
 | G11E | DRAFT | backtest-runtime strategy | G11B, G11D | Schedule/warmup fixtures |
@@ -8689,7 +8689,7 @@ Implementation commit：`72fe31f5b10d785340b11ca0fd3d0fec8c1c4a34`。
 
 ```yaml
 id: G11B
-status: READY
+status: PASSED
 depends_on:
   - G11A
 owner_package: backtest-runtime observations
@@ -8747,6 +8747,11 @@ evidence:
   - import-boundary-report
   - static-type-report
   - dependency-lock-report
+passed_commit: c40de40a8e9117b95f3155ac2ebd5d3b4c7a95c8
+artifact_hashes:
+  tests/fixtures/runtime/observations/observation-revision-causality-v1.json: sha256:f5642321dcc1d61b485d17d32dddd6ed0eb2155ea23946edf663a4b0ddce18de
+  build/acceptance/g11b-pytest.xml: sha256:4b977cf6708e8bd670ad1bafb1cfac33495cc22e9bdfa52aec1afe39f4a010c9
+  build/acceptance/g11b-import-boundary-report.json: sha256:638223017e9fcec58200226a92610dc39dd20a59d443e4a733f2ecf919aef6cd
 ```
 
 ### G11B Acceptance
@@ -8805,6 +8810,24 @@ Markdown + git diff checks                                           PASS
 uv lock --check                                                      PASS
 Python                                                                3.13.5
 ```
+
+Acceptance validation：
+
+```text
+G11B frozen acceptance command                                      51 passed
+Point-in-time observation contract/golden/boundary                  17 passed
+Full test suite                                                    1137 passed
+Workspace import boundary                                           PASS (81 files)
+mypy 2.3.0                                                           no issues (81 package source files)
+Primary LSP                                                          clean (6 files)
+pi-lens scoped review                                                no findings across 6 changed files
+Static golden/revision/failure/forgery controls                      PASS
+Markdown + git diff checks                                           PASS
+uv lock --check                                                      PASS
+Python                                                                3.13.5
+```
+
+Implementation commit：`c40de40a8e9117b95f3155ac2ebd5d3b4c7a95c8`。
 
 ## 87. PASSED 记录格式
 
