@@ -346,7 +346,7 @@ G10F caller-supplied的纯离线immutable account authority，对齐Account Conf
 
 ## Binance USDⓈ-M 手续费账户规则（Binance USDⓈ-M Account Fee Rules）
 
-Per-symbol maker/taker commission是authority，feeTier只作evidence。Reservation使用`max(maker,taker)`和USDT Scale 8 CEILING；Final按actual Fill liquidity逐Fill使用maker-only/taker-only与TOWARD_ZERO。Negative rebate、BNB discount和rounding parity未冻结为decision-grade，必须fail closed或保留development limitation。
+Per-symbol maker/taker commission是authority，feeTier只作evidence。Reservation使用`max(maker,taker)`和USDT Scale 8 CEILING；Final按actual Fill liquidity逐Fill使用maker-only/taker-only与TOWARD_ZERO。Market fee/Tax的显式N/A coverage rules使用generic Estimator/Engine可执行的zero-rate basis，不使用会被generic unknown-basis检查拒绝的UNKNOWN。Negative rebate、BNB discount和rounding parity未冻结为decision-grade，必须fail closed或保留development limitation。
 
 ## 资金发布与应用时点（Funding Publication and Application Instant）
 

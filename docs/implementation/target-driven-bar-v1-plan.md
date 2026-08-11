@@ -1704,8 +1704,8 @@ G10E Funding Rate History Regular-only source、stable Slot、fixed post-eligibi
 - Commission Rate允许non-negative ordinary decimal与zero。Negative maker rebate/LP program不clip为zero、不写negative fee，v1 structured unsupported；raw trailing zeros进入source identity；
 - Fee currency、G10A quote/settlement Currency和requested Reporting Currency必须exact `USDT`；固定Fee Scale 8，不为USDC/BUSD/BNB建立隐式peg、FX或stablecoin conversion；
 - `AccountFeeScheduleRef` digest绑定Account/Instrument、maker/taker、feeTier、feeBurn、mode、source revisions、Currency/Scale与quantization；Reservation与Final Rule Set exact共享该Ref；
-- Fee Reservation Rule Set显式包含market-fee/tax `not_applicable`及account-schedule `order_notional` rule，rate exact为`max(maker,taker)`且USDT Scale 8 `CEILING`；不得按可能Fill数重复预留；
-- Final Fee Rule Set显式包含market-fee/tax `not_applicable`及separate account-schedule maker-only/taker-only per-Fill notional rules，USDT Scale 8 `TOWARD_ZERO`。Fill liquidity role与actual price×quantity仍由generic FeeAssessmentEngine拥有；
+- Fee Reservation Rule Set显式包含market-fee/tax `ORDER_NOTIONAL+NOT_APPLICABLE+zero rate`及account-schedule `ORDER_NOTIONAL+APPLIES` rule，account rate exact为`max(maker,taker)`且USDT Scale 8 `CEILING`；zero-rate N/A形式保持generic Estimator可执行，不得按可能Fill数重复预留；
+- Final Fee Rule Set显式包含market-fee/tax `FILL+NOTIONAL_RATE+NOT_APPLICABLE+zero rate`及separate account-schedule maker-only/taker-only per-Fill notional rules，USDT Scale 8 `TOWARD_ZERO`。Zero-rate N/A形式保持generic Engine可执行；Fill liquidity role与actual price×quantity仍由generic FeeAssessmentEngine拥有；
 - final fee rounding是development convention，G10H必须与archived Account Trade List `commission/commissionAsset/maker`逐Fill parity后才能升级；G10F不把actual historical commission amount作为未来synthetic Fill fee；
 - Resolution保存active Band、selected leverage、Leverage Evidence、AccountFeeScheduleRef、Reservation/Final Rule Sets、normalized mode、Reporting/Fee Currency、`FeeReserveFundingSource.AVAILABLE_MARGIN`、limitations与`decision_grade_eligible=false`；
 - G10F不创建完整`AccountRiskPolicy`：order capacity/exposure limits、G10B deferred counts、G09F available margin与capability intersection由G10G组合；不映射Wallet/Ledger state；
