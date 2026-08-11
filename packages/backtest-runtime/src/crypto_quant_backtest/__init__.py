@@ -132,6 +132,9 @@ from .liquidation_audit import (
     LinearLiquidationPositionAudit,
 )
 from .observations import (
+    ObservationCausalityFailure,
+    ObservationCausalityFailureCode,
+    ObservationCausalityTrace,
     ObservationPurposeRef,
     ObservationQuery,
     ObservationQueryFailure,
@@ -140,6 +143,10 @@ from .observations import (
     ObservationQueryResult,
     ObservationRecord,
     ObservationView,
+    PointInTimeObservationQueryOutcome,
+    PointInTimeObservationQueryResult,
+    PointInTimeObservationView,
+    RevisionedObservationRecord,
 )
 from .ports import (
     CloseoutPolicy,
@@ -408,6 +415,9 @@ __all__ = [
     "NextEligibleBarOpenModel",
     "NoEligibleBarAction",
     "NormalizedBacktestRequest",
+    "ObservationCausalityFailure",
+    "ObservationCausalityFailureCode",
+    "ObservationCausalityTrace",
     "ObservationPurposeRef",
     "ObservationQuery",
     "ObservationQueryFailure",
@@ -416,6 +426,10 @@ __all__ = [
     "ObservationQueryResult",
     "ObservationRecord",
     "ObservationView",
+    "PointInTimeObservationQueryOutcome",
+    "PointInTimeObservationQueryResult",
+    "PointInTimeObservationView",
+    "RevisionedObservationRecord",
     "OrderEventPlan",
     "OrderTerminatedByRunEnd",
     "PendingFeeAssessmentRef",
