@@ -9092,7 +9092,100 @@ Python                                                                3.13.5
 
 Implementation commit：`91571d219b432348f5fc04e63d72ce54d3ff024b`。
 
-## 89. PASSED 记录格式
+## 89. G11H Model Artifact and Revision Timeline Acceptance Card
+
+```yaml
+id: G11H
+status: DRAFT
+depends_on:
+  - G11B
+  - G11F
+owner_package: backtest-runtime strategy
+public_interface:
+  - crypto_quant_backtest.ModelArtifactRef
+  - crypto_quant_backtest.ModelRevisionTimeline
+test_commands:
+  readiness: uv run pytest -q tests/runtime/observations/test_point_in_time_observation_view.py tests/runtime/observations/test_point_in_time_observation_view_golden.py tests/runtime/strategy_state/test_strategy_state.py tests/runtime/strategy_state/test_strategy_state_golden.py tests/domain/canonical tests/architecture/test_g11b_observation_causality_boundary.py tests/architecture/test_g11f_strategy_state_boundary.py tests/architecture/test_public_api_imports.py tests/architecture/test_repository_cleanliness.py
+  contract: uv run pytest -q tests/runtime/model_revisions/test_model_revision_timeline.py
+  fixture: uv run pytest -q tests/runtime/model_revisions/test_model_revision_timeline_golden.py
+  boundary: uv run pytest -q tests/architecture/test_g11h_model_revision_boundary.py tests/architecture/test_g11b_observation_causality_boundary.py tests/architecture/test_g11f_strategy_state_boundary.py tests/architecture/test_public_api_imports.py tests/architecture/test_repository_cleanliness.py
+  acceptance: uv run pytest -q tests/runtime/model_revisions/test_model_revision_timeline.py tests/runtime/model_revisions/test_model_revision_timeline_golden.py tests/runtime/observations/test_point_in_time_observation_view.py tests/runtime/strategy_state/test_strategy_state.py tests/domain/canonical tests/architecture/test_g11h_model_revision_boundary.py tests/architecture/test_g11b_observation_causality_boundary.py tests/architecture/test_g11f_strategy_state_boundary.py tests/architecture/test_public_api_imports.py tests/architecture/test_repository_cleanliness.py --junitxml=build/acceptance/g11h-pytest.xml
+fixture_ids:
+  - walk-forward-model-revision-v1
+expected_artifacts:
+  - docs/research/g11h-model-artifact-revision-timeline.md
+  - tests/fixtures/runtime/model-revisions/walk-forward-model-revision-v1.json
+  - build/acceptance/g11h-pytest.xml
+  - build/acceptance/g11h-import-boundary-report.json
+failure_contracts:
+  - model-reference-omits-content-training-code-data-window-or-feature-schema-identity
+  - model-bytes-path-loader-callback-framework-or-endpoint-enters-runtime-reference
+  - training-window-is-empty-reversed-or-ends-after-artifact-availability
+  - utc-only-cutoff-exposes-same-time-later-phase-or-sequence-artifact
+  - future-or-unrelated-model-evidence-changes-prior-timeline-or-selection
+  - same-model-revision-identity-has-conflicting-content
+  - visible-model-revision-parent-is-missing
+  - visible-model-revision-chain-forks-cycles-or-has-multiple-roots-or-terminals
+  - feature-schema-changes-silently-inside-one-model-lineage
+  - child-model-revision-availability-does-not-strictly-follow-parent
+  - selected-model-is-not-the-latest-visible-terminal
+  - empty-visible-timeline-is-treated-as-training-or-coverage-failure
+  - input-order-or-exact-duplicate-changes-canonical-output
+  - g11h-trains-ranks-loads-executes-or-mutates-strategy-state
+  - g11h-claims-model-quality-decision-grade-live-or-deployment-authorization
+allowed_grade: development
+evidence:
+  - immutable-model-provenance-contract-tests
+  - full-simulation-instant-visibility-tests
+  - revision-chain-selection-and-failure-precedence-tests
+  - future-and-unrelated-model-noninterference-tests
+  - walk-forward-switch-static-golden-hash
+  - constructor-forgery-controls
+  - public-api-import-report
+  - import-boundary-report
+  - static-type-report
+  - dependency-lock-report
+```
+
+### G11H Acceptance
+
+1. G11H只新增one production module `crypto_quant_backtest.model_revisions`与root exports `ModelArtifactRef`、`ModelRevisionTimeline`。它是pure immutable、provider-neutral、offline point-in-time reference seam，不训练、加载、执行、评分或选择候选模型；
+2. `ModelArtifactRef` exact保存canonical nonempty `model_key`、`model_hash`、`training_data_hash`、`training_start: UtcInstant`、`training_end: UtcInstant`、`training_code_hash`、`feature_schema_hash`、`available_at: SimulationInstant`、canonical `revision_id`与optional `supersedes_revision_id`；
+3. 四个hash field exact必须为`sha256:<64 lowercase hex>`。Reference不保存model bytes、weights、path、URI、loader、callable、module/class、framework object、endpoint、registry handle、score/rank、mutable status、Attempt或wall-clock identity；
+4. Training interval必须`training_start < training_end`且`training_end <= available_at.instant`。Training interval是economic provenance，artifact visibility使用full SimulationInstant；G11H不猜timezone、capture delay或training completion；
+5. `ModelArtifactRef` canonical body exact为`{type="model_artifact_ref",schema_version=1,model_key,model_hash,training_data_hash,training_start,training_end,training_code_hash,feature_schema_hash,available_at,revision_id,supersedes_revision_id}`。`artifact_ref_hash=canonical_sha256(body)`且canonical dict只追加non-recursive hash；
+6. `ModelRevisionTimeline` constructor exact只接收canonical `model_key`、`decision_instant: SimulationInstant`与`ModelArtifactRef` iterable。Public behavior exact只有`timeline_hash`与argument-free `select() -> ModelArtifactRef | None`；不得暴露backing/future revisions、mutable registry或loader；
+7. Construction processing order exact为：discard refs with other model key；discard `available_at > decision_instant` future refs using full total order；collapse exact duplicate canonical refs；validate/freeze visible revision chain；derive timeline hash。Future/unrelated malformed chain evidence不能阻断或改变prior timeline/selection；
+8. Visible revision identity exact为`(model_key,revision_id)`。Exact duplicate refs collapse；same identity/different canonical content fail closed。Input order不得改变visible chain、timeline hash或selection；
+9. Visible legal lineage exact有one root、unique revision IDs、every child naming same-lineage visible parent、no fork/cycle/disconnected second root/multiple terminal。Failure precedence exact为revision-ID conflict→missing parent→chain conflict→feature-schema mismatch→availability regression；
+10. `feature_schema_hash`必须在one model lineage内exact stable。Feature interface change需要new model key或later explicit migration contract；不得silent fallback。Training data/window、training code和model content允许逐revision变化且全部保留identity；
+11. Child `available_at`必须strictly greater than parent in full SimulationInstant order。Same UTC later phase/sequence可合法；equal/earlier full instant fail closed。Future child存在时visible predecessor仍是terminal；
+12. `select()`成功返回visible legal chain unique terminal exact object；没有visible ref成功返回None。Empty不等于Missing Bundle、training failure、model quality failure、Universe exclusion或deployment blocker；
+13. Timeline canonical body exact为`{type="model_revision_timeline",schema_version=1,model_key,decision_instant,visible_artifacts}`，visible refs按root→terminal chain order且使用full canonical dict。`timeline_hash=canonical_sha256(body)`且non-recursive；
+14. Adding/reordering other model refs、future refs、future conflicts或exact duplicates必须产生same prior timeline hash与selection canonical bytes/hash。Later model revision不得retroactively rewrite earlier DecisionContext；
+15. Model key、Decision full instant、any visible provenance/hash/window/revision/availability field变化必须改变timeline identity。Selected Artifact identity可由G11I写入StrategyState/Decision evidence，但G11H本身不得mutate StrategyState或produce Decision；
+16. Constructor与`dataclasses.replace`必须重新验证hashes、training interval、availability、revision text与supersession identity。Timeline rejects malformed visible chains deterministically；derived hashes不接受caller input；
+17. Runtime training、fine-tuning、feature computation、parameter search、candidate ranking/best-model selection、experiment comparison、model deserialization/inference callback与remote/file/object-store acquisition全部outside G11H；
+18. Production imports exact只允许stdlib immutable collection support与`crypto_quant_domain` public canonical/time contracts。Observation implementation may inform semantics but G11H module不得import Engine、Runner、Timeline runtime object、StrategyState implementation、Trading Kernel、ML framework或provider SDK；
+19. Static golden至少冻结before/at same-UTC correction、future conflict/unrelated model noninterference、v1→v2 terminal selection、empty success、all visible chain failures、feature-schema failure、full provenance/timeline hashes、input/repeat parity及forgery controls；
+20. G11H outputs固定development-only，不声明model quality、decision-grade eligibility、live inference或deployment authorization。Historical artifact acquisition/completeness/retention remains external/G12 authority。
+
+Frozen seam note：`docs/research/g11h-model-artifact-revision-timeline.md`。
+
+Readiness baseline：
+
+```text
+G11B and G11F frozen contracts                                       pending validation
+Workspace import boundary                                           pending validation
+mypy 2.3.0                                                           pending validation
+Primary LSP                                                          pending validation
+pi-lens scoped review                                                pending validation
+Markdown + git diff checks                                           PASS
+uv lock --check                                                      pending validation
+Python                                                                3.13.5
+```
+
+## 90. PASSED 记录格式
 
 ```yaml
 id: WP-00A
