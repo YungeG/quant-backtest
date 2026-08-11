@@ -15,6 +15,7 @@ id = "trading-kernel"
 module = "crypto_quant_trading"
 source = "packages/trading-kernel/src"
 allowed_workspace_modules = ["crypto_quant_domain"]
+public_submodules = ["crypto_quant_trading.profiles.binance_usdm"]
 
 [[packages]]
 id = "market-data-contracts"

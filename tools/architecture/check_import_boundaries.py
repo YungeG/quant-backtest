@@ -35,6 +35,7 @@ class PackagePolicy:
     module: str
     source: str
     allowed_workspace_modules: frozenset[str]
+    public_modules: frozenset[str]
 
 
 @dataclass(frozen=True)
@@ -135,6 +136,25 @@ def load_policy(path: Path) -> Policy:
                 f"packages[{index}].allowed_workspace_modules",
             )
         )
+        public_modules = frozenset(
+            (
+                module,
+                *require_string_list(
+                    row.get("public_submodules", []),
+                    f"packages[{index}].public_submodules",
+                ),
+            )
+        )
+        invalid_public_modules = tuple(
+            value
+            for value in public_modules
+            if value != module and not value.startswith(f"{module}.")
+        )
+        if invalid_public_modules:
+            raise PolicyError(
+                "invalid-policy",
+                f"Package {package_id} public modules must be under {module}",
+            )
         if package_id in package_ids or module in package_modules or source in package_sources:
             raise PolicyError(
                 "invalid-policy",
@@ -143,7 +163,9 @@ def load_policy(path: Path) -> Policy:
         package_ids.add(package_id)
         package_modules.add(module)
         package_sources.add(source)
-        packages.append(PackagePolicy(package_id, module, source, allowed))
+        packages.append(
+            PackagePolicy(package_id, module, source, allowed, public_modules)
+        )
 
     for package in packages:
         unknown = package.allowed_workspace_modules - package_modules
@@ -635,7 +657,7 @@ def check_occurrence(
                 ),
             )
         ]
-    if occurrence.target != target_package.module:
+    if occurrence.target not in target_package.public_modules:
         return [
             Violation(
                 rule="cross-package-internal-import",
@@ -644,8 +666,8 @@ def check_occurrence(
                 column=occurrence.column,
                 import_target=occurrence.target,
                 message=(
-                    f"Cross-package imports must use public root "
-                    f"{target_package.module}"
+                    "Cross-package imports must use a declared public module: "
+                    f"{', '.join(sorted(target_package.public_modules))}"
                 ),
             )
         ]

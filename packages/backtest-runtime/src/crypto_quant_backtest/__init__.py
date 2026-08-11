@@ -1,5 +1,17 @@
 """Deterministic historical backtest runtime."""
 
+from .binance_usdm_profile import (
+    BinanceUsdmAccountCapacityEvidence,
+    BinanceUsdmExecutionAccountProfile,
+    BinanceUsdmMarketSemanticsProfile,
+    BinanceUsdmProfileComposer,
+    BinanceUsdmProfileCompositionFailure,
+    BinanceUsdmProfileCompositionFailureCode,
+    BinanceUsdmProfileCompositionOutcome,
+    BinanceUsdmProfileCompositionRequest,
+    BinanceUsdmResolvedProfile,
+    BinanceUsdmSimulationProfile,
+)
 from .composition import ExecutionCaseComposer
 from .engine import (
     DeterministicBarEngine,
@@ -256,6 +268,16 @@ __all__ = [
     "BacktestResolutionFailureCode",
     "BacktestResolutionOutcome",
     "BacktestRunOutcome",
+    "BinanceUsdmAccountCapacityEvidence",
+    "BinanceUsdmExecutionAccountProfile",
+    "BinanceUsdmMarketSemanticsProfile",
+    "BinanceUsdmProfileComposer",
+    "BinanceUsdmProfileCompositionFailure",
+    "BinanceUsdmProfileCompositionFailureCode",
+    "BinanceUsdmProfileCompositionOutcome",
+    "BinanceUsdmProfileCompositionRequest",
+    "BinanceUsdmResolvedProfile",
+    "BinanceUsdmSimulationProfile",
     "BarIneligibilityReason",
     "BarLiquidityEvidence",
     "BarOpenCandidate",
