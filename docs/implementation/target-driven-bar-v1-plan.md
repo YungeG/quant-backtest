@@ -1686,6 +1686,8 @@ G10D fixed purpose mapping、point-in-time availability、generic MarkResolver d
 
 Primary source note：`docs/research/binance-usdm-funding-source-semantics-primary-sources.md`。
 
+G10E Funding Rate History Regular-only source、stable Slot、fixed post-eligibility settlement instant、direct Rate、same-row Funding Mark、G09C/G09D evidence、failure precedence、golden与purity boundaries已由implementation commit `195265b1ed830e62b91882ff315b115e7ac80597`冻结通过。
+
 ### Gate G10F Fee and Account Profile
 
 依赖：G05H、G05J、G09F。

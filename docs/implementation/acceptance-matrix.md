@@ -130,7 +130,7 @@ artifact_hashes: []
 | G10B | PASSED — immutable commit `11072289a9dda708a185ae2edcbf5fcdf0c7bd55` | trading-kernel profiles/binance_usdm | G10A, WP-05G | none |
 | G10C | PASSED — immutable commit `50fa838f901385498ce18d65a897d4eb1dc31337` | trading-kernel margin requirement + profiles/binance_usdm | G10A, G09E | none |
 | G10D | PASSED — immutable commit `790469d80ddcf3797f03c96c975b77d75a3d49a5` | trading-kernel profiles/binance_usdm | G10A, WP-03C | none |
-| G10E | READY | trading-kernel profiles/binance_usdm | G09C–G09D, G10D | Funding source fixtures |
+| G10E | PASSED — immutable commit `195265b1ed830e62b91882ff315b115e7ac80597` | trading-kernel profiles/binance_usdm | G09C–G09D, G10D | Funding source fixtures |
 | G10F | DRAFT | trading-kernel profiles/binance_usdm | WP-05H, WP-05J, G09F | Fee/account fixtures |
 | G10G | DRAFT | backtest-runtime composition | G10A–G10F | Resolved profile E2E |
 | G10H | DRAFT | parity tooling | G10G, WP-00C | crypt-gemini parity |
@@ -7942,7 +7942,7 @@ Python                                                                3.13.5
 
 ```yaml
 id: G10E
-status: READY
+status: PASSED
 depends_on:
   - G09C
   - G09D
@@ -8001,8 +8001,12 @@ evidence:
   - import-boundary-report
   - static-type-report
   - dependency-lock-report
-passed_commit: null
-artifact_hashes: []
+passed_commit: 195265b1ed830e62b91882ff315b115e7ac80597
+artifact_hashes:
+  tests/fixtures/profiles/binance-usdm-historical-funding-source-v1.json: sha256:db70f5bded639e56373a1bfa7fe3a16350f712f18a2f9a8bc9dbae091d756b76
+  tests/fixtures/profiles/binance-usdm-funding-source-semantics-v1.json: sha256:9e1fdf8b190d8cc952c3e6017d326029ba4c0dec9d2b95745a0e759084e5f457
+  build/acceptance/g10e-pytest.xml: sha256:fad8b12b60ed87bdff4c6f4080f0d2ffd38a435ebf42e6273147f7cb54801af1
+  build/acceptance/g10e-import-boundary-report.json: sha256:d9c1ea3790e4ab529930768c6984b0f552a12832dd119b9c6276925d5d5b7156
 ```
 
 ### G10E Acceptance
@@ -8033,6 +8037,8 @@ artifact_hashes: []
 22. Concrete purity scanner allowlist只允许stdlib、`crypto_quant_domain`、generic `marks`、G09A/G09C/G09D frozen types和same-package G10A types；拒绝filesystem/network/provider SDK/process/database/cloud、dynamic import、MarketBundle、Runtime、Engine、Runner、mutable module/class/decorator state与wall clock。Production Runtime不得import concrete profile；不新增dependency；
 23. G10E不拥有Funding archive acquisition/parser/checksum/completeness、historical funding formula/cap/interval reconstruction、Position Snapshot/Eligibility resolution、account user-data/Income parity、cash-flow formula、Money quantization、Journal append、Ledger mutation、Fee、Margin、Liquidation、Bundle Builder、Profile composition、live、deployment或parity。G12完成funding archive initial state、all revisions/checksums与slot-gap proof前，Resolution固定development-grade。
 
+G10E已由immutable implementation commit `195265b1ed830e62b91882ff315b115e7ac80597`实现并通过冻结验收，状态为`PASSED`。
+
 Primary-source contract：`docs/research/binance-usdm-funding-source-semantics-primary-sources.md`。
 
 Readiness baseline：
@@ -8056,6 +8062,18 @@ Workspace import boundary                                           PASS (77 fil
 mypy 2.3.0                                                           no issues (77 source files)
 Primary LSP + scoped pi-lens                                         no blocking errors
 Markdown + git diff checks                                           PASS
+uv lock --check                                                      PASS
+Python                                                                3.13.5
+```
+
+PASSED validation：
+
+```text
+G10E frozen acceptance command                                     112 passed
+Full test suite                                                    1072 passed
+Workspace import boundary                                           PASS (78 files)
+mypy 2.3.0                                                           no issues (78 source files)
+Primary LSP + scoped pi-lens                                         no diagnostics
 uv lock --check                                                      PASS
 Python                                                                3.13.5
 ```

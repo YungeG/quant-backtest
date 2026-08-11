@@ -338,7 +338,7 @@ G10D caller-supplied的纯离线immutable source authority：aggregate trades只
 
 ## Binance USDⓈ-M 历史资金簿（Binance USDⓈ-M Historical Funding Book）
 
-G10E caller-supplied的纯离线immutable Funding Rate History authority。Exact `fundingTime`派生G09C Slot；`fundingRate`直接映射final applied fraction；同row `markPrice`唯一映射Funding Mark。v1只接受一个visible `Regular` root row，`Special`、duplicate/conflict/supersession、missing rate/mark/type或current/predicted fallback都structured fail closed。
+G10E caller-supplied的纯离线immutable Funding Rate History authority。Exact `fundingTime`派生G09C Slot；`fundingRate`直接映射final applied fraction；同row `markPrice`唯一映射Funding Mark。v1只接受一个visible `Regular` root row，`Special`、duplicate/conflict/supersession、missing rate/mark/type或current/predicted fallback都structured fail closed。冻结实现commit为`195265b1ed830e62b91882ff315b115e7ac80597`。
 
 ## 资金发布与应用时点（Funding Publication and Application Instant）
 
