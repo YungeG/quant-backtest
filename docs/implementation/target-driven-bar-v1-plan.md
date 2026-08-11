@@ -1743,19 +1743,26 @@ G10G pure composition authority、three profile registrations、conservative Acc
 
 Primary source and composition convention note：`docs/research/binance-usdm-profile-composition-primary-sources.md`。
 
-### Gate G10H `crypt-gemini` Parity
+### Gate G10H Binance USDⓈ-M Layered Parity
 
 依赖：G10G、WP-00C。
 
-拥有：固定 `crypt-gemini` Source Snapshot、Comparator Contract 和 first-divergence ParityReport。
+拥有：固定`crypt-gemini` Source Snapshot、caller-supplied canonical Binance account-record projection、existing Comparator Contract v1调用、13-layer coverage与first-divergence composite Parity Report。G10H是pure offline parity tooling，不是第二套exchange simulator或provider acquisition gate。
 
 验收：
 
-- 比较 Decision/Order/Fill/Funding/Fee/Journal/Margin，而不只比较最终收益；
-- 不使用全局 epsilon；
-- 每项 explicit tolerance 或 intentional change 单独声明；
-- intentional semantic change 引用 ADR；
-- Dirty workspace 不作为来源 identity。
+- Legacy identity exact固定archive SHA-256 `d6e6feca46b61586e890a441443738dc9e911a58428c940e86055459361eda80`与content-tree SHA-256 `704dee87020ad119e417fbec3831875f8203787ba06206f625a07e2414a068bb`；Dirty workspace provenance不作为identity，tool也不执行archive code；
+- comparison pairs固定`LEGACY_TO_G10G`、`BINANCE_TO_G10G`。Layer order固定Source Identity、Decision、Order Intent、Order Event、Fill、Fee、Position/PnL、Funding、Journal/Ledger、Margin/Snapshot、Liquidation Audit、Liquidation Execution、Final Result；后续aggregate match不能掩盖较早divergence；
+- 每个pair exact-cover全部layers，每层显式`COMPARABLE`或具体`NOT_COMPARABLE_*` reason。Missing legacy scope、missing provider evidence或G12 archive completeness未证明时不能伪装成Match、zero、tolerance或silent omission；
+- 只复用WP-00C Comparator Contract v1。Exact、sequence、quantized、explicit tolerance和approved change全部path-local；global epsilon与unclassified field继续禁止；
+- Intentional semantic change只引用committed `docs/adr/0001-g10h-legacy-binance-parity-boundary.md`。Legacy long-only/next-open/fixed-cost shortcuts与G10G open-reduce-flip/provider semantics的差异必须可见，不能为追求Match重写；
+- Binance Account Trade按Account+Instrument+Trade ID保存per-Fill price/quantity/maker/commission/realized PnL；Income History只作linked cash-flow cross-check，不能double-book；Order/User Data event、economic、capture与availability times保持分离；`ACCOUNT_UPDATE.bc`不能冒充含PnL/commission的总cash delta；
+- User Force Orders区分Liquidation与ADL。Conservative bar-extreme Audit只能比较detection/classification，不能冒充actual trigger/fill/bankruptcy/insurance execution；public liquidation stream不作complete user archive；
+- CLI在completed `MISMATCH`或`APPROVED_CHANGE`仍生成canonical report并exit 0；invalid/blocked非零。Passing gate证明报告真实可重复，不要求经济Verdict为Match；
+- Static provider fixture仅为pseudonymous first-party-schema example，并显式archive completeness未证明。G12前全部report固定`decision_grade_eligible=false`、`deployment_authorized=false`；
+- Tool只import stdlib与existing parity helpers，不import Engine/Runner/concrete Profile/provider SDK/network/secrets/database/process。G10G projection由tests/support预先生成fixture，Parity runtime不执行Backtest。
+
+Primary-source and parity boundary：`docs/research/binance-usdm-parity-primary-sources.md`。
 
 ---
 

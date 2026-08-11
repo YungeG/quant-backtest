@@ -356,6 +356,22 @@ G10G只组合caller-supplied immutable G10A–G10F authorities，不重新查询
 
 G10G caller-supplied Account Capacity Evidence保存同G10B active source的`MAX_NUM_ORDERS`与`MAX_NUM_ALGO_ORDERS`历史values。Generic AccountRiskPolicy只有一个order-cap dimension，v1显式保守取二者minimum。Exposure cap取G10F selected-leverage `maxNotionalValue`与G10C finite terminal tier coverage的USDT minimum；Working Order count、current Exposure、Available Margin与Reservation仍由generic PreTradeRisk point-in-time input提供。G10G pure composition、development-only dispatcher/Journey、static goldens、ProfileResolver/Runner integration已由implementation commit `12286dbf6b7289fcb2f6069c46fc648d8f5a5be0`冻结通过。
 
+## Binance USDⓈ-M 分层 Parity（Binance USDⓈ-M Layered Parity）
+
+G10H在Runtime外对固定`crypt-gemini` projection、G10G development-run projection与caller-supplied canonical Binance account-record projection进行13层比较。层顺序从Source Identity、Decision、Order、Fill、Fee、Position/PnL、Funding、Journal/Ledger、Margin/Snapshot到Liquidation与Final Result；较早divergence不能被最终PnL或aggregate match隐藏。它只复用WP-00C Comparator Contract v1，不新增第二套exchange simulator。
+
+## Parity 覆盖分类（Parity Coverage Classification）
+
+每个source pair对每个layer的显式资格结果。`COMPARABLE`才能执行exact/path-local comparison；`NOT_COMPARABLE_LEGACY_SCOPE`、`NOT_COMPARABLE_PROVIDER_EVIDENCE`和`NOT_COMPARABLE_ARCHIVE_COMPLETENESS`必须保存reason/evidence，不能被省略、zero、empty或tolerance伪装成Match。Completed Mismatch是有效报告，不等于tooling failure。
+
+## Binance 账户记录投影（Binance Account Record Projection）
+
+Caller-supplied immutable canonical parity input，保留Account Trade per-Fill identity/economics、linked Income cash flows、User Data event/state与User Force Order Liquidation/ADL事实。Account Trade与Income不得double-book；`ACCOUNT_UPDATE.bc`不含PnL/commission，不能替代Fill总cash delta；capture/availability time不得替代matching-engine/economic time。G12 completeness未证明前该投影只能支持record-level development parity。
+
+## 首个语义分歧（First Semantic Divergence）
+
+按固定source-pair、layer、Comparator rule/path顺序选择的最早不同expected/actual事实及reason。它优先于后续aggregate equality。Intentional legacy/G10G差异必须逐path引用`docs/adr/0001-g10h-legacy-binance-parity-boundary.md`，global epsilon禁止。
+
 ## 资金发布与应用时点（Funding Publication and Application Instant）
 
 Binance只提供millisecond funding UTC，repository冻结target UTC `TimelinePhase(110,"funding_settlement")/SourceSequence(0)`作为system ordering convention：位于G09C eligibility phase 100之后，同时作为Publication availability与G09D `applied_at`。Archive capture/revision visibility另行保存，不能与economic funding time合并。

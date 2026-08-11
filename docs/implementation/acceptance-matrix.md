@@ -133,7 +133,7 @@ artifact_hashes: []
 | G10E | PASSED — immutable commit `195265b1ed830e62b91882ff315b115e7ac80597` | trading-kernel profiles/binance_usdm | G09C–G09D, G10D | Funding source fixtures |
 | G10F | READY | trading-kernel profiles/binance_usdm | WP-05H, WP-05J, G09F, G10A | Fee/account fixtures |
 | G10G | PASSED — immutable commit `12286dbf6b7289fcb2f6069c46fc648d8f5a5be0` | backtest-runtime composition | G10A–G10F | Resolved profile E2E |
-| G10H | DRAFT | parity tooling | G10G, WP-00C | crypt-gemini parity |
+| G10H | READY | parity tooling | G10G, WP-00C | none |
 | G11A | DRAFT | backtest-runtime observations | G07 | Capability isolation fixtures |
 | G11B | DRAFT | backtest-runtime observations | G11A | Revision/causality fixtures |
 | G11C | DRAFT | backtest-runtime observations | G11A–G11B | Universe fixtures |
@@ -8388,7 +8388,134 @@ Python                                                                3.13.5
 
 Implementation commit：`12286dbf6b7289fcb2f6069c46fc648d8f5a5be0`。
 
-## 84. PASSED 记录格式
+## 84. G10H Binance USDⓈ-M Layered Parity Acceptance Card
+
+```yaml
+id: G10H
+status: READY
+depends_on:
+  - G10G
+  - WP-00C
+owner_package: parity tooling
+public_interface:
+  - tools/parity/binance_usdm.py
+  - tools/parity/run_binance_usdm_parity.py
+  - binance-usdm-g10h-parity-plan-v1
+  - binance-usdm-g10h-parity-report-v1
+test_commands:
+  readiness: uv run pytest -q tests/runtime/profiles/binance_usdm/test_profile_composition.py tests/support/binance_usdm/test_binance_usdm_profile.py tests/runtime/engine/test_g10g_binance_usdm_journey.py tests/runtime/engine/test_g10g_binance_usdm_golden.py tests/runtime/runner/test_g10g_binance_usdm_runner.py tests/runtime/resolution/test_backtest_resolution.py tests/runtime/engine/test_g09h_synthetic_linear_perpetual_journey.py tests/kernel/pretrade_risk/test_pretrade_risk.py tests/profiles/binance_usdm/test_instrument_metadata.py tests/profiles/binance_usdm/test_order_rules.py tests/profiles/binance_usdm/test_margin_tiers.py tests/profiles/binance_usdm/test_price_streams.py tests/profiles/binance_usdm/test_funding_sources.py tests/profiles/binance_usdm/test_account_profile.py tests/architecture/test_binance_usdm_profile_boundary.py tests/architecture/test_g10g_binance_composition_boundary.py tests/architecture/test_g09h_composition_boundary.py tests/architecture/test_public_api_imports.py tests/architecture/test_repository_cleanliness.py
+  contract: uv run pytest -q tests/parity/test_binance_usdm_parity.py
+  fixture: uv run pytest -q tests/parity/test_binance_usdm_parity_golden.py
+  boundary: uv run pytest -q tests/parity/test_comparator_contract.py tests/parity/test_source_snapshots.py tests/architecture/test_g10h_parity_boundary.py tests/architecture/test_repository_cleanliness.py
+  acceptance: uv run pytest -q tests/parity/test_binance_usdm_parity.py tests/parity/test_binance_usdm_parity_golden.py tests/parity/test_comparator_contract.py tests/parity/test_source_snapshots.py tests/runtime/engine/test_g10g_binance_usdm_journey.py tests/runtime/engine/test_g10g_binance_usdm_golden.py tests/runtime/runner/test_g10g_binance_usdm_runner.py tests/architecture/test_g10h_parity_boundary.py tests/architecture/test_g10g_binance_composition_boundary.py tests/architecture/test_repository_cleanliness.py --junitxml=build/acceptance/g10h-pytest.xml
+fixture_ids:
+  - binance-usdm-g10h-parity-plan-v1
+  - binance-usdm-g10h-legacy-projection-v1
+  - binance-usdm-g10h-g10g-projection-v1
+  - binance-usdm-g10h-provider-record-projection-v1
+  - binance-usdm-g10h-parity-report-v1
+expected_artifacts:
+  - docs/research/binance-usdm-parity-primary-sources.md
+  - docs/adr/0001-g10h-legacy-binance-parity-boundary.md
+  - tests/parity/contracts/binance-usdm-g10h-legacy-to-g10g-v1.json
+  - tests/parity/contracts/binance-usdm-g10h-provider-to-g10g-v1.json
+  - tests/parity/fixtures/binance-usdm-g10h-v1/plan.json
+  - tests/parity/fixtures/binance-usdm-g10h-v1/legacy.expected.json
+  - tests/parity/fixtures/binance-usdm-g10h-v1/g10g.actual.json
+  - tests/parity/fixtures/binance-usdm-g10h-v1/provider.expected.json
+  - tests/parity/fixtures/binance-usdm-g10h-v1/report.expected.json
+  - build/acceptance/g10h-parity-report.json
+  - build/acceptance/g10h-pytest.xml
+  - build/acceptance/g10h-import-boundary-report.json
+failure_contracts:
+  - frozen-crypt-gemini-snapshot-or-content-tree-identity-mismatch
+  - unsafe-missing-duplicate-or-unexpected-parity-plan-path
+  - source-role-pair-case-or-projection-identity-mismatch
+  - parity-layer-order-is-missing-duplicated-or-reordered
+  - pair-layer-coverage-is-missing-duplicated-or-silently-omitted
+  - not-comparable-layer-is-treated-as-match-or-tolerance
+  - comparable-layer-lacks-an-exact-path-local-rule
+  - global-epsilon-or-unclassified-comparator-field
+  - approved-change-lacks-intentional-mode-or-committed-adr
+  - provider-trade-order-income-or-force-order-identity-is-collapsed
+  - account-trade-and-income-history-are-double-booked
+  - event-transaction-economic-capture-or-availability-time-is-substituted
+  - account-update-balance-change-is-treated-as-total-fill-cash-delta
+  - liquidation-and-adl-or-audit-and-execution-are-conflated
+  - later-aggregate-match-hides-an-earlier-layer-divergence
+  - comparator-mismatch-is-treated-as-tooling-failure-or-silently-passes-match
+  - static-schema-example-claims-provider-history-completeness
+  - parity-report-claims-decision-grade-live-or-deployment-authorization
+  - parity-tool-imports-runtime-engine-provider-network-or-secret-state
+allowed_grade: development
+evidence:
+  - frozen-crypt-gemini-source-snapshot-and-content-tree-hashes
+  - official-account-trade-income-user-data-and-force-order-source-note
+  - path-local-comparator-contract-hashes
+  - explicit-layer-coverage-and-not-comparable-reasons
+  - legacy-to-g10g-and-provider-record-to-g10g-comparison-reports
+  - first-divergence-report-and-static-golden-hash
+  - adr-backed-approved-change-evidence
+  - import-boundary-report
+  - static-type-report
+  - dependency-lock-report
+```
+
+### G10H Acceptance
+
+1. G10H只拥有pure offline parity orchestration、canonical JSON validation、existing Comparator Contract v1调用与first-divergence aggregation；不得修改G10G经济语义、Generic Engine/Runner/Journal/Ledger/Profile、调用provider、读取secrets、执行legacy archive code、获取当前状态、补历史缺口或授权live/deployment；
+2. Legacy source identity exact固定为Source ID `crypt-gemini`、Snapshot/archive SHA-256 `d6e6feca46b61586e890a441443738dc9e911a58428c940e86055459361eda80`、content-tree SHA-256 `704dee87020ad119e417fbec3831875f8203787ba06206f625a07e2414a068bb`与base commit `ba36e8a2b9ca1b1a949cf71cc93e175c9ef5e014`。Frozen dirty-worktree provenance不能替代archive/content identity；
+3. Tool只消费caller-supplied immutable canonical projections和plan。Source roles exact为`LEGACY_CRYPT_GEMINI`、`G10G_DEVELOPMENT_RUN`、`BINANCE_ACCOUNT_RECORDS`；comparison pairs exact为`LEGACY_TO_G10G`后接`BINANCE_TO_G10G`，同role重复、缺失或case/source identity冲突fail closed；
+4. Layer order exact为`SOURCE_IDENTITY`、`DECISION`、`ORDER_INTENT`、`ORDER_EVENT`、`FILL`、`FEE`、`POSITION_PNL`、`FUNDING`、`JOURNAL_LEDGER`、`MARGIN_SNAPSHOT`、`LIQUIDATION_AUDIT`、`LIQUIDATION_EXECUTION`、`FINAL_RESULT`。First divergence按pair order、layer order、Comparator rule/path order选择；晚期aggregate match不能覆盖早期mismatch；
+5. 每个pair必须exact-cover全部13 layers，每层有且仅有一个coverage row。Coverage status exact为`COMPARABLE`、`NOT_COMPARABLE_LEGACY_SCOPE`、`NOT_COMPARABLE_PROVIDER_EVIDENCE`或`NOT_COMPARABLE_ARCHIVE_COMPLETENESS`，并保存非空reason与sorted immutable evidence refs；
+6. 只有`COMPARABLE` layer进入Comparator。Not-comparable layer不得被省略、伪装为`MATCH`、zero/empty value、quantization或tolerance；有comparison rule的not-comparable layer和无rule的comparable layer均fail closed；
+7. Existing `tools.migration.legacy_migration.parity` Comparator Contract v1保持唯一比较引擎。G10H不复制或扩展exact/sequence/quantized/explicit-tolerance/approved-change算法；全部input leaves必须被unique sorted non-overlapping path rule分类，global epsilon继续禁止；
+8. `exact`用于identity、typed integer/string和canonical structure；`sequence`用于ordered records并报告首个不同index；`quantized`必须声明positive decimal quantum与rounding；`explicit_tolerance`必须逐path声明absolute/relative值。Tolerance不能用于source identity、provider IDs、event order、currency、side、position side、maker flag、reason/type或coverage；
+9. `approved_change`只允许`intentional_semantic_change` mode并引用已提交`docs/adr/0001-g10h-legacy-binance-parity-boundary.md`。已批准v1 differences仅限legacy long-only vs open/reduce/flip、next-open full-fill vs matching-engine、fixed fee/slippage vs observed maker/taker fill economics、legacy normalized accounting/funding/margin shortcuts、conservative liquidation audit vs actual liquidation/ADL execution及operational vs canonical identity；
+10. Legacy projection只冻结snapshot内真实可复核的Decision/action、OrderTrace、next-open full Fill、fixed fee/slippage、funding ledger、long Position/PnL和result reconciliation。它不得合成snapshot中不存在的partial fill、Short/flip、maker/taker、Binance order/trade IDs、account margin、force order、ADL或matching-engine truth；
+11. Binance account-record projection的per-Fill identity exact为Account+Instrument/Symbol+Trade ID，并保留Order ID、side、position side、price、quantity、quote quantity、maker、commission、commission asset、realized PnL和trade time。Order ID不能折叠multiple fills，current commission rule不能重算或替代observed commission；
+12. Income History保留income type、tranId、amount、asset、symbol和economic time，作为Funding/Commission/Realized PnL cash-flow cross-check；它不替代Account Trade fill authority。Linked Account Trade与Income rows只比较/reconcile一次，不能形成双重Journal effect；`INSURANCE_CLEAR`不得并入ordinary realized PnL；
+13. `ORDER_TRADE_UPDATE`的event generation `E`、transaction/matching-engine `T`、order/trade time与capture/availability time保持分离；`ACCOUNT_UPDATE`只作为balance/position state observation。其`bc`不含PnL/commission，不能作为Fill总cash delta或替代Account Trade/Income fields；
+14. User Force Orders exact区分`LIQUIDATION`与`ADL`并保留Order/client-order identity、status、price/average price、original/executed quantity、cumulative quote和times。Public liquidation stream不是完整user archive；G09G/G10G conservative bar-extreme audit只可比较detection window/classification，不可声称actual trigger/fill/bankruptcy/insurance parity；
+15. Parity plan `schema_version=1` exact保存plan ID、three source refs、two pair refs、13-layer order、coverage rows、Comparator contract/expected/actual repo-relative paths、migration modes、expected pair verdicts、`decision_grade_eligible=false`和`deployment_authorized=false`。所有path必须normalized repo-relative、存在、不可absolute/`..`/symlink escape；
+16. Pair verdict沿existing Comparator为`MATCH`、`MISMATCH`或`APPROVED_CHANGE`。Composite report另保存coverage completeness；若无comparable layer则pair为`NOT_COMPARABLE`。Composite `comparison_verdict` precedence exact为`MISMATCH`→`APPROVED_CHANGE`→`NOT_COMPARABLE`→`MATCH`，但完整per-layer coverage不能被single verdict替代；
+17. Tooling completion与economic verdict分离：completed `MISMATCH`或`APPROVED_CHANGE`必须生成canonical report并以CLI exit 0结束；invalid plan/contract/source/coverage或blocked comparator非零。Optional `--require-match`只在所有pair `MATCH`且coverage complete时exit 0，否则非零；Acceptance不用该flag；
+18. Composite report exact保存schema/version、plan/contract/projection hashes、source manifest、pair reports、all coverage rows、comparison counts、first divergence、limitations、`decision_grade_eligible=false`、`deployment_authorized=false`与non-recursive report hash。相同bytes在不同filesystem root重复运行必须exact相同；wall clock、absolute path、PID、hostname、Attempt ID或runtime address不得进入report；
+19. Frozen provider fixture只可使用pseudonymous/static first-party-schema example records来验证field preservation、linking与first divergence。它必须显式`NOT_COMPARABLE_ARCHIVE_COMPLETENESS`，不能声称真实account history、all pages、initial state或provider completeness；G12 artifacts缺失时G10H永远不能升级decision-grade eligibility；
+20. Failure precedence exact为：`INVALID_PLAN`→`UNSAFE_PATH`→`SOURCE_SNAPSHOT_MISMATCH`→`SOURCE_ROLE_MISMATCH`→`PAIR_IDENTITY_MISMATCH`→`LAYER_ORDER_MISMATCH`→`COVERAGE_MISMATCH`→`NOT_COMPARABLE_RULE_CONFLICT`→`COMPARABLE_RULE_MISSING`→`PROVIDER_IDENTITY_CONFLICT`→`COMPARATOR_BLOCKED`→`EXPECTED_VERDICT_MISMATCH`。多缺陷只报告第一项；
+21. Production package purity保持不变。Parity tool可import stdlib及existing `tools.migration.legacy_migration.parity/snapshots`，但不得import `crypto_quant_backtest` Engine/Runner、concrete Profile implementation、provider SDK、network/filesystem acquisition、database/cloud/process/dynamic import或mutable global state；G10G projection由tests/support提前产生canonical fixture，tool不在运行时执行Backtest；
+22. G10H通过只证明frozen source/projection/coverage/contracts/report的可重复性与first-divergence truth。所有output固定development、`decision_grade_eligible=false`、`deployment_authorized=false`；matching-engine、queue/partial-fill realism、historical archive completeness、real liquidation/ADL/bankruptcy/insurance fund与live仍明确unsupported。
+
+Primary-source and parity boundary：`docs/research/binance-usdm-parity-primary-sources.md`。
+
+Readiness baseline：
+
+```text
+G10G frozen acceptance command                                     131 passed
+Full test suite                                                    1101 passed
+Workspace import boundary                                           PASS (80 files)
+mypy 2.3.0                                                           no issues (80 source files)
+Primary LSP + scoped pi-lens                                         no blocking errors
+Markdown + git diff checks                                           PASS
+uv lock --check                                                      PASS
+Python                                                                3.13.5
+```
+
+Readiness validation：
+
+```text
+G10G frozen acceptance command                                     131 passed
+Full test suite                                                    1101 passed
+Workspace import boundary                                           PASS (80 files)
+mypy 2.3.0                                                           no issues (80 source files)
+Primary LSP                                                          no diagnostics (6 Markdown files unconfirmed on silent clean)
+pi-lens scoped review                                                no new findings; 8 pre-existing Protocol ellipsis warnings
+Markdown + git diff checks                                           PASS
+uv lock --check                                                      PASS
+Python                                                                3.13.5
+```
+
+## 85. PASSED 记录格式
 
 ```yaml
 id: WP-00A
