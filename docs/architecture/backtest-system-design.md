@@ -1565,6 +1565,12 @@ External Cash Flow 使用 `CapitalDeposited`、`CapitalWithdrawn` 和 `CapitalTr
 
 `MarkResolver` 按 PricePurpose 和 UtcInstant 选择唯一合法 Mark，执行 StaleMarkPolicy，并禁止用 Execution Price 隐式替代 Valuation Price。缺失、歧义或过期 Mark 返回结构化失败。
 
+G10D 的 Binance USDⓈ-M Price Stream Adapter保持纯离线并复用该Resolver。Accepted source exact为official public-data `aggTrades`与closed `markPriceKlines`：aggregate-trade price按provider trade time映射`EXECUTION_REFERENCE`；closed Mark Kline close分别生成独立`VALUATION`与`MARGIN` observation；同一raw Mark row另生成独立`LIQUIDATION` close observation及low/high Bar。共享source row不授权跨Purpose fallback，ordinary contract kline open/close、book ticker、index price、moving-average mark和estimated settlement price均不能替代上述authority。
+
+Source economic time与knowledge time分离。Aggregate trade observed-at exact为trade time；Mark close observed-at exact为provider close time，interval end-exclusive为close time加1ms；caller-supplied closed-at/available-at/captured-at控制可见性且不得前移。若late availability只能靠same-UTC `SimulationInstant.phase/source_sequence`表达，现有`MarkObservation`的Utc-only availability不能无损保存，Adapter structured fail closed而不是抹平顺序。Point ambiguity/staleness继续由purpose-specific `StaleMarkPolicy`与generic Resolver处理；Liquidation OHLC coverage独立检查，不允许point forward fill。
+
+G10D v1显式不支持`SETTLEMENT`：Mark Price Stream字段`P`只是estimated settlement price，index/mark/trade close也不是final automatic-settlement authority。`FUNDING`仍由G10E使用Funding Rate History关联mark和Slot publication semantics提供。每个purpose独立保存finite coverage、source/revision lineage和stream identity；mapping/schema/limitations进入G10D model digest并由G10G纳入最终Profile digest。G12证明ZIP/CSV/checksum/revision/gap completeness前全部Resolution固定development-grade。Primary-source boundary记录于`docs/research/binance-usdm-price-purpose-streams-primary-sources.md`。
+
 `CurrencyValuationGraph` 把原生 Currency Balance 转换为 Reporting Currency。每条转换边引用 point-in-time Price Stream；存在多条路径时由版本化 `CurrencyValuationPolicy` 选择。Stablecoin 不默认 1:1，除非 Profile 明确提供版本化 Peg Valuation Policy。缺少路径或路径不唯一时 decision-grade 失败关闭。
 
 `PortfolioSnapshotProjector` 只消费 Ledger State、Resolved Marks 和 Reporting Currency Valuations；它不查询数据源、不选择价格、不决定换算路径。
@@ -1996,11 +2002,11 @@ semantics:
   liquidation_rules: binance_usdm_tiered
   corporate_action_model: none
   price_streams:
-    execution_reference: raw_trade_bar
-    valuation: historical_mark_price
-    margin: historical_mark_price
-    liquidation: historical_mark_price
-    settlement: exchange_settlement_mark
+    execution_reference: historical_aggregate_trade_price
+    valuation: historical_mark_price_kline_close
+    margin: historical_mark_price_kline_close
+    liquidation: historical_mark_price_kline_range
+    settlement: unsupported_until_final_settlement_source
 
 simulation_profile: bar.next_eligible_open.conservative.v1
 simulation:

@@ -1637,14 +1637,26 @@ G10C generic schema-v2 boundary convention、finite terminal coverage、historic
 
 依赖：G10A、MarkResolver。
 
-拥有：Execution Reference、Valuation Mark、Margin Mark、Liquidation Mark 和 Settlement Mark Stream mapping。
+拥有：纯离线`crypto_quant_trading.profiles.binance_usdm.price_streams` Adapter；caller-supplied immutable USDⓈ-M aggregate-trade与closed mark-price-kline evidence → purpose-specific generic `MarkObservation`、resolved point Mark及provider liquidation Mark Bar。Settlement mapping由本Gate显式fail closed；Funding Mark source仍由G10E拥有。
+
+不拥有：provider client/JSON/CSV/ZIP parser、current endpoint fallback、archive completeness、Bar Builder、Fill/Order Book simulation、Funding Slot、final settlement price acquisition、Runtime/Profile composition、live/deployment。
 
 验收：
 
-- 每个 PricePurpose 指向明确 stream/source identity；
-- Trade Close 不得隐式替代 Mark Price；
-- Coverage/gap/staleness 按用途独立验证；
-- PricePurpose 变化进入 Profile digest。
+- Accepted mapping exact为aggregate-trade `p@T`→`EXECUTION_REFERENCE`；closed mark-price-kline close→分别独立的`VALUATION`与`MARGIN` point streams；同一closed mark-price-kline close及low/high→`LIQUIDATION` point/bar evidence。共享raw row不共享PricePurpose identity，Trade/contract-kline close/index/estimated-settlement不得替代Mark；
+- Contract kline open不得按bucket start冒充已知execution reference；G10D v1只用aggregate trade作为execution-reference source。Book ticker保留outside scope，不冒充trade或fill；
+- Provider trade time、bar open/close time、interval end-exclusive、closed-at、available-at与captured-at分离。Aggregate trade `available_at >= T`；final Mark Bar `closed_at.instant = close_time + 1ms`且`available_at >= closed_at`；只靠same-UTC phase/sequence表达的late availability因generic point Mark无法无损表示而structured fail closed；
+- Point selection exact委托既有provider-neutral `MarkResolver`与purpose-specific `StaleMarkPolicy`；availability、ambiguity、forward-fill与maximum age不在Binance Adapter复制实现。Liquidation OHLC coverage独立验证且不得point forward-fill；
+- `P` estimated settlement price、index price `i`、moving-average mark `ap`、ordinary mark/contract close均不能创建`SETTLEMENT` Mark。G10D v1 settlement query返回structured unsupported failure，直到first-party immutable final-settlement-price source另行冻结；
+- Funding Rate History关联mark属于G10E；G10D不得从nearby mark kline或Mark Price Stream制造`FUNDING` Mark；
+- Historical Price Book按每个purpose保存finite half-open coverage、source kind/key/hash、event/revision lineage与raw canonical decimal/timestamp evidence；visible evidence只允许`available_at <= captured_at`，gap、overlap、duplicate visible natural ID、cross-Instrument、late-only或current/latest fallback fail closed；
+- Decimal只用canonical ordinary string与integer arithmetic；raw trailing zeros进入source identity，mapped Price使用smallest exact required Scale，不用float、ambient Decimal context或precision hint；
+- Model digest exact包含固定purpose→source mapping、schema与limitations；任何mapping变化都改变G10D model digest，并由G10G纳入最终Profile digest。G10D不新增会迫使现有Market Profile exact-cover的generic `ProfilePortType`；
+- Resolution固定`decision_grade_eligible=false`，直到G12证明source archive initial state、all files/checksums/revisions及gap classification coverage；
+- static Fixture覆盖execution/valuation/margin/liquidation mapping、same raw Mark row的purpose separation、before/at/after availability、staleness、duplicate same-time ambiguity、liquidation interval coverage、contract-kline-open lookahead rejection、settlement/funding/index/estimated-settlement rejection、malformed decimal/timing/source conflict、forgery与input-order parity；
+- Production module无filesystem/network/process/database/cloud SDK/wall clock，不修改Generic MarkResolver、Engine、Runner、Ledger、Snapshot、Margin或Liquidation Audit增加Binance branch。
+
+Primary source note：`docs/research/binance-usdm-price-purpose-streams-primary-sources.md`。
 
 ### Gate G10E Funding Source Semantics
 

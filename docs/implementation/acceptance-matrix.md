@@ -129,7 +129,7 @@ artifact_hashes: []
 | G10A | PASSED — immutable commit `613c319b2dbba9962d4867dcfb3d1b19067d16cf` | trading-kernel profiles/binance_usdm | G09H | none |
 | G10B | PASSED — immutable commit `11072289a9dda708a185ae2edcbf5fcdf0c7bd55` | trading-kernel profiles/binance_usdm | G10A, WP-05G | none |
 | G10C | PASSED — immutable commit `50fa838f901385498ce18d65a897d4eb1dc31337` | trading-kernel margin requirement + profiles/binance_usdm | G10A, G09E | none |
-| G10D | DRAFT | trading-kernel profiles/binance_usdm | G10A, WP-03C | PricePurpose fixtures |
+| G10D | READY | trading-kernel profiles/binance_usdm | G10A, WP-03C | none |
 | G10E | DRAFT | trading-kernel profiles/binance_usdm | G09C–G09D, G10D | Funding source fixtures |
 | G10F | DRAFT | trading-kernel profiles/binance_usdm | WP-05H, WP-05J, G09F | Fee/account fixtures |
 | G10G | DRAFT | backtest-runtime composition | G10A–G10F | Resolved profile E2E |
@@ -7792,7 +7792,134 @@ uv lock --check                                                      PASS
 Python                                                                3.13.5
 ```
 
-## 80. PASSED 记录格式
+## 80. G10D Binance USDⓈ-M Historical Price-Purpose Streams Acceptance Card
+
+```yaml
+id: G10D
+status: READY
+depends_on:
+  - G10A
+  - WP-03C
+owner_package: trading-kernel profiles/binance_usdm
+public_interface:
+  - crypto_quant_trading.profiles.binance_usdm.BinanceUsdmPriceSourceKind
+  - crypto_quant_trading.profiles.binance_usdm.BinanceUsdmPriceSourceRef
+  - crypto_quant_trading.profiles.binance_usdm.BinanceUsdmAggregateTradePrice
+  - crypto_quant_trading.profiles.binance_usdm.BinanceUsdmMarkPriceKline
+  - crypto_quant_trading.profiles.binance_usdm.BinanceUsdmPriceStreamCoverage
+  - crypto_quant_trading.profiles.binance_usdm.BinanceUsdmHistoricalPriceBook
+  - crypto_quant_trading.profiles.binance_usdm.BinanceUsdmPricePurposeQuery
+  - crypto_quant_trading.profiles.binance_usdm.BinanceUsdmLiquidationMarkBar
+  - crypto_quant_trading.profiles.binance_usdm.BinanceUsdmPricePurposeResolution
+  - crypto_quant_trading.profiles.binance_usdm.BinanceUsdmPriceStreamFailureCode
+  - crypto_quant_trading.profiles.binance_usdm.BinanceUsdmPriceStreamFailure
+  - crypto_quant_trading.profiles.binance_usdm.BinanceUsdmPriceStreamOutcome
+  - crypto_quant_trading.profiles.binance_usdm.BinanceUsdmPriceStreamModel
+test_commands:
+  contract: uv run pytest -q tests/profiles/binance_usdm/test_price_streams.py
+  fixture: uv run pytest -q tests/profiles/binance_usdm/test_price_streams_golden.py
+  boundary: uv run pytest -q tests/architecture/test_binance_usdm_profile_boundary.py tests/architecture/test_derivative_boundary.py tests/architecture/test_liquidation_audit_boundary.py tests/architecture/test_public_api_imports.py tests/architecture/test_repository_cleanliness.py
+  regression: uv run pytest -q tests/kernel/marks/test_mark_resolver.py tests/kernel/marks/test_mark_resolver_golden.py tests/runtime/execution/test_next_eligible_bar_open.py tests/runtime/liquidation/test_conservative_linear_liquidation_audit.py tests/profiles/binance_usdm/test_instrument_metadata.py tests/profiles/binance_usdm/test_order_rules.py
+  acceptance: uv run pytest -q tests/profiles/binance_usdm/test_price_streams.py tests/profiles/binance_usdm/test_price_streams_golden.py tests/kernel/marks/test_mark_resolver.py tests/kernel/marks/test_mark_resolver_golden.py tests/runtime/execution/test_next_eligible_bar_open.py tests/runtime/liquidation/test_conservative_linear_liquidation_audit.py tests/architecture/test_binance_usdm_profile_boundary.py tests/architecture/test_derivative_boundary.py tests/architecture/test_liquidation_audit_boundary.py tests/architecture/test_public_api_imports.py tests/architecture/test_repository_cleanliness.py tests/profiles/binance_usdm/test_instrument_metadata.py tests/profiles/binance_usdm/test_order_rules.py --junitxml=build/acceptance/g10d-pytest.xml
+fixture_ids:
+  - binance-usdm-historical-price-source-v1
+  - binance-usdm-price-purpose-streams-v1
+expected_artifacts:
+  - docs/research/binance-usdm-price-purpose-streams-primary-sources.md
+  - tests/fixtures/profiles/binance-usdm-historical-price-source-v1.json
+  - tests/fixtures/profiles/binance-usdm-price-purpose-streams-v1.json
+  - build/acceptance/g10d-pytest.xml
+  - build/acceptance/g10d-import-boundary-report.json
+failure_contracts:
+  - missing-price-source-records
+  - instrument-metadata-query-or-price-book-mismatch
+  - unsupported-settlement-or-g10e-owned-funding-purpose
+  - no-price-evidence-visible-by-captured-at
+  - missing-or-overlapping-purpose-coverage
+  - cross-instrument-duplicate-or-conflicting-source-event
+  - malformed-noncanonical-overflow-or-inexact-decimal
+  - aggregate-trade-or-mark-bar-timing-is-causal-invalid
+  - same-utc-phase-only-late-availability-is-erased
+  - contract-kline-open-is-exposed-at-bucket-start
+  - trade-contract-close-index-moving-average-or-estimated-settlement-substitutes-mark-purpose
+  - liquidation-point-forward-fill-substitutes-missing-ohlc
+  - generic-mark-resolution-failure-is-hidden-or-reinterpreted
+  - current-api-current-archive-or-nearest-row-backfills-history
+  - purpose-source-mapping-change-does-not-change-model-digest
+  - source-query-filesystem-network-wall-clock-runtime-or-engine-leakage
+allowed_grade: development
+evidence:
+  - readiness-contract-tests
+  - official-source-note
+  - static-source-and-golden-fixture-hashes
+  - purpose-specific-mark-resolver-and-liquidation-coverage-evidence
+  - execution-reference-no-lookahead-evidence
+  - public-api-import-report
+  - import-boundary-report
+  - static-type-report
+  - dependency-lock-report
+passed_commit: null
+artifact_hashes: []
+```
+
+### G10D Acceptance
+
+冻结边界：
+
+1. G10D是纯离线`crypto_quant_trading.profiles.binance_usdm.price_streams` Adapter。Production code只消费caller-supplied immutable G10A Resolution、finite Historical Price Book、Query和time inputs；不得创建provider client、发HTTP/WebSocket、解析JSON/CSV/ZIP、读filesystem/database/wall clock或fallback到current REST/WebSocket/public-data directory；G12拥有acquisition/parsing/checksum/retention与complete gap proof；
+2. `BinanceUsdmPriceSourceKind` exact只接受`AGGREGATE_TRADE`与`MARK_PRICE_KLINE`。Source Ref exact保存source key、SHA-256 content hash、revision ID、optional superseded revision、archive path/key和captured provenance；不得把book ticker、ordinary contract kline、index-price kline、premium-index kline、current premiumIndex response或Funding History伪装成accepted source kind；
+3. `BinanceUsdmAggregateTradePrice` exact保存stable Instrument、aggregate trade ID、raw canonical price/quantity、first/last trade IDs、provider trade time、caller-supplied available-at、buyer-maker flag、source event/revision lineage与Source Ref。Aggregate IDs与trade-ID range必须nonnegative、first<=last、natural event ID在同visible revision set唯一；
+4. `BinanceUsdmMarkPriceKline` exact保存stable Instrument、interval key、raw open-time/close-time毫秒、raw canonical OHLC strings、caller-supplied exact `closed_at: SimulationInstant`、`available_at: SimulationInstant`、closed-final flag、source event/revision lineage与Source Ref。只接受closed-final row；open<=high、low<=close/open<=high、low<=high及positive prices exact验证；
+5. Provider Mark Kline interval exact为`[open_time, close_time + 1ms)`；`closed_at.instant`必须等于end-exclusive且`available_at >= closed_at`。Aggregate trade `available_at.instant >= trade_time`。任何future availability、close-before-end、non-final row或时钟字段冲突返回`INVALID_SOURCE_TIMING`，不得修正、round或取max；
+6. `BinanceUsdmPriceStreamCoverage`按stable Instrument与一个exact PricePurpose保存finite half-open economic coverage、accepted Source Kind、stream key/version和source lineage。Historical Price Book必须exact-cover请求支持的purpose streams且canonical-sort；首尾缺失、内部gap、overlap、duplicate purpose-band ID、cross-Instrument或按tuple order选winner均fail closed；
+7. Fixed mapping exact为：aggregate-trade `price@trade_time`→`EXECUTION_REFERENCE`；closed Mark Kline close→独立`VALUATION` observation；同一close→独立`MARGIN` observation；同一close→独立`LIQUIDATION` observation，且low/high→`BinanceUsdmLiquidationMarkBar`。每个output具有purpose-specific stream ID；同一raw source row可授权多个显式mapping，但不能生成一个无Purpose共享Mark；
+8. Contract kline open不得在bucket start生成Execution Reference。G10D v1不用ordinary kline或book ticker替代aggregate trade，也不把aggregate trade声明为Fill、bar-open、best bid/ask或order-book execution。G10G若组合execution行为必须另外消费source event/availability evidence；
+9. Mark Price Stream/REST字段`p`、`ap`、`i`、`P`、`r`、`T`保持不同authority。Accepted v1 Mark Kline只代表historical mark-price OHLC；index price、moving-average mark、estimated settlement price、funding rate/time或ordinary trade/contract close不得映射为Valuation/Margin/Liquidation Mark；
+10. Query exact绑定G10A Resolution、Historical Price Book hash、PricePurpose、economic `requested_at: UtcInstant`、knowledge `captured_at: SimulationInstant`、point-purpose StaleMarkPolicy及仅LIQUIDATION允许的optional finite interval。G10A query effective-at必须exact等于requested-at，G10A listing interval必须覆盖requested-at及optional liquidation interval，G10A captured-at不得晚于Query captured-at.instant，Instrument/quote-settlement Currency必须exact匹配；
+11. Visible source只允许`available_at <= captured_at`。Point observations保留provider observed-at与caller availability UTC；Adapter把canonical visible tuple交给既有provider-neutral `MarkResolver`，不复制或修改其instrument/purpose/availability/ambiguity/forward-fill/max-age precedence；generic failure保存为nested authority并映射固定provider failure；
+12. 若source availability比economic fact晚但只由same UTC nanosecond的`SimulationInstant.phase`或`source_sequence`表达，current `MarkObservation.available_at: UtcInstant`无法无损表示。G10D必须返回`UNREPRESENTABLE_AVAILABILITY_ORDER`，不得丢弃phase/sequence后产生age zero或提前可见Mark；
+13. Liquidation query要求exact finite interval并返回连续closed Mark Bars；每个Bar保存PricePurpose.LIQUIDATION、low/high、closed/available SimulationInstant、stream/event/revision/source identity。Bar gap、overlap、extra/cross-Instrument、future available或非exact interval coverage fail closed；point StaleMarkPolicy/forward-fill不能补Liquidation OHLC；
+14. `PricePurpose.SETTLEMENT`在G10D v1返回`UNSUPPORTED_PRICE_PURPOSE`。Mark Price字段`P`只被官方定义为estimated settlement price且仅最后一小时有用；index-price kline、mark close、trade price、deliveryDate或delist time均不能创建final Settlement Mark；
+15. `PricePurpose.FUNDING`在G10D返回`PRICE_PURPOSE_OWNED_BY_G10E`。Funding Rate History的associated mark、publication/finality、Funding Slot ID和target settlement UTC由G10E冻结；G10D不得从nearby Mark Kline或ordinary Mark update合成Funding Mark；
+16. Provider failure precedence exact为：`INSTRUMENT_METADATA_MISMATCH`、`UNSUPPORTED_PRICE_PURPOSE`、`PRICE_PURPOSE_OWNED_BY_G10E`、`MISSING_SOURCE_RECORDS`、`SOURCE_NOT_AVAILABLE`、`MISSING_PURPOSE_COVERAGE`、`OVERLAPPING_PURPOSE_COVERAGE`、`INVALID_DECIMAL_FIELD`、`INVALID_SOURCE_TIMING`、`UNREPRESENTABLE_AVAILABILITY_ORDER`、`SOURCE_IDENTITY_CONFLICT`、`MARK_RESOLUTION_FAILED`、`METADATA_CONFLICT`；多缺陷只返回第一项；
+17. Decimal grammar exact限定positive ordinary decimal string，不允许sign、exponent、NaN/Infinity、leading plus、whitespace、Unicode alternative、zero/negative value或超过18 fractional places。Mapping只用string/integer arithmetic；raw trailing zeros保留source identity，point与OHLC使用smallest exact required common Scale；禁止float、ambient Decimal context及`pricePrecision`；
+18. Resolution exact包含model key/version/digest、Query/Book identity、visible source records、normalized purpose observations、optional resolved Mark、Liquidation Bars、source coverage、limitations与`decision_grade_eligible=false`。Model digest exact包含schema、fixed purpose-source mapping、unsupported Settlement、G10E-owned Funding、timing/decimal rules与limitations；mapping变化必须改变digest，并由G10G纳入final Profile digest；
+19. G10D不新增generic `ProfilePortType`，避免让既有Market Profile/Runner exact-cover一个尚未成为runtime behavioral port的source-normalization component。G10G以G10D model digest和resolution hashes组合Profile identity；Generic Kernel/Runtime仍不识别Binance concrete type；
+20. Constructor必须重算Source Ref、source rows、Coverage、Book、Query、Resolution、Failure、Outcome、MarkObservation和Liquidation Bar identities，并重验证visible set、purpose separation、mapped Scale/time/source exact coverage及decision-grade flag。`dataclasses.replace`伪造任一authority必须拒绝；
+21. 相同logical inputs任意tuple顺序产生相同canonical outcome。Natural event/revision conflict、同observed-at多visible point导致generic ambiguity、same event ID changed bytes、supersedes chain断裂或source hash冲突不得按输入顺序选winner；
+22. Static source/golden至少覆盖：two aggregate trades、two closed 1m Mark Bars、all accepted purpose mappings、same Mark row的three separate purpose identities、before/at/after available-at、stale/no-forward-fill、same-time ambiguity、liquidation exact/gap/overlap、contract-kline-open lookahead killer、settlement/funding/index/estimated-settlement/book-ticker rejection、malformed decimal/timing、cross-Instrument/source conflict、forgery、input-order parity与all hashes；
+23. Generic compatibility golden固定既有`MarkObservation`、`StaleMarkPolicy`、`ResolvedMark`、`MarkResolver`与G09G `LinearLiquidationMarkBarEvidence` schema/bytes/hash/behavior不变。G10D只生成accepted generic/provider evidence，不修改generic classes或failure precedence；
+24. Concrete purity scanner allowlist只允许stdlib、`crypto_quant_domain`、generic `marks`和same-package G10A types；拒绝filesystem/network/provider/process/database/cloud、dynamic import、MarketBundle、Runtime、Engine、Runner、account/margin/funding implementation和wall clock。Production Runtime不得import concrete profile；不新增dependency；
+25. G10D不拥有archive completeness、raw parser、Bar aggregation、Execution Fill/Slippage/Liquidity、PERCENT_PRICE final admission、Funding source/Slot、final Settlement price acquisition、Account/Wallet、Margin calculation、Liquidation execution、Bundle Builder、Profile composition、live、deployment或parity。G12完成archive initial state、all revisions/checksums与purpose-specific gap proof前，Resolution固定development-grade。
+
+Primary-source contract：`docs/research/binance-usdm-price-purpose-streams-primary-sources.md`。
+
+Readiness baseline：
+
+```text
+G10C frozen acceptance command                                     113 passed
+Full test suite                                                    1052 passed
+Workspace import boundary                                           PASS (76 files)
+mypy 2.3.0                                                           no issues (76 source files)
+Primary LSP + scoped pi-lens                                         no blocking errors
+uv lock --check                                                      PASS
+Python                                                                3.13.5
+```
+
+Readiness validation：
+
+```text
+G10C frozen acceptance command                                     113 passed
+Full test suite                                                    1052 passed
+Workspace import boundary                                           PASS (76 files)
+mypy 2.3.0                                                           no issues (76 source files)
+Primary LSP + scoped pi-lens                                         no blocking errors
+Markdown + git diff checks                                           PASS
+uv lock --check                                                      PASS
+Python                                                                3.13.5
+```
+
+## 81. PASSED 记录格式
 
 ```yaml
 id: WP-00A

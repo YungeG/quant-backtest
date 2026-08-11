@@ -332,6 +332,18 @@ Price 或 Market Event Stream 在预期覆盖区间中的缺失，并具有明�
 
 针对一个价格用途、按模拟时点排序并具有稳定来源身份的历史价格事件序列。
 
+## Binance USDⓈ-M 历史价格簿（Binance USDⓈ-M Historical Price Book）
+
+G10D caller-supplied的纯离线immutable source authority：aggregate trades只映射Execution Reference；closed mark-price klines的close分别映射Valuation、Margin与Liquidation point stream，low/high映射Liquidation Bar。每个Purpose独立声明finite coverage与source/revision identity，current API不能补洞。
+
+## 价格事实时间与可用时间（Price Fact Time and Availability Time）
+
+Provider trade time或closed Mark Bar时间描述经济事实发生/闭合；caller-supplied available-at描述回放何时可见。两者不得合并。若late knowledge只能靠same-UTC phase/sequence表达而目标generic contract只有UtcInstant，必须fail closed，不能抹平顺序制造lookahead。
+
+## 不支持的最终结算价格（Unsupported Final Settlement Price）
+
+G10D v1对Binance USDⓈ-M `PricePurpose.SETTLEMENT`的显式状态。Mark Price Stream的`P`只是estimated settlement price，index、mark、trade或contract close都不能替代final automatic-settlement authority；可靠first-party final price source另行冻结前必须structured fail closed。
+
 ## Bar 定义（Bar Definition）
 
 规定 Bar duration、Session scope、anchor、包含阶段、价格来源、成交量语义和空区间策略的版本化聚合契约。
