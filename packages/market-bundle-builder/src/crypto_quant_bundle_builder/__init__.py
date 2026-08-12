@@ -1,4 +1,4 @@
-"""Offline immutable market-bundle builder."""
+from __future__ import annotations
 
 from .source_snapshots import (
     RawSourceMember,
@@ -21,6 +21,12 @@ from .synthetic_jsonl import (
     SyntheticJsonlV1SourceTrace,
     normalize_synthetic_jsonl_v1,
 )
+from .bundle_validation import (
+    BundleValidationFailure,
+    BundleValidationFailureCode,
+    BundleValidationOutcome,
+    validate_market_bundle_v1,
+)
 
 __version__ = "0.1.0"
 
@@ -39,7 +45,11 @@ __all__ = [
     "SyntheticJsonlV1NormalizationResult",
     "SyntheticJsonlV1RecordLocator",
     "SyntheticJsonlV1SourceTrace",
+    "BundleValidationFailure",
+    "BundleValidationFailureCode",
+    "BundleValidationOutcome",
     "freeze_source_snapshot",
-    "normalize_synthetic_jsonl_v1",
+    "validate_market_bundle_v1",
     "verify_source_snapshot",
+    "normalize_synthetic_jsonl_v1",
 ]
