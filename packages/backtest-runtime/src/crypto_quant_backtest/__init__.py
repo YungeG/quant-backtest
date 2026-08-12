@@ -13,6 +13,13 @@ from .binance_usdm_profile import (
     BinanceUsdmSimulationProfile,
 )
 from .composition import ExecutionCaseComposer
+from .decision_schedule import (
+    DecisionSchedule,
+    DecisionScheduleEntry,
+    LookbackCoverage,
+    LookbackRequirement,
+    WarmupEligibility,
+)
 from .engine import (
     DeterministicBarEngine,
     EngineCancellation,
@@ -337,6 +344,8 @@ __all__ = [
     "CanonicalResultPublisher",
     "CanonicalExecutionSummary",
     "CashFillAccountingPlan",
+    "DecisionSchedule",
+    "DecisionScheduleEntry",
     "DefaultCashFinancialDispatcher",
     "FeeAccountingDispatchPlan",
     "FillAccountingDispatchPlan",
@@ -423,6 +432,8 @@ __all__ = [
     "LinearLiquidationAuditResult",
     "LinearLiquidationMarkBarEvidence",
     "LinearLiquidationPositionAudit",
+    "LookbackCoverage",
+    "LookbackRequirement",
     "LiquidationAuditModel",
     "MarketSemanticsProfileRegistration",
     "MarkToMarketCloseoutPolicy",
@@ -533,4 +544,5 @@ __all__ = [
     "UniverseMembershipRevision",
     "UniverseQuery",
     "UniverseSelection",
+    "WarmupEligibility",
 ]
