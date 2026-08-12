@@ -149,7 +149,7 @@ artifact_hashes: []
 | G11J | DRAFT | parity tooling | G11I, G07 | Dual-entry parity |
 | G12A | PASSED | market-bundle-builder | G00 | SourceSnapshot contract |
 | G12B | PASSED | market-bundle-builder | G12A, G02 | Normalization fixtures |
-| G12C | READY | market-bundle-builder | G12B | Manifest/validation fixtures |
+| G12C | PASSED | market-bundle-builder | G12B | Manifest/validation fixtures |
 | G12D | DRAFT | market-bundle-builder + market-data-contracts | G12C | Atomic publish/repository fixtures |
 | G12E | DRAFT | market-data-contracts | G12D, WP-06A | Columnar reader fixtures |
 | G12F | DRAFT | parity tooling | G12E, G07 | Reader/partition parity |
@@ -9959,7 +9959,8 @@ Implementation commit：`c57080a87e5daa48b5637ad6d9d0f84f94f707b1`。
 
 ```yaml
 id: G12C
-status: READY
+status: PASSED
+passed_commit: e307ffb5886fef14705c4d33d4ab9e6eda098c3f
 depends_on:
   - G12B
 owner_package: market-bundle-builder
@@ -10032,6 +10033,32 @@ uv.lock                                                              sha256:a071
 ```
 
 Contract freeze commit：`719d9a0491e3b196248a7b9f1b57e8eb41e1c199`。
+
+Implementation validation：
+
+```text
+Focused G12C contract/golden/architecture                               24 passed
+Frozen acceptance command                                              106 passed
+Full repository suite                                                  1291 passed
+Workspace import boundary                                             PASS (90 files)
+mypy 2.3.0                                                             no issues (90 package source files)
+Primary LSP                                                            no diagnostics across 7 changed Python files
+pi-lens edited-file review                                             no findings across 7 files
+uv lock --check                                                        PASS
+git diff --check                                                       PASS
+Python                                                                  3.13.5
+```
+
+Artifact hashes：
+
+```text
+synthetic-jsonl-bundle-validation-v1.expected.json                    sha256:fe7d68cedd99461bb315310ee181e648e30159c41767005fafcc30177196ac1f
+g12c-pytest.xml                                                       sha256:2e9f1597be9728ec967b41879837db0f18a52f8ef9f5b016757ff238434e227f
+g12c-import-boundary-report.json                                      sha256:95bd23871a345174caa07f8b7e0c36a22aa74a607cf623ae8c76e7137b978634
+uv.lock                                                               sha256:a07106c285b2c454d0528411c79988881b3ff87c0a84d04228d94c186e9d3d8d
+```
+
+Implementation commit：`e307ffb5886fef14705c4d33d4ab9e6eda098c3f`。
 
 ## 96. PASSED 记录格式
 
