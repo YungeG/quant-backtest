@@ -132,6 +132,12 @@ from .liquidation_audit import (
     LinearLiquidationPositionAudit,
 )
 from .model_revisions import ModelArtifactRef, ModelRevisionTimeline
+from .observation_windows import (
+    BarDefinitionRef,
+    NamedBarWindowQuery,
+    NamedBarWindowResult,
+    NamedBarWindowView,
+)
 from .observations import (
     ObservationCausalityFailure,
     ObservationCausalityFailureCode,
@@ -314,6 +320,7 @@ __all__ = [
     "BarOpenCandidate",
     "BarOpenKind",
     "BarOpenObservation",
+    "BarDefinitionRef",
     "BuildArtifactManifest",
     "BuildArtifactRef",
     "BuildArtifactRole",
@@ -431,6 +438,9 @@ __all__ = [
     "NextEligibleBarOpenModel",
     "NoEligibleBarAction",
     "NormalizedBacktestRequest",
+    "NamedBarWindowQuery",
+    "NamedBarWindowResult",
+    "NamedBarWindowView",
     "NamedRandomStream",
     "ObservationCausalityFailure",
     "ObservationCausalityFailureCode",
