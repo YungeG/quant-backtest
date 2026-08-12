@@ -148,7 +148,7 @@ artifact_hashes: []
 | G11I | DRAFT | backtest-runtime strategy | G11A–G11H, G04 | Invocation/batch fixtures |
 | G11J | DRAFT | parity tooling | G11I, G07 | Dual-entry parity |
 | G12A | PASSED | market-bundle-builder | G00 | SourceSnapshot contract |
-| G12B | READY | market-bundle-builder | G12A, G02 | Normalization fixtures |
+| G12B | PASSED | market-bundle-builder | G12A, G02 | Normalization fixtures |
 | G12C | DRAFT | market-bundle-builder | G12B | Manifest/validation fixtures |
 | G12D | DRAFT | market-bundle-builder + market-data-contracts | G12C | Atomic publish/repository fixtures |
 | G12E | DRAFT | market-data-contracts | G12D, WP-06A | Columnar reader fixtures |
@@ -9802,7 +9802,8 @@ Implementation commit：`36d8146864ad3fead31593878ad247fbd5f5f463`。
 
 ```yaml
 id: G12B
-status: READY
+status: PASSED
+passed_commit: c57080a87e5daa48b5637ad6d9d0f84f94f707b1
 depends_on:
   - G12A
   - G02
@@ -9926,6 +9927,33 @@ Python                                                                3.13.5
 ```
 
 Contract freeze commit：`95b5cbe`；Builder Domain dependency commit：`3bf3edfe9f77bdde3bbc74e63d246614c61e03e2`。
+
+Implementation validation：
+
+```text
+Frozen acceptance command                                            150 passed
+Focused G12B contract/golden/boundary                                22 passed
+Full repository suite                                                1273 passed
+Workspace import boundary                                           PASS (89 files)
+mypy 2.3.0                                                           no issues (89 package source files)
+Primary LSP                                                          no diagnostics across 7 changed Python files
+pi-lens edited-file review                                           no findings across 7 files
+Markdown + git diff checks                                           PASS
+uv lock --check                                                      PASS
+Python                                                                3.13.5
+```
+
+Artifact hashes：
+
+```text
+synthetic-jsonl-v1.jsonl                                             sha256:bda20f6da08ee1ad2679129f7e3f58ce3a1dae482ed8e9ce30374d70b6c0913b
+synthetic-jsonl-v1.expected.json                                     sha256:d79dea48d388821a2b8e44bed5b8e53a48044909c5cfc84c405889b92f0a2390
+g12b-pytest.xml                                                      sha256:7488c2e0a1e0814c5e01d4956c5db7d84d1c83a0374c7d2f759b1e00e1f89bb1
+g12b-import-boundary-report.json                                     sha256:556f6dc119c0f5ab137c4816966e7a65f4f439e6d56c250d1dc30c288b4a0aa3
+uv.lock                                                              sha256:a07106c285b2c454d0528411c79988881b3ff87c0a84d04228d94c186e9d3d8d
+```
+
+Implementation commit：`c57080a87e5daa48b5637ad6d9d0f84f94f707b1`。
 
 ## 95. PASSED 记录格式
 
