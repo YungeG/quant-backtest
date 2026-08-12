@@ -9367,7 +9367,99 @@ Python                                                                3.13.5
 
 Implementation commit：`d3fe684181ddd5a7335da0e68485849eb41a22f2`。
 
-## 91. PASSED 记录格式
+## 91. G11D Named Bar Window Acceptance Card
+
+```yaml
+id: G11D
+status: DRAFT
+depends_on:
+  - G11A
+  - G11B
+owner_package: backtest-runtime observations
+public_interface:
+  - crypto_quant_backtest.BarDefinitionRef
+  - crypto_quant_backtest.NamedBarWindowQuery
+  - crypto_quant_backtest.NamedBarWindowResult
+  - crypto_quant_backtest.NamedBarWindowView
+test_commands:
+  readiness: uv run pytest -q tests/runtime/observations/test_point_in_time_observation_view.py tests/runtime/observations/test_point_in_time_observation_view_golden.py tests/domain/canonical tests/domain/time tests/architecture/test_g11b_observation_causality_boundary.py tests/architecture/test_public_api_imports.py tests/architecture/test_repository_cleanliness.py
+  contract: uv run pytest -q tests/runtime/observation_windows/test_named_bar_window.py
+  fixture: uv run pytest -q tests/runtime/observation_windows/test_named_bar_window_golden.py
+  boundary: uv run pytest -q tests/architecture/test_g11d_observation_window_boundary.py tests/architecture/test_g11b_observation_causality_boundary.py tests/architecture/test_public_api_imports.py tests/architecture/test_repository_cleanliness.py
+  acceptance: uv run pytest -q tests/runtime/observation_windows/test_named_bar_window.py tests/runtime/observation_windows/test_named_bar_window_golden.py tests/runtime/observations/test_point_in_time_observation_view.py tests/runtime/observations/test_point_in_time_observation_view_golden.py tests/domain/canonical tests/domain/time tests/architecture/test_g11d_observation_window_boundary.py tests/architecture/test_g11b_observation_causality_boundary.py tests/architecture/test_public_api_imports.py tests/architecture/test_repository_cleanliness.py --junitxml=build/acceptance/g11d-pytest.xml
+fixture_ids:
+  - named-bar-window-coverage-v1
+expected_artifacts:
+  - docs/research/g11d-named-bar-window.md
+  - tests/fixtures/runtime/observation-windows/named-bar-window-coverage-v1.json
+  - build/acceptance/g11d-pytest.xml
+  - build/acceptance/g11d-import-boundary-report.json
+failure_contracts:
+  - bar-definition-key-version-or-hash-is-invalid-or-implicit
+  - lookback-is-bool-zero-negative-or-unbounded
+  - window-end-is-after-decision-instant
+  - backing-g11b-query-or-decision-instant-does-not-match
+  - non-bar-wrong-context-future-post-cutoff-duplicate-or-noncanonical-event-is-returned
+  - backing-causality-trace-is-forged-or-does-not-match-events
+  - returned-window-is-not-the-canonical-bounded-suffix
+  - short-or-empty-window-is-misclassified-as-gap-reason-or-exception
+  - g11d-resamples-aggregates-forward-fills-or-parses-payload-semantics
+  - g11d-claims-bar-completeness-decision-grade-live-or-deployment-authorization
+allowed_grade: development
+evidence:
+  - explicit-bar-definition-identity-tests
+  - full-simulation-instant-backing-result-tests
+  - bounded-lookback-and-end-cutoff-tests
+  - full-partial-and-empty-coverage-tests
+  - causality-trace-and-maxima-tests
+  - deterministic-static-golden-hash
+  - constructor-forgery-controls
+  - public-api-import-report
+  - import-boundary-report
+  - static-type-report
+  - dependency-lock-report
+```
+
+### G11D Acceptance
+
+1. G11D只新增one production module `crypto_quant_backtest.observation_windows`与root exports，保持pure immutable、provider-neutral、offline Strategy-facing bounded Bar window seam。它只组合caller-supplied successful G11B result，不读取Bundle/Reader/file/network/database/process/environment/wall clock；
+2. `BarDefinitionRef` exact保存canonical nonempty key、positive non-bool integer version与exact sha256 definition hash。Hash由Builder/Bundle evidence承诺duration/session/anchor/phases/price/volume/empty-policy/calendar完整定义；G11D不复制或解释这些字段；
+3. `BarDefinitionRef` canonical body exact为`{type="bar_definition_ref",schema_version=1,key,version,definition_hash}`；`bar_definition_ref_hash=canonical_sha256(body)`且non-recursive。Definition变化必须改变version和/或hash；无implicit current/default definition；
+4. `NamedBarWindowQuery` exact保存one G11B `ObservationQuery`、BarDefinitionRef、`decision_instant: SimulationInstant`、positive bounded `lookback_count`与optional `end_at_or_before: UtcInstant`。bool/zero/negative lookback fail closed；v1 maximum exact为10000；
+5. Optional end cutoff必须`<= decision_instant.instant`。Query不接受duration、timezone、Calendar、resample rule、predicate、callback、dataframe、Reader或path；query hash绑定all exact fields；
+6. `NamedBarWindowView` constructor exact接收Named Query与one successful `PointInTimeObservationQueryResult`。Public behavior exact只有`view_hash`与argument-free `window() -> NamedBarWindowResult`；
+7. Backing Result query与Decision Instant必须exact匹配Named Query，trace context/result fields必须继续通过G11B constructor invariants。G11D不得接受G11B failure、re-authorize Query或inspect hidden/superseded payload；
+8. Backing events必须all exact Event type `bar`、matching Dataset/Instrument/Capability、`timeline_instant <= decision_instant`、unique IDs且G11A/B canonical order。If end cutoff supplied only events with `event_time <= cutoff` are eligible；post-cutoff event不得进入returned window；
+9. Window exact为eligible events canonical tuple的final `lookback_count` suffix；不得reverse、payload-sort、deduplicate semantic bars、parse OHLCV、forward-fill、synthesize empty Bars或aggregate/resample；
+10. `NamedBarWindowResult` exact保存Query、returned Event tuple、backing causality trace、`available_count`（eligible count before truncation）、requested count、coverage complete、shortfall count、window max event/available times、flags与result hash；
+11. `coverage_complete` exact等于`available_count >= requested_count`，`shortfall_count=max(requested_count-available_count,0)`。Returned count exact为`min(available_count,requested_count)`；constructor/replace重算all relationships；
+12. Short or empty authorized lookback成功返回explicit partial result。G11D不得分类为NO_SESSION、SUSPENDED、NO_TRADES、MISSING、SOURCE_OUTAGE、Bundle gap或Bar aggregation defect；G12 owns reasons/completeness；
+13. Result maxima exact从returned window计算；empty window maxima为None。Backing trace remains full authorized Query causality evidence and may cover more events than returned suffix；result hash binds both trace and returned window；
+14. View canonical body exact为`{type="named_bar_window_view",schema_version=1,query,backing_result}`，view hash绑定BarDefinition identity、Decision、lookback/cutoff与full G11B result. Input parity inherited from G11B；
+15. Result canonical body exact为`{type="named_bar_window_result",schema_version=1,query,events,causality_trace,available_count,requested_count,coverage_complete,shortfall_count,max_event_time,max_available_instant,decision_grade_eligible,deployment_authorized}`；
+16. `decision_grade_eligible=false`与`deployment_authorized=false`固定。G11D不能因count complete声明BarDefinition aggregation correct、gap complete或decision-grade；G12 BarAggregationManifest/coverage required；
+17. Constructor与`dataclasses.replace`必须拒绝wrong Query/instant/context/type/order/count/maxima/flags或forged trace/result。Derived hashes不接受caller input；
+18. G11D不拥有Universe（G11C）、schedule/warmup（G11E）、Strategy invocation（G11I）、indicator library、arbitrary resampling、financial state、RNG、Model或EngineCheckpoint；
+19. Production imports exact只允许stdlib immutable support、`crypto_quant_domain`/`crypto_quant_market_data` public values与G11B public observation contracts。Engine、Runner、Timeline runtime object、Trading Kernel/provider SDK保持无G11D branch；
+20. Static golden至少冻结five visible Bars、lookback 3 suffix、end cutoff boundary、full/partial/empty results、BarDefinition identity change、wrong context/type/cutoff/forged trace failures、counts/maxima/trace/hashes/flags与repeat parity；
+21. G11D outputs固定development-only，不声明Bar completeness、decision-grade、live或deployment authorization。
+
+Frozen seam note：`docs/research/g11d-named-bar-window.md`。
+
+Readiness baseline：
+
+```text
+G11B observation and canonical prerequisites                          pending validation
+Workspace import boundary                                           pending validation
+mypy 2.3.0                                                           pending validation
+Primary LSP                                                          pending validation
+pi-lens scoped review                                                pending validation
+Markdown + git diff checks                                           PASS
+uv lock --check                                                      pending validation
+Python                                                                3.13.5
+```
+
+## 92. PASSED 记录格式
 
 ```yaml
 id: WP-00A
