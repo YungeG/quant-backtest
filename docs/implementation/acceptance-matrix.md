@@ -141,7 +141,7 @@ artifact_hashes: []
 | G11B | PASSED | backtest-runtime observations | G11A | none |
 | G11C | PASSED | backtest-runtime observations | G11A–G11B | Universe fixtures |
 | G11D | PASSED | backtest-runtime observations | G11A–G11B | Bar/window fixtures |
-| G11E | READY | backtest-runtime strategy | G11B, G11D | Schedule/warmup fixtures |
+| G11E | PASSED | backtest-runtime strategy | G11B, G11D | Schedule/warmup fixtures |
 | G11F | PASSED | backtest-runtime strategy | G02 | State/checkpoint fixtures |
 | G11G | PASSED | backtest-runtime strategy | G11F | Random stream fixtures |
 | G11H | PASSED | backtest-runtime strategy | G11B, G11F | Model revision fixtures |
@@ -9508,7 +9508,8 @@ Implementation commit：`49969689f0792481a6fb626c090a7ac7049aaaf9`。
 
 ```yaml
 id: G11E
-status: READY
+status: PASSED
+passed_commit: 0e602a91ef02518533340b2bb1c6ca44a741f6f6
 depends_on:
   - G11B
   - G11D
@@ -9622,6 +9623,32 @@ Python                                                                3.13.5
 ```
 
 Contract freeze commit：`d432ba39ac00801077e96447abaf7cf46504c7fa`。
+
+Implementation validation：
+
+```text
+Frozen acceptance command                                            52 passed
+Focused G11E contract/golden/boundary                                12 passed
+Full repository suite                                                1243 passed
+Workspace import boundary                                           PASS (87 files)
+mypy 2.3.0                                                           no issues (87 package source files)
+Primary LSP                                                          no diagnostics across 6 changed Python files
+pi-lens edited-file review                                           no findings across 6 files
+Markdown + git diff checks                                           PASS
+uv lock --check                                                      PASS
+Python                                                                3.13.5
+```
+
+Artifact hashes：
+
+```text
+decision-schedule-warmup-eligibility-v1.json                         sha256:cafcf80aa438a730d747d6b7c6cbe3b5ad5b4dc8d2ce25ef49e5c0b7c1010372
+g11e-pytest.xml                                                      sha256:26da77ab6d3bfd494932f3c805f56c9d50be55cabb31505ad4794fc43338e1b0
+g11e-import-boundary-report.json                                     sha256:72f8fdc85a57f5a326f67a61dcb2c89d292089fdaceaaadc1bd1d3bc8e9090f1
+uv.lock                                                              sha256:afa595beed6c70d7a0124844d450e6b157b365ce6fa7c7fd0d2df9b70aff97c5
+```
+
+Implementation commit：`0e602a91ef02518533340b2bb1c6ca44a741f6f6`。
 
 ## 93. PASSED 记录格式
 
