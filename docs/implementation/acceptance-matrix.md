@@ -149,7 +149,7 @@ artifact_hashes: []
 | G11J | DRAFT | parity tooling | G11I, G07 | Dual-entry parity |
 | G12A | PASSED | market-bundle-builder | G00 | SourceSnapshot contract |
 | G12B | PASSED | market-bundle-builder | G12A, G02 | Normalization fixtures |
-| G12C | DRAFT | market-bundle-builder | G12B | Manifest/validation fixtures |
+| G12C | READY | market-bundle-builder | G12B | Manifest/validation fixtures |
 | G12D | DRAFT | market-bundle-builder + market-data-contracts | G12C | Atomic publish/repository fixtures |
 | G12E | DRAFT | market-data-contracts | G12D, WP-06A | Columnar reader fixtures |
 | G12F | DRAFT | parity tooling | G12E, G07 | Reader/partition parity |
@@ -9959,7 +9959,7 @@ Implementation commit：`c57080a87e5daa48b5637ad6d9d0f84f94f707b1`。
 
 ```yaml
 id: G12C
-status: DRAFT
+status: READY
 depends_on:
   - G12B
 owner_package: market-bundle-builder
@@ -10006,6 +10006,32 @@ Frozen contract：
 - runtime/kernel may not import the Builder validator; G12C may not mutate frozen Market Data schemas or own Reader, repository, publication, global Timeline, Bars, coverage reports, provider acquisition, decision-grade, or deployment authorization.
 
 Research authority：`docs/research/g12c-bundle-validation-contract.md`。
+
+Readiness evidence：
+
+```text
+Frozen readiness command                                             39 passed
+Workspace import boundary                                            PASS (89 files)
+mypy 2.3.0                                                            no issues (89 package source files)
+LSP                                                                   TOML clean; Markdown servers silent-on-clean
+Auxiliary diagnostics                                                 pre-existing information-only typos outside G12C card
+uv lock --check                                                       PASS
+git diff --check                                                      PASS
+Python                                                                 3.13.5
+```
+
+Readiness artifact hashes：
+
+```text
+g12c-bundle-validation-contract.md                                   sha256:a892c592d6a877ba3ffd65f108bbbddece47e38a7a2edc35db6e73ac0d8149b6
+g12c.md                                                              sha256:d322fa27aec03883f90ca714c0efc175d48ad2af6e0f71d9a877d1a7043144e5
+import-boundaries.toml                                               sha256:d15abacac6ee5b460d3f9a6ec4cbce47ac705320d7c3c80c398267dd5128b938
+g12c-readiness-pytest.xml                                            sha256:00229ad7f24a0f82192c67c70ee29d6cf70452b34beaa7f8be45c540e15d5c5b
+g12c-readiness-import-boundary-report.json                           sha256:9871d3b48e7162e74c90682bf773bc536a1c269aae6034ee6a4c007e7b83716f
+uv.lock                                                              sha256:a07106c285b2c454d0528411c79988881b3ff87c0a84d04228d94c186e9d3d8d
+```
+
+Contract freeze commit：`719d9a0491e3b196248a7b9f1b57e8eb41e1c199`。
 
 ## 96. PASSED 记录格式
 
