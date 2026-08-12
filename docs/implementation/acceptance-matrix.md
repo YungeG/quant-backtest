@@ -140,7 +140,7 @@ artifact_hashes: []
 | G11A | PASSED — immutable commit `72fe31f5b10d785340b11ca0fd3d0fec8c1c4a34` | backtest-runtime observations | G07, WP-06A | none |
 | G11B | PASSED | backtest-runtime observations | G11A | none |
 | G11C | PASSED | backtest-runtime observations | G11A–G11B | Universe fixtures |
-| G11D | READY | backtest-runtime observations | G11A–G11B | Bar/window fixtures |
+| G11D | PASSED | backtest-runtime observations | G11A–G11B | Bar/window fixtures |
 | G11E | DRAFT | backtest-runtime strategy | G11B, G11D | Schedule/warmup fixtures |
 | G11F | PASSED | backtest-runtime strategy | G02 | State/checkpoint fixtures |
 | G11G | PASSED | backtest-runtime strategy | G11F | Random stream fixtures |
@@ -9371,7 +9371,8 @@ Implementation commit：`d3fe684181ddd5a7335da0e68485849eb41a22f2`。
 
 ```yaml
 id: G11D
-status: READY
+status: PASSED
+passed_commit: 49969689f0792481a6fb626c090a7ac7049aaaf9
 depends_on:
   - G11A
   - G11B
@@ -9476,6 +9477,32 @@ Python                                                                3.13.5
 ```
 
 Contract freeze commit：`48d7b8f55ae7754328c89603f33e649c14911486`。
+
+Implementation validation：
+
+```text
+Frozen acceptance command                                            61 passed
+Focused G11D contract/golden/boundary                                13 passed
+Full repository suite                                                1231 passed
+Workspace import boundary                                           PASS (86 files)
+mypy 2.3.0                                                           no issues (86 package source files)
+Primary LSP                                                          no diagnostics across 6 changed Python files
+pi-lens edited-file review                                           no findings across 6 files
+Markdown + git diff checks                                           PASS
+uv lock --check                                                      PASS
+Python                                                                3.13.5
+```
+
+Artifact hashes：
+
+```text
+named-bar-window-coverage-v1.json                                    sha256:7cda8b555fb3072f3f5f629fef10c111996ab39a99f0d8e113ac981b4c60a40d
+g11d-pytest.xml                                                      sha256:2a7b98e3493f0648e8f3d777097acaf376772e1a220b2ad4cc2605bf989e108c
+g11d-import-boundary-report.json                                     sha256:dd1e52459f0cf25f229d3746eb9e2c18418737f19161ffd347fb233db71494fb
+uv.lock                                                              sha256:afa595beed6c70d7a0124844d450e6b157b365ce6fa7c7fd0d2df9b70aff97c5
+```
+
+Implementation commit：`49969689f0792481a6fb626c090a7ac7049aaaf9`。
 
 ## 92. PASSED 记录格式
 
