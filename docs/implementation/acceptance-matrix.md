@@ -9504,7 +9504,108 @@ uv.lock                                                              sha256:afa5
 
 Implementation commit：`49969689f0792481a6fb626c090a7ac7049aaaf9`。
 
-## 92. PASSED 记录格式
+## 92. G11E Decision Schedule and Warmup Acceptance Card
+
+```yaml
+id: G11E
+status: DRAFT
+depends_on:
+  - G11B
+  - G11D
+owner_package: backtest-runtime strategy
+public_interface:
+  - crypto_quant_backtest.LookbackRequirement
+  - crypto_quant_backtest.DecisionScheduleEntry
+  - crypto_quant_backtest.DecisionSchedule
+  - crypto_quant_backtest.LookbackCoverage
+  - crypto_quant_backtest.WarmupEligibility
+test_commands:
+  readiness: uv run pytest -q tests/runtime/observation_windows/test_named_bar_window.py tests/runtime/observation_windows/test_named_bar_window_golden.py tests/runtime/timeline/test_deterministic_timeline.py tests/domain/time tests/architecture/test_g11d_observation_window_boundary.py tests/architecture/test_public_api_imports.py tests/architecture/test_repository_cleanliness.py
+  contract: uv run pytest -q tests/runtime/decision_schedule/test_decision_schedule.py
+  fixture: uv run pytest -q tests/runtime/decision_schedule/test_decision_schedule_golden.py
+  boundary: uv run pytest -q tests/architecture/test_g11e_decision_schedule_boundary.py tests/architecture/test_g11d_observation_window_boundary.py tests/architecture/test_public_api_imports.py tests/architecture/test_repository_cleanliness.py
+  acceptance: uv run pytest -q tests/runtime/decision_schedule/test_decision_schedule.py tests/runtime/decision_schedule/test_decision_schedule_golden.py tests/runtime/observation_windows/test_named_bar_window.py tests/runtime/observation_windows/test_named_bar_window_golden.py tests/runtime/timeline/test_deterministic_timeline.py tests/domain/time tests/architecture/test_g11e_decision_schedule_boundary.py tests/architecture/test_g11d_observation_window_boundary.py tests/architecture/test_public_api_imports.py tests/architecture/test_repository_cleanliness.py --junitxml=build/acceptance/g11e-pytest.xml
+fixture_ids:
+  - decision-schedule-warmup-eligibility-v1
+expected_artifacts:
+  - docs/research/g11e-decision-schedule-warmup.md
+  - tests/fixtures/runtime/decision-schedule/decision-schedule-warmup-eligibility-v1.json
+  - build/acceptance/g11e-pytest.xml
+  - build/acceptance/g11e-import-boundary-report.json
+failure_contracts:
+  - schedule-or-requirement-identity-is-invalid-or-implicit
+  - lookback-minimum-is-bool-zero-negative-or-unbounded
+  - schedule-entry-is-empty-duplicate-unsorted-or-outside-half-open-window
+  - declared-segment-does-not-match-window-boundaries
+  - duplicate-requirement-key-or-selector-definition-identity
+  - evaluated-entry-is-not-an-exact-schedule-member
+  - window-evidence-is-missing-duplicate-extra-or-wrong-context
+  - insufficient-lookback-is-misclassified-as-exception-or-gap-reason
+  - warmup-authorizes-order-fill-journal-performance-or-account-side-effects
+  - schedule-collapses-or-reorders-full-simulation-instants-by-utc-only
+  - g11e-expands-calendar-session-cron-or-reads-timeline-bundle-clock
+  - g11e-claims-decision-grade-live-or-deployment-authorization
+allowed_grade: development
+evidence:
+  - half-open-warmup-active-boundary-tests
+  - full-simulation-instant-ordering-tests
+  - lookback-requirement-and-window-binding-tests
+  - satisfied-short-missing-and-empty-coverage-tests
+  - warmup-side-effect-suppression-tests
+  - deterministic-static-golden-hash
+  - constructor-forgery-controls
+  - public-api-import-report
+  - import-boundary-report
+  - static-type-report
+  - dependency-lock-report
+```
+
+### G11E Acceptance
+
+1. G11E只新增one production module `crypto_quant_backtest.decision_schedule`与root exports，保持pure immutable、provider-neutral、offline schedule/eligibility seam；
+2. G11E exact复用`TimelineWindow`与`TimelineSegment`，不得新增second run-boundary/segment model。Window必须继续满足`data_start <= trading_start < end_exclusive`；
+3. `LookbackRequirement` exact保存canonical nonempty `requirement_key`、G11A `ObservationQuery`、G11D `BarDefinitionRef`与positive non-bool `minimum_count`；v1 maximum exact为10000；
+4. Requirement canonical body exact为`{type="lookback_requirement",schema_version=1,requirement_key,observation_query,bar_definition,minimum_count}`；requirement hash non-recursive绑定all fields；
+5. `DecisionScheduleEntry` exact保存`decision_instant: SimulationInstant`与`segment: TimelineSegment`。UTC位于`[data_start,trading_start)`必须Warmup，位于`[trading_start,end_exclusive)`必须Active Trading；end boundary及以后不得进入schedule；
+6. Entry canonical body exact为`{type="decision_schedule_entry",schema_version=1,decision_instant,segment}`；entry hash绑定full Instant phase/source sequence，不能UTC-only；
+7. `DecisionSchedule` exact保存canonical nonempty key、positive non-bool version、one TimelineWindow、nonempty Entry tuple与Requirement tuple。Public behavior exact只有`key`/`version`/`window`/`entries`/`requirements` values、`schedule_hash`和`eligibility(entry, windows)`；
+8. Entries必须caller-supplied exact strict increasing full SimulationInstant order且unique；constructor不得silent sort。Same UTC different phase/source sequence是distinct ordered invocation windows；duplicate full Instant fail closed；
+9. Requirements按`(requirement_key, observation_query.query_hash, bar_definition_ref_hash)`canonical排序。Duplicate requirement key或duplicate `(ObservationQuery, BarDefinitionRef)` identity fail closed；empty requirements合法；
+10. Schedule canonical body exact为`{type="decision_schedule",schema_version=1,key,version,window,entries,requirements}`；changed boundary/Instant phase or sequence/segment/requirement/BarDefinition must change schedule hash；
+11. `eligibility`只接受schedule exact member Entry与tuple of G11D `NamedBarWindowResult`；无callback、registry、hidden state或runtime clock；same inputs repeat parity；
+12. Every requirement必须匹配exactly one Window result by ObservationQuery and BarDefinitionRef；Window Query Decision Instant必须exact等于Entry Decision Instant。Missing、duplicate、extra、wrong selector、wrong definition或wrong instant evidence fail closed；
+13. `LookbackCoverage` exact保存requirement、window result hash、required count、available count、shortfall count与satisfied。`satisfied = available_count >= minimum_count`；`shortfall=max(minimum_count-available_count,0)`；derived relations constructor/replace重算；
+14. G11E使用G11D `available_count`评估frozen minimum，不依赖G11D `coverage_complete`或requested_count等于minimum。不得parse Bar payload、resample、forward-fill或分类absence reason；
+15. `WarmupEligibility` exact保存schedule hash、Entry、ordered coverage tuple、`lookback_satisfied`、`strategy_invocation_eligible`、`trading_side_effects_authorized`、grade/deployment flags与eligibility hash；
+16. Overall lookback satisfied exact为all coverage satisfied；empty requirements为true。Insufficient/missing count中的insufficient是successful explicit ineligible result，不是exception、G12 gap reason或Bar completeness claim；
+17. `strategy_invocation_eligible = lookback_satisfied` for both Warmup and Active，允许Warmup在requirements满足后构建StrategyState；实际Context/invocation/state transition由G11I/G11F拥有；
+18. `trading_side_effects_authorized = lookback_satisfied and segment == ACTIVE_TRADING`。Warmup固定false，不得产生或授权OrderIntent、Target activation、Fill、Journal、account mutation或performance；
+19. `WarmupEligibility` canonical body exact为`{type="warmup_eligibility",schema_version=1,schedule_hash,entry,coverage,lookback_satisfied,strategy_invocation_eligible,trading_side_effects_authorized,decision_grade_eligible,deployment_authorized}`；
+20. `decision_grade_eligible=false`与`deployment_authorized=false`固定。G11E只提供development eligibility evidence；G12 completeness与later qualification required；
+21. Constructor与`dataclasses.replace`必须拒绝wrong hash/entry/coverage counts/order/derived booleans/flags或forged context；derived hashes不接受caller input；
+22. G11E consumes already-resolved finite Decision Instants；不拥有Calendar/Session/TradingDate/DST/cron/recurrence expansion、Timeline/Reader/Bundle/Event generation或wall clock；
+23. Atomic same-instant boundary仅表示one exact full SimulationInstant Entry为shared eligibility boundary。G11I owns Strategy identities、registration-order independence、parallel isolation、invocation与DecisionBatch；G11E不生成per-Strategy entries或partial outputs；
+24. Existing adapter-specific `TargetStreamDecisionSchedule`与Warmup suppression保持不变；G11E不替换其UTC target injection contract；Engine/Runner/Timeline/TargetStream/Kernel/provider SDK保持无G11E branch；
+25. Production imports exact只允许stdlib immutable support、`crypto_quant_domain` public canonical/time values与G11D/Timeline public runtime contracts；无新增dependency/cache/framework；
+26. Static golden至少冻结Warmup 50、Active boundary 100、same UTC distinct full Instants、last legal Active instant、end 300 exclusion、satisfied/short/missing/empty requirements、Warmup invocation true + side effects false、Active side effects only when satisfied、identity changes、wrong/extra/duplicate evidence、unsorted/segment/forgery failures与repeat parity；
+27. G11E outputs固定development-only，不声明Lookback completeness原因、decision-grade、live或deployment authorization。
+
+Frozen seam note：`docs/research/g11e-decision-schedule-warmup.md`。
+
+Readiness baseline：
+
+```text
+G11D window/timeline prerequisites                                  pending validation
+Workspace import boundary                                           pending validation
+mypy 2.3.0                                                           pending validation
+Primary LSP                                                          pending validation
+pi-lens scoped review                                                pending validation
+Markdown + git diff checks                                           PASS
+uv lock --check                                                      pending validation
+Python                                                                3.13.5
+```
+
+## 93. PASSED 记录格式
 
 ```yaml
 id: WP-00A
