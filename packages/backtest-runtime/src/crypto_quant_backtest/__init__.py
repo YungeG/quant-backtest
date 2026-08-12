@@ -270,6 +270,13 @@ from .timeline import (
     TimelineStreamCursor,
     TimelineWindow,
 )
+from .universe import (
+    PointInTimeUniverseView,
+    UniverseKind,
+    UniverseMembershipRevision,
+    UniverseQuery,
+    UniverseSelection,
+)
 
 __version__ = "0.1.0"
 
@@ -443,6 +450,7 @@ __all__ = [
     "OrderEventPlan",
     "OrderTerminatedByRunEnd",
     "PendingFeeAssessmentRef",
+    "PointInTimeUniverseView",
     "PositionLotBook",
     "PrecomputedTargetStreamAdapter",
     "ProfileResolver",
@@ -511,4 +519,8 @@ __all__ = [
     "TimelineSegment",
     "TimelineStreamCursor",
     "TimelineWindow",
+    "UniverseKind",
+    "UniverseMembershipRevision",
+    "UniverseQuery",
+    "UniverseSelection",
 ]
