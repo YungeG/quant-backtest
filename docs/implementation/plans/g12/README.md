@@ -22,7 +22,7 @@ real old artifact          → G12J
 | --- | --- | --- | --- |
 | [G12A](g12a.md) | Deterministic SourceSnapshot | G00 | `market-bundle-builder/source_snapshots.py` |
 | [G12B](g12b.md) | Canonical normalization | G12A, G02, first source contract | builder normalizers |
-| G12C | Bundle validation/manifest | G12B | builder validation |
+| [G12C](g12c.md) | Bundle validation/manifest | G12B | `market-bundle-builder/bundle_validation.py` |
 | G12D | Atomic publish/repository | G12C | builder + market-data contracts |
 | G12E | Columnar reader | G12D, WP-06A | market-data contracts |
 | G12F | Reader/partition parity | G12E, G07 | parity tooling |

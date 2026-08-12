@@ -118,6 +118,31 @@ targets = [
 ]
 
 [[forbidden_import_rules]]
+id = "g12c-bundle-validation-offline-core"
+source_packages = ["market-bundle-builder"]
+include = ["crypto_quant_bundle_builder/bundle_validation.py"]
+exclude = []
+targets = [
+  "aiohttp",
+  "boto3",
+  "ccxt",
+  "ftplib",
+  "gzip",
+  "http.client",
+  "httpx",
+  "pandas",
+  "pathlib",
+  "requests",
+  "smtplib",
+  "socket",
+  "sqlalchemy",
+  "subprocess",
+  "tarfile",
+  "urllib.request",
+  "websockets",
+]
+
+[[forbidden_import_rules]]
 id = "runtime-builder-import"
 source_packages = ["backtest-runtime"]
 include = ["*.py", "**/*.py"]

@@ -9955,7 +9955,59 @@ uv.lock                                                              sha256:a071
 
 Implementation commit：`c57080a87e5daa48b5637ad6d9d0f84f94f707b1`。
 
-## 95. PASSED 记录格式
+## 95. G12C Bundle Validation and Manifest Acceptance Card
+
+```yaml
+id: G12C
+status: DRAFT
+depends_on:
+  - G12B
+owner_package: market-bundle-builder
+allowed_grade: development
+public_interface:
+  - crypto_quant_bundle_builder.BundleValidationFailureCode
+  - crypto_quant_bundle_builder.BundleValidationFailure
+  - crypto_quant_bundle_builder.BundleValidationOutcome
+  - crypto_quant_bundle_builder.validate_market_bundle_v1
+test_commands:
+  readiness: PYTHONDONTWRITEBYTECODE=1 uv run pytest -q tests/market_data/bundles tests/bundle_builder/normalization tests/runtime/timeline tests/runtime/engine/test_g06_synthetic_cash_journey.py
+  contract: PYTHONDONTWRITEBYTECODE=1 uv run pytest -q tests/bundle_builder/validation/test_bundle_validation.py
+  fixture: PYTHONDONTWRITEBYTECODE=1 uv run pytest -q tests/bundle_builder/validation/test_bundle_validation_golden.py
+  architecture: PYTHONDONTWRITEBYTECODE=1 uv run pytest -q tests/architecture/test_g12c_bundle_validation_boundary.py tests/architecture/test_g12b_synthetic_jsonl_boundary.py tests/architecture/test_g12a_source_snapshot_boundary.py tests/architecture/test_import_boundary_mutations.py tests/architecture/test_public_api_imports.py tests/architecture/test_network_isolation.py tests/architecture/test_repository_cleanliness.py
+  acceptance: PYTHONDONTWRITEBYTECODE=1 uv run pytest -q tests/bundle_builder/source_snapshots tests/bundle_builder/normalization tests/bundle_builder/validation tests/market_data/bundles tests/runtime/timeline tests/runtime/engine/test_g06_synthetic_cash_journey.py tests/architecture/test_g12a_source_snapshot_boundary.py tests/architecture/test_g12b_synthetic_jsonl_boundary.py tests/architecture/test_g12c_bundle_validation_boundary.py tests/architecture/test_import_boundary_mutations.py tests/architecture/test_public_api_imports.py tests/architecture/test_network_isolation.py tests/architecture/test_repository_cleanliness.py --junitxml=build/acceptance/g12c-pytest.xml
+  import_boundary: PYTHONDONTWRITEBYTECODE=1 uv run python tools/architecture/check_import_boundaries.py --root . --policy architecture/import-boundaries.toml --report build/acceptance/g12c-import-boundary-report.json
+  static_types: uvx --from mypy==2.3.0 mypy --python-version 3.13 packages/*/src
+  full_suite: PYTHONDONTWRITEBYTECODE=1 uv run pytest -q
+artifacts:
+  - docs/research/g12c-bundle-validation-contract.md
+  - tests/fixtures/market_data/validation/synthetic-jsonl-bundle-validation-v1.expected.json
+  - build/acceptance/g12c-pytest.xml
+  - build/acceptance/g12c-import-boundary-report.json
+implementation_commit: null
+approved_on: null
+```
+
+Frozen contract：
+
+- G12C adds one generic, pure Builder module and exactly four root exports: `BundleValidationFailureCode`, `BundleValidationFailure`, `BundleValidationOutcome`, and `validate_market_bundle_v1`;
+- the function accepts only `bundle_key`, positive `schema_version`, half-open `UtcInstant` coverage, `instrument_catalog_hash`, and an exact `tuple[MarketEvent, ...]`; it accepts no capabilities, manifests, partition IDs, paths, refs, Snapshot, normalization result, protocol, callback, registry, or plugin;
+- a nonempty caller-order subsequence with one `stream_key` is the G12C logical in-memory partition; its existing `MarketStreamManifest` is the complete partition hash evidence; physical layout/chunks/files remain G12D+;
+- source provenance at this Gate is exact `MarketEvent.source_key`/`source_hash`, transitively committed through Event, stream, and Bundle hashes; authenticated G12A/G12B replay provenance is excluded;
+- success retains each per-stream caller subsequence unchanged, derives `MarketStreamManifest.from_events()`, derives capabilities exactly from actual stream manifests, and calls `MarketBundleManifest.build()`; `MarketBundleManifest.content_hash` and external `MarketBundleRef.from_manifest()` parity remain the only success identities;
+- validation never uses `InMemoryMarketBundleReader` and never sorts to repair input;
+- failure codes are exactly `invalid_input`, `duplicate_event_id`, `event_outside_coverage`, `stream_classification_mismatch`, `duplicate_stream_ordering_key`, and `stream_order_regression`;
+- `BundleValidationFailure` contains only code, optional stream key, and optional zero-based original input position; its stable canonical body is `market_bundle_v1_validation_failure` schema v1 and `failure_hash = canonical_sha256(body)`;
+- exact global failure precedence is invalid header/member → duplicate Bundle-wide Event ID → Event-time coverage → mixed `(event_type, capability)` inside a stream → duplicate local ordering key → local ordering regression; the earliest original input position wins within one category;
+- coverage means only `coverage_start <= event.event_time < coverage_end_exclusive`; it is not completeness evidence;
+- Event IDs are unique Bundle-wide; ordering keys are unique and strictly increasing only within one stream; non-contiguous SourceSequence succeeds, while equal ordering keys across streams remain WP-06B Timeline authority;
+- all failure paths are atomic and return no partial manifest, stream, Event, payload, trace, path, or exception text;
+- empty Events structurally succeed with empty streams/capabilities but make no coverage, retention, publication, decision-grade, or deployment claim;
+- static fixture `synthetic-jsonl-bundle-validation-v1` must freeze manifest/stream/ref repeat parity, source sensitivity, structured failure precedence, atomic later failure, empty input, non-contiguous sequence, and cross-stream handoff;
+- runtime/kernel may not import the Builder validator; G12C may not mutate frozen Market Data schemas or own Reader, repository, publication, global Timeline, Bars, coverage reports, provider acquisition, decision-grade, or deployment authorization.
+
+Research authority：`docs/research/g12c-bundle-validation-contract.md`。
+
+## 96. PASSED 记录格式
 
 ```yaml
 id: WP-00A
