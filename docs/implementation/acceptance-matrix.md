@@ -139,7 +139,7 @@ artifact_hashes: []
 | G10H | PASSED — immutable commit `468c91ad3fdbad221c959182f8751300f20a2424` | parity tooling | G10G, WP-00C | none |
 | G11A | PASSED — immutable commit `72fe31f5b10d785340b11ca0fd3d0fec8c1c4a34` | backtest-runtime observations | G07, WP-06A | none |
 | G11B | PASSED | backtest-runtime observations | G11A | none |
-| G11C | READY | backtest-runtime observations | G11A–G11B | Universe fixtures |
+| G11C | PASSED | backtest-runtime observations | G11A–G11B | Universe fixtures |
 | G11D | DRAFT | backtest-runtime observations | G11A–G11B | Bar/window fixtures |
 | G11E | DRAFT | backtest-runtime strategy | G11B, G11D | Schedule/warmup fixtures |
 | G11F | PASSED | backtest-runtime strategy | G02 | State/checkpoint fixtures |
@@ -9230,7 +9230,7 @@ Implementation commit：`07a29546bb7defff701b143c575b3d2df8ab2a83`。
 
 ```yaml
 id: G11C
-status: READY
+status: PASSED
 depends_on:
   - G11A
   - G11B
@@ -9284,6 +9284,11 @@ evidence:
   - import-boundary-report
   - static-type-report
   - dependency-lock-report
+passed_commit: d3fe684181ddd5a7335da0e68485849eb41a22f2
+artifact_hashes:
+  tests/fixtures/runtime/universe/point-in-time-universe-membership-v1.json: sha256:46848a7f577d540ee7e5f5118e45646590034f5888cd540902535b746a03c9da
+  build/acceptance/g11c-pytest.xml: sha256:227b0db7763a70cce11350f1b64a25bcc2dadf0ba5a7db25e73981c624159450
+  build/acceptance/g11c-import-boundary-report.json: sha256:f94d2195306e7cb62bdffd4356fe92a3ce4c714cc81a01cf630e7978ea875097
 ```
 
 ### G11C Acceptance
@@ -9343,6 +9348,24 @@ Python                                                                3.13.5
 ```
 
 Contract freeze commit：`a723209730be2365f70ed96809ed43a51b9512a0`。
+
+Acceptance validation：
+
+```text
+G11C frozen acceptance command                                      74 passed
+Universe contract/golden/boundary                                   14 passed
+Full test suite                                                    1218 passed
+Workspace import boundary                                           PASS (85 files)
+mypy 2.3.0                                                           no issues (85 package source files)
+Primary LSP                                                          clean (6 files)
+pi-lens scoped review                                                no findings across 6 changed files
+Static golden/membership/listing/static/forgery controls             PASS
+Markdown + git diff checks                                           PASS
+uv lock --check                                                      PASS
+Python                                                                3.13.5
+```
+
+Implementation commit：`d3fe684181ddd5a7335da0e68485849eb41a22f2`。
 
 ## 91. PASSED 记录格式
 
