@@ -9798,7 +9798,118 @@ uv.lock                                                              sha256:afa5
 
 Implementation commit：`36d8146864ad3fead31593878ad247fbd5f5f463`。
 
-## 94. PASSED 记录格式
+## 94. G12B Synthetic JSONL v1 Normalization Acceptance Card
+
+```yaml
+id: G12B
+status: DRAFT
+depends_on:
+  - G12A
+  - G02
+owner_package: market-bundle-builder
+public_interface:
+  - crypto_quant_bundle_builder.SyntheticJsonlV1Config
+  - crypto_quant_bundle_builder.SyntheticJsonlV1RecordLocator
+  - crypto_quant_bundle_builder.SyntheticJsonlV1SourceTrace
+  - crypto_quant_bundle_builder.SyntheticJsonlV1NormalizationResult
+  - crypto_quant_bundle_builder.SyntheticJsonlV1NormalizationFailureCode
+  - crypto_quant_bundle_builder.SyntheticJsonlV1NormalizationFailure
+  - crypto_quant_bundle_builder.SyntheticJsonlV1NormalizationOutcome
+  - crypto_quant_bundle_builder.normalize_synthetic_jsonl_v1
+  - crypto_quant_bundle_builder.SyntheticJsonlV1NormalizationResult.event_for_source_record
+  - crypto_quant_bundle_builder.SyntheticJsonlV1NormalizationResult.trace_for_event
+test_commands:
+  readiness: uv run pytest -q tests/bundle_builder/source_snapshots tests/parity/test_source_snapshots.py tests/domain/canonical tests/domain/instruments tests/domain/numeric tests/domain/time tests/domain/accounting tests/market_data/bundles tests/architecture/test_workspace_smoke.py tests/architecture/test_g12a_source_snapshot_boundary.py tests/architecture/test_import_boundary_mutations.py tests/architecture/test_public_api_imports.py tests/architecture/test_network_isolation.py tests/architecture/test_repository_cleanliness.py
+  contract: uv run pytest -q tests/bundle_builder/normalization/test_synthetic_jsonl.py
+  fixture: uv run pytest -q tests/bundle_builder/normalization/test_synthetic_jsonl_golden.py
+  boundary: uv run pytest -q tests/architecture/test_g12b_synthetic_jsonl_boundary.py tests/architecture/test_g12a_source_snapshot_boundary.py tests/architecture/test_import_boundary_mutations.py tests/architecture/test_public_api_imports.py tests/architecture/test_network_isolation.py tests/architecture/test_repository_cleanliness.py
+  acceptance: uv run pytest -q tests/bundle_builder/normalization/test_synthetic_jsonl.py tests/bundle_builder/normalization/test_synthetic_jsonl_golden.py tests/bundle_builder/source_snapshots tests/domain/canonical tests/domain/instruments tests/domain/numeric tests/domain/time tests/domain/accounting tests/market_data/bundles tests/architecture/test_g12b_synthetic_jsonl_boundary.py tests/architecture/test_g12a_source_snapshot_boundary.py tests/architecture/test_import_boundary_mutations.py tests/architecture/test_public_api_imports.py tests/architecture/test_network_isolation.py tests/architecture/test_repository_cleanliness.py tests/parity/test_source_snapshots.py --junitxml=build/acceptance/g12b-pytest.xml
+fixture_ids:
+  - synthetic-jsonl-v1
+expected_artifacts:
+  - docs/research/g12b-canonical-normalization-contract.md
+  - tests/fixtures/market_data/normalization/synthetic-jsonl-v1.jsonl
+  - tests/fixtures/market_data/normalization/synthetic-jsonl-v1.expected.json
+  - build/acceptance/g12b-pytest.xml
+  - build/acceptance/g12b-import-boundary-report.json
+failure_contracts:
+  - invalid-normalization-input
+  - source-snapshot-invalid
+  - selected-member-missing
+  - member-encoding-invalid
+  - jsonl-layout-invalid
+  - json-invalid
+  - noncanonical-json
+  - record-shape-invalid
+  - unsupported-record-schema
+  - record-field-invalid
+  - instrument-unmapped
+  - price-purpose-unmapped
+  - event-envelope-invalid
+allowed_grade: development
+evidence:
+  - verified-g12a-member-only-input
+  - strict-canonical-jsonl-tests
+  - explicit-instrument-and-price-purpose-mapping
+  - exact-utc-scale-and-revision-preservation
+  - bidirectional-source-event-trace
+  - physical-line-order-and-sequence-tests
+  - config-and-normalizer-identity-tests
+  - atomic-failure-precedence-tests
+  - deterministic-static-golden-hash
+  - scoped-import-boundary-report
+  - public-api-import-report
+  - static-type-report
+  - dependency-lock-report
+```
+
+### G12B Acceptance
+
+1. G12B只新增one production module `crypto_quant_bundle_builder.synthetic_jsonl`与eight Builder root exports，使用one synthetic-only function seam；无generic normalizer/protocol/callback/registry/parser plugin/DSL/cache/provider adapter；
+2. Builder package明确直接依赖`crypto_quant_domain` public root与`crypto_quant_market_data`；无third-party dependency；不得通过Market Data re-export Domain types规避依赖；
+3. `SyntheticJsonlV1Config` exact保存member key、stream key、MarketBundleCapability、TimelinePhase、Instrument alias bindings与PricePurpose alias bindings；bindings nonempty、canonical sorted、duplicate alias fail closed且input order hash-invariant；
+4. Instrument alias exact匹配`[A-Z][A-Z0-9._-]{0,63}`，Purpose alias exact匹配`[a-z][a-z0-9_.-]{0,63}`；无default/implicit mapping；
+5. Config canonical body exact绑定all semantic fields；`config_hash=canonical_sha256(body)`。Fixed normalizer ID exact为`synthetic_jsonl@1`，spec hash exact绑定type/schema/ID；grammar semantic change requires new version；
+6. Normalizer先验证complete G12A SourceSnapshot，再从verified member evidence选择exact `config.member_key`，raw bytes只通过`member_bytes()`；不得读取archive bytes或parse gzip/tar；
+7. Selected zero-byte member成功返回empty Events/traces且不声明coverage/completeness；
+8. Nonempty member必须strict UTF-8、无BOM/raw CR、exact one final LF delimiter、无empty physical records；physical line number 1-based，SourceSequence exact为line_number-1；
+9. JSON parser拒绝duplicate keys at any nesting、float/decimal/exponent/nonfinite tokens，不修改process-global integer limit；original line bytes必须exact等于`canonical_bytes(parsed_object)`；
+10. Each line exact包含eleven keys：available/event time、instrument、price scale/units、purpose、record key、revision ID、schema version、supersedes revision ID、type；unknown/missing keys fail closed；
+11. Type exact为`synthetic_price_point`且schema version exact non-bool integer 1；record/revision IDs与aliases obey frozen regex；supersedes null或different valid revision ID；
+12. Times exact为non-bool integer UtcInstant且available >= event；price units positive non-bool integer；price scale exact accepted by Scale；无float/rounding/inference；
+13. Event exact映射configured stream/capability/phase、mapped Instrument、event/available time、line sequence、revision fields、Snapshot provenance source key与selected member content hash；
+14. Event type exact为`synthetic_price_point.v1`；payload exact为canonical primitives `synthetic_record_key`、`price_units`、`price_scale` places、`price_purpose` enum value；不构造typed Price/currency/Rule/CorporateAction；
+15. Locator canonical body exact为`{type="synthetic_jsonl_line_locator",schema_version=1,member_key,line_number}`；
+16. Event ID exact为`synthetic-jsonl-v1:` + canonical hash of type/schema/spec hash/config hash/snapshot ID/source key/locator；caller不能提供Event ID/sequence/hash；
+17. Events/traces exact保留physical-line order；G12B不sort/deduplicate、不验证stream ordering或revision chain；G12C/G12I owns those checks；
+18. Source trace exact保存snapshot ID、provenance hash、source key、member content hash、locator、Event ID/hash；member hash + locator是raw source identity，无redundant raw-line hash；
+19. Result exact保存config/spec/snapshot/provenance/source/member identities、Event/trace tuples、normalization hash与false flags；trace/event positional exact-cover、contiguous locator/sequence、source evidence与hashes必须一致；
+20. `event_for_source_record()`与`trace_for_event()`是deterministic linear lookup returning value or None；无stored indexes/cache；
+21. Provenance-only changes with same source key preserve Event identity但change trace/result identity；source key/member content/semantic config changes affect Event/result identity；
+22. Outcome XOR result/failure，all failures return no partial Event/trace tuples；failure只保存code、optional safe member key/locator/field与failure hash，不泄漏raw value/bytes/exception/path/URL/header/credential；
+23. Failure precedence exact为invalid input→snapshot invalid→member missing→encoding invalid→layout invalid→lowest failing physical line；per-line exact为JSON invalid→noncanonical→shape→schema→field→Instrument unmapped→Purpose unmapped→Event envelope invalid；
+24. G12B只生成existing public MarketEvent envelope与Builder-local trace；没有generic Rule/CorporateAction/Revision class claim；
+25. Production imports只允许stdlib、sibling G12A、Domain public root、Market Data public root；无Domain internal/Kernel/Runtime/archive/filesystem/network/process/current-clock imports；
+26. G12B不拥有G12C manifest/partition/count/capability/order/duplicate validation、G12G Bars、G12H/K economics/coverage、G12I revision selection/coverage、G12D–F publication/Reader或G12L acquisition；
+27. Static golden至少冻结root+correction+second purpose、zero-byte success、exact Event/trace/config/spec/result hashes、reverse-binding parity、provenance/source/content/config sensitivity、all failure codes/precedence、atomicity、bidirectional lookup与false flags；
+28. G12B outputs固定development-only，`decision_grade_eligible=false`与`deployment_authorized=false`，不声明real provider schema或source completeness。
+
+Frozen seam note：`docs/research/g12b-canonical-normalization-contract.md`。
+
+Readiness baseline：
+
+```text
+G12A/domain/market-data prerequisites                               pending validation
+Workspace import boundary                                           pending validation
+mypy 2.3.0                                                           pending validation
+Primary LSP                                                          pending validation
+pi-lens scoped review                                                pending validation
+Markdown + git diff checks                                           PASS
+uv lock --check                                                      pending validation
+Python                                                                3.13.5
+```
+
+## 95. PASSED 记录格式
 
 ```yaml
 id: WP-00A
