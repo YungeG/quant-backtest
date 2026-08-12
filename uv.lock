@@ -76,11 +76,15 @@ name = "crypto-quant-bundle-builder"
 version = "0.1.0"
 source = { editable = "packages/market-bundle-builder" }
 dependencies = [
+    { name = "crypto-quant-domain" },
     { name = "crypto-quant-market-data" },
 ]
 
 [package.metadata]
-requires-dist = [{ name = "crypto-quant-market-data", editable = "packages/market-data-contracts" }]
+requires-dist = [
+    { name = "crypto-quant-domain", editable = "packages/trading-domain" },
+    { name = "crypto-quant-market-data", editable = "packages/market-data-contracts" },
+]
 
 [[package]]
 name = "crypto-quant-domain"

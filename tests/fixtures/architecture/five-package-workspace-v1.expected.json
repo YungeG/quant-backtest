@@ -39,6 +39,7 @@
       "project_name": "crypto-quant-bundle-builder",
       "module_name": "crypto_quant_bundle_builder",
       "dependencies": [
+        "crypto-quant-domain",
         "crypto-quant-market-data"
       ]
     },

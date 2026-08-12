@@ -27,7 +27,7 @@ allowed_workspace_modules = ["crypto_quant_domain"]
 id = "market-bundle-builder"
 module = "crypto_quant_bundle_builder"
 source = "packages/market-bundle-builder/src"
-allowed_workspace_modules = ["crypto_quant_market_data"]
+allowed_workspace_modules = ["crypto_quant_domain", "crypto_quant_market_data"]
 
 [[packages]]
 id = "backtest-runtime"
@@ -88,6 +88,31 @@ targets = [
   "socket",
   "sqlalchemy",
   "subprocess",
+  "urllib.request",
+  "websockets",
+]
+
+[[forbidden_import_rules]]
+id = "g12b-synthetic-jsonl-offline-core"
+source_packages = ["market-bundle-builder"]
+include = ["crypto_quant_bundle_builder/synthetic_jsonl.py"]
+exclude = []
+targets = [
+  "aiohttp",
+  "boto3",
+  "ccxt",
+  "ftplib",
+  "gzip",
+  "http.client",
+  "httpx",
+  "pandas",
+  "pathlib",
+  "requests",
+  "smtplib",
+  "socket",
+  "sqlalchemy",
+  "subprocess",
+  "tarfile",
   "urllib.request",
   "websockets",
 ]
