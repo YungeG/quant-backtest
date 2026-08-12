@@ -1786,16 +1786,9 @@ Builder 是允许访问网络/供应商文件的独立写侧工具；Backtest Ru
 
 ### Gate G12A SourceSnapshot Contract
 
-所属 package：`market-bundle-builder`。
+Detailed plan：[`docs/implementation/plans/g12/g12a.md`](plans/g12/g12a.md)。
 
-拥有：原始输入冻结、source/vendor identity、acquisition time、source hash、license 和 retention metadata。
-
-验收：
-
-- 相同原始内容产生相同 SourceSnapshot identity；
-- 获取失败或 hash 不一致不进入 Normalization；
-- 网络访问只存在 Builder Source Adapter；
-- Runtime package/测试无法导入在线获取实现。
+Acceptance and status authority：[`docs/implementation/acceptance-matrix.md`](acceptance-matrix.md)。
 
 ### Gate G12B Canonical Normalization
 

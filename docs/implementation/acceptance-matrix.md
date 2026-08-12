@@ -9650,7 +9650,109 @@ uv.lock                                                              sha256:afa5
 
 Implementation commit：`0e602a91ef02518533340b2bb1c6ca44a741f6f6`。
 
-## 93. PASSED 记录格式
+## 93. G12A SourceSnapshot Acceptance Card
+
+```yaml
+id: G12A
+status: DRAFT
+depends_on:
+  - G00
+owner_package: market-bundle-builder
+public_interface:
+  - crypto_quant_bundle_builder.RawSourceMember
+  - crypto_quant_bundle_builder.SourceSnapshotProvenance
+  - crypto_quant_bundle_builder.SourceSnapshotMember
+  - crypto_quant_bundle_builder.SourceSnapshot
+  - crypto_quant_bundle_builder.SourceSnapshotFailureCode
+  - crypto_quant_bundle_builder.SourceSnapshotFailure
+  - crypto_quant_bundle_builder.SourceSnapshotOutcome
+  - crypto_quant_bundle_builder.freeze_source_snapshot
+  - crypto_quant_bundle_builder.verify_source_snapshot
+  - crypto_quant_bundle_builder.SourceSnapshot.member_bytes
+test_commands:
+  readiness: uv run pytest -q tests/architecture tests/parity
+  contract: uv run pytest -q tests/bundle_builder/source_snapshots/test_source_snapshot.py
+  fixture: uv run pytest -q tests/bundle_builder/source_snapshots/test_source_snapshot_golden.py
+  boundary: uv run pytest -q tests/architecture/test_g12a_source_snapshot_boundary.py tests/architecture/test_import_boundary_mutations.py tests/architecture/test_public_api_imports.py tests/architecture/test_network_isolation.py tests/architecture/test_repository_cleanliness.py
+  acceptance: uv run pytest -q tests/bundle_builder/source_snapshots/test_source_snapshot.py tests/bundle_builder/source_snapshots/test_source_snapshot_golden.py tests/architecture/test_g12a_source_snapshot_boundary.py tests/architecture/test_import_boundary_mutations.py tests/architecture/test_public_api_imports.py tests/architecture/test_network_isolation.py tests/architecture/test_repository_cleanliness.py tests/parity/test_source_snapshots.py --junitxml=build/acceptance/g12a-pytest.xml
+fixture_ids:
+  - source-snapshot-v1
+expected_artifacts:
+  - docs/research/g12a-source-snapshot-contract.md
+  - tests/fixtures/market_data/source-snapshots/source-snapshot-v1.tar.gz
+  - tests/fixtures/market_data/source-snapshots/source-snapshot-v1.expected.json
+  - build/acceptance/g12a-pytest.xml
+  - build/acceptance/g12a-import-boundary-report.json
+failure_contracts:
+  - invalid-snapshot-input
+  - unsafe-member
+  - duplicate-member
+  - acquisition-failed
+  - declared-source-hash-mismatch
+  - archive-invalid
+  - snapshot-id-mismatch
+  - content-tree-hash-mismatch
+  - provenance-hash-mismatch
+allowed_grade: development
+evidence:
+  - g00-compatible-deterministic-archive-identity
+  - content-and-provenance-hash-separation
+  - one-shot-atomic-capture-tests
+  - declared-source-hash-controls
+  - archive-tamper-and-noncanonical-controls
+  - verified-member-access-tests
+  - restricted-canonical-json-parity
+  - deterministic-static-golden-hash
+  - scoped-import-boundary-report
+  - public-api-import-report
+  - static-type-report
+  - dependency-lock-report
+```
+
+### G12A Acceptance
+
+1. G12A只新增one production module `crypto_quant_bundle_builder.source_snapshots`与Builder root exports，保持pure in-memory、offline、stdlib-only source-freeze seam；不import Trading Domain/Kernel/Runtime/provider SDK；无新增dependency；
+2. `RawSourceMember` exact保存`member_key`、`raw_bytes: bytes | None`、mode、caller-supplied acquisition epoch nanoseconds与optional declared sha256。`b""`是valid content，只有None表示acquisition incomplete；bytes字段`repr=False`；
+3. Member key v1 exact为ASCII 1–100 bytes slash-separated logical USTAR key；每segment匹配`[A-Za-z0-9_][A-Za-z0-9._-]*`；absolute/empty/dot/dotdot/repeated or trailing slash/backslash/NUL/non-ASCII/leading-dot/overlong/PAX path fail closed；
+4. Mode exact只允许`0644`或`0755`；acquisition time必须non-bool integer；all public digest exact为`sha256:<64 lowercase hex>`；declared hash若存在必须match raw bytes；
+5. `SourceSnapshotProvenance` exact保存canonical lowercase `vendor_key`、`source_key`、`license_ref`与`retention_policy_ref`，每值匹配`[a-z][a-z0-9._-]*`。这些是metadata refs，不是credential/header/URL/path/legal conclusion/retention proof；
+6. `freeze_source_snapshot` exact materialize caller iterable once before derivation，canonical sort by member key，并拒绝duplicate。Any invalid/unsafe/failed/mismatched later member returns failure with no partial Snapshot；
+7. Content archive exact复用G00/WP-00C recipe：sorted regular USTAR members、exact key/bytes/mode、mtime/uid/gid=0、uname/gname/gzip filename empty、gzip mtime=0、compresslevel=9；
+8. `snapshot_id=sha256(archive_bytes)`。Member key/mode/bytes必须改变identity；input order/acquisition time/provenance/local path/process/machine/current time不得改变identity；
+9. `SourceSnapshotMember` exact保存member key、content hash、byte count、mode、acquisition epoch nanoseconds与optional declared hash；members必须sorted/unique且与archive exact-cover；
+10. Content-tree preimage exact为`{type="source_snapshot_content_tree",schema_version=1,members:[{member_key,content_hash,byte_count,mode}]}`；content tree hash是audit evidence，不是second reference identity；
+11. Provenance preimage exact为`{type="source_snapshot_provenance",schema_version=1,snapshot_id,vendor_key,source_key,license_ref,retention_policy_ref,members:[{member_key,acquired_at_epoch_nanoseconds,declared_sha256}]}`；provenance-only changes preserve snapshot ID and change provenance hash；
+12. `SourceSnapshot.to_canonical_dict()` exact保存type/schema/snapshot ID/content-tree hash/full member evidence/provenance/provenance hash/false qualification flags且不保存archive bytes。G12A不新增manifest/ref/envelope/path/URI/CAS identity；
+13. Builder private canonical encoder只接受null/bool/non-bool integer/NFC string/list/string-key mapping，使用UTF-8 compact JSON与Unicode-key sort；float/Decimal/datetime/bytes/set/non-string keys/cycles fail closed；
+14. `freeze_source_snapshot`与`verify_source_snapshot` exact返回XOR `SourceSnapshotOutcome`。Success only one Snapshot；failure only one structured failure；无exception text/stack/bytes/credentials/URL/header/local path泄漏；
+15. Freeze failure precedence exact为INVALID_SNAPSHOT_INPUT→UNSAFE_MEMBER→DUPLICATE_MEMBER→ACQUISITION_FAILED→DECLARED_SOURCE_HASH_MISMATCH；
+16. Verify failure precedence exact为INVALID_SNAPSHOT_INPUT→ARCHIVE_INVALID→SNAPSHOT_ID_MISMATCH→CONTENT_TREE_HASH_MISMATCH→PROVENANCE_HASH_MISMATCH；constructor shape violations使用TypeError/ValueError；
+17. Verification全程in-memory，reject malformed/nonregular/unsafe/duplicate/unsorted/noncanonical tar/gzip metadata，reconstruct exact canonical archive and byte-compare，再重算snapshot/member/content/provenance evidence；
+18. `SourceSnapshot.member_bytes(member_key)`是G12B唯一raw-member access，必须private verify/extract、正确返回zero-byte content，并对invalid/unverified/missing request只抛fixed non-revealing error；
+19. `SourceSnapshotFailure`只保存stable code与optional independently-safe member key；unsafe/unparseable input不得回显；failure identity canonical且不绑定runtime exception/message；
+20. Value atomicity exact表示all supplied members形成one complete Snapshot或no Snapshot。Filesystem/object-store publish、temp files、locks、concurrent dedup、repository retrieval与retention属于G12D；
+21. G12A不拥有HTTP/file/database/cloud acquisition、provider auth/pagination/retry、filesystem scan/symlink、CLI/registry/protocol/callback/cache/wall clock、normalization、Bundle validation、Reader或Runtime；
+22. Scoped import policy只限制`source_snapshots.py` offline core，不全局阻止future G12L Builder adapters；Runtime→Builder prohibition保持；
+23. Static golden至少冻结three synthetic members including zero-byte and executable、exact archive bytes、manifest/member/content/provenance hashes、reverse-input parity、provenance-only change、key/mode/byte sensitivity、member access、all failure codes/precedence、later-member atomicity、archive tamper/noncanonical controls、canonical vectors与false flags；
+24. G12A fixture必须synthetic and secret-free。Real source admissibility/encryption/license adjudication/retention/retrievability/completeness/decision-grade/live/deployment均不在本Gate声明；
+25. G12A固定development-only，`decision_grade_eligible=false`与`deployment_authorized=false`。
+
+Frozen seam note：`docs/research/g12a-source-snapshot-contract.md`。
+
+Readiness baseline：
+
+```text
+G00 architecture/parity prerequisites                               pending validation
+Workspace import boundary                                           pending validation
+mypy 2.3.0                                                           pending validation
+Primary LSP                                                          pending validation
+pi-lens scoped review                                                pending validation
+Markdown + git diff checks                                           PASS
+uv lock --check                                                      pending validation
+Python                                                                3.13.5
+```
+
+## 94. PASSED 记录格式
 
 ```yaml
 id: WP-00A
