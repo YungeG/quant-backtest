@@ -9226,7 +9226,107 @@ Python                                                                3.13.5
 
 Implementation commit：`07a29546bb7defff701b143c575b3d2df8ab2a83`。
 
-## 90. PASSED 记录格式
+## 90. G11C Point-in-time Universe Acceptance Card
+
+```yaml
+id: G11C
+status: DRAFT
+depends_on:
+  - G11A
+  - G11B
+owner_package: backtest-runtime observations
+public_interface:
+  - crypto_quant_backtest.UniverseKind
+  - crypto_quant_backtest.UniverseMembershipRevision
+  - crypto_quant_backtest.UniverseQuery
+  - crypto_quant_backtest.UniverseSelection
+  - crypto_quant_backtest.PointInTimeUniverseView
+test_commands:
+  readiness: uv run pytest -q tests/runtime/observations/test_point_in_time_observation_view.py tests/runtime/observations/test_point_in_time_observation_view_golden.py tests/domain/instruments tests/domain/time tests/kernel/validation/test_strategy_output_validator.py tests/architecture/test_g11b_observation_causality_boundary.py tests/architecture/test_public_api_imports.py tests/architecture/test_repository_cleanliness.py
+  contract: uv run pytest -q tests/runtime/universe/test_point_in_time_universe.py
+  fixture: uv run pytest -q tests/runtime/universe/test_point_in_time_universe_golden.py
+  boundary: uv run pytest -q tests/architecture/test_g11c_universe_boundary.py tests/architecture/test_g11b_observation_causality_boundary.py tests/architecture/test_public_api_imports.py tests/architecture/test_repository_cleanliness.py
+  acceptance: uv run pytest -q tests/runtime/universe/test_point_in_time_universe.py tests/runtime/universe/test_point_in_time_universe_golden.py tests/runtime/observations/test_point_in_time_observation_view.py tests/domain/instruments tests/domain/time tests/kernel/validation/test_strategy_output_validator.py tests/architecture/test_g11c_universe_boundary.py tests/architecture/test_g11b_observation_causality_boundary.py tests/architecture/test_public_api_imports.py tests/architecture/test_repository_cleanliness.py --junitxml=build/acceptance/g11c-pytest.xml
+fixture_ids:
+  - point-in-time-universe-membership-v1
+expected_artifacts:
+  - docs/research/g11c-point-in-time-universe.md
+  - tests/fixtures/runtime/universe/point-in-time-universe-membership-v1.json
+  - build/acceptance/g11c-pytest.xml
+  - build/acceptance/g11c-import-boundary-report.json
+failure_contracts:
+  - universe-is-inferred-from-files-symbols-bars-or-current-api
+  - point-in-time-and-static-evidence-is-mixed-for-one-query
+  - utc-only-cutoff-exposes-same-time-later-phase-or-sequence-membership
+  - future-or-unrelated-universe-conflict-changes-prior-view-or-selection
+  - same-membership-revision-identity-has-conflicting-content
+  - visible-membership-parent-is-missing
+  - visible-membership-chain-forks-cycles-or-has-multiple-roots-or-terminals
+  - membership-lineage-changes-universe-kind-instrument-or-membership-key
+  - child-membership-availability-does-not-strictly-follow-parent
+  - membership-or-listing-interval-is-empty-reversed-or-inconsistent
+  - active-membership-overlaps-for-one-instrument
+  - pre-listing-or-at-after-delisting-instrument-is-returned
+  - selected-instruments-or-evidence-hashes-are-not-canonical-and-unique
+  - empty-universe-is-misclassified-as-session-gap-or-completeness-failure
+  - static-universe-claims-survivorship-bias-free-market-coverage
+  - g11c-claims-decision-grade-live-or-deployment-authorization
+allowed_grade: development
+evidence:
+  - full-simulation-instant-membership-tests
+  - listing-delisting-entry-exit-and-reentry-tests
+  - revision-chain-selection-and-failure-precedence-tests
+  - future-and-unrelated-universe-noninterference-tests
+  - labelled-static-universe-tests
+  - deterministic-static-golden-hash
+  - constructor-forgery-controls
+  - public-api-import-report
+  - import-boundary-report
+  - static-type-report
+  - dependency-lock-report
+```
+
+### G11C Acceptance
+
+1. G11C只新增one production module `crypto_quant_backtest.universe`与root exports，保持pure immutable、provider-neutral、offline Strategy-facing Universe value seam。它只消费caller-supplied exact evidence，不扫描directory/file、读取Bundle/Reader/network/current API或从Symbol/Bar推断Universe；
+2. `UniverseKind` v1 exact只有`POINT_IN_TIME`与`STATIC`。One `UniverseQuery`/Universe key不能mix kinds；Static evidence必须显式label，不能fallback为Point-in-time或冒充historical exchange coverage；
+3. `UniverseMembershipRevision` exact保存canonical nonempty `universe_key`与caller-supplied stable `membership_key`、exact kind、`InstrumentId`、listing interval、membership interval、`available_at: SimulationInstant`、canonical Revision ID/optional superseded ID、source hash；
+4. Listing interval exact为`[listed_at,delisted_at)`，membership interval exact为`[member_from,member_until)`；optional ends为open-ended。Each interval必须nonempty，membership interval必须完全contained by listing interval。Delisting closes active membership but does not erase historical revision/Instrument identity；
+5. `membership_key`是one logical membership interval across corrections，不从Instrument、times、Revision ID、payload/order猜测。Same Instrument exit/re-entry使用separate nonoverlapping membership keys；
+6. Revision canonical body exact为`{type="universe_membership_revision",schema_version=1,universe_key,membership_key,kind,instrument_id,listed_at,delisted_at,member_from,member_until,available_at,revision_id,supersedes_revision_id,source_hash}`；`revision_hash=canonical_sha256(body)`且non-recursive；
+7. `UniverseQuery` exact保存canonical `universe_key`、kind与`decision_instant: SimulationInstant`；query hash绑定full instant。Economic interval membership按`decision_instant.instant`判定，knowledge visibility按full SimulationInstant total order；
+8. `PointInTimeUniverseView` constructor exact只接收Query和Revision iterable。Public behavior exact只有`view_hash`与argument-free `select() -> UniverseSelection`；不得暴露backing/future revisions、mutable registry/cache、Reader或clock；
+9. Construction order exact为discard other Universe key/kind→discard future availability→canonical exact dedup→validate each membership-key visible chain→select terminal→validate selected interval consistency→select active members。Future/unrelated malformed evidence不能阻断或改变prior view/selection；
+10. Visible identity exact为`(membership_key,revision_id)`。Exact duplicate collapse；same identity/different content fail closed。Each lineage exact one root、existing same-lineage parents、no fork/cycle/disconnected second root/multiple terminal；
+11. Lineage exact保持Universe key、kind、Instrument与membership key。Child full availability必须strictly greater than parent。Failure precedence exact为revision identity conflict→missing parent→chain conflict→lineage context mismatch→availability regression→interval invalid→active overlap；
+12. Terminal revisions independently selected per membership key。At Decision UTC instant only intervals containing that instant are active；pre-listing、at/after finite delisting、before membership start及at/after membership end必须excluded；
+13. Active selected membership intervals for same Instrument/Universe cannot overlap.Exit/re-entry via nonoverlapping keys is legal；simultaneously active duplicate Instrument evidence fail closed instead of silently deduplicating semantic conflict；
+14. `UniverseSelection` exact保存Query、sorted unique active Instrument tuple、selected active revision hashes、all visible candidate revision hashes、max selected availability instant、fixed limitation flags与selection hash；tuple fields/hashes必须canonical sorted and unique；
+15. Selection flags exact为：`point_in_time = kind is POINT_IN_TIME`、`static_universe = kind is STATIC`、`survivorship_bias_safe=false`、`decision_grade_eligible=false`、`deployment_authorized=false`。Constructor/replace不得forge flags or maxima；
+16. Exact query没有active Instrument成功返回empty tuple、empty selected revision hashes与None max selected availability。G11C不得解释为No Session、Suspended、No Trades、Missing、Source Outage、complete market absence或coverage success/failure；
+17. View canonical body exact绑定Query与all visible in-scope revisions after dedup；selection canonical body绑定Query、active Instruments/selected hashes/all visible hashes/max availability/flags。Input order、exact duplicates、future/unrelated records不能改变prior identity；
+18. Static Universe仍必须提供explicit listing/membership intervals与availability evidence。它只表示caller-declared fixed experiment set；G11C不得检查current directory/final dataset组成或声明survivorship-safe、all-market或decision-grade；
+19. G11C不拥有Universe completeness/source gap/retention（G12）、Bar/window/resample（G11D）、schedule/warmup（G11E）、Strategy invocation（G11I）、Target validation mutation、financial state、RNG、Model或EngineCheckpoint；
+20. Production imports exact只允许stdlib immutable support与`crypto_quant_domain` public identity/time/canonical contracts。Engine、Runner、Timeline runtime object、Observation implementation、Trading Kernel/provider modules保持无G11C branch；
+21. Static golden至少冻结entry/correction same-UTC cutoff、exit/re-entry、pre-listing/delisting、POINT_IN_TIME/STATIC flags、future/unrelated noninterference、all chain/interval failures、empty success、input/repeat parity、sorted output、hash/maxima与forgery controls；
+22. G11C outputs固定development-only。G12 coverage完成且later invocation qualification前不得声明survivorship-safe、decision-grade、live或deployment authorization。
+
+Frozen seam note：`docs/research/g11c-point-in-time-universe.md`。
+
+Readiness baseline：
+
+```text
+G11B observation and Domain universe inputs                           pending validation
+Workspace import boundary                                           pending validation
+mypy 2.3.0                                                           pending validation
+Primary LSP                                                          pending validation
+pi-lens scoped review                                                pending validation
+Markdown + git diff checks                                           PASS
+uv lock --check                                                      pending validation
+Python                                                                3.13.5
+```
+
+## 91. PASSED 记录格式
 
 ```yaml
 id: WP-00A
