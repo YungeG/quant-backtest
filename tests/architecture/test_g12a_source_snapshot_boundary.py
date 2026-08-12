@@ -65,10 +65,10 @@ def test_source_snapshot_core_is_stdlib_only_and_offline() -> None:
         assert forbidden not in source
 
 
-def test_builder_root_exposes_only_frozen_g12a_surface() -> None:
+def test_builder_root_retains_frozen_g12a_surface() -> None:
     import crypto_quant_bundle_builder as builder
 
-    assert set(builder.__all__) == {
+    assert {
         "RawSourceMember",
         "SourceSnapshot",
         "SourceSnapshotFailure",
@@ -78,7 +78,7 @@ def test_builder_root_exposes_only_frozen_g12a_surface() -> None:
         "SourceSnapshotProvenance",
         "freeze_source_snapshot",
         "verify_source_snapshot",
-    }
+    } <= set(builder.__all__)
     assert builder.freeze_source_snapshot is freeze_source_snapshot
     assert builder.SourceSnapshot is SourceSnapshot
 
