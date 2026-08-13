@@ -10271,7 +10271,60 @@ uv.lock                                                               sha256:a07
 
 Implementation commit：`e307ffb5886fef14705c4d33d4ab9e6eda098c3f`。
 
-## 98. PASSED 记录格式
+## 99. G12F Reader and Partition Parity Acceptance Card
+
+```yaml
+id: G12F
+status: DRAFT
+depends_on:
+  - G12E
+  - G07
+  - WP-00C
+owner_package: repository-root parity tooling
+allowed_grade: development
+public_interface:
+  - tools/parity/market_bundle_reader.py
+  - tools/parity/run_market_bundle_reader_parity.py
+  - market-bundle-reader-g12f-parity-report-v1
+  - no production package export
+test_commands:
+  readiness: PYTHONDONTWRITEBYTECODE=1 uv run pytest -q tests/parity/test_comparator_contract.py tests/market_data/bundles tests/runtime/timeline tests/runtime/engine/test_g06_synthetic_cash_journey.py tests/runtime/integration/test_g07_auditable_run.py
+  contract: PYTHONDONTWRITEBYTECODE=1 uv run pytest -q tests/parity/test_market_bundle_reader_parity.py
+  fixture: PYTHONDONTWRITEBYTECODE=1 uv run pytest -q tests/parity/test_market_bundle_reader_parity_golden.py
+  architecture: PYTHONDONTWRITEBYTECODE=1 uv run pytest -q tests/architecture/test_g12f_reader_parity_boundary.py tests/architecture/test_g12e_local_reader_boundary.py tests/architecture/test_repository_cleanliness.py
+  acceptance: PYTHONDONTWRITEBYTECODE=1 uv run pytest -q tests/parity/test_market_bundle_reader_parity.py tests/parity/test_market_bundle_reader_parity_golden.py tests/parity/test_comparator_contract.py tests/market_data/bundles tests/runtime/timeline tests/runtime/engine/test_g06_synthetic_cash_journey.py tests/runtime/integration/test_g07_auditable_run.py tests/architecture/test_g12f_reader_parity_boundary.py tests/architecture/test_g12e_local_reader_boundary.py tests/architecture/test_repository_cleanliness.py --junitxml=build/acceptance/g12f-pytest.xml
+  import_boundary: PYTHONDONTWRITEBYTECODE=1 uv run python tools/architecture/check_import_boundaries.py --root . --policy architecture/import-boundaries.toml --report build/acceptance/g12f-import-boundary-report.json
+  static_types: uvx --from mypy==2.3.0 mypy --python-version 3.13 packages/*/src
+  full_suite: PYTHONDONTWRITEBYTECODE=1 uv run pytest -q
+artifacts:
+  - docs/research/g12f-reader-partition-parity.md
+  - tests/parity/contracts/market-bundle-reader-g12f-v1.json
+  - tests/parity/fixtures/market-bundle-reader-g12f-v1/report.expected.json
+  - build/acceptance/g12f-parity-report.json
+  - build/acceptance/g12f-pytest.xml
+  - build/acceptance/g12f-import-boundary-report.json
+implementation_commit: null
+approved_on: null
+```
+
+Candidate contract：
+
+- G12F compares the two real adapters at the existing `MarketBundleReader` seam, `InMemoryMarketBundleReader` and `LocalMarketBundleReader`; it adds no production export, second Reader/Cursor, Runtime mode, storage abstraction, or comparator algorithm;
+- v1 **logical partition** means one `MarketStreamManifest` declaration and its exact ordered canonical Event tuple. Physical Parquet/Arrow partitioning, row groups, codec choices, and memory-map modes are not represented by G12D/G12E and cannot be claimed by G12F;
+- one immutable G12D Bundle ref, Manifest, and complete Event set seed both Reader projections. Absolute local root, Reader class name, Reader batch size, Timeline batch size, temporary paths, Attempt IDs, and Evidence Manifest hashes are operational or attempt evidence and do not enter economic parity identity;
+- parity matrix exact-covers Reader adapters `in_memory|local_persisted`, Reader batch sizes `1|2|larger-than-stream`, Timeline batch sizes `1|2|larger-than-output`, and direct Engine plus G07 auditable Runner paths;
+- every matrix cell must preserve exact Bundle/Manifest identity, per-stream Event ID/hash sequence, Timeline Event ID/hash/segment sequence, terminal Timeline Cursor evidence, execution-case hash, Engine result hash, Trace hash, Ledger state hash, Snapshot hash, Run End report hash, and G07 execution result hash;
+- G07 retains distinct Attempt and Evidence identities. G12F requires their bound execution result hash to match; it never requires Attempt ID or Evidence Manifest hash equality and never weakens G07 atomic evidence/publication rules;
+- Comparator Contract v1 remains the only comparison engine. G12F uses exact/sequence rules only, with no tolerance, global epsilon, `approved_change`, hidden field, or not-comparable row; a passing G12F verdict is `MATCH`;
+- first divergence must expose the earliest differing comparison layer and, for stream/Timeline sequences, the stream key, zero-based Event position, and expected/actual Event ID/hash. A later aggregate result match cannot hide an earlier stream or Timeline divergence;
+- malformed, missing, duplicated, reordered, unclassified, or forged Bundle/stream/Timeline/execution evidence fails closed. Report bytes are canonical, repeatable, and repository-root independent;
+- parity tooling imports only stdlib and existing `legacy_migration.parity` helpers. It does not import Builder, Runtime Engine/Runner, Market Data Reader implementations, Trading Kernel, provider SDK, network, database, subprocess, secrets, dynamic imports, or wall clock; tests/support own projection generation;
+- G12F proves adapter and operational batching invariance only. It does not prove source completeness, provider correctness, future retention, deterministic rebuild, columnar performance, decision-grade eligibility, live readiness, or deployment authorization; qualification flags remain false;
+- a future physical partition or Parquet/Arrow parity extension requires a preceding Builder-owned, separately hashed representation manifest and atomic publication linkage. An unhashed sidecar or reopening G12C–E is forbidden.
+
+Research authority：`docs/research/g12f-reader-partition-parity.md`。
+
+## 100. PASSED 记录格式
 
 ```yaml
 id: WP-00A

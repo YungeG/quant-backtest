@@ -1829,18 +1829,19 @@ Acceptance and status authority：[`docs/implementation/acceptance-matrix.md`](a
 - publish failure 不留下可读取的半成品；
 - Retention Policy 可以验证 Rebuildability。
 
-### Gate G12E Parquet/Arrow Reader
+### Gate G12E Local Persisted Reader
 
 依赖：G12D、G06A Reader contract。
 
-拥有：Columnar storage、memory-map 和 bounded batch Reader Adapter。
+拥有：对 G12D manifest-bound canonical stream payload 的完整本地验证，以及 bounded batch Reader Adapter。
 
 验收：
 
 - 不暴露 DataFrame 给 Strategy；
 - Cursor 支持规范事件顺序和有界读取；
 - Runtime 不加载 Source Adapter；
-- corrupted partition/hash mismatch fail closed。
+- corrupted publication/stream/hash mismatch fail closed；
+- Parquet/Arrow 与 memory-map representation 延后到独立 hashed representation contract。
 
 ### Gate G12F Reader and Partition Parity
 
@@ -1848,10 +1849,11 @@ Acceptance and status authority：[`docs/implementation/acceptance-matrix.md`](a
 
 验收：
 
-- InMemory vs Parquet/Arrow event sequence exact parity；
-- partition layout、batch size 和 memory-map mode 不改变 execution result hash；
-- first divergence 可定位到 stream/partition/event；
-- 性能优化不改变 canonical ordering。
+- InMemory vs Local persisted Reader event sequence exact parity；
+- logical stream partition、Reader batch size 和 Timeline batch size 不改变 execution result hash；
+- first divergence 可定位到 stream/logical partition/event；
+- 性能优化不改变 canonical ordering；
+- future Parquet/Arrow physical partition parity 必须先有 separately hashed representation manifest。
 
 ### Gate G12G Bar Aggregation
 
