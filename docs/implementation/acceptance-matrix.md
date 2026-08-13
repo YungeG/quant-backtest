@@ -151,7 +151,7 @@ artifact_hashes: []
 | G12B | PASSED | market-bundle-builder | G12A, G02 | Normalization fixtures |
 | G12C | PASSED | market-bundle-builder | G12B | Manifest/validation fixtures |
 | G12D | PASSED | market-bundle-builder + market-data-contracts | G12C | none |
-| G12E | DRAFT | market-data-contracts | G12D, WP-06A | Freeze local persisted Reader acceptance and RED proof |
+| G12E | PASSED | market-data-contracts | G12D, WP-06A | none |
 | G12F | DRAFT | parity tooling | G12E, G07 | Reader/partition parity |
 | G12G | DRAFT | market-bundle-builder | G12B–G12C | Bar aggregation fixtures |
 | G12H | DRAFT | market-bundle-builder validation | G12C | Rule coverage fixtures |
@@ -10070,7 +10070,8 @@ Implementation commit：`7df91f381a1635d3d748ff08f83504107c2a41f4`。
 
 ```yaml
 id: G12E
-status: READY
+status: PASSED
+passed_commit: 8cfc36e77a444c47e820959328d4e480ad46fe7e
 depends_on:
   - G12D
   - WP-06A
@@ -10092,8 +10093,8 @@ artifacts:
   - tests/fixtures/market_data/local-reader/local-market-bundle-reader-v1.expected.json
   - build/acceptance/g12e-pytest.xml
   - build/acceptance/g12e-import-boundary-report.json
-implementation_commit: null
-approved_on: null
+implementation_commit: 8cfc36e77a444c47e820959328d4e480ad46fe7e
+approved_on: 2026-08-13
 ```
 
 Frozen contract：
@@ -10137,6 +10138,33 @@ uv.lock                                                               sha256:a07
 ```
 
 Contract freeze commit：`e43f0f3`。
+
+PASSED evidence：
+
+```text
+Focused G12E contract/golden/architecture                              10 passed
+Frozen G12E acceptance                                                  80 passed
+Workspace import boundary                                              PASS (92 files)
+mypy 2.3.0                                                             no issues (92 package source files)
+LSP                                                                    clean (6 changed Python files)
+pi-lens edited-file review                                             no findings across 6 files
+Full repository suite                                                  1313 passed
+uv lock --check                                                        PASS
+git diff --check                                                       PASS
+Python                                                                  3.13.5
+```
+
+PASSED artifact hashes：
+
+```text
+local-market-bundle-reader-v1.expected.json                            sha256:10660fd05b88a66d3f17fb60cb63252d6916a8e3c34b0b68475fd1aad4b237ec
+g12e-pytest.xml                                                        sha256:77b6f20f370ef391656692cdca86e11428e952ce55d55295e321e661402fdd72
+g12e-import-boundary-report.json                                       sha256:e2ec75a4dd3761ae719f677960d27fd923012fb99dce804685d6cf90ac0a5139
+import-boundaries.toml                                                 sha256:66d5d58eb8544b3d7b995921ab20845c5af75a1af6bd6255b2f5af885966713d
+uv.lock                                                                sha256:a07106c285b2c454d0528411c79988881b3ff87c0a84d04228d94c186e9d3d8d
+```
+
+Implementation commit：`8cfc36e77a444c47e820959328d4e480ad46fe7e`。
 
 ## 98. G12C Bundle Validation and Manifest Acceptance Card
 
