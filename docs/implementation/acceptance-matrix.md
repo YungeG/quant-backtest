@@ -9959,7 +9959,8 @@ Implementation commit：`c57080a87e5daa48b5637ad6d9d0f84f94f707b1`。
 
 ```yaml
 id: G12D
-status: READY
+status: PASSED
+passed_commit: 7df91f381a1635d3d748ff08f83504107c2a41f4
 depends_on:
   - G12C
 owner_package: market-bundle-builder
@@ -9987,8 +9988,8 @@ artifacts:
   - tests/fixtures/market_data/publication/local-market-bundle-repository-v1.expected.json
   - build/acceptance/g12d-pytest.xml
   - build/acceptance/g12d-import-boundary-report.json
-implementation_commit: null
-approved_on: null
+implementation_commit: 7df91f381a1635d3d748ff08f83504107c2a41f4
+approved_on: 2026-08-13
 ```
 
 Frozen contract：
@@ -10036,6 +10037,34 @@ uv.lock                                                               sha256:a07
 ```
 
 Contract freeze commit：`8d9a2f9ac0cfc9fbacdf15004303438d3371f251`。
+
+PASSED evidence：
+
+```text
+Focused G12D contract/golden/architecture                              21 passed
+Frozen G12D acceptance                                                 118 passed
+Workspace import boundary                                              PASS (91 files)
+mypy 2.3.0                                                             no issues (91 package source files)
+LSP                                                                    clean (6 changed Python files)
+Full repository suite                                                  1303 passed
+uv lock --check                                                        PASS
+git diff --check                                                       PASS
+Python                                                                  3.13.5
+```
+
+PASSED artifact hashes：
+
+```text
+local-market-bundle-repository-v1.expected.json                        sha256:6158e9745c04e2bf7592e7946801adf8eebe9cdc2f70dfc2a89601af45eafff0
+g12d-pytest.xml                                                        sha256:c66f30139832ef5484c1c0fd2fe585b46698519a73c5d13a76aa97aa2030eb55
+g12d-import-boundary-report.json                                       sha256:7b1236cd6380133fc076d795c84699e96dc8af1a72f9cca9ff2fab6eaac83359
+g12d-atomic-bundle-repository.md                                       sha256:4fa20891348aeec107f4b7054aa94c5756e141c5278a1e869c627d5ef8a0c68e
+g12d.md                                                                 sha256:76bd2049212c113fab78dce94afcfb14b1f6f8f1ccaa03aa7b736696d3fa50c5
+import-boundaries.toml                                                 sha256:66d5d58eb8544b3d7b995921ab20845c5af75a1af6bd6255b2f5af885966713d
+uv.lock                                                                sha256:a07106c285b2c454d0528411c79988881b3ff87c0a84d04228d94c186e9d3d8d
+```
+
+Implementation commit：`7df91f381a1635d3d748ff08f83504107c2a41f4`。
 
 ## 97. G12C Bundle Validation and Manifest Acceptance Card
 
