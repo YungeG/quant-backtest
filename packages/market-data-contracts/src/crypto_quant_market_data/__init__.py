@@ -16,6 +16,7 @@ from .bundles import (
     MarketEvent,
     MarketStreamManifest,
 )
+from .local_market_bundle_reader import LocalMarketBundleReader
 
 __version__ = "0.1.0"
 
@@ -25,6 +26,7 @@ __all__ = [
     "InputValidationFailure",
     "InputValidationIssue",
     "InputValidationIssueCode",
+    "LocalMarketBundleReader",
     "MarketBundleCapability",
     "MarketBundleError",
     "MarketBundleIntegrityError",
