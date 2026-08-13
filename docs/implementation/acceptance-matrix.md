@@ -150,7 +150,7 @@ artifact_hashes: []
 | G12A | PASSED | market-bundle-builder | G00 | SourceSnapshot contract |
 | G12B | PASSED | market-bundle-builder | G12A, G02 | Normalization fixtures |
 | G12C | PASSED | market-bundle-builder | G12B | Manifest/validation fixtures |
-| G12D | DRAFT | market-bundle-builder + market-data-contracts | G12C | Atomic publish/repository fixtures |
+| G12D | READY | market-bundle-builder + market-data-contracts | G12C | Atomic publish/repository fixtures |
 | G12E | DRAFT | market-data-contracts | G12D, WP-06A | Columnar reader fixtures |
 | G12F | DRAFT | parity tooling | G12E, G07 | Reader/partition parity |
 | G12G | DRAFT | market-bundle-builder | G12B–G12C | Bar aggregation fixtures |
@@ -9955,12 +9955,11 @@ uv.lock                                                              sha256:a071
 
 Implementation commit：`c57080a87e5daa48b5637ad6d9d0f84f94f707b1`。
 
-
 ## 96. G12D Atomic Local MarketBundle Repository Acceptance Card
 
 ```yaml
 id: G12D
-status: DRAFT
+status: READY
 depends_on:
   - G12C
 owner_package: market-bundle-builder
@@ -10012,6 +10011,31 @@ Frozen contract：
 - G12D excludes G12E Reader/columnar storage, G12F parity, provider/network/database adapters, acquisition/normalization/validation, retention guarantee, deterministic rebuild proof, coverage, decision grade, Runtime imports, and deployment authorization.
 
 Research authority：`docs/research/g12d-atomic-bundle-repository.md`。
+
+Readiness evidence：
+
+```text
+Frozen readiness command                                             62 passed
+Workspace import boundary                                            PASS (90 files)
+mypy 2.3.0                                                            no issues (90 package source files)
+LSP                                                                   TOML clean; Markdown servers silent-on-clean
+uv lock --check                                                       PASS
+git diff --check                                                      PASS
+Python                                                                 3.13.5
+```
+
+Readiness artifact hashes：
+
+```text
+g12d-atomic-bundle-repository.md                                      sha256:4fa20891348aeec107f4b7054aa94c5756e141c5278a1e869c627d5ef8a0c68e
+g12d.md                                                               sha256:76bd2049212c113fab78dce94afcfb14b1f6f8f1ccaa03aa7b736696d3fa50c5
+import-boundaries.toml                                                sha256:66d5d58eb8544b3d7b995921ab20845c5af75a1af6bd6255b2f5af885966713d
+g12d-readiness-pytest.xml                                             sha256:9fbee8847ca1677cd447054a2ca3414c307410c9208d72e66daeffef6166886e
+g12d-readiness-import-boundary-report.json                            sha256:47e95ba47a4501ba965f6758abd62aa448805bcf57b82c053fbb778f11c74976
+uv.lock                                                               sha256:a07106c285b2c454d0528411c79988881b3ff87c0a84d04228d94c186e9d3d8d
+```
+
+Contract freeze commit：`8d9a2f9ac0cfc9fbacdf15004303438d3371f251`。
 
 ## 97. G12C Bundle Validation and Manifest Acceptance Card
 
