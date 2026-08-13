@@ -24,7 +24,7 @@ real old artifact          → G12J
 | [G12B](g12b.md) | Canonical normalization | G12A, G02, first source contract | builder normalizers |
 | [G12C](g12c.md) | Bundle validation/manifest | G12B | `market-bundle-builder/bundle_validation.py` |
 | [G12D](g12d.md) | Atomic publish/repository | G12C | `market-bundle-builder/local_market_bundle_repository.py` |
-| G12E | Columnar reader | G12D, WP-06A | market-data contracts |
+| [G12E](g12e.md) | Verified local persisted reader | G12D, WP-06A | `market-data-contracts/local_market_bundle_reader.py` |
 | G12F | Reader/partition parity | G12E, G07 | parity tooling |
 | G12G | Bar aggregation | G12B–C | builder aggregation |
 | G12H | Rule coverage | G12C | builder validation |

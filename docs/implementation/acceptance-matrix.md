@@ -150,8 +150,8 @@ artifact_hashes: []
 | G12A | PASSED | market-bundle-builder | G00 | SourceSnapshot contract |
 | G12B | PASSED | market-bundle-builder | G12A, G02 | Normalization fixtures |
 | G12C | PASSED | market-bundle-builder | G12B | Manifest/validation fixtures |
-| G12D | READY | market-bundle-builder + market-data-contracts | G12C | Atomic publish/repository fixtures |
-| G12E | DRAFT | market-data-contracts | G12D, WP-06A | Columnar reader fixtures |
+| G12D | PASSED | market-bundle-builder + market-data-contracts | G12C | none |
+| G12E | DRAFT | market-data-contracts | G12D, WP-06A | Freeze local persisted Reader acceptance and RED proof |
 | G12F | DRAFT | parity tooling | G12E, G07 | Reader/partition parity |
 | G12G | DRAFT | market-bundle-builder | G12B–G12C | Bar aggregation fixtures |
 | G12H | DRAFT | market-bundle-builder validation | G12C | Rule coverage fixtures |
@@ -10066,7 +10066,55 @@ uv.lock                                                                sha256:a0
 
 Implementation commit：`7df91f381a1635d3d748ff08f83504107c2a41f4`。
 
-## 97. G12C Bundle Validation and Manifest Acceptance Card
+## 97. G12E Local Persisted MarketBundle Reader Acceptance Card
+
+```yaml
+id: G12E
+status: DRAFT
+depends_on:
+  - G12D
+  - WP-06A
+owner_package: market-data-contracts
+allowed_grade: development
+public_interface:
+  - crypto_quant_market_data.LocalMarketBundleReader
+test_commands:
+  readiness: PYTHONDONTWRITEBYTECODE=1 uv run pytest -q tests/market_data/bundles tests/bundle_builder/publication tests/runtime/timeline tests/runtime/engine/test_g06_synthetic_cash_journey.py
+  contract: PYTHONDONTWRITEBYTECODE=1 uv run pytest -q tests/market_data/bundles/test_local_market_bundle_reader.py
+  fixture: PYTHONDONTWRITEBYTECODE=1 uv run pytest -q tests/market_data/bundles/test_local_market_bundle_reader_golden.py
+  architecture: PYTHONDONTWRITEBYTECODE=1 uv run pytest -q tests/architecture/test_g12e_local_reader_boundary.py tests/architecture/test_g12d_local_repository_boundary.py tests/architecture/test_public_api_imports.py tests/architecture/test_network_isolation.py tests/architecture/test_repository_cleanliness.py
+  acceptance: PYTHONDONTWRITEBYTECODE=1 uv run pytest -q tests/market_data/bundles tests/bundle_builder/publication tests/runtime/timeline tests/runtime/engine/test_g06_synthetic_cash_journey.py tests/architecture/test_g12d_local_repository_boundary.py tests/architecture/test_g12e_local_reader_boundary.py tests/architecture/test_import_boundary_mutations.py tests/architecture/test_public_api_imports.py tests/architecture/test_network_isolation.py tests/architecture/test_repository_cleanliness.py --junitxml=build/acceptance/g12e-pytest.xml
+  import_boundary: PYTHONDONTWRITEBYTECODE=1 uv run python tools/architecture/check_import_boundaries.py --root . --policy architecture/import-boundaries.toml --report build/acceptance/g12e-import-boundary-report.json
+  static_types: uvx --from mypy==2.3.0 mypy --python-version 3.13 packages/*/src
+  full_suite: PYTHONDONTWRITEBYTECODE=1 uv run pytest -q
+artifacts:
+  - docs/research/g12e-persisted-market-bundle-reader.md
+  - tests/fixtures/market_data/local-reader/local-market-bundle-reader-v1.expected.json
+  - build/acceptance/g12e-pytest.xml
+  - build/acceptance/g12e-import-boundary-report.json
+implementation_commit: null
+approved_on: null
+```
+
+Frozen contract：
+
+- G12E adds one concrete `LocalMarketBundleReader` and one Market Data root export; it implements the existing WP-06A `MarketBundleReader` Protocol and adds no second Protocol, Cursor, wrapper function, repository abstraction, callback, registry, factory, or codec plugin;
+- the only constructor seam is `LocalMarketBundleReader.open(*, repository_root: Path, bundle_ref: MarketBundleRef) -> LocalMarketBundleReader`; root must be one exact absolute local `Path`, remains operational only, and never enters Bundle identity, Cursor evidence, canonical output, or error text;
+- final location is derived only from G12D identity as `bundles/<bundle_key>/<manifest-digest>/`; G12E does not accept a caller-supplied manifest path, stream path, URI, provider connection, or mutable repository handle;
+- open is all-or-nothing and verifies the complete G12D publication before returning: exact root entries, no symlinks, read-only hardening, canonical Manifest/publication/retention JSON bytes, exact cross-file path/hash linkage, `MarketBundleRef.from_manifest(manifest)` parity, exact declared stream set, and every stream payload SHA-256;
+- v1 stream payload representation is exactly the G12C/G12D committed `canonical_bytes(tuple(events_for_stream))`; G12E does not infer codecs, generate a sidecar, reinterpret bytes as Parquet/Arrow, or expose DataFrame/columnar objects;
+- decoded values must be exact canonical MarketEvent envelopes. G12E reconstructs public Domain/Market Data value types, byte-compares canonical encoding, then reuses `InMemoryMarketBundleReader` validation for stream identity, event-ID uniqueness, coverage, declaration, count, ordering-key uniqueness, and content-hash parity;
+- malformed repository state, canonical JSON, manifest/ref linkage, event envelope, path cover, writable/symlink entry, missing/extra file, count/order/hash mismatch, or tampering fails closed with `MarketBundleIntegrityError` before any Reader is returned; errors do not expose absolute paths, raw bytes, exception text, PID, hostname, or clock;
+- after open, `validate_requirements`, `open_cursor`, `read_batch`, and `resume_cursor` preserve exact WP-06A behavior, typed `InputValidationFailure`, `MarketBundleStreamError`, immutable Cursor identity, exhausted-Cursor behavior, and batch-size-independent event ID/hash sequence;
+- event sequence is the already-committed canonical stream order by `(available_time, phase.rank, phase.code, source_sequence)`; G12E adds no current-time, cutoff, revision-selection, resampling, coverage, or late-arrival policy;
+- Reader performs no lazy partial verification and no global mutable cache. Current retrievability is checked only during open; G12E makes no future-retention, rebuild, freshness, decision-grade, or deployment claim;
+- fixture `local-market-bundle-reader-v1` freezes exact G12D open, one/multiple stream reads, page sizes, exhausted/resumed/cross-Bundle/Cross-stream Cursors, requirements, all integrity failures, repeat parity, and absence of absolute-root/clock leakage;
+- production imports remain provider-neutral and offline through public roots only; no Builder, Runtime, Kernel, source adapter, Pandas, Parquet, Arrow, network, database, subprocess, vendor SDK, or wall-clock dependency;
+- G12E defers columnar packaging. A future Parquet/Arrow Reader requires a preceding Builder-owned, separately hashed representation manifest and publication contract; an unhashed sidecar is forbidden.
+
+Research authority：`docs/research/g12e-persisted-market-bundle-reader.md`。
+
+## 98. G12C Bundle Validation and Manifest Acceptance Card
 
 ```yaml
 id: G12C
