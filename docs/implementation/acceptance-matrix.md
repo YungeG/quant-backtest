@@ -152,7 +152,7 @@ artifact_hashes: []
 | G12C | PASSED | market-bundle-builder | G12B | Manifest/validation fixtures |
 | G12D | PASSED | market-bundle-builder + market-data-contracts | G12C | none |
 | G12E | PASSED | market-data-contracts | G12D, WP-06A | none |
-| G12F | READY | parity tooling | G12E, G07 | Reader/partition parity |
+| G12F | PASSED | parity tooling | G12E, G07 | none |
 | G12G | DRAFT | market-bundle-builder | G12B–G12C | Bar aggregation fixtures |
 | G12H | DRAFT | market-bundle-builder validation | G12C | Rule coverage fixtures |
 | G12I | DRAFT | market-bundle-builder validation | G12C, G12G | Price/availability/revision coverage |
@@ -10275,7 +10275,8 @@ Implementation commit：`e307ffb5886fef14705c4d33d4ab9e6eda098c3f`。
 
 ```yaml
 id: G12F
-status: READY
+status: PASSED
+passed_commit: f9e563d520d4a820bafe0a372cf17c32db70e995
 depends_on:
   - G12E
   - G07
@@ -10303,11 +10304,11 @@ artifacts:
   - build/acceptance/g12f-parity-report.json
   - build/acceptance/g12f-pytest.xml
   - build/acceptance/g12f-import-boundary-report.json
-implementation_commit: null
-approved_on: null
+implementation_commit: f9e563d520d4a820bafe0a372cf17c32db70e995
+approved_on: 2026-08-13
 ```
 
-Candidate contract：
+Frozen contract：
 
 - G12F compares the two real adapters at the existing `MarketBundleReader` seam, `InMemoryMarketBundleReader` and `LocalMarketBundleReader`; it adds no production export, second Reader/Cursor, Runtime mode, storage abstraction, or comparator algorithm;
 - v1 **logical partition** means one `MarketStreamManifest` declaration and its exact ordered canonical Event tuple. Physical Parquet/Arrow partitioning, row groups, codec choices, and memory-map modes are not represented by G12D/G12E and cannot be claimed by G12F;
@@ -10349,6 +10350,35 @@ uv.lock                                                              sha256:a071
 ```
 
 Contract freeze commit：`300d99b162dba5c4b2d1edcaddfaf2eb4aa5adf1`。
+
+PASSED evidence：
+
+```text
+Focused G12F contract/golden/architecture                              8 passed
+Frozen G12F acceptance                                                54 passed
+Workspace import boundary                                            PASS (92 files)
+mypy 2.3.0                                                           no issues (92 package source files)
+LSP                                                                  clean (6 changed Python files)
+pi-lens edited-file review                                           no findings across 6 files
+Full repository suite                                                1321 passed
+uv lock --check                                                      PASS
+git diff --check                                                     PASS
+Python                                                               3.13.5
+```
+
+PASSED artifact hashes：
+
+```text
+market-bundle-reader-g12f-v1.json                                    sha256:57e40c6a9e15720a84f815e07f7e2184a2d680faf6ab393356dd023901f9617f
+expected.json                                                        sha256:46bf1d86925c736562972a8eea7a3a26c8603877bbfb091b47823c67c483094e
+actual.json                                                          sha256:46bf1d86925c736562972a8eea7a3a26c8603877bbfb091b47823c67c483094e
+report.expected.json                                                 sha256:60c22b847b8e5daae78681162148fed5034d3879ebee97ffda14b533295d3f1a
+g12f-pytest.xml                                                      sha256:551bd140f684245eb21b661e79c22576e543d61d025ebd380058a1476da4e8d1
+g12f-import-boundary-report.json                                     sha256:e2ec75a4dd3761ae719f677960d27fd923012fb99dce804685d6cf90ac0a5139
+uv.lock                                                              sha256:a07106c285b2c454d0528411c79988881b3ff87c0a84d04228d94c186e9d3d8d
+```
+
+Implementation commit：`f9e563d520d4a820bafe0a372cf17c32db70e995`。
 
 ## 100. PASSED 记录格式
 
