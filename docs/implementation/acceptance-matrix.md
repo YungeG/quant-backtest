@@ -152,7 +152,7 @@ artifact_hashes: []
 | G12C | PASSED | market-bundle-builder | G12B | Manifest/validation fixtures |
 | G12D | PASSED | market-bundle-builder + market-data-contracts | G12C | none |
 | G12E | PASSED | market-data-contracts | G12D, WP-06A | none |
-| G12F | DRAFT | parity tooling | G12E, G07 | Reader/partition parity |
+| G12F | READY | parity tooling | G12E, G07 | Reader/partition parity |
 | G12G | DRAFT | market-bundle-builder | G12B–G12C | Bar aggregation fixtures |
 | G12H | DRAFT | market-bundle-builder validation | G12C | Rule coverage fixtures |
 | G12I | DRAFT | market-bundle-builder validation | G12C, G12G | Price/availability/revision coverage |
@@ -10275,7 +10275,7 @@ Implementation commit：`e307ffb5886fef14705c4d33d4ab9e6eda098c3f`。
 
 ```yaml
 id: G12F
-status: DRAFT
+status: READY
 depends_on:
   - G12E
   - G07
@@ -10323,6 +10323,32 @@ Candidate contract：
 - a future physical partition or Parquet/Arrow parity extension requires a preceding Builder-owned, separately hashed representation manifest and atomic publication linkage. An unhashed sidecar or reopening G12C–E is forbidden.
 
 Research authority：`docs/research/g12f-reader-partition-parity.md`。
+
+Readiness evidence：
+
+```text
+Frozen G12F readiness command                                        41 passed
+Workspace import boundary                                            PASS (92 files)
+mypy 2.3.0                                                           no issues (92 package source files)
+LSP                                                                  Markdown servers silent-on-clean after refresh
+pi-lens current-turn review                                          no warnings
+uv lock --check                                                      PASS
+git diff --check                                                     PASS
+Python                                                               3.13.5
+```
+
+Readiness artifact hashes：
+
+```text
+g12f-reader-partition-parity.md                                      sha256:75726edb505cd6df3252194a8421574c7d36c19aec442ce0c2afa7ddbcd5c227
+g12f.md                                                              sha256:c052094f5071fc41bd3ae512f0cd1bb11af1e3a6c0ef75562d410b337cc462bd
+import-boundaries.toml                                               sha256:66d5d58eb8544b3d7b995921ab20845c5af75a1af6bd6255b2f5af885966713d
+g12f-readiness-pytest.xml                                            sha256:f88c61550a33277e15562361406e9c808d560abb4dc4948f90e9c748099f816e
+g12f-readiness-import-boundary-report.json                           sha256:e2ec75a4dd3761ae719f677960d27fd923012fb99dce804685d6cf90ac0a5139
+uv.lock                                                              sha256:a07106c285b2c454d0528411c79988881b3ff87c0a84d04228d94c186e9d3d8d
+```
+
+Contract freeze commit：`300d99b162dba5c4b2d1edcaddfaf2eb4aa5adf1`。
 
 ## 100. PASSED 记录格式
 
