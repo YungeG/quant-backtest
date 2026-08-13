@@ -10070,7 +10070,7 @@ Implementation commit：`7df91f381a1635d3d748ff08f83504107c2a41f4`。
 
 ```yaml
 id: G12E
-status: DRAFT
+status: READY
 depends_on:
   - G12D
   - WP-06A
@@ -10113,6 +10113,30 @@ Frozen contract：
 - G12E defers columnar packaging. A future Parquet/Arrow Reader requires a preceding Builder-owned, separately hashed representation manifest and publication contract; an unhashed sidecar is forbidden.
 
 Research authority：`docs/research/g12e-persisted-market-bundle-reader.md`。
+
+Readiness evidence：
+
+```text
+Frozen readiness command                                             32 passed
+Workspace import boundary                                            PASS (91 files)
+mypy 2.3.0                                                            no issues (91 package source files)
+LSP                                                                   Markdown servers silent-on-clean
+uv lock --check                                                       PASS
+git diff --check                                                      PASS
+Python                                                                 3.13.5
+```
+
+Readiness artifact hashes：
+
+```text
+g12e-persisted-market-bundle-reader.md                               sha256:1395d34f1da5f6ccd369ebf10a6c9d28a7284eb65f2089283fb1000010bcbfc8
+g12e.md                                                               sha256:ff2b3a74ed758c4d31458eaa14a5854cc47ea90350d9c778ac38e54417b41ce9
+import-boundaries.toml                                                sha256:66d5d58eb8544b3d7b995921ab20845c5af75a1af6bd6255b2f5af885966713d
+g12e-readiness-import-boundary-report.json                           sha256:7b1236cd6380133fc076d795c84699e96dc8af1a72f9cca9ff2fab6eaac83359
+uv.lock                                                               sha256:a07106c285b2c454d0528411c79988881b3ff87c0a84d04228d94c186e9d3d8d
+```
+
+Contract freeze commit：`e43f0f3`。
 
 ## 98. G12C Bundle Validation and Manifest Acceptance Card
 
