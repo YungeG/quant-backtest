@@ -80,7 +80,7 @@ def test_builder_root_exactly_adds_frozen_g12b_exports() -> None:
 
     assert G12B_EXPORTS <= set(builder.__all__)
     assert builder.normalize_synthetic_jsonl_v1 is normalize_synthetic_jsonl_v1
-    assert len(set(builder.__all__)) == 21
+    assert len(set(builder.__all__)) == 29
 
 
 def test_runtime_and_kernel_do_not_import_builder_normalizer() -> None:

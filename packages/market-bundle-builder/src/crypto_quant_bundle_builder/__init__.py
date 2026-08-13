@@ -27,6 +27,16 @@ from .bundle_validation import (
     BundleValidationOutcome,
     validate_market_bundle_v1,
 )
+from .local_market_bundle_repository import (
+    LocalMarketBundleRepository,
+    LocalMarketBundleRepositoryConfig,
+    LocalMarketBundleRetentionProof,
+    MarketBundlePublicationFailure,
+    MarketBundlePublicationFailureCode,
+    MarketBundlePublicationOutcome,
+    MarketBundlePublicationResult,
+    MarketBundleRepositoryPath,
+)
 
 __version__ = "0.1.0"
 
@@ -48,6 +58,14 @@ __all__ = [
     "BundleValidationFailure",
     "BundleValidationFailureCode",
     "BundleValidationOutcome",
+    "LocalMarketBundleRepository",
+    "LocalMarketBundleRepositoryConfig",
+    "MarketBundlePublicationFailureCode",
+    "MarketBundlePublicationFailure",
+    "MarketBundlePublicationOutcome",
+    "MarketBundlePublicationResult",
+    "MarketBundleRepositoryPath",
+    "LocalMarketBundleRetentionProof",
     "freeze_source_snapshot",
     "validate_market_bundle_v1",
     "verify_source_snapshot",
