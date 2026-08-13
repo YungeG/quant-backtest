@@ -1,0 +1,14 @@
+{
+  "id": "market-bundle-reader-g12f-v1",
+  "rules": [
+    {"comparison": "sequence", "path": "/auditable_runs"},
+    {"comparison": "exact", "path": "/bundle"},
+    {"comparison": "sequence", "path": "/executions"},
+    {"comparison": "exact", "path": "/fixture_id"},
+    {"comparison": "exact", "path": "/qualification"},
+    {"comparison": "exact", "path": "/schema_version"},
+    {"comparison": "sequence", "path": "/streams"},
+    {"comparison": "sequence", "path": "/timelines"}
+  ],
+  "schema_version": 1
+}
