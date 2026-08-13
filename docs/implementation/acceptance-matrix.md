@@ -9955,7 +9955,65 @@ uv.lock                                                              sha256:a071
 
 Implementation commit：`c57080a87e5daa48b5637ad6d9d0f84f94f707b1`。
 
-## 95. G12C Bundle Validation and Manifest Acceptance Card
+
+## 96. G12D Atomic Local MarketBundle Repository Acceptance Card
+
+```yaml
+id: G12D
+status: DRAFT
+depends_on:
+  - G12C
+owner_package: market-bundle-builder
+allowed_grade: development
+public_interface:
+  - crypto_quant_bundle_builder.LocalMarketBundleRepository
+  - crypto_quant_bundle_builder.LocalMarketBundleRepositoryConfig
+  - crypto_quant_bundle_builder.MarketBundlePublicationFailureCode
+  - crypto_quant_bundle_builder.MarketBundlePublicationFailure
+  - crypto_quant_bundle_builder.MarketBundlePublicationOutcome
+  - crypto_quant_bundle_builder.MarketBundlePublicationResult
+  - crypto_quant_bundle_builder.MarketBundleRepositoryPath
+  - crypto_quant_bundle_builder.LocalMarketBundleRetentionProof
+test_commands:
+  readiness: PYTHONDONTWRITEBYTECODE=1 uv run pytest -q tests/bundle_builder/source_snapshots tests/bundle_builder/normalization tests/bundle_builder/validation tests/market_data/bundles tests/runtime/timeline tests/runtime/engine/test_g06_synthetic_cash_journey.py
+  contract: PYTHONDONTWRITEBYTECODE=1 uv run pytest -q tests/bundle_builder/publication/test_local_market_bundle_repository.py
+  fixture: PYTHONDONTWRITEBYTECODE=1 uv run pytest -q tests/bundle_builder/publication/test_local_market_bundle_repository_golden.py
+  architecture: PYTHONDONTWRITEBYTECODE=1 uv run pytest -q tests/architecture/test_g12d_local_repository_boundary.py tests/architecture/test_g12c_bundle_validation_boundary.py tests/architecture/test_g12b_synthetic_jsonl_boundary.py tests/architecture/test_g12a_source_snapshot_boundary.py tests/architecture/test_import_boundary_mutations.py tests/architecture/test_public_api_imports.py tests/architecture/test_network_isolation.py tests/architecture/test_repository_cleanliness.py
+  acceptance: PYTHONDONTWRITEBYTECODE=1 uv run pytest -q tests/bundle_builder/source_snapshots tests/bundle_builder/normalization tests/bundle_builder/validation tests/bundle_builder/publication tests/market_data/bundles tests/runtime/timeline tests/runtime/engine/test_g06_synthetic_cash_journey.py tests/architecture/test_g12a_source_snapshot_boundary.py tests/architecture/test_g12b_synthetic_jsonl_boundary.py tests/architecture/test_g12c_bundle_validation_boundary.py tests/architecture/test_g12d_local_repository_boundary.py tests/architecture/test_import_boundary_mutations.py tests/architecture/test_public_api_imports.py tests/architecture/test_network_isolation.py tests/architecture/test_repository_cleanliness.py --junitxml=build/acceptance/g12d-pytest.xml
+  import_boundary: PYTHONDONTWRITEBYTECODE=1 uv run python tools/architecture/check_import_boundaries.py --root . --policy architecture/import-boundaries.toml --report build/acceptance/g12d-import-boundary-report.json
+  static_types: uvx --from mypy==2.3.0 mypy --python-version 3.13 packages/*/src
+  full_suite: PYTHONDONTWRITEBYTECODE=1 uv run pytest -q
+artifacts:
+  - docs/research/g12d-atomic-bundle-repository.md
+  - tests/fixtures/market_data/publication/local-market-bundle-repository-v1.expected.json
+  - build/acceptance/g12d-pytest.xml
+  - build/acceptance/g12d-import-boundary-report.json
+implementation_commit: null
+approved_on: null
+```
+
+Frozen contract：
+
+- G12D adds one concrete Builder module and exactly eight root exports; the only operation is `LocalMarketBundleRepository.publish_market_bundle_v1`, with no free wrapper, generic Protocol, URI/object-store layer, Reader, Cursor, callback, registry, or plugin;
+- config accepts one absolute local `Path` root; the root, hostname, PID, thread, UUID, and clock never enter identity or public evidence;
+- input is an exact valid `MarketBundleManifest`, exact `Mapping[str, bytes]` covering every manifest stream and no extras, and a canonical lowercase `retention_policy_ref`; stream payload bytes are opaque and must hash exactly to the corresponding `MarketStreamManifest.content_hash`;
+- authoritative identity is `MarketBundleRef.from_manifest(manifest)`; final paths use `bundles/<bundle_key>/<manifest-digest>/`, where digest is the lowercase hex portion of the manifest hash;
+- deterministic final files are `manifest.json`, canonical ordered `streams/<index>.payload`, `publication.json`, and `retention-proof.json`; hidden `.locks/` and `.staging/` paths are operational state and never evidence;
+- `MarketBundleRepositoryPath`, publication result, and failure expose only canonical repository-relative POSIX paths, never absolute paths or exception text;
+- `LocalMarketBundleRetentionProof` proves current verified retrievability only and binds Bundle ref, retention policy ref, relative manifest/publication/stream paths, and exact source/payload hashes; it has no wall clock, expiry, future guarantee, rebuild trace/window, freshness, decision-grade, or deployment claim;
+- exact failure codes and global precedence are `invalid_input` → `stream_payload_mismatch` → `lock_unavailable` → `final_destination_conflict` → `staging_prepare_failed` → `staging_write_failed` → `staging_verification_failed` → `immutability_failed` → `atomic_finalize_failed` → `unmanaged_publication_state`;
+- lock granularity is exact `(bundle_key, manifest_hash)` using an exclusive cooperative lock file, with no wall-clock expiry or automatic stale-lock breaking; different identities may publish concurrently;
+- under the lock, an exact verified final directory is idempotent success with `already_published=true`; any other existing final identity path is `final_destination_conflict`; an existing staging path is never adopted or overwritten;
+- publish uses exclusive temporary files, flush/fsync, staged exact-cover/hash verification, read-only hardening, same-filesystem atomic rename, final-parent fsync, and complete final verification before success;
+- permission bits are accidental-mutation hardening only; canonical bytes, path exact-cover, hashes, and final verification remain integrity authority;
+- every pre-final failure removes staging; finalize/final-fsync failure hides and removes any final path; inability to prove that no readable partial state remains returns `unmanaged_publication_state` and requires operator attention rather than automatic retry;
+- old verified final identities are never overwritten or mutated, and lock-release residue after verified success does not rewrite semantic success;
+- fixture `local-market-bundle-repository-v1` freezes first publish, exact idempotence, conflicts, per-manifest contention, different-identity concurrency, phase failures/cleanup, unmanaged state, tamper detection, current retrievability proof, repeat parity, and absence of absolute-path/clock leakage;
+- G12D excludes G12E Reader/columnar storage, G12F parity, provider/network/database adapters, acquisition/normalization/validation, retention guarantee, deterministic rebuild proof, coverage, decision grade, Runtime imports, and deployment authorization.
+
+Research authority：`docs/research/g12d-atomic-bundle-repository.md`。
+
+## 97. G12C Bundle Validation and Manifest Acceptance Card
 
 ```yaml
 id: G12C
@@ -10060,7 +10118,7 @@ uv.lock                                                               sha256:a07
 
 Implementation commit：`e307ffb5886fef14705c4d33d4ab9e6eda098c3f`。
 
-## 96. PASSED 记录格式
+## 98. PASSED 记录格式
 
 ```yaml
 id: WP-00A

@@ -143,6 +143,29 @@ targets = [
 ]
 
 [[forbidden_import_rules]]
+id = "g12d-local-market-bundle-repository"
+source_packages = ["market-bundle-builder"]
+include = ["crypto_quant_bundle_builder/local_market_bundle_repository.py"]
+exclude = []
+targets = [
+  "aiohttp",
+  "boto3",
+  "ccxt",
+  "ftplib",
+  "http.client",
+  "httpx",
+  "hummingbot",
+  "pandas",
+  "requests",
+  "smtplib",
+  "socket",
+  "sqlalchemy",
+  "subprocess",
+  "urllib.request",
+  "websockets",
+]
+
+[[forbidden_import_rules]]
 id = "runtime-builder-import"
 source_packages = ["backtest-runtime"]
 include = ["*.py", "**/*.py"]
