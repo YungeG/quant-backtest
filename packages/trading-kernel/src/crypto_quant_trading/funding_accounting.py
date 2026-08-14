@@ -5,7 +5,6 @@ from __future__ import annotations
 from dataclasses import dataclass
 from enum import Enum
 from math import gcd
-import re
 from typing import Any
 
 from crypto_quant_domain import (
@@ -46,7 +45,6 @@ from .ports import ProfileComponentRef, ProfilePortOutcome, ProfilePortType
 _SCHEMA_VERSION = 1
 _COMPONENT_KEY = "instrument.linear-perpetual.funding-accounting.v1"
 _RATE_BASIS = "funding_fraction_of_notional"
-_SHA256 = re.compile(r"sha256:[0-9a-f]{64}\Z")
 
 
 def _require_text(name: str, value: str) -> None:
@@ -55,7 +53,12 @@ def _require_text(name: str, value: str) -> None:
 
 
 def _require_hash(name: str, value: str) -> None:
-    if type(value) is not str or _SHA256.fullmatch(value) is None:
+    if (
+        type(value) is not str
+        or len(value) != 71
+        or not value.startswith("sha256:")
+        or any(character not in "0123456789abcdef" for character in value[7:])
+    ):
         raise ValueError(f"{name} must be a canonical sha256 hash")
 
 
