@@ -1,0 +1,26 @@
+{
+  "id": "precomputed-strategy-g11j-v1",
+  "rules": [
+    {"comparison": "exact", "path": "/fixture_id"},
+    {"comparison": "exact", "path": "/layers/00_NORMALIZED_ENTRY"},
+    {"comparison": "sequence", "path": "/layers/01_DECISION_BATCH"},
+    {"comparison": "sequence", "path": "/layers/02_ALLOCATION"},
+    {"comparison": "sequence", "path": "/layers/03_PORTFOLIO_RISK"},
+    {"comparison": "sequence", "path": "/layers/04_NORMALIZED_ACTIVE_TARGET"},
+    {"comparison": "sequence", "path": "/layers/05_ORDER_PLAN_INTENT"},
+    {"comparison": "sequence", "path": "/layers/06_ORDER_EVENT"},
+    {"comparison": "sequence", "path": "/layers/07_FILL"},
+    {"comparison": "sequence", "path": "/layers/08_SLIPPAGE"},
+    {"comparison": "sequence", "path": "/layers/09_FEE"},
+    {"comparison": "sequence", "path": "/layers/10_FINANCIAL_ARTIFACT"},
+    {"comparison": "sequence", "path": "/layers/11_JOURNAL"},
+    {"comparison": "exact", "path": "/layers/12_LEDGER"},
+    {"comparison": "exact", "path": "/layers/13_FINAL_SNAPSHOT"},
+    {"comparison": "exact", "path": "/layers/14_RUN_END"},
+    {"comparison": "exact", "path": "/layers/15_TRACE"},
+    {"comparison": "exact", "path": "/layers/16_EXECUTION_RESULT_HASH"},
+    {"comparison": "exact", "path": "/qualification"},
+    {"comparison": "exact", "path": "/schema_version"}
+  ],
+  "schema_version": 1
+}

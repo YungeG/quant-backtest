@@ -1,0 +1,78 @@
+{
+  "entry_evidence": {
+    "precomputed": {
+      "decision_batch_hash": "sha256:43699c7592376ceee4222cafe7fa4f57005675ab1ade3ecab1315c29944b7cd9",
+      "decision_batch_id": "decision-batch-v1:sha256:c9126ea400897e9cd53d5bfa8640f6199db37db7a77435de15141d429d871d52",
+      "injection_hash": "sha256:4c080930a0c38188686b5dfa4f1aae055489dfd07417af5af721abe7be9b2cca",
+      "schedule_hash": "sha256:017c95020e0036152f7d44904ce8a692ff4cd48e4c6ddff93574bbc803b1a03b",
+      "source_event_hashes": [
+        "sha256:d8ce3cd92509e2f0f4cfce2f4e77783e99de2e5e33ad97610c8fc259ba3dc3a0"
+      ],
+      "source_event_ids": [
+        "engine-target-100"
+      ],
+      "target_stream_digest": "sha256:ead473aba908a5d2ace5745a648d357c16666c47a726743b86dbde42768a539f"
+    },
+    "strategy": {
+      "checkpoint_hashes": [
+        "sha256:a80c04575289d79578149ab40ee6b17057e0b5dd662d3c1af9965b02955b0bc0"
+      ],
+      "context_hashes": [
+        "sha256:ac9b5c1e284c325b7d9dd2b9f136859a46a047bd86c856bde0581ac8c6197e78"
+      ],
+      "decision_batch_hash": "sha256:6af6db61eebf196d2c46e133b38260b6be798e4d649b2fbf0fdd27ccf906f534",
+      "decision_batch_id": "decision-batch-v2:sha256:f8d5073ce4fcb03ba0b3bdd0317ad9e6e9ea02d9a97afaecdadb9193ec25ea7d",
+      "eligibility_hash": "sha256:25d18ad40dd24c3b526e055545cd11e89c790aac3d8ada8599451def40e0a20b",
+      "handoff_hash": "sha256:3649f5c365e18b66e601a102cb563aec430b368f3bad7de3d9f65d4ed46c210e",
+      "invocation_hashes": [
+        "sha256:9b9675c3991fd2efa8051e5e36cd1710287654ac7809abe344806aed8606b626"
+      ],
+      "model_timeline_hashes": [],
+      "observation_result_hashes": [],
+      "output_hash": "sha256:92e8aa00ceb992a1e1a3be71ea1d2d653fad1abe5b75c00a2df51291fc7d0873",
+      "random_stream_hashes": [],
+      "schedule_hash": "sha256:f65527f7977402aba4853b027c31036adcb7ce0092af8c0ef2f13f5e28d49163",
+      "state_transition_hashes": [
+        "sha256:708a7e3cd99771b1df5767509a4d74385f55c00db3dafb31f28c66fdff00ba8b"
+      ],
+      "strategy_artifact_hashes": [
+        "sha256:15e31c1bbb74e1176ae4831ba47d49e0606103e5f96bee7ad32b4cf809a18803"
+      ],
+      "universe_selection_hashes": [
+        "sha256:326a3b320841a963e3439c29c4303b8d6e05bccb8beed1d91a4c01734ebcd7ce"
+      ],
+      "window_result_hashes": []
+    }
+  },
+  "g07": {
+    "attempt_ids": [
+      "attempt_3c478bbb5e7141603744fadfe484c4859fac39a56b525df8b5be0fb2a8e1cdfa",
+      "attempt_39000746f7552464b07d9a8e1b2035a6e9e0fbf341f34dc6bf02c4a87fe82d8c"
+    ],
+    "canonical_result_hash": "sha256:fadb88d9fdac6335341f079035d3f17378d240519f5ded44496f52ccc327f38d",
+    "evidence_directories": [
+      "runs/run_39ab44a26d7f719fe1648f3ccbf7cbdcb874a9bc43e8c15d3a51ab5aca421591/attempts/attempt_3c478bbb5e7141603744fadfe484c4859fac39a56b525df8b5be0fb2a8e1cdfa",
+      "runs/run_39ab44a26d7f719fe1648f3ccbf7cbdcb874a9bc43e8c15d3a51ab5aca421591/attempts/attempt_39000746f7552464b07d9a8e1b2035a6e9e0fbf341f34dc6bf02c4a87fe82d8c"
+    ],
+    "evidence_manifest_hashes": [
+      "sha256:cf0f80282d5ab79165ff81b73f737ea84ec90e8aa0263ccd33492867f7ec103a",
+      "sha256:1787609e0c6751b7cc8e782405470f921aae3687de38ae0cf25a6cb5b4ca394b"
+    ],
+    "execution_case_hashes": [
+      "sha256:bdbcf92c176fedaf8fa89a056bc92fddeb9d70b75bcacb7cb6013b468374c87e",
+      "sha256:bdbcf92c176fedaf8fa89a056bc92fddeb9d70b75bcacb7cb6013b468374c87e"
+    ],
+    "execution_result_hashes": [
+      "sha256:97a39c3e4aafe92db6bfb70df9230c6cbda44e9e8c9cf00cca51b0d6a2bf005b",
+      "sha256:97a39c3e4aafe92db6bfb70df9230c6cbda44e9e8c9cf00cca51b0d6a2bf005b"
+    ],
+    "identity_manifest_hashes": [
+      "sha256:b9d575e5275aae0d4f3ac46dba4e5f8454ee639192b8881d2aa7833373f05e92",
+      "sha256:b9d575e5275aae0d4f3ac46dba4e5f8454ee639192b8881d2aa7833373f05e92"
+    ],
+    "semantic_run_ids": [
+      "run_39ab44a26d7f719fe1648f3ccbf7cbdcb874a9bc43e8c15d3a51ab5aca421591",
+      "run_39ab44a26d7f719fe1648f3ccbf7cbdcb874a9bc43e8c15d3a51ab5aca421591"
+    ]
+  }
+}
