@@ -1776,7 +1776,7 @@ G11 active plan authority、dependency DAG、Ready queue与per-Gate links已迁�
 
 - `docs/implementation/plans/g11/README.md`
 
-G11A已在implementation commit `72fe31f5b10d785340b11ca0fd3d0fec8c1c4a34`冻结通过；G11B的详细READY contract仍由Acceptance Matrix和`docs/research/g11b-observation-revision-causality.md`拥有。后续G11B–G11J prose只在拆分后的Gate plan维护，本聚合文件不再复制。
+G11A–G11I均已冻结通过；G11I implementation commit为`43735440ca5c60e2b3ae9c536c4a77411db317d0`，其详细contract与证据由Acceptance Matrix、`docs/research/g11i-portfolio-strategy-invocation.md`和拆分后的Gate plan拥有。G11J现为G11唯一剩余Gate；本聚合文件不再复制per-Gate prose。
 
 ---
 

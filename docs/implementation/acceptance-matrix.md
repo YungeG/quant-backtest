@@ -145,7 +145,7 @@ artifact_hashes: []
 | G11F | PASSED | backtest-runtime strategy | G02 | State/checkpoint fixtures |
 | G11G | PASSED | backtest-runtime strategy | G11F | Random stream fixtures |
 | G11H | PASSED | backtest-runtime strategy | G11B, G11F | Model revision fixtures |
-| G11I | DRAFT | backtest-runtime strategy | G11A–G11H, G04 | Invocation/batch fixtures |
+| G11I | PASSED | backtest-runtime strategy | G11A–G11H, G04 | Invocation/batch fixtures |
 | G11J | DRAFT | parity tooling | G11I, G07 | Dual-entry parity |
 | G12A | PASSED | market-bundle-builder | G00 | SourceSnapshot contract |
 | G12B | PASSED | market-bundle-builder | G12A, G02 | Normalization fixtures |
@@ -10380,7 +10380,142 @@ uv.lock                                                              sha256:a071
 
 Implementation commit：`f9e563d520d4a820bafe0a372cf17c32db70e995`。
 
-## 100. PASSED 记录格式
+## 100. G11I Portfolio Strategy Invocation and Atomic DecisionBatch Acceptance Card
+
+```yaml
+id: G11I
+status: PASSED
+passed_commit: 43735440ca5c60e2b3ae9c536c4a77411db317d0
+depends_on:
+  - G11A
+  - G11B
+  - G11C
+  - G11D
+  - G11E
+  - G11F
+  - G11G
+  - G11H
+  - G04
+owner_package: backtest-runtime strategy
+allowed_grade: development
+public_interface:
+  - crypto_quant_backtest.PortfolioStrategyRegistration
+  - crypto_quant_backtest.PortfolioStrategyInvocationContext
+  - crypto_quant_backtest.PortfolioStrategyInvocation
+  - crypto_quant_backtest.PortfolioStrategyInvocationFailureCode
+  - crypto_quant_backtest.PortfolioStrategyInvocationStatus
+  - crypto_quant_backtest.PortfolioStrategyInvocationOutput
+  - crypto_quant_backtest.invoke_portfolio_strategies
+test_commands:
+  contract: PYTHONDONTWRITEBYTECODE=1 uv run pytest -q tests/runtime/strategy_runtime
+  g04_exact_instant: PYTHONDONTWRITEBYTECODE=1 uv run pytest -q tests/domain/decisions tests/kernel/validation tests/kernel/decisions tests/kernel/integration/test_target_materialization_journey.py
+  boundary: PYTHONDONTWRITEBYTECODE=1 uv run pytest -q tests/architecture/test_g11i_strategy_runtime_boundary.py tests/architecture/test_g11b_observation_causality_boundary.py tests/architecture/test_g11c_universe_boundary.py tests/architecture/test_g11d_observation_window_boundary.py tests/architecture/test_g11e_decision_schedule_boundary.py tests/architecture/test_g11f_strategy_state_boundary.py tests/architecture/test_g11g_random_stream_boundary.py tests/architecture/test_g11h_model_revision_boundary.py tests/architecture/test_public_api_imports.py tests/architecture/test_repository_cleanliness.py
+  acceptance: PYTHONDONTWRITEBYTECODE=1 uv run pytest -q tests/runtime/strategy_runtime tests/runtime/observations tests/runtime/universe tests/runtime/observation_windows tests/runtime/decision_schedule tests/runtime/strategy_state tests/runtime/random_streams tests/runtime/model_revisions tests/domain/decisions tests/kernel/validation tests/kernel/decisions tests/kernel/integration/test_target_materialization_journey.py tests/architecture/test_g11i_strategy_runtime_boundary.py tests/architecture/test_g11b_observation_causality_boundary.py tests/architecture/test_g11c_universe_boundary.py tests/architecture/test_g11d_observation_window_boundary.py tests/architecture/test_g11e_decision_schedule_boundary.py tests/architecture/test_g11f_strategy_state_boundary.py tests/architecture/test_g11g_random_stream_boundary.py tests/architecture/test_g11h_model_revision_boundary.py tests/architecture/test_public_api_imports.py tests/architecture/test_repository_cleanliness.py --junitxml=build/acceptance/g11i-pytest.xml
+  import_boundary: PYTHONDONTWRITEBYTECODE=1 uv run python tools/architecture/check_import_boundaries.py --root . --policy architecture/import-boundaries.toml --report build/acceptance/g11i-import-boundary-report.json
+  static_types: uvx --from mypy==2.3.0 mypy --python-version 3.13 packages/*/src
+  full_suite: PYTHONDONTWRITEBYTECODE=1 uv run pytest -q
+fixture_ids:
+  - portfolio-strategy-invocation-v1
+  - atomic-decision-batch-simulation-instant-v2
+  - target-materialization-same-utc-v2
+artifacts:
+  - docs/research/g11i-portfolio-strategy-invocation.md
+  - tests/fixtures/runtime/portfolio-strategy-invocation-v1.json
+  - tests/fixtures/kernel/atomic-decision-batch-simulation-instant-v2.json
+  - tests/fixtures/kernel/target-materialization-same-utc-v2.json
+  - build/acceptance/g11i-pytest.xml
+  - build/acceptance/g11i-import-boundary-report.json
+failure_contracts:
+  - duplicate-sleeve-or-cross-evidence-mismatch-reaches-callback
+  - ineligible-entry-invokes-callback-validator-or-collector
+  - callback-lookup-exception-or-malformed-output-escapes-isolation
+  - invalid-state-or-rng-transition-is-accepted-as-future-authority
+  - validation-failure-produces-partial-batch-state-or-handoff
+  - active-success-calls-atomic-collector-zero-or-multiple-times
+  - registration-input-order-changes-invocation-batch-or-handoff-identity
+  - executable-strategy-object-does-not-match-attested-build-artifact
+  - bare-model-artifact-bypasses-g11h-timeline-selection-proof
+  - detached-or-future-strategy-checkpoint-enters-context
+  - advanced-rng-or-state-does-not-match-prior-successful-invocation
+  - forged-public-record-splices-unrelated-context-transition-or-batch
+  - same-utc-distinct-full-instants-collapse-or-cannot-continue
+  - exact-and-legacy-instant-modes-mix-without-fail-closed-result
+  - legacy-g04-v1-canonical-bytes-id-or-hash-changes
+  - exact-instant-state-is-flattened-by-allocation-risk-mark-or-sizing
+  - g11i-adds-second-validator-batch-or-downstream-economic-path
+  - g11i-claims-decision-grade-live-or-deployment-authorization
+evidence:
+  - canonical-two-sleeve-invocation-and-registration-order-parity
+  - warmup-state-rng-without-decision-batch
+  - ineligible-zero-callback-context-binding
+  - callback-output-state-rng-validation-and-batch-failure-precedence
+  - complete-attempted-state-and-rng-audit-with-no-partial-authority
+  - checkpoint-prior-output-and-model-timeline-forgery-controls
+  - exact-one-validator-call-site-and-collector-call-site-boundary
+  - same-utc-full-simulation-instant-v2-chain-and-downstream-journey
+  - byte-identical-legacy-g04-v1-goldens
+  - static-golden-public-api-import-and-import-boundary-reports
+implementation_commit: 43735440ca5c60e2b3ae9c536c4a77411db317d0
+approved_on: 2026-08-14
+```
+
+Frozen contract：
+
+1. G11I只新增one offline `crypto_quant_backtest.strategy_runtime` orchestration seam与七个root exports；Generic Engine、Runner、Timeline与TargetStream不新增G11I branch；
+2. `PortfolioStrategyRegistration` exact绑定one `DecisionBatchExpectation`、immutable `BuildArtifactRef(role=DECISION_SOURCE)`、executable Strategy object、G11B Observation results、G11C Universe、G11D windows、G11F checkpoint、G11G named streams、G11H model timelines及optional prior successful G11I output；
+3. Executable Strategy必须暴露与registration exact相同的immutable artifact ref。Callback/module path、object address、exception text、traceback、Attempt ID与wall clock不得进入canonical identity；installed-byte attestation remains external build authority；
+4. Context是least-authority immutable value，只绑定expectation、shared G11E entry/eligibility、Observation result/query/trace hashes、Universe selection、window/causality hashes、previous Target/State/checkpoint/output、RNG hashes、model timeline/selected artifact hashes与Instrument Catalog hash；不暴露Bundle、Reader、Ledger、account state、filesystem、network、process或clock；
+5. Registration在任何callback前按`(strategy_id,sleeve_id)` canonical sort并拒绝duplicate Sleeve、future/mismatched Observation/Universe/window/model/checkpoint/prior state evidence。Input order不得改变callback order、invocation、batch、state、output或handoff hash；
+6. `strategy_invocation_eligible=false` exact返回`INELIGIBLE`，零callback、零Validator、零Collector；但output仍绑定完整suppressed context evidence，因此State/RNG/artifact变化必须改变identity；
+7. 每个callback exact接收自己的Context与prior StrategyState，返回one `StrategyDecisionCandidate`、next `StrategyState`与next named streams tuple。Lookup/call exception、malformed tuple、invalid State或invalid RNG均per-Sleeve隔离，其他callback继续执行；
+8. 所有捕获Candidate必须通过existing `StrategyOutputValidator`，不得内联第二个decoder/validator。Invocation/output/state/RNG failure precedence高于validation failure；failure code稳定且不依赖exception message；
+9. Eligible Warmup成功保存validated invocation、StrategyStateTransition与next RNG evidence，但不调用Collector、不生成DecisionBatch或handoff。Failed attempts保留已计算after-state/RNG audit hashes，但不得成为后续accepted checkpoint/RNG authority；
+10. Eligible Active仅在所有callback/output/state/RNG/validation成功后调用existing `AtomicDecisionBatchCollector.collect(...)` exact一次。G11I不得直接构造`DecisionBatch`或`LatestSleeveDecisionState`，不得产生partial batch/state/downstream object；
+11. Successful future continuation必须提供strictly earlier full-instant `StrategyCheckpoint`。Advanced State/RNG必须exact匹配prior successful G11I invocation的transition、invocation hash与next streams；Active continuation的prior decision state必须match prior output atomic state；genesis streams必须counter zero；
+12. G11H evidence必须作为`ModelRevisionTimeline`进入Context并同时绑定timeline hash与selected terminal artifact hash。Bare/orphan/forked/future model ref不能绕过G11H lineage/visibility authority；G11I不加载、训练、rank或执行model bytes；
+13. Public Invocation/Output constructors必须重新验证Context、eligibility、catalog、validation、transition、RNG与atomic batch exact-cover，拒绝空invocation、cross-Sleeve splicing、unrelated batch或forged success status；
+14. G11E允许same UTC且phase/source sequence不同的legal full `SimulationInstant` entries。G04 additive exact-instant mode必须允许strict earlier same-UTC state继续，并使两个entry产生不同decision/batch/state/handoff identity；equal/later或ambiguous legacy same-UTC state fail closed；
+15. Exact-instant支持使用optional keyword-only fields与v2 identities。字段缺失时legacy G04 v1 constructors、canonical bytes、fixture hashes与`decision-batch-v1:` ID exact保持不变；exact mode使用v2 ID且拒绝UTC/full-instant mismatch与exact→legacy downgrade；
+16. Exact instant在opt-in v2路径继续绑定Portfolio Snapshot、Allocation、Risk、Resolved Mark、Sizing与Active Target。任一UTC-only downstream evidence与exact state混用必须structured fail closed，不得把phase/sequence静默压平；
+17. Invocation canonical record保存Context、Strategy artifact、validation result、attempted State transition、attempted next RNG hashes与stable failure code。Aggregate output保存status、entry/eligibility、catalog、ordered invocations、existing atomic result与active-success-only handoff hash；
+18. G11I始终`decision_grade_eligible=false`、`deployment_authorized=false`。G12拥有真实数据完整性与资格；G11J拥有precomputed-vs-Strategy downstream parity；
+19. Production module不包含Registry、Factory、Executor、Protocol、thread/process/async runtime、dynamic import、filesystem/network/provider/model SDK、wall clock或global RNG；不新增第二套Allocation、Risk、Planning、Execution、Accounting、Runner或Evidence path；
+20. Static evidence至少冻结Active two-Sleeve success、registration-order parity、Warmup、ineligible、callback/output/state/RNG/validation/batch failures、artifact/model/checkpoint/record forgery、Collector runtime call count、same-UTC v2 continuation、legacy v1 compatibility与full downstream exact-instant journey。
+
+Research authority：`docs/research/g11i-portfolio-strategy-invocation.md`。
+
+PASSED evidence：
+
+```text
+Focused G11I/G11A-H/G04 acceptance                              209 passed
+Focused exact-instant and nearest regressions                    71 passed
+Full repository suite                                          1350 passed
+Workspace import boundary                                      PASS (93 files)
+mypy 2.3.0                                                     no issues (93 package source files)
+Primary LSP                                                    clean across 22 changed Python files
+pi-lens project blocking diagnostics                           no errors across 153 scanned files
+Legacy G04 v1 fixture hashes                                   byte-identical
+uv lock --check                                                PASS
+git diff --check                                               PASS
+Python                                                          3.13.5
+```
+
+Artifact hashes：
+
+```text
+g11i-portfolio-strategy-invocation.md                           sha256:c331ad5808af2125f78907b27d6dc43874ae7a15bee1440bbd88de2e2073dbc3
+portfolio-strategy-invocation-v1.json                          sha256:97ce7eae1a309436a0444d658327fd4ce1b7125d40132479db36a7ee945d9a49
+atomic-decision-batch-simulation-instant-v2.json                sha256:c12342b9d0925237d3f8229b69a2a424cbfbb3345fc20cb5f7d003f871a5df63
+target-materialization-same-utc-v2.json                        sha256:f551782dc9831bc77436e520f6c0f362b77932127b5d5ec9d8adf9b80860ec48
+g11i-pytest.xml                                                sha256:a88ce8cd70fb5abc0daef82c84e135e0ab3e06f048b704f886581d0e6e18a356
+g11i-import-boundary-report.json                               sha256:25d7011ff63aba5567f71c115a06000f33c4e653bbcc9d2096f449eddcc02673
+import-boundaries.toml                                         sha256:66d5d58eb8544b3d7b995921ab20845c5af75a1af6bd6255b2f5af885966713d
+uv.lock                                                        sha256:a07106c285b2c454d0528411c79988881b3ff87c0a84d04228d94c186e9d3d8d
+```
+
+Implementation commit：`43735440ca5c60e2b3ae9c536c4a77411db317d0`。
+
+## 101. PASSED 记录格式
 
 ```yaml
 id: WP-00A

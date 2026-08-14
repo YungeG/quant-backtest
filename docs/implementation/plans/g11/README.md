@@ -18,12 +18,12 @@ The Gate status registry remains `docs/implementation/acceptance-matrix.md`. Fil
 ## Execution DAG
 
 ```text
-G11A(PASSED) ─→ G11B ─┬─→ G11C ───────────────┐
-                      ├─→ G11D ─→ G11E ──────┤
-                      └────────────→ G11H ────┤
-G02(PASSED) ─→ G11F ──┬─→ G11G ──────────────┤
-                      └────────────→ G11H ────┤
-G11A–G11H + G04(PASSED) ───────────→ G11I ─→ G11J
+G11A(PASSED) ─→ G11B(PASSED) ─┬─→ G11C(PASSED) ───────────────┐
+                               ├─→ G11D(PASSED) ─→ G11E(PASSED) ─┤
+                               └────────────→ G11H(PASSED) ──────┤
+G02(PASSED) ─→ G11F(PASSED) ──┬─→ G11G(PASSED) ─────────────────┤
+                               └────────────→ G11H(PASSED) ──────┤
+G11A–G11H + G04(PASSED) ───────────────→ G11I(PASSED) ─→ G11J
 ```
 
 ## Nodes
@@ -53,13 +53,8 @@ Expected seams are planning ownership, not frozen module names until the Gate re
 
 | Priority | Work | State | Unblocks | Write ownership |
 | --- | --- | --- | --- | --- |
-| 1 | G11B implementation | READY | G11C, G11D, G11H | observations core |
-| 2 | G11F research/readiness | RESEARCH-READY | G11G, G11H | strategy state |
-| 3 | G11C/G11D interface research | RESEARCH-READY | G11I / G11E | read-only until G11B passes |
-| 4 | G11G/G11H | BLOCKED | G11I | wait for G11F / G11B |
-| 5 | G11E | BLOCKED | G11I | wait for G11D |
-| 6 | G11I | BLOCKED | G11J | fan-in G11A–H |
-| 7 | G11J | BLOCKED | G11 release | wait for G11I |
+| 1 | G11A–G11I contracts and implementation | PASSED | G11J | frozen Acceptance Cards and static fixtures |
+| 2 | G11J readiness and implementation | READY | G11 release | parity tooling; serialized fixture and acceptance edits |
 
 ## WIP and validation
 
@@ -68,4 +63,4 @@ Expected seams are planning ownership, not frozen module names until the Gate re
 - Focused RED/GREEN tests during edits.
 - Frozen Gate acceptance plus one full suite at implementation completion.
 - PASSED recording performs document, hash, and repository checks without repeating unchanged expensive suites.
-- G11I is the integration fan-in; G11J is the downstream economic parity fan-in.
+- G11I is the completed integration fan-in; G11J is now the only remaining downstream economic parity fan-in.
