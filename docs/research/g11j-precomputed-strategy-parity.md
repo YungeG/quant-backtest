@@ -2,7 +2,7 @@
 
 ## Decision status
 
-G11J remains `DRAFT` in `docs/implementation/acceptance-matrix.md`. Its smallest valid v1 seam is repository-root parity tooling over a test-owned dual-entry fixture. No Engine, Runner, Timeline, TargetStream, Trading Kernel, or package export change is required.
+G11J is `PASSED` in `docs/implementation/acceptance-matrix.md` at implementation commit `7387c0b667d6af29d82fd0e0a046d45a3387956d`. Its frozen v1 seam is repository-root parity tooling over a test-owned dual-entry fixture. No Engine, Runner, Timeline, TargetStream, Trading Kernel, or package export change is required.
 
 The fixture normalizes both entry mechanisms at the first source-neutral economic value they already share: the complete ordered validated `TargetSnapshot` tuple. It then binds both legs to independently composed equal `ResolvedExecutionCase` values and exact-compares the existing Engine and G07 authorities. The CLI report is equality evidence for the supplied projections, not authentication of their origin.
 

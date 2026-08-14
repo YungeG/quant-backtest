@@ -226,8 +226,8 @@ def test_production_runtime_remains_branchless_and_has_no_public_export() -> Non
             assert forbidden not in source
 
 
-def test_g11j_remains_draft_in_status_authority() -> None:
+def test_g11j_is_passed_in_status_authority() -> None:
     matrix = (ROOT / "docs/implementation/acceptance-matrix.md").read_text(
         encoding="utf-8"
     )
-    assert "| G11J | DRAFT |" in matrix
+    assert "| G11J | PASSED |" in matrix

@@ -146,7 +146,7 @@ artifact_hashes: []
 | G11G | PASSED | backtest-runtime strategy | G11F | Random stream fixtures |
 | G11H | PASSED | backtest-runtime strategy | G11B, G11F | Model revision fixtures |
 | G11I | PASSED | backtest-runtime strategy | G11A–G11H, G04 | Invocation/batch fixtures |
-| G11J | DRAFT | parity tooling | G11I, G07 | Dual-entry parity |
+| G11J | PASSED | parity tooling | G11I, G07 | Dual-entry parity |
 | G12A | PASSED | market-bundle-builder | G00 | SourceSnapshot contract |
 | G12B | PASSED | market-bundle-builder | G12A, G02 | Normalization fixtures |
 | G12C | PASSED | market-bundle-builder | G12B | Manifest/validation fixtures |
@@ -10515,7 +10515,126 @@ uv.lock                                                        sha256:a07106c285
 
 Implementation commit：`43735440ca5c60e2b3ae9c536c4a77411db317d0`。
 
-## 101. PASSED 记录格式
+## 101. G11J Precomputed-vs-Strategy Downstream Parity Acceptance Card
+
+```yaml
+id: G11J
+status: PASSED
+passed_commit: 7387c0b667d6af29d82fd0e0a046d45a3387956d
+depends_on:
+  - G11I
+  - G07
+owner_package: repository-root parity tooling
+allowed_grade: development
+public_interface:
+  - tools/parity/precomputed_strategy.py
+  - tools/parity/run_precomputed_strategy_parity.py
+  - precomputed-vs-strategy-g11j-parity-report-v1
+  - no production package export
+test_commands:
+  contract: PYTHONDONTWRITEBYTECODE=1 uv run pytest -q tests/parity/test_precomputed_strategy_parity.py tests/parity/test_precomputed_strategy_parity_golden.py
+  boundary: PYTHONDONTWRITEBYTECODE=1 uv run pytest -q tests/architecture/test_g11j_dual_entry_parity_boundary.py tests/architecture/test_public_api_imports.py tests/architecture/test_repository_cleanliness.py
+  acceptance: PYTHONDONTWRITEBYTECODE=1 uv run pytest -q tests/parity/test_precomputed_strategy_parity.py tests/parity/test_precomputed_strategy_parity_golden.py tests/parity/test_comparator_contract.py tests/runtime/strategy_runtime tests/runtime/runner tests/runtime/execution_hash tests/runtime/integrity tests/runtime/engine tests/architecture/test_g11j_dual_entry_parity_boundary.py tests/architecture/test_g11i_strategy_runtime_boundary.py tests/architecture/test_public_api_imports.py tests/architecture/test_repository_cleanliness.py --junitxml=build/acceptance/g11j-pytest.xml
+  import_boundary: PYTHONDONTWRITEBYTECODE=1 uv run python tools/architecture/check_import_boundaries.py --root . --policy architecture/import-boundaries.toml --report build/acceptance/g11j-import-boundary-report.json
+  static_types: uvx --from mypy==2.3.0 mypy --python-version 3.13 packages/*/src
+  full_suite: PYTHONDONTWRITEBYTECODE=1 uv run pytest -q
+fixture_ids:
+  - precomputed-strategy-g11j-v1
+artifacts:
+  - docs/research/g11j-precomputed-strategy-parity.md
+  - tests/parity/contracts/precomputed-strategy-g11j-v1.json
+  - tests/parity/fixtures/precomputed-strategy-g11j-v1/expected.json
+  - tests/parity/fixtures/precomputed-strategy-g11j-v1/actual.json
+  - tests/parity/fixtures/precomputed-strategy-g11j-v1/sidecar.json
+  - tests/parity/fixtures/precomputed-strategy-g11j-v1/report.expected.json
+  - build/acceptance/g11j-pytest.xml
+  - build/acceptance/g11j-import-boundary-report.json
+failure_contracts:
+  - precomputed-and-strategy-validated-target-snapshots-differ
+  - confidence-reason-or-decision-evidence-is-normalized-away
+  - source-v1-v2-batch-identities-enter-economic-comparison
+  - source-batch-identity-difference-is-not-preserved-in-sidecar
+  - allocation-risk-target-order-fill-fee-journal-or-result-diverges
+  - later-hash-match-masks-earlier-economic-divergence
+  - required-layer-is-missing-unclassified-or-reordered
+  - substitute-tolerant-quantized-or-approved-change-contract-is-used
+  - report-path-aliases-contract-expected-or-actual
+  - contract-expected-actual-or-report-escapes-supplied-root
+  - fixture-or-report-bytes-depend-on-repository-checkout-root
+  - g11j-adds-production-runtime-economic-or-public-api-branch
+  - comparator-report-is-claimed-as-source-provenance-authentication
+  - g11j-claims-decision-grade-live-or-deployment-authorization
+evidence:
+  - real-precomputed-target-stream-entry
+  - real-g11i-strategy-invocation-entry
+  - equal-complete-normalized-validated-decisions-and-target-snapshots
+  - explicit-distinct-v1-v2-source-batch-sidecar
+  - independent-equal-resolved-cases-and-two-g07-attempts
+  - exact-seventeen-layer-economic-projection
+  - every-layer-mutation-and-missing-layer-negative-matrix
+  - earliest-first-divergence-with-later-mutation
+  - frozen-contract-substitution-and-policy-rejection
+  - copied-root-repeatable-golden-report
+  - static-architecture-and-no-public-export-boundary
+implementation_commit: 7387c0b667d6af29d82fd0e0a046d45a3387956d
+approved_on: 2026-08-14
+```
+
+Frozen contract：
+
+1. G11J只新增repository-root parity tooling、test support、static contract/fixtures与architecture boundary；Engine、Runner、Timeline、TargetStream、Trading Kernel和package root exports均不新增G11J branch；
+2. Dual-entry fixture分别执行existing `PrecomputedTargetStreamAdapter`与G11I `invoke_portfolio_strategies(...)`。Strategy entry继续使用existing `StrategyOutputValidator`与`AtomicDecisionBatchCollector`；G11J不新增Validator或Collector；
+3. Source-neutral Candidate冻结confidence、reason、Decision evidence与TargetSnapshot。Layer 00 exact比较shared full `SimulationInstant`、complete validated Decisions和ordered TargetSnapshots，不得只比较weights或剥离Decision evidence；
+4. Precomputed source batch保留legacy `decision-batch-v1` identity，Strategy source batch保留exact-instant `decision-batch-v2` identity。两者ID/hash必须不同并进入explicit sidecar；raw source batch identity不得进入source-neutral economic projection；
+5. Normalization只为precomputed Decision补入shared target-event `SimulationInstant`。其余Strategy ID、decision/observation time、TargetSnapshot、confidence、reason与evidence均exact保持；
+6. 两条entry分别组合equal `ResolvedExecutionCase` values并通过existing branchless Engine/G07 path执行。G07 Attempt/Evidence identities必须不同，而Semantic Run、case、domain与execution-result identities必须相等；
+7. Exact parity层按numeric prefix冻结：normalized entry、DecisionBatch、Allocation、Portfolio Risk、Normalized Active Target、Order Plan/Intent、Order Event、Fill、Slippage、Fee、Financial Artifact、Journal、Ledger、final Snapshot、Run End、Trace与Execution Result hash；
+8. Comparator Contract v1是唯一comparison engine。G11J wrapper固定`migration_mode=copy_with_parity`并直接复用`load_contract`、`run_comparison`与`invalid_report`；不得复制comparison algorithm；
+9. Frozen contract exact包含17层及fixture/qualification/schema fields，rule path unique、sorted、non-overlapping，只允许`exact|sequence`。替代ID、缺层、额外层、tolerance、quantization、epsilon或`approved_change`全部BLOCKED；
+10. Numeric layer order定义first-divergence precedence；sequence差异定位first zero-based item。任意later Trace/result hash相等不得掩盖earlier Allocation、Risk、Order、Fill、Fee或Journal差异；
+11. CLI只接受`--root --contract --expected --actual --report`。Root必须是existing non-filesystem-root directory；所有evidence paths必须位于root内；report不得alias input，且以temporary replace原子写入；
+12. Unsafe path返回`BLOCKED`/exit 2；malformed/unclassified/frozen-contract violation返回`invalid-contract`/exit 2；first economic difference返回`MISMATCH`/exit 1；all exact layers equal返回`MATCH`/exit 0；
+13. Static generation test真实执行两条entry并将expected、actual、sidecar与checked-in fixtures exact比较。Copied-root golden证明report bytes不依赖repository checkout path；
+14. CLI只证明supplied projections在frozen contract下相等，不重新生成projection、不读取sidecar，也不认证precomputed/Strategy provenance。两个identical substituted或malicious files仍可MATCH；source linkage authority属于dual-entry generation test；
+15. Entry-only evidence仅包括TargetStream digest/schedule/source/injection、Strategy schedule/eligibility/artifact/checkpoint/context/invocation/state/output/handoff、source batch IDs/hashes及G07 Attempt/Evidence identities；normalization后不得排除任何economic object；
+16. Qualification始终`decision_grade_eligible=false`、`deployment_authorized=false`。G11J不证明Provider correctness、market qualification、live readiness或deployment authorization。
+
+Research authority：`docs/research/g11j-precomputed-strategy-parity.md`。
+
+PASSED evidence：
+
+```text
+G11J parity contract/golden matrix                               67 passed
+Frozen G11J/G11I/G07 acceptance                                198 passed
+Full repository suite                                         1422 passed
+Workspace import boundary                                      PASS (93 files)
+mypy 2.3.0                                                     no issues (93 package source files)
+Primary LSP                                                    clean across 7 changed Python files
+pi-lens blocking diagnostics                                  no errors across 8 changed files
+Derivative purity regression                                  54 passed
+uv lock --check                                                PASS
+git diff --check                                               PASS
+Python                                                          3.13.5
+```
+
+Artifact hashes：
+
+```text
+g11j-precomputed-strategy-parity.md                            sha256:587d6fd1f279a00b1929997822746978ace5ffdb5a3e2463634731cb1e3e1e4b
+precomputed-strategy-g11j-v1.json                             sha256:72356cb7be8fae03e6faa674be758f87b8a87337e5d67d6011274f6b2bfc1248
+expected.json                                                  sha256:ff8ccefe1407f7f6d1aa8427706f9dcd7b22b57886b034069082663978e05811
+actual.json                                                    sha256:ff8ccefe1407f7f6d1aa8427706f9dcd7b22b57886b034069082663978e05811
+sidecar.json                                                   sha256:7f3390600473de53aa3e9d4dd5c27ead5c3e36a72cd0d1922fd45fd310bee1a4
+report.expected.json                                           sha256:0d412cdf9144646bf4da574cd139c7ef55659a1c9402af19e397d6882d58f3dc
+g11j-pytest.xml                                                sha256:b184279f58df1ec02023651b1e2ec5ad559e79a454f3191c9b207729426b3cef
+g11j-import-boundary-report.json                               sha256:25d7011ff63aba5567f71c115a06000f33c4e653bbcc9d2096f449eddcc02673
+import-boundaries.toml                                         sha256:66d5d58eb8544b3d7b995921ab20845c5af75a1af6bd6255b2f5af885966713d
+uv.lock                                                        sha256:a07106c285b2c454d0528411c79988881b3ff87c0a84d04228d94c186e9d3d8d
+```
+
+Implementation commit：`7387c0b667d6af29d82fd0e0a046d45a3387956d`。
+
+## 102. PASSED 记录格式
 
 ```yaml
 id: WP-00A
