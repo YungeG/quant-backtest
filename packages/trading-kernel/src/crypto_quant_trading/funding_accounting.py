@@ -46,7 +46,7 @@ from .ports import ProfileComponentRef, ProfilePortOutcome, ProfilePortType
 _SCHEMA_VERSION = 1
 _COMPONENT_KEY = "instrument.linear-perpetual.funding-accounting.v1"
 _RATE_BASIS = "funding_fraction_of_notional"
-_SHA256 = r"sha256:[0-9a-f]{64}"
+_SHA256 = re.compile(r"sha256:[0-9a-f]{64}\Z")
 
 
 def _require_text(name: str, value: str) -> None:
@@ -55,7 +55,7 @@ def _require_text(name: str, value: str) -> None:
 
 
 def _require_hash(name: str, value: str) -> None:
-    if type(value) is not str or re.fullmatch(_SHA256, value) is None:
+    if type(value) is not str or _SHA256.fullmatch(value) is None:
         raise ValueError(f"{name} must be a canonical sha256 hash")
 
 

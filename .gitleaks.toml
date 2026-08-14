@@ -1,0 +1,9 @@
+[extend]
+useDefault = true
+
+[[allowlists]]
+description = "Canonical versioned domain identifiers are not API credentials"
+regexTarget = "secret"
+regexes = [
+  '''^(?:[a-z0-9][a-z0-9_.:-]*(?:\.v|-v)[0-9]+|fixture\.bars\.1m|sta\.[a-z0-9.-]+|mof-sta\.[a-z0-9.-]+|g08f-announcement-(?:golden|causality))$''',
+]

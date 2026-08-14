@@ -243,7 +243,9 @@ class LocalMarketBundleRetentionProof:
         if type(self.bundle_ref) is not MarketBundleRef:
             raise TypeError("bundle_ref must be MarketBundleRef")
         if (
-            re.fullmatch(_RETENTION_POLICY_REF, _text("retention_policy_ref", self.retention_policy_ref))
+            _RETENTION_POLICY_REF.fullmatch(
+                _text("retention_policy_ref", self.retention_policy_ref)
+            )
             is None
         ):
             raise ValueError("retention_policy_ref must be canonical reference")
@@ -427,7 +429,12 @@ class LocalMarketBundleRepository:
         bundle_ref = MarketBundleRef.from_manifest(manifest)
 
         try:
-            if re.fullmatch(_RETENTION_POLICY_REF, _text("retention_policy_ref", retention_policy_ref)) is None:
+            if (
+                _RETENTION_POLICY_REF.fullmatch(
+                    _text("retention_policy_ref", retention_policy_ref)
+                )
+                is None
+            ):
                 return self._failure(
                     bundle_ref,
                     MarketBundlePublicationFailureCode.INVALID_INPUT,
@@ -627,19 +634,7 @@ class LocalMarketBundleRepository:
                     _make_read_only_tree(staging_path)
                     _verify_read_only_tree(staging_path)
                     _fsync_directory(staging_path)
-                except ValueError:
-                    if not _force_remove(staging_path):
-                        return self._failure(
-                            bundle_ref,
-                            MarketBundlePublicationFailureCode.UNMANAGED_PUBLICATION_STATE,
-                            _relative_subject(self._config.root, staging_path),
-                        )
-                    return self._failure(
-                        bundle_ref,
-                        MarketBundlePublicationFailureCode.IMMUTABILITY_FAILED,
-                        _relative_subject(self._config.root, staging_path),
-                    )
-                except OSError:
+                except (ValueError, OSError):
                     if not _force_remove(staging_path):
                         return self._failure(
                             bundle_ref,
@@ -723,19 +718,19 @@ class LocalMarketBundleRepository:
                     ),
                     failure=None,
                 )
-        except FileExistsError:
-            return self._failure(
-                bundle_ref,
-                MarketBundlePublicationFailureCode.LOCK_UNAVAILABLE,
-                _relative_subject(
-                    self._config.root,
-                    self._config.root
-                    / ".locks"
-                    / bundle_ref.bundle_key
-                    / f"{bundle_ref.manifest_hash.removeprefix('sha256:')}.lock",
-                ),
-            )
-        except OSError:
+        except OSError as error:
+            if isinstance(error, FileExistsError):
+                return self._failure(
+                    bundle_ref,
+                    MarketBundlePublicationFailureCode.LOCK_UNAVAILABLE,
+                    _relative_subject(
+                        self._config.root,
+                        self._config.root
+                        / ".locks"
+                        / bundle_ref.bundle_key
+                        / f"{bundle_ref.manifest_hash.removeprefix('sha256:')}.lock",
+                    ),
+                )
             return self._failure(
                 bundle_ref,
                 MarketBundlePublicationFailureCode.STAGING_PREPARE_FAILED,
