@@ -26,7 +26,7 @@ real old artifact          → G12J
 | [G12D](g12d.md) | Atomic publish/repository | G12C | `market-bundle-builder/local_market_bundle_repository.py` |
 | [G12E](g12e.md) | Verified local persisted reader | G12D, WP-06A | `market-data-contracts/local_market_bundle_reader.py` |
 | [G12F](g12f.md) | Reader/partition parity | G12E, G07 | parity tooling |
-| G12G | Bar aggregation | G12B–C | builder aggregation |
+| [G12G](g12g.md) | Bar aggregation — readiness `READY`, Gate `DRAFT` | G12B–C | builder aggregation |
 | G12H | Rule coverage | G12C | builder validation |
 | G12I | Price/availability/revision coverage | G12C, G12G | builder validation |
 | G12J | Schema migration | real old artifact | trading-domain migration |

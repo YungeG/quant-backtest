@@ -1859,14 +1859,15 @@ Acceptance and status authority：[`docs/implementation/acceptance-matrix.md`](a
 
 依赖：G12B、G12C。
 
-拥有：BarDefinition、Session anchor、TradingDate、included phases、empty interval policy 和 BarAggregationManifest。
+拥有：BarDefinition、一个调用方显式提供的有限 BarBucketPlan、精确 price-only OHLC、revision/availability mechanics 和 BarAggregationManifest；每个 bucket 绑定 SessionId、TradingDate 与半开 included spans，不拥有 calendar engine 或 bucket derivation。
 
 验收：
 
-- A 股午休、Crypto UTC day 和未来夜盘规则按 Session 聚合；
-- Strategy 不需要自行 Resample；
-- source/definition/code/output hashes 完整；
-- BarDefinition 变化产生新 Bundle identity。
+- A 股午休、Crypto UTC day 和未来夜盘规则由显式 bucket plan 固化，不跨越未包含时段；
+- 精确 OHLC、revision、availability 与 supersession 可重复，Strategy 不需要自行 Resample；
+- source/definition/bucket-plan/code/output hashes 完整；
+- source-plus-Bar 输出必须重新通过 G12C，BarDefinition 变化产生新 Bundle identity；
+- coverage/classification 归 G12I，provider/market qualification 归 G12L/M。
 
 ### Gate G12H Rule Coverage
 
