@@ -130,6 +130,15 @@ class ModelRevisionTimeline:
     def select(self) -> ModelArtifactRef | None:
         return None if not self._artifacts else self._artifacts[-1]
 
+    def __eq__(self, other: object) -> bool:
+        return (
+            type(other) is ModelRevisionTimeline
+            and self.timeline_hash == other.timeline_hash
+        )
+
+    def __hash__(self) -> int:
+        return hash(self.timeline_hash)
+
     @staticmethod
     def _validate_and_order(
         artifacts: tuple[ModelArtifactRef, ...],

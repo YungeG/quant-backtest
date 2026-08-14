@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import re
 import unicodedata
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from enum import Enum
 from typing import Any
 
@@ -13,6 +13,7 @@ from crypto_quant_domain import (
     InstrumentId,
     Price,
     PricePurpose,
+    SimulationInstant,
     UtcInstant,
     canonical_sha256,
 )
@@ -165,6 +166,8 @@ class ResolvedMark:
     stale_policy_key: str
     stale_policy_version: int
     stale_policy_hash: str
+    available_at_instant: SimulationInstant | None = field(default=None, kw_only=True)
+    resolved_at_instant: SimulationInstant | None = field(default=None, kw_only=True)
 
     def __post_init__(self) -> None:
         _validate_price_identity(
@@ -184,6 +187,19 @@ class ResolvedMark:
             raise ValueError("available_at cannot precede observed_at")
         if self.resolved_at < self.available_at:
             raise ValueError("resolved_at cannot precede available_at")
+        if (self.available_at_instant is None) != (self.resolved_at_instant is None):
+            raise ValueError("exact mark availability and resolution must share mode")
+        if self.available_at_instant is not None:
+            if not isinstance(self.available_at_instant, SimulationInstant):
+                raise TypeError("available_at_instant must be SimulationInstant or None")
+            if not isinstance(self.resolved_at_instant, SimulationInstant):
+                raise TypeError("resolved_at_instant must be SimulationInstant or None")
+            if self.available_at_instant.instant != self.available_at:
+                raise ValueError("available_at_instant instant must equal available_at")
+            if self.resolved_at_instant.instant != self.resolved_at:
+                raise ValueError("resolved_at_instant instant must equal resolved_at")
+            if self.resolved_at_instant < self.available_at_instant:
+                raise ValueError("resolved_at_instant cannot precede available_at_instant")
         expected_age = (
             self.resolved_at.epoch_nanoseconds
             - self.observed_at.epoch_nanoseconds
@@ -207,7 +223,7 @@ class ResolvedMark:
         return canonical_sha256(self._canonical_body())
 
     def _canonical_body(self) -> dict[str, Any]:
-        return {
+        value = {
             "instrument_id": self.instrument_id,
             "quote_currency_id": self.quote_currency_id,
             "price_purpose": self.price_purpose.value,
@@ -223,6 +239,10 @@ class ResolvedMark:
             "stale_policy_version": self.stale_policy_version,
             "stale_policy_hash": self.stale_policy_hash,
         }
+        if self.available_at_instant is not None:
+            value["available_at_instant"] = self.available_at_instant
+            value["resolved_at_instant"] = self.resolved_at_instant
+        return value
 
     def to_canonical_dict(self) -> dict[str, Any]:
         return {"type": "resolved_mark", "mark_id": self.mark_id, **self._canonical_body()}

@@ -8,6 +8,7 @@ from crypto_quant_domain import (
     InstrumentDefinition,
     InstrumentId,
     InstrumentType,
+    SimulationInstant,
     StrategyDecisionCandidate,
     StrategyDecisionPayload,
     StrategySleeveId,
@@ -48,13 +49,18 @@ def catalog() -> InstrumentCatalog:
     )
 
 
-def context(*, universe: tuple[InstrumentId, ...] = (BTC,)) -> StrategyOutputValidationContext:
+def context(
+    *,
+    universe: tuple[InstrumentId, ...] = (BTC,),
+    decision_instant: SimulationInstant | None = None,
+) -> StrategyOutputValidationContext:
     return StrategyOutputValidationContext(
         expected_strategy_id="trend-v1",
         expected_sleeve_id=StrategySleeveId("trend.primary"),
         decision_time=UtcInstant(100),
         instrument_catalog=catalog(),
         universe=universe,
+        decision_instant=decision_instant,
     )
 
 

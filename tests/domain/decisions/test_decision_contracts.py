@@ -14,15 +14,19 @@ from crypto_quant_domain import (
     Quantity,
     Rate,
     Scale,
+    SimulationInstant,
+    SourceSequence,
     StrategyDecision,
     StrategyDecisionCandidate,
     StrategyDecisionPayload,
     StrategySleeveId,
     TargetExposureFraction,
     TargetSnapshot,
+    TimelinePhase,
     UtcInstant,
     VenueId,
     canonical_bytes,
+    canonical_sha256,
 )
 
 
@@ -43,7 +47,20 @@ def snapshot(*targets: TargetExposureFraction) -> TargetSnapshot:
     )
 
 
-def decision(*, decision_time: int = 100, target_snapshot: TargetSnapshot | None = None) -> StrategyDecision:
+def simulation_instant(decision_time: int = 100, sequence: int = 1) -> SimulationInstant:
+    return SimulationInstant(
+        UtcInstant(decision_time),
+        TimelinePhase(60, "decision"),
+        SourceSequence(sequence),
+    )
+
+
+def decision(
+    *,
+    decision_time: int = 100,
+    target_snapshot: TargetSnapshot | None = None,
+    decision_instant: SimulationInstant | None = None,
+) -> StrategyDecision:
     return StrategyDecision(
         strategy_id="trend-v1",
         decision_time=UtcInstant(decision_time),
@@ -56,6 +73,7 @@ def decision(*, decision_time: int = 100, target_snapshot: TargetSnapshot | None
         ),
         reason="scheduled rebalance",
         evidence={"model": {"revision": "sha256:model-v1"}, "features": ["a", "b"]},
+        decision_instant=decision_instant,
     )
 
 
@@ -150,6 +168,40 @@ def test_validated_decision_enforces_time_confidence_and_canonical_evidence() ->
         replace(valid, confidence=Rate(1_000_000_000_001, Scale(12), "confidence"))
     with pytest.raises(CanonicalizationError, match="float"):
         replace(valid, evidence={"score": 0.5})
+
+
+def test_exact_decision_and_batch_bind_full_simulation_instant() -> None:
+    legacy = decision()
+    first_instant = simulation_instant(sequence=1)
+    later_instant = simulation_instant(sequence=2)
+    exact = decision(decision_instant=first_instant)
+
+    assert "decision_instant" not in legacy.to_canonical_dict()
+    assert exact.to_canonical_dict()["decision_instant"] == first_instant.to_canonical_dict()
+    assert canonical_sha256(legacy) != canonical_sha256(exact)
+
+    batch = DecisionBatch(
+        "decision-batch-v2:fixture",
+        UtcInstant(100),
+        (exact,),
+        decision_instant=first_instant,
+    )
+    assert batch.decision_instant == first_instant
+    assert batch.to_canonical_dict()["decision_instant"] == first_instant.to_canonical_dict()
+
+    with pytest.raises(ValueError, match="decision_instant instant"):
+        decision(decision_instant=SimulationInstant(
+            UtcInstant(101), first_instant.phase, first_instant.source_sequence
+        ))
+    with pytest.raises(ValueError, match="share decision_instant"):
+        DecisionBatch("batch:legacy", UtcInstant(100), (exact,))
+    with pytest.raises(ValueError, match="share decision_instant"):
+        DecisionBatch(
+            "batch:exact",
+            UtcInstant(100),
+            (exact,),
+            decision_instant=later_instant,
+        )
 
 
 def test_decision_batch_requires_one_time_and_unique_sleeves() -> None:

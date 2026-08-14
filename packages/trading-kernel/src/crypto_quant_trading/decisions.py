@@ -2,12 +2,13 @@ from __future__ import annotations
 
 import re
 from collections import defaultdict
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from enum import Enum
 from typing import Any, cast
 
 from crypto_quant_domain import (
     DecisionBatch,
+    SimulationInstant,
     StrategyDecision,
     StrategySleeveId,
     UtcInstant,
@@ -67,7 +68,9 @@ class DecisionBatchIssueCode(str, Enum):
     STRATEGY_ID_MISMATCH = "strategy_id_mismatch"
     SLEEVE_ID_MISMATCH = "sleeve_id_mismatch"
     DECISION_TIME_MISMATCH = "decision_time_mismatch"
+    DECISION_INSTANT_MISMATCH = "decision_instant_mismatch"
     PRIOR_STATE_NOT_BEFORE_DECISION = "prior_state_not_before_decision"
+    PRIOR_STATE_INSTANT_MODE_MISMATCH = "prior_state_instant_mode_mismatch"
 
 
 @dataclass(frozen=True, slots=True)
@@ -102,10 +105,16 @@ def _issue_key(issue: DecisionBatchIssue) -> tuple[str, str, str]:
 class DecisionBatchFailure:
     decision_time: UtcInstant
     issues: tuple[DecisionBatchIssue, ...]
+    decision_instant: SimulationInstant | None = field(default=None, kw_only=True)
 
     def __post_init__(self) -> None:
         if not isinstance(self.decision_time, UtcInstant):
             raise TypeError("decision_time must be UtcInstant")
+        if self.decision_instant is not None:
+            if not isinstance(self.decision_instant, SimulationInstant):
+                raise TypeError("decision_instant must be SimulationInstant or None")
+            if self.decision_instant.instant != self.decision_time:
+                raise ValueError("decision_instant instant must equal decision_time")
         if not isinstance(self.issues, tuple) or not self.issues:
             raise ValueError("issues must be a non-empty tuple")
         if not all(isinstance(issue, DecisionBatchIssue) for issue in self.issues):
@@ -117,31 +126,57 @@ class DecisionBatchFailure:
         return canonical_sha256(self)
 
     def to_canonical_dict(self) -> dict[str, Any]:
-        return {
+        value = {
             "type": "decision_batch_failure",
             "decision_time": self.decision_time.to_canonical_dict(),
             "issues": [issue.to_canonical_dict() for issue in self.issues],
         }
+        if self.decision_instant is not None:
+            value["decision_instant"] = self.decision_instant.to_canonical_dict()
+        return value
 
 
 @dataclass(frozen=True, slots=True)
 class LatestSleeveDecisionState:
     as_of: UtcInstant | None
     decisions: tuple[StrategyDecision, ...]
+    as_of_instant: SimulationInstant | None = field(default=None, kw_only=True)
 
     def __post_init__(self) -> None:
         if self.as_of is not None and not isinstance(self.as_of, UtcInstant):
             raise TypeError("as_of must be UtcInstant or None")
+        if self.as_of_instant is not None:
+            if not isinstance(self.as_of_instant, SimulationInstant):
+                raise TypeError("as_of_instant must be SimulationInstant or None")
+            if self.as_of_instant.instant != self.as_of:
+                raise ValueError("as_of_instant instant must equal as_of")
         if not isinstance(self.decisions, tuple):
             raise TypeError("decisions must be a tuple")
         if not all(isinstance(value, StrategyDecision) for value in self.decisions):
             raise TypeError("decisions must contain StrategyDecision")
+        if self.as_of_instant is None and any(
+            decision.decision_instant is not None for decision in self.decisions
+        ):
+            raise ValueError("exact decisions require as_of_instant")
         if bool(self.decisions) != (self.as_of is not None):
             raise ValueError("empty state requires no as_of and non-empty state requires as_of")
         if self.as_of is not None and any(
             decision.decision_time > self.as_of for decision in self.decisions
         ):
             raise ValueError("state cannot contain a decision after as_of")
+        if self.as_of_instant is not None:
+            if any(
+                decision.decision_instant is None
+                and decision.decision_time >= self.as_of_instant.instant
+                for decision in self.decisions
+            ):
+                raise ValueError("exact state same-UTC decisions require decision_instant")
+            if any(
+                decision.decision_instant is not None
+                and decision.decision_instant > self.as_of_instant
+                for decision in self.decisions
+            ):
+                raise ValueError("state cannot contain a decision after as_of_instant")
         sleeve_ids = [decision.target_snapshot.sleeve_id for decision in self.decisions]
         if len(set(sleeve_ids)) != len(sleeve_ids):
             raise ValueError("state cannot contain duplicate Sleeve decisions")
@@ -168,11 +203,14 @@ class LatestSleeveDecisionState:
         return canonical_sha256(self)
 
     def to_canonical_dict(self) -> dict[str, Any]:
-        return {
+        value = {
             "type": "latest_sleeve_decision_state",
             "as_of": self.as_of.to_canonical_dict() if self.as_of is not None else None,
             "decisions": [decision.to_canonical_dict() for decision in self.decisions],
         }
+        if self.as_of_instant is not None:
+            value["as_of_instant"] = self.as_of_instant.to_canonical_dict()
+        return value
 
 
 @dataclass(frozen=True, slots=True)
@@ -224,9 +262,15 @@ class AtomicDecisionBatchCollector:
         expected: tuple[DecisionBatchExpectation, ...],
         submissions: tuple[DecisionBatchSubmission, ...],
         prior_state: LatestSleeveDecisionState | None = None,
+        decision_instant: SimulationInstant | None = None,
     ) -> AtomicDecisionBatchResult:
         if not isinstance(decision_time, UtcInstant):
             raise TypeError("decision_time must be UtcInstant")
+        if decision_instant is not None:
+            if not isinstance(decision_instant, SimulationInstant):
+                raise TypeError("decision_instant must be SimulationInstant or None")
+            if decision_instant.instant != decision_time:
+                raise ValueError("decision_instant instant must equal decision_time")
         if not isinstance(expected, tuple) or not all(
             isinstance(value, DecisionBatchExpectation) for value in expected
         ):
@@ -334,20 +378,45 @@ class AtomicDecisionBatchCollector:
                         DecisionBatchIssueCode.DECISION_TIME_MISMATCH, sleeve_id.value
                     )
                 )
+            if decision.decision_instant != decision_instant:
+                issues.append(
+                    DecisionBatchIssue(
+                        DecisionBatchIssueCode.DECISION_INSTANT_MISMATCH,
+                        sleeve_id.value,
+                    )
+                )
             decisions.append(decision)
 
-        if state.as_of is not None and state.as_of >= decision_time:
-            issues.append(
-                DecisionBatchIssue(
-                    DecisionBatchIssueCode.PRIOR_STATE_NOT_BEFORE_DECISION,
-                    "prior_state",
-                    state.state_hash,
+        if state.as_of is not None:
+            if decision_instant is None and state.as_of_instant is not None:
+                issues.append(
+                    DecisionBatchIssue(
+                        DecisionBatchIssueCode.PRIOR_STATE_INSTANT_MODE_MISMATCH,
+                        "prior_state",
+                        state.state_hash,
+                    )
                 )
-            )
+            elif (
+                state.as_of_instant >= decision_instant
+                if state.as_of_instant is not None
+                and decision_instant is not None
+                else state.as_of >= decision_time
+            ):
+                issues.append(
+                    DecisionBatchIssue(
+                        DecisionBatchIssueCode.PRIOR_STATE_NOT_BEFORE_DECISION,
+                        "prior_state",
+                        state.state_hash,
+                    )
+                )
 
         if issues:
             return AtomicDecisionBatchResult.failed(
-                DecisionBatchFailure(decision_time, tuple(issues))
+                DecisionBatchFailure(
+                    decision_time,
+                    tuple(issues),
+                    decision_instant=decision_instant,
+                )
             )
 
         ordered_decisions = tuple(
@@ -359,16 +428,31 @@ class AtomicDecisionBatchCollector:
                 ),
             )
         )
-        identity_payload = {
-            "type": "decision_batch_identity",
-            "schema_version": 1,
-            "decision_time": decision_time.to_canonical_dict(),
-            "decisions": [value.to_canonical_dict() for value in ordered_decisions],
-        }
+        if decision_instant is None:
+            identity_payload = {
+                "type": "decision_batch_identity",
+                "schema_version": 1,
+                "decision_time": decision_time.to_canonical_dict(),
+                "decisions": [value.to_canonical_dict() for value in ordered_decisions],
+            }
+            decision_batch_id = (
+                f"decision-batch-v1:{canonical_sha256(identity_payload)}"
+            )
+        else:
+            identity_payload = {
+                "type": "decision_batch_identity",
+                "schema_version": 2,
+                "decision_instant": decision_instant.to_canonical_dict(),
+                "decisions": [value.to_canonical_dict() for value in ordered_decisions],
+            }
+            decision_batch_id = (
+                f"decision-batch-v2:{canonical_sha256(identity_payload)}"
+            )
         batch = DecisionBatch(
-            decision_batch_id=f"decision-batch-v1:{canonical_sha256(identity_payload)}",
+            decision_batch_id=decision_batch_id,
             decision_time=decision_time,
             decisions=ordered_decisions,
+            decision_instant=decision_instant,
         )
         latest = {
             value.target_snapshot.sleeve_id: value for value in state.decisions
@@ -377,6 +461,8 @@ class AtomicDecisionBatchCollector:
             {value.target_snapshot.sleeve_id: value for value in ordered_decisions}
         )
         updated_state = LatestSleeveDecisionState(
-            as_of=decision_time, decisions=tuple(latest.values())
+            as_of=decision_time,
+            decisions=tuple(latest.values()),
+            as_of_instant=decision_instant,
         )
         return AtomicDecisionBatchResult.succeeded(batch, updated_state)

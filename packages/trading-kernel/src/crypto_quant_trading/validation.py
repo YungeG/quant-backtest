@@ -4,7 +4,7 @@ import hashlib
 import re
 import struct
 from collections.abc import Mapping
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from decimal import Decimal, InvalidOperation
 from enum import Enum
 from typing import Any
@@ -15,6 +15,7 @@ from crypto_quant_domain import (
     InstrumentId,
     Rate,
     Scale,
+    SimulationInstant,
     StrategyDecision,
     StrategyDecisionCandidate,
     StrategySleeveId,
@@ -142,6 +143,7 @@ class StrategyOutputValidationContext:
     decision_time: UtcInstant
     instrument_catalog: InstrumentCatalog
     universe: tuple[InstrumentId, ...]
+    decision_instant: SimulationInstant | None = field(default=None, kw_only=True)
 
     def __post_init__(self) -> None:
         _require_canonical_text("expected_strategy_id", self.expected_strategy_id)
@@ -149,6 +151,11 @@ class StrategyOutputValidationContext:
             raise TypeError("expected_sleeve_id must be StrategySleeveId")
         if not isinstance(self.decision_time, UtcInstant):
             raise TypeError("decision_time must be UtcInstant")
+        if self.decision_instant is not None:
+            if not isinstance(self.decision_instant, SimulationInstant):
+                raise TypeError("decision_instant must be SimulationInstant or None")
+            if self.decision_instant.instant != self.decision_time:
+                raise ValueError("decision_instant instant must equal decision_time")
         if not isinstance(self.instrument_catalog, InstrumentCatalog):
             raise TypeError("instrument_catalog must be InstrumentCatalog")
         if not isinstance(self.universe, tuple) or not all(
@@ -245,6 +252,7 @@ class StrategyOutputValidator:
             confidence=confidence,
             reason=reason,
             evidence=evidence,
+            decision_instant=context.decision_instant,
         )
         return StrategyValidationResult.valid(decision)
 

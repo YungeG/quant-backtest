@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import re
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from enum import Enum
 from typing import Any, Self
 
@@ -16,6 +16,7 @@ from crypto_quant_domain import (
     Quantity,
     RoundingPolicy,
     Scale,
+    SimulationInstant,
     UtcInstant,
     canonical_bytes,
     canonical_sha256,
@@ -27,7 +28,7 @@ from .risk import ApprovedInstrumentTarget, ApprovedPortfolioTarget
 
 _SHA256_RE = re.compile(r"^sha256:[0-9a-f]{64}$")
 _NORMALIZED_TARGET_ID_RE = re.compile(
-    r"^normalized-portfolio-target-v1:sha256:[0-9a-f]{64}$"
+    r"^normalized-portfolio-target-v[12]:sha256:[0-9a-f]{64}$"
 )
 
 
@@ -508,6 +509,7 @@ class NormalizedPortfolioTarget:
     policy: PositionSizingPolicy
     targets: tuple[NormalizedInstrumentTarget, ...]
     active_target: ActivePortfolioTarget
+    materialized_instant: SimulationInstant | None = field(default=None, kw_only=True)
 
     def __post_init__(self) -> None:
         if (
@@ -518,6 +520,11 @@ class NormalizedPortfolioTarget:
         _canonical_text("source_decision_batch_id", self.source_decision_batch_id)
         if not isinstance(self.materialized_at, UtcInstant):
             raise TypeError("materialized_at must be UtcInstant")
+        if self.materialized_instant is not None:
+            if not isinstance(self.materialized_instant, SimulationInstant):
+                raise TypeError("materialized_instant must be SimulationInstant or None")
+            if self.materialized_instant.instant != self.materialized_at:
+                raise ValueError("materialized_instant instant must equal materialized_at")
         _canonical_text("source_approved_target_id", self.source_approved_target_id)
         _require_hash("source_approved_target_hash", self.source_approved_target_hash)
         if not isinstance(self.policy, PositionSizingPolicy):
@@ -533,7 +540,10 @@ class NormalizedPortfolioTarget:
             raise ValueError("duplicate normalized Instrument target")
         if self.active_target.source_decision_batch_id != self.source_decision_batch_id:
             raise ValueError("active target source DecisionBatch mismatch")
-        if self.active_target.materialized_at != self.materialized_at:
+        if (
+            self.active_target.materialized_at != self.materialized_at
+            or self.active_target.materialized_instant != self.materialized_instant
+        ):
             raise ValueError("active target materialization time mismatch")
         expected_quantities = tuple(
             (value.instrument_id, value.decision.final_quantity) for value in targets
@@ -543,7 +553,11 @@ class NormalizedPortfolioTarget:
         if any(value.decision.policy_hash != self.policy.policy_hash for value in targets):
             raise ValueError("normalized target policy mismatch")
         identity_payload = self._identity_payload(targets)
-        expected_id = f"normalized-portfolio-target-v1:{canonical_sha256(identity_payload)}"
+        schema_version = 2 if self.materialized_instant is not None else 1
+        expected_id = (
+            f"normalized-portfolio-target-v{schema_version}:"
+            f"{canonical_sha256(identity_payload)}"
+        )
         if self.normalized_target_id != expected_id:
             raise ValueError("normalized_target_id does not match materialization identity")
         object.__setattr__(self, "targets", targets)
@@ -558,16 +572,19 @@ class NormalizedPortfolioTarget:
         targets: tuple[NormalizedInstrumentTarget, ...],
     ) -> Self:
         targets = tuple(sorted(targets, key=lambda value: value.instrument_id))
+        materialized_instant = approved_target.approved_instant
+        schema_version = 2 if materialized_instant is not None else 1
         active_target = ActivePortfolioTarget(
             source_decision_batch_id=source_decision_batch_id,
             materialized_at=approved_target.approved_at,
             quantities=tuple(
                 (value.instrument_id, value.decision.final_quantity) for value in targets
             ),
+            materialized_instant=materialized_instant,
         )
         identity_payload = {
             "type": "normalized_portfolio_target_identity",
-            "schema_version": 1,
+            "schema_version": schema_version,
             "source_decision_batch_id": source_decision_batch_id,
             "materialized_at": approved_target.approved_at,
             "source_approved_target_id": approved_target.approved_target_id,
@@ -576,9 +593,11 @@ class NormalizedPortfolioTarget:
             "targets": targets,
             "active_target": active_target,
         }
+        if materialized_instant is not None:
+            identity_payload["materialized_instant"] = materialized_instant
         return cls(
             normalized_target_id=(
-                "normalized-portfolio-target-v1:"
+                f"normalized-portfolio-target-v{schema_version}:"
                 f"{canonical_sha256(identity_payload)}"
             ),
             source_decision_batch_id=source_decision_batch_id,
@@ -588,14 +607,16 @@ class NormalizedPortfolioTarget:
             policy=policy,
             targets=targets,
             active_target=active_target,
+            materialized_instant=materialized_instant,
         )
 
     def _identity_payload(
         self, targets: tuple[NormalizedInstrumentTarget, ...]
     ) -> dict[str, Any]:
-        return {
+        schema_version = 2 if self.materialized_instant is not None else 1
+        value = {
             "type": "normalized_portfolio_target_identity",
-            "schema_version": 1,
+            "schema_version": schema_version,
             "source_decision_batch_id": self.source_decision_batch_id,
             "materialized_at": self.materialized_at,
             "source_approved_target_id": self.source_approved_target_id,
@@ -604,6 +625,9 @@ class NormalizedPortfolioTarget:
             "targets": targets,
             "active_target": self.active_target,
         }
+        if self.materialized_instant is not None:
+            value["materialized_instant"] = self.materialized_instant
+        return value
 
     @property
     def normalized_target_hash(self) -> str:
@@ -803,7 +827,11 @@ class PositionSizer:
                 policy,
                 (sizing_input.input_hash,),
             )
-        if sizing_input.mark.resolved_at != approved_target.approved_at:
+        if (
+            sizing_input.mark.resolved_at != approved_target.approved_at
+            or sizing_input.mark.resolved_at_instant
+            != approved_target.approved_instant
+        ):
             return self._failed(
                 approved_target,
                 PositionSizingFailureCode.MARK_TIME_MISMATCH,

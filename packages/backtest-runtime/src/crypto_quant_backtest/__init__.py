@@ -249,6 +249,15 @@ from .slippage import (
     SlippageModelKind,
     SlippageRequest,
 )
+from .strategy_runtime import (
+    PortfolioStrategyInvocation,
+    PortfolioStrategyInvocationContext,
+    PortfolioStrategyInvocationFailureCode,
+    PortfolioStrategyInvocationOutput,
+    PortfolioStrategyInvocationStatus,
+    PortfolioStrategyRegistration,
+    invoke_portfolio_strategies,
+)
 from .strategy_state import (
     StrategyCheckpoint,
     StrategyState,
@@ -507,6 +516,12 @@ __all__ = [
     "SlippageRequest",
     "SourceTreeState",
     "SnapshotProjectionPlan",
+    "PortfolioStrategyInvocation",
+    "PortfolioStrategyInvocationContext",
+    "PortfolioStrategyInvocationFailureCode",
+    "PortfolioStrategyInvocationOutput",
+    "PortfolioStrategyInvocationStatus",
+    "PortfolioStrategyRegistration",
     "StrategyCheckpoint",
     "StrategyState",
     "StrategyStateTransition",
@@ -545,4 +560,5 @@ __all__ = [
     "UniverseQuery",
     "UniverseSelection",
     "WarmupEligibility",
+    "invoke_portfolio_strategies",
 ]

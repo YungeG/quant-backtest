@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from collections.abc import Mapping
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from decimal import Decimal
 from types import MappingProxyType
 from typing import Any, cast
@@ -10,7 +10,7 @@ from .canonical import canonical_bytes
 from .identity import require_canonical_text
 from .instruments import InstrumentId
 from .numeric import Quantity, Rate, Scale
-from .time import UtcInstant
+from .time import SimulationInstant, UtcInstant
 
 
 TARGET_EXPOSURE_SCALE = Scale(12)
@@ -158,12 +158,18 @@ class StrategyDecision:
     confidence: Rate | None
     reason: str
     evidence: Mapping[str, Any]
+    decision_instant: SimulationInstant | None = field(default=None, kw_only=True)
 
     def __post_init__(self) -> None:
         require_canonical_text("strategy_id", self.strategy_id)
         require_canonical_text("reason", self.reason)
         if not isinstance(self.decision_time, UtcInstant):
             raise TypeError("decision_time must be UtcInstant")
+        if self.decision_instant is not None:
+            if not isinstance(self.decision_instant, SimulationInstant):
+                raise TypeError("decision_instant must be SimulationInstant or None")
+            if self.decision_instant.instant != self.decision_time:
+                raise ValueError("decision_instant instant must equal decision_time")
         if not isinstance(self.observed_through, UtcInstant):
             raise TypeError("observed_through must be UtcInstant")
         if not isinstance(self.target_snapshot, TargetSnapshot):
@@ -185,7 +191,7 @@ class StrategyDecision:
         canonical_bytes({"strategy_id": self.strategy_id, "reason": self.reason})
 
     def to_canonical_dict(self) -> dict[str, Any]:
-        return {
+        value = {
             "type": "strategy_decision",
             "strategy_id": self.strategy_id,
             "decision_time": self.decision_time.to_canonical_dict(),
@@ -199,6 +205,9 @@ class StrategyDecision:
             "reason": self.reason,
             "evidence": self.evidence,
         }
+        if self.decision_instant is not None:
+            value["decision_instant"] = self.decision_instant.to_canonical_dict()
+        return value
 
 
 @dataclass(frozen=True, slots=True)
@@ -206,11 +215,17 @@ class DecisionBatch:
     decision_batch_id: str
     decision_time: UtcInstant
     decisions: tuple[StrategyDecision, ...]
+    decision_instant: SimulationInstant | None = field(default=None, kw_only=True)
 
     def __post_init__(self) -> None:
         require_canonical_text("decision_batch_id", self.decision_batch_id)
         if not isinstance(self.decision_time, UtcInstant):
             raise TypeError("decision_time must be UtcInstant")
+        if self.decision_instant is not None:
+            if not isinstance(self.decision_instant, SimulationInstant):
+                raise TypeError("decision_instant must be SimulationInstant or None")
+            if self.decision_instant.instant != self.decision_time:
+                raise ValueError("decision_instant instant must equal decision_time")
         if not isinstance(self.decisions, tuple):
             raise TypeError("decisions must be a tuple")
         if not self.decisions:
@@ -219,13 +234,18 @@ class DecisionBatch:
             raise TypeError("decisions must contain StrategyDecision")
         if any(decision.decision_time != self.decision_time for decision in self.decisions):
             raise ValueError("DecisionBatch decisions must share decision_time")
+        if any(
+            decision.decision_instant != self.decision_instant
+            for decision in self.decisions
+        ):
+            raise ValueError("DecisionBatch decisions must share decision_instant")
         sleeve_ids = [decision.target_snapshot.sleeve_id for decision in self.decisions]
         if len(set(sleeve_ids)) != len(sleeve_ids):
             raise ValueError("duplicate StrategySleeveId in DecisionBatch")
         canonical_bytes(self.decision_batch_id)
 
     def to_canonical_dict(self) -> dict[str, Any]:
-        return {
+        value = {
             "type": "decision_batch",
             "decision_batch_id": self.decision_batch_id,
             "decision_time": self.decision_time.to_canonical_dict(),
@@ -240,6 +260,9 @@ class DecisionBatch:
                 )
             ],
         }
+        if self.decision_instant is not None:
+            value["decision_instant"] = self.decision_instant.to_canonical_dict()
+        return value
 
 
 @dataclass(frozen=True, slots=True)
@@ -247,6 +270,7 @@ class ActivePortfolioTarget:
     source_decision_batch_id: str
     materialized_at: UtcInstant
     quantities: tuple[tuple[InstrumentId, Quantity], ...]
+    materialized_instant: SimulationInstant | None = field(default=None, kw_only=True)
 
     def __post_init__(self) -> None:
         require_canonical_text(
@@ -254,6 +278,11 @@ class ActivePortfolioTarget:
         )
         if not isinstance(self.materialized_at, UtcInstant):
             raise TypeError("materialized_at must be UtcInstant")
+        if self.materialized_instant is not None:
+            if not isinstance(self.materialized_instant, SimulationInstant):
+                raise TypeError("materialized_instant must be SimulationInstant or None")
+            if self.materialized_instant.instant != self.materialized_at:
+                raise ValueError("materialized_instant instant must equal materialized_at")
         if not isinstance(self.quantities, tuple):
             raise TypeError("quantities must be a tuple")
         instrument_ids: list[InstrumentId] = []
@@ -273,7 +302,7 @@ class ActivePortfolioTarget:
         canonical_bytes(self.source_decision_batch_id)
 
     def to_canonical_dict(self) -> dict[str, Any]:
-        return {
+        value = {
             "type": "active_portfolio_target",
             "source_decision_batch_id": self.source_decision_batch_id,
             "materialized_at": self.materialized_at.to_canonical_dict(),
@@ -287,3 +316,6 @@ class ActivePortfolioTarget:
                 )
             ],
         }
+        if self.materialized_instant is not None:
+            value["materialized_instant"] = self.materialized_instant.to_canonical_dict()
+        return value

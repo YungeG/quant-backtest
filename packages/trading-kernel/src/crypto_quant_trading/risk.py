@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import re
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from enum import Enum
 from typing import Any, Self, cast
 
@@ -10,6 +10,7 @@ from crypto_quant_domain import (
     InstrumentId,
     Money,
     Scale,
+    SimulationInstant,
     UtcInstant,
     canonical_bytes,
     canonical_sha256,
@@ -20,7 +21,7 @@ from .allocation import NetInstrumentTarget, PortfolioAllocation
 
 _SHA256_RE = re.compile(r"^sha256:[0-9a-f]{64}$")
 _APPROVED_TARGET_ID_RE = re.compile(
-    r"^approved-portfolio-target-v1:sha256:[0-9a-f]{64}$"
+    r"^approved-portfolio-target-v[12]:sha256:[0-9a-f]{64}$"
 )
 
 
@@ -392,6 +393,7 @@ class ApprovedPortfolioTarget:
     gross_exposure: Money
     net_exposure: Money
     decisions: tuple[PortfolioRiskDecision, ...]
+    approved_instant: SimulationInstant | None = field(default=None, kw_only=True)
 
     def __post_init__(self) -> None:
         if (
@@ -401,6 +403,11 @@ class ApprovedPortfolioTarget:
             raise ValueError("approved_target_id must be an approved target identity")
         if not isinstance(self.approved_at, UtcInstant):
             raise TypeError("approved_at must be UtcInstant")
+        if self.approved_instant is not None:
+            if not isinstance(self.approved_instant, SimulationInstant):
+                raise TypeError("approved_instant must be SimulationInstant or None")
+            if self.approved_instant.instant != self.approved_at:
+                raise ValueError("approved_instant instant must equal approved_at")
         _canonical_text("source_allocation_id", self.source_allocation_id)
         _require_hash("source_allocation_hash", self.source_allocation_hash)
         if not isinstance(self.policy_ref, PortfolioRiskPolicyRef):
@@ -509,9 +516,10 @@ class ApprovedPortfolioTarget:
         ):
             raise ValueError("approved target exposure context mismatch")
 
+        schema_version = 2 if self.approved_instant is not None else 1
         identity_payload = {
             "type": "approved_portfolio_target_identity",
-            "schema_version": 1,
+            "schema_version": schema_version,
             "approved_at": self.approved_at,
             "source_allocation_id": self.source_allocation_id,
             "source_allocation_hash": self.source_allocation_hash,
@@ -519,7 +527,12 @@ class ApprovedPortfolioTarget:
             "targets": targets,
             "decisions": decisions,
         }
-        expected_id = f"approved-portfolio-target-v1:{canonical_sha256(identity_payload)}"
+        if self.approved_instant is not None:
+            identity_payload["approved_instant"] = self.approved_instant
+        expected_id = (
+            f"approved-portfolio-target-v{schema_version}:"
+            f"{canonical_sha256(identity_payload)}"
+        )
         if self.approved_target_id != expected_id:
             raise ValueError("approved_target_id does not match target identity")
         object.__setattr__(self, "targets", targets)
@@ -555,9 +568,13 @@ class ApprovedPortfolioTarget:
             scale,
             currency,
         )
+        approved_instant = source_allocation.valuation_instant
+        if approved_instant is not None and approved_instant.instant != approved_at:
+            raise ValueError("source allocation instant must match approved_at")
+        schema_version = 2 if approved_instant is not None else 1
         identity_payload = {
             "type": "approved_portfolio_target_identity",
-            "schema_version": 1,
+            "schema_version": schema_version,
             "approved_at": approved_at,
             "source_allocation_id": source_allocation.allocation_id,
             "source_allocation_hash": source_allocation.allocation_hash,
@@ -565,9 +582,11 @@ class ApprovedPortfolioTarget:
             "targets": targets,
             "decisions": decisions,
         }
+        if approved_instant is not None:
+            identity_payload["approved_instant"] = approved_instant
         return cls(
             approved_target_id=(
-                "approved-portfolio-target-v1:"
+                f"approved-portfolio-target-v{schema_version}:"
                 f"{canonical_sha256(identity_payload)}"
             ),
             approved_at=approved_at,
@@ -578,6 +597,7 @@ class ApprovedPortfolioTarget:
             gross_exposure=gross,
             net_exposure=net,
             decisions=decisions,
+            approved_instant=approved_instant,
         )
 
     @property
@@ -592,7 +612,7 @@ class ApprovedPortfolioTarget:
         return canonical_sha256(self)
 
     def to_canonical_dict(self) -> dict[str, Any]:
-        return {
+        value = {
             "type": "approved_portfolio_target",
             "approved_target_id": self.approved_target_id,
             "approved_at": self.approved_at,
@@ -605,6 +625,9 @@ class ApprovedPortfolioTarget:
             "decisions": self.decisions,
             "economic_rejected": self.economic_rejected,
         }
+        if self.approved_instant is not None:
+            value["approved_instant"] = self.approved_instant
+        return value
 
 
 class PortfolioRiskContractIssueCode(str, Enum):

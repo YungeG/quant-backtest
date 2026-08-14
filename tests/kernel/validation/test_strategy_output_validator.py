@@ -8,9 +8,12 @@ import pytest
 from crypto_quant_domain import (
     CanonicalizationError,
     InstrumentId,
+    SimulationInstant,
+    SourceSequence,
     StrategyDecisionCandidate,
     StrategyDecisionPayload,
     StrategySleeveId,
+    TimelinePhase,
     UtcInstant,
     canonical_bytes,
 )
@@ -43,6 +46,27 @@ def test_valid_candidate_becomes_the_only_authoritative_decision() -> None:
     assert result.decision.target_snapshot.targets[0].units == 500_000_000_000
     assert result.decision.confidence is not None
     assert result.decision.confidence.units == 875_000_000_000
+
+
+def test_validation_context_binds_exact_instant_without_changing_candidate_schema() -> None:
+    instant = SimulationInstant(
+        UtcInstant(100), TimelinePhase(60, "decision"), SourceSequence(1)
+    )
+    result = StrategyOutputValidator().validate(
+        candidate(), context(decision_instant=instant)
+    )
+
+    assert "decision_instant" not in candidate().payload.fields
+    assert result.failure is None
+    assert result.decision is not None
+    assert result.decision.decision_instant == instant
+
+    with pytest.raises(ValueError, match="decision_instant instant"):
+        context(
+            decision_instant=SimulationInstant(
+                UtcInstant(101), instant.phase, instant.source_sequence
+            )
+        )
 
 
 def test_schema_missing_and_unknown_fields_fail_without_partial_decision() -> None:

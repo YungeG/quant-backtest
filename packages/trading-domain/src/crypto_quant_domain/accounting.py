@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import re
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from enum import Enum
 from typing import Any
 
@@ -361,11 +361,17 @@ class PortfolioSnapshot:
     valuation_mark_set_hash: str
     valuation_staleness_report_hash: str
     currency_valuation_graph_hash: str
+    timestamp_instant: SimulationInstant | None = field(default=None, kw_only=True)
 
     def __post_init__(self) -> None:
         _require_text("account_id", self.account_id)
         if not isinstance(self.timestamp, UtcInstant):
             raise TypeError("timestamp must be UtcInstant")
+        if self.timestamp_instant is not None:
+            if not isinstance(self.timestamp_instant, SimulationInstant):
+                raise TypeError("timestamp_instant must be SimulationInstant or None")
+            if self.timestamp_instant.instant != self.timestamp:
+                raise ValueError("timestamp_instant instant must equal timestamp")
         if not isinstance(self.reporting_currency, CurrencyId):
             raise TypeError("reporting_currency must be CurrencyId")
         if not isinstance(self.cash, tuple) or not all(
@@ -429,7 +435,7 @@ class PortfolioSnapshot:
             raise ValueError("valuation mark-set hash mismatch")
 
     def to_canonical_dict(self) -> dict[str, Any]:
-        return {
+        value = {
             "type": "portfolio_snapshot",
             "account_id": self.account_id,
             "timestamp": self.timestamp,
@@ -447,3 +453,6 @@ class PortfolioSnapshot:
             "valuation_staleness_report_hash": self.valuation_staleness_report_hash,
             "currency_valuation_graph_hash": self.currency_valuation_graph_hash,
         }
+        if self.timestamp_instant is not None:
+            value["timestamp_instant"] = self.timestamp_instant
+        return value

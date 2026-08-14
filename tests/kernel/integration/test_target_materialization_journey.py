@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import json
-from dataclasses import FrozenInstanceError
+from dataclasses import FrozenInstanceError, replace
 from pathlib import Path
 from typing import Any, TypedDict, cast
 
@@ -19,14 +19,18 @@ from crypto_quant_domain import (
     PricePurpose,
     Quantity,
     Scale,
+    SimulationInstant,
+    SourceSequence,
     StrategyDecisionCandidate,
     StrategyDecisionPayload,
     StrategySleeveId,
+    TimelinePhase,
     UtcInstant,
     canonical_bytes,
     canonical_sha256,
 )
 from crypto_quant_trading import (
+    AllocationConstraintCode,
     AtomicDecisionBatchCollector,
     DecisionBatchExpectation,
     DecisionBatchSubmission,
@@ -38,6 +42,7 @@ from crypto_quant_trading import (
     PortfolioAllocator,
     PortfolioRiskEvaluator,
     PositionSizer,
+    PositionSizingFailureCode,
     StrategyAllocation,
     StrategyOutputValidationContext,
     StrategyOutputValidator,
@@ -59,6 +64,7 @@ from tests.kernel.sizing._fixtures import lattice, resolved_mark, sizing_policy
 
 ROOT = Path(__file__).resolve().parents[3]
 FIXTURE = ROOT / "tests/fixtures/kernel/target-materialization-journey-v1.json"
+SAME_UTC_FIXTURE = ROOT / "tests/fixtures/kernel/target-materialization-same-utc-v2.json"
 
 
 class Journey(TypedDict):
@@ -122,6 +128,7 @@ def validate(
     targets: tuple[tuple[InstrumentId, str], ...],
     *,
     reverse_mapping: bool = False,
+    decision_instant: SimulationInstant | None = None,
 ) -> DecisionBatchSubmission:
     result = StrategyOutputValidator().validate(
         payload(
@@ -136,6 +143,7 @@ def validate(
             decision_time=UtcInstant(100),
             instrument_catalog=catalog(),
             universe=(BTC, ETH),
+            decision_instant=decision_instant,
         ),
     )
     return DecisionBatchSubmission(expectation=expectation, result=result)
@@ -281,6 +289,253 @@ def test_registration_mapping_and_pipeline_input_order_are_irrelevant() -> None:
 
     for key in ("batch", "state", "allocation", "approved", "normalized", "active"):
         assert canonical_sha256(first[key]) == canonical_sha256(reordered[key])
+
+
+def test_same_utc_second_state_flows_through_allocation_risk_and_sizing() -> None:
+    try:
+        fixture = cast(
+            dict[str, Any],
+            json.loads(SAME_UTC_FIXTURE.read_text(encoding="utf-8")),
+        )
+    except (OSError, json.JSONDecodeError) as error:
+        raise AssertionError(f"invalid same-UTC fixture: {SAME_UTC_FIXTURE}") from error
+
+    first_instant = SimulationInstant(
+        UtcInstant(100), TimelinePhase(60, "decision"), SourceSequence(1)
+    )
+    later_instant = SimulationInstant(
+        UtcInstant(100), TimelinePhase(60, "decision"), SourceSequence(2)
+    )
+    trend = DecisionBatchExpectation("trend-v1", TREND)
+    carry = DecisionBatchExpectation("carry-v1", CARRY)
+    collector = AtomicDecisionBatchCollector()
+    first = collector.collect(
+        decision_time=UtcInstant(100),
+        decision_instant=first_instant,
+        expected=(trend, carry),
+        submissions=(
+            validate(trend, ((BTC, "0.5"),), decision_instant=first_instant),
+            validate(carry, ((ETH, "0.1"),), decision_instant=first_instant),
+        ),
+    )
+    assert first.state is not None
+    later = collector.collect(
+        decision_time=UtcInstant(100),
+        decision_instant=later_instant,
+        expected=(trend,),
+        submissions=(
+            validate(trend, ((BTC, "0.75"),), decision_instant=later_instant),
+        ),
+        prior_state=first.state,
+    )
+    assert later.batch is not None and later.state is not None
+
+    flattened_snapshot = snapshot()
+    flattened_hash = canonical_sha256(flattened_snapshot)
+    flattened = PortfolioAllocator().allocate(
+        sleeve_state=later.state,
+        portfolio_snapshot=flattened_snapshot,
+        allocations=(
+            StrategyAllocation(
+                "trend-v1",
+                TREND,
+                UtcInstant(100),
+                USD,
+                Money(60_000, MONEY_SCALE, "USD"),
+                POLICY,
+                flattened_hash,
+            ),
+            StrategyAllocation(
+                "carry-v1",
+                CARRY,
+                UtcInstant(100),
+                USD,
+                Money(40_000, MONEY_SCALE, "USD"),
+                POLICY,
+                flattened_hash,
+            ),
+        ),
+        target_notional_scale=NOTIONAL_SCALE,
+    )
+    assert flattened.failure is not None
+    assert {
+        value.code for value in flattened.failure.decisions
+    } == {AllocationConstraintCode.VALUATION_INSTANT_MISMATCH}
+
+    portfolio_snapshot = replace(snapshot(), timestamp_instant=later_instant)
+    snapshot_hash = canonical_sha256(portfolio_snapshot)
+    allocated = PortfolioAllocator().allocate(
+        sleeve_state=later.state,
+        portfolio_snapshot=portfolio_snapshot,
+        allocations=(
+            StrategyAllocation(
+                "trend-v1",
+                TREND,
+                UtcInstant(100),
+                USD,
+                Money(60_000, MONEY_SCALE, "USD"),
+                POLICY,
+                snapshot_hash,
+                valuation_instant=later_instant,
+            ),
+            StrategyAllocation(
+                "carry-v1",
+                CARRY,
+                UtcInstant(100),
+                USD,
+                Money(40_000, MONEY_SCALE, "USD"),
+                POLICY,
+                snapshot_hash,
+                valuation_instant=later_instant,
+            ),
+        ),
+        target_notional_scale=NOTIONAL_SCALE,
+    )
+    assert allocated.allocation is not None
+    future_instant = SimulationInstant(
+        UtcInstant(100), TimelinePhase(60, "decision"), SourceSequence(3)
+    )
+    future_snapshot = replace(portfolio_snapshot, timestamp_instant=future_instant)
+    future_snapshot_hash = canonical_sha256(future_snapshot)
+    future_allocation = PortfolioAllocator().allocate(
+        sleeve_state=later.state,
+        portfolio_snapshot=future_snapshot,
+        allocations=tuple(
+            replace(
+                value,
+                source_portfolio_snapshot_hash=future_snapshot_hash,
+                valuation_instant=future_instant,
+            )
+            for value in allocated.allocation.allocations
+        ),
+        target_notional_scale=NOTIONAL_SCALE,
+    )
+    assert future_allocation.failure is not None
+    assert {
+        value.code for value in future_allocation.failure.decisions
+    } == {AllocationConstraintCode.VALUATION_INSTANT_MISMATCH}
+
+    assessed = PortfolioRiskEvaluator().evaluate(
+        allocation=allocated.allocation,
+        policy=risk_policy(),
+    )
+    assert assessed.approved_target is not None
+    flattened_sizing = PositionSizer().materialize(
+        approved_target=assessed.approved_target,
+        source_decision_batch_id=later.batch.decision_batch_id,
+        policy=sizing_policy(),
+        inputs=(
+            InstrumentSizingInput(
+                BTC,
+                resolved_mark(BTC, price_units=2_000),
+                Quantity(0, Scale(3), str(BTC)),
+                lattice(BTC),
+            ),
+            InstrumentSizingInput(
+                ETH,
+                resolved_mark(ETH, price_units=1_000),
+                Quantity(0, Scale(3), str(ETH)),
+                lattice(ETH),
+            ),
+        ),
+    )
+    assert flattened_sizing.failure is not None
+    assert flattened_sizing.failure.code is PositionSizingFailureCode.MARK_TIME_MISMATCH
+
+    exact_marks = (
+        replace(
+            resolved_mark(BTC, price_units=2_000),
+            available_at_instant=later_instant,
+            resolved_at_instant=later_instant,
+        ),
+        replace(
+            resolved_mark(ETH, price_units=1_000),
+            available_at_instant=later_instant,
+            resolved_at_instant=later_instant,
+        ),
+    )
+    future_sizing = PositionSizer().materialize(
+        approved_target=assessed.approved_target,
+        source_decision_batch_id=later.batch.decision_batch_id,
+        policy=sizing_policy(),
+        inputs=(
+            InstrumentSizingInput(
+                BTC,
+                replace(
+                    exact_marks[0],
+                    available_at_instant=future_instant,
+                    resolved_at_instant=future_instant,
+                ),
+                Quantity(0, Scale(3), str(BTC)),
+                lattice(BTC),
+            ),
+            InstrumentSizingInput(
+                ETH,
+                exact_marks[1],
+                Quantity(0, Scale(3), str(ETH)),
+                lattice(ETH),
+            ),
+        ),
+    )
+    assert future_sizing.failure is not None
+    assert future_sizing.failure.code is PositionSizingFailureCode.MARK_TIME_MISMATCH
+
+    sized = PositionSizer().materialize(
+        approved_target=assessed.approved_target,
+        source_decision_batch_id=later.batch.decision_batch_id,
+        policy=sizing_policy(),
+        inputs=(
+            InstrumentSizingInput(
+                BTC,
+                exact_marks[0],
+                Quantity(0, Scale(3), str(BTC)),
+                lattice(BTC),
+            ),
+            InstrumentSizingInput(
+                ETH,
+                exact_marks[1],
+                Quantity(0, Scale(3), str(ETH)),
+                lattice(ETH),
+            ),
+        ),
+    )
+    assert sized.normalized_target is not None
+
+    by_sleeve = {
+        value.target_snapshot.sleeve_id: value for value in later.state.decisions
+    }
+    actual = {
+        "schema_version": 2,
+        "fixture_id": "target-materialization-same-utc-v2",
+        "first_batch_hash": first.batch_hash,
+        "first_state_hash": first.state_hash,
+        "later_batch_hash": later.batch_hash,
+        "later_state_hash": later.state_hash,
+        "allocation_hash": allocated.allocation.allocation_hash,
+        "approved_target_hash": assessed.approved_target.approved_target_hash,
+        "normalized_target_hash": sized.normalized_target.normalized_target_hash,
+        "active_target": canonical_value(sized.normalized_target.active_target),
+    }
+    assert actual == fixture
+    assert by_sleeve[TREND].decision_instant == later_instant
+    assert by_sleeve[CARRY].decision_instant == first_instant
+    assert allocated.allocation.source_sleeve_state_hash == later.state_hash
+    assert allocated.allocation.valuation_instant == later_instant
+    assert assessed.approved_target.approved_instant == later_instant
+    assert sized.normalized_target.materialized_instant == later_instant
+    assert sized.normalized_target.active_target.materialized_instant == later_instant
+    assert (
+        assessed.approved_target.source_allocation_hash
+        == allocated.allocation.allocation_hash
+    )
+    assert (
+        sized.normalized_target.source_approved_target_hash
+        == assessed.approved_target.approved_target_hash
+    )
+    assert (
+        sized.normalized_target.source_decision_batch_id
+        == later.batch.decision_batch_id
+    )
 
 
 def test_later_marks_cannot_mutate_the_materialized_active_target() -> None:

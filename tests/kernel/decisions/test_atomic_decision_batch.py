@@ -2,6 +2,8 @@ from __future__ import annotations
 
 from dataclasses import replace
 
+import pytest
+
 from crypto_quant_domain import (
     StrategySleeveId,
     UtcInstant,
@@ -19,7 +21,15 @@ from crypto_quant_trading import (
     StrategyValidationResult,
 )
 
-from ._fixtures import BTC, CARRY, ETH, TREND, decision, submission
+from ._fixtures import (
+    BTC,
+    CARRY,
+    ETH,
+    TREND,
+    decision,
+    simulation_instant,
+    submission,
+)
 
 
 def issue_codes(result: object) -> set[DecisionBatchIssueCode]:
@@ -59,6 +69,172 @@ def test_complete_batch_is_atomic_and_input_order_independent() -> None:
     assert [
         item.target_snapshot.sleeve_id for item in first.batch.decisions
     ] == [CARRY.sleeve_id, TREND.sleeve_id]
+
+
+def test_exact_batches_chain_same_utc_and_preserve_unscheduled_sleeves() -> None:
+    collector = AtomicDecisionBatchCollector()
+    first_instant = simulation_instant(sequence=1)
+    later_instant = simulation_instant(sequence=2)
+    first = collector.collect(
+        decision_time=UtcInstant(100),
+        decision_instant=first_instant,
+        expected=(TREND, CARRY),
+        submissions=(
+            submission(TREND, decision_instant=first_instant),
+            submission(CARRY, instrument_id=ETH, decision_instant=first_instant),
+        ),
+    )
+    reordered = collector.collect(
+        decision_time=UtcInstant(100),
+        decision_instant=first_instant,
+        expected=(CARRY, TREND),
+        submissions=(
+            submission(CARRY, instrument_id=ETH, decision_instant=first_instant),
+            submission(TREND, decision_instant=first_instant),
+        ),
+    )
+    assert first.batch is not None and first.state is not None
+    assert reordered.batch is not None and reordered.state is not None
+    same_payload_later = collector.collect(
+        decision_time=UtcInstant(100),
+        decision_instant=later_instant,
+        expected=(TREND, CARRY),
+        submissions=(
+            submission(TREND, decision_instant=later_instant),
+            submission(CARRY, instrument_id=ETH, decision_instant=later_instant),
+        ),
+    )
+    assert same_payload_later.batch is not None
+
+    later = collector.collect(
+        decision_time=UtcInstant(100),
+        decision_instant=later_instant,
+        expected=(TREND,),
+        submissions=(submission(TREND, decision_instant=later_instant),),
+        prior_state=first.state,
+    )
+
+    assert later.failure is None
+    assert later.batch is not None and later.state is not None
+    assert first.batch == reordered.batch
+    assert first.batch_hash == reordered.batch_hash
+    assert first.state_hash == reordered.state_hash
+    assert first.batch.decision_batch_id.startswith("decision-batch-v2:sha256:")
+    assert (
+        first.batch.decision_batch_id
+        != same_payload_later.batch.decision_batch_id
+    )
+    assert first.batch_hash != same_payload_later.batch_hash
+    assert first.batch.decision_batch_id != later.batch.decision_batch_id
+    assert first.batch_hash != later.batch_hash
+    assert first.state_hash != later.state_hash
+    assert canonical_sha256(
+        decision(TREND, decision_instant=first_instant)
+    ) != canonical_sha256(decision(TREND, decision_instant=later_instant))
+    by_sleeve = {
+        value.target_snapshot.sleeve_id: value for value in later.state.decisions
+    }
+    assert by_sleeve[TREND.sleeve_id].decision_instant == later_instant
+    assert by_sleeve[CARRY.sleeve_id].decision_instant == first_instant
+
+
+def test_exact_instant_mismatches_and_ambiguous_prior_state_fail_closed() -> None:
+    collector = AtomicDecisionBatchCollector()
+    first_instant = simulation_instant(sequence=1)
+    later_instant = simulation_instant(sequence=2)
+    first = collector.collect(
+        decision_time=UtcInstant(100),
+        decision_instant=first_instant,
+        expected=(TREND,),
+        submissions=(submission(TREND, decision_instant=first_instant),),
+    )
+    later = collector.collect(
+        decision_time=UtcInstant(100),
+        decision_instant=later_instant,
+        expected=(TREND,),
+        submissions=(submission(TREND, decision_instant=later_instant),),
+        prior_state=first.state,
+    )
+    assert first.state is not None and later.state is not None
+
+    replayed = collector.collect(
+        decision_time=UtcInstant(100),
+        decision_instant=later_instant,
+        expected=(CARRY,),
+        submissions=(submission(CARRY, decision_instant=first_instant),),
+        prior_state=first.state,
+    )
+    equal = collector.collect(
+        decision_time=UtcInstant(100),
+        decision_instant=first_instant,
+        expected=(CARRY,),
+        submissions=(submission(CARRY, decision_instant=first_instant),),
+        prior_state=first.state,
+    )
+    earlier = collector.collect(
+        decision_time=UtcInstant(100),
+        decision_instant=first_instant,
+        expected=(CARRY,),
+        submissions=(submission(CARRY, decision_instant=first_instant),),
+        prior_state=later.state,
+    )
+    legacy_same_utc = collector.collect(
+        decision_time=UtcInstant(100),
+        decision_instant=later_instant,
+        expected=(CARRY,),
+        submissions=(submission(CARRY, decision_instant=later_instant),),
+        prior_state=LatestSleeveDecisionState(
+            as_of=UtcInstant(100), decisions=(decision(TREND),)
+        ),
+    )
+    downgrade = collector.collect(
+        decision_time=UtcInstant(101),
+        expected=(TREND,),
+        submissions=(submission(TREND, decision_time=101),),
+        prior_state=first.state,
+    )
+
+    assert issue_codes(replayed) == {
+        DecisionBatchIssueCode.DECISION_INSTANT_MISMATCH
+    }
+    assert replayed.failure is not None
+    assert replayed.failure.decision_instant == later_instant
+    assert issue_codes(equal) == {
+        DecisionBatchIssueCode.PRIOR_STATE_NOT_BEFORE_DECISION
+    }
+    assert issue_codes(earlier) == {
+        DecisionBatchIssueCode.PRIOR_STATE_NOT_BEFORE_DECISION
+    }
+    assert issue_codes(legacy_same_utc) == {
+        DecisionBatchIssueCode.PRIOR_STATE_NOT_BEFORE_DECISION
+    }
+    assert issue_codes(downgrade) == {
+        DecisionBatchIssueCode.PRIOR_STATE_INSTANT_MODE_MISMATCH
+    }
+    assert all(
+        result.batch is None and result.state is None
+        for result in (replayed, equal, earlier, legacy_same_utc, downgrade)
+    )
+
+    with pytest.raises(ValueError, match="decision_instant instant"):
+        collector.collect(
+            decision_time=UtcInstant(101),
+            decision_instant=first_instant,
+            expected=(TREND,),
+            submissions=(),
+        )
+    with pytest.raises(ValueError, match="as_of_instant instant"):
+        LatestSleeveDecisionState(
+            as_of=UtcInstant(101),
+            decisions=(decision(TREND, decision_instant=first_instant),),
+            as_of_instant=first_instant,
+        )
+    with pytest.raises(ValueError, match="same-UTC decisions require decision_instant"):
+        LatestSleeveDecisionState(
+            as_of=UtcInstant(100),
+            decisions=(decision(TREND),),
+            as_of_instant=first_instant,
+        )
 
 
 def test_validation_failure_produces_neither_partial_batch_nor_state() -> None:

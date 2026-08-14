@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import re
 from collections import defaultdict
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from enum import Enum
 from typing import Any
 
@@ -12,6 +12,7 @@ from crypto_quant_domain import (
     Money,
     PortfolioSnapshot,
     Scale,
+    SimulationInstant,
     StrategySleeveId,
     TargetExposureFraction,
     UtcInstant,
@@ -23,7 +24,7 @@ from .decisions import LatestSleeveDecisionState
 
 
 _SHA256_RE = re.compile(r"^sha256:[0-9a-f]{64}$")
-_ALLOCATION_ID_RE = re.compile(r"^portfolio-allocation-v1:sha256:[0-9a-f]{64}$")
+_ALLOCATION_ID_RE = re.compile(r"^portfolio-allocation-v[12]:sha256:[0-9a-f]{64}$")
 
 
 def _canonical_text(name: str, value: str) -> None:
@@ -92,6 +93,7 @@ class StrategyAllocation:
     allocation_nav: Money
     policy_ref: CapitalAllocationPolicyRef
     source_portfolio_snapshot_hash: str
+    valuation_instant: SimulationInstant | None = field(default=None, kw_only=True)
 
     def __post_init__(self) -> None:
         _canonical_text("strategy_id", self.strategy_id)
@@ -99,6 +101,11 @@ class StrategyAllocation:
             raise TypeError("sleeve_id must be StrategySleeveId")
         if not isinstance(self.valuation_time, UtcInstant):
             raise TypeError("valuation_time must be UtcInstant")
+        if self.valuation_instant is not None:
+            if not isinstance(self.valuation_instant, SimulationInstant):
+                raise TypeError("valuation_instant must be SimulationInstant or None")
+            if self.valuation_instant.instant != self.valuation_time:
+                raise ValueError("valuation_instant instant must equal valuation_time")
         if not isinstance(self.valuation_currency, CurrencyId):
             raise TypeError("valuation_currency must be CurrencyId")
         if not isinstance(self.allocation_nav, Money):
@@ -116,7 +123,7 @@ class StrategyAllocation:
         return canonical_sha256(self)
 
     def to_canonical_dict(self) -> dict[str, Any]:
-        return {
+        value = {
             "type": "strategy_allocation",
             "strategy_id": self.strategy_id,
             "sleeve_id": self.sleeve_id,
@@ -126,6 +133,9 @@ class StrategyAllocation:
             "policy_ref": self.policy_ref,
             "source_portfolio_snapshot_hash": self.source_portfolio_snapshot_hash,
         }
+        if self.valuation_instant is not None:
+            value["valuation_instant"] = self.valuation_instant
+        return value
 
 
 @dataclass(frozen=True, slots=True)
@@ -239,6 +249,7 @@ class AllocationConstraintCode(str, Enum):
     UNEXPECTED_ALLOCATION = "unexpected_allocation"
     STRATEGY_ID_MISMATCH = "strategy_id_mismatch"
     VALUATION_TIME_MISMATCH = "valuation_time_mismatch"
+    VALUATION_INSTANT_MISMATCH = "valuation_instant_mismatch"
     VALUATION_CURRENCY_MISMATCH = "valuation_currency_mismatch"
     ALLOCATION_SCALE_MISMATCH = "allocation_scale_mismatch"
     SNAPSHOT_HASH_MISMATCH = "snapshot_hash_mismatch"
@@ -284,10 +295,16 @@ class CapitalAllocationFailure:
     source_sleeve_state_hash: str
     source_portfolio_snapshot_hash: str
     decisions: tuple[AllocationConstraintDecision, ...]
+    valuation_instant: SimulationInstant | None = field(default=None, kw_only=True)
 
     def __post_init__(self) -> None:
         if not isinstance(self.valuation_time, UtcInstant):
             raise TypeError("valuation_time must be UtcInstant")
+        if self.valuation_instant is not None:
+            if not isinstance(self.valuation_instant, SimulationInstant):
+                raise TypeError("valuation_instant must be SimulationInstant or None")
+            if self.valuation_instant.instant != self.valuation_time:
+                raise ValueError("valuation_instant instant must equal valuation_time")
         _require_hash("source_sleeve_state_hash", self.source_sleeve_state_hash)
         _require_hash(
             "source_portfolio_snapshot_hash", self.source_portfolio_snapshot_hash
@@ -309,13 +326,16 @@ class CapitalAllocationFailure:
         return canonical_sha256(self)
 
     def to_canonical_dict(self) -> dict[str, Any]:
-        return {
+        value = {
             "type": "capital_allocation_failure",
             "valuation_time": self.valuation_time,
             "source_sleeve_state_hash": self.source_sleeve_state_hash,
             "source_portfolio_snapshot_hash": self.source_portfolio_snapshot_hash,
             "decisions": self.decisions,
         }
+        if self.valuation_instant is not None:
+            value["valuation_instant"] = self.valuation_instant
+        return value
 
 
 @dataclass(frozen=True, slots=True)
@@ -331,14 +351,20 @@ class PortfolioAllocation:
     total_allocation_nav: Money
     sleeve_targets: tuple[SleeveTargetNotional, ...]
     net_targets: tuple[NetInstrumentTarget, ...]
+    valuation_instant: SimulationInstant | None = field(default=None, kw_only=True)
 
     def __post_init__(self) -> None:
         if not isinstance(self.allocation_id, str) or _ALLOCATION_ID_RE.fullmatch(
             self.allocation_id
         ) is None:
-            raise ValueError("allocation_id must be a portfolio-allocation-v1 identity")
+            raise ValueError("allocation_id must be a portfolio-allocation identity")
         if not isinstance(self.valuation_time, UtcInstant):
             raise TypeError("valuation_time must be UtcInstant")
+        if self.valuation_instant is not None:
+            if not isinstance(self.valuation_instant, SimulationInstant):
+                raise TypeError("valuation_instant must be SimulationInstant or None")
+            if self.valuation_instant.instant != self.valuation_time:
+                raise ValueError("valuation_instant instant must equal valuation_time")
         if not isinstance(self.valuation_currency, CurrencyId):
             raise TypeError("valuation_currency must be CurrencyId")
         if not isinstance(self.target_notional_scale, Scale):
@@ -386,6 +412,7 @@ class PortfolioAllocation:
             raise ValueError("duplicate StrategyAllocation Sleeve")
         if any(
             value.valuation_time != self.valuation_time
+            or value.valuation_instant != self.valuation_instant
             or value.valuation_currency != self.valuation_currency
             or value.policy_ref != self.policy_ref
             or value.source_portfolio_snapshot_hash
@@ -440,9 +467,10 @@ class PortfolioAllocation:
         )
         if ordered_net_targets != expected_net_targets:
             raise ValueError("net_targets do not match Sleeve attribution")
+        schema_version = 2 if self.valuation_instant is not None else 1
         identity_payload = {
             "type": "portfolio_allocation_identity",
-            "schema_version": 1,
+            "schema_version": schema_version,
             "valuation_time": self.valuation_time,
             "valuation_currency": self.valuation_currency,
             "target_notional_scale": self.target_notional_scale.places,
@@ -453,7 +481,12 @@ class PortfolioAllocation:
             "sleeve_targets": ordered_sleeve_targets,
             "net_targets": ordered_net_targets,
         }
-        expected_id = f"portfolio-allocation-v1:{canonical_sha256(identity_payload)}"
+        if self.valuation_instant is not None:
+            identity_payload["valuation_instant"] = self.valuation_instant
+        expected_id = (
+            f"portfolio-allocation-v{schema_version}:"
+            f"{canonical_sha256(identity_payload)}"
+        )
         if self.allocation_id != expected_id:
             raise ValueError("allocation_id does not match allocation identity")
         object.__setattr__(self, "allocations", ordered_allocations)
@@ -465,7 +498,7 @@ class PortfolioAllocation:
         return canonical_sha256(self)
 
     def to_canonical_dict(self) -> dict[str, Any]:
-        return {
+        value = {
             "type": "portfolio_allocation",
             "allocation_id": self.allocation_id,
             "valuation_time": self.valuation_time,
@@ -479,6 +512,9 @@ class PortfolioAllocation:
             "sleeve_targets": self.sleeve_targets,
             "net_targets": self.net_targets,
         }
+        if self.valuation_instant is not None:
+            value["valuation_instant"] = self.valuation_instant
+        return value
 
 
 @dataclass(frozen=True, slots=True)
@@ -542,6 +578,7 @@ class PortfolioAllocator:
             raise TypeError("target_notional_scale must be Scale")
 
         valuation_time = sleeve_state.as_of or portfolio_snapshot.timestamp
+        valuation_instant = sleeve_state.as_of_instant
         state_hash = sleeve_state.state_hash
         snapshot_hash = canonical_sha256(portfolio_snapshot)
         issues: list[AllocationConstraintDecision] = []
@@ -557,6 +594,14 @@ class PortfolioAllocator:
             issues.append(
                 AllocationConstraintDecision(
                     AllocationConstraintCode.VALUATION_TIME_MISMATCH,
+                    "portfolio_snapshot",
+                    snapshot_hash,
+                )
+            )
+        if portfolio_snapshot.timestamp_instant != valuation_instant:
+            issues.append(
+                AllocationConstraintDecision(
+                    AllocationConstraintCode.VALUATION_INSTANT_MISMATCH,
                     "portfolio_snapshot",
                     snapshot_hash,
                 )
@@ -609,6 +654,14 @@ class PortfolioAllocator:
                 issues.append(
                     AllocationConstraintDecision(
                         AllocationConstraintCode.VALUATION_TIME_MISMATCH,
+                        sleeve_id.value,
+                        strategy_allocation.allocation_hash,
+                    )
+                )
+            if strategy_allocation.valuation_instant != valuation_instant:
+                issues.append(
+                    AllocationConstraintDecision(
+                        AllocationConstraintCode.VALUATION_INSTANT_MISMATCH,
                         sleeve_id.value,
                         strategy_allocation.allocation_hash,
                     )
@@ -742,6 +795,7 @@ class PortfolioAllocator:
                     source_sleeve_state_hash=state_hash,
                     source_portfolio_snapshot_hash=snapshot_hash,
                     decisions=tuple(issues),
+                    valuation_instant=valuation_instant,
                 )
             )
 
@@ -783,9 +837,10 @@ class PortfolioAllocator:
             )
             for instrument_id, values in sorted(by_instrument.items())
         )
+        schema_version = 2 if valuation_instant is not None else 1
         identity_payload = {
             "type": "portfolio_allocation_identity",
-            "schema_version": 1,
+            "schema_version": schema_version,
             "valuation_time": valuation_time,
             "valuation_currency": portfolio_snapshot.reporting_currency,
             "target_notional_scale": target_notional_scale.places,
@@ -796,8 +851,13 @@ class PortfolioAllocator:
             "sleeve_targets": ordered_sleeve_targets,
             "net_targets": net_targets,
         }
+        if valuation_instant is not None:
+            identity_payload["valuation_instant"] = valuation_instant
         portfolio_allocation = PortfolioAllocation(
-            allocation_id=f"portfolio-allocation-v1:{canonical_sha256(identity_payload)}",
+            allocation_id=(
+                f"portfolio-allocation-v{schema_version}:"
+                f"{canonical_sha256(identity_payload)}"
+            ),
             valuation_time=valuation_time,
             valuation_currency=portfolio_snapshot.reporting_currency,
             target_notional_scale=target_notional_scale,
@@ -808,5 +868,6 @@ class PortfolioAllocator:
             total_allocation_nav=total_nav,
             sleeve_targets=ordered_sleeve_targets,
             net_targets=net_targets,
+            valuation_instant=valuation_instant,
         )
         return PortfolioAllocationOutcome.succeeded(portfolio_allocation)

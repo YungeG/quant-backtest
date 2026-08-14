@@ -67,6 +67,8 @@ def test_empty_exact_duplicates_and_input_order_are_deterministic() -> None:
         supplied_artifacts=(supplied[1], supplied[0], supplied[0], supplied[1]),
     )
     assert forward.timeline_hash == repeated.timeline_hash
+    assert forward == repeated
+    assert hash(forward) == hash(repeated)
     assert select_model(forward) == select_model(repeated) == supplied[1]
 
 
