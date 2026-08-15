@@ -96,7 +96,7 @@ def test_builder_root_enforces_exact_g12d_surface() -> None:
     import crypto_quant_bundle_builder as builder
 
     assert G12D_EXPORTS <= set(builder.__all__)
-    assert len(set(builder.__all__)) == 29
+    assert len(set(builder.__all__)) == 38
     assert builder.LocalMarketBundleRepository is LocalMarketBundleRepository
     assert builder.LocalMarketBundleRepositoryConfig is LocalMarketBundleRepositoryConfig
     assert builder.LocalMarketBundleRetentionProof is LocalMarketBundleRetentionProof

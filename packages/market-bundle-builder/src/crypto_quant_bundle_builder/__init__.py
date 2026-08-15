@@ -1,5 +1,32 @@
 from __future__ import annotations
 
+from .bar_aggregation import (
+    BarAggregationFailure,
+    BarAggregationFailureCode,
+    BarAggregationManifest,
+    BarAggregationOutcome,
+    BarAggregationResult,
+    BarBucket,
+    BarBucketPlan,
+    BarDefinition,
+    aggregate_bars_v1,
+)
+from .bundle_validation import (
+    BundleValidationFailure,
+    BundleValidationFailureCode,
+    BundleValidationOutcome,
+    validate_market_bundle_v1,
+)
+from .local_market_bundle_repository import (
+    LocalMarketBundleRepository,
+    LocalMarketBundleRepositoryConfig,
+    LocalMarketBundleRetentionProof,
+    MarketBundlePublicationFailure,
+    MarketBundlePublicationFailureCode,
+    MarketBundlePublicationOutcome,
+    MarketBundlePublicationResult,
+    MarketBundleRepositoryPath,
+)
 from .source_snapshots import (
     RawSourceMember,
     SourceSnapshot,
@@ -21,26 +48,29 @@ from .synthetic_jsonl import (
     SyntheticJsonlV1SourceTrace,
     normalize_synthetic_jsonl_v1,
 )
-from .bundle_validation import (
-    BundleValidationFailure,
-    BundleValidationFailureCode,
-    BundleValidationOutcome,
-    validate_market_bundle_v1,
-)
-from .local_market_bundle_repository import (
-    LocalMarketBundleRepository,
-    LocalMarketBundleRepositoryConfig,
-    LocalMarketBundleRetentionProof,
-    MarketBundlePublicationFailure,
-    MarketBundlePublicationFailureCode,
-    MarketBundlePublicationOutcome,
-    MarketBundlePublicationResult,
-    MarketBundleRepositoryPath,
-)
 
 __version__ = "0.1.0"
 
 __all__ = [
+    "BarAggregationFailure",
+    "BarAggregationFailureCode",
+    "BarAggregationManifest",
+    "BarAggregationOutcome",
+    "BarAggregationResult",
+    "BarBucket",
+    "BarBucketPlan",
+    "BarDefinition",
+    "BundleValidationFailure",
+    "BundleValidationFailureCode",
+    "BundleValidationOutcome",
+    "LocalMarketBundleRepository",
+    "LocalMarketBundleRepositoryConfig",
+    "LocalMarketBundleRetentionProof",
+    "MarketBundlePublicationFailure",
+    "MarketBundlePublicationFailureCode",
+    "MarketBundlePublicationOutcome",
+    "MarketBundlePublicationResult",
+    "MarketBundleRepositoryPath",
     "RawSourceMember",
     "SourceSnapshot",
     "SourceSnapshotFailure",
@@ -55,19 +85,9 @@ __all__ = [
     "SyntheticJsonlV1NormalizationResult",
     "SyntheticJsonlV1RecordLocator",
     "SyntheticJsonlV1SourceTrace",
-    "BundleValidationFailure",
-    "BundleValidationFailureCode",
-    "BundleValidationOutcome",
-    "LocalMarketBundleRepository",
-    "LocalMarketBundleRepositoryConfig",
-    "MarketBundlePublicationFailureCode",
-    "MarketBundlePublicationFailure",
-    "MarketBundlePublicationOutcome",
-    "MarketBundlePublicationResult",
-    "MarketBundleRepositoryPath",
-    "LocalMarketBundleRetentionProof",
+    "aggregate_bars_v1",
     "freeze_source_snapshot",
+    "normalize_synthetic_jsonl_v1",
     "validate_market_bundle_v1",
     "verify_source_snapshot",
-    "normalize_synthetic_jsonl_v1",
 ]

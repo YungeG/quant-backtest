@@ -143,6 +143,32 @@ targets = [
 ]
 
 [[forbidden_import_rules]]
+id = "g12g-bar-aggregation-offline-core"
+source_packages = ["market-bundle-builder"]
+include = ["crypto_quant_bundle_builder/bar_aggregation.py"]
+exclude = []
+targets = [
+  "aiohttp",
+  "boto3",
+  "ccxt",
+  "ftplib",
+  "gzip",
+  "http.client",
+  "httpx",
+  "pandas",
+  "pathlib",
+  "polars",
+  "requests",
+  "smtplib",
+  "socket",
+  "sqlalchemy",
+  "subprocess",
+  "tarfile",
+  "urllib.request",
+  "websockets",
+]
+
+[[forbidden_import_rules]]
 id = "g12d-local-market-bundle-repository"
 source_packages = ["market-bundle-builder"]
 include = ["crypto_quant_bundle_builder/local_market_bundle_repository.py"]
