@@ -1342,24 +1342,26 @@ Detailed plan: [G08G](plans/g08/g08g.md); research: [G08G lifecycle readiness](.
 - adjustment/payment 幂等并可 Journal replay；
 - 缺少 Effective/Payment/Listing 或 availability evidence 时 fail closed；
 - raw tradable prices 不被 ex-reference metadata 改写。
-- Corporate Action tax disposition 至少区分 NOT_APPLICABLE/APPLIED/DEFERRED_UNSUPPORTED；G08G owns disposition，G08H/Runtime 对 deferred unsupported 后续 taxable transfer fail closed。
+- Corporate Action tax disposition 至少区分 NOT_APPLICABLE/APPLIED/DEFERRED_UNSUPPORTED；G08G v1 success exact 仅接受 NOT_APPLICABLE，其他 disposition 在任何 Journal/Lot effect 前 fail closed。G08H 必须保持该 exclusion；未来若支持 deferred tax，需另行冻结 taxable-transfer authority。
 
 ### Gate G08H A-share Profile Composition and Parity
 
-依赖：G08A–G08G。
+依赖：G08A–G08G、G09H、WP-00C；当前状态 `DRAFT / BLOCKED`。
 
-拥有：`equity.cn_a_share.v1` component composition、完整黄金 Fixture、announcement/register complete closed revision-set validation、跨 Query identity-history validation、不可由 G08F Query 表达的 security/account/distribution scope qualification，以及 `cycle-rotation-platform` ParityReport。
+拥有：pure `backtest-runtime` 的 `equity.cn_a_share.v1` development composition、`tests/support` development dispatcher/Journey、complete closed announcement/register revision-set validation、跨 Query identity-history validation、不可由 G08F Query 表达的 instrument/account/distribution scope declaration，以及分层 `cycle-rotation-platform` scope/parity report。Real provider/archive completeness 与 market/profile qualification 继续属于 G12L/G12M。
+
+READY 前必须先冻结：exact public seam/canonical schema、instrument/account scope evidence、announcement/register closure evidence、12-slot component manifest/capabilities、failure precedence、scheduled Payment/Listing dispatcher contract、fixture IDs/artifacts/RED commands，以及 legacy layer/verdict policy。
 
 验收：
 
-- Profile composition exact 证明没有遗漏 later announcement cancellation/revision 或 register correction，并对跨 Query stable ID conflicting reuse fail closed；
-- Profile composition 在调用 G08F 前阻断 ordinary-vs-preferred、cash-auction mechanism、B/H、Stock Connect、margin/short、lending/repo、pledge/freeze、restricted/pre-IPO、differential distribution 和 issuer self-distribution 等 Query 不可观察上下文；
+- Profile composition 验证 caller-supplied announcement/register closure declaration 的 set/chain、source snapshot、coverage、availability 与 terminal state 内部一致，并对跨 Query stable ID conflicting reuse fail closed；它不声称证明外部 provider/archive 没有遗漏 later revision/correction；
+- Profile composition 在调用 G08F 前验证 caller-supplied ordinary domestic CNY cash-auction、cash-account/long-only 与 exclusion evidence，不从 symbol、Venue、current state 或 provider 推断；
+- G08G success 继续只接受 `NOT_APPLICABLE`；`APPLIED`/`DEFERRED_UNSUPPORTED` 在任何 Journal/Lot effect 前 fail closed，不新增 deferred-tax Lot state machine；
 - Timeline、Runner、Generic Ledger 和 Bar Engine 不新增 A 股条件分支；
 - ProfileResolver 对全部 component/capability 兼容性验证通过；
-- 完整 Fixture 覆盖 T+1、100 股手、价格限制、费用、税和公司行为；
-- 与固定 `cycle-rotation-platform` source 使用分层 ParityContract；
-- ParityReport 定位 first divergence；
-- 任何未支持且影响结果的公司行为产生结构化阻断。
+- 完整 Fixture 覆盖 T+1、100 股手、价格限制、费用、税和公司行为；XSHG bonus/capitalization 仍显式 unsupported；
+- 与固定 `cycle-rotation-platform` source 使用分层 contract；legacy 不具备 Calendar、真实 T+1、historical fee/tax、price-limit 或 Corporate Action oracle 的层必须标记 `NOT_COMPARABLE_LEGACY_SCOPE`，不得声称 exact parity；
+- Report 定位 first divergence；任何未支持且影响结果的公司行为产生结构化阻断。
 
 ---
 

@@ -120,7 +120,7 @@ artifact_hashes: []
 | G08E | PASSED | trading-kernel profiles/cn_a_share | WP-05H, WP-05J | none |
 | G08F | PASSED | trading-kernel profiles/cn_a_share | G08A, WP-06A, WP-06B | none |
 | G08G | PASSED | trading-kernel profiles/cn_a_share | G08F, G03 | none |
-| G08H | DRAFT | trading-kernel profiles/cn_a_share + parity | G08A–G08G | Composition/parity commands |
+| G08H | DRAFT | backtest-runtime composition + tests/support + parity tooling | G08A–G08G, G09H, WP-00C | Scope/revision declarations, composition, dispatcher, parity contract |
 | G09A | PASSED | trading-kernel derivatives | G03 | none |
 | G09B | PASSED | trading-kernel derivative accounting | G09A, G03 | none |
 | G09C | PASSED | trading-kernel funding eligibility | G09A, G09B, WP-06A, WP-06B | none |
@@ -6534,6 +6534,63 @@ uv run python tools/architecture/check_import_boundaries.py \
   --policy architecture/import-boundaries.toml \
   --report build/acceptance/g08g-f3-import-boundary-report.json
 ```
+
+## 68A. G08H A-share Profile Composition and Parity Acceptance Card
+
+```yaml
+id: G08H
+status: DRAFT
+depends_on:
+  - G08A
+  - G08B
+  - G08C
+  - G08D
+  - G08E
+  - G08F
+  - G08G
+  - G09H
+  - WP-00C
+owner_package: backtest-runtime composition + tests/support + parity tooling
+public_interface:
+  - TBD before READY
+test_commands:
+  contract: TBD before READY
+  fixture: TBD before READY
+  boundary: TBD before READY
+fixture_ids:
+  - TBD before READY
+expected_artifacts:
+  - TBD before READY
+failure_contracts:
+  - TBD before READY
+allowed_grade: development
+evidence:
+  - TBD before READY
+passed_commit: null
+artifact_hashes: {}
+```
+
+### G08H Acceptance / Blocker
+
+**Status:** `DRAFT / BLOCKED`. G08A–G08G are `PASSED`, but readiness still lacks an exact public interface, typed inputs/declarations, failure precedence, fixture IDs, test commands, expected artifacts and parity layer/verdict contract.
+
+Blockers / prerequisites for READY:
+
+1. Freeze one production `backtest-runtime` composition module and exact canonical request/result/failure/outcome/composer seam; reuse the existing Registry/Resolver, G09H profile-neutral financial-dispatch seam and all G08A–G08G authorities;
+2. Freeze immutable development instrument/account-scope declarations and internally closed announcement/register revision-set declarations with exact source-snapshot, coverage and availability identity. G08H may validate the supplied set/chain but cannot prove external provider/archive completeness;
+3. Freeze a distinct cross-query identity-history input and exact conflict checks for corporate-action, snapshot, register-series and revision stable IDs;
+4. Freeze the exact 12-slot component manifest, capabilities, generic no-op component reuse, profile limitations, development grade and false decision/profile/deployment qualification flags;
+5. Freeze test-support-only A-share dispatcher/Journey wiring for G08G Payment/Listing scheduled events without adding `CnAShare*` imports or branches to generic Runtime modules;
+6. Freeze a layered WP-00C/G10H-style parity plan. The immutable `cycle-rotation-platform` source has no authoritative Calendar, true T+1, historical fee/tax, price-limit or Corporate Action oracle, so unsupported layers must be explicit `NOT_COMPARABLE_LEGACY_SCOPE`, not claimed parity;
+7. Freeze exact failure precedence, fixture IDs, expected artifacts and RED contract/golden/Journey/parity/architecture commands.
+
+Tax boundary correction: G08G success already accepts only `NOT_APPLICABLE`; `APPLIED` and `DEFERRED_UNSUPPORTED` fail before any Journal/Lot effect. G08H v1 must preserve that exclusion and must not invent a deferred-tax Lot/transfer state machine.
+
+XSHG bonus/capitalization remains an explicit unsupported limitation. Real provider/archive completeness and market/profile qualification remain G12L/G12M responsibilities.
+
+Do not begin implementation or transition to `READY` until the seven blockers above are exact-frozen and independently reviewed.
+
+Research and plan: `docs/research/g08h-profile-composition-parity.md`, `docs/implementation/plans/g08/g08h.md`.
 
 ## 69. G09A Linear Derivative Position Model Acceptance Card
 
