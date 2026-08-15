@@ -1330,7 +1330,7 @@ Broker commission 不属于 MarketSemantics。Golden 使用 caller-supplied synt
 
 Detailed plan: [G08G](plans/g08/g08g.md); research: [G08G lifecycle readiness](../research/g08g-corporate-action-lifecycle.md).
 
-依赖：G08F、G03 Accounting；当前状态 `DRAFT / BLOCKED`，但 F1 Journal/Ledger Lot replay foundation 可立即执行。
+依赖：G08F、G03 Accounting；当前状态 `DRAFT / BLOCKED`。F1 Journal/Ledger Lot replay foundation 已在 `3ff43d9ad17c0380d87b8b7c8f367b57a8123ecd` 通过；下一可执行里程碑为 F2 Fill/Runtime Lot authority migration。
 
 拥有：Ex/Effective position adjustment、Payment cash、withholding/tax Journal translation。
 
