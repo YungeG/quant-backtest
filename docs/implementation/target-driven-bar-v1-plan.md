@@ -1330,7 +1330,7 @@ Broker commission 不属于 MarketSemantics。Golden 使用 caller-supplied synt
 
 Detailed plan: [G08G](plans/g08/g08g.md); research: [G08G lifecycle readiness](../research/g08g-corporate-action-lifecycle.md).
 
-依赖：G08F、G03 Accounting；当前状态 `READY / F3 CONTRACT FREEZE`。F1 Journal/Ledger Lot replay foundation 已在 `3ff43d9ad17c0380d87b8b7c8f367b57a8123ecd` 通过；F2a exact/replayable Cash accounting 已在 `b673cc7a500145302357480c05afc0a9439a0715` 通过；F2b policy-v2 Runtime Ledger authority 已在 `f3e33fb232a732cd1212811d6ef4074f2477fe1a` 通过，且 policy-v1 artifacts 保持 exact。F3 Corporate Action translation acceptance contract 已冻结，目前处于可执行的 READY 状态。
+依赖：G08F、G03 Accounting；当前状态 `PASSED`。F1 Journal/Ledger Lot replay foundation 已在 `3ff43d9ad17c0380d87b8b7c8f367b57a8123ecd` 通过；F2a exact/replayable Cash accounting 已在 `b673cc7a500145302357480c05afc0a9439a0715` 通过；F2b policy-v2 Runtime Ledger authority 已在 `f3e33fb232a732cd1212811d6ef4074f2477fe1a` 通过；F3 Corporate Action translation RED fixtures 已冻结在 `bc1e902bf04109eaa8a329fd8d44a3c758fa8317`，实现已冻结在 `547e16f2d7a9331f9207abfca7ea7c0593fc84fc`。Policy-v1 artifacts 保持 exact；最终验证为 92 focused、1519 full tests，mypy/import boundaries 95 files clean。
 
 拥有：Ex/Effective position adjustment、Payment cash、withholding/tax Journal translation。
 

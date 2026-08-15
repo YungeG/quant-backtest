@@ -119,7 +119,7 @@ artifact_hashes: []
 | G08D | PASSED | trading-kernel profiles/cn_a_share | G08A, G08C, WP-05G | none |
 | G08E | PASSED | trading-kernel profiles/cn_a_share | WP-05H, WP-05J | none |
 | G08F | PASSED | trading-kernel profiles/cn_a_share | G08A, WP-06A, WP-06B | none |
-| G08G | READY | trading-kernel profiles/cn_a_share | G08F, G03 | none |
+| G08G | PASSED | trading-kernel profiles/cn_a_share | G08F, G03 | none |
 | G08H | DRAFT | trading-kernel profiles/cn_a_share + parity | G08A–G08G | Composition/parity commands |
 | G09A | PASSED | trading-kernel derivatives | G03 | none |
 | G09B | PASSED | trading-kernel derivative accounting | G09A, G03 | none |
@@ -6378,7 +6378,7 @@ Python                                                              3.13.5
 
 ```yaml
 id: G08G
-status: READY
+status: PASSED
 depends_on:
   - G08F
   - G03
@@ -6449,8 +6449,13 @@ evidence:
   - deployment-authorized-false-evidence
   - import-boundary-report
   - static-type-report
-passed_commit: null
-artifact_hashes: []
+passed_commit: 547e16f2d7a9331f9207abfca7ea7c0593fc84fc
+artifact_hashes:
+  tests/fixtures/kernel/profiles/cn_a_share/corporate-action-accounting-v1.json: sha256:dfed0880cae559b5c4c0f54c3cd461e0e6008af7eda09a1c57254a2db73747c3
+  tests/fixtures/kernel/integration/corporate-action-journal-replay-v1.json: sha256:63de3b4dc8f5a674d1d759ac09d868ca505e2dfbdc9707a9a348a939c342faeb
+  build/acceptance/g08g-f3-pytest.xml: sha256:1a05c2dd911d41616cc61af59d74ba5799a6cfa20996299c77667a5dac15ff9a
+  build/acceptance/g08g-f3-mypy.txt: sha256:787fb5f4281ca29d54908fb6f304c60aaf529c36739cf0420d75b382addef0b7
+  build/acceptance/g08g-f3-import-boundary-report.json: sha256:7dc4808c8fedcdee236cf64089ecfaa60ad2e3e5ed01acf133b07156ae593a3f
 ```
 
 ### G08G Acceptance
@@ -6476,7 +6481,30 @@ artifact_hashes: []
 19. All artifacts remain synthetic development evidence and exact-record `grade=development`, `decision_grade_eligible=false`, `profile_qualified=false`, and `deployment_authorized=false`. G08G does not qualify a provider, real security/account/distribution scope, revision completeness, real market/profile, trading decision, or deployment;
 20. G08H retains provider/payment/revision-set scope, cross-query stable-ID conflict validation, real-market composition qualification, MarketBundle mapping, Runtime wiring, and parity. G08G does not mutate raw OHLC/Fill/accounting prices, infer ex-reference prices, recompute G08F entitlement, add a Corporate Action Settlement fork, or claim profile completeness.
 
-Exact RED commands:
+### G08G Implementation Acceptance
+
+1. F1/F2/F3 share one `PositionLotChange`/`GenericLedger` authority; policy-v2 Fill/Fee and Corporate Action share delivery all replay through the same Journal/Ledger path, while policy-v1 fixtures remain exact;
+2. The concrete profile-only module implements the frozen twelve-name seam, exact evidence/request/failure/outcome schemas, strict XOR reconstruction, all sixteen first-failure guards, and no provider/Runtime/generic-framework side path;
+3. XSHE CNY 70 payment and current-500/Record-700 share delivery conserve CNY 7,500.00 total basis and derive only rounded display unit cost; XSHG CNY 200 payment succeeds while unsupported share scope fails closed;
+4. Full/prefix/resume replay, duplicate idempotency, Journal conflicts, stale Lot before-state, source identity collision, exact subject IDs, canonical hashes, raw-price non-mutation, and false qualification flags are frozen by static tests;
+5. Final verification passed `92` focused acceptance tests and `1519` full repository tests; mypy 2.3.0 and import boundaries are clean across 95 source files; LSP/pi-lens, `uv lock --check`, `git diff --check`, and three independent final reviews are dry.
+
+G08G implementation is frozen at immutable commit `547e16f2d7a9331f9207abfca7ea7c0593fc84fc` and status is `PASSED`. G08H remains responsible for provider/revision closure, real-market composition, Runtime wiring, parity, and qualification.
+
+Validation record:
+
+```text
+G08G focused acceptance                                         92 passed
+Full repository                                               1519 passed
+mypy 2.3.0                                             95 source files clean
+Import boundaries                                         95 files passed
+Primary LSP + pi-lens                                             clean
+Independent final reviews                                           NONE
+uv lock --check                                                     PASS
+git diff --check                                                    PASS
+```
+
+Exact acceptance commands:
 
 ```bash
 uv run pytest -q \

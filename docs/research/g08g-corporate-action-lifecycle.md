@@ -2,7 +2,7 @@
 
 ## Decision status
 
-G08G is **READY** for F3 implementation. F1 Journal/Ledger Lot replay and F2 Fill/Runtime authority migration passed; the concrete F3 interface, dependencies, owner, public API, test commands, fixture IDs, artifacts, failure contract, allowed grade, and evidence are frozen.
+G08G is **PASSED**. F1 Journal/Ledger Lot replay, F2 Fill/Runtime authority migration, and F3 Corporate Action cash/share translation passed. The readiness contract is frozen at `8cf6a65e8fe1bb36c96cd6302534f101b26b3899`, RED fixtures at `bc1e902bf04109eaa8a329fd8d44a3c758fa8317`, and implementation at `547e16f2d7a9331f9207abfca7ea7c0593fc84fc`.
 
 This contract does not qualify a real market or authorize deployment. G08H retains provider/payment/revision scope, complete real-market composition qualification, MarketBundle mapping, Runtime wiring, and parity.
 
