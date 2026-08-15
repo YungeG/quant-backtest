@@ -158,7 +158,7 @@ artifact_hashes: []
 | G12I | DRAFT | market-bundle-builder validation | G12C, G12G | Real profile-purpose, provider/calendar availability, and terminal-set closure evidence |
 | G12J | DRAFT | trading-domain schema migration | real old artifact | No real source/target schema yet |
 | G12K | DRAFT | market-bundle-builder validation | G12C | Universe/corporate action coverage |
-| G12L-* | DRAFT | market-bundle-builder source adapter | G12A–G12K as applicable | Provider selection/spec |
+| G12L-* | DRAFT | market-bundle-builder source adapter | G12A–G12K as applicable | Concrete provider/dataset/version, real raw fixtures, mapping and closure evidence |
 | G12M-* | DRAFT | backtest-runtime qualification | market-specific G12L, G07–G10 | Per-market qualification matrix |
 
 ## 4. WP-00A Acceptance Card
@@ -11115,7 +11115,81 @@ artifact_hashes: []
 
 This slice freezes passive declaration values only. The static fixture is deterministic contract evidence, not provider/calendar truth or terminal-set completeness. `PriceStreamCoverageReport`, `MarketAvailabilityReport`, and `RevisionProvenanceReport` remain unimplemented. G12I remains `DRAFT / BLOCKED`, development-only, and cannot qualify a market or authorize deployment.
 
-## 104. PASSED 记录格式
+
+## 104. G12L-* Provider Qualification Contract (Gate remains DRAFT)
+
+```yaml
+id: G12L-*
+status: DRAFT
+depends_on:
+  - G12A
+  - applicable G12B-G12K contracts
+owner_package: market-bundle-builder adapters
+public_interface:
+  - docs-only provider-neutral qualification obligations
+test_commands:
+  contract: TBD by concrete provider slice before READY
+  fixture: TBD by concrete provider slice before READY
+  boundary: TBD by concrete provider slice before READY
+fixture_ids: []
+expected_artifacts:
+  - docs/research/g12l-provider-adapter-contract.md
+  - docs/implementation/plans/g12/g12l.md
+failure_contracts:
+  - CONFIGURATION_INVALID
+  - PROVIDER_UNAVAILABLE
+  - AUTHENTICATION_REJECTED
+  - RATE_LIMIT_EXHAUSTED
+  - SOURCE_SCHEMA_MISMATCH
+  - NORMALIZATION_FAILED
+  - DATA_GAP_DETECTED
+allowed_grade: development
+evidence:
+  - finite-explicit-scope-obligation
+  - source-authority-and-version-obligation
+  - deterministic-raw-member-and-g12a-handoff-obligation
+  - idempotent-retry-resume-and-atomic-failure-obligation
+  - secret-redaction-and-offline-test-obligation
+  - false-qualification-flags-and-immutable-hash-obligation
+remaining_blockers:
+  - provider-market-dataset-and-version-selection
+  - provider-request-authentication-and-transport-contract
+  - provider-schema-to-g12b-mapping
+  - pagination-cursor-and-terminal-closure
+  - revision-correction-and-archive-closure
+  - availability-calendar-outage-and-gap-authority
+  - sanitized-real-raw-fixtures-and-exact-artifact-hashes
+  - concrete-offline-test-commands-and-provider-error-mapping
+passed_commit: null
+artifact_hashes: {}
+```
+
+### G12L Acceptance
+
+1. The common G12L contract is docs-only. It adds no provider code, HTTP client,
+   SDK, transport Protocol, generic adapter interface, registry, factory,
+   resolver, plug-in system, retry framework, cache, credential store,
+   filesystem abstraction, executable providerless schema, or network test.
+2. Every concrete slice must freeze finite explicit scope, source authority and
+   version, deterministic raw-byte/member identity, exact atomic G12A handoff,
+   idempotent retry/resume evidence, secret redaction, offline unit tests, false
+   qualification flags, and immutable artifact hashes.
+3. Each concrete slice—not the common layer—owns provider request shape,
+   dataset/schema mapping, pagination/cursor closure, revision/correction
+   closure, availability/calendar claims, and sanitized real raw fixtures.
+4. Latest/current/now fallback, open-ended polling, partial snapshots, current
+   endpoint gap filling, inferred completeness, and secret-bearing evidence are
+   forbidden.
+5. Failure precedence is exact in the YAML order above. Multi-fault cases select
+   the earliest applicable code; ties use the provider slice's frozen
+   request/member order; every failure exposes no partial downstream authority.
+6. The exact per-provider READY checklist is frozen in
+   `docs/implementation/plans/g12/g12l.md`; research authority is
+   `docs/research/g12l-provider-adapter-contract.md`.
+7. G12H, G12I, G12K, every concrete G12L-*, and G12M remain `DRAFT / BLOCKED`.
+   This contract grants no decision-grade, live, or deployment authority.
+
+## 105. PASSED 记录格式
 
 ```yaml
 id: WP-00A

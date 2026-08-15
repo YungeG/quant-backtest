@@ -31,11 +31,13 @@ real old artifact          → G12J
 | [G12I](g12i.md) | Price/availability/revision coverage — readiness `BLOCKED`, Gate `DRAFT` | G12C, G12G + closure declarations | builder validation |
 | G12J | Schema migration | real old artifact | trading-domain migration |
 | [G12K](g12k.md) | Universe/corporate-action coverage — readiness `BLOCKED`, Gate `DRAFT` | G12C + normalized schemas/closure declarations | builder validation |
-| G12L-* | Provider source adapter | applicable G12A–K | builder adapters |
+| [G12L-*](g12l.md) | Provider source qualification — common contract frozen; every concrete slice `DRAFT` | applicable G12A–K + real provider evidence | docs-only until provider selection |
 | G12M-* | Market qualification | market-specific G12L, G07–G10 | runtime qualification |
 
 ## Parallelism
 
 After G12C, G12D, G12G, G12H, and G12K may proceed as disjoint research/readiness lanes. Implementation remains single-writer where public schemas, the Acceptance Matrix, architecture policy, or shared fixtures overlap.
+
+G12L currently freezes only provider-neutral acceptance obligations. Provider request/schema values, closure claims, availability/calendar authority, and raw fixtures belong to a future concrete `G12L-*` slice; no market/provider is selected and no adapter implementation is authorized.
 
 Status remains authoritative only in `docs/implementation/acceptance-matrix.md`.
