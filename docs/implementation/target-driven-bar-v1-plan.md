@@ -1346,11 +1346,11 @@ Detailed plan: [G08G](plans/g08/g08g.md); research: [G08G lifecycle readiness](.
 
 ### Gate G08H A-share Profile Composition and Parity
 
-依赖：G08A–G08G、G09H、WP-00C；当前状态 `READY / RED FREEZE`。
+依赖：G08A–G08G、G09H、WP-00C；当前状态 `PASSED`，immutable implementation commit 为 `e954be6bc1d46a3d3f399a3c3cf874a917894570`。
 
 拥有：pure `backtest-runtime` 的 `equity.cn_a_share.v1` development composition、`tests/support` development dispatcher/Journey、complete closed announcement/register revision-set validation、跨 Query identity-history validation、不可由 G08F Query 表达的 instrument/account/distribution scope declaration，以及分层 `cycle-rotation-platform` scope/parity report。Real provider/archive completeness 与 market/profile qualification 继续属于 G12L/G12M。
 
-Readiness contract 已冻结：单一 `crypto_quant_backtest.cn_a_share_profile` production seam、五个 immutable scope/revision/history declarations、15 项 first-failure precedence、exact 12-slot/6-slot manifests、profile-specific A-share dispatcher spec、test-support Payment/Listing Journey、七个 static fixture IDs 与 source-grounded layered legacy scope report。实现不得修改冻结 RED tests/fixtures。
+冻结 contract 已实现：单一 `crypto_quant_backtest.cn_a_share_profile` production seam、五个 immutable scope/revision/history declarations、15 项 first-failure precedence、exact 12-slot/6-slot manifests、profile-specific A-share dispatcher spec、test-support Payment/Listing Journey、七个 static fixture IDs 与 source-grounded layered legacy scope report。`304` 项 focused acceptance、`1568` 项 full repository、mypy、96-file import boundaries、LSP/pi-lens、lock/diff checks 与最终独立 reviews 均通过；冻结 fixture bytes 未修改。
 
 验收：
 

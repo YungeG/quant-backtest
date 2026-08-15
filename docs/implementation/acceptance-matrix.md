@@ -120,7 +120,7 @@ artifact_hashes: []
 | G08E | PASSED | trading-kernel profiles/cn_a_share | WP-05H, WP-05J | none |
 | G08F | PASSED | trading-kernel profiles/cn_a_share | G08A, WP-06A, WP-06B | none |
 | G08G | PASSED | trading-kernel profiles/cn_a_share | G08F, G03 | none |
-| G08H | READY | backtest-runtime composition + tests/support + parity tooling | G08A–G08G, G09H, WP-00C | none |
+| G08H | PASSED | backtest-runtime composition + tests/support + parity tooling | G08A–G08G, G09H, WP-00C | none |
 | G09A | PASSED | trading-kernel derivatives | G03 | none |
 | G09B | PASSED | trading-kernel derivative accounting | G09A, G03 | none |
 | G09C | PASSED | trading-kernel funding eligibility | G09A, G09B, WP-06A, WP-06B | none |
@@ -6539,7 +6539,7 @@ uv run python tools/architecture/check_import_boundaries.py \
 
 ```yaml
 id: G08H
-status: READY
+status: PASSED
 depends_on:
   - G08A
   - G08B
@@ -6576,7 +6576,7 @@ public_interface:
   - tools.parity.cn_a_share.blocked_report
   - tools/parity/run_cn_a_share_parity.py
 test_commands:
-  contract: uv run pytest -q tests/runtime/profiles/cn_a_share/test_profile_composition.py tests/support/cn_a_share/test_cn_a_share_profile.py
+  contract: uv run pytest -q tests/runtime/profiles/cn_a_share/test_profile_composition.py tests/runtime/profiles/cn_a_share/test_profile_composition_adversarial.py tests/support/cn_a_share/test_cn_a_share_profile.py
   fixture: uv run pytest -q tests/runtime/profiles/cn_a_share/test_profile_composition_golden.py tests/runtime/engine/test_g08h_cn_a_share_golden.py
   journey: uv run pytest -q tests/runtime/engine/test_g08h_cn_a_share_journey.py
   parity: uv run pytest -q tests/parity/test_cn_a_share_parity.py tests/parity/test_cn_a_share_parity_golden.py
@@ -6639,8 +6639,19 @@ evidence:
   - import-boundary-report
   - static-type-report
   - pytest-report
-passed_commit: null
-artifact_hashes: {}
+passed_commit: e954be6bc1d46a3d3f399a3c3cf874a917894570
+artifact_hashes:
+  tests/fixtures/runtime/profiles/cn-a-share-resolved-profile-composition-v1.json: sha256:aa032668a5207b61b6c8815894e0087f1c1e734d41e9707c7d32111b6c1cd79f
+  tests/fixtures/runtime/engine/cn-a-share-resolved-profile-development-journey-v1.json: sha256:08358c1c0d2144fb23c1b1c8862fa6c879bd285533e5fa415e5cc0273013e905
+  tests/parity/contracts/cn-a-share-g08h-legacy-to-g08h-v1.json: sha256:6d310d9ce7bcf3e5eb1b88704c7030d63a42aa5d2faa67c18324ebd4ca8b423b
+  tests/parity/fixtures/cn-a-share-g08h-v1/plan.json: sha256:7600c6416d18e35fe5f9cb3174a6fe9768d752fd740440fba2430f4ef293d1b8
+  tests/parity/fixtures/cn-a-share-g08h-v1/legacy.expected.json: sha256:e6b267b42f5983187a0807c3514beae80e0676ea2987dd4dea2c6c816f680b2a
+  tests/parity/fixtures/cn-a-share-g08h-v1/g08h.actual.json: sha256:6a565b912671b88fe0c9ab70b24705aa5259fdb99fd644d19bac7ac3178a7174
+  tests/parity/fixtures/cn-a-share-g08h-v1/report.expected.json: sha256:d12734232e96a78f8397a795b9151f3c2c597df338fd45d44eeeaf20990e08da
+  build/acceptance/g08h-pytest.xml: sha256:f3d39b1ccf74c5d7f47202508b538ef22f6e6b56b7e3726a3b7aff65aa981b74
+  build/acceptance/g08h-parity-report.json: sha256:a6f230cb5da84156cd5d114180e2a202c2b0fad169a813a1da7174018ebfdd01
+  build/acceptance/g08h-import-boundary-report.json: sha256:466a494a456919fb6e0200e49ba4bb93d2bc0538f4cbca0d43a55e04b99a8df5
+  build/acceptance/g08h-mypy.txt: sha256:a46f4f6204d5dbfb5bd53dd8594c13848e25384e360264df053a1e64ce013501
 ```
 
 ### G08H Acceptance
@@ -6664,7 +6675,31 @@ artifact_hashes: {}
 17. Static fixture bytes, inherited PASSED fixture hashes and exact RED failures are frozen. Production, test-support and parity implementations remain absent at READY; implementation may make tests green but may not rewrite the contract or fixtures;
 18. Real provider acquisition, archive completeness, live security/account scope, decision grade, profile qualification and deployment authorization remain G12L/G12M responsibilities.
 
-G08H is `READY`; implementation is authorized only against the frozen RED surface. Research and plan: `docs/research/g08h-profile-composition-parity.md`, `docs/implementation/plans/g08/g08h.md`.
+### G08H Implementation Acceptance
+
+1. The pure production composer, fourteen root exports, five immutable declarations, exact 12/6 manifests, development registrations and profile-specific dispatcher identity are implemented at immutable commit `e954be6bc1d46a3d3f399a3c3cf874a917894570`;
+2. Additive adversarial tests reject fabricated embedded revision chains, unsupported risk-warning/new-listing contexts, absent profile-Venue fee/tax authority, cross-history identity conflicts, duplicate manifest authorities, bool/int equality forgery and duck-typed Outcome branches;
+3. The test-support Journey emits the frozen phase-110 Payment and phase-120 Listing artifacts and appends the exact G08G share-ID-7/cash-ID-8 immutable Journal batch in canonical `(recorded_at, journal_entry_id)` order. It preserves CNY 70, 500→710 shares, CNY 7,500 total basis, full/prefix/resume replay and final Snapshot binding without an Engine/Journal/Ledger market branch;
+4. The isolated parity tool reuses the WP-00C comparator, validates root-contained paths and immutable hashes, exact-covers all ten layers, reports comparable `MATCH`, aggregate `NOT_COMPARABLE_LEGACY_SCOPE`, Calendar/Session first uncovered, deterministic first divergence and canonical report hash `sha256:d72471cc2ee87d2e414c04d92be9d7de94f1cf2fbe83aa422b27f610a79b7874`;
+5. Final verification passed `304` G08H acceptance tests and `1568` full repository tests. Mypy is clean for the production module and isolated test-support/parity surfaces; import boundaries pass across `96` files; LSP/pi-lens, `uv lock --check`, `git diff --check`, static fixture byte hashes and two final independent dry reviews are clean.
+
+G08H implementation is frozen at immutable commit `e954be6bc1d46a3d3f399a3c3cf874a917894570` and status is `PASSED`. Real provider acquisition, archive completeness, live security/account scope, decision grade, profile qualification and deployment authorization remain G12L/G12M responsibilities.
+
+Validation record:
+
+```text
+G08H focused acceptance                                        304 passed
+Full repository                                               1568 passed
+Mypy                                              4 changed surfaces clean
+Import boundaries                                         96 files passed
+Parity aggregate verdict                    NOT_COMPARABLE_LEGACY_SCOPE
+Primary LSP + pi-lens                                             clean
+Independent final reviews                                           NONE
+uv lock --check                                                     PASS
+git diff --check                                                    PASS
+```
+
+Research and plan: `docs/research/g08h-profile-composition-parity.md`, `docs/implementation/plans/g08/g08h.md`.
 
 ## 69. G09A Linear Derivative Position Model Acceptance Card
 

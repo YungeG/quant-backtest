@@ -1,8 +1,8 @@
-# G08H Profile Composition and Parity Readiness Record
+# G08H Profile Composition and Parity Acceptance Record
 
 ## Verdict
 
-G08H is **READY / RED FREEZE**. The production, test-support and parity implementations remain absent; the exact contract and static fixtures are frozen for implementation.
+G08H is **PASSED** at immutable implementation commit `e954be6bc1d46a3d3f399a3c3cf874a917894570`. The exact contract and static fixture bytes remain frozen, while the production composer, test-support dispatcher/Journey and parity tool/runner are implemented and accepted.
 
 This Gate remains development-only. It does not prove external provider/archive completeness, real security/account classification, decision-grade eligibility or deployment authorization.
 
@@ -98,6 +98,18 @@ The exact field order, type literals, manifest rows, fixed digests, limitations,
 - `tests/fixtures/runtime/engine/cn-a-share-resolved-profile-development-journey-v1.json`;
 - `tests/parity/contracts/cn-a-share-g08h-legacy-to-g08h-v1.json`;
 - `tests/parity/fixtures/cn-a-share-g08h-v1/`;
-- G08H contract, golden, Journey, parity and architecture RED tests.
+- G08H contract, golden, Journey, parity, architecture and additive adversarial tests.
 
-Implementation is authorized only against that frozen surface. Real provider/archive qualification remains blocked on G12L/G12M.
+## Acceptance evidence
+
+- focused G08H acceptance: `304 passed`;
+- full repository: `1568 passed`;
+- import boundaries: `96 files passed`;
+- production and isolated support/parity mypy surfaces: clean;
+- parity aggregate verdict: `NOT_COMPARABLE_LEGACY_SCOPE` with canonical report hash `sha256:d72471cc2ee87d2e414c04d92be9d7de94f1cf2fbe83aa422b27f610a79b7874`;
+- primary LSP, pi-lens, `uv lock --check`, `git diff --check`: clean;
+- final independent production and integration reviews: `NONE`.
+
+The Payment artifact remains at phase 110 and Listing artifact at phase 120. Because the frozen G08G entries share one `recorded_at` and canonical Journal tie-break orders share ID 7 before cash ID 8, the development dispatcher publishes the payment artifact at its boundary and appends the exact immutable share/cash Journal batch at Listing; it does not mutate Engine state or create another accounting authority.
+
+Real provider/archive qualification remains blocked on G12L/G12M.
