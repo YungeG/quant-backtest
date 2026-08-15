@@ -296,8 +296,9 @@ def test_position_lot_total_cost_basis_and_contract_edges() -> None:
     value = lot_with_total_cost_basis()
     assert value.total_cost_basis is not None
 
-    with pytest.raises(ValueError, match="positive"):
-        replace(value, total_cost_basis=money(0))
+    assert replace(value, total_cost_basis=money(0)).total_cost_basis == money(0)
+    with pytest.raises(ValueError, match="negative"):
+        replace(value, total_cost_basis=money(-1))
     with pytest.raises(ValueError, match="currency"):
         replace(value, total_cost_basis=money(1_234_56, "USD"))
     with pytest.raises(ValueError, match="requires before or after"):

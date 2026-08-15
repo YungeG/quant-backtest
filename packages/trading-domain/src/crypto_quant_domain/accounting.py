@@ -168,8 +168,8 @@ class PositionLot:
         if self.total_cost_basis is not None:
             if not isinstance(self.total_cost_basis, Money):
                 raise TypeError("total_cost_basis must be Money or None")
-            if self.total_cost_basis.units <= 0:
-                raise ValueError("PositionLot total cost basis must be positive")
+            if self.total_cost_basis.units < 0:
+                raise ValueError("PositionLot total cost basis cannot be negative")
             if self.unit_cost is not None and (
                 self.total_cost_basis.currency != self.unit_cost.quote_currency
             ):

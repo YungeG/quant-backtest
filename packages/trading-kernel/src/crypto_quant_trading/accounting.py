@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from dataclasses import dataclass, replace
+from dataclasses import dataclass, field, replace
 from enum import Enum
 from fractions import Fraction
 from math import ceil, floor
@@ -22,10 +22,12 @@ from crypto_quant_domain import (
     OrderSide,
     PositionBalanceKey,
     PositionLot,
+    PositionLotChange,
     Price,
     QuantizationPolicy,
     Quantity,
     RoundingPolicy,
+    Scale,
     SimulationInstant,
     canonical_bytes,
     canonical_sha256,
@@ -83,6 +85,7 @@ class LotConsumption:
     quantity: Quantity
     unit_cost: Price
     allocated_fees: tuple[Money, ...]
+    total_cost_basis: Money | None = field(default=None, kw_only=True)
 
     def __post_init__(self) -> None:
         for name, value in (
@@ -98,6 +101,13 @@ class LotConsumption:
             raise ValueError("LotConsumption unit_cost must be positive Price")
         if self.quantity.instrument_id != self.unit_cost.instrument_id:
             raise ValueError("LotConsumption instrument identity mismatch")
+        if self.total_cost_basis is not None:
+            if not isinstance(self.total_cost_basis, Money):
+                raise TypeError("LotConsumption total_cost_basis must be Money or None")
+            if self.total_cost_basis.units < 0:
+                raise ValueError("LotConsumption total_cost_basis cannot be negative")
+            if self.total_cost_basis.currency != self.unit_cost.quote_currency:
+                raise ValueError("LotConsumption total_cost_basis currency mismatch")
         _validate_fee_tuple(self.allocated_fees)
         if any(
             fee.currency != self.unit_cost.quote_currency
@@ -106,7 +116,7 @@ class LotConsumption:
             raise ValueError("LotConsumption allocated fee currency mismatch")
 
     def to_canonical_dict(self) -> dict[str, Any]:
-        return {
+        payload = {
             "type": "lot_consumption",
             "lot_id": self.lot_id,
             "source_fill_id": self.source_fill_id,
@@ -114,6 +124,10 @@ class LotConsumption:
             "unit_cost": self.unit_cost,
             "allocated_fees": self.allocated_fees,
         }
+        if self.total_cost_basis is not None:
+            payload["schema_version"] = 2
+            payload["total_cost_basis"] = self.total_cost_basis
+        return payload
 
 
 @dataclass(frozen=True, slots=True)
@@ -308,6 +322,46 @@ def _lot_order(lot: PositionLot) -> tuple[int, str]:
     return (lot.opened_at.epoch_nanoseconds, lot.lot_id)
 
 
+def _supports_exact_cost_basis(policy: CostBasisPolicy) -> bool:
+    return policy.policy_version >= 2
+
+
+def _apply_position_lot_changes(
+    open_lots: tuple[PositionLot, ...],
+    lot_changes: tuple[PositionLotChange, ...],
+) -> tuple[PositionLot, ...]:
+    working: dict[str, PositionLot] = {lot.lot_id: lot for lot in open_lots}
+    for lot_change in lot_changes:
+        before = lot_change.before
+        after = lot_change.after
+        if before is None:
+            if after is None:
+                raise ValueError("PositionLotChange requires before or after")
+            if after.lot_id in working:
+                raise ValueError("position lot create conflict")
+            working[after.lot_id] = after
+        else:
+            existing = working.get(before.lot_id)
+            if existing is None:
+                raise ValueError("position lot before state missing")
+            if existing != before:
+                raise ValueError("position lot before mismatch")
+            if after is None:
+                del working[before.lot_id]
+            else:
+                working[before.lot_id] = after
+    return tuple(sorted(working.values(), key=_lot_order))
+
+
+def _assert_lot_changes_match(
+    before_open_lots: tuple[PositionLot, ...],
+    after_open_lots: tuple[PositionLot, ...],
+    lot_changes: tuple[PositionLotChange, ...],
+) -> None:
+    if _apply_position_lot_changes(before_open_lots, lot_changes) != after_open_lots:
+        raise ValueError("position_lot_changes must reconcile open lot transition")
+
+
 def _validate_accounting_result(
     journal_entry: AccountingJournalEntry,
     open_lots: tuple[PositionLot, ...],
@@ -348,6 +402,8 @@ def _validate_open_lots(
     *,
     position_key: PositionBalanceKey,
     fill: Fill,
+    policy_version: int,
+    total_cost_basis_scale: Scale | None = None,
 ) -> tuple[PositionLot, ...] | None:
     try:
         _require_lot_tuple(lots)
@@ -356,6 +412,10 @@ def _validate_open_lots(
     if len({lot.lot_id for lot in lots}) != len(lots):
         return None
     if len({lot.source_id for lot in lots}) != len(lots):
+        return None
+    if policy_version >= 2 and lots and any(
+        lot.total_cost_basis is None for lot in lots
+    ):
         return None
     for lot in lots:
         if (
@@ -366,6 +426,12 @@ def _validate_open_lots(
             or lot.unit_cost is None
             or lot.unit_cost.instrument_id != str(fill.instrument_id)
             or lot.unit_cost.quote_currency != fill.price.quote_currency
+            or (policy_version < 2 and lot.total_cost_basis is not None)
+            or (
+                lot.total_cost_basis is not None
+                and total_cost_basis_scale is not None
+                and lot.total_cost_basis.scale != total_cost_basis_scale
+            )
         ):
             return None
         if any(fee.currency != fill.price.quote_currency for fee in lot.allocated_fees):
@@ -471,6 +537,7 @@ def _fill_journal_entry(
     cash_change: Money,
     position_change: Quantity,
     realized_pnl: Money | None,
+    position_lot_changes: tuple[PositionLotChange, ...] = (),
 ) -> AccountingJournalEntry:
     return AccountingJournalEntry(
         journal_entry_id=journal_entry_id,
@@ -487,6 +554,7 @@ def _fill_journal_entry(
         realized_pnl=(realized_pnl,) if realized_pnl is not None and realized_pnl.units else (),
         fees=(),
         financing=(),
+        position_lot_changes=tuple(sorted(position_lot_changes, key=canonical_bytes)),
     )
 
 
@@ -525,7 +593,11 @@ class CashInstrumentAccounting:
                 )
             )
         ordered_lots = _validate_open_lots(
-            open_lots, position_key=position_key, fill=fill
+            open_lots,
+            position_key=position_key,
+            fill=fill,
+            policy_version=policy.policy_version,
+            total_cost_basis_scale=notional_quantization.target_scale,
         )
         if ordered_lots is None:
             return CashFillAccountingOutcome(
@@ -589,6 +661,8 @@ class CashInstrumentAccounting:
             allocated_fees=(),
             opened_at=fill.execution_time,
         )
+        if _supports_exact_cost_basis(policy):
+            lot = replace(lot, total_cost_basis=notional)
         if any(
             existing.lot_id == lot.lot_id or existing.source_id == lot.source_id
             for existing in open_lots
@@ -599,6 +673,11 @@ class CashInstrumentAccounting:
                 )
             )
         remaining = tuple(sorted((*open_lots, lot), key=_lot_order))
+        lot_changes: tuple[PositionLotChange, ...] = ()
+        if _supports_exact_cost_basis(policy):
+            lot_change = PositionLotChange(before=None, after=lot)
+            lot_changes = (lot_change,)
+            _assert_lot_changes_match(open_lots, remaining, lot_changes)
         entry = _fill_journal_entry(
             fill=fill,
             cash_key=cash_key,
@@ -608,6 +687,7 @@ class CashInstrumentAccounting:
             cash_change=-notional,
             position_change=fill.quantity,
             realized_pnl=None,
+            position_lot_changes=lot_changes,
         )
         return CashFillAccountingOutcome(
             result=CashFillAccountingResult(
@@ -643,7 +723,9 @@ class CashInstrumentAccounting:
                 )
             )
         remaining_to_consume = fill.quantity.units
+        supports_exact = _supports_exact_cost_basis(policy)
         remaining_lots: list[PositionLot] = []
+        lot_changes: list[PositionLotChange] = []
         consumptions: list[LotConsumption] = []
         price_cost_basis = Money(
             0, notional_quantization.target_scale, fill.price.quote_currency
@@ -661,6 +743,22 @@ class CashInstrumentAccounting:
                 total_units=lot.quantity.units,
                 rounding=policy.fee_allocation_rounding,
             )
+            consumed_basis: Money | None = None
+            residual_basis: Money | None = None
+            if supports_exact and lot.total_cost_basis is not None:
+                consumed_basis_units = _round_ratio(
+                    lot.total_cost_basis.units * consumed_units,
+                    lot.quantity.units,
+                    notional_quantization.rounding,
+                )
+                consumed_basis = replace(
+                    lot.total_cost_basis, units=consumed_basis_units
+                )
+                residual_basis = replace(
+                    lot.total_cost_basis,
+                    units=lot.total_cost_basis.units - consumed_basis_units,
+                )
+
             consumptions.append(
                 LotConsumption(
                     lot_id=lot.lot_id,
@@ -668,23 +766,46 @@ class CashInstrumentAccounting:
                     quantity=consumed_quantity,
                     unit_cost=unit_cost,
                     allocated_fees=consumed_fees,
+                    total_cost_basis=consumed_basis,
                 )
             )
-            price_cost_basis += unit_cost.notional(
-                consumed_quantity,
-                result_scale=notional_quantization.target_scale,
-                rounding=notional_quantization.rounding,
-            )
+            if consumed_basis is not None:
+                price_cost_basis += consumed_basis
+            else:
+                price_cost_basis += unit_cost.notional(
+                    consumed_quantity,
+                    result_scale=notional_quantization.target_scale,
+                    rounding=notional_quantization.rounding,
+                )
             residual_units = lot.quantity.units - consumed_units
             if residual_units:
-                remaining_lots.append(
-                    replace(
-                        lot,
-                        quantity=replace(lot.quantity, units=residual_units),
-                        allocated_fees=residual_fees,
-                    )
+                residual_lot = replace(
+                    lot,
+                    quantity=replace(lot.quantity, units=residual_units),
+                    allocated_fees=residual_fees,
                 )
+                if supports_exact:
+                    residual_lot = replace(
+                        residual_lot,
+                        total_cost_basis=residual_basis,
+                    )
+                else:
+                    residual_lot = replace(
+                        residual_lot,
+                        total_cost_basis=None,
+                    )
+                if supports_exact:
+                    lot_changes.append(
+                        PositionLotChange(before=lot, after=residual_lot)
+                    )
+                remaining_lots.append(residual_lot)
+            else:
+                if supports_exact:
+                    lot_changes.append(PositionLotChange(before=lot, after=None))
             remaining_to_consume -= consumed_units
+        remaining_lots_tuple = tuple(remaining_lots)
+        if supports_exact:
+            _assert_lot_changes_match(open_lots, remaining_lots_tuple, tuple(lot_changes))
         gross = proceeds - price_cost_basis
         entry = _fill_journal_entry(
             fill=fill,
@@ -695,11 +816,12 @@ class CashInstrumentAccounting:
             cash_change=proceeds,
             position_change=-fill.quantity,
             realized_pnl=gross,
+            position_lot_changes=tuple(lot_changes) if supports_exact else (),
         )
         return CashFillAccountingOutcome(
             result=CashFillAccountingResult(
                 journal_entry=entry,
-                open_lots=tuple(remaining_lots),
+                open_lots=remaining_lots_tuple,
                 opened_lot=None,
                 lot_consumptions=tuple(consumptions),
                 price_cost_basis=price_cost_basis,
@@ -780,7 +902,10 @@ class CashInstrumentAccounting:
             related_fill.instrument_id,
         )
         ordered_lots = _validate_open_lots(
-            open_lots, position_key=position_key, fill=related_fill
+            open_lots,
+            position_key=position_key,
+            fill=related_fill,
+            policy_version=policy.policy_version,
         )
         if ordered_lots is None:
             return FeeChargeAccountingOutcome(
@@ -790,7 +915,9 @@ class CashInstrumentAccounting:
                 )
             )
 
+        lot_change: PositionLotChange | None = None
         allocated_lot_id: str | None = None
+        supports_exact = _supports_exact_cost_basis(policy)
         if related_fill.side is OrderSide.BUY:
             matching = [
                 lot for lot in ordered_lots if lot.source_id == str(related_fill.fill_id)
@@ -837,10 +964,18 @@ class CashInstrumentAccounting:
                     sorted(updated_fees, key=lambda value: value.currency)
                 ),
             )
-            ordered_lots = tuple(
-                updated_target if lot.lot_id == target.lot_id else lot
-                for lot in ordered_lots
-            )
+            if supports_exact:
+                lot_change = PositionLotChange(before=target, after=updated_target)
+                ordered_lots = tuple(
+                    updated_target if lot.lot_id == target.lot_id else lot
+                    for lot in ordered_lots
+                )
+                _assert_lot_changes_match(open_lots, ordered_lots, (lot_change,))
+            else:
+                ordered_lots = tuple(
+                    updated_target if lot.lot_id == target.lot_id else lot
+                    for lot in ordered_lots
+                )
             allocated_lot_id = target.lot_id
 
         source_ids = {
@@ -868,6 +1003,7 @@ class CashInstrumentAccounting:
             realized_pnl=(),
             fees=(assessment.amount,),
             financing=(),
+            position_lot_changes=() if lot_change is None else (lot_change,),
         )
         return FeeChargeAccountingOutcome(
             result=FeeChargeAccountingResult(

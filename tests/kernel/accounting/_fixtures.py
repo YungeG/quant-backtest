@@ -47,6 +47,13 @@ COST_BASIS_POLICY = CostBasisPolicy(
     fee_allocation_rounding=RoundingPolicy.HALF_EVEN,
 )
 
+COST_BASIS_POLICY_V2 = CostBasisPolicy(
+    policy_key="cash-cost-basis.fifo.v2",
+    policy_version=2,
+    method=CostBasisMethod.FIFO,
+    fee_allocation_rounding=RoundingPolicy.HALF_EVEN,
+)
+
 
 def domain_id(kind: DomainIdKind, digit: str) -> DomainId:
     return DomainId(kind, f"{kind.prefix}_{digit * 64}")
