@@ -173,7 +173,7 @@ def _execution_semantics(case: ResolvedExecutionCase) -> dict[str, object]:
 def _journal_entry_semantics(
     entry: AccountingJournalEntry,
 ) -> dict[str, object]:
-    return {
+    payload: dict[str, object] = {
         "entry_type": entry.entry_type.value,
         "account_id": entry.account_id,
         "venue_id": entry.venue_id,
@@ -185,6 +185,9 @@ def _journal_entry_semantics(
         "fees": entry.fees,
         "financing": entry.financing,
     }
+    if entry.position_lot_changes:
+        payload["position_lot_changes"] = entry.position_lot_changes
+    return payload
 
 
 def _snapshot_semantics(snapshot: PortfolioSnapshot) -> dict[str, object]:

@@ -90,6 +90,7 @@ from crypto_quant_market_data import (
 )
 from crypto_quant_trading import (
     AccountingJournal,
+    FinalFeeAssessmentResult,
     FundingSlotId,
     GenericLedger,
     LedgerBalanceRegistration,
@@ -690,6 +691,22 @@ class SyntheticLinearFinancialDispatcher:
             (artifact,),
         )
         return FinancialDispatchOutcome(self.spec, input_hash, result=result)
+
+    def book_fee(
+        self,
+        plan: FillAccountingDispatchPlan,
+        fill: Fill,
+        assessment: FinalFeeAssessmentResult,
+        state_view: FinancialStateView,
+        /,
+    ) -> FinancialDispatchOutcome:
+        return _failure(
+            self.spec,
+            plan.source_event_id,
+            canonical_sha256({"operation": "book_fee"}),
+            FinancialDispatchFailureCode.PROFILE_COMPONENT_FAILURE,
+            "book_fee_not_implemented",
+        )
 
     def dispatch_scheduled_event(
         self,

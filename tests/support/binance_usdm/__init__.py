@@ -82,6 +82,9 @@ class BinanceUsdmDevelopmentFinancialDispatcher(SyntheticLinearFinancialDispatch
     def book_fill(self, plan, fill, state_view, /):
         return _rename_outcome(super().book_fill(plan, fill, state_view))
 
+    def book_fee(self, plan, fill, assessment, state_view, /):
+        return _rename_outcome(super().book_fee(plan, fill, assessment, state_view))
+
     def dispatch_scheduled_event(self, event, state_view, /):
         return _rename_outcome(super().dispatch_scheduled_event(event, state_view))
 

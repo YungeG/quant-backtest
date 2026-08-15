@@ -47,6 +47,7 @@ from crypto_quant_trading import (
     InstrumentSizingInput,
     JournalError,
     LatestSleeveDecisionState,
+    LedgerError,
     LedgerSchema,
     LedgerState,
     MarketRuleEvaluator,
@@ -88,6 +89,7 @@ from crypto_quant_trading import (
 )
 
 from .financial_dispatch import (
+    CashFillAccountingPlan,
     DefaultCashFinancialDispatcher,
     FillAccountingDispatchPlan,
     FinancialDispatchArtifact,
@@ -193,6 +195,21 @@ def _domain_id(name: str, value: DomainId, kind: DomainIdKind) -> DomainId:
 
 def _stable_tuple(values: tuple[Any, ...]) -> tuple[Any, ...]:
     return tuple(sorted(values, key=canonical_bytes))
+
+
+def _lot_state(values: dict[PositionBalanceKey, tuple[PositionLot, ...]]) -> tuple[
+    tuple[PositionBalanceKey, tuple[PositionLot, ...]],
+    ...
+]:
+    return tuple(sorted(values.items(), key=lambda value: canonical_bytes(value[0])))
+
+
+def _lot_books_from_ledger(
+    state: LedgerState,
+) -> dict[PositionBalanceKey, tuple[PositionLot, ...]]:
+    return {
+        value.key: value.lots for value in state.position_balances if value.lots
+    }
 
 
 @dataclass(frozen=True, slots=True)
@@ -1836,6 +1853,9 @@ class DeterministicBarEngine:
         financial = case.financial_state
         ledger = GenericLedger(financial.ledger_schema)
         ledger_state = ledger.project(financial.journal)
+        has_position_lot_changes = any(
+            entry.position_lot_changes for entry in financial.journal.entries
+        )
         order_streams = {
             value.order.order_id.value: value for value in financial.order_streams
         }
@@ -1853,12 +1873,17 @@ class DeterministicBarEngine:
             reservation_state,
             financial.settlement_rules,
         )
+        lot_books = (
+            _lot_books_from_ledger(ledger_state)
+            if has_position_lot_changes
+            else {value.position_key: value.lots for value in financial.lot_books}
+        )
         return _EngineState(
             journal=financial.journal,
             ledger=ledger,
             ledger_state=ledger_state,
             snapshot=financial.initial_snapshot,
-            lot_books={value.position_key: value.lots for value in financial.lot_books},
+            lot_books=lot_books,
             settlement_book=financial.settlement_book,
             settlement_state=settlement_state,
             reservation_book=reservation_book,
@@ -1871,6 +1896,21 @@ class DeterministicBarEngine:
                 for value in financial.order_admissions
             },
         )
+
+    @staticmethod
+    def _policy_v2_cash_position_key(
+        case: ResolvedExecutionCase, source_event_id: str
+    ) -> PositionBalanceKey | None:
+        for execution in case.bar_executions:
+            plan = execution.accounting_plan
+            payload = plan.position_payload
+            if (
+                plan.source_event_id == source_event_id
+                and type(payload) is CashFillAccountingPlan
+                and payload.cost_basis_policy.policy_version >= 2
+            ):
+                return payload.position_key
+        return None
 
     @staticmethod
     def _financial_state_view(state: _EngineState) -> FinancialStateView:
@@ -1931,18 +1971,72 @@ class DeterministicBarEngine:
                 (FinancialDispatchFailureCode.SNAPSHOT_PROJECTION_FAILURE.value,),
                 (canonical_sha256(result),),
             )
-        try:
-            for entry in result.journal_entries:
-                state.journal = state.journal.append(entry)
-        except JournalError:
+        staged_journal = state.journal
+        if result.journal_entries:
+            try:
+                staged_journal = state.journal.append_many(result.journal_entries)
+            except JournalError:
+                return self._failed(
+                    case,
+                    state,
+                    EngineFailureCode.FINANCIAL_DISPATCH_FAILURE,
+                    (FinancialDispatchFailureCode.JOURNAL_APPEND_FAILURE.value,),
+                    (canonical_sha256(result),),
+                )
+        staged_ledger = state.ledger_state
+        if result.journal_entries:
+            try:
+                staged_ledger = state.ledger.project(staged_journal)
+            except LedgerError:
+                return self._failed(
+                    case,
+                    state,
+                    EngineFailureCode.FINANCIAL_DISPATCH_FAILURE,
+                    (
+                        FinancialDispatchFailureCode.PROFILE_COMPONENT_FAILURE.value,
+                        "generic_ledger_projection",
+                    ),
+                    (canonical_sha256(result),),
+                )
+        v2_position_key = self._policy_v2_cash_position_key(
+            case, result.source_event_id
+        )
+        replay_authority = v2_position_key is not None or any(
+            entry.position_lot_changes for entry in staged_journal.entries
+        )
+        projected_lots = _lot_books_from_ledger(staged_ledger)
+        v2_position_keys = {
+            payload.position_key
+            for execution in case.bar_executions
+            if type(payload := execution.accounting_plan.position_payload)
+            is CashFillAccountingPlan
+            and payload.cost_basis_policy.policy_version >= 2
+        }
+        if any(
+            staged_ledger.position_quantity(key).units and not projected_lots.get(key)
+            for key in v2_position_keys
+        ):
             return self._failed(
                 case,
                 state,
                 EngineFailureCode.FINANCIAL_DISPATCH_FAILURE,
-                (FinancialDispatchFailureCode.JOURNAL_APPEND_FAILURE.value,),
+                (
+                    FinancialDispatchFailureCode.PROFILE_COMPONENT_FAILURE.value,
+                    "position_lot_books",
+                ),
                 (canonical_sha256(result),),
             )
-        state.lot_books = dict(result.position_lot_books)
+        if replay_authority and _lot_state(projected_lots) != result.position_lot_books:
+            return self._failed(
+                case,
+                state,
+                EngineFailureCode.FINANCIAL_DISPATCH_FAILURE,
+                (
+                    FinancialDispatchFailureCode.PROFILE_COMPONENT_FAILURE.value,
+                    "position_lot_books",
+                ),
+                (canonical_sha256(result),),
+            )
         existing_roles = {value.role for value in state.financial_artifacts}
         if existing_roles.intersection(value.role for value in result.artifacts):
             return self._failed(
@@ -1952,10 +2046,17 @@ class DeterministicBarEngine:
                 (FinancialDispatchFailureCode.ARTIFACT_COVERAGE_MISMATCH.value,),
                 (canonical_sha256(result.artifacts),),
             )
-        state.financial_artifacts.extend(result.artifacts)
+        state.journal = staged_journal
         if result.journal_entries:
-            state.ledger_state = state.ledger.project(state.journal)
+            state.ledger_state = staged_ledger
             self._refresh_resources(case, state)
+
+        state.lot_books = (
+            projected_lots
+            if replay_authority
+            else dict(result.position_lot_books)
+        )
+        state.financial_artifacts.extend(result.artifacts)
         if result.snapshot is not None:
             state.snapshot = result.snapshot
         for artifact in result.artifacts:
@@ -2603,13 +2704,13 @@ class DeterministicBarEngine:
             assessment_time=fee.fee_assessment_time,
         )
         if fee_outcome.result is None:
-            failure = cast(Any, fee_outcome.failure)
+            assessment_failure = cast(Any, fee_outcome.failure)
             return self._failed(
                 case,
                 state,
                 EngineFailureCode.FEE_ASSESSMENT_FAILURE,
-                tuple(value.value for value in failure.codes),
-                (failure.failure_hash,),
+                tuple(value.value for value in assessment_failure.codes),
+                (assessment_failure.failure_hash,),
             )
         state.fee_assessments.append(fee_outcome.result.assessment)
         self._trace_add(
@@ -2623,31 +2724,55 @@ class DeterministicBarEngine:
             fee.fee_assessment_id.value,
             fee_outcome.result.result_hash,
         )
-        fee_journal = FeeChargedJournalTranslator().translate(
-            result=fee_outcome.result,
-            cash_key=fee.cash_key,
-            journal_entry_id=fee.fee_journal_entry_id,
-            recorded_at=fee.fee_recorded_at,
-        )
-        if fee_journal.result is None:
-            failure = cast(Any, fee_journal.failure)
-            return self._failed(
+        if (
+            type(accounting.position_payload) is CashFillAccountingPlan
+            and accounting.position_payload.cost_basis_policy.policy_version >= 2
+        ):
+            fee_dispatch = self._financial_dispatcher.book_fee(
+                accounting, fill, fee_outcome.result, self._financial_state_view(state)
+            )
+            failure = self._apply_financial_dispatch(
                 case,
                 state,
-                EngineFailureCode.FEE_ACCOUNTING_FAILURE,
-                (failure.code.value,),
-                (failure.failure_hash,),
+                fee_dispatch,
+                expected_snapshot=False,
             )
-        state.journal = state.journal.append(fee_journal.result.journal_entry)
-        self._trace_add(
-            state,
-            EngineStage.FEE_ACCOUNTING,
-            fee.fee_recorded_at,
-            fee.fee_journal_entry_id.value,
-            fee_journal.result.result_hash,
-        )
-        state.ledger_state = state.ledger.project(state.journal)
-        self._refresh_resources(case, state)
+            if failure is not None:
+                return failure
+            assert fee_dispatch.result is not None
+            self._trace_add(
+                state,
+                EngineStage.FEE_ACCOUNTING,
+                fee.fee_recorded_at,
+                fee.fee_journal_entry_id.value,
+                canonical_sha256(fee_dispatch.result),
+            )
+        else:
+            fee_journal = FeeChargedJournalTranslator().translate(
+                result=fee_outcome.result,
+                cash_key=fee.cash_key,
+                journal_entry_id=fee.fee_journal_entry_id,
+                recorded_at=fee.fee_recorded_at,
+            )
+            if fee_journal.result is None:
+                fee_failure = cast(Any, fee_journal.failure)
+                return self._failed(
+                    case,
+                    state,
+                    EngineFailureCode.FEE_ACCOUNTING_FAILURE,
+                    (fee_failure.code.value,),
+                    (fee_failure.failure_hash,),
+                )
+            state.journal = state.journal.append(fee_journal.result.journal_entry)
+            self._trace_add(
+                state,
+                EngineStage.FEE_ACCOUNTING,
+                fee.fee_recorded_at,
+                fee.fee_journal_entry_id.value,
+                fee_journal.result.result_hash,
+            )
+            state.ledger_state = state.ledger.project(state.journal)
+            self._refresh_resources(case, state)
         self._trace_add(
             state,
             EngineStage.LEDGER_STATE,

@@ -26,6 +26,7 @@ from crypto_quant_trading import (
     AccountingJournal,
     CashInstrumentAccounting,
     CostBasisPolicy,
+    FinalFeeAssessmentResult,
     FinalFeeRuleSet,
     LedgerState,
     PortfolioSnapshotProjector,
@@ -616,6 +617,15 @@ class FinancialEventDispatcher(Protocol):
         /,
     ) -> FinancialDispatchOutcome: ...
 
+    def book_fee(
+        self,
+        plan: FillAccountingDispatchPlan,
+        fill: Fill,
+        assessment: FinalFeeAssessmentResult,
+        state_view: FinancialStateView,
+        /,
+    ) -> FinancialDispatchOutcome: ...
+
     def dispatch_scheduled_event(
         self,
         event: ScheduledAccountEvent,
@@ -709,6 +719,16 @@ def _lot_state(
     return tuple(sorted(values.items(), key=lambda value: canonical_bytes(value[0])))
 
 
+def _position_lot_books_from_ledger(
+    state: LedgerState,
+) -> dict[PositionBalanceKey, tuple[PositionLot, ...]]:
+    return {
+        value.key: value.lots
+        for value in state.position_balances
+        if value.lots
+    }
+
+
 class DefaultCashFinancialDispatcher:
     def __init__(self) -> None:
         self._spec = default_cash_financial_dispatcher_spec()
@@ -724,24 +744,27 @@ class DefaultCashFinancialDispatcher:
         state_view: FinancialStateView,
         /,
     ) -> FinancialDispatchOutcome:
-        input_hash = canonical_sha256(
-            {
-                "operation": "book_fill",
-                "plan": plan,
-                "fill": fill,
-                "journal_hash": state_view.journal.journal_hash,
-            }
-        )
+        payload = plan.position_payload
+        input_payload = {
+            "operation": "book_fill",
+            "plan": plan,
+            "fill": fill,
+            "journal_hash": state_view.journal.journal_hash,
+        }
+        if (
+            type(payload) is CashFillAccountingPlan
+            and payload.cost_basis_policy.policy_version >= 2
+        ):
+            input_payload["ledger_state_hash"] = state_view.ledger_state.state_hash
+        input_hash = canonical_sha256(input_payload)
         if (
             plan.position_accounting_component
             != self.spec.position_accounting_component
             or plan.expected_fill_id != fill.fill_id
             or plan.source_event_id == ""
-            or plan.fill_journal_entry_id != getattr(
-                plan.position_payload, "fill_journal_entry_id", None
-            )
-            or plan.fill_recorded_at
-            != getattr(plan.position_payload, "fill_recorded_at", None)
+            or plan.fill_journal_entry_id
+            != getattr(payload, "fill_journal_entry_id", None)
+            or plan.fill_recorded_at != getattr(payload, "fill_recorded_at", None)
         ):
             return _failure(
                 self.spec,
@@ -750,7 +773,6 @@ class DefaultCashFinancialDispatcher:
                 FinancialDispatchFailureCode.FILL_PLAN_MISMATCH,
                 str(fill.fill_id),
             )
-        payload = plan.position_payload
         if type(payload) is not CashFillAccountingPlan:
             return _failure(
                 self.spec,
@@ -759,12 +781,35 @@ class DefaultCashFinancialDispatcher:
                 FinancialDispatchFailureCode.FILL_PLAN_MISMATCH,
                 type(payload).__name__,
             )
-        lots = dict(state_view.position_lot_books)
+
+        if payload.cost_basis_policy.policy_version >= 2:
+            lots_by_position = _position_lot_books_from_ledger(
+                state_view.ledger_state
+            )
+            lots = lots_by_position.get(payload.position_key, ())
+            if (
+                not lots
+                and state_view.ledger_state.position_quantity(
+                    payload.position_key
+                ).units
+            ):
+                return _failure(
+                    self.spec,
+                    plan.source_event_id,
+                    input_hash,
+                    FinancialDispatchFailureCode.PROFILE_COMPONENT_FAILURE,
+                    "position_lot_books",
+                    str(payload.position_key),
+                )
+        else:
+            lots_by_position = dict(state_view.position_lot_books)
+            lots = lots_by_position.get(payload.position_key, ())
+
         booked = CashInstrumentAccounting().book_fill(
             fill=fill,
             cash_key=payload.cash_key,
             position_key=payload.position_key,
-            open_lots=lots.get(payload.position_key, ()),
+            open_lots=lots,
             cost_basis_policy=payload.cost_basis_policy,
             notional_quantization=payload.notional_quantization,
             journal_entry_id=plan.fill_journal_entry_id,
@@ -780,7 +825,11 @@ class DefaultCashFinancialDispatcher:
                 getattr(getattr(failure, "code", None), "value", "cash-accounting"),
                 getattr(failure, "subject_id", str(fill.fill_id)),
             )
-        lots[payload.position_key] = booked.result.open_lots
+
+        lots_by_position[payload.position_key] = booked.result.open_lots
+        if payload.cost_basis_policy.policy_version >= 2 and not booked.result.open_lots:
+            lots_by_position.pop(payload.position_key, None)
+
         artifact = FinancialDispatchArtifact(
             "position_accounting",
             plan.source_event_id,
@@ -796,8 +845,91 @@ class DefaultCashFinancialDispatcher:
             self.spec,
             plan.source_event_id,
             (booked.result.journal_entry,),
-            _lot_state(lots),
+            _lot_state(lots_by_position),
             (artifact,),
+        )
+        return FinancialDispatchOutcome(self.spec, input_hash, result=result)
+
+    def book_fee(
+        self,
+        plan: FillAccountingDispatchPlan,
+        fill: Fill,
+        assessment: FinalFeeAssessmentResult,
+        state_view: FinancialStateView,
+        /,
+    ) -> FinancialDispatchOutcome:
+        input_hash = canonical_sha256(
+            {
+                "operation": "book_fee",
+                "plan": plan,
+                "fill": fill,
+                "assessment": assessment,
+                "journal_hash": state_view.journal.journal_hash,
+                "ledger_state_hash": state_view.ledger_state.state_hash,
+            }
+        )
+        payload = plan.position_payload
+        if (
+            type(payload) is not CashFillAccountingPlan
+            or payload.cost_basis_policy.policy_version < 2
+            or plan.expected_fill_id != fill.fill_id
+            or assessment.rule_set != plan.fee_plan.final_fee_rule_set
+            or assessment.assessment.fee_assessment_id
+            != plan.fee_plan.fee_assessment_id
+            or assessment.assessment.assessment_time
+            != plan.fee_plan.fee_assessment_time
+            or assessment.basis.fills != (fill,)
+        ):
+            return _failure(
+                self.spec,
+                plan.source_event_id,
+                input_hash,
+                FinancialDispatchFailureCode.FILL_PLAN_MISMATCH,
+                str(fill.fill_id),
+            )
+        lots_by_position = _position_lot_books_from_ledger(state_view.ledger_state)
+        open_lots = lots_by_position.get(payload.position_key, ())
+        if (
+            not open_lots
+            and state_view.ledger_state.position_quantity(payload.position_key).units
+        ):
+            return _failure(
+                self.spec,
+                plan.source_event_id,
+                input_hash,
+                FinancialDispatchFailureCode.PROFILE_COMPONENT_FAILURE,
+                "position_lot_books",
+                str(payload.position_key),
+            )
+        fee = plan.fee_plan
+        charged = CashInstrumentAccounting().charge_fee(
+            assessment=assessment.assessment,
+            related_fill=fill,
+            cash_key=fee.cash_key,
+            open_lots=open_lots,
+            cost_basis_policy=payload.cost_basis_policy,
+            journal_entry_id=fee.fee_journal_entry_id,
+            recorded_at=fee.fee_recorded_at,
+        )
+        if charged.result is None:
+            failure = charged.failure
+            return _failure(
+                self.spec,
+                plan.source_event_id,
+                input_hash,
+                FinancialDispatchFailureCode.PROFILE_COMPONENT_FAILURE,
+                getattr(getattr(failure, "code", None), "value", "cash-accounting"),
+                getattr(failure, "subject_id", str(fill.fill_id)),
+            )
+        lots_by_position[payload.position_key] = charged.result.open_lots
+        if not charged.result.open_lots:
+            lots_by_position.pop(payload.position_key, None)
+        result = FinancialDispatchResult(
+            self.spec,
+            plan.source_event_id,
+            (charged.result.journal_entry,),
+            _lot_state(lots_by_position),
+            (),
         )
         return FinancialDispatchOutcome(self.spec, input_hash, result=result)
 
