@@ -155,7 +155,7 @@ artifact_hashes: []
 | G12F | PASSED | parity tooling | G12E, G07 | none |
 | G12G | PASSED | market-bundle-builder | G12B–G12C | Bar aggregation fixtures |
 | G12H | DRAFT | market-bundle-builder validation | G12C | Rule coverage fixtures |
-| G12I | DRAFT | market-bundle-builder validation | G12C, G12G | Price/availability/revision coverage |
+| G12I | DRAFT | market-bundle-builder validation | G12C, G12G | Real profile-purpose, provider/calendar availability, and terminal-set closure evidence |
 | G12J | DRAFT | trading-domain schema migration | real old artifact | No real source/target schema yet |
 | G12K | DRAFT | market-bundle-builder validation | G12C | Universe/corporate action coverage |
 | G12L-* | DRAFT | market-bundle-builder source adapter | G12A–G12K as applicable | Provider selection/spec |
@@ -11069,7 +11069,53 @@ uv.lock                                                        sha256:a07106c285
 
 Implementation commit：`eefe4df3568776323881810a309ea09a47b379b7`。
 
-## 103. PASSED 记录格式
+## 103. G12I Declaration Prerequisite Progress (Gate remains DRAFT)
+
+```yaml
+id: G12I
+status: DRAFT
+depends_on:
+  - G12C
+  - G12G
+owner_package: market-bundle-builder validation
+allowed_grade: development
+public_interface:
+  - crypto_quant_bundle_builder.BuilderStaleMarkPolicy
+  - crypto_quant_bundle_builder.PricePurposeRequirement
+  - crypto_quant_bundle_builder.MarketAvailabilityReason
+  - crypto_quant_bundle_builder.AvailabilitySpan
+  - crypto_quant_bundle_builder.AvailabilityClosureDeclaration
+  - crypto_quant_bundle_builder.RevisionTerminalLineage
+  - crypto_quant_bundle_builder.RevisionClosureDeclaration
+test_commands:
+  contract: uv run pytest -q tests/bundle_builder/coverage_declarations/test_coverage_declarations.py
+  parity: uv run pytest -q tests/parity/test_stale_policy_projection_parity.py
+  boundary: uv run pytest -q tests/architecture/test_g12i_coverage_declarations_boundary.py
+fixture_ids:
+  - coverage-declarations-v1
+expected_artifacts:
+  - tests/fixtures/market_data/coverage-declarations-v1.json
+failure_contracts:
+  - stale-policy-projection-differs-from-g03
+  - declaration-type-or-hash-forgery
+  - stale-policy-purpose-mismatch
+  - execution-or-liquidation-forward-fill
+  - availability-overlap-gap-or-unclassified-range
+  - duplicate-or-unordered-terminal-lineage
+  - declaration-claims-decision-grade-or-deployment-authorization
+  - builder-production-imports-kernel-runtime-or-io-authority
+remaining_blockers:
+  - real-profile-or-build-owned-complete-price-purpose-declarations
+  - real-provider-or-calendar-backed-gap-classification
+  - real-provider-backed-terminal-set-closure
+  - final-report-contract-and-atomic-failure-precedence
+passed_commit: null
+artifact_hashes: []
+```
+
+This slice freezes passive declaration values only. The static fixture is deterministic contract evidence, not provider/calendar truth or terminal-set completeness. `PriceStreamCoverageReport`, `MarketAvailabilityReport`, and `RevisionProvenanceReport` remain unimplemented. G12I remains `DRAFT / BLOCKED`, development-only, and cannot qualify a market or authorize deployment.
+
+## 104. PASSED 记录格式
 
 ```yaml
 id: WP-00A

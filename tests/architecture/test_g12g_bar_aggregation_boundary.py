@@ -72,7 +72,7 @@ def test_builder_root_exactly_adds_frozen_g12g_exports() -> None:
     import crypto_quant_bundle_builder as builder
 
     assert G12G_EXPORTS <= set(builder.__all__)
-    assert len(set(builder.__all__)) == 38
+    assert len(set(builder.__all__)) == 45
     assert builder.aggregate_bars_v1 is aggregate_bars_v1
 
 

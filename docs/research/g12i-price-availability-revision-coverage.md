@@ -2,57 +2,42 @@
 
 ## Decision status
 
-G12I remains **DRAFT / BLOCKED**. G12C and G12G are PASSED, but the Builder lacks frozen canonical input declarations for price-purpose requirements, stale-policy evidence, availability classifications, and generalized revision-closure claims.
+G12I remains **DRAFT / BLOCKED**. The Builder now owns immutable declaration value contracts and test-only G03 stale-policy parity, but no real profile/build authority, provider/calendar classification, or terminal-set closure has been supplied.
 
-This note records the missing authority. It does not authorize implementation, provider completeness, decision-grade use, Runtime qualification, or deployment.
+This note does not authorize the final analyzer, provider completeness, decision-grade use, Runtime qualification, or deployment.
 
-## Verified existing authority
+## Frozen prerequisite seam
 
-- G12C binds Bundle coverage, stream capabilities, Event ordering, revision envelopes, and source identities.
-- G12G binds mechanical Bar bucket/out-of-plan counts, source Event hashes, exact availability, and immutable Bar revisions.
-- `PricePurpose` is Domain authority.
-- `StaleMarkPolicy` is Trading Kernel authority with key/version/purpose/max-age/forward-fill fields and `policy_hash`.
-- Builder may not import Trading Kernel production code.
-- No existing Builder schema declares required purposes per market/profile, maps a Bundle stream to one purpose over an Instrument/time scope, classifies every availability gap, or attests that a supplied revision set is closed.
+`crypto_quant_bundle_builder.coverage_declarations` now exports:
 
-G12I therefore cannot claim exact G03 policy reuse, invent gap reasons from empty Bars, or generalize source-specific revision payloads without a preceding projection contract.
+- `BuilderStaleMarkPolicy` — exact Kernel-independent projection of G03 `StaleMarkPolicy`;
+- `PricePurposeRequirement` — one Instrument/purpose/stream/time requirement bound to the projection and source identity;
+- `MarketAvailabilityReason` — the closed caller-declared reason vocabulary;
+- `AvailabilitySpan` and `AvailabilityClosureDeclaration` — exact half-open caller declarations linked to a G12G manifest hash;
+- `RevisionTerminalLineage` and `RevisionClosureDeclaration` — exact caller-declared terminal hashes and causal visibility limit.
 
-## Missing prerequisite contracts
+All declaration records are frozen/slotted schema-v1 values with constructor validation, canonical hashes, explicit empty-scope semantics, and fixed development-only qualification. The Builder production module imports only Domain and Market Data public contracts. Trading Kernel appears only in parity tests.
 
-Implementation requires immutable Builder-consumable declarations for:
+The stale-policy projection intentionally preserves the G03 canonical body byte-for-byte, so its schema-v1 identity is class authority rather than an added canonical field. `policy_hash` is always recomputed as `canonical_sha256(projection)` and exact-matches the authoritative Kernel value for equal inputs.
 
-### Price-purpose requirement declaration
+`PricePurposeRequirement` rejects cross-purpose policy binding and rejects forward fill for `EXECUTION_REFERENCE` and `LIQUIDATION`. It is passive data, not a resolver, evaluator, fallback engine, or state machine.
 
-- target Bundle/profile/Instrument scope;
-- required `PricePurpose` tuple;
-- exact stream/capability/schema identity per purpose;
-- finite half-open coverage spans;
-- a canonical stale-policy projection containing policy key/version/purpose/max-age/forward-fill and authoritative Kernel policy hash;
-- test-only exact parity to `StaleMarkPolicy.to_canonical_dict()`.
+## What remains blocked
 
-### Availability closure declaration
+The checked-in fixture proves only deterministic contract shape. It is not real market authority.
 
-- exact target interval and Instrument/purpose scope;
-- caller-justified non-overlapping spans using frozen reasons;
-- source key/hash and explicit empty coverage;
-- links to relevant G12G bucket hashes/mechanical findings;
-- declaration hash and authority provenance.
+G12I still requires:
 
-G12G mechanical emptiness must never manufacture `NO_SESSION`, `SUSPENDED`, `NO_TRADES`, `MISSING`, or `SOURCE_OUTAGE` by itself.
+1. immutable profile/build ownership declaring the complete required purpose set and exact Bundle scopes;
+2. real provider/calendar-backed availability declarations classifying every required scope, including justified empty scope;
+3. real terminal-set closure declarations proving that no in-scope lineage or later visible correction was omitted;
+4. exact binding of those declarations to the target G12C/G12G artifacts.
 
-### Revision closure declaration
-
-- exact logical lineage keys and in-scope Event hashes;
-- declared terminal revision hashes;
-- source key/hash and explicit empty closure;
-- causal visibility limit;
-- declaration hash and immutable source authority.
-
-Event absence or one internally valid chain does not prove that no omitted correction exists.
+G12G mechanical empty-bucket counts must not manufacture `NO_SESSION`, `SUSPENDED`, `NO_TRADES`, `MISSING`, or `SOURCE_OUTAGE`. A locally valid revision chain must not be treated as proof of provider terminal-set completeness.
 
 ## Provisional downstream outcome
 
-After the declarations are frozen, G12I may produce atomically:
+Only after real declaration evidence is frozen may G12I add, atomically:
 
 - `PriceStreamCoverageReport`;
 - `MarketAvailabilityReport`;
@@ -60,25 +45,11 @@ After the declarations are frozen, G12I may produce atomically:
 - one combined coverage manifest; or
 - one structured failure.
 
-Reports must bind exact G12C/G12G refs and declaration hashes, remain development-only, and never mutate source artifacts.
-
-The public seam, canonical bodies, and failure precedence remain provisional until the declaration contracts exist.
-
-## Evidence needed to become READY
-
-- real immutable fixtures for all three declaration types;
-- test-only stale-policy projection parity to G03;
-- explicit required-purpose ownership by a profile/build artifact;
-- exact availability reason vocabulary and closure authority;
-- revision terminal-set/closure evidence, including explicit empty scope;
-- no-forward-fill tests for execution/liquidation purposes;
-- cross-purpose fallback rejection;
-- missing/duplicate purpose, unclassified/overlapping availability, broken/omitted revision closure, future visibility, precedence, atomicity, and repeat hashes;
-- Builder-only import boundary.
+None of those reports is implemented by this prerequisite slice.
 
 ## Non-goals
 
 - No calendar/session derivation or gap-reason invention.
-- No Bar generation, interpolation, carry close, placeholder data, or forward-filled execution evidence.
-- No provider API, real-source completeness claim, or provider schema mapping; G12L owns those.
-- No Runtime/Kernel production import, Engine branch, market qualification, live use, or deployment authorization; G12M owns final qualification.
+- No Bar generation, interpolation, carry close, placeholder data, or forward-filled execution/liquidation evidence.
+- No provider adapter, API, filesystem/network/wall-clock read, cache, registry, DSL, resolver, or rule engine.
+- No Runtime/Kernel production import, Engine branch, market qualification, live use, or deployment authorization.

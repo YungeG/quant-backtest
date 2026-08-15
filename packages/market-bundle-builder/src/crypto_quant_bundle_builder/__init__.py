@@ -17,6 +17,15 @@ from .bundle_validation import (
     BundleValidationOutcome,
     validate_market_bundle_v1,
 )
+from .coverage_declarations import (
+    AvailabilityClosureDeclaration,
+    AvailabilitySpan,
+    BuilderStaleMarkPolicy,
+    MarketAvailabilityReason,
+    PricePurposeRequirement,
+    RevisionClosureDeclaration,
+    RevisionTerminalLineage,
+)
 from .local_market_bundle_repository import (
     LocalMarketBundleRepository,
     LocalMarketBundleRepositoryConfig,
@@ -52,6 +61,8 @@ from .synthetic_jsonl import (
 __version__ = "0.1.0"
 
 __all__ = [
+    "AvailabilityClosureDeclaration",
+    "AvailabilitySpan",
     "BarAggregationFailure",
     "BarAggregationFailureCode",
     "BarAggregationManifest",
@@ -63,15 +74,20 @@ __all__ = [
     "BundleValidationFailure",
     "BundleValidationFailureCode",
     "BundleValidationOutcome",
+    "BuilderStaleMarkPolicy",
     "LocalMarketBundleRepository",
     "LocalMarketBundleRepositoryConfig",
     "LocalMarketBundleRetentionProof",
+    "MarketAvailabilityReason",
     "MarketBundlePublicationFailure",
     "MarketBundlePublicationFailureCode",
     "MarketBundlePublicationOutcome",
     "MarketBundlePublicationResult",
     "MarketBundleRepositoryPath",
+    "PricePurposeRequirement",
     "RawSourceMember",
+    "RevisionClosureDeclaration",
+    "RevisionTerminalLineage",
     "SourceSnapshot",
     "SourceSnapshotFailure",
     "SourceSnapshotFailureCode",

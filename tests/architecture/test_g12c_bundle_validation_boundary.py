@@ -65,7 +65,7 @@ def test_builder_root_exposes_the_g12c_seam() -> None:
     import crypto_quant_bundle_builder as builder
 
     assert G12C_EXPORTS <= set(builder.__all__)
-    assert len(set(builder.__all__)) == 38
+    assert len(set(builder.__all__)) == 45
     assert builder.validate_market_bundle_v1 is validate_market_bundle_v1
     assert builder.BundleValidationFailure is BundleValidationFailure
     assert builder.BundleValidationFailureCode is BundleValidationFailureCode
