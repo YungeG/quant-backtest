@@ -92,8 +92,10 @@ def payment_trigger(value: CnAShareCorporateActionEntitlement) -> SimulationInst
 
 def listing_trigger(value: CnAShareCorporateActionEntitlement) -> SimulationInstant:
     announcement = value.query.announcement
-    assert announcement is not None and announcement.listing_date is not None
-    return local_boundary(announcement.listing_date.value, LISTING_PHASE)
+    assert announcement is not None
+    listing = announcement.listing_date or announcement.ex_date
+    assert listing is not None
+    return local_boundary(listing.value, LISTING_PHASE)
 
 
 def cash_evidence(value: CnAShareCorporateActionEntitlement | None = None) -> CnAShareCashPaymentEvidence:

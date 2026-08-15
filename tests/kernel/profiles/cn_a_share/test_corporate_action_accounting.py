@@ -97,6 +97,40 @@ def test_public_enums_and_concrete_seam_are_exact() -> None:
         "cancelled",
     )
     assert tuple(value.value for value in CnAShareCorporateActionTranslationFailureCode) == FAILURE_VALUES
+    assert [field.name for field in fields(CnAShareCashPaymentEvidence)] == [
+        "evidence_id",
+        "source_ref",
+        "entitlement_hash",
+        "corporate_action_id",
+        "event_id",
+        "event_hash",
+        "status",
+        "trigger_at",
+        "available_at",
+        "gross_cash",
+        "withholding",
+        "net_cash",
+        "tax_disposition",
+        "tradable",
+        "withdrawable",
+        "margin_eligible",
+    ]
+    assert [field.name for field in fields(CnAShareShareDeliveryEvidence)] == [
+        "evidence_id",
+        "source_ref",
+        "entitlement_hash",
+        "corporate_action_id",
+        "event_id",
+        "event_hash",
+        "status",
+        "trigger_at",
+        "available_at",
+        "delivered_bonus_quantity",
+        "delivered_capitalization_quantity",
+        "withholding",
+        "tax_disposition",
+        "sellable",
+    ]
     assert [field.name for field in fields(CnAShareCashPaymentOutcome)] == [
         "request",
         "journal_entry",
@@ -115,8 +149,12 @@ def test_evidence_and_requests_are_frozen_slotted_and_semantic_defects_construct
     requests = (cash_request(), share_request())
     for value in (cash, share, *requests):
         assert type(value).__slots__
+    for value in (cash, share):
         with pytest.raises(FrozenInstanceError):
-            cast(Any, value).recorded_at = value
+            cast(Any, value).evidence_id = "forged"
+    for value in requests:
+        with pytest.raises(FrozenInstanceError):
+            cast(Any, value).recorded_at = value.recorded_at
 
     # Business defects are translator outcomes, not constructor errors.
     replace(cash, status=CnAShareCorporateActionDeliveryStatus.SUSPENDED)
@@ -425,6 +463,128 @@ def test_lot_cardinality_is_absolute_and_never_filters_candidates() -> None:
     assert _failure_code(outcome) is CnAShareCorporateActionTranslationFailureCode.ELIGIBLE_LOT_CARDINALITY_MISMATCH
 
 
+def test_context_identity_and_source_collisions_fail_before_economic_guards() -> None:
+    cash = cash_request()
+    wrong_cash_key = CashBalanceKey(
+        cash.entitlement.account_id,
+        cash.entitlement.position_key.venue_id,
+        CurrencyId("USD"),
+    )
+    assert _failure_code(
+        translate_corporate_action_cash_payment(replace(cash, cash_key=wrong_cash_key))
+    ) is CnAShareCorporateActionTranslationFailureCode.CONTEXT_MISMATCH
+    assert _failure_code(
+        translate_corporate_action_cash_payment(
+            with_cash_evidence(cash, withholding=Money(0, Scale(3), "CNY"))
+        )
+    ) is CnAShareCorporateActionTranslationFailureCode.CONTEXT_MISMATCH
+    assert _failure_code(
+        translate_corporate_action_cash_payment(
+            with_cash_evidence(
+                cash,
+                gross_cash=Money(7_000, Scale(3), "CNY"),
+                net_cash=Money(7_000, Scale(3), "CNY"),
+            )
+        )
+    ) is CnAShareCorporateActionTranslationFailureCode.CONTEXT_MISMATCH
+
+    share = share_request()
+    assert _failure_code(
+        translate_corporate_action_share_delivery(
+            with_share_evidence(share, withholding=Money(0, CNY_SCALE, "USD"))
+        )
+    ) is CnAShareCorporateActionTranslationFailureCode.CONTEXT_MISMATCH
+    other_instrument = "xshe:xshe.other.stable"
+    assert _failure_code(
+        translate_corporate_action_share_delivery(
+            with_share_evidence(
+                share,
+                delivered_bonus_quantity=Quantity(
+                    share.evidence.delivered_bonus_quantity.units,
+                    SHARE_SCALE,
+                    other_instrument,
+                ),
+            )
+        )
+    ) is CnAShareCorporateActionTranslationFailureCode.CONTEXT_MISMATCH
+    assert _failure_code(
+        translate_corporate_action_cash_payment(
+            with_cash_evidence(
+                cash,
+                evidence_id=cash.evidence.corporate_action_id,
+            )
+        )
+    ) is CnAShareCorporateActionTranslationFailureCode.ENTITLEMENT_EVIDENCE_MISMATCH
+
+
+def test_share_lot_scale_fails_but_rounded_unit_cost_does_not_override_exact_basis() -> None:
+    request = share_request()
+    old = request.open_lots[0]
+    scaled = replace(
+        old,
+        quantity=Quantity(
+            old.quantity.units * 10,
+            Scale(1),
+            old.quantity.instrument_id,
+        ),
+    )
+    assert _failure_code(
+        translate_corporate_action_share_delivery(
+            replace(request, open_lots=(scaled,))
+        )
+    ) is CnAShareCorporateActionTranslationFailureCode.LOT_STATE_MISMATCH
+
+    assert old.unit_cost is not None
+    rounded = replace(
+        old,
+        unit_cost=replace(old.unit_cost, units=old.unit_cost.units - 1),
+    )
+    outcome = translate_corporate_action_share_delivery(
+        replace(request, open_lots=(rounded,))
+    )
+    assert outcome.failure is None
+    assert outcome.journal_entry is not None
+    change = outcome.journal_entry.position_lot_changes[0]
+    assert change.after is not None
+    assert change.after.total_cost_basis == rounded.total_cost_basis
+
+    assert _failure_code(
+        translate_corporate_action_share_delivery(
+            replace(request, open_lots=(replace(old, unit_cost=None),))
+        )
+    ) is CnAShareCorporateActionTranslationFailureCode.LOT_STATE_MISMATCH
+    for basis in (None, Money(1, Scale(3), "CNY")):
+        assert _failure_code(
+            translate_corporate_action_share_delivery(
+                replace(request, open_lots=(replace(old, total_cost_basis=basis),))
+            )
+        ) is CnAShareCorporateActionTranslationFailureCode.EXACT_COST_BASIS_MISMATCH
+
+    tiny_basis = replace(old, total_cost_basis=Money(1, CNY_SCALE, "CNY"))
+    assert _failure_code(
+        translate_corporate_action_share_delivery(
+            replace(request, open_lots=(tiny_basis,))
+        )
+    ) is CnAShareCorporateActionTranslationFailureCode.UNIT_COST_QUANTIZATION_MISMATCH
+
+
+def test_failure_values_reject_code_and_leg_identity_forgery() -> None:
+    failure = translate_corporate_action_cash_payment(
+        with_cash_evidence(
+            cash_request(),
+            status=CnAShareCorporateActionDeliveryStatus.CANCELLED,
+        )
+    ).failure
+    assert failure is not None
+    with pytest.raises(ValueError):
+        replace(failure, subject_ids=("context_mismatch", *failure.subject_ids[1:]))
+    with pytest.raises(ValueError):
+        replace(
+            failure,
+            subject_ids=(failure.subject_ids[0], "unknown_leg", *failure.subject_ids[2:]),
+        )
+
+
 def test_outcomes_enforce_strict_xor_and_reject_forgery() -> None:
     cash = cash_request()
     valid = translate_corporate_action_cash_payment(cash)
@@ -446,10 +606,36 @@ def test_outcomes_enforce_strict_xor_and_reject_forgery() -> None:
     share = share_request()
     valid_share = translate_corporate_action_share_delivery(share)
     assert valid_share.journal_entry is not None
+    failed_share = translate_corporate_action_share_delivery(
+        with_share_evidence(
+            share,
+            status=CnAShareCorporateActionDeliveryStatus.CANCELLED,
+        )
+    )
+    assert failed_share.failure is not None
     with pytest.raises(ValueError):
         CnAShareShareDeliveryOutcome(share, None, None)
     with pytest.raises(ValueError):
-        CnAShareShareDeliveryOutcome(share, replace(valid_share.journal_entry, source_ids=("forged",)), None)
+        CnAShareShareDeliveryOutcome(
+            share,
+            valid_share.journal_entry,
+            failed_share.failure,
+        )
+    with pytest.raises(ValueError):
+        CnAShareShareDeliveryOutcome(
+            share,
+            replace(valid_share.journal_entry, source_ids=("forged",)),
+            None,
+        )
+    with pytest.raises(ValueError):
+        CnAShareShareDeliveryOutcome(
+            share,
+            None,
+            replace(
+                failed_share.failure,
+                code=CnAShareCorporateActionTranslationFailureCode.CONTEXT_MISMATCH,
+            ),
+        )
 
 
 def test_translation_is_pure_and_does_not_mutate_entitlement_lot_or_raw_prices() -> None:
