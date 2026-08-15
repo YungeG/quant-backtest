@@ -25,6 +25,30 @@ def test_every_workspace_package_has_an_importable_public_root() -> None:
         assert module.__package__ == package["module_name"]
 
 
+def test_g08g_corporate_action_accounting_is_public_only_from_cn_a_share_profile() -> None:
+    profile = importlib.import_module("crypto_quant_trading.profiles.cn_a_share")
+    top_level = importlib.import_module("crypto_quant_trading")
+    names = (
+        "CnAShareCorporateActionTaxDisposition",
+        "CnAShareCorporateActionDeliveryStatus",
+        "CnAShareCashPaymentEvidence",
+        "CnAShareShareDeliveryEvidence",
+        "CnAShareCashPaymentRequest",
+        "CnAShareShareDeliveryRequest",
+        "CnAShareCorporateActionTranslationFailureCode",
+        "CnAShareCorporateActionTranslationFailure",
+        "CnAShareCashPaymentOutcome",
+        "CnAShareShareDeliveryOutcome",
+        "translate_corporate_action_cash_payment",
+        "translate_corporate_action_share_delivery",
+    )
+    for name in names:
+        assert hasattr(profile, name), name
+        assert name in profile.__all__
+        assert not hasattr(top_level, name), name
+        assert name not in top_level.__all__
+
+
 def git_status() -> str:
     return subprocess.run(
         ["git", "status", "--porcelain=v1", "--untracked-files=all"],
