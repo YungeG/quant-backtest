@@ -1328,7 +1328,9 @@ Broker commission 不属于 MarketSemantics。Golden 使用 caller-supplied synt
 
 ### Gate G08G Corporate Action Adjustment and Payment
 
-依赖：G08F、G03 Accounting；当前状态 `DRAFT`。
+Detailed plan: [G08G](plans/g08/g08g.md); research: [G08G lifecycle readiness](../research/g08g-corporate-action-lifecycle.md).
+
+依赖：G08F、G03 Accounting；当前状态 `DRAFT / BLOCKED`，但 F1 Journal/Ledger Lot replay foundation 可立即执行。
 
 拥有：Ex/Effective position adjustment、Payment cash、withholding/tax Journal translation。
 
