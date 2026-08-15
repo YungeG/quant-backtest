@@ -1330,17 +1330,9 @@ Broker commission 不属于 MarketSemantics。Golden 使用 caller-supplied synt
 
 Detailed plan: [G08G](plans/g08/g08g.md); research: [G08G lifecycle readiness](../research/g08g-corporate-action-lifecycle.md).
 
-依赖：G08F、G03 Accounting；当前状态 `DRAFT / CONTRACT FREEZE`。F1 Journal/Ledger Lot replay foundation 已在 `3ff43d9ad17c0380d87b8b7c8f367b57a8123ecd` 通过；F2a exact/replayable Cash accounting 已在 `b673cc7a500145302357480c05afc0a9439a0715` 通过；F2b policy-v2 Runtime Ledger authority 已在 `f3e33fb232a732cd1212811d6ef4074f2477fe1a` 通过，且 policy-v1 artifacts 保持 exact。下一可执行里程碑为冻结 F3 Corporate Action translation acceptance contract。
+依赖：G08F、G03 Accounting；当前状态 `READY / F3 CONTRACT FREEZE`。F1 Journal/Ledger Lot replay foundation 已在 `3ff43d9ad17c0380d87b8b7c8f367b57a8123ecd` 通过；F2a exact/replayable Cash accounting 已在 `b673cc7a500145302357480c05afc0a9439a0715` 通过；F2b policy-v2 Runtime Ledger authority 已在 `f3e33fb232a732cd1212811d6ef4074f2477fe1a` 通过，且 policy-v1 artifacts 保持 exact。F3 Corporate Action translation acceptance contract 已冻结，目前处于可执行的 READY 状态。
 
 拥有：Ex/Effective position adjustment、Payment cash、withholding/tax Journal translation。
-
-READY 前阻断：
-
-- Generic Journal/Ledger 必须拥有 replayable Position Lot create/replace/close effects，Runtime mutable lot side-state 不能作为权威；
-- `PositionLot` 必须拥有 exact authoritative total Cost Basis，不能只靠 fixed-scale unit cost 声称任意 ratio 守恒；
-- 新股 sellability、支付现金 tradable/withdrawable availability、fractional delivered quantity、gross/deferred tax 和 delayed/suspended lifecycle evidence必须冻结；
-- Fill accounting 与 Corporate Action 必须共享 Lot-effect contract并通过 full/prefix/resume replay；多 Lot 的 entitlement allocation 必须有 authoritative per-Lot evidence，或 v1 exact 限制为单一 eligible Lot；
-- Corporate Action tax disposition 至少区分 NOT_APPLICABLE/APPLIED/DEFERRED_UNSUPPORTED；G08G owns disposition，G08H/Runtime 对 deferred unsupported 后续 taxable transfer fail closed。
 
 最终验收仍包括：
 
@@ -1350,6 +1342,7 @@ READY 前阻断：
 - adjustment/payment 幂等并可 Journal replay；
 - 缺少 Effective/Payment/Listing 或 availability evidence 时 fail closed；
 - raw tradable prices 不被 ex-reference metadata 改写。
+- Corporate Action tax disposition 至少区分 NOT_APPLICABLE/APPLIED/DEFERRED_UNSUPPORTED；G08G owns disposition，G08H/Runtime 对 deferred unsupported 后续 taxable transfer fail closed。
 
 ### Gate G08H A-share Profile Composition and Parity
 

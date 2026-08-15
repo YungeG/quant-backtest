@@ -119,7 +119,7 @@ artifact_hashes: []
 | G08D | PASSED | trading-kernel profiles/cn_a_share | G08A, G08C, WP-05G | none |
 | G08E | PASSED | trading-kernel profiles/cn_a_share | WP-05H, WP-05J | none |
 | G08F | PASSED | trading-kernel profiles/cn_a_share | G08A, WP-06A, WP-06B | none |
-| G08G | DRAFT | trading-domain + trading-kernel + backtest-runtime | G08F, G03 | Journal-replayable Lot effects, exact total Cost Basis, availability/tax/fractional-share fixtures |
+| G08G | READY | trading-kernel profiles/cn_a_share | G08F, G03 | none |
 | G08H | DRAFT | trading-kernel profiles/cn_a_share + parity | G08A–G08G | Composition/parity commands |
 | G09A | PASSED | trading-kernel derivatives | G03 | none |
 | G09B | PASSED | trading-kernel derivative accounting | G09A, G03 | none |
@@ -6374,19 +6374,138 @@ uv lock --check                                                     PASS
 Python                                                              3.13.5
 ```
 
-## 68. G08G Corporate Action Adjustment and Payment Readiness Blockers
+## 68. G08G Corporate Action Adjustment and Payment Acceptance Card
 
-G08G 保持 `DRAFT`。在以下 blockers 全部冻结前不得实现：
+```yaml
+id: G08G
+status: READY
+depends_on:
+  - G08F
+  - G03
+owner_package: trading-kernel profiles/cn_a_share
+public_interface:
+  - crypto_quant_trading.profiles.cn_a_share.CnAShareCorporateActionTaxDisposition
+  - crypto_quant_trading.profiles.cn_a_share.CnAShareCorporateActionDeliveryStatus
+  - crypto_quant_trading.profiles.cn_a_share.CnAShareCashPaymentEvidence
+  - crypto_quant_trading.profiles.cn_a_share.CnAShareShareDeliveryEvidence
+  - crypto_quant_trading.profiles.cn_a_share.CnAShareCashPaymentRequest
+  - crypto_quant_trading.profiles.cn_a_share.CnAShareShareDeliveryRequest
+  - crypto_quant_trading.profiles.cn_a_share.CnAShareCorporateActionTranslationFailureCode
+  - crypto_quant_trading.profiles.cn_a_share.CnAShareCorporateActionTranslationFailure
+  - crypto_quant_trading.profiles.cn_a_share.CnAShareCashPaymentOutcome
+  - crypto_quant_trading.profiles.cn_a_share.CnAShareShareDeliveryOutcome
+  - crypto_quant_trading.profiles.cn_a_share.translate_corporate_action_cash_payment
+  - crypto_quant_trading.profiles.cn_a_share.translate_corporate_action_share_delivery
+test_commands:
+  contract: uv run pytest -q tests/kernel/profiles/cn_a_share/test_corporate_action_accounting.py
+  fixture: uv run pytest -q tests/kernel/profiles/cn_a_share/test_corporate_action_accounting_golden.py tests/kernel/integration/test_corporate_action_journal_replay.py
+  boundary: uv run pytest -q tests/architecture/test_g08g_corporate_action_accounting_boundary.py tests/architecture/test_public_api_imports.py tests/architecture/test_network_isolation.py tests/architecture/test_repository_cleanliness.py && uv run python tools/architecture/check_import_boundaries.py --root . --policy architecture/import-boundaries.toml --report build/acceptance/g08g-f3-import-boundary-report.json
+  foundation: uv run pytest -q tests/domain/accounting tests/kernel/accounting tests/kernel/journal tests/kernel/ledger tests/runtime/engine/test_g08g_runtime_lot_authority.py
+fixture_ids:
+  - cn-a-share-corporate-action-accounting-v1
+  - cn-a-share-corporate-action-journal-replay-v1
+expected_artifacts:
+  - tests/fixtures/kernel/profiles/cn_a_share/corporate-action-accounting-v1.json
+  - tests/fixtures/kernel/integration/corporate-action-journal-replay-v1.json
+  - build/acceptance/g08g-f3-pytest.xml
+  - build/acceptance/g08g-f3-mypy.txt
+  - build/acceptance/g08g-f3-import-boundary-report.json
+failure_contracts:
+  - malformed-types-or-noncanonical-text-are-constructor-errors-not-business-failures
+  - semantic-context-mismatch-is-accepted-or-partially-translated
+  - entitlement-evidence-corporate-action-event-or-hash-mismatch-is-accepted
+  - absent-or-zero-payable-leg-or-unsupported-venue-action-scope-is-translated
+  - suspended-or-cancelled-delivery-status-is-translated
+  - applied-or-deferred-tax-disposition-is-translated
+  - nonzero-withholding-or-gross-net-cash-mismatch-is-translated
+  - cash-is-not-explicitly-tradable-withdrawable-and-margin-eligible
+  - delivered-shares-are-not-explicitly-sellable
+  - trigger-is-inferred-or-early-or-unavailable-evidence-is-translated
+  - delivered-cash-or-separate-share-values-differ-from-entitlement
+  - fractional-share-evidence-is-rounded-or-cash-in-lieu-is-invented
+  - zero-or-multiple-eligible-lots-are-allocated-or-selected
+  - current-lot-quantity-is-required-to-equal-record-registered-quantity
+  - lot-context-or-authoritative-total-cost-basis-mismatch-is-accepted
+  - total-cost-basis-changes-or-unit-cost-is-derived-without-supplied-quantization
+  - failure-precedence-differs-or-partial-journal-lot-output-is-returned
+  - outcome-allows-both-present-or-both-absent-result-and-failure
+  - duplicate-journal-id-conflicting-replay-or-stale-before-state-is-reclassified-as-translation-failure
+  - raw-price-settlement-availability-provider-runtime-or-revision-scope-is-mutated
+  - real-market-profile-decision-grade-or-deployment-qualification-is-claimed
+allowed_grade: development
+evidence:
+  - pytest-report
+  - static-corporate-action-accounting-golden-hash
+  - static-corporate-action-journal-replay-golden-hash
+  - unchanged-g08f-entitlement-hash-evidence
+  - unchanged-raw-price-evidence
+  - exact-failure-precedence-and-no-partial-output-evidence
+  - strict-xor-reconstruction-evidence
+  - exact-total-cost-basis-conservation-and-unit-cost-quantization-evidence
+  - full-prefix-resume-journal-ledger-replay-evidence
+  - duplicate-idempotency-conflict-and-stale-before-state-rejection-evidence
+  - synthetic-development-profile-qualified-false-evidence
+  - decision-grade-eligible-false-evidence
+  - deployment-authorized-false-evidence
+  - import-boundary-report
+  - static-type-report
+passed_commit: null
+artifact_hashes: []
+```
 
-1. Immutable Accounting Journal 与 Generic Ledger 必须拥有 typed Position Lot create/replace/close effects；当前 Generic Ledger 明确拒绝 Position lots，Runtime mutable `lot_books` 不是权威 replay source；
-2. `PositionLot` 必须增加可精确守恒的 authoritative total Cost Basis；仅有 fixed-scale `unit_cost` 无法对 3-for-2 等 repeating ratio 保证总 Cost Basis exact 不变；
-3. Cash Fill accounting 与 Corporate Action adjustment 必须共用同一 replayable Lot-effect contract，并证明 full replay、prefix/resume、duplicate idempotency 与 conflict rejection；Account-level entitlement 即使为整数也可能在多个 Lot 间产生 fractional allocation，因此 READY 前必须冻结 authoritative per-Lot allocation evidence，或将 v1 收窄为 exactly-one eligible Lot 并对多 Lot fail closed；
-4. 新增股份的 sellability/settlement 与支付现金的 tradable/withdrawable/margin availability 必须显式冻结，不能因 Ledger balance 变化而隐式全部可用；
-5. Fractional share 必须有 authoritative delivered-quantity evidence；Shanghai sub-cent cash、延迟/暂停支付和 self-distribution 需要独立 facts；
-6. G08E 明确不拥有 Corporate Action tax。G08G 仍拥有 Corporate Action tax disposition/translation，但 READY 前必须冻结 typed disposition（至少区分 `NOT_APPLICABLE`、`APPLIED`、`DEFERRED_UNSUPPORTED`）及 owner：G08G 产生 account-tax disposition，G08H/Runtime composition 对 `DEFERRED_UNSUPPORTED` 后续 taxable transfer fail closed。若不冻结该 guard，G08G v1 必须收窄为有明确 `NOT_APPLICABLE` 证据的 gross payment，并排除普通个人 deferred-tax case；
-7. Ex/Effective/Payment/Listing trigger identity 与 revised/suspended lifecycle evidence必须独立于 Entitlement。Entitlement 不得自动推导支付或调整；
-8. Raw tradable prices 保持不变。Ex reference price 只能进入 Market Rule/reference metadata，不能 retroactively rewrite OHLC、Fill 或 accounting price；
-9. 完整成功 Fixture、精确验收命令、public interface、failure precedence、canonical identity chain 和 artifact list 仍未冻结。
+### G08G Acceptance
+
+1. G08G adds exactly one concrete module, `crypto_quant_trading.profiles.cn_a_share.corporate_action_accounting`, owned by `trading-kernel profiles/cn_a_share`. It is exported only from `crypto_quant_trading.profiles.cn_a_share`, not top-level `crypto_quant_trading`. It may reuse G08F Corporate Action values and existing Domain Journal/Lot/Money/Quantization authorities; it must not add a stateless service class, Protocol, registry, new `ProfilePortType`, `ProfilePortOutcome`, generic effect engine, Runtime dispatcher, provider adapter, filesystem/network/process/database access, dynamic import, or wall-clock read;
+2. The public seam is exact: one `CnAShareCorporateActionTaxDisposition`, one `CnAShareCorporateActionDeliveryStatus`, separate typed cash-payment and share-delivery evidence/requests, one shared translation failure code/value, two strict XOR outcomes, and two module-level pure translator functions. No separate success-result wrapper is introduced because the existing `AccountingJournalEntry` is the complete success value;
+3. `CnAShareCorporateActionTaxDisposition` values are exactly `not_applicable`, `applied`, `deferred_unsupported`. `CnAShareCorporateActionDeliveryStatus` values are exactly `confirmed`, `suspended`, `cancelled`; v1 success accepts only `confirmed`. G08G records disposition but does not calculate withholding or deferred tax. `APPLIED`, `DEFERRED_UNSUPPORTED`, and any nonzero withholding fail closed;
+4. Both evidence types are immutable/slotted and exact-bind canonical `evidence_id`, one G08F `CnAShareCorporateActionSourceRef`, G08F `entitlement_hash`, `corporate_action_id`, announcement `event_id`/`event_hash`, delivery status, exact `trigger_at: SimulationInstant`, and evidence `available_at: SimulationInstant`. Cash evidence additionally binds gross cash, withholding, net cash, disposition, and explicit `tradable`, `withdrawable`, `margin_eligible`; share evidence binds separate delivered bonus/capitalization quantities, withholding, disposition, and explicit `sellable`. Payment trigger exact 为 declared Payment `TradingDate` 的 Asia/Shanghai 09:30、`TimelinePhase(110, "corporate_action_payment")`、`SourceSequence(0)`；Listing trigger exact 为 declared Listing `TradingDate` 的 Asia/Shanghai 09:30、`TimelinePhase(120, "corporate_action_listing")`、`SourceSequence(0)`。这些是 deterministic Engine ordering boundaries，不声称外部 clearing timestamp；v1 success exact 要求 `available_at == trigger_at`;
+5. Constructors reject only malformed types, invalid existing Domain-value invariants, or noncanonical text. Supported-scope, entitlement/evidence identity, status, tax, withholding, availability, trigger, invocation, delivered-value, Lot, exact-basis, and quantization mismatches remain structured translator outcomes. G08G never infers provider facts, payment revisions, suspension history, event time, delivered value, availability, or tax from dates/current state;
+6. Cash request exact stores entitlement, evidence, existing `CashBalanceKey`, existing `DomainId` whose kind is `DomainIdKind.JOURNAL`, and `recorded_at`. Share request exact stores entitlement, evidence, caller-ordered `open_lots: tuple[PositionLot, ...]`, existing `QuantizationPolicy`, existing Journal-kind `DomainId`, and `recorded_at`. A non-Journal ID kind is `CONTEXT_MISMATCH`; requests do not create another ID or Lot authority;
+7. Cash success requires a strictly positive G08F payable cash leg; exact account/Venue/Instrument/corporate-action/entitlement/event identities; confirmed status; `NOT_APPLICABLE`; CNY Scale-2 zero withholding; `net_cash == gross_cash`; all three immediate availability flags true; the exact frozen Payment trigger; `available_at == trigger_at`; and `recorded_at >= trigger_at` under full `SimulationInstant` total order. Missing/zero cash leg is unsupported scope; sub-cent, negative, withheld, net/gross mismatch, inferred, early, late/early evidence, suspended, or unavailable cases fail closed;
+8. Cash success returns one existing `AccountingJournalEntry` with `CORPORATE_ACTION_CASH_PAID`, effective time `evidence.trigger_at.instant`, exactly one positive cash `BalanceChange` for `net_cash`, empty Lot changes/realized PnL/fees/financing, and no Settlement or availability mutation. It returns no partial Journal tuple;
+9. Share success is limited to a strictly positive XSHE bonus/capitalization leg. XSHG share delivery and all non-XSHE share actions are unsupported scope. Success requires confirmed status, `NOT_APPLICABLE`, CNY Scale-2 zero withholding, `sellable=True`, the exact frozen Listing trigger, `available_at == trigger_at`, `recorded_at >= trigger_at` under full `SimulationInstant` total order, separate delivered bonus and capitalization quantities exact-equal to G08F entitlement, whole Scale-0 quantities, and positive summed delivery. G08G does not invent fractional allocation, rounding, cash-in-lieu, delayed listing, or Shanghai listing semantics;
+10. Share request must contain exactly one eligible current `PositionLot`; zero and multiple candidates return `ELIGIBLE_LOT_CARDINALITY_MISMATCH`. The Lot exact-matches entitlement account/Venue/Instrument position identity and has positive current quantity, but current Lot quantity is not required to equal G08F `registered_quantity`: post-Record sales do not alter captured entitlement. Multi-Lot allocation and Lot selection heuristics are forbidden;
+11. The eligible Lot must have non-null positive `unit_cost` and strictly positive authoritative CNY Scale-2 `total_cost_basis: Money` with exact position/currency identity. The replacement preserves Lot ID, source ID, position key, opened time, allocated fees, and exact total cost basis; its quantity is current quantity plus delivered bonus/capitalization. Only non-authoritative `unit_cost` is rederived from conserved total basis/new quantity using the caller-supplied existing `QuantizationPolicy`; the policy target scale must equal the prior unit-cost scale and the quantized result must remain positive. Missing/zero basis, incompatible currency/scale/policy, or unverifiable derivation fails closed;
+12. Share success returns one existing `AccountingJournalEntry` with `CORPORATE_ACTION_POSITION_ADJUSTED`, effective time `evidence.trigger_at.instant`, one position `BalanceChange` equal to delivered bonus plus capitalization, and exactly one `PositionLotChange(before=old_lot, after=adjusted_lot)`. Realized PnL, fees, financing, Settlement, and availability effects are empty. The outcome does not return `open_lots`; `AccountingJournal` append and `GenericLedger` replay are authoritative;
+13. Failure enum declaration and first-applicable guard order are exact: `CONTEXT_MISMATCH` → `ENTITLEMENT_EVIDENCE_MISMATCH` → `UNSUPPORTED_ACTION_SCOPE` → `UNSUPPORTED_DELIVERY_STATUS` → `UNSUPPORTED_TAX_DISPOSITION` → `NONZERO_WITHHOLDING` → `UNSUPPORTED_AVAILABILITY` → `TRIGGER_MISMATCH` → `EVIDENCE_NOT_AVAILABLE` → `UNSUPPORTED_FRACTIONAL_SHARE` → `DELIVERED_VALUE_MISMATCH` → `EARLY_INVOCATION` → `ELIGIBLE_LOT_CARDINALITY_MISMATCH` → `LOT_STATE_MISMATCH` → `EXACT_COST_BASIS_MISMATCH` → `UNIT_COST_QUANTIZATION_MISMATCH`. `EVIDENCE_NOT_AVAILABLE` exact-covers `available_at != trigger_at`; `DELIVERED_VALUE_MISMATCH` exact-covers cash gross/net versus G08F entitlement after the earlier withholding guard and share bonus/capitalization mismatch after the earlier fractional guard, so intrinsic evidence attribution is stable across early/on-time retries. `ELIGIBLE_LOT_CARDINALITY_MISMATCH` checks absolute `len(open_lots) != 1` without filtering; only identity/state defects of the single Lot reach `LOT_STATE_MISMATCH`. Multi-defect requests return only the first failure and no Journal/Lot prefix;
+14. Duplicate Journal IDs, duplicate idempotency, conflicting Journal replay, and stale/mismatched Lot before-state are not G08G translation failures. The translator deterministically reconstructs the same entry from the same request; existing `AccountingJournal` and `GenericLedger` remain authoritative and reject append/replay conflicts atomically;
+15. Cash/share outcomes embed the complete request and exactly one of `journal_entry` or shared failure. Constructors reject both-present and both-absent states; they re-evaluate the first failure or exact-reconstruct the Journal from the request, preventing forged success/failure/outcome hashes;
+16. Every new value uses `schema_version=1`, explicit type literal, canonical tuple order, and hash. Type literals are `cn_a_share_cash_payment_evidence`, `cn_a_share_share_delivery_evidence`, `cn_a_share_cash_payment_request`, `cn_a_share_share_delivery_request`, `cn_a_share_corporate_action_translation_failure`, `cn_a_share_cash_payment_outcome`, and `cn_a_share_share_delivery_outcome`. Public hashes are `evidence_hash`, `request_hash`, `failure_hash`, and `outcome_hash` as applicable;
+17. Failure `subject_ids` exact order is `(code, leg, corporate_action_id, entitlement_hash, evidence_id, evidence_hash, account_id, instrument_id, journal_entry_id)`, where leg is `cash_payment` or `share_delivery`. Journal `source_ids` exact order is corporate-action ID, entitlement hash, announcement event ID, announcement event hash, evidence ID, evidence hash;
+18. Static fixtures are exactly `tests/fixtures/kernel/profiles/cn_a_share/corporate-action-accounting-v1.json` with ID `cn-a-share-corporate-action-accounting-v1` and `tests/fixtures/kernel/integration/corporate-action-journal-replay-v1.json` with ID `cn-a-share-corporate-action-journal-replay-v1`. They freeze CA-XSHE-001 CNY 70 payment/210-share delivery against one current 500-share exact-basis Lot, proving current quantity need not equal the frozen 700-share Record entitlement; CA-XSHG-001 CNY 200 payment; Journal IDs with repeated 6/7/8 payloads; every failure; multi-defect precedence; XOR rejection; full/prefix/resume replay; existing Journal/Ledger duplicate/conflict rejection; unchanged G08F entitlement hash; and unchanged raw prices. Golden hashes are generated/frozen in the RED fixture commit, not invented in implementation;
+19. All artifacts remain synthetic development evidence and exact-record `grade=development`, `decision_grade_eligible=false`, `profile_qualified=false`, and `deployment_authorized=false`. G08G does not qualify a provider, real security/account/distribution scope, revision completeness, real market/profile, trading decision, or deployment;
+20. G08H retains provider/payment/revision-set scope, cross-query stable-ID conflict validation, real-market composition qualification, MarketBundle mapping, Runtime wiring, and parity. G08G does not mutate raw OHLC/Fill/accounting prices, infer ex-reference prices, recompute G08F entitlement, add a Corporate Action Settlement fork, or claim profile completeness.
+
+Exact RED commands:
+
+```bash
+uv run pytest -q \
+  tests/kernel/profiles/cn_a_share/test_corporate_action_accounting.py \
+  tests/kernel/profiles/cn_a_share/test_corporate_action_accounting_golden.py \
+  tests/kernel/integration/test_corporate_action_journal_replay.py
+```
+
+```bash
+uv run pytest -q \
+  tests/domain/accounting \
+  tests/kernel/accounting \
+  tests/kernel/journal \
+  tests/kernel/ledger \
+  tests/runtime/engine/test_g08g_runtime_lot_authority.py
+```
+
+```bash
+uv run pytest -q \
+  tests/architecture/test_g08g_corporate_action_accounting_boundary.py \
+  tests/architecture/test_public_api_imports.py \
+  tests/architecture/test_network_isolation.py \
+  tests/architecture/test_repository_cleanliness.py
+
+uv run python tools/architecture/check_import_boundaries.py \
+  --root . \
+  --policy architecture/import-boundaries.toml \
+  --report build/acceptance/g08g-f3-import-boundary-report.json
+```
 
 ## 69. G09A Linear Derivative Position Model Acceptance Card
 
