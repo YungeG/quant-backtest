@@ -14,6 +14,8 @@ from crypto_quant_domain import (
     Money,
     PositionBalance,
     PositionBalanceKey,
+    PositionLot,
+    PositionLotChange,
     Quantity,
     Scale,
     canonical_bytes,
@@ -151,14 +153,20 @@ def _sorted_cash_balances(
 
 def _sorted_position_balances(
     values: dict[PositionBalanceKey, Quantity],
+    lots: dict[PositionBalanceKey, dict[str, PositionLot]],
 ) -> tuple[PositionBalance, ...]:
-    return tuple(
-        PositionBalance(key, quantity, ())
-        for key, quantity in sorted(
-            values.items(), key=lambda item: canonical_bytes(item[0])
-        )
-        if quantity.units != 0
-    )
+    balances: list[PositionBalance] = []
+    for key, quantity in sorted(values.items(), key=lambda item: canonical_bytes(item[0])):
+        if quantity.units == 0:
+            if key in lots and lots[key]:
+                raise LedgerFinancialInvariantError("position lot total mismatch")
+            continue
+        key_lots = lots.get(key, {})
+        balance_lots = tuple(sorted(key_lots.values(), key=canonical_bytes))
+        if key_lots and sum(lot.quantity.units for lot in balance_lots) != quantity.units:
+            raise LedgerFinancialInvariantError("Position lot total mismatch")
+        balances.append(PositionBalance(key, quantity, balance_lots))
+    return tuple(balances)
 
 
 @dataclass(frozen=True, slots=True)
@@ -243,10 +251,6 @@ class LedgerState:
                 raise LedgerFinancialInvariantError(
                     "position balance scale mismatch for "
                     f"{_key_description(value.key)}"
-                )
-            if value.lots:
-                raise LedgerFinancialInvariantError(
-                    "Generic Ledger does not project Position lots"
                 )
 
     @property
@@ -345,6 +349,68 @@ class GenericLedger:
                 f"balance change scale mismatch for {_key_description(change.key)}"
             )
 
+    def _validate_lot_scale(self, lot: PositionLot) -> None:
+        registration = self.schema.registration_for(lot.position_key)
+        if lot.quantity.scale != registration.scale:
+            raise LedgerFinancialInvariantError(
+                f"position lot scale mismatch for {_key_description(lot.position_key)}"
+            )
+
+    def _apply_position_lot_change(
+        self,
+        lots: dict[PositionBalanceKey, dict[str, PositionLot]],
+        lot_change: PositionLotChange,
+    ) -> None:
+        before = lot_change.before
+        after = lot_change.after
+        base = before or after
+        assert base is not None
+        self._validate_lot_scale(base)
+        position_key = base.position_key
+        bucket = lots.setdefault(position_key, {})
+
+        if before is None:
+            if after is None:
+                raise LedgerFinancialInvariantError("lot change cannot be empty")
+            if after.lot_id in bucket:
+                raise LedgerFinancialInvariantError("Position lot create conflict")
+            bucket[after.lot_id] = after
+            return
+
+        existing = bucket.get(before.lot_id)
+        if existing is None:
+            raise LedgerFinancialInvariantError("position lot before state missing")
+        if existing != before:
+            raise LedgerFinancialInvariantError("position lot before mismatch")
+
+        if after is None:
+            del bucket[before.lot_id]
+        else:
+            self._validate_lot_scale(after)
+            bucket[before.lot_id] = after
+
+        if not bucket:
+            lots.pop(position_key, None)
+
+    def _validate_position_lot_quantities(
+        self,
+        positions: dict[PositionBalanceKey, Quantity],
+        lots: dict[PositionBalanceKey, dict[str, PositionLot]],
+    ) -> None:
+        for key, bucket in lots.items():
+            if not bucket:
+                continue
+            registration = self.schema.registration_for(key)
+            total_units = sum(lot.quantity.units for lot in bucket.values())
+            position = positions.get(
+                key, Quantity(0, registration.scale, str(key.instrument_id))
+            )
+            if total_units != position.units:
+                raise LedgerFinancialInvariantError(
+                    "position lot total must match position quantity"
+                )
+
+
     def _attribution_key(
         self, entry: AccountingJournalEntry, value: Money
     ) -> CashBalanceKey:
@@ -384,6 +450,11 @@ class GenericLedger:
         positions = {
             balance.key: balance.quantity for balance in state.position_balances
         }
+        position_lots = {
+            balance.key: {lot.lot_id: lot for lot in balance.lots}
+            for balance in state.position_balances
+            if balance.lots
+        }
         realized_pnl = {
             balance.key: balance.amount for balance in state.realized_pnl
         }
@@ -404,14 +475,22 @@ class GenericLedger:
                         raise LedgerFinancialInvariantError(
                             "Position balance change must contain Quantity"
                         )
-                    current = positions.get(change.key)
-                    positions[change.key] = (
-                        change.value if current is None else current + change.value
+                    current = positions.get(
+                        change.key,
+                        Quantity(
+                            0,
+                            self.schema.registration_for(change.key).scale,
+                            str(change.key.instrument_id),
+                        ),
                     )
+                    positions[change.key] = current + change.value
                 else:
                     raise LedgerFinancialInvariantError(
                         "unsupported Ledger balance key type"
                     )
+            for lot_change in entry.position_lot_changes:
+                self._apply_position_lot_change(position_lots, lot_change)
+            self._validate_position_lot_quantities(positions, position_lots)
             for value in entry.realized_pnl:
                 self._add_money(
                     realized_pnl, self._attribution_key(entry, value), value
@@ -427,7 +506,7 @@ class GenericLedger:
             schema=self.schema,
             cursor=replay.end_cursor,
             cash_balances=_sorted_cash_balances(cash, omit_zero=False),
-            position_balances=_sorted_position_balances(positions),
+            position_balances=_sorted_position_balances(positions, position_lots),
             realized_pnl=_sorted_cash_balances(realized_pnl, omit_zero=True),
             fees=_sorted_cash_balances(fees, omit_zero=True),
             financing=_sorted_cash_balances(financing, omit_zero=True),

@@ -726,7 +726,10 @@ def test_replay_rejects_specialized_entry_subclass_as_non_authoritative() -> Non
             pass
 
     forged = ForgedEntry(
-        *(getattr(authoritative, value.name) for value in fields(authoritative))
+        **{
+            value.name: getattr(authoritative, value.name)
+            for value in fields(authoritative)
+        }
     )
     assert isinstance(forged, LinearDerivativeJournalEntry)
     assert type(forged) is not LinearDerivativeJournalEntry

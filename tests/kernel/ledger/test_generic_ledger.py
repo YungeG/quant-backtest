@@ -15,7 +15,10 @@ from crypto_quant_domain import (
     DomainIdKind,
     InstrumentId,
     Money,
+    PositionBalance,
     PositionBalanceKey,
+    PositionLot,
+    PositionLotChange,
     Quantity,
     Scale,
     SimulationInstant,
@@ -62,6 +65,7 @@ def entry(
     realized_pnl: tuple[Money, ...] = (),
     fees: tuple[Money, ...] = (),
     financing: tuple[Money, ...] = (),
+    position_lot_changes: tuple[PositionLotChange, ...] = (),
 ) -> AccountingJournalEntry:
     return AccountingJournalEntry(
         journal_entry_id=DomainId(DomainIdKind.JOURNAL, f"jnl_{digit * 64}"),
@@ -79,6 +83,25 @@ def entry(
         realized_pnl=realized_pnl,
         fees=fees,
         financing=financing,
+        position_lot_changes=position_lot_changes,
+    )
+
+
+def lot(
+    lot_id: str,
+    units: int,
+    *,
+    total_cost: int = 0,
+) -> PositionLot:
+    return PositionLot(
+        lot_id=lot_id,
+        position_key=STOCK_KEY,
+        source_id="fill:1",
+        quantity=Quantity(units, QUANTITY_SCALE, str(STOCK)),
+        unit_cost=None,
+        allocated_fees=(),
+        opened_at=UtcInstant(5),
+        total_cost_basis=Money(total_cost, USD_SCALE, "USD") if total_cost else None,
     )
 
 
@@ -158,6 +181,46 @@ def test_full_projection_rebuilds_cash_position_and_native_attributions() -> Non
     assert state.fee_amount(USD_KEY) == Money(100, USD_SCALE, "USD")
     assert state.financing_amount(USD_KEY) == Money(50, USD_SCALE, "USD")
     assert not hasattr(state, "unrealized_pnl")
+
+
+def test_lot_projection_supports_full_and_prefix_resume() -> None:
+    open_position = entry(
+        "1",
+        recorded_nanoseconds=10,
+        entry_type=AccountingEntryType.FILL_BOOKED,
+        changes=(BalanceChange(STOCK_KEY, Quantity(10, QUANTITY_SCALE, str(STOCK))),),
+        position_lot_changes=(PositionLotChange(None, lot("lot-1", 10)),),
+    )
+    adjust = entry(
+        "2",
+        recorded_nanoseconds=20,
+        entry_type=AccountingEntryType.FILL_BOOKED,
+        changes=(),
+        position_lot_changes=(
+            PositionLotChange(before=lot("lot-1", 10), after=lot("lot-1", 5)),
+            PositionLotChange(before=None, after=lot("lot-2", 5)),
+        ),
+    )
+    close_half = entry(
+        "3",
+        recorded_nanoseconds=30,
+        entry_type=AccountingEntryType.FILL_BOOKED,
+        changes=(BalanceChange(STOCK_KEY, Quantity(-5, QUANTITY_SCALE, str(STOCK))),),
+        position_lot_changes=(
+            PositionLotChange(before=lot("lot-1", 5), after=None),
+        ),
+    )
+
+    journal = AccountingJournal.from_entries((open_position, adjust, close_half))
+    ledger = GenericLedger(schema())
+    full = ledger.project(journal)
+    prefix = ledger.project(journal, stop=journal.cursor_at(2))
+    resumed = ledger.resume(journal, prefix)
+
+    assert resumed == full
+    assert resumed.state_hash == full.state_hash
+    assert ledger.resume(journal, full) is full
+    assert full.position_quantity(STOCK_KEY) == Quantity(5, QUANTITY_SCALE, str(STOCK))
 
 
 def test_prefix_resume_has_exact_full_replay_parity_and_is_idempotent() -> None:
@@ -240,6 +303,34 @@ def test_resume_rejects_forged_cursor_and_forged_state() -> None:
         ledger.resume(journal, forged_state)
 
 
+def test_resume_rejects_forged_position_lot_state() -> None:
+    open_position = entry(
+        "1",
+        recorded_nanoseconds=10,
+        entry_type=AccountingEntryType.FILL_BOOKED,
+        changes=(
+            BalanceChange(STOCK_KEY, Quantity(10, QUANTITY_SCALE, str(STOCK))),
+        ),
+        position_lot_changes=(PositionLotChange(None, lot("lot-1", 10)),),
+    )
+    later_cash = entry(
+        "2",
+        recorded_nanoseconds=20,
+        entry_type=AccountingEntryType.CAPITAL_DEPOSITED,
+        changes=(BalanceChange(USD_KEY, Money(100, USD_SCALE, "USD")),),
+    )
+    journal = AccountingJournal.from_entries((open_position, later_cash))
+    ledger = GenericLedger(schema())
+    prefix = ledger.project(journal, stop=journal.cursor_at(1))
+    position = prefix.position_balances[0]
+    forged_lot = replace(position.lots[0], source_id="fill:forged")
+    forged_position = replace(position, lots=(forged_lot,))
+    forged_state = replace(prefix, position_balances=(forged_position,))
+
+    with pytest.raises(LedgerStateMismatchError, match="state"):
+        ledger.resume(journal, forged_state)
+
+
 def test_truthful_negative_cash_and_short_position_are_not_policy_rejected() -> None:
     short = entry(
         "1",
@@ -280,3 +371,146 @@ def test_zero_position_is_removed_but_registered_zero_cash_remains_explicit() ->
     assert state.position_quantity(STOCK_KEY) == expected_zero_position
     assert state.cash_amount(USD_KEY) == Money(0, USD_SCALE, "USD")
     assert len(state.cash_balances) == 1
+
+
+def test_projection_tracks_position_lot_mutation_and_keeps_exact_quantities() -> None:
+    open_position = entry(
+        "1",
+        recorded_nanoseconds=10,
+        entry_type=AccountingEntryType.FILL_BOOKED,
+        changes=(BalanceChange(STOCK_KEY, Quantity(10, QUANTITY_SCALE, str(STOCK))),),
+        position_lot_changes=(PositionLotChange(None, lot("lot-1", 10)),),
+    )
+    adjust = entry(
+        "2",
+        recorded_nanoseconds=20,
+        entry_type=AccountingEntryType.FILL_BOOKED,
+        changes=(),
+        position_lot_changes=(
+            PositionLotChange(before=lot("lot-1", 10), after=lot("lot-1", 3)),
+            PositionLotChange(before=None, after=lot("lot-2", 7)),
+        ),
+    )
+    close_part = entry(
+        "3",
+        recorded_nanoseconds=30,
+        entry_type=AccountingEntryType.FILL_BOOKED,
+        changes=(BalanceChange(STOCK_KEY, Quantity(-7, QUANTITY_SCALE, str(STOCK))),),
+        position_lot_changes=(
+            PositionLotChange(before=lot("lot-2", 7), after=None),
+        ),
+    )
+
+    state = GenericLedger(schema()).project(
+        AccountingJournal.from_entries((open_position, adjust, close_part))
+    )
+
+    expected = PositionBalance(STOCK_KEY, Quantity(3, QUANTITY_SCALE, str(STOCK)), (lot("lot-1", 3),))
+    assert state.position_balances == (expected,)
+    assert state.position_quantity(STOCK_KEY).units == 3
+
+
+def test_ledger_rejects_lot_change_total_mismatch() -> None:
+    open_position = entry(
+        "1",
+        recorded_nanoseconds=10,
+        entry_type=AccountingEntryType.FILL_BOOKED,
+        changes=(BalanceChange(STOCK_KEY, Quantity(10, QUANTITY_SCALE, str(STOCK))),),
+        position_lot_changes=(PositionLotChange(None, lot("lot-1", 5)),),
+    )
+
+    with pytest.raises(LedgerFinancialInvariantError, match="position lot total"):
+        GenericLedger(schema()).project(AccountingJournal.from_entries((open_position,)))
+
+
+def test_ledger_rejects_position_lot_before_not_found_and_create_conflict() -> None:
+    open_position = entry(
+        "1",
+        recorded_nanoseconds=10,
+        entry_type=AccountingEntryType.FILL_BOOKED,
+        changes=(BalanceChange(STOCK_KEY, Quantity(10, QUANTITY_SCALE, str(STOCK))),),
+        position_lot_changes=(PositionLotChange(None, lot("lot-1", 10)),),
+    )
+    close_unknown = entry(
+        "2",
+        recorded_nanoseconds=20,
+        entry_type=AccountingEntryType.FILL_BOOKED,
+        changes=(),
+        position_lot_changes=(PositionLotChange(before=lot("lot-2", 1), after=None),),
+    )
+    duplicate_create = entry(
+        "3",
+        recorded_nanoseconds=30,
+        entry_type=AccountingEntryType.FILL_BOOKED,
+        changes=(),
+        position_lot_changes=(PositionLotChange(None, lot("lot-1", 1)),),
+    )
+
+    with pytest.raises(LedgerFinancialInvariantError, match="before state"):
+        GenericLedger(schema()).project(
+            AccountingJournal.from_entries((open_position, close_unknown))
+        )
+    with pytest.raises(LedgerFinancialInvariantError, match="create conflict"):
+        GenericLedger(schema()).project(
+            AccountingJournal.from_entries((open_position, duplicate_create))
+        )
+
+
+def test_ledger_rejects_position_lot_before_mismatch() -> None:
+    open_position = entry(
+        "1",
+        recorded_nanoseconds=10,
+        entry_type=AccountingEntryType.FILL_BOOKED,
+        changes=(
+            BalanceChange(STOCK_KEY, Quantity(10, QUANTITY_SCALE, str(STOCK))),
+        ),
+        position_lot_changes=(PositionLotChange(None, lot("lot-1", 10)),),
+    )
+    mismatched_replace = entry(
+        "2",
+        recorded_nanoseconds=20,
+        entry_type=AccountingEntryType.FILL_BOOKED,
+        changes=(),
+        position_lot_changes=(
+            PositionLotChange(
+                before=lot("lot-1", 5),
+                after=lot("lot-1", 4),
+            ),
+        ),
+    )
+
+    with pytest.raises(LedgerFinancialInvariantError, match="before mismatch"):
+        GenericLedger(schema()).project(
+            AccountingJournal.from_entries((open_position, mismatched_replace))
+        )
+
+
+def test_ledger_rejects_position_lot_close_quantity_mismatch() -> None:
+    open_position = entry(
+        "1",
+        recorded_nanoseconds=10,
+        entry_type=AccountingEntryType.FILL_BOOKED,
+        changes=(
+            BalanceChange(STOCK_KEY, Quantity(10, QUANTITY_SCALE, str(STOCK))),
+        ),
+        position_lot_changes=(
+            PositionLotChange(None, lot("lot-1", 5)),
+            PositionLotChange(None, lot("lot-2", 5)),
+        ),
+    )
+    mismatched_close = entry(
+        "2",
+        recorded_nanoseconds=20,
+        entry_type=AccountingEntryType.FILL_BOOKED,
+        changes=(
+            BalanceChange(STOCK_KEY, Quantity(-7, QUANTITY_SCALE, str(STOCK))),
+        ),
+        position_lot_changes=(
+            PositionLotChange(before=lot("lot-1", 5), after=None),
+        ),
+    )
+
+    with pytest.raises(LedgerFinancialInvariantError, match="lot total"):
+        GenericLedger(schema()).project(
+            AccountingJournal.from_entries((open_position, mismatched_close))
+        )

@@ -819,7 +819,10 @@ def test_full_journal_rejects_funding_entry_subclasses() -> None:
             pass
 
     forged = ForgedFundingEntry(
-        *(getattr(authoritative, value.name) for value in fields(authoritative))
+        **{
+            value.name: getattr(authoritative, value.name)
+            for value in fields(authoritative)
+        }
     )
     outcome = LinearFundingJournalProjector().project(
         LinearFundingJournalReplayRequest(

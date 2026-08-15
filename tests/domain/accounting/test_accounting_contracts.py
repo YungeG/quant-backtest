@@ -22,6 +22,7 @@ from crypto_quant_domain import (
     PositionBalance,
     PositionBalanceKey,
     PositionLot,
+    PositionLotChange,
     Price,
     PricePurpose,
     Quantity,
@@ -85,6 +86,19 @@ def lot(lot_id: str = "lot:fill-1", units: int = 10_000) -> PositionLot:
         unit_cost=price(),
         allocated_fees=(money(500),),
         opened_at=UtcInstant(100),
+    )
+
+
+def lot_with_total_cost_basis(lot_id: str = "lot:fill-1", units: int = 10_000) -> PositionLot:
+    return PositionLot(
+        lot_id=lot_id,
+        position_key=position_key(),
+        source_id="fill:1",
+        quantity=quantity(units),
+        unit_cost=price(),
+        allocated_fees=(money(500),),
+        opened_at=UtcInstant(100),
+        total_cost_basis=money(units * 100),
     )
 
 
@@ -276,6 +290,48 @@ def test_position_lot_and_position_balance_preserve_lot_provenance() -> None:
         replace(balance, quantity=quantity(9_999))
     with pytest.raises(ValueError, match="duplicate lot"):
         replace(balance, lots=(value, value))
+
+
+def test_position_lot_total_cost_basis_and_contract_edges() -> None:
+    value = lot_with_total_cost_basis()
+    assert value.total_cost_basis is not None
+
+    with pytest.raises(ValueError, match="positive"):
+        replace(value, total_cost_basis=money(0))
+    with pytest.raises(ValueError, match="currency"):
+        replace(value, total_cost_basis=money(1_234_56, "USD"))
+    with pytest.raises(ValueError, match="requires before or after"):
+        PositionLotChange(before=None, after=None)
+    with pytest.raises(ValueError, match="no-op"):
+        PositionLotChange(before=value, after=replace(value))
+    with pytest.raises(ValueError, match="lot identity"):
+        PositionLotChange(before=value, after=replace(value, lot_id="lot:other"))
+    with pytest.raises(ValueError, match="quantity scale"):
+        PositionLotChange(before=value, after=replace(value, quantity=Quantity(1_000, Scale(1), str(instrument()))))
+
+
+def test_accounting_journal_entry_records_lot_changes_and_keeps_legacy_bytes() -> None:
+    empty = journal_entry()
+    assert "schema_version" not in empty.to_canonical_dict()
+
+    with_lots = replace(
+        empty,
+        position_lot_changes=(
+            PositionLotChange(before=None, after=lot()),
+        ),
+    )
+    payload = with_lots.to_canonical_dict()
+    assert payload["schema_version"] == 2
+    assert payload["position_lot_changes"]
+
+    with pytest.raises(ValueError, match="canonical order"):
+        replace(
+            empty,
+            position_lot_changes=(
+                PositionLotChange(before=None, after=lot("lot-2")),
+                PositionLotChange(before=None, after=lot("lot-1")),
+            ),
+        )
 
 
 def test_cash_and_position_balances_are_typed_immutable_state_values() -> None:

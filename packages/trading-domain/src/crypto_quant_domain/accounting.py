@@ -3,7 +3,7 @@ from __future__ import annotations
 import re
 from dataclasses import dataclass, field
 from enum import Enum
-from typing import Any
+from typing import Any, cast
 
 from .canonical import canonical_bytes, canonical_sha256
 from .identity import DomainId, DomainIdKind, require_canonical_text
@@ -145,6 +145,7 @@ class PositionLot:
     unit_cost: Price | None
     allocated_fees: tuple[Money, ...]
     opened_at: UtcInstant
+    total_cost_basis: Money | None = None
 
     def __post_init__(self) -> None:
         _require_text("lot_id", self.lot_id)
@@ -164,12 +165,21 @@ class PositionLot:
                 raise ValueError("PositionLot unit cost must be positive")
             if self.unit_cost.instrument_id != str(self.position_key.instrument_id):
                 raise ValueError("PositionLot unit cost instrument identity mismatch")
+        if self.total_cost_basis is not None:
+            if not isinstance(self.total_cost_basis, Money):
+                raise TypeError("total_cost_basis must be Money or None")
+            if self.total_cost_basis.units <= 0:
+                raise ValueError("PositionLot total cost basis must be positive")
+            if self.unit_cost is not None and (
+                self.total_cost_basis.currency != self.unit_cost.quote_currency
+            ):
+                raise ValueError("PositionLot total cost basis currency mismatch")
         _require_money_tuple("allocated fee", self.allocated_fees)
         if not isinstance(self.opened_at, UtcInstant):
             raise TypeError("opened_at must be UtcInstant")
 
     def to_canonical_dict(self) -> dict[str, Any]:
-        return {
+        value = {
             "type": "position_lot",
             "lot_id": self.lot_id,
             "position_key": self.position_key,
@@ -178,6 +188,46 @@ class PositionLot:
             "unit_cost": self.unit_cost,
             "allocated_fees": _canonical_money(self.allocated_fees),
             "opened_at": self.opened_at,
+        }
+        if self.total_cost_basis is not None:
+            value["schema_version"] = 2
+            value["total_cost_basis"] = self.total_cost_basis
+        return value
+
+
+@dataclass(frozen=True, slots=True)
+class PositionLotChange:
+    before: PositionLot | None
+    after: PositionLot | None
+
+    def __post_init__(self) -> None:
+        if self.before is None and self.after is None:
+            raise ValueError("PositionLotChange requires before or after")
+        if self.before is not None and not isinstance(self.before, PositionLot):
+            raise TypeError("before must be PositionLot or None")
+        if self.after is not None and not isinstance(self.after, PositionLot):
+            raise TypeError("after must be PositionLot or None")
+        if self.before is not None and self.after is not None:
+            if self.before == self.after:
+                raise ValueError("PositionLotChange cannot be a no-op")
+            if self.before.lot_id != self.after.lot_id:
+                raise ValueError("PositionLotChange lot identity mismatch")
+            if self.before.position_key != self.after.position_key:
+                raise ValueError("PositionLotChange lot position mismatch")
+            if self.before.source_id != self.after.source_id:
+                raise ValueError("PositionLotChange lot source mismatch")
+            if self.before.opened_at != self.after.opened_at:
+                raise ValueError("PositionLotChange lot opened_at mismatch")
+            if self.before.quantity.scale != self.after.quantity.scale:
+                raise ValueError("PositionLotChange quantity scale mismatch")
+            if self.before.quantity.instrument_id != self.after.quantity.instrument_id:
+                raise ValueError("PositionLotChange quantity instrument mismatch")
+
+    def to_canonical_dict(self) -> dict[str, Any]:
+        return {
+            "type": "position_lot_change",
+            "before": self.before,
+            "after": self.after,
         }
 
 
@@ -276,6 +326,9 @@ class AccountingJournalEntry:
     realized_pnl: tuple[Money, ...]
     fees: tuple[Money, ...]
     financing: tuple[Money, ...]
+    position_lot_changes: tuple[PositionLotChange, ...] = field(
+        default_factory=tuple, kw_only=True
+    )
 
     def __post_init__(self) -> None:
         if not isinstance(self.journal_entry_id, DomainId):
@@ -314,11 +367,46 @@ class AccountingJournalEntry:
         _require_money_tuple("realized_pnl", self.realized_pnl)
         _require_money_tuple("fees", self.fees)
         _require_money_tuple("financing", self.financing)
+        if not isinstance(self.position_lot_changes, tuple):
+            raise TypeError("position_lot_changes must be a tuple")
+        if not all(
+            isinstance(value, PositionLotChange) for value in self.position_lot_changes
+        ):
+            raise TypeError("position_lot_changes must contain PositionLotChange")
+        touched_ids: list[str] = []
+        for lot_change in self.position_lot_changes:
+            lot_change = cast(PositionLotChange, lot_change)
+            if lot_change.before is None:
+                lot = lot_change.after
+            else:
+                lot = lot_change.before
+            if lot is None:
+                raise ValueError("PositionLotChange requires before or after")
+            touched_ids.append(lot.lot_id)
+        if len(set(touched_ids)) != len(touched_ids):
+            raise ValueError("duplicate lot identity")
+        for lot_change in self.position_lot_changes:
+            lot_change = cast(PositionLotChange, lot_change)
+            if lot_change.before is not None:
+                if lot_change.before.position_key.account_id != self.account_id:
+                    raise ValueError("Journal lot account mismatch")
+                if lot_change.before.position_key.venue_id != self.venue_id:
+                    raise ValueError("Journal lot Venue mismatch")
+            if lot_change.after is not None:
+                if lot_change.after.position_key.account_id != self.account_id:
+                    raise ValueError("Journal lot account mismatch")
+                if lot_change.after.position_key.venue_id != self.venue_id:
+                    raise ValueError("Journal lot Venue mismatch")
+        if tuple(sorted(self.position_lot_changes, key=canonical_bytes)) != (
+            self.position_lot_changes
+        ):
+            raise ValueError("position_lot_changes must be canonical order")
         if (
             not self.balance_changes
             and not self.realized_pnl
             and not self.fees
             and not self.financing
+            and not self.position_lot_changes
             and self.entry_type
             not in (
                 AccountingEntryType.CORPORATE_ACTION_ENTITLEMENT_BOOKED,
@@ -328,7 +416,7 @@ class AccountingJournalEntry:
             raise ValueError("AccountingJournalEntry requires an economic effect")
 
     def to_canonical_dict(self) -> dict[str, Any]:
-        return {
+        value = {
             "type": "accounting_journal_entry",
             "journal_entry_id": self.journal_entry_id,
             "entry_type": self.entry_type.value,
@@ -342,6 +430,12 @@ class AccountingJournalEntry:
             "fees": _canonical_money(self.fees),
             "financing": _canonical_money(self.financing),
         }
+        if self.position_lot_changes:
+            value["schema_version"] = 2
+            value["position_lot_changes"] = sorted(
+                self.position_lot_changes, key=canonical_bytes
+            )
+        return value
 
 
 @dataclass(frozen=True, slots=True)

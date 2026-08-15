@@ -20,6 +20,7 @@ from crypto_quant_domain import (
     PositionBalance,
     PositionBalanceKey,
     PositionLot,
+    PositionLotChange,
     Price,
     PricePurpose,
     Quantity,
@@ -35,16 +36,15 @@ from crypto_quant_domain import (
 
 
 ROOT = Path(__file__).resolve().parents[3]
-FIXTURE = ROOT / "tests/fixtures/domain/accounting-contracts-v1.json"
+FIXTURE_V1 = ROOT / "tests/fixtures/domain/accounting-contracts-v1.json"
+FIXTURE_V2 = ROOT / "tests/fixtures/domain/accounting-contracts-v2.json"
 
 
-def load_fixture() -> dict[str, Any]:
+def load_fixture(path: Path) -> dict[str, Any]:
     try:
-        return cast(
-            dict[str, Any], json.loads(FIXTURE.read_text(encoding="utf-8"))
-        )
+        return cast(dict[str, Any], json.loads(path.read_text(encoding="utf-8")))
     except (OSError, json.JSONDecodeError) as error:
-        raise AssertionError(f"invalid accounting fixture: {FIXTURE}") from error
+        raise AssertionError(f"invalid accounting fixture: {path}") from error
 
 
 def domain_id(kind: DomainIdKind, digit: str) -> DomainId:
@@ -87,6 +87,32 @@ def lot() -> PositionLot:
     )
 
 
+def lot_with_total_cost_basis() -> PositionLot:
+    return PositionLot(
+        lot_id="lot:fill-1",
+        position_key=position_key(),
+        source_id="fill:1",
+        quantity=quantity(10_000),
+        unit_cost=Price(1_025, Scale(2), str(instrument()), "CNY"),
+        allocated_fees=(money(500),),
+        opened_at=UtcInstant(100),
+        total_cost_basis=money(10_250_000),
+    )
+
+
+def lot_with_replacement() -> PositionLot:
+    return PositionLot(
+        lot_id="lot:fill-1",
+        position_key=position_key(),
+        source_id="fill:1",
+        quantity=quantity(5_000),
+        unit_cost=Price(1_050, Scale(2), str(instrument()), "CNY"),
+        allocated_fees=(money(500),),
+        opened_at=UtcInstant(100),
+        total_cost_basis=money(5_250_000),
+    )
+
+
 def journal() -> AccountingJournalEntry:
     return AccountingJournalEntry(
         journal_entry_id=domain_id(DomainIdKind.JOURNAL, "1"),
@@ -107,6 +133,44 @@ def journal() -> AccountingJournalEntry:
         realized_pnl=(),
         fees=(money(500),),
         financing=(),
+    )
+
+
+def journal_with_lots() -> AccountingJournalEntry:
+    replacement = lot_with_replacement()
+    change = PositionLotChange(
+        before=PositionLot(
+            lot_id="lot:fill-1",
+            position_key=position_key(),
+            source_id="fill:1",
+            quantity=quantity(10_000),
+            unit_cost=Price(1_025, Scale(2), str(instrument()), "CNY"),
+            allocated_fees=(money(500),),
+            opened_at=UtcInstant(100),
+            total_cost_basis=money(10_250_000),
+        ),
+        after=replacement,
+    )
+    return AccountingJournalEntry(
+        journal_entry_id=domain_id(DomainIdKind.JOURNAL, "2"),
+        entry_type=AccountingEntryType.FILL_BOOKED,
+        account_id="account:primary",
+        venue_id=venue(),
+        effective_time=UtcInstant(130),
+        recorded_at=SimulationInstant(
+            UtcInstant(140),
+            TimelinePhase(40, "accounting"),
+            SourceSequence(1),
+        ),
+        source_ids=("fill:2",),
+        balance_changes=(
+            BalanceChange(position_key(), quantity(-5_000)),
+            BalanceChange(cash_key(), money(5_250_000)),
+        ),
+        realized_pnl=(),
+        fees=(),
+        financing=(),
+        position_lot_changes=(change,),
     )
 
 
@@ -161,10 +225,28 @@ def build_objects() -> dict[str, object]:
     }
 
 
+def build_v2_objects() -> dict[str, object]:
+    return {
+        "position_lot_v2": lot_with_total_cost_basis(),
+        "position_lot_change_v2": PositionLotChange(
+            before=lot(),
+            after=lot_with_replacement(),
+        ),
+        "journal_entry_v2": journal_with_lots(),
+    }
+
+
 def test_accounting_contracts_match_golden_hashes() -> None:
-    expected = load_fixture()["expected_sha256"]
+    expected = load_fixture(FIXTURE_V1)["expected_sha256"]
     actual = {name: canonical_sha256(value) for name, value in build_objects().items()}
     assert actual == expected
+
+
+def test_accounting_contracts_match_v2_golden_hashes() -> None:
+    expected = load_fixture(FIXTURE_V2)["expected_sha256"]
+    actual = {name: canonical_sha256(value) for name, value in build_v2_objects().items()}
+    assert actual == expected
+
 
 
 def test_set_like_accounting_inputs_have_order_independent_hashes() -> None:

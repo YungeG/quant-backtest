@@ -10,6 +10,7 @@ from .accounting import (
     PositionBalance,
     PositionBalanceKey,
     PositionLot,
+    PositionLotChange,
     PricePurpose,
     ValuationMarkReference,
 )
@@ -152,6 +153,7 @@ __all__ = [
     "PositionBalanceKey",
     "PositionEffect",
     "PositionLot",
+    "PositionLotChange",
     "Price",
     "PricePurpose",
     "PriceConstraint",
