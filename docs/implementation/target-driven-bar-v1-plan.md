@@ -1873,30 +1873,23 @@ Acceptance and status authority：[`docs/implementation/acceptance-matrix.md`](a
 
 ### Gate G12H Rule Coverage
 
-依赖：G12C、MarketSemanticsProfile required dimensions。
+状态：[G12H plan](plans/g12/g12h.md) / [Research](../research/g12h-rule-coverage.md)记录为 readiness BLOCKED、Gate DRAFT；等待profile rule-dimension declaration与normalized typed rule-source fixture。
+
+依赖：G12C。
 
 拥有：RuleCoverageReport。
 
-验收：
-
-- 每个 required dimension 有完整有效区间；
-- 无缺口、无重叠且唯一解析；
-- source identity 完整；
-- 缺失时在 Engine 启动前产生结构化阻断。
+验收：见独立的 G12H plan。
 
 ### Gate G12I Price, Availability and Revision Coverage
+
+状态：[G12I plan](plans/g12/g12i.md) / [Research](../research/g12i-price-availability-revision-coverage.md)记录为 readiness BLOCKED、Gate DRAFT；等待purpose/stale-policy、availability与revision closure declarations。
 
 依赖：G12C、G12G。
 
 拥有：PriceStreamCoverageReport、MarketAvailabilityReport 和 RevisionProvenanceReport。
 
-验收：
-
-- 每个 PricePurpose 独立覆盖；
-- Gap 分类为 non-session/suspension/no-trade/data-missing/source-failure；
-- StaleMarkPolicy max-age 可验证；
-- Execution 禁止 forward-fill；
-- Vendor correction 保留旧 Revision。
+验收：见独立的 G12I plan。
 
 ### Gate G12J First Real Schema Migration
 
@@ -1914,16 +1907,13 @@ Acceptance and status authority：[`docs/implementation/acceptance-matrix.md`](a
 
 ### Gate G12K Universe and Corporate Action Coverage
 
+状态：[G12K plan](plans/g12/g12k.md) / [Research](../research/g12k-universe-corporate-action-coverage.md)记录为 readiness BLOCKED、Gate DRAFT；等待catalog body binding、normalized lifecycle/action schemas与closure declarations。
+
 依赖：G12C。
 
-拥有：UniverseCoverageReport 和 CorporateAction lifecycle coverage。
+拥有：UniverseCoverageReport 和 CorporateActionCoverageReport。
 
-验收：
-
-- Listing/delisting/membership point-in-time 完整；
-- Announcement/Record/Effective/Payment 证据完整；
-- StaticUniverse 明确标记；
-- unsupported action 对受影响运行 fail closed。
+验收：见独立的 G12K plan。
 
 ### Gate G12L Market Source Adapter Slice
 

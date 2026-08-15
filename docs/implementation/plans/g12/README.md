@@ -27,10 +27,10 @@ real old artifact          → G12J
 | [G12E](g12e.md) | Verified local persisted reader | G12D, WP-06A | `market-data-contracts/local_market_bundle_reader.py` |
 | [G12F](g12f.md) | Reader/partition parity | G12E, G07 | parity tooling |
 | [G12G](g12g.md) | Canonical revisioned bar aggregation — `PASSED` | G12B–C | `bar_aggregation.py` |
-| G12H | Rule coverage | G12C | builder validation |
-| G12I | Price/availability/revision coverage | G12C, G12G | builder validation |
+| [G12H](g12h.md) | Rule coverage — readiness `BLOCKED`, Gate `DRAFT` | G12C + profile rule declaration | builder validation |
+| [G12I](g12i.md) | Price/availability/revision coverage — readiness `BLOCKED`, Gate `DRAFT` | G12C, G12G + closure declarations | builder validation |
 | G12J | Schema migration | real old artifact | trading-domain migration |
-| G12K | Universe/corporate-action coverage | G12C | builder validation |
+| [G12K](g12k.md) | Universe/corporate-action coverage — readiness `BLOCKED`, Gate `DRAFT` | G12C + normalized schemas/closure declarations | builder validation |
 | G12L-* | Provider source adapter | applicable G12A–K | builder adapters |
 | G12M-* | Market qualification | market-specific G12L, G07–G10 | runtime qualification |
 
