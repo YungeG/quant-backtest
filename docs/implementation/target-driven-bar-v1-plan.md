@@ -1859,6 +1859,8 @@ Acceptance and status authority：[`docs/implementation/acceptance-matrix.md`](a
 
 依赖：G12B、G12C。
 
+状态：已在implementation commit `eefe4df3568776323881810a309ea09a47b379b7`冻结通过；详细contract与证据由Acceptance Matrix、`docs/research/g12g-bar-aggregation.md`和拆分后的Gate plan拥有。
+
 拥有：BarDefinition、一个调用方显式提供的有限 BarBucketPlan、精确 price-only OHLC、revision/availability mechanics 和 BarAggregationManifest；每个 bucket 绑定 SessionId、TradingDate 与半开 included spans，不拥有 calendar engine 或 bucket derivation。
 
 验收：

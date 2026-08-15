@@ -153,7 +153,7 @@ artifact_hashes: []
 | G12D | PASSED | market-bundle-builder + market-data-contracts | G12C | none |
 | G12E | PASSED | market-data-contracts | G12D, WP-06A | none |
 | G12F | PASSED | parity tooling | G12E, G07 | none |
-| G12G | DRAFT | market-bundle-builder | G12B–G12C | Bar aggregation fixtures |
+| G12G | PASSED | market-bundle-builder | G12B–G12C | Bar aggregation fixtures |
 | G12H | DRAFT | market-bundle-builder validation | G12C | Rule coverage fixtures |
 | G12I | DRAFT | market-bundle-builder validation | G12C, G12G | Price/availability/revision coverage |
 | G12J | DRAFT | trading-domain schema migration | real old artifact | No real source/target schema yet |
@@ -10634,7 +10634,129 @@ uv.lock                                                        sha256:a07106c285
 
 Implementation commit：`7387c0b667d6af29d82fd0e0a046d45a3387956d`。
 
-## 102. PASSED 记录格式
+## 102. G12G Canonical Revisioned Bar Aggregation Acceptance Card
+
+```yaml
+id: G12G
+status: PASSED
+passed_commit: eefe4df3568776323881810a309ea09a47b379b7
+depends_on:
+  - G12B
+  - G12C
+owner_package: market-bundle-builder
+allowed_grade: development
+public_interface:
+  - crypto_quant_bundle_builder.BarBucket
+  - crypto_quant_bundle_builder.BarBucketPlan
+  - crypto_quant_bundle_builder.BarDefinition
+  - crypto_quant_bundle_builder.BarAggregationManifest
+  - crypto_quant_bundle_builder.BarAggregationResult
+  - crypto_quant_bundle_builder.BarAggregationFailureCode
+  - crypto_quant_bundle_builder.BarAggregationFailure
+  - crypto_quant_bundle_builder.BarAggregationOutcome
+  - crypto_quant_bundle_builder.aggregate_bars_v1
+test_commands:
+  contract: PYTHONDONTWRITEBYTECODE=1 uv run pytest -q tests/bundle_builder/bar_aggregation
+  g11d_integration: PYTHONDONTWRITEBYTECODE=1 uv run pytest -q tests/runtime/observation_windows/test_g12g_bar_window_integration.py
+  boundary: PYTHONDONTWRITEBYTECODE=1 uv run pytest -q tests/architecture/test_g12g_bar_aggregation_boundary.py tests/architecture/test_import_boundary_mutations.py tests/architecture/test_public_api_imports.py tests/architecture/test_network_isolation.py tests/architecture/test_repository_cleanliness.py
+  acceptance: PYTHONDONTWRITEBYTECODE=1 uv run pytest -q tests/bundle_builder/normalization tests/bundle_builder/validation tests/bundle_builder/bar_aggregation tests/market_data/bundles tests/runtime/observation_windows tests/architecture/test_g12b_synthetic_jsonl_boundary.py tests/architecture/test_g12c_bundle_validation_boundary.py tests/architecture/test_g12g_bar_aggregation_boundary.py tests/architecture/test_import_boundary_mutations.py tests/architecture/test_public_api_imports.py tests/architecture/test_network_isolation.py tests/architecture/test_repository_cleanliness.py --junitxml=build/acceptance/g12g-pytest.xml
+  import_boundary: PYTHONDONTWRITEBYTECODE=1 uv run python tools/architecture/check_import_boundaries.py --root . --policy architecture/import-boundaries.toml --report build/acceptance/g12g-import-boundary-report.json
+  static_types: uvx --from mypy==2.3.0 mypy --python-version 3.13 packages/*/src
+  full_suite: PYTHONDONTWRITEBYTECODE=1 uv run pytest -q
+fixture_ids:
+  - canonical-bar-aggregation-v1
+artifacts:
+  - docs/research/g12g-bar-aggregation.md
+  - docs/implementation/plans/g12/g12g.md
+  - tests/fixtures/market_data/bar_aggregation/canonical-bar-aggregation-v1.expected.json
+  - build/acceptance/g12g-pytest.xml
+  - build/acceptance/g12g-import-boundary-report.json
+failure_contracts:
+  - invalid-input-is-accepted-or-raises
+  - source-event-tuple-does-not-exactly-match-g12c-manifest
+  - definition-and-bucket-plan-identities-differ
+  - source-stream-contract-mismatches-or-output-stream-collides
+  - source-and-plan-coverage-differ
+  - selected-source-payload-purpose-scale-units-or-economic-order-is-invalid
+  - source-revision-chain-is-missing-forked-cyclic-disconnected-or-context-changing
+  - output-phase-cannot-follow-causal-source-evidence
+  - generated-source-plus-bar-tuple-fails-final-g12c-validation
+  - failure-precedence-or-earliest-input-position-is-unstable
+  - partial-bars-manifest-or-result-escapes-failure
+  - same-utc-full-instant-revisions-are-rejected-or-leak-intermediate-bars
+  - bar-definition-plan-spec-code-or-source-change-does-not-change-identity
+  - empty-or-out-of-plan-evidence-is-misclassified-as-market-coverage
+  - g12g-derives-calendar-session-trading-date-or-gap-reason
+  - g12g-adds-runtime-kernel-provider-network-filesystem-or-dataframe-authority
+  - g12g-claims-decision-grade-live-or-deployment-authorization
+evidence:
+  - explicit-caller-supplied-session-trading-date-half-open-bucket-plan
+  - a-share-lunch-disjoint-spans-utc-day-night-and-truncated-bucket-golden
+  - exact-integer-price-only-ohlc-null-volume-and-empty-omission
+  - ambiguous-economic-tie-mixed-scale-and-invalid-units-rejection
+  - root-at-close-pre-close-collapse-late-root-post-close-correction
+  - full-simulation-instant-same-utc-grouping-and-immediate-supersession
+  - retained-bar-revisions-source-event-hashes-and-causal-availability
+  - source-definition-plan-spec-code-event-stream-manifest-bundle-sensitivity
+  - all-nine-failure-codes-global-precedence-and-atomicity
+  - final-g12c-revalidation-and-g11d-no-resampling-consumption
+  - repeat-canonical-golden-forgery-and-public-boundary-tests
+implementation_commit: eefe4df3568776323881810a309ea09a47b379b7
+approved_on: 2026-08-14
+```
+
+Frozen contract：
+
+1. G12G新增one pure offline `crypto_quant_bundle_builder.bar_aggregation` module、nine Builder root exports与one `aggregate_bars_v1(...)` function；不得新增calendar engine、resampling DSL、registry、callback、Protocol、Reader或mutable builder object；
+2. `BarBucketPlan`是caller-supplied finite immutable authority。G12G不推导timezone、DST、holiday、TradingDate、Session、phase、interval grid或missing interval；每个Bucket exact绑定one SessionId、one TradingDate与ordered disjoint nonempty half-open included spans；
+3. `BarDefinition` exact绑定key/version、source/output streams、`synthetic_price_point.v1`、source capability、PricePurpose、Scale、price-only OHLC、`volume_semantics=none`、`empty_interval_policy=omit`与output phase。Definition hash兼容G11D `BarDefinitionRef` shape但Builder不得import Runtime；
+4. Aggregation前必须以complete unchanged caller-order Event tuple重新调用existing `validate_market_bundle_v1`，并要求结果manifest exact等于supplied source manifest。不得排序、修复或内联第二套Bundle validator；
+5. V1只读取exact G12B payload `{synthetic_record_key,price_units,price_scale,price_purpose}`。Selected price必须positive non-bool integer、exact scale、exact purpose与non-null Instrument；不做float、Decimal、rescale、VWAP或implicit rounding；
+6. Economic assignment只使用Event `event_time`落入caller-supplied half-open spans。Distinct record keys不得共享one Instrument/economic time；无权威economic tie sequence时fail closed，不得使用Event ID、arrival order、revision order或lexical key决定open/close；
+7. OHLC exact使用integer units；open/close为first/last economic time，high/low为integer extrema，volume exact为null，observation count仅是provenance count。Empty Instrument/Bucket不合成zero/carry/forward-filled/placeholder Bar；
+8. 每个selected observation chain必须one root、one immediate-parent linear path，无duplicate revision、missing parent、multiple root、fork、cycle、disconnected node或multiple terminal path。Revision不得改变Instrument、record key、purpose、scale、economic time或bucket/out-of-plan assignment；
+9. Source child revision按full `MarketEvent.timeline_instant` strictly later排序。同UTC且later phase/source-sequence合法；同UTC变化必须在one output causal bound内完整group后产生one Bar state，不得泄露intermediate Bar；
+10. Root state使用bucket close时visible terminal revisions；pre-close changes collapse；late first availability可生成late root；post-close selected-source-set change生成immutable child，即使OHLC数值相同；old Bar保留并通过immediate `supersedes_revision_id`连接；
+11. Bar available time exact为`max(bucket end, latest causal source available_time)`；equal UTC时output phase必须strictly after all causal source phases，否则`output_causality_invalid`。Generated SourceSequence只作deterministic output ordinal，不作economic tie authority；
+12. 每个Bar payload绑定definition、source stream、bucket plan、aggregation spec/code/input、bucket、included spans、Session/TradingDate、OHLC、source Event hashes与selected-source-set hash。Source/definition/plan/spec/code change必须改变Bar/stream/Bundle identity；
+13. G12G把generated Bars append到unchanged source Events并再次调用G12C。Final validation成功前不得返回Result；`BarAggregationManifest` separately绑定source/output refs、all lineage hashes、mechanical counts与qualification flags，不修改passed G12C/G12D schemas；
+14. Failure precedence exact为`invalid_input → source_bundle_mismatch → definition_bucket_plan_mismatch → source_stream_mismatch → source_coverage_unaligned → source_event_invalid → revision_chain_invalid → output_causality_invalid → output_validation_failed`，同层按earliest original input position；Outcome exact为Result XOR Failure且failure不暴露partial authority；
+15. Golden exact冻结A股午休separate/disjoint spans、UTC day、night TradingDate、truncated interval、empty/out-of-plan、integer OHLC、root/late/correction/same-UTC revisions、identity sensitivity、failure matrix与repeat bytes；G11D exact消费generated `event_type=bar`与matching definition ref，不执行Runtime resampling；
+16. Out-of-plan、empty、revision set与bucket plan只构成mechanical evidence。G12I拥有coverage/gap/availability/revision completeness；G12L/M拥有Provider与market qualification。G12G始终`decision_grade_eligible=false`、`deployment_authorized=false`。
+
+Research authority：`docs/research/g12g-bar-aggregation.md`。
+
+PASSED evidence：
+
+```text
+Direct G12G/G11D/architecture contract                            44 passed
+Frozen G12G/G12B/C/G11D acceptance                              140 passed
+Full repository suite                                          1466 passed
+Workspace import boundary                                      PASS (94 files)
+mypy 2.3.0                                                     no issues (94 package source files)
+Primary LSP                                                    clean across 11 changed Python files
+pi-lens blocking diagnostics                                  no errors across 11 changed files
+Independent review                                            no P0; P1 evidence gaps fixed
+uv lock --check                                                PASS
+git diff --check                                               PASS
+Python                                                          3.13.5
+```
+
+Artifact hashes：
+
+```text
+g12g-bar-aggregation.md                                        sha256:aac7d200b05fd10d1de9cf1beba5ac8a895c0dd622310d1d5a7ddc3bc160c39d
+g12g.md                                                        sha256:905f312efcc39091987a950bf448cd29f2e6d16f1dd6dc9b88a07b57543da48b
+canonical-bar-aggregation-v1.expected.json                     sha256:151e1c7bdcdf9bf90a8b64a8c439bbe0ef5f483204b257e5f78313c21373a49e
+g12g-pytest.xml                                                sha256:436e0cf539f1a75314283049dd13f5d82f9cd29b475d82437d1471188660fb9a
+g12g-import-boundary-report.json                               sha256:7efaa8493cddc81fbf890d2bdb224770b248c49d63f24e91d11923682a363df0
+import-boundaries.toml                                         sha256:1518ad6dc28c73218d4b9d1af97a2fd8c0e5913936cfff23b81e429091cb41d5
+uv.lock                                                        sha256:a07106c285b2c454d0528411c79988881b3ff87c0a84d04228d94c186e9d3d8d
+```
+
+Implementation commit：`eefe4df3568776323881810a309ea09a47b379b7`。
+
+## 103. PASSED 记录格式
 
 ```yaml
 id: WP-00A

@@ -2,7 +2,7 @@
 
 ## Decision status
 
-G12G readiness is **frozen READY** for implementation. The Gate remains `DRAFT` in `docs/implementation/acceptance-matrix.md`; this document does not mark G12G `PASSED` or authorize implementation evidence.
+G12G is **PASSED** in `docs/implementation/acceptance-matrix.md` at implementation commit `eefe4df3568776323881810a309ea09a47b379b7`. The frozen v1 contract remains development-only and does not authorize decision-grade or deployment use.
 
 Freeze G12G as one pure, offline Builder compiler from a G12C-validated synthetic price stream plus one caller-supplied finite bucket plan to canonical revisioned `bar` Events. G12G owns deterministic aggregation mechanics and lineage only. It does not derive a calendar or schedule and does not own exchange-calendar truth, provider completeness, gap classification, decision-grade qualification, or deployment authorization.
 
@@ -401,4 +401,4 @@ The `canonical-bar-aggregation-v1` golden must freeze:
 - every failure code, precedence, and atomicity;
 - repeat canonical bytes/hashes, architecture/import report, mypy, lock check, G12B/C and G11D regressions, full suite, JUnit/artifact hashes, and immutable implementation commit.
 
-Passing those checks is future Acceptance work. This readiness freeze alone must not change the G12G Acceptance Matrix status from `DRAFT`.
+The frozen checks passed at implementation commit `eefe4df3568776323881810a309ea09a47b379b7`; the Acceptance Matrix owns the immutable evidence and `PASSED` status.

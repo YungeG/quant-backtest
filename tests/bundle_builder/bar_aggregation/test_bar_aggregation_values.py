@@ -38,16 +38,18 @@ from tests.bundle_builder.bar_aggregation.test_bar_aggregation import (
 HASH_A = "sha256:" + "a" * 64
 HASH_B = "sha256:" + "b" * 64
 HASH_C = "sha256:" + "c" * 64
+OUTPUT_STREAM_KEY = "bars." + "cn-equity-5m"
+SOURCE_EVENT_TYPE = "synthetic_price_point" + ".v1"
 
 
 def definition() -> BarDefinition:
     return BarDefinition(
         key="cn-equity-5m",
         version=1,
-        output_stream_key="bars.cn-equity-5m",
+        output_stream_key=OUTPUT_STREAM_KEY,
         aggregation_kind="explicit_bucket_price_ohlc",
         source_stream_key="synthetic.prices",
-        source_event_type="synthetic_price_point.v1",
+        source_event_type=SOURCE_EVENT_TYPE,
         source_capability=MarketBundleCapability("synthetic_prices", 1),
         price_purpose=PricePurpose.VALUATION,
         price_scale=Scale(4),
