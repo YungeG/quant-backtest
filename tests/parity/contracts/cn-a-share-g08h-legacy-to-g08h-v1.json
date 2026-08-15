@@ -1,0 +1,10 @@
+{
+  "id": "cn-a-share-g08h-legacy-to-g08h-v1",
+  "schema_version": 1,
+  "rules": [
+    {"path": "/case_id", "comparison": "exact"},
+    {"path": "/layers/00_CASE_INPUT", "comparison": "exact"},
+    {"path": "/layers/03_DECISION_BUDGETING", "comparison": "sequence"},
+    {"path": "/layers/04_ORDER_INTENT", "comparison": "sequence"}
+  ]
+}

@@ -1,117 +1,103 @@
-# G08H Profile Composition and Parity Readiness Audit
+# G08H Profile Composition and Parity Readiness Record
 
 ## Verdict
 
-G08H remains **DRAFT / BLOCKED**. G08A–G08G are `PASSED`, so the component implementations exist, but the composition contract, typed scope/revision evidence, Runtime dispatcher plan, fixture identity, and parity contract are not frozen.
+G08H is **READY / RED FREEZE**. The production, test-support and parity implementations remain absent; the exact contract and static fixtures are frozen for implementation.
 
-This is a readiness blocker record, not an implementation specification and not a real-market qualification claim.
+This Gate remains development-only. It does not prove external provider/archive completeness, real security/account classification, decision-grade eligibility or deployment authorization.
 
-## Correct ownership boundary
+## Reused authorities
 
-G08H combines three existing seams:
+G08H composes rather than replaces:
 
-- production pure composition in `backtest-runtime`, analogous to G10G;
-- development-only dispatcher and Journey assembly in `tests/support`, reusing the G09H profile-neutral financial-dispatch seam without adding an A-share branch to generic Engine/Runner/Timeline/Ledger code;
-- parity plan/tooling in `tools/parity` and `tests/parity`.
+- G08A Calendar/Session;
+- G08B T+1 Settlement/Availability;
+- G08C Quantity Lattice;
+- G08D historical Order Rules/Price Limits;
+- G08E Fee/Stamp Duty;
+- G08F Corporate Action Entitlement;
+- G08G Corporate Action Cash/Share accounting;
+- G09H profile-neutral Financial Dispatcher, Engine, Runner, Journal/Ledger and Snapshot seams;
+- WP-00C exact comparator and first-divergence rules;
+- G10G/G10H composition and layered-scope-report patterns.
 
-G08A–G08G remain owned by `trading-kernel profiles/cn_a_share`; G08H must consume them rather than create replacement Calendar, Settlement, Order Rule, Fee/Tax, Entitlement, Accounting, Journal, Ledger, Registry, or execution authorities.
+The production owner is one pure `crypto_quant_backtest.cn_a_share_profile` module. The development dispatcher/Journey remains in `tests/support/cn_a_share`; parity remains in `tools/parity/cn_a_share.py` and its runner. Generic Runtime code must not gain A-share branches.
 
-## Existing repository authorities
+## Scope declarations
 
-The repository already has:
+Five new production values carry caller-supplied development evidence:
 
-1. G08A Calendar/Session, G08B T+1 Settlement, G08C Quantity Lattice, G08D historical Order Rules/Price Limits, G08E Fee/Tax, G08F Corporate Action Entitlement, and G08G Corporate Action Accounting;
-2. generic `MarketSemanticsProfileRegistration`, `SimulationProfileRegistration`, `ExecutionAccountProfileRegistration`, `BacktestProfileRegistry`, and the G09H profile-neutral `FinancialDispatcherSpec`/`FinancialDispatchPlan`/`ScheduledAccountEvent` plus Journal/Ledger replay, Timeline and Runner seams;
-3. the G10G production-composer plus development-dispatcher pattern;
-4. the G10H layered parity pattern, including explicit `NOT_COMPARABLE_*` verdicts;
-5. authoritative Journal-prefix and Ledger replay identities needed to prove that Settlement consumes already-booked Fill accounting.
+1. `CnAShareInstrumentScopeDeclaration` stores a full `InstrumentDefinition`, existing `CnAShareInstrumentRuleContext`, finite coverage, availability, explicit ordinary-domestic/cash-auction assertions, every excluded product/distribution flag, and source snapshot/manifest hashes.
+2. `CnAShareAccountScopeDeclaration` stores Account/Venue, finite coverage, availability, explicit cash/domestic assertions, margin-short/Stock-Connect/available-margin exclusions, and source hashes.
+3. `CnAShareAnnouncementRevisionSetDeclaration` stores the scoped corporate action, ordered linear revision chain, terminal/cancellation state, finite coverage, availability and source hashes.
+4. `CnAShareRegisterRevisionSetDeclaration` stores the scoped account/position/register series, ordered linear revision chain, terminal state, finite coverage, availability and source hashes.
+5. `CnAShareIdentityHistoryDeclaration` stores canonical scoped identity/payload-hash pairs for corporate actions, register snapshots and register revisions, plus coverage, availability and source hashes.
 
-## Missing typed declarations before READY
+Hashes are derived properties, not caller-supplied self-hash fields. Constructors own malformed type/text/hash/interval rejection; supported scope, closure, cancellation, coverage, availability and conflicting reuse remain structured composer failures.
 
-### 1. Instrument and execution-scope qualification
+These values prove only internal consistency of supplied evidence. G12L/G12M retain external source completeness and real-market qualification.
 
-Current `InstrumentDefinition` values prove broad Equity type, Venue and currencies, but cannot prove all caller preconditions deferred by G08B–G08F. G08H needs one frozen immutable declaration/evidence schema for the development fixture that explicitly binds, rather than infers:
+## Frozen composer behavior
 
-- ordinary domestic CNY A-share;
-- standard cash auction;
-- XSHG or XSHE venue;
-- not B/H share, ETF, REIT, Stock Connect, block trade or after-hours mechanism;
-- no lending/repo, pledge/freeze, restricted/pre-IPO or differential-distribution scope.
+`CnAShareProfileComposer.compose(request, /)` consumes the five optional declarations plus exact G08 Calendar/rule books/Entitlements/G08G requests and a finite Timeline window. Optional declarations permit structured missing-authority outcomes; inherited authorities use exact concrete types.
 
-This evidence must remain development-grade and must not claim provider completeness or real-market qualification.
+The fifteen failure codes and precedence are:
 
-### 2. Account-scope qualification
+`MISSING_INSTRUMENT_SCOPE` → `MISSING_ACCOUNT_SCOPE` → `MISSING_ANNOUNCEMENT_REVISION_SET` → `MISSING_REGISTER_REVISION_SET` → `MISSING_IDENTITY_HISTORY` → `INSTRUMENT_SCOPE_MISMATCH` → `ACCOUNT_SCOPE_MISMATCH` → `AUTHORITY_CONTEXT_MISMATCH` → `REVISION_CLOSURE_MISMATCH` → `CROSS_QUERY_IDENTITY_CONFLICT` → `TIMELINE_COVERAGE_MISMATCH` → `EVIDENCE_NOT_AVAILABLE` → `UNSUPPORTED_TAX_DISPOSITION` → `UNSUPPORTED_XSHG_SHARE_DELIVERY` → `COMPONENT_IDENTITY_CONFLICT`.
 
-Existing generic account/risk values can express long-only and cash-funded behavior, but the exact G08H declaration and consistency checks are not frozen. The contract must explicitly bind cash account, domestic access, no margin/short, no Stock Connect, no available-margin authorization, account identity and Venue identity.
+Failure embeds the Request and reconstructs the first failure; strict XOR Outcome and Resolved Profile constructors reject forged replacement values.
 
-### 3. Corporate Action revision-set closure
+## Tax and venue boundary
 
-G08F proves only the supplied Candidate/Snapshot values. G08H still needs immutable caller-supplied closure evidence for:
+G08G already rejects `APPLIED` and `DEFERRED_UNSUPPORTED` before any Journal/Lot effect. G08H v1 preserves `NOT_APPLICABLE`-only success and does not add deferred-tax Lot state. XSHG bonus/capitalization also remains unsupported; XSHG cash payment remains within inherited G08F/G08G scope when all other declarations match.
 
-- the complete closed announcement revision set;
-- the complete closed register revision set;
-- terminal revision/cancellation state;
-- source snapshot/manifest identity and coverage;
-- captured-at/available-at causality;
-- cross-query stable-ID conflict detection for corporate-action, snapshot, register-series and revision identities.
+## Profile and dispatcher identity
 
-No current A-share schema binds a caller declaration that a supplied revision set is closed. G08H must freeze that schema before a composer can validate the supplied set/chain, source snapshot, coverage, availability and terminal state. The pure composer cannot prove that an external provider/archive omitted nothing; that real-source completeness remains G12L/G12M scope.
+The Market profile exact-covers all 12 `ProfilePortType` values; the Simulation profile exact-covers all six `SimulationPortType` values. Existing G08 component refs and generic cash/no-op refs are reused. Only two explicit manifest identities are composed for cash no-liquidation rules and CNY identity valuation; their canonical payloads/digests are frozen in the composition fixture.
 
-## Corporate Action tax boundary
+A-share scheduled Corporate Actions require a profile-specific `FinancialDispatcherSpec` key, `equity.cn_a_share.cash-financial-dispatch.v1`. It reuses default cash component refs but binds the resolved model, manifests, operation keys, G08G request identities and limitations. It must not masquerade as the generic cash dispatcher spec.
 
-G08G does **not** apply `APPLIED` or `DEFERRED_UNSUPPORTED` actions. Both cash and share translators return `UNSUPPORTED_TAX_DISPOSITION` unless the evidence is exactly `NOT_APPLICABLE`. Therefore G08H v1 does not need to invent a deferred-tax Lot flag or later-transfer state machine.
+All profile/registration outputs remain `development`, `decision_grade_eligible=false`, `profile_qualified=false`, and `deployment_authorized=false`.
 
-The G08H development composition must preserve the existing `NOT_APPLICABLE`-only scope and fail closed before any Journal/Lot effect for other dispositions. A future Gate that supports deferred taxation would require a separately frozen taxable-transfer authority.
+## Runtime Journey boundary
 
-## Component composition gap
+The development dispatcher implements the existing G09H seam and uses only:
 
-No `equity.cn_a_share.v1` resolved profile currently exists. G08H has not frozen:
+- `cn_a_share.corporate_action.cash_payment.v1`, phase 110;
+- `cn_a_share.corporate_action.share_delivery.v1`, phase 120.
 
-- production request/result/failure/outcome/composer names and canonical schemas;
-- the exact 12-slot `ProfilePortType` manifest;
-- which existing generic no-financing/no-margin/no-liquidation/CNY-valuation components are reused and how their digests are bound;
-- Market, Simulation and Execution Account keys/versions/capabilities;
-- profile limitations and exact grade flags;
-- failure-code declaration and first-failure precedence.
+The Journey freezes the existing XSHE CNY 70 payment and 210-share delivery, exact 7,500.00 CNY Lot basis conservation, full/prefix/resume Journal/Ledger/Lot reconstruction and Snapshot binding. G08A–G08F component semantics remain covered by their immutable inherited fixtures and are rerun in G08H acceptance rather than reimplemented by a second validator.
 
-The missing explicit A-share component classes are not themselves a reason to create new engines. Existing versioned generic/no-op components may be reused if the final manifest and digests are frozen exactly.
+## Legacy scope/parity conclusion
 
-## Runtime lifecycle gap
+The frozen `cycle-rotation-platform` archive contains budgeting and order-intent code but no authoritative exchange Calendar, historical Price Limit, exact Fee/Tax, T+1 availability, Corporate Action lifecycle or canonical Journal/Ledger semantics.
 
-Generic scheduled-event machinery exists, but no development A-share dispatcher or execution-case builder currently:
+The G08H parity fixture therefore compares only a source-grounded synthetic case:
 
-- maps frozen payment/listing operation keys to the G08G translators;
-- supplies the exact request payloads and Timeline events at phases 110/120;
-- appends/replays the resulting Journal entries through the existing dispatcher authority;
-- proves full/prefix/resume reconstruction in an Engine Journey;
-- preserves G08G failure outcomes atomically without partial effects.
+- CNY 100,000 NAV;
+- 0.95 exposure;
+- one target;
+- CNY 10.00 price;
+- zero current shares;
+- 100-share lot;
+- CNY 95,000 target;
+- 9,500-share BUY intent.
 
-This belongs in development test support; generic Runtime code must not import or branch on `CnAShare*` types.
+Comparable layers are `00_CASE_INPUT`, `03_DECISION_BUDGETING`, and `04_ORDER_INTENT`. The remaining seven layers are `NOT_COMPARABLE_LEGACY_SCOPE`. Comparable layers use `copy_with_parity` and must return pair verdict `MATCH`; the aggregate report remains `NOT_COMPARABLE_LEGACY_SCOPE`, with Calendar/Session as the first uncovered layer. This is scope evidence, not economic parity.
 
-## Parity reality
+Immutable source identity:
 
-The immutable `cycle-rotation-platform` source is mapped as `reimplement_with_reference` with `comparator_contract: null`. It has no authoritative Calendar/Session, true T+1 Settlement, historical Price Limit, exact Fee/Tax, Corporate Action lifecycle, or Journal/Ledger accounting oracle.
+- archive SHA-256 `1fea4f5a4ec8ab12ddb25c6c5bb525f91f8bac9e887f3e5b382b641a948c91c3`;
+- content-tree SHA-256 `65f9812bd86241ac5fcfdfcca1cb8c28868edbdf007d747ecee8cc68ee20d089`.
 
-Consequently G08H cannot claim exact legacy equivalence for those layers. Before READY it must freeze one of these two policies:
+## Frozen evidence
 
-1. a G10H-style layered report whose unsupported legacy layers are explicitly `NOT_COMPARABLE_LEGACY_SCOPE`, with any comparable legacy budgeting/order/final-result layers defined exactly; or
-2. a different immutable source artifact that is a real oracle for the claimed layers.
+The exact field order, type literals, manifest rows, fixed digests, limitations, failure precedence, inherited hashes, Journey controls, parity coverage and byte hashes are frozen by:
 
-A `NOT_COMPARABLE` report is evidence of scope, not evidence of economic parity. The exact layer set, projections, verdict rules, first-divergence behavior and fixture IDs are still missing.
+- `tests/fixtures/runtime/profiles/cn-a-share-resolved-profile-composition-v1.json`;
+- `tests/fixtures/runtime/engine/cn-a-share-resolved-profile-development-journey-v1.json`;
+- `tests/parity/contracts/cn-a-share-g08h-legacy-to-g08h-v1.json`;
+- `tests/parity/fixtures/cn-a-share-g08h-v1/`;
+- G08H contract, golden, Journey, parity and architecture RED tests.
 
-## Explicit retained exclusions
-
-- XSHG bonus/capitalization remains unsupported; G08F/G08G already fail closed. G08H must retain that limitation unless separate provenance is frozen.
-- Real provider/archive completeness, live security classification and deployment qualification remain G12L/G12M concerns.
-- G08H output remains `grade=development`, `decision_grade_eligible=false`, `profile_qualified=false`, and `deployment_authorized=false`.
-
-## Exact prerequisites for DRAFT → READY
-
-1. Choose and freeze the development-only scope and parity policy above.
-2. Freeze the production module path, exact public names, schemas, canonical hashes and exports.
-3. Freeze instrument/account scope evidence and Corporate Action revision-closure evidence.
-4. Freeze the profile manifest, capabilities, dispatcher spec/operation keys, failure precedence and reconstruction invariants.
-5. Freeze static fixture IDs, exact test commands, expected artifacts and parity layers/verdicts.
-6. Add RED contract/golden/Journey/parity/boundary tests and obtain an independent dry review.
-
-Until all six are complete, implementation must not begin and the Gate remains `DRAFT / BLOCKED`.
+Implementation is authorized only against that frozen surface. Real provider/archive qualification remains blocked on G12L/G12M.

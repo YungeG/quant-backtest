@@ -120,7 +120,7 @@ artifact_hashes: []
 | G08E | PASSED | trading-kernel profiles/cn_a_share | WP-05H, WP-05J | none |
 | G08F | PASSED | trading-kernel profiles/cn_a_share | G08A, WP-06A, WP-06B | none |
 | G08G | PASSED | trading-kernel profiles/cn_a_share | G08F, G03 | none |
-| G08H | DRAFT | backtest-runtime composition + tests/support + parity tooling | G08A–G08G, G09H, WP-00C | Scope/revision declarations, composition, dispatcher, parity contract |
+| G08H | READY | backtest-runtime composition + tests/support + parity tooling | G08A–G08G, G09H, WP-00C | none |
 | G09A | PASSED | trading-kernel derivatives | G03 | none |
 | G09B | PASSED | trading-kernel derivative accounting | G09A, G03 | none |
 | G09C | PASSED | trading-kernel funding eligibility | G09A, G09B, WP-06A, WP-06B | none |
@@ -6539,7 +6539,7 @@ uv run python tools/architecture/check_import_boundaries.py \
 
 ```yaml
 id: G08H
-status: DRAFT
+status: READY
 depends_on:
   - G08A
   - G08B
@@ -6552,45 +6552,119 @@ depends_on:
   - WP-00C
 owner_package: backtest-runtime composition + tests/support + parity tooling
 public_interface:
-  - TBD before READY
+  - crypto_quant_backtest.CnAShareInstrumentScopeDeclaration
+  - crypto_quant_backtest.CnAShareAccountScopeDeclaration
+  - crypto_quant_backtest.CnAShareAnnouncementRevisionSetDeclaration
+  - crypto_quant_backtest.CnAShareRegisterRevisionSetDeclaration
+  - crypto_quant_backtest.CnAShareIdentityHistoryDeclaration
+  - crypto_quant_backtest.CnAShareProfileCompositionRequest
+  - crypto_quant_backtest.CnAShareMarketSemanticsProfile
+  - crypto_quant_backtest.CnAShareSimulationProfile
+  - crypto_quant_backtest.CnAShareExecutionAccountProfile
+  - crypto_quant_backtest.CnAShareResolvedProfile
+  - crypto_quant_backtest.CnAShareProfileCompositionFailureCode
+  - crypto_quant_backtest.CnAShareProfileCompositionFailure
+  - crypto_quant_backtest.CnAShareProfileCompositionOutcome
+  - crypto_quant_backtest.CnAShareProfileComposer
+  - tests.support.cn_a_share.CnAShareDevelopmentFinancialDispatcher
+  - tests.support.cn_a_share.CnAShareDevelopmentJourneyResult
+  - tests.support.cn_a_share.build_cn_a_share_resolved_request
+  - tests.support.cn_a_share.build_cn_a_share_execution_case
+  - tests.support.cn_a_share.run_cn_a_share_development_journey
+  - tools.parity.cn_a_share.CnAShareParityError
+  - tools.parity.cn_a_share.run_plan
+  - tools.parity.cn_a_share.blocked_report
+  - tools/parity/run_cn_a_share_parity.py
 test_commands:
-  contract: TBD before READY
-  fixture: TBD before READY
-  boundary: TBD before READY
+  contract: uv run pytest -q tests/runtime/profiles/cn_a_share/test_profile_composition.py tests/support/cn_a_share/test_cn_a_share_profile.py
+  fixture: uv run pytest -q tests/runtime/profiles/cn_a_share/test_profile_composition_golden.py tests/runtime/engine/test_g08h_cn_a_share_golden.py
+  journey: uv run pytest -q tests/runtime/engine/test_g08h_cn_a_share_journey.py
+  parity: uv run pytest -q tests/parity/test_cn_a_share_parity.py tests/parity/test_cn_a_share_parity_golden.py
+  boundary: uv run pytest -q tests/architecture/test_g08h_cn_a_share_composition_boundary.py tests/architecture/test_g08h_parity_boundary.py tests/architecture/test_public_api_imports.py tests/architecture/test_repository_cleanliness.py
+  acceptance: uv run pytest -q tests/runtime/profiles/cn_a_share tests/support/cn_a_share tests/runtime/engine/test_g08h_cn_a_share_journey.py tests/runtime/engine/test_g08h_cn_a_share_golden.py tests/parity/test_cn_a_share_parity.py tests/parity/test_cn_a_share_parity_golden.py tests/architecture/test_g08h_cn_a_share_composition_boundary.py tests/architecture/test_g08h_parity_boundary.py tests/kernel/profiles/cn_a_share tests/kernel/integration/test_corporate_action_journal_replay.py tests/runtime/engine/test_g08g_runtime_lot_authority.py tests/runtime/engine/test_g09h_synthetic_linear_perpetual_journey.py --junitxml=build/acceptance/g08h-pytest.xml
 fixture_ids:
-  - TBD before READY
+  - cn-a-share-resolved-profile-composition-v1
+  - cn-a-share-resolved-profile-development-journey-v1
+  - cn-a-share-g08h-parity-plan-v1
+  - cn-a-share-g08h-cycle-rotation-projection-v1
+  - cn-a-share-g08h-runtime-projection-v1
+  - cn-a-share-g08h-parity-report-v1
+  - cn-a-share-g08h-legacy-to-g08h-v1
 expected_artifacts:
-  - TBD before READY
+  - docs/research/g08h-profile-composition-parity.md
+  - docs/implementation/plans/g08/g08h.md
+  - tests/fixtures/runtime/profiles/cn-a-share-resolved-profile-composition-v1.json
+  - tests/fixtures/runtime/engine/cn-a-share-resolved-profile-development-journey-v1.json
+  - tests/parity/contracts/cn-a-share-g08h-legacy-to-g08h-v1.json
+  - tests/parity/fixtures/cn-a-share-g08h-v1/plan.json
+  - tests/parity/fixtures/cn-a-share-g08h-v1/legacy.expected.json
+  - tests/parity/fixtures/cn-a-share-g08h-v1/g08h.actual.json
+  - tests/parity/fixtures/cn-a-share-g08h-v1/report.expected.json
+  - build/acceptance/g08h-pytest.xml
+  - build/acceptance/g08h-parity-report.json
+  - build/acceptance/g08h-import-boundary-report.json
+  - build/acceptance/g08h-mypy.txt
 failure_contracts:
-  - TBD before READY
+  - missing-instrument-scope-is-accepted-or-inferred
+  - missing-account-scope-is-accepted-or-inferred
+  - missing-announcement-revision-set-is-accepted
+  - missing-register-revision-set-is-accepted
+  - missing-identity-history-is-accepted
+  - unsupported-instrument-scope-is-composed
+  - unsupported-account-scope-or-available-margin-authority-is-composed
+  - inherited-account-venue-instrument-currency-or-rule-context-mismatch-is-composed
+  - revision-chain-gap-branch-terminal-or-cancellation-mismatch-is-composed
+  - cross-query-stable-id-conflict-is-composed
+  - timeline-coverage-gap-is-filled-from-neighbor-or-current-state
+  - evidence-available-after-composition-is-used
+  - applied-or-deferred-tax-disposition-produces-effects
+  - xshg-share-delivery-is-composed
+  - component-manifest-spec-registration-or-profile-identity-conflict-is-accepted
+  - result-failure-outcome-or-declaration-hash-is-forgeable
+  - generic-runtime-adds-cn-a-share-import-name-or-operation-branch
+  - legacy-missing-authority-is-claimed-as-match
 allowed_grade: development
 evidence:
-  - TBD before READY
+  - exact-public-schema-field-type-and-canonical-hash-tests
+  - fifteen-code-first-failure-reachability-and-multi-defect-precedence
+  - strict-xor-and-constructor-reconstruction-forgery-rejection
+  - exact-twelve-market-and-six-simulation-component-manifests
+  - inherited-g08a-through-g08g-static-fixture-hashes
+  - profile-specific-dispatcher-spec-and-operation-key-identity
+  - phase-110-payment-and-phase-120-listing-journey
+  - exact-cash-share-basis-and-full-prefix-resume-replay-evidence
+  - source-grounded-comparable-legacy-budgeting-and-order-intent-projections
+  - explicit-not-comparable-legacy-scope-coverage
+  - deterministic-first-divergence-and-source-identity-tamper-rejection
+  - import-boundary-report
+  - static-type-report
+  - pytest-report
 passed_commit: null
 artifact_hashes: {}
 ```
 
-### G08H Acceptance / Blocker
+### G08H Acceptance
 
-**Status:** `DRAFT / BLOCKED`. G08A–G08G are `PASSED`, but readiness still lacks an exact public interface, typed inputs/declarations, failure precedence, fixture IDs, test commands, expected artifacts and parity layer/verdict contract.
+1. G08H adds exactly one pure production module, `crypto_quant_backtest.cn_a_share_profile`, and root-exports the fourteen frozen production names above. It reuses G08A–G08G and G09H; it must not add a second Registry, Resolver, Engine, dispatcher framework, accounting authority, Protocol, generic port, provider Adapter, cache or Runtime market branch;
+2. The five immutable declarations and their exact fields/types are frozen by contract tests and the composition fixture. Every `declaration_hash` is a derived property over a canonical body that excludes itself. Constructors reject malformed exact types/text/hash/intervals; supported scope, closure, identity, coverage and availability remain structured business failures;
+3. Instrument success requires explicit ordinary domestic XSHG/XSHE CNY Equity cash-auction evidence plus existing G08D board/risk/listing context, with B/H, fund/bond, Stock Connect, lending/repo, pledge/freeze, restricted/pre-IPO, differential distribution and issuer self-distribution flags false. No symbol/current/provider inference is permitted;
+4. Account success requires explicit cash domestic access, no margin/short, no Stock Connect and no generic available-margin authorization. One profile covers one Venue and one declared Account scope;
+5. Announcement/register declarations bind caller-order nonempty immediate-parent linear revision chains, terminal IDs, coverage, availability and source snapshot/manifest hashes. G08H validates the supplied set/chain only; G12L/G12M retain external omission/completeness and real-market qualification;
+6. Cross-query identity history uses canonical scoped identity/payload-hash tuples. Conflicting reuse of corporate-action, register-snapshot or register-revision identity fails atomically;
+7. Composition Request exact-binds the five optional declarations, G08A Calendar, G08D/G08E/G08F rule books, canonical Entitlement/G08G request tuples, Timeline window and composition instant. Optional declarations exist only for structured missing-authority outcomes; all inherited authorities use exact types;
+8. The fifteen failure codes and first-failure order are exact as frozen in the composition fixture. Failure embeds the full Request and reconstructs the first failure with `subject_ids=(code.value, request.request_hash)`. Outcome is strict XOR. Resolved Profile, Failure and Outcome reject forged `dataclasses.replace` values;
+9. G08G tax success remains `NOT_APPLICABLE`-only; `APPLIED` and `DEFERRED_UNSUPPORTED` fail before Journal/Lot effects. XSHG bonus/capitalization remains unsupported. No deferred-tax Lot state machine or Shenzhen-to-Shanghai Listing inference is added;
+10. Market and Simulation profiles exact-cover all existing 12/6 port enums. Existing G08 and default-cash component refs are reused. The two explicit static manifest components and all fixed digests are frozen in the composition fixture;
+11. Dispatcher spec key is `equity.cn_a_share.cash-financial-dispatch.v1`, not the generic cash key. Its config hash binds profile/request/manifests/operation keys/G08G requests/limitations while reusing default cash accounting refs and snapshot projection authority;
+12. Profile keys, capabilities, AccountRiskPolicy, limitations, registrations and Registry are exact. Every result is development-only with `decision_grade_eligible=false`, `profile_qualified=false`, and `deployment_authorized=false`;
+13. Test-support exports one concrete dispatcher, one Journey result and three builders/runners. Payment and Listing operation keys are exact at phases 110/120; generic Engine/Runner/Timeline/Journal/Ledger/Composer contain no A-share import, name or operation branch;
+14. The scheduled-event Journey freezes the existing XSHE CNY 70 payment, 210-share delivery, current 500→710 Lot transition and exact CNY 7,500.00 total-basis conservation. Full and prefix/resume Journal/Ledger/Lot replay are identical and the final Snapshot binds the final Journal state. Inherited G08A–G08F suites remain the component behavior authority;
+15. Legacy comparison is grounded in the immutable archive and a CNY 100,000/0.95/10.00/100-share synthetic case. Only case input, decision budgeting and order intent are comparable. The other seven layers are `NOT_COMPARABLE_LEGACY_SCOPE`; pair verdict is `MATCH`, aggregate verdict is `NOT_COMPARABLE_LEGACY_SCOPE`, and Calendar/Session is the first uncovered layer;
+16. Parity tooling validates immutable source/projection/contract hashes, complete coverage, rule/coverage separation and deterministic first divergence. It does not execute the archive, import Runtime/profile code, invent an oracle or claim missing authority as equality;
+17. Static fixture bytes, inherited PASSED fixture hashes and exact RED failures are frozen. Production, test-support and parity implementations remain absent at READY; implementation may make tests green but may not rewrite the contract or fixtures;
+18. Real provider acquisition, archive completeness, live security/account scope, decision grade, profile qualification and deployment authorization remain G12L/G12M responsibilities.
 
-Blockers / prerequisites for READY:
-
-1. Freeze one production `backtest-runtime` composition module and exact canonical request/result/failure/outcome/composer seam; reuse the existing Registry/Resolver, G09H profile-neutral financial-dispatch seam and all G08A–G08G authorities;
-2. Freeze immutable development instrument/account-scope declarations and internally closed announcement/register revision-set declarations with exact source-snapshot, coverage and availability identity. G08H may validate the supplied set/chain but cannot prove external provider/archive completeness;
-3. Freeze a distinct cross-query identity-history input and exact conflict checks for corporate-action, snapshot, register-series and revision stable IDs;
-4. Freeze the exact 12-slot component manifest, capabilities, generic no-op component reuse, profile limitations, development grade and false decision/profile/deployment qualification flags;
-5. Freeze test-support-only A-share dispatcher/Journey wiring for G08G Payment/Listing scheduled events without adding `CnAShare*` imports or branches to generic Runtime modules;
-6. Freeze a layered WP-00C/G10H-style parity plan. The immutable `cycle-rotation-platform` source has no authoritative Calendar, true T+1, historical fee/tax, price-limit or Corporate Action oracle, so unsupported layers must be explicit `NOT_COMPARABLE_LEGACY_SCOPE`, not claimed parity;
-7. Freeze exact failure precedence, fixture IDs, expected artifacts and RED contract/golden/Journey/parity/architecture commands.
-
-Tax boundary correction: G08G success already accepts only `NOT_APPLICABLE`; `APPLIED` and `DEFERRED_UNSUPPORTED` fail before any Journal/Lot effect. G08H v1 must preserve that exclusion and must not invent a deferred-tax Lot/transfer state machine.
-
-XSHG bonus/capitalization remains an explicit unsupported limitation. Real provider/archive completeness and market/profile qualification remain G12L/G12M responsibilities.
-
-Do not begin implementation or transition to `READY` until the seven blockers above are exact-frozen and independently reviewed.
-
-Research and plan: `docs/research/g08h-profile-composition-parity.md`, `docs/implementation/plans/g08/g08h.md`.
+G08H is `READY`; implementation is authorized only against the frozen RED surface. Research and plan: `docs/research/g08h-profile-composition-parity.md`, `docs/implementation/plans/g08/g08h.md`.
 
 ## 69. G09A Linear Derivative Position Model Acceptance Card
 

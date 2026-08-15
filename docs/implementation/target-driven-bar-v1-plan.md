@@ -1346,11 +1346,11 @@ Detailed plan: [G08G](plans/g08/g08g.md); research: [G08G lifecycle readiness](.
 
 ### Gate G08H A-share Profile Composition and Parity
 
-依赖：G08A–G08G、G09H、WP-00C；当前状态 `DRAFT / BLOCKED`。
+依赖：G08A–G08G、G09H、WP-00C；当前状态 `READY / RED FREEZE`。
 
 拥有：pure `backtest-runtime` 的 `equity.cn_a_share.v1` development composition、`tests/support` development dispatcher/Journey、complete closed announcement/register revision-set validation、跨 Query identity-history validation、不可由 G08F Query 表达的 instrument/account/distribution scope declaration，以及分层 `cycle-rotation-platform` scope/parity report。Real provider/archive completeness 与 market/profile qualification 继续属于 G12L/G12M。
 
-READY 前必须先冻结：exact public seam/canonical schema、instrument/account scope evidence、announcement/register closure evidence、12-slot component manifest/capabilities、failure precedence、scheduled Payment/Listing dispatcher contract、fixture IDs/artifacts/RED commands，以及 legacy layer/verdict policy。
+Readiness contract 已冻结：单一 `crypto_quant_backtest.cn_a_share_profile` production seam、五个 immutable scope/revision/history declarations、15 项 first-failure precedence、exact 12-slot/6-slot manifests、profile-specific A-share dispatcher spec、test-support Payment/Listing Journey、七个 static fixture IDs 与 source-grounded layered legacy scope report。实现不得修改冻结 RED tests/fixtures。
 
 验收：
 

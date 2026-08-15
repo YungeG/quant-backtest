@@ -1,0 +1,435 @@
+{
+  "fixture_id": "cn-a-share-resolved-profile-composition-v1",
+  "schema_version": 1,
+  "model_key": "equity.cn_a_share.resolved-profile-composition.v1",
+  "model_version": 1,
+  "profile_keys": {
+    "market": "equity.cn_a_share.v1",
+    "simulation": "bar.next_eligible_open.cn_a_share.development.v1",
+    "account": "equity.cn_a_share.cash.long-only.v1"
+  },
+  "public_interface": [
+    "CnAShareInstrumentScopeDeclaration",
+    "CnAShareAccountScopeDeclaration",
+    "CnAShareAnnouncementRevisionSetDeclaration",
+    "CnAShareRegisterRevisionSetDeclaration",
+    "CnAShareIdentityHistoryDeclaration",
+    "CnAShareProfileCompositionRequest",
+    "CnAShareMarketSemanticsProfile",
+    "CnAShareSimulationProfile",
+    "CnAShareExecutionAccountProfile",
+    "CnAShareResolvedProfile",
+    "CnAShareProfileCompositionFailureCode",
+    "CnAShareProfileCompositionFailure",
+    "CnAShareProfileCompositionOutcome",
+    "CnAShareProfileComposer"
+  ],
+  "canonical_contracts": {
+    "CnAShareInstrumentScopeDeclaration": {
+      "type": "cn_a_share_instrument_scope_declaration",
+      "fields": [
+        "instrument",
+        "rule_context",
+        "coverage_from",
+        "coverage_to_exclusive",
+        "available_at",
+        "is_ordinary_domestic_a_share",
+        "is_standard_cash_auction",
+        "is_b_or_h_share",
+        "is_fund_or_bond",
+        "is_stock_connect",
+        "has_lending_or_repo",
+        "has_pledge_or_freeze",
+        "is_restricted_or_pre_ipo",
+        "has_differential_distribution",
+        "has_issuer_self_distribution",
+        "source_snapshot_hash",
+        "source_manifest_hash"
+      ],
+      "hash_property": "declaration_hash"
+    },
+    "CnAShareAccountScopeDeclaration": {
+      "type": "cn_a_share_account_scope_declaration",
+      "fields": [
+        "account_id",
+        "venue_id",
+        "coverage_from",
+        "coverage_to_exclusive",
+        "available_at",
+        "is_cash_account",
+        "is_domestic_access",
+        "has_margin_or_short_permission",
+        "has_stock_connect_permission",
+        "authorizes_available_margin_use",
+        "source_snapshot_hash",
+        "source_manifest_hash"
+      ],
+      "hash_property": "declaration_hash"
+    },
+    "CnAShareAnnouncementRevisionSetDeclaration": {
+      "type": "cn_a_share_announcement_revision_set_declaration",
+      "fields": [
+        "venue_id",
+        "instrument_id",
+        "corporate_action_id",
+        "revision_chain",
+        "terminal_revision_id",
+        "is_cancelled",
+        "coverage_from",
+        "coverage_to_exclusive",
+        "available_at",
+        "source_snapshot_hash",
+        "source_manifest_hash"
+      ],
+      "hash_property": "declaration_hash"
+    },
+    "CnAShareRegisterRevisionSetDeclaration": {
+      "type": "cn_a_share_register_revision_set_declaration",
+      "fields": [
+        "account_id",
+        "position_key",
+        "register_series_id",
+        "revision_chain",
+        "terminal_revision_id",
+        "coverage_from",
+        "coverage_to_exclusive",
+        "available_at",
+        "source_snapshot_hash",
+        "source_manifest_hash"
+      ],
+      "hash_property": "declaration_hash"
+    },
+    "CnAShareIdentityHistoryDeclaration": {
+      "type": "cn_a_share_identity_history_declaration",
+      "fields": [
+        "corporate_action_hashes",
+        "register_snapshot_hashes",
+        "register_revision_hashes",
+        "coverage_from",
+        "coverage_to_exclusive",
+        "available_at",
+        "source_snapshot_hash",
+        "source_manifest_hash"
+      ],
+      "hash_property": "declaration_hash"
+    },
+    "CnAShareProfileCompositionRequest": {
+      "type": "cn_a_share_profile_composition_request",
+      "fields": [
+        "instrument_scope",
+        "account_scope",
+        "announcement_revision_set",
+        "register_revision_set",
+        "identity_history",
+        "calendar",
+        "order_rule_book",
+        "market_fee_rule_book",
+        "stamp_duty_rule_book",
+        "corporate_action_rule_book",
+        "corporate_action_entitlements",
+        "cash_payment_requests",
+        "share_delivery_requests",
+        "timeline_window",
+        "composed_at"
+      ],
+      "hash_property": "request_hash"
+    },
+    "CnAShareMarketSemanticsProfile": {
+      "type": "cn_a_share_market_semantics_profile",
+      "fields": [
+        "model_digest",
+        "source_manifest_hash",
+        "component_manifest",
+        "financial_dispatcher_spec",
+        "profile_key",
+        "profile_version"
+      ],
+      "hash_property": "profile_digest"
+    },
+    "CnAShareSimulationProfile": {
+      "type": "cn_a_share_simulation_profile",
+      "fields": [
+        "model_digest",
+        "component_manifest",
+        "profile_key",
+        "profile_version"
+      ],
+      "hash_property": "profile_digest"
+    },
+    "CnAShareExecutionAccountProfile": {
+      "type": "cn_a_share_execution_account_profile",
+      "fields": [
+        "model_digest",
+        "source_manifest_hash",
+        "account_id",
+        "venue_id",
+        "account_risk_policy",
+        "profile_key",
+        "profile_version",
+        "account_type",
+        "margin_mode"
+      ],
+      "hash_property": "profile_digest"
+    },
+    "CnAShareResolvedProfile": {
+      "type": "cn_a_share_resolved_profile",
+      "fields": [
+        "request",
+        "model_key",
+        "model_version",
+        "model_digest",
+        "source_manifest",
+        "account_risk_policy",
+        "market_semantics",
+        "simulation",
+        "execution_account",
+        "market_registration",
+        "simulation_registration",
+        "execution_account_registration",
+        "profile_registry",
+        "financial_dispatcher_spec",
+        "limitations",
+        "decision_grade_eligible",
+        "profile_qualified",
+        "deployment_authorized"
+      ],
+      "hash_property": "profile_digest"
+    },
+    "CnAShareProfileCompositionFailure": {
+      "type": "cn_a_share_profile_composition_failure",
+      "fields": [
+        "request",
+        "model_digest",
+        "code",
+        "subject_ids"
+      ],
+      "hash_property": "failure_hash",
+      "subject_ids": [
+        "code.value",
+        "request.request_hash"
+      ]
+    },
+    "CnAShareProfileCompositionOutcome": {
+      "type": "cn_a_share_profile_composition_outcome",
+      "fields": [
+        "request_hash",
+        "model_digest",
+        "result",
+        "failure"
+      ],
+      "hash_property": "outcome_hash",
+      "xor": true
+    }
+  },
+  "request_ordering": {
+    "corporate_action_entitlements": "(venue_id,instrument_id,corporate_action_id,entitlement_hash)",
+    "cash_payment_requests": "(trigger_at,journal_entry_id,request_hash)",
+    "share_delivery_requests": "(trigger_at,journal_entry_id,request_hash)",
+    "identity_history_pairs": "canonical key then payload hash",
+    "revision_chain": "caller order is immediate-parent semantic order and is not sorted"
+  },
+  "market_components": [
+    {
+      "port_type": "session_model",
+      "component_key": "equity.cn_a_share.cash.session.v1",
+      "component_version": 1,
+      "digest_authority": "CnAShareCashSessionModel(calendar).component_ref"
+    },
+    {
+      "port_type": "instrument_model",
+      "component_key": "equity.cn_a_share.cash.quantity-lattice.v1",
+      "component_version": 1,
+      "digest_authority": "CnAShareCashQuantityLatticeModel(venue_id,Scale(2)).component_ref"
+    },
+    {
+      "port_type": "order_rule_model",
+      "component_key": "equity.cn_a_share.cash.order-rules.v1",
+      "component_version": 1,
+      "digest_authority": "CnAShareCashOrderRuleModel(order_rule_book,Scale(2)).component_ref"
+    },
+    {
+      "port_type": "fee_assessment_policy",
+      "component_key": "equity.cn_a_share.cash.market-fees.v1",
+      "component_version": 1,
+      "digest_authority": "CnAShareCashMarketFeePolicy(market_fee_rule_book,Scale(2)).component_ref"
+    },
+    {
+      "port_type": "tax_policy",
+      "component_key": "equity.cn_a_share.cash.stamp-duty.v1",
+      "component_version": 1,
+      "digest_authority": "CnAShareCashStampDutyTaxPolicy(stamp_duty_rule_book,Scale(2)).component_ref"
+    },
+    {
+      "port_type": "settlement_model",
+      "component_key": "equity.cn_a_share.cash.settlement.v1",
+      "component_version": 1,
+      "digest_authority": "CnAShareCashSettlementModel(calendar).component_ref"
+    },
+    {
+      "port_type": "position_accounting_model",
+      "component_key": "cash.instrument.position-accounting.v1",
+      "component_version": 1,
+      "component_digest": "sha256:4afab2bdcc0a850f518cf1e57dd4fbbd5656e4fd008ec1ccf4d0061e55259b83"
+    },
+    {
+      "port_type": "financing_model",
+      "component_key": "cash.no-financing.v1",
+      "component_version": 1,
+      "component_digest": "sha256:2e2aa485f39fe6b625a02267cb82d9b062997d2c4901e52d7fff517eb8ee4048"
+    },
+    {
+      "port_type": "margin_model",
+      "component_key": "cash.no-margin.v1",
+      "component_version": 1,
+      "component_digest": "sha256:8deb36c6dd8d1c403cfc5b4b5cb9082fa63cfe6d2afbc512a24238f9bb66d9c3"
+    },
+    {
+      "port_type": "liquidation_rules",
+      "component_key": "equity.cn_a_share.cash.liquidation-not-applicable.v1",
+      "component_version": 1,
+      "component_digest": "sha256:4761c095c40a4fa997046a5ab16e7db9564f848e28651583b537f01ad40e51fe"
+    },
+    {
+      "port_type": "corporate_action_model",
+      "component_key": "equity.cn_a_share.corporate-action-entitlement.v1",
+      "component_version": 1,
+      "digest_authority": "CnAShareCorporateActionEntitlementModel(corporate_action_rule_book,session_model).component_ref"
+    },
+    {
+      "port_type": "currency_valuation_policy",
+      "component_key": "equity.cn_a_share.cny-identity-valuation.v1",
+      "component_version": 1,
+      "component_digest": "sha256:abbb38b8d92a680c69e8a8e09a553a08d1a3eb717aea4da55fa04ddf24168f40"
+    }
+  ],
+  "static_component_payloads": {
+    "equity.cn_a_share.cash.liquidation-not-applicable.v1": {
+      "type": "cn_a_share_profile_static_component",
+      "schema_version": 1,
+      "port_type": "liquidation_rules",
+      "component_key": "equity.cn_a_share.cash.liquidation-not-applicable.v1",
+      "component_version": 1,
+      "policy": "cash_long_only_no_liquidation"
+    },
+    "equity.cn_a_share.cny-identity-valuation.v1": {
+      "type": "cn_a_share_profile_static_component",
+      "schema_version": 1,
+      "port_type": "currency_valuation_policy",
+      "component_key": "equity.cn_a_share.cny-identity-valuation.v1",
+      "component_version": 1,
+      "policy": "cny_identity_path_only"
+    }
+  },
+  "simulation_components": [
+    {
+      "port_type": "execution_model",
+      "component_key": "next_eligible_bar_open.v1",
+      "component_version": 1,
+      "component_digest": "sha256:d69d6d96c9081f730db6ff8cdd02431d4babdef2e3967f0094971e73aedf30fe"
+    },
+    {
+      "port_type": "slippage_model",
+      "component_key": "zero_slippage.development.v1",
+      "component_version": 1,
+      "digest_authority": "canonical_sha256({model_digest,bps:0,rounding:toward_zero,limitation:zero_slippage_development_only})"
+    },
+    {
+      "port_type": "latency_model",
+      "component_key": "latency.zero.development.v1",
+      "component_version": 1,
+      "digest_authority": "canonical_sha256({model_digest})"
+    },
+    {
+      "port_type": "liquidity_model",
+      "component_key": "liquidity.next-bar-full-fill.development.v1",
+      "component_version": 1,
+      "digest_authority": "canonical_sha256({model_digest})"
+    },
+    {
+      "port_type": "liquidation_audit_model",
+      "component_key": "cash.no-liquidation-audit.v1",
+      "component_version": 1,
+      "component_digest": "sha256:2cce82368126aca72a49690cb11e083af7fd857e1b0cd46894515d89f09e5955"
+    },
+    {
+      "port_type": "closeout_policy",
+      "component_key": "mark_to_market.v1",
+      "component_version": 1,
+      "component_digest": "sha256:d9be291bff3147a191296ec5b3d37cc79aecc9ee2bff4877d7bca86f9aeb0ea8"
+    }
+  ],
+  "market_capabilities": [
+    "account.financial-event@1",
+    "bar_open@1",
+    "corporate_actions@1"
+  ],
+  "simulation_capabilities": [
+    "bar_open@1"
+  ],
+  "dispatcher": {
+    "dispatcher_key": "equity.cn_a_share.cash-financial-dispatch.v1",
+    "dispatcher_version": 1,
+    "base_component_authority": "default_cash_financial_dispatcher_spec",
+    "cash_payment_operation_key": "cn_a_share.corporate_action.cash_payment.v1",
+    "share_delivery_operation_key": "cn_a_share.corporate_action.share_delivery.v1",
+    "snapshot_projection_key": "generic.cash.portfolio-snapshot.v1",
+    "snapshot_projection_version": 1,
+    "config_hash_binds": [
+      "model_digest",
+      "source_manifest",
+      "market_component_manifest",
+      "simulation_component_manifest",
+      "operation_keys",
+      "cash_payment_request_hashes",
+      "share_delivery_request_hashes",
+      "limitations"
+    ]
+  },
+  "failure_precedence": [
+    "missing_instrument_scope",
+    "missing_account_scope",
+    "missing_announcement_revision_set",
+    "missing_register_revision_set",
+    "missing_identity_history",
+    "instrument_scope_mismatch",
+    "account_scope_mismatch",
+    "authority_context_mismatch",
+    "revision_closure_mismatch",
+    "cross_query_identity_conflict",
+    "timeline_coverage_mismatch",
+    "evidence_not_available",
+    "unsupported_tax_disposition",
+    "unsupported_xshg_share_delivery",
+    "component_identity_conflict"
+  ],
+  "limitations": [
+    "bar_open_full_fill_has_no_queue_volume_or_intrabar_path",
+    "caller_supplied_scope_and_revision_closure_not_external_archive_completeness",
+    "corporate_action_tax_disposition_not_applicable_only",
+    "development_profile",
+    "finite_caller_supplied_calendar_rule_fee_and_corporate_action_coverage",
+    "margin_short_stock_connect_and_non_cash_account_unsupported",
+    "non_ordinary_or_non_standard_cash_auction_equity_unsupported",
+    "real_market_profile_qualification_unproven",
+    "risk_warning_new_listing_no_daily_limit_and_intraday_halt_unsupported",
+    "single_working_order_capacity",
+    "xshg_bonus_and_capitalization_unsupported",
+    "zero_slippage_development_only"
+  ],
+  "qualification": {
+    "allowed_grade": "development",
+    "decision_grade_eligible": false,
+    "profile_qualified": false,
+    "deployment_authorized": false
+  },
+  "inherited_fixture_sha256": {
+    "calendar-session-v1.json": "ef2ed7296ca9da16791ca7839583b93f151b1425734f53b02dd6e8556c0dd26d",
+    "settlement-availability-v1.json": "4b66c6ed6594c05de8723f11b69839507ba5991b8b913b6fe32f61d6960ba800",
+    "quantity-lattice-odd-lot-v1.json": "7b6a4e76260955735ea62a81c897dfb11eecc0af89b571143bbfcea244cecd1c",
+    "historical-order-rules-v1.json": "af74733a438d35a6d58712ee8f66f371af87f53dbb2f39692d22eaf5231d817d",
+    "commission-tax-v1.json": "3ef26743bc9cebfe546f77812c6773cbdf3353e0337d03ed512d5f1c396f702b",
+    "corporate-action-entitlement-v1.json": "dd489fc4488414f1a3d1d493ea7781952bad707d0c4df839ec8645466c33b011",
+    "corporate-action-accounting-v1.json": "dfed0880cae559b5c4c0f54c3cd461e0e6008af7eda09a1c57254a2db73747c3",
+    "corporate-action-journal-replay-v1.json": "63de3b4dc8f5a674d1d759ac09d868ca505e2dfbdc9707a9a348a939c342faeb"
+  }
+}
