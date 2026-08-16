@@ -11,6 +11,8 @@ import unicodedata
 
 from crypto_quant_domain import canonical_sha256
 
+from .artifact_envelope_reader import ArtifactEnvelopeReader
+
 
 _SHA256_PATTERN = re.compile(r"sha256:[0-9a-f]{64}")
 

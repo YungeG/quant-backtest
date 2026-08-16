@@ -179,6 +179,7 @@ from .observations import (
     RevisionedObservationRecord,
 )
 from .ports import (
+    ArtifactEnvelopeReader,
     CloseoutPolicy,
     ExecutionModel,
     LatencyModel,
@@ -401,6 +402,7 @@ __all__ = [
     "FinancialStateView",
     "ScheduledAccountEvent",
     "default_cash_financial_dispatcher_spec",
+    "ArtifactEnvelopeReader",
     "CloseoutPolicy",
     "DeterministicBarEngine",
     "DeterministicBpsSlippageModel",
