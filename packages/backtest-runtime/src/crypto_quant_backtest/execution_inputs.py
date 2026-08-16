@@ -22,6 +22,7 @@ from crypto_quant_domain import (
     canonical_bytes,
     canonical_sha256,
 )
+from crypto_quant_market_data import InputValidationFailure, MarketBundleReader
 
 from .engine import ExecutionCaseIdentityRule, ExecutionCaseSemanticSpec
 from .ports import ArtifactEnvelopeReader
@@ -35,6 +36,7 @@ from .resolution import (
     RuntimeLibraryRef,
     SourceTreeState,
 )
+from .target_stream import PrecomputedTargetStream
 
 _ARTIFACT_TYPE = "backtest_execution_input_bundle"
 _SCHEMA_VERSION = 1
@@ -98,7 +100,7 @@ class _HydratedExecutionInputs:
     build_artifact_manifest: BuildArtifactManifest
     execution_case_semantic_spec: ExecutionCaseSemanticSpec
     timeline_stream_keys: tuple[str, ...]
-    target_stream_key: str
+    target_stream: PrecomputedTargetStream
     timeline_batch_size: int
     initial_financial_state_template: Mapping[str, Any]
 
@@ -610,6 +612,8 @@ def _failure(
 def _hydrate_execution_inputs(
     reader: ArtifactEnvelopeReader,
     request: BacktestExecutionRequest,
+    *,
+    market_reader: MarketBundleReader,
 ) -> _ExecutionInputsHydrationOutcome:
     if type(request) is not BacktestExecutionRequest:
         return _failure(
@@ -694,10 +698,50 @@ def _hydrate_execution_inputs(
             _ExecutionInputsHydrationFailureCode.BUILD_BINDING_MISMATCH,
             "bundle build manifest does not bind the request",
         )
-    if bundle.execution_case_semantic_spec.target_stream_digest != public_request.target_stream_digest:
+    if market_reader.bundle_ref != public_request.market_bundle_ref:
         return _failure(
             _ExecutionInputsHydrationFailureCode.TARGET_BINDING_MISMATCH,
-            "bundle target digest does not bind the request",
+            "MarketBundleReader does not bind the request MarketBundleRef",
+        )
+    requirement_failure = market_reader.validate_requirements(
+        required_streams=bundle.timeline_stream_keys
+    )
+    if requirement_failure is not None:
+        return _failure(
+            _ExecutionInputsHydrationFailureCode.TARGET_BINDING_MISMATCH,
+            "MarketBundleReader does not provide the required streams",
+        )
+    cursor = market_reader.open_cursor(
+        bundle.target_stream_key,
+        batch_size=bundle.timeline_batch_size,
+    )
+    if isinstance(cursor, InputValidationFailure):
+        return _failure(
+            _ExecutionInputsHydrationFailureCode.TARGET_BINDING_MISMATCH,
+            "target stream cannot be opened",
+        )
+    events = []
+    try:
+        while not cursor.exhausted:
+            batch, cursor = market_reader.read_batch(cursor)
+            events.extend(batch)
+        target_stream = PrecomputedTargetStream(
+            bundle.target_stream_key,
+            tuple(events),
+        )
+    except Exception as error:
+        return _failure(
+            _ExecutionInputsHydrationFailureCode.EXECUTION_INPUT_UNAVAILABLE,
+            str(error),
+        )
+    if (
+        target_stream.target_stream_digest != public_request.target_stream_digest
+        or bundle.execution_case_semantic_spec.target_stream_digest
+        != public_request.target_stream_digest
+    ):
+        return _failure(
+            _ExecutionInputsHydrationFailureCode.TARGET_BINDING_MISMATCH,
+            "hydrated target stream does not bind the request",
         )
     try:
         _validate_initial_template(
@@ -720,7 +764,7 @@ def _hydrate_execution_inputs(
             build_artifact_manifest=bundle.build_artifact_manifest,
             execution_case_semantic_spec=bundle.execution_case_semantic_spec,
             timeline_stream_keys=bundle.timeline_stream_keys,
-            target_stream_key=bundle.target_stream_key,
+            target_stream=target_stream,
             timeline_batch_size=bundle.timeline_batch_size,
             initial_financial_state_template=bundle.initial_financial_state_template,
         )

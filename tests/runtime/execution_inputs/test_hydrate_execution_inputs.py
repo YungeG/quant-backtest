@@ -56,6 +56,15 @@ def _transport(envelope: ArtifactEnvelope) -> BacktestExecutionRequest:
     )
 
 
+def _hydrate(reader: object, request: object) -> _ExecutionInputsHydrationOutcome:
+    _, case = resolved_request_and_case()
+    return _hydrate_execution_inputs(
+        reader,  # type: ignore[arg-type]
+        request,  # type: ignore[arg-type]
+        market_reader=case.timeline.reader,
+    )
+
+
 @dataclass(frozen=True, slots=True)
 class _Reader:
     envelope: ArtifactEnvelope | None = None
@@ -86,14 +95,17 @@ def _assert_failure(
 
 def test_hydration_uses_source_bytes_not_structural_reader_artifact() -> None:
     envelope = _frozen_envelope()
-    outcome = _hydrate_execution_inputs(_Reader(envelope), _transport(envelope))
+    outcome = _hydrate(_Reader(envelope), _transport(envelope))
 
     assert outcome.failure is None
     assert outcome.result is not None
     assert outcome.result.build_artifact_manifest.manifest_hash == (
         _transport(envelope).request.build_artifact_manifest_hash
     )
-    assert outcome.result.target_stream_key == "targets"
+    assert outcome.result.target_stream.stream_key == "targets"
+    assert outcome.result.target_stream.target_stream_digest == (
+        _transport(envelope).request.target_stream_digest
+    )
     expected_stream_keys = ("bars.open", "targets")
     assert outcome.result.timeline_stream_keys == expected_stream_keys
     assert outcome.result.timeline_batch_size == 1
@@ -101,7 +113,7 @@ def test_hydration_uses_source_bytes_not_structural_reader_artifact() -> None:
 
 def test_malformed_transport_precedes_io() -> None:
     reader = _Reader(error=AssertionError("reader must not be called"))
-    outcome = _hydrate_execution_inputs(reader, object())  # type: ignore[arg-type]
+    outcome = _hydrate(reader, object())
     _assert_failure(
         outcome,
         _ExecutionInputsHydrationFailureCode.MALFORMED_EXECUTION_REQUEST,
@@ -119,7 +131,7 @@ def test_wrong_bundle_ref_precedes_io() -> None:
         ArtifactRef("evidence_manifest", 1, "sha256:" + "0" * 64),
     )
     reader = _Reader(error=AssertionError("reader must not be called"))
-    outcome = _hydrate_execution_inputs(reader, forged)
+    outcome = _hydrate(reader, forged)
     _assert_failure(
         outcome,
         _ExecutionInputsHydrationFailureCode.WRONG_EXECUTION_INPUT_BUNDLE_REF,
@@ -128,7 +140,7 @@ def test_wrong_bundle_ref_precedes_io() -> None:
 
 def test_unavailable_input_has_no_partial_value() -> None:
     envelope = _frozen_envelope()
-    outcome = _hydrate_execution_inputs(
+    outcome = _hydrate(
         _Reader(error=ArtifactCatalogError("missing")),
         _transport(envelope),
     )
@@ -143,7 +155,7 @@ def test_returned_envelope_ref_mismatch_is_tamper() -> None:
     returned = _modified_envelope(
         lambda payload: payload.__setitem__("timeline_batch_size", 2)
     )
-    outcome = _hydrate_execution_inputs(_Reader(returned), _transport(requested))
+    outcome = _hydrate(_Reader(returned), _transport(requested))
     _assert_failure(
         outcome,
         _ExecutionInputsHydrationFailureCode.EXECUTION_INPUT_TAMPERED,
@@ -163,7 +175,7 @@ def test_forged_reader_source_is_tamper_before_payload_decode() -> None:
         def read(self, *, ref: ArtifactRef) -> ArtifactReadResult:
             return forged
 
-    outcome = _hydrate_execution_inputs(ForgedReader(), _transport(envelope))
+    outcome = _hydrate(ForgedReader(), _transport(envelope))
     _assert_failure(
         outcome,
         _ExecutionInputsHydrationFailureCode.EXECUTION_INPUT_TAMPERED,
@@ -172,7 +184,7 @@ def test_forged_reader_source_is_tamper_before_payload_decode() -> None:
 
 def test_malformed_payload_is_decode_failure_after_ref_verification() -> None:
     envelope = _modified_envelope(lambda payload: payload.pop("build_artifact_manifest"))
-    outcome = _hydrate_execution_inputs(_Reader(envelope), _transport(envelope))
+    outcome = _hydrate(_Reader(envelope), _transport(envelope))
     _assert_failure(
         outcome,
         _ExecutionInputsHydrationFailureCode.EXECUTION_INPUT_DECODE_FAILED,
@@ -185,7 +197,7 @@ def test_request_binding_mismatch_precedes_later_binding_defects() -> None:
         payload["execution_case_semantic_spec"]["case_version"] = 2
 
     envelope = _modified_envelope(mutate)
-    outcome = _hydrate_execution_inputs(_Reader(envelope), _transport(envelope))
+    outcome = _hydrate(_Reader(envelope), _transport(envelope))
     _assert_failure(
         outcome,
         _ExecutionInputsHydrationFailureCode.REQUEST_BINDING_MISMATCH,
@@ -199,7 +211,7 @@ def test_build_binding_mismatch() -> None:
         manifest["manifest_hash"] = canonical_sha256(manifest["identity"])
 
     envelope = _modified_envelope(mutate)
-    outcome = _hydrate_execution_inputs(_Reader(envelope), _transport(envelope))
+    outcome = _hydrate(_Reader(envelope), _transport(envelope))
     _assert_failure(
         outcome,
         _ExecutionInputsHydrationFailureCode.BUILD_BINDING_MISMATCH,
@@ -213,7 +225,7 @@ def test_target_binding_mismatch_precedes_semantic_hash_mismatch() -> None:
         )
 
     envelope = _modified_envelope(mutate)
-    outcome = _hydrate_execution_inputs(_Reader(envelope), _transport(envelope))
+    outcome = _hydrate(_Reader(envelope), _transport(envelope))
     _assert_failure(
         outcome,
         _ExecutionInputsHydrationFailureCode.TARGET_BINDING_MISMATCH,
@@ -228,7 +240,7 @@ def test_initial_state_binding_mismatch_precedes_semantic_hash_mismatch() -> Non
         snapshot["account_id"] = "account:other"
 
     envelope = _modified_envelope(mutate)
-    outcome = _hydrate_execution_inputs(_Reader(envelope), _transport(envelope))
+    outcome = _hydrate(_Reader(envelope), _transport(envelope))
     _assert_failure(
         outcome,
         _ExecutionInputsHydrationFailureCode.INITIAL_STATE_BINDING_MISMATCH,
@@ -240,7 +252,7 @@ def test_execution_case_semantic_hash_mismatch_is_last() -> None:
         payload["execution_case_semantic_spec"]["case_version"] = 2
 
     envelope = _modified_envelope(mutate)
-    outcome = _hydrate_execution_inputs(_Reader(envelope), _transport(envelope))
+    outcome = _hydrate(_Reader(envelope), _transport(envelope))
     _assert_failure(
         outcome,
         _ExecutionInputsHydrationFailureCode.EXECUTION_CASE_SEMANTIC_HASH_MISMATCH,
