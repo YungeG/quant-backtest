@@ -161,8 +161,9 @@ artifact_hashes: []
 | G12L-* | DRAFT | market-bundle-builder source adapter | G12A–G12K as applicable | Concrete provider/dataset/version, real raw fixtures, mapping and closure evidence |
 | G12M-* | DRAFT | backtest-runtime qualification | market-specific G12L, G07–G10 | Per-market qualification matrix |
 | BT-GAP-01 | PASSED — immutable commit `f2440f9658fbe2ae1cf0016a78c44e4230995394` | trading-domain | WP-02E, Platform BT-PORT-01 | none |
-| BT-GAP-02 | DRAFT / BLOCKED | backtest-runtime | BT-GAP-01, BT-GAP-02A, BT-GAP-04 | No production authority maps every resolved supported request to a `ResolvedExecutionCase` |
-| BT-GAP-02A | DRAFT / UNBLOCKED | backtest-runtime composition | G07, G08H, G10G | Freeze one profile-owned production execution-case composition authority by deepening existing seams |
+| BT-GAP-02 | DRAFT / BLOCKED | backtest-runtime | BT-GAP-01, G07, BT-GAP-02A, BT-GAP-04 | No production authority maps every resolved supported request to a `ResolvedExecutionCase` |
+| BT-GAP-02A | DRAFT / BLOCKED | backtest-runtime composition | G07, G08H, G10G, BT-GAP-02B | Composition awaits a production execution-input hydration contract |
+| BT-GAP-02B | DRAFT / UNBLOCKED | backtest-runtime execution inputs | G03, G07, G11I, G12E | Freeze how request-bound runtime payloads are hydrated without a second repository or registry |
 | BT-GAP-04 | PASSED — immutable commit `c3257643d6911bd3b63efac0899aa04d47397b05` | backtest-runtime | BT-GAP-01, G07, Platform BT-PORT-01 | none |
 
 ## 4. WP-00A Acceptance Card
@@ -11298,39 +11299,82 @@ artifact_hashes: {}
 
 ```yaml
 id: BT-GAP-02A
-status: DRAFT / UNBLOCKED
+status: DRAFT / BLOCKED
 depends_on:
   - G07
   - G08H production CnA profile composition
   - G10G production Binance USDM profile composition
+  - BT-GAP-02B production execution-input hydration contract
 owner_package: backtest-runtime composition
 public_interface: []
 test_commands: {}
 fixture_ids: []
 expected_artifacts:
   - future profile-owned production execution-case composition contract
-failure_contracts: []
+failure_contracts:
+  - missing-market-bundle-timeline-input-contract
+  - missing-precomputed-target-stream-payload-contract
+  - missing-initial-financial-state-contract
+  - missing-builder-runtime-constants-contract
 allowed_grade: development
 evidence:
   - production composer and registry authority analysis
-next_contract_decisions:
-  - define the minimum profile-owned inputs required to construct a ResolvedExecutionCase
-  - deepen BacktestProfileRegistry or its existing registrations rather than introduce a parallel selector
-  - bind the resolved market, simulation, and account profile tuple to exactly one production case-construction authority
-  - preserve ExecutionCaseComposer as the semantic validation and identity-sealing authority
-  - keep every tests/support builder and development dispatcher outside production
+  - missing-contract audit confirms current request/profile tuple cannot fully hydrate a `ResolvedExecutionCase`
+remaining_blockers:
+  - BT-GAP-02B must freeze request-bound hydration of `MarketBundleReader`/timeline payloads
+  - BT-GAP-02B must freeze hydration of `PrecomputedTargetStream`; the request exposes only its digest
+  - BT-GAP-02B must freeze the initial `PortfolioSnapshot` and `AccountingJournal` source
+  - BT-GAP-02B must assign `case_key`, `case_version`, and `timeline_batch_size` to an existing production owner
 passed_commit: null
 artifact_hashes: {}
 ```
 
 ### BT-GAP-02A Readiness
 
-1. Binance USDM and CnA production profile composers own profile-specific resolution but require different evidence-rich inputs and currently build isolated single-profile registries.
-2. `BacktestProfileRegistry` is the existing profile selection authority. BT-GAP-02A may deepen that seam or its registrations; it must not create a second registry, generic plugin system, factory, callback graph, or runtime branch table.
-3. The outcome must be one production-owned path from a valid `ResolvedBacktestRequest` and its already-authoritative inputs to one `ResolvedExecutionCase`, with `ExecutionCaseComposer` retaining semantic validation and identity sealing.
-4. Exact public names, constructor shape, fixture, and RED tests remain unfrozen. BT-GAP-02A is `DRAFT / UNBLOCKED`; BT-GAP-02 resumes only after this contract passes.
+1. `BacktestProfileRegistry` is the existing profile selection authority. BT-GAP-02A may deepen that seam or its registrations; it must not create a second registry, generic plugin system, factory, callback graph, or runtime branch table.
+2. Production composition of one `ResolvedExecutionCase` now requires four typed runtime inputs that are currently missing from the request/profile tuple and cannot be hydrated without broader artifact-loading authority: `MarketBundleManifest` reader/event timeline, hydrated `PrecomputedTargetStream`, `PortfolioSnapshot` + initial `AccountingJournal`, and builder constants (`case_key`, `case_version`, `timeline_batch_size`).
+3. Because BT-GAP-03/07 define post-run evidence and verified-load concerns (and do not hydrate pre-run execution-case runtime inputs), they are not valid predecessors for a runnable 02A path.
+4. Exact public names, constructor shape, fixture, and RED tests remain unfrozen. BT-GAP-02A is `DRAFT / BLOCKED` on BT-GAP-02B; BT-GAP-02 resumes only after both contracts pass.
 
-## 108. BT-GAP-04 Publication Reference Contract
+## 108. BT-GAP-02B Production Execution-Input Hydration Contract
+
+```yaml
+id: BT-GAP-02B
+status: DRAFT / UNBLOCKED
+depends_on:
+  - G03 financial state authorities
+  - G07 auditable runner identity and publication
+  - G11I strategy runtime and precomputed target stream
+  - G12E persisted MarketBundleReader
+owner_package: backtest-runtime execution inputs
+public_interface: []
+test_commands: {}
+fixture_ids: []
+expected_artifacts:
+  - future request-bound execution-input hydration contract
+failure_contracts: []
+allowed_grade: development
+evidence:
+  - ResolvedExecutionCase field-to-owner audit
+next_contract_decisions:
+  - bind each hydrated payload to an existing BacktestRequest identity or digest
+  - select one existing production owner for market timeline, target stream, initial financial state, and builder constants
+  - distinguish missing, tampered, wrong-identity, and unavailable inputs before Attempt creation
+  - define whether hydration is a concrete local deep module or an extension of an existing owner without adding a generic repository or registry
+  - preserve MarketBundleReader, strategy runtime, accounting, profile, and ExecutionCaseComposer authorities
+passed_commit: null
+artifact_hashes: {}
+```
+
+### BT-GAP-02B Readiness
+
+1. BT-GAP-02B produces only the pre-run, request-bound runtime inputs consumed by BT-GAP-02A. It does not resolve profiles, build `ResolvedExecutionCase`, execute Attempts, publish evidence, or load completed/terminal/analysis artifacts.
+2. The contract must cover canonical market timeline payloads, a hydrated `PrecomputedTargetStream`, initial `PortfolioSnapshot` plus `AccountingJournal`, and stable builder constants. Every semantic value must be checked against identities already committed by `BacktestRequest` or an existing versioned production owner.
+3. G12E remains the MarketBundle read authority; strategy runtime remains target-stream authority; Kernel/Runtime accounting remains financial-state authority; profile composers remain market-policy authority; `ExecutionCaseComposer` remains semantic validation and identity-sealing authority.
+4. BT-GAP-03 and BT-GAP-07 are post-run Backtest evidence concerns and are not predecessors. BT-GAP-02B must not create a second artifact repository, profile registry, provider adapter, factory, Protocol, callback graph, Platform import, or new economic model.
+5. Exact names, fixture, failure precedence, and implementation shape remain unfrozen. BT-GAP-02B is the immediate `DRAFT / UNBLOCKED` node.
+
+## 109. BT-GAP-04 Publication Reference Contract
 
 ```yaml
 id: BT-GAP-04
@@ -11399,7 +11443,7 @@ artifact_hashes:
 6. G07 canonicalized finalized structures remain unchanged and are validated against the existing G07 golden fixture.
 7. Contract freeze commit `033af1fdc029e48c74fc3cae5eca08b4b3ef2e19` and implementation commit `c3257643d6911bd3b63efac0899aa04d47397b05` are immutable. Focused/inherited tests passed 42, the full repository passed 1586, Platform BT-PORT-01 passed 14, type/import checks passed, and both independent final reviews returned `NONE`.
 
-## 109. PASSED 记录格式
+## 110. PASSED 记录格式
 
 ```yaml
 id: WP-00A
