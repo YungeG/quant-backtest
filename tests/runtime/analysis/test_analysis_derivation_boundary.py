@@ -5,7 +5,7 @@ from inspect import signature
 from pathlib import Path
 
 import crypto_quant_backtest
-from crypto_quant_backtest import VerifiedCompletedPublication, derive_backtest_analysis
+from crypto_quant_backtest import BacktestAnalysisRuntime, VerifiedCompletedPublication
 
 _ROOT = Path(__file__).resolve().parents[3]
 _RUNTIME = _ROOT / "packages/backtest-runtime/src/crypto_quant_backtest"
@@ -17,7 +17,7 @@ def _tree(path: Path) -> ast.Module:
     return ast.parse(path.read_text(encoding="utf-8"), filename=str(path))
 
 
-def test_derivation_has_one_exact_public_function_and_no_storage_framework() -> None:
+def test_derivation_has_one_exact_public_runtime_and_no_storage_framework() -> None:
     module = _tree(_DERIVATION)
     public_functions = {
         node.name
@@ -30,13 +30,21 @@ def test_derivation_has_one_exact_public_function_and_no_storage_framework() -> 
         for node in module.body
         if isinstance(node, ast.ClassDef) and not node.name.startswith("_")
     }
-    assert public_functions == {"derive_backtest_analysis"}
-    assert public_classes == set()
-    assert list(signature(derive_backtest_analysis).parameters) == [
+    assert public_functions == set()
+    assert public_classes == {"BacktestAnalysisRuntime"}
+    assert list(signature(BacktestAnalysisRuntime).parameters) == ["publisher"]
+    assert list(signature(BacktestAnalysisRuntime.derive).parameters) == [
+        "self",
         "completed",
         "metric_profile_ref",
-        "metric_profile",
     ]
+
+    protocols = {
+        node.name
+        for node in module.body
+        if isinstance(node, ast.ClassDef) and node.name.endswith("Publisher")
+    }
+    assert protocols == {"_BacktestAnalysisPublisher"}
 
     source = _DERIVATION.read_text(encoding="utf-8")
     for forbidden in (
@@ -53,6 +61,8 @@ def test_derivation_has_one_exact_public_function_and_no_storage_framework() -> 
         "pathlib",
         "cache",
         "simulator",
+        "VerifiedBacktestAnalysis(",
+        "def derive_backtest_analysis",
     ):
         assert forbidden not in source
 
@@ -93,13 +103,15 @@ def test_verified_publication_module_owns_one_minimal_completed_view() -> None:
         assert forbidden not in source
 
 
-def test_completed_view_and_derivation_are_root_exported_without_repository_api() -> None:
+def test_completed_view_and_runtime_are_root_exported_without_repository_api() -> None:
     assert crypto_quant_backtest.VerifiedCompletedPublication is (
         VerifiedCompletedPublication
     )
-    assert crypto_quant_backtest.derive_backtest_analysis is derive_backtest_analysis
+    assert crypto_quant_backtest.BacktestAnalysisRuntime is BacktestAnalysisRuntime
+    assert not hasattr(crypto_quant_backtest, "derive_backtest_analysis")
     assert "VerifiedCompletedPublication" in crypto_quant_backtest.__all__
-    assert "derive_backtest_analysis" in crypto_quant_backtest.__all__
+    assert "BacktestAnalysisRuntime" in crypto_quant_backtest.__all__
+    assert "derive_backtest_analysis" not in crypto_quant_backtest.__all__
     for forbidden in (
         "BacktestAnalysisRepository",
         "BacktestAnalysisReader",

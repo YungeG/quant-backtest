@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from decimal import Decimal, ROUND_HALF_EVEN, localcontext
+from typing import Protocol
 
 from crypto_quant_domain import (
     AccountingEntryType,
@@ -13,11 +14,10 @@ from .analysis import (
     AnalysisArtifactRef,
     BacktestAnalysis,
     BacktestMetricProfile,
-    VerifiedBacktestAnalysis,
 )
 from .verified_publications import VerifiedCompletedPublication
 
-__all__ = ["derive_backtest_analysis"]
+__all__ = ["BacktestAnalysisRuntime"]
 
 _EXTERNAL_CASH_FLOW_TYPES = frozenset(
     {
@@ -27,6 +27,14 @@ _EXTERNAL_CASH_FLOW_TYPES = frozenset(
     }
 )
 _QUANTUM = Decimal("0.000000000000000001")
+_PROFILE = BacktestMetricProfile("simple_period_return.fill_count.v1", 1)
+_PROFILE_REF = ArtifactRef.from_envelope(
+    ArtifactEnvelope.create("backtest_metric_profile", 1, _PROFILE)
+)
+
+
+class _BacktestAnalysisPublisher(Protocol):
+    def put(self, *, envelope: ArtifactEnvelope) -> ArtifactRef: ...
 
 
 def _money_decimal(value: Money) -> Decimal:
@@ -91,32 +99,37 @@ def _simple_period_return(completed: VerifiedCompletedPublication) -> str | None
     )
 
 
-def derive_backtest_analysis(
-    completed: VerifiedCompletedPublication,
-    metric_profile_ref: ArtifactRef,
-    metric_profile: BacktestMetricProfile,
-) -> VerifiedBacktestAnalysis:
-    if type(completed) is not VerifiedCompletedPublication:
-        raise TypeError("completed must be exact VerifiedCompletedPublication")
-    if type(metric_profile_ref) is not ArtifactRef:
-        raise TypeError("metric_profile_ref must be exact ArtifactRef")
-    if type(metric_profile) is not BacktestMetricProfile:
-        raise TypeError("metric_profile must be exact BacktestMetricProfile")
-    profile_envelope = ArtifactEnvelope.create(
-        "backtest_metric_profile", 1, metric_profile
-    )
-    if metric_profile_ref != ArtifactRef.from_envelope(profile_envelope):
-        raise ValueError("metric_profile_ref does not bind metric_profile")
+class BacktestAnalysisRuntime:
+    def __init__(self, publisher: _BacktestAnalysisPublisher) -> None:
+        if not callable(getattr(publisher, "put", None)):
+            raise TypeError("publisher must provide put")
+        self._publisher = publisher
 
-    analysis = BacktestAnalysis(
-        metric_profile_ref=metric_profile_ref,
-        source_publication_ref=completed.source_publication_ref,
-        source_execution_result_hash=completed.source_execution_result_hash,
-        simple_period_return=_simple_period_return(completed),
-        trade_count=len(completed.execution_summary.fills),
-        result_grade=completed.result_grade,
-    )
-    envelope = ArtifactEnvelope.create("backtest_analysis", 1, analysis)
-    return VerifiedBacktestAnalysis(
-        AnalysisArtifactRef(ArtifactRef.from_envelope(envelope)), analysis
-    )
+    def derive(
+        self,
+        completed: VerifiedCompletedPublication,
+        metric_profile_ref: ArtifactRef,
+    ) -> AnalysisArtifactRef:
+        if type(completed) is not VerifiedCompletedPublication:
+            raise TypeError("completed must be exact VerifiedCompletedPublication")
+        if type(metric_profile_ref) is not ArtifactRef:
+            raise TypeError("metric_profile_ref must be exact ArtifactRef")
+        if metric_profile_ref != _PROFILE_REF:
+            raise ValueError("metric_profile_ref does not bind accepted metric profile")
+
+        analysis = BacktestAnalysis(
+            metric_profile_ref=metric_profile_ref,
+            source_publication_ref=completed.source_publication_ref,
+            source_execution_result_hash=completed.source_execution_result_hash,
+            simple_period_return=_simple_period_return(completed),
+            trade_count=len(completed.execution_summary.fills),
+            result_grade=completed.result_grade,
+        )
+        envelope = ArtifactEnvelope.create("backtest_analysis", 1, analysis)
+        expected_ref = ArtifactRef.from_envelope(envelope)
+        stored_ref = self._publisher.put(envelope=envelope)
+        if type(stored_ref) is not ArtifactRef:
+            raise TypeError("publisher.put must return exact ArtifactRef")
+        if stored_ref != expected_ref:
+            raise ValueError("publisher.put returned ref does not bind envelope")
+        return AnalysisArtifactRef(stored_ref)

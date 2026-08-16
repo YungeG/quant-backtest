@@ -8,9 +8,10 @@ from pathlib import Path
 import pytest
 
 from crypto_quant_backtest import (
+    BacktestAnalysisRuntime,
     BacktestMetricProfile,
+    VerifiedBacktestAnalysis,
     VerifiedCompletedPublication,
-    derive_backtest_analysis,
 )
 from crypto_quant_backtest.analysis_derivation import _calculate_simple_period_return
 from crypto_quant_domain import (
@@ -25,7 +26,22 @@ from tests.runtime.integration._fixtures import completed_journey
 
 _ROOT = Path(__file__).resolve().parents[3]
 _FIXTURE = _ROOT / "tests/fixtures/runtime/bt-gap05-completed-analysis-v1.json"
-_FIXTURE_SHA256 = "1eec1c7a9bea2d90323bc775e48f52d770392c1cc237aa6d40b242f3faf1acce"
+_FIXTURE_SHA256 = "f988ca0d779c68a0f05e5b06caf20c68b578a6c1ff7210307816f0e4835b4f2e"
+
+
+class _RecordingPublisher:
+    def __init__(self, returned_ref: ArtifactRef | None = None) -> None:
+        self.returned_ref = returned_ref
+        self.envelopes: list[ArtifactEnvelope] = []
+
+    def put(self, *, envelope: ArtifactEnvelope) -> ArtifactRef:
+        self.envelopes.append(envelope)
+        return self.returned_ref or ArtifactRef.from_envelope(envelope)
+
+
+class _FailingPublisher:
+    def put(self, *, envelope: ArtifactEnvelope) -> ArtifactRef:
+        raise RuntimeError("retention unavailable")
 
 
 def _load_fixture() -> dict[str, object]:
@@ -34,12 +50,11 @@ def _load_fixture() -> dict[str, object]:
     return value
 
 
-def _profile() -> tuple[ArtifactRef, BacktestMetricProfile]:
+def _profile_ref() -> ArtifactRef:
     profile = BacktestMetricProfile("simple_period_return.fill_count.v1", 1)
-    ref = ArtifactRef.from_envelope(
+    return ArtifactRef.from_envelope(
         ArtifactEnvelope.create("backtest_metric_profile", 1, profile)
     )
-    return ref, profile
 
 
 def _money(value: str, currency: str = "USD") -> Money:
@@ -53,7 +68,7 @@ def _money(value: str, currency: str = "USD") -> Money:
     )
 
 
-def test_completed_derivation_matches_frozen_artifact_and_is_idempotent(
+def test_completed_derivation_publishes_frozen_artifact_and_returns_only_ref(
     tmp_path: Path,
 ) -> None:
     fixture = _load_fixture()
@@ -63,20 +78,23 @@ def test_completed_derivation_matches_frozen_artifact_and_is_idempotent(
     finalized = journey.publication.finalized_result
     assert finalized is not None
     completed = VerifiedCompletedPublication(finalized, journey.case)
-    profile_ref, profile = _profile()
+    publisher = _RecordingPublisher()
 
-    first = derive_backtest_analysis(completed, profile_ref, profile)
-    second = derive_backtest_analysis(completed, profile_ref, profile)
+    analysis_ref = BacktestAnalysisRuntime(publisher).derive(completed, _profile_ref())
+
     expected = fixture["derived"]
     assert type(expected) is dict
-    assert first == second
-    assert canonical_bytes(first.analysis) == canonical_bytes(expected["stored_payload"])
-    assert canonical_bytes(first) == canonical_bytes(expected["loaded_view"])
-    envelope = ArtifactEnvelope.create("backtest_analysis", 1, first.analysis)
+    assert not isinstance(analysis_ref, VerifiedBacktestAnalysis)
+    assert not hasattr(analysis_ref, "analysis")
+    assert expected["runtime_return"] == expected["ref"]
+    assert canonical_bytes(analysis_ref) == canonical_bytes(expected["runtime_return"])
+    assert len(publisher.envelopes) == 1
+    envelope = publisher.envelopes[0]
     assert canonical_bytes(envelope).decode() == expected["expected_canonical_utf8"]
     assert envelope.to_canonical_dict() == expected["envelope"]
-    assert canonical_bytes(first.analysis_ref) == canonical_bytes(expected["ref"])
-    assert canonical_sha256(first.analysis) == expected["payload_canonical_sha256"]
+    assert envelope.payload == expected["stored_payload"]
+    assert analysis_ref.artifact_ref == ArtifactRef.from_envelope(envelope)
+    assert canonical_sha256(envelope.payload) == expected["payload_canonical_sha256"]
 
     source = fixture["source"]
     assert type(source) is dict
@@ -84,8 +102,78 @@ def test_completed_derivation_matches_frozen_artifact_and_is_idempotent(
         source["publication_ref"]
     )
     assert completed.source_execution_result_hash == source["execution_result_hash"]
-    assert first.trade_count == source["authoritative_fill_count"]
-    assert first.simple_period_return == "0.02392"
+    assert envelope.payload["trade_count"] == source["authoritative_fill_count"]
+    assert envelope.payload["simple_period_return"] == "0.02392"
+
+
+def test_derivation_replay_performs_idempotent_put_and_returns_same_ref(
+    tmp_path: Path,
+) -> None:
+    journey = completed_journey(tmp_path)
+    finalized = journey.publication.finalized_result
+    assert finalized is not None
+    completed = VerifiedCompletedPublication(finalized, journey.case)
+    publisher = _RecordingPublisher()
+    runtime = BacktestAnalysisRuntime(publisher)
+    profile_ref = _profile_ref()
+
+    first = runtime.derive(completed, profile_ref)
+    second = runtime.derive(completed, profile_ref)
+
+    assert first == second
+    assert len(publisher.envelopes) == 2
+    assert publisher.envelopes[0] == publisher.envelopes[1]
+
+
+def test_publisher_failures_and_wrong_returned_ref_are_not_fabricated(
+    tmp_path: Path,
+) -> None:
+    journey = completed_journey(tmp_path)
+    finalized = journey.publication.finalized_result
+    assert finalized is not None
+    completed = VerifiedCompletedPublication(finalized, journey.case)
+    profile_ref = _profile_ref()
+
+    with pytest.raises(RuntimeError, match="retention unavailable"):
+        BacktestAnalysisRuntime(_FailingPublisher()).derive(completed, profile_ref)
+
+    wrong = ArtifactRef("backtest_analysis", 1, "sha256:" + "3" * 64)
+    with pytest.raises(ValueError, match="returned ref does not bind envelope"):
+        BacktestAnalysisRuntime(_RecordingPublisher(wrong)).derive(
+            completed, profile_ref
+        )
+
+
+@pytest.mark.parametrize("bad_ref", [
+    ArtifactRef("backtest_metric_profile", 1, "sha256:" + "2" * 64),
+    ArtifactRef("evidence_manifest", 1, "sha256:" + "1" * 64),
+])
+def test_derivation_rejects_profile_mismatch(bad_ref: ArtifactRef, tmp_path: Path) -> None:
+    journey = completed_journey(tmp_path)
+    finalized = journey.publication.finalized_result
+    assert finalized is not None
+    completed = VerifiedCompletedPublication(finalized, journey.case)
+
+    with pytest.raises(ValueError, match="accepted metric profile"):
+        BacktestAnalysisRuntime(_RecordingPublisher()).derive(completed, bad_ref)
+
+
+def test_derivation_rejects_terminals_and_unverified_case(tmp_path: Path) -> None:
+    journey = completed_journey(tmp_path)
+    finalized = journey.publication.finalized_result
+    assert finalized is not None
+    completed = VerifiedCompletedPublication(finalized, journey.case)
+    terminal = ArtifactRef("evidence_manifest", 1, "sha256:" + "1" * 64)
+
+    with pytest.raises(TypeError, match="VerifiedCompletedPublication"):
+        BacktestAnalysisRuntime(_RecordingPublisher()).derive(terminal, _profile_ref())  # type: ignore[arg-type]
+    with pytest.raises(TypeError, match="ArtifactRef"):
+        BacktestAnalysisRuntime(_RecordingPublisher()).derive(completed, object())  # type: ignore[arg-type]
+    with pytest.raises(ValueError, match="does not bind completed execution result"):
+        VerifiedCompletedPublication(
+            finalized,
+            replace(journey.case, case_key="other.case.v1"),
+        )
 
 
 def test_return_formula_rounding_null_and_decimal_wire_match_frozen_examples() -> None:
@@ -116,31 +204,19 @@ def test_return_formula_rounding_null_and_decimal_wire_match_frozen_examples() -
     ) == "0.1"
 
 
-def test_derivation_rejects_terminals_profile_forgery_and_unverified_case(
-    tmp_path: Path,
-) -> None:
-    journey = completed_journey(tmp_path)
-    finalized = journey.publication.finalized_result
-    assert finalized is not None
-    completed = VerifiedCompletedPublication(finalized, journey.case)
-    profile_ref, profile = _profile()
-
-    terminal = ArtifactRef("evidence_manifest", 1, "sha256:" + "1" * 64)
-    with pytest.raises(TypeError, match="VerifiedCompletedPublication"):
-        derive_backtest_analysis(terminal, profile_ref, profile)  # type: ignore[arg-type]
-    with pytest.raises(ValueError, match="does not bind"):
-        derive_backtest_analysis(
-            completed,
-            ArtifactRef("backtest_metric_profile", 1, "sha256:" + "2" * 64),
-            profile,
-        )
-    with pytest.raises(TypeError, match="exact BacktestMetricProfile"):
-        derive_backtest_analysis(completed, profile_ref, object())  # type: ignore[arg-type]
-    with pytest.raises(ValueError, match="does not bind completed execution result"):
-        VerifiedCompletedPublication(
-            finalized,
-            replace(journey.case, case_key="other.case.v1"),
-        )
+def test_withdrawal_transfer_and_mixed_currency_cash_flow_behavior() -> None:
+    assert _calculate_simple_period_return(
+        _money("100"), _money("90"), (_money("-20"),)
+    ) == "0.1"
+    assert _calculate_simple_period_return(
+        _money("100"), _money("110"), (_money("5"),)
+    ) == "0.05"
+    assert _calculate_simple_period_return(
+        _money("100"), _money("110"), (_money("5", "EUR"),)
+    ) is None
+    assert _calculate_simple_period_return(
+        _money("100"), _money("110"), (_money("5", "EUR"), _money("-5", "EUR"))
+    ) == "0.1"
 
 
 def test_verified_completed_publication_is_one_frozen_reference_view(

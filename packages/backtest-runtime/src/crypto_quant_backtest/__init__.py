@@ -6,7 +6,7 @@ from .analysis import (
     BacktestMetricProfile,
     VerifiedBacktestAnalysis,
 )
-from .analysis_derivation import derive_backtest_analysis
+from .analysis_derivation import BacktestAnalysisRuntime
 from .binance_usdm_profile import (
     BinanceUsdmAccountCapacityEvidence,
     BinanceUsdmExecutionAccountProfile,
@@ -356,6 +356,7 @@ __all__ = [
     "BacktestRunOutcome",
     "BacktestCanonicalPublicationRef",
     "BacktestAnalysis",
+    "BacktestAnalysisRuntime",
     "BacktestMetricProfile",
     "BinanceUsdmAccountCapacityEvidence",
     "BinanceUsdmExecutionAccountProfile",
@@ -616,6 +617,5 @@ __all__ = [
     "VerifiedBacktestAnalysis",
     "VerifiedCompletedPublication",
     "WarmupEligibility",
-    "derive_backtest_analysis",
     "invoke_portfolio_strategies",
 ]
