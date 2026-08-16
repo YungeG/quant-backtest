@@ -165,7 +165,7 @@ artifact_hashes: []
 | BT-GAP-02A | DRAFT / BLOCKED | backtest-runtime composition | G07, G08H, G10G, BT-GAP-02B | Composition awaits a production execution-input hydration contract |
 | BT-GAP-02B | DRAFT / BLOCKED | backtest-runtime execution inputs | BT-GAP-01, G03, G07, G11I, G12E, BT-GAP-07, PLAT-REC-03 | BacktestRequest v1 digests do not locate all runtime payloads; additive request-envelope ownership is unresolved |
 | BT-GAP-04 | PASSED — immutable commit `c3257643d6911bd3b63efac0899aa04d47397b05` | backtest-runtime | BT-GAP-01, G07, Platform BT-PORT-01 | none |
-| BT-GAP-07 | READY | backtest-runtime structural read port | BT-GAP-01, WP-02E | none |
+| BT-GAP-07 | PASSED — immutable commit `029ac43f6d781567cd0742594ca82c181ead0a6d` | backtest-runtime structural read port | BT-GAP-01, WP-02E | none |
 
 ## 4. WP-00A Acceptance Card
 
@@ -11453,7 +11453,7 @@ artifact_hashes:
 
 ```yaml
 id: BT-GAP-07
-status: READY
+status: PASSED
 depends_on:
   - BT-GAP-01
   - WP-02E
@@ -11476,16 +11476,38 @@ allowed_grade: development
 evidence:
   - inherited domain WP-02E artifact fixtures
 remaining_blockers: []
-passed_commit: null
+contract_freeze_commit: 9610e2985e41aeb7d94a74ce0c89c4424034fed3
+implementation_commit: 8c7812aab63c017b52357ac826a25902412551bd
+hardening_commit: 029ac43f6d781567cd0742594ca82c181ead0a6d
+passed_commit: 029ac43f6d781567cd0742594ca82c181ead0a6d
+executed_commands:
+  - uv run pytest -q --junitxml=build/acceptance/bt-gap-07-pytest.xml tests/runtime/ports/test_artifact_envelope_reader_contract.py tests/architecture/test_bt_gap07_artifact_reader_boundary.py tests/domain/artifacts/test_artifact_ref.py tests/domain/artifacts/test_artifact_envelope_golden.py tests/domain/artifacts/test_schema_catalog.py
+  - uv run pytest -q
+  - cd .. && uvx --python 3.13.5 --from pytest==8.4.2 pytest -q -p no:cacheprovider tests/architecture/test_backtest_consumer_port.py
+  - MYPYPATH=packages/backtest-runtime/src:packages/trading-domain/src:packages/trading-kernel/src:packages/market-data-contracts/src:packages/market-bundle-builder/src uvx --from mypy==2.3.0 mypy --python-version 3.13 packages/backtest-runtime/src/crypto_quant_backtest/artifact_envelope_reader.py packages/backtest-runtime/src/crypto_quant_backtest/ports.py packages/backtest-runtime/src/crypto_quant_backtest/__init__.py
+  - uv run python tools/architecture/check_import_boundaries.py --root . --policy architecture/import-boundaries.toml --report build/acceptance/bt-gap-07-import-boundary-report.json
+  - uv lock --check
+  - git diff --check
+test_results:
+  focused_and_inherited: 17 passed
+  full_repository: 1591 passed
+  platform_consumer_contract: 14 passed
+  independent_reviews: NONE after import-guard correction
+artifact_hashes:
+  tests/fixtures/domain/artifact-envelope-catalog-v1.json: sha256:ec5138bcc003ecd59a1821f20999bfea3072493e3dfccf8cd781b4f4963b7e16
+  build/acceptance/bt-gap-07-pytest.xml: sha256:8221987a8ce1c31a25868f66c78fb6e09002521ec85e3fcfd37d559e660cdcc3
+  build/acceptance/bt-gap-07-import-boundary-report.json: sha256:f9bed570a953dc581b2886d35b7041fa83378fec8f034353efd706025c96b809
+  uv.lock: sha256:a07106c285b2c454d0528411c79988881b3ff87c0a84d04228d94c186e9d3d8d
 ```
 
-### BT-GAP-07 Readiness
+### BT-GAP-07 Acceptance
 
 1. The protocol freeze adds only the structural `ArtifactEnvelopeReader` seam (`read(*, ref: ArtifactRef) -> ArtifactReadResult`) and does not introduce a reader implementation.
 2. `crypto_quant_backtest.ArtifactEnvelopeReader` is the sole Backtest public root export for this seam. Its exact Domain parameter/result types match Platform Integration v1.
 3. `ArtifactReadResult.artifact` is not semantic authority at this boundary. BT-GAP-03 consumers must verify the exact ref/source bytes and decode through a Backtest-owned `SchemaCatalog`; providers remain structural.
 4. AST and signature tests forbid filesystem, network, provider, repository, catalog, decoder, cache, registry, factory, adapter, callback, or Platform behavior in the port.
-5. Implementation absence is not a blocker for a Protocol contract. BT-GAP-07 is `READY`; provider conformance belongs to Platform fan-in and semantic verification belongs to BT-GAP-03.
+5. Provider conformance belongs to Platform fan-in and semantic verification belongs to BT-GAP-03. Contract commit `9610e2985e41aeb7d94a74ce0c89c4424034fed3`, implementation commit `8c7812aab63c017b52357ac826a25902412551bd`, and accepted hardening commit `029ac43f6d781567cd0742594ca82c181ead0a6d` are immutable.
+6. Focused/inherited tests passed 17, the full repository passed 1591, Platform BT-PORT-01 passed 14, type/LSP/import checks passed, and the final independent re-review returned `NONE`.
 
 ## 111. PASSED 记录格式
 
