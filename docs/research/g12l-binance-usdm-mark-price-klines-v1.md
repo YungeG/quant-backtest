@@ -100,20 +100,28 @@ The accepted G10D primary-source decision remains authoritative:
 - provider open/high/low/close decimal strings and millisecond times remain exact;
 - archive capture time is not substituted for economic event/close time.
 
-G12L still needs a Builder-owned provider normalizer and source↔event trace. It
-must not import Trading Kernel provider types or label provider rows as the
-existing synthetic JSONL grammar.
+G12L still needs a Builder-owned provider normalizer and source↔event trace, but
+that normalizer is currently blocked: the CSV proves provider close times, not
+when each final row became knowable. `available_time = close_time + 1ms` would be
+invented, while archive capture time would make every 2024 event unavailable
+until the later capture. A separate immutable per-row publication/availability
+authority or authoritative bounded derivation rule must be frozen first. The
+future normalizer must not import Trading Kernel provider types or label provider
+rows as the existing synthetic JSONL grammar.
 
 ## Remaining closure work
 
-1. Freeze the provider-specific normalization result and exact mapping to generic
-   `MarketEvent` values without adding a generic adapter framework.
-2. Implement strict checksum/ZIP/CSV validation and atomic mapping failures.
-3. Freeze bounded transport retry/restart behavior with injected offline fakes;
+1. Freeze immutable publication/availability evidence for every row or an exact
+   authoritative bounded derivation rule; provider close time alone is not enough.
+2. Freeze the provider-specific, purpose-separated normalization result and exact
+   mapping to generic `MarketEvent` values without adding a generic adapter framework.
+3. Implement strict checksum/ZIP/CSV validation and atomic mapping failures,
+   including malformed/encrypted ZIP members and mixed-fault precedence.
+4. Freeze bounded transport retry/restart behavior with injected offline fakes;
    no partial G12A handoff may escape.
-4. Map HTTP/provider and content failures to the common G12L precedence.
-5. Prove archive revision/correction terminality or record a finite causal limit;
+5. Map HTTP/provider and content failures to the common G12L precedence.
+6. Prove archive revision/correction terminality or record a finite causal limit;
    the public README explicitly permits later archive updates.
-6. Produce G12C manifest and G12D publication evidence from the normalized set.
-7. Keep G12I/G12M and all decision/live/deployment flags false until their own
+7. Produce G12C manifest and G12D publication evidence from the normalized set.
+8. Keep G12I/G12M and all decision/live/deployment flags false until their own
    provider-backed closure evidence passes.

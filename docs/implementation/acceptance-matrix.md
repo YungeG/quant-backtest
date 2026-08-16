@@ -11248,9 +11248,10 @@ evidence:
   - exact-g12a-snapshot-provenance-and-content-identity
   - offline-repeatable-fixture-check
 remaining_blockers:
+  - immutable-per-row-publication-or-availability-authority
   - provider-specific-request-result-and-failure-contract
-  - bounded-retry-restart-and-atomic-failure-tests
-  - provider-csv-to-market-event-normalizer-and-source-trace
+  - bounded-retry-restart-atomic-and-mixed-fault-precedence-tests
+  - purpose-separated-provider-csv-to-market-event-normalizer-and-source-trace
   - archive-revision-correction-terminal-closure
   - g12c-manifest-and-g12d-publication-evidence
   - full-network-isolation-secret-scan-and-independent-review
@@ -11273,10 +11274,14 @@ artifact_hashes:
    that Binance will never replace the archive or that no provider outage occurred.
 3. The exact two-member G12A snapshot, content-tree, provenance identities and
    false qualification flags are executable and frozen without network access.
-4. G10D remains the source-semantics authority. A future Builder normalizer must
-   preserve exact provider bytes/times/decimals and purpose separation without
-   importing Trading Kernel types or relabeling the source as synthetic JSONL.
-5. No provider adapter, normalized MarketEvent set, G12C/D publication, revision
+4. G10D remains the source-semantics authority. The archive CSV has economic
+   close times but no immutable per-row publication/availability evidence, so a
+   Builder normalizer must not invent `available_time = close_time + 1ms` or use
+   later archive capture time. That authority must be frozen before normalization.
+5. A future Builder normalizer must preserve exact provider bytes/times/decimals
+   and purpose separation without importing Trading Kernel types, relabeling the
+   source as synthetic JSONL, or accidentally expanding the frozen Builder root.
+6. No provider adapter, normalized MarketEvent set, G12C/D publication, revision
    terminality, G12I/G12M qualification, decision-grade, live, or deployment
    authority is claimed by this readiness evidence.
 
