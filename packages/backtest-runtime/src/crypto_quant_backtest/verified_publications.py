@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
+from enum import Enum
 import re
 
 from crypto_quant_domain import (
@@ -23,13 +24,41 @@ from .integrity import (
 from .publication_refs import BacktestCanonicalPublicationRef
 
 __all__ = [
+    "TerminalStatus",
     "VerifiedCompletedPublication",
     "VerifiedCompletedPublicationV2",
     "VerifiedExecutionSummary",
+    "VerifiedTerminalPublication",
 ]
 
 _RUN_PATTERN = re.compile(r"run_[0-9a-f]{64}")
 _HASH_PATTERN = re.compile(r"sha256:[0-9a-f]{64}")
+
+
+class TerminalStatus(str, Enum):
+    BLOCKED = "BLOCKED"
+    FAILED = "FAILED"
+    CANCELLED = "CANCELLED"
+
+
+@dataclass(frozen=True, slots=True)
+class VerifiedTerminalPublication:
+    """Verified TERMINAL publication view."""
+
+    status: TerminalStatus
+    durable_evidence_ref: ArtifactRef
+
+    def __post_init__(self) -> None:
+        if type(self.status) is not TerminalStatus:
+            raise TypeError("status must be exact TerminalStatus")
+        if type(self.durable_evidence_ref) is not ArtifactRef:
+            raise TypeError("durable_evidence_ref must be exact ArtifactRef")
+
+    def to_canonical_dict(self) -> dict[str, object]:
+        return {
+            "status": self.status.value,
+            "durable_evidence_ref": self.durable_evidence_ref,
+        }
 
 
 @dataclass(frozen=True, slots=True)

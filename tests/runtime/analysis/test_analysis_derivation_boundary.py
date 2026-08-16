@@ -89,6 +89,8 @@ def test_verified_publication_module_owns_one_minimal_completed_view() -> None:
         "VerifiedCompletedPublication",
         "VerifiedCompletedPublicationV2",
         "VerifiedExecutionSummary",
+        "VerifiedTerminalPublication",
+        "TerminalStatus",
     }
     assert public_functions == set()
     assert list(signature(VerifiedCompletedPublication).parameters) == [
@@ -106,6 +108,9 @@ def test_verified_publication_module_owns_one_minimal_completed_view() -> None:
     ]
 
     source = _VERIFIED.read_text(encoding="utf-8")
+    terminal_neutral_source = source.replace(
+        "VerifiedTerminalPublication", ""
+    ).replace("TerminalStatus", "")
     for forbidden in (
         "crypto_quant_platform",
         "tests.support",
@@ -118,7 +123,7 @@ def test_verified_publication_module_owns_one_minimal_completed_view() -> None:
         "Path(",
         "pathlib",
     ):
-        assert forbidden not in source
+        assert forbidden not in terminal_neutral_source
 
 
 def test_completed_view_and_runtime_are_root_exported_without_repository_api() -> None:

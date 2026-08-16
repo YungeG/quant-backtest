@@ -74,6 +74,11 @@ from .execution_inputs import (
     materialize_execution_input_bundle,
     materialize_execution_input_bundle_v2,
 )
+from .evidence_repository import (
+    BacktestEvidenceError,
+    BacktestEvidenceFailureCode,
+    BacktestEvidenceRepository,
+)
 from .evidence import (
     AttemptEvidenceWriter,
     EvidenceArtifactEntry,
@@ -213,9 +218,11 @@ from .ports import (
 )
 from .publication_refs import BacktestCanonicalPublicationRef, RunPublicationRef
 from .verified_publications import (
+    TerminalStatus,
     VerifiedCompletedPublication,
     VerifiedCompletedPublicationV2,
     VerifiedExecutionSummary,
+    VerifiedTerminalPublication,
 )
 from .random_streams import NamedRandomStream
 from .resolution import (
@@ -358,6 +365,9 @@ __all__ = [
     "AttemptIssueSource",
     "AuditableBacktestRunner",
     "BacktestProfileRegistry",
+    "BacktestEvidenceError",
+    "BacktestEvidenceFailureCode",
+    "BacktestEvidenceRepository",
     "BacktestExecutionRequest",
     "BacktestRequest",
     "BacktestResolutionFailure",
@@ -634,6 +644,8 @@ __all__ = [
     "VerifiedCompletedPublication",
     "VerifiedCompletedPublicationV2",
     "VerifiedExecutionSummary",
+    "VerifiedTerminalPublication",
+    "TerminalStatus",
     "WarmupEligibility",
     "invoke_portfolio_strategies",
 ]

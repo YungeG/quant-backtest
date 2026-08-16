@@ -72,6 +72,14 @@ class ArtifactDecodeError(ArtifactCatalogError):
     pass
 
 
+class ArtifactNotFoundError(ArtifactCatalogError):
+    pass
+
+
+class ArtifactRetentionUnavailableError(ArtifactCatalogError):
+    pass
+
+
 def _source_hash(source_bytes: bytes) -> str:
     return f"sha256:{hashlib.sha256(source_bytes).hexdigest()}"
 
