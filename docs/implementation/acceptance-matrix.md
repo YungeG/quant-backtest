@@ -163,7 +163,7 @@ artifact_hashes: []
 | BT-GAP-01 | PASSED — immutable commit `f2440f9658fbe2ae1cf0016a78c44e4230995394` | trading-domain | WP-02E, Platform BT-PORT-01 | none |
 | BT-GAP-02 | DRAFT / BLOCKED | backtest-runtime | BT-GAP-01, G07, BT-GAP-02A, BT-GAP-04 | No production authority maps every resolved supported request to a `ResolvedExecutionCase` |
 | BT-GAP-02A | DRAFT / BLOCKED | backtest-runtime composition | G07, G08H, G10G, BT-GAP-02B | Composition awaits a production execution-input hydration contract |
-| BT-GAP-02B | DRAFT / BLOCKED | backtest-runtime execution inputs | BT-GAP-01, G03, G07, G11I, G12E, BT-GAP-07, PLAT-REC-03 | Initial-state template identity, target-stream ownership, and semantic-spec/builder bindings remain unfrozen |
+| BT-GAP-02B | READY | backtest-runtime execution inputs | BT-GAP-01, G03, G07, G11I, G12E, BT-GAP-07, PLAT-REC-03 | none |
 | BT-GAP-04 | PASSED — immutable commit `c3257643d6911bd3b63efac0899aa04d47397b05` | backtest-runtime | BT-GAP-01, G07, Platform BT-PORT-01 | none |
 | BT-GAP-06 | DRAFT / BLOCKED | backtest-runtime analysis schema | BT-GAP-01, BT-GAP-04, G07 | Stored payload versus loaded view, missing-metric wire, metric-profile schema, and decimal authority are unresolved |
 | BT-GAP-07 | PASSED — immutable commit `029ac43f6d781567cd0742594ca82c181ead0a6d` | backtest-runtime structural read port | BT-GAP-01, WP-02E | none |
@@ -11342,7 +11342,7 @@ artifact_hashes: {}
 
 ```yaml
 id: BT-GAP-02B
-status: DRAFT / BLOCKED
+status: READY
 depends_on:
   - BT-GAP-01
   - G03 financial state authorities
@@ -11352,39 +11352,54 @@ depends_on:
   - BT-GAP-07 structural ArtifactEnvelope reader
   - PLAT-REC-03 additive execution-request ownership decision
 owner_package: backtest-runtime execution inputs
-public_interface: []
-test_commands: {}
-fixture_ids: []
+public_interface:
+  - crypto_quant_backtest.BacktestExecutionRequest
+  - crypto_quant_backtest.materialize_execution_input_bundle
+test_commands:
+  contract_red: uv run pytest -q tests/runtime/execution_inputs/test_execution_input_bundle_contract.py
+  boundary_red: uv run pytest -q tests/architecture/test_bt_gap02b_execution_input_boundary.py
+  inherited: uv run pytest -q -k "not bt_gap02b and not execution_input_bundle_contract"
+  lock: uv lock --check
+  diff: git diff --check
+fixture_ids:
+  - bt-gap02b-execution-input-bundle-v1
 expected_artifacts:
-  - future request-bound execution-input hydration contract
-failure_contracts: []
+  - backtest_execution_input_bundle@1 ArtifactEnvelope
+  - BacktestExecutionRequest@1 pass-by-value transport
+failure_contracts:
+  - malformed_execution_request
+  - wrong_execution_input_bundle_ref
+  - execution_input_unavailable
+  - execution_input_tampered
+  - execution_input_decode_failed
+  - request_binding_mismatch
+  - build_binding_mismatch
+  - target_binding_mismatch
+  - initial_state_binding_mismatch
+  - execution_case_semantic_hash_mismatch
 allowed_grade: development
 evidence:
   - ResolvedExecutionCase field-to-owner audit
   - accepted Platform PLAT-REC-03 additive execution-input transport
-remaining_blockers:
-  - Freeze `execution_input_financial_state_template@1`: a full request-bound initial financial-state template must cover journal economics, ledger schema, snapshot economics, lots, existing orders/admissions/reservations, settlement state, and settlement rules without embedding composer-derived Domain IDs or derived journal/snapshot hashes.
-  - Freeze journal subtype scope and identity reconstruction. Recommended v1 accepts exact base `AccountingJournalEntry` templates plus position-lot changes, carries an `identity_plan` binding key for each entry, and rejects specialized derivative/funding journal subtypes as initial-state inputs.
-  - Freeze target-stream ownership. Recommended v1 carries only canonical `target_stream_key` and `timeline_stream_keys`; G12E retains every MarketEvent byte and Backtest reconstructs `PrecomputedTargetStream` before checking `request.target_stream_digest`.
-  - Freeze builder binding. Recommended v1 carries the full `ExecutionCaseSemanticSpec` plus operational `timeline_batch_size`, not duplicate bare `case_key`/`case_version` fields.
-next_contract_decisions:
-  - freeze `BacktestExecutionRequest@1` as a pass-by-value typed value containing the exact BacktestRequest v1 plus one `backtest_execution_input_bundle@1` ArtifactRef; it is not an Artifact and has no catalog registration, hash, ref, timestamp, path, status, or repository metadata
-  - freeze one Backtest public materializer returning the bundle ArtifactEnvelope; the bundle alone uses a private Backtest SchemaCatalog registration during implementation
-  - freeze bundle fields as request_hash, full BuildArtifactManifest, full ExecutionCaseSemanticSpec, timeline_stream_keys, target_stream_key, timeline_batch_size, and the exact ID-free initial-financial-state template
-  - freeze pre-Attempt precedence as malformed transport, wrong expected ref type/version, unavailable input, returned source/ref tamper, bundle decode failure, request/build/target/initial-state binding mismatches, then execution-case semantic-hash mismatch
-  - preserve Domain ownership of ArtifactEnvelope/ArtifactRef, BT-GAP-07 structural reading, G12E MarketBundle bytes, and Backtest-only decoding/semantic validation
+  - user-approved repository-independence boundary: Platform does not construct or understand the initial-financial-state template
+remaining_blockers: []
 passed_commit: null
-artifact_hashes: {}
+artifact_hashes:
+  fixture_sha256: 09578ac47f997bc4bf55119d31e97dbcad3eb71e90d93a5ef7c8e6669bd66be2
+  bundle_content_hash: sha256:cde469808ba86f5b55702a85c4d30111cb3408db2932db402d069d5889817c02
+  transport_canonical_sha256: sha256:b28cfb5334bf0d87a5b2a5ef82b02afb5761ead717791bc08e000cba8325765d
 ```
 
 ### BT-GAP-02B Readiness
 
-1. BT-GAP-02B produces only the pre-run, request-bound runtime inputs consumed by BT-GAP-02A. It does not resolve profiles, build `ResolvedExecutionCase`, execute Attempts, publish evidence, or load completed/terminal/analysis artifacts.
-2. The contract must cover canonical market timeline payloads, a hydrated `PrecomputedTargetStream`, initial `PortfolioSnapshot` plus `AccountingJournal`, and stable builder constants. Every semantic value must be checked against identities already committed by `BacktestRequest` or an existing versioned production owner.
-3. G12E remains the MarketBundle read authority. BT-GAP-07 is the structural read authority for the proposed execution-input-bundle ArtifactEnvelope; strategy runtime, accounting, profile composers, and `ExecutionCaseComposer` retain decoding and semantic authority.
-4. Bare digests are not locators: `target_stream_digest`, `build_artifact_manifest_hash`, and `execution_case_semantic_hash` cannot recover their internal keys or physical bytes, and v1 carries no initial-state identity. No implicit path convention or digest-to-path registry may be invented.
-5. PLAT-REC-03 now accepts the additive transport while preserving the embedded BacktestRequest v1. The transport is passed by value; Backtest materializes the bundle ArtifactEnvelope, Foundation stores only that envelope, and Domain owns the returned ArtifactRef.
-6. Missing production readers/materializers are implementation work and are not readiness blockers. Exact names, fixture, bytes, and RED tests wait only on the four semantic decisions above; BT-GAP-02B remains `DRAFT / BLOCKED` until those identity and ownership choices are approved.
+1. BT-GAP-02B produces only the pre-run, request-bound inputs consumed by BT-GAP-02A. It does not resolve profiles, build `ResolvedExecutionCase`, execute Attempts, publish evidence, or load completed/terminal/analysis artifacts.
+2. `BacktestExecutionRequest@1` is a typed value passed by value. It embeds the exact immutable `BacktestRequest@1` plus one `backtest_execution_input_bundle@1` Domain `ArtifactRef`; the transport has no ArtifactEnvelope, catalog registration, content hash, second ref, path, timestamp, status, reader, or repository metadata.
+3. The bundle exact-covers request hash, full `BuildArtifactManifest`, full `ExecutionCaseSemanticSpec`, sorted timeline stream keys, target stream key, operational timeline batch size, and `backtest_initial_financial_state_template@1`. The financial template exact-covers journal economics, ledger schema, snapshot economics, lots, existing orders/admissions/reservations, settlement state, and settlement rules while omitting composer-derived Domain IDs and derived journal/snapshot hashes.
+4. Initial journal templates accept exact base `AccountingJournalEntry` payloads, including position-lot changes, and bind each entry through an `identity_plan` key. Specialized derivative/funding journal subtypes are rejected as v1 initial-state inputs. Backtest reconstructs identities after request/profile resolution.
+5. G12E retains every MarketBundle/MarketEvent byte. The bundle carries only `target_stream_key` and `timeline_stream_keys`; Backtest reconstructs `PrecomputedTargetStream` through the G12E reader and verifies `request.target_stream_digest`. No market bytes, path convention, digest registry, provider selector, cache, or second repository is introduced.
+6. The Backtest-owned public materializer accepts Backtest-owned typed values and the internal financial template, validates and writes one bundle ArtifactEnvelope, and is called by Backtest provider code—not by Platform semantic code. Platform treats the result as opaque, stores only the envelope through Foundation CAS, obtains its Domain ref, and passes the transport by value. Backtest imports no Platform type.
+7. Pre-Attempt precedence is exact: malformed transport; wrong expected bundle-ref type/version; unavailable input; returned source/ref tamper; bundle decode failure; request, build, target, or initial-state binding mismatch; execution-case semantic-hash mismatch. Every failure creates no Attempt, terminal publication, analysis, or partial evidence.
+8. The frozen fixture preserves existing `BacktestRequest@1` canonical bytes/hash and proves no MarketEvent copy or transport-level identity. Seven focused assertions are intentionally RED only because the two public names and production module do not yet exist; two independent fixture/ownership assertions pass.
 
 ## 109. BT-GAP-04 Publication Reference Contract
 
