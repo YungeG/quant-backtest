@@ -113,11 +113,12 @@ def test_catalog_selects_highest_writer_and_reads_each_registered_version() -> N
     value = ExampleArtifact(identifier="alpha", count=7)
 
     written = current.write_current(ARTIFACT_TYPE, value)
-    old = ArtifactEnvelope.create(ARTIFACT_TYPE, 1, value)
+    old = current.write_version(ARTIFACT_TYPE, 1, value)
 
     assert written.envelope.schema_version == 2
+    assert old.envelope.schema_version == 1
     assert current.read(written.source_bytes).artifact == (2, value)
-    assert current.read(canonical_bytes(old)).artifact == value
+    assert current.read(old.source_bytes).artifact == value
     assert tuple(
         (registration.artifact_type, registration.schema_version)
         for registration in current.registrations

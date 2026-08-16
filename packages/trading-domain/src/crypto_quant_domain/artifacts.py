@@ -224,6 +224,13 @@ class SchemaCatalog:
     def write_current(self, artifact_type: str, artifact: Any) -> ArtifactWriteResult:
         return self._write(self._registration(artifact_type), artifact)
 
+    def write_version(
+        self, artifact_type: str, schema_version: int, artifact: Any
+    ) -> ArtifactWriteResult:
+        return self._write(
+            self._registration(artifact_type, schema_version), artifact
+        )
+
     @staticmethod
     def _write(
         registration: ArtifactSchemaRegistration, artifact: Any

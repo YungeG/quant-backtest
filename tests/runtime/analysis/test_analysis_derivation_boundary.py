@@ -5,7 +5,11 @@ from inspect import signature
 from pathlib import Path
 
 import crypto_quant_backtest
-from crypto_quant_backtest import BacktestAnalysisRuntime, VerifiedCompletedPublication
+from crypto_quant_backtest import (
+    BacktestAnalysisRuntime,
+    VerifiedCompletedPublication,
+    VerifiedCompletedPublicationV2,
+)
 
 _ROOT = Path(__file__).resolve().parents[3]
 _RUNTIME = _ROOT / "packages/backtest-runtime/src/crypto_quant_backtest"
@@ -81,11 +85,24 @@ def test_verified_publication_module_owns_one_minimal_completed_view() -> None:
         if isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef))
         and not node.name.startswith("_")
     }
-    assert public_classes == {"VerifiedCompletedPublication"}
+    assert public_classes == {
+        "VerifiedCompletedPublication",
+        "VerifiedCompletedPublicationV2",
+        "VerifiedExecutionSummary",
+    }
     assert public_functions == set()
     assert list(signature(VerifiedCompletedPublication).parameters) == [
         "publication",
         "execution_case",
+    ]
+    assert list(signature(VerifiedCompletedPublicationV2).parameters) == [
+        "source_publication_ref",
+        "semantic_run_id",
+        "source_execution_result_hash",
+        "result_grade",
+        "reporting_currency",
+        "engine_context",
+        "execution_summary",
     ]
 
     source = _VERIFIED.read_text(encoding="utf-8")

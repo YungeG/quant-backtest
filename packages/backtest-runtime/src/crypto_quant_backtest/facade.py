@@ -16,12 +16,14 @@ from crypto_quant_market_data import MarketBundleReader
 
 from .artifact_envelope_publisher import ArtifactEnvelopePublisher
 from .artifact_envelope_reader import ArtifactEnvelopeReader
+from .engine import ResolvedExecutionCase
 from .evidence import AttemptEvidenceWriter, FinalizedAttemptEvidence
 from .execution_hash import AttemptExecutionHash, ExecutionResultHasher
 from .execution_inputs import BacktestExecutionRequest, _hydrate_execution_inputs
 from .integrity import (
     CanonicalResultPublisher,
     DeterministicRebuildEvidence,
+    EngineExecutionContext,
     IntegrityTraceLevel,
 )
 from .publication_refs import BacktestCanonicalPublicationRef
@@ -99,7 +101,7 @@ class BacktestRuntime:
         if execution_case is None:
             raise RuntimeError("execution input bundle is not executable")
 
-        runner = AuditableBacktestRunner(publication_root=self._publication_root)
+        runner = AuditableBacktestRunner.for_v2(publication_root=self._publication_root)
         first = runner.execute(
             resolved_request=resolved,
             execution_case=execution_case,
@@ -141,6 +143,7 @@ class BacktestRuntime:
         )
         return self._publish_canonical(
             resolved,
+            execution_case,
             (first_hash, second_hash),
             (first_evidence, second_evidence),
         )
@@ -218,6 +221,7 @@ class BacktestRuntime:
     def _publish_canonical(
         self,
         resolved: ResolvedBacktestRequest,
+        execution_case: ResolvedExecutionCase,
         attempt_hashes: tuple[AttemptExecutionHash, AttemptExecutionHash],
         evidence: tuple[FinalizedAttemptEvidence, FinalizedAttemptEvidence],
     ) -> BacktestCanonicalPublicationRef | ArtifactRef:
@@ -238,22 +242,33 @@ class BacktestRuntime:
             execution_result_hash=canonical.execution_result_hash,
             deterministic_rebuild_proof_hash=None,
         )
-        publication = CanonicalResultPublisher(root=self._publication_root).publish(
+        if execution_case.identity_manifest is None:
+            raise RuntimeError("execution_case is missing identity_manifest")
+        engine_context = EngineExecutionContext(
+            semantic_run_id=resolved.semantic_run_id,
+            semantic_spec_hash=execution_case.semantic_spec_hash,
+            case_hash=execution_case.case_hash,
+            target_stream_digest=execution_case.target_stream.target_stream_digest,
+            identity_manifest_hash=execution_case.identity_manifest.manifest_hash,
+            financial_state=execution_case.financial_state,
+        )
+        publication = CanonicalResultPublisher(root=self._publication_root).publish_v2(
             resolved_request=resolved,
             attempt_hashes=attempt_hashes,
             finalized_attempts=evidence,
             rebuild_evidence=rebuild,
+            engine_context=engine_context,
         )
         if publication.failure is not None:
             raise RuntimeError(
                 "canonical publication failed: "
                 f"{publication.failure.code.value}"
             )
-        finalized = publication.finalized_result or publication.finalized_evaluation
+        finalized = publication.finalized_result_v2 or publication.finalized_evaluation
         if finalized is None:
             raise RuntimeError("canonical publication returned no result")
         ref = self._mirror_publication_graph(finalized.relative_directory)
-        if publication.finalized_result is not None:
+        if publication.finalized_result_v2 is not None:
             return BacktestCanonicalPublicationRef.from_artifact_ref(ref)
         return ref
 

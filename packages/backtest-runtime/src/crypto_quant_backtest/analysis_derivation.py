@@ -14,7 +14,7 @@ from .analysis import (
     BacktestMetricProfile,
 )
 from .artifact_envelope_publisher import ArtifactEnvelopePublisher
-from .verified_publications import VerifiedCompletedPublication
+from .verified_publications import VerifiedCompletedPublication, VerifiedCompletedPublicationV2
 
 __all__ = ["BacktestAnalysisRuntime"]
 
@@ -75,7 +75,7 @@ def _calculate_simple_period_return(
     return "0" if text in {"-0", ""} else text
 
 
-def _simple_period_return(completed: VerifiedCompletedPublication) -> str | None:
+def _simple_period_return(completed: VerifiedCompletedPublication | VerifiedCompletedPublicationV2) -> str | None:
     journal_entries = completed.execution_summary.final_journal.entries[
         completed.initial_journal_entry_count :
     ]
@@ -102,11 +102,11 @@ class BacktestAnalysisRuntime:
 
     def derive(
         self,
-        completed: VerifiedCompletedPublication,
+        completed: VerifiedCompletedPublication | VerifiedCompletedPublicationV2,
         metric_profile_ref: ArtifactRef,
     ) -> AnalysisArtifactRef:
-        if type(completed) is not VerifiedCompletedPublication:
-            raise TypeError("completed must be exact VerifiedCompletedPublication")
+        if type(completed) is not VerifiedCompletedPublication and type(completed) is not VerifiedCompletedPublicationV2:
+            raise TypeError("completed must be exact VerifiedCompletedPublication or VerifiedCompletedPublicationV2")
         if type(metric_profile_ref) is not ArtifactRef:
             raise TypeError("metric_profile_ref must be exact ArtifactRef")
         if metric_profile_ref != _PROFILE_REF:

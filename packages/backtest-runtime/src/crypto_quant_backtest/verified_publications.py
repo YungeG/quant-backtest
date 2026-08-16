@@ -1,15 +1,35 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
+import re
 
-from crypto_quant_domain import ArtifactEnvelope, ArtifactRef, PortfolioSnapshot
+from crypto_quant_domain import (
+    ArtifactEnvelope,
+    ArtifactRef,
+    CurrencyId,
+    Fill,
+    PortfolioSnapshot,
+)
+from crypto_quant_trading import AccountingJournal
 
 from .engine import ResolvedExecutionCase
 from .execution_hash import CanonicalExecutionSummary
-from .integrity import FinalizedCanonicalResult, ResultGrade
+from .integrity import (
+    EngineExecutionContext,
+    FinalizedCanonicalResult,
+    FinalizedCanonicalResultV2,
+    ResultGrade,
+)
 from .publication_refs import BacktestCanonicalPublicationRef
 
-__all__ = ["VerifiedCompletedPublication"]
+__all__ = [
+    "VerifiedCompletedPublication",
+    "VerifiedCompletedPublicationV2",
+    "VerifiedExecutionSummary",
+]
+
+_RUN_PATTERN = re.compile(r"run_[0-9a-f]{64}")
+_HASH_PATTERN = re.compile(r"sha256:[0-9a-f]{64}")
 
 
 @dataclass(frozen=True, slots=True)
@@ -89,3 +109,112 @@ class VerifiedCompletedPublication:
     @property
     def result_grade(self) -> ResultGrade:
         return self.publication.result.result_grade
+
+
+@dataclass(frozen=True, slots=True)
+class VerifiedExecutionSummary:
+    fills: tuple[Fill, ...]
+    final_journal: AccountingJournal
+    final_portfolio_snapshot: PortfolioSnapshot
+
+    def __post_init__(self) -> None:
+        if type(self.fills) is not tuple or not all(
+            type(value) is Fill for value in self.fills
+        ):
+            raise TypeError("fills must contain exact Fill values")
+        if type(self.final_journal) is not AccountingJournal:
+            raise TypeError("final_journal must be exact AccountingJournal")
+        if type(self.final_portfolio_snapshot) is not PortfolioSnapshot:
+            raise TypeError(
+                "final_portfolio_snapshot must be exact PortfolioSnapshot"
+            )
+
+
+@dataclass(frozen=True, slots=True)
+class VerifiedCompletedPublicationV2:
+    """Lean verified view of one analysis-ready v2 COMPLETED publication."""
+
+    source_publication_ref: BacktestCanonicalPublicationRef
+    semantic_run_id: str
+    source_execution_result_hash: str
+    result_grade: ResultGrade
+    reporting_currency: CurrencyId
+    engine_context: EngineExecutionContext
+    execution_summary: VerifiedExecutionSummary
+
+    def __post_init__(self) -> None:
+        if type(self.source_publication_ref) is not BacktestCanonicalPublicationRef:
+            raise TypeError(
+                "source_publication_ref must be exact BacktestCanonicalPublicationRef"
+            )
+        if type(self.semantic_run_id) is not str or _RUN_PATTERN.fullmatch(
+            self.semantic_run_id
+        ) is None:
+            raise ValueError("semantic_run_id must use run_sha256 schema")
+        if (
+            type(self.source_execution_result_hash) is not str
+            or _HASH_PATTERN.fullmatch(self.source_execution_result_hash) is None
+        ):
+            raise ValueError("source_execution_result_hash must use sha256 schema")
+        if type(self.result_grade) is not ResultGrade:
+            raise TypeError("result_grade must be exact ResultGrade")
+        if type(self.reporting_currency) is not CurrencyId:
+            raise TypeError("reporting_currency must be exact CurrencyId")
+        if type(self.engine_context) is not EngineExecutionContext:
+            raise TypeError("engine_context must be exact EngineExecutionContext")
+        if type(self.execution_summary) is not VerifiedExecutionSummary:
+            raise TypeError(
+                "execution_summary must be exact VerifiedExecutionSummary"
+            )
+        if self.engine_context.semantic_run_id != self.semantic_run_id:
+            raise ValueError("engine context semantic run mismatch")
+
+        initial = self.engine_context.financial_state
+        final_journal = self.execution_summary.final_journal
+        if final_journal.entries[: len(initial.journal.entries)] != (
+            initial.journal.entries
+        ):
+            raise ValueError("completed Journal does not preserve the run-start prefix")
+        starting = initial.initial_snapshot
+        ending = self.execution_summary.final_portfolio_snapshot
+        if (
+            starting.account_id != ending.account_id
+            or starting.reporting_currency != ending.reporting_currency
+            or starting.reporting_currency != self.reporting_currency
+        ):
+            raise ValueError("run-boundary PortfolioSnapshot context mismatch")
+
+    @classmethod
+    def from_finalized(
+        cls, publication: FinalizedCanonicalResultV2
+    ) -> VerifiedCompletedPublicationV2:
+        if type(publication) is not FinalizedCanonicalResultV2:
+            raise TypeError("publication must be exact FinalizedCanonicalResultV2")
+        result = publication.result
+        summary = result.context.attempts.canonical_attempt.summary
+        manifest_envelope = ArtifactEnvelope.create(
+            "canonical_publication_manifest", 1, publication.manifest
+        )
+        return cls(
+            source_publication_ref=BacktestCanonicalPublicationRef.from_artifact_ref(
+                ArtifactRef.from_envelope(manifest_envelope)
+            ),
+            semantic_run_id=result.semantic_run_id,
+            source_execution_result_hash=result.execution_result_hash,
+            result_grade=result.result_grade,
+            reporting_currency=result.context.resolved_request.request.reporting_currency,
+            engine_context=result.engine_context,
+            execution_summary=VerifiedExecutionSummary(
+                fills=summary.fills,
+                final_journal=summary.final_journal,
+                final_portfolio_snapshot=summary.final_portfolio_snapshot,
+            ),
+        )
+
+    @property
+    def starting_snapshot(self) -> PortfolioSnapshot:
+        return self.engine_context.financial_state.initial_snapshot
+
+    @property
+    def initial_journal_entry_count(self) -> int:
+        return len(self.engine_context.financial_state.journal.entries)

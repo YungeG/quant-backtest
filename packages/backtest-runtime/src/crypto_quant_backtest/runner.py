@@ -439,7 +439,8 @@ class CanonicalResultCacheHit:
         if self.result_grade not in {"development", "decision_grade"}:
             raise ValueError("result_grade is unsupported")
         expected = f"runs/{self.canonical_attempt.semantic_run_id}/canonical"
-        if self.relative_directory != expected:
+        expected_v2 = f"runs/{self.canonical_attempt.semantic_run_id}/canonical-v2"
+        if self.relative_directory not in {expected, expected_v2}:
             raise ValueError("relative_directory does not match canonical layout")
         if type(self.deployment_authorized) is not bool:
             raise TypeError("deployment_authorized must be bool")
@@ -607,8 +608,63 @@ def _read_canonical_cache_hit(
     input_origin: InputOrigin,
     execution_case_hash: str,
 ) -> CanonicalResultCacheHit:
+    return _read_canonical_cache_hit_version(
+        root=root,
+        resolved_request=resolved_request,
+        input_origin=input_origin,
+        execution_case_hash=execution_case_hash,
+        directory_name="canonical",
+        publication_id="canonical",
+        result_schema_version=1,
+        expected_engine_context=None,
+    )
+
+
+def _read_canonical_cache_hit_v2(
+    *,
+    root: Path,
+    resolved_request: ResolvedBacktestRequest,
+    input_origin: InputOrigin,
+    execution_case: ResolvedExecutionCase,
+) -> CanonicalResultCacheHit:
+    identity_manifest = execution_case.identity_manifest
+    if identity_manifest is None:
+        raise ValueError("execution case identity manifest is required")
+    expected_engine_context = {
+        "type": "engine_execution_context",
+        "schema_version": 1,
+        "semantic_run_id": resolved_request.semantic_run_id,
+        "semantic_spec_hash": execution_case.semantic_spec_hash,
+        "case_hash": execution_case.case_hash,
+        "target_stream_digest": execution_case.target_stream.target_stream_digest,
+        "identity_manifest_hash": identity_manifest.manifest_hash,
+        "financial_state": execution_case.financial_state,
+    }
+    return _read_canonical_cache_hit_version(
+        root=root,
+        resolved_request=resolved_request,
+        input_origin=input_origin,
+        execution_case_hash=execution_case.case_hash,
+        directory_name="canonical-v2",
+        publication_id="canonical-v2",
+        result_schema_version=2,
+        expected_engine_context=expected_engine_context,
+    )
+
+
+def _read_canonical_cache_hit_version(
+    *,
+    root: Path,
+    resolved_request: ResolvedBacktestRequest,
+    input_origin: InputOrigin,
+    execution_case_hash: str,
+    directory_name: str,
+    publication_id: str,
+    result_schema_version: int,
+    expected_engine_context: Mapping[str, object] | None,
+) -> CanonicalResultCacheHit:
     semantic_run_id = resolved_request.semantic_run_id
-    relative = f"runs/{semantic_run_id}/canonical"
+    relative = f"runs/{semantic_run_id}/{directory_name}"
     directory = root / relative
     if not directory.is_dir():
         raise ValueError("canonical publication is not a directory")
@@ -622,13 +678,13 @@ def _read_canonical_cache_hit(
     if {path.name for path in directory.iterdir()} != expected_files:
         raise ValueError("canonical publication file coverage mismatch")
     artifact_specs = {
-        "canonical-attempt-ref.json": "canonical_attempt_ref",
-        "integrity.json": "integrity_report",
-        "result.json": "completed_backtest_result",
+        "canonical-attempt-ref.json": ("canonical_attempt_ref", 1),
+        "integrity.json": ("integrity_report", 1),
+        "result.json": ("completed_backtest_result", result_schema_version),
     }
     artifacts = {
         name: _read_canonical_artifact(directory / name, artifact_type)
-        for name, artifact_type in artifact_specs.items()
+        for name, (artifact_type, _) in artifact_specs.items()
     }
     manifest_payload, _, manifest_source_hash = _read_canonical_artifact(
         directory / "publication-manifest.json",
@@ -638,7 +694,7 @@ def _read_canonical_cache_hit(
     if (
         manifest_payload.get("semantic_run_id") != semantic_run_id
         or manifest_payload.get("publication_kind") != "canonical"
-        or manifest_payload.get("publication_id") != "canonical"
+        or manifest_payload.get("publication_id") != publication_id
         or type(manifest_authorized) is not bool
         or manifest_authorized
     ):
@@ -655,12 +711,13 @@ def _read_canonical_cache_hit(
     by_path = {value["relative_path"]: value for value in entries}
     if set(by_path) != set(artifact_specs):
         raise ValueError("canonical publication manifest does not exact-cover")
-    for name, expected_type in artifact_specs.items():
+    for name, (expected_type, expected_version) in artifact_specs.items():
         _, envelope, source_hash = artifacts[name]
         entry = by_path[name]
         if (
-            entry.get("artifact_type") != expected_type
-            or entry.get("schema_version") != envelope.schema_version
+            envelope.schema_version != expected_version
+            or entry.get("artifact_type") != expected_type
+            or entry.get("schema_version") != expected_version
             or entry.get("content_hash") != envelope.content_hash
             or entry.get("source_hash") != source_hash
             or entry.get("byte_count") != (directory / name).stat().st_size
@@ -686,6 +743,20 @@ def _read_canonical_cache_hit(
         raise ValueError("canonical Attempt payload is invalid")
     result_grade_value = result_payload.get("result_grade")
     integrity_grade_value = integrity_payload.get("result_grade")
+    actual_engine_context = result_payload.get("engine_execution_context")
+    if (
+        result_payload.get("schema_version") != result_schema_version
+        or (
+            expected_engine_context is None
+            and actual_engine_context is not None
+        )
+        or (
+            expected_engine_context is not None
+            and canonical_sha256(actual_engine_context)
+            != canonical_sha256(expected_engine_context)
+        )
+    ):
+        raise ValueError("canonical Result schema context mismatch")
     requested_grade = integrity_payload.get("requested_grade")
     expected_grade = resolved_request.request.result_grade_requested.value
     if (
@@ -814,11 +885,22 @@ class AuditableBacktestRunner:
         *,
         engine: _Engine | None = None,
         publication_root: Path | None = None,
+        canonical_publication_version: int = 1,
     ) -> None:
         if publication_root is not None and not isinstance(publication_root, Path):
             raise TypeError("publication_root must be Path or None")
+        if canonical_publication_version not in {1, 2}:
+            raise ValueError("canonical_publication_version must be 1 or 2")
         self._engine: _Engine = engine or DeterministicBarEngine()
         self._publication_root = publication_root
+        self._canonical_publication_version = canonical_publication_version
+
+    @classmethod
+    def for_v2(cls, *, publication_root: Path) -> AuditableBacktestRunner:
+        return cls(
+            publication_root=publication_root,
+            canonical_publication_version=2,
+        )
 
     @staticmethod
     def classify_engine_failure(
@@ -889,20 +971,33 @@ class AuditableBacktestRunner:
                 root=self._publication_root,
                 semantic_run_id=resolved_request.semantic_run_id,
             ):
+                relative_canonical = (
+                    "canonical-v2"
+                    if self._canonical_publication_version == 2
+                    else "canonical"
+                )
                 canonical = (
                     self._publication_root
                     / "runs"
                     / resolved_request.semantic_run_id
-                    / "canonical"
+                    / relative_canonical
                 )
                 if os.path.lexists(canonical):
                     try:
-                        cache_hit = _read_canonical_cache_hit(
-                            root=self._publication_root,
-                            resolved_request=resolved_request,
-                            input_origin=input_origin,
-                            execution_case_hash=execution_case.case_hash,
-                        )
+                        if self._canonical_publication_version == 2:
+                            cache_hit = _read_canonical_cache_hit_v2(
+                                root=self._publication_root,
+                                resolved_request=resolved_request,
+                                input_origin=input_origin,
+                                execution_case=execution_case,
+                            )
+                        else:
+                            cache_hit = _read_canonical_cache_hit(
+                                root=self._publication_root,
+                                resolved_request=resolved_request,
+                                input_origin=input_origin,
+                                execution_case_hash=execution_case.case_hash,
+                            )
                     except (OSError, TypeError, ValueError, KeyError) as error:
                         return self._failed_record(
                             attempt,

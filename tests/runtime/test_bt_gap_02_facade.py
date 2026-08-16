@@ -215,7 +215,7 @@ def test_completed_run_is_durable_cache_stable_and_preserves_experiment_id(
     for path in attempt_requests:
         source = json.loads(path.read_text(encoding="utf-8"))
         assert source["payload"]["experiment_id"] == request.request.experiment_id
-    assert len(tuple(run_root.rglob("canonical/publication-manifest.json"))) == 1
+    assert len(tuple(run_root.rglob("canonical-v2/publication-manifest.json"))) == 1
     canonical_manifests = [
         envelope
         for envelope in publisher.envelopes
@@ -259,7 +259,7 @@ def test_cache_hit_with_fresh_publisher_mirrors_attempt_and_canonical_graphs(
 
     assert second == first
     assert type(second) is BacktestCanonicalPublicationRef
-    canonical_dir = next((tmp_path / "runs").glob("*/canonical"))
+    canonical_dir = next((tmp_path / "runs").glob("*/canonical-v2"))
     canonical_attempt_ref = _load_envelope(canonical_dir / "canonical-attempt-ref.json")
     attempt_id = canonical_attempt_ref.payload["attempt"]["attempt_id"]
     attempt_dir = canonical_dir.parent / "attempts" / attempt_id

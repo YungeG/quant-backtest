@@ -13,6 +13,7 @@ import re
 
 from crypto_quant_domain import (
     ArtifactEnvelope,
+    ArtifactRef,
     ArtifactSchemaRegistration,
     CanonicalSchema,
     SchemaCatalog,
@@ -33,6 +34,7 @@ from ._publication import (
     verify_read_only,
     write_file,
 )
+from .engine import ResolvedFinancialState
 from .evidence import (
     AttemptEvidenceWriter,
     EvidenceArtifactRole,
@@ -730,8 +732,12 @@ class _PublicationArtifactEntry:
         if path.is_absolute() or len(path.parts) != 1:
             raise ValueError("publication artifact path must be a file name")
         CanonicalSchema(self.artifact_type, self.schema_version)
-        if self.schema_version != 1:
-            raise ValueError("publication artifact schema_version must be 1")
+        if self.schema_version not in {1, 2}:
+            raise ValueError("publication artifact schema_version must be 1 or 2")
+        if self.schema_version == 2 and self.artifact_type != "completed_backtest_result":
+            raise ValueError(
+                "publication artifact schema_version 2 is reserved for completed Result"
+            )
         _hash("content_hash", self.content_hash)
         _hash("source_hash", self.source_hash)
         if type(self.byte_count) is not int or self.byte_count <= 0:
@@ -810,21 +816,22 @@ def _publication_entry(
     relative_path: str,
     artifact_type: str,
     payload: object,
+    schema_version: int = 1,
 ) -> _PublicationArtifactEntry:
-    envelope = ArtifactEnvelope.create(artifact_type, 1, payload)
+    envelope = ArtifactEnvelope.create(artifact_type, schema_version, payload)
     source = canonical_bytes(envelope)
     return _PublicationArtifactEntry(
         relative_path=relative_path,
         artifact_type=artifact_type,
-        schema_version=1,
+        schema_version=schema_version,
         content_hash=envelope.content_hash,
         source_hash=f"sha256:{hashlib.sha256(source).hexdigest()}",
         byte_count=len(source),
     )
 
 
-def _publication_source_hash(artifact_type: str, payload: object) -> str:
-    source = canonical_bytes(ArtifactEnvelope.create(artifact_type, 1, payload))
+def _publication_source_hash(artifact_type: str, payload: object, schema_version: int = 1) -> str:
+    source = canonical_bytes(ArtifactEnvelope.create(artifact_type, schema_version, payload))
     return f"sha256:{hashlib.sha256(source).hexdigest()}"
 
 
@@ -925,6 +932,148 @@ class CompletedBacktestResult:
                 "limitations": self.integrity_report.limitations,
             },
             "result_grade": self.result_grade.value,
+            "deployment_authorized": self.deployment_authorized,
+        }
+
+
+@dataclass(frozen=True, slots=True)
+class EngineExecutionContext:
+    semantic_run_id: str
+    semantic_spec_hash: str
+    case_hash: str
+    target_stream_digest: str
+    identity_manifest_hash: str
+    financial_state: ResolvedFinancialState
+
+    def __post_init__(self) -> None:
+        if type(self.semantic_run_id) is not str or _RUN_PATTERN.fullmatch(
+            self.semantic_run_id
+        ) is None:
+            raise ValueError("semantic_run_id must use run_sha256 schema")
+        _hash("semantic_spec_hash", self.semantic_spec_hash)
+        _hash("case_hash", self.case_hash)
+        _hash("target_stream_digest", self.target_stream_digest)
+        _hash("identity_manifest_hash", self.identity_manifest_hash)
+        if type(self.financial_state) is not ResolvedFinancialState:
+            raise TypeError("financial_state must be exact ResolvedFinancialState")
+
+    @property
+    def context_hash(self) -> str:
+        return canonical_sha256(self)
+
+    def to_canonical_dict(self) -> dict[str, object]:
+        return {
+            "type": "engine_execution_context",
+            "schema_version": 1,
+            "semantic_run_id": self.semantic_run_id,
+            "semantic_spec_hash": self.semantic_spec_hash,
+            "case_hash": self.case_hash,
+            "target_stream_digest": self.target_stream_digest,
+            "identity_manifest_hash": self.identity_manifest_hash,
+            "financial_state": self.financial_state,
+        }
+
+
+@dataclass(frozen=True, slots=True)
+class CompletedBacktestResultV2(CompletedBacktestResult):
+    engine_context: EngineExecutionContext | None = None
+
+    def __post_init__(self) -> None:
+        if not isinstance(self.context, IntegrityEvaluationContext):
+            raise TypeError("context must be IntegrityEvaluationContext")
+        if not isinstance(self.canonical_attempt_ref, CanonicalAttemptRef):
+            raise TypeError("canonical_attempt_ref must be CanonicalAttemptRef")
+        if not isinstance(self.integrity_report, IntegrityReport):
+            raise TypeError("integrity_report must be IntegrityReport")
+        if self.integrity_report.context != self.context:
+            raise ValueError("Integrity report does not bind Result context")
+        if self.integrity_report.blocking_issues:
+            raise ValueError("Completed Result cannot bind blocking Integrity")
+        if self.integrity_report.canonical_attempt_ref != self.canonical_attempt_ref:
+            raise ValueError("Integrity report does not bind canonical Attempt ref")
+        if (
+            self.canonical_attempt_ref.consistency_set_hash
+            != self.context.attempts.consistency_set_hash
+        ):
+            raise ValueError("canonical Attempt ref does not bind consistency set")
+        if (
+            self.context.attempts.canonical_attempt.attempt
+            != self.canonical_attempt_ref.attempt
+        ):
+            raise ValueError("canonical Attempt ref does not bind canonical Attempt")
+        if type(self.deployment_authorized) is not bool:
+            raise TypeError("deployment_authorized must be bool")
+        if self.deployment_authorized:
+            raise ValueError("Completed backtest never authorizes deployment")
+        if type(self.engine_context) is not EngineExecutionContext:
+            raise TypeError("engine_context must be exact EngineExecutionContext")
+        execution = self.context.attempts.canonical_attempt.engine_result
+        request = self.context.resolved_request.request
+        engine_context = self.engine_context
+        if engine_context.semantic_run_id != self.semantic_run_id:
+            raise ValueError("engine context semantic run mismatch")
+        if engine_context.semantic_spec_hash != request.execution_case_semantic_hash:
+            raise ValueError("engine context semantic hash mismatch")
+        if engine_context.target_stream_digest != request.target_stream_digest:
+            raise ValueError("engine context target digest does not bind request")
+        if engine_context.case_hash != execution.case_hash:
+            raise ValueError("engine context case hash does not bind execution result")
+        if engine_context.target_stream_digest != execution.target_stream_digest:
+            raise ValueError("engine context target digest does not bind execution result")
+        initial = engine_context.financial_state
+        if execution.final_journal.entries[: len(initial.journal.entries)] != initial.journal.entries:
+            raise ValueError("completed Journal does not preserve the run-start prefix")
+        starting = initial.initial_snapshot
+        ending = execution.final_portfolio_snapshot
+        if (
+            starting.account_id != ending.account_id
+            or starting.reporting_currency != ending.reporting_currency
+            or starting.reporting_currency != request.reporting_currency
+        ):
+            raise ValueError("run-boundary PortfolioSnapshot context mismatch")
+
+    @property
+    def canonical_evidence_manifest_ref(self) -> ArtifactRef:
+        evidence = self.context.attempts.canonical_evidence
+        envelope = ArtifactEnvelope.create("evidence_manifest", 1, evidence.manifest)
+        ref = ArtifactRef.from_envelope(envelope)
+        if (
+            evidence.manifest.manifest_hash
+            != self.canonical_attempt_ref.evidence_manifest_hash
+        ):
+            raise ValueError("canonical evidence manifest hash mismatch")
+        if (
+            evidence.manifest_source_hash
+            != self.canonical_attempt_ref.evidence_manifest_source_hash
+        ):
+            raise ValueError("canonical evidence manifest source hash mismatch")
+        return ref
+
+    def to_canonical_dict(self) -> dict[str, object]:
+        return {
+            "type": "completed_backtest_result",
+            "schema_version": 2,
+            "semantic_run_id": self.semantic_run_id,
+            "outcome": self.outcome.value,
+            "request_hash": self.request_hash,
+            "resolved_request": self.context.resolved_request,
+            "attempt_consistency_set": self.context.attempts,
+            "execution_hash_check": self.context.execution_hash_check,
+            "execution_result_hash": self.execution_result_hash,
+            "consistency_set_hash": self.consistency_set_hash,
+            "attempt_id": self.canonical_attempt_ref.attempt.attempt_id,
+            "evidence_manifest_hash": (
+                self.canonical_attempt_ref.evidence_manifest_hash
+            ),
+            "canonical_evidence_manifest_ref": self.canonical_evidence_manifest_ref,
+            "canonical_attempt_ref_hash": self.canonical_attempt_ref_hash,
+            "integrity_report_hash": self.integrity_report_hash,
+            "integrity": {
+                "blocking": self.integrity_report.blocking_issues,
+                "limitations": self.integrity_report.limitations,
+            },
+            "result_grade": self.result_grade.value,
+            "engine_execution_context": self.engine_context,
             "deployment_authorized": self.deployment_authorized,
         }
 
@@ -1053,6 +1202,64 @@ class FinalizedCanonicalResult:
         return {
             "type": "finalized_canonical_result",
             "schema_version": 1,
+            "semantic_run_id": self.result.semantic_run_id,
+            "canonical_attempt_ref_hash": self.canonical_attempt_ref.reference_hash,
+            "integrity_report_hash": self.integrity_report.report_hash,
+            "result_hash": self.result.result_hash,
+            "publication_manifest_hash": self.manifest.manifest_hash,
+            "publication_manifest_source_hash": self.manifest_source_hash,
+            "relative_directory": self.relative_directory,
+            "deployment_authorized": False,
+        }
+
+
+@dataclass(frozen=True, slots=True)
+class FinalizedCanonicalResultV2:
+    canonical_attempt_ref: CanonicalAttemptRef
+    integrity_report: IntegrityReport
+    result: CompletedBacktestResultV2
+    manifest: CanonicalPublicationManifest
+    manifest_source_hash: str
+    relative_directory: str
+
+    def __post_init__(self) -> None:
+        if type(self.canonical_attempt_ref) is not CanonicalAttemptRef:
+            raise TypeError("canonical_attempt_ref must be exact CanonicalAttemptRef")
+        if type(self.integrity_report) is not IntegrityReport:
+            raise TypeError("integrity_report must be exact IntegrityReport")
+        if type(self.result) is not CompletedBacktestResultV2:
+            raise TypeError("result must be exact CompletedBacktestResultV2")
+        if type(self.manifest) is not CanonicalPublicationManifest:
+            raise TypeError("manifest must be exact CanonicalPublicationManifest")
+        expected_entries = tuple(sorted((
+            _publication_entry("canonical-attempt-ref.json", "canonical_attempt_ref", self.canonical_attempt_ref),
+            _publication_entry("integrity.json", "integrity_report", self.integrity_report),
+            _publication_entry("result.json", "completed_backtest_result", self.result, 2),
+        ), key=lambda value: value.relative_path))
+        if self.manifest.artifacts != expected_entries:
+            raise ValueError("publication manifest source hashes do not bind Result")
+        if self.manifest.publication_kind != "canonical" or self.manifest.publication_id != "canonical-v2":
+            raise ValueError("manifest must be canonical-v2 publication")
+        if self.result.canonical_attempt_ref_hash != self.canonical_attempt_ref.reference_hash:
+            raise ValueError("Result does not bind canonical Attempt ref")
+        if self.result.integrity_report_hash != self.integrity_report.report_hash:
+            raise ValueError("Result does not bind Integrity report")
+        if self.result.semantic_run_id != self.manifest.semantic_run_id:
+            raise ValueError("Result and manifest semantic run mismatch")
+        _hash("manifest_source_hash", self.manifest_source_hash)
+        if self.manifest_source_hash != _publication_source_hash("canonical_publication_manifest", self.manifest):
+            raise ValueError("publication manifest source hash mismatch")
+        if self.relative_directory != f"runs/{self.result.semantic_run_id}/canonical-v2":
+            raise ValueError("relative_directory does not match canonical-v2 layout")
+
+    @property
+    def publication_hash(self) -> str:
+        return canonical_sha256(self)
+
+    def to_canonical_dict(self) -> dict[str, object]:
+        return {
+            "type": "finalized_canonical_result",
+            "schema_version": 2,
             "semantic_run_id": self.result.semantic_run_id,
             "canonical_attempt_ref_hash": self.canonical_attempt_ref.reference_hash,
             "integrity_report_hash": self.integrity_report.report_hash,
@@ -1205,10 +1412,31 @@ class CanonicalPublicationOutcome:
 
 
 @dataclass(frozen=True, slots=True)
+class CanonicalPublicationOutcomeV2:
+    finalized_result_v2: FinalizedCanonicalResultV2 | None = None
+    finalized_evaluation: FinalizedIntegrityEvaluation | None = None
+    failure: CanonicalPublicationFailure | None = None
+
+    def __post_init__(self) -> None:
+        if sum(map(bool, (self.finalized_result_v2, self.finalized_evaluation, self.failure))) != 1:
+            raise ValueError("publication outcome requires exactly one branch")
+
+    def to_canonical_dict(self) -> dict[str, object]:
+        return {
+            "type": "canonical_publication_outcome",
+            "schema_version": 2,
+            "finalized_result": self.finalized_result_v2,
+            "finalized_evaluation": self.finalized_evaluation,
+            "failure": self.failure,
+        }
+
+
+@dataclass(frozen=True, slots=True)
 class _PublicationPlan:
     relative_path: str
     artifact_type: str
     payload: object
+    schema_version: int = 1
 
 
 @dataclass(frozen=True, slots=True)
@@ -1219,13 +1447,20 @@ class _PublishedDirectory:
 
 
 _PUBLICATION_CATALOG = SchemaCatalog(
-    ArtifactSchemaRegistration(artifact_type, 1, lambda payload: payload)
-    for artifact_type in (
-        "canonical_attempt_ref",
-        "canonical_publication_manifest",
-        "completed_backtest_result",
-        "integrity_evaluation_record",
-        "integrity_report",
+    (
+        *(
+            ArtifactSchemaRegistration(artifact_type, 1, lambda payload: payload)
+            for artifact_type in (
+                "canonical_attempt_ref",
+                "canonical_publication_manifest",
+                "completed_backtest_result",
+                "integrity_evaluation_record",
+                "integrity_report",
+            )
+        ),
+        ArtifactSchemaRegistration(
+            "completed_backtest_result", 2, lambda payload: payload
+        ),
     )
 )
 
@@ -1290,6 +1525,51 @@ class CanonicalResultPublisher:
             )
         except OSError as error:
             return CanonicalPublicationOutcome(
+                failure=self._failure(
+                    semantic_run_id,
+                    CanonicalPublicationFailureCode.STAGING_PREPARE_FAILED,
+                    f"runs/{semantic_run_id}",
+                    error,
+                )
+            )
+
+    def publish_v2(
+        self,
+        *,
+        resolved_request: ResolvedBacktestRequest,
+        attempt_hashes: tuple[AttemptExecutionHash, ...],
+        finalized_attempts: tuple[FinalizedAttemptEvidence, ...],
+        rebuild_evidence: DeterministicRebuildEvidence,
+        engine_context: EngineExecutionContext,
+    ) -> CanonicalPublicationOutcomeV2:
+        if type(engine_context) is not EngineExecutionContext:
+            raise TypeError("engine_context must be exact EngineExecutionContext")
+        if not isinstance(resolved_request, ResolvedBacktestRequest):
+            raise TypeError("resolved_request must be ResolvedBacktestRequest")
+        semantic_run_id = resolved_request.semantic_run_id
+        try:
+            with RunPublicationLock(
+                root=self._root,
+                semantic_run_id=semantic_run_id,
+            ):
+                return self._publish_v2_locked(
+                    resolved_request,
+                    attempt_hashes,
+                    finalized_attempts,
+                    rebuild_evidence,
+                    engine_context,
+                )
+        except FileExistsError as error:
+            return CanonicalPublicationOutcomeV2(
+                failure=self._failure(
+                    semantic_run_id,
+                    CanonicalPublicationFailureCode.RUN_LOCK_UNAVAILABLE,
+                    f"runs/{semantic_run_id}/.publication.lock",
+                    error,
+                )
+            )
+        except OSError as error:
+            return CanonicalPublicationOutcomeV2(
                 failure=self._failure(
                     semantic_run_id,
                     CanonicalPublicationFailureCode.STAGING_PREPARE_FAILED,
@@ -1411,6 +1691,131 @@ class CanonicalResultPublisher:
             return CanonicalPublicationOutcome(failure=publication)
         return CanonicalPublicationOutcome(
             finalized_result=FinalizedCanonicalResult(
+                reference,
+                report,
+                result,
+                publication.manifest,
+                publication.manifest_source_hash,
+                publication.relative_directory,
+            )
+        )
+
+    def _publish_v2_locked(
+        self,
+        resolved_request: ResolvedBacktestRequest,
+        attempt_hashes: tuple[AttemptExecutionHash, ...],
+        finalized_attempts: tuple[FinalizedAttemptEvidence, ...],
+        rebuild_evidence: DeterministicRebuildEvidence,
+        engine_context: EngineExecutionContext,
+    ) -> CanonicalPublicationOutcomeV2:
+        semantic_run_id = resolved_request.semantic_run_id
+        canonical = self._root / "runs" / semantic_run_id / "canonical-v2"
+        if os.path.lexists(canonical):
+            return CanonicalPublicationOutcomeV2(
+                failure=self._failure(
+                    semantic_run_id,
+                    CanonicalPublicationFailureCode.SEMANTIC_RUN_CLOSED,
+                    f"runs/{semantic_run_id}/canonical-v2",
+                )
+            )
+        try:
+            self._verify_attempt_set(
+                semantic_run_id,
+                attempt_hashes,
+                finalized_attempts,
+            )
+        except _AttemptSetMismatch as error:
+            return CanonicalPublicationOutcomeV2(
+                failure=self._failure(
+                    semantic_run_id,
+                    CanonicalPublicationFailureCode.ATTEMPT_SET_MISMATCH,
+                    f"runs/{semantic_run_id}/attempts",
+                    error,
+                )
+            )
+        except _AttemptEvidenceInvalid as error:
+            return CanonicalPublicationOutcomeV2(
+                failure=self._failure(
+                    semantic_run_id,
+                    CanonicalPublicationFailureCode.ATTEMPT_EVIDENCE_INVALID,
+                    f"runs/{semantic_run_id}/attempts",
+                    error,
+                )
+            )
+        try:
+            attempts = AttemptConsistencySet(
+                resolved_request,
+                attempt_hashes,
+                finalized_attempts,
+            )
+            check = ExecutionResultHasher.check_same_semantic_run(attempt_hashes)
+            context = IntegrityEvaluationContext(
+                resolved_request,
+                attempts,
+                check,
+                rebuild_evidence,
+            )
+            report = IntegrityEvaluator().evaluate(context)
+        except (TypeError, ValueError) as error:
+            return CanonicalPublicationOutcomeV2(
+                failure=self._failure(
+                    semantic_run_id,
+                    CanonicalPublicationFailureCode.INVALID_INTEGRITY_CONTEXT,
+                    f"runs/{semantic_run_id}/attempts",
+                    error,
+                )
+            )
+        if report.blocking_issues:
+            outcome = self._publish_evaluation(report)
+            return CanonicalPublicationOutcomeV2(
+                finalized_evaluation=outcome.finalized_evaluation,
+                failure=outcome.failure,
+            )
+        return self._publish_canonical_v2(resolved_request, attempts, report, engine_context)
+
+    def _publish_canonical_v2(
+        self,
+        resolved_request: ResolvedBacktestRequest,
+        attempts: AttemptConsistencySet,
+        report: IntegrityReport,
+        engine_context: EngineExecutionContext,
+    ) -> CanonicalPublicationOutcomeV2:
+        reference = report.canonical_attempt_ref
+        grade = report.result_grade
+        if reference is None or grade is None:
+            return CanonicalPublicationOutcomeV2(
+                failure=self._failure(
+                    resolved_request.semantic_run_id,
+                    CanonicalPublicationFailureCode.INVALID_INTEGRITY_CONTEXT,
+                    "integrity-report",
+                )
+            )
+        result = CompletedBacktestResultV2(
+            context=report.context,
+            canonical_attempt_ref=reference,
+            integrity_report=report,
+            engine_context=engine_context,
+        )
+        relative = f"runs/{resolved_request.semantic_run_id}/canonical-v2"
+        publication = self._publish_directory(
+            semantic_run_id=resolved_request.semantic_run_id,
+            publication_kind="canonical",
+            publication_id="canonical-v2",
+            relative_directory=relative,
+            plans=(
+                _PublicationPlan(
+                    "canonical-attempt-ref.json", "canonical_attempt_ref", reference
+                ),
+                _PublicationPlan("integrity.json", "integrity_report", report),
+                _PublicationPlan(
+                    "result.json", "completed_backtest_result", result, 2
+                ),
+            ),
+        )
+        if isinstance(publication, CanonicalPublicationFailure):
+            return CanonicalPublicationOutcomeV2(failure=publication)
+        return CanonicalPublicationOutcomeV2(
+            finalized_result_v2=FinalizedCanonicalResultV2(
                 reference,
                 report,
                 result,
@@ -1570,8 +1975,9 @@ class CanonicalResultPublisher:
         payloads: dict[str, object] = {}
         try:
             for plan in plans:
-                result = _PUBLICATION_CATALOG.write_current(
+                result = _PUBLICATION_CATALOG.write_version(
                     plan.artifact_type,
+                    plan.schema_version,
                     plan.payload,
                 )
                 self._write_file(staging / plan.relative_path, result.source_bytes)
@@ -1601,8 +2007,9 @@ class CanonicalResultPublisher:
                 publication_id,
                 tuple(entries),
             )
-            result = _PUBLICATION_CATALOG.write_current(
+            result = _PUBLICATION_CATALOG.write_version(
                 "canonical_publication_manifest",
+                1,
                 manifest,
             )
             self._write_file(
@@ -1749,10 +2156,14 @@ __all__ = [
     "CanonicalPublicationFailureCode",
     "CanonicalPublicationManifest",
     "CanonicalPublicationOutcome",
+    "CanonicalPublicationOutcomeV2",
     "CanonicalResultPublisher",
     "CompletedBacktestResult",
+    "CompletedBacktestResultV2",
     "DeterministicRebuildEvidence",
+    "EngineExecutionContext",
     "FinalizedCanonicalResult",
+    "FinalizedCanonicalResultV2",
     "FinalizedIntegrityEvaluation",
     "IntegrityEvaluationContext",
     "IntegrityEvaluationRecord",

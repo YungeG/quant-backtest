@@ -64,7 +64,7 @@ def test_facade_reuses_existing_authorities_without_a_second_graph() -> None:
     ):
         assert forbidden not in source
     assert source.count("ProfileResolver().resolve(") == 1
-    assert source.count("AuditableBacktestRunner(") == 1
+    assert source.count("AuditableBacktestRunner.for_v2(") == 1
     assert source.count("AttemptEvidenceWriter(") == 1
     assert source.count("CanonicalResultPublisher(") == 1
 

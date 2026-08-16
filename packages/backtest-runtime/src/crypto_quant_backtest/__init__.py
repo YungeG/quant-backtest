@@ -121,10 +121,14 @@ from .integrity import (
     CanonicalPublicationFailureCode,
     CanonicalPublicationManifest,
     CanonicalPublicationOutcome,
+    CanonicalPublicationOutcomeV2,
     CanonicalResultPublisher,
     CompletedBacktestResult,
+    CompletedBacktestResultV2,
     DeterministicRebuildEvidence,
+    EngineExecutionContext,
     FinalizedCanonicalResult,
+    FinalizedCanonicalResultV2,
     FinalizedIntegrityEvaluation,
     IntegrityEvaluationContext,
     IntegrityEvaluationRecord,
@@ -208,7 +212,11 @@ from .ports import (
     SlippageModel,
 )
 from .publication_refs import BacktestCanonicalPublicationRef, RunPublicationRef
-from .verified_publications import VerifiedCompletedPublication
+from .verified_publications import (
+    VerifiedCompletedPublication,
+    VerifiedCompletedPublicationV2,
+    VerifiedExecutionSummary,
+)
 from .random_streams import NamedRandomStream
 from .resolution import (
     ArtifactInstallMode,
@@ -390,9 +398,12 @@ __all__ = [
     "CanonicalPublicationFailureCode",
     "CanonicalPublicationManifest",
     "CanonicalPublicationOutcome",
+    "CanonicalPublicationOutcomeV2",
     "CanonicalResultPublisher",
     "CanonicalExecutionSummary",
     "CashFillAccountingPlan",
+    "CompletedBacktestResult",
+    "CompletedBacktestResultV2",
     "CnAShareAccountScopeDeclaration",
     "CnAShareAnnouncementRevisionSetDeclaration",
     "CnAShareExecutionAccountProfile",
@@ -428,13 +439,13 @@ __all__ = [
     "CloseoutPolicy",
     "DeterministicBarEngine",
     "DeterministicBpsSlippageModel",
-    "CompletedBacktestResult",
     "materialize_execution_input_bundle",
     "materialize_execution_input_bundle_v2",
     "DeterministicRebuildEvidence",
     "DeterministicTimeline",
     "EngineCancellation",
     "EngineCancellationRequest",
+    "EngineExecutionContext",
     "EngineExecutionOutcome",
     "EngineExecutionResult",
     "EngineFailure",
@@ -477,6 +488,7 @@ __all__ = [
     "FailedAttemptReport",
     "FinalizedAttemptEvidence",
     "FinalizedCanonicalResult",
+    "FinalizedCanonicalResultV2",
     "FinalizedIntegrityEvaluation",
     "InputDecodeFailure",
     "InputDecodeIssue",
@@ -620,6 +632,8 @@ __all__ = [
     "UniverseSelection",
     "VerifiedBacktestAnalysis",
     "VerifiedCompletedPublication",
+    "VerifiedCompletedPublicationV2",
+    "VerifiedExecutionSummary",
     "WarmupEligibility",
     "invoke_portfolio_strategies",
 ]
