@@ -165,7 +165,7 @@ artifact_hashes: []
 | BT-GAP-02A | DRAFT / BLOCKED | backtest-runtime composition | G07, G08H, G10G, BT-GAP-02B | Composition awaits a production execution-input hydration contract |
 | BT-GAP-02B | DRAFT / BLOCKED | backtest-runtime execution inputs | BT-GAP-01, G03, G07, G11I, G12E, BT-GAP-07, PLAT-REC-03 | BacktestRequest v1 digests do not locate all runtime payloads; additive request-envelope ownership is unresolved |
 | BT-GAP-04 | PASSED — immutable commit `c3257643d6911bd3b63efac0899aa04d47397b05` | backtest-runtime | BT-GAP-01, G07, Platform BT-PORT-01 | none |
-| BT-GAP-07 | DRAFT / UNBLOCKED | backtest-runtime structural read port | BT-GAP-01, WP-02E | Freeze the smallest structural ArtifactEnvelope reader shared by pre-run input hydration and verified evidence loads |
+| BT-GAP-07 | READY | backtest-runtime structural read port | BT-GAP-01, WP-02E | none |
 
 ## 4. WP-00A Acceptance Card
 
@@ -11449,7 +11449,45 @@ artifact_hashes:
 6. G07 canonicalized finalized structures remain unchanged and are validated against the existing G07 golden fixture.
 7. Contract freeze commit `033af1fdc029e48c74fc3cae5eca08b4b3ef2e19` and implementation commit `c3257643d6911bd3b63efac0899aa04d47397b05` are immutable. Focused/inherited tests passed 42, the full repository passed 1586, Platform BT-PORT-01 passed 14, type/import checks passed, and both independent final reviews returned `NONE`.
 
-## 110. PASSED 记录格式
+## 110. BT-GAP-07 Artifact Envelope Reader Protocol
+
+```yaml
+id: BT-GAP-07
+status: READY
+depends_on:
+  - BT-GAP-01
+  - WP-02E
+owner_package: backtest-runtime
+public_interface:
+  - crypto_quant_backtest.ArtifactEnvelopeReader
+test_commands:
+  contract: uv run pytest -q tests/runtime/ports/test_artifact_envelope_reader_contract.py
+  boundary: uv run pytest -q tests/architecture/test_bt_gap07_artifact_reader_boundary.py
+  lock: uv lock --check
+  diff: git diff --check
+fixture_ids: []
+expected_artifacts: []
+failure_contracts:
+  - reader_contract_signature_drift
+  - protocol_implementation_statement
+  - root_export_drift
+  - semantic_decoder_or_provider_leak
+allowed_grade: development
+evidence:
+  - inherited domain WP-02E artifact fixtures
+remaining_blockers: []
+passed_commit: null
+```
+
+### BT-GAP-07 Readiness
+
+1. The protocol freeze adds only the structural `ArtifactEnvelopeReader` seam (`read(*, ref: ArtifactRef) -> ArtifactReadResult`) and does not introduce a reader implementation.
+2. `crypto_quant_backtest.ArtifactEnvelopeReader` is the sole Backtest public root export for this seam. Its exact Domain parameter/result types match Platform Integration v1.
+3. `ArtifactReadResult.artifact` is not semantic authority at this boundary. BT-GAP-03 consumers must verify the exact ref/source bytes and decode through a Backtest-owned `SchemaCatalog`; providers remain structural.
+4. AST and signature tests forbid filesystem, network, provider, repository, catalog, decoder, cache, registry, factory, adapter, callback, or Platform behavior in the port.
+5. Implementation absence is not a blocker for a Protocol contract. BT-GAP-07 is `READY`; provider conformance belongs to Platform fan-in and semantic verification belongs to BT-GAP-03.
+
+## 111. PASSED 记录格式
 
 ```yaml
 id: WP-00A
