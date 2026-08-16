@@ -90,6 +90,7 @@ def _hydration_outcome():
             _Reader(envelope),
             transport,
             market_reader=case.timeline.reader,
+            resolved_request=resolved,
         ),
         case,
     )
