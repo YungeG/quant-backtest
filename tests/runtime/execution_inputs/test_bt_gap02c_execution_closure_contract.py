@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from dataclasses import dataclass
 from hashlib import sha256
 from inspect import Parameter, signature
 import json
@@ -17,11 +18,13 @@ from crypto_quant_backtest import (
 )
 from crypto_quant_domain import (
     ArtifactEnvelope,
+    ArtifactReadResult,
     ArtifactRef,
     TimeInForce,
     canonical_bytes,
     canonical_sha256,
 )
+from crypto_quant_backtest.execution_inputs import _hydrate_execution_inputs
 from tests.runtime.profiles.binance_usdm._fixtures import composition_request
 from tests.runtime.runner._fixtures import resolved_request_and_case
 
@@ -48,6 +51,20 @@ def _fixture() -> dict[str, object]:
         return json.loads(_FIXTURE.read_text(encoding="utf-8"))
     except (OSError, json.JSONDecodeError) as error:
         pytest.fail(f"invalid BT-GAP-02C fixture: {error}")
+
+
+@dataclass(frozen=True, slots=True)
+class _Reader:
+    envelope: ArtifactEnvelope
+
+    def read(self, *, ref: ArtifactRef) -> ArtifactReadResult:
+        assert ref == ArtifactRef.from_envelope(self.envelope)
+        return ArtifactReadResult(
+            envelope=self.envelope,
+            artifact={"not": "semantic authority"},
+            source_bytes=canonical_bytes(self.envelope),
+            source_hash=canonical_sha256(self.envelope),
+        )
 
 
 def _standard_execution_model() -> NextEligibleBarOpenModel:
@@ -163,6 +180,35 @@ def test_transport_v2_retains_one_ref_and_no_second_identity() -> None:
     assert not hasattr(transport, "artifact_ref")
     assert not hasattr(transport, "path")
     assert not hasattr(transport, "status")
+
+
+def test_v2_hydration_reconstructs_one_typed_plan_without_a_second_decoder() -> None:
+    fixture = _fixture()
+    resolved, case = resolved_request_and_case()
+    envelope = ArtifactEnvelope(**fixture["bundle"]["envelope"])
+    transport = BacktestExecutionRequest(
+        schema_version=2,
+        request=resolved.request,
+        execution_input_bundle_ref=ArtifactRef.from_envelope(envelope),
+    )
+    outcome = _hydrate_execution_inputs(
+        _Reader(envelope),
+        transport,
+        market_reader=case.timeline.reader,
+    )
+    assert outcome.failure is None
+    assert outcome.result is not None
+    plan = getattr(outcome.result, "execution_case_plan", None)
+    assert plan is not None, "BT-GAP-02C RED: typed execution-case plan is absent"
+    assert plan.decision_cycles == case.decision_cycles
+    assert plan.bar_executions == case.bar_executions
+    assert plan.financial_state == case.financial_state
+    assert plan.financial_dispatch_plan == case.financial_dispatch_plan
+    assert plan.execution_model.spec() == case.execution_model.spec()
+    assert plan.snapshot_plan == case.snapshot_plan
+    assert plan.closeout_policy.spec() == case.closeout_policy.spec()
+    assert outcome.result.target_stream == case.target_stream
+    assert not hasattr(plan, "identity_manifest")
 
 
 def test_binance_executable_profile_v2_uses_concrete_runtime_refs() -> None:
