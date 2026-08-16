@@ -163,7 +163,7 @@ artifact_hashes: []
 | BT-GAP-01 | PASSED — immutable commit `f2440f9658fbe2ae1cf0016a78c44e4230995394` | trading-domain | WP-02E, Platform BT-PORT-01 | none |
 | BT-GAP-02 | DRAFT / BLOCKED | backtest-runtime | BT-GAP-01, G07, BT-GAP-02A, BT-GAP-04 | No production authority maps every resolved supported request to a `ResolvedExecutionCase` |
 | BT-GAP-02A | DRAFT / BLOCKED | backtest-runtime composition | G07, G08H, G10G, BT-GAP-02B | Composition awaits a production execution-input hydration contract |
-| BT-GAP-02B | READY | backtest-runtime execution inputs | BT-GAP-01, G03, G07, G11I, G12E, BT-GAP-07, PLAT-REC-03 | none |
+| BT-GAP-02B | PASSED — immutable commit `9f321780bb2e831bac521722c04af82adbd8e40e` | backtest-runtime execution inputs | BT-GAP-01, G03, G07, G11I, G12E, BT-GAP-07, PLAT-REC-03 | none |
 | BT-GAP-04 | PASSED — immutable commit `c3257643d6911bd3b63efac0899aa04d47397b05` | backtest-runtime | BT-GAP-01, G07, Platform BT-PORT-01 | none |
 | BT-GAP-06 | DRAFT / BLOCKED | backtest-runtime analysis schema | BT-GAP-01, BT-GAP-04, G07 | Stored payload versus loaded view, missing-metric wire, metric-profile schema, and decimal authority are unresolved |
 | BT-GAP-07 | PASSED — immutable commit `029ac43f6d781567cd0742594ca82c181ead0a6d` | backtest-runtime structural read port | BT-GAP-01, WP-02E | none |
@@ -11342,7 +11342,7 @@ artifact_hashes: {}
 
 ```yaml
 id: BT-GAP-02B
-status: READY
+status: PASSED
 depends_on:
   - BT-GAP-01
   - G03 financial state authorities
@@ -11356,9 +11356,9 @@ public_interface:
   - crypto_quant_backtest.BacktestExecutionRequest
   - crypto_quant_backtest.materialize_execution_input_bundle
 test_commands:
-  contract_red: uv run pytest -q tests/runtime/execution_inputs/test_execution_input_bundle_contract.py
-  boundary_red: uv run pytest -q tests/architecture/test_bt_gap02b_execution_input_boundary.py
-  inherited: uv run pytest -q -k "not bt_gap02b and not execution_input_bundle_contract"
+  focused: uv run pytest -q tests/runtime/execution_inputs/test_execution_input_bundle_contract.py tests/runtime/execution_inputs/test_hydrate_execution_inputs.py tests/architecture/test_bt_gap02b_execution_input_boundary.py
+  full: uv run pytest -q
+  boundary: uv run python tools/architecture/check_import_boundaries.py --root . --policy architecture/import-boundaries.toml --report build/acceptance/bt-gap02b-implementation-import-boundary-report.json
   lock: uv lock --check
   diff: git diff --check
 fixture_ids:
@@ -11382,12 +11382,26 @@ evidence:
   - ResolvedExecutionCase field-to-owner audit
   - accepted Platform PLAT-REC-03 additive execution-input transport
   - user-approved repository-independence boundary: Platform does not construct or understand the initial-financial-state template
+  - contract commit ed176cd002ac006de2a6b44120d5b57cebca1653
+  - implementation commit 148c3e2e608e3ee5f3d70a82d198aefafed09e5e
+  - G12E/tamper hardening commit 9f321780bb2e831bac521722c04af82adbd8e40e
 remaining_blockers: []
-passed_commit: null
+passed_commit: 9f321780bb2e831bac521722c04af82adbd8e40e
+executed_commands:
+  - uv run pytest -q tests/runtime/execution_inputs/test_execution_input_bundle_contract.py tests/runtime/execution_inputs/test_hydrate_execution_inputs.py tests/architecture/test_bt_gap02b_execution_input_boundary.py
+  - uv run pytest -q
+  - uv run python tools/architecture/check_import_boundaries.py --root . --policy architecture/import-boundaries.toml --report build/acceptance/bt-gap02b-implementation-import-boundary-report.json
+  - uv lock --check
+  - git diff --check
+test_results:
+  focused: 23 passed
+  full_repository: 1614 passed
+  import_boundaries: 100 files passed
 artifact_hashes:
   fixture_sha256: 09578ac47f997bc4bf55119d31e97dbcad3eb71e90d93a5ef7c8e6669bd66be2
   bundle_content_hash: sha256:cde469808ba86f5b55702a85c4d30111cb3408db2932db402d069d5889817c02
   transport_canonical_sha256: sha256:b28cfb5334bf0d87a5b2a5ef82b02afb5761ead717791bc08e000cba8325765d
+  import_boundary_report_sha256: cc9d143d45930baa34019f3f0dac5c3b50386fbb54b35a5b594584e14e2f9ccf
 ```
 
 ### BT-GAP-02B Readiness
@@ -11399,7 +11413,8 @@ artifact_hashes:
 5. G12E retains every MarketBundle/MarketEvent byte. The bundle carries only `target_stream_key` and `timeline_stream_keys`; Backtest reconstructs `PrecomputedTargetStream` through the G12E reader and verifies `request.target_stream_digest`. No market bytes, path convention, digest registry, provider selector, cache, or second repository is introduced.
 6. The Backtest-owned public materializer accepts Backtest-owned typed values and the internal financial template, validates and writes one bundle ArtifactEnvelope, and is called by Backtest provider code—not by Platform semantic code. Platform treats the result as opaque, stores only the envelope through Foundation CAS, obtains its Domain ref, and passes the transport by value. Backtest imports no Platform type.
 7. Pre-Attempt precedence is exact: malformed transport; wrong expected bundle-ref type/version; unavailable input; returned source/ref tamper; bundle decode failure; request, build, target, or initial-state binding mismatch; execution-case semantic-hash mismatch. Every failure creates no Attempt, terminal publication, analysis, or partial evidence.
-8. The frozen fixture preserves existing `BacktestRequest@1` canonical bytes/hash and proves no MarketEvent copy or transport-level identity. Seven focused assertions are intentionally RED only because the two public names and production module do not yet exist; two independent fixture/ownership assertions pass.
+8. The frozen fixture preserves existing `BacktestRequest@1` canonical bytes/hash and proves no MarketEvent copy or transport-level identity. The public materializer reproduces its exact envelope/ref/transport bytes; private hydration ignores `ArtifactReadResult.artifact`, verifies source/envelope/ref integrity, reconstructs typed build/spec values and the G12E target stream, and returns an atomic success-or-failure result.
+9. Focused acceptance passed 23 tests, the full repository passed 1614 tests, 100 import-boundary files passed, `uv lock --check` and `git diff --check` passed, and independent architecture review returned `NONE`. The adversarial tamper finding was fixed before acceptance; the requested semantic-hash reordering was rejected because the frozen precedence intentionally places initial-state binding before final semantic-hash mismatch.
 
 ## 109. BT-GAP-04 Publication Reference Contract
 
