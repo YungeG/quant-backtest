@@ -62,6 +62,10 @@ from .engine import (
     ResolvedPreTradePlan,
     SnapshotProjectionPlan,
 )
+from .execution_inputs import (
+    BacktestExecutionRequest,
+    materialize_execution_input_bundle,
+)
 from .evidence import (
     AttemptEvidenceWriter,
     EvidenceArtifactEntry,
@@ -334,6 +338,7 @@ __all__ = [
     "AttemptIssueSource",
     "AuditableBacktestRunner",
     "BacktestProfileRegistry",
+    "BacktestExecutionRequest",
     "BacktestRequest",
     "BacktestResolutionFailure",
     "BacktestResolutionFailureCode",
@@ -407,6 +412,7 @@ __all__ = [
     "DeterministicBarEngine",
     "DeterministicBpsSlippageModel",
     "CompletedBacktestResult",
+    "materialize_execution_input_bundle",
     "DeterministicRebuildEvidence",
     "DeterministicTimeline",
     "EngineCancellation",
