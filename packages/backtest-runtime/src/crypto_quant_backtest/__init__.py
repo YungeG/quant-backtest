@@ -1,5 +1,11 @@
 """Deterministic historical backtest runtime."""
 
+from .analysis import (
+    AnalysisArtifactRef,
+    BacktestAnalysis,
+    BacktestMetricProfile,
+    VerifiedBacktestAnalysis,
+)
 from .binance_usdm_profile import (
     BinanceUsdmAccountCapacityEvidence,
     BinanceUsdmExecutionAccountProfile,
@@ -326,6 +332,7 @@ from .universe import (
 __version__ = "0.1.0"
 
 __all__ = [
+    "AnalysisArtifactRef",
     "BAR_OPEN_CAPABILITY",
     "BAR_OPEN_EVENT_TYPE",
     "ArtifactInstallMode",
@@ -346,6 +353,8 @@ __all__ = [
     "BacktestResolutionOutcome",
     "BacktestRunOutcome",
     "BacktestCanonicalPublicationRef",
+    "BacktestAnalysis",
+    "BacktestMetricProfile",
     "BinanceUsdmAccountCapacityEvidence",
     "BinanceUsdmExecutionAccountProfile",
     "BinanceUsdmMarketSemanticsProfile",
@@ -602,6 +611,7 @@ __all__ = [
     "UniverseMembershipRevision",
     "UniverseQuery",
     "UniverseSelection",
+    "VerifiedBacktestAnalysis",
     "WarmupEligibility",
     "invoke_portfolio_strategies",
 ]
