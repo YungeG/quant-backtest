@@ -192,6 +192,7 @@ from .ports import (
     SimulationPortType,
     SlippageModel,
 )
+from .publication_refs import BacktestCanonicalPublicationRef, RunPublicationRef
 from .random_streams import NamedRandomStream
 from .resolution import (
     ArtifactInstallMode,
@@ -337,6 +338,7 @@ __all__ = [
     "BacktestResolutionFailureCode",
     "BacktestResolutionOutcome",
     "BacktestRunOutcome",
+    "BacktestCanonicalPublicationRef",
     "BinanceUsdmAccountCapacityEvidence",
     "BinanceUsdmExecutionAccountProfile",
     "BinanceUsdmMarketSemanticsProfile",
@@ -565,6 +567,7 @@ __all__ = [
     "RunEndOutcome",
     "RunEndReport",
     "RunEndReservationRelease",
+    "RunPublicationRef",
     "TARGET_STREAM_CAPABILITY",
     "StrategyFamily",
     "TARGET_STREAM_EVENT_TYPE",
