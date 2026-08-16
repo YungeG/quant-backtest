@@ -161,6 +161,7 @@ artifact_hashes: []
 | G12L-* | DRAFT | market-bundle-builder source adapter | G12A–G12K as applicable | Concrete provider/dataset/version, real raw fixtures, mapping and closure evidence |
 | G12M-* | DRAFT | backtest-runtime qualification | market-specific G12L, G07–G10 | Per-market qualification matrix |
 | BT-GAP-01 | PASSED — immutable commit `f2440f9658fbe2ae1cf0016a78c44e4230995394` | trading-domain | WP-02E, Platform BT-PORT-01 | none |
+| BT-GAP-02 | DRAFT / BLOCKED | backtest-runtime | BT-GAP-01, BT-GAP-04 | Tagged completed/terminal refs and exactly-one run publication outcome are not frozen |
 
 ## 4. WP-00A Acceptance Card
 
@@ -11255,7 +11256,41 @@ artifact_hashes:
 5. WP-02E `ArtifactEnvelope` and `artifact-envelope-catalog-v1` bytes/hashes remain unchanged. No migration, repository, facade, tagged Backtest ref, analysis, structural reader, registry, or BT-GAP-02+ behavior is introduced.
 6. Contract freeze commit `80d44c81645a4ea1a19bb786150e774cf0055e0f` and implementation commit `f2440f9658fbe2ae1cf0016a78c44e4230995394` are immutable. Focused/inherited tests passed 44, the full repository passed 1581, the unchanged Platform consumer contract passed 14, and both independent final reviews returned `NONE`.
 
-## 106. PASSED 记录格式
+## 106. BT-GAP-02 Backtest Runtime Facade
+
+```yaml
+id: BT-GAP-02
+status: DRAFT / BLOCKED
+depends_on:
+  - BT-GAP-01
+  - G07
+  - BT-GAP-04 tagged publication contract
+owner_package: backtest-runtime
+public_interface: []
+test_commands: {}
+fixture_ids: []
+expected_artifacts:
+  - future BT-GAP-02 run-only facade contract
+failure_contracts: []
+allowed_grade: development
+evidence:
+  - existing request-resolution-composition-runner-publication flow analysis
+remaining_blockers:
+  - BT-GAP-04 must freeze nominal completed and terminal refs
+  - BT-GAP-04 must freeze the exactly-one completed-or-terminal run publication outcome
+  - only then may BT-GAP-02 freeze its run-only facade name, constructor dependencies, failures, fixture, and RED tests
+passed_commit: null
+artifact_hashes: {}
+```
+
+### BT-GAP-02 Readiness
+
+1. Existing G07 authorities already own request resolution, composition, Attempt execution, integrity evaluation, terminal semantics, cache verification, and canonical publication. BT-GAP-02 will eventually hide their sequencing behind one deep public `run` interface; it must not reimplement them.
+2. The facade cannot freeze an honest return type before BT-GAP-04 owns nominal completed/terminal refs and their exactly-one tagged outcome. Implementation absence is not itself a readiness blocker; the missing upstream contract is.
+3. BT-GAP-02 owns only the run facade. Repository loads remain BT-GAP-03, tagged refs/outcome remain BT-GAP-04, analysis remains BT-GAP-05/06, and structural reader injection remains BT-GAP-07.
+4. No fixture, RED test, production type name, constructor dependency list, or failure precedence is frozen while the return contract is unresolved. BT-GAP-02 therefore remains `DRAFT / BLOCKED`.
+
+## 107. PASSED 记录格式
 
 ```yaml
 id: WP-00A
