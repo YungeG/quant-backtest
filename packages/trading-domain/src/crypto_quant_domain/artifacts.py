@@ -17,6 +17,42 @@ _ENVELOPE_FIELDS = frozenset(
 )
 
 
+@dataclass(frozen=True, slots=True)
+class ArtifactRef:
+    artifact_type: str
+    schema_version: int
+    content_hash: str
+
+    def __post_init__(self) -> None:
+        if type(self.artifact_type) is not str:
+            raise TypeError("artifact_type must be str")
+        if type(self.schema_version) is not int:
+            raise TypeError("schema_version must be int")
+        CanonicalSchema(self.artifact_type, self.schema_version)
+        if type(self.content_hash) is not str or _SHA256.fullmatch(
+            self.content_hash
+        ) is None:
+            raise ValueError("content hash must be sha256:<64 lowercase hex>")
+
+    @classmethod
+    def from_envelope(cls, envelope: ArtifactEnvelope) -> ArtifactRef:
+        if type(envelope) is not ArtifactEnvelope:
+            raise TypeError("envelope must be ArtifactEnvelope")
+        return cls(
+            artifact_type=envelope.artifact_type,
+            schema_version=envelope.schema_version,
+            content_hash=envelope.content_hash,
+        )
+
+    def to_canonical_dict(self) -> dict[str, object]:
+        return {
+            "type": "artifact_ref",
+            "artifact_type": self.artifact_type,
+            "schema_version": self.schema_version,
+            "content_hash": self.content_hash,
+        }
+
+
 class ArtifactCatalogError(ValueError):
     pass
 
