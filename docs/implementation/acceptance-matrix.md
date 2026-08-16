@@ -159,7 +159,7 @@ artifact_hashes: []
 | G12J | DRAFT | trading-domain schema migration | real old artifact | No real source/target schema yet |
 | G12K | DRAFT | market-bundle-builder validation | G12C | Universe/corporate action coverage |
 | G12L-* | DRAFT | market-bundle-builder source adapter | G12A–G12K as applicable | Concrete provider/dataset/version, real raw fixtures, mapping and closure evidence |
-| G12L-BINANCE-USDM-MARK-PRICE-KLINES-V1 | DRAFT / READY FOR ACCEPTANCE | market-bundle-builder Binance USD-M source slice | G10D, G12A–G12D | Full repository validation, independent review, accepted commit |
+| G12L-BINANCE-USDM-MARK-PRICE-KLINES-V1 | PASSED — immutable commit `47d59e40081555ab9b555c3e632070a517509436` | market-bundle-builder Binance USD-M source slice | G10D, G12A–G12D | none |
 | G12M-* | DRAFT | backtest-runtime qualification | market-specific G12L, G07–G10 | Per-market qualification matrix |
 | BT-GAP-01 | PASSED — immutable commit `f2440f9658fbe2ae1cf0016a78c44e4230995394` | trading-domain | WP-02E, Platform BT-PORT-01 | none |
 | BT-GAP-02 | PASSED — immutable commit `39863c58ace1d996f3e814835836ec46e2aa3794` | backtest-runtime facade | BT-GAP-01, G07, BT-GAP-02A, BT-GAP-04 | none |
@@ -11198,14 +11198,14 @@ artifact_hashes: {}
    `docs/implementation/plans/g12/g12l.md`; research authority is
    `docs/research/g12l-provider-adapter-contract.md`.
 7. G12H, G12I, G12K, and G12M remain `DRAFT / BLOCKED`. The first concrete
-   G12L slice is `DRAFT / READY FOR ACCEPTANCE`; no concrete G12L slice is PASSED.
+   G12L slice is PASSED at immutable commit `47d59e40081555ab9b555c3e632070a517509436`.
    This contract grants no decision-grade, live, or deployment authority.
 
-## 104A. G12L Binance USDⓈ-M Daily Mark-Price-Kline v1 (Gate remains DRAFT)
+## 104A. G12L Binance USDⓈ-M Daily Mark-Price-Kline v1 (PASSED)
 
 ```yaml
 id: G12L-BINANCE-USDM-MARK-PRICE-KLINES-V1
-status: DRAFT / READY FOR ACCEPTANCE
+status: PASSED
 depends_on:
   - G10D
   - G12A
@@ -11259,11 +11259,15 @@ evidence:
   - finite-archive-revision-causal-limit
   - g12c-three-stream-manifest-and-g12d-publication
   - offline-repeatable-fixture-check
-remaining_blockers:
-  - full-repository-validation-and-secret-scan
-  - independent-review
-  - accepted-commit
-passed_commit: null
+remaining_blockers: []
+validation:
+  focused_g12l: 11 passed
+  full_repository: 1726 passed
+  import_boundaries: 107 files passed
+  lock_check: passed
+  lsp_lens: clean
+  independent_review: NONE
+passed_commit: 47d59e40081555ab9b555c3e632070a517509436
 artifact_hashes:
   archive_sha256: 660efeefdc875f052051b94c2976babd013f64c6633bf58ba030764771747b90
   checksum_sha256: ea5548dadd83fad69bbc9db3a24560b7d3f988e54299d2c6aa87e85351e05215

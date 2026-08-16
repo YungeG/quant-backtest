@@ -1,7 +1,7 @@
 ---
 id: G12L-BINANCE-USDM-MARK-PRICE-KLINES-V1
-readiness: READY
-gate_status: DRAFT
+readiness: PASSED
+gate_status: PASSED
 owner: market-bundle-builder Binance USD-M source slice
 produces:
   - exact Binance Public Data raw fixture evidence
@@ -31,11 +31,11 @@ Research authority:
 
 ## Current status
 
-`DRAFT / READY FOR ACCEPTANCE`. Provider, dataset, immutable authority revision,
-finite request scope, real ZIP/checksum fixtures, internal one-day closure, exact
-G12A snapshot identity, conservative availability, bounded retry/failure behavior,
-purpose-separated normalization, and G12C/D evidence are implemented and frozen.
-Full repository validation, independent review, and the accepted commit remain.
+`PASSED` at immutable commit `47d59e40081555ab9b555c3e632070a517509436`.
+Provider, dataset, authority revision, finite request, real ZIP/checksum, exact
+G12A identity, conservative availability, bounded retry/failure behavior,
+purpose-separated normalization, G12C/D evidence, full validation, and independent
+review are frozen.
 
 ## Frozen v1 scope
 
@@ -128,13 +128,14 @@ replacement is a new explicit slice/version and may not silently supersede this
 snapshot. Every normalized event uses the archive content hash as revision ID
 and records no invented supersedes link.
 
-## Acceptance work remaining
+## Acceptance closure
 
-1. Run focused and full repository tests, import boundaries, network isolation,
-   secret scan, lock check, LSP, and diff checks.
-2. Obtain independent review with no material findings.
-3. Freeze the accepted commit and exact final artifact hashes.
-4. Only then change the concrete slice to `PASSED`; G12I/G12M remain separate.
+- focused G12L: 11 passed;
+- full repository: 1726 passed;
+- import boundaries: 107 files passed;
+- root lock, diff, LSP, lens, and secret scan: clean;
+- independent review: `NONE`;
+- G12I/G12M remain separate and unqualified.
 
 ## Current executable evidence
 

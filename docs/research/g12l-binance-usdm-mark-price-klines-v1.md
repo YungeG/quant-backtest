@@ -5,10 +5,10 @@
 The first concrete G12L source is selected: Binance Public Data, USD-M futures,
 `daily/markPriceKlines`, `BTCUSDT`, `1m`, UTC date `2024-01-01`.
 
-This note freezes source evidence and the exact G12A handoff only. The concrete
-slice remains `DRAFT / IN PROGRESS` until provider normalization, retry/failure
-behavior, archive-revision closure, G12B-D publication, and acceptance are
-implemented. It grants no G12I, G12M, decision-grade, live, or deployment claim.
+The concrete slice PASSES at immutable commit
+`47d59e40081555ab9b555c3e632070a517509436`. It freezes source acquisition,
+exact G12A handoff, purpose-separated normalization, and G12C/D publication. It
+grants no G12I, G12M, intraday-2024, decision-grade, live, or deployment claim.
 
 ## First-party authority
 
