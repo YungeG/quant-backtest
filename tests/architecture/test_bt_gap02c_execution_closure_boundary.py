@@ -90,3 +90,18 @@ def test_execution_closure_remains_data_not_a_new_artifact_or_repository() -> No
         "profile_plan_path",
     ):
         assert forbidden not in source
+
+
+def test_typed_reader_and_executable_profile_do_not_forge_runtime_objects() -> None:
+    execution_inputs = _EXECUTION_INPUTS.read_text(encoding="utf-8")
+    binance_profile = (_RUNTIME / "binance_usdm_profile.py").read_text(
+        encoding="utf-8"
+    )
+    for forbidden in (
+        "object.__new__",
+        "_dataclass_shell",
+        "_CanonicalPlanValue",
+        "get_type_hints",
+    ):
+        assert forbidden not in execution_inputs
+    assert "def __getattr__(" not in binance_profile

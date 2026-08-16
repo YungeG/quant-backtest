@@ -12,9 +12,11 @@ import crypto_quant_backtest
 from crypto_quant_backtest import (
     BacktestExecutionRequest,
     BinanceUsdmProfileComposer,
+    BinanceUsdmResolvedProfile,
     MarkToMarketCloseoutPolicy,
     NextEligibleBarOpenModel,
     NoEligibleBarAction,
+    TargetStreamScheduleEntry,
 )
 from crypto_quant_domain import (
     ArtifactEnvelope,
@@ -146,10 +148,8 @@ def test_v2_materializer_has_one_deep_public_interface_and_exact_bytes() -> None
     )
     assert "materialize_execution_input_bundle_v2" in crypto_quant_backtest.__all__
     parameters = tuple(signature(materializer).parameters.values())
-    assert tuple(value.name for value in parameters) == (
-        "resolved_request",
-        "execution_case",
-    )
+    parameter_names = tuple(value.name for value in parameters)
+    assert parameter_names == ("resolved_request", "execution_case")
     assert all(value.kind is Parameter.KEYWORD_ONLY for value in parameters)
 
     resolved, case = resolved_request_and_case()
@@ -201,6 +201,11 @@ def test_v2_hydration_reconstructs_one_typed_plan_without_a_second_decoder() -> 
     plan = getattr(outcome.result, "execution_case_plan", None)
     assert plan is not None, "BT-GAP-02C RED: typed execution-case plan is absent"
     assert plan.decision_cycles == case.decision_cycles
+    assert all(
+        type(entry) is TargetStreamScheduleEntry
+        for cycle in plan.decision_cycles
+        for entry in cycle.schedule.entries
+    ), "typed hydration must call exact schedule-entry constructors"
     assert plan.bar_executions == case.bar_executions
     assert plan.financial_state == case.financial_state
     assert plan.financial_dispatch_plan == case.financial_dispatch_plan
@@ -219,6 +224,7 @@ def test_binance_executable_profile_v2_uses_concrete_runtime_refs() -> None:
     outcome = compose_executable(composition_request())
     assert outcome.result is not None
     profile = outcome.result
+    assert type(profile) is BinanceUsdmResolvedProfile
     frozen = _fixture()["binance_executable_simulation_v2"]
     assert profile.simulation.profile_key == frozen["profile_key"]
     assert profile.simulation.profile_version == frozen["profile_version"]
