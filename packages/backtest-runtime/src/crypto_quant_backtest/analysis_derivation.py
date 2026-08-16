@@ -1,8 +1,6 @@
 from __future__ import annotations
 
 from decimal import Decimal, ROUND_HALF_EVEN, localcontext
-from typing import Protocol
-
 from crypto_quant_domain import (
     AccountingEntryType,
     ArtifactEnvelope,
@@ -15,6 +13,7 @@ from .analysis import (
     BacktestAnalysis,
     BacktestMetricProfile,
 )
+from .artifact_envelope_publisher import ArtifactEnvelopePublisher
 from .verified_publications import VerifiedCompletedPublication
 
 __all__ = ["BacktestAnalysisRuntime"]
@@ -31,10 +30,6 @@ _PROFILE = BacktestMetricProfile("simple_period_return.fill_count.v1", 1)
 _PROFILE_REF = ArtifactRef.from_envelope(
     ArtifactEnvelope.create("backtest_metric_profile", 1, _PROFILE)
 )
-
-
-class _BacktestAnalysisPublisher(Protocol):
-    def put(self, *, envelope: ArtifactEnvelope) -> ArtifactRef: ...
 
 
 def _money_decimal(value: Money) -> Decimal:
@@ -100,7 +95,7 @@ def _simple_period_return(completed: VerifiedCompletedPublication) -> str | None
 
 
 class BacktestAnalysisRuntime:
-    def __init__(self, publisher: _BacktestAnalysisPublisher) -> None:
+    def __init__(self, publisher: ArtifactEnvelopePublisher) -> None:
         if not callable(getattr(publisher, "put", None)):
             raise TypeError("publisher must provide put")
         self._publisher = publisher

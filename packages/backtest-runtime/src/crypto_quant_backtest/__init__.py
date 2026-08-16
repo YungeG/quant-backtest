@@ -85,6 +85,7 @@ from .evidence import (
     EvidenceWriteFailureCode,
     FinalizedAttemptEvidence,
 )
+from .facade import BacktestRuntime
 from .financial_dispatch import (
     CashFillAccountingPlan,
     DefaultCashFinancialDispatcher,
@@ -191,6 +192,7 @@ from .observations import (
     RevisionedObservationRecord,
 )
 from .ports import (
+    ArtifactEnvelopePublisher,
     ArtifactEnvelopeReader,
     CloseoutPolicy,
     ExecutionModel,
@@ -355,6 +357,7 @@ __all__ = [
     "BacktestResolutionOutcome",
     "BacktestRunOutcome",
     "BacktestCanonicalPublicationRef",
+    "BacktestRuntime",
     "BacktestAnalysis",
     "BacktestAnalysisRuntime",
     "BacktestMetricProfile",
@@ -420,6 +423,7 @@ __all__ = [
     "FinancialStateView",
     "ScheduledAccountEvent",
     "default_cash_financial_dispatcher_spec",
+    "ArtifactEnvelopePublisher",
     "ArtifactEnvelopeReader",
     "CloseoutPolicy",
     "DeterministicBarEngine",

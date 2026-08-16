@@ -11,6 +11,7 @@ import unicodedata
 
 from crypto_quant_domain import canonical_sha256
 
+from .artifact_envelope_publisher import ArtifactEnvelopePublisher
 from .artifact_envelope_reader import ArtifactEnvelopeReader
 
 

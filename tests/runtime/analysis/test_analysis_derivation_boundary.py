@@ -44,9 +44,10 @@ def test_derivation_has_one_exact_public_runtime_and_no_storage_framework() -> N
         for node in module.body
         if isinstance(node, ast.ClassDef) and node.name.endswith("Publisher")
     }
-    assert protocols == {"_BacktestAnalysisPublisher"}
+    assert protocols == set()
 
     source = _DERIVATION.read_text(encoding="utf-8")
+    assert "ArtifactEnvelopePublisher" in source
     for forbidden in (
         "crypto_quant_platform",
         "tests.support",
