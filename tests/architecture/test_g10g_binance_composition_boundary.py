@@ -37,18 +37,13 @@ ALLOWED_IMPORTS = {
     "crypto_quant_market_data",
     "crypto_quant_trading",
     "crypto_quant_trading.profiles.binance_usdm",
-    # BT-GAP-02A narrowly permits private execution-case construction dependencies.
-    "composition",
-    "engine",
     "execution",
-    "execution_inputs",
     "financial_dispatch",
     "liquidation_audit",
     "ports",
     "resolution",
     "run_end",
     "slippage",
-    "target_stream",
     "timeline",
 }
 FORBIDDEN_CALLS = {
