@@ -1,0 +1,102 @@
+{
+  "archive": {
+    "csv_byte_count": 140721,
+    "first_row": [
+      "1704067200000",
+      "42313.90000000",
+      "42328.34025532",
+      "42289.70000000",
+      "42326.90000000",
+      "0",
+      "1704067259999",
+      "0",
+      "60",
+      "0",
+      "0",
+      "0"
+    ],
+    "header": [
+      "open_time",
+      "open",
+      "high",
+      "low",
+      "close",
+      "volume",
+      "close_time",
+      "quote_volume",
+      "count",
+      "taker_buy_volume",
+      "taker_buy_quote_volume",
+      "ignore"
+    ],
+    "last_row": [
+      "1704153540000",
+      "44210.30000000",
+      "44232.40000000",
+      "44208.20000000",
+      "44232.40000000",
+      "0",
+      "1704153599999",
+      "0",
+      "60",
+      "0",
+      "0",
+      "0"
+    ],
+    "member_name": "BTCUSDT-1m-2024-01-01.csv",
+    "row_count": 1440
+  },
+  "fixture_id": "g12l-binance-usdm-mark-price-klines-v1",
+  "limitations": [
+    "single-symbol-single-day-single-interval-evidence",
+    "raw-archive-and-g12a-handoff-only",
+    "provider-normalizer-not-yet-implemented",
+    "archive-revision-closure-not-yet-proved",
+    "no-g12i-or-g12m-qualification",
+    "decision-grade-eligible-false",
+    "deployment-authorized-false"
+  ],
+  "schema_version": 1,
+  "snapshot": {
+    "content_tree_hash": "sha256:9b12fcf35779d78b2d0293692deb595d54b4506bbb9da6dde44e525a8c968b32",
+    "decision_grade_eligible": false,
+    "deployment_authorized": false,
+    "members": [
+      {
+        "acquired_at_epoch_nanoseconds": 1786920753047737420,
+        "byte_count": 33182,
+        "content_hash": "sha256:660efeefdc875f052051b94c2976babd013f64c6633bf58ba030764771747b90",
+        "declared_sha256": "sha256:660efeefdc875f052051b94c2976babd013f64c6633bf58ba030764771747b90",
+        "member_key": "archive/BTCUSDT-1m-2024-01-01.zip",
+        "mode": "0644"
+      },
+      {
+        "acquired_at_epoch_nanoseconds": 1786920753047737420,
+        "byte_count": 92,
+        "content_hash": "sha256:ea5548dadd83fad69bbc9db3a24560b7d3f988e54299d2c6aa87e85351e05215",
+        "declared_sha256": "sha256:ea5548dadd83fad69bbc9db3a24560b7d3f988e54299d2c6aa87e85351e05215",
+        "member_key": "archive/BTCUSDT-1m-2024-01-01.zip.CHECKSUM",
+        "mode": "0644"
+      }
+    ],
+    "provenance": {
+      "license_ref": "binance.public_data.terms",
+      "retention_policy_ref": "backtest.fixture.retention",
+      "source_key": "binance.public_data.futures.um.daily.mark_price_klines.btcusdt.1m.2024-01-01",
+      "vendor_key": "binance.public_data"
+    },
+    "provenance_hash": "sha256:4dba4a7b2140ac82bc7c736f856b1fa8ea0d2ff58e8e5f7c659f4cb870aed2ca",
+    "schema_version": 1,
+    "snapshot_id": "sha256:df0869271a08320107381a60e9be9012d9645e076ef349c551d34aa332d2be80",
+    "type": "source_snapshot"
+  },
+  "source_hashes": {
+    "archive_sha256": "sha256:660efeefdc875f052051b94c2976babd013f64c6633bf58ba030764771747b90",
+    "checksum_sha256": "sha256:ea5548dadd83fad69bbc9db3a24560b7d3f988e54299d2c6aa87e85351e05215",
+    "csv_sha256": "sha256:71357549ea1f81632e92f1b2ee2677c173a51e8563b0d5dd26ee4f321c7eb378"
+  },
+  "source_urls": {
+    "archive": "https://data.binance.vision/data/futures/um/daily/markPriceKlines/BTCUSDT/1m/BTCUSDT-1m-2024-01-01.zip",
+    "checksum": "https://data.binance.vision/data/futures/um/daily/markPriceKlines/BTCUSDT/1m/BTCUSDT-1m-2024-01-01.zip.CHECKSUM"
+  }
+}

@@ -159,6 +159,7 @@ artifact_hashes: []
 | G12J | DRAFT | trading-domain schema migration | real old artifact | No real source/target schema yet |
 | G12K | DRAFT | market-bundle-builder validation | G12C | Universe/corporate action coverage |
 | G12L-* | DRAFT | market-bundle-builder source adapter | G12A–G12K as applicable | Concrete provider/dataset/version, real raw fixtures, mapping and closure evidence |
+| G12L-BINANCE-USDM-MARK-PRICE-KLINES-V1 | DRAFT / IN PROGRESS | market-bundle-builder Binance USD-M source slice | G10D, G12A–G12D | Provider normalizer, retry/failure contract, archive revision closure, G12C/D evidence |
 | G12M-* | DRAFT | backtest-runtime qualification | market-specific G12L, G07–G10 | Per-market qualification matrix |
 | BT-GAP-01 | PASSED — immutable commit `f2440f9658fbe2ae1cf0016a78c44e4230995394` | trading-domain | WP-02E, Platform BT-PORT-01 | none |
 | BT-GAP-02 | PASSED — immutable commit `39863c58ace1d996f3e814835836ec46e2aa3794` | backtest-runtime facade | BT-GAP-01, G07, BT-GAP-02A, BT-GAP-04 | none |
@@ -11196,8 +11197,88 @@ artifact_hashes: {}
 6. The exact per-provider READY checklist is frozen in
    `docs/implementation/plans/g12/g12l.md`; research authority is
    `docs/research/g12l-provider-adapter-contract.md`.
-7. G12H, G12I, G12K, every concrete G12L-*, and G12M remain `DRAFT / BLOCKED`.
-   This contract grants no decision-grade, live, or deployment authority.
+7. G12H, G12I, G12K, and G12M remain `DRAFT / BLOCKED`. The first concrete
+   G12L slice is `DRAFT / IN PROGRESS`; no concrete G12L slice is PASSED. This
+   contract grants no decision-grade, live, or deployment authority.
+
+## 104A. G12L Binance USDⓈ-M Daily Mark-Price-Kline v1 (Gate remains DRAFT)
+
+```yaml
+id: G12L-BINANCE-USDM-MARK-PRICE-KLINES-V1
+status: DRAFT / IN PROGRESS
+depends_on:
+  - G10D
+  - G12A
+  - G12B
+  - G12C
+  - G12D
+owner_package: market-bundle-builder Binance USD-M source slice
+public_interface:
+  - none yet; raw evidence and exact G12A handoff only
+test_commands:
+  evidence: uv run --locked pytest -q tests/bundle_builder/providers/binance_usdm/test_mark_price_archive_evidence.py
+fixture_ids:
+  - g12l-binance-usdm-mark-price-klines-v1
+expected_artifacts:
+  - docs/research/g12l-binance-usdm-mark-price-klines-v1.md
+  - docs/implementation/plans/g12/g12l-binance-usdm-mark-price-klines-v1.md
+  - tests/fixtures/market_data/providers/binance_usdm/mark-price-klines-v1/BTCUSDT-1m-2024-01-01.zip
+  - tests/fixtures/market_data/providers/binance_usdm/mark-price-klines-v1/BTCUSDT-1m-2024-01-01.zip.CHECKSUM
+  - tests/fixtures/market_data/providers/binance_usdm/mark-price-klines-v1/evidence.expected.json
+frozen_scope:
+  provider: Binance Public Data
+  authority_revision: binance-public-data@5c7f3197
+  market: USD-M Futures
+  dataset: daily markPriceKlines
+  symbol: BTCUSDT
+  interval: 1m
+  utc_date: 2024-01-01
+  archive_rows: 1440
+g12a_evidence:
+  snapshot_id: sha256:df0869271a08320107381a60e9be9012d9645e076ef349c551d34aa332d2be80
+  content_tree_hash: sha256:9b12fcf35779d78b2d0293692deb595d54b4506bbb9da6dde44e525a8c968b32
+  provenance_hash: sha256:4dba4a7b2140ac82bc7c736f856b1fa8ea0d2ff58e8e5f7c659f4cb870aed2ca
+allowed_grade: development
+evidence:
+  - immutable-first-party-authority-revision
+  - finite-two-member-https-scope
+  - sanitized-real-zip-and-checksum-bytes
+  - exact-checksum-and-single-member-zip-layout
+  - exact-1440-row-utc-day-sequence-closure
+  - exact-g12a-snapshot-provenance-and-content-identity
+  - offline-repeatable-fixture-check
+remaining_blockers:
+  - provider-specific-request-result-and-failure-contract
+  - bounded-retry-restart-and-atomic-failure-tests
+  - provider-csv-to-market-event-normalizer-and-source-trace
+  - archive-revision-correction-terminal-closure
+  - g12c-manifest-and-g12d-publication-evidence
+  - full-network-isolation-secret-scan-and-independent-review
+passed_commit: null
+artifact_hashes:
+  archive_sha256: 660efeefdc875f052051b94c2976babd013f64c6633bf58ba030764771747b90
+  checksum_sha256: ea5548dadd83fad69bbc9db3a24560b7d3f988e54299d2c6aa87e85351e05215
+  csv_sha256: 71357549ea1f81632e92f1b2ee2677c173a51e8563b0d5dd26ee4f321c7eb378
+  evidence_fixture_sha256: 09811d1be57087a058542e80ba023c64562ffc6df78e5322829bc00c831501cf
+```
+
+### G12L Binance Mark-Price Evidence Acceptance
+
+1. The first concrete G12L provider, dataset, authority revision, finite request,
+   and real raw bytes are now selected. The common G12L contract no longer waits
+   on provider selection, but this concrete Gate is not PASSED.
+2. The committed Binance ZIP and adjacent checksum exact-match. The ZIP contains
+   one CSV with the frozen provider header and exactly 1440 one-minute rows that
+   internally exact-cover `2024-01-01` UTC. This is fixture closure, not a claim
+   that Binance will never replace the archive or that no provider outage occurred.
+3. The exact two-member G12A snapshot, content-tree, provenance identities and
+   false qualification flags are executable and frozen without network access.
+4. G10D remains the source-semantics authority. A future Builder normalizer must
+   preserve exact provider bytes/times/decimals and purpose separation without
+   importing Trading Kernel types or relabeling the source as synthetic JSONL.
+5. No provider adapter, normalized MarketEvent set, G12C/D publication, revision
+   terminality, G12I/G12M qualification, decision-grade, live, or deployment
+   authority is claimed by this readiness evidence.
 
 ## 105. BT-GAP-01 Domain ArtifactRef
 
