@@ -170,7 +170,7 @@ artifact_hashes: []
 | BT-GAP-05 | PASSED — immutable commit `39863c58ace1d996f3e814835836ec46e2aa3794` | backtest-runtime analysis runtime | BT-GAP-01, BT-GAP-04, BT-GAP-06, G07 | none |
 | BT-GAP-06 | PASSED | backtest-runtime analysis schema | BT-GAP-01, BT-GAP-04, G07 | none |
 | BT-GAP-07 | PASSED — immutable commit `029ac43f6d781567cd0742594ca82c181ead0a6d` | backtest-runtime structural read port | BT-GAP-01, WP-02E | none |
-| BT-GAP-08 | DRAFT / BLOCKED | Backtest package closure | BT-GAP-02, BT-GAP-03, BT-GAP-05, BT-GAP-06 | clean accepted P00 revision and handoff receipt |
+| BT-GAP-08 | PASSED — accepted package revision `9e5937895d7559b8537a4595d73b6aabc94f6f13` | Backtest package closure | BT-GAP-02, BT-GAP-03, BT-GAP-05, BT-GAP-06 | none |
 
 ## 4. WP-00A Acceptance Card
 
@@ -11957,7 +11957,62 @@ remaining_blockers: []
 6. Failure precedence is frozen as ref type, root not found, tamper, manifest invalid, linked retention unavailable, terminal not analyzable, and analysis-link mismatch. Additive Domain errors distinguish not-found from retention-unavailable without changing the structural reader signature.
 7. Acceptance is green: 37 final focused tests and 1715 full-repository tests pass; import boundaries pass across 106 files; the Platform consumer contract passes 15 tests; lock, diff, LSP, and lens checks are clean; the independent fix-verification review reports `NONE`.
 
-## 114. PASSED 记录格式
+## 114. BT-GAP-08 Clean P00 Package Revision
+
+```yaml
+id: BT-GAP-08
+status: PASSED
+depends_on:
+  - BT-GAP-02
+  - BT-GAP-03
+  - BT-GAP-05
+  - BT-GAP-06
+accepted_package_revision: 9e5937895d7559b8537a4595d73b6aabc94f6f13
+accepted_tree: clean detached worktree
+clean_worktree: /tmp/backtest-bt-gap08-clean
+install_command: uv sync --locked
+installed_packages:
+  - crypto-quant-domain==0.1.0
+  - crypto-quant-market-data==0.1.0
+  - crypto-quant-trading==0.1.0
+  - crypto-quant-backtest==0.1.0
+  - crypto-quant-bundle-builder==0.1.0
+executed_commands:
+  - git worktree add --detach /tmp/backtest-bt-gap08-clean 9e5937895d7559b8537a4595d73b6aabc94f6f13
+  - test -z "$(git status --porcelain)"
+  - uv sync --locked
+  - uv run --locked python -c "import crypto_quant_domain, crypto_quant_market_data, crypto_quant_trading, crypto_quant_backtest, crypto_quant_bundle_builder"
+  - uv run --locked pytest -q
+  - uv run --locked python tools/architecture/check_import_boundaries.py --root . --policy architecture/import-boundaries.toml --report /tmp/bt-gap08-import-boundaries.json
+  - uv lock --check
+  - sha256sum uv.lock pyproject.toml packages/*/pyproject.toml
+  - test -z "$(git status --porcelain)"
+test_results:
+  clean_install: 5 workspace packages built and installed
+  public_root_imports: 5 passed
+  full_repository: 1715 passed
+  import_boundaries: 106 files passed
+  final_worktree_status: clean
+package_hashes:
+  uv_lock_sha256: a07106c285b2c454d0528411c79988881b3ff87c0a84d04228d94c186e9d3d8d
+  root_pyproject_sha256: d06e6db31a4050ace93efad2c73c8da532cd4990612a7bcf69bb9e945fb51c4d
+  backtest_runtime_pyproject_sha256: 2d8c0ffbc581ae4e8e75f974f6f4c3d897ca7f24620a8a8955568073f1749e5b
+  market_bundle_builder_pyproject_sha256: ebde64b75bf939308ae2c010d8218df9b322d6c48e5260e6202b981beca97e7a
+  market_data_contracts_pyproject_sha256: 8e63e9a1ea212c3003da3a6e48776f76800d088915a100ae517251cbbe4980cb
+  trading_domain_pyproject_sha256: 6552f027631013c41073f394a3ac8c16326fe56f27313bcc864074255682f734
+  trading_kernel_pyproject_sha256: 68dedd449a9aeb56c9fd547d675cd3029c7a4102af13ac000645913515e5acf2
+remaining_blockers: []
+```
+
+### BT-GAP-08 Acceptance
+
+1. `9e5937895d7559b8537a4595d73b6aabc94f6f13` is the accepted lowercase 40-character Backtest package revision. It contains the accepted Domain `ArtifactRef`, Backtest facade, execution closure, structural reader, completed-only analysis, passive analysis schema, additive completed-publication v2 closure, verified evidence repository, frozen fixtures, and acceptance records through BT-GAP-03.
+2. Acceptance was executed in a fresh detached worktree, not the maintainer's dirty sibling worktree. Both pre-install and post-validation `git status --porcelain` were empty; the pre-existing maintainer `.gitignore` change and untracked Platform dependency note were neither modified nor used as evidence.
+3. `uv sync --locked` built and installed all five workspace packages from the accepted tree and one root lock. Public imports for Domain, Market Data, Trading, Backtest, and Bundle Builder succeeded without `PYTHONPATH`, sibling checkout imports, editable external paths, or a leaf lock.
+4. The clean installed tree passes all 1715 repository tests and all 106 import-boundary files. The exact root lock and all package descriptor hashes are recorded above for Platform handoff.
+5. This receipt closes only Backtest package-revision acceptance. Platform `P00-SEAM-01` still owns the real Foundation structural-reader binding, unchanged BT-PORT consumer suite, integration provider tests, Platform root lock, and fan-in receipt; it must consume this SHA without copying Backtest evidence or semantics.
+
+## 115. PASSED 记录格式
 
 ```yaml
 id: WP-00A
