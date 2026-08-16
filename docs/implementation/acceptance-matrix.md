@@ -164,7 +164,7 @@ artifact_hashes: []
 | BT-GAP-02 | DRAFT / BLOCKED | backtest-runtime | BT-GAP-01, G07, BT-GAP-02A, BT-GAP-04 | No production authority maps every resolved supported request to a `ResolvedExecutionCase` |
 | BT-GAP-02A | DRAFT / BLOCKED | backtest-runtime composition | G07, G08H, G10G, BT-GAP-02B, BT-GAP-02C | Awaiting PASSED persisted execution closure v2 and production profile case composition |
 | BT-GAP-02B | PASSED — immutable commit `9f321780bb2e831bac521722c04af82adbd8e40e` | backtest-runtime execution inputs | BT-GAP-01, G03, G07, G11I, G12E, BT-GAP-07, PLAT-REC-03 | none |
-| BT-GAP-02C | READY | backtest-runtime execution closure | BT-GAP-02B, G07, G08H, G10G, G12E | none |
+| BT-GAP-02C | PASSED | backtest-runtime execution closure | BT-GAP-02B, G07, G08H, G10G, G12E | none |
 | BT-GAP-04 | PASSED — immutable commit `c3257643d6911bd3b63efac0899aa04d47397b05` | backtest-runtime | BT-GAP-01, G07, Platform BT-PORT-01 | none |
 | BT-GAP-06 | DRAFT / BLOCKED | backtest-runtime analysis schema | BT-GAP-01, BT-GAP-04, G07 | Stored payload versus loaded view, missing-metric wire, metric-profile schema, and decimal authority are unresolved |
 | BT-GAP-07 | PASSED — immutable commit `029ac43f6d781567cd0742594ca82c181ead0a6d` | backtest-runtime structural read port | BT-GAP-01, WP-02E | none |
@@ -11347,7 +11347,7 @@ artifact_hashes: {}
 
 ```yaml
 id: BT-GAP-02C
-status: READY
+status: PASSED
 depends_on:
   - BT-GAP-02B immutable execution-input v1
   - G07 execution-case identity and sealing
@@ -11388,10 +11388,38 @@ test_commands:
 evidence:
   - executable-closure field and identity-cycle audit
   - G08H represented component refs match accepted v1 registration
-  - G10G execution/slippage/closeout mismatch reproduced without weakening constructors
+  - G10G executable-v2 execution/slippage/closeout refs bind exact runtime components
+  - exact constructor reconstruction for accepted G08H and G10G plan shapes
   - existing BacktestProfileRegistry remains the only profile selector
+  - contract commit 23efa4fe32ea263aa41522edf0b2845c95f6123d
+  - typed-hydration amendment 73d04563e21b046a26b8b3372eca38dfce59d0d1
+  - constructor-hardening commit 05723dfa7179337ae51d9c3e249dae86a025a782
+  - accepted-profile reconstruction contract 7bb7137f380f40e80105a80af146d1ed707b29ac
+  - implementation commit 3c2a9bd0b3d070ae8a90c535cebb858105a63c62
 remaining_blockers: []
-passed_commit: null
+passed_commit: 3c2a9bd0b3d070ae8a90c535cebb858105a63c62
+executed_commands:
+  - uv run pytest -q tests/runtime/execution_inputs/test_bt_gap02c_execution_closure_contract.py tests/architecture/test_bt_gap02c_execution_closure_boundary.py
+  - uv run pytest -q tests/runtime/execution_inputs/test_execution_input_bundle_contract.py tests/runtime/execution_inputs/test_hydrate_execution_inputs.py tests/architecture/test_bt_gap02b_execution_input_boundary.py
+  - uv run pytest -q
+  - uv run python tools/architecture/check_import_boundaries.py --root . --policy architecture/import-boundaries.toml --report /tmp/bt-gap02c-final-import-boundaries.json
+  - uv lock --check
+  - git diff --check
+  - targeted pyright on changed production files
+  - mypy across 100 source files
+results:
+  contract_and_boundary: 12 passed
+  inherited_bt_gap02b: 23 passed
+  g08h: 39 passed
+  g10g: 13 passed
+  domain_artifacts: 13 passed
+  component_derivative_ledger: 127 passed
+  full_repository: 1627 passed
+  import_boundaries: 100 files passed
+  targeted_pyright: 0 errors
+  mypy: 100 source files, no issues
+validation_gaps:
+  - full pyright retains 8 pre-existing unrelated errors in ArtifactEnvelopeReader exports, composition.py, and capabilities.py
 artifact_hashes:
   fixture_sha256: c082042640382dde2dad61f758058ab93c3ba741ed19df0256d7989a157eced1
   bundle_content_hash: sha256:887cc5e056cb46dfb785598eb36261f9bba6af269e87b42538f86234460b6252
@@ -11411,7 +11439,8 @@ artifact_hashes:
 6. `BacktestExecutionRequest` supports additive wire schema version 2 only when its single ref is `backtest_execution_input_bundle@2`. Its v1 constructor behavior and canonical bytes remain unchanged. The transport remains a value, not an Artifact, and has no second identity/ref/path/status/repository metadata.
 7. CnA executable composition continues to use its accepted v1 simulation profile because its represented execution and closeout refs match concrete runtime components. Binance adds `bar.next_eligible_open.conservative.v2` through `BinanceUsdmProfileComposer.compose_executable`; v2 uses the exact concrete `next_eligible_bar_open.v1`, `zero_slippage.development.v1`, and `mark_to_market.v1` identities. G10G v1 remains immutable profile-composition evidence and is not mutated or reinterpreted as executable closure.
 8. The existing `BacktestProfileRegistry` remains the only selector. Bundle hydration and generic runtime contain no CnA/Binance branch, profile plan registry, builder factory, hidden adapter, callback graph, or mutable profile state.
-9. Contract RED is exact: the fixture/preservation assertion passes; four behavior assertions fail only for absent bundle-v2 materialization, transport-v2 acceptance, typed plan hydration, and Binance executable profile v2. Boundary RED has two intentional failures and two ownership/preservation checks passing. No production implementation is included in this freeze.
+9. Implementation reconstructs accepted G08H nonempty Journal/Lot/snapshot/scheduled-event plans and G10G order/admission/reservation plus linear derivative/funding/margin plans through exact constructors. Opaque canonical wrappers remain limited to fields whose runtime contract is intentionally canonical payload; they do not impersonate typed values or bypass constructor invariants.
+10. Acceptance passed with 12 focused contract/boundary tests, 23 inherited BT-GAP-02B tests, 39 G08H tests, 13 G10G tests, 13 Domain artifact tests, 127 component/derivative/ledger checks, 100-file import-boundary verification, and the full 1627-test repository suite. Frozen v1/v2 fixture hashes remain unchanged.
 
 ## 108. BT-GAP-02B Production Execution-Input Hydration Contract
 
