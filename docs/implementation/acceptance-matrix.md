@@ -160,7 +160,7 @@ artifact_hashes: []
 | G12K | DRAFT | market-bundle-builder validation | G12C | Universe/corporate action coverage |
 | G12L-* | DRAFT | market-bundle-builder source adapter | G12A–G12K as applicable | Concrete provider/dataset/version, real raw fixtures, mapping and closure evidence |
 | G12M-* | DRAFT | backtest-runtime qualification | market-specific G12L, G07–G10 | Per-market qualification matrix |
-| BT-GAP-01 | READY | trading-domain | WP-02E, Platform BT-PORT-01 | none |
+| BT-GAP-01 | PASSED — immutable commit `f2440f9658fbe2ae1cf0016a78c44e4230995394` | trading-domain | WP-02E, Platform BT-PORT-01 | none |
 
 ## 4. WP-00A Acceptance Card
 
@@ -11193,7 +11193,7 @@ artifact_hashes: {}
 
 ```yaml
 id: BT-GAP-01
-status: READY
+status: PASSED
 depends_on:
   - WP-02E
   - Platform BT-PORT-01 consumer contract
@@ -11223,9 +11223,27 @@ evidence:
   - inherited-envelope-byte-compatibility
   - public-domain-root-import
   - focused-pytest-report
-passed_commit: null
+contract_freeze_commit: 80d44c81645a4ea1a19bb786150e774cf0055e0f
+passed_commit: f2440f9658fbe2ae1cf0016a78c44e4230995394
+executed_commands:
+  - uv run pytest -q --junitxml=build/acceptance/bt-gap-01-pytest.xml tests/domain/artifacts/test_artifact_ref.py tests/domain/artifacts/test_artifact_envelope_golden.py tests/domain/artifacts/test_schema_catalog.py tests/architecture/test_public_api_imports.py tests/architecture/test_import_boundary_mutations.py
+  - uv run pytest -q
+  - uvx --from mypy==2.3.0 mypy --python-version 3.13 packages/trading-domain/src/crypto_quant_domain/artifacts.py packages/trading-domain/src/crypto_quant_domain/__init__.py
+  - MYPYPATH=packages/trading-domain/src uvx --from mypy==2.3.0 --with pytest==8.4.2 mypy --python-version 3.13 tests/domain/artifacts/test_artifact_ref.py
+  - uv run python tools/architecture/check_import_boundaries.py --root . --policy architecture/import-boundaries.toml --report build/acceptance/bt-gap-01-import-boundary-report.json
+  - uv lock --check
+  - git diff --check
+test_results:
+  focused_and_inherited: 44 passed
+  full_repository: 1581 passed
+  platform_consumer_contract: 14 passed
+  independent_reviews: NONE / NONE
 artifact_hashes:
   tests/fixtures/domain/artifact-ref-v1.json: sha256:f1153b2b06ac0fff60ec50a0f4eca26b3e3a798cb149f185178a2deec791c75e
+  tests/fixtures/domain/artifact-envelope-catalog-v1.json: sha256:ec5138bcc003ecd59a1821f20999bfea3072493e3dfccf8cd781b4f4963b7e16
+  build/acceptance/bt-gap-01-pytest.xml: sha256:cc1213a24d2ca56d5bfcad9ff63698579172e4b3895c85ad5effc224f46e9060
+  build/acceptance/bt-gap-01-import-boundary-report.json: sha256:55593051b06645b1ae73420cfe0d110dabb19ccd18b245e6ac17343d400e4678
+  uv.lock: sha256:a07106c285b2c454d0528411c79988881b3ff87c0a84d04228d94c186e9d3d8d
 ```
 
 ### BT-GAP-01 Acceptance
@@ -11235,7 +11253,7 @@ artifact_hashes:
 3. `ArtifactRef.from_envelope()` accepts only an exact `ArtifactEnvelope` and reconstructs all three coordinate fields. It does not decode, store, or verify external bytes.
 4. The ref contains no Payload, source hash, path, timestamp, repository identity, governance status, or Platform type.
 5. WP-02E `ArtifactEnvelope` and `artifact-envelope-catalog-v1` bytes/hashes remain unchanged. No migration, repository, facade, tagged Backtest ref, analysis, structural reader, registry, or BT-GAP-02+ behavior is introduced.
-6. `READY → PASSED` requires an immutable implementation commit, actual command outputs, the focused JUnit artifact hash, full regression evidence, and independent review.
+6. Contract freeze commit `80d44c81645a4ea1a19bb786150e774cf0055e0f` and implementation commit `f2440f9658fbe2ae1cf0016a78c44e4230995394` are immutable. Focused/inherited tests passed 44, the full repository passed 1581, the unchanged Platform consumer contract passed 14, and both independent final reviews returned `NONE`.
 
 ## 106. PASSED 记录格式
 
