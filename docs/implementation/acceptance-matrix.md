@@ -161,7 +161,8 @@ artifact_hashes: []
 | G12L-* | DRAFT | market-bundle-builder source adapter | G12A–G12K as applicable | Concrete provider/dataset/version, real raw fixtures, mapping and closure evidence |
 | G12M-* | DRAFT | backtest-runtime qualification | market-specific G12L, G07–G10 | Per-market qualification matrix |
 | BT-GAP-01 | PASSED — immutable commit `f2440f9658fbe2ae1cf0016a78c44e4230995394` | trading-domain | WP-02E, Platform BT-PORT-01 | none |
-| BT-GAP-02 | DRAFT / UNBLOCKED | backtest-runtime | BT-GAP-01, BT-GAP-04 | Freeze the run-only facade contract against PASSED `RunPublicationRef` |
+| BT-GAP-02 | DRAFT / BLOCKED | backtest-runtime | BT-GAP-01, BT-GAP-02A, BT-GAP-04 | No production authority maps every resolved supported request to a `ResolvedExecutionCase` |
+| BT-GAP-02A | DRAFT / UNBLOCKED | backtest-runtime composition | G07, G08H, G10G | Freeze one profile-owned production execution-case composition authority by deepening existing seams |
 | BT-GAP-04 | PASSED — immutable commit `c3257643d6911bd3b63efac0899aa04d47397b05` | backtest-runtime | BT-GAP-01, G07, Platform BT-PORT-01 | none |
 
 ## 4. WP-00A Acceptance Card
@@ -11261,10 +11262,11 @@ artifact_hashes:
 
 ```yaml
 id: BT-GAP-02
-status: DRAFT / UNBLOCKED
+status: DRAFT / BLOCKED
 depends_on:
   - BT-GAP-01
   - G07
+  - BT-GAP-02A production execution-case composition authority
   - BT-GAP-04 tagged publication contract
 owner_package: backtest-runtime
 public_interface: []
@@ -11275,25 +11277,60 @@ expected_artifacts:
 failure_contracts: []
 allowed_grade: development
 evidence:
-  - existing request-resolution-composition-runner-publication flow analysis
-remaining_blockers: []
-next_contract_decisions:
-  - freeze the run-only facade name and existing public request input
-  - freeze only the minimum constructor dependencies needed to reuse G07 authorities
-  - freeze provider/storage failure precedence without converting failures to terminals
-  - freeze fixture and RED tests against PASSED RunPublicationRef
+  - production request-resolution-composition-runner-publication flow analysis
+remaining_blockers:
+  - ProfileResolver stops at ResolvedBacktestRequest
+  - ExecutionCaseComposer requires a caller-selected private _ExecutionCaseBuilder
+  - production has no concrete _ExecutionCaseBuilder and no existing authority selects one for every supported profile tuple
+  - BT-GAP-02A must close that seam without a second registry, dispatcher, factory, Protocol, callback graph, or tests/support dependency
 passed_commit: null
 artifact_hashes: {}
 ```
 
 ### BT-GAP-02 Readiness
 
-1. Existing G07 authorities already own request resolution, composition, Attempt execution, integrity evaluation, terminal semantics, cache verification, and canonical publication. BT-GAP-02 will eventually hide their sequencing behind one deep public `run` interface; it must not reimplement them.
-2. BT-GAP-04 now supplies the PASSED direct `RunPublicationRef` return contract. Implementation absence is not a blocker; BT-GAP-02 is ready for its own contract-freeze phase.
-3. BT-GAP-02 owns only the run facade. Repository loads remain BT-GAP-03, tagged refs/outcome remain BT-GAP-04, analysis remains BT-GAP-05/06, and structural reader injection remains BT-GAP-07.
-4. No BT-GAP-02 fixture, RED test, facade name, constructor dependency list, or failure precedence is frozen yet. The gate is `DRAFT / UNBLOCKED`, not `READY` or `PASSED`.
+1. Existing G07 authorities own request resolution, Attempt execution, integrity evaluation, terminal semantics, cache verification, and canonical publication. BT-GAP-04 supplies the direct `RunPublicationRef` return contract.
+2. The production chain is nevertheless incomplete before execution: `ProfileResolver` returns `ResolvedBacktestRequest`, while `ExecutionCaseComposer.compose()` requires an externally selected `_ExecutionCaseBuilder`. Production contains no concrete implementation or profile-tuple selection authority for that private seam.
+3. Passing `ResolvedBacktestRequest`, `ResolvedExecutionCase`, a builder, Resolver, Registry, Composer, or Runner into the public facade would expose the orchestration BT-GAP-02 must hide. Using `tests/support` would be non-production evidence. Adding a second registry/dispatcher/factory would duplicate `BacktestProfileRegistry` authority.
+4. BT-GAP-02 therefore remains `DRAFT / BLOCKED` on BT-GAP-02A. Repository loads remain BT-GAP-03, analysis BT-GAP-05/06, and structural reader injection BT-GAP-07.
 
-## 107. BT-GAP-04 Publication Reference Contract
+## 107. BT-GAP-02A Production Execution-Case Composition Authority
+
+```yaml
+id: BT-GAP-02A
+status: DRAFT / UNBLOCKED
+depends_on:
+  - G07
+  - G08H production CnA profile composition
+  - G10G production Binance USDM profile composition
+owner_package: backtest-runtime composition
+public_interface: []
+test_commands: {}
+fixture_ids: []
+expected_artifacts:
+  - future profile-owned production execution-case composition contract
+failure_contracts: []
+allowed_grade: development
+evidence:
+  - production composer and registry authority analysis
+next_contract_decisions:
+  - define the minimum profile-owned inputs required to construct a ResolvedExecutionCase
+  - deepen BacktestProfileRegistry or its existing registrations rather than introduce a parallel selector
+  - bind the resolved market, simulation, and account profile tuple to exactly one production case-construction authority
+  - preserve ExecutionCaseComposer as the semantic validation and identity-sealing authority
+  - keep every tests/support builder and development dispatcher outside production
+passed_commit: null
+artifact_hashes: {}
+```
+
+### BT-GAP-02A Readiness
+
+1. Binance USDM and CnA production profile composers own profile-specific resolution but require different evidence-rich inputs and currently build isolated single-profile registries.
+2. `BacktestProfileRegistry` is the existing profile selection authority. BT-GAP-02A may deepen that seam or its registrations; it must not create a second registry, generic plugin system, factory, callback graph, or runtime branch table.
+3. The outcome must be one production-owned path from a valid `ResolvedBacktestRequest` and its already-authoritative inputs to one `ResolvedExecutionCase`, with `ExecutionCaseComposer` retaining semantic validation and identity sealing.
+4. Exact public names, constructor shape, fixture, and RED tests remain unfrozen. BT-GAP-02A is `DRAFT / UNBLOCKED`; BT-GAP-02 resumes only after this contract passes.
+
+## 108. BT-GAP-04 Publication Reference Contract
 
 ```yaml
 id: BT-GAP-04
@@ -11362,7 +11399,7 @@ artifact_hashes:
 6. G07 canonicalized finalized structures remain unchanged and are validated against the existing G07 golden fixture.
 7. Contract freeze commit `033af1fdc029e48c74fc3cae5eca08b4b3ef2e19` and implementation commit `c3257643d6911bd3b63efac0899aa04d47397b05` are immutable. Focused/inherited tests passed 42, the full repository passed 1586, Platform BT-PORT-01 passed 14, type/import checks passed, and both independent final reviews returned `NONE`.
 
-## 108. PASSED 记录格式
+## 109. PASSED 记录格式
 
 ```yaml
 id: WP-00A
