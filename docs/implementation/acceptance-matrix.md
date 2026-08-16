@@ -162,7 +162,7 @@ artifact_hashes: []
 | G12M-* | DRAFT | backtest-runtime qualification | market-specific G12L, G07–G10 | Per-market qualification matrix |
 | BT-GAP-01 | PASSED — immutable commit `f2440f9658fbe2ae1cf0016a78c44e4230995394` | trading-domain | WP-02E, Platform BT-PORT-01 | none |
 | BT-GAP-02 | DRAFT / BLOCKED | backtest-runtime | BT-GAP-01, G07, BT-GAP-02A, BT-GAP-04 | No production authority maps every resolved supported request to a `ResolvedExecutionCase` |
-| BT-GAP-02A | DRAFT / BLOCKED | backtest-runtime composition | G07, G08H, G10G, BT-GAP-02B, BT-GAP-02C | Awaiting PASSED persisted execution closure v2 and production profile case composition |
+| BT-GAP-02A | READY | backtest-runtime composition | G07, G08H, G10G, BT-GAP-02B, BT-GAP-02C | none |
 | BT-GAP-02B | PASSED — immutable commit `9f321780bb2e831bac521722c04af82adbd8e40e` | backtest-runtime execution inputs | BT-GAP-01, G03, G07, G11I, G12E, BT-GAP-07, PLAT-REC-03 | none |
 | BT-GAP-02C | PASSED | backtest-runtime execution closure | BT-GAP-02B, G07, G08H, G10G, G12E | none |
 | BT-GAP-04 | PASSED — immutable commit `c3257643d6911bd3b63efac0899aa04d47397b05` | backtest-runtime | BT-GAP-01, G07, Platform BT-PORT-01 | none |
@@ -11302,7 +11302,7 @@ artifact_hashes: {}
 
 ```yaml
 id: BT-GAP-02A
-status: DRAFT / BLOCKED
+status: READY
 depends_on:
   - G07
   - G08H production CnA profile composition
@@ -11311,37 +11311,55 @@ depends_on:
   - BT-GAP-02C persisted execution closure v2
 owner_package: backtest-runtime composition
 public_interface: []
-test_commands: {}
-fixture_ids: []
+private_interface:
+  - crypto_quant_backtest.composition._ExecutionCasePlan
+  - crypto_quant_backtest.composition._HydratedExecutionCaseInputs
+  - crypto_quant_backtest.composition._compose_execution_case
+  - _HydratedExecutionInputs.execution_case
+test_commands:
+  contract_red: uv run pytest -q tests/runtime/execution_inputs/test_bt_gap02a_composition_contract.py
+  boundary_red: uv run pytest -q tests/architecture/test_bt_gap02a_composition_boundary.py
+  inherited: uv run pytest -q tests/runtime/execution_inputs/test_bt_gap02c_execution_closure_contract.py tests/architecture/test_bt_gap02c_execution_closure_boundary.py
+  lock: uv lock --check
+  diff: git diff --check
+fixture_ids:
+  - bt-gap02a-production-composition-v2
 expected_artifacts:
-  - future profile-owned production execution-case composition contract
+  - one exact sealed ResolvedExecutionCase returned by v2 hydration
 failure_contracts:
   - execution-closure-v2-unavailable-or-invalid
-  - production-profile-case-composition-unavailable
   - reconstructed-case-semantic-or-identity-mismatch
   - g12e-target-or-timeline-binding-mismatch
+  - selected-profile-component-ref-mismatch
 allowed_grade: development
 evidence:
-  - existing-selector ownership audit
-  - failed implementation audit at contract commit 3dbf171960e18f45d0f8216dfb175f864f065bdc
-  - G10G execution/slippage/closeout component mismatch reproduced
-  - speculative duplicate initial-state decoder and weakened component validators removed before commit
-remaining_blockers:
-  - BT-GAP-02C must implement and pass bundle-v2 materialization, typed plan hydration, transport-v2 acceptance, and Binance executable profile v2
-  - production CnA/Binance provider code must construct a sealed case while it still owns the rich ResolvedProfile; tests/support cannot remain that authority
-  - the package-private runtime composition seam must reconstruct the case from the typed persisted plan plus G12E timeline/target and re-verify semantic and identity closure
+  - BT-GAP-02C PASSED typed persisted plan and executable Binance v2
+  - accepted CnA v1 and Binance executable-v2 registration refs
+  - superseded hidden simulation-implementation builder rejected
+remaining_blockers: []
+contract_commit: null
 passed_commit: null
-artifact_hashes: {}
+test_results:
+  fixture_and_boundary_preservation: 5 passed
+  intentional_red: 4 failed
+artifact_hashes:
+  fixture_sha256: bfa0ddff37bb6e1c813f50da14db4abcc2fab76fa8262c522fbf5facb1b5f764
+  preserved_bt_gap02b_fixture_sha256: 09578ac47f997bc4bf55119d31e97dbcad3eb71e90d93a5ef7c8e6669bd66be2
+  preserved_bt_gap02c_fixture_sha256: c082042640382dde2dad61f758058ab93c3ba741ed19df0256d7989a157eced1
+  preserved_cn_a_profile_fixture_sha256: aa032668a5207b61b6c8815894e0087f1c1e734d41e9707c7d32111b6c1cd79f
+  preserved_binance_profile_fixture_sha256: e9e329b4cd2dfd990a8eec8460767b6b05fffcc126e876a2cdf86f15a6d06bd9
 ```
 
 ### BT-GAP-02A Readiness
 
-1. BT-GAP-02C owns the serialization seam that was missing from the first speculative contract. Rich profile data is consumed while still available to provider-side Backtest code, reduced to one sealed request-bound execution plan, and persisted without serializing `ResolvedProfile`, Registry, implementation objects, callbacks, or MarketEvent bytes.
-2. Runtime BT-GAP-02A consumes only the typed v2 plan, resolved request, and G12E reader. It does not require hidden state on `SimulationProfileRegistration.implementation`, a second selector, or profile branches in generic runtime.
-3. The single v2 reader belongs to `execution_inputs`; `composition.py` receives typed Domain/Kernel values and must not duplicate canonical decoding. Stored semantic-run-derived IDs are re-derived from the accepted identity plan before case sealing.
-4. CnA may retain its accepted v1 simulation registration. Binance runtime composition must use the additive executable v2 registration from BT-GAP-02C; G10G v1 bytes remain immutable and are not weakened or reinterpreted.
-5. Contract commit `3dbf171960e18f45d0f8216dfb175f864f065bdc` remains superseded. BT-GAP-02A resumes only after BT-GAP-02C passes and production profile-side sealed-case construction replaces tests/support authority.
-6. BT-GAP-02 remains blocked. No public builder, second registry/factory, hidden adapter, Attempt, publication, or partial evidence is introduced by this dependency rewrite.
+1. BT-GAP-02C is the only persisted execution-plan and canonical-decoding authority. It already accepts a provider-side sealed case, stores its complete non-market typed plan, reloads target/timeline bytes through G12E, and rejects component, semantic, and identity mismatches before Attempt creation.
+2. BT-GAP-02A deepens composition rather than restoring the superseded hidden builder. `_ExecutionCasePlan` moves to `composition.py`; `_HydratedExecutionCaseInputs` packages the typed plan, semantic spec, stream keys, target stream, and batch size; `_compose_execution_case` accepts only that value plus the resolved request and G12E reader.
+3. Runtime composition is profile-neutral. It contains no CnA/Binance branch, second `BacktestProfileRegistry`, registration lookup, `implementation._build_execution_case`, factory, Protocol, callback graph, adapter, or `tests/support` dependency. Accepted profile ownership is already reduced to the persisted plan before runtime hydration.
+4. `_compose_execution_case` reconstructs Timeline and identity authority from typed values, creates one exact `ResolvedExecutionCase`, recomputes the semantic spec, and verifies the complete identity manifest. `_hydrate_execution_inputs` returns that sealed case for the future BT-GAP-02 facade rather than exposing a second composition path.
+5. CnA retains its accepted v1 simulation registration. Binance uses the additive executable v2 registration from BT-GAP-02C. The contract fixture freezes all six selected simulation refs for each profile and preserves G08H/G10G v1 fixture bytes.
+6. `composition.py` receives no JSON/Mapping payload and owns no SchemaCatalog or reader. `execution_inputs.py` remains the sole v1/v2 decoder and structural-bundle hydration authority; G12E remains the sole MarketEvent source.
+7. The old `3dbf171960e18f45d0f8216dfb175f864f065bdc` shape remains superseded: selected registration implementations do not gain private builders and the generic runtime never dispatches through hidden implementation state.
+8. Contract RED is intentional: five fixture/preservation/ownership checks pass; four assertions fail only because the private typed composition input/entry and hydrated exact-case result are absent.
 
 ## 107A. BT-GAP-02C Persisted Execution Closure v2
 

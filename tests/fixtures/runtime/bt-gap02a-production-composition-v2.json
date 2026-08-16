@@ -1,0 +1,130 @@
+{
+  "fixture_id": "bt-gap02a-production-composition-v2",
+  "schema_version": 1,
+  "private_entry_point": "crypto_quant_backtest.composition._compose_execution_case",
+  "private_input_type": "crypto_quant_backtest.composition._HydratedExecutionCaseInputs",
+  "profiles": [
+    {
+      "profile_id": "cn_a_share",
+      "market_profile_key": "equity.cn_a_share.v1",
+      "simulation_profile_key": "bar.next_eligible_open.cn_a_share.development.v1",
+      "execution_account_profile_key": "equity.cn_a_share.cash.long-only.v1",
+      "simulation_component_refs": [
+        {
+          "type": "simulation_component_ref",
+          "port_type": "closeout_policy",
+          "component_key": "mark_to_market.v1",
+          "component_version": 1,
+          "component_digest": "sha256:d9be291bff3147a191296ec5b3d37cc79aecc9ee2bff4877d7bca86f9aeb0ea8"
+        },
+        {
+          "type": "simulation_component_ref",
+          "port_type": "execution_model",
+          "component_key": "next_eligible_bar_open.v1",
+          "component_version": 1,
+          "component_digest": "sha256:d69d6d96c9081f730db6ff8cdd02431d4babdef2e3967f0094971e73aedf30fe"
+        },
+        {
+          "type": "simulation_component_ref",
+          "port_type": "latency_model",
+          "component_key": "latency.zero.development.v1",
+          "component_version": 1,
+          "component_digest": "sha256:8a0c438f1f3d2d3983324e320593a85a8d8a6a4b807249018a2f06e604b9cf8d"
+        },
+        {
+          "type": "simulation_component_ref",
+          "port_type": "liquidation_audit_model",
+          "component_key": "cash.no-liquidation-audit.v1",
+          "component_version": 1,
+          "component_digest": "sha256:2cce82368126aca72a49690cb11e083af7fd857e1b0cd46894515d89f09e5955"
+        },
+        {
+          "type": "simulation_component_ref",
+          "port_type": "liquidity_model",
+          "component_key": "liquidity.next-bar-full-fill.development.v1",
+          "component_version": 1,
+          "component_digest": "sha256:8a0c438f1f3d2d3983324e320593a85a8d8a6a4b807249018a2f06e604b9cf8d"
+        },
+        {
+          "type": "simulation_component_ref",
+          "port_type": "slippage_model",
+          "component_key": "zero_slippage.development.v1",
+          "component_version": 1,
+          "component_digest": "sha256:43c1790abfe4220ba22537b33db0fe810e2f1f162794916584a51fa4f765b650"
+        }
+      ]
+    },
+    {
+      "profile_id": "binance_usdm",
+      "market_profile_key": "crypto.binance_usdm.v1",
+      "simulation_profile_key": "bar.next_eligible_open.conservative.v2",
+      "execution_account_profile_key": "binance.usdm.standard-cross.v1",
+      "simulation_component_refs": [
+        {
+          "type": "simulation_component_ref",
+          "port_type": "closeout_policy",
+          "component_key": "mark_to_market.v1",
+          "component_version": 1,
+          "component_digest": "sha256:d9be291bff3147a191296ec5b3d37cc79aecc9ee2bff4877d7bca86f9aeb0ea8"
+        },
+        {
+          "type": "simulation_component_ref",
+          "port_type": "execution_model",
+          "component_key": "next_eligible_bar_open.v1",
+          "component_version": 1,
+          "component_digest": "sha256:d69d6d96c9081f730db6ff8cdd02431d4babdef2e3967f0094971e73aedf30fe"
+        },
+        {
+          "type": "simulation_component_ref",
+          "port_type": "latency_model",
+          "component_key": "latency.zero.development.v1",
+          "component_version": 1,
+          "component_digest": "sha256:5037407390dedc9e52fb16dcf8e33672fc55d575cffe2edec021e2b1faf26f97"
+        },
+        {
+          "type": "simulation_component_ref",
+          "port_type": "liquidation_audit_model",
+          "component_key": "conservative.linear-perpetual.liquidation-audit.v1",
+          "component_version": 1,
+          "component_digest": "sha256:964c7a9a0a30deaf872b3ed7563684bbc7c0af9437dc71bbbe2bc7f3da9d2422"
+        },
+        {
+          "type": "simulation_component_ref",
+          "port_type": "liquidity_model",
+          "component_key": "liquidity.next-bar-full-fill.development.v1",
+          "component_version": 1,
+          "component_digest": "sha256:5037407390dedc9e52fb16dcf8e33672fc55d575cffe2edec021e2b1faf26f97"
+        },
+        {
+          "type": "simulation_component_ref",
+          "port_type": "slippage_model",
+          "component_key": "zero_slippage.development.v1",
+          "component_version": 1,
+          "component_digest": "sha256:89f95a5f0178b9dca1cfdbe620f1529daf4e810149686ca64ff04d13775bd70d"
+        }
+      ]
+    }
+  ],
+  "composition_invariants": [
+    "accepted_execution_input_bundle_v2_is_the_only_persisted_case_plan_authority",
+    "execution_inputs_is_the_only_canonical_decoder",
+    "composition_receives_typed_values_and_reloads_market_data_through_g12e",
+    "timeline_target_semantic_spec_and_identity_manifest_are_reverified",
+    "represented_simulation_components_equal_selected_registration_refs",
+    "hydration_returns_one_exact_sealed_resolved_execution_case",
+    "failure_occurs_before_attempt_or_publication"
+  ],
+  "forbidden_runtime_ownership": [
+    "simulation_registration_implementation_hidden_builder",
+    "second_profile_selector",
+    "profile_branch_table",
+    "tests_support_dependency",
+    "second_decoder_or_schema_catalog"
+  ],
+  "preserved_fixture_sha256": {
+    "bt_gap02b_execution_input_bundle_v1": "09578ac47f997bc4bf55119d31e97dbcad3eb71e90d93a5ef7c8e6669bd66be2",
+    "bt_gap02c_execution_closure_v2": "c082042640382dde2dad61f758058ab93c3ba741ed19df0256d7989a157eced1",
+    "cn_a_share_resolved_profile_composition_v1": "aa032668a5207b61b6c8815894e0087f1c1e734d41e9707c7d32111b6c1cd79f",
+    "binance_usdm_resolved_profile_composition_v1": "e9e329b4cd2dfd990a8eec8460767b6b05fffcc126e876a2cdf86f15a6d06bd9"
+  }
+}
