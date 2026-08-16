@@ -49,13 +49,32 @@
   "fixture_id": "g12l-binance-usdm-mark-price-klines-v1",
   "limitations": [
     "single-symbol-single-day-single-interval-evidence",
-    "raw-archive-and-g12a-handoff-only",
-    "provider-normalizer-not-yet-implemented",
+    "archive-availability-is-late-g12a-acquisition-time",
     "archive-revision-closure-not-yet-proved",
     "no-g12i-or-g12m-qualification",
     "decision-grade-eligible-false",
     "deployment-authorized-false"
   ],
+  "provider_result": {
+    "bundle_ref": {
+      "bundle_key": "binance-usdm-mark-price-btcusdt-2024-01-01",
+      "manifest_hash": "sha256:9a23df29531073637259722e353685c97283be0489ec0b6e51c12e7b64cfeabd",
+      "type": "market_bundle_ref"
+    },
+    "capture_hash": "sha256:b1b9d1bc5d85e6d97a3eb1ab6fee60a37983f378137ad979acda43193b314be9",
+    "event_count": 4320,
+    "first_event_hash": "sha256:eff31f1154aea177dc7e857fbf4a0d6fff4e92461fe4cfeaecf9a09f81833643",
+    "last_event_hash": "sha256:220d70cf2e4f366e31b78f6efeaaf9fd158aac1bcdd1c7dfce3f0e3d578be560",
+    "manifest_content_hash": "sha256:048e1247e9346445f3764de27b123e5d90bfae9d618b3a5f7b5fa853abd1807d",
+    "normalization_hash": "sha256:77ac62498fc78d6ac7b10840eceb0d6b968e8c6024ba5e207ebb985dd72a3a51",
+    "request_hash": "sha256:6339107fdfc8c93ce11d1c56c5d5ba5a4a05442c6e3071f2651649e4d5675f27",
+    "retention_proof_hash": "sha256:4c71cf3cbf27b9a3129d6a3d460775ceed53528880f67c1aaedd85fe97ff5458",
+    "stream_content_hashes": {
+      "binance_usdm.mark_price.liquidation.btcusdt.1m.v1": "sha256:68fe04fe46509778eec1bcea26d8e2d90f5b276ebe39b94332e28521e58923dc",
+      "binance_usdm.mark_price.margin.btcusdt.1m.v1": "sha256:bcc749f1d5187adf7433e23b2224e4dcd6890c228614c3c396bacc55d97db468",
+      "binance_usdm.mark_price.valuation.btcusdt.1m.v1": "sha256:19f69ff09437ab1b419679cbd706ef38827608a85ac9dc8fafb36572b1fde8ad"
+    }
+  },
   "schema_version": 1,
   "snapshot": {
     "content_tree_hash": "sha256:9b12fcf35779d78b2d0293692deb595d54b4506bbb9da6dde44e525a8c968b32",

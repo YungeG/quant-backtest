@@ -100,29 +100,24 @@ The accepted G10D primary-source decision remains authoritative:
 - provider open/high/low/close decimal strings and millisecond times remain exact;
 - archive capture time is not substituted for economic event/close time.
 
-G12L still needs a Builder-owned provider normalizer and source↔event trace. The
-CSV proves provider close times but not when each final row became knowable, so
-`available_time = close_time + 1ms` is forbidden. The conservative v1 authority
-is instead the exact G12A archive member acquisition timestamp: all rows become
-available only at that later instant. This prevents lookahead but intentionally
-cannot qualify an intraday 2024 replay; G12M remains blocked until stronger
-immutable provider publication evidence exists. The future normalizer must not
-import Trading Kernel provider types or label provider rows as the existing
-synthetic JSONL grammar.
+The Builder-owned provider module now freezes the source↔event trace without a
+generic adapter framework or Trading Kernel import. It emits separate VALUATION
+and MARGIN point streams plus LIQUIDATION bar evidence. Every event retains exact
+provider economic times and uses the G12A archive member acquisition timestamp as
+its later availability. `available_time = close_time + 1ms` remains forbidden.
 
-## Remaining closure work
+## Implemented boundary and residual limits
 
-1. Freeze the provider-specific, purpose-separated normalization result and exact
-   mapping to generic `MarketEvent` values without adding a generic adapter framework.
-2. Bind every normalized `available_time` to the G12A archive member acquisition
-   timestamp and preserve provider close time separately as economic time.
-3. Implement strict checksum/ZIP/CSV validation and atomic mapping failures,
-   including malformed/encrypted ZIP members and mixed-fault precedence.
-4. Freeze bounded transport retry/restart behavior with injected offline fakes;
-   no partial G12A handoff may escape.
-5. Map HTTP/provider and content failures to the common G12L precedence.
-6. Prove archive revision/correction terminality or record a finite causal limit;
-   the public README explicitly permits later archive updates.
-7. Produce G12C manifest and G12D publication evidence from the normalized set.
-8. Keep G12I/G12M and all decision/live/deployment flags false until their own
-   provider-backed closure evidence passes.
+1. Capture uses exactly two fixed URLs, three bounded attempts, injected byte
+   fetching, atomic G12A handoff, and the common failure precedence.
+2. Exact archive/checksum/snapshot/provenance identity is revalidated at capture
+   and normalization. Replacement, malformed, encrypted, missing-member, or
+   wrong-provenance evidence fails before any normalized authority is exposed.
+3. Normalization emits 4320 purpose-separated events with exact source traces;
+   G12C validates three 1440-event streams and G12D publishes them atomically.
+4. The frozen revision causal limit is the exact archive hash/checksum at the G12A
+   acquisition instant. Later provider replacement requires a new slice/version;
+   no latest or silent supersession claim is made.
+5. Because availability is the later archive acquisition time, this slice cannot
+   qualify an intraday 2024 replay. G12I/G12M and all decision/live/deployment
+   flags remain false until stronger provider-backed evidence passes.

@@ -32,13 +32,13 @@ real old artifact          → G12J
 | G12J | Schema migration | real old artifact | trading-domain migration |
 | [G12K](g12k.md) | Universe/corporate-action coverage — readiness `BLOCKED`, Gate `DRAFT` | G12C + normalized schemas/closure declarations | builder validation |
 | [G12L-*](g12l.md) | Provider source qualification — common contract frozen | applicable G12A–K + real provider evidence | provider-specific slices only |
-| [G12L-BINANCE-USDM-MARK-PRICE-KLINES-V1](g12l-binance-usdm-mark-price-klines-v1.md) | First concrete slice — `DRAFT / IN PROGRESS`; real ZIP/checksum and exact G12A identity frozen | G10D, G12A-D + Binance public-data evidence | Builder Binance USD-M source slice |
+| [G12L-BINANCE-USDM-MARK-PRICE-KLINES-V1](g12l-binance-usdm-mark-price-klines-v1.md) | First concrete slice — `DRAFT / READY FOR ACCEPTANCE`; capture, purpose-separated normalization, G12C/D evidence frozen | G10D, G12A-D + Binance public-data evidence | Builder Binance USD-M source slice |
 | G12M-* | Market qualification | market-specific G12L, G07–G10 | runtime qualification |
 
 ## Parallelism
 
 After G12C, G12D, G12G, G12H, and G12K may proceed as disjoint research/readiness lanes. Implementation remains single-writer where public schemas, the Acceptance Matrix, architecture policy, or shared fixtures overlap.
 
-G12L's common contract remains provider-neutral. The first concrete slice selects Binance Public Data USD-M daily mark-price klines and freezes one real ZIP/checksum plus its exact G12A identity; provider normalization, revision closure, G12C/D evidence, and adapter acceptance remain in progress. No other market/provider is selected.
+G12L's common contract remains provider-neutral. The first concrete slice selects Binance Public Data USD-M daily mark-price klines and now freezes real ZIP/checksum bytes, exact G12A identity, conservative late availability, purpose-separated normalization, and G12C/D evidence. Final repository validation/review and adapter acceptance remain; no other market/provider is selected.
 
 Status remains authoritative only in `docs/implementation/acceptance-matrix.md`.

@@ -159,7 +159,7 @@ artifact_hashes: []
 | G12J | DRAFT | trading-domain schema migration | real old artifact | No real source/target schema yet |
 | G12K | DRAFT | market-bundle-builder validation | G12C | Universe/corporate action coverage |
 | G12L-* | DRAFT | market-bundle-builder source adapter | G12A–G12K as applicable | Concrete provider/dataset/version, real raw fixtures, mapping and closure evidence |
-| G12L-BINANCE-USDM-MARK-PRICE-KLINES-V1 | DRAFT / IN PROGRESS | market-bundle-builder Binance USD-M source slice | G10D, G12A–G12D | Provider normalizer, retry/failure contract, archive revision closure, G12C/D evidence |
+| G12L-BINANCE-USDM-MARK-PRICE-KLINES-V1 | DRAFT / READY FOR ACCEPTANCE | market-bundle-builder Binance USD-M source slice | G10D, G12A–G12D | Full repository validation, independent review, accepted commit |
 | G12M-* | DRAFT | backtest-runtime qualification | market-specific G12L, G07–G10 | Per-market qualification matrix |
 | BT-GAP-01 | PASSED — immutable commit `f2440f9658fbe2ae1cf0016a78c44e4230995394` | trading-domain | WP-02E, Platform BT-PORT-01 | none |
 | BT-GAP-02 | PASSED — immutable commit `39863c58ace1d996f3e814835836ec46e2aa3794` | backtest-runtime facade | BT-GAP-01, G07, BT-GAP-02A, BT-GAP-04 | none |
@@ -11198,14 +11198,14 @@ artifact_hashes: {}
    `docs/implementation/plans/g12/g12l.md`; research authority is
    `docs/research/g12l-provider-adapter-contract.md`.
 7. G12H, G12I, G12K, and G12M remain `DRAFT / BLOCKED`. The first concrete
-   G12L slice is `DRAFT / IN PROGRESS`; no concrete G12L slice is PASSED. This
-   contract grants no decision-grade, live, or deployment authority.
+   G12L slice is `DRAFT / READY FOR ACCEPTANCE`; no concrete G12L slice is PASSED.
+   This contract grants no decision-grade, live, or deployment authority.
 
 ## 104A. G12L Binance USDⓈ-M Daily Mark-Price-Kline v1 (Gate remains DRAFT)
 
 ```yaml
 id: G12L-BINANCE-USDM-MARK-PRICE-KLINES-V1
-status: DRAFT / IN PROGRESS
+status: DRAFT / READY FOR ACCEPTANCE
 depends_on:
   - G10D
   - G12A
@@ -11214,9 +11214,13 @@ depends_on:
   - G12D
 owner_package: market-bundle-builder Binance USD-M source slice
 public_interface:
-  - none yet; raw evidence and exact G12A handoff only
+  - crypto_quant_bundle_builder.binance_usdm_mark_price_archive.BinanceUsdmMarkPriceArchiveRequest
+  - crypto_quant_bundle_builder.binance_usdm_mark_price_archive.capture_binance_usdm_mark_price_archive
+  - crypto_quant_bundle_builder.binance_usdm_mark_price_archive.normalize_binance_usdm_mark_price_archive
 test_commands:
-  evidence: uv run --locked pytest -q tests/bundle_builder/providers/binance_usdm/test_mark_price_archive_evidence.py
+  contract: uv run --locked pytest -q tests/bundle_builder/providers/binance_usdm
+  boundary: uv run --locked pytest -q tests/architecture/test_g12l_binance_mark_price_boundary.py
+  focused: uv run --locked pytest -q tests/bundle_builder tests/architecture/test_network_isolation.py tests/architecture/test_public_api_imports.py
 fixture_ids:
   - g12l-binance-usdm-mark-price-klines-v1
 expected_artifacts:
@@ -11246,20 +11250,31 @@ evidence:
   - exact-checksum-and-single-member-zip-layout
   - exact-1440-row-utc-day-sequence-closure
   - exact-g12a-snapshot-provenance-and-content-identity
+  - bounded-retry-and-atomic-failure-precedence
+  - conservative-g12a-acquisition-time-availability
+  - purpose-separated-valuation-margin-liquidation-events
+  - exact-source-row-trace-and-4320-event-identity
+  - malformed-and-encrypted-zip-containment
+  - exact-snapshot-provenance-and-replacement-rejection
+  - finite-archive-revision-causal-limit
+  - g12c-three-stream-manifest-and-g12d-publication
   - offline-repeatable-fixture-check
 remaining_blockers:
-  - provider-specific-request-result-and-failure-contract
-  - bounded-retry-restart-atomic-and-mixed-fault-precedence-tests
-  - purpose-separated-provider-csv-to-market-event-normalizer-and-source-trace
-  - archive-revision-correction-terminal-closure
-  - g12c-manifest-and-g12d-publication-evidence
-  - full-network-isolation-secret-scan-and-independent-review
+  - full-repository-validation-and-secret-scan
+  - independent-review
+  - accepted-commit
 passed_commit: null
 artifact_hashes:
   archive_sha256: 660efeefdc875f052051b94c2976babd013f64c6633bf58ba030764771747b90
   checksum_sha256: ea5548dadd83fad69bbc9db3a24560b7d3f988e54299d2c6aa87e85351e05215
   csv_sha256: 71357549ea1f81632e92f1b2ee2677c173a51e8563b0d5dd26ee4f321c7eb378
-  evidence_fixture_sha256: 09811d1be57087a058542e80ba023c64562ffc6df78e5322829bc00c831501cf
+  evidence_fixture_sha256: 4814ad89aeadf2aeb10a8c63f9b4ea1218d04890043f7887a98fea362f84ac3c
+  provider_module_sha256: 34c8767a8d094a2f3bef0af702f17c6b9ab39a2fbe3717b34967e3458fc760b2
+  request_hash: sha256:6339107fdfc8c93ce11d1c56c5d5ba5a4a05442c6e3071f2651649e4d5675f27
+  capture_hash: sha256:b1b9d1bc5d85e6d97a3eb1ab6fee60a37983f378137ad979acda43193b314be9
+  normalization_hash: sha256:77ac62498fc78d6ac7b10840eceb0d6b968e8c6024ba5e207ebb985dd72a3a51
+  manifest_content_hash: sha256:048e1247e9346445f3764de27b123e5d90bfae9d618b3a5f7b5fa853abd1807d
+  bundle_manifest_hash: sha256:9a23df29531073637259722e353685c97283be0489ec0b6e51c12e7b64cfeabd
 ```
 
 ### G12L Binance Mark-Price Evidence Acceptance
@@ -11278,12 +11293,19 @@ artifact_hashes:
    close_time + 1ms` is forbidden. The conservative v1 authority is the exact
    G12A archive member acquisition timestamp for every row. This prevents
    lookahead but cannot qualify intraday 2024 replay; G12M remains blocked.
-5. A future Builder normalizer must preserve exact provider bytes/times/decimals
-   and purpose separation without importing Trading Kernel types, relabeling the
-   source as synthetic JSONL, or accidentally expanding the frozen Builder root.
-6. No provider adapter, normalized MarketEvent set, G12C/D publication, revision
-   terminality, G12I/G12M qualification, decision-grade, live, or deployment
-   authority is claimed by this readiness evidence.
+5. The Builder provider module remains off the frozen root and imports neither
+   Trading Kernel nor Runtime. It emits separate VALUATION/MARGIN point streams
+   and LIQUIDATION bars with exact source-row traces, conservative late
+   availability, 4320 stable event identities, and no synthetic-JSONL relabeling.
+6. Capture evaluates both fixed URL outcomes before selecting the common failure
+   precedence. Capture and normalization revalidate the exact two-member bytes,
+   hashes, acquisition time, modes, provenance, snapshot, and checksum identity;
+   malformed/encrypted/replacement evidence exposes no partial downstream authority.
+7. G12C validates three exact 1440-event streams and G12D publishes their frozen
+   bundle. The revision causal limit is only the accepted archive/checksum hash at
+   acquisition; later Binance replacements require a new explicit slice/version.
+8. G12I/G12M qualification, intraday 2024 replay, decision-grade, live, and
+   deployment authority remain explicitly unclaimed.
 
 ## 105. BT-GAP-01 Domain ArtifactRef
 

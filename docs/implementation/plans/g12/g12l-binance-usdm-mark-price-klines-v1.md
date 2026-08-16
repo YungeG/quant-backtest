@@ -1,6 +1,6 @@
 ---
 id: G12L-BINANCE-USDM-MARK-PRICE-KLINES-V1
-readiness: IN_PROGRESS
+readiness: READY
 gate_status: DRAFT
 owner: market-bundle-builder Binance USD-M source slice
 produces:
@@ -31,11 +31,11 @@ Research authority:
 
 ## Current status
 
-`DRAFT / IN PROGRESS`. Provider, dataset, immutable authority revision, finite
-request scope, real ZIP/checksum fixtures, internal one-day closure, exact G12A
-snapshot identity, and the conservative v1 availability rule are frozen. Provider
-normalization, bounded transport behavior, revision terminality, G12C/D evidence,
-and final acceptance remain.
+`DRAFT / READY FOR ACCEPTANCE`. Provider, dataset, immutable authority revision,
+finite request scope, real ZIP/checksum fixtures, internal one-day closure, exact
+G12A snapshot identity, conservative availability, bounded retry/failure behavior,
+purpose-separated normalization, and G12C/D evidence are implemented and frozen.
+Full repository validation, independent review, and the accepted commit remain.
 
 ## Frozen v1 scope
 
@@ -52,17 +52,19 @@ and final acceptance remain.
 
 ## Minimum implementation seam
 
-Add one Builder-owned module for this exact provider grammar. It may use stdlib
-`csv`, `hashlib`, `io`, and `zipfile`, plus existing Domain/Market Data/G12A
-public contracts. It must not add an HTTP library, SDK, generic transport
-Protocol, provider registry, adapter factory, plug-in system, cache, credential
-store, filesystem scan, or Trading Kernel import.
+The Builder-owned
+`crypto_quant_bundle_builder.binance_usdm_mark_price_archive` module implements
+this exact provider grammar using only stdlib plus existing Domain, Market Data,
+and G12A contracts. It stays off the already-frozen Builder root and adds no HTTP
+library, SDK, generic transport Protocol, provider registry, adapter factory,
+plug-in system, cache, credential store, filesystem scan, or Trading Kernel import.
 
-The executable entry point receives the exact finite request plus an injected
-provider-specific byte fetch callable. It fetches only the two derived immutable
-URLs with a frozen bounded retry count, verifies both members, and calls
-`freeze_source_snapshot()` only after complete success. A restart re-fetches the
-whole two-member set; no partial resume state becomes authority.
+The capture entry point receives the exact finite request plus an injected
+provider-specific byte-fetch callable. It fetches only the two immutable URLs
+with three bounded attempts, evaluates both terminal outcomes before applying the
+common failure precedence, verifies both members, and calls
+`freeze_source_snapshot()` only after complete success. Restart re-fetches the
+whole two-member set; no partial state becomes authority.
 
 The conservative v1 availability authority is the exact G12A archive member
 `acquired_at_epoch_nanoseconds`: every normalized row uses that later instant as
@@ -117,25 +119,29 @@ Provisional provider mapping to freeze in tests:
 Multi-fault tests select the earliest code above; ties follow archive then
 checksum request order and physical CSV row order.
 
+## Frozen revision causal limit
+
+The v1 revision is exactly the committed archive content hash plus adjacent
+checksum at G12A acquisition instant `1786920753047737420`. It claims neither
+latest status nor provider terminality beyond those bytes. Any later Binance
+replacement is a new explicit slice/version and may not silently supersede this
+snapshot. Every normalized event uses the archive content hash as revision ID
+and records no invented supersedes link.
+
 ## Acceptance work remaining
 
-1. Add RED contract tests for request/result/failure canonical identities.
-2. Add offline fake-fetch tests for uninterrupted, retry, restart, duplicate
-   response, exhausted retry, every HTTP/content failure mapping, and mixed-fault
-   precedence before early return.
-3. Implement the minimal provider module and purpose-separated source↔event trace
-   without changing the already-frozen Builder root API accidentally.
-4. Produce and freeze normalized, G12C manifest, and G12D publication fixtures.
-5. Record archive revision/correction closure or an explicit finite causal limit.
-6. Run focused, full repository, import-boundary, network-isolation, secret scan,
-   lock, LSP, and independent review checks.
-7. Only then change the concrete slice to `PASSED`; G12I/G12M remain separate.
+1. Run focused and full repository tests, import boundaries, network isolation,
+   secret scan, lock check, LSP, and diff checks.
+2. Obtain independent review with no material findings.
+3. Freeze the accepted commit and exact final artifact hashes.
+4. Only then change the concrete slice to `PASSED`; G12I/G12M remain separate.
 
 ## Current executable evidence
 
 ```bash
 uv run --locked pytest -q \
-  tests/bundle_builder/providers/binance_usdm/test_mark_price_archive_evidence.py
+  tests/bundle_builder/providers/binance_usdm \
+  tests/architecture/test_g12l_binance_mark_price_boundary.py
 ```
 
 This check is deliberately narrower than Gate acceptance. It freezes the real
