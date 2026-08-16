@@ -161,13 +161,16 @@ artifact_hashes: []
 | G12L-* | DRAFT | market-bundle-builder source adapter | G12A–G12K as applicable | Concrete provider/dataset/version, real raw fixtures, mapping and closure evidence |
 | G12M-* | DRAFT | backtest-runtime qualification | market-specific G12L, G07–G10 | Per-market qualification matrix |
 | BT-GAP-01 | PASSED — immutable commit `f2440f9658fbe2ae1cf0016a78c44e4230995394` | trading-domain | WP-02E, Platform BT-PORT-01 | none |
-| BT-GAP-02 | DRAFT / BLOCKED | backtest-runtime | BT-GAP-01, G07, BT-GAP-02A, BT-GAP-04 | No production authority maps every resolved supported request to a `ResolvedExecutionCase` |
+| BT-GAP-02 | PASSED — immutable commit `39863c58ace1d996f3e814835836ec46e2aa3794` | backtest-runtime facade | BT-GAP-01, G07, BT-GAP-02A, BT-GAP-04 | none |
 | BT-GAP-02A | PASSED | backtest-runtime composition | G07, G08H, G10G, BT-GAP-02B, BT-GAP-02C | none |
 | BT-GAP-02B | PASSED — immutable commit `9f321780bb2e831bac521722c04af82adbd8e40e` | backtest-runtime execution inputs | BT-GAP-01, G03, G07, G11I, G12E, BT-GAP-07, PLAT-REC-03 | none |
 | BT-GAP-02C | PASSED | backtest-runtime execution closure | BT-GAP-02B, G07, G08H, G10G, G12E | none |
+| BT-GAP-03 | DRAFT / BLOCKED | backtest-runtime verified repository | BT-GAP-02, BT-GAP-05, BT-GAP-06, BT-GAP-07 | semantic decoders and not-found/retention failure authority |
 | BT-GAP-04 | PASSED — immutable commit `c3257643d6911bd3b63efac0899aa04d47397b05` | backtest-runtime | BT-GAP-01, G07, Platform BT-PORT-01 | none |
+| BT-GAP-05 | PASSED — immutable commit `39863c58ace1d996f3e814835836ec46e2aa3794` | backtest-runtime analysis runtime | BT-GAP-01, BT-GAP-04, BT-GAP-06, G07 | none |
 | BT-GAP-06 | PASSED | backtest-runtime analysis schema | BT-GAP-01, BT-GAP-04, G07 | none |
 | BT-GAP-07 | PASSED — immutable commit `029ac43f6d781567cd0742594ca82c181ead0a6d` | backtest-runtime structural read port | BT-GAP-01, WP-02E | none |
+| BT-GAP-08 | DRAFT / BLOCKED | Backtest package closure | BT-GAP-02, BT-GAP-03, BT-GAP-05, BT-GAP-06 | clean accepted P00 revision and handoff receipt |
 
 ## 4. WP-00A Acceptance Card
 
@@ -11266,37 +11269,91 @@ artifact_hashes:
 
 ```yaml
 id: BT-GAP-02
-status: DRAFT / BLOCKED
+status: PASSED
 depends_on:
   - BT-GAP-01
   - G07
   - BT-GAP-02A production execution-case composition authority
   - BT-GAP-04 tagged publication contract
-owner_package: backtest-runtime
-public_interface: []
-test_commands: {}
-fixture_ids: []
+  - BT-GAP-07 structural reader
+owner_package: backtest-runtime facade
+public_interface:
+  - crypto_quant_backtest.BacktestRuntime
+  - crypto_quant_backtest.BacktestRuntime.run
+  - crypto_quant_backtest.ArtifactEnvelopePublisher
+composition_only_dependencies:
+  - BacktestProfileRegistry
+  - ArtifactEnvelopeReader
+  - ArtifactEnvelopePublisher
+  - MarketBundleReader
+  - publication_root
+private_interface:
+  - request hydration, profile resolution, Attempt execution, evidence hashing, integrity evaluation, publication mirroring, and cache verification
+  - manifest structural mirror safety gate
+test_commands:
+  focused: uv run pytest -q tests/runtime/test_bt_gap_02_facade.py tests/architecture/test_bt_gap_02_facade_boundary.py tests/runtime/ports/test_artifact_envelope_publisher_contract.py
+  inherited: uv run pytest -q tests/runtime/analysis tests/runtime/execution_inputs tests/runtime/resolution tests/runtime/runner tests/runtime/evidence tests/runtime/integrity tests/runtime/publication
+  full: uv run pytest -q
+  boundaries: uv run python tools/architecture/check_import_boundaries.py --root . --policy architecture/import-boundaries.toml
+  platform_contract: uvx --python 3.13.5 --from pytest==8.4.2 pytest -q -p no:cacheprovider tests/architecture/test_backtest_consumer_port.py
+  lock: uv lock --check
+  diff: git diff --check
+fixture_ids:
+  - bt-gap02-public-facade-v1
 expected_artifacts:
-  - future BT-GAP-02 run-only facade contract
-failure_contracts: []
+  - BacktestCanonicalPublicationRef for durable COMPLETED canonical publication
+  - bare ArtifactRef for durable BLOCKED, FAILED, CANCELLED, or integrity-evaluation evidence
+  - exact publisher-visible Attempt and canonical publication graphs
+failure_contracts:
+  - malformed-or-unavailable-execution-input-before-Attempt
+  - provider-or-market-reader-failure-before-Attempt
+  - publisher-failure-or-returned-ref-mismatch
+  - local-publication-storage-or-lock-failure
+  - malformed-or-path-escaping-manifest-mirror
+  - cached-Attempt-evidence-or-canonical-link-mismatch
 allowed_grade: development
 evidence:
-  - production request-resolution-composition-runner-publication flow analysis
-remaining_blockers:
-  - ProfileResolver stops at ResolvedBacktestRequest
-  - ExecutionCaseComposer requires a caller-selected private _ExecutionCaseBuilder
-  - production has no concrete _ExecutionCaseBuilder and no existing authority selects one for every supported profile tuple
-  - BT-GAP-02A must close that seam without a second registry, dispatcher, factory, Protocol, callback graph, or tests/support dependency
-passed_commit: null
-artifact_hashes: {}
+  - BT-GAP-02A exact sealed execution-case composition
+  - G07 runner/evidence/integrity/publication authorities
+  - BT-GAP-04 direct completed/terminal ref union
+  - Backtest-owned composition-only registry decision
+  - two blocking review rounds followed by clean Opus final review
+remaining_blockers: []
+implementation_commit: 39863c58ace1d996f3e814835836ec46e2aa3794
+passed_commit: 39863c58ace1d996f3e814835836ec46e2aa3794
+executed_commands:
+  - uv run pytest -q tests/runtime/test_bt_gap_02_facade.py tests/architecture/test_bt_gap_02_facade_boundary.py tests/runtime/ports/test_artifact_envelope_publisher_contract.py tests/runtime/analysis tests/runtime/execution_inputs tests/runtime/resolution tests/runtime/runner tests/runtime/evidence tests/runtime/integrity tests/runtime/publication
+  - uv run pytest -q
+  - uv run python tools/architecture/check_import_boundaries.py --root . --policy architecture/import-boundaries.toml --report /tmp/bt-gap02-main-import-boundaries.json
+  - uv lock --check
+  - git diff --check
+  - uvx --python 3.13.5 --from pytest==8.4.2 pytest -q -p no:cacheprovider tests/architecture/test_backtest_consumer_port.py
+test_results:
+  focused_and_inherited: 172 passed
+  full_repository: 1680 passed
+  import_boundaries: 105 files passed
+  platform_consumer_contract: 15 passed
+  lsp: clean
+  lens: clean
+  independent_final_review: NONE
+artifact_hashes:
+  fixture_sha256: 0f3f70a457f1a54939b1ecdf6cf860671c0dfcaa20a56297540a3266141c9b91
+  preserved_bt_gap02a_fixture_sha256: bfa0ddff37bb6e1c813f50da14db4abcc2fab76fa8262c522fbf5facb1b5f764
+  preserved_bt_gap02b_fixture_sha256: 09578ac47f997bc4bf55119d31e97dbcad3eb71e90d93a5ef7c8e6669bd66be2
+  preserved_bt_gap02c_fixture_sha256: c082042640382dde2dad61f758058ab93c3ba741ed19df0256d7989a157eced1
+  preserved_bt_gap04_fixture_sha256: 9cbe91becf64053fdb44cb884a8cfd621e020e8ce54e4f5f6f76411f275e3c79
 ```
 
-### BT-GAP-02 Readiness
+### BT-GAP-02 Acceptance
 
-1. Existing G07 authorities own request resolution, Attempt execution, integrity evaluation, terminal semantics, cache verification, and canonical publication. BT-GAP-04 supplies the direct `RunPublicationRef` return contract.
-2. The production chain is nevertheless incomplete before execution: `ProfileResolver` returns `ResolvedBacktestRequest`, while `ExecutionCaseComposer.compose()` requires an externally selected `_ExecutionCaseBuilder`. Production contains no concrete implementation or profile-tuple selection authority for that private seam.
-3. Passing `ResolvedBacktestRequest`, `ResolvedExecutionCase`, a builder, Resolver, Registry, Composer, or Runner into the public facade would expose the orchestration BT-GAP-02 must hide. Using `tests/support` would be non-production evidence. Adding a second registry/dispatcher/factory would duplicate `BacktestProfileRegistry` authority.
-4. BT-GAP-02 therefore remains `DRAFT / BLOCKED` on BT-GAP-02A. Repository loads remain BT-GAP-03, analysis BT-GAP-05/06, and structural reader injection BT-GAP-07.
+1. `BacktestRuntime.run(request)` is the sole Platform-facing operation. It accepts exact `BacktestExecutionRequest` by value, preserves the embedded opaque context/`experiment_id`, and returns only `BacktestCanonicalPublicationRef | ArtifactRef`. Resolved requests, execution cases, Resolver, Registry, Runner, evidence writer, hasher, publisher, and integrity values never cross the operation boundary.
+2. The unique `BacktestProfileRegistry` remains the sole profile selector and is injected only by Backtest-owned composition code. Platform receives an already composed deep module. This is the minimum admissible seam because exact `ResolvedBacktestRequest` still contains live selected registrations; no default/global registry, private factory graph, bundle serialization of resolved profiles, second resolver, or runner input weakening is introduced.
+3. V2 hydration first validates the public request and reconstructs one exact sealed execution case through BT-GAP-02A/02C. Profile resolution uses the same request, MarketBundle manifest, and decoded build manifest, then the second hydration binds the resolved request to the persisted semantic-run identity before Attempt creation.
+4. Profile-resolution failure is published as exact `backtest_resolution_failure@1` through the shared structural `ArtifactEnvelopePublisher.put(*, envelope) -> ArtifactRef` seam and returns a bare durable BLOCKED ref. Malformed input, unavailable/tampered provider data, publisher mismatch, and local storage failures remain exceptions outside the run-result union.
+5. Attempt evidence, canonical completed publications, integrity-evaluation terminals, and canonical cache hits are mirrored as their exact existing ArtifactEnvelopes into the structural publisher. Every child ref/source hash/byte count is checked against the accepted manifest before the manifest is published. A fresh publisher on cache hit receives both canonical-Attempt evidence and the canonical publication graph, so the returned completed ref remains loadable rather than becoming a partial graph.
+6. The mirror safety gate rejects malformed field types, invalid hashes/refs/counts, duplicate or non-normalized paths, absolute/parent/backslash paths, missing children, and symlink escapes before publishing any child. It is not a second semantic manifest decoder; G07 writer/cache verification remains semantic authority and BT-GAP-03 remains the verified load authority.
+7. COMPLETED returns the nominal `BacktestCanonicalPublicationRef`. Attempt BLOCKED/FAILED/CANCELLED evidence and blocked integrity evaluations return bare Domain `ArtifactRef`; status remains recoverable from the verified artifact graph rather than a facade wrapper. Retry/cache identity is stable and repeated publisher puts are content-addressed and idempotent.
+8. Acceptance is green: 172 focused/inherited tests pass, the full repository passes 1680 tests, import boundaries pass across 105 files, Platform BT-PORT-01 passes 15 tests, LSP/lens are clean, frozen BT-GAP-02A/02B/02C/04 fixture hashes are unchanged, and the final independent Opus review reports no blocker.
 
 ## 107. BT-GAP-02A Production Execution-Case Composition Authority
 
@@ -11769,8 +11826,8 @@ public_interface:
   - crypto_quant_backtest.VerifiedCompletedPublication
   - crypto_quant_backtest.BacktestAnalysisRuntime
   - crypto_quant_backtest.BacktestAnalysisRuntime.derive
+  - crypto_quant_backtest.ArtifactEnvelopePublisher
 private_interface:
-  - crypto_quant_backtest.analysis_derivation._BacktestAnalysisPublisher
   - crypto_quant_backtest.analysis_derivation._calculate_simple_period_return
 test_commands:
   focused: uv run pytest -q tests/runtime/analysis/test_analysis_contract.py tests/runtime/analysis/test_analysis_boundary.py tests/runtime/analysis/test_analysis_derivation_contract.py tests/runtime/analysis/test_analysis_derivation_boundary.py
@@ -11803,7 +11860,8 @@ evidence:
 remaining_blockers: []
 contract_and_implementation_commit: c8de3d447ffd9fccfe507e2fbdc5c77c70aac041
 publication_hardening_commit: 1cbf97c9f8ccc7b225da49379c4db08fe877e438
-passed_commit: 1cbf97c9f8ccc7b225da49379c4db08fe877e438
+shared_publisher_hardening_commit: 39863c58ace1d996f3e814835836ec46e2aa3794
+passed_commit: 39863c58ace1d996f3e814835836ec46e2aa3794
 executed_commands:
   - uv run pytest -q tests/runtime/analysis/test_analysis_contract.py tests/runtime/analysis/test_analysis_boundary.py tests/runtime/analysis/test_analysis_derivation_contract.py tests/runtime/analysis/test_analysis_derivation_boundary.py tests/runtime/integrity tests/runtime/evidence tests/runtime/publication
   - uv run pytest -q
@@ -11813,8 +11871,8 @@ executed_commands:
   - uvx --python 3.13.5 --from pytest==8.4.2 pytest -q -p no:cacheprovider tests/architecture/test_backtest_consumer_port.py
 test_results:
   focused_and_inherited: 83 passed
-  full_repository: 1656 passed
-  import_boundaries: 103 files passed
+  full_repository: 1680 passed
+  import_boundaries: 105 files passed
   platform_consumer_contract: 15 passed
   lsp: clean
   independent_followup_review: NONE
@@ -11831,9 +11889,9 @@ artifact_hashes:
 1. `VerifiedCompletedPublication` is the single upstream loaded-value contract shared by BT-GAP-05 and the future BT-GAP-03 repository. It holds the accepted finalized canonical publication and exact sealed execution case, verifies case/result/request/target/identity bindings, preserves the initial Journal prefix, and validates run-boundary account/reporting-currency context. It introduces no second status, identity, ref, repository, or evidence copy.
 2. `BacktestAnalysisRuntime` is the sole derive runtime. Its public `derive(completed, metric_profile_ref)` accepts only the exact verified COMPLETED value and the exact accepted `backtest_metric_profile@1` ref. Terminal refs and unverified objects fail structurally before publication.
 3. The runtime derives `simple_period_return` from starting/ending authoritative `PortfolioSnapshot.equity` and net external cash flow from authoritative post-initial-prefix Journal entries. Missing/unusable currency or denominator evidence produces `null`; conclusive values follow the BT-GAP-06 18-place ROUND_HALF_EVEN canonical-decimal policy. `trade_count` is the authoritative Fill count.
-4. Derivation constructs one immutable `backtest_analysis@1` payload linked to metric profile, source canonical publication, source execution-result hash, and result grade. A single private structural publisher port matches Foundation `put(*, envelope) -> ArtifactRef`; the runtime verifies the returned exact ref and returns only `AnalysisArtifactRef`. `VerifiedBacktestAnalysis` remains exclusively the future BT-GAP-03 loaded view.
+4. Derivation constructs one immutable `backtest_analysis@1` payload linked to metric profile, source canonical publication, source execution-result hash, and result grade. The shared exact structural `ArtifactEnvelopePublisher.put(*, envelope) -> ArtifactRef` port is also consumed by BT-GAP-02; it contains no implementation or provider semantics. The runtime verifies the returned exact ref and returns only `AnalysisArtifactRef`. `VerifiedBacktestAnalysis` remains exclusively the future BT-GAP-03 loaded view.
 5. Repeated derivation publishes byte-identical envelopes and returns the same content-addressed ref. Publisher exceptions remain provider/storage failures; wrong returned refs fail closed. No repository, reader, SchemaCatalog, MetricRegistry, MetricEngine, cache, path convention, simulator, PnL authority, Platform import, or tests/support production import is introduced.
-6. Acceptance is green: 83 focused/inherited tests pass on the integrated branch, the full repository passes 1656 tests, import boundaries pass across 103 files, the Platform consumer contract passes 15 tests, LSP/lens checks are clean, and the independent follow-up review reports no blocker or fix worth doing now.
+6. Acceptance is green: 83 focused/inherited tests passed before the shared publisher hardening; the final integrated repository passes 1680 tests, import boundaries pass across 105 files, the Platform consumer contract passes 15 tests, LSP/lens checks are clean, and the independent follow-up review reports no blocker or fix worth doing now.
 
 ## 113. PASSED 记录格式
 
