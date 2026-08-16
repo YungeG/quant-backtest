@@ -16,6 +16,7 @@ from crypto_quant_backtest import (
     MarkToMarketCloseoutPolicy,
     NextEligibleBarOpenModel,
     NoEligibleBarAction,
+    ResolvedExecutionCase,
     TargetStreamScheduleEntry,
 )
 from crypto_quant_domain import (
@@ -26,9 +27,14 @@ from crypto_quant_domain import (
     canonical_bytes,
     canonical_sha256,
 )
-from crypto_quant_backtest.execution_inputs import _hydrate_execution_inputs
+from crypto_quant_backtest.execution_inputs import (
+    _hydrate_execution_inputs,
+    _read_execution_case_plan,
+)
 from tests.runtime.profiles.binance_usdm._fixtures import composition_request
 from tests.runtime.runner._fixtures import resolved_request_and_case
+from tests.support.binance_usdm import build_binance_usdm_execution_case
+from tests.support.cn_a_share import build_cn_a_share_execution_case
 
 _FIXTURE = (
     Path(__file__).resolve().parents[2]
@@ -206,14 +212,50 @@ def test_v2_hydration_reconstructs_one_typed_plan_without_a_second_decoder() -> 
         for cycle in plan.decision_cycles
         for entry in cycle.schedule.entries
     ), "typed hydration must call exact schedule-entry constructors"
-    assert plan.bar_executions == case.bar_executions
-    assert plan.financial_state == case.financial_state
-    assert plan.financial_dispatch_plan == case.financial_dispatch_plan
+    assert canonical_bytes(plan.bar_executions) == canonical_bytes(case.bar_executions)
+    assert canonical_bytes(plan.financial_state) == canonical_bytes(case.financial_state)
+    assert canonical_bytes(plan.financial_dispatch_plan) == canonical_bytes(
+        case.financial_dispatch_plan
+    )
     assert plan.execution_model.spec() == case.execution_model.spec()
     assert plan.snapshot_plan == case.snapshot_plan
     assert plan.closeout_policy.spec() == case.closeout_policy.spec()
     assert outcome.result.target_stream == case.target_stream
     assert not hasattr(plan, "identity_manifest")
+
+
+@pytest.mark.parametrize("profile", ("cn_a_share", "binance_usdm"))
+def test_v2_reader_reconstructs_accepted_profile_plan_shapes(profile: str) -> None:
+    case = (
+        build_cn_a_share_execution_case()
+        if profile == "cn_a_share"
+        else build_binance_usdm_execution_case(composition_request())
+    )
+    assert type(case) is ResolvedExecutionCase
+    wire = json.loads(
+        canonical_bytes(
+            {
+                "type": "execution_case_plan",
+                "schema_version": 1,
+                "decision_cycles": case.decision_cycles,
+                "bar_executions": case.bar_executions,
+                "financial_state": case.financial_state,
+                "financial_dispatch_plan": case.financial_dispatch_plan,
+                "execution_model_spec": case.execution_model.spec(),
+                "snapshot_plan": case.snapshot_plan,
+                "closeout_policy_spec": case.closeout_policy.spec(),
+            }
+        )
+    )
+    plan = _read_execution_case_plan(wire)
+    for actual, expected in (
+        (plan.decision_cycles, case.decision_cycles),
+        (plan.bar_executions, case.bar_executions),
+        (plan.financial_state, case.financial_state),
+        (plan.financial_dispatch_plan, case.financial_dispatch_plan),
+        (plan.snapshot_plan, case.snapshot_plan),
+    ):
+        assert canonical_bytes(actual) == canonical_bytes(expected)
 
 
 def test_binance_executable_profile_v2_uses_concrete_runtime_refs() -> None:
