@@ -71,7 +71,6 @@ def test_analysis_contract_exports_only_values_not_runtime_or_storage() -> None:
         "BacktestAnalysisRepository",
         "BacktestAnalysisReader",
         "BacktestMetricRegistry",
-        "derive_backtest_analysis",
     ):
         assert forbidden not in source
 

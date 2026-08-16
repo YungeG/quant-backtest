@@ -6,6 +6,7 @@ from .analysis import (
     BacktestMetricProfile,
     VerifiedBacktestAnalysis,
 )
+from .analysis_derivation import derive_backtest_analysis
 from .binance_usdm_profile import (
     BinanceUsdmAccountCapacityEvidence,
     BinanceUsdmExecutionAccountProfile,
@@ -205,6 +206,7 @@ from .ports import (
     SlippageModel,
 )
 from .publication_refs import BacktestCanonicalPublicationRef, RunPublicationRef
+from .verified_publications import VerifiedCompletedPublication
 from .random_streams import NamedRandomStream
 from .resolution import (
     ArtifactInstallMode,
@@ -612,6 +614,8 @@ __all__ = [
     "UniverseQuery",
     "UniverseSelection",
     "VerifiedBacktestAnalysis",
+    "VerifiedCompletedPublication",
     "WarmupEligibility",
+    "derive_backtest_analysis",
     "invoke_portfolio_strategies",
 ]
