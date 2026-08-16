@@ -165,6 +165,7 @@ artifact_hashes: []
 | BT-GAP-02A | DRAFT / BLOCKED | backtest-runtime composition | G07, G08H, G10G, BT-GAP-02B | Composition awaits a production execution-input hydration contract |
 | BT-GAP-02B | DRAFT / BLOCKED | backtest-runtime execution inputs | BT-GAP-01, G03, G07, G11I, G12E, BT-GAP-07, PLAT-REC-03 | BacktestRequest v1 digests do not locate all runtime payloads; additive request-envelope ownership is unresolved |
 | BT-GAP-04 | PASSED — immutable commit `c3257643d6911bd3b63efac0899aa04d47397b05` | backtest-runtime | BT-GAP-01, G07, Platform BT-PORT-01 | none |
+| BT-GAP-06 | DRAFT / BLOCKED | backtest-runtime analysis schema | BT-GAP-01, BT-GAP-04, G07 | Stored payload versus loaded view, missing-metric wire, metric-profile schema, and decimal authority are unresolved |
 | BT-GAP-07 | PASSED — immutable commit `029ac43f6d781567cd0742594ca82c181ead0a6d` | backtest-runtime structural read port | BT-GAP-01, WP-02E | none |
 
 ## 4. WP-00A Acceptance Card
@@ -11509,7 +11510,44 @@ artifact_hashes:
 5. Provider conformance belongs to Platform fan-in and semantic verification belongs to BT-GAP-03. Contract commit `9610e2985e41aeb7d94a74ce0c89c4424034fed3`, implementation commit `8c7812aab63c017b52357ac826a25902412551bd`, and accepted hardening commit `029ac43f6d781567cd0742594ca82c181ead0a6d` are immutable.
 6. Focused/inherited tests passed 17, the full repository passed 1591, Platform BT-PORT-01 passed 14, type/LSP/import checks passed, and the final independent re-review returned `NONE`.
 
-## 111. PASSED 记录格式
+## 111. BT-GAP-06 Analysis Artifact Schema
+
+```yaml
+id: BT-GAP-06
+status: DRAFT / BLOCKED
+depends_on:
+  - BT-GAP-01
+  - BT-GAP-04
+  - G07 completed evidence
+owner_package: backtest-runtime analysis schema
+public_interface: []
+test_commands: {}
+fixture_ids: []
+expected_artifacts:
+  - future immutable analysis payload and verified loaded-view contracts
+failure_contracts: []
+allowed_grade: development
+evidence:
+  - architecture section 15.6 analysis boundary
+  - Platform BT-PORT-01 complete-analysis view
+remaining_blockers:
+  - the Platform loaded analysis view includes `analysis_ref`, while immutable artifact payloads must not contain their own ref or hash
+  - missing or inconclusive `simple_period_return` has no frozen wire encoding; `null`, omission, and an explicit status are materially different
+  - `backtest_metric_profile@1` is referenced by Platform but has no frozen Backtest-owned payload/schema contract
+  - no existing public authority validates Platform canonical decimal strings without duplicating regex logic
+passed_commit: null
+artifact_hashes: {}
+```
+
+### BT-GAP-06 Readiness
+
+1. The complete Platform vector freezes the verified loaded view for one conclusive case: analysis ref, metric-profile ref, source publication ref, source execution-result hash, `simple_period_return = "-0.1"`, `trade_count = 1`, and `development` grade.
+2. It does not freeze the stored artifact payload. Domain identity rules prohibit a payload from embedding its own `analysis_ref`; BT-GAP-03 may attach that ref only in a verified loaded view.
+3. Architecture §15.6 requires missing valid metrics to remain missing/inconclusive, never zero-filled, but does not choose `null`, omission, or a tagged metric status. No encoding is inferred.
+4. `ResultGrade`, `ArtifactRef`, `BacktestCanonicalPublicationRef`, execution-result hashes, snapshots, and Journal evidence remain existing authorities. BT-GAP-06 must not add a decoder, derive runtime, repository, reader, metric registry, duplicate hash/decimal validator, or second metrics engine.
+5. No fixture, public type name, canonical bytes, or RED test is frozen while these schema decisions remain unresolved. BT-GAP-06 remains `DRAFT / BLOCKED`.
+
+## 112. PASSED 记录格式
 
 ```yaml
 id: WP-00A
