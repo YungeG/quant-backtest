@@ -36,9 +36,14 @@ from crypto_quant_trading import (
     SettlementBook,
 )
 
-from .composition import ExecutionCaseComposer
+from .composition import (
+    ExecutionCaseComposer,
+    _compose_execution_case,
+    _compose_execution_case_from_authority,
+    _ExecutionCasePlan,
+    _HydratedExecutionCaseInputs,
+)
 from .engine import (
-    ExecutionCaseIdentityFactory,
     ExecutionCaseIdentityRule,
     ExecutionCaseSemanticSpec,
     OrderEventPlan,
@@ -104,7 +109,7 @@ from .target_stream import (
     TargetStreamDecisionSchedule,
     TargetStreamScheduleEntry,
 )
-from .timeline import DeterministicTimeline, TimelineSegment
+from .timeline import TimelineSegment
 
 _ARTIFACT_TYPE = "backtest_execution_input_bundle"
 _SCHEMA_VERSION = 1
@@ -194,17 +199,6 @@ class _ExecutionInputsHydrationFailure:
 
 
 @dataclass(frozen=True, slots=True)
-class _ExecutionCasePlan:
-    decision_cycles: tuple[ResolvedDecisionCycle, ...]
-    bar_executions: tuple[ResolvedBarExecution, ...]
-    financial_state: ResolvedFinancialState
-    financial_dispatch_plan: FinancialDispatchPlan
-    execution_model: NextEligibleBarOpenModel
-    snapshot_plan: SnapshotProjectionPlan
-    closeout_policy: MarkToMarketCloseoutPolicy
-
-
-@dataclass(frozen=True, slots=True)
 class _HydratedExecutionInputs:
     build_artifact_manifest: BuildArtifactManifest
     execution_case_semantic_spec: ExecutionCaseSemanticSpec
@@ -213,6 +207,7 @@ class _HydratedExecutionInputs:
     timeline_batch_size: int
     initial_financial_state_template: Mapping[str, Any] | None = None
     execution_case_plan: _ExecutionCasePlan | None = None
+    execution_case: ResolvedExecutionCase | None = None
 
 
 @dataclass(frozen=True, slots=True)
@@ -2446,74 +2441,22 @@ def _failure(
     )
 
 
-def _verify_execution_case_plan(
-    bundle: _DecodedExecutionInputBundleV2,
-    request: BacktestRequest,
-    market_reader: MarketBundleReader,
-    target_stream: PrecomputedTargetStream,
-) -> None:
-    spec = bundle.execution_case_semantic_spec
-    factory = ExecutionCaseIdentityFactory(
-        semantic_run_id=bundle.semantic_run_id,
-        namespace=spec.identity_namespace,
-        identity_plan=spec.identity_plan,
-    )
-    for rule in spec.identity_plan:
-        if rule.domain_kind is None:
-            factory.event_id(rule.binding_key)
-        else:
-            factory.domain_id(rule.binding_key)
-    timeline = DeterministicTimeline.open(
-        reader=market_reader,
-        stream_keys=bundle.timeline_stream_keys,
-        window=request.timeline_window,
-    )
-    if isinstance(timeline, InputValidationFailure):
-        raise ValueError("execution timeline cannot be reconstructed")
-    if ExecutionCaseComposer.timeline_semantic_hash(timeline) != spec.timeline_semantic_hash:
-        raise ValueError("execution timeline semantic hash mismatch")
-
-    plan = bundle.execution_case_plan
-    reconstructed = ResolvedExecutionCase(
-        case_key=spec.case_key,
-        case_version=spec.case_version,
-        semantic_spec_hash=spec.semantic_spec_hash,
-        timeline=timeline,
-        timeline_batch_size=bundle.timeline_batch_size,
-        target_stream=target_stream,
-        decision_cycles=plan.decision_cycles,
-        bar_executions=plan.bar_executions,
-        financial_state=plan.financial_state,
-        financial_dispatch_plan=plan.financial_dispatch_plan,
-        execution_model=plan.execution_model,
-        snapshot_plan=plan.snapshot_plan,
-        closeout_policy=plan.closeout_policy,
-        identity_manifest=factory.manifest(),
-        semantic_spec=spec,
-    )
-    recomputed_spec = ExecutionCaseComposer.semantic_spec_from_case(
-        reconstructed,
-        spec_key=spec.spec_key,
-        spec_version=spec.spec_version,
-        identity_namespace=spec.identity_namespace,
-        identity_plan=spec.identity_plan,
-    )
-    if recomputed_spec != spec:
-        raise ValueError("execution case inputs do not match the semantic spec")
-    if not reconstructed.verify_identity_manifest(bundle.semantic_run_id):
-        raise ValueError("execution case identities do not match the semantic plan")
-
-
 def _hydrate_execution_inputs(
     reader: ArtifactEnvelopeReader,
     request: BacktestExecutionRequest,
     *,
     market_reader: MarketBundleReader,
+    resolved_request: ResolvedBacktestRequest | None = None,
 ) -> _ExecutionInputsHydrationOutcome:
     if type(request) is not BacktestExecutionRequest:
         return _failure(
             _ExecutionInputsHydrationFailureCode.MALFORMED_EXECUTION_REQUEST,
             "request must be exact BacktestExecutionRequest",
+        )
+    if resolved_request is not None and type(resolved_request) is not ResolvedBacktestRequest:
+        return _failure(
+            _ExecutionInputsHydrationFailureCode.MALFORMED_EXECUTION_REQUEST,
+            "resolved_request must be exact ResolvedBacktestRequest or None",
         )
     ref = request.execution_input_bundle_ref
     if (
@@ -2685,8 +2628,34 @@ def _hydrate_execution_inputs(
             _ExecutionInputsHydrationFailureCode.EXECUTION_INPUT_DECODE_FAILED,
             "bundle reader returned the wrong decoded version",
         )
+    composition_inputs = _HydratedExecutionCaseInputs(
+        execution_case_semantic_spec=bundle.execution_case_semantic_spec,
+        timeline_stream_keys=bundle.timeline_stream_keys,
+        target_stream=target_stream,
+        timeline_batch_size=bundle.timeline_batch_size,
+        execution_case_plan=bundle.execution_case_plan,
+    )
     try:
-        _verify_execution_case_plan(bundle, public_request, market_reader, target_stream)
+        if resolved_request is None:
+            execution_case = _compose_execution_case_from_authority(
+                request=public_request,
+                semantic_run_id=bundle.semantic_run_id,
+                market_reader=market_reader,
+                hydrated_inputs=composition_inputs,
+            )
+        else:
+            if (
+                resolved_request.request != public_request
+                or resolved_request.semantic_run_id != bundle.semantic_run_id
+                or resolved_request.build_artifact_manifest
+                != bundle.build_artifact_manifest
+            ):
+                raise ValueError("resolved request does not bind the execution bundle")
+            execution_case = _compose_execution_case(
+                resolved_request=resolved_request,
+                market_reader=market_reader,
+                hydrated_inputs=composition_inputs,
+            )
     except (TypeError, ValueError) as error:
         return _failure(
             _ExecutionInputsHydrationFailureCode.EXECUTION_CASE_SEMANTIC_HASH_MISMATCH,
@@ -2700,5 +2669,6 @@ def _hydrate_execution_inputs(
             target_stream=target_stream,
             timeline_batch_size=bundle.timeline_batch_size,
             execution_case_plan=bundle.execution_case_plan,
+            execution_case=execution_case,
         )
     )

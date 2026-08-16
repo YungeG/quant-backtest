@@ -94,10 +94,16 @@ def test_private_composition_does_not_create_attempt_publication_or_storage() ->
         "ArtifactEnvelopeReader",
         "Repository",
         "Path(",
-        "open(",
         "requests",
         "httpx",
         "socket",
         "subprocess",
     ):
         assert forbidden not in source
+    tree = _tree(_COMPOSITION)
+    assert not any(
+        isinstance(node, ast.Call)
+        and isinstance(node.func, ast.Name)
+        and node.func.id == "open"
+        for node in ast.walk(tree)
+    )
