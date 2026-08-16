@@ -98,6 +98,11 @@ Canonical 或 Integrity Evaluation 目录的无环 hash DAG root，exact-cover �
 
 将不可变旧 Artifact 通过可审计纯函数转换为新结构视图的单向过程。原始 Artifact 和摘要保持不变。
 
+## Artifact 参考坐标（Artifact Reference）
+
+不可变跨包内容坐标，绑定 `artifact_type`、`schema_version` 和 `content_hash`。它引用 Artifact Envelope 的规范内容身份，不携带 Payload、source hash、文件路径或时间戳。
+_Avoid_: path reference, source-hash reference, payload wrapper
+
 ## Migration Manifest
 
 记录一次 Schema 迁移的源版本、目标版本、迁移链和迁移代码身份的证据。

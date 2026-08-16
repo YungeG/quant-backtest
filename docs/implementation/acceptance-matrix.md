@@ -160,6 +160,7 @@ artifact_hashes: []
 | G12K | DRAFT | market-bundle-builder validation | G12C | Universe/corporate action coverage |
 | G12L-* | DRAFT | market-bundle-builder source adapter | G12A–G12K as applicable | Concrete provider/dataset/version, real raw fixtures, mapping and closure evidence |
 | G12M-* | DRAFT | backtest-runtime qualification | market-specific G12L, G07–G10 | Per-market qualification matrix |
+| BT-GAP-01 | READY | trading-domain | WP-02E, Platform BT-PORT-01 | none |
 
 ## 4. WP-00A Acceptance Card
 
@@ -11115,7 +11116,6 @@ artifact_hashes: []
 
 This slice freezes passive declaration values only. The static fixture is deterministic contract evidence, not provider/calendar truth or terminal-set completeness. `PriceStreamCoverageReport`, `MarketAvailabilityReport`, and `RevisionProvenanceReport` remain unimplemented. G12I remains `DRAFT / BLOCKED`, development-only, and cannot qualify a market or authorize deployment.
 
-
 ## 104. G12L-* Provider Qualification Contract (Gate remains DRAFT)
 
 ```yaml
@@ -11189,7 +11189,55 @@ artifact_hashes: {}
 7. G12H, G12I, G12K, every concrete G12L-*, and G12M remain `DRAFT / BLOCKED`.
    This contract grants no decision-grade, live, or deployment authority.
 
-## 105. PASSED 记录格式
+## 105. BT-GAP-01 Domain ArtifactRef
+
+```yaml
+id: BT-GAP-01
+status: READY
+depends_on:
+  - WP-02E
+  - Platform BT-PORT-01 consumer contract
+owner_package: trading-domain
+public_interface:
+  - crypto_quant_domain.ArtifactRef
+test_commands:
+  contract: uv run pytest -q tests/domain/artifacts/test_artifact_ref.py
+  fixture: uv run pytest -q tests/domain/artifacts/test_artifact_ref.py tests/domain/artifacts/test_artifact_envelope_golden.py
+  boundary: uv run pytest -q tests/architecture/test_public_api_imports.py
+fixture_ids:
+  - artifact-ref-v1
+  - artifact-envelope-catalog-v1
+expected_artifacts:
+  - tests/fixtures/domain/artifact-ref-v1.json
+  - build/acceptance/bt-gap-01-pytest.xml
+failure_contracts:
+  - invalid-artifact-ref-type
+  - invalid-artifact-ref-schema-version
+  - invalid-artifact-ref-content-hash
+  - non-exact-artifact-envelope-reconstruction
+  - artifact-envelope-v1-byte-regression
+allowed_grade: development
+evidence:
+  - exact-platform-artifact-ref-wire
+  - canonical-golden-fixture
+  - inherited-envelope-byte-compatibility
+  - public-domain-root-import
+  - focused-pytest-report
+passed_commit: null
+artifact_hashes:
+  tests/fixtures/domain/artifact-ref-v1.json: sha256:f1153b2b06ac0fff60ec50a0f4eca26b3e3a798cb149f185178a2deec791c75e
+```
+
+### BT-GAP-01 Acceptance
+
+1. `ArtifactRef` is the single Domain-owned immutable content coordinate. Its exact canonical wire is `{type="artifact_ref", artifact_type, schema_version, content_hash}`.
+2. `artifact_type`, `schema_version`, and `content_hash` require exact built-in types; schema identity reuses `CanonicalSchema`, and the hash is exactly `sha256:<64 lowercase hex>`.
+3. `ArtifactRef.from_envelope()` accepts only an exact `ArtifactEnvelope` and reconstructs all three coordinate fields. It does not decode, store, or verify external bytes.
+4. The ref contains no Payload, source hash, path, timestamp, repository identity, governance status, or Platform type.
+5. WP-02E `ArtifactEnvelope` and `artifact-envelope-catalog-v1` bytes/hashes remain unchanged. No migration, repository, facade, tagged Backtest ref, analysis, structural reader, registry, or BT-GAP-02+ behavior is introduced.
+6. `READY → PASSED` requires an immutable implementation commit, actual command outputs, the focused JUnit artifact hash, full regression evidence, and independent review.
+
+## 106. PASSED 记录格式
 
 ```yaml
 id: WP-00A
