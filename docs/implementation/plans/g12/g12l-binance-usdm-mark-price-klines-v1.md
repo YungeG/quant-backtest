@@ -32,11 +32,10 @@ Research authority:
 ## Current status
 
 `DRAFT / IN PROGRESS`. Provider, dataset, immutable authority revision, finite
-request scope, real ZIP/checksum fixtures, internal one-day closure, and exact
-G12A snapshot identity are frozen. Provider normalization is blocked because the
-archive CSV contains close times but no immutable per-row publication/availability
-evidence; bounded transport behavior, revision terminality, G12C/D evidence, and
-final acceptance also remain.
+request scope, real ZIP/checksum fixtures, internal one-day closure, exact G12A
+snapshot identity, and the conservative v1 availability rule are frozen. Provider
+normalization, bounded transport behavior, revision terminality, G12C/D evidence,
+and final acceptance remain.
 
 ## Frozen v1 scope
 
@@ -65,20 +64,23 @@ URLs with a frozen bounded retry count, verifies both members, and calls
 `freeze_source_snapshot()` only after complete success. A restart re-fetches the
 whole two-member set; no partial resume state becomes authority.
 
-Normalization must not be implemented until the concrete slice freezes caller-
-supplied immutable availability evidence for every row or one authoritative
-bounded rule that derives it. Binance `close_time` is an economic source time,
-not publication evidence; archive capture time is not substituted. After that
-prerequisite, normalization may read the verified G12A ZIP member, exact-validate
-the one CSV, and emit one atomic result with source↔event traces or one failure.
-The final public type names and canonical result body are frozen by RED tests
-before the production implementation is added.
+The conservative v1 availability authority is the exact G12A archive member
+`acquired_at_epoch_nanoseconds`: every normalized row uses that later instant as
+`available_time`. Binance `close_time` remains the economic event/interval time
+and never becomes publication evidence. This is deliberately fail-closed: the
+2024 rows cannot qualify an intraday 2024 replay and G12M remains blocked until a
+stronger immutable provider publication source is separately frozen.
+
+Normalization may read the verified G12A ZIP member, exact-validate the one CSV,
+and emit one atomic result with source↔event traces or one failure. The final
+public type names and canonical result body are frozen by RED tests before the
+production implementation is added.
 
 ## Mapping constraints
 
 - preserve all provider timestamps and decimal strings exactly;
-- bind `available_time` only from separately frozen immutable authority; never
-  infer it as `close_time + 1ms` or from archive capture time;
+- bind `available_time` exactly to the G12A archive member acquisition timestamp;
+  never infer it as `close_time + 1ms` or claim earlier provider publication;
 - require closed rows and exact daily sequence closure;
 - map close separately to VALUATION and MARGIN streams;
 - map close plus low/high to LIQUIDATION evidence;
@@ -117,19 +119,17 @@ checksum request order and physical CSV row order.
 
 ## Acceptance work remaining
 
-1. Freeze immutable per-row publication/availability evidence or an authoritative
-   bounded derivation rule; without it no canonical MarketEvent may be emitted.
-2. Add RED contract tests for request/result/failure canonical identities.
-3. Add offline fake-fetch tests for uninterrupted, retry, restart, duplicate
+1. Add RED contract tests for request/result/failure canonical identities.
+2. Add offline fake-fetch tests for uninterrupted, retry, restart, duplicate
    response, exhausted retry, every HTTP/content failure mapping, and mixed-fault
    precedence before early return.
-4. Implement the minimal provider module and purpose-separated source↔event trace
+3. Implement the minimal provider module and purpose-separated source↔event trace
    without changing the already-frozen Builder root API accidentally.
-5. Produce and freeze normalized, G12C manifest, and G12D publication fixtures.
-6. Record archive revision/correction closure or an explicit finite causal limit.
-7. Run focused, full repository, import-boundary, network-isolation, secret scan,
+4. Produce and freeze normalized, G12C manifest, and G12D publication fixtures.
+5. Record archive revision/correction closure or an explicit finite causal limit.
+6. Run focused, full repository, import-boundary, network-isolation, secret scan,
    lock, LSP, and independent review checks.
-8. Only then change the concrete slice to `PASSED`; G12I/G12M remain separate.
+7. Only then change the concrete slice to `PASSED`; G12I/G12M remain separate.
 
 ## Current executable evidence
 

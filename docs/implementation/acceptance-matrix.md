@@ -11248,7 +11248,6 @@ evidence:
   - exact-g12a-snapshot-provenance-and-content-identity
   - offline-repeatable-fixture-check
 remaining_blockers:
-  - immutable-per-row-publication-or-availability-authority
   - provider-specific-request-result-and-failure-contract
   - bounded-retry-restart-atomic-and-mixed-fault-precedence-tests
   - purpose-separated-provider-csv-to-market-event-normalizer-and-source-trace
@@ -11275,9 +11274,10 @@ artifact_hashes:
 3. The exact two-member G12A snapshot, content-tree, provenance identities and
    false qualification flags are executable and frozen without network access.
 4. G10D remains the source-semantics authority. The archive CSV has economic
-   close times but no immutable per-row publication/availability evidence, so a
-   Builder normalizer must not invent `available_time = close_time + 1ms` or use
-   later archive capture time. That authority must be frozen before normalization.
+   close times but no provider publication timestamps, so `available_time =
+   close_time + 1ms` is forbidden. The conservative v1 authority is the exact
+   G12A archive member acquisition timestamp for every row. This prevents
+   lookahead but cannot qualify intraday 2024 replay; G12M remains blocked.
 5. A future Builder normalizer must preserve exact provider bytes/times/decimals
    and purpose separation without importing Trading Kernel types, relabeling the
    source as synthetic JSONL, or accidentally expanding the frozen Builder root.

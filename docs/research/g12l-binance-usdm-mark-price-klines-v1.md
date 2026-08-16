@@ -100,21 +100,22 @@ The accepted G10D primary-source decision remains authoritative:
 - provider open/high/low/close decimal strings and millisecond times remain exact;
 - archive capture time is not substituted for economic event/close time.
 
-G12L still needs a Builder-owned provider normalizer and source↔event trace, but
-that normalizer is currently blocked: the CSV proves provider close times, not
-when each final row became knowable. `available_time = close_time + 1ms` would be
-invented, while archive capture time would make every 2024 event unavailable
-until the later capture. A separate immutable per-row publication/availability
-authority or authoritative bounded derivation rule must be frozen first. The
-future normalizer must not import Trading Kernel provider types or label provider
-rows as the existing synthetic JSONL grammar.
+G12L still needs a Builder-owned provider normalizer and source↔event trace. The
+CSV proves provider close times but not when each final row became knowable, so
+`available_time = close_time + 1ms` is forbidden. The conservative v1 authority
+is instead the exact G12A archive member acquisition timestamp: all rows become
+available only at that later instant. This prevents lookahead but intentionally
+cannot qualify an intraday 2024 replay; G12M remains blocked until stronger
+immutable provider publication evidence exists. The future normalizer must not
+import Trading Kernel provider types or label provider rows as the existing
+synthetic JSONL grammar.
 
 ## Remaining closure work
 
-1. Freeze immutable publication/availability evidence for every row or an exact
-   authoritative bounded derivation rule; provider close time alone is not enough.
-2. Freeze the provider-specific, purpose-separated normalization result and exact
+1. Freeze the provider-specific, purpose-separated normalization result and exact
    mapping to generic `MarketEvent` values without adding a generic adapter framework.
+2. Bind every normalized `available_time` to the G12A archive member acquisition
+   timestamp and preserve provider close time separately as economic time.
 3. Implement strict checksum/ZIP/CSV validation and atomic mapping failures,
    including malformed/encrypted ZIP members and mixed-fault precedence.
 4. Freeze bounded transport retry/restart behavior with injected offline fakes;
