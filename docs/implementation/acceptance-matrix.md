@@ -161,8 +161,8 @@ artifact_hashes: []
 | G12L-* | DRAFT | market-bundle-builder source adapter | G12A–G12K as applicable | Concrete provider/dataset/version, real raw fixtures, mapping and closure evidence |
 | G12M-* | DRAFT | backtest-runtime qualification | market-specific G12L, G07–G10 | Per-market qualification matrix |
 | BT-GAP-01 | PASSED — immutable commit `f2440f9658fbe2ae1cf0016a78c44e4230995394` | trading-domain | WP-02E, Platform BT-PORT-01 | none |
-| BT-GAP-02 | DRAFT / BLOCKED | backtest-runtime | BT-GAP-01, BT-GAP-04 | Tagged completed/terminal refs and exactly-one run publication outcome are not frozen |
-| BT-GAP-04 | READY | backtest-runtime | BT-GAP-01, G07, Platform BT-PORT-01 | Completed nominal ref, bare terminal ArtifactRef, and direct run-ref union are frozen |
+| BT-GAP-02 | DRAFT / UNBLOCKED | backtest-runtime | BT-GAP-01, BT-GAP-04 | Freeze the run-only facade contract against PASSED `RunPublicationRef` |
+| BT-GAP-04 | PASSED — immutable commit `c3257643d6911bd3b63efac0899aa04d47397b05` | backtest-runtime | BT-GAP-01, G07, Platform BT-PORT-01 | none |
 
 ## 4. WP-00A Acceptance Card
 
@@ -11261,7 +11261,7 @@ artifact_hashes:
 
 ```yaml
 id: BT-GAP-02
-status: DRAFT / BLOCKED
+status: DRAFT / UNBLOCKED
 depends_on:
   - BT-GAP-01
   - G07
@@ -11276,10 +11276,12 @@ failure_contracts: []
 allowed_grade: development
 evidence:
   - existing request-resolution-composition-runner-publication flow analysis
-remaining_blockers:
-  - BT-GAP-04 must freeze nominal completed and terminal refs
-  - BT-GAP-04 must freeze the exactly-one completed-or-terminal run publication outcome
-  - only then may BT-GAP-02 freeze its run-only facade name, constructor dependencies, failures, fixture, and RED tests
+remaining_blockers: []
+next_contract_decisions:
+  - freeze the run-only facade name and existing public request input
+  - freeze only the minimum constructor dependencies needed to reuse G07 authorities
+  - freeze provider/storage failure precedence without converting failures to terminals
+  - freeze fixture and RED tests against PASSED RunPublicationRef
 passed_commit: null
 artifact_hashes: {}
 ```
@@ -11287,15 +11289,15 @@ artifact_hashes: {}
 ### BT-GAP-02 Readiness
 
 1. Existing G07 authorities already own request resolution, composition, Attempt execution, integrity evaluation, terminal semantics, cache verification, and canonical publication. BT-GAP-02 will eventually hide their sequencing behind one deep public `run` interface; it must not reimplement them.
-2. The facade cannot freeze an honest return type before BT-GAP-04 owns nominal completed/terminal refs and their exactly-one tagged outcome. Implementation absence is not itself a readiness blocker; the missing upstream contract is.
+2. BT-GAP-04 now supplies the PASSED direct `RunPublicationRef` return contract. Implementation absence is not a blocker; BT-GAP-02 is ready for its own contract-freeze phase.
 3. BT-GAP-02 owns only the run facade. Repository loads remain BT-GAP-03, tagged refs/outcome remain BT-GAP-04, analysis remains BT-GAP-05/06, and structural reader injection remains BT-GAP-07.
-4. No fixture, RED test, production type name, constructor dependency list, or failure precedence is frozen while the return contract is unresolved. BT-GAP-02 therefore remains `DRAFT / BLOCKED`.
+4. No BT-GAP-02 fixture, RED test, facade name, constructor dependency list, or failure precedence is frozen yet. The gate is `DRAFT / UNBLOCKED`, not `READY` or `PASSED`.
 
 ## 107. BT-GAP-04 Publication Reference Contract
 
 ```yaml
 id: BT-GAP-04
-status: READY
+status: PASSED
 depends_on:
   - BT-GAP-01
   - G07
@@ -11307,7 +11309,8 @@ public_interface:
 test_commands:
   contract: uv run pytest -q tests/runtime/publication/test_publication_refs.py tests/runtime/integration/test_g07_auditable_run_golden.py
   boundary: uv run python tools/architecture/check_import_boundaries.py --root . --policy architecture/import-boundaries.toml --report build/acceptance/bt-gap-04-import-boundary-report.json
-  quality: MYPYPATH=packages/backtest-runtime/src:packages/trading-domain/src uvx --from mypy==2.3.0 --with pytest==8.4.2 mypy --python-version 3.13 packages/backtest-runtime/src/crypto_quant_backtest/publication_refs.py tests/runtime/publication/test_publication_refs.py
+  source_types: MYPYPATH=packages/backtest-runtime/src:packages/trading-domain/src:packages/trading-kernel/src:packages/market-data-contracts/src:packages/market-bundle-builder/src uvx --from mypy==2.3.0 mypy --python-version 3.13 packages/backtest-runtime/src/crypto_quant_backtest/publication_refs.py
+  test_types: MYPYPATH=packages/backtest-runtime/src:packages/trading-domain/src:packages/trading-kernel/src:packages/market-data-contracts/src:packages/market-bundle-builder/src uvx --from mypy==2.3.0 --with pytest==8.4.2 mypy --python-version 3.13 --ignore-missing-imports --follow-imports=silent tests/runtime/publication/test_publication_refs.py
   lock: uv lock --check
   diff: git diff --check
 fixture_ids:
@@ -11325,11 +11328,31 @@ evidence:
   - exact Platform completed and all three terminal refs
   - direct completed-or-terminal run reference union
   - unchanged G07 finalized result and evaluation wires
-passed_commit: null
-artifact_hashes: {}
+contract_freeze_commit: 033af1fdc029e48c74fc3cae5eca08b4b3ef2e19
+passed_commit: c3257643d6911bd3b63efac0899aa04d47397b05
+executed_commands:
+  - uv run pytest -q --junitxml=build/acceptance/bt-gap-04-pytest.xml tests/domain/artifacts/test_artifact_ref.py tests/runtime/publication/test_publication_refs.py tests/runtime/integration/test_g07_auditable_run_golden.py tests/architecture/test_public_api_imports.py tests/architecture/test_import_boundary_mutations.py
+  - uv run pytest -q
+  - cd .. && uvx --python 3.13.5 --from pytest==8.4.2 pytest -q -p no:cacheprovider tests/architecture/test_backtest_consumer_port.py
+  - MYPYPATH=packages/backtest-runtime/src:packages/trading-domain/src:packages/trading-kernel/src:packages/market-data-contracts/src:packages/market-bundle-builder/src uvx --from mypy==2.3.0 mypy --python-version 3.13 packages/backtest-runtime/src/crypto_quant_backtest/publication_refs.py
+  - MYPYPATH=packages/backtest-runtime/src:packages/trading-domain/src:packages/trading-kernel/src:packages/market-data-contracts/src:packages/market-bundle-builder/src uvx --from mypy==2.3.0 --with pytest==8.4.2 mypy --python-version 3.13 --ignore-missing-imports --follow-imports=silent tests/runtime/publication/test_publication_refs.py
+  - uv run python tools/architecture/check_import_boundaries.py --root . --policy architecture/import-boundaries.toml --report build/acceptance/bt-gap-04-import-boundary-report.json
+  - uv lock --check
+  - git diff --check
+test_results:
+  focused_and_inherited: 42 passed
+  full_repository: 1586 passed
+  platform_consumer_contract: 14 passed
+  independent_reviews: NONE / NONE
+artifact_hashes:
+  tests/fixtures/runtime/bt-gap04-publication-ref-v1.json: sha256:9cbe91becf64053fdb44cb884a8cfd621e020e8ce54e4f5f6f76411f275e3c79
+  tests/fixtures/runtime/g07-auditable-synthetic-run-v1.json: sha256:60da78527bacf40af3586e9a783ad62ba07c4e160ec4b2c831fefb0385834c90
+  build/acceptance/bt-gap-04-pytest.xml: sha256:ec4b949d0c57044a9d0e49466648834fccb6f415f60e1af7639733ce99ada617
+  build/acceptance/bt-gap-04-import-boundary-report.json: sha256:576836a8f111d693e5a39dd3db936d199d4ae4681ce6dc92a6263db28b6887f5
+  uv.lock: sha256:a07106c285b2c454d0528411c79988881b3ff87c0a84d04228d94c186e9d3d8d
 ```
 
-### BT-GAP-04 Readiness
+### BT-GAP-04 Acceptance
 
 1. The frozen Platform consumer fixture is executable authority where its prose summary conflicts: completed runs return a nominal `backtest_canonical_publication_ref`, while `BLOCKED`, `FAILED`, and `CANCELLED` return a bare Domain `artifact_ref`.
 2. `BacktestCanonicalPublicationRef` wraps exactly one `ArtifactRef` constrained to `canonical_publication_manifest@1`. It adds no path, payload, timestamp, grade, metric, or repository state.
@@ -11337,6 +11360,7 @@ artifact_hashes: {}
 4. Terminal status and durable evidence are recovered and verified by the future BT-GAP-03 repository. The run return itself carries no status wrapper, metrics, zero return, or synthetic terminal artifact.
 5. Analysis refs remain BT-GAP-05/06. Facade sequencing remains BT-GAP-02, repository loads BT-GAP-03, and structural reader injection BT-GAP-07.
 6. G07 canonicalized finalized structures remain unchanged and are validated against the existing G07 golden fixture.
+7. Contract freeze commit `033af1fdc029e48c74fc3cae5eca08b4b3ef2e19` and implementation commit `c3257643d6911bd3b63efac0899aa04d47397b05` are immutable. Focused/inherited tests passed 42, the full repository passed 1586, Platform BT-PORT-01 passed 14, type/import checks passed, and both independent final reviews returned `NONE`.
 
 ## 108. PASSED 记录格式
 
