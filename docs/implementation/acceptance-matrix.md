@@ -163,7 +163,7 @@ artifact_hashes: []
 | BT-GAP-01 | PASSED — immutable commit `f2440f9658fbe2ae1cf0016a78c44e4230995394` | trading-domain | WP-02E, Platform BT-PORT-01 | none |
 | BT-GAP-02 | DRAFT / BLOCKED | backtest-runtime | BT-GAP-01, G07, BT-GAP-02A, BT-GAP-04 | No production authority maps every resolved supported request to a `ResolvedExecutionCase` |
 | BT-GAP-02A | DRAFT / BLOCKED | backtest-runtime composition | G07, G08H, G10G, BT-GAP-02B | Composition awaits a production execution-input hydration contract |
-| BT-GAP-02B | DRAFT / BLOCKED | backtest-runtime execution inputs | BT-GAP-01, G03, G07, G11I, G12E, BT-GAP-07, PLAT-REC-03 | BacktestRequest v1 digests do not locate all runtime payloads; additive request-envelope ownership is unresolved |
+| BT-GAP-02B | DRAFT / UNBLOCKED | backtest-runtime execution inputs | BT-GAP-01, G03, G07, G11I, G12E, BT-GAP-07, PLAT-REC-03 | Freeze the accepted additive transport, bundle materializer, payload schema, and pre-Attempt validation |
 | BT-GAP-04 | PASSED — immutable commit `c3257643d6911bd3b63efac0899aa04d47397b05` | backtest-runtime | BT-GAP-01, G07, Platform BT-PORT-01 | none |
 | BT-GAP-06 | DRAFT / BLOCKED | backtest-runtime analysis schema | BT-GAP-01, BT-GAP-04, G07 | Stored payload versus loaded view, missing-metric wire, metric-profile schema, and decimal authority are unresolved |
 | BT-GAP-07 | PASSED — immutable commit `029ac43f6d781567cd0742594ca82c181ead0a6d` | backtest-runtime structural read port | BT-GAP-01, WP-02E | none |
@@ -11342,7 +11342,7 @@ artifact_hashes: {}
 
 ```yaml
 id: BT-GAP-02B
-status: DRAFT / BLOCKED
+status: DRAFT / UNBLOCKED
 depends_on:
   - BT-GAP-01
   - G03 financial state authorities
@@ -11361,13 +11361,13 @@ failure_contracts: []
 allowed_grade: development
 evidence:
   - ResolvedExecutionCase field-to-owner audit
+  - accepted Platform PLAT-REC-03 additive execution-input transport
 next_contract_decisions:
-  - RECOMMENDED OPTION_A (additive envelope): Platform constructs a versioned Backtest-owned execution request containing the exact immutable BacktestRequest v1 plus one execution-input-bundle ArtifactRef; v1 bytes and hashes remain unchanged.
-  - The bundle is a Backtest-owned ArtifactEnvelope read structurally through BT-GAP-07; Backtest alone decodes and verifies target stream, initial financial state, builder constants, and their bindings to v1 digests before Attempt creation.
-  - G12E continues to locate and verify MarketBundle bytes from the existing MarketBundleRef; market bytes are not copied into the execution-input bundle.
-  - REJECT OPTION_B profile factory: it misassigns runtime payload hydration to simulation-profile registrations and creates a second selection seam.
-  - REJECT OPTION_C bare deep function: explicit hydrated arguments have no addressable source from BacktestRequest v1 and would leak pre-run orchestration to the facade caller.
-  - PLAT-REC-03 must approve the additive execution-request envelope because accepted PLAT-REC-01 currently names the bare public BacktestRequest value.
+  - freeze Backtest-owned final public names and canonical bytes for the transport value containing exact BacktestRequest v1 plus one execution-input-bundle ArtifactRef
+  - freeze the Backtest public encoder/materializer that returns the bundle ArtifactEnvelope; Platform stores only that envelope and passes the transport by value
+  - freeze the bundle payload for target stream, initial PortfolioSnapshot and AccountingJournal, and stable builder constants; MarketBundle bytes remain under G12E and are not copied
+  - freeze pre-Attempt missing, tampered, wrong-type/version, digest-mismatch, semantic-hash-mismatch, and unavailable-input precedence
+  - preserve Domain ownership of ArtifactEnvelope/ArtifactRef, BT-GAP-07 structural reading, and Backtest-only decoding/semantic validation
 passed_commit: null
 artifact_hashes: {}
 ```
@@ -11378,8 +11378,8 @@ artifact_hashes: {}
 2. The contract must cover canonical market timeline payloads, a hydrated `PrecomputedTargetStream`, initial `PortfolioSnapshot` plus `AccountingJournal`, and stable builder constants. Every semantic value must be checked against identities already committed by `BacktestRequest` or an existing versioned production owner.
 3. G12E remains the MarketBundle read authority. BT-GAP-07 is the structural read authority for the proposed execution-input-bundle ArtifactEnvelope; strategy runtime, accounting, profile composers, and `ExecutionCaseComposer` retain decoding and semantic authority.
 4. Bare digests are not locators: `target_stream_digest`, `build_artifact_manifest_hash`, and `execution_case_semantic_hash` cannot recover their internal keys or physical bytes, and v1 carries no initial-state identity. No implicit path convention or digest-to-path registry may be invented.
-5. The recommended additive envelope changes the Platform-facing execution request while preserving its embedded BacktestRequest v1. PLAT-REC-03 is therefore a material cross-repository decision, not an implementation detail.
-6. Exact names, fixture, failure precedence, and bytes remain unfrozen. BT-GAP-02B stays `DRAFT / BLOCKED`; BT-GAP-07 is the immediate independently acceptable node.
+5. PLAT-REC-03 now accepts the additive transport while preserving the embedded BacktestRequest v1. The transport is passed by value; Backtest materializes the bundle ArtifactEnvelope, Foundation stores only that envelope, and Domain owns the returned ArtifactRef.
+6. Exact Backtest names, fixture, payload schema, failure precedence, and bytes remain unfrozen. BT-GAP-02B is the immediate `DRAFT / UNBLOCKED` node.
 
 ## 109. BT-GAP-04 Publication Reference Contract
 
