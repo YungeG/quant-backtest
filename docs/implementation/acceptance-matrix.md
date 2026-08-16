@@ -11691,7 +11691,7 @@ evidence:
   - Platform BT-PORT-01 complete-analysis view
   - user-confirmed missing/null, Fill-count, return, rounding, and profile authorities
 remaining_blockers: []
-contract_commit: null
+contract_commit: 70fd2a45c3c2ed84d01d331d0a7720fdfe8589cf
 passed_commit: null
 test_results:
   fixture_and_platform_projection: 2 passed
