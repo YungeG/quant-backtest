@@ -59,7 +59,9 @@ def test_g08h_production_composition_is_one_offline_isolated_module() -> None:
         in {"requests", "urllib", "socket", "subprocess"}
         for value in imports
     )
-    assert not any(value.endswith(".engine") or value.endswith(".runner") for value in imports)
+    # BT-GAP-02A narrowly permits private execution-case construction dependencies;
+    # the profile still must not own Engine execution or Runner orchestration.
+    assert not any(value.endswith(".runner") for value in imports)
     assert "class FinancialEventDispatcher" not in source
     assert "class BacktestProfileRegistry" not in source
 

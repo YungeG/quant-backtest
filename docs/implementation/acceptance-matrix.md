@@ -162,7 +162,7 @@ artifact_hashes: []
 | G12M-* | DRAFT | backtest-runtime qualification | market-specific G12L, G07–G10 | Per-market qualification matrix |
 | BT-GAP-01 | PASSED — immutable commit `f2440f9658fbe2ae1cf0016a78c44e4230995394` | trading-domain | WP-02E, Platform BT-PORT-01 | none |
 | BT-GAP-02 | DRAFT / BLOCKED | backtest-runtime | BT-GAP-01, G07, BT-GAP-02A, BT-GAP-04 | No production authority maps every resolved supported request to a `ResolvedExecutionCase` |
-| BT-GAP-02A | DRAFT / BLOCKED | backtest-runtime composition | G07, G08H, G10G, BT-GAP-02B | Composition awaits a production execution-input hydration contract |
+| BT-GAP-02A | READY | backtest-runtime composition | G07, G08H, G10G, BT-GAP-02B | none |
 | BT-GAP-02B | PASSED — immutable commit `9f321780bb2e831bac521722c04af82adbd8e40e` | backtest-runtime execution inputs | BT-GAP-01, G03, G07, G11I, G12E, BT-GAP-07, PLAT-REC-03 | none |
 | BT-GAP-04 | PASSED — immutable commit `c3257643d6911bd3b63efac0899aa04d47397b05` | backtest-runtime | BT-GAP-01, G07, Platform BT-PORT-01 | none |
 | BT-GAP-06 | DRAFT / BLOCKED | backtest-runtime analysis schema | BT-GAP-01, BT-GAP-04, G07 | Stored payload versus loaded view, missing-metric wire, metric-profile schema, and decimal authority are unresolved |
@@ -11301,7 +11301,7 @@ artifact_hashes: {}
 
 ```yaml
 id: BT-GAP-02A
-status: DRAFT / BLOCKED
+status: READY
 depends_on:
   - G07
   - G08H production CnA profile composition
@@ -11309,34 +11309,53 @@ depends_on:
   - BT-GAP-02B production execution-input hydration contract
 owner_package: backtest-runtime composition
 public_interface: []
-test_commands: {}
-fixture_ids: []
+test_commands:
+  contract_red: uv run pytest -q tests/runtime/execution_inputs/test_bt_gap02a_composition_contract.py
+  boundary_red: uv run pytest -q tests/architecture/test_bt_gap02a_composition_boundary.py
+  inherited: uv run pytest -q tests/runtime/execution_inputs/test_execution_input_bundle_contract.py tests/runtime/execution_inputs/test_hydrate_execution_inputs.py tests/runtime/resolution/test_execution_case_identity.py tests/runtime/profiles/cn_a_share/test_profile_composition.py tests/runtime/profiles/binance_usdm/test_profile_composition.py tests/architecture/test_bt_gap02b_execution_input_boundary.py tests/architecture/test_g08h_cn_a_share_composition_boundary.py tests/architecture/test_g10g_binance_composition_boundary.py
+  import_boundary: uv run python tools/architecture/check_import_boundaries.py --root . --policy architecture/import-boundaries.toml --report /tmp/bt-gap02a-contract-import-boundary-report.json
+  lock: uv lock --check
+  diff: git diff --check
+fixture_ids:
+  - bt-gap02a-production-composition-v1
 expected_artifacts:
-  - future profile-owned production execution-case composition contract
+  - one package-private `crypto_quant_backtest.composition._compose_execution_case` entry point
+  - one package-private `_build_execution_case` method on each selected production simulation implementation
+  - one composer-sealed `ResolvedExecutionCase` for each supported production profile
 failure_contracts:
-  - missing-market-bundle-timeline-input-contract
-  - missing-precomputed-target-stream-payload-contract
-  - missing-initial-financial-state-contract
-  - missing-builder-runtime-constants-contract
+  - selected-simulation-construction-owner-missing
+  - resolved-registration-or-hydrated-spec-mismatch
+  - represented-simulation-component-ref-mismatch
+  - non-pristine-initial-order-state
+  - non-pristine-initial-settlement-state
+  - builder-supplied-or-incomplete-identity-manifest
+  - nondeterministic-production-composition
 allowed_grade: development
 evidence:
-  - production composer and registry authority analysis
-  - missing-contract audit confirms current request/profile tuple cannot fully hydrate a `ResolvedExecutionCase`
-remaining_blockers:
-  - BT-GAP-02B must freeze request-bound hydration of `MarketBundleReader`/timeline payloads
-  - BT-GAP-02B must freeze hydration of `PrecomputedTargetStream`; the request exposes only its digest
-  - BT-GAP-02B must freeze the initial `PortfolioSnapshot` and `AccountingJournal` source
-  - BT-GAP-02B must assign `case_key`, `case_version`, and `timeline_batch_size` to an existing production owner
+  - existing-selector ownership audit
+  - initial-state nested Domain-ID audit
+  - CnA execution-model component authority match
+  - G10G execution/slippage/closeout component authority mismatch reproduced
+  - BT-GAP-02B hydrated input contract accepted at immutable commit 9f321780bb2e831bac521722c04af82adbd8e40e
+remaining_blockers: []
 passed_commit: null
-artifact_hashes: {}
+artifact_hashes:
+  fixture_sha256: 816358c92ac6e223ffe91cb01a1088a3721b08eac5f5623350affe7ba373437b
+  preserved_bt_gap02b_fixture_sha256: 09578ac47f997bc4bf55119d31e97dbcad3eb71e90d93a5ef7c8e6669bd66be2
+  preserved_cn_a_profile_fixture_sha256: aa032668a5207b61b6c8815894e0087f1c1e734d41e9707c7d32111b6c1cd79f
+  preserved_binance_profile_fixture_sha256: e9e329b4cd2dfd990a8eec8460767b6b05fffcc126e876a2cdf86f15a6d06bd9
 ```
 
 ### BT-GAP-02A Readiness
 
-1. `BacktestProfileRegistry` is the existing profile selection authority. BT-GAP-02A may deepen that seam or its registrations; it must not create a second registry, generic plugin system, factory, callback graph, or runtime branch table.
-2. Production composition of one `ResolvedExecutionCase` now requires four typed runtime inputs that are currently missing from the request/profile tuple and cannot be hydrated without broader artifact-loading authority: `MarketBundleManifest` reader/event timeline, hydrated `PrecomputedTargetStream`, `PortfolioSnapshot` + initial `AccountingJournal`, and builder constants (`case_key`, `case_version`, `timeline_batch_size`).
-3. BT-GAP-03 remains a post-run evidence repository and is not a predecessor. BT-GAP-07 may be reused by BT-GAP-02B only for structural reading of an approved execution-input-bundle ArtifactEnvelope; it does not decode or semantically hydrate execution inputs.
-4. Exact public names, constructor shape, fixture, and RED tests remain unfrozen. BT-GAP-02A is `DRAFT / BLOCKED` on BT-GAP-02B; BT-GAP-02 resumes only after both contracts pass.
+1. Semantic ownership is sufficient and BT-GAP-02A is `READY`. `BacktestProfileRegistry` remains the only selector: after `ProfileResolver` has produced `ResolvedBacktestRequest`, the private composition entry invokes only `resolved_request.environment.simulation.implementation._build_execution_case`. There is no fallback, second lookup table, public builder/factory/protocol/callback, profile-key branch, or `tests/support` production dependency.
+2. The selected simulation implementation is the sole concrete execution-case construction owner. The private entry supplies the exact resolved Market Semantics and Execution Account registrations, the caller-supplied G12E `MarketBundleReader`, and the hydrated BT-GAP-02B inputs. `ExecutionCaseComposer` retains semantic-spec validation, `ExecutionCaseIdentityFactory`, exact identity-manifest coverage, and final sealing. No Registry, Resolver, Composer, Builder, implementation, or case is newly root-exported.
+3. Both CnA and Binance production profiles must reconstruct exactly one `ResolvedExecutionCase` whose semantic spec equals the hydrated BT-GAP-02B spec. Timeline stream keys/window, target stream and digest, operational batch size, build identity, financial state, financial dispatch plan, snapshot plan, and run-end inputs exact-match; repeated composition yields equal semantic run, identities, manifest, canonical bytes, and case hash.
+4. Every concrete simulation component represented in the case must equal the corresponding selected `SimulationProfileRegistration.component_manifest` ref. At minimum this covers execution model and closeout for CnA, plus execution model, slippage, and closeout for Binance. The frozen RED reproduces the current G10G mismatch while confirming the CnA execution-model and closeout refs already match. Aggregate profile `model_digest` is not a component digest and is never substituted for one.
+5. Development v1 deliberately rejects non-empty initial Order streams, Order admissions, Reservation schedules, and any non-pristine Settlement state before construction. BT-GAP-02B remains unchanged and may structurally hydrate those fields; BT-GAP-02A narrows executable v1 scope because nested historical Order/Reservation/Settlement Domain IDs are not composer-derived today. Historical-state execution requires a later ID-free nested template plus complete binding/reconstruction contract.
+6. Any owner, resolved-registration, hydrated-spec, component, initial-state, identity-plan, manifest, or determinism mismatch fails before Attempt creation or publication. The private composition path imports neither Runner nor publication authority and cannot produce partial evidence.
+7. G08H and G10G frozen purity boundaries are narrowly superseded only to permit package-private execution-case construction dependencies (`composition`, `engine`, `execution_inputs`, `execution`, `slippage`, `run_end`, `target_stream`, and `timeline`) inside the production profile implementation or a same-package private helper. Engine execution, Runner orchestration, filesystem/network/provider/process/database/cloud access, mutable global state, public API expansion, and concrete CnA/Binance branches in generic runtime remain forbidden.
+8. The contract fixture is additive and preserves every accepted BT-GAP-02B, G08H, and G10G fixture byte/hash. The intentional RED is limited to the absent private entry/owners and the existing G10G component mismatch; no production implementation is included in this freeze.
 
 ## 108. BT-GAP-02B Production Execution-Input Hydration Contract
 

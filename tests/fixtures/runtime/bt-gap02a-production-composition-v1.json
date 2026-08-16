@@ -1,0 +1,74 @@
+{
+  "fixture_id": "bt-gap02a-production-composition-v1",
+  "schema_version": 1,
+  "private_entry_point": "crypto_quant_backtest.composition._compose_execution_case",
+  "selected_owner_method": "_build_execution_case",
+  "profiles": [
+    {
+      "profile_id": "cn_a_share",
+      "market_profile_key": "equity.cn_a_share.v1",
+      "simulation_profile_key": "bar.next_eligible_open.cn_a_share.development.v1",
+      "execution_account_profile_key": "equity.cn_a_share.cash.long-only.v1",
+      "represented_component_refs": [
+        {
+          "port_type": "execution_model",
+          "component_key": "next_eligible_bar_open.v1",
+          "component_version": 1,
+          "component_digest": "sha256:d69d6d96c9081f730db6ff8cdd02431d4babdef2e3967f0094971e73aedf30fe"
+        },
+        {
+          "port_type": "closeout_policy",
+          "component_key": "mark_to_market.v1",
+          "component_version": 1,
+          "component_digest": "sha256:d9be291bff3147a191296ec5b3d37cc79aecc9ee2bff4877d7bca86f9aeb0ea8"
+        }
+      ]
+    },
+    {
+      "profile_id": "binance_usdm",
+      "market_profile_key": "crypto.binance_usdm.v1",
+      "simulation_profile_key": "bar.next_eligible_open.conservative.v1",
+      "execution_account_profile_key": "binance.usdm.standard-cross.v1",
+      "represented_component_refs": [
+        {
+          "port_type": "execution_model",
+          "component_key": "bar.next-eligible-open.v1",
+          "component_version": 1,
+          "component_digest": "sha256:5037407390dedc9e52fb16dcf8e33672fc55d575cffe2edec021e2b1faf26f97"
+        },
+        {
+          "port_type": "slippage_model",
+          "component_key": "slippage.deterministic-zero-bps.v1",
+          "component_version": 1,
+          "component_digest": "sha256:882ec91a3ee14deb47aebfe2066dce67958a5e05843d07052f0a927295c52ce8"
+        },
+        {
+          "port_type": "closeout_policy",
+          "component_key": "closeout.mark-to-market.v1",
+          "component_version": 1,
+          "component_digest": "sha256:5037407390dedc9e52fb16dcf8e33672fc55d575cffe2edec021e2b1faf26f97"
+        }
+      ]
+    }
+  ],
+  "initial_state_scope_v1": {
+    "order_streams": "must_be_empty",
+    "order_admissions": "must_be_empty",
+    "reservation_schedules": "must_be_empty",
+    "settlement_state": "must_be_pristine"
+  },
+  "composition_invariants": [
+    "resolved_request_environment_simulation_implementation_is_the_only_construction_owner",
+    "hydrated_execution_case_semantic_spec_is_exact",
+    "timeline_stream_keys_target_stream_batch_size_build_identity_and_initial_state_are_exact",
+    "represented_simulation_components_equal_selected_registration_refs",
+    "execution_case_composer_seals_identity_manifest",
+    "repeat_composition_is_byte_and_hash_deterministic",
+    "failure_occurs_before_attempt_or_publication"
+  ],
+  "preserved_fixture_sha256": {
+    "bt_gap02b_execution_input_bundle_v1": "09578ac47f997bc4bf55119d31e97dbcad3eb71e90d93a5ef7c8e6669bd66be2",
+    "cn_a_share_resolved_profile_composition_v1": "aa032668a5207b61b6c8815894e0087f1c1e734d41e9707c7d32111b6c1cd79f",
+    "binance_usdm_resolved_profile_composition_v1": "e9e329b4cd2dfd990a8eec8460767b6b05fffcc126e876a2cdf86f15a6d06bd9"
+  }
+}
