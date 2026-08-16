@@ -162,8 +162,9 @@ artifact_hashes: []
 | G12M-* | DRAFT | backtest-runtime qualification | market-specific G12L, G07–G10 | Per-market qualification matrix |
 | BT-GAP-01 | PASSED — immutable commit `f2440f9658fbe2ae1cf0016a78c44e4230995394` | trading-domain | WP-02E, Platform BT-PORT-01 | none |
 | BT-GAP-02 | DRAFT / BLOCKED | backtest-runtime | BT-GAP-01, G07, BT-GAP-02A, BT-GAP-04 | No production authority maps every resolved supported request to a `ResolvedExecutionCase` |
-| BT-GAP-02A | DRAFT / BLOCKED | backtest-runtime composition | G07, G08H, G10G, BT-GAP-02B | Selected registrations do not retain the profile-owned runtime inputs required to construct a case; G10G v1 component refs do not match concrete runtime components |
+| BT-GAP-02A | DRAFT / BLOCKED | backtest-runtime composition | G07, G08H, G10G, BT-GAP-02B, BT-GAP-02C | Awaiting PASSED persisted execution closure v2 and production profile case composition |
 | BT-GAP-02B | PASSED — immutable commit `9f321780bb2e831bac521722c04af82adbd8e40e` | backtest-runtime execution inputs | BT-GAP-01, G03, G07, G11I, G12E, BT-GAP-07, PLAT-REC-03 | none |
+| BT-GAP-02C | READY | backtest-runtime execution closure | BT-GAP-02B, G07, G08H, G10G, G12E | none |
 | BT-GAP-04 | PASSED — immutable commit `c3257643d6911bd3b63efac0899aa04d47397b05` | backtest-runtime | BT-GAP-01, G07, Platform BT-PORT-01 | none |
 | BT-GAP-06 | DRAFT / BLOCKED | backtest-runtime analysis schema | BT-GAP-01, BT-GAP-04, G07 | Stored payload versus loaded view, missing-metric wire, metric-profile schema, and decimal authority are unresolved |
 | BT-GAP-07 | PASSED — immutable commit `029ac43f6d781567cd0742594ca82c181ead0a6d` | backtest-runtime structural read port | BT-GAP-01, WP-02E | none |
@@ -11307,6 +11308,7 @@ depends_on:
   - G08H production CnA profile composition
   - G10G production Binance USDM profile composition
   - BT-GAP-02B production execution-input hydration contract
+  - BT-GAP-02C persisted execution closure v2
 owner_package: backtest-runtime composition
 public_interface: []
 test_commands: {}
@@ -11314,10 +11316,10 @@ fixture_ids: []
 expected_artifacts:
   - future profile-owned production execution-case composition contract
 failure_contracts:
-  - selected-registration-lacks-runtime-composition-inputs
-  - initial-financial-state-has-no-single-typed-reconstruction-authority
-  - registered-and-concrete-simulation-component-identity-mismatch
-  - profile-construction-would-weaken-a-passed-runtime-component-invariant
+  - execution-closure-v2-unavailable-or-invalid
+  - production-profile-case-composition-unavailable
+  - reconstructed-case-semantic-or-identity-mismatch
+  - g12e-target-or-timeline-binding-mismatch
 allowed_grade: development
 evidence:
   - existing-selector ownership audit
@@ -11325,22 +11327,91 @@ evidence:
   - G10G execution/slippage/closeout component mismatch reproduced
   - speculative duplicate initial-state decoder and weakened component validators removed before commit
 remaining_blockers:
-  - ResolvedBacktestRequest retains only profile registrations; the selected simulation implementation does not retain the resolved profile request, FinancialDispatcherSpec, scheduled financial events, snapshot inputs, or other profile-owned runtime composition inputs
-  - BT-GAP-02B validates the initial-state mapping but does not expose one typed reconstruction authority parameterized by ExecutionCaseIdentityFactory; implementing BT-GAP-02A directly would duplicate its schema validation and canonical decoding
-  - G10G v1 registration refs for execution, slippage, and closeout do not equal the existing concrete runtime component refs; PASSED v1 bytes cannot change and existing component invariants cannot be weakened
-  - the versioned profile/runtime ownership seam that closes these gaps without a second registry, hidden adapter, generic factory, or tests/support dependency is not yet frozen
+  - BT-GAP-02C must implement and pass bundle-v2 materialization, typed plan hydration, transport-v2 acceptance, and Binance executable profile v2
+  - production CnA/Binance provider code must construct a sealed case while it still owns the rich ResolvedProfile; tests/support cannot remain that authority
+  - the package-private runtime composition seam must reconstruct the case from the typed persisted plan plus G12E timeline/target and re-verify semantic and identity closure
 passed_commit: null
 artifact_hashes: {}
 ```
 
 ### BT-GAP-02A Readiness
 
-1. `BacktestProfileRegistry` remains the only acceptable profile selector, but the selected `SimulationProfileRegistration.implementation` is not presently a complete execution-case construction authority. G08H/G10G `ResolvedProfile` values own required runtime inputs that are discarded before `ResolvedBacktestRequest` is formed.
-2. The attempted generic construction helper required hundreds of lines of duplicate Domain/Kernel canonical decoding in `composition.py`. That would create a second initial-state validator beside BT-GAP-02B and was removed. Any future seam must deepen the existing Backtest-owned hydration authority rather than copy it.
-3. The attempted G10G implementation could satisfy the proposed component-ref equality only by weakening `NextEligibleBarOpenModel`, `MarkToMarketCloseoutPolicy`, and slippage component invariants or by changing PASSED G10G v1 registration bytes. Both are forbidden. An additive versioned profile/runtime binding or another explicit authority decision is required.
-4. Existing G08H/G10G purity boundaries remain in force. They are not relaxed until the profile-owned runtime composition seam and its exact imports are frozen.
-5. Contract commit `3dbf171960e18f45d0f8216dfb175f864f065bdc` is superseded as a non-accepted speculative READY draft. Its fixture and RED tests are removed because they froze an implementation shape before the required runtime inputs and component identities had one coherent owner.
-6. BT-GAP-02 remains blocked. No production composition entry, builder, adapter, registry, factory, Attempt, publication, or partial evidence is accepted by this blocker update.
+1. BT-GAP-02C owns the serialization seam that was missing from the first speculative contract. Rich profile data is consumed while still available to provider-side Backtest code, reduced to one sealed request-bound execution plan, and persisted without serializing `ResolvedProfile`, Registry, implementation objects, callbacks, or MarketEvent bytes.
+2. Runtime BT-GAP-02A consumes only the typed v2 plan, resolved request, and G12E reader. It does not require hidden state on `SimulationProfileRegistration.implementation`, a second selector, or profile branches in generic runtime.
+3. The single v2 reader belongs to `execution_inputs`; `composition.py` receives typed Domain/Kernel values and must not duplicate canonical decoding. Stored semantic-run-derived IDs are re-derived from the accepted identity plan before case sealing.
+4. CnA may retain its accepted v1 simulation registration. Binance runtime composition must use the additive executable v2 registration from BT-GAP-02C; G10G v1 bytes remain immutable and are not weakened or reinterpreted.
+5. Contract commit `3dbf171960e18f45d0f8216dfb175f864f065bdc` remains superseded. BT-GAP-02A resumes only after BT-GAP-02C passes and production profile-side sealed-case construction replaces tests/support authority.
+6. BT-GAP-02 remains blocked. No public builder, second registry/factory, hidden adapter, Attempt, publication, or partial evidence is introduced by this dependency rewrite.
+
+## 107A. BT-GAP-02C Persisted Execution Closure v2
+
+```yaml
+id: BT-GAP-02C
+status: READY
+depends_on:
+  - BT-GAP-02B immutable execution-input v1
+  - G07 execution-case identity and sealing
+  - G08H CnA profile composition
+  - G10G Binance USDM profile composition
+  - G12E MarketBundleReader
+owner_package: backtest-runtime execution inputs + profile composition
+public_interface:
+  - crypto_quant_backtest.materialize_execution_input_bundle_v2
+  - crypto_quant_backtest.BacktestExecutionRequest with schema_version=2
+  - crypto_quant_backtest.BinanceUsdmProfileComposer.compose_executable
+private_interface:
+  - execution_case_plan@1 embedded value inside backtest_execution_input_bundle@2
+  - one typed v2 reader registration in the existing execution-input SchemaCatalog
+  - future package-private BT-GAP-02A composition seam
+fixture_ids:
+  - bt-gap02c-execution-closure-v2
+expected_artifacts:
+  - backtest_execution_input_bundle@2 ArtifactEnvelope
+  - BacktestExecutionRequest@2 pass-by-value transport
+  - additive Binance executable simulation profile v2
+failure_contracts:
+  - resolved-request-or-sealed-case-type-mismatch
+  - case-does-not-bind-semantic-run-or-request
+  - case-identity-manifest-is-missing-or-invalid
+  - execution-plan-component-ref-mismatch
+  - execution-plan-source-or-ref-tamper
+  - execution-plan-decode-failure
+  - g12e-timeline-or-target-mismatch
+  - reconstructed-case-semantic-or-identity-mismatch
+allowed_grade: development
+test_commands:
+  contract_red: uv run pytest -q tests/runtime/execution_inputs/test_bt_gap02c_execution_closure_contract.py
+  boundary_red: uv run pytest -q tests/architecture/test_bt_gap02c_execution_closure_boundary.py
+  inherited: uv run pytest -q tests/runtime/execution_inputs/test_execution_input_bundle_contract.py tests/runtime/execution_inputs/test_hydrate_execution_inputs.py tests/runtime/profiles/cn_a_share/test_profile_composition.py tests/runtime/profiles/binance_usdm/test_profile_composition.py tests/architecture/test_bt_gap02b_execution_input_boundary.py tests/architecture/test_g08h_cn_a_share_composition_boundary.py tests/architecture/test_g10g_binance_composition_boundary.py
+  lock: uv lock --check
+  diff: git diff --check
+evidence:
+  - executable-closure field and identity-cycle audit
+  - G08H represented component refs match accepted v1 registration
+  - G10G execution/slippage/closeout mismatch reproduced without weakening constructors
+  - existing BacktestProfileRegistry remains the only profile selector
+remaining_blockers: []
+passed_commit: null
+artifact_hashes:
+  fixture_sha256: c082042640382dde2dad61f758058ab93c3ba741ed19df0256d7989a157eced1
+  bundle_content_hash: sha256:887cc5e056cb46dfb785598eb36261f9bba6af269e87b42538f86234460b6252
+  transport_canonical_sha256: sha256:bad2fef4a26b7ba09ddcc62fde064f4fb69865fdee8088ce3b4b94dff0117408
+  preserved_bt_gap02b_fixture_sha256: 09578ac47f997bc4bf55119d31e97dbcad3eb71e90d93a5ef7c8e6669bd66be2
+  preserved_cn_a_profile_fixture_sha256: aa032668a5207b61b6c8815894e0087f1c1e734d41e9707c7d32111b6c1cd79f
+  preserved_binance_profile_fixture_sha256: e9e329b4cd2dfd990a8eec8460767b6b05fffcc126e876a2cdf86f15a6d06bd9
+```
+
+### BT-GAP-02C Readiness
+
+1. Executable closure is an immutable data problem, not a second profile-selection problem. Bundle v2 persists the complete non-market preimage required to reconstruct one case: decision cycles, bar executions, resolved financial state, financial dispatch plan, execution-model spec, snapshot plan, and closeout-policy spec. The embedded `execution_case_plan@1` is a value inside the bundle; it receives no ArtifactRef, repository, cache, path, or public root type.
+2. `materialize_execution_input_bundle_v2(*, resolved_request, execution_case)` accepts one exact sealed `ResolvedExecutionCase`. It verifies the request, build, semantic spec, semantic run, identity manifest, timeline, target digest, and case identities before emitting one `backtest_execution_input_bundle@2` Envelope. Provider code may construct the case while it still owns the rich resolved profile; Platform only stores the opaque Envelope.
+3. Bundle v2 does not store the Timeline reader or target `MarketEvent` bytes. It stores timeline stream keys, target stream key, operational batch size, and the request-bound plan. G12E remains the sole MarketBundle/MarketEvent read authority; runtime reconstruction must reload and verify the exact target stream and timeline.
+4. Semantic-run-derived Domain/Event IDs may be stored in the v2 plan. There is no content cycle: `semantic_run_id` derives from normalized `BacktestRequest`, resolved environment, and build manifest; `BacktestRequest` does not contain the execution-bundle ref. Hydration must nevertheless recompute every identity binding from `ExecutionCaseSemanticSpec.identity_plan` and reject any stored-ID mismatch before Attempt creation.
+5. Initial financial state is stored as exact typed `ResolvedFinancialState` canonical data rather than a second Mapping template. The v2 reader in `execution_inputs` is the one reconstruction authority and canonical-byte-compares every rebuilt value. `composition.py` and profile modules do not implement another Domain/Kernel decoder.
+6. `BacktestExecutionRequest` supports additive wire schema version 2 only when its single ref is `backtest_execution_input_bundle@2`. Its v1 constructor behavior and canonical bytes remain unchanged. The transport remains a value, not an Artifact, and has no second identity/ref/path/status/repository metadata.
+7. CnA executable composition continues to use its accepted v1 simulation profile because its represented execution and closeout refs match concrete runtime components. Binance adds `bar.next_eligible_open.conservative.v2` through `BinanceUsdmProfileComposer.compose_executable`; v2 uses the exact concrete `next_eligible_bar_open.v1`, `zero_slippage.development.v1`, and `mark_to_market.v1` identities. G10G v1 remains immutable profile-composition evidence and is not mutated or reinterpreted as executable closure.
+8. The existing `BacktestProfileRegistry` remains the only selector. Bundle hydration and generic runtime contain no CnA/Binance branch, profile plan registry, builder factory, hidden adapter, callback graph, or mutable profile state.
+9. Contract RED is exact: the fixture/preservation assertion passes; three public behavior assertions fail only for absent bundle-v2 materialization, transport-v2 acceptance, and Binance executable profile v2. Boundary RED has two intentional failures and two ownership/preservation checks passing. No production implementation is included in this freeze.
 
 ## 108. BT-GAP-02B Production Execution-Input Hydration Contract
 
