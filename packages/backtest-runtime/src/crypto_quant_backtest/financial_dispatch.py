@@ -16,6 +16,7 @@ from crypto_quant_domain import (
     PortfolioSnapshot,
     PositionBalanceKey,
     PositionLot,
+    Price,
     QuantizationPolicy,
     SimulationInstant,
     UtcInstant,
@@ -28,7 +29,10 @@ from crypto_quant_trading import (
     CostBasisPolicy,
     FinalFeeAssessmentResult,
     FinalFeeRuleSet,
+    LedgerBalanceRegistration,
     LedgerState,
+    LinearFundingApplicationIdentity,
+    LinearPerpetualContract,
     PortfolioSnapshotProjector,
     ProfileComponentRef,
     ProfilePortType,
@@ -139,6 +143,104 @@ class FinancialDispatcherSpec:
             "liquidation_audit_component": self.liquidation_audit_component,
             "snapshot_projection_key": self.snapshot_projection_key,
             "snapshot_projection_version": self.snapshot_projection_version,
+        }
+
+
+@dataclass(frozen=True, slots=True)
+class LinearDerivativeFillAccountingPlan:
+    position_key: PositionBalanceKey
+    contract: LinearPerpetualContract
+    settlement_cash_registration: LedgerBalanceRegistration
+    pnl_quantization: QuantizationPolicy
+
+    def __post_init__(self) -> None:
+        if type(self.position_key) is not PositionBalanceKey:
+            raise TypeError("position_key must be exact PositionBalanceKey")
+        if type(self.contract) is not LinearPerpetualContract:
+            raise TypeError("contract must be exact LinearPerpetualContract")
+        if type(self.settlement_cash_registration) is not LedgerBalanceRegistration:
+            raise TypeError(
+                "settlement_cash_registration must be exact LedgerBalanceRegistration"
+            )
+        if type(self.pnl_quantization) is not QuantizationPolicy:
+            raise TypeError("pnl_quantization must be exact QuantizationPolicy")
+
+    def to_canonical_dict(self) -> dict[str, object]:
+        return {
+            "type": "synthetic_linear_fill_payload",
+            "position_key": self.position_key,
+            "contract": self.contract,
+            "settlement_cash_registration": self.settlement_cash_registration,
+            "pnl_quantization": self.pnl_quantization,
+        }
+
+
+@dataclass(frozen=True, slots=True)
+class LinearFundingAccountEventPlan:
+    settlement_identity: LinearFundingApplicationIdentity
+    recorded_at: SimulationInstant
+
+    def __post_init__(self) -> None:
+        if type(self.settlement_identity) is not LinearFundingApplicationIdentity:
+            raise TypeError(
+                "settlement_identity must be exact LinearFundingApplicationIdentity"
+            )
+        if type(self.recorded_at) is not SimulationInstant:
+            raise TypeError("recorded_at must be exact SimulationInstant")
+
+    def to_canonical_dict(self) -> dict[str, object]:
+        return {
+            "type": "synthetic_funding_dispatch_payload",
+            "settlement_identity": self.settlement_identity,
+            "recorded_at": self.recorded_at,
+        }
+
+
+@dataclass(frozen=True, slots=True)
+class LinearMarginLiquidationAuditPlan:
+    evaluated_at: SimulationInstant
+    valuation_price: Price
+    margin_price: Price
+    interval_start: UtcInstant
+    interval_end_exclusive: UtcInstant
+    liquidation_low: Price
+    liquidation_high: Price
+    audit_at: SimulationInstant
+    role_suffix: str
+
+    def __post_init__(self) -> None:
+        if type(self.evaluated_at) is not SimulationInstant or type(
+            self.audit_at
+        ) is not SimulationInstant:
+            raise TypeError("evaluation and audit times must be SimulationInstant")
+        for name in (
+            "valuation_price",
+            "margin_price",
+            "liquidation_low",
+            "liquidation_high",
+        ):
+            if type(getattr(self, name)) is not Price:
+                raise TypeError(f"{name} must be exact Price")
+        if type(self.interval_start) is not UtcInstant or type(
+            self.interval_end_exclusive
+        ) is not UtcInstant:
+            raise TypeError("audit interval must use exact UtcInstant")
+        if self.interval_end_exclusive <= self.interval_start:
+            raise ValueError("audit interval must be non-empty")
+        _text("role_suffix", self.role_suffix)
+
+    def to_canonical_dict(self) -> dict[str, object]:
+        return {
+            "type": "synthetic_margin_audit_payload",
+            "evaluated_at": self.evaluated_at,
+            "valuation_price": self.valuation_price,
+            "margin_price": self.margin_price,
+            "interval_start": self.interval_start,
+            "interval_end_exclusive": self.interval_end_exclusive,
+            "liquidation_low": self.liquidation_low,
+            "liquidation_high": self.liquidation_high,
+            "audit_at": self.audit_at,
+            "role_suffix": self.role_suffix,
         }
 
 

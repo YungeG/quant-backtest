@@ -504,6 +504,8 @@ __all__ = [
     "LinearAccountMarginProjectionOutcome",
     "LinearAccountMarginProjectionRequest",
     "LinearAccountMarginProjector",
+    "LinearFundingAccounting",
+    "LinearFundingApplicationIdentity",
     "LinearFundingEligibility",
     "LinearFundingEligibilityComponentRef",
     "LinearFundingEligibilityFailure",

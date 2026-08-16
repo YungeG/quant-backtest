@@ -85,7 +85,10 @@ def test_execution_input_module_preserves_one_way_repository_boundary() -> None:
         and not node.name.startswith("_")
     }
     assert public_classes == {"BacktestExecutionRequest"}
-    assert public_functions == {"materialize_execution_input_bundle"}
+    assert public_functions == {
+        "materialize_execution_input_bundle",
+        "materialize_execution_input_bundle_v2",
+    }
     assert not any(
         name.endswith(FORBIDDEN_PUBLIC_SUFFIXES)
         for name in public_classes | public_functions
@@ -124,7 +127,7 @@ def test_execution_input_module_does_not_copy_market_events_or_platform_types() 
     assert "Foundation" not in source
 
 
-def test_only_the_bundle_has_one_private_schema_catalog_registration() -> None:
+def test_only_the_bundle_has_one_private_versioned_schema_catalog() -> None:
     module = _module()
     registrations = [
         (
@@ -140,7 +143,10 @@ def test_only_the_bundle_has_one_private_schema_catalog_registration() -> None:
         for node in ast.walk(module)
         if isinstance(node, ast.Call) and _call_name(node.func).endswith("SchemaCatalog")
     ]
-    expected_registrations = [("backtest_execution_input_bundle", 1)]
+    expected_registrations = [
+        ("backtest_execution_input_bundle", 1),
+        ("backtest_execution_input_bundle", 2),
+    ]
     assert registrations == expected_registrations
     assert len(catalogs) == 1
 

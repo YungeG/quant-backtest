@@ -65,6 +65,7 @@ from .engine import (
 from .execution_inputs import (
     BacktestExecutionRequest,
     materialize_execution_input_bundle,
+    materialize_execution_input_bundle_v2,
 )
 from .evidence import (
     AttemptEvidenceWriter,
@@ -413,6 +414,7 @@ __all__ = [
     "DeterministicBpsSlippageModel",
     "CompletedBacktestResult",
     "materialize_execution_input_bundle",
+    "materialize_execution_input_bundle_v2",
     "DeterministicRebuildEvidence",
     "DeterministicTimeline",
     "EngineCancellation",

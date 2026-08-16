@@ -52,6 +52,11 @@ from crypto_quant_backtest import (
     StrategyFamily,
     TimelineWindow,
 )
+from crypto_quant_backtest.financial_dispatch import (
+    LinearDerivativeFillAccountingPlan as SyntheticLinearFillPayload,
+    LinearFundingAccountEventPlan as SyntheticFundingDispatchPayload,
+    LinearMarginLiquidationAuditPlan as SyntheticMarginAuditPayload,
+)
 from crypto_quant_domain import (
     AccountingEntryType,
     CashBalanceKey,
@@ -276,23 +281,6 @@ class SyntheticLinearPerpetualDevelopmentProfile:
 
 
 @dataclass(frozen=True, slots=True)
-class SyntheticLinearFillPayload:
-    position_key: object
-    contract: LinearPerpetualContract
-    settlement_cash_registration: LedgerBalanceRegistration
-    pnl_quantization: QuantizationPolicy
-
-    def to_canonical_dict(self) -> dict[str, object]:
-        return {
-            "type": "synthetic_linear_fill_payload",
-            "position_key": self.position_key,
-            "contract": self.contract,
-            "settlement_cash_registration": self.settlement_cash_registration,
-            "pnl_quantization": self.pnl_quantization,
-        }
-
-
-@dataclass(frozen=True, slots=True)
 class SyntheticLinearFillSemantics:
     position_key: object
     contract: LinearPerpetualContract
@@ -310,19 +298,6 @@ class SyntheticLinearFillSemantics:
 
 
 @dataclass(frozen=True, slots=True)
-class SyntheticFundingDispatchPayload:
-    settlement_identity: LinearFundingApplicationIdentity
-    recorded_at: SimulationInstant
-
-    def to_canonical_dict(self) -> dict[str, object]:
-        return {
-            "type": "synthetic_funding_dispatch_payload",
-            "settlement_identity": self.settlement_identity,
-            "recorded_at": self.recorded_at,
-        }
-
-
-@dataclass(frozen=True, slots=True)
 class SyntheticFundingDispatchSemantics:
     target_funding_time: UtcInstant
     applied_rate: Rate
@@ -336,33 +311,6 @@ class SyntheticFundingDispatchSemantics:
             "applied_rate": self.applied_rate,
             "funding_price": self.funding_price,
             "recorded_at": self.recorded_at,
-        }
-
-
-@dataclass(frozen=True, slots=True)
-class SyntheticMarginAuditPayload:
-    evaluated_at: SimulationInstant
-    valuation_price: Price
-    margin_price: Price
-    interval_start: UtcInstant
-    interval_end_exclusive: UtcInstant
-    liquidation_low: Price
-    liquidation_high: Price
-    audit_at: SimulationInstant
-    role_suffix: str
-
-    def to_canonical_dict(self) -> dict[str, object]:
-        return {
-            "type": "synthetic_margin_audit_payload",
-            "evaluated_at": self.evaluated_at,
-            "valuation_price": self.valuation_price,
-            "margin_price": self.margin_price,
-            "interval_start": self.interval_start,
-            "interval_end_exclusive": self.interval_end_exclusive,
-            "liquidation_low": self.liquidation_low,
-            "liquidation_high": self.liquidation_high,
-            "audit_at": self.audit_at,
-            "role_suffix": self.role_suffix,
         }
 
 

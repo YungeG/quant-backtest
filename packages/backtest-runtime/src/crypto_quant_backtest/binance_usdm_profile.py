@@ -1,17 +1,16 @@
 from __future__ import annotations
 
+import re
 from dataclasses import dataclass
 from enum import Enum
-import re
 
 from crypto_quant_domain import (
     CurrencyId,
     InstrumentId,
     Money,
-    OrderSide,
-    PositionEffect,
     Scale,
     SimulationInstant,
+    TimeInForce,
     UtcInstant,
     canonical_sha256,
 )
@@ -40,6 +39,7 @@ from crypto_quant_trading.profiles.binance_usdm import (
     BinanceUsdmPricePurposeResolution,
 )
 
+from .execution import NextEligibleBarOpenModel, NoEligibleBarAction
 from .financial_dispatch import FinancialDispatcherSpec
 from .liquidation_audit import ConservativeLinearLiquidationAuditModel
 from .ports import SimulationComponentRef, SimulationPortType
@@ -51,14 +51,15 @@ from .resolution import (
     SimulationProfileRegistration,
     StrategyFamily,
 )
+from .run_end import MarkToMarketCloseoutPolicy
 from .timeline import TimelineWindow
-
 
 _SCHEMA_VERSION = 1
 _MODEL_KEY = "crypto.binance_usdm.resolved-profile-composition.v1"
 _MODEL_VERSION = 1
 _MARKET_KEY = "crypto.binance_usdm.v1"
 _SIMULATION_KEY = "bar.next_eligible_open.conservative.v1"
+_EXECUTABLE_SIMULATION_KEY = "bar.next_eligible_open.conservative.v2"
 _ACCOUNT_KEY = "binance.usdm.standard-cross.v1"
 _DISPATCHER_KEY = "crypto.binance_usdm.linear-financial-dispatch.v1"
 _USDT = CurrencyId("USDT")
@@ -374,6 +375,47 @@ class BinanceUsdmSimulationProfile:
 
 
 @dataclass(frozen=True, slots=True)
+class _BinanceUsdmExecutableSimulationProfile:
+    model_digest: str
+    component_manifest: tuple[SimulationComponentRef, ...]
+    profile_key: str = _EXECUTABLE_SIMULATION_KEY
+    profile_version: int = 2
+
+    def __post_init__(self) -> None:
+        _hash("model_digest", self.model_digest)
+        if type(self.component_manifest) is not tuple or not all(
+            type(value) is SimulationComponentRef for value in self.component_manifest
+        ):
+            raise TypeError("component_manifest must contain exact simulation refs")
+        ordered = tuple(
+            sorted(self.component_manifest, key=lambda value: value.port_type.value)
+        )
+        if {value.port_type for value in ordered} != set(SimulationPortType):
+            raise ValueError("simulation profile must exact-cover SimulationPortType")
+        object.__setattr__(self, "component_manifest", ordered)
+        if (
+            self.profile_key != _EXECUTABLE_SIMULATION_KEY
+            or self.profile_version != 2
+        ):
+            raise ValueError("executable simulation profile identity mismatch")
+
+    @property
+    def profile_digest(self) -> str:
+        return canonical_sha256(self)
+
+    def to_canonical_dict(self) -> dict[str, object]:
+        return {
+            "type": "binance_usdm_simulation_profile",
+            "schema_version": _SCHEMA_VERSION,
+            "profile_key": self.profile_key,
+            "profile_version": self.profile_version,
+            "model_digest": self.model_digest,
+            "components": self.component_manifest,
+            "limitations": _LIMITATIONS,
+        }
+
+
+@dataclass(frozen=True, slots=True)
 class BinanceUsdmExecutionAccountProfile:
     model_digest: str
     source_manifest_hash: str
@@ -646,6 +688,43 @@ def _simulation_components(model_digest: str) -> tuple[SimulationComponentRef, .
     return tuple(sorted(values, key=lambda value: value.port_type.value))
 
 
+def _executable_simulation_components(
+    model_digest: str,
+    legacy: BinanceUsdmSimulationProfile,
+) -> tuple[SimulationComponentRef, ...]:
+    execution_model = NextEligibleBarOpenModel.create(
+        actions=(
+            (TimeInForce.DAY, NoEligibleBarAction.EXPIRE),
+            (TimeInForce.GTC, NoEligibleBarAction.KEEP_ACTIVE),
+            (TimeInForce.IOC, NoEligibleBarAction.EXPIRE),
+            (TimeInForce.FOK, NoEligibleBarAction.EXPIRE),
+            (TimeInForce.GTX, NoEligibleBarAction.KEEP_ACTIVE),
+        )
+    )
+    replacements = {
+        SimulationPortType.EXECUTION_MODEL: execution_model.component_ref,
+        SimulationPortType.SLIPPAGE_MODEL: _simulation_component(
+            SimulationPortType.SLIPPAGE_MODEL,
+            "zero_slippage.development.v1",
+            {
+                "model_digest": model_digest,
+                "basis_points": 0,
+                "limitation": "zero_slippage_development_only",
+            },
+        ),
+        SimulationPortType.CLOSEOUT_POLICY: MarkToMarketCloseoutPolicy().component_ref,
+    }
+    return tuple(
+        sorted(
+            (
+                replacements.get(value.port_type, value)
+                for value in legacy.component_manifest
+            ),
+            key=lambda value: value.port_type.value,
+        )
+    )
+
+
 @dataclass(frozen=True, slots=True)
 class _Values:
     model_digest: str
@@ -757,6 +836,42 @@ def _values(request: BinanceUsdmProfileCompositionRequest) -> _Values:
     return _Values(model_digest, source_manifest, source_manifest_hash, contract, policy, market_profile, simulation_profile, account_profile, market_registration, simulation_registration, account_registration, registry, dispatcher)
 
 
+def _executable_simulation_authority(
+    values: _Values,
+) -> tuple[
+    _BinanceUsdmExecutableSimulationProfile,
+    SimulationProfileRegistration,
+    BacktestProfileRegistry,
+]:
+    simulation = _BinanceUsdmExecutableSimulationProfile(
+        values.model_digest,
+        _executable_simulation_components(values.model_digest, values.simulation),
+    )
+    legacy = values.simulation_registration
+    registration = SimulationProfileRegistration(
+        simulation.profile_key,
+        simulation.profile_version,
+        simulation.profile_digest,
+        simulation,
+        legacy.engine_kind,
+        legacy.supported_strategy_families,
+        legacy.required_bundle_capabilities,
+        simulation.component_manifest,
+        legacy.grade,
+        legacy.limitations,
+        legacy.decision_grade_eligible,
+    )
+    return (
+        simulation,
+        registration,
+        BacktestProfileRegistry(
+            (values.market_registration,),
+            (registration,),
+            (values.execution_account_registration,),
+        ),
+    )
+
+
 @dataclass(frozen=True, slots=True)
 class BinanceUsdmResolvedProfile:
     request: BinanceUsdmProfileCompositionRequest
@@ -767,7 +882,7 @@ class BinanceUsdmResolvedProfile:
     linear_contract: LinearPerpetualContract
     account_risk_policy: AccountRiskPolicy
     market_semantics: BinanceUsdmMarketSemanticsProfile
-    simulation: BinanceUsdmSimulationProfile
+    simulation: BinanceUsdmSimulationProfile | _BinanceUsdmExecutableSimulationProfile
     execution_account: BinanceUsdmExecutionAccountProfile
     market_registration: MarketSemanticsProfileRegistration
     simulation_registration: SimulationProfileRegistration
@@ -784,12 +899,30 @@ class BinanceUsdmResolvedProfile:
         if type(self.request) is not BinanceUsdmProfileCompositionRequest:
             raise TypeError("request must be exact composition request")
         values = _values(self.request)
+        simulation: (
+            BinanceUsdmSimulationProfile
+            | _BinanceUsdmExecutableSimulationProfile
+        )
+        simulation_registration: SimulationProfileRegistration
+        profile_registry: BacktestProfileRegistry
+        if type(self.simulation) is BinanceUsdmSimulationProfile:
+            simulation = values.simulation
+            simulation_registration = values.simulation_registration
+            profile_registry = values.profile_registry
+        elif type(self.simulation) is _BinanceUsdmExecutableSimulationProfile:
+            (
+                simulation,
+                simulation_registration,
+                profile_registry,
+            ) = _executable_simulation_authority(values)
+        else:
+            raise TypeError("simulation must be exact known Binance USDM authority")
         expected = (
             _MODEL_KEY, _MODEL_VERSION, values.model_digest, values.source_manifest,
             values.linear_contract, values.account_risk_policy, values.market_semantics,
-            values.simulation, values.execution_account, values.market_registration,
-            values.simulation_registration, values.execution_account_registration,
-            values.profile_registry, values.financial_dispatcher_spec,
+            simulation, values.execution_account, values.market_registration,
+            simulation_registration, values.execution_account_registration,
+            profile_registry, values.financial_dispatcher_spec,
             tuple(
                 value.value
                 for value in self.request.order_rules.active_deferred_rule_keys
@@ -947,3 +1080,38 @@ class BinanceUsdmProfileComposer:
             _LIMITATIONS, False, False,
         )
         return BinanceUsdmProfileCompositionOutcome(request.request_hash, model_digest, result, None)
+
+    def compose_executable(
+        self, request: BinanceUsdmProfileCompositionRequest, /
+    ) -> BinanceUsdmProfileCompositionOutcome:
+        legacy_outcome = self.compose(request)
+        legacy = legacy_outcome.result
+        if legacy is None:
+            return legacy_outcome
+        values = _values(request)
+        simulation, registration, registry = _executable_simulation_authority(values)
+        result = BinanceUsdmResolvedProfile(
+            request,
+            legacy.model_key,
+            legacy.model_version,
+            legacy.model_digest,
+            legacy.source_manifest,
+            legacy.linear_contract,
+            legacy.account_risk_policy,
+            legacy.market_semantics,
+            simulation,
+            legacy.execution_account,
+            legacy.market_registration,
+            registration,
+            legacy.execution_account_registration,
+            registry,
+            legacy.financial_dispatcher_spec,
+            legacy.source_deferred_rule_keys,
+            legacy.resolved_deferred_rule_keys,
+            legacy.limitations,
+            legacy.decision_grade_eligible,
+            legacy.deployment_authorized,
+        )
+        return BinanceUsdmProfileCompositionOutcome(
+            request.request_hash, legacy.model_digest, result, None
+        )

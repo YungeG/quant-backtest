@@ -10,7 +10,6 @@ from typing import Any
 
 from .canonical import CanonicalSchema, canonical_bytes, canonical_sha256
 
-
 _SHA256 = re.compile(r"sha256:[0-9a-f]{64}\Z")
 _ENVELOPE_FIELDS = frozenset(
     {"artifact_type", "schema_version", "payload", "content_hash"}
@@ -205,24 +204,30 @@ class SchemaCatalog:
     def __init__(
         self, registrations: Iterable[ArtifactSchemaRegistration]
     ) -> None:
-        items = tuple(registrations)
-        by_type: dict[str, ArtifactSchemaRegistration] = {}
-        for registration in items:
+        by_schema: dict[tuple[str, int], ArtifactSchemaRegistration] = {}
+        for registration in registrations:
             if not isinstance(registration, ArtifactSchemaRegistration):
                 raise TypeError("registrations must contain ArtifactSchemaRegistration")
-            if registration.artifact_type in by_type:
+            key = (registration.artifact_type, registration.schema_version)
+            if key in by_schema:
                 raise ValueError(
-                    f"duplicate artifact type registration: {registration.artifact_type}"
+                    "duplicate artifact type/version registration: "
+                    f"{registration.artifact_type}@{registration.schema_version}"
                 )
-            by_type[registration.artifact_type] = registration
+            by_schema[key] = registration
         object.__setattr__(
             self,
             "registrations",
-            tuple(by_type[key] for key in sorted(by_type)),
+            tuple(by_schema[key] for key in sorted(by_schema)),
         )
 
     def write_current(self, artifact_type: str, artifact: Any) -> ArtifactWriteResult:
-        registration = self._registration(artifact_type)
+        return self._write(self._registration(artifact_type), artifact)
+
+    @staticmethod
+    def _write(
+        registration: ArtifactSchemaRegistration, artifact: Any
+    ) -> ArtifactWriteResult:
         envelope = ArtifactEnvelope.create(
             registration.artifact_type,
             registration.schema_version,
@@ -242,13 +247,9 @@ class SchemaCatalog:
         envelope = _read_envelope(decoded)
         if source_bytes != canonical_bytes(envelope):
             raise ArtifactIntegrityError("artifact must use canonical source bytes")
-        registration = self._registration(envelope.artifact_type)
-        if envelope.schema_version != registration.schema_version:
-            raise UnsupportedSchemaVersionError(
-                f"unsupported {envelope.artifact_type} schema version "
-                f"{envelope.schema_version}; current version is "
-                f"{registration.schema_version}"
-            )
+        registration = self._registration(
+            envelope.artifact_type, envelope.schema_version
+        )
         try:
             artifact = registration.payload_reader(envelope.payload)
         except Exception as error:
@@ -263,11 +264,26 @@ class SchemaCatalog:
             source_hash=_source_hash(source_bytes),
         )
 
-    def _registration(self, artifact_type: str) -> ArtifactSchemaRegistration:
-        for registration in self.registrations:
-            if registration.artifact_type == artifact_type:
+    def _registration(
+        self, artifact_type: str, schema_version: int | None = None
+    ) -> ArtifactSchemaRegistration:
+        matches = tuple(
+            registration
+            for registration in self.registrations
+            if registration.artifact_type == artifact_type
+        )
+        if not matches:
+            raise UnknownArtifactTypeError(f"unknown artifact type: {artifact_type}")
+        if schema_version is None:
+            return max(matches, key=lambda registration: registration.schema_version)
+        for registration in matches:
+            if registration.schema_version == schema_version:
                 return registration
-        raise UnknownArtifactTypeError(f"unknown artifact type: {artifact_type}")
+        current = max(matches, key=lambda registration: registration.schema_version)
+        raise UnsupportedSchemaVersionError(
+            f"unsupported {artifact_type} schema version {schema_version}; "
+            f"current version is {current.schema_version}"
+        )
 
 
 def _decode_source(source_bytes: bytes) -> Any:

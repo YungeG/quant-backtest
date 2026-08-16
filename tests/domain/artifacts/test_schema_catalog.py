@@ -7,7 +7,6 @@ from dataclasses import dataclass
 from typing import Any
 
 import pytest
-
 from crypto_quant_domain import (
     ArtifactCatalogError,
     ArtifactDecodeError,
@@ -20,7 +19,6 @@ from crypto_quant_domain import (
     canonical_bytes,
     canonical_sha256,
 )
-
 
 ARTIFACT_TYPE = "example.position-snapshot"
 
@@ -100,6 +98,30 @@ def test_reader_dispatches_only_after_integrity_checks_and_preserves_source() ->
     assert read.artifact == ExampleArtifact(identifier="alpha", count=7)
     assert read.source_bytes == written.source_bytes
     assert read.source_hash == written.source_hash
+
+
+def test_catalog_selects_highest_writer_and_reads_each_registered_version() -> None:
+    def read_v2(payload: Any) -> tuple[int, ExampleArtifact]:
+        return (2, read_example(payload))
+
+    current = SchemaCatalog(
+        (
+            ArtifactSchemaRegistration(ARTIFACT_TYPE, 2, read_v2),
+            ArtifactSchemaRegistration(ARTIFACT_TYPE, 1, read_example),
+        )
+    )
+    value = ExampleArtifact(identifier="alpha", count=7)
+
+    written = current.write_current(ARTIFACT_TYPE, value)
+    old = ArtifactEnvelope.create(ARTIFACT_TYPE, 1, value)
+
+    assert written.envelope.schema_version == 2
+    assert current.read(written.source_bytes).artifact == (2, value)
+    assert current.read(canonical_bytes(old)).artifact == value
+    assert tuple(
+        (registration.artifact_type, registration.schema_version)
+        for registration in current.registrations
+    ) == ((ARTIFACT_TYPE, 1), (ARTIFACT_TYPE, 2))
 
 
 def test_catalog_and_envelope_reject_invalid_registration_or_identity() -> None:
