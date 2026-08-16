@@ -18,17 +18,18 @@ def _module_body() -> ast.Module:
 
 def test_artifact_envelope_reader_module_has_exact_whitelisted_imports() -> None:
     body = _module_body()
-    imports = {
-        node.module: tuple(alias.name for alias in node.names)
+    imports = sorted(
+        (node.module, tuple(alias.name for alias in node.names))
         for node in ast.walk(body)
         if isinstance(node, ast.ImportFrom)
-    }
-    assert len(imports) == 3
-    assert imports == {
-        "__future__": ("annotations",),
-        "typing": ("Protocol",),
-        "crypto_quant_domain": ("ArtifactRef", "ArtifactReadResult"),
-    }
+    )
+    assert imports == sorted(
+        [
+            ("__future__", ("annotations",)),
+            ("typing", ("Protocol",)),
+            ("crypto_quant_domain", ("ArtifactRef", "ArtifactReadResult")),
+        ]
+    )
     for node in ast.walk(body):
         if isinstance(node, (ast.Import, ast.Assign, ast.Call, ast.With, ast.For, ast.While)):
             raise AssertionError(f"forbidden implementation statement: {type(node).__name__}")
