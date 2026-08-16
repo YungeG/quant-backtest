@@ -11754,7 +11754,88 @@ artifact_hashes:
 7. BT-GAP-06 implements only the four passive schema values and their constructor invariants. It adds no decoder, derive function, repository, reader, SchemaCatalog, MetricRegistry, MetricEngine, provider, filesystem path, or Platform import. BT-GAP-05 owns completed-only derivation and BT-GAP-03 owns verified loading.
 8. Acceptance is green: all eight focused schema/boundary tests and thirteen inherited ref/publication/import tests pass; the full repository passes 1644 tests and import boundaries pass across 101 files. Frozen fixture and Platform-projection bytes remain unchanged.
 
-## 112. PASSED 记录格式
+## 112. BT-GAP-05 Completed-Only Analysis Runtime
+
+```yaml
+id: BT-GAP-05
+status: PASSED
+depends_on:
+  - BT-GAP-01
+  - BT-GAP-04
+  - BT-GAP-06
+  - G07 completed canonical evidence
+owner_package: backtest-runtime analysis runtime
+public_interface:
+  - crypto_quant_backtest.VerifiedCompletedPublication
+  - crypto_quant_backtest.BacktestAnalysisRuntime
+  - crypto_quant_backtest.BacktestAnalysisRuntime.derive
+private_interface:
+  - crypto_quant_backtest.analysis_derivation._BacktestAnalysisPublisher
+  - crypto_quant_backtest.analysis_derivation._calculate_simple_period_return
+test_commands:
+  focused: uv run pytest -q tests/runtime/analysis/test_analysis_contract.py tests/runtime/analysis/test_analysis_boundary.py tests/runtime/analysis/test_analysis_derivation_contract.py tests/runtime/analysis/test_analysis_derivation_boundary.py
+  inherited: uv run pytest -q tests/runtime/integrity tests/runtime/evidence tests/runtime/publication
+  platform_contract: uvx --python 3.13.5 --from pytest==8.4.2 pytest -q -p no:cacheprovider tests/architecture/test_backtest_consumer_port.py
+  full: uv run pytest -q
+  boundaries: uv run python tools/architecture/check_import_boundaries.py --root . --policy architecture/import-boundaries.toml
+  lock: uv lock --check
+  diff: git diff --check
+fixture_ids:
+  - bt-gap05-completed-analysis-v1
+expected_artifacts:
+  - one immutable backtest_analysis@1 ArtifactEnvelope published through exact put(envelope)
+  - one AnalysisArtifactRef returned by derive
+  - one verified completed loaded value shared with future BT-GAP-03
+failure_contracts:
+  - terminal-or-unverified-publication-is-not-analyzable
+  - wrong-or-foreign-metric-profile-ref
+  - metric-profile-ref-does-not-bind-v1-profile
+  - publisher-failure
+  - publisher-returned-ref-does-not-bind-envelope
+  - unusable-starting-equity-or-currency-evidence-yields-null
+allowed_grade: development
+evidence:
+  - authoritative run-boundary PortfolioSnapshot equity
+  - authoritative Journal net external cash flow after the initial-state prefix
+  - authoritative CanonicalExecutionSummary Fill count
+  - immutable source publication and execution-result linkage
+  - independent implementation review and clean follow-up review
+remaining_blockers: []
+contract_and_implementation_commit: c8de3d447ffd9fccfe507e2fbdc5c77c70aac041
+publication_hardening_commit: 1cbf97c9f8ccc7b225da49379c4db08fe877e438
+passed_commit: 1cbf97c9f8ccc7b225da49379c4db08fe877e438
+executed_commands:
+  - uv run pytest -q tests/runtime/analysis/test_analysis_contract.py tests/runtime/analysis/test_analysis_boundary.py tests/runtime/analysis/test_analysis_derivation_contract.py tests/runtime/analysis/test_analysis_derivation_boundary.py tests/runtime/integrity tests/runtime/evidence tests/runtime/publication
+  - uv run pytest -q
+  - uv run python tools/architecture/check_import_boundaries.py --root . --policy architecture/import-boundaries.toml --report /tmp/bt-gap05-main-import-boundaries.json
+  - uv lock --check
+  - git diff --check
+  - uvx --python 3.13.5 --from pytest==8.4.2 pytest -q -p no:cacheprovider tests/architecture/test_backtest_consumer_port.py
+test_results:
+  focused_and_inherited: 83 passed
+  full_repository: 1656 passed
+  import_boundaries: 103 files passed
+  platform_consumer_contract: 15 passed
+  lsp: clean
+  independent_followup_review: NONE
+artifact_hashes:
+  fixture_sha256: f988ca0d779c68a0f05e5b06caf20c68b578a6c1ff7210307816f0e4835b4f2e
+  preserved_bt_gap06_fixture_sha256: 7764e978cc530d1e518f4c4b4a714627b49b09dc2fe594eacf1633a9d8ba5ef1
+  metric_profile_content_hash: sha256:bced4dbef8bbf6e1ec9821ae3b68e8c6ce2bbed953f95fe1214c8e21676dbd6a
+  analysis_payload_sha256: sha256:f3218fb53f78e28db07c5d5d324314cea4160fdfe6b6430065fdb36116e48430
+  analysis_content_hash: sha256:0d085f4848588f2683a7d6ba81053a18e8a3bd316b1603a758fc35756c68ba1c
+```
+
+### BT-GAP-05 Acceptance
+
+1. `VerifiedCompletedPublication` is the single upstream loaded-value contract shared by BT-GAP-05 and the future BT-GAP-03 repository. It holds the accepted finalized canonical publication and exact sealed execution case, verifies case/result/request/target/identity bindings, preserves the initial Journal prefix, and validates run-boundary account/reporting-currency context. It introduces no second status, identity, ref, repository, or evidence copy.
+2. `BacktestAnalysisRuntime` is the sole derive runtime. Its public `derive(completed, metric_profile_ref)` accepts only the exact verified COMPLETED value and the exact accepted `backtest_metric_profile@1` ref. Terminal refs and unverified objects fail structurally before publication.
+3. The runtime derives `simple_period_return` from starting/ending authoritative `PortfolioSnapshot.equity` and net external cash flow from authoritative post-initial-prefix Journal entries. Missing/unusable currency or denominator evidence produces `null`; conclusive values follow the BT-GAP-06 18-place ROUND_HALF_EVEN canonical-decimal policy. `trade_count` is the authoritative Fill count.
+4. Derivation constructs one immutable `backtest_analysis@1` payload linked to metric profile, source canonical publication, source execution-result hash, and result grade. A single private structural publisher port matches Foundation `put(*, envelope) -> ArtifactRef`; the runtime verifies the returned exact ref and returns only `AnalysisArtifactRef`. `VerifiedBacktestAnalysis` remains exclusively the future BT-GAP-03 loaded view.
+5. Repeated derivation publishes byte-identical envelopes and returns the same content-addressed ref. Publisher exceptions remain provider/storage failures; wrong returned refs fail closed. No repository, reader, SchemaCatalog, MetricRegistry, MetricEngine, cache, path convention, simulator, PnL authority, Platform import, or tests/support production import is introduced.
+6. Acceptance is green: 83 focused/inherited tests pass on the integrated branch, the full repository passes 1656 tests, import boundaries pass across 103 files, the Platform consumer contract passes 15 tests, LSP/lens checks are clean, and the independent follow-up review reports no blocker or fix worth doing now.
+
+## 113. PASSED 记录格式
 
 ```yaml
 id: WP-00A
