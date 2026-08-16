@@ -166,7 +166,7 @@ artifact_hashes: []
 | BT-GAP-02B | PASSED — immutable commit `9f321780bb2e831bac521722c04af82adbd8e40e` | backtest-runtime execution inputs | BT-GAP-01, G03, G07, G11I, G12E, BT-GAP-07, PLAT-REC-03 | none |
 | BT-GAP-02C | PASSED | backtest-runtime execution closure | BT-GAP-02B, G07, G08H, G10G, G12E | none |
 | BT-GAP-04 | PASSED — immutable commit `c3257643d6911bd3b63efac0899aa04d47397b05` | backtest-runtime | BT-GAP-01, G07, Platform BT-PORT-01 | none |
-| BT-GAP-06 | DRAFT / BLOCKED | backtest-runtime analysis schema | BT-GAP-01, BT-GAP-04, G07 | Stored payload versus loaded view, missing-metric wire, metric-profile schema, and decimal authority are unresolved |
+| BT-GAP-06 | READY | backtest-runtime analysis schema | BT-GAP-01, BT-GAP-04, G07 | none |
 | BT-GAP-07 | PASSED — immutable commit `029ac43f6d781567cd0742594ca82c181ead0a6d` | backtest-runtime structural read port | BT-GAP-01, WP-02E | none |
 
 ## 4. WP-00A Acceptance Card
@@ -11653,38 +11653,67 @@ artifact_hashes:
 
 ```yaml
 id: BT-GAP-06
-status: DRAFT / BLOCKED
+status: READY
 depends_on:
   - BT-GAP-01
   - BT-GAP-04
   - G07 completed evidence
 owner_package: backtest-runtime analysis schema
-public_interface: []
-test_commands: {}
-fixture_ids: []
+public_interface:
+  - crypto_quant_backtest.AnalysisArtifactRef
+  - crypto_quant_backtest.BacktestMetricProfile
+  - crypto_quant_backtest.BacktestAnalysis
+  - crypto_quant_backtest.VerifiedBacktestAnalysis
+private_interface: []
+test_commands:
+  contract_red: uv run pytest -q tests/runtime/analysis/test_analysis_contract.py
+  boundary_red: uv run pytest -q tests/runtime/analysis/test_analysis_boundary.py
+  inherited: uv run pytest -q tests/domain/artifacts/test_artifact_ref.py tests/runtime/publication/test_publication_refs.py tests/architecture/test_public_api_imports.py
+  lock: uv lock --check
+  diff: git diff --check
+fixture_ids:
+  - bt-gap06-analysis-v1
 expected_artifacts:
-  - future immutable analysis payload and verified loaded-view contracts
-failure_contracts: []
+  - backtest_metric_profile@1 ArtifactEnvelope
+  - backtest_analysis@1 ArtifactEnvelope
+  - verified loaded analysis value with one AnalysisArtifactRef
+failure_contracts:
+  - wrong-analysis-or-metric-profile-artifact-type-or-version
+  - stored-analysis-self-reference
+  - source-publication-or-execution-result-link-mismatch
+  - invalid-result-grade
+  - noncanonical-simple-period-return
+  - invalid-trade-count
+  - terminal-publication-is-not-analyzable
 allowed_grade: development
 evidence:
   - architecture section 15.6 analysis boundary
   - Platform BT-PORT-01 complete-analysis view
-remaining_blockers:
-  - the Platform loaded analysis view includes `analysis_ref`, while immutable artifact payloads must not contain their own ref or hash
-  - missing or inconclusive `simple_period_return` has no frozen wire encoding; `null`, omission, and an explicit status are materially different
-  - `backtest_metric_profile@1` is referenced by Platform but has no frozen Backtest-owned payload/schema contract
-  - no existing public authority validates Platform canonical decimal strings without duplicating regex logic
+  - user-confirmed missing/null, Fill-count, return, rounding, and profile authorities
+remaining_blockers: []
+contract_commit: null
 passed_commit: null
-artifact_hashes: {}
+test_results:
+  fixture_and_platform_projection: 2 passed
+  intentional_red: 6 failed
+artifact_hashes:
+  fixture_sha256: 7764e978cc530d1e518f4c4b4a714627b49b09dc2fe594eacf1633a9d8ba5ef1
+  metric_profile_payload_sha256: sha256:d2448e93df20789c4f74064bfb5cf34bc116ab3f070010342a3eadc60ec2275f
+  metric_profile_content_hash: sha256:bced4dbef8bbf6e1ec9821ae3b68e8c6ce2bbed953f95fe1214c8e21676dbd6a
+  analysis_payload_sha256: sha256:e425e84d809f45a5306f7e374a95bec414464cc5c4cdef20141da71bf7726862
+  analysis_content_hash: sha256:29279641f97e3e3b2d752642c884561fc0c65947e11e064aba5aad755e9a69c0
 ```
 
 ### BT-GAP-06 Readiness
 
-1. The complete Platform vector freezes the verified loaded view for one conclusive case: analysis ref, metric-profile ref, source publication ref, source execution-result hash, `simple_period_return = "-0.1"`, `trade_count = 1`, and `development` grade.
-2. It does not freeze the stored artifact payload. Domain identity rules prohibit a payload from embedding its own `analysis_ref`; BT-GAP-03 may attach that ref only in a verified loaded view.
-3. Architecture §15.6 requires missing valid metrics to remain missing/inconclusive, never zero-filled, but does not choose `null`, omission, or a tagged metric status. No encoding is inferred.
-4. `ResultGrade`, `ArtifactRef`, `BacktestCanonicalPublicationRef`, execution-result hashes, snapshots, and Journal evidence remain existing authorities. BT-GAP-06 must not add a decoder, derive runtime, repository, reader, metric registry, duplicate hash/decimal validator, or second metrics engine.
-5. No fixture, public type name, canonical bytes, or RED test is frozen while these schema decisions remain unresolved. BT-GAP-06 remains `DRAFT / BLOCKED`.
+1. `backtest_metric_profile@1` is the sole v1 metric-semantic authority. Profile `simple_period_return.fill_count.v1` declares run-boundary snapshots, simple period return, no annualization/risk-free/benchmark/drawdown calculation, source-result reporting currency, external-cash-flow subtraction, authoritative Fill count, and null encoding for a valid missing metric. It is a fixed v1 profile, not a generic registry or framework.
+2. The return is `(ending_equity - starting_equity - net_external_cash_flow) / starting_equity`. Starting and ending equity come from the exact run-boundary `PortfolioSnapshot` values; net external cash flow is derived from authoritative Journal cash-flow evidence under the profile. A zero or otherwise unusable starting-equity denominator produces `simple_period_return: null`, never zero.
+3. `trade_count` is the number of authoritative `Fill` values in the completed `EngineExecutionResult`. It is a non-negative exact integer and does not count Orders, round trips, position transitions, or Journal entries.
+4. Conclusive return wire values are ordinary canonical decimal strings with at most 18 fractional digits, ROUND_HALF_EVEN, no exponent, no trailing fractional zero, and no negative zero. The profile owns this policy; Engine state and `execution_result_hash` remain unchanged.
+5. The immutable `backtest_analysis@1` payload contains metric-profile ref, source canonical-publication ref, source execution-result hash, return/null, Fill count, and result grade. It does not contain `analysis_ref`, its own content hash, a path, status, timestamp, reader, repository, or Platform metadata.
+6. `VerifiedBacktestAnalysis` is a loaded value, not another Artifact. BT-GAP-03 attaches the exact derived `AnalysisArtifactRef` to the verified stored payload and exposes the seven-field Platform view. The local fixture computes real Backtest content refs; BT-PORT hash literals remain test-support placeholders while artifact type/version and source/metric linkage semantics remain exact.
+7. BT-GAP-06 freezes passive schema values only. It adds no production module, decoder, derive function, repository, reader, SchemaCatalog, MetricRegistry, MetricEngine, provider, filesystem path, or Platform import. BT-GAP-05 owns completed-only derivation and BT-GAP-03 owns verified loading.
+8. Contract RED is intentional: fixture and Platform-projection assertions pass; three value-contract tests and three ownership/export tests fail only because the four public schema values and passive analysis module are not implemented.
 
 ## 112. PASSED 记录格式
 
