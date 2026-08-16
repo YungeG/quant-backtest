@@ -162,11 +162,11 @@ artifact_hashes: []
 | G12M-* | DRAFT | backtest-runtime qualification | market-specific G12L, G07–G10 | Per-market qualification matrix |
 | BT-GAP-01 | PASSED — immutable commit `f2440f9658fbe2ae1cf0016a78c44e4230995394` | trading-domain | WP-02E, Platform BT-PORT-01 | none |
 | BT-GAP-02 | DRAFT / BLOCKED | backtest-runtime | BT-GAP-01, G07, BT-GAP-02A, BT-GAP-04 | No production authority maps every resolved supported request to a `ResolvedExecutionCase` |
-| BT-GAP-02A | READY | backtest-runtime composition | G07, G08H, G10G, BT-GAP-02B, BT-GAP-02C | none |
+| BT-GAP-02A | PASSED | backtest-runtime composition | G07, G08H, G10G, BT-GAP-02B, BT-GAP-02C | none |
 | BT-GAP-02B | PASSED — immutable commit `9f321780bb2e831bac521722c04af82adbd8e40e` | backtest-runtime execution inputs | BT-GAP-01, G03, G07, G11I, G12E, BT-GAP-07, PLAT-REC-03 | none |
 | BT-GAP-02C | PASSED | backtest-runtime execution closure | BT-GAP-02B, G07, G08H, G10G, G12E | none |
 | BT-GAP-04 | PASSED — immutable commit `c3257643d6911bd3b63efac0899aa04d47397b05` | backtest-runtime | BT-GAP-01, G07, Platform BT-PORT-01 | none |
-| BT-GAP-06 | READY | backtest-runtime analysis schema | BT-GAP-01, BT-GAP-04, G07 | none |
+| BT-GAP-06 | PASSED | backtest-runtime analysis schema | BT-GAP-01, BT-GAP-04, G07 | none |
 | BT-GAP-07 | PASSED — immutable commit `029ac43f6d781567cd0742594ca82c181ead0a6d` | backtest-runtime structural read port | BT-GAP-01, WP-02E | none |
 
 ## 4. WP-00A Acceptance Card
@@ -11337,11 +11337,22 @@ evidence:
   - accepted CnA v1 and Binance executable-v2 registration refs
   - superseded hidden simulation-implementation builder rejected
 remaining_blockers: []
-contract_commit: null
-passed_commit: null
+contract_commit: 49146424471bf6943e5966ff2c9753d5ff6cb1e9
+hardening_commit: bb48c4f953e6fad42f0a17ae3f1c9a014baff048
+implementation_commit: 33707f64f1a0da49fcc9239f04f39d56823f78ab
+passed_commit: 33707f64f1a0da49fcc9239f04f39d56823f78ab
+executed_commands:
+  - uv run pytest -q tests/runtime/execution_inputs/test_bt_gap02a_composition_contract.py tests/architecture/test_bt_gap02a_composition_boundary.py tests/runtime/execution_inputs/test_bt_gap02c_execution_closure_contract.py tests/architecture/test_bt_gap02c_execution_closure_boundary.py tests/runtime/execution_inputs/test_execution_input_bundle_contract.py tests/runtime/execution_inputs/test_hydrate_execution_inputs.py tests/architecture/test_bt_gap02b_execution_input_boundary.py
+  - uv run pytest -q tests/runtime/profiles/cn_a_share tests/runtime/profiles/binance_usdm tests/runtime/engine/test_g08h_cn_a_share_golden.py tests/runtime/engine/test_g08h_cn_a_share_journey.py tests/runtime/engine/test_g10g_binance_usdm_golden.py tests/runtime/runner/test_g10g_binance_usdm_runner.py tests/architecture/test_g08h_cn_a_share_composition_boundary.py tests/architecture/test_g10g_binance_composition_boundary.py
+  - uv run pytest -q
+  - uv run python tools/architecture/check_import_boundaries.py --root . --policy architecture/import-boundaries.toml --report /tmp/bt-gap02a-analysis-schema-import-boundaries.json
+  - uv lock --check
+  - git diff --check
 test_results:
-  fixture_and_boundary_preservation: 5 passed
-  intentional_red: 4 failed
+  focused_and_inherited: 44 passed
+  accepted_profiles: 48 passed
+  full_repository: 1644 passed
+  import_boundaries: 101 files passed
 artifact_hashes:
   fixture_sha256: bfa0ddff37bb6e1c813f50da14db4abcc2fab76fa8262c522fbf5facb1b5f764
   preserved_bt_gap02b_fixture_sha256: 09578ac47f997bc4bf55119d31e97dbcad3eb71e90d93a5ef7c8e6669bd66be2
@@ -11359,7 +11370,7 @@ artifact_hashes:
 5. CnA retains its accepted v1 simulation registration. Binance uses the additive executable v2 registration from BT-GAP-02C. The contract fixture freezes all six selected simulation refs for each profile and preserves G08H/G10G v1 fixture bytes.
 6. `composition.py` receives no JSON/Mapping payload and owns no SchemaCatalog or reader. `execution_inputs.py` remains the sole v1/v2 decoder and structural-bundle hydration authority; G12E remains the sole MarketEvent source.
 7. The old `3dbf171960e18f45d0f8216dfb175f864f065bdc` shape remains superseded: selected registration implementations do not gain private builders and the generic runtime never dispatches through hidden implementation state.
-8. Contract RED is intentional: five fixture/preservation/ownership checks pass; four assertions fail only because the private typed composition input/entry and hydrated exact-case result are absent.
+8. Acceptance is green: the private typed composition seam returns one exact sealed case, repeat hydration is byte/hash deterministic, 44 focused/inherited tests and 48 accepted-profile tests pass, the full repository passes 1644 tests, and import boundaries pass across 101 files.
 
 ## 107A. BT-GAP-02C Persisted Execution Closure v2
 
@@ -11671,7 +11682,7 @@ artifact_hashes:
 
 ```yaml
 id: BT-GAP-06
-status: READY
+status: PASSED
 depends_on:
   - BT-GAP-01
   - BT-GAP-04
@@ -11710,10 +11721,20 @@ evidence:
   - user-confirmed missing/null, Fill-count, return, rounding, and profile authorities
 remaining_blockers: []
 contract_commit: 70fd2a45c3c2ed84d01d331d0a7720fdfe8589cf
-passed_commit: null
+implementation_commit: 61a747f7a772b3cffd0d7fe7291d98e351820047
+passed_commit: 61a747f7a772b3cffd0d7fe7291d98e351820047
+executed_commands:
+  - uv run pytest -q tests/runtime/analysis/test_analysis_contract.py tests/runtime/analysis/test_analysis_boundary.py
+  - uv run pytest -q tests/domain/artifacts/test_artifact_ref.py tests/runtime/publication/test_publication_refs.py tests/architecture/test_public_api_imports.py
+  - uv run pytest -q
+  - uv run python tools/architecture/check_import_boundaries.py --root . --policy architecture/import-boundaries.toml --report /tmp/bt-gap02a-analysis-schema-import-boundaries.json
+  - uv lock --check
+  - git diff --check
 test_results:
-  fixture_and_platform_projection: 2 passed
-  intentional_red: 6 failed
+  focused_schema: 8 passed
+  inherited: 13 passed
+  full_repository: 1644 passed
+  import_boundaries: 101 files passed
 artifact_hashes:
   fixture_sha256: 7764e978cc530d1e518f4c4b4a714627b49b09dc2fe594eacf1633a9d8ba5ef1
   metric_profile_payload_sha256: sha256:d2448e93df20789c4f74064bfb5cf34bc116ab3f070010342a3eadc60ec2275f
@@ -11730,8 +11751,8 @@ artifact_hashes:
 4. Conclusive return wire values are ordinary canonical decimal strings with at most 18 fractional digits, ROUND_HALF_EVEN, no exponent, no trailing fractional zero, and no negative zero. The profile owns this policy; Engine state and `execution_result_hash` remain unchanged.
 5. The immutable `backtest_analysis@1` payload contains metric-profile ref, source canonical-publication ref, source execution-result hash, return/null, Fill count, and result grade. It does not contain `analysis_ref`, its own content hash, a path, status, timestamp, reader, repository, or Platform metadata.
 6. `VerifiedBacktestAnalysis` is a loaded value, not another Artifact. BT-GAP-03 attaches the exact derived `AnalysisArtifactRef` to the verified stored payload and exposes the seven-field Platform view. The local fixture computes real Backtest content refs; BT-PORT hash literals remain test-support placeholders while artifact type/version and source/metric linkage semantics remain exact.
-7. BT-GAP-06 freezes passive schema values only. It adds no production module, decoder, derive function, repository, reader, SchemaCatalog, MetricRegistry, MetricEngine, provider, filesystem path, or Platform import. BT-GAP-05 owns completed-only derivation and BT-GAP-03 owns verified loading.
-8. Contract RED is intentional: fixture and Platform-projection assertions pass; three value-contract tests and three ownership/export tests fail only because the four public schema values and passive analysis module are not implemented.
+7. BT-GAP-06 implements only the four passive schema values and their constructor invariants. It adds no decoder, derive function, repository, reader, SchemaCatalog, MetricRegistry, MetricEngine, provider, filesystem path, or Platform import. BT-GAP-05 owns completed-only derivation and BT-GAP-03 owns verified loading.
+8. Acceptance is green: all eight focused schema/boundary tests and thirteen inherited ref/publication/import tests pass; the full repository passes 1644 tests and import boundaries pass across 101 files. Frozen fixture and Platform-projection bytes remain unchanged.
 
 ## 112. PASSED 记录格式
 
