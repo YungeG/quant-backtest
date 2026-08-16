@@ -165,7 +165,7 @@ artifact_hashes: []
 | BT-GAP-02A | PASSED | backtest-runtime composition | G07, G08H, G10G, BT-GAP-02B, BT-GAP-02C | none |
 | BT-GAP-02B | PASSED — immutable commit `9f321780bb2e831bac521722c04af82adbd8e40e` | backtest-runtime execution inputs | BT-GAP-01, G03, G07, G11I, G12E, BT-GAP-07, PLAT-REC-03 | none |
 | BT-GAP-02C | PASSED | backtest-runtime execution closure | BT-GAP-02B, G07, G08H, G10G, G12E | none |
-| BT-GAP-03 | DRAFT / BLOCKED | backtest-runtime verified repository | BT-GAP-02, BT-GAP-05, BT-GAP-06, BT-GAP-07 | semantic decoders and not-found/retention failure authority |
+| BT-GAP-03 | PASSED — immutable commit `dfcd49508854abcb41702b7dbd9acee535608515` | backtest-runtime verified repository | BT-GAP-02, BT-GAP-05, BT-GAP-06, BT-GAP-07 | none |
 | BT-GAP-04 | PASSED — immutable commit `c3257643d6911bd3b63efac0899aa04d47397b05` | backtest-runtime | BT-GAP-01, G07, Platform BT-PORT-01 | none |
 | BT-GAP-05 | PASSED — immutable commit `39863c58ace1d996f3e814835836ec46e2aa3794` | backtest-runtime analysis runtime | BT-GAP-01, BT-GAP-04, BT-GAP-06, G07 | none |
 | BT-GAP-06 | PASSED | backtest-runtime analysis schema | BT-GAP-01, BT-GAP-04, G07 | none |
@@ -11893,7 +11893,71 @@ artifact_hashes:
 5. Repeated derivation publishes byte-identical envelopes and returns the same content-addressed ref. Publisher exceptions remain provider/storage failures; wrong returned refs fail closed. No repository, reader, SchemaCatalog, MetricRegistry, MetricEngine, cache, path convention, simulator, PnL authority, Platform import, or tests/support production import is introduced.
 6. Acceptance is green: 83 focused/inherited tests passed before the shared publisher hardening; the final integrated repository passes 1680 tests, import boundaries pass across 105 files, the Platform consumer contract passes 15 tests, LSP/lens checks are clean, and the independent follow-up review reports no blocker or fix worth doing now.
 
-## 113. PASSED 记录格式
+## 113. BT-GAP-03 Verified Evidence Repository
+
+```yaml
+id: BT-GAP-03
+status: PASSED
+depends_on:
+  - BT-GAP-02
+  - BT-GAP-05
+  - BT-GAP-06
+  - BT-GAP-07
+owner_package: backtest-runtime verified evidence repository
+public_interface:
+  - crypto_quant_backtest.BacktestEvidenceRepository
+  - crypto_quant_backtest.BacktestEvidenceRepository.load_completed
+  - crypto_quant_backtest.BacktestEvidenceRepository.load_terminal
+  - crypto_quant_backtest.BacktestEvidenceRepository.load_analysis
+  - crypto_quant_backtest.BacktestEvidenceFailureCode
+  - crypto_quant_backtest.BacktestEvidenceError
+  - crypto_quant_backtest.VerifiedCompletedPublicationV2
+  - crypto_quant_backtest.VerifiedTerminalPublication
+  - crypto_quant_backtest.TerminalStatus
+  - crypto_quant_domain.ArtifactNotFoundError
+  - crypto_quant_domain.ArtifactRetentionUnavailableError
+failure_contracts:
+  - PORT_REF_TYPE_MISMATCH
+  - PORT_REF_NOT_FOUND
+  - PORT_EVIDENCE_TAMPERED
+  - PORT_MANIFEST_INVALID
+  - PORT_RETENTION_UNAVAILABLE
+  - PORT_TERMINAL_NOT_ANALYZABLE
+  - PORT_ANALYSIS_LINK_MISMATCH
+completed_evidence_closure_commit: f605af3769e79fe757a9d3750186351621577c47
+repository_implementation_commit: dfcd49508854abcb41702b7dbd9acee535608515
+passed_commit: dfcd49508854abcb41702b7dbd9acee535608515
+executed_commands:
+  - uv run pytest -q tests/runtime/evidence_repository/test_evidence_repository.py tests/runtime/integrity/test_completed_publication_v2.py tests/runtime/analysis/test_analysis_derivation_boundary.py
+  - uv run pytest -q
+  - uv run python tools/architecture/check_import_boundaries.py --root . --policy architecture/import-boundaries.toml --report /tmp/bt-gap03-import-boundaries.json
+  - uv lock --check
+  - git diff --check
+  - cd /tmp && /tmp/backtest-bt-gap03-repository/.venv/bin/python -m pytest -q tests/architecture/test_backtest_consumer_port.py
+test_results:
+  focused_final: 37 passed
+  full_repository: 1715 passed
+  import_boundaries: 106 files passed
+  platform_consumer_contract: 15 passed
+  lsp: clean
+  independent_followup_review: NONE
+artifact_hashes:
+  completed_publication_v2_fixture_sha256: 71c3ff2bfa71ef07eb8d95e80914db35549a1ba53d5c1f1ddf447d7a6265916b
+  repository_contract_fixture_sha256: e72648ac1c33812f610f988295391b0d82932ecfc26f4db9a8f3cf98e07b42e5
+remaining_blockers: []
+```
+
+### BT-GAP-03 Acceptance
+
+1. `BacktestEvidenceRepository` is the sole verified load authority for completed, terminal, and analysis evidence. It accepts only exact nominal refs, delegates structural retrieval through the frozen `ArtifactEnvelopeReader`, ignores provider-supplied hydrated artifacts, and semantically decodes only canonical `source_bytes` through one Backtest-owned multi-version `SchemaCatalog`.
+2. The additive `completed_backtest_result@2` preserves the `canonical_publication_manifest@1` three-child root and all legacy v1 bytes/APIs. Its exact `EngineExecutionContext` and canonical evidence-manifest ref make starting financial state, initial Journal boundary, execution case identity, and the complete Attempt evidence graph reachable without profile resolution, hidden paths, or a second repository.
+3. Completed loading verifies root and child refs, source hashes, byte counts, schema versions, normalized role/path/type layouts, canonical Attempt/integrity/result hashes, consistency and rebuild evidence, evidence-manifest and finalized-evidence identities, market-bundle and Attempt-record links, canonical execution-summary hash, engine context, Journal prefix, and run-boundary reporting-currency invariants before producing the lean exact `VerifiedCompletedPublicationV2`.
+4. Terminal loading supports only resolution BLOCKED evidence, Attempt BLOCKED/FAILED/CANCELLED manifests, and integrity-evaluation manifests. It verifies all structurally reachable children before `PORT_TERMINAL_NOT_ANALYZABLE`; completed publications never acquire a synthetic terminal wrapper.
+5. Analysis loading reconstructs exact `backtest_analysis@1` and the accepted metric profile, then reloads the linked completed publication and validates source publication, execution-result hash, result grade, and profile links before returning `VerifiedBacktestAnalysis`.
+6. Failure precedence is frozen as ref type, root not found, tamper, manifest invalid, linked retention unavailable, terminal not analyzable, and analysis-link mismatch. Additive Domain errors distinguish not-found from retention-unavailable without changing the structural reader signature.
+7. Acceptance is green: 37 final focused tests and 1715 full-repository tests pass; import boundaries pass across 106 files; the Platform consumer contract passes 15 tests; lock, diff, LSP, and lens checks are clean; the independent fix-verification review reports `NONE`.
+
+## 114. PASSED 记录格式
 
 ```yaml
 id: WP-00A
