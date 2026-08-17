@@ -21,6 +21,7 @@ real old artifact          → G12J
 | Gate | Outcome | Contract dependencies | Primary module/package |
 | --- | --- | --- | --- |
 | [G12A](g12a.md) | Deterministic SourceSnapshot | G00 | `market-bundle-builder/source_snapshots.py` |
+| [G12-ACQ-TOOLS-V1](../../provider-acquisition-tools.md) | Backtest-owned Binance/Tushare source acquisition — `DRAFT / READY FOR ACCEPTANCE` | G12A | `tools/acquisition/` |
 | [G12B](g12b.md) | Canonical normalization | G12A, G02, first source contract | builder normalizers |
 | [G12C](g12c.md) | Bundle validation/manifest | G12B | `market-bundle-builder/bundle_validation.py` |
 | [G12D](g12d.md) | Atomic publish/repository | G12C | `market-bundle-builder/local_market_bundle_repository.py` |

@@ -319,6 +319,19 @@ only the recorder implementation is present.
 `/fapi/v1/time`, clock quality, and `wss://fstream.binance.com` depth cadence/gaps.
 It assesses connectivity and does not acquire historical market data.
 
+## Backtest-owned acquisition implementation
+
+The reusable subset is now imported into Backtest under `tools/acquisition/`:
+
+- `binance_usdm.py` acquires checksummed USD-M `aggTrades`/`bookTicker` archives
+  and exact funding-history REST bytes without credentials;
+- `cn_a_share_tushare.py` acquires exact daily/listing JSON through fixed HTTPS
+  requests using environment-only `TUSHARE_TOKEN`;
+- both write atomic redacted receipts and candidate G12A snapshots;
+- neither is imported by Runtime/Kernel or exposed from a package root.
+
+Operational details: `docs/implementation/provider-acquisition-tools.md`.
+
 ## Recommended next use in Backtest
 
 1. Use the existing 200-GiB MM L1 raw bundle before downloading more Binance

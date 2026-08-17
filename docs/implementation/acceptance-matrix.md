@@ -148,6 +148,7 @@ artifact_hashes: []
 | G11I | PASSED | backtest-runtime strategy | G11A–G11H, G04 | Invocation/batch fixtures |
 | G11J | PASSED | parity tooling | G11I, G07 | Dual-entry parity |
 | G12A | PASSED | market-bundle-builder | G00 | SourceSnapshot contract |
+| G12-ACQ-TOOLS-V1 | DRAFT / READY FOR ACCEPTANCE | Backtest tools/acquisition | G12A | Full validation, independent review, accepted commit |
 | G12B | PASSED | market-bundle-builder | G12A, G02 | Normalization fixtures |
 | G12C | PASSED | market-bundle-builder | G12B | Manifest/validation fixtures |
 | G12D | PASSED | market-bundle-builder + market-data-contracts | G12C | none |
@@ -10125,6 +10126,36 @@ uv.lock                                                              sha256:afa5
 ```
 
 Implementation commit：`36d8146864ad3fead31593878ad247fbd5f5f463`。
+
+## 93A. Provider Acquisition Tools v1 (Gate remains DRAFT)
+
+```yaml
+id: G12-ACQ-TOOLS-V1
+status: DRAFT / READY FOR ACCEPTANCE
+owner: Backtest tools/acquisition
+depends_on: [G12A]
+interfaces:
+  - tools.acquisition.binance_usdm.acquire_archive
+  - tools.acquisition.binance_usdm.acquire_funding_history
+  - tools.acquisition.cn_a_share_tushare.acquire_daily_listing
+credential_contract:
+  binance_public_market_data: none
+  tushare: environment-only TUSHARE_TOKEN
+test_commands:
+  focused: uv run --locked pytest -q tests/tools/acquisition tests/architecture/test_provider_acquisition_tools_boundary.py
+remaining_blockers:
+  - full-repository-validation
+  - independent-review
+  - accepted-commit
+passed_commit: null
+```
+
+Acceptance requires exact provider-specific request validation, bounded retries,
+checksum/raw-response preservation, redacted receipts, G12A candidate snapshots,
+atomic no-partial output, fixed false qualification flags, no runtime/package-root
+surface change, no network tests, and no tracked credential fallback.
+
+Implementation note: `docs/implementation/provider-acquisition-tools.md`.
 
 ## 94. G12B Synthetic JSONL v1 Normalization Acceptance Card
 
