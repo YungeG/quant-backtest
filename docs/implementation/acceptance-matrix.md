@@ -152,6 +152,7 @@ artifact_hashes: []
 | G12-ACQ-TUSHARE-CALENDAR-V1 | PASSED — immutable commit `10638db8225f68256c027b1dd1373bacff0d112c` | Backtest tools/acquisition | G12A, G12-ACQ-TOOLS-V1 | none |
 | G12B | PASSED | market-bundle-builder | G12A, G02 | Normalization fixtures |
 | G12B-TUSHARE-CN-A-SHARE-DAILY-V1 | PASSED — immutable commit `373817b762fbe0d68b286577e0396107694cc9a1` | market-bundle-builder internal Tushare normalization | G12A, G12B, G12G, frozen Tushare event-time/numeric evidence | none; G12C/D and provider closure remain separate |
+| G12CD-TUSHARE-CN-A-SHARE-DAILY-PUBLICATION-V1 | READY_FOR_RED | market-bundle-builder internal Tushare daily projection | G12B-TUSHARE-CN-A-SHARE-DAILY-V1, G12C, G12D | RED-only; G12L/listing, revision, corporate-action, G12I/K/M, and deployment remain BLOCKED |
 | G12C | PASSED | market-bundle-builder | G12B | Manifest/validation fixtures |
 | G12D | PASSED | market-bundle-builder + market-data-contracts | G12C | none |
 | G12E | PASSED | market-data-contracts | G12D, WP-06A | none |
@@ -11592,7 +11593,44 @@ remaining_blockers: []
 5. Exact Tushare success-wrapper/data keys and values, request/raw-Bar/trace/execution-reference/valuation/result canonical bodies, and hashes are frozen. The result retains and reconstructs the exact request plus verified snapshot metadata, validates member/provenance/revision/availability and projection links, and excludes archive bytes from its canonical body. Price invariants require strictly positive OHLC/pre-close. Failure precedence is invalid request, snapshot invalid, snapshot binding, member missing/binding, JSON, schema, record, decimal mapping, Bar invariant, bucket binding, and availability. Any failure returns no partial result.
 6. Implementation remains off the Builder package root, imports no Runtime/Trading Kernel, and introduces no generic provider Protocol/factory/registry/parser framework. Clean acceptance passed 1842 repository tests, 112 import-boundary files, lock/diff/LSP/lens/Ruff/Pyright/secret checks, unchanged fixtures, and final independent review `NONE` (`aab61081`).
 
-## 104F. G12L Tushare China A-share Daily and Listing v1 (Gate remains BLOCKED)
+## 104F. G12C/D Tushare China A-share Daily Publication v1 (RED only)
+
+```yaml
+id: G12CD-TUSHARE-CN-A-SHARE-DAILY-PUBLICATION-V1
+status: READY_FOR_RED
+depends_on: [G12B-TUSHARE-CN-A-SHARE-DAILY-V1, G12C, G12D]
+owner_package: market-bundle-builder internal Tushare daily projection
+plan: docs/implementation/plans/g12/g12cd-tushare-cn-a-share-daily-publication-v1.md
+public_root_exports: []
+private_module: crypto_quant_bundle_builder.tushare_cn_a_share_daily_bundle
+private_function: project_tushare_cn_a_share_daily_market_event_v1(result) -> MarketEvent
+test_commands:
+  red: >
+    PYTHONDONTWRITEBYTECODE=1 uv run --locked pytest -q
+    tests/bundle_builder/providers/tushare/test_cn_a_share_daily_bundle.py
+    tests/architecture/test_g12cd_tushare_daily_bundle_boundary.py
+qualification:
+  revision_closure_complete: false
+  historical_listing_status_qualified: false
+  corporate_actions_qualified: false
+  decision_grade_eligible: false
+  deployment_authorized: false
+remaining_blockers:
+  - production-projection-implementation
+  - provider-revision-correction-terminal-closure
+  - historical-listing-status-authority
+  - corporate-action-lifecycle-authority
+  - G12I-G12K-G12M-qualification
+  - deployment-authorization
+```
+
+The one-event provider test must compose the unchanged `validate_market_bundle_v1`
+and `LocalMarketBundleRepository` seams; the projection module must not import or
+wrap either. The nested raw Bar remains purpose-free, while explicit nested
+execution-reference and valuation projections retain their separate purposes. This
+RED card adds no G12L readiness or provider/deployment claim.
+
+## 104G. G12L Tushare China A-share Daily and Listing v1 (Gate remains BLOCKED)
 
 ```yaml
 id: G12L-TUSHARE-CN-A-SHARE-DAILY-LISTING-V1
@@ -11638,7 +11676,8 @@ now freezes the one-day G12G bucket. Exact source-text price/change/percentage,
 lot-to-share, and thousand-CNY-to-CNY mappings are frozen. The G12B purpose-free
 raw-Bar/projection normalizer is PASSED at
 `373817b762fbe0d68b286577e0396107694cc9a1`; provider revisions, listing lifecycle,
-corporate actions, G12C/D, G12I/K/M, and deployment remain blocked.
+corporate actions, production G12C/D publication, G12I/K/M, and deployment remain
+blocked.
 
 ## 105. BT-GAP-01 Domain ArtifactRef
 

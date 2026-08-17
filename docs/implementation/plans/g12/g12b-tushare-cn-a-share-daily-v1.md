@@ -18,7 +18,7 @@ depends_on:
     - g12l-tushare-cn-a-share-daily-listing-v1
     - g12l-cn-a-share-daily-event-time-v1
     - g12l-cn-a-share-daily-numeric-mapping-v1
-fan_out: [G12C-TUSHARE-CN-A-SHARE-DAILY-V1, G12I, G12M-CN-A-SHARE]
+fan_out: [G12CD-TUSHARE-CN-A-SHARE-DAILY-PUBLICATION-V1, G12I, G12M-CN-A-SHARE]
 ---
 
 # G12B Tushare China A-share Daily Raw Bar and Purpose Projection v1

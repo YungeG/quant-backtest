@@ -29,8 +29,9 @@ Research authority:
 ## Status
 
 `DRAFT / BLOCKED`. Exact acquisition request, raw response bytes, receipt,
-G12A identity, token-redaction proof, and DuckDB parity are frozen. No normalizer
-or G12C/D publication is authorized.
+G12A identity, token-redaction proof, and DuckDB parity are frozen. The accepted
+normalizer and RED-only G12C/D projection contract do not authorize G12L provider
+qualification or production publication.
 
 ## Frozen scope
 
@@ -69,8 +70,12 @@ Mapping hash:
 `docs/implementation/plans/g12/g12b-tushare-cn-a-share-daily-v1.md` freezes a
 purpose-free `TushareCnAShareDailyRawBar`, exact source trace, and separate
 execution-reference/valuation projection values. The internal normalizer is PASSED at
-`373817b762fbe0d68b286577e0396107694cc9a1`; no G12C/D MarketEvent publication is
-claimed.
+`373817b762fbe0d68b286577e0396107694cc9a1`; its acceptance itself claims no G12C/D
+MarketEvent publication.
+
+`G12CD-TUSHARE-CN-A-SHARE-DAILY-PUBLICATION-V1` now freezes RED-only use of the
+accepted result through the existing G12C/D seams. It remains a development-only
+contract; it does not qualify this G12L listing slice or change any blocker below.
 
 ## Remaining blockers
 
