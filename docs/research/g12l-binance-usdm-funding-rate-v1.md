@@ -2,9 +2,10 @@
 
 ## Decision status
 
-`G12L-BINANCE-USDM-FUNDING-RATE-V1` is the third concrete provider slice and is
-`DRAFT / READY FOR ACCEPTANCE`. It freezes real Binance USD-M monthly
-`fundingRate`, exact G12A identity, rate-only normalization, and G12C/D evidence.
+`G12L-BINANCE-USDM-FUNDING-RATE-V1` is the third concrete provider slice and
+PASSES at immutable commit `ebd91f746c4a065ca06dba89d847e7d41ab06331`.
+It freezes real monthly funding rates, exact G12A identity, rate-only normalization,
+and G12C/D evidence.
 
 ## First-party authority
 

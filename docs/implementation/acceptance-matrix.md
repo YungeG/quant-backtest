@@ -161,7 +161,7 @@ artifact_hashes: []
 | G12L-* | DRAFT | market-bundle-builder source adapter | G12A–G12K as applicable | Concrete provider/dataset/version, real raw fixtures, mapping and closure evidence |
 | G12L-BINANCE-USDM-MARK-PRICE-KLINES-V1 | PASSED — immutable commit `47d59e40081555ab9b555c3e632070a517509436` | market-bundle-builder Binance USD-M source slice | G10D, G12A–G12D | none |
 | G12L-BINANCE-USDM-AGGTRADES-V1 | PASSED — immutable commit `981429b4f0ff5fa219ccc8bc991458072b025bf8` | market-bundle-builder Binance USD-M source slice | G10D, G12A–G12D | none |
-| G12L-BINANCE-USDM-FUNDING-RATE-V1 | DRAFT / READY FOR ACCEPTANCE | market-bundle-builder Binance USD-M source slice | G10E, G12A–G12D | Full validation, independent review, accepted commit |
+| G12L-BINANCE-USDM-FUNDING-RATE-V1 | PASSED — immutable commit `ebd91f746c4a065ca06dba89d847e7d41ab06331` | market-bundle-builder Binance USD-M source slice | G10E, G12A–G12D | none |
 | G12M-* | DRAFT | backtest-runtime qualification | market-specific G12L, G07–G10 | Per-market qualification matrix |
 | BT-GAP-01 | PASSED — immutable commit `f2440f9658fbe2ae1cf0016a78c44e4230995394` | trading-domain | WP-02E, Platform BT-PORT-01 | none |
 | BT-GAP-02 | PASSED — immutable commit `39863c58ace1d996f3e814835836ec46e2aa3794` | backtest-runtime facade | BT-GAP-01, G07, BT-GAP-02A, BT-GAP-04 | none |
@@ -11367,11 +11367,11 @@ and repeatable G12A identity. The provider module emits one EXECUTION_REFERENCE
 stream with availability at the later G12A acquisition instant, exact source
 traces, G12C manifest, and G12D publication. G12I/G12M remain unqualified.
 
-## 104C. G12L Binance USDⓈ-M Monthly Funding Rate v1 (Gate remains DRAFT)
+## 104C. G12L Binance USDⓈ-M Monthly Funding Rate v1 (PASSED)
 
 ```yaml
 id: G12L-BINANCE-USDM-FUNDING-RATE-V1
-status: DRAFT / READY FOR ACCEPTANCE
+status: PASSED
 depends_on: [G10E, G12A, G12B, G12C, G12D]
 owner_package: market-bundle-builder Binance USD-M source slice
 public_interface:
@@ -11395,9 +11395,14 @@ g12a_evidence:
   content_tree_hash: sha256:d596329bda3338709134d3b02403fb38f4cfed555a1b40910f877b15fba6196e
   provenance_hash: sha256:7abdd0a03f8e3b833595492707869700fd19c410a68cd74c1eb419759d3f6e73
 allowed_grade: development
-remaining_blockers:
-  - full-validation-independent-review-and-accepted-commit
-passed_commit: null
+remaining_blockers: []
+validation:
+  focused_provider_and_boundaries: 29 passed
+  full_repository: 1744 passed
+  import_boundaries: 109 files passed
+  lock_diff_lsp_lens_secret_scan: clean
+  independent_review: NONE
+passed_commit: ebd91f746c4a065ca06dba89d847e7d41ab06331
 artifact_hashes:
   archive_sha256: 7f81b2f3694d13779e7e896b69d60cd61e9444d7b9f9e90df761935e1c1b76e2
   checksum_sha256: 3274779c977a6d657722bac4cc9f965bb774c5ba38aad391eb47ef183ae46120
