@@ -166,6 +166,9 @@ def test_funding_history_preserves_raw_response_and_request_receipt(tmp_path: Pa
         b'[{"symbol":"ETHUSDT","fundingTime":1709251200000,"fundingRate":"Infinity","markPrice":"3343.0"}]',
         b'[{"symbol":"ETHUSDT","fundingTime":1709251200000,"fundingRate":"0.1","markPrice":"NaN"}]',
         b'[{"symbol":"ETHUSDT","fundingTime":1709251200000,"fundingRate":"x","markPrice":"-1"}]',
+        b'[{"symbol":"ETHUSDT","fundingTime":1709251200000,"fundingRate":"00.1","markPrice":"1"}]',
+        b'[{"symbol":"ETHUSDT","fundingTime":1709251200000,"fundingRate":"-00","markPrice":"1"}]',
+        b'[{"symbol":"ETHUSDT","fundingTime":1709251200000,"fundingRate":"0.1","markPrice":"01.0"}]',
     ),
 )
 def test_funding_history_rejects_nonfinite_provider_decimals(

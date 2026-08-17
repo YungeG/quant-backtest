@@ -33,7 +33,8 @@ _ARCHIVE_ROOT = "https://data.binance.vision/data/futures/um/daily"
 _FUNDING_ROOT = "https://fapi.binance.com/fapi/v1/fundingRate"
 _SYMBOL = re.compile(r"[A-Z0-9]{5,20}\Z")
 _DATE = re.compile(r"20[0-9]{2}-[01][0-9]-[0-3][0-9]\Z")
-_DECIMAL = re.compile(r"-?[0-9]+(?:\.[0-9]+)?\Z")
+_SIGNED_DECIMAL = re.compile(r"-?(?:0|[1-9][0-9]*)(?:\.[0-9]{1,18})?\Z")
+_POSITIVE_DECIMAL = re.compile(r"(?:0|[1-9][0-9]*)(?:\.[0-9]{1,18})?\Z")
 _KINDS = ("aggTrades", "bookTicker")
 _MAX_ATTEMPTS = 5
 
@@ -244,16 +245,17 @@ def acquire_archive(
 
 
 def _valid_decimal(value: str, *, positive: bool) -> bool:
-    if len(value) > 64 or _DECIMAL.fullmatch(value) is None:
+    pattern = _POSITIVE_DECIMAL if positive else _SIGNED_DECIMAL
+    if len(value) > 64 or pattern.fullmatch(value) is None:
         return False
     whole, _, fraction = value.removeprefix("-").partition(".")
-    if len(fraction) > 18:
-        return False
     try:
         units = int(whole + fraction)
     except ValueError:
         return False
-    return not positive or (not value.startswith("-") and units > 0)
+    if value.startswith("-") and units == 0:
+        return False
+    return not positive or units > 0
 
 
 def _funding_records(
