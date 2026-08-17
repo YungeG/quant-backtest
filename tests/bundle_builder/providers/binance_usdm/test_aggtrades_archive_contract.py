@@ -3,6 +3,7 @@ from __future__ import annotations
 import hashlib
 import json
 from pathlib import Path
+from typing import cast
 
 import pytest
 
@@ -82,10 +83,17 @@ def test_request_and_capture_are_exact_retryable_and_atomic() -> None:
     )
     assert failed.result is None
     assert failed.failure is not None
-    assert failed.failure.code is BinanceUsdmArchiveFailureCode.DATA_GAP_DETECTED
+    assert failed.failure.code is BinanceUsdmArchiveFailureCode.SOURCE_SCHEMA_MISMATCH
 
     with pytest.raises(ValueError, match="frozen source capture"):
         BinanceUsdmAggregateTradesArchiveRequest(request().instrument_id, 0)
+    with pytest.raises(ValueError, match="exact request"):
+        BinanceUsdmArchiveCaptureResult(
+            cast(BinanceUsdmAggregateTradesArchiveRequest, object()),
+            outcome.result.snapshot,
+            1,
+            1,
+        )
 
 
 def test_capture_maps_retry_exhaustion_without_partial_snapshot() -> None:

@@ -29,8 +29,7 @@
   "fixture_id": "g12l-binance-usdm-aggtrades-v1",
   "limitations": [
     "single-symbol-single-day-evidence",
-    "raw-archive-and-g12a-handoff-only",
-    "provider-normalizer-not-yet-implemented",
+    "exact-provider-normalizer-and-g12c-g12d-evidence",
     "archive-availability-is-late-g12a-acquisition-time",
     "no-g12i-or-g12m-qualification",
     "decision-grade-eligible-false",

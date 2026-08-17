@@ -133,6 +133,15 @@ class BinanceUsdmArchiveCaptureResult:
     deployment_authorized: bool = False
 
     def __post_init__(self) -> None:
+        if (
+            type(self.request) is not BinanceUsdmAggregateTradesArchiveRequest
+            or type(self.snapshot) is not SourceSnapshot
+            or type(self.archive_attempts) is not int
+            or not 1 <= self.archive_attempts <= _MAX_ATTEMPTS
+            or type(self.checksum_attempts) is not int
+            or not 1 <= self.checksum_attempts <= _MAX_ATTEMPTS
+        ):
+            raise ValueError("capture result must bind the exact request and snapshot")
         if self.decision_grade_eligible or self.deployment_authorized:
             raise ValueError("G12L qualification flags must remain false")
 
@@ -227,17 +236,23 @@ def capture_binance_usdm_aggregate_trades_archive(
 
     archive, archive_attempts, archive_failure = _fetch(_ARCHIVE_URL, fetch)
     checksum, checksum_attempts, checksum_failure = _fetch(_CHECKSUM_URL, fetch)
-    failures = [
-        failure
-        for failure in (archive_failure, checksum_failure)
-        if failure is not None
-    ]
+    if archive is not None and _sha256(archive) != _ARCHIVE_HASH:
+        archive_failure = BinanceUsdmArchiveFailure(
+            BinanceUsdmArchiveFailureCode.SOURCE_SCHEMA_MISMATCH, _ARCHIVE_URL
+        )
+    if checksum is not None and (
+        _sha256(checksum) != _CHECKSUM_HASH
+        or checksum != f"{_ARCHIVE_HASH[7:]}  {_ARCHIVE_NAME}\n".encode()
+    ):
+        checksum_failure = BinanceUsdmArchiveFailure(
+            BinanceUsdmArchiveFailureCode.SOURCE_SCHEMA_MISMATCH, _CHECKSUM_URL
+        )
+    failures = [failure for failure in (archive_failure, checksum_failure) if failure]
     if failures:
         precedence = tuple(BinanceUsdmArchiveFailureCode)
         return BinanceUsdmArchiveCaptureOutcome(
             failure=min(failures, key=lambda failure: precedence.index(failure.code))
         )
-
     if archive is None or checksum is None:
         return BinanceUsdmArchiveCaptureOutcome(
             failure=BinanceUsdmArchiveFailure(
@@ -245,18 +260,6 @@ def capture_binance_usdm_aggregate_trades_archive(
             )
         )
     archive_hash = _sha256(archive)
-    expected = f"{archive_hash[7:]}  {_ARCHIVE_NAME}\n".encode()
-    if (
-        checksum != expected
-        or archive_hash != _ARCHIVE_HASH
-        or _sha256(checksum) != _CHECKSUM_HASH
-    ):
-        return BinanceUsdmArchiveCaptureOutcome(
-            failure=BinanceUsdmArchiveFailure(
-                BinanceUsdmArchiveFailureCode.SOURCE_SCHEMA_MISMATCH,
-                _CHECKSUM_URL,
-            )
-        )
 
     snapshot = freeze_source_snapshot(
         members=(
@@ -399,6 +402,7 @@ def normalize_binance_usdm_aggregate_trades_archive(
 ) -> BinanceUsdmAggregateTradesNormalizationOutcome:
     if (
         type(capture) is not BinanceUsdmArchiveCaptureResult
+        or type(capture.request) is not BinanceUsdmAggregateTradesArchiveRequest
         or verify_source_snapshot(capture.snapshot).snapshot is None
     ):
         return _content_failure(
@@ -469,14 +473,26 @@ def normalize_binance_usdm_aggregate_trades_archive(
         return _content_failure(
             BinanceUsdmArchiveFailureCode.SOURCE_SCHEMA_MISMATCH, "csv"
         )
-    if len(rows) != _ROW_COUNT or any(len(row) != 7 for row in rows):
-        return _content_failure(
-            BinanceUsdmArchiveFailureCode.DATA_GAP_DETECTED, "row_count_or_columns"
+    faults: list[BinanceUsdmArchiveFailure] = []
+    if len(rows) != _ROW_COUNT:
+        faults.append(
+            BinanceUsdmArchiveFailure(
+                BinanceUsdmArchiveFailureCode.DATA_GAP_DETECTED, "row_count"
+            )
         )
 
     parsed: list[tuple[int, int, int, int, int, int, bool, list[str]]] = []
     previous_time = _DAY_START_MILLISECONDS
     for row_number, row in enumerate(rows, 1):
+        if len(row) != 7:
+            faults.append(
+                BinanceUsdmArchiveFailure(
+                    BinanceUsdmArchiveFailureCode.SOURCE_SCHEMA_MISMATCH,
+                    "csv_columns",
+                    row_number,
+                )
+            )
+            continue
         try:
             aggregate_trade_id = int(row[0])
             price_units = _decimal_units(row[1], scale=2, pattern=_PRICE)
@@ -488,31 +504,40 @@ def normalize_binance_usdm_aggregate_trades_archive(
                 raise ValueError
             is_buyer_maker = row[6] == "true"
         except (TypeError, ValueError):
-            return _content_failure(
-                BinanceUsdmArchiveFailureCode.NORMALIZATION_FAILED,
-                "row_value",
-                row_number,
+            faults.append(
+                BinanceUsdmArchiveFailure(
+                    BinanceUsdmArchiveFailureCode.NORMALIZATION_FAILED,
+                    "row_value",
+                    row_number,
+                )
             )
+            continue
         if aggregate_trade_id != _FIRST_AGGREGATE_TRADE_ID + row_number - 1:
-            return _content_failure(
-                BinanceUsdmArchiveFailureCode.DATA_GAP_DETECTED,
-                "aggregate_trade_sequence",
-                row_number,
+            faults.append(
+                BinanceUsdmArchiveFailure(
+                    BinanceUsdmArchiveFailureCode.DATA_GAP_DETECTED,
+                    "aggregate_trade_sequence",
+                    row_number,
+                )
             )
         if not (
             _DAY_START_MILLISECONDS <= transaction_time < _DAY_END_MILLISECONDS
             and previous_time <= transaction_time
         ):
-            return _content_failure(
-                BinanceUsdmArchiveFailureCode.DATA_GAP_DETECTED,
-                "transaction_time_sequence",
-                row_number,
+            faults.append(
+                BinanceUsdmArchiveFailure(
+                    BinanceUsdmArchiveFailureCode.DATA_GAP_DETECTED,
+                    "transaction_time_sequence",
+                    row_number,
+                )
             )
         if min(first_trade_id, last_trade_id) < 0 or first_trade_id > last_trade_id:
-            return _content_failure(
-                BinanceUsdmArchiveFailureCode.NORMALIZATION_FAILED,
-                "trade_id_range",
-                row_number,
+            faults.append(
+                BinanceUsdmArchiveFailure(
+                    BinanceUsdmArchiveFailureCode.NORMALIZATION_FAILED,
+                    "trade_id_range",
+                    row_number,
+                )
             )
         previous_time = transaction_time
         parsed.append(
@@ -525,6 +550,17 @@ def normalize_binance_usdm_aggregate_trades_archive(
                 transaction_time,
                 is_buyer_maker,
                 row,
+            )
+        )
+    if faults:
+        precedence = tuple(BinanceUsdmArchiveFailureCode)
+        return BinanceUsdmAggregateTradesNormalizationOutcome(
+            failure=min(
+                faults,
+                key=lambda failure: (
+                    precedence.index(failure.code),
+                    failure.row_number or 0,
+                ),
             )
         )
 
