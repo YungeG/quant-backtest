@@ -2,9 +2,11 @@ from __future__ import annotations
 
 import json
 from pathlib import Path
+from unittest.mock import patch
 
 import pytest
 
+import crypto_quant_bundle_builder.binance_usdm_funding_rate_archive as provider
 from crypto_quant_bundle_builder import (
     LocalMarketBundleRepository,
     LocalMarketBundleRepositoryConfig,
@@ -90,39 +92,54 @@ def test_request_capture_retry_precedence_and_atomicity() -> None:
 @pytest.mark.parametrize(
     ("archive_responses", "checksum_responses", "expected"),
     (
-        (((500, b""),) * 3, ((200, CHECKSUM),), BinanceUsdmArchiveFailureCode.PROVIDER_UNAVAILABLE),
+        ((("invalid", b""),), ((500, b""),) * 3, BinanceUsdmArchiveFailureCode.CONFIGURATION_INVALID),
+        (((500, b""),) * 3, ((401, b""),), BinanceUsdmArchiveFailureCode.PROVIDER_UNAVAILABLE),
+        (((500, b""),) * 3, ((429, b""),) * 3, BinanceUsdmArchiveFailureCode.PROVIDER_UNAVAILABLE),
         (((401, b""),), ((429, b""),) * 3, BinanceUsdmArchiveFailureCode.AUTHENTICATION_REJECTED),
         (((429, b""),) * 3, ((404, b""),), BinanceUsdmArchiveFailureCode.RATE_LIMIT_EXHAUSTED),
         (((404, b""),), ((200, CHECKSUM),), BinanceUsdmArchiveFailureCode.DATA_GAP_DETECTED),
     ),
 )
 def test_exhausted_and_mixed_provider_failures_are_atomic(
-    archive_responses: tuple[tuple[int, bytes], ...],
+    archive_responses: tuple[tuple[object, bytes], ...],
     checksum_responses: tuple[tuple[int, bytes], ...],
     expected: BinanceUsdmArchiveFailureCode,
 ) -> None:
     archive_url, checksum_url = request().urls
-    outcome = capture_binance_usdm_funding_rate_archive(
-        request(),
-        FakeFetch({archive_url: archive_responses, checksum_url: checksum_responses}),
-    )
+    with patch.object(provider, "freeze_source_snapshot") as freeze:
+        outcome = capture_binance_usdm_funding_rate_archive(
+            request(),
+            FakeFetch({archive_url: archive_responses, checksum_url: checksum_responses}),  # type: ignore[arg-type]
+        )
     assert outcome.result is None
     assert outcome.failure is not None
     assert outcome.failure.code is expected
+    freeze.assert_not_called()
 
 
 def test_restart_and_duplicate_response_preserve_content_identity() -> None:
     archive_url, checksum_url = request().urls
-    interrupted = capture_binance_usdm_funding_rate_archive(
-        request(),
-        FakeFetch(
-            {
-                archive_url: ((500, b""),) * 3,
-                checksum_url: ((200, CHECKSUM),),
-            }
-        ),
-    )
+
+    class InterruptedMemberFetch:
+        checksum_calls = 0
+
+        def __call__(self, url: str) -> tuple[int, bytes]:
+            if url == archive_url:
+                return (200, ARCHIVE)
+            self.checksum_calls += 1
+            if self.checksum_calls <= 3:
+                raise ConnectionError
+            return (200, CHECKSUM)
+
+    interrupted_fetch = InterruptedMemberFetch()
+    interrupted = capture_binance_usdm_funding_rate_archive(request(), interrupted_fetch)
     assert interrupted.result is None
+    restarted_after_interruption = capture_binance_usdm_funding_rate_archive(
+        request(), interrupted_fetch
+    )
+    assert restarted_after_interruption.result is not None
+    clean = captured()
+    assert restarted_after_interruption.result.capture_hash == clean.capture_hash
 
     duplicate_fetch = FakeFetch(
         {
