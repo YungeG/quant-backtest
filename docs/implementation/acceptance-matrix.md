@@ -178,7 +178,7 @@ artifact_hashes: []
 | BT-GAP-06 | PASSED | backtest-runtime analysis schema | BT-GAP-01, BT-GAP-04, G07 | none |
 | BT-GAP-07 | PASSED — immutable commit `029ac43f6d781567cd0742594ca82c181ead0a6d` | backtest-runtime structural read port | BT-GAP-01, WP-02E | none |
 | BT-GAP-08 | PASSED — accepted package revision `9e5937895d7559b8537a4595d73b6aabc94f6f13` | Backtest package closure | BT-GAP-02, BT-GAP-03, BT-GAP-05, BT-GAP-06 | none |
-| BT-GAP-09 | DRAFT / BLOCKED_OWNER_DECISION | installable development cash provider, preparation, and request registration | BT-GAP-02, BT-GAP-02B, BT-GAP-02C, BT-GAP-07, BT-GAP-08 | Approve `cash.precomputed_target.development.v1`, then freeze provider inputs and terminal semantics |
+| BT-GAP-09 | DRAFT / BLOCKED_PLATFORM_TERMINAL_DECISION | installable development cash provider, preparation, and request registration | BT-GAP-02, BT-GAP-02B, BT-GAP-02C, BT-GAP-07, BT-GAP-08 | Cash contract frozen; Platform must choose honest FAILED acceptance rule |
 
 ## 4. WP-00A Acceptance Card
 
@@ -12399,7 +12399,7 @@ remaining_blockers: []
 
 ```yaml
 id: BT-GAP-09
-status: DRAFT / BLOCKED_OWNER_DECISION
+status: DRAFT / BLOCKED_PLATFORM_TERMINAL_DECISION
 depends_on:
   - BT-GAP-02
   - BT-GAP-02B
@@ -12410,6 +12410,7 @@ owner_package: backtest-runtime
 plan: docs/implementation/plans/bt-gap-09.md
 proposed_product: cash.precomputed_target.development.v1
 proposed_public_interface:
+  - CashDevelopmentRequestIntent
   - BacktestRequestRef
   - CashDevelopmentProviderInputs
   - PreparedBacktestExecution
@@ -12418,8 +12419,7 @@ platform_fan_in:
   - P00-BTA-01
   - P00-SEAM-01
 remaining_blockers:
-  - Backtest-owner product approval
-  - exact provider input and terminal contract freeze
+  - Platform-owned FAILED acceptance decision
   - RED tests and minimal implementation
   - clean accepted Backtest SHA
   - real Platform binding receipt
@@ -12430,13 +12430,16 @@ remaining_blockers:
 1. Independent source review found that the installed Backtest packages contain no production producer of a complete v2 execution plan. Existing producers of decision cycles, bar executions, financial state, dispatch plans, and snapshots are test-only. A wrapper around a prebuilt envelope would therefore leave `P00-BTA-01` blocked and is rejected as closure.
 2. Binance and China A-share production profiles freeze registrations/component identities but do not own complete executable cases; their executable financial dispatchers remain test-only. Promoting those fixtures or adding those providers first would violate the no-test-support and minimum-scope constraints.
 3. The proposed minimum honest product is `cash.precomputed_target.development.v1`: one account, one spot instrument, precomputed targets, next-bar full fill, production default cash dispatcher, mark-to-market closeout, and development grade only. It carries no provider-market, decision-grade, deployment, derivative, settlement, corporate-action, or live claim.
-4. After owner approval, the public seam will return an opaque persisted `BacktestRequestRef`, semantic-run identity, executable `BacktestExecutionRequest@2`, and configured existing `BacktestRuntime` without exposing resolved requests/cases, plans, registries, dispatchers, builders, callbacks, paths, or Platform types.
-5. Real terminal vectors must use semantic inputs: resolution failure for BLOCKED, order-capability rejection for FAILED, and additive `EngineCancellationRequest` propagation through the facade for CANCELLED. Provider/storage/malformed/tampered/binding failures remain pre-Attempt exceptions.
+4. The public seam accepts `CashDevelopmentRequestIntent@1`, not a caller-constructed `BacktestRequest@1`. Backtest derives the immutable request only after producing its semantic spec, thereby retaining authority over profile keys, market/build/target/spec commitments, request hash, and semantic-run identity. It returns an opaque persisted `BacktestRequestRef`, executable `BacktestExecutionRequest@2`, and configured existing `BacktestRuntime` without exposing resolved requests/cases, plans, registries, dispatchers, builders, callbacks, paths, or Platform types.
+5. Real cash-provider terminal vectors use semantic inputs: missing MARKET capability for BLOCKED and additive `BacktestRuntime.run_with_cancellation()` propagation for CANCELLED while preserving existing `run()`. FAILED is not fabricated: production FAILED codes represent allocation/risk/rebalance/plan/accounting/internal-contract defects, and an ordinary exceeded risk limit yields an economically rejected zero target rather than `PORTFOLIO_RISK`. Platform must choose whether real binding proves COMPLETED/BLOCKED/CANCELLED while accepted repository evidence proves FAILED verification, or authorize a separate failure-conformance product.
 6. All accepted v1 request, execution-input, profile, facade, publication, evidence, analysis, fixture bytes, hashes, IDs, and APIs remain immutable. No second registry, repository, catalog, verifier, adapter, Protocol, factory, cache, database, queue, or Platform import is introduced.
 7. First-principles ownership is frozen as Platform context/request construction, Backtest request identity/execution/evidence, concrete provider external-fact production, Foundation structural bytes, and Platform governance admission. No owner may reconstruct another owner's internal authority.
 8. The cash product is acceptable only as a permanent standalone reference/conformance provider for the development-grade P00 seam. It cannot qualify Binance, China A-share, G12L/G12M, decision-grade, deployment, or real-market claims. If P00 itself must prove a real market, the owner must reject this proposal and authorize the larger concrete provider/dispatcher scope.
 9. Acceptance is split into provider authority/producer, Backtest registration-preparation-executable facade, and Platform P00-BTA/P00-SEAM binding. No prebuilt-envelope wrapper may substitute for the provider producer, and no Backtest receipt may substitute for the Platform binding.
-10. Implementation must not start until the Backtest owner approves the new development product and the exact provider-input/terminal authority is frozen. P00 remains blocked until all three acceptance responsibilities pass from clean-installed public roots.
+10. The Backtest owner approved the product. The provider input contains exactly nine external authorities: build manifest, one-instrument catalog, strategy ID, `StrategySleeveId`, initial cash, quantity lattice, decision `MarkObservation`, final `MarkObservation`, and order capabilities. A separate six-field request intent carries only experiment context, timeline window, account ID, reporting currency, and seed plus its fixed schema version. Both observations are exact `VALUATION` facts at the target/end instants; Backtest owns zero-age/no-forward-fill policies and all request commitments, resolved marks, registry, policy, timeline, order, accounting, snapshot, identity, semantic, and runtime values.
+11. The semantic ceiling is one target, one order, at most one full fill, fixed `targets`/`bars.open` streams, zero slippage/fees, no later cash flow, no settlement/financing/margin/liquidation/corporate action, and development grade only. Unsupported economics fail before Attempt creation.
+12. The P00 adverse vector is input-derived: `100000` initial equity, `0.5` target, `100` decision/fill price, and `80` final mark yield `-0.1` simple return and one Fill. No result literal or Platform fixture selector is embedded in production.
+13. BT-GAP-09 remains blocked on the Platform-owned FAILED acceptance decision. The recommended first-principles rule is that the real cash provider proves COMPLETED/BLOCKED/CANCELLED while immutable BT-PORT and Backtest repository evidence continue to prove FAILED verification; adding a failure switch or inconsistent plan is rejected as a test hook. After that decision, RED implementation may begin.
 
 ## 115. PASSED 记录格式
 

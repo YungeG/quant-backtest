@@ -4,6 +4,7 @@ status_source: ../acceptance-matrix.md
 owner: backtest-runtime public provider preparation
 produces:
   - installable cash.precomputed_target.development.v1 provider
+  - CashDevelopmentRequestIntent
   - BacktestRequestRef
   - PreparedBacktestExecution
   - prepare_cash_development_backtest
@@ -20,21 +21,25 @@ fan_in:
 
 ## Status
 
-`BLOCKED_OWNER_DECISION` until the Backtest owner approves
-`cash.precomputed_target.development.v1` as a new installable, development-only
-product. A registration wrapper alone cannot close P00 because the current installed
-packages contain no production producer of an executable v2 execution plan.
+`BLOCKED_PLATFORM_TERMINAL_DECISION`. The Backtest owner approved
+`cash.precomputed_target.development.v1` as a permanent installable,
+development-only reference provider. Request-intent ownership, provider inputs,
+semantic ceiling, mark policy, and independence rules are frozen. RED implementation
+waits for an honest P00 `FAILED` acceptance decision: the minimal cash product has no
+legitimate external fact that should manufacture an internal-contract failure.
 
 ## First-principles authority chain
 
 The required independent flow is:
 
 ```text
-opaque Platform context
-→ public BacktestRequest
+opaque Platform context → public CashDevelopmentRequestIntent
+concrete provider external facts → CashDevelopmentProviderInputs
+                    ↓
+Backtest-produced unsealed cash case and semantic spec
+→ Backtest-derived immutable BacktestRequest@1
 → Backtest validation/persistence and BacktestRequestRef
-→ concrete provider external facts
-→ Backtest-owned executable case
+→ identity-sealed Backtest-owned executable case
 → canonical v2 execution-input envelope
 → BacktestRuntime execution and evidence
 → Platform governance admission
@@ -47,8 +52,9 @@ it.
 
 Independence means:
 
-1. Platform constructs only the public request and passes opaque context; it derives
-   no Backtest identity, execution plan, metric, terminal, or evidence hash.
+1. Platform constructs only the concrete provider request intent and passes opaque
+   context; it derives no Backtest request hash, semantic hash, target digest, build
+   binding, execution plan, metric, terminal, or evidence hash.
 2. Backtest imports no Platform type and preserves the opaque context exactly.
 3. Foundation stores and structurally reads canonical bytes but implements no
    Backtest semantic decoder or verifier.
@@ -118,18 +124,19 @@ one adverse development result, one Fill, verified terminal/evidence behavior, a
 positive deployment claim. The recommended decision is therefore approval, subject
 to the independent-input constraints above.
 
-## Proposed public seam
+## Frozen public seam
 
-After the provider input contract is approved and frozen, add only:
+Add only:
 
 ```python
+CashDevelopmentRequestIntent
 BacktestRequestRef
 CashDevelopmentProviderInputs
 PreparedBacktestExecution
 
 prepare_cash_development_backtest(
     *,
-    request: BacktestRequest,
+    request_intent: CashDevelopmentRequestIntent,
     provider_inputs: CashDevelopmentProviderInputs,
     artifact_reader: ArtifactEnvelopeReader,
     artifact_publisher: ArtifactEnvelopePublisher,
@@ -139,6 +146,16 @@ prepare_cash_development_backtest(
 ```
 
 ```text
+CashDevelopmentRequestIntent@1 = {
+  type: "cash_development_request_intent",
+  schema_version: 1,
+  experiment_id: canonical text | null,
+  timeline_window: TimelineWindow,
+  execution_account_id: canonical text,
+  reporting_currency: CurrencyId,
+  master_random_seed: non-negative integer,
+}
+
 BacktestRequestRef@1 = {
   type: "backtest_request_ref",
   artifact_ref: ArtifactRef[backtest_request@1],
@@ -148,45 +165,129 @@ PreparedBacktestExecution@1 = {
   type: "prepared_backtest_execution",
   schema_version: 1,
   request_ref: BacktestRequestRef,
-  semantic_run_id: sha256,
+  semantic_run_id: run_[0-9a-f]{64},
   execution_request: BacktestExecutionRequest@2,
   runtime: BacktestRuntime,
 }
 ```
 
-The operation internally owns profile registration, request resolution, concrete
-cash-case production, identity sealing, v2 materialization, request/bundle
-publication, returned-ref verification, and facade composition. It exposes no
+The intent deliberately omits profile keys, market-bundle ref, target digest,
+execution-case semantic hash, build-manifest hash, strategy family, engine kind, and
+result grade. The provider fixes or derives them and creates the exact immutable
+`BacktestRequest@1` before registration. This is the additive contract correction
+required because callers cannot know `execution_case_semantic_hash` before Backtest
+has produced the execution case.
+
+The operation internally owns request materialization, profile registration, request
+resolution, concrete cash-case production, identity sealing, v2 materialization,
+request/bundle publication, returned-ref verification, and facade composition. It exposes no
 resolved request, execution case, plan, registry, dispatcher, builder, callback,
 path convention, or Platform type.
 
-The exact `CashDevelopmentProviderInputs` fields are intentionally not frozen before
-the owner approves this product. The subsequent authority-freeze commit must prove
-that every field is a caller-owned economic/provider input rather than a disguised
-resolved plan or fixture-case selector.
+## Frozen provider-input contract
 
-## Terminal contract to freeze
+```text
+CashDevelopmentProviderInputs@1 = {
+  type: "cash_development_provider_inputs",
+  schema_version: 1,
+  build_artifact_manifest: BuildArtifactManifest,
+  instrument_catalog: InstrumentCatalog,
+  strategy_id: canonical text,
+  sleeve_id: StrategySleeveId,
+  initial_cash: Money,
+  quantity_lattice: QuantityLattice,
+  decision_mark: MarkObservation,
+  final_mark: MarkObservation,
+  order_capabilities: OrderCapabilitySet,
+}
+```
+
+These nine fields are external build, market, strategy, capital, lattice, observed
+price, and venue-capability facts. The provider owns fixed stale policies and derives
+both `ResolvedMark` values at the target decision time and request end-exclusive. It
+also derives every registry entry, policy, timeline,
+decision cycle, order, admission, reservation, accounting plan, snapshot plan,
+identity rule, semantic spec, and runtime value. None of those internal authorities
+may be added to the public input later without a new version and owner review.
+
+Validation freezes these bindings:
+
+1. the build manifest hash equals the public request commitment;
+2. the instrument catalog hash equals the MarketBundle manifest commitment and
+   contains exactly one SPOT instrument plus its currencies;
+3. initial cash is positive and denominated in the request reporting currency;
+4. lattice and both marks reference the sole instrument;
+5. both observations use `PricePurpose.VALUATION` and quote the reporting currency;
+   the decision observation has `observed_at == available_at == target decision time`,
+   the final observation has `observed_at == available_at == request end-exclusive`,
+   and Backtest resolves each at that exact instant with fixed `max_age_nanoseconds=0`
+   and `allow_forward_fill=false` stale policy;
+6. the public request selects the provider's fixed market, simulation, and account
+   profile keys and requests development grade;
+7. the target stream contains exactly one active target event for the frozen strategy
+   and sleeve, exactly one positive long target for the sole instrument, and no
+   warmup, revision conflict, second sleeve, or second instrument;
+8. the bar stream contains exactly one eligible real bar-open event after the target
+   and before end-exclusive;
+9. order capabilities are preserved as provider facts so a missing MARKET capability
+   produces the legitimate engine `CAPABILITY_REJECTED` / `BLOCKED` vector rather
+   than a fixture selector.
+
+## Frozen semantic ceiling
+
+The provider owns fixed stream keys `targets` and `bars.open`, timeline batch size
+one, one target decision, one order, at most one full fill, zero slippage, zero fees,
+no pre-existing position, no external cash flow after the initial deposit, permissive
+cash market rules derived from the lattice, no settlement delay, no financing,
+no margin, no liquidation, and mark-to-market final closeout. Target sizing uses the
+decision mark; execution uses the bar open; final valuation uses the final mark.
+
+A completed case must contain exactly one Fill. Inputs that would require a second
+order/fill, shorting, partial fill, multiple instruments/accounts/currencies,
+settlement, fees, financing, corporate actions, or a second target are rejected before
+Attempt creation rather than silently approximated.
+
+The worked P00 vector is input-derived, not hard-coded: initial equity `100000`, target
+weight `0.5`, decision/fill price `100`, and final mark `80` produce ending equity
+`90000`, `simple_period_return = "-0.1"`, and `trade_count = 1`.
+
+## Terminal contract and open decision
 
 The implementation must use legitimate semantics rather than `fixture_case` flags:
 
-- `BLOCKED`: public request/profile resolution failure before Attempt creation;
-- `FAILED`: a valid cash execution reaches an accepted engine failure, initially an
-  order-capability rejection derived from provider capability inputs;
-- `CANCELLED`: additive optional `EngineCancellationRequest` propagation through
-  `BacktestRuntime.run(..., cancellation=...)` and both retry attempts;
+- `BLOCKED`: a structurally valid provider capability set lacks MARKET execution,
+  producing the accepted `CAPABILITY_REJECTED` engine mapping;
+- `CANCELLED`: additive `BacktestRuntime.run_with_cancellation(request,
+  cancellation)` preserves existing `run(request)` unchanged and propagates one
+  `EngineCancellationRequest` to the Attempt actually executed;
 - provider, storage, malformed input, tamper, and binding failures remain exceptions
   before Attempt creation and outside the terminal union.
 
+`FAILED` remains deliberately unresolved. The production runner maps `FAILED` to
+allocation/risk/rebalance/plan/accounting/internal-contract failure classes. A
+well-formed minimal cash provider should not expose an external switch that fabricates
+one of those defects. An ordinary exceeded risk limit is an economically rejected,
+zeroed target, not `PORTFOLIO_RISK` failure. Before RED implementation, Platform must
+choose one honest acceptance rule:
+
+1. real cash provider binding proves COMPLETED/BLOCKED/CANCELLED while immutable
+   BT-PORT and Backtest repository evidence continue to prove FAILED verification; or
+2. authorize a separate concrete runtime-strategy/failure-conformance product with
+   legitimate FAILED semantics and its own gate.
+
+The recommended first-principles choice is option 1. Adding a failure-injection field
+or intentionally inconsistent plan would turn a product interface into a test hook.
+
 ## Failure precedence
 
-Provider preparation must freeze and test:
+Provider preparation must test in this order:
 
 1. exact public argument types;
-2. request/provider-input semantic validation;
-3. market/build/target/spec binding;
-4. profile resolution;
-5. concrete execution-case composition and identity sealing;
-6. v2 materialization and canonical decode verification;
+2. request-intent/provider-input semantic validation;
+3. market/build/target observation binding;
+4. concrete execution-case production and semantic-spec derivation;
+5. immutable `BacktestRequest@1` materialization and profile resolution;
+6. identity sealing, v2 materialization, and canonical decode verification;
 7. request publication and returned-ref verification;
 8. execution-input publication and returned-ref verification;
 9. runtime construction.
@@ -213,11 +314,8 @@ without A. C remains Platform-owned and cannot be claimed by Backtest tests.
 
 ### Phase 1 — provider authority decision and freeze
 
-1. Approve or reject `cash.precomputed_target.development.v1`.
-2. Freeze exact provider input fields and one-instrument/one-fill ceiling.
-3. Freeze completed, blocked, failed, and cancelled semantic vectors.
-4. Freeze request/build/market/target/spec identity sources.
-5. Record unchanged v1/v2 fixture hashes.
+Completed by the owner approval and this readiness contract. Existing frozen v1/v2
+fixture hashes must be captured by the RED suite before production edits.
 
 ### Phase 2 — RED tests
 
@@ -227,7 +325,8 @@ without A. C remains Platform-owned and cannot be claimed by Backtest tests.
 4. Completed execution and analysis produce `-0.1`, one Fill, development grade.
 5. Same request/context replays to identical request, semantic-run, retry, cache,
    publication, and analysis identities.
-6. Legitimate BLOCKED, FAILED, and CANCELLED paths publish durable terminal evidence.
+6. Legitimate BLOCKED and CANCELLED paths publish durable terminal evidence; FAILED
+   follows the separately approved Platform acceptance rule.
 7. Preparation faults create no Attempt or terminal evidence.
 8. Architecture guards reject Platform/Foundation implementation imports,
    `tests/support`, adapters, Protocols, factories, callbacks, second catalogs,
@@ -240,7 +339,7 @@ Expected production write set:
 - `packages/backtest-runtime/src/crypto_quant_backtest/cash_development_provider.py`
 - `packages/backtest-runtime/src/crypto_quant_backtest/request_registration.py`
 - additive exports in `packages/backtest-runtime/src/crypto_quant_backtest/__init__.py`
-- narrowly scoped cancellation propagation in `facade.py`
+- additive `run_with_cancellation` implementation in `facade.py`, preserving `run`
 
 Do not move or import test fixture builders. Reuse existing production engine,
 composer, materializer, dispatcher, identity factory, publisher, and reader.
