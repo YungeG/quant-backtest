@@ -467,7 +467,13 @@ def _planned_order(values: _CaseInputs, ids: _Ids, snapshot: domain.PortfolioSna
     planned = trading.RebalanceCoordinator().coordinate(target=sized.normalized_target, target_validity=validity, portfolio_snapshot=snapshot, working_orders=(), reservations=reservations, availability=availability, policy=rebalance, as_of=values.target_event.event_time)
     if planned.decision is None or len(planned.decision.plan.planned_orders) != 1:
         raise ValueError("cash provider target must produce exactly one order")
-    order = domain.Order(ids.order, values.intent.execution_account_id, planned.decision.plan.planned_orders[0].intent, _sim(values.target_event.event_time, 80, "order_admission", 1))
+    planned_order = planned.decision.plan.planned_orders[0]
+    if (
+        planned_order.intent.side is not domain.OrderSide.BUY
+        or planned_order.intent.quantity.units <= 0
+    ):
+        raise ValueError("cash provider target must be one positive long order")
+    order = domain.Order(ids.order, values.intent.execution_account_id, planned_order.intent, _sim(values.target_event.event_time, 80, "order_admission", 1))
     return order, validity, allocations, risk, sizing_policy, sizing_inputs, rebalance
 
 

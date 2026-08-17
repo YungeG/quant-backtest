@@ -254,8 +254,8 @@ class _SubstitutionCas(_Cas):
         )
 
 
-def _reader() -> InMemoryMarketBundleReader:
-    target = target_event()
+def _reader(target: MarketEvent | None = None) -> InMemoryMarketBundleReader:
+    target = target or target_event()
     original = bar_event()
     bar = replace(
         original,
@@ -697,6 +697,31 @@ def test_terminal_replay_rejects_cross_run_manifest_substitution(tmp_path: Path)
 
     with pytest.raises(RuntimeError, match="terminal Attempt identity mismatch"):
         first.runtime.run(first.execution_request)
+
+
+def test_negative_target_is_rejected_before_publication_or_attempt(tmp_path: Path) -> None:
+    event = target_event()
+    candidate = dict(event.payload["candidate"])
+    target = dict(candidate["targets"][0])
+    target["value"] = "-0.5"
+    candidate["targets"] = (target,)
+    reader = _reader(
+        replace(event, payload={"schema_version": 1, "candidate": candidate})
+    )
+    store = _Cas()
+
+    with pytest.raises(ValueError, match="one positive long order"):
+        backtest.prepare_cash_development_backtest(
+            request_intent=_intent(),
+            provider_inputs=_inputs(),
+            artifact_reader=store,
+            artifact_publisher=store,
+            market_reader=reader,
+            publication_root=tmp_path,
+        )
+
+    assert store.by_ref == {}
+    assert not (tmp_path / "runs").exists()
 
 
 def test_preparation_ref_mismatch_returns_no_authority_or_attempt(tmp_path: Path) -> None:
