@@ -35,12 +35,13 @@ real old artifact          → G12J
 | [G12L-BINANCE-USDM-MARK-PRICE-KLINES-V1](g12l-binance-usdm-mark-price-klines-v1.md) | First concrete slice — `PASSED`; immutable commit `47d59e40081555ab9b555c3e632070a517509436` | G10D, G12A-D + Binance public-data evidence | Builder Binance USD-M source slice |
 | [G12L-BINANCE-USDM-AGGTRADES-V1](g12l-binance-usdm-aggtrades-v1.md) | Second concrete slice — `PASSED`; immutable commit `981429b4f0ff5fa219ccc8bc991458072b025bf8` | G10D, G12A-D + Binance public-data evidence | Builder Binance USD-M source slice |
 | [G12L-BINANCE-USDM-FUNDING-RATE-V1](g12l-binance-usdm-funding-rate-v1.md) | Third concrete slice — `PASSED`; immutable commit `ebd91f746c4a065ca06dba89d847e7d41ab06331` | G10E, G12A-D + Binance public-data evidence | Builder Binance USD-M source slice |
+| [G12L-BINANCE-USDM-FUNDING-HISTORY-V1](g12l-binance-usdm-funding-history-v1.md) | Exact rate+mark REST evidence — `DRAFT / BLOCKED`; no immutable provider revision closure | G10E, G12A + Binance API evidence | Builder Binance USD-M source slice |
 | G12M-* | Market qualification | market-specific G12L, G07–G10 | runtime qualification |
 
 ## Parallelism
 
 After G12C, G12D, G12G, G12H, and G12K may proceed as disjoint research/readiness lanes. Implementation remains single-writer where public schemas, the Acceptance Matrix, architecture policy, or shared fixtures overlap.
 
-G12L's common contract remains provider-neutral. The first concrete slice PASSES Binance Public Data USD-M daily mark-price klines with real ZIP/checksum bytes, exact G12A identity, conservative late availability, purpose-separated normalization, and G12C/D evidence. The second concrete slice PASSES Binance USD-M daily aggregate trades with real source/G12A, EXECUTION_REFERENCE normalization, and G12C/D publication evidence. No other market/provider is selected.
+G12L's common contract remains provider-neutral. The first concrete slice PASSES Binance Public Data USD-M daily mark-price klines with real ZIP/checksum bytes, exact G12A identity, conservative late availability, purpose-separated normalization, and G12C/D evidence. The second concrete slice PASSES Binance USD-M daily aggregate trades with real source/G12A, EXECUTION_REFERENCE normalization, and G12C/D publication evidence. The third PASSED slice freezes rate-only monthly funding archives. A separate exact rate+mark REST capture remains BLOCKED because Binance exposes no immutable revision/correction closure. No other market/provider is selected.
 
 Status remains authoritative only in `docs/implementation/acceptance-matrix.md`.

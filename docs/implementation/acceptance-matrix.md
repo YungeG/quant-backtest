@@ -162,6 +162,7 @@ artifact_hashes: []
 | G12L-BINANCE-USDM-MARK-PRICE-KLINES-V1 | PASSED — immutable commit `47d59e40081555ab9b555c3e632070a517509436` | market-bundle-builder Binance USD-M source slice | G10D, G12A–G12D | none |
 | G12L-BINANCE-USDM-AGGTRADES-V1 | PASSED — immutable commit `981429b4f0ff5fa219ccc8bc991458072b025bf8` | market-bundle-builder Binance USD-M source slice | G10D, G12A–G12D | none |
 | G12L-BINANCE-USDM-FUNDING-RATE-V1 | PASSED — immutable commit `ebd91f746c4a065ca06dba89d847e7d41ab06331` | market-bundle-builder Binance USD-M source slice | G10E, G12A–G12D | none |
+| G12L-BINANCE-USDM-FUNDING-HISTORY-V1 | DRAFT / BLOCKED | market-bundle-builder Binance USD-M source slice | G10E, G12A | Immutable provider revision/correction closure |
 | G12M-* | DRAFT | backtest-runtime qualification | market-specific G12L, G07–G10 | Per-market qualification matrix |
 | BT-GAP-01 | PASSED — immutable commit `f2440f9658fbe2ae1cf0016a78c44e4230995394` | trading-domain | WP-02E, Platform BT-PORT-01 | none |
 | BT-GAP-02 | PASSED — immutable commit `39863c58ace1d996f3e814835836ec46e2aa3794` | backtest-runtime facade | BT-GAP-01, G07, BT-GAP-02A, BT-GAP-04 | none |
@@ -11420,6 +11421,45 @@ The committed CSV has 93 exact eight-hour slots and preserves provider 0–2ms
 slot jitter plus the scientific-notation source rate. The provider emits one
 rate-only funding-publication stream with exact traces and G12C/D publication.
 The archive has no funding-time mark, so G10E/G12I/G12M remain unqualified.
+
+## 104D. G12L Binance USDⓈ-M Funding History v1 (Gate remains BLOCKED)
+
+```yaml
+id: G12L-BINANCE-USDM-FUNDING-HISTORY-V1
+status: DRAFT / BLOCKED
+depends_on: [G10E, G12A]
+owner_package: market-bundle-builder Binance USD-M source slice
+public_interface:
+  - none; exact source/G12A development evidence only
+test_commands:
+  evidence: uv run --locked pytest -q tests/bundle_builder/providers/binance_usdm/test_funding_history_response_evidence.py
+fixture_ids: [g12l-binance-usdm-funding-history-v1]
+frozen_scope:
+  provider: Binance USD-M Funding Rate History REST
+  symbol: BTCUSDT
+  utc_date: 2024-01-01
+  records: 3
+  fields: [symbol, fundingTime, fundingRate, markPrice, rateType]
+g12a_evidence:
+  snapshot_id: sha256:0d4566742f51b18d66a28605c087ec3604769ab04e6fc551d71c9b32033b69a9
+  content_tree_hash: sha256:a55fd58ce7f37e829b37c1a6fb94c1426a79c0b97aa0df3c6e793273506b4680
+  provenance_hash: sha256:18a2286003de03ae71aa343a83b75432653ed0e1b490dcf5f3608b37896aa058
+allowed_grade: development
+remaining_blockers:
+  - provider-checksum-or-signed-content-identity
+  - immutable-publication-revision
+  - correction-supersession-terminal-closure
+  - historical-availability-authority
+passed_commit: null
+artifact_hashes:
+  response_sha256: e9f73f9c845c28abb31037d8230df2d6f13d5d368c43436e891fcc757372c338
+  evidence_fixture_sha256: 56ae7e1ddf9ee0fbead02b96e44a76134f60e0add2451060a824106a0810efa4
+```
+
+The exact response supplies all G10E record fields, including the funding-time
+mark, and repeated fetches had identical bytes. It remains BLOCKED because the
+current REST endpoint provides no immutable revision/correction terminal set or
+provider checksum. No normalizer, G12C/D, G12I, G12M, or deployment claim follows.
 
 ## 105. BT-GAP-01 Domain ArtifactRef
 
