@@ -68,12 +68,12 @@ Mapping hash:
 
 `docs/implementation/plans/g12/g12b-tushare-cn-a-share-daily-v1.md` freezes a
 purpose-free `TushareCnAShareDailyRawBar`, exact source trace, and separate
-execution-reference/valuation projection values. It authorizes RED normalizer work
-only; no G12C/D MarketEvent publication is claimed.
+execution-reference/valuation projection values. The internal normalizer is
+implemented with acceptance pending; no G12C/D MarketEvent publication is claimed.
 
 ## Remaining blockers
 
-1. Implement and accept the frozen G12B raw-Bar normalizer and projections.
+1. Complete independent review and full acceptance for the implemented G12B raw-Bar normalizer and projections.
 2. Decide whether current `stock_basic` may only provide instrument metadata or
    can support any historical listing claim; default is metadata only.
 3. Obtain provider revision/correction terminal evidence or retain the finite

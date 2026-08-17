@@ -25,10 +25,11 @@ fan_out: [G12C-TUSHARE-CN-A-SHARE-DAILY-V1, G12I, G12M-CN-A-SHARE]
 
 ## Status
 
-`READY_FOR_RED`. This contract freezes normalization for the exact
-`000001.SZ / 2024-01-02` Tushare daily source slice. It does not authorize G12C/D
-publication, historical listing status, provider correction closure, corporate
-actions, decision-grade use, or deployment.
+`IMPLEMENTED / ACCEPTANCE_PENDING`. The internal normalizer and focused contract
+suite implement the exact `000001.SZ / 2024-01-02` source slice. Independent review
+fixes are applied; final reviewer/full-repository acceptance remains pending. This
+status does not authorize G12C/D publication, historical listing status, provider
+correction closure, corporate actions, decision-grade use, or deployment.
 
 ## Outcome and interface
 
@@ -118,6 +119,7 @@ strings. The remaining nine values are tagged JSON number tokens.
 ```text
 TushareCnAShareDailyRawBar@1 = {
   instrument_id: InstrumentId,
+  provider_ts_code: "000001.SZ",
   provider_trade_date: str,
   bucket: BarBucket,
   available_time: UtcInstant,
@@ -148,7 +150,9 @@ TushareCnAShareDailyRawBar@1 = {
 ```
 
 Canonical body is `{type="tushare_cn_a_share_daily_raw_bar", schema_version=1,
-...all fields above...}`. `raw_bar_hash = canonical_sha256(body)`.
+...all fields above...}`. `raw_bar_hash = canonical_sha256(body)`. The constructor
+recomputes `source_record_hash` from retained `provider_ts_code`, trade date, and all
+nine numeric lexemes; a caller-supplied hash is never trusted independently.
 
 Fixed limitations, canonical-sorted:
 
@@ -281,7 +285,8 @@ exact raw-Bar type. Their hashes and canonical bodies must be distinct.
 
 ```text
 TushareCnAShareDailyNormalizationResult@1 = {
-  request_hash: sha256,
+  request: TushareCnAShareDailyNormalizationRequest,
+  snapshot: verified SourceSnapshot,
   raw_bar: TushareCnAShareDailyRawBar,
   trace: TushareCnAShareDailySourceTrace,
   execution_reference: TushareCnAShareDailyExecutionReference,
@@ -289,7 +294,11 @@ TushareCnAShareDailyNormalizationResult@1 = {
 }
 ```
 
-The result validates all request/raw/trace/projection links. Canonical type is
+The result derives `request_hash` from `request` and validates the exact request,
+verified snapshot, selected member, provenance/source/revision trace, acquisition
+availability, raw Bar, and projection links. Its canonical body contains
+`request.to_canonical_dict()` and `snapshot.to_canonical_dict()` metadata only; archive
+bytes are never hashed into the result body. Canonical type is
 `tushare_cn_a_share_daily_normalization_result`; `normalization_hash` is
 `canonical_sha256` of the complete type/schema/body.
 
@@ -334,7 +343,7 @@ values, and `canonical_sha256`. Do not add a provider Protocol, factory, registr
 second decimal framework, Runtime import, Trading Kernel import, cache, repository,
 path convention, or network access.
 
-## RED acceptance
+## Acceptance evidence required
 
 1. exact snapshot/provenance/member/request binding, including acquisition-time
    mutation with identical bytes;

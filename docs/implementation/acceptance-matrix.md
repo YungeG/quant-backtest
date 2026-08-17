@@ -151,7 +151,7 @@ artifact_hashes: []
 | G12-ACQ-TOOLS-V1 | PASSED — immutable commit `6f0bd99a93a349924996eb26708fbb0ac6fecf17` | Backtest tools/acquisition | G12A | none |
 | G12-ACQ-TUSHARE-CALENDAR-V1 | PASSED — immutable commit `10638db8225f68256c027b1dd1373bacff0d112c` | Backtest tools/acquisition | G12A, G12-ACQ-TOOLS-V1 | none |
 | G12B | PASSED | market-bundle-builder | G12A, G02 | Normalization fixtures |
-| G12B-TUSHARE-CN-A-SHARE-DAILY-V1 | READY_FOR_RED | market-bundle-builder internal Tushare normalization | G12A, G12B, G12G, frozen Tushare event-time/numeric evidence | RED tests and minimal normalizer pending |
+| G12B-TUSHARE-CN-A-SHARE-DAILY-V1 | IMPLEMENTED / ACCEPTANCE_PENDING | market-bundle-builder internal Tushare normalization | G12A, G12B, G12G, frozen Tushare event-time/numeric evidence | independent review and full-repository acceptance pending |
 | G12C | PASSED | market-bundle-builder | G12B | Manifest/validation fixtures |
 | G12D | PASSED | market-bundle-builder + market-data-contracts | G12C | none |
 | G12E | PASSED | market-data-contracts | G12D, WP-06A | none |
@@ -11539,7 +11539,7 @@ provider checksum. No normalizer, G12C/D, G12I, G12M, or deployment claim follow
 
 ```yaml
 id: G12B-TUSHARE-CN-A-SHARE-DAILY-V1
-status: READY_FOR_RED
+status: IMPLEMENTED / ACCEPTANCE_PENDING
 depends_on: [G12A, G12B, G12G]
 owner_package: market-bundle-builder internal Tushare normalization
 plan: docs/implementation/plans/g12/g12b-tushare-cn-a-share-daily-v1.md
@@ -11563,20 +11563,22 @@ qualification:
   corporate_actions_qualified: false
   decision_grade_eligible: false
   deployment_authorized: false
+implementation:
+  module: crypto_quant_bundle_builder.tushare_cn_a_share_daily
+  package_root_exported: false
 remaining_blockers:
-  - RED tests
-  - minimal internal normalizer
-  - focused/full acceptance
+  - independent-review-closure
+  - full-repository-acceptance
 ```
 
 ### G12B Tushare Daily Readiness
 
-1. The request binds both G12A `snapshot_id` and `provenance_hash`; identical member bytes with changed acquisition time fail before parsing. The raw provider Bar has no `price_purpose`; tagged JSON numeric lexemes and typed price/rate/quantity/amount mappings remain jointly authoritative.
+1. The request binds both G12A `snapshot_id` and `provenance_hash`; identical member bytes with changed acquisition time fail before parsing. The raw provider Bar retains `provider_ts_code`, trade date, and all numeric lexemes, recomputes its source-record hash, and has no `price_purpose`; typed price/rate/quantity/amount mappings remain jointly authoritative.
 2. Execution-reference and valuation are separate immutable projections linked to the same raw-Bar hash. Execution-reference preserves OHLC/volume/amount; valuation exposes only close at bucket end-exclusive. Neither projection grants settlement, adjusted-close, margin, liquidation, funding, listing, or corporate-action semantics.
 3. `available_time` is derived only from the selected G12A member acquisition time and must be no earlier than bucket end-exclusive. The later 2026 acquisition cannot be rewritten as 2024 same-day availability.
 4. Source trace records one row and exact snapshot/provenance/member identities while fixing `revision_closure_complete=false`. Current `stock_basic` is outside the normalizer and remains metadata-only.
-5. Exact Tushare success-wrapper/data keys and values, request/raw-Bar/trace/execution-reference/valuation/result canonical bodies, and hashes are frozen. Price invariants require strictly positive OHLC/pre-close. Failure precedence is invalid request, snapshot invalid, snapshot binding, member missing/binding, JSON, schema, record, decimal mapping, Bar invariant, bucket binding, and availability. Any failure returns no partial result.
-6. Implementation remains off the Builder package root, imports no Runtime/Trading Kernel, and introduces no generic provider Protocol/factory/registry/parser framework.
+5. Exact Tushare success-wrapper/data keys and values, request/raw-Bar/trace/execution-reference/valuation/result canonical bodies, and hashes are frozen. The result retains and reconstructs the exact request plus verified snapshot metadata, validates member/provenance/revision/availability and projection links, and excludes archive bytes from its canonical body. Price invariants require strictly positive OHLC/pre-close. Failure precedence is invalid request, snapshot invalid, snapshot binding, member missing/binding, JSON, schema, record, decimal mapping, Bar invariant, bucket binding, and availability. Any failure returns no partial result.
+6. Implementation remains off the Builder package root, imports no Runtime/Trading Kernel, and introduces no generic provider Protocol/factory/registry/parser framework. Focused implementation is complete; PASSED status requires independent review and full repository acceptance.
 
 ## 104F. G12L Tushare China A-share Daily and Listing v1 (Gate remains BLOCKED)
 
@@ -11623,9 +11625,9 @@ snapshot. Daily OHLC/percentage change and converted volume/amount plus listing 
 match the stable DuckDB backup. An exact SZSE `trade_cal` row plus G08H phase parity
 now freezes the one-day G12G bucket. Exact source-text price/change/percentage,
 lot-to-share, and thousand-CNY-to-CNY mappings are frozen. The G12B purpose-free
-raw-Bar/projection contract is READY_FOR_RED; normalizer acceptance, provider
-revisions, listing lifecycle, corporate actions, G12C/D, G12I/K/M, and deployment
-remain blocked.
+raw-Bar/projection normalizer is IMPLEMENTED / ACCEPTANCE_PENDING; independent review,
+full acceptance, provider revisions, listing lifecycle, corporate actions, G12C/D,
+G12I/K/M, and deployment remain blocked.
 
 ## 105. BT-GAP-01 Domain ArtifactRef
 
