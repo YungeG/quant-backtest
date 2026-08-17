@@ -25,14 +25,30 @@
   "fixture_id": "g12l-binance-usdm-funding-rate-v1",
   "limitations": [
     "single-symbol-single-month-evidence",
-    "raw-archive-and-g12a-handoff-only",
-    "provider-normalizer-not-yet-implemented",
+    "exact-provider-normalizer-and-g12c-g12d-evidence",
     "archive-has-funding-rate-but-no-funding-mark-price",
     "archive-availability-is-late-g12a-acquisition-time",
     "no-g12i-or-g12m-qualification",
     "decision-grade-eligible-false",
     "deployment-authorized-false"
   ],
+  "provider_result": {
+    "bundle_ref": {
+      "bundle_key": "binance-usdm-funding-rate-btcusdt-2020-01",
+      "manifest_hash": "sha256:baa96c9993c7531715a203f610f7e0075dd2955240f020330072f925cbee4ba5",
+      "type": "market_bundle_ref"
+    },
+    "capture_hash": "sha256:530184b2bafdffef4fbc7ed4e310bc4ba7567f3f44e540a3d7d29190d24d34c3",
+    "event_count": 93,
+    "first_event_hash": "sha256:e56b342d64286c677344c6c8e1aa3c23c2b5375443f819919ca53b5f2b50f57d",
+    "last_event_hash": "sha256:8dc2574cd23c0b8a1d752418906e27a97d1d2692a572c281871cea71dc19c395",
+    "manifest_content_hash": "sha256:47e75aacbe3c0dc8f877e1fbb58b8963a017bda2c1bf1b3894e32d12338295af",
+    "normalization_hash": "sha256:adaf13c487bb3864e3321539e70a7c4fa0f8e3ab8c4cd94cee4138537fb9d62f",
+    "request_hash": "sha256:adaba188f07aab97b311e995f41d7e2b266e82baaeb5d3b416560e1fc98e29c7",
+    "retention_proof_hash": "sha256:30400c149621d1879862289d0c4f376dc8cf75120ef05d09d857dec5a34697d4",
+    "scientific_event_hash": "sha256:ec7b81ef27fdb62a633dabd143c398fdf9913af7c363d81cbcf8fe45bb7e18a7",
+    "stream_content_hash": "sha256:c33bb4faaae254a7963724832ac296dcb941e8eb12cabe8692cbabb12d5450b9"
+  },
   "schema_version": 1,
   "snapshot": {
     "content_tree_hash": "sha256:d596329bda3338709134d3b02403fb38f4cfed555a1b40910f877b15fba6196e",

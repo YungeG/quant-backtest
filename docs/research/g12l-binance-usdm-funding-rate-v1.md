@@ -3,9 +3,8 @@
 ## Decision status
 
 `G12L-BINANCE-USDM-FUNDING-RATE-V1` is the third concrete provider slice and is
-`DRAFT / IN PROGRESS`. It selects Binance Public Data USD-M monthly
-`fundingRate`, `BTCUSDT`, UTC month `2020-01`. This note freezes real source
-bytes and exact G12A identity only; normalization and acceptance remain.
+`DRAFT / READY FOR ACCEPTANCE`. It freezes real Binance USD-M monthly
+`fundingRate`, exact G12A identity, rate-only normalization, and G12C/D evidence.
 
 ## First-party authority
 

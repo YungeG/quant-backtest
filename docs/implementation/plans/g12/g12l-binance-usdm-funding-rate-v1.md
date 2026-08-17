@@ -1,6 +1,6 @@
 ---
 id: G12L-BINANCE-USDM-FUNDING-RATE-V1
-readiness: IN_PROGRESS
+readiness: READY
 gate_status: DRAFT
 owner: market-bundle-builder Binance USD-M source slice
 produces:
@@ -28,9 +28,9 @@ Research authority: `docs/research/g12l-binance-usdm-funding-rate-v1.md`.
 
 ## Current status
 
-`DRAFT / IN PROGRESS`. Provider, finite archive/checksum, exact three-field CSV,
-93 eight-hour slots with retained 0–2ms provider jitter, scientific-notation
-source evidence, exact G12A identity, and conservative availability are frozen.
+`DRAFT / READY FOR ACCEPTANCE`. Exact capture, global failure precedence,
+three-field normalization, 93 slots with retained jitter, scientific-rate handling,
+request/source binding, conservative availability, traces, and G12C/D are frozen.
 
 ## Minimum implementation seam
 
@@ -52,8 +52,8 @@ dependency, cache, Trading Kernel import, or funding mark.
 
 ## Acceptance work remaining
 
-1. Freeze RED request/capture/normalization/failure tests.
-2. Implement exact capture and one funding-publication stream.
-3. Prove request/source binding, replacement/provenance and malformed ZIP/CSV rejection.
-4. Freeze G12C/D hashes and the missing-funding-mark causal limit.
-5. Run full validation and independent review, then accept the immutable commit.
+1. Run focused and full repository tests, import boundaries, network isolation,
+   secret scan, lock check, LSP, and diff checks.
+2. Obtain independent review with no material findings.
+3. Freeze the accepted implementation commit and change this slice to `PASSED`.
+4. Keep the missing funding-time mark, G12I, and G12M explicitly unqualified.

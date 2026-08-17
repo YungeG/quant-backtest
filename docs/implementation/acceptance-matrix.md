@@ -161,7 +161,7 @@ artifact_hashes: []
 | G12L-* | DRAFT | market-bundle-builder source adapter | G12A–G12K as applicable | Concrete provider/dataset/version, real raw fixtures, mapping and closure evidence |
 | G12L-BINANCE-USDM-MARK-PRICE-KLINES-V1 | PASSED — immutable commit `47d59e40081555ab9b555c3e632070a517509436` | market-bundle-builder Binance USD-M source slice | G10D, G12A–G12D | none |
 | G12L-BINANCE-USDM-AGGTRADES-V1 | PASSED — immutable commit `981429b4f0ff5fa219ccc8bc991458072b025bf8` | market-bundle-builder Binance USD-M source slice | G10D, G12A–G12D | none |
-| G12L-BINANCE-USDM-FUNDING-RATE-V1 | DRAFT / IN PROGRESS | market-bundle-builder Binance USD-M source slice | G10E, G12A–G12D | Provider normalizer, G12C/D evidence, full validation and review |
+| G12L-BINANCE-USDM-FUNDING-RATE-V1 | DRAFT / READY FOR ACCEPTANCE | market-bundle-builder Binance USD-M source slice | G10E, G12A–G12D | Full validation, independent review, accepted commit |
 | G12M-* | DRAFT | backtest-runtime qualification | market-specific G12L, G07–G10 | Per-market qualification matrix |
 | BT-GAP-01 | PASSED — immutable commit `f2440f9658fbe2ae1cf0016a78c44e4230995394` | trading-domain | WP-02E, Platform BT-PORT-01 | none |
 | BT-GAP-02 | PASSED — immutable commit `39863c58ace1d996f3e814835836ec46e2aa3794` | backtest-runtime facade | BT-GAP-01, G07, BT-GAP-02A, BT-GAP-04 | none |
@@ -11371,13 +11371,15 @@ traces, G12C manifest, and G12D publication. G12I/G12M remain unqualified.
 
 ```yaml
 id: G12L-BINANCE-USDM-FUNDING-RATE-V1
-status: DRAFT / IN PROGRESS
+status: DRAFT / READY FOR ACCEPTANCE
 depends_on: [G10E, G12A, G12B, G12C, G12D]
 owner_package: market-bundle-builder Binance USD-M source slice
 public_interface:
-  - none yet; raw evidence and exact G12A handoff only
+  - crypto_quant_bundle_builder.binance_usdm_funding_rate_archive.BinanceUsdmFundingRateArchiveRequest
+  - crypto_quant_bundle_builder.binance_usdm_funding_rate_archive.capture_binance_usdm_funding_rate_archive
+  - crypto_quant_bundle_builder.binance_usdm_funding_rate_archive.normalize_binance_usdm_funding_rate_archive
 test_commands:
-  evidence: uv run --locked pytest -q tests/bundle_builder/providers/binance_usdm/test_funding_rate_archive_evidence.py
+  provider: uv run --locked pytest -q tests/bundle_builder/providers/binance_usdm tests/architecture/test_g12l_binance_funding_rate_boundary.py
 fixture_ids: [g12l-binance-usdm-funding-rate-v1]
 frozen_scope:
   provider: Binance Public Data
@@ -11394,23 +11396,25 @@ g12a_evidence:
   provenance_hash: sha256:7abdd0a03f8e3b833595492707869700fd19c410a68cd74c1eb419759d3f6e73
 allowed_grade: development
 remaining_blockers:
-  - exact-request-capture-and-failure-contract
-  - funding-rate-normalizer-and-source-trace
-  - replacement-and-provenance-rejection
-  - g12c-manifest-and-g12d-publication
   - full-validation-independent-review-and-accepted-commit
 passed_commit: null
 artifact_hashes:
   archive_sha256: 7f81b2f3694d13779e7e896b69d60cd61e9444d7b9f9e90df761935e1c1b76e2
   checksum_sha256: 3274779c977a6d657722bac4cc9f965bb774c5ba38aad391eb47ef183ae46120
   csv_sha256: b566eea750ede01486360de242ce63a727ebbbc81fb46fcfdf2fb68188b48835
-  evidence_fixture_sha256: 1bcb140ddc0c1731ad32cd025bb2e54b97ea4dd5bba123dee9caefe07f10557e
+  evidence_fixture_sha256: e2283531420b1b282b43bdbd046aba1d5e3ce6ac9438cc8c3eb909e0cdd70541
+  provider_module_sha256: 2f42f796ed947dbe24f025e5e3612437c52704faaac5a12c60514685ceee0754
+  request_hash: sha256:adaba188f07aab97b311e995f41d7e2b266e82baaeb5d3b416560e1fc98e29c7
+  capture_hash: sha256:530184b2bafdffef4fbc7ed4e310bc4ba7567f3f44e540a3d7d29190d24d34c3
+  normalization_hash: sha256:adaf13c487bb3864e3321539e70a7c4fa0f8e3ab8c4cd94cee4138537fb9d62f
+  manifest_content_hash: sha256:47e75aacbe3c0dc8f877e1fbb58b8963a017bda2c1bf1b3894e32d12338295af
+  bundle_manifest_hash: sha256:baa96c9993c7531715a203f610f7e0075dd2955240f020330072f925cbee4ba5
 ```
 
 The committed CSV has 93 exact eight-hour slots and preserves provider 0–2ms
-slot jitter plus the scientific-notation source rate. It is real source/G12A
-readiness evidence only. The archive has no funding-time mark price, so this
-slice alone cannot satisfy G10E, G12I, G12M, decision-grade, or deployment.
+slot jitter plus the scientific-notation source rate. The provider emits one
+rate-only funding-publication stream with exact traces and G12C/D publication.
+The archive has no funding-time mark, so G10E/G12I/G12M remain unqualified.
 
 ## 105. BT-GAP-01 Domain ArtifactRef
 
