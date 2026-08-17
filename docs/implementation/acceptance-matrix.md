@@ -160,7 +160,7 @@ artifact_hashes: []
 | G12K | DRAFT | market-bundle-builder validation | G12C | Universe/corporate action coverage |
 | G12L-* | DRAFT | market-bundle-builder source adapter | G12A–G12K as applicable | Concrete provider/dataset/version, real raw fixtures, mapping and closure evidence |
 | G12L-BINANCE-USDM-MARK-PRICE-KLINES-V1 | PASSED — immutable commit `47d59e40081555ab9b555c3e632070a517509436` | market-bundle-builder Binance USD-M source slice | G10D, G12A–G12D | none |
-| G12L-BINANCE-USDM-AGGTRADES-V1 | DRAFT / IN PROGRESS | market-bundle-builder Binance USD-M source slice | G10D, G12A–G12D | Provider normalizer, G12C/D evidence, full validation and review |
+| G12L-BINANCE-USDM-AGGTRADES-V1 | DRAFT / READY FOR ACCEPTANCE | market-bundle-builder Binance USD-M source slice | G10D, G12A–G12D | Full validation, independent review, accepted commit |
 | G12M-* | DRAFT | backtest-runtime qualification | market-specific G12L, G07–G10 | Per-market qualification matrix |
 | BT-GAP-01 | PASSED — immutable commit `f2440f9658fbe2ae1cf0016a78c44e4230995394` | trading-domain | WP-02E, Platform BT-PORT-01 | none |
 | BT-GAP-02 | PASSED — immutable commit `39863c58ace1d996f3e814835836ec46e2aa3794` | backtest-runtime facade | BT-GAP-01, G07, BT-GAP-02A, BT-GAP-04 | none |
@@ -11316,13 +11316,15 @@ artifact_hashes:
 
 ```yaml
 id: G12L-BINANCE-USDM-AGGTRADES-V1
-status: DRAFT / IN PROGRESS
+status: DRAFT / READY FOR ACCEPTANCE
 depends_on: [G10D, G12A, G12B, G12C, G12D]
 owner_package: market-bundle-builder Binance USD-M source slice
 public_interface:
-  - none yet; raw evidence and exact G12A handoff only
+  - crypto_quant_bundle_builder.binance_usdm_aggtrades_archive.BinanceUsdmAggregateTradesArchiveRequest
+  - crypto_quant_bundle_builder.binance_usdm_aggtrades_archive.capture_binance_usdm_aggregate_trades_archive
+  - crypto_quant_bundle_builder.binance_usdm_aggtrades_archive.normalize_binance_usdm_aggregate_trades_archive
 test_commands:
-  evidence: uv run --locked pytest -q tests/bundle_builder/providers/binance_usdm/test_aggtrades_archive_evidence.py
+  provider: uv run --locked pytest -q tests/bundle_builder/providers/binance_usdm tests/architecture/test_g12l_binance_aggtrades_boundary.py
 fixture_ids: [g12l-binance-usdm-aggtrades-v1]
 frozen_scope:
   provider: Binance Public Data
@@ -11338,24 +11340,26 @@ g12a_evidence:
   provenance_hash: sha256:70908485e1e1baddf684248282fce1ba78dd5df4f066ccc3cf714ec892bac5d7
 allowed_grade: development
 remaining_blockers:
-  - exact-request-capture-and-failure-contract
-  - execution-reference-normalizer-and-source-trace
-  - replacement-and-provenance-rejection
-  - g12c-manifest-and-g12d-publication
   - full-validation-independent-review-and-accepted-commit
 passed_commit: null
 artifact_hashes:
   archive_sha256: 638e72c179e4965c2a6521bb27295930d09126433efe0cc3acd4e925ada955ac
   checksum_sha256: 54f9a3ec8d0ea0363fcd730c2eb43399fa425d2d1fd803a7261f761af78d8499
   csv_sha256: b296db90ad4f8a20cd888cb7ce4a4199409ed14ad488331fe1a6b4943e6a53c0
-  evidence_fixture_sha256: 139b9596466f807107f5780f01849133de7c518fea3fc50ecb548d090272bfd4
+  evidence_fixture_sha256: 7a9eccf395d1570539ab1b1957d16bd307d3263dd10b4cb6a752d933b212b789
+  provider_module_sha256: aebbd8c85ce698c500f50186a8bdd2f7c995e2051bd75492a3939fa957171013
+  request_hash: sha256:71444a4b733b10f5b94508c74c5a941afc3c4ea531f1971bb71fcc0acdc64f91
+  capture_hash: sha256:3a15e9f997bb9b7925037ee77a4dc6e2cc39b4ea87f56683e2611643d4ea632a
+  normalization_hash: sha256:8d516a2679966c0b002e599b93559854322eaf3a17f8b61f2145aca801785c68
+  manifest_content_hash: sha256:babd102967a4a40bdd1de8868916aabce54359499204eb8d267bd86d0ed3ee90
+  bundle_manifest_hash: sha256:7248df115d39299343a4c31a6c6354d37ec7603a545c91b5978f4f4a7c8ac4e4
 ```
 
 The committed headerless CSV has 71,359 exact seven-field rows, contiguous
 aggregate-trade IDs, nondecreasing in-day transaction times, exact ZIP/checksum,
-and repeatable G12A identity. It is real source readiness evidence only. The
-future normalizer may emit only EXECUTION_REFERENCE events with availability at
-the later G12A acquisition instant; G12I/G12M and deployment remain unqualified.
+and repeatable G12A identity. The provider module emits one EXECUTION_REFERENCE
+stream with availability at the later G12A acquisition instant, exact source
+traces, G12C manifest, and G12D publication. G12I/G12M remain unqualified.
 
 ## 105. BT-GAP-01 Domain ArtifactRef
 

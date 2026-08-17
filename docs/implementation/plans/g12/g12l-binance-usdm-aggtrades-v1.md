@@ -1,6 +1,6 @@
 ---
 id: G12L-BINANCE-USDM-AGGTRADES-V1
-readiness: IN_PROGRESS
+readiness: READY
 gate_status: DRAFT
 owner: market-bundle-builder Binance USD-M source slice
 produces:
@@ -29,9 +29,9 @@ Research authority: `docs/research/g12l-binance-usdm-aggtrades-v1.md`.
 
 ## Current status
 
-`DRAFT / IN PROGRESS`. Provider, authority revision, finite archive/checksum,
-headerless seven-field grammar, contiguous aggregate-trade IDs, exact G12A
-identity, and conservative acquisition-time availability are frozen.
+`DRAFT / READY FOR ACCEPTANCE`. Exact capture, bounded retries, failure mapping,
+headerless seven-field normalization, contiguous aggregate-trade IDs, exact G12A
+identity, conservative availability, source traces, and G12C/D evidence are frozen.
 
 ## Frozen scope
 
@@ -64,11 +64,11 @@ registry, transport Protocol, HTTP dependency, cache, or Trading Kernel import.
 
 ## Acceptance work remaining
 
-1. Freeze RED request/capture/normalization/failure tests.
-2. Implement exact capture and one execution-reference stream.
-3. Prove replacement/provenance/missing-member/malformed archive rejection.
-4. Freeze G12C/D hashes and exact revision causal limit.
-5. Run full validation and independent review, then accept the immutable commit.
+1. Run focused and full repository tests, import boundaries, network isolation,
+   secret scan, lock check, LSP, and diff checks.
+2. Obtain independent review with no material findings.
+3. Freeze the accepted implementation commit and change this slice to `PASSED`.
+4. Keep G12I/G12M separate and unqualified.
 
 ## Current executable evidence
 

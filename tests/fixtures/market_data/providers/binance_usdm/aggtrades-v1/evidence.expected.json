@@ -36,6 +36,22 @@
     "decision-grade-eligible-false",
     "deployment-authorized-false"
   ],
+  "provider_result": {
+    "bundle_ref": {
+      "bundle_key": "binance-usdm-aggregate-trades-btcusdt-2020-01-01",
+      "manifest_hash": "sha256:7248df115d39299343a4c31a6c6354d37ec7603a545c91b5978f4f4a7c8ac4e4",
+      "type": "market_bundle_ref"
+    },
+    "capture_hash": "sha256:3a15e9f997bb9b7925037ee77a4dc6e2cc39b4ea87f56683e2611643d4ea632a",
+    "event_count": 71359,
+    "first_event_hash": "sha256:a767efd50f74334b953ed2bb6d3b7ac5c194593d5296284251700d6c38f854ef",
+    "last_event_hash": "sha256:39085520a852d55990766110a7b012e1b42ebc092a3d996625007357c95849e1",
+    "manifest_content_hash": "sha256:babd102967a4a40bdd1de8868916aabce54359499204eb8d267bd86d0ed3ee90",
+    "normalization_hash": "sha256:8d516a2679966c0b002e599b93559854322eaf3a17f8b61f2145aca801785c68",
+    "request_hash": "sha256:71444a4b733b10f5b94508c74c5a941afc3c4ea531f1971bb71fcc0acdc64f91",
+    "retention_proof_hash": "sha256:8ad07b2ccc8666617c0a827f75f3deb8485a2b77eaadbf6832f6a977686d76b8",
+    "stream_content_hash": "sha256:353537cf1088621ec29e936d76ee6b47219867df94f4d9eb4524561dfa09b59e"
+  },
   "schema_version": 1,
   "snapshot": {
     "content_tree_hash": "sha256:3e51e591737b5928ce796dc555b266b7d49d48e88b1051fbb9c6aa0b957993d7",
