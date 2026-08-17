@@ -104,6 +104,23 @@ action closure therefore remains blocked.
 
 ## Binance data
 
+### Raw checksummed MM L1 archive bundle
+
+The strongest Binance source found is outside `agent-projs` but is owned by the
+`crypt-gemini` acquisition program:
+
+```text
+/srv/bcache-8t/ygguo/crypt/mm_l1_engineering_20260720
+```
+
+It contains about 200 GiB of official ETHUSDT daily `bookTicker` and `aggTrades`
+ZIPs with adjacent checksums, exact raw funding JSON pages and request receipts,
+normalized partitions, and verified manifests for March 2024. The raw bundle
+receipt SHA-256 is
+`e731f0007a380601306ad0299aa542e015a6971b3e7094f75d45da9420553676`.
+This is directly reusable for bounded Backtest G12A/G12L evidence. Details and
+program commands are in `docs/research/cross-project-market-data-acquisition.md`.
+
 ### Hashed API-derived carry bundle
 
 `crypt-gemini/artifacts/carry_audit_20260728/input/` contains the strongest broad
