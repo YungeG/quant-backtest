@@ -56,15 +56,23 @@ freezes one G12G `BarBucket`:
 
 No Builder production import of Trading Kernel was added.
 
+## Frozen numeric prerequisite
+
+`docs/research/g12l-cn-a-share-daily-numeric-mapping-v1.md` freezes exact raw
+lexemes and integer mappings for scale-2 CNY/share prices, signed change,
+provider percentage change, lot-to-share volume, and thousand-CNY-to-CNY amount.
+Mapping hash:
+`sha256:8b59762e8820cda614687677733e105ddc62ce4ca84ef6409f1131a7af60c0ad`.
+
 ## Remaining blockers
 
-1. Freeze exact source-text decimal, unit, and scale mapping for OHLC, volume lots,
-   amount thousands, and percentage change.
+1. Freeze a G12B purpose contract: separate execution-reference and valuation
+   outputs, or one raw provider Bar followed by an explicit purpose projection.
 2. Decide whether current `stock_basic` may only provide instrument metadata or
    can support any historical listing claim; default is metadata only.
 3. Obtain provider revision/correction terminal evidence or retain the finite
    causal limit explicitly.
-4. Freeze normalized G12B schemas and failure precedence before implementation.
+4. Freeze normalizer failure precedence before implementation.
 5. Keep corporate actions, G12I, G12K final reports, G12M, decision-grade, and
    deployment separate.
 

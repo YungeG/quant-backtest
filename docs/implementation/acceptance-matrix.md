@@ -11558,7 +11558,7 @@ g12a_evidence:
   provenance_hash: sha256:8745af52a950d0ba35eee381b32b6adad2d2ee144325de34ad3597389f2e73fb
 allowed_grade: development
 remaining_blockers:
-  - exact-source-text-decimal-unit-scale-mapping
+  - purpose-separated-g12b-daily-bar-contract
   - provider-revision-correction-terminal-closure
   - historical-listing-status-authority
   - normalized-g12b-schema-and-failure-contract
@@ -11568,14 +11568,18 @@ artifact_hashes:
   listing_response_sha256: d78fc472268deacb5af7c59c113325e2a00c5b4619c53fbbfe6fa23c96d471d2
   acquisition_receipt_sha256: 61106b7e974ff09dedf96c065070f4a097a7fe02121bfd7a81b5dacb5c4757da
   evidence_fixture_sha256: 95775b9dc7ace840f52fbb6a2291ab2b34a92318a519fb8356a67d74ab776c43
+  numeric_mapping_fixture_sha256: 8c6f436cfb2c3c41643affcc4a8187e3b04c4293b31b0a76c1893bd60a656b48
+  numeric_mapping_hash: sha256:8b59762e8820cda614687677733e105ddc62ce4ca84ef6409f1131a7af60c0ad
   duckdb_backup_sha256: cdc6ce41dee3fe9903d8c27ec5cc584455ad423989cd79e3eb0187c5bba8bd41
 ```
 
 The exact provider responses contain no token and reproduce one candidate G12A
 snapshot. Daily OHLC/percentage change and converted volume/amount plus listing metadata
 match the stable DuckDB backup. An exact SZSE `trade_cal` row plus G08H phase parity
-now freezes the one-day G12G bucket; historical availability, provider revision
-terminality, listing lifecycle, normalizer, G12C/D, G12I/K/M, and deployment remain blocked.
+now freezes the one-day G12G bucket. Exact source-text price/change/percentage,
+lot-to-share, and thousand-CNY-to-CNY mappings are frozen; purpose selection,
+historical availability, provider revisions, listing lifecycle, normalizer,
+G12C/D, G12I/K/M, and deployment remain blocked.
 
 ## 105. BT-GAP-01 Domain ArtifactRef
 

@@ -86,12 +86,18 @@ G12G bucket starts at the 09:15 opening call (`01:15Z`) and ends exclusive at th
 15:00 close (`07:00Z`). Future daily Bar `event_time` follows the G12G convention
 and uses interval start; finality uses interval end exclusive.
 
+## Frozen numeric prerequisite
+
+`docs/research/g12l-cn-a-share-daily-numeric-mapping-v1.md` freezes raw JSON
+number lexemes, scale-2 CNY/share prices, exact lot-to-share volume, and exact
+thousand-CNY-to-CNY amount conversion. No binary float is authoritative.
+
 ## Blocking semantics
 
 No normalizer is authorized yet:
 
-1. Tushare publishes JSON numbers rather than canonical decimal strings. Mapping
-   must parse exact source text and freeze price/volume/amount scales and units;
+1. G12B has not selected purpose-separated execution-reference/valuation outputs
+   or a raw provider-Bar schema with an explicit later purpose projection;
 2. current `stock_basic` is not a historical listing-status snapshot as of
    `2024-01-02` and has no correction/supersession terminal set;
 3. Tushare provides no adjacent checksum, immutable publication revision, or
