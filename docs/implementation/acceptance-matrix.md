@@ -152,7 +152,7 @@ artifact_hashes: []
 | G12-ACQ-TUSHARE-CALENDAR-V1 | PASSED — immutable commit `10638db8225f68256c027b1dd1373bacff0d112c` | Backtest tools/acquisition | G12A, G12-ACQ-TOOLS-V1 | none |
 | G12B | PASSED | market-bundle-builder | G12A, G02 | Normalization fixtures |
 | G12B-TUSHARE-CN-A-SHARE-DAILY-V1 | PASSED — immutable commit `373817b762fbe0d68b286577e0396107694cc9a1` | market-bundle-builder internal Tushare normalization | G12A, G12B, G12G, frozen Tushare event-time/numeric evidence | none; G12C/D and provider closure remain separate |
-| G12CD-TUSHARE-CN-A-SHARE-DAILY-PUBLICATION-V1 | READY_FOR_RED | market-bundle-builder internal Tushare daily projection | G12B-TUSHARE-CN-A-SHARE-DAILY-V1, G12C, G12D | RED-only; G12L/listing, revision, corporate-action, G12I/K/M, and deployment remain BLOCKED |
+| G12CD-TUSHARE-CN-A-SHARE-DAILY-PUBLICATION-V1 | IMPLEMENTED / ACCEPTANCE_PENDING | market-bundle-builder internal Tushare daily projection | G12B-TUSHARE-CN-A-SHARE-DAILY-V1, G12C, G12D | independent review/full-repository acceptance pending; G12L/listing, revision, corporate-action, G12I/K/M, and deployment remain BLOCKED |
 | G12C | PASSED | market-bundle-builder | G12B | Manifest/validation fixtures |
 | G12D | PASSED | market-bundle-builder + market-data-contracts | G12C | none |
 | G12E | PASSED | market-data-contracts | G12D, WP-06A | none |
@@ -11593,11 +11593,11 @@ remaining_blockers: []
 5. Exact Tushare success-wrapper/data keys and values, request/raw-Bar/trace/execution-reference/valuation/result canonical bodies, and hashes are frozen. The result retains and reconstructs the exact request plus verified snapshot metadata, validates member/provenance/revision/availability and projection links, and excludes archive bytes from its canonical body. Price invariants require strictly positive OHLC/pre-close. Failure precedence is invalid request, snapshot invalid, snapshot binding, member missing/binding, JSON, schema, record, decimal mapping, Bar invariant, bucket binding, and availability. Any failure returns no partial result.
 6. Implementation remains off the Builder package root, imports no Runtime/Trading Kernel, and introduces no generic provider Protocol/factory/registry/parser framework. Clean acceptance passed 1842 repository tests, 112 import-boundary files, lock/diff/LSP/lens/Ruff/Pyright/secret checks, unchanged fixtures, and final independent review `NONE` (`aab61081`).
 
-## 104F. G12C/D Tushare China A-share Daily Publication v1 (RED only)
+## 104F. G12C/D Tushare China A-share Daily Publication v1
 
 ```yaml
 id: G12CD-TUSHARE-CN-A-SHARE-DAILY-PUBLICATION-V1
-status: READY_FOR_RED
+status: IMPLEMENTED / ACCEPTANCE_PENDING
 depends_on: [G12B-TUSHARE-CN-A-SHARE-DAILY-V1, G12C, G12D]
 owner_package: market-bundle-builder internal Tushare daily projection
 plan: docs/implementation/plans/g12/g12cd-tushare-cn-a-share-daily-publication-v1.md
@@ -11615,8 +11615,14 @@ qualification:
   corporate_actions_qualified: false
   decision_grade_eligible: false
   deployment_authorized: false
+implementation:
+  module: crypto_quant_bundle_builder.tushare_cn_a_share_daily_bundle
+  package_root_exported: false
+  g12c_changed: false
+  g12d_changed: false
 remaining_blockers:
-  - production-projection-implementation
+  - independent-review-closure
+  - full-repository-acceptance
   - provider-revision-correction-terminal-closure
   - historical-listing-status-authority
   - corporate-action-lifecycle-authority
@@ -11628,7 +11634,9 @@ The one-event provider test must compose the unchanged `validate_market_bundle_v
 and `LocalMarketBundleRepository` seams; the projection module must not import or
 wrap either. The nested raw Bar remains purpose-free, while explicit nested
 execution-reference and valuation projections retain their separate purposes. This
-RED card adds no G12L readiness or provider/deployment claim.
+The implemented development-only projection adds no G12L readiness or
+provider/deployment claim; PASSED status still requires independent review and
+full-repository acceptance.
 
 ## 104G. G12L Tushare China A-share Daily and Listing v1 (Gate remains BLOCKED)
 

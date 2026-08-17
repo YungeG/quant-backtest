@@ -1,10 +1,12 @@
 from __future__ import annotations
 
 import json
+from dataclasses import fields
 from datetime import date
 from importlib import import_module
 from pathlib import Path
 
+import pytest
 from crypto_quant_bundle_builder import (
     BarBucket,
     LocalMarketBundleRepository,
@@ -34,12 +36,15 @@ EVENT_TIME_FIXTURE = (
     / "fixtures/market_data/providers/tushare/cn-a-share-trade-calendar-v1"
     / "daily-event-time.expected.json"
 )
+EXPECTED_FIXTURE = (
+    ROOT
+    / "fixtures/market_data/providers/tushare/cn-a-share-daily-bundle-v1.expected.json"
+)
+EXPECTED = json.loads(EXPECTED_FIXTURE.read_text())
 ACQUIRED_AT = 1_786_943_026_685_846_805
 
 
-def test_tushare_daily_result_projects_one_purpose_preserving_event_and_publishes(
-    tmp_path: Path,
-) -> None:
+def _normalized_result():
     normalizer = import_module(
         "crypto_quant_bundle_builder.tushare_cn_a_share_daily"
     )
@@ -101,7 +106,13 @@ def test_tushare_daily_result_projects_one_purpose_preserving_event_and_publishe
         ),
     )
     assert normalized.failure is None and normalized.result is not None
-    result = normalized.result
+    return normalized.result
+
+
+def test_tushare_daily_result_projects_one_purpose_preserving_event_and_publishes(
+    tmp_path: Path,
+) -> None:
+    result = _normalized_result()
     bundle = import_module(
         "crypto_quant_bundle_builder.tushare_cn_a_share_daily_bundle"
     )
@@ -113,6 +124,8 @@ def test_tushare_daily_result_projects_one_purpose_preserving_event_and_publishe
     event = project(result)
 
     assert type(event) is MarketEvent
+    assert json.loads(canonical_bytes(event)) == EXPECTED["event"]
+    assert event.event_hash == EXPECTED["event_hash"]
     assert event.event_id == f"tushare-cn-a-share-daily-v1:{result.normalization_hash}"
     assert (
         event.stream_key
@@ -138,19 +151,19 @@ def test_tushare_daily_result_projects_one_purpose_preserving_event_and_publishe
         "qualification",
     }
     assert event.payload["normalization_hash"] == result.normalization_hash
-    assert event.payload["raw_bar"] == json.loads(canonical_bytes(result.raw_bar))
+    assert canonical_bytes(event.payload["raw_bar"]) == canonical_bytes(result.raw_bar)
     assert "price_purpose" not in event.payload["raw_bar"]
     assert event.payload["raw_bar"]["raw_bar_hash"] == result.raw_bar.raw_bar_hash
     assert event.payload["raw_bar"]["decision_grade_eligible"] is False
     assert event.payload["raw_bar"]["deployment_authorized"] is False
-    assert event.payload["source_trace"] == json.loads(canonical_bytes(result.trace))
+    assert canonical_bytes(event.payload["source_trace"]) == canonical_bytes(result.trace)
     assert event.payload["source_trace"]["revision_closure_complete"] is False
-    assert event.payload["execution_reference"] == json.loads(
-        canonical_bytes(result.execution_reference)
+    assert canonical_bytes(event.payload["execution_reference"]) == canonical_bytes(
+        result.execution_reference
     )
     assert event.payload["execution_reference"]["price_purpose"] == "execution_reference"
-    assert event.payload["valuation"] == json.loads(
-        canonical_bytes(result.valuation)
+    assert canonical_bytes(event.payload["valuation"]) == canonical_bytes(
+        result.valuation
     )
     assert event.payload["valuation"]["price_purpose"] == "valuation"
     assert event.payload["qualification"] == {
@@ -160,6 +173,19 @@ def test_tushare_daily_result_projects_one_purpose_preserving_event_and_publishe
         "decision_grade_eligible": False,
         "deployment_authorized": False,
     }
+
+    with pytest.raises(TypeError, match="exact Tushare daily normalization result"):
+        project(object())
+    forged_raw = object.__new__(type(result.raw_bar))
+    for field in fields(result.raw_bar):
+        object.__setattr__(forged_raw, field.name, getattr(result.raw_bar, field.name))
+    object.__setattr__(forged_raw, "source_record_hash", "sha256:" + "f" * 64)
+    forged_result = object.__new__(type(result))
+    for field in fields(result):
+        object.__setattr__(forged_result, field.name, getattr(result, field.name))
+    object.__setattr__(forged_result, "raw_bar", forged_raw)
+    with pytest.raises(ValueError, match="authority is invalid"):
+        project(forged_result)
 
     validation = validate_market_bundle_v1(
         bundle_key="tushare-cn-a-share-daily-000001-20240102",
@@ -171,12 +197,29 @@ def test_tushare_daily_result_projects_one_purpose_preserving_event_and_publishe
     )
     assert validation.failure is None and validation.manifest is not None
     manifest = validation.manifest
-    publication = LocalMarketBundleRepository(
+    assert manifest.content_hash == EXPECTED["manifest_content_hash"]
+    assert manifest.streams[0].content_hash == EXPECTED["stream_content_hash"]
+    repository = LocalMarketBundleRepository(
         config=LocalMarketBundleRepositoryConfig(tmp_path.resolve())
-    ).publish_market_bundle_v1(
+    )
+    publication = repository.publish_market_bundle_v1(
         manifest=manifest,
         stream_payloads={event.stream_key: canonical_bytes((event,))},
         retention_policy_ref="retention.g12cd-tushare-cn-a-share-daily-v1",
     )
     assert publication.failure is None and publication.result is not None
     assert publication.result.already_published is False
+    assert publication.result.bundle_ref.to_canonical_dict() == EXPECTED["bundle_ref"]
+    assert (
+        publication.result.retention_proof.proof_hash
+        == EXPECTED["retention_proof_hash"]
+    )
+    replay = repository.publish_market_bundle_v1(
+        manifest=manifest,
+        stream_payloads={event.stream_key: canonical_bytes((event,))},
+        retention_policy_ref="retention.g12cd-tushare-cn-a-share-daily-v1",
+    )
+    assert replay.failure is None and replay.result is not None
+    assert replay.result.already_published is True
+    assert replay.result.bundle_ref == publication.result.bundle_ref
+    assert replay.result.retention_proof == publication.result.retention_proof

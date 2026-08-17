@@ -384,4 +384,4 @@ path convention, or network access.
 - historical listing lifecycle authority;
 - provider revision/correction terminal closure;
 - corporate-action-adjusted data;
-- G12C/D publication and G12I/K/M qualification.
+- G12C/D provider-projection acceptance and G12I/K/M qualification.

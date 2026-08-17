@@ -1,7 +1,7 @@
 ---
 id: G12CD-TUSHARE-CN-A-SHARE-DAILY-PUBLICATION-V1
-readiness: READY_FOR_RED
-gate_status: DRAFT
+readiness: IMPLEMENTED
+gate_status: ACCEPTANCE_PENDING
 owner: market-bundle-builder internal Tushare daily publication projection
 produces:
   - one development-only MarketEvent from one accepted Tushare daily normalization result
@@ -18,9 +18,10 @@ fan_out: [G12I, G12K, G12M-CN-A-SHARE]
 
 ## Status
 
-`READY_FOR_RED` only. This freezes one development-only projection and its
-composition through the already accepted G12C/D seams. It authorizes neither
-production implementation nor G12L/provider qualification.
+`IMPLEMENTED / ACCEPTANCE_PENDING`. One development-only projection now composes
+through the already accepted G12C/D seams with exact event, manifest, publication,
+and replay fixtures. Independent review and full-repository acceptance remain
+pending; this status does not authorize G12L/provider qualification.
 
 ## Single internal seam
 
@@ -67,7 +68,7 @@ The provider contract test must pass the returned one-event tuple unchanged to
 G12D code, APIs, and root exports remain unchanged. No adapter, Protocol, factory,
 registry, repository wrapper, Reader, root export, or network path is introduced.
 
-## RED evidence and blockers
+## Implementation evidence and blockers
 
 ```bash
 PYTHONDONTWRITEBYTECODE=1 uv run --locked pytest -q \
@@ -75,6 +76,6 @@ PYTHONDONTWRITEBYTECODE=1 uv run --locked pytest -q \
   tests/architecture/test_g12cd_tushare_daily_bundle_boundary.py
 ```
 
-The committed RED tests fail until the module/function exists. They do not make
-G12L/listing, provider revision closure, corporate actions, G12I, G12K, G12M,
-decision grade, or deployment ready.
+The focused projection, architecture, G12C validation, G12D first publication,
+and idempotent replay checks pass. This does not make G12L/listing, provider revision
+closure, corporate actions, G12I, G12K, G12M, decision grade, or deployment ready.
