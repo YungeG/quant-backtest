@@ -178,7 +178,7 @@ artifact_hashes: []
 | BT-GAP-06 | PASSED | backtest-runtime analysis schema | BT-GAP-01, BT-GAP-04, G07 | none |
 | BT-GAP-07 | PASSED — immutable commit `029ac43f6d781567cd0742594ca82c181ead0a6d` | backtest-runtime structural read port | BT-GAP-01, WP-02E | none |
 | BT-GAP-08 | PASSED — accepted package revision `9e5937895d7559b8537a4595d73b6aabc94f6f13` | Backtest package closure | BT-GAP-02, BT-GAP-03, BT-GAP-05, BT-GAP-06 | none |
-| BT-GAP-09 | PASSED — accepted package revision `3d9131f2a98ab2fb0b8aec6a216883b4afd787a4` | installable development cash provider, preparation, and request registration | BT-GAP-02, BT-GAP-02B, BT-GAP-02C, BT-GAP-07, BT-GAP-08 | none; Platform P00-BTA/P00-SEAM remain external |
+| BT-GAP-09 | PASSED — accepted package revision `a014e9389f36b6696653606c5ebcb845cabe9f24` | installable development cash provider, preparation, request registration, and opaque metric-profile authority | BT-GAP-02, BT-GAP-02B, BT-GAP-02C, BT-GAP-05, BT-GAP-07, BT-GAP-08 | none; Platform P00-BTA/P00-SEAM remain external |
 
 ## 4. WP-00A Acceptance Card
 
@@ -12400,7 +12400,7 @@ remaining_blockers: []
 ```yaml
 id: BT-GAP-09
 status: PASSED
-accepted_package_revision: 3d9131f2a98ab2fb0b8aec6a216883b4afd787a4
+accepted_package_revision: a014e9389f36b6696653606c5ebcb845cabe9f24
 clean_worktree: /tmp/backtest-provider-seam-clean
 depends_on:
   - BT-GAP-02
@@ -12423,7 +12423,7 @@ platform_fan_in:
 test_results:
   focused_final: 43 passed
   broad_focused: 223 passed
-  full_repository: 1791 passed
+  full_repository: 1792 passed
   import_boundaries: 111 files passed
   platform_consumer_contract: 15 passed
   independent_review: NONE
@@ -12454,7 +12454,7 @@ remaining_blockers:
 14. Platform approved the first-principles terminal split: the real cash provider proves COMPLETED/BLOCKED/CANCELLED while immutable BT-PORT and accepted Backtest repository evidence continue to prove FAILED verification. Failure injection and intentionally inconsistent plans remain forbidden.
 15. The market-neutral provider's existing `FinalFeeRuleSet` marks all Fill charges NOT_APPLICABLE. The resulting zero-unit `FinalFeeAssessmentResult` is authoritative: Engine traces the assessment, skips fee Journal mutation and `book_fee()`, retains post-fill Ledger state, and projects zero fees. Positive assessments retain the frozen existing path. No second dispatcher, accounting engine, plan schema, or real-market fee claim is introduced.
 16. Before publication the v2 execution-input envelope round-trips the existing package-private SchemaCatalog. After request and bundle publication, both are exact-read through the structural reader and verified for exact `ArtifactReadResult`, canonical source bytes/hash, envelope, and ref; drop or substitution yields no prepared authority. The first terminal Attempt is final: repeated or cross-entry calls verify manifest semantic-run/Attempt identity plus repository integrity and return the same bare ref without republishing; cross-run substitution fails closed. A cancellation after verified canonical completion fails closed rather than returning COMPLETED. No registry or new Attempt ordinal is added.
-17. Short/negative targets are rejected before publication and cannot manufacture provider-generated FAILED evidence. Clean detached acceptance at `3d9131f2a98ab2fb0b8aec6a216883b4afd787a4` passed 1791 repository tests, 111 import-boundary files, unchanged 15-test Platform consumer contract, public clean install/imports, lock/diff/compile/LSP/lens/secret checks, unchanged frozen fixtures, and final independent review `NONE` (`d2229a65`). BT-GAP-09 is PASSED; Platform still owns P00-BTA-01/P00-SEAM-01.
+17. Short/negative targets are rejected before publication and cannot manufacture provider-generated FAILED evidence. `BacktestAnalysisRuntime.publish_metric_profile()` publishes and returns the exact accepted opaque metric-profile ref, so Platform constructs no Backtest analysis payload. Clean acceptance at `a014e9389f36b6696653606c5ebcb845cabe9f24` passed 1792 repository tests, 111 import-boundary files, unchanged 15-test Platform consumer contract, public clean install/imports, lock/diff/compile/LSP/lens/secret checks, unchanged frozen fixtures, and independent reviews `NONE` (`d2229a65`, `bce4c4da`). BT-GAP-09 is PASSED; Platform still owns P00-BTA-01/P00-SEAM-01.
 
 ## 115. PASSED 记录格式
 
