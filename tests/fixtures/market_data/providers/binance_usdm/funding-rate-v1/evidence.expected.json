@@ -1,0 +1,79 @@
+{
+  "archive": {
+    "csv_byte_count": 2563,
+    "first_row": [
+      "1577836800000",
+      "8",
+      "-0.00012359"
+    ],
+    "funding_interval_hours": 8,
+    "header": [
+      "calc_time",
+      "funding_interval_hours",
+      "last_funding_rate"
+    ],
+    "last_row": [
+      "1580486400000",
+      "8",
+      "0.00039858"
+    ],
+    "maximum_slot_jitter_milliseconds": 2,
+    "member_name": "BTCUSDT-fundingRate-2020-01.csv",
+    "nominal_start_milliseconds": 1577836800000,
+    "row_count": 93
+  },
+  "fixture_id": "g12l-binance-usdm-funding-rate-v1",
+  "limitations": [
+    "single-symbol-single-month-evidence",
+    "raw-archive-and-g12a-handoff-only",
+    "provider-normalizer-not-yet-implemented",
+    "archive-has-funding-rate-but-no-funding-mark-price",
+    "archive-availability-is-late-g12a-acquisition-time",
+    "no-g12i-or-g12m-qualification",
+    "decision-grade-eligible-false",
+    "deployment-authorized-false"
+  ],
+  "schema_version": 1,
+  "snapshot": {
+    "content_tree_hash": "sha256:d596329bda3338709134d3b02403fb38f4cfed555a1b40910f877b15fba6196e",
+    "decision_grade_eligible": false,
+    "deployment_authorized": false,
+    "members": [
+      {
+        "acquired_at_epoch_nanoseconds": 1786932488331056046,
+        "byte_count": 825,
+        "content_hash": "sha256:7f81b2f3694d13779e7e896b69d60cd61e9444d7b9f9e90df761935e1c1b76e2",
+        "declared_sha256": "sha256:7f81b2f3694d13779e7e896b69d60cd61e9444d7b9f9e90df761935e1c1b76e2",
+        "member_key": "archive/BTCUSDT-fundingRate-2020-01.zip",
+        "mode": "0644"
+      },
+      {
+        "acquired_at_epoch_nanoseconds": 1786932488331056046,
+        "byte_count": 98,
+        "content_hash": "sha256:3274779c977a6d657722bac4cc9f965bb774c5ba38aad391eb47ef183ae46120",
+        "declared_sha256": "sha256:3274779c977a6d657722bac4cc9f965bb774c5ba38aad391eb47ef183ae46120",
+        "member_key": "archive/BTCUSDT-fundingRate-2020-01.zip.CHECKSUM",
+        "mode": "0644"
+      }
+    ],
+    "provenance": {
+      "license_ref": "binance.public_data.terms",
+      "retention_policy_ref": "backtest.fixture.retention",
+      "source_key": "binance.public_data.futures.um.monthly.funding_rate.btcusdt.2020-01",
+      "vendor_key": "binance.public_data"
+    },
+    "provenance_hash": "sha256:7abdd0a03f8e3b833595492707869700fd19c410a68cd74c1eb419759d3f6e73",
+    "schema_version": 1,
+    "snapshot_id": "sha256:8a42a791c9471a20f734d88660b37b7e967b8eabb6007078e625b220add11ebd",
+    "type": "source_snapshot"
+  },
+  "source_hashes": {
+    "archive_sha256": "sha256:7f81b2f3694d13779e7e896b69d60cd61e9444d7b9f9e90df761935e1c1b76e2",
+    "checksum_sha256": "sha256:3274779c977a6d657722bac4cc9f965bb774c5ba38aad391eb47ef183ae46120",
+    "csv_sha256": "sha256:b566eea750ede01486360de242ce63a727ebbbc81fb46fcfdf2fb68188b48835"
+  },
+  "source_urls": {
+    "archive": "https://data.binance.vision/data/futures/um/monthly/fundingRate/BTCUSDT/BTCUSDT-fundingRate-2020-01.zip",
+    "checksum": "https://data.binance.vision/data/futures/um/monthly/fundingRate/BTCUSDT/BTCUSDT-fundingRate-2020-01.zip.CHECKSUM"
+  }
+}

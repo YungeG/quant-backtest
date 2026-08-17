@@ -34,6 +34,7 @@ real old artifact          → G12J
 | [G12L-*](g12l.md) | Provider source qualification — common contract frozen | applicable G12A–K + real provider evidence | provider-specific slices only |
 | [G12L-BINANCE-USDM-MARK-PRICE-KLINES-V1](g12l-binance-usdm-mark-price-klines-v1.md) | First concrete slice — `PASSED`; immutable commit `47d59e40081555ab9b555c3e632070a517509436` | G10D, G12A-D + Binance public-data evidence | Builder Binance USD-M source slice |
 | [G12L-BINANCE-USDM-AGGTRADES-V1](g12l-binance-usdm-aggtrades-v1.md) | Second concrete slice — `PASSED`; immutable commit `981429b4f0ff5fa219ccc8bc991458072b025bf8` | G10D, G12A-D + Binance public-data evidence | Builder Binance USD-M source slice |
+| [G12L-BINANCE-USDM-FUNDING-RATE-V1](g12l-binance-usdm-funding-rate-v1.md) | Third concrete slice — `DRAFT / IN PROGRESS`; real monthly ZIP/checksum and G12A identity frozen | G10E, G12A-D + Binance public-data evidence | Builder Binance USD-M source slice |
 | G12M-* | Market qualification | market-specific G12L, G07–G10 | runtime qualification |
 
 ## Parallelism
