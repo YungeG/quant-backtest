@@ -25,9 +25,10 @@ fan_out: [G12C-TUSHARE-CN-A-SHARE-DAILY-V1, G12I, G12M-CN-A-SHARE]
 
 ## Status
 
-`IMPLEMENTED / ACCEPTANCE_PENDING`. The internal normalizer and focused contract
-suite implement the exact `000001.SZ / 2024-01-02` source slice. Independent review
-fixes are applied; final reviewer/full-repository acceptance remains pending. This
+`PASSED` at immutable implementation commit
+`373817b762fbe0d68b286577e0396107694cc9a1`. The exact
+`000001.SZ / 2024-01-02` raw-Bar normalizer, source trace, purpose projections,
+constructor hardening, and global failure precedence passed clean acceptance. This
 status does not authorize G12C/D publication, historical listing status, provider
 correction closure, corporate actions, decision-grade use, or deployment.
 
@@ -359,6 +360,23 @@ path convention, or network access.
 10. mixed-fault precedence and no partial output;
 11. no Builder production import of Trading Kernel/Runtime and no root export;
 12. existing G12A/B/G fixtures and hashes unchanged.
+
+## Acceptance closure
+
+- implementation commit: `373817b762fbe0d68b286577e0396107694cc9a1`;
+- clean worktree: `/tmp/backtest-a-share-daily-normalizer-clean`;
+- focused final normalizer/boundary: 49 passed;
+- broad Tushare/G12A/B/G/architecture: 125 passed;
+- full repository: 1842 passed;
+- import boundaries: 112 files passed;
+- lock, diff, LSP, lens, Ruff, Pyright, gitleaks, and fixture checks: clean;
+- final independent review: `NONE` (`aab61081`);
+- source record hash: `sha256:9b476b034dc596f296959ac817c7d797814b8e2b75498d5ec4c50da09e3d9f5e`;
+- raw Bar hash: `sha256:7f0739da15fa80c99ccfdf9a1bdcca617376c20ed7b205c9b1e82b88f2759da0`;
+- trace hash: `sha256:fc05a2fdc26d734bf6cd526eb22a149d36d5ab4022cfa2c67de0e807a7d6ee96`;
+- execution projection hash: `sha256:d283870ccf3042530bdc664aeb4f451b3723300fe3e22a59018b253c67b6bbb4`;
+- valuation projection hash: `sha256:2f9cf2a71c0f152e5377be0fdad798ec49cc411814b7cd3a372040286507a630`;
+- normalization hash: `sha256:d01518de64eb48c9b796b83bb72eeb53fe6645d4dbcc00e88311148f23adb16c`.
 
 ## Deferred work
 
