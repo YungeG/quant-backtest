@@ -22,7 +22,8 @@ fan_in:
 ## Status
 
 `PASSED` at accepted package revision
-`a014e9389f36b6696653606c5ebcb845cabe9f24`. The installable
+`e3c04fb612d6798aef1420b60864d4f315ed12ac` (package implementation
+`a014e9389f36b6696653606c5ebcb845cabe9f24`). The installable
 development-only reference provider, request registration/preparation seam,
 additive no-fee authority, terminal finality, and cancellation entry point passed
 clean-install, full-repository, boundary, and independent review acceptance.
@@ -400,7 +401,7 @@ independent review, and clean-install validation. Record a new clean lowercase
 
 ### Phase 5 — Platform fan-in
 
-Platform pins accepted SHA `a014e9389f36b6696653606c5ebcb845cabe9f24`, adds
+Platform pins accepted source SHA `e3c04fb612d6798aef1420b60864d4f315ed12ac`, adds
 `tests/integration/test_backtest_public_binding.py`, binds Foundation structural
 reader/publisher through public roots only, runs unchanged BT-PORT vectors, and
 records `P00-BTA-01` then `P00-SEAM-01`. Backtest does not create Platform admission,
@@ -425,17 +426,21 @@ market, decision-grade, or deployment claims.
 
 ## Acceptance closure
 
-- accepted package revision: `a014e9389f36b6696653606c5ebcb845cabe9f24`;
+- accepted source revision: `e3c04fb612d6798aef1420b60864d4f315ed12ac`;
+- package implementation revision: `a014e9389f36b6696653606c5ebcb845cabe9f24`;
 - clean detached worktree: `/tmp/backtest-provider-seam-clean`;
 - clean install/public roots: five workspace packages plus all BT-GAP-09 symbols;
 - focused final provider/facade/engine: 43 passed;
 - broad focused provider/runtime/repository/architecture: 223 passed;
-- clean full repository: 1792 passed;
+- clean full repository: 1793 passed;
 - import boundaries: 111 files passed;
 - unchanged Platform BT-PORT: 15 passed;
 - lock, diff, compile, LSP, lens, gitleaks/secret scan, and final status: clean;
 - frozen BT-GAP-02/02B/02C fixture SHA-256 values unchanged;
-- independent final reviews: `NONE` (`d2229a65`, `bce4c4da`).
+- independent final reviews: `NONE` (`d2229a65`, `bce4c4da`, `eea3121a`).
+- `BacktestEvidenceRepository.load_terminal()` acceptance publishes a real FAILED
+  Attempt evidence graph through `AttemptEvidenceWriter`, reloads every reachable
+  child through the structural reader, and returns exact `TerminalStatus.FAILED`.
 - `BacktestAnalysisRuntime.publish_metric_profile()` publishes and returns the exact
   accepted opaque `backtest_metric_profile@1` ref; Platform constructs no metric
   profile payload.
