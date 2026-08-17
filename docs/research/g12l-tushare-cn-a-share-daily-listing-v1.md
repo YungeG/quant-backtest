@@ -78,21 +78,27 @@ DuckDB shares by `×100`; Tushare amount thousands map to DuckDB currency units 
 The backup market row lacks `TSCode`, while its static row preserves
 `000001.SZ`; this discrepancy is retained rather than silently repaired.
 
+## Frozen event-time prerequisite
+
+`docs/research/g12l-cn-a-share-daily-event-time-v1.md` freezes an exact SZSE
+`trade_cal` row and test-only parity to the accepted G08H phase table. The daily
+G12G bucket starts at the 09:15 opening call (`01:15Z`) and ends exclusive at the
+15:00 close (`07:00Z`). Future daily Bar `event_time` follows the G12G convention
+and uses interval start; finality uses interval end exclusive.
+
 ## Blocking semantics
 
 No normalizer is authorized yet:
 
-1. `trade_date` is an economic date, not a complete event timestamp. Builder must
-   consume an approved A-share session-close authority rather than invent 15:00;
-2. Tushare publishes JSON numbers rather than canonical decimal strings. Mapping
+1. Tushare publishes JSON numbers rather than canonical decimal strings. Mapping
    must parse exact source text and freeze price/volume/amount scales and units;
-3. current `stock_basic` is not a historical listing-status snapshot as of
+2. current `stock_basic` is not a historical listing-status snapshot as of
    `2024-01-02` and has no correction/supersession terminal set;
-4. Tushare provides no adjacent checksum, immutable publication revision, or
+3. Tushare provides no adjacent checksum, immutable publication revision, or
    correction closure for either response;
-5. the only conservative availability is the later G12A acquisition time, so
+4. the only conservative availability is the later G12A acquisition time, so
    this cannot qualify a 2024 same-day replay;
-6. corporate-action lifecycle evidence remains absent.
+5. corporate-action lifecycle evidence remains absent.
 
 The slice therefore grants no G12B-D normalization/publication, G12I, G12K,
 G12M, decision-grade, live, or deployment authority.

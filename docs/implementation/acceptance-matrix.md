@@ -149,6 +149,7 @@ artifact_hashes: []
 | G11J | PASSED | parity tooling | G11I, G07 | Dual-entry parity |
 | G12A | PASSED | market-bundle-builder | G00 | SourceSnapshot contract |
 | G12-ACQ-TOOLS-V1 | PASSED — immutable commit `6f0bd99a93a349924996eb26708fbb0ac6fecf17` | Backtest tools/acquisition | G12A | none |
+| G12-ACQ-TUSHARE-CALENDAR-V1 | DRAFT / READY FOR ACCEPTANCE | Backtest tools/acquisition | G12A, G12-ACQ-TOOLS-V1 | Full validation, review, accepted commit |
 | G12B | PASSED | market-bundle-builder | G12A, G02 | Normalization fixtures |
 | G12C | PASSED | market-bundle-builder | G12B | Manifest/validation fixtures |
 | G12D | PASSED | market-bundle-builder + market-data-contracts | G12C | none |
@@ -10163,6 +10164,36 @@ surface change, no network tests, and no tracked credential fallback.
 
 Implementation note: `docs/implementation/provider-acquisition-tools.md`.
 
+## 93B. Tushare Trade-Calendar Acquisition v1 (Gate remains DRAFT)
+
+```yaml
+id: G12-ACQ-TUSHARE-CALENDAR-V1
+status: DRAFT / READY FOR ACCEPTANCE
+owner: Backtest tools/acquisition
+interfaces:
+  - tools.acquisition.cn_a_share_tushare_trade_calendar.TushareTradeCalendarRequest
+  - tools.acquisition.cn_a_share_tushare_trade_calendar.acquire_trade_calendar
+credential_contract:
+  tushare: environment-only TUSHARE_TOKEN
+test_commands:
+  focused: uv run --locked pytest -q tests/tools/acquisition/test_cn_a_share_tushare_trade_calendar.py tests/bundle_builder/providers/tushare/test_cn_a_share_daily_event_time.py
+remaining_blockers:
+  - full-repository-validation
+  - independent-review
+  - accepted-commit
+passed_commit: null
+artifact_hashes:
+  module_sha256: 9b63d052245263e221123793f035e7223ebdf472a39cd262e3c710c032474d4d
+  response_sha256: aead455c7bb4ab5ff3966fb06c8c5b640b537767f38ebf99249fad05a8211bf9
+  receipt_sha256: 42a6bec925179f1262d8c0ca8e3e43b411eb6627da394acba7f326e0e7a8d4c1
+  event_time_fixture_sha256: 5df297b69479629aa4baf19ea0199fa2f22d2ab42a0ccbb406315052a80a0425
+```
+
+Acceptance requires fixed HTTPS scope, environment-only token, decoded token-echo
+rejection inherited from the accepted Tushare transport, one exact calendar row,
+no-clobber receipt-last publication, candidate G12A identity, false flags, and no
+Runtime/Kernel/package-root production dependency.
+
 ## 94. G12B Synthetic JSONL v1 Normalization Acceptance Card
 
 ```yaml
@@ -11523,7 +11554,6 @@ g12a_evidence:
   provenance_hash: sha256:8745af52a950d0ba35eee381b32b6adad2d2ee144325de34ad3597389f2e73fb
 allowed_grade: development
 remaining_blockers:
-  - approved-session-date-to-event-time-authority
   - exact-source-text-decimal-unit-scale-mapping
   - provider-revision-correction-terminal-closure
   - historical-listing-status-authority
@@ -11539,9 +11569,9 @@ artifact_hashes:
 
 The exact provider responses contain no token and reproduce one candidate G12A
 snapshot. Daily OHLC/percentage change and converted volume/amount plus listing metadata
-match the stable DuckDB backup. No event timestamp, historical availability,
-provider revision terminality, listing lifecycle, normalizer, G12C/D, G12I/K/M,
-or deployment claim follows.
+match the stable DuckDB backup. An exact SZSE `trade_cal` row plus G08H phase parity
+now freezes the one-day G12G bucket; historical availability, provider revision
+terminality, listing lifecycle, normalizer, G12C/D, G12I/K/M, and deployment remain blocked.
 
 ## 105. BT-GAP-01 Domain ArtifactRef
 

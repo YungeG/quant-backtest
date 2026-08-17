@@ -49,6 +49,20 @@ candidate two-member G12A snapshot.
 The legacy token discovered in the old `quant-a50` Git history must be rotated
 before this command is used.
 
+### Tushare A-share trade calendar (additive v1)
+
+```bash
+TUSHARE_TOKEN=... uv run --locked python \
+  -m tools.acquisition.cn_a_share_tushare_trade_calendar \
+  --exchange SZSE --trade-date 20240102 \
+  --output-dir /absolute/new/output
+```
+
+This additive tool preserves one exact `trade_cal` response, validates exchange,
+calendar date, open/closed flag, and previous trading date, writes no token, and
+freezes a one-member candidate G12A snapshot. It does not alter the accepted
+`G12-ACQ-TOOLS-V1` interfaces or package roots.
+
 ## Output contract
 
 Every successful command creates a previously nonexistent directory containing:

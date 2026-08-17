@@ -44,18 +44,28 @@ or G12C/D publication is authorized.
 - no token bytes in fixtures or receipts;
 - all qualification flags false.
 
+## Frozen event-time prerequisite
+
+`docs/research/g12l-cn-a-share-daily-event-time-v1.md` combines an exact SZSE
+Tushare `trade_cal` row with test-only parity to the accepted G08H phase table and
+freezes one G12G `BarBucket`:
+
+- event/interval start: `2024-01-02T01:15:00Z`;
+- finality/end exclusive: `2024-01-02T07:00:00Z`;
+- bucket hash: `sha256:b58489aeffd996cfa583caac981bfeb39edf0b93280f787d63b0f6b0855dc7b7`.
+
+No Builder production import of Trading Kernel was added.
+
 ## Remaining blockers
 
-1. Freeze a Builder-owned A-share session/date-to-event-time declaration exact-
-   bound to the accepted G08H calendar/session authority.
-2. Freeze exact source-text decimal, unit, and scale mapping for OHLC, volume lots,
+1. Freeze exact source-text decimal, unit, and scale mapping for OHLC, volume lots,
    amount thousands, and percentage change.
-3. Decide whether current `stock_basic` may only provide instrument metadata or
+2. Decide whether current `stock_basic` may only provide instrument metadata or
    can support any historical listing claim; default is metadata only.
-4. Obtain provider revision/correction terminal evidence or retain the finite
+3. Obtain provider revision/correction terminal evidence or retain the finite
    causal limit explicitly.
-5. Freeze normalized G12B schemas and failure precedence before implementation.
-6. Keep corporate actions, G12I, G12K final reports, G12M, decision-grade, and
+4. Freeze normalized G12B schemas and failure precedence before implementation.
+5. Keep corporate actions, G12I, G12K final reports, G12M, decision-grade, and
    deployment separate.
 
 ## Current executable evidence

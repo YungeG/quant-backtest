@@ -327,7 +327,9 @@ The reusable subset is now imported into Backtest under `tools/acquisition/`:
   and exact funding-history REST bytes without credentials;
 - `cn_a_share_tushare.py` acquires exact daily/listing JSON through fixed HTTPS
   requests using environment-only `TUSHARE_TOKEN`;
-- both write atomic redacted receipts and candidate G12A snapshots;
+- `cn_a_share_tushare_trade_calendar.py` additively acquires one exact exchange
+  calendar row for session/date binding;
+- all write atomic redacted receipts and candidate G12A snapshots;
 - neither is imported by Runtime/Kernel or exposed from a package root.
 
 Operational details: `docs/implementation/provider-acquisition-tools.md`.
