@@ -234,7 +234,8 @@ Validation freezes these bindings:
 ## Frozen semantic ceiling
 
 The provider owns fixed stream keys `targets` and `bars.open`, timeline batch size
-one, one target decision, one order, at most one full fill, zero slippage, zero fees,
+one, one target decision, one order, at most one full fill, zero slippage, explicit
+no-fee assessment,
 no pre-existing position, no external cash flow after the initial deposit, permissive
 cash market rules derived from the lattice, no settlement delay, no financing,
 no margin, no liquidation, and mark-to-market final closeout. Target sizing uses the
@@ -249,7 +250,28 @@ The worked P00 vector is input-derived, not hard-coded: initial equity `100000`,
 weight `0.5`, decision/fill price `100`, and final mark `80` produce ending equity
 `90000`, `simple_period_return = "-0.1"`, and `trade_count = 1`.
 
-## Terminal contract and open decision
+## Additive no-fee accounting authority
+
+Concrete market providers own versioned market, tax, and account fee rule authorities.
+This provider is market-neutral and must not borrow Binance, China A-share, broker, or
+exchange rates. Its `FinalFeeRuleSet` explicitly marks every Fill-basis charge as
+`NOT_APPLICABLE`; `FeeAssessmentEngine` therefore produces an authoritative zero-unit
+`FinalFeeAssessmentResult`.
+
+The additive engine rule is:
+
+1. persist/trace the exact zero assessment as fee evidence;
+2. when `assessment.amount.units == 0`, perform no fee Journal mutation and do not call
+   `DefaultCashFinancialDispatcher.book_fee()`;
+3. retain the post-fill Ledger state and project final fees as zero;
+4. positive assessments continue through the frozen existing fee accounting path
+   byte-for-byte and behavior-for-behavior.
+
+No second dispatcher, accounting engine, plan schema, fee rule engine, or provider fee
+source is introduced. This also matches existing Binance G10F authority, which permits
+exact zero commission rates while rejecting negative rebates.
+
+## Frozen terminal contract
 
 The implementation must use legitimate semantics rather than `fixture_case` flags:
 
