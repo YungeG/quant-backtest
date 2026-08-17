@@ -152,7 +152,7 @@ artifact_hashes: []
 | G12-ACQ-TUSHARE-CALENDAR-V1 | PASSED — immutable commit `10638db8225f68256c027b1dd1373bacff0d112c` | Backtest tools/acquisition | G12A, G12-ACQ-TOOLS-V1 | none |
 | G12B | PASSED | market-bundle-builder | G12A, G02 | Normalization fixtures |
 | G12B-TUSHARE-CN-A-SHARE-DAILY-V1 | PASSED — immutable commit `373817b762fbe0d68b286577e0396107694cc9a1` | market-bundle-builder internal Tushare normalization | G12A, G12B, G12G, frozen Tushare event-time/numeric evidence | none; G12C/D and provider closure remain separate |
-| G12CD-TUSHARE-CN-A-SHARE-DAILY-PUBLICATION-V1 | IMPLEMENTED / ACCEPTANCE_PENDING | market-bundle-builder internal Tushare daily projection | G12B-TUSHARE-CN-A-SHARE-DAILY-V1, G12C, G12D | independent review/full-repository acceptance pending; G12L/listing, revision, corporate-action, G12I/K/M, and deployment remain BLOCKED |
+| G12CD-TUSHARE-CN-A-SHARE-DAILY-PUBLICATION-V1 | PASSED — immutable source `7400cad6531b2687ffb150959cbf534c6797359e` | market-bundle-builder internal Tushare daily projection | G12B-TUSHARE-CN-A-SHARE-DAILY-V1, G12C, G12D | none; G12L/listing, revision, corporate-action, G12I/K/M, and deployment remain BLOCKED |
 | G12C | PASSED | market-bundle-builder | G12B | Manifest/validation fixtures |
 | G12D | PASSED | market-bundle-builder + market-data-contracts | G12C | none |
 | G12E | PASSED | market-data-contracts | G12D, WP-06A | none |
@@ -11597,7 +11597,8 @@ remaining_blockers: []
 
 ```yaml
 id: G12CD-TUSHARE-CN-A-SHARE-DAILY-PUBLICATION-V1
-status: IMPLEMENTED / ACCEPTANCE_PENDING
+status: PASSED
+passed_commit: 7400cad6531b2687ffb150959cbf534c6797359e
 depends_on: [G12B-TUSHARE-CN-A-SHARE-DAILY-V1, G12C, G12D]
 owner_package: market-bundle-builder internal Tushare daily projection
 plan: docs/implementation/plans/g12/g12cd-tushare-cn-a-share-daily-publication-v1.md
@@ -11620,9 +11621,19 @@ implementation:
   package_root_exported: false
   g12c_changed: false
   g12d_changed: false
+test_results:
+  focused_clean: 63 passed
+  broad_focused: 93 passed
+  full_repository: 1846 passed
+  import_boundaries: 113 files passed
+  independent_review: NONE
+artifact_hashes:
+  event_hash: sha256:ab872662754a286bf9f41e722e739fe8f961d387d4d6cfa95e13888e0c8e8b0f
+  stream_content_hash: sha256:27bb8945601e9a869e609bb8c146a998fca06878061950f294c2a0dabacd426c
+  manifest_content_hash: sha256:7d87625e9fce5b3f668a8f1ba9a3e302a09dc334b28b61760a8212a6818f80fc
+  manifest_hash: sha256:f343a0d9e4d86659ad0b1c73c888d050886f9713acedc77fc31fc16202fbce3f
+  retention_proof_hash: sha256:77ce91f2cc959c6f8584da4d3844f436cb241b0060ed6d2e77c2f7dd2164a492
 remaining_blockers:
-  - independent-review-closure
-  - full-repository-acceptance
   - provider-revision-correction-terminal-closure
   - historical-listing-status-authority
   - corporate-action-lifecycle-authority
@@ -11634,9 +11645,9 @@ The one-event provider test must compose the unchanged `validate_market_bundle_v
 and `LocalMarketBundleRepository` seams; the projection module must not import or
 wrap either. The nested raw Bar remains purpose-free, while explicit nested
 execution-reference and valuation projections retain their separate purposes. This
-The implemented development-only projection adds no G12L readiness or
-provider/deployment claim; PASSED status still requires independent review and
-full-repository acceptance.
+The PASSED development-only projection adds no G12L readiness or
+provider/deployment claim. It reuses unchanged G12C/D production modules and remains
+o authority for listing, revision closure, corporate actions, G12I/K/M, or deployment.
 
 ## 104G. G12L Tushare China A-share Daily and Listing v1 (Gate remains BLOCKED)
 

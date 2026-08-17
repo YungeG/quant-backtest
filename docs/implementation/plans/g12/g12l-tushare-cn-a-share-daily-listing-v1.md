@@ -30,7 +30,7 @@ Research authority:
 
 `DRAFT / BLOCKED`. Exact acquisition request, raw response bytes, receipt,
 G12A identity, token-redaction proof, and DuckDB parity are frozen. The accepted
-normalizer and implemented-but-unaccepted G12C/D projection do not authorize G12L
+normalizer and PASSED development-only G12C/D projection do not authorize G12L
 provider qualification or production publication.
 
 ## Frozen scope
@@ -73,9 +73,10 @@ execution-reference/valuation projection values. The internal normalizer is PASS
 `373817b762fbe0d68b286577e0396107694cc9a1`; its acceptance itself claims no G12C/D
 MarketEvent publication.
 
-`G12CD-TUSHARE-CN-A-SHARE-DAILY-PUBLICATION-V1` now implements development-only use
-of the accepted result through the existing G12C/D seams, with acceptance pending.
-It does not qualify this G12L listing slice or change any blocker below.
+`G12CD-TUSHARE-CN-A-SHARE-DAILY-PUBLICATION-V1` now PASSES development-only use of
+the accepted result through the existing G12C/D seams at
+`7400cad6531b2687ffb150959cbf534c6797359e`. It does not qualify this G12L listing
+slice or change any blocker below.
 
 ## Remaining blockers
 

@@ -1,7 +1,7 @@
 ---
 id: G12CD-TUSHARE-CN-A-SHARE-DAILY-PUBLICATION-V1
-readiness: IMPLEMENTED
-gate_status: ACCEPTANCE_PENDING
+readiness: PASSED
+gate_status: PASSED
 owner: market-bundle-builder internal Tushare daily publication projection
 produces:
   - one development-only MarketEvent from one accepted Tushare daily normalization result
@@ -18,10 +18,11 @@ fan_out: [G12I, G12K, G12M-CN-A-SHARE]
 
 ## Status
 
-`IMPLEMENTED / ACCEPTANCE_PENDING`. One development-only projection now composes
-through the already accepted G12C/D seams with exact event, manifest, publication,
-and replay fixtures. Independent review and full-repository acceptance remain
-pending; this status does not authorize G12L/provider qualification.
+`PASSED` at immutable implementation revision
+`7400cad6531b2687ffb150959cbf534c6797359e`. One development-only projection
+composes through the already accepted G12C/D seams with exact event, manifest,
+publication, replay, and authority-hardening evidence. This status does not
+authorize G12L/provider qualification.
 
 ## Single internal seam
 
@@ -76,6 +77,22 @@ PYTHONDONTWRITEBYTECODE=1 uv run --locked pytest -q \
   tests/architecture/test_g12cd_tushare_daily_bundle_boundary.py
 ```
 
-The focused projection, architecture, G12C validation, G12D first publication,
-and idempotent replay checks pass. This does not make G12L/listing, provider revision
-closure, corporate actions, G12I, G12K, G12M, decision grade, or deployment ready.
+Acceptance closure:
+
+- RED contract: `2d0470440eea2e4f84ef6ffab5efca0fb8263516`;
+- implementation: `8f17338ae974243d4096919f3e4da097605804b4`;
+- exact qualification hardening/final source: `7400cad6531b2687ffb150959cbf534c6797359e`;
+- clean worktree: `/tmp/backtest-a-share-daily-bundle-clean`;
+- clean focused authority/projection: 63 passed;
+- broad Tushare/G12A/B/C/D/G/publication: 93 passed;
+- full repository: 1846 passed;
+- import boundaries: 113 files passed;
+- final independent review: `NONE`;
+- event hash: `sha256:ab872662754a286bf9f41e722e739fe8f961d387d4d6cfa95e13888e0c8e8b0f`;
+- stream content hash: `sha256:27bb8945601e9a869e609bb8c146a998fca06878061950f294c2a0dabacd426c`;
+- manifest content hash: `sha256:7d87625e9fce5b3f668a8f1ba9a3e302a09dc334b28b61760a8212a6818f80fc`;
+- manifest hash: `sha256:f343a0d9e4d86659ad0b1c73c888d050886f9713acedc77fc31fc16202fbce3f`;
+- retention proof hash: `sha256:77ce91f2cc959c6f8584da4d3844f436cb241b0060ed6d2e77c2f7dd2164a492`.
+
+This does not make G12L/listing, provider revision closure, corporate actions,
+G12I, G12K, G12M, decision grade, or deployment ready.
