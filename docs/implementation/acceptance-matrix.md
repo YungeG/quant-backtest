@@ -178,7 +178,7 @@ artifact_hashes: []
 | BT-GAP-06 | PASSED | backtest-runtime analysis schema | BT-GAP-01, BT-GAP-04, G07 | none |
 | BT-GAP-07 | PASSED — immutable commit `029ac43f6d781567cd0742594ca82c181ead0a6d` | backtest-runtime structural read port | BT-GAP-01, WP-02E | none |
 | BT-GAP-08 | PASSED — accepted package revision `9e5937895d7559b8537a4595d73b6aabc94f6f13` | Backtest package closure | BT-GAP-02, BT-GAP-03, BT-GAP-05, BT-GAP-06 | none |
-| BT-GAP-09 | READY_FOR_RED — owner-approved provider and terminal scope | installable development cash provider, preparation, and request registration | BT-GAP-02, BT-GAP-02B, BT-GAP-02C, BT-GAP-07, BT-GAP-08 | Frozen request intent, nine-field provider input, one-fill ceiling, and P00 terminal split |
+| BT-GAP-09 | PASSED — accepted package revision `3d9131f2a98ab2fb0b8aec6a216883b4afd787a4` | installable development cash provider, preparation, and request registration | BT-GAP-02, BT-GAP-02B, BT-GAP-02C, BT-GAP-07, BT-GAP-08 | none; Platform P00-BTA/P00-SEAM remain external |
 
 ## 4. WP-00A Acceptance Card
 
@@ -12399,7 +12399,9 @@ remaining_blockers: []
 
 ```yaml
 id: BT-GAP-09
-status: READY_FOR_RED
+status: PASSED
+accepted_package_revision: 3d9131f2a98ab2fb0b8aec6a216883b4afd787a4
+clean_worktree: /tmp/backtest-provider-seam-clean
 depends_on:
   - BT-GAP-02
   - BT-GAP-02B
@@ -12418,10 +12420,20 @@ proposed_public_interface:
 platform_fan_in:
   - P00-BTA-01
   - P00-SEAM-01
+test_results:
+  focused_final: 43 passed
+  broad_focused: 223 passed
+  full_repository: 1791 passed
+  import_boundaries: 111 files passed
+  platform_consumer_contract: 15 passed
+  independent_review: NONE
+fixture_hashes:
+  bt-gap02-public-facade-v1.json: sha256:0f3f70a457f1a54939b1ecdf6cf860671c0dfcaa20a56297540a3266141c9b91
+  bt-gap02b-execution-input-bundle-v1.json: sha256:09578ac47f997bc4bf55119d31e97dbcad3eb71e90d93a5ef7c8e6669bd66be2
+  bt-gap02c-execution-closure-v2.json: sha256:c082042640382dde2dad61f758058ab93c3ba741ed19df0256d7989a157eced1
 remaining_blockers:
-  - RED tests and minimal implementation
-  - clean accepted Backtest SHA
-  - real Platform binding receipt
+  - Platform P00-BTA-01 real Foundation binding receipt
+  - Platform P00-SEAM-01 fan-in receipt
 ```
 
 ### BT-GAP-09 Readiness
@@ -12441,7 +12453,8 @@ remaining_blockers:
 13. The P00 adverse vector is input-derived: `100000` initial equity, `0.5` target, `100` decision/fill price, and `80` final mark yield `-0.1` simple return and one Fill. No result literal or Platform fixture selector is embedded in production.
 14. Platform approved the first-principles terminal split: the real cash provider proves COMPLETED/BLOCKED/CANCELLED while immutable BT-PORT and accepted Backtest repository evidence continue to prove FAILED verification. Failure injection and intentionally inconsistent plans remain forbidden.
 15. The market-neutral provider's existing `FinalFeeRuleSet` marks all Fill charges NOT_APPLICABLE. The resulting zero-unit `FinalFeeAssessmentResult` is authoritative: Engine traces the assessment, skips fee Journal mutation and `book_fee()`, retains post-fill Ledger state, and projects zero fees. Positive assessments retain the frozen existing path. No second dispatcher, accounting engine, plan schema, or real-market fee claim is introduced.
-16. Before publication the v2 execution-input envelope round-trips the existing package-private SchemaCatalog. After request and bundle publication, both are exact-read through the structural reader and verified for exact `ArtifactReadResult`, canonical source bytes/hash, envelope, and ref; drop or substitution yields no prepared authority. The first terminal Attempt is final: repeated or cross-entry calls exact-read and repository-verify the existing terminal manifest and return the same bare ref without republishing. A cancellation after verified canonical completion fails closed rather than returning COMPLETED. No registry or new Attempt ordinal is added. BT-GAP-09 is READY_FOR_RED.
+16. Before publication the v2 execution-input envelope round-trips the existing package-private SchemaCatalog. After request and bundle publication, both are exact-read through the structural reader and verified for exact `ArtifactReadResult`, canonical source bytes/hash, envelope, and ref; drop or substitution yields no prepared authority. The first terminal Attempt is final: repeated or cross-entry calls verify manifest semantic-run/Attempt identity plus repository integrity and return the same bare ref without republishing; cross-run substitution fails closed. A cancellation after verified canonical completion fails closed rather than returning COMPLETED. No registry or new Attempt ordinal is added.
+17. Short/negative targets are rejected before publication and cannot manufacture provider-generated FAILED evidence. Clean detached acceptance at `3d9131f2a98ab2fb0b8aec6a216883b4afd787a4` passed 1791 repository tests, 111 import-boundary files, unchanged 15-test Platform consumer contract, public clean install/imports, lock/diff/compile/LSP/lens/secret checks, unchanged frozen fixtures, and final independent review `NONE` (`d2229a65`). BT-GAP-09 is PASSED; Platform still owns P00-BTA-01/P00-SEAM-01.
 
 ## 115. PASSED 记录格式
 

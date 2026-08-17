@@ -21,10 +21,11 @@ fan_in:
 
 ## Status
 
-`READY_FOR_RED`. The Backtest owner approved
-`cash.precomputed_target.development.v1` as a permanent installable,
-development-only reference provider. Request-intent ownership, provider inputs,
-semantic ceiling, mark policy, terminal scope, and independence rules are frozen.
+`PASSED` at accepted package revision
+`3d9131f2a98ab2fb0b8aec6a216883b4afd787a4`. The installable
+development-only reference provider, request registration/preparation seam,
+additive no-fee authority, terminal finality, and cancellation entry point passed
+clean-install, full-repository, boundary, and independent review acceptance.
 
 ## First-principles authority chain
 
@@ -399,7 +400,7 @@ independent review, and clean-install validation. Record a new clean lowercase
 
 ### Phase 5 — Platform fan-in
 
-Platform pins that exact SHA, adds
+Platform pins accepted SHA `3d9131f2a98ab2fb0b8aec6a216883b4afd787a4`, adds
 `tests/integration/test_backtest_public_binding.py`, binds Foundation structural
 reader/publisher through public roots only, runs unchanged BT-PORT vectors, and
 records `P00-BTA-01` then `P00-SEAM-01`. Backtest does not create Platform admission,
@@ -421,3 +422,20 @@ No accepted v1 bytes/API changes; no provider adapter framework; no second simul
 registry, repository, SchemaCatalog, verifier, cache, database, queue, deployment, or
 Platform import. The provider is explicitly development-only and cannot qualify real
 market, decision-grade, or deployment claims.
+
+## Acceptance closure
+
+- accepted package revision: `3d9131f2a98ab2fb0b8aec6a216883b4afd787a4`;
+- clean detached worktree: `/tmp/backtest-provider-seam-clean`;
+- clean install/public roots: five workspace packages plus all BT-GAP-09 symbols;
+- focused final provider/facade/engine: 43 passed;
+- broad focused provider/runtime/repository/architecture: 223 passed;
+- clean full repository: 1791 passed;
+- import boundaries: 111 files passed;
+- unchanged Platform BT-PORT: 15 passed;
+- lock, diff, compile, LSP, lens, gitleaks/secret scan, and final status: clean;
+- frozen BT-GAP-02/02B/02C fixture SHA-256 values unchanged;
+- independent final review: `NONE` (`d2229a65`).
+
+This closes only the Backtest-owned provider/preparation dependency. Platform still
+owns the real Foundation binding, `P00-BTA-01`, and `P00-SEAM-01` receipts.
