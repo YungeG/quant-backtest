@@ -164,6 +164,7 @@ artifact_hashes: []
 | G12L-BINANCE-USDM-AGGTRADES-V1 | PASSED — immutable commit `981429b4f0ff5fa219ccc8bc991458072b025bf8` | market-bundle-builder Binance USD-M source slice | G10D, G12A–G12D | none |
 | G12L-BINANCE-USDM-FUNDING-RATE-V1 | PASSED — immutable commit `ebd91f746c4a065ca06dba89d847e7d41ab06331` | market-bundle-builder Binance USD-M source slice | G10E, G12A–G12D | none |
 | G12L-BINANCE-USDM-FUNDING-HISTORY-V1 | DRAFT / BLOCKED | market-bundle-builder Binance USD-M source slice | G10E, G12A | Immutable provider revision/correction closure |
+| G12L-TUSHARE-CN-A-SHARE-DAILY-LISTING-V1 | DRAFT / BLOCKED | market-bundle-builder China A-share source slice | G12A, G12-ACQ-TOOLS-V1 | Session-time, decimal/unit mapping, provider revision and listing-history authority |
 | G12M-* | DRAFT | backtest-runtime qualification | market-specific G12L, G07–G10 | Per-market qualification matrix |
 | BT-GAP-01 | PASSED — immutable commit `f2440f9658fbe2ae1cf0016a78c44e4230995394` | trading-domain | WP-02E, Platform BT-PORT-01 | none |
 | BT-GAP-02 | PASSED — immutable commit `39863c58ace1d996f3e814835836ec46e2aa3794` | backtest-runtime facade | BT-GAP-01, G07, BT-GAP-02A, BT-GAP-04 | none |
@@ -11496,6 +11497,51 @@ The exact response supplies all G10E record fields, including the funding-time
 mark, and repeated fetches had identical bytes. It remains BLOCKED because the
 current REST endpoint provides no immutable revision/correction terminal set or
 provider checksum. No normalizer, G12C/D, G12I, G12M, or deployment claim follows.
+
+## 104E. G12L Tushare China A-share Daily and Listing v1 (Gate remains BLOCKED)
+
+```yaml
+id: G12L-TUSHARE-CN-A-SHARE-DAILY-LISTING-V1
+status: DRAFT / BLOCKED
+depends_on: [G12A, G12-ACQ-TOOLS-V1]
+owner_package: market-bundle-builder China A-share source slice
+public_interface:
+  - none; exact source/acquisition/G12A/parity evidence only
+test_commands:
+  evidence: uv run --locked pytest -q tests/bundle_builder/providers/tushare/test_cn_a_share_daily_listing_evidence.py
+fixture_ids: [g12l-tushare-cn-a-share-daily-listing-v1]
+frozen_scope:
+  provider: Tushare Pro
+  ts_code: 000001.SZ
+  trade_date: 20240102
+  daily_rows: 1
+  listing_rows: 1
+  acquisition_tool_commit: 6f0bd99a93a349924996eb26708fbb0ac6fecf17
+g12a_evidence:
+  snapshot_id: sha256:6a360b17c1a5dd7686b2496f3b04006f902ef5705a1427dc2a7dbdaeadc2458a
+  content_tree_hash: sha256:44c4cd1e11dca26ddfe62fc1d2b5d4d8175da701b288876d33d1be65e06eddb5
+  provenance_hash: sha256:8745af52a950d0ba35eee381b32b6adad2d2ee144325de34ad3597389f2e73fb
+allowed_grade: development
+remaining_blockers:
+  - approved-session-date-to-event-time-authority
+  - exact-source-text-decimal-unit-scale-mapping
+  - provider-revision-correction-terminal-closure
+  - historical-listing-status-authority
+  - normalized-g12b-schema-and-failure-contract
+passed_commit: null
+artifact_hashes:
+  daily_response_sha256: c2950a35c093b983e538f97830b7b3fcb0bba1a7dac98a17bd20f6db9296f846
+  listing_response_sha256: d78fc472268deacb5af7c59c113325e2a00c5b4619c53fbbfe6fa23c96d471d2
+  acquisition_receipt_sha256: 61106b7e974ff09dedf96c065070f4a097a7fe02121bfd7a81b5dacb5c4757da
+  evidence_fixture_sha256: 95775b9dc7ace840f52fbb6a2291ab2b34a92318a519fb8356a67d74ab776c43
+  duckdb_backup_sha256: cdc6ce41dee3fe9903d8c27ec5cc584455ad423989cd79e3eb0187c5bba8bd41
+```
+
+The exact provider responses contain no token and reproduce one candidate G12A
+snapshot. Daily OHLC/change and converted volume/amount plus listing metadata
+match the stable DuckDB backup. No event timestamp, historical availability,
+provider revision terminality, listing lifecycle, normalizer, G12C/D, G12I/K/M,
+or deployment claim follows.
 
 ## 105. BT-GAP-01 Domain ArtifactRef
 

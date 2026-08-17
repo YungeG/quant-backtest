@@ -37,6 +37,7 @@ real old artifact          → G12J
 | [G12L-BINANCE-USDM-AGGTRADES-V1](g12l-binance-usdm-aggtrades-v1.md) | Second concrete slice — `PASSED`; immutable commit `981429b4f0ff5fa219ccc8bc991458072b025bf8` | G10D, G12A-D + Binance public-data evidence | Builder Binance USD-M source slice |
 | [G12L-BINANCE-USDM-FUNDING-RATE-V1](g12l-binance-usdm-funding-rate-v1.md) | Third concrete slice — `PASSED`; immutable commit `ebd91f746c4a065ca06dba89d847e7d41ab06331` | G10E, G12A-D + Binance public-data evidence | Builder Binance USD-M source slice |
 | [G12L-BINANCE-USDM-FUNDING-HISTORY-V1](g12l-binance-usdm-funding-history-v1.md) | Exact rate+mark REST evidence — `DRAFT / BLOCKED`; no immutable provider revision closure | G10E, G12A + Binance API evidence | Builder Binance USD-M source slice |
+| [G12L-TUSHARE-CN-A-SHARE-DAILY-LISTING-V1](g12l-tushare-cn-a-share-daily-listing-v1.md) | First real A-share capture — `DRAFT / BLOCKED`; source/G12A/DuckDB parity frozen | G12A, acquisition tools + Tushare evidence | Builder China A-share source slice |
 | G12M-* | Market qualification | market-specific G12L, G07–G10 | runtime qualification |
 
 ## Parallelism
