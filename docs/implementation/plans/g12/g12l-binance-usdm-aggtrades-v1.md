@@ -1,7 +1,7 @@
 ---
 id: G12L-BINANCE-USDM-AGGTRADES-V1
-readiness: READY
-gate_status: DRAFT
+readiness: PASSED
+gate_status: PASSED
 owner: market-bundle-builder Binance USD-M source slice
 produces:
   - exact Binance aggregate-trades raw evidence
@@ -29,9 +29,10 @@ Research authority: `docs/research/g12l-binance-usdm-aggtrades-v1.md`.
 
 ## Current status
 
-`DRAFT / READY FOR ACCEPTANCE`. Exact capture, bounded retries, failure mapping,
-headerless seven-field normalization, contiguous aggregate-trade IDs, exact G12A
-identity, conservative availability, source traces, and G12C/D evidence are frozen.
+`PASSED` at immutable commit `981429b4f0ff5fa219ccc8bc991458072b025bf8`.
+Exact capture, global failure precedence, headerless normalization, request/source
+binding, conservative availability, source traces, G12C/D evidence, full validation,
+and independent review are frozen.
 
 ## Frozen scope
 
@@ -62,13 +63,14 @@ registry, transport Protocol, HTTP dependency, cache, or Trading Kernel import.
 6. `NORMALIZATION_FAILED`
 7. `DATA_GAP_DETECTED`
 
-## Acceptance work remaining
+## Acceptance closure
 
-1. Run focused and full repository tests, import boundaries, network isolation,
-   secret scan, lock check, LSP, and diff checks.
-2. Obtain independent review with no material findings.
-3. Freeze the accepted implementation commit and change this slice to `PASSED`.
-4. Keep G12I/G12M separate and unqualified.
+- focused provider and boundaries: 26 passed;
+- full repository: 1732 passed;
+- import boundaries: 108 files passed;
+- lock, diff, LSP, lens, network isolation, and secret scan: clean;
+- independent review: `NONE`;
+- G12I/G12M remain separate and unqualified.
 
 ## Current executable evidence
 

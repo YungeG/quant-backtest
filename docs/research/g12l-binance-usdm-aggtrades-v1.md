@@ -2,10 +2,10 @@
 
 ## Decision status
 
-`G12L-BINANCE-USDM-AGGTRADES-V1` is the second concrete provider slice and is
-`DRAFT / READY FOR ACCEPTANCE`. It selects Binance Public Data USD-M daily
-`aggTrades`, `BTCUSDT`, UTC date `2020-01-01`. Real source, exact G12A identity,
-EXECUTION_REFERENCE normalization, and G12C/D publication evidence are frozen.
+`G12L-BINANCE-USDM-AGGTRADES-V1` is the second concrete provider slice and
+PASSES at immutable commit `981429b4f0ff5fa219ccc8bc991458072b025bf8`.
+It freezes real Binance USD-M `BTCUSDT` daily aggregate trades, exact G12A identity,
+EXECUTION_REFERENCE normalization, and G12C/D publication evidence.
 
 ## First-party authority
 

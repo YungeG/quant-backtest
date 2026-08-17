@@ -160,7 +160,7 @@ artifact_hashes: []
 | G12K | DRAFT | market-bundle-builder validation | G12C | Universe/corporate action coverage |
 | G12L-* | DRAFT | market-bundle-builder source adapter | G12A–G12K as applicable | Concrete provider/dataset/version, real raw fixtures, mapping and closure evidence |
 | G12L-BINANCE-USDM-MARK-PRICE-KLINES-V1 | PASSED — immutable commit `47d59e40081555ab9b555c3e632070a517509436` | market-bundle-builder Binance USD-M source slice | G10D, G12A–G12D | none |
-| G12L-BINANCE-USDM-AGGTRADES-V1 | DRAFT / READY FOR ACCEPTANCE | market-bundle-builder Binance USD-M source slice | G10D, G12A–G12D | Full validation, independent review, accepted commit |
+| G12L-BINANCE-USDM-AGGTRADES-V1 | PASSED — immutable commit `981429b4f0ff5fa219ccc8bc991458072b025bf8` | market-bundle-builder Binance USD-M source slice | G10D, G12A–G12D | none |
 | G12M-* | DRAFT | backtest-runtime qualification | market-specific G12L, G07–G10 | Per-market qualification matrix |
 | BT-GAP-01 | PASSED — immutable commit `f2440f9658fbe2ae1cf0016a78c44e4230995394` | trading-domain | WP-02E, Platform BT-PORT-01 | none |
 | BT-GAP-02 | PASSED — immutable commit `39863c58ace1d996f3e814835836ec46e2aa3794` | backtest-runtime facade | BT-GAP-01, G07, BT-GAP-02A, BT-GAP-04 | none |
@@ -11312,11 +11312,11 @@ artifact_hashes:
 8. G12I/G12M qualification, intraday 2024 replay, decision-grade, live, and
    deployment authority remain explicitly unclaimed.
 
-## 104B. G12L Binance USDⓈ-M Daily Aggregate Trades v1 (Gate remains DRAFT)
+## 104B. G12L Binance USDⓈ-M Daily Aggregate Trades v1 (PASSED)
 
 ```yaml
 id: G12L-BINANCE-USDM-AGGTRADES-V1
-status: DRAFT / READY FOR ACCEPTANCE
+status: PASSED
 depends_on: [G10D, G12A, G12B, G12C, G12D]
 owner_package: market-bundle-builder Binance USD-M source slice
 public_interface:
@@ -11339,9 +11339,14 @@ g12a_evidence:
   content_tree_hash: sha256:3e51e591737b5928ce796dc555b266b7d49d48e88b1051fbb9c6aa0b957993d7
   provenance_hash: sha256:70908485e1e1baddf684248282fce1ba78dd5df4f066ccc3cf714ec892bac5d7
 allowed_grade: development
-remaining_blockers:
-  - full-validation-independent-review-and-accepted-commit
-passed_commit: null
+remaining_blockers: []
+validation:
+  focused_provider_and_boundaries: 26 passed
+  full_repository: 1732 passed
+  import_boundaries: 108 files passed
+  lock_diff_lsp_lens_secret_scan: clean
+  independent_review: NONE
+passed_commit: 981429b4f0ff5fa219ccc8bc991458072b025bf8
 artifact_hashes:
   archive_sha256: 638e72c179e4965c2a6521bb27295930d09126433efe0cc3acd4e925ada955ac
   checksum_sha256: 54f9a3ec8d0ea0363fcd730c2eb43399fa425d2d1fd803a7261f761af78d8499
