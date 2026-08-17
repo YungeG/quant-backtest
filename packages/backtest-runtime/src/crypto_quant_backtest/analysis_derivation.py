@@ -100,6 +100,15 @@ class BacktestAnalysisRuntime:
             raise TypeError("publisher must provide put")
         self._publisher = publisher
 
+    def publish_metric_profile(self) -> ArtifactRef:
+        envelope = ArtifactEnvelope.create("backtest_metric_profile", 1, _PROFILE)
+        stored_ref = self._publisher.put(envelope=envelope)
+        if type(stored_ref) is not ArtifactRef:
+            raise TypeError("publisher.put must return exact ArtifactRef")
+        if stored_ref != _PROFILE_REF:
+            raise ValueError("publisher.put returned ref does not bind metric profile")
+        return stored_ref
+
     def derive(
         self,
         completed: VerifiedCompletedPublication | VerifiedCompletedPublicationV2,

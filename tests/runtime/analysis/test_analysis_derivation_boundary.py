@@ -37,6 +37,9 @@ def test_derivation_has_one_exact_public_runtime_and_no_storage_framework() -> N
     assert public_functions == set()
     assert public_classes == {"BacktestAnalysisRuntime"}
     assert list(signature(BacktestAnalysisRuntime).parameters) == ["publisher"]
+    assert list(signature(BacktestAnalysisRuntime.publish_metric_profile).parameters) == [
+        "self",
+    ]
     assert list(signature(BacktestAnalysisRuntime.derive).parameters) == [
         "self",
         "completed",

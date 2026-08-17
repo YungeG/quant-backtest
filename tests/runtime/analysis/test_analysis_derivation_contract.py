@@ -57,6 +57,21 @@ def _profile_ref() -> ArtifactRef:
     )
 
 
+def test_runtime_publishes_the_accepted_opaque_metric_profile_ref() -> None:
+    publisher = _RecordingPublisher()
+
+    profile_ref = BacktestAnalysisRuntime(publisher).publish_metric_profile()
+
+    assert profile_ref == _profile_ref()
+    assert len(publisher.envelopes) == 1
+    envelope = publisher.envelopes[0]
+    assert envelope.artifact_type == "backtest_metric_profile"
+    assert envelope.schema_version == 1
+    assert canonical_bytes(envelope.payload) == canonical_bytes(
+        BacktestMetricProfile("simple_period_return.fill_count.v1", 1)
+    )
+
+
 def _money(value: str, currency: str = "USD") -> Money:
     sign = -1 if value.startswith("-") else 1
     unsigned = value.removeprefix("-")
@@ -135,7 +150,13 @@ def test_publisher_failures_and_wrong_returned_ref_are_not_fabricated(
     profile_ref = _profile_ref()
 
     with pytest.raises(RuntimeError, match="retention unavailable"):
+        BacktestAnalysisRuntime(_FailingPublisher()).publish_metric_profile()
+    with pytest.raises(RuntimeError, match="retention unavailable"):
         BacktestAnalysisRuntime(_FailingPublisher()).derive(completed, profile_ref)
+
+    wrong_profile = ArtifactRef("backtest_metric_profile", 1, "sha256:" + "4" * 64)
+    with pytest.raises(ValueError, match="does not bind metric profile"):
+        BacktestAnalysisRuntime(_RecordingPublisher(wrong_profile)).publish_metric_profile()
 
     wrong = ArtifactRef("backtest_analysis", 1, "sha256:" + "3" * 64)
     with pytest.raises(ValueError, match="returned ref does not bind envelope"):
