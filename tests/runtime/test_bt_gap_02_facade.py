@@ -186,7 +186,7 @@ def test_public_facade_hides_orchestration_and_returns_only_direct_refs() -> Non
         name
         for name, value in vars(BacktestRuntime).items()
         if callable(value) and not name.startswith("_")
-    } == {"run"}
+    } == {"run", "run_with_cancellation"}
 
 
 def test_completed_run_is_durable_cache_stable_and_preserves_experiment_id(

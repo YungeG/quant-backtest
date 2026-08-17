@@ -13,6 +13,11 @@ from crypto_quant_backtest import (
     EngineStage,
 )
 from crypto_quant_domain import Money, Quantity, Scale, canonical_sha256
+from crypto_quant_trading import (
+    FinalFeeApplicability,
+    FinalFeeRuleSet,
+    PortfolioValueKind,
+)
 
 from tests.runtime.engine._fixtures import (
     BAR_EVENT_ID,
@@ -60,6 +65,74 @@ def test_engine_runs_target_to_fill_accounting_snapshot_and_run_end() -> None:
     assert not hasattr(result, "semantic_run_id")
     assert not hasattr(result, "attempt_id")
     assert not hasattr(result, "outcome")
+
+
+def test_zero_fee_assessment_skips_fee_journal_without_changing_positive_path() -> None:
+    case = execution_case()
+    accounting = case.bar_executions[0].accounting_plan
+    original_rules = accounting.fee_plan.final_fee_rule_set
+    zero_rules = FinalFeeRuleSet.create(
+        market_fee_policy_ref=original_rules.market_fee_policy_ref,
+        tax_policy_ref=original_rules.tax_policy_ref,
+        account_fee_schedule_ref=original_rules.account_fee_schedule_ref,
+        assessment_currency=original_rules.assessment_currency,
+        assessment_scale=original_rules.assessment_scale,
+        charge_rules=tuple(
+            replace(rule, applicability=FinalFeeApplicability.NOT_APPLICABLE)
+            for rule in original_rules.charge_rules
+        ),
+        minimums=(),
+    )
+    zero_accounting = replace(
+        accounting,
+        position_payload=replace(
+            accounting.position_payload,
+            final_fee_rule_set=zero_rules,
+        ),
+        fee_plan=replace(accounting.fee_plan, final_fee_rule_set=zero_rules),
+    )
+    zero_snapshot = replace(
+        case.snapshot_plan,
+        valuations=tuple(
+            replace(
+                value,
+                native_value=Money(47_445, Scale(2), "USD"),
+                reporting_value=Money(47_445, Scale(2), "USD"),
+            )
+            if value.value_ref.kind is PortfolioValueKind.CASH
+            else value
+            for value in case.snapshot_plan.valuations
+            if value.value_ref.kind is not PortfolioValueKind.FEES
+        ),
+    )
+    zero_case = replace(
+        case,
+        bar_executions=(
+            replace(case.bar_executions[0], accounting_plan=zero_accounting),
+        ),
+        snapshot_plan=zero_snapshot,
+        financial_dispatch_plan=replace(
+            case.financial_dispatch_plan,
+            final_snapshot_payload=zero_snapshot,
+        ),
+    )
+
+    zero_result = DeterministicBarEngine().run(zero_case).result
+    positive_result = DeterministicBarEngine().run(case).result
+
+    assert zero_result is not None and positive_result is not None
+    assert zero_result.fee_assessments[0].amount == Money(0, Scale(2), "USD")
+    assert zero_result.final_journal.entry_count == 2
+    assert zero_result.final_ledger_state.fees == ()
+    assert zero_result.final_portfolio_snapshot.fees == Money(0, Scale(2), "USD")
+    zero_stages = tuple(value.stage for value in zero_result.trace.entries)
+    assert EngineStage.FEE_ASSESSMENT in zero_stages
+    assert EngineStage.FEE_ACCOUNTING not in zero_stages
+    assert positive_result.final_journal.entry_count == 3
+    assert positive_result.final_portfolio_snapshot.fees == Money(53, Scale(2), "USD")
+    assert EngineStage.FEE_ACCOUNTING in {
+        value.stage for value in positive_result.trace.entries
+    }
 
 
 def test_same_case_is_exact_across_timeline_batch_size() -> None:

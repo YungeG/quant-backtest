@@ -159,15 +159,12 @@ BacktestRequestRef@1 = {
   artifact_ref: ArtifactRef[backtest_request@1],
 }
 
-PreparedBacktestExecution@1 = {
-  type: "prepared_backtest_execution",
-  schema_version: 1,
-  request_ref: BacktestRequestRef,
-  semantic_run_id: run_[0-9a-f]{64},
-  execution_request: BacktestExecutionRequest@2,
-  runtime: BacktestRuntime,
-}
 ```
+
+`PreparedBacktestExecution` is an in-process immutable Python value containing
+`request_ref`, `semantic_run_id`, `execution_request`, and the configured
+`BacktestRuntime`. It has no canonical wire, schema version, ArtifactEnvelope, or
+persistence identity because the runtime handle is process-local.
 
 The intent deliberately omits profile keys, market-bundle ref, target digest,
 execution-case semantic hash, build-manifest hash, strategy family, engine kind, and
@@ -178,7 +175,12 @@ has produced the execution case.
 
 The operation internally owns request materialization, profile registration, request
 resolution, concrete cash-case production, identity sealing, v2 materialization,
-request/bundle publication, returned-ref verification, and facade composition. It exposes no
+request/bundle publication, readback verification, and facade composition. Before
+publication the v2 envelope must round-trip the existing package-private execution-
+input `SchemaCatalog`. After publishing request and bundle, preparation exact-reads
+both through the injected structural reader and verifies exact `ArtifactReadResult`,
+canonical source bytes/hash, envelope equality, and ref equality before returning.
+Drop, substitution, or malformed readback returns no prepared authority. It exposes no
 resolved request, execution case, plan, registry, dispatcher, builder, callback,
 path convention, or Platform type.
 
@@ -201,7 +203,18 @@ CashDevelopmentProviderInputs@1 = {
 ```
 
 These nine fields are external build, market, strategy, capital, lattice, observed
-price, and venue-capability facts. The provider owns fixed stale policies and derives
+price, and venue-capability facts. `build_artifact_manifest` is the caller-owned base
+manifest: callers neither know nor construct this provider's profile digests. After
+deriving the fixed registry, preparation deterministically adds exactly three
+`PROFILE_COMPONENT` `BuildArtifactRef` values for the provider market, simulation, and
+account profile keys, using profile version, WHEEL/CLEAN identity, and each derived
+profile digest. Other caller artifacts, runtime libraries, lock/image identity,
+build key, and provenance are preserved exactly. An exact existing provider ref is
+idempotent; any caller artifact with a provider profile key and different fields fails
+before publication. The final enriched manifest hash, not the base hash, binds the
+immutable request and v2 bundle.
+
+The provider owns fixed stale policies and derives
 both `ResolvedMark` values at the target decision time and request end-exclusive. It
 also derives every registry entry, policy, timeline,
 decision cycle, order, admission, reservation, accounting plan, snapshot plan,
@@ -210,16 +223,21 @@ may be added to the public input later without a new version and owner review.
 
 Validation freezes these bindings:
 
-1. the build manifest hash equals the public request commitment;
+1. the enriched build manifest hash equals the public request commitment, contains
+   the three deterministic provider profile refs, and otherwise exact-preserves the
+   caller base manifest;
 2. the instrument catalog hash equals the MarketBundle manifest commitment and
    contains exactly one SPOT instrument plus its currencies;
 3. initial cash is positive and denominated in the request reporting currency;
 4. lattice and both marks reference the sole instrument;
 5. both observations use `PricePurpose.VALUATION` and quote the reporting currency;
-   the decision observation has `observed_at == available_at == target decision time`,
-   the final observation has `observed_at == available_at == request end-exclusive`,
-   and Backtest resolves each at that exact instant with fixed `max_age_nanoseconds=0`
-   and `allow_forward_fill=false` stale policy;
+   the decision observation has `observed_at == available_at == target decision time`
+   and resolves there with `max_age_nanoseconds=0`, `allow_forward_fill=false`; the
+   final observation has `observed_at < request end_exclusive` and
+   `available_at <= request end_exclusive`, then resolves at end-exclusive with
+   `allow_forward_fill=true` and `max_age_nanoseconds` exactly equal to
+   `end_exclusive - observed_at`; this bounded close carry is provider-owned and keeps
+   the accepted RunEnd rule that valuation marks must precede the boundary;
 6. the public request selects the provider's fixed market, simulation, and account
    profile keys and requests development grade;
 7. the target stream contains exactly one active target event for the frozen strategy
@@ -297,17 +315,32 @@ Provider preparation must test in this order:
 
 1. exact public argument types;
 2. request-intent/provider-input semantic validation;
-3. market/build/target observation binding;
-4. concrete execution-case production and semantic-spec derivation;
+3. market/target observation binding and concrete case/profile derivation;
+4. caller/provider profile-key conflict rejection and deterministic build-manifest
+   enrichment;
 5. immutable `BacktestRequest@1` materialization and profile resolution;
-6. identity sealing, v2 materialization, and canonical decode verification;
-7. request publication and returned-ref verification;
-8. execution-input publication and returned-ref verification;
+6. identity sealing, v2 materialization, and existing-catalog round-trip;
+7. request then execution-input publication and returned-ref verification;
+8. exact structural readback of both persisted envelopes;
 9. runtime construction.
 
 No partial `PreparedBacktestExecution` is returned. Immutable orphan CAS objects may
-remain after a later publication failure; no transaction, cleanup protocol, or
-second repository is introduced.
+remain after a later publication/readback failure; no transaction, cleanup protocol,
+or second repository is introduced.
+
+## Terminal finality and cache order
+
+The exact first Attempt is the only terminal Attempt for a semantic run. Before any
+execution, the facade checks its deterministic Attempt directory. If a terminal
+manifest exists, it exact-reads canonical local bytes, verifies the mirrored graph
+through `BacktestEvidenceRepository`, and returns the same bare manifest ref without
+republishing or allocating another ordinal. BLOCKED/FAILED/CANCELLED are final across
+repeated calls and across `run`/`run_with_cancellation` ordering.
+
+A completed canonical-v2 publication remains final through the existing cache. A
+later cancellation request must exact-verify that cache and fail closed; it cannot
+convert or return COMPLETED for a cancellation call. No terminal registry, alternate
+Attempt numbering, or hidden state is introduced.
 
 ## Acceptance gate split
 

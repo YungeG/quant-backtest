@@ -2724,55 +2724,58 @@ class DeterministicBarEngine:
             fee.fee_assessment_id.value,
             fee_outcome.result.result_hash,
         )
-        if (
-            type(accounting.position_payload) is CashFillAccountingPlan
-            and accounting.position_payload.cost_basis_policy.policy_version >= 2
-        ):
-            fee_dispatch = self._financial_dispatcher.book_fee(
-                accounting, fill, fee_outcome.result, self._financial_state_view(state)
-            )
-            failure = self._apply_financial_dispatch(
-                case,
-                state,
-                fee_dispatch,
-                expected_snapshot=False,
-            )
-            if failure is not None:
-                return failure
-            assert fee_dispatch.result is not None
-            self._trace_add(
-                state,
-                EngineStage.FEE_ACCOUNTING,
-                fee.fee_recorded_at,
-                fee.fee_journal_entry_id.value,
-                canonical_sha256(fee_dispatch.result),
-            )
-        else:
-            fee_journal = FeeChargedJournalTranslator().translate(
-                result=fee_outcome.result,
-                cash_key=fee.cash_key,
-                journal_entry_id=fee.fee_journal_entry_id,
-                recorded_at=fee.fee_recorded_at,
-            )
-            if fee_journal.result is None:
-                fee_failure = cast(Any, fee_journal.failure)
-                return self._failed(
+        # A zero assessment is authoritative evidence, not a cash mutation.
+        if fee_outcome.result.assessment.amount.units:
+            if (
+                type(accounting.position_payload) is CashFillAccountingPlan
+                and accounting.position_payload.cost_basis_policy.policy_version >= 2
+            ):
+                fee_dispatch = self._financial_dispatcher.book_fee(
+                    accounting, fill, fee_outcome.result, self._financial_state_view(state)
+                )
+                failure = self._apply_financial_dispatch(
                     case,
                     state,
-                    EngineFailureCode.FEE_ACCOUNTING_FAILURE,
-                    (fee_failure.code.value,),
-                    (fee_failure.failure_hash,),
+                    fee_dispatch,
+                    expected_snapshot=False,
                 )
-            state.journal = state.journal.append(fee_journal.result.journal_entry)
-            self._trace_add(
-                state,
-                EngineStage.FEE_ACCOUNTING,
-                fee.fee_recorded_at,
-                fee.fee_journal_entry_id.value,
-                fee_journal.result.result_hash,
-            )
-            state.ledger_state = state.ledger.project(state.journal)
-            self._refresh_resources(case, state)
+                if failure is not None:
+                    return failure
+                if fee_dispatch.result is None:
+                    raise RuntimeError("successful fee dispatch lacks result")
+                self._trace_add(
+                    state,
+                    EngineStage.FEE_ACCOUNTING,
+                    fee.fee_recorded_at,
+                    fee.fee_journal_entry_id.value,
+                    canonical_sha256(fee_dispatch.result),
+                )
+            else:
+                fee_journal = FeeChargedJournalTranslator().translate(
+                    result=fee_outcome.result,
+                    cash_key=fee.cash_key,
+                    journal_entry_id=fee.fee_journal_entry_id,
+                    recorded_at=fee.fee_recorded_at,
+                )
+                if fee_journal.result is None:
+                    fee_failure = cast(Any, fee_journal.failure)
+                    return self._failed(
+                        case,
+                        state,
+                        EngineFailureCode.FEE_ACCOUNTING_FAILURE,
+                        (fee_failure.code.value,),
+                        (fee_failure.failure_hash,),
+                    )
+                state.journal = state.journal.append(fee_journal.result.journal_entry)
+                self._trace_add(
+                    state,
+                    EngineStage.FEE_ACCOUNTING,
+                    fee.fee_recorded_at,
+                    fee.fee_journal_entry_id.value,
+                    fee_journal.result.result_hash,
+                )
+                state.ledger_state = state.ledger.project(state.journal)
+                self._refresh_resources(case, state)
         self._trace_add(
             state,
             EngineStage.LEDGER_STATE,

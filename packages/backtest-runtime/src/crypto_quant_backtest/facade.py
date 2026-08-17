@@ -16,8 +16,9 @@ from crypto_quant_market_data import MarketBundleReader
 
 from .artifact_envelope_publisher import ArtifactEnvelopePublisher
 from .artifact_envelope_reader import ArtifactEnvelopeReader
-from .engine import ResolvedExecutionCase
+from .engine import EngineCancellationRequest, ResolvedExecutionCase
 from .evidence import AttemptEvidenceWriter, FinalizedAttemptEvidence
+from .evidence_repository import BacktestEvidenceRepository
 from .execution_hash import AttemptExecutionHash, ExecutionResultHasher
 from .execution_inputs import BacktestExecutionRequest, _hydrate_execution_inputs
 from .integrity import (
@@ -36,6 +37,7 @@ from .runner import (
     CanonicalResultCacheHit,
     InputOrigin,
     _read_canonical_artifact,
+    _read_canonical_cache_hit_v2,
 )
 
 _STORAGE_RUNNER_ISSUES = frozenset({"canonical_cache_invalid", "run_lock_unavailable"})
@@ -79,6 +81,23 @@ class BacktestRuntime:
     def run(
         self, request: BacktestExecutionRequest
     ) -> BacktestCanonicalPublicationRef | ArtifactRef:
+        return self._run(request, cancellation=None)
+
+    def run_with_cancellation(
+        self,
+        request: BacktestExecutionRequest,
+        cancellation: EngineCancellationRequest,
+    ) -> BacktestCanonicalPublicationRef | ArtifactRef:
+        if type(cancellation) is not EngineCancellationRequest:
+            raise TypeError("cancellation must be exact EngineCancellationRequest")
+        return self._run(request, cancellation=cancellation)
+
+    def _run(
+        self,
+        request: BacktestExecutionRequest,
+        *,
+        cancellation: EngineCancellationRequest | None,
+    ) -> BacktestCanonicalPublicationRef | ArtifactRef:
         hydrated = self._hydrate(request)
         resolution = ProfileResolver().resolve(
             request=request.request,
@@ -101,12 +120,33 @@ class BacktestRuntime:
         if execution_case is None:
             raise RuntimeError("execution input bundle is not executable")
 
+        terminal_ref = self._existing_terminal_ref(resolved)
+        if terminal_ref is not None:
+            return terminal_ref
+        input_origin = self._input_origin(resolved)
+        if cancellation is not None:
+            canonical_directory = (
+                self._publication_root
+                / "runs"
+                / resolved.semantic_run_id
+                / "canonical-v2"
+            )
+            if canonical_directory.exists():
+                _read_canonical_cache_hit_v2(
+                    root=self._publication_root,
+                    resolved_request=resolved,
+                    input_origin=input_origin,
+                    execution_case=execution_case,
+                )
+                raise RuntimeError("completed semantic run cannot be cancelled")
+
         runner = AuditableBacktestRunner.for_v2(publication_root=self._publication_root)
         first = runner.execute(
             resolved_request=resolved,
             execution_case=execution_case,
             attempt=AttemptIdentity.first(resolved.semantic_run_id),
-            input_origin=self._input_origin(resolved),
+            input_origin=input_origin,
+            cancellation=cancellation,
         )
         cached = self._cache_ref(first)
         if cached is not None:
@@ -127,7 +167,8 @@ class BacktestRuntime:
             resolved_request=resolved,
             execution_case=execution_case,
             next_attempt_ordinal=2,
-            input_origin=self._input_origin(resolved),
+            input_origin=input_origin,
+            cancellation=cancellation,
         )
         cached = self._cache_ref(second)
         if cached is not None:
@@ -167,6 +208,45 @@ class BacktestRuntime:
         if outcome.result is None:
             raise RuntimeError("execution input hydration returned no result")
         return outcome.result
+
+    def _existing_terminal_ref(
+        self,
+        resolved: ResolvedBacktestRequest,
+    ) -> ArtifactRef | None:
+        attempt = AttemptIdentity.first(resolved.semantic_run_id)
+        attempt_directory = (
+            self._publication_root
+            / "runs"
+            / resolved.semantic_run_id
+            / "attempts"
+            / attempt.attempt_id
+        )
+        if not attempt_directory.exists():
+            return None
+        manifest_path = attempt_directory / "evidence-manifest.json"
+        if not manifest_path.is_file():
+            raise RuntimeError("terminal Attempt is incomplete")
+        payload, envelope, _ = _read_canonical_artifact(
+            manifest_path,
+            "evidence_manifest",
+        )
+        if (
+            payload.get("semantic_run_id") != resolved.semantic_run_id
+            or payload.get("attempt_id") != attempt.attempt_id
+        ):
+            raise RuntimeError("terminal Attempt identity mismatch")
+        status = payload.get("status")
+        if status == "READY_FOR_INTEGRITY":
+            return None
+        if status not in {"BLOCKED", "FAILED", "CANCELLED"}:
+            raise RuntimeError("Attempt evidence has unsupported terminal status")
+        ref = ArtifactRef.from_envelope(envelope)
+        terminal = BacktestEvidenceRepository(
+            reader=self._artifact_reader
+        ).load_terminal(ref)
+        if terminal.durable_evidence_ref != ref:
+            raise RuntimeError("terminal evidence verification returned wrong ref")
+        return ref
 
     @staticmethod
     def _input_origin(resolved: ResolvedBacktestRequest) -> InputOrigin:

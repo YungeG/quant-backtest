@@ -91,6 +91,13 @@ from .evidence import (
     FinalizedAttemptEvidence,
 )
 from .facade import BacktestRuntime
+from .cash_development_provider import (
+    CashDevelopmentProviderInputs,
+    CashDevelopmentRequestIntent,
+    PreparedBacktestExecution,
+    prepare_cash_development_backtest,
+)
+from .request_registration import BacktestRequestRef
 from .financial_dispatch import (
     CashFillAccountingPlan,
     DefaultCashFinancialDispatcher,
@@ -370,6 +377,7 @@ __all__ = [
     "BacktestEvidenceRepository",
     "BacktestExecutionRequest",
     "BacktestRequest",
+    "BacktestRequestRef",
     "BacktestResolutionFailure",
     "BacktestResolutionFailureCode",
     "BacktestResolutionOutcome",
@@ -411,6 +419,8 @@ __all__ = [
     "CanonicalPublicationOutcomeV2",
     "CanonicalResultPublisher",
     "CanonicalExecutionSummary",
+    "CashDevelopmentProviderInputs",
+    "CashDevelopmentRequestIntent",
     "CashFillAccountingPlan",
     "CompletedBacktestResult",
     "CompletedBacktestResultV2",
@@ -451,6 +461,7 @@ __all__ = [
     "DeterministicBpsSlippageModel",
     "materialize_execution_input_bundle",
     "materialize_execution_input_bundle_v2",
+    "prepare_cash_development_backtest",
     "DeterministicRebuildEvidence",
     "DeterministicTimeline",
     "EngineCancellation",
@@ -529,6 +540,7 @@ __all__ = [
     "ModelArtifactRef",
     "ModelRevisionTimeline",
     "LiquidityModel",
+    "PreparedBacktestExecution",
     "PrecomputedTargetStream",
     "NextBarOpenApplicability",
     "NextBarOpenDecision",

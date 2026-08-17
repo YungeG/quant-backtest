@@ -33,7 +33,7 @@ def test_facade_is_one_public_root_run_boundary() -> None:
         if isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef))
         and not node.name.startswith("_")
     }
-    assert public_methods == {"run"}
+    assert public_methods == {"run", "run_with_cancellation"}
     run = next(
         node
         for node in facade.body
@@ -41,6 +41,17 @@ def test_facade_is_one_public_root_run_boundary() -> None:
     )
     assert [argument.arg for argument in run.args.args] == ["self", "request"]
     assert not run.args.kwonlyargs
+    cancel = next(
+        node
+        for node in facade.body
+        if isinstance(node, ast.FunctionDef) and node.name == "run_with_cancellation"
+    )
+    assert [argument.arg for argument in cancel.args.args] == [
+        "self",
+        "request",
+        "cancellation",
+    ]
+    assert not cancel.args.kwonlyargs
     assert "BacktestRuntime" in _PUBLIC_ROOT.read_text(encoding="utf-8")
 
 
