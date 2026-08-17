@@ -54,6 +54,8 @@ def test_checksummed_archive_acquisition_is_atomic_and_repeatable(tmp_path: Path
     assert receipt["archive_attempts"] == 1
     assert receipt["checksum_attempts"] == 2
     assert receipt["snapshot"]["members"][0]["member_key"].endswith(".zip")
+    assert receipt["snapshot"]["members"][0]["declared_sha256"] == receipt["archive_sha256"]
+    assert receipt["snapshot"]["members"][1]["declared_sha256"] is None
 
     repeated = acquire_archive(
         request,
@@ -87,6 +89,32 @@ def test_existing_output_is_rejected_before_network(tmp_path: Path) -> None:
         )
     assert fetch.calls == []
     assert marker.read_text() == "unchanged"
+
+
+def test_concurrent_output_claim_is_not_replaced(tmp_path: Path) -> None:
+    request = BinanceArchiveRequest("ETHUSDT", "aggTrades", "2024-03-01")
+    archive = b"archive"
+    digest = hashlib.sha256(archive).hexdigest()
+    checksum = f"{digest}  {request.filename}\n".encode()
+    output = tmp_path / "raced"
+
+    def racing_get(url: str) -> tuple[int, bytes]:
+        if url == request.archive_url:
+            output.mkdir()
+            (output / "foreign").write_text("keep")
+            return (200, archive)
+        return (200, checksum)
+
+    with pytest.raises(AcquisitionError, match="already exists"):
+        acquire_archive(
+            request,
+            output_dir=output,
+            acquired_at_epoch_nanoseconds=1_800_000_000_000_000_000,
+            get=racing_get,
+            sleep=lambda _: None,
+        )
+    assert (output / "foreign").read_text() == "keep"
+    assert not (output / "acquisition-receipt.json").exists()
 
 
 def test_archive_failure_writes_no_partial_authority(tmp_path: Path) -> None:
@@ -129,3 +157,50 @@ def test_funding_history_preserves_raw_response_and_request_receipt(tmp_path: Pa
     assert result["record_count"] == 2
     assert result["request"]["symbol"] == "ETHUSDT"
     assert result["snapshot"]["members"][0]["content_hash"] == result["response_sha256"]
+    assert result["snapshot"]["members"][0]["declared_sha256"] is None
+
+
+@pytest.mark.parametrize(
+    "response",
+    (
+        b'[{"symbol":"ETHUSDT","fundingTime":1709251200000,"fundingRate":"Infinity","markPrice":"3343.0"}]',
+        b'[{"symbol":"ETHUSDT","fundingTime":1709251200000,"fundingRate":"0.1","markPrice":"NaN"}]',
+        b'[{"symbol":"ETHUSDT","fundingTime":1709251200000,"fundingRate":"x","markPrice":"-1"}]',
+    ),
+)
+def test_funding_history_rejects_nonfinite_provider_decimals(
+    tmp_path: Path, response: bytes
+) -> None:
+    request = BinanceFundingHistoryRequest(
+        "ETHUSDT", 1_709_251_200_000, 1_709_337_599_999, 1000
+    )
+    output = tmp_path / "invalid"
+    with pytest.raises(AcquisitionError, match="violates request scope"):
+        acquire_funding_history(
+            request,
+            output_dir=output,
+            acquired_at_epoch_nanoseconds=1_800_000_000_000_000_000,
+            get=FakeGet({request.url: ((200, response),)}),
+            sleep=lambda _: None,
+        )
+    assert not output.exists()
+
+
+def test_funding_history_enforces_limit_and_archive_date_is_real(tmp_path: Path) -> None:
+    with pytest.raises(ValueError, match="real calendar"):
+        BinanceArchiveRequest("ETHUSDT", "aggTrades", "2024-19-39")
+    request = BinanceFundingHistoryRequest(
+        "ETHUSDT", 1_709_251_200_000, 1_709_337_599_999, 1
+    )
+    response = (
+        b'[{"symbol":"ETHUSDT","fundingTime":1709251200000,"fundingRate":"0.1","markPrice":"1"},'
+        b'{"symbol":"ETHUSDT","fundingTime":1709280000000,"fundingRate":"0.1","markPrice":"1"}]'
+    )
+    with pytest.raises(AcquisitionError, match="requested limit"):
+        acquire_funding_history(
+            request,
+            output_dir=tmp_path / "too-many",
+            acquired_at_epoch_nanoseconds=1_800_000_000_000_000_000,
+            get=FakeGet({request.url: ((200, response),)}),
+            sleep=lambda _: None,
+        )

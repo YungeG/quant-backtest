@@ -7,6 +7,7 @@ import re
 import ssl
 import time
 from dataclasses import dataclass
+from datetime import datetime
 from pathlib import Path
 from time import sleep as real_sleep
 from typing import Any
@@ -32,6 +33,7 @@ _ARCHIVE_ROOT = "https://data.binance.vision/data/futures/um/daily"
 _FUNDING_ROOT = "https://fapi.binance.com/fapi/v1/fundingRate"
 _SYMBOL = re.compile(r"[A-Z0-9]{5,20}\Z")
 _DATE = re.compile(r"20[0-9]{2}-[01][0-9]-[0-3][0-9]\Z")
+_DECIMAL = re.compile(r"-?[0-9]+(?:\.[0-9]+)?\Z")
 _KINDS = ("aggTrades", "bookTicker")
 _MAX_ATTEMPTS = 5
 
@@ -49,6 +51,10 @@ class BinanceArchiveRequest:
             raise ValueError(f"kind must be one of {_KINDS}")
         if _DATE.fullmatch(self.utc_date) is None:
             raise ValueError("utc_date must be YYYY-MM-DD")
+        try:
+            datetime.strptime(self.utc_date, "%Y-%m-%d")
+        except ValueError as error:
+            raise ValueError("utc_date must be a real calendar date") from error
 
     @property
     def filename(self) -> str:
@@ -198,7 +204,7 @@ def acquire_archive(
                 checksum_bytes,
                 "0644",
                 acquired_at_epoch_nanoseconds,
-                checksum_hash,
+                None,
             ),
         ),
         provenance=SourceSnapshotProvenance(
@@ -237,6 +243,19 @@ def acquire_archive(
     return receipt
 
 
+def _valid_decimal(value: str, *, positive: bool) -> bool:
+    if len(value) > 64 or _DECIMAL.fullmatch(value) is None:
+        return False
+    whole, _, fraction = value.removeprefix("-").partition(".")
+    if len(fraction) > 18:
+        return False
+    try:
+        units = int(whole + fraction)
+    except ValueError:
+        return False
+    return not positive or (not value.startswith("-") and units > 0)
+
+
 def _funding_records(
     response_bytes: bytes,
     request: BinanceFundingHistoryRequest,
@@ -245,8 +264,12 @@ def _funding_records(
         payload = json.loads(response_bytes)
     except (UnicodeDecodeError, json.JSONDecodeError) as error:
         raise AcquisitionError("funding response must be valid JSON") from error
-    if not isinstance(payload, list) or not payload:
-        raise AcquisitionError("funding response must be a non-empty list")
+    if (
+        not isinstance(payload, list)
+        or not payload
+        or len(payload) > request.limit
+    ):
+        raise AcquisitionError("funding response violates the requested limit")
     previous = request.start_time_milliseconds - 1
     missing_mark_prices = 0
     for item in payload:
@@ -268,6 +291,8 @@ def _funding_records(
             or funding_time <= previous
             or type(funding_rate) is not str
             or type(mark_price) is not str
+            or not _valid_decimal(funding_rate, positive=False)
+            or (bool(mark_price) and not _valid_decimal(mark_price, positive=True))
         ):
             raise AcquisitionError("funding response item violates request scope")
         previous = funding_time
@@ -298,7 +323,7 @@ def acquire_funding_history(
                 response_bytes,
                 "0644",
                 acquired_at_epoch_nanoseconds,
-                response_hash,
+                None,
             ),
         ),
         provenance=SourceSnapshotProvenance(

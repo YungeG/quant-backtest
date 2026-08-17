@@ -4,7 +4,6 @@ import hashlib
 import json
 import os
 import shutil
-import tempfile
 from collections.abc import Callable
 from pathlib import Path
 from typing import Any
@@ -30,18 +29,37 @@ def publish_directory(
     files: dict[str, bytes],
 ) -> None:
     output = Path(output_dir).resolve()
-    if output.exists():
-        raise AcquisitionError(f"output directory already exists: {output}")
     output.parent.mkdir(parents=True, exist_ok=True)
-    temporary = Path(tempfile.mkdtemp(prefix=f".{output.name}.", dir=output.parent))
     try:
-        for relative, source_bytes in files.items():
-            path = temporary / relative
+        output.mkdir(mode=0o700)
+    except FileExistsError as error:
+        raise AcquisitionError(f"output directory already exists: {output}") from error
+    try:
+        ordered = sorted(
+            files.items(), key=lambda item: item[0] == "acquisition-receipt.json"
+        )
+        for relative, source_bytes in ordered:
+            path = output / relative
             path.parent.mkdir(parents=True, exist_ok=True)
-            path.write_bytes(source_bytes)
-        os.replace(temporary, output)
+            descriptor = os.open(path, os.O_WRONLY | os.O_CREAT | os.O_EXCL, 0o600)
+            try:
+                with os.fdopen(descriptor, "wb") as handle:
+                    handle.write(source_bytes)
+                    handle.flush()
+                    os.fsync(handle.fileno())
+            except BaseException:
+                try:
+                    os.close(descriptor)
+                except OSError:
+                    pass
+                raise
+        directory = os.open(output, os.O_RDONLY | getattr(os, "O_DIRECTORY", 0))
+        try:
+            os.fsync(directory)
+        finally:
+            os.close(directory)
     except BaseException:
-        shutil.rmtree(temporary, ignore_errors=True)
+        shutil.rmtree(output, ignore_errors=True)
         raise
 
 

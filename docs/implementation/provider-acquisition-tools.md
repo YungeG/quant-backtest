@@ -57,9 +57,14 @@ Every successful command creates a previously nonexistent directory containing:
 - `acquisition-receipt.json` with request scope, attempts, hashes, G12A snapshot,
   and false qualification flags.
 
-Any provider, checksum, schema, scope, token-echo, or snapshot failure leaves the
-requested output directory absent. Existing output directories are never
-replaced.
+The output directory is claimed with no-clobber `mkdir`; files are fsynced and the
+receipt is written last as the publication marker. Any provider, checksum, schema,
+scope, decoded token-echo, or snapshot failure leaves the requested output absent.
+A concurrently created output is preserved and never replaced.
+
+`declared_sha256` is populated only for archive bytes whose hash is declared by
+Binance's adjacent checksum. Checksum files and REST/Tushare responses retain only
+their independently computed G12A content hash.
 
 ## Boundaries
 

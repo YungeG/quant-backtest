@@ -123,16 +123,32 @@ def _post_with_retries(
     raise AcquisitionError(f"provider {api_name} request exhausted retries")
 
 
+def _contains_text(value: object, text: str) -> bool:
+    if isinstance(value, str):
+        return text in value
+    if isinstance(value, dict):
+        return any(
+            _contains_text(key, text) or _contains_text(item, text)
+            for key, item in value.items()
+        )
+    if isinstance(value, list):
+        return any(_contains_text(item, text) for item in value)
+    return False
+
+
 def _rows(
     response_bytes: bytes,
     *,
     api_name: str,
     expected_fields: tuple[str, ...],
+    forbidden_text: str,
 ) -> list[list[object]]:
     try:
         payload = json.loads(response_bytes)
     except (UnicodeDecodeError, json.JSONDecodeError) as error:
         raise AcquisitionError(f"provider {api_name} response must be valid JSON") from error
+    if _contains_text(payload, forbidden_text):
+        raise AcquisitionError(f"provider {api_name} response contains credential material")
     if not isinstance(payload, dict) or type(payload.get("code")) is not int:
         raise AcquisitionError(f"provider {api_name} response has invalid envelope")
     if payload["code"] != 0:
@@ -180,7 +196,10 @@ def acquire_daily_listing(
         "daily", daily_body, post, sleep
     )
     daily_rows = _rows(
-        daily_bytes, api_name="daily", expected_fields=_DAILY_FIELDS
+        daily_bytes,
+        api_name="daily",
+        expected_fields=_DAILY_FIELDS,
+        forbidden_text=token,
     )
     if (
         len(daily_rows) != 1
@@ -199,7 +218,10 @@ def acquire_daily_listing(
         "stock_basic", listing_body, post, sleep
     )
     listing_rows = _rows(
-        listing_bytes, api_name="stock_basic", expected_fields=_LISTING_FIELDS
+        listing_bytes,
+        api_name="stock_basic",
+        expected_fields=_LISTING_FIELDS,
+        forbidden_text=token,
     )
     if len(listing_rows) != 1 or listing_rows[0][0] != request.ts_code:
         raise AcquisitionError("provider stock_basic response does not exact-cover request")
@@ -213,14 +235,14 @@ def acquire_daily_listing(
                 daily_bytes,
                 "0644",
                 acquired_at_epoch_nanoseconds,
-                daily_hash,
+                None,
             ),
             RawSourceMember(
                 "response/stock-basic.json",
                 listing_bytes,
                 "0644",
                 acquired_at_epoch_nanoseconds,
-                listing_hash,
+                None,
             ),
         ),
         provenance=SourceSnapshotProvenance(

@@ -79,9 +79,55 @@ def test_tushare_daily_listing_acquisition_uses_env_token_without_persisting_it(
     assert result["request"] == {"trade_date": "20240102", "ts_code": "000001.SZ"}
     assert result["daily_row_count"] == 1
     assert result["listing_row_count"] == 1
+    assert all(member["declared_sha256"] is None for member in result["snapshot"]["members"])
     assert all(call[0].startswith("https://") for call in post.calls)
     assert all(call[1]["token"] == secret for call in post.calls)
     assert all(secret.encode() not in path.read_bytes() for path in output.iterdir())
+
+
+def test_json_escaped_token_echo_is_rejected(tmp_path: Path) -> None:
+    token = 'secret"value'
+    daily = tushare_response(
+        [
+            "ts_code",
+            "trade_date",
+            "open",
+            "high",
+            "low",
+            "close",
+            "pre_close",
+            "change",
+            "pct_chg",
+            "vol",
+            "amount",
+        ],
+        [["000001.SZ", "20240102", 9.39, 9.42, 9.21, 9.21, 9.39, -0.18, -1.9169, 1158366.45, 1075742.252]],
+    )
+    listing = tushare_response(
+        [
+            "ts_code",
+            "symbol",
+            "name",
+            "area",
+            "industry",
+            "market",
+            "exchange",
+            "list_status",
+            "list_date",
+            "delist_date",
+        ],
+        [["000001.SZ", "000001", token, "深圳", "银行", "主板", "SZSE", "L", "19910403", None]],
+    )
+    output = tmp_path / "echo"
+    with pytest.raises(AcquisitionError, match="credential material"):
+        acquire_daily_listing(
+            TushareDailyListingRequest("000001.SZ", "20240102"),
+            token=token,
+            output_dir=output,
+            acquired_at_epoch_nanoseconds=1_800_000_000_000_000_000,
+            post=FakePost({"daily": (200, daily), "stock_basic": (200, listing)}),
+        )
+    assert not output.exists()
 
 
 def test_late_tushare_failure_leaves_no_daily_partial_output(tmp_path: Path) -> None:
