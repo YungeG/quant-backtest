@@ -178,6 +178,7 @@ artifact_hashes: []
 | BT-GAP-06 | PASSED | backtest-runtime analysis schema | BT-GAP-01, BT-GAP-04, G07 | none |
 | BT-GAP-07 | PASSED — immutable commit `029ac43f6d781567cd0742594ca82c181ead0a6d` | backtest-runtime structural read port | BT-GAP-01, WP-02E | none |
 | BT-GAP-08 | PASSED — accepted package revision `9e5937895d7559b8537a4595d73b6aabc94f6f13` | Backtest package closure | BT-GAP-02, BT-GAP-03, BT-GAP-05, BT-GAP-06 | none |
+| BT-GAP-09 | DRAFT / BLOCKED_OWNER_DECISION | installable development cash provider, preparation, and request registration | BT-GAP-02, BT-GAP-02B, BT-GAP-02C, BT-GAP-07, BT-GAP-08 | Approve `cash.precomputed_target.development.v1`, then freeze provider inputs and terminal semantics |
 
 ## 4. WP-00A Acceptance Card
 
@@ -12393,6 +12394,49 @@ remaining_blockers: []
 3. `uv sync --locked` built and installed all five workspace packages from the accepted tree and one root lock. Public imports for Domain, Market Data, Trading, Backtest, and Bundle Builder succeeded without `PYTHONPATH`, sibling checkout imports, editable external paths, or a leaf lock.
 4. The clean installed tree passes all 1715 repository tests and all 106 import-boundary files. The exact root lock and all package descriptor hashes are recorded above for Platform handoff.
 5. This receipt closes only Backtest package-revision acceptance. Platform `P00-SEAM-01` still owns the real Foundation structural-reader binding, unchanged BT-PORT consumer suite, integration provider tests, Platform root lock, and fan-in receipt; it must consume this SHA without copying Backtest evidence or semantics.
+
+## 114A. BT-GAP-09 Installable Development Cash Provider and Platform Preparation
+
+```yaml
+id: BT-GAP-09
+status: DRAFT / BLOCKED_OWNER_DECISION
+depends_on:
+  - BT-GAP-02
+  - BT-GAP-02B
+  - BT-GAP-02C
+  - BT-GAP-07
+  - BT-GAP-08
+owner_package: backtest-runtime
+plan: docs/implementation/plans/bt-gap-09.md
+proposed_product: cash.precomputed_target.development.v1
+proposed_public_interface:
+  - BacktestRequestRef
+  - CashDevelopmentProviderInputs
+  - PreparedBacktestExecution
+  - prepare_cash_development_backtest
+platform_fan_in:
+  - P00-BTA-01
+  - P00-SEAM-01
+remaining_blockers:
+  - Backtest-owner product approval
+  - exact provider input and terminal contract freeze
+  - RED tests and minimal implementation
+  - clean accepted Backtest SHA
+  - real Platform binding receipt
+```
+
+### BT-GAP-09 Readiness
+
+1. Independent source review found that the installed Backtest packages contain no production producer of a complete v2 execution plan. Existing producers of decision cycles, bar executions, financial state, dispatch plans, and snapshots are test-only. A wrapper around a prebuilt envelope would therefore leave `P00-BTA-01` blocked and is rejected as closure.
+2. Binance and China A-share production profiles freeze registrations/component identities but do not own complete executable cases; their executable financial dispatchers remain test-only. Promoting those fixtures or adding those providers first would violate the no-test-support and minimum-scope constraints.
+3. The proposed minimum honest product is `cash.precomputed_target.development.v1`: one account, one spot instrument, precomputed targets, next-bar full fill, production default cash dispatcher, mark-to-market closeout, and development grade only. It carries no provider-market, decision-grade, deployment, derivative, settlement, corporate-action, or live claim.
+4. After owner approval, the public seam will return an opaque persisted `BacktestRequestRef`, semantic-run identity, executable `BacktestExecutionRequest@2`, and configured existing `BacktestRuntime` without exposing resolved requests/cases, plans, registries, dispatchers, builders, callbacks, paths, or Platform types.
+5. Real terminal vectors must use semantic inputs: resolution failure for BLOCKED, order-capability rejection for FAILED, and additive `EngineCancellationRequest` propagation through the facade for CANCELLED. Provider/storage/malformed/tampered/binding failures remain pre-Attempt exceptions.
+6. All accepted v1 request, execution-input, profile, facade, publication, evidence, analysis, fixture bytes, hashes, IDs, and APIs remain immutable. No second registry, repository, catalog, verifier, adapter, Protocol, factory, cache, database, queue, or Platform import is introduced.
+7. First-principles ownership is frozen as Platform context/request construction, Backtest request identity/execution/evidence, concrete provider external-fact production, Foundation structural bytes, and Platform governance admission. No owner may reconstruct another owner's internal authority.
+8. The cash product is acceptable only as a permanent standalone reference/conformance provider for the development-grade P00 seam. It cannot qualify Binance, China A-share, G12L/G12M, decision-grade, deployment, or real-market claims. If P00 itself must prove a real market, the owner must reject this proposal and authorize the larger concrete provider/dispatcher scope.
+9. Acceptance is split into provider authority/producer, Backtest registration-preparation-executable facade, and Platform P00-BTA/P00-SEAM binding. No prebuilt-envelope wrapper may substitute for the provider producer, and no Backtest receipt may substitute for the Platform binding.
+10. Implementation must not start until the Backtest owner approves the new development product and the exact provider-input/terminal authority is frozen. P00 remains blocked until all three acceptance responsibilities pass from clean-installed public roots.
 
 ## 115. PASSED 记录格式
 
