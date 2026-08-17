@@ -41,6 +41,7 @@ _CHECKSUM_HASH = "sha256:54f9a3ec8d0ea0363fcd730c2eb43399fa425d2d1fd803a7261f761
 _SNAPSHOT_ID = "sha256:84e362ddf3a1a7567c436160bb4bb6102324cd20474a4c2c2b0a38b388142c65"
 _CONTENT_TREE_HASH = "sha256:3e51e591737b5928ce796dc555b266b7d49d48e88b1051fbb9c6aa0b957993d7"
 _PROVENANCE_HASH = "sha256:70908485e1e1baddf684248282fce1ba78dd5df4f066ccc3cf714ec892bac5d7"
+_REQUEST_HASH = "sha256:71444a4b733b10f5b94508c74c5a941afc3c4ea531f1971bb71fcc0acdc64f91"
 _CSV_NAME = "BTCUSDT-aggTrades-2020-01-01.csv"
 _ROW_COUNT = 71_359
 _FIRST_AGGREGATE_TRADE_ID = 18_374_167
@@ -93,6 +94,16 @@ class BinanceUsdmAggregateTradesArchiveRequest:
         }
 
 
+def _is_exact_request(value: object) -> bool:
+    try:
+        return (
+            type(value) is BinanceUsdmAggregateTradesArchiveRequest
+            and value.request_hash == _REQUEST_HASH
+        )
+    except (AttributeError, TypeError, ValueError):
+        return False
+
+
 class BinanceUsdmArchiveFailureCode(str, Enum):
     CONFIGURATION_INVALID = "configuration_invalid"
     PROVIDER_UNAVAILABLE = "provider_unavailable"
@@ -134,7 +145,7 @@ class BinanceUsdmArchiveCaptureResult:
 
     def __post_init__(self) -> None:
         if (
-            type(self.request) is not BinanceUsdmAggregateTradesArchiveRequest
+            not _is_exact_request(self.request)
             or type(self.snapshot) is not SourceSnapshot
             or type(self.archive_attempts) is not int
             or not 1 <= self.archive_attempts <= _MAX_ATTEMPTS
@@ -227,7 +238,7 @@ def capture_binance_usdm_aggregate_trades_archive(
     request: BinanceUsdmAggregateTradesArchiveRequest,
     fetch: FetchBytes,
 ) -> BinanceUsdmArchiveCaptureOutcome:
-    if type(request) is not BinanceUsdmAggregateTradesArchiveRequest or not callable(fetch):
+    if not _is_exact_request(request) or not callable(fetch):
         return BinanceUsdmArchiveCaptureOutcome(
             failure=BinanceUsdmArchiveFailure(
                 BinanceUsdmArchiveFailureCode.CONFIGURATION_INVALID
@@ -402,7 +413,7 @@ def normalize_binance_usdm_aggregate_trades_archive(
 ) -> BinanceUsdmAggregateTradesNormalizationOutcome:
     if (
         type(capture) is not BinanceUsdmArchiveCaptureResult
-        or type(capture.request) is not BinanceUsdmAggregateTradesArchiveRequest
+        or not _is_exact_request(capture.request)
         or verify_source_snapshot(capture.snapshot).snapshot is None
     ):
         return _content_failure(

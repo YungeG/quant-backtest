@@ -180,6 +180,17 @@ def test_normalization_emits_execution_reference_stream_and_publishes(tmp_path: 
 
 
 def test_normalizer_rejects_non_authoritative_capture_and_malformed_zip() -> None:
+    mutated = captured()
+    object.__setattr__(
+        mutated.request,
+        "instrument_id",
+        InstrumentId(VenueId("binance_usdm"), "eth-usdt-perpetual"),
+    )
+    rejected_request = normalize_binance_usdm_aggregate_trades_archive(mutated)
+    assert rejected_request.result is None
+    assert rejected_request.failure is not None
+    assert rejected_request.failure.code is BinanceUsdmArchiveFailureCode.CONFIGURATION_INVALID
+
     archive_url, checksum_url = request().urls
     replacement = bytearray(ARCHIVE)
     replacement[-10] ^= 1
