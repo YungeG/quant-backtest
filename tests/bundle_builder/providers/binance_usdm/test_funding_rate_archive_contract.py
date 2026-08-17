@@ -87,6 +87,64 @@ def test_request_capture_retry_precedence_and_atomicity() -> None:
         BinanceUsdmFundingRateArchiveRequest(request().instrument_id, 0)
 
 
+@pytest.mark.parametrize(
+    ("archive_responses", "checksum_responses", "expected"),
+    (
+        (((500, b""),) * 3, ((200, CHECKSUM),), BinanceUsdmArchiveFailureCode.PROVIDER_UNAVAILABLE),
+        (((401, b""),), ((429, b""),) * 3, BinanceUsdmArchiveFailureCode.AUTHENTICATION_REJECTED),
+        (((429, b""),) * 3, ((404, b""),), BinanceUsdmArchiveFailureCode.RATE_LIMIT_EXHAUSTED),
+        (((404, b""),), ((200, CHECKSUM),), BinanceUsdmArchiveFailureCode.DATA_GAP_DETECTED),
+    ),
+)
+def test_exhausted_and_mixed_provider_failures_are_atomic(
+    archive_responses: tuple[tuple[int, bytes], ...],
+    checksum_responses: tuple[tuple[int, bytes], ...],
+    expected: BinanceUsdmArchiveFailureCode,
+) -> None:
+    archive_url, checksum_url = request().urls
+    outcome = capture_binance_usdm_funding_rate_archive(
+        request(),
+        FakeFetch({archive_url: archive_responses, checksum_url: checksum_responses}),
+    )
+    assert outcome.result is None
+    assert outcome.failure is not None
+    assert outcome.failure.code is expected
+
+
+def test_restart_and_duplicate_response_preserve_content_identity() -> None:
+    archive_url, checksum_url = request().urls
+    interrupted = capture_binance_usdm_funding_rate_archive(
+        request(),
+        FakeFetch(
+            {
+                archive_url: ((500, b""),) * 3,
+                checksum_url: ((200, CHECKSUM),),
+            }
+        ),
+    )
+    assert interrupted.result is None
+
+    duplicate_fetch = FakeFetch(
+        {
+            archive_url: ((200, ARCHIVE), (200, ARCHIVE)),
+            checksum_url: ((200, CHECKSUM), (200, CHECKSUM)),
+        }
+    )
+    first = capture_binance_usdm_funding_rate_archive(request(), duplicate_fetch)
+    restarted = capture_binance_usdm_funding_rate_archive(request(), duplicate_fetch)
+    assert first.result is not None
+    assert restarted.result is not None
+    assert first.result.capture_hash == restarted.result.capture_hash
+    first_normalized = normalize_binance_usdm_funding_rate_archive(first.result)
+    restarted_normalized = normalize_binance_usdm_funding_rate_archive(restarted.result)
+    assert first_normalized.result is not None
+    assert restarted_normalized.result is not None
+    assert (
+        first_normalized.result.normalization_hash
+        == restarted_normalized.result.normalization_hash
+    )
+
+
 def test_normalization_preserves_jitter_raw_rate_and_exact_decimal(tmp_path: Path) -> None:
     capture = captured()
     assert capture.capture_hash == EXPECTED["provider_result"]["capture_hash"]
