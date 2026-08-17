@@ -60,7 +60,20 @@ def test_trade_calendar_acquisition_is_exact_atomic_and_redacted(tmp_path: Path)
     assert post.calls[0][1]["token"] == secret
 
 
-def test_trade_calendar_rejects_wrong_scope_without_output(tmp_path: Path) -> None:
+@pytest.mark.parametrize(
+    "item",
+    (
+        ["SSE", "20240102", 1, "20231229"],
+        ["SZSE", 20240102, 1, "20231229"],
+        ["SZSE", "20240102", True, "20231229"],
+        ["SZSE", "20240102", 1, "20241399"],
+        ["SZSE", "20240102", 1, "20240102"],
+        ["SZSE", "20240102", 1, "20240103"],
+    ),
+)
+def test_trade_calendar_rejects_wrong_scope_without_output(
+    tmp_path: Path, item: list[object]
+) -> None:
     output = tmp_path / "wrong"
     with pytest.raises(AcquisitionError, match="exact-cover"):
         acquire_trade_calendar(
@@ -68,6 +81,6 @@ def test_trade_calendar_rejects_wrong_scope_without_output(tmp_path: Path) -> No
             token="secret",
             output_dir=output,
             acquired_at_epoch_nanoseconds=1_800_000_000_000_000_000,
-            post=FakePost(response(["SSE", "20240102", 1, "20231229"])),
+            post=FakePost(response(item)),
         )
     assert not output.exists()

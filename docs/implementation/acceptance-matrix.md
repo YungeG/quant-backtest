@@ -10183,7 +10183,7 @@ remaining_blockers:
   - accepted-commit
 passed_commit: null
 artifact_hashes:
-  module_sha256: 9b63d052245263e221123793f035e7223ebdf472a39cd262e3c710c032474d4d
+  module_sha256: a2ef06aa9738dd3bfda4008938c033bb8483750115b31d8ef23107237d68abd1
   response_sha256: aead455c7bb4ab5ff3966fb06c8c5b640b537767f38ebf99249fad05a8211bf9
   receipt_sha256: 42a6bec925179f1262d8c0ca8e3e43b411eb6627da394acba7f326e0e7a8d4c1
   event_time_fixture_sha256: 5df297b69479629aa4baf19ea0199fa2f22d2ab42a0ccbb406315052a80a0425

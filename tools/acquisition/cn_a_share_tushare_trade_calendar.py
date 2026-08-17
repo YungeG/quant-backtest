@@ -85,13 +85,24 @@ def acquire_trade_calendar(
         expected_fields=_FIELDS,
         forbidden_text=token,
     )
+    if len(rows) != 1:
+        raise AcquisitionError("provider trade_cal response does not exact-cover request")
+    exchange, calendar_text, is_open, pretrade_text = rows[0]
+    try:
+        calendar_date = datetime.strptime(calendar_text, "%Y%m%d").date()
+        pretrade_date = datetime.strptime(pretrade_text, "%Y%m%d").date()
+    except (TypeError, ValueError) as error:
+        raise AcquisitionError(
+            "provider trade_cal response does not exact-cover request"
+        ) from error
     if (
-        len(rows) != 1
-        or rows[0][0] != request.exchange
-        or str(rows[0][1]) != request.trade_date
-        or rows[0][2] not in (0, 1)
-        or type(rows[0][3]) is not str
-        or _DATE.fullmatch(rows[0][3]) is None
+        exchange != request.exchange
+        or type(calendar_text) is not str
+        or calendar_text != request.trade_date
+        or type(is_open) is not int
+        or is_open not in (0, 1)
+        or type(pretrade_text) is not str
+        or pretrade_date >= calendar_date
     ):
         raise AcquisitionError("provider trade_cal response does not exact-cover request")
     response_hash = sha256(response_bytes)
@@ -128,8 +139,8 @@ def acquire_trade_calendar(
             "attempts": attempts,
         },
         "acquired_at_epoch_nanoseconds": acquired_at_epoch_nanoseconds,
-        "is_open": bool(rows[0][2]),
-        "pretrade_date": rows[0][3],
+        "is_open": bool(is_open),
+        "pretrade_date": pretrade_text,
         "response_sha256": response_hash,
         "snapshot": snapshot.to_canonical_dict(),
         "decision_grade_eligible": False,
