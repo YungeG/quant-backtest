@@ -22,7 +22,7 @@ real old artifact          → G12J
 | --- | --- | --- | --- |
 | [G12A](g12a.md) | Deterministic SourceSnapshot | G00 | `market-bundle-builder/source_snapshots.py` |
 | [G12-ACQ-TOOLS-V1](../../provider-acquisition-tools.md) | Backtest-owned Binance/Tushare source acquisition — `PASSED`; immutable commit `6f0bd99a93a349924996eb26708fbb0ac6fecf17` | G12A | `tools/acquisition/` |
-| G12-ACQ-TUSHARE-CALENDAR-V1 | Additive exact `trade_cal` acquisition — `DRAFT / READY FOR ACCEPTANCE` | G12A, acquisition tools | `tools/acquisition/cn_a_share_tushare_trade_calendar.py` |
+| G12-ACQ-TUSHARE-CALENDAR-V1 | Additive exact `trade_cal` acquisition — `PASSED`; immutable commit `10638db8225f68256c027b1dd1373bacff0d112c` | G12A, acquisition tools | `tools/acquisition/cn_a_share_tushare_trade_calendar.py` |
 | [G12B](g12b.md) | Canonical normalization | G12A, G02, first source contract | builder normalizers |
 | [G12C](g12c.md) | Bundle validation/manifest | G12B | `market-bundle-builder/bundle_validation.py` |
 | [G12D](g12d.md) | Atomic publish/repository | G12C | `market-bundle-builder/local_market_bundle_repository.py` |

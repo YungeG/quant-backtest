@@ -149,7 +149,7 @@ artifact_hashes: []
 | G11J | PASSED | parity tooling | G11I, G07 | Dual-entry parity |
 | G12A | PASSED | market-bundle-builder | G00 | SourceSnapshot contract |
 | G12-ACQ-TOOLS-V1 | PASSED — immutable commit `6f0bd99a93a349924996eb26708fbb0ac6fecf17` | Backtest tools/acquisition | G12A | none |
-| G12-ACQ-TUSHARE-CALENDAR-V1 | DRAFT / READY FOR ACCEPTANCE | Backtest tools/acquisition | G12A, G12-ACQ-TOOLS-V1 | Full validation, review, accepted commit |
+| G12-ACQ-TUSHARE-CALENDAR-V1 | PASSED — immutable commit `10638db8225f68256c027b1dd1373bacff0d112c` | Backtest tools/acquisition | G12A, G12-ACQ-TOOLS-V1 | none |
 | G12B | PASSED | market-bundle-builder | G12A, G02 | Normalization fixtures |
 | G12C | PASSED | market-bundle-builder | G12B | Manifest/validation fixtures |
 | G12D | PASSED | market-bundle-builder + market-data-contracts | G12C | none |
@@ -10164,11 +10164,11 @@ surface change, no network tests, and no tracked credential fallback.
 
 Implementation note: `docs/implementation/provider-acquisition-tools.md`.
 
-## 93B. Tushare Trade-Calendar Acquisition v1 (Gate remains DRAFT)
+## 93B. Tushare Trade-Calendar Acquisition v1 (PASSED)
 
 ```yaml
 id: G12-ACQ-TUSHARE-CALENDAR-V1
-status: DRAFT / READY FOR ACCEPTANCE
+status: PASSED
 owner: Backtest tools/acquisition
 interfaces:
   - tools.acquisition.cn_a_share_tushare_trade_calendar.TushareTradeCalendarRequest
@@ -10177,11 +10177,15 @@ credential_contract:
   tushare: environment-only TUSHARE_TOKEN
 test_commands:
   focused: uv run --locked pytest -q tests/tools/acquisition/test_cn_a_share_tushare_trade_calendar.py tests/bundle_builder/providers/tushare/test_cn_a_share_daily_event_time.py
-remaining_blockers:
-  - full-repository-validation
-  - independent-review
-  - accepted-commit
-passed_commit: null
+remaining_blockers: []
+validation:
+  focused_trade_calendar_and_event_time: 8 passed
+  full_repository: 1774 passed
+  import_boundaries: 109 files passed
+  lock_diff_lsp_lens_secret_scan: clean
+  real_tushare_network_smoke: passed
+  independent_review: NONE
+passed_commit: 10638db8225f68256c027b1dd1373bacff0d112c
 artifact_hashes:
   module_sha256: a2ef06aa9738dd3bfda4008938c033bb8483750115b31d8ef23107237d68abd1
   response_sha256: aead455c7bb4ab5ff3966fb06c8c5b640b537767f38ebf99249fad05a8211bf9

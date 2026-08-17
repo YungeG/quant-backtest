@@ -3,7 +3,8 @@
 ## Decision
 
 The `000001.SZ / 2024-01-02` Tushare daily row now has a frozen Builder-owned
-session bucket declaration. This resolves the date/session-to-economic-time
+session bucket declaration accepted with trade-calendar acquisition commit
+`10638db8225f68256c027b1dd1373bacff0d112c`. This resolves the date/session-to-economic-time
 blocker for that exact slice without adding a Builder production import of the
 Trading Kernel.
 
