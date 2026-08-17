@@ -239,6 +239,11 @@ class SourceSnapshot:
         if type(self.provenance) is not SourceSnapshotProvenance:
             raise TypeError("provenance must be SourceSnapshotProvenance")
         _hash("provenance_hash", self.provenance_hash)
+        if (
+            type(self.decision_grade_eligible) is not bool
+            or type(self.deployment_authorized) is not bool
+        ):
+            raise TypeError("G12A qualification flags must be exact bools")
         if self.decision_grade_eligible or self.deployment_authorized:
             raise ValueError("G12A qualification flags must remain false")
 

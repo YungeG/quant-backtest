@@ -154,6 +154,17 @@ def test_member_and_provenance_inputs_fail_closed() -> None:
         replace(_provenance(), vendor_key="https://vendor.example")
 
 
+@pytest.mark.parametrize(
+    ("field", "value"),
+    (("decision_grade_eligible", 0), ("deployment_authorized", None)),
+)
+def test_qualification_flags_require_exact_false(field: str, value: object) -> None:
+    snapshot = freeze_source_snapshot(members=_members(), provenance=_provenance()).snapshot
+    assert snapshot is not None
+    with pytest.raises(TypeError, match="qualification flags must be exact bools"):
+        replace(snapshot, **{field: value})
+
+
 def test_member_access_is_verified_and_non_revealing() -> None:
     snapshot = freeze_source_snapshot(members=_members(), provenance=_provenance()).snapshot
     assert snapshot is not None

@@ -187,6 +187,21 @@ def test_tushare_daily_result_projects_one_purpose_preserving_event_and_publishe
     with pytest.raises(ValueError, match="authority is invalid"):
         project(forged_result)
 
+    forged_snapshot = object.__new__(type(result.snapshot))
+    for field in fields(result.snapshot):
+        object.__setattr__(
+            forged_snapshot,
+            field.name,
+            getattr(result.snapshot, field.name),
+        )
+    object.__setattr__(forged_snapshot, "decision_grade_eligible", 0)
+    forged_result = object.__new__(type(result))
+    for field in fields(result):
+        object.__setattr__(forged_result, field.name, getattr(result, field.name))
+    object.__setattr__(forged_result, "snapshot", forged_snapshot)
+    with pytest.raises(ValueError, match="authority is invalid"):
+        project(forged_result)
+
     validation = validate_market_bundle_v1(
         bundle_key="tushare-cn-a-share-daily-000001-20240102",
         schema_version=1,

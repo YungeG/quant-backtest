@@ -33,9 +33,10 @@ def project_tushare_cn_a_share_daily_market_event_v1(
         raise ValueError("normalization result authority is invalid") from error
     if rebuilt != result:
         raise ValueError("normalization result authority reconstruction mismatch")
+    normalization_hash = rebuilt.normalization_hash
 
     return MarketEvent(
-        event_id=f"tushare-cn-a-share-daily-v1:{rebuilt.normalization_hash}",
+        event_id=f"tushare-cn-a-share-daily-v1:{normalization_hash}",
         stream_key=_STREAM_KEY,
         event_type=_EVENT_TYPE,
         capability=_CAPABILITY,
@@ -49,7 +50,7 @@ def project_tushare_cn_a_share_daily_market_event_v1(
         source_key=rebuilt.trace.source_key,
         source_hash=rebuilt.trace.member_content_hash,
         payload={
-            "normalization_hash": rebuilt.normalization_hash,
+            "normalization_hash": normalization_hash,
             "raw_bar": json.loads(canonical_bytes(rebuilt.raw_bar)),
             "source_trace": json.loads(canonical_bytes(rebuilt.trace)),
             "execution_reference": json.loads(
