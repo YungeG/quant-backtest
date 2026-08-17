@@ -178,7 +178,7 @@ artifact_hashes: []
 | BT-GAP-06 | PASSED | backtest-runtime analysis schema | BT-GAP-01, BT-GAP-04, G07 | none |
 | BT-GAP-07 | PASSED — immutable commit `029ac43f6d781567cd0742594ca82c181ead0a6d` | backtest-runtime structural read port | BT-GAP-01, WP-02E | none |
 | BT-GAP-08 | PASSED — accepted package revision `9e5937895d7559b8537a4595d73b6aabc94f6f13` | Backtest package closure | BT-GAP-02, BT-GAP-03, BT-GAP-05, BT-GAP-06 | none |
-| BT-GAP-09 | DRAFT / BLOCKED_PLATFORM_TERMINAL_DECISION | installable development cash provider, preparation, and request registration | BT-GAP-02, BT-GAP-02B, BT-GAP-02C, BT-GAP-07, BT-GAP-08 | Cash contract frozen; Platform must choose honest FAILED acceptance rule |
+| BT-GAP-09 | READY_FOR_RED — owner-approved provider and terminal scope | installable development cash provider, preparation, and request registration | BT-GAP-02, BT-GAP-02B, BT-GAP-02C, BT-GAP-07, BT-GAP-08 | Frozen request intent, nine-field provider input, one-fill ceiling, and P00 terminal split |
 
 ## 4. WP-00A Acceptance Card
 
@@ -12399,7 +12399,7 @@ remaining_blockers: []
 
 ```yaml
 id: BT-GAP-09
-status: DRAFT / BLOCKED_PLATFORM_TERMINAL_DECISION
+status: READY_FOR_RED
 depends_on:
   - BT-GAP-02
   - BT-GAP-02B
@@ -12419,7 +12419,6 @@ platform_fan_in:
   - P00-BTA-01
   - P00-SEAM-01
 remaining_blockers:
-  - Platform-owned FAILED acceptance decision
   - RED tests and minimal implementation
   - clean accepted Backtest SHA
   - real Platform binding receipt
@@ -12439,7 +12438,7 @@ remaining_blockers:
 10. The Backtest owner approved the product. The provider input contains exactly nine external authorities: build manifest, one-instrument catalog, strategy ID, `StrategySleeveId`, initial cash, quantity lattice, decision `MarkObservation`, final `MarkObservation`, and order capabilities. A separate six-field request intent carries only experiment context, timeline window, account ID, reporting currency, and seed plus its fixed schema version. Both observations are exact `VALUATION` facts at the target/end instants; Backtest owns zero-age/no-forward-fill policies and all request commitments, resolved marks, registry, policy, timeline, order, accounting, snapshot, identity, semantic, and runtime values.
 11. The semantic ceiling is one target, one order, at most one full fill, fixed `targets`/`bars.open` streams, zero slippage/fees, no later cash flow, no settlement/financing/margin/liquidation/corporate action, and development grade only. Unsupported economics fail before Attempt creation.
 12. The P00 adverse vector is input-derived: `100000` initial equity, `0.5` target, `100` decision/fill price, and `80` final mark yield `-0.1` simple return and one Fill. No result literal or Platform fixture selector is embedded in production.
-13. BT-GAP-09 remains blocked on the Platform-owned FAILED acceptance decision. The recommended first-principles rule is that the real cash provider proves COMPLETED/BLOCKED/CANCELLED while immutable BT-PORT and Backtest repository evidence continue to prove FAILED verification; adding a failure switch or inconsistent plan is rejected as a test hook. After that decision, RED implementation may begin.
+13. Platform approved the first-principles terminal split: the real cash provider proves COMPLETED/BLOCKED/CANCELLED while immutable BT-PORT and accepted Backtest repository evidence continue to prove FAILED verification. Failure injection and intentionally inconsistent plans remain forbidden. BT-GAP-09 is READY_FOR_RED.
 
 ## 115. PASSED 记录格式
 

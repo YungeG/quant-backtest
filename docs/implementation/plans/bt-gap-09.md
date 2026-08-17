@@ -21,12 +21,10 @@ fan_in:
 
 ## Status
 
-`BLOCKED_PLATFORM_TERMINAL_DECISION`. The Backtest owner approved
+`READY_FOR_RED`. The Backtest owner approved
 `cash.precomputed_target.development.v1` as a permanent installable,
 development-only reference provider. Request-intent ownership, provider inputs,
-semantic ceiling, mark policy, and independence rules are frozen. RED implementation
-waits for an honest P00 `FAILED` acceptance decision: the minimal cash product has no
-legitimate external fact that should manufacture an internal-contract failure.
+semantic ceiling, mark policy, terminal scope, and independence rules are frozen.
 
 ## First-principles authority chain
 
@@ -263,20 +261,13 @@ The implementation must use legitimate semantics rather than `fixture_case` flag
 - provider, storage, malformed input, tamper, and binding failures remain exceptions
   before Attempt creation and outside the terminal union.
 
-`FAILED` remains deliberately unresolved. The production runner maps `FAILED` to
-allocation/risk/rebalance/plan/accounting/internal-contract failure classes. A
-well-formed minimal cash provider should not expose an external switch that fabricates
-one of those defects. An ordinary exceeded risk limit is an economically rejected,
-zeroed target, not `PORTFOLIO_RISK` failure. Before RED implementation, Platform must
-choose one honest acceptance rule:
-
-1. real cash provider binding proves COMPLETED/BLOCKED/CANCELLED while immutable
-   BT-PORT and Backtest repository evidence continue to prove FAILED verification; or
-2. authorize a separate concrete runtime-strategy/failure-conformance product with
-   legitimate FAILED semantics and its own gate.
-
-The recommended first-principles choice is option 1. Adding a failure-injection field
-or intentionally inconsistent plan would turn a product interface into a test hook.
+`FAILED` is outside the real cash-provider generation scope. The production runner
+maps it to allocation/risk/rebalance/plan/accounting/internal-contract failure classes;
+a well-formed minimal provider must not expose a switch that fabricates one of those
+defects. Platform approved the first-principles acceptance rule: the real provider
+binding proves COMPLETED/BLOCKED/CANCELLED, while immutable BT-PORT and accepted
+Backtest repository evidence continue to prove FAILED verification. No failure
+injection field, inconsistent plan, or failure-conformance product is added.
 
 ## Failure precedence
 
@@ -326,7 +317,7 @@ fixture hashes must be captured by the RED suite before production edits.
 5. Same request/context replays to identical request, semantic-run, retry, cache,
    publication, and analysis identities.
 6. Legitimate BLOCKED and CANCELLED paths publish durable terminal evidence; FAILED
-   follows the separately approved Platform acceptance rule.
+   remains covered by immutable BT-PORT and accepted Backtest repository evidence.
 7. Preparation faults create no Attempt or terminal evidence.
 8. Architecture guards reject Platform/Foundation implementation imports,
    `tests/support`, adapters, Protocols, factories, callbacks, second catalogs,
