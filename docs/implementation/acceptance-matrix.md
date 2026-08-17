@@ -11538,7 +11538,7 @@ artifact_hashes:
 ```
 
 The exact provider responses contain no token and reproduce one candidate G12A
-snapshot. Daily OHLC/change and converted volume/amount plus listing metadata
+snapshot. Daily OHLC/percentage change and converted volume/amount plus listing metadata
 match the stable DuckDB backup. No event timestamp, historical availability,
 provider revision terminality, listing lifecycle, normalizer, G12C/D, G12I/K/M,
 or deployment claim follows.
