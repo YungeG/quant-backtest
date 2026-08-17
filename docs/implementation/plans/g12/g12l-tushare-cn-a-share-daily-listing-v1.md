@@ -64,15 +64,21 @@ provider percentage change, lot-to-share volume, and thousand-CNY-to-CNY amount.
 Mapping hash:
 `sha256:8b59762e8820cda614687677733e105ddc62ce4ca84ef6409f1131a7af60c0ad`.
 
+## Frozen G12B purpose contract
+
+`docs/implementation/plans/g12/g12b-tushare-cn-a-share-daily-v1.md` freezes a
+purpose-free `TushareCnAShareDailyRawBar`, exact source trace, and separate
+execution-reference/valuation projection values. It authorizes RED normalizer work
+only; no G12C/D MarketEvent publication is claimed.
+
 ## Remaining blockers
 
-1. Freeze a G12B purpose contract: separate execution-reference and valuation
-   outputs, or one raw provider Bar followed by an explicit purpose projection.
+1. Implement and accept the frozen G12B raw-Bar normalizer and projections.
 2. Decide whether current `stock_basic` may only provide instrument metadata or
    can support any historical listing claim; default is metadata only.
 3. Obtain provider revision/correction terminal evidence or retain the finite
    causal limit explicitly.
-4. Freeze normalizer failure precedence before implementation.
+4. Prove the frozen normalizer failure precedence in RED and final acceptance.
 5. Keep corporate actions, G12I, G12K final reports, G12M, decision-grade, and
    deployment separate.
 

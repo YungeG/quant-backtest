@@ -24,6 +24,7 @@ real old artifact          → G12J
 | [G12-ACQ-TOOLS-V1](../../provider-acquisition-tools.md) | Backtest-owned Binance/Tushare source acquisition — `PASSED`; immutable commit `6f0bd99a93a349924996eb26708fbb0ac6fecf17` | G12A | `tools/acquisition/` |
 | G12-ACQ-TUSHARE-CALENDAR-V1 | Additive exact `trade_cal` acquisition — `PASSED`; immutable commit `10638db8225f68256c027b1dd1373bacff0d112c` | G12A, acquisition tools | `tools/acquisition/cn_a_share_tushare_trade_calendar.py` |
 | [G12B](g12b.md) | Canonical normalization | G12A, G02, first source contract | builder normalizers |
+| [G12B-TUSHARE-CN-A-SHARE-DAILY-V1](g12b-tushare-cn-a-share-daily-v1.md) | Purpose-free raw daily Bar plus explicit execution-reference/valuation projections — `READY_FOR_RED` | G12A, G12B, G12G + frozen Tushare evidence | internal Builder Tushare normalizer |
 | [G12C](g12c.md) | Bundle validation/manifest | G12B | `market-bundle-builder/bundle_validation.py` |
 | [G12D](g12d.md) | Atomic publish/repository | G12C | `market-bundle-builder/local_market_bundle_repository.py` |
 | [G12E](g12e.md) | Verified local persisted reader | G12D, WP-06A | `market-data-contracts/local_market_bundle_reader.py` |
@@ -38,7 +39,7 @@ real old artifact          → G12J
 | [G12L-BINANCE-USDM-AGGTRADES-V1](g12l-binance-usdm-aggtrades-v1.md) | Second concrete slice — `PASSED`; immutable commit `981429b4f0ff5fa219ccc8bc991458072b025bf8` | G10D, G12A-D + Binance public-data evidence | Builder Binance USD-M source slice |
 | [G12L-BINANCE-USDM-FUNDING-RATE-V1](g12l-binance-usdm-funding-rate-v1.md) | Third concrete slice — `PASSED`; immutable commit `ebd91f746c4a065ca06dba89d847e7d41ab06331` | G10E, G12A-D + Binance public-data evidence | Builder Binance USD-M source slice |
 | [G12L-BINANCE-USDM-FUNDING-HISTORY-V1](g12l-binance-usdm-funding-history-v1.md) | Exact rate+mark REST evidence — `DRAFT / BLOCKED`; no immutable provider revision closure | G10E, G12A + Binance API evidence | Builder Binance USD-M source slice |
-| [G12L-TUSHARE-CN-A-SHARE-DAILY-LISTING-V1](g12l-tushare-cn-a-share-daily-listing-v1.md) | First real A-share capture — `DRAFT / BLOCKED`; source/G12A/parity, event-time bucket, and numeric units frozen | G12A, acquisition tools + Tushare evidence | Builder China A-share source slice |
+| [G12L-TUSHARE-CN-A-SHARE-DAILY-LISTING-V1](g12l-tushare-cn-a-share-daily-listing-v1.md) | First real A-share capture — `DRAFT / BLOCKED`; source/G12A/parity, event-time, numeric units, and G12B purpose contract frozen | G12A, acquisition tools + Tushare evidence | Builder China A-share source slice |
 | G12M-* | Market qualification | market-specific G12L, G07–G10 | runtime qualification |
 
 ## Parallelism

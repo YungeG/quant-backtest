@@ -151,6 +151,7 @@ artifact_hashes: []
 | G12-ACQ-TOOLS-V1 | PASSED — immutable commit `6f0bd99a93a349924996eb26708fbb0ac6fecf17` | Backtest tools/acquisition | G12A | none |
 | G12-ACQ-TUSHARE-CALENDAR-V1 | PASSED — immutable commit `10638db8225f68256c027b1dd1373bacff0d112c` | Backtest tools/acquisition | G12A, G12-ACQ-TOOLS-V1 | none |
 | G12B | PASSED | market-bundle-builder | G12A, G02 | Normalization fixtures |
+| G12B-TUSHARE-CN-A-SHARE-DAILY-V1 | READY_FOR_RED | market-bundle-builder internal Tushare normalization | G12A, G12B, G12G, frozen Tushare event-time/numeric evidence | RED tests and minimal normalizer pending |
 | G12C | PASSED | market-bundle-builder | G12B | Manifest/validation fixtures |
 | G12D | PASSED | market-bundle-builder + market-data-contracts | G12C | none |
 | G12E | PASSED | market-data-contracts | G12D, WP-06A | none |
@@ -165,7 +166,7 @@ artifact_hashes: []
 | G12L-BINANCE-USDM-AGGTRADES-V1 | PASSED — immutable commit `981429b4f0ff5fa219ccc8bc991458072b025bf8` | market-bundle-builder Binance USD-M source slice | G10D, G12A–G12D | none |
 | G12L-BINANCE-USDM-FUNDING-RATE-V1 | PASSED — immutable commit `ebd91f746c4a065ca06dba89d847e7d41ab06331` | market-bundle-builder Binance USD-M source slice | G10E, G12A–G12D | none |
 | G12L-BINANCE-USDM-FUNDING-HISTORY-V1 | DRAFT / BLOCKED | market-bundle-builder Binance USD-M source slice | G10E, G12A | Immutable provider revision/correction closure |
-| G12L-TUSHARE-CN-A-SHARE-DAILY-LISTING-V1 | DRAFT / BLOCKED | market-bundle-builder China A-share source slice | G12A, G12-ACQ-TOOLS-V1 | Session-time, decimal/unit mapping, provider revision and listing-history authority |
+| G12L-TUSHARE-CN-A-SHARE-DAILY-LISTING-V1 | DRAFT / BLOCKED | market-bundle-builder China A-share source slice | G12A, G12-ACQ-TOOLS-V1, G12B-TUSHARE-CN-A-SHARE-DAILY-V1 | Normalizer acceptance, provider revision, listing history, and corporate-action authority |
 | G12M-* | DRAFT | backtest-runtime qualification | market-specific G12L, G07–G10 | Per-market qualification matrix |
 | BT-GAP-01 | PASSED — immutable commit `f2440f9658fbe2ae1cf0016a78c44e4230995394` | trading-domain | WP-02E, Platform BT-PORT-01 | none |
 | BT-GAP-02 | PASSED — immutable commit `39863c58ace1d996f3e814835836ec46e2aa3794` | backtest-runtime facade | BT-GAP-01, G07, BT-GAP-02A, BT-GAP-04 | none |
@@ -11534,7 +11535,50 @@ mark, and repeated fetches had identical bytes. It remains BLOCKED because the
 current REST endpoint provides no immutable revision/correction terminal set or
 provider checksum. No normalizer, G12C/D, G12I, G12M, or deployment claim follows.
 
-## 104E. G12L Tushare China A-share Daily and Listing v1 (Gate remains BLOCKED)
+## 104E. G12B Tushare China A-share Daily Raw Bar and Purpose Projection v1
+
+```yaml
+id: G12B-TUSHARE-CN-A-SHARE-DAILY-V1
+status: READY_FOR_RED
+depends_on: [G12A, G12B, G12G]
+owner_package: market-bundle-builder internal Tushare normalization
+plan: docs/implementation/plans/g12/g12b-tushare-cn-a-share-daily-v1.md
+public_root_exports: []
+produces:
+  - purpose-free TushareCnAShareDailyRawBar
+  - exact SourceSnapshot member trace
+  - execution-reference projection
+  - valuation projection
+frozen_input:
+  snapshot_id: sha256:6a360b17c1a5dd7686b2496f3b04006f902ef5705a1427dc2a7dbdaeadc2458a
+  provenance_hash: sha256:8745af52a950d0ba35eee381b32b6adad2d2ee144325de34ad3597389f2e73fb
+  member_key: response/daily.json
+  member_content_hash: sha256:c2950a35c093b983e538f97830b7b3fcb0bba1a7dac98a17bd20f6db9296f846
+  instrument_id: xshe:000001
+  provider_trade_date: 20240102
+  bucket_hash: sha256:b58489aeffd996cfa583caac981bfeb39edf0b93280f787d63b0f6b0855dc7b7
+qualification:
+  revision_closure_complete: false
+  historical_listing_status_qualified: false
+  corporate_actions_qualified: false
+  decision_grade_eligible: false
+  deployment_authorized: false
+remaining_blockers:
+  - RED tests
+  - minimal internal normalizer
+  - focused/full acceptance
+```
+
+### G12B Tushare Daily Readiness
+
+1. The request binds both G12A `snapshot_id` and `provenance_hash`; identical member bytes with changed acquisition time fail before parsing. The raw provider Bar has no `price_purpose`; tagged JSON numeric lexemes and typed price/rate/quantity/amount mappings remain jointly authoritative.
+2. Execution-reference and valuation are separate immutable projections linked to the same raw-Bar hash. Execution-reference preserves OHLC/volume/amount; valuation exposes only close at bucket end-exclusive. Neither projection grants settlement, adjusted-close, margin, liquidation, funding, listing, or corporate-action semantics.
+3. `available_time` is derived only from the selected G12A member acquisition time and must be no earlier than bucket end-exclusive. The later 2026 acquisition cannot be rewritten as 2024 same-day availability.
+4. Source trace records one row and exact snapshot/provenance/member identities while fixing `revision_closure_complete=false`. Current `stock_basic` is outside the normalizer and remains metadata-only.
+5. Exact Tushare success-wrapper/data keys and values, request/raw-Bar/trace/execution-reference/valuation/result canonical bodies, and hashes are frozen. Price invariants require strictly positive OHLC/pre-close. Failure precedence is invalid request, snapshot invalid, snapshot binding, member missing/binding, JSON, schema, record, decimal mapping, Bar invariant, bucket binding, and availability. Any failure returns no partial result.
+6. Implementation remains off the Builder package root, imports no Runtime/Trading Kernel, and introduces no generic provider Protocol/factory/registry/parser framework.
+
+## 104F. G12L Tushare China A-share Daily and Listing v1 (Gate remains BLOCKED)
 
 ```yaml
 id: G12L-TUSHARE-CN-A-SHARE-DAILY-LISTING-V1
@@ -11559,10 +11603,10 @@ g12a_evidence:
   provenance_hash: sha256:8745af52a950d0ba35eee381b32b6adad2d2ee144325de34ad3597389f2e73fb
 allowed_grade: development
 remaining_blockers:
-  - purpose-separated-g12b-daily-bar-contract
+  - g12b-tushare-normalizer-acceptance
   - provider-revision-correction-terminal-closure
   - historical-listing-status-authority
-  - normalized-g12b-schema-and-failure-contract
+  - corporate-action-lifecycle-authority
 passed_commit: null
 artifact_hashes:
   daily_response_sha256: c2950a35c093b983e538f97830b7b3fcb0bba1a7dac98a17bd20f6db9296f846
@@ -11578,9 +11622,10 @@ The exact provider responses contain no token and reproduce one candidate G12A
 snapshot. Daily OHLC/percentage change and converted volume/amount plus listing metadata
 match the stable DuckDB backup. An exact SZSE `trade_cal` row plus G08H phase parity
 now freezes the one-day G12G bucket. Exact source-text price/change/percentage,
-lot-to-share, and thousand-CNY-to-CNY mappings are frozen; purpose selection,
-historical availability, provider revisions, listing lifecycle, normalizer,
-G12C/D, G12I/K/M, and deployment remain blocked.
+lot-to-share, and thousand-CNY-to-CNY mappings are frozen. The G12B purpose-free
+raw-Bar/projection contract is READY_FOR_RED; normalizer acceptance, provider
+revisions, listing lifecycle, corporate actions, G12C/D, G12I/K/M, and deployment
+remain blocked.
 
 ## 105. BT-GAP-01 Domain ArtifactRef
 
