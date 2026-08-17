@@ -2,7 +2,7 @@
 
 ## Status
 
-`DRAFT / READY FOR ACCEPTANCE`.
+`PASSED` at immutable commit `6f0bd99a93a349924996eb26708fbb0ac6fecf17`.
 
 Backtest now owns reproducible source acquisition programs in
 `tools/acquisition/`. They are side-effect adapters outside runtime packages;
@@ -65,6 +65,18 @@ A concurrently created output is preserved and never replaced.
 `declared_sha256` is populated only for archive bytes whose hash is declared by
 Binance's adjacent checksum. Checksum files and REST/Tushare responses retain only
 their independently computed G12A content hash.
+
+## Acceptance closure
+
+- focused acquisition and architecture: 20 passed;
+- full repository: 1765 passed;
+- import boundaries: 109 files passed;
+- lock, diff, LSP, lens, and secret scan: clean;
+- independent review: `NONE`;
+- real Binance smoke reproduced the accepted BTCUSDT 2020-01-01 aggregate-trades
+  ZIP/checksum hashes and the BTCUSDT 2024-01-01 funding-history response hash;
+- an invalid-token Tushare HTTPS smoke failed atomically without persisting or
+  printing the credential.
 
 ## Boundaries
 

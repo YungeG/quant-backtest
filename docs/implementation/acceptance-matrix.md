@@ -148,7 +148,7 @@ artifact_hashes: []
 | G11I | PASSED | backtest-runtime strategy | G11A–G11H, G04 | Invocation/batch fixtures |
 | G11J | PASSED | parity tooling | G11I, G07 | Dual-entry parity |
 | G12A | PASSED | market-bundle-builder | G00 | SourceSnapshot contract |
-| G12-ACQ-TOOLS-V1 | DRAFT / READY FOR ACCEPTANCE | Backtest tools/acquisition | G12A | Full validation, independent review, accepted commit |
+| G12-ACQ-TOOLS-V1 | PASSED — immutable commit `6f0bd99a93a349924996eb26708fbb0ac6fecf17` | Backtest tools/acquisition | G12A | none |
 | G12B | PASSED | market-bundle-builder | G12A, G02 | Normalization fixtures |
 | G12C | PASSED | market-bundle-builder | G12B | Manifest/validation fixtures |
 | G12D | PASSED | market-bundle-builder + market-data-contracts | G12C | none |
@@ -10127,11 +10127,11 @@ uv.lock                                                              sha256:afa5
 
 Implementation commit：`36d8146864ad3fead31593878ad247fbd5f5f463`。
 
-## 93A. Provider Acquisition Tools v1 (Gate remains DRAFT)
+## 93A. Provider Acquisition Tools v1 (PASSED)
 
 ```yaml
 id: G12-ACQ-TOOLS-V1
-status: DRAFT / READY FOR ACCEPTANCE
+status: PASSED
 owner: Backtest tools/acquisition
 depends_on: [G12A]
 interfaces:
@@ -10143,11 +10143,16 @@ credential_contract:
   tushare: environment-only TUSHARE_TOKEN
 test_commands:
   focused: uv run --locked pytest -q tests/tools/acquisition tests/architecture/test_provider_acquisition_tools_boundary.py
-remaining_blockers:
-  - full-repository-validation
-  - independent-review
-  - accepted-commit
-passed_commit: null
+remaining_blockers: []
+validation:
+  focused_acquisition_and_architecture: 20 passed
+  full_repository: 1765 passed
+  import_boundaries: 109 files passed
+  lock_diff_lsp_lens_secret_scan: clean
+  real_binance_network_smoke: passed
+  tushare_invalid_token_redaction_smoke: passed
+  independent_review: NONE
+passed_commit: 6f0bd99a93a349924996eb26708fbb0ac6fecf17
 ```
 
 Acceptance requires exact provider-specific request validation, bounded retries,
