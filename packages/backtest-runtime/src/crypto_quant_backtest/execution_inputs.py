@@ -2992,21 +2992,27 @@ def _rebuild_prepared_market_data_v3(
     )
 
 
-def _rebuild_execution_request_v3(value: object) -> BacktestExecutionRequest:
+def _rebuild_execution_request_v3(
+    value: object,
+) -> tuple[int, BacktestRequest, ArtifactRef]:
     if type(value) is not BacktestExecutionRequest:
         raise TypeError("request must be exact BacktestExecutionRequest")
+    schema_version = value.schema_version
+    if type(schema_version) is not int or schema_version not in (
+        _SCHEMA_VERSION,
+        _V2_SCHEMA_VERSION,
+        _V3_SCHEMA_VERSION,
+    ):
+        raise ValueError("request schema_version is malformed")
     ref = value.execution_input_bundle_ref
     if type(ref) is not ArtifactRef:
         raise TypeError("execution_input_bundle_ref must be exact ArtifactRef")
-    return BacktestExecutionRequest(
-        schema_version=value.schema_version,
-        request=_rebuild_backtest_request_v3(value.request),
-        execution_input_bundle_ref=ArtifactRef(
-            ref.artifact_type,
-            ref.schema_version,
-            ref.content_hash,
-        ),
+    rebuilt_ref = ArtifactRef(
+        ref.artifact_type,
+        ref.schema_version,
+        ref.content_hash,
     )
+    return schema_version, _rebuild_backtest_request_v3(value.request), rebuilt_ref
 
 
 def _materialize_execution_input_bundle_v3(
@@ -3031,6 +3037,10 @@ def _materialize_execution_input_bundle_v3(
         raise TypeError("v3 materialization authority is malformed") from None
     request = resolved.request
     spec = inputs.execution_case_semantic_spec
+    stream_keys = _stream_keys(inputs.timeline_stream_keys)
+    target_key = _text("target_stream_key", inputs.target_stream.stream_key)
+    if target_key not in stream_keys:
+        raise ValueError("target_stream_key must be included in timeline_stream_keys")
     if resolved.build_artifact_manifest.manifest_hash != (
         request.build_artifact_manifest_hash
     ):
@@ -3058,8 +3068,8 @@ def _materialize_execution_input_bundle_v3(
         "semantic_run_id": resolved.semantic_run_id,
         "build_artifact_manifest": resolved.build_artifact_manifest,
         "execution_case_semantic_spec": spec,
-        "timeline_stream_keys": inputs.timeline_stream_keys,
-        "target_stream_key": inputs.target_stream.stream_key,
+        "timeline_stream_keys": stream_keys,
+        "target_stream_key": target_key,
         "timeline_batch_size": inputs.timeline_batch_size,
         "execution_case_plan": {
             "type": "execution_case_plan",
@@ -3219,7 +3229,9 @@ def _hydrate_execution_inputs_v3(
             _ExecutionInputsHydrationFailureCodeV3.MALFORMED_EXECUTION_REQUEST
         )
     try:
-        execution_request = _rebuild_execution_request_v3(request)
+        request_schema_version, public_request, ref = (
+            _rebuild_execution_request_v3(request)
+        )
         resolved = _rebuild_resolved_request_v3(resolved_request)
         prepared = _rebuild_prepared_market_data_v3(prepared_market_data)
     except Exception:
@@ -3230,9 +3242,8 @@ def _hydrate_execution_inputs_v3(
         return _failure_v3(
             _ExecutionInputsHydrationFailureCodeV3.MALFORMED_EXECUTION_REQUEST
         )
-    ref = execution_request.execution_input_bundle_ref
     if (
-        execution_request.schema_version != _V3_SCHEMA_VERSION
+        request_schema_version != _V3_SCHEMA_VERSION
         or ref.artifact_type != _ARTIFACT_TYPE
         or ref.schema_version != _V3_SCHEMA_VERSION
     ):
@@ -3321,7 +3332,6 @@ def _hydrate_execution_inputs_v3(
         binding_count,
     )
 
-    public_request = execution_request.request
     if (
         bundle.request_hash != public_request.request_hash
         or resolved.request != public_request
