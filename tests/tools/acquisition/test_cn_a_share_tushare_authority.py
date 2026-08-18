@@ -248,6 +248,35 @@ def test_scope_or_late_provider_failure_leaves_no_partial_authority(
     assert not (tmp_path / "late-failure").exists()
 
 
+def test_impossible_provider_interval_dates_are_rejected(tmp_path: Path) -> None:
+    cases = (
+        ("stock_basic", 0, 8, "listing interval"),
+        ("namechange", 0, 2, "target interval"),
+    )
+    for api_name, row_index, field_index, message in cases:
+        provider = responses()
+        payload = json.loads(provider[api_name][1])
+        payload["data"]["items"][row_index][field_index] = "20230230"
+        provider[api_name] = (
+            200,
+            json.dumps(
+                payload,
+                separators=(",", ":"),
+                ensure_ascii=False,
+            ).encode(),
+        )
+        output = tmp_path / api_name
+        with pytest.raises(AcquisitionError, match=message):
+            acquire_listing_corporate_action_authority(
+                request(),
+                token="secret",
+                output_dir=output,
+                acquired_at_epoch_nanoseconds=1,
+                post=FakePost(provider),
+            )
+        assert not output.exists()
+
+
 def test_nonterminal_or_duplicate_key_response_is_rejected(tmp_path: Path) -> None:
     valid = responses()["adj_factor"][1]
     has_more = json.loads(valid)

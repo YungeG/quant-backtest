@@ -78,6 +78,16 @@ _DIVIDEND_FIELDS = (
 )
 
 
+def _is_real_historical_date(value: object) -> bool:
+    if type(value) is not str or _HISTORICAL_DATE.fullmatch(value) is None:
+        return False
+    try:
+        datetime.strptime(value, "%Y%m%d")
+    except ValueError:
+        return False
+    return True
+
+
 def _authority_rows(
     response_bytes: bytes,
     *,
@@ -245,13 +255,13 @@ def acquire_listing_corporate_action_authority(
     if (
         stock[7] != "L"
         or type(list_date) is not str
-        or _HISTORICAL_DATE.fullmatch(list_date) is None
+        or not _is_real_historical_date(list_date)
         or list_date > request.trade_date
         or (
             delist_date is not None
             and (
                 type(delist_date) is not str
-                or _HISTORICAL_DATE.fullmatch(delist_date) is None
+                or not _is_real_historical_date(delist_date)
                 or delist_date < request.trade_date
             )
         )
@@ -265,13 +275,13 @@ def acquire_listing_corporate_action_authority(
         row
         for row in name_rows
         if type(row[2]) is str
-        and _HISTORICAL_DATE.fullmatch(row[2]) is not None
+        and _is_real_historical_date(row[2])
         and row[2] <= request.trade_date
         and (
             row[3] is None
             or (
                 type(row[3]) is str
-                and _HISTORICAL_DATE.fullmatch(row[3]) is not None
+                and _is_real_historical_date(row[3])
                 and request.trade_date <= row[3]
             )
         )

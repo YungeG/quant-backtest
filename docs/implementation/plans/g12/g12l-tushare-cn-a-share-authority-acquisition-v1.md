@@ -64,8 +64,8 @@ Runtime/Trading Kernel import.
 4. `dividend(ts_code=000001.SZ, ex_date=20240102)`.
 
 Success requires exact unique-key provider envelopes with `has_more=false` and
-integer `count=0`, one stock row whose documented list/delist interval covers the
-trade date, exactly one name interval covering the trade date, exact unique
+integer `count=0`, one stock row whose real-calendar list/delist interval covers
+the trade date, exactly one real-calendar name interval covering the trade date, exact unique
 adjustment-factor rows for previous/target/next trading dates, and only target-date
 dividend rows (zero is valid). Exact raw response bytes remain authoritative;
 parsed binary floats are not numeric authority.
