@@ -78,9 +78,11 @@ qualification = {
 }
 ```
 
-Each authority entry is exactly `{authority_hash, body}`. `body` is the canonical
-G08 authority body and must have schema version `1`, the exact dimension-specific
-type below, and `canonical_sha256(body) == authority_hash`:
+Each authority entry is exactly `{authority_hash, canonical_body_hash, body}`.
+`authority_hash` preserves the G08 authority's own frozen identity;
+`canonical_body_hash=canonical_sha256(body)` binds the exact projected bytes.
+`body` is the canonical G08 authority body and must have schema version `1` and
+the exact dimension-specific type below:
 
 | Dimension | Canonical body type |
 | --- | --- |
@@ -123,7 +125,8 @@ All events have:
 - phase `market_data` rank `0`;
 - no superseded revision;
 - source sequence equal to the dimension index;
-- revision/source hash equal to that dimension's authority hash.
+- revision ID equal to that dimension's G08 authority hash;
+- source hash equal to that dimension's canonical body hash.
 
 For dimension `<dimension>`:
 
@@ -143,6 +146,7 @@ Each payload is exact:
   target_coverage,
   dimension,
   authority_hash,
+  canonical_body_hash,
   authority,
   qualification
 }

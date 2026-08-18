@@ -38,11 +38,23 @@ def test_declaration_is_lossless_g08h_development_authority() -> None:
     assert outcome.result is not None
     profile = outcome.result.market_semantics
     authorities = {
-        "calendar": request.calendar,
-        "order_rules": request.order_rule_book,
-        "market_fees": request.market_fee_rule_book,
-        "stamp_duty": request.stamp_duty_rule_book,
-        "corporate_action_entitlements": request.corporate_action_rule_book,
+        "calendar": (request.calendar.calendar_hash, request.calendar),
+        "order_rules": (
+            request.order_rule_book.rule_book_hash,
+            request.order_rule_book,
+        ),
+        "market_fees": (
+            request.market_fee_rule_book.rule_book_hash,
+            request.market_fee_rule_book,
+        ),
+        "stamp_duty": (
+            request.stamp_duty_rule_book.rule_book_hash,
+            request.stamp_duty_rule_book,
+        ),
+        "corporate_action_entitlements": (
+            request.corporate_action_rule_book.rule_book_hash,
+            request.corporate_action_rule_book,
+        ),
     }
 
     assert DECLARATION["profile"] == {
@@ -61,10 +73,11 @@ def test_declaration_is_lossless_g08h_development_authority() -> None:
         "available_at_epoch_nanoseconds": request.composed_at.instant.epoch_nanoseconds,
     }
     assert set(DECLARATION["authorities"]) == set(DIMENSIONS)
-    for dimension, authority in authorities.items():
+    for dimension, (authority_hash, authority) in authorities.items():
         entry = DECLARATION["authorities"][dimension]
         assert canonical_bytes(entry["body"]) == canonical_bytes(authority)
-        assert entry["authority_hash"] == canonical_sha256(authority)
+        assert entry["authority_hash"] == authority_hash
+        assert entry["canonical_body_hash"] == canonical_sha256(entry["body"])
 
 
 def test_rule_authorities_project_five_exact_events_and_publish(tmp_path: Path) -> None:
@@ -113,16 +126,17 @@ def test_rule_authorities_project_five_exact_events_and_publish(tmp_path: Path) 
         assert event.revision_id == authority["authority_hash"]
         assert event.supersedes_revision_id is None
         assert event.source_key == f"equity.cn_a_share.v1/{dimension}"
-        assert event.source_hash == authority["authority_hash"]
-        assert event.payload == {
+        assert event.source_hash == authority["canonical_body_hash"]
+        assert canonical_bytes(event.payload) == canonical_bytes({
             "declaration_hash": declaration_hash,
             "profile": DECLARATION["profile"],
             "target_coverage": coverage,
             "dimension": dimension,
             "authority_hash": authority["authority_hash"],
+            "canonical_body_hash": authority["canonical_body_hash"],
             "authority": authority["body"],
             "qualification": DECLARATION["qualification"],
-        }
+        })
 
     validation = validate_market_bundle_v1(
         bundle_key="cn-a-share-development-rule-authorities-20260706-20260731-v1",
@@ -137,7 +151,7 @@ def test_rule_authorities_project_five_exact_events_and_publish(tmp_path: Path) 
     assert validation.failure is None and validation.manifest is not None
     manifest = validation.manifest
     assert manifest.content_hash == expected["manifest_content_hash"]
-    assert manifest.manifest_hash == expected["manifest_hash"]
+    assert canonical_sha256(manifest) == expected["manifest_hash"]
     assert {
         stream.stream_key: stream.content_hash for stream in manifest.streams
     } == expected["stream_content_hashes"]
@@ -180,35 +194,35 @@ def test_rule_authorities_project_five_exact_events_and_publish(tmp_path: Path) 
     (
         (
             lambda value: value.update({"extra": None}),
-            "declaration schema",
+            "declaration authority",
         ),
         (
             lambda value: value["profile"].update(
                 {"market_profile_digest": "sha256:" + "f" * 64}
             ),
-            "profile binding",
+            "declaration authority",
         ),
         (
             lambda value: value["target_coverage"].update(
                 {"available_at_epoch_nanoseconds": 0}
             ),
-            "target coverage",
+            "declaration authority",
         ),
         (
             lambda value: value["authorities"].pop("market_fees"),
-            "authority set",
+            "declaration authority",
         ),
         (
             lambda value: value["authorities"]["calendar"]["body"].update(
                 {"calendar_id": "forged"}
             ),
-            "authority hash",
+            "declaration authority",
         ),
         (
             lambda value: value["qualification"].update(
                 {"decision_grade_eligible": 0}
             ),
-            "qualification",
+            "declaration authority",
         ),
     ),
 )
@@ -227,3 +241,16 @@ def test_rule_projection_rejects_forged_declaration_without_partial_output(
 
     with pytest.raises(TypeError, match="exact declaration mapping"):
         project(object())
+
+
+def test_rule_projection_rejects_self_consistent_forged_authority_body() -> None:
+    bundle = import_module(
+        "crypto_quant_bundle_builder.cn_a_share_development_rule_bundle"
+    )
+    project = bundle.project_cn_a_share_development_rule_authority_events_v1
+    forged = deepcopy(DECLARATION)
+    entry = forged["authorities"]["calendar"]
+    entry["body"]["calendar_id"] = "forged"
+    entry["canonical_body_hash"] = canonical_sha256(entry["body"])
+    with pytest.raises(ValueError, match="declaration authority"):
+        project(forged)
