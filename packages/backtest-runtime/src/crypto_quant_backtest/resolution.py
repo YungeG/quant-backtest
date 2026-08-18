@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from abc import abstractmethod
+from collections.abc import Mapping
 from dataclasses import dataclass
 from enum import Enum
 import re
@@ -719,6 +720,59 @@ class BacktestProfileRegistry:
 
 
 @dataclass(frozen=True, slots=True)
+class ModelRequestBinding:
+    strategy_id: str
+    input_name: str
+    model_key: str
+    timeline_hash: str
+    artifact_ref_hash: str
+
+    def __post_init__(self) -> None:
+        _text("strategy_id", self.strategy_id)
+        _text("input_name", self.input_name)
+        _text("model_key", self.model_key)
+        _hash("timeline_hash", self.timeline_hash)
+        _hash("artifact_ref_hash", self.artifact_ref_hash)
+
+    @classmethod
+    def from_canonical_dict(cls, value: object) -> ModelRequestBinding:
+        if not isinstance(value, Mapping) or set(value) != {
+            "type",
+            "schema_version",
+            "strategy_id",
+            "input_name",
+            "model_key",
+            "timeline_hash",
+            "artifact_ref_hash",
+        }:
+            raise ValueError("model request binding must be canonical")
+        if (
+            value["type"] != "model_request_binding"
+            or type(value["schema_version"]) is not int
+            or value["schema_version"] != 1
+        ):
+            raise ValueError("model request binding tag mismatch")
+        return cls(
+            strategy_id=value["strategy_id"],  # type: ignore[arg-type]
+            input_name=value["input_name"],  # type: ignore[arg-type]
+            model_key=value["model_key"],  # type: ignore[arg-type]
+            timeline_hash=value["timeline_hash"],  # type: ignore[arg-type]
+            artifact_ref_hash=value["artifact_ref_hash"],  # type: ignore[arg-type]
+        )
+
+    def to_canonical_dict(self) -> dict[str, object]:
+        return {
+            "type": "model_request_binding",
+            "schema_version": 1,
+            "strategy_id": self.strategy_id,
+            "input_name": self.input_name,
+            "model_key": self.model_key,
+            "timeline_hash": self.timeline_hash,
+            "artifact_ref_hash": self.artifact_ref_hash,
+        }
+
+
+@dataclass(frozen=True, slots=True)
 class BacktestRequest:
     schema_version: int
     experiment_id: str | None
@@ -736,6 +790,7 @@ class BacktestRequest:
     strategy_family: StrategyFamily
     engine_kind: str
     result_grade_requested: RequestedResultGrade
+    model_binding: ModelRequestBinding | None = None
 
     def __post_init__(self) -> None:
         if type(self.schema_version) is not int or self.schema_version != 1:
@@ -765,13 +820,15 @@ class BacktestRequest:
             raise TypeError("strategy_family must be StrategyFamily")
         if not isinstance(self.result_grade_requested, RequestedResultGrade):
             raise TypeError("result_grade_requested must be RequestedResultGrade")
+        if self.model_binding is not None and type(self.model_binding) is not ModelRequestBinding:
+            raise TypeError("model_binding must be exact ModelRequestBinding or None")
 
     @property
     def request_hash(self) -> str:
         return canonical_sha256(self)
 
     def to_canonical_dict(self) -> dict[str, object]:
-        return {
+        value = {
             "type": "backtest_request",
             "schema_version": self.schema_version,
             "experiment_id": self.experiment_id,
@@ -790,6 +847,9 @@ class BacktestRequest:
             "engine_kind": self.engine_kind,
             "result_grade_requested": self.result_grade_requested.value,
         }
+        if self.model_binding is not None:
+            value["model_binding"] = self.model_binding
+        return value
 
 
 @dataclass(frozen=True, slots=True)

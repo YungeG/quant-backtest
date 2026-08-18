@@ -331,6 +331,7 @@ class BacktestRuntime:
             target_stream_digest=execution_case.target_stream.target_stream_digest,
             identity_manifest_hash=execution_case.identity_manifest.manifest_hash,
             financial_state=execution_case.financial_state,
+            model_binding=resolved.request.model_binding,
         )
         publication = CanonicalResultPublisher(root=self._publication_root).publish_v2(
             resolved_request=resolved,

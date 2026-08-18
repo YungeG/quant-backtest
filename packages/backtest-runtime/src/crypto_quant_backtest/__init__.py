@@ -94,8 +94,11 @@ from .facade import BacktestRuntime
 from .cash_development_provider import (
     CashDevelopmentProviderInputs,
     CashDevelopmentRequestIntent,
+    ModelPreparationFailure,
     PreparedBacktestExecution,
+    PreparedModelBoundBacktestExecution,
     prepare_cash_development_backtest,
+    prepare_model_bound_cash_development_backtest,
 )
 from .request_registration import BacktestRequestRef
 from .financial_dispatch import (
@@ -248,6 +251,7 @@ from .resolution import (
     EnvironmentCompatibilityReport,
     ExecutionAccountProfileRegistration,
     MarketSemanticsProfileRegistration,
+    ModelRequestBinding,
     NormalizedBacktestRequest,
     ProfileResolver,
     RequestedResultGrade,
@@ -462,6 +466,7 @@ __all__ = [
     "materialize_execution_input_bundle",
     "materialize_execution_input_bundle_v2",
     "prepare_cash_development_backtest",
+    "prepare_model_bound_cash_development_backtest",
     "DeterministicRebuildEvidence",
     "DeterministicTimeline",
     "EngineCancellation",
@@ -538,9 +543,12 @@ __all__ = [
     "MarketSemanticsProfileRegistration",
     "MarkToMarketCloseoutPolicy",
     "ModelArtifactRef",
+    "ModelPreparationFailure",
+    "ModelRequestBinding",
     "ModelRevisionTimeline",
     "LiquidityModel",
     "PreparedBacktestExecution",
+    "PreparedModelBoundBacktestExecution",
     "PrecomputedTargetStream",
     "NextBarOpenApplicability",
     "NextBarOpenDecision",

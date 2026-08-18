@@ -48,6 +48,7 @@ from .financial_dispatch import (
     FinancialDispatchPlan,
     default_cash_financial_dispatcher_spec,
 )
+from .model_revisions import ModelRevisionTimeline
 from .ports import SimulationComponentRef, SimulationPortType
 from .request_registration import BacktestRequestRef
 from .resolution import (
@@ -59,6 +60,7 @@ from .resolution import (
     BuildArtifactRole,
     ExecutionAccountProfileRegistration,
     MarketSemanticsProfileRegistration,
+    ModelRequestBinding,
     ProfileResolver,
     RequestedResultGrade,
     SimulationProfileRegistration,
@@ -84,6 +86,7 @@ from .target_stream import (
 from .timeline import DeterministicTimeline, TimelineEvent, TimelineSegment, TimelineWindow
 
 _RUN_ID_PATTERN = re.compile(r"run_[0-9a-f]{64}\Z")
+_HASH_PATTERN = re.compile(r"sha256:[0-9a-f]{64}\Z")
 _PROFILE_PREFIX = "cash.precomputed_target.development.v1"
 _MARKET_KEY = f"{_PROFILE_PREFIX}.market"
 _SIMULATION_KEY = f"{_PROFILE_PREFIX}.simulation"
@@ -93,6 +96,18 @@ _BAR_STREAM = "bars.open"
 _TARGET_CAPABILITY = TARGET_STREAM_CAPABILITY
 _TARGET_EVENT_TYPE = TARGET_STREAM_EVENT_TYPE
 _LIMITATIONS = ("development_only", "single_cash_spot_full_fill")
+
+
+class ModelPreparationFailure(ValueError):
+    def __init__(self, code: str) -> None:
+        if code not in {
+            "MODEL_TIMELINE_INVALID",
+            "MODEL_ARTIFACT_UNAVAILABLE",
+            "MODEL_BINDING_MISMATCH",
+        }:
+            raise ValueError("unknown model preparation failure")
+        self.code = code
+        super().__init__(code)
 
 
 def _canonical_text(name: str, value: object) -> str:
@@ -185,6 +200,27 @@ class PreparedBacktestExecution:
             raise TypeError("execution_request must be exact BacktestExecutionRequest")
         if type(self.runtime) is not BacktestRuntime:
             raise TypeError("runtime must be exact BacktestRuntime")
+
+
+@dataclass(frozen=True, slots=True)
+class PreparedModelBoundBacktestExecution:
+    request_ref: BacktestRequestRef
+    semantic_run_id: str
+    execution_request: BacktestExecutionRequest
+    runtime: BacktestRuntime
+    model_binding: ModelRequestBinding
+
+    def __post_init__(self) -> None:
+        base = PreparedBacktestExecution(
+            self.request_ref,
+            self.semantic_run_id,
+            self.execution_request,
+            self.runtime,
+        )
+        if type(self.model_binding) is not ModelRequestBinding:
+            raise TypeError("model_binding must be exact ModelRequestBinding")
+        if base.execution_request.request.model_binding != self.model_binding:
+            raise ValueError("prepared model binding does not match request")
 
 
 @dataclass(frozen=True, slots=True)
@@ -659,7 +695,16 @@ def _verify_published(
         raise ValueError("published artifact readback does not bind envelope")
 
 
-def prepare_cash_development_backtest(*, request_intent: CashDevelopmentRequestIntent, provider_inputs: CashDevelopmentProviderInputs, artifact_reader: ArtifactEnvelopeReader, artifact_publisher: ArtifactEnvelopePublisher, market_reader: MarketBundleReader, publication_root: Path) -> PreparedBacktestExecution:
+def _prepare_cash_development_backtest(
+    *,
+    request_intent: CashDevelopmentRequestIntent,
+    provider_inputs: CashDevelopmentProviderInputs,
+    artifact_reader: ArtifactEnvelopeReader,
+    artifact_publisher: ArtifactEnvelopePublisher,
+    market_reader: MarketBundleReader,
+    publication_root: Path,
+    model_binding: ModelRequestBinding | None,
+) -> PreparedBacktestExecution:
     if type(request_intent) is not CashDevelopmentRequestIntent or type(provider_inputs) is not CashDevelopmentProviderInputs:
         raise TypeError("request_intent and provider_inputs must be exact public values")
     if not callable(getattr(artifact_reader, "read", None)) or not callable(getattr(artifact_publisher, "put", None)):
@@ -675,7 +720,25 @@ def prepare_cash_development_backtest(*, request_intent: CashDevelopmentRequestI
         provider_inputs.build_artifact_manifest,
         registry,
     )
-    request = BacktestRequest(1, request_intent.experiment_id, request_intent.timeline_window, _MARKET_KEY, _SIMULATION_KEY, _ACCOUNT_KEY, request_intent.execution_account_id, request_intent.reporting_currency, market_reader.bundle_ref, spec.target_stream_digest, spec.semantic_spec_hash, request_intent.master_random_seed, build_manifest.manifest_hash, StrategyFamily.PRECOMPUTED_TARGET, "bar", RequestedResultGrade.DEVELOPMENT)
+    request = BacktestRequest(
+        schema_version=1,
+        experiment_id=request_intent.experiment_id,
+        timeline_window=request_intent.timeline_window,
+        market_semantics_profile_key=_MARKET_KEY,
+        simulation_profile_key=_SIMULATION_KEY,
+        execution_account_profile_key=_ACCOUNT_KEY,
+        execution_account_id=request_intent.execution_account_id,
+        reporting_currency=request_intent.reporting_currency,
+        market_bundle_ref=market_reader.bundle_ref,
+        target_stream_digest=spec.target_stream_digest,
+        execution_case_semantic_hash=spec.semantic_spec_hash,
+        master_random_seed=request_intent.master_random_seed,
+        build_artifact_manifest_hash=build_manifest.manifest_hash,
+        strategy_family=StrategyFamily.PRECOMPUTED_TARGET,
+        engine_kind="bar",
+        result_grade_requested=RequestedResultGrade.DEVELOPMENT,
+        model_binding=model_binding,
+    )
     outcome = ProfileResolver().resolve(request=request, registry=registry, market_bundle_manifest=market_reader.manifest, build_artifact_manifest=build_manifest)
     if outcome.resolved is None:
         raise ValueError(f"cash development request cannot resolve: {outcome.failure.code.value if outcome.failure else 'unknown'}")
@@ -696,3 +759,84 @@ def prepare_cash_development_backtest(*, request_intent: CashDevelopmentRequestI
     execution_request = BacktestExecutionRequest(2, request, bundle_ref)
     runtime = BacktestRuntime(registry=registry, artifact_reader=artifact_reader, artifact_publisher=artifact_publisher, market_reader=market_reader, publication_root=publication_root)
     return PreparedBacktestExecution(request_ref, outcome.resolved.semantic_run_id, execution_request, runtime)
+
+
+def prepare_cash_development_backtest(
+    *,
+    request_intent: CashDevelopmentRequestIntent,
+    provider_inputs: CashDevelopmentProviderInputs,
+    artifact_reader: ArtifactEnvelopeReader,
+    artifact_publisher: ArtifactEnvelopePublisher,
+    market_reader: MarketBundleReader,
+    publication_root: Path,
+) -> PreparedBacktestExecution:
+    return _prepare_cash_development_backtest(
+        request_intent=request_intent,
+        provider_inputs=provider_inputs,
+        artifact_reader=artifact_reader,
+        artifact_publisher=artifact_publisher,
+        market_reader=market_reader,
+        publication_root=publication_root,
+        model_binding=None,
+    )
+
+
+def prepare_model_bound_cash_development_backtest(
+    *,
+    request_intent: CashDevelopmentRequestIntent,
+    provider_inputs: CashDevelopmentProviderInputs,
+    model_timeline: ModelRevisionTimeline,
+    expected_model_key: str,
+    expected_artifact_ref_hash: str,
+    artifact_reader: ArtifactEnvelopeReader,
+    artifact_publisher: ArtifactEnvelopePublisher,
+    market_reader: MarketBundleReader,
+    publication_root: Path,
+) -> PreparedModelBoundBacktestExecution:
+    if (
+        type(request_intent) is not CashDevelopmentRequestIntent
+        or type(provider_inputs) is not CashDevelopmentProviderInputs
+    ):
+        raise TypeError("request_intent and provider_inputs must be exact public values")
+    if type(model_timeline) is not ModelRevisionTimeline:
+        raise ModelPreparationFailure("MODEL_TIMELINE_INVALID")
+    try:
+        _canonical_text("expected_model_key", expected_model_key)
+    except (TypeError, ValueError) as error:
+        raise ModelPreparationFailure("MODEL_BINDING_MISMATCH") from error
+    if (
+        type(expected_artifact_ref_hash) is not str
+        or _HASH_PATTERN.fullmatch(expected_artifact_ref_hash) is None
+    ):
+        raise ModelPreparationFailure("MODEL_BINDING_MISMATCH")
+    selected = model_timeline.select()
+    if selected is None:
+        raise ModelPreparationFailure("MODEL_ARTIFACT_UNAVAILABLE")
+    if (
+        selected.model_key != expected_model_key
+        or selected.artifact_ref_hash != expected_artifact_ref_hash
+    ):
+        raise ModelPreparationFailure("MODEL_BINDING_MISMATCH")
+    binding = ModelRequestBinding(
+        strategy_id=provider_inputs.strategy_id,
+        input_name="primary_model",
+        model_key=selected.model_key,
+        timeline_hash=model_timeline.timeline_hash,
+        artifact_ref_hash=selected.artifact_ref_hash,
+    )
+    prepared = _prepare_cash_development_backtest(
+        request_intent=request_intent,
+        provider_inputs=provider_inputs,
+        artifact_reader=artifact_reader,
+        artifact_publisher=artifact_publisher,
+        market_reader=market_reader,
+        publication_root=publication_root,
+        model_binding=binding,
+    )
+    return PreparedModelBoundBacktestExecution(
+        prepared.request_ref,
+        prepared.semantic_run_id,
+        prepared.execution_request,
+        prepared.runtime,
+        binding,
+    )
