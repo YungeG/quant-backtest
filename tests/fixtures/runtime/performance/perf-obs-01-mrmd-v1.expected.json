@@ -1,0 +1,16 @@
+{
+  "operations": [
+    "CONSTRUCT_BINDINGS",
+    "VALIDATE_BINDINGS",
+    "LOOKUP_STREAMS",
+    "HYDRATE_INPUTS",
+    "VERIFY_REPLAY",
+    "PROJECT_POINT_IN_TIME",
+    "VERIFY_SIGNAL_BAR",
+    "BUILD_WINDOW",
+    "EVALUATE_LOOKBACK"
+  ],
+  "outcomes": ["SUCCEEDED", "FAILED", "INELIGIBLE"],
+  "maximum_cells": 19,
+  "saturation_limit": 9223372036854775807
+}
