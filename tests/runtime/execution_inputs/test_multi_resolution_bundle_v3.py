@@ -35,7 +35,11 @@ from crypto_quant_backtest.performance_observations import (
     BoundedPerformanceRecorder,
     PerformanceOperation,
 )
-from crypto_quant_backtest.resolution import ProfileResolver
+from crypto_quant_backtest.resolution import (
+    ProfileResolver,
+    ResolvedBacktestRequest,
+    RuntimeLibraryRef,
+)
 from crypto_quant_backtest.run_end import MarkToMarketCloseoutPolicy
 from crypto_quant_domain import (
     ArtifactCatalogError,
@@ -75,13 +79,26 @@ class _Reader:
         )
 
 
-def _contract():
+def _contract(*, extra_runtime_library: bool = False):
     values = prepared_inputs()
     prepared_outcome = prepare_multi_resolution_market_data_v1(**values)
     assert type(prepared_outcome.prepared) is PreparedMultiResolutionMarketData
     prepared = prepared_outcome.prepared
     assert prepared is not None
     base_resolved, base_case = resolved_request_and_case()
+    build_manifest = base_resolved.build_artifact_manifest
+    if extra_runtime_library:
+        build_manifest = replace(
+            build_manifest,
+            runtime_libraries=(
+                *build_manifest.runtime_libraries,
+                RuntimeLibraryRef(
+                    "stdlib",
+                    "3.13",
+                    "sha256:" + "ab" * 32,
+                ),
+            ),
+        )
     authority = values["case_authority"]
     assert type(base_case.semantic_spec) is ExecutionCaseSemanticSpec
     assert type(base_case.closeout_policy) is MarkToMarketCloseoutPolicy
@@ -102,6 +119,7 @@ def _contract():
     request = replace(
         values["resolved_request"].request,
         execution_case_semantic_hash=spec.semantic_spec_hash,
+        build_artifact_manifest_hash=build_manifest.manifest_hash,
     )
     resolved_outcome = ProfileResolver().resolve(
         request=request,
@@ -113,7 +131,7 @@ def _contract():
             )
         ),
         market_bundle_manifest=prepared.verified_reader.manifest,
-        build_artifact_manifest=base_resolved.build_artifact_manifest,
+        build_artifact_manifest=build_manifest,
     )
     assert resolved_outcome.resolved is not None
     resolved = resolved_outcome.resolved
@@ -135,6 +153,39 @@ def _contract():
         execution_input_bundle_ref=ArtifactRef.from_envelope(envelope),
     )
     return prepared, resolved, hydrated, envelope, transport
+
+
+def _resolved_for_spec(prepared, resolved, spec):
+    request = replace(
+        resolved.request,
+        execution_case_semantic_hash=spec.semantic_spec_hash,
+    )
+    outcome = ProfileResolver().resolve(
+        request=request,
+        registry=profile_registry(
+            extra_market_capabilities=tuple(
+                capability
+                for capability in prepared.verified_reader.manifest.capabilities
+                if capability.key == "price_bars"
+            )
+        ),
+        market_bundle_manifest=prepared.verified_reader.manifest,
+        build_artifact_manifest=resolved.build_artifact_manifest,
+    )
+    assert outcome.resolved is not None
+    return outcome.resolved
+
+
+def _transport(envelope, resolved):
+    return crypto_quant_backtest.BacktestExecutionRequest(
+        schema_version=3,
+        request=resolved.request,
+        execution_input_bundle_ref=ArtifactRef.from_envelope(envelope),
+    )
+
+
+def _payload(envelope):
+    return json.loads(canonical_bytes(envelope).decode())["payload"]
 
 
 def _hydrate(envelope, transport, prepared, resolved, recorder=None):
@@ -240,6 +291,218 @@ def test_v3_decode_rejects_nested_constructor_bypass_and_noncanonical_hashes() -
             hydrated_inputs=hydrated,
             market_data_preparation=forged,
         )
+
+
+def test_v3_replays_embedded_preparation_against_decoded_case_authority() -> None:
+    prepared, resolved, hydrated, _, _ = _contract()
+    changed_plan = replace(hydrated.execution_case_plan, decision_cycles=())
+    changed_spec = _execution_case_semantic_spec_v3(
+        base_spec=hydrated.execution_case_semantic_spec,
+        execution_case_plan=changed_plan,
+        market_data_preparation=prepared.preparation,
+    )
+    changed_resolved = _resolved_for_spec(prepared, resolved, changed_spec)
+    changed_inputs = replace(
+        hydrated,
+        execution_case_semantic_spec=changed_spec,
+        execution_case_plan=changed_plan,
+    )
+    envelope = _materialize_execution_input_bundle_v3(
+        resolved_request=changed_resolved,
+        hydrated_inputs=changed_inputs,
+        market_data_preparation=prepared.preparation,
+    )
+
+    outcome = _hydrate(
+        envelope,
+        _transport(envelope, changed_resolved),
+        prepared,
+        changed_resolved,
+    )
+    assert outcome.result is None
+    assert outcome.failure is not None
+    assert outcome.failure.code is (
+        _ExecutionInputsHydrationFailureCodeV3.PREPARED_MARKET_DATA_REPLAY_MISMATCH
+    )
+
+
+@pytest.mark.parametrize("authority", ["financial_state", "financial_dispatch_plan"])
+def test_v3_materialization_rejects_valid_plan_financial_tamper(authority) -> None:
+    prepared, resolved, hydrated, _, _ = _contract()
+    plan = hydrated.execution_case_plan
+    if authority == "financial_state":
+        changed_plan = replace(
+            plan,
+            financial_state=replace(plan.financial_state, lot_books=()),
+        )
+    else:
+        dispatch = plan.financial_dispatch_plan
+        changed_plan = replace(
+            plan,
+            financial_dispatch_plan=replace(
+                dispatch,
+                expected_artifact_roles=(
+                    *dispatch.expected_artifact_roles,
+                    "tampered_financial_role",
+                ),
+            ),
+        )
+    with pytest.raises(ValueError, match="semantic spec"):
+        _materialize_execution_input_bundle_v3(
+            resolved_request=resolved,
+            hydrated_inputs=replace(hydrated, execution_case_plan=changed_plan),
+            market_data_preparation=prepared.preparation,
+        )
+
+
+@pytest.mark.parametrize("authority", ["financial_state", "financial_dispatch_plan"])
+def test_v3_hydration_rejects_valid_plan_financial_tamper(authority) -> None:
+    prepared, resolved, _, envelope, _ = _contract()
+    payload = _payload(envelope)
+    plan = payload["execution_case_plan"]
+    if authority == "financial_state":
+        plan["financial_state"]["lot_books"] = []
+    else:
+        plan["financial_dispatch_plan"]["expected_artifact_roles"].append(
+            "tampered_financial_role"
+        )
+    tampered = ArtifactEnvelope.create("backtest_execution_input_bundle", 3, payload)
+
+    outcome = _hydrate(
+        tampered,
+        _transport(tampered, resolved),
+        prepared,
+        resolved,
+    )
+    assert outcome.result is None
+    assert outcome.failure is not None
+    assert outcome.failure.code is (
+        _ExecutionInputsHydrationFailureCodeV3.PREPARED_MARKET_DATA_REPLAY_MISMATCH
+    )
+
+
+def test_v3_hydration_rejects_valid_run_end_hash_tamper() -> None:
+    prepared, resolved, hydrated, envelope, _ = _contract()
+    tampered_spec = replace(
+        hydrated.execution_case_semantic_spec,
+        run_end_inputs_hash="sha256:" + "00" * 32,
+    )
+    tampered_resolved = _resolved_for_spec(prepared, resolved, tampered_spec)
+    payload = _payload(envelope)
+    payload["request_hash"] = tampered_resolved.request.request_hash
+    payload["semantic_run_id"] = tampered_resolved.semantic_run_id
+    payload["execution_case_semantic_spec"]["run_end_inputs_hash"] = (
+        tampered_spec.run_end_inputs_hash
+    )
+    tampered = ArtifactEnvelope.create("backtest_execution_input_bundle", 3, payload)
+
+    outcome = _hydrate(
+        tampered,
+        _transport(tampered, tampered_resolved),
+        prepared,
+        tampered_resolved,
+    )
+    assert outcome.result is None
+    assert outcome.failure is not None
+    assert outcome.failure.code is (
+        _ExecutionInputsHydrationFailureCodeV3.PREPARED_MARKET_DATA_REPLAY_MISMATCH
+    )
+
+
+@pytest.mark.parametrize(
+    "nested_sequence",
+    ["artifacts", "runtime_libraries", "identity_plan"],
+)
+def test_v3_decode_rejects_nested_sequence_normalization(nested_sequence) -> None:
+    prepared, resolved, _, envelope, _ = _contract(extra_runtime_library=True)
+    payload = _payload(envelope)
+    if nested_sequence == "identity_plan":
+        payload["execution_case_semantic_spec"]["identity_plan"].reverse()
+    else:
+        payload["build_artifact_manifest"]["identity"][nested_sequence].reverse()
+    reordered = ArtifactEnvelope.create("backtest_execution_input_bundle", 3, payload)
+
+    outcome = _hydrate(
+        reordered,
+        _transport(reordered, resolved),
+        prepared,
+        resolved,
+    )
+    assert outcome.result is None
+    assert outcome.failure is not None
+    assert outcome.failure.code is (
+        _ExecutionInputsHydrationFailureCodeV3.EXECUTION_INPUT_DECODE_FAILED
+    )
+
+
+def test_v3_hydration_revalidates_forged_caller_authority_before_io() -> None:
+    prepared, resolved, _, envelope, transport = _contract()
+    secret = "SECRET-forged-caller-token-/private/path"
+
+    class SecretRef:
+        @property
+        def artifact_type(self):
+            raise RuntimeError(secret)
+
+    forged_transport = object.__new__(crypto_quant_backtest.BacktestExecutionRequest)
+    object.__setattr__(forged_transport, "schema_version", 3)
+    object.__setattr__(forged_transport, "request", resolved.request)
+    object.__setattr__(forged_transport, "execution_input_bundle_ref", SecretRef())
+
+    forged_resolved = object.__new__(ResolvedBacktestRequest)
+    object.__setattr__(forged_resolved, "request", object())
+
+    forged_prepared = object.__new__(PreparedMultiResolutionMarketData)
+    object.__setattr__(forged_prepared, "preparation", object())
+    object.__setattr__(forged_prepared, "eligibilities", ())
+    object.__setattr__(forged_prepared, "verified_reader", prepared.verified_reader)
+
+    for request_value, resolved_value, prepared_value in (
+        (forged_transport, resolved, prepared),
+        (transport, forged_resolved, prepared),
+        (transport, resolved, forged_prepared),
+    ):
+        outcome = _hydrate_execution_inputs_v3(
+            _Reader(error=AssertionError("reader must not be called")),
+            request_value,
+            market_reader=prepared.verified_reader,
+            resolved_request=resolved_value,
+            prepared_market_data=prepared_value,
+        )
+        assert outcome.result is None
+        assert outcome.failure is not None
+        assert outcome.failure.code is (
+            _ExecutionInputsHydrationFailureCodeV3.MALFORMED_EXECUTION_REQUEST
+        )
+        assert secret.encode() not in canonical_bytes(outcome.failure)
+
+
+def test_v3_caller_revalidation_preserves_baseexception() -> None:
+    prepared, resolved, _, _, _ = _contract()
+
+    class FatalAuthorityFailure(BaseException):
+        pass
+
+    fatal = FatalAuthorityFailure("fatal-caller-authority")
+
+    class FatalRef:
+        @property
+        def artifact_type(self):
+            raise fatal
+
+    forged = object.__new__(crypto_quant_backtest.BacktestExecutionRequest)
+    object.__setattr__(forged, "schema_version", 3)
+    object.__setattr__(forged, "request", resolved.request)
+    object.__setattr__(forged, "execution_input_bundle_ref", FatalRef())
+    with pytest.raises(FatalAuthorityFailure) as raised:
+        _hydrate_execution_inputs_v3(
+            _Reader(error=AssertionError("reader must not be called")),
+            forged,
+            market_reader=prepared.verified_reader,
+            resolved_request=resolved,
+            prepared_market_data=prepared,
+        )
+    assert raised.value is fatal
 
 
 def test_role_preimages_change_only_the_assigned_hash_then_request_and_run_identity() -> None:
