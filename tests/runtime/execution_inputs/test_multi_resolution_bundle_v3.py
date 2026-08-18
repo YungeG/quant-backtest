@@ -44,7 +44,12 @@ from crypto_quant_backtest.resolution import (
     RuntimeLibraryRef,
 )
 from crypto_quant_backtest.run_end import MarkToMarketCloseoutPolicy
-from crypto_quant_market_data import InMemoryMarketBundleReader
+from crypto_quant_market_data import (
+    InMemoryMarketBundleReader,
+    MarketBundleManifest,
+    MarketBundleRef,
+    MarketEvent,
+)
 from crypto_quant_domain import (
     ArtifactCatalogError,
     ArtifactEnvelope,
@@ -568,6 +573,141 @@ def test_v3_decode_rejects_nested_sequence_normalization(nested_sequence) -> Non
     assert outcome.failure.code is (
         _ExecutionInputsHydrationFailureCodeV3.EXECUTION_INPUT_DECODE_FAILED
     )
+
+
+@pytest.mark.parametrize(
+    "scalar_location",
+    ["bundle_ref", "manifest", "stream_key", "event_payload"],
+)
+def test_v3_retained_reader_rejects_all_scalar_subclasses_before_artifact_io(
+    scalar_location,
+) -> None:
+    prepared, resolved, _, envelope, transport = _contract()
+    original = prepared.verified_reader
+
+    class ScalarSubclass(str):
+        pass
+
+    def forged_copy(value, **changes):
+        forged = object.__new__(type(value))
+        for field in fields(value):
+            object.__setattr__(
+                forged,
+                field.name,
+                changes.get(field.name, getattr(value, field.name)),
+            )
+        return forged
+
+    bundle_ref = original.bundle_ref
+    manifest = original.manifest
+    streams = dict(original.streams)
+    if scalar_location == "bundle_ref":
+        bundle_ref = forged_copy(
+            bundle_ref,
+            bundle_key=ScalarSubclass(bundle_ref.bundle_key),
+        )
+    elif scalar_location == "manifest":
+        manifest = forged_copy(
+            manifest,
+            bundle_key=ScalarSubclass(manifest.bundle_key),
+        )
+    elif scalar_location == "stream_key":
+        stream_key = next(iter(streams))
+        streams[ScalarSubclass(stream_key)] = streams.pop(stream_key)
+    else:
+        stream_key = next(iter(streams))
+        event = streams[stream_key][0]
+        payload = dict(event.payload)
+        payload_key = next(
+            key for key, value in payload.items() if type(value) is str
+        )
+        payload[payload_key] = ScalarSubclass(payload[payload_key])
+        streams[stream_key] = (
+            forged_copy(event, payload=payload),
+            *streams[stream_key][1:],
+        )
+
+    forged_reader = object.__new__(InMemoryMarketBundleReader)
+    object.__setattr__(forged_reader, "bundle_ref", bundle_ref)
+    object.__setattr__(forged_reader, "manifest", manifest)
+    object.__setattr__(forged_reader, "streams", streams)
+    forged_prepared = replace(prepared, verified_reader=forged_reader)
+
+    class CountingArtifactReader(_Reader):
+        def __init__(self):
+            super().__init__(envelope)
+            self.calls = 0
+
+        def read(self, *, ref):
+            self.calls += 1
+            return super().read(ref=ref)
+
+    artifact_reader = CountingArtifactReader()
+    outcome = _hydrate_execution_inputs_v3(
+        artifact_reader,
+        transport,
+        market_reader=forged_reader,
+        resolved_request=resolved,
+        prepared_market_data=forged_prepared,
+    )
+    assert artifact_reader.calls == 0
+    assert outcome.result is None
+    assert outcome.failure is not None
+    assert outcome.failure.code is (
+        _ExecutionInputsHydrationFailureCodeV3.MALFORMED_EXECUTION_REQUEST
+    )
+
+
+def test_v3_retained_reader_rejects_pass_rebuild_then_raise_str_subclass() -> None:
+    prepared, resolved, _, envelope, transport = _contract()
+    secret = "SECRET-delayed-str-subclass-/private/path"
+
+    class DelayedStr(str):
+        strip_count = 0
+
+        def strip(self, chars=None):
+            self.strip_count += 1
+            return self
+
+        def __eq__(self, other):
+            if self.strip_count >= 2:
+                raise RuntimeError(secret)
+            return super().__eq__(other)
+
+    ref = prepared.verified_reader.bundle_ref
+    forged_ref = object.__new__(MarketBundleRef)
+    object.__setattr__(forged_ref, "bundle_key", DelayedStr(ref.bundle_key))
+    object.__setattr__(forged_ref, "manifest_hash", ref.manifest_hash)
+    forged_reader = object.__new__(InMemoryMarketBundleReader)
+    object.__setattr__(forged_reader, "bundle_ref", forged_ref)
+    object.__setattr__(forged_reader, "manifest", prepared.verified_reader.manifest)
+    object.__setattr__(forged_reader, "streams", prepared.verified_reader.streams)
+    forged_prepared = replace(prepared, verified_reader=forged_reader)
+
+    class CountingArtifactReader(_Reader):
+        def __init__(self):
+            super().__init__(envelope)
+            self.calls = 0
+
+        def read(self, *, ref):
+            self.calls += 1
+            return super().read(ref=ref)
+
+    artifact_reader = CountingArtifactReader()
+    outcome = _hydrate_execution_inputs_v3(
+        artifact_reader,
+        transport,
+        market_reader=forged_reader,
+        resolved_request=resolved,
+        prepared_market_data=forged_prepared,
+    )
+    assert artifact_reader.calls == 0
+    assert outcome.result is None
+    assert outcome.failure is not None
+    assert outcome.failure.code is (
+        _ExecutionInputsHydrationFailureCodeV3.MALFORMED_EXECUTION_REQUEST
+    )
+    assert secret.encode() not in canonical_bytes(outcome.failure)
 
 
 def test_v3_hydration_rejects_nested_forged_retained_reader_before_artifact_io() -> None:
