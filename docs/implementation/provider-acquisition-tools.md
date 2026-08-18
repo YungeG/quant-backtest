@@ -76,10 +76,11 @@ TUSHARE_TOKEN=... uv run --locked python \
 
 This additive tool preserves exact `stock_basic`, `namechange`, adjacent
 `adj_factor`, and target-ex-date `dividend` responses in one candidate G12A
-snapshot. It validates the finite listing/name/date scopes but fixes provider
-revision closure, historical-listing qualification, corporate-action lifecycle,
-decision grade, and deployment to false. The PASSED daily/listing and calendar
-programs remain unchanged.
+snapshot. It rejects duplicate-key or nonterminal provider pages, requiring exact
+captured envelopes with `has_more=false` and integer `count=0`, and validates the
+finite listing/name/date scopes. Provider revision closure, historical-listing
+qualification, corporate-action lifecycle, decision grade, and deployment remain
+false. The PASSED daily/listing and calendar programs remain unchanged.
 
 ## Output contract
 

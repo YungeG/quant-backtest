@@ -11675,6 +11675,8 @@ implementation:
   module: tools.acquisition.cn_a_share_tushare_authority
   existing_daily_listing_tool_changed: false
   existing_trade_calendar_tool_changed: false
+  exact_unique_key_envelope_required: true
+  pagination_terminal_required: has_more=false,count=0
 focused_tests: 15 passed
 frozen_capture:
   implementation_commit: 538cf2873e647c61405052e4b7631fdc39e25122

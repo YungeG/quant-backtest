@@ -69,7 +69,13 @@ def response(fields: list[str], items: list[list[object]]) -> bytes:
             "request_id": "request-id",
             "code": 0,
             "msg": "",
-            "data": {"fields": fields, "items": items},
+            "data": {
+                "fields": fields,
+                "items": items,
+                "has_more": False,
+                "count": 0,
+            },
+            "detail": "...",
         },
         separators=(",", ":"),
         ensure_ascii=False,
@@ -220,7 +226,13 @@ def test_scope_or_late_provider_failure_leaves_no_partial_authority(
     late_failure["dividend"] = (
         200,
         json.dumps(
-            {"request_id": "id", "code": -2001, "msg": "permission denied", "data": None},
+            {
+                "request_id": "id",
+                "code": -2001,
+                "msg": "permission denied",
+                "data": None,
+                "detail": "...",
+            },
             separators=(",", ":"),
         ).encode(),
     )
@@ -234,3 +246,34 @@ def test_scope_or_late_provider_failure_leaves_no_partial_authority(
         )
     assert "secret" not in str(error.value)
     assert not (tmp_path / "late-failure").exists()
+
+
+def test_nonterminal_or_duplicate_key_response_is_rejected(tmp_path: Path) -> None:
+    valid = responses()["adj_factor"][1]
+    has_more = json.loads(valid)
+    has_more["data"]["has_more"] = True
+    nonzero_count = json.loads(valid)
+    nonzero_count["data"]["count"] = 1
+    duplicate = valid.replace(
+        b'"has_more":false',
+        b'"has_more":false,"has_more":false',
+        1,
+    )
+    cases = (
+        ("has-more", json.dumps(has_more, separators=(",", ":")).encode(), "not terminal"),
+        ("count", json.dumps(nonzero_count, separators=(",", ":")).encode(), "not terminal"),
+        ("duplicate", duplicate, "unique-key JSON"),
+    )
+    for name, malformed, message in cases:
+        provider = responses()
+        provider["adj_factor"] = (200, malformed)
+        output = tmp_path / name
+        with pytest.raises(AcquisitionError, match=message):
+            acquire_listing_corporate_action_authority(
+                request(),
+                token="secret",
+                output_dir=output,
+                acquired_at_epoch_nanoseconds=1,
+                post=FakePost(provider),
+            )
+        assert not output.exists()

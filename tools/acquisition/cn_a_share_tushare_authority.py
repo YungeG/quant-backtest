@@ -27,9 +27,9 @@ from ._common import (
     sha256,
 )
 from .cn_a_share_tushare import (
+    _contains_text,
     _post_with_retries,
     _provider_body,
-    _rows,
     _stdlib_post,
 )
 
@@ -76,6 +76,68 @@ _DIVIDEND_FIELDS = (
     "base_date",
     "base_share",
 )
+
+
+def _authority_rows(
+    response_bytes: bytes,
+    *,
+    api_name: str,
+    expected_fields: tuple[str, ...],
+    forbidden_text: str,
+) -> list[list[object]]:
+    def unique_object(pairs: list[tuple[str, object]]) -> dict[str, object]:
+        result: dict[str, object] = {}
+        for key, value in pairs:
+            if key in result:
+                raise ValueError("duplicate key")
+            result[key] = value
+        return result
+
+    def reject_constant(value: str) -> object:
+        raise ValueError(f"invalid JSON constant {value}")
+
+    try:
+        payload = json.loads(
+            response_bytes,
+            object_pairs_hook=unique_object,
+            parse_constant=reject_constant,
+        )
+    except (UnicodeDecodeError, json.JSONDecodeError, ValueError) as error:
+        raise AcquisitionError(
+            f"provider {api_name} response must be valid unique-key JSON"
+        ) from error
+    if _contains_text(payload, forbidden_text):
+        raise AcquisitionError(
+            f"provider {api_name} response contains credential material"
+        )
+    if (
+        type(payload) is not dict
+        or set(payload) != {"request_id", "code", "data", "msg", "detail"}
+        or type(payload["request_id"]) is not str
+        or not payload["request_id"]
+        or type(payload["code"]) is not int
+        or type(payload["msg"]) is not str
+        or type(payload["detail"]) is not str
+    ):
+        raise AcquisitionError(f"provider {api_name} response has invalid envelope")
+    if payload["code"] != 0:
+        raise AcquisitionError(f"provider rejected {api_name} request")
+    data = payload["data"]
+    if (
+        type(data) is not dict
+        or set(data) != {"fields", "items", "has_more", "count"}
+        or data["fields"] != list(expected_fields)
+        or type(data["items"]) is not list
+    ):
+        raise AcquisitionError(f"provider {api_name} response schema mismatch")
+    if data["has_more"] is not False or type(data["count"]) is not int or data["count"] != 0:
+        raise AcquisitionError(f"provider {api_name} response is not terminal")
+    if any(
+        type(item) is not list or len(item) != len(expected_fields)
+        for item in data["items"]
+    ):
+        raise AcquisitionError(f"provider {api_name} response row mismatch")
+    return data["items"]
 
 
 @dataclass(frozen=True, slots=True)
@@ -166,7 +228,7 @@ def acquire_listing_corporate_action_authority(
             post,
             sleep,
         )
-        rows = _rows(
+        rows = _authority_rows(
             response_bytes,
             api_name=api_name,
             expected_fields=fields,

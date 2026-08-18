@@ -63,7 +63,8 @@ Runtime/Trading Kernel import.
 3. `adj_factor(ts_code=000001.SZ, start_date=20231229, end_date=20240103)`;
 4. `dividend(ts_code=000001.SZ, ex_date=20240102)`.
 
-Success requires one stock row whose documented list/delist interval covers the
+Success requires exact unique-key provider envelopes with `has_more=false` and
+integer `count=0`, one stock row whose documented list/delist interval covers the
 trade date, exactly one name interval covering the trade date, exact unique
 adjustment-factor rows for previous/target/next trading dates, and only target-date
 dividend rows (zero is valid). Exact raw response bytes remain authoritative;
