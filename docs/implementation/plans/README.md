@@ -8,8 +8,8 @@ The goal is not more documents. The goal is a small roadmap index plus independe
 
 ## Active cross-Gate plans
 
-- [MRMD-01 Multi-resolution Market Data](mrmd-01-multi-resolution-market-data.md) — architecture direction frozen; DRAFT until `PERF-OBS-01` and readiness review.
-- `PERF-OBS-01` — DRAFT cross-cutting non-authoritative performance observation policy.
+- [MRMD-01 Multi-resolution Market Data](mrmd-01-multi-resolution-market-data.md) — `READY`; additive test-first implementation authorized.
+- [PERF-OBS-01 Performance Observability](perf-obs-01-performance-observability.md) — `READY`; Runtime MRMD/PREP-only bounded non-authoritative observations.
 - `PREP-COVERAGE-01` — DRAFT MRMD preparation/preflight fan-out node.
 
 ## Separate artifact roles

@@ -160,8 +160,8 @@ artifact_hashes: []
 | G12E | PASSED | market-data-contracts | G12D, WP-06A | none |
 | G12F | PASSED | parity tooling | G12E, G07 | none |
 | G12G | PASSED | market-bundle-builder | G12B–G12C | Bar aggregation fixtures |
-| PERF-OBS-01 | DRAFT | outer orchestration across Builder/Runtime/Repository/Analysis | accepted public operation seams | fixed bounded non-authoritative observation policy not yet frozen |
-| MRMD-01 | DRAFT — architecture direction frozen | backtest-runtime preparation and observation integration | G11B, G11D, G11E, G12G, BT-GAP-02B, BT-GAP-02C, PERF-OBS-01 | observability policy and final readiness review |
+| PERF-OBS-01 | READY | backtest-runtime MRMD/PREP orchestration | G00 | none; implementation must begin with named RED fixtures |
+| MRMD-01 | READY | backtest-runtime preparation and observation integration | G11B, G11D, G11E, G12G, BT-GAP-02B, BT-GAP-02C, PERF-OBS-01 | none; implementation must preserve all PASSED v1 bytes |
 | PREP-COVERAGE-01 | DRAFT | backtest-runtime preparation | MRMD-01, BT-GAP-02B, BT-GAP-02C | construction inputs, preflight outcome, and failure precedence not yet frozen |
 | G12H | DRAFT / BLOCKED | market-bundle-builder validation | G12C, G12CD-CN-A-SHARE-DEVELOPMENT-RULE-AUTHORITIES-V1 | aligned five-dimension authority; current exact fixture fails `COVERAGE_GAP / market_fees` because fee/tax coverage ends August 2023 before the July 2026 target |
 | G12I | DRAFT | market-bundle-builder validation | G12C, G12G | Real profile-purpose, provider/calendar availability, and terminal-set closure evidence |
@@ -186,6 +186,76 @@ artifact_hashes: []
 | BT-GAP-07 | PASSED — immutable commit `029ac43f6d781567cd0742594ca82c181ead0a6d` | backtest-runtime structural read port | BT-GAP-01, WP-02E | none |
 | BT-GAP-08 | PASSED — accepted package revision `9e5937895d7559b8537a4595d73b6aabc94f6f13` | Backtest package closure | BT-GAP-02, BT-GAP-03, BT-GAP-05, BT-GAP-06 | none |
 | BT-GAP-09 | PASSED — accepted source revision `e3c04fb612d6798aef1420b60864d4f315ed12ac` (package code `a014e9389f36b6696653606c5ebcb845cabe9f24`) | installable development cash provider, preparation, request registration, opaque metric-profile authority, and durable FAILED repository acceptance | BT-GAP-02, BT-GAP-02B, BT-GAP-02C, BT-GAP-03, BT-GAP-05, BT-GAP-07, BT-GAP-08 | none; Platform P00-BTA/P00-SEAM remain external |
+
+### PERF-OBS-01 Readiness Card
+
+```yaml
+id: PERF-OBS-01
+status: READY
+depends_on: [G00]
+owner_package: backtest-runtime internal MRMD/PREP orchestration
+public_interface: none; off-root private module only
+test_commands:
+  contract: uv run --locked pytest -q tests/runtime/performance_observations/test_bounded_performance_recorder.py
+  fixture: uv run --locked pytest -q tests/runtime/multi_resolution/test_performance_invariance.py
+  boundary: uv run --locked pytest -q tests/architecture/test_performance_observation_boundary.py
+fixture_ids:
+  - perf-obs-01-mrmd-v1
+expected_artifacts:
+  - tests/fixtures/runtime/performance/perf-obs-01-mrmd-v1.expected.json
+failure_contracts:
+  - invalid-operation-outcome
+  - invalid-exact-integer
+  - saturation
+  - recorder-failure-ignored
+  - clock-failure-ignored
+  - counter-extraction-failure-ignored
+  - canonical-encoding-rejected
+allowed_grade: development
+evidence:
+  - recorder-contract-tests
+  - MRMD-canonical-invariance
+  - frozen-signature-checks
+  - architecture-import-and-source-boundary
+passed_commit: null
+artifact_hashes: []
+```
+
+### MRMD-01 Readiness Card
+
+```yaml
+id: MRMD-01
+status: READY
+depends_on: [G11B, G11D, G11E, G12G, BT-GAP-02B, BT-GAP-02C, PERF-OBS-01]
+owner_package: backtest-runtime internal preparation and observation integration
+public_interface: none; off-root values and orchestration only
+test_commands:
+  contract: uv run --locked pytest -q tests/runtime/multi_resolution/test_market_data_bindings.py
+  fixture: uv run --locked pytest -q tests/runtime/multi_resolution/test_multi_resolution_journey.py
+  boundary: uv run --locked pytest -q tests/architecture/test_multi_resolution_market_data_boundary.py
+fixture_ids:
+  - mrmd-01-multi-resolution-market-data-v1
+expected_artifacts:
+  - tests/fixtures/runtime/multi_resolution/mrmd-01-v1.expected.json
+failure_contracts:
+  - invalid-binding
+  - schedule-signal-exact-cover-mismatch
+  - bundle-or-stream-mismatch
+  - malformed-visible-g12g-bar
+  - bar-definition-mismatch
+  - aggregation-lineage-mismatch
+  - implicit-role-fallback
+allowed_grade: development
+evidence:
+  - value-contract-tests
+  - one-bundle-preflight
+  - visible-event-causality
+  - role-hash-and-run-identity-parity
+  - legacy-byte-compatibility
+  - performance-observation-invariance
+passed_commit: null
+artifact_hashes: []
+```
 
 ## 4. WP-00A Acceptance Card
 

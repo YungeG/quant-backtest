@@ -1870,7 +1870,7 @@ Acceptance and status authority：[`docs/implementation/acceptance-matrix.md`](a
 
 ### Cross-Gate MRMD-01 Multi-resolution Market Data
 
-状态：[MRMD-01 plan](plans/mrmd-01-multi-resolution-market-data.md) 已冻结 architecture direction，Gate 保持 DRAFT，等待 `PERF-OBS-01` 与最终 readiness review。系统不设置 global backtest frequency；信号观察、决策节奏、成交模拟行情和估值行情独立绑定。Runtime 不 resample；现有 G12G point-to-Bar Event lineage 由 run-scoped bindings exact 绑定并进入现有 decision/execution/snapshot semantic identities。
+状态：[MRMD-01 plan](plans/mrmd-01-multi-resolution-market-data.md) 与 [PERF-OBS-01](plans/perf-obs-01-performance-observability.md) 均为 READY；允许 additive test-first implementation。系统不设置 global backtest frequency；信号观察、决策节奏、成交模拟行情和估值行情独立绑定。Runtime 不 resample；现有 G12G point-to-Bar Event lineage 由 run-scoped bindings exact 绑定并进入现有 decision/execution/snapshot semantic identities。性能观测只存在于新 MRMD/PREP outer orchestration，永不进入 canonical identity/evidence。
 
 ### Gate G12H Rule Coverage
 

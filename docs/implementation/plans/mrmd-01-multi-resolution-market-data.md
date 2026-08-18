@@ -1,7 +1,7 @@
 ---
 id: MRMD-01
-readiness: DRAFT
-gate_status: DRAFT
+readiness: READY
+gate_status: READY
 owner: backtest-runtime preparation and observation integration
 produces:
   - MultiResolutionMarketDataBindings@1
@@ -15,7 +15,7 @@ consumes:
   - selected Profile-owned execution and valuation inputs
 depends_on:
   contract: [G11B, G11D, G11E, G12G, BT-GAP-02B, BT-GAP-02C, PERF-OBS-01]
-  evidence: [accepted G12G fixtures, multi-resolution RED fixtures]
+  evidence: [accepted G12G fixtures]
   write_conflict: [execution-input bundle, acceptance registry]
 fan_out: [PREP-COVERAGE-01, G12I, provider-specific multi-resolution slices]
 ---
@@ -24,10 +24,10 @@ fan_out: [PREP-COVERAGE-01, G12I, provider-specific multi-resolution slices]
 
 ## Status
 
-`DRAFT / BLOCKED`. The architecture direction is frozen, but implementation is
-not authorized until the Acceptance Matrix records `READY` and `PERF-OBS-01`
-freezes performance observation mechanics. All PASSED v1 bytes, hashes, interfaces,
-and failure precedence remain immutable.
+`READY`. The architecture contract, `PERF-OBS-01`, Acceptance Matrix readiness
+card, and independent reviews are complete. Implementation remains additive and
+test-first. All PASSED v1 bytes, hashes, interfaces, and failure precedence remain
+immutable.
 
 Architecture decision: `docs/adr/0002-no-global-backtest-frequency.md`.
 
