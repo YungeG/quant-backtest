@@ -13,6 +13,8 @@ from crypto_quant_backtest import (
     BacktestExecutionRequest,
     BacktestProfileRegistry,
     BacktestRuntime,
+    AttemptEvidenceWriter,
+    AttemptIdentity,
     DeterministicBarEngine,
     EngineCancellation,
     EngineCancellationRequest,
@@ -313,6 +315,11 @@ def test_v3_retry_terminal_is_idempotent_after_restart(
 
     no_engine = _SequenceEngine(())
     _install_engine(monkeypatch, no_engine)
+
+    def forbidden_publish(*args, **kwargs):
+        raise AssertionError("existing terminal evidence must not be republished")
+
+    monkeypatch.setattr(AttemptEvidenceWriter, "_publish_locked", forbidden_publish)
     restarted = _runtime(tmp_path, store, prepared)
     second = (
         restarted.run_with_cancellation(transport, cancellation)
@@ -352,11 +359,21 @@ def test_v3_restart_reuses_attempt_one_ready_and_runs_only_retry(
     monkeypatch.undo()
     retry_engine = _SequenceEngine(("ready",))
     _install_engine(monkeypatch, retry_engine)
+    publish_calls = 0
+    original_publish = AttemptEvidenceWriter._publish_locked
+
+    def publish(self, record):
+        nonlocal publish_calls
+        publish_calls += 1
+        return original_publish(self, record)
+
+    monkeypatch.setattr(AttemptEvidenceWriter, "_publish_locked", publish)
     result = _runtime(tmp_path, store, prepared).run(transport)
 
     assert type(result) is BacktestCanonicalPublicationRef
     assert result.artifact_ref.artifact_type == "canonical_publication_manifest"
     assert retry_engine.calls == 1
+    assert publish_calls == 1
 
 
 def test_v3_restart_finalizes_two_ready_attempts_without_engine_rerun(
@@ -380,6 +397,11 @@ def test_v3_restart_finalizes_two_ready_attempts_without_engine_rerun(
     monkeypatch.undo()
     no_engine = _SequenceEngine(())
     _install_engine(monkeypatch, no_engine)
+
+    def forbidden_publish(*args, **kwargs):
+        raise AssertionError("READY evidence must not be republished")
+
+    monkeypatch.setattr(AttemptEvidenceWriter, "_publish_locked", forbidden_publish)
     result = _runtime(tmp_path, store, prepared).run(transport)
 
     assert type(result) is BacktestCanonicalPublicationRef
@@ -458,3 +480,49 @@ def test_v3_recovered_finalization_is_byte_identical_to_uninterrupted_run(
     } == {
         path.name: path.read_bytes() for path in recovered_canonical.iterdir()
     }
+
+
+def test_v3_target_is_reconstructed_once_before_timeline(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    prepared, _, _, envelope, transport = _executable_contract()
+    store = _ArtifactStore(envelope)
+    target_opens = 0
+    original_open = InMemoryMarketBundleReader.open_cursor
+
+    def open_cursor(self, stream_key, *, batch_size):
+        nonlocal target_opens
+        if stream_key == "targets":
+            target_opens += 1
+        return original_open(self, stream_key, batch_size=batch_size)
+
+    monkeypatch.setattr(InMemoryMarketBundleReader, "open_cursor", open_cursor)
+    result = _runtime(tmp_path, store, prepared).run(transport)
+
+    assert type(result) is BacktestCanonicalPublicationRef
+    # Original Reader capture, one retained target reconstruction, then two Engine
+    # Timeline cursors. Hydration performs no second target reconstruction.
+    assert target_opens == 4
+
+
+def test_v3_attempt_graph_rejects_retry_ordinal_gap_before_engine(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    prepared, resolved, _, envelope, transport = _executable_contract()
+    store = _ArtifactStore(envelope)
+    first = AttemptIdentity.first(
+        resolved.semantic_run_id
+    )
+    second = AttemptIdentity.retry(
+        first, next_ordinal=2
+    )
+    attempts = tmp_path / "runs" / resolved.semantic_run_id / "attempts"
+    (attempts / ".staging").mkdir(parents=True)
+    (attempts / second.attempt_id).mkdir()
+    no_engine = _SequenceEngine(())
+    _install_engine(monkeypatch, no_engine)
+
+    with pytest.raises(RuntimeError, match="ordinal gap"):
+        _runtime(tmp_path, store, prepared).run(transport)
+
+    assert no_engine.calls == 0

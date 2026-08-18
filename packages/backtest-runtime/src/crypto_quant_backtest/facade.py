@@ -625,6 +625,9 @@ class BacktestRuntime:
             children = tuple(value for value in children if value != staging)
         if any(not value.is_dir() or value.name not in expected for value in children):
             raise RuntimeError("Attempt graph contains an unexpected node")
+        names = {value.name for value in children}
+        if second.attempt_id in names and first.attempt_id not in names:
+            raise RuntimeError("Attempt graph has an ordinal gap")
         states = {
             value.name: self._recover_attempt_state(
                 value,
@@ -635,8 +638,6 @@ class BacktestRuntime:
             )
             for value in children
         }
-        if second.attempt_id in states and first.attempt_id not in states:
-            raise RuntimeError("Attempt graph has an ordinal gap")
         ordered = tuple(
             states[value.attempt_id]
             for value in (first, second)
@@ -722,6 +723,7 @@ class BacktestRuntime:
                 manifest.semantic_run_id != resolved.semantic_run_id
                 or manifest.attempt_id != attempt.attempt_id
                 or manifest.manifest_hash != manifest_payload["manifest_hash"]
+                or canonical_bytes(manifest_payload) != canonical_bytes(manifest)
             ):
                 raise ValueError("manifest identity mismatch")
             expected_files = {value.relative_path for value in entries} | {
@@ -744,6 +746,22 @@ class BacktestRuntime:
                     raise ValueError("Attempt artifact binding mismatch")
                 payloads[entry.relative_path] = payload
             record = payloads["attempt-execution-record.json"]
+            if (
+                canonical_sha256(record) != manifest.attempt_record_hash
+                or canonical_sha256(payloads["market-bundle-ref.json"])
+                != manifest.market_bundle_ref_hash
+                or canonical_bytes(payloads["request.json"])
+                != canonical_bytes(resolved.request)
+                or canonical_bytes(payloads["environment.json"])
+                != canonical_bytes(resolved.environment)
+                or canonical_bytes(payloads["build-artifact-manifest.json"])
+                != canonical_bytes(resolved.build_artifact_manifest)
+                or canonical_bytes(
+                    payloads["environment-compatibility-report.json"]
+                )
+                != canonical_bytes(resolved.environment.compatibility_report)
+            ):
+                raise ValueError("Attempt common evidence mismatch")
             branch_name = {
                 EvidencePublicationStatus.READY_FOR_INTEGRITY: "ready_to_finalize",
                 EvidencePublicationStatus.BLOCKED: "blocked_report",
