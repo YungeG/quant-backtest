@@ -32,13 +32,19 @@ from .decision_schedule import (
     WarmupEligibility,
 )
 from .engine import (
+    OrderEventPlan,
     ResolvedBarExecution,
     ResolvedDecisionCycle,
     ResolvedMark,
     ResolvedOrderAdmission,
+    ResolvedPreTradePlan,
     SnapshotProjectionPlan,
 )
-from .execution import NextEligibleBarOpenModel
+from .execution import (
+    BarLiquidityEvidence,
+    NextBarOpenApplicability,
+    NextEligibleBarOpenModel,
+)
 from .multi_resolution_market_data import (
     ExecutionDataBinding,
     MultiResolutionMarketDataBindings,
@@ -69,9 +75,20 @@ from .performance_observations import (
     PerformanceOperation,
     PerformanceOutcome,
 )
-from .ports import SimulationPortType
+from .ports import SimulationComponentRef, SimulationPortType
 from .resolution import ResolvedBacktestRequest
-from .target_stream import PrecomputedTargetStream, PrecomputedTargetStreamAdapter
+from .slippage import (
+    DeterministicBpsSlippageModel,
+    SlippageApplicabilityEnvelope,
+    SlippageCalibrationRef,
+    SlippageMarketState,
+)
+from .target_stream import (
+    PrecomputedTargetStream,
+    PrecomputedTargetStreamAdapter,
+    TargetStreamDecisionSchedule,
+    TargetStreamScheduleEntry,
+)
 from .timeline import TimelineEvent, TimelineSegment, TimelineWindow
 
 
@@ -390,6 +407,254 @@ class MarketDataCaseAuthority:
             raise TypeError("snapshot_plan must be exact SnapshotProjectionPlan")
         if type(self.target_stream) is not PrecomputedTargetStream:
             raise TypeError("target_stream must be exact PrecomputedTargetStream")
+
+
+def _component_ref(value: object) -> SimulationComponentRef:
+    if type(value) is not SimulationComponentRef:
+        raise TypeError("component ref must be exact SimulationComponentRef")
+    return SimulationComponentRef(
+        value.port_type,
+        value.component_key,
+        value.component_version,
+        value.component_digest,
+    )
+
+
+def _target_schedule(value: object) -> TargetStreamDecisionSchedule:
+    if type(value) is not TargetStreamDecisionSchedule:
+        raise TypeError("cycle schedule must be exact TargetStreamDecisionSchedule")
+    entries = []
+    for entry in value.entries:
+        if type(entry) is not TargetStreamScheduleEntry:
+            raise TypeError("cycle schedule entries must be exact TargetStreamScheduleEntry")
+        entries.append(
+            TargetStreamScheduleEntry(
+                entry.event_id,
+                entry.expectation,
+                entry.validation_context,
+            )
+        )
+    return TargetStreamDecisionSchedule(
+        _utc(value.decision_time),
+        value.segment,
+        tuple(entries),
+    )
+
+
+def _pretrade_plan(value: object) -> ResolvedPreTradePlan:
+    if type(value) is not ResolvedPreTradePlan:
+        raise TypeError("pretrade_plan must be exact ResolvedPreTradePlan")
+    return ResolvedPreTradePlan(
+        value.order_rule_timeline,
+        value.notional_evidence,
+        _utc(value.market_rule_evaluated_at),
+        value.fee_reservation_rule_set,
+        _utc(value.fee_estimated_at),
+        value.resource_commitment,
+        value.requirement_source_key,
+        value.requirement_source_version,
+        value.requirement_source_hash,
+        value.account_risk_policy,
+        _utc(value.pretrade_evaluated_at),
+    )
+
+
+def _admission(value: object) -> ResolvedOrderAdmission:
+    if type(value) is not ResolvedOrderAdmission:
+        raise TypeError("admissions must contain exact ResolvedOrderAdmission")
+    event_plan = []
+    for event in value.event_plan:
+        if type(event) is not OrderEventPlan:
+            raise TypeError("admission event_plan must contain exact OrderEventPlan")
+        event_plan.append(
+            OrderEventPlan(
+                event.event_type,
+                event.event_id,
+                _instant(event.occurred_at),
+                event.external_evidence_id,
+            )
+        )
+    return ResolvedOrderAdmission(
+        value.order,
+        value.capability_set,
+        value.translation_mapping,
+        _utc(value.translation_time),
+        _pretrade_plan(value.pretrade_plan),
+        tuple(event_plan),
+    )
+
+
+def _decision_cycle(value: object) -> ResolvedDecisionCycle:
+    if type(value) is not ResolvedDecisionCycle:
+        raise TypeError("decision_cycles must contain exact ResolvedDecisionCycle")
+    return ResolvedDecisionCycle(
+        _target_schedule(value.schedule),
+        value.allocations,
+        value.target_notional_scale,
+        value.risk_policy,
+        value.sizing_policy,
+        value.sizing_inputs,
+        value.target_validity,
+        value.rebalance_policy,
+        _utc(value.planning_at),
+        tuple(_admission(item) for item in value.admissions),
+    )
+
+
+def _liquidity_evidence(value: object) -> BarLiquidityEvidence:
+    if type(value) is not BarLiquidityEvidence:
+        raise TypeError("liquidity_evidence must be exact BarLiquidityEvidence")
+    return BarLiquidityEvidence(
+        value.evidence_key,
+        value.evidence_version,
+        value.market_event_id,
+        value.market_event_hash,
+        _utc(value.evaluated_at),
+        value.approved,
+        value.reason_code,
+        value.source_hash,
+        value.evidence_id,
+    )
+
+
+def _market_state(value: object) -> SlippageMarketState:
+    if type(value) is not SlippageMarketState:
+        raise TypeError("market_state must be exact SlippageMarketState")
+    return SlippageMarketState(
+        value.state_key,
+        _utc(value.observed_at),
+        _utc(value.available_at),
+        value.source_event_id,
+        value.revision_id,
+        value.evidence_hash,
+    )
+
+
+def _slippage_model(value: object) -> DeterministicBpsSlippageModel:
+    if type(value) is not DeterministicBpsSlippageModel:
+        raise TypeError("slippage_model must be exact DeterministicBpsSlippageModel")
+    calibration = value.calibration_ref
+    if type(calibration) is not SlippageCalibrationRef:
+        raise TypeError("calibration_ref must be exact SlippageCalibrationRef")
+    envelope = value.applicability_envelope
+    if type(envelope) is not SlippageApplicabilityEnvelope:
+        raise TypeError("applicability_envelope must be exact SlippageApplicabilityEnvelope")
+    return DeterministicBpsSlippageModel(
+        _component_ref(value.component_ref),
+        SlippageCalibrationRef(
+            calibration.calibration_key,
+            calibration.calibration_version,
+            calibration.calibration_digest,
+        ),
+        SlippageApplicabilityEnvelope(
+            envelope.envelope_key,
+            envelope.envelope_version,
+            _instrument(envelope.instrument_id),
+            _utc(envelope.valid_from),
+            _utc(envelope.valid_to_exclusive),
+            envelope.maximum_quantity,
+            envelope.allowed_market_state_keys,
+            envelope.config_hash,
+        ),
+        value.basis_points_units,
+        value.basis_points_scale,
+        value.rounding,
+        value.limitations,
+    )
+
+
+def _bar_execution(value: object) -> ResolvedBarExecution:
+    if type(value) is not ResolvedBarExecution:
+        raise TypeError("bar_executions must contain exact ResolvedBarExecution")
+    return ResolvedBarExecution(
+        value.event_id,
+        value.order_id,
+        _pretrade_plan(value.pretrade_plan),
+        _liquidity_evidence(value.liquidity_evidence),
+        _market_state(value.market_state),
+        _slippage_model(value.slippage_model),
+        value.fill_id,
+        value.fill_event_id,
+        _instant(value.fill_event_at),
+        value.accounting_plan,
+    )
+
+
+def _execution_model(value: object) -> NextEligibleBarOpenModel:
+    if type(value) is not NextEligibleBarOpenModel:
+        raise TypeError("execution_model must be exact NextEligibleBarOpenModel")
+    applicability = value.applicability
+    if type(applicability) is not NextBarOpenApplicability:
+        raise TypeError("execution applicability must be exact NextBarOpenApplicability")
+    return NextEligibleBarOpenModel(
+        _component_ref(value.component_ref),
+        NextBarOpenApplicability(applicability.tif_actions),
+    )
+
+
+def _resolved_mark(value: object) -> ResolvedMark:
+    if type(value) is not ResolvedMark:
+        raise TypeError("resolved_marks must contain exact ResolvedMark")
+    return ResolvedMark(
+        _instrument(value.instrument_id),
+        value.quote_currency_id,
+        value.price_purpose,
+        value.price,
+        _utc(value.observed_at),
+        _utc(value.available_at),
+        _utc(value.resolved_at),
+        value.age_nanoseconds,
+        value.stream_id,
+        value.source_event_id,
+        value.revision_id,
+        value.stale_policy_key,
+        value.stale_policy_version,
+        value.stale_policy_hash,
+        available_at_instant=(
+            None
+            if value.available_at_instant is None
+            else _instant(value.available_at_instant)
+        ),
+        resolved_at_instant=(
+            None
+            if value.resolved_at_instant is None
+            else _instant(value.resolved_at_instant)
+        ),
+    )
+
+
+def _snapshot_plan(value: object) -> SnapshotProjectionPlan:
+    if type(value) is not SnapshotProjectionPlan:
+        raise TypeError("snapshot_plan must be exact SnapshotProjectionPlan")
+    return SnapshotProjectionPlan(
+        tuple(_resolved_mark(item) for item in value.resolved_marks),
+        value.valuations,
+        value.reporting_currency,
+        value.reporting_scale,
+        _utc(value.timestamp),
+        value.currency_valuation_graph_hash,
+    )
+
+
+def _target_stream(value: object) -> PrecomputedTargetStream:
+    if type(value) is not PrecomputedTargetStream:
+        raise TypeError("target_stream must be exact PrecomputedTargetStream")
+    return PrecomputedTargetStream(
+        value.stream_key,
+        tuple(_event(item) for item in value.events),
+    )
+
+
+def _case_authority(value: object) -> MarketDataCaseAuthority:
+    if type(value) is not MarketDataCaseAuthority:
+        raise TypeError("case_authority must be exact MarketDataCaseAuthority")
+    return MarketDataCaseAuthority(
+        tuple(_decision_cycle(item) for item in value.decision_cycles),
+        tuple(_bar_execution(item) for item in value.bar_executions),
+        _execution_model(value.execution_model),
+        _snapshot_plan(value.snapshot_plan),
+        _target_stream(value.target_stream),
+    )
 
 
 class MarketDataPreparationFailureCode(str, Enum):
@@ -762,7 +1027,12 @@ def _valuation_failure(
             return position, None
         binding = by_instrument.get(mark.instrument_id)
         event = all_events.get(mark.source_event_id)
-        if binding is None or event is None or binding.stream_key != mark.stream_id:
+        if (
+            mark.price_purpose is not PricePurpose.VALUATION
+            or binding is None
+            or event is None
+            or binding.stream_key != mark.stream_id
+        ):
             return position, None
         manifest = manifests[binding.stream_key]
         if (
@@ -1006,15 +1276,7 @@ def prepare_multi_resolution_market_data_v1(
             ),
         )
     )
-    if type(case_authority) is not MarketDataCaseAuthority:
-        raise TypeError("case_authority must be exact MarketDataCaseAuthority")
-    MarketDataCaseAuthority(
-        case_authority.decision_cycles,
-        case_authority.bar_executions,
-        case_authority.execution_model,
-        case_authority.snapshot_plan,
-        case_authority.target_stream,
-    )
+    case_authority = _case_authority(case_authority)
     if type(resolved_request) is not ResolvedBacktestRequest:
         raise TypeError("resolved_request must be exact ResolvedBacktestRequest")
     if recorder is not None and type(recorder) is not BoundedPerformanceRecorder:

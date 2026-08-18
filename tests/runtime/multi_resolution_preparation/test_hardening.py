@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from dataclasses import replace
+from dataclasses import fields, replace
 
 import pytest
 
@@ -25,6 +25,7 @@ from crypto_quant_domain import (
     DomainId,
     DomainIdKind,
     InstrumentId,
+    PricePurpose,
     SimulationInstant,
     SourceSequence,
     TimelinePhase,
@@ -40,6 +41,17 @@ from tests.runtime.engine._fixtures import (
 )
 
 from ._fixtures import _g12g_bar, bind_reader, prepared_inputs, rebuild_reader
+
+
+def _forge(value, **changes):
+    forged = object.__new__(type(value))
+    for field in fields(value):
+        object.__setattr__(
+            forged,
+            field.name,
+            changes.get(field.name, getattr(value, field.name)),
+        )
+    return forged
 
 
 def _assert_failure(values, code):
@@ -367,6 +379,53 @@ def test_valuation_identity_matrix_fails_closed(change) -> None:
     _assert_failure(
         values, MarketDataPreparationFailureCode.VALUATION_PROFILE_BINDING_MISMATCH
     )
+
+
+def test_execution_reference_mark_cannot_link_to_valuation_bar() -> None:
+    values = prepared_inputs()
+    authority = values["case_authority"]
+    mark = authority.snapshot_plan.resolved_marks[0]
+    execution_reference = replace(
+        mark, price_purpose=PricePurpose.EXECUTION_REFERENCE
+    )
+    assert execution_reference.price_purpose is PricePurpose.EXECUTION_REFERENCE
+    values["case_authority"] = replace(
+        authority,
+        snapshot_plan=replace(
+            authority.snapshot_plan, resolved_marks=(execution_reference,)
+        ),
+    )
+
+    _assert_failure(
+        values, MarketDataPreparationFailureCode.VALUATION_PROFILE_BINDING_MISMATCH
+    )
+
+
+def test_forged_nested_case_authority_is_reconstructed_before_use() -> None:
+    values = prepared_inputs()
+    authority = values["case_authority"]
+    active = authority.decision_cycles[0]
+    forged_active = _forge(active, allocations=())
+    values["case_authority"] = replace(
+        authority, decision_cycles=(forged_active,)
+    )
+
+    with pytest.raises(ValueError, match="active decision cycle requires allocations"):
+        prepare_multi_resolution_market_data_v1(**values)
+
+    values = prepared_inputs()
+    authority = values["case_authority"]
+    mark = authority.snapshot_plan.resolved_marks[0]
+    forged_mark = _forge(mark, age_nanoseconds=mark.age_nanoseconds + 1)
+    values["case_authority"] = replace(
+        authority,
+        snapshot_plan=replace(
+            authority.snapshot_plan, resolved_marks=(forged_mark,)
+        ),
+    )
+
+    with pytest.raises(ValueError, match="age_nanoseconds"):
+        prepare_multi_resolution_market_data_v1(**values)
 
 
 def test_valuation_price_is_not_inferred_from_bar_close() -> None:
