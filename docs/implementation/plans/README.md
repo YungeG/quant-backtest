@@ -10,7 +10,7 @@ The goal is not more documents. The goal is a small roadmap index plus independe
 
 - [MRMD-01 Multi-resolution Market Data](mrmd-01-multi-resolution-market-data.md) — `READY`; additive test-first implementation authorized.
 - [PERF-OBS-01 Performance Observability](perf-obs-01-performance-observability.md) — `READY`; Runtime MRMD/PREP-only bounded non-authoritative observations.
-- `PREP-COVERAGE-01` — DRAFT MRMD preparation/preflight fan-out node.
+- [PREP-COVERAGE-01 Runtime Multi-resolution Preparation/Preflight](prep-coverage-01.md) — `READY`; MRMD/PERF F2 test-first fan-in authorized.
 
 ## Separate artifact roles
 

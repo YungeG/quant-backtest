@@ -162,7 +162,7 @@ artifact_hashes: []
 | G12G | PASSED | market-bundle-builder | G12B–G12C | Bar aggregation fixtures |
 | PERF-OBS-01 | READY — F1 recorder core PASSED at `85eac498b70d98dccce524f7ec30198456983dbf` | backtest-runtime MRMD/PREP orchestration | G00 | F2 six operations await PREP-COVERAGE-01 |
 | MRMD-01 | READY — F1 bindings/visible verifier PASSED at `85eac498b70d98dccce524f7ec30198456983dbf` | backtest-runtime preparation and observation integration | G11B, G11D, G11E, G12G, BT-GAP-02B, BT-GAP-02C, PERF-OBS-01 | F2 one-Bundle/Profile/identity/hydration/replay awaits PREP-COVERAGE-01 |
-| PREP-COVERAGE-01 | DRAFT | backtest-runtime preparation | MRMD-01, BT-GAP-02B, BT-GAP-02C | construction inputs, preflight outcome, and failure precedence not yet frozen |
+| PREP-COVERAGE-01 | READY | backtest-runtime preparation | MRMD-01, PERF-OBS-01, G11B, G11D, G11E, G12E, BT-GAP-02B, BT-GAP-02C | none; implementation must follow the three frozen test-first slices |
 | G12H | DRAFT / BLOCKED | market-bundle-builder validation | G12C, G12CD-CN-A-SHARE-DEVELOPMENT-RULE-AUTHORITIES-V1 | aligned five-dimension authority; current exact fixture fails `COVERAGE_GAP / market_fees` because fee/tax coverage ends August 2023 before the July 2026 target |
 | G12I | DRAFT | market-bundle-builder validation | G12C, G12G | Real profile-purpose, provider/calendar availability, and terminal-set closure evidence |
 | G12J | DRAFT | trading-domain schema migration | real old artifact | No real source/target schema yet |
@@ -252,6 +252,56 @@ evidence:
   - visible-event-causality
   - role-hash-and-run-identity-parity
   - legacy-byte-compatibility
+  - performance-observation-invariance
+passed_commit: null
+artifact_hashes: []
+```
+
+### PREP-COVERAGE-01 Readiness Card
+
+```yaml
+id: PREP-COVERAGE-01
+status: READY
+depends_on: [MRMD-01, PERF-OBS-01, G11B, G11D, G11E, G12E, BT-GAP-02B, BT-GAP-02C]
+owner_package: backtest-runtime internal preparation/preflight
+public_interface: none; off-root values and private v3 continuations only
+test_commands:
+  contract: uv run --locked pytest -q tests/runtime/multi_resolution_preparation/test_preparation_values.py tests/runtime/multi_resolution_preparation/test_preparation_precedence.py
+  fixture: uv run --locked pytest -q tests/runtime/multi_resolution_preparation/test_preparation_journey.py tests/runtime/execution_inputs/test_multi_resolution_bundle_v3.py
+  integration: uv run --locked pytest -q tests/runtime/test_bt_gap_02_facade.py -k multi_resolution_v3 tests/runtime/runner/test_multi_resolution_v3.py
+  compatibility: uv run --locked pytest -q tests/runtime/execution_inputs tests/runtime/runner tests/runtime/evidence_repository tests/runtime/providers/test_cash_development_provider.py tests/runtime/test_bt_gap_02_facade.py tests/runtime/execution_inputs/test_bt_gap02a_composition_contract.py
+  boundary: uv run --locked pytest -q tests/architecture/test_multi_resolution_preparation_boundary.py tests/architecture/test_bt_gap02b_execution_input_boundary.py tests/architecture/test_bt_gap_02_facade_boundary.py tests/architecture/test_public_api_imports.py
+fixture_ids:
+  - prep-coverage-01-multi-resolution-v1
+  - backtest-execution-input-bundle-v3
+expected_artifacts:
+  - tests/fixtures/runtime/multi_resolution/prep-coverage-01-v1.expected.json
+  - tests/fixtures/runtime/bt-gap02b-execution-input-bundle-v3.json
+failure_contracts:
+  - bundle-reader-mismatch
+  - signal-binding-mismatch
+  - stream-manifest-mismatch
+  - execution-profile-binding-mismatch
+  - valuation-profile-binding-mismatch
+  - signal-lineage-mismatch
+  - point-in-time-failure
+  - signal-bar-failure
+  - window-construction-failure
+  - decision-cycle-eligibility-mismatch
+  - prepared-market-data-binding-mismatch
+  - prepared-market-data-replay-mismatch
+  - execution-case-semantic-hash-mismatch
+  - secret-safe-v3-failure
+  - reader-zero-progress-or-substitution
+allowed_grade: development
+evidence:
+  - MRMD-F1-accepted-source
+  - PERF-OBS-F1-accepted-source
+  - one-bundle-and-role-preflight
+  - opaque-lineage-replay
+  - role-only-semantic-identity
+  - execution-input-v3-roundtrip
+  - legacy-v1-v2-byte-compatibility
   - performance-observation-invariance
 passed_commit: null
 artifact_hashes: []
