@@ -150,7 +150,7 @@ artifact_hashes: []
 | G12A | PASSED | market-bundle-builder | G00 | SourceSnapshot contract |
 | G12-ACQ-TOOLS-V1 | PASSED — immutable commit `6f0bd99a93a349924996eb26708fbb0ac6fecf17` | Backtest tools/acquisition | G12A | none |
 | G12-ACQ-TUSHARE-CALENDAR-V1 | PASSED — immutable commit `10638db8225f68256c027b1dd1373bacff0d112c` | Backtest tools/acquisition | G12A, G12-ACQ-TOOLS-V1 | none |
-| G12L-TUSHARE-CN-A-SHARE-AUTHORITY-ACQUISITION-V1 | READY_FOR_RED | Backtest tools/acquisition | G12A, G12-ACQ-TOOLS-V1, G12-ACQ-TUSHARE-CALENDAR-V1 | implementation and real bounded capture pending; all qualification false |
+| G12L-TUSHARE-CN-A-SHARE-AUTHORITY-ACQUISITION-V1 | IMPLEMENTED / LIVE_CAPTURE_PENDING | Backtest tools/acquisition | G12A, G12-ACQ-TOOLS-V1, G12-ACQ-TUSHARE-CALENDAR-V1 | real bounded capture and acceptance pending; all qualification false |
 | G12B | PASSED | market-bundle-builder | G12A, G02 | Normalization fixtures |
 | G12B-TUSHARE-CN-A-SHARE-DAILY-V1 | PASSED — immutable commit `373817b762fbe0d68b286577e0396107694cc9a1` | market-bundle-builder internal Tushare normalization | G12A, G12B, G12G, frozen Tushare event-time/numeric evidence | none; G12C/D and provider closure remain separate |
 | G12CD-TUSHARE-CN-A-SHARE-DAILY-PUBLICATION-V1 | PASSED — immutable source `7400cad6531b2687ffb150959cbf534c6797359e` | market-bundle-builder internal Tushare daily projection | G12B-TUSHARE-CN-A-SHARE-DAILY-V1, G12C, G12D | none; G12L/listing, revision, corporate-action, G12I/K/M, and deployment remain BLOCKED |
@@ -11650,11 +11650,11 @@ The PASSED development-only projection adds no G12L readiness or
 provider/deployment claim. It reuses unchanged G12C/D production modules and remains
 o authority for listing, revision closure, corporate actions, G12I/K/M, or deployment.
 
-## 104G. G12L Tushare A-share Authority Acquisition v1 (RED only)
+## 104G. G12L Tushare A-share Authority Acquisition v1
 
 ```yaml
 id: G12L-TUSHARE-CN-A-SHARE-AUTHORITY-ACQUISITION-V1
-status: READY_FOR_RED
+status: IMPLEMENTED / LIVE_CAPTURE_PENDING
 depends_on: [G12A, G12-ACQ-TOOLS-V1, G12-ACQ-TUSHARE-CALENDAR-V1]
 owner: Backtest tools/acquisition
 plan: docs/implementation/plans/g12/g12l-tushare-cn-a-share-authority-acquisition-v1.md
@@ -11671,8 +11671,12 @@ qualification:
   corporate_action_lifecycle_qualified: false
   decision_grade_eligible: false
   deployment_authorized: false
+implementation:
+  module: tools.acquisition.cn_a_share_tushare_authority
+  existing_daily_listing_tool_changed: false
+  existing_trade_calendar_tool_changed: false
+focused_tests: 15 passed
 remaining_blockers:
-  - production-acquisition-tool
   - real-no-clobber-capture
   - independent-review-and-full-acceptance
   - provider-revision-correction-terminal-closure

@@ -24,7 +24,9 @@ Freeze one exact real A-share provider capture and independent local-lake parity
 before defining normalized daily-price or listing-lifecycle events.
 
 Research authority:
-`docs/research/g12l-tushare-cn-a-share-daily-listing-v1.md`.
+
+- `docs/research/g12l-tushare-cn-a-share-daily-listing-v1.md`;
+- `docs/research/g12l-tushare-listing-corporate-action-revision-authority-v1.md`.
 
 ## Status
 
@@ -77,6 +79,11 @@ MarketEvent publication.
 the accepted result through the existing G12C/D seams at
 `7400cad6531b2687ffb150959cbf534c6797359e`. It does not qualify this G12L listing
 slice or change any blocker below.
+
+The additive
+`G12L-TUSHARE-CN-A-SHARE-AUTHORITY-ACQUISITION-V1` tool is implemented with real
+capture pending. Its finite current-metadata/name/adjustment/dividend evidence does
+not change the qualifications below.
 
 ## Remaining blockers
 

@@ -64,6 +64,23 @@ previous trading date, writes no token, and
 freezes a one-member candidate G12A snapshot. It does not alter the accepted
 `G12-ACQ-TOOLS-V1` interfaces or package roots.
 
+### Tushare A-share listing/corporate-action authority candidate
+
+```bash
+TUSHARE_TOKEN=... uv run --locked python \
+  -m tools.acquisition.cn_a_share_tushare_authority \
+  --ts-code 000001.SZ --trade-date 20240102 \
+  --previous-trade-date 20231229 --next-trade-date 20240103 \
+  --output-dir /absolute/new/output
+```
+
+This additive tool preserves exact `stock_basic`, `namechange`, adjacent
+`adj_factor`, and target-ex-date `dividend` responses in one candidate G12A
+snapshot. It validates the finite listing/name/date scopes but fixes provider
+revision closure, historical-listing qualification, corporate-action lifecycle,
+decision grade, and deployment to false. The PASSED daily/listing and calendar
+programs remain unchanged.
+
 ## Output contract
 
 Every successful command creates a previously nonexistent directory containing:

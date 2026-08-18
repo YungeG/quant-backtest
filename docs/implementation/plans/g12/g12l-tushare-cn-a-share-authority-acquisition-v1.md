@@ -1,7 +1,7 @@
 ---
 id: G12L-TUSHARE-CN-A-SHARE-AUTHORITY-ACQUISITION-V1
-readiness: READY_FOR_RED
-gate_status: DRAFT
+readiness: IMPLEMENTED
+gate_status: LIVE_CAPTURE_PENDING
 owner: Backtest tools/acquisition
 produces:
   - exact current stock metadata response
@@ -22,10 +22,12 @@ fan_out: [G12L-TUSHARE-CN-A-SHARE-DAILY-LISTING-V1, G12K, G12M-CN-A-SHARE]
 
 ## Status
 
-`READY_FOR_RED`. This freezes one additive acquisition program for exact
-`000001.SZ / 2024-01-02` listing/name/corporate-action source evidence. It does
-not modify the PASSED daily/listing or trade-calendar tools and grants no listing,
-revision, corporate-action, decision-grade, or deployment qualification.
+`IMPLEMENTED / LIVE_CAPTURE_PENDING`. The additive acquisition program and
+focused atomicity/redaction/scope contract pass for exact `000001.SZ / 2024-01-02`
+listing/name/corporate-action source evidence. Real no-clobber capture and final
+acceptance remain pending. The PASSED daily/listing and trade-calendar tools remain
+unchanged, and no listing, revision, corporate-action, decision-grade, or deployment
+qualification is granted.
 
 ## Single tool seam
 
@@ -94,13 +96,15 @@ never replaced. Token material is accepted only as an injected/environment value
 and must not appear in raw responses, receipts, exceptions, stdout, or committed
 artifacts.
 
-## RED command
+## Focused command
 
 ```bash
 uv run --locked pytest -q \
   tests/tools/acquisition/test_cn_a_share_tushare_authority.py \
   tests/architecture/test_g12l_tushare_authority_acquisition_boundary.py
 ```
+
+Focused implementation and inherited acquisition checks: 15 passed.
 
 ## Explicit limits
 
