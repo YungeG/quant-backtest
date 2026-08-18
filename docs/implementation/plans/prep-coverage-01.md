@@ -24,10 +24,12 @@ fan_in: [MRMD-01, PERF-OBS-01]
 
 ## Status
 
-`READY`; delivery slice 1 pure preflight is `PASSED` at immutable source
-`3a8cacccd1902ea6b6ef57c2f39266166f2edc01`. Delivery slices 2–3 remain READY and
-own execution-input v3 identity/hydration plus facade/Runner/repository fan-in. The
-full PREP-COVERAGE Gate is not PASSED until all three slices complete.
+`READY`; delivery slices 1–2 are `PASSED`. Slice 1 pure preflight is frozen at
+`3a8cacccd1902ea6b6ef57c2f39266166f2edc01`; slice 2 execution-input v3 identity,
+decode, hydration, and replay is frozen at
+`44d91f39ee5edafc23f000d4d9c061bb794d3679`. Delivery slice 3 remains READY and
+owns facade/Runner/repository fan-in. The full PREP-COVERAGE Gate is not PASSED
+until slice 3 completes.
 
 Slice-1 acceptance closure:
 
@@ -41,6 +43,21 @@ Slice-1 acceptance closure:
 - import boundaries: passed;
 - Pyright, compile, lock, diff, and clean-worktree checks: passed;
 - independent spec/security reviews: no blocker/high findings.
+
+Slice-2 acceptance closure:
+
+- RED: `7eb4b0e`;
+- initial implementation: `5712eb5`;
+- final source: `44d91f39ee5edafc23f000d4d9c061bb794d3679`;
+- exact bundle-v3 fixture: `sha256:ac17536771914f599b3ea58f936049208f29b3f707815456e5b763d0762e5179`;
+- immutable v1 fixture remains `sha256:09578ac47f997bc4bf55119d31e97dbcad3eb71e90d93a5ef7c8e6669bd66be2`;
+- immutable v2 fixture remains `sha256:c082042640382dde2dad61f758058ab93c3ba741ed19df0256d7989a157eced1`;
+- focused validation: 133 passed;
+- architecture validation: 175 passed;
+- full repository at final source: 1974 passed;
+- import boundaries: 117 files passed;
+- Pyright, LSP, pi-lens blocking diagnostics, compile, lock, diff, and clean-worktree checks: passed;
+- independent spec, identity, security, minimality, and final finding-owner reviews: no blocker/high findings.
 
 ## Outcome
 

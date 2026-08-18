@@ -10,7 +10,7 @@ The goal is not more documents. The goal is a small roadmap index plus independe
 
 - [MRMD-01 Multi-resolution Market Data](mrmd-01-multi-resolution-market-data.md) — `READY`; additive test-first implementation authorized.
 - [PERF-OBS-01 Performance Observability](perf-obs-01-performance-observability.md) — `READY`; Runtime MRMD/PREP-only bounded non-authoritative observations.
-- [PREP-COVERAGE-01 Runtime Multi-resolution Preparation/Preflight](prep-coverage-01.md) — `READY`; slice 1 pure preflight PASSED at `3a8cacc`; slices 2–3 v3 identity/runtime fan-in remain.
+- [PREP-COVERAGE-01 Runtime Multi-resolution Preparation/Preflight](prep-coverage-01.md) — `READY`; slices 1–2 PASSED; slice 3 one-read Runtime/repository fan-in remains.
 
 ## Separate artifact roles
 
