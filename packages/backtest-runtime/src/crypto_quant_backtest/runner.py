@@ -1149,8 +1149,15 @@ class AuditableBacktestRunner:
         execution_case: ResolvedExecutionCase,
         next_attempt_ordinal: int,
         input_origin: InputOrigin,
+        market_data_preparation: MultiResolutionMarketDataPreparation,
         cancellation: EngineCancellationRequest | None = None,
     ) -> AttemptExecutionRecord:
+        self._verify_v3_contract(
+            resolved_request=resolved_request,
+            execution_case=execution_case,
+            input_origin=input_origin,
+            market_data_preparation=market_data_preparation,
+        )
         if not isinstance(previous, AttemptExecutionRecord):
             raise TypeError("previous must be AttemptExecutionRecord")
         if previous.cache_hit is not None:

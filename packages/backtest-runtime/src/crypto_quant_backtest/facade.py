@@ -315,6 +315,7 @@ class BacktestRuntime:
                 execution_case=execution_case,
                 next_attempt_ordinal=2,
                 input_origin=input_origin,
+                market_data_preparation=market_data_preparation,
                 cancellation=cancellation,
             )
         cached = self._cache_ref(second)
@@ -631,14 +632,18 @@ class BacktestRuntime:
             )
         directory_root = directory.resolve(strict=True)
         for entry in self._manifest_artifacts(manifest_payload):
+            relative_path = self._manifest_relative_path(entry["relative_path"])
+            artifact_type = self._manifest_text(
+                "artifact_type", entry["artifact_type"]
+            )
             child_path = self._contained_manifest_child(
                 directory,
                 directory_root,
-                entry["relative_path"],
+                relative_path,
             )
             _, envelope, source_hash = _read_canonical_artifact(
                 child_path,
-                entry["artifact_type"],
+                artifact_type,
             )
             if (
                 envelope.schema_version != entry["schema_version"]

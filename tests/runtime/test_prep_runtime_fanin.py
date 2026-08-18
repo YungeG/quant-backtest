@@ -7,9 +7,16 @@ from pathlib import Path
 import pytest
 
 from crypto_quant_backtest import (
+    AttemptEvidenceWriter,
+    AttemptIdentity,
     BacktestCanonicalPublicationRef,
     BacktestEvidenceRepository,
     BacktestRuntime,
+    EngineExecutionOutcome,
+    EngineFailure,
+    EngineFailureCode,
+    ExecutionTrace,
+    TerminalStatus,
 )
 from crypto_quant_backtest.composition import (
     ExecutionCaseComposer,
@@ -28,6 +35,8 @@ from crypto_quant_backtest.multi_resolution_preparation import (
     MultiResolutionMarketDataPreparation,
 )
 from crypto_quant_backtest.resolution import ProfileResolver
+from crypto_quant_backtest.run_end import MarkToMarketCloseoutPolicy
+import crypto_quant_backtest.runner as runner_module
 from crypto_quant_backtest.runner import AuditableBacktestRunner
 from crypto_quant_backtest.timeline import DeterministicTimeline
 from crypto_quant_domain import (
@@ -127,6 +136,7 @@ def _executable_contract():
         identities,
         spec.semantic_spec_hash,
     )
+    assert type(rebuilt.closeout_policy) is MarkToMarketCloseoutPolicy
     plan = _ExecutionCasePlan(
         rebuilt.decision_cycles,
         rebuilt.bar_executions,
@@ -176,11 +186,12 @@ def test_v3_runtime_is_one_read_one_resolve_and_reuses_one_retained_reader(
 ) -> None:
     prepared, resolved, _, envelope, transport = _executable_contract()
     runtime, store = _runtime(tmp_path, envelope, prepared)
-    calls = {"resolve": 0, "timeline": 0, "shared": 0}
+    calls = {"resolve": 0, "timeline": 0, "shared": 0, "engine": 0}
     timeline_readers: list[object] = []
     original_resolve = ProfileResolver.resolve
     original_open = DeterministicTimeline.open
     original_shared = AuditableBacktestRunner._execute_verified
+    original_engine = AuditableBacktestRunner._execute_engine
 
     def resolve(self, **kwargs):
         calls["resolve"] += 1
@@ -199,19 +210,28 @@ def test_v3_runtime_is_one_read_one_resolve_and_reuses_one_retained_reader(
         assert calls["timeline"] == 1
         return original_shared(self, *args, **kwargs)
 
+    def execute_engine(self, *args, **kwargs):
+        calls["engine"] += 1
+        return original_engine(self, *args, **kwargs)
+
     monkeypatch.setattr(ProfileResolver, "resolve", resolve)
     monkeypatch.setattr(DeterministicTimeline, "open", open_timeline)
     monkeypatch.setattr(AuditableBacktestRunner, "_execute_verified", execute_shared)
+    monkeypatch.setattr(AuditableBacktestRunner, "_execute_engine", execute_engine)
 
     result = runtime.run(transport)
 
     assert type(result) is BacktestCanonicalPublicationRef
     assert store.reads == 1
-    assert calls == {"resolve": 1, "timeline": 1, "shared": 2}
+    assert calls == {"resolve": 1, "timeline": 1, "shared": 2, "engine": 2}
     assert len(timeline_readers) == 1
     assert timeline_readers[0] is not prepared.verified_reader
     completed = BacktestEvidenceRepository(store).load_completed(result)
     assert completed.semantic_run_id == resolved.semantic_run_id
+    attempt_requests = tuple(
+        (tmp_path / "runs" / resolved.semantic_run_id / "attempts").glob("*/request.json")
+    )
+    assert len(attempt_requests) == 2
 
 
 def test_v3_cache_hit_still_finishes_replay_before_cache_return(
@@ -221,19 +241,28 @@ def test_v3_cache_hit_still_finishes_replay_before_cache_return(
     runtime, store = _runtime(tmp_path, envelope, prepared)
     first = runtime.run(transport)
     shared_calls = 0
+    cache_calls = 0
     original_shared = AuditableBacktestRunner._execute_verified
+    original_cache = runner_module._read_canonical_cache_hit_v2
 
     def execute_shared(self, *args, **kwargs):
         nonlocal shared_calls
         shared_calls += 1
         return original_shared(self, *args, **kwargs)
 
+    def read_cache(**kwargs):
+        nonlocal cache_calls
+        cache_calls += 1
+        return original_cache(**kwargs)
+
     monkeypatch.setattr(AuditableBacktestRunner, "_execute_verified", execute_shared)
+    monkeypatch.setattr(runner_module, "_read_canonical_cache_hit_v2", read_cache)
     second = runtime.run(transport)
 
     assert second == first
     assert store.reads == 2
     assert shared_calls == 1
+    assert cache_calls == 1
 
 
 def test_v3_structural_failure_leaves_no_timeline_attempt_cache_or_evidence(
@@ -250,7 +279,7 @@ def test_v3_structural_failure_leaves_no_timeline_attempt_cache_or_evidence(
         execution_input_bundle_ref=ArtifactRef.from_envelope(malformed),
     )
     runtime, store = _runtime(tmp_path, malformed, prepared)
-    calls = {"timeline": 0, "shared": 0}
+    calls = {"timeline": 0, "shared": 0, "attempt": 0, "evidence": 0, "cache": 0}
 
     def forbidden_timeline(**kwargs):
         calls["timeline"] += 1
@@ -260,14 +289,35 @@ def test_v3_structural_failure_leaves_no_timeline_attempt_cache_or_evidence(
         calls["shared"] += 1
         raise AssertionError("cache/Attempt/Engine path must not start")
 
+    def forbidden_attempt(*args, **kwargs):
+        calls["attempt"] += 1
+        raise AssertionError("Attempt must not be created")
+
+    def forbidden_evidence(*args, **kwargs):
+        calls["evidence"] += 1
+        raise AssertionError("evidence must not be written")
+
+    def forbidden_cache(**kwargs):
+        calls["cache"] += 1
+        raise AssertionError("cache must not be read")
+
     monkeypatch.setattr(DeterministicTimeline, "open", forbidden_timeline)
     monkeypatch.setattr(AuditableBacktestRunner, "_execute_verified", forbidden_shared)
+    monkeypatch.setattr(AttemptIdentity, "first", staticmethod(forbidden_attempt))
+    monkeypatch.setattr(AttemptEvidenceWriter, "publish", forbidden_evidence)
+    monkeypatch.setattr(runner_module, "_read_canonical_cache_hit_v2", forbidden_cache)
 
     with pytest.raises(RuntimeError) as raised:
         runtime.run(transport)
 
     assert "SECRET" not in str(raised.value)
-    assert calls == {"timeline": 0, "shared": 0}
+    assert calls == {
+        "timeline": 0,
+        "shared": 0,
+        "attempt": 0,
+        "evidence": 0,
+        "cache": 0,
+    }
     assert store.puts == 0
     assert not (tmp_path / "runs").exists()
 
@@ -322,3 +372,91 @@ def test_runner_v3_contract_recomputes_role_spec_before_shared_body(
             input_origin=runner._expected_input_origin(resolved),
             market_data_preparation=changed,
         )
+
+
+def test_v3_transport_and_provider_failures_are_secret_safe_and_atomic(
+    tmp_path: Path,
+) -> None:
+    prepared, resolved, _, envelope, transport = _executable_contract()
+    runtime, store = _runtime(tmp_path / "wrong-ref", envelope, prepared)
+    forged = object.__new__(BacktestExecutionRequest)
+    object.__setattr__(forged, "schema_version", 3)
+    object.__setattr__(forged, "request", resolved.request)
+    object.__setattr__(
+        forged,
+        "execution_input_bundle_ref",
+        ArtifactRef("evidence_manifest", 3, "sha256:" + "0" * 64),
+    )
+
+    with pytest.raises(RuntimeError, match="wrong_execution_input_bundle_ref"):
+        runtime.run(forged)
+
+    assert store.reads == 0
+    assert store.puts == 0
+    assert not (tmp_path / "wrong-ref" / "runs").exists()
+
+    secret = "SECRET-provider-token-/private/path"
+
+    class _FailingStore(_ArtifactStore):
+        def read(self, *, ref: ArtifactRef) -> ArtifactReadResult:
+            self.reads += 1
+            raise OSError(secret)
+
+    failing_store = _FailingStore(envelope)
+    failing_runtime = BacktestRuntime(
+        registry=_registry(prepared),
+        artifact_reader=failing_store,
+        artifact_publisher=failing_store,
+        market_reader=prepared.verified_reader,
+        publication_root=tmp_path / "provider",
+    )
+    with pytest.raises(RuntimeError, match="execution_input_unavailable") as raised:
+        failing_runtime.run(transport)
+
+    assert secret not in str(raised.value)
+    assert failing_store.reads == 1
+    assert failing_store.puts == 0
+    assert not (tmp_path / "provider" / "runs").exists()
+
+
+def test_v3_blocked_terminal_closes_as_repository_evidence(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    prepared, _, _, envelope, transport = _executable_contract()
+    runtime, store = _runtime(tmp_path, envelope, prepared)
+
+    class _BlockingEngine:
+        calls = 0
+
+        def run(self, case, *, cancellation=None):
+            self.calls += 1
+            evidence_hash = canonical_sha256({"type": "blocked-v3-test"})
+            return EngineExecutionOutcome(
+                engine_failure=EngineFailure(
+                    code=EngineFailureCode.TIMELINE_FAILURE,
+                    case_hash=case.case_hash,
+                    trace_hash=ExecutionTrace().trace_hash,
+                    subject_keys=("timeline",),
+                    evidence_hashes=(evidence_hash,),
+                )
+            )
+
+    engine = _BlockingEngine()
+
+    def for_v2(cls, *, publication_root):
+        return cls(
+            engine=engine,
+            publication_root=publication_root,
+            canonical_publication_version=2,
+        )
+
+    monkeypatch.setattr(AuditableBacktestRunner, "for_v2", classmethod(for_v2))
+
+    result = runtime.run(transport)
+
+    assert type(result) is ArtifactRef
+    assert result.artifact_type == "evidence_manifest"
+    assert engine.calls == 1
+    terminal = BacktestEvidenceRepository(store).load_terminal(result)
+    assert terminal.status is TerminalStatus.BLOCKED
+    assert terminal.durable_evidence_ref == result
