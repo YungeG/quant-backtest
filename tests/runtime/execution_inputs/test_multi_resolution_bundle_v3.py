@@ -336,17 +336,75 @@ def test_v3_wrong_ref_precedence_matches_legacy_v1_v2(schema_version) -> None:
     object.__setattr__(forged, "request", resolved.request)
     object.__setattr__(forged, "execution_input_bundle_ref", wrong_ref)
 
+    resolved_value = None
+    if schema_version == 2:
+        resolved_value = object.__new__(ResolvedBacktestRequest)
+        object.__setattr__(resolved_value, "request", object())
     outcome = _hydrate_execution_inputs(
         _Reader(error=AssertionError("reader must not be called")),
         forged,
         market_reader=case.timeline.reader,
-        resolved_request=resolved if schema_version == 2 else None,
+        resolved_request=resolved_value,
     )
     assert outcome.result is None
     assert outcome.failure is not None
     assert outcome.failure.code is (
         _ExecutionInputsHydrationFailureCode.WRONG_EXECUTION_INPUT_BUNDLE_REF
     )
+
+
+def test_v3_wrong_ref_precedes_malformed_or_fatal_nested_authority() -> None:
+    prepared, resolved, _, _, _ = _contract()
+    wrong_ref = ArtifactRef(
+        "evidence_manifest",
+        3,
+        "sha256:" + "00" * 32,
+    )
+    forged_request = object.__new__(crypto_quant_backtest.BacktestExecutionRequest)
+    object.__setattr__(forged_request, "schema_version", 3)
+    object.__setattr__(forged_request, "request", resolved.request)
+    object.__setattr__(forged_request, "execution_input_bundle_ref", wrong_ref)
+
+    forged_resolved = object.__new__(ResolvedBacktestRequest)
+    object.__setattr__(forged_resolved, "request", object())
+
+    class FatalAuthorityFailure(BaseException):
+        pass
+
+    fatal = FatalAuthorityFailure("nested authority must not be accessed")
+
+    class FatalStreams(Mapping):
+        def __getitem__(self, key):
+            raise fatal
+
+        def __iter__(self):
+            raise fatal
+
+        def __len__(self):
+            raise fatal
+
+    forged_reader = object.__new__(InMemoryMarketBundleReader)
+    object.__setattr__(forged_reader, "bundle_ref", prepared.verified_reader.bundle_ref)
+    object.__setattr__(forged_reader, "manifest", prepared.verified_reader.manifest)
+    object.__setattr__(forged_reader, "streams", FatalStreams())
+    forged_prepared = replace(prepared, verified_reader=forged_reader)
+
+    for resolved_value, prepared_value, market_reader in (
+        (forged_resolved, prepared, prepared.verified_reader),
+        (resolved, forged_prepared, forged_reader),
+    ):
+        outcome = _hydrate_execution_inputs_v3(
+            _Reader(error=AssertionError("reader must not be called")),
+            forged_request,
+            market_reader=market_reader,
+            resolved_request=resolved_value,
+            prepared_market_data=prepared_value,
+        )
+        assert outcome.result is None
+        assert outcome.failure is not None
+        assert outcome.failure.code is (
+            _ExecutionInputsHydrationFailureCodeV3.WRONG_EXECUTION_INPUT_BUNDLE_REF
+        )
 
 
 def test_v3_materialization_rejects_empty_or_target_omitting_timeline_keys() -> None:
@@ -513,40 +571,42 @@ def test_v3_decode_rejects_nested_sequence_normalization(nested_sequence) -> Non
 
 
 def test_v3_hydration_rejects_nested_forged_retained_reader_before_artifact_io() -> None:
-    prepared, resolved, _, _, transport = _contract()
-    secret = "SECRET-nested-reader-bundle-ref-/private/path"
+    prepared, resolved, _, envelope, transport = _contract()
+    secret = "SECRET-delayed-reader-streams-/private/path"
+    original_streams = prepared.verified_reader.streams
 
-    class SecretText(str):
-        def strip(self, chars=None):
-            return self
+    class PassOnceThenRaiseStreams(Mapping):
+        def __init__(self):
+            self.get_count = 0
 
-        def __eq__(self, other):
-            raise RuntimeError(secret)
+        def __getitem__(self, key):
+            self.get_count += 1
+            if self.get_count > len(original_streams) * 2:
+                raise RuntimeError(secret)
+            return original_streams[key]
 
-        def __ne__(self, other):
-            raise RuntimeError(secret)
+        def __iter__(self):
+            return iter(original_streams)
 
-    forged_ref = object.__new__(MarketBundleRef)
-    object.__setattr__(forged_ref, "bundle_key", SecretText("forged.bundle"))
-    object.__setattr__(
-        forged_ref,
-        "manifest_hash",
-        prepared.verified_reader.bundle_ref.manifest_hash,
-    )
+        def __len__(self):
+            return len(original_streams)
+
     forged_reader = object.__new__(InMemoryMarketBundleReader)
-    object.__setattr__(forged_reader, "bundle_ref", forged_ref)
+    object.__setattr__(forged_reader, "bundle_ref", prepared.verified_reader.bundle_ref)
     object.__setattr__(forged_reader, "manifest", prepared.verified_reader.manifest)
-    object.__setattr__(forged_reader, "streams", prepared.verified_reader.streams)
+    object.__setattr__(forged_reader, "streams", PassOnceThenRaiseStreams())
     forged_prepared = replace(prepared, verified_reader=forged_reader)
 
-    class NoArtifactIO:
-        calls = 0
+    class CountingArtifactReader(_Reader):
+        def __init__(self):
+            super().__init__(envelope)
+            self.calls = 0
 
         def read(self, *, ref):
             self.calls += 1
-            raise RuntimeError(secret)
+            return super().read(ref=ref)
 
-    artifact_reader = NoArtifactIO()
+    artifact_reader = CountingArtifactReader()
     outcome = _hydrate_execution_inputs_v3(
         artifact_reader,  # pyright: ignore[reportArgumentType]
         transport,
