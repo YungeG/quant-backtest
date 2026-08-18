@@ -20,6 +20,7 @@ from crypto_quant_backtest.execution_inputs import (
     _hydrate_execution_inputs_v3,
     _materialize_execution_input_bundle_v3,
 )
+from crypto_quant_backtest.engine import ExecutionCaseSemanticSpec
 from crypto_quant_backtest.multi_resolution_market_data import (
     ExecutionDataBinding,
     MultiResolutionMarketDataBindings,
@@ -35,6 +36,7 @@ from crypto_quant_backtest.performance_observations import (
     PerformanceOperation,
 )
 from crypto_quant_backtest.resolution import ProfileResolver
+from crypto_quant_backtest.run_end import MarkToMarketCloseoutPolicy
 from crypto_quant_domain import (
     ArtifactCatalogError,
     ArtifactEnvelope,
@@ -81,6 +83,8 @@ def _contract():
     assert prepared is not None
     base_resolved, base_case = resolved_request_and_case()
     authority = values["case_authority"]
+    assert type(base_case.semantic_spec) is ExecutionCaseSemanticSpec
+    assert type(base_case.closeout_policy) is MarkToMarketCloseoutPolicy
     plan = _ExecutionCasePlan(
         decision_cycles=authority.decision_cycles,
         bar_executions=authority.bar_executions,

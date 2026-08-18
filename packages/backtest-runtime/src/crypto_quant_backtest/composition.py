@@ -37,15 +37,13 @@ from .timeline import DeterministicTimeline
 
 
 class _ExecutionCaseBuilder(Protocol):
-    def semantic_spec(self) -> ExecutionCaseSemanticSpec:
-        pass
+    def semantic_spec(self) -> ExecutionCaseSemanticSpec: ...
 
     def build(
         self,
         identities: ExecutionCaseIdentityFactory,
         semantic_spec_hash: str,
-    ) -> ResolvedExecutionCase:
-        pass
+    ) -> ResolvedExecutionCase: ...
 
 
 @dataclass(frozen=True, slots=True)
@@ -373,7 +371,7 @@ def _execution_case_semantic_spec_v3(
         decision_inputs_hash=canonical_sha256(
             {
                 "type": "execution_case_decision_inputs_mrmd_v1",
-                "base": _decision_semantics(execution_case_plan),
+                "base": _decision_semantics(execution_case_plan),  # pyright: ignore[reportArgumentType]
                 "decision_schedule": preparation.decision_schedule,
                 "signal_bindings": preparation.bindings.signal_bindings,
                 "signal_lineages": preparation.signal_lineages,
@@ -382,7 +380,7 @@ def _execution_case_semantic_spec_v3(
         execution_inputs_hash=canonical_sha256(
             {
                 "type": "execution_case_execution_inputs_mrmd_v1",
-                "base": _execution_semantics(execution_case_plan),
+                "base": _execution_semantics(execution_case_plan),  # pyright: ignore[reportArgumentType]
                 "execution_bindings": preparation.bindings.execution_bindings,
             }
         ),
@@ -412,6 +410,9 @@ def _execution_case_semantic_spec_from_case_v3(
         identity_namespace=identity_namespace,
         identity_plan=identity_plan,
     )
+    closeout_policy = case.closeout_policy
+    if type(closeout_policy) is not MarkToMarketCloseoutPolicy:
+        raise TypeError("closeout_policy must be exact MarkToMarketCloseoutPolicy")
     return _execution_case_semantic_spec_v3(
         base_spec=base_spec,
         execution_case_plan=_ExecutionCasePlan(
@@ -421,7 +422,7 @@ def _execution_case_semantic_spec_from_case_v3(
             financial_dispatch_plan=case.financial_dispatch_plan,
             execution_model=case.execution_model,
             snapshot_plan=case.snapshot_plan,
-            closeout_policy=case.closeout_policy,
+            closeout_policy=closeout_policy,
         ),
         market_data_preparation=market_data_preparation,
     )
