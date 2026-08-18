@@ -1870,7 +1870,7 @@ Acceptance and status authority：[`docs/implementation/acceptance-matrix.md`](a
 
 ### Gate G12H Rule Coverage
 
-状态：[G12H plan](plans/g12/g12h.md) / [Research](../research/g12h-rule-coverage.md)记录为 readiness BLOCKED、Gate DRAFT；等待profile rule-dimension declaration与normalized typed rule-source fixture。
+状态：[G12H plan](plans/g12/g12h.md) / [Research](../research/g12h-rule-coverage.md)记录为 readiness BLOCKED、Gate DRAFT；declaration/publication prerequisite 已 PASSED，但当前五维 authority 无共同 target coverage。需新增 additive aligned five-dimension authority set；既有 PASSED artifacts 保持 immutable，2023 fee/tax bands 不得外推到 2026。
 
 依赖：G12C。
 
