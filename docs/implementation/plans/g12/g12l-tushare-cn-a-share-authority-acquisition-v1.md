@@ -65,8 +65,9 @@ Runtime/Trading Kernel import.
 
 Success requires exact unique-key provider envelopes with `has_more=false` and
 integer `count=0`, one stock row whose real-calendar list/delist interval covers
-the trade date, exactly one real-calendar name interval covering the trade date, exact unique
-adjustment-factor rows for previous/target/next trading dates, and only target-date
+the trade date, valid non-duplicate real-calendar dates for every returned name
+interval with exactly one covering the trade date, exact unique adjustment-factor
+rows for previous/target/next trading dates, and only target-date
 dividend rows (zero is valid). Exact raw response bytes remain authoritative;
 parsed binary floats are not numeric authority.
 

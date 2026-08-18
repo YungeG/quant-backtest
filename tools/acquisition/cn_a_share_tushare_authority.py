@@ -269,8 +269,26 @@ def acquire_listing_corporate_action_authority(
         raise AcquisitionError("provider stock_basic listing interval does not cover request")
 
     name_rows = captured["namechange"][3]
-    if any(row[0] != request.ts_code for row in name_rows):
-        raise AcquisitionError("provider namechange response does not exact-cover request")
+    if any(
+        row[0] != request.ts_code
+        or type(row[1]) is not str
+        or not row[1]
+        or type(row[2]) is not str
+        or not _is_real_historical_date(row[2])
+        or (
+            row[3] is not None
+            and (
+                type(row[3]) is not str
+                or not _is_real_historical_date(row[3])
+                or row[3] < row[2]
+            )
+        )
+        or type(row[4]) is not str
+        or not _is_real_historical_date(row[4])
+        or type(row[5]) is not str
+        for row in name_rows
+    ) or len({tuple(row) for row in name_rows}) != len(name_rows):
+        raise AcquisitionError("provider namechange response has invalid intervals")
     covering_names = [
         row
         for row in name_rows

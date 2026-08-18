@@ -250,10 +250,11 @@ def test_scope_or_late_provider_failure_leaves_no_partial_authority(
 
 def test_impossible_provider_interval_dates_are_rejected(tmp_path: Path) -> None:
     cases = (
-        ("stock_basic", 0, 8, "listing interval"),
-        ("namechange", 0, 2, "target interval"),
+        ("stock-basic", "stock_basic", 0, 8, "listing interval"),
+        ("name-covering", "namechange", 0, 2, "invalid intervals"),
+        ("name-noncovering", "namechange", 1, 2, "invalid intervals"),
     )
-    for api_name, row_index, field_index, message in cases:
+    for name, api_name, row_index, field_index, message in cases:
         provider = responses()
         payload = json.loads(provider[api_name][1])
         payload["data"]["items"][row_index][field_index] = "20230230"
@@ -265,7 +266,7 @@ def test_impossible_provider_interval_dates_are_rejected(tmp_path: Path) -> None
                 ensure_ascii=False,
             ).encode(),
         )
-        output = tmp_path / api_name
+        output = tmp_path / name
         with pytest.raises(AcquisitionError, match=message):
             acquire_listing_corporate_action_authority(
                 request(),
