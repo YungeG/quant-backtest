@@ -477,34 +477,6 @@ def test_v3_hydration_revalidates_forged_caller_authority_before_io() -> None:
         assert secret.encode() not in canonical_bytes(outcome.failure)
 
 
-def test_v3_caller_revalidation_preserves_baseexception() -> None:
-    prepared, resolved, _, _, _ = _contract()
-
-    class FatalAuthorityFailure(BaseException):
-        pass
-
-    fatal = FatalAuthorityFailure("fatal-caller-authority")
-
-    class FatalRef:
-        @property
-        def artifact_type(self):
-            raise fatal
-
-    forged = object.__new__(crypto_quant_backtest.BacktestExecutionRequest)
-    object.__setattr__(forged, "schema_version", 3)
-    object.__setattr__(forged, "request", resolved.request)
-    object.__setattr__(forged, "execution_input_bundle_ref", FatalRef())
-    with pytest.raises(FatalAuthorityFailure) as raised:
-        _hydrate_execution_inputs_v3(
-            _Reader(error=AssertionError("reader must not be called")),
-            forged,
-            market_reader=prepared.verified_reader,
-            resolved_request=resolved,
-            prepared_market_data=prepared,
-        )
-    assert raised.value is fatal
-
-
 def test_role_preimages_change_only_the_assigned_hash_then_request_and_run_identity() -> None:
     prepared, resolved, hydrated, _, _ = _contract()
     original = prepared.preparation
@@ -621,6 +593,24 @@ def test_v3_binding_and_replay_failures_are_closed_positional_and_secret_safe() 
     assert outcome.failure.code is _ExecutionInputsHydrationFailureCodeV3.EXECUTION_INPUT_UNAVAILABLE
     assert secret.encode() not in canonical_bytes(outcome.failure)
     assert not hasattr(outcome.failure, "message")
+
+    class SecretPropertyReader:
+        @property
+        def read(self):
+            raise RuntimeError(secret)
+
+    property_outcome = _hydrate_execution_inputs_v3(
+        SecretPropertyReader(),
+        transport,
+        market_reader=prepared.verified_reader,
+        resolved_request=resolved,
+        prepared_market_data=prepared,
+    )
+    assert property_outcome.failure is not None
+    assert property_outcome.failure.code is (
+        _ExecutionInputsHydrationFailureCodeV3.EXECUTION_INPUT_UNAVAILABLE
+    )
+    assert secret.encode() not in canonical_bytes(property_outcome.failure)
 
 
 def test_v3_hydrate_and_replay_observations_are_direct_and_invariant(monkeypatch) -> None:

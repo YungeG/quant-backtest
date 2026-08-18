@@ -33,6 +33,7 @@ from crypto_quant_market_data import (
     InputValidationFailure,
     MarketBundleCapability,
     MarketBundleReader,
+    MarketBundleRef,
 )
 from crypto_quant_trading import (
     LinearFundingApplicationIdentity,  # pyright: ignore[reportPrivateImportUsage]
@@ -92,9 +93,12 @@ from .multi_resolution_market_data import (
     _record_observation,
 )
 from .multi_resolution_preparation import (
+    MarketDataCaseAuthority,
+    MarketDataPreparationOutcome,
     MultiResolutionMarketDataPreparation,
     PreparedMultiResolutionMarketData,
     SignalObservationLineageBinding,
+    prepare_multi_resolution_market_data_v1,
 )
 from .observation_windows import BarDefinitionRef
 from .observations import ObservationPurposeRef, ObservationQuery
@@ -118,9 +122,13 @@ from .resolution import (
     BuildArtifactRef,
     BuildArtifactRole,
     BuildProvenance,
+    NormalizedBacktestRequest,
+    RequestedResultGrade,
+    ResolvedBacktestEnvironment,
     ResolvedBacktestRequest,
     RuntimeLibraryRef,
     SourceTreeState,
+    StrategyFamily,
 )
 from .run_end import (
     MarkToMarketCloseoutPolicy,
@@ -688,6 +696,8 @@ def _read_build_manifest(value: object) -> BuildArtifactManifest:
     )
     if manifest_value["manifest_hash"] != manifest.manifest_hash:
         raise ValueError("BuildArtifactManifest manifest_hash mismatch")
+    if canonical_bytes(manifest_value) != canonical_bytes(manifest):
+        raise ValueError("BuildArtifactManifest did not reconstruct exactly")
     return manifest
 
 
@@ -756,7 +766,7 @@ def _read_semantic_spec(value: object) -> ExecutionCaseSemanticSpec:
             )
         )
 
-    return ExecutionCaseSemanticSpec(
+    spec = ExecutionCaseSemanticSpec(
         schema_version=data["schema_version"],
         spec_key=data["spec_key"],
         spec_version=data["spec_version"],
@@ -772,6 +782,9 @@ def _read_semantic_spec(value: object) -> ExecutionCaseSemanticSpec:
         snapshot_inputs_hash=data["snapshot_inputs_hash"],
         run_end_inputs_hash=data["run_end_inputs_hash"],
     )
+    if canonical_bytes(data) != canonical_bytes(spec):
+        raise ValueError("ExecutionCaseSemanticSpec did not reconstruct exactly")
+    return spec
 
 
 def _tagged(name: str, value: object, expected_type: str) -> Mapping[str, Any]:
@@ -2813,42 +2826,226 @@ def materialize_execution_input_bundle_v2(
     return ArtifactEnvelope.create(_V2_SCHEMA.name, _V2_SCHEMA.version, payload)
 
 
+def _rebuild_backtest_request_v3(value: object) -> BacktestRequest:
+    if type(value) is not BacktestRequest:
+        raise TypeError("request must be exact BacktestRequest")
+    if type(value.timeline_window) is not TimelineWindow:
+        raise TypeError("timeline_window must be exact TimelineWindow")
+    if type(value.reporting_currency) is not CurrencyId:
+        raise TypeError("reporting_currency must be exact CurrencyId")
+    if type(value.market_bundle_ref) is not MarketBundleRef:
+        raise TypeError("market_bundle_ref must be exact MarketBundleRef")
+    if type(value.strategy_family) is not StrategyFamily:
+        raise TypeError("strategy_family must be exact StrategyFamily")
+    if type(value.result_grade_requested) is not RequestedResultGrade:
+        raise TypeError("result_grade_requested must be exact RequestedResultGrade")
+    window = TimelineWindow(
+        UtcInstant(value.timeline_window.data_start.epoch_nanoseconds),
+        UtcInstant(value.timeline_window.trading_start.epoch_nanoseconds),
+        UtcInstant(value.timeline_window.end_exclusive.epoch_nanoseconds),
+    )
+    return BacktestRequest(
+        schema_version=value.schema_version,
+        experiment_id=value.experiment_id,
+        timeline_window=window,
+        market_semantics_profile_key=value.market_semantics_profile_key,
+        simulation_profile_key=value.simulation_profile_key,
+        execution_account_profile_key=value.execution_account_profile_key,
+        execution_account_id=value.execution_account_id,
+        reporting_currency=CurrencyId(value.reporting_currency.value),
+        market_bundle_ref=MarketBundleRef(
+            value.market_bundle_ref.bundle_key,
+            value.market_bundle_ref.manifest_hash,
+        ),
+        target_stream_digest=value.target_stream_digest,
+        execution_case_semantic_hash=value.execution_case_semantic_hash,
+        master_random_seed=value.master_random_seed,
+        build_artifact_manifest_hash=value.build_artifact_manifest_hash,
+        strategy_family=value.strategy_family,
+        engine_kind=value.engine_kind,
+        result_grade_requested=value.result_grade_requested,
+    )
+
+
+def _rebuild_build_manifest_v3(value: object) -> BuildArtifactManifest:
+    if type(value) is not BuildArtifactManifest:
+        raise TypeError("build_artifact_manifest must be exact BuildArtifactManifest")
+    if type(value.artifacts) is not tuple or any(
+        type(item) is not BuildArtifactRef for item in value.artifacts
+    ):
+        raise TypeError("artifacts must contain exact BuildArtifactRef")
+    if type(value.runtime_libraries) is not tuple or any(
+        type(item) is not RuntimeLibraryRef for item in value.runtime_libraries
+    ):
+        raise TypeError("runtime_libraries must contain exact RuntimeLibraryRef")
+    if type(value.provenance) is not BuildProvenance:
+        raise TypeError("provenance must be exact BuildProvenance")
+    rebuilt = BuildArtifactManifest(
+        schema_version=value.schema_version,
+        build_key=value.build_key,
+        artifacts=value.artifacts,
+        dependency_lock_hash=value.dependency_lock_hash,
+        runtime_libraries=value.runtime_libraries,
+        container_image_digest=value.container_image_digest,
+        provenance=value.provenance,
+    )
+    if canonical_bytes(rebuilt) != canonical_bytes(value):
+        raise ValueError("build_artifact_manifest did not reconstruct exactly")
+    return rebuilt
+
+
+def _rebuild_resolved_request_v3(value: object) -> ResolvedBacktestRequest:
+    if type(value) is not ResolvedBacktestRequest:
+        raise TypeError("resolved_request must be exact ResolvedBacktestRequest")
+    request = _rebuild_backtest_request_v3(value.request)
+    if type(value.normalized_request) is not NormalizedBacktestRequest:
+        raise TypeError("normalized_request must be exact NormalizedBacktestRequest")
+    if type(value.environment) is not ResolvedBacktestEnvironment:
+        raise TypeError("environment must be exact ResolvedBacktestEnvironment")
+    manifest = _rebuild_build_manifest_v3(value.build_artifact_manifest)
+    normalized = NormalizedBacktestRequest.from_request(request)
+    if normalized != value.normalized_request:
+        raise ValueError("normalized_request did not reconstruct exactly")
+    return ResolvedBacktestRequest(
+        request=request,
+        normalized_request=normalized,
+        environment=value.environment,
+        build_artifact_manifest=manifest,
+        semantic_run_id=value.semantic_run_id,
+    )
+
+
+def _rebuild_semantic_spec_v3(value: object) -> ExecutionCaseSemanticSpec:
+    if type(value) is not ExecutionCaseSemanticSpec:
+        raise TypeError("execution_case_semantic_spec must be exact ExecutionCaseSemanticSpec")
+    rebuilt = ExecutionCaseSemanticSpec(
+        schema_version=value.schema_version,
+        spec_key=value.spec_key,
+        spec_version=value.spec_version,
+        case_key=value.case_key,
+        case_version=value.case_version,
+        identity_namespace=value.identity_namespace,
+        identity_plan=value.identity_plan,
+        timeline_semantic_hash=value.timeline_semantic_hash,
+        target_stream_digest=value.target_stream_digest,
+        decision_inputs_hash=value.decision_inputs_hash,
+        execution_inputs_hash=value.execution_inputs_hash,
+        financial_inputs_hash=value.financial_inputs_hash,
+        snapshot_inputs_hash=value.snapshot_inputs_hash,
+        run_end_inputs_hash=value.run_end_inputs_hash,
+    )
+    if canonical_bytes(rebuilt) != canonical_bytes(value):
+        raise ValueError("execution_case_semantic_spec did not reconstruct exactly")
+    return rebuilt
+
+
+def _rebuild_execution_case_plan_v3(value: object) -> _ExecutionCasePlan:
+    if type(value) is not _ExecutionCasePlan:
+        raise TypeError("execution_case_plan must be exact _ExecutionCasePlan")
+    return _ExecutionCasePlan(
+        decision_cycles=value.decision_cycles,
+        bar_executions=value.bar_executions,
+        financial_state=value.financial_state,
+        financial_dispatch_plan=value.financial_dispatch_plan,
+        execution_model=value.execution_model,
+        snapshot_plan=value.snapshot_plan,
+        closeout_policy=value.closeout_policy,
+    )
+
+
+def _rebuild_hydrated_inputs_v3(value: object) -> _HydratedExecutionCaseInputs:
+    if type(value) is not _HydratedExecutionCaseInputs:
+        raise TypeError("hydrated_inputs must be exact _HydratedExecutionCaseInputs")
+    target_stream = PrecomputedTargetStream(
+        value.target_stream.stream_key,
+        value.target_stream.events,
+    )
+    return _HydratedExecutionCaseInputs(
+        execution_case_semantic_spec=_rebuild_semantic_spec_v3(
+            value.execution_case_semantic_spec
+        ),
+        timeline_stream_keys=tuple(value.timeline_stream_keys),
+        target_stream=target_stream,
+        timeline_batch_size=value.timeline_batch_size,
+        execution_case_plan=_rebuild_execution_case_plan_v3(
+            value.execution_case_plan
+        ),
+    )
+
+
+def _rebuild_prepared_market_data_v3(
+    value: object,
+) -> PreparedMultiResolutionMarketData:
+    if type(value) is not PreparedMultiResolutionMarketData:
+        raise TypeError(
+            "prepared_market_data must be exact PreparedMultiResolutionMarketData"
+        )
+    preparation = MultiResolutionMarketDataPreparation(
+        value.preparation.decision_schedule,
+        value.preparation.bindings,
+        value.preparation.signal_lineages,
+    )
+    return PreparedMultiResolutionMarketData(
+        preparation=preparation,
+        eligibilities=tuple(value.eligibilities),
+        verified_reader=value.verified_reader,
+    )
+
+
+def _rebuild_execution_request_v3(value: object) -> BacktestExecutionRequest:
+    if type(value) is not BacktestExecutionRequest:
+        raise TypeError("request must be exact BacktestExecutionRequest")
+    ref = value.execution_input_bundle_ref
+    if type(ref) is not ArtifactRef:
+        raise TypeError("execution_input_bundle_ref must be exact ArtifactRef")
+    return BacktestExecutionRequest(
+        schema_version=value.schema_version,
+        request=_rebuild_backtest_request_v3(value.request),
+        execution_input_bundle_ref=ArtifactRef(
+            ref.artifact_type,
+            ref.schema_version,
+            ref.content_hash,
+        ),
+    )
+
+
 def _materialize_execution_input_bundle_v3(
     *,
     resolved_request: ResolvedBacktestRequest,
     hydrated_inputs: _HydratedExecutionCaseInputs,
     market_data_preparation: MultiResolutionMarketDataPreparation,
 ) -> ArtifactEnvelope:
-    if type(resolved_request) is not ResolvedBacktestRequest:
-        raise TypeError("resolved_request must be exact ResolvedBacktestRequest")
-    if type(hydrated_inputs) is not _HydratedExecutionCaseInputs:
-        raise TypeError("hydrated_inputs must be exact _HydratedExecutionCaseInputs")
-    if type(market_data_preparation) is not MultiResolutionMarketDataPreparation:
-        raise TypeError(
-            "market_data_preparation must be exact MultiResolutionMarketDataPreparation"
+    try:
+        resolved = _rebuild_resolved_request_v3(resolved_request)
+        inputs = _rebuild_hydrated_inputs_v3(hydrated_inputs)
+        if type(market_data_preparation) is not MultiResolutionMarketDataPreparation:
+            raise TypeError(
+                "market_data_preparation must be exact MultiResolutionMarketDataPreparation"
+            )
+        preparation = MultiResolutionMarketDataPreparation(
+            market_data_preparation.decision_schedule,
+            market_data_preparation.bindings,
+            market_data_preparation.signal_lineages,
         )
-    preparation = MultiResolutionMarketDataPreparation(
-        market_data_preparation.decision_schedule,
-        market_data_preparation.bindings,
-        market_data_preparation.signal_lineages,
-    )
-    request = resolved_request.request
-    spec = hydrated_inputs.execution_case_semantic_spec
-    if resolved_request.build_artifact_manifest.manifest_hash != (
+    except Exception:
+        raise TypeError("v3 materialization authority is malformed") from None
+    request = resolved.request
+    spec = inputs.execution_case_semantic_spec
+    if resolved.build_artifact_manifest.manifest_hash != (
         request.build_artifact_manifest_hash
     ):
         raise ValueError("resolved build artifact manifest does not bind the request")
     if spec.semantic_spec_hash != request.execution_case_semantic_hash:
         raise ValueError("execution case semantic spec does not bind the request")
     if (
-        hydrated_inputs.target_stream.target_stream_digest
+        inputs.target_stream.target_stream_digest
         != request.target_stream_digest
         or spec.target_stream_digest != request.target_stream_digest
     ):
         raise ValueError("target stream does not bind the request")
     expected_spec = _execution_case_semantic_spec_v3(
         base_spec=spec,
-        execution_case_plan=hydrated_inputs.execution_case_plan,
+        execution_case_plan=inputs.execution_case_plan,
         market_data_preparation=preparation,
     )
     if expected_spec != spec:
@@ -2858,28 +3055,22 @@ def _materialize_execution_input_bundle_v3(
         "type": _ARTIFACT_TYPE,
         "schema_version": _V3_SCHEMA_VERSION,
         "request_hash": request.request_hash,
-        "semantic_run_id": resolved_request.semantic_run_id,
-        "build_artifact_manifest": resolved_request.build_artifact_manifest,
+        "semantic_run_id": resolved.semantic_run_id,
+        "build_artifact_manifest": resolved.build_artifact_manifest,
         "execution_case_semantic_spec": spec,
-        "timeline_stream_keys": hydrated_inputs.timeline_stream_keys,
-        "target_stream_key": hydrated_inputs.target_stream.stream_key,
-        "timeline_batch_size": hydrated_inputs.timeline_batch_size,
+        "timeline_stream_keys": inputs.timeline_stream_keys,
+        "target_stream_key": inputs.target_stream.stream_key,
+        "timeline_batch_size": inputs.timeline_batch_size,
         "execution_case_plan": {
             "type": "execution_case_plan",
             "schema_version": 1,
-            "decision_cycles": hydrated_inputs.execution_case_plan.decision_cycles,
-            "bar_executions": hydrated_inputs.execution_case_plan.bar_executions,
-            "financial_state": hydrated_inputs.execution_case_plan.financial_state,
-            "financial_dispatch_plan": (
-                hydrated_inputs.execution_case_plan.financial_dispatch_plan
-            ),
-            "execution_model_spec": (
-                hydrated_inputs.execution_case_plan.execution_model.spec()
-            ),
-            "snapshot_plan": hydrated_inputs.execution_case_plan.snapshot_plan,
-            "closeout_policy_spec": (
-                hydrated_inputs.execution_case_plan.closeout_policy.spec()
-            ),
+            "decision_cycles": inputs.execution_case_plan.decision_cycles,
+            "bar_executions": inputs.execution_case_plan.bar_executions,
+            "financial_state": inputs.execution_case_plan.financial_state,
+            "financial_dispatch_plan": inputs.execution_case_plan.financial_dispatch_plan,
+            "execution_model_spec": inputs.execution_case_plan.execution_model.spec(),
+            "snapshot_plan": inputs.execution_case_plan.snapshot_plan,
+            "closeout_policy_spec": inputs.execution_case_plan.closeout_policy.spec(),
         },
         "market_data_preparation": preparation.to_canonical_dict(),
     }
@@ -3023,18 +3214,25 @@ def _hydrate_execution_inputs_v3(
     prepared_market_data: PreparedMultiResolutionMarketData,
     recorder: BoundedPerformanceRecorder | None = None,
 ) -> _ExecutionInputsHydrationOutcomeV3:
-    if (
-        type(request) is not BacktestExecutionRequest
-        or type(resolved_request) is not ResolvedBacktestRequest
-        or type(prepared_market_data) is not PreparedMultiResolutionMarketData
-        or (recorder is not None and type(recorder) is not BoundedPerformanceRecorder)
-    ):
+    if recorder is not None and type(recorder) is not BoundedPerformanceRecorder:
         return _failure_v3(
             _ExecutionInputsHydrationFailureCodeV3.MALFORMED_EXECUTION_REQUEST
         )
-    ref = request.execution_input_bundle_ref
+    try:
+        execution_request = _rebuild_execution_request_v3(request)
+        resolved = _rebuild_resolved_request_v3(resolved_request)
+        prepared = _rebuild_prepared_market_data_v3(prepared_market_data)
+    except Exception:
+        return _failure_v3(
+            _ExecutionInputsHydrationFailureCodeV3.MALFORMED_EXECUTION_REQUEST
+        )
+    if market_reader is not prepared.verified_reader:
+        return _failure_v3(
+            _ExecutionInputsHydrationFailureCodeV3.MALFORMED_EXECUTION_REQUEST
+        )
+    ref = execution_request.execution_input_bundle_ref
     if (
-        request.schema_version != _V3_SCHEMA_VERSION
+        execution_request.schema_version != _V3_SCHEMA_VERSION
         or ref.artifact_type != _ARTIFACT_TYPE
         or ref.schema_version != _V3_SCHEMA_VERSION
     ):
@@ -3062,7 +3260,7 @@ def _hydrate_execution_inputs_v3(
             and source.source_hash == canonical_sha256(source.envelope)
             and ArtifactRef.from_envelope(source.envelope) == ref
         )
-    except BaseException:
+    except Exception:
         source_valid = False
     if not source_valid:
         return _failure_v3(
@@ -3123,11 +3321,11 @@ def _hydrate_execution_inputs_v3(
         binding_count,
     )
 
-    public_request = request.request
+    public_request = execution_request.request
     if (
         bundle.request_hash != public_request.request_hash
-        or resolved_request.request != public_request
-        or bundle.semantic_run_id != resolved_request.semantic_run_id
+        or resolved.request != public_request
+        or bundle.semantic_run_id != resolved.semantic_run_id
     ):
         return _failure_v3(
             _ExecutionInputsHydrationFailureCodeV3.REQUEST_BINDING_MISMATCH
@@ -3135,7 +3333,7 @@ def _hydrate_execution_inputs_v3(
     if (
         bundle.build_artifact_manifest.manifest_hash
         != public_request.build_artifact_manifest_hash
-        or bundle.build_artifact_manifest != resolved_request.build_artifact_manifest
+        or bundle.build_artifact_manifest != resolved.build_artifact_manifest
     ):
         return _failure_v3(
             _ExecutionInputsHydrationFailureCodeV3.BUILD_BINDING_MISMATCH
@@ -3178,9 +3376,9 @@ def _hydrate_execution_inputs_v3(
     replay_started = _start_v3(recorder)
     try:
         retained_preparation = MultiResolutionMarketDataPreparation(
-            prepared_market_data.preparation.decision_schedule,
-            prepared_market_data.preparation.bindings,
-            prepared_market_data.preparation.signal_lineages,
+            prepared.preparation.decision_schedule,
+            prepared.preparation.bindings,
+            prepared.preparation.signal_lineages,
         )
     except Exception:
         _record_v3(
@@ -3215,7 +3413,7 @@ def _hydrate_execution_inputs_v3(
         )
     if (
         bundle.market_data_preparation != retained_preparation
-        or prepared_market_data.verified_reader is not market_reader
+        or prepared.verified_reader is not market_reader
     ):
         schedule_position, requirement_position, event_position = (
             _preparation_replay_positions(
@@ -3242,14 +3440,50 @@ def _hydrate_execution_inputs_v3(
         execution_case_plan=bundle.execution_case_plan,
         market_data_preparation=retained_preparation,
     )
-    if (
-        expected_spec.decision_inputs_hash
-        != bundle.execution_case_semantic_spec.decision_inputs_hash
-        or expected_spec.execution_inputs_hash
-        != bundle.execution_case_semantic_spec.execution_inputs_hash
-        or expected_spec.snapshot_inputs_hash
-        != bundle.execution_case_semantic_spec.snapshot_inputs_hash
-    ):
+    if expected_spec != bundle.execution_case_semantic_spec:
+        _record_v3(
+            recorder,
+            PerformanceOperation.VERIFY_REPLAY,
+            PerformanceOutcome.FAILED,
+            replay_started,
+            binding_count,
+            0,
+        )
+        return _failure_v3(
+            _ExecutionInputsHydrationFailureCodeV3.PREPARED_MARKET_DATA_REPLAY_MISMATCH
+        )
+    try:
+        plan = bundle.execution_case_plan
+        authority = MarketDataCaseAuthority(
+            decision_cycles=plan.decision_cycles,
+            bar_executions=plan.bar_executions,
+            execution_model=plan.execution_model,
+            snapshot_plan=plan.snapshot_plan,
+            target_stream=target_stream,
+        )
+        replayed_preparation = prepare_multi_resolution_market_data_v1(
+            expected_bundle_ref=public_request.market_bundle_ref,
+            reader=prepared.verified_reader,
+            schedule=bundle.market_data_preparation.decision_schedule,
+            signal_binding_candidates=(
+                bundle.market_data_preparation.bindings.signal_bindings
+            ),
+            execution_binding_candidates=(
+                bundle.market_data_preparation.bindings.execution_bindings
+            ),
+            valuation_binding_candidates=(
+                bundle.market_data_preparation.bindings.valuation_bindings
+            ),
+            signal_lineages=bundle.market_data_preparation.signal_lineages,
+            case_authority=authority,
+            resolved_request=resolved,
+            recorder=None,
+        )
+        expected_preparation = MarketDataPreparationOutcome(prepared, None)
+        preparation_replayed_exactly = replayed_preparation == expected_preparation
+    except Exception:
+        preparation_replayed_exactly = False
+    if not preparation_replayed_exactly:
         _record_v3(
             recorder,
             PerformanceOperation.VERIFY_REPLAY,

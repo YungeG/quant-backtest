@@ -384,12 +384,18 @@ def _execution_case_semantic_spec_v3(
                 "execution_bindings": preparation.bindings.execution_bindings,
             }
         ),
+        financial_inputs_hash=canonical_sha256(
+            _financial_semantics(execution_case_plan)  # pyright: ignore[reportArgumentType]
+        ),
         snapshot_inputs_hash=canonical_sha256(
             {
                 "type": "execution_case_snapshot_inputs_mrmd_v1",
                 "base": execution_case_plan.snapshot_plan,
                 "valuation_bindings": preparation.bindings.valuation_bindings,
             }
+        ),
+        run_end_inputs_hash=canonical_sha256(
+            execution_case_plan.closeout_policy.spec()
         ),
     )
 
