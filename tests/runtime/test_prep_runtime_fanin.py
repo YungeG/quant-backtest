@@ -388,7 +388,7 @@ def test_v3_transport_and_provider_failures_are_secret_safe_and_atomic(
         ArtifactRef("evidence_manifest", 3, "sha256:" + "0" * 64),
     )
 
-    with pytest.raises(RuntimeError, match="wrong_execution_input_bundle_ref"):
+    with pytest.raises(RuntimeError, match="malformed_execution_request"):
         runtime.run(forged)
 
     assert store.reads == 0

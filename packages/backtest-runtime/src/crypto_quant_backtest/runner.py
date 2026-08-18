@@ -1212,33 +1212,6 @@ class AuditableBacktestRunner:
             cancellation=cancellation,
         )
 
-    def _retry_from_recovered_v3_locked(
-        self,
-        *,
-        previous_attempt: AttemptIdentity,
-        resolved_request: ResolvedBacktestRequest,
-        execution_case: ResolvedExecutionCase,
-        input_origin: InputOrigin,
-        market_data_preparation: MultiResolutionMarketDataPreparation,
-        cancellation: EngineCancellationRequest | None = None,
-    ) -> AttemptExecutionRecord:
-        self._verify_v3_contract(
-            resolved_request=resolved_request,
-            execution_case=execution_case,
-            input_origin=input_origin,
-            market_data_preparation=market_data_preparation,
-        )
-        if type(previous_attempt) is not AttemptIdentity or previous_attempt.ordinal != 1:
-            raise ValueError("recovered retry requires exact first Attempt")
-        attempt = AttemptIdentity.retry(previous_attempt, next_ordinal=2)
-        return self._execute_verified_locked(
-            resolved_request=resolved_request,
-            execution_case=execution_case,
-            attempt=attempt,
-            input_origin=input_origin,
-            cancellation=cancellation,
-        )
-
     def _map_outcome(
         self,
         resolved_request: ResolvedBacktestRequest,

@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 from collections.abc import Mapping
-from dataclasses import dataclass
 import os
 from pathlib import Path, PurePosixPath
 import re
@@ -17,19 +16,12 @@ from crypto_quant_domain import (
 )
 from crypto_quant_market_data import InputValidationFailure, MarketBundleReader
 
-from ._publication import RunPublicationLock, verify_read_only
+from ._publication import RunPublicationLock
 from .artifact_envelope_publisher import ArtifactEnvelopePublisher
 from .artifact_envelope_reader import ArtifactEnvelopeReader
 from .composition import _HydratedExecutionCaseInputs, _compose_execution_case_v3
 from .engine import EngineCancellationRequest, ResolvedExecutionCase
-from .evidence import (
-    AttemptEvidenceWriter,
-    EvidenceArtifactEntry,
-    EvidenceArtifactRole,
-    EvidenceManifest,
-    EvidencePublicationStatus,
-    FinalizedAttemptEvidence,
-)
+from .evidence import AttemptEvidenceWriter, FinalizedAttemptEvidence
 from .evidence_repository import BacktestEvidenceRepository
 from .execution_hash import AttemptExecutionHash, ExecutionResultHasher
 from .execution_inputs import (
@@ -37,7 +29,9 @@ from .execution_inputs import (
     _ExecutionInputsHydrationFailureV3,
     _hydrate_execution_inputs,
     _hydrate_execution_inputs_v3_from_decoded,
-    _read_execution_inputs_v3,
+    _read_execution_inputs_v3_from_snapshot,
+    _snapshot_execution_request_v3_from_validated_schema,
+    _verify_execution_inputs_v3_after_resolution,
 )
 from .integrity import (
     CanonicalResultPublisher,
@@ -59,25 +53,14 @@ from .runner import (
     AttemptIdentity,
     AttemptIssueSource,
     AuditableBacktestRunner,
-    BacktestRunOutcome,
     CanonicalResultCacheHit,
     InputOrigin,
-    ReadyToFinalizeAttempt,
     _read_canonical_artifact,
     _read_canonical_cache_hit_v2,
 )
 
 _STORAGE_RUNNER_ISSUES = frozenset({"canonical_cache_invalid", "run_lock_unavailable"})
 _SHA256_PATTERN = re.compile(r"sha256:[0-9a-f]{64}\Z")
-
-
-@dataclass(frozen=True, slots=True)
-class _RecoveredAttemptState:
-    attempt: AttemptIdentity
-    evidence: FinalizedAttemptEvidence
-    record_payload: dict[str, object]
-    engine_payload: dict[str, object] | None
-    engine_content_hash: str | None
 
 
 _MANIFEST_ENTRY_KEYS = frozenset(
@@ -136,20 +119,38 @@ class BacktestRuntime:
         *,
         cancellation: EngineCancellationRequest | None,
     ) -> BacktestCanonicalPublicationRef | ArtifactRef:
-        if type(request) is BacktestExecutionRequest:
-            try:
-                schema_version = request.schema_version
-            except Exception:
-                raise RuntimeError(
-                    "execution input hydration failed: malformed_execution_request"
-                ) from None
-            if type(schema_version) is not int:
-                raise RuntimeError(
-                    "execution input hydration failed: malformed_execution_request"
-                )
-            if schema_version == 3:
-                return self._run_v3(request, cancellation=cancellation)
-        return self._run_legacy(request, cancellation=cancellation)
+        if type(request) is not BacktestExecutionRequest:
+            raise RuntimeError(
+                "execution input hydration failed: malformed_execution_request"
+            )
+        try:
+            schema_version = request.schema_version
+        except Exception:
+            raise RuntimeError(
+                "execution input hydration failed: malformed_execution_request"
+            ) from None
+        if type(schema_version) is not int or schema_version not in {1, 2, 3}:
+            raise RuntimeError(
+                "execution input hydration failed: malformed_execution_request"
+            )
+        if schema_version == 3:
+            snapshot, failure = _snapshot_execution_request_v3_from_validated_schema(
+                request
+            )
+            if failure is not None or snapshot is None:
+                self._raise_v3_hydration_failure(failure)
+            return self._run_v3(snapshot, cancellation=cancellation)
+        try:
+            snapshot = BacktestExecutionRequest(
+                schema_version,
+                request.request,
+                request.execution_input_bundle_ref,
+            )
+        except Exception:
+            raise RuntimeError(
+                "execution input hydration failed: malformed_execution_request"
+            ) from None
+        return self._run_legacy(snapshot, cancellation=cancellation)
 
     def _run_legacy(
         self,
@@ -185,7 +186,7 @@ class BacktestRuntime:
         *,
         cancellation: EngineCancellationRequest | None,
     ) -> BacktestCanonicalPublicationRef | ArtifactRef:
-        bundle, failure = _read_execution_inputs_v3(
+        bundle, failure = _read_execution_inputs_v3_from_snapshot(
             self._artifact_reader,
             request,
         )
@@ -217,6 +218,14 @@ class BacktestRuntime:
         resolved = resolution.resolved
         if resolved is None:
             raise RuntimeError("Backtest request resolution returned no result")
+        binding_failure = _verify_execution_inputs_v3_after_resolution(
+            bundle,
+            request,
+            resolved,
+            retained_reader,
+        )
+        if binding_failure is not None:
+            self._raise_v3_hydration_failure(binding_failure)
 
         plan = bundle.execution_case_plan
         authority = MarketDataCaseAuthority(
@@ -250,6 +259,7 @@ class BacktestRuntime:
             resolved_request=resolved,
             prepared_market_data=prepared,
             target_stream=target_stream,
+            bindings_verified=True,
         )
         if hydrated.failure is not None or hydrated.result is None:
             self._raise_v3_hydration_failure(hydrated.failure)
@@ -433,103 +443,64 @@ class BacktestRuntime:
             self._raise_runner_storage_failure(cached_record)
             raise RuntimeError("canonical cache did not return a verified result")
 
-        recovered = self._recover_attempt_graph(
-            resolved,
-            execution_case,
-            input_origin,
-        )
-        first_state = recovered[0] if recovered else None
-        second_state = recovered[1] if len(recovered) == 2 else None
-        terminal = next(
-            (
-                value
-                for value in reversed(recovered)
-                if value.evidence.status
-                in {
-                    EvidencePublicationStatus.BLOCKED,
-                    EvidencePublicationStatus.FAILED,
-                    EvidencePublicationStatus.CANCELLED,
-                }
-            ),
-            None,
-        )
-        if terminal is not None:
-            return self._verified_terminal_ref(terminal.evidence)
+        terminal_ref = self._existing_terminal_ref_v3(resolved)
+        if terminal_ref is not None:
+            return terminal_ref
 
         writer = self._attempt_writer()
-        first_record: AttemptExecutionRecord | None = None
-        first_evidence: FinalizedAttemptEvidence
-        first_hash: AttemptExecutionHash | None = None
-        if first_state is None:
-            first_record = runner._execute_verified_locked(
-                resolved_request=resolved,
-                execution_case=execution_case,
-                attempt=first_attempt,
-                input_origin=input_origin,
-                cancellation=cancellation,
-            )
-            cached = self._cache_ref(first_record)
-            if cached is not None:
-                return cached
-            self._raise_runner_storage_failure(first_record)
-            first_evidence = self._publish_attempt_locked(writer, first_record)
-            if first_record.ready_to_finalize is None:
-                return self._evidence_ref(first_evidence)
-            first_hash = ExecutionResultHasher.bind(
-                first_record.ready_to_finalize,
-                first_evidence,
-            )
-        else:
-            first_evidence = first_state.evidence
-            if second_state is None:
-                self._mirror_evidence_graph(first_evidence)
-
-        if second_state is not None:
-            if first_state is None:
-                raise RuntimeError("Attempt graph has an ordinal gap")
-            return self._publish_recovered_canonical_locked(
-                resolved,
-                execution_case,
-                (first_state, second_state),
-            )
-
-        second_record = runner._retry_from_recovered_v3_locked(
-            previous_attempt=first_evidence.attempt,
+        first_claim = writer._claim_v3_locked(
+            attempt=first_attempt,
+            resolved_request=resolved,
+            execution_case_hash=execution_case.case_hash,
+            execution_case_semantic_hash=execution_case.semantic_spec_hash,
+            input_origin=input_origin,
+        )
+        first = runner._execute_verified_locked(
             resolved_request=resolved,
             execution_case=execution_case,
+            attempt=first_attempt,
             input_origin=input_origin,
-            market_data_preparation=market_data_preparation,
             cancellation=cancellation,
         )
-        cached = self._cache_ref(second_record)
-        if cached is not None:
-            return cached
-        self._raise_runner_storage_failure(second_record)
-        second_evidence = self._publish_attempt_locked(writer, second_record)
-        if second_record.ready_to_finalize is None:
+        first_evidence = self._finalize_v3_attempt_locked(
+            writer,
+            first,
+            first_claim,
+        )
+        if first.ready_to_finalize is None:
+            return self._evidence_ref(first_evidence)
+        first_hash = ExecutionResultHasher.bind(
+            first.ready_to_finalize,
+            first_evidence,
+        )
+
+        second_attempt = AttemptIdentity.retry(first_attempt, next_ordinal=2)
+        second_claim = writer._claim_v3_locked(
+            attempt=second_attempt,
+            resolved_request=resolved,
+            execution_case_hash=execution_case.case_hash,
+            execution_case_semantic_hash=execution_case.semantic_spec_hash,
+            input_origin=input_origin,
+            prior_ready=first_evidence,
+        )
+        second = runner._execute_verified_locked(
+            resolved_request=resolved,
+            execution_case=execution_case,
+            attempt=second_attempt,
+            input_origin=input_origin,
+            cancellation=cancellation,
+        )
+        second_evidence = self._finalize_v3_attempt_locked(
+            writer,
+            second,
+            second_claim,
+        )
+        if second.ready_to_finalize is None:
             return self._evidence_ref(second_evidence)
         second_hash = ExecutionResultHasher.bind(
-            second_record.ready_to_finalize,
+            second.ready_to_finalize,
             second_evidence,
         )
-        if first_hash is None:
-            if first_state is None or first_state.engine_payload is None:
-                raise RuntimeError("Attempt graph READY evidence is incomplete")
-            if canonical_bytes(first_state.engine_payload) != canonical_bytes(
-                second_record.ready_to_finalize.engine_result
-            ):
-                raise RuntimeError("Attempt graph execution results are inconsistent")
-            recovered_ready = ReadyToFinalizeAttempt(
-                attempt=first_state.attempt,
-                resolved_request=resolved,
-                input_origin=input_origin,
-                execution_case_hash=execution_case.case_hash,
-                engine_result=second_record.ready_to_finalize.engine_result,
-            )
-            first_hash = ExecutionResultHasher.bind(
-                recovered_ready,
-                first_evidence,
-            )
         return self._publish_canonical(
             resolved,
             execution_case,
@@ -538,12 +509,13 @@ class BacktestRuntime:
             locked=True,
         )
 
-    def _publish_attempt_locked(
+    def _finalize_v3_attempt_locked(
         self,
         writer: AttemptEvidenceWriter,
         record: AttemptExecutionRecord,
+        claim,
     ) -> FinalizedAttemptEvidence:
-        outcome = writer._publish_locked(record)
+        outcome = writer._finalize_v3_locked(record, claim)
         if outcome.failure is not None:
             raise RuntimeError(
                 "Attempt evidence publication failed: "
@@ -554,294 +526,88 @@ class BacktestRuntime:
         self._mirror_evidence_graph(outcome.finalized)
         return outcome.finalized
 
-    def _verified_terminal_ref(
-        self,
-        evidence: FinalizedAttemptEvidence,
-    ) -> ArtifactRef:
-        self._mirror_evidence_graph(evidence)
-        ref = self._evidence_ref(evidence)
-        terminal = BacktestEvidenceRepository(reader=self._artifact_reader).load_terminal(
-            ref
-        )
-        if terminal.durable_evidence_ref != ref:
-            raise RuntimeError("terminal evidence verification returned wrong ref")
-        return ref
-
-    def _publish_recovered_canonical_locked(
+    def _existing_terminal_ref_v3(
         self,
         resolved: ResolvedBacktestRequest,
-        execution_case: ResolvedExecutionCase,
-        recovered: tuple[_RecoveredAttemptState, _RecoveredAttemptState],
-    ) -> BacktestCanonicalPublicationRef | ArtifactRef:
-        if any(value.engine_payload is None for value in recovered):
-            raise RuntimeError("Attempt graph READY evidence is incomplete")
-        first, second = recovered
-        self._mirror_evidence_graph(first.evidence)
-        self._mirror_evidence_graph(second.evidence)
-        if first.engine_payload is None or second.engine_payload is None:
-            raise RuntimeError("Attempt graph READY evidence is incomplete")
-        publication = self._canonical_publisher()._publish_v2_recovered_locked(
-            resolved_request=resolved,
-            attempts=(
-                (
-                    first.attempt,
-                    first.evidence,
-                    first.engine_payload,
-                    first.engine_content_hash,
-                ),
-                (
-                    second.attempt,
-                    second.evidence,
-                    second.engine_payload,
-                    second.engine_content_hash,
-                ),
-            ),
-            engine_context=self._engine_context(resolved, execution_case),
-        )
-        if publication.failure is not None:
-            raise RuntimeError(
-                "canonical publication failed: "
-                f"{publication.failure.code.value}"
-            )
-        relative = publication.relative_directory
-        if relative is None:
-            raise RuntimeError("canonical publication returned no result")
-        ref = self._mirror_publication_graph(relative)
-        return BacktestCanonicalPublicationRef.from_artifact_ref(ref)
-
-    def _recover_attempt_graph(
-        self,
-        resolved: ResolvedBacktestRequest,
-        execution_case: ResolvedExecutionCase,
-        input_origin: InputOrigin,
-    ) -> tuple[_RecoveredAttemptState, ...]:
-        attempts_directory = (
+    ) -> ArtifactRef | None:
+        attempts = (
             self._publication_root
             / "runs"
             / resolved.semantic_run_id
             / "attempts"
         )
-        if not attempts_directory.exists():
-            return ()
-        if not attempts_directory.is_dir():
-            raise RuntimeError("Attempt graph root is not a directory")
+        if not attempts.exists():
+            return None
+        if not attempts.is_dir():
+            raise RuntimeError("V3 restart state is not clean")
+        staging = attempts / ".staging"
+        claims = attempts / ".claims"
+        if (
+            (staging.exists() and (not staging.is_dir() or any(staging.iterdir())))
+            or (claims.exists() and (not claims.is_dir() or any(claims.iterdir())))
+        ):
+            raise RuntimeError("V3 restart state is not clean")
         first = AttemptIdentity.first(resolved.semantic_run_id)
         second = AttemptIdentity.retry(first, next_ordinal=2)
-        expected = {
-            first.attempt_id: first,
-            second.attempt_id: second,
+        allowed = {first.attempt_id, second.attempt_id, ".staging", ".claims"}
+        children = tuple(attempts.iterdir())
+        if any(value.name not in allowed for value in children):
+            raise RuntimeError("V3 restart state is not clean")
+        existing = {
+            attempt.attempt_id: attempts / attempt.attempt_id
+            for attempt in (first, second)
+            if (attempts / attempt.attempt_id).exists()
         }
-        children = tuple(attempts_directory.iterdir())
-        staging = attempts_directory / ".staging"
-        if staging in children:
-            if not staging.is_dir() or any(staging.iterdir()):
-                raise RuntimeError("Attempt graph staging is inconsistent")
-            children = tuple(value for value in children if value != staging)
-        if any(not value.is_dir() or value.name not in expected for value in children):
-            raise RuntimeError("Attempt graph contains an unexpected node")
-        names = {value.name for value in children}
-        if second.attempt_id in names and first.attempt_id not in names:
-            raise RuntimeError("Attempt graph has an ordinal gap")
-        states = {
-            value.name: self._recover_attempt_state(
-                value,
-                expected[value.name],
-                resolved,
-                execution_case,
-                input_origin,
-            )
-            for value in children
-        }
-        ordered = tuple(
-            states[value.attempt_id]
-            for value in (first, second)
-            if value.attempt_id in states
+        if second.attempt_id in existing and first.attempt_id not in existing:
+            raise RuntimeError("V3 restart state is not clean")
+        statuses: dict[str, str] = {}
+        refs: dict[str, ArtifactRef] = {}
+        for attempt_id, directory in existing.items():
+            if not directory.is_dir():
+                raise RuntimeError("V3 restart state is not clean")
+            try:
+                payload, envelope, _ = _read_canonical_artifact(
+                    directory / "evidence-manifest.json",
+                    "evidence_manifest",
+                )
+            except (OSError, TypeError, ValueError) as error:
+                raise RuntimeError("V3 restart state is not clean") from error
+            status = payload.get("status")
+            if (
+                payload.get("semantic_run_id") != resolved.semantic_run_id
+                or payload.get("attempt_id") != attempt_id
+                or type(status) is not str
+            ):
+                raise RuntimeError("V3 restart state is not clean")
+            statuses[attempt_id] = status
+            refs[attempt_id] = ArtifactRef.from_envelope(envelope)
+        terminal_id: str | None = None
+        first_status = statuses.get(first.attempt_id)
+        second_status = statuses.get(second.attempt_id)
+        terminals = {"BLOCKED", "FAILED", "CANCELLED"}
+        if first_status in terminals and second_status is None:
+            terminal_id = first.attempt_id
+        elif first_status == "READY_FOR_INTEGRITY" and second_status in terminals:
+            terminal_id = second.attempt_id
+        elif not statuses:
+            return None
+        elif terminal_id is None:
+            return None
+        ref = self._mirror_manifest_graph(
+            relative_directory=(
+                f"runs/{resolved.semantic_run_id}/attempts/{terminal_id}"
+            ),
+            manifest_name="evidence-manifest.json",
+            manifest_type="evidence_manifest",
         )
-        if ordered and ordered[0].evidence.status is not EvidencePublicationStatus.READY_FOR_INTEGRITY:
-            if len(ordered) != 1:
-                raise RuntimeError("Attempt graph continues after terminal Attempt")
-        if len(ordered) == 2 and ordered[1].attempt.parent_attempt_id != ordered[0].attempt.attempt_id:
-            raise RuntimeError("Attempt graph parent link mismatch")
-        return ordered
-
-    def _recover_attempt_state(
-        self,
-        directory: Path,
-        attempt: AttemptIdentity,
-        resolved: ResolvedBacktestRequest,
-        execution_case: ResolvedExecutionCase,
-        input_origin: InputOrigin,
-    ) -> _RecoveredAttemptState:
-        try:
-            verify_read_only(directory)
-            manifest_payload, _, manifest_source_hash = _read_canonical_artifact(
-                directory / "evidence-manifest.json",
-                "evidence_manifest",
-            )
-            artifact_values = manifest_payload["artifacts"]
-            if type(artifact_values) is not tuple or not all(
-                isinstance(value, Mapping) for value in artifact_values
-            ):
-                raise ValueError("Attempt manifest artifacts are invalid")
-            entries = tuple(
-                EvidenceArtifactEntry(
-                    relative_path=self._manifest_relative_path(value["relative_path"]),
-                    role=EvidenceArtifactRole(value["role"]),
-                    artifact_type=self._manifest_text(
-                        "artifact_type", value["artifact_type"]
-                    ),
-                    schema_version=self._manifest_int(
-                        "schema_version", value["schema_version"], positive=True
-                    ),
-                    content_hash=self._canonical_hash(
-                        "content_hash", value["content_hash"]
-                    ),
-                    source_hash=self._canonical_hash(
-                        "source_hash", value["source_hash"]
-                    ),
-                    byte_count=self._manifest_int(
-                        "byte_count", value["byte_count"], positive=True
-                    ),
-                )
-                for value in artifact_values
-            )
-            status = EvidencePublicationStatus(manifest_payload["status"])
-            terminal_outcome = manifest_payload["terminal_outcome"]
-            deployment_authorized = manifest_payload["deployment_authorized"]
-            if type(deployment_authorized) is not bool:
-                raise ValueError("Attempt deployment flag is invalid")
-            manifest = EvidenceManifest(
-                semantic_run_id=self._manifest_text(
-                    "semantic_run_id", manifest_payload["semantic_run_id"]
-                ),
-                attempt_id=self._manifest_text(
-                    "attempt_id", manifest_payload["attempt_id"]
-                ),
-                status=status,
-                terminal_outcome=(
-                    None
-                    if terminal_outcome is None
-                    else BacktestRunOutcome(terminal_outcome)
-                ),
-                artifacts=entries,
-                market_bundle_ref_hash=self._canonical_hash(
-                    "market_bundle_ref_hash",
-                    manifest_payload["market_bundle_ref_hash"],
-                ),
-                attempt_record_hash=self._canonical_hash(
-                    "attempt_record_hash", manifest_payload["attempt_record_hash"]
-                ),
-                deployment_authorized=deployment_authorized,
-            )
-            if (
-                manifest.semantic_run_id != resolved.semantic_run_id
-                or manifest.attempt_id != attempt.attempt_id
-                or manifest.manifest_hash != manifest_payload["manifest_hash"]
-                or canonical_bytes(manifest_payload) != canonical_bytes(manifest)
-            ):
-                raise ValueError("manifest identity mismatch")
-            expected_files = {value.relative_path for value in entries} | {
-                "evidence-manifest.json"
-            }
-            if {value.name for value in directory.iterdir()} != expected_files:
-                raise ValueError("Attempt file coverage mismatch")
-            payloads: dict[str, dict[str, object]] = {}
-            for entry in entries:
-                payload, envelope, source_hash = _read_canonical_artifact(
-                    directory / entry.relative_path,
-                    entry.artifact_type,
-                )
-                if (
-                    envelope.schema_version != entry.schema_version
-                    or envelope.content_hash != entry.content_hash
-                    or source_hash != entry.source_hash
-                    or len(canonical_bytes(envelope)) != entry.byte_count
-                ):
-                    raise ValueError("Attempt artifact binding mismatch")
-                payloads[entry.relative_path] = payload
-            record = payloads["attempt-execution-record.json"]
-            if (
-                canonical_sha256(record) != manifest.attempt_record_hash
-                or canonical_sha256(payloads["market-bundle-ref.json"])
-                != manifest.market_bundle_ref_hash
-                or canonical_bytes(payloads["request.json"])
-                != canonical_bytes(resolved.request)
-                or canonical_bytes(payloads["environment.json"])
-                != canonical_bytes(resolved.environment)
-                or canonical_bytes(payloads["build-artifact-manifest.json"])
-                != canonical_bytes(resolved.build_artifact_manifest)
-                or canonical_bytes(
-                    payloads["environment-compatibility-report.json"]
-                )
-                != canonical_bytes(resolved.environment.compatibility_report)
-            ):
-                raise ValueError("Attempt common evidence mismatch")
-            branch_name = {
-                EvidencePublicationStatus.READY_FOR_INTEGRITY: "ready_to_finalize",
-                EvidencePublicationStatus.BLOCKED: "blocked_report",
-                EvidencePublicationStatus.FAILED: "failed_report",
-                EvidencePublicationStatus.CANCELLED: "cancelled_report",
-            }[status]
-            branch = record.get(branch_name)
-            if not isinstance(branch, Mapping):
-                raise ValueError("Attempt record branch mismatch")
-            if (
-                canonical_bytes(branch.get("attempt")) != canonical_bytes(attempt)
-                or canonical_sha256(branch.get("resolved_request"))
-                != canonical_sha256(resolved)
-                or branch.get("input_origin") != input_origin.value
-                or branch.get("execution_case_hash") != execution_case.case_hash
-            ):
-                raise ValueError("Attempt record context mismatch")
-            expected_record_status = {
-                EvidencePublicationStatus.READY_FOR_INTEGRITY: "READY_TO_FINALIZE",
-                EvidencePublicationStatus.BLOCKED: "BLOCKED",
-                EvidencePublicationStatus.FAILED: "FAILED",
-                EvidencePublicationStatus.CANCELLED: "CANCELLED",
-            }[status]
-            if record.get("status") != expected_record_status:
-                raise ValueError("Attempt record status mismatch")
-            evidence = FinalizedAttemptEvidence(
-                attempt=attempt,
-                status=status,
-                terminal_outcome=manifest.terminal_outcome,
-                manifest=manifest,
-                manifest_source_hash=manifest_source_hash,
-                relative_directory=(
-                    f"runs/{resolved.semantic_run_id}/attempts/{attempt.attempt_id}"
-                ),
-            )
-            engine_payload = payloads.get("engine-execution-result.json")
-            engine_entry = next(
-                (
-                    value
-                    for value in entries
-                    if value.role is EvidenceArtifactRole.ENGINE_EXECUTION_RESULT
-                ),
-                None,
-            )
-            if status is EvidencePublicationStatus.READY_FOR_INTEGRITY:
-                if engine_payload is None or engine_entry is None:
-                    raise ValueError("READY Attempt lacks Engine result")
-                trace = engine_payload.get("trace")
-                if (
-                    engine_payload.get("case_hash") != execution_case.case_hash
-                    or engine_payload.get("target_stream_digest")
-                    != resolved.request.target_stream_digest
-                    or not isinstance(trace, Mapping)
-                    or canonical_bytes(branch.get("engine_result"))
-                    != canonical_bytes(engine_payload)
-                ):
-                    raise ValueError("Engine result context mismatch")
-            return _RecoveredAttemptState(
-                attempt,
-                evidence,
-                record,
-                engine_payload,
-                engine_entry.content_hash if engine_entry is not None else None,
-            )
-        except (KeyError, OSError, TypeError, ValueError) as error:
-            raise RuntimeError("Attempt graph verification failed") from error
+        if ref != refs[terminal_id]:
+            raise RuntimeError("V3 restart state is not clean")
+        terminal = BacktestEvidenceRepository(
+            reader=self._artifact_reader
+        ).load_terminal(ref)
+        if terminal.durable_evidence_ref != ref:
+            raise RuntimeError("terminal evidence verification returned wrong ref")
+        return ref
 
     def _resolve(
         self,

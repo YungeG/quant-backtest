@@ -14,6 +14,7 @@ from crypto_quant_domain import (
     ArtifactSchemaRegistration,
     CanonicalSchema,
     SchemaCatalog,
+    canonical_bytes,
     canonical_sha256,
 )
 
@@ -29,11 +30,13 @@ from ._publication import (
     verify_read_only,
     write_file,
 )
+from .resolution import ResolvedBacktestRequest
 from .runner import (
     AttemptExecutionRecord,
     AttemptExecutionStatus,
     AttemptIdentity,
     BacktestRunOutcome,
+    InputOrigin,
 )
 
 
@@ -383,6 +386,17 @@ class _EvidencePaths:
     final_relative: str
 
 
+@dataclass(frozen=True, slots=True)
+class _V3AttemptClaim:
+    attempt: AttemptIdentity
+    resolved_request_hash: str
+    execution_case_hash: str
+    execution_case_semantic_hash: str
+    input_origin: InputOrigin
+    path: Path
+    source_hash: str
+
+
 class AttemptEvidenceWriter:
     """Publish one immutable local Attempt evidence directory."""
 
@@ -390,6 +404,133 @@ class AttemptEvidenceWriter:
         if not isinstance(root, Path):
             raise TypeError("root must be pathlib.Path")
         self._root = root
+
+    def _claim_v3_locked(
+        self,
+        *,
+        attempt: AttemptIdentity,
+        resolved_request: ResolvedBacktestRequest,
+        execution_case_hash: str,
+        execution_case_semantic_hash: str,
+        input_origin: InputOrigin,
+        prior_ready: FinalizedAttemptEvidence | None = None,
+    ) -> _V3AttemptClaim:
+        if type(attempt) is not AttemptIdentity:
+            raise TypeError("attempt must be exact AttemptIdentity")
+        if type(resolved_request) is not ResolvedBacktestRequest:
+            raise TypeError("resolved_request must be exact ResolvedBacktestRequest")
+        _hash("execution_case_hash", execution_case_hash)
+        _hash("execution_case_semantic_hash", execution_case_semantic_hash)
+        if type(input_origin) is not InputOrigin:
+            raise TypeError("input_origin must be exact InputOrigin")
+        paths = self._paths(attempt)
+        try:
+            ensure_directory(paths.attempts)
+            staging_root = paths.staging.parent
+            claims_root = paths.attempts / ".claims"
+            ensure_directory(staging_root)
+            ensure_directory(claims_root)
+        except OSError as error:
+            raise RuntimeError("V3 restart state is not clean") from error
+        if any(staging_root.iterdir()) or any(claims_root.iterdir()):
+            raise RuntimeError("V3 restart state is not clean")
+        final_children = {
+            value.name: value
+            for value in paths.attempts.iterdir()
+            if value.name not in {".staging", ".claims"}
+        }
+        if any(not value.is_dir() for value in final_children.values()):
+            raise RuntimeError("V3 restart state is not clean")
+        if attempt.ordinal == 1:
+            if prior_ready is not None or final_children:
+                raise RuntimeError("V3 restart state is not clean")
+        elif attempt.ordinal == 2:
+            first = AttemptIdentity.first(attempt.semantic_run_id)
+            if (
+                type(prior_ready) is not FinalizedAttemptEvidence
+                or prior_ready.attempt != first
+                or prior_ready.status is not EvidencePublicationStatus.READY_FOR_INTEGRITY
+                or attempt.parent_attempt_id != first.attempt_id
+                or set(final_children) != {first.attempt_id}
+                or self.verify(prior_ready).failure is not None
+            ):
+                raise RuntimeError("V3 restart state is not clean")
+        else:
+            raise RuntimeError("V3 restart state is not clean")
+        payload = {
+            "type": "backtest_v3_attempt_claim",
+            "schema_version": 1,
+            "attempt": attempt,
+            "resolved_request_hash": canonical_sha256(resolved_request),
+            "execution_case_hash": execution_case_hash,
+            "execution_case_semantic_hash": execution_case_semantic_hash,
+            "input_origin": input_origin.value,
+        }
+        source = canonical_bytes(payload)
+        path = claims_root / f"{attempt.attempt_id}.claim"
+        try:
+            self._write_file(path, source)
+            self._fsync_directory(claims_root)
+            self._fsync_directory(paths.attempts)
+        except OSError as error:
+            raise RuntimeError("V3 restart state is not clean") from error
+        return _V3AttemptClaim(
+            attempt=attempt,
+            resolved_request_hash=canonical_sha256(resolved_request),
+            execution_case_hash=execution_case_hash,
+            execution_case_semantic_hash=execution_case_semantic_hash,
+            input_origin=input_origin,
+            path=path,
+            source_hash=canonical_sha256(payload),
+        )
+
+    def _finalize_v3_locked(
+        self,
+        record: AttemptExecutionRecord,
+        claim: _V3AttemptClaim,
+    ) -> EvidencePublicationOutcome:
+        if type(record) is not AttemptExecutionRecord:
+            raise TypeError("record must be exact AttemptExecutionRecord")
+        if type(claim) is not _V3AttemptClaim:
+            raise TypeError("claim must be exact _V3AttemptClaim")
+        payload = {
+            "type": "backtest_v3_attempt_claim",
+            "schema_version": 1,
+            "attempt": claim.attempt,
+            "resolved_request_hash": claim.resolved_request_hash,
+            "execution_case_hash": claim.execution_case_hash,
+            "execution_case_semantic_hash": claim.execution_case_semantic_hash,
+            "input_origin": claim.input_origin.value,
+        }
+        try:
+            source = claim.path.read_bytes()
+        except OSError as error:
+            raise RuntimeError("V3 restart state is not clean") from error
+        if (
+            record.attempt != claim.attempt
+            or canonical_sha256(record.resolved_request)
+            != claim.resolved_request_hash
+            or record.execution_case_hash != claim.execution_case_hash
+            or record.resolved_request.request.execution_case_semantic_hash
+            != claim.execution_case_semantic_hash
+            or record.input_origin is not claim.input_origin
+            or source != canonical_bytes(payload)
+            or canonical_sha256(payload) != claim.source_hash
+        ):
+            raise RuntimeError("V3 restart state is not clean")
+        outcome = self._publish_locked(record)
+        if outcome.finalized is None:
+            return outcome
+        try:
+            claims_root = claim.path.parent
+            attempts = self._paths(claim.attempt).attempts
+            claim.path.unlink()
+            self._fsync_directory(claims_root)
+            claims_root.rmdir()
+            self._fsync_directory(attempts)
+        except OSError as error:
+            raise RuntimeError("V3 restart state is not clean") from error
+        return outcome
 
     def publish(self, record: AttemptExecutionRecord) -> EvidencePublicationOutcome:
         if not isinstance(record, AttemptExecutionRecord):

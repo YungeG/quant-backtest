@@ -3319,7 +3319,62 @@ def _preparation_replay_positions(
     return None, None, None
 
 
+def _snapshot_execution_request_v3(
+    request: BacktestExecutionRequest,
+) -> tuple[BacktestExecutionRequest | None, _ExecutionInputsHydrationFailureV3 | None]:
+    try:
+        request_schema_version, ref = _rebuild_execution_request_v3(request)
+        if request_schema_version != _V3_SCHEMA_VERSION:
+            raise ValueError("request is not schema 3")
+        public_request = _rebuild_backtest_request_v3(request.request)
+        return BacktestExecutionRequest(3, public_request, ref), None
+    except Exception:
+        return None, _ExecutionInputsHydrationFailureV3(
+            _ExecutionInputsHydrationFailureCodeV3.MALFORMED_EXECUTION_REQUEST
+        )
+
+
+def _snapshot_execution_request_v3_from_validated_schema(
+    request: BacktestExecutionRequest,
+) -> tuple[BacktestExecutionRequest | None, _ExecutionInputsHydrationFailureV3 | None]:
+    try:
+        ref = request.execution_input_bundle_ref
+        if (
+            type(ref) is not ArtifactRef
+            or ref.artifact_type != _ARTIFACT_TYPE
+            or ref.schema_version != _V3_SCHEMA_VERSION
+        ):
+            raise ValueError("execution input ref is not schema 3")
+        rebuilt_ref = ArtifactRef(
+            ref.artifact_type,
+            ref.schema_version,
+            ref.content_hash,
+        )
+        public_request = _rebuild_backtest_request_v3(request.request)
+        return BacktestExecutionRequest(3, public_request, rebuilt_ref), None
+    except Exception:
+        return None, _ExecutionInputsHydrationFailureV3(
+            _ExecutionInputsHydrationFailureCodeV3.MALFORMED_EXECUTION_REQUEST
+        )
+
+
 def _read_execution_inputs_v3(
+    reader: ArtifactEnvelopeReader,
+    request: BacktestExecutionRequest,
+    *,
+    recorder: BoundedPerformanceRecorder | None = None,
+) -> tuple[_DecodedExecutionInputBundleV3 | None, _ExecutionInputsHydrationFailureV3 | None]:
+    snapshot, failure = _snapshot_execution_request_v3(request)
+    if failure is not None or snapshot is None:
+        return None, failure
+    return _read_execution_inputs_v3_from_snapshot(
+        reader,
+        snapshot,
+        recorder=recorder,
+    )
+
+
+def _read_execution_inputs_v3_from_snapshot(
     reader: ArtifactEnvelopeReader,
     request: BacktestExecutionRequest,
     *,
@@ -3329,26 +3384,12 @@ def _read_execution_inputs_v3(
         return None, _ExecutionInputsHydrationFailureV3(
             _ExecutionInputsHydrationFailureCodeV3.MALFORMED_EXECUTION_REQUEST
         )
-    try:
-        request_schema_version, ref = _rebuild_execution_request_v3(request)
-    except Exception:
+    if type(request) is not BacktestExecutionRequest or request.schema_version != 3:
         return None, _ExecutionInputsHydrationFailureV3(
             _ExecutionInputsHydrationFailureCodeV3.MALFORMED_EXECUTION_REQUEST
         )
-    if (
-        request_schema_version != _V3_SCHEMA_VERSION
-        or ref.artifact_type != _ARTIFACT_TYPE
-        or ref.schema_version != _V3_SCHEMA_VERSION
-    ):
-        return None, _ExecutionInputsHydrationFailureV3(
-            _ExecutionInputsHydrationFailureCodeV3.WRONG_EXECUTION_INPUT_BUNDLE_REF
-        )
-    try:
-        public_request = _rebuild_backtest_request_v3(request.request)
-    except Exception:
-        return None, _ExecutionInputsHydrationFailureV3(
-            _ExecutionInputsHydrationFailureCodeV3.MALFORMED_EXECUTION_REQUEST
-        )
+    ref = request.execution_input_bundle_ref
+    public_request = request.request
     try:
         source = reader.read(ref=ref)
     except Exception as error:
@@ -3430,6 +3471,52 @@ def _read_execution_inputs_v3(
     return bundle, None
 
 
+def _verify_execution_inputs_v3_after_resolution(
+    bundle: _DecodedExecutionInputBundleV3,
+    request: BacktestExecutionRequest,
+    resolved_request: ResolvedBacktestRequest,
+    verified_reader: MarketBundleReader,
+) -> _ExecutionInputsHydrationFailureV3 | None:
+    try:
+        if type(bundle) is not _DecodedExecutionInputBundleV3:
+            raise TypeError("bundle must be exact decoded v3 execution inputs")
+        if type(request) is not BacktestExecutionRequest or request.schema_version != 3:
+            raise TypeError("request must be exact schema-3 snapshot")
+        if type(resolved_request) is not ResolvedBacktestRequest:
+            raise TypeError("resolved_request must be exact ResolvedBacktestRequest")
+        public_request = request.request
+        if (
+            bundle.request_hash != public_request.request_hash
+            or resolved_request.request != public_request
+            or bundle.semantic_run_id != resolved_request.semantic_run_id
+        ):
+            return _ExecutionInputsHydrationFailureV3(
+                _ExecutionInputsHydrationFailureCodeV3.REQUEST_BINDING_MISMATCH
+            )
+        if (
+            bundle.build_artifact_manifest.manifest_hash
+            != public_request.build_artifact_manifest_hash
+            or bundle.build_artifact_manifest
+            != resolved_request.build_artifact_manifest
+        ):
+            return _ExecutionInputsHydrationFailureV3(
+                _ExecutionInputsHydrationFailureCodeV3.BUILD_BINDING_MISMATCH
+            )
+        if (
+            verified_reader.bundle_ref != public_request.market_bundle_ref
+            or resolved_request.environment.market_bundle_ref
+            != public_request.market_bundle_ref
+        ):
+            return _ExecutionInputsHydrationFailureV3(
+                _ExecutionInputsHydrationFailureCodeV3.TARGET_BINDING_MISMATCH
+            )
+    except Exception:
+        return _ExecutionInputsHydrationFailureV3(
+            _ExecutionInputsHydrationFailureCodeV3.MALFORMED_EXECUTION_REQUEST
+        )
+    return None
+
+
 def _hydrate_execution_inputs_v3_from_decoded(
     bundle: _DecodedExecutionInputBundleV3,
     request: BacktestExecutionRequest,
@@ -3438,29 +3525,38 @@ def _hydrate_execution_inputs_v3_from_decoded(
     resolved_request: ResolvedBacktestRequest,
     prepared_market_data: PreparedMultiResolutionMarketData,
     target_stream: PrecomputedTargetStream | None = None,
+    bindings_verified: bool = False,
     recorder: BoundedPerformanceRecorder | None = None,
 ) -> _ExecutionInputsHydrationOutcomeV3:
     if recorder is not None and type(recorder) is not BoundedPerformanceRecorder:
         return _failure_v3(
             _ExecutionInputsHydrationFailureCodeV3.MALFORMED_EXECUTION_REQUEST
         )
-    try:
-        request_schema_version, ref = _rebuild_execution_request_v3(request)
-    except Exception:
+    if type(bindings_verified) is not bool:
         return _failure_v3(
             _ExecutionInputsHydrationFailureCodeV3.MALFORMED_EXECUTION_REQUEST
         )
-    if (
-        request_schema_version != _V3_SCHEMA_VERSION
-        or ref.artifact_type != _ARTIFACT_TYPE
-        or ref.schema_version != _V3_SCHEMA_VERSION
-    ):
-        return _failure_v3(
-            _ExecutionInputsHydrationFailureCodeV3.WRONG_EXECUTION_INPUT_BUNDLE_REF
-        )
     try:
-        public_request = _rebuild_backtest_request_v3(request.request)
-        resolved = _rebuild_resolved_request_v3(resolved_request)
+        if bindings_verified:
+            if (
+                type(request) is not BacktestExecutionRequest
+                or type(resolved_request) is not ResolvedBacktestRequest
+            ):
+                raise TypeError("verified hydration authorities are malformed")
+            public_request = request.request
+            resolved = resolved_request
+        else:
+            request_schema_version, ref = _rebuild_execution_request_v3(request)
+            if (
+                request_schema_version != _V3_SCHEMA_VERSION
+                or ref.artifact_type != _ARTIFACT_TYPE
+                or ref.schema_version != _V3_SCHEMA_VERSION
+            ):
+                return _failure_v3(
+                    _ExecutionInputsHydrationFailureCodeV3.WRONG_EXECUTION_INPUT_BUNDLE_REF
+                )
+            public_request = _rebuild_backtest_request_v3(request.request)
+            resolved = _rebuild_resolved_request_v3(resolved_request)
         if type(bundle) is not _DecodedExecutionInputBundleV3:
             raise TypeError("bundle must be exact decoded v3 execution inputs")
         if type(prepared_market_data) is not PreparedMultiResolutionMarketData:
@@ -3477,26 +3573,15 @@ def _hydrate_execution_inputs_v3_from_decoded(
         )
 
     binding_count = _observation_binding_count_v3(bundle.market_data_preparation)
-    if (
-        bundle.request_hash != public_request.request_hash
-        or resolved.request != public_request
-        or bundle.semantic_run_id != resolved.semantic_run_id
-    ):
-        return _failure_v3(
-            _ExecutionInputsHydrationFailureCodeV3.REQUEST_BINDING_MISMATCH
+    if not bindings_verified:
+        failure = _verify_execution_inputs_v3_after_resolution(
+            bundle,
+            request,
+            resolved,
+            verified_reader,
         )
-    if (
-        bundle.build_artifact_manifest.manifest_hash
-        != public_request.build_artifact_manifest_hash
-        or bundle.build_artifact_manifest != resolved.build_artifact_manifest
-    ):
-        return _failure_v3(
-            _ExecutionInputsHydrationFailureCodeV3.BUILD_BINDING_MISMATCH
-        )
-    if verified_reader.bundle_ref != public_request.market_bundle_ref:
-        return _failure_v3(
-            _ExecutionInputsHydrationFailureCodeV3.TARGET_BINDING_MISMATCH
-        )
+        if failure is not None:
+            return _ExecutionInputsHydrationOutcomeV3(failure=failure)
     try:
         if target_stream is None:
             requirement_failure = verified_reader.validate_requirements(

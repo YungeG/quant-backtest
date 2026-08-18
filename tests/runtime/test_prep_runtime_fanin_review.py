@@ -428,10 +428,20 @@ def test_v3_evidence_write_failure_keeps_claim_and_restart_runs_no_engine(
     engine = _SequenceEngine(("ready",))
     _install_engine(monkeypatch, engine)
 
+    original_finalize = AttemptEvidenceWriter._finalize_v3_locked
+
     def fail_write(*args, **kwargs):
         raise OSError("mapping-write-failed")
 
-    monkeypatch.setattr(AttemptEvidenceWriter, "_write_file", staticmethod(fail_write))
+    def finalize(self, record, claim):
+        monkeypatch.setattr(
+            AttemptEvidenceWriter,
+            "_write_file",
+            staticmethod(fail_write),
+        )
+        return original_finalize(self, record, claim)
+
+    monkeypatch.setattr(AttemptEvidenceWriter, "_finalize_v3_locked", finalize)
     with pytest.raises(RuntimeError, match="Attempt evidence publication failed"):
         _runtime(tmp_path, _ArtifactStore(envelope), prepared).run(transport)
     assert engine.calls == 1
@@ -690,3 +700,19 @@ def test_v3_semantic_run_binding_precedes_simultaneous_preparation_failure(
 
     assert store.puts == 0
     assert not (tmp_path / "runs").exists()
+
+
+def test_v3_stale_run_lock_fails_closed_before_engine(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    prepared, resolved, _, envelope, transport = _executable_contract()
+    run_root = tmp_path / "runs" / resolved.semantic_run_id
+    run_root.mkdir(parents=True)
+    (run_root / ".publication.lock").write_text("stale", encoding="utf-8")
+    no_engine = _SequenceEngine(())
+    _install_engine(monkeypatch, no_engine)
+
+    with pytest.raises(RuntimeError, match="run_lock_unavailable"):
+        _runtime(tmp_path, _ArtifactStore(envelope), prepared).run(transport)
+
+    assert no_engine.calls == 0
