@@ -1,13 +1,20 @@
 from __future__ import annotations
 
 import json
+from copy import deepcopy
 from pathlib import Path
 
 from crypto_quant_bundle_builder import (
     BuilderStaleMarkPolicy,
     PricePurposeRequirement,
 )
-from crypto_quant_domain import InstrumentId, PricePurpose, UtcInstant, VenueId
+from crypto_quant_domain import (
+    InstrumentId,
+    PricePurpose,
+    UtcInstant,
+    VenueId,
+    canonical_sha256,
+)
 from crypto_quant_market_data import MarketBundleCapability
 
 
@@ -67,12 +74,40 @@ def _requirement(purpose: PricePurpose) -> PricePurposeRequirement:
     )
 
 
-def test_tushare_daily_purpose_scope_fixture_is_exact_and_development_only() -> None:
-    expected = json.loads(PURPOSE_SCOPE_FIXTURE.read_text(encoding="utf-8"))
-    requirements = (
+def _requirements() -> tuple[PricePurposeRequirement, PricePurposeRequirement]:
+    return (
         _requirement(PricePurpose.EXECUTION_REFERENCE),
         _requirement(PricePurpose.VALUATION),
     )
+
+
+def _publication_purpose_binding_body(
+    publication: dict[str, object],
+    requirements: tuple[PricePurposeRequirement, PricePurposeRequirement],
+) -> dict[str, object]:
+    event = publication["event"]
+    assert isinstance(event, dict)
+    return {
+        "type": "tushare_cn_a_share_daily_publication_purpose_binding",
+        "schema_version": 1,
+        "publication_event_id": event["event_id"],
+        "publication_event_hash": publication["event_hash"],
+        "bundle_ref": publication["bundle_ref"],
+        "manifest_content_hash": publication["manifest_content_hash"],
+        "stream_content_hash": publication["stream_content_hash"],
+        "price_purpose_requirements": [
+            {
+                "price_purpose": value.price_purpose.value,
+                "requirement_hash": value.requirement_hash,
+            }
+            for value in requirements
+        ],
+    }
+
+
+def test_tushare_daily_purpose_scope_fixture_is_exact_and_development_only() -> None:
+    expected = json.loads(PURPOSE_SCOPE_FIXTURE.read_text(encoding="utf-8"))
+    requirements = _requirements()
 
     assert [value.to_canonical_dict() for value in requirements] == expected[
         "requirements"
@@ -90,8 +125,10 @@ def test_tushare_daily_purpose_scope_fixture_is_exact_and_development_only() -> 
 def test_tushare_daily_purpose_scope_binds_only_the_passed_publication() -> None:
     expected = json.loads(PURPOSE_SCOPE_FIXTURE.read_text(encoding="utf-8"))
     publication = json.loads(PUBLICATION_FIXTURE.read_text(encoding="utf-8"))
+    requirements = _requirements()
     event = publication["event"]
     bucket = event["payload"]["raw_bar"]["bucket"]
+    binding_body = _publication_purpose_binding_body(publication, requirements)
 
     assert expected["publication_binding"] == {
         "event_id": event["event_id"],
@@ -105,6 +142,10 @@ def test_tushare_daily_purpose_scope_binds_only_the_passed_publication() -> None
         "source_key": event["source_key"],
         "source_hash": event["source_hash"],
     }
+    assert expected["publication_purpose_binding"] == {
+        "binding_body": binding_body,
+        "binding_hash": canonical_sha256(binding_body),
+    }
     assert expected["qualification"] == {
         "availability_closure_complete": False,
         "revision_closure_complete": False,
@@ -116,3 +157,22 @@ def test_tushare_daily_purpose_scope_binds_only_the_passed_publication() -> None
         "decision_grade_eligible": False,
         "deployment_authorized": False,
     }
+
+
+def test_publication_purpose_binding_rejects_replacement_evidence() -> None:
+    expected = json.loads(PURPOSE_SCOPE_FIXTURE.read_text(encoding="utf-8"))
+    publication = json.loads(PUBLICATION_FIXTURE.read_text(encoding="utf-8"))
+    binding_body = _publication_purpose_binding_body(publication, _requirements())
+    binding_hash = expected["publication_purpose_binding"]["binding_hash"]
+
+    replacement_publication = deepcopy(binding_body)
+    replacement_publication["publication_event_hash"] = "sha256:" + "f" * 64
+    assert canonical_sha256(replacement_publication) != binding_hash
+
+    replacement_requirement = deepcopy(binding_body)
+    requirement_bindings = replacement_requirement["price_purpose_requirements"]
+    assert isinstance(requirement_bindings, list)
+    first, second = requirement_bindings
+    assert isinstance(first, dict) and isinstance(second, dict)
+    first["requirement_hash"] = second["requirement_hash"]
+    assert canonical_sha256(replacement_requirement) != binding_hash

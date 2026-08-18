@@ -5,12 +5,15 @@ gate_status: PASSED
 owner: market-bundle-builder Tushare daily purpose-scope evidence
 produces:
   - two development-only PricePurposeRequirement values
+  - one test-only canonical publication-purpose binding fixture
 consumes:
   - G12CD-TUSHARE-CN-A-SHARE-DAILY-PUBLICATION-V1
   - existing G12I coverage declaration values
 depends_on:
   contract: [G12I, G12CD-TUSHARE-CN-A-SHARE-DAILY-PUBLICATION-V1]
-  evidence: [cn-a-share-daily-bundle-v1.expected.json]
+  evidence:
+    - cn-a-share-daily-bundle-v1.expected.json
+    - cn-a-share-daily-purpose-scope-v1.expected.json
 fan_out: []
 ---
 
@@ -28,11 +31,14 @@ new exports, or a resolver/analyzer.
 
 ## Status
 
-`PASSED`. The static fixture freezes the two exact requirement values and their
-accepted publication binding. Requirement hashes are:
+`PASSED`. The static fixture freezes the two exact requirement values and one
+canonical test-only binding to the accepted publication. Requirement hashes are:
 
 - execution reference: `sha256:eedbfd66e6b4b0d63e5bab9c1bd239bc307b8a8571b027157eb825985d5d8066`;
 - valuation: `sha256:8d410aad09e114cda8cd3beccc6cc551a2493983901c9d78ac59f5b3d1775dc3`.
+
+Publication-purpose binding hash:
+`sha256:4f14022355362ad536fe67794a4d9d0143c7987870d2abf8dadbcb9f16b9ebbc`.
 
 This status applies only to this finite development-purpose declaration fixture and
 does not change G12I, G12L, decision-grade, or deployment readiness.
@@ -43,6 +49,10 @@ Both requirements bind exactly to:
 
 - event ID: `tushare-cn-a-share-daily-v1:sha256:d01518de64eb48c9b796b83bb72eeb53fe6645d4dbcc00e88311148f23adb16c`;
 - event hash: `sha256:ab872662754a286bf9f41e722e739fe8f961d387d4d6cfa95e13888e0c8e8b0f`;
+- bundle key: `tushare-cn-a-share-daily-000001-20240102`;
+- manifest hash: `sha256:f343a0d9e4d86659ad0b1c73c888d050886f9713acedc77fc31fc16202fbce3f`;
+- manifest content hash: `sha256:7d87625e9fce5b3f668a8f1ba9a3e302a09dc334b28b61760a8212a6818f80fc`;
+- stream content hash: `sha256:27bb8945601e9a869e609bb8c146a998fca06878061950f294c2a0dabacd426c`;
 - stream: `tushare_cn_a_share.daily.publication.xshe.000001.v1`;
 - event type: `tushare_cn_a_share_daily_publication.v1`;
 - capability: `tushare_cn_a_share.daily-publications@1`;
@@ -53,6 +63,20 @@ Both requirements bind exactly to:
 
 The provider-specific capability remains unchanged. This slice must not substitute
 or claim generic `price_bars@1` capability.
+
+## Canonical test-only binding
+
+The fixture freezes one canonical body with type
+`tushare_cn_a_share_daily_publication_purpose_binding`, schema version `1`, the
+accepted Event ID/hash, complete frozen `MarketBundleRef`, manifest content hash,
+stream content hash, and the ordered `(price_purpose, requirement_hash)` pair for
+`EXECUTION_REFERENCE` and `VALUATION`. Its binding hash is recomputed with
+`canonical_sha256`.
+
+Tests reconstruct this body only from the accepted publication fixture and the two
+exact `PricePurposeRequirement` values. Replacing either the publication Event hash
+or either requirement hash changes the binding hash. This is test evidence only,
+not a production or generic artifact/API.
 
 ## Frozen requirements
 
@@ -85,9 +109,12 @@ not resolve a mark or prove that any requested instant is available.
    `BuilderStaleMarkPolicy` and `PricePurposeRequirement` and requires one missing
    static fixture.
 2. Add the fixture with exact canonical values and hashes.
-3. Assert the fixture binding matches the accepted G12C/D publication fixture and
-   that all excluded qualification claims remain false.
-4. Run focused provider/G12I tests, the full suite, import-boundary tests, static
+3. Assert the canonical binding body/hash matches the accepted G12C/D Event,
+   bundle/manifest identity, and both exact requirement hashes.
+4. Mutate publication and requirement identities independently and prove neither
+   replacement retains the frozen binding hash.
+5. Assert all excluded qualification claims remain false.
+6. Run focused provider/G12I tests, the full suite, import-boundary tests, static
    type/LSP-equivalent checks available in the repository, and secret scanning.
 
 ## Explicit non-claims
@@ -104,4 +131,4 @@ This slice does not claim or produce:
 - deployment authorization.
 
 It does not edit the Acceptance Matrix, shared plans README, G12I analyzer status,
-or production code.
+or production code, and it adds no generic binding artifact.

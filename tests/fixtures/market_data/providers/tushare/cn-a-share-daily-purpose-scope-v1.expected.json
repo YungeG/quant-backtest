@@ -26,6 +26,32 @@
     "source_key": "tushare.pro.daily_listing.000001.sz.20240102",
     "stream_key": "tushare_cn_a_share.daily.publication.xshe.000001.v1"
   },
+  "publication_purpose_binding": {
+    "binding_body": {
+      "bundle_ref": {
+        "bundle_key": "tushare-cn-a-share-daily-000001-20240102",
+        "manifest_hash": "sha256:f343a0d9e4d86659ad0b1c73c888d050886f9713acedc77fc31fc16202fbce3f",
+        "type": "market_bundle_ref"
+      },
+      "manifest_content_hash": "sha256:7d87625e9fce5b3f668a8f1ba9a3e302a09dc334b28b61760a8212a6818f80fc",
+      "price_purpose_requirements": [
+        {
+          "price_purpose": "execution_reference",
+          "requirement_hash": "sha256:eedbfd66e6b4b0d63e5bab9c1bd239bc307b8a8571b027157eb825985d5d8066"
+        },
+        {
+          "price_purpose": "valuation",
+          "requirement_hash": "sha256:8d410aad09e114cda8cd3beccc6cc551a2493983901c9d78ac59f5b3d1775dc3"
+        }
+      ],
+      "publication_event_hash": "sha256:ab872662754a286bf9f41e722e739fe8f961d387d4d6cfa95e13888e0c8e8b0f",
+      "publication_event_id": "tushare-cn-a-share-daily-v1:sha256:d01518de64eb48c9b796b83bb72eeb53fe6645d4dbcc00e88311148f23adb16c",
+      "schema_version": 1,
+      "stream_content_hash": "sha256:27bb8945601e9a869e609bb8c146a998fca06878061950f294c2a0dabacd426c",
+      "type": "tushare_cn_a_share_daily_publication_purpose_binding"
+    },
+    "binding_hash": "sha256:4f14022355362ad536fe67794a4d9d0143c7987870d2abf8dadbcb9f16b9ebbc"
+  },
   "qualification": {
     "availability_closure_complete": false,
     "corporate_actions_qualified": false,
