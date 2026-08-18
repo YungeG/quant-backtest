@@ -3339,17 +3339,25 @@ def _snapshot_execution_request_v3_from_validated_schema(
 ) -> tuple[BacktestExecutionRequest | None, _ExecutionInputsHydrationFailureV3 | None]:
     try:
         ref = request.execution_input_bundle_ref
-        if (
-            type(ref) is not ArtifactRef
-            or ref.artifact_type != _ARTIFACT_TYPE
-            or ref.schema_version != _V3_SCHEMA_VERSION
-        ):
-            raise ValueError("execution input ref is not schema 3")
+        if type(ref) is not ArtifactRef:
+            raise TypeError("execution input ref must be exact ArtifactRef")
         rebuilt_ref = ArtifactRef(
             ref.artifact_type,
             ref.schema_version,
             ref.content_hash,
         )
+    except Exception:
+        return None, _ExecutionInputsHydrationFailureV3(
+            _ExecutionInputsHydrationFailureCodeV3.MALFORMED_EXECUTION_REQUEST
+        )
+    if (
+        rebuilt_ref.artifact_type != _ARTIFACT_TYPE
+        or rebuilt_ref.schema_version != _V3_SCHEMA_VERSION
+    ):
+        return None, _ExecutionInputsHydrationFailureV3(
+            _ExecutionInputsHydrationFailureCodeV3.WRONG_EXECUTION_INPUT_BUNDLE_REF
+        )
+    try:
         public_request = _rebuild_backtest_request_v3(request.request)
         return BacktestExecutionRequest(3, public_request, rebuilt_ref), None
     except Exception:

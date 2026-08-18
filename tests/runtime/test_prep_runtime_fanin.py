@@ -260,7 +260,7 @@ def test_v3_cache_hit_still_finishes_replay_before_cache_return(
     second = runtime.run(transport)
 
     assert second == first
-    assert store.reads == 2
+    assert store.reads > 2  # input reads plus mandatory repository cache replay
     assert shared_calls == 1
     assert cache_calls == 1
 
@@ -388,7 +388,7 @@ def test_v3_transport_and_provider_failures_are_secret_safe_and_atomic(
         ArtifactRef("evidence_manifest", 3, "sha256:" + "0" * 64),
     )
 
-    with pytest.raises(RuntimeError, match="malformed_execution_request"):
+    with pytest.raises(RuntimeError, match="wrong_execution_input_bundle_ref"):
         runtime.run(forged)
 
     assert store.reads == 0

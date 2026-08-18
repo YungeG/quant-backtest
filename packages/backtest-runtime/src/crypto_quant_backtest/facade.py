@@ -304,21 +304,27 @@ class BacktestRuntime:
                 input_origin=input_origin,
                 market_data_preparation=market_data_preparation,
             )
+            lock = RunPublicationLock(
+                root=self._publication_root,
+                semantic_run_id=resolved.semantic_run_id,
+            )
             try:
-                with RunPublicationLock(
-                    root=self._publication_root,
-                    semantic_run_id=resolved.semantic_run_id,
-                ):
-                    return self._execute_case_v3_locked(
-                        resolved,
-                        execution_case,
-                        runner=runner,
-                        input_origin=input_origin,
-                        market_data_preparation=market_data_preparation,
-                        cancellation=cancellation,
-                    )
-            except OSError as error:
-                raise RuntimeError("Backtest storage failed: run_lock_unavailable") from error
+                lock.__enter__()
+            except OSError:
+                raise RuntimeError(
+                    "Backtest v3 storage failed: run_lock_unavailable"
+                ) from None
+            try:
+                return self._execute_case_v3_locked(
+                    resolved,
+                    execution_case,
+                    runner=runner,
+                    input_origin=input_origin,
+                    market_data_preparation=market_data_preparation,
+                    cancellation=cancellation,
+                )
+            finally:
+                lock.__exit__(None, None, None)
 
         terminal_ref = self._existing_terminal_ref(resolved)
         if terminal_ref is not None:
@@ -426,14 +432,6 @@ class BacktestRuntime:
             / "canonical-v2"
         )
         if os.path.lexists(canonical):
-            if cancellation is not None:
-                _read_canonical_cache_hit_v2(
-                    root=self._publication_root,
-                    resolved_request=resolved,
-                    input_origin=input_origin,
-                    execution_case=execution_case,
-                )
-                raise RuntimeError("completed semantic run cannot be cancelled")
             cached_record = runner._execute_verified_locked(
                 resolved_request=resolved,
                 execution_case=execution_case,
@@ -441,24 +439,32 @@ class BacktestRuntime:
                 input_origin=input_origin,
                 cancellation=cancellation,
             )
-            cached = self._cache_ref(cached_record)
+            cached = self._verified_cache_ref_v3(cached_record, resolved)
             if cached is not None:
+                if cancellation is not None:
+                    raise RuntimeError("completed semantic run cannot be cancelled")
                 return cached
             self._raise_runner_storage_failure(cached_record)
             raise RuntimeError("canonical cache did not return a verified result")
 
-        terminal_ref = self._existing_terminal_ref_v3(resolved)
+        try:
+            terminal_ref = self._existing_terminal_ref_v3(resolved)
+        except Exception:
+            self._raise_v3_storage_failure("attempt_graph_invalid")
         if terminal_ref is not None:
             return terminal_ref
 
         writer = self._attempt_writer()
-        first_claim = writer._claim_v3_locked(
-            attempt=first_attempt,
-            resolved_request=resolved,
-            execution_case_hash=execution_case.case_hash,
-            execution_case_semantic_hash=execution_case.semantic_spec_hash,
-            input_origin=input_origin,
-        )
+        try:
+            first_claim = writer._claim_v3_locked(
+                attempt=first_attempt,
+                resolved_request=resolved,
+                execution_case_hash=execution_case.case_hash,
+                execution_case_semantic_hash=execution_case.semantic_spec_hash,
+                input_origin=input_origin,
+            )
+        except Exception:
+            self._raise_v3_storage_failure("attempt_graph_invalid")
         first = runner._execute_verified_locked(
             resolved_request=resolved,
             execution_case=execution_case,
@@ -479,14 +485,17 @@ class BacktestRuntime:
         )
 
         second_attempt = AttemptIdentity.retry(first_attempt, next_ordinal=2)
-        second_claim = writer._claim_v3_locked(
-            attempt=second_attempt,
-            resolved_request=resolved,
-            execution_case_hash=execution_case.case_hash,
-            execution_case_semantic_hash=execution_case.semantic_spec_hash,
-            input_origin=input_origin,
-            prior_ready=first_evidence,
-        )
+        try:
+            second_claim = writer._claim_v3_locked(
+                attempt=second_attempt,
+                resolved_request=resolved,
+                execution_case_hash=execution_case.case_hash,
+                execution_case_semantic_hash=execution_case.semantic_spec_hash,
+                input_origin=input_origin,
+                prior_ready=first_evidence,
+            )
+        except Exception:
+            self._raise_v3_storage_failure("attempt_graph_invalid")
         second = runner._execute_verified_locked(
             resolved_request=resolved,
             execution_case=execution_case,
@@ -505,13 +514,16 @@ class BacktestRuntime:
             second.ready_to_finalize,
             second_evidence,
         )
-        return self._publish_canonical(
-            resolved,
-            execution_case,
-            (first_hash, second_hash),
-            (first_evidence, second_evidence),
-            locked=True,
-        )
+        try:
+            return self._publish_canonical(
+                resolved,
+                execution_case,
+                (first_hash, second_hash),
+                (first_evidence, second_evidence),
+                locked=True,
+            )
+        except Exception:
+            self._raise_v3_storage_failure("canonical_publication_failed")
 
     def _finalize_v3_attempt_locked(
         self,
@@ -519,16 +531,14 @@ class BacktestRuntime:
         record: AttemptExecutionRecord,
         claim,
     ) -> FinalizedAttemptEvidence:
-        outcome = writer._finalize_v3_locked(record, claim)
-        if outcome.failure is not None:
-            raise RuntimeError(
-                "Attempt evidence publication failed: "
-                f"{outcome.failure.code.value}"
-            )
-        if outcome.finalized is None:
-            raise RuntimeError("Attempt evidence publication returned no result")
-        self._mirror_evidence_graph(outcome.finalized)
-        return outcome.finalized
+        try:
+            outcome = writer._finalize_v3_locked(record, claim)
+            if outcome.failure is not None or outcome.finalized is None:
+                self._raise_v3_storage_failure("attempt_publication_failed")
+            self._mirror_evidence_graph(outcome.finalized)
+            return outcome.finalized
+        except Exception:
+            self._raise_v3_storage_failure("attempt_publication_failed")
 
     def _existing_terminal_ref_v3(
         self,
@@ -691,6 +701,10 @@ class BacktestRuntime:
             ) from None
 
     @staticmethod
+    def _raise_v3_storage_failure(code: str) -> NoReturn:
+        raise RuntimeError(f"Backtest v3 storage failed: {code}") from None
+
+    @staticmethod
     def _raise_v3_hydration_failure(failure) -> NoReturn:
         code = (
             failure.code.value
@@ -797,6 +811,44 @@ class BacktestRuntime:
         return ArtifactRef.from_envelope(
             ArtifactEnvelope.create("evidence_manifest", 1, evidence.manifest)
         )
+
+    def _verified_cache_ref_v3(
+        self,
+        record: AttemptExecutionRecord,
+        resolved: ResolvedBacktestRequest,
+    ) -> BacktestCanonicalPublicationRef | None:
+        cache_hit = record.cache_hit
+        if cache_hit is None:
+            return None
+        try:
+            directory = self._publication_root / cache_hit.relative_directory
+            payload, envelope, source_hash = _read_canonical_artifact(
+                directory / "publication-manifest.json",
+                "canonical_publication_manifest",
+            )
+            if (
+                payload.get("semantic_run_id") != resolved.semantic_run_id
+                or canonical_sha256(payload) != cache_hit.publication_manifest_hash
+                or source_hash != cache_hit.publication_manifest_source_hash
+            ):
+                raise ValueError("cache publication identity mismatch")
+            publication_ref = BacktestCanonicalPublicationRef.from_artifact_ref(
+                ArtifactRef.from_envelope(envelope)
+            )
+            completed = BacktestEvidenceRepository(
+                reader=self._artifact_reader
+            ).load_completed(publication_ref)
+            if (
+                completed.source_publication_ref != publication_ref
+                or completed.semantic_run_id != resolved.semantic_run_id
+            ):
+                raise ValueError("cache repository identity mismatch")
+            mirrored = self._cache_ref(record)
+            if mirrored != publication_ref:
+                raise ValueError("cache mirror identity mismatch")
+            return mirrored
+        except Exception:
+            self._raise_v3_storage_failure("cache_verification_failed")
 
     def _cache_ref(
         self, record: AttemptExecutionRecord

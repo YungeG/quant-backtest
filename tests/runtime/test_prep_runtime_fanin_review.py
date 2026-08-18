@@ -4,6 +4,7 @@ from dataclasses import replace
 from enum import Enum
 import json
 from pathlib import Path
+from types import SimpleNamespace
 
 import pytest
 
@@ -39,6 +40,9 @@ from crypto_quant_domain import (
     canonical_sha256,
 )
 from crypto_quant_market_data import InMemoryMarketBundleReader
+from tests.runtime.evidence_repository.test_evidence_repository import (
+    _mutate_root_graph,
+)
 from tests.runtime.test_prep_runtime_fanin import (
     _ArtifactStore,
     _executable_contract,
@@ -342,7 +346,7 @@ def _assert_v3_restart_fails_closed(
     monkeypatch.undo()
     no_engine = _SequenceEngine(())
     _install_engine(monkeypatch, no_engine)
-    with pytest.raises(RuntimeError, match="restart state"):
+    with pytest.raises(RuntimeError, match="attempt_graph_invalid"):
         _runtime(root, _ArtifactStore(envelope), prepared).run(transport)
     assert no_engine.calls == 0
 
@@ -442,7 +446,7 @@ def test_v3_evidence_write_failure_keeps_claim_and_restart_runs_no_engine(
         return original_finalize(self, record, claim)
 
     monkeypatch.setattr(AttemptEvidenceWriter, "_finalize_v3_locked", finalize)
-    with pytest.raises(RuntimeError, match="Attempt evidence publication failed"):
+    with pytest.raises(RuntimeError, match="attempt_publication_failed"):
         _runtime(tmp_path, _ArtifactStore(envelope), prepared).run(transport)
     assert engine.calls == 1
     _assert_v3_restart_fails_closed(
@@ -506,7 +510,7 @@ def test_v3_crash_after_second_ready_fails_closed_without_engine_rerun(
     )
 
 
-def test_v3_crash_after_canonical_publication_returns_verified_cache(
+def test_v3_crash_after_canonical_without_durable_repository_fails_closed(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
     prepared, _, _, envelope, transport = _executable_contract()
@@ -529,8 +533,8 @@ def test_v3_crash_after_canonical_publication_returns_verified_cache(
     monkeypatch.undo()
     no_engine = _SequenceEngine(())
     _install_engine(monkeypatch, no_engine)
-    result = _runtime(tmp_path, _ArtifactStore(envelope), prepared).run(transport)
-    assert type(result) is BacktestCanonicalPublicationRef
+    with pytest.raises(RuntimeError, match="cache_verification_failed"):
+        _runtime(tmp_path, _ArtifactStore(envelope), prepared).run(transport)
     assert no_engine.calls == 0
 
 
@@ -580,7 +584,8 @@ def test_v3_completed_restart_cannot_be_cancelled(
     prepared, _, _, envelope, transport = _executable_contract()
     engine = _SequenceEngine(("ready", "ready"))
     _install_engine(monkeypatch, engine)
-    _runtime(tmp_path, _ArtifactStore(envelope), prepared).run(transport)
+    store = _ArtifactStore(envelope)
+    _runtime(tmp_path, store, prepared).run(transport)
     assert engine.calls == 2
 
     monkeypatch.undo()
@@ -588,7 +593,7 @@ def test_v3_completed_restart_cannot_be_cancelled(
     _install_engine(monkeypatch, no_engine)
     cancellation = EngineCancellationRequest("bar-open-1", "operator_cancelled")
     with pytest.raises(RuntimeError, match="completed semantic run cannot be cancelled"):
-        _runtime(tmp_path, _ArtifactStore(envelope), prepared).run_with_cancellation(
+        _runtime(tmp_path, store, prepared).run_with_cancellation(
             transport, cancellation
         )
     assert no_engine.calls == 0
@@ -848,7 +853,7 @@ def test_v3_attempt_ready_publisher_failure_is_stable_and_restart_runs_no_engine
 
     no_engine = _SequenceEngine(())
     _install_engine(monkeypatch, no_engine)
-    with pytest.raises(RuntimeError, match="restart state"):
+    with pytest.raises(RuntimeError, match="attempt_graph_invalid"):
         _runtime(tmp_path, _ArtifactStore(envelope), prepared).run(transport)
     assert no_engine.calls == 0
 
@@ -874,7 +879,7 @@ def test_v3_retry_publisher_failure_is_stable_and_restart_runs_no_engine(
 
     no_engine = _SequenceEngine(())
     _install_engine(monkeypatch, no_engine)
-    with pytest.raises(RuntimeError, match="restart state"):
+    with pytest.raises(RuntimeError, match="attempt_graph_invalid"):
         _runtime(tmp_path, _ArtifactStore(envelope), prepared).run(transport)
     assert no_engine.calls == 0
 
@@ -939,6 +944,101 @@ def test_v3_canonical_publisher_failure_is_stable_and_restart_runs_no_engine(
 
     no_engine = _SequenceEngine(())
     _install_engine(monkeypatch, no_engine)
+    with pytest.raises(RuntimeError, match="cache_verification_failed"):
+        _runtime(tmp_path, store, prepared).run(transport)
+    assert no_engine.calls == 0
+
+
+def test_v3_locally_rehashed_cache_cross_link_fails_repository_verification(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    prepared, resolved, _, envelope, transport = _executable_contract()
+    store = _ArtifactStore(envelope)
+    publication = _runtime(tmp_path, store, prepared).run(transport)
+    assert type(publication) is BacktestCanonicalPublicationRef
+
+    class Adapter:
+        d = store.values
+
+    mutated = _mutate_root_graph(
+        Adapter(),
+        publication,
+        lambda payload: payload.__setitem__(
+            "evidence_publication_hash", "sha256:" + "0" * 64
+        ),
+    )
+    directory = tmp_path / "runs" / resolved.semantic_run_id / "canonical-v2"
+    directory.chmod(0o755)
+    root_result = store.values[mutated.artifact_ref]
+    for entry in root_result.envelope.payload["artifacts"]:
+        ref = ArtifactRef(
+            entry["artifact_type"], entry["schema_version"], entry["content_hash"]
+        )
+        path = directory / entry["relative_path"]
+        path.chmod(0o644)
+        path.write_bytes(store.values[ref].source_bytes)
+        path.chmod(0o444)
+    manifest_path = directory / "publication-manifest.json"
+    manifest_path.chmod(0o644)
+    manifest_path.write_bytes(root_result.source_bytes)
+    manifest_path.chmod(0o444)
+    directory.chmod(0o555)
+
+    no_engine = _SequenceEngine(())
+    _install_engine(monkeypatch, no_engine)
+    with pytest.raises(RuntimeError, match="cache_verification_failed"):
+        _runtime(tmp_path, store, prepared).run(transport)
+    assert no_engine.calls == 0
+
+
+def test_v3_storage_boundary_preserves_baseexception(
+    tmp_path: Path,
+) -> None:
+    prepared, _, _, envelope, transport = _executable_contract()
+    fatal = KeyboardInterrupt("publisher-baseexception")
+
+    class FatalStore(_ArtifactStore):
+        def put(self, *, envelope):
+            if envelope.artifact_type == "evidence_manifest":
+                raise fatal
+            return super().put(envelope=envelope)
+
+    with pytest.raises(KeyboardInterrupt) as raised:
+        _runtime(tmp_path, FatalStore(envelope), prepared).run(transport)
+    assert raised.value is fatal
+
+
+@pytest.mark.parametrize("mismatch", ["ref", "semantic"])
+def test_v3_cache_repository_return_identity_must_match(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch, mismatch: str
+) -> None:
+    prepared, resolved, _, envelope, transport = _executable_contract()
+    store = _ArtifactStore(envelope)
+    publication = _runtime(tmp_path, store, prepared).run(transport)
+    assert type(publication) is BacktestCanonicalPublicationRef
+    no_engine = _SequenceEngine(())
+    _install_engine(monkeypatch, no_engine)
+    wrong_ref = BacktestCanonicalPublicationRef.from_artifact_ref(
+        ArtifactRef(
+            "canonical_publication_manifest",
+            1,
+            "sha256:" + "0" * 64,
+        )
+    )
+
+    def load(*args, **kwargs):
+        return SimpleNamespace(
+            source_publication_ref=(
+                wrong_ref if mismatch == "ref" else publication
+            ),
+            semantic_run_id=(
+                "run_" + "0" * 64
+                if mismatch == "semantic"
+                else resolved.semantic_run_id
+            ),
+        )
+
+    monkeypatch.setattr(BacktestEvidenceRepository, "load_completed", load)
     with pytest.raises(RuntimeError, match="cache_verification_failed"):
         _runtime(tmp_path, store, prepared).run(transport)
     assert no_engine.calls == 0
