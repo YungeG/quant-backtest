@@ -4,7 +4,6 @@ import ast
 import hashlib
 from pathlib import Path
 
-
 ROOT = Path(__file__).resolve().parents[2]
 MODULE = ROOT / "packages/market-bundle-builder/src/crypto_quant_bundle_builder/tushare_cn_a_share_daily_catalog_bundle.py"
 BUILDER_ROOT = ROOT / "packages/market-bundle-builder/src/crypto_quant_bundle_builder/__init__.py"

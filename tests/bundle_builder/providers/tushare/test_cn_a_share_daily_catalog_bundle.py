@@ -33,7 +33,6 @@ from crypto_quant_domain import (
 )
 from crypto_quant_market_data import MarketEvent
 
-
 ROOT = Path(__file__).parents[3]
 DAILY_FIXTURE = ROOT / "fixtures/market_data/providers/tushare/cn-a-share-daily-listing-v1"
 EVENT_TIME_FIXTURE = ROOT / "fixtures/market_data/providers/tushare/cn-a-share-trade-calendar-v1/daily-event-time.expected.json"

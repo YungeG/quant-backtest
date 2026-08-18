@@ -24,7 +24,6 @@ from .tushare_cn_a_share_daily_bundle import (
     project_tushare_cn_a_share_daily_market_event_v1,
 )
 
-
 _SCHEMA_VERSION = 1
 _MEMBER_KEY = "response/stock-basic.json"
 _MEMBER_CONTENT_HASH = "sha256:d78fc472268deacb5af7c59c113325e2a00c5b4619c53fbbfe6fa23c96d471d2"
