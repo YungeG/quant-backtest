@@ -22,7 +22,11 @@ from .artifact_envelope_reader import ArtifactEnvelopeReader
 from .composition import _HydratedExecutionCaseInputs, _compose_execution_case_v3
 from .engine import EngineCancellationRequest, ResolvedExecutionCase
 from .evidence import AttemptEvidenceWriter, FinalizedAttemptEvidence
-from .evidence_repository import BacktestEvidenceRepository
+from .evidence_repository import (
+    BacktestEvidenceError,
+    BacktestEvidenceFailureCode,
+    BacktestEvidenceRepository,
+)
 from .execution_hash import AttemptExecutionHash, ExecutionResultHasher
 from .execution_inputs import (
     BacktestExecutionRequest,
@@ -593,6 +597,26 @@ class BacktestRuntime:
             return None
         elif terminal_id is None:
             return None
+        if terminal_id == second.attempt_id:
+            ready_ref = self._mirror_manifest_graph(
+                relative_directory=(
+                    f"runs/{resolved.semantic_run_id}/attempts/{first.attempt_id}"
+                ),
+                manifest_name="evidence-manifest.json",
+                manifest_type="evidence_manifest",
+            )
+            try:
+                BacktestEvidenceRepository(
+                    reader=self._artifact_reader
+                ).load_terminal(ready_ref)
+            except BacktestEvidenceError as error:
+                if (
+                    error.code
+                    is not BacktestEvidenceFailureCode.PORT_TERMINAL_NOT_ANALYZABLE
+                ):
+                    raise RuntimeError("V3 restart state is not clean") from error
+            else:
+                raise RuntimeError("V3 restart state is not clean")
         ref = self._mirror_manifest_graph(
             relative_directory=(
                 f"runs/{resolved.semantic_run_id}/attempts/{terminal_id}"
