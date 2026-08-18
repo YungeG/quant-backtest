@@ -600,7 +600,7 @@ def test_v3_binding_and_replay_failures_are_closed_positional_and_secret_safe() 
             raise RuntimeError(secret)
 
     property_outcome = _hydrate_execution_inputs_v3(
-        SecretPropertyReader(),
+        SecretPropertyReader(),  # pyright: ignore[reportArgumentType]
         transport,
         market_reader=prepared.verified_reader,
         resolved_request=resolved,
