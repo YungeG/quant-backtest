@@ -25,6 +25,22 @@ create the named RED fixtures before production code.
 Architecture decision:
 `docs/adr/0003-performance-observations-are-non-authoritative.md`.
 
+## Delivery slices
+
+PERF-OBS-01 follows the MRMD delivery split while retaining one fixed Runtime-v1
+taxonomy:
+
+- F1 implements `CONSTRUCT_BINDINGS`, `VALIDATE_BINDINGS`, and
+  `VERIFY_SIGNAL_BAR` only.
+- `PREP-COVERAGE-01` F2 implements `LOOKUP_STREAMS`, `HYDRATE_INPUTS`,
+  `VERIFY_REPLAY`, `PROJECT_POINT_IN_TIME`, `BUILD_WINDOW`, and
+  `EVALUATE_LOOKBACK` when their authoritative seams are implemented.
+
+The recorder accepts exact `PerformanceOperation` and `PerformanceOutcome` enum
+values. F1 contains no generic observing callback/decorator graph; each of its
+three new operations executes authority directly and then best-effort records
+already-known aggregate measurements.
+
 ## Outcome
 
 Add enough bounded observation points to optimize the new MRMD/PREP path later,
@@ -49,7 +65,8 @@ It owns exactly:
 - `_PerformanceObservation` frozen/slotted internal value;
 - `BoundedPerformanceRecorder` concrete recorder.
 
-Only `BoundedPerformanceRecorder` may be imported by the new MRMD/PREP Runtime
+Only `BoundedPerformanceRecorder` and the fixed `PerformanceOperation` /
+`PerformanceOutcome` enums may be imported by the new MRMD/PREP Runtime
 orchestration modules; nothing is exported from `crypto_quant_backtest` root.
 
 The recorder:

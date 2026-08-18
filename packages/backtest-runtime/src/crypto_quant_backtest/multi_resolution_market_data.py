@@ -4,12 +4,13 @@ from dataclasses import dataclass
 from datetime import date
 from enum import Enum
 from time import perf_counter_ns as _perf_counter_ns
-from typing import cast
-
 from crypto_quant_domain import (
     InstrumentId,
     PricePurpose,
     SessionId,
+    SimulationInstant,
+    SourceSequence,
+    TimelinePhase,
     TradingDate,
     UtcInstant,
     VenueId,
@@ -19,11 +20,21 @@ from crypto_quant_domain import (
 from crypto_quant_market_data import MarketBundleCapability, MarketEvent, MarketStreamManifest
 
 from .decision_schedule import DecisionSchedule, LookbackRequirement
-from .observations import PointInTimeObservationQueryResult
-from .performance_observations import BoundedPerformanceRecorder
+from .observations import (
+    ObservationCausalityTrace,
+    ObservationPurposeRef,
+    ObservationQuery,
+    PointInTimeObservationQueryResult,
+)
+from .performance_observations import (
+    BoundedPerformanceRecorder,
+    PerformanceOperation,
+    PerformanceOutcome,
+)
 
 
 _SCHEMA_VERSION = 1
+_MAX_OBSERVATION_VALUE = 2**63 - 1
 _AGGREGATION_SPEC_HASH = "sha256:324439214b2cb2fa64300c470a65e322de3c3dd7056381a73672db00677dbccb"
 _BAR_CAPABILITY = MarketBundleCapability("price_bars", 1)
 _PAYLOAD_FIELDS = {
@@ -82,6 +93,125 @@ def _instrument(value: object) -> InstrumentId:
         return InstrumentId(VenueId(value.venue.value), value.stable_key)
     except AttributeError as error:
         raise ValueError("instrument_id authority is invalid") from error
+
+
+def _utc(value: object) -> UtcInstant:
+    if type(value) is not UtcInstant:
+        raise TypeError("instant must be exact UtcInstant")
+    return UtcInstant(value.epoch_nanoseconds)
+
+
+def _phase(value: object) -> TimelinePhase:
+    if type(value) is not TimelinePhase:
+        raise TypeError("phase must be exact TimelinePhase")
+    return TimelinePhase(value.rank, value.code)
+
+
+def _source_sequence(value: object) -> SourceSequence:
+    if type(value) is not SourceSequence:
+        raise TypeError("source_sequence must be exact SourceSequence")
+    return SourceSequence(value.value)
+
+
+def _simulation_instant(value: object) -> SimulationInstant:
+    if type(value) is not SimulationInstant:
+        raise TypeError("decision instant must be exact SimulationInstant")
+    return SimulationInstant(
+        _utc(value.instant),
+        _phase(value.phase),
+        _source_sequence(value.source_sequence),
+    )
+
+
+def _capability(value: object) -> MarketBundleCapability:
+    if type(value) is not MarketBundleCapability:
+        raise TypeError("capability must be exact MarketBundleCapability")
+    return MarketBundleCapability(value.key, value.version)
+
+
+def _purpose(value: object) -> ObservationPurposeRef:
+    if type(value) is not ObservationPurposeRef:
+        raise TypeError("purpose must be exact ObservationPurposeRef")
+    return ObservationPurposeRef(value.key, value.version)
+
+
+def _query(value: object) -> ObservationQuery:
+    if type(value) is not ObservationQuery:
+        raise TypeError("query must be exact ObservationQuery")
+    return ObservationQuery(
+        value.dataset_key,
+        _instrument(value.instrument_id),
+        _purpose(value.purpose),
+        _capability(value.capability),
+    )
+
+
+def _event(value: object) -> MarketEvent:
+    if type(value) is not MarketEvent:
+        raise TypeError("events must contain exact MarketEvent")
+    return MarketEvent(
+        event_id=value.event_id,
+        stream_key=value.stream_key,
+        event_type=value.event_type,
+        capability=_capability(value.capability),
+        instrument_id=None if value.instrument_id is None else _instrument(value.instrument_id),
+        event_time=_utc(value.event_time),
+        available_time=_utc(value.available_time),
+        phase=_phase(value.phase),
+        source_sequence=_source_sequence(value.source_sequence),
+        revision_id=value.revision_id,
+        supersedes_revision_id=value.supersedes_revision_id,
+        source_key=value.source_key,
+        source_hash=value.source_hash,
+        payload=value.payload,
+    )
+
+
+def _trace(value: object) -> ObservationCausalityTrace:
+    if type(value) is not ObservationCausalityTrace:
+        raise TypeError("trace must be exact ObservationCausalityTrace")
+    for name in (
+        "candidate_record_hashes",
+        "selected_observation_keys",
+        "selected_event_hashes",
+        "selected_revision_ids",
+        "selected_source_hashes",
+    ):
+        if type(getattr(value, name)) is not tuple:
+            raise TypeError(f"trace {name} must be an exact tuple")
+    return ObservationCausalityTrace(
+        view_hash=value.view_hash,
+        query=_query(value.query),
+        decision_instant=_simulation_instant(value.decision_instant),
+        candidate_record_hashes=value.candidate_record_hashes,
+        revision_set_hash=value.revision_set_hash,
+        selected_observation_keys=value.selected_observation_keys,
+        selected_event_hashes=value.selected_event_hashes,
+        selected_revision_ids=value.selected_revision_ids,
+        selected_source_hashes=value.selected_source_hashes,
+        dataset_hash=value.dataset_hash,
+        max_event_time=None if value.max_event_time is None else _utc(value.max_event_time),
+        max_available_instant=(
+            None
+            if value.max_available_instant is None
+            else _simulation_instant(value.max_available_instant)
+        ),
+        event_count=value.event_count,
+    )
+
+
+def _visible_result(value: object) -> PointInTimeObservationQueryResult:
+    if type(value) is not PointInTimeObservationQueryResult:
+        raise TypeError("visible_result must be exact PointInTimeObservationQueryResult")
+    if type(value.events) is not tuple:
+        raise TypeError("visible result events must be a tuple")
+    return PointInTimeObservationQueryResult(
+        view_hash=value.view_hash,
+        query=_query(value.query),
+        decision_instant=_simulation_instant(value.decision_instant),
+        events=tuple(_event(event) for event in value.events),
+        trace=_trace(value.trace),
+    )
 
 
 def _signal(value: object) -> SignalBarBinding:
@@ -306,40 +436,46 @@ def _clock() -> int | None:
         return None
 
 
-def _observed(recorder: BoundedPerformanceRecorder | None, operation: str, authority, input_count, output_count, outcome):
-    if recorder is None:
-        return authority()
-    start = _clock()
+def _record_observation(
+    recorder: BoundedPerformanceRecorder,
+    operation: PerformanceOperation,
+    outcome: PerformanceOutcome,
+    duration_ns: int,
+    input_count: int,
+    output_count: int,
+) -> None:
     try:
-        value = authority()
-    except BaseException:
-        try:
-            _record_observation(recorder, operation, "FAILED", start, input_count, lambda: 0)
-        except BaseException:
-            pass
-        raise
-    try:
-        outcome_name = outcome(value)
-    except BaseException:
-        outcome_name = "SUCCEEDED"
-    try:
-        _record_observation(recorder, operation, outcome_name, start, input_count, lambda: output_count(value))
-    except BaseException:
-        pass
-    return value
-
-
-def _record_observation(recorder, operation: str, outcome: str, start: int | None, input_count, output_count) -> None:
-    end = _clock()
-    try:
-        duration = 0 if start is None or end is None else max(end - start, 0)
-        inputs = input_count()
-        outputs = output_count()
-        if type(inputs) is not int or type(outputs) is not int:
+        measurements = (duration_ns, input_count, output_count)
+        if any(type(value) is not int or value < 0 for value in measurements):
             return
-        recorder.record(operation=operation, outcome=outcome, duration_ns=duration, input_count=inputs, output_count=outputs)
+        duration_ns, input_count, output_count = (
+            min(value, _MAX_OBSERVATION_VALUE) for value in measurements
+        )
+        recorder.record(
+            operation=operation,
+            outcome=outcome,
+            duration_ns=duration_ns,
+            input_count=input_count,
+            output_count=output_count,
+        )
     except BaseException:
         return
+
+
+def _candidate_count(signal_bindings, execution_bindings, valuation_bindings) -> int:
+    return len(signal_bindings) + len(execution_bindings) + len(valuation_bindings)
+
+
+def _binding_count(bindings: MultiResolutionMarketDataBindings) -> int:
+    return (
+        len(bindings.signal_bindings)
+        + len(bindings.execution_bindings)
+        + len(bindings.valuation_bindings)
+    )
+
+
+def _event_count(events: tuple[MarketEvent, ...]) -> int:
+    return len(events)
 
 
 def construct_multi_resolution_market_data_bindings(
@@ -349,17 +485,48 @@ def construct_multi_resolution_market_data_bindings(
     valuation_bindings: tuple[ValuationDataBinding, ...],
     recorder: BoundedPerformanceRecorder | None = None,
 ) -> MultiResolutionMarketDataBindings:
-    return cast(
-        MultiResolutionMarketDataBindings,
-        _observed(
-            recorder,
-            "CONSTRUCT_BINDINGS",
-            lambda: MultiResolutionMarketDataBindings(signal_bindings, execution_bindings, valuation_bindings),
-            lambda: len(signal_bindings) + len(execution_bindings) + len(valuation_bindings),
-            lambda value: len(value.signal_bindings) + len(value.execution_bindings) + len(value.valuation_bindings),
-            lambda value: "SUCCEEDED",
-        ),
-    )
+    if recorder is None:
+        return MultiResolutionMarketDataBindings(
+            signal_bindings, execution_bindings, valuation_bindings
+        )
+    start = _clock()
+    try:
+        result = MultiResolutionMarketDataBindings(
+            signal_bindings, execution_bindings, valuation_bindings
+        )
+    except BaseException:
+        end = _clock()
+        try:
+            if start is not None and end is not None and end >= start:
+                _record_observation(
+                    recorder,
+                    PerformanceOperation.CONSTRUCT_BINDINGS,
+                    PerformanceOutcome.FAILED,
+                    end - start,
+                    _candidate_count(
+                        signal_bindings, execution_bindings, valuation_bindings
+                    ),
+                    0,
+                )
+        except BaseException:
+            pass
+        raise
+    end = _clock()
+    try:
+        if start is not None and end is not None and end >= start:
+            _record_observation(
+                recorder,
+                PerformanceOperation.CONSTRUCT_BINDINGS,
+                PerformanceOutcome.SUCCEEDED,
+                end - start,
+                _candidate_count(
+                    signal_bindings, execution_bindings, valuation_bindings
+                ),
+                _binding_count(result),
+            )
+    except BaseException:
+        pass
+    return result
 
 
 def validate_schedule_signal_exact_cover(
@@ -367,33 +534,62 @@ def validate_schedule_signal_exact_cover(
     bindings: MultiResolutionMarketDataBindings,
     recorder: BoundedPerformanceRecorder | None = None,
 ) -> MultiResolutionMarketDataBindings:
-    def authority() -> MultiResolutionMarketDataBindings:
+    start = None if recorder is None else _clock()
+    try:
         if type(schedule) is not DecisionSchedule:
             raise TypeError("schedule must be exact DecisionSchedule")
         if type(bindings) is not MultiResolutionMarketDataBindings:
             raise TypeError("bindings must be exact MultiResolutionMarketDataBindings")
-        MultiResolutionMarketDataBindings(bindings.signal_bindings, bindings.execution_bindings, bindings.valuation_bindings)
+        MultiResolutionMarketDataBindings(
+            bindings.signal_bindings,
+            bindings.execution_bindings,
+            bindings.valuation_bindings,
+        )
         expected = tuple(value.requirement_hash for value in schedule.requirements)
         actual = tuple(value.requirement_hash for value in bindings.signal_bindings)
         if set(actual) != set(expected) or len(actual) != len(expected):
             raise ValueError("signal bindings must exact-cover schedule requirements")
         by_hash = {value.requirement_hash: value for value in bindings.signal_bindings}
         for requirement in schedule.requirements:
-            if by_hash[requirement.requirement_hash].stream_key != requirement.observation_query.dataset_key:
-                raise ValueError("signal binding stream must match requirement observation stream")
-        return bindings
-
-    return cast(
-        MultiResolutionMarketDataBindings,
-        _observed(
-            recorder,
-            "VALIDATE_BINDINGS",
-            authority,
-            lambda: len(bindings.signal_bindings),
-            lambda value: len(value.signal_bindings),
-            lambda value: "SUCCEEDED",
-        ),
-    )
+            if (
+                by_hash[requirement.requirement_hash].stream_key
+                != requirement.observation_query.dataset_key
+            ):
+                raise ValueError(
+                    "signal binding stream must match requirement observation stream"
+                )
+        result = bindings
+    except BaseException:
+        if recorder is not None:
+            end = _clock()
+            try:
+                if start is not None and end is not None and end >= start:
+                    _record_observation(
+                        recorder,
+                        PerformanceOperation.VALIDATE_BINDINGS,
+                        PerformanceOutcome.FAILED,
+                        end - start,
+                        len(bindings.signal_bindings),
+                        0,
+                    )
+            except BaseException:
+                pass
+        raise
+    if recorder is not None:
+        end = _clock()
+        try:
+            if start is not None and end is not None and end >= start:
+                _record_observation(
+                    recorder,
+                    PerformanceOperation.VALIDATE_BINDINGS,
+                    PerformanceOutcome.SUCCEEDED,
+                    end - start,
+                    len(bindings.signal_bindings),
+                    len(result.signal_bindings),
+                )
+        except BaseException:
+            pass
+    return result
 
 
 def _keys(value: object, expected: set[str]) -> bool:
@@ -558,7 +754,8 @@ def verify_visible_signal_bars(
     visible_result: PointInTimeObservationQueryResult,
     recorder: BoundedPerformanceRecorder | None = None,
 ) -> SignalBarVerificationOutcome:
-    def authority() -> SignalBarVerificationOutcome:
+    start = None if recorder is None else _clock()
+    try:
         if type(requirement) is not LookbackRequirement:
             raise TypeError("requirement must be exact LookbackRequirement")
         if type(binding) is not SignalBarBinding:
@@ -570,7 +767,7 @@ def verify_visible_signal_bars(
             manifest = MarketStreamManifest(
                 stream_manifest.stream_key,
                 stream_manifest.event_type,
-                stream_manifest.capability,
+                _capability(stream_manifest.capability),
                 stream_manifest.event_count,
                 stream_manifest.content_hash,
             )
@@ -583,40 +780,100 @@ def verify_visible_signal_bars(
             or manifest.capability != requirement.observation_query.capability
         ):
             raise ValueError("stream_manifest must match signal binding and requirement")
-        if type(visible_result) is not PointInTimeObservationQueryResult:
-            raise TypeError("visible_result must be exact PointInTimeObservationQueryResult")
+        rebuilt = _visible_result(visible_result)
         if binding_copy.requirement_hash != requirement.requirement_hash:
             raise ValueError("binding requirement_hash must match requirement")
-        if visible_result.query != requirement.observation_query:
+        if rebuilt.query != requirement.observation_query:
             raise ValueError("visible result Query must match requirement")
         failures: list[tuple[int, int, SignalBarVerificationFailureCode]] = []
-        for position, event in enumerate(visible_result.events):
+        for position, event in enumerate(rebuilt.events):
             if _malformed(requirement, binding_copy, manifest, event):
-                failures.append((0, position, SignalBarVerificationFailureCode.MALFORMED_G12G_PAYLOAD))
+                failures.append(
+                    (
+                        0,
+                        position,
+                        SignalBarVerificationFailureCode.MALFORMED_G12G_PAYLOAD,
+                    )
+                )
                 continue
             payload = event.payload
             if (
                 payload["bar_definition_key"] != requirement.bar_definition.key
-                or payload["bar_definition_version"] != requirement.bar_definition.version
-                or payload["bar_definition_hash"] != requirement.bar_definition.definition_hash
+                or payload["bar_definition_version"]
+                != requirement.bar_definition.version
+                or payload["bar_definition_hash"]
+                != requirement.bar_definition.definition_hash
                 or payload["price_purpose"] != binding_copy.price_purpose.value
             ):
-                failures.append((1, position, SignalBarVerificationFailureCode.BAR_DEFINITION_MISMATCH))
-            elif payload["aggregation_input_hash"] != binding_copy.aggregation_input_hash or event.source_hash != binding_copy.aggregation_input_hash:
-                failures.append((2, position, SignalBarVerificationFailureCode.AGGREGATION_LINEAGE_MISMATCH))
+                failures.append(
+                    (
+                        1,
+                        position,
+                        SignalBarVerificationFailureCode.BAR_DEFINITION_MISMATCH,
+                    )
+                )
+            elif (
+                payload["aggregation_input_hash"]
+                != binding_copy.aggregation_input_hash
+                or event.source_hash != binding_copy.aggregation_input_hash
+            ):
+                failures.append(
+                    (
+                        2,
+                        position,
+                        SignalBarVerificationFailureCode.AGGREGATION_LINEAGE_MISMATCH,
+                    )
+                )
         if failures:
             _, position, code = min(failures)
-            return SignalBarVerificationOutcome(None, SignalBarVerificationFailure(code, position))
-        return SignalBarVerificationOutcome(VerifiedSignalBarResult(requirement.requirement_hash, visible_result.events), None)
-
-    return cast(
-        SignalBarVerificationOutcome,
-        _observed(
-            recorder,
-            "VERIFY_SIGNAL_BAR",
-            authority,
-            lambda: len(visible_result.events),
-            lambda value: 0 if value.result is None else len(value.result.events),
-            lambda value: "FAILED" if value.failure is not None else "SUCCEEDED",
-        ),
-    )
+            outcome = SignalBarVerificationOutcome(
+                None, SignalBarVerificationFailure(code, position)
+            )
+        else:
+            outcome = SignalBarVerificationOutcome(
+                VerifiedSignalBarResult(
+                    requirement.requirement_hash, rebuilt.events
+                ),
+                None,
+            )
+    except BaseException:
+        if recorder is not None:
+            end = _clock()
+            try:
+                if start is not None and end is not None and end >= start:
+                    _record_observation(
+                        recorder,
+                        PerformanceOperation.VERIFY_SIGNAL_BAR,
+                        PerformanceOutcome.FAILED,
+                        end - start,
+                        _event_count(visible_result.events),
+                        0,
+                    )
+            except BaseException:
+                pass
+        raise
+    if recorder is not None:
+        end = _clock()
+        try:
+            performance_outcome = (
+                PerformanceOutcome.FAILED
+                if outcome.failure is not None
+                else PerformanceOutcome.SUCCEEDED
+            )
+            output_count = (
+                0
+                if outcome.result is None
+                else _event_count(outcome.result.events)
+            )
+            if start is not None and end is not None and end >= start:
+                _record_observation(
+                    recorder,
+                    PerformanceOperation.VERIFY_SIGNAL_BAR,
+                    performance_outcome,
+                    end - start,
+                    _event_count(rebuilt.events),
+                    output_count,
+                )
+        except BaseException:
+            pass
+    return outcome

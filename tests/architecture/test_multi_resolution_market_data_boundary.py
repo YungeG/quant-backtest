@@ -31,6 +31,28 @@ def test_mrmd_core_is_off_root_and_uses_only_existing_runtime_authorities() -> N
         "Provider", "DSL", "global_frequency", "execution_input_bundle",
     ):
         assert forbidden not in source
+    tree = ast.parse(source)
+    functions = {
+        node.name: node for node in ast.walk(tree) if isinstance(node, ast.FunctionDef)
+    }
+    assert "_observed" not in functions
+    record_parameters = functions["_record_observation"].args.args
+    assert tuple(value.arg for value in record_parameters) == (
+        "recorder",
+        "operation",
+        "outcome",
+        "duration_ns",
+        "input_count",
+        "output_count",
+    )
+    assert not any(
+        isinstance(argument, ast.Lambda)
+        for node in ast.walk(tree)
+        if isinstance(node, ast.Call)
+        and isinstance(node.func, ast.Name)
+        and node.func.id == "_record_observation"
+        for argument in node.args
+    )
     root_source = ROOT_MODULE.read_text(encoding="utf-8")
     assert "multi_resolution_market_data" not in root_source
     assert "MultiResolutionMarketDataBindings" not in root_source

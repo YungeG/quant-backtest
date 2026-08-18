@@ -44,6 +44,23 @@ def test_observation_requires_exact_enums_valid_pair_and_exact_integers() -> Non
 
     with pytest.raises(TypeError):
         _PerformanceObservation("CONSTRUCT_BINDINGS", PerformanceOutcome.SUCCEEDED, 1, 2, 3, 4)  # type: ignore[arg-type]
+    recorder = BoundedPerformanceRecorder()
+    with pytest.raises(TypeError, match="exact PerformanceOperation"):
+        recorder.record(
+            operation="CONSTRUCT_BINDINGS",  # type: ignore[arg-type]
+            outcome=PerformanceOutcome.SUCCEEDED,
+            duration_ns=1,
+            input_count=1,
+            output_count=1,
+        )
+    with pytest.raises(TypeError, match="exact PerformanceOutcome"):
+        recorder.record(
+            operation=PerformanceOperation.CONSTRUCT_BINDINGS,
+            outcome="SUCCEEDED",  # type: ignore[arg-type]
+            duration_ns=1,
+            input_count=1,
+            output_count=1,
+        )
     with pytest.raises(ValueError, match="INELIGIBLE"):
         _PerformanceObservation(
             PerformanceOperation.CONSTRUCT_BINDINGS,
@@ -75,8 +92,8 @@ def test_recorder_aggregates_saturates_and_snapshot_is_sorted() -> None:
         output_count=MAX,
     )
     recorder.record(
-        operation="VERIFY_SIGNAL_BAR",
-        outcome="FAILED",
+        operation=PerformanceOperation.VERIFY_SIGNAL_BAR,
+        outcome=PerformanceOutcome.FAILED,
         duration_ns=10,
         input_count=10,
         output_count=10,

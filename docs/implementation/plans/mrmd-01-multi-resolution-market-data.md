@@ -31,6 +31,39 @@ immutable.
 
 Architecture decision: `docs/adr/0002-no-global-backtest-frequency.md`.
 
+## Delivery slices
+
+MRMD-01 is delivered in two explicit slices. The Gate remains `READY`, not
+`PASSED`, until both slices and the full acceptance contract complete.
+
+### F1 — core bindings and visible verification
+
+F1 owns only:
+
+- the four off-root canonical binding values;
+- binding construction and `DecisionSchedule` signal exact-cover validation;
+- exact reconstruction of the selected G11B point-in-time result followed by
+  strict visible G12G v1 Bar consumer verification;
+- the private bounded recorder and the three F1 observations:
+  `CONSTRUCT_BINDINGS`, `VALIDATE_BINDINGS`, and `VERIFY_SIGNAL_BAR`.
+
+G11B observation lineage keys remain opaque caller-supplied authority. F1 neither
+derives nor verifies a new observation-key preimage.
+
+### F2 — PREP-COVERAGE integration
+
+`PREP-COVERAGE-01` owns F2:
+
+- one-Bundle and selected Profile execution/valuation validation;
+- the remaining six observations: `LOOKUP_STREAMS`, `HYDRATE_INPUTS`,
+  `VERIFY_REPLAY`, `PROJECT_POINT_IN_TIME`, `BUILD_WINDOW`, and
+  `EVALUATE_LOOKBACK`;
+- integration with the existing decision/execution/snapshot role-hash preimages;
+- execution-input bundle v3, decode/hydration, and replay verification;
+- cross-requirement atomic failure precedence.
+
+F1 does not implement or partially scaffold any F2 responsibility.
+
 ## Outcome
 
 Unify how one run binds four independent market-data concerns without creating a
@@ -136,6 +169,8 @@ and validates the same stream. Implicit fallback is forbidden.
 
 ## One-Bundle invariant
 
+This invariant is implemented and accepted in F2 by `PREP-COVERAGE-01`; F1 only
+checks the exact selected `MarketStreamManifest` supplied to visible verification.
 MRMD-01 v1 is one-Bundle only:
 
 - the request, resolved environment, Timeline Reader, and hydration Reader use one
@@ -189,10 +224,11 @@ only when:
 Runtime validates the frozen consumer grammar but does not recompute aggregation,
 revision selection, or Builder manifests.
 
-The observation lineage key uses BarDefinition-ref hash, Instrument identity, and
-bucket hash. Existing G11B owns revision selection, G11D owns bounded windows, and
-G11E owns lookback eligibility and Strategy invocation. Malformed future Events
-are not eagerly scanned and cannot alter earlier decisions.
+G11B observation lineage keys remain opaque and are not re-derived or interpreted
+by MRMD F1. Existing G11B owns revision selection and its caller-supplied keys,
+G11D owns bounded windows, and G11E owns lookback eligibility and Strategy
+invocation. Malformed future Events are not eagerly scanned and cannot alter
+earlier decisions.
 
 ## Aggregation scope
 
@@ -212,7 +248,8 @@ Builder contract if a concrete need appears.
 
 ## Identity and migration
 
-MRMD-01 reuses existing identity fields instead of adding another semantic root:
+The following integration belongs to F2 and is not implemented by F1. MRMD-01
+reuses existing identity fields instead of adding another semantic root:
 
 1. preserve `BacktestRequest@1` and `ExecutionCaseSemanticSpec@1` bytes;
 2. add `backtest_execution_input_bundle@3` embedding the complete canonical MRMD
@@ -237,26 +274,29 @@ change these identity preimages or introduce a second Artifact lookup.
 Constructors use exact `TypeError`/`ValueError`. Preparation failure codes and
 precedence belong to `PREP-COVERAGE-01`.
 
-At visible signal use, precedence is:
+Within one F1 visible signal verification call, precedence is:
 
 1. malformed consumed G12G payload;
 2. BarDefinition key/version/hash mismatch;
 3. aggregation-input/source-hash mismatch.
 
-Ties use schedule requirement canonical order and then Reader/Event order. No
-partial binding set or verified window escapes failure. Normal lookback shortfall
+Reader/Event order breaks F1 ties. F2 owns atomic precedence across schedule
+requirements and preparation checks. No partial binding set or verified window
+escapes failure. Normal lookback shortfall
 remains the existing successful-but-ineligible G11E result.
 
 ## Performance observation coverage
 
-Implementation must expose outer-orchestration observation points for:
+F1 exposes only:
 
-- binding construction and schedule exact-cover validation;
-- Bundle/stream lookup;
-- visible signal payload verification;
-- point-in-time projection and named-window construction;
-- execution and valuation binding checks;
-- execution-input hydration and replay verification.
+- binding construction;
+- schedule signal exact-cover validation;
+- visible signal payload verification.
+
+F2 exposes the remaining outer-orchestration observation points for Bundle/stream
+lookup, point-in-time projection, named-window construction, lookback evaluation,
+and execution-input hydration/replay verification. One-Bundle and Profile-owned
+execution/valuation checks are also F2 preparation authority.
 
 The mechanism, fixed schema, boundedness, privacy rules, and failure isolation are
 owned only by `PERF-OBS-01`. Telemetry on/off/failure/overflow must leave all

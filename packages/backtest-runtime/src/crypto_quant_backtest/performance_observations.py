@@ -67,22 +67,12 @@ class BoundedPerformanceRecorder:
     def record(
         self,
         *,
-        operation: PerformanceOperation | str,
-        outcome: PerformanceOutcome | str,
+        operation: PerformanceOperation,
+        outcome: PerformanceOutcome,
         duration_ns: int,
         input_count: int,
         output_count: int,
     ) -> None:
-        if type(operation) is str:
-            try:
-                operation = PerformanceOperation[operation]
-            except KeyError as error:
-                raise ValueError("unknown performance operation") from error
-        if type(outcome) is str:
-            try:
-                outcome = PerformanceOutcome[outcome]
-            except KeyError as error:
-                raise ValueError("unknown performance outcome") from error
         operation, outcome = _pair(operation, outcome)
         duration_ns = _integer("duration_ns", duration_ns)
         input_count = _integer("input_count", input_count)

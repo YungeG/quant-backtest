@@ -257,6 +257,15 @@ passed_commit: null
 artifact_hashes: []
 ```
 
+Delivery is explicitly split without changing either Gate status. F1 covers the
+binding values, signal exact-cover, strict post-G11B visible verifier, and only
+`CONSTRUCT_BINDINGS` / `VALIDATE_BINDINGS` / `VERIFY_SIGNAL_BAR` observations.
+`PREP-COVERAGE-01` F2 owns one-Bundle/Profile validation, the remaining six
+observations, role-hash preimage integration, execution-input bundle v3,
+hydration/replay, and cross-requirement atomic precedence. G11B observation keys
+remain opaque; F1 defines no new key preimage. `PERF-OBS-01` and `MRMD-01` remain
+`READY`, not `PASSED`.
+
 ## 4. WP-00A Acceptance Card
 
 ```yaml
