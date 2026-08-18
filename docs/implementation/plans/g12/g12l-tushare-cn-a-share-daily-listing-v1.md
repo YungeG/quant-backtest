@@ -81,7 +81,8 @@ the accepted result through the existing G12C/D seams at
 slice or change any blocker below.
 
 The additive
-`G12L-TUSHARE-CN-A-SHARE-AUTHORITY-ACQUISITION-V1` tool froze one real four-response
+`G12L-TUSHARE-CN-A-SHARE-AUTHORITY-ACQUISITION-V1` PASSED at
+`57afefb8283ff6fbfdd9e4f2579c5091171dc18e` and froze one real four-response
 capture at snapshot
 `sha256:bd8ae548949696f1c98f8a20b5c8653f64121fc2eee61c1ff2ac21a97d248c0d`.
 Its finite current-metadata/name/adjustment/dividend evidence does not change the

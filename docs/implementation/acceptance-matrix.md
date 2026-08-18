@@ -150,7 +150,7 @@ artifact_hashes: []
 | G12A | PASSED | market-bundle-builder | G00 | SourceSnapshot contract |
 | G12-ACQ-TOOLS-V1 | PASSED — immutable commit `6f0bd99a93a349924996eb26708fbb0ac6fecf17` | Backtest tools/acquisition | G12A | none |
 | G12-ACQ-TUSHARE-CALENDAR-V1 | PASSED — immutable commit `10638db8225f68256c027b1dd1373bacff0d112c` | Backtest tools/acquisition | G12A, G12-ACQ-TOOLS-V1 | none |
-| G12L-TUSHARE-CN-A-SHARE-AUTHORITY-ACQUISITION-V1 | EVIDENCE_FROZEN / ACCEPTANCE_PENDING | Backtest tools/acquisition | G12A, G12-ACQ-TOOLS-V1, G12-ACQ-TUSHARE-CALENDAR-V1 | independent review/full acceptance pending; all qualification false |
+| G12L-TUSHARE-CN-A-SHARE-AUTHORITY-ACQUISITION-V1 | PASSED — immutable source `57afefb8283ff6fbfdd9e4f2579c5091171dc18e` | Backtest tools/acquisition | G12A, G12-ACQ-TOOLS-V1, G12-ACQ-TUSHARE-CALENDAR-V1 | none for source capture; historical listing/revision/corporate-action qualification remains separate and false |
 | G12B | PASSED | market-bundle-builder | G12A, G02 | Normalization fixtures |
 | G12B-TUSHARE-CN-A-SHARE-DAILY-V1 | PASSED — immutable commit `373817b762fbe0d68b286577e0396107694cc9a1` | market-bundle-builder internal Tushare normalization | G12A, G12B, G12G, frozen Tushare event-time/numeric evidence | none; G12C/D and provider closure remain separate |
 | G12CD-TUSHARE-CN-A-SHARE-DAILY-PUBLICATION-V1 | PASSED — immutable source `7400cad6531b2687ffb150959cbf534c6797359e` | market-bundle-builder internal Tushare daily projection | G12B-TUSHARE-CN-A-SHARE-DAILY-V1, G12C, G12D | none; G12L/listing, revision, corporate-action, G12I/K/M, and deployment remain BLOCKED |
@@ -11654,7 +11654,8 @@ o authority for listing, revision closure, corporate actions, G12I/K/M, or deplo
 
 ```yaml
 id: G12L-TUSHARE-CN-A-SHARE-AUTHORITY-ACQUISITION-V1
-status: EVIDENCE_FROZEN / ACCEPTANCE_PENDING
+status: PASSED
+passed_commit: 57afefb8283ff6fbfdd9e4f2579c5091171dc18e
 depends_on: [G12A, G12-ACQ-TOOLS-V1, G12-ACQ-TUSHARE-CALENDAR-V1]
 owner: Backtest tools/acquisition
 plan: docs/implementation/plans/g12/g12l-tushare-cn-a-share-authority-acquisition-v1.md
@@ -11689,8 +11690,12 @@ frozen_capture:
   dividend_sha256: sha256:cc1a888c81aef5e93097951eb25ea14e14744e1a5cf3b3da2eea5cb561609a7d
   receipt_sha256: sha256:5f2e6f2c3870cdc26c93a2e15e5842888b890cb8d20ad5d5b16ed19882771276
   row_counts: {stock_basic: 1, namechange: 4, adj_factor: 3, target_ex_date_dividend: 0}
+acceptance:
+  focused_clean: 16 passed
+  full_repository: 1852 passed
+  import_boundaries: 113 files passed
+  independent_review: NONE
 remaining_blockers:
-  - independent-review-and-full-acceptance
   - provider-revision-correction-terminal-closure
   - historical-listing-status-authority
   - corporate-action-lifecycle-authority

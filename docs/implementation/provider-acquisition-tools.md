@@ -64,7 +64,7 @@ previous trading date, writes no token, and
 freezes a one-member candidate G12A snapshot. It does not alter the accepted
 `G12-ACQ-TOOLS-V1` interfaces or package roots.
 
-### Tushare A-share listing/corporate-action authority candidate
+### Tushare A-share listing/corporate-action authority candidate — PASSED at `57afefb8283ff6fbfdd9e4f2579c5091171dc18e`
 
 ```bash
 TUSHARE_TOKEN=... uv run --locked python \

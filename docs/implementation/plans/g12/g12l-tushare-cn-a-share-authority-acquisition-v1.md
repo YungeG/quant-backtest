@@ -1,7 +1,7 @@
 ---
 id: G12L-TUSHARE-CN-A-SHARE-AUTHORITY-ACQUISITION-V1
-readiness: EVIDENCE_FROZEN
-gate_status: ACCEPTANCE_PENDING
+readiness: PASSED
+gate_status: PASSED
 owner: Backtest tools/acquisition
 produces:
   - exact current stock metadata response
@@ -22,12 +22,12 @@ fan_out: [G12L-TUSHARE-CN-A-SHARE-DAILY-LISTING-V1, G12K, G12M-CN-A-SHARE]
 
 ## Status
 
-`EVIDENCE_FROZEN / ACCEPTANCE_PENDING`. The additive acquisition program produced
-one real no-clobber capture for exact `000001.SZ / 2024-01-02`
-listing/name/corporate-action source evidence. Independent review and full-repository
-acceptance remain pending. The PASSED daily/listing and trade-calendar tools remain
-unchanged, and no listing, revision, corporate-action, decision-grade, or deployment
-qualification is granted.
+`PASSED` at immutable final source revision
+`57afefb8283ff6fbfdd9e4f2579c5091171dc18e`. The additive acquisition program
+produced one real no-clobber capture for exact `000001.SZ / 2024-01-02`
+listing/name/corporate-action source evidence and passed independent/full acceptance.
+The PASSED daily/listing and trade-calendar tools remain unchanged, and no listing,
+revision, corporate-action, decision-grade, or deployment qualification is granted.
 
 ## Single tool seam
 
@@ -121,6 +121,16 @@ Focused implementation and inherited acquisition checks: 15 passed.
 - receipt file: `sha256:5f2e6f2c3870cdc26c93a2e15e5842888b890cb8d20ad5d5b16ed19882771276`;
 - rows: stock 1, namechange 4, adjacent factors 3, target-date dividend 0;
 - all provider-revision/listing/corporate-action/decision/deployment qualifications remain false.
+
+Acceptance closure:
+
+- final source: `57afefb8283ff6fbfdd9e4f2579c5091171dc18e`;
+- clean worktree: `/tmp/backtest-g12l-tushare-authority-clean`;
+- clean focused authority/acquisition: 16 passed;
+- full repository: 1852 passed;
+- import boundaries: 113 files passed;
+- lock, diff, LSP, lens, and secret scan: clean;
+- final independent review: `NONE` (`b9d8ff89`).
 
 ## Explicit limits
 
