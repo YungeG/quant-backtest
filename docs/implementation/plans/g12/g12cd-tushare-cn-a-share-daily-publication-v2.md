@@ -203,8 +203,12 @@ TushareCnAShareAcquisitionCatalogSource@1 = {
 ```
 
 The constructor rebuilds all nested values, requires exact primitive types, requires
+the frozen member key/content hash, requires
 `acquired_at == result.raw_bar.available_time`, and recomputes both hashes. It must
-reject `bool` masquerading as integer and constructor-bypass forgeries.
+reject `bool` masquerading as integer and constructor-bypass forgeries. The seam
+parses JSON/schema before comparing the frozen content hash so malformed or
+well-formed-wrong-schema bytes retain their reachable grammar failures instead of
+being hidden by the necessarily changed content hash.
 
 ```text
 source_record_hash = canonical_sha256({
@@ -394,24 +398,43 @@ TushareCnAShareDailyCatalogPublicationFailure@1 = {
 bytes, provider text, path, exception, or credential. The seam returns exactly one
 failure and no partial catalog/source/Event/result.
 
+After normalization authority/scope succeeds, define the catalog candidate as the
+sole snapshot member other than the normalization request's accepted daily member.
+Zero candidates is missing; multiple candidates or a candidate under any key other
+than `response/stock-basic.json` is a member-key binding mismatch. Read the sole
+candidate through `member_bytes(candidate.member_key)`. Because complete snapshot
+verification already succeeded, an extraction/verification failure here indicates
+invalid normalization authority rather than a second catalog-member integrity
+category. This candidate rule makes the member-key predicate concrete without a
+registry or generic member discovery policy.
+
 For any mixed-fault input, first-applicable global order is:
 
 1. `NORMALIZATION_AUTHORITY_INVALID` — wrong result type, failed exact
-   reconstruction, or failed accepted v1 projection;
-2. `SNAPSHOT_SCOPE_MISMATCH` — vendor/source/license/retention provenance is not the
-   exact accepted daily-listing capture scope;
-3. `CATALOG_MEMBER_MISSING` — no exact `response/stock-basic.json` member metadata;
-4. `CATALOG_MEMBER_BINDING_MISMATCH` — member access fails, member acquisition time
-   differs from the accepted daily availability, or member/source metadata does not
-   exact-bind the reconstructed snapshot;
-5. `CATALOG_JSON_INVALID` — invalid UTF-8/JSON, duplicate key, or non-finite
-   constant;
-6. `CATALOG_SCHEMA_MISMATCH` — wrapper/data/field/type/pagination/count/row-shape
+   normalization reconstruction, invalid/inaccessible snapshot or member archive,
+   failed `member_bytes()` verification, or failed accepted v1 projection;
+2. `SNAPSHOT_SCOPE_MISMATCH` — the valid reconstructed snapshot's
+   vendor/source/license/retention provenance is not the exact accepted
+   daily-listing capture scope;
+3. `CATALOG_MEMBER_MISSING` — the otherwise valid snapshot has no catalog
+   candidate member in addition to the accepted daily member;
+4. `CATALOG_JSON_INVALID` — the selected member has invalid UTF-8/JSON, a duplicate
+   key, or a non-finite constant;
+5. `CATALOG_SCHEMA_MISMATCH` — wrapper/data/field/type/pagination/count/row-shape
    mismatch;
-7. `CATALOG_RECORD_MISMATCH` — the one row is not the exact frozen current-metadata
-   row or does not exact-map to accepted `xshe:000001`;
-8. `CATALOG_CONSTRUCTION_INVALID` — exact Domain catalog/source/Event/result
-   reconstruction fails.
+6. `CATALOG_MEMBER_BINDING_MISMATCH` — there are multiple non-daily candidates, or,
+   after valid JSON/schema for the sole candidate, its key, frozen content hash,
+   acquisition time, exact row, or mapping to the accepted `xshe:000001` result
+   differs.
+
+`CATALOG_MEMBER_BINDING_MISMATCH` is limited to those reachable input-derived
+comparisons. Invalid or inaccessible snapshot/archive/member authority cannot reach
+it because normalization reconstruction and `member_bytes()` verification fail at
+`NORMALIZATION_AUTHORITY_INVALID`. There is no separate record-mismatch code: the
+exact row is part of the one captured member binding. There is no construction code:
+after the fixed row/constants pass, Domain catalog/source/Event/result construction
+has no remaining input-derived failure trigger; constructor failure would be an
+implementation defect, not a structured data outcome.
 
 Evaluate a complete stage before advancing. With one fixed member and row there is
 no positional tie. Existing v1 normalization and G12C/D failure precedence remain
@@ -432,15 +455,15 @@ Do not edit existing tests or fixtures.
 | --- | --- |
 | internal contract | exact dataclass fields/order, enum order, signature, exactly-one outcome, derived hashes |
 | source grammar | duplicate/malformed JSON, bad UTF-8/constants, extra/missing keys, wrong types, pagination/count, fields/row shape |
-| snapshot binding | wrong accepted-result type, constructor bypass, wrong provenance, missing member, inaccessible member, distinct member acquisition time |
-| record mapping | every stock-basic column mismatch independently rejects; no generic symbol/exchange/listing inference |
+| authority/scope | wrong accepted-result type, constructor-bypassed or inaccessible snapshot/archive/member maps to `NORMALIZATION_AUTHORITY_INVALID`; valid wrong provenance maps to `SNAPSHOT_SCOPE_MISMATCH`; zero non-daily catalog candidates maps to `CATALOG_MEMBER_MISSING` |
+| member binding | multiple non-daily candidates, or after valid grammar/schema a distinct acquisition time, sole candidate member key, frozen content hash, every stock-basic column, or `xshe:000001` mapping mismatch maps to `CATALOG_MEMBER_BINDING_MISMATCH`; no generic symbol/exchange/listing inference |
 | catalog | exact one CNY currency, one equity definition, no base currency, empty symbol timelines, canonical body/hash |
 | source value | all raw metadata retained, exact acquisition/source/member identities, fixed false/null qualifications, hash recomputation |
 | v1 reuse | five nested payload components canonical-byte-equal v1; copied envelope authority equal v1; v1 function/signature/source/fixture bytes unchanged |
 | v2 distinction | Event ID/stream/type/capability distinct; no v1 supersession; exact payload and qualification keys |
 | manifest binding | Event body/hash/catalog-source/binding and manifest catalog hash exact-match; forged body/hash at every layer rejected |
 | G12C/D | unchanged validation, serialization, first publication, idempotent replay, ref and retention proof |
-| precedence | each code alone plus mixed adjacent/all-stage faults; one failure and no partial catalog/Event/manifest/publication |
+| precedence | every reachable code alone plus mixed adjacent/all-stage faults; malformed/schema-invalid bytes win before their changed frozen hash; no unreachable construction/record code; one failure and no partial catalog/Event/manifest/publication |
 | qualification | current-metadata-only true; historical listing, survivorship, provider closure, corporate actions, decision/deployment all false |
 | architecture | one new internal production module; no root export, framework, second catalog, Runtime/Kernel/network/repository/Reader import |
 | compatibility | all accepted G12A/B/C/D/G and Tushare v1 fixtures/hashes/signatures remain exact |
@@ -563,7 +586,10 @@ git status --short
 
 Final acceptance requires clean detached-worktree replay, immutable RED and
 implementation commits, no staged files, and independent review with no blocker or
-high finding. Do not merge or push as part of this slice.
+high finding. The enum/RED suite must contain only the six reachable codes above;
+review must reject any inaccessible-member binding case, separate record mismatch,
+or construction-failure case reintroduced without a concrete non-injected input
+trigger. Do not merge or push as part of this slice.
 
 ## Explicit non-goals
 
