@@ -130,5 +130,4 @@ This slice does not claim or produce:
 - decision-grade eligibility;
 - deployment authorization.
 
-It does not edit the Acceptance Matrix, shared plans README, G12I analyzer status,
-or production code, and it adds no generic binding artifact.
+The provider-specific implementation commits did not edit shared registries or production code; parent fan-in records this PASSED slice in the Acceptance Matrix and G12 README. It adds no generic binding artifact or G12I analyzer implementation.

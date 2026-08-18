@@ -38,8 +38,11 @@ The current read-only inventory found:
 
 `MarketData.Source` is uniformly `tushare_compatible_csv`; the daily natural key
 `(TradingDay, Symbol)` has no duplicates. `IntradayData` is not acceptance-ready:
-there are 14,496 duplicate natural-key rows and 13,356 conflicting duplicate
-groups.
+the prior inventory observed 14,496 duplicate natural-key rows and 13,356
+conflicting duplicate groups. A deterministic re-audit attempted on 2026-08-18 is
+`BLOCKED` because the DuckDB was actively mutated and could not be opened read-only;
+see `docs/research/intraday-data-deterministic-audit-blocked-20260818.md`. Those
+prior counts were not promoted as results of the blocked run.
 
 The lake is mutable and not Git-bound. A stable local backup is also present:
 

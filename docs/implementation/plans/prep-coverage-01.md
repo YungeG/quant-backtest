@@ -24,9 +24,23 @@ fan_in: [MRMD-01, PERF-OBS-01]
 
 ## Status
 
-`READY`. The F2 contract, Acceptance Matrix readiness card, and independent
-architecture/oracle/security reviews are complete. Implementation is authorized
-only as the three test-first delivery slices below.
+`READY`; delivery slice 1 pure preflight is `PASSED` at immutable source
+`3a8cacccd1902ea6b6ef57c2f39266166f2edc01`. Delivery slices 2–3 remain READY and
+own execution-input v3 identity/hydration plus facade/Runner/repository fan-in. The
+full PREP-COVERAGE Gate is not PASSED until all three slices complete.
+
+Slice-1 acceptance closure:
+
+- RED: `5763227`;
+- implementation: `a4f6832`;
+- closure hardening: `c5ab5b7`;
+- final security hardening/source: `3a8cacccd1902ea6b6ef57c2f39266166f2edc01`;
+- focused validation: 39 passed;
+- compatibility validation: 75 passed;
+- full repository: 1938 passed;
+- import boundaries: passed;
+- Pyright, compile, lock, diff, and clean-worktree checks: passed;
+- independent spec/security reviews: no blocker/high findings.
 
 ## Outcome
 

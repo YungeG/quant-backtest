@@ -154,6 +154,9 @@ artifact_hashes: []
 | G12B | PASSED | market-bundle-builder | G12A, G02 | Normalization fixtures |
 | G12B-TUSHARE-CN-A-SHARE-DAILY-V1 | PASSED — immutable commit `373817b762fbe0d68b286577e0396107694cc9a1` | market-bundle-builder internal Tushare normalization | G12A, G12B, G12G, frozen Tushare event-time/numeric evidence | none; G12C/D and provider closure remain separate |
 | G12CD-TUSHARE-CN-A-SHARE-DAILY-PUBLICATION-V1 | PASSED — immutable source `7400cad6531b2687ffb150959cbf534c6797359e` | market-bundle-builder internal Tushare daily projection | G12B-TUSHARE-CN-A-SHARE-DAILY-V1, G12C, G12D | none; G12L/listing, revision, corporate-action, G12I/K/M, and deployment remain BLOCKED |
+| G12I-TUSHARE-CN-A-SHARE-DAILY-PURPOSE-SCOPE-V1 | PASSED — immutable evidence `5fd8e94` | market-bundle-builder Tushare purpose declarations | G12I, G12CD-TUSHARE-CN-A-SHARE-DAILY-PUBLICATION-V1 | none for finite purpose scope; availability/revision/analyzer/provider qualification remain BLOCKED |
+| G12CD-TUSHARE-CN-A-SHARE-DAILY-PUBLICATION-V2 | READY — plan `33e0b9b` | market-bundle-builder internal catalog-bound Tushare publication | G12B-TUSHARE-CN-A-SHARE-DAILY-V1, G12CD-TUSHARE-CN-A-SHARE-DAILY-PUBLICATION-V1, G12C, G12D | production and RED tests not implemented |
+| A-SHARE-INTRADAY-DQ-AUDIT-V1 | DRAFT / BLOCKED — evidence `4df498b` | repository research/audit | external quant_a50 DuckDB | active writer prevents stable hash and read-only open; no SQL result accepted |
 | G12CD-CN-A-SHARE-DEVELOPMENT-RULE-AUTHORITIES-V1 | PASSED — immutable source `832f53a74d3f74436ecae8672bd1c0dd3530c814` | market-bundle-builder internal A-share rule projection | G08H, G12C, G12D | none; provider/G12H/decision/deployment qualification fixed false |
 | G12C | PASSED | market-bundle-builder | G12B | Manifest/validation fixtures |
 | G12D | PASSED | market-bundle-builder + market-data-contracts | G12C | none |
@@ -162,7 +165,7 @@ artifact_hashes: []
 | G12G | PASSED | market-bundle-builder | G12B–G12C | Bar aggregation fixtures |
 | PERF-OBS-01 | READY — F1 recorder core PASSED at `85eac498b70d98dccce524f7ec30198456983dbf` | backtest-runtime MRMD/PREP orchestration | G00 | F2 six operations await PREP-COVERAGE-01 |
 | MRMD-01 | READY — F1 bindings/visible verifier PASSED at `85eac498b70d98dccce524f7ec30198456983dbf` | backtest-runtime preparation and observation integration | G11B, G11D, G11E, G12G, BT-GAP-02B, BT-GAP-02C, PERF-OBS-01 | F2 one-Bundle/Profile/identity/hydration/replay awaits PREP-COVERAGE-01 |
-| PREP-COVERAGE-01 | READY | backtest-runtime preparation | MRMD-01, PERF-OBS-01, G11B, G11D, G11E, G12E, BT-GAP-02B, BT-GAP-02C | none; implementation must follow the three frozen test-first slices |
+| PREP-COVERAGE-01 | READY — slice 1 pure preflight PASSED at `3a8cacccd1902ea6b6ef57c2f39266166f2edc01` | backtest-runtime preparation | MRMD-01, PERF-OBS-01, G11B, G11D, G11E, G12E, BT-GAP-02B, BT-GAP-02C | slices 2–3 execution-input v3 and Runtime fan-in remain |
 | G12H | DRAFT / BLOCKED | market-bundle-builder validation | G12C, G12CD-CN-A-SHARE-DEVELOPMENT-RULE-AUTHORITIES-V1 | aligned five-dimension authority; current exact fixture fails `COVERAGE_GAP / market_fees` because fee/tax coverage ends August 2023 before the July 2026 target |
 | G12I | DRAFT | market-bundle-builder validation | G12C, G12G | Real profile-purpose, provider/calendar availability, and terminal-set closure evidence |
 | G12J | DRAFT | trading-domain schema migration | real old artifact | No real source/target schema yet |
