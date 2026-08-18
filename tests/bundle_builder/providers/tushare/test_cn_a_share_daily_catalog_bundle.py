@@ -31,7 +31,7 @@ from crypto_quant_domain import (
     canonical_bytes,
     canonical_sha256,
 )
-from crypto_quant_market_data import MarketEvent
+from crypto_quant_market_data import MarketBundleCapability, MarketEvent
 
 ROOT = Path(__file__).parents[3]
 DAILY_FIXTURE = ROOT / "fixtures/market_data/providers/tushare/cn-a-share-daily-listing-v1"
@@ -441,6 +441,17 @@ def test_authority_failures_hide_member_secret_sentinels_without_catching_baseex
         )
 
 
+def test_post_binding_implementation_defects_are_not_structured_data_failures(monkeypatch) -> None:
+    def defect(*args, **kwargs):
+        raise RuntimeError("post-binding-implementation-defect")
+
+    monkeypatch.setattr(MODULE, "_market_event", defect)
+    with pytest.raises(RuntimeError, match="post-binding-implementation-defect"):
+        MODULE.project_tushare_cn_a_share_daily_catalog_bound_market_event_v2(
+            _normalized_result()
+        )
+
+
 def test_deep_authority_reconstruction_rejects_hostile_equivalent_values() -> None:
     publication = MODULE.project_tushare_cn_a_share_daily_catalog_bound_market_event_v2(_normalized_result()).result
     assert publication is not None
@@ -473,16 +484,61 @@ def test_deep_authority_reconstruction_rejects_hostile_equivalent_values() -> No
             publication.catalog_source, forged_event,
         )
 
+    class HostileCurrency(CurrencyId):
+        def __eq__(self, other):
+            raise RuntimeError("catalog-secret-sentinel")
+
+        def to_canonical_dict(self):
+            raise RuntimeError("catalog-secret-sentinel")
+
+    hostile_catalog = _forge(
+        publication.instrument_catalog,
+        currencies=(HostileCurrency("CNY"),),
+    )
+    with pytest.raises((TypeError, ValueError), match="catalog"):
+        MODULE.TushareCnAShareDailyCatalogPublicationResult(
+            publication.normalization_result, hostile_catalog,
+            publication.catalog_source, publication.market_event,
+        )
+
+    class HostileCapability(MarketBundleCapability):
+        def __eq__(self, other):
+            raise RuntimeError("event-secret-sentinel")
+
+        def to_canonical_dict(self):
+            raise RuntimeError("event-secret-sentinel")
+
+    hostile_event = _forge(
+        publication.market_event,
+        capability=HostileCapability("tushare_cn_a_share.daily-publications", 2),
+    )
+    with pytest.raises((TypeError, ValueError), match="event"):
+        MODULE.TushareCnAShareDailyCatalogPublicationResult(
+            publication.normalization_result, publication.instrument_catalog,
+            publication.catalog_source, hostile_event,
+        )
+    mutable_event = _forge(
+        publication.market_event,
+        payload=json.loads(canonical_bytes(publication.market_event.payload)),
+    )
+    with pytest.raises((TypeError, ValueError), match="event"):
+        MODULE.TushareCnAShareDailyCatalogPublicationResult(
+            publication.normalization_result, publication.instrument_catalog,
+            publication.catalog_source, mutable_event,
+        )
+
 
 def test_result_retains_only_reconstructed_catalog_source_and_event() -> None:
     publication = MODULE.project_tushare_cn_a_share_daily_catalog_bound_market_event_v2(_normalized_result()).result
     assert publication is not None
+    caller_normalization = publication.normalization_result
     caller_catalog = publication.instrument_catalog
     caller_source = publication.catalog_source
     caller_event = publication.market_event
     rebuilt = MODULE.TushareCnAShareDailyCatalogPublicationResult(
         publication.normalization_result, caller_catalog, caller_source, caller_event,
     )
+    assert rebuilt.normalization_result is not caller_normalization
     assert rebuilt.instrument_catalog is not caller_catalog
     assert rebuilt.catalog_source is not caller_source
     assert rebuilt.market_event is not caller_event

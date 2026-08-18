@@ -4,7 +4,9 @@ import json
 import re
 import unicodedata
 from dataclasses import dataclass
+from datetime import date
 from enum import Enum
+from types import MappingProxyType
 
 from crypto_quant_domain import (
     CurrencyId,
@@ -12,6 +14,10 @@ from crypto_quant_domain import (
     InstrumentDefinition,
     InstrumentId,
     InstrumentType,
+    SessionId,
+    SourceSequence,
+    TimelinePhase,
+    TradingDate,
     UtcInstant,
     VenueId,
     canonical_bytes,
@@ -19,7 +25,19 @@ from crypto_quant_domain import (
 )
 from crypto_quant_market_data import MarketBundleCapability, MarketEvent
 
-from .tushare_cn_a_share_daily import TushareCnAShareDailyNormalizationResult
+from .bar_aggregation import BarBucket
+from .source_snapshots import (
+    RawSourceMember,
+    SourceSnapshot,
+    SourceSnapshotMember,
+    SourceSnapshotProvenance,
+    freeze_source_snapshot,
+)
+from .tushare_cn_a_share_daily import (
+    TushareCnAShareDailyNormalizationRequest,
+    TushareCnAShareDailyNormalizationResult,
+    normalize_tushare_cn_a_share_daily_v1,
+)
 from .tushare_cn_a_share_daily_bundle import (
     project_tushare_cn_a_share_daily_market_event_v1,
 )
@@ -111,8 +129,9 @@ def _schema_row(value: object) -> tuple[object, ...] | None:
         return None
     try:
         _text("request_id", value.get("request_id"))
-        _text("detail", value.get("detail"), nonempty=False)
     except (TypeError, ValueError):
+        return None
+    if type(value.get("detail")) is not str:
         return None
     if type(value.get("code")) is not int or value.get("code") != 0:
         return None
@@ -163,43 +182,56 @@ def _catalog() -> InstrumentCatalog:
     )
 
 
-def _catalog_valid(value: object) -> bool:
-    if type(value) is not InstrumentCatalog:
-        return False
+def _utc(value: object) -> UtcInstant:
+    if type(value) is not UtcInstant or type(value.epoch_nanoseconds) is not int:
+        raise TypeError("instant must be exact UtcInstant")
+    return UtcInstant(value.epoch_nanoseconds)
+
+
+def _instrument(value: object) -> InstrumentId:
+    if type(value) is not InstrumentId or type(value.venue) is not VenueId:
+        raise TypeError("instrument must be exact InstrumentId")
+    venue = _text("instrument venue", value.venue.value)
+    stable_key = _text("instrument stable key", value.stable_key)
+    return InstrumentId(VenueId(venue), stable_key)
+
+
+def _reconstruct_catalog(value: object) -> InstrumentCatalog | None:
     try:
         if (
-            type(value.currencies) is not tuple
+            type(value) is not InstrumentCatalog
+            or type(value.currencies) is not tuple
             or type(value.instruments) is not tuple
             or type(value.symbol_timelines) is not tuple
             or len(value.currencies) != 1
             or len(value.instruments) != 1
             or value.symbol_timelines
         ):
-            return False
+            return None
         currency = value.currencies[0]
         definition = value.instruments[0]
-        if type(currency) is not CurrencyId or type(definition) is not InstrumentDefinition:
-            return False
-        instrument = definition.instrument_id
-        if type(instrument) is not InstrumentId or type(instrument.venue) is not VenueId:
-            return False
-        rebuilt = InstrumentCatalog(
-            currencies=(CurrencyId(currency.value),),
-            instruments=(
-                InstrumentDefinition(
-                    InstrumentId(VenueId(instrument.venue.value), instrument.stable_key),
-                    InstrumentType(definition.instrument_type.value),
-                    None if definition.base_currency is None else CurrencyId(definition.base_currency.value),
-                    CurrencyId(definition.quote_currency.value),
-                    CurrencyId(definition.settlement_currency.value),
-                ),
-            ),
-            symbol_timelines=(),
-        )
-    except (AttributeError, TypeError, ValueError):
-        return False
-    expected = _catalog()
-    return rebuilt == value == expected and canonical_bytes(value) == canonical_bytes(expected)
+        if (
+            type(currency) is not CurrencyId
+            or type(currency.value) is not str
+            or currency.value != "CNY"
+            or type(definition) is not InstrumentDefinition
+            or type(definition.instrument_type) is not InstrumentType
+            or definition.instrument_type is not InstrumentType.EQUITY
+            or definition.base_currency is not None
+            or type(definition.quote_currency) is not CurrencyId
+            or type(definition.quote_currency.value) is not str
+            or definition.quote_currency.value != "CNY"
+            or type(definition.settlement_currency) is not CurrencyId
+            or type(definition.settlement_currency.value) is not str
+            or definition.settlement_currency.value != "CNY"
+        ):
+            return None
+        instrument = _instrument(definition.instrument_id)
+        if instrument.venue.value != "xshe" or instrument.stable_key != "000001":
+            return None
+    except Exception:  # noqa: BLE001 - reject hostile authority objects atomically
+        return None
+    return _catalog()
 
 
 def _source_record_hash(row: tuple[object, ...]) -> str:
@@ -261,20 +293,20 @@ class TushareCnAShareAcquisitionCatalogSource:
     def __post_init__(self) -> None:
         _hash("snapshot_id", self.snapshot_id)
         _hash("provenance_hash", self.provenance_hash)
+        _text("source_key", self.source_key)
+        _text("member_key", self.member_key)
         if self.source_key != _SOURCE_KEY or self.member_key != _MEMBER_KEY:
             raise ValueError("catalog source identity mismatch")
+        _hash("member_content_hash", self.member_content_hash)
         if self.member_content_hash != _MEMBER_CONTENT_HASH:
             raise ValueError("catalog source member hash mismatch")
         if type(self.record_index) is not int or self.record_index != 0:
             raise ValueError("catalog source record index mismatch")
-        if type(self.acquired_at) is not UtcInstant:
-            raise TypeError("catalog source acquisition time must be exact UtcInstant")
         try:
-            rebuilt_time = UtcInstant(self.acquired_at.epoch_nanoseconds)
-        except (AttributeError, TypeError, ValueError) as error:
+            rebuilt_time = _utc(self.acquired_at)
+        except Exception as error:
             raise ValueError("catalog source acquisition time is invalid") from error
-        if rebuilt_time != self.acquired_at:
-            raise ValueError("catalog source acquisition time reconstruction mismatch")
+        object.__setattr__(self, "acquired_at", rebuilt_time)
         row = (
             self.provider_ts_code,
             self.provider_symbol,
@@ -287,12 +319,16 @@ class TushareCnAShareAcquisitionCatalogSource:
             self.provider_list_date,
             self.provider_delist_date,
         )
-        if row != _ROW or any(type(value) is not str for value in row[:-1]) or row[-1] is not None:
-            raise ValueError("catalog source row mismatch")
+        if any(type(value) is not str for value in row[:-1]) or row[-1] is not None:
+            raise TypeError("catalog source row must use exact string primitives")
         for index, value in enumerate(row[:-1]):
             _text(f"catalog source row[{index}]", value, nonempty=False)
+        if row != _ROW:
+            raise ValueError("catalog source row mismatch")
+        _hash("source_record_hash", self.source_record_hash)
         if self.source_record_hash != _source_record_hash(row):
             raise ValueError("catalog source record hash mismatch")
+        _hash("instrument_catalog_hash", self.instrument_catalog_hash)
         if self.instrument_catalog_hash != canonical_sha256(_catalog()):
             raise ValueError("catalog source catalog hash mismatch")
         if type(self.current_metadata_only) is not bool or not self.current_metadata_only:
@@ -382,13 +418,157 @@ class TushareCnAShareDailyCatalogPublicationFailure:
         return {**self._body(), "failure_hash": self.failure_hash}
 
 
+def _reconstruct_bucket(value: object) -> BarBucket:
+    if type(value) is not BarBucket:
+        raise TypeError("bucket must be exact BarBucket")
+    session = value.session_id
+    trading_date = value.trading_date
+    if (
+        type(session) is not SessionId
+        or type(session.calendar_id) is not str
+        or type(session.value) is not str
+        or type(trading_date) is not TradingDate
+        or type(trading_date.calendar_id) is not str
+        or type(trading_date.value) is not date
+    ):
+        raise TypeError("bucket identity values must use exact types")
+    if type(value.included_spans) is not tuple:
+        raise TypeError("bucket spans must be exact tuple")
+    spans: list[tuple[UtcInstant, UtcInstant]] = []
+    for span in value.included_spans:
+        if type(span) is not tuple or len(span) != 2:
+            raise TypeError("bucket span must be exact pair")
+        spans.append((_utc(span[0]), _utc(span[1])))
+    trusted_date = date(
+        trading_date.value.year,
+        trading_date.value.month,
+        trading_date.value.day,
+    )
+    return BarBucket(
+        SessionId(_text("session calendar", session.calendar_id), _text("session", session.value)),
+        TradingDate(_text("trading calendar", trading_date.calendar_id), trusted_date),
+        tuple(spans),
+        _utc(value.interval_start),
+        _utc(value.interval_end_exclusive),
+    )
+
+
+def _reconstruct_snapshot(value: object) -> SourceSnapshot:
+    if type(value) is not SourceSnapshot or type(value.archive_bytes) is not bytes:
+        raise TypeError("snapshot must be exact SourceSnapshot")
+    _hash("snapshot_id", value.snapshot_id)
+    _hash("content_tree_hash", value.content_tree_hash)
+    _hash("provenance_hash", value.provenance_hash)
+    if (
+        type(value.decision_grade_eligible) is not bool
+        or type(value.deployment_authorized) is not bool
+        or value.decision_grade_eligible
+        or value.deployment_authorized
+        or type(value.members) is not tuple
+        or type(value.provenance) is not SourceSnapshotProvenance
+    ):
+        raise ValueError("snapshot authority values are invalid")
+    provenance = SourceSnapshotProvenance(
+        _text("vendor_key", value.provenance.vendor_key),
+        _text("source_key", value.provenance.source_key),
+        _text("license_ref", value.provenance.license_ref),
+        _text("retention_policy_ref", value.provenance.retention_policy_ref),
+    )
+    raw_members: list[RawSourceMember] = []
+    supplied_members: list[tuple[object, ...]] = []
+    for member in value.members:
+        if type(member) is not SourceSnapshotMember:
+            raise TypeError("snapshot member must be exact SourceSnapshotMember")
+        member_key = _text("member_key", member.member_key)
+        content_hash = _hash("member content_hash", member.content_hash)
+        if type(member.byte_count) is not int or member.byte_count < 0:
+            raise TypeError("member byte_count must be exact integer")
+        mode = _text("member mode", member.mode)
+        if mode not in {"0644", "0755"}:
+            raise ValueError("member mode is invalid")
+        if type(member.acquired_at_epoch_nanoseconds) is not int:
+            raise TypeError("member acquisition time must be exact integer")
+        declared = member.declared_sha256
+        if declared is not None:
+            declared = _hash("member declared_sha256", declared)
+        raw_bytes = value.member_bytes(member_key)
+        if type(raw_bytes) is not bytes:
+            raise TypeError("member bytes must be exact bytes")
+        raw_members.append(
+            RawSourceMember(
+                member_key,
+                bytes(raw_bytes),
+                mode,
+                member.acquired_at_epoch_nanoseconds,
+                declared,
+            )
+        )
+        supplied_members.append(
+            (
+                member_key,
+                content_hash,
+                member.byte_count,
+                mode,
+                member.acquired_at_epoch_nanoseconds,
+                declared,
+            )
+        )
+    outcome = freeze_source_snapshot(members=tuple(raw_members), provenance=provenance)
+    if outcome.snapshot is None:
+        raise ValueError("snapshot reconstruction failed")
+    trusted = outcome.snapshot
+    trusted_members = tuple(
+        (
+            member.member_key,
+            member.content_hash,
+            member.byte_count,
+            member.mode,
+            member.acquired_at_epoch_nanoseconds,
+            member.declared_sha256,
+        )
+        for member in trusted.members
+    )
+    if (
+        value.snapshot_id != trusted.snapshot_id
+        or value.archive_bytes != trusted.archive_bytes
+        or value.content_tree_hash != trusted.content_tree_hash
+        or value.provenance_hash != trusted.provenance_hash
+        or tuple(supplied_members) != trusted_members
+    ):
+        raise ValueError("snapshot reconstruction mismatch")
+    return trusted
+
+
+def _reconstruct_request(
+    value: object,
+    snapshot: SourceSnapshot,
+) -> TushareCnAShareDailyNormalizationRequest:
+    if type(value) is not TushareCnAShareDailyNormalizationRequest:
+        raise TypeError("request must be exact normalization request")
+    if type(value.schema_version) is not int:
+        raise TypeError("request schema must be exact integer")
+    request = TushareCnAShareDailyNormalizationRequest(
+        value.schema_version,
+        _hash("request snapshot_id", value.snapshot_id),
+        _hash("request provenance_hash", value.provenance_hash),
+        _text("request member_key", value.member_key),
+        _hash("request member_content_hash", value.member_content_hash),
+        _instrument(value.instrument_id),
+        _text("provider_trade_date", value.provider_trade_date),
+        _reconstruct_bucket(value.bucket),
+    )
+    if request.snapshot_id != snapshot.snapshot_id or request.provenance_hash != snapshot.provenance_hash:
+        raise ValueError("request snapshot binding mismatch")
+    return request
+
+
 def _reconstruct_normalization(
     value: object,
 ) -> TushareCnAShareDailyNormalizationResult | None:
-    if type(value) is not TushareCnAShareDailyNormalizationResult:
-        return None
     try:
-        rebuilt = TushareCnAShareDailyNormalizationResult(
+        if type(value) is not TushareCnAShareDailyNormalizationResult:
+            return None
+        validated = TushareCnAShareDailyNormalizationResult(
             value.request,
             value.snapshot,
             value.raw_bar,
@@ -396,23 +576,53 @@ def _reconstruct_normalization(
             value.execution_reference,
             value.valuation,
         )
-    except (AttributeError, TypeError, ValueError):
+        snapshot = _reconstruct_snapshot(value.snapshot)
+        request = _reconstruct_request(value.request, snapshot)
+        outcome = normalize_tushare_cn_a_share_daily_v1(snapshot, request)
+        trusted = outcome.result
+        if trusted is None or canonical_bytes(validated) != canonical_bytes(trusted):
+            return None
+        return trusted
+    except Exception:  # noqa: BLE001 - caller authority failures are data failures
         return None
-    return rebuilt if rebuilt == value else None
 
 
 def _reconstruct_source(
     value: object,
 ) -> TushareCnAShareAcquisitionCatalogSource | None:
-    if type(value) is not TushareCnAShareAcquisitionCatalogSource:
-        return None
     try:
-        rebuilt = TushareCnAShareAcquisitionCatalogSource(
-            **{field: getattr(value, field) for field in value.__dataclass_fields__}
+        if type(value) is not TushareCnAShareAcquisitionCatalogSource:
+            return None
+        return TushareCnAShareAcquisitionCatalogSource(
+            snapshot_id=value.snapshot_id,
+            provenance_hash=value.provenance_hash,
+            source_key=value.source_key,
+            member_key=value.member_key,
+            member_content_hash=value.member_content_hash,
+            record_index=value.record_index,
+            acquired_at=_utc(value.acquired_at),
+            provider_ts_code=value.provider_ts_code,
+            provider_symbol=value.provider_symbol,
+            provider_name=value.provider_name,
+            provider_area=value.provider_area,
+            provider_industry=value.provider_industry,
+            provider_market=value.provider_market,
+            provider_exchange=value.provider_exchange,
+            provider_list_status=value.provider_list_status,
+            provider_list_date=value.provider_list_date,
+            provider_delist_date=value.provider_delist_date,
+            source_record_hash=value.source_record_hash,
+            instrument_catalog_hash=value.instrument_catalog_hash,
+            current_metadata_only=value.current_metadata_only,
+            provider_revision_id=value.provider_revision_id,
+            revision_closure_complete=value.revision_closure_complete,
+            historical_listing_status_qualified=value.historical_listing_status_qualified,
+            survivorship_bias_safe=value.survivorship_bias_safe,
+            decision_grade_eligible=value.decision_grade_eligible,
+            deployment_authorized=value.deployment_authorized,
         )
-    except (AttributeError, TypeError, ValueError):
+    except Exception:  # noqa: BLE001 - reject hostile authority objects atomically
         return None
-    return rebuilt if rebuilt == value else None
 
 
 def _catalog_source(
@@ -501,6 +711,75 @@ def _market_event(
     )
 
 
+def _primitive(value: object) -> object:
+    if value is None or type(value) in (bool, int, str):
+        if type(value) is str:
+            _text("event payload string", value, nonempty=False)
+        return value
+    if type(value) is tuple:
+        return tuple(_primitive(item) for item in value)
+    if type(value) is MappingProxyType:
+        result: dict[str, object] = {}
+        for key, item in value.items():
+            if type(key) is not str:
+                raise TypeError("event payload key must be exact string")
+            _text("event payload key", key, nonempty=False)
+            result[key] = _primitive(item)
+        return result
+    raise TypeError("event payload contains untrusted nested value")
+
+
+def _reconstruct_event(value: object) -> MarketEvent | None:
+    try:
+        if type(value) is not MarketEvent:
+            return None
+        capability = value.capability
+        if (
+            type(capability) is not MarketBundleCapability
+            or type(capability.key) is not str
+            or type(capability.version) is not int
+        ):
+            return None
+        instrument = None if value.instrument_id is None else _instrument(value.instrument_id)
+        phase = value.phase
+        sequence = value.source_sequence
+        if (
+            type(phase) is not TimelinePhase
+            or type(phase.rank) is not int
+            or type(phase.code) is not str
+            or type(sequence) is not SourceSequence
+            or type(sequence.value) is not int
+        ):
+            return None
+        supersedes = value.supersedes_revision_id
+        if supersedes is not None:
+            supersedes = _text("supersedes_revision_id", supersedes)
+        payload = _primitive(value.payload)
+        if type(payload) is not dict:
+            return None
+        return MarketEvent(
+            event_id=_text("event_id", value.event_id),
+            stream_key=_text("stream_key", value.stream_key),
+            event_type=_text("event_type", value.event_type),
+            capability=MarketBundleCapability(
+                _text("capability key", capability.key),
+                capability.version,
+            ),
+            instrument_id=instrument,
+            event_time=_utc(value.event_time),
+            available_time=_utc(value.available_time),
+            phase=TimelinePhase(phase.rank, _text("phase code", phase.code)),
+            source_sequence=SourceSequence(sequence.value),
+            revision_id=_text("revision_id", value.revision_id),
+            supersedes_revision_id=supersedes,
+            source_key=_text("event source_key", value.source_key),
+            source_hash=_hash("event source_hash", value.source_hash),
+            payload=payload,
+        )
+    except Exception:  # noqa: BLE001 - reject hostile authority objects atomically
+        return None
+
+
 @dataclass(frozen=True, slots=True)
 class TushareCnAShareDailyCatalogPublicationResult:
     normalization_result: TushareCnAShareDailyNormalizationResult
@@ -512,7 +791,8 @@ class TushareCnAShareDailyCatalogPublicationResult:
         rebuilt = _reconstruct_normalization(self.normalization_result)
         if rebuilt is None:
             raise ValueError("normalization authority is invalid")
-        if not _catalog_valid(self.instrument_catalog):
+        instrument_catalog = _reconstruct_catalog(self.instrument_catalog)
+        if instrument_catalog is None:
             raise ValueError("instrument catalog is invalid")
         source = _reconstruct_source(self.catalog_source)
         if source is None:
@@ -522,27 +802,26 @@ class TushareCnAShareDailyCatalogPublicationResult:
         expected_source = _catalog_source(
             rebuilt,
             rebuilt.raw_bar.available_time,
-            self.instrument_catalog,
+            instrument_catalog,
         )
-        if source != expected_source or canonical_bytes(source) != canonical_bytes(expected_source):
+        if canonical_bytes(source) != canonical_bytes(expected_source):
             raise ValueError("catalog source binding mismatch")
-        try:
-            v1 = project_tushare_cn_a_share_daily_market_event_v1(rebuilt)
-            expected_event = _market_event(
-                rebuilt,
-                v1,
-                self.instrument_catalog,
-                source,
-            )
-        except (AttributeError, TypeError, ValueError) as error:
-            raise ValueError("market event authority is invalid") from error
-        if type(self.market_event) is not MarketEvent:
-            raise TypeError("market event must be exact MarketEvent")
-        if (
-            self.market_event != expected_event
-            or canonical_bytes(self.market_event) != canonical_bytes(expected_event)
-        ):
+        event = _reconstruct_event(self.market_event)
+        if event is None:
+            raise ValueError("market event authority is invalid")
+        v1 = project_tushare_cn_a_share_daily_market_event_v1(rebuilt)
+        expected_event = _market_event(
+            rebuilt,
+            v1,
+            instrument_catalog,
+            source,
+        )
+        if canonical_bytes(event) != canonical_bytes(expected_event):
             raise ValueError("market event binding mismatch")
+        object.__setattr__(self, "normalization_result", rebuilt)
+        object.__setattr__(self, "instrument_catalog", instrument_catalog)
+        object.__setattr__(self, "catalog_source", source)
+        object.__setattr__(self, "market_event", event)
 
     @property
     def instrument_catalog_hash(self) -> str:
@@ -611,33 +890,26 @@ def _scope_matches(result: TushareCnAShareDailyNormalizationResult) -> bool:
 def project_tushare_cn_a_share_daily_catalog_bound_market_event_v2(
     result: TushareCnAShareDailyNormalizationResult,
 ) -> TushareCnAShareDailyCatalogPublicationOutcome:
-    rebuilt = _reconstruct_normalization(result)
-    if rebuilt is None:
-        return _failed(
-            TushareCnAShareDailyCatalogPublicationFailureCode.NORMALIZATION_AUTHORITY_INVALID
-        )
     try:
+        rebuilt = _reconstruct_normalization(result)
+        if rebuilt is None:
+            raise ValueError("normalization reconstruction failed")
         v1 = project_tushare_cn_a_share_daily_market_event_v1(rebuilt)
-    except (AttributeError, TypeError, ValueError):
+        candidates = tuple(
+            member
+            for member in rebuilt.snapshot.members
+            if member.member_key != rebuilt.request.member_key
+        )
+        source_bytes: bytes | None = None
+        if len(candidates) == 1:
+            source_bytes = rebuilt.snapshot.member_bytes(candidates[0].member_key)
+        scope_matches = _scope_matches(rebuilt)
+    except Exception:  # noqa: BLE001 - frozen authority failures map to one code
         return _failed(
             TushareCnAShareDailyCatalogPublicationFailureCode.NORMALIZATION_AUTHORITY_INVALID
         )
 
-    candidates = tuple(
-        member
-        for member in rebuilt.snapshot.members
-        if member.member_key != rebuilt.request.member_key
-    )
-    source_bytes: bytes | None = None
-    if len(candidates) == 1:
-        try:
-            source_bytes = rebuilt.snapshot.member_bytes(candidates[0].member_key)
-        except (AttributeError, TypeError, ValueError):
-            return _failed(
-                TushareCnAShareDailyCatalogPublicationFailureCode.NORMALIZATION_AUTHORITY_INVALID
-            )
-
-    if not _scope_matches(rebuilt):
+    if not scope_matches:
         return _failed(
             TushareCnAShareDailyCatalogPublicationFailureCode.SNAPSHOT_SCOPE_MISMATCH
         )
