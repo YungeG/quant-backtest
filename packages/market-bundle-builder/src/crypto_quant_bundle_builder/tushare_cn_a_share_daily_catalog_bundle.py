@@ -111,11 +111,21 @@ def _duplicate_free_object(pairs: list[tuple[str, object]]) -> dict[str, object]
 
 
 def _parse(source: bytes) -> object:
-    return json.loads(
-        source.decode("utf-8"),
-        parse_constant=_constant,
-        object_pairs_hook=_duplicate_free_object,
-    )
+    try:
+        return json.loads(
+            source.decode("utf-8"),
+            parse_constant=_constant,
+            object_pairs_hook=_duplicate_free_object,
+        )
+    except (UnicodeDecodeError, ValueError) as error:
+        raise ValueError("invalid stock_basic JSON") from error
+
+
+def _canonical_json(value: object) -> object:
+    try:
+        return json.loads(canonical_bytes(value))
+    except (TypeError, ValueError) as error:
+        raise RuntimeError("trusted canonical serialization failed") from error
 
 
 def _schema_row(value: object) -> tuple[object, ...] | None:
@@ -140,7 +150,8 @@ def _schema_row(value: object) -> tuple[object, ...] | None:
     data = value.get("data")
     if type(data) is not dict or set(data) != {"fields", "items", "has_more", "count"}:
         return None
-    if data.get("has_more") is not False:
+    has_more = data.get("has_more")
+    if type(has_more) is not bool or has_more:
         return None
     if type(data.get("count")) is not int or data.get("count") != 0:
         return None
@@ -692,9 +703,9 @@ def _market_event(
             "source_trace": v1.payload["source_trace"],
             "execution_reference": v1.payload["execution_reference"],
             "valuation": v1.payload["valuation"],
-            "instrument_catalog": json.loads(canonical_bytes(instrument_catalog)),
+            "instrument_catalog": _canonical_json(instrument_catalog),
             "instrument_catalog_hash": instrument_catalog_hash,
-            "catalog_source": json.loads(canonical_bytes(catalog_source)),
+            "catalog_source": _canonical_json(catalog_source),
             "catalog_binding_hash": binding_hash,
             "qualification": {
                 "current_metadata_only": True,
@@ -840,11 +851,11 @@ class TushareCnAShareDailyCatalogPublicationResult:
             "type": "tushare_cn_a_share_daily_catalog_publication_result",
             "schema_version": _SCHEMA_VERSION,
             "normalization_hash": self.normalization_result.normalization_hash,
-            "instrument_catalog": json.loads(canonical_bytes(self.instrument_catalog)),
+            "instrument_catalog": _canonical_json(self.instrument_catalog),
             "instrument_catalog_hash": self.instrument_catalog_hash,
             "catalog_source": self.catalog_source.to_canonical_dict(),
             "catalog_binding_hash": self.catalog_binding_hash,
-            "market_event": json.loads(canonical_bytes(self.market_event)),
+            "market_event": _canonical_json(self.market_event),
         }
 
     @property
