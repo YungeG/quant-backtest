@@ -2977,11 +2977,62 @@ def _rebuild_hydrated_inputs_v3(value: object) -> _HydratedExecutionCaseInputs:
     )
 
 
+def _validate_exact_canonical_scalars_v3(
+    value: object,
+    active: set[int] | None = None,
+) -> None:
+    if value is None:
+        return
+    if isinstance(value, Enum):
+        return
+    if isinstance(value, bool):
+        if type(value) is not bool:
+            raise TypeError("canonical bool leaves must be exact builtins")
+        return
+    if isinstance(value, int):
+        if type(value) is not int:
+            raise TypeError("canonical integer leaves must be exact builtins")
+        return
+    if isinstance(value, str):
+        if type(value) is not str:
+            raise TypeError("canonical text leaves must be exact builtins")
+        return
+
+    seen = set() if active is None else active
+    identity = id(value)
+    if identity in seen:
+        raise ValueError("canonical authority must not contain cycles")
+    seen.add(identity)
+    try:
+        if isinstance(value, Mapping):
+            for key, child in value.items():
+                if type(key) is not str:
+                    raise TypeError("canonical mapping keys must be exact str")
+                _validate_exact_canonical_scalars_v3(child, seen)
+            return
+        if isinstance(value, (list, tuple)):
+            for child in value:
+                _validate_exact_canonical_scalars_v3(child, seen)
+            return
+        to_canonical = getattr(value, "to_canonical_dict", None)
+        if not callable(to_canonical):
+            raise TypeError("canonical authority contains an unsupported value")
+        canonical_value = to_canonical()
+        if not isinstance(canonical_value, Mapping):
+            raise TypeError("canonical authority must encode as a mapping")
+        _validate_exact_canonical_scalars_v3(canonical_value, seen)
+    finally:
+        seen.remove(identity)
+
+
 def _rebuild_verified_reader_v3(
     value: object,
 ) -> InMemoryMarketBundleReader:
     if type(value) is not InMemoryMarketBundleReader:
         raise TypeError("verified_reader must be exact InMemoryMarketBundleReader")
+    _validate_exact_canonical_scalars_v3(value.bundle_ref)
+    _validate_exact_canonical_scalars_v3(value.manifest)
+    _validate_exact_canonical_scalars_v3(value.streams)
 
     def rebuild_once() -> InMemoryMarketBundleReader:
         bundle_ref = _rebuild_market_bundle_ref_v3(value.bundle_ref)
@@ -3000,6 +3051,9 @@ def _rebuild_verified_reader_v3(
                 _rebuild_market_event_v3(event) for event in events
             )
         rebuilt = InMemoryMarketBundleReader(bundle_ref, manifest, streams)
+        _validate_exact_canonical_scalars_v3(rebuilt.bundle_ref)
+        _validate_exact_canonical_scalars_v3(rebuilt.manifest)
+        _validate_exact_canonical_scalars_v3(rebuilt.streams)
         if (
             canonical_bytes(rebuilt.bundle_ref) != canonical_bytes(value.bundle_ref)
             or canonical_bytes(rebuilt.manifest) != canonical_bytes(value.manifest)

@@ -44,12 +44,7 @@ from crypto_quant_backtest.resolution import (
     RuntimeLibraryRef,
 )
 from crypto_quant_backtest.run_end import MarkToMarketCloseoutPolicy
-from crypto_quant_market_data import (
-    InMemoryMarketBundleReader,
-    MarketBundleManifest,
-    MarketBundleRef,
-    MarketEvent,
-)
+from crypto_quant_market_data import InMemoryMarketBundleReader, MarketBundleRef
 from crypto_quant_domain import (
     ArtifactCatalogError,
     ArtifactEnvelope,
