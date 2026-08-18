@@ -1,7 +1,7 @@
 ---
 id: G12L-TUSHARE-CN-A-SHARE-AUTHORITY-ACQUISITION-V1
-readiness: IMPLEMENTED
-gate_status: LIVE_CAPTURE_PENDING
+readiness: EVIDENCE_FROZEN
+gate_status: ACCEPTANCE_PENDING
 owner: Backtest tools/acquisition
 produces:
   - exact current stock metadata response
@@ -22,9 +22,9 @@ fan_out: [G12L-TUSHARE-CN-A-SHARE-DAILY-LISTING-V1, G12K, G12M-CN-A-SHARE]
 
 ## Status
 
-`IMPLEMENTED / LIVE_CAPTURE_PENDING`. The additive acquisition program and
-focused atomicity/redaction/scope contract pass for exact `000001.SZ / 2024-01-02`
-listing/name/corporate-action source evidence. Real no-clobber capture and final
+`EVIDENCE_FROZEN / ACCEPTANCE_PENDING`. The additive acquisition program produced
+one real no-clobber capture for exact `000001.SZ / 2024-01-02`
+listing/name/corporate-action source evidence. Independent review and full-repository
 acceptance remain pending. The PASSED daily/listing and trade-calendar tools remain
 unchanged, and no listing, revision, corporate-action, decision-grade, or deployment
 qualification is granted.
@@ -105,6 +105,20 @@ uv run --locked pytest -q \
 ```
 
 Focused implementation and inherited acquisition checks: 15 passed.
+
+## Frozen real capture
+
+- implementation commit: `538cf2873e647c61405052e4b7631fdc39e25122`;
+- acquisition time: `1787021168783113919` ns;
+- snapshot: `sha256:bd8ae548949696f1c98f8a20b5c8653f64121fc2eee61c1ff2ac21a97d248c0d`;
+- provenance: `sha256:f0e938a25f952cc5ba6ce5300975927a7956099ce4fd899cb99cf21538d9e8ca`;
+- `stock_basic`: `sha256:93cba2aa17cc927cf454d4de962d2f18a099a9576cf044add502626df3075af4`;
+- `namechange`: `sha256:9a4982b500c54001160f958c618a99092d7859d56da21dbaea58963e89db82d4`;
+- `adj_factor`: `sha256:4830a62041922615a68d9b31b5a9ee608fdeb3835e52ba308fede59622422df8`;
+- `dividend(ex_date=20240102)`: `sha256:cc1a888c81aef5e93097951eb25ea14e14744e1a5cf3b3da2eea5cb561609a7d`;
+- receipt file: `sha256:5f2e6f2c3870cdc26c93a2e15e5842888b890cb8d20ad5d5b16ed19882771276`;
+- rows: stock 1, namechange 4, adjacent factors 3, target-date dividend 0;
+- all provider-revision/listing/corporate-action/decision/deployment qualifications remain false.
 
 ## Explicit limits
 

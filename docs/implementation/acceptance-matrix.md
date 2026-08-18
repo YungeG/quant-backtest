@@ -150,7 +150,7 @@ artifact_hashes: []
 | G12A | PASSED | market-bundle-builder | G00 | SourceSnapshot contract |
 | G12-ACQ-TOOLS-V1 | PASSED — immutable commit `6f0bd99a93a349924996eb26708fbb0ac6fecf17` | Backtest tools/acquisition | G12A | none |
 | G12-ACQ-TUSHARE-CALENDAR-V1 | PASSED — immutable commit `10638db8225f68256c027b1dd1373bacff0d112c` | Backtest tools/acquisition | G12A, G12-ACQ-TOOLS-V1 | none |
-| G12L-TUSHARE-CN-A-SHARE-AUTHORITY-ACQUISITION-V1 | IMPLEMENTED / LIVE_CAPTURE_PENDING | Backtest tools/acquisition | G12A, G12-ACQ-TOOLS-V1, G12-ACQ-TUSHARE-CALENDAR-V1 | real bounded capture and acceptance pending; all qualification false |
+| G12L-TUSHARE-CN-A-SHARE-AUTHORITY-ACQUISITION-V1 | EVIDENCE_FROZEN / ACCEPTANCE_PENDING | Backtest tools/acquisition | G12A, G12-ACQ-TOOLS-V1, G12-ACQ-TUSHARE-CALENDAR-V1 | independent review/full acceptance pending; all qualification false |
 | G12B | PASSED | market-bundle-builder | G12A, G02 | Normalization fixtures |
 | G12B-TUSHARE-CN-A-SHARE-DAILY-V1 | PASSED — immutable commit `373817b762fbe0d68b286577e0396107694cc9a1` | market-bundle-builder internal Tushare normalization | G12A, G12B, G12G, frozen Tushare event-time/numeric evidence | none; G12C/D and provider closure remain separate |
 | G12CD-TUSHARE-CN-A-SHARE-DAILY-PUBLICATION-V1 | PASSED — immutable source `7400cad6531b2687ffb150959cbf534c6797359e` | market-bundle-builder internal Tushare daily projection | G12B-TUSHARE-CN-A-SHARE-DAILY-V1, G12C, G12D | none; G12L/listing, revision, corporate-action, G12I/K/M, and deployment remain BLOCKED |
@@ -11654,7 +11654,7 @@ o authority for listing, revision closure, corporate actions, G12I/K/M, or deplo
 
 ```yaml
 id: G12L-TUSHARE-CN-A-SHARE-AUTHORITY-ACQUISITION-V1
-status: IMPLEMENTED / LIVE_CAPTURE_PENDING
+status: EVIDENCE_FROZEN / ACCEPTANCE_PENDING
 depends_on: [G12A, G12-ACQ-TOOLS-V1, G12-ACQ-TUSHARE-CALENDAR-V1]
 owner: Backtest tools/acquisition
 plan: docs/implementation/plans/g12/g12l-tushare-cn-a-share-authority-acquisition-v1.md
@@ -11676,8 +11676,18 @@ implementation:
   existing_daily_listing_tool_changed: false
   existing_trade_calendar_tool_changed: false
 focused_tests: 15 passed
+frozen_capture:
+  implementation_commit: 538cf2873e647c61405052e4b7631fdc39e25122
+  acquired_at_epoch_nanoseconds: 1787021168783113919
+  snapshot_id: sha256:bd8ae548949696f1c98f8a20b5c8653f64121fc2eee61c1ff2ac21a97d248c0d
+  provenance_hash: sha256:f0e938a25f952cc5ba6ce5300975927a7956099ce4fd899cb99cf21538d9e8ca
+  stock_basic_sha256: sha256:93cba2aa17cc927cf454d4de962d2f18a099a9576cf044add502626df3075af4
+  namechange_sha256: sha256:9a4982b500c54001160f958c618a99092d7859d56da21dbaea58963e89db82d4
+  adj_factor_sha256: sha256:4830a62041922615a68d9b31b5a9ee608fdeb3835e52ba308fede59622422df8
+  dividend_sha256: sha256:cc1a888c81aef5e93097951eb25ea14e14744e1a5cf3b3da2eea5cb561609a7d
+  receipt_sha256: sha256:5f2e6f2c3870cdc26c93a2e15e5842888b890cb8d20ad5d5b16ed19882771276
+  row_counts: {stock_basic: 1, namechange: 4, adj_factor: 3, target_ex_date_dividend: 0}
 remaining_blockers:
-  - real-no-clobber-capture
   - independent-review-and-full-acceptance
   - provider-revision-correction-terminal-closure
   - historical-listing-status-authority
