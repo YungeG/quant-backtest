@@ -244,7 +244,7 @@ class _ExecutionInputsHydrationFailureCodeV3(str, Enum):
 
 
 @dataclass(frozen=True, slots=True)
-class ExecutionInputsHydrationFailureV3:
+class _ExecutionInputsHydrationFailureV3:
     code: _ExecutionInputsHydrationFailureCodeV3
     role_position: int | None = None
     schedule_entry_position: int | None = None
@@ -328,15 +328,15 @@ class _HydratedExecutionInputsV3:
 @dataclass(frozen=True, slots=True)
 class _ExecutionInputsHydrationOutcomeV3:
     result: _HydratedExecutionInputsV3 | None = None
-    failure: ExecutionInputsHydrationFailureV3 | None = None
+    failure: _ExecutionInputsHydrationFailureV3 | None = None
 
     def __post_init__(self) -> None:
         if (self.result is None) == (self.failure is None):
             raise ValueError("v3 hydration outcome requires exactly one result or failure")
         if self.result is not None and type(self.result) is not _HydratedExecutionInputsV3:
             raise TypeError("result must be exact _HydratedExecutionInputsV3 or None")
-        if self.failure is not None and type(self.failure) is not ExecutionInputsHydrationFailureV3:
-            raise TypeError("failure must be exact ExecutionInputsHydrationFailureV3 or None")
+        if self.failure is not None and type(self.failure) is not _ExecutionInputsHydrationFailureV3:
+            raise TypeError("failure must be exact _ExecutionInputsHydrationFailureV3 or None")
 
 
 @dataclass(frozen=True, slots=True)
@@ -2894,7 +2894,7 @@ def _failure_v3(
     event_position: int | None = None,
 ) -> _ExecutionInputsHydrationOutcomeV3:
     return _ExecutionInputsHydrationOutcomeV3(
-        failure=ExecutionInputsHydrationFailureV3(
+        failure=_ExecutionInputsHydrationFailureV3(
             code,
             role_position,
             schedule_entry_position,
