@@ -16,7 +16,9 @@ from crypto_quant_backtest.composition import (
 )
 from crypto_quant_backtest.execution_inputs import (
     _EXECUTION_INPUT_CATALOG,
+    _ExecutionInputsHydrationFailureCode,
     _ExecutionInputsHydrationFailureCodeV3,
+    _hydrate_execution_inputs,
     _hydrate_execution_inputs_v3,
     _materialize_execution_input_bundle_v3,
 )
@@ -291,6 +293,79 @@ def test_v3_decode_rejects_nested_constructor_bypass_and_noncanonical_hashes() -
             hydrated_inputs=hydrated,
             market_data_preparation=forged,
         )
+
+
+def test_v3_constructor_bypass_preserves_wrong_ref_precedence_without_io() -> None:
+    prepared, resolved, _, _, _ = _contract()
+    wrong_ref = ArtifactRef(
+        "evidence_manifest",
+        3,
+        "sha256:" + "00" * 32,
+    )
+    forged = object.__new__(crypto_quant_backtest.BacktestExecutionRequest)
+    object.__setattr__(forged, "schema_version", 3)
+    object.__setattr__(forged, "request", resolved.request)
+    object.__setattr__(forged, "execution_input_bundle_ref", wrong_ref)
+
+    outcome = _hydrate_execution_inputs_v3(
+        _Reader(error=AssertionError("reader must not be called")),
+        forged,
+        market_reader=prepared.verified_reader,
+        resolved_request=resolved,
+        prepared_market_data=prepared,
+    )
+    assert outcome.result is None
+    assert outcome.failure is not None
+    assert outcome.failure.code is (
+        _ExecutionInputsHydrationFailureCodeV3.WRONG_EXECUTION_INPUT_BUNDLE_REF
+    )
+
+
+@pytest.mark.parametrize("schema_version", [1, 2])
+def test_v3_wrong_ref_precedence_matches_legacy_v1_v2(schema_version) -> None:
+    resolved, case = resolved_request_and_case()
+    wrong_ref = ArtifactRef(
+        "evidence_manifest",
+        schema_version,
+        "sha256:" + "00" * 32,
+    )
+    forged = object.__new__(crypto_quant_backtest.BacktestExecutionRequest)
+    object.__setattr__(forged, "schema_version", schema_version)
+    object.__setattr__(forged, "request", resolved.request)
+    object.__setattr__(forged, "execution_input_bundle_ref", wrong_ref)
+
+    outcome = _hydrate_execution_inputs(
+        _Reader(error=AssertionError("reader must not be called")),
+        forged,
+        market_reader=case.timeline.reader,
+        resolved_request=resolved if schema_version == 2 else None,
+    )
+    assert outcome.result is None
+    assert outcome.failure is not None
+    assert outcome.failure.code is (
+        _ExecutionInputsHydrationFailureCode.WRONG_EXECUTION_INPUT_BUNDLE_REF
+    )
+
+
+def test_v3_materialization_rejects_empty_or_target_omitting_timeline_keys() -> None:
+    prepared, resolved, hydrated, _, _ = _contract()
+    for stream_keys in ((), ("bars.open",)):
+        invalid = replace(hydrated, timeline_stream_keys=stream_keys)
+        with pytest.raises(ValueError, match="target_stream_key|timeline_stream_keys"):
+            _materialize_execution_input_bundle_v3(
+                resolved_request=resolved,
+                hydrated_inputs=invalid,
+                market_data_preparation=prepared.preparation,
+            )
+
+
+def test_every_materialized_v3_bundle_decodes_and_hydrates_round_trip() -> None:
+    prepared, resolved, _, envelope, transport = _contract()
+    decoded = _EXECUTION_INPUT_CATALOG.read(canonical_bytes(envelope))
+    assert decoded.envelope == envelope
+    outcome = _hydrate(envelope, transport, prepared, resolved)
+    assert outcome.failure is None
+    assert outcome.result is not None
 
 
 def test_v3_replays_embedded_preparation_against_decoded_case_authority() -> None:
