@@ -1,7 +1,7 @@
 ---
 id: G12CD-TUSHARE-CN-A-SHARE-DAILY-PUBLICATION-V2
-readiness: READY
-gate_status: READY
+readiness: PASSED
+gate_status: PASSED
 owner: market-bundle-builder internal Tushare catalog-bound daily publication
 produces:
   - one acquisition-time current-metadata InstrumentCatalog for 000001.SZ
@@ -20,10 +20,25 @@ fan_out: [G12K]
 
 ## Status
 
-`READY`. This plan freezes one additive test-first slice. Production and RED tests
-are not implemented by this plan commit. The accepted v1 normalizer, v1 projection,
-fixtures, hashes, signatures, G12C/D seams, package roots, and shared plan registries
-remain unchanged.
+`PASSED` at immutable source
+`590901802915df79d69d9bd85f00bb6c3290f5a3`. The accepted v1 normalizer, v1
+projection, fixtures, hashes, signatures, G12C/D seams, package roots, and public
+surfaces remain unchanged.
+
+Acceptance closure:
+
+- RED: `33fb8230533954c1439ca4a100963473e0088f92`;
+- implementation: `2f921eccd25ce18ca934021311146a0b6134d69e`;
+- authority hardening: `5c287808e5b60170dfde5b146f6fb554239eae07`;
+- final source: `590901802915df79d69d9bd85f00bb6c3290f5a3`;
+- fixture: `sha256:d71ca8ed8977bf5fa0aa7cd1ab11fb85abcd5382f42c7e2bb2243d5b5290e456`;
+- catalog: `sha256:99df0de0dc3008cf557bb7634caf483fae27488c75016421218100df6a77a6cc`;
+- Event: `sha256:8ed74f580aef1b14b8ee43d55c537f8db4b5734b4b6740f3a0f5b7c36cd78015`;
+- manifest: `sha256:1bb2541e2131bd71d5a08cb82581fb5d035a9880ccb7fc62e5f660a0287ab6e5`;
+- focused validation: 111 passed; broad validation: 346 passed;
+- full repository: 2066 passed; import boundaries: 118 files passed;
+- Pyright, Ruff, LSP/lens, compile, lock, diff, gitleaks, and clean-worktree checks: passed;
+- independent contract, canonical-security, authority/nonclaim, boundary, and final reviews: no blocker/high findings.
 
 This slice narrows one G12K prerequisite by binding a real canonical catalog body
 and hash to a new manifest. It does **not** make G12K ready: the Domain catalog has
