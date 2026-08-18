@@ -2,9 +2,9 @@
 
 ## Decision status
 
-G12H remains **DRAFT / BLOCKED**. The G08H composition request grounds the candidate historical-rule dimensions, but the repository still does not contain exact G12C rule-event authority from which a Builder-consumable normalized projection can be frozen without invention.
+G12H remains **DRAFT / BLOCKED**, but its source-publication prerequisite is now closed. `G12CD-CN-A-SHARE-DEVELOPMENT-RULE-AUTHORITIES-V1` PASSED at `832f53a74d3f74436ecae8672bd1c0dd3530c814`, losslessly binding the five G08H development authorities to one immutable G12C/D Bundle.
 
-This note records the blocker; it does not authorize the G12H validator, Runtime integration, decision-grade use, or deployment.
+This note does not authorize the G12H validator, provider completeness, Runtime integration, decision-grade use, or deployment. The remaining work is to freeze G12H's own declaration/report/failure contract and RED matrix against that Bundle.
 
 ## Grounded prerequisite evidence
 
@@ -28,31 +28,31 @@ The G08 typed authorities also ground the evidence that a later normalized proje
 
 A truthful declaration must bind the resolved G08H market profile key/version/digest, `canonical_sha256(component_manifest)`, the ordered five dimensions above, the exact G08H timeline target, normalized schema/source identities, explicit fail-closed empty semantics, source-manifest identity, fixed development-only qualification flags, and constructor-recomputed hashes.
 
-## Remaining exact blockers
+## Closed prerequisite blockers
 
-### 1. No authoritative G12C rule-event projection
+### 1. Exact G12C/D rule-event projection
 
-G12C freezes generic `MarketEvent` and Bundle structure, but no PASSED fixture defines A-share rule stream keys, event types, capabilities, payload schemas, revision identities, or the mapping from the five typed G08 authorities into those events. Existing A-share support emits account financial events only. Choosing those missing values here would invent the source contract that G12H is meant to validate.
+The PASSED prerequisite now freezes five providerless development streams, exact event types/capability, revision and canonical-body identities, immutable G08H profile/manifest binding, target coverage, availability, and false qualification flags. Builder production code imports neither Runtime nor Trading Kernel.
 
-### 2. The proposed interval/source-only shape loses typed applicability
+### 2. Typed applicability remains lossless
 
-A normalized band containing only time bounds and source refs is not parity-complete:
+The publication embeds each complete canonical G08 authority body rather than flattening it to interval/source-only rows:
 
 - G08D order bands are selected by Venue **and board**, and use `date` bounds interpreted in the A-share local trading-date domain.
 - G08E market-fee bands preserve three independently sourced fee classes; flattening them into one undifferentiated source tuple loses exact source identity.
 - The frozen Calendar has no generic `source_ref`; its immutable identity is the calendar body/hash.
 
-Without frozen applicability and evidence fields, valid parallel bands would appear as overlaps and source mismatches could be hidden. Adding a generic discriminator or payload DSL would be a new rule model and is not authorized.
+The fixed five-dimension declaration and complete canonical bodies preserve these applicability/evidence fields without adding a generic discriminator, payload DSL, or second rule model.
 
-### 3. Coverage-target and Bundle binding are not frozen together
+### 3. Coverage target and Bundle binding
 
-The resolved G08H fixture has a finite `TimelineWindow`, while a G12C Bundle independently has manifest coverage. No PASSED artifact binds one exact G08H resolved-profile digest/component manifest and the five typed projections to one exact G12C Bundle manifest/event set. A declaration hash created before that binding would certify test-authored values rather than existing immutable source authority.
+The PASSED declaration binds the exact G08H profile request, market-profile digest, component-manifest hash, source-manifest hash, timeline target, availability instant, five intrinsic authority hashes, and five canonical body hashes to one exact G12C/D manifest/event set.
 
 ## Readiness verdict
 
-The smallest grounded prerequisite is now identified, but it cannot yet be implemented exactly. G12H therefore remains **BLOCKED**. No production contract, static normalized fixture, parity mapper, RED validator tests, public export, or Builder code is added.
+The smallest grounded prerequisite is PASSED. G12H still remains **BLOCKED** because its analyzer contract is not frozen. The next readiness slice must define one exact Builder-owned declaration, atomic report/failure shapes, interval/applicability semantics, deterministic precedence, and RED fixtures against the accepted manifest/events.
 
-To become READY, a preceding source-contract freeze must provide one immutable A-share G12C rule Bundle whose five stream/event payload schemas are direct lossless projections of the G08 typed authorities, including applicability keys and source evidence. Test-only Kernel parity can then prove exact reconstruction without any production Builder import of Runtime or Trading Kernel.
+No provider truth, generic rule model, Runtime boot path, public Builder root export, decision-grade claim, or deployment authority follows from the prerequisite publication.
 
 ## Provisional downstream outcome
 

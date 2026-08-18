@@ -1,7 +1,7 @@
 ---
 id: G12CD-CN-A-SHARE-DEVELOPMENT-RULE-AUTHORITIES-V1
-readiness: READY
-gate_status: READY
+readiness: PASSED
+gate_status: PASSED
 owner: market-bundle-builder internal A-share development rule publication
 produces:
   - five development-only MarketEvents preserving the frozen G08H rule authorities
@@ -19,14 +19,14 @@ fan_out: [G12H]
 
 ## Status
 
-`READY`. This is the smallest prerequisite for G12H: freeze one exact,
+`PASSED` at immutable source revision
+`832f53a74d3f74436ecae8672bd1c0dd3530c814`. This prerequisite freezes one exact,
 development-only G12C/D publication of the five rule authorities already accepted
 by G08H. It does not claim provider truth, historical external completeness,
 G12H coverage qualification, decision grade, live use, or deployment authority.
 
-The user instruction to continue authorizes implementation only at the internal
-seam below. G08H production modules, G12C/D APIs, Builder root exports, and all
-previously PASSED fixtures remain unchanged.
+G08H production modules, G12C/D APIs, Builder root exports, and all previously
+PASSED fixtures remain unchanged.
 
 ## Single internal seam
 
@@ -186,9 +186,21 @@ uv run --locked python tools/architecture/check_import_boundaries.py \
   --report build/acceptance/g12cd-cn-a-share-rule-authorities-import-boundaries.json
 ```
 
-Acceptance additionally requires full repository tests, clean LSP/lens/secret
-checks, immutable event/stream/manifest/retention hashes, clean detached-worktree
-replay, and independent review `NONE`.
+Acceptance closure:
+
+- contract: `64e656815079a0da0cd91cd5fa67c59be68d30f7`;
+- RED: `b87cfc236b888f62bb55f94c8b70a3f850742caf`;
+- immutable source: `832f53a74d3f74436ecae8672bd1c0dd3530c814`;
+- declaration hash: `sha256:6e0c60a75e957467a5cfe1b4e2bbbb786c463747ae96adf059c54ecef4a1b7b6`;
+- clean focused acceptance: 19 passed;
+- broad G08H/G12C/D/publication: 76 passed;
+- full repository: 1862 passed;
+- import boundaries: 114 files passed;
+- lock, diff, LSP, lens, and secret checks: clean;
+- independent review: `NONE` (`18a64a7a`);
+- manifest content hash: `sha256:6a5850c53f6b484f6cf52eb035f6439a853e2f74400bf765e5215991bb6d6818`;
+- manifest hash: `sha256:d85f6a85f7977a2096d1a26fe33a3892640bd27dc28e49b3e6b379650ab984c8`;
+- retention proof: `sha256:5ab9f8c8bab3dbdd144753157945ee16daa818058bca57e1ac82039fc97bad08`.
 
 ## Explicit non-goals
 

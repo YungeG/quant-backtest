@@ -154,7 +154,7 @@ artifact_hashes: []
 | G12B | PASSED | market-bundle-builder | G12A, G02 | Normalization fixtures |
 | G12B-TUSHARE-CN-A-SHARE-DAILY-V1 | PASSED — immutable commit `373817b762fbe0d68b286577e0396107694cc9a1` | market-bundle-builder internal Tushare normalization | G12A, G12B, G12G, frozen Tushare event-time/numeric evidence | none; G12C/D and provider closure remain separate |
 | G12CD-TUSHARE-CN-A-SHARE-DAILY-PUBLICATION-V1 | PASSED — immutable source `7400cad6531b2687ffb150959cbf534c6797359e` | market-bundle-builder internal Tushare daily projection | G12B-TUSHARE-CN-A-SHARE-DAILY-V1, G12C, G12D | none; G12L/listing, revision, corporate-action, G12I/K/M, and deployment remain BLOCKED |
-| G12CD-CN-A-SHARE-DEVELOPMENT-RULE-AUTHORITIES-V1 | READY | market-bundle-builder internal A-share rule projection | G08H, G12C, G12D | none for implementation; provider/G12H/decision/deployment qualification fixed false |
+| G12CD-CN-A-SHARE-DEVELOPMENT-RULE-AUTHORITIES-V1 | PASSED — immutable source `832f53a74d3f74436ecae8672bd1c0dd3530c814` | market-bundle-builder internal A-share rule projection | G08H, G12C, G12D | none; provider/G12H/decision/deployment qualification fixed false |
 | G12C | PASSED | market-bundle-builder | G12B | Manifest/validation fixtures |
 | G12D | PASSED | market-bundle-builder + market-data-contracts | G12C | none |
 | G12E | PASSED | market-data-contracts | G12D, WP-06A | none |
