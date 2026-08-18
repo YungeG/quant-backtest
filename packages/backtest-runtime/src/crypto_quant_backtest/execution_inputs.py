@@ -102,7 +102,7 @@ from .multi_resolution_preparation import (
     _bundle_ref as _rebuild_market_bundle_ref_v3,
     _event as _rebuild_market_event_v3,
     _manifest as _rebuild_market_bundle_manifest_v3,
-    prepare_multi_resolution_market_data_v1,
+    _prepare_multi_resolution_market_data_from_retained_v1,
 )
 from .observation_windows import BarDefinitionRef
 from .observations import ObservationPurposeRef, ObservationQuery
@@ -3319,8 +3319,119 @@ def _preparation_replay_positions(
     return None, None, None
 
 
-def _hydrate_execution_inputs_v3(
+def _read_execution_inputs_v3(
     reader: ArtifactEnvelopeReader,
+    request: BacktestExecutionRequest,
+    *,
+    recorder: BoundedPerformanceRecorder | None = None,
+) -> tuple[_DecodedExecutionInputBundleV3 | None, _ExecutionInputsHydrationFailureV3 | None]:
+    if recorder is not None and type(recorder) is not BoundedPerformanceRecorder:
+        return None, _ExecutionInputsHydrationFailureV3(
+            _ExecutionInputsHydrationFailureCodeV3.MALFORMED_EXECUTION_REQUEST
+        )
+    try:
+        request_schema_version, ref = _rebuild_execution_request_v3(request)
+    except Exception:
+        return None, _ExecutionInputsHydrationFailureV3(
+            _ExecutionInputsHydrationFailureCodeV3.MALFORMED_EXECUTION_REQUEST
+        )
+    if (
+        request_schema_version != _V3_SCHEMA_VERSION
+        or ref.artifact_type != _ARTIFACT_TYPE
+        or ref.schema_version != _V3_SCHEMA_VERSION
+    ):
+        return None, _ExecutionInputsHydrationFailureV3(
+            _ExecutionInputsHydrationFailureCodeV3.WRONG_EXECUTION_INPUT_BUNDLE_REF
+        )
+    try:
+        public_request = _rebuild_backtest_request_v3(request.request)
+    except Exception:
+        return None, _ExecutionInputsHydrationFailureV3(
+            _ExecutionInputsHydrationFailureCodeV3.MALFORMED_EXECUTION_REQUEST
+        )
+    try:
+        source = reader.read(ref=ref)
+    except Exception as error:
+        return None, _ExecutionInputsHydrationFailureV3(
+            _ExecutionInputsHydrationFailureCodeV3.EXECUTION_INPUT_TAMPERED
+            if isinstance(error, ArtifactIntegrityError)
+            else _ExecutionInputsHydrationFailureCodeV3.EXECUTION_INPUT_UNAVAILABLE
+        )
+    if type(source) is not ArtifactReadResult:
+        return None, _ExecutionInputsHydrationFailureV3(
+            _ExecutionInputsHydrationFailureCodeV3.EXECUTION_INPUT_UNAVAILABLE
+        )
+    try:
+        source_valid = (
+            source.source_bytes == canonical_bytes(source.envelope)
+            and source.source_hash == canonical_sha256(source.envelope)
+            and ArtifactRef.from_envelope(source.envelope) == ref
+        )
+    except Exception:
+        source_valid = False
+    if not source_valid:
+        return None, _ExecutionInputsHydrationFailureV3(
+            _ExecutionInputsHydrationFailureCodeV3.EXECUTION_INPUT_TAMPERED
+        )
+
+    hydrate_started = _start_v3(recorder)
+    try:
+        decoded = _EXECUTION_INPUT_CATALOG.read(source.source_bytes)
+    except Exception as error:
+        _record_v3(
+            recorder,
+            PerformanceOperation.HYDRATE_INPUTS,
+            PerformanceOutcome.FAILED,
+            hydrate_started,
+            0,
+            0,
+        )
+        return None, _ExecutionInputsHydrationFailureV3(
+            _ExecutionInputsHydrationFailureCodeV3.EXECUTION_INPUT_TAMPERED
+            if isinstance(
+                error,
+                (
+                    ArtifactIntegrityError,
+                    UnknownArtifactTypeError,
+                    UnsupportedSchemaVersionError,
+                ),
+            )
+            else _ExecutionInputsHydrationFailureCodeV3.EXECUTION_INPUT_DECODE_FAILED
+        )
+    bundle = decoded.artifact
+    if (
+        decoded.envelope != source.envelope
+        or type(bundle) is not _DecodedExecutionInputBundleV3
+    ):
+        _record_v3(
+            recorder,
+            PerformanceOperation.HYDRATE_INPUTS,
+            PerformanceOutcome.FAILED,
+            hydrate_started,
+            0,
+            0,
+        )
+        return None, _ExecutionInputsHydrationFailureV3(
+            _ExecutionInputsHydrationFailureCodeV3.EXECUTION_INPUT_DECODE_FAILED
+        )
+    binding_count = _observation_binding_count_v3(bundle.market_data_preparation)
+    _record_v3(
+        recorder,
+        PerformanceOperation.HYDRATE_INPUTS,
+        PerformanceOutcome.SUCCEEDED,
+        hydrate_started,
+        binding_count,
+        binding_count,
+    )
+    if bundle.request_hash != public_request.request_hash:
+        return None, _ExecutionInputsHydrationFailureV3(
+            _ExecutionInputsHydrationFailureCodeV3.REQUEST_BINDING_MISMATCH
+        )
+    return bundle, None
+
+
+def _hydrate_execution_inputs_v3_from_decoded(
+    bundle: _DecodedExecutionInputBundleV3,
     request: BacktestExecutionRequest,
     *,
     market_reader: MarketBundleReader,
@@ -3349,92 +3460,22 @@ def _hydrate_execution_inputs_v3(
     try:
         public_request = _rebuild_backtest_request_v3(request.request)
         resolved = _rebuild_resolved_request_v3(resolved_request)
+        if type(bundle) is not _DecodedExecutionInputBundleV3:
+            raise TypeError("bundle must be exact decoded v3 execution inputs")
         if type(prepared_market_data) is not PreparedMultiResolutionMarketData:
             raise TypeError(
                 "prepared_market_data must be exact PreparedMultiResolutionMarketData"
             )
-        original_verified_reader = prepared_market_data.verified_reader
-        if market_reader is not original_verified_reader:
+        if market_reader is not prepared_market_data.verified_reader:
             raise ValueError("market_reader must be the retained verified Reader")
-        prepared = _rebuild_prepared_market_data_v3(prepared_market_data)
+        prepared = prepared_market_data
         verified_reader = prepared.verified_reader
     except Exception:
         return _failure_v3(
             _ExecutionInputsHydrationFailureCodeV3.MALFORMED_EXECUTION_REQUEST
         )
 
-    try:
-        source = reader.read(ref=ref)
-    except Exception as error:
-        return _failure_v3(
-            _ExecutionInputsHydrationFailureCodeV3.EXECUTION_INPUT_TAMPERED
-            if isinstance(error, ArtifactIntegrityError)
-            else _ExecutionInputsHydrationFailureCodeV3.EXECUTION_INPUT_UNAVAILABLE
-        )
-    if type(source) is not ArtifactReadResult:
-        return _failure_v3(
-            _ExecutionInputsHydrationFailureCodeV3.EXECUTION_INPUT_UNAVAILABLE
-        )
-    try:
-        source_valid = (
-            source.source_bytes == canonical_bytes(source.envelope)
-            and source.source_hash == canonical_sha256(source.envelope)
-            and ArtifactRef.from_envelope(source.envelope) == ref
-        )
-    except Exception:
-        source_valid = False
-    if not source_valid:
-        return _failure_v3(
-            _ExecutionInputsHydrationFailureCodeV3.EXECUTION_INPUT_TAMPERED
-        )
-
-    hydrate_started = _start_v3(recorder)
-    try:
-        decoded = _EXECUTION_INPUT_CATALOG.read(source.source_bytes)
-    except Exception as error:
-        _record_v3(
-            recorder,
-            PerformanceOperation.HYDRATE_INPUTS,
-            PerformanceOutcome.FAILED,
-            hydrate_started,
-            0,
-            0,
-        )
-        return _failure_v3(
-            _ExecutionInputsHydrationFailureCodeV3.EXECUTION_INPUT_TAMPERED
-            if isinstance(
-                error,
-                (
-                    ArtifactIntegrityError,
-                    UnknownArtifactTypeError,
-                    UnsupportedSchemaVersionError,
-                ),
-            )
-            else _ExecutionInputsHydrationFailureCodeV3.EXECUTION_INPUT_DECODE_FAILED
-        )
-    bundle = decoded.artifact
-    if decoded.envelope != source.envelope or type(bundle) is not _DecodedExecutionInputBundleV3:
-        _record_v3(
-            recorder,
-            PerformanceOperation.HYDRATE_INPUTS,
-            PerformanceOutcome.FAILED,
-            hydrate_started,
-            0,
-            0,
-        )
-        return _failure_v3(
-            _ExecutionInputsHydrationFailureCodeV3.EXECUTION_INPUT_DECODE_FAILED
-        )
     binding_count = _observation_binding_count_v3(bundle.market_data_preparation)
-    _record_v3(
-        recorder,
-        PerformanceOperation.HYDRATE_INPUTS,
-        PerformanceOutcome.SUCCEEDED,
-        hydrate_started,
-        binding_count,
-        binding_count,
-    )
-
     if (
         bundle.request_hash != public_request.request_hash
         or resolved.request != public_request
@@ -3571,7 +3612,7 @@ def _hydrate_execution_inputs_v3(
             snapshot_plan=plan.snapshot_plan,
             target_stream=target_stream,
         )
-        replayed_preparation = prepare_multi_resolution_market_data_v1(
+        replayed_preparation = _prepare_multi_resolution_market_data_from_retained_v1(
             expected_bundle_ref=public_request.market_bundle_ref,
             reader=prepared.verified_reader,
             schedule=bundle.market_data_preparation.decision_schedule,
@@ -3640,6 +3681,63 @@ def _hydrate_execution_inputs_v3(
         )
     )
 
+
+def _hydrate_execution_inputs_v3(
+    reader: ArtifactEnvelopeReader,
+    request: BacktestExecutionRequest,
+    *,
+    market_reader: MarketBundleReader,
+    resolved_request: ResolvedBacktestRequest,
+    prepared_market_data: PreparedMultiResolutionMarketData,
+    recorder: BoundedPerformanceRecorder | None = None,
+) -> _ExecutionInputsHydrationOutcomeV3:
+    if recorder is not None and type(recorder) is not BoundedPerformanceRecorder:
+        return _failure_v3(
+            _ExecutionInputsHydrationFailureCodeV3.MALFORMED_EXECUTION_REQUEST
+        )
+    try:
+        request_schema_version, ref = _rebuild_execution_request_v3(request)
+    except Exception:
+        return _failure_v3(
+            _ExecutionInputsHydrationFailureCodeV3.MALFORMED_EXECUTION_REQUEST
+        )
+    if (
+        request_schema_version != _V3_SCHEMA_VERSION
+        or ref.artifact_type != _ARTIFACT_TYPE
+        or ref.schema_version != _V3_SCHEMA_VERSION
+    ):
+        return _failure_v3(
+            _ExecutionInputsHydrationFailureCodeV3.WRONG_EXECUTION_INPUT_BUNDLE_REF
+        )
+    try:
+        _rebuild_backtest_request_v3(request.request)
+        _rebuild_resolved_request_v3(resolved_request)
+        if type(prepared_market_data) is not PreparedMultiResolutionMarketData:
+            raise TypeError(
+                "prepared_market_data must be exact PreparedMultiResolutionMarketData"
+            )
+        if market_reader is not prepared_market_data.verified_reader:
+            raise ValueError("market_reader must be the retained verified Reader")
+        _rebuild_prepared_market_data_v3(prepared_market_data)
+    except Exception:
+        return _failure_v3(
+            _ExecutionInputsHydrationFailureCodeV3.MALFORMED_EXECUTION_REQUEST
+        )
+    bundle, failure = _read_execution_inputs_v3(reader, request, recorder=recorder)
+    if failure is not None:
+        return _ExecutionInputsHydrationOutcomeV3(failure=failure)
+    if bundle is None:
+        return _failure_v3(
+            _ExecutionInputsHydrationFailureCodeV3.EXECUTION_INPUT_DECODE_FAILED
+        )
+    return _hydrate_execution_inputs_v3_from_decoded(
+        bundle,
+        request,
+        market_reader=market_reader,
+        resolved_request=resolved_request,
+        prepared_market_data=prepared_market_data,
+        recorder=recorder,
+    )
 
 def _failure(
     code: _ExecutionInputsHydrationFailureCode, message: str

@@ -5,6 +5,7 @@ from __future__ import annotations
 from collections.abc import Mapping
 from pathlib import Path, PurePosixPath
 import re
+from typing import NoReturn
 
 from crypto_quant_domain import (
     ArtifactEnvelope,
@@ -12,23 +13,37 @@ from crypto_quant_domain import (
     canonical_bytes,
     canonical_sha256,
 )
-from crypto_quant_market_data import MarketBundleReader
+from crypto_quant_market_data import InputValidationFailure, MarketBundleReader
 
 from .artifact_envelope_publisher import ArtifactEnvelopePublisher
 from .artifact_envelope_reader import ArtifactEnvelopeReader
+from .composition import _HydratedExecutionCaseInputs, _compose_execution_case_v3
 from .engine import EngineCancellationRequest, ResolvedExecutionCase
 from .evidence import AttemptEvidenceWriter, FinalizedAttemptEvidence
 from .evidence_repository import BacktestEvidenceRepository
 from .execution_hash import AttemptExecutionHash, ExecutionResultHasher
-from .execution_inputs import BacktestExecutionRequest, _hydrate_execution_inputs
+from .execution_inputs import (
+    BacktestExecutionRequest,
+    _ExecutionInputsHydrationFailureV3,
+    _hydrate_execution_inputs,
+    _hydrate_execution_inputs_v3_from_decoded,
+    _read_execution_inputs_v3,
+)
 from .integrity import (
     CanonicalResultPublisher,
     DeterministicRebuildEvidence,
     EngineExecutionContext,
     IntegrityTraceLevel,
 )
+from .multi_resolution_preparation import (
+    MarketDataCaseAuthority,
+    MultiResolutionMarketDataPreparation,
+    _capture_market_bundle_reader_v1,
+    _prepare_multi_resolution_market_data_from_retained_v1,
+)
 from .publication_refs import BacktestCanonicalPublicationRef
 from .resolution import BacktestProfileRegistry, ProfileResolver, ResolvedBacktestRequest
+from .target_stream import PrecomputedTargetStream
 from .runner import (
     AttemptExecutionRecord,
     AttemptIdentity,
@@ -98,20 +113,24 @@ class BacktestRuntime:
         *,
         cancellation: EngineCancellationRequest | None,
     ) -> BacktestCanonicalPublicationRef | ArtifactRef:
+        if type(request) is BacktestExecutionRequest and request.schema_version == 3:
+            return self._run_v3(request, cancellation=cancellation)
+        return self._run_legacy(request, cancellation=cancellation)
+
+    def _run_legacy(
+        self,
+        request: BacktestExecutionRequest,
+        *,
+        cancellation: EngineCancellationRequest | None,
+    ) -> BacktestCanonicalPublicationRef | ArtifactRef:
         hydrated = self._hydrate(request)
-        resolution = ProfileResolver().resolve(
-            request=request.request,
-            registry=self._registry,
+        resolution = self._resolve(
+            request,
             market_bundle_manifest=self._market_reader.manifest,
             build_artifact_manifest=hydrated.build_artifact_manifest,
         )
         if resolution.failure is not None:
-            envelope = ArtifactEnvelope.create(
-                "backtest_resolution_failure",
-                1,
-                resolution.failure,
-            )
-            return self._put_verified(envelope)
+            return self._publish_resolution_failure(resolution.failure)
         resolved = resolution.resolved
         if resolved is None:
             raise RuntimeError("Backtest request resolution returned no result")
@@ -119,11 +138,120 @@ class BacktestRuntime:
         execution_case = self._hydrate(request, resolved).execution_case
         if execution_case is None:
             raise RuntimeError("execution input bundle is not executable")
+        return self._execute_case(
+            resolved,
+            execution_case,
+            cancellation=cancellation,
+            market_data_preparation=None,
+        )
+
+    def _run_v3(
+        self,
+        request: BacktestExecutionRequest,
+        *,
+        cancellation: EngineCancellationRequest | None,
+    ) -> BacktestCanonicalPublicationRef | ArtifactRef:
+        bundle, failure = _read_execution_inputs_v3(
+            self._artifact_reader,
+            request,
+        )
+        if failure is not None or bundle is None:
+            self._raise_v3_hydration_failure(failure)
+        retained_reader = _capture_market_bundle_reader_v1(
+            request.request.market_bundle_ref,
+            self._market_reader,
+        )
+        if retained_reader is None:
+            raise RuntimeError(
+                "execution input hydration failed: prepared_market_data_replay_mismatch"
+            )
+        resolution = self._resolve(
+            request,
+            market_bundle_manifest=retained_reader.manifest,
+            build_artifact_manifest=bundle.build_artifact_manifest,
+        )
+        if resolution.failure is not None:
+            return self._publish_resolution_failure(resolution.failure)
+        resolved = resolution.resolved
+        if resolved is None:
+            raise RuntimeError("Backtest request resolution returned no result")
+
+        target_stream = self._target_stream_v3(bundle, retained_reader)
+        plan = bundle.execution_case_plan
+        authority = MarketDataCaseAuthority(
+            decision_cycles=plan.decision_cycles,
+            bar_executions=plan.bar_executions,
+            execution_model=plan.execution_model,
+            snapshot_plan=plan.snapshot_plan,
+            target_stream=target_stream,
+        )
+        embedded = bundle.market_data_preparation
+        preparation_outcome = _prepare_multi_resolution_market_data_from_retained_v1(
+            expected_bundle_ref=request.request.market_bundle_ref,
+            reader=retained_reader,
+            schedule=embedded.decision_schedule,
+            signal_binding_candidates=embedded.bindings.signal_bindings,
+            execution_binding_candidates=embedded.bindings.execution_bindings,
+            valuation_binding_candidates=embedded.bindings.valuation_bindings,
+            signal_lineages=embedded.signal_lineages,
+            case_authority=authority,
+            resolved_request=resolved,
+        )
+        prepared = preparation_outcome.prepared
+        if prepared is None:
+            raise RuntimeError(
+                "execution input hydration failed: prepared_market_data_replay_mismatch"
+            )
+        hydrated = _hydrate_execution_inputs_v3_from_decoded(
+            bundle,
+            request,
+            market_reader=retained_reader,
+            resolved_request=resolved,
+            prepared_market_data=prepared,
+        )
+        if hydrated.failure is not None or hydrated.result is None:
+            self._raise_v3_hydration_failure(hydrated.failure)
+        values = hydrated.result
+        execution_case = _compose_execution_case_v3(
+            resolved_request=resolved,
+            market_reader=retained_reader,
+            hydrated_inputs=_HydratedExecutionCaseInputs(
+                values.execution_case_semantic_spec,
+                values.timeline_stream_keys,
+                values.target_stream,
+                values.timeline_batch_size,
+                values.execution_case_plan,
+            ),
+            market_data_preparation=values.market_data_preparation,
+        )
+        return self._execute_case(
+            resolved,
+            execution_case,
+            cancellation=cancellation,
+            market_data_preparation=prepared.preparation,
+        )
+
+    def _execute_case(
+        self,
+        resolved: ResolvedBacktestRequest,
+        execution_case: ResolvedExecutionCase,
+        *,
+        cancellation: EngineCancellationRequest | None,
+        market_data_preparation: MultiResolutionMarketDataPreparation | None,
+    ) -> BacktestCanonicalPublicationRef | ArtifactRef:
+        input_origin = self._input_origin(resolved)
+        runner = AuditableBacktestRunner.for_v2(publication_root=self._publication_root)
+        if market_data_preparation is not None:
+            runner._verify_v3_contract(
+                resolved_request=resolved,
+                execution_case=execution_case,
+                input_origin=input_origin,
+                market_data_preparation=market_data_preparation,
+            )
 
         terminal_ref = self._existing_terminal_ref(resolved)
         if terminal_ref is not None:
             return terminal_ref
-        input_origin = self._input_origin(resolved)
         if cancellation is not None:
             canonical_directory = (
                 self._publication_root
@@ -140,14 +268,23 @@ class BacktestRuntime:
                 )
                 raise RuntimeError("completed semantic run cannot be cancelled")
 
-        runner = AuditableBacktestRunner.for_v2(publication_root=self._publication_root)
-        first = runner.execute(
-            resolved_request=resolved,
-            execution_case=execution_case,
-            attempt=AttemptIdentity.first(resolved.semantic_run_id),
-            input_origin=input_origin,
-            cancellation=cancellation,
-        )
+        attempt = AttemptIdentity.first(resolved.semantic_run_id)
+        if market_data_preparation is None:
+            first = runner.execute(
+                resolved_request=resolved,
+                execution_case=execution_case,
+                attempt=attempt,
+                input_origin=input_origin,
+                cancellation=cancellation,
+            )
+        else:
+            first = runner._execute_verified(
+                resolved_request=resolved,
+                execution_case=execution_case,
+                attempt=attempt,
+                input_origin=input_origin,
+                cancellation=cancellation,
+            )
         cached = self._cache_ref(first)
         if cached is not None:
             return cached
@@ -162,14 +299,24 @@ class BacktestRuntime:
             first_evidence,
         )
 
-        second = runner.retry_from_start(
-            previous=first,
-            resolved_request=resolved,
-            execution_case=execution_case,
-            next_attempt_ordinal=2,
-            input_origin=input_origin,
-            cancellation=cancellation,
-        )
+        if market_data_preparation is None:
+            second = runner.retry_from_start(
+                previous=first,
+                resolved_request=resolved,
+                execution_case=execution_case,
+                next_attempt_ordinal=2,
+                input_origin=input_origin,
+                cancellation=cancellation,
+            )
+        else:
+            second = runner._retry_from_start_verified(
+                previous=first,
+                resolved_request=resolved,
+                execution_case=execution_case,
+                next_attempt_ordinal=2,
+                input_origin=input_origin,
+                cancellation=cancellation,
+            )
         cached = self._cache_ref(second)
         if cached is not None:
             return cached
@@ -188,6 +335,62 @@ class BacktestRuntime:
             (first_hash, second_hash),
             (first_evidence, second_evidence),
         )
+
+    def _resolve(
+        self,
+        request: BacktestExecutionRequest,
+        *,
+        market_bundle_manifest,
+        build_artifact_manifest,
+    ):
+        return ProfileResolver().resolve(
+            request=request.request,
+            registry=self._registry,
+            market_bundle_manifest=market_bundle_manifest,
+            build_artifact_manifest=build_artifact_manifest,
+        )
+
+    def _publish_resolution_failure(self, failure) -> ArtifactRef:
+        envelope = ArtifactEnvelope.create(
+            "backtest_resolution_failure",
+            1,
+            failure,
+        )
+        return self._put_verified(envelope)
+
+    @staticmethod
+    def _target_stream_v3(bundle, retained_reader):
+        try:
+            failure = retained_reader.validate_requirements(
+                required_streams=bundle.timeline_stream_keys
+            )
+            cursor = retained_reader.open_cursor(
+                bundle.target_stream_key,
+                batch_size=bundle.timeline_batch_size,
+            )
+            if failure is not None or isinstance(cursor, InputValidationFailure):
+                raise ValueError("target unavailable")
+            events = []
+            while not cursor.exhausted:
+                previous_position = cursor.position
+                batch, cursor = retained_reader.read_batch(cursor)
+                if not batch or cursor.position != previous_position + len(batch):
+                    raise ValueError("target cursor did not advance")
+                events.extend(batch)
+            return PrecomputedTargetStream(bundle.target_stream_key, tuple(events))
+        except Exception:
+            raise RuntimeError(
+                "execution input hydration failed: target_binding_mismatch"
+            ) from None
+
+    @staticmethod
+    def _raise_v3_hydration_failure(failure) -> NoReturn:
+        code = (
+            failure.code.value
+            if type(failure) is _ExecutionInputsHydrationFailureV3
+            else "execution_input_decode_failed"
+        )
+        raise RuntimeError(f"execution input hydration failed: {code}")
 
     def _hydrate(
         self,

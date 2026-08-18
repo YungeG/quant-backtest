@@ -18,7 +18,10 @@ from crypto_quant_domain import ArtifactEnvelope, canonical_bytes, canonical_sha
 from crypto_quant_market_data import InputValidationFailure
 
 from ._publication import RunPublicationLock, verify_read_only
-from .composition import ExecutionCaseComposer
+from .composition import (
+    ExecutionCaseComposer,
+    _execution_case_semantic_spec_from_case_v3,
+)
 from .engine import (
     DeterministicBarEngine,
     EngineCancellation,
@@ -29,6 +32,7 @@ from .engine import (
     EngineFailureCode,
     ResolvedExecutionCase,
 )
+from .multi_resolution_preparation import MultiResolutionMarketDataPreparation
 from .resolution import ResolvedBacktestRequest, StrategyFamily
 
 
@@ -955,6 +959,23 @@ class AuditableBacktestRunner:
                 execution_case.case_hash,
                 contract_issue,
             )
+        return self._execute_verified(
+            resolved_request=resolved_request,
+            execution_case=execution_case,
+            attempt=attempt,
+            input_origin=input_origin,
+            cancellation=cancellation,
+        )
+
+    def _execute_verified(
+        self,
+        *,
+        resolved_request: ResolvedBacktestRequest,
+        execution_case: ResolvedExecutionCase,
+        attempt: AttemptIdentity,
+        input_origin: InputOrigin,
+        cancellation: EngineCancellationRequest | None,
+    ) -> AttemptExecutionRecord:
         if self._publication_root is None:
             return self._failed_record(
                 attempt,
@@ -1120,6 +1141,41 @@ class AuditableBacktestRunner:
             cancellation=cancellation,
         )
 
+    def _retry_from_start_verified(
+        self,
+        *,
+        previous: AttemptExecutionRecord,
+        resolved_request: ResolvedBacktestRequest,
+        execution_case: ResolvedExecutionCase,
+        next_attempt_ordinal: int,
+        input_origin: InputOrigin,
+        cancellation: EngineCancellationRequest | None = None,
+    ) -> AttemptExecutionRecord:
+        if not isinstance(previous, AttemptExecutionRecord):
+            raise TypeError("previous must be AttemptExecutionRecord")
+        if previous.cache_hit is not None:
+            return previous
+        if previous.resolved_request.semantic_run_id != resolved_request.semantic_run_id:
+            raise ValueError("retry must remain in the previous Semantic Run")
+        if canonical_sha256(previous.resolved_request) != canonical_sha256(
+            resolved_request
+        ):
+            raise ValueError("retry must reuse the same resolved request")
+        if previous.execution_case_hash != execution_case.case_hash:
+            raise ValueError("retry must reuse the same initial execution case")
+        if previous.input_origin is not input_origin:
+            raise ValueError("retry must preserve InputOrigin")
+        attempt = AttemptIdentity.retry(
+            previous.attempt, next_ordinal=next_attempt_ordinal
+        )
+        return self._execute_verified(
+            resolved_request=resolved_request,
+            execution_case=execution_case,
+            attempt=attempt,
+            input_origin=input_origin,
+            cancellation=cancellation,
+        )
+
     def _map_outcome(
         self,
         resolved_request: ResolvedBacktestRequest,
@@ -1262,6 +1318,67 @@ class AuditableBacktestRunner:
                 cancellation,
             )
         )
+
+    @staticmethod
+    def _expected_input_origin(resolved_request: ResolvedBacktestRequest) -> InputOrigin:
+        if not isinstance(resolved_request, ResolvedBacktestRequest):
+            raise TypeError("resolved_request must be ResolvedBacktestRequest")
+        return (
+            InputOrigin.PRECOMPUTED_TARGET_STREAM
+            if resolved_request.request.strategy_family
+            is StrategyFamily.PRECOMPUTED_TARGET
+            else InputOrigin.RUNTIME_STRATEGY
+        )
+
+    @classmethod
+    def _verify_v3_contract(
+        cls,
+        *,
+        resolved_request: ResolvedBacktestRequest,
+        execution_case: ResolvedExecutionCase,
+        input_origin: InputOrigin,
+        market_data_preparation: MultiResolutionMarketDataPreparation,
+    ) -> None:
+        if type(resolved_request) is not ResolvedBacktestRequest:
+            raise TypeError("resolved_request must be exact ResolvedBacktestRequest")
+        if type(execution_case) is not ResolvedExecutionCase:
+            raise TypeError("execution_case must be exact ResolvedExecutionCase")
+        if type(input_origin) is not InputOrigin:
+            raise TypeError("input_origin must be exact InputOrigin")
+        if type(market_data_preparation) is not MultiResolutionMarketDataPreparation:
+            raise TypeError(
+                "market_data_preparation must be exact MultiResolutionMarketDataPreparation"
+            )
+        spec = execution_case.semantic_spec
+        if spec is None:
+            raise RuntimeError("execution case semantic spec mismatch")
+        try:
+            recomputed = _execution_case_semantic_spec_from_case_v3(
+                case=execution_case,
+                market_data_preparation=market_data_preparation,
+                spec_key=spec.spec_key,
+                spec_version=spec.spec_version,
+                identity_namespace=spec.identity_namespace,
+                identity_plan=spec.identity_plan,
+            )
+        except (TypeError, ValueError):
+            recomputed = None
+        request = resolved_request.request
+        if (
+            recomputed != spec
+            or request.execution_case_semantic_hash
+            != execution_case.semantic_spec_hash
+        ):
+            raise RuntimeError("execution case semantic spec mismatch")
+        manifest = execution_case.identity_manifest
+        if manifest is None or not execution_case.verify_identity_manifest(
+            resolved_request.semantic_run_id
+        ):
+            raise RuntimeError("execution case identity manifest mismatch")
+        if request.target_stream_digest != execution_case.target_stream.target_stream_digest:
+            raise RuntimeError("target stream digest mismatch")
+        if input_origin is not cls._expected_input_origin(resolved_request):
+            raise RuntimeError("input origin mismatch")
 
     @staticmethod
     def _contract_issue(

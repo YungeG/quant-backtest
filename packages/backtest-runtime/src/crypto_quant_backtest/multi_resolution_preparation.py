@@ -774,11 +774,10 @@ def _record(
         )
 
 
-def _capture_reader(
+def _capture_market_bundle_reader_v1(
     expected_bundle_ref: MarketBundleRef,
     reader: MarketBundleReader,
-    resolved_request: ResolvedBacktestRequest,
-    recorder: BoundedPerformanceRecorder | None,
+    recorder: BoundedPerformanceRecorder | None = None,
 ) -> InMemoryMarketBundleReader | None:
     start = None if recorder is None else _clock()
     try:
@@ -787,8 +786,6 @@ def _capture_reader(
         if (
             ref != MarketBundleRef.from_manifest(manifest)
             or ref != expected_bundle_ref
-            or ref != resolved_request.request.market_bundle_ref
-            or ref != resolved_request.environment.market_bundle_ref
         ):
             raise ValueError("bundle identity mismatch")
         streams: dict[str, tuple[MarketEvent, ...]] = {}
@@ -868,6 +865,25 @@ def _capture_reader(
         sum(value.event_count for value in manifest.streams),
         sum(len(value) for value in retained.streams.values()),
     )
+    return retained
+
+
+def _capture_reader(
+    expected_bundle_ref: MarketBundleRef,
+    reader: MarketBundleReader,
+    resolved_request: ResolvedBacktestRequest,
+    recorder: BoundedPerformanceRecorder | None,
+) -> InMemoryMarketBundleReader | None:
+    retained = _capture_market_bundle_reader_v1(
+        expected_bundle_ref,
+        reader,
+        recorder,
+    )
+    if retained is None or (
+        retained.bundle_ref != resolved_request.request.market_bundle_ref
+        or retained.bundle_ref != resolved_request.environment.market_bundle_ref
+    ):
+        return None
     return retained
 
 
@@ -1202,7 +1218,7 @@ def _cycle_failure(
     return None
 
 
-def prepare_multi_resolution_market_data_v1(
+def _prepare_multi_resolution_market_data_v1(
     *,
     expected_bundle_ref: MarketBundleRef,
     reader: MarketBundleReader,
@@ -1213,7 +1229,8 @@ def prepare_multi_resolution_market_data_v1(
     signal_lineages: tuple[SignalObservationLineageBinding, ...],
     case_authority: MarketDataCaseAuthority,
     resolved_request: ResolvedBacktestRequest,
-    recorder: BoundedPerformanceRecorder | None = None,
+    recorder: BoundedPerformanceRecorder | None,
+    retained_reader: InMemoryMarketBundleReader | None,
 ) -> MarketDataPreparationOutcome:
     expected_bundle_ref = _bundle_ref(expected_bundle_ref)
     schedule = _schedule(schedule)
@@ -1282,7 +1299,23 @@ def prepare_multi_resolution_market_data_v1(
     if recorder is not None and type(recorder) is not BoundedPerformanceRecorder:
         raise TypeError("recorder must be exact BoundedPerformanceRecorder or None")
 
-    retained = _capture_reader(expected_bundle_ref, reader, resolved_request, recorder)
+    if retained_reader is None:
+        retained = _capture_reader(
+            expected_bundle_ref,
+            reader,
+            resolved_request,
+            recorder,
+        )
+    else:
+        retained = retained_reader
+        if (
+            type(retained) is not InMemoryMarketBundleReader
+            or reader is not retained
+            or retained.bundle_ref != expected_bundle_ref
+            or retained.bundle_ref != resolved_request.request.market_bundle_ref
+            or retained.bundle_ref != resolved_request.environment.market_bundle_ref
+        ):
+            retained = None
     if retained is None:
         return _failure(MarketDataPreparationFailureCode.BUNDLE_READER_MISMATCH)
 
@@ -1469,4 +1502,60 @@ def prepare_multi_resolution_market_data_v1(
     return MarketDataPreparationOutcome(
         PreparedMultiResolutionMarketData(preparation, eligibility_values, retained),
         None,
+    )
+
+
+def prepare_multi_resolution_market_data_v1(
+    *,
+    expected_bundle_ref: MarketBundleRef,
+    reader: MarketBundleReader,
+    schedule: DecisionSchedule,
+    signal_binding_candidates: tuple[SignalBarBinding, ...],
+    execution_binding_candidates: tuple[ExecutionDataBinding, ...],
+    valuation_binding_candidates: tuple[ValuationDataBinding, ...],
+    signal_lineages: tuple[SignalObservationLineageBinding, ...],
+    case_authority: MarketDataCaseAuthority,
+    resolved_request: ResolvedBacktestRequest,
+    recorder: BoundedPerformanceRecorder | None = None,
+) -> MarketDataPreparationOutcome:
+    return _prepare_multi_resolution_market_data_v1(
+        expected_bundle_ref=expected_bundle_ref,
+        reader=reader,
+        schedule=schedule,
+        signal_binding_candidates=signal_binding_candidates,
+        execution_binding_candidates=execution_binding_candidates,
+        valuation_binding_candidates=valuation_binding_candidates,
+        signal_lineages=signal_lineages,
+        case_authority=case_authority,
+        resolved_request=resolved_request,
+        recorder=recorder,
+        retained_reader=None,
+    )
+
+
+def _prepare_multi_resolution_market_data_from_retained_v1(
+    *,
+    expected_bundle_ref: MarketBundleRef,
+    reader: InMemoryMarketBundleReader,
+    schedule: DecisionSchedule,
+    signal_binding_candidates: tuple[SignalBarBinding, ...],
+    execution_binding_candidates: tuple[ExecutionDataBinding, ...],
+    valuation_binding_candidates: tuple[ValuationDataBinding, ...],
+    signal_lineages: tuple[SignalObservationLineageBinding, ...],
+    case_authority: MarketDataCaseAuthority,
+    resolved_request: ResolvedBacktestRequest,
+    recorder: BoundedPerformanceRecorder | None = None,
+) -> MarketDataPreparationOutcome:
+    return _prepare_multi_resolution_market_data_v1(
+        expected_bundle_ref=expected_bundle_ref,
+        reader=reader,
+        schedule=schedule,
+        signal_binding_candidates=signal_binding_candidates,
+        execution_binding_candidates=execution_binding_candidates,
+        valuation_binding_candidates=valuation_binding_candidates,
+        signal_lineages=signal_lineages,
+        case_authority=case_authority,
+        resolved_request=resolved_request,
+        recorder=recorder,
+        retained_reader=reader,
     )

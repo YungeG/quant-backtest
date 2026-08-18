@@ -13,10 +13,12 @@ from crypto_quant_backtest import (
 )
 from crypto_quant_backtest.composition import (
     ExecutionCaseComposer,
+    _ExecutionCasePlan,
     _HydratedExecutionCaseInputs,
     _compose_execution_case_v3,
     _execution_case_semantic_spec_v3,
 )
+from crypto_quant_backtest.engine import ExecutionCaseIdentityFactory
 from crypto_quant_backtest.execution_inputs import (
     BacktestExecutionRequest,
     _hydrate_execution_inputs_v3,
@@ -36,6 +38,7 @@ from crypto_quant_domain import (
     canonical_bytes,
     canonical_sha256,
 )
+from tests.runtime.engine._fixtures import SyntheticExecutionCaseBuilder
 from tests.runtime.execution_inputs.test_multi_resolution_bundle_v3 import _contract
 from tests.runtime.resolution._fixtures import profile_registry
 
@@ -115,7 +118,34 @@ def _executable_contract():
     )
     assert outcome.resolved is not None
     resolved = outcome.resolved
-    hydrated = replace(hydrated, execution_case_semantic_spec=spec)
+    identities = ExecutionCaseIdentityFactory(
+        semantic_run_id=resolved.semantic_run_id,
+        namespace=spec.identity_namespace,
+        identity_plan=spec.identity_plan,
+    )
+    rebuilt = SyntheticExecutionCaseBuilder().build(
+        identities,
+        spec.semantic_spec_hash,
+    )
+    plan = _ExecutionCasePlan(
+        rebuilt.decision_cycles,
+        rebuilt.bar_executions,
+        rebuilt.financial_state,
+        rebuilt.financial_dispatch_plan,
+        rebuilt.execution_model,
+        hydrated.execution_case_plan.snapshot_plan,
+        rebuilt.closeout_policy,
+    )
+    assert _execution_case_semantic_spec_v3(
+        base_spec=spec,
+        execution_case_plan=plan,
+        market_data_preparation=prepared.preparation,
+    ) == spec
+    hydrated = replace(
+        hydrated,
+        execution_case_semantic_spec=spec,
+        execution_case_plan=plan,
+    )
     envelope = _materialize_execution_input_bundle_v3(
         resolved_request=resolved,
         hydrated_inputs=hydrated,
