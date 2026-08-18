@@ -30,6 +30,7 @@ from crypto_quant_domain import (
     canonical_sha256,
 )
 from crypto_quant_market_data import (
+    InMemoryMarketBundleReader,
     InputValidationFailure,
     MarketBundleCapability,
     MarketBundleReader,
@@ -98,6 +99,9 @@ from .multi_resolution_preparation import (
     MultiResolutionMarketDataPreparation,
     PreparedMultiResolutionMarketData,
     SignalObservationLineageBinding,
+    _bundle_ref as _rebuild_market_bundle_ref_v3,
+    _event as _rebuild_market_event_v3,
+    _manifest as _rebuild_market_bundle_manifest_v3,
     prepare_multi_resolution_market_data_v1,
 )
 from .observation_windows import BarDefinitionRef
@@ -2973,6 +2977,36 @@ def _rebuild_hydrated_inputs_v3(value: object) -> _HydratedExecutionCaseInputs:
     )
 
 
+def _rebuild_verified_reader_v3(
+    value: object,
+) -> InMemoryMarketBundleReader:
+    if type(value) is not InMemoryMarketBundleReader:
+        raise TypeError("verified_reader must be exact InMemoryMarketBundleReader")
+    bundle_ref = _rebuild_market_bundle_ref_v3(value.bundle_ref)
+    manifest = _rebuild_market_bundle_manifest_v3(value.manifest)
+    stream_values = value.streams
+    if not isinstance(stream_values, Mapping):
+        raise TypeError("verified_reader streams must be a mapping")
+    streams: dict[str, tuple[Any, ...]] = {}
+    for stream_key in sorted(stream_values):
+        if type(stream_key) is not str:
+            raise TypeError("verified_reader stream keys must be exact str")
+        events = stream_values[stream_key]
+        if type(events) is not tuple:
+            raise TypeError("verified_reader stream Events must be exact tuples")
+        streams[stream_key] = tuple(
+            _rebuild_market_event_v3(event) for event in events
+        )
+    rebuilt = InMemoryMarketBundleReader(bundle_ref, manifest, streams)
+    if (
+        canonical_bytes(rebuilt.bundle_ref) != canonical_bytes(value.bundle_ref)
+        or canonical_bytes(rebuilt.manifest) != canonical_bytes(value.manifest)
+        or canonical_bytes(rebuilt.streams) != canonical_bytes(value.streams)
+    ):
+        raise ValueError("verified_reader did not reconstruct exactly")
+    return value
+
+
 def _rebuild_prepared_market_data_v3(
     value: object,
 ) -> PreparedMultiResolutionMarketData:
@@ -2985,10 +3019,11 @@ def _rebuild_prepared_market_data_v3(
         value.preparation.bindings,
         value.preparation.signal_lineages,
     )
+    verified_reader = _rebuild_verified_reader_v3(value.verified_reader)
     return PreparedMultiResolutionMarketData(
         preparation=preparation,
         eligibilities=tuple(value.eligibilities),
-        verified_reader=value.verified_reader,
+        verified_reader=verified_reader,
     )
 
 
