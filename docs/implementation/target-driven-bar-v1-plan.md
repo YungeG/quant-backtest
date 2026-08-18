@@ -1870,7 +1870,7 @@ Acceptance and status authority：[`docs/implementation/acceptance-matrix.md`](a
 
 ### Cross-Gate MRMD-01 Multi-resolution Market Data
 
-状态：[MRMD-01 plan](plans/mrmd-01-multi-resolution-market-data.md) 与 [PERF-OBS-01](plans/perf-obs-01-performance-observability.md) 均为 READY，F1 core 已 PASSED；[PREP-COVERAGE-01](plans/prep-coverage-01.md) 为 READY，slices 1–2 已 PASSED；继续按冻结的 slice 3 完成 one-read/one-resolve Runtime/repository fan-in。系统不设置 global backtest frequency；信号观察、决策节奏、成交模拟行情和估值行情独立绑定。Runtime 不 resample；现有 G12G point-to-Bar Event lineage 由 run-scoped bindings exact 绑定并进入现有 decision/execution/snapshot semantic identities。性能观测只存在于新 MRMD/PREP outer orchestration，永不进入 canonical identity/evidence。
+状态：[MRMD-01 plan](plans/mrmd-01-multi-resolution-market-data.md)、[PERF-OBS-01](plans/perf-obs-01-performance-observability.md) 与 [PREP-COVERAGE-01](plans/prep-coverage-01.md) 均为 PASSED；F1 与 PREP-owned F2 slices 1–3 已冻结至最终 source `8fc4fde588ef6f215576e8a3cf4de17acbdce8da`。系统不设置 global backtest frequency；信号观察、决策节奏、成交模拟行情和估值行情独立绑定。Runtime 不 resample；现有 G12G point-to-Bar Event lineage 由 run-scoped bindings exact 绑定并进入现有 decision/execution/snapshot semantic identities。性能观测只存在于新 MRMD/PREP outer orchestration，永不进入 canonical identity/evidence。
 
 ### Gate G12H Rule Coverage
 

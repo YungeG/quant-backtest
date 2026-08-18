@@ -1,7 +1,7 @@
 ---
 id: PERF-OBS-01
-readiness: READY
-gate_status: READY
+readiness: PASSED
+gate_status: PASSED
 owner: backtest-runtime MRMD/PREP orchestration
 produces:
   - private bounded MRMD/PREP performance recorder
@@ -18,9 +18,10 @@ fan_out: [MRMD-01, PREP-COVERAGE-01]
 
 ## Status
 
-`READY`; F1 recorder core is `PASSED` at immutable source
-`85eac498b70d98dccce524f7ec30198456983dbf`. The full Gate remains READY until
-`PREP-COVERAGE-01` adds the remaining six operations at their authoritative seams.
+`PASSED`. F1 recorder core is frozen at immutable source
+`85eac498b70d98dccce524f7ec30198456983dbf`; the remaining six operations and
+their failure-isolated Runtime fan-in are frozen through `PREP-COVERAGE-01` source
+`8fc4fde588ef6f215576e8a3cf4de17acbdce8da`.
 
 Architecture decision:
 `docs/adr/0003-performance-observations-are-non-authoritative.md`.
@@ -53,6 +54,11 @@ F1 acceptance closure:
 - LSP/lens: clean;
 - independent standards/spec/minimality re-reviews: no blocker/high findings;
 - observation fixture: `sha256:1e61c04fabc6735ea0a8cce6ed257c1dd02012bbbd2167d9e4f82716d8777d13`.
+
+F2 acceptance closure is inherited from `PREP-COVERAGE-01`: all six operations are
+at their authoritative seams; recorder-disabled, failing, and saturating variants
+remain authority/identity/evidence invariant; the final repository suite passed
+2031 tests with no blocker/high review finding.
 
 ## Outcome
 

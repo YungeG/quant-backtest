@@ -1,7 +1,7 @@
 ---
 id: PREP-COVERAGE-01
-readiness: READY
-gate_status: READY
+readiness: PASSED
+gate_status: PASSED
 owner: backtest-runtime preparation/preflight
 produces:
   - one-Bundle MRMD preparation and replay closure
@@ -24,12 +24,12 @@ fan_in: [MRMD-01, PERF-OBS-01]
 
 ## Status
 
-`READY`; delivery slices 1–2 are `PASSED`. Slice 1 pure preflight is frozen at
+`PASSED`. Slice 1 pure preflight is frozen at
 `3a8cacccd1902ea6b6ef57c2f39266166f2edc01`; slice 2 execution-input v3 identity,
 decode, hydration, and replay is frozen at
-`44d91f39ee5edafc23f000d4d9c061bb794d3679`. Delivery slice 3 remains READY and
-owns facade/Runner/repository fan-in. The full PREP-COVERAGE Gate is not PASSED
-until slice 3 completes.
+`44d91f39ee5edafc23f000d4d9c061bb794d3679`; slice 3 one-read/one-resolve
+facade/Runner/repository fan-in is frozen at
+`8fc4fde588ef6f215576e8a3cf4de17acbdce8da`.
 
 Slice-1 acceptance closure:
 
@@ -58,6 +58,20 @@ Slice-2 acceptance closure:
 - import boundaries: 117 files passed;
 - Pyright, LSP, pi-lens blocking diagnostics, compile, lock, diff, and clean-worktree checks: passed;
 - independent spec, identity, security, minimality, and final finding-owner reviews: no blocker/high findings.
+
+Slice-3 acceptance closure:
+
+- RED: `35905a1`;
+- initial implementation: `28242f7`;
+- fail-closed durable-claim architecture: `6c7665d`;
+- final terminal-context/source closure: `8fc4fde588ef6f215576e8a3cf4de17acbdce8da`;
+- focused Runtime/PREP/MRMD/PERF/repository validation: 321 passed;
+- architecture validation: 175 passed;
+- full repository at final source: 2031 passed;
+- import boundaries: 117 files passed;
+- Pyright, LSP, pi-lens blocking diagnostics, compile, lock, diff, and clean-worktree checks: passed;
+- one transient CPython 3.13 GC segmentation fault in an unrelated aggregate-trades test did not reproduce in 20 targeted runs; the complete full-suite rerun passed;
+- independent ordering, security, Runner/repository, minimality, oracle, adversarial, and finding-owner reviews: no blocker/high findings.
 
 ## Outcome
 

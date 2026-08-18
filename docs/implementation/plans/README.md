@@ -8,9 +8,9 @@ The goal is not more documents. The goal is a small roadmap index plus independe
 
 ## Active cross-Gate plans
 
-- [MRMD-01 Multi-resolution Market Data](mrmd-01-multi-resolution-market-data.md) — `READY`; additive test-first implementation authorized.
-- [PERF-OBS-01 Performance Observability](perf-obs-01-performance-observability.md) — `READY`; Runtime MRMD/PREP-only bounded non-authoritative observations.
-- [PREP-COVERAGE-01 Runtime Multi-resolution Preparation/Preflight](prep-coverage-01.md) — `READY`; slices 1–2 PASSED; slice 3 one-read Runtime/repository fan-in remains.
+- [MRMD-01 Multi-resolution Market Data](mrmd-01-multi-resolution-market-data.md) — `PASSED`; F1 core plus PREP-owned F2 one-Bundle/Profile/identity/Runtime closure.
+- [PERF-OBS-01 Performance Observability](perf-obs-01-performance-observability.md) — `PASSED`; all nine bounded non-authoritative MRMD/PREP operations integrated.
+- [PREP-COVERAGE-01 Runtime Multi-resolution Preparation/Preflight](prep-coverage-01.md) — `PASSED`; slices 1–3 frozen through source `8fc4fde`.
 
 ## Separate artifact roles
 

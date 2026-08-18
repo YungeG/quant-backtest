@@ -163,9 +163,9 @@ artifact_hashes: []
 | G12E | PASSED | market-data-contracts | G12D, WP-06A | none |
 | G12F | PASSED | parity tooling | G12E, G07 | none |
 | G12G | PASSED | market-bundle-builder | G12B–G12C | Bar aggregation fixtures |
-| PERF-OBS-01 | READY — F1 recorder core PASSED at `85eac498b70d98dccce524f7ec30198456983dbf` | backtest-runtime MRMD/PREP orchestration | G00 | F2 six operations await PREP-COVERAGE-01 |
-| MRMD-01 | READY — F1 bindings/visible verifier PASSED at `85eac498b70d98dccce524f7ec30198456983dbf` | backtest-runtime preparation and observation integration | G11B, G11D, G11E, G12G, BT-GAP-02B, BT-GAP-02C, PERF-OBS-01 | F2 one-Bundle/Profile/identity/hydration/replay awaits PREP-COVERAGE-01 |
-| PREP-COVERAGE-01 | READY — slices 1–2 PASSED; slice 2 source `44d91f39ee5edafc23f000d4d9c061bb794d3679` | backtest-runtime preparation | MRMD-01, PERF-OBS-01, G11B, G11D, G11E, G12E, BT-GAP-02B, BT-GAP-02C | slice 3 one-read Runtime/repository fan-in remains |
+| PERF-OBS-01 | PASSED — F1 source `85eac498b70d98dccce524f7ec30198456983dbf`; F2 closure `8fc4fde588ef6f215576e8a3cf4de17acbdce8da` | backtest-runtime MRMD/PREP orchestration | G00 | none |
+| MRMD-01 | PASSED — F1 source `85eac498b70d98dccce524f7ec30198456983dbf`; F2 closure `8fc4fde588ef6f215576e8a3cf4de17acbdce8da` | backtest-runtime preparation and observation integration | G11B, G11D, G11E, G12G, BT-GAP-02B, BT-GAP-02C, PERF-OBS-01 | none |
+| PREP-COVERAGE-01 | PASSED — slices 1–3; final source `8fc4fde588ef6f215576e8a3cf4de17acbdce8da` | backtest-runtime preparation/preflight and Runtime fan-in | MRMD-01, PERF-OBS-01, G11B, G11D, G11E, G12E, BT-GAP-02B, BT-GAP-02C | none |
 | G12H | DRAFT / BLOCKED | market-bundle-builder validation | G12C, G12CD-CN-A-SHARE-DEVELOPMENT-RULE-AUTHORITIES-V1 | aligned five-dimension authority; current exact fixture fails `COVERAGE_GAP / market_fees` because fee/tax coverage ends August 2023 before the July 2026 target |
 | G12I | DRAFT | market-bundle-builder validation | G12C, G12G | Real profile-purpose, provider/calendar availability, and terminal-set closure evidence |
 | G12J | DRAFT | trading-domain schema migration | real old artifact | No real source/target schema yet |
@@ -194,7 +194,7 @@ artifact_hashes: []
 
 ```yaml
 id: PERF-OBS-01
-status: READY
+status: PASSED
 depends_on: [G00]
 owner_package: backtest-runtime internal MRMD/PREP orchestration
 public_interface: none; off-root private module only
@@ -220,15 +220,16 @@ evidence:
   - MRMD-canonical-invariance
   - frozen-signature-checks
   - architecture-import-and-source-boundary
-passed_commit: null
-artifact_hashes: []
+passed_commit: 8fc4fde588ef6f215576e8a3cf4de17acbdce8da
+artifact_hashes:
+  - sha256:1e61c04fabc6735ea0a8cce6ed257c1dd02012bbbd2167d9e4f82716d8777d13
 ```
 
 ### MRMD-01 Readiness Card
 
 ```yaml
 id: MRMD-01
-status: READY
+status: PASSED
 depends_on: [G11B, G11D, G11E, G12G, BT-GAP-02B, BT-GAP-02C, PERF-OBS-01]
 owner_package: backtest-runtime internal preparation and observation integration
 public_interface: none; off-root values and orchestration only
@@ -256,15 +257,16 @@ evidence:
   - role-hash-and-run-identity-parity
   - legacy-byte-compatibility
   - performance-observation-invariance
-passed_commit: null
-artifact_hashes: []
+passed_commit: 8fc4fde588ef6f215576e8a3cf4de17acbdce8da
+artifact_hashes:
+  - sha256:64b41061f8ab0707fe7aa5a23f2f73039fc5730a3da53709b610b4d2dac4e18c
 ```
 
 ### PREP-COVERAGE-01 Readiness Card
 
 ```yaml
 id: PREP-COVERAGE-01
-status: READY
+status: PASSED
 depends_on: [MRMD-01, PERF-OBS-01, G11B, G11D, G11E, G12E, BT-GAP-02B, BT-GAP-02C]
 owner_package: backtest-runtime internal preparation/preflight
 public_interface: none; off-root values and private v3 continuations only
@@ -306,18 +308,19 @@ evidence:
   - execution-input-v3-roundtrip
   - legacy-v1-v2-byte-compatibility
   - performance-observation-invariance
-passed_commit: null
-artifact_hashes: []
+passed_commit: 8fc4fde588ef6f215576e8a3cf4de17acbdce8da
+artifact_hashes:
+  - sha256:ac17536771914f599b3ea58f936049208f29b3f707815456e5b763d0762e5179
 ```
 
-Delivery is explicitly split without changing either Gate status. F1 covers the
+Delivery is explicitly split across immutable F1 and PREP-owned F2 sources. F1 covers the
 binding values, signal exact-cover, strict post-G11B visible verifier, and only
 `CONSTRUCT_BINDINGS` / `VALIDATE_BINDINGS` / `VERIFY_SIGNAL_BAR` observations.
 `PREP-COVERAGE-01` F2 owns one-Bundle/Profile validation, the remaining six
 observations, role-hash preimage integration, execution-input bundle v3,
 hydration/replay, and cross-requirement atomic precedence. G11B observation keys
-remain opaque; F1 defines no new key preimage. `PERF-OBS-01` and `MRMD-01` remain
-`READY`, not `PASSED`.
+remain opaque; F1 defines no new key preimage. `PERF-OBS-01`, `MRMD-01`, and
+`PREP-COVERAGE-01` are `PASSED` at the frozen sources above.
 
 ## 4. WP-00A Acceptance Card
 

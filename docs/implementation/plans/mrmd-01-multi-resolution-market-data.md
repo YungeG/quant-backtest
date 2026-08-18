@@ -1,7 +1,7 @@
 ---
 id: MRMD-01
-readiness: READY
-gate_status: READY
+readiness: PASSED
+gate_status: PASSED
 owner: backtest-runtime preparation and observation integration
 produces:
   - MultiResolutionMarketDataBindings@1
@@ -24,11 +24,11 @@ fan_out: [PREP-COVERAGE-01, G12I, provider-specific multi-resolution slices]
 
 ## Status
 
-`READY`; F1 core is `PASSED` at immutable source
-`85eac498b70d98dccce524f7ec30198456983dbf`. The full Gate remains READY until
-`PREP-COVERAGE-01` F2 completes identity, hydration, replay, Profile, and one-Bundle
-integration. All PASSED v1 bytes, hashes, interfaces, and failure precedence remain
-immutable.
+`PASSED`. F1 core is frozen at immutable source
+`85eac498b70d98dccce524f7ec30198456983dbf`; F2 one-Bundle/Profile identity,
+hydration, replay, and Runtime fan-in is frozen through `PREP-COVERAGE-01` source
+`8fc4fde588ef6f215576e8a3cf4de17acbdce8da`. All PASSED v1 bytes, hashes,
+interfaces, and failure precedence remain immutable.
 
 Architecture decision: `docs/adr/0002-no-global-backtest-frequency.md`.
 
@@ -50,6 +50,11 @@ F1 owns only:
 
 G11B observation lineage keys remain opaque caller-supplied authority. F1 neither
 derives nor verifies a new observation-key preimage.
+
+F2 acceptance closure is inherited from `PREP-COVERAGE-01`: slices 1–3 PASSED,
+2031 full repository tests passed at final source, import boundaries passed for 117
+files, and independent ordering/security/identity/repository reviews found no
+blocker/high finding.
 
 ### F2 — PREP-COVERAGE integration
 

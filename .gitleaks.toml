@@ -1,9 +1,11 @@
 [extend]
 useDefault = true
 
-[[allowlists]]
-description = "Canonical versioned domain identifiers are not API credentials"
-regexTarget = "secret"
+[allowlist]
+description = "Canonical domain identifiers assigned to semantic key fields are not credentials"
 regexes = [
-  '''^(?:[a-z0-9][a-z0-9_.:-]*(?:\.v|-v)[0-9]+|fixture\.bars\.1m|sta\.[a-z0-9.-]+|mof-sta\.[a-z0-9.-]+|g08f-announcement-(?:golden|causality))$''',
+  '''(?i)key["']?\s*(?::|=|==)\s*["']?[a-z0-9][a-z0-9_.:-]*(?:\.v|-v)[0-9]+["']?''',
+  '''(?i)key["']?\s*(?::|=|==)\s*["']?(?:fixture\.bars\.1m|bars\.cn-equity-5m|sta\.[a-z0-9.-]+|mof-sta\.[a-z0-9.-]+|g08f-announcement-(?:golden|causality))["']?''',
+  '''(?i)key["']?\s*(?::|=|==)\s*["']?[a-z0-9][a-z0-9_.:-]*[.-][0-9]{4}-[0-9]{1,2}(?:-[0-9]{1,2})?(?:-[a-z0-9-]+)?["']?''',
+  '''(?i)authority\s*=\s*v[0-9]+_[a-z0-9_]+_key''',
 ]
