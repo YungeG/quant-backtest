@@ -366,6 +366,15 @@ def test_catalog_schema_failures_are_exact(mutator) -> None:
     assert _failure(_normalized_result(stock_bytes=_stock_json(mutator))) is codes.CATALOG_SCHEMA_MISMATCH
 
 
+def test_detail_accepts_any_json_string_before_frozen_member_binding() -> None:
+    codes = MODULE.TushareCnAShareDailyCatalogPublicationFailureCode
+    for detail in (" padded ", "e\u0301"):
+        changed = _stock_json(lambda value, detail=detail: value.__setitem__("detail", detail))
+        assert _failure(_normalized_result(stock_bytes=changed)) is codes.CATALOG_MEMBER_BINDING_MISMATCH
+    changed = _stock_json(lambda value: value.__setitem__("detail", None))
+    assert _failure(_normalized_result(stock_bytes=changed)) is codes.CATALOG_SCHEMA_MISMATCH
+
+
 def test_member_binding_checks_follow_valid_json_and_schema() -> None:
     codes = MODULE.TushareCnAShareDailyCatalogPublicationFailureCode
     assert _failure(_normalized_result(stock_key="response/not-stock-basic.json")) is codes.CATALOG_MEMBER_BINDING_MISMATCH
@@ -383,6 +392,105 @@ def test_member_binding_checks_follow_valid_json_and_schema() -> None:
     assert _failure(malformed) is codes.CATALOG_JSON_INVALID
     schema = _normalized_result(stock_bytes=_stock_json(lambda value: value["data"].__setitem__("count", 1)))
     assert _failure(schema) is codes.CATALOG_SCHEMA_MISMATCH
+
+
+def test_authority_failures_hide_member_secret_sentinels_without_catching_baseexception() -> None:
+    codes = MODULE.TushareCnAShareDailyCatalogPublicationFailureCode
+    result = _normalized_result()
+    catalog_member = next(member for member in result.snapshot.members if member.member_key == CATALOG_MEMBER)
+
+    class SecretStr(str):
+        __hash__ = str.__hash__
+
+        def __eq__(self, other):
+            raise RuntimeError("member-secret-sentinel")
+
+    for field_name, value in (
+        ("mode", SecretStr("0644")),
+        ("content_hash", SecretStr(catalog_member.content_hash)),
+        ("declared_sha256", SecretStr("sha256:" + "0" * 64)),
+    ):
+        forged_member = _forge(catalog_member, **{field_name: value})
+        forged_members = tuple(
+            forged_member if member.member_key == CATALOG_MEMBER else member
+            for member in result.snapshot.members
+        )
+        forged_result = _forge(result, snapshot=_forge(result.snapshot, members=forged_members))
+        outcome = MODULE.project_tushare_cn_a_share_daily_catalog_bound_market_event_v2(forged_result)
+        assert outcome.result is None
+        assert outcome.failure is not None and outcome.failure.code is codes.NORMALIZATION_AUTHORITY_INVALID
+        assert "secret" not in json.dumps(outcome.failure.to_canonical_dict())
+
+    class SecretAbort(BaseException):
+        pass
+
+    class AbortStr(str):
+        __hash__ = str.__hash__
+
+        def __eq__(self, other):
+            raise SecretAbort
+
+    abort_member = _forge(catalog_member, mode=AbortStr("0644"))
+    abort_members = tuple(
+        abort_member if member.member_key == CATALOG_MEMBER else member
+        for member in result.snapshot.members
+    )
+    with pytest.raises(SecretAbort):
+        MODULE.project_tushare_cn_a_share_daily_catalog_bound_market_event_v2(
+            _forge(result, snapshot=_forge(result.snapshot, members=abort_members))
+        )
+
+
+def test_deep_authority_reconstruction_rejects_hostile_equivalent_values() -> None:
+    publication = MODULE.project_tushare_cn_a_share_daily_catalog_bound_market_event_v2(_normalized_result()).result
+    assert publication is not None
+
+    class HostileStr(str):
+        def __eq__(self, other):
+            return True
+
+        def __hash__(self):
+            return str.__hash__(self)
+
+    source_values = {field.name: getattr(publication.catalog_source, field.name) for field in fields(publication.catalog_source)}
+    source_values["source_key"] = HostileStr(publication.catalog_source.source_key)
+    with pytest.raises((TypeError, ValueError), match="text|source"):
+        MODULE.TushareCnAShareAcquisitionCatalogSource(**source_values)
+
+    forged_currency = object.__new__(CurrencyId)
+    object.__setattr__(forged_currency, "value", HostileStr("CNY"))
+    forged_catalog = _forge(publication.instrument_catalog, currencies=(forged_currency,))
+    with pytest.raises((TypeError, ValueError), match="catalog"):
+        MODULE.TushareCnAShareDailyCatalogPublicationResult(
+            publication.normalization_result, forged_catalog,
+            publication.catalog_source, publication.market_event,
+        )
+
+    forged_event = _forge(publication.market_event, source_key=HostileStr(publication.market_event.source_key))
+    with pytest.raises((TypeError, ValueError), match="event"):
+        MODULE.TushareCnAShareDailyCatalogPublicationResult(
+            publication.normalization_result, publication.instrument_catalog,
+            publication.catalog_source, forged_event,
+        )
+
+
+def test_result_retains_only_reconstructed_catalog_source_and_event() -> None:
+    publication = MODULE.project_tushare_cn_a_share_daily_catalog_bound_market_event_v2(_normalized_result()).result
+    assert publication is not None
+    caller_catalog = publication.instrument_catalog
+    caller_source = publication.catalog_source
+    caller_event = publication.market_event
+    rebuilt = MODULE.TushareCnAShareDailyCatalogPublicationResult(
+        publication.normalization_result, caller_catalog, caller_source, caller_event,
+    )
+    assert rebuilt.instrument_catalog is not caller_catalog
+    assert rebuilt.catalog_source is not caller_source
+    assert rebuilt.market_event is not caller_event
+    expected_hash = rebuilt.publication_hash
+    object.__setattr__(caller_catalog, "currencies", ())
+    object.__setattr__(caller_source, "source_key", "mutated.source")
+    object.__setattr__(caller_event, "source_key", "mutated.source")
+    assert rebuilt.publication_hash == expected_hash == EXPECTED["publication_hash"]
 
 
 def test_nested_constructor_reconstruction_rejects_forged_values() -> None:
