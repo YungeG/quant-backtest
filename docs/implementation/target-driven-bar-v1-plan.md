@@ -1868,6 +1868,10 @@ Acceptance and status authority：[`docs/implementation/acceptance-matrix.md`](a
 - source-plus-Bar 输出必须重新通过 G12C，BarDefinition 变化产生新 Bundle identity；
 - coverage/classification 归 G12I，provider/market qualification 归 G12L/M。
 
+### Cross-Gate MRMD-01 Multi-resolution Market Data
+
+状态：[MRMD-01 plan](plans/mrmd-01-multi-resolution-market-data.md) 已冻结 architecture direction，Gate 保持 DRAFT，等待 `PERF-OBS-01` 与最终 readiness review。系统不设置 global backtest frequency；信号观察、决策节奏、成交模拟行情和估值行情独立绑定。Runtime 不 resample；现有 G12G point-to-Bar Event lineage 由 run-scoped bindings exact 绑定并进入现有 decision/execution/snapshot semantic identities。
+
 ### Gate G12H Rule Coverage
 
 状态：[G12H plan](plans/g12/g12h.md) / [Research](../research/g12h-rule-coverage.md)记录为 readiness BLOCKED、Gate DRAFT；declaration/publication prerequisite 已 PASSED，但当前五维 authority 无共同 target coverage。需新增 additive aligned five-dimension authority set；既有 PASSED artifacts 保持 immutable，2023 fee/tax bands 不得外推到 2026。

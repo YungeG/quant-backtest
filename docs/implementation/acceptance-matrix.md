@@ -160,6 +160,9 @@ artifact_hashes: []
 | G12E | PASSED | market-data-contracts | G12D, WP-06A | none |
 | G12F | PASSED | parity tooling | G12E, G07 | none |
 | G12G | PASSED | market-bundle-builder | G12B–G12C | Bar aggregation fixtures |
+| PERF-OBS-01 | DRAFT | outer orchestration across Builder/Runtime/Repository/Analysis | accepted public operation seams | fixed bounded non-authoritative observation policy not yet frozen |
+| MRMD-01 | DRAFT — architecture direction frozen | backtest-runtime preparation and observation integration | G11B, G11D, G11E, G12G, BT-GAP-02B, BT-GAP-02C, PERF-OBS-01 | observability policy and final readiness review |
+| PREP-COVERAGE-01 | DRAFT | backtest-runtime preparation | MRMD-01, BT-GAP-02B, BT-GAP-02C | construction inputs, preflight outcome, and failure precedence not yet frozen |
 | G12H | DRAFT / BLOCKED | market-bundle-builder validation | G12C, G12CD-CN-A-SHARE-DEVELOPMENT-RULE-AUTHORITIES-V1 | aligned five-dimension authority; current exact fixture fails `COVERAGE_GAP / market_fees` because fee/tax coverage ends August 2023 before the July 2026 target |
 | G12I | DRAFT | market-bundle-builder validation | G12C, G12G | Real profile-purpose, provider/calendar availability, and terminal-set closure evidence |
 | G12J | DRAFT | trading-domain schema migration | real old artifact | No real source/target schema yet |

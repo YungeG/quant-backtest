@@ -6,6 +6,12 @@ Use this policy when an implementation plan becomes difficult to navigate, repea
 
 The goal is not more documents. The goal is a small roadmap index plus independently executable vertical plans connected by explicit dependencies.
 
+## Active cross-Gate plans
+
+- [MRMD-01 Multi-resolution Market Data](mrmd-01-multi-resolution-market-data.md) — architecture direction frozen; DRAFT until `PERF-OBS-01` and readiness review.
+- `PERF-OBS-01` — DRAFT cross-cutting non-authoritative performance observation policy.
+- `PREP-COVERAGE-01` — DRAFT MRMD preparation/preflight fan-out node.
+
 ## Separate artifact roles
 
 Do not make one document serve every role:

@@ -155,6 +155,31 @@ Strategy 为形成首个合法决策所声明的最小历史数据范围和数�
 
 证明市场数据包在交易开始前满足 Strategy 回看要求的验证结果。
 
+## 多周期行情绑定（Multi-resolution Market Data Bindings）
+
+一次语义运行中对信号观察、成交模拟行情和估值行情的不可变角色绑定；决策时点继续由 DecisionSchedule 独立拥有。它没有全局回测频率，每个角色显式选择已发布行情流。
+_Avoid_: global backtest frequency, base timeframe
+
+## 信号观察粒度（Signal Observation Resolution）
+
+Strategy 形成信号所消费的 BarDefinition 与行情流身份，由 Lookback Requirement 声明，不决定策略调用频率、成交粒度或估值粒度。
+_Avoid_: strategy frequency
+
+## 决策节奏（Decision Cadence）
+
+Strategy 可被调用的有限 SimulationInstant 序列，由 DecisionSchedule 声明，与任何行情流的名义周期相互独立。
+_Avoid_: bar frequency
+
+## 成交模拟行情（Execution Simulation Data）
+
+Simulation Profile 为订单成交近似显式选择的行情流。它不能从信号流或估值流隐式回退。
+_Avoid_: execution frequency
+
+## 估值行情（Valuation Data）
+
+Profile 为持仓和组合估值显式绑定的 VALUATION-purpose 行情。执行参考价、信号价、保证金价或 Funding 数据不能隐式替代它。
+_Avoid_: mark fallback
+
 ## 来源快照（Source Snapshot）
 
 从供应商、交易所、数据库、文件系统或迁移来源仓库取得，并以内容摘要冻结的原始输入证据。来源仓库是否 dirty 不影响资格；Snapshot 按声明范围捕获当时的实际文件字节，范围内 modified/untracked 文件可以被纳入，范围外文件一律忽略。Base commit 和 clean/dirty 状态只属于 provenance，Snapshot aggregate hash 才是权威身份。它先于规范化、迁移比较或 MarketBundle 构建。
