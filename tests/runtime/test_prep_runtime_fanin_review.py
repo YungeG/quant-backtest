@@ -8,6 +8,8 @@ from pathlib import Path
 import pytest
 
 from crypto_quant_backtest import (
+    BacktestCanonicalPublicationRef,
+    BacktestEvidenceRepository,
     BacktestExecutionRequest,
     BacktestProfileRegistry,
     BacktestRuntime,
@@ -20,6 +22,7 @@ from crypto_quant_backtest import (
     ExecutionTrace,
     TerminalStatus,
 )
+from crypto_quant_backtest.performance_observations import BoundedPerformanceRecorder
 from crypto_quant_backtest.multi_resolution_preparation import (
     _capture_market_bundle_reader_v1,
 )
@@ -46,7 +49,9 @@ class _FatalReader:
         self.manifest = source.manifest
         self._fatal = fatal
 
-    def validate_requirements(self, *, required_streams):
+    def validate_requirements(
+        self, *, required_capabilities=(), required_streams=()
+    ):
         raise self._fatal
 
     def open_cursor(self, stream_key, *, batch_size):
@@ -56,6 +61,9 @@ class _FatalReader:
         raise self._fatal
 
     def resume(self, cursor, *, batch_size):
+        raise self._fatal
+
+    def resume_cursor(self, cursor, *, batch_size=None):
         raise self._fatal
 
 
@@ -250,7 +258,7 @@ def test_capture_reader_preserves_baseexception_from_telemetry(
         _capture_market_bundle_reader_v1(
             wrong_ref,
             prepared.verified_reader,
-            object(),  # recorder presence reaches the isolated telemetry seam
+            BoundedPerformanceRecorder(),
         )
     assert raised.value is fatal
 
@@ -313,10 +321,9 @@ def test_v3_retry_terminal_is_idempotent_after_restart(
     )
 
     assert second == first
+    assert type(second) is ArtifactRef
     assert no_engine.calls == 0
-    terminal_result = restarted._artifact_reader and __import__(
-        "crypto_quant_backtest"
-    ).BacktestEvidenceRepository(store).load_terminal(second)
+    terminal_result = BacktestEvidenceRepository(store).load_terminal(second)
     assert terminal_result.status is TerminalStatus[terminal.upper()]
 
 
@@ -334,7 +341,7 @@ def test_v3_restart_reuses_attempt_one_ready_and_runs_only_retry(
 
     monkeypatch.setattr(
         AuditableBacktestRunner,
-        "_retry_from_start_verified",
+        "_retry_from_recovered_v3_locked",
         crash_retry,
     )
     with pytest.raises(KeyboardInterrupt) as raised:
@@ -347,6 +354,7 @@ def test_v3_restart_reuses_attempt_one_ready_and_runs_only_retry(
     _install_engine(monkeypatch, retry_engine)
     result = _runtime(tmp_path, store, prepared).run(transport)
 
+    assert type(result) is BacktestCanonicalPublicationRef
     assert result.artifact_ref.artifact_type == "canonical_publication_manifest"
     assert retry_engine.calls == 1
 
@@ -374,6 +382,7 @@ def test_v3_restart_finalizes_two_ready_attempts_without_engine_rerun(
     _install_engine(monkeypatch, no_engine)
     result = _runtime(tmp_path, store, prepared).run(transport)
 
+    assert type(result) is BacktestCanonicalPublicationRef
     assert result.artifact_ref.artifact_type == "canonical_publication_manifest"
     assert no_engine.calls == 0
 
@@ -389,7 +398,11 @@ def test_v3_attempt_graph_corruption_fails_closed_without_engine(
     def crash_retry(*args, **kwargs):
         raise KeyboardInterrupt("crash")
 
-    monkeypatch.setattr(AuditableBacktestRunner, "_retry_from_start_verified", crash_retry)
+    monkeypatch.setattr(
+        AuditableBacktestRunner,
+        "_retry_from_recovered_v3_locked",
+        crash_retry,
+    )
     with pytest.raises(KeyboardInterrupt):
         _runtime(tmp_path, store, prepared).run(transport)
     attempts = tmp_path / "runs" / resolved.semantic_run_id / "attempts"
@@ -401,3 +414,47 @@ def test_v3_attempt_graph_corruption_fails_closed_without_engine(
     with pytest.raises(RuntimeError, match="Attempt graph"):
         _runtime(tmp_path, store, prepared).run(transport)
     assert no_engine.calls == 0
+
+
+def test_v3_recovered_finalization_is_byte_identical_to_uninterrupted_run(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    prepared, resolved, _, envelope, transport = _executable_contract()
+
+    normal_store = _ArtifactStore(envelope)
+    normal_engine = _SequenceEngine(("ready", "ready"))
+    _install_engine(monkeypatch, normal_engine)
+    normal_root = tmp_path / "normal"
+    normal = _runtime(normal_root, normal_store, prepared).run(transport)
+    assert normal_engine.calls == 2
+
+    monkeypatch.undo()
+    recovered_store = _ArtifactStore(envelope)
+    recovered_engine = _SequenceEngine(("ready", "ready"))
+    _install_engine(monkeypatch, recovered_engine)
+    recovered_root = tmp_path / "recovered"
+    fatal = SystemExit("crash-before-canonical")
+
+    def crash_publish(*args, **kwargs):
+        raise fatal
+
+    monkeypatch.setattr(BacktestRuntime, "_publish_canonical", crash_publish)
+    with pytest.raises(SystemExit):
+        _runtime(recovered_root, recovered_store, prepared).run(transport)
+
+    monkeypatch.undo()
+    no_engine = _SequenceEngine(())
+    _install_engine(monkeypatch, no_engine)
+    recovered = _runtime(recovered_root, recovered_store, prepared).run(transport)
+
+    assert recovered == normal
+    assert no_engine.calls == 0
+    normal_canonical = normal_root / "runs" / resolved.semantic_run_id / "canonical-v2"
+    recovered_canonical = (
+        recovered_root / "runs" / resolved.semantic_run_id / "canonical-v2"
+    )
+    assert {
+        path.name: path.read_bytes() for path in normal_canonical.iterdir()
+    } == {
+        path.name: path.read_bytes() for path in recovered_canonical.iterdir()
+    }

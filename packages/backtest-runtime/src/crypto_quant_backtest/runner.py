@@ -992,54 +992,12 @@ class AuditableBacktestRunner:
                 root=self._publication_root,
                 semantic_run_id=resolved_request.semantic_run_id,
             ):
-                relative_canonical = (
-                    "canonical-v2"
-                    if self._canonical_publication_version == 2
-                    else "canonical"
-                )
-                canonical = (
-                    self._publication_root
-                    / "runs"
-                    / resolved_request.semantic_run_id
-                    / relative_canonical
-                )
-                if os.path.lexists(canonical):
-                    try:
-                        if self._canonical_publication_version == 2:
-                            cache_hit = _read_canonical_cache_hit_v2(
-                                root=self._publication_root,
-                                resolved_request=resolved_request,
-                                input_origin=input_origin,
-                                execution_case=execution_case,
-                            )
-                        else:
-                            cache_hit = _read_canonical_cache_hit(
-                                root=self._publication_root,
-                                resolved_request=resolved_request,
-                                input_origin=input_origin,
-                                execution_case_hash=execution_case.case_hash,
-                            )
-                    except (OSError, TypeError, ValueError, KeyError) as error:
-                        return self._failed_record(
-                            attempt,
-                            resolved_request,
-                            input_origin,
-                            execution_case.case_hash,
-                            self._runner_issue(
-                                "canonical_cache_invalid",
-                                (
-                                    resolved_request.semantic_run_id,
-                                    f"{type(error).__module__}.{type(error).__qualname__}",
-                                ),
-                            ),
-                        )
-                    return AttemptExecutionRecord(cache_hit=cache_hit)
-                return self._execute_engine(
-                    resolved_request,
-                    execution_case,
-                    attempt,
-                    input_origin,
-                    cancellation,
+                return self._execute_verified_locked(
+                    resolved_request=resolved_request,
+                    execution_case=execution_case,
+                    attempt=attempt,
+                    input_origin=input_origin,
+                    cancellation=cancellation,
                 )
         except OSError:
             return self._failed_record(
@@ -1052,6 +1010,77 @@ class AuditableBacktestRunner:
                     (resolved_request.semantic_run_id,),
                 ),
             )
+
+    def _execute_verified_locked(
+        self,
+        *,
+        resolved_request: ResolvedBacktestRequest,
+        execution_case: ResolvedExecutionCase,
+        attempt: AttemptIdentity,
+        input_origin: InputOrigin,
+        cancellation: EngineCancellationRequest | None,
+    ) -> AttemptExecutionRecord:
+        root = self._publication_root
+        if root is None:
+            return self._failed_record(
+                attempt,
+                resolved_request,
+                input_origin,
+                execution_case.case_hash,
+                self._runner_issue(
+                    "publication_root_required",
+                    (resolved_request.semantic_run_id,),
+                ),
+            )
+        relative_canonical = (
+            "canonical-v2"
+            if self._canonical_publication_version == 2
+            else "canonical"
+        )
+        canonical = (
+            root
+            / "runs"
+            / resolved_request.semantic_run_id
+            / relative_canonical
+        )
+        if os.path.lexists(canonical):
+            try:
+                if self._canonical_publication_version == 2:
+                    cache_hit = _read_canonical_cache_hit_v2(
+                        root=root,
+                        resolved_request=resolved_request,
+                        input_origin=input_origin,
+                        execution_case=execution_case,
+                    )
+                else:
+                    cache_hit = _read_canonical_cache_hit(
+                        root=root,
+                        resolved_request=resolved_request,
+                        input_origin=input_origin,
+                        execution_case_hash=execution_case.case_hash,
+                    )
+            except (OSError, TypeError, ValueError, KeyError) as error:
+                return self._failed_record(
+                    attempt,
+                    resolved_request,
+                    input_origin,
+                    execution_case.case_hash,
+                    self._runner_issue(
+                        "canonical_cache_invalid",
+                        (
+                            resolved_request.semantic_run_id,
+                            f"{type(error).__module__}.{type(error).__qualname__}",
+                        ),
+                    ),
+                )
+            return AttemptExecutionRecord(cache_hit=cache_hit)
+        return self._execute_engine(
+            resolved_request,
+            execution_case,
+            attempt,
+            input_origin,
+            cancellation,
+        )
 
     def _execute_engine(
         self,
@@ -1176,6 +1205,33 @@ class AuditableBacktestRunner:
             previous.attempt, next_ordinal=next_attempt_ordinal
         )
         return self._execute_verified(
+            resolved_request=resolved_request,
+            execution_case=execution_case,
+            attempt=attempt,
+            input_origin=input_origin,
+            cancellation=cancellation,
+        )
+
+    def _retry_from_recovered_v3_locked(
+        self,
+        *,
+        previous_attempt: AttemptIdentity,
+        resolved_request: ResolvedBacktestRequest,
+        execution_case: ResolvedExecutionCase,
+        input_origin: InputOrigin,
+        market_data_preparation: MultiResolutionMarketDataPreparation,
+        cancellation: EngineCancellationRequest | None = None,
+    ) -> AttemptExecutionRecord:
+        self._verify_v3_contract(
+            resolved_request=resolved_request,
+            execution_case=execution_case,
+            input_origin=input_origin,
+            market_data_preparation=market_data_preparation,
+        )
+        if type(previous_attempt) is not AttemptIdentity or previous_attempt.ordinal != 1:
+            raise ValueError("recovered retry requires exact first Attempt")
+        attempt = AttemptIdentity.retry(previous_attempt, next_ordinal=2)
+        return self._execute_verified_locked(
             resolved_request=resolved_request,
             execution_case=execution_case,
             attempt=attempt,

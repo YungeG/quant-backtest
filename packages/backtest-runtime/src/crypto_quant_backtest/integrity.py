@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from collections.abc import Mapping
 from contextlib import suppress
 from dataclasses import dataclass
 from enum import Enum
@@ -43,7 +44,9 @@ from .evidence import (
 )
 from .execution_hash import (
     AttemptExecutionHash,
+    ExecutionHashAttemptRef,
     ExecutionHashCheck,
+    ExecutionHashConsistency,
     ExecutionHashMismatch,
     ExecutionResultHasher,
 )
@@ -1446,6 +1449,16 @@ class _PublishedDirectory:
     relative_directory: str
 
 
+@dataclass(frozen=True, slots=True)
+class _RecoveredPublicationOutcome:
+    relative_directory: str | None = None
+    failure: CanonicalPublicationFailure | None = None
+
+    def __post_init__(self) -> None:
+        if (self.relative_directory is None) == (self.failure is None):
+            raise ValueError("recovered publication requires one branch")
+
+
 _PUBLICATION_CATALOG = SchemaCatalog(
     (
         *(
@@ -1772,6 +1785,348 @@ class CanonicalResultPublisher:
                 failure=outcome.failure,
             )
         return self._publish_canonical_v2(resolved_request, attempts, report, engine_context)
+
+    def _publish_v2_recovered_locked(
+        self,
+        *,
+        resolved_request: ResolvedBacktestRequest,
+        attempts: tuple[
+            tuple[
+                AttemptIdentity,
+                FinalizedAttemptEvidence,
+                Mapping[str, object],
+                str | None,
+            ],
+            tuple[
+                AttemptIdentity,
+                FinalizedAttemptEvidence,
+                Mapping[str, object],
+                str | None,
+            ],
+        ],
+        engine_context: EngineExecutionContext,
+    ) -> _RecoveredPublicationOutcome:
+        semantic_run_id = resolved_request.semantic_run_id
+        if (self._root / "runs" / semantic_run_id / "canonical-v2").exists():
+            return _RecoveredPublicationOutcome(
+                failure=self._failure(
+                    semantic_run_id,
+                    CanonicalPublicationFailureCode.SEMANTIC_RUN_CLOSED,
+                    f"runs/{semantic_run_id}/canonical-v2",
+                )
+            )
+        ordered = tuple(sorted(attempts, key=lambda value: value[0].ordinal))
+        if tuple(value[0].ordinal for value in ordered) != (1, 2):
+            return _RecoveredPublicationOutcome(
+                failure=self._failure(
+                    semantic_run_id,
+                    CanonicalPublicationFailureCode.ATTEMPT_SET_MISMATCH,
+                    f"runs/{semantic_run_id}/attempts",
+                )
+            )
+        refs: list[ExecutionHashAttemptRef] = []
+        evidence_hashes: list[str] = []
+        execution_hashes: list[str] = []
+        for attempt, evidence, payload, content_hash in ordered:
+            if (
+                attempt.semantic_run_id != semantic_run_id
+                or evidence.attempt != attempt
+                or evidence.status is not EvidencePublicationStatus.READY_FOR_INTEGRITY
+                or type(content_hash) is not str
+                or ArtifactEnvelope.create(
+                    "engine_execution_result", 1, payload
+                ).content_hash
+                != content_hash
+            ):
+                return _RecoveredPublicationOutcome(
+                    failure=self._failure(
+                        semantic_run_id,
+                        CanonicalPublicationFailureCode.ATTEMPT_EVIDENCE_INVALID,
+                        f"runs/{semantic_run_id}/attempts/{attempt.attempt_id}",
+                    )
+                )
+            summary = dict(payload)
+            summary["type"] = "canonical_execution_summary"
+            summary.pop("case_hash", None)
+            summary.pop("target_stream_digest", None)
+            execution_hash = canonical_sha256(summary)
+            execution_hashes.append(execution_hash)
+            refs.append(
+                ExecutionHashAttemptRef(
+                    semantic_run_id,
+                    attempt.attempt_id,
+                    evidence.manifest.manifest_hash,
+                    execution_hash,
+                )
+            )
+            evidence_hashes.append(evidence.publication_hash)
+        if len(set(execution_hashes)) != 1:
+            return _RecoveredPublicationOutcome(
+                failure=self._failure(
+                    semantic_run_id,
+                    CanonicalPublicationFailureCode.ATTEMPT_SET_MISMATCH,
+                    f"runs/{semantic_run_id}/attempts",
+                )
+            )
+        execution_result_hash = execution_hashes[0]
+        attempt_set = {
+            "type": "attempt_consistency_set",
+            "schema_version": 1,
+            "semantic_run_id": semantic_run_id,
+            "resolved_request_hash": canonical_sha256(resolved_request),
+            "attempts": tuple(refs),
+            "finalized_evidence_hashes": tuple(evidence_hashes),
+        }
+        consistency_set_hash = canonical_sha256(attempt_set)
+        consistency = ExecutionHashConsistency(
+            semantic_run_id,
+            execution_result_hash,
+            tuple(sorted(refs, key=lambda value: value.attempt_id)),
+        )
+        execution_check = ExecutionHashCheck(consistency=consistency)
+        canonical_attempt, canonical_evidence, canonical_payload, content_hash = ordered[0]
+        if type(content_hash) is not str:
+            return _RecoveredPublicationOutcome(
+                failure=self._failure(
+                    semantic_run_id,
+                    CanonicalPublicationFailureCode.ATTEMPT_EVIDENCE_INVALID,
+                    f"runs/{semantic_run_id}/attempts/{canonical_attempt.attempt_id}",
+                )
+            )
+        trace = canonical_payload.get("trace")
+        if not isinstance(trace, Mapping):
+            return _RecoveredPublicationOutcome(
+                failure=self._failure(
+                    semantic_run_id,
+                    CanonicalPublicationFailureCode.ATTEMPT_EVIDENCE_INVALID,
+                    f"runs/{semantic_run_id}/attempts/{canonical_attempt.attempt_id}",
+                )
+            )
+        trace_hash = canonical_sha256(trace)
+        case_hash = canonical_payload.get("case_hash")
+        if (
+            type(case_hash) is not str
+            or engine_context.case_hash != case_hash
+            or engine_context.target_stream_digest
+            != canonical_payload.get("target_stream_digest")
+        ):
+            return _RecoveredPublicationOutcome(
+                failure=self._failure(
+                    semantic_run_id,
+                    CanonicalPublicationFailureCode.ATTEMPT_EVIDENCE_INVALID,
+                    f"runs/{semantic_run_id}/attempts/{canonical_attempt.attempt_id}",
+                )
+            )
+        rebuild = DeterministicRebuildEvidence(
+            semantic_run_id=semantic_run_id,
+            request_hash=canonical_sha256(resolved_request.request),
+            environment_hash=resolved_request.environment.environment_hash,
+            build_artifact_manifest_hash=(
+                resolved_request.build_artifact_manifest.manifest_hash
+            ),
+            market_bundle_manifest_hash=(
+                resolved_request.environment.market_bundle_ref.manifest_hash
+            ),
+            market_bundle_retention_proof_hash=None,
+            target_stream_digest=resolved_request.request.target_stream_digest,
+            execution_case_semantic_hash=(
+                resolved_request.request.execution_case_semantic_hash
+            ),
+            execution_case_hash=case_hash,
+            trace_hash=trace_hash,
+            trace_level=IntegrityTraceLevel.FULL_TRACE,
+            execution_result_hash=execution_result_hash,
+            deterministic_rebuild_proof_hash=None,
+        )
+        context = {
+            "type": "integrity_evaluation_context",
+            "schema_version": 1,
+            "semantic_run_id": semantic_run_id,
+            "resolved_request": resolved_request,
+            "attempt_consistency_set": attempt_set,
+            "execution_hash_check": execution_check,
+            "rebuild_evidence": rebuild,
+        }
+        issues = self._recovered_integrity_issues(resolved_request, rebuild)
+        if any(
+            value.severity is IntegrityIssueSeverity.BLOCKING for value in issues
+        ):
+            return _RecoveredPublicationOutcome(
+                failure=self._failure(
+                    semantic_run_id,
+                    CanonicalPublicationFailureCode.INVALID_INTEGRITY_CONTEXT,
+                    f"runs/{semantic_run_id}/attempts",
+                )
+            )
+        canonical_ref = CanonicalAttemptRef(
+            attempt=canonical_attempt,
+            evidence_manifest_hash=canonical_evidence.manifest.manifest_hash,
+            evidence_manifest_source_hash=canonical_evidence.manifest_source_hash,
+            evidence_publication_hash=canonical_evidence.publication_hash,
+            engine_result_artifact_content_hash=content_hash,
+            consistency_set_hash=consistency_set_hash,
+            execution_result_hash=execution_result_hash,
+            execution_case_semantic_hash=(
+                resolved_request.request.execution_case_semantic_hash
+            ),
+            execution_case_hash=case_hash,
+            trace_hash=trace_hash,
+            trace_level=IntegrityTraceLevel.FULL_TRACE,
+            market_bundle_manifest_hash=(
+                resolved_request.environment.market_bundle_ref.manifest_hash
+            ),
+            market_bundle_retention_proof_hash=None,
+            deterministic_rebuild_evidence_hash=rebuild.evidence_hash,
+        )
+        grade = (
+            ResultGrade.DECISION_GRADE
+            if resolved_request.request.result_grade_requested
+            is RequestedResultGrade.DECISION_GRADE
+            else ResultGrade.DEVELOPMENT
+        )
+        integrity = {
+            "type": "integrity_report",
+            "schema_version": 1,
+            "semantic_run_id": semantic_run_id,
+            "context": context,
+            "context_hash": canonical_sha256(context),
+            "requested_grade": (
+                resolved_request.request.result_grade_requested.value
+            ),
+            "result_grade": grade.value,
+            "issues": issues,
+            "canonical_attempt_ref_hash": canonical_ref.reference_hash,
+            "deployment_authorized": False,
+        }
+        integrity_hash = canonical_sha256(integrity)
+        evidence_ref = ArtifactRef.from_envelope(
+            ArtifactEnvelope.create(
+                "evidence_manifest", 1, canonical_evidence.manifest
+            )
+        )
+        result = {
+            "type": "completed_backtest_result",
+            "schema_version": 2,
+            "semantic_run_id": semantic_run_id,
+            "outcome": BacktestRunOutcome.COMPLETED.value,
+            "request_hash": canonical_sha256(resolved_request.request),
+            "resolved_request": resolved_request,
+            "attempt_consistency_set": attempt_set,
+            "execution_hash_check": execution_check,
+            "execution_result_hash": execution_result_hash,
+            "consistency_set_hash": consistency_set_hash,
+            "attempt_id": canonical_attempt.attempt_id,
+            "evidence_manifest_hash": canonical_evidence.manifest.manifest_hash,
+            "canonical_evidence_manifest_ref": evidence_ref,
+            "canonical_attempt_ref_hash": canonical_ref.reference_hash,
+            "integrity_report_hash": integrity_hash,
+            "integrity": {
+                "blocking": (),
+                "limitations": issues,
+            },
+            "result_grade": grade.value,
+            "engine_execution_context": engine_context,
+            "deployment_authorized": False,
+        }
+        publication = self._publish_directory(
+            semantic_run_id=semantic_run_id,
+            publication_kind="canonical",
+            publication_id="canonical-v2",
+            relative_directory=f"runs/{semantic_run_id}/canonical-v2",
+            plans=(
+                _PublicationPlan(
+                    "canonical-attempt-ref.json",
+                    "canonical_attempt_ref",
+                    canonical_ref,
+                ),
+                _PublicationPlan("integrity.json", "integrity_report", integrity),
+                _PublicationPlan(
+                    "result.json",
+                    "completed_backtest_result",
+                    result,
+                    2,
+                ),
+            ),
+        )
+        if isinstance(publication, CanonicalPublicationFailure):
+            return _RecoveredPublicationOutcome(failure=publication)
+        return _RecoveredPublicationOutcome(
+            relative_directory=publication.relative_directory
+        )
+
+    @staticmethod
+    def _recovered_integrity_issues(
+        resolved_request: ResolvedBacktestRequest,
+        rebuild: DeterministicRebuildEvidence,
+    ) -> tuple[IntegrityIssue, ...]:
+        decision_grade = (
+            resolved_request.request.result_grade_requested
+            is RequestedResultGrade.DECISION_GRADE
+        )
+        severity = (
+            IntegrityIssueSeverity.BLOCKING
+            if decision_grade
+            else IntegrityIssueSeverity.LIMITATION
+        )
+        issues: list[IntegrityIssue] = []
+        profiles = (
+            resolved_request.environment.market_semantics,
+            resolved_request.environment.simulation,
+            resolved_request.environment.execution_account,
+        )
+        if any(
+            value.grade is RequestedResultGrade.DEVELOPMENT
+            or not value.decision_grade_eligible
+            for value in profiles
+        ):
+            issues.append(
+                IntegrityIssue(
+                    IntegrityIssueCode.DEVELOPMENT_PROFILE,
+                    severity,
+                    tuple(value.profile_key for value in profiles),
+                    tuple(value.profile_digest for value in profiles),
+                )
+            )
+        build = resolved_request.build_artifact_manifest
+        if not build.decision_grade_eligible:
+            issues.append(
+                IntegrityIssue(
+                    IntegrityIssueCode.DEVELOPMENT_BUILD,
+                    severity,
+                    build.limitations or ("build_artifact_manifest",),
+                    (build.manifest_hash,),
+                )
+            )
+        environment = resolved_request.environment
+        if environment.limitations:
+            issues.append(
+                IntegrityIssue(
+                    IntegrityIssueCode.ENVIRONMENT_LIMITATION,
+                    severity,
+                    environment.limitations,
+                    (environment.environment_hash,),
+                )
+            )
+        issues.extend(
+            (
+                IntegrityIssue(
+                    IntegrityIssueCode.BUNDLE_RETENTION_UNPROVEN,
+                    severity,
+                    (rebuild.market_bundle_manifest_hash,),
+                    (),
+                ),
+                IntegrityIssue(
+                    IntegrityIssueCode.DETERMINISTIC_REBUILD_UNPROVEN,
+                    severity,
+                    (rebuild.evidence_hash,),
+                    (),
+                ),
+            )
+        )
+        return tuple(
+            sorted(issues, key=lambda value: (value.severity.value, value.code.value))
+        )
+
 
     def _publish_canonical_v2(
         self,

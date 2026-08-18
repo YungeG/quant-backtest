@@ -847,7 +847,7 @@ def _capture_market_bundle_reader_v1(
                 raise ValueError("captured stream does not match manifest")
             streams[stream_manifest.stream_key] = captured
         retained = InMemoryMarketBundleReader(ref, manifest, streams)
-    except BaseException:
+    except Exception:
         _record(
             recorder,
             PerformanceOperation.HYDRATE_INPUTS,

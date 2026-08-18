@@ -190,7 +190,7 @@ def test_v3_runtime_is_one_read_one_resolve_and_reuses_one_retained_reader(
     timeline_readers: list[object] = []
     original_resolve = ProfileResolver.resolve
     original_open = DeterministicTimeline.open
-    original_shared = AuditableBacktestRunner._execute_verified
+    original_shared = AuditableBacktestRunner._execute_verified_locked
     original_engine = AuditableBacktestRunner._execute_engine
 
     def resolve(self, **kwargs):
@@ -216,7 +216,7 @@ def test_v3_runtime_is_one_read_one_resolve_and_reuses_one_retained_reader(
 
     monkeypatch.setattr(ProfileResolver, "resolve", resolve)
     monkeypatch.setattr(DeterministicTimeline, "open", open_timeline)
-    monkeypatch.setattr(AuditableBacktestRunner, "_execute_verified", execute_shared)
+    monkeypatch.setattr(AuditableBacktestRunner, "_execute_verified_locked", execute_shared)
     monkeypatch.setattr(AuditableBacktestRunner, "_execute_engine", execute_engine)
 
     result = runtime.run(transport)
@@ -242,7 +242,7 @@ def test_v3_cache_hit_still_finishes_replay_before_cache_return(
     first = runtime.run(transport)
     shared_calls = 0
     cache_calls = 0
-    original_shared = AuditableBacktestRunner._execute_verified
+    original_shared = AuditableBacktestRunner._execute_verified_locked
     original_cache = runner_module._read_canonical_cache_hit_v2
 
     def execute_shared(self, *args, **kwargs):
@@ -255,7 +255,7 @@ def test_v3_cache_hit_still_finishes_replay_before_cache_return(
         cache_calls += 1
         return original_cache(**kwargs)
 
-    monkeypatch.setattr(AuditableBacktestRunner, "_execute_verified", execute_shared)
+    monkeypatch.setattr(AuditableBacktestRunner, "_execute_verified_locked", execute_shared)
     monkeypatch.setattr(runner_module, "_read_canonical_cache_hit_v2", read_cache)
     second = runtime.run(transport)
 
@@ -302,7 +302,7 @@ def test_v3_structural_failure_leaves_no_timeline_attempt_cache_or_evidence(
         raise AssertionError("cache must not be read")
 
     monkeypatch.setattr(DeterministicTimeline, "open", forbidden_timeline)
-    monkeypatch.setattr(AuditableBacktestRunner, "_execute_verified", forbidden_shared)
+    monkeypatch.setattr(AuditableBacktestRunner, "_execute_verified_locked", forbidden_shared)
     monkeypatch.setattr(AttemptIdentity, "first", staticmethod(forbidden_attempt))
     monkeypatch.setattr(AttemptEvidenceWriter, "publish", forbidden_evidence)
     monkeypatch.setattr(runner_module, "_read_canonical_cache_hit_v2", forbidden_cache)

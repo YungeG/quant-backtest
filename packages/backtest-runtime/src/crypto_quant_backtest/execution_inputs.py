@@ -3437,6 +3437,7 @@ def _hydrate_execution_inputs_v3_from_decoded(
     market_reader: MarketBundleReader,
     resolved_request: ResolvedBacktestRequest,
     prepared_market_data: PreparedMultiResolutionMarketData,
+    target_stream: PrecomputedTargetStream | None = None,
     recorder: BoundedPerformanceRecorder | None = None,
 ) -> _ExecutionInputsHydrationOutcomeV3:
     if recorder is not None and type(recorder) is not BoundedPerformanceRecorder:
@@ -3497,23 +3498,32 @@ def _hydrate_execution_inputs_v3_from_decoded(
             _ExecutionInputsHydrationFailureCodeV3.TARGET_BINDING_MISMATCH
         )
     try:
-        requirement_failure = verified_reader.validate_requirements(
-            required_streams=bundle.timeline_stream_keys
-        )
-        cursor = verified_reader.open_cursor(
-            bundle.target_stream_key,
-            batch_size=bundle.timeline_batch_size,
-        )
-        if requirement_failure is not None or isinstance(cursor, InputValidationFailure):
-            raise ValueError("target unavailable")
-        events: list[Any] = []
-        while not cursor.exhausted:
-            previous_position = cursor.position
-            batch, cursor = verified_reader.read_batch(cursor)
-            if not batch or cursor.position != previous_position + len(batch):
-                raise ValueError("target cursor did not advance")
-            events.extend(batch)
-        target_stream = PrecomputedTargetStream(bundle.target_stream_key, tuple(events))
+        if target_stream is None:
+            requirement_failure = verified_reader.validate_requirements(
+                required_streams=bundle.timeline_stream_keys
+            )
+            cursor = verified_reader.open_cursor(
+                bundle.target_stream_key,
+                batch_size=bundle.timeline_batch_size,
+            )
+            if requirement_failure is not None or isinstance(
+                cursor, InputValidationFailure
+            ):
+                raise ValueError("target unavailable")
+            events: list[Any] = []
+            while not cursor.exhausted:
+                previous_position = cursor.position
+                batch, cursor = verified_reader.read_batch(cursor)
+                if not batch or cursor.position != previous_position + len(batch):
+                    raise ValueError("target cursor did not advance")
+                events.extend(batch)
+            target_stream = PrecomputedTargetStream(
+                bundle.target_stream_key, tuple(events)
+            )
+        elif type(target_stream) is not PrecomputedTargetStream:
+            raise TypeError("target_stream must be exact PrecomputedTargetStream")
+        if target_stream.stream_key != bundle.target_stream_key:
+            raise ValueError("target stream key mismatch")
     except Exception:
         return _failure_v3(
             _ExecutionInputsHydrationFailureCodeV3.TARGET_BINDING_MISMATCH
