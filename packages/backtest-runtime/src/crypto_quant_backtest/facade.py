@@ -69,6 +69,8 @@ from .runner import (
 
 _STORAGE_RUNNER_ISSUES = frozenset({"canonical_cache_invalid", "run_lock_unavailable"})
 _SHA256_PATTERN = re.compile(r"sha256:[0-9a-f]{64}\Z")
+
+
 @dataclass(frozen=True, slots=True)
 class _RecoveredAttemptState:
     attempt: AttemptIdentity
@@ -410,6 +412,14 @@ class BacktestRuntime:
             / "canonical-v2"
         )
         if os.path.lexists(canonical):
+            if cancellation is not None:
+                _read_canonical_cache_hit_v2(
+                    root=self._publication_root,
+                    resolved_request=resolved,
+                    input_origin=input_origin,
+                    execution_case=execution_case,
+                )
+                raise RuntimeError("completed semantic run cannot be cancelled")
             cached_record = runner._execute_verified_locked(
                 resolved_request=resolved,
                 execution_case=execution_case,
@@ -471,6 +481,8 @@ class BacktestRuntime:
             )
         else:
             first_evidence = first_state.evidence
+            if second_state is None:
+                self._mirror_evidence_graph(first_evidence)
 
         if second_state is not None:
             if first_state is None:
@@ -564,6 +576,8 @@ class BacktestRuntime:
         if any(value.engine_payload is None for value in recovered):
             raise RuntimeError("Attempt graph READY evidence is incomplete")
         first, second = recovered
+        self._mirror_evidence_graph(first.evidence)
+        self._mirror_evidence_graph(second.evidence)
         if first.engine_payload is None or second.engine_payload is None:
             raise RuntimeError("Attempt graph READY evidence is incomplete")
         publication = self._canonical_publisher()._publish_v2_recovered_locked(
@@ -828,7 +842,6 @@ class BacktestRuntime:
             )
         except (KeyError, OSError, TypeError, ValueError) as error:
             raise RuntimeError("Attempt graph verification failed") from error
-
 
     def _resolve(
         self,

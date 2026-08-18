@@ -2127,7 +2127,6 @@ class CanonicalResultPublisher:
             sorted(issues, key=lambda value: (value.severity.value, value.code.value))
         )
 
-
     def _publish_canonical_v2(
         self,
         resolved_request: ResolvedBacktestRequest,

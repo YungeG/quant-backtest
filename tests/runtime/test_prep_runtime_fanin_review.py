@@ -320,7 +320,8 @@ def test_v3_retry_terminal_is_idempotent_after_restart(
         raise AssertionError("existing terminal evidence must not be republished")
 
     monkeypatch.setattr(AttemptEvidenceWriter, "_publish_locked", forbidden_publish)
-    restarted = _runtime(tmp_path, store, prepared)
+    restart_store = _ArtifactStore(envelope)
+    restarted = _runtime(tmp_path, restart_store, prepared)
     second = (
         restarted.run_with_cancellation(transport, cancellation)
         if cancellation is not None
@@ -330,7 +331,7 @@ def test_v3_retry_terminal_is_idempotent_after_restart(
     assert second == first
     assert type(second) is ArtifactRef
     assert no_engine.calls == 0
-    terminal_result = BacktestEvidenceRepository(store).load_terminal(second)
+    terminal_result = BacktestEvidenceRepository(restart_store).load_terminal(second)
     assert terminal_result.status is TerminalStatus[terminal.upper()]
 
 
@@ -368,7 +369,7 @@ def test_v3_restart_reuses_attempt_one_ready_and_runs_only_retry(
         return original_publish(self, record)
 
     monkeypatch.setattr(AttemptEvidenceWriter, "_publish_locked", publish)
-    result = _runtime(tmp_path, store, prepared).run(transport)
+    result = _runtime(tmp_path, _ArtifactStore(envelope), prepared).run(transport)
 
     assert type(result) is BacktestCanonicalPublicationRef
     assert result.artifact_ref.artifact_type == "canonical_publication_manifest"
@@ -402,7 +403,7 @@ def test_v3_restart_finalizes_two_ready_attempts_without_engine_rerun(
         raise AssertionError("READY evidence must not be republished")
 
     monkeypatch.setattr(AttemptEvidenceWriter, "_publish_locked", forbidden_publish)
-    result = _runtime(tmp_path, store, prepared).run(transport)
+    result = _runtime(tmp_path, _ArtifactStore(envelope), prepared).run(transport)
 
     assert type(result) is BacktestCanonicalPublicationRef
     assert result.artifact_ref.artifact_type == "canonical_publication_manifest"
@@ -467,7 +468,9 @@ def test_v3_recovered_finalization_is_byte_identical_to_uninterrupted_run(
     monkeypatch.undo()
     no_engine = _SequenceEngine(())
     _install_engine(monkeypatch, no_engine)
-    recovered = _runtime(recovered_root, recovered_store, prepared).run(transport)
+    recovered = _runtime(
+        recovered_root, _ArtifactStore(envelope), prepared
+    ).run(transport)
 
     assert recovered == normal
     assert no_engine.calls == 0
@@ -525,4 +528,24 @@ def test_v3_attempt_graph_rejects_retry_ordinal_gap_before_engine(
     with pytest.raises(RuntimeError, match="ordinal gap"):
         _runtime(tmp_path, store, prepared).run(transport)
 
+    assert no_engine.calls == 0
+
+
+def test_v3_completed_restart_cannot_be_cancelled(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    prepared, _, _, envelope, transport = _executable_contract()
+    engine = _SequenceEngine(("ready", "ready"))
+    _install_engine(monkeypatch, engine)
+    _runtime(tmp_path, _ArtifactStore(envelope), prepared).run(transport)
+    assert engine.calls == 2
+
+    monkeypatch.undo()
+    no_engine = _SequenceEngine(())
+    _install_engine(monkeypatch, no_engine)
+    cancellation = EngineCancellationRequest("bar-open-1", "operator_cancelled")
+    with pytest.raises(RuntimeError, match="completed semantic run cannot be cancelled"):
+        _runtime(tmp_path, _ArtifactStore(envelope), prepared).run_with_cancellation(
+            transport, cancellation
+        )
     assert no_engine.calls == 0
