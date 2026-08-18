@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from collections.abc import Mapping
 from dataclasses import fields, replace
+from enum import Enum
 import hashlib
 from inspect import signature
 import json
@@ -651,6 +652,58 @@ def test_v3_retained_reader_rejects_all_scalar_subclasses_before_artifact_io(
     assert outcome.failure.code is (
         _ExecutionInputsHydrationFailureCodeV3.MALFORMED_EXECUTION_REQUEST
     )
+
+
+def test_v3_retained_reader_rejects_caller_defined_str_enum_before_artifact_io() -> None:
+    prepared, resolved, _, envelope, transport = _contract()
+    secret = "SECRET-caller-str-enum-/private/path"
+    state = {"armed": False}
+
+    class CallerText(str, Enum):
+        BUNDLE_KEY = prepared.verified_reader.bundle_ref.bundle_key
+
+        def __eq__(self, other):
+            if state["armed"]:
+                raise RuntimeError(secret)
+            return str.__eq__(self, other)
+
+        __hash__ = str.__hash__
+
+    ref = prepared.verified_reader.bundle_ref
+    forged_ref = object.__new__(MarketBundleRef)
+    object.__setattr__(forged_ref, "bundle_key", CallerText.BUNDLE_KEY)
+    object.__setattr__(forged_ref, "manifest_hash", ref.manifest_hash)
+    forged_reader = object.__new__(InMemoryMarketBundleReader)
+    object.__setattr__(forged_reader, "bundle_ref", forged_ref)
+    object.__setattr__(forged_reader, "manifest", prepared.verified_reader.manifest)
+    object.__setattr__(forged_reader, "streams", prepared.verified_reader.streams)
+    forged_prepared = replace(prepared, verified_reader=forged_reader)
+
+    class ArmingArtifactReader(_Reader):
+        def __init__(self):
+            super().__init__(envelope)
+            self.calls = 0
+
+        def read(self, *, ref):
+            self.calls += 1
+            state["armed"] = True
+            return super().read(ref=ref)
+
+    artifact_reader = ArmingArtifactReader()
+    outcome = _hydrate_execution_inputs_v3(
+        artifact_reader,
+        transport,
+        market_reader=forged_reader,
+        resolved_request=resolved,
+        prepared_market_data=forged_prepared,
+    )
+    assert artifact_reader.calls == 0
+    assert outcome.result is None
+    assert outcome.failure is not None
+    assert outcome.failure.code is (
+        _ExecutionInputsHydrationFailureCodeV3.MALFORMED_EXECUTION_REQUEST
+    )
+    assert secret.encode() not in canonical_bytes(outcome.failure)
 
 
 def test_v3_retained_reader_rejects_pass_rebuild_then_raise_str_subclass() -> None:
