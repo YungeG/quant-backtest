@@ -166,7 +166,7 @@ artifact_hashes: []
 | PERF-OBS-01 | PASSED — F1 source `85eac498b70d98dccce524f7ec30198456983dbf`; F2 closure `8fc4fde588ef6f215576e8a3cf4de17acbdce8da` | backtest-runtime MRMD/PREP orchestration | G00 | none |
 | MRMD-01 | PASSED — F1 source `85eac498b70d98dccce524f7ec30198456983dbf`; F2 closure `8fc4fde588ef6f215576e8a3cf4de17acbdce8da` | backtest-runtime preparation and observation integration | G11B, G11D, G11E, G12G, BT-GAP-02B, BT-GAP-02C, PERF-OBS-01 | none |
 | PREP-COVERAGE-01 | PASSED — slices 1–3; final source `8fc4fde588ef6f215576e8a3cf4de17acbdce8da` | backtest-runtime preparation/preflight and Runtime fan-in | MRMD-01, PERF-OBS-01, G11B, G11D, G11E, G12E, BT-GAP-02B, BT-GAP-02C | none |
-| G12H | DRAFT / BLOCKED | market-bundle-builder validation | G12C, G12CD-CN-A-SHARE-DEVELOPMENT-RULE-AUTHORITIES-V1 | aligned five-dimension authority; current exact fixture fails `COVERAGE_GAP / market_fees` because fee/tax coverage ends August 2023 before the July 2026 target |
+| G12H | DRAFT / BLOCKED — primary-source blocker `c95952a862057faf36c87ef14839da4105315cb8` | market-bundle-builder validation | G12C, G12CD-CN-A-SHARE-DEVELOPMENT-RULE-AUTHORITIES-V1 | aligned five-dimension authority; current exact fixture fails `COVERAGE_GAP / market_fees`; candidate later rates lack finite full-target/pre-analysis closure, and the target extends 10 days 6 hours beyond analysis |
 | G12I | DRAFT | market-bundle-builder validation | G12C, G12G | Real profile-purpose, provider/calendar availability, and terminal-set closure evidence |
 | G12J | DRAFT | trading-domain schema migration | real old artifact | No real source/target schema yet |
 | G12K | DRAFT | market-bundle-builder validation | G12C | Universe/corporate action coverage |
