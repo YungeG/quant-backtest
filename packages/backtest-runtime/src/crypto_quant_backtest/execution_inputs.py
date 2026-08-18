@@ -3365,13 +3365,11 @@ def _hydrate_execution_inputs_v3(
 
     try:
         source = reader.read(ref=ref)
-    except ArtifactIntegrityError:
+    except Exception as error:
         return _failure_v3(
             _ExecutionInputsHydrationFailureCodeV3.EXECUTION_INPUT_TAMPERED
-        )
-    except Exception:
-        return _failure_v3(
-            _ExecutionInputsHydrationFailureCodeV3.EXECUTION_INPUT_UNAVAILABLE
+            if isinstance(error, ArtifactIntegrityError)
+            else _ExecutionInputsHydrationFailureCodeV3.EXECUTION_INPUT_UNAVAILABLE
         )
     if type(source) is not ArtifactReadResult:
         return _failure_v3(
@@ -3393,11 +3391,7 @@ def _hydrate_execution_inputs_v3(
     hydrate_started = _start_v3(recorder)
     try:
         decoded = _EXECUTION_INPUT_CATALOG.read(source.source_bytes)
-    except (
-        ArtifactIntegrityError,
-        UnknownArtifactTypeError,
-        UnsupportedSchemaVersionError,
-    ):
+    except Exception as error:
         _record_v3(
             recorder,
             PerformanceOperation.HYDRATE_INPUTS,
@@ -3408,18 +3402,15 @@ def _hydrate_execution_inputs_v3(
         )
         return _failure_v3(
             _ExecutionInputsHydrationFailureCodeV3.EXECUTION_INPUT_TAMPERED
-        )
-    except Exception:
-        _record_v3(
-            recorder,
-            PerformanceOperation.HYDRATE_INPUTS,
-            PerformanceOutcome.FAILED,
-            hydrate_started,
-            0,
-            0,
-        )
-        return _failure_v3(
-            _ExecutionInputsHydrationFailureCodeV3.EXECUTION_INPUT_DECODE_FAILED
+            if isinstance(
+                error,
+                (
+                    ArtifactIntegrityError,
+                    UnknownArtifactTypeError,
+                    UnsupportedSchemaVersionError,
+                ),
+            )
+            else _ExecutionInputsHydrationFailureCodeV3.EXECUTION_INPUT_DECODE_FAILED
         )
     bundle = decoded.artifact
     if decoded.envelope != source.envelope or type(bundle) is not _DecodedExecutionInputBundleV3:
