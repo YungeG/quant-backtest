@@ -448,7 +448,11 @@ class BacktestRuntime:
             raise RuntimeError("canonical cache did not return a verified result")
 
         try:
-            terminal_ref = self._existing_terminal_ref_v3(resolved)
+            terminal_ref = self._existing_terminal_ref_v3(
+                resolved,
+                execution_case,
+                input_origin,
+            )
         except Exception:
             self._raise_v3_storage_failure("attempt_graph_invalid")
         if terminal_ref is not None:
@@ -543,6 +547,8 @@ class BacktestRuntime:
     def _existing_terminal_ref_v3(
         self,
         resolved: ResolvedBacktestRequest,
+        execution_case: ResolvedExecutionCase,
+        input_origin: InputOrigin,
     ) -> ArtifactRef | None:
         attempts = (
             self._publication_root
@@ -574,73 +580,74 @@ class BacktestRuntime:
         }
         if second.attempt_id in existing and first.attempt_id not in existing:
             raise RuntimeError("V3 restart state is not clean")
-        statuses: dict[str, str] = {}
         refs: dict[str, ArtifactRef] = {}
         for attempt_id, directory in existing.items():
             if not directory.is_dir():
                 raise RuntimeError("V3 restart state is not clean")
             try:
-                payload, envelope, _ = _read_canonical_artifact(
+                _, envelope, _ = _read_canonical_artifact(
                     directory / "evidence-manifest.json",
                     "evidence_manifest",
                 )
             except (OSError, TypeError, ValueError) as error:
                 raise RuntimeError("V3 restart state is not clean") from error
-            status = payload.get("status")
-            if (
-                payload.get("semantic_run_id") != resolved.semantic_run_id
-                or payload.get("attempt_id") != attempt_id
-                or type(status) is not str
-            ):
-                raise RuntimeError("V3 restart state is not clean")
-            statuses[attempt_id] = status
             refs[attempt_id] = ArtifactRef.from_envelope(envelope)
-        terminal_id: str | None = None
-        first_status = statuses.get(first.attempt_id)
-        second_status = statuses.get(second.attempt_id)
-        terminals = {"BLOCKED", "FAILED", "CANCELLED"}
-        if first_status in terminals and second_status is None:
-            terminal_id = first.attempt_id
-        elif first_status == "READY_FOR_INTEGRITY" and second_status in terminals:
-            terminal_id = second.attempt_id
-        elif not statuses:
+        if not refs:
             return None
-        elif terminal_id is None:
-            return None
-        if terminal_id == second.attempt_id:
-            ready_ref = self._mirror_manifest_graph(
-                relative_directory=(
-                    f"runs/{resolved.semantic_run_id}/attempts/{first.attempt_id}"
-                ),
-                manifest_name="evidence-manifest.json",
-                manifest_type="evidence_manifest",
-            )
+        repository = BacktestEvidenceRepository(reader=self._artifact_reader)
+        terminal_attempt: AttemptIdentity | None = None
+        if second.attempt_id not in refs:
             try:
-                BacktestEvidenceRepository(
-                    reader=self._artifact_reader
-                ).load_terminal(ready_ref)
+                repository._verify_terminal_attempt_context(
+                    refs[first.attempt_id],
+                    expected_attempt=first,
+                    resolved_request=resolved,
+                    execution_case=execution_case,
+                    input_origin=input_origin,
+                )
+            except BacktestEvidenceError as error:
+                if (
+                    error.code
+                    is BacktestEvidenceFailureCode.PORT_TERMINAL_NOT_ANALYZABLE
+                ):
+                    return None
+                raise
+            terminal_attempt = first
+        else:
+            try:
+                repository._verify_terminal_attempt_context(
+                    refs[first.attempt_id],
+                    expected_attempt=first,
+                    resolved_request=resolved,
+                    execution_case=execution_case,
+                    input_origin=input_origin,
+                )
             except BacktestEvidenceError as error:
                 if (
                     error.code
                     is not BacktestEvidenceFailureCode.PORT_TERMINAL_NOT_ANALYZABLE
                 ):
-                    raise RuntimeError("V3 restart state is not clean") from error
+                    raise
             else:
                 raise RuntimeError("V3 restart state is not clean")
+            repository._verify_terminal_attempt_context(
+                refs[second.attempt_id],
+                expected_attempt=second,
+                resolved_request=resolved,
+                execution_case=execution_case,
+                input_origin=input_origin,
+            )
+            terminal_attempt = second
         ref = self._mirror_manifest_graph(
             relative_directory=(
-                f"runs/{resolved.semantic_run_id}/attempts/{terminal_id}"
+                f"runs/{resolved.semantic_run_id}/attempts/"
+                f"{terminal_attempt.attempt_id}"
             ),
             manifest_name="evidence-manifest.json",
             manifest_type="evidence_manifest",
         )
-        if ref != refs[terminal_id]:
+        if ref != refs[terminal_attempt.attempt_id]:
             raise RuntimeError("V3 restart state is not clean")
-        terminal = BacktestEvidenceRepository(
-            reader=self._artifact_reader
-        ).load_terminal(ref)
-        if terminal.durable_evidence_ref != ref:
-            raise RuntimeError("terminal evidence verification returned wrong ref")
         return ref
 
     def _resolve(

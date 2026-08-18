@@ -33,9 +33,12 @@ from .execution_inputs import (
     _read_journal,
     _read_portfolio_snapshot,
 )
+from .engine import ResolvedExecutionCase
 from .integrity import EngineExecutionContext, ResultGrade
 from .ports import ArtifactEnvelopeReader
 from .publication_refs import BacktestCanonicalPublicationRef
+from .resolution import ResolvedBacktestRequest
+from .runner import AttemptIdentity, InputOrigin
 from .verified_publications import (
     TerminalStatus,
     VerifiedCompletedPublicationV2,
@@ -794,7 +797,13 @@ def _read_analysis(value: object) -> _DecodedAnalysis:
 
 def _read_metric_profile(value: object) -> _DecodedMetricProfile:
     data = _mapping("metric profile", value)
-    profile = BacktestMetricProfile(data.get("profile_key"), data.get("profile_version"))
+    version = data.get("profile_version")
+    if type(version) is not int:
+        raise TypeError("metric profile version must be int")
+    profile = BacktestMetricProfile(
+        _text("profile_key", data.get("profile_key")),
+        version,
+    )
     if canonical_bytes(profile) != canonical_bytes(data):
         raise ValueError("metric profile did not reconstruct exactly")
     return _DecodedMetricProfile(profile)
@@ -1177,12 +1186,11 @@ class BacktestEvidenceRepository:
             raise ValueError("attempt record branch mismatch")
         branch_role = _EVIDENCE_BRANCH_LAYOUT[evidence.status][0]
         branch_artifact = children[branch_role].artifact
-        branch_raw = (
-            branch_artifact.raw
-            if type(branch_artifact) in {_EngineSummary, _DecodedEvidenceChild}
-            else None
-        )
-        if branch_raw is None:
+        if type(branch_artifact) is _EngineSummary:
+            branch_raw = branch_artifact.raw
+        elif type(branch_artifact) is _DecodedEvidenceChild:
+            branch_raw = branch_artifact.raw
+        else:
             raise TypeError("wrong evidence branch decoder result")
         nested_branch = _mapping("attempt record branch", branch_values[record_branch])
         resolved = _mapping(
@@ -1470,6 +1478,87 @@ class BacktestEvidenceRepository:
             engine_context_value,
             summary,
         )
+
+    def _verify_terminal_attempt_context(
+        self,
+        ref: ArtifactRef,
+        *,
+        expected_attempt: AttemptIdentity,
+        resolved_request: ResolvedBacktestRequest,
+        execution_case: ResolvedExecutionCase,
+        input_origin: InputOrigin,
+    ) -> VerifiedTerminalPublication:
+        if type(ref) is not ArtifactRef or ref.artifact_type != "evidence_manifest":
+            raise BacktestEvidenceError(
+                BacktestEvidenceFailureCode.PORT_REF_TYPE_MISMATCH,
+                "exact evidence manifest ref required",
+            )
+        if type(expected_attempt) is not AttemptIdentity:
+            raise TypeError("expected_attempt must be exact AttemptIdentity")
+        if type(resolved_request) is not ResolvedBacktestRequest:
+            raise TypeError("resolved_request must be exact ResolvedBacktestRequest")
+        if type(execution_case) is not ResolvedExecutionCase:
+            raise TypeError("execution_case must be exact ResolvedExecutionCase")
+        if type(input_origin) is not InputOrigin:
+            raise TypeError("input_origin must be exact InputOrigin")
+        try:
+            loaded = self._read_expected(ref, "evidence_manifest", 1, root=True)
+            evidence = loaded.artifact
+            if type(evidence) is not _EvidenceManifest:
+                raise TypeError("wrong evidence manifest decoder result")
+            children = self._read_evidence_children(evidence)
+            record_artifact = children["attempt_execution_record"].artifact
+            if type(record_artifact) is not _DecodedEvidenceChild:
+                raise TypeError("wrong attempt record decoder result")
+            record = record_artifact.raw
+            branch_name = {
+                "READY_FOR_INTEGRITY": "ready_to_finalize",
+                "BLOCKED": "blocked_report",
+                "FAILED": "failed_report",
+                "CANCELLED": "cancelled_report",
+            }[evidence.status]
+            branch = _mapping("attempt terminal branch", record[branch_name])
+            branch_resolved = _mapping(
+                "attempt terminal resolved request", branch["resolved_request"]
+            )
+            branch_request = _mapping(
+                "attempt terminal public request", branch_resolved["request"]
+            )
+            if (
+                evidence.semantic_run_id != resolved_request.semantic_run_id
+                or evidence.attempt_id != expected_attempt.attempt_id
+                or canonical_bytes(branch["attempt"])
+                != canonical_bytes(expected_attempt)
+                or canonical_bytes(branch_resolved)
+                != canonical_bytes(resolved_request)
+                or canonical_sha256(branch_request)
+                != canonical_sha256(resolved_request.request)
+                or branch_resolved["semantic_run_id"]
+                != resolved_request.semantic_run_id
+                or branch["execution_case_hash"] != execution_case.case_hash
+                or branch["input_origin"] != input_origin.value
+                or resolved_request.request.execution_case_semantic_hash
+                != execution_case.semantic_spec_hash
+                or branch_request["execution_case_semantic_hash"]
+                != execution_case.semantic_spec_hash
+            ):
+                raise ValueError("terminal Attempt context mismatch")
+            if evidence.status == "READY_FOR_INTEGRITY":
+                raise BacktestEvidenceError(
+                    BacktestEvidenceFailureCode.PORT_TERMINAL_NOT_ANALYZABLE,
+                    "completed evidence is not terminal",
+                )
+            return VerifiedTerminalPublication(
+                TerminalStatus(evidence.status),
+                ref,
+            )
+        except BacktestEvidenceError:
+            raise
+        except (KeyError, TypeError, ValueError) as error:
+            raise BacktestEvidenceError(
+                BacktestEvidenceFailureCode.PORT_MANIFEST_INVALID,
+                str(error),
+            ) from error
 
     def load_terminal(self, ref: ArtifactRef) -> VerifiedTerminalPublication:
         if type(ref) is not ArtifactRef:
