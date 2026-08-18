@@ -265,7 +265,7 @@ def test_catalog_bound_event_passes_unchanged_through_g12c_and_g12d(tmp_path: Pa
     )
     assert validation.failure is None and validation.manifest is not None
     manifest = validation.manifest
-    assert manifest.to_canonical_dict() == EXPECTED["manifest"]
+    assert json.loads(canonical_bytes(manifest)) == EXPECTED["manifest"]
     assert manifest.instrument_catalog_hash == publication.instrument_catalog_hash
     assert manifest.content_hash == EXPECTED["manifest_content_hash"]
     assert manifest.streams[0].content_hash == EXPECTED["stream_content_hash"]
@@ -405,7 +405,7 @@ def test_nested_constructor_reconstruction_rejects_forged_values() -> None:
             MODULE.TushareCnAShareAcquisitionCatalogSource(**changed)
 
     forged_currency = object.__new__(CurrencyId)
-    object.__setattr__(forged_currency, "value", "CNY")
+    object.__setattr__(forged_currency, "value", "cny")
     forged_catalog = _forge(publication.instrument_catalog, currencies=(forged_currency,))
     with pytest.raises((TypeError, ValueError), match="catalog"):
         MODULE.TushareCnAShareDailyCatalogPublicationResult(
@@ -418,6 +418,38 @@ def test_nested_constructor_reconstruction_rejects_forged_values() -> None:
             publication.normalization_result, publication.instrument_catalog,
             publication.catalog_source, forged_event,
         )
+    for path in (
+        ("instrument_catalog_hash",),
+        ("catalog_binding_hash",),
+        ("catalog_source", "catalog_source_hash"),
+        ("instrument_catalog", "instruments", 0, "instrument_id", "venue"),
+    ):
+        payload = json.loads(canonical_bytes(publication.market_event.payload))
+        target = payload
+        for key in path[:-1]:
+            target = target[key]
+        target[path[-1]] = "sha256:" + "0" * 64 if path[-1] != "venue" else "xshg"
+        changed_event = MarketEvent(
+            event_id=publication.market_event.event_id,
+            stream_key=publication.market_event.stream_key,
+            event_type=publication.market_event.event_type,
+            capability=publication.market_event.capability,
+            instrument_id=publication.market_event.instrument_id,
+            event_time=publication.market_event.event_time,
+            available_time=publication.market_event.available_time,
+            phase=publication.market_event.phase,
+            source_sequence=publication.market_event.source_sequence,
+            revision_id=publication.market_event.revision_id,
+            supersedes_revision_id=publication.market_event.supersedes_revision_id,
+            source_key=publication.market_event.source_key,
+            source_hash=publication.market_event.source_hash,
+            payload=payload,
+        )
+        with pytest.raises((TypeError, ValueError), match="event"):
+            MODULE.TushareCnAShareDailyCatalogPublicationResult(
+                publication.normalization_result, publication.instrument_catalog,
+                publication.catalog_source, changed_event,
+            )
     forged_source = _forge(publication.catalog_source, decision_grade_eligible=1)
     with pytest.raises((TypeError, ValueError), match="source"):
         MODULE.TushareCnAShareDailyCatalogPublicationResult(
