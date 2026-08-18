@@ -37,6 +37,8 @@ from tests.runtime.engine._fixtures import (
     execution_model,
     snapshot_plan,
     target_event,
+    warmup_cycle,
+    warmup_target_event,
 )
 from tests.runtime.resolution._fixtures import build_manifest, profile_registry, request
 
@@ -50,6 +52,41 @@ def _g12g_bar(start: int, stop: int, *, stream_key: str, instrument_id=BTC) -> t
     generated = outcome.result.generated_events[0]
     definition = outcome.result.aggregation_manifest.bar_definition
     return replace(generated, stream_key=stream_key, instrument_id=instrument_id), definition
+
+
+def bind_reader(values: dict[str, object], reader: InMemoryMarketBundleReader) -> None:
+    manifest = build_manifest()
+    resolved_outcome = ProfileResolver().resolve(
+        request=replace(
+            request(manifest, bundle=reader.manifest),
+            market_bundle_ref=reader.bundle_ref,
+        ),
+        registry=profile_registry(
+            extra_market_capabilities=(MarketBundleCapability("price_bars", 1),)
+        ),
+        market_bundle_manifest=reader.manifest,
+        build_artifact_manifest=manifest,
+    )
+    assert resolved_outcome.resolved is not None
+    values["expected_bundle_ref"] = reader.bundle_ref
+    values["reader"] = reader
+    values["resolved_request"] = resolved_outcome.resolved
+
+
+def rebuild_reader(values: dict[str, object], **streams) -> InMemoryMarketBundleReader:
+    reader = values["reader"]
+    assert isinstance(reader, InMemoryMarketBundleReader)
+    contents = dict(reader.streams)
+    contents.update(streams)
+    return InMemoryMarketBundleReader.build(
+        bundle_key=reader.manifest.bundle_key,
+        schema_version=reader.manifest.schema_version,
+        coverage_start=reader.manifest.coverage_start,
+        coverage_end_exclusive=reader.manifest.coverage_end_exclusive,
+        instrument_catalog_hash=reader.manifest.instrument_catalog_hash,
+        capabilities=tuple({event.capability for events in contents.values() for event in events}),
+        streams=contents,
+    )
 
 
 def prepared_inputs():
@@ -137,20 +174,7 @@ def prepared_inputs():
         snapshot_plan=replace(snapshot_plan(), resolved_marks=(mark,)),
         target_stream=PrecomputedTargetStream("targets", (target_event(),)),
     )
-    manifest = build_manifest()
-    resolved_outcome = ProfileResolver().resolve(
-        request=replace(
-            request(manifest, bundle=reader.manifest),
-            market_bundle_ref=reader.bundle_ref,
-        ),
-        registry=profile_registry(
-            extra_market_capabilities=(MarketBundleCapability("price_bars", 1),)
-        ),
-        market_bundle_manifest=reader.manifest,
-        build_artifact_manifest=manifest,
-    )
-    assert resolved_outcome.resolved is not None
-    return {
+    values = {
         "expected_bundle_ref": reader.bundle_ref,
         "reader": reader,
         "schedule": schedule,
@@ -166,5 +190,7 @@ def prepared_inputs():
             ),
         ),
         "case_authority": authority,
-        "resolved_request": resolved_outcome.resolved,
+        "resolved_request": None,
     }
+    bind_reader(values, reader)
+    return values

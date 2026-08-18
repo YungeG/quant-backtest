@@ -35,6 +35,7 @@ from .engine import (
     ResolvedBarExecution,
     ResolvedDecisionCycle,
     ResolvedMark,
+    ResolvedOrderAdmission,
     SnapshotProjectionPlan,
 )
 from .execution import NextEligibleBarOpenModel
@@ -50,7 +51,12 @@ from .multi_resolution_market_data import (
     validate_schedule_signal_exact_cover,
     verify_visible_signal_bars,
 )
-from .observation_windows import BarDefinitionRef, NamedBarWindowQuery, NamedBarWindowView
+from .observation_windows import (
+    BarDefinitionRef,
+    NamedBarWindowQuery,
+    NamedBarWindowResult,
+    NamedBarWindowView,
+)
 from .observations import (
     ObservationPurposeRef,
     ObservationQuery,
@@ -607,17 +613,36 @@ def _stream_lookup(
 ) -> dict[str, MarketStreamManifest] | None:
     start = None if recorder is None else _clock()
     manifests = {value.stream_key: value for value in reader.manifest.streams}
-    found = {key: manifests[key] for key in keys if key in manifests}
-    succeeded = len(found) == len(set(keys))
+    found_count = sum(key in manifests for key in keys)
+    succeeded = found_count == len(keys)
     _record(
         recorder,
         PerformanceOperation.LOOKUP_STREAMS,
         PerformanceOutcome.SUCCEEDED if succeeded else PerformanceOutcome.FAILED,
         start,
         len(keys),
-        len(found),
+        found_count,
     )
-    return found if succeeded else None
+    return ({key: manifests[key] for key in keys} if succeeded else None)
+
+
+def _signal_manifest_failure(
+    schedule: DecisionSchedule,
+    bindings: tuple[SignalBarBinding, ...],
+    manifests: dict[str, MarketStreamManifest],
+) -> int | None:
+    requirements = {value.requirement_hash: value for value in schedule.requirements}
+    failures = []
+    for position, binding in enumerate(bindings):
+        requirement = requirements[binding.requirement_hash]
+        manifest = manifests[binding.stream_key]
+        if (
+            manifest.event_type != "bar"
+            or manifest.capability != _BAR_CAPABILITY
+            or manifest.capability != requirement.observation_query.capability
+        ):
+            failures.append(position)
+    return min(failures) if failures else None
 
 
 def _valid_valuation_bar(event: MarketEvent, manifest: MarketStreamManifest) -> bool:
@@ -629,26 +654,30 @@ def _valid_valuation_bar(event: MarketEvent, manifest: MarketStreamManifest) -> 
             ObservationPurposeRef("valuation.bar", 1),
             event.capability,
         )
+        definition_key = _text("bar_definition_key", payload["bar_definition_key"])
+        definition_version = payload["bar_definition_version"]
+        if type(definition_version) is not int:
+            return False
+        definition_hash = _hash("bar_definition_hash", payload["bar_definition_hash"])
+        aggregation_input_hash = _hash(
+            "aggregation_input_hash", payload["aggregation_input_hash"]
+        )
         requirement = LookbackRequirement(
             "valuation-bar",
             query,
-            BarDefinitionRef(
-                payload["bar_definition_key"],
-                payload["bar_definition_version"],
-                payload["bar_definition_hash"],
-            ),
+            BarDefinitionRef(definition_key, definition_version, definition_hash),
             1,
         )
         binding = SignalBarBinding(
             requirement.requirement_hash,
             event.stream_key,
             PricePurpose.VALUATION,
-            payload["aggregation_input_hash"],
+            aggregation_input_hash,
         )
         return (
             event.capability == _BAR_CAPABILITY
             and payload["price_purpose"] == PricePurpose.VALUATION.value
-            and event.source_hash == payload["aggregation_input_hash"]
+            and event.source_hash == aggregation_input_hash
             and not _malformed(requirement, binding, manifest, event)
         )
     except (AttributeError, KeyError, TypeError, ValueError):
@@ -685,10 +714,15 @@ def _execution_failure(
     ):
         return 0, None
     events = {value.event_id: value for value in reader.streams[binding.stream_key]}
+    admissions_by_order: dict[object, list[ResolvedOrderAdmission]] = {}
+    for cycle in authority.decision_cycles:
+        for admission in cycle.admissions:
+            admissions_by_order.setdefault(admission.order.order_id, []).append(admission)
     for position, execution in enumerate(authority.bar_executions):
         event = events.get(execution.event_id)
         evidence = execution.liquidity_evidence
         state = execution.market_state
+        admissions = admissions_by_order.get(execution.order_id, [])
         if event is None or (
             evidence.market_event_id != event.event_id
             or evidence.market_event_hash != event.event_hash
@@ -699,6 +733,10 @@ def _execution_failure(
             or state.observed_at != event.event_time
             or state.available_at != event.available_time
             or state.evidence_hash != event.event_hash
+            or (
+                len(admissions) == 1
+                and event.instrument_id != admissions[0].order.intent.instrument_id
+            )
         ):
             return 0, position
     return None
@@ -753,9 +791,16 @@ def _lineage_records(
         value.requirement_hash: value for value in bindings.signal_bindings
     }
     rows_by_requirement: dict[str, list[SignalObservationLineageBinding]] = {}
+    event_hashes: dict[str, str] = {}
+    identities: set[tuple[str, str]] = set()
     for position, row in enumerate(lineages):
         if row.requirement_hash not in requirements:
             return None, (0, position)
+        identity = (row.requirement_hash, row.event_id)
+        previous = event_hashes.setdefault(row.event_id, row.event_hash)
+        if identity in identities or previous != row.event_hash:
+            return None, (0, position)
+        identities.add(identity)
         rows_by_requirement.setdefault(row.requirement_hash, []).append(row)
     records: dict[str, tuple[RevisionedObservationRecord, ...]] = {}
     start = schedule.window.data_start
@@ -827,8 +872,15 @@ def _cycle_failure(
             return position, None
     if len(mapped) != len(authority.decision_cycles):
         return None, None
-    if not mapped and authority.bar_executions:
-        return None, None
+    active_admissions: dict[object, int] = {}
+    for _, cycle in mapped:
+        if cycle.schedule.segment is TimelineSegment.ACTIVE_TRADING:
+            for admission in cycle.admissions:
+                order_id = admission.order.order_id
+                active_admissions[order_id] = active_admissions.get(order_id, 0) + 1
+    for event_position, execution in enumerate(authority.bar_executions):
+        if active_admissions.get(execution.order_id, 0) != 1:
+            return None, event_position
     expected_target_ids = {
         entry.event_id
         for _, cycle in mapped
@@ -905,25 +957,55 @@ def prepare_multi_resolution_market_data_v1(
         if type(values) is not tuple or any(type(value) is not expected for value in values):
             raise TypeError(f"{name} must contain exact values")
     signal_binding_candidates = tuple(
-        SignalBarBinding(
-            value.requirement_hash,
-            value.stream_key,
-            value.price_purpose,
-            value.aggregation_input_hash,
+        sorted(
+            (
+                SignalBarBinding(
+                    value.requirement_hash,
+                    value.stream_key,
+                    value.price_purpose,
+                    value.aggregation_input_hash,
+                )
+                for value in signal_binding_candidates
+            ),
+            key=lambda value: (
+                value.requirement_hash,
+                value.stream_key,
+                value.price_purpose.value,
+                value.aggregation_input_hash,
+            ),
         )
-        for value in signal_binding_candidates
     )
     execution_binding_candidates = tuple(
-        ExecutionDataBinding(value.profile_binding_key, value.stream_key)
-        for value in execution_binding_candidates
+        sorted(
+            (
+                ExecutionDataBinding(value.profile_binding_key, value.stream_key)
+                for value in execution_binding_candidates
+            ),
+            key=lambda value: (value.profile_binding_key, value.stream_key),
+        )
     )
     valuation_binding_candidates = tuple(
-        ValuationDataBinding(value.instrument_id, value.stream_key)
-        for value in valuation_binding_candidates
+        sorted(
+            (
+                ValuationDataBinding(value.instrument_id, value.stream_key)
+                for value in valuation_binding_candidates
+            ),
+            key=lambda value: (canonical_bytes(value.instrument_id), value.stream_key),
+        )
     )
     if type(signal_lineages) is not tuple:
         raise TypeError("signal_lineages must be an exact tuple")
-    signal_lineages = tuple(_lineage(value) for value in signal_lineages)
+    signal_lineages = tuple(
+        sorted(
+            (_lineage(value) for value in signal_lineages),
+            key=lambda value: (
+                value.requirement_hash,
+                value.event_id,
+                value.event_hash,
+                value.observation_key,
+            ),
+        )
+    )
     if type(case_authority) is not MarketDataCaseAuthority:
         raise TypeError("case_authority must be exact MarketDataCaseAuthority")
     MarketDataCaseAuthority(
@@ -970,6 +1052,24 @@ def prepare_multi_resolution_market_data_v1(
     if manifests is None:
         _record(recorder, PerformanceOperation.VERIFY_REPLAY, PerformanceOutcome.FAILED, replay_start, len(role_keys), 0)
         return _failure(MarketDataPreparationFailureCode.STREAM_MANIFEST_MISMATCH)
+    signal_manifest_position = _signal_manifest_failure(
+        schedule, signal_binding_candidates, manifests
+    )
+    if signal_manifest_position is not None:
+        _record(
+            recorder,
+            PerformanceOperation.VERIFY_REPLAY,
+            PerformanceOutcome.FAILED,
+            replay_start,
+            len(signal_binding_candidates),
+            0,
+        )
+        return _failure(
+            MarketDataPreparationFailureCode.STREAM_MANIFEST_MISMATCH,
+            _ROLE_SIGNAL,
+            None,
+            signal_manifest_position,
+        )
     if len({value.profile_binding_key for value in execution_binding_candidates}) != len(execution_binding_candidates):
         _record(recorder, PerformanceOperation.VERIFY_REPLAY, PerformanceOutcome.FAILED, replay_start, len(execution_binding_candidates), 0)
         return _failure(MarketDataPreparationFailureCode.EXECUTION_PROFILE_BINDING_MISMATCH, _ROLE_EXECUTION)
@@ -981,9 +1081,9 @@ def prepare_multi_resolution_market_data_v1(
             signal_bindings=signal_binding_candidates,
             execution_bindings=execution_binding_candidates,
             valuation_bindings=valuation_binding_candidates,
-            recorder=recorder,
+            recorder=None,
         )
-        validate_schedule_signal_exact_cover(schedule, bindings, recorder)
+        validate_schedule_signal_exact_cover(schedule, bindings, None)
     except (TypeError, ValueError):
         _record(recorder, PerformanceOperation.VERIFY_REPLAY, PerformanceOutcome.FAILED, replay_start, len(signal_binding_candidates), 0)
         return _failure(MarketDataPreparationFailureCode.SIGNAL_BINDING_MISMATCH, _ROLE_SIGNAL)
@@ -1009,7 +1109,9 @@ def prepare_multi_resolution_market_data_v1(
     point_failures: list[tuple[int, int]] = []
     signal_failures: list[tuple[int, int, int]] = []
     window_failures: list[tuple[int, int]] = []
-    windows_by_entry: dict[int, list[object]] = {position: [] for position in range(len(schedule.entries))}
+    windows_by_entry: dict[int, list[NamedBarWindowResult]] = {
+        position: [] for position in range(len(schedule.entries))
+    }
     binding_by_requirement = {value.requirement_hash: value for value in bindings.signal_bindings}
     for entry_position, entry in enumerate(schedule.entries):
         for requirement_position, requirement in enumerate(schedule.requirements):
@@ -1029,13 +1131,17 @@ def prepare_multi_resolution_market_data_v1(
                 continue
             visible = point_outcome.result
             _record(recorder, PerformanceOperation.PROJECT_POINT_IN_TIME, PerformanceOutcome.SUCCEEDED, point_start, len(requirement_records), len(visible.events))
-            verification = verify_visible_signal_bars(
-                requirement,
-                binding_by_requirement[requirement.requirement_hash],
-                manifests[binding_by_requirement[requirement.requirement_hash].stream_key],
-                visible,
-                recorder,
-            )
+            try:
+                verification = verify_visible_signal_bars(
+                    requirement,
+                    binding_by_requirement[requirement.requirement_hash],
+                    manifests[binding_by_requirement[requirement.requirement_hash].stream_key],
+                    visible,
+                    None,
+                )
+            except (TypeError, ValueError):
+                signal_failures.append((entry_position, requirement_position, 0))
+                continue
             if verification.failure is not None:
                 signal_failures.append((entry_position, requirement_position, verification.failure.event_position))
                 continue

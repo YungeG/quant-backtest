@@ -38,6 +38,32 @@ def test_preparation_is_off_root_and_has_no_forbidden_architecture_dependencies(
     assert "MultiResolutionMarketDataPreparation" not in root
 
 
+def test_preparation_does_not_reinstrument_f1_helpers() -> None:
+    tree = ast.parse(MODULE.read_text(encoding="utf-8"))
+    calls = {
+        node.func.id: node
+        for node in ast.walk(tree)
+        if isinstance(node, ast.Call)
+        and isinstance(node.func, ast.Name)
+        and node.func.id
+        in {
+            "construct_multi_resolution_market_data_bindings",
+            "validate_schedule_signal_exact_cover",
+            "verify_visible_signal_bars",
+        }
+    }
+    construct = calls["construct_multi_resolution_market_data_bindings"]
+    assert next(
+        keyword.value
+        for keyword in construct.keywords
+        if keyword.arg == "recorder"
+    ).value is None
+    validate = calls["validate_schedule_signal_exact_cover"]
+    verify = calls["verify_visible_signal_bars"]
+    assert isinstance(validate.args[-1], ast.Constant) and validate.args[-1].value is None
+    assert isinstance(verify.args[-1], ast.Constant) and verify.args[-1].value is None
+
+
 def test_exact_value_field_surfaces_remain_minimal() -> None:
     assert tuple(field.name for field in fields(SignalObservationLineageBinding)) == (
         "requirement_hash", "event_id", "event_hash", "observation_key"
