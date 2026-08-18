@@ -1,9 +1,10 @@
 from __future__ import annotations
 
-from copy import deepcopy
 from dataclasses import fields, replace
+import hashlib
 from inspect import signature
 import json
+from pathlib import Path
 
 import pytest
 
@@ -47,8 +48,15 @@ from tests.runtime.resolution._fixtures import profile_registry
 from tests.runtime.runner._fixtures import resolved_request_and_case
 
 
+_FIXTURE = (
+    Path(__file__).resolve().parents[2]
+    / "fixtures/runtime/bt-gap02b-execution-input-bundle-v3.json"
+)
+_FIXTURE_SHA256 = "ac17536771914f599b3ea58f936049208f29b3f707815456e5b763d0762e5179"
+
+
 class _Reader:
-    def __init__(self, envelope: ArtifactEnvelope | None = None, error: Exception | None = None):
+    def __init__(self, envelope: ArtifactEnvelope | None = None, error: BaseException | None = None):
         self.envelope = envelope
         self.error = error
 
@@ -134,6 +142,24 @@ def _hydrate(envelope, transport, prepared, resolved, recorder=None):
         prepared_market_data=prepared,
         recorder=recorder,
     )
+
+
+def test_v3_frozen_fixture_locks_bundle_and_identity_chain() -> None:
+    fixture = json.loads(_FIXTURE.read_text(encoding="utf-8"))
+    assert hashlib.sha256(_FIXTURE.read_bytes()).hexdigest() == _FIXTURE_SHA256
+    prepared, resolved, hydrated, envelope, _ = _contract()
+    assert fixture["fixture_id"] == "backtest-execution-input-bundle-v3"
+    assert fixture["bundle"]["envelope"] == json.loads(canonical_bytes(envelope).decode())
+    assert fixture["bundle"]["expected_canonical_sha256"] == canonical_sha256(envelope)
+    assert fixture["identity"] == {
+        "decision_inputs_hash": hydrated.execution_case_semantic_spec.decision_inputs_hash,
+        "execution_inputs_hash": hydrated.execution_case_semantic_spec.execution_inputs_hash,
+        "snapshot_inputs_hash": hydrated.execution_case_semantic_spec.snapshot_inputs_hash,
+        "execution_case_semantic_hash": hydrated.execution_case_semantic_spec.semantic_spec_hash,
+        "request_hash": resolved.request.request_hash,
+        "semantic_run_id": resolved.semantic_run_id,
+        "preparation_hash": prepared.preparation.preparation_hash,
+    }
 
 
 def test_v3_is_one_private_catalog_registration_and_exact_v2_plus_preparation() -> None:
@@ -348,6 +374,40 @@ def test_v3_hydrate_and_replay_observations_are_direct_and_invariant(monkeypatch
         envelope, transport, prepared, resolved, BoundedPerformanceRecorder()
     )
     assert failed_recorder == expected
+
+
+def test_v3_instrumentation_failures_preserve_authority_and_baseexceptions(monkeypatch) -> None:
+    prepared, resolved, _, envelope, transport = _contract()
+    expected = _hydrate(envelope, transport, prepared, resolved)
+
+    def fail_instrumentation(*args, **kwargs):
+        raise RuntimeError("SECRET-instrumentation")
+
+    monkeypatch.setattr(
+        "crypto_quant_backtest.execution_inputs._clock", fail_instrumentation
+    )
+    monkeypatch.setattr(
+        "crypto_quant_backtest.execution_inputs._binding_count_v3",
+        fail_instrumentation,
+    )
+    observed = _hydrate(
+        envelope, transport, prepared, resolved, BoundedPerformanceRecorder()
+    )
+    assert observed == expected
+
+    class FatalAuthorityFailure(BaseException):
+        pass
+
+    fatal = FatalAuthorityFailure("fatal-authority")
+    with pytest.raises(FatalAuthorityFailure) as raised:
+        _hydrate_execution_inputs_v3(
+            _Reader(error=fatal),
+            transport,
+            market_reader=prepared.verified_reader,
+            resolved_request=resolved,
+            prepared_market_data=prepared,
+        )
+    assert raised.value is fatal
 
 
 def test_legacy_bytes_signatures_and_request_shape_remain_locked() -> None:

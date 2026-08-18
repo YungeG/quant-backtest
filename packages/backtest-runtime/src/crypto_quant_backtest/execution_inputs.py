@@ -2904,6 +2904,15 @@ def _failure_v3(
     )
 
 
+def _start_v3(recorder: BoundedPerformanceRecorder | None) -> int | None:
+    if recorder is None:
+        return None
+    try:
+        return _clock()
+    except BaseException:
+        return None
+
+
 def _record_v3(
     recorder: BoundedPerformanceRecorder | None,
     operation: PerformanceOperation,
@@ -2914,16 +2923,19 @@ def _record_v3(
 ) -> None:
     if recorder is None or started_at is None:
         return
-    ended_at = _clock()
-    if ended_at is not None and ended_at >= started_at:
-        _record_observation(
-            recorder,
-            operation,
-            outcome,
-            ended_at - started_at,
-            input_count,
-            output_count,
-        )
+    try:
+        ended_at = _clock()
+        if ended_at is not None and ended_at >= started_at:
+            _record_observation(
+                recorder,
+                operation,
+                outcome,
+                ended_at - started_at,
+                input_count,
+                output_count,
+            )
+    except BaseException:
+        return
 
 
 def _binding_count_v3(preparation: MultiResolutionMarketDataPreparation) -> int:
@@ -2933,6 +2945,15 @@ def _binding_count_v3(preparation: MultiResolutionMarketDataPreparation) -> int:
         + len(bindings.execution_bindings)
         + len(bindings.valuation_bindings)
     )
+
+
+def _observation_binding_count_v3(
+    preparation: MultiResolutionMarketDataPreparation,
+) -> int:
+    try:
+        return _binding_count_v3(preparation)
+    except BaseException:
+        return 0
 
 
 def _binding_mismatch_position(
@@ -3027,7 +3048,7 @@ def _hydrate_execution_inputs_v3(
         return _failure_v3(
             _ExecutionInputsHydrationFailureCodeV3.EXECUTION_INPUT_TAMPERED
         )
-    except BaseException:
+    except Exception:
         return _failure_v3(
             _ExecutionInputsHydrationFailureCodeV3.EXECUTION_INPUT_UNAVAILABLE
         )
@@ -3048,7 +3069,7 @@ def _hydrate_execution_inputs_v3(
             _ExecutionInputsHydrationFailureCodeV3.EXECUTION_INPUT_TAMPERED
         )
 
-    hydrate_started = None if recorder is None else _clock()
+    hydrate_started = _start_v3(recorder)
     try:
         decoded = _EXECUTION_INPUT_CATALOG.read(source.source_bytes)
     except (
@@ -3067,7 +3088,7 @@ def _hydrate_execution_inputs_v3(
         return _failure_v3(
             _ExecutionInputsHydrationFailureCodeV3.EXECUTION_INPUT_TAMPERED
         )
-    except BaseException:
+    except Exception:
         _record_v3(
             recorder,
             PerformanceOperation.HYDRATE_INPUTS,
@@ -3092,7 +3113,7 @@ def _hydrate_execution_inputs_v3(
         return _failure_v3(
             _ExecutionInputsHydrationFailureCodeV3.EXECUTION_INPUT_DECODE_FAILED
         )
-    binding_count = _binding_count_v3(bundle.market_data_preparation)
+    binding_count = _observation_binding_count_v3(bundle.market_data_preparation)
     _record_v3(
         recorder,
         PerformanceOperation.HYDRATE_INPUTS,
@@ -3141,7 +3162,7 @@ def _hydrate_execution_inputs_v3(
                 raise ValueError("target cursor did not advance")
             events.extend(batch)
         target_stream = PrecomputedTargetStream(bundle.target_stream_key, tuple(events))
-    except BaseException:
+    except Exception:
         return _failure_v3(
             _ExecutionInputsHydrationFailureCodeV3.TARGET_BINDING_MISMATCH
         )
@@ -3154,14 +3175,14 @@ def _hydrate_execution_inputs_v3(
             _ExecutionInputsHydrationFailureCodeV3.TARGET_BINDING_MISMATCH
         )
 
-    replay_started = None if recorder is None else _clock()
+    replay_started = _start_v3(recorder)
     try:
         retained_preparation = MultiResolutionMarketDataPreparation(
             prepared_market_data.preparation.decision_schedule,
             prepared_market_data.preparation.bindings,
             prepared_market_data.preparation.signal_lineages,
         )
-    except BaseException:
+    except Exception:
         _record_v3(
             recorder,
             PerformanceOperation.VERIFY_REPLAY,
