@@ -194,6 +194,54 @@ def test_failure_precedence_selects_valuation_before_lineage() -> None:
     assert outcome.failure.code is MarketDataPreparationFailureCode.VALUATION_PROFILE_BINDING_MISMATCH
 
 
+def test_strict_execution_and_valuation_source_identity_fail_closed() -> None:
+    values = prepared_inputs()
+    authority = values["case_authority"]
+    execution = authority.bar_executions[0]
+    wrong_state = replace(execution.market_state, revision_id="wrong-revision")
+    values["case_authority"] = replace(
+        authority,
+        bar_executions=(replace(execution, market_state=wrong_state),),
+    )
+    outcome = prepare_multi_resolution_market_data_v1(**values)
+    assert outcome.failure is not None
+    assert outcome.failure.code is MarketDataPreparationFailureCode.EXECUTION_PROFILE_BINDING_MISMATCH
+
+    values = prepared_inputs()
+    authority = values["case_authority"]
+    mark = replace(authority.snapshot_plan.resolved_marks[0], revision_id="wrong-revision")
+    values["case_authority"] = replace(
+        authority,
+        snapshot_plan=replace(authority.snapshot_plan, resolved_marks=(mark,)),
+    )
+    outcome = prepare_multi_resolution_market_data_v1(**values)
+    assert outcome.failure is not None
+    assert outcome.failure.code is MarketDataPreparationFailureCode.VALUATION_PROFILE_BINDING_MISMATCH
+
+
+def test_forged_lineage_hash_fails_before_point_in_time_projection() -> None:
+    values = prepared_inputs()
+    row = values["signal_lineages"][0]
+    values["signal_lineages"] = (replace(row, event_hash="sha256:" + "f" * 64),)
+    outcome = prepare_multi_resolution_market_data_v1(**values)
+    assert outcome.failure is not None
+    assert outcome.failure.code is MarketDataPreparationFailureCode.SIGNAL_LINEAGE_MISMATCH
+
+
+def test_recorder_failure_cannot_change_authoritative_success(monkeypatch) -> None:
+    values = prepared_inputs()
+    expected = prepare_multi_resolution_market_data_v1(**values)
+
+    def fail_record(self, **kwargs):
+        raise RuntimeError("secret-recorder-failure")
+
+    monkeypatch.setattr(BoundedPerformanceRecorder, "record", fail_record)
+    observed = prepare_multi_resolution_market_data_v1(
+        **values, recorder=BoundedPerformanceRecorder()
+    )
+    assert observed == expected
+
+
 def test_target_timeline_must_follow_full_decision_instant() -> None:
     values = prepared_inputs()
     entry = values["schedule"].entries[0]

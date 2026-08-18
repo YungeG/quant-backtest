@@ -11,19 +11,21 @@ from crypto_quant_backtest import (
     ObservationQuery,
     PrecomputedTargetStream,
     ProfileResolver,
-    SimulationInstant,
-    SourceSequence,
-    TimelinePhase,
     TimelineSegment,
     TimelineWindow,
-    UtcInstant,
 )
 from crypto_quant_backtest.multi_resolution_market_data import (
     ExecutionDataBinding,
     SignalBarBinding,
     ValuationDataBinding,
 )
-from crypto_quant_domain import PricePurpose
+from crypto_quant_domain import (
+    PricePurpose,
+    SimulationInstant,
+    SourceSequence,
+    TimelinePhase,
+    UtcInstant,
+)
 from crypto_quant_market_data import InMemoryMarketBundleReader, MarketBundleCapability, MarketEvent
 
 from tests.bundle_builder.bar_aggregation.test_bar_aggregation import aggregate, bucket, event, plan
