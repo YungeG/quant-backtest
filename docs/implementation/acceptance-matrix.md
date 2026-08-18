@@ -160,7 +160,7 @@ artifact_hashes: []
 | G12E | PASSED | market-data-contracts | G12D, WP-06A | none |
 | G12F | PASSED | parity tooling | G12E, G07 | none |
 | G12G | PASSED | market-bundle-builder | G12B–G12C | Bar aggregation fixtures |
-| G12H | DRAFT | market-bundle-builder validation | G12C | Rule coverage fixtures |
+| G12H | DRAFT / BLOCKED | market-bundle-builder validation | G12C, G12CD-CN-A-SHARE-DEVELOPMENT-RULE-AUTHORITIES-V1 | aligned five-dimension authority; current exact fixture fails `COVERAGE_GAP / market_fees` because fee/tax coverage ends August 2023 before the July 2026 target |
 | G12I | DRAFT | market-bundle-builder validation | G12C, G12G | Real profile-purpose, provider/calendar availability, and terminal-set closure evidence |
 | G12J | DRAFT | trading-domain schema migration | real old artifact | No real source/target schema yet |
 | G12K | DRAFT | market-bundle-builder validation | G12C | Universe/corporate action coverage |

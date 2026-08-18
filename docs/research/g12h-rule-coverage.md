@@ -2,9 +2,9 @@
 
 ## Decision status
 
-G12H remains **DRAFT / BLOCKED**, but its source-publication prerequisite is now closed. `G12CD-CN-A-SHARE-DEVELOPMENT-RULE-AUTHORITIES-V1` PASSED at `832f53a74d3f74436ecae8672bd1c0dd3530c814`, losslessly binding the five G08H development authorities to one immutable G12C/D Bundle.
+G12H remains **DRAFT / BLOCKED**. `G12CD-CN-A-SHARE-DEVELOPMENT-RULE-AUTHORITIES-V1` PASSED at `832f53a74d3f74436ecae8672bd1c0dd3530c814`, losslessly binding the five G08H development authorities to one immutable G12C/D Bundle. Exact follow-up evidence now shows that the five dimensions do not cover one common target interval.
 
-This note does not authorize the G12H validator, provider completeness, Runtime integration, decision-grade use, or deployment. The remaining work is to freeze G12H's own declaration/report/failure contract and RED matrix against that Bundle.
+This note does not authorize the G12H validator, provider completeness, Runtime integration, decision-grade use, or deployment. Exact interval evidence and the additive prerequisite are recorded in `docs/research/g12h-five-dimension-target-coverage-blocker-v1.md`.
 
 ## Grounded prerequisite evidence
 
@@ -50,9 +50,9 @@ The PASSED declaration binds the exact G08H profile request, market-profile dige
 
 ## Readiness verdict
 
-The smallest grounded prerequisite is PASSED. G12H still remains **BLOCKED** because its analyzer contract is not frozen. The next readiness slice must define one exact Builder-owned declaration, atomic report/failure shapes, interval/applicability semantics, deterministic precedence, and RED fixtures against the accepted manifest/events.
+The source-publication prerequisite is PASSED, but its target is July 2026 while the exact XSHE market-fee and stamp-duty bands end in August 2023. The deterministic earliest result is `COVERAGE_GAP / market_fees`; the complete five-dimension interval intersection is empty.
 
-No provider truth, generic rule model, Runtime boot path, public Builder root export, decision-grade claim, or deployment authority follows from the prerequisite publication.
+G12H therefore remains **BLOCKED** on a new additive aligned authority set, not merely on naming an analyzer contract. No production analyzer or synthetic success fixture is added. No provider truth, generic rule model, Runtime boot path, public Builder root export, decision-grade claim, or deployment authority follows from the prerequisite publication.
 
 ## Provisional downstream outcome
 
