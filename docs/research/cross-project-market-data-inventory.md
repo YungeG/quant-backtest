@@ -16,8 +16,8 @@ The strongest existing A-share source is the external DuckDB lake used by
 
 ```text
 /srv/bcache-8t/ygguo/duckdb/quant-a50/quant_a50.duckdb
-sha256: e06542cbf76d1043bf47e0660bf91b9cfbd90fab3c15616db50878271c8948b3
-size: about 1.6 GiB
+sha256: 7d82c0408f09ef665ea93a718def3e5355920eca703ad4d145217e23c39992ef
+size: 1,708,404,736 bytes
 ```
 
 The current read-only inventory found:
@@ -37,12 +37,15 @@ The current read-only inventory found:
 | `MarginDetailData` | 6,105,951 | margin balances and intensity fields |
 
 `MarketData.Source` is uniformly `tushare_compatible_csv`; the daily natural key
-`(TradingDay, Symbol)` has no duplicates. `IntradayData` is not acceptance-ready:
-the prior inventory observed 14,496 duplicate natural-key rows and 13,356
-conflicting duplicate groups. A deterministic re-audit attempted on 2026-08-18 is
-`BLOCKED` because the DuckDB was actively mutated and could not be opened read-only;
-see `docs/research/intraday-data-deterministic-audit-blocked-20260818.md`. Those
-prior counts were not promoted as results of the blocked run.
+`(TradingDay, Symbol)` has no duplicates. The deterministic read-only `IntradayData`
+audit now PASSES reproducibility at canonical audit hash
+`sha256:4224e9ffcebde23c116107d091b40620620c4a6b828dee0b2e94eb64db9458cf`;
+see `docs/research/intraday-data-deterministic-audit-20260818.md`. It confirms
+14,496 duplicate `(symbol, timestamp, freq)` groups: 1,140 are payload-exact after
+excluding representational `ts_code`, while 13,356 have conflicting payloads. The
+table contains no source/fetch/revision authority, so no winning row or deduplication
+policy is inferred. The earlier blocked report remains historical evidence of the
+first mutable-state attempt.
 
 The lake is mutable and not Git-bound. A stable local backup is also present:
 
