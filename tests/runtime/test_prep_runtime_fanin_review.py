@@ -1042,3 +1042,29 @@ def test_v3_cache_repository_return_identity_must_match(
     with pytest.raises(RuntimeError, match="cache_verification_failed"):
         _runtime(tmp_path, store, prepared).run(transport)
     assert no_engine.calls == 0
+
+
+def test_v3_snapshot_exact_malformed_ref_is_secret_safe(
+    tmp_path: Path,
+) -> None:
+    prepared, resolved, _, envelope, _ = _executable_contract()
+    secret = "SECRET-exact-ref-/private/path"
+
+    class EvilText(str):
+        def __eq__(self, other):
+            raise RuntimeError(secret)
+
+    ref = object.__new__(ArtifactRef)
+    object.__setattr__(ref, "artifact_type", EvilText("backtest_execution_input_bundle"))
+    object.__setattr__(ref, "schema_version", 3)
+    object.__setattr__(ref, "content_hash", "sha256:" + "0" * 64)
+    forged = object.__new__(BacktestExecutionRequest)
+    object.__setattr__(forged, "schema_version", 3)
+    object.__setattr__(forged, "request", resolved.request)
+    object.__setattr__(forged, "execution_input_bundle_ref", ref)
+    store = _ArtifactStore(envelope)
+
+    with pytest.raises(RuntimeError, match="malformed_execution_request") as raised:
+        _runtime(tmp_path, store, prepared).run(forged)
+    assert secret not in str(raised.value)
+    assert store.reads == 0
