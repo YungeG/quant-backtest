@@ -61,8 +61,8 @@ def test_v2_uses_the_existing_catalog_and_no_second_selector() -> None:
         "BT-GAP-02C RED: v2 implementation is absent"
     )
     assert source.count("SchemaCatalog(") == 1
-    assert source.count("CanonicalSchema(") == 2, (
-        "BT-GAP-02C RED: bundle@2 must be a second registration in the existing catalog"
+    assert source.count("CanonicalSchema(") == 3, (
+        "PREP-COVERAGE-01: bundle@3 must be a third registration in the existing catalog"
     )
     generic_source = "\n".join(
         path.read_text(encoding="utf-8") for path in _GENERIC_RUNTIME
