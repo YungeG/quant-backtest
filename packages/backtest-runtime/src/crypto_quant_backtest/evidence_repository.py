@@ -279,7 +279,7 @@ def _attempt(value: object) -> str:
 
 
 def _false(name: str, value: object) -> None:
-    if value is not False:
+    if type(value) is not bool or value:
         raise ValueError(f"{name} must be false")
 
 
@@ -758,7 +758,12 @@ def _read_resolution_failure(value: object) -> _ResolutionFailure:
         raise ValueError("profile-not-found failure cannot carry compatibility report")
     if data["code"] == "incompatible_environment":
         report_data = _mapping("compatibility_report", report)
-        if report_data.get("type") != "environment_compatibility_report" or report_data.get("compatible") is not False:
+        compatible = report_data.get("compatible")
+        if (
+            report_data.get("type") != "environment_compatibility_report"
+            or type(compatible) is not bool
+            or compatible
+        ):
             raise ValueError("incompatible failure requires failed compatibility report")
     return _ResolutionFailure(data)
 
