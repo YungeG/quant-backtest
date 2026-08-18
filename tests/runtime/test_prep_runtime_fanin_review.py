@@ -309,7 +309,8 @@ def test_v3_exact_retry_terminal_remains_idempotent(
     )
     engine = _SequenceEngine(("ready", terminal), cancellation)
     _install_engine(monkeypatch, engine)
-    runtime = _runtime(tmp_path, _ArtifactStore(envelope), prepared)
+    store = _ArtifactStore(envelope)
+    runtime = _runtime(tmp_path, store, prepared)
     first = (
         runtime.run_with_cancellation(transport, cancellation)
         if cancellation is not None
@@ -320,8 +321,7 @@ def test_v3_exact_retry_terminal_remains_idempotent(
     monkeypatch.undo()
     no_engine = _SequenceEngine(())
     _install_engine(monkeypatch, no_engine)
-    restart_store = _ArtifactStore(envelope)
-    restarted = _runtime(tmp_path, restart_store, prepared)
+    restarted = _runtime(tmp_path, store, prepared)
     second = (
         restarted.run_with_cancellation(transport, cancellation)
         if cancellation is not None
@@ -331,7 +331,7 @@ def test_v3_exact_retry_terminal_remains_idempotent(
     assert second == first
     assert type(second) is ArtifactRef
     assert no_engine.calls == 0
-    loaded = BacktestEvidenceRepository(restart_store).load_terminal(second)
+    loaded = BacktestEvidenceRepository(store).load_terminal(second)
     assert loaded.status is TerminalStatus[terminal.upper()]
 
 
@@ -1068,3 +1068,172 @@ def test_v3_snapshot_exact_malformed_ref_is_secret_safe(
         _runtime(tmp_path, store, prepared).run(forged)
     assert secret not in str(raised.value)
     assert store.reads == 0
+
+
+def _rewrite_terminal_context(
+    root: Path,
+    store: _ArtifactStore,
+    semantic_run_id: str,
+    attempt: AttemptIdentity,
+    mutation: str,
+) -> None:
+    directory = root / "runs" / semantic_run_id / "attempts" / attempt.attempt_id
+    manifest_path = directory / "evidence-manifest.json"
+    manifest_json = json.loads(manifest_path.read_text())
+    manifest = manifest_json["payload"]
+    entries = {entry["relative_path"]: entry for entry in manifest["artifacts"]}
+    payloads = {
+        name: json.loads((directory / name).read_text())["payload"]
+        for name in entries
+    }
+    record = payloads["attempt-execution-record.json"]
+    branch_name = next(
+        name
+        for name in (
+            "blocked_report",
+            "failed_report",
+            "cancelled_report",
+        )
+        if record[name] is not None
+    )
+    branch_file = {
+        "blocked_report": "blocked-run-report.json",
+        "failed_report": "failure-report.json",
+        "cancelled_report": "cancellation-report.json",
+    }[branch_name]
+    branch = record[branch_name]
+    if mutation == "attempt":
+        branch["attempt"]["ordinal"] = 99
+    elif mutation == "case":
+        branch["execution_case_hash"] = "sha256:" + "1" * 64
+    elif mutation == "input":
+        branch["input_origin"] = "runtime_strategy"
+    else:
+        request = payloads["request.json"]
+        if mutation == "semantic":
+            request["execution_case_semantic_hash"] = "sha256:" + "2" * 64
+        else:
+            request["experiment_id"] = "substituted-terminal-context"
+        compatibility = payloads["environment-compatibility-report.json"]
+        compatibility["request_hash"] = canonical_sha256(request)
+        environment = payloads["environment.json"]
+        environment["compatibility_report"] = compatibility
+        branch["resolved_request"]["request"] = request
+        branch["resolved_request"]["environment"] = environment
+    payloads[branch_file] = branch
+    changed = {
+        "attempt-execution-record.json",
+        branch_file,
+    }
+    if mutation in {"semantic", "resolved"}:
+        changed.update(
+            {
+                "request.json",
+                "environment.json",
+                "environment-compatibility-report.json",
+            }
+        )
+    directory.chmod(0o755)
+    for name in changed:
+        entry = entries[name]
+        envelope = ArtifactEnvelope.create(
+            entry["artifact_type"],
+            entry["schema_version"],
+            payloads[name],
+        )
+        source = canonical_bytes(envelope)
+        path = directory / name
+        path.chmod(0o644)
+        path.write_bytes(source)
+        path.chmod(0o444)
+        ref = ArtifactRef.from_envelope(envelope)
+        store.values[ref] = ArtifactReadResult(
+            envelope=envelope,
+            artifact=object(),
+            source_bytes=source,
+            source_hash=canonical_sha256(envelope),
+        )
+        entry["content_hash"] = ref.content_hash
+        entry["source_hash"] = canonical_sha256(envelope)
+        entry["byte_count"] = len(source)
+    manifest["attempt_record_hash"] = canonical_sha256(
+        payloads["attempt-execution-record.json"]
+    )
+    identity = dict(manifest)
+    identity.pop("manifest_hash")
+    manifest["manifest_hash"] = canonical_sha256(identity)
+    manifest_envelope = ArtifactEnvelope.create("evidence_manifest", 1, manifest)
+    source = canonical_bytes(manifest_envelope)
+    manifest_path.chmod(0o644)
+    manifest_path.write_bytes(source)
+    manifest_path.chmod(0o444)
+    directory.chmod(0o555)
+    ref = ArtifactRef.from_envelope(manifest_envelope)
+    store.values[ref] = ArtifactReadResult(
+        envelope=manifest_envelope,
+        artifact=object(),
+        source_bytes=source,
+        source_hash=canonical_sha256(manifest_envelope),
+    )
+
+
+@pytest.mark.parametrize(
+    ("terminal", "ordinal", "mutation"),
+    [
+        ("blocked", 1, "resolved"),
+        ("failed", 1, "attempt"),
+        ("cancelled", 1, "semantic"),
+        ("blocked", 2, "case"),
+        ("failed", 2, "input"),
+        ("cancelled", 2, "resolved"),
+        ("blocked", 1, "input"),
+        ("failed", 2, "semantic"),
+        ("cancelled", 1, "case"),
+        ("blocked", 2, "attempt"),
+    ],
+)
+def test_v3_rehashed_terminal_context_substitution_fails_before_mirror_or_engine(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+    terminal: str,
+    ordinal: int,
+    mutation: str,
+) -> None:
+    prepared, resolved, _, envelope, transport = _executable_contract()
+    cancellation = (
+        EngineCancellationRequest("bar-open-1", "operator_cancelled")
+        if terminal == "cancelled"
+        else None
+    )
+    branches = (terminal,) if ordinal == 1 else ("ready", terminal)
+    engine = _SequenceEngine(branches, cancellation)
+    _install_engine(monkeypatch, engine)
+    store = _ArtifactStore(envelope)
+    runtime = _runtime(tmp_path, store, prepared)
+    if cancellation is None:
+        runtime.run(transport)
+    else:
+        runtime.run_with_cancellation(transport, cancellation)
+    assert engine.calls == ordinal
+    first = AttemptIdentity.first(resolved.semantic_run_id)
+    attempt = first if ordinal == 1 else AttemptIdentity.retry(first, next_ordinal=2)
+    _rewrite_terminal_context(
+        tmp_path,
+        store,
+        resolved.semantic_run_id,
+        attempt,
+        mutation,
+    )
+    puts_before = store.puts
+
+    monkeypatch.undo()
+    no_engine = _SequenceEngine(())
+    _install_engine(monkeypatch, no_engine)
+    restarted = _runtime(tmp_path, store, prepared)
+    with pytest.raises(RuntimeError, match="attempt_graph_invalid"):
+        if cancellation is None:
+            restarted.run(transport)
+        else:
+            restarted.run_with_cancellation(transport, cancellation)
+    assert no_engine.calls == 0
+    assert store.puts == puts_before
