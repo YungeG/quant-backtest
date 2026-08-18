@@ -2984,7 +2984,7 @@ def _validate_exact_canonical_scalars_v3(
     if value is None:
         return
     if isinstance(value, Enum):
-        return
+        raise TypeError("canonical Reader authority must not contain Enum leaves")
     if isinstance(value, bool):
         if type(value) is not bool:
             raise TypeError("canonical bool leaves must be exact builtins")
