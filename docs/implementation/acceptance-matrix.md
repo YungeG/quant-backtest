@@ -160,8 +160,8 @@ artifact_hashes: []
 | G12E | PASSED | market-data-contracts | G12D, WP-06A | none |
 | G12F | PASSED | parity tooling | G12E, G07 | none |
 | G12G | PASSED | market-bundle-builder | G12B–G12C | Bar aggregation fixtures |
-| PERF-OBS-01 | READY | backtest-runtime MRMD/PREP orchestration | G00 | none; implementation must begin with named RED fixtures |
-| MRMD-01 | READY | backtest-runtime preparation and observation integration | G11B, G11D, G11E, G12G, BT-GAP-02B, BT-GAP-02C, PERF-OBS-01 | none; implementation must preserve all PASSED v1 bytes |
+| PERF-OBS-01 | READY — F1 recorder core PASSED at `85eac498b70d98dccce524f7ec30198456983dbf` | backtest-runtime MRMD/PREP orchestration | G00 | F2 six operations await PREP-COVERAGE-01 |
+| MRMD-01 | READY — F1 bindings/visible verifier PASSED at `85eac498b70d98dccce524f7ec30198456983dbf` | backtest-runtime preparation and observation integration | G11B, G11D, G11E, G12G, BT-GAP-02B, BT-GAP-02C, PERF-OBS-01 | F2 one-Bundle/Profile/identity/hydration/replay awaits PREP-COVERAGE-01 |
 | PREP-COVERAGE-01 | DRAFT | backtest-runtime preparation | MRMD-01, BT-GAP-02B, BT-GAP-02C | construction inputs, preflight outcome, and failure precedence not yet frozen |
 | G12H | DRAFT / BLOCKED | market-bundle-builder validation | G12C, G12CD-CN-A-SHARE-DEVELOPMENT-RULE-AUTHORITIES-V1 | aligned five-dimension authority; current exact fixture fails `COVERAGE_GAP / market_fees` because fee/tax coverage ends August 2023 before the July 2026 target |
 | G12I | DRAFT | market-bundle-builder validation | G12C, G12G | Real profile-purpose, provider/calendar availability, and terminal-set closure evidence |

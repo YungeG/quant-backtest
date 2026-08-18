@@ -18,9 +18,9 @@ fan_out: [MRMD-01, PREP-COVERAGE-01]
 
 ## Status
 
-`READY`. The policy, exact Runtime-v1 contract, Acceptance Matrix readiness card,
-and independent review are complete. Implementation remains test-first and must
-create the named RED fixtures before production code.
+`READY`; F1 recorder core is `PASSED` at immutable source
+`85eac498b70d98dccce524f7ec30198456983dbf`. The full Gate remains READY until
+`PREP-COVERAGE-01` adds the remaining six operations at their authoritative seams.
 
 Architecture decision:
 `docs/adr/0003-performance-observations-are-non-authoritative.md`.
@@ -40,6 +40,19 @@ The recorder accepts exact `PerformanceOperation` and `PerformanceOutcome` enum
 values. F1 contains no generic observing callback/decorator graph; each of its
 three new operations executes authority directly and then best-effort records
 already-known aggregate measurements.
+
+F1 acceptance closure:
+
+- RED: `5ef0e375c83b5ef317dab8fe28ac9d881e271bb8`;
+- implementation: `c5177260e118e7dd314fb08f4d9d79e96c1f22e3`;
+- hardening/final source: `85eac498b70d98dccce524f7ec30198456983dbf`;
+- focused source validation: 36 passed;
+- full repository: 1899 passed;
+- clean detached acceptance: 119 passed;
+- import boundaries: 116 files passed;
+- LSP/lens: clean;
+- independent standards/spec/minimality re-reviews: no blocker/high findings;
+- observation fixture: `sha256:1e61c04fabc6735ea0a8cce6ed257c1dd02012bbbd2167d9e4f82716d8777d13`.
 
 ## Outcome
 

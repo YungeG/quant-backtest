@@ -24,9 +24,10 @@ fan_out: [PREP-COVERAGE-01, G12I, provider-specific multi-resolution slices]
 
 ## Status
 
-`READY`. The architecture contract, `PERF-OBS-01`, Acceptance Matrix readiness
-card, and independent reviews are complete. Implementation remains additive and
-test-first. All PASSED v1 bytes, hashes, interfaces, and failure precedence remain
+`READY`; F1 core is `PASSED` at immutable source
+`85eac498b70d98dccce524f7ec30198456983dbf`. The full Gate remains READY until
+`PREP-COVERAGE-01` F2 completes identity, hydration, replay, Profile, and one-Bundle
+integration. All PASSED v1 bytes, hashes, interfaces, and failure precedence remain
 immutable.
 
 Architecture decision: `docs/adr/0002-no-global-backtest-frequency.md`.
@@ -63,6 +64,20 @@ derives nor verifies a new observation-key preimage.
 - cross-requirement atomic failure precedence.
 
 F1 does not implement or partially scaffold any F2 responsibility.
+
+F1 acceptance closure:
+
+- RED: `5ef0e375c83b5ef317dab8fe28ac9d881e271bb8`;
+- implementation: `c5177260e118e7dd314fb08f4d9d79e96c1f22e3`;
+- hardening/final source: `85eac498b70d98dccce524f7ec30198456983dbf`;
+- focused source validation: 36 passed;
+- compatibility validation: 117 passed;
+- full repository: 1899 passed;
+- clean detached acceptance: 119 passed;
+- import boundaries: 116 files passed;
+- LSP/lens: clean;
+- independent standards/spec/minimality re-reviews: no blocker/high findings;
+- MRMD fixture: `sha256:64b41061f8ab0707fe7aa5a23f2f73039fc5730a3da53709b610b4d2dac4e18c`.
 
 ## Outcome
 
