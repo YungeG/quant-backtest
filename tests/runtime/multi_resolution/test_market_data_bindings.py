@@ -37,6 +37,18 @@ def valuation(stable_key: str = "asset", stream_key: str = "marks.1m") -> Valuat
 
 
 def test_canonical_values_sort_hash_and_match_static_fixture() -> None:
+    assert tuple(field.name for field in fields(SignalBarBinding)) == (
+        "requirement_hash", "stream_key", "price_purpose", "aggregation_input_hash"
+    )
+    assert tuple(field.name for field in fields(ExecutionDataBinding)) == (
+        "profile_binding_key", "stream_key"
+    )
+    assert tuple(field.name for field in fields(ValuationDataBinding)) == (
+        "instrument_id", "stream_key"
+    )
+    assert tuple(field.name for field in fields(MultiResolutionMarketDataBindings)) == (
+        "signal_bindings", "execution_bindings", "valuation_bindings"
+    )
     value = construct_multi_resolution_market_data_bindings(
         signal_bindings=(signal(),),
         execution_bindings=(execution(),),

@@ -37,14 +37,21 @@ def test_disabled_enabled_and_failing_recorder_preserve_exact_authority() -> Non
     assert recorder.snapshot()[0].operation is PerformanceOperation.CONSTRUCT_BINDINGS
 
 
-def test_clock_and_authoritative_exception_identity_are_preserved(monkeypatch) -> None:
+def test_clock_counter_and_authoritative_exception_identity_are_preserved(monkeypatch) -> None:
     import crypto_quant_backtest.multi_resolution_market_data as module
 
     def broken_clock() -> int:
         raise RuntimeError("clock failed")
 
     monkeypatch.setattr(module, "_perf_counter_ns", broken_clock)
-    assert construct_multi_resolution_market_data_bindings(**candidates(), recorder=BoundedPerformanceRecorder()) == MultiResolutionMarketDataBindings(**candidates())
+    expected = MultiResolutionMarketDataBindings(**candidates())
+    assert construct_multi_resolution_market_data_bindings(**candidates(), recorder=BoundedPerformanceRecorder()) == expected
+
+    def broken_counter(*args, **kwargs) -> None:
+        raise RuntimeError("counter failed")
+
+    monkeypatch.setattr(module, "_record_observation", broken_counter)
+    assert construct_multi_resolution_market_data_bindings(**candidates(), recorder=BoundedPerformanceRecorder()) == expected
 
     bad = candidates()
     bad["signal_bindings"] = []

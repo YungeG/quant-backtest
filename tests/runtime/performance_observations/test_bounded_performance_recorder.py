@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import json
+from dataclasses import fields
 from pathlib import Path
 
 import pytest
@@ -35,6 +36,9 @@ def test_observation_requires_exact_enums_valid_pair_and_exact_integers() -> Non
         2,
         3,
         4,
+    )
+    assert tuple(field.name for field in fields(_PerformanceObservation)) == (
+        "operation", "outcome", "call_count", "total_duration_ns", "input_count", "output_count"
     )
     assert value.call_count == 1
 
@@ -98,6 +102,18 @@ def test_recorder_aggregates_saturates_and_snapshot_is_sorted() -> None:
         MAX,
         MAX,
     )
+    recorder._cells[(PerformanceOperation.CONSTRUCT_BINDINGS, PerformanceOutcome.SUCCEEDED)] = _PerformanceObservation(
+        PerformanceOperation.CONSTRUCT_BINDINGS, PerformanceOutcome.SUCCEEDED, MAX, MAX, MAX, MAX
+    )
+    recorder.record(
+        operation=PerformanceOperation.CONSTRUCT_BINDINGS,
+        outcome=PerformanceOutcome.SUCCEEDED,
+        duration_ns=1,
+        input_count=1,
+        output_count=1,
+    )
+    fully_saturated = next(item for item in recorder.snapshot() if item.operation is PerformanceOperation.CONSTRUCT_BINDINGS)
+    assert (fully_saturated.call_count, fully_saturated.total_duration_ns, fully_saturated.input_count, fully_saturated.output_count) == (MAX, MAX, MAX, MAX)
 
 
 def test_fixed_keyspace_is_bounded_to_nineteen_cells() -> None:

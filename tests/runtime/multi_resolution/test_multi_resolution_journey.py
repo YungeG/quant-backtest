@@ -16,7 +16,6 @@ from crypto_quant_backtest import (
 from crypto_quant_backtest.multi_resolution_market_data import (
     SignalBarBinding,
     SignalBarVerificationFailureCode,
-    signal_bar_observation_key,
     verify_visible_signal_bars,
 )
 from crypto_quant_domain import PricePurpose, SimulationInstant, SourceSequence, TimelinePhase, UtcInstant
@@ -25,7 +24,7 @@ from crypto_quant_market_data import MarketEvent
 from tests.bundle_builder.bar_aggregation.test_bar_aggregation import aggregate, bucket, event, plan
 
 
-def context() -> tuple[LookbackRequirement, SignalBarBinding, MarketEvent]:
+def context():
     aggregation = aggregate((event(0, event_time=110, available_time=120, price_units=100),), bucket_plan=plan(bucket(100, 200)))
     assert aggregation.result is not None
     bar = aggregation.result.generated_events[0]
@@ -48,14 +47,16 @@ def context() -> tuple[LookbackRequirement, SignalBarBinding, MarketEvent]:
         PricePurpose.VALUATION,
         aggregation.result.aggregation_manifest.aggregation_input_hash,
     )
-    return requirement, binding, bar
+    stream_manifest = aggregation.result.aggregation_manifest.output_stream_manifest
+    assert stream_manifest is not None
+    return requirement, binding, stream_manifest, bar
 
 
 def visible_result(*events: MarketEvent, decision_ns: int = 500):
-    requirement, _, _ = context()
+    requirement, _, _, _ = context()
     records = tuple(
         RevisionedObservationRecord(
-            signal_bar_observation_key(requirement.bar_definition, item.instrument_id, item.payload["bucket_hash"]),
+            f"opaque-lineage:{item.event_id}",
             ObservationRecord(requirement.observation_query.purpose, item),
         )
         for item in events
@@ -77,9 +78,9 @@ def malformed(bar: MarketEvent, **payload_changes: object) -> MarketEvent:
 
 
 def test_visible_canonical_g12g_bar_is_verified_after_visibility() -> None:
-    requirement, binding, bar = context()
+    requirement, binding, stream_manifest, bar = context()
 
-    outcome = verify_visible_signal_bars(requirement, binding, visible_result(bar))
+    outcome = verify_visible_signal_bars(requirement, binding, stream_manifest, visible_result(bar))
 
     assert outcome.failure is None
     assert outcome.result is not None
@@ -87,7 +88,7 @@ def test_visible_canonical_g12g_bar_is_verified_after_visibility() -> None:
 
 
 def test_malformed_future_bar_cannot_change_earlier_verification() -> None:
-    requirement, binding, bar = context()
+    requirement, binding, stream_manifest, bar = context()
     future = replace(
         malformed(bar, schema_version=2),
         event_id="future-event",
@@ -96,7 +97,7 @@ def test_malformed_future_bar_cannot_change_earlier_verification() -> None:
         source_sequence=SourceSequence(1),
     )
 
-    outcome = verify_visible_signal_bars(requirement, binding, visible_result(bar, future, decision_ns=300))
+    outcome = verify_visible_signal_bars(requirement, binding, stream_manifest, visible_result(bar, future, decision_ns=300))
 
     assert outcome.result is not None
     assert outcome.result.events == (bar,)
@@ -118,24 +119,36 @@ def test_malformed_future_bar_cannot_change_earlier_verification() -> None:
     ],
 )
 def test_exact_g12g_payload_and_nested_grammar_fail_closed(mutate) -> None:
-    requirement, binding, bar = context()
+    requirement, binding, stream_manifest, bar = context()
     changed = mutate(bar)
 
-    outcome = verify_visible_signal_bars(requirement, binding, visible_result(changed))
+    outcome = verify_visible_signal_bars(requirement, binding, stream_manifest, visible_result(changed))
 
     assert outcome.result is None
     assert outcome.failure is not None
     assert outcome.failure.code is SignalBarVerificationFailureCode.MALFORMED_G12G_PAYLOAD
 
 
+def test_selected_stream_manifest_must_match_binding_requirement_and_bar_contract() -> None:
+    requirement, binding, stream_manifest, bar = context()
+
+    with pytest.raises(ValueError, match="stream_manifest"):
+        verify_visible_signal_bars(
+            requirement,
+            binding,
+            replace(stream_manifest, event_type="trade"),
+            visible_result(bar),
+        )
+
+
 def test_failure_precedence_definition_then_aggregation_lineage() -> None:
-    requirement, binding, bar = context()
+    requirement, binding, stream_manifest, bar = context()
     wrong_definition = malformed(bar, bar_definition_key="wrong", aggregation_input_hash="sha256:" + "9" * 64)
-    definition_outcome = verify_visible_signal_bars(requirement, binding, visible_result(wrong_definition))
+    definition_outcome = verify_visible_signal_bars(requirement, binding, stream_manifest, visible_result(wrong_definition))
     assert definition_outcome.failure is not None
     assert definition_outcome.failure.code is SignalBarVerificationFailureCode.BAR_DEFINITION_MISMATCH
 
     wrong_lineage = malformed(bar, aggregation_input_hash="sha256:" + "9" * 64)
-    lineage_outcome = verify_visible_signal_bars(requirement, binding, visible_result(wrong_lineage))
+    lineage_outcome = verify_visible_signal_bars(requirement, binding, stream_manifest, visible_result(wrong_lineage))
     assert lineage_outcome.failure is not None
     assert lineage_outcome.failure.code is SignalBarVerificationFailureCode.AGGREGATION_LINEAGE_MISMATCH
