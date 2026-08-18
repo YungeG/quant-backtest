@@ -11,7 +11,7 @@ Official primary sources identify candidate rates for ordinary domestic CNY A-sh
 - stock transaction transfer fee: `0.01‰` of transaction amount, buyer and seller;
 - securities transaction stamp duty: `0.5‰` of transaction amount, seller/transferor only.
 
-Those sources do **not** prove a finite, full-target continuity and revision-closure chain. The immutable target extends beyond the analysis instant, and every candidate rule is open-ended. Applying any candidate to the post-analysis segment would infer that no later publication changed the rule before target end. G12H forbids that inference.
+Those sources do **not** prove a finite, full-target continuity and revision-closure chain. The immutable target extends beyond the analysis instant, and every candidate rule is open-ended. Applying any candidate to the post-analysis segment would infer that no later publication changed the rule before target end. The upstream profile contract does not authorize that inference, and G12H may only validate the supplied contract.
 
 No July-2026 fee/tax authority set is produced. No code, fixture, registry, shared Acceptance Matrix, plan README, or existing authority artifact is changed.
 
@@ -47,7 +47,9 @@ The earlier research handoff incorrectly reported that the G12H blocker, order/q
 | G12H declaration fixture | `tests/fixtures/market_data/rule_authorities/cn-a-share-development-v1/declaration.json` | `19017a07fbfd2da954483648fb168d87212f88e92fccca7c28fb0a514b202515` |
 | G12H publication fixture | `tests/fixtures/market_data/rule_authorities/cn-a-share-development-v1/publication.expected.json` | `7a95188cf05d401fcaed80b548f82f22f0b9bc23f6423c6ff1190de775291f7d` |
 
-The declaration's canonical hash is `sha256:6e0c60a75e957467a5cfe1b4e2bbbb786c463747ae96adf059c54ecef4a1b7b6`; the publication manifest hash is `sha256:d85f6a85f7977a2096d1a26fe33a3892640bd27dc28e49b3e6b379650ab984c8`. The immutable publication source is commit `832f53a74d3f74436ecae8672bd1c0dd3530c814`.
+The declaration's canonical hash is `sha256:6e0c60a75e957467a5cfe1b4e2bbbb786c463747ae96adf059c54ecef4a1b7b6`; the publication manifest hash is `sha256:d85f6a85f7977a2096d1a26fe33a3892640bd27dc28e49b3e6b379650ab984c8`. These are verifiable hashes of repository fixture content/canonicalization. The immutable publication source is commit `832f53a74d3f74436ecae8672bd1c0dd3530c814`.
+
+By contrast, the fee/tax source hashes inherited below are not backed here by the referenced official response bytes plus a source-specific acquisition receipt. They are preserved only as **inherited canonical identifier claims** from prior local notes/fixtures, not as verified official byte hashes or verified URL-to-content mappings.
 
 `/tmp/g12h-aligned-authority-options.md` was also present. Its surviving content confirms the blocker path, blocker hash, declaration byte/canonical hashes, and publication byte hash, but the file is truncated after six lines in a serialized child-run result. It is not a complete independent oracle report. Its usable interval-inventory conclusion agrees with the repository evidence: Calendar, XSHE Main Board order rules, and XSHE corporate-action entitlements exact-cover the target; the fee/tax bands end in August 2023; the five-dimension intersection is empty; and finite bands must not be extrapolated.
 
@@ -63,6 +65,8 @@ The declaration fixes:
 | Post-analysis target segment | `[2026-07-20T10:00:00Z, 2026-07-30T16:00:00Z)` | `[2026-07-20 18:00, 2026-07-31 00:00)` |
 
 The post-analysis segment is `10 days 6 hours`. A component can pass only if official authority available no later than the analysis instant establishes the exact rate, basis, side, venue/mechanism, and a complete effective/repeal/correction/supersession chain for every target instant. An open-ended rule does not itself close a future interval.
+
+The target and analysis boundary are owned upstream by `CnAShareProfileCompositionRequest.timeline_window` and `CnAShareProfileCompositionRequest.composed_at`. G12H does not choose or revise them; it only validates that the declared rule dimensions cover the supplied window and satisfy its availability boundary. Any target/analysis change, or any market-fee/stamp-duty source-identity change, requires a new additive profile/build declaration and digest plus a new G12C/D publication. The existing PASSED profile/build/publication artifacts remain immutable.
 
 The existing declaration deliberately records `provider_authority_qualified=false`, `revision_closure_complete=false`, `rule_coverage_qualified=false`, `decision_grade_eligible=false`, and `deployment_authorized=false`.
 
@@ -82,12 +86,14 @@ The existing declaration deliberately records `provider_authority_qualified=fals
 - Stated sunset/repeal: none in the located notice.
 - As-published interval: `[2023-08-28, unknown supersession)`.
 
-Local source identities preserved by the existing note/research handoff:
+Inherited canonical identifier claims preserved by the existing note/research handoff:
 
-- transition notice: `szse.transaction-handling.2023-08-18`, `sha256:6645a32b6ab297741f22e6b8e959342bb4c9312757d0f1d99de37a0a410d12ba`;
-- dynamic fee-page snapshot: `szse.market-fee-collection.2026-08-08-snapshot`, `sha256:fbd7df3dfa07778b1318564563d22992f19d06bde415144fef248f27674f03c7`.
+- transition notice identifier: `szse.transaction-handling.2023-08-18`, `sha256:6645a32b6ab297741f22e6b8e959342bb4c9312757d0f1d99de37a0a410d12ba`;
+- dynamic fee-page identifier: `szse.market-fee-collection.2026-08-08-snapshot`, `sha256:fbd7df3dfa07778b1318564563d22992f19d06bde415144fef248f27674f03c7`.
 
-**Closure result: failed.** The notice identifies the candidate transition, and the dynamic page is labeled January 2026, but no pre-analysis finite authority fixes the rate through `2026-07-31 00:00+08:00`. The dynamic page can be revised and the locally hashed bytes were retrieved after analysis.
+Neither value is verified here against exact official response bytes and a source-specific receipt. In particular, the inherited record does not establish whether the fee-page identifier names raw HTML, rendered DOM, extracted text, normalized content, or another representation.
+
+**Closure result: failed.** The notice identifies the candidate transition, and the dynamic page is labeled January 2026, but no pre-analysis finite authority fixes the rate through `2026-07-31 00:00+08:00`. The dynamic page can be revised; the inherited `2026-08-08` observation is after analysis and has no per-source receipt in this repository.
 
 ### 2. Securities-business regulatory fee
 
@@ -103,10 +109,12 @@ Local source identities preserved by the existing note/research handoff:
 - Ownership distinction: 917 alone does not establish bilateral investor pass-through; that fact comes from the SZSE table.
 - As-published interval: `[2018-01-01, unknown supersession)`.
 
-Local source identities:
+Inherited canonical identifier claims:
 
-- NDRC/MOF 917 page: `ndrc.securities-business-regulatory-fee.2018-917`, `sha256:4c8c8426c7cc797a99a86f8d8bea21fef8f1a944d1ef14857286c9784085b3c8`;
-- SZSE dynamic fee-page snapshot: `szse.market-fee-collection.2026-08-08-snapshot`, `sha256:fbd7df3dfa07778b1318564563d22992f19d06bde415144fef248f27674f03c7`.
+- NDRC/MOF 917 identifier: `ndrc.securities-business-regulatory-fee.2018-917`, `sha256:4c8c8426c7cc797a99a86f8d8bea21fef8f1a944d1ef14857286c9784085b3c8`;
+- SZSE dynamic fee-page identifier: `szse.market-fee-collection.2026-08-08-snapshot`, `sha256:fbd7df3dfa07778b1318564563d22992f19d06bde415144fef248f27674f03c7`.
+
+These values are not verified here against exact official response bytes and source-specific receipts; URL/rendering-to-hash mapping remains unproven.
 
 **Closure result: failed.** The rate, basis, venue, and displayed investor-side collection are identified, but no finite pre-analysis authority or complete effective/invalidated register snapshot proves no adjustment through target end.
 
@@ -121,10 +129,12 @@ Local source identities:
 - Official Shenzhen corroborating table: <https://www.chinaclear.cn/zdjs/fbzyls/202512/a59388fbfa714c5fa546784891a42e30/files/%E6%B7%B1%E5%9C%B3%E5%B8%82%E5%9C%BA%E8%AF%81%E5%88%B8%E7%99%BB%E8%AE%B0%E7%BB%93%E7%AE%97%E4%B8%9A%E5%8A%A1%E6%94%B6%E8%B4%B9%E5%8F%8A%E4%BB%A3%E6%94%B6%E7%A8%8E%E8%B4%B9%E4%B8%80%E8%A7%88%E8%A1%A8.pdf>.
 - As-published interval: `[2022-04-29, unknown supersession)`.
 
-Local source identities:
+Inherited canonical identifier claims:
 
-- transition notice: `chinaclear.stock-transfer-fee.2022-04-28`, `sha256:68763b8fe13f7fb90f378b077033b692aafc4eca851c78c18a306b001d591a60`;
-- Shenzhen table: `sha256:dff4a06ce20e180f4a85ddae138211dcf7dd3246fb84775453cfd21cbaec6573`.
+- transition notice identifier: `chinaclear.stock-transfer-fee.2022-04-28`, `sha256:68763b8fe13f7fb90f378b077033b692aafc4eca851c78c18a306b001d591a60`;
+- Shenzhen table identifier: `sha256:dff4a06ce20e180f4a85ddae138211dcf7dd3246fb84775453cfd21cbaec6573`.
+
+These values are not verified here against exact official notice/PDF bytes and source-specific receipts; the inherited identifiers do not prove the precise captured representation.
 
 **Closure result: failed.** The 2022 notice identifies rate, basis, side, venues, and effective date. The December-2025 table corroborates the same candidate, but an equal later table and absence of a found adjustment do not establish complete continuity, especially for the post-analysis target segment.
 
@@ -146,12 +156,12 @@ The primary legal chain is:
 
 The existing G08E fixture also binds the prior sell-only baseline through the official STA 12366 answer quoting 财税明电〔2008〕2号: <https://12366.chinatax.gov.cn/nszx/onlinemessage/detail?id=c012f7a11b0e48429e85e861b2682d3e>.
 
-Local source identities:
+Inherited canonical identifier claims:
 
-- sell-only `1‰` baseline quotation: `sta.12366.stamp-duty.2008-2-quotation`, `sha256:69179c93a4861d2fad5d96d2d8e85b3346e0b70ac8213129959bcb4fa5d3f6ba`;
-- 2023 half-collection source identity: `mof-sta.stamp-duty.2023-39`, `sha256:970711682948365c3f79afc476df67d5f2d29f57ed239f695f1308f45acffdaf`.
+- sell-only `1‰` baseline quotation identifier: `sta.12366.stamp-duty.2008-2-quotation`, `sha256:69179c93a4861d2fad5d96d2d8e85b3346e0b70ac8213129959bcb4fa5d3f6ba`;
+- 2023 half-collection identifier: `mof-sta.stamp-duty.2023-39`, `sha256:970711682948365c3f79afc476df67d5f2d29f57ed239f695f1308f45acffdaf`.
 
-The local notes do not preserve a byte hash for the Stamp Tax Law policy-library page itself. The law and half-collection rule are open-ended: law `[2022-07-01, unknown legislative supersession)` and half collection `[2023-08-28, unknown supersession)`.
+These values are not verified official byte hashes in this repository. Announcement 39 has explicit URL/rendering ambiguity: the prior note cites the China Government page, this report also retains the STA policy-library page, and no exact bytes plus receipt show whether the inherited identifier maps to either HTML response, an attachment, rendered/extracted text, normalized content, or another capture. The local notes preserve no corresponding identifier for the Stamp Tax Law policy-library page itself. The law and half-collection rule are open-ended: law `[2022-07-01, unknown legislative supersession)` and half collection `[2023-08-28, unknown supersession)`.
 
 **Closure result: failed.** The legal basis, calculation basis, side, withholding mechanism, base rate, reduction, and resulting candidate rate are identified. No pre-analysis artifact prevents a later law, announcement, correction, or effective-date change from affecting the target's post-analysis segment.
 
@@ -166,21 +176,21 @@ The local notes do not preserve a byte hash for the Stamp Tax Law policy-library
 
 These values must not be installed as a qualified G12H July-2026 rule band.
 
-## Static, dynamic, and retrieval limitations
+## Static, dynamic, and provenance limitations
 
-The official-source byte hashes above were preserved by the existing local fee/tax note and the completed research handoff. The local note records retrieval on `2026-08-08` UTC, after the `2026-07-20T10:00:00Z` analysis instant. Those hashes identify later-retrieved bytes; they do not prove that mutable content was publicly available in the same form by the analysis instant.
+The prior local fee/tax note gives one blanket inherited retrieval observation of `2026-08-08` UTC. It is not a set of source-specific acquisition receipts, and this repository does not contain the exact referenced official response bytes needed to verify the inherited source hashes. The date and hashes therefore remain unverified provenance claims/canonical identifiers. They do not establish per-source retrieval time, captured representation, URL-to-content mapping, or public availability by the `2026-07-20T10:00:00Z` analysis instant.
 
-| Evidence | Form | Recorded access | Limitation |
+| Evidence | Form | What is retained | Limitation |
 | --- | --- | --- | --- |
-| NDRC/MOF 2018 rule | Static authority page | Readable text and local hash | Open-ended; no authority-complete invalidation snapshot through target end |
-| Stamp Tax Law / Announcement 39 | Static policy-library pages | Readable text; Announcement 39 hash preserved | Law-page bytes/attachment hash not preserved locally; both rules remain amendable |
-| SZSE 2023 handling notice | JS-rendered authority page | Official URL and post-analysis local hash | No pre-analysis exact-byte capture or signed historical version |
-| SZSE January-2026 fee table | Dynamic current page | Extracted and post-analysis local hash | Mutable display; no as-of-analysis version, headers, or revision history |
-| ChinaClear 2022 transfer notice | Authority page | Official URL and post-analysis local hash | Direct extraction was incomplete in the research run; no complete as-of register |
-| ChinaClear Shenzhen table | Static PDF | Official URL and post-analysis local hash | Later/equal table corroborates a candidate but cannot prove uninterrupted continuity |
-| SZSE/ChinaClear lists and repeal searches | Dynamic/search interfaces | Partly discoverable | Search absence is not an authority-issued completeness certificate |
+| NDRC/MOF 2018 rule | Static authority page | Official URL plus inherited canonical identifier claim | No exact response bytes/receipt here; open-ended validity |
+| Stamp Tax Law / Announcement 39 | Static policy-library/government pages | Official URLs plus inherited Announcement 39 identifier claim | Announcement 39 URL/rendering mapping is ambiguous; law-page bytes are not identified; both rules remain amendable |
+| SZSE 2023 handling notice | JS-rendered authority page | Official URL plus inherited canonical identifier claim | Raw HTML/rendered/extracted representation is unknown; no pre-analysis version closure |
+| SZSE January-2026 fee table | Dynamic current page | Official URL plus inherited canonical identifier claim | Mutable display; no verified as-of-analysis state or revision history |
+| ChinaClear 2022 transfer notice | Authority page | Official URL plus inherited canonical identifier claim | Exact captured representation/receipt is absent; no complete as-of register |
+| ChinaClear Shenzhen table | Static PDF | Official URL plus inherited canonical identifier claim | Exact PDF bytes/receipt are absent; later/equal content cannot prove uninterrupted continuity |
+| SZSE/ChinaClear lists and repeal searches | Dynamic/search interfaces | Search observations only | Search absence is not an authority-issued completeness certificate |
 
-The research run recorded JavaScript rendering and incomplete extraction, not a robots-denial response. It did not preserve raw response headers, redirect chains, content encodings, a trustworthy transport timestamp for every fetch, or an authority-signed historical snapshot as of the analysis instant.
+Authority-signed historical snapshots, exact original bytes, HTTP headers, redirect chains, content encoding, retrieval timestamps, and documented capture methods are **preferred evidence controls** for resolving mutable-page and provenance ambiguity. They are not themselves mandatory frozen-contract fields. The mandatory outcomes are: finite coverage of the selected target, availability no later than the selected analysis boundary under the chosen contract, immutable source identity, and explicit correction/revision/supersession limits.
 
 ## Effective/repeal/revision conclusion
 
@@ -195,21 +205,34 @@ They do not establish a finite end boundary or an authority-complete revision cl
 
 Most importantly, no post hoc acquisition can make a result-affecting fact first published after `2026-07-20T10:00:00Z` available at that analysis instant. Under the immutable target and analysis boundary, open-ended rules cannot cover the post-analysis segment without inferring no change.
 
-## Exact next acquisition artifacts
+## Permitted closure paths and evidence controls
 
-A fresh current-page capture is insufficient. The prerequisite requires all of the following, additively and without modifying PASSED artifacts:
+Later post-target evidence is **not automatically admissible** for the immutable mid-target analysis contract. The blocker can close only through one explicitly selected path:
 
-1. **Post-target authority-complete closure packages** covering publications through at least `2026-07-31 00:00+08:00` for:
-   - SZSE fee standards and all handling-fee adjustment, correction, repeal, and invalidation notices;
-   - ChinaClear Shenzhen fee tables and all stock-transfer-fee adjustment, correction, repeal, and invalidation notices;
-   - NDRC/MOF/CSRC effective and invalidated document registers for 发改价格规〔2018〕917号 and successors;
-   - MOF/STA effective and invalidated policy registers for the Stamp Tax Law, Announcement 2023 No. 39, and successors.
-2. **Authority-signed or authority-generated historical snapshots as of `2026-07-20T10:00:00Z`** for each register and dynamic fee table, including revision history rather than a fresh HTML page.
-3. **Original immutable bytes and provenance** for every retained document and attachment: cryptographic hash, official publication metadata, first-publication timestamp, retrieval UTC timestamp, HTTP status/headers, redirects, content encoding, and capture method.
-4. **A closed revision/supersession set** proving that no omitted correction, cancellation, repeal, replacement, or retroactively effective publication affects any target instant.
-5. **A new additive five-dimension declaration and G12C/D publication** only after the fee/tax evidence meets the same finite target as Calendar, XSHE Main Board order rules, and XSHE corporate-action entitlements.
+1. **Pre-analysis finite primary authority:** acquire primary authority available no later than `CnAShareProfileCompositionRequest.composed_at` that itself fixes a finite fee/tax effective and revision chain through `CnAShareProfileCompositionRequest.timeline_window.end_exclusive`. The authority set must identify exact rate, basis, side, scope, immutable source identity, and explicit correction/revision limits for every target instant.
+2. **Contract-owner-approved retrospective closure:** obtain explicit approval from the upstream profile/build contract owner to treat a post-target authority-complete revision record as valid retrospective evidence for this analysis contract. The later record is not valid merely because it exists; the approval must define the changed availability/revision semantics and be frozen in a new additive profile/build declaration and digest plus a new G12C/D publication.
+3. **New additive analysis boundary/profile/build scope:** define a new `CnAShareProfileCompositionRequest.timeline_window` and/or `composed_at` whose target/analysis relationship can be supported by the chosen authorities, then freeze a new profile/build declaration and digest and publish it through G12C/D. Existing PASSED artifacts are not edited.
 
-Even those artifacts cannot satisfy a strict “all result-affecting facts available by analysis” requirement if a relevant publication first appears after the analysis instant. To remove that structural conflict, a separately authorized task would have to move the analysis instant to or after target end, or shorten the target to end no later than the analysis instant. This report does neither.
+Without one of those paths, the result remains `BLOCKED`.
+
+For any selected path, mandatory frozen-contract outcomes are:
+
+- finite exact coverage of the selected target for all five required dimensions;
+- evidence availability no later than the selected analysis boundary under the explicitly chosen contract semantics;
+- immutable source identity for every result-affecting authority;
+- explicit correction, revision, repeal, cancellation, and supersession limits.
+
+Preferred acquisition controls—not independent mandatory contract requirements—include authority-signed/generated historical snapshots, exact response/document bytes, source-specific receipts, publication metadata, first-publication and retrieval timestamps, HTTP status/headers, redirects, content encoding, and a documented capture/normalization method. These controls are especially valuable for proving what mutable or JS-rendered pages contained and how a canonical identifier maps to a URL/rendering.
+
+## Alignment options
+
+| Option | Target/analysis choice | Missing dimensions/evidence | Consequence |
+| --- | --- | --- | --- |
+| **A — historical 2023** | New additive target aligned to the finite G08E fee/tax bands (`[2023-08-25T00:00:00+08:00, 2023-08-30T00:00:00+08:00)`) with a compatible new `composed_at` | The current Calendar, XSHE Main Board order-rule, and corporate-action-entitlement authorities cover July 2026, not this 2023 interval; those three dimensions need new finite 2023 authority bodies and availability evidence | Produces a historical-2023 profile/build only, not the preserved July-2026 profile. Requires a new additive profile/build declaration/digest and G12C/D publication; existing artifacts remain unchanged |
+| **B — preserved July 2026** | Keep `[2026-07-06, 2026-07-31)` Asia/Shanghai and the existing mid-target `2026-07-20T10:00:00Z` `composed_at` | `market_fees` and `stamp_duty` remain missing. Closure requires either pre-analysis primary authority that itself fixes the finite chain through target end, or explicit upstream contract-owner approval of retrospective closure | Preserves the requested target only if the missing fee/tax authority and availability semantics are lawfully frozen. Any new fee/tax identity or approved retrospective semantics requires a new additive profile/build declaration/digest and G12C/D publication |
+| **C — blocked** | Keep the current target, analysis boundary, and evidence contract unchanged | `market_fees` and `stamp_duty` still have no finite full-target authority; inherited hashes/provenance do not repair coverage or availability | Current publication remains valid evidence of deterministic `COVERAGE_GAP / market_fees`; no success authority set, G12H success contract, analyzer implementation, or qualification follows |
+
+Option B is the only path that preserves July 2026. This report does not select an option, approve retrospective closure, or alter the upstream request.
 
 ## Repository disposition
 
