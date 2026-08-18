@@ -2982,29 +2982,44 @@ def _rebuild_verified_reader_v3(
 ) -> InMemoryMarketBundleReader:
     if type(value) is not InMemoryMarketBundleReader:
         raise TypeError("verified_reader must be exact InMemoryMarketBundleReader")
-    bundle_ref = _rebuild_market_bundle_ref_v3(value.bundle_ref)
-    manifest = _rebuild_market_bundle_manifest_v3(value.manifest)
-    stream_values = value.streams
-    if not isinstance(stream_values, Mapping):
-        raise TypeError("verified_reader streams must be a mapping")
-    streams: dict[str, tuple[Any, ...]] = {}
-    for stream_key in sorted(stream_values):
-        if type(stream_key) is not str:
-            raise TypeError("verified_reader stream keys must be exact str")
-        events = stream_values[stream_key]
-        if type(events) is not tuple:
-            raise TypeError("verified_reader stream Events must be exact tuples")
-        streams[stream_key] = tuple(
-            _rebuild_market_event_v3(event) for event in events
-        )
-    rebuilt = InMemoryMarketBundleReader(bundle_ref, manifest, streams)
+
+    def rebuild_once() -> InMemoryMarketBundleReader:
+        bundle_ref = _rebuild_market_bundle_ref_v3(value.bundle_ref)
+        manifest = _rebuild_market_bundle_manifest_v3(value.manifest)
+        stream_values = value.streams
+        if not isinstance(stream_values, Mapping):
+            raise TypeError("verified_reader streams must be a mapping")
+        streams: dict[str, tuple[Any, ...]] = {}
+        for stream_key in sorted(stream_values):
+            if type(stream_key) is not str:
+                raise TypeError("verified_reader stream keys must be exact str")
+            events = stream_values[stream_key]
+            if type(events) is not tuple:
+                raise TypeError("verified_reader stream Events must be exact tuples")
+            streams[stream_key] = tuple(
+                _rebuild_market_event_v3(event) for event in events
+            )
+        rebuilt = InMemoryMarketBundleReader(bundle_ref, manifest, streams)
+        if (
+            canonical_bytes(rebuilt.bundle_ref) != canonical_bytes(value.bundle_ref)
+            or canonical_bytes(rebuilt.manifest) != canonical_bytes(value.manifest)
+            or canonical_bytes(rebuilt.streams) != canonical_bytes(value.streams)
+        ):
+            raise ValueError("verified_reader did not reconstruct exactly")
+        return rebuilt
+
+    rebuilt = rebuild_once()
+    verified_again = rebuild_once()
     if (
-        canonical_bytes(rebuilt.bundle_ref) != canonical_bytes(value.bundle_ref)
-        or canonical_bytes(rebuilt.manifest) != canonical_bytes(value.manifest)
-        or canonical_bytes(rebuilt.streams) != canonical_bytes(value.streams)
+        canonical_bytes(rebuilt.bundle_ref)
+        != canonical_bytes(verified_again.bundle_ref)
+        or canonical_bytes(rebuilt.manifest)
+        != canonical_bytes(verified_again.manifest)
+        or canonical_bytes(rebuilt.streams)
+        != canonical_bytes(verified_again.streams)
     ):
-        raise ValueError("verified_reader did not reconstruct exactly")
-    return value
+        raise ValueError("verified_reader authority changed during reconstruction")
+    return rebuilt
 
 
 def _rebuild_prepared_market_data_v3(
@@ -3029,7 +3044,7 @@ def _rebuild_prepared_market_data_v3(
 
 def _rebuild_execution_request_v3(
     value: object,
-) -> tuple[int, BacktestRequest, ArtifactRef]:
+) -> tuple[int, ArtifactRef]:
     if type(value) is not BacktestExecutionRequest:
         raise TypeError("request must be exact BacktestExecutionRequest")
     schema_version = value.schema_version
@@ -3047,7 +3062,7 @@ def _rebuild_execution_request_v3(
         ref.schema_version,
         ref.content_hash,
     )
-    return schema_version, _rebuild_backtest_request_v3(value.request), rebuilt_ref
+    return schema_version, rebuilt_ref
 
 
 def _materialize_execution_input_bundle_v3(
@@ -3264,16 +3279,8 @@ def _hydrate_execution_inputs_v3(
             _ExecutionInputsHydrationFailureCodeV3.MALFORMED_EXECUTION_REQUEST
         )
     try:
-        request_schema_version, public_request, ref = (
-            _rebuild_execution_request_v3(request)
-        )
-        resolved = _rebuild_resolved_request_v3(resolved_request)
-        prepared = _rebuild_prepared_market_data_v3(prepared_market_data)
+        request_schema_version, ref = _rebuild_execution_request_v3(request)
     except Exception:
-        return _failure_v3(
-            _ExecutionInputsHydrationFailureCodeV3.MALFORMED_EXECUTION_REQUEST
-        )
-    if market_reader is not prepared.verified_reader:
         return _failure_v3(
             _ExecutionInputsHydrationFailureCodeV3.MALFORMED_EXECUTION_REQUEST
         )
@@ -3284,6 +3291,22 @@ def _hydrate_execution_inputs_v3(
     ):
         return _failure_v3(
             _ExecutionInputsHydrationFailureCodeV3.WRONG_EXECUTION_INPUT_BUNDLE_REF
+        )
+    try:
+        public_request = _rebuild_backtest_request_v3(request.request)
+        resolved = _rebuild_resolved_request_v3(resolved_request)
+        if type(prepared_market_data) is not PreparedMultiResolutionMarketData:
+            raise TypeError(
+                "prepared_market_data must be exact PreparedMultiResolutionMarketData"
+            )
+        original_verified_reader = prepared_market_data.verified_reader
+        if market_reader is not original_verified_reader:
+            raise ValueError("market_reader must be the retained verified Reader")
+        prepared = _rebuild_prepared_market_data_v3(prepared_market_data)
+        verified_reader = prepared.verified_reader
+    except Exception:
+        return _failure_v3(
+            _ExecutionInputsHydrationFailureCodeV3.MALFORMED_EXECUTION_REQUEST
         )
 
     try:
@@ -3383,15 +3406,15 @@ def _hydrate_execution_inputs_v3(
         return _failure_v3(
             _ExecutionInputsHydrationFailureCodeV3.BUILD_BINDING_MISMATCH
         )
-    if market_reader.bundle_ref != public_request.market_bundle_ref:
+    if verified_reader.bundle_ref != public_request.market_bundle_ref:
         return _failure_v3(
             _ExecutionInputsHydrationFailureCodeV3.TARGET_BINDING_MISMATCH
         )
     try:
-        requirement_failure = market_reader.validate_requirements(
+        requirement_failure = verified_reader.validate_requirements(
             required_streams=bundle.timeline_stream_keys
         )
-        cursor = market_reader.open_cursor(
+        cursor = verified_reader.open_cursor(
             bundle.target_stream_key,
             batch_size=bundle.timeline_batch_size,
         )
@@ -3400,7 +3423,7 @@ def _hydrate_execution_inputs_v3(
         events: list[Any] = []
         while not cursor.exhausted:
             previous_position = cursor.position
-            batch, cursor = market_reader.read_batch(cursor)
+            batch, cursor = verified_reader.read_batch(cursor)
             if not batch or cursor.position != previous_position + len(batch):
                 raise ValueError("target cursor did not advance")
             events.extend(batch)
@@ -3456,10 +3479,7 @@ def _hydrate_execution_inputs_v3(
             None,
             binding_position[1],
         )
-    if (
-        bundle.market_data_preparation != retained_preparation
-        or prepared.verified_reader is not market_reader
-    ):
+    if bundle.market_data_preparation != retained_preparation:
         schedule_position, requirement_position, event_position = (
             _preparation_replay_positions(
                 bundle.market_data_preparation, retained_preparation
