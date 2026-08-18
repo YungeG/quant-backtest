@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from collections.abc import Mapping
 from dataclasses import fields, replace
 import hashlib
 from inspect import signature
@@ -43,6 +44,7 @@ from crypto_quant_backtest.resolution import (
     RuntimeLibraryRef,
 )
 from crypto_quant_backtest.run_end import MarkToMarketCloseoutPolicy
+from crypto_quant_market_data import InMemoryMarketBundleReader, MarketBundleRef
 from crypto_quant_domain import (
     ArtifactCatalogError,
     ArtifactEnvelope,
@@ -508,6 +510,86 @@ def test_v3_decode_rejects_nested_sequence_normalization(nested_sequence) -> Non
     assert outcome.failure.code is (
         _ExecutionInputsHydrationFailureCodeV3.EXECUTION_INPUT_DECODE_FAILED
     )
+
+
+def test_v3_hydration_rejects_nested_forged_retained_reader_before_artifact_io() -> None:
+    prepared, resolved, _, _, transport = _contract()
+    secret = "SECRET-nested-reader-bundle-ref-/private/path"
+
+    class SecretEquality:
+        def __eq__(self, other):
+            raise RuntimeError(secret)
+
+    forged_ref = object.__new__(MarketBundleRef)
+    object.__setattr__(forged_ref, "bundle_key", SecretEquality())
+    object.__setattr__(
+        forged_ref,
+        "manifest_hash",
+        prepared.verified_reader.bundle_ref.manifest_hash,
+    )
+    forged_reader = object.__new__(InMemoryMarketBundleReader)
+    object.__setattr__(forged_reader, "bundle_ref", forged_ref)
+    object.__setattr__(forged_reader, "manifest", prepared.verified_reader.manifest)
+    object.__setattr__(forged_reader, "streams", prepared.verified_reader.streams)
+    forged_prepared = replace(prepared, verified_reader=forged_reader)
+
+    class NoArtifactIO:
+        calls = 0
+
+        def read(self, *, ref):
+            self.calls += 1
+            raise RuntimeError(secret)
+
+    artifact_reader = NoArtifactIO()
+    outcome = _hydrate_execution_inputs_v3(
+        artifact_reader,  # pyright: ignore[reportArgumentType]
+        transport,
+        market_reader=forged_reader,
+        resolved_request=resolved,
+        prepared_market_data=forged_prepared,
+    )
+    assert artifact_reader.calls == 0
+    assert outcome.result is None
+    assert outcome.failure is not None
+    assert outcome.failure.code is (
+        _ExecutionInputsHydrationFailureCodeV3.MALFORMED_EXECUTION_REQUEST
+    )
+    assert secret.encode() not in canonical_bytes(outcome.failure)
+
+
+def test_v3_nested_retained_reader_revalidation_preserves_baseexception() -> None:
+    prepared, resolved, _, _, transport = _contract()
+
+    class FatalAuthorityFailure(BaseException):
+        pass
+
+    fatal = FatalAuthorityFailure("fatal-nested-reader-authority")
+
+    class FatalStreams(Mapping):
+        def __getitem__(self, key):
+            raise fatal
+
+        def __iter__(self):
+            raise fatal
+
+        def __len__(self):
+            raise fatal
+
+    forged_reader = object.__new__(InMemoryMarketBundleReader)
+    object.__setattr__(forged_reader, "bundle_ref", prepared.verified_reader.bundle_ref)
+    object.__setattr__(forged_reader, "manifest", prepared.verified_reader.manifest)
+    object.__setattr__(forged_reader, "streams", FatalStreams())
+    forged_prepared = replace(prepared, verified_reader=forged_reader)
+
+    with pytest.raises(FatalAuthorityFailure) as raised:
+        _hydrate_execution_inputs_v3(
+            _Reader(error=AssertionError("artifact I/O must not occur")),
+            transport,
+            market_reader=forged_reader,
+            resolved_request=resolved,
+            prepared_market_data=forged_prepared,
+        )
+    assert raised.value is fatal
 
 
 def test_v3_hydration_revalidates_forged_caller_authority_before_io() -> None:
