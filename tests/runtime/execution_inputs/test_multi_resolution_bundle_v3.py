@@ -516,12 +516,18 @@ def test_v3_hydration_rejects_nested_forged_retained_reader_before_artifact_io()
     prepared, resolved, _, _, transport = _contract()
     secret = "SECRET-nested-reader-bundle-ref-/private/path"
 
-    class SecretEquality:
+    class SecretText(str):
+        def strip(self, chars=None):
+            return self
+
         def __eq__(self, other):
             raise RuntimeError(secret)
 
+        def __ne__(self, other):
+            raise RuntimeError(secret)
+
     forged_ref = object.__new__(MarketBundleRef)
-    object.__setattr__(forged_ref, "bundle_key", SecretEquality())
+    object.__setattr__(forged_ref, "bundle_key", SecretText("forged.bundle"))
     object.__setattr__(
         forged_ref,
         "manifest_hash",
