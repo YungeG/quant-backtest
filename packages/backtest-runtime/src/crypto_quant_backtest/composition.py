@@ -28,6 +28,7 @@ from .engine import (
 )
 from .execution import NextEligibleBarOpenModel
 from .financial_dispatch import FillAccountingDispatchPlan, FinancialDispatchPlan
+from .multi_resolution_preparation import MultiResolutionMarketDataPreparation
 from .resolution import BacktestRequest, ResolvedBacktestRequest
 from .run_end import MarkToMarketCloseoutPolicy
 from .slippage import DeterministicBpsSlippageModel
@@ -348,6 +349,84 @@ def _financial_semantics(case: ResolvedExecutionCase) -> dict[str, object]:
     }
 
 
+def _execution_case_semantic_spec_v3(
+    *,
+    base_spec: ExecutionCaseSemanticSpec,
+    execution_case_plan: _ExecutionCasePlan,
+    market_data_preparation: MultiResolutionMarketDataPreparation,
+) -> ExecutionCaseSemanticSpec:
+    if type(base_spec) is not ExecutionCaseSemanticSpec:
+        raise TypeError("base_spec must be exact ExecutionCaseSemanticSpec")
+    if type(execution_case_plan) is not _ExecutionCasePlan:
+        raise TypeError("execution_case_plan must be exact _ExecutionCasePlan")
+    if type(market_data_preparation) is not MultiResolutionMarketDataPreparation:
+        raise TypeError(
+            "market_data_preparation must be exact MultiResolutionMarketDataPreparation"
+        )
+    preparation = MultiResolutionMarketDataPreparation(
+        market_data_preparation.decision_schedule,
+        market_data_preparation.bindings,
+        market_data_preparation.signal_lineages,
+    )
+    return replace(
+        base_spec,
+        decision_inputs_hash=canonical_sha256(
+            {
+                "type": "execution_case_decision_inputs_mrmd_v1",
+                "base": _decision_semantics(execution_case_plan),
+                "decision_schedule": preparation.decision_schedule,
+                "signal_bindings": preparation.bindings.signal_bindings,
+                "signal_lineages": preparation.signal_lineages,
+            }
+        ),
+        execution_inputs_hash=canonical_sha256(
+            {
+                "type": "execution_case_execution_inputs_mrmd_v1",
+                "base": _execution_semantics(execution_case_plan),
+                "execution_bindings": preparation.bindings.execution_bindings,
+            }
+        ),
+        snapshot_inputs_hash=canonical_sha256(
+            {
+                "type": "execution_case_snapshot_inputs_mrmd_v1",
+                "base": execution_case_plan.snapshot_plan,
+                "valuation_bindings": preparation.bindings.valuation_bindings,
+            }
+        ),
+    )
+
+
+def _execution_case_semantic_spec_from_case_v3(
+    *,
+    case: ResolvedExecutionCase,
+    market_data_preparation: MultiResolutionMarketDataPreparation,
+    spec_key: str,
+    spec_version: int,
+    identity_namespace: IdentityNamespace,
+    identity_plan: tuple[ExecutionCaseIdentityRule, ...],
+) -> ExecutionCaseSemanticSpec:
+    base_spec = ExecutionCaseComposer.semantic_spec_from_case(
+        case,
+        spec_key=spec_key,
+        spec_version=spec_version,
+        identity_namespace=identity_namespace,
+        identity_plan=identity_plan,
+    )
+    return _execution_case_semantic_spec_v3(
+        base_spec=base_spec,
+        execution_case_plan=_ExecutionCasePlan(
+            decision_cycles=case.decision_cycles,
+            bar_executions=case.bar_executions,
+            financial_state=case.financial_state,
+            financial_dispatch_plan=case.financial_dispatch_plan,
+            execution_model=case.execution_model,
+            snapshot_plan=case.snapshot_plan,
+            closeout_policy=case.closeout_policy,
+        ),
+        market_data_preparation=market_data_preparation,
+    )
+
+
 def _compose_execution_case_from_authority(
     *,
     request: BacktestRequest,
@@ -424,6 +503,88 @@ def _compose_execution_case_from_authority(
     return result
 
 
+def _compose_execution_case_from_authority_v3(
+    *,
+    request: BacktestRequest,
+    semantic_run_id: str,
+    market_reader: MarketBundleReader,
+    hydrated_inputs: _HydratedExecutionCaseInputs,
+    market_data_preparation: MultiResolutionMarketDataPreparation,
+) -> ResolvedExecutionCase:
+    if type(request) is not BacktestRequest:
+        raise TypeError("request must be exact BacktestRequest")
+    if type(semantic_run_id) is not str or not semantic_run_id:
+        raise TypeError("semantic_run_id must be nonempty str")
+    if type(hydrated_inputs) is not _HydratedExecutionCaseInputs:
+        raise TypeError(
+            "hydrated_inputs must be exact _HydratedExecutionCaseInputs"
+        )
+    if type(market_data_preparation) is not MultiResolutionMarketDataPreparation:
+        raise TypeError(
+            "market_data_preparation must be exact MultiResolutionMarketDataPreparation"
+        )
+    spec = hydrated_inputs.execution_case_semantic_spec
+    if spec.semantic_spec_hash != request.execution_case_semantic_hash:
+        raise ValueError("execution case semantic spec does not bind the request")
+    if hydrated_inputs.target_stream.target_stream_digest != request.target_stream_digest:
+        raise ValueError("target stream does not bind the request")
+    if market_reader.bundle_ref != request.market_bundle_ref:
+        raise ValueError("market reader does not bind the request")
+
+    timeline = DeterministicTimeline.open(
+        reader=market_reader,
+        stream_keys=hydrated_inputs.timeline_stream_keys,
+        window=request.timeline_window,
+    )
+    if isinstance(timeline, InputValidationFailure):
+        raise ValueError("execution timeline cannot be reconstructed")
+    if ExecutionCaseComposer.timeline_semantic_hash(timeline) != spec.timeline_semantic_hash:
+        raise ValueError("execution timeline semantic hash mismatch")
+
+    identities = ExecutionCaseIdentityFactory(
+        semantic_run_id=semantic_run_id,
+        namespace=spec.identity_namespace,
+        identity_plan=spec.identity_plan,
+    )
+    for rule in spec.identity_plan:
+        if rule.domain_kind is None:
+            identities.event_id(rule.binding_key)
+        else:
+            identities.domain_id(rule.binding_key)
+
+    plan = hydrated_inputs.execution_case_plan
+    result = ResolvedExecutionCase(
+        case_key=spec.case_key,
+        case_version=spec.case_version,
+        semantic_spec_hash=spec.semantic_spec_hash,
+        timeline=timeline,
+        timeline_batch_size=hydrated_inputs.timeline_batch_size,
+        target_stream=hydrated_inputs.target_stream,
+        decision_cycles=plan.decision_cycles,
+        bar_executions=plan.bar_executions,
+        financial_state=plan.financial_state,
+        financial_dispatch_plan=plan.financial_dispatch_plan,
+        execution_model=plan.execution_model,
+        snapshot_plan=plan.snapshot_plan,
+        closeout_policy=plan.closeout_policy,
+        identity_manifest=identities.manifest(),
+        semantic_spec=spec,
+    )
+    recomputed_spec = _execution_case_semantic_spec_from_case_v3(
+        case=result,
+        market_data_preparation=market_data_preparation,
+        spec_key=spec.spec_key,
+        spec_version=spec.spec_version,
+        identity_namespace=spec.identity_namespace,
+        identity_plan=spec.identity_plan,
+    )
+    if recomputed_spec != spec:
+        raise ValueError("execution case inputs do not match the semantic spec")
+    if not result.verify_identity_manifest(semantic_run_id):
+        raise ValueError("execution case identities do not match the semantic plan")
+    return result
+
+
 def _compose_execution_case(
     *,
     resolved_request: ResolvedBacktestRequest,
@@ -461,6 +622,48 @@ def _compose_execution_case(
         semantic_run_id=resolved_request.semantic_run_id,
         market_reader=market_reader,
         hydrated_inputs=hydrated_inputs,
+    )
+
+
+def _compose_execution_case_v3(
+    *,
+    resolved_request: ResolvedBacktestRequest,
+    market_reader: MarketBundleReader,
+    hydrated_inputs: _HydratedExecutionCaseInputs,
+    market_data_preparation: MultiResolutionMarketDataPreparation,
+) -> ResolvedExecutionCase:
+    if type(resolved_request) is not ResolvedBacktestRequest:
+        raise TypeError("resolved_request must be exact ResolvedBacktestRequest")
+    if type(hydrated_inputs) is not _HydratedExecutionCaseInputs:
+        raise TypeError(
+            "hydrated_inputs must be exact _HydratedExecutionCaseInputs"
+        )
+    request = resolved_request.request
+    if (
+        resolved_request.build_artifact_manifest.manifest_hash
+        != request.build_artifact_manifest_hash
+    ):
+        raise ValueError("resolved build manifest does not bind the request")
+
+    selected = {
+        value.port_type: value
+        for value in resolved_request.environment.simulation.component_manifest
+    }
+    plan = hydrated_inputs.execution_case_plan
+    represented = (
+        plan.execution_model.component_ref,
+        plan.closeout_policy.spec().component_ref,
+        *(value.slippage_model.component_ref for value in plan.bar_executions),
+    )
+    if any(selected.get(value.port_type) != value for value in represented):
+        raise ValueError("execution case component refs do not bind the resolved profile")
+
+    return _compose_execution_case_from_authority_v3(
+        request=request,
+        semantic_run_id=resolved_request.semantic_run_id,
+        market_reader=market_reader,
+        hydrated_inputs=hydrated_inputs,
+        market_data_preparation=market_data_preparation,
     )
 
 

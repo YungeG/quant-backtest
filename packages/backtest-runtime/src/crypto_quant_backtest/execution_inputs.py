@@ -29,7 +29,11 @@ from crypto_quant_domain import (
     canonical_bytes,
     canonical_sha256,
 )
-from crypto_quant_market_data import InputValidationFailure, MarketBundleReader
+from crypto_quant_market_data import (
+    InputValidationFailure,
+    MarketBundleCapability,
+    MarketBundleReader,
+)
 from crypto_quant_trading import (
     LinearFundingApplicationIdentity,  # pyright: ignore[reportPrivateImportUsage]
     LinearFundingApplicationKey,  # pyright: ignore[reportPrivateImportUsage]
@@ -40,8 +44,14 @@ from .composition import (
     ExecutionCaseComposer,
     _compose_execution_case,
     _compose_execution_case_from_authority,
+    _execution_case_semantic_spec_v3,
     _ExecutionCasePlan,
     _HydratedExecutionCaseInputs,
+)
+from .decision_schedule import (
+    DecisionSchedule,
+    DecisionScheduleEntry,
+    LookbackRequirement,
 )
 from .engine import (
     ExecutionCaseIdentityRule,
@@ -72,6 +82,26 @@ from .financial_dispatch import (
     LinearFundingAccountEventPlan,
     LinearMarginLiquidationAuditPlan,
     ScheduledAccountEvent,
+)
+from .multi_resolution_market_data import (
+    ExecutionDataBinding,
+    MultiResolutionMarketDataBindings,
+    SignalBarBinding,
+    ValuationDataBinding,
+    _clock,
+    _record_observation,
+)
+from .multi_resolution_preparation import (
+    MultiResolutionMarketDataPreparation,
+    PreparedMultiResolutionMarketData,
+    SignalObservationLineageBinding,
+)
+from .observation_windows import BarDefinitionRef
+from .observations import ObservationPurposeRef, ObservationQuery
+from .performance_observations import (
+    BoundedPerformanceRecorder,
+    PerformanceOperation,
+    PerformanceOutcome,
 )
 from .ports import (
     ArtifactEnvelopeReader,
@@ -109,14 +139,16 @@ from .target_stream import (
     TargetStreamDecisionSchedule,
     TargetStreamScheduleEntry,
 )
-from .timeline import TimelineSegment
+from .timeline import TimelineSegment, TimelineWindow
 
 _ARTIFACT_TYPE = "backtest_execution_input_bundle"
 _SCHEMA_VERSION = 1
 _V2_SCHEMA_VERSION = 2
+_V3_SCHEMA_VERSION = 3
 _TEMPLATE_TYPE = "backtest_initial_financial_state_template"
 _V1_SCHEMA = CanonicalSchema(_ARTIFACT_TYPE, _SCHEMA_VERSION)
 _V2_SCHEMA = CanonicalSchema(_ARTIFACT_TYPE, _V2_SCHEMA_VERSION)
+_V3_SCHEMA = CanonicalSchema(_ARTIFACT_TYPE, _V3_SCHEMA_VERSION)
 _PAYLOAD_FIELDS = frozenset(
     {
         "type",
@@ -144,6 +176,7 @@ _V2_PAYLOAD_FIELDS = frozenset(
         "execution_case_plan",
     }
 )
+_V3_PAYLOAD_FIELDS = _V2_PAYLOAD_FIELDS | {"market_data_preparation"}
 _PLAN_FIELDS = frozenset(
     {
         "type",
@@ -192,6 +225,57 @@ class _ExecutionInputsHydrationFailureCode(str, Enum):
     )
 
 
+class _ExecutionInputsHydrationFailureCodeV3(str, Enum):
+    MALFORMED_EXECUTION_REQUEST = "malformed_execution_request"
+    WRONG_EXECUTION_INPUT_BUNDLE_REF = "wrong_execution_input_bundle_ref"
+    EXECUTION_INPUT_UNAVAILABLE = "execution_input_unavailable"
+    EXECUTION_INPUT_TAMPERED = "execution_input_tampered"
+    EXECUTION_INPUT_DECODE_FAILED = "execution_input_decode_failed"
+    REQUEST_BINDING_MISMATCH = "request_binding_mismatch"
+    BUILD_BINDING_MISMATCH = "build_binding_mismatch"
+    TARGET_BINDING_MISMATCH = "target_binding_mismatch"
+    PREPARED_MARKET_DATA_BINDING_MISMATCH = (
+        "prepared_market_data_binding_mismatch"
+    )
+    PREPARED_MARKET_DATA_REPLAY_MISMATCH = "prepared_market_data_replay_mismatch"
+    EXECUTION_CASE_SEMANTIC_HASH_MISMATCH = (
+        "execution_case_semantic_hash_mismatch"
+    )
+
+
+@dataclass(frozen=True, slots=True)
+class ExecutionInputsHydrationFailureV3:
+    code: _ExecutionInputsHydrationFailureCodeV3
+    role_position: int | None = None
+    schedule_entry_position: int | None = None
+    requirement_position: int | None = None
+    event_position: int | None = None
+
+    def __post_init__(self) -> None:
+        if type(self.code) is not _ExecutionInputsHydrationFailureCodeV3:
+            raise TypeError("code must be exact v3 hydration failure code")
+        for name in (
+            "role_position",
+            "schedule_entry_position",
+            "requirement_position",
+            "event_position",
+        ):
+            value = getattr(self, name)
+            if value is not None and (type(value) is not int or value < 0):
+                raise ValueError(f"{name} must be a non-negative exact integer or None")
+
+    def to_canonical_dict(self) -> dict[str, object]:
+        return {
+            "type": "execution_inputs_hydration_failure_v3",
+            "schema_version": 3,
+            "code": self.code.value,
+            "role_position": self.role_position,
+            "schedule_entry_position": self.schedule_entry_position,
+            "requirement_position": self.requirement_position,
+            "event_position": self.event_position,
+        }
+
+
 @dataclass(frozen=True, slots=True)
 class _ExecutionInputsHydrationFailure:
     code: _ExecutionInputsHydrationFailureCode
@@ -221,6 +305,41 @@ class _ExecutionInputsHydrationOutcome:
 
 
 @dataclass(frozen=True, slots=True)
+class _HydratedExecutionInputsV3:
+    build_artifact_manifest: BuildArtifactManifest
+    execution_case_semantic_spec: ExecutionCaseSemanticSpec
+    timeline_stream_keys: tuple[str, ...]
+    target_stream: PrecomputedTargetStream
+    timeline_batch_size: int
+    execution_case_plan: _ExecutionCasePlan
+    market_data_preparation: MultiResolutionMarketDataPreparation
+
+    def __post_init__(self) -> None:
+        if type(self.build_artifact_manifest) is not BuildArtifactManifest:
+            raise TypeError("build_artifact_manifest must be exact BuildArtifactManifest")
+        if type(self.execution_case_semantic_spec) is not ExecutionCaseSemanticSpec:
+            raise TypeError("execution_case_semantic_spec must be exact ExecutionCaseSemanticSpec")
+        if type(self.execution_case_plan) is not _ExecutionCasePlan:
+            raise TypeError("execution_case_plan must be exact _ExecutionCasePlan")
+        if type(self.market_data_preparation) is not MultiResolutionMarketDataPreparation:
+            raise TypeError("market_data_preparation must be exact MultiResolutionMarketDataPreparation")
+
+
+@dataclass(frozen=True, slots=True)
+class _ExecutionInputsHydrationOutcomeV3:
+    result: _HydratedExecutionInputsV3 | None = None
+    failure: ExecutionInputsHydrationFailureV3 | None = None
+
+    def __post_init__(self) -> None:
+        if (self.result is None) == (self.failure is None):
+            raise ValueError("v3 hydration outcome requires exactly one result or failure")
+        if self.result is not None and type(self.result) is not _HydratedExecutionInputsV3:
+            raise TypeError("result must be exact _HydratedExecutionInputsV3 or None")
+        if self.failure is not None and type(self.failure) is not ExecutionInputsHydrationFailureV3:
+            raise TypeError("failure must be exact ExecutionInputsHydrationFailureV3 or None")
+
+
+@dataclass(frozen=True, slots=True)
 class _DecodedExecutionInputBundle:
     request_hash: str
     build_artifact_manifest: BuildArtifactManifest
@@ -244,6 +363,19 @@ class _DecodedExecutionInputBundleV2:
 
 
 @dataclass(frozen=True, slots=True)
+class _DecodedExecutionInputBundleV3:
+    request_hash: str
+    semantic_run_id: str
+    build_artifact_manifest: BuildArtifactManifest
+    execution_case_semantic_spec: ExecutionCaseSemanticSpec
+    timeline_stream_keys: tuple[str, ...]
+    target_stream_key: str
+    timeline_batch_size: int
+    execution_case_plan: _ExecutionCasePlan
+    market_data_preparation: MultiResolutionMarketDataPreparation
+
+
+@dataclass(frozen=True, slots=True)
 class BacktestExecutionRequest:
     schema_version: int
     request: BacktestRequest
@@ -253,8 +385,9 @@ class BacktestExecutionRequest:
         if type(self.schema_version) is not int or self.schema_version not in (
             _SCHEMA_VERSION,
             _V2_SCHEMA_VERSION,
+            _V3_SCHEMA_VERSION,
         ):
-            raise ValueError("BacktestExecutionRequest schema_version must be 1 or 2")
+            raise ValueError("BacktestExecutionRequest schema_version must be 1, 2, or 3")
         if type(self.request) is not BacktestRequest:
             raise TypeError("request must be exact BacktestRequest")
         if type(self.execution_input_bundle_ref) is not ArtifactRef:
@@ -2215,6 +2348,213 @@ def _read_execution_case_plan(value: object) -> _ExecutionCasePlan:
     )
 
 
+def _canonical_reconstruction(name: str, value: object, rebuilt: object) -> Any:
+    if canonical_bytes(value) != canonical_bytes(rebuilt):
+        raise ValueError(f"{name} did not reconstruct exactly")
+    return rebuilt
+
+
+def _read_market_bundle_capability(value: object) -> MarketBundleCapability:
+    data = _tagged("market_bundle_capability", value, "market_bundle_capability")
+    return _canonical_reconstruction(
+        "market_bundle_capability",
+        data,
+        MarketBundleCapability(data["key"], data["version"]),
+    )
+
+
+def _read_observation_purpose(value: object) -> ObservationPurposeRef:
+    data = _tagged("observation_purpose_ref", value, "observation_purpose_ref")
+    return _canonical_reconstruction(
+        "observation_purpose_ref",
+        data,
+        ObservationPurposeRef(data["key"], data["version"]),
+    )
+
+
+def _read_observation_query(value: object) -> ObservationQuery:
+    data = _tagged("observation_query", value, "observation_query")
+    return _canonical_reconstruction(
+        "observation_query",
+        data,
+        ObservationQuery(
+            data["dataset_key"],
+            _read_instrument_id(data["instrument_id"]),
+            _read_observation_purpose(data["purpose"]),
+            _read_market_bundle_capability(data["capability"]),
+        ),
+    )
+
+
+def _read_bar_definition_ref(value: object) -> BarDefinitionRef:
+    data = _tagged("bar_definition_ref", value, "bar_definition_ref")
+    return _canonical_reconstruction(
+        "bar_definition_ref",
+        data,
+        BarDefinitionRef(data["key"], data["version"], data["definition_hash"]),
+    )
+
+
+def _read_timeline_window(value: object) -> TimelineWindow:
+    data = _tagged("timeline_window", value, "timeline_window")
+    return _canonical_reconstruction(
+        "timeline_window",
+        data,
+        TimelineWindow(
+            _read_utc(data["data_start"]),
+            _read_utc(data["trading_start"]),
+            _read_utc(data["end_exclusive"]),
+        ),
+    )
+
+
+def _read_decision_schedule_entry(value: object) -> DecisionScheduleEntry:
+    data = _tagged("decision_schedule_entry", value, "decision_schedule_entry")
+    return _canonical_reconstruction(
+        "decision_schedule_entry",
+        data,
+        DecisionScheduleEntry(
+            _read_simulation_instant(data["decision_instant"]),
+            TimelineSegment(data["segment"]),
+        ),
+    )
+
+
+def _read_lookback_requirement(value: object) -> LookbackRequirement:
+    data = _tagged("lookback_requirement", value, "lookback_requirement")
+    return _canonical_reconstruction(
+        "lookback_requirement",
+        data,
+        LookbackRequirement(
+            data["requirement_key"],
+            _read_observation_query(data["observation_query"]),
+            _read_bar_definition_ref(data["bar_definition"]),
+            data["minimum_count"],
+        ),
+    )
+
+
+def _read_decision_schedule(value: object) -> DecisionSchedule:
+    data = _tagged("decision_schedule", value, "decision_schedule")
+    return _canonical_reconstruction(
+        "decision_schedule",
+        data,
+        DecisionSchedule(
+            data["key"],
+            data["version"],
+            _read_timeline_window(data["window"]),
+            _sequence(
+                "decision schedule entries",
+                data["entries"],
+                _read_decision_schedule_entry,
+            ),
+            _sequence(
+                "lookback requirements",
+                data["requirements"],
+                _read_lookback_requirement,
+            ),
+        ),
+    )
+
+
+def _read_signal_binding(value: object) -> SignalBarBinding:
+    data = _tagged("signal_bar_binding", value, "signal_bar_binding")
+    return _canonical_reconstruction(
+        "signal_bar_binding",
+        data,
+        SignalBarBinding(
+            data["requirement_hash"],
+            data["stream_key"],
+            domain.PricePurpose(data["price_purpose"]),
+            data["aggregation_input_hash"],
+        ),
+    )
+
+
+def _read_execution_binding(value: object) -> ExecutionDataBinding:
+    data = _tagged("execution_data_binding", value, "execution_data_binding")
+    return _canonical_reconstruction(
+        "execution_data_binding",
+        data,
+        ExecutionDataBinding(data["profile_binding_key"], data["stream_key"]),
+    )
+
+
+def _read_valuation_binding(value: object) -> ValuationDataBinding:
+    data = _tagged("valuation_data_binding", value, "valuation_data_binding")
+    return _canonical_reconstruction(
+        "valuation_data_binding",
+        data,
+        ValuationDataBinding(
+            _read_instrument_id(data["instrument_id"]), data["stream_key"]
+        ),
+    )
+
+
+def _read_market_data_bindings(value: object) -> MultiResolutionMarketDataBindings:
+    data = _tagged(
+        "multi_resolution_market_data_bindings",
+        value,
+        "multi_resolution_market_data_bindings",
+    )
+    return _canonical_reconstruction(
+        "multi_resolution_market_data_bindings",
+        data,
+        MultiResolutionMarketDataBindings(
+            _sequence("signal_bindings", data["signal_bindings"], _read_signal_binding),
+            _sequence(
+                "execution_bindings",
+                data["execution_bindings"],
+                _read_execution_binding,
+            ),
+            _sequence(
+                "valuation_bindings",
+                data["valuation_bindings"],
+                _read_valuation_binding,
+            ),
+        ),
+    )
+
+
+def _read_signal_lineage(value: object) -> SignalObservationLineageBinding:
+    data = _tagged(
+        "signal_observation_lineage_binding",
+        value,
+        "signal_observation_lineage_binding",
+    )
+    return _canonical_reconstruction(
+        "signal_observation_lineage_binding",
+        data,
+        SignalObservationLineageBinding(
+            data["requirement_hash"],
+            data["event_id"],
+            data["event_hash"],
+            data["observation_key"],
+        ),
+    )
+
+
+def _read_market_data_preparation(
+    value: object,
+) -> MultiResolutionMarketDataPreparation:
+    data = _tagged(
+        "multi_resolution_market_data_preparation",
+        value,
+        "multi_resolution_market_data_preparation",
+    )
+    return _canonical_reconstruction(
+        "multi_resolution_market_data_preparation",
+        data,
+        MultiResolutionMarketDataPreparation(
+            _read_decision_schedule(data["decision_schedule"]),
+            _read_market_data_bindings(data["bindings"]),
+            _sequence(
+                "signal_lineages", data["signal_lineages"], _read_signal_lineage
+            ),
+        ),
+    )
+
+
 def _read_execution_input_payload(value: object) -> _DecodedExecutionInputBundle:
     payload = _mapping("execution_input_bundle", value)
     _exact_fields("execution_input_bundle", payload, _PAYLOAD_FIELDS)
@@ -2274,6 +2614,41 @@ def _read_execution_input_payload_v2(value: object) -> _DecodedExecutionInputBun
     )
 
 
+def _read_execution_input_payload_v3(value: object) -> _DecodedExecutionInputBundleV3:
+    payload = _mapping("execution_input_bundle", value)
+    _exact_fields("execution_input_bundle", payload, _V3_PAYLOAD_FIELDS)
+    if (
+        payload["type"] != _ARTIFACT_TYPE
+        or payload["schema_version"] != _V3_SCHEMA_VERSION
+    ):
+        raise ValueError(
+            "execution input payload must be backtest_execution_input_bundle@3"
+        )
+    stream_keys = _stream_keys(payload["timeline_stream_keys"])
+    target_key = _text("target_stream_key", payload["target_stream_key"])
+    if target_key not in stream_keys:
+        raise ValueError("target_stream_key must be included in timeline_stream_keys")
+    return _DecodedExecutionInputBundleV3(
+        request_hash=_text("request_hash", payload["request_hash"]),
+        semantic_run_id=_text("semantic_run_id", payload["semantic_run_id"]),
+        build_artifact_manifest=_read_build_manifest(
+            payload["build_artifact_manifest"]
+        ),
+        execution_case_semantic_spec=_read_semantic_spec(
+            payload["execution_case_semantic_spec"]
+        ),
+        timeline_stream_keys=stream_keys,
+        target_stream_key=target_key,
+        timeline_batch_size=_positive_int(
+            "timeline_batch_size", payload["timeline_batch_size"]
+        ),
+        execution_case_plan=_read_execution_case_plan(payload["execution_case_plan"]),
+        market_data_preparation=_read_market_data_preparation(
+            payload["market_data_preparation"]
+        ),
+    )
+
+
 _EXECUTION_INPUT_CATALOG = SchemaCatalog(
     (
         ArtifactSchemaRegistration(
@@ -2285,6 +2660,11 @@ _EXECUTION_INPUT_CATALOG = SchemaCatalog(
             artifact_type="backtest_execution_input_bundle",
             schema_version=2,
             payload_reader=_read_execution_input_payload_v2,
+        ),
+        ArtifactSchemaRegistration(
+            artifact_type="backtest_execution_input_bundle",
+            schema_version=3,
+            payload_reader=_read_execution_input_payload_v3,
         ),
     )
 )
@@ -2431,6 +2811,469 @@ def materialize_execution_input_bundle_v2(
         },
     }
     return ArtifactEnvelope.create(_V2_SCHEMA.name, _V2_SCHEMA.version, payload)
+
+
+def _materialize_execution_input_bundle_v3(
+    *,
+    resolved_request: ResolvedBacktestRequest,
+    hydrated_inputs: _HydratedExecutionCaseInputs,
+    market_data_preparation: MultiResolutionMarketDataPreparation,
+) -> ArtifactEnvelope:
+    if type(resolved_request) is not ResolvedBacktestRequest:
+        raise TypeError("resolved_request must be exact ResolvedBacktestRequest")
+    if type(hydrated_inputs) is not _HydratedExecutionCaseInputs:
+        raise TypeError("hydrated_inputs must be exact _HydratedExecutionCaseInputs")
+    if type(market_data_preparation) is not MultiResolutionMarketDataPreparation:
+        raise TypeError(
+            "market_data_preparation must be exact MultiResolutionMarketDataPreparation"
+        )
+    preparation = MultiResolutionMarketDataPreparation(
+        market_data_preparation.decision_schedule,
+        market_data_preparation.bindings,
+        market_data_preparation.signal_lineages,
+    )
+    request = resolved_request.request
+    spec = hydrated_inputs.execution_case_semantic_spec
+    if resolved_request.build_artifact_manifest.manifest_hash != (
+        request.build_artifact_manifest_hash
+    ):
+        raise ValueError("resolved build artifact manifest does not bind the request")
+    if spec.semantic_spec_hash != request.execution_case_semantic_hash:
+        raise ValueError("execution case semantic spec does not bind the request")
+    if (
+        hydrated_inputs.target_stream.target_stream_digest
+        != request.target_stream_digest
+        or spec.target_stream_digest != request.target_stream_digest
+    ):
+        raise ValueError("target stream does not bind the request")
+    expected_spec = _execution_case_semantic_spec_v3(
+        base_spec=spec,
+        execution_case_plan=hydrated_inputs.execution_case_plan,
+        market_data_preparation=preparation,
+    )
+    if expected_spec != spec:
+        raise ValueError("market data preparation does not bind the semantic spec")
+
+    payload = {
+        "type": _ARTIFACT_TYPE,
+        "schema_version": _V3_SCHEMA_VERSION,
+        "request_hash": request.request_hash,
+        "semantic_run_id": resolved_request.semantic_run_id,
+        "build_artifact_manifest": resolved_request.build_artifact_manifest,
+        "execution_case_semantic_spec": spec,
+        "timeline_stream_keys": hydrated_inputs.timeline_stream_keys,
+        "target_stream_key": hydrated_inputs.target_stream.stream_key,
+        "timeline_batch_size": hydrated_inputs.timeline_batch_size,
+        "execution_case_plan": {
+            "type": "execution_case_plan",
+            "schema_version": 1,
+            "decision_cycles": hydrated_inputs.execution_case_plan.decision_cycles,
+            "bar_executions": hydrated_inputs.execution_case_plan.bar_executions,
+            "financial_state": hydrated_inputs.execution_case_plan.financial_state,
+            "financial_dispatch_plan": (
+                hydrated_inputs.execution_case_plan.financial_dispatch_plan
+            ),
+            "execution_model_spec": (
+                hydrated_inputs.execution_case_plan.execution_model.spec()
+            ),
+            "snapshot_plan": hydrated_inputs.execution_case_plan.snapshot_plan,
+            "closeout_policy_spec": (
+                hydrated_inputs.execution_case_plan.closeout_policy.spec()
+            ),
+        },
+        "market_data_preparation": preparation.to_canonical_dict(),
+    }
+    return ArtifactEnvelope.create(_V3_SCHEMA.name, _V3_SCHEMA.version, payload)
+
+
+def _failure_v3(
+    code: _ExecutionInputsHydrationFailureCodeV3,
+    role_position: int | None = None,
+    schedule_entry_position: int | None = None,
+    requirement_position: int | None = None,
+    event_position: int | None = None,
+) -> _ExecutionInputsHydrationOutcomeV3:
+    return _ExecutionInputsHydrationOutcomeV3(
+        failure=ExecutionInputsHydrationFailureV3(
+            code,
+            role_position,
+            schedule_entry_position,
+            requirement_position,
+            event_position,
+        )
+    )
+
+
+def _record_v3(
+    recorder: BoundedPerformanceRecorder | None,
+    operation: PerformanceOperation,
+    outcome: PerformanceOutcome,
+    started_at: int | None,
+    input_count: int,
+    output_count: int,
+) -> None:
+    if recorder is None or started_at is None:
+        return
+    ended_at = _clock()
+    if ended_at is not None and ended_at >= started_at:
+        _record_observation(
+            recorder,
+            operation,
+            outcome,
+            ended_at - started_at,
+            input_count,
+            output_count,
+        )
+
+
+def _binding_count_v3(preparation: MultiResolutionMarketDataPreparation) -> int:
+    bindings = preparation.bindings
+    return (
+        len(bindings.signal_bindings)
+        + len(bindings.execution_bindings)
+        + len(bindings.valuation_bindings)
+    )
+
+
+def _binding_mismatch_position(
+    embedded: MultiResolutionMarketDataBindings,
+    retained: MultiResolutionMarketDataBindings,
+) -> tuple[int, int] | None:
+    roles = (
+        (embedded.signal_bindings, retained.signal_bindings),
+        (embedded.execution_bindings, retained.execution_bindings),
+        (embedded.valuation_bindings, retained.valuation_bindings),
+    )
+    for role_position, (left, right) in enumerate(roles):
+        for position in range(max(len(left), len(right))):
+            if position >= len(left) or position >= len(right) or left[position] != right[position]:
+                return role_position, position
+    return None
+
+
+def _preparation_replay_positions(
+    embedded: MultiResolutionMarketDataPreparation,
+    retained: MultiResolutionMarketDataPreparation,
+) -> tuple[int | None, int | None, int | None]:
+    for position in range(
+        max(
+            len(embedded.decision_schedule.entries),
+            len(retained.decision_schedule.entries),
+        )
+    ):
+        if (
+            position >= len(embedded.decision_schedule.entries)
+            or position >= len(retained.decision_schedule.entries)
+            or embedded.decision_schedule.entries[position]
+            != retained.decision_schedule.entries[position]
+        ):
+            return position, None, None
+    for position in range(
+        max(
+            len(embedded.decision_schedule.requirements),
+            len(retained.decision_schedule.requirements),
+        )
+    ):
+        if (
+            position >= len(embedded.decision_schedule.requirements)
+            or position >= len(retained.decision_schedule.requirements)
+            or embedded.decision_schedule.requirements[position]
+            != retained.decision_schedule.requirements[position]
+        ):
+            return None, position, None
+    for position in range(
+        max(len(embedded.signal_lineages), len(retained.signal_lineages))
+    ):
+        if (
+            position >= len(embedded.signal_lineages)
+            or position >= len(retained.signal_lineages)
+            or embedded.signal_lineages[position] != retained.signal_lineages[position]
+        ):
+            return None, None, position
+    return None, None, None
+
+
+def _hydrate_execution_inputs_v3(
+    reader: ArtifactEnvelopeReader,
+    request: BacktestExecutionRequest,
+    *,
+    market_reader: MarketBundleReader,
+    resolved_request: ResolvedBacktestRequest,
+    prepared_market_data: PreparedMultiResolutionMarketData,
+    recorder: BoundedPerformanceRecorder | None = None,
+) -> _ExecutionInputsHydrationOutcomeV3:
+    if (
+        type(request) is not BacktestExecutionRequest
+        or type(resolved_request) is not ResolvedBacktestRequest
+        or type(prepared_market_data) is not PreparedMultiResolutionMarketData
+        or (recorder is not None and type(recorder) is not BoundedPerformanceRecorder)
+    ):
+        return _failure_v3(
+            _ExecutionInputsHydrationFailureCodeV3.MALFORMED_EXECUTION_REQUEST
+        )
+    ref = request.execution_input_bundle_ref
+    if (
+        request.schema_version != _V3_SCHEMA_VERSION
+        or ref.artifact_type != _ARTIFACT_TYPE
+        or ref.schema_version != _V3_SCHEMA_VERSION
+    ):
+        return _failure_v3(
+            _ExecutionInputsHydrationFailureCodeV3.WRONG_EXECUTION_INPUT_BUNDLE_REF
+        )
+
+    try:
+        source = reader.read(ref=ref)
+    except ArtifactIntegrityError:
+        return _failure_v3(
+            _ExecutionInputsHydrationFailureCodeV3.EXECUTION_INPUT_TAMPERED
+        )
+    except BaseException:
+        return _failure_v3(
+            _ExecutionInputsHydrationFailureCodeV3.EXECUTION_INPUT_UNAVAILABLE
+        )
+    if type(source) is not ArtifactReadResult:
+        return _failure_v3(
+            _ExecutionInputsHydrationFailureCodeV3.EXECUTION_INPUT_UNAVAILABLE
+        )
+    try:
+        source_valid = (
+            source.source_bytes == canonical_bytes(source.envelope)
+            and source.source_hash == canonical_sha256(source.envelope)
+            and ArtifactRef.from_envelope(source.envelope) == ref
+        )
+    except BaseException:
+        source_valid = False
+    if not source_valid:
+        return _failure_v3(
+            _ExecutionInputsHydrationFailureCodeV3.EXECUTION_INPUT_TAMPERED
+        )
+
+    hydrate_started = None if recorder is None else _clock()
+    try:
+        decoded = _EXECUTION_INPUT_CATALOG.read(source.source_bytes)
+    except (
+        ArtifactIntegrityError,
+        UnknownArtifactTypeError,
+        UnsupportedSchemaVersionError,
+    ):
+        _record_v3(
+            recorder,
+            PerformanceOperation.HYDRATE_INPUTS,
+            PerformanceOutcome.FAILED,
+            hydrate_started,
+            0,
+            0,
+        )
+        return _failure_v3(
+            _ExecutionInputsHydrationFailureCodeV3.EXECUTION_INPUT_TAMPERED
+        )
+    except BaseException:
+        _record_v3(
+            recorder,
+            PerformanceOperation.HYDRATE_INPUTS,
+            PerformanceOutcome.FAILED,
+            hydrate_started,
+            0,
+            0,
+        )
+        return _failure_v3(
+            _ExecutionInputsHydrationFailureCodeV3.EXECUTION_INPUT_DECODE_FAILED
+        )
+    bundle = decoded.artifact
+    if decoded.envelope != source.envelope or type(bundle) is not _DecodedExecutionInputBundleV3:
+        _record_v3(
+            recorder,
+            PerformanceOperation.HYDRATE_INPUTS,
+            PerformanceOutcome.FAILED,
+            hydrate_started,
+            0,
+            0,
+        )
+        return _failure_v3(
+            _ExecutionInputsHydrationFailureCodeV3.EXECUTION_INPUT_DECODE_FAILED
+        )
+    binding_count = _binding_count_v3(bundle.market_data_preparation)
+    _record_v3(
+        recorder,
+        PerformanceOperation.HYDRATE_INPUTS,
+        PerformanceOutcome.SUCCEEDED,
+        hydrate_started,
+        binding_count,
+        binding_count,
+    )
+
+    public_request = request.request
+    if (
+        bundle.request_hash != public_request.request_hash
+        or resolved_request.request != public_request
+        or bundle.semantic_run_id != resolved_request.semantic_run_id
+    ):
+        return _failure_v3(
+            _ExecutionInputsHydrationFailureCodeV3.REQUEST_BINDING_MISMATCH
+        )
+    if (
+        bundle.build_artifact_manifest.manifest_hash
+        != public_request.build_artifact_manifest_hash
+        or bundle.build_artifact_manifest != resolved_request.build_artifact_manifest
+    ):
+        return _failure_v3(
+            _ExecutionInputsHydrationFailureCodeV3.BUILD_BINDING_MISMATCH
+        )
+    if market_reader.bundle_ref != public_request.market_bundle_ref:
+        return _failure_v3(
+            _ExecutionInputsHydrationFailureCodeV3.TARGET_BINDING_MISMATCH
+        )
+    try:
+        requirement_failure = market_reader.validate_requirements(
+            required_streams=bundle.timeline_stream_keys
+        )
+        cursor = market_reader.open_cursor(
+            bundle.target_stream_key,
+            batch_size=bundle.timeline_batch_size,
+        )
+        if requirement_failure is not None or isinstance(cursor, InputValidationFailure):
+            raise ValueError("target unavailable")
+        events: list[Any] = []
+        while not cursor.exhausted:
+            previous_position = cursor.position
+            batch, cursor = market_reader.read_batch(cursor)
+            if not batch or cursor.position != previous_position + len(batch):
+                raise ValueError("target cursor did not advance")
+            events.extend(batch)
+        target_stream = PrecomputedTargetStream(bundle.target_stream_key, tuple(events))
+    except BaseException:
+        return _failure_v3(
+            _ExecutionInputsHydrationFailureCodeV3.TARGET_BINDING_MISMATCH
+        )
+    if (
+        target_stream.target_stream_digest != public_request.target_stream_digest
+        or bundle.execution_case_semantic_spec.target_stream_digest
+        != public_request.target_stream_digest
+    ):
+        return _failure_v3(
+            _ExecutionInputsHydrationFailureCodeV3.TARGET_BINDING_MISMATCH
+        )
+
+    replay_started = None if recorder is None else _clock()
+    try:
+        retained_preparation = MultiResolutionMarketDataPreparation(
+            prepared_market_data.preparation.decision_schedule,
+            prepared_market_data.preparation.bindings,
+            prepared_market_data.preparation.signal_lineages,
+        )
+    except BaseException:
+        _record_v3(
+            recorder,
+            PerformanceOperation.VERIFY_REPLAY,
+            PerformanceOutcome.FAILED,
+            replay_started,
+            binding_count,
+            0,
+        )
+        return _failure_v3(
+            _ExecutionInputsHydrationFailureCodeV3.PREPARED_MARKET_DATA_REPLAY_MISMATCH
+        )
+    binding_position = _binding_mismatch_position(
+        bundle.market_data_preparation.bindings,
+        retained_preparation.bindings,
+    )
+    if binding_position is not None:
+        _record_v3(
+            recorder,
+            PerformanceOperation.VERIFY_REPLAY,
+            PerformanceOutcome.FAILED,
+            replay_started,
+            binding_count,
+            0,
+        )
+        return _failure_v3(
+            _ExecutionInputsHydrationFailureCodeV3.PREPARED_MARKET_DATA_BINDING_MISMATCH,
+            binding_position[0],
+            None,
+            binding_position[1],
+        )
+    if (
+        bundle.market_data_preparation != retained_preparation
+        or prepared_market_data.verified_reader is not market_reader
+    ):
+        schedule_position, requirement_position, event_position = (
+            _preparation_replay_positions(
+                bundle.market_data_preparation, retained_preparation
+            )
+        )
+        _record_v3(
+            recorder,
+            PerformanceOperation.VERIFY_REPLAY,
+            PerformanceOutcome.FAILED,
+            replay_started,
+            binding_count,
+            0,
+        )
+        return _failure_v3(
+            _ExecutionInputsHydrationFailureCodeV3.PREPARED_MARKET_DATA_REPLAY_MISMATCH,
+            None,
+            schedule_position,
+            requirement_position,
+            event_position,
+        )
+    expected_spec = _execution_case_semantic_spec_v3(
+        base_spec=bundle.execution_case_semantic_spec,
+        execution_case_plan=bundle.execution_case_plan,
+        market_data_preparation=retained_preparation,
+    )
+    if (
+        expected_spec.decision_inputs_hash
+        != bundle.execution_case_semantic_spec.decision_inputs_hash
+        or expected_spec.execution_inputs_hash
+        != bundle.execution_case_semantic_spec.execution_inputs_hash
+        or expected_spec.snapshot_inputs_hash
+        != bundle.execution_case_semantic_spec.snapshot_inputs_hash
+    ):
+        _record_v3(
+            recorder,
+            PerformanceOperation.VERIFY_REPLAY,
+            PerformanceOutcome.FAILED,
+            replay_started,
+            binding_count,
+            0,
+        )
+        return _failure_v3(
+            _ExecutionInputsHydrationFailureCodeV3.PREPARED_MARKET_DATA_REPLAY_MISMATCH
+        )
+    if (
+        bundle.execution_case_semantic_spec.semantic_spec_hash
+        != public_request.execution_case_semantic_hash
+    ):
+        _record_v3(
+            recorder,
+            PerformanceOperation.VERIFY_REPLAY,
+            PerformanceOutcome.FAILED,
+            replay_started,
+            binding_count,
+            0,
+        )
+        return _failure_v3(
+            _ExecutionInputsHydrationFailureCodeV3.EXECUTION_CASE_SEMANTIC_HASH_MISMATCH
+        )
+    _record_v3(
+        recorder,
+        PerformanceOperation.VERIFY_REPLAY,
+        PerformanceOutcome.SUCCEEDED,
+        replay_started,
+        binding_count,
+        binding_count,
+    )
+    return _ExecutionInputsHydrationOutcomeV3(
+        result=_HydratedExecutionInputsV3(
+            build_artifact_manifest=bundle.build_artifact_manifest,
+            execution_case_semantic_spec=bundle.execution_case_semantic_spec,
+            timeline_stream_keys=bundle.timeline_stream_keys,
+            target_stream=target_stream,
+            timeline_batch_size=bundle.timeline_batch_size,
+            execution_case_plan=bundle.execution_case_plan,
+            market_data_preparation=bundle.market_data_preparation,
+        )
+    )
 
 
 def _failure(

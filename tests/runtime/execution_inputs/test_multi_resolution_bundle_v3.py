@@ -3,6 +3,7 @@ from __future__ import annotations
 from copy import deepcopy
 from dataclasses import fields, replace
 from inspect import signature
+import json
 
 import pytest
 
@@ -156,7 +157,9 @@ def test_v3_is_one_private_catalog_registration_and_exact_v2_plus_preparation() 
         "execution_case_plan",
         "market_data_preparation",
     }
-    assert envelope.payload["market_data_preparation"] == prepared.preparation.to_canonical_dict()
+    assert canonical_bytes(envelope.payload["market_data_preparation"]) == canonical_bytes(
+        prepared.preparation
+    )
     assert transport.schema_version == 3
     assert not hasattr(crypto_quant_backtest, "materialize_execution_input_bundle_v3")
     assert "materialize_execution_input_bundle_v3" not in crypto_quant_backtest.__all__
@@ -168,15 +171,23 @@ def test_v3_round_trip_reconstructs_every_nested_value_exactly() -> None:
     assert outcome.failure is None
     assert outcome.result is not None
     assert outcome.result.market_data_preparation == prepared.preparation
-    assert outcome.result.execution_case_plan == hydrated.execution_case_plan
+    assert canonical_bytes(outcome.result.execution_case_plan.decision_cycles) == canonical_bytes(
+        hydrated.execution_case_plan.decision_cycles
+    )
+    assert canonical_bytes(outcome.result.execution_case_plan.bar_executions) == canonical_bytes(
+        hydrated.execution_case_plan.bar_executions
+    )
+    assert canonical_bytes(outcome.result.execution_case_plan.financial_state) == canonical_bytes(
+        hydrated.execution_case_plan.financial_state
+    )
     assert canonical_bytes(outcome.result.market_data_preparation) == canonical_bytes(
         envelope.payload["market_data_preparation"]
     )
 
 
 def test_v3_decode_rejects_nested_constructor_bypass_and_noncanonical_hashes() -> None:
-    prepared, resolved, _, envelope, _ = _contract()
-    payload = deepcopy(dict(envelope.payload))
+    prepared, resolved, hydrated, envelope, _ = _contract()
+    payload = json.loads(canonical_bytes(envelope).decode())["payload"]
     payload["market_data_preparation"]["decision_schedule"]["requirements"][0][
         "minimum_count"
     ] = True
@@ -196,7 +207,7 @@ def test_v3_decode_rejects_nested_constructor_bypass_and_noncanonical_hashes() -
     with pytest.raises(TypeError):
         _materialize_execution_input_bundle_v3(
             resolved_request=resolved,
-            hydrated_inputs=_contract()[2],
+            hydrated_inputs=hydrated,
             market_data_preparation=forged,
         )
 
