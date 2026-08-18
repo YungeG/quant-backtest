@@ -1,7 +1,7 @@
 ---
 id: G12I-TUSHARE-CN-A-SHARE-DAILY-PURPOSE-SCOPE-V1
-readiness: DRAFT
-gate_status: DRAFT
+readiness: PASSED
+gate_status: PASSED
 owner: market-bundle-builder Tushare daily purpose-scope evidence
 produces:
   - two development-only PricePurposeRequirement values
@@ -25,6 +25,17 @@ the accepted `000001.SZ / 2024-01-02` Tushare daily publication: one
 This is a finite provider-specific purpose-scope sub-slice. It reuses the existing
 G12I declaration types and the PASSED G12C/D publication without production code,
 new exports, or a resolver/analyzer.
+
+## Status
+
+`PASSED`. The static fixture freezes the two exact requirement values and their
+accepted publication binding. Requirement hashes are:
+
+- execution reference: `sha256:eedbfd66e6b4b0d63e5bab9c1bd239bc307b8a8571b027157eb825985d5d8066`;
+- valuation: `sha256:8d410aad09e114cda8cd3beccc6cc551a2493983901c9d78ac59f5b3d1775dc3`.
+
+This status applies only to this finite development-purpose declaration fixture and
+does not change G12I, G12L, decision-grade, or deployment readiness.
 
 ## Accepted publication binding
 
