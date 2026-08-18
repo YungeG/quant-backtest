@@ -6,15 +6,13 @@ import subprocess
 import sys
 from pathlib import Path
 
-import pytest
-
-
-duckdb = pytest.importorskip("duckdb")
+import duckdb
 
 TOOL = Path(__file__).parents[2] / "tools" / "audit_intraday_data.py"
 
 
 def test_audit_is_read_only_and_deterministic_on_fixture(tmp_path: Path) -> None:
+    assert duckdb.__version__ == "1.5.1"
     database = tmp_path / "fixture.duckdb"
     connection = duckdb.connect(str(database))
     try:
@@ -61,6 +59,11 @@ def test_audit_is_read_only_and_deterministic_on_fixture(tmp_path: Path) -> None
     assert first == second
     assert hashlib.sha256(database.read_bytes()).hexdigest() == before
     payload = json.loads(first)
+    assert payload["connection"]["duckdb_python_version"] == "1.5.1"
+    semantic_files = payload["semantic_inputs"]["cycle_rotation_platform"]["files"]
+    assert semantic_files["operations/apps/fetch_intraday_baostock.py"] == (
+        "af9eea685d4812d33ef35faa3e60a228b46fdb6563bdcdbb90b081008d126ec2"
+    )
     summary = payload["results"]["duplicate_summary"][0]
     assert summary == {
         "conflicting_duplicate_group_count": 1,

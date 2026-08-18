@@ -21,8 +21,9 @@ bar payloads.
 | Pre-query SHA-256 read 2 | `7d82c0408f09ef665ea93a718def3e5355920eca703ad4d145217e23c39992ef` |
 | Post-query SHA-256 | `7d82c0408f09ef665ea93a718def3e5355920eca703ad4d145217e23c39992ef` |
 | DuckDB Python / SQL version | `1.5.1` / `v1.5.1` |
+| Locked audit dependency | dev-only `duckdb==1.5.1` in `pyproject.toml` and `uv.lock` |
 | Canonical audit JSON | `docs/research/intraday-data-deterministic-audit-20260818.json` |
-| Canonical audit SHA-256, both exact runs | `f1e8f5e3681e3a08803588c561004efeccaa6d37fee88e7706c5d1aa3f63381b` |
+| Canonical audit SHA-256, both exact locked runs | `4224e9ffcebde23c116107d091b40620620c4a6b828dee0b2e94eb64db9458cf` |
 | Audit tool | `tools/audit_intraday_data.py` |
 
 `lsof` reported no open target handle immediately before the initial two full
@@ -40,7 +41,8 @@ canonical JSON files were byte-identical.
 ## Inputs reviewed
 
 The audit used the prior blocked report and cross-project inventory in this
-repository, then confirmed semantics from `cycle-rotation-platform` commit
+repository, then confirmed semantics from exact `git show` bytes at
+`cycle-rotation-platform` commit
 `91cd8e182b736a07319e0f504e64572b32ea7dea`:
 
 | Source | SHA-256 |
@@ -50,10 +52,15 @@ repository, then confirmed semantics from `cycle-rotation-platform` commit
 | `cycle-rotation-platform/core/intraday.py` | `836ed999480c678be4bcf7d73deb53267759847b8ab26e668aadba430aba9f81` |
 | `operations/apps/fetch_intraday_tushare.py` | `851adf045945c67ebfd7a421ba8bccf8050652138fd899e3db2d78c01edc5648` |
 | `operations/apps/fetch_intraday_akshare.py` | `8e481d92f94ad44ba37d4a5c4847192041e39a17034267a918cc1f5f6093fb05` |
-| `operations/apps/fetch_intraday_baostock.py` | `c2c2ded9af8fcc81e803a8cc63b46b7681e5c022d18d323291f17290437dfd1e` |
+| `operations/apps/fetch_intraday_baostock.py` | `af9eea685d4812d33ef35faa3e60a228b46fdb6563bdcdbb90b081008d126ec2` |
 | `docs/intraday-data-architecture-2026-04-22.md` | `524cf2bcb4f7f0e3a2142d72fd56a7086649b0d5c414d0d45a7ac2106ada2a5c` |
 
-All three importers canonicalize `symbol` to six digits and identify a bar by its
+The Baostock working tree was dirty when rechecked. Its observed uncommitted file
+hash was `c2c2ded9af8fcc81e803a8cc63b46b7681e5c022d18d323291f17290437dfd1e`.
+That hash is non-authoritative, is explicitly excluded from the semantic input
+identity, and is not attributed to the commit above.
+
+All three committed importers canonicalize `symbol` to six digits and identify a bar by its
 symbol, timestamp, and frequency. Consumers query by `symbol`, `trading_day`, and
 `freq`, ordered by timestamp. The importers do not use one canonical `ts_code`
 representation: AkShare writes lower-case exchange prefixes such as `sh.600000`,
@@ -239,7 +246,6 @@ Final reproducibility commands:
 
 ```bash
 DB=/srv/bcache-8t/ygguo/duckdb/quant-a50/quant_a50.duckdb
-PY=/home/ygguo/agent-projs/cycle-rotation-platform/venv/bin/python
 
 lsof "$DB"
 stat --format='%s|%Y|%y|%i' "$DB"
@@ -248,18 +254,21 @@ stat --format='%s|%Y|%y|%i' "$DB"
 sha256sum "$DB"
 stat --format='%s|%Y|%y|%i' "$DB"
 
-$PY -m pytest -q tests/tools/test_audit_intraday_data.py
-$PY tools/audit_intraday_data.py "$DB" > /tmp/intraday-audit-run1.json
-$PY tools/audit_intraday_data.py "$DB" > /tmp/intraday-audit-run2.json
+uv run --locked pytest -q tests/tools/test_audit_intraday_data.py
+uv run --locked python tools/audit_intraday_data.py "$DB" > /tmp/intraday-audit-run1.json
+uv run --locked python tools/audit_intraday_data.py "$DB" > /tmp/intraday-audit-run2.json
 sha256sum /tmp/intraday-audit-run1.json /tmp/intraday-audit-run2.json
 cmp -s /tmp/intraday-audit-run1.json /tmp/intraday-audit-run2.json
 lsof "$DB"
 sha256sum "$DB"
 ```
 
-The tool uses only `duckdb.connect(path, read_only=True, config={"threads": "1"})`
-for the audited database. The committed test creates and writes only a temporary
-fixture, closes it, and then invokes the audit twice against that fixture.
+The locked dev environment pins exactly `duckdb==1.5.1`; the tool also rejects a
+different Python or SQL DuckDB version. It uses only
+`duckdb.connect(path, read_only=True, config={"threads": "1"})` for the audited
+database. The committed test creates and writes only a temporary fixture, closes
+it, and then invokes the audit twice against that fixture. Normal locked CI imports
+DuckDB directly and executes this test; it cannot skip for a missing dependency.
 
 ## Limitations and explicit non-claims
 

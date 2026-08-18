@@ -14,6 +14,20 @@ import os
 from pathlib import Path
 from typing import Any
 
+AUDITED_DUCKDB_VERSION = "1.5.1"
+SEMANTIC_INPUTS = {
+    "cycle_rotation_platform": {
+        "commit": "91cd8e182b736a07319e0f504e64572b32ea7dea",
+        "files": {
+            "core/intraday.py": "836ed999480c678be4bcf7d73deb53267759847b8ab26e668aadba430aba9f81",
+            "docs/intraday-data-architecture-2026-04-22.md": "524cf2bcb4f7f0e3a2142d72fd56a7086649b0d5c414d0d45a7ac2106ada2a5c",
+            "operations/apps/fetch_intraday_akshare.py": "8e481d92f94ad44ba37d4a5c4847192041e39a17034267a918cc1f5f6093fb05",
+            "operations/apps/fetch_intraday_baostock.py": "af9eea685d4812d33ef35faa3e60a228b46fdb6563bdcdbb90b081008d126ec2",
+            "operations/apps/fetch_intraday_tushare.py": "851adf045945c67ebfd7a421ba8bccf8050652138fd899e3db2d78c01edc5648",
+        },
+    }
+}
+
 EXPECTED_COLUMNS = [
     (0, "ts_code", "VARCHAR", True, None, True),
     (1, "symbol", "VARCHAR", True, None, False),
@@ -385,6 +399,10 @@ def query_rows(connection: Any, sql: str) -> list[dict[str, Any]]:
 def audit(path: Path) -> dict[str, Any]:
     import duckdb
 
+    if duckdb.__version__ != AUDITED_DUCKDB_VERSION:
+        raise RuntimeError(
+            f"expected duckdb {AUDITED_DUCKDB_VERSION}, got {duckdb.__version__}"
+        )
     resolved = path.expanduser().resolve(strict=True)
     pre = stable_pre_query_state(resolved)
     connection = duckdb.connect(str(resolved), read_only=True, config={"threads": "1"})
@@ -405,6 +423,8 @@ def audit(path: Path) -> dict[str, Any]:
         ]
         if actual_columns != EXPECTED_COLUMNS:
             raise RuntimeError(f"unexpected IntradayData schema: {actual_columns!r}")
+        if results["duckdb_version"] != [{"version": f"v{AUDITED_DUCKDB_VERSION}"}]:
+            raise RuntimeError(f"unexpected DuckDB SQL version: {results['duckdb_version']!r}")
     finally:
         connection.close()
     post = post_query_state(resolved, pre)
@@ -421,6 +441,7 @@ def audit(path: Path) -> dict[str, Any]:
             "unchanged": pre == post,
         },
         "connection": {"read_only": True, "threads": 1, "duckdb_python_version": duckdb.__version__},
+        "semantic_inputs": SEMANTIC_INPUTS,
         "natural_key": {
             "columns": ["symbol", "timestamp", "freq"],
             "basis": "canonical symbol plus bar timestamp and frequency in all three source importers; ts_code formatting differs by importer",
