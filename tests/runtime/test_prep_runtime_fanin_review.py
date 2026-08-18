@@ -716,3 +716,229 @@ def test_v3_stale_run_lock_fails_closed_before_engine(
         _runtime(tmp_path, _ArtifactStore(envelope), prepared).run(transport)
 
     assert no_engine.calls == 0
+
+
+@pytest.mark.parametrize(
+    "ref",
+    [
+        ArtifactRef("evidence_manifest", 3, "sha256:" + "0" * 64),
+        ArtifactRef("backtest_execution_input_bundle", 2, "sha256:" + "0" * 64),
+    ],
+)
+def test_v3_snapshot_preserves_wrong_ref_transport_classification(
+    tmp_path: Path, ref: ArtifactRef
+) -> None:
+    prepared, resolved, _, envelope, _ = _executable_contract()
+    forged = object.__new__(BacktestExecutionRequest)
+    object.__setattr__(forged, "schema_version", 3)
+    object.__setattr__(forged, "request", resolved.request)
+    object.__setattr__(forged, "execution_input_bundle_ref", ref)
+    store = _ArtifactStore(envelope)
+
+    with pytest.raises(RuntimeError, match="wrong_execution_input_bundle_ref"):
+        _runtime(tmp_path, store, prepared).run(forged)
+
+    assert store.reads == 0
+    assert store.puts == 0
+
+
+def test_v3_snapshot_nonexact_ref_is_malformed_and_secret_safe(
+    tmp_path: Path,
+) -> None:
+    prepared, resolved, _, envelope, _ = _executable_contract()
+    secret = "SECRET-ref-provider-/private/path"
+
+    class EvilRef:
+        @property
+        def artifact_type(self):
+            raise OSError(secret)
+
+    forged = object.__new__(BacktestExecutionRequest)
+    object.__setattr__(forged, "schema_version", 3)
+    object.__setattr__(forged, "request", resolved.request)
+    object.__setattr__(forged, "execution_input_bundle_ref", EvilRef())
+    store = _ArtifactStore(envelope)
+
+    with pytest.raises(RuntimeError, match="malformed_execution_request") as raised:
+        _runtime(tmp_path, store, prepared).run(forged)
+
+    assert secret not in str(raised.value)
+    assert store.reads == 0
+    assert store.puts == 0
+
+
+def test_v3_cache_repository_verification_precedes_mirroring(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    prepared, _, _, envelope, transport = _executable_contract()
+    store = _ArtifactStore(envelope)
+    first = _runtime(tmp_path, store, prepared).run(transport)
+    loaded = False
+    original_load = BacktestEvidenceRepository.load_completed
+    original_mirror = BacktestRuntime._mirror_publication_graph
+
+    def load(self, ref):
+        nonlocal loaded
+        value = original_load(self, ref)
+        loaded = True
+        return value
+
+    def mirror(self, relative_directory):
+        assert loaded
+        return original_mirror(self, relative_directory)
+
+    monkeypatch.setattr(BacktestEvidenceRepository, "load_completed", load)
+    monkeypatch.setattr(BacktestRuntime, "_mirror_publication_graph", mirror)
+    second = _runtime(tmp_path, store, prepared).run(transport)
+
+    assert second == first
+    assert loaded
+
+
+def test_v3_cache_repository_cross_link_failure_is_closed_before_engine(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    prepared, _, _, envelope, transport = _executable_contract()
+    store = _ArtifactStore(envelope)
+    _runtime(tmp_path, store, prepared).run(transport)
+    secret = "SECRET-cross-link-/private/cache"
+    no_engine = _SequenceEngine(())
+    _install_engine(monkeypatch, no_engine)
+
+    def fail_completed(*args, **kwargs):
+        raise ValueError(secret)
+
+    monkeypatch.setattr(
+        BacktestEvidenceRepository,
+        "load_completed",
+        fail_completed,
+    )
+    with pytest.raises(RuntimeError, match="cache_verification_failed") as raised:
+        _runtime(tmp_path, store, prepared).run(transport)
+
+    assert secret not in str(raised.value)
+    assert no_engine.calls == 0
+
+
+class _FailingPublisherStore(_ArtifactStore):
+    def __init__(self, envelope, predicate, secret):
+        super().__init__(envelope)
+        self.predicate = predicate
+        self.secret = secret
+
+    def put(self, *, envelope):
+        if self.predicate(envelope):
+            raise OSError(self.secret)
+        return super().put(envelope=envelope)
+
+
+def test_v3_attempt_ready_publisher_failure_is_stable_and_restart_runs_no_engine(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    prepared, _, _, envelope, transport = _executable_contract()
+    secret = "SECRET-publisher-/private/attempt"
+    store = _FailingPublisherStore(
+        envelope,
+        lambda value: value.artifact_type == "evidence_manifest",
+        secret,
+    )
+    with pytest.raises(RuntimeError, match="attempt_publication_failed") as raised:
+        _runtime(tmp_path, store, prepared).run(transport)
+    assert secret not in str(raised.value)
+
+    no_engine = _SequenceEngine(())
+    _install_engine(monkeypatch, no_engine)
+    with pytest.raises(RuntimeError, match="restart state"):
+        _runtime(tmp_path, _ArtifactStore(envelope), prepared).run(transport)
+    assert no_engine.calls == 0
+
+
+def test_v3_retry_publisher_failure_is_stable_and_restart_runs_no_engine(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    prepared, _, _, envelope, transport = _executable_contract()
+    secret = "SECRET-publisher-/private/retry"
+    evidence_manifests = 0
+
+    def predicate(value):
+        nonlocal evidence_manifests
+        if value.artifact_type == "evidence_manifest":
+            evidence_manifests += 1
+            return evidence_manifests == 2
+        return False
+
+    store = _FailingPublisherStore(envelope, predicate, secret)
+    with pytest.raises(RuntimeError, match="attempt_publication_failed") as raised:
+        _runtime(tmp_path, store, prepared).run(transport)
+    assert secret not in str(raised.value)
+
+    no_engine = _SequenceEngine(())
+    _install_engine(monkeypatch, no_engine)
+    with pytest.raises(RuntimeError, match="restart state"):
+        _runtime(tmp_path, _ArtifactStore(envelope), prepared).run(transport)
+    assert no_engine.calls == 0
+
+
+def test_v3_cache_mirror_publisher_failure_is_stable_after_repository_verification(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    prepared, _, _, envelope, transport = _executable_contract()
+    durable_store = _ArtifactStore(envelope)
+    _runtime(tmp_path, durable_store, prepared).run(transport)
+    secret = "SECRET-publisher-/private/cache"
+    failing = _FailingPublisherStore(envelope, lambda value: True, secret)
+    failing.values.update(durable_store.values)
+    no_engine = _SequenceEngine(())
+    _install_engine(monkeypatch, no_engine)
+
+    with pytest.raises(RuntimeError, match="cache_verification_failed") as raised:
+        _runtime(tmp_path, failing, prepared).run(transport)
+
+    assert secret not in str(raised.value)
+    assert no_engine.calls == 0
+
+
+def test_v3_terminal_filesystem_secret_is_wrapped_without_engine(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    prepared, _, _, envelope, transport = _executable_contract()
+    engine = _SequenceEngine(("blocked",))
+    _install_engine(monkeypatch, engine)
+    _runtime(tmp_path, _ArtifactStore(envelope), prepared).run(transport)
+    assert engine.calls == 1
+
+    monkeypatch.undo()
+    no_engine = _SequenceEngine(())
+    _install_engine(monkeypatch, no_engine)
+    secret = "SECRET-filesystem-/private/terminal"
+
+    def fail_read(*args, **kwargs):
+        raise OSError(secret)
+
+    monkeypatch.setattr("crypto_quant_backtest.facade._read_canonical_artifact", fail_read)
+    with pytest.raises(RuntimeError, match="attempt_graph_invalid") as raised:
+        _runtime(tmp_path, _ArtifactStore(envelope), prepared).run(transport)
+
+    assert secret not in str(raised.value)
+    assert no_engine.calls == 0
+
+
+def test_v3_canonical_publisher_failure_is_stable_and_restart_runs_no_engine(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    prepared, _, _, envelope, transport = _executable_contract()
+    secret = "SECRET-publisher-/private/canonical"
+    store = _FailingPublisherStore(
+        envelope,
+        lambda value: value.artifact_type == "canonical_publication_manifest",
+        secret,
+    )
+    with pytest.raises(RuntimeError, match="canonical_publication_failed") as raised:
+        _runtime(tmp_path, store, prepared).run(transport)
+    assert secret not in str(raised.value)
+
+    no_engine = _SequenceEngine(())
+    _install_engine(monkeypatch, no_engine)
+    with pytest.raises(RuntimeError, match="cache_verification_failed"):
+        _runtime(tmp_path, store, prepared).run(transport)
+    assert no_engine.calls == 0
