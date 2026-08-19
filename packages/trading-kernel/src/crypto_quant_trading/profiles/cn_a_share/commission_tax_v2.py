@@ -1,0 +1,831 @@
+"""Finite XSHE route/product-aware A-share execution fee rules (v2)."""
+
+from __future__ import annotations
+
+from dataclasses import dataclass
+from enum import Enum
+from typing import Any
+
+from crypto_quant_domain import (
+    CurrencyId,
+    DomainId,
+    Fill,
+    InstrumentDefinition,
+    InstrumentId,
+    InstrumentType,
+    Money,
+    Order,
+    OrderSide,
+    QuantizationPolicy,
+    Rate,
+    RoundingPolicy,
+    Scale,
+    UtcInstant,
+    VenueId,
+    FeeBasisType,
+    canonical_sha256,
+)
+from crypto_quant_trading.fee_reservations import (
+    FeeReservationApplicability,
+    FeeReservationBasis,
+    FeeReservationChargeRule,
+    FeeReservationRuleSource,
+)
+from crypto_quant_trading.fees import (
+    FinalFeeApplicability,
+    FinalFeeCalculationBasis,
+    FinalFeeChargeRule,
+    FinalFeeRuleSource,
+)
+from crypto_quant_trading.ports import (
+    ProfileComponentRef,
+    ProfilePortOutcome,
+    ProfilePortType,
+)
+
+from .commission_tax import (
+    CnAShareFeeRuleSourceRef,
+    CnAShareFeeTradeMechanism,
+    CnAShareMarketFeeBand,
+    CnAShareMarketFeeRuleBook,
+    CnAShareStampDutyBand,
+    CnAShareStampDutyRuleBook,
+)
+
+_MARKET_KEY = "equity.cn_a_share.cash.market-fees.route-product.v2"
+_TAX_KEY = "equity.cn_a_share.cash.stamp-duty.route-product.v2"
+_AUTHORITY_KEY = "equity.cn_a_share.cash.fee-execution-authority.route-product.v2"
+_ZERO = Rate(0, Scale(0), "fee_fraction")
+_SCALE = Scale(2)
+
+
+class CnAShareExecutionAccessRoute(str, Enum):
+    DOMESTIC = "domestic"
+    NORTHBOUND_STOCK_CONNECT = "northbound_stock_connect"
+
+
+class CnAShareFeeProductClass(str, Enum):
+    ORDINARY_A_SHARE = "ordinary_a_share"
+    PREFERRED_STOCK = "preferred_stock"
+    ETF = "etf"
+
+
+class CnAShareFeeAssessmentPurposeV2(str, Enum):
+    RESERVATION = "reservation"
+    FINAL_FILL = "final_fill"
+
+
+def _text(name: str, value: object) -> None:
+    if type(value) is not str or not value or value.strip() != value:
+        raise ValueError(f"{name} must be canonical non-empty text")
+
+
+def _hash(name: str, value: object) -> None:
+    if type(value) is not str or not value.startswith("sha256:") or len(value) != 71 or any(c not in "0123456789abcdef" for c in value[7:]):
+        raise ValueError(f"{name} must be a canonical sha256 identity")
+
+
+def _rate(name: str, value: object) -> None:
+    if not isinstance(value, Rate):
+        raise TypeError(f"{name} must be Rate")
+    if value.units < 0 or value.basis != "fee_fraction":
+        raise ValueError(f"{name} must be a non-negative fee_fraction")
+
+
+def _sources(name: str, values: object) -> tuple[CnAShareFeeRuleSourceRef, ...]:
+    if not isinstance(values, tuple) or not values or not all(isinstance(x, CnAShareFeeRuleSourceRef) for x in values):
+        raise TypeError(f"{name} must be a non-empty source-ref tuple")
+    ordered = tuple(sorted(values, key=lambda x: (x.source_key, x.source_hash)))
+    if ordered != values:
+        raise ValueError(f"{name} must be canonical-sorted")
+    if len(set(values)) != len(values):
+        raise ValueError(f"{name} contains duplicate source refs")
+    return values
+
+
+def _interval(value: object) -> None:
+    if not isinstance(value.effective_from, UtcInstant) or not isinstance(value.effective_to_exclusive, UtcInstant):
+        raise TypeError("effective interval must use UtcInstant")
+    if value.effective_from >= value.effective_to_exclusive:
+        raise ValueError("effective interval must be non-empty")
+
+
+def _canonical(type_name: str, **fields: Any) -> dict[str, Any]:
+    return {"type": type_name, "schema_version": 1, **fields}
+
+
+@dataclass(frozen=True, slots=True)
+class CnAShareFeeExecutionScopeV2:
+    account_id: str
+    venue_id: VenueId
+    instrument: InstrumentDefinition
+    instrument_id: InstrumentId
+    instrument_type: InstrumentType
+    quote_currency_id: CurrencyId
+    settlement_currency_id: CurrencyId
+    trade_mechanism: CnAShareFeeTradeMechanism
+    coverage_from: UtcInstant
+    coverage_to_exclusive: UtcInstant
+    allowed_order_sides: tuple[OrderSide, ...]
+    access_route: CnAShareExecutionAccessRoute
+    fee_product_class: CnAShareFeeProductClass
+
+    def __post_init__(self) -> None:
+        _text("account_id", self.account_id)
+        if not isinstance(self.venue_id, VenueId) or self.venue_id != VenueId("xshe"):
+            raise ValueError("scope venue_id must be XSHE")
+        if not isinstance(self.instrument, InstrumentDefinition) or not isinstance(self.instrument_id, InstrumentId):
+            raise TypeError("scope instrument identity must be concrete")
+        if self.instrument.instrument_id != self.instrument_id or self.instrument_id.venue != self.venue_id:
+            raise ValueError("scope instrument identity mismatch")
+        if self.instrument_type is not InstrumentType.EQUITY:
+            raise ValueError("scope instrument_type must be EQUITY")
+        if self.instrument.instrument_type is not self.instrument_type:
+            raise ValueError("scope instrument_type mismatch")
+        if not isinstance(self.quote_currency_id, CurrencyId) or self.quote_currency_id != CurrencyId("CNY"):
+            raise ValueError("scope quote_currency_id must be CNY")
+        if not isinstance(self.settlement_currency_id, CurrencyId) or self.settlement_currency_id != CurrencyId("CNY"):
+            raise ValueError("scope settlement_currency_id must be CNY")
+        if self.instrument.quote_currency != self.quote_currency_id or self.instrument.settlement_currency != self.settlement_currency_id:
+            raise ValueError("scope currency identity mismatch")
+        if self.trade_mechanism is not CnAShareFeeTradeMechanism.AUCTION:
+            raise ValueError("scope trade_mechanism must be AUCTION")
+        if not isinstance(self.coverage_from, UtcInstant) or not isinstance(self.coverage_to_exclusive, UtcInstant) or self.coverage_from >= self.coverage_to_exclusive:
+            raise ValueError("scope coverage interval must be finite and non-empty")
+        if not isinstance(self.allowed_order_sides, tuple) or not self.allowed_order_sides or not all(isinstance(x, OrderSide) for x in self.allowed_order_sides):
+            raise TypeError("allowed_order_sides must be a non-empty OrderSide tuple")
+        if self.allowed_order_sides != tuple(sorted(self.allowed_order_sides, key=lambda x: x.value)) or len(set(self.allowed_order_sides)) != len(self.allowed_order_sides):
+            raise ValueError("allowed_order_sides must be canonical unique")
+        if not isinstance(self.access_route, CnAShareExecutionAccessRoute) or not isinstance(self.fee_product_class, CnAShareFeeProductClass):
+            raise TypeError("scope route/product must be enums")
+
+    @property
+    def scope_hash(self) -> str: return canonical_sha256(self)
+    def to_canonical_dict(self) -> dict[str, Any]:
+        return _canonical("cn_a_share_fee_execution_scope_v2", account_id=self.account_id, venue_id=self.venue_id, instrument=self.instrument, instrument_id=self.instrument_id, instrument_type=self.instrument_type.value, quote_currency_id=self.quote_currency_id, settlement_currency_id=self.settlement_currency_id, trade_mechanism=self.trade_mechanism.value, coverage_from=self.coverage_from, coverage_to_exclusive=self.coverage_to_exclusive, allowed_order_sides=tuple(x.value for x in self.allowed_order_sides), access_route=self.access_route.value, fee_product_class=self.fee_product_class.value)
+
+
+@dataclass(frozen=True, slots=True)
+class CnAShareMarketFeeBandV2:
+    venue_id: VenueId
+    effective_from: UtcInstant
+    effective_to_exclusive: UtcInstant
+    handling_applies: bool
+    handling_rate: Rate
+    handling_source_refs: tuple[CnAShareFeeRuleSourceRef, ...]
+    regulatory_applies: bool
+    regulatory_rate: Rate
+    regulatory_source_refs: tuple[CnAShareFeeRuleSourceRef, ...]
+    chinaclear_transfer_applies: bool
+    chinaclear_transfer_rate: Rate
+    chinaclear_transfer_source_refs: tuple[CnAShareFeeRuleSourceRef, ...]
+    hkscc_transfer_applies: bool
+    hkscc_transfer_rate: Rate
+    hkscc_transfer_source_refs: tuple[CnAShareFeeRuleSourceRef, ...]
+
+    def __post_init__(self) -> None:
+        if not isinstance(self.venue_id, VenueId): raise TypeError("venue_id must be VenueId")
+        _interval(self)
+        for applies, rate, refs, name in ((self.handling_applies,self.handling_rate,self.handling_source_refs,"handling"),(self.regulatory_applies,self.regulatory_rate,self.regulatory_source_refs,"regulatory"),(self.chinaclear_transfer_applies,self.chinaclear_transfer_rate,self.chinaclear_transfer_source_refs,"chinaclear_transfer"),(self.hkscc_transfer_applies,self.hkscc_transfer_rate,self.hkscc_transfer_source_refs,"hkscc_transfer")):
+            if type(applies) is not bool: raise TypeError(f"{name}_applies must be bool")
+            _rate(f"{name}_rate", rate); _sources(f"{name}_source_refs", refs)
+            if not applies and rate != _ZERO: raise ValueError(f"{name} false applicability requires zero rate")
+
+    @property
+    def band_hash(self) -> str: return canonical_sha256(self)
+    def contains(self, instant: UtcInstant) -> bool: return self.effective_from <= instant < self.effective_to_exclusive
+    def to_canonical_dict(self) -> dict[str, Any]:
+        return _canonical("cn_a_share_market_fee_band_v2", venue_id=self.venue_id, effective_from=self.effective_from, effective_to_exclusive=self.effective_to_exclusive, handling_applies=self.handling_applies, handling_rate=self.handling_rate, handling_source_refs=self.handling_source_refs, regulatory_applies=self.regulatory_applies, regulatory_rate=self.regulatory_rate, regulatory_source_refs=self.regulatory_source_refs, chinaclear_transfer_applies=self.chinaclear_transfer_applies, chinaclear_transfer_rate=self.chinaclear_transfer_rate, chinaclear_transfer_source_refs=self.chinaclear_transfer_source_refs, hkscc_transfer_applies=self.hkscc_transfer_applies, hkscc_transfer_rate=self.hkscc_transfer_rate, hkscc_transfer_source_refs=self.hkscc_transfer_source_refs)
+
+
+@dataclass(frozen=True, slots=True)
+class CnAShareStampDutyBandV2:
+    venue_id: VenueId
+    effective_from: UtcInstant
+    effective_to_exclusive: UtcInstant
+    applies_to_sell: bool
+    rate: Rate
+    source_refs: tuple[CnAShareFeeRuleSourceRef, ...]
+    def __post_init__(self) -> None:
+        if not isinstance(self.venue_id, VenueId): raise TypeError("venue_id must be VenueId")
+        _interval(self)
+        if type(self.applies_to_sell) is not bool: raise TypeError("applies_to_sell must be bool")
+        _rate("rate", self.rate); _sources("source_refs", self.source_refs)
+        if not self.applies_to_sell and self.rate != _ZERO: raise ValueError("false sell applicability requires zero rate")
+    @property
+    def band_hash(self) -> str: return canonical_sha256(self)
+    def contains(self, instant: UtcInstant) -> bool: return self.effective_from <= instant < self.effective_to_exclusive
+    def to_canonical_dict(self) -> dict[str, Any]:
+        return _canonical("cn_a_share_stamp_duty_band_v2", venue_id=self.venue_id, effective_from=self.effective_from, effective_to_exclusive=self.effective_to_exclusive, applies_to_sell=self.applies_to_sell, rate=self.rate, source_refs=self.source_refs)
+
+
+@dataclass(frozen=True, slots=True)
+class CnAShareMarketFeeRuleBookV2:
+    rule_book_key: str
+    rule_book_version: int
+    access_route: CnAShareExecutionAccessRoute
+    fee_product_class: CnAShareFeeProductClass
+    bands: tuple[CnAShareMarketFeeBandV2, ...]
+    def __post_init__(self) -> None:
+        _text("rule_book_key", self.rule_book_key)
+        if type(self.rule_book_version) is not int or self.rule_book_version != 2: raise ValueError("rule_book_version must be 2")
+        if not isinstance(self.access_route, CnAShareExecutionAccessRoute) or not isinstance(self.fee_product_class, CnAShareFeeProductClass): raise TypeError("rule book route/product must be enums")
+        if not isinstance(self.bands, tuple) or not self.bands or not all(isinstance(x, CnAShareMarketFeeBandV2) for x in self.bands): raise TypeError("bands must contain CnAShareMarketFeeBandV2")
+        if self.bands != tuple(sorted(self.bands, key=lambda x:(x.venue_id.value,x.effective_from,x.effective_to_exclusive,x.band_hash))): raise ValueError("bands must be canonical-sorted")
+    @property
+    def rule_book_hash(self) -> str: return canonical_sha256(self)
+    def active_bands(self, venue: VenueId, instant: UtcInstant) -> tuple[CnAShareMarketFeeBandV2,...]: return tuple(x for x in self.bands if x.venue_id == venue and x.contains(instant))
+    def to_canonical_dict(self) -> dict[str, Any]: return _canonical("cn_a_share_market_fee_rule_book_v2", rule_book_key=self.rule_book_key, rule_book_version=self.rule_book_version, access_route=self.access_route.value, fee_product_class=self.fee_product_class.value, bands=self.bands)
+
+
+@dataclass(frozen=True, slots=True)
+class CnAShareStampDutyRuleBookV2:
+    rule_book_key: str
+    rule_book_version: int
+    access_route: CnAShareExecutionAccessRoute
+    fee_product_class: CnAShareFeeProductClass
+    bands: tuple[CnAShareStampDutyBandV2, ...]
+    def __post_init__(self) -> None:
+        _text("rule_book_key", self.rule_book_key)
+        if type(self.rule_book_version) is not int or self.rule_book_version != 2: raise ValueError("rule_book_version must be 2")
+        if not isinstance(self.access_route, CnAShareExecutionAccessRoute) or not isinstance(self.fee_product_class, CnAShareFeeProductClass): raise TypeError("rule book route/product must be enums")
+        if not isinstance(self.bands, tuple) or not self.bands or not all(isinstance(x, CnAShareStampDutyBandV2) for x in self.bands): raise TypeError("bands must contain CnAShareStampDutyBandV2")
+        if self.bands != tuple(sorted(self.bands, key=lambda x:(x.venue_id.value,x.effective_from,x.effective_to_exclusive,x.band_hash))): raise ValueError("bands must be canonical-sorted")
+    @property
+    def rule_book_hash(self) -> str: return canonical_sha256(self)
+    def active_bands(self, venue: VenueId, instant: UtcInstant) -> tuple[CnAShareStampDutyBandV2,...]: return tuple(x for x in self.bands if x.venue_id == venue and x.contains(instant))
+    def to_canonical_dict(self) -> dict[str, Any]: return _canonical("cn_a_share_stamp_duty_rule_book_v2", rule_book_key=self.rule_book_key, rule_book_version=self.rule_book_version, access_route=self.access_route.value, fee_product_class=self.fee_product_class.value, bands=self.bands)
+
+
+@dataclass(frozen=True, slots=True)
+class CnAShareFeeExecutionSelectionV2:
+    selection_key: str
+    selection_version: int
+    access_route: CnAShareExecutionAccessRoute
+    fee_product_class: CnAShareFeeProductClass
+    market_fee_rule_book: CnAShareMarketFeeRuleBookV2
+    market_fee_rule_book_hash: str
+    stamp_duty_rule_book: CnAShareStampDutyRuleBookV2
+    stamp_duty_rule_book_hash: str
+    market_fee_component_ref: ProfileComponentRef
+    stamp_duty_component_ref: ProfileComponentRef
+    def __post_init__(self) -> None:
+        _text("selection_key", self.selection_key)
+        if type(self.selection_version) is not int or self.selection_version <= 0: raise ValueError("selection_version must be positive")
+        if not isinstance(self.access_route,CnAShareExecutionAccessRoute) or not isinstance(self.fee_product_class,CnAShareFeeProductClass): raise TypeError("selection route/product must be enums")
+        if not isinstance(self.market_fee_rule_book,CnAShareMarketFeeRuleBookV2) or not isinstance(self.stamp_duty_rule_book,CnAShareStampDutyRuleBookV2): raise TypeError("selection rule books must be v2")
+        _hash("market_fee_rule_book_hash",self.market_fee_rule_book_hash); _hash("stamp_duty_rule_book_hash",self.stamp_duty_rule_book_hash)
+        if self.market_fee_rule_book_hash != self.market_fee_rule_book.rule_book_hash or self.stamp_duty_rule_book_hash != self.stamp_duty_rule_book.rule_book_hash: raise ValueError("selection rule book hash mismatch")
+        if not isinstance(self.market_fee_component_ref,ProfileComponentRef) or self.market_fee_component_ref.port_type is not ProfilePortType.FEE_ASSESSMENT_POLICY: raise TypeError("market_fee_component_ref must identify fee policy")
+        if not isinstance(self.stamp_duty_component_ref,ProfileComponentRef) or self.stamp_duty_component_ref.port_type is not ProfilePortType.TAX_POLICY: raise TypeError("stamp_duty_component_ref must identify tax policy")
+    @property
+    def selection_hash(self) -> str: return canonical_sha256(self)
+    def to_canonical_dict(self) -> dict[str,Any]: return _canonical("cn_a_share_fee_execution_selection_v2", selection_key=self.selection_key, selection_version=self.selection_version, access_route=self.access_route.value, fee_product_class=self.fee_product_class.value, market_fee_rule_book=self.market_fee_rule_book, market_fee_rule_book_hash=self.market_fee_rule_book_hash, stamp_duty_rule_book=self.stamp_duty_rule_book, stamp_duty_rule_book_hash=self.stamp_duty_rule_book_hash, market_fee_component_ref=self.market_fee_component_ref, stamp_duty_component_ref=self.stamp_duty_component_ref)
+
+
+class CnAShareFeeExecutionAuthorityFailureCodeV2(str, Enum):
+    SCOPE_SELECTION_MISMATCH = "scope_selection_mismatch"
+    RULE_BOOK_SCOPE_MISMATCH = "rule_book_scope_mismatch"
+    COMPONENT_REF_MISMATCH = "component_ref_mismatch"
+
+
+@dataclass(frozen=True, slots=True)
+class CnAShareFeeExecutionAuthorityFailureV2:
+    scope: CnAShareFeeExecutionScopeV2
+    scope_hash: str
+    selection: CnAShareFeeExecutionSelectionV2
+    selection_hash: str
+    code: CnAShareFeeExecutionAuthorityFailureCodeV2
+    subject_ids: tuple[str,...]
+    def __post_init__(self) -> None:
+        if not isinstance(self.scope,CnAShareFeeExecutionScopeV2) or not isinstance(self.selection,CnAShareFeeExecutionSelectionV2): raise TypeError("authority failure context invalid")
+        _hash("scope_hash",self.scope_hash); _hash("selection_hash",self.selection_hash)
+        if self.scope_hash != self.scope.scope_hash or self.selection_hash != self.selection.selection_hash: raise ValueError("authority failure hash mismatch")
+        if not isinstance(self.code,CnAShareFeeExecutionAuthorityFailureCodeV2) or not isinstance(self.subject_ids,tuple): raise TypeError("authority failure invalid")
+    @property
+    def failure_hash(self)->str:return canonical_sha256(self)
+    def to_canonical_dict(self)->dict[str,Any]:return _canonical("cn_a_share_fee_execution_authority_failure_v2",scope=self.scope,scope_hash=self.scope_hash,selection=self.selection,selection_hash=self.selection_hash,code=self.code.value,subject_ids=self.subject_ids)
+
+
+@dataclass(frozen=True, slots=True)
+class CnAShareFeeExecutionAuthorityV2:
+    authority_key: str
+    authority_version: int
+    scope: CnAShareFeeExecutionScopeV2
+    scope_hash: str
+    selection: CnAShareFeeExecutionSelectionV2
+    selection_hash: str
+    access_route: CnAShareExecutionAccessRoute
+    fee_product_class: CnAShareFeeProductClass
+    market_fee_rule_book: CnAShareMarketFeeRuleBookV2
+    market_fee_rule_book_hash: str
+    stamp_duty_rule_book: CnAShareStampDutyRuleBookV2
+    stamp_duty_rule_book_hash: str
+    market_fee_component_ref: ProfileComponentRef
+    stamp_duty_component_ref: ProfileComponentRef
+    def __post_init__(self)->None:
+        if self.authority_key != _AUTHORITY_KEY or self.authority_version != 2: raise ValueError("authority identity mismatch")
+        if not isinstance(self.scope,CnAShareFeeExecutionScopeV2) or not isinstance(self.selection,CnAShareFeeExecutionSelectionV2): raise TypeError("authority scope/selection invalid")
+        _hash("scope_hash",self.scope_hash);_hash("selection_hash",self.selection_hash);_hash("market_fee_rule_book_hash",self.market_fee_rule_book_hash);_hash("stamp_duty_rule_book_hash",self.stamp_duty_rule_book_hash)
+        if (self.scope_hash,self.selection_hash)!=(self.scope.scope_hash,self.selection.selection_hash):raise ValueError("authority scope/selection hash mismatch")
+        if (self.access_route,self.fee_product_class,self.market_fee_rule_book,self.market_fee_rule_book_hash,self.stamp_duty_rule_book,self.stamp_duty_rule_book_hash,self.market_fee_component_ref,self.stamp_duty_component_ref) != (self.selection.access_route,self.selection.fee_product_class,self.selection.market_fee_rule_book,self.selection.market_fee_rule_book_hash,self.selection.stamp_duty_rule_book,self.selection.stamp_duty_rule_book_hash,self.selection.market_fee_component_ref,self.selection.stamp_duty_component_ref): raise ValueError("authority selection mismatch")
+        if self.scope.access_route is not self.access_route or self.scope.fee_product_class is not self.fee_product_class: raise ValueError("authority scope mismatch")
+    @property
+    def authority_hash(self)->str:return canonical_sha256(self)
+    def to_canonical_dict(self)->dict[str,Any]:return _canonical("cn_a_share_fee_execution_authority_v2",authority_key=self.authority_key,authority_version=self.authority_version,scope=self.scope,scope_hash=self.scope_hash,selection=self.selection,selection_hash=self.selection_hash,access_route=self.access_route.value,fee_product_class=self.fee_product_class.value,market_fee_rule_book=self.market_fee_rule_book,market_fee_rule_book_hash=self.market_fee_rule_book_hash,stamp_duty_rule_book=self.stamp_duty_rule_book,stamp_duty_rule_book_hash=self.stamp_duty_rule_book_hash,market_fee_component_ref=self.market_fee_component_ref,stamp_duty_component_ref=self.stamp_duty_component_ref)
+
+
+def _authority_failure(scope:CnAShareFeeExecutionScopeV2, selection:CnAShareFeeExecutionSelectionV2, code:CnAShareFeeExecutionAuthorityFailureCodeV2, suffix:tuple[str,...])->CnAShareFeeExecutionAuthorityFailureV2:
+    return CnAShareFeeExecutionAuthorityFailureV2(scope,scope.scope_hash,selection,selection.selection_hash,code,(code.value,scope.scope_hash,selection.selection_hash,*suffix))
+
+
+def create_cn_a_share_fee_execution_authority_v2(scope: CnAShareFeeExecutionScopeV2, selection: CnAShareFeeExecutionSelectionV2, /) -> CnAShareFeeExecutionAuthorityV2 | CnAShareFeeExecutionAuthorityFailureV2:
+    if not isinstance(scope,CnAShareFeeExecutionScopeV2) or not isinstance(selection,CnAShareFeeExecutionSelectionV2): raise TypeError("scope and selection must be v2")
+    if scope.access_route is not selection.access_route or scope.fee_product_class is not selection.fee_product_class:
+        return _authority_failure(scope,selection,CnAShareFeeExecutionAuthorityFailureCodeV2.SCOPE_SELECTION_MISMATCH,("scope_access_route",scope.access_route.value,"selection_access_route",selection.access_route.value,"scope_fee_product_class",scope.fee_product_class.value,"selection_fee_product_class",selection.fee_product_class.value))
+    if selection.market_fee_rule_book.access_route is not scope.access_route or selection.market_fee_rule_book.fee_product_class is not scope.fee_product_class or selection.stamp_duty_rule_book.access_route is not scope.access_route or selection.stamp_duty_rule_book.fee_product_class is not scope.fee_product_class or any(band.venue_id != scope.venue_id for band in selection.market_fee_rule_book.bands) or any(band.venue_id != scope.venue_id for band in selection.stamp_duty_rule_book.bands):
+        return _authority_failure(scope,selection,CnAShareFeeExecutionAuthorityFailureCodeV2.RULE_BOOK_SCOPE_MISMATCH,("market_fee_rule_book_hash",selection.market_fee_rule_book_hash,"stamp_duty_rule_book_hash",selection.stamp_duty_rule_book_hash,"scope_venue_id",scope.venue_id.value))
+    expected_market=_market_component(selection.market_fee_rule_book);expected_tax=_tax_component(selection.stamp_duty_rule_book)
+    if (selection.market_fee_component_ref,selection.stamp_duty_component_ref)!=(expected_market,expected_tax):
+        return _authority_failure(scope,selection,CnAShareFeeExecutionAuthorityFailureCodeV2.COMPONENT_REF_MISMATCH,("market_fee_component_digest",selection.market_fee_component_ref.component_digest,"stamp_duty_component_digest",selection.stamp_duty_component_ref.component_digest))
+    return CnAShareFeeExecutionAuthorityV2(_AUTHORITY_KEY,2,scope,scope.scope_hash,selection,selection.selection_hash,scope.access_route,scope.fee_product_class,selection.market_fee_rule_book,selection.market_fee_rule_book_hash,selection.stamp_duty_rule_book,selection.stamp_duty_rule_book_hash,selection.market_fee_component_ref,selection.stamp_duty_component_ref)
+
+
+class CnAShareFeeExecutionBindingFailureCodeV2(str, Enum):
+    AUTHORITY_SCOPE_MISMATCH="authority_scope_mismatch"
+    ORDER_ACCOUNT_MISMATCH="order_account_mismatch"
+    ORDER_VENUE_MISMATCH="order_venue_mismatch"
+    ORDER_INSTRUMENT_MISMATCH="order_instrument_mismatch"
+    ORDER_SIDE_MISMATCH="order_side_mismatch"
+    ORDER_CONTEXT_MISMATCH="order_context_mismatch"
+
+
+@dataclass(frozen=True, slots=True)
+class CnAShareFeeExecutionBindingV2:
+    authority:CnAShareFeeExecutionAuthorityV2
+    authority_hash:str
+    order:Order
+    order_hash:str
+    order_id:DomainId
+    account_id:str
+    venue_id:VenueId
+    instrument_id:InstrumentId
+    side:OrderSide
+    order_effective_at:UtcInstant
+    def __post_init__(self)->None:
+        if not isinstance(self.authority,CnAShareFeeExecutionAuthorityV2) or not isinstance(self.order,Order):raise TypeError("binding authority/order invalid")
+        _hash("authority_hash",self.authority_hash);_hash("order_hash",self.order_hash)
+        if self.authority_hash!=self.authority.authority_hash or self.order_hash!=canonical_sha256(self.order):raise ValueError("binding hash mismatch")
+        if (self.order_id,self.account_id,self.venue_id,self.instrument_id,self.side,self.order_effective_at)!=(self.order.order_id,self.order.account_id,self.order.intent.instrument_id.venue,self.order.intent.instrument_id,self.order.intent.side,self.order.created_at.instant):raise ValueError("binding order context mismatch")
+    @property
+    def binding_hash(self)->str:return canonical_sha256(self)
+    def to_canonical_dict(self)->dict[str,Any]:return _canonical("cn_a_share_fee_execution_binding_v2",authority=self.authority,authority_hash=self.authority_hash,order=self.order,order_hash=self.order_hash,order_id=self.order_id,account_id=self.account_id,venue_id=self.venue_id,instrument_id=self.instrument_id,side=self.side.value,order_effective_at=self.order_effective_at)
+
+
+@dataclass(frozen=True, slots=True)
+class CnAShareFeeExecutionBindingFailureV2:
+    authority:CnAShareFeeExecutionAuthorityV2
+    authority_hash:str
+    scope:CnAShareFeeExecutionScopeV2
+    scope_hash:str
+    order:Order
+    order_hash:str
+    code:CnAShareFeeExecutionBindingFailureCodeV2
+    subject_ids:tuple[str,...]
+    def __post_init__(self)->None:
+        if not isinstance(self.authority,CnAShareFeeExecutionAuthorityV2) or not isinstance(self.scope,CnAShareFeeExecutionScopeV2) or not isinstance(self.order,Order):raise TypeError("binding failure context invalid")
+        if (self.authority_hash,self.scope_hash,self.order_hash)!=(self.authority.authority_hash,self.scope.scope_hash,canonical_sha256(self.order)):raise ValueError("binding failure hash mismatch")
+    @property
+    def failure_hash(self)->str:return canonical_sha256(self)
+    def to_canonical_dict(self)->dict[str,Any]:return _canonical("cn_a_share_fee_execution_binding_failure_v2",authority=self.authority,authority_hash=self.authority_hash,scope=self.scope,scope_hash=self.scope_hash,order=self.order,order_hash=self.order_hash,code=self.code.value,subject_ids=self.subject_ids)
+
+
+def _binding_failure(authority:CnAShareFeeExecutionAuthorityV2,order:Order,code:CnAShareFeeExecutionBindingFailureCodeV2,suffix:tuple[str,...])->CnAShareFeeExecutionBindingFailureV2:
+    return CnAShareFeeExecutionBindingFailureV2(authority,authority.authority_hash,authority.scope,authority.scope_hash,order,canonical_sha256(order),code,(code.value,authority.authority_hash,authority.scope_hash,canonical_sha256(order),*suffix))
+
+
+def bind_cn_a_share_fee_execution_v2(authority:CnAShareFeeExecutionAuthorityV2, order:Order, /)->CnAShareFeeExecutionBindingV2|CnAShareFeeExecutionBindingFailureV2:
+    if not isinstance(authority,CnAShareFeeExecutionAuthorityV2) or not isinstance(order,Order):raise TypeError("authority and order must be concrete")
+    scope=authority.scope
+    if authority.scope_hash!=scope.scope_hash or authority.selection_hash!=authority.selection.selection_hash:
+        return _binding_failure(authority,order,CnAShareFeeExecutionBindingFailureCodeV2.AUTHORITY_SCOPE_MISMATCH,("authority_scope_hash",authority.scope_hash,"authority_selection_hash",authority.selection_hash))
+    if order.account_id!=scope.account_id:return _binding_failure(authority,order,CnAShareFeeExecutionBindingFailureCodeV2.ORDER_ACCOUNT_MISMATCH,("order_account_id",order.account_id,"scope_account_id",scope.account_id))
+    if order.intent.instrument_id.venue!=scope.venue_id:return _binding_failure(authority,order,CnAShareFeeExecutionBindingFailureCodeV2.ORDER_VENUE_MISMATCH,("order_venue_id",order.intent.instrument_id.venue.value,"scope_venue_id",scope.venue_id.value))
+    if order.intent.instrument_id!=scope.instrument_id:return _binding_failure(authority,order,CnAShareFeeExecutionBindingFailureCodeV2.ORDER_INSTRUMENT_MISMATCH,("order_instrument_id",str(order.intent.instrument_id),"scope_instrument_id",str(scope.instrument_id)))
+    if order.intent.side not in scope.allowed_order_sides:return _binding_failure(authority,order,CnAShareFeeExecutionBindingFailureCodeV2.ORDER_SIDE_MISMATCH,("order_side",order.intent.side.value,"allowed_order_sides_hash",canonical_sha256(scope.allowed_order_sides)))
+    if not scope.coverage_from<=order.created_at.instant<scope.coverage_to_exclusive:return _binding_failure(authority,order,CnAShareFeeExecutionBindingFailureCodeV2.ORDER_CONTEXT_MISMATCH,("order_created_at_hash",canonical_sha256(order.created_at.instant),"scope_coverage_from_hash",canonical_sha256(scope.coverage_from),"scope_coverage_to_exclusive_hash",canonical_sha256(scope.coverage_to_exclusive),"scope_trade_mechanism",scope.trade_mechanism.value))
+    return CnAShareFeeExecutionBindingV2(authority,authority.authority_hash,order,canonical_sha256(order),order.order_id,order.account_id,order.intent.instrument_id.venue,order.intent.instrument_id,order.intent.side,order.created_at.instant)
+
+
+class CnAShareFeeQueryConstructionFailureCodeV2(str, Enum):
+    AUTHORITY_BINDING_MISMATCH = "authority_binding_mismatch"
+    RESERVATION_CONTEXT_MISMATCH = "reservation_context_mismatch"
+    MISSING_FILL = "missing_fill"
+    FILL_ORDER_MISMATCH = "fill_order_mismatch"
+    FILL_ACCOUNT_MISMATCH = "fill_account_mismatch"
+    FILL_VENUE_MISMATCH = "fill_venue_mismatch"
+    FILL_INSTRUMENT_MISMATCH = "fill_instrument_mismatch"
+    FILL_SIDE_MISMATCH = "fill_side_mismatch"
+    EXECUTION_TIME_MISMATCH = "execution_time_mismatch"
+
+
+@dataclass(frozen=True, slots=True)
+class CnAShareCashFeeRuleQueryV2:
+    authority: CnAShareFeeExecutionAuthorityV2
+    authority_hash: str
+    execution_binding: CnAShareFeeExecutionBindingV2
+    binding_hash: str
+    purpose: CnAShareFeeAssessmentPurposeV2
+    fill: Fill | None
+    fill_hash: str | None
+    fill_id: DomainId | None
+    def __post_init__(self) -> None:
+        if not isinstance(self.authority,CnAShareFeeExecutionAuthorityV2) or not isinstance(self.execution_binding,CnAShareFeeExecutionBindingV2): raise TypeError("query authority/binding invalid")
+        _hash("authority_hash",self.authority_hash);_hash("binding_hash",self.binding_hash)
+        if self.authority_hash != self.authority.authority_hash or self.binding_hash != self.execution_binding.binding_hash: raise ValueError("query authority/binding hash mismatch")
+        if not isinstance(self.purpose,CnAShareFeeAssessmentPurposeV2): raise TypeError("purpose must be CnAShareFeeAssessmentPurposeV2")
+        if self.fill is None:
+            if self.fill_hash is not None or self.fill_id is not None: raise ValueError("missing Fill provenance mismatch")
+        else:
+            if not isinstance(self.fill,Fill) or self.fill_hash != canonical_sha256(self.fill) or self.fill_id != self.fill.fill_id: raise ValueError("Fill provenance mismatch")
+    @property
+    def order_id(self)->DomainId:return self.execution_binding.order_id
+    @property
+    def order_hash(self)->str:return self.execution_binding.order_hash
+    @property
+    def account_id(self)->str:return self.execution_binding.account_id
+    @property
+    def venue_id(self)->VenueId:return self.execution_binding.venue_id
+    @property
+    def instrument_id(self)->InstrumentId:return self.execution_binding.instrument_id
+    @property
+    def side(self)->OrderSide:return self.execution_binding.side
+    @property
+    def effective_at(self)->UtcInstant:
+        if self.purpose is CnAShareFeeAssessmentPurposeV2.RESERVATION:return self.execution_binding.order_effective_at
+        if self.fill is None: raise ValueError("final fill query requires Fill")
+        return self.fill.execution_time
+    @property
+    def query_hash(self)->str:return canonical_sha256(self)
+    def to_canonical_dict(self)->dict[str,Any]:return _canonical("cn_a_share_cash_fee_rule_query_v2",authority=self.authority,authority_hash=self.authority_hash,execution_binding=self.execution_binding,binding_hash=self.binding_hash,purpose=self.purpose.value,fill=self.fill,fill_hash=self.fill_hash,fill_id=self.fill_id,order_id=self.order_id,order_hash=self.order_hash,account_id=self.account_id,venue_id=self.venue_id,instrument_id=self.instrument_id,side=self.side.value,effective_at=self.effective_at)
+    @classmethod
+    def for_reservation(cls, authority:CnAShareFeeExecutionAuthorityV2, execution_binding:CnAShareFeeExecutionBindingV2, /)->CnAShareCashFeeRuleQueryV2|CnAShareFeeQueryConstructionFailureV2:
+        return _construct_query(authority,execution_binding,CnAShareFeeAssessmentPurposeV2.RESERVATION,None)
+    @classmethod
+    def for_final_fill(cls, authority:CnAShareFeeExecutionAuthorityV2, execution_binding:CnAShareFeeExecutionBindingV2, fill:Fill|None, /)->CnAShareCashFeeRuleQueryV2|CnAShareFeeQueryConstructionFailureV2:
+        return _construct_query(authority,execution_binding,CnAShareFeeAssessmentPurposeV2.FINAL_FILL,fill)
+
+
+@dataclass(frozen=True, slots=True)
+class CnAShareFeeQueryConstructionFailureV2:
+    authority:CnAShareFeeExecutionAuthorityV2
+    authority_hash:str
+    execution_binding:CnAShareFeeExecutionBindingV2
+    binding_hash:str
+    purpose:CnAShareFeeAssessmentPurposeV2
+    fill:Fill|None
+    fill_hash:str|None
+    code:CnAShareFeeQueryConstructionFailureCodeV2
+    subject_ids:tuple[str,...]
+    def __post_init__(self)->None:
+        if not isinstance(self.authority,CnAShareFeeExecutionAuthorityV2) or not isinstance(self.execution_binding,CnAShareFeeExecutionBindingV2) or not isinstance(self.purpose,CnAShareFeeAssessmentPurposeV2) or not isinstance(self.code,CnAShareFeeQueryConstructionFailureCodeV2):raise TypeError("query failure context invalid")
+        if (self.authority_hash,self.binding_hash)!=(self.authority.authority_hash,self.execution_binding.binding_hash):raise ValueError("query failure hash mismatch")
+        if self.fill is None:
+            if self.fill_hash is not None:raise ValueError("missing fill hash mismatch")
+        elif self.fill_hash != canonical_sha256(self.fill):raise ValueError("fill hash mismatch")
+    @property
+    def failure_hash(self)->str:return canonical_sha256(self)
+    def to_canonical_dict(self)->dict[str,Any]:return _canonical("cn_a_share_fee_query_construction_failure_v2",authority=self.authority,authority_hash=self.authority_hash,execution_binding=self.execution_binding,binding_hash=self.binding_hash,purpose=self.purpose.value,fill=self.fill,fill_hash=self.fill_hash,code=self.code.value,subject_ids=self.subject_ids)
+
+
+def _query_failure(authority:CnAShareFeeExecutionAuthorityV2,binding:CnAShareFeeExecutionBindingV2,purpose:CnAShareFeeAssessmentPurposeV2,fill:Fill|None,code:CnAShareFeeQueryConstructionFailureCodeV2,suffix:tuple[str,...])->CnAShareFeeQueryConstructionFailureV2:
+    fill_hash=None if fill is None else canonical_sha256(fill)
+    return CnAShareFeeQueryConstructionFailureV2(authority,authority.authority_hash,binding,binding.binding_hash,purpose,fill,fill_hash,code,(code.value,authority.authority_hash,binding.binding_hash,purpose.value,fill_hash or "none",*suffix))
+
+
+def _construct_query(authority:CnAShareFeeExecutionAuthorityV2,binding:CnAShareFeeExecutionBindingV2,purpose:CnAShareFeeAssessmentPurposeV2,fill:Fill|None)->CnAShareCashFeeRuleQueryV2|CnAShareFeeQueryConstructionFailureV2:
+    if not isinstance(authority,CnAShareFeeExecutionAuthorityV2) or not isinstance(binding,CnAShareFeeExecutionBindingV2):raise TypeError("authority and execution_binding must be v2")
+    if binding.authority != authority or binding.authority_hash != authority.authority_hash:return _query_failure(authority,binding,purpose,fill,CnAShareFeeQueryConstructionFailureCodeV2.AUTHORITY_BINDING_MISMATCH,("binding_authority_hash",binding.authority_hash))
+    if purpose is CnAShareFeeAssessmentPurposeV2.RESERVATION:
+        if binding.order_effective_at != binding.order.created_at.instant:return _query_failure(authority,binding,purpose,None,CnAShareFeeQueryConstructionFailureCodeV2.RESERVATION_CONTEXT_MISMATCH,("order_id",binding.order_id.value,"order_hash",binding.order_hash,"order_effective_at_hash",canonical_sha256(binding.order_effective_at)))
+        return CnAShareCashFeeRuleQueryV2(authority,authority.authority_hash,binding,binding.binding_hash,purpose,None,None,None)
+    if fill is None:return _query_failure(authority,binding,purpose,None,CnAShareFeeQueryConstructionFailureCodeV2.MISSING_FILL,("fill","none"))
+    if not isinstance(fill,Fill):raise TypeError("fill must be Fill or None")
+    if fill.order_id != binding.order_id:return _query_failure(authority,binding,purpose,fill,CnAShareFeeQueryConstructionFailureCodeV2.FILL_ORDER_MISMATCH,("fill_order_id",fill.order_id.value,"binding_order_id",binding.order_id.value))
+    if fill.account_id != binding.account_id:return _query_failure(authority,binding,purpose,fill,CnAShareFeeQueryConstructionFailureCodeV2.FILL_ACCOUNT_MISMATCH,("fill_account_id",fill.account_id,"binding_account_id",binding.account_id))
+    if fill.venue_id != binding.venue_id:return _query_failure(authority,binding,purpose,fill,CnAShareFeeQueryConstructionFailureCodeV2.FILL_VENUE_MISMATCH,("fill_venue_id",fill.venue_id.value,"binding_venue_id",binding.venue_id.value))
+    if fill.instrument_id != binding.instrument_id:return _query_failure(authority,binding,purpose,fill,CnAShareFeeQueryConstructionFailureCodeV2.FILL_INSTRUMENT_MISMATCH,("fill_instrument_id",str(fill.instrument_id),"binding_instrument_id",str(binding.instrument_id)))
+    if fill.side is not binding.side:return _query_failure(authority,binding,purpose,fill,CnAShareFeeQueryConstructionFailureCodeV2.FILL_SIDE_MISMATCH,("fill_side",fill.side.value,"binding_side",binding.side.value))
+    if not binding.order_effective_at<=fill.execution_time<authority.scope.coverage_to_exclusive:return _query_failure(authority,binding,purpose,fill,CnAShareFeeQueryConstructionFailureCodeV2.EXECUTION_TIME_MISMATCH,("fill_execution_time_hash",canonical_sha256(fill.execution_time),"binding_order_effective_at_hash",canonical_sha256(binding.order_effective_at),"scope_coverage_to_exclusive_hash",canonical_sha256(authority.scope.coverage_to_exclusive)))
+    return CnAShareCashFeeRuleQueryV2(authority,authority.authority_hash,binding,binding.binding_hash,purpose,fill,canonical_sha256(fill),fill.fill_id)
+
+
+class CnAShareFeeRuleFailureCodeV2(str, Enum):
+    EXECUTION_AUTHORITY_MISMATCH="execution_authority_mismatch"
+    QUERY_PROVENANCE_MISMATCH="query_provenance_mismatch"
+    RULE_BOOK_SCOPE_MISMATCH="rule_book_scope_mismatch"
+    MISSING_RULE_INTERVAL="missing_rule_interval"
+    OVERLAPPING_RULE_INTERVALS="overlapping_rule_intervals"
+
+
+@dataclass(frozen=True, slots=True)
+class CnAShareFeeRuleFailureV2:
+    query:CnAShareCashFeeRuleQueryV2
+    query_hash:str
+    code:CnAShareFeeRuleFailureCodeV2
+    subject_ids:tuple[str,...]
+    def __post_init__(self)->None:
+        if not isinstance(self.query,CnAShareCashFeeRuleQueryV2) or self.query_hash!=self.query.query_hash or not isinstance(self.code,CnAShareFeeRuleFailureCodeV2) or not isinstance(self.subject_ids,tuple):raise ValueError("fee rule failure invalid")
+    @property
+    def failure_hash(self)->str:return canonical_sha256(self)
+    def to_canonical_dict(self)->dict[str,Any]:return _canonical("cn_a_share_fee_rule_failure_v2",query=self.query,query_hash=self.query_hash,code=self.code.value,subject_ids=self.subject_ids)
+
+
+def _market_component(book:CnAShareMarketFeeRuleBookV2)->ProfileComponentRef:
+    body=_canonical("cn_a_share_cash_market_fee_component_v2",component_key=_MARKET_KEY,component_version=2,algorithm_key="cn-a-share-historical-market-fees-route-product-v2",rule_book_hash=book.rule_book_hash,access_route=book.access_route.value,fee_product_class=book.fee_product_class.value,assessment_scale=2,rounding="half_up",quantization_version="cn-a-share-market-fee.cny-cent.half-up.v2")
+    return ProfileComponentRef(ProfilePortType.FEE_ASSESSMENT_POLICY,_MARKET_KEY,2,canonical_sha256(body))
+
+
+def _tax_component(book:CnAShareStampDutyRuleBookV2)->ProfileComponentRef:
+    body=_canonical("cn_a_share_cash_stamp_duty_component_v2",component_key=_TAX_KEY,component_version=2,algorithm_key="cn-a-share-historical-stamp-duty-route-product-v2",rule_book_hash=book.rule_book_hash,access_route=book.access_route.value,fee_product_class=book.fee_product_class.value,assessment_scale=2,rounding="half_up",quantization_version="cn-a-share-stamp-duty.cny-cent.half-up.v2")
+    return ProfileComponentRef(ProfilePortType.TAX_POLICY,_TAX_KEY,2,canonical_sha256(body))
+
+
+def _failure(query:CnAShareCashFeeRuleQueryV2,code:CnAShareFeeRuleFailureCodeV2,suffix:tuple[str,...],policy_authority_hash:str|None=None)->CnAShareFeeRuleFailureV2:
+    return CnAShareFeeRuleFailureV2(query,query.query_hash,code,(code.value,policy_authority_hash or query.authority_hash,query.query_hash,*suffix))
+
+
+def _provenance(query:CnAShareCashFeeRuleQueryV2)->CnAShareCashFeeRuleQueryV2|CnAShareFeeQueryConstructionFailureV2:
+    if query.purpose is CnAShareFeeAssessmentPurposeV2.RESERVATION:return CnAShareCashFeeRuleQueryV2.for_reservation(query.authority,query.execution_binding)
+    return CnAShareCashFeeRuleQueryV2.for_final_fill(query.authority,query.execution_binding,query.fill)
+
+
+def _policy_failure(policy:Any,query:CnAShareCashFeeRuleQueryV2,book:Any)->CnAShareFeeRuleFailureV2|None:
+    if query.authority != policy.authority or query.authority_hash != policy.authority_hash:
+        return _failure(query,CnAShareFeeRuleFailureCodeV2.EXECUTION_AUTHORITY_MISMATCH,("query_authority_hash",query.authority_hash,"policy_authority_hash",policy.authority_hash,"query_scope_hash",query.authority.scope_hash,"policy_scope_hash",policy.authority.scope_hash),policy.authority_hash)
+    reconstructed=_provenance(query)
+    if not isinstance(reconstructed,CnAShareCashFeeRuleQueryV2) or reconstructed != query or reconstructed.query_hash != query.query_hash:
+        suffix=("purpose",query.purpose.value,"reconstructed_query_hash",reconstructed.query_hash) if isinstance(reconstructed,CnAShareCashFeeRuleQueryV2) else ("purpose",query.purpose.value,"query_construction_failure_hash",reconstructed.failure_hash)
+        return _failure(query,CnAShareFeeRuleFailureCodeV2.QUERY_PROVENANCE_MISMATCH,suffix)
+    if book.access_route is not query.authority.access_route or book.fee_product_class is not query.authority.fee_product_class:
+        return _failure(query,CnAShareFeeRuleFailureCodeV2.RULE_BOOK_SCOPE_MISMATCH,("scope_hash",query.authority.scope_hash,"market_fee_rule_book_hash",query.authority.market_fee_rule_book_hash,"stamp_duty_rule_book_hash",query.authority.stamp_duty_rule_book_hash))
+    return None
+
+
+def _generated_id(tag:str,rule_type:str,component:ProfileComponentRef,book_hash:str,band_hash:str,query:CnAShareCashFeeRuleQueryV2,charge_key:str,purpose:str,basis_type:str,applies:bool,refs:tuple[CnAShareFeeRuleSourceRef,...],quantization_version:str)->str:
+    return f"{tag}:{canonical_sha256(_canonical('cn_a_share_fee_generated_rule_id_v2',rule_type=rule_type,rule_schema_version=1,component_key=component.component_key,component_version=component.component_version,component_digest=component.component_digest,rule_book_hash=book_hash,band_hash=band_hash,authority_hash=query.authority_hash,binding_hash=query.binding_hash,query_hash=query.query_hash,access_route=query.authority.access_route.value,fee_product_class=query.authority.fee_product_class.value,charge_key=charge_key,purpose=purpose,basis_type=basis_type,applies=applies,source_refs=refs,quantization_version=quantization_version))}"
+
+
+def _market_rules(authority:CnAShareFeeExecutionAuthorityV2,query:CnAShareCashFeeRuleQueryV2,band:CnAShareMarketFeeBandV2)->tuple[tuple[FeeReservationChargeRule,...],tuple[FinalFeeChargeRule,...],tuple[FinalFeeChargeRule,...]]:
+    quant=QuantizationPolicy("cn-a-share-market-fee.cny-cent.half-up.v2",_SCALE,RoundingPolicy.HALF_UP)
+    component=_market_component(authority.market_fee_rule_book)
+    charges=(("handling",band.handling_applies,band.handling_rate,band.handling_source_refs),("securities_regulatory",band.regulatory_applies,band.regulatory_rate,band.regulatory_source_refs),("chinaclear_transfer",band.chinaclear_transfer_applies,band.chinaclear_transfer_rate,band.chinaclear_transfer_source_refs),("hkscc_transfer",band.hkscc_transfer_applies,band.hkscc_transfer_rate,band.hkscc_transfer_source_refs))
+    def rid(key:str,applies:bool,refs:tuple[CnAShareFeeRuleSourceRef,...],purpose:str,basis:str)->str:return _generated_id("cn-a-share-market-fee-rule-v2","cn_a_share_market_fee_charge_rule_v2",component,authority.market_fee_rule_book_hash,band.band_hash,query,key,purpose,basis,applies,refs,quant.version)
+    reserve=tuple(FeeReservationChargeRule(FeeReservationRuleSource.MARKET_FEE,rid(k,a,r,"reservation","order_notional"),FeeReservationBasis.ORDER_NOTIONAL,FeeReservationApplicability.APPLIES if a else FeeReservationApplicability.NOT_APPLICABLE,rate if a else _ZERO,None,quant) for k,a,rate,r in charges)
+    final=tuple(FinalFeeChargeRule(FinalFeeRuleSource.MARKET_FEE,rid(k,a,r,"final_fill","fill"),FeeBasisType.FILL,FinalFeeCalculationBasis.NOTIONAL_RATE,FinalFeeApplicability.ALWAYS if a else FinalFeeApplicability.NOT_APPLICABLE,rate if a else _ZERO,None,quant) for k,a,rate,r in charges)
+    order=tuple(FinalFeeChargeRule(FinalFeeRuleSource.MARKET_FEE,rid(k,False,r,"final_order","order"),FeeBasisType.ORDER,FinalFeeCalculationBasis.NOTIONAL_RATE,FinalFeeApplicability.NOT_APPLICABLE,_ZERO,None,quant) for k,_,_,r in charges)
+    return reserve,final,order
+
+
+def _tax_rules(authority:CnAShareFeeExecutionAuthorityV2,query:CnAShareCashFeeRuleQueryV2,band:CnAShareStampDutyBandV2)->tuple[FeeReservationChargeRule,FinalFeeChargeRule,FinalFeeChargeRule]:
+    quant=QuantizationPolicy("cn-a-share-stamp-duty.cny-cent.half-up.v2",_SCALE,RoundingPolicy.HALF_UP);component=_tax_component(authority.stamp_duty_rule_book); applies=band.applies_to_sell and query.side is OrderSide.SELL
+    def rid(applies:bool,purpose:str,basis:str)->str:return _generated_id("cn-a-share-stamp-duty-rule-v2","cn_a_share_stamp_duty_charge_rule_v2",component,authority.stamp_duty_rule_book_hash,band.band_hash,query,"stamp_duty",purpose,basis,applies,band.source_refs,quant.version)
+    rate=band.rate if applies else _ZERO
+    return (FeeReservationChargeRule(FeeReservationRuleSource.TAX,rid(applies,"reservation","order_notional"),FeeReservationBasis.ORDER_NOTIONAL,FeeReservationApplicability.APPLIES if applies else FeeReservationApplicability.NOT_APPLICABLE,rate,None,quant),FinalFeeChargeRule(FinalFeeRuleSource.TAX,rid(applies,"final_fill","fill"),FeeBasisType.FILL,FinalFeeCalculationBasis.NOTIONAL_RATE,FinalFeeApplicability.ALWAYS if applies else FinalFeeApplicability.NOT_APPLICABLE,rate,None,quant),FinalFeeChargeRule(FinalFeeRuleSource.TAX,rid(False,"final_order","order"),FeeBasisType.ORDER,FinalFeeCalculationBasis.NOTIONAL_RATE,FinalFeeApplicability.NOT_APPLICABLE,_ZERO,None,quant))
+
+
+@dataclass(frozen=True, slots=True)
+class CnAShareMarketFeeRuleResolutionV2:
+    authority:CnAShareFeeExecutionAuthorityV2
+    authority_hash:str
+    query:CnAShareCashFeeRuleQueryV2
+    query_hash:str
+    binding_hash:str
+    order_id:DomainId
+    order_hash:str
+    fill:Fill|None
+    fill_hash:str|None
+    fill_id:DomainId|None
+    side:OrderSide
+    effective_at:UtcInstant
+    active_band:CnAShareMarketFeeBandV2
+    active_band_hash:str
+    reservation_charge_rules:tuple[FeeReservationChargeRule,...]
+    final_fill_charge_rules:tuple[FinalFeeChargeRule,...]
+    final_order_not_applicable_rules:tuple[FinalFeeChargeRule,...]
+    def __post_init__(self)->None:
+        if not isinstance(self.authority,CnAShareFeeExecutionAuthorityV2) or not isinstance(self.query,CnAShareCashFeeRuleQueryV2) or not isinstance(self.active_band,CnAShareMarketFeeBandV2):raise TypeError("market resolution context invalid")
+        if (self.authority_hash,self.query_hash,self.binding_hash)!=(self.authority.authority_hash,self.query.query_hash,self.query.binding_hash):raise ValueError("market resolution hash mismatch")
+        if (self.order_id,self.order_hash,self.fill,self.fill_hash,self.fill_id,self.side,self.effective_at)!=(self.query.order_id,self.query.order_hash,self.query.fill,self.query.fill_hash,self.query.fill_id,self.query.side,self.query.effective_at):raise ValueError("market resolution query provenance mismatch")
+        if self.active_band_hash!=self.active_band.band_hash or self.active_band.venue_id!=self.query.venue_id or not self.active_band.contains(self.effective_at):raise ValueError("active market band mismatch")
+        if (self.reservation_charge_rules,self.final_fill_charge_rules,self.final_order_not_applicable_rules)!=_market_rules(self.authority,self.query,self.active_band):raise ValueError("market resolution rule semantics mismatch")
+    @property
+    def resolution_hash(self)->str:return canonical_sha256(self)
+    def to_canonical_dict(self)->dict[str,Any]:return _canonical("cn_a_share_market_fee_rule_resolution_v2",authority=self.authority,authority_hash=self.authority_hash,query=self.query,query_hash=self.query_hash,binding_hash=self.binding_hash,order_id=self.order_id,order_hash=self.order_hash,fill=self.fill,fill_hash=self.fill_hash,fill_id=self.fill_id,side=self.side.value,effective_at=self.effective_at,active_band=self.active_band,active_band_hash=self.active_band_hash,reservation_charge_rules=self.reservation_charge_rules,final_fill_charge_rules=self.final_fill_charge_rules,final_order_not_applicable_rules=self.final_order_not_applicable_rules)
+
+
+@dataclass(frozen=True, slots=True)
+class CnAShareStampDutyRuleResolutionV2:
+    authority:CnAShareFeeExecutionAuthorityV2
+    authority_hash:str
+    query:CnAShareCashFeeRuleQueryV2
+    query_hash:str
+    binding_hash:str
+    order_id:DomainId
+    order_hash:str
+    fill:Fill|None
+    fill_hash:str|None
+    fill_id:DomainId|None
+    side:OrderSide
+    effective_at:UtcInstant
+    active_band:CnAShareStampDutyBandV2
+    active_band_hash:str
+    reservation_charge_rule:FeeReservationChargeRule
+    final_fill_charge_rule:FinalFeeChargeRule
+    final_order_not_applicable_rule:FinalFeeChargeRule
+    def __post_init__(self)->None:
+        if not isinstance(self.authority,CnAShareFeeExecutionAuthorityV2) or not isinstance(self.query,CnAShareCashFeeRuleQueryV2) or not isinstance(self.active_band,CnAShareStampDutyBandV2):raise TypeError("stamp resolution context invalid")
+        if (self.authority_hash,self.query_hash,self.binding_hash)!=(self.authority.authority_hash,self.query.query_hash,self.query.binding_hash):raise ValueError("stamp resolution hash mismatch")
+        if (self.order_id,self.order_hash,self.fill,self.fill_hash,self.fill_id,self.side,self.effective_at)!=(self.query.order_id,self.query.order_hash,self.query.fill,self.query.fill_hash,self.query.fill_id,self.query.side,self.query.effective_at):raise ValueError("stamp resolution query provenance mismatch")
+        if self.active_band_hash!=self.active_band.band_hash or self.active_band.venue_id!=self.query.venue_id or not self.active_band.contains(self.effective_at):raise ValueError("active stamp band mismatch")
+        if (self.reservation_charge_rule,self.final_fill_charge_rule,self.final_order_not_applicable_rule)!=_tax_rules(self.authority,self.query,self.active_band):raise ValueError("stamp resolution rule semantics mismatch")
+    @property
+    def resolution_hash(self)->str:return canonical_sha256(self)
+    def to_canonical_dict(self)->dict[str,Any]:return _canonical("cn_a_share_stamp_duty_rule_resolution_v2",authority=self.authority,authority_hash=self.authority_hash,query=self.query,query_hash=self.query_hash,binding_hash=self.binding_hash,order_id=self.order_id,order_hash=self.order_hash,fill=self.fill,fill_hash=self.fill_hash,fill_id=self.fill_id,side=self.side.value,effective_at=self.effective_at,active_band=self.active_band,active_band_hash=self.active_band_hash,reservation_charge_rule=self.reservation_charge_rule,final_fill_charge_rule=self.final_fill_charge_rule,final_order_not_applicable_rule=self.final_order_not_applicable_rule)
+
+
+@dataclass(frozen=True, slots=True)
+class CnAShareCashMarketFeePolicyV2:
+    authority:CnAShareFeeExecutionAuthorityV2
+    authority_hash:str
+    assessment_scale:Scale
+    def __post_init__(self)->None:
+        if not isinstance(self.authority,CnAShareFeeExecutionAuthorityV2) or self.authority_hash!=self.authority.authority_hash or self.assessment_scale!=_SCALE:raise ValueError("market policy authority or scale mismatch")
+    @property
+    def component_ref(self)->ProfileComponentRef:return _market_component(self.authority.market_fee_rule_book)
+    def assess_fees(self,query:CnAShareCashFeeRuleQueryV2,/)->ProfilePortOutcome[CnAShareMarketFeeRuleResolutionV2,CnAShareFeeRuleFailureV2]:
+        if not isinstance(query,CnAShareCashFeeRuleQueryV2):raise TypeError("query must be CnAShareCashFeeRuleQueryV2")
+        failure=_policy_failure(self,query,self.authority.market_fee_rule_book)
+        if failure is not None:return ProfilePortOutcome.for_failure(self.component_ref,query,failure)
+        active=self.authority.market_fee_rule_book.active_bands(query.venue_id,query.effective_at)
+        if len(active)!=1:
+            code=CnAShareFeeRuleFailureCodeV2.MISSING_RULE_INTERVAL if not active else CnAShareFeeRuleFailureCodeV2.OVERLAPPING_RULE_INTERVALS
+            hashes=canonical_sha256(()) if not active else canonical_sha256(tuple(sorted(x.band_hash for x in active)))
+            failure=_failure(query,code,("venue_id",query.venue_id.value,"effective_at_hash",canonical_sha256(query.effective_at),"rule_book_hash",self.authority.market_fee_rule_book_hash,"active_band_hashes_hash",hashes))
+            return ProfilePortOutcome.for_failure(self.component_ref,query,failure)
+        band=active[0];reservation,final,order=_market_rules(self.authority,query,band)
+        return ProfilePortOutcome.for_result(self.component_ref,query,CnAShareMarketFeeRuleResolutionV2(self.authority,self.authority_hash,query,query.query_hash,query.binding_hash,query.order_id,query.order_hash,query.fill,query.fill_hash,query.fill_id,query.side,query.effective_at,band,band.band_hash,reservation,final,order))
+
+
+@dataclass(frozen=True, slots=True)
+class CnAShareCashStampDutyTaxPolicyV2:
+    authority:CnAShareFeeExecutionAuthorityV2
+    authority_hash:str
+    assessment_scale:Scale
+    def __post_init__(self)->None:
+        if not isinstance(self.authority,CnAShareFeeExecutionAuthorityV2) or self.authority_hash!=self.authority.authority_hash or self.assessment_scale!=_SCALE:raise ValueError("stamp policy authority or scale mismatch")
+    @property
+    def component_ref(self)->ProfileComponentRef:return _tax_component(self.authority.stamp_duty_rule_book)
+    def assess_taxes(self,query:CnAShareCashFeeRuleQueryV2,/)->ProfilePortOutcome[CnAShareStampDutyRuleResolutionV2,CnAShareFeeRuleFailureV2]:
+        if not isinstance(query,CnAShareCashFeeRuleQueryV2):raise TypeError("query must be CnAShareCashFeeRuleQueryV2")
+        failure=_policy_failure(self,query,self.authority.stamp_duty_rule_book)
+        if failure is not None:return ProfilePortOutcome.for_failure(self.component_ref,query,failure)
+        active=self.authority.stamp_duty_rule_book.active_bands(query.venue_id,query.effective_at)
+        if len(active)!=1:
+            code=CnAShareFeeRuleFailureCodeV2.MISSING_RULE_INTERVAL if not active else CnAShareFeeRuleFailureCodeV2.OVERLAPPING_RULE_INTERVALS
+            hashes=canonical_sha256(()) if not active else canonical_sha256(tuple(sorted(x.band_hash for x in active)))
+            failure=_failure(query,code,("venue_id",query.venue_id.value,"effective_at_hash",canonical_sha256(query.effective_at),"rule_book_hash",self.authority.stamp_duty_rule_book_hash,"active_band_hashes_hash",hashes))
+            return ProfilePortOutcome.for_failure(self.component_ref,query,failure)
+        band=active[0];reservation,final,order=_tax_rules(self.authority,query,band)
+        return ProfilePortOutcome.for_result(self.component_ref,query,CnAShareStampDutyRuleResolutionV2(self.authority,self.authority_hash,query,query.query_hash,query.binding_hash,query.order_id,query.order_hash,query.fill,query.fill_hash,query.fill_id,query.side,query.effective_at,band,band.band_hash,reservation,final,order))
+
+
+@dataclass(frozen=True, slots=True)
+class CnAShareFeeReservationBufferV2:
+    market_resolution:CnAShareMarketFeeRuleResolutionV2
+    tax_resolution:CnAShareStampDutyRuleResolutionV2
+    maximum_fill_count:int
+    market_charge_rule:FeeReservationChargeRule
+    tax_charge_rule:FeeReservationChargeRule
+    def __post_init__(self)->None:
+        if not isinstance(self.market_resolution,CnAShareMarketFeeRuleResolutionV2) or not isinstance(self.tax_resolution,CnAShareStampDutyRuleResolutionV2):raise TypeError("buffer resolutions must be v2")
+        if type(self.maximum_fill_count) is not int or self.maximum_fill_count<=0:raise ValueError("maximum_fill_count must be a positive integer")
+        if not _same_context(self.market_resolution,self.tax_resolution):raise ValueError("reservation buffer resolution context mismatch")
+        if (self.market_charge_rule,self.tax_charge_rule)!=_buffer_rules(self.market_resolution,self.tax_resolution,self.maximum_fill_count):raise ValueError("reservation buffer rule semantics mismatch")
+    @classmethod
+    def create(cls,*,market_resolution:CnAShareMarketFeeRuleResolutionV2,tax_resolution:CnAShareStampDutyRuleResolutionV2,maximum_fill_count:int)->CnAShareFeeReservationBufferV2:
+        if not _same_context(market_resolution,tax_resolution):raise ValueError("reservation buffer resolution context mismatch")
+        market,tax=_buffer_rules(market_resolution,tax_resolution,maximum_fill_count)
+        return cls(market_resolution,tax_resolution,maximum_fill_count,market,tax)
+    def covers_fill_count(self,fill_count:int,/)->bool:
+        if type(fill_count) is not int or fill_count<0:raise ValueError("fill_count must be a non-negative integer")
+        return fill_count<=self.maximum_fill_count
+    def require_covers_fills(self,fills:tuple[Fill,...],/)->None:
+        if not isinstance(fills,tuple) or not all(isinstance(x,Fill) for x in fills):raise TypeError("fills must be a tuple of Fill")
+        if not self.covers_fill_count(len(fills)):raise ValueError("actual fill count exceeds reservation bound")
+    @property
+    def buffer_hash(self)->str:return canonical_sha256(self)
+    def to_canonical_dict(self)->dict[str,Any]:return _canonical("cn_a_share_fee_reservation_buffer_v2",market_resolution=self.market_resolution,tax_resolution=self.tax_resolution,maximum_fill_count=self.maximum_fill_count,market_charge_rule=self.market_charge_rule,tax_charge_rule=self.tax_charge_rule)
+
+
+def _same_context(market:Any,tax:Any)->bool:
+    if not isinstance(market,CnAShareMarketFeeRuleResolutionV2) or not isinstance(tax,CnAShareStampDutyRuleResolutionV2):return False
+    return (market.authority,market.authority_hash,market.query,market.query_hash,market.binding_hash,market.order_id,market.order_hash,market.fill,market.fill_hash,market.fill_id,market.side,market.effective_at,market.query.purpose)==(tax.authority,tax.authority_hash,tax.query,tax.query_hash,tax.binding_hash,tax.order_id,tax.order_hash,tax.fill,tax.fill_hash,tax.fill_id,tax.side,tax.effective_at,tax.query.purpose) and market.query.purpose is CnAShareFeeAssessmentPurposeV2.RESERVATION
+
+
+def _buffer_rules(market:CnAShareMarketFeeRuleResolutionV2,tax:CnAShareStampDutyRuleResolutionV2,count:int)->tuple[FeeReservationChargeRule,FeeReservationChargeRule]:
+    if type(count) is not int or count<=0:raise ValueError("maximum_fill_count must be a positive integer")
+    quant=QuantizationPolicy("cn-a-share-fee-reservation-buffer.cny-cent.half-up.v2",_SCALE,RoundingPolicy.HALF_UP);unit=count//2
+    market_count=sum(x.applicability is FeeReservationApplicability.APPLIES for x in market.reservation_charge_rules);tax_count=int(tax.reservation_charge_rule.applicability is FeeReservationApplicability.APPLIES)
+    def rule(component:ProfileComponentRef,resolution_hash:str,component_count:int,charge_key:str,source:FeeReservationRuleSource)->FeeReservationChargeRule:
+        applies=component_count>0;amount=Money(component_count*unit,_SCALE,"CNY")
+        preimage=_canonical("cn_a_share_fee_reservation_buffer_rule_id_v2",rule_type="cn_a_share_fee_reservation_buffer_rule_v2",rule_schema_version=1,component_key=component.component_key,component_version=component.component_version,component_digest=component.component_digest,authority_hash=market.authority_hash,scope_hash=market.authority.scope_hash,binding_hash=market.binding_hash,market_resolution_hash=market.resolution_hash,tax_resolution_hash=tax.resolution_hash,maximum_fill_count=count,component_count=component_count,applies=applies,charge_key=charge_key,basis_type="flat_per_order",amount=amount,quantization_version=quant.version)
+        return FeeReservationChargeRule(source,f"cn-a-share-fee-reservation-buffer-rule-v2:{canonical_sha256(preimage)}",FeeReservationBasis.FLAT_PER_ORDER,FeeReservationApplicability.APPLIES if applies else FeeReservationApplicability.NOT_APPLICABLE,None,amount,quant)
+    return rule(_market_component(market.authority.market_fee_rule_book),market.resolution_hash,market_count,"handling",FeeReservationRuleSource.MARKET_FEE),rule(_tax_component(tax.authority.stamp_duty_rule_book),tax.resolution_hash,tax_count,"stamp_duty",FeeReservationRuleSource.TAX)
+
+
+class CnAShareDomesticOrdinaryFeeProjectionFailureCodeV2(str, Enum):
+    NON_XSHE_MARKET_SOURCE="non_xshe_market_source"
+    NON_XSHE_STAMP_DUTY_SOURCE="non_xshe_stamp_duty_source"
+    MARKET_SOURCE_INTERVAL_INVALID="market_source_interval_invalid"
+    STAMP_DUTY_SOURCE_INTERVAL_INVALID="stamp_duty_source_interval_invalid"
+    MARKET_SOURCE_ECONOMIC_INVALID="market_source_economic_invalid"
+    STAMP_DUTY_SOURCE_ECONOMIC_INVALID="stamp_duty_source_economic_invalid"
+
+
+@dataclass(frozen=True, slots=True)
+class CnAShareDomesticOrdinaryFeeProjectionFailureV2:
+    market_rule_book:CnAShareMarketFeeRuleBook
+    market_rule_book_hash:str
+    stamp_duty_rule_book:CnAShareStampDutyRuleBook
+    stamp_duty_rule_book_hash:str
+    code:CnAShareDomesticOrdinaryFeeProjectionFailureCodeV2
+    subject_ids:tuple[str,...]
+    def __post_init__(self)->None:
+        if not isinstance(self.market_rule_book,CnAShareMarketFeeRuleBook) or not isinstance(self.stamp_duty_rule_book,CnAShareStampDutyRuleBook) or not isinstance(self.code,CnAShareDomesticOrdinaryFeeProjectionFailureCodeV2):raise TypeError("projection failure context invalid")
+        if (self.market_rule_book_hash,self.stamp_duty_rule_book_hash)!=(self.market_rule_book.rule_book_hash,self.stamp_duty_rule_book.rule_book_hash):raise ValueError("projection failure hash mismatch")
+    @property
+    def failure_hash(self)->str:return canonical_sha256(self)
+    def to_canonical_dict(self)->dict[str,Any]:return _canonical("cn_a_share_domestic_ordinary_fee_projection_failure_v2",market_rule_book=self.market_rule_book,market_rule_book_hash=self.market_rule_book_hash,stamp_duty_rule_book=self.stamp_duty_rule_book,stamp_duty_rule_book_hash=self.stamp_duty_rule_book_hash,code=self.code.value,subject_ids=self.subject_ids)
+
+
+@dataclass(frozen=True, slots=True)
+class CnAShareDomesticOrdinaryFeeProjectionV2:
+    algorithm_id:str
+    source_market_rule_book:CnAShareMarketFeeRuleBook
+    source_market_rule_book_hash:str
+    source_stamp_duty_rule_book:CnAShareStampDutyRuleBook
+    source_stamp_duty_rule_book_hash:str
+    access_route:CnAShareExecutionAccessRoute
+    fee_product_class:CnAShareFeeProductClass
+    market_fee_rule_book:CnAShareMarketFeeRuleBookV2
+    market_fee_rule_book_hash:str
+    stamp_duty_rule_book:CnAShareStampDutyRuleBookV2
+    stamp_duty_rule_book_hash:str
+    def __post_init__(self)->None:
+        if self.algorithm_id!="cn-a-share-domestic-ordinary-v1-to-v2-fee-projection-v1":raise ValueError("projection algorithm_id mismatch")
+        if not isinstance(self.source_market_rule_book,CnAShareMarketFeeRuleBook) or not isinstance(self.source_stamp_duty_rule_book,CnAShareStampDutyRuleBook):raise TypeError("projection source books invalid")
+        if (self.source_market_rule_book_hash,self.source_stamp_duty_rule_book_hash)!=(self.source_market_rule_book.rule_book_hash,self.source_stamp_duty_rule_book.rule_book_hash):raise ValueError("projection source hash mismatch")
+        if self.access_route is not CnAShareExecutionAccessRoute.DOMESTIC or self.fee_product_class is not CnAShareFeeProductClass.ORDINARY_A_SHARE:raise ValueError("projection scope mismatch")
+        if not isinstance(self.market_fee_rule_book,CnAShareMarketFeeRuleBookV2) or not isinstance(self.stamp_duty_rule_book,CnAShareStampDutyRuleBookV2):raise TypeError("projection v2 books invalid")
+        if (self.market_fee_rule_book_hash,self.stamp_duty_rule_book_hash)!=(self.market_fee_rule_book.rule_book_hash,self.stamp_duty_rule_book.rule_book_hash):raise ValueError("projection v2 hash mismatch")
+    @property
+    def projection_hash(self)->str:return canonical_sha256(self)
+    def to_canonical_dict(self)->dict[str,Any]:return _canonical("cn_a_share_domestic_ordinary_fee_projection_v2",algorithm_id=self.algorithm_id,source_market_rule_book=self.source_market_rule_book,source_market_rule_book_hash=self.source_market_rule_book_hash,source_stamp_duty_rule_book=self.source_stamp_duty_rule_book,source_stamp_duty_rule_book_hash=self.source_stamp_duty_rule_book_hash,access_route=self.access_route.value,fee_product_class=self.fee_product_class.value,market_fee_rule_book=self.market_fee_rule_book,market_fee_rule_book_hash=self.market_fee_rule_book_hash,stamp_duty_rule_book=self.stamp_duty_rule_book,stamp_duty_rule_book_hash=self.stamp_duty_rule_book_hash)
+
+
+def _projection_failure(market:CnAShareMarketFeeRuleBook,stamp:CnAShareStampDutyRuleBook,code:CnAShareDomesticOrdinaryFeeProjectionFailureCodeV2,suffix:tuple[str,...])->CnAShareDomesticOrdinaryFeeProjectionFailureV2:
+    return CnAShareDomesticOrdinaryFeeProjectionFailureV2(market,market.rule_book_hash,stamp,stamp.rule_book_hash,code,(code.value,market.rule_book_hash,stamp.rule_book_hash,*suffix))
+
+
+def _valid_v1_market(value:Any)->bool:
+    return isinstance(value,CnAShareMarketFeeBand) and all(isinstance(getattr(value,n,None),Rate) and getattr(value,n).units>=0 and getattr(value,n).basis=="fee_fraction" for n in ("handling_rate","regulatory_rate","transfer_rate")) and all(isinstance(getattr(value,n,None),tuple) and getattr(value,n) for n in ("handling_source_refs","regulatory_source_refs","transfer_source_refs"))
+
+
+def _valid_v1_stamp(value:Any)->bool:
+    return isinstance(value,CnAShareStampDutyBand) and isinstance(getattr(value,"rate",None),Rate) and value.rate.units>=0 and value.rate.basis=="fee_fraction" and isinstance(getattr(value,"source_refs",None),tuple) and bool(value.source_refs)
+
+
+def project_cn_a_share_domestic_ordinary_fee_rules_v2(market_rule_book:CnAShareMarketFeeRuleBook,stamp_duty_rule_book:CnAShareStampDutyRuleBook,/)->CnAShareDomesticOrdinaryFeeProjectionV2|CnAShareDomesticOrdinaryFeeProjectionFailureV2:
+    if not isinstance(market_rule_book,CnAShareMarketFeeRuleBook) or not isinstance(stamp_duty_rule_book,CnAShareStampDutyRuleBook):raise TypeError("source rule books must be v1")
+    for band in market_rule_book.bands:
+        if band.venue_id != VenueId("xshe"):return _projection_failure(market_rule_book,stamp_duty_rule_book,CnAShareDomesticOrdinaryFeeProjectionFailureCodeV2.NON_XSHE_MARKET_SOURCE,("venue_id",band.venue_id.value,"band_hash",band.band_hash))
+    for band in stamp_duty_rule_book.bands:
+        if band.venue_id != VenueId("xshe"):return _projection_failure(market_rule_book,stamp_duty_rule_book,CnAShareDomesticOrdinaryFeeProjectionFailureCodeV2.NON_XSHE_STAMP_DUTY_SOURCE,("venue_id",band.venue_id.value,"band_hash",band.band_hash))
+    for band in market_rule_book.bands:
+        if not isinstance(band.effective_from,UtcInstant) or not isinstance(band.effective_to_exclusive,UtcInstant) or band.effective_from>=band.effective_to_exclusive:return _projection_failure(market_rule_book,stamp_duty_rule_book,CnAShareDomesticOrdinaryFeeProjectionFailureCodeV2.MARKET_SOURCE_INTERVAL_INVALID,("band_hash",band.band_hash,"effective_from_hash",canonical_sha256(band.effective_from),"effective_to_exclusive_hash",canonical_sha256(band.effective_to_exclusive)))
+    for band in stamp_duty_rule_book.bands:
+        if not isinstance(band.effective_from,UtcInstant) or not isinstance(band.effective_to_exclusive,UtcInstant) or band.effective_from>=band.effective_to_exclusive:return _projection_failure(market_rule_book,stamp_duty_rule_book,CnAShareDomesticOrdinaryFeeProjectionFailureCodeV2.STAMP_DUTY_SOURCE_INTERVAL_INVALID,("band_hash",band.band_hash,"effective_from_hash",canonical_sha256(band.effective_from),"effective_to_exclusive_hash",canonical_sha256(band.effective_to_exclusive)))
+    for band in market_rule_book.bands:
+        if not _valid_v1_market(band):return _projection_failure(market_rule_book,stamp_duty_rule_book,CnAShareDomesticOrdinaryFeeProjectionFailureCodeV2.MARKET_SOURCE_ECONOMIC_INVALID,("band_hash",band.band_hash,"economic_hash",canonical_sha256(band)))
+    for band in stamp_duty_rule_book.bands:
+        if not _valid_v1_stamp(band):return _projection_failure(market_rule_book,stamp_duty_rule_book,CnAShareDomesticOrdinaryFeeProjectionFailureCodeV2.STAMP_DUTY_SOURCE_ECONOMIC_INVALID,("band_hash",band.band_hash,"economic_hash",canonical_sha256(band)))
+    market_hash=market_rule_book.rule_book_hash;stamp_hash=stamp_duty_rule_book.rule_book_hash
+    def hkscc(band:CnAShareMarketFeeBand)->CnAShareFeeRuleSourceRef:
+        digest=canonical_sha256(_canonical("cn_a_share_fee_compatibility_hkscc_source_v2",source_market_rule_book_hash=market_hash,source_stamp_duty_rule_book_hash=stamp_hash,venue_id="xshe",effective_from=band.effective_from,effective_to_exclusive=band.effective_to_exclusive,access_route="domestic",fee_product_class="ordinary_a_share",charge_key="hkscc_transfer",applies=False))
+        return CnAShareFeeRuleSourceRef("cn-a-share-domestic-ordinary-v1-to-v2-hkscc-not-applicable",digest)
+    market_bands=tuple(CnAShareMarketFeeBandV2(b.venue_id,b.effective_from,b.effective_to_exclusive,True,b.handling_rate,b.handling_source_refs,True,b.regulatory_rate,b.regulatory_source_refs,True,b.transfer_rate,b.transfer_source_refs,False,_ZERO,(hkscc(b),)) for b in market_rule_book.bands)
+    stamp_bands=tuple(CnAShareStampDutyBandV2(b.venue_id,b.effective_from,b.effective_to_exclusive,True,b.rate,b.source_refs) for b in stamp_duty_rule_book.bands)
+    market=CnAShareMarketFeeRuleBookV2("equity.cn_a_share.cash.market-fees.domestic.ordinary-a-share.projected-v2",2,CnAShareExecutionAccessRoute.DOMESTIC,CnAShareFeeProductClass.ORDINARY_A_SHARE,market_bands)
+    stamp=CnAShareStampDutyRuleBookV2("equity.cn_a_share.cash.stamp-duty.domestic.ordinary-a-share.projected-v2",2,CnAShareExecutionAccessRoute.DOMESTIC,CnAShareFeeProductClass.ORDINARY_A_SHARE,stamp_bands)
+    return CnAShareDomesticOrdinaryFeeProjectionV2("cn-a-share-domestic-ordinary-v1-to-v2-fee-projection-v1",market_rule_book,market_hash,stamp_duty_rule_book,stamp_hash,CnAShareExecutionAccessRoute.DOMESTIC,CnAShareFeeProductClass.ORDINARY_A_SHARE,market,market.rule_book_hash,stamp,stamp.rule_book_hash)
