@@ -1,0 +1,15 @@
+{
+  "market_band_hashes": [
+    "sha256:e3a6d8afc83b2b3a9726f6a05fc52303e081415792889f103d67eb82ad450d1d",
+    "sha256:03151fae3a3296d04a0a40603348b31ed17919a554d6bcb7bb8c2b2ce338d8c0"
+  ],
+  "market_fee_rule_book_hash": "sha256:4bc3436ded73ae77b61d7c98da2861df3ba365f1c8dc5987808f259d3fea5429",
+  "projection_hash": "sha256:0a914b02d049d37f90a42090f7a6458291e3e42002ab804ef5ac46d63c62346c",
+  "source_market_rule_book_hash": "sha256:1d5a60deef1d2e9510ad344bbf1ea13913050d397a2687b997679b1025740bb2",
+  "source_stamp_duty_rule_book_hash": "sha256:21f97fa0cccf57d6dc2a697bacd7b2ce1319a595f4d95bd16de9a0fb8c52eb72",
+  "stamp_band_hashes": [
+    "sha256:f6204e46bc9584060ebc064e8d8102196b7e40888d696b82fdd225499f484581",
+    "sha256:d87d35ed410acbc25297533edbc13e03e7ba85964939e166c87ce7f183d8510f"
+  ],
+  "stamp_duty_rule_book_hash": "sha256:0255dcf04d3d6485717b7a50de17aaa9dc59718e5b68e5aa718b2e972fe26912"
+}

@@ -1258,6 +1258,7 @@ _ALLOWED_IMPORTS_BY_FILE = {
     "commission_tax_v2.py": {
         "__future__",
         "dataclasses",
+        "unicodedata",
         "enum",
         "typing",
         "crypto_quant_domain",
