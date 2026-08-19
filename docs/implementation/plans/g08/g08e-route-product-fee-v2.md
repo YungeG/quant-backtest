@@ -25,7 +25,7 @@ fan_out: [G12H-EFFECTIVE-UNTIL-SUPERSEDED-V2]
 
 `READY_FOR_CONTRACT_RED` only. [ADR 0005](../../../adr/0005-cn-a-share-fees-require-access-route-and-product-class.md) accepts the additive contract. No code, fixture, registry, Acceptance Matrix, README, G12 publication, or qualification change is authorized by this plan freeze.
 
-The implementation contract is not `PASSED`. G12H F1 remains blocked until the complete authority, exact three-argument private profile-binding seam, Order/Fill constructors, canonical query-provenance check, and both v2 policies pass compatibility, semantic, architecture, and byte-lock acceptance. That acceptance is independent of G12H: it uses only the finite XSHE v1-to-v2 compatibility projection.
+The implementation contract is not `PASSED`. G12H F1 remains blocked until the complete Authority/Profile Binding Proof, exact three-argument private profile/build semantic-binding seam, Order/Fill constructors, canonical query-provenance check, and both v2 policies pass compatibility, semantic, architecture, and byte-lock acceptance. That acceptance is independent of G12H: it uses only the finite XSHE v1-to-v2 compatibility projection.
 
 ## Goal and first enforceable scope
 
@@ -86,11 +86,11 @@ Update only the concrete A-share submodule export file:
 packages/trading-kernel/src/crypto_quant_trading/profiles/cn_a_share/__init__.py
 ```
 
-Do not modify `commission_tax.py`, `cn_a_share_profile.py`, generic fee/tax ports, generic fee arithmetic, Engine, Runner, Dispatcher, Journal, Ledger, profile registry, Runtime root exports, Builder, or market-data packages.
+Do not modify `commission_tax.py`, `cn_a_share_profile.py`, generic fee/tax ports, generic fee arithmetic, Engine, Runner, Dispatcher, Journal, Ledger, v1 profile registry entries, Runtime root exports, Builder, or market-data packages. One additive profile-specific v2 build registration in `cn_a_share_fee_v2.py` is allowed only to bind the v2 authority/proof into a new unique profile/build identity before execution; it does not mutate or reinterpret any v1 registration.
 
 `commission_tax_v2.py` may import stdlib, `crypto_quant_domain`, existing generic fee/reservation/port contracts, and the v1 A-share fee types needed by the compatibility projection. It performs no I/O and imports no Runtime, Builder, provider, repository, filesystem, network, database, process, wall clock, dynamic loader, or test code.
 
-`cn_a_share_fee_v2.py` is the private pure profile-authority binding seam. It may import v1 `CnAShareResolvedProfile` and only these v2 Kernel types: `CnAShareFeeExecutionScopeV2`, `CnAShareFeeExecutionSelectionV2`, `CnAShareFeeExecutionAuthorityV2`, and `CnAShareFeeExecutionAuthorityBuildFailureV2` (the build outcome union). It contains exactly `_create_cn_a_share_fee_execution_authority_v2(resolved_profile, scope, selection, /) -> CnAShareFeeExecutionAuthorityV2 | CnAShareFeeExecutionAuthorityBuildFailureV2`; no two-argument form exists. It imports no Engine, Runner, Builder, provider, repository, filesystem, network, database, process, wall clock, callback, or implementation object identity. It is not imported or exported by `crypto_quant_backtest.__init__`.
+`cn_a_share_fee_v2.py` is the private pure profile-authority and v2 profile-build binding seam. It may import v1 `CnAShareResolvedProfile` and only these v2 Kernel types: `CnAShareFeeExecutionScopeV2`, `CnAShareFeeExecutionSelectionV2`, `CnAShareFeeProfileBindingProofV2`, `CnAShareFeeExecutionAuthorityV2`, `CnAShareFeeExecutionAuthorityBuildFailureCodeV2`, `CnAShareFeeExecutionAuthorityBuildFailureV2`, and `CnAShareFeeExecutionSemanticBindingV2` (the build outcome/binding types). It contains exactly `_create_cn_a_share_fee_execution_authority_v2(resolved_profile, scope, selection, /) -> CnAShareFeeExecutionAuthorityV2 | CnAShareFeeExecutionAuthorityBuildFailureV2`; no two-argument form exists. It imports no Engine, Runner, Builder, provider, repository, filesystem, network, database, process, wall clock, callback, or implementation object identity. It is not imported or exported by `crypto_quant_backtest.__init__`.
 
 ### Test/support files after RED is approved
 
@@ -122,7 +122,9 @@ CnAShareFeeProductClass
 CnAShareFeeAssessmentPurposeV2
 CnAShareFeeExecutionScopeV2
 CnAShareFeeExecutionSelectionV2
+CnAShareFeeProfileBindingProofV2
 CnAShareFeeExecutionAuthorityV2
+CnAShareFeeExecutionSemanticBindingV2
 CnAShareFeeExecutionAuthorityBuildFailureCodeV2
 CnAShareFeeExecutionAuthorityBuildFailureV2
 CnAShareFeeExecutionBindingV2
@@ -197,6 +199,31 @@ Its canonical type is `cn_a_share_fee_execution_scope_v2`; its body uses that ex
 
 `CnAShareFeeExecutionSelectionV2` is the explicit immutable build selection. Its exact fields, in order, are `selection_key: str`, `selection_version: int`, `access_route: CnAShareExecutionAccessRoute`, `fee_product_class: CnAShareFeeProductClass`, `market_fee_rule_book: CnAShareMarketFeeRuleBookV2`, `market_fee_rule_book_hash: str`, `stamp_duty_rule_book: CnAShareStampDutyRuleBookV2`, `stamp_duty_rule_book_hash: str`, `market_fee_component_ref: ProfileComponentRef`, and `stamp_duty_component_ref: ProfileComponentRef`. Its canonical type is `cn_a_share_fee_execution_selection_v2`; its body uses that exact order; `selection_hash = canonical_sha256(body)`. Constructor validation is structural only: positive version, canonical primitive/hash form, and exact concrete member types. It does not choose a route/product or pair books by inference.
 
+`CnAShareFeeProfileBindingProofV2` is the canonical proof produced by the private Runtime authority builder for accepted v2 execution; direct construction is structurally possible but cannot satisfy execution selection without the matching semantic binding below. Its exact fields, in order, are:
+
+1. `resolved_profile_key: str`
+2. `resolved_profile_version: int`
+3. `resolved_profile_digest: str`
+4. `composition_request_type: str`
+5. `composition_request_schema_version: int`
+6. `composition_request_hash: str`
+7. `composition_request_body_hash: str`
+8. `market_component_manifest_hash: str`
+9. `source_manifest_hash: str`
+10. `instrument_scope_declaration_hash: str`
+11. `account_scope_declaration_hash: str`
+12. `account_id: str`
+13. `venue_id: VenueId`
+14. `instrument_id: InstrumentId`
+15. `scope_hash: str`
+16. `selection_hash: str`
+17. `market_fee_rule_book_hash: str`
+18. `stamp_duty_rule_book_hash: str`
+19. `market_fee_component_ref: ProfileComponentRef`
+20. `stamp_duty_component_ref: ProfileComponentRef`
+
+Its canonical type is `cn_a_share_fee_profile_binding_proof_v2`; its canonical body uses precisely that order; `profile_binding_hash = canonical_sha256(body)`. `composition_request_type` is exactly `cn_a_share_profile_composition_request`, `composition_request_schema_version` is exactly `1`, and the builder reconstructs the exact v1 resolved-profile key/version/digest, request body/hash, market-component manifest hash, source-manifest hash, instrument/account declaration hashes, Scope/selection hashes, book hashes, and component refs/digests. A proof is canonical evidence of that reconstruction, not a cryptographic claim about how a caller obtained its input.
+
 `CnAShareFeeExecutionAuthorityV2` is the only authority accepted by v2 policies. Its exact fields, in order, are:
 
 1. `resolved_profile_digest: str`
@@ -209,18 +236,20 @@ Its canonical type is `cn_a_share_fee_execution_scope_v2`; its body uses that ex
 8. `execution_account_profile_digest: str`
 9. `instrument_scope_declaration_hash: str`
 10. `account_scope_declaration_hash: str`
-11. `scope: CnAShareFeeExecutionScopeV2`
-12. `scope_hash: str`
-13. `selection: CnAShareFeeExecutionSelectionV2`
-14. `selection_hash: str`
-15. `access_route: CnAShareExecutionAccessRoute`
-16. `fee_product_class: CnAShareFeeProductClass`
-17. `market_fee_rule_book: CnAShareMarketFeeRuleBookV2`
-18. `market_fee_rule_book_hash: str`
-19. `stamp_duty_rule_book: CnAShareStampDutyRuleBookV2`
-20. `stamp_duty_rule_book_hash: str`
-21. `market_fee_component_ref: ProfileComponentRef`
-22. `stamp_duty_component_ref: ProfileComponentRef`
+11. `profile_binding_proof: CnAShareFeeProfileBindingProofV2`
+12. `profile_binding_hash: str`
+13. `scope: CnAShareFeeExecutionScopeV2`
+14. `scope_hash: str`
+15. `selection: CnAShareFeeExecutionSelectionV2`
+16. `selection_hash: str`
+17. `access_route: CnAShareExecutionAccessRoute`
+18. `fee_product_class: CnAShareFeeProductClass`
+19. `market_fee_rule_book: CnAShareMarketFeeRuleBookV2`
+20. `market_fee_rule_book_hash: str`
+21. `stamp_duty_rule_book: CnAShareStampDutyRuleBookV2`
+22. `stamp_duty_rule_book_hash: str`
+23. `market_fee_component_ref: ProfileComponentRef`
+24. `stamp_duty_component_ref: ProfileComponentRef`
 
 Its canonical body is exactly:
 
@@ -238,6 +267,8 @@ Its canonical body is exactly:
   execution_account_profile_digest,
   instrument_scope_declaration_hash,
   account_scope_declaration_hash,
+  profile_binding_proof,
+  profile_binding_hash,
   scope,
   scope_hash,
   selection,
@@ -253,7 +284,7 @@ Its canonical body is exactly:
 }
 ```
 
-`authority_hash = canonical_sha256(body)`. Its constructor only enforces exact primitives, canonical hashes, positive profile versions, and concrete types. Semantic equality between repeated scope/selection/book/ref values is owned by the private builder or policy, never hidden in a constructor.
+`authority_hash = canonical_sha256(body)`. Its constructor only enforces exact primitives, canonical hashes, positive profile versions, and concrete types. The private builder reconstructs every proof field and then requires proof/hash equality to the Authority's profile/request/declaration/Scope/selection/book/component fields. Semantic equality between repeated fields is owned by the private builder or policy, never hidden in a constructor.
 
 #### Authority-builder ownership
 
@@ -297,6 +328,60 @@ It is direct-module private, reads only passed values, has no registry lookup, a
 | `COMPONENT_REF_MISMATCH` | `("market_fee_component_digest", selection.market_fee_component_ref.component_digest, "stamp_duty_component_digest", selection.stamp_duty_component_ref.component_digest)` |
 
 All labels above are literal strings; Domain IDs use `.value`, venue/type/enum values use `.value`, and hashes are their canonical `sha256:` text. Therefore `failure_hash = canonical_sha256(failure body)` is unique and reproducible.
+
+### V2 profile/build semantic binding
+
+`CnAShareFeeExecutionSemanticBindingV2` is the execution-selected expected authority context consumed by both policies. Its exact fields, in order, are:
+
+1. `profile_binding_proof: CnAShareFeeProfileBindingProofV2`
+2. `profile_binding_hash: str`
+3. `authority: CnAShareFeeExecutionAuthorityV2`
+4. `authority_hash: str`
+5. `profile_build_key: str`
+6. `profile_build_version: int`
+7. `profile_build_manifest_hash: str`
+8. `financial_semantic_identity_hash: str`
+9. `semantic_run_input_hash: str`
+
+Its canonical type is `cn_a_share_fee_execution_semantic_binding_v2`; its canonical body uses precisely that order; `semantic_binding_hash = canonical_sha256(body)`. It requires `profile_build_key == "equity.cn_a_share.fee-execution.v2"` and `profile_build_version == 2`. Constructor validation is only exact primitive/concrete type and canonical hash form; private F3 construction owns full reconstruction.
+
+The same private Runtime module contains `_bind_cn_a_share_fee_execution_profile_build_v2(resolved_profile, authority, /) -> CnAShareFeeExecutionSemanticBindingV2`. It reconstructs the proof from `resolved_profile`, requires exact proof/hash and Authority equality, then creates a **new additive** profile/build registration with key/version above. It does not claim to prove the historical origin of a structurally valid Authority; policy acceptance requires this execution-selected binding. It neither mutates the immutable v1 `CnAShareResolvedProfile`, v1 registrations, v1 component manifest, nor root exports.
+
+The v2 profile/build manifest preimage is exactly:
+
+```text
+{
+  type: "cn_a_share_fee_execution_profile_build_manifest_v2",
+  schema_version: 1,
+  profile_build_key: "equity.cn_a_share.fee-execution.v2",
+  profile_build_version: 2,
+  base_resolved_profile_digest,
+  base_composition_request_hash,
+  base_market_component_manifest_hash,
+  base_source_manifest_hash,
+  profile_binding_hash,
+  authority_hash,
+  market_fee_component_ref,
+  stamp_duty_component_ref
+}
+```
+
+`profile_build_manifest_hash = canonical_sha256(body)`. The financial semantic preimage is exactly:
+
+```text
+{
+  type: "cn_a_share_fee_execution_financial_semantic_identity_v2",
+  schema_version: 1,
+  profile_build_manifest_hash,
+  base_financial_dispatcher_spec_hash,
+  profile_binding_hash,
+  authority_hash,
+  market_fee_component_ref,
+  stamp_duty_component_ref
+}
+```
+
+`financial_semantic_identity_hash = canonical_sha256(body)`. `semantic_run_input_hash = canonical_sha256({type: "cn_a_share_fee_execution_semantic_run_input_v2", schema_version: 1, profile_build_manifest_hash, financial_semantic_identity_hash, profile_binding_hash, authority_hash})`. F3 registers this additive binding before execution, hash-binds the immutable existing v1 profile/build manifest as `base_*` fields above, and inserts `profile_build_manifest_hash`, `financial_semantic_identity_hash`, `profile_binding_hash`, `authority_hash`, and `semantic_run_input_hash` into the v2-only profile/build manifest and `ExecutionCaseSemanticSpec`/Semantic Run input preimage. The v1 semantic spec and bytes remain unchanged. Therefore substituting a structurally valid different Authority changes the v2 request/Semantic Run identity; a request carrying hashes inconsistent with its selected semantic binding is rejected before execution. This is canonical builder-equivalence plus runtime semantic binding, not a cryptographic provenance claim.
 
 ### Exact Order binding and query-construction ownership
 
@@ -353,25 +438,27 @@ They return `CnAShareCashFeeRuleQueryV2 | CnAShareFeeQueryConstructionFailureV2`
 
 1. `AUTHORITY_BINDING_MISMATCH = "authority_binding_mismatch"`
 2. `RESERVATION_CONTEXT_MISMATCH = "reservation_context_mismatch"`
-3. `FILL_ORDER_MISMATCH = "fill_order_mismatch"`
-4. `FILL_ACCOUNT_MISMATCH = "fill_account_mismatch"`
-5. `FILL_VENUE_MISMATCH = "fill_venue_mismatch"`
-6. `FILL_INSTRUMENT_MISMATCH = "fill_instrument_mismatch"`
-7. `FILL_SIDE_MISMATCH = "fill_side_mismatch"`
-8. `EXECUTION_TIME_MISMATCH = "execution_time_mismatch"`
+3. `MISSING_FILL = "missing_fill"`
+4. `FILL_ORDER_MISMATCH = "fill_order_mismatch"`
+5. `FILL_ACCOUNT_MISMATCH = "fill_account_mismatch"`
+6. `FILL_VENUE_MISMATCH = "fill_venue_mismatch"`
+7. `FILL_INSTRUMENT_MISMATCH = "fill_instrument_mismatch"`
+8. `FILL_SIDE_MISMATCH = "fill_side_mismatch"`
+9. `EXECUTION_TIME_MISMATCH = "execution_time_mismatch"`
 
-Authority/binding mismatch compares authority hash and binding reconstruction; reservation context requires bound Order side/time still reconstruct; final codes compare exact Fill Order ID, account, Venue, Instrument, side, then require `fill.execution_time >= binding.order_effective_at`. `CnAShareFeeQueryConstructionFailureV2` exact fields are `authority: CnAShareFeeExecutionAuthorityV2`, `authority_hash: str`, `execution_binding: CnAShareFeeExecutionBindingV2`, `binding_hash: str`, `purpose: CnAShareFeeAssessmentPurposeV2`, `fill: Fill | None`, `fill_hash: str | None`, `code: CnAShareFeeQueryConstructionFailureCodeV2`, and `subject_ids: tuple[str, ...]`, in that order. Its type is `cn_a_share_fee_query_construction_failure_v2`; `failure_hash` is derived. Its fixed subject prefix is exactly `(code.value, authority_hash, binding_hash, purpose.value, fill_hash or "none")`, followed only by the code-specific suffix below; no subject tuple is deduplicated or sorted.
+Authority/binding mismatch compares authority hash and binding reconstruction; reservation context requires bound Order side/time still reconstruct. `MISSING_FILL` is evaluated before any Fill dereference whenever final construction receives `fill is None`. Later final codes compare exact Fill Order ID, account, Venue, Instrument, side, then require exactly `binding.order_effective_at <= fill.execution_time < authority.scope.coverage_to_exclusive`; either lower- or upper-bound violation is `EXECUTION_TIME_MISMATCH`. `CnAShareFeeQueryConstructionFailureV2` exact fields are `authority: CnAShareFeeExecutionAuthorityV2`, `authority_hash: str`, `execution_binding: CnAShareFeeExecutionBindingV2`, `binding_hash: str`, `purpose: CnAShareFeeAssessmentPurposeV2`, `fill: Fill | None`, `fill_hash: str | None`, `code: CnAShareFeeQueryConstructionFailureCodeV2`, and `subject_ids: tuple[str, ...]`, in that order. Its type is `cn_a_share_fee_query_construction_failure_v2`; `failure_hash` is derived. Its fixed subject prefix is exactly `(code.value, authority_hash, binding_hash, purpose.value, fill_hash or "none")`, followed only by the code-specific suffix below; no subject tuple is deduplicated or sorted.
 
 | code | exact suffix in order |
 | --- | --- |
 | `AUTHORITY_BINDING_MISMATCH` | `("binding_authority_hash", execution_binding.authority_hash)` |
 | `RESERVATION_CONTEXT_MISMATCH` | `("order_id", execution_binding.order_id.value, "order_hash", execution_binding.order_hash, "order_effective_at_hash", canonical_sha256(execution_binding.order_effective_at))` |
+| `MISSING_FILL` | `("fill", "none")` |
 | `FILL_ORDER_MISMATCH` | `("fill_order_id", fill.order_id.value, "binding_order_id", execution_binding.order_id.value)` |
 | `FILL_ACCOUNT_MISMATCH` | `("fill_account_id", fill.account_id, "binding_account_id", execution_binding.account_id)` |
 | `FILL_VENUE_MISMATCH` | `("fill_venue_id", fill.venue_id.value, "binding_venue_id", execution_binding.venue_id.value)` |
 | `FILL_INSTRUMENT_MISMATCH` | `("fill_instrument_id", str(fill.instrument_id), "binding_instrument_id", str(execution_binding.instrument_id))` |
 | `FILL_SIDE_MISMATCH` | `("fill_side", fill.side.value, "binding_side", execution_binding.side.value)` |
-| `EXECUTION_TIME_MISMATCH` | `("fill_execution_time_hash", canonical_sha256(fill.execution_time), "binding_order_effective_at_hash", canonical_sha256(execution_binding.order_effective_at))` |
+| `EXECUTION_TIME_MISMATCH` | `("fill_execution_time_hash", canonical_sha256(fill.execution_time), "binding_order_effective_at_hash", canonical_sha256(execution_binding.order_effective_at), "scope_coverage_to_exclusive_hash", canonical_sha256(authority.scope.coverage_to_exclusive))` |
 
 `fill` is present for every final-code row and never represented by a wildcard; literals, `.value` IDs/enums, and canonical hash text use exactly the representations shown. Therefore `failure_hash = canonical_sha256(failure body)` is unique and reproducible.
 
@@ -383,7 +470,7 @@ Authority/binding mismatch compares authority hash and binding reconstruction; r
 
 `CnAShareMarketFeeRuleBookV2` exact fields are `rule_book_key: str`, `rule_book_version: int`, `access_route: CnAShareExecutionAccessRoute`, `fee_product_class: CnAShareFeeProductClass`, and `bands: tuple[CnAShareMarketFeeBandV2, ...]`, in that order; its type is `cn_a_share_market_fee_rule_book_v2`. `CnAShareStampDutyRuleBookV2` exact fields are `rule_book_key: str`, `rule_book_version: int`, `access_route: CnAShareExecutionAccessRoute`, `fee_product_class: CnAShareFeeProductClass`, and `bands: tuple[CnAShareStampDutyBandV2, ...]`, in that order; its type is `cn_a_share_stamp_duty_rule_book_v2`. Both require `rule_book_version == 2`, derive `rule_book_hash = canonical_sha256(body)`, and sort Bands by Venue, half-open interval, then `band_hash`. They resolve only after authority/book route/product equality passes.
 
-`CnAShareCashMarketFeePolicyV2` exact fields, in order, are `authority: CnAShareFeeExecutionAuthorityV2`, `authority_hash: str`, and `assessment_scale: Scale`; it exposes only `assess_fees(query: CnAShareCashFeeRuleQueryV2, /) -> ProfilePortOutcome[CnAShareMarketFeeRuleResolutionV2, CnAShareFeeRuleFailureV2]`. `CnAShareCashStampDutyTaxPolicyV2` exact fields, in order, are `authority: CnAShareFeeExecutionAuthorityV2`, `authority_hash: str`, and `assessment_scale: Scale`; it exposes only `assess_taxes(query: CnAShareCashFeeRuleQueryV2, /) -> ProfilePortOutcome[CnAShareStampDutyRuleResolutionV2, CnAShareFeeRuleFailureV2]`. Both require authority hash equality and `Scale(2)`, consume only the matching authority book/ref, and accept no RuleBook, side, time, or route/product argument.
+`CnAShareCashMarketFeePolicyV2` exact fields, in order, are `execution_semantic_binding: CnAShareFeeExecutionSemanticBindingV2`, `semantic_binding_hash: str`, `authority: CnAShareFeeExecutionAuthorityV2`, `authority_hash: str`, and `assessment_scale: Scale`; it exposes only `assess_fees(query: CnAShareCashFeeRuleQueryV2, /) -> ProfilePortOutcome[CnAShareMarketFeeRuleResolutionV2, CnAShareFeeRuleFailureV2]`. `CnAShareCashStampDutyTaxPolicyV2` exact fields, in order, are `execution_semantic_binding: CnAShareFeeExecutionSemanticBindingV2`, `semantic_binding_hash: str`, `authority: CnAShareFeeExecutionAuthorityV2`, `authority_hash: str`, and `assessment_scale: Scale`; it exposes only `assess_taxes(query: CnAShareCashFeeRuleQueryV2, /) -> ProfilePortOutcome[CnAShareStampDutyRuleResolutionV2, CnAShareFeeRuleFailureV2]`. Both require exact semantic-binding/hash, Authority/hash, proof/hash, and `Scale(2)` equality; they consume only the expected Authority book/ref and accept no RuleBook, side, time, route/product, or caller-selected expected hash argument.
 
 The component preimages are exact:
 
@@ -458,24 +545,26 @@ For market reservation/final-fill, `applies` is the corresponding Band applies f
 
 `CnAShareStampDutyRuleResolutionV2` exact fields, in order, are `authority: CnAShareFeeExecutionAuthorityV2`, `authority_hash: str`, `query: CnAShareCashFeeRuleQueryV2`, `query_hash: str`, `binding_hash: str`, `order_id: DomainId`, `order_hash: str`, `fill: Fill | None`, `fill_hash: str | None`, `fill_id: DomainId | None`, `side: OrderSide`, `effective_at: UtcInstant`, `active_band: CnAShareStampDutyBandV2`, `active_band_hash: str`, `reservation_charge_rule: FeeReservationChargeRule`, `final_fill_charge_rule: FinalFeeChargeRule`, and `final_order_not_applicable_rule: FinalFeeChargeRule`. Its type is `cn_a_share_stamp_duty_rule_resolution_v2`; `resolution_hash` covers every field. Each tax rule has only `charge_key="stamp_duty"` and all identity/time fields reconstruct from the query.
 
-Policies first canonically re-run the authoritative query constructor before any policy-owned check: `RESERVATION` invokes `CnAShareCashFeeRuleQueryV2.for_reservation(query.authority, query.execution_binding, /)`; `FINAL_FILL` invokes `CnAShareCashFeeRuleQueryV2.for_final_fill(query.authority, query.execution_binding, query.fill, /)`. The result must be a successful query exactly equal to the supplied query with the same `query_hash`; a constructor failure, absent final Fill, wrong Fill/order/account/Venue/Instrument/side/time, `dataclasses.replace`, or `object.__new__` bypass is not repaired or reinterpreted.
+After the required execution-authority match, policies canonically re-run the authoritative query constructor before any remaining policy-owned check: `RESERVATION` invokes `CnAShareCashFeeRuleQueryV2.for_reservation(query.authority, query.execution_binding, /)`; `FINAL_FILL` invokes `CnAShareCashFeeRuleQueryV2.for_final_fill(query.authority, query.execution_binding, query.fill, /)`. The result must be a successful query exactly equal to the supplied query with the same `query_hash`; a constructor failure, absent final Fill, wrong Fill/order/account/Venue/Instrument/side/time, `dataclasses.replace`, or `object.__new__` bypass is not repaired or reinterpreted. A structurally valid direct `FINAL_FILL` query with `fill=None` deterministically produces constructor `MISSING_FILL` and therefore policy `QUERY_PROVENANCE_MISMATCH`, never a Fill dereference.
 
 `CnAShareFeeRuleFailureCodeV2` is limited to semantically reachable policy failures in this exact order:
 
-1. `QUERY_PROVENANCE_MISMATCH = "query_provenance_mismatch"`
-2. `AUTHORITY_QUERY_MISMATCH = "authority_query_mismatch"`
-3. `RULE_BOOK_SCOPE_MISMATCH = "rule_book_scope_mismatch"`
-4. `MISSING_RULE_INTERVAL = "missing_rule_interval"`
-5. `OVERLAPPING_RULE_INTERVALS = "overlapping_rule_intervals"`
+1. `EXECUTION_AUTHORITY_MISMATCH = "execution_authority_mismatch"`
+2. `QUERY_PROVENANCE_MISMATCH = "query_provenance_mismatch"`
+3. `AUTHORITY_QUERY_MISMATCH = "authority_query_mismatch"`
+4. `RULE_BOOK_SCOPE_MISMATCH = "rule_book_scope_mismatch"`
+5. `MISSING_RULE_INTERVAL = "missing_rule_interval"`
+6. `OVERLAPPING_RULE_INTERVALS = "overlapping_rule_intervals"`
 
-`QUERY_PROVENANCE_MISMATCH` owns every direct/forged query bypass before policy authority/book/interval evaluation. `AUTHORITY_QUERY_MISMATCH` then compares the successful reconstructed query authority/hash to the policy authority/hash; `RULE_BOOK_SCOPE_MISMATCH` checks authority Scope/selection/books/component refs as an inseparable pair; only then does the policy resolve intervals.
+Before query use, `EXECUTION_AUTHORITY_MISMATCH` requires policy Authority/hash/proof and query Authority/hash/proof to exact-match the execution-selected semantic binding's Authority/hash/proof. A directly constructed Authority that is structurally valid but is not the selected expected Authority/proof fails here. The policy then performs `QUERY_PROVENANCE_MISMATCH` reconstruction; `AUTHORITY_QUERY_MISMATCH` compares the successful reconstructed query authority/hash to policy authority/hash; `RULE_BOOK_SCOPE_MISMATCH` checks Authority Scope/selection/books/component refs as an inseparable pair; only then does the policy resolve intervals.
 
-`CnAShareFeeRuleFailureV2` exact fields are `query: CnAShareCashFeeRuleQueryV2`, `query_hash: str`, `code: CnAShareFeeRuleFailureCodeV2`, and `subject_ids: tuple[str, ...]`, in that order. Its type is `cn_a_share_fee_rule_failure_v2`; `failure_hash` is derived. Its fixed subject prefix is exactly `(code.value, authority_hash, query_hash)`, followed only by the code-specific suffix below; no subject tuple is deduplicated or sorted.
+`CnAShareFeeRuleFailureV2` exact fields are `query: CnAShareCashFeeRuleQueryV2`, `query_hash: str`, `code: CnAShareFeeRuleFailureCodeV2`, and `subject_ids: tuple[str, ...]`, in that order. Its type is `cn_a_share_fee_rule_failure_v2`; `failure_hash` is derived. Its fixed subject prefix is exactly `(code.value, policy.authority_hash, query.query_hash)`, followed only by the code-specific suffix below; no subject tuple is deduplicated or sorted.
 
 | code | exact suffix in order |
 | --- | --- |
+| `EXECUTION_AUTHORITY_MISMATCH` | `("query_authority_hash", query.authority_hash, "policy_authority_hash", policy.authority_hash, "expected_authority_hash", policy.execution_semantic_binding.authority_hash, "query_profile_binding_hash", query.authority.profile_binding_hash, "policy_profile_binding_hash", policy.authority.profile_binding_hash, "expected_profile_binding_hash", policy.execution_semantic_binding.profile_binding_hash)` |
 | `QUERY_PROVENANCE_MISMATCH` | `("purpose", query.purpose.value, "reconstructed_query_hash", reconstructed.query_hash)` on successful reconstruction; otherwise `("purpose", query.purpose.value, "query_construction_failure_hash", reconstruction_failure.failure_hash)` |
-| `AUTHORITY_QUERY_MISMATCH` | `("policy_authority_hash", policy.authority_hash, "query_authority_hash", query.authority_hash)` |
+| `AUTHORITY_QUERY_MISMATCH` | `("query_authority_hash", query.authority_hash, "policy_authority_hash", policy.authority_hash)` |
 | `RULE_BOOK_SCOPE_MISMATCH` | `("scope_hash", query.authority.scope_hash, "market_fee_rule_book_hash", query.authority.market_fee_rule_book_hash, "stamp_duty_rule_book_hash", query.authority.stamp_duty_rule_book_hash)` |
 | `MISSING_RULE_INTERVAL` | `("venue_id", query.venue_id.value, "effective_at_hash", canonical_sha256(query.effective_at), "rule_book_hash", selected_rule_book.rule_book_hash, "active_band_hashes_hash", canonical_sha256(()))` |
 | `OVERLAPPING_RULE_INTERVALS` | `("venue_id", query.venue_id.value, "effective_at_hash", canonical_sha256(query.effective_at), "rule_book_hash", selected_rule_book.rule_book_hash, "active_band_hashes_hash", canonical_sha256(tuple(sorted(band.band_hash for band in active_bands))) )` |
@@ -535,9 +624,9 @@ Output keys are `equity.cn_a_share.cash.market-fees.domestic.ordinary-a-share.pr
 ## Architecture and public rules
 
 - Reuse existing generic `FeeAssessmentPolicy`, `TaxPolicy`, `ProfilePortOutcome`, `FeeReservationEstimator`, `FeeAssessmentEngine`, RuleSet, Journal, and Ledger contracts unchanged.
-- No new Protocol, generic port, interface, registry, resolver, factory framework, DSL, callback, plugin, cache, provider adapter, Runtime market branch, or second fee engine.
+- No new Protocol, generic port, interface, generic registry, resolver, factory framework, DSL, callback, plugin, cache, provider adapter, Runtime market branch, or second fee engine. The one named private v2 profile/build registration is the sole additive exception.
 - Kernel concrete-profile code may import v1 sibling types only for the pure projection. Generic Kernel modules never import concrete A-share code.
-- Runtime profile-authority binding is private, profile-specific, and isolated; Engine, Runner, composition, financial dispatch, and resolution remain free of A-share branches.
+- Runtime profile-authority/profile-build binding is private, profile-specific, and isolated; only the named v2 registration carries its hashes into the v2-only semantic preimage. Engine, Runner, composition, financial dispatch, and resolution remain free of A-share branches for v1 and receive no A-share name matching.
 - Builder imports neither Kernel nor Runtime. This slice adds no Builder code.
 - V2 Kernel names are concrete-submodule public; existing `cn_a_share.__all__` v1 members/order remain exact and only the declared v2 names append. The private Runtime helper and both package roots remain unchanged. Existing G08H root import set remains exact.
 - Production never imports `tests.support`; test support never becomes semantic authority.
@@ -558,7 +647,7 @@ Implement only `commission_tax_v2.py` and concrete submodule exports: exact Scop
 
 ### F3 — private profile-authority binding GREEN
 
-Implement only `cn_a_share_fee_v2.py` and the additive test-support module. Make `_create_cn_a_share_fee_execution_authority_v2(resolved_profile, scope, selection, /)` validate explicit Scope plus selection against the frozen v1 profile and return its own structured build failure without modifying the v1 composer, registry, root exports, existing journey, or fixture bytes.
+Implement only `cn_a_share_fee_v2.py` and the additive test-support module. Make `_create_cn_a_share_fee_execution_authority_v2(resolved_profile, scope, selection, /)` reconstruct `CnAShareFeeProfileBindingProofV2`; then create the one new `equity.cn_a_share.fee-execution.v2` private profile/build registration that binds Authority/proof hashes into v2 financial semantic and Semantic Run inputs. It must reject swapped expected Authority/proof before execution without modifying v1 composer, registry entries, root exports, existing journey, or fixture bytes.
 
 ### F4 — contract acceptance
 
@@ -584,8 +673,8 @@ After F4 passes, G12H may resume source acquisition for `DOMESTIC + ORDINARY_A_S
 - an authority cannot pair either of its books with another authority, including equal-rate/equal-scope books;
 - binder owns and tests authority-Scope, Order account/Venue/Instrument/side/context failures in its declared order and returns no binding; it performs no registry lookup;
 - reservation constructor accepts no side/time and uses bound Order side/created instant; final constructor accepts no side/time and uses exact Fill side/execution time;
-- query construction owns and tests final Fill Order/account/Venue/Instrument/side and pre-order execution-time failures in its declared order, returning no query;
-- policy first re-runs the authoritative query constructor and tests `QUERY_PROVENANCE_MISMATCH`, then authority/query mismatch, RuleBook scope mismatch, and interval gap/overlap; symbol/stable-key mutations do not infer route/product; omitted route/product is a construction error.
+- query construction owns and tests `MISSING_FILL` before Fill dereference, then final Fill Order/account/Venue/Instrument/side and lower-or-upper-bound execution-time failures in its declared order, returning no query; direct `FINAL_FILL` `fill=None` reaches policy only as `QUERY_PROVENANCE_MISMATCH`;
+- policy first checks execution-selected Authority/proof, then re-runs the authoritative query constructor and tests `QUERY_PROVENANCE_MISMATCH`, then authority/query mismatch, RuleBook scope mismatch, and interval gap/overlap; symbol/stable-key mutations do not infer route/product; omitted route/product is a construction error.
 
 ### Economic and component controls
 
@@ -605,7 +694,7 @@ After F4 passes, G12H may resume source acquisition for `DOMESTIC + ORDINARY_A_S
 
 - each failure belongs to exactly one seam: builder, binder, query constructor, or policy; structural/canonical forgery is constructor-rejected;
 - multi-defect inputs return the exact first failure order and exact subject_ids at their owning seam;
-- builder precedes binder; binder precedes query construction; policy starts with query provenance, then authority/query mismatch, RuleBook scope mismatch, gap, overlap;
+- builder precedes binder; binder precedes query construction; policy starts with execution-selected Authority/proof mismatch, then query provenance, authority/query mismatch, RuleBook scope mismatch, gap, overlap;
 - every failure returns no authority, binding, query, reservation/final rules, or projection as applicable.
 
 ### Reservation/final controls
@@ -621,7 +710,7 @@ After F4 passes, G12H may resume source acquisition for `DOMESTIC + ORDINARY_A_S
 
 - canonical input reorder normalizes where declared; semantic order remains fixed where declared;
 - forged selection/authority/binding/query/fill hash, Band hash, RuleBook hash, component ref/digest, resolution rules/order/Fill context, projection source/output hash, and buffer hash are rejected; direct constructor, `dataclasses.replace`, and `object.__new__` query bypasses fail policy `QUERY_PROVENANCE_MISMATCH` atomically;
-- mutation of route/product/applies/source/rate/interval/profile/request/order/Fill/component context propagates through all v2 identities;
+- mutation of route/product/applies/source/rate/interval/profile/request/order/Fill/component/proof/profile-build context propagates through all v2 identities; swapped structurally valid Authority/proof changes v2 request/Semantic Run identity and is rejected before execution;
 - v1 canonical bytes and hashes remain unchanged under all v2 imports and tests.
 
 ### Architecture/nonclaim controls
