@@ -358,7 +358,7 @@ _Avoid_: equity-as-fee-class, ordinary-share fallback
 
 ## 费用执行授权（Fee Execution Authority）
 
-由 Profile/build 对一次明确 access route 与 fee product class 作出的不可变费用选择。它 exact 绑定由 private Runtime builder 重建的 Profile Binding Proof、Fee Execution Scope、resolved Profile/request 身份、scope declarations、market/tax RuleBook 及其 `ProfileComponentRef.component_digest`；一个 Authority 中的两本 RuleBook 不能与另一 Authority 互换。Reservation 从其已绑定 exact Order 的 side 与 created instant 构造；final 从已绑定 exact Fill 的 execution time 构造。Profile builder、Order binder、Fill query constructor 和 policy 分别拥有各自结构化失败，不能静默跨越边界；policy 必须先匹配 execution-selected Authority/proof，再重建 canonical query，直接/forged query 失败而不回退。
+由明确 route/product Scope、精确市场/税 RuleBook 与 component identity 组成的不可变费用选择。一个 Authority 中的两本 RuleBook 不能与另一 Authority 互换。Reservation 从其已绑定 exact Order 的 side 与 created instant 构造；final 从其已绑定 exact Fill 的 execution time 构造。缺失或不一致的 Scope、Order、Fill、route、product 或 RuleBook 必须 fail closed。Runtime Profile/build 与 Semantic Run 如何选择或绑定该 Authority 由独立 Runtime contract 冻结，不是本领域术语的隐含事实。
 _Avoid_: interchangeable rulebooks, default route/product, caller-supplied final side/time
 
 ## 费用执行范围（Fee Execution Scope）
