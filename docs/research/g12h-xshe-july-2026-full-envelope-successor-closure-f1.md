@@ -4,11 +4,11 @@
 
 **BLOCKED.** F1 must not produce a closure artifact, finite July-2026 RuleBook, fixture, declaration, publication, registry entry, or qualification claim from the reviewed evidence.
 
-The decisive blocker is a scope mismatch, independent of the still-incomplete successor-index evidence:
+The decisive blocker is a route-and-product scope mismatch, independent of the still-incomplete successor-index evidence:
 
-> Northbound Shenzhen Stock Connect has an additional HKSCC transfer fee of **0.002% (`0.02‰`) of gross trade value per side**, in addition to the ChinaClear transfer fee of **0.001% (`0.01‰`) per side**. Ordinary domestic XSHE access has the ChinaClear fee but not the HKSCC fee. `CnAShareCashFeeRuleQuery` cannot distinguish access channel, so one access-blind `CnAShareMarketFeeRuleBook` is necessarily wrong for ordinary domestic access or Northbound access.
+> Northbound Shenzhen Stock Connect has an additional HKSCC transfer fee of **0.002% (`0.02‰`) of gross trade value per side**, in addition to the ChinaClear transfer fee of **0.001% (`0.01‰`) per side**. Ordinary domestic XSHE access has the ChinaClear fee but not the HKSCC fee. Separately, SZSE preferred-stock handling is **80% of the ordinary-stock handling standard**, while Northbound ETFs use **0.004% (`0.04‰`) handling per purchase or sale** with securities-management fee, ChinaClear transfer fee, and stamp duty waived. `CnAShareCashFeeRuleQuery` distinguishes neither selected access route nor execution fee product class, so one access/product-blind `CnAShareMarketFeeRuleBook` is necessarily wrong for at least one supported route/product combination.
 
-This is `SCOPE_MISMATCH` / `AUTHORITY_SCOPE_GAP`, not a qualified closure. Stock Connect must not be silently excluded.
+This is `SCOPE_MISMATCH` / `AUTHORITY_SCOPE_GAP`, not a qualified closure. Stock Connect and non-ordinary-A-share product classes must not be silently excluded or assigned ordinary A-share rates.
 
 ## Reviewed contract and target
 
@@ -39,31 +39,40 @@ effective_at: UtcInstant
 trade_mechanism: CnAShareFeeTradeMechanism
 ```
 
-The policy validates venue, equity instrument type, CNY quote/settlement currencies, and auction mechanism. It does not receive or derive board or access channel. Resolution selects a finite Band only by `venue_id` and `effective_at`.
+The policy validates venue, equity instrument type, CNY quote/settlement currencies, and auction mechanism. It does not receive or derive board, selected access route, or execution fee product class. Local `InstrumentType` has no preferred-stock or ETF member; this fee path accepts only the broad `EQUITY` classification. Any ordinary share, preferred stock, or ETF admitted through that classification is fee-product-indistinguishable to the query. `InstrumentId.stable_key` is identity, not an execution-enforced fee classification, and must not be parsed to guess product semantics. Resolution selects a finite Band only by `venue_id` and `effective_at`.
 
-`CnAShareMarketFeeBand` contains one rate each for `handling_rate`, `regulatory_rate`, and `transfer_rate`. The resulting execution rules apply those rates on order/fill notional. It has no channel discriminator and cannot represent participant portfolio value, clearing instructions, settlement messages, or other non-notional bases.
+`CnAShareMarketFeeBand` contains one rate each for `handling_rate`, `regulatory_rate`, and `transfer_rate`. The resulting execution rules apply those rates on order/fill notional. It has no route/product discriminator and cannot represent participant portfolio value, clearing instructions, settlement messages, or other non-notional bases. Adding access channel alone is therefore insufficient: v2 fee evaluation must also receive an immutable, execution-enforced fee product class.
 
-## Ordinary domestic versus Northbound matrix
+## Route and product matrix
 
-The figures below are target-state candidates supported by the identified first-party materials. They are **not** qualified July-2026 closure bands because successor/correction inventory is incomplete and exact closure evidence bytes were not frozen.
+The figures below are target-state candidates supported by the identified first-party materials. They are **not** qualified July-2026 closure bands because successor/correction inventory is incomplete and exact closure evidence representations were not frozen.
 
-| Component | Ordinary domestic XSHE auction | Northbound Shenzhen Stock Connect | Basis and side | F1 disposition |
+### Ordinary A-share route comparison
+
+| Component | Ordinary domestic XSHE ordinary A share | Northbound Shenzhen Stock Connect ordinary A share | Basis and side | F1 disposition |
 | --- | ---: | ---: | --- | --- |
-| SZSE transaction handling fee | `0.00341%` (`0.0341‰`) | `0.00341%` (`0.0341‰`) | consideration; purchase and sale | Candidate economics match; successor closure incomplete |
+| SZSE transaction handling fee | `0.00341%` (`0.0341‰`) | `0.00341%` (`0.0341‰`) | consideration; purchase and sale | Candidate economics match for ordinary A shares; successor closure incomplete |
 | CSRC securities-management/regulatory fee | `0.002%` (`0.02‰`) | `0.002%` (`0.02‰`) | consideration; purchase and sale | Candidate economics match; controlling-rate and investor-collection closure incomplete |
 | ChinaClear transfer fee | `0.001%` (`0.01‰`) | `0.001%` (`0.01‰`) | consideration; purchase and sale | Candidate economics match; successor closure incomplete |
-| **HKSCC China Connect transfer fee** | **not applicable** | **`0.002%` (`0.02‰`) additional** | gross value of each China Connect Securities Trade; per side | **Blocker: execution-linked and access-specific, but query is access-blind** |
-| Securities transaction stamp duty | `0.05%` (`0.5‰`) | `0.05%` (`0.5‰`) | consideration; seller/transferor only | Candidate economics match; statutory and half-collection successor closure incomplete |
-| Buy-side notional subtotal of the rows above | `0.00641%` (`0.0641‰`) | `0.00841%` (`0.0841‰`) | arithmetic candidate only | Differs by the HKSCC `0.002%`; cannot share one access-blind RuleBook |
+| **HKSCC China Connect transfer fee** | **not applicable** | **`0.002%` (`0.02‰`) additional** | gross value of each China Connect Securities Trade; per side | **Blocker: execution-linked and route-specific, but query is route-blind** |
+| Securities transaction stamp duty | `0.05%` (`0.5‰`) | `0.05%` (`0.5‰`) | consideration; seller/transferor only | Candidate economics match for ordinary A shares; statutory and half-collection successor closure incomplete |
+| Buy-side notional subtotal of the rows above | `0.00641%` (`0.0641‰`) | `0.00841%` (`0.0841‰`) | arithmetic candidate only | Differs by the HKSCC `0.002%`; cannot share one route-blind RuleBook |
 | Sell-side notional subtotal including stamp duty | `0.05641%` (`0.5641‰`) | `0.05841%` (`0.5841‰`) | arithmetic candidate only | Differs by the HKSCC `0.002%`; not a qualified charge schedule |
-| HKSCC portfolio fee | not applicable | tiered `0.008%` to `0.003%` per annum | aggregate daily China Connect portfolio value per participant; accrued daily and collected monthly | Access-specific and non-notional; outside current Band model |
-| HKSCC CNS money-settlement fee | not applicable | `HK$0.50` for each applicable CPI | per settlement instruction/message, not trade notional | Access-specific operational cost; outside current Band model |
-| HKSCC ordinary China Connect stock clearing fee | not applicable | nil | clearing service | Candidate no-charge state; successor closure still required if contractually material |
-| HKSCC ordinary China Connect stock settlement fee | not applicable | nil | settlement service | Candidate no-charge state; SI and other instruction cases differ |
-| Investor Compensation Levy | not applicable | collection suspended (`0`) | potential levy; reinstatement by SFC announcement | Live successor channel; zero display is not complete closure |
-| Broker commission | contract-specific | contract-specific | broker/account contract | Outside the uniform official-rule lineages; no universal rate claimed |
 
-The two subtotal rows are arithmetic comparisons, not installation-ready rates. They exclude broker commission and the non-notional portfolio/instruction charges.
+### Product-class comparison inside the current product-blind path
+
+| Route/product candidate | Handling fee | Securities-management fee | ChinaClear transfer fee | Stamp duty | Separate HKSCC transfer | Representability disposition |
+| --- | ---: | ---: | ---: | ---: | ---: | --- |
+| Ordinary domestic XSHE ordinary A share | `0.00341%` (`0.0341‰`) | `0.002%` (`0.02‰`) | `0.001%` (`0.01‰`) | `0.05%` (`0.5‰`) seller-only | not applicable | Ordinary-A-share candidate only; must not be generalized |
+| Ordinary domestic XSHE preferred stock | **80% of ordinary-stock handling = `0.002728%` (`0.02728‰`)** | not reclosed by this increment | not reclosed by this increment | not reclosed by this increment | not applicable | **Product blocker:** the SZSE page states 80% during the pilot; derived decimal is bilateral because the ordinary handling standard is bilateral |
+| Northbound XSHE ordinary A share | `0.00341%` (`0.0341‰`) | `0.002%` (`0.02‰`) | `0.001%` (`0.01‰`) | `0.05%` (`0.5‰`) seller-only | `0.002%` (`0.02‰`) additional candidate | Route and product candidate; closure incomplete |
+| Northbound XSHE-listed ETF | **`0.004%` (`0.04‰`) per purchase or sale** | **waived** | **waived** | **waived** | section 21's generic `0.002%` China Connect trade candidate remains separate; the transaction table does not state an ETF waiver for it | **Product blocker:** handling differs and three ordinary-A-share components are waived |
+
+The first-party [HKEX Northbound transaction page](https://www.hkex.com.hk/Services/Rules-and-Forms-and-Fees/Fees/Securities-(Stock-Connect)/Trading/Transactions?sc_lang=en) presents separate A-share and ETF columns. It states ETF handling at `0.004%` of consideration for each purchase or sale and marks the securities-management fee, ChinaClear transfer fee, and stamp duty as waived for ETFs. The waivers in that transaction table must not be silently extended to the separate HKSCC section 21 fee.
+
+The SZSE [January-2026 fee table](https://www.szse.cn/marketServices/deal/payFees/index.html) states that preferred-stock handling during the pilot is charged at 80% of the ordinary-stock standard. Applying the displayed bilateral ordinary-stock standard of `0.0341‰` gives the arithmetic candidate `0.02728‰` (`0.002728%`) per side. The page states the 80% relation; the decimal is a transparent derivation, not a separately printed rate.
+
+The ordinary-A-share subtotal rows are arithmetic comparisons, not installation-ready rates. They exclude broker commission and the non-notional portfolio/instruction charges.
 
 ## Decisive source fact
 
@@ -79,7 +88,9 @@ Northbound stock-transfer economics:    0.001% ChinaClear + 0.002% HKSCC
                                       = 0.003% per side
 ```
 
-Putting `0.001%` in the single local `transfer_rate` undercharges Northbound. Putting `0.003%` there overcharges ordinary domestic access. Moving the HKSCC amount into another local lineage does not repair the mismatch because every lineage resolves from the same access-blind query.
+Putting `0.001%` in the single local `transfer_rate` undercharges Northbound ordinary A shares. Putting `0.003%` there overcharges ordinary domestic access. Moving the HKSCC amount into another local lineage does not repair the mismatch because every lineage resolves from the same route-blind query.
+
+Route discrimination alone still does not close F1. On the same Northbound route, an ordinary A share uses `0.00341%` handling plus non-waived securities-management, ChinaClear transfer, and seller stamp duty, while an ETF uses `0.004%` handling and waives those three components. On ordinary domestic XSHE access, preferred-stock handling is 80% of ordinary-stock handling. A valid reusable v2 contract must therefore bind both selected access route and execution fee product class before fee evaluation.
 
 ## Access-specific non-notional limitations
 
@@ -89,7 +100,7 @@ The HKSCC [Northbound clearing and settlement fee page](https://www.hkex.com.hk/
 - money-settlement charges such as `HK$0.50` for each applicable CPI;
 - SI/STI, cash-prepayment, collateral, safekeeping, corporate-action, and other participant/instruction fees in specified circumstances.
 
-These costs are a separate limitation from the `0.002%` transfer-fee blocker. The present query and Band types model execution-linked notional rates; they do not carry participant portfolio state or settlement-instruction context. Whether each participant-level charge belongs in the product's promised cost envelope requires an explicit policy contract. It must not be silently folded into a notional rate or silently omitted under a claim of full access-channel cost coverage.
+These costs are a separate limitation from the route/product execution-fee blockers. The present query and Band types model execution-linked notional rates; they do not carry participant portfolio state or settlement-instruction context. Whether each participant-level charge belongs in the product's promised cost envelope requires an explicit policy contract. It must not be silently folded into a notional rate or silently omitted under a claim of full route/product cost coverage.
 
 ## Candidate inventory and dispositions
 
@@ -109,12 +120,14 @@ These costs are a separate limitation from the `0.002%` transfer-fee blocker. Th
 | Investor Compensation Levy suspension | suspension from `2005-12-19`; Northbound regime from `2020-01-01` | collection currently zero; reinstatement by SFC announcement | Candidate no-charge state; reinstatement/successor channel unresolved |
 | HKSCC portfolio fee schedule | current schedule | tiered annual holding-based cost | Northbound-specific, non-notional, and unrepresentable by current Band model |
 | HKSCC settlement/instruction schedules | current schedule | fixed or instruction/participant-based charges | Do not fold into execution notional rates; policy scope decision required |
-| [SZSE January-2026 fee table](https://www.szse.cn/marketServices/deal/payFees/index.html) | page labels its table `2026年1月` | handling `0.0341‰`, regulatory `0.02‰`, transfer `0.01‰`, stamp `0.5‰` | Useful near-target domestic endpoint candidate; mutable and before target end, not a terminated historical register |
+| [SZSE January-2026 fee table](https://www.szse.cn/marketServices/deal/payFees/index.html) — ordinary A share | page labels its table `2026年1月` | handling `0.0341‰`, regulatory `0.02‰`, transfer `0.01‰`, stamp `0.5‰` | Useful near-target ordinary-A-share endpoint candidate; mutable and before target end, not a terminated historical register |
+| [SZSE January-2026 fee table](https://www.szse.cn/marketServices/deal/payFees/index.html) — preferred stock | same mutable page | preferred-stock handling during the pilot is 80% of ordinary-stock standard; derived `0.02728‰` from displayed `0.0341‰`, bilateral | **Product-scope mismatch candidate**; other preferred-stock components and successor chain are not reclosed here |
+| [HKEX Northbound transaction page](https://www.hkex.com.hk/Services/Rules-and-Forms-and-Fees/Fees/Securities-(Stock-Connect)/Trading/Transactions?sc_lang=en) — listed ETF column | current displayed table | handling `0.004%` for each purchase or sale; securities-management fee, ChinaClear transfer fee, and stamp duty waived | **Product-scope mismatch candidate**; current mutable display is not complete historical/successor closure and does not waive the separate HKSCC section 21 fee |
 | [SZSE Trading Rules 2026 notice](https://www.szse.cn/lawrules/rule/allrules/bussiness/t20260424_620190.html) and [PDF](https://docs.static.szse.cn/www/lawrules/rule/trade/current/W020260424690713155663.pdf) | effective `2026-07-06`; replaces 2023 rules | chapter 9 delegates fees to applicable provisions | Target-start rule disposition only; does not freeze fee economics through target end |
 
 ## Separate successor-closure limitation
 
-Even if the access-channel mismatch were resolved, F1 would remain blocked on evidence closure. No authority-complete, explicitly terminated candidate inventory through a post-target `official_record_as_of` was frozen for all relevant channels:
+Even if the route and product-class mismatches were resolved, F1 would remain blocked on evidence closure. No authority-complete, explicitly terminated candidate inventory through a post-target `official_record_as_of` was frozen for all relevant channels and product classes:
 
 - SZSE notices, fee-table versions, corrections, and validity/repeal registers;
 - ChinaClear national and Shenzhen notices, tables, corrections, and successor channels;
@@ -134,8 +147,8 @@ target_to_exclusive <= official_record_as_of <= closure_evidence_available_at
 
 | Source class | Access observed | Permitted claim | Limit |
 | --- | --- | --- | --- |
-| HKEX/HKSCC pages and PDFs | The underlying research handoff records direct fetch as blocked by TUN/fake-IP SSRF protection and therefore relied on indexed first-party-domain content. During repository-report validation, the listed URLs returned HTTP `200`, and current representations were inspected transiently. | First-party URLs and the displayed/current source facts listed above | No exact response bytes, headers, redirect receipts, retrieval receipt, or hashes are frozen in this report; current retrieval does not prove retrospective state or complete successor closure |
-| SZSE pages/PDF | Listed URLs returned HTTP `200` during report validation; the fee page displayed a January-2026 table | First-party candidate endpoint facts and publication links | Dynamic/current HTML and PDFs were not preserved as closure evidence with source-specific receipts/hashes; the fee page predates target end |
+| HKEX/HKSCC pages and PDFs | The underlying research handoff records direct fetch as blocked by TUN/fake-IP SSRF protection and therefore relied on indexed first-party-domain content. During repository-report validation, the listed URLs returned HTTP `200`; current raw HTML/PDF responses were saved only under temporary validation storage and inspected through text extraction. | First-party URLs and the displayed/current source facts listed above, including the separate ETF column and section 21 wording | Temporary representations are not committed closure evidence. No source-specific headers, redirect receipt, retrieval receipt, selected-representation hash, or historical-version proof is frozen; current retrieval does not prove retrospective state or complete successor closure |
+| SZSE pages/PDF | Listed URLs returned HTTP `200` during report validation; current raw fee-page HTML was saved only under temporary validation storage and extracted as readable text | First-party candidate endpoint facts, including ordinary handling `0.0341‰` bilateral and preferred handling at 80% of ordinary standard | Temporary current HTML is not committed closure evidence and has no source-specific receipt/hash; the mutable January-2026 table predates target end |
 | ChinaClear page | Listed URL returned HTTP `200` during report validation | First-party transition URL and candidate rate | No exact selected bytes, correction chain, or terminated successor index is frozen |
 | NDRC page | `HEAD` returned `405`; `GET` returned the official page during validation | First-party controlling-authority URL and candidate rate/effective date | Method-specific reachability is not a byte receipt or validity-index closure |
 | STA policy-library pages | Listed URLs returned HTTP `200` during report validation | First-party statutory and half-collection URLs and candidate facts | Exact selected representations and complete correction/repeal/successor indexes are not frozen |
@@ -146,12 +159,12 @@ The temporary validation retrievals are not repository evidence artifacts. No SH
 
 F1 can proceed only after an explicit contract decision. The acceptable options are:
 
-1. **Add an execution-enforced access-channel discriminator and separate RuleBooks.** Make ordinary domestic versus Northbound access observable at fee/tax evaluation, then close and project separate domestic and Northbound authority sets. The discriminator must be enforced by execution; metadata or documentation alone is insufficient.
-2. **Separately approve a narrower enforceable domestic contract.** Define a new additive contract whose execution path proves domestic access and rejects Northbound before fee evaluation. This is a separate approval outside ADR 0004 and the current v2 plan; it must not be achieved by silently treating the present access-blind query as domestic-only.
-3. **Redesign policy for access-specific and non-notional costs.** Represent channel-specific execution charges and, if promised by product scope, participant portfolio/instruction/settlement costs using their actual bases rather than blending them into trade notional.
+1. **Add an execution-enforced route-and-product discriminator and separate v2 RuleBooks/economics.** Bind both selected access route and fee product class from immutable profile/order context into fee evaluation. The minimum explicit product classes are ordinary A share, preferred stock, ETF, and every other supported class with distinct official economics. Runtime must reject missing or inconsistent route/product context; metadata, symbol parsing, or documentation alone is insufficient.
+2. **Separately approve a narrower enforceable ordinary-A-share-only contract.** Define a new additive contract whose execution path proves both the permitted access route and ordinary-A-share product class, and rejects Northbound or non-ordinary products outside the approved scope before fee evaluation. It must not be achieved by treating the present route/product-blind query as implicitly domestic or ordinary A share.
+3. **Separately redesign non-notional participant-cost policy if full route cost is promised.** After route/product execution fees are correctly discriminated, represent portfolio/instruction/settlement costs using their actual participant/state/message bases rather than blending them into trade notional. This does not replace the route/product discriminator.
 4. **Remain blocked.** Preserve the existing `COVERAGE_GAP / market_fees` result and do not emit closure, projection, publication, or qualification artifacts.
 
-Silently excluding Stock Connect is not an option under the current full-envelope contract.
+**Recommendation:** remain blocked under the current contract. For the full envelope, approve option 1 before renewed closure acquisition. If the intended product is narrower, option 2 requires separate approval and execution enforcement. Silently excluding Stock Connect, preferred stock, ETFs, or other supported product classes—and silently generalizing ordinary A-share rates—is not an option.
 
 ## Repository disposition and nonclaims
 
@@ -161,4 +174,4 @@ It does not claim provider authority, provider completeness, rule coverage, deci
 
 ## Conclusion
 
-**BLOCKED.** The additional Northbound-only HKSCC `0.002%` (`0.02‰`) gross-trade-value transfer fee makes one access-blind `CnAShareMarketFeeRuleBook` economically false for at least one access channel. Access-specific non-notional costs and incomplete successor-index closure are additional, separate limitations. No G12H F1 success artifact or qualification follows from this report.
+**BLOCKED.** The additional Northbound-only HKSCC `0.002%` (`0.02‰`) gross-trade-value transfer fee makes one route-blind `CnAShareMarketFeeRuleBook` economically false. Preferred-stock handling at 80% of ordinary handling and the distinct Northbound ETF handling/waiver schedule independently make one product-blind RuleBook false. Access route alone is insufficient; valid v2 evaluation must bind both route and fee product class, or a separately approved contract must enforce an ordinary-A-share-only scope. Non-notional participant costs and incomplete successor-index closure remain additional, separate limitations. No G12H F1 success artifact or qualification follows from this report.
