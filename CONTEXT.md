@@ -348,13 +348,18 @@ Symbol-time规则状态：`normal`允许普通开平仓，`reduce_only`只允许
 
 ## 执行访问路径（Execution Access Route）
 
-订单实际进入市场并决定执行费用适用范围的明确通道，例如境内直接通道或北向股票互联互通。它必须由不可变 Profile 与订单执行上下文绑定，不能从证券代码、宽泛 Instrument 类型、账户权限或当前元数据推断。
+订单实际进入市场并决定执行费用适用范围的明确通道，例如境内直接通道或北向股票互联互通。它必须进入不可变 Fee Execution Authority，再与 exact Order/Fill 绑定；不能从证券代码、宽泛 Instrument 类型、账户权限或当前元数据推断。
 _Avoid_: access-channel default, symbol-derived route
 
 ## 费用产品类别（Fee Product Class）
 
-为执行费用选择适用规则簿的明确证券费用分类，例如普通 A 股、优先股或 ETF。它不同于宽泛的 Instrument 类型，并必须与执行访问路径共同绑定；缺失或不一致时费用评估必须失败。
+为执行费用选择适用规则簿的明确证券费用分类，例如普通 A 股、优先股或 ETF。它不同于宽泛的 Instrument 类型，必须与执行访问路径共同进入同一不可变 Fee Execution Authority；缺失、不一致或替换该 Authority 内的 RuleBook 时费用评估必须失败。
 _Avoid_: equity-as-fee-class, ordinary-share fallback
+
+## 费用执行授权（Fee Execution Authority）
+
+由 Profile/build 对一次明确 access route 与 fee product class 作出的不可变费用选择。它 exact 绑定 resolved Profile/request 身份、scope declarations、market/tax RuleBook 及其 component ref/digest；一个 Authority 中的两本 RuleBook 不能与另一 Authority 互换。Reservation 从其已绑定 exact Order 的 side 与 created instant 构造；final 从已绑定 exact Fill 的 execution time 构造。
+_Avoid_: interchangeable rulebooks, default route/product, caller-supplied final side/time
 
 ## 规则覆盖报告（Rule Coverage Report）
 

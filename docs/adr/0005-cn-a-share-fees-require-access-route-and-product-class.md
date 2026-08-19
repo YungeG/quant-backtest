@@ -19,9 +19,11 @@ Every v2 fee evaluation requires both explicit dimensions, with no default or in
 - execution access route: `DOMESTIC` or `NORTHBOUND_STOCK_CONNECT`;
 - fee product class: `ORDINARY_A_SHARE`, `PREFERRED_STOCK`, or `ETF`.
 
-The dimensions are bound in one immutable profile/order execution binding before reservation or final fee evaluation. The binding identifies the resolved market profile, execution-account profile, scope declarations, Order, Account, Venue, and Instrument. The fee query must carry that binding and must fail closed if its Order, Account, Instrument, route, or product does not match the selected v2 RuleBook. Symbol parsing, current metadata lookup, defaults, and nearest-book fallback are prohibited.
+A profile/build-selected `CnAShareFeeExecutionAuthorityV2` is mandatory before reservation or final fee evaluation. It canonically binds the resolved-profile digest and composition-request hash, market and execution-account profile keys/versions/digests, scope-declaration hashes, explicit route/product selection, the exact v2 market and stamp RuleBooks/hashes, and their exact component refs/digests. The two books in one authority are a single selection: no v2 book may be substituted, paired, or reused with another authority by matching route/product alone.
 
-V2 has new query, policy, RuleBook, Band, resolution, failure, reservation-buffer, component, generated-rule, and projection identities. Existing generic `FeeAssessmentPolicy`, `TaxPolicy`, reservation, assessment, Journal, and Ledger contracts are reused unchanged.
+`CnAShareFeeExecutionBindingV2` then binds that authority/hash to the exact canonical `Order`/hash, Order ID, account, Venue, Instrument, side, and order-effective instant. Reservation is constructed only from that bound exact Order; final assessment is constructed only from an exact `Fill`, validates the Fill Order/account/Venue/Instrument/side against the binding, and derives its effective time only from `Fill.execution_time`. A private additive Runtime profile-binding seam may create an authority only from an explicit immutable route/product selection and must validate that selection against the frozen v1 profile constraints. It never manufactures domestic/ordinary defaults. Symbol parsing, current metadata lookup, defaults, nearest-book fallback, and caller-supplied final side or effective time are prohibited.
+
+V2 has new selection, authority, binding, query, policy, RuleBook, Band, resolution, failure, reservation-buffer, component, generated-rule, and projection identities. Existing generic `FeeAssessmentPolicy`, `TaxPolicy`, reservation, assessment, Journal, and Ledger contracts are reused unchanged.
 
 Market-fee v2 represents trade-notional charges separately in this order:
 
@@ -46,16 +48,16 @@ board_scope: all boards admitted by the bound profile
 basis: trade_notional
 ```
 
-A compatibility projection may copy the finite G08E v1 handling, regulatory, ChinaClear-transfer, and stamp-duty economics into new v2 domestic ordinary-A-share RuleBooks. That projection creates only new v2 identities and does not extend the v1 time interval, qualify July 2026, or prove new evidence. `NORTHBOUND_STOCK_CONNECT`, `PREFERRED_STOCK`, and `ETF` require separately evidenced RuleBooks and separately qualifying profile/binding paths; absence is a structured failure, never a fallback to domestic ordinary economics.
+A compatibility projection may copy only finite **XSHE** G08E v1 handling, regulatory, ChinaClear-transfer, and stamp-duty economics into new v2 domestic ordinary-A-share RuleBooks; it rejects any XSHG source Band before constructing output. Every v2 source-ref tuple is nonempty. The projected HKSCC not-applicable charge therefore carries a deterministic compatibility source ref derived from the source RuleBook hashes, XSHE interval, route/product, and charge key. The projection creates only new v2 identities and does not extend the v1 time interval, qualify July 2026, or prove new evidence. `NORTHBOUND_STOCK_CONNECT`, `PREFERRED_STOCK`, and `ETF` require separately evidenced RuleBooks and separately qualifying profile/binding paths; absence is a structured failure, never a fallback to domestic ordinary economics.
 
 Daily portfolio-value fees, clearing instructions, settlement messages, safekeeping, collateral, corporate-action service charges, and other non-trade-notional participant costs are outside execution-fee v2. A future contract must model them using their actual state and basis before any broader cost-coverage claim.
 
-G12H F1 may resume only after the additive v2 contract passes. It may then acquire successor-closure evidence only for the enforceable `DOMESTIC + ORDINARY_A_SHARE` scope. F1 closure, F2 projection, F3 publication, and G12H analyzer success remain separate gates; this ADR itself closes none of them.
+G12H F1 may resume only after the complete additive v2 contract—exact authority, private profile-binding seam, binding/query constructors, and both policies—passes acceptance. That acceptance may use only the finite XSHE v1-to-v2 compatibility projection and does not require G12H evidence, so it is not circular. F1 may then acquire successor-closure evidence only for the enforceable `DOMESTIC + ORDINARY_A_SHARE` scope. F1 closure, F2 projection, F3 publication, and G12H analyzer success remain separate gates; this ADR itself closes none of them.
 
 ## Consequences
 
 - G08E/G08H v1 remains byte- and API-identical and continues to fail closed outside its finite evidence.
-- The minimal production seam is one additive Kernel fee module plus one additive Runtime binding module; generic Runtime/Kernel code remains A-share-branchless.
-- V2 types are public only from the existing concrete A-share profile submodule. The Runtime binding function is module-public but not exported from the `crypto_quant_backtest` root, preserving the frozen G08H root surface.
+- The minimal production seam is one additive Kernel fee module plus one private additive Runtime profile-authority binding module; generic Runtime/Kernel code remains A-share-branchless.
+- V2 types are public only from the existing concrete A-share profile submodule. `cn_a_share.__all__` preserves every v1 member and order exactly, then appends the v2 names; the global `crypto_quant_trading` and `crypto_quant_backtest` roots remain unchanged. The Runtime profile-binding helper is not a root export.
 - Builder, provider, registry, Acceptance Matrix, README, and publication code do not change in the contract slice.
 - No provider completeness, July-2026 closure, decision-grade, live, account-statement parity, or deployment claim follows.
