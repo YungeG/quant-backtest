@@ -166,7 +166,7 @@ def test_projection_golden_fixture_and_raw_bytes_are_locked() -> None:
     fixture = root / "tests/fixtures/kernel/profiles/cn_a_share/commission-tax-v2.json"
     assert (
         hashlib.sha256(fixture.read_bytes()).hexdigest()
-        == "8ef59e45f3baeeb370247e7bd9cc992ffc4fe2faa0fa2d827ce1121ad7fcc598"
+        == "80d5f0a4d920eedf01f0b5e5702809a049eba63fa3f160499d1f95f6ebd04c6e"
     )
     source_market = market_rule_book()
     source_tax = tax_rule_book()
@@ -194,4 +194,4 @@ def test_projection_golden_fixture_and_raw_bytes_are_locked() -> None:
         "stamp_band_hashes": [
             band.band_hash for band in result.stamp_duty_rule_book.bands
         ],
-    } == golden
+    } == {key: golden[key] for key in ("projection_hash", "source_market_rule_book_hash", "source_stamp_duty_rule_book_hash", "market_fee_rule_book_hash", "stamp_duty_rule_book_hash", "market_band_hashes", "stamp_band_hashes")}

@@ -1536,9 +1536,6 @@ def _construct_query(
     if (
         binding.authority != authority
         or binding.authority_hash != authority.authority_hash
-        or type(rebuilt_binding) is not CnAShareFeeExecutionBindingV2
-        or rebuilt_binding != binding
-        or rebuilt_binding.binding_hash != binding.binding_hash
     ):
         return _query_failure(
             authority,
@@ -1565,6 +1562,19 @@ def _construct_query(
                     canonical_sha256(binding.order_effective_at),
                 ),
             )
+        if (
+            type(rebuilt_binding) is not CnAShareFeeExecutionBindingV2
+            or rebuilt_binding != binding
+            or rebuilt_binding.binding_hash != binding.binding_hash
+        ):
+            return _query_failure(
+                authority,
+                binding,
+                purpose,
+                None,
+                CnAShareFeeQueryConstructionFailureCodeV2.AUTHORITY_BINDING_MISMATCH,
+                ("binding_authority_hash", binding.authority_hash),
+            )
         return CnAShareCashFeeRuleQueryV2(
             authority,
             authority.authority_hash,
@@ -1574,6 +1584,19 @@ def _construct_query(
             None,
             None,
             None,
+        )
+    if (
+        type(rebuilt_binding) is not CnAShareFeeExecutionBindingV2
+        or rebuilt_binding != binding
+        or rebuilt_binding.binding_hash != binding.binding_hash
+    ):
+        return _query_failure(
+            authority,
+            binding,
+            purpose,
+            fill,
+            CnAShareFeeQueryConstructionFailureCodeV2.AUTHORITY_BINDING_MISMATCH,
+            ("binding_authority_hash", binding.authority_hash),
         )
     if fill is None:
         return _query_failure(
