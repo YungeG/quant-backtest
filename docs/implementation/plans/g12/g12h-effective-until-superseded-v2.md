@@ -1,13 +1,12 @@
 ---
 id: G12H-EFFECTIVE-UNTIL-SUPERSEDED-V2
-readiness: BLOCKED_ON_ROUTE_PRODUCT_FEE_V2C_PASS
-gate_status: DRAFT
+proposed_readiness: BLOCKED_ON_ROUTE_PRODUCT_FEE_V2C_PASS
+registry_status: PENDING_PARENT_ACCEPTANCE_MATRIX_FAN_IN
 owner: official-source acquisition + trading-kernel projection + market-bundle-builder publication
 produces:
   - official-rule successor-closure artifact v1
   - finite target-scoped fee/tax RuleBooks
   - additive five-dimension declaration and G12C/D publication v2
-  - G12H RuleCoverageReport or RuleCoverageFailure contract
 consumes:
   - exact official predecessor, endpoint, and successor-index evidence
   - immutable G08E/G08H and G12C/D v1 identities
@@ -16,7 +15,7 @@ consumes:
   - G08E route/product fee v2 acceptance receipt
 depends_on:
   contract: [G08E, G08H, G08E-ROUTE-PRODUCT-FEE-V2C, G12C, G12D]
-  evidence: [real XSHE July-2026 successor closure]
+  evidence: [] # F1 acquires raw evidence after V2C parent-registry PASSED
   write_conflict: [kernel-cn-a-share-fee-tax, builder-rule-publication, acceptance-registry]
 fan_out: [G12H, G12L-*, G12M-*]
 ---
@@ -25,7 +24,7 @@ fan_out: [G12H, G12L-*, G12M-*]
 
 ## Status and authority
 
-`BLOCKED_ON_ROUTE_PRODUCT_FEE_V2C_PASS`. [ADR 0005](../../../adr/0005-cn-a-share-fees-require-access-route-and-product-class.md) accepts the domain decision. The [G08E v2 roadmap](../g08/g08e-route-product-fee-v2.md) requires V2A Kernel, V2B Runtime binding, and V2C acceptance in order. F1 may resume for `DOMESTIC + ORDINARY_A_SHARE` only after **V2C** becomes `PASSED`; V2A alone is insufficient. V2C acceptance uses finite XSHE compatibility economics and requires no G12H closure artifact, so the DAG is not circular. Until then no closure acquisition artifact, F2 projection, F3 publication, analyzer RED, or qualification change is authorized. No default, inference, silent Stock Connect/product exclusion, or interchangeable v2 RuleBook pairing is permitted.
+Proposed `BLOCKED_ON_ROUTE_PRODUCT_FEE_V2C_PASS`, pending parent Acceptance Matrix fan-in. The parent [Acceptance Matrix](../../acceptance-matrix.md) is the sole current Gate-status authority; this frontmatter is not a second status. [ADR 0005](../../../adr/0005-cn-a-share-fees-require-access-route-and-product-class.md) accepts the domain decision. The [G08E v2 roadmap](../g08/g08e-route-product-fee-v2.md) requires V2A Kernel, V2B Runtime binding, and V2C acceptance in order. F1 may resume for `DOMESTIC + ORDINARY_A_SHARE` only after **V2C** becomes `PASSED`; V2A alone is insufficient. V2C acceptance uses finite XSHE compatibility economics and requires no G12H closure artifact, so the DAG is not circular. Until then no closure acquisition artifact, F2 projection, F3 publication, analyzer RED, or qualification change is authorized. No default, inference, silent Stock Connect/product exclusion, or interchangeable v2 RuleBook pairing is permitted.
 
 Accepted semantics: [ADR 0004](../../../adr/0004-official-rules-effective-until-authoritatively-superseded.md) and [ADR 0005](../../../adr/0005-cn-a-share-fees-require-access-route-and-product-class.md).
 
@@ -77,6 +76,8 @@ target_to_exclusive <= official_record_as_of <= closure_evidence_available_at
 - Later evidence or corrections create new additive identities. Prior artifacts remain immutable and truthful for their own cutoffs.
 
 ## F1 — capture and verify real closure evidence
+
+F1 itself owns acquisition, immutable capture, normalization, and verification of all raw XSHE successor/correction/endpoint evidence. Completed closure is therefore an F1 output, not a pre-start dependency; the only pre-start gate is the passed V2C parent-registry fact.
 
 ### Scope
 
@@ -432,66 +433,9 @@ Builder production imports neither Trading Kernel nor Runtime. It consumes alrea
 
 Publish through unchanged G12C validation and G12D idempotent publication. Repeated publication must return identical manifest, event, stream, retention, and Bundle identities.
 
-## G12H analyzer RED after F3
+## G12H RuleCoverage handoff
 
-Only after F3 passes may RED tests freeze the existing pure atomic analyzer contract. The intended module is one concrete Builder module, `rule_coverage.py`, with no provider lookup, economic evaluator, Runtime/Kernel import, registry, or root export.
-
-The analyzer consumes only the explicit v2 declaration and published manifest/events. It does not parse official notices, rerun F2 economics, discover dimensions from `ProfilePortType`, or enumerate Kernel classes.
-
-### Canonical success and failure
-
-`RuleCoverageReport` canonical body fields are:
-
-```text
-type, schema_version, declaration_hash, authority_build_hash,
-bundle_manifest_hash, target_coverage, applicability_scope, basis,
-historical_profile_composed_at, official_record_as_of,
-closure_evidence_available_at, closure_hash, projection_hash,
-required_dimensions, dimension_coverage
-```
-
-`dimension_coverage` uses required-dimension order and binds each authority hash/body hash plus exact finite intersection. `report_hash` is derived and excluded from its own preimage.
-
-`RuleCoverageFailure` canonical body fields are:
-
-```text
-type, schema_version, declaration_hash, bundle_manifest_hash,
-code, dimension, subject_ids
-```
-
-The function returns exactly one report or one failure, never partial dimension success.
-
-Exact failure precedence remains:
-
-1. `invalid_input`;
-2. `bundle_declaration_mismatch`;
-3. `missing_required_dimension`;
-4. `coverage_gap`;
-5. `coverage_overlap`;
-6. `source_identity_mismatch`.
-
-Within a code, the five-dimension order decides first failure. Zero declared dimensions is `invalid_input`. Closure/projection/RuleBook/body hash mismatch is `source_identity_mismatch`; malformed retrospective availability is `invalid_input`. Subject IDs are `(code, dimension-or-rule_coverage, declaration_hash, manifest_hash-or-missing)`.
-
-### RED matrix
-
-- v1 declaration remains `coverage_gap / market_fees` and all accepted bytes remain exact;
-- empty, missing, extra, duplicate, or reordered dimensions fail deterministically;
-- declaration/Bundle/profile-context/target/scope/basis mismatch fails atomically;
-- closure, projection, authority-body, source, event, or manifest mutation changes all additive identities;
-- closure-only evidence change yields new closure/projection/declaration/publication hashes while both finite RuleBook bytes/hashes remain exact;
-- a post-target documentary correction with unchanged target economics has the same RuleBooks but new additive identities;
-- a post-target correction that retroactively changes a target segment is selected at cutoff, splits/replaces the affected target Band, and changes the affected RuleBook hash;
-- documentary terminals are selected per official act before economic states are ordered by `effective_from`; publication order does not cause rejection;
-- unresolved documentary/economic fork, gap, overlap, equal-time conflict, or contradictory applicability fails closed;
-- exact cutoff equality passes; target end after record cutoff, record cutoff after closure evidence availability, selected official revision after record cutoff, capture/receipt after evidence cutoff, and historical composition time substitution all fail `CUTOFF_INVALID`;
-- unsupported `basis`, non-domestic route, non-ordinary product, route/product omission, or board scope outside the immutable bound profile fails before RuleBook construction and returns no partial output;
-- gap at target start/middle/end and overlap at every boundary fail in dimension order;
-- exact half-open adjacency passes; target-end equality is not overlap;
-- calendar local-date and UTC dimensions preserve their declared domains;
-- market-fee applicability keeps handling, regulatory, ChinaClear transfer, and HKSCC transfer nonempty source tuples and generated rules distinct;
-- repeated analysis yields byte-identical report/failure hashes;
-- provider, decision-grade, live, and deployment flags cannot become true;
-- no Runtime/Kernel import, Builder root export, generic rule model, or second economic engine appears.
+This effective-until-superseded plan owns successor closure, finite v2 RuleBook projection, and additive publication fan-out only. It does not define, freeze, implement, or produce `RuleCoverageReport` or `RuleCoverageFailure`; those remain solely owned by [G12H Rule Coverage](g12h.md) after its own prerequisites pass. Any analyzer RED/GREEN, fields, failures, and acceptance belong there.
 
 ## Validation by phase
 

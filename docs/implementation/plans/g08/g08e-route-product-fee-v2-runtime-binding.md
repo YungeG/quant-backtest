@@ -1,7 +1,7 @@
 ---
 id: G08E-ROUTE-PRODUCT-FEE-V2B
-readiness: BLOCKED_ON_G08E_V2A_PASSED
-gate_status: DRAFT
+proposed_readiness: BLOCKED_ON_G08E_V2A_PASSED
+registry_status: PENDING_PARENT_ACCEPTANCE_MATRIX_FAN_IN
 owner: backtest-runtime profile/build binding
 produces:
   - explicit route/product selection from immutable profile/order context
@@ -20,7 +20,7 @@ fan_out: [G08E-ROUTE-PRODUCT-FEE-V2C]
 
 ## Status
 
-`BLOCKED_ON_G08E_V2A_PASSED`. This plan freezes behavioral outcomes, ownership, and exclusions only. It must not freeze Runtime field lists, canonical preimages, import sets, helper signatures, manifest leaf hashes, or registration leaves until V2A's pure Kernel interfaces are accepted. Those are deliberately unresolved here.
+Proposed `BLOCKED_ON_G08E_V2A_PASSED`, pending parent Acceptance Matrix fan-in. The parent [Acceptance Matrix](../../acceptance-matrix.md) is the sole current status authority; this frontmatter is not a second Gate status. This plan freezes behavioral outcomes, ownership, and exclusions only. It must not freeze Runtime field lists, canonical preimages, import sets, helper signatures, manifest leaf hashes, or registration leaves until V2A's pure Kernel interfaces are accepted. Those are deliberately unresolved here.
 
 ## Required outcomes
 
@@ -30,7 +30,7 @@ After V2A passes, Runtime must:
 2. reject any profile/order context outside the selected A Scope before fee binding;
 3. use only the exact A Authority and paired A market/stamp books selected for this execution;
 4. create a new additive profile/build identity that hash-binds the immutable v1 profile/build inputs, selected A Authority hash, A Scope/selection/book/component identities, and the financial semantic identity used before execution;
-5. inject that additive identity into the v2 request/Semantic Run financial input so a structurally valid substituted Authority cannot retain the same execution identity;
+5. bind identity in one direction only: the selected V2A Authority enters the additive profile/build identity, then that profile/build identity enters the v2 request/Semantic Run financial input; Runtime must not feed a Semantic Run or profile/build identity back into V2A Authority, books, or economics;
 6. require the Kernel policy to receive the execution-selected expected A Authority; a substitution must fail before fee query use;
 7. retain the frozen v1 `CnAShareResolvedProfile`, root exports, registry entries, journey bytes, and Semantic Run behavior unchanged for v1 callers.
 

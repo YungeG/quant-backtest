@@ -1,18 +1,18 @@
 ---
 id: G08E-ROUTE-PRODUCT-FEE-V2C
-readiness: BLOCKED_ON_G08E_V2A_AND_V2B_PASSED
-gate_status: DRAFT
+proposed_readiness: BLOCKED_ON_G08E_V2A_AND_V2B_PASSED
+registry_status: PENDING_PARENT_ACCEPTANCE_MATRIX_FAN_IN
 owner: cross-cutting acceptance
 produces:
-  - immutable v2 acceptance receipt
-  - G12H F1 unblocking decision
+  - final source commit plus fixture/artifact hashes recorded in V2C acceptance closure and parent Acceptance Matrix
+  - G12H F1 unblocking registry fact
 consumes:
-  - G08E-V2A Kernel acceptance receipt
-  - G08E-V2B Runtime binding acceptance receipt
-  - immutable v1 byte receipts
+  - G08E-V2A Kernel acceptance closure
+  - G08E-V2B Runtime binding acceptance closure
+  - immutable v1 byte hashes
 depends_on:
   contract: [G08E-ROUTE-PRODUCT-FEE-V2A, G08E-ROUTE-PRODUCT-FEE-V2B]
-  evidence: [V2A-PASSED, V2B-PASSED, legacy-parity, full-suite]
+  evidence: [V2A-parent-registry-PASSED, V2B-parent-registry-PASSED, legacy-parity, full-suite]
   write_conflict: [acceptance-registry]
 fan_out: [G12H-EFFECTIVE-UNTIL-SUPERSEDED-V2]
 ---
@@ -21,11 +21,11 @@ fan_out: [G12H-EFFECTIVE-UNTIL-SUPERSEDED-V2]
 
 ## Status
 
-`BLOCKED_ON_G08E_V2A_AND_V2B_PASSED`. This is an acceptance fan-in, not an implementation plan. It creates no economics, Runtime selection semantics, profile/build fields, canonical preimages, fixtures, registry entry, Acceptance Matrix change, or README update until both upstream receipts are immutable.
+Proposed `BLOCKED_ON_G08E_V2A_AND_V2B_PASSED`, pending parent Acceptance Matrix fan-in. The parent [Acceptance Matrix](../../acceptance-matrix.md) is the sole current status authority; this frontmatter is not a second Gate status. This is an acceptance fan-in, not an implementation plan. It creates no economics, Runtime selection semantics, profile/build fields, canonical preimages, fixtures, registry entry, Acceptance Matrix change, or README update until both upstream closures are immutable.
 
-## Required receipts
+## Required acceptance closure
 
-V2C requires all of the following:
+V2C requires all of the following closure evidence:
 
 1. V2A proof that exact pure Kernel contract/golden/architecture tests pass, including MISSING_FILL, upper execution-time bound, query provenance, separate ChinaClear/HKSCC, XSHE-only projection, source refs, IDs, and exports.
 2. V2B proof that explicit immutable Runtime selection and additive v2 profile/build/Semantic Run binding pass, and direct structurally valid Authority substitution changes identity and is rejected before fee use.
@@ -35,6 +35,6 @@ V2C requires all of the following:
 
 ## Acceptance decision
 
-Only a separate authorized `PASSED` decision after every receipt is present may set V2C to `PASSED`. That decision authorizes G12H F1 to resume only for `DOMESTIC + ORDINARY_A_SHARE`; it does not pass F1, create a RuleBook authority for July 2026, or alter its closure/publication/analyzer gates.
+Only a separate authorized parent Acceptance Matrix `PASSED` registry fact after every closure item is present may mark V2C accepted. V2C records the final source commit plus fixture/artifact hashes in this plan's acceptance closure and the parent Acceptance Matrix; it does not create a new receipt file. That registry fact authorizes G12H F1 to resume only for `DOMESTIC + ORDINARY_A_SHARE`; it does not pass F1, create a RuleBook authority for July 2026, or alter its closure/publication/analyzer gates.
 
-Any missing, stale, contradictory, or byte-mutating receipt leaves V2C blocked. No merge or push belongs to the acceptance plan.
+Any missing, stale, contradictory, or byte-mutating closure item leaves V2C blocked. No merge or push belongs to the acceptance plan.
