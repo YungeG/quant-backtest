@@ -146,7 +146,7 @@ Freeze one canonical JSON body with this exact top-level field order and schema 
 }
 ```
 
-`baseline_binding` binds the immutable v1 declaration hash, publication manifest hash, profile request hash, market-profile digest, component-manifest hash, source-manifest hash, exact target, existing blocker result, and the passed G08E-V2C acceptance receipt plus protected-byte evidence. It does not prescribe V2B profile/build leaf identities or require future G12H closure books for G08E acceptance. V1 identities remain historical context, not route/product execution authority.
+`baseline_binding` binds the immutable v1 declaration hash, publication manifest hash, profile request hash, market-profile digest, component-manifest hash, source-manifest hash, exact target, existing blocker result, and the parent Acceptance Matrix G08E-V2C `PASSED` registry fact together with V2C acceptance-closure final source commit and protected fixture/artifact hashes. It does not prescribe V2B profile/build leaf identities or require future G12H closure books for G08E acceptance. V1 identities remain historical context, not route/product execution authority.
 
 `target_scope` freezes XSHE, `InstrumentType.EQUITY`, CNY quote and settlement, `AUCTION`, all profile-admitted boards, `execution_access_route=DOMESTIC`, `fee_product_class=ORDINARY_A_SHARE`, exact `trade_notional` basis, and target bounds. The exact invariant is `target_to_exclusive <= official_record_as_of <= closure_evidence_available_at`. Each selected official revision is published/recorded by `official_record_as_of`; every source capture and receipt used is available by `closure_evidence_available_at`.
 
