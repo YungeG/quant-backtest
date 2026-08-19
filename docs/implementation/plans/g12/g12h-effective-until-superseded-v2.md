@@ -1,6 +1,6 @@
 ---
 id: G12H-EFFECTIVE-UNTIL-SUPERSEDED-V2
-readiness: READY_FOR_F1_EVIDENCE_ACQUISITION_ONLY
+readiness: BLOCKED_ON_ACCESS_PRODUCT_DISCRIMINATOR
 gate_status: DRAFT
 owner: official-source acquisition + trading-kernel projection + market-bundle-builder publication
 produces:
@@ -23,7 +23,7 @@ fan_out: [G12H, G12L-*, G12M-*]
 
 ## Status and authority
 
-`READY` for **F1 evidence acquisition only**. F2 projection, F3 declaration/publication, and the G12H analyzer RED contract remain blocked until F1 passes independent evidence review.
+`BLOCKED`. Initial F1 research proves the existing fee query cannot enforce the full official fee envelope: domestic and Northbound access differ, and ordinary shares, preferred stock, and Northbound ETFs have different fee schedules. Further closure acquisition and F2/F3 remain blocked until an additive execution-enforced access-route and fee-product-class contract—or another explicitly enforceable narrower scope—is approved. No default or silent Stock Connect exclusion is permitted.
 
 Accepted semantics: [ADR 0004](../../../adr/0004-official-rules-effective-until-authoritatively-superseded.md).
 
@@ -31,7 +31,8 @@ Evidence baseline:
 
 - [G12H five-dimension blocker](../../../research/g12h-five-dimension-target-coverage-blocker-v1.md);
 - [G12H rule-coverage analysis](../../../research/g12h-rule-coverage.md);
-- [XSHE July-2026 fee/tax source research](../../../research/g12h-xshe-july-2026-fee-tax-authority-primary-sources.md).
+- [XSHE July-2026 fee/tax source research](../../../research/g12h-xshe-july-2026-fee-tax-authority-primary-sources.md);
+- [F1 full-envelope access/product blocker](../../../research/g12h-xshe-july-2026-full-envelope-successor-closure-f1.md).
 
 The existing v1 declaration still deterministically fails `COVERAGE_GAP / market_fees`. No existing PASSED G08E, G08H, G12C/D, fixture, hash, event, manifest, test, or publication byte may change.
 
