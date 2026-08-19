@@ -118,6 +118,9 @@ artifact_hashes: []
 | G08C | PASSED | trading-kernel profiles/cn_a_share | G08A, WP-04E, WP-05D, WP-05G | none |
 | G08D | PASSED | trading-kernel profiles/cn_a_share | G08A, G08C, WP-05G | none |
 | G08E | PASSED | trading-kernel profiles/cn_a_share | WP-05H, WP-05J | none |
+| G08E-ROUTE-PRODUCT-FEE-V2A | READY — contract plan `800b94a012e5306185c736ca240eeda69b0d029d` | trading-kernel profiles/cn_a_share | G08E, ADR-0005 | none; pure Kernel contract RED authorized |
+| G08E-ROUTE-PRODUCT-FEE-V2B | DRAFT / BLOCKED | backtest-runtime private profile/build binding | G08E-ROUTE-PRODUCT-FEE-V2A | V2A PASSED interface and accepted hashes |
+| G08E-ROUTE-PRODUCT-FEE-V2C | DRAFT / BLOCKED | parent acceptance fan-in | G08E-ROUTE-PRODUCT-FEE-V2A, G08E-ROUTE-PRODUCT-FEE-V2B | both implementation nodes PASSED plus legacy parity/full acceptance |
 | G08F | PASSED | trading-kernel profiles/cn_a_share | G08A, WP-06A, WP-06B | none |
 | G08G | PASSED | trading-kernel profiles/cn_a_share | G08F, G03 | none |
 | G08H | PASSED | backtest-runtime composition + tests/support + parity tooling | G08A–G08G, G09H, WP-00C | none |
@@ -166,7 +169,7 @@ artifact_hashes: []
 | PERF-OBS-01 | PASSED — F1 source `85eac498b70d98dccce524f7ec30198456983dbf`; F2 closure `8fc4fde588ef6f215576e8a3cf4de17acbdce8da` | backtest-runtime MRMD/PREP orchestration | G00 | none |
 | MRMD-01 | PASSED — F1 source `85eac498b70d98dccce524f7ec30198456983dbf`; F2 closure `8fc4fde588ef6f215576e8a3cf4de17acbdce8da` | backtest-runtime preparation and observation integration | G11B, G11D, G11E, G12G, BT-GAP-02B, BT-GAP-02C, PERF-OBS-01 | none |
 | PREP-COVERAGE-01 | PASSED — slices 1–3; final source `8fc4fde588ef6f215576e8a3cf4de17acbdce8da` | backtest-runtime preparation/preflight and Runtime fan-in | MRMD-01, PERF-OBS-01, G11B, G11D, G11E, G12E, BT-GAP-02B, BT-GAP-02C | none |
-| G12H | DRAFT / BLOCKED — F1 scope blocker `14d79c44f8bfccb54c2ad9724b12c692a91f29b4` | market-bundle-builder validation | G12C, G12CD-CN-A-SHARE-DEVELOPMENT-RULE-AUTHORITIES-V1 | current exact fixture remains `COVERAGE_GAP / market_fees`; existing query cannot distinguish domestic/Northbound access or ordinary/preferred/ETF fee products, which have different official schedules; route/product contract decision, successor closure, F2/F3, and analyzer remain blocked |
+| G12H | DRAFT / BLOCKED — F1 scope blocker `14d79c44f8bfccb54c2ad9724b12c692a91f29b4` | market-bundle-builder validation | G12C, G12CD-CN-A-SHARE-DEVELOPMENT-RULE-AUTHORITIES-V1, G08E-ROUTE-PRODUCT-FEE-V2C | current exact fixture remains `COVERAGE_GAP / market_fees`; G08E V2A/B/C must PASSED before closure resumes for execution-enforced `DOMESTIC + ORDINARY_A_SHARE`, then successor closure, F2/F3, and analyzer remain |
 | G12I | DRAFT | market-bundle-builder validation | G12C, G12G | Real profile-purpose, provider/calendar availability, and terminal-set closure evidence |
 | G12J | DRAFT | trading-domain schema migration | real old artifact | No real source/target schema yet |
 | G12K | DRAFT | market-bundle-builder validation | G12C | Universe/corporate action coverage |
