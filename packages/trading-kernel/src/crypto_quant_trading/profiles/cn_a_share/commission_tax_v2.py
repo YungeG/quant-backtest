@@ -711,10 +711,60 @@ def _authority_failure(
     )
 
 
+def _reconstructed_scope(value: object) -> CnAShareFeeExecutionScopeV2 | None:
+    if type(value) is not CnAShareFeeExecutionScopeV2:
+        return None
+    try:
+        rebuilt = CnAShareFeeExecutionScopeV2(
+            value.account_id,
+            value.venue_id,
+            value.instrument,
+            value.instrument_id,
+            value.instrument_type,
+            value.quote_currency_id,
+            value.settlement_currency_id,
+            value.trade_mechanism,
+            value.coverage_from,
+            value.coverage_to_exclusive,
+            value.allowed_order_sides,
+            value.access_route,
+            value.fee_product_class,
+        )
+    except (TypeError, ValueError):
+        return None
+    return rebuilt if rebuilt == value else None
+
+
+def _reconstructed_selection(value: object) -> CnAShareFeeExecutionSelectionV2 | None:
+    if type(value) is not CnAShareFeeExecutionSelectionV2:
+        return None
+    try:
+        rebuilt = CnAShareFeeExecutionSelectionV2(
+            value.selection_key,
+            value.selection_version,
+            value.access_route,
+            value.fee_product_class,
+            value.market_fee_rule_book,
+            value.market_fee_rule_book_hash,
+            value.stamp_duty_rule_book,
+            value.stamp_duty_rule_book_hash,
+            value.market_fee_component_ref,
+            value.stamp_duty_component_ref,
+        )
+    except (TypeError, ValueError):
+        return None
+    return rebuilt if rebuilt == value else None
+
+
 def _authority_problem(
     scope: CnAShareFeeExecutionScopeV2,
     selection: CnAShareFeeExecutionSelectionV2,
 ) -> CnAShareFeeExecutionAuthorityFailureCodeV2 | None:
+    if (
+        _reconstructed_scope(scope) is None
+        or _reconstructed_selection(selection) is None
+    ):
+        return CnAShareFeeExecutionAuthorityFailureCodeV2.RULE_BOOK_SCOPE_MISMATCH
     if (
         scope.access_route is not selection.access_route
         or scope.fee_product_class is not selection.fee_product_class
@@ -1023,12 +1073,38 @@ def _binding_failure(
     )
 
 
+def _reconstructed_authority(value: object) -> CnAShareFeeExecutionAuthorityV2 | None:
+    if type(value) is not CnAShareFeeExecutionAuthorityV2:
+        return None
+    try:
+        rebuilt = CnAShareFeeExecutionAuthorityV2(
+            value.authority_key,
+            value.authority_version,
+            value.scope,
+            value.scope_hash,
+            value.selection,
+            value.selection_hash,
+            value.access_route,
+            value.fee_product_class,
+            value.market_fee_rule_book,
+            value.market_fee_rule_book_hash,
+            value.stamp_duty_rule_book,
+            value.stamp_duty_rule_book_hash,
+            value.market_fee_component_ref,
+            value.stamp_duty_component_ref,
+        )
+    except (TypeError, ValueError):
+        return None
+    return rebuilt if rebuilt == value else None
+
+
 def _binding_problem(
     authority: CnAShareFeeExecutionAuthorityV2, order: Order
 ) -> CnAShareFeeExecutionBindingFailureCodeV2 | None:
     scope = authority.scope
     if (
-        authority.scope_hash != scope.scope_hash
+        _reconstructed_authority(authority) is None
+        or authority.scope_hash != scope.scope_hash
         or authority.selection_hash != authority.selection.selection_hash
     ):
         return CnAShareFeeExecutionBindingFailureCodeV2.AUTHORITY_SCOPE_MISMATCH
@@ -1187,6 +1263,8 @@ class CnAShareCashFeeRuleQueryV2:
         if not isinstance(self.purpose, CnAShareFeeAssessmentPurposeV2):
             raise TypeError("purpose must be CnAShareFeeAssessmentPurposeV2")
         if self.fill is None:
+            if self.purpose is CnAShareFeeAssessmentPurposeV2.FINAL_FILL:
+                raise ValueError("final fill query requires Fill")
             if self.fill_hash is not None or self.fill_id is not None:
                 raise ValueError("missing Fill provenance mismatch")
         else:
@@ -2183,7 +2261,7 @@ class CnAShareCashMarketFeePolicyV2:
     ) -> ProfilePortOutcome[
         CnAShareMarketFeeRuleResolutionV2, CnAShareFeeRuleFailureV2
     ]:
-        if not isinstance(query, CnAShareCashFeeRuleQueryV2):
+        if type(query) is not CnAShareCashFeeRuleQueryV2:
             raise TypeError("query must be CnAShareCashFeeRuleQueryV2")
         failure = _policy_failure(self, query, self.authority.market_fee_rule_book)
         if failure is not None:
@@ -2267,7 +2345,7 @@ class CnAShareCashStampDutyTaxPolicyV2:
     ) -> ProfilePortOutcome[
         CnAShareStampDutyRuleResolutionV2, CnAShareFeeRuleFailureV2
     ]:
-        if not isinstance(query, CnAShareCashFeeRuleQueryV2):
+        if type(query) is not CnAShareCashFeeRuleQueryV2:
             raise TypeError("query must be CnAShareCashFeeRuleQueryV2")
         failure = _policy_failure(self, query, self.authority.stamp_duty_rule_book)
         if failure is not None:
@@ -2392,9 +2470,53 @@ class CnAShareFeeReservationBufferV2:
 
 
 def _same_context(market: Any, tax: Any) -> bool:
-    if not isinstance(market, CnAShareMarketFeeRuleResolutionV2) or not isinstance(
-        tax, CnAShareStampDutyRuleResolutionV2
+    if (
+        type(market) is not CnAShareMarketFeeRuleResolutionV2
+        or type(tax) is not CnAShareStampDutyRuleResolutionV2
     ):
+        return False
+    try:
+        reconstructed_market = CnAShareMarketFeeRuleResolutionV2(
+            market.authority,
+            market.authority_hash,
+            market.query,
+            market.query_hash,
+            market.binding_hash,
+            market.order_id,
+            market.order_hash,
+            market.fill,
+            market.fill_hash,
+            market.fill_id,
+            market.side,
+            market.effective_at,
+            market.active_band,
+            market.active_band_hash,
+            market.reservation_charge_rules,
+            market.final_fill_charge_rules,
+            market.final_order_not_applicable_rules,
+        )
+        reconstructed_tax = CnAShareStampDutyRuleResolutionV2(
+            tax.authority,
+            tax.authority_hash,
+            tax.query,
+            tax.query_hash,
+            tax.binding_hash,
+            tax.order_id,
+            tax.order_hash,
+            tax.fill,
+            tax.fill_hash,
+            tax.fill_id,
+            tax.side,
+            tax.effective_at,
+            tax.active_band,
+            tax.active_band_hash,
+            tax.reservation_charge_rule,
+            tax.final_fill_charge_rule,
+            tax.final_order_not_applicable_rule,
+        )
+    except (TypeError, ValueError):
+        return False
+    if reconstructed_market != market or reconstructed_tax != tax:
         return False
     return (
         market.authority,
@@ -2536,6 +2658,12 @@ class CnAShareDomesticOrdinaryFeeProjectionFailureV2:
             self.stamp_duty_rule_book.rule_book_hash,
         ):
             raise ValueError("projection failure hash mismatch")
+        if not isinstance(
+            self.subject_ids, tuple
+        ) or self.subject_ids != _projection_failure_subjects(
+            self.market_rule_book, self.stamp_duty_rule_book, self.code
+        ):
+            raise ValueError("projection failure subject_ids mismatch")
 
     @property
     def failure_hash(self) -> str:
@@ -2601,6 +2729,9 @@ class CnAShareDomesticOrdinaryFeeProjectionV2:
             self.stamp_duty_rule_book.rule_book_hash,
         ):
             raise ValueError("projection v2 hash mismatch")
+        _ensure_projectable_sources(
+            self.source_market_rule_book, self.source_stamp_duty_rule_book
+        )
         expected_market, expected_stamp = _projected_books(
             self.source_market_rule_book, self.source_stamp_duty_rule_book
         )
@@ -2631,19 +2762,102 @@ class CnAShareDomesticOrdinaryFeeProjectionV2:
         )
 
 
+def _projection_failure_subjects(
+    market: CnAShareMarketFeeRuleBook,
+    stamp: CnAShareStampDutyRuleBook,
+    code: CnAShareDomesticOrdinaryFeeProjectionFailureCodeV2,
+) -> tuple[str, ...]:
+    prefix = (code.value, market.rule_book_hash, stamp.rule_book_hash)
+    if (
+        code
+        is CnAShareDomesticOrdinaryFeeProjectionFailureCodeV2.NON_XSHE_MARKET_SOURCE
+    ):
+        band = next(band for band in market.bands if band.venue_id != VenueId("xshe"))
+        return (*prefix, "venue_id", band.venue_id.value, "band_hash", band.band_hash)
+    if (
+        code
+        is CnAShareDomesticOrdinaryFeeProjectionFailureCodeV2.NON_XSHE_STAMP_DUTY_SOURCE
+    ):
+        band = next(band for band in stamp.bands if band.venue_id != VenueId("xshe"))
+        return (*prefix, "venue_id", band.venue_id.value, "band_hash", band.band_hash)
+    if (
+        code
+        is CnAShareDomesticOrdinaryFeeProjectionFailureCodeV2.MARKET_SOURCE_INTERVAL_INVALID
+    ):
+        band = next(
+            band
+            for band in market.bands
+            if type(band.effective_from) is not UtcInstant
+            or type(band.effective_to_exclusive) is not UtcInstant
+            or band.effective_from >= band.effective_to_exclusive
+        )
+        return (
+            *prefix,
+            "band_hash",
+            band.band_hash,
+            "effective_from_hash",
+            canonical_sha256(band.effective_from),
+            "effective_to_exclusive_hash",
+            canonical_sha256(band.effective_to_exclusive),
+        )
+    if (
+        code
+        is CnAShareDomesticOrdinaryFeeProjectionFailureCodeV2.STAMP_DUTY_SOURCE_INTERVAL_INVALID
+    ):
+        band = next(
+            band
+            for band in stamp.bands
+            if type(band.effective_from) is not UtcInstant
+            or type(band.effective_to_exclusive) is not UtcInstant
+            or band.effective_from >= band.effective_to_exclusive
+        )
+        return (
+            *prefix,
+            "band_hash",
+            band.band_hash,
+            "effective_from_hash",
+            canonical_sha256(band.effective_from),
+            "effective_to_exclusive_hash",
+            canonical_sha256(band.effective_to_exclusive),
+        )
+    if (
+        code
+        is CnAShareDomesticOrdinaryFeeProjectionFailureCodeV2.MARKET_SOURCE_ECONOMIC_INVALID
+    ):
+        band = next(band for band in market.bands if not _valid_v1_market(band))
+        return (
+            *prefix,
+            "band_hash",
+            band.band_hash,
+            "economic_hash",
+            canonical_sha256(band),
+        )
+    band = next(band for band in stamp.bands if not _valid_v1_stamp(band))
+    return (
+        *prefix,
+        "band_hash",
+        band.band_hash,
+        "economic_hash",
+        canonical_sha256(band),
+    )
+
+
 def _projection_failure(
     market: CnAShareMarketFeeRuleBook,
     stamp: CnAShareStampDutyRuleBook,
     code: CnAShareDomesticOrdinaryFeeProjectionFailureCodeV2,
     suffix: tuple[str, ...],
 ) -> CnAShareDomesticOrdinaryFeeProjectionFailureV2:
+    expected = _projection_failure_subjects(market, stamp, code)
+    if suffix != expected[3:]:
+        raise ValueError("projection failure suffix mismatch")
     return CnAShareDomesticOrdinaryFeeProjectionFailureV2(
         market,
         market.rule_book_hash,
         stamp,
         stamp.rule_book_hash,
         code,
-        (code.value, market.rule_book_hash, stamp.rule_book_hash, *suffix),
+        expected,
     )
 
 
@@ -2772,6 +2986,7 @@ def project_cn_a_share_domestic_ordinary_fee_rules_v2(
                 CnAShareDomesticOrdinaryFeeProjectionFailureCodeV2.STAMP_DUTY_SOURCE_ECONOMIC_INVALID,
                 ("band_hash", band.band_hash, "economic_hash", canonical_sha256(band)),
             )
+    _ensure_projectable_sources(market_rule_book, stamp_duty_rule_book)
     market_hash = market_rule_book.rule_book_hash
     stamp_hash = stamp_duty_rule_book.rule_book_hash
     market, stamp = _projected_books(market_rule_book, stamp_duty_rule_book)
@@ -2788,6 +3003,67 @@ def project_cn_a_share_domestic_ordinary_fee_rules_v2(
         stamp,
         stamp.rule_book_hash,
     )
+
+
+def _ensure_projectable_sources(
+    market_rule_book: CnAShareMarketFeeRuleBook,
+    stamp_duty_rule_book: CnAShareStampDutyRuleBook,
+) -> None:
+    if (
+        not isinstance(market_rule_book.bands, tuple)
+        or not isinstance(stamp_duty_rule_book.bands, tuple)
+        or not market_rule_book.bands
+        or not stamp_duty_rule_book.bands
+    ):
+        raise ValueError("projection source rule books must be non-empty")
+    if market_rule_book.bands != tuple(
+        sorted(
+            market_rule_book.bands,
+            key=lambda band: (
+                band.venue_id.value,
+                band.effective_from,
+                band.effective_to_exclusive,
+                band.band_hash,
+            ),
+        )
+    ) or stamp_duty_rule_book.bands != tuple(
+        sorted(
+            stamp_duty_rule_book.bands,
+            key=lambda band: (
+                band.venue_id.value,
+                band.effective_from,
+                band.effective_to_exclusive,
+                band.band_hash,
+            ),
+        )
+    ):
+        raise ValueError("projection source bands must be canonical-sorted")
+    if any(
+        type(band) is not CnAShareMarketFeeBand or band.venue_id != VenueId("xshe")
+        for band in market_rule_book.bands
+    ):
+        raise ValueError("projection market source must be XSHE-only")
+    if any(
+        type(band) is not CnAShareStampDutyBand or band.venue_id != VenueId("xshe")
+        for band in stamp_duty_rule_book.bands
+    ):
+        raise ValueError("projection stamp source must be XSHE-only")
+    if any(
+        type(band.effective_from) is not UtcInstant
+        or type(band.effective_to_exclusive) is not UtcInstant
+        or band.effective_from >= band.effective_to_exclusive
+        for band in market_rule_book.bands
+    ) or any(
+        type(band.effective_from) is not UtcInstant
+        or type(band.effective_to_exclusive) is not UtcInstant
+        or band.effective_from >= band.effective_to_exclusive
+        for band in stamp_duty_rule_book.bands
+    ):
+        raise ValueError("projection source intervals invalid")
+    if any(not _valid_v1_market(band) for band in market_rule_book.bands) or any(
+        not _valid_v1_stamp(band) for band in stamp_duty_rule_book.bands
+    ):
+        raise ValueError("projection source economics invalid")
 
 
 def _projected_books(
