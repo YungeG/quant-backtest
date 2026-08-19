@@ -25,7 +25,7 @@ fan_out: [G12H, G12L-*, G12M-*]
 
 ## Status and authority
 
-`BLOCKED_ON_ROUTE_PRODUCT_FEE_V2_PASS`. [ADR 0005](../../../adr/0005-cn-a-share-fees-require-access-route-and-product-class.md) accepts the additive route/product contract, and [the G08E v2 plan](../g08/g08e-route-product-fee-v2.md) is `READY_FOR_CONTRACT_RED` only. F1 may resume for `DOMESTIC + ORDINARY_A_SHARE` only after the complete v2 execution Scope/authority, private profile-binding seam, structured Order/Fill constructors, and market/tax policies become `PASSED`. That acceptance uses the finite XSHE v1-to-v2 compatibility projection and requires no G12H closure artifact, so it is not circular. Until then no closure acquisition artifact, F2 projection, F3 publication, analyzer RED, or qualification change is authorized. No default, inference, silent Stock Connect/product exclusion, or interchangeable v2 RuleBook pairing is permitted.
+`BLOCKED_ON_ROUTE_PRODUCT_FEE_V2_PASS`. [ADR 0005](../../../adr/0005-cn-a-share-fees-require-access-route-and-product-class.md) accepts the additive route/product contract, and [the G08E v2 plan](../g08/g08e-route-product-fee-v2.md) is `READY_FOR_CONTRACT_RED` only. F1 may resume for `DOMESTIC + ORDINARY_A_SHARE` only after the complete v2 execution Scope/authority, exact three-argument private profile-binding seam, structured Order/Fill constructors, canonical query-provenance policy check, and market/tax policies become `PASSED`. That acceptance uses the finite XSHE v1-to-v2 compatibility projection and requires no G12H closure artifact, so it is not circular. Until then no closure acquisition artifact, F2 projection, F3 publication, analyzer RED, or qualification change is authorized. No default, inference, silent Stock Connect/product exclusion, or interchangeable v2 RuleBook pairing is permitted.
 
 Accepted semantics: [ADR 0004](../../../adr/0004-official-rules-effective-until-authoritatively-superseded.md) and [ADR 0005](../../../adr/0005-cn-a-share-fees-require-access-route-and-product-class.md).
 
@@ -80,7 +80,7 @@ target_to_exclusive <= official_record_as_of <= closure_evidence_available_at
 
 ### Scope
 
-F1 remains blocked until the complete G08E route/product v2 execution Scope/authority, private profile-binding seam, structured Order/Fill constructors, and policies are `PASSED`. After that independent pass, the F1/F2 success envelope is exactly the execution-enforceable scope below:
+F1 remains blocked until the complete G08E route/product v2 execution Scope/authority, exact three-argument private profile-binding seam, structured Order/Fill constructors, canonical query-provenance check, and policies are `PASSED`. After that independent pass, the F1/F2 success envelope is exactly the execution-enforceable scope below:
 
 ```text
 execution_access_route: DOMESTIC
@@ -212,7 +212,7 @@ Failure is atomic: no successful closure artifact, derived RuleBook, declaration
 
 ### F1 pass gate
 
-F1 cannot start until the complete G08E route/product fee v2 execution-Scope/authority/binding/policy contract is `PASSED`. Its acceptance uses only the finite XSHE compatibility projection and is not an F1 output or prerequisite. Once started, F1 passes only after exact captures, normalized source identities, closure body/hash, failure-free reconstruction, and independent source/closure review pass. Until then no G12H projector, declaration fixture, publication, or analyzer RED is authorized.
+F1 cannot start until the complete G08E route/product fee v2 execution-Scope/authority/binding/query-provenance-policy contract is `PASSED`. Its acceptance uses only the finite XSHE compatibility projection and is not an F1 output or prerequisite. Once started, F1 passes only after exact captures, normalized source identities, closure body/hash, failure-free reconstruction, and independent source/closure review pass. Until then no G12H projector, declaration fixture, publication, or analyzer RED is authorized.
 
 ## F2 — pure source authority to finite execution RuleBooks
 
