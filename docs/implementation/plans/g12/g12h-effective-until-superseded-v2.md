@@ -37,15 +37,17 @@ The existing v1 declaration still deterministically fails `COVERAGE_GAP / market
 
 ## Frozen decision
 
-A scoped official rule revision is economically effective from its authoritative start until a competent authority makes an authoritative successor effective. Source-law continuity is not an execution interval: a successful closure is projected to one finite target and materialized with the existing finite `CnAShareMarketFeeBand`, `CnAShareStampDutyBand`, `CnAShareMarketFeeRuleBook`, and `CnAShareStampDutyRuleBook` types.
+A scoped official rule revision is economically effective from its authoritative start until a competent authority makes an authoritative successor effective. Documentary correction and economic succession are independent: `corrects_revision_id` links representations of the same official act, while `economic_predecessor_revision_id` links complete economic states across official acts. At cutoff, closure selects the terminal documentary representation of each act, then orders selected economic states by authoritative `effective_from`; publication, capture, and tuple order never decide economic order. Retroactive correction is allowed, including one recorded after target end that changes a target segment. Unresolved documentary/economic forks, gaps, overlaps, or conflicts fail closed.
+
+Source-law continuity is not an execution interval: a successful closure is projected to one finite target and materialized with the existing finite `CnAShareMarketFeeBand`, `CnAShareStampDutyBand`, `CnAShareMarketFeeRuleBook`, and `CnAShareStampDutyRuleBook` types only when the exact basis and scope can be enforced by those policies.
 
 The identities are deliberately separate:
 
-1. **closure identity** binds predecessor evidence, endpoint evidence, successor indexes, candidate dispositions, scope, and official-record cutoff;
-2. **projection identity** binds closure identity, selected revisions, finite target, algorithm, and resulting RuleBook hashes;
-3. **execution RuleBook identity** binds only the finite economic Bands consumed by existing fee/tax policies.
+1. **closure identity** binds all evidence, documentary/economic lineages, candidate dispositions, scope, basis, and cutoffs;
+2. **projection identity** binds closure identity, selected revisions, finite target, algorithm, scope, basis, and resulting RuleBook hashes;
+3. **execution RuleBook identity** binds only canonical target economics and the stable economic-authority refs consumed by existing fee/tax policies.
 
-Equal RuleBook hashes do not imply equal closure/projection provenance. Closure or projection hashes must not be inserted into generated economic charge-rule IDs merely to force them to differ.
+Any new evidence changes closure, projection, declaration, event, stream, manifest, and publication identities. Existing finite RuleBook bytes/hashes change only when canonical target economics change. Closure-only evidence may therefore produce a new projection/publication with byte-identical RuleBooks; a target-affecting correction must change the affected RuleBook bytes/hash. Closure or projection hashes must not be inserted into economic source refs or generated charge-rule IDs merely to force execution identity changes.
 
 ## Availability and historical claims
 
@@ -56,35 +58,47 @@ UTC:           [2026-07-05T16:00:00Z, 2026-07-30T16:00:00Z)
 Asia/Shanghai: [2026-07-06 00:00:00+08:00, 2026-07-31 00:00:00+08:00)
 ```
 
-The old `2026-07-20T10:00:00Z` composition/availability instant remains an immutable historical fact. Later evidence is never represented as available then.
+The old `2026-07-20T10:00:00Z` time remains an immutable historical fact named only `historical_profile_composed_at`. It is not an evidence availability or record cutoff.
 
-- **As-of closure** states the terminal authoritative record visible at its declared cutoff. Projection beyond that cutoff is only a point-in-time belief under the accepted semantics, not retrospectively final history.
-- **Retrospective closure** uses evidence actually available after target end and a record cutoff at or after target end to establish the target history as of that later cutoff.
-- F1 uses retrospective closure. Its new publication availability is the actual closure-evidence availability time, not the old composition instant.
-- A later official retroactive correction or newly discovered successor produces new closure, projection, RuleBook, declaration, and publication identities. Prior artifacts remain immutable and truthfully describe their own cutoffs.
+Every F1-F3 body and validation path enforces exactly:
+
+```text
+target_to_exclusive <= official_record_as_of <= closure_evidence_available_at
+```
+
+- **As-of closure** selects only official revisions published or recorded no later than `official_record_as_of`.
+- **Retrospective closure** requires `official_record_as_of` at or after target end and uses captures/receipts available no later than `closure_evidence_available_at`.
+- F1 uses retrospective closure. Its failure/result evaluation time is an explicit immutable closure cutoff supplied by the artifact, never wall clock or inferred file/retrieval time.
+- An official revision recorded after `official_record_as_of`, or a capture/receipt available after `closure_evidence_available_at`, is not selectable.
+- Any violation, including substitution of `historical_profile_composed_at` for either cutoff, is `CUTOFF_INVALID`.
+- Later evidence or corrections create new additive identities. Prior artifacts remain immutable and truthful for their own cutoffs.
 
 ## F1 — capture and verify real closure evidence
 
 ### Scope
 
-Only ordinary domestic CNY A-share standard cash-auction executions on XSHE Main Board for the preserved target, and only these ordered lineages:
+Only ordinary domestic CNY A-share standard cash-auction executions on XSHE for the preserved target, and only these ordered lineages:
 
 1. `exchange_handling`;
 2. `securities_regulatory`;
 3. `stock_transfer`;
 4. `stamp_duty`.
 
+Every revision and closure conclusion freezes exact Venue, board, instrument class, currency, mechanism, and calculation `basis`. The accepted basis is exactly `trade_notional`. F1 may record narrower Main-Board evidence, but F2 must reject it as `UNSUPPORTED_SCOPE` because the existing fee/tax policy cannot enforce board-specific applicability. A reusable existing RuleBook may be constructed only from evidence covering the full policy-representable scope: XSHE, all boards represented by the existing policy, ordinary domestic A share, CNY, auction, and trade notional.
+
 ### Required proof
 
 For every lineage, capture and verify:
 
-1. exact official predecessor authority and every semantic field used by economics: competent issuer, scope, effective start, rate, basis, buy/sell applicability, venue, and mechanism;
-2. an official endpoint table, validity record, or complete historical register whose record state is after target end;
-3. every competent-authority successor index/channel capable of amendment, correction, replacement, repeal, suspension, invalidation, or scope change through the declared cutoff;
-4. complete pagination/cursor/range termination and an ordered inventory of candidate entries;
-5. exact official bytes for every result-affecting predecessor, endpoint, successor, and index representation;
-6. deterministic disposition of every candidate as no effect, outside scope, before target/already in chain, after target, non-economic correction, target successor, repeal without replacement, or unresolved;
-7. a gap-free, non-overlapping target conclusion and explicit terminal revision for each lineage.
+1. exact official predecessor authority and every semantic field used by economics: competent issuer, official act, authoritative `effective_from`, rate, `trade_notional` basis, buy/sell applicability, Venue, board, instrument class, currency, and mechanism;
+2. every documentary representation and exact `corrects_revision_id` chain for each official act;
+3. every selected complete economic state and exact `economic_predecessor_revision_id` chain across official acts;
+4. an official endpoint table, validity record, or complete historical register whose record state is at or after target end;
+5. every competent-authority successor/correction index or channel through `official_record_as_of`;
+6. complete pagination/cursor/range termination and an ordered inventory of candidate entries;
+7. exact official bytes for every result-affecting predecessor, endpoint, successor, correction, and index representation;
+8. deterministic disposition of every candidate as no effect, outside scope, before target/already in chain, after target, documentary correction without economic change, target-affecting correction/successor, repeal without replacement, or unresolved;
+9. terminal documentary representation selection per official act, followed by a gap-free, non-overlapping, conflict-free economic target conclusion per lineage.
 
 A current endpoint alone, a search-engine result, an undocumented keyword search, or “no successor found” is insufficient. Regulatory fee closure must cover both controlling rate authority and XSHE bilateral investor-collection applicability. Stamp-duty closure must cover both the statutory seller-side basis and the half-collection act.
 
@@ -115,25 +129,31 @@ Freeze one canonical JSON body with this exact top-level field order and schema 
 
 `baseline_binding` binds the immutable v1 declaration hash, publication manifest hash, profile request hash, market-profile digest, component-manifest hash, source-manifest hash, exact target, and existing blocker result.
 
-`target_scope` freezes Venue, board, instrument class, currency, mechanism, and target bounds. `official_record_as_of` must be at or after target end. `closure_evidence_available_at` must be no earlier than every evidence item used.
+`target_scope` freezes Venue, board, instrument class, currency, mechanism, exact `trade_notional` basis, and target bounds. The exact invariant is `target_to_exclusive <= official_record_as_of <= closure_evidence_available_at`. Each selected official revision is published/recorded by `official_record_as_of`; every source capture and receipt used is available by `closure_evidence_available_at`.
 
 `components` is a four-item tuple in the lineage order above. Each component body is exact:
 
 ```text
 {
   lineage_key,
-  predecessor_revision_hashes,
+  documentary_representations,
+  selected_documentary_revision_ids,
+  selected_economic_state_hashes,
   predecessor_source_refs,
   endpoint_source_refs,
   successor_index_refs,
   candidate_disposition_refs,
-  terminal_revision_id,
-  terminal_revision_hash,
+  terminal_economic_revision_id,
+  terminal_economic_state_hash,
   conclusion
 }
 ```
 
-Allowed conclusions are `closed_unchanged` and `closed_with_successor_bands`. Repeal without a complete replacement, unresolved scope/effective time, incomplete index coverage, gap, overlap, or conflict fails F1.
+Each documentary representation binds `official_act_id`, `revision_id`, `corrects_revision_id`, `official_recorded_at`, representation source refs, and representation hash. Selected economic states additionally bind `economic_predecessor_revision_id`, authoritative `effective_from`, rate, basis, side applicability, and full scope. Closure selects exactly one documentary terminal per official act before evaluating the economic chain.
+
+`economic_state_hash` is a projection/provenance identity canonical over official act identity, lineage, normalized economic predecessor act, authoritative effective time, rate, basis, side applicability, and full scope. It excludes documentary revision IDs and acquisition metadata. Separately, each finite target segment derives a `target_economic_semantics_hash` only from lineage, clipped interval, rate, basis, side applicability, and full scope. It excludes official act, revision, predecessor, capture/receipt, closure, and projection identities. Execution source refs derive only from that target-economic hash. Therefore any evidence or authority-lineage change with identical target economics changes closure/projection identities but not execution RuleBook bytes.
+
+Allowed conclusions are `closed_unchanged` and `closed_with_successor_bands`. A later documentary correction with no canonical target-economic change may remain `closed_unchanged`; a correction that changes any target segment is `closed_with_successor_bands`. Repeal without a complete replacement, unresolved documentary/economic fork, scope/effective-time conflict, incomplete index coverage, gap, or overlap fails F1.
 
 `qualification` may set only dimension-scoped official successor closure true. Provider authority, provider completeness, rule coverage, decision grade, live use, and deployment remain false.
 
@@ -168,6 +188,8 @@ A failure body is canonical JSON:
 }
 ```
 
+`lineage_key` is exactly `rule_closure` for `SCOPE_MISMATCH` and `CUTOFF_INVALID`; every other F1 failure uses the first affected charge lineage, falling back to `rule_closure` only when no lineage can be identified. `subject_ids` is exactly `(code, lineage_key, closure_key, *canonically_sorted_offending_ids)`. Offending IDs are unique and sorted by canonical bytes. `evidence_available_at` is exactly the explicit immutable `closure_evidence_available_at` supplied to the attempted closure evaluation; it is never inferred from captures, filesystem metadata, process time, or wall clock. Every cutoff/availability invariant violation maps to `CUTOFF_INVALID`.
+
 Failure is atomic: no successful closure artifact, derived RuleBook, declaration, or publication may be emitted.
 
 ### F1 pass gate
@@ -201,19 +223,25 @@ If exported, concrete types and the function are exported only from `crypto_quan
 
 ### Source revision body
 
-One normalized revision represents a complete state for one charge lineage:
+One normalized revision is one documentary representation of a complete charge state:
 
 ```text
 {
   type: "cn_a_share_official_charge_rule_revision",
   schema_version: 1,
+  official_act_id,
   revision_id,
-  supersedes_revision_id,
+  corrects_revision_id,
+  economic_predecessor_revision_id,
   lineage_key,
   venue_id,
+  board,
+  instrument_class,
+  currency_id,
   trade_mechanism,
+  basis,
   effective_from,
-  available_at,
+  official_recorded_at,
   rate,
   applies_to_buy,
   applies_to_sell,
@@ -221,7 +249,11 @@ One normalized revision represents a complete state for one charge lineage:
 }
 ```
 
-The first three lineages are bilateral; stamp duty is seller-only. All rates use `fee_fraction`. Source refs reuse `CnAShareFeeRuleSourceRef`. No caller-supplied end exists: each end is the next authoritative successor effective time or the finite target end for the closure terminal. Same-effective-time corrections select the terminal chain member; decreasing effective time, forks, cycles, unresolved repeal, and incomplete replacement fail closed.
+`corrects_revision_id` is `None` only for the first documentary representation of one `official_act_id`; otherwise it names the immediately corrected representation of that same act. `economic_predecessor_revision_id` names the selected complete economic state from the preceding official act, or `None` for the root. It never substitutes for documentary correction.
+
+The accepted exact scope is XSHE, `all_policy_supported_boards`, `ordinary_domestic_a_share`, CNY, auction, and `basis="trade_notional"`. The first three lineages are bilateral; stamp duty is seller-only. `Rate.basis` remains `fee_fraction` and is distinct from calculation `basis`. Source refs reuse `CnAShareFeeRuleSourceRef` for documentary authority; execution Bands use deterministic semantic refs derived only from canonical finite target economics, not official-act, revision, predecessor, closure, capture, or receipt identity.
+
+At `official_record_as_of`, group by `official_act_id`, select one terminal `corrects_revision_id` chain member, normalize economic predecessor links to selected terminals, then sort economic states by authoritative `effective_from`. A retroactive correction may move a boundary earlier than its publication or its prior representation and does not fail solely for that ordering. No caller-supplied end exists: each end is the next selected economic state's effective time or the finite target end. Unresolved correction/economic forks, cycles, equal-time conflicting states, gaps, overlaps, repeal without replacement, and incomplete replacement fail closed.
 
 ### Projection request and result
 
@@ -231,21 +263,28 @@ The canonical request body is exact:
 {
   type: "cn_a_share_effective_fee_tax_projection_request",
   schema_version: 1,
+  request_key,
   venue_id,
+  board,
+  instrument_class,
+  currency_id,
   trade_mechanism,
+  basis,
   target_from,
   target_to_exclusive,
-  closure_evidence_available_at,
   official_record_as_of,
+  closure_evidence_available_at,
   closure_body,
   closure_hash,
   revisions
 }
 ```
 
-The request requires the exact four lineages, a finite non-empty target, a retrospective record cutoff at or after target end, closure availability no earlier than every supplied revision/evidence item, and constructor-recomputed closure identity.
+The request and its hash bind the exact four lineages and full applicability scope. It requires a finite non-empty target and exactly `target_to_exclusive <= official_record_as_of <= closure_evidence_available_at`. Every selected revision must have `official_recorded_at <= official_record_as_of`; every bound capture/receipt must be available by `closure_evidence_available_at`. Violations are `CUTOFF_INVALID`.
 
-Projection orders revisions by declared parent chain, derives successor boundaries, clips each lineage to the target, unions the three fee-lineage boundaries, resolves exactly one state per segment, and constructs existing finite Bands and RuleBooks. Adjacent Bands may coalesce only when every economic and source-ref field is identical.
+Before constructing any Band, projection rejects unsupported basis or scope. In v1, `basis` must be `trade_notional`, and scope must be fully representable by the existing policy. Main-Board-only evidence is `UNSUPPORTED_SCOPE`; it cannot yield a reusable all-XSHE RuleBook.
+
+Projection first selects terminal documentary representations, then orders selected economic states by `effective_from`, derives boundaries, clips each lineage to the target, unions the three fee-lineage boundaries, resolves exactly one state per segment, and constructs existing finite Bands and RuleBooks. Adjacent Bands may coalesce only when every canonical target-economic field and stable economic-authority ref is identical.
 
 Execution RuleBook identities are new lineages:
 
@@ -254,7 +293,7 @@ equity.cn_a_share.cash.market-fees.effective-until-superseded.v1
 equity.cn_a_share.cash.stamp-duty.effective-until-superseded.v1
 ```
 
-Both use `rule_book_version=1`. New evidence changes content hashes; a projection semantic/schema change increments the algorithm/type/key version.
+Both use `rule_book_version=1`. Closure-only evidence, documentary correction, or a new official act with identical target economics leaves these RuleBook canonical bytes and hashes unchanged. Only a changed target interval, rate, side, basis, or supported scope changes the affected RuleBook hash. Any new evidence still changes projection/declaration/publication identities. A projection semantic/schema change increments the algorithm/type/key version.
 
 The canonical result body is exact:
 
@@ -265,10 +304,18 @@ The canonical result body is exact:
   algorithm_id: "cn-a-share-effective-until-superseded-fee-tax-projection-v1",
   request_hash,
   closure_hash,
+  venue_id,
+  board,
+  instrument_class,
+  currency_id,
+  trade_mechanism,
+  basis,
   target_from,
   target_to_exclusive,
   official_record_as_of,
-  selected_revision_hashes,
+  closure_evidence_available_at,
+  selected_documentary_revision_hashes,
+  selected_economic_state_hashes,
   market_fee_rule_book,
   market_fee_rule_book_hash,
   stamp_duty_rule_book,
@@ -276,23 +323,25 @@ The canonical result body is exact:
 }
 ```
 
-`projection_hash = canonical_sha256(result body)`. The selected revision hashes use the four-lineage order. Closure/projection hashes remain outside the existing RuleBook and generated fee-rule canonical preimages.
+`projection_hash = canonical_sha256(result body)`. Selected hashes use the four-lineage order and make every evidence change visible in projection identity. Closure/projection/documentary hashes remain outside existing RuleBook and generated fee-rule canonical preimages; RuleBook refs bind stable canonical economic states.
 
 ### F2 failures
 
 Exact first-failure precedence:
 
 1. `UNSUPPORTED_SCOPE`;
-2. `EVIDENCE_NOT_AVAILABLE`;
-3. `CLOSURE_BINDING_MISMATCH`;
-4. `REVISION_CHAIN_MISMATCH`;
-5. `SUCCESSOR_TERMINAL_MISMATCH`;
-6. `NON_MONOTONIC_EFFECTIVE_REVISION`;
-7. `UNSUPPORTED_REVISION_DISPOSITION`;
-8. `COVERAGE_GAP`;
-9. `PROJECTED_OVERLAP`.
+2. `UNSUPPORTED_BASIS`;
+3. `CUTOFF_INVALID`;
+4. `CLOSURE_BINDING_MISMATCH`;
+5. `DOCUMENTARY_CORRECTION_MISMATCH`;
+6. `ECONOMIC_SUCCESSION_MISMATCH`;
+7. `SUCCESSOR_TERMINAL_MISMATCH`;
+8. `UNSUPPORTED_REVISION_DISPOSITION`;
+9. `ECONOMIC_TIMELINE_CONFLICT`;
+10. `COVERAGE_GAP`;
+11. `PROJECTED_OVERLAP`.
 
-The canonical failure body contains `type`, `schema_version`, full request, `request_hash`, `code`, `lineage_key`, and `subject_ids`; its constructor recomputes the first applicable failure. Malformed exact types, noncanonical text/hash, invalid rates, and empty targets are constructor errors. Failure returns no partial RuleBook.
+The canonical failure body contains `type`, `schema_version`, full request, `request_hash`, `code`, `lineage_key`, and `subject_ids`; its constructor recomputes the first applicable failure. `lineage_key` is exactly `fee_tax_projection` for `UNSUPPORTED_SCOPE`, `UNSUPPORTED_BASIS`, `CUTOFF_INVALID`, and `CLOSURE_BINDING_MISMATCH`; every later code uses the first affected charge lineage. `subject_ids` is exactly `(code, lineage_key, request_key, *canonically_sorted_offending_ids)`, with unique offending IDs sorted by canonical bytes. All record/capture/historical-time invariant violations are `CUTOFF_INVALID`. Malformed exact types, noncanonical text/hash, invalid rates, and empty targets are constructor errors. Failure returns no partial RuleBook.
 
 ## F3 — additive five-dimension declaration and G12C/D publication v2
 
@@ -324,9 +373,9 @@ Rules:
 
 - `baseline_profile_binding` preserves the immutable G08H/v1 identities and labels them historical context, not proof that the old profile contained projected fee/tax RuleBooks;
 - `continuity_semantics` is exactly `effective_until_authoritatively_superseded`;
-- `retrospective_availability` carries the old composition instant separately from actual closure/publication availability and `official_record_as_of`;
-- `closure_binding` contains the closure key/version/hash and ordered terminal hashes;
-- `projection_binding` contains algorithm ID, projection hash, and both execution RuleBook hashes;
+- `retrospective_availability` contains fields named exactly `historical_profile_composed_at`, `official_record_as_of`, and `closure_evidence_available_at`, and enforces `target_to_exclusive <= official_record_as_of <= closure_evidence_available_at`;
+- `closure_binding` contains the closure key/version/hash, full scope/basis, and ordered terminal documentary/economic hashes;
+- `projection_binding` contains algorithm ID, projection hash, full scope/basis, and both execution RuleBook hashes;
 - `required_dimensions` is exactly `calendar`, `order_rules`, `market_fees`, `stamp_duty`, `corporate_action_entitlements` in that order;
 - Calendar, order-rule, and corporate-action canonical bodies/hashes are reused byte-for-byte from v1;
 - market-fee and stamp-duty bodies are the F2 finite projections;
@@ -349,7 +398,7 @@ project_cn_a_share_official_rule_authority_events_v2(
 ) -> tuple[MarketEvent, ...]
 ```
 
-The function canonical-rebuilds and hash-pins the exact declaration, emits exactly five events atomically in required-dimension order, and uses v2 capability/stream/event/bundle identities. Event `available_time` is the actual retrospective closure/publication availability.
+The function canonical-rebuilds and hash-pins the exact declaration, emits exactly five events atomically in required-dimension order, and uses v2 capability/stream/event/bundle identities. Event `available_time` is exactly `closure_evidence_available_at`. Any new evidence changes declaration, event, stream, manifest, retention, Bundle, and publication identities even when projected RuleBook bytes are unchanged.
 
 Builder production imports neither Trading Kernel nor Runtime. It consumes already-canonical authority bodies and does not reconstruct economics. The function is not exported from `crypto_quant_bundle_builder.__init__`. No generic publication framework is added.
 
@@ -367,8 +416,10 @@ The analyzer consumes only the explicit v2 declaration and published manifest/ev
 
 ```text
 type, schema_version, declaration_hash, authority_build_hash,
-bundle_manifest_hash, target_coverage, official_record_as_of,
-closure_hash, projection_hash, required_dimensions, dimension_coverage
+bundle_manifest_hash, target_coverage, applicability_scope, basis,
+historical_profile_composed_at, official_record_as_of,
+closure_evidence_available_at, closure_hash, projection_hash,
+required_dimensions, dimension_coverage
 ```
 
 `dimension_coverage` uses required-dimension order and binds each authority hash/body hash plus exact finite intersection. `report_hash` is derived and excluded from its own preimage.
@@ -397,9 +448,15 @@ Within a code, the five-dimension order decides first failure. Zero declared dim
 
 - v1 declaration remains `coverage_gap / market_fees` and all accepted bytes remain exact;
 - empty, missing, extra, duplicate, or reordered dimensions fail deterministically;
-- declaration/Bundle/profile-context/target mismatch fails atomically;
-- closure, projection, RuleBook, authority-body, source, event, or manifest mutation fails;
-- closure/publication availability before required evidence, or record cutoff before target end, fails;
+- declaration/Bundle/profile-context/target/scope/basis mismatch fails atomically;
+- closure, projection, authority-body, source, event, or manifest mutation changes all additive identities;
+- closure-only evidence change yields new closure/projection/declaration/publication hashes while both finite RuleBook bytes/hashes remain exact;
+- a post-target documentary correction with unchanged target economics has the same RuleBooks but new additive identities;
+- a post-target correction that retroactively changes a target segment is selected at cutoff, splits/replaces the affected target Band, and changes the affected RuleBook hash;
+- documentary terminals are selected per official act before economic states are ordered by `effective_from`; publication order does not cause rejection;
+- unresolved documentary/economic fork, gap, overlap, equal-time conflict, or contradictory applicability fails closed;
+- exact cutoff equality passes; target end after record cutoff, record cutoff after closure evidence availability, selected official revision after record cutoff, capture/receipt after evidence cutoff, and historical composition time substitution all fail `CUTOFF_INVALID`;
+- unsupported `basis` or Main-Board-only/narrower applicability fails before RuleBook construction and returns no partial output;
 - gap at target start/middle/end and overlap at every boundary fail in dimension order;
 - exact half-open adjacency passes; target-end equality is not overlap;
 - calendar local-date and UTC dimensions preserve their declared domains;
@@ -412,14 +469,17 @@ Within a code, the five-dimension order decides first failure. Zero declared dim
 
 ### F1
 
-- independently verify official domains, bytes, receipts, index range/termination, candidate inventory, and dispositions;
-- reconstruct every canonical source/candidate/component/closure hash twice;
-- prove the record cutoff and evidence availability are not backdated;
+- independently verify official domains, bytes, receipts, correction/succession indexes, range/termination, candidate inventory, and dispositions;
+- reconstruct every canonical documentary representation, economic state, candidate, component, and closure hash twice;
+- assert `target_to_exclusive <= official_record_as_of <= closure_evidence_available_at`, official-record selection, capture/receipt availability, and explicit immutable evaluation cutoff;
+- test closure-only evidence and post-target target-affecting correction cases;
 - run gitleaks against captured artifacts and repository diff.
 
 ### F2
 
-- focused pure tests for unchanged terminal, in-target successor split, same-effective correction, after-target successor, unresolved repeal, fork/cycle, availability, target clipping, gap/overlap, canonical hashes, forged constructors, and no partial output;
+- focused pure tests for documentary terminal selection, economic predecessor normalization, publication-order independence, retroactive target correction, in-target successor split, after-target successor, unresolved repeal/fork/cycle/conflict, every cutoff violation, target clipping, gap/overlap, canonical hashes, forged constructors, and no partial output;
+- prove closure-only evidence changes projection/publication identity but not RuleBook bytes, while target-affecting correction changes the affected RuleBook hash;
+- reject unsupported basis and narrower board/scope before RuleBook construction;
 - rerun existing G08E tests and accepted fixture hashes unchanged;
 - architecture assertion for the one concrete Kernel seam and forbidden imports.
 
