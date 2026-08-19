@@ -348,7 +348,7 @@ Symbol-time规则状态：`normal`允许普通开平仓，`reduce_only`只允许
 
 ## 执行访问路径（Execution Access Route）
 
-订单实际进入市场并决定执行费用适用范围的明确通道，例如境内直接通道或北向股票互联互通。它必须进入不可变 Fee Execution Authority，再与 exact Order/Fill 绑定；不能从证券代码、宽泛 Instrument 类型、账户权限或当前元数据推断。
+订单实际进入市场并决定执行费用适用范围的明确通道，例如境内直接通道或北向股票互联互通。它必须与 account、Venue、精确 Instrument、currency、mechanism 和产品类别共同进入不可变 Fee Execution Scope/Authority，再与 exact Order/Fill 绑定；不能从证券代码、宽泛 Instrument 类型、账户权限或当前元数据推断。
 _Avoid_: access-channel default, symbol-derived route
 
 ## 费用产品类别（Fee Product Class）
@@ -358,8 +358,13 @@ _Avoid_: equity-as-fee-class, ordinary-share fallback
 
 ## 费用执行授权（Fee Execution Authority）
 
-由 Profile/build 对一次明确 access route 与 fee product class 作出的不可变费用选择。它 exact 绑定 resolved Profile/request 身份、scope declarations、market/tax RuleBook 及其 component ref/digest；一个 Authority 中的两本 RuleBook 不能与另一 Authority 互换。Reservation 从其已绑定 exact Order 的 side 与 created instant 构造；final 从已绑定 exact Fill 的 execution time 构造。
+由 Profile/build 对一次明确 access route 与 fee product class 作出的不可变费用选择。它 exact 绑定 Fee Execution Scope、resolved Profile/request 身份、scope declarations、market/tax RuleBook 及其 `ProfileComponentRef.component_digest`；一个 Authority 中的两本 RuleBook 不能与另一 Authority 互换。Reservation 从其已绑定 exact Order 的 side 与 created instant 构造；final 从已绑定 exact Fill 的 execution time 构造。Profile builder、Order binder、Fill query constructor 和 policy 分别拥有各自结构化失败，不能静默跨越边界。
 _Avoid_: interchangeable rulebooks, default route/product, caller-supplied final side/time
+
+## 费用执行范围（Fee Execution Scope）
+
+Fee Execution Authority 所绑定的 immutable account、Venue、精确 InstrumentDefinition/ID/type、quote/settlement currency、trade mechanism、允许 Order side、access route、fee product class 与必要 Profile scope facts。它是 Order binder 的唯一上下文，不做 registry/current-metadata lookup；任何 account、Venue、Instrument、side 或 context 不匹配都在生成 binding 前失败。
+_Avoid_: registry lookup, inferred execution context, unconstrained order side
 
 ## 规则覆盖报告（Rule Coverage Report）
 

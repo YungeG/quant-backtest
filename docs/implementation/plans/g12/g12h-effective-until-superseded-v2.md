@@ -25,7 +25,7 @@ fan_out: [G12H, G12L-*, G12M-*]
 
 ## Status and authority
 
-`BLOCKED_ON_ROUTE_PRODUCT_FEE_V2_PASS`. [ADR 0005](../../../adr/0005-cn-a-share-fees-require-access-route-and-product-class.md) accepts the additive route/product contract, and [the G08E v2 plan](../g08/g08e-route-product-fee-v2.md) is `READY_FOR_CONTRACT_RED` only. F1 may resume for `DOMESTIC + ORDINARY_A_SHARE` only after the complete v2 authority, private profile-binding seam, Order/Fill constructors, and market/tax policies become `PASSED`. That acceptance uses the finite XSHE v1-to-v2 compatibility projection and requires no G12H closure artifact, so it is not circular. Until then no closure acquisition artifact, F2 projection, F3 publication, analyzer RED, or qualification change is authorized. No default, inference, silent Stock Connect/product exclusion, or interchangeable v2 RuleBook pairing is permitted.
+`BLOCKED_ON_ROUTE_PRODUCT_FEE_V2_PASS`. [ADR 0005](../../../adr/0005-cn-a-share-fees-require-access-route-and-product-class.md) accepts the additive route/product contract, and [the G08E v2 plan](../g08/g08e-route-product-fee-v2.md) is `READY_FOR_CONTRACT_RED` only. F1 may resume for `DOMESTIC + ORDINARY_A_SHARE` only after the complete v2 execution Scope/authority, private profile-binding seam, structured Order/Fill constructors, and market/tax policies become `PASSED`. That acceptance uses the finite XSHE v1-to-v2 compatibility projection and requires no G12H closure artifact, so it is not circular. Until then no closure acquisition artifact, F2 projection, F3 publication, analyzer RED, or qualification change is authorized. No default, inference, silent Stock Connect/product exclusion, or interchangeable v2 RuleBook pairing is permitted.
 
 Accepted semantics: [ADR 0004](../../../adr/0004-official-rules-effective-until-authoritatively-superseded.md) and [ADR 0005](../../../adr/0005-cn-a-share-fees-require-access-route-and-product-class.md).
 
@@ -48,7 +48,7 @@ The identities are deliberately separate:
 
 1. **closure identity** binds all evidence, documentary/economic lineages, candidate dispositions, scope, basis, and cutoffs;
 2. **projection identity** binds closure identity, selected revisions, finite target, algorithm, scope, basis, and resulting RuleBook hashes;
-3. **execution RuleBook identity** binds only canonical target economics and nonempty stable economic-authority refs; a separately selected `CnAShareFeeExecutionAuthorityV2` later binds the exact market/tax book pair, component refs/digests, route/product, and profile/request identities consumed by the additive v2 policies.
+3. **execution RuleBook identity** binds only canonical target economics and nonempty stable economic-authority refs; a separately selected `CnAShareFeeExecutionAuthorityV2` later binds its exact `CnAShareFeeExecutionScopeV2`, market/tax book pair, `ProfileComponentRef.component_digest` values, route/product, and profile/request identities consumed by the additive v2 policies.
 
 Any new evidence changes closure, projection, declaration, event, stream, manifest, and publication identities. Existing finite RuleBook bytes/hashes change only when canonical target economics change. Closure-only evidence may therefore produce a new projection/publication with byte-identical RuleBooks; a target-affecting correction must change the affected RuleBook bytes/hash. Closure or projection hashes must not be inserted into economic source refs or generated charge-rule IDs merely to force execution identity changes.
 
@@ -80,7 +80,7 @@ target_to_exclusive <= official_record_as_of <= closure_evidence_available_at
 
 ### Scope
 
-F1 remains blocked until the complete G08E route/product v2 authority, private profile-binding seam, Order/Fill constructors, and policies are `PASSED`. After that independent pass, the F1/F2 success envelope is exactly the execution-enforceable scope below:
+F1 remains blocked until the complete G08E route/product v2 execution Scope/authority, private profile-binding seam, structured Order/Fill constructors, and policies are `PASSED`. After that independent pass, the F1/F2 success envelope is exactly the execution-enforceable scope below:
 
 ```text
 execution_access_route: DOMESTIC
@@ -102,7 +102,7 @@ Only these ordered lineages are in scope:
 4. `hkscc_transfer`;
 5. `stamp_duty`.
 
-`hkscc_transfer` is retained as an explicit route-applicability lineage and must close as not applicable for `DOMESTIC`; it is never blended with `chinaclear_transfer`. Northbound, preferred-stock, and ETF evidence/books are outside this G12H increment and cannot fall back to domestic ordinary economics. Board remains constrained by the immutable bound profile; no symbol or stable-key inference is allowed.
+`exchange_handling` is the official-source lineage and maps only to the v2 generated charge key `handling`; `securities_regulatory`, `chinaclear_transfer`, `hkscc_transfer`, and `stamp_duty` map to identically named v2 keys. `hkscc_transfer` is retained as an explicit route-applicability lineage and must close as not applicable for `DOMESTIC`; it is never blended with `chinaclear_transfer`. Northbound, preferred-stock, and ETF evidence/books are outside this G12H increment and cannot fall back to domestic ordinary economics. Board remains constrained by the immutable bound profile; no symbol or stable-key inference is allowed.
 
 ### Required proof
 
@@ -145,7 +145,7 @@ Freeze one canonical JSON body with this exact top-level field order and schema 
 }
 ```
 
-`baseline_binding` binds the immutable v1 declaration hash, publication manifest hash, profile request hash, market-profile digest, component-manifest hash, source-manifest hash, exact target, existing blocker result, and the accepted/passed G08E v2 authority/binding/policy contract identities plus protected-byte evidence. It does not bind a future G12H authority instance or require future closure books for G08E acceptance. V1 identities remain historical context, not route/product execution authority.
+`baseline_binding` binds the immutable v1 declaration hash, publication manifest hash, profile request hash, market-profile digest, component-manifest hash, source-manifest hash, exact target, existing blocker result, and the accepted/passed G08E v2 execution-Scope/authority/binding/policy contract identities plus protected-byte evidence. It does not bind a future G12H authority instance or require future closure books for G08E acceptance. V1 identities remain historical context, not route/product execution authority.
 
 `target_scope` freezes XSHE, `InstrumentType.EQUITY`, CNY quote and settlement, `AUCTION`, all profile-admitted boards, `execution_access_route=DOMESTIC`, `fee_product_class=ORDINARY_A_SHARE`, exact `trade_notional` basis, and target bounds. The exact invariant is `target_to_exclusive <= official_record_as_of <= closure_evidence_available_at`. Each selected official revision is published/recorded by `official_record_as_of`; every source capture and receipt used is available by `closure_evidence_available_at`.
 
@@ -212,7 +212,7 @@ Failure is atomic: no successful closure artifact, derived RuleBook, declaration
 
 ### F1 pass gate
 
-F1 cannot start until the complete G08E route/product fee v2 authority/binding/policy contract is `PASSED`. Its acceptance uses only the finite XSHE compatibility projection and is not an F1 output or prerequisite. Once started, F1 passes only after exact captures, normalized source identities, closure body/hash, failure-free reconstruction, and independent source/closure review pass. Until then no G12H projector, declaration fixture, publication, or analyzer RED is authorized.
+F1 cannot start until the complete G08E route/product fee v2 execution-Scope/authority/binding/policy contract is `PASSED`. Its acceptance uses only the finite XSHE compatibility projection and is not an F1 output or prerequisite. Once started, F1 passes only after exact captures, normalized source identities, closure body/hash, failure-free reconstruction, and independent source/closure review pass. Until then no G12H projector, declaration fixture, publication, or analyzer RED is authorized.
 
 ## F2 — pure source authority to finite execution RuleBooks
 
