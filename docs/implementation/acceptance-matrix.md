@@ -118,8 +118,8 @@ artifact_hashes: []
 | G08C | PASSED | trading-kernel profiles/cn_a_share | G08A, WP-04E, WP-05D, WP-05G | none |
 | G08D | PASSED | trading-kernel profiles/cn_a_share | G08A, G08C, WP-05G | none |
 | G08E | PASSED | trading-kernel profiles/cn_a_share | WP-05H, WP-05J | none |
-| G08E-ROUTE-PRODUCT-FEE-V2A | READY — contract plan `800b94a012e5306185c736ca240eeda69b0d029d` | trading-kernel profiles/cn_a_share | G08E, ADR-0005 | none; pure Kernel contract RED authorized |
-| G08E-ROUTE-PRODUCT-FEE-V2B | DRAFT / BLOCKED | backtest-runtime private profile/build binding | G08E-ROUTE-PRODUCT-FEE-V2A | V2A PASSED interface and accepted hashes |
+| G08E-ROUTE-PRODUCT-FEE-V2A | PASSED — immutable source `b9f959a68a6e42d668253d0592ae65a08cedaeb5`; fixture `sha256:5f0241887237a568f411a7d4a664482848ee134202d930903404aaf367f463e0` | trading-kernel profiles/cn_a_share | G08E, ADR-0005 | none; final security review PASS, full and clean-detached suites `2091 passed`, Pyright/Ruff/import/gitleaks clean |
+| G08E-ROUTE-PRODUCT-FEE-V2B | READY | backtest-runtime private profile/build binding | G08E-ROUTE-PRODUCT-FEE-V2A | none; V2A accepted interface/hashes frozen, private Runtime RED authorized |
 | G08E-ROUTE-PRODUCT-FEE-V2C | DRAFT / BLOCKED | parent acceptance fan-in | G08E-ROUTE-PRODUCT-FEE-V2A, G08E-ROUTE-PRODUCT-FEE-V2B | both implementation nodes PASSED plus legacy parity/full acceptance |
 | G08F | PASSED | trading-kernel profiles/cn_a_share | G08A, WP-06A, WP-06B | none |
 | G08G | PASSED | trading-kernel profiles/cn_a_share | G08F, G03 | none |
