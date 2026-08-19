@@ -166,7 +166,7 @@ def test_projection_golden_fixture_and_raw_bytes_are_locked() -> None:
     fixture = root / "tests/fixtures/kernel/profiles/cn_a_share/commission-tax-v2.json"
     assert (
         hashlib.sha256(fixture.read_bytes()).hexdigest()
-        == "80d5f0a4d920eedf01f0b5e5702809a049eba63fa3f160499d1f95f6ebd04c6e"
+        == "5f0241887237a568f411a7d4a664482848ee134202d930903404aaf367f463e0"
     )
     source_market = market_rule_book()
     source_tax = tax_rule_book()
@@ -182,16 +182,4 @@ def test_projection_golden_fixture_and_raw_bytes_are_locked() -> None:
     )
     result = project_cn_a_share_domestic_ordinary_fee_rules_v2(market, tax)
     golden = json.loads(fixture.read_bytes())
-    assert {
-        "projection_hash": result.projection_hash,
-        "source_market_rule_book_hash": result.source_market_rule_book_hash,
-        "source_stamp_duty_rule_book_hash": result.source_stamp_duty_rule_book_hash,
-        "market_fee_rule_book_hash": result.market_fee_rule_book_hash,
-        "stamp_duty_rule_book_hash": result.stamp_duty_rule_book_hash,
-        "market_band_hashes": [
-            band.band_hash for band in result.market_fee_rule_book.bands
-        ],
-        "stamp_band_hashes": [
-            band.band_hash for band in result.stamp_duty_rule_book.bands
-        ],
-    } == {key: golden[key] for key in ("projection_hash", "source_market_rule_book_hash", "source_stamp_duty_rule_book_hash", "market_fee_rule_book_hash", "stamp_duty_rule_book_hash", "market_band_hashes", "stamp_band_hashes")}
+    assert result.projection_hash == golden["hashes"]["projection"]

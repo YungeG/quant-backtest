@@ -8,8 +8,6 @@ import subprocess
 import sys
 from pathlib import Path
 
-import pytest
-
 import crypto_quant_trading
 from crypto_quant_trading.profiles import cn_a_share
 
@@ -112,7 +110,7 @@ def test_v2_reflection_freezes_enum_wires_dataclass_shapes_and_positional_apis()
     }
     classes = tuple(getattr(module, name) for name in V2_EXPORTS if isinstance(getattr(module, name, None), type) and dataclasses.is_dataclass(getattr(module, name)))
     for cls in classes:
-        assert getattr(cls, "__dataclass_params__").frozen
+        assert cls.__dataclass_params__.frozen
         assert hasattr(cls, "__slots__")
         signature = inspect.signature(cls)
         assert all(parameter.default is inspect.Parameter.empty for parameter in signature.parameters.values())
