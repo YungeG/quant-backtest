@@ -14,7 +14,9 @@ For a precisely scoped official rule revision, economic effect begins at its aut
 
 Documentary correction and economic succession are separate lineages. A corrected publication names the prior representation through `corrects_revision_id`; an economic state names its economic predecessor through `economic_predecessor_revision_id`. At the official-record cutoff, closure first selects the terminal documentary representation of each official act, then orders those selected economic states by authoritative `effective_from`. A retroactive correction is not rejected merely because it was published later or moves an effective boundary backward. Unresolved documentary/economic forks, gaps, overlaps, or conflicts fail closed.
 
-Every economic state binds the exact calculation basis and applicability scope: Venue, board, instrument class, currency, and mechanism. Projection is forbidden when that basis or scope cannot be represented and enforced by the existing execution policy; Main-Board-only evidence cannot produce a Venue-wide RuleBook.
+Every economic state binds the exact calculation basis and applicability scope. Because `CnAShareCashFeeRuleQuery` can enforce only Venue, `InstrumentType`, quote/settlement currency, and mechanism—and cannot distinguish board, domestic access, or Stock Connect—the only F1/F2 success envelope is exactly XSHE, `InstrumentType.EQUITY`, CNY quote and settlement, `AUCTION`, all boards, and every access channel indistinguishable to that query. Closure must cover every fee/tax difference applicable anywhere in that envelope, including Stock Connect. Domestic-only, Main-Board-only, or Stock-Connect-excluding evidence is insufficient and F2 returns `UNSUPPORTED_SCOPE`; it cannot create a generally reusable RuleBook.
+
+A separately approved execution-enforced discriminator contract could permit narrower authority by making board/access scope observable at fee/tax evaluation. That contract is outside this decision and plan.
 
 Source authority remains distinct from execution authority:
 
@@ -33,6 +35,7 @@ The G12H analyzer may proceed only after exact predecessor, post-target endpoint
 
 - Existing G08E/G08H types, fixtures, hashes, and G12C/D v1 publication remain byte-identical.
 - Closure-only evidence changes leave finite execution RuleBook bytes unchanged; target-affecting economic changes produce new RuleBook hashes.
+- Current domestic/Main-Board research does not close the full policy-representable envelope, including Stock Connect, so F1 remains blocked pending broader evidence.
 - No open-ended interval or fallback is added to Runtime execution.
 - No Runtime/profile composer or source projector is authorized before real closure evidence passes.
 - If projection code is needed after closure, it is one concrete pure seam beside the existing Kernel A-share fee/tax types; Builder publication imports neither Kernel nor Runtime.
