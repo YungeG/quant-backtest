@@ -1,6 +1,6 @@
 ---
 id: G12H-EFFECTIVE-UNTIL-SUPERSEDED-V2
-readiness: BLOCKED_ON_ACCESS_PRODUCT_DISCRIMINATOR
+readiness: BLOCKED_ON_ROUTE_PRODUCT_FEE_V2_PASS
 gate_status: DRAFT
 owner: official-source acquisition + trading-kernel projection + market-bundle-builder publication
 produces:
@@ -12,8 +12,10 @@ consumes:
   - exact official predecessor, endpoint, and successor-index evidence
   - immutable G08E/G08H and G12C/D v1 identities
   - ADR 0004 effective-until-authoritatively-superseded semantics
+  - ADR 0005 execution access-route and fee-product-class semantics
+  - G08E route/product fee v2 contract
 depends_on:
-  contract: [G08E, G08H, G12C, G12D]
+  contract: [G08E, G08H, G08E-ROUTE-PRODUCT-FEE-V2, G12C, G12D]
   evidence: [real XSHE July-2026 successor closure]
   write_conflict: [kernel-cn-a-share-fee-tax, builder-rule-publication, acceptance-registry]
 fan_out: [G12H, G12L-*, G12M-*]
@@ -23,9 +25,9 @@ fan_out: [G12H, G12L-*, G12M-*]
 
 ## Status and authority
 
-`BLOCKED`. Initial F1 research proves the existing fee query cannot enforce the full official fee envelope: domestic and Northbound access differ, and ordinary shares, preferred stock, and Northbound ETFs have different fee schedules. Further closure acquisition and F2/F3 remain blocked until an additive execution-enforced access-route and fee-product-class contract—or another explicitly enforceable narrower scope—is approved. No default or silent Stock Connect exclusion is permitted.
+`BLOCKED_ON_ROUTE_PRODUCT_FEE_V2_PASS`. [ADR 0005](../../../adr/0005-cn-a-share-fees-require-access-route-and-product-class.md) accepts the additive route/product contract, and [the G08E v2 plan](../g08/g08e-route-product-fee-v2.md) is `READY_FOR_CONTRACT_RED` only. F1 may resume for the enforceable `DOMESTIC + ORDINARY_A_SHARE` scope only after that contract becomes `PASSED`. Until then no closure acquisition artifact, F2 projection, F3 publication, analyzer RED, or qualification change is authorized. No default, inference, or silent Stock Connect/product exclusion is permitted.
 
-Accepted semantics: [ADR 0004](../../../adr/0004-official-rules-effective-until-authoritatively-superseded.md).
+Accepted semantics: [ADR 0004](../../../adr/0004-official-rules-effective-until-authoritatively-superseded.md) and [ADR 0005](../../../adr/0005-cn-a-share-fees-require-access-route-and-product-class.md).
 
 Evidence baseline:
 
@@ -40,13 +42,13 @@ The existing v1 declaration still deterministically fails `COVERAGE_GAP / market
 
 A scoped official rule revision is economically effective from its authoritative start until a competent authority makes an authoritative successor effective. Documentary correction and economic succession are independent: `corrects_revision_id` links representations of the same official act, while `economic_predecessor_revision_id` links complete economic states across official acts. At cutoff, closure selects the terminal documentary representation of each act, then orders selected economic states by authoritative `effective_from`; publication, capture, and tuple order never decide economic order. Retroactive correction is allowed, including one recorded after target end that changes a target segment. Unresolved documentary/economic forks, gaps, overlaps, or conflicts fail closed.
 
-Source-law continuity is not an execution interval: a successful closure is projected to one finite target and materialized with the existing finite `CnAShareMarketFeeBand`, `CnAShareStampDutyBand`, `CnAShareMarketFeeRuleBook`, and `CnAShareStampDutyRuleBook` types only when the exact basis and scope can be enforced by those policies.
+Source-law continuity is not an execution interval: a successful closure is projected to one finite target and materialized with the additive finite `CnAShareMarketFeeBandV2`, `CnAShareStampDutyBandV2`, `CnAShareMarketFeeRuleBookV2`, and `CnAShareStampDutyRuleBookV2` types only after the passed route/product contract makes the exact basis and scope execution-enforceable. Existing v1 types remain byte-identical historical authority and are not July-2026 output types.
 
 The identities are deliberately separate:
 
 1. **closure identity** binds all evidence, documentary/economic lineages, candidate dispositions, scope, basis, and cutoffs;
 2. **projection identity** binds closure identity, selected revisions, finite target, algorithm, scope, basis, and resulting RuleBook hashes;
-3. **execution RuleBook identity** binds only canonical target economics and the stable economic-authority refs consumed by existing fee/tax policies.
+3. **execution RuleBook identity** binds only canonical target economics and the stable economic-authority refs consumed by the additive v2 fee/tax policies.
 
 Any new evidence changes closure, projection, declaration, event, stream, manifest, and publication identities. Existing finite RuleBook bytes/hashes change only when canonical target economics change. Closure-only evidence may therefore produce a new projection/publication with byte-identical RuleBooks; a target-affecting correction must change the affected RuleBook bytes/hash. Closure or projection hashes must not be inserted into economic source refs or generated charge-rule IDs merely to force execution identity changes.
 
@@ -78,16 +80,17 @@ target_to_exclusive <= official_record_as_of <= closure_evidence_available_at
 
 ### Scope
 
-The F1/F2 success envelope is exactly the full domain enforceable by `CnAShareCashFeeRuleQuery` for the preserved target:
+F1 remains blocked until G08E route/product fee v2 is `PASSED`. After that pass, the F1/F2 success envelope is exactly the execution-enforceable scope below:
 
 ```text
+execution_access_route: DOMESTIC
+fee_product_class: ORDINARY_A_SHARE
 venue_id: XSHE
 instrument_type: InstrumentType.EQUITY
 quote_currency_id: CNY
 settlement_currency_id: CNY
 trade_mechanism: AUCTION
-board_scope: all boards (query-indistinguishable)
-access_channel_scope: all access channels (query-indistinguishable)
+board_scope: all boards admitted by the bound profile
 basis: trade_notional
 ```
 
@@ -95,18 +98,17 @@ Only these ordered lineages are in scope:
 
 1. `exchange_handling`;
 2. `securities_regulatory`;
-3. `stock_transfer`;
-4. `stamp_duty`.
+3. `chinaclear_transfer`;
+4. `hkscc_transfer`;
+5. `stamp_duty`.
 
-The query cannot distinguish domestic access from Stock Connect or distinguish boards. F1 must therefore close every fee/tax difference applicable anywhere in the envelope, including Stock Connect. Domestic-only, Main-Board-only, or Stock-Connect-excluding evidence is an explicit current limitation and cannot pass F1. F2 returns `UNSUPPORTED_SCOPE` before RuleBook construction for any narrower authority.
-
-A separately approved execution-enforced discriminator contract could permit narrower board/access authority. It is outside this plan and cannot be assumed by F1-F3.
+`hkscc_transfer` is retained as an explicit route-applicability lineage and must close as not applicable for `DOMESTIC`; it is never blended with `chinaclear_transfer`. Northbound, preferred-stock, and ETF evidence/books are outside this G12H increment and cannot fall back to domestic ordinary economics. Board remains constrained by the immutable bound profile; no symbol or stable-key inference is allowed.
 
 ### Required proof
 
 For every lineage, capture and verify:
 
-1. exact official predecessor authority and every semantic field used by economics: competent issuer, official act, authoritative `effective_from`, rate, `trade_notional` basis, buy/sell applicability, XSHE, `InstrumentType.EQUITY`, CNY quote/settlement, `AUCTION`, all boards, and all query-indistinguishable access channels;
+1. exact official predecessor authority and every semantic field used by economics: competent issuer, official act, authoritative `effective_from`, rate or explicit not-applicability, `trade_notional` basis, buy/sell applicability, XSHE, `InstrumentType.EQUITY`, CNY quote/settlement, `AUCTION`, all profile-admitted boards, `execution_access_route=DOMESTIC`, and `fee_product_class=ORDINARY_A_SHARE`;
 2. every documentary representation and exact `corrects_revision_id` chain for each official act;
 3. every selected complete economic state and exact `economic_predecessor_revision_id` chain across official acts;
 4. an official endpoint table, validity record, or complete historical register whose record state is at or after target end;
@@ -143,11 +145,11 @@ Freeze one canonical JSON body with this exact top-level field order and schema 
 }
 ```
 
-`baseline_binding` binds the immutable v1 declaration hash, publication manifest hash, profile request hash, market-profile digest, component-manifest hash, source-manifest hash, exact target, and existing blocker result.
+`baseline_binding` binds the immutable v1 declaration hash, publication manifest hash, profile request hash, market-profile digest, component-manifest hash, source-manifest hash, exact target, existing blocker result, and the accepted/passed G08E route-product fee v2 contract identities and protected-byte evidence. V1 identities remain historical context, not route/product execution authority.
 
-`target_scope` freezes XSHE, `InstrumentType.EQUITY`, CNY quote and settlement, `AUCTION`, all boards, all query-indistinguishable access channels, exact `trade_notional` basis, and target bounds. The exact invariant is `target_to_exclusive <= official_record_as_of <= closure_evidence_available_at`. Each selected official revision is published/recorded by `official_record_as_of`; every source capture and receipt used is available by `closure_evidence_available_at`.
+`target_scope` freezes XSHE, `InstrumentType.EQUITY`, CNY quote and settlement, `AUCTION`, all profile-admitted boards, `execution_access_route=DOMESTIC`, `fee_product_class=ORDINARY_A_SHARE`, exact `trade_notional` basis, and target bounds. The exact invariant is `target_to_exclusive <= official_record_as_of <= closure_evidence_available_at`. Each selected official revision is published/recorded by `official_record_as_of`; every source capture and receipt used is available by `closure_evidence_available_at`.
 
-`components` is a four-item tuple in the lineage order above. Each component body is exact:
+`components` is a five-item tuple in the lineage order above. Each component body is exact:
 
 ```text
 {
@@ -165,11 +167,11 @@ Freeze one canonical JSON body with this exact top-level field order and schema 
 }
 ```
 
-Each documentary representation binds `official_act_id`, `revision_id`, `corrects_revision_id`, `official_recorded_at`, representation source refs, and representation hash. Selected economic states additionally bind `economic_predecessor_revision_id`, authoritative `effective_from`, rate, basis, side applicability, and full scope. Closure selects exactly one documentary terminal per official act before evaluating the economic chain.
+Each documentary representation binds `official_act_id`, `revision_id`, `corrects_revision_id`, `official_recorded_at`, representation source refs, and representation hash. Selected economic states additionally bind `economic_predecessor_revision_id`, authoritative `effective_from`, applies state, rate, basis, side applicability, execution access route, fee product class, and full scope. Closure selects exactly one documentary terminal per official act before evaluating the economic chain.
 
-`economic_state_hash` is a projection/provenance identity canonical over official act identity, lineage, normalized economic predecessor act, authoritative effective time, rate, basis, side applicability, and full scope. It excludes documentary revision IDs and acquisition metadata. Separately, each finite target segment derives a `target_economic_semantics_hash` only from lineage, clipped interval, rate, basis, side applicability, and full scope. It excludes official act, revision, predecessor, capture/receipt, closure, and projection identities. Execution source refs derive only from that target-economic hash. Therefore any evidence or authority-lineage change with identical target economics changes closure/projection identities but not execution RuleBook bytes.
+`economic_state_hash` is a projection/provenance identity canonical over official act identity, lineage, normalized economic predecessor act, authoritative effective time, applies state, rate, basis, side applicability, execution access route, fee product class, and full scope. It excludes documentary revision IDs and acquisition metadata. Separately, each finite target segment derives a `target_economic_semantics_hash` only from lineage, clipped interval, applies state, rate, basis, side applicability, execution access route, fee product class, and full scope. It excludes official act, revision, predecessor, capture/receipt, closure, and projection identities. Execution source refs derive only from that target-economic hash. Therefore any evidence or authority-lineage change with identical target economics changes closure/projection identities but not execution RuleBook bytes.
 
-Allowed conclusions are `closed_unchanged` and `closed_with_successor_bands`. A later documentary correction with no canonical target-economic change may remain `closed_unchanged`; a correction that changes any target segment is `closed_with_successor_bands`. Repeal without a complete replacement, unresolved documentary/economic fork, scope/effective-time conflict, incomplete index coverage, gap, or overlap fails F1.
+Allowed conclusions are `closed_unchanged`, `closed_with_successor_bands`, and `closed_not_applicable`. Only `hkscc_transfer` may use `closed_not_applicable`, and only with official route-applicability evidence for `DOMESTIC`. A later documentary correction with no canonical target-economic change may remain `closed_unchanged`; a correction that changes any target segment is `closed_with_successor_bands`. Repeal without a complete replacement, unresolved documentary/economic fork, scope/effective-time conflict, incomplete index coverage, gap, or overlap fails F1.
 
 `qualification` may set only dimension-scoped official successor closure true. Provider authority, provider completeness, rule coverage, decision grade, live use, and deployment remain false.
 
@@ -210,7 +212,7 @@ Failure is atomic: no successful closure artifact, derived RuleBook, declaration
 
 ### F1 pass gate
 
-F1 passes only after exact captures, normalized source identities, closure body/hash, failure-free reconstruction, and independent source/closure review pass. Until then no production projector, runtime/profile composer, v2 fixture, or v2 publication is authorized.
+F1 cannot start until the G08E route/product fee v2 contract is `PASSED`. Once started, F1 passes only after exact captures, normalized source identities, closure body/hash, failure-free reconstruction, and independent source/closure review pass. Until then no G12H projector, declaration fixture, publication, or analyzer RED is authorized.
 
 ## F2 — pure source authority to finite execution RuleBooks
 
@@ -221,19 +223,19 @@ F1 passes only after exact captures, normalized source identities, closure body/
 Add one concrete module beside the existing Kernel A-share fee/tax types:
 
 ```text
-packages/trading-kernel/src/crypto_quant_trading/profiles/cn_a_share/effective_fee_tax_rules.py
+packages/trading-kernel/src/crypto_quant_trading/profiles/cn_a_share/effective_fee_tax_rules_v2.py
 ```
 
 It owns exactly one public operation:
 
 ```python
-project_cn_a_share_effective_fee_tax_rules(
-    request: CnAShareEffectiveFeeTaxProjectionRequest,
+project_cn_a_share_effective_fee_tax_rules_v2(
+    request: CnAShareEffectiveFeeTaxProjectionRequestV2,
     /,
-) -> CnAShareEffectiveFeeTaxProjection | CnAShareEffectiveFeeTaxProjectionFailure
+) -> CnAShareEffectiveFeeTaxProjectionV2 | CnAShareEffectiveFeeTaxProjectionFailureV2
 ```
 
-The module may import `commission_tax` and domain value types. It imports no Builder, Runtime, provider, repository, filesystem, network, database, process, or wall clock. It performs no I/O. No class-based projector, Protocol, interface, registry, resolver, factory, composer, adapter framework, DSL, callback, cache, or plug-in is added.
+The module may import `commission_tax_v2` and domain value types. It imports no Builder, Runtime, provider, repository, filesystem, network, database, process, or wall clock. It performs no I/O. No class-based projector, Protocol, interface, registry, resolver, factory, composer, adapter framework, DSL, callback, cache, or plug-in is added.
 
 If exported, concrete types and the function are exported only from `crypto_quant_trading.profiles.cn_a_share`, not the global `crypto_quant_trading` root.
 
@@ -256,10 +258,12 @@ One normalized revision is one documentary representation of a complete charge s
   settlement_currency_id,
   trade_mechanism,
   board_scope,
-  access_channel_scope,
+  execution_access_route,
+  fee_product_class,
   basis,
   effective_from,
   official_recorded_at,
+  applies,
   rate,
   applies_to_buy,
   applies_to_sell,
@@ -269,7 +273,7 @@ One normalized revision is one documentary representation of a complete charge s
 
 `corrects_revision_id` is `None` only for the first documentary representation of one `official_act_id`; otherwise it names the immediately corrected representation of that same act. `economic_predecessor_revision_id` names the selected complete economic state from the preceding official act, or `None` for the root. It never substitutes for documentary correction.
 
-The accepted exact scope is XSHE, `InstrumentType.EQUITY`, CNY quote and settlement, `AUCTION`, `board_scope="all_boards"`, `access_channel_scope="all_query_indistinguishable_access_channels"`, and `basis="trade_notional"`. The first three lineages are bilateral; stamp duty is seller-only. `Rate.basis` remains `fee_fraction` and is distinct from calculation `basis`. Source refs reuse `CnAShareFeeRuleSourceRef` for documentary authority; execution Bands use deterministic semantic refs derived only from canonical finite target economics, not official-act, revision, predecessor, closure, capture, or receipt identity.
+The accepted exact scope is XSHE, `InstrumentType.EQUITY`, CNY quote and settlement, `AUCTION`, `board_scope="all_profile_admitted_boards"`, `execution_access_route="domestic"`, `fee_product_class="ordinary_a_share"`, and `basis="trade_notional"`. Handling, regulatory, and ChinaClear transfer are bilateral; HKSCC transfer is explicitly not applicable for the domestic route; stamp duty is seller-only. `Rate.basis` remains `fee_fraction` and is distinct from calculation `basis`. Source refs reuse `CnAShareFeeRuleSourceRef` for documentary authority; execution Bands use deterministic semantic refs derived only from canonical finite target economics, not official-act, revision, predecessor, closure, capture, or receipt identity.
 
 At `official_record_as_of`, group by `official_act_id`, select one terminal `corrects_revision_id` chain member, normalize economic predecessor links to selected terminals, then sort economic states by authoritative `effective_from`. A retroactive correction may move a boundary earlier than its publication or its prior representation and does not fail solely for that ordering. No caller-supplied end exists: each end is the next selected economic state's effective time or the finite target end. Unresolved correction/economic forks, cycles, equal-time conflicting states, gaps, overlaps, repeal without replacement, and incomplete replacement fail closed.
 
@@ -279,7 +283,7 @@ The canonical request body is exact:
 
 ```text
 {
-  type: "cn_a_share_effective_fee_tax_projection_request",
+  type: "cn_a_share_effective_fee_tax_projection_request_v2",
   schema_version: 1,
   request_key,
   venue_id,
@@ -288,7 +292,8 @@ The canonical request body is exact:
   settlement_currency_id,
   trade_mechanism,
   board_scope,
-  access_channel_scope,
+  execution_access_route,
+  fee_product_class,
   basis,
   target_from,
   target_to_exclusive,
@@ -300,28 +305,28 @@ The canonical request body is exact:
 }
 ```
 
-The request and its hash bind the exact four lineages and full applicability scope. It requires a finite non-empty target and exactly `target_to_exclusive <= official_record_as_of <= closure_evidence_available_at`. Every selected revision must have `official_recorded_at <= official_record_as_of`; every bound capture/receipt must be available by `closure_evidence_available_at`. Violations are `CUTOFF_INVALID`.
+The request and its hash bind the exact five lineages and full applicability scope. It requires a finite non-empty target and exactly `target_to_exclusive <= official_record_as_of <= closure_evidence_available_at`. Every selected revision must have `official_recorded_at <= official_record_as_of`; every bound capture/receipt must be available by `closure_evidence_available_at`. Violations are `CUTOFF_INVALID`.
 
-Before constructing any Band, projection rejects unsupported basis or scope. In v1, `basis` must be `trade_notional`, and scope must equal the complete query-enforceable envelope above. Domestic-only, Main-Board-only, or Stock-Connect-excluding evidence is `UNSUPPORTED_SCOPE`; it cannot yield a generally reusable RuleBook. Success requires closure of any Stock Connect or other access-channel fee/tax difference within the envelope.
+Before constructing any Band, projection rejects unsupported basis or scope. `basis` must be `trade_notional`, route/product must be exactly `DOMESTIC + ORDINARY_A_SHARE`, and the remaining scope must equal the execution-enforceable envelope above. Northbound, preferred-stock, ETF, board-limited outside the bound profile, or route/product-omitting evidence is `UNSUPPORTED_SCOPE` and returns no partial RuleBook.
 
-Projection first selects terminal documentary representations, then orders selected economic states by `effective_from`, derives boundaries, clips each lineage to the target, unions the three fee-lineage boundaries, resolves exactly one state per segment, and constructs existing finite Bands and RuleBooks. Adjacent Bands may coalesce only when every canonical target-economic field and stable economic-authority ref is identical.
+Projection first selects terminal documentary representations, then orders selected economic states by `effective_from`, derives boundaries, clips each lineage to the target, unions the four market-fee lineage boundaries, resolves exactly one state per segment, and constructs additive finite v2 Bands and RuleBooks. The HKSCC component remains separately represented as not applicable; it is never omitted or merged into ChinaClear. Adjacent Bands may coalesce only when every canonical target-economic field and stable economic-authority ref is identical.
 
 Execution RuleBook identities are new lineages:
 
 ```text
-equity.cn_a_share.cash.market-fees.effective-until-superseded.v1
-equity.cn_a_share.cash.stamp-duty.effective-until-superseded.v1
+equity.cn_a_share.cash.market-fees.domestic.ordinary-a-share.effective-until-superseded.v2
+equity.cn_a_share.cash.stamp-duty.domestic.ordinary-a-share.effective-until-superseded.v2
 ```
 
-Both use `rule_book_version=1`. Closure-only evidence, documentary correction, or a new official act with identical target economics leaves these RuleBook canonical bytes and hashes unchanged. Only a changed target interval, rate, side, basis, or supported scope changes the affected RuleBook hash. Any new evidence still changes projection/declaration/publication identities. A projection semantic/schema change increments the algorithm/type/key version.
+Both use `rule_book_version=2` and exact route/product scope. Closure-only evidence, documentary correction, or a new official act with identical target economics leaves these RuleBook canonical bytes and hashes unchanged. Only a changed target interval, rate, side, basis, or supported scope changes the affected RuleBook hash. Any new evidence still changes projection/declaration/publication identities. A projection semantic/schema change increments the algorithm/type/key version.
 
 The canonical result body is exact:
 
 ```text
 {
-  type: "cn_a_share_effective_fee_tax_projection",
+  type: "cn_a_share_effective_fee_tax_projection_v2",
   schema_version: 1,
-  algorithm_id: "cn-a-share-effective-until-superseded-fee-tax-projection-v1",
+  algorithm_id: "cn-a-share-effective-until-superseded-fee-tax-projection-v2",
   request_hash,
   closure_hash,
   venue_id,
@@ -330,7 +335,8 @@ The canonical result body is exact:
   settlement_currency_id,
   trade_mechanism,
   board_scope,
-  access_channel_scope,
+  execution_access_route,
+  fee_product_class,
   basis,
   target_from,
   target_to_exclusive,
@@ -345,7 +351,7 @@ The canonical result body is exact:
 }
 ```
 
-`projection_hash = canonical_sha256(result body)`. Selected hashes use the four-lineage order and make every evidence change visible in projection identity. Closure/projection/documentary hashes remain outside existing RuleBook and generated fee-rule canonical preimages; RuleBook refs bind stable canonical economic states.
+`projection_hash = canonical_sha256(result body)`. Selected hashes use the five-lineage order and make every evidence change visible in projection identity. Closure/projection/documentary hashes remain outside v2 RuleBook and generated fee-rule canonical preimages; RuleBook refs bind stable canonical economic states.
 
 ### F2 failures
 
@@ -396,8 +402,8 @@ Rules:
 - `baseline_profile_binding` preserves the immutable G08H/v1 identities and labels them historical context, not proof that the old profile contained projected fee/tax RuleBooks;
 - `continuity_semantics` is exactly `effective_until_authoritatively_superseded`;
 - `retrospective_availability` contains fields named exactly `historical_profile_composed_at`, `official_record_as_of`, and `closure_evidence_available_at`, and enforces `target_to_exclusive <= official_record_as_of <= closure_evidence_available_at`;
-- `closure_binding` contains the closure key/version/hash, full scope/basis, and ordered terminal documentary/economic hashes;
-- `projection_binding` contains algorithm ID, projection hash, full scope/basis, and both execution RuleBook hashes;
+- `closure_binding` contains the closure key/version/hash, exact `DOMESTIC + ORDINARY_A_SHARE` scope/basis, and ordered terminal documentary/economic hashes;
+- `projection_binding` contains algorithm ID, projection hash, exact route/product/scope/basis, and both execution RuleBook hashes;
 - `required_dimensions` is exactly `calendar`, `order_rules`, `market_fees`, `stamp_duty`, `corporate_action_entitlements` in that order;
 - Calendar, order-rule, and corporate-action canonical bodies/hashes are reused byte-for-byte from v1;
 - market-fee and stamp-duty bodies are the F2 finite projections;
@@ -478,11 +484,11 @@ Within a code, the five-dimension order decides first failure. Zero declared dim
 - documentary terminals are selected per official act before economic states are ordered by `effective_from`; publication order does not cause rejection;
 - unresolved documentary/economic fork, gap, overlap, equal-time conflict, or contradictory applicability fails closed;
 - exact cutoff equality passes; target end after record cutoff, record cutoff after closure evidence availability, selected official revision after record cutoff, capture/receipt after evidence cutoff, and historical composition time substitution all fail `CUTOFF_INVALID`;
-- unsupported `basis`, domestic-only, board-limited, or Stock-Connect-excluding applicability fails before RuleBook construction and returns no partial output;
+- unsupported `basis`, non-domestic route, non-ordinary product, route/product omission, or board scope outside the immutable bound profile fails before RuleBook construction and returns no partial output;
 - gap at target start/middle/end and overlap at every boundary fail in dimension order;
 - exact half-open adjacency passes; target-end equality is not overlap;
 - calendar local-date and UTC dimensions preserve their declared domains;
-- market-fee applicability keeps handling/regulatory/transfer source tuples distinct;
+- market-fee applicability keeps handling, regulatory, ChinaClear transfer, and HKSCC transfer source tuples and generated rules distinct;
 - repeated analysis yields byte-identical report/failure hashes;
 - provider, decision-grade, live, and deployment flags cannot become true;
 - no Runtime/Kernel import, Builder root export, generic rule model, or second economic engine appears.
@@ -501,7 +507,7 @@ Within a code, the five-dimension order decides first failure. Zero declared dim
 
 - focused pure tests for documentary terminal selection, economic predecessor normalization, publication-order independence, retroactive target correction, in-target successor split, after-target successor, unresolved repeal/fork/cycle/conflict, every cutoff violation, target clipping, gap/overlap, canonical hashes, forged constructors, and no partial output;
 - prove closure-only evidence changes projection/publication identity but not RuleBook bytes, while target-affecting correction changes the affected RuleBook hash;
-- reject unsupported basis and any domestic-only, board-limited, or access-channel-limited scope before RuleBook construction;
+- reject unsupported basis, any route other than `DOMESTIC`, any product other than `ORDINARY_A_SHARE`, omitted route/product, and board scope outside the immutable bound profile before RuleBook construction;
 - rerun existing G08E tests and accepted fixture hashes unchanged;
 - architecture assertion for the one concrete Kernel seam and forbidden imports.
 
@@ -519,6 +525,6 @@ Every phase ends with focused pytest, import-boundary checks, canonical source a
 
 ## Nonclaims and prohibited scope
 
-This plan does not claim provider/archive completeness, universal broker commission, minimum commission, bundled fees, rebates, official rounding, block trading, after-hours trading, B shares, funds, bonds, margin/short, non-CNY scope, account-statement parity, broader Stock Connect trading qualification, live/current qualification, decision grade, or deployment authorization. Current evidence is domestic/Main-focused and does not close Stock Connect or every other query-indistinguishable access-channel fee/tax difference, so F1 remains blocked.
+This plan does not claim provider/archive completeness, universal broker commission, minimum commission, bundled fees, rebates, official rounding, block trading, after-hours trading, B shares, funds, bonds, margin/short, non-CNY scope, account-statement parity, Northbound qualification, preferred-stock qualification, ETF qualification, live/current qualification, decision grade, or deployment authorization. It also excludes non-notional portfolio, instruction, safekeeping, collateral, corporate-action-service, and settlement-message costs. F1 remains blocked until the route/product fee v2 contract passes; after that, incomplete domestic ordinary-A-share successor closure remains a separate blocker.
 
 Do not modify existing G08E/G08H types or fixtures; existing G12C/D v1 fixtures/projector; the blocker test; registries; shared Acceptance Matrix; plan README; or root exports. Do not merge or push as part of this plan freeze.

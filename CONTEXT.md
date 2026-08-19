@@ -346,6 +346,16 @@ Symbol-time规则状态：`normal`允许普通开平仓，`reduce_only`只允许
 
 一个市场语义 Profile 声明会影响其回测结果、因此必须具有完整历史覆盖的规则类别。
 
+## 执行访问路径（Execution Access Route）
+
+订单实际进入市场并决定执行费用适用范围的明确通道，例如境内直接通道或北向股票互联互通。它必须由不可变 Profile 与订单执行上下文绑定，不能从证券代码、宽泛 Instrument 类型、账户权限或当前元数据推断。
+_Avoid_: access-channel default, symbol-derived route
+
+## 费用产品类别（Fee Product Class）
+
+为执行费用选择适用规则簿的明确证券费用分类，例如普通 A 股、优先股或 ETF。它不同于宽泛的 Instrument 类型，并必须与执行访问路径共同绑定；缺失或不一致时费用评估必须失败。
+_Avoid_: equity-as-fee-class, ordinary-share fallback
+
 ## 规则覆盖报告（Rule Coverage Report）
 
 证明市场数据包满足市场语义 Profile 必需规则维度，并且有效区间无缺口、无重叠且来源明确的验证结果。
