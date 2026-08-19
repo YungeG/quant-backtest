@@ -84,6 +84,14 @@ class CnAShareFeeAssessmentPurposeV2(str, Enum):
     FINAL_FILL = "final_fill"
 
 
+def _enum_member(value: object, enum_type: type[Any], /) -> bool:
+    return (
+        issubclass(enum_type, Enum)
+        and type(value) is enum_type
+        and any(value is member for member in enum_type)
+    )
+
+
 def _text(name: str, value: object) -> None:
     if (
         type(value) is not str
@@ -104,9 +112,17 @@ def _hash(name: str, value: object) -> None:
         raise ValueError(f"{name} must be a canonical sha256 identity")
 
 
+def _canonical_hash(value: object, /) -> bool:
+    try:
+        _hash("hash", value)
+    except (TypeError, ValueError):
+        return False
+    return True
+
+
 def _rate(name: str, value: object) -> None:
-    if type(value) is not Rate:
-        raise TypeError(f"{name} must be Rate")
+    if not _concrete_rate(value):
+        raise TypeError(f"{name} must be concrete Rate")
     rate = cast(Rate, value)
     if rate.units < 0 or rate.basis != "fee_fraction":
         raise ValueError(f"{name} must be a non-negative fee_fraction")
@@ -114,9 +130,12 @@ def _rate(name: str, value: object) -> None:
 
 def _sources(name: str, values: object) -> tuple[CnAShareFeeRuleSourceRef, ...]:
     if (
-        not isinstance(values, tuple)
+        type(values) is not tuple
         or not values
-        or not all(type(x) is CnAShareFeeRuleSourceRef and _exact(x, CnAShareFeeRuleSourceRef) for x in values)
+        or not all(
+            type(x) is CnAShareFeeRuleSourceRef and _exact(x, CnAShareFeeRuleSourceRef)
+            for x in values
+        )
     ):
         raise TypeError(f"{name} must be a non-empty source-ref tuple")
     ordered = tuple(sorted(values, key=lambda x: (x.source_key, x.source_hash)))
@@ -128,11 +147,10 @@ def _sources(name: str, values: object) -> tuple[CnAShareFeeRuleSourceRef, ...]:
 
 
 def _interval(effective_from: object, effective_to_exclusive: object) -> None:
-    if (
-        type(effective_from) is not UtcInstant
-        or type(effective_to_exclusive) is not UtcInstant
+    if not (
+        _concrete_instant(effective_from) and _concrete_instant(effective_to_exclusive)
     ):
-        raise TypeError("effective interval must use UtcInstant")
+        raise TypeError("effective interval must use concrete UtcInstant")
     start = cast(UtcInstant, effective_from)
     stop = cast(UtcInstant, effective_to_exclusive)
     if start >= stop:
@@ -154,51 +172,96 @@ def _exact(value: object, cls: type[Any], /) -> bool:
     return rebuilt == value
 
 
+def _concrete_venue(value: object) -> bool:
+    return (
+        type(value) is VenueId and type(value.value) is str and _exact(value, VenueId)
+    )
+
+
 def _concrete_instrument_id(value: object) -> bool:
     return (
         type(value) is InstrumentId
-        and type(value.venue) is VenueId
-        and _exact(value.venue, VenueId)
+        and _concrete_venue(value.venue)
+        and type(value.stable_key) is str
         and _exact(value, InstrumentId)
     )
 
 
 def _concrete_currency(value: object) -> bool:
-    return type(value) is CurrencyId and _exact(value, CurrencyId)
+    return (
+        type(value) is CurrencyId
+        and type(value.value) is str
+        and _exact(value, CurrencyId)
+    )
 
 
 def _concrete_scale(value: object) -> bool:
-    return type(value) is Scale and _exact(value, Scale)
+    return type(value) is Scale and type(value.places) is int and _exact(value, Scale)
 
 
 def _concrete_rate(value: object) -> bool:
-    return type(value) is Rate and _concrete_scale(value.scale) and _exact(value, Rate)
+    return (
+        type(value) is Rate
+        and type(value.units) is int
+        and type(value.basis) is str
+        and _concrete_scale(value.scale)
+        and _exact(value, Rate)
+    )
 
 
 def _concrete_money(value: object) -> bool:
-    return type(value) is Money and _concrete_scale(value.scale) and _exact(value, Money)
+    return (
+        type(value) is Money
+        and type(value.units) is int
+        and type(value.currency) is str
+        and _concrete_scale(value.scale)
+        and _exact(value, Money)
+    )
 
 
 def _concrete_quantity(value: object) -> bool:
-    return type(value) is Quantity and _concrete_scale(value.scale) and _exact(value, Quantity)
+    return (
+        type(value) is Quantity
+        and type(value.units) is int
+        and type(value.instrument_id) is str
+        and _concrete_scale(value.scale)
+        and _exact(value, Quantity)
+    )
 
 
 def _concrete_price(value: object) -> bool:
-    return type(value) is Price and _concrete_scale(value.scale) and _exact(value, Price)
+    return (
+        type(value) is Price
+        and type(value.units) is int
+        and type(value.instrument_id) is str
+        and type(value.quote_currency) is str
+        and _concrete_scale(value.scale)
+        and _exact(value, Price)
+    )
 
 
 def _concrete_domain_id(value: object) -> bool:
-    return type(value) is DomainId and _exact(value, DomainId)
+    return (
+        type(value) is DomainId
+        and _enum_member(value.kind, type(value.kind))
+        and type(value.value) is str
+        and _exact(value, DomainId)
+    )
 
 
 def _concrete_instant(value: object) -> bool:
-    return type(value) is UtcInstant and _exact(value, UtcInstant)
+    return (
+        type(value) is UtcInstant
+        and type(value.epoch_nanoseconds) is int
+        and _exact(value, UtcInstant)
+    )
 
 
 def _concrete_instrument(value: object) -> bool:
     return (
         type(value) is InstrumentDefinition
         and _concrete_instrument_id(value.instrument_id)
+        and _enum_member(value.instrument_type, InstrumentType)
         and (value.base_currency is None or _concrete_currency(value.base_currency))
         and _concrete_currency(value.quote_currency)
         and _concrete_currency(value.settlement_currency)
@@ -212,17 +275,38 @@ def _concrete_order(value: object) -> bool:
     intent = value.intent
     if not (
         _concrete_domain_id(value.order_id)
+        and type(value.account_id) is str
         and _concrete_instrument_id(intent.instrument_id)
+        and _enum_member(intent.side, OrderSide)
         and _concrete_quantity(intent.quantity)
-        and (intent.price_constraint is None or type(intent.price_constraint) is PriceConstraint)
-        and (intent.price_constraint is None or all(
-            price is None or _concrete_price(price)
-            for price in (intent.price_constraint.limit_price, intent.price_constraint.trigger_price)
-        ))
+        and _enum_member(intent.execution_style, type(intent.execution_style))
+        and _enum_member(intent.time_in_force, type(intent.time_in_force))
+        and type(intent.reduce_only) is bool
+        and _enum_member(intent.position_effect, type(intent.position_effect))
+        and type(intent.urgency) is str
+        and type(intent.reason) is str
+        and type(intent.parent_id) is str
+        and (
+            intent.price_constraint is None
+            or type(intent.price_constraint) is PriceConstraint
+        )
+        and (
+            intent.price_constraint is None
+            or all(
+                price is None or _concrete_price(price)
+                for price in (
+                    intent.price_constraint.limit_price,
+                    intent.price_constraint.trigger_price,
+                )
+            )
+        )
         and type(value.created_at) is SimulationInstant
         and _concrete_instant(value.created_at.instant)
         and type(value.created_at.phase) is TimelinePhase
+        and type(value.created_at.phase.rank) is int
+        and type(value.created_at.phase.code) is str
         and type(value.created_at.source_sequence) is SourceSequence
+        and type(value.created_at.source_sequence.value) is int
         and _exact(value.created_at.phase, TimelinePhase)
         and _exact(value.created_at.source_sequence, SourceSequence)
     ):
@@ -232,18 +316,32 @@ def _concrete_order(value: object) -> bool:
             None
             if intent.price_constraint is None
             else PriceConstraint(
-                intent.price_constraint.limit_price, intent.price_constraint.trigger_price
+                intent.price_constraint.limit_price,
+                intent.price_constraint.trigger_price,
             )
         )
         rebuilt_intent = OrderIntent(
-            intent.instrument_id, intent.side, intent.quantity, intent.execution_style,
-            constraint, intent.time_in_force, intent.reduce_only, intent.position_effect,
-            intent.urgency, intent.reason, intent.parent_id,
+            intent.instrument_id,
+            intent.side,
+            intent.quantity,
+            intent.execution_style,
+            constraint,
+            intent.time_in_force,
+            intent.reduce_only,
+            intent.position_effect,
+            intent.urgency,
+            intent.reason,
+            intent.parent_id,
         )
         rebuilt_time = SimulationInstant(
-            value.created_at.instant, value.created_at.phase, value.created_at.source_sequence
+            value.created_at.instant,
+            value.created_at.phase,
+            value.created_at.source_sequence,
         )
-        return Order(value.order_id, value.account_id, rebuilt_intent, rebuilt_time) == value
+        return (
+            Order(value.order_id, value.account_id, rebuilt_intent, rebuilt_time)
+            == value
+        )
     except (TypeError, ValueError, AttributeError):
         return False
 
@@ -254,11 +352,24 @@ def _concrete_fill(value: object) -> bool:
     if not (
         _concrete_domain_id(value.fill_id)
         and _concrete_domain_id(value.order_id)
+        and type(value.account_id) is str
+        and _concrete_venue(value.venue_id)
+        and _enum_member(value.side, OrderSide)
         and _concrete_instrument_id(value.instrument_id)
         and _concrete_quantity(value.quantity)
         and _concrete_price(value.reference_price)
+        and _enum_member(
+            value.reference_price_purpose, type(value.reference_price_purpose)
+        )
         and _concrete_price(value.price)
         and _concrete_money(value.slippage_amount)
+        and type(value.slippage_decision_id) is str
+        and type(value.slippage_model_key) is str
+        and (
+            value.slippage_calibration_id is None
+            or type(value.slippage_calibration_id) is str
+        )
+        and (value.liquidity is None or type(value.liquidity) is str)
         and _concrete_instant(value.execution_time)
     ):
         return False
@@ -266,6 +377,57 @@ def _concrete_fill(value: object) -> bool:
         return Fill(*(getattr(value, field.name) for field in fields(Fill))) == value
     except (TypeError, ValueError, AttributeError):
         return False
+
+
+def _concrete_quantization(value: object) -> bool:
+    if not (
+        type(value) is QuantizationPolicy
+        and _concrete_scale(value.target_scale)
+        and _enum_member(value.rounding, RoundingPolicy)
+    ):
+        return False
+    try:
+        _text("quantization version", value.version)
+    except (TypeError, ValueError, AttributeError):
+        return False
+    return _exact(value, QuantizationPolicy)
+
+
+def _concrete_reservation_rule(value: object) -> bool:
+    if not (
+        type(value) is FeeReservationChargeRule
+        and _enum_member(value.source, FeeReservationRuleSource)
+        and _enum_member(value.basis, FeeReservationBasis)
+        and _enum_member(value.applicability, FeeReservationApplicability)
+        and (value.rate is None or _concrete_rate(value.rate))
+        and (value.flat_amount is None or _concrete_money(value.flat_amount))
+        and _concrete_quantization(value.quantization)
+    ):
+        return False
+    try:
+        _text("reservation rule_id", value.rule_id)
+    except (TypeError, ValueError, AttributeError):
+        return False
+    return _exact(value, FeeReservationChargeRule)
+
+
+def _concrete_final_rule(value: object) -> bool:
+    if not (
+        type(value) is FinalFeeChargeRule
+        and _enum_member(value.source, FinalFeeRuleSource)
+        and _enum_member(value.basis_type, FeeBasisType)
+        and _enum_member(value.calculation_basis, FinalFeeCalculationBasis)
+        and _enum_member(value.applicability, FinalFeeApplicability)
+        and (value.rate is None or _concrete_rate(value.rate))
+        and (value.flat_amount is None or _concrete_money(value.flat_amount))
+        and _concrete_quantization(value.quantization)
+    ):
+        return False
+    try:
+        _text("final rule_id", value.rule_id)
+    except (TypeError, ValueError, AttributeError):
+        return False
+    return _exact(value, FinalFeeChargeRule)
 
 
 @dataclass(frozen=True, slots=True)
@@ -286,7 +448,7 @@ class CnAShareFeeExecutionScopeV2:
 
     def __post_init__(self) -> None:
         _text("account_id", self.account_id)
-        if type(self.venue_id) is not VenueId or self.venue_id != VenueId("xshe"):
+        if not _concrete_venue(self.venue_id) or self.venue_id != VenueId("xshe"):
             raise ValueError("scope venue_id must be XSHE")
         if not (
             _concrete_instrument(self.instrument)
@@ -302,13 +464,13 @@ class CnAShareFeeExecutionScopeV2:
             raise ValueError("scope instrument_type must be EQUITY")
         if self.instrument.instrument_type is not self.instrument_type:
             raise ValueError("scope instrument_type mismatch")
-        if type(
+        if not _concrete_currency(
             self.quote_currency_id
-        ) is not CurrencyId or self.quote_currency_id != CurrencyId("CNY"):
+        ) or self.quote_currency_id != CurrencyId("CNY"):
             raise ValueError("scope quote_currency_id must be CNY")
-        if type(
+        if not _concrete_currency(
             self.settlement_currency_id
-        ) is not CurrencyId or self.settlement_currency_id != CurrencyId("CNY"):
+        ) or self.settlement_currency_id != CurrencyId("CNY"):
             raise ValueError("scope settlement_currency_id must be CNY")
         if (
             self.instrument.quote_currency != self.quote_currency_id
@@ -318,22 +480,22 @@ class CnAShareFeeExecutionScopeV2:
         if self.trade_mechanism is not CnAShareFeeTradeMechanism.AUCTION:
             raise ValueError("scope trade_mechanism must be AUCTION")
         if (
-            type(self.coverage_from) is not UtcInstant
-            or type(self.coverage_to_exclusive) is not UtcInstant
+            not _concrete_instant(self.coverage_from)
+            or not _concrete_instant(self.coverage_to_exclusive)
             or self.coverage_from >= self.coverage_to_exclusive
         ):
             raise ValueError("scope coverage interval must be finite and non-empty")
-        if not isinstance(self.allowed_order_sides, tuple) or not all(
-            type(x) is OrderSide for x in self.allowed_order_sides
+        if type(self.allowed_order_sides) is not tuple or not all(
+            _enum_member(side, OrderSide) for side in self.allowed_order_sides
         ):
             raise TypeError("allowed_order_sides must be an OrderSide tuple")
         if self.allowed_order_sides != tuple(
             sorted(self.allowed_order_sides, key=lambda x: x.value)
         ) or len(set(self.allowed_order_sides)) != len(self.allowed_order_sides):
             raise ValueError("allowed_order_sides must be canonical unique")
-        if not isinstance(
+        if not _enum_member(
             self.access_route, CnAShareExecutionAccessRoute
-        ) or not isinstance(self.fee_product_class, CnAShareFeeProductClass):
+        ) or not _enum_member(self.fee_product_class, CnAShareFeeProductClass):
             raise TypeError("scope route/product must be enums")
 
     @property
@@ -378,8 +540,8 @@ class CnAShareMarketFeeBandV2:
     hkscc_transfer_source_refs: tuple[CnAShareFeeRuleSourceRef, ...]
 
     def __post_init__(self) -> None:
-        if type(self.venue_id) is not VenueId:
-            raise TypeError("venue_id must be VenueId")
+        if not _concrete_venue(self.venue_id):
+            raise TypeError("venue_id must be concrete VenueId")
         _interval(self.effective_from, self.effective_to_exclusive)
         for applies, rate, refs, name in (
             (
@@ -452,8 +614,8 @@ class CnAShareStampDutyBandV2:
     source_refs: tuple[CnAShareFeeRuleSourceRef, ...]
 
     def __post_init__(self) -> None:
-        if type(self.venue_id) is not VenueId:
-            raise TypeError("venue_id must be VenueId")
+        if not _concrete_venue(self.venue_id):
+            raise TypeError("venue_id must be concrete VenueId")
         _interval(self.effective_from, self.effective_to_exclusive)
         if type(self.applies_to_sell) is not bool:
             raise TypeError("applies_to_sell must be bool")
@@ -493,14 +655,14 @@ class CnAShareMarketFeeRuleBookV2:
         _text("rule_book_key", self.rule_book_key)
         if type(self.rule_book_version) is not int or self.rule_book_version != 2:
             raise ValueError("rule_book_version must be 2")
-        if not isinstance(
+        if not _enum_member(
             self.access_route, CnAShareExecutionAccessRoute
-        ) or not isinstance(self.fee_product_class, CnAShareFeeProductClass):
+        ) or not _enum_member(self.fee_product_class, CnAShareFeeProductClass):
             raise TypeError("rule book route/product must be enums")
-        if not isinstance(self.bands, tuple) or not all(
-            type(x) is CnAShareMarketFeeBandV2 for x in self.bands
+        if type(self.bands) is not tuple or not all(
+            _concrete_market_band(band) for band in self.bands
         ):
-            raise TypeError("bands must contain CnAShareMarketFeeBandV2")
+            raise TypeError("bands must contain concrete CnAShareMarketFeeBandV2")
         if self.bands != tuple(
             sorted(
                 self.bands,
@@ -548,14 +710,14 @@ class CnAShareStampDutyRuleBookV2:
         _text("rule_book_key", self.rule_book_key)
         if type(self.rule_book_version) is not int or self.rule_book_version != 2:
             raise ValueError("rule_book_version must be 2")
-        if not isinstance(
+        if not _enum_member(
             self.access_route, CnAShareExecutionAccessRoute
-        ) or not isinstance(self.fee_product_class, CnAShareFeeProductClass):
+        ) or not _enum_member(self.fee_product_class, CnAShareFeeProductClass):
             raise TypeError("rule book route/product must be enums")
-        if not isinstance(self.bands, tuple) or not all(
-            type(x) is CnAShareStampDutyBandV2 for x in self.bands
+        if type(self.bands) is not tuple or not all(
+            _concrete_stamp_band(band) for band in self.bands
         ):
-            raise TypeError("bands must contain CnAShareStampDutyBandV2")
+            raise TypeError("bands must contain concrete CnAShareStampDutyBandV2")
         if self.bands != tuple(
             sorted(
                 self.bands,
@@ -608,9 +770,9 @@ class CnAShareFeeExecutionSelectionV2:
         _text("selection_key", self.selection_key)
         if type(self.selection_version) is not int or self.selection_version <= 0:
             raise ValueError("selection_version must be positive")
-        if not isinstance(
+        if not _enum_member(
             self.access_route, CnAShareExecutionAccessRoute
-        ) or not isinstance(self.fee_product_class, CnAShareFeeProductClass):
+        ) or not _enum_member(self.fee_product_class, CnAShareFeeProductClass):
             raise TypeError("selection route/product must be enums")
         if not (
             _concrete_market_book(self.market_fee_rule_book)
@@ -673,10 +835,17 @@ class CnAShareFeeExecutionAuthorityFailureV2:
     subject_ids: tuple[str, ...]
 
     def __post_init__(self) -> None:
-        if not isinstance(self.scope, CnAShareFeeExecutionScopeV2) or not isinstance(
-            self.selection, CnAShareFeeExecutionSelectionV2
+        if (
+            _reconstructed_scope(self.scope) is None
+            or type(self.selection) is not CnAShareFeeExecutionSelectionV2
         ):
             raise TypeError("authority failure context invalid")
+        try:
+            selection_hash = canonical_sha256(self.selection)
+        except (TypeError, ValueError, AttributeError) as error:
+            raise TypeError("authority failure selection is not canonical") from error
+        if self.selection_hash != selection_hash:
+            raise ValueError("authority failure selection hash mismatch")
         _hash("scope_hash", self.scope_hash)
         _hash("selection_hash", self.selection_hash)
         if (
@@ -684,9 +853,10 @@ class CnAShareFeeExecutionAuthorityFailureV2:
             or self.selection_hash != self.selection.selection_hash
         ):
             raise ValueError("authority failure hash mismatch")
-        if not isinstance(
-            self.code, CnAShareFeeExecutionAuthorityFailureCodeV2
-        ) or not isinstance(self.subject_ids, tuple):
+        if (
+            not _enum_member(self.code, CnAShareFeeExecutionAuthorityFailureCodeV2)
+            or type(self.subject_ids) is not tuple
+        ):
             raise TypeError("authority failure invalid")
         expected = _authority_failure_subjects(self.scope, self.selection, self.code)
         if self.subject_ids != expected:
@@ -726,7 +896,12 @@ class CnAShareFeeExecutionAuthorityV2:
     stamp_duty_component_ref: ProfileComponentRef
 
     def __post_init__(self) -> None:
-        if self.authority_key != _AUTHORITY_KEY or self.authority_version != 2:
+        _text("authority_key", self.authority_key)
+        if (
+            self.authority_key != _AUTHORITY_KEY
+            or type(self.authority_version) is not int
+            or self.authority_version != 2
+        ):
             raise ValueError("authority identity mismatch")
         if (
             _reconstructed_scope(self.scope) is None
@@ -846,14 +1021,18 @@ def _authority_failure(
 
 
 def _concrete_source_ref(value: object) -> bool:
-    return type(value) is CnAShareFeeRuleSourceRef and _exact(value, CnAShareFeeRuleSourceRef)
+    return (
+        type(value) is CnAShareFeeRuleSourceRef
+        and type(value.source_key) is str
+        and type(value.source_hash) is str
+        and _exact(value, CnAShareFeeRuleSourceRef)
+    )
 
 
 def _concrete_market_band(value: object) -> bool:
     return (
         type(value) is CnAShareMarketFeeBandV2
-        and type(value.venue_id) is VenueId
-        and _exact(value.venue_id, VenueId)
+        and _concrete_venue(value.venue_id)
         and _concrete_instant(value.effective_from)
         and _concrete_instant(value.effective_to_exclusive)
         and all(
@@ -874,8 +1053,7 @@ def _concrete_market_band(value: object) -> bool:
 def _concrete_stamp_band(value: object) -> bool:
     return (
         type(value) is CnAShareStampDutyBandV2
-        and type(value.venue_id) is VenueId
-        and _exact(value.venue_id, VenueId)
+        and _concrete_venue(value.venue_id)
         and _concrete_instant(value.effective_from)
         and _concrete_instant(value.effective_to_exclusive)
         and _concrete_rate(value.rate)
@@ -904,7 +1082,14 @@ def _concrete_stamp_book(value: object) -> bool:
 
 
 def _concrete_component_ref(value: object) -> bool:
-    return type(value) is ProfileComponentRef and _exact(value, ProfileComponentRef)
+    return (
+        type(value) is ProfileComponentRef
+        and _enum_member(value.port_type, ProfilePortType)
+        and type(value.component_key) is str
+        and type(value.component_version) is int
+        and type(value.component_digest) is str
+        and _exact(value, ProfileComponentRef)
+    )
 
 
 def _reconstructed_scope(value: object) -> CnAShareFeeExecutionScopeV2 | None:
@@ -916,6 +1101,8 @@ def _reconstructed_scope(value: object) -> CnAShareFeeExecutionScopeV2 | None:
         and _concrete_currency(value.settlement_currency_id)
         and _concrete_instant(value.coverage_from)
         and _concrete_instant(value.coverage_to_exclusive)
+        and type(value.allowed_order_sides) is tuple
+        and all(_enum_member(side, OrderSide) for side in value.allowed_order_sides)
     ):
         return None
     return value if _exact(value, CnAShareFeeExecutionScopeV2) else None
@@ -1071,12 +1258,13 @@ class CnAShareFeeExecutionBindingV2:
             _reconstructed_authority(self.authority) is None
             or not _concrete_order(self.order)
             or not _concrete_domain_id(self.order_id)
-            or type(self.venue_id) is not VenueId
-            or not _exact(self.venue_id, VenueId)
+            or not _concrete_venue(self.venue_id)
             or not _concrete_instrument_id(self.instrument_id)
+            or not _enum_member(self.side, OrderSide)
             or not _concrete_instant(self.order_effective_at)
         ):
             raise TypeError("binding authority/order invalid")
+        _text("account_id", self.account_id)
         _hash("authority_hash", self.authority_hash)
         _hash("order_hash", self.order_hash)
         if (
@@ -1136,18 +1324,22 @@ class CnAShareFeeExecutionBindingFailureV2:
 
     def __post_init__(self) -> None:
         if (
-            not isinstance(self.authority, CnAShareFeeExecutionAuthorityV2)
-            or not isinstance(self.scope, CnAShareFeeExecutionScopeV2)
-            or not isinstance(self.order, Order)
+            not _concrete_authority_context(self.authority)
+            or _reconstructed_scope(self.scope) is None
+            or self.scope != self.authority.scope
+            or not _concrete_order(self.order)
         ):
             raise TypeError("binding failure context invalid")
+        _hash("authority_hash", self.authority_hash)
+        _hash("scope_hash", self.scope_hash)
+        _hash("order_hash", self.order_hash)
         if (self.authority_hash, self.scope_hash, self.order_hash) != (
             self.authority.authority_hash,
             self.scope.scope_hash,
             canonical_sha256(self.order),
         ):
             raise ValueError("binding failure hash mismatch")
-        if not isinstance(self.code, CnAShareFeeExecutionBindingFailureCodeV2):
+        if not _enum_member(self.code, CnAShareFeeExecutionBindingFailureCodeV2):
             raise TypeError("binding failure code invalid")
         if self.subject_ids != _binding_failure_subjects(
             self.authority, self.order, self.code
@@ -1258,9 +1450,13 @@ def _binding_failure(
     )
 
 
-def _reconstructed_authority(value: object) -> CnAShareFeeExecutionAuthorityV2 | None:
+def _concrete_authority_context(value: object) -> bool:
     if not (
         type(value) is CnAShareFeeExecutionAuthorityV2
+        and type(value.authority_key) is str
+        and value.authority_key == _AUTHORITY_KEY
+        and type(value.authority_version) is int
+        and value.authority_version == 2
         and _reconstructed_scope(value.scope) is not None
         and _reconstructed_selection(value.selection) is not None
         and _concrete_market_book(value.market_fee_rule_book)
@@ -1268,8 +1464,52 @@ def _reconstructed_authority(value: object) -> CnAShareFeeExecutionAuthorityV2 |
         and _concrete_component_ref(value.market_fee_component_ref)
         and _concrete_component_ref(value.stamp_duty_component_ref)
     ):
-        return None
-    return value if _exact(value, CnAShareFeeExecutionAuthorityV2) else None
+        return False
+    try:
+        for name in (
+            "scope_hash",
+            "selection_hash",
+            "market_fee_rule_book_hash",
+            "stamp_duty_rule_book_hash",
+        ):
+            _hash(name, getattr(value, name))
+    except (TypeError, ValueError, AttributeError):
+        return False
+    return (
+        value.scope_hash == value.scope.scope_hash
+        and value.selection_hash == value.selection.selection_hash
+        and value.market_fee_rule_book_hash == value.market_fee_rule_book.rule_book_hash
+        and value.stamp_duty_rule_book_hash == value.stamp_duty_rule_book.rule_book_hash
+        and (
+            value.access_route,
+            value.fee_product_class,
+            value.market_fee_rule_book,
+            value.market_fee_rule_book_hash,
+            value.stamp_duty_rule_book,
+            value.stamp_duty_rule_book_hash,
+            value.market_fee_component_ref,
+            value.stamp_duty_component_ref,
+        )
+        == (
+            value.selection.access_route,
+            value.selection.fee_product_class,
+            value.selection.market_fee_rule_book,
+            value.selection.market_fee_rule_book_hash,
+            value.selection.stamp_duty_rule_book,
+            value.selection.stamp_duty_rule_book_hash,
+            value.selection.market_fee_component_ref,
+            value.selection.stamp_duty_component_ref,
+        )
+    )
+
+
+def _reconstructed_authority(value: object) -> CnAShareFeeExecutionAuthorityV2 | None:
+    return (
+        cast(CnAShareFeeExecutionAuthorityV2, value)
+        if _concrete_authority_context(value)
+        and _exact(value, CnAShareFeeExecutionAuthorityV2)
+        else None
+    )
 
 
 def _binding_problem(
@@ -1302,10 +1542,7 @@ def _binding_problem(
 def bind_cn_a_share_fee_execution_v2(
     authority: CnAShareFeeExecutionAuthorityV2, order: Order, /
 ) -> CnAShareFeeExecutionBindingV2 | CnAShareFeeExecutionBindingFailureV2:
-    if (
-        type(authority) is not CnAShareFeeExecutionAuthorityV2
-        or not _concrete_order(order)
-    ):
+    if not _concrete_authority_context(authority) or not _concrete_order(order):
         raise TypeError("authority and order must be concrete")
     scope = authority.scope
     code = _binding_problem(authority, order)
@@ -1399,19 +1636,52 @@ def bind_cn_a_share_fee_execution_v2(
     )
 
 
-def _reconstructed_binding(value: object) -> CnAShareFeeExecutionBindingV2 | None:
+def _concrete_binding_context(value: object) -> bool:
     if not (
         type(value) is CnAShareFeeExecutionBindingV2
         and _reconstructed_authority(value.authority) is not None
         and _concrete_order(value.order)
         and _concrete_domain_id(value.order_id)
-        and type(value.venue_id) is VenueId
-        and _exact(value.venue_id, VenueId)
+        and type(value.account_id) is str
+        and _concrete_venue(value.venue_id)
         and _concrete_instrument_id(value.instrument_id)
+        and _enum_member(value.side, OrderSide)
         and _concrete_instant(value.order_effective_at)
     ):
-        return None
-    return value if _exact(value, CnAShareFeeExecutionBindingV2) else None
+        return False
+    try:
+        _text("account_id", value.account_id)
+        _hash("authority_hash", value.authority_hash)
+        _hash("order_hash", value.order_hash)
+    except (TypeError, ValueError, AttributeError):
+        return False
+    return (
+        value.authority_hash == value.authority.authority_hash
+        and value.order_hash == canonical_sha256(value.order)
+        and (
+            value.order_id,
+            value.account_id,
+            value.venue_id,
+            value.instrument_id,
+            value.side,
+        )
+        == (
+            value.order.order_id,
+            value.order.account_id,
+            value.order.intent.instrument_id.venue,
+            value.order.intent.instrument_id,
+            value.order.intent.side,
+        )
+    )
+
+
+def _reconstructed_binding(value: object) -> CnAShareFeeExecutionBindingV2 | None:
+    return (
+        cast(CnAShareFeeExecutionBindingV2, value)
+        if _concrete_binding_context(value)
+        and _exact(value, CnAShareFeeExecutionBindingV2)
+        else None
+    )
 
 
 class CnAShareFeeQueryConstructionFailureCodeV2(str, Enum):
@@ -1450,7 +1720,7 @@ class CnAShareCashFeeRuleQueryV2:
             or self.binding_hash != self.execution_binding.binding_hash
         ):
             raise ValueError("query authority/binding hash mismatch")
-        if not isinstance(self.purpose, CnAShareFeeAssessmentPurposeV2):
+        if not _enum_member(self.purpose, CnAShareFeeAssessmentPurposeV2):
             raise TypeError("purpose must be CnAShareFeeAssessmentPurposeV2")
         if self.fill is None:
             if self.purpose is CnAShareFeeAssessmentPurposeV2.FINAL_FILL:
@@ -1458,6 +1728,9 @@ class CnAShareCashFeeRuleQueryV2:
             if self.fill_hash is not None or self.fill_id is not None:
                 raise ValueError("missing Fill provenance mismatch")
         else:
+            if self.fill_hash is None:
+                raise ValueError("Fill provenance mismatch")
+            _hash("fill_hash", self.fill_hash)
             if (
                 not _concrete_fill(self.fill)
                 or self.fill_hash != canonical_sha256(self.fill)
@@ -1565,12 +1838,16 @@ class CnAShareFeeQueryConstructionFailureV2:
 
     def __post_init__(self) -> None:
         if (
-            not isinstance(self.authority, CnAShareFeeExecutionAuthorityV2)
-            or not isinstance(self.execution_binding, CnAShareFeeExecutionBindingV2)
-            or not isinstance(self.purpose, CnAShareFeeAssessmentPurposeV2)
-            or not isinstance(self.code, CnAShareFeeQueryConstructionFailureCodeV2)
+            _reconstructed_authority(self.authority) is None
+            or not _concrete_binding_context(self.execution_binding)
+            or not _enum_member(self.purpose, CnAShareFeeAssessmentPurposeV2)
+            or not _enum_member(self.code, CnAShareFeeQueryConstructionFailureCodeV2)
         ):
             raise TypeError("query failure context invalid")
+        _hash("authority_hash", self.authority_hash)
+        _hash("binding_hash", self.binding_hash)
+        if self.fill_hash is not None:
+            _hash("fill_hash", self.fill_hash)
         if (self.authority_hash, self.binding_hash) != (
             self.authority.authority_hash,
             self.execution_binding.binding_hash,
@@ -1579,7 +1856,9 @@ class CnAShareFeeQueryConstructionFailureV2:
         if self.fill is None:
             if self.fill_hash is not None:
                 raise ValueError("missing fill hash mismatch")
-        elif self.fill_hash != canonical_sha256(self.fill):
+        elif not _concrete_fill(self.fill) or self.fill_hash != canonical_sha256(
+            self.fill
+        ):
             raise ValueError("fill hash mismatch")
         if self.subject_ids != _query_failure_subjects(
             self.authority, self.execution_binding, self.purpose, self.fill, self.code
@@ -1718,9 +1997,8 @@ def _construct_query(
     purpose: CnAShareFeeAssessmentPurposeV2,
     fill: Fill | None,
 ) -> CnAShareCashFeeRuleQueryV2 | CnAShareFeeQueryConstructionFailureV2:
-    if (
-        _reconstructed_authority(authority) is None
-        or _reconstructed_binding(binding) is None
+    if _reconstructed_authority(authority) is None or not _concrete_binding_context(
+        binding
     ):
         raise TypeError("authority and execution_binding must be concrete v2")
     if fill is not None and not _concrete_fill(fill):
@@ -1800,8 +2078,8 @@ def _construct_query(
             CnAShareFeeQueryConstructionFailureCodeV2.MISSING_FILL,
             ("fill", "none"),
         )
-    if not isinstance(fill, Fill):
-        raise TypeError("fill must be Fill or None")
+    if type(fill) is not Fill:
+        raise TypeError("fill must be concrete Fill or None")
     if fill.order_id != binding.order_id:
         return _query_failure(
             authority,
@@ -1944,11 +2222,12 @@ class CnAShareFeeRuleFailureV2:
     subject_ids: tuple[str, ...]
 
     def __post_init__(self) -> None:
+        _hash("query_hash", self.query_hash)
         if (
-            type(self.query) is not CnAShareCashFeeRuleQueryV2
+            not _concrete_query_context(self.query)
             or self.query_hash != self.query.query_hash
-            or not isinstance(self.code, CnAShareFeeRuleFailureCodeV2)
-            or not isinstance(self.subject_ids, tuple)
+            or not _enum_member(self.code, CnAShareFeeRuleFailureCodeV2)
+            or type(self.subject_ids) is not tuple
             or not _valid_rule_failure_subjects(self.query, self.code, self.subject_ids)
         ):
             raise ValueError("fee rule failure invalid")
@@ -1970,7 +2249,11 @@ class CnAShareFeeRuleFailureV2:
 def _active_market_bands(
     book: CnAShareMarketFeeRuleBookV2, venue: VenueId, instant: UtcInstant, /
 ) -> tuple[CnAShareMarketFeeBandV2, ...]:
-    if not (_concrete_market_book(book) and type(venue) is VenueId and _concrete_instant(instant)):
+    if not (
+        _concrete_market_book(book)
+        and _concrete_venue(venue)
+        and _concrete_instant(instant)
+    ):
         raise TypeError("market rule book context must be concrete")
     return tuple(
         band
@@ -1983,7 +2266,11 @@ def _active_market_bands(
 def _active_stamp_bands(
     book: CnAShareStampDutyRuleBookV2, venue: VenueId, instant: UtcInstant, /
 ) -> tuple[CnAShareStampDutyBandV2, ...]:
-    if not (_concrete_stamp_book(book) and type(venue) is VenueId and _concrete_instant(instant)):
+    if not (
+        _concrete_stamp_book(book)
+        and _concrete_venue(venue)
+        and _concrete_instant(instant)
+    ):
         raise TypeError("stamp rule book context must be concrete")
     return tuple(
         band
@@ -1993,12 +2280,41 @@ def _active_stamp_bands(
     )
 
 
+def _concrete_query_context(value: object) -> bool:
+    if not (
+        type(value) is CnAShareCashFeeRuleQueryV2
+        and _reconstructed_authority(value.authority) is not None
+        and _concrete_binding_context(value.execution_binding)
+        and _enum_member(value.purpose, CnAShareFeeAssessmentPurposeV2)
+        and (value.fill is None or _concrete_fill(value.fill))
+        and (value.fill_id is None or _concrete_domain_id(value.fill_id))
+        and not (
+            value.purpose is CnAShareFeeAssessmentPurposeV2.FINAL_FILL
+            and value.fill is None
+        )
+    ):
+        return False
+    try:
+        _hash("authority_hash", value.authority_hash)
+        _hash("binding_hash", value.binding_hash)
+        if value.fill_hash is not None:
+            _hash("fill_hash", value.fill_hash)
+        canonical_sha256(value)
+    except (TypeError, ValueError, AttributeError):
+        return False
+    return True
+
+
 def _valid_rule_failure_subjects(
     query: CnAShareCashFeeRuleQueryV2,
     code: CnAShareFeeRuleFailureCodeV2,
     subjects: tuple[str, ...],
 ) -> bool:
-    if len(subjects) < 3 or subjects[:1] != (code.value,) or subjects[2:3] != (query.query_hash,):
+    if (
+        len(subjects) < 3
+        or subjects[0] != code.value
+        or subjects[2] != query.query_hash
+    ):
         return False
     suffix = subjects[3:]
     if code is CnAShareFeeRuleFailureCodeV2.EXECUTION_AUTHORITY_MISMATCH:
@@ -2006,7 +2322,9 @@ def _valid_rule_failure_subjects(
             len(suffix) != 8
             or suffix[:2] != ("query_authority_hash", query.authority_hash)
             or suffix[2] != "policy_authority_hash"
-            or suffix[4:7] != ("query_scope_hash", query.authority.scope_hash, "policy_scope_hash")
+            or subjects[1] != suffix[3]
+            or suffix[4:7]
+            != ("query_scope_hash", query.authority.scope_hash, "policy_scope_hash")
         ):
             return False
         try:
@@ -2015,29 +2333,63 @@ def _valid_rule_failure_subjects(
         except (TypeError, ValueError):
             return False
         return True
+    if subjects[1] != query.authority_hash:
+        return False
     if code is CnAShareFeeRuleFailureCodeV2.RULE_BOOK_SCOPE_MISMATCH:
         return suffix == (
-            "scope_hash", query.authority.scope_hash,
-            "market_fee_rule_book_hash", query.authority.market_fee_rule_book_hash,
-            "stamp_duty_rule_book_hash", query.authority.stamp_duty_rule_book_hash,
+            "scope_hash",
+            query.authority.scope_hash,
+            "market_fee_rule_book_hash",
+            query.authority.market_fee_rule_book_hash,
+            "stamp_duty_rule_book_hash",
+            query.authority.stamp_duty_rule_book_hash,
         )
     if code is CnAShareFeeRuleFailureCodeV2.QUERY_PROVENANCE_MISMATCH:
         rebuilt = _provenance(query)
         expected = (
-            "purpose", query.purpose.value, "reconstructed_query_hash", rebuilt.query_hash
-        ) if isinstance(rebuilt, CnAShareCashFeeRuleQueryV2) else (
-            "purpose", query.purpose.value, "query_construction_failure_hash", rebuilt.failure_hash
+            (
+                "purpose",
+                query.purpose.value,
+                "reconstructed_query_hash",
+                rebuilt.query_hash,
+            )
+            if type(rebuilt) is CnAShareCashFeeRuleQueryV2
+            else (
+                "purpose",
+                query.purpose.value,
+                "query_construction_failure_hash",
+                cast(CnAShareFeeQueryConstructionFailureV2, rebuilt).failure_hash,
+            )
         )
         return suffix == expected
-    if len(suffix) != 8 or suffix[0] != "venue_id" or suffix[1] != query.venue_id.value or suffix[2] != "effective_at_hash" or suffix[3] != canonical_sha256(query.effective_at) or suffix[4] != "rule_book_hash" or suffix[6] != "active_band_hashes_hash":
+    if (
+        len(suffix) != 8
+        or suffix[:2] != ("venue_id", query.venue_id.value)
+        or suffix[2:4] != ("effective_at_hash", canonical_sha256(query.effective_at))
+        or suffix[4] != "rule_book_hash"
+        or suffix[6] != "active_band_hashes_hash"
+    ):
         return False
-    if suffix[5] not in (query.authority.market_fee_rule_book_hash, query.authority.stamp_duty_rule_book_hash):
+    if suffix[5] == query.authority.market_fee_rule_book_hash:
+        active = _active_market_bands(
+            query.authority.market_fee_rule_book, query.venue_id, query.effective_at
+        )
+    elif suffix[5] == query.authority.stamp_duty_rule_book_hash:
+        active = _active_stamp_bands(
+            query.authority.stamp_duty_rule_book, query.venue_id, query.effective_at
+        )
+    else:
         return False
-    expected_active = canonical_sha256(())
-    if code is CnAShareFeeRuleFailureCodeV2.OVERLAPPING_RULE_INTERVALS:
-        # The failure carries a hash of the exact sorted active-band identities.
-        return type(suffix[7]) is str and suffix[7].startswith("sha256:")
-    return suffix[7] == expected_active
+    expected = (
+        canonical_sha256(())
+        if code is CnAShareFeeRuleFailureCodeV2.MISSING_RULE_INTERVAL
+        else canonical_sha256(tuple(sorted(band.band_hash for band in active)))
+    )
+    return (
+        not active
+        if code is CnAShareFeeRuleFailureCodeV2.MISSING_RULE_INTERVAL
+        else len(active) > 1
+    ) and suffix[7] == expected
 
 
 def _market_component(book: CnAShareMarketFeeRuleBookV2) -> ProfileComponentRef:
@@ -2131,7 +2483,7 @@ def _policy_failure(
         )
     reconstructed = _provenance(query)
     if (
-        not isinstance(reconstructed, CnAShareCashFeeRuleQueryV2)
+        type(reconstructed) is not CnAShareCashFeeRuleQueryV2
         or reconstructed != query
         or reconstructed.query_hash != query.query_hash
     ):
@@ -2142,12 +2494,12 @@ def _policy_failure(
                 "reconstructed_query_hash",
                 reconstructed.query_hash,
             )
-            if isinstance(reconstructed, CnAShareCashFeeRuleQueryV2)
+            if type(reconstructed) is CnAShareCashFeeRuleQueryV2
             else (
                 "purpose",
                 query.purpose.value,
                 "query_construction_failure_hash",
-                reconstructed.failure_hash,
+                cast(CnAShareFeeQueryConstructionFailureV2, reconstructed).failure_hash,
             )
         )
         return _failure(
@@ -2383,9 +2735,38 @@ class CnAShareMarketFeeRuleResolutionV2:
         if (
             _reconstructed_authority(self.authority) is None
             or _reconstructed_query(self.query) is None
+            or not _concrete_domain_id(self.order_id)
+            or not (self.fill is None or _concrete_fill(self.fill))
+            or not (self.fill_id is None or _concrete_domain_id(self.fill_id))
+            or not _enum_member(self.side, OrderSide)
+            or not _concrete_instant(self.effective_at)
             or not _concrete_market_band(self.active_band)
+            or type(self.reservation_charge_rules) is not tuple
+            or not all(
+                _concrete_reservation_rule(rule)
+                for rule in self.reservation_charge_rules
+            )
+            or type(self.final_fill_charge_rules) is not tuple
+            or not all(
+                _concrete_final_rule(rule) for rule in self.final_fill_charge_rules
+            )
+            or type(self.final_order_not_applicable_rules) is not tuple
+            or not all(
+                _concrete_final_rule(rule)
+                for rule in self.final_order_not_applicable_rules
+            )
         ):
             raise TypeError("market resolution context invalid")
+        for name, value in (
+            ("authority_hash", self.authority_hash),
+            ("query_hash", self.query_hash),
+            ("binding_hash", self.binding_hash),
+            ("order_hash", self.order_hash),
+            ("active_band_hash", self.active_band_hash),
+        ):
+            _hash(name, value)
+        if self.fill_hash is not None:
+            _hash("fill_hash", self.fill_hash)
         if (self.authority_hash, self.query_hash, self.binding_hash) != (
             self.authority.authority_hash,
             self.query.query_hash,
@@ -2482,9 +2863,27 @@ class CnAShareStampDutyRuleResolutionV2:
         if (
             _reconstructed_authority(self.authority) is None
             or _reconstructed_query(self.query) is None
+            or not _concrete_domain_id(self.order_id)
+            or not (self.fill is None or _concrete_fill(self.fill))
+            or not (self.fill_id is None or _concrete_domain_id(self.fill_id))
+            or not _enum_member(self.side, OrderSide)
+            or not _concrete_instant(self.effective_at)
             or not _concrete_stamp_band(self.active_band)
+            or not _concrete_reservation_rule(self.reservation_charge_rule)
+            or not _concrete_final_rule(self.final_fill_charge_rule)
+            or not _concrete_final_rule(self.final_order_not_applicable_rule)
         ):
             raise TypeError("stamp resolution context invalid")
+        for name, value in (
+            ("authority_hash", self.authority_hash),
+            ("query_hash", self.query_hash),
+            ("binding_hash", self.binding_hash),
+            ("order_hash", self.order_hash),
+            ("active_band_hash", self.active_band_hash),
+        ):
+            _hash(name, value)
+        if self.fill_hash is not None:
+            _hash("fill_hash", self.fill_hash)
         if (self.authority_hash, self.query_hash, self.binding_hash) != (
             self.authority.authority_hash,
             self.query.query_hash,
@@ -2564,9 +2963,11 @@ class CnAShareCashMarketFeePolicyV2:
     assessment_scale: Scale
 
     def __post_init__(self) -> None:
+        _hash("authority_hash", self.authority_hash)
         if (
-            not isinstance(self.authority, CnAShareFeeExecutionAuthorityV2)
+            _reconstructed_authority(self.authority) is None
             or self.authority_hash != self.authority.authority_hash
+            or not _concrete_scale(self.assessment_scale)
             or self.assessment_scale != _SCALE
         ):
             raise ValueError("market policy authority or scale mismatch")
@@ -2580,8 +2981,17 @@ class CnAShareCashMarketFeePolicyV2:
     ) -> ProfilePortOutcome[
         CnAShareMarketFeeRuleResolutionV2, CnAShareFeeRuleFailureV2
     ]:
-        if type(query) is not CnAShareCashFeeRuleQueryV2:
-            raise TypeError("query must be CnAShareCashFeeRuleQueryV2")
+        if (
+            type(self) is not CnAShareCashMarketFeePolicyV2
+            or _reconstructed_authority(self.authority) is None
+            or not _canonical_hash(self.authority_hash)
+            or self.authority_hash != self.authority.authority_hash
+            or not _concrete_scale(self.assessment_scale)
+            or self.assessment_scale != _SCALE
+        ):
+            raise TypeError("market policy context invalid")
+        if not _concrete_query_context(query):
+            raise TypeError("query context must be concrete")
         failure = _policy_failure(self, query, self.authority.market_fee_rule_book)
         if failure is not None:
             return ProfilePortOutcome.for_failure(self.component_ref, query, failure)
@@ -2648,9 +3058,11 @@ class CnAShareCashStampDutyTaxPolicyV2:
     assessment_scale: Scale
 
     def __post_init__(self) -> None:
+        _hash("authority_hash", self.authority_hash)
         if (
-            not isinstance(self.authority, CnAShareFeeExecutionAuthorityV2)
+            _reconstructed_authority(self.authority) is None
             or self.authority_hash != self.authority.authority_hash
+            or not _concrete_scale(self.assessment_scale)
             or self.assessment_scale != _SCALE
         ):
             raise ValueError("stamp policy authority or scale mismatch")
@@ -2664,8 +3076,17 @@ class CnAShareCashStampDutyTaxPolicyV2:
     ) -> ProfilePortOutcome[
         CnAShareStampDutyRuleResolutionV2, CnAShareFeeRuleFailureV2
     ]:
-        if type(query) is not CnAShareCashFeeRuleQueryV2:
-            raise TypeError("query must be CnAShareCashFeeRuleQueryV2")
+        if (
+            type(self) is not CnAShareCashStampDutyTaxPolicyV2
+            or _reconstructed_authority(self.authority) is None
+            or not _canonical_hash(self.authority_hash)
+            or self.authority_hash != self.authority.authority_hash
+            or not _concrete_scale(self.assessment_scale)
+            or self.assessment_scale != _SCALE
+        ):
+            raise TypeError("stamp policy context invalid")
+        if not _concrete_query_context(query):
+            raise TypeError("query context must be concrete")
         failure = _policy_failure(self, query, self.authority.stamp_duty_rule_book)
         if failure is not None:
             return ProfilePortOutcome.for_failure(self.component_ref, query, failure)
@@ -2734,10 +3155,16 @@ class CnAShareFeeReservationBufferV2:
     tax_charge_rule: FeeReservationChargeRule
 
     def __post_init__(self) -> None:
-        if not isinstance(
-            self.market_resolution, CnAShareMarketFeeRuleResolutionV2
-        ) or not isinstance(self.tax_resolution, CnAShareStampDutyRuleResolutionV2):
-            raise TypeError("buffer resolutions must be v2")
+        if (
+            type(self.market_resolution) is not CnAShareMarketFeeRuleResolutionV2
+            or type(self.tax_resolution) is not CnAShareStampDutyRuleResolutionV2
+        ):
+            raise TypeError("buffer resolutions must be concrete v2")
+        if not (
+            _concrete_reservation_rule(self.market_charge_rule)
+            and _concrete_reservation_rule(self.tax_charge_rule)
+        ):
+            raise TypeError("buffer rules must be concrete")
         if type(self.maximum_fill_count) is not int or self.maximum_fill_count <= 0:
             raise ValueError("maximum_fill_count must be a positive integer")
         if not _same_context(self.market_resolution, self.tax_resolution):
@@ -2768,8 +3195,8 @@ class CnAShareFeeReservationBufferV2:
         return fill_count <= self.maximum_fill_count
 
     def require_covers_fills(self, fills: tuple[Fill, ...], /) -> None:
-        if not isinstance(fills, tuple) or not all(isinstance(x, Fill) for x in fills):
-            raise TypeError("fills must be a tuple of Fill")
+        if type(fills) is not tuple or not all(_concrete_fill(fill) for fill in fills):
+            raise TypeError("fills must be a tuple of concrete Fill")
         if not self.covers_fill_count(len(fills)):
             raise ValueError("actual fill count exceeds reservation bound")
 
@@ -2945,6 +3372,66 @@ def _buffer_rules(
     )
 
 
+def _safe_hash(value: object, /) -> str | None:
+    try:
+        return canonical_sha256(value)
+    except (TypeError, ValueError, AttributeError):
+        return None
+
+
+def _raw_v1_market_book(value: object) -> bool:
+    return (
+        type(value) is CnAShareMarketFeeRuleBook
+        and type(value.rule_book_key) is str
+        and type(value.rule_book_version) is int
+        and type(value.bands) is tuple
+        and all(type(band) is CnAShareMarketFeeBand for band in value.bands)
+        and _safe_hash(value) is not None
+    )
+
+
+def _raw_v1_stamp_book(value: object) -> bool:
+    return (
+        type(value) is CnAShareStampDutyRuleBook
+        and type(value.rule_book_key) is str
+        and type(value.rule_book_version) is int
+        and type(value.bands) is tuple
+        and all(type(band) is CnAShareStampDutyBand for band in value.bands)
+        and _safe_hash(value) is not None
+    )
+
+
+def _raw_band_hash(value: object, /) -> str:
+    result = _safe_hash(value)
+    if result is None:
+        raise ValueError("projection source cannot be canonically identified")
+    return result
+
+
+def _raw_band_order(values: tuple[Any, ...], /) -> tuple[Any, ...]:
+    def key(band: Any) -> tuple[Any, ...]:
+        venue = getattr(band, "venue_id", None)
+        start = getattr(band, "effective_from", None)
+        stop = getattr(band, "effective_to_exclusive", None)
+        return (
+            0 if _concrete_venue(venue) else 1,
+            cast(VenueId, venue).value
+            if _concrete_venue(venue)
+            else _raw_band_hash(venue),
+            0 if _concrete_instant(start) else 1,
+            cast(UtcInstant, start).epoch_nanoseconds
+            if _concrete_instant(start)
+            else _raw_band_hash(start),
+            0 if _concrete_instant(stop) else 1,
+            cast(UtcInstant, stop).epoch_nanoseconds
+            if _concrete_instant(stop)
+            else _raw_band_hash(stop),
+            _raw_band_hash(band),
+        )
+
+    return tuple(sorted(values, key=key))
+
+
 class CnAShareDomesticOrdinaryFeeProjectionFailureCodeV2(str, Enum):
     NON_XSHE_MARKET_SOURCE = "non_xshe_market_source"
     NON_XSHE_STAMP_DUTY_SOURCE = "non_xshe_stamp_duty_source"
@@ -2964,22 +3451,24 @@ class CnAShareDomesticOrdinaryFeeProjectionFailureV2:
     subject_ids: tuple[str, ...]
 
     def __post_init__(self) -> None:
+        _hash("market_rule_book_hash", self.market_rule_book_hash)
+        _hash("stamp_duty_rule_book_hash", self.stamp_duty_rule_book_hash)
         if (
-            not isinstance(self.market_rule_book, CnAShareMarketFeeRuleBook)
-            or not isinstance(self.stamp_duty_rule_book, CnAShareStampDutyRuleBook)
-            or not isinstance(
+            not _raw_v1_market_book(self.market_rule_book)
+            or not _raw_v1_stamp_book(self.stamp_duty_rule_book)
+            or not _enum_member(
                 self.code, CnAShareDomesticOrdinaryFeeProjectionFailureCodeV2
             )
         ):
             raise TypeError("projection failure context invalid")
         if (self.market_rule_book_hash, self.stamp_duty_rule_book_hash) != (
-            self.market_rule_book.rule_book_hash,
-            self.stamp_duty_rule_book.rule_book_hash,
+            _raw_band_hash(self.market_rule_book),
+            _raw_band_hash(self.stamp_duty_rule_book),
         ):
             raise ValueError("projection failure hash mismatch")
-        if not isinstance(
-            self.subject_ids, tuple
-        ) or self.subject_ids != _projection_failure_subjects(
+        if type(
+            self.subject_ids
+        ) is not tuple or self.subject_ids != _projection_failure_subjects(
             self.market_rule_book, self.stamp_duty_rule_book, self.code
         ):
             raise ValueError("projection failure subject_ids mismatch")
@@ -3015,6 +3504,14 @@ class CnAShareDomesticOrdinaryFeeProjectionV2:
     stamp_duty_rule_book_hash: str
 
     def __post_init__(self) -> None:
+        _text("algorithm_id", self.algorithm_id)
+        for name, value in (
+            ("source_market_rule_book_hash", self.source_market_rule_book_hash),
+            ("source_stamp_duty_rule_book_hash", self.source_stamp_duty_rule_book_hash),
+            ("market_fee_rule_book_hash", self.market_fee_rule_book_hash),
+            ("stamp_duty_rule_book_hash", self.stamp_duty_rule_book_hash),
+        ):
+            _hash(name, value)
         if (
             self.algorithm_id
             != "cn-a-share-domestic-ordinary-v1-to-v2-fee-projection-v1"
@@ -3086,38 +3583,60 @@ def _projection_failure_subjects(
     stamp: CnAShareStampDutyRuleBook,
     code: CnAShareDomesticOrdinaryFeeProjectionFailureCodeV2,
 ) -> tuple[str, ...]:
-    prefix = (code.value, market.rule_book_hash, stamp.rule_book_hash)
+    prefix = (code.value, _raw_band_hash(market), _raw_band_hash(stamp))
+    market_bands = _raw_band_order(market.bands)
+    stamp_bands = _raw_band_order(stamp.bands)
     if (
         code
         is CnAShareDomesticOrdinaryFeeProjectionFailureCodeV2.NON_XSHE_MARKET_SOURCE
     ):
-        band = next(band for band in market.bands if band.venue_id != VenueId("xshe"))
-        return (*prefix, "venue_id", band.venue_id.value, "band_hash", band.band_hash)
+        band = next(
+            band
+            for band in market_bands
+            if not _concrete_venue(band.venue_id) or band.venue_id != VenueId("xshe")
+        )
+        return (
+            *prefix,
+            "venue_id",
+            band.venue_id.value if _concrete_venue(band.venue_id) else "invalid",
+            "band_hash",
+            _raw_band_hash(band),
+        )
     if (
         code
         is CnAShareDomesticOrdinaryFeeProjectionFailureCodeV2.NON_XSHE_STAMP_DUTY_SOURCE
     ):
-        band = next(band for band in stamp.bands if band.venue_id != VenueId("xshe"))
-        return (*prefix, "venue_id", band.venue_id.value, "band_hash", band.band_hash)
+        band = next(
+            band
+            for band in stamp_bands
+            if not _concrete_venue(band.venue_id) or band.venue_id != VenueId("xshe")
+        )
+        return (
+            *prefix,
+            "venue_id",
+            band.venue_id.value if _concrete_venue(band.venue_id) else "invalid",
+            "band_hash",
+            _raw_band_hash(band),
+        )
     if (
         code
         is CnAShareDomesticOrdinaryFeeProjectionFailureCodeV2.MARKET_SOURCE_INTERVAL_INVALID
     ):
         band = next(
             band
-            for band in market.bands
-            if type(band.effective_from) is not UtcInstant
-            or type(band.effective_to_exclusive) is not UtcInstant
+            for band in market_bands
+            if not _concrete_instant(band.effective_from)
+            or not _concrete_instant(band.effective_to_exclusive)
             or band.effective_from >= band.effective_to_exclusive
         )
         return (
             *prefix,
             "band_hash",
-            band.band_hash,
+            _raw_band_hash(band),
             "effective_from_hash",
-            canonical_sha256(band.effective_from),
+            _raw_band_hash(band.effective_from),
             "effective_to_exclusive_hash",
-            canonical_sha256(band.effective_to_exclusive),
+            _raw_band_hash(band.effective_to_exclusive),
         )
     if (
         code
@@ -3125,39 +3644,39 @@ def _projection_failure_subjects(
     ):
         band = next(
             band
-            for band in stamp.bands
-            if type(band.effective_from) is not UtcInstant
-            or type(band.effective_to_exclusive) is not UtcInstant
+            for band in stamp_bands
+            if not _concrete_instant(band.effective_from)
+            or not _concrete_instant(band.effective_to_exclusive)
             or band.effective_from >= band.effective_to_exclusive
         )
         return (
             *prefix,
             "band_hash",
-            band.band_hash,
+            _raw_band_hash(band),
             "effective_from_hash",
-            canonical_sha256(band.effective_from),
+            _raw_band_hash(band.effective_from),
             "effective_to_exclusive_hash",
-            canonical_sha256(band.effective_to_exclusive),
+            _raw_band_hash(band.effective_to_exclusive),
         )
     if (
         code
         is CnAShareDomesticOrdinaryFeeProjectionFailureCodeV2.MARKET_SOURCE_ECONOMIC_INVALID
     ):
-        band = next(band for band in market.bands if not _valid_v1_market(band))
+        band = next(band for band in market_bands if not _valid_v1_market(band))
         return (
             *prefix,
             "band_hash",
-            band.band_hash,
+            _raw_band_hash(band),
             "economic_hash",
-            canonical_sha256(band),
+            _raw_band_hash(band),
         )
-    band = next(band for band in stamp.bands if not _valid_v1_stamp(band))
+    band = next(band for band in stamp_bands if not _valid_v1_stamp(band))
     return (
         *prefix,
         "band_hash",
-        band.band_hash,
+        _raw_band_hash(band),
         "economic_hash",
-        canonical_sha256(band),
+        _raw_band_hash(band),
     )
 
 
@@ -3172,9 +3691,9 @@ def _projection_failure(
         raise ValueError("projection failure suffix mismatch")
     return CnAShareDomesticOrdinaryFeeProjectionFailureV2(
         market,
-        market.rule_book_hash,
+        _raw_band_hash(market),
         stamp,
-        stamp.rule_book_hash,
+        _raw_band_hash(stamp),
         code,
         expected,
     )
@@ -3196,7 +3715,7 @@ def _valid_v1_market(value: Any) -> bool:
     return (
         type(value) is CnAShareMarketFeeBand
         and all(
-            type(getattr(value, n, None)) is Rate
+            _concrete_rate(getattr(value, n, None))
             and getattr(value, n).units >= 0
             and getattr(value, n).basis == "fee_fraction"
             for n in ("handling_rate", "regulatory_rate", "transfer_rate")
@@ -3215,7 +3734,7 @@ def _valid_v1_market(value: Any) -> bool:
 def _valid_v1_stamp(value: Any) -> bool:
     return (
         type(value) is CnAShareStampDutyBand
-        and type(getattr(value, "rate", None)) is Rate
+        and _concrete_rate(getattr(value, "rate", None))
         and value.rate.units >= 0
         and value.rate.basis == "fee_fraction"
         and _valid_v1_sources(getattr(value, "source_refs", None))
@@ -3225,15 +3744,26 @@ def _valid_v1_stamp(value: Any) -> bool:
 def _concrete_v1_market_book(value: object) -> bool:
     return (
         type(value) is CnAShareMarketFeeRuleBook
+        and type(value.rule_book_key) is str
+        and type(value.rule_book_version) is int
         and type(value.bands) is tuple
         and all(
             type(band) is CnAShareMarketFeeBand
-            and type(band.venue_id) is VenueId
-            and _exact(band.venue_id, VenueId)
+            and _concrete_venue(band.venue_id)
             and _concrete_instant(band.effective_from)
             and _concrete_instant(band.effective_to_exclusive)
-            and all(_concrete_rate(getattr(band, name)) for name in ("handling_rate", "regulatory_rate", "transfer_rate"))
-            and all(_valid_v1_sources(getattr(band, name)) for name in ("handling_source_refs", "regulatory_source_refs", "transfer_source_refs"))
+            and all(
+                _concrete_rate(getattr(band, name))
+                for name in ("handling_rate", "regulatory_rate", "transfer_rate")
+            )
+            and all(
+                _valid_v1_sources(getattr(band, name))
+                for name in (
+                    "handling_source_refs",
+                    "regulatory_source_refs",
+                    "transfer_source_refs",
+                )
+            )
             and _exact(band, CnAShareMarketFeeBand)
             for band in value.bands
         )
@@ -3244,11 +3774,12 @@ def _concrete_v1_market_book(value: object) -> bool:
 def _concrete_v1_stamp_book(value: object) -> bool:
     return (
         type(value) is CnAShareStampDutyRuleBook
+        and type(value.rule_book_key) is str
+        and type(value.rule_book_version) is int
         and type(value.bands) is tuple
         and all(
             type(band) is CnAShareStampDutyBand
-            and type(band.venue_id) is VenueId
-            and _exact(band.venue_id, VenueId)
+            and _concrete_venue(band.venue_id)
             and _concrete_instant(band.effective_from)
             and _concrete_instant(band.effective_to_exclusive)
             and _concrete_rate(band.rate)
@@ -3269,30 +3800,46 @@ def project_cn_a_share_domestic_ordinary_fee_rules_v2(
     | CnAShareDomesticOrdinaryFeeProjectionFailureV2
 ):
     if not (
-        _concrete_v1_market_book(market_rule_book)
-        and _concrete_v1_stamp_book(stamp_duty_rule_book)
+        _raw_v1_market_book(market_rule_book)
+        and _raw_v1_stamp_book(stamp_duty_rule_book)
     ):
-        raise TypeError("source rule books must be concrete v1")
-    for band in market_rule_book.bands:
-        if band.venue_id != VenueId("xshe"):
+        raise TypeError("source rule books must be exact v1 outer values")
+    market_bands = _raw_band_order(market_rule_book.bands)
+    stamp_bands = _raw_band_order(stamp_duty_rule_book.bands)
+    for band in market_bands:
+        if not _concrete_venue(band.venue_id) or band.venue_id != VenueId("xshe"):
             return _projection_failure(
                 market_rule_book,
                 stamp_duty_rule_book,
                 CnAShareDomesticOrdinaryFeeProjectionFailureCodeV2.NON_XSHE_MARKET_SOURCE,
-                ("venue_id", band.venue_id.value, "band_hash", band.band_hash),
+                (
+                    "venue_id",
+                    band.venue_id.value
+                    if _concrete_venue(band.venue_id)
+                    else "invalid",
+                    "band_hash",
+                    _raw_band_hash(band),
+                ),
             )
-    for band in stamp_duty_rule_book.bands:
-        if band.venue_id != VenueId("xshe"):
+    for band in stamp_bands:
+        if not _concrete_venue(band.venue_id) or band.venue_id != VenueId("xshe"):
             return _projection_failure(
                 market_rule_book,
                 stamp_duty_rule_book,
                 CnAShareDomesticOrdinaryFeeProjectionFailureCodeV2.NON_XSHE_STAMP_DUTY_SOURCE,
-                ("venue_id", band.venue_id.value, "band_hash", band.band_hash),
+                (
+                    "venue_id",
+                    band.venue_id.value
+                    if _concrete_venue(band.venue_id)
+                    else "invalid",
+                    "band_hash",
+                    _raw_band_hash(band),
+                ),
             )
-    for band in market_rule_book.bands:
+    for band in market_bands:
         if (
-            not isinstance(band.effective_from, UtcInstant)
-            or not isinstance(band.effective_to_exclusive, UtcInstant)
+            not _concrete_instant(band.effective_from)
+            or not _concrete_instant(band.effective_to_exclusive)
             or band.effective_from >= band.effective_to_exclusive
         ):
             return _projection_failure(
@@ -3301,17 +3848,17 @@ def project_cn_a_share_domestic_ordinary_fee_rules_v2(
                 CnAShareDomesticOrdinaryFeeProjectionFailureCodeV2.MARKET_SOURCE_INTERVAL_INVALID,
                 (
                     "band_hash",
-                    band.band_hash,
+                    _raw_band_hash(band),
                     "effective_from_hash",
-                    canonical_sha256(band.effective_from),
+                    _raw_band_hash(band.effective_from),
                     "effective_to_exclusive_hash",
-                    canonical_sha256(band.effective_to_exclusive),
+                    _raw_band_hash(band.effective_to_exclusive),
                 ),
             )
-    for band in stamp_duty_rule_book.bands:
+    for band in stamp_bands:
         if (
-            not isinstance(band.effective_from, UtcInstant)
-            or not isinstance(band.effective_to_exclusive, UtcInstant)
+            not _concrete_instant(band.effective_from)
+            or not _concrete_instant(band.effective_to_exclusive)
             or band.effective_from >= band.effective_to_exclusive
         ):
             return _projection_failure(
@@ -3320,28 +3867,38 @@ def project_cn_a_share_domestic_ordinary_fee_rules_v2(
                 CnAShareDomesticOrdinaryFeeProjectionFailureCodeV2.STAMP_DUTY_SOURCE_INTERVAL_INVALID,
                 (
                     "band_hash",
-                    band.band_hash,
+                    _raw_band_hash(band),
                     "effective_from_hash",
-                    canonical_sha256(band.effective_from),
+                    _raw_band_hash(band.effective_from),
                     "effective_to_exclusive_hash",
-                    canonical_sha256(band.effective_to_exclusive),
+                    _raw_band_hash(band.effective_to_exclusive),
                 ),
             )
-    for band in market_rule_book.bands:
+    for band in market_bands:
         if not _valid_v1_market(band):
             return _projection_failure(
                 market_rule_book,
                 stamp_duty_rule_book,
                 CnAShareDomesticOrdinaryFeeProjectionFailureCodeV2.MARKET_SOURCE_ECONOMIC_INVALID,
-                ("band_hash", band.band_hash, "economic_hash", canonical_sha256(band)),
+                (
+                    "band_hash",
+                    _raw_band_hash(band),
+                    "economic_hash",
+                    _raw_band_hash(band),
+                ),
             )
-    for band in stamp_duty_rule_book.bands:
+    for band in stamp_bands:
         if not _valid_v1_stamp(band):
             return _projection_failure(
                 market_rule_book,
                 stamp_duty_rule_book,
                 CnAShareDomesticOrdinaryFeeProjectionFailureCodeV2.STAMP_DUTY_SOURCE_ECONOMIC_INVALID,
-                ("band_hash", band.band_hash, "economic_hash", canonical_sha256(band)),
+                (
+                    "band_hash",
+                    _raw_band_hash(band),
+                    "economic_hash",
+                    _raw_band_hash(band),
+                ),
             )
     _ensure_projectable_sources(market_rule_book, stamp_duty_rule_book)
     market_hash = market_rule_book.rule_book_hash
@@ -3367,8 +3924,8 @@ def _ensure_projectable_sources(
     stamp_duty_rule_book: CnAShareStampDutyRuleBook,
 ) -> None:
     if (
-        not isinstance(market_rule_book.bands, tuple)
-        or not isinstance(stamp_duty_rule_book.bands, tuple)
+        type(market_rule_book.bands) is not tuple
+        or type(stamp_duty_rule_book.bands) is not tuple
         or not market_rule_book.bands
         or not stamp_duty_rule_book.bands
     ):
