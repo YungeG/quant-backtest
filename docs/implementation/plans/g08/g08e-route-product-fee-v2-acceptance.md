@@ -30,7 +30,7 @@ V2C requires all of the following closure evidence:
 1. V2A proof that exact pure Kernel contract/golden/architecture tests pass, including MISSING_FILL, upper execution-time bound, query provenance, separate ChinaClear/HKSCC, XSHE-only projection, source refs, IDs, and exports.
 2. V2B proof that explicit immutable Runtime selection and additive v2 profile/build/Semantic Run binding pass, and direct structurally valid Authority substitution changes identity and is rejected before fee use.
 3. Legacy G08E/G08H parity and the full repository suite.
-4. The five protected raw fixture SHA-256 receipts, import-boundary report, mypy, lock check, gitleaks, clean diff/index/status, and independent review receipts.
+4. The five protected raw fixture SHA-256 records, import-boundary report, mypy, lock check, gitleaks, clean diff/index/status, and independent review records.
 5. Verification that no provider/archive completeness, July-2026 closure, decision grade, live/deployment, account-statement parity, or non-notional-cost claim was introduced.
 
 ## Acceptance decision

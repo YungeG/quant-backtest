@@ -23,7 +23,7 @@ This file is the roadmap and dependency authority only. The parent [Acceptance M
 G08E/G08H v1 bytes + ADR 0005
              |
              v
-G08E-V2A Kernel contract (READY_FOR_CONTRACT_RED)
+G08E-V2A Kernel contract (proposed READY_FOR_CONTRACT_RED)
              |
              v
 G08E-V2B Runtime binding (BLOCKED_ON_V2A_PASSED)
@@ -52,9 +52,9 @@ There are no back edges: V2A must not require resolved-profile, profile-build, R
 
 ## Transition rules
 
-1. V2A may enter RED now and may become `PASSED` only with its own exact Kernel acceptance.
-2. V2B starts only after V2A interface/identity tests pass; it may narrow no A fact and may add no economics.
-3. V2C starts only after both prior nodes pass and is the sole G12H-unblocking gate.
+1. V2A may enter RED only after the parent Acceptance Matrix registers it `READY`; it may become `PASSED` only with its own exact Kernel acceptance closure.
+2. V2B starts only after the parent Matrix registers V2A `PASSED`; it may narrow no A fact and may add no economics.
+3. V2C starts only after the parent Matrix registers both prior nodes `PASSED` and is the sole G12H-unblocking gate.
 4. The parent Acceptance Matrix is the sole current status authority; V2C records final source commit and fixture/artifact hashes in its acceptance closure and that parent registry fact, never a new receipt file. No node claims implementation or qualification before that fan-in.
 
 Do not add code, fixtures, registry entries, Acceptance Matrix, README, or publication artifacts in this decomposition change.

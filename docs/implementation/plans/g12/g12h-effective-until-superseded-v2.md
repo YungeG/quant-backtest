@@ -12,7 +12,7 @@ consumes:
   - immutable G08E/G08H and G12C/D v1 identities
   - ADR 0004 effective-until-authoritatively-superseded semantics
   - ADR 0005 execution access-route and fee-product-class semantics
-  - G08E route/product fee v2 acceptance receipt
+  - G08E route/product fee v2 parent-Matrix PASSED registry fact
 depends_on:
   contract: [G08E, G08H, G08E-ROUTE-PRODUCT-FEE-V2C, G12C, G12D]
   evidence: [] # F1 acquires raw evidence after V2C parent-registry PASSED
@@ -24,7 +24,7 @@ fan_out: [G12H, G12L-*, G12M-*]
 
 ## Status and authority
 
-Proposed `BLOCKED_ON_ROUTE_PRODUCT_FEE_V2C_PASS`, pending parent Acceptance Matrix fan-in. The parent [Acceptance Matrix](../../acceptance-matrix.md) is the sole current Gate-status authority; this frontmatter is not a second status. [ADR 0005](../../../adr/0005-cn-a-share-fees-require-access-route-and-product-class.md) accepts the domain decision. The [G08E v2 roadmap](../g08/g08e-route-product-fee-v2.md) requires V2A Kernel, V2B Runtime binding, and V2C acceptance in order. F1 may resume for `DOMESTIC + ORDINARY_A_SHARE` only after **V2C** becomes `PASSED`; V2A alone is insufficient. V2C acceptance uses finite XSHE compatibility economics and requires no G12H closure artifact, so the DAG is not circular. Until then no closure acquisition artifact, F2 projection, F3 publication, analyzer RED, or qualification change is authorized. No default, inference, silent Stock Connect/product exclusion, or interchangeable v2 RuleBook pairing is permitted.
+Proposed `BLOCKED_ON_ROUTE_PRODUCT_FEE_V2C_PASS`, pending parent Acceptance Matrix fan-in. The parent [Acceptance Matrix](../../acceptance-matrix.md) is the sole current Gate-status authority; this frontmatter is not a second status. [ADR 0005](../../../adr/0005-cn-a-share-fees-require-access-route-and-product-class.md) accepts the domain decision. The [G08E v2 roadmap](../g08/g08e-route-product-fee-v2.md) requires V2A Kernel, V2B Runtime binding, and V2C acceptance in order. F1 may resume for `DOMESTIC + ORDINARY_A_SHARE` only after the parent Acceptance Matrix records V2C `PASSED`; V2A alone is insufficient. V2C acceptance uses finite XSHE compatibility economics and requires no G12H closure artifact, so the DAG is not circular. Until then no closure acquisition artifact, F2 projection, F3 publication, analyzer RED, or qualification change is authorized. No default, inference, silent Stock Connect/product exclusion, or interchangeable v2 RuleBook pairing is permitted.
 
 Accepted semantics: [ADR 0004](../../../adr/0004-official-rules-effective-until-authoritatively-superseded.md) and [ADR 0005](../../../adr/0005-cn-a-share-fees-require-access-route-and-product-class.md).
 
@@ -81,7 +81,7 @@ F1 itself owns acquisition, immutable capture, normalization, and verification o
 
 ### Scope
 
-F1 remains blocked until [G08E-V2C acceptance](../g08/g08e-route-product-fee-v2-acceptance.md) is `PASSED`; V2A Kernel alone does not unblock it. After that independent pass, the F1/F2 success envelope is exactly the execution-enforceable scope below:
+F1 remains blocked until the parent Acceptance Matrix records [G08E-V2C acceptance](../g08/g08e-route-product-fee-v2-acceptance.md) `PASSED`; V2A Kernel alone does not unblock it. After that independent pass, the F1/F2 success envelope is exactly the execution-enforceable scope below:
 
 ```text
 execution_access_route: DOMESTIC
@@ -213,7 +213,7 @@ Failure is atomic: no successful closure artifact, derived RuleBook, declaration
 
 ### F1 pass gate
 
-F1 cannot start until G08E-V2C acceptance is `PASSED`; V2A or V2B alone cannot start it. V2C uses only the finite XSHE compatibility projection and is not an F1 output or prerequisite. Once started, F1 passes only after exact captures, normalized source identities, closure body/hash, failure-free reconstruction, and independent source/closure review pass. Until then no G12H projector, declaration fixture, publication, or analyzer RED is authorized.
+F1 cannot start until the parent Acceptance Matrix records G08E-V2C acceptance `PASSED`; V2A or V2B alone cannot start it. V2C uses only the finite XSHE compatibility projection and is not an F1 output or prerequisite. Once started, F1 passes only after exact captures, normalized source identities, closure body/hash, failure-free reconstruction, and independent source/closure review pass. Until then no G12H projector, declaration fixture, publication, or analyzer RED is authorized.
 
 ## F2 — pure source authority to finite execution RuleBooks
 

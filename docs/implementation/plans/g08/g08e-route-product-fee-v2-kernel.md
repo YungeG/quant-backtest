@@ -85,11 +85,11 @@ access_route: CnAShareExecutionAccessRoute
 fee_product_class: CnAShareFeeProductClass
 ```
 
-Canonical type is `cn_a_share_fee_execution_scope_v2`; `scope_hash = canonical_sha256(body)`. Structure requires exact nested identities, finite half-open coverage, canonical unique side tuple, and no inferred route/product. Caller selection of this value is owned by V2B.
+Canonical type is `cn_a_share_fee_execution_scope_v2`; `scope_hash = canonical_sha256(body)`. Structure requires exact nested identities, canonical unique side tuple, and no inferred route/product. Constructor invariants are exact and run before Authority build: `venue_id == VenueId("xshe")` else `ValueError("scope venue_id must be XSHE")`; `instrument_type is InstrumentType.EQUITY` else `ValueError("scope instrument_type must be EQUITY")`; `quote_currency_id == CurrencyId("CNY")` else `ValueError("scope quote_currency_id must be CNY")`; `settlement_currency_id == CurrencyId("CNY")` else `ValueError("scope settlement_currency_id must be CNY")`; `trade_mechanism is CnAShareFeeTradeMechanism.AUCTION` else `ValueError("scope trade_mechanism must be AUCTION")`; and finite `coverage_from < coverage_to_exclusive` else `ValueError("scope coverage interval must be finite and non-empty")`. Caller selection of this value is owned by V2B.
 
 `CnAShareFeeExecutionSelectionV2` fields/order are `selection_key: str`, `selection_version: int`, `access_route`, `fee_product_class`, `market_fee_rule_book: CnAShareMarketFeeRuleBookV2`, `market_fee_rule_book_hash: str`, `stamp_duty_rule_book: CnAShareStampDutyRuleBookV2`, `stamp_duty_rule_book_hash: str`, `market_fee_component_ref: ProfileComponentRef`, `stamp_duty_component_ref: ProfileComponentRef`. Its type is `cn_a_share_fee_execution_selection_v2`; `selection_hash` is derived.
 
-The exact pure authority API is `create_cn_a_share_fee_execution_authority_v2(scope: CnAShareFeeExecutionScopeV2, selection: CnAShareFeeExecutionSelectionV2, /) -> CnAShareFeeExecutionAuthorityV2 | CnAShareFeeExecutionAuthorityFailureV2`. It evaluates `SCOPE_SELECTION_MISMATCH`, then `RULE_BOOK_SCOPE_MISMATCH`, then `COMPONENT_REF_MISMATCH` in declaration order. `CnAShareFeeExecutionAuthorityV2` is pure Kernel selection, not profile provenance. Fields/order are `authority_key: str`, `authority_version: int`, `scope`, `scope_hash`, `selection`, `selection_hash`, `access_route`, `fee_product_class`, `market_fee_rule_book`, `market_fee_rule_book_hash`, `stamp_duty_rule_book`, `stamp_duty_rule_book_hash`, `market_fee_component_ref`, `stamp_duty_component_ref`. Type is `cn_a_share_fee_execution_authority_v2`; `authority_version == 2`; `authority_hash` is derived. The pure authority constructor validates Scope/Selection equality, exact book/hash/ref equality, route/product equality, and no interchangeable market/stamp book pair.
+The exact pure authority API is `create_cn_a_share_fee_execution_authority_v2(scope: CnAShareFeeExecutionScopeV2, selection: CnAShareFeeExecutionSelectionV2, /) -> CnAShareFeeExecutionAuthorityV2 | CnAShareFeeExecutionAuthorityFailureV2`. It sets `authority_key` exactly to `equity.cn_a_share.cash.fee-execution-authority.route-product.v2`, sets `authority_version` exactly to `2`, then evaluates `SCOPE_SELECTION_MISMATCH`, `RULE_BOOK_SCOPE_MISMATCH`, and `COMPONENT_REF_MISMATCH` in declaration order. `CnAShareFeeExecutionAuthorityV2` is pure Kernel selection, not profile provenance. Fields/order are `authority_key: str`, `authority_version: int`, `scope`, `scope_hash`, `selection`, `selection_hash`, `access_route`, `fee_product_class`, `market_fee_rule_book`, `market_fee_rule_book_hash`, `stamp_duty_rule_book`, `stamp_duty_rule_book_hash`, `market_fee_component_ref`, `stamp_duty_component_ref`. Type is `cn_a_share_fee_execution_authority_v2`; `authority_version == 2`; `authority_hash` is derived. The pure authority constructor validates Scope/Selection equality, exact book/hash/ref equality, route/product equality, and no interchangeable market/stamp book pair.
 
 `CnAShareFeeExecutionAuthorityFailureCodeV2` order is `SCOPE_SELECTION_MISMATCH`, `RULE_BOOK_SCOPE_MISMATCH`, `COMPONENT_REF_MISMATCH`. `CnAShareFeeExecutionAuthorityFailureV2` fields/order are `scope`, `scope_hash`, `selection`, `selection_hash`, `code`, `subject_ids`; type is `cn_a_share_fee_execution_authority_failure_v2`. Prefix is `(code.value, scope_hash, selection_hash)`. Exact suffixes are respectively `( "scope_access_route", scope.access_route.value, "selection_access_route", selection.access_route.value, "scope_fee_product_class", scope.fee_product_class.value, "selection_fee_product_class", selection.fee_product_class.value )`; `( "market_fee_rule_book_hash", selection.market_fee_rule_book_hash, "stamp_duty_rule_book_hash", selection.stamp_duty_rule_book_hash, "scope_venue_id", scope.venue_id.value )`; and `( "market_fee_component_digest", selection.market_fee_component_ref.component_digest, "stamp_duty_component_digest", selection.stamp_duty_component_ref.component_digest )`. No subject tuple is deduplicated or sorted.
 
@@ -195,7 +195,7 @@ Market charge keys/order are exactly `handling`, `securities_regulatory`, `china
 }
 ```
 
-`rule_type` is exactly `cn_a_share_market_fee_charge_rule_v2` or `cn_a_share_stamp_duty_charge_rule_v2`; tags are exactly `cn-a-share-market-fee-rule-v2` or `cn-a-share-stamp-duty-rule-v2`. For market reservation/final-fill, applies is the selected charge Band bool; final-order uses false. For stamp reservation/final-fill, applies is exactly `(band.applies_to_sell and query.side is SELL)`; final-order uses false. True maps to `FeeReservationApplicability.APPLIES`/`FinalFeeApplicability.ALWAYS`; false maps to `NOT_APPLICABLE`, exact zero rate, and preserved nonempty refs.
+`rule_type` is exactly `cn_a_share_market_fee_charge_rule_v2` or `cn_a_share_stamp_duty_charge_rule_v2`; tags are exactly `cn-a-share-market-fee-rule-v2` or `cn-a-share-stamp-duty-rule-v2`; every generated rule ID is exactly `f'{tag}:{canonical_sha256(preimage)}'`. For market reservation/final-fill, applies is the selected charge Band bool; final-order uses false. For stamp reservation/final-fill, applies is exactly `(band.applies_to_sell and query.side is SELL)`; final-order uses false. True maps to `FeeReservationApplicability.APPLIES`/`FinalFeeApplicability.ALWAYS`; false maps to `NOT_APPLICABLE`, exact zero rate, and preserved nonempty refs.
 
 `CnAShareMarketFeeRuleResolutionV2` exact fields/order are `authority: CnAShareFeeExecutionAuthorityV2`, `authority_hash: str`, `query: CnAShareCashFeeRuleQueryV2`, `query_hash: str`, `binding_hash: str`, `order_id: DomainId`, `order_hash: str`, `fill: Fill | None`, `fill_hash: str | None`, `fill_id: DomainId | None`, `side: OrderSide`, `effective_at: UtcInstant`, `active_band: CnAShareMarketFeeBandV2`, `active_band_hash: str`, `reservation_charge_rules: tuple[FeeReservationChargeRule, ...]`, `final_fill_charge_rules: tuple[FinalFeeChargeRule, ...]`, `final_order_not_applicable_rules: tuple[FinalFeeChargeRule, ...]`; type `cn_a_share_market_fee_rule_resolution_v2`. Every market tuple has four rules in fixed charge order.
 
@@ -211,7 +211,20 @@ Policy failure prefix is exactly `(code.value, policy.authority_hash, query.quer
 | `MISSING_RULE_INTERVAL` | `( "venue_id", query.venue_id.value, "effective_at_hash", canonical_sha256(query.effective_at), "rule_book_hash", selected_rule_book.rule_book_hash, "active_band_hashes_hash", canonical_sha256(()) )` |
 | `OVERLAPPING_RULE_INTERVALS` | `( "venue_id", query.venue_id.value, "effective_at_hash", canonical_sha256(query.effective_at), "rule_book_hash", selected_rule_book.rule_book_hash, "active_band_hashes_hash", canonical_sha256(tuple(sorted(band.band_hash for band in active_bands))) )` |
 
-`CnAShareFeeReservationBufferV2` exact fields/order are `market_resolution: CnAShareMarketFeeRuleResolutionV2`, `tax_resolution: CnAShareStampDutyRuleResolutionV2`, `maximum_fill_count: int`, `market_charge_rule: FeeReservationChargeRule`, `tax_charge_rule: FeeReservationChargeRule`; type `cn_a_share_fee_reservation_buffer_v2`; `buffer_hash` derived. Its exact API is:
+`CnAShareFeeRuleFailureCodeV2` exact declaration order and wire values are:
+
+```python
+class CnAShareFeeRuleFailureCodeV2(str, Enum):
+    EXECUTION_AUTHORITY_MISMATCH = "execution_authority_mismatch"
+    QUERY_PROVENANCE_MISMATCH = "query_provenance_mismatch"
+    RULE_BOOK_SCOPE_MISMATCH = "rule_book_scope_mismatch"
+    MISSING_RULE_INTERVAL = "missing_rule_interval"
+    OVERLAPPING_RULE_INTERVALS = "overlapping_rule_intervals"
+```
+
+`CnAShareFeeRuleFailureV2` exact fields/order are `query: CnAShareCashFeeRuleQueryV2`, `query_hash: str`, `code: CnAShareFeeRuleFailureCodeV2`, `subject_ids: tuple[str, ...]`. Its canonical body is exactly `{type: "cn_a_share_fee_rule_failure_v2", schema_version: 1, query, query_hash, code: code.value, subject_ids}`; `failure_hash = canonical_sha256(body)`. Constructor requires `query_hash == query.query_hash`, exact enum type, and the code-specific subject tuple above.
+
+`CnAShareFeeReservationBufferV2` exact fields/order are `market_resolution: CnAShareMarketFeeRuleResolutionV2`, `tax_resolution: CnAShareStampDutyRuleResolutionV2`, `maximum_fill_count: int`, `market_charge_rule: FeeReservationChargeRule`, `tax_charge_rule: FeeReservationChargeRule`; type `cn_a_share_fee_reservation_buffer_v2`; `buffer_hash` derived. `create` requires both resolutions to have exact same Authority/hash, query/hash, binding hash, order ID/hash, Fill/fill hash/fill ID provenance, side, effective time, and `query.purpose is RESERVATION`; any mismatch raises exactly `ValueError("reservation buffer resolution context mismatch")`. Its exact API is:
 
 ```python
 CnAShareFeeReservationBufferV2.create(*, market_resolution, tax_resolution, maximum_fill_count)
@@ -236,8 +249,7 @@ The buffer rule-ID preimage is exactly:
 }
 ```
 
-Market buffer uses `charge_key="handling"`; tax buffer uses `charge_key="stamp_duty"`; `applies == (component_count > 0)`. Domestic ordinary market count is 3; separately evidenced Northbound ordinary can be 4.
-
+Buffer tag is exactly `cn-a-share-fee-reservation-buffer-rule-v2`; each buffer ID is exactly `f'{tag}:{canonical_sha256(preimage)}'`. Market buffer uses `charge_key="handling"`; tax buffer uses `charge_key="stamp_duty"`; `applies == (component_count > 0)`. Domestic ordinary market count is 3; separately evidenced Northbound ordinary can be 4.
 
 ### XSHE compatibility projection
 
@@ -283,10 +295,9 @@ CnAShareFeeRuleSourceRef(
 
 The `first_*` value is the first source Band in v1 canonical Band order satisfying the named predicate. All failure paths return no partial output. Projection remains a finite compatibility proof only: no July-2026 evidence, Runtime selection, provider qualification, or open-ended continuity.
 
-
 ## RED and acceptance for A
 
-Add only kernel contract/golden/architecture tests and kernel fixture after approval. Test exact field/signature/type/order, all failure precedence/subjects, missing Fill, lower/upper execution time, direct/replace/object-new provenance, separate ChinaClear/HKSCC, all applies mappings, buffer count/Money/IDs, XSHE rejection, empty source rejection, projection identities, import boundary, and all protected v1 bytes. V2A passes only focused Kernel tests, v1 regression/byte locks, static import check, mypy, gitleaks, diff/status, and independent review. It creates no Runtime or Semantic Run claim.
+After the parent Acceptance Matrix registers V2A `READY`, add only kernel contract/golden/architecture tests and kernel fixture. Test exact field/signature/type/order, all failure precedence/subjects, missing Fill, lower/upper execution time, direct/replace/object-new provenance, separate ChinaClear/HKSCC, all applies mappings, buffer count/Money/IDs, XSHE rejection, empty source rejection, projection identities, import boundary, and all protected v1 bytes. V2A passes only focused Kernel tests, v1 regression/byte locks, static import check, mypy, gitleaks, diff/status, and independent review. It creates no Runtime or Semantic Run claim.
 
 ## Nonclaims
 
