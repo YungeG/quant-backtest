@@ -35,7 +35,8 @@ real old artifact          → G12J
 | [G12E](g12e.md) | Verified local persisted reader | G12D, WP-06A | `market-data-contracts/local_market_bundle_reader.py` |
 | [G12F](g12f.md) | Reader/partition parity | G12E, G07 | parity tooling |
 | [G12G](g12g.md) | Canonical revisioned bar aggregation — `PASSED` | G12B–C | `bar_aggregation.py` |
-| [G12H](g12h.md) | Rule coverage — `DRAFT / BLOCKED`; primary-source blocker `c95952a` confirms candidate later rates lack finite full-target/pre-analysis closure; earliest failure remains `COVERAGE_GAP / market_fees` | G12C + aligned five-dimension rule authority | builder validation |
+| [G12H](g12h.md) | Rule coverage — `DRAFT / BLOCKED`; effective-until-authoritatively-superseded semantics approved, but exact current fixture remains `COVERAGE_GAP / market_fees` | G12C + aligned five-dimension rule authority | builder validation |
+| [G12H-EFFECTIVE-UNTIL-SUPERSEDED-V2](g12h-effective-until-superseded-v2.md) | Additive successor-closure path — F1 evidence acquisition `READY`; F2 finite projection and F3 v2 publication remain `BLOCKED` | official predecessor/endpoint/index evidence, existing finite RuleBook types | staged research/build publication |
 | [G12I](g12i.md) | Price/availability/revision coverage — readiness `BLOCKED`, Gate `DRAFT` | G12C, G12G + closure declarations | builder validation |
 | G12J | Schema migration | real old artifact | trading-domain migration |
 | [G12K](g12k.md) | Universe/corporate-action coverage — readiness `BLOCKED`, Gate `DRAFT` | G12C + normalized schemas/closure declarations | builder validation |
