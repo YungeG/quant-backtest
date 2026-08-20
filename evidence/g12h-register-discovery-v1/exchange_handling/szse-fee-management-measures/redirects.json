@@ -1,0 +1,95 @@
+{
+  "responses": [
+    {
+      "headers": [
+        {
+          "name": "Server",
+          "value": "Tengine"
+        },
+        {
+          "name": "Content-Type",
+          "value": "application/pdf"
+        },
+        {
+          "name": "Content-Length",
+          "value": "136125"
+        },
+        {
+          "name": "Connection",
+          "value": "keep-alive"
+        },
+        {
+          "name": "Set-Cookie",
+          "value": "acw_tc=<redacted sha256:34518115cfd41e960b1e46f0881bb7fb54e3ed1d503778b8d201b5cacbe0f366>;path=/;HttpOnly;Max-Age=3600"
+        },
+        {
+          "name": "Set-Cookie",
+          "value": "cdn_sec_tc=<redacted sha256:34518115cfd41e960b1e46f0881bb7fb54e3ed1d503778b8d201b5cacbe0f366>;path=/;HttpOnly;Max-Age=3600"
+        },
+        {
+          "name": "Date",
+          "value": "Thu, 20 Aug 2026 02:08:37 GMT"
+        },
+        {
+          "name": "X-UA-Compatible",
+          "value": "IE=EDGE"
+        },
+        {
+          "name": "X-Varnish",
+          "value": "873643752"
+        },
+        {
+          "name": "Via",
+          "value": "1.1 varnish-v4, cache22.l2nu20-3[0,0,304-0,H], cache12.l2nu20-3[1,0], ens-cache13.cn8134[0,0,200-0,H], ens-cache7.cn8134[3,0]"
+        },
+        {
+          "name": "X-UA-Compatible",
+          "value": "IE=EDGE"
+        },
+        {
+          "name": "Accept-Ranges",
+          "value": "bytes"
+        },
+        {
+          "name": "Last-Modified",
+          "value": "Wed, 31 Dec 2025 07:00:30 GMT"
+        },
+        {
+          "name": "ETag",
+          "value": "\"6954ca0e-213bd\""
+        },
+        {
+          "name": "Age",
+          "value": "23762"
+        },
+        {
+          "name": "Ali-Swift-Global-Savetime",
+          "value": "1787191717"
+        },
+        {
+          "name": "X-Cache",
+          "value": "HIT TCP_HIT dirn:8:190075088"
+        },
+        {
+          "name": "X-Swift-SaveTime",
+          "value": "Thu, 20 Aug 2026 03:39:35 GMT"
+        },
+        {
+          "name": "X-Swift-CacheTime",
+          "value": "37742"
+        },
+        {
+          "name": "Timing-Allow-Origin",
+          "value": "*"
+        },
+        {
+          "name": "EagleId",
+          "value": "3c1cf71b17872154790256831e"
+        }
+      ],
+      "status_line": "HTTP/1.1 200 OK"
+    }
+  ],
+  "schema_version": 1,
+  "type": "g12h_http_response_chain_v1"
+}

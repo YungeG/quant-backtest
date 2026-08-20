@@ -1,0 +1,196 @@
+{
+  "code": 200,
+  "data": {
+    "bbbs": "ff80818179f5da5e0179f890885b0481",
+    "content": {
+      "children": [
+        {
+          "children": [],
+          "id": "79890000-3e3b-0016-451e-08dde3775f14",
+          "index": 1,
+          "parentId": "79890000-3e3b-0016-4486-08dde3775f14",
+          "title": "题注"
+        },
+        {
+          "children": [],
+          "id": "79890000-3e3b-0016-57d5-08dde3775f14",
+          "index": 2,
+          "parentId": "79890000-3e3b-0016-4486-08dde3775f14",
+          "title": "第一条"
+        },
+        {
+          "children": [],
+          "id": "79890000-3e3b-0016-6abb-08dde3775f14",
+          "index": 3,
+          "parentId": "79890000-3e3b-0016-4486-08dde3775f14",
+          "title": "第二条"
+        },
+        {
+          "children": [],
+          "id": "79890000-3e3b-0016-7c70-08dde3775f14",
+          "index": 4,
+          "parentId": "79890000-3e3b-0016-4486-08dde3775f14",
+          "title": "第三条"
+        },
+        {
+          "children": [],
+          "id": "79890000-3e3b-0016-8a4b-08dde3775f14",
+          "index": 5,
+          "parentId": "79890000-3e3b-0016-4486-08dde3775f14",
+          "title": "第四条"
+        },
+        {
+          "children": [],
+          "id": "79890000-3e3b-0016-9572-08dde3775f14",
+          "index": 6,
+          "parentId": "79890000-3e3b-0016-4486-08dde3775f14",
+          "title": "第五条"
+        },
+        {
+          "children": [],
+          "id": "79890000-3e3b-0016-a1d8-08dde3775f14",
+          "index": 7,
+          "parentId": "79890000-3e3b-0016-4486-08dde3775f14",
+          "title": "第六条"
+        },
+        {
+          "children": [],
+          "id": "79890000-3e3b-0016-ad44-08dde3775f14",
+          "index": 8,
+          "parentId": "79890000-3e3b-0016-4486-08dde3775f14",
+          "title": "第七条"
+        },
+        {
+          "children": [],
+          "id": "79890000-3e3b-0016-b917-08dde3775f14",
+          "index": 9,
+          "parentId": "79890000-3e3b-0016-4486-08dde3775f14",
+          "title": "第八条"
+        },
+        {
+          "children": [],
+          "id": "79890000-3e3b-0016-c43a-08dde3775f14",
+          "index": 10,
+          "parentId": "79890000-3e3b-0016-4486-08dde3775f14",
+          "title": "第九条"
+        },
+        {
+          "children": [],
+          "id": "79890000-3e3b-0016-cfa1-08dde3775f14",
+          "index": 11,
+          "parentId": "79890000-3e3b-0016-4486-08dde3775f14",
+          "title": "第十条"
+        },
+        {
+          "children": [],
+          "id": "79890000-3e3b-0016-dbcb-08dde3775f14",
+          "index": 12,
+          "parentId": "79890000-3e3b-0016-4486-08dde3775f14",
+          "title": "第十一条"
+        },
+        {
+          "children": [],
+          "id": "79890000-3e3b-0016-e71f-08dde3775f14",
+          "index": 13,
+          "parentId": "79890000-3e3b-0016-4486-08dde3775f14",
+          "title": "第十二条"
+        },
+        {
+          "children": [],
+          "id": "79890000-3e3b-0016-f4ca-08dde3775f14",
+          "index": 14,
+          "parentId": "79890000-3e3b-0016-4486-08dde3775f14",
+          "title": "第十三条"
+        },
+        {
+          "children": [],
+          "id": "79890000-3e3b-0016-019d-08dde3775f15",
+          "index": 15,
+          "parentId": "79890000-3e3b-0016-4486-08dde3775f14",
+          "title": "第十四条"
+        },
+        {
+          "children": [],
+          "id": "79890000-3e3b-0016-0d7a-08dde3775f15",
+          "index": 16,
+          "parentId": "79890000-3e3b-0016-4486-08dde3775f14",
+          "title": "第十五条"
+        },
+        {
+          "children": [],
+          "id": "79890000-3e3b-0016-193d-08dde3775f15",
+          "index": 17,
+          "parentId": "79890000-3e3b-0016-4486-08dde3775f14",
+          "title": "第十六条"
+        },
+        {
+          "children": [],
+          "id": "79890000-3e3b-0016-25de-08dde3775f15",
+          "index": 18,
+          "parentId": "79890000-3e3b-0016-4486-08dde3775f14",
+          "title": "第十七条"
+        },
+        {
+          "children": [],
+          "id": "79890000-3e3b-0016-5c9a-08dde3775f15",
+          "index": 19,
+          "parentId": "79890000-3e3b-0016-4486-08dde3775f14",
+          "title": "第十八条"
+        },
+        {
+          "children": [],
+          "id": "79890000-3e3b-0016-6903-08dde3775f15",
+          "index": 20,
+          "parentId": "79890000-3e3b-0016-4486-08dde3775f14",
+          "title": "第十九条"
+        },
+        {
+          "children": [],
+          "id": "79890000-3e3b-0016-759b-08dde3775f15",
+          "index": 21,
+          "parentId": "79890000-3e3b-0016-4486-08dde3775f14",
+          "title": "第二十条"
+        },
+        {
+          "children": [
+            {
+              "children": [],
+              "id": "79890000-3e3b-0016-8ebe-08dde3775f15",
+              "index": 23,
+              "parentId": "79890000-3e3b-0016-824a-08dde3775f15",
+              "title": "印花税税目税率表"
+            }
+          ],
+          "id": "79890000-3e3b-0016-824a-08dde3775f15",
+          "index": 22,
+          "parentId": "79890000-3e3b-0016-4486-08dde3775f14",
+          "title": "附："
+        }
+      ],
+      "id": "79890000-3e3b-0016-4486-08dde3775f14",
+      "index": 0,
+      "parentId": "00000000-0000-0000-0000-000000000000",
+      "title": "中华人民共和国印花税法"
+    },
+    "flfg": null,
+    "flxz": "法律",
+    "gbrq": "2021-06-10",
+    "lsyg": null,
+    "ossFile": {
+      "ossPdfOfdPath": "prod/20210610/3b107a3136aa4454bcf6289c350d1d98.ofd",
+      "ossPdfOfdSize": 829764,
+      "ossPdfPath": "prod/20210610/3b107a3136aa4454bcf6289c350d1d98.pdf",
+      "ossWordOfdPath": "prod/20210610/1478b40e6a2844258beb95d3f2a91720.ofd",
+      "ossWordOfdSize": 95907,
+      "ossWordPath": "prod/20210610/1478b40e6a2844258beb95d3f2a91720.docx"
+    },
+    "sxrq": "2022-07-01",
+    "sxx": 3,
+    "title": "中华人民共和国印花税法",
+    "xfFlag": 0,
+    "xgwj": [],
+    "xgzl": [],
+    "zdjgName": "全国人民代表大会常务委员会"
+  },
+  "msg": "操作成功"
+}

@@ -1,0 +1,52 @@
+{
+  "external_harness": {
+    "path": "evidence/g12h/operator/g12h_wave1_capture.py",
+    "sha256": "sha256:85ccf78ce0d595ff9d372c85243d81c49c3bc1be19f868df5936cc2f6977d9ea"
+  },
+  "files": [
+    {
+      "byte_length": 911,
+      "path": "README.md",
+      "provenance": "DOCUMENTATION_OR_EXECUTION_RECEIPT",
+      "sha256": "sha256:1043e7fe5a75cb0d94b059c488f16fda9d5788961dc00aac1390172250e91153"
+    },
+    {
+      "byte_length": 5141,
+      "path": "executed/g12h_npc_post_capture.executed.py",
+      "provenance": "EXACT_EXECUTED_OPERATOR_SOURCE",
+      "sha256": "sha256:7de8a942b0580797bbd3c8eddac7876f874bb40c13fd6988e142e96955e5f169"
+    },
+    {
+      "byte_length": 5238,
+      "path": "executed/g12h_redact_register_cookies.executed.py",
+      "provenance": "EXACT_EXECUTED_OPERATOR_SOURCE",
+      "sha256": "sha256:47895c343fd59abe8d1883240e16429b2a09e2907f0091e82d3d0c5f87e92c7b"
+    },
+    {
+      "byte_length": 4059,
+      "path": "g12h_build_register_discovery.py",
+      "provenance": "EXACT_EXECUTED_OPERATOR_SOURCE",
+      "sha256": "sha256:93037b32e1f04c2fd68ee17b219cf330b0b46947a7745349f83c6e4e4298a8ee"
+    },
+    {
+      "byte_length": 5483,
+      "path": "g12h_npc_post_capture.py",
+      "provenance": "HARDENED_RECONSTRUCTION_OF_EXECUTED_OPERATOR",
+      "sha256": "sha256:ee07f577b604d70cc0cb5fd635e9e2fed18e69a3a0236c44ee01963ba3e158cb"
+    },
+    {
+      "byte_length": 5717,
+      "path": "g12h_redact_register_cookies.py",
+      "provenance": "HARDENED_RECONSTRUCTION_OF_EXECUTED_OPERATOR",
+      "sha256": "sha256:3bcec8248f302c21bfaf4b9ac993270591c6f7d6962545d5e8346323884358fe"
+    },
+    {
+      "byte_length": 756,
+      "path": "redaction-execution-receipt.json",
+      "provenance": "DOCUMENTATION_OR_EXECUTION_RECEIPT",
+      "sha256": "sha256:c9e18101695c5286dfa9b8923c175130c3501ae7bd3821e1b01ffc0b01e0dccc"
+    }
+  ],
+  "schema_version": 1,
+  "type": "g12h_register_discovery_operator_manifest_v1"
+}

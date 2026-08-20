@@ -1,0 +1,57 @@
+{
+  "authority_status": "CAPTURED_NOT_QUALIFIED",
+  "content_type": "text/html; charset=utf-8",
+  "curl_exit_code": 0,
+  "curl_stderr": "",
+  "derivatives": {
+    "rendered_dom": {
+      "available": false,
+      "reason": "No browser renderer is installed in the acquisition environment; raw server response and deterministic text extraction retained."
+    },
+    "text_extraction": {
+      "charset": "utf-8",
+      "decode_errors": false
+    }
+  },
+  "final_url": "https://www.hkex.com.hk/Services/Settlement-and-Depository/USM?sc_lang=en",
+  "lineage": "hkscc_transfer",
+  "operator_harness_sha256": "sha256:85ccf78ce0d595ff9d372c85243d81c49c3bc1be19f868df5936cc2f6977d9ea",
+  "raw_byte_length": 356720,
+  "raw_file": "raw.html",
+  "raw_sha256": "sha256:59bcedb05fa2f4a84a0fd33c2dabe6caf09bac538cb24b6dea97aa5cb817b39c",
+  "redirect_count": 0,
+  "response_chain_count": 1,
+  "response_code": 200,
+  "retrieved_at": "2026-08-20T08:44:46.831281Z",
+  "schema_version": 1,
+  "sensitive_response_headers": {
+    "files": [
+      {
+        "exact_private_path": "/srv/bcache-8t/ygguo/backtest/g12h-authority-private/20260820-register-discovery-response-headers/hkscc_transfer/hkscc-usm-page-live/response.headers",
+        "exact_private_sha256": "sha256:10bd9c51e6591a28892e92cb50f75bc3046ed899890d2a58752466d2b76f9eb2",
+        "redaction": "Set-Cookie value replaced by SHA-256; name and attributes retained.",
+        "tracked_path": "hkscc_transfer/hkscc-usm-page-live/response.headers",
+        "tracked_redacted_sha256": "sha256:61fa731dd371c3fca391336f1482abc9e8692b66349119c6752e575b0acccf23"
+      },
+      {
+        "exact_private_path": "/srv/bcache-8t/ygguo/backtest/g12h-authority-private/20260820-register-discovery-response-headers/hkscc_transfer/hkscc-usm-page-live/transport.log",
+        "exact_private_sha256": "sha256:ad68f9c427d66869260786cef365fe6b27d2bd90932f28d23652cfa9d5820a26",
+        "redaction": "Set-Cookie value replaced by SHA-256; name and attributes retained.",
+        "tracked_path": "hkscc_transfer/hkscc-usm-page-live/transport.log",
+        "tracked_redacted_sha256": "sha256:8ead80463e4d1cf8b4227c64afaece587517e07cae7204c92cea6414067d0257"
+      },
+      {
+        "exact_private_path": "/srv/bcache-8t/ygguo/backtest/g12h-authority-private/20260820-register-discovery-response-headers/hkscc_transfer/hkscc-usm-page-live/redirects.json",
+        "exact_private_sha256": "sha256:5809c7310f2ff29581f7e0f9e9c26b40fc0250bf5ada1335db895b2dbcec03d7",
+        "redaction": "Set-Cookie value replaced by SHA-256; name and attributes retained.",
+        "tracked_path": "hkscc_transfer/hkscc-usm-page-live/redirects.json",
+        "tracked_redacted_sha256": "sha256:9bf2870112eb555a0a185fe120c306addc5209300c3a921850e9b4f4ee36afa6"
+      }
+    ],
+    "policy": "Exact server-issued cookie values are excluded from Git and retained in the mode-restricted private evidence store."
+  },
+  "source_id": "hkscc-usm-page-live",
+  "started_at": "2026-08-20T08:44:39.277453Z",
+  "tool": "curl 8.14.1 (x86_64-pc-linux-gnu) libcurl/8.14.1 OpenSSL/3.5.6 zlib/1.3.1 brotli/1.1.0 zstd/1.5.7 libidn2/2.3.8 libpsl/0.21.2 libssh2/1.11.1 nghttp2/1.64.0 nghttp3/1.8.0 librtmp/2.3 OpenLDAP/2.6.10",
+  "type": "g12h_official_http_capture_receipt_v1"
+}

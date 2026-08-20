@@ -1,0 +1,19 @@
+HTTP/2 200 
+pragma: no-cache
+content-length: 161352
+content-type: application/pdf
+last-modified: Wed, 28 May 2025 07:23:17 GMT
+accept-ranges: bytes
+x-content-type-options: nosniff
+content-disposition: inline; filename="019_25_HKSCC OP_Stock settlement fee restructure_e.pdf"
+strict-transport-security: max-age=31536000; includeSubDomains
+access-control-allow-origin: *
+content-security-policy: frame-ancestors 'self' https://www.hkex.com.hk https://sc.hkex.com.hk/ http://sc.hkex.com.hk/ http://www.hkgem.com http://www.hkex.com.hk http://www.hkexgroup.com http://sc.hkex.com.hk http://sc.hkexnews.hk http://www.hkexnews.hk https://google.com.hk https://www.recaptcha.net/ https://www1.hkex.com.hk https://assets.adobedtm.com https://hkexchanges.demdex.net https://dpm.demdex.net https://hkexchanges.data.adobedc.net https://hkexchanges.sc.omtrdc.net https://cm.everesttech.net https://hkexchanges.2o7.net https://*.mktoweb.com https://markets.hkex.com.hk https://piid.hkex.com.hk; frame-src 'self' http://www.hkgem.com http://www.hkex.com.hk http://www.hkexgroup.com http://sc.hkex.com.hk https://sc.hkex.com.hk http://sc.hkexnews.hk http://www.hkexnews.hk http://asia.tools.euroland.com https://google.com.hk https://www.hkexgroup.com https://view.vzaar.com https://video.vzaar.com https://www.google.com https://www.recaptcha.net/ https://www1.hkex.com.hk https://assets.adobedtm.com https://hkexchanges.demdex.net https://dpm.demdex.net https://hkexchanges.data.adobedc.net https://hkexchanges.sc.omtrdc.net https://cm.everesttech.net https://hkexchanges.2o7.net https://*.mktoweb.com https://markets.hkex.com.hk https://piid.hkex.com.hk; 
+x-xss-protection: 1; mode=block
+x-content-type-options: nosniff
+x-frame-options: SameOrigin
+access-control-allow-headers: Content-Type, Authorization, X-Requested-With
+access-control-allow-methods: GET, POST, OPTIONS, PUT, DELETE
+cache-control: private, no-cache, no-store
+date: Thu, 20 Aug 2026 08:44:51 GMT
+

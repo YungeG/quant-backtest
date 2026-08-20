@@ -1,0 +1,101 @@
+                                                                          編號
+                                                                          Ref.   PT/NIS/CCASS/100/2026
+                                                                          No.:
+                                                                          日期
+                                                                          Date: 30/03/2026
+
+
+
+
+香港中央結算有限公司
+(香港交易及結算所有限公司全資附屬公司)
+
+HONG KONG SECURITIES CLEARING COMPANY LIMITED
+(A wholly-owned subsidiary of Hong Kong Exchanges and Clearing Limited)
+
+
+
+通告 CIRCULAR
+
+ Subject:          Updates on the Implementation of Uncertificated Securities Market (USM)
+ Enquiry:          CCASS Hotline : 2979 7111 / E-mail : clearingps@hkex.com.hk
+
+
+Reference is made to the circular dated 7 August 2025 (Reference: PT/NIS/CCASS/236/2025)
+regarding the implementation of the Uncertificated Securities Market (USM) in Hong Kong. Since
+this last update, Hong Kong Securities Clearing Company Limited (HKSCC) has made great
+progress together with the Securities and Futures Commission (SFC) and the Federation of Share
+Registrars Limited (FSR) on the readiness of implementing the USM regime.
+
+The SFC today announced that the USM regime is targeted to be launched on 16 November 2026.
+HKSCC is also pleased to announce that the SFC has approved the corresponding amendments to
+General Rules of HKSCC and the HKSCC Operational Procedures, which will take effect upon the
+implementation of USM regime. The corresponding amendments are now available on the HKEX
+USM designated webpage. These approvals represent a key milestone in the transition to the USM
+regime and pave the way for the successful commencement of implementation.
+
+To facilitate the preparation of Clearing Participants and Custodian Participants (together, the
+“CPs”), a series of activities are planned as follows:
+
+(i)    A supplementary information paper on USM implementation is now available on the HKEX
+       website. This paper sets out the latest updates, including:
+       •    Operational and procedural changes to securities deposit and withdrawal under the USM
+            regime;
+       •    Arrangements for prescribed securities to become participating securities so that issuers
+            transition to the new regime in an orderly manner;
+       •    Modernisation of the relevant HKSCC fee structure under the USM regime; and
+       •    Fees charged by approved securities registrars (ASRs) and collected via HKSCC.
+
+       CPs may contact HKSCC via the CCASS Hotline with any questions on the information paper,
+       including enquiries about how the modernised fee structure may affect their own fees based
+       on their historical portfolios.
+                                                                                                                                          2
+
+
+
+
+(ii)    Three briefing sessions will be conducted to support CPs in their preparation for USM
+        implementation. CPs are strongly encouraged to attend and register via the Event section in
+        Client Connect on HKEX Access Management Portal by 14 April 2026 (Tuesday). Details of
+        the briefings are as follows:
+                      Date                   Mode of Briefing             Time           Language
+         16 April 2026 (Thursday)         Microsoft Teams video       16:30 – 17:45        English
+         22 April 2026 (Wednesday)             conferencing #
+                                                                                         Cantonese
+         24 April 2026 (Friday)           Grand Auditorium, 1/F,      16:30 – 17:45      Cantonese
+                                          One & Two Exchange          (Registration
+                                              Square, Central*       starts at 16:00)
+          #Confirmation email together with the Microsoft Teams information will be sent to those who
+
+          have successfully registered
+          *Maximum 2 attendees per CP
+
+
+(iii)   To better understand CPs’ progress of preparation work for USM, HKSCC, in collaboration
+        with the SFC, invites all CPs to complete “The Implementation of Uncertificated Securities
+        Market (USM) – Questionnaire” via Client Connect on HKEX Access Management Portal.
+        Completion of the questionnaire is mandatory, and all CPs are required to submit their
+        responses by 24 April 2026 (Friday).
+
+(iv)    To facilitate CPs in preparing for system readiness, relevant CCASS Terminal User Guides
+        are now available on the HKEX USM dedicated webpage.
+
+(v)     Practice sessions will be arranged prior to the USM implementation for CPs to be familiarized
+        with the new USM related functionalities and are well-equipped to support post launched daily
+        operations. Details of the practice sessions will be announced in due course.
+
+CPs are encouraged to visit the HKEX USM dedicated webpage for the latest information, guidance
+materials and reference documents. CPs are highly recommended to coordinate with their IT teams
+and/or system vendors to ensure timely preparation.
+
+
+
+Alan Chuen
+Senior Vice President
+Post Trade
+Operations Division
+
+This circular has been issued in the English language with a separate Chinese language translation. If there is any conflict in the circulars
+between the meaning of Chinese words or terms in the Chinese language version and English words in the English language version, the
+meaning of the English words shall prevail.
+

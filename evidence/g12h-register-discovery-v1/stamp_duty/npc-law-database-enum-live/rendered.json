@@ -1,0 +1,918 @@
+{
+  "code": 200,
+  "data": {
+    "flcaStatus": 0,
+    "flfgfl": {
+      "children": [
+        {
+          "children": [],
+          "codeId": 100,
+          "codeIdList": [
+            100
+          ],
+          "id": 1,
+          "level": 1,
+          "name": "宪法",
+          "parentId": 0
+        },
+        {
+          "children": [
+            {
+              "children": [
+                {
+                  "children": [],
+                  "codeId": 110,
+                  "codeIdList": [
+                    110
+                  ],
+                  "id": 4,
+                  "level": 3,
+                  "name": "宪法相关法",
+                  "parentId": 3
+                },
+                {
+                  "children": [],
+                  "codeId": 120,
+                  "codeIdList": [
+                    120
+                  ],
+                  "id": 5,
+                  "level": 3,
+                  "name": "民法商法",
+                  "parentId": 3
+                },
+                {
+                  "children": [],
+                  "codeId": 130,
+                  "codeIdList": [
+                    130
+                  ],
+                  "id": 6,
+                  "level": 3,
+                  "name": "行政法",
+                  "parentId": 3
+                },
+                {
+                  "children": [],
+                  "codeId": 140,
+                  "codeIdList": [
+                    140
+                  ],
+                  "id": 7,
+                  "level": 3,
+                  "name": "经济法",
+                  "parentId": 3
+                },
+                {
+                  "children": [],
+                  "codeId": 150,
+                  "codeIdList": [
+                    150
+                  ],
+                  "id": 8,
+                  "level": 3,
+                  "name": "社会法",
+                  "parentId": 3
+                },
+                {
+                  "children": [],
+                  "codeId": 155,
+                  "codeIdList": [
+                    155
+                  ],
+                  "id": 37,
+                  "level": 3,
+                  "name": "生态环境法",
+                  "parentId": 3
+                },
+                {
+                  "children": [],
+                  "codeId": 160,
+                  "codeIdList": [
+                    160
+                  ],
+                  "id": 9,
+                  "level": 3,
+                  "name": "刑法",
+                  "parentId": 3
+                },
+                {
+                  "children": [],
+                  "codeId": 170,
+                  "codeIdList": [
+                    170
+                  ],
+                  "id": 10,
+                  "level": 3,
+                  "name": "诉讼与非诉讼程序法",
+                  "parentId": 3
+                }
+              ],
+              "codeId": 102,
+              "codeIdList": [
+                102,
+                110,
+                120,
+                130,
+                140,
+                150,
+                155,
+                160,
+                170
+              ],
+              "id": 3,
+              "level": 2,
+              "name": "法律",
+              "parentId": 2
+            },
+            {
+              "children": [],
+              "codeId": 180,
+              "codeIdList": [
+                180
+              ],
+              "id": 11,
+              "level": 2,
+              "name": "法律解释",
+              "parentId": 2
+            },
+            {
+              "children": [],
+              "codeId": 190,
+              "codeIdList": [
+                190
+              ],
+              "id": 12,
+              "level": 2,
+              "name": "有关法律问题和重大问题的决定（部分）",
+              "parentId": 2
+            },
+            {
+              "children": [],
+              "codeId": 195,
+              "codeIdList": [
+                195
+              ],
+              "id": 35,
+              "level": 2,
+              "name": "修正案",
+              "parentId": 2
+            },
+            {
+              "children": [],
+              "codeId": 200,
+              "codeIdList": [
+                200
+              ],
+              "id": 13,
+              "level": 2,
+              "name": "修改、废止的决定",
+              "parentId": 2
+            }
+          ],
+          "codeId": 101,
+          "codeIdList": [
+            101,
+            102,
+            110,
+            120,
+            130,
+            140,
+            150,
+            155,
+            160,
+            170,
+            180,
+            190,
+            195,
+            200
+          ],
+          "id": 2,
+          "level": 1,
+          "name": "法律",
+          "parentId": 0
+        },
+        {
+          "children": [
+            {
+              "children": [],
+              "codeId": 210,
+              "codeIdList": [
+                210
+              ],
+              "id": 32,
+              "level": 2,
+              "name": "行政法规",
+              "parentId": 14
+            },
+            {
+              "children": [],
+              "codeId": 215,
+              "codeIdList": [
+                215
+              ],
+              "id": 33,
+              "level": 2,
+              "name": "修改、废止的决定",
+              "parentId": 14
+            }
+          ],
+          "codeId": 201,
+          "codeIdList": [
+            201,
+            210,
+            215
+          ],
+          "id": 14,
+          "level": 1,
+          "name": "行政法规",
+          "parentId": 0
+        },
+        {
+          "children": [],
+          "codeId": 220,
+          "codeIdList": [
+            220
+          ],
+          "id": 15,
+          "level": 1,
+          "name": "监察法规",
+          "parentId": 0
+        },
+        {
+          "children": [
+            {
+              "children": [
+                {
+                  "children": [],
+                  "codeId": 230,
+                  "codeIdList": [
+                    230
+                  ],
+                  "id": 18,
+                  "level": 3,
+                  "name": "地方性法规",
+                  "parentId": 17
+                },
+                {
+                  "children": [],
+                  "codeId": 260,
+                  "codeIdList": [
+                    260
+                  ],
+                  "id": 21,
+                  "level": 3,
+                  "name": "自治条例",
+                  "parentId": 17
+                },
+                {
+                  "children": [],
+                  "codeId": 270,
+                  "codeIdList": [
+                    270
+                  ],
+                  "id": 22,
+                  "level": 3,
+                  "name": "单行条例",
+                  "parentId": 17
+                },
+                {
+                  "children": [],
+                  "codeId": 290,
+                  "codeIdList": [
+                    290
+                  ],
+                  "id": 24,
+                  "level": 3,
+                  "name": "经济特区法规",
+                  "parentId": 17
+                },
+                {
+                  "children": [],
+                  "codeId": 295,
+                  "codeIdList": [
+                    295
+                  ],
+                  "id": 34,
+                  "level": 3,
+                  "name": "浦东新区法规",
+                  "parentId": 17
+                },
+                {
+                  "children": [],
+                  "codeId": 300,
+                  "codeIdList": [
+                    300
+                  ],
+                  "id": 25,
+                  "level": 3,
+                  "name": "海南自由贸易港法规",
+                  "parentId": 17
+                }
+              ],
+              "codeId": 222,
+              "codeIdList": [
+                222,
+                230,
+                260,
+                270,
+                290,
+                295,
+                300
+              ],
+              "id": 17,
+              "level": 2,
+              "name": "地方法规",
+              "parentId": 16
+            },
+            {
+              "children": [],
+              "codeId": 305,
+              "codeIdList": [
+                305
+              ],
+              "id": 36,
+              "level": 2,
+              "name": "法规性决定",
+              "parentId": 16
+            },
+            {
+              "children": [],
+              "codeId": 310,
+              "codeIdList": [
+                310
+              ],
+              "id": 26,
+              "level": 2,
+              "name": "修改、废止的决定",
+              "parentId": 16
+            }
+          ],
+          "codeId": 221,
+          "codeIdList": [
+            221,
+            222,
+            230,
+            260,
+            270,
+            290,
+            295,
+            300,
+            305,
+            310
+          ],
+          "id": 16,
+          "level": 1,
+          "name": "地方法规",
+          "parentId": 0
+        },
+        {
+          "children": [
+            {
+              "children": [],
+              "codeId": 320,
+              "codeIdList": [
+                320
+              ],
+              "id": 28,
+              "level": 2,
+              "name": "高法司法解释",
+              "parentId": 27
+            },
+            {
+              "children": [],
+              "codeId": 330,
+              "codeIdList": [
+                330
+              ],
+              "id": 29,
+              "level": 2,
+              "name": "高检司法解释",
+              "parentId": 27
+            },
+            {
+              "children": [],
+              "codeId": 340,
+              "codeIdList": [
+                340
+              ],
+              "id": 30,
+              "level": 2,
+              "name": "联合发布司法解释",
+              "parentId": 27
+            },
+            {
+              "children": [],
+              "codeId": 350,
+              "codeIdList": [
+                350
+              ],
+              "id": 31,
+              "level": 2,
+              "name": "修改、废止的决定",
+              "parentId": 27
+            }
+          ],
+          "codeId": 311,
+          "codeIdList": [
+            311,
+            320,
+            330,
+            340,
+            350
+          ],
+          "id": 27,
+          "level": 1,
+          "name": "司法解释",
+          "parentId": 0
+        }
+      ],
+      "codeId": null,
+      "codeIdList": [
+        null,
+        100,
+        101,
+        102,
+        110,
+        120,
+        130,
+        140,
+        150,
+        155,
+        160,
+        170,
+        180,
+        190,
+        195,
+        200,
+        201,
+        210,
+        215,
+        220,
+        221,
+        222,
+        230,
+        260,
+        270,
+        290,
+        295,
+        300,
+        305,
+        310,
+        311,
+        320,
+        330,
+        340,
+        350
+      ],
+      "id": 0,
+      "level": 0,
+      "name": null,
+      "parentId": -1
+    },
+    "zdjgfl": {
+      "children": [
+        {
+          "children": [
+            {
+              "children": [],
+              "codeId": 100,
+              "codeIdList": [
+                100
+              ],
+              "id": 2,
+              "level": 2,
+              "name": "全国人大",
+              "parentId": 1
+            },
+            {
+              "children": [],
+              "codeId": 110,
+              "codeIdList": [
+                110
+              ],
+              "id": 3,
+              "level": 2,
+              "name": "全国人大常委会",
+              "parentId": 1
+            }
+          ],
+          "codeId": 90,
+          "codeIdList": [
+            90
+          ],
+          "id": 1,
+          "level": 1,
+          "name": "全国人大及其常委会",
+          "parentId": 0
+        },
+        {
+          "children": [],
+          "codeId": 120,
+          "codeIdList": [
+            120
+          ],
+          "id": 4,
+          "level": 1,
+          "name": "国务院",
+          "parentId": 0
+        },
+        {
+          "children": [],
+          "codeId": 130,
+          "codeIdList": [
+            130
+          ],
+          "id": 5,
+          "level": 1,
+          "name": "国家监察委员会",
+          "parentId": 0
+        },
+        {
+          "children": [],
+          "codeId": 140,
+          "codeIdList": [
+            140
+          ],
+          "id": 6,
+          "level": 1,
+          "name": "最高人民法院",
+          "parentId": 0
+        },
+        {
+          "children": [],
+          "codeId": 150,
+          "codeIdList": [
+            150
+          ],
+          "id": 7,
+          "level": 1,
+          "name": "最高人民检察院",
+          "parentId": 0
+        },
+        {
+          "children": [
+            {
+              "children": [],
+              "codeId": 170,
+              "codeIdList": [
+                170
+              ],
+              "id": 10,
+              "level": 2,
+              "name": "北京",
+              "parentId": 9
+            },
+            {
+              "children": [],
+              "codeId": 180,
+              "codeIdList": [
+                180
+              ],
+              "id": 11,
+              "level": 2,
+              "name": "天津",
+              "parentId": 9
+            },
+            {
+              "children": [],
+              "codeId": 190,
+              "codeIdList": [
+                190
+              ],
+              "id": 12,
+              "level": 2,
+              "name": "河北",
+              "parentId": 9
+            },
+            {
+              "children": [],
+              "codeId": 200,
+              "codeIdList": [
+                200
+              ],
+              "id": 13,
+              "level": 2,
+              "name": "山西",
+              "parentId": 9
+            },
+            {
+              "children": [],
+              "codeId": 210,
+              "codeIdList": [
+                210
+              ],
+              "id": 14,
+              "level": 2,
+              "name": "内蒙古",
+              "parentId": 9
+            },
+            {
+              "children": [],
+              "codeId": 220,
+              "codeIdList": [
+                220
+              ],
+              "id": 15,
+              "level": 2,
+              "name": "辽宁",
+              "parentId": 9
+            },
+            {
+              "children": [],
+              "codeId": 230,
+              "codeIdList": [
+                230
+              ],
+              "id": 16,
+              "level": 2,
+              "name": "吉林",
+              "parentId": 9
+            },
+            {
+              "children": [],
+              "codeId": 240,
+              "codeIdList": [
+                240
+              ],
+              "id": 17,
+              "level": 2,
+              "name": "黑龙江",
+              "parentId": 9
+            },
+            {
+              "children": [],
+              "codeId": 250,
+              "codeIdList": [
+                250
+              ],
+              "id": 18,
+              "level": 2,
+              "name": "上海",
+              "parentId": 9
+            },
+            {
+              "children": [],
+              "codeId": 260,
+              "codeIdList": [
+                260
+              ],
+              "id": 19,
+              "level": 2,
+              "name": "江苏",
+              "parentId": 9
+            },
+            {
+              "children": [],
+              "codeId": 270,
+              "codeIdList": [
+                270
+              ],
+              "id": 20,
+              "level": 2,
+              "name": "浙江",
+              "parentId": 9
+            },
+            {
+              "children": [],
+              "codeId": 280,
+              "codeIdList": [
+                280
+              ],
+              "id": 21,
+              "level": 2,
+              "name": "安徽",
+              "parentId": 9
+            },
+            {
+              "children": [],
+              "codeId": 290,
+              "codeIdList": [
+                290
+              ],
+              "id": 22,
+              "level": 2,
+              "name": "福建",
+              "parentId": 9
+            },
+            {
+              "children": [],
+              "codeId": 300,
+              "codeIdList": [
+                300
+              ],
+              "id": 23,
+              "level": 2,
+              "name": "江西",
+              "parentId": 9
+            },
+            {
+              "children": [],
+              "codeId": 310,
+              "codeIdList": [
+                310
+              ],
+              "id": 24,
+              "level": 2,
+              "name": "山东",
+              "parentId": 9
+            },
+            {
+              "children": [],
+              "codeId": 320,
+              "codeIdList": [
+                320
+              ],
+              "id": 25,
+              "level": 2,
+              "name": "河南",
+              "parentId": 9
+            },
+            {
+              "children": [],
+              "codeId": 330,
+              "codeIdList": [
+                330
+              ],
+              "id": 26,
+              "level": 2,
+              "name": "湖北",
+              "parentId": 9
+            },
+            {
+              "children": [],
+              "codeId": 340,
+              "codeIdList": [
+                340
+              ],
+              "id": 27,
+              "level": 2,
+              "name": "湖南",
+              "parentId": 9
+            },
+            {
+              "children": [],
+              "codeId": 350,
+              "codeIdList": [
+                350
+              ],
+              "id": 28,
+              "level": 2,
+              "name": "广东",
+              "parentId": 9
+            },
+            {
+              "children": [],
+              "codeId": 360,
+              "codeIdList": [
+                360
+              ],
+              "id": 29,
+              "level": 2,
+              "name": "广西",
+              "parentId": 9
+            },
+            {
+              "children": [],
+              "codeId": 370,
+              "codeIdList": [
+                370
+              ],
+              "id": 30,
+              "level": 2,
+              "name": "海南",
+              "parentId": 9
+            },
+            {
+              "children": [],
+              "codeId": 380,
+              "codeIdList": [
+                380
+              ],
+              "id": 31,
+              "level": 2,
+              "name": "重庆",
+              "parentId": 9
+            },
+            {
+              "children": [],
+              "codeId": 390,
+              "codeIdList": [
+                390
+              ],
+              "id": 32,
+              "level": 2,
+              "name": "四川",
+              "parentId": 9
+            },
+            {
+              "children": [],
+              "codeId": 400,
+              "codeIdList": [
+                400
+              ],
+              "id": 33,
+              "level": 2,
+              "name": "贵州",
+              "parentId": 9
+            },
+            {
+              "children": [],
+              "codeId": 410,
+              "codeIdList": [
+                410
+              ],
+              "id": 34,
+              "level": 2,
+              "name": "云南",
+              "parentId": 9
+            },
+            {
+              "children": [],
+              "codeId": 420,
+              "codeIdList": [
+                420
+              ],
+              "id": 35,
+              "level": 2,
+              "name": "西藏",
+              "parentId": 9
+            },
+            {
+              "children": [],
+              "codeId": 430,
+              "codeIdList": [
+                430
+              ],
+              "id": 36,
+              "level": 2,
+              "name": "陕西",
+              "parentId": 9
+            },
+            {
+              "children": [],
+              "codeId": 440,
+              "codeIdList": [
+                440
+              ],
+              "id": 37,
+              "level": 2,
+              "name": "甘肃",
+              "parentId": 9
+            },
+            {
+              "children": [],
+              "codeId": 450,
+              "codeIdList": [
+                450
+              ],
+              "id": 38,
+              "level": 2,
+              "name": "青海",
+              "parentId": 9
+            },
+            {
+              "children": [],
+              "codeId": 460,
+              "codeIdList": [
+                460
+              ],
+              "id": 39,
+              "level": 2,
+              "name": "宁夏",
+              "parentId": 9
+            },
+            {
+              "children": [],
+              "codeId": 470,
+              "codeIdList": [
+                470
+              ],
+              "id": 40,
+              "level": 2,
+              "name": "新疆",
+              "parentId": 9
+            }
+          ],
+          "codeId": 165,
+          "codeIdList": [
+            165
+          ],
+          "id": 9,
+          "level": 1,
+          "name": "地方人大及其常委会",
+          "parentId": 0
+        }
+      ],
+      "codeId": null,
+      "codeIdList": [
+        null
+      ],
+      "id": 0,
+      "level": 0,
+      "name": null,
+      "parentId": -1
+    }
+  },
+  "msg": "操作成功"
+}

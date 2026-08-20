@@ -1,0 +1,25 @@
+{
+  "authority_status": "CAPTURED_CURRENT_STATUS_NOT_CUTOFF_CLOSED",
+  "content_type": "application/json",
+  "curl_exit_code": 0,
+  "derivatives": {
+    "json_parse": {
+      "valid": true
+    }
+  },
+  "final_url": "https://flk.npc.gov.cn/law-search/search/list",
+  "lineage": "stamp_duty",
+  "operator_harness_sha256": "sha256:7de8a942b0580797bbd3c8eddac7876f874bb40c13fd6988e142e96955e5f169",
+  "raw_byte_length": 1081,
+  "raw_file": "raw.json",
+  "raw_sha256": "sha256:9b380f51f753df85cc0868f37c1817620affdca2da979c773a9d2b519e30c6b3",
+  "redirect_count": 0,
+  "response_chain_count": 1,
+  "response_code": 200,
+  "retrieved_at": "2026-08-20T08:43:06.883420Z",
+  "schema_version": 1,
+  "source_id": "npc-stamp-duty-law-current-status-search",
+  "started_at": "2026-08-20T08:43:06.794200Z",
+  "tool": "curl 8.14.1 (x86_64-pc-linux-gnu) libcurl/8.14.1 OpenSSL/3.5.6 zlib/1.3.1 brotli/1.1.0 zstd/1.5.7 libidn2/2.3.8 libpsl/0.21.2 libssh2/1.11.1 nghttp2/1.64.0 nghttp3/1.8.0 librtmp/2.3 OpenLDAP/2.6.10",
+  "type": "g12h_official_http_capture_receipt_v1"
+}

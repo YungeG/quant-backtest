@@ -1,0 +1,1309 @@
+HKSCC Operational Procedures
+
+
+
+                                              Definitions
+
+(a)    For the convenience of readers, the definitions contained in the Rules are repeated below.
+
+“Intra-day Counter Transfer Instruction” or “ICI”
+         means an instruction given by a Clearing Participant or Clearing Agency Participant to HKSCC in
+         such form as HKSCC may prescribe from time to time, to effect, where applicable, the transfer of
+         designated Multi-counter Eligible Securities of an Issuer held in such Participant’s Stock Clearing
+         Account from one relevant stock code to another relevant stock code for settlement purposes, as
+         referred to in Rule 1008;
+
+“Multi-counter Eligible Securitiesy”
+          means an Eligible Securityies of the same class of an Issuer which have been approved or accepted
+          for listing and trading on the Exchange in different Eligible Currencies under separate stock code
+          numbers in accordance with Rule 501, and a “Multi-counter Eligible Security” shall be construed
+          accordingly;
+
+“Multi-counter Transfer Instruction”
+          means an instruction given by a Participant to HKSCC in such form as HKSCC may prescribe from
+          time to time, to effect the transfer of Multi-counter Eligible Securities of an Issuer held in the
+          Participant’s Stock Accounts (except its Stock Collateral Control Account, SSA with Statement
+          Service and Special Segregated Accounts (in the case of a Clearing Participant or a Custodian
+          Participant) and TSF Accounts (in the case of a TSF CCASS Participant)) from one relevant stock
+          code to another relevant stock code, as referred to in Rule 816A;
+
+(b)     When used in the Operational Procedures, the following expressions shall have the following meanings
+        unless the context otherwise requires:
+
+“Dual Counter Security”
+        has the same meaning as defined in the Exchange Rules;
+
+“secondary counter”
+        has the same meaning as defined in the Exchange Rules;
+
+
+
+
+                                                     1
+                                                    Section 5
+                                              Eligible Securities
+
+5.3   STOCK CODE NUMBER AND DESCRIPTION
+       Each Eligible Security will be allocated a stock code number by HKSCC. The relevant stock code
+       numbers of the relevant Eligible Securityies should be quoted in all communications with HKSCC
+       concerning those such Eligible Security Securities.
+
+       To cater for the available record length of the CCASS computer system, HKSCC may also assign an
+       abbreviated name to an Eligible Security.
+
+       In general, for Eligible Securities listed or admitted to trading on the Exchange, HKSCC will usually
+       follow the stock codes and descriptions used by the Exchange. For Multi-counter Eligible Securities,
+       notwithstanding that such Multi-counter Eligible Securities are traded in multiple stock codes on the
+       Exchange under different trading counters in different Eligible Currencies, HKSCC will use the stock
+       code of the trading counter in HKD (or in the case where no such trading counter, the stock code of
+       other trading counter as designated by HKSCC from time to time) as the domain stock code in CCASS.
+       For China Connect Securities, HKSCC will usually follow a mapping algorithm and convert the stock
+       codes used by the relevant China Connect Market Operator to a set of 5-digit stock codes for use in
+       CCASS. Participants will be notified of the relevant stock code mapping via circular. A list of the
+       China Connect Securities’ stock codes together with their CCASS stock code mapping will be
+       published by HKSCC on the HKEX website.
+
+
+                                                    Section 7
+                                    Depository and Related Services
+
+7.2   OPERATING PRINCIPLES
+
+7.2.5 Deposits and Withdrawals of Certificates
+      Subject as provided below or in the Rules, Participants may, at any time, deposit Eligible Securities in
+      registered form into their Stock Accounts, other than their Stock Collateral Control Accounts, and
+      where the Participants are TSF CCASS Participants, other than their TSF Accounts. An Investor
+      Participant may only deposit Eligible Securities which are in registered form where such Eligible
+      Securities are registered in the name of the Investor Participant concerned or in the name of the
+      Nominee. Deposit of Eligible Securities registered in any other name(s) will not be accepted.
+
+
+
+
+                                                      2
+        Any Debt Securities in bearer form which are Eligible Securities cannot be deposited into CCASS by
+        Participants, and are only accepted by HKSCC direct from the issuer or the issuer’s agent or
+        representative for credit to Participants’ Stock Accounts, other than Stock Collateral Control Accounts
+        during the initial issue process. The bearer certificates of Debt Securities credited to Participants’ Stock
+        Accounts, other than Stock Collateral Control Accounts if withdrawn from CCASS by Participants,
+        are not allowed to be re-deposited into CCASS at any time thereafter.
+
+        Participants may, at any time, withdraw Eligible Securities credited to their Stock Accounts, other than
+        their Stock Collateral Control Accounts and where the Participants are TSF CCASS Participants, other
+        than their TSF Accounts, from CCASS, subject to such conditions and restrictions as HKSCC may
+        from time to time impose. Unless otherwise determined by HKSCC or provided in the Rules,
+        Participants cannot physically deposit into or withdraw from CCASS or an Appointed Depositary via
+        HKSCC Eligible Securities which are: (a) uncertificated or issued in global form; or (b) Dual Counter
+        Securities under the stock code of the secondary counter. Accordingly, physical deposit or withdrawal
+        of China Connect Securities into or from CCASS or the relevant China Connect Clearing House is not
+        available and Rules relating to the physical deposit and withdrawal of securities are not applicable to
+        China Connect Securities.
+
+        For the avoidance of doubt, no Eligible Securities can be directly deposited into or withdrawn from
+        any Stock Collateral Control Account and any TSF Account.
+
+7.13    PROCEDURES     FOR                 TRANSFER             OF       MULTI-COUNTER                ELIGIBLE
+        SECURITIES[REPEALED]
+
+7.13.1 Submission of Multi-counter Transfer Instructions
+       A Participant other than an Investor Participant that wishes to effect a transfer of Multi-counter Eligible
+       Securities in its Stock Accounts from one stock code of Multi-counter Eligible Securities of an Issuer
+       to another stock code of Multi-counter Eligible Securities of the same Issuer should submit a Multi-
+       counter Transfer Instruction to HKSCC electronically via the Participant’s CCASS Terminal or
+       through other means as specified by HKSCC from time to time. Participants are requested to refer to
+       the CCASS Terminal User Guide for further information on the use of the relevant maintenance
+       function.
+
+        An Investor Participant that wishes to effect a transfer of Multi-counter Eligible Securities in its Stock
+        Account from one stock code of Multi-counter Eligible Securities of an Issuer to another stock code
+        of Multi-counter Eligible Securities of the same Issuer should submit a duly completed and signed
+        Multi-counter Transfer Instruction Form (as set out in the Operating Guide for Investor Participants)
+        to HKSCC or through other means as HKSCC may specify from time to time. The Form, stamped
+        with the company chop of the Investor Participant (if applicable), should be submitted to the Customer
+        Service Centre of HKSCC for processing.
+
+
+
+
+                                                         3
+7.13.2   Relevant CCASS Report
+         A report recording both the Multi-counter Transfer Instructions and Parallel Trading Conversion
+         Instructions submitted by Participants other than Investor Participants is available daily from the
+         time the report download function is available. For further details regarding the report, please refer
+         to the CCASS Terminal User Guide.
+
+7.13A    PROCEDURES FOR CONVERSION OF HOLDINGS OF ELIGIBLE SECURITIES
+         SUBJECT TO PARALLEL TRADING ARRANGEMENTS
+
+
+7.13A.2 Relevant CCASS Report
+        A report recording both the Multi-counter Transfer Instructions and Parallel Trading Conversion
+        Instructions submitted by Participants other than Investor Participants is available daily from the
+        time when the report download function is available. For further details regarding the report, please
+        refer to the CCASS Terminal User Guide.
+
+
+                                                    Section 10
+                                     Exchange Trades - CNS System
+
+For the purposes of this Section 10, (i) references to “Eligible Securities” mean Eligible Securities other than
+China Connect Securities; (ii) references to “Participants” mean Clearing Participants and Clearing Agency
+Participants; and (iii) references to “Exchange Participants” include Special Participants, unless specified
+otherwise.
+
+
+10.1     ACCEPTANCE FOR SETTLEMENT UNDER THE CNS SYSTEM
+
+10.1.5   Information contained in PCSs
+          A PCS will provide a Participant with information in relation to all Exchange Trades and/or Clearing
+          Agency Transactions to be cleared and settled by the Participant on that day. For a particular day,
+          a PCS will set out the details of Exchange Trades and/or Clearing Agency Transactions to be settled
+          under the CNS System and the details of its net stock settlement positions in each Eligible Security
+          traded that day (and the relevant money positions). Where the Eligible Security is a Multi-counter
+          Eligible Security, the PCS will set out the net stock settlement positions in each of the Eligible
+          Currency traded that day (and the relevant money positions).
+
+          For Exchange Trades relating to interest-bearing eligible Debt Securities, accrued interest amount
+          and trade amount of the trades will be displayed separately in the PCSs. In addition, other
+
+
+
+
+                                                       4
+         information such as interest calculation method, interest rate used and number of days used in the
+         calculation of accrued interest will also be provided in the PCSs.
+
+         Details of the Exchange Trades to be settled under the Isolated Trades System and details of trades
+         in non-Eligible Securities will also be provided in the PCSs.
+
+         Details of Clearing Agency Transactions to be settled under the CNS System or the Isolated Trades
+         System will be included in the second batch of PCSs only.
+
+         The information contained in a PCS will only be indicative of the settlement obligations of a
+         Participant on the due settlement date (i.e. T+2). Trade Amendments may be made, “late” Exchange
+         Trades may be accepted, trades not recognized by the Exchange may be excluded and the settlement
+         obligations may be affected by unsettled positions under the CNS System in the intervening day (i.e.
+         T+1) before the due settlement date.
+
+         The main purpose of a PCS, in addition to allowing a Participant to make initial preparation for
+         settlement, is to allow a Participant to carry out daily reconciliation with its internal records of the
+         Exchange Trades and/or Clearing Agency Transactions.
+
+         Where a Participant is in the process of opening a bank account in an Eligible Currency for money
+         settlement of Exchange Trades and/or Clearing Agency Transactions accepted under the CNS System,
+         a message will be posted on the PCSs of the Participant concerned to alert the Participant about the
+         alternative payment methods available.
+
+10.2     TRADE AMENDMENTS, “LATE” EXCHANGE TRADES AND TRADES NOT
+         RECOGNIZED BY THE EXCHANGE
+
+10.2.5   Information contained in FCSs
+          A FCS will contain the following information in relation to (a) trades of a Participant and, in the
+          case of a GCP, including those of its NCPs concluded on the Exchange and designated to it for
+          clearing, or in the case of a Clearing Agency Participant, including those of its Special Participants
+          concluded on the Exchange and/or (b) Clearing Agency Transactions of a Participant and, in the
+          case of a GCP, including those of NCPs, effected on the previous Business Day (i.e. T-day) and
+          which are to be settled on the following Settlement Day (i.e. T+2):
+
+         (i)   the net stock positions with HKSCC in each Eligible Security (and/or, where an Eligible
+               Security is a Multi-counter Eligible Security, the net stock positions in each of the Eligible
+               Currency traded) (which will each be assigned a unique settlement position number) and their
+               related money positions under the CNS System (taking into account any Trade Amendments
+
+
+
+
+                                                       5
+                accepted by HKSCC, any “late” Exchange Trades accepted by HKSCC and the exclusion of
+                any trades not recognized by the Exchange) as well as details of individual Exchange Trades
+                and Clearing Agency Transactions of a Participant effected on the previous Business Day;
+
+         (ii)   the net money position with HKSCC for all net stock positions under the CNS System;
+
+         (iii) details of Exchange Trades accepted for settlement under the Isolated Trades System and their
+               related money positions (including any Trade Amendments thereto approved by the
+               Exchange) and accrued interest amounts of Exchange Trades in eligible interest-bearing Debt
+               Securities;
+
+         (iv) details of Clearing Agency Transactions accepted for settlement under the CNS System or
+              accepted for settlement under the Isolated Trades System and their related money positions
+              (including any amendments thereto accepted by HKSCC);
+
+         (v)    details of Trade Amendments, any "late" Exchange Trades accepted by HKSCC and the
+                exclusion of any trades not recognized by the Exchange, if any;
+
+         (vi) details of trades effected in securities listed on the Exchange which are not Eligible Securities
+              (and any Trade Amendments thereto); and
+
+         (vii) details of fees payable in relation to the settlement of Exchange Trades and Clearing Agency
+               Transactions in CCASS (see Section 21.1).
+
+         Where a Participant is in the process of opening a bank account in an Eligible Currency for money
+         settlement of Exchange Trades and/or Clearing Agency Transactions accepted under CNS System,
+         a message will be posted on the FCS of the Participant concerned to alert the Participant about the
+         alternative payment methods available.
+
+10.3     NETTING
+
+10.3.1   Determination of daily stock settlement positions
+         The daily stock settlement positions of a Clearing Participant or Clearing Agency Participant with
+         HKSCC, arising out of Exchange Trades or Clearing Agency Transactions, as the case may be,
+         accepted for settlement under the CNS System, will be determined based on the following steps:
+
+         (i)    Novation : the Novation of Exchange Trades and Clearing Agency Transactions upon their
+                acceptance for settlement under the CNS System, pursuant to which HKSCC becomes
+                substituted as the settlement counterparty to the relevant Clearing Participants and Clearing
+
+
+
+
+                                                      6
+      Agency Participants (the novated contracts being referred to as "Market Contracts");
+
+(ii) daily netting: the stock positions of a Clearing Participant or Clearing Agency Participant under
+      the Market Contracts (which may include novated Clearing Agency Transactions), on the
+      same day, in the same Eligible Security (and arising from Exchange Trades executed by the
+      same Special Participant in the case of a Clearing Agency Participant which is a China Connect
+      Clearing House), being offset against each other to result in one net long or net short stock
+      position with HKSCC, in each Eligible Security, on each Business Day (and in respect of each
+      Special Participant in the case of a Clearing Agency Participant which is a China Connect
+      Clearing House), provided that, in the case of an Eligible Security which is a Multi-counter
+      Eligible Security, such offset will be for Market Contracts traded in the same Eligible
+      Currency, so as to result in one net long or net short stock position with HKSCC in each of
+      the Eligible Currency traded. Each such net long or net short stock position of a Clearing
+      Participant or Clearing Agency Participant will be assigned a unique Settlement Position
+      Number for reference purposes; and
+
+(iii) cross-day netting: the netting process operates on a continuous basis in the sense that any
+      outstanding unsettled stock position of a Clearing Participant or Clearing Agency Participant
+      in an Eligible Security (and in respect of the same Special Participant in the case of a Clearing
+      Agency Participant which is a China Connect Clearing House) on a Settlement Day is carried
+      forward to the following Settlement Day and is offset against any opposite stock position in
+      the same Eligible Security (and in respect of the same Special Participant in the case of a
+      Clearing Agency Participant which is a China Connect Clearing House) due on the following
+      Settlement Day. If the outstanding stock position so carried forward to the following
+      Settlement Day and the stock position in the same Eligible Security (and in respect of the same
+      Special Participant in the case of a Clearing Agency Participant which is a China Connect
+      Clearing House) due for settlement on the following Settlement Day are both long or both
+      short, the two stock positions will remain separate and distinct for settlement purposes in
+      CCASS (although they will be added together for the purpose of determining the aggregate
+      stock position of the Clearing Participant or Clearing Agency Participant in that Eligible
+      Security, and in the case of a Clearing Agency Participant which is a China Connect Clearing
+      House, in respect of the same Special Participant, at the time)., provided that, in the case of an
+      Eligible Security which is a Multi-counter Eligible Security, such offset under the cross-day
+      netting process will be for Market Contracts traded in the same Eligible Currency, so as to
+      result in one net long or net short stock position with HKSCC in each of the Eligible Currency
+      traded; and
+
+(iv) same stock netting: before the first Batch-settlement-run on a Settlement Day, there will be a
+     same stock netting process applicable to a Multi-counter Eligible Security, under which any
+
+
+
+
+                                              7
+               unsettled stock positions of a Clearing Participant or Clearing Agency Participant in a Multi-
+               counter Eligible Security traded in one Eligible Currency will be offset against the unsettled
+               opposite direction stock positions of the same Multi-counter Eligible Security traded in other
+               Eligible Currency (and in respect of the same Special Participant in the case of a Clearing
+               Agency Participant which is a China Connect Clearing House) that are due or overdue on the
+               same Settlement Day.
+
+               For a Multi-counter Eligible Security which is traded in more than two Eligible Currencies on
+               the Exchange, HKSCC will conduct same stock netting in accordance with the following
+               algorithm when there are more than one stock position of the same direction to be offset
+               against another stock position of opposite direction:
+
+               (a) age – the stock position which remains unsettled for the longest period of time; and if this
+                   is the same for all stock positions, then
+
+               (b) position price (i.e. position amount divided by position quantity) – the long/short stock
+                   position which has the highest/lowest position price (to be calculated in HKD equivalent
+                   at the exchange rate determined by HKSCC from time to time for any non-HKD position
+                   price); and if this is the same for all stock positions, then
+
+               (c) position size – the stock position which has the smallest size (i.e. quantity); and if this is
+                   the same for all positions, then
+
+               (d) random.
+
+10.3.3   Example (daily netting)
+         The concept of daily netting of Market Contracts in the same Eligible Security can be illustrated as
+         follows :
+
+         On T-day, Participant A had the following five Exchange Trades for settlement in stock X.
+
+         Trade
+         Counterparty         Settlement
+         (assuming they       Counter-        Action by              Quantity        Unit     Money
+         are all DCPs)        Party           Participant A          (stock)         Price    Positions
+
+
+         Participant B        HKSCC           Sell (Deliver)          10,000         $10.0    $100,000CR
+         Participant B        HKSCC           Sell (Deliver)          25,000         $ 9.0    $225,000CR
+         Participant C        HKSCC           Buy (Receive)           20,000         $11.0    $220,000DR
+
+
+
+
+                                                      8
+         Participant D        HKSCC           Buy (Receive)           10,000         $10.0   $100,000DR
+         Participant E        HKSCC           Sell (Deliver)          15,000         $11.0   $165,000CR
+                                            ______________            ______                 ___________
+                                            Net sell (Deliver)        20,000                 $170,000 CR
+
+         After netting, Participant A has a net short stock position of 20,000 in stock X, with a corresponding
+         money position of $170,000.00 CR. The average position price for the CNS stock position of
+         Participant A in stock X is therefore $8.5 (i.e. $170,000 / 20,000).
+
+10.3.4   Example (cross-day netting - two opposite stock positions)
+         The concept of cross-day netting (CNS) involving two opposite stock positions of a Participant in
+         the same Eligible Security can be illustrated by using the following example :
+
+         At the beginning of a Settlement Day ("S-Dday"), Participant A has the following unsettled positions
+         in stock X before the settlement on the day begins.
+
+         Due settlement date                                                Money
+         of stock positions             Unsettled stock positions           positions
+
+
+         S-1                            2,000 (short)                       $2,200CR
+         S                              3,000 (long)                        $3,600DR
+
+
+         At the beginning of S-day, the long stock position of 3,000 due on S-day will be offset against the
+         outstanding short stock position of 2,000 due on S-1, as follows :
+
+                                                          Stock positions
+                                 Unsettled stock             offset under      Unsettled stock
+         Due settlement         positions before        cross-day netting       positions after
+         date of stock         cross-day netting          settled by CNS             cross-day
+         position                 CNS on S-day                   on S-day         nettingCNS
+
+
+         S-1                       2,000 (short)            2,000 (short)                    0
+         S                         3,000 (long)             2,000 (long)           1,000 (long)
+
+
+         Due                  Money positions          Money positions                Unsettled
+         settlement           before cross-day           settled under         money positions
+         date of stock         netting CNS on                cross-day          after cross-day
+         positions                       S-day         netting by CNS                   netting
+
+
+
+
+                                                        9
+                                                              on S-day
+
+
+         S-1                          $2,200CR             $2,200CR                         0
+         S                            $3,600DR              $2,400DR*               $1,200DR
+
+
+         Money position to be settled under cross-day netting: $2,400 - $2,200 = $200 DR
+
+         * The amount $2,400 is derived from $3,600 x 2,000/3,000
+
+         As a result of cross-day netting of CNS, Participant A has a net long stock position of 1,000 in stock
+         X (with a corresponding money position of $1,200 DR), to be settled on S-day. The amount of $200
+         arising out of the process of cross-day netting CNS will be debited by HKSCC to the Settlement
+         Account (a sub-account of its Money Ledger) of Participant A for settlement on the same day.
+
+         Assuming Further settlement in respect of the net long stock position of 1,000 with a corresponding
+         position of $1,200 DR in stock X may be effectedhas been settled during subsequent Batch-
+         settlement-run on S-day. The total stock positions and money positions for stock X settled on S-day
+         should be 1,000 long (3,000 - 2,000) and $1,400 DR ($3,600 - $2,200)
+
+10.3.5   Example (cross-day netting - stock positions both long or both short)
+         The concept of cross-day netting (CNS) involving two stock positions of a Participant in the same
+         Eligible Security which are both long or both short can be illustrated by using the following example.
+
+         Participant A has the following positions in stock X on S-day.
+
+
+         Due settlement date                     Unsettled stock
+         of stock positions                            positions          Money positions
+
+
+         S-1                                         2,000(short)                $2,200CR
+         S                                           3,000(short)                $3,600CR
+
+
+         On S-day, Participant A will have an aggregate short stock position of 5,000 in stock X. However,
+         for the purpose of settlement under the CNS System, the two stock positions will remain separate
+         and distinct. Similarly, the corresponding money positions of the two stock positions will also
+         remain as separate and distinct.
+
+         Settlement may be effected in respect of the two stock positions in Sstock X on S-day.
+
+
+
+
+                                                     10
+10.3.6   Example (cross-day netting - three stock positions)
+         The concept of cross-day netting (CNS) involving three stock positions of a Participant in the same
+         Eligible Security, two of which being either both long or both short, and the remaining one being
+         opposite to the other two, can be illustrated by using the following example. The example
+         demonstrates that any offsetting by cross-day netting will be effected first against the oldest opposite
+         stock position.
+
+         Participant A has the following three positions in stock X on S-day.
+
+         Due settlement date
+         of stock positions              Unsettled stock positions         Money positions
+
+
+         S-2                                           2,000(short)               $2,400CR
+         S-1                                           1,000(short)               $1,300CR
+         S                                              2,600(long)               $3,900DR
+
+
+         At the beginning of S- day, the long stock position of 2,600 due on S- day will be first offset against
+         the "oldest" outstanding short position, i.e. the short stock position of 2,000 due on S-2. The
+         remainder part of the long position will then be offset with the short position of 1,000 due on S-1.
+         The result will be as follows :
+
+
+                      Stock positions        Money positions
+                         offset under            offset under         Unsettled stock              Unsettled
+                            cross-day       cross-day netting          positions after      money positions
+         Stock         netting settled                 settled              cross-day        after cross-day
+         Positions            by CNS                  by CNS             netting CNS            netting CNS
+
+
+         S-2             2,000(short)               $2,400CR                       Nil                    Nil
+         S-1               600(short)                 $780CR               400(short)                $520CR
+         S               2,600(long)                $3,900DR                       Nil                    Nil
+
+
+         Following cross-day netting at the beginning of S-day, Participant A will have one outstanding CNS
+         short position in stock X of 400, with a corresponding money position of $520 CR.
+
+         It should be noted that a partial settlement has been made in respect of the outstanding CNS short
+         position of 1,000 due on S-1. The money settlement to be effected as a result of the partial delivery
+         is worked out by multiplying $1,300 by 600 / 1,000.
+
+
+
+
+                                                      11
+10.3.7    Example (daily netting for Multi-counter Eligible Securities)
+
+          Where stock X is a Multi-counter Eligible Security:
+
+
+                            Settlement
+         Trade              Counter-       Action by            Quantity       Unit           Money
+         Counterparty       Party          Participant A        (stock)        Price          Positions
+
+
+         Participant B      HKSCC          Sell (Deliver)        10,000        HKD10.0         HKD100,000CR
+         Participant B      HKSCC          Sell (Deliver)        25,000        HKD 12.0        HKD300,000CR
+         Participant C      HKSCC          Buy (Receive)         20,000        HKD11.0        HKD220,000DR
+         Participant D      HKSCC          Buy (Receive)          9,000        RMB10.0          RMB90,000DR
+         Participant E      HKSCC          Sell (Deliver)        15,000        RMB11.0        RMB165,000CR
+                                         ______________          ______                       ___________
+                           Net sell for HKD counter (Deliver) 15,000                          HKD180,000 CR
+                          Net sell for RMB counter (Deliver)      6,000                       RMB75,000CR
+
+
+          After daily netting, CNS positions will be generated for each of the Eligible Currency traded that
+          day. Therefore, Participant A has a net short stock position of 15,000 (10,000 + 25,000 – 20,000) in
+          stock X (traded in HKD counter), with a corresponding money position of HKD180,000.00 CR
+          (HKD100,000 + HKD300,000 – HKD220,000), and a net short position of 6,000 (15,000 – 9,000)
+          in stock X (traded in RMB counter), with a corresponding money position of RMB75,000 CR
+          (RMB165,000 – RMB90,000). The average position price for the CNS stock position of Participant
+          A in stock X is therefore HKD12.0 (HKD180,000 / 15,000) and RMB12.50 (RMB75,000 / 6,000)
+          respectively.
+
+10.3.8    Example (same stock netting for Multi-counter Eligible Securities - opposite stock positions)
+          Same stock netting only applies to opposite direction stock positions of a Multi-counter Eligible
+          Security traded in different Eligible Currencies. The following example demonstrates that same
+          stock netting will only apply to net long stock positions and net short stock positions of the same
+          Multi-counter Eligible Security traded in different Eligible Currencies after the daily netting and/or
+          cross-day netting processes.
+
+          At the beginning of S-day, Participant A has the following unsettled positions in stock W and stock
+          X due on the same Settlement Day before the settlement on the day begins.
+
+
+
+
+                                                       12
+                  Unsettled                                         Money
+                       stock                                   positions in      Unit Price
+Stock              positions       Money positions                   HKD            in HKD
+
+
+Stock W        3,000 (short)         HKD15,000CR              15,000.00CR               5.00
+Stock W         1,000 (long)          RMB4,500DR               4,815.00DR               4.82
+Stock W           800 (long)             USD510DR              3,957.60DR               4.95
+
+
+Stock X         4,000 (long)         HKD40,000DR             40,000.00DR               10.00
+Stock X        2,000 (short)         RMB18,000CR              19,260.00CR               9.63
+Stock X           800 (long)           USD1,025DR              7,954.00DR               9.94
+*this example assumes the exchange rate for USD to HKD is 7.76:1 and RMB to HKD is 1.07:1.
+
+Pursuant to the same stock netting, the outstanding short stock position of 3,000 in stock W traded
+in HKD counter will be first offset against the outstanding long position of 800 in stock W traded in
+USD counter with the highest unit price, then 1,000 in stock W traded in RMB counter.
+
+In the case of stock X, the outstanding short stock position of 2,000 in stock X traded in RMB
+counter will be offset against the outstanding long stock position of 4,000 in stock X traded in HKD
+counter with the highest unit price.
+
+The result will be as follows:
+
+               Stock positions                              Unsettled Unsettled money
+                  offset under     Money positions stock positions         positions after
+                   same stock     offset under same        after same          same stock
+Stock                  netting         stock netting    stock netting              netting
+
+
+Stock W           1,800 (short)      HKD9,000CR*         1,200 (short)        HKD6,000CR
+Stock W           1,000 (long)        RMB4,500DR                   Nil                 Nil
+Stock W             800 (long)          USD510DR                   Nil                 Nil
+
+
+Stock X           2,000 (long)    HKD20,000DR**           2,000 (long)    HKD20,000DR
+Stock X           2,000 (short)      RMB18,000CR                   Nil                 Nil
+Stock X                     Nil                  Nil        800 (long)        USD1,025DR
+
+
+
+
+                                            13
+         * The amount HKD9,000 is derived from HKD15,000 x 1,800 / 3,000
+         ** The amount HKD20,000 is derived from HKD40,000 x 2,000 / 4,000
+
+10.3.9   Example (same stock netting for Multi-counter Eligible Securities - stock positions both long
+         or both short)
+         The concept of same stock netting process involving two stock positions of the same direction of a
+         Multi-counter Eligible Security traded in different Eligible Currencies can be illustrated by using
+         the following example.
+
+          Participant A has the following two positions in stock X traded in different Eligible Currencies on
+          S-day.
+
+
+          Due settlement date                    Unsettled stock
+          of stock positions                            positions         Money positions
+
+
+          S                                           2,000(short)           RMB2,200CR
+          S                                           3,000(short)           HKD3,600CR
+
+
+          On S-day, Participant A will have an aggregate short stock position of 5,000 in stock X. However,
+          for the purpose of settlement under the System, the two stock positions under different Eligible
+          Currencies will remain separate and distinct. No same stock netting will be performed if all
+          outstanding positions are in the same direction.
+
+          Settlement may be effected in respect of the two stock positions in stock X on S-day.
+
+10.3.10 Example (cross-day netting and same stock netting for Multi-counter Eligible Securities –
+        opposite stock positions)
+        The sequence of netting in respect of a Multi-counter Eligible Security will be (i) cross-day netting
+        of the same Eligible Currency; then (ii) same stock netting for stock positions in the opposite
+        direction in respect of different Eligible Currencies. The netting processes can be illustrated by using
+        the following example:
+
+          At the beginning of a S-day, Participant A has the following unsettled positions in stock X before
+          settlement on the day begins.
+
+
+          Due settlement date of
+                                                 Unsettled stock
+          stock positions                              positions              Money positions
+
+
+
+
+                                                      14
+S-1                                       6,500 (long)                HKD13,000DR
+S-1                                         500 (long)                      RMB870DR
+S                                         3,000 (long)                     HKD3,600DR
+S                                         7,700 (short)               RMB14,050CR
+
+
+At the beginning of S-day, two opposite stock positions under the same Eligible Currency of
+different settlement dates will be offset. No cross-day netting will be performed for stock X traded
+in HKD counter as the outstanding positions for both S-1 and S are long positions. For stock X
+traded in RMB counter, the cross-day netting will be as follows :
+
+              Stock positions                                 Unsettled Unsettled money
+                  offset under     Money positions stock positions           positions after
+Stock               cross-day offset under cross- after cross-day                 cross-day
+positions              netting           day netting             netting            netting
+
+
+S-1                 500 (long)         RMB870DR                      Nil                Nil
+S                   500 (short)        RMB912CR*           7,200 (short)        RMB13,138
+
+
+* The amount RMB912 is derived from RMB14,050 x 500 / 7,700
+
+As a result of cross-day netting, Participant A has a net short stock position of 7,200 in stock X
+traded in RMB counter (with a corresponding money position of RMB13,138 CR). The amount of
+RMB42 (RMB912 – RMB870) arising out of the process will be credited by HKSCC to the
+Settlement Account (a sub-account of its Money Ledger) of Participant A for settlement on the same
+day.
+
+After cross-day netting, the outstanding unsettled stock positions of stock X will be as follows:
+
+Due settlement date of
+stock positions                   Unsettled stock positions                 Money positions
+
+
+S-1                                              6,500 (long)                HKD13,000DR
+S                                                3,000 (long)                 HKD3,600DR
+S                                                7,200 (short)               RMB13,138CR
+
+
+Following cross-day netting and prior to the Batch-settlement-runs, the following same stock netting
+for stock X will be conducted:
+
+
+
+
+                                            15
+         (i)   Settle with the oldest first
+
+
+                                                                     Unsettled Unsettled money
+                         Stock positions       Money positions stock positions    positions after
+         Stock        offset under same       offset under same     after same       same stock
+         Positions         stock netting          stock netting   stock netting          netting
+
+
+         S-1                 6,500 (long)     HKD13,000.00DR               Nil               Nil
+         S                  6,500 (short)     RMB11,860.69CR        700 (short) RMB1,277.31CR
+
+
+         (ii) Settle with the latest
+                                                                     Unsettled Unsettled money
+                         Stock positions       Money positions stock positions    positions after
+         Stock        offset under same       offset under same     after same       same stock
+         Positions         stock netting          stock netting   stock netting          netting
+
+
+         S                     700 (long)      HKD840.00DR*        2,300 (long) HKD2,760.00DR
+         S                    700 (short)      RMB1,277.31CR               Nil               Nil
+
+
+         * The amount HKD840 is derived from HKD3,600 x 700 / 3,000
+
+         As a result of same stock netting, Participant A has a net long stock position of 2,300 in stock X
+         (with a corresponding money position of HKD2,760 DR) to be settled on S-day. Assuming such net
+         long stock position of 2,300 in stock X has been settled during subsequent Batch-settlement-run on
+         S-day. The total amounts arising out of the money positions offset under cross-day netting, same
+         stock netting and Batch-settlement-run will be debited/credited by HKSCC to the Settlement
+         Account (a sub-account of its Money Ledger) of Participant A for settlement on the same day.
+
+         The money positions of different CNS stock positions of a Participant in the same Multi-counter
+         Eligible Securities will continue to be treated as separate and distinct. As such, HKD16,600 DR
+         (HKD13,000 + HKD3,600) and RMB 13,180 CR (RMB14,050 – RMB870) will be posted to the
+         Money Ledger of Participant A.
+
+10.5     MONEY SETTLEMENT UNDER THE CNS SYSTEM
+
+10.5.2   Money position of daily net CNS stock positions
+
+
+
+
+                                                      16
+          For Exchange Trades in the same Eligible Security effected on the same day and accepted for
+          settlement under the CNS System (and effected by the same Special Participant in the case of a
+          Clearing Agency Participant which is a China Connect Clearing House), there will be one daily net
+          stock position, as described in Section 10.3.1(ii), provided that, with respect to Multi-counter Eligible
+          Security, there will be one daily net stock position in each of the Eligible Currency traded.
+
+          This daily net CNS stock position of a Participant will have a corresponding net money position,
+          derived from offsetting the money positions of the underlying Exchange Trades. This is illustrated in
+          the examples set out in Sections 10.3.3 and 10.3.7.
+
+          The net money positions derived from offsetting the money positions of the underlying Exchange
+          Trades of a Participant in each Eligible Security in the same Eligible Currency (and in respect of each
+          of its designated Special Participants in the case of a Clearing Agency Participant which is a China
+          Connect Clearing House) on the same day will be offset against each other to result in a total net
+          money position with HKSCC on each Settlement Day.
+
+ 10.5.3   Money position of CNS stock positions after cross-day netting
+          If two opposite CNS stock positions of a Participant in the same Eligible Security are offset against
+          each other as a result of cross-day netting as described in Section 10.3.1(iii), the money positions of
+          the two CNS stock positions (or, in the case of a Clearing Agency Participant which is a China
+          Connect Clearing House, the money positions of the two CNS stock positions in respect of each of
+          its designated Special Participants) will also be offset against each other to result in a sum to be
+          settled between HKSCC and the Participant concerned. Any unsettled CNS stock position will also
+          have a corresponding money position. The position is illustrated in the examples set out in Sections
+          10.3.4 to 10.3.6 and 10.3.10.
+
+          The money positions of two CNS stock positions of a Participant (or, in the case of a Clearing Agency
+          Participant which is a China Connect Clearing House, the money positions of two CNS stock
+          positions in respect of each of its designated Special Participants) in the same Eligible Security (and,
+          in the case of Multi-counter Eligible Securities, in respect of the same Eligible Currency traded)
+          (such CNS stock positions being both long or both short), will continue to be treated as separate and
+          distinct.
+
+10.5.3A   Money position of CNS stock positions after same stock netting for Multi-counter Eligible
+          Securities
+          If multiple opposite CNS stock positions of a Participant in the same Multi-counter Eligible Security
+          traded in different Eligible Currencies are offset against each other as a result of same stock netting
+          as described in Section 10.3.1(iv), the corresponding money positions of such different CNS stock
+          positions (or, in the case of a Clearing Agency Participant which is a China Connect Clearing House,
+
+
+
+
+                                                        17
+          the money positions of different CNS stock positions in respect of each of its designated Special
+          Participants) in different Eligible Currencies will not be offset against each other, and will each be
+          posted to Money Ledger to be settled between HKSCC and the Participant concerned. Each unsettled
+          CNS stock position will also have its corresponding money position. The position is illustrated in
+          the examples set out in Sections 10.3.8 to 10.3.10.
+
+         The money positions of different CNS stock positions of a Participant (or, in the case of a Clearing
+         Agency Participant which is a China Connect Clearing House, the money positions of different CNS
+         stock positions in respect of each of its designated Special Participants) in the same Multi-counter
+         Eligible Security (such CNS stock positions being all long or all short), will continue to be treated as
+         separate and distinct.
+
+10.8     LATE DELIVERY : BUY-IN
+
+10.8.2   Timing of Buy-in
+         Unless (i) HKSCC grants an exemption under Section 10.8.3, (ii) there is a risk management reason
+         affecting HKSCC, which is considered valid by the Risk Management Committee or (iii) a Buy-in
+         has been executed by HKSCC pursuant to Rule 3501(iv) in respect of the short CNS stock positions
+         of a Participant, HKSCC shall have the right, but shall not be obliged, to effect a Buy-in on behalf
+         of the short Participant on T+3 (or if it is not practicable to do so on T+3, at any time thereafter) as
+         HKSCC in its absolute discretion considers appropriate in respect of short stock positions of a
+         Participant under the CNS System which are outstanding for settlement on the due date (i.e., unsettled
+         after settlement processing on T+2).
+
+         A Buy-in trade executed by HKSCC on behalf of the short Participant on or off the Exchange will
+         normally be settled under the CNS System, subject to the usual T+2 settlement period and will go
+         through the substitution process (where applicable) and normal novation, daily netting, and cross-
+         day netting and same stock netting processing.
+
+10.8.3 Exemption from Buy-in
+       HKSCC may grant an exemption from a Buy-in on behalf of a short Participant on T+3 if such
+       Participant is able to provide HKSCC with satisfactory evidence in accordance with Section 10.8.4
+       that a ground for exemption as set out below applies:
+
+         (xi)    in respect of transactions in Eligible Securities which are subject to parallel trading on the
+                 Exchange or transfers of Multi-counter Eligible Securities as referred to in Rule 816A or
+                 Rule 1008, the Participant applying for exemption or the delivering Participant has: (a) long
+                 positions in Eligible Securities of the relevant issuer or Multi-counter Eligible Securities of
+                 the relevant issuer (as the case may be); or (b) sufficient Eligible Securities of the relevant
+
+
+
+
+                                                      18
+                  issuer or Multi-counter Eligible Securities of the relevant issuer (as the case may be) in its
+                  Stock Account, which following conversions of such long positions or holdings of Eligible
+                  Securities (as applicable) or transfers of Multi-counter Eligible Securities in CCASS, are
+                  sufficient to settle the relevant short positions on T+2;
+
+10.8.5   Buy-in process by HKSCC on behalf of a short Participant
+         The following explains the process of Buy-in by HKSCC on behalf of a short Participant in greater
+         detail:
+
+         (i)    in respect of the short stock positions of a short Participant under the CNS System still
+                outstanding at the end of the due date (i.e., T+2), a Buy-in Notification Report containing such
+                outstanding short stock positions will be generated by HKSCC. Unless (a) HKSCC grants an
+                exemption under Section 10.8.3, (b) there is a risk management reason affecting HKSCC which
+                is considered valid by the Risk Management Committee or (c) a Buy-in has been executed by
+                HKSCC pursuant to Rule 3501(iv) in respect of the short CNS stock positions of a short
+                Participant, HKSCC shall have the right, but shall not be obliged, to effect Buy-in on T+3 (or
+                if it is not practicable to do so on T+3, at any time thereafter) as HKSCC in its absolute
+                discretion considers appropriate of all outstanding short stock positions stated in the Buy-in
+                Notification Report;
+
+         (ii)   the Buy-in Notification Report will be available to the short Participant through its CCASS
+                Terminals and Participant Gateways after the final Batch-settlement-run;
+
+         (iii) the short Participant may apply for exemption from Buy-in to HKSCC in accordance with the
+               provisions of section 10.8.4;
+
+         (iv) HKSCC may instruct its authorized brokers to assist in effecting a Buy-in on or off the
+              Exchange;
+
+         (v)    HKSCC shall effect a Buy-in at what it determines to be the best prevailing market price and
+                terms available (but taking into account HKSCC may need to act promptly and provided that
+                HKSCC, the Exchange, and a recognized exchange controller which is the controller of
+                HKSCC shall have no liability if HKSCC acts in good faith). The short Participant shall be
+                liable to and shall indemnify HKSCC, the Exchange, and a recognized exchange controller
+                which is the controller of HKSCC against all costs and expenses incurred by HKSCC in
+                connection with the Buy-in;
+
+         (vi) after effecting such a Buy-in, the relevant Buy-in details will be available to the short
+              Participant via the CCASS enquiry function of "Enquire Buy-in Confirmation". The relevant
+              Buy-in details will also be posted under the section "Buy-in Confirmation" in the Buy-in
+
+
+
+
+                                                      19
+               Notification Report; and
+
+         (vii) upon receipt of confirmation of good funds in relation to the cost of the Buy-in, Eligible
+               Securities received under the Buy-in will be delivered to the short Participant.
+
+         With respect to a Buy-in of a Multi-counter Eligible Security, under normal circumstances, such Buy-
+         in will be effected in the trading counter in HKD. HKSCC reserves the right to execute the Buy-in
+         in any other trading counter of such Multi-counter Eligible Security in its absolute discretion as it
+         may think fit.
+
+10.10    RISK MANAGEMENT : MARKS
+
+10.10.1 General
+        As settlement counterparty to Participants under the CNS System, HKSCC is exposed to market
+        risks as a result of unfavourable fluctuations of prices in respect of the unsettled stock positions of
+        Participants under the CNS System. In this Section 10.10, any unsettled stock positions in Eligible
+        Securities under the CNS System are referred to as “CNS stock positions”, provided that, in respect
+        of a Multi-counter Eligible Security, all its CNS stock positions will be considered on a cross-
+        currency offset basis for risk management calculation purpose using the methodology set out in the
+        RMS Guide.
+
+         To monitor and control such risk exposure, HKSCC will Mark-to-market the CNS stock positions of
+         Participants and collect Marks from Participants. In respect of the CNS stock positions in any
+         Eligible Security, HKSCC will compute Marks in accordance with the provisions of this Section
+         10.10 in the Eligible Currency in which that Eligible Security is traded (or, in the case of a Multi-
+         counter Eligible Security, in such Eligible Currency as designated by HKSCC from time to time).
+
+         HKSCC will collect Marks from the Participant in Hong Kong dollar unless the Participant has
+         maintained a Preferred Single Settlement Currency in another currency or unless the Marks are to be
+         collected from a Clearing Agency Participant.
+
+         Where the Eligible Currency in which an Eligible Security is traded is not Hong Kong dollar,
+         HKSCC will convert Marks in the Eligible Currency to Hong Kong dollar at such exchange rate and
+         subject to such haircut as determined by HKSCC from time to time. Where the Participant has
+         maintained a Preferred Single Settlement Currency which is not Hong Kong dollar, HKSCC will
+         further convert Marks from Hong Kong dollar to the Preferred Single Settlement Currency at such
+         exchange rate and subject to such haircut rate as determined by HKSCC from time to time, and
+         collect Marks from the Participant in the Preferred Single Settlement Currency. Notwithstanding the
+
+
+
+
+                                                      20
+         foregoing, HKSCC reserves the right to collect the required amount of Marks in any Eligible
+         Currency.
+
+         Where the Participant is a Clearing Agency Participant which is a China Connect Clearing House,
+         Marks will be computed and collected from or redelivered to such Participant separately in respect
+         of each of its designated Special Participants with reference to the CNS stock positions arising from
+         Exchange Trades executed by such Special Participant, and references to the CNS stock positions of
+         a Participant in this Section 10.10 shall be construed accordingly for such Clearing Agency
+         Participant. HKSCC will convert the Marks to Renminbi at such exchange rate and subject to such
+         haircut rate as determined by HKSCC from time to time and collect the Marks from the Clearing
+         Agency Participant in Renminbi. Unless HKSCC otherwise agrees, the Clearing Agency Participant
+         shall pay Marks to HKSCC in Renminbi. Notwithstanding the foregoing, HKSCC reserves the right
+         to collect the required amount of Marks in any Eligible Currency.
+
+         Mark-to-market of a CNS stock position involves the evaluation of the risk exposure of a Participant
+         to HKSCC relating to the CNS stock position by reference to the extent to which the Mark-to-market
+         value of the CNS stock position has moved against the value originally agreed in respect of such
+         CNS stock position.
+
+         Under the Rules, HKSCC has the right to collect Marks from Participants in respect of all CNS stock
+         positions, whether or not due for settlement and whether or not such CNS stock positions may be
+         subsequently amended or excluded or not accepted for settlement under the CNS System in
+         accordance with the Rules.
+
+         Marks will normally be collected in the form of cash. HKSCC may in exceptional cases collect Marks
+         in the form of Collateral Securities acceptable to it.
+
+         This Section 10.10 describes the extent to and the manner in which Marks from Participants will be
+         collected and redelivered by HKSCC.
+
+         The provisions of this Section 10.10 shall also be applicable, in so far as they are relevant to risk
+         management measures detailed in Section 12.2.9(i), in respect of Clearing Agency Transactions.
+
+10.10.3 Computation of Marks
+        The value of the Mark on a CNS stock position of a Participant is the difference between:
+
+         (i)    the money position of that CNS stock position (see Section 10.5.2); and
+
+         (ii)   the prevailing market value of such CNS stock position (as determined by HKSCC).
+
+
+
+
+                                                     21
+         The Marks on CNS stock positions of any Eligible Security, other than any Multi-counter Eligible
+         Security, will first be calculated and denominated in the Eligible Currency in which the Eligible
+         Security is traded. In respect of a Multi-counter Eligible Security, all its CNS stock positions under
+         different Eligible Currencies will be offset against each other first and then Marks will be calculated
+         in Hong Kong dollars by converting the value of any non-Hong Kong dollar positions into Hong
+         Kong dollars subject to such haircut as determined by HKSCC from time to time. Favourable Marks
+         and Unfavourable Marks in the same Eligible Currency will offset against one another to arrive at
+         the Favourable Marks or Unfavourable Marks in that Eligible Currency.
+
+         Favourable Marks or Unfavourable Marks in an Eligible Currency will then be offset against the
+         Unfavourable Marks or Favourable Marks, as the case may be, in other Eligible Currencies in the
+         sequence as HKSCC considers appropriate to arrive at the Net Favourable Marks or Net
+         Unfavourable Marks on the CNS stock positions. For the purpose of performing such cross-currency
+         offset, Favourable Marks and Unfavourable Marks in Eligible Currencies other than Hong Kong
+         dollar will be converted to Hong Kong dollar equivalent at such exchange rate and subject to such
+         haircut rate as determined by HKSCC from time to time for computation.
+
+         Where a Participant has provided the relevant quantity of Collateral Security to cover a part or the
+         whole of a short CNS stock position not due for settlement to HKSCC pursuant to Rule 3601, the
+         short CNS stock position covered by the Collateral Security will be waived from computation of
+         Marks. HKSCC has absolute right to use such Collateral Security to settle the covered portion of the
+         short CNS stock position on or before its Settlement Day.
+
+         Where a Participant has provided the relevant amount of Specific Cash Collateral to cover the
+         corresponding money position of a part or the whole of a long CNS stock position not due for
+         settlement to HKSCC pursuant to Rule 3601, the long CNS stock position covered by the Specific
+         Cash Collateral will be waived from computation of Marks. HKSCC has absolute right to use such
+         Specific Cash Collateral to settle the money position of the covered portion of the long CNS stock
+         position on or before its Settlement Day.
+
+10.10A    RISK MANAGEMENT: MARGIN
+
+10.10A.1 General
+         As settlement counterparty to Participants under the CNS System, HKSCC is exposed to market
+         risks as a result of potential unfavourable fluctuations of prices in respect of the unsettled stock
+         positions of Participants under the CNS System. In this Section 10.10A, any unsettled stock
+         positions in Eligible Securities under the CNS System are referred to as “CNS stock positions”,
+         provided that, in respect of a Multi-counter Eligible Security, all its CNS stock positions will be
+
+
+
+
+                                                      22
+         considered on a cross-currency offset basis for risk management calculation purpose using the
+         methodology set out in the RMS Guide.
+
+         To monitor and control such risk exposure, HKSCC will compute Margin on the CNS stock
+         positions of Participants and collect Margin from Participants. In respect of the CNS stock positions
+         in any Eligible Security, HKSCC will compute Margin in accordance with the provisions of this
+         Section 10.10A in the Eligible Currency in which that Eligible Security is traded (or, in the case of
+         a Multi-counter Eligible Security, in such Eligible Currency as designated by HKSCC from time
+         to time).
+
+10.10A.2 Computation of Margin
+          (i)   Margin requirement
+
+         The Margin requirement on CNS stock positions of a Participant will be computed in accordance
+         with the methodology referred to in the Initial Margin Calculation Guide.
+
+         The amount of Margin requirement on CNS stock positions in an Eligible Security is computed in
+         Hong Kong dollar. Where the Clearing Participant has maintained a Preferred Single Settlement
+         Currency which is not Hong Kong dollar, HKSCC will convert Margin calculated in Hong Kong
+         dollar to the Preferred Single Settlement Currency at such exchange rate and subject to such haircut
+         rate as determined by HKSCC from time to time, and collect Margin from the Clearing Participant
+         in the Preferred Single Settlement Currency. Notwithstanding the foregoing, HKSCC reserves the
+         right to collect the required amount of Margin in any Eligible Currency.
+
+         For the avoidance of doubt, HKSCC has the right to compute Margin requirement using other
+         methods and assumptions as HKSCC may from time to time consider appropriate.
+
+         (ii)     Marginable Position
+         Marginable Position refers to the CNS stock positions included in the computation of Margin using
+         a hybrid approach or such other methodology as may from time to time be determined by HKSCC
+         and referred to in the Initial Margin Calculation Guide. Marginable Positions can be broadly divided
+         into three categories, which are summarised as follows:
+
+             (i) primary tier (Tier P) positions: subject to portfolio margining and minimum margin levels
+                 prescribed by HKSCC from time to time;
+
+             (ii) non-constituent Tier (Tier N) positions: subject to a flat Margin Rate and margin
+                  multipliers prescribed by HKSCC from time to time; and
+
+
+
+
+                                                    23
+               (iii) corporate action entitlement positions: subject to a flat Margin Rate prescribed by
+                     HKSCC from time to time.
+
+          In respect of the methodology of categorisation, please refer to the Initial Margin Calculation
+          Guide.
+
+          Multi-counter Eligible Securities of the same class of an Issuer are treated as different positions and
+          will not be netted against each other for the determination of the Mark-to-market value of the CNS
+          stock positions as mentioned above.
+
+
+                                                Section 13
+                                        Securities Settlement
+
+13.1.1A   Intra-day Counter Transfer Instructions [Repealed]
+          With respect to certain Multi-counter Eligible Securities designated by HKSCC from time to time,
+          a Clearing Participant or Clearing Agency Participant may submit Intra-day Counter Transfer
+          Instructions to HKSCC at or before 3:00 p.m. on a Settlement Day, via CCASS Terminal or such
+          other means as may be specified by HKSCC from time to time, to facilitate settlement of such
+          Multi-counter Eligible Securities at the final Batch-settlement-run at 3:45 p.m.
+
+           A Clearing Participant or Clearing Agency Participant may submit one-off or standing Intra-day
+          Counter Transfer Instructions to HKSCC. Pursuant to an Intra-day Counter Transfer Instruction
+          provided by a Clearing Participant or Clearing Agency Participant, HKSCC will compare the
+          availability of the Multi-counter Eligible Securities under the different stock codes in its Stock
+          Clearing Account and will, to the extent there is a shortfall in one stock code to meet its delivering
+          obligations for settlement and a surplus in another stock code, effect an automatic transfer of surplus
+          Multi-counter Eligible Securities from the other stock code to such stock code up to the amount of
+          the shortfall provided that the Multi-counter Eligible Securities concerned are of the same class.
+
+           Any standing Intra-day Counter Transfer Instruction submitted by a Clearing Participant or
+          Clearing Agency Participant authorizes HKSCC to generate recurring Intra-day Counter Transfer
+          Instructions on its behalf on each Settlement Day. Clearing Participants and Clearing Agency
+          Participants are requested to refer to the CCASS Terminal User Guide for further information on
+          the use of the relevant maintenance function.
+
+13.3      SETTLEMENT BY BATCH-SETTLEMENT-RUNS
+
+
+
+
+                                                      24
+13.3.4   Delivery - processing sequence of short positions
+         In the case of CNS short stock positions in the same Eligible Security of a Participant, the oldest
+         CNS short stock position of a Participant will be settled first in a Batch-settlement-run. In case of
+         Isolated Trades (including Clearing Agency Transactions) in the same Eligible Security, settlement
+         processing will be in the following order:
+
+         (i)   age (oldest) - the trade which has remained unsettled for the longest time; and if this is the
+                same, then
+
+         (ii) price (highest) - the trade which has the highest position price (i.e. position amount divided by
+               position quantity, and for Multi-counter Eligible Securities, converted into the HKD
+               equivalent at the exchange rate determined by HKSCC from time to time for any non-HKD
+               position price); and if this is the same, then
+
+         (iii) position (smallest) - the trade which has the smallest position size (i.e. quantity); and if this is
+                the same, then
+
+         (iv) random.
+
+13.4     ALLOCATION ALGORITHM FOR LONG CNS STOCK POSITIONS
+
+13.4.1   Allocation algorithm
+         For each Eligible Security, upon receipt of Eligible Securities from Participants and, in the case of
+         China Connect Securities, the relevant China Connect Clearing House and China Connect Clearing
+         Participants, with short CNS stock positions (whether by DIs or as a result of Batch-settlement-runs)
+         HKSCC will allocate such Eligible Securities to the Stock Clearing Accounts of Participants with
+         long CNS Stock positions based on the following allocation algorithm:
+
+         (i)   age (oldest) - the long CNS stock position which has remained unsettled for the longest period
+                of time; and if this is the same for two CNS stock positions, then
+
+         (ii) position price (highest) - the long CNS stock position which has the highest position price (i.e.
+               position amount divided by position quantity, and for Multi-counter Eligible Securities,
+               converted into the HKD equivalent for any non-HKD position price); and if this is the same
+               for two CNS stock positions, then
+
+         (iii) position size (smallest) - the long CNS position which has the smallest position size (i.e.
+                quantity); and if this is the same for two CNS stock positions, then
+
+
+
+
+                                                       25
+         (iv) random.
+
+         At any time, one Participant may have received partial delivery in respect of its long CNS stock
+         position in a particular Eligible Security.
+
+
+                                                 Section 14
+                                     CCASS Money Settlement
+
+
+14.4     DDIs AND DCIs
+
+14.4.4   Default of payment by Participants other than Investor Participants
+         If HKSCC is notified of a rejected DDI by the Designated Bank of a Participant other than an Investor
+         Participant, the Participant will be regarded as having defaulted and will be subject to such action or
+         actions as HKSCC may wish to take under the Rules.
+
+         Without prejudice to HKSCC’s right to take any action under the Rules, HKSCC may attempt to
+         contact the defaulting Participant and may demand that the defaulting Participant make payment to
+         HKSCC by such means as specified by HKSCC from time to time and before such time or times as
+         HKSCC may specify.
+
+         HKSCC, if it is able to contact the defaulting Participant, will usually demand the defaulting
+         Participant to provide HKSCC with an explanation for the default and assurances as determined by
+         HKSCC to ensure that the default will be cured promptly. HKSCC may also contact the Designated
+         Bank of the defaulting Participant to ascertain the reasons for the default. Interest will be charged
+         by HKSCC.
+
+         A defaulting Participant (other than an Investor Participant) will be subject to such disciplinary action
+         as may be deemed appropriate by HKSCC, upon the occurrence of any such default or any of the
+         following events :
+
+         (i)    a Participant rejects or fails to comply with HKSCC's demand for payment;
+
+         (ii)   a Participant fails to provide an explanation for its default or fails to provide HKSCC with
+                assurances that the default will be cured.
+
+         HKSCC reserves the right not to effect payment in respect of any DCIs issued in favour of a
+         defaulting Participant, in the event that any DDI issued is rejected or any CPI issued in relation to
+         China Connect Securities Trades remains unpaid after the stipulated deadline.
+
+
+
+
+                                                       26
+       HKSCC reserves the right not to effect payment in respect of any DCIs issued in favour of a
+       defaulting Participant, in the event that any DDI issued is rejected. To monitor and control the risk
+       exposure of HKSCC in settlement of money positions relating to Multi-counter Eligible Securities
+       that are subject to the same stock netting process, in the event that a Designated Bank rejected a DDI
+       of a Clearing Participant or Clearing Agency Participant (except where the Clearing Agency
+       Participant is a China Connect Clearing House) at or before 5:45 p.m. on a Settlement Day, the
+       corresponding DCI of such Clearing Participant or Clearing Agency Participant will, unless
+       otherwise determined by HKSCC in its absolute discretion, be rejected.
+
+       Where a Clearing Participant or a Clearing Agency Participant defaults in payment, HKSCC will
+       normally notify the Exchange.
+
+       For any DDI issued by HKSCC in connection with a Participant's instruction on nominee and similar
+       services (including, but not limited to, Tender Instructions), if payment is not received by HKSCC,
+       HKSCC reserves the right not to act on the defaulting Participant's instruction until such time when
+       payment is received by HKSCC. If any deadline for implementing such instruction is breached as
+       a result of any default of payment by the Participant, HKSCC, the Exchange, and a recognized
+       exchange controller which is the controller of HKSCC will not be liable for any losses or damages
+       that may be suffered by the defaulting Participant.
+
+
+                                             Section 15
+                                         Enquiry Services
+
+
+15.2   USE OF VARIOUS ENQUIRY FUNCTIONS AVAILABLE
+       The various enquiry functions provided by CCASS that are available for access and the purpose of
+       accessing each such function are set out below:
+
+       (i)     Available to Participants other than Investor Participants:
+
+               (ba) “Enquire Sellable Balance Adjustment Request” function: to enquire about the details
+                     of any sellable balance adjustment request due to SPSA Delivery Failure input by a
+                     China Connect Clearing Participant on current day;
+
+               (bb) “Enquire Shareholding Category Disclosure” function: to enquire about the details of
+                     any Shareholding Category Disclosure made in respect of China Connect Securities;
+                     and
+
+
+
+
+                                                   27
+                 (bc) [Repealed]“Enquire Intra-day Counter Transfer Standing Instruction” function: to
+                       enquire about the status and details of any Intra-day Counter Transfer Standing
+                       Instruction; and
+
+                 (bd) [Repealed]“Enquire Intra-day Counter Transfer Instruction” function: to enquire about
+                       the status and details of any Intra-day Counter Transfer Instruction.
+
+                 (be) “Enquire Multi-counter Settlement Mapping” function: to enquire about the authorized
+                       multi-counter settlement mapping.
+
+
+                                              Section 16
+                                       Statements and Reports
+
+
+16.6     REPORTS AND STATEMENTS FOR PARTICIPANTS
+
+16.6.1   Reports and Statements for Participants other than Investor Participants to be retrieved from
+         CCASS Terminals or Participant Gateways
+
+         Report ID     Report name           Frequency       Time available
+
+         CSEAS07       A-share Sellable   Daily              from the time when the report retrieval
+                       Balance Adjustment                    function is available
+                       Audit Trail Report
+
+         CSEIC01       Intra-day Counter     Daily           from the time when the report retrieval
+                       Transfer Standing                     function is available (for previous day’s
+                       Instruction                           maintenance activity)
+                       Maintenance A/T
+                       Report
+
+         CSEIC02       Intra-day Counter    Daily            from the time when the report retrieval
+                       Transfer Instruction                  function is available (for previous day’s
+                       Maintenance A/T                       maintenance activity)
+                       Report
+
+         CCVTF01       Inter-counter         Daily           from the time when the report retrieval
+
+
+
+
+                                                     28
+                       Transfer/Conversion                   function is available (for previous day’s
+                       Instruction Activities                processed      Multi-counter      Transfer
+                       Report                                Instructions   and      Parallel  Trading
+                                                             Conversion Instructions)
+
+         CCVTF03       Multi-counter        After each       shortly after completion of each batch
+                       Transfer Instruction batch            validation run on uploaded files containing
+                       Batch Input Control validation        Multi-counter     Transfer      Instructions
+                       Report                                scheduled at around 9:15 a.m., 10:15 a.m.,
+                                                             12:30 p.m. and 2:30 p.m. (for status of
+                                                             Multi-counter Transfer Instruction batch
+                                                             uploads)
+
+         CCVTF05       Parallel Trading     After each       shortly after completion of each batch
+                       Conversion           batch            validation run on uploaded files containing
+                       Instruction Batch    validation       Parallel Trading Conversion Instructions
+                       Input Control Report                  scheduled at around 9:15 a.m., 10:15 a.m.,
+                                                             12:30 p.m. and 2:30 p.m. (for status of
+                                                             Parallel Trading Conversion Instruction
+                                                             batch uploads)
+
+         CCDCM02       Multi-counter      Daily              from the time when the report retrieval
+                       Settlement Mapping                    function is available (for active mapping as
+                       Data Download File                    of the file generation time)
+
+
+                                                Section 21
+                                        Costs and Expenses
+In this Section 21, references to “HKD” or “HK$” mean Hong Kong Dollar; references to “CNY” mean
+Chinese Yuan (Renminbi) and references to “USD” mean US Dollar.
+
+21.5     DEPOSITORY AND NOMINEE SERVICES
+
+          -   Multi-counter eligible securities transfer        NIL
+              fee for the transfer of Multi-counter
+              Eligible Securities of an Issuer from one
+              stock code to another stock code.
+
+              Notes:
+
+
+
+
+                                                    29
+           Fee debited on date of submission of
+           instruction.
+
+
+                                        Section 22
+                           Tariff for Investor Participants
+
+In this Section 22, references to “HKD” or “HK$” mean Hong Kong Dollar; references to “CNY” mean
+Chinese Yuan (Renminbi) and references to “USD” mean US Dollar.
+
+22.2   DEPOSITORY AND NOMINEE SERVICES
+
+        - Multi-counter eligible securities transfer    NIL
+          fee for the transfer of Multi-counter
+          Eligible Securities of an Issuer from one
+          stock code to another stock code.
+
+           Notes:
+           Fee debited on date of submission of
+           instruction.
+
+
+
+
+                                             30
+
