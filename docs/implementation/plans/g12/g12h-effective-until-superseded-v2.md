@@ -1,7 +1,7 @@
 ---
 id: G12H-EFFECTIVE-UNTIL-SUPERSEDED-V2
-proposed_readiness: BLOCKED_ON_ROUTE_PRODUCT_FEE_V2C_PASS
-registry_status: PENDING_PARENT_ACCEPTANCE_MATRIX_FAN_IN
+proposed_readiness: READY_FOR_F1_AUTHORITY_CLOSURE
+registry_status: SEE_PARENT_ACCEPTANCE_MATRIX
 owner: official-source acquisition + trading-kernel projection + market-bundle-builder publication
 produces:
   - official-rule successor-closure artifact v1
@@ -24,7 +24,7 @@ fan_out: [G12H, G12L-*, G12M-*]
 
 ## Status and authority
 
-Proposed `BLOCKED_ON_ROUTE_PRODUCT_FEE_V2C_PASS`, pending parent Acceptance Matrix fan-in. The parent [Acceptance Matrix](../../acceptance-matrix.md) is the sole current Gate-status authority; this frontmatter is not a second status. [ADR 0005](../../../adr/0005-cn-a-share-fees-require-access-route-and-product-class.md) accepts the domain decision. The [G08E v2 roadmap](../g08/g08e-route-product-fee-v2.md) requires V2A Kernel, V2B Runtime binding, and V2C acceptance in order. F1 may resume for `DOMESTIC + ORDINARY_A_SHARE` only after the parent Acceptance Matrix records V2C `PASSED`; V2A alone is insufficient. V2C acceptance uses finite XSHE compatibility economics and requires no G12H closure artifact, so the DAG is not circular. Until then no closure acquisition artifact, F2 projection, F3 publication, analyzer RED, or qualification change is authorized. No default, inference, silent Stock Connect/product exclusion, or interchangeable v2 RuleBook pairing is permitted.
+The parent [Acceptance Matrix](../../acceptance-matrix.md) is the sole current Gate-status authority and records G08E V2A/V2B/V2C `PASSED`. Scoped F1 authority-closure acquisition is therefore ready only for execution-enforced `DOMESTIC + ORDINARY_A_SHARE`. V2C acceptance uses finite XSHE compatibility economics and requires no G12H closure artifact, so the DAG is not circular. F2 projection, F3 publication, analyzer RED, and qualification changes remain unauthorized until F1 closes its required predecessor/endpoint/successor evidence. No default, inference, silent Stock Connect/product exclusion, or interchangeable v2 RuleBook pairing is permitted.
 
 Accepted semantics: [ADR 0004](../../../adr/0004-official-rules-effective-until-authoritatively-superseded.md) and [ADR 0005](../../../adr/0005-cn-a-share-fees-require-access-route-and-product-class.md).
 
@@ -81,7 +81,7 @@ F1 itself owns acquisition, immutable capture, normalization, and verification o
 
 ### Scope
 
-F1 remains blocked until the parent Acceptance Matrix records [G08E-V2C acceptance](../g08/g08e-route-product-fee-v2-acceptance.md) `PASSED`; V2A Kernel alone does not unblock it. After that independent pass, the F1/F2 success envelope is exactly the execution-enforceable scope below:
+The parent Acceptance Matrix records [G08E-V2C acceptance](../g08/g08e-route-product-fee-v2-acceptance.md) `PASSED`; scoped F1 authority-closure acquisition is authorized. The F1/F2 success envelope is exactly the execution-enforceable scope below:
 
 ```text
 execution_access_route: DOMESTIC
@@ -469,6 +469,6 @@ Every phase ends with focused pytest, import-boundary checks, canonical source a
 
 ## Nonclaims and prohibited scope
 
-This plan does not claim provider/archive completeness, universal broker commission, minimum commission, bundled fees, rebates, official rounding, block trading, after-hours trading, B shares, funds, bonds, margin/short, non-CNY scope, account-statement parity, Northbound qualification, preferred-stock qualification, ETF qualification, live/current qualification, decision grade, or deployment authorization. It also excludes non-notional portfolio, instruction, safekeeping, collateral, corporate-action-service, and settlement-message costs. F1 remains blocked until the route/product fee v2 contract passes; after that, incomplete domestic ordinary-A-share successor closure remains a separate blocker.
+This plan does not claim provider/archive completeness, universal broker commission, minimum commission, bundled fees, rebates, official rounding, block trading, after-hours trading, B shares, funds, bonds, margin/short, non-CNY scope, account-statement parity, Northbound qualification, preferred-stock qualification, ETF qualification, live/current qualification, decision grade, or deployment authorization. It also excludes non-notional portfolio, instruction, safekeeping, collateral, corporate-action-service, and settlement-message costs. The route/product fee v2 prerequisite is `PASSED`; incomplete domestic ordinary-A-share predecessor/endpoint/successor authority closure remains the active F1 blocker.
 
 Do not modify existing G08E/G08H types or fixtures; existing G12C/D v1 fixtures/projector; the blocker test; registries; shared Acceptance Matrix; plan README; or root exports. Do not merge or push as part of this plan freeze.

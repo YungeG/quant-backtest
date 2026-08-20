@@ -1,7 +1,7 @@
 ---
 id: G08E-ROUTE-PRODUCT-FEE-V2A
-proposed_readiness: READY_FOR_CONTRACT_RED
-registry_status: PENDING_PARENT_ACCEPTANCE_MATRIX_FAN_IN
+proposed_readiness: SEE_PARENT_ACCEPTANCE_MATRIX
+registry_status: SEE_PARENT_ACCEPTANCE_MATRIX
 owner: trading-kernel profiles/cn_a_share
 produces:
   - pure route/product-aware A-share fee Kernel contract
@@ -20,7 +20,7 @@ fan_out: [G08E-ROUTE-PRODUCT-FEE-V2B, G08E-ROUTE-PRODUCT-FEE-V2C]
 
 ## Scope and exclusion
 
-Proposed `READY_FOR_CONTRACT_RED`, pending parent Acceptance Matrix fan-in. The parent [Acceptance Matrix](../../acceptance-matrix.md) is the sole current status authority; this frontmatter is not a second Gate status. This is a pure Kernel contract. It does not import Runtime, resolved profiles, profile registries, profile/build manifests, `ExecutionCaseSemanticSpec`, Financial Dispatch, Runner, or Semantic Run. Runtime selection and semantic binding are exclusively deferred to [V2B](g08e-route-product-fee-v2-runtime-binding.md).
+The parent [Acceptance Matrix](../../acceptance-matrix.md) is the sole current status authority; this frontmatter delegates status to that registry. This is the frozen pure Kernel contract accepted at the source recorded there. It does not import Runtime, resolved profiles, profile registries, profile/build manifests, `ExecutionCaseSemanticSpec`, Financial Dispatch, Runner, or Semantic Run. Runtime selection and semantic binding are owned by [V2B](g08e-route-product-fee-v2-runtime-binding.md).
 
 The initial finite compatibility scope is exactly `DOMESTIC + ORDINARY_A_SHARE + XSHE + EQUITY + CNY + AUCTION + trade_notional`. `NORTHBOUND_STOCK_CONNECT`, `PREFERRED_STOCK`, and `ETF` are named enums only; they require separately evidenced v2 books. Non-notional portfolio, instruction, settlement, safekeeping, collateral, and corporate-action service costs are out of scope.
 

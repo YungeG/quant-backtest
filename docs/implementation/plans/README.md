@@ -11,7 +11,7 @@ The goal is not more documents. The goal is a small roadmap index plus independe
 - [MRMD-01 Multi-resolution Market Data](mrmd-01-multi-resolution-market-data.md) — `PASSED`; F1 core plus PREP-owned F2 one-Bundle/Profile/identity/Runtime closure.
 - [PERF-OBS-01 Performance Observability](perf-obs-01-performance-observability.md) — `PASSED`; all nine bounded non-authoritative MRMD/PREP operations integrated.
 - [PREP-COVERAGE-01 Runtime Multi-resolution Preparation/Preflight](prep-coverage-01.md) — `PASSED`; slices 1–3 frozen through source `8fc4fde`.
-- [G08E Route/Product Fee v2 roadmap](g08/g08e-route-product-fee-v2.md) — V2A pure Kernel contract `READY`; V2B Runtime binding and V2C acceptance remain `BLOCKED`.
+- [G08E Route/Product Fee v2 roadmap](g08/g08e-route-product-fee-v2.md) — V2A Kernel, V2B Runtime binding, and V2C fan-in `PASSED`; only scoped G12H F1 authority closure resumes.
 
 ## Separate artifact roles
 

@@ -1,7 +1,7 @@
 ---
 id: G08E-ROUTE-PRODUCT-FEE-V2B
-proposed_readiness: BLOCKED_ON_G08E_V2A_PASSED
-registry_status: PENDING_PARENT_ACCEPTANCE_MATRIX_FAN_IN
+proposed_readiness: SEE_PARENT_ACCEPTANCE_MATRIX
+registry_status: SEE_PARENT_ACCEPTANCE_MATRIX
 owner: backtest-runtime profile/build binding
 produces:
   - explicit route/product selection from immutable profile/order context
@@ -20,7 +20,7 @@ fan_out: [G08E-ROUTE-PRODUCT-FEE-V2C]
 
 ## Status
 
-Proposed `BLOCKED_ON_G08E_V2A_PASSED`, pending parent Acceptance Matrix fan-in. The parent [Acceptance Matrix](../../acceptance-matrix.md) is the sole current status authority; this frontmatter is not a second Gate status. This plan freezes behavioral outcomes, ownership, and exclusions only. It must not freeze Runtime field lists, canonical preimages, import sets, helper signatures, manifest leaf hashes, or registration leaves until V2A's pure Kernel interfaces are accepted. Those are deliberately unresolved here.
+The parent [Acceptance Matrix](../../acceptance-matrix.md) is the sole current status authority; this frontmatter delegates status to that registry. This plan records the accepted private Runtime behavior, ownership, and exclusions. The immutable implementation source and validation evidence are recorded by [V2C](g08e-route-product-fee-v2-acceptance.md#acceptance-closure).
 
 ## Required outcomes
 

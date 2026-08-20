@@ -31,5 +31,5 @@ Daily portfolio-value fees, clearing instructions, settlement messages, safekeep
 
 - Generic `FeeAssessmentPolicy`, `TaxPolicy`, reservation, assessment, Journal, and Ledger seams remain reused; no second fee engine or generic route/product framework is introduced.
 - V2 Kernel names append only to the concrete A-share submodule; global roots remain unchanged.
-- G12H F1 remains blocked until **V2C acceptance is `PASSED`**, then may acquire evidence only for `DOMESTIC + ORDINARY_A_SHARE`.
+- V2C acceptance is `PASSED`; G12H F1 may acquire predecessor/endpoint/successor evidence only for execution-enforced `DOMESTIC + ORDINARY_A_SHARE`.
 - This decision claims no provider completeness, July-2026 closure, decision grade, live use, deployment, or full cost coverage.
