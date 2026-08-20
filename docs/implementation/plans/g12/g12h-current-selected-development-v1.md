@@ -17,7 +17,7 @@ depends_on:
 
 ## Status
 
-D1-D3 `PASSED` at source `cdc5a29133bbc0b863ec409219fb50bd0b299c77`. D4 development coverage `PASSED` at source `0215ed3a369bff10a64830c462c569b378914670`; strict ADR 0004 successor closure remains blocked.
+D1-D3 `PASSED` at source `cdc5a29133bbc0b863ec409219fb50bd0b299c77`. D4 development coverage `PASSED` at source `0215ed3a369bff10a64830c462c569b378914670`. D5 Runtime fan-in `PASSED` at source `d1a472091deb7d844e696a814e9e52e46976ece4`, with duplicate-free identity parsing cleanup `1de4f80b51c2ae66687ccdae8771d06b000ab348`; strict ADR 0004 successor closure remains blocked.
 
 Frozen identities:
 
@@ -33,6 +33,8 @@ D1-D3 acceptance: 40 focused tests, full `2107 passed`, import boundaries 121 fi
 
 D4 freezes report hash `sha256:5cbcc37871999b334709d1823f1c40ce6cdf73480f410f821cf4ebd38ceec9bb` and coverage fixture canonical hash `sha256:f27dfa509772fbd2007f5aa0cfd834e5c941a4cc9eef1a1ef6f480b3d6ee56c9`. Acceptance: 33 focused tests, 43 broad rule-authority/architecture tests, import boundaries 122 files, lock/diff/LSP/gitleaks clean, and independent review PASS. A full-suite attempt exited 139 in unrelated Binance aggTrades garbage collection; that exact test independently passed, and the prior D1-D3 full suite remains `2107 passed`.
 
+D5 freezes authority `sha256:6019179179ba23ee5d637e95ac09813bcdd228dad2851cc514238a4cf89f7d97`, Runtime binding `sha256:9b022ca0ded3cde20d15e2c9b1608ae05a62c6a49119ff54ac8e093833809bea`, financial inputs `sha256:f39985966cc1c054f4ca8465ba93382291ecfd79b387c5d12943587aa719c8c5`, and semantic spec `sha256:799a038b9f60171f11e737966d1a2d9838cb5c332f23377f02986cd4d4282c8b`. Acceptance: 39 parent-focused tests, 70 worker-focused tests, import boundaries 123 files, lock/diff/LSP/gitleaks clean, exact canonical coverage mapping and spoof rejection, and independent review PASS.
+
 ## Boundary
 
 This is the additive option-B path accepted by [ADR 0007](../../../adr/0007-current-official-selection-supports-development-projection.md). It does not replace or pass the strict [effective-until-superseded plan](g12h-effective-until-superseded-v2.md). Strict `official_record_as_of` successor closure remains blocked.
@@ -43,7 +45,7 @@ The exact scope is XSHE, `EQUITY`, CNY quote/settlement, `AUCTION`, all boards a
 [2026-07-05T16:00:00Z, 2026-07-30T16:00:00Z)
 ```
 
-No v1 artifact, V2A compatibility artifact, root export, Runtime branch, or public API changes.
+No v1 artifact, V2A compatibility artifact, root export, existing V2B branch, or public API changes. D5 is one additive off-root Runtime binding with no production I/O or fallback.
 
 ## D1 — current-selected development snapshot
 
@@ -135,11 +137,18 @@ deployment_authorized = false
 
 Coverage completeness must never be presented as legal/history completeness.
 
+## D5 — Runtime fan-in
+
+The additive off-root Runtime module `crypto_quant_backtest.cn_a_share_current_selected_fee_binding` consumes caller-provided values from one already-opened Bundle/Reader path: exact manifest, five authority events, canonical D4 report mapping, resolved profile, build manifest, semantic spec, and order. Production opens no repository or Reader and imports no Builder.
+
+It hydrates the exact published v2 RuleBooks, creates the existing Kernel v2 execution authority/binding, exposes reservation/final-fill queries and policies, and binds Bundle/declaration/snapshot/coverage/RuleBook/authority/profile/build identities into `financial_inputs_hash` and the Semantic Run. BUY and SELL validation preserves separate handling, regulatory, ChinaClear, HKSCC-not-applicable, and seller-only stamp-duty rules. Any Bundle, event, report, qualification, book, profile, build, order, or nested-type substitution fails before policy use. No compatibility/v1 fallback exists.
+
 ## Validation
 
 - D1/D2: exact source/hash reconstruction, canonical nested types, mutation matrix, one-band target economics, v1/V2A hash preservation.
 - D3: five exact events, G12C validation, G12D first/repeated publication, no Kernel/Runtime/root imports.
 - D4: exact target coverage, gap/overlap failures, deterministic precedence, explicit qualification separation, and mandatory `rule_coverage_qualified=false` despite a complete finite development interval report.
+- D5: one-Reader publication replay, exact Runtime hydration, BUY/SELL policy economics, semantic/replay identity, substitution matrix, and no Builder/Reader/repository production imports.
 - Every phase: focused pytest, architecture checks, `uv lock --check`, `git diff --check`, gitleaks, and independent review.
 
 ## Nonclaims
