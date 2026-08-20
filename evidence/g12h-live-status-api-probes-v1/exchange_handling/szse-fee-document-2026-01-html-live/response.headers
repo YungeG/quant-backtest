@@ -1,0 +1,19 @@
+HTTP/1.1 200 OK
+Server: nginx
+Date: Thu, 20 Aug 2026 09:41:39 GMT
+Content-Type: text/html
+Content-Length: 82412
+Connection: keep-alive
+Last-Modified: Sat, 30 May 2026 09:11:11 GMT
+ETag: W/"6a1aa9af-141ec"
+Expires: Thu, 20 Aug 2026 09:41:38 GMT
+Cache-Control: no-cache
+X-UA-Compatible: IE=EDGE
+Vary: Accept-Encoding
+X-Varnish: 880947659
+Age: 0
+Via: 1.1 varnish-v4
+X-cache: MISS
+Accept-Ranges: bytes
+X-UA-Compatible: IE=EDGE
+

@@ -1,0 +1,52 @@
+{
+  "authority_status": "CAPTURED_NOT_QUALIFIED",
+  "content_type": "application/json;charset=UTF-8",
+  "curl_exit_code": 0,
+  "curl_stderr": "",
+  "derivatives": {
+    "json_parse": {
+      "valid": true
+    }
+  },
+  "final_url": "https://www.chinatax.gov.cn/search5/search/s?siteCode=bm29000002&column=%E6%94%BF%E7%AD%96%E6%B3%95%E8%A7%84&searchWord=%E8%B4%A2%E6%94%BF%E9%83%A8+%E7%A8%8E%E5%8A%A1%E6%80%BB%E5%B1%80%E5%85%AC%E5%91%8A2023%E5%B9%B4%E7%AC%AC39%E5%8F%B7&wordPlace=0&docType=%E8%B4%A2%E6%94%BF%E9%83%A8%E7%A8%8E%E5%8A%A1%E6%80%BB%E5%B1%80%E5%85%AC%E5%91%8A&docYear=2023&docNo=39&xxgkTaxPolicy=%E7%A8%8E%E6%94%B6%E6%94%BF%E7%AD%96&xxgkSonTaxPolicy=%E5%8D%B0%E8%8A%B1%E7%A8%8E&xxgkFormulatedYear=2023&orderBy=5&participleRule=5&searchSiteName=GSFFK&pageNum=0&xxgkAging=%E5%85%A8%E6%96%87%E5%A4%B1%E6%95%88",
+  "lineage": "stamp_duty",
+  "operator_harness_sha256": "sha256:3873462441ef49e833e748b62f01094041c9c17980f5f238d63650b6b4543771",
+  "raw_byte_length": 11484,
+  "raw_file": "raw.json",
+  "raw_sha256": "sha256:488e07fbf43cb49c0605f3aa75bf973ff1436ec8d0640d1fb08f592caa73ff7e",
+  "redirect_count": 0,
+  "response_chain_count": 1,
+  "response_code": 200,
+  "retrieved_at": "2026-08-20T09:41:40.090651Z",
+  "schema_version": 1,
+  "sensitive_response_headers": {
+    "files": [
+      {
+        "exact_private_path": "/srv/bcache-8t/ygguo/backtest/g12h-authority-private/20260820-live-status-api-probes-response-headers/stamp_duty/sta-no39-status-invalid-live/response.headers",
+        "exact_private_sha256": "sha256:ebdc3997497c4156827403c8197246430285bbb33d60cd1c7f3eb361edf7b4bc",
+        "redaction": "Set-Cookie value replaced by SHA-256; name and attributes retained.",
+        "tracked_path": "stamp_duty/sta-no39-status-invalid-live/response.headers",
+        "tracked_redacted_sha256": "sha256:110c2b878abdc958a23e7bb7ea487fc0a8462fdcdcd708d6ac494e41f7dd14b0"
+      },
+      {
+        "exact_private_path": "/srv/bcache-8t/ygguo/backtest/g12h-authority-private/20260820-live-status-api-probes-response-headers/stamp_duty/sta-no39-status-invalid-live/transport.log",
+        "exact_private_sha256": "sha256:32a4f8b96225080ff316e9b4a28f8f538ed992980bbf4a25ba9e7ce512c794b0",
+        "redaction": "Set-Cookie value replaced by SHA-256; name and attributes retained.",
+        "tracked_path": "stamp_duty/sta-no39-status-invalid-live/transport.log",
+        "tracked_redacted_sha256": "sha256:4a86b46b3613eed3994d23cbfd1e60ca347319fc42a37c8bac7ebd2527f1206b"
+      },
+      {
+        "exact_private_path": "/srv/bcache-8t/ygguo/backtest/g12h-authority-private/20260820-live-status-api-probes-response-headers/stamp_duty/sta-no39-status-invalid-live/redirects.json",
+        "exact_private_sha256": "sha256:b58f929b22726edd73d1143a6b0d9f12df9d059cc9816cfcdbca769cdada01fe",
+        "redaction": "Set-Cookie value replaced by SHA-256; name and attributes retained.",
+        "tracked_path": "stamp_duty/sta-no39-status-invalid-live/redirects.json",
+        "tracked_redacted_sha256": "sha256:e1652202e95c2e06d63d5198e32ab1801b6c485a60c092c3d2146689abb954c8"
+      }
+    ],
+    "policy": "Exact server-issued cookie values are excluded from Git and retained in the mode-restricted private evidence store."
+  },
+  "source_id": "sta-no39-status-invalid-live",
+  "started_at": "2026-08-20T09:41:39.653921Z",
+  "tool": "curl 8.14.1 (x86_64-pc-linux-gnu) libcurl/8.14.1 OpenSSL/3.5.6 zlib/1.3.1 brotli/1.1.0 zstd/1.5.7 libidn2/2.3.8 libpsl/0.21.2 libssh2/1.11.1 nghttp2/1.64.0 nghttp3/1.8.0 librtmp/2.3 OpenLDAP/2.6.10",
+  "type": "g12h_official_http_capture_receipt_v1"
+}

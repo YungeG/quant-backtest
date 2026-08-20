@@ -36,7 +36,8 @@ Evidence baseline:
 - [XSHE July-2026 fee/tax source research](../../../research/g12h-xshe-july-2026-fee-tax-authority-primary-sources.md);
 - [F1 full-envelope access/product blocker](../../../research/g12h-xshe-july-2026-full-envelope-successor-closure-f1.md);
 - [competent status-register discovery](../../../research/g12h-competent-status-register-discovery-v1.md);
-- [live-status relaxation impact](../../../research/g12h-live-status-relaxation-impact-v1.md).
+- [live-status relaxation impact](../../../research/g12h-live-status-relaxation-impact-v1.md);
+- [live-status API probes](../../../research/g12h-live-status-api-probes-v1.md).
 
 The existing v1 declaration still deterministically fails `COVERAGE_GAP / market_fees`. No existing PASSED G08E, G08H, G12C/D, fixture, hash, event, manifest, test, or publication byte may change.
 
