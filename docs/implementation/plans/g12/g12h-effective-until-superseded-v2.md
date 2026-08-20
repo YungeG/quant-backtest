@@ -12,6 +12,7 @@ consumes:
   - immutable G08E/G08H and G12C/D v1 identities
   - ADR 0004 effective-until-authoritatively-superseded semantics
   - ADR 0005 execution access-route and fee-product-class semantics
+  - ADR 0006 explicit official live-status receipt-time semantics
   - G08E route/product fee v2 parent-Matrix PASSED registry fact
 depends_on:
   contract: [G08E, G08H, G08E-ROUTE-PRODUCT-FEE-V2C, G12C, G12D]
@@ -26,14 +27,16 @@ fan_out: [G12H, G12L-*, G12M-*]
 
 The parent [Acceptance Matrix](../../acceptance-matrix.md) is the sole current Gate-status authority and records G08E V2A/V2B/V2C `PASSED`. Scoped F1 authority-closure acquisition is therefore ready only for execution-enforced `DOMESTIC + ORDINARY_A_SHARE`. V2C acceptance uses finite XSHE compatibility economics and requires no G12H closure artifact, so the DAG is not circular. F2 projection, F3 publication, analyzer RED, and qualification changes remain unauthorized until F1 closes its required predecessor/endpoint/successor evidence. No default, inference, silent Stock Connect/product exclusion, or interchangeable v2 RuleBook pairing is permitted.
 
-Accepted semantics: [ADR 0004](../../../adr/0004-official-rules-effective-until-authoritatively-superseded.md) and [ADR 0005](../../../adr/0005-cn-a-share-fees-require-access-route-and-product-class.md).
+Accepted semantics: [ADR 0004](../../../adr/0004-official-rules-effective-until-authoritatively-superseded.md), [ADR 0005](../../../adr/0005-cn-a-share-fees-require-access-route-and-product-class.md), and [ADR 0006](../../../adr/0006-explicit-official-live-status-may-use-receipt-time.md).
 
 Evidence baseline:
 
 - [G12H five-dimension blocker](../../../research/g12h-five-dimension-target-coverage-blocker-v1.md);
 - [G12H rule-coverage analysis](../../../research/g12h-rule-coverage.md);
 - [XSHE July-2026 fee/tax source research](../../../research/g12h-xshe-july-2026-fee-tax-authority-primary-sources.md);
-- [F1 full-envelope access/product blocker](../../../research/g12h-xshe-july-2026-full-envelope-successor-closure-f1.md).
+- [F1 full-envelope access/product blocker](../../../research/g12h-xshe-july-2026-full-envelope-successor-closure-f1.md);
+- [competent status-register discovery](../../../research/g12h-competent-status-register-discovery-v1.md);
+- [live-status relaxation impact](../../../research/g12h-live-status-relaxation-impact-v1.md).
 
 The existing v1 declaration still deterministically fails `COVERAGE_GAP / market_fees`. No existing PASSED G08E, G08H, G12C/D, fixture, hash, event, manifest, test, or publication byte may change.
 
@@ -69,6 +72,7 @@ target_to_exclusive <= official_record_as_of <= closure_evidence_available_at
 ```
 
 - **As-of closure** selects only official revisions published or recorded no later than `official_record_as_of`.
+- **Explicit live-status exception.** Under ADR 0006, an issuer-owned official live-status API response that identifies the exact official act and returns an explicit nonblank status may use its verified response receipt time as that API response's record-state time when it has no source-declared record-state/as-of timestamp. A common `official_record_as_of` is no later than the earliest relied-on live-status API receipt or source-declared register-through time.
 - **Retrospective closure** requires `official_record_as_of` at or after target end and uses captures/receipts available no later than `closure_evidence_available_at`.
 - F1 uses retrospective closure. Its failure/result evaluation time is an explicit immutable closure cutoff supplied by the artifact, never wall clock or inferred file/retrieval time.
 - An official revision recorded after `official_record_as_of`, or a capture/receipt available after `closure_evidence_available_at`, is not selectable.
@@ -112,14 +116,14 @@ For every lineage, capture and verify:
 1. exact official predecessor authority and every semantic field used by economics: competent issuer, official act, authoritative `effective_from`, rate or explicit not-applicability, `trade_notional` basis, buy/sell applicability, XSHE, `InstrumentType.EQUITY`, CNY quote/settlement, `AUCTION`, all profile-admitted boards, `execution_access_route=DOMESTIC`, and `fee_product_class=ORDINARY_A_SHARE`;
 2. every documentary representation and exact `corrects_revision_id` chain for each official act;
 3. every selected complete economic state and exact `economic_predecessor_revision_id` chain across official acts;
-4. an official endpoint table, validity record, or complete historical register whose record state is at or after target end;
+4. an official endpoint table, validity record, complete historical register, or ADR-0006-qualifying issuer-owned official live-status API response whose record state is at or after target end;
 5. every competent-authority successor/correction index or channel through `official_record_as_of`;
 6. complete pagination/cursor/range termination and an ordered inventory of candidate entries;
 7. exact official bytes for every result-affecting predecessor, endpoint, successor, correction, and index representation;
 8. deterministic disposition of every candidate as no effect, outside scope, before target/already in chain, after target, documentary correction without economic change, target-affecting correction/successor, repeal without replacement, or unresolved;
 9. terminal documentary representation selection per official act, followed by a gap-free, non-overlapping, conflict-free economic target conclusion per lineage.
 
-A current endpoint alone, a search-engine result, an undocumented keyword search, or “no successor found” is insufficient. Regulatory fee closure must cover both controlling rate authority and XSHE bilateral investor-collection applicability. Stamp-duty closure must cover both the statutory seller-side basis and the half-collection act.
+A current endpoint alone is insufficient unless it is an issuer-owned official live-status API response that returns an explicit nonblank status for the exact official act and satisfies ADR 0006. Page presence, blank or null status, a search-engine result, an undocumented keyword search, or “no successor found” remains insufficient. The receipt-time exception does not waive exact corpus fit or complete successor/correction candidate channels. Regulatory fee closure must cover both controlling rate authority and XSHE bilateral investor-collection applicability. Stamp-duty closure must cover both the statutory seller-side basis and the half-collection act.
 
 Exact bytes, source-specific receipts, redirects, headers, content encoding, rendered/attachment hashes, extraction hashes, and pagination termination are sufficient acquisition controls. They are not a mandatory universal transport schema: freeze only fields required to prove the selected source representation and closure claim.
 
@@ -441,9 +445,9 @@ This effective-until-superseded plan owns successor closure, finite v2 RuleBook 
 
 ### F1
 
-- independently verify official domains, bytes, receipts, correction/succession indexes, range/termination, candidate inventory, and dispositions;
+- independently verify official domains, bytes, receipts, correction/succession indexes, range/termination, candidate inventory, dispositions, and every relied-on live-status enum mapping;
 - reconstruct every canonical documentary representation, economic state, candidate, component, and closure hash twice;
-- assert `target_to_exclusive <= official_record_as_of <= closure_evidence_available_at`, official-record selection, capture/receipt availability, and explicit immutable evaluation cutoff;
+- assert `target_to_exclusive <= official_record_as_of <= closure_evidence_available_at`, official-record selection, capture/receipt availability, explicit immutable evaluation cutoff, and that any receipt-time substitution satisfies ADR 0006;
 - test closure-only evidence and post-target target-affecting correction cases;
 - run gitleaks against captured artifacts and repository diff.
 
