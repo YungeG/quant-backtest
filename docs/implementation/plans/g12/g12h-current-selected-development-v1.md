@@ -1,6 +1,6 @@
 ---
 id: G12H-CURRENT-SELECTED-DEVELOPMENT-V1
-proposed_readiness: READY_FOR_D1_SNAPSHOT
+proposed_readiness: READY_FOR_D4_COVERAGE
 registry_status: SEE_PARENT_ACCEPTANCE_MATRIX
 owner: trading-kernel values + market-bundle-builder publication
 produces:
@@ -14,6 +14,22 @@ depends_on:
 ---
 
 # G12H current-selected development v1
+
+## Status
+
+D1-D3 `PASSED` at source `cdc5a29133bbc0b863ec409219fb50bd0b299c77`. D4 development coverage is ready; strict ADR 0004 successor closure remains blocked.
+
+Frozen identities:
+
+- snapshot `sha256:747e5c88fd2810ca05841cc6bb3c9534fbfc203ccad3e0903dd3f14e25a8a5c8`;
+- declaration `sha256:4b21421bbe112d47a63ff03578dcb2215946e394d9971ab39a65c381d3d697d1`;
+- market-fee RuleBook `sha256:7dc7d6316ff8e7c88435bb7a070adc18fe9f18db6fd79fd19f927d88b6384c40`;
+- stamp-duty RuleBook `sha256:f8ba2eae8d6d4eefb119a864ffc2c170b97ba0eb0537371ab4caf65bb25b01cb`;
+- manifest `sha256:28fdfafe241c48cd4a12a8b7467ccfafdb1b2b28881e0608d938cbb3b4853989`;
+- Bundle ref `sha256:d375267069c8c740ba24f58a127e3a5d784211c85618d1e23ee89d353e4204cd`;
+- retention proof `sha256:cb64fb22249489d711aa1cbc1bdd206948d898587dd2416f6eced9ca6d07223b`.
+
+Acceptance: 40 focused tests, full `2107 passed`, import boundaries 121 files, lock/diff/LSP/gitleaks clean, and independent review PASS.
 
 ## Boundary
 
