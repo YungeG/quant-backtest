@@ -163,6 +163,17 @@ def _rate(value: object) -> Rate:
     )
 
 
+def _book_identity(
+    data: Mapping[str, object],
+) -> tuple[str, int, CnAShareExecutionAccessRoute, CnAShareFeeProductClass]:
+    return (
+        cast(str, data["rule_book_key"]),
+        cast(int, data["rule_book_version"]),
+        CnAShareExecutionAccessRoute(cast(str, data["access_route"])),
+        CnAShareFeeProductClass(cast(str, data["fee_product_class"])),
+    )
+
+
 def _market_book(body: object) -> CnAShareMarketFeeRuleBookV2:
     data = _mapping("market fee authority", body)
     bands = []
@@ -187,13 +198,7 @@ def _market_book(body: object) -> CnAShareMarketFeeRuleBookV2:
                 _source_refs(band["hkscc_transfer_source_refs"]),
             )
         )
-    return CnAShareMarketFeeRuleBookV2(
-        cast(str, data["rule_book_key"]),
-        cast(int, data["rule_book_version"]),
-        CnAShareExecutionAccessRoute(cast(str, data["access_route"])),
-        CnAShareFeeProductClass(cast(str, data["fee_product_class"])),
-        tuple(bands),
-    )
+    return CnAShareMarketFeeRuleBookV2(*_book_identity(data), tuple(bands))
 
 
 def _stamp_book(body: object) -> CnAShareStampDutyRuleBookV2:
@@ -211,13 +216,7 @@ def _stamp_book(body: object) -> CnAShareStampDutyRuleBookV2:
                 _source_refs(band["source_refs"]),
             )
         )
-    return CnAShareStampDutyRuleBookV2(
-        cast(str, data["rule_book_key"]),
-        cast(int, data["rule_book_version"]),
-        CnAShareExecutionAccessRoute(cast(str, data["access_route"])),
-        CnAShareFeeProductClass(cast(str, data["fee_product_class"])),
-        tuple(bands),
-    )
+    return CnAShareStampDutyRuleBookV2(*_book_identity(data), tuple(bands))
 
 
 def _events(
