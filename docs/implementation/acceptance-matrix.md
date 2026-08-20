@@ -119,8 +119,8 @@ artifact_hashes: []
 | G08D | PASSED | trading-kernel profiles/cn_a_share | G08A, G08C, WP-05G | none |
 | G08E | PASSED | trading-kernel profiles/cn_a_share | WP-05H, WP-05J | none |
 | G08E-ROUTE-PRODUCT-FEE-V2A | PASSED — immutable source `b9f959a68a6e42d668253d0592ae65a08cedaeb5`; fixture `sha256:5f0241887237a568f411a7d4a664482848ee134202d930903404aaf367f463e0` | trading-kernel profiles/cn_a_share | G08E, ADR-0005 | none; final security review PASS, full and clean-detached suites `2091 passed`, Pyright/Ruff/import/gitleaks clean |
-| G08E-ROUTE-PRODUCT-FEE-V2B | READY | backtest-runtime private profile/build binding | G08E-ROUTE-PRODUCT-FEE-V2A | none; V2A accepted interface/hashes frozen, private Runtime RED authorized |
-| G08E-ROUTE-PRODUCT-FEE-V2C | DRAFT / BLOCKED | parent acceptance fan-in | G08E-ROUTE-PRODUCT-FEE-V2A, G08E-ROUTE-PRODUCT-FEE-V2B | both implementation nodes PASSED plus legacy parity/full acceptance |
+| G08E-ROUTE-PRODUCT-FEE-V2B | PASSED — immutable source `a186d6512cbbb381ec8fb1db2137f5a994fe8389` | backtest-runtime private profile/build binding | G08E-ROUTE-PRODUCT-FEE-V2A | none; final correctness/security/identity/acceptance reviews PASS, full and clean-detached suites `2097 passed`, Pyright/Ruff/import/gitleaks clean |
+| G08E-ROUTE-PRODUCT-FEE-V2C | READY | parent acceptance fan-in | G08E-ROUTE-PRODUCT-FEE-V2A, G08E-ROUTE-PRODUCT-FEE-V2B | none; V2A/V2B accepted sources frozen, legacy parity/full fan-in authorized |
 | G08F | PASSED | trading-kernel profiles/cn_a_share | G08A, WP-06A, WP-06B | none |
 | G08G | PASSED | trading-kernel profiles/cn_a_share | G08F, G03 | none |
 | G08H | PASSED | backtest-runtime composition + tests/support + parity tooling | G08A–G08G, G09H, WP-00C | none |
