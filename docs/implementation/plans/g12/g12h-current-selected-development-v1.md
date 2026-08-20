@@ -1,6 +1,6 @@
 ---
 id: G12H-CURRENT-SELECTED-DEVELOPMENT-V1
-proposed_readiness: READY_FOR_D4_COVERAGE
+proposed_readiness: DEVELOPMENT_COVERAGE_PASSED
 registry_status: SEE_PARENT_ACCEPTANCE_MATRIX
 owner: trading-kernel values + market-bundle-builder publication
 produces:
@@ -17,7 +17,7 @@ depends_on:
 
 ## Status
 
-D1-D3 `PASSED` at source `cdc5a29133bbc0b863ec409219fb50bd0b299c77`. D4 development coverage is ready; strict ADR 0004 successor closure remains blocked.
+D1-D3 `PASSED` at source `cdc5a29133bbc0b863ec409219fb50bd0b299c77`. D4 development coverage `PASSED` at source `0215ed3a369bff10a64830c462c569b378914670`; strict ADR 0004 successor closure remains blocked.
 
 Frozen identities:
 
@@ -29,7 +29,9 @@ Frozen identities:
 - Bundle ref `sha256:d375267069c8c740ba24f58a127e3a5d784211c85618d1e23ee89d353e4204cd`;
 - retention proof `sha256:cb64fb22249489d711aa1cbc1bdd206948d898587dd2416f6eced9ca6d07223b`.
 
-Acceptance: 40 focused tests, full `2107 passed`, import boundaries 121 files, lock/diff/LSP/gitleaks clean, and independent review PASS.
+D1-D3 acceptance: 40 focused tests, full `2107 passed`, import boundaries 121 files, lock/diff/LSP/gitleaks clean, and independent review PASS.
+
+D4 freezes report hash `sha256:5cbcc37871999b334709d1823f1c40ce6cdf73480f410f821cf4ebd38ceec9bb` and coverage fixture canonical hash `sha256:f27dfa509772fbd2007f5aa0cfd834e5c941a4cc9eef1a1ef6f480b3d6ee56c9`. Acceptance: 33 focused tests, 43 broad rule-authority/architecture tests, import boundaries 122 files, lock/diff/LSP/gitleaks clean, and independent review PASS. A full-suite attempt exited 139 in unrelated Binance aggTrades garbage collection; that exact test independently passed, and the prior D1-D3 full suite remains `2107 passed`.
 
 ## Boundary
 
