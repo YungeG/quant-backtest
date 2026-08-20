@@ -1,0 +1,68 @@
+{
+  "available_at": {
+    "instant": {
+      "epoch_nanoseconds": 1784196000000000000,
+      "type": "utc_instant"
+    },
+    "phase": {
+      "code": "corporate_action_register",
+      "rank": 100,
+      "type": "timeline_phase"
+    },
+    "source_sequence": {
+      "type": "source_sequence",
+      "value": 1
+    },
+    "type": "simulation_instant"
+  },
+  "coverage_from": {
+    "epoch_nanoseconds": 1783267200000000000,
+    "type": "utc_instant"
+  },
+  "coverage_to_exclusive": {
+    "epoch_nanoseconds": 1785427200000000000,
+    "type": "utc_instant"
+  },
+  "declaration_hash": "sha256:87d7ecd23fb0cc87c5c37edfa6a31b437f5646b161b43eaee1e1771cefa68058",
+  "has_differential_distribution": false,
+  "has_issuer_self_distribution": false,
+  "has_lending_or_repo": false,
+  "has_pledge_or_freeze": false,
+  "instrument": {
+    "base_currency": null,
+    "instrument_id": {
+      "stable_key": "xshe.corporate-action.stable",
+      "type": "instrument_id",
+      "venue": "xshe"
+    },
+    "instrument_type": "equity",
+    "quote_currency": {
+      "type": "currency_id",
+      "value": "CNY"
+    },
+    "settlement_currency": {
+      "type": "currency_id",
+      "value": "CNY"
+    },
+    "type": "instrument_definition"
+  },
+  "is_b_or_h_share": false,
+  "is_fund_or_bond": false,
+  "is_ordinary_domestic_a_share": true,
+  "is_restricted_or_pre_ipo": false,
+  "is_standard_cash_auction": true,
+  "is_stock_connect": false,
+  "rule_context": {
+    "board": "main",
+    "listing_phase": "seasoned",
+    "risk_class": "standard",
+    "schema_version": 1,
+    "source_hash": "sha256:5555555555555555555555555555555555555555555555555555555555555555",
+    "source_key": "development.cn-a-share.instrument-scope.v1",
+    "type": "cn_a_share_instrument_rule_context"
+  },
+  "schema_version": 1,
+  "source_manifest_hash": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+  "source_snapshot_hash": "sha256:9999999999999999999999999999999999999999999999999999999999999999",
+  "type": "cn_a_share_instrument_scope_declaration"
+}

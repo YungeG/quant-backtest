@@ -1,0 +1,166 @@
+{
+  "candidate_count": 6,
+  "candidates": [
+    {
+      "candidate_id": "ndrc-000",
+      "disposition": "unresolved",
+      "published_date": "2018-06-27",
+      "query_provenance": [
+        "ndrc-2018-917-exact",
+        "securities-business-regulatory-fee",
+        "securities-futures-regulatory-fee",
+        "securities-transaction-regulatory-fee"
+      ],
+      "source_refs": [
+        {
+          "raw_sha256": "sha256:0fabf2356105c09ba63fc04a35270e4f25fb4e9ad2bbf50a890a61b3bdc168e1",
+          "source_id": "ndrc-query-ndrc-2018-917-exact-page-1"
+        },
+        {
+          "raw_sha256": "sha256:8e49b3bc23b1249853823eed5c69cd7f0c23fdbb54dd2edca24a249e2ecbb06c",
+          "source_id": "ndrc-query-securities-business-regulatory-fee-page-1"
+        },
+        {
+          "raw_sha256": "sha256:d738a0bc353c39a21014fa337d0e93645c77789453e3b43478eb5992a58c8117",
+          "source_id": "ndrc-query-securities-futures-regulatory-fee-page-1"
+        },
+        {
+          "raw_sha256": "sha256:08bd2cb3d94adef8b5549500eeb8b1a252e5f1e84b9c4ca34862e84586fb1781",
+          "source_id": "ndrc-query-securities-transaction-regulatory-fee-page-1"
+        }
+      ],
+      "title": "关于证券期货业监管费标准等有关问题的通知(发改价格规〔2018〕917号)",
+      "url": "https://www.ndrc.gov.cn/xxgk/zcfb/ghxwj/201806/t20180627_960950.html"
+    },
+    {
+      "candidate_id": "ndrc-001",
+      "disposition": "unresolved",
+      "published_date": "2022-01-07",
+      "query_provenance": [
+        "securities-business-regulatory-fee",
+        "securities-futures-regulatory-fee",
+        "securities-transaction-regulatory-fee"
+      ],
+      "source_refs": [
+        {
+          "raw_sha256": "sha256:8e49b3bc23b1249853823eed5c69cd7f0c23fdbb54dd2edca24a249e2ecbb06c",
+          "source_id": "ndrc-query-securities-business-regulatory-fee-page-1"
+        },
+        {
+          "raw_sha256": "sha256:d738a0bc353c39a21014fa337d0e93645c77789453e3b43478eb5992a58c8117",
+          "source_id": "ndrc-query-securities-futures-regulatory-fee-page-1"
+        },
+        {
+          "raw_sha256": "sha256:08bd2cb3d94adef8b5549500eeb8b1a252e5f1e84b9c4ca34862e84586fb1781",
+          "source_id": "ndrc-query-securities-transaction-regulatory-fee-page-1"
+        }
+      ],
+      "title": "关于银行业、保险业和证券期货业监管费收费标准有关问题的通知(发改价格〔2021〕1947号",
+      "url": "https://www.ndrc.gov.cn/xxgk/zcfb/tz/202201/t20220107_1311590.html"
+    },
+    {
+      "candidate_id": "ndrc-002",
+      "disposition": "unresolved",
+      "published_date": "2016-05-16",
+      "query_provenance": [
+        "securities-futures-regulatory-fee"
+      ],
+      "source_refs": [
+        {
+          "raw_sha256": "sha256:d738a0bc353c39a21014fa337d0e93645c77789453e3b43478eb5992a58c8117",
+          "source_id": "ndrc-query-securities-futures-regulatory-fee-page-1"
+        }
+      ],
+      "title": "关于重新核发银监会证监会保监会监管费等收费标准的通知(发改价格〔2016〕14号)",
+      "url": "https://www.ndrc.gov.cn/xxgk/zcfb/tz/201605/t20160516_963050.html"
+    },
+    {
+      "candidate_id": "ndrc-003",
+      "disposition": "unresolved",
+      "published_date": "2010-05-27",
+      "query_provenance": [
+        "securities-futures-regulatory-fee",
+        "securities-transaction-regulatory-fee"
+      ],
+      "source_refs": [
+        {
+          "raw_sha256": "sha256:d738a0bc353c39a21014fa337d0e93645c77789453e3b43478eb5992a58c8117",
+          "source_id": "ndrc-query-securities-futures-regulatory-fee-page-1"
+        },
+        {
+          "raw_sha256": "sha256:08bd2cb3d94adef8b5549500eeb8b1a252e5f1e84b9c4ca34862e84586fb1781",
+          "source_id": "ndrc-query-securities-transaction-regulatory-fee-page-1"
+        }
+      ],
+      "title": "关于重新发布中央管理的证券监管部门行政事业性收费标准的通知(发改价格[2010]996号)",
+      "url": "https://www.ndrc.gov.cn/xxgk/zcfb/tz/201005/t20100527_964643.html"
+    },
+    {
+      "candidate_id": "ndrc-004",
+      "disposition": "unresolved",
+      "published_date": "2012-07-13",
+      "query_provenance": [
+        "securities-transaction-regulatory-fee"
+      ],
+      "source_refs": [
+        {
+          "raw_sha256": "sha256:08bd2cb3d94adef8b5549500eeb8b1a252e5f1e84b9c4ca34862e84586fb1781",
+          "source_id": "ndrc-query-securities-transaction-regulatory-fee-page-1"
+        }
+      ],
+      "title": "关于降低证券、期货市场监管费收费标准等问题的通知(发改价格[2012]2119号)",
+      "url": "https://www.ndrc.gov.cn/xxgk/zcfb/tz/201207/t20120713_964462.html"
+    },
+    {
+      "candidate_id": "ndrc-005",
+      "disposition": "unresolved",
+      "published_date": "2006-11-14",
+      "query_provenance": [
+        "securities-transaction-regulatory-fee"
+      ],
+      "source_refs": [
+        {
+          "raw_sha256": "sha256:08bd2cb3d94adef8b5549500eeb8b1a252e5f1e84b9c4ca34862e84586fb1781",
+          "source_id": "ndrc-query-securities-transaction-regulatory-fee-page-1"
+        }
+      ],
+      "title": "关于证券、期货市场监管费收费标准有关问题的通知(发改价格[2006]2437号)",
+      "url": "https://www.ndrc.gov.cn/xxgk/zcfb/tz/200611/t20061114_965328.html"
+    }
+  ],
+  "closure_limit": "All located competent-rate candidates are pre-target; the NDRC search corpus is discovery, not an issuer-declared complete amendment/repeal/successor register.",
+  "latest_candidate_date": "2022-01-07",
+  "queries": [
+    {
+      "page_1_source_id": "ndrc-query-ndrc-2018-917-exact-page-1",
+      "query_id": "ndrc-2018-917-exact",
+      "terminal_page_2_source_id": "ndrc-query-ndrc-2018-917-exact-terminal-page-2",
+      "terminal_result_count": 0,
+      "total_hits": 1
+    },
+    {
+      "page_1_source_id": "ndrc-query-securities-business-regulatory-fee-page-1",
+      "query_id": "securities-business-regulatory-fee",
+      "terminal_page_2_source_id": "ndrc-query-securities-business-regulatory-fee-terminal-page-2",
+      "terminal_result_count": 0,
+      "total_hits": 2
+    },
+    {
+      "page_1_source_id": "ndrc-query-securities-futures-regulatory-fee-page-1",
+      "query_id": "securities-futures-regulatory-fee",
+      "terminal_page_2_source_id": "ndrc-query-securities-futures-regulatory-fee-terminal-page-2",
+      "terminal_result_count": 0,
+      "total_hits": 4
+    },
+    {
+      "page_1_source_id": "ndrc-query-securities-transaction-regulatory-fee-page-1",
+      "query_id": "securities-transaction-regulatory-fee",
+      "terminal_page_2_source_id": "ndrc-query-securities-transaction-regulatory-fee-terminal-page-2",
+      "terminal_result_count": 0,
+      "total_hits": 5
+    }
+  ],
+  "schema_version": 1,
+  "status": "DISCOVERY_ONLY_INSUFFICIENT",
+  "type": "g12h_securities_regulatory_candidate_inventory_discovery_v1"
+}

@@ -1,0 +1,20 @@
+{
+  "account_scope_declaration_hash": "sha256:de8e0f3df68fd3436da37f463a2d2265e7371ee3e68c980e182e6cd987067595",
+  "account_scope_snapshot_sha256": "sha256:bd19cbee1ac244426979a1d3cf0d4e518e7d62988a3a0f2e0ad40b565cf95410",
+  "adr_sha256": "sha256:2ae3cb57ecb3e313445225ea5b1421a4d36a0c8ebbd5e5130c100c94c92e14b1",
+  "board_id_tuple_hash": "sha256:747354f83eb6b671d2a813f986f7e78cdc1d01e63cc1bd52b6e20284c52a43cc",
+  "bound_scope_sha256": "sha256:8daef0cbf85b77bac91fac2f99276ec663eae2368730642f24c7cf023d15afb2",
+  "fixture_sha256": "sha256:5f0241887237a568f411a7d4a664482848ee134202d930903404aaf367f463e0",
+  "instrument_scope_declaration_hash": "sha256:87d7ecd23fb0cc87c5c37edfa6a31b437f5646b161b43eaee1e1771cefa68058",
+  "instrument_scope_snapshot_sha256": "sha256:9deb5b0a8c6a725a88a790390830ffd20acaf405d0df7f9f1edc399ec6040425",
+  "manifest_sha256": "sha256:59752515fddb7d6a038384da7eb65a09d9eb10bba75cfd095553ecf78f353a2f",
+  "operator_source": {
+    "path": "evidence/g12h/operator/g12h_scope_export.py",
+    "sha256": "sha256:025ce57d2af9b5c919b63a93e8cd210a482383d5cfdc20144e860600f2d27ba7",
+    "status": "RECONSTRUCTED_FROM_EXECUTED_INLINE_OPERATOR"
+  },
+  "producer_git_object": "5cbc3da58293d16571c662a1f1d2158f3c0f0017",
+  "schema_version": 1,
+  "type": "g12h_bound_execution_scope_receipt_v1",
+  "verification_result": "PASS_SCOPE_ONLY_AUTHORITY_INSUFFICIENT"
+}

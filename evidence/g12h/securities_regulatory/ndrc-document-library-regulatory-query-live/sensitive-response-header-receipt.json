@@ -1,0 +1,29 @@
+{
+  "files": [
+    {
+      "exact_private_path": "/srv/bcache-8t/ygguo/backtest/g12h-authority-private/20260820-wave1-response-headers/securities_regulatory/ndrc-document-library-regulatory-query-live/response.headers",
+      "exact_private_sha256": "sha256:1629cabc37a2cc8227579cb38bebf971f0c7e3c895264c602a425d2a80cc8d8a",
+      "redaction": "Set-Cookie value replaced by its SHA-256; cookie name and attributes retained.",
+      "tracked_path": "securities_regulatory/ndrc-document-library-regulatory-query-live/response.headers",
+      "tracked_redacted_sha256": "sha256:f96a7665eb7517e80146eeee5c28b1c426e6625c9c6e987e4a4da9b143f1aae6"
+    },
+    {
+      "exact_private_path": "/srv/bcache-8t/ygguo/backtest/g12h-authority-private/20260820-wave1-response-headers/securities_regulatory/ndrc-document-library-regulatory-query-live/transport.log",
+      "exact_private_sha256": "sha256:d1cbfc1c76cd01e561c4a7ff7ba83b50285d5784cda731664b5746e7b1152191",
+      "redaction": "Set-Cookie value replaced by its SHA-256; cookie name and attributes retained.",
+      "tracked_path": "securities_regulatory/ndrc-document-library-regulatory-query-live/transport.log",
+      "tracked_redacted_sha256": "sha256:335542b1660424607b533ed1421168cac6c4b21d16291af178badd3efabb29f9"
+    },
+    {
+      "exact_private_path": "/srv/bcache-8t/ygguo/backtest/g12h-authority-private/20260820-wave1-response-headers/securities_regulatory/ndrc-document-library-regulatory-query-live/redirects.json",
+      "exact_private_sha256": "sha256:d5392e5d2db202ee339fa8ed9c78a9fb9003ad3f2698f39728bc320d50c9d958",
+      "redaction": "Set-Cookie value replaced by its SHA-256; cookie name and attributes retained.",
+      "tracked_path": "securities_regulatory/ndrc-document-library-regulatory-query-live/redirects.json",
+      "tracked_redacted_sha256": "sha256:887d41d0962c57672d2bf7eafbfd4c09fc0de35b26d1d1b82fbb766397b0c708"
+    }
+  ],
+  "private_store_root": "/srv/bcache-8t/ygguo/backtest/g12h-authority-private/20260820-wave1-response-headers",
+  "schema_version": 1,
+  "source_id": "ndrc-document-library-regulatory-query-live",
+  "type": "g12h_sensitive_response_header_receipt_v1"
+}

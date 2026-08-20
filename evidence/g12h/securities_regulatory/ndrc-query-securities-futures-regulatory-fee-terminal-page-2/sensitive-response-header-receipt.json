@@ -1,0 +1,29 @@
+{
+  "files": [
+    {
+      "exact_private_path": "/srv/bcache-8t/ygguo/backtest/g12h-authority-private/20260820-wave1-response-headers/securities_regulatory/ndrc-query-securities-futures-regulatory-fee-terminal-page-2/response.headers",
+      "exact_private_sha256": "sha256:a81309a8e810923c2f935e918c3b786d007311d9908b971c79c942679290c33b",
+      "redaction": "Set-Cookie value replaced by its SHA-256; cookie name and attributes retained.",
+      "tracked_path": "securities_regulatory/ndrc-query-securities-futures-regulatory-fee-terminal-page-2/response.headers",
+      "tracked_redacted_sha256": "sha256:785a95f81b3faddb5475f3f630b6da6b6729dbcbe39ec8d02f7bd15491dd3f1f"
+    },
+    {
+      "exact_private_path": "/srv/bcache-8t/ygguo/backtest/g12h-authority-private/20260820-wave1-response-headers/securities_regulatory/ndrc-query-securities-futures-regulatory-fee-terminal-page-2/transport.log",
+      "exact_private_sha256": "sha256:a26958aa730c16db9f278a831c5965ce821bf7239900c2eac231576ab4be32a9",
+      "redaction": "Set-Cookie value replaced by its SHA-256; cookie name and attributes retained.",
+      "tracked_path": "securities_regulatory/ndrc-query-securities-futures-regulatory-fee-terminal-page-2/transport.log",
+      "tracked_redacted_sha256": "sha256:f6ad143f50b5b84454268920aa9e024d90086016fb2fc9c6c011ddd2eb50da5d"
+    },
+    {
+      "exact_private_path": "/srv/bcache-8t/ygguo/backtest/g12h-authority-private/20260820-wave1-response-headers/securities_regulatory/ndrc-query-securities-futures-regulatory-fee-terminal-page-2/redirects.json",
+      "exact_private_sha256": "sha256:6f6056fb2526bb7e88cfa5bf49fe7d21a7e0af1a685b7fb08d71c4af6d5911ef",
+      "redaction": "Set-Cookie value replaced by its SHA-256; cookie name and attributes retained.",
+      "tracked_path": "securities_regulatory/ndrc-query-securities-futures-regulatory-fee-terminal-page-2/redirects.json",
+      "tracked_redacted_sha256": "sha256:a7fef4d00009b9faba39f52ada609ddf5c98a6b67bf1d25d491ce731a7249b10"
+    }
+  ],
+  "private_store_root": "/srv/bcache-8t/ygguo/backtest/g12h-authority-private/20260820-wave1-response-headers",
+  "schema_version": 1,
+  "source_id": "ndrc-query-securities-futures-regulatory-fee-terminal-page-2",
+  "type": "g12h_sensitive_response_header_receipt_v1"
+}

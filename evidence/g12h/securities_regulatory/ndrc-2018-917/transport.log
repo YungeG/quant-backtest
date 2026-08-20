@@ -1,0 +1,73 @@
+* Host www.ndrc.gov.cn:443 was resolved.
+* IPv6: (none)
+* IPv4: 221.204.95.168, 221.204.95.145, 221.204.95.141, 221.204.95.167, 221.204.95.143, 221.204.95.166, 221.204.95.151
+*   Trying 221.204.95.168:443...
+* ALPN: curl offers h2,http/1.1
+} [5 bytes data]
+* TLSv1.3 (OUT), TLS handshake, Client hello (1):
+} [1570 bytes data]
+*  CAfile: /etc/ssl/certs/ca-certificates.crt
+*  CApath: /etc/ssl/certs
+{ [5 bytes data]
+* TLSv1.3 (IN), TLS handshake, Server hello (2):
+{ [112 bytes data]
+* TLSv1.2 (IN), TLS handshake, Certificate (11):
+{ [5017 bytes data]
+* TLSv1.2 (IN), TLS handshake, Server key exchange (12):
+{ [300 bytes data]
+* TLSv1.2 (IN), TLS handshake, Server finished (14):
+{ [4 bytes data]
+* TLSv1.2 (OUT), TLS handshake, Client key exchange (16):
+} [37 bytes data]
+* TLSv1.2 (OUT), TLS change cipher, Change cipher spec (1):
+} [1 bytes data]
+* TLSv1.2 (OUT), TLS handshake, Finished (20):
+} [16 bytes data]
+* TLSv1.2 (IN), TLS handshake, Finished (20):
+{ [16 bytes data]
+* SSL connection using TLSv1.2 / ECDHE-RSA-AES128-GCM-SHA256 / x25519 / rsaEncryption
+* ALPN: server accepted http/1.1
+* Server certificate:
+*  subject: CN=*.ndrc.gov.cn
+*  start date: Aug 28 08:15:58 2025 GMT
+*  expire date: Aug 28 08:15:57 2026 GMT
+*  subjectAltName: host "www.ndrc.gov.cn" matched cert's "*.ndrc.gov.cn"
+*  issuer: C=CN; O=TrustAsia Technologies, Inc.; CN=TrustAsia DV TLS RSA CA C5
+*  SSL certificate verify ok.
+*   Certificate level 0: Public key type RSA (2048/112 Bits/secBits), signed using sha256WithRSAEncryption
+*   Certificate level 1: Public key type RSA (4096/152 Bits/secBits), signed using sha512WithRSAEncryption
+*   Certificate level 2: Public key type RSA (4096/152 Bits/secBits), signed using sha512WithRSAEncryption
+* Connected to www.ndrc.gov.cn (221.204.95.168) port 443
+* using HTTP/1.x
+} [5 bytes data]
+> GET /xxgk/zcfb/ghxwj/201806/t20180627_960950.html?code= HTTP/1.1
+> Host: www.ndrc.gov.cn
+> User-Agent: Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 Chrome/130.0 Safari/537.36 G12HAuthorityCapture/1.0
+> Accept: */*
+> Accept-Language: zh-CN,zh;q=0.9,en;q=0.5
+> Cache-Control: no-cache
+> Pragma: no-cache
+> 
+* Request completely sent off
+{ [5 bytes data]
+< HTTP/1.1 200 OK
+< Date: Thu, 20 Aug 2026 07:37:15 GMT
+< Content-Type: text/html
+< Content-Length: 8166
+< Connection: keep-alive
+< ETag: W/"8166-1720684196000"
+< Last-Modified: Thu, 11 Jul 2024 07:49:56 GMT
+< Vary: Accept-Encoding
+< X-Cache: BYPASS
+< X-Request-Id: e912cc0de8b4110c6099a373d8949546
+< Server: WAF
+< Accept-Ranges: bytes
+< X-Ser: i27285_c18667, i2759126_c26763
+< X-Cache: HIT from i2759126_c26763(cloudsvr)
+< Cache-Control: no-store, no-cache
+< Access-Control-Allow-Methods: GET,POST
+< Content-Security-Policy: frame-ancestors 'self' https://fxsjcj.kaipuyun.cn
+< Pragma: no-cache
+< 
+{ [8166 bytes data]
+* Connection #0 to host www.ndrc.gov.cn left intact

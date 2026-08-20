@@ -1,0 +1,51 @@
+{
+  "code": 200,
+  "data": {
+    "resultList": [
+      {
+        "combins": 0,
+        "dbName": "fgw",
+        "docDate": "2018-06-27",
+        "domainSite": "ndrc.gov.cn",
+        "domainSiteName": "国家发展和改革委员会",
+        "dreDate": 1530085425000,
+        "dreTitle": "关于证券期货业监管费标准等有关问题的通知(<em>发</em><em>改</em><em>价格</em><em>规</em>〔<em>2018</em>〕<em>917</em><em>号</em>)",
+        "encodeUrl": "DF213102E43E854ACEA293C9A05991DBEDFDD39CDFA1B5A6C2FD40FBC4609CB11207929F0C401244310DA87F2CDEB4D2BC86A895F6D1415440964769D878B5EF0BDF13DAEB43342F",
+        "includeImg": false,
+        "indexDate": "2018-06-27 15:43:45",
+        "myValues": {
+          "C1": "政务公开",
+          "C6": "CN",
+          "DOMAINSITE": "ndrc.gov.cn",
+          "DOMAINSITENAME": "国家发展和改革委员会",
+          "DREDATE": "1530085425",
+          "DREDBNAME": "fgw",
+          "DREREFERENCE": "960950",
+          "DRETITLE": "关于证券期货业监管费标准等有关问题的通知 发改价格规 2018 917号 ",
+          "DRETITLEO": "关于证券期货业监管费标准等有关问题的通知(发改价格规〔2018〕917号)",
+          "FILETYPE": ".html",
+          "INCLUDEIMAGE": "0",
+          "L1": "政务公开",
+          "MD5URL": "6EEF43CCD818FCD19F0BE184D2668E0B",
+          "N9": "1",
+          "QUICKDESCRIPTION": "国家发展改革委 财政部关于证券期货业\n监管费标准等有关问题的通知\n\n发改价格规 2018 917号\n\n证监会 \n  你会 关于申报证券期货业监管费收费标准的函  证监函 2017 316号 收悉 按照 财政部 国家发展改革委关于重新发布中国证券监督管理委员会行政事业性收费项目的通知  财税 2015 20号 有关规定 现就证券期货业监管费收费标准等有关问题通知如下 \n  一 证券期货业监管费标准\n   一 业务监管费标准 对上海 深圳证券交易所收取证券业务监管费 按股票交易额的0 02 收取 对上海期货交易所 郑州商品交易所 大连商品交易所和中国金融期货交易所收取期货业务监管费 按交易额的0 001 收取 \n   二 机构监管费标准 对在中国境内登记注册的证券公司 基金管理公司 期货经纪公司收取的机构监管费 按照 财政部 国家发展改革委关于停征 免征和调整部分行政事业性收费有关政策的通知  财税 2018 37号 有关规定 自2018年1月1日至2020年12月31日暂免征收 \n  二 证券 期货 基金从业人员资格考试费标准 按照 国家发展改革委 财政部关于改革全国性职业资格考试收费标",
+          "SHENG": "全国",
+          "SPIDERTIME": "2020-12-25T04:59:54.898Z",
+          "SUMMARY": "国家发展改革委 财政部关于证券期货业\n监管费标准等有关问题的通知\n\n发改价格规 〔2018〕917号\n\n证监会：\n　　你会《关于申报证券期货业监管费收费标准的函",
+          "URL": "https://www.ndrc.gov.cn/xxgk/zcfb/ghxwj/201806/t20180627_960950.html",
+          "WEBSITE": "www.ndrc.gov.cn",
+          "WEBSITENAME": "www.ndrc.gov.cn",
+          "_ID": "6EEF43CCD818FCD19F0BE184D2668E0B",
+          "_INDEX": "fgw0",
+          "_TYPE": "_doc"
+        },
+        "reference": "6EEF43CCD818FCD19F0BE184D2668E0B",
+        "summary": "国家<em>发</em>展<em>改</em>革委 财政部关于证券期货业\n监管费标准等有关问题的通知 <em>发</em><em>改</em><em>价格</em><em>规</em> 〔<em>2018</em>〕<em>917</em><em>号</em> 证监会：\n　　你会《关于申报证券期货业监管费收费标准的函",
+        "title": "关于证券期货业监管费标准等有关问题的通知(发改价格规〔2018〕917号)",
+        "url": "https://www.ndrc.gov.cn/xxgk/zcfb/ghxwj/201806/t20180627_960950.html"
+      }
+    ],
+    "totalHits": 1
+  },
+  "ok": true
+}

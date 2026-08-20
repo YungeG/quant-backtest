@@ -1,0 +1,16 @@
+HTTP/1.1 200 OK
+Date: Thu, 20 Aug 2026 07:41:53 GMT
+Content-Type: application/json;charset=UTF-8
+Transfer-Encoding: chunked
+Connection: keep-alive
+Expires: Thu, 20 Aug 2026 07:41:53 GMT
+Set-Cookie: http_waf_cookie=<redacted sha256:74c83e5f2ab1ea8f04f4fbdbc7fd953ce582fa83c7606d59b4b36280d5a70444>; Expires=1787218912; Path=/; HttpOnly
+X-Content-Type-Options: nosniff
+X-XSS-Protection: 1; mode=block
+Cache-Control: no-cache, no-store, max-age=0, must-revalidate
+Pragma: no-cache
+X-Frame-Options: DENY
+X-Request-Id: f0f8ab562c4fd4915882fb966386312c
+Server: WAF
+X-Ser: i2282315_c26763
+

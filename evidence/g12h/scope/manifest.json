@@ -1,0 +1,19 @@
+{
+  "files": {
+    "account-scope-declaration.json": {
+      "byte_length": 1213,
+      "sha256": "sha256:bd19cbee1ac244426979a1d3cf0d4e518e7d62988a3a0f2e0ad40b565cf95410"
+    },
+    "bound-execution-scope.json": {
+      "byte_length": 2550,
+      "sha256": "sha256:8daef0cbf85b77bac91fac2f99276ec663eae2368730642f24c7cf023d15afb2"
+    },
+    "instrument-scope-declaration.json": {
+      "byte_length": 2045,
+      "sha256": "sha256:9deb5b0a8c6a725a88a790390830ffd20acaf405d0df7f9f1edc399ec6040425"
+    }
+  },
+  "git_head": "5e32e9c85a99897dd4c1e81821e9921b94132e7d",
+  "schema_version": 1,
+  "type": "g12h_scope_capture_manifest_v1"
+}

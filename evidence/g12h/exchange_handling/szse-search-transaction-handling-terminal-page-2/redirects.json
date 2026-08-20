@@ -1,0 +1,35 @@
+{
+  "responses": [
+    {
+      "headers": [
+        {
+          "name": "Server",
+          "value": "nginx"
+        },
+        {
+          "name": "Date",
+          "value": "Thu, 20 Aug 2026 07:41:21 GMT"
+        },
+        {
+          "name": "Content-Type",
+          "value": "application/json;charset=UTF-8"
+        },
+        {
+          "name": "Transfer-Encoding",
+          "value": "chunked"
+        },
+        {
+          "name": "Connection",
+          "value": "keep-alive"
+        },
+        {
+          "name": "X-UA-Compatible",
+          "value": "IE=EDGE"
+        }
+      ],
+      "status_line": "HTTP/1.1 200 "
+    }
+  ],
+  "schema_version": 1,
+  "type": "g12h_http_response_chain_v1"
+}

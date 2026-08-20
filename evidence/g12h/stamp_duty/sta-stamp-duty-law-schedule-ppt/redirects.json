@@ -1,0 +1,59 @@
+{
+  "responses": [
+    {
+      "headers": [
+        {
+          "name": "Date",
+          "value": "Thu, 20 Aug 2026 08:25:20 GMT"
+        },
+        {
+          "name": "Content-Type",
+          "value": "application/vnd.ms-powerpoint"
+        },
+        {
+          "name": "Content-Length",
+          "value": "305152"
+        },
+        {
+          "name": "Connection",
+          "value": "keep-alive"
+        },
+        {
+          "name": "Last-Modified",
+          "value": "Tue, 02 Jun 2026 04:10:58 GMT"
+        },
+        {
+          "name": "ETag",
+          "value": "\"6a1e57d2-4a800\""
+        },
+        {
+          "name": "X-Frame-Options",
+          "value": "ALLOW-FROM https://www.chinatax.gov.cn/"
+        },
+        {
+          "name": "Access-Control-Allow-Origin",
+          "value": "https://www.chinatax.gov.cn"
+        },
+        {
+          "name": "Accept-Ranges",
+          "value": "bytes"
+        },
+        {
+          "name": "x-via",
+          "value": "1.1 PS-WUH-01nYu93:4 (Cdn Cache Server V2.0), 1.1 PS-000-017pq67:10 (Cdn Cache Server V2.0), 1.1 PS-000-01Mba83:10 (Cdn Cache Server V2.0)"
+        },
+        {
+          "name": "x-ws-request-id",
+          "value": "6a86b9f0_PS-000-01Mba83_19361-60954"
+        },
+        {
+          "name": "age",
+          "value": "1"
+        }
+      ],
+      "status_line": "HTTP/1.1 200 OK"
+    }
+  ],
+  "schema_version": 1,
+  "type": "g12h_http_response_chain_v1"
+}

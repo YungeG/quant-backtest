@@ -1,0 +1,8 @@
+evidence/g12h/**/raw.* -text -whitespace
+evidence/g12h/**/response.headers -text -whitespace
+evidence/g12h/**/transport.log -text -whitespace
+evidence/g12h/**/request.body -text -whitespace
+evidence/g12h/**/rendered-fragment.html -text -whitespace
+evidence/g12h/**/*.pdf -text -whitespace
+evidence/g12h/**/*.ppt -text -whitespace
+evidence/g12h/**/*.png -text -whitespace

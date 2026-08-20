@@ -1,0 +1,12 @@
+{
+  "exact_private_byte_length": 14309,
+  "exact_private_path": "/srv/bcache-8t/ygguo/backtest/g12h-authority-private/20260820-wave1-scanner-sensitive-exact-bytes/securities_regulatory/ndrc-document-library-regulatory-query-live/raw.html",
+  "exact_private_sha256": "sha256:df653fb51762252924ac3788e6282ff2bcd0d45f41ee7ccc3fe65def6531a638",
+  "redaction": "Public client-side NDRC search key replaced by its SHA-256 in Git to satisfy secret scanning; exact official bytes retained externally.",
+  "schema_version": 1,
+  "source_id": "ndrc-document-library-regulatory-query-live",
+  "tracked_path": "securities_regulatory/ndrc-document-library-regulatory-query-live/raw.html",
+  "tracked_redacted_byte_length": 14409,
+  "tracked_redacted_sha256": "sha256:4c3e6988c56744c8360e4490914b63c90d0ad73a8136c18d05b1764db5210cff",
+  "type": "g12h_scanner_sensitive_exact_byte_receipt_v1"
+}

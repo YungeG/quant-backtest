@@ -1,0 +1,1443 @@
+                                                                                       21/1
+                                        Section 21
+                                  Costs and Expenses
+
+21.1   CLEARING AND SETTLEMENT OF EXCHANGE TRADES
+
+       ⎯   Stock clearing fee                     NIL
+
+       ⎯   Stock settlement fee payable by each   0.0042% per side of gross value of
+           Clearing Participant and each          an Exchange Trade, except for such
+           Clearing Agency Participant for        Exchange Trade in Designated
+           each Exchange Trade cleared and        Exchange Traded Funds conducted
+           settled through CCASS.                 by a Securities Market Maker
+                                                  which meets such eligibility
+           Notes:                                 requirements as from time to time
+           Gross value refers to transacted       prescribed    by   HKSCC       and
+           market value of eligible non-Debt      published on the HKEX website, in
+           Securities or nominal value of         which case a rate of 0.002% shall
+           eligible Debt Securities.              apply.
+           Exercised stock options positions
+           processed in CCASS between the
+           two     settlement     counterparty
+           Participants are subject to the same
+           stock settlement fee and payable
+           by both Participants.
+
+           Fee debited on T+1.
+
+       ⎯   Stock settlement fee payable by        0.0021% per side of gross value of
+           the Clearing Participant for each      a crossed Exchange Trade, except
+           crossed Exchange Trade cleared         for such crossed Exchange Trade in
+           and settled through CCASS, i.e.        Designated Exchange Traded Funds
+           where the buy and sell of an           conducted by a Securities Market
+           Exchange Trade is handled by the       Maker which meets such eligibility
+           same Exchange Participant.             requirements as from time to time
+                                                  prescribed    by    HKSCC     and
+           Notes:                                 published on the HKEX website, in
+           Gross value refers to transacted       which case a rate of 0.001% shall
+           market value of eligible non-Debt      apply.
+           Securities or nominal value of
+           eligible Debt Securities.
+
+           Not applicable to an Exchange Trade
+           effected by a Special Participant on
+           the Exchange.
+
+
+           Fee debited on T+1.
+
+       ⎯   Money settlement fee under CNS         HK$0.50 for HKD items, RMB
+           System.                                items and USD items for each DDI
+                                                  or DCI issued by HKSCC in respect
+           Note:                                  of money positions of a Clearing
+           Fee debited on the day of money        Participant and a Clearing Agency
+
+
+HKSCC OPERATIONAL PROCEDURES
+                                                                                         21/2
+            settlement.                            Participant to be settled under the
+                                                   CNS System on each day.
+
+        ⎯   Money settlement fee for Isolated      HK$0.50 for HKD items, RMB
+            Trades payable by each Clearing        items and USD items for each EPI
+            Participant and each Clearing          issued by HKSCC for Isolated
+            Agency Participant for each            Trades settled in CCASS on a DVP
+            Isolated Trade cleared and settled     basis.
+            through CCASS.
+
+            Note:
+            Fee debited on the day of money
+            settlement.
+
+        ⎯   Cash Prepayment service fee for        HK$100 per remittance by a
+            releasing Securities-on-hold at the    Clearing Participant and a Clearing
+            request of a Clearing Participant      Agency Participant.
+            and a Clearing Agency Participant.
+
+            Notes:
+            Fee debited on the day of
+            remittance. For cash prepayment
+            instructions input with “CHATS”
+            set as the payment method, no
+            such fee will be payable by the
+            Clearing Participant and the
+            Clearing Agency Participant.
+
+            Use of this service is at the option
+            of a Clearing Participant and a
+            Clearing Agency Participant.
+
+            Refund     on    the    following
+            settlement day of remittance
+            received after the time limit
+            prescribed by HKSCC is also
+            subject to the said cash
+            prepayment service fee.
+
+21.1A   CLEARING AND SETTLEMENT OF CHINA CONNECT SECURITIES TRADES
+
+        ⎯   Stock clearing fee                     NIL
+
+        ⎯   Stock settlement fee payable by        NIL
+            each China Connect Clearing
+            Participant for each China
+            Connect Securities Trade cleared
+            and settled through CCASS.
+
+            Note:
+            Fee debited on T.
+
+
+        ⎯   Stock settlement fee payable by a      NIL
+            China       Connect      Clearing
+
+HKSCC OPERATIONAL PROCEDURES
+                                                                                        21/3
+           Participant for each crossed China
+           Connect Securities Trade cleared
+           and settled through CCASS, i.e.
+           where the buy and sell of a China
+           Connect Securities Trade is
+           handled by the same China
+           Connect Exchange Participant.
+
+           Note:
+           Fee debited on T.
+
+       ⎯   Money settlement fee under CNS         HK$0.50 for HKD items, RMB items
+           System.                                and USD items for each CPI issued by
+                                                  HKSCC in respect of money positions
+           Note:                                  of a China Connect Clearing Participant
+           Fee debited on the day of money        to be settled under the CNS System on
+           settlement.                            each day.
+
+       ⎯   Cash Prepayment service fee for        HK$100 per remittance by a China
+           releasing Securities-on-hold at the    Connect Clearing Participant.
+           request of a China Connect
+           Clearing Participant.
+
+           Notes:
+           Fee debited on the day of
+           remittance. No such fee will be
+           payable by the China Connect
+           Clearing Participant for Cash
+           Prepayment Instructions with
+           “CHATS” set as the payment
+           method.
+
+           Use of this service is at the option
+           of a China Connect Clearing
+           Participant.
+
+           Refund     on    the    following
+           settlement day of remittance
+           received after the time limit
+           prescribed by HKSCC is also
+           subject to the said cash
+           prepayment service fee.
+
+       ⎯   Transfer fee payable by each           0.002% of gross value of such China
+           China      Connect      Clearing       Connect Securities Trade.
+           Participant for each China
+           Connect Securities Trade cleared
+           and settled through HKSCC
+           pursuant to Chapter 41 of these
+           Rules.
+
+           Notes:
+           Fee debited and collected through
+           DDI in RMB on T.
+
+
+HKSCC OPERATIONAL PROCEDURES
+                                                                                         21/4
+           This fee is in addition to any
+           transfer fee payable by a China
+           Connect Clearing Participant
+           under Rule 14A11 and Rule
+           14B11 of the Rules of the
+           Exchange.
+
+       ⎯   Handling fee for the acceptance of     Accrued daily at 1% per annum on the
+           Collateral in relation to the early    amount of the Collateral accepted by
+           release of Securities-on-hold at       HKSCC in relation to an application for
+           the request of a China Connect         the early release of Securities-on-hold
+           Clearing Participant.                  (Collateral in Eligible Currencies other
+                                                  than HKD will be converted to HKD
+           Notes:                                 equivalent at such exchange rate as
+           The fee will be debited in HKD         determined by HKSCC from time to
+           on the day of application and          time for computation), from the day of
+           (where applicable) on the day of       application until the day on which the
+           completion of settlement.              outstanding payment obligations to
+                                                  HKSCC as secured by such Collateral
+                                                  are fully discharged.
+
+
+21.2   CLEARING AND SETTLEMENT OF SI TRANSACTIONS
+
+       ⎯   Stock clearing fee for each SI         HK$1.00 each.
+           input by a Participant.
+
+           Note:
+           Fee debited on input date.
+
+       ⎯   Stock clearing fee for each SI         HK$1.00 each.
+           amendment or revocation input by
+           a Participant.
+
+           Note:
+           Fee debited on input date.
+
+       ⎯   Stock settlement fee for broker-       0.0020% of the gross value for each
+           custodian SI Transactions with         such SI Transaction, subject to a
+           trade value data input, payable by     minimum fee of HK$2 and maximum
+           each counterparty Participant to       fee of HK$100 for each such SI
+           such SI Transaction.                   Transaction.
+
+           Notes:
+           Gross value refers to input trade
+           value of eligible non-Debt
+           Securities or nominal value of
+           eligible Debt Securities.
+
+           Fee debited on completion of
+           settlement.
+
+           For eligible non-Debt Securities, if
+           the gross trade value input is
+           significantly lower than the value
+
+HKSCC OPERATIONAL PROCEDURES
+                                                                                         21/5
+           of the subject Eligible Securities
+           determined by HKSCC, HKSCC
+           may use the higher value for the
+           purposes of determining the stock
+           settlement fee payable.
+
+       ⎯   Stock settlement fee for broker-       0.0020% of the gross value subject to a
+           custodian SI Transactions without      minimum fee of HK$2 and maximum
+           trade value data input and all other   fee of HK$100 for each such SI
+           types of SI Transactions, payable      Transaction.
+           by each counterparty Participant to
+           such SI Transaction.
+
+           Notes:
+           Gross value for eligible non-Debt
+           Securities    refers   to     value
+           calculated at nominal prices of the
+           previous trading day, and for
+           eligible Debt Securities, refers to
+           their nominal value.
+
+           Fee debited on completion of
+           Settlement.
+
+           Notes:
+           A 50% discount in stock clearing
+           fee and stock settlement fee may
+           be granted to Participants, on
+           written application by Participants,
+           for the portfolio transfer of SI
+           Transactions due to change of
+           business structure or clearing
+           arrangement of Participants subject
+           to payment of a maximum fee of
+           HK$2,500 by each counterparty
+           Participant where the beneficial
+           ownership remains unchanged or
+           of a maximum fee of HK$5,000 by
+           each counterparty Participant
+           where there is a change in the
+           beneficial ownership.
+
+           A discount in stock clearing fee
+           and stock settlement fee may be
+           granted to Participants, on written
+           application by Participants, for SI
+           Transactions involving China
+           Connect Securities due to such
+           reasons as may be specified by
+           HKSCC from time to time.
+
+       ⎯   Money settlement fee for SI            HK$0.50 for HKD items, RMB items
+           Transactions payable by each           and USD items for each EPI issued by
+           counterparty Participant to SI         HKSCC for SI Transactions settled in
+           Transactions.                          CCASS on a DVP basis.
+
+HKSCC OPERATIONAL PROCEDURES
+                                                                                        21/6
+
+           Note:
+           Fee debited on the day of money
+           settlement.
+
+       ⎯   Money settlement fee for SI            HK$0.50 for HKD items, RMB items
+           Transactions settled in CCASS on       and USD items per side per SI
+           a RDP basis payable by each            Transaction elected by the Participants
+           counterparty Participant to SI         to be settled in CCASS on a RDP basis.
+           Transactions.
+
+           Note:
+           Fee debited on the day of money
+           settlement.
+
+
+21.3   CLEARING AND SETTLEMENT OF ISI TRANSACTIONS
+
+       ⎯   Stock clearing fee for each ISI        HK$1.00 each.
+           input by a Participant other than an
+           Investor Participant.
+
+           Note:
+           Fee debited on input date and
+           payable     by    the     inputting
+           Participant only. No such fee will
+           be payable by Investor Participant.
+
+       ⎯   Stock clearing fee for each ISI        HK$1.00 each.
+           amendment input by a Participant
+           other than an Investor Participant.
+
+           Note:
+           Fee debited on input date and
+           payable      by   the    inputting
+           Participant only. No such fee will
+           be payable by an Investor
+           Participant.
+
+       ⎯   Stock clearing fee for affirmation     NIL
+           of ISI by an Investor Participant.
+
+       ⎯   Stock settlement fee for ISI           NIL
+           Transactions with trade value data
+           input.
+
+           Note:
+           The fee is only payable by Investor
+           Participant to such ISI Transaction.
+           No such fee will be payable by the
+           other counterparty Participant to
+           such ISI Transaction.
+
+       ⎯   Stock settlement fee for ISI           NIL
+           Transactions without trade value
+
+HKSCC OPERATIONAL PROCEDURES
+                                                                                          21/7
+            data input.
+
+            Note:
+            The fee is only payable by Investor
+            Participant to such ISI Transaction.
+            No such fee will be payable by the
+            other counterparty Participant to
+            such ISI Transaction.
+
+        ⎯   Money settlement fee for ISI           HK$0.50 for HKD items, RMB
+            Transactions payable by each           items and USD items for each EPI
+            counterparty Participant to ISI        issued by HKSCC for ISI
+            Transactions.                          Transactions settled in CCASS on a
+                                                   DVP basis.
+            Note:
+            Fee debited on the day of money
+            settlement.
+
+        ⎯   Money settlement fee for ISI           HK$0.50 for HKD items, RMB
+            Transactions settled in CCASS on       items and USD items per side per
+            RDP basis payable by each              ISI Transaction elected by the
+            counterparty to ISI Transactions.      Participants to be settled in CCASS
+                                                   on a RDP basis.
+            Note:
+            Fee debited on the day of money
+            settlement.
+
+21.3A   CLEARING AND SETTLEMENT OF TRANSFER INSTRUCTIONS
+
+        ⎯   Stock clearing fee for each TI         HK$1.00.
+            submitted by a Participant.
+
+            Note:
+            Fee debited on date of submission.
+
+        ⎯   Stock transfer fee for each TI         0.002% of the gross value subject to
+            relating to a transfer between a       a minimum fee of HK$2 and
+            Participant and a Recognized           maximum fee of HK$100.
+            Dealer or between a Participant
+            and a CMU Member.
+
+            Notes:
+            Gross value for Exchange Fund
+            Notes,    Government         Bonds,
+            Specified Instruments and CMU
+            Instruments refers to their nominal
+            value.
+
+            Fee debited on completion of the
+            TI.
+
+            Out-of-pocket expenses incurred
+            by HKSCC, if any, will be borne
+            by the Participant.
+
+
+HKSCC OPERATIONAL PROCEDURES
+                                                                                           21/8
+
+21.3B   CROSS-BORDER TRANSFER (RECEIPTS/DELIVERIES) INSTRUCTIONS
+
+        ⎯    Cross-border transfer fee for         HK$200 per receipt / delivery
+             Cross-Border Transfer Instructions    instruction.
+             on receipts/deliveries of Foreign
+             Securities   and     Uncertificated
+             Eligible Securities, as referred to
+             in Rule 907.
+
+             Notes:
+             Fee debited on date of submission
+             of instruction.
+
+             Out-of-pocket expenses incurred
+             by HKSCC, if any, will be borne
+             by the Participant.
+
+
+21.4    Repealed
+
+
+21.5    DEPOSITORY AND NOMINEE SERVICES
+
+         ⎯ Stock deposit fee for the deposit       NIL
+           of     certificates  representing
+           Eligible Securities other than
+           China Connect Securities into
+           CCASS.
+
+             Note:
+             Stock deposit fee for initial/bulk
+             deposit of eligible bearer Debt
+             Securities will be nil.
+
+         ⎯ Stock     withdrawal     fee     for    HK$3.50 per Board Lot. Odd lot
+           registered Eligible Securities other    also charged at HK$3.50 each.
+           than China Connect Securities.          Transfer deed stamp duty of HK$5
+                                                   for each certificate, if any, will be
+             Notes:                                borne by the Participant.
+             Fee debited on the        day   of
+             withdrawal.
+
+             Fee inclusive of registration and
+             transfer fee charged by HKSCC.
+
+             HKSCC may, on the written
+             application of Participants, waive
+             the registration and transfer fee
+             included in the stock withdrawal
+             fee levied on Participants (which
+             cease to participate in CCASS)
+             due to business restructuring,
+
+
+HKSCC OPERATIONAL PROCEDURES
+                                                                                         21/9
+           cessation     of     business      or
+           liquidation or death of Participants
+           (if an individual) to the extent that
+           HKSCC has made such charge at
+           the previous collection date of the
+           relevant Eligible Securities other
+           than China Connect Securities.
+
+           No waiver of the registration and
+           transfer fee included in the stock
+           withdrawal fee shall be allowed
+           by HKSCC on any application by
+           a Participant if the Participant has
+           also applied for and HKSCC has
+           granted the registration and
+           transfer fee concession hereinafter
+           mentioned as a result of such an
+           application.
+
+           Fee not applicable to Eligible
+           Securities which are Foreign
+           Securities or China Connect
+           Securities.
+
+       ⎯ Stock withdrawal fee for eligible         HK$100 per certificate.
+         bearer Debt Securities.
+
+           Notes:
+           Fee debited on the          day   of
+           withdrawal.
+
+           Fee not applicable to Debt
+           Securities which are Foreign
+           Securities or China Connect
+           Securities.
+
+       ⎯ Stock withdrawal fee for other            HK$1 per Board Lot for registered
+         non-Eligible   Securities     or          securities or HK$1 per certificate
+         securities which have been                for bearer securities. Odd lot also
+         discontinued    as      Eligible          charged at HK$1 each.
+         Securities.
+
+           Notes:
+           This may include uncertificated or
+           delisted bearer securities.
+
+           Discontinued Eligible Securities
+           by reason of delisting or expiry
+           are also covered (eg. Expired
+           warrants).
+
+           Fee not applicable to Foreign
+           Securities or China Connect
+           Securities.
+
+
+HKSCC OPERATIONAL PROCEDURES
+                                                                                        21/10
+       ⎯ Stock withdrawal fee for Foreign         HK$600 per instruction.
+         Securities.
+
+           Notes:
+           Fee debited on completion of
+           withdrawal.
+
+           Fee also applicable to the
+           withdrawal        of      securities
+           entitlements     accruing       from
+           Foreign Securities which do not
+           constitute Eligible Securities.
+
+           Out-of-pocket expenses incurred
+           by HKSCC, if any, will be borne
+           by the Participant.
+
+       ⎯ Stock     withdrawal     fee  for        HK$1 per Board Lot for registered
+         securities entitlements which are        securities or HK$1 per certificate
+         non-Eligible Securities.                 for bearer securities. Odd lot also
+                                                  charged at HK$1 each.
+           Note:
+           Fee not applicable to Foreign
+           Securities or China Connect
+           Securities.
+
+       ⎯ Stock custody fee for the custody        HK$0.012 per Board Lot subject to
+         of      securities   representing        a maximum of HK$100,000 per
+         registered securities held in            month per Participant. Odd lots
+         CCASS.                                   also charged at HK$0.012 each.
+
+           Notes:
+           Fee calculated on aggregate
+           month-end       stock quantity
+           balances in Stock Accounts of
+           each Participant.
+
+           For securities that have undergone
+           automatic conversion (for share
+           sub-divisions or consolidations
+           and stock conversions) in CCASS
+           on the last Business Day of a
+           month, the stock quantity balance
+           and board lot before such
+           automatic conversion will be used
+           for calculation of the stock
+           custody fee for that month.
+
+           Fee debited at end of each
+           calendar month.
+
+           Fee not applicable to Foreign
+           Securities or China Connect
+           Securities.
+
+
+HKSCC OPERATIONAL PROCEDURES
+                                                                                      21/11
+           Fee not applicable to a China
+           Connect Clearing House.
+
+       ⎯ Stock custody fee for the custody      0.012% per annum on nominal
+         of    securities   in     CCASS        values calculated on a daily basis,
+         representing a) bearer Debt            subject to a maximum of
+         Securities, b) Exchange Fund           HK$300,000 per month per
+         Notes, c) Government Bonds, d)         Participant.
+         Specified Instruments and e)
+         CMU Instruments.
+
+           Notes:
+           Fee calculated on aggregate daily
+           balance of nominal values of
+           bearer Debt Securities, Exchange
+           Fund Notes, Government Bonds,
+           Specified Instruments and CMU
+           Instruments in Stock Accounts of
+           each Participant.
+
+           Fee debited at end of each
+           calendar month.
+
+           Fee not applicable to Foreign
+           Securities or China Connect
+           Securities.
+
+           Fee not applicable to a China
+           Connect Clearing House.
+
+       ⎯ Stock maintenance fee for Foreign      HK$0.25 per 100 shares. Odd lots
+         Securities.                            also charged at HK$0.25.
+
+           Notes:
+           Fee calculated on daily average
+           stock quantity balance of Foreign
+           Securities in Stock Accounts of
+           each Participant on a monthly
+           basis.
+
+           For Foreign Securities that have
+           undergone automatic conversion
+           (for share sub-divisions or
+           consolidations      and      stock
+           conversions) in CCASS on any
+           Business Day of a month, the
+           stock quantity balance before such
+           automatic conversion will be used
+           for calculation of the daily
+           average stock quantity balance for
+           that month.
+
+           Fee debited at end of each
+           calendar month.
+
+
+HKSCC OPERATIONAL PROCEDURES
+                                                                                      21/12
+
+
+           Fee not applicable to a China
+           Connect Clearing House.
+
+       ⎯ Portfolio fee for Participants’       Accrued daily at fixed cumulative
+         China Connect Securities held or      percentage per annum on the total
+         recorded in CCASS.                    daily stock portfolio value of China
+                                               Connect Securities per Participant.
+           Notes:
+           Fee calculated on aggregate daily   •   The first HK$50 billion is
+           stock portfolio value in Stock          charged at 0.008%.
+           Accounts of each Participant and    •   The next HK$200 billion is
+           collected on a monthly basis.           charged at 0.007%, the rate
+                                                   applicable to portfolio values
+           Fee debited at end of each              above HK$50 billion and up to
+           calendar month.                         HK$250 billion.
+                                               •   The next HK$250 billion is
+                                                   charged at 0.006%, the rate
+                                                   applicable to portfolio values
+                                                   above HK$250 billion and up
+                                                   to HK$500 billion.
+                                               •   The next HK$250 billion is
+                                                   charged at 0.005%, the rate
+                                                   applicable to portfolio values
+                                                   above HK$500 billion and up
+                                                   to HK$750 billion.
+                                               •   The next HK$250 billion is
+                                                   charged at 0.004%, the rate
+                                                   applicable to portfolio values
+                                                   above HK$750 billion and up
+                                                   to HK$1,000 billion.
+                                               •   Remainder is charged at
+                                                   0.003%, the rate applicable to
+                                                   portfolio     values    above
+                                                   HK$1,000 billion.
+
+       ⎯ Portfolio fee for the safe-keeping    Accrued daily at fixed cumulative
+         of Eligible Securities in CCASS       percentage per annum on the total
+         of a China Connect Clearing           daily stock portfolio value of
+         House in respect of each Special      Eligible Securities of the China
+         Participant.                          Connect Clearing House in respect
+                                               of each Special Participant.
+           Notes:
+           Fee calculated on aggregate daily   •   The first HK$50 billion is
+           stock portfolio value in Stock          charged at 0.008%.
+           Accounts in respect of each         •   The next HK$200 billion is
+           Special Participant and collected       charged at 0.007%, the rate
+           on a monthly basis.                     applicable to portfolio values
+                                                   above HK$50 billion and up to
+           Fee debited at end of each              HK$250 billion.
+           calendar month.                     •   The next HK$250 billion is
+                                                   charged at 0.006%, the rate
+                                                   applicable to portfolio values
+                                                   above HK$250 billion and up
+
+HKSCC OPERATIONAL PROCEDURES
+                                                                                        21/13
+                                                    to HK$500 billion.
+                                                •   The next HK$250 billion is
+                                                    charged at 0.005%, the rate
+                                                    applicable to portfolio values
+                                                    above HK$500 billion and up
+                                                    to HK$750 billion.
+                                                •   The next HK$250 billion is
+                                                    charged at 0.004%, the rate
+                                                    applicable to portfolio values
+                                                    above HK$750 billion and up
+                                                    to HK$1,000 billion.
+                                                •   Remainder is charged at
+                                                    0.003%, the rate applicable to
+                                                    portfolio    values     above
+                                                    HK$1,000 billion.
+
+       ⎯ Dividend and other distribution        0.12% of the aggregate of cash
+         and bonus and Debt Securities          amount of dividend, distribution,
+         interest collection service fee.       bonus and interest per stock/Debt
+                                                Securities paid to Participant in one
+           Notes:                               currency on the same day, subject
+           Fee is charged for cash dividend     to a maximum fee of HK$10,000
+           or cash distribution or cash bonus   (or its equivalent in foreign
+           or cash interest only.               currencies).
+
+           No fee is charged for scrip
+           dividend or bonus shares.
+
+           Fee together with other applicable
+           bank charges will be deducted at
+           source at the time of distribution
+           to Participants.
+
+           Fee also applicable to Units and
+           Foreign Securities.
+
+           Fee not applicable to China
+           Connect Securities.
+
+           Fee not applicable to China
+           Connect Clearing House.
+
+       ⎯ Handling fee for conversion,           HK$30 per
+         redemption and corporate actions       instruction/announcement.
+         of registered and bearer Debt
+         Securities including Exchange
+         Fund Notes, Government Bonds,
+         Specified Instruments and CMU
+         Instruments.
+
+           Notes:
+           Fee is debited on input date.
+
+           Where     there   is   automatic
+           conversion or redemption of non-
+
+HKSCC OPERATIONAL PROCEDURES
+                                                                                        21/14
+           eligible registered or bearer Debt
+           Securities including Exchange
+           Fund Notes, Specified Instruments
+           and CMU Instruments, the
+           handling fee shall be payable.
+
+           Fee also applicable to Foreign
+           Securities.
+
+       ⎯ Corporate actions service fee for       HK$0.80 per Board Lot subject to a
+         registered non-Debt Securities.         maximum of HK$10,000 per
+                                                 instruction or (if no instruction is
+           Notes:                                required for a corporate action) per
+           Fee applicable to all corporate       corporate action per account. Odd
+           actions other than collection of      lots also charged at HK$0.80 each.
+           cash dividends, cash distribution     Where the amount calculated as
+           and bonuses, bonus shares, stock      aforesaid         exceeds        the
+           dividends, corporate voting, stock    corresponding amount of cash
+           splitting, or stock consolidation.    payment entitlement collected in
+                                                 respect of the corporate action and
+           Fee calculated on stock quantity      such cash payment is the only form
+           balances on which the corporate       of entitlement collected in respect
+           actions are to be taken.              of that corporate action (for the
+                                                 avoidance of doubt, this does not
+           Fee debited on input dates or         apply where there is no cash
+           event dates of corporate actions.     payment entitlement in respect of a
+                                                 corporate action), the amount of the
+           Fee also applicable to automatic      cash payment.
+           exercise of Structured Products at
+           expiry.
+
+           Fee also applicable to applications
+           for issue and redemption of Units.
+
+           Fee also applicable to Foreign
+           Securities.
+
+           Fee not applicable to China
+           Connect Securities.
+
+           Fee not applicable to China
+           Connect Clearing House.
+
+       ⎯ Handling     fee    for    warrant      HK$600 per instruction.
+         conversion, voluntary takeover,
+         tender offer, or open offer in
+         respect of Foreign Securities.
+
+           Notes:
+           Fee debited on date of submission
+           of instruction.
+
+           Out-of-pocket expenses incurred
+           by HKSCC, if any, will be borne
+           by the Participant.
+
+HKSCC OPERATIONAL PROCEDURES
+                                                                                         21/15
+
+       ⎯ Handling charge for unclaimed             HK$200 per claim application in
+         entitlements.                             respect of unclaimed entitlements
+                                                   of a stock or (if the gross cash
+           Notes:                                  amount      of    the    unclaimed
+           Fee applicable to claims made by        entitlements is less than HK$200)
+           the Participants against HKSCC.         the gross cash amount.
+
+           Fee is additional to other fees for
+           relevant nominee services.
+
+           Fee is payable on successful claim
+           application.
+
+       ⎯ Registration and transfer fee.            HK$1.50 per Board Lot on net
+                                                   increase in aggregate holdings in
+           Notes:                                  Board Lots of registered securities
+           HKSCC may incur payments for            in balances in the Stock Accounts
+           re-registration     of    registered    of a Participant since the date on
+           Eligible Securities as well as non-     which fee was last collected by
+           Eligible Securities and in relation     HKSCC. Odd lots also charged at
+           to adjustments for entitlements in      HK$1.50 each.
+           respect of late deliveries under the
+           CNS System.                             NIL for Exchange Fund Notes,
+                                                   Government Bonds, Specified
+           In relation to portfolio transfer of    Instruments, CMU Instruments and
+           registered securities from Clearing     Foreign Securities.
+           and/or Custodian Participants’
+           Stock Accounts to the Investor
+           Participant’s Stock Account in
+           CCASS by ISI Transactions
+           without trade data value input
+           within the first ten Settlement
+           Days from the date of opening of
+           the investor account and for which
+           HKSCC has granted registration
+           and transfer fee concession to the
+           Investor Participant; the number
+           of Board Lots representing such
+           transfer will be deducted from the
+           aggregate holdings in Board Lots
+           in the Stock Accounts balances of
+           the Clearing and/or Custodian
+           Participant for the purpose of
+           calculating the registration and
+           transfer fee payable by such
+           Clearing      and/or      Custodian
+           Participant.
+
+           Fee is debited on one of the
+           following collection dates:-
+
+           (i)   The last registration date of a
+                 corporate event of which a
+                 book-close date / record date
+
+HKSCC OPERATIONAL PROCEDURES
+                                                   21/16
+                is announced by the issuer of
+                registered securities for
+                determining the registered
+                holders and their registered
+                holdings that qualify for
+                receipt of cash and non-cash
+                entitlements, (other than for
+                receipt of out-of-money
+                rights issue entitlements
+                determined by reference to
+                the closing nominal prices of
+                the underlying securities on
+                the first ex-date, i.e., two
+                trading days prior to the
+                relevant book-close date /
+                record date, for attendance at
+                meetings and votings solely
+                without receipt of any
+                entitlement and for stock
+                conversion      into     other
+                Eligible Securities only);
+
+           (ii) Event date of corporate
+                actions other than share
+                splitting,              share
+                consolidation,          stock
+                conversion      into    other
+                Eligible     Securities    or
+                corporate actions involving
+                no cash distribution to the
+                registered holders).
+
+           Fee is subject to revision if
+           registration and transfer fee is
+           changed by share registrars.
+
+           Fee not applicable to China
+           Connect Securities.
+
+           Fee not applicable to China
+           Connect Clearing House.
+
+           HKSCC         may,     on     written
+           applications of Participants, grant
+           concessions to the Participants
+           with respect to all or part of the
+           registration and transfer fee and
+           HKSCC may charge a handling
+           charge      of    HK$1,000        per
+           application.      HKSCC         shall
+           stipulate the circumstances, and
+           the criteria to be satisfied, for the
+           grant from time to time.
+
+           Concession may be granted on a
+
+HKSCC OPERATIONAL PROCEDURES
+                                                                                         21/17
+           written application by the
+           Participants if their CCASS
+           participantship is altered due to
+           their business restructuring.
+
+           A concessionary registration and
+           transfer fee of HK$2.50 per
+           certificate will be charged in
+           respect of large denomination
+           registered share/Debt Securities
+           certificates deposited in CCASS
+           instead of the normal registration
+           and transfer fee.      Each such
+           registered share/Debt Securities
+           certificate must represent at least
+           1,000 Board Lots. Such fee will
+           be debited at the time of deposit.
+           The number of Board Lots
+           represented by such large
+           denomination             registered
+           share/Debt Securities certificates
+           will not be included in the
+           calculation    of    the    normal
+           registration and transfer fee
+           debited on the relevant collection
+           date.
+
+       ⎯ Bank charges on foreign currency        Actual amounts          incurred   by
+         benefits      and    entitlements       HKSCC.
+         distribution.
+
+           Note:
+           Recovery of bank charges from
+           Participants will be deducted at
+           source at the time of distribution
+           of entitlements to Participants.
+
+       ⎯ Handling fee for Electronic             HK$5 per instruction.
+         Application Instructions for New
+         Issue Shares.
+
+           Note:
+           Fee is debited on application end
+           date.
+
+       ⎯ Handling      fee      for    Tender    HK$5 per instruction.
+         Instructions.
+
+           Note:
+           Fee is debited on input date.
+
+       ⎯ Disbursements and out-of-pocket         Actual amounts          incurred   by
+         expenses in connection with             HKSCC.
+         nominee services.
+
+
+HKSCC OPERATIONAL PROCEDURES
+                                                                                     21/18
+            Note:
+            Recoveries of disbursements and
+            out-of-pocket    expenses     are
+            additional to other fees for
+            relevant nominee services and will
+            be debited or deducted as and
+            when incurred by HKSCC.
+
+       ⎯ Subscription fee for CA ISO              HK$20,000      per   month   per
+         Message Service.                         Participant.
+
+            Note:
+            Fee calculated at the end of each
+            calendar month and debited on
+            next Business Day.
+
+            Fee for the first and final months
+            of CA ISO Message Service will
+            be pro-rated if applicable.
+
+       ⎯ Handling fee for submitting a            HK$3,000 per requisition
+         requisition to an Issuer.
+
+            Note:
+            Fee is debited upon delivery of the
+            requisition to the Issuer and it is
+            not refundable.
+
+
+
+21.6   [Repealed]
+
+
+21.7   OTHER MONEY SETTLEMENT FEES
+
+       ⎯    Money settlement fees for other       HK$0.50 for HKD items, RMB
+            miscellaneous amounts to be paid      items and USD items for each
+            to or collected from Participants     DDI/DCI/EPI issued or each CPI
+                                                  settled by HKSCC.
+            (eg. Marks, Margin, Basic
+            Contributions,            Dynamic
+            Contributions, application and
+            refund monies under Tender
+            Instructions, and any redelivery of
+            Collateral in relation to the early
+            release    of    China     Connect
+            Securities that are Securities-on-
+            hold).
+
+            Notes:
+            Fee debited on the day of money
+            settlement.
+
+HKSCC OPERATIONAL PROCEDURES
+                                                                                             21/19
+
+
+            Fee not applicable to EPIs issued
+            by HKSCC on a weekly basis for
+            effecting fee payment as referred
+            to in Section 21.14.
+
+       ⎯    Money settlement fee for Intra-day           HK$12.80 for each Intra-day
+            Payment Instruction.                         Payment Instruction issued by
+                                                         HKSCC.
+            Note:
+            Fee debited on the day of money
+            settlement.
+
+
+21.8   REPORT REPRINTING SERVICE
+
+       ⎯    Report reprinting service fee.               HK$10 per page for lost copies of
+                                                         reports at Participants’ request
+            Note:                                        (printed by HKSCC).
+            Fee debited on date of service.
+
+21.9   (i) Repealed
+
+       (ii) Repealed
+
+       (iii) FEES FOR CCASS TERMINALS
+
+       ⎯    Establishment of each Authorised                HK$250
+            User or Delegated Administrator.
+
+            Note:
+            Fee debited upon establishment of a
+            new Authorised User or Delegated
+            Administrator.
+
+
+       (iv) FEES FOR PARTICIPANT GATEWAYS
+
+       ⎯    Supply or     replacement        of   each      HK$250.
+            smartcard.
+
+            Note:
+            Fee debited      upon     delivery      of
+            smartcard.
+
+       ⎯    Supply or replacement            of   each      HK$300.
+            smartcard reader.
+
+            Note:
+            Fee debited upon          delivery      of
+            smartcard reader.
+
+
+
+
+HKSCC OPERATIONAL PROCEDURES
+                                                                                           21/20
+        ⎯   Testing fees of Participant Gateway.       HK$1,500 per day or part thereof for
+                                                       testing on Mondays to Fridays within
+            Notes:                                     HKSCC's normal working hours.
+            Fee payable by those Participants
+            which request for additional testing in    HK$2,500 per half day or part thereof
+            addition to the free sessions offered by   for testing on Saturdays from 9:30 a.m.
+            HKSCC.                                     to 12:30 p.m.
+
+            Fee debited upon completion of             HK$5,000 per day or part thereof for
+            testing.                                   testing on Saturdays from 9:30 a.m. to
+                                                       4:00 p.m. provided that if testing does
+                                                       not extend beyond 12:30 p.m., the fee
+                                                       payable shall be HK$2,500.
+
+        ⎯   Usage fee      for   each   Participant    HK$53,000 per annum.
+            Gateway.
+
+
+21.10   APPLICABLE INTEREST RATES
+
+        ⎯   Rate of interest chargeable on overdue     HKD or where applicable, RMB or USD
+            money balances in HKD or RMB or            best lending rate of HKSCC’s banker
+            USD owed to HKSCC.                         plus 2% per annum or the relevant
+                                                       Interbank Offered Rate for HKD, RMB
+            Notes:                                     or USD plus 2% per annum, whichever
+            Interest will be debited to the Money      is higher and is incurred by HKSCC.
+            Ledger of Participants and collected
+            on a daily basis (except the Billing
+            Account, to which interest will be
+            debited and collected on a weekly
+            basis).
+
+
+        ⎯   Rate of interest allowed or charged on     In relation to a currency, where the
+            Marks, Margin or Collateral of each        reference rate for such currency is
+            Participant                                positive and greater than the prevailing
+                                                       handling fee, the applicable interest rate
+            Notes:                                     will be the reference rate, less the
+            In respect of each Participant, interest   prevailing handling fee.
+            that may be allowed or charged will
+            be calculated daily by HKSCC by            Where the reference rate for the relevant
+            multiplying the interest rate with the     currency is positive and less than or
+            HKD, USD and RMB cash balance of           equal to the prevailing handling fee, no
+            the CCMS House Collateral Account          interest payment will be made.
+            of such Participant on such day, and
+            paid or charged monthly to such            Where the reference rate for the relevant
+            Participant by crediting or debiting, as   currency is negative, HKSCC will
+            the case may be, the CCMS House            charge each HKSCC Participant an
+            Collateral     Account      of     such    interest rate on that currency which is
+            Participant, on the first Business Day     calculated based on the net costs
+            of the following month.                    incurred by HKSCC for that currency
+                                                       (including any negative yield, swap
+            The rate of interest may be varied         costs and charges imposed by banks).
+            from time to time by HKSCC without
+            prior notice.                              For the purposes of this Section, the
+
+HKSCC OPERATIONAL PROCEDURES
+                                                                  21/21
+                               reference rate for each relevant currency
+                               is determined as follows:
+
+                                Currency            Reference rate
+                                HKD                 The     prevailing
+                                                    HKD-HIBOR
+                                                    overnight, being
+                                                    the      overnight
+                                                    Hong         Kong
+                                                    Interbank Offered
+                                                    Rate administered
+                                                    by the Treasury
+                                                    Markets
+                                                    Association
+                                USD                 The     prevailing
+                                                    USD-SOFR,
+                                                    being the Secured
+                                                    Overnight
+                                                    Financing Rate
+                                                    administered by
+                                                    the        Federal
+                                                    Reserve Bank of
+                                                    New York
+                                RMB                 The     prevailing
+                                                    CNY-SHIBOR,
+                                                    being          the
+                                                    Shanghai
+                                                    Interbank Offered
+                                                    Rate           for
+                                                    overnight
+                                                    deposits
+                                                    administered by
+                                                    the China Foreign
+                                                    Exchange Trade
+                                                    System          &
+                                                    National
+                                                    Interbank
+                                                    Funding Center
+                                                    authorized by the
+                                                    People’s Bank of
+                                                    China
+
+                               For the purposes of this Section, the
+                               prevailing handling fee is as follows:
+
+                                Period           Prevailing
+                                                 handling fee
+                                2 October 2025 – 0.80%
+                                30     December
+                                2026
+                                31     December 0.70%
+                                2026    –     30
+                                December 2027
+                                31     December 0.60%
+
+
+HKSCC OPERATIONAL PROCEDURES
+                                                                                        21/22
+                                                       2027    –    28
+                                                       December 2028
+                                                       29     December 0.50%
+                                                       2028 onwards
+
+         ⎯   Rate of interest allowed or charged on   To be determined by HKSCC from time
+             Mainland Settlement Deposit and          to time by reference to RMB prevailing
+             Mainland Security Deposit collected      bank savings rates and the rate of
+             in cash in RMB from the Participant      interest allowed or charged by the China
+                                                      Connect Clearing House
+             Notes:
+             Interest that may be allowed or
+             charged will be accrued and paid or
+             charged quarterly to Participants by
+             crediting or debiting, as the case may
+             be, Miscellaneous Account of the
+             China Connect Clearing Participant’s
+             Money Ledger, on the first Business
+             Day of the following quarter.
+
+             The rate of interest may be varied
+             from time to time by HKSCC without
+             prior notice.
+
+
+21.11    SSA WITH STATEMENT SERVICE
+
+         ⎯   Fee for issuing hard copy statement(s)        HK$10 per month per account.
+             of each SSA with Statement Service.
+
+             Note:
+             A full month’s fee will be charged for
+             the months of opening and closing
+             such SSA with Statement Service.
+
+             Fee will be debited on the first
+             Business Day of each month.
+
+
+21.11A   STOCK SEGREGATED ACCOUNT TRANSFER INSTRUCTIONS
+
+         ⎯   Clearing Fee for each STI input by a          HK$1 per instruction
+             Clearing Participant or Custodian
+             Participant.
+
+             Note:
+             Fee debited at end of each calendar
+             month and payable by the inputting
+             Participant.
+
+
+
+21.12    Repealed
+
+
+
+HKSCC OPERATIONAL PROCEDURES
+                                                                                              21/23
+21.13   COSTS AND EXPENSES – MISCELLANEOUS
+        Fee for other services and facilities will be specified and announced from time to time by
+        HKSCC.
+
+        Unless otherwise stated, all other disbursements and out-of-pocket expenses incurred by
+        HKSCC are to be reimbursed by the respective Participants. The relevant Participants must
+        reimburse HKSCC for any additional disbursements or out-of-pocket expenses incurred by
+        HKSCC, including but not limited to those related to China Connect Securities Trades, on
+        their behalf in the Eligible Currency specified by HKSCC from time to time.
+
+
+21.14   BILLING
+        Unless otherwise stated, all fees payable by a Participant other than an Investor Participant
+        will be debited in Hong Kong dollars or the Hong Kong dollar equivalents of the relevant
+        foreign currencies to its Billing Account (a sub-account of its Money Ledger) when due and
+        will be settled on a weekly basis through the generation of EPIs (see further Section 14.5).
+
+        Foreign currencies will be converted to their Hong Kong dollar equivalents at exchange
+        rates determined by HKSCC from time to time.
+
+
+21.15   REVIEW OF COSTS AND EXPENSES
+        HKSCC shall, from time to time, review the costs and expenses.
+
+
+21.16   DEFAULT FEE FOR LATE DELIVERY UNDER THE CNS SYSTEM
+
+        ⎯    Fee for failure to settle CNS short       0.50% multiplied by the market value
+             stock position arising from               (based upon the closing price quoted on the
+             Exchange Trades on the due date           Exchange on the due date) of the
+             (i.e., T+2)                               corresponding short stock position arising
+                                                       from Exchange Trades, subject to a
+             Notes:                                    maximum fee of HK$100,000 for each
+             Fee will be debited by DDI on T+2.        corresponding short stock position.
+
+             In respect of short stock position
+             for which HKSCC has granted an
+             exemption from a Buy-in, fee will
+             be refunded by DCI on T+3 except
+             that where an exemption is granted
+             under Section 10.8.3(v), (x) and
+             (xii) in respect of failed delivery
+             being due to a Participant’s clerical
+             error or calculation error, fee may
+             not be refunded at the discretion of
+             HKSCC. However, fee may be
+             debited again if an exemption is
+             granted but delivery of sufficient
+             Eligible Securities is not made on
+             T+3.
+
+             Fee may be revised by HKSCC
+             from time to time.
+
+
+
+HKSCC OPERATIONAL PROCEDURES
+                                                                                                 21/24
+         ⎯    Fee for failure to settle CNS short        1.00% multiplied by the market value
+              stock position in China Connect            (based upon the closing price quoted on the
+              Securities on the due date (i.e., T)       relevant China Connect Market on the due
+                                                         date) of the corresponding short stock
+              Notes:                                     position in China Connect Securities,
+              Fee will be debited by DDI on T.           subject to a maximum fee of HKD200,000
+                                                         for each corresponding short stock position
+              In respect of short stock position         in China Connect Securities.
+              for which HKSCC has granted an
+              exemption from a Buy-in under
+              Section 10A.6.2A(ii), fee will be
+              refunded by DCI on T+1.
+              However, fee may be debited
+              again if an exemption is granted
+              but delivery of sufficient China
+              Connect Securities is not made on
+              T+1.
+
+              Fee may be revised by HKSCC
+              from time to time.
+
+
+21.17    FOREIGN CURRENCY DENOMINATED TRANSACTIONS
+         Unless otherwise specified, the fee structure set out in this Section 21 shall be applicable to
+         both Hong Kong dollar and non-Hong Kong dollar Eligible Securities transactions. In the
+         case of non-Hong Kong dollar transactions, the calculated fee amounts will be converted into
+         Hong Kong dollar equivalents at exchange rates determined by HKSCC and collected by
+         HKSCC in Hong Kong dollars. Dividend collection fees and interest collection fees will be
+         collected by HKSCC in currency in which the relevant securities are denominated and
+         deducted by HKSCC at source before payment.
+
+
+21.18    PUBLICATIONS
+         [Repealed]
+
+
+21.18a   [Repealed]
+
+
+21.19    CLEARING AND SETTLEMENT OF TSF FX TRANSACTIONS
+
+          –    TSF FX clearing fee                        NIL
+
+          –    TSF FX settlement fee payable by           HK$2 per TSF FX Transaction
+               each TSF Clearing Participant for
+               each TSF FX Transaction settled
+               through CCASS.
+
+               Notes:
+               Fee debited on T+1
+
+
+
+
+HKSCC OPERATIONAL PROCEDURES
+                                                                                            21/25
+21.20 EXCEPTION HANDLING FEE IN RELATION TO SETTLEMENT OF TSF
+      FX TRANSACTIONS AND EARMARKING OF TSF STOCKS
+
+        –   Exception handling fee in respect of       0.50% multiplied by the unsettled amount
+            a failure to settle a TSF Final FX         subject to a maximum amount of
+            Position or a TSF payment                  HK$100,000 in respect of each failure to
+            instruction generated for the              settle.
+            settlement of Stock Release FX
+            Transaction on the due date;
+
+            Notes:
+            For the calculation of the fee, if the
+            unsettled amount is in RMB, the fee
+            will be calculated based on the
+            corresponding HKD amount under the
+            HKD money position in respect of the
+            TSF Final FX Position or the stock
+            release payment instruction.
+
+            The fee will be debited in HKD by
+            EPIs.
+
+            The fee may be revised by HKSCC
+            from time to time.
+
+        –   Exception handling fee in respect of a     0.50% multiplied by the HKD money
+            failure to transfer the number of shares   position of the FX transaction executed by
+            for earmarking pursuant to Section         HKSCC with the default TSF Clearing
+            12A.5.4(iv)                                Participant     pursuant     to    Section
+                                                       12A.5.4(iv), subject to a maximum
+            Notes:                                     amount of HK$100,000 in respect of each
+            The fee will be debited in HKD             failure.
+            byEPIs.
+
+            The fee may be revised by HKSCC
+            from time to time.
+
+
+
+21.21   SPECIAL SEGREGATED ACCOUNT
+
+        –   Special     Segregated         Account     HK$50 per month per account.
+            Maintenance Fee.
+
+            Note:
+            A full month’s fee will be charged for
+            the months of opening and closing
+            such Special Segregated Account.
+
+            Fee will be debited on the first
+            Business Day of each month.
+
+
+
+
+HKSCC OPERATIONAL PROCEDURES
+

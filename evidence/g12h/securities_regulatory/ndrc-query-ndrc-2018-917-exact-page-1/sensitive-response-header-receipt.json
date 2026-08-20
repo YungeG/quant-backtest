@@ -1,0 +1,29 @@
+{
+  "files": [
+    {
+      "exact_private_path": "/srv/bcache-8t/ygguo/backtest/g12h-authority-private/20260820-wave1-response-headers/securities_regulatory/ndrc-query-ndrc-2018-917-exact-page-1/response.headers",
+      "exact_private_sha256": "sha256:196db892e61ebd894377191b70f8ea85b535e0f36fa80be651ef51288b226951",
+      "redaction": "Set-Cookie value replaced by its SHA-256; cookie name and attributes retained.",
+      "tracked_path": "securities_regulatory/ndrc-query-ndrc-2018-917-exact-page-1/response.headers",
+      "tracked_redacted_sha256": "sha256:d715c8becdda0dfc24a75debbcacc480694951480af215189c45f0c67c8ac2b3"
+    },
+    {
+      "exact_private_path": "/srv/bcache-8t/ygguo/backtest/g12h-authority-private/20260820-wave1-response-headers/securities_regulatory/ndrc-query-ndrc-2018-917-exact-page-1/transport.log",
+      "exact_private_sha256": "sha256:32dce76eb625066496b55ae86b66d77f29526ef9af7381a0951c3e13c912b0e3",
+      "redaction": "Set-Cookie value replaced by its SHA-256; cookie name and attributes retained.",
+      "tracked_path": "securities_regulatory/ndrc-query-ndrc-2018-917-exact-page-1/transport.log",
+      "tracked_redacted_sha256": "sha256:75a891959bb125518437ad860781e1df766e6db6b652190e0888beb702f8f446"
+    },
+    {
+      "exact_private_path": "/srv/bcache-8t/ygguo/backtest/g12h-authority-private/20260820-wave1-response-headers/securities_regulatory/ndrc-query-ndrc-2018-917-exact-page-1/redirects.json",
+      "exact_private_sha256": "sha256:477b39e1ad5fd7d7344e19cb4d73189a0d56d9f3b7a63f96c361bf73e5e54e28",
+      "redaction": "Set-Cookie value replaced by its SHA-256; cookie name and attributes retained.",
+      "tracked_path": "securities_regulatory/ndrc-query-ndrc-2018-917-exact-page-1/redirects.json",
+      "tracked_redacted_sha256": "sha256:2029ab751766fa65a4d2c59da638502dcdd9d84657de1f1a84f833b8ba1b183f"
+    }
+  ],
+  "private_store_root": "/srv/bcache-8t/ygguo/backtest/g12h-authority-private/20260820-wave1-response-headers",
+  "schema_version": 1,
+  "source_id": "ndrc-query-ndrc-2018-917-exact-page-1",
+  "type": "g12h_sensitive_response_header_receipt_v1"
+}

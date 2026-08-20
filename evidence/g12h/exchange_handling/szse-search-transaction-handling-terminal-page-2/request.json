@@ -1,0 +1,42 @@
+{
+  "authentication": "none",
+  "headers": [
+    {
+      "name": "User-Agent",
+      "value": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 Chrome/130.0 Safari/537.36 G12HAuthorityCapture/1.0"
+    },
+    {
+      "name": "Accept",
+      "value": "application/json, text/plain, */*"
+    },
+    {
+      "name": "Accept-Language",
+      "value": "zh-CN,zh;q=0.9,en;q=0.5"
+    },
+    {
+      "name": "Content-Type",
+      "value": "application/x-www-form-urlencoded; charset=UTF-8"
+    },
+    {
+      "name": "Cache-Control",
+      "value": "no-cache"
+    },
+    {
+      "name": "Pragma",
+      "value": "no-cache"
+    }
+  ],
+  "method": "POST",
+  "redirect_policy": {
+    "follow": true,
+    "maximum": 10,
+    "redirect_protocols": [
+      "https"
+    ]
+  },
+  "request_body_file": "request.body",
+  "request_body_sha256": "sha256:336d8b7ca6a2484b4732d03caa471753dcb0d2c5e7f9bf93075112ecafbca3e0",
+  "schema_version": 1,
+  "type": "g12h_official_http_request_v1",
+  "url": "https://www.szse.cn/api/search/content"
+}

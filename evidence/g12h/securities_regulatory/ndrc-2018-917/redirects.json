@@ -1,0 +1,79 @@
+{
+  "responses": [
+    {
+      "headers": [
+        {
+          "name": "Date",
+          "value": "Thu, 20 Aug 2026 07:37:15 GMT"
+        },
+        {
+          "name": "Content-Type",
+          "value": "text/html"
+        },
+        {
+          "name": "Content-Length",
+          "value": "8166"
+        },
+        {
+          "name": "Connection",
+          "value": "keep-alive"
+        },
+        {
+          "name": "ETag",
+          "value": "W/\"8166-1720684196000\""
+        },
+        {
+          "name": "Last-Modified",
+          "value": "Thu, 11 Jul 2024 07:49:56 GMT"
+        },
+        {
+          "name": "Vary",
+          "value": "Accept-Encoding"
+        },
+        {
+          "name": "X-Cache",
+          "value": "BYPASS"
+        },
+        {
+          "name": "X-Request-Id",
+          "value": "e912cc0de8b4110c6099a373d8949546"
+        },
+        {
+          "name": "Server",
+          "value": "WAF"
+        },
+        {
+          "name": "Accept-Ranges",
+          "value": "bytes"
+        },
+        {
+          "name": "X-Ser",
+          "value": "i27285_c18667, i2759126_c26763"
+        },
+        {
+          "name": "X-Cache",
+          "value": "HIT from i2759126_c26763(cloudsvr)"
+        },
+        {
+          "name": "Cache-Control",
+          "value": "no-store, no-cache"
+        },
+        {
+          "name": "Access-Control-Allow-Methods",
+          "value": "GET,POST"
+        },
+        {
+          "name": "Content-Security-Policy",
+          "value": "frame-ancestors 'self' https://fxsjcj.kaipuyun.cn"
+        },
+        {
+          "name": "Pragma",
+          "value": "no-cache"
+        }
+      ],
+      "status_line": "HTTP/1.1 200 OK"
+    }
+  ],
+  "schema_version": 1,
+  "type": "g12h_http_response_chain_v1"
+}
