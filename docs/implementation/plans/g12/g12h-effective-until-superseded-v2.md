@@ -25,7 +25,7 @@ fan_out: [G12H, G12L-*, G12M-*]
 
 ## Status and authority
 
-The parent [Acceptance Matrix](../../acceptance-matrix.md) is the sole current Gate-status authority and records G08E V2A/V2B/V2C `PASSED`. Scoped F1 authority-closure acquisition is therefore ready only for execution-enforced `DOMESTIC + ORDINARY_A_SHARE`. V2C acceptance uses finite XSHE compatibility economics and requires no G12H closure artifact, so the DAG is not circular. F2 projection, F3 publication, analyzer RED, and qualification changes remain unauthorized until F1 closes its required predecessor/endpoint/successor evidence. No default, inference, silent Stock Connect/product exclusion, or interchangeable v2 RuleBook pairing is permitted.
+The parent [Acceptance Matrix](../../acceptance-matrix.md) is the sole current Gate-status authority and records G08E V2A/V2B/V2C `PASSED`. Scoped F1 authority-closure acquisition is therefore ready only for execution-enforced `DOMESTIC + ORDINARY_A_SHARE`. V2C acceptance uses finite XSHE compatibility economics and requires no G12H closure artifact, so the DAG is not circular. F2 projection, F3 publication, analyzer RED, and qualification changes under this strict path remain unauthorized until F1 closes its required predecessor/endpoint/successor evidence. [ADR 0007](../../../adr/0007-current-official-selection-supports-development-projection.md) authorizes a separate development-only path and does not satisfy, weaken, or relabel this F1 gate. No default, inference, silent Stock Connect/product exclusion, or interchangeable v2 RuleBook pairing is permitted.
 
 Accepted semantics: [ADR 0004](../../../adr/0004-official-rules-effective-until-authoritatively-superseded.md), [ADR 0005](../../../adr/0005-cn-a-share-fees-require-access-route-and-product-class.md), and [ADR 0006](../../../adr/0006-explicit-official-live-status-may-use-receipt-time.md).
 
@@ -37,7 +37,8 @@ Evidence baseline:
 - [F1 full-envelope access/product blocker](../../../research/g12h-xshe-july-2026-full-envelope-successor-closure-f1.md);
 - [competent status-register discovery](../../../research/g12h-competent-status-register-discovery-v1.md);
 - [live-status relaxation impact](../../../research/g12h-live-status-relaxation-impact-v1.md);
-- [live-status API probes](../../../research/g12h-live-status-api-probes-v1.md).
+- [live-status API probes](../../../research/g12h-live-status-api-probes-v1.md);
+- [current-selected development authority](../../../research/g12h-current-selected-development-authority-v1.md).
 
 The existing v1 declaration still deterministically fails `COVERAGE_GAP / market_fees`. No existing PASSED G08E, G08H, G12C/D, fixture, hash, event, manifest, test, or publication byte may change.
 
