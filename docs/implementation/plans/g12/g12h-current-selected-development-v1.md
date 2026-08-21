@@ -17,7 +17,7 @@ depends_on:
 
 ## Status
 
-D1-D3 `PASSED` at source `cdc5a29133bbc0b863ec409219fb50bd0b299c77`. D4 development coverage `PASSED` at source `0215ed3a369bff10a64830c462c569b378914670`. D5 Runtime fan-in `PASSED` at source `d1a472091deb7d844e696a814e9e52e46976ece4`, with duplicate-free identity parsing cleanup `1de4f80b51c2ae66687ccdae8771d06b000ab348`; strict ADR 0004 successor closure remains blocked.
+D1-D3 `PASSED` at source `cdc5a29133bbc0b863ec409219fb50bd0b299c77`. D4 development coverage `PASSED` at source `0215ed3a369bff10a64830c462c569b378914670`. D5 Runtime fan-in `PASSED` at source `d1a472091deb7d844e696a814e9e52e46976ece4`, with duplicate-free identity parsing cleanup `1de4f80b51c2ae66687ccdae8771d06b000ab348`. D6 financial-dispatch journey `PASSED` at source `54951d1d181274c7597c1c5b7cff2f81a4bd0f8f`; strict ADR 0004 successor closure remains blocked.
 
 Frozen identities:
 
@@ -34,6 +34,8 @@ D1-D3 acceptance: 40 focused tests, full `2107 passed`, import boundaries 121 fi
 D4 freezes report hash `sha256:5cbcc37871999b334709d1823f1c40ce6cdf73480f410f821cf4ebd38ceec9bb` and coverage fixture canonical hash `sha256:f27dfa509772fbd2007f5aa0cfd834e5c941a4cc9eef1a1ef6f480b3d6ee56c9`. Acceptance: 33 focused tests, 43 broad rule-authority/architecture tests, import boundaries 122 files, lock/diff/LSP/gitleaks clean, and independent review PASS. A full-suite attempt exited 139 in unrelated Binance aggTrades garbage collection; that exact test independently passed, and the prior D1-D3 full suite remains `2107 passed`.
 
 D5 freezes authority `sha256:6019179179ba23ee5d637e95ac09813bcdd228dad2851cc514238a4cf89f7d97`, Runtime binding `sha256:9b022ca0ded3cde20d15e2c9b1608ae05a62c6a49119ff54ac8e093833809bea`, financial inputs `sha256:f39985966cc1c054f4ca8465ba93382291ecfd79b387c5d12943587aa719c8c5`, and semantic spec `sha256:799a038b9f60171f11e737966d1a2d9838cb5c332f23377f02986cd4d4282c8b`. Acceptance: 39 parent-focused tests, 70 worker-focused tests, import boundaries 123 files, lock/diff/LSP/gitleaks clean, exact canonical coverage mapping and spoof rejection, and independent review PASS.
+
+D6 freezes financial-dispatch journey hash `sha256:0d8a916d7adf18d202df5f4365c837fb9b28dcd3f3d715c534318576938853f4`. Acceptance: 14 parent-focused tests, 17 worker-focused tests, import boundaries 123 files, lock/diff/LSP/gitleaks clean, shared test fixture seams, and independent review PASS.
 
 ## Boundary
 
@@ -143,12 +145,17 @@ The additive off-root Runtime module `crypto_quant_backtest.cn_a_share_current_s
 
 It hydrates the exact published v2 RuleBooks, creates the existing Kernel v2 execution authority/binding, exposes reservation/final-fill queries and policies, and binds Bundle/declaration/snapshot/coverage/RuleBook/authority/profile/build identities into `financial_inputs_hash` and the Semantic Run. BUY and SELL validation preserves separate handling, regulatory, ChinaClear, HKSCC-not-applicable, and seller-only stamp-duty rules. Any Bundle, event, report, qualification, book, profile, build, order, or nested-type substitution fails before policy use. No compatibility/v1 fallback exists.
 
+## D6 — financial-dispatch journey
+
+A test-only integration composes the D5 BUY and SELL prepared bindings into canonical final fee rule sets and executes sequential fill/fee booking through `DefaultCashFinancialDispatcher`, `FeeAssessmentEngine`, and `GenericLedger`. It verifies exact handling/regulatory/ChinaClear/HKSCC/stamp lines, complete position close, cash/fee/lot effects, full replay equals prefix/resume replay, and deterministic repeat hashes. It does not claim `DeterministicBarEngine`, decision-grade, live, or deployment execution and adds no production code.
+
 ## Validation
 
 - D1/D2: exact source/hash reconstruction, canonical nested types, mutation matrix, one-band target economics, v1/V2A hash preservation.
 - D3: five exact events, G12C validation, G12D first/repeated publication, no Kernel/Runtime/root imports.
 - D4: exact target coverage, gap/overlap failures, deterministic precedence, explicit qualification separation, and mandatory `rule_coverage_qualified=false` despite a complete finite development interval report.
 - D5: one-Reader publication replay, exact Runtime hydration, BUY/SELL policy economics, semantic/replay identity, substitution matrix, and no Builder/Reader/repository production imports.
+- D6: dispatcher/assessment/ledger BUY-to-complete-SELL journey, fee allocation, cash/position/lot outcomes, prefix/resume replay, repeatability, and no engine/live overclaim.
 - Every phase: focused pytest, architecture checks, `uv lock --check`, `git diff --check`, gitleaks, and independent review.
 
 ## Nonclaims
