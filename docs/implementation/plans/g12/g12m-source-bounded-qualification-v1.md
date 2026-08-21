@@ -1,6 +1,6 @@
 ---
 id: G12M-SOURCE-BOUNDED-QUALIFICATION-V1
-readiness: PROVIDER_SPECIFIC_NOMINAL_READY
+readiness: A_SHARE_NOMINAL_READY_BINANCE_CAUSAL_BLOCKED
 gate_status: DRAFT
 owner: backtest-runtime qualification
 produces:
@@ -30,12 +30,15 @@ must do so.
 
 ## Status
 
-`DRAFT / PROVIDER-SPECIFIC A-SHARE AND BINANCE NOMINAL READY`. ADR 0008 policy is
-accepted. The exact G12I Tushare/SZSE, G12K Tushare fixed-singleton, and Binance
-funding-history nominal reconstruction boundaries below are frozen. Later D1
-contracts may design the exact Tushare-only A-share case and exact Binance
-funding-history case independently. General/dynamic-universe G12K and other Binance
-source combinations remain blocked on their own missing lanes.
+`DRAFT / PROVIDER-SPECIFIC A-SHARE NOMINAL READY; BINANCE UPSTREAM V2 EVIDENCE
+ACCEPTED / CAUSAL RUNTIME QUALIFICATION BLOCKED`. ADR 0008 policy is accepted. The
+exact G12I Tushare/SZSE and G12K Tushare fixed-singleton nominal reconstruction
+boundaries are frozen. The Binance funding-history v2 report is accepted as post-hoc
+evidence, but its `available_time` remains the 2026 receipt instant and does not
+establish causal availability for the historical 2024 events. A later D1 contract
+may design the exact Tushare-only A-share case; Binance historical causal qualification
+requires target-effective provider availability authority. General/dynamic-universe
+G12K and other Binance source combinations remain blocked on their own missing lanes.
 
 No production code, public type, function signature, serialized assessment body,
 failure enum, test contract, or write set is authorized by this plan.
@@ -82,7 +85,7 @@ either duplicate Builder authority or trust claims it cannot verify.
 | --- | --- | --- |
 | G12I SZSE | `ACCEPTED`: exact July-2026 Tushare `daily`/`trade_cal`/`suspend_d` observation report, canonical replay, append-only correction identity, and nominal Runtime boundary below. | Source `4389877b8879fc9bb1a6d6544c4079a7d29312ab`; report `sha256:ff09c4ad9f8025e66689387b5132d3d85c4101276fbf7330dd5040af111cc029`; canonical file `sha256:9cbfc115e41f56d1e83eac520856c3f529f83972b97111238e5dbb1a68c4eae6`. |
 | G12K Tushare fixed singleton | `ACCEPTED`: exact full `dividend(ts_code="000001.SZ")` response, receipt/Snapshot replay, fixed July-2026 scope, 96 ordered source rows, zero target-relevant rows, append-only direct-predecessor evidence, and explicit limits. This is not listing/universe/survivorship/lifecycle authority. | Source `28a4d7234f5101e67bfa64f1eded92b81bfcf73d`; report `sha256:5a49065d87286a9673893337328ddbbab9a19cd3addf178bf96033b9b1babfd7`; canonical file `sha256:a386f4281374d1449c0b5ba4371b9e9d2de5b236bc8fc5b5cdd8de5e43c65956`; final plan `sha256:79402fe89df8bffc23be4ff2772bbba14510f6a6133de8fe48acca1b0656c5d8`. |
-| Binance FAPI funding history | `ACCEPTED`: exact public REST request/response bytes, canonical receipt/Snapshot replay, three rate+funding-mark rows, exact Event/manifest/Bundle-ref publication, late receipt-derived observed-as-of, append-only predecessor evidence, and explicit provider-finality limitations. | Source `024e5f209a94bb358946f5c468630108981f0329`; report `sha256:29e639615c1e5f5fa05ffdff9bc77a630d56838c7b0e70230177922bdbffc37b`; canonical file `sha256:850cf2b5b2f3caffd7afc1cb4f364e6224c4022417ae46bb01a406600e971951`; final plan `sha256:8a5d5643db1baa6bd50d26e6ab4220df948ca3122a46214a710dd47cd9299686`. |
+| Binance FAPI funding history | `UPSTREAM V2 EVIDENCE ACCEPTED / CAUSAL RUNTIME QUALIFICATION BLOCKED`: exact public REST request/response bytes, canonical receipt/Snapshot replay, three rate+funding-mark rows, exact Event/manifest/Bundle-ref publication, late receipt-derived observed-as-of, append-only predecessor evidence, and explicit provider-finality limitations. The evidence is post-hoc because `available_time` remains the 2026 receipt instant. | Source `024e5f209a94bb358946f5c468630108981f0329`; report `sha256:29e639615c1e5f5fa05ffdff9bc77a630d56838c7b0e70230177922bdbffc37b`; canonical file `sha256:850cf2b5b2f3caffd7afc1cb4f364e6224c4022417ae46bb01a406600e971951`; final plan `sha256:8a5d5643db1baa6bd50d26e6ab4220df948ca3122a46214a710dd47cd9299686`. |
 
 Research notes, ad hoc files, inherited hash claims, development fixtures, or
 Builder objects without an accepted canonical cross-package boundary do not
@@ -168,9 +171,9 @@ closure, or provider finality. A corrected G12K capture is a new accepted canoni
 report whose direct predecessor was evidence-replayed; it cannot silently replace
 these identities.
 
-## Frozen Binance funding-history nominal reconstruction boundary
+## Accepted Binance funding-history post-hoc evidence boundary
 
-A future Binance G12M Runtime implementation must independently consume exact
+A future post-hoc Binance G12M Runtime assessment may independently consume exact
 canonical bytes for type
 `binance_usdm_funding_history_source_bounded_observation_report`, schema version
 `2`. It must use a closed nominal Runtime value mirroring every field; it must not
@@ -234,11 +237,12 @@ by that exact case provides:
 
 The accepted G12I and fixed-singleton G12K lanes satisfy the upstream source-lane
 criteria for the exact Tushare-only A-share case. The accepted Binance
-funding-history v2 lane independently satisfies the source-lane criteria for its
-exact Binance funding case. The remaining work is to freeze provider-specific
-Runtime closed nominal values, run/Integrity bindings, assessment artifacts,
-failure precedence, tests, and write sets. Neither provider case depends on the
-other.
+funding-history v2 lane supplies exact post-hoc upstream evidence, but does not
+satisfy the historical causal-availability prerequisite while `available_time`
+remains the 2026 receipt instant. Binance Runtime qualification is therefore
+blocked pending target-effective provider availability authority, before closed
+nominal values, run/Integrity bindings, assessment artifacts, failure precedence,
+tests, or write sets may be frozen. Neither provider case depends on the other.
 
 Any new G12M contract must bind the accepted finite artifacts directly; it must not
 introduce a provider registry, generic source framework, facts registry, or policy

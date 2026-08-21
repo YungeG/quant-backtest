@@ -32,9 +32,12 @@ provider-global completeness remains an explicit limitation rather than an
 ordinary historical-research blocker.
 
 The slice normalizes and publishes the exact three observed funding records with
-their funding-time mark prices. It does not modify the accepted monthly rate-only
-v1 archive, G10E, Runtime, Kernel, Builder root, existing fixtures, or public APIs.
-It grants no result grade, profile, live, or deployment authority.
+their funding-time mark prices. This is accepted post-hoc upstream evidence;
+historical causal Runtime qualification remains blocked because `available_time`
+is the 2026 receipt instant, not established 2024 provider availability. It does
+not modify the accepted monthly rate-only v1 archive, G10E, Runtime, Kernel, Builder
+root, existing fixtures, or public APIs. It grants no result grade, profile, live,
+or deployment authority.
 
 ## Frozen source scope
 
@@ -498,13 +501,14 @@ adversarial review passed. Existing acquisition, funding-history v1, monthly
 funding-rate v1, G10E, Builder root, Runtime, Kernel, fixtures, hashes, and public
 APIs remain unchanged.
 
-G12M is now provider-specifically nominally ready for one exact Binance
-funding-history case. A future Runtime slice must independently deep-reconstruct the
-accepted canonical report bytes, bind the accepted report/file/source/receipt/
-Snapshot/Event/manifest identities, require the bound run's instrument and funding
-scope to match, and assess no earlier than report `observed_at`. Generic mappings,
-caller booleans, naked hashes, generic `ArtifactRef`, Runtime→Builder import, or the
-rate-only monthly archive alone remain insufficient.
+The exact Binance funding-history v2 evidence is accepted for post-hoc G12M use,
+but historical causal Runtime qualification remains blocked while its
+`available_time` remains the 2026 receipt instant. Any post-hoc Runtime slice must
+independently deep-reconstruct the accepted canonical report bytes, bind the
+accepted report/file/source/receipt/Snapshot/Event/manifest identities, require the
+run's instrument and funding scope to match, and assess no earlier than report
+`observed_at`. Generic mappings, caller booleans, naked hashes, generic `ArtifactRef`,
+Runtime→Builder import, or the rate-only monthly archive alone remain insufficient.
 
 No permanent checksum, provider finality, complete correction lineage,
 provider-global completeness, immutable 2024 publication availability, result-grade
