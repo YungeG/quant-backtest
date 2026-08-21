@@ -1,0 +1,49 @@
+{
+  "content_tree_hash": "sha256:218d95c3cb2ea769b2a52bc8633d162b76624e8dabb9829eccc5a60b2dcf0b1d",
+  "decision_grade_eligible": false,
+  "deployment_authorized": false,
+  "members": [
+    {
+      "acquired_at_epoch_nanoseconds": 1787322817956479546,
+      "byte_count": 6642,
+      "content_hash": "sha256:49e23a8aefc09dcfa08a7efd788b9076451d0527fa1eac44284656f7860dc689",
+      "declared_sha256": "sha256:49e23a8aefc09dcfa08a7efd788b9076451d0527fa1eac44284656f7860dc689",
+      "member_key": "raw/binance-futures-connector-python-d30576a.patch",
+      "mode": "0644"
+    },
+    {
+      "acquired_at_epoch_nanoseconds": 1787322817513968902,
+      "byte_count": 18300,
+      "content_hash": "sha256:e50bd98895e218893124db4cce7126dd128d3621d7d0d14f3545ee9bbf8e3533",
+      "declared_sha256": "sha256:e50bd98895e218893124db4cce7126dd128d3621d7d0d14f3545ee9bbf8e3533",
+      "member_key": "raw/binance-futures-connector-python-market-d30576a.py",
+      "mode": "0644"
+    },
+    {
+      "acquired_at_epoch_nanoseconds": 1787322796693720939,
+      "byte_count": 91413,
+      "content_hash": "sha256:94104929c6a1c381a5435bc235d9ac12f26645ad649583b05e1c1de8464ccc30",
+      "declared_sha256": "sha256:94104929c6a1c381a5435bc235d9ac12f26645ad649583b05e1c1de8464ccc30",
+      "member_key": "raw/binance-support-article-360033525031.json",
+      "mode": "0644"
+    },
+    {
+      "acquired_at_epoch_nanoseconds": 1787304863983843230,
+      "byte_count": 379,
+      "content_hash": "sha256:e9f73f9c845c28abb31037d8230df2d6f13d5d368c43436e891fcc757372c338",
+      "declared_sha256": "sha256:e9f73f9c845c28abb31037d8230df2d6f13d5d368c43436e891fcc757372c338",
+      "member_key": "raw/target-funding-history-response.json",
+      "mode": "0644"
+    }
+  ],
+  "provenance": {
+    "license_ref": "binance.api.terms",
+    "retention_policy_ref": "backtest.research.evidence",
+    "source_key": "g12m.funding-settlement-availability.v1",
+    "vendor_key": "binance.first-party"
+  },
+  "provenance_hash": "sha256:80a206059389d29ed710d57dd6cffdc4b84e481acbef668530206174f8db04ea",
+  "schema_version": 1,
+  "snapshot_id": "sha256:ad5ee7b6981ffbd1048f3bd7b7966369e6cadc6654cde81aa670426f19d7c09f",
+  "type": "source_snapshot"
+}

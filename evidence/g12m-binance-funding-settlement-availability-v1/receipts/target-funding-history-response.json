@@ -1,0 +1,12 @@
+{
+  "accepted_acquisition_receipt_path": "tests/fixtures/market_data/providers/binance_usdm/funding-history-source-bounded-v2/acquisition-receipt.json",
+  "byte_count": 379,
+  "credentials_or_cookies_retained": false,
+  "local_copy_at_epoch_nanoseconds": 1787322818525887422,
+  "new_network_fetch": false,
+  "request_url": "https://fapi.binance.com/fapi/v1/fundingRate?symbol=BTCUSDT&startTime=1704067200000&endTime=1704153599999&limit=100",
+  "schema_version": 1,
+  "sha256": "sha256:e9f73f9c845c28abb31037d8230df2d6f13d5d368c43436e891fcc757372c338",
+  "source_repository_path": "tests/fixtures/market_data/providers/binance_usdm/funding-history-source-bounded-v2/response/funding-history.json",
+  "type": "g12m_inherited_official_bytes_receipt_v1"
+}
