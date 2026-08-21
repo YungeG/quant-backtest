@@ -612,7 +612,19 @@ ResourceReservationState中active Orders的`ReservationCommitment.margin`聚合�
 
 ## 事件时间（Event Time）
 
-市场事件在市场中实际发生的 UtcInstant。
+市场事实发生或生效的时间。
+
+## 供应方可用时间（Provider Availability Time）
+
+在供应方或市场语义下，精确事件修订最早可被市场参与者使用的可辩护时间。
+
+## 获取时间（Acquisition Time）
+
+本仓库取得并保留精确来源字节的时间。
+
+## 评估时间（Assessment Time）
+
+对已经发布的证据与运行身份进行资格评估的时间。
 
 ## 可用时间（Available Time）
 
