@@ -1,7 +1,8 @@
 ---
 id: G12K-JULY-2026-DEVELOPMENT-COVERAGE-V1
 readiness: BLOCKED
-contract_status: D1_FROZEN_PENDING_ACCEPTANCE
+contract_status: D1_PASSED
+implementation_status: D2_DEVELOPMENT_PASSED
 owner: market-bundle-builder validation
 produces:
   - UniverseCoverageReport
@@ -21,9 +22,7 @@ depends_on:
 
 ## Status and fixed target
 
-D1 freezes only the minimum development contract. G12K remains `DRAFT / BLOCKED`
-until the payloads, declarations, RED evidence, and analyzer are implemented and
-accepted. Do not update the Acceptance Matrix for D1.
+D1 froze the minimum development contract at `24b88d836d1451e30e975ebbe36d860b19388530`; D2 implemented and accepted the finite analyzer at `a9be1d1bc4572fb27732dfefa8037ab9283fa28f`. G12K remains `DRAFT / BLOCKED` for provider/history qualification despite this development-only PASS.
 
 The fixed target is XSHE, `EQUITY`, CNY quote/settlement, Universe
 `equity.cn_a_share.xshe.corporate-action-development.v1`, point-in-time selection,
@@ -370,7 +369,7 @@ adjacent-pair combinatorial matrix.
 
 ## Expected implementation write set
 
-D1 changes documentation only. A later approved implementation is limited to:
+D1 changed documentation only. D2 used exactly this implementation write set:
 
 ```text
 packages/market-bundle-builder/src/crypto_quant_bundle_builder/g12b_universe_corporate_action_payloads.py
@@ -394,5 +393,17 @@ staged files. D1 does not change readiness or authorize production/tests.
 No provider/history/survivorship claim, interval-wide Universe guarantee,
 identifier mapping, inferred lifecycle, entitlement/register/accounting, tax,
 fractional-share handling, Reader/repository/I/O, Runtime/Kernel integration,
-root export, framework, registry, profile/live/deployment qualification, commit,
-push, staging, or Acceptance Matrix update.
+root export, framework, registry, or profile/live/deployment qualification.
+
+## D2 development acceptance
+
+- implementation: `a9be1d1bc4572fb27732dfefa8037ab9283fa28f`
+- payload module: `sha256:3cb083ab93b256ff62755ca78bc79ad7af5f7e0ab3fe4f7207fd62f42a9cef7b`
+- analyzer module: `sha256:ab7cb0d00a90e38ebcdc70e7a7142706179043bdab57c302a7bca8be4269babf`
+- golden fixture: `sha256:c4b0a21a078240c9ad39f692c2ebbeae882e357c4a18eeacaf6121d4c781c9ec`
+- outcome: `sha256:c78d15d6a3f4d73dcda2ce16cc05e337e551fa5e8dc44d066f4a7a517467fef4`
+- Universe report: `sha256:61cc9c034aa0907a6ac24475f39078db0a13a2e72dc6a38af5c4cc7583259b63`
+- corporate-action report: `sha256:c678b4bbe90654efeabc2307d5b8a77f1ea852cb813852943a7fdb8746caca46`
+- validation: 22 focused tests, 456 Builder/architecture tests, import boundaries 125 files, Ruff/Pyright/LSP/lens/lock/diff/gitleaks clean, independent correctness and minimality reviews PASS.
+
+All provider authority, revision completeness, historical authority, survivorship safety, decision-grade, profile, live, and deployment flags remain false.
