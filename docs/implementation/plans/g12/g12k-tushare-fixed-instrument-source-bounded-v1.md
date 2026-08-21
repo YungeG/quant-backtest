@@ -257,11 +257,26 @@ and no dedup winner is inferred.
 
 ### Frozen target-relevance predicate
 
-For each retained source row, define:
+Domain `canonical_sha256` rejects floats, while Tushare rows contain JSON numbers.
+D3 therefore preserves every valid JSON numeric token's exact ASCII lexeme rather
+than converting it to Python `float`. For each retained row, define:
 
 ```text
-source_row_hash = canonical_sha256({"fields": <exact field tuple>, "row": <exact row>})
+fields_bytes = compact UTF-8 JSON array of the exact ordered field names
+row_bytes = compact UTF-8 JSON array where:
+  null   -> b"null"
+  string -> standard ensure_ascii=false JSON string bytes
+  number -> the exact validated provider JSON numeric-token bytes
+source_row_hash = sha256(
+  b'{"fields":' + fields_bytes + b',"row":' + row_bytes + b'}'
+)
 ```
+
+The numeric token grammar is exact finite JSON number syntax; `NaN`, infinities,
+invalid constants, malformed exponents, and non-finite conversions fail. This
+explicit D1 clarification replaces the impossible float-bearing
+`canonical_sha256({...})` shorthand; it does not change the request-scope hash,
+report canonicalization, field order, source order, or accepted response bytes.
 
 A row is target-relevant iff at least one non-null value in this exact ordered
 field tuple is within provider-date interval `[20260706, 20260731)`:
