@@ -278,6 +278,14 @@ explicit D1 clarification replaces the impossible float-bearing
 `canonical_sha256({...})` shorthand; it does not change the request-scope hash,
 report canonicalization, field order, source order, or accepted response bytes.
 
+The report also retains `dividend_source_rows`, an ordered canonical replay value.
+Each row has exactly 16 entries: provider string/null fields remain string/null;
+provider numeric/null fields are represented by their exact validated numeric
+lexeme string or null. Field position supplies the type distinction. This value is
+not the raw response byte stream, but it is sufficient for nominal reconstruction
+to rebuild every `row_bytes`, source-row hash, and relevance decision without
+trusting copied hashes or booleans.
+
 A row is target-relevant iff at least one non-null value in this exact ordered
 field tuple is within provider-date interval `[20260706, 20260731)`:
 
@@ -357,6 +365,7 @@ member_content_hashes
 member_acquired_at_epoch_nanoseconds
 dividend_response_has_more
 dividend_response_count_metadata
+dividend_source_rows
 dividend_source_row_hashes
 target_relevance_fields
 target_relevant_row_hashes
@@ -388,8 +397,12 @@ Fixed invariants:
 - `member_keys=("response/dividend.json",)` and the member hash/time bind receipt,
   snapshot, and raw archive bytes;
 - request-scope hash is the exact frozen value above;
-- the first accepted row-hash tuple has length 96, `has_more=false`, observed
-  count metadata `0`, and an empty target-relevant tuple;
+- `dividend_source_rows` exact-reconstructs every retained row in provider order;
+  reconstruction recomputes the complete row-hash tuple and exact relevance
+  selection from those rows and rejects replacement, reordering, or copied-hash
+  tampering;
+- the first accepted source-row and row-hash tuples each have length 96,
+  `has_more=false`, observed count metadata `0`, and an empty target-relevant tuple;
 - `observed_at` is the later of accepted G12I `observed_at` and the dividend member
   receipt time; it is never moved backward;
 - `supersedes_report_hash` is null when no predecessor is supplied; and
@@ -422,8 +435,9 @@ The provider correction-lineage limitation is distinct from Backtest's local
 nested substitution, constructor bypass, changed hashes, changed row order,
 changed deterministic relevance output, or any true qualification flag.
 
-Raw bytes are not copied into the report. D3 verifies them before report creation.
-Copied G12I hashes inside G12K are not sufficient by themselves for Runtime
+Raw response bytes are not copied into the report. D3 verifies them before report
+creation and retains only the exact typed row replay values above. Copied G12I
+hashes inside G12K are not sufficient by themselves for Runtime
 qualification; the future G12M boundary independently consumes both canonical
 reports.
 
