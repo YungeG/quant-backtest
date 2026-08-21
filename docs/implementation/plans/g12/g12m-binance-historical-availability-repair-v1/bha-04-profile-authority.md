@@ -1,6 +1,6 @@
 ---
 id: G12M-BHA-04
-status: DRAFT_WAITING_H1
+status: TERMINATED_H3
 owner: Runtime Profile authority writer
 produces:
   - additive Binance Profile authority inputs and limitation dispositions

@@ -1,6 +1,6 @@
 ---
 id: G12M-BHA-06
-status: DRAFT_WAITING
+status: TERMINATED_H3
 owner: Runtime-to-Kernel adapter writer
 produces:
   - provider-specific MarketEvent-to-G10E adapter

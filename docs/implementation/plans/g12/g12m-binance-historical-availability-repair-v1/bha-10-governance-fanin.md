@@ -1,12 +1,12 @@
 ---
 id: G12M-BHA-10
-status: DRAFT_WAITING
+status: READY_H3
 owner: governance and main-branch single writer
 produces:
   - final accepted or blocked G12M registry state
   - immutable acceptance receipt and artifact links
 consumes:
-  - G12M-BHA-09 or G12M-BHA-02 H2/H3
+  - G12M-BHA-02 H3
 depends_on:
   contract: [G12M-BHA-00]
   evidence: [accepted node receipts]
@@ -18,26 +18,22 @@ fan_in: null
 
 ## Outcome
 
-Integrate only accepted commits in topological order and make the Acceptance Matrix
-and G12 README state unambiguous: upstream v2 evidence accepted, historical causal
-Runtime qualification either accepted through exact v3 identities or blocked by the
-recorded H2/H3 decision.
+Integrate the accepted BHA-02 H3 decision and make the Acceptance Matrix and G12
+README state unambiguous: upstream v2 evidence remains accepted and historical
+causal Runtime qualification is blocked by `H3 — NO_CAUSAL_AUTHORITY`.
 
 ## Inputs
 
 - Accepted node commits and receipts.
-- Exact authority/source/Bundle/Profile/adapter/Run/assessment hashes for H1.
-- Exact blocker-decision hash for H2/H3.
+- Exact BHA-02 H3 blocker-decision hash.
 - Protected v1/v2 fingerprints and pre-existing dirty-file fingerprints.
 
 ## Fan-in rules
 
 - Cherry-pick only immutable accepted commits; one writer owns main.
 - Resolve no user-owned dirty file without explicit ownership handoff.
-- H1 links every identity from v2 evidence through the assessment.
-- H2 records 2024 as post-hoc-only and links a separate prospective plan; it does not
-  reuse v2 as causal input.
-- H3 records the permanent causal blocker.
+- Record H3 as the permanent causal blocker and retain 2024 v2 as post-hoc-only.
+- Link no prospective plan and reuse no v2 artifact as causal input.
 - Remove stale Binance `nominal ready` wording.
 - Keep legal, live, deployment, permanent-finality, and provider-global-completeness
   claims false or explicitly limited.
@@ -64,5 +60,5 @@ No executable package or accepted source/fixture changes.
 ## Exclusions
 
 - New implementation or research.
-- Retrofitting H2/H3 into H1.
+- Retrofitting H3 into H1.
 - Live/deployment authorization.

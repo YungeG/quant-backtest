@@ -1,6 +1,6 @@
 ---
 id: G12M-BHA-09
-status: DRAFT_WAITING
+status: TERMINATED_H3
 owner: provider-specific G12M assessor writer
 produces:
   - read-only Binance funding-history G12M assessment

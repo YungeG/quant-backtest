@@ -1,6 +1,6 @@
 ---
 id: G12M-BHA-03
-status: DRAFT_WAITING_H1
+status: TERMINATED_H3
 owner: Builder source-v3 writer
 produces:
   - additive Binance funding-history source-bounded v3 report

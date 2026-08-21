@@ -1,6 +1,6 @@
 ---
 id: G12M-BHA-08
-status: DRAFT_WAITING
+status: TERMINATED_H3
 owner: canonical Run single writer
 produces:
   - one persisted decision-grade Binance Run

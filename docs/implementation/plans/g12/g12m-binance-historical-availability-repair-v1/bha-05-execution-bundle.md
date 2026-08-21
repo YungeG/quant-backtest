@@ -1,6 +1,6 @@
 ---
 id: G12M-BHA-05
-status: DRAFT_WAITING
+status: TERMINATED_H3
 owner: Builder execution-Bundle writer
 produces:
   - one immutable complete execution Bundle

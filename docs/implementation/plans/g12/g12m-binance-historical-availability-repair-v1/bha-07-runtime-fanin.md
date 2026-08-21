@@ -1,6 +1,6 @@
 ---
 id: G12M-BHA-07
-status: DRAFT_WAITING_WRITE_CONFLICT
+status: TERMINATED_H3
 owner: Runtime integration single writer
 produces:
   - exact resolved additive production Profile identity and registration
