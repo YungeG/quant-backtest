@@ -1,8 +1,7 @@
 ---
 id: G12K-TUSHARE-FIXED-INSTRUMENT-SOURCE-BOUNDED-V1
-readiness: BLOCKED
-contract_status: D1_PASSED
-implementation_status: UNIMPLEMENTED
+readiness: ACCEPTED_SOURCE_BOUNDED_SLICE
+gate_status: PASSED
 owner: market-bundle-builder G12K fixed-instrument observation
 produces:
   - G12KFixedInstrumentSourceBoundedObservationReportV1
@@ -26,7 +25,9 @@ fan_out: [G12M-SOURCE-BOUNDED-QUALIFICATION-V1]
 
 ## Status and purpose
 
-D1 is frozen and passed. General G12K remains `DRAFT / BLOCKED`.
+D1-D4 `PASSED` at implementation source
+`28a4d7234f5101e67bfa64f1eded92b81bfcf73d`. The exact fixed-singleton
+Tushare source-bounded slice is accepted; general G12K remains `DRAFT / BLOCKED`.
 The slice is deliberately narrower than listing/universe qualification: it records
 positive Tushare daily-row presence for one preselected instrument and the exact
 corporate-action rows returned by one observed-as-of Tushare response. It does not
@@ -518,7 +519,7 @@ lineage.
 - No result grade, profile qualification, legal/compliance claim, live eligibility,
   or deployment authorization is granted.
 
-## D2 — bounded acquisition (unimplemented)
+## D2 — bounded acquisition (`PASSED` at `5954b84cbb5bab875cbda2051df876348f30ae12`)
 
 Authorized write set:
 
@@ -535,7 +536,7 @@ malformed/duplicate-key/credential tests, exact response capture, and secret sca
 pass. D2 does not modify accepted acquisition modules used by G12I or the older
 Tushare authority fixture.
 
-## D3 — observation report (unimplemented)
+## D3 — observation report (`PASSED` at `28a4d7234f5101e67bfa64f1eded92b81bfcf73d`)
 
 Authorized write set:
 
@@ -551,34 +552,59 @@ verification, deterministic row/relevance hashing, canonical report replay,
 append-only direct-edge tests, failure-precedence tests, architecture tests, and
 preservation of accepted production bytes pass.
 
-## D4 — acceptance and nominal G12M handoff (unimplemented)
+## D4 — acceptance and nominal G12M handoff (`PASSED`)
 
-Authorized documentation write set:
+The accepted capture is exactly one full Tushare Pro
+`dividend(ts_code="000001.SZ")` response for the fixed singleton
+`xshe:000001`. It retains 96 rows in provider order, reports `has_more=false` and
+observed count metadata `0`, and selects zero rows under the frozen
+`[20260706, 20260731)` target-date predicate. The zero selection means only
+`NO_TARGET_RELEVANT_ROW_RETURNED_AT_OBSERVED_AS_OF`.
 
-```text
-docs/implementation/plans/g12/g12k-tushare-fixed-instrument-source-bounded-v1.md
-docs/implementation/plans/g12/README.md
-docs/implementation/plans/g12/g12k.md
-docs/implementation/plans/g12/g12m-source-bounded-qualification-v1.md
-docs/implementation/acceptance-matrix.md
-```
+Frozen identities:
 
-D4 records exact fixture/report/file/snapshot/request/source-row hashes and the
-immutable implementation commit. It formally amends G12M into provider-specific
-nominal readiness:
+- D1 contract source: `3d65a4740c3da6eb923dd5f12a92c0ef8e1e9972`;
+- D1 contract amendments: `a274658d47e428a5c5be5a3dedcd79f223ed805d`,
+  `060c6e2ce949183e2ad6611eb7bc1da971018e9a`,
+  `3addd11376e1974ea577b7ce3604b3b739db0dce`, and
+  `ff768d493d9d0d4bc61d280105130d8dab945691`;
+- bounded acquisition source: `5954b84cbb5bab875cbda2051df876348f30ae12`;
+- observation implementation source: `28a4d7234f5101e67bfa64f1eded92b81bfcf73d`;
+- production module file: `sha256:4fe7aea59608fbe7dcf9953b29b97a0bf644e3efe6ef069790c851aa64403546`;
+- response file: `sha256:af19248549b55de24f36e120e4c416dd9a23d225c84f96edaa1534cfb377a8af`;
+- acquisition receipt file: `sha256:5524257ee9a464d8e72df803c1493bc92e59420f0af1f6593b23a22dbb93a240`;
+- SourceSnapshot: `sha256:ecb17991e82a73cc2eaaaa457ff72ccd89cb1a4a23fd595419983028f2c4a5c4`;
+- source content tree: `sha256:734b7b3460fda376ee105619fc4f20da33f88a3e5693de50c92389782b872809`;
+- provenance: `sha256:475f9a488e7e8c761bd01f55528f1185a1aacbba4868c00190d51a1200c18e0d`;
+- request scope: `sha256:5738442bf477fc2f60542fa4b0ddee7be8d737d068077eefaa63d72489935ed7`;
+- accepted catalog canonical file: `sha256:d71ca8ed8977bf5fa0aa7cd1ab11fb85abcd5382f42c7e2bb2243d5b5290e456`;
+- instrument catalog: `sha256:99df0de0dc3008cf557bb7634caf483fae27488c75016421218100df6a77a6cc`;
+- retained source rows: `sha256:2ed79936a664545591c2f3baf7224c7a632f17416c120eae22022eac56ed07aa`;
+- ordered source-row-hash tuple: `sha256:774f8cb53478581c3137c6cc086a76552a0719cfaa121df790c451368b37fb84`;
+- empty target-relevant-hash tuple: `sha256:4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945`;
+- report: `sha256:5a49065d87286a9673893337328ddbbab9a19cd3addf178bf96033b9b1babfd7`;
+- report canonical file: `sha256:a386f4281374d1449c0b5ba4371b9e9d2de5b236bc8fc5b5cdd8de5e43c65956`.
 
-- the A-share fixed-singleton case independently consumes and nominally
-  deep-reconstructs both accepted G12I and G12K canonical report bytes, binds both
-  accepted canonical-file/report hashes, and cross-checks provider, instrument,
-  scope, dates/Event hashes, and observation times;
-- copied G12I hashes inside G12K, caller booleans, naked hashes, generic
-  `ArtifactRef`, or Runtime→Builder import are insufficient;
-- Runtime separately verifies the bound run uses exactly singleton `xshe:000001`,
-  has no dynamic universe selector, and the assessment instant is not earlier than
-  G12K `observed_at`;
-- general/dynamic-universe G12K remains blocked; and
-- Binance evidence remains required for a Binance nominal case, but does not block
-  this exact Tushare-only A-share nominal case.
+Acceptance passed 25 focused observer/acquisition/architecture tests, 127 adjacent
+Tushare/SourceSnapshot tests, the 192-test architecture suite, and the full
+2213-test repository suite. Ruff check/format, primary LSP, compileall, diff checks,
+full-repository gitleaks, and independent adversarial review passed. Pyright was not
+available in this environment (`ModuleNotFoundError: pyright`); primary LSP was
+clean. Accepted G12I/G12CD modules, fixtures, canonical bytes, hashes, APIs, and the
+Builder root surface remain unchanged.
 
-No broader listing, universe, survivorship, corporate-action, result-grade, live,
-legal, or deployment claim is implied.
+G12M is now provider-specific nominally ready for one A-share case only. A future
+Runtime slice must independently deep-reconstruct the accepted G12I and G12K
+canonical report bytes, bind both accepted canonical-file/report hashes, and
+cross-check provider, instrument, scope, G12I dates/Event hashes, and observation
+times. Copied G12I hashes inside G12K, caller booleans, naked hashes, generic
+`ArtifactRef`, or Runtime→Builder import remain insufficient. Runtime must also
+verify the bound run uses exactly singleton `xshe:000001`, has no dynamic universe
+selector, and is assessed no earlier than G12K `observed_at`.
+
+General or dynamic-universe G12K remains blocked. Binance observed-as-of evidence is
+still required for a Binance nominal case, but does not block this exact
+Tushare-only A-share case. No broader listing, universe, survivorship,
+corporate-action absence/lifecycle, result-grade, live, legal, or deployment claim
+is implied. Corrections require a new snapshot/report and exact predecessor-evidence
+replay; prior evidence and Runs remain immutable.

@@ -1,6 +1,6 @@
 ---
 id: G12M-SOURCE-BOUNDED-QUALIFICATION-V1
-readiness: BLOCKED
+readiness: PROVIDER_SPECIFIC_NOMINAL_READY
 gate_status: DRAFT
 owner: backtest-runtime qualification
 produces:
@@ -8,11 +8,11 @@ produces:
 consumes:
   - ADR 0008
   - accepted G12I SZSE evidence slice
-  - accepted G12K SZSE/CNINFO evidence slice
-  - accepted Binance FAPI observed-as-of evidence slice
+  - accepted G12K Tushare fixed-instrument evidence slice
+  - future Binance FAPI observed-as-of evidence slice for a Binance case
 depends_on:
   contract: [G07, G12I, G12K, G12L-*]
-  evidence: [exact canonical upstream artifacts and accepted hashes from the three named lanes]
+  evidence: [exact canonical upstream artifacts and accepted hashes required by each provider-specific case]
   write_conflict: [runtime-integrity-policy, acceptance-registry]
 ---
 
@@ -22,15 +22,18 @@ depends_on:
 
 Prepare a future Runtime-owned, read-only qualification of an already graded
 backtest result under [ADR 0008](../../../adr/0008-source-bounded-decision-grade.md).
-Do not freeze or authorize a production interface until the provider lanes below
-publish exact accepted canonical artifacts and hashes.
+One exact Tushare-only A-share case now has accepted G12I and fixed-singleton G12K
+canonical artifacts. This governance plan still does not itself freeze or authorize
+a production Runtime interface; a later provider-specific D1 contract must do so.
 
 ## Status
 
-`DRAFT / BLOCKED`. ADR 0008 policy is accepted. The exact G12I Tushare/SZSE
-nominal reconstruction boundary below is now frozen. G12M implementation readiness
-remains blocked because the repository does not yet contain accepted exact
-SZSE/CNINFO G12K and Binance FAPI observed-as-of source evidence contracts.
+`DRAFT / PROVIDER-SPECIFIC A-SHARE NOMINAL READY`. ADR 0008 policy is accepted.
+The exact G12I Tushare/SZSE and G12K Tushare fixed-singleton nominal reconstruction
+boundaries below are frozen. A later D1 contract may now design the exact
+Tushare-only A-share case. General/dynamic-universe G12K and any Binance case remain
+blocked on their own missing authority/artifact lanes; Binance does not block the
+A-share case.
 
 No production code, public type, function signature, serialized assessment body,
 failure enum, test contract, or write set is authorized by this plan.
@@ -73,11 +76,11 @@ either duplicate Builder authority or trust claims it cannot verify.
 
 ## Prerequisite source lanes
 
-| Lane | Exact evidence contract still needed before G12M design | Acceptance identity still needed |
+| Lane | Provider-specific readiness | Acceptance identity |
 | --- | --- | --- |
 | G12I SZSE | `ACCEPTED`: exact July-2026 Tushare `daily`/`trade_cal`/`suspend_d` observation report, canonical replay, append-only correction identity, and nominal Runtime boundary below. | Source `4389877b8879fc9bb1a6d6544c4079a7d29312ab`; report `sha256:ff09c4ad9f8025e66689387b5132d3d85c4101276fbf7330dd5040af111cc029`; canonical file `sha256:9cbfc115e41f56d1e83eac520856c3f529f83972b97111238e5dbb1a68c4eae6`. |
-| G12K SZSE/CNINFO | Finite listing/universe and corporate-action evidence that binds SZSE/CNINFO source bytes, receipts, point-in-time scope, corrections, and supported completeness limits. | Accepted catalog/action artifact types, canonical hashes, correction identities, scope hash, and immutable acceptance commit. |
-| Binance FAPI observed-as-of | Finite Binance FAPI acquisition evidence that binds the exact request/response bytes, receipt-derived observed-as-of, local identity, normalization/publication boundary, and known archive limitations. | Accepted source/receipt/report artifact types, exact canonical hashes, request/scope identity, observed-as-of rule, and immutable acceptance commit. |
+| G12K Tushare fixed singleton | `ACCEPTED`: exact full `dividend(ts_code="000001.SZ")` response, receipt/Snapshot replay, fixed July-2026 scope, 96 ordered source rows, zero target-relevant rows, append-only direct-predecessor evidence, and explicit limits. This is not listing/universe/survivorship/lifecycle authority. | Source `28a4d7234f5101e67bfa64f1eded92b81bfcf73d`; report `sha256:5a49065d87286a9673893337328ddbbab9a19cd3addf178bf96033b9b1babfd7`; canonical file `sha256:a386f4281374d1449c0b5ba4371b9e9d2de5b236bc8fc5b5cdd8de5e43c65956`; final plan `sha256:79402fe89df8bffc23be4ff2772bbba14510f6a6133de8fe48acca1b0656c5d8`. |
+| Binance FAPI observed-as-of | `BLOCKED FOR BINANCE CASE ONLY`: finite Binance FAPI acquisition evidence must bind exact request/response bytes, receipt-derived observed-as-of, local identity, normalization/publication boundary, and known archive limitations. It does not block the Tushare-only A-share case. | Accepted source/receipt/report artifact types, exact canonical hashes, request/scope identity, observed-as-of rule, and immutable acceptance commit remain missing. |
 
 Research notes, ad hoc files, inherited hash claims, development fixtures, or
 Builder objects without an accepted canonical cross-package boundary do not
@@ -117,9 +120,56 @@ This freezes no Runtime function signature or public export. A later corrected G
 capture is a new upstream acceptance and must bind its predecessor through
 `supersedes_report_hash`; it cannot silently replace these identities.
 
+## Frozen G12K fixed-singleton nominal reconstruction boundary
+
+A future Tushare-only A-share G12M implementation must independently consume the
+accepted G12K evidence as exact canonical bytes for type
+`g12k_fixed_instrument_source_bounded_observation_report`, schema version `1`. It
+must use a closed nominal Runtime value that mirrors every accepted field; it must
+not import Builder or accept an open mapping, generic `ArtifactRef`, caller boolean,
+class-name assertion, or naked hash.
+
+Reconstruction must reject noncanonical JSON, duplicate/extra/missing keys,
+constructor bypass, nested substitution, any true qualification flag, hashes or
+relevance inconsistent with retained source-row replay, and any mismatch in the
+fixed provider, dataset, instrument, XSHE/SZSE scope, accepted catalog/G12I
+identities, member/hash/time bindings, limitations, or null first-capture
+`supersedes_report_hash`. It must bind these accepted identities:
+
+- implementation source `28a4d7234f5101e67bfa64f1eded92b81bfcf73d`;
+- canonical report file `sha256:a386f4281374d1449c0b5ba4371b9e9d2de5b236bc8fc5b5cdd8de5e43c65956`;
+- report `sha256:5a49065d87286a9673893337328ddbbab9a19cd3addf178bf96033b9b1babfd7`;
+- receipt `sha256:5524257ee9a464d8e72df803c1493bc92e59420f0af1f6593b23a22dbb93a240`;
+- snapshot `sha256:ecb17991e82a73cc2eaaaa457ff72ccd89cb1a4a23fd595419983028f2c4a5c4`;
+- content tree `sha256:734b7b3460fda376ee105619fc4f20da33f88a3e5693de50c92389782b872809`;
+- provenance `sha256:475f9a488e7e8c761bd01f55528f1185a1aacbba4868c00190d51a1200c18e0d`;
+- request scope `sha256:5738442bf477fc2f60542fa4b0ddee7be8d737d068077eefaa63d72489935ed7`;
+- catalog canonical file `sha256:d71ca8ed8977bf5fa0aa7cd1ab11fb85abcd5382f42c7e2bb2243d5b5290e456`;
+- instrument catalog `sha256:99df0de0dc3008cf557bb7634caf483fae27488c75016421218100df6a77a6cc`;
+- retained rows `sha256:2ed79936a664545591c2f3baf7224c7a632f17416c120eae22022eac56ed07aa`;
+- ordered row-hash tuple `sha256:774f8cb53478581c3137c6cc086a76552a0719cfaa121df790c451368b37fb84`;
+- empty relevant-row tuple `sha256:4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945`;
+- final upstream plan `sha256:79402fe89df8bffc23be4ff2772bbba14510f6a6133de8fe48acca1b0656c5d8`.
+
+The Runtime boundary must cross-check the embedded G12I report/canonical-file
+identities against the independently reconstructed accepted G12I value, require the
+19 ordered daily dates/Event hashes to match exactly, and require G12K
+`observed_at` not earlier than G12I `observed_at`. It must separately prove the
+bound run uses exactly singleton `xshe:000001`, has no dynamic universe selector,
+and that the assessment instant is not earlier than G12K `observed_at`.
+
+The 19 daily rows mean only `OBSERVED_DAILY_ROW_AT_SESSION`; the zero selected
+dividend rows mean only
+`NO_TARGET_RELEVANT_ROW_RETURNED_AT_OBSERVED_AS_OF`. Neither is listing membership,
+whole-universe completeness, survivorship safety, action absence, lifecycle
+closure, or provider finality. A corrected G12K capture is a new accepted canonical
+report whose direct predecessor was evidence-replayed; it cannot silently replace
+these identities.
+
 ## Readiness exit criteria
 
-G12M may move from `BLOCKED` only after all three lanes provide:
+A provider-specific G12M contract may freeze only after every upstream lane required
+by that exact case provides:
 
 1. exact provider, dataset, finite scope, source authority, and observed-as-of
    semantics;
@@ -128,16 +178,22 @@ G12M may move from `BLOCKED` only after all three lanes provide:
 3. a verifier or nominal value boundary that Runtime can consume without
    importing Builder or performing I/O;
 4. explicit limitation semantics for unavailable permanent identity, revision
-   finality, provider scope completeness, and joined Binance funding evidence;
+   finality, provider scope completeness, and any applicable joined Binance funding
+   evidence;
 5. append-only correction identity sufficient to distinguish a new snapshot from
    the superseded evidence; and
 6. accepted tests, architecture checks, immutable commit identities, and review
    closure owned by each upstream lane.
 
-Only then may a new G12M contract freeze exact inputs, output artifact, failure
-precedence, compatibility rules, tests, and implementation write set. That
-contract must bind the accepted finite artifacts directly; it must not introduce
-a provider registry, generic source framework, facts registry, or policy DSL.
+The accepted G12I and fixed-singleton G12K lanes satisfy the upstream source-lane
+criteria for the exact Tushare-only A-share case. The remaining D1 work is to freeze
+the Runtime-owned closed nominal values, run/Integrity bindings, assessment
+artifact, failure precedence, tests, and write set. Binance is not a dependency of
+that case.
+
+Any new G12M contract must bind the accepted finite artifacts directly; it must not
+introduce a provider registry, generic source framework, facts registry, or policy
+DSL.
 
 ## Future invariants
 
