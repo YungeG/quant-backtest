@@ -313,6 +313,8 @@ observe_g12k_tushare_fixed_instrument_source_bounded_v1(
   snapshot: SourceSnapshot,
   instrument_catalog: InstrumentCatalog,
   supersedes_report: G12KFixedInstrumentSourceBoundedObservationReportV1 | None = None,
+  supersedes_acquisition_receipt_bytes: bytes | None = None,
+  supersedes_snapshot: SourceSnapshot | None = None,
 ) -> G12KFixedInstrumentSourceBoundedObservationOutcomeV1
 ```
 
@@ -327,8 +329,12 @@ The observer:
 5. deep-reconstructs the exact supplied `InstrumentCatalog` and binds accepted
    G12CD identities;
 6. deterministically hashes every source row and applies the frozen relevance
-   predicate; and
-7. deep-reconstructs the completed report before returning it.
+   predicate;
+7. when a direct predecessor is supplied, requires all three predecessor inputs,
+   verifies its receipt/snapshot/archive bytes exactly as current evidence, rebuilds
+   its row replay and report while preserving only its already-recorded predecessor
+   hash, and compares the rebuilt complete report; and
+8. deep-reconstructs the completed report before returning it.
 
 The report canonical body has these fields in this order, followed by computed
 `report_hash`:
@@ -457,8 +463,9 @@ First applicable trigger wins:
 5. `RESPONSE_PAGE_INCOMPLETE` — retained response says `has_more=true`;
 6. `SOURCE_REFERENCE_MISMATCH` — valid canonical G12I bytes or a valid exact
    catalog value do not match the accepted G12I/G12CD identities;
-7. `PREDECESSOR_INVALID` — an exact-type predecessor fails deep canonical
-   reconstruction, including constructor-bypass detection;
+7. `PREDECESSOR_INVALID` — predecessor inputs are partial, malformed,
+   constructor-bypassed, receipt/snapshot/archive-inconsistent, or the complete
+   predecessor report cannot be rebuilt exactly from its supplied evidence;
 8. `CORRECTION_EDGE_INVALID` — a valid predecessor is not the identical fixed
    scope, the new snapshot is unchanged, the new `observed_at` is not later, or
    the direct supersession/report identity is inconsistent;
@@ -470,13 +477,22 @@ text, token material, arbitrary exception text, or undeclared filesystem path.
 
 ### Append-only direct correction edge
 
-D3 validates one explicitly supplied direct predecessor only. The predecessor must
-be the identical fixed scope; the new snapshot must differ; new `observed_at` must
-be later; and the new report sets
-`supersedes_report_hash=predecessor.report_hash`. If no predecessor is supplied,
-the field is null.
+D3 validates one explicitly supplied direct predecessor only. Either all of
+`supersedes_report`, `supersedes_acquisition_receipt_bytes`, and
+`supersedes_snapshot` are null, or all three are present with exact nominal types.
+The predecessor receipt/snapshot/archive is independently verified, its source rows
+and relevance are replayed, and a complete expected predecessor report is rebuilt
+using only the predecessor's already-recorded `supersedes_report_hash` as an opaque
+prior-edge identity. That complete expected report must equal the supplied
+predecessor.
 
-D3 does not know repository head state, detect an omitted intermediate report, or
+The predecessor must be the identical fixed scope; the new snapshot must differ;
+new `observed_at` must be later; and the new report sets
+`supersedes_report_hash=predecessor.report_hash`. If no predecessor evidence is
+supplied, the field is null.
+
+D3 does not validate the predecessor's earlier edge, know repository head state,
+detect an omitted intermediate report, or
 reject competing successors. Acceptance/repository/consumer policy establishes
 currentness and rejects forks. Prior bytes, reports, runs, and results remain
 immutable. Local direct supersession does not manufacture provider correction
