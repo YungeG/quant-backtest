@@ -1,6 +1,6 @@
 ---
 id: G12M-BINANCE-HISTORICAL-AVAILABILITY-REPAIR-V1-EXECUTION
-status: DECIDED_H3_ROUTE
+status: ACCEPTED_H3_FANIN
 owner: backtest historical availability and provider qualification
 source_plan: ../g12m-binance-historical-availability-repair-v1.md
 status_authority: ../../../acceptance-matrix.md
@@ -10,8 +10,8 @@ status_authority: ../../../acceptance-matrix.md
 
 ## Outcome
 
-Record the accepted Wave 0 inputs, the BHA-02 H3 decision, terminated implementation
-nodes, and the sole Ready governance route.
+Record the accepted Wave 0 inputs, accepted BHA-02 H3 decision, permanently
+terminated implementation nodes, and completed BHA-10 governance fan-in.
 
 The parent plan remains the normative specification. This directory owns execution
 order, node contracts, write sets, and acceptance boundaries only.
@@ -39,10 +39,11 @@ BHA-01A settlement research (accepted) ─────┼─→ BHA-02 DECIDED_H
 BHA-01B revision research (accepted) ───────┘          │
                                                        ├─× BHA-03 … BHA-09
                                                        │   TERMINATED_H3
-                                                       └─→ BHA-10 READY_H3
+                                                       └─→ BHA-10 ACCEPTED_H3
 ```
 
-BHA-10 is the only Ready route. No H2 or prospective authorization remains.
+BHA-10 is accepted. No Ready Binance route, H2 route, or prospective authorization
+remains.
 
 ## Nodes
 
@@ -59,7 +60,7 @@ BHA-10 is the only Ready route. No H2 or prospective authorization remains.
 | [BHA-07](bha-07-runtime-fanin.md) | TERMINATED_H3 | none | — | — | none |
 | [BHA-08](bha-08-canonical-run.md) | TERMINATED_H3 | none | — | — | none |
 | [BHA-09](bha-09-assessment.md) | TERMINATED_H3 | none | — | — | none |
-| [BHA-10](bha-10-governance-fanin.md) | READY_H3 | blocked registry state | BHA-02 H3 | accepted decision receipt | acceptance registry/main branch |
+| [BHA-10](bha-10-governance-fanin.md) | ACCEPTED_H3 | final blocked registry state and [receipt](bha-10-acceptance-receipt.md) | BHA-02 H3 | accepted decision/report/manifest and protected-byte fingerprints | acceptance registry/main branch |
 
 ## Parallel waves
 
@@ -76,20 +77,17 @@ BHA-02 selected `H3 — NO_CAUSAL_AUTHORITY` and emitted decision artifacts only
 BHA-03 through BHA-09 are `TERMINATED_H3`. No source/Profile, Bundle/adapter,
 Runtime, Run, or assessment writer starts.
 
-### Governance fan-in — Ready
+### Governance fan-in — accepted
 
-BHA-10 is the only Ready route.
+BHA-10 is accepted. Binance has no remaining Ready or prospective route.
 
-## WIP policy
+## Closed execution state
 
-- Only the BHA-10 governance writer may start.
-- Read-only reviewers may run in parallel after the BHA-02 commit is frozen.
-- Consume only the immutable Wave 0 tips and recorded decision hashes.
-
-## Acceptance and merge policy
-
-BHA-10 consumes the accepted H3 decision and is the sole writer for final Acceptance
-Matrix and G12 README status. No terminated implementation commit is integrated.
+- BHA-10 consumed only immutable Wave 0 tips and recorded decision hashes.
+- No terminated implementation commit was integrated.
+- No source v3, Profile input, Bundle, adapter, Run, assessment, or prospective plan
+  exists for this historical repair.
+- Tushare readiness and unrelated registry states remain unchanged.
 
 ## Proof budget
 
@@ -101,8 +99,8 @@ Matrix and G12 README status. No terminated implementation commit is integrated.
 No executable code changed, so no repository or architecture suite is required by
 BHA-02.
 
-## Immediate ready queue
+## Final route
 
-| Priority | Node | Unblocks | Write set | State |
-| --- | --- | --- | --- | --- |
-| 1 | BHA-10 | final blocked governance fan-in | Acceptance Matrix/G12 README and receipts | READY_H3 |
+| Node | Outcome | Receipt | State |
+| --- | --- | --- | --- |
+| BHA-10 | final blocked governance fan-in | [immutable receipt](bha-10-acceptance-receipt.md) | ACCEPTED_H3 |

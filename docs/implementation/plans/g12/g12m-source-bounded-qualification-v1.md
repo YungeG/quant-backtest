@@ -1,6 +1,6 @@
 ---
 id: G12M-SOURCE-BOUNDED-QUALIFICATION-V1
-readiness: A_SHARE_NOMINAL_READY_BINANCE_CAUSAL_BLOCKED
+readiness: A_SHARE_NOMINAL_READY_BINANCE_H3_PERMANENT_BLOCK
 gate_status: DRAFT
 owner: backtest-runtime qualification
 produces:
@@ -30,18 +30,18 @@ must do so.
 
 ## Status
 
-`DRAFT / PROVIDER-SPECIFIC A-SHARE NOMINAL READY; BINANCE UPSTREAM V2 EVIDENCE
-ACCEPTED / CAUSAL RUNTIME QUALIFICATION BLOCKED`. ADR 0008 policy is accepted. The
-exact G12I Tushare/SZSE and G12K Tushare fixed-singleton nominal reconstruction
-boundaries are frozen. The Binance funding-history v2 report is accepted as post-hoc
-evidence, but its `available_time` remains the 2026 receipt instant and does not
-establish causal availability for the historical 2024 events. A later D1 contract
-may design the exact Tushare-only A-share case; Binance historical causal qualification
-requires target-effective provider availability authority. General/dynamic-universe
-G12K and other Binance source combinations remain blocked on their own missing lanes.
+`DRAFT / PROVIDER-SPECIFIC A-SHARE NOMINAL READY; BINANCE H3 PERMANENTLY
+BLOCKED`. ADR 0008 policy and the exact Tushare readiness boundaries are unchanged.
+The Binance funding-history v2 report remains accepted as exact post-hoc upstream
+evidence, with `available_time` fixed at the 2026 receipt instant. Accepted H3
+`NO_CAUSAL_AUTHORITY` permanently terminates the historical BHA-03 through BHA-09
+branch. No Binance source v3, Profile input, Bundle, adapter, Run, assessment, or
+prospective plan exists or is authorized. General/dynamic-universe G12K and other
+provider combinations remain blocked on their own missing lanes.
 
 No production code, public type, function signature, serialized assessment body,
-failure enum, test contract, or write set is authorized by this plan.
+failure enum, test contract, or write set is authorized by this plan. Tushare nominal
+readiness is not altered by the Binance H3 decision.
 
 ## Decision frozen now
 
@@ -85,7 +85,7 @@ either duplicate Builder authority or trust claims it cannot verify.
 | --- | --- | --- |
 | G12I SZSE | `ACCEPTED`: exact July-2026 Tushare `daily`/`trade_cal`/`suspend_d` observation report, canonical replay, append-only correction identity, and nominal Runtime boundary below. | Source `4389877b8879fc9bb1a6d6544c4079a7d29312ab`; report `sha256:ff09c4ad9f8025e66689387b5132d3d85c4101276fbf7330dd5040af111cc029`; canonical file `sha256:9cbfc115e41f56d1e83eac520856c3f529f83972b97111238e5dbb1a68c4eae6`. |
 | G12K Tushare fixed singleton | `ACCEPTED`: exact full `dividend(ts_code="000001.SZ")` response, receipt/Snapshot replay, fixed July-2026 scope, 96 ordered source rows, zero target-relevant rows, append-only direct-predecessor evidence, and explicit limits. This is not listing/universe/survivorship/lifecycle authority. | Source `28a4d7234f5101e67bfa64f1eded92b81bfcf73d`; report `sha256:5a49065d87286a9673893337328ddbbab9a19cd3addf178bf96033b9b1babfd7`; canonical file `sha256:a386f4281374d1449c0b5ba4371b9e9d2de5b236bc8fc5b5cdd8de5e43c65956`; final plan `sha256:79402fe89df8bffc23be4ff2772bbba14510f6a6133de8fe48acca1b0656c5d8`. |
-| Binance FAPI funding history | `UPSTREAM V2 EVIDENCE ACCEPTED / CAUSAL RUNTIME QUALIFICATION BLOCKED`: exact public REST request/response bytes, canonical receipt/Snapshot replay, three rate+funding-mark rows, exact Event/manifest/Bundle-ref publication, late receipt-derived observed-as-of, append-only predecessor evidence, and explicit provider-finality limitations. The evidence is post-hoc because `available_time` remains the 2026 receipt instant. | Source `024e5f209a94bb358946f5c468630108981f0329`; report `sha256:29e639615c1e5f5fa05ffdff9bc77a630d56838c7b0e70230177922bdbffc37b`; canonical file `sha256:850cf2b5b2f3caffd7afc1cb4f364e6224c4022417ae46bb01a406600e971951`; final plan `sha256:8a5d5643db1baa6bd50d26e6ab4220df948ca3122a46214a710dd47cd9299686`. |
+| Binance FAPI funding history | `UPSTREAM V2 EVIDENCE ACCEPTED / H3 PERMANENTLY BLOCKED`: exact v2 post-hoc evidence remains accepted, but H3 `NO_CAUSAL_AUTHORITY` terminates historical BHA-03 through BHA-09. No causal Runtime or prospective route is authorized. | Source `024e5f209a94bb358946f5c468630108981f0329`; v2 Snapshot `sha256:a45d9acdcfb4d42d1c70af44969f6a5151fb260c4c3040943b3d961c1073aa3f`; v2 report `sha256:29e639615c1e5f5fa05ffdff9bc77a630d56838c7b0e70230177922bdbffc37b`; H3 decision JSON `sha256:a0f8fff9ed75db74abb9fd596ad6b3c79bd1a1c75e823e5bef5b5c63e0b2a3e2`; decision report `sha256:130bfc81c8c97e47992a90354c64b28bebee8053fafc48eb63eb07c942f407af`; manifest file `sha256:760d44f9a4b1627f7f2a176336ba74a2924f7eecaf44ac7ba72e78d93f99e6f6`; accepted main `600259a9f22e44102e5e60faab3176cbf5761e6e`. |
 
 Research notes, ad hoc files, inherited hash claims, development fixtures, or
 Builder objects without an accepted canonical cross-package boundary do not
@@ -173,48 +173,35 @@ these identities.
 
 ## Accepted Binance funding-history post-hoc evidence boundary
 
-A future post-hoc Binance G12M Runtime assessment may independently consume exact
-canonical bytes for type
-`binance_usdm_funding_history_source_bounded_observation_report`, schema version
-`2`. It must use a closed nominal Runtime value mirroring every field; it must not
-import Builder or accept an open mapping, generic `ArtifactRef`, caller boolean,
-class-name assertion, or naked hash.
-
-Reconstruction must rebuild the compact three-row raw response from retained source
-rows, verify the member hash, rebuild the one-member SourceSnapshot with fixed
-provenance, normalize both funding rate and funding-time mark at exact scale `8`,
-rebuild all Event IDs/hashes and `canonical_bytes(events)`, and require exact G12C
-stream/manifest plus `MarketBundleRef` identity. It must bind:
+The accepted v2 report remains discoverable as exact post-hoc upstream evidence only:
 
 - implementation source `024e5f209a94bb358946f5c468630108981f0329`;
-- response and member `sha256:e9f73f9c845c28abb31037d8230df2d6f13d5d368c43436e891fcc757372c338`;
+- response/member `sha256:e9f73f9c845c28abb31037d8230df2d6f13d5d368c43436e891fcc757372c338`;
 - receipt `sha256:a92989478047de7d744744aedeaf365f7d16240b536c1ccece749abe3b4efa36`;
-- request scope `sha256:e749c6265a08ebc7095c96c3636e3070eceb3f5cd82e2e981d9d23167ef50be1`;
-- snapshot `sha256:a45d9acdcfb4d42d1c70af44969f6a5151fb260c4c3040943b3d961c1073aa3f`;
-- content tree `sha256:b992587527ddb79b5d752a0bc060cad8bdfd960b874f194d49f16033f171dfd0`;
-- provenance `sha256:8591a52c953f11179a3ddc59e9c16db7d28518d7220643f73b31967683e760f6`;
-- source rows `sha256:39883ccd15ba2aaa6dc5235214331eb0abc0ecacc6851aec007391415e2086f8`;
-- ordered source-record hashes `sha256:a580b16bdcd1093a2125a63d336649133400a930b6a44af9e592f2c22ddce2b2`;
-- ordered Event hashes `sha256:9ca70dd34ce79e0f3505f2bb40cace8299557d9b9b67895c5d4a9588262677de`;
-- stream `sha256:edac3e0e501190a063fbd11ba33da0a3a4cae576fed3434697a2f7a0824c25d7`;
+- Snapshot `sha256:a45d9acdcfb4d42d1c70af44969f6a5151fb260c4c3040943b3d961c1073aa3f`;
+- Event tuple `sha256:9ca70dd34ce79e0f3505f2bb40cace8299557d9b9b67895c5d4a9588262677de`;
 - manifest content `sha256:1a4e5db873e59e1c761531a926857c424d51494d02ba06c6f76ffc851e7e47f1`;
 - Bundle-ref manifest `sha256:352aa6a20c9c04dc998d07e6935f6bb635fb52459a361648262565d5773423fb`;
 - report `sha256:29e639615c1e5f5fa05ffdff9bc77a630d56838c7b0e70230177922bdbffc37b`;
 - canonical report file `sha256:850cf2b5b2f3caffd7afc1cb4f364e6224c4022417ae46bb01a406600e971951`;
 - final upstream plan `sha256:8a5d5643db1baa6bd50d26e6ab4220df948ca3122a46214a710dd47cd9299686`.
 
-The Runtime boundary must separately prove the bound run uses instrument
-`binance_usdm:btc-usdt-perpetual`, the exact three funding times and funding
-purpose, the accepted Bundle/Build/Profile/Environment/Integrity evidence, and an
-assessment instant not earlier than report `observed_at`. The rate-only monthly
-archive, a nearby mark-price stream, or manufactured funding mark cannot substitute
-for this report.
+Accepted H3 authority is linked by the
+[decision report](../../../research/g12m-binance-funding-availability-authority-decision-v1.md),
+[canonical decision](../../../../evidence/g12m-binance-funding-availability-authority-decision-v1/decision.json),
+and [manifest](../../../../evidence/g12m-binance-funding-availability-authority-decision-v1/manifest.sha256).
+Their hashes are respectively
+`sha256:130bfc81c8c97e47992a90354c64b28bebee8053fafc48eb63eb07c942f407af`,
+`sha256:a0f8fff9ed75db74abb9fd596ad6b3c79bd1a1c75e823e5bef5b5c63e0b2a3e2`,
+and `sha256:760d44f9a4b1627f7f2a176336ba74a2924f7eecaf44ac7ba72e78d93f99e6f6`.
 
-Late local observation is explicit: this report proves the exact rows as observed,
-not immutable 2024 publication availability. Permanent provider identity, future
-finality, correction lineage, and provider-global completeness remain limitations.
-A correction requires a new accepted report whose direct predecessor receipt,
-Snapshot, raw response, Events, and report were evidence-replayed.
+No Binance Runtime reconstruction contract is authorized. Historical BHA-03 through
+BHA-09 are permanently `TERMINATED_H3`; no source v3, Profile input, Bundle, adapter,
+Run, or assessment exists. The accepted v2 report cannot be reused as causal input,
+and no prospective plan is authorized. Immutable 2024 publication availability,
+permanent provider identity/finality, complete correction lineage, provider-global
+completeness, legal closure, live eligibility, and deployment authorization remain
+false or limited.
 
 ## Readiness exit criteria
 
@@ -237,12 +224,11 @@ by that exact case provides:
 
 The accepted G12I and fixed-singleton G12K lanes satisfy the upstream source-lane
 criteria for the exact Tushare-only A-share case. The accepted Binance
-funding-history v2 lane supplies exact post-hoc upstream evidence, but does not
-satisfy the historical causal-availability prerequisite while `available_time`
-remains the 2026 receipt instant. Binance Runtime qualification is therefore
-blocked pending target-effective provider availability authority, before closed
-nominal values, run/Integrity bindings, assessment artifacts, failure precedence,
-tests, or write sets may be frozen. Neither provider case depends on the other.
+funding-history v2 lane supplies exact post-hoc upstream evidence only. H3
+`NO_CAUSAL_AUTHORITY` permanently closes the historical causal route: no closed
+nominal value, run/Integrity binding,
+assessment artifact, failure contract, test, or write set is authorized for the
+terminated BHA-03 through BHA-09 branch. Neither provider case depends on the other.
 
 Any new G12M contract must bind the accepted finite artifacts directly; it must not
 introduce a provider registry, generic source framework, facts registry, or policy
@@ -295,5 +281,6 @@ not ordinary source-bounded historical-research blockers.
 ## Nonclaims
 
 No generic assessor, public Runtime interface, new grade, provider registry,
-source framework, facts registry, policy DSL, legal certification, live trading,
-deployment authorization, or provider-global completeness claim is approved.
+source framework, facts registry, policy DSL, Binance prospective plan, legal
+certification, live trading, deployment authorization, permanent provider finality,
+or provider-global completeness claim is approved.

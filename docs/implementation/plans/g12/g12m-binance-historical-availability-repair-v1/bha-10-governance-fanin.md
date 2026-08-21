@@ -1,6 +1,6 @@
 ---
 id: G12M-BHA-10
-status: READY_H3
+status: ACCEPTED_H3
 owner: governance and main-branch single writer
 produces:
   - final accepted or blocked G12M registry state
@@ -18,15 +18,30 @@ fan_in: null
 
 ## Outcome
 
-Integrate the accepted BHA-02 H3 decision and make the Acceptance Matrix and G12
-README state unambiguous: upstream v2 evidence remains accepted and historical
-causal Runtime qualification is blocked by `H3 — NO_CAUSAL_AUTHORITY`.
+The accepted BHA-02 H3 decision is integrated into the Acceptance Matrix, G12
+README, and parent G12M status. Upstream v2 remains exact post-hoc evidence, while
+historical causal Runtime qualification is permanently blocked by
+`H3 — NO_CAUSAL_AUTHORITY`.
 
 ## Inputs
 
-- Accepted node commits and receipts.
-- Exact BHA-02 H3 blocker-decision hash.
-- Protected v1/v2 fingerprints and pre-existing dirty-file fingerprints.
+- Accepted main commits: BHA-00
+  `d9ec8631385247249fcd91bd814c1342948c53b5`, BHA-01A
+  `7a808d3b7b7a58a354212e0da0fc67c3dcefd85c`, BHA-01B
+  `366575914cd4066ad6cfa593b8df219df7021c54`, and BHA-02
+  `600259a9f22e44102e5e60faab3176cbf5761e6e`.
+- [H3 decision report](../../../../research/g12m-binance-funding-availability-authority-decision-v1.md)
+  `sha256:130bfc81c8c97e47992a90354c64b28bebee8053fafc48eb63eb07c942f407af`.
+- [Canonical decision](../../../../../evidence/g12m-binance-funding-availability-authority-decision-v1/decision.json)
+  `sha256:a0f8fff9ed75db74abb9fd596ad6b3c79bd1a1c75e823e5bef5b5c63e0b2a3e2`.
+- [Decision manifest](../../../../../evidence/g12m-binance-funding-availability-authority-decision-v1/manifest.sha256)
+  `sha256:760d44f9a4b1627f7f2a176336ba74a2924f7eecaf44ac7ba72e78d93f99e6f6`.
+- Accepted v2 Snapshot
+  `sha256:a45d9acdcfb4d42d1c70af44969f6a5151fb260c4c3040943b3d961c1073aa3f`
+  and report
+  `sha256:29e639615c1e5f5fa05ffdff9bc77a630d56838c7b0e70230177922bdbffc37b`.
+- Protected v1/v2 fingerprints and clean starting worktree fingerprint recorded in
+  the [acceptance receipt](bha-10-acceptance-receipt.md).
 
 ## Fan-in rules
 
@@ -47,15 +62,17 @@ causal Runtime qualification is blocked by `H3 — NO_CAUSAL_AUTHORITY`.
 
 No executable package or accepted source/fixture changes.
 
-## Acceptance
+## Accepted final state
 
-- Topological commit and artifact-hash audit.
-- Protected v1/v2 and user-dirty fingerprints unchanged.
-- Focused/adjacent suites for every integrated executable node.
-- Full architecture and repository suites when H1 executable code is integrated.
-- Ruff, Markdown/Python LSP, `git diff --check`, gitleaks, link/status consistency.
-- Independent final review with no blocker/high finding.
-- Commit but do not push without authorization.
+- BHA-03 through BHA-09 are permanently `TERMINATED_H3`.
+- No historical-repair source v3, Profile input, Bundle, adapter, Run, or assessment
+  exists; accepted v2 is not a causal input.
+- No prospective plan is authorized.
+- Tushare readiness and unrelated statuses are unchanged.
+- Legal, live, deployment, permanent-finality, and provider-global-completeness
+  claims remain false or explicitly limited.
+- Commands, hashes, protected-byte checks, and residual limitations are frozen in
+  the [acceptance receipt](bha-10-acceptance-receipt.md).
 
 ## Exclusions
 
