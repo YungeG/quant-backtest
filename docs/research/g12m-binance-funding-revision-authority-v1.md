@@ -10,124 +10,152 @@ conclusion: UNKNOWN_CAUSAL_BLOCKER
 
 ## Decision
 
-**UNKNOWN — causal blocker.** The searched first-party Binance surfaces do not expose an identity, predecessor, publication timestamp, or immutable checksum for the exact revision of a settled funding row visible at settlement. The current Funding Rate History response is a current-state row keyed only by business fields; it therefore cannot prove that a value retrieved later is the same revision that was visible at the 2024 settlement instant.
+**UNKNOWN — causal blocker.** Exact unauthenticated first-party bytes now establish
+bounded endpoint request/response shape and post-target schema evolution, but none
+identifies the exact revision of a settled row that was visible at settlement. A
+later current-state row therefore cannot prove equality with the 2024
+settlement-visible revision.
 
-Missing permanent finality alone could remain an ADR 0008 limitation. Here, however, the missing settlement-visible revision identity is independently blocking and cannot be downgraded to a finality limitation.
+Missing permanent finality alone could remain an ADR 0008 limitation. Missing
+settlement-visible revision identity is independently causal and cannot be
+downgraded.
 
-## Scope and method
+## Accepted evidence method
 
-Only first-party Binance sources were treated as authority:
+The acceptance basis is the five-member canonical G12A `SourceSnapshot` at
+`evidence/g12m-binance-funding-revision-authority-v1/source-snapshot.json`:
 
-1. USDⓈ-M `GET /fapi/v1/fundingRate` reference.
-2. USDⓈ-M Futures developer change log.
-3. Binance Futures funding-rate FAQ (used only for contextual current funding-history availability, not revision authority).
+1. official Binance Python Futures connector bytes pinned at a 2022 commit;
+2. official Binance modular connector response-model bytes pinned at 2025 and 2026
+   commits;
+3. the official modular connector changelog pinned at the 2026 response change;
+4. one exact unauthenticated Binance Futures testnet response.
 
-Searches were bounded to those surfaces and the exact terms recorded under `evidence/g12m-binance-funding-revision-authority-v1/negative-searches.md`. No provider-global absence claim is made. Secondary sources were not used as authority.
+Every member has exact request scope, nanosecond receipt time, HTTP status and raw
+headers, body byte count, SHA-256, and a local receipt. GitHub bytes replay against
+both raw HTTP and `git show <commit>:<path>`. Search-provider excerpts remain
+secondary acquisition aids: they are not SourceSnapshot members and are not the
+acceptance basis.
 
-Direct raw HTTP retrieval of Binance and GitHub hosts was blocked in this runtime because DNS resolved through a `198.18.0.0/15` fake-IP range rejected by the fetcher's SSRF policy. Search-provider readable extraction was available. Consequently, this lane retains exact extracted passages and receipts, but **does not claim retained official raw HTTP bytes, HTTP-header fidelity, SHA-256 values, or a canonical SourceSnapshot**. Those missing acceptance items are explicit in the evidence manifest.
+Production `developers.binance.com` and `fapi.binance.com` remained unreachable:
+both resolved into `198.18.0.0/15` and failed TLS before any HTTP response. The
+exact failures are retained. No authentication, cookie, credential, or API key was
+used.
 
 ## Findings
 
-### 1. Binance documents the endpoint as returning row values, not revisions
+### 1. A target-preceding official connector exposes business-time selectors, not row vintage
 
-The current first-party endpoint reference describes these response members:
+At official commit `d30576a6d8e6edb706c8b013eb11167b58e9c33a`, dated
+2022-08-29, `binance/um_futures/market.py` defines Funding Rate History as:
 
-> `symbol` — Symbol.
+> `GET /fapi/v1/fundingRate`
 >
-> `fundingRate` — Funding Rate.
+> `symbol`, `limit`, `startTime`, `endTime`
 >
-> `fundingTime` — Funding Time.
+> `return self.query("/fapi/v1/fundingRate", params)`
+
+Accepted raw member: `github/funding-rate-request-2022.py`, lines 242-263.
+
+This establishes that the endpoint and those request parameters predate the target
+2024 rows. It exposes no `asOf`, revision, publication-time, or snapshot-vintage
+selector in that accepted interface. This is not a claim about undisclosed Binance
+systems or every later parameter.
+
+### 2. Accepted first-party response shapes name business fields, not row revisions
+
+The official generated response model pinned at commit
+`38996023660752a75acf7ebbc4f9a504e10e336f` names:
+
+> `symbol`, `fundingRate`, `fundingTime`, `markPrice`
+
+The model pinned at commit `e44cdc9e57c76154f08676764bb6f21fbdb49c4a`
+names the same fields plus `rateType`. The separately fetched exact testnet body
+contains two rows with `symbol`, `fundingTime`, `fundingRate`, and `markPrice`.
+
+None of those exact surfaces names a revision ID, predecessor, corrected-at time,
+provider publication time, or immutable row checksum. The generated model allows
+additional properties, so the accepted statement is bounded to named fields on
+these exact surfaces; it is not a provider-global absence claim.
+
+### 3. Current schema is demonstrably not wholly target-effective
+
+The 2025 pinned response model has four named fields. The 2026 pinned model adds
+`rateType`, and the pinned official changelog states:
+
+> `## 15.0.0 - 2026-07-28`
 >
-> `markPrice` — mark price associated with a particular funding fee charge
+> `Modified response for get_funding_rate_history() (GET /fapi/v1/fundingRate)`
 >
-> `rateType` — Funding rate type. `Regular` for the normal funding rate; `Special` for the additional funding rate generated by stock dividends.
+> `property rateType added`
 
-Source: [Get Funding Rate History](https://developers.binance.com/docs/derivatives/usds-margined-futures/market-data/rest-api/Get-Funding-Rate-History).
+Accepted raw member: `github/usds-futures-changelog-2026.md`, lines 3 and 28-30.
 
-No revision ID, version, predecessor, corrected-at timestamp, first-published-at timestamp, ETag binding, or row checksum appears in the extracted response schema. This is a source-bounded schema observation, not a claim about undisclosed Binance systems.
+That exact dated evolution prevents backdating the whole current schema to 2024.
+It proves schema evolution only; it neither confirms nor excludes corrections to
+settled funding values.
 
-### 2. Funding Rate History exposes current state without historical-vintage selection
+### 4. Current-state retrieval cannot recover settlement-visible revision identity
 
-The same reference says:
+The accepted target-preceding request interface selects business-time range/count,
+while the accepted response surfaces expose current business fields without named
+revision lineage. Consequently, a later response can establish only the bytes
+received later. Without a retained settlement-time response or first-party lineage,
+it cannot distinguish an unchanged original value from a later-corrected value.
 
-> If `startTime` and `endTime` are not sent, the most recent 200 records are returned.
->
-> If the number of data between `startTime` and `endTime` is larger than `limit`, return as `startTime` + `limit`.
->
-> In ascending order.
+This is a capability limitation. It is **not** a positive claim that Binance revises
+settled rows.
 
-The documented request parameters select business-time range and count. The searched schema exposes no `asOf`, revision, publication-time, or snapshot-vintage selector. A later request can establish what the endpoint returns when requested; it cannot reconstruct which exact row revision was visible at settlement.
+### 5. No permanent-finality guarantee is established by the accepted raw set
 
-### 3. Current values could be revised, but Binance authority found here neither confirms nor excludes it
+No accepted member states that settled rows are immutable forever or binds them to
+an immutable provider checksum. This supports only: **the enumerated accepted
+first-party surfaces do not provide the required guarantee**. It does not establish
+that no such statement exists elsewhere.
 
-The current endpoint returns one value tuple for a funding row and provides no revision lineage. Therefore:
+### 6. Search excerpts are secondary only
 
-- a later correction, if Binance performs one, could be reflected without an API-visible identity change;
-- an unchanged value could also be returned;
-- comparing a current response with no retained settlement-time response cannot distinguish those cases.
-
-This is a capability limitation derived from the documented response/request shape. It is **not** a positive claim that Binance revises settled rows.
-
-### 4. The change log proves schema evolution, not row-revision semantics
-
-The first-party change log states for 2023-11-01:
-
-> Update on `GET /fapi/v1/fundingRate`:
->
-> add response field `markPrice` to display mark price associated with a particular funding fee charge
-
-Source: [USDⓈ-M Futures Change Log, 2023-11-01](https://developers.binance.com/en/docs/products/derivatives-trading-usds-futures/change-log#2023-11-01-1).
-
-This predates the target 2024 rows and supports target-effective availability of the `markPrice` response field. It does not identify a row revision or say whether settled rows can be corrected.
-
-The currently extracted change log also contains a later entry:
-
-> The response now includes a new field `rateType` (STRING): the funding rate type. `Regular` for the normal funding rate; `Special` for the additional funding rate generated by stock dividends.
-
-That entry has an effective date of 2026-07-23 and is not authority for 2024 response semantics. It demonstrates why a current documentation page cannot silently be treated as target-effective in full.
-
-### 5. No correction, revision, or permanent-finality guarantee was found on the bounded surfaces
-
-Within the extracted English USDⓈ-M change log, exact text searches found funding endpoint entries but no matches for `correction`, `revision`, or `checksum` associated with Funding Rate History. Searches of the endpoint reference found no revision/checksum identity fields. The funding FAQ explains access to historical rates but supplies no correction lineage or immutability guarantee.
-
-This supports only the bounded statement: **the searched first-party surfaces did not provide the required authority**. It does not establish that Binance has never corrected a row or that no other first-party legal/operational material exists.
-
-### 6. Current FAQ material is not target-effective authority for 2024 revision semantics
-
-The extracted Binance FAQ identifies itself as published in 2019 but updated in 2026, and warns:
-
-> The information on this page may be outdated.
-
-It says users can view “real-time and historical funding rates,” but does not document historical revision identity, correction policy, or permanent finality. Because its present content was updated after the target period and no archived 2024 bytes were retained here, it is contextual only.
+The endpoint documentation, developer change-log extraction, and funding FAQ search
+passages remain useful for locating terminology and bounding further acquisition.
+They do not carry raw HTTP-header fidelity and are excluded from the canonical
+SourceSnapshot. In particular, the search-extracted 2023-11-01 `markPrice` passage
+is not used as independent acceptance authority; no claim here depends on it.
 
 ## Answers to BHA-01B questions
 
-| Question | Answer | Confidence / consequence |
+| Question | Answer | Consequence |
 | --- | --- | --- |
-| Does Binance document corrections or revisions to settled funding rows? | Not on the bounded first-party surfaces searched. | Bounded negative; no provider-global claim. |
-| Does Funding Rate History expose revision identity or only current state? | Documented response exposes business fields only; no revision identity or vintage selector was found. | **Causal blocker.** |
-| Can the current endpoint return a value revised after original settlement? | Undetermined. The schema would not let a consumer distinguish such a revised value from the originally visible value. | **Causal blocker.** |
-| Is a permanent finality/checksum guarantee available? | None found on the bounded surfaces. | May remain a limitation by itself, but does not cure the identity blocker. |
-| What is allowed under ADR 0008 / the governing G12M plan? | Provider-finality uncertainty may remain explicit and must not silently alter prior Runs; missing exact settlement-visible revision identity remains `UNKNOWN` and fail-closed. Source-bounded evidence cannot mint or upgrade ResultGrade. | Closed limitation set below. |
+| Does Binance document corrections or revisions to settled funding rows? | Not in the exact accepted first-party byte set. | Bounded negative only; no provider-global claim. |
+| Does Funding Rate History expose revision identity or only current state? | Accepted interfaces expose business-time request parameters and named business response fields, with no named row-vintage selector or revision lineage. | **Causal blocker.** |
+| Can the current endpoint return a value revised after original settlement? | Undetermined. The accepted interface cannot distinguish that case from an unchanged original value. | **Causal blocker.** |
+| Is a permanent finality/checksum guarantee available? | Not established by the accepted raw set. | Explicit ADR 0008 limitation; cannot cure the identity blocker. |
+| What is allowed under the governing G12M plan? | Preserve source bounds and fail closed; do not backdate current bytes or mint ResultGrade. | `UNKNOWN_CAUSAL_BLOCKER`. |
 
 ## Closed limitation set returned to BHA-02
 
-The canonical closed set is retained at `evidence/g12m-binance-funding-revision-authority-v1/closed-limitations.md`.
+The canonical set is retained at
+`evidence/g12m-binance-funding-revision-authority-v1/closed-limitations.md`.
 
-- **BHA01B-B1 — BLOCKER:** no exact API-visible identity for the row revision visible at settlement.
-- **BHA01B-B2 — BLOCKER:** a current response cannot prove whether its value is original or later corrected.
-- **BHA01B-L1 — LIMITATION:** no permanent finality or immutable provider checksum guarantee found; this alone could remain explicit under ADR 0008.
-- **BHA01B-L2 — LIMITATION:** negative findings are limited to enumerated first-party surfaces and terms.
-- **BHA01B-L3 — LIMITATION:** current mutable documentation is not wholly target-effective for 2024; only the dated 2023-11-01 `markPrice` change-log statement predates the target rows.
-- **BHA01B-L4 — EVIDENCE ACCEPTANCE LIMITATION:** raw official bytes, SHA-256 replay, and SourceSnapshot could not be produced in this runtime because direct retrieval was blocked.
+- **BHA01B-B1 — BLOCKER:** no exact accepted identity for the row revision visible
+  at settlement.
+- **BHA01B-B2 — BLOCKER:** later current-state bytes cannot distinguish original
+  versus later-corrected value.
+- **BHA01B-L1 — LIMITATION:** no accepted permanent-finality or immutable checksum
+  guarantee.
+- **BHA01B-L2 — LIMITATION:** negative findings are limited to enumerated exact
+  first-party surfaces.
+- **BHA01B-L3 — LIMITATION:** no accepted production response or revision-policy
+  bytes from the 2024 settlement period; current schema includes a dated 2026 field.
+- **BHA01B-L4 — LIMITATION:** production docs/API remained inaccessible through the
+  runtime fake-IP path; accepted raw bytes come from pinned official GitHub and
+  public testnet surfaces.
+- **BHA01B-L5 — LIMITATION:** source-bounded research cannot mint/upgrade ResultGrade
+  or silently alter prior Runs.
 
-## Effective-date basis
+## Evidence identities and review
 
-- `markPrice` field: dated first-party change-log entry on 2023-11-01, before target 2024 settlements.
-- Endpoint request/response shape: current documentation only; the response presently includes a post-target `rateType` field.
-- Correction/revision/finality semantics: no dated target-effective first-party statement found.
-- Funding FAQ: current page reports an update after 2024; contextual only.
-
-## Evidence and access status
-
-See `evidence/g12m-binance-funding-revision-authority-v1/README.md` for source URLs, request scope, search receipt IDs, access failures, and retained excerpts. No credentials, cookies, request authorization headers, or environment values are retained.
+- SourceSnapshot: `sha256:e8faeb5a146c0ff85f5afca6f740ee9a925a3d47134c4d3495b26fdb5e4b8f25`.
+- Content tree: `sha256:935355b119ac9445a17fc7e3be19eeb8156914081df21519604182a9fed73f5a`.
+- Primary-source review: `evidence/g12m-binance-funding-revision-authority-v1/primary-source-review.md`.
+- Full source URLs, receipts, headers, hashes, Git blob OIDs, fake-IP failures, and
+  replay boundary: `evidence/g12m-binance-funding-revision-authority-v1/README.md`.

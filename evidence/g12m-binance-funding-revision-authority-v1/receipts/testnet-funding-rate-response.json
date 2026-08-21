@@ -1,0 +1,32 @@
+{
+  "authentication": "none",
+  "authority": "Binance Futures public testnet API",
+  "body_byte_count": 212,
+  "body_path": "evidence/g12m-binance-funding-revision-authority-v1/raw/api/testnet-funding-rate-response.json",
+  "body_sha256": "919927e6693079c947eb7030fe96027aa4ae12bb4d7bb821f3b3064f43534b62",
+  "completed_at_epoch_nanoseconds": 1787323699521631895,
+  "curl_stderr": "",
+  "curl_version": "8.14.1",
+  "environment_limit": "testnet current-state observation; not production and not target-effective for 2024",
+  "http_status": 200,
+  "method": "GET",
+  "request_headers": {
+    "Accept": "*/*",
+    "User-Agent": "curl/8.14.1"
+  },
+  "request_scope": {
+    "endTime": null,
+    "endpoint": "/fapi/v1/fundingRate",
+    "limit": 2,
+    "startTime": null,
+    "symbol": "BTCUSDT"
+  },
+  "request_url": "https://testnet.binancefuture.com/fapi/v1/fundingRate?symbol=BTCUSDT&limit=2",
+  "resolved_addresses": [
+    "198.18.4.140"
+  ],
+  "response_headers_raw_lf": "HTTP/2 200 \ncontent-type: application/json;charset=UTF-8\ncontent-length: 212\ndate: Fri, 21 Aug 2026 14:48:19 GMT\nstrict-transport-security: max-age=31536000; includeSubdomains\nserver: nginx\nvary: Accept-Encoding\nx-frame-options: SAMEORIGIN\nx-xss-protection: 1; mode=block\nx-content-type-options: nosniff\nreferrer-policy: origin-when-cross-origin\nx-cache: Miss from cloudfront\nvia: 1.1 f1119b324d4e36d850ba4a840cb7f2e4.cloudfront.net (CloudFront)\nx-amz-cf-pop: NRT20-P3\nx-amz-cf-id: N_fjEkWYaiijD6f1sU1lxC6uGr4lk2ytcn9yK3f3UjKAI3aJ4Ni5ZA==\n\n",
+  "schema_version": 1,
+  "source_id": "API1",
+  "started_at_epoch_nanoseconds": 1787323699298011724
+}

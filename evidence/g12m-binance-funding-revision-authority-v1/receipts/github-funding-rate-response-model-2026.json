@@ -1,0 +1,31 @@
+{
+  "authentication": "none",
+  "authority": "Binance official GitHub organization",
+  "body_byte_count": 4304,
+  "body_path": "evidence/g12m-binance-funding-revision-authority-v1/raw/github/funding-rate-response-model-2026.py",
+  "body_sha256": "b3aa5b35ad034d409f60616ef7bed10fe6b553c6ad6eb145fdb32806a9d459d4",
+  "completed_at_epoch_nanoseconds": 1787323698800206180,
+  "curl_stderr": "",
+  "curl_version": "8.14.1",
+  "git_blob_oid_sha1": "d0893e9233b9fb987a431b55543402a24f1ba359",
+  "http_status": 200,
+  "method": "GET",
+  "request_headers": {
+    "Accept": "*/*",
+    "User-Agent": "curl/8.14.1"
+  },
+  "request_scope": {
+    "commit": "e44cdc9e57c76154f08676764bb6f21fbdb49c4a",
+    "commit_time": "2026-07-28T11:47:50+02:00",
+    "path": "clients/derivatives_trading_usds_futures/src/binance_sdk_derivatives_trading_usds_futures/rest_api/models/get_funding_rate_history_response_inner.py",
+    "repository": "https://github.com/binance/binance-connector-python.git"
+  },
+  "request_url": "https://raw.githubusercontent.com/binance/binance-connector-python/e44cdc9e57c76154f08676764bb6f21fbdb49c4a/clients/derivatives_trading_usds_futures/src/binance_sdk_derivatives_trading_usds_futures/rest_api/models/get_funding_rate_history_response_inner.py",
+  "resolved_addresses": [
+    "198.18.0.75"
+  ],
+  "response_headers_raw_lf": "HTTP/2 200 \ncache-control: max-age=300\ncontent-security-policy: default-src 'none'; style-src 'unsafe-inline'; sandbox\ncontent-type: text/plain; charset=utf-8\netag: \"2f0ba1acc325a3413a53710f0c203c72f8930f83ece75bab169a234754ce99e9\"\nstrict-transport-security: max-age=31536000\nx-content-type-options: nosniff\nx-frame-options: deny\nx-xss-protection: 1; mode=block\nx-github-request-id: 240C:221632:131E9:23F2A:6A88652B\nx-github-edge-region: japaneast\naccept-ranges: bytes\ndate: Fri, 21 Aug 2026 14:48:18 GMT\nvia: 1.1 varnish\nx-served-by: cache-nrt-rjtt7900050-NRT\nx-cache: MISS\nx-cache-hits: 0\nx-timer: S1787323699.523686,VS0,VE217\nvary: Authorization,Accept-Encoding\naccess-control-allow-origin: *\ncross-origin-resource-policy: cross-origin\nx-fastly-request-id: edbb1db6d49cf172e1864a48fd1bb1a1d5eeedbe\nexpires: Fri, 21 Aug 2026 14:53:18 GMT\nsource-age: 0\ncontent-length: 4304\n\n",
+  "schema_version": 1,
+  "source_id": "G3",
+  "started_at_epoch_nanoseconds": 1787323698328319547
+}
