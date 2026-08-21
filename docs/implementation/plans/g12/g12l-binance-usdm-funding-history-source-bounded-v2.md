@@ -364,9 +364,15 @@ The exact limitations tuple is:
 ```
 
 `report_hash = canonical_sha256(complete body excluding report_hash)`.
-`from_canonical_dict()` rejects unknown/missing keys, coercion, nested substitution,
-constructor bypass, source rows/hashes/Event/manifest inconsistencies, or any true
-qualification flag.
+`from_canonical_dict()` reconstructs the exact compact raw response bytes from
+`source_rows` using the frozen field order, requires their SHA-256 to equal the
+single member content hash, then rebuilds the one-member `SourceSnapshot` with the
+reported acquisition time and frozen provenance and compares snapshot, content-tree,
+and provenance hashes before replaying Events and publication. It rejects
+unknown/missing keys, coercion, nested substitution, constructor bypass, source
+rows/hashes/raw/Snapshot/Event/manifest inconsistencies, or any true qualification
+flag. Receipt SHA-256 remains bound where receipt bytes are available: the observer,
+first acceptance, and predecessor-evidence replay.
 
 ## Failure precedence
 
