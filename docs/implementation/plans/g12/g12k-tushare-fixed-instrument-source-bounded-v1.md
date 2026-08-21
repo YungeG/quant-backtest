@@ -404,9 +404,10 @@ Fixed invariants:
   snapshot, and raw archive bytes;
 - request-scope hash is the exact frozen value above;
 - `dividend_source_rows` exact-reconstructs every retained row in provider order;
-  reconstruction recomputes the complete row-hash tuple and exact relevance
-  selection from those rows and rejects replacement, reordering, or copied-hash
-  tampering;
+  nominal reconstruction recomputes the complete row-hash tuple and exact relevance
+  selection and rejects copied hashes or selections inconsistent with those rows;
+  observer raw-evidence replay, predecessor-evidence replay, and the accepted
+  canonical-file hash reject row replacement or reordering relative to evidence;
 - the first accepted source-row and row-hash tuples each have length 96,
   `has_more=false`, observed count metadata `0`, and an empty target-relevant tuple;
 - `observed_at` is the later of accepted G12I `observed_at` and the dividend member
@@ -438,8 +439,10 @@ The provider correction-lineage limitation is distinct from Backtest's local
 
 `report_hash = canonical_sha256(complete body excluding report_hash)`. Exact
 `from_canonical_dict()` reconstruction rejects unknown/missing keys, coercion,
-nested substitution, constructor bypass, changed hashes, changed row order,
-changed deterministic relevance output, or any true qualification flag.
+nested substitution, constructor bypass, hashes or deterministic relevance output
+inconsistent with the retained row replay, or any true qualification flag. Exact
+accepted-file and observer evidence comparison reject an otherwise internally
+consistent replacement or reordering of the retained rows.
 
 Raw response bytes are not copied into the report. D3 verifies them before report
 creation and retains only the exact typed row replay values above. Copied G12I
