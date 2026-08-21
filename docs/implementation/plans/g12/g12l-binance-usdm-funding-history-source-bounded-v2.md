@@ -1,7 +1,7 @@
 ---
 id: G12L-BINANCE-USDM-FUNDING-HISTORY-SOURCE-BOUNDED-V2
-readiness: CONTRACT_FROZEN
-gate_status: D1_PASSED
+readiness: ACCEPTED_SOURCE_BOUNDED_SLICE
+gate_status: PASSED
 owner: market-bundle-builder Binance USD-M source observation
 produces:
   - BinanceUsdmFundingHistorySourceBoundedObservationReportV2
@@ -24,8 +24,9 @@ fan_out: [G12M-SOURCE-BOUNDED-QUALIFICATION-V1]
 
 ## Status and purpose
 
-D1 is frozen and passed. This additive v2 reclassifies the exact finite Binance
-Funding Rate History REST evidence under ADR 0008. The absence of a permanent
+D1-D4 `PASSED` at accepted implementation source
+`024e5f209a94bb358946f5c468630108981f0329`. This additive v2 reclassifies the
+exact finite Binance Funding Rate History REST evidence under ADR 0008. The absence of a permanent
 provider checksum, proof of no future revision, complete correction lineage, or
 provider-global completeness remains an explicit limitation rather than an
 ordinary historical-research blocker.
@@ -426,7 +427,7 @@ reports, Runs, and results remain immutable.
   finality, immutable publication identity, completeness outside the finite request,
   live correctness, or deployment authority.
 
-## D2 — accepted-tool capture (unimplemented)
+## D2 — accepted-tool capture (`PASSED` at `8cc0a488eb3715612ce627b8897d01b193c23195`)
 
 Authorized write set:
 
@@ -441,7 +442,7 @@ D2 copies the exact live candidate bytes, reproduces them through the unchanged
 accepted acquisition function using a bounded fake transport, verifies no-clobber
 publication and canonical receipt/Snapshot identity, and runs secret scans.
 
-## D3 — observation, normalization, and publication (unimplemented)
+## D3 — observation, normalization, and publication (`PASSED` at `024e5f209a94bb358946f5c468630108981f0329`)
 
 Authorized write set:
 
@@ -456,20 +457,57 @@ D3 exits only after exact evidence reconstruction, row/Event/manifest replay,
 G12C validation, temporary G12D publication, lookahead, correction, failure
 precedence, architecture, protected-byte, LSP, lint, diff, and secret checks pass.
 
-## D4 — acceptance and G12M handoff (unimplemented)
+## D4 — acceptance and G12M handoff (`PASSED`)
 
-Authorized documentation write set:
+The accepted capture is exactly one public Binance USD-M Funding Rate History
+request for `BTCUSDT` on 2024-01-01. It retains three strictly ordered rows with
+exact funding rate, funding-time mark price, `Regular` rate type, and no missing
+mark. The response was recaptured byte-identically; local observation time remains
+later than every funding event time and is preserved as Event availability.
 
-```text
-docs/implementation/plans/g12/g12l-binance-usdm-funding-history-source-bounded-v2.md
-docs/implementation/plans/g12/g12l-binance-usdm-funding-history-v1.md
-docs/implementation/plans/g12/g12m-source-bounded-qualification-v1.md
-docs/implementation/plans/g12/README.md
-docs/implementation/acceptance-matrix.md
-```
+Frozen identities:
 
-D4 records exact response, receipt, Snapshot, row, Event, manifest, report, file,
-plan, and immutable implementation identities. It may make one exact Binance
-funding-history G12M case provider-specifically nominally ready, but it authorizes
-no generic Runtime interface, grade change, provider finality, live use, or
-deployment.
+- D1 contract source: `6b8a00b225df03b4cee58eae731993e9e6948c4a`;
+- D2 capture source: `8cc0a488eb3715612ce627b8897d01b193c23195`;
+- D3 implementation source: `5795f0f32fe05aaff0de2117b58146c05a2415c7`;
+- replay contract amendment: `ec487466e2fe63792d37107e08fa41e7ee65954d`;
+- accepted implementation closure: `024e5f209a94bb358946f5c468630108981f0329`;
+- production module file: `sha256:552b67cd8b62a3a5b4d782f7cd5ab4041cd1910514ae451932cef3c57b917bc3`;
+- response file: `sha256:e9f73f9c845c28abb31037d8230df2d6f13d5d368c43436e891fcc757372c338`;
+- acquisition receipt file: `sha256:a92989478047de7d744744aedeaf365f7d16240b536c1ccece749abe3b4efa36`;
+- request scope: `sha256:e749c6265a08ebc7095c96c3636e3070eceb3f5cd82e2e981d9d23167ef50be1`;
+- SourceSnapshot: `sha256:a45d9acdcfb4d42d1c70af44969f6a5151fb260c4c3040943b3d961c1073aa3f`;
+- source content tree: `sha256:b992587527ddb79b5d752a0bc060cad8bdfd960b874f194d49f16033f171dfd0`;
+- provenance: `sha256:8591a52c953f11179a3ddc59e9c16db7d28518d7220643f73b31967683e760f6`;
+- retained source rows: `sha256:39883ccd15ba2aaa6dc5235214331eb0abc0ecacc6851aec007391415e2086f8`;
+- ordered source-record-hash tuple: `sha256:a580b16bdcd1093a2125a63d336649133400a930b6a44af9e592f2c22ddce2b2`;
+- ordered Event-hash tuple: `sha256:9ca70dd34ce79e0f3505f2bb40cace8299557d9b9b67895c5d4a9588262677de`;
+- Event hashes: `sha256:409ee9420f506c717e22f97ed1a693d3b2e420282d53e369e5a7ce11d92386b9`,
+  `sha256:8030397a45e330643a0dbf606bb97e751076da553c47b105c4e4907b4b815944`,
+  and `sha256:dc6f26c99a8eb2ff78d6353cd40ee3c1da59ed3597d515fb5848ed6307ea66c6`;
+- stream content: `sha256:edac3e0e501190a063fbd11ba33da0a3a4cae576fed3434697a2f7a0824c25d7`;
+- manifest content: `sha256:1a4e5db873e59e1c761531a926857c424d51494d02ba06c6f76ffc851e7e47f1`;
+- Bundle-ref manifest: `sha256:352aa6a20c9c04dc998d07e6935f6bb635fb52459a361648262565d5773423fb`;
+- report: `sha256:29e639615c1e5f5fa05ffdff9bc77a630d56838c7b0e70230177922bdbffc37b`;
+- report canonical file: `sha256:850cf2b5b2f3caffd7afc1cb4f364e6224c4022417ae46bb01a406600e971951`.
+
+Acceptance passed 24 focused D2/D3/architecture tests, 253 adjacent
+Binance/SourceSnapshot/architecture tests, and the full 2237-test repository suite.
+Ruff check/format, primary LSP, diff checks, full-repository gitleaks, and independent
+adversarial review passed. Existing acquisition, funding-history v1, monthly
+funding-rate v1, G10E, Builder root, Runtime, Kernel, fixtures, hashes, and public
+APIs remain unchanged.
+
+G12M is now provider-specifically nominally ready for one exact Binance
+funding-history case. A future Runtime slice must independently deep-reconstruct the
+accepted canonical report bytes, bind the accepted report/file/source/receipt/
+Snapshot/Event/manifest identities, require the bound run's instrument and funding
+scope to match, and assess no earlier than report `observed_at`. Generic mappings,
+caller booleans, naked hashes, generic `ArtifactRef`, Runtime→Builder import, or the
+rate-only monthly archive alone remain insufficient.
+
+No permanent checksum, provider finality, complete correction lineage,
+provider-global completeness, immutable 2024 publication availability, result-grade
+change, live use, or deployment authority is implied. Corrections require new raw
+bytes, receipt, Snapshot, Events, report, and full predecessor-evidence replay; prior
+evidence and Runs remain immutable.

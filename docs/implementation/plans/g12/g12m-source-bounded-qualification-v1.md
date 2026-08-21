@@ -9,7 +9,7 @@ consumes:
   - ADR 0008
   - accepted G12I SZSE evidence slice
   - accepted G12K Tushare fixed-instrument evidence slice
-  - future Binance FAPI observed-as-of evidence slice for a Binance case
+  - accepted Binance FAPI funding-history observed-as-of evidence slice
 depends_on:
   contract: [G07, G12I, G12K, G12L-*]
   evidence: [exact canonical upstream artifacts and accepted hashes required by each provider-specific case]
@@ -22,18 +22,20 @@ depends_on:
 
 Prepare a future Runtime-owned, read-only qualification of an already graded
 backtest result under [ADR 0008](../../../adr/0008-source-bounded-decision-grade.md).
-One exact Tushare-only A-share case now has accepted G12I and fixed-singleton G12K
-canonical artifacts. This governance plan still does not itself freeze or authorize
-a production Runtime interface; a later provider-specific D1 contract must do so.
+One exact Tushare-only A-share case has accepted G12I and fixed-singleton G12K
+canonical artifacts, and one exact Binance funding-history case has an accepted
+observed-as-of canonical report. This governance plan still does not itself freeze
+or authorize a production Runtime interface; a later provider-specific D1 contract
+must do so.
 
 ## Status
 
-`DRAFT / PROVIDER-SPECIFIC A-SHARE NOMINAL READY`. ADR 0008 policy is accepted.
-The exact G12I Tushare/SZSE and G12K Tushare fixed-singleton nominal reconstruction
-boundaries below are frozen. A later D1 contract may now design the exact
-Tushare-only A-share case. General/dynamic-universe G12K and any Binance case remain
-blocked on their own missing authority/artifact lanes; Binance does not block the
-A-share case.
+`DRAFT / PROVIDER-SPECIFIC A-SHARE AND BINANCE NOMINAL READY`. ADR 0008 policy is
+accepted. The exact G12I Tushare/SZSE, G12K Tushare fixed-singleton, and Binance
+funding-history nominal reconstruction boundaries below are frozen. Later D1
+contracts may design the exact Tushare-only A-share case and exact Binance
+funding-history case independently. General/dynamic-universe G12K and other Binance
+source combinations remain blocked on their own missing lanes.
 
 No production code, public type, function signature, serialized assessment body,
 failure enum, test contract, or write set is authorized by this plan.
@@ -80,7 +82,7 @@ either duplicate Builder authority or trust claims it cannot verify.
 | --- | --- | --- |
 | G12I SZSE | `ACCEPTED`: exact July-2026 Tushare `daily`/`trade_cal`/`suspend_d` observation report, canonical replay, append-only correction identity, and nominal Runtime boundary below. | Source `4389877b8879fc9bb1a6d6544c4079a7d29312ab`; report `sha256:ff09c4ad9f8025e66689387b5132d3d85c4101276fbf7330dd5040af111cc029`; canonical file `sha256:9cbfc115e41f56d1e83eac520856c3f529f83972b97111238e5dbb1a68c4eae6`. |
 | G12K Tushare fixed singleton | `ACCEPTED`: exact full `dividend(ts_code="000001.SZ")` response, receipt/Snapshot replay, fixed July-2026 scope, 96 ordered source rows, zero target-relevant rows, append-only direct-predecessor evidence, and explicit limits. This is not listing/universe/survivorship/lifecycle authority. | Source `28a4d7234f5101e67bfa64f1eded92b81bfcf73d`; report `sha256:5a49065d87286a9673893337328ddbbab9a19cd3addf178bf96033b9b1babfd7`; canonical file `sha256:a386f4281374d1449c0b5ba4371b9e9d2de5b236bc8fc5b5cdd8de5e43c65956`; final plan `sha256:79402fe89df8bffc23be4ff2772bbba14510f6a6133de8fe48acca1b0656c5d8`. |
-| Binance FAPI observed-as-of | `BLOCKED FOR BINANCE CASE ONLY`: finite Binance FAPI acquisition evidence must bind exact request/response bytes, receipt-derived observed-as-of, local identity, normalization/publication boundary, and known archive limitations. It does not block the Tushare-only A-share case. | Accepted source/receipt/report artifact types, exact canonical hashes, request/scope identity, observed-as-of rule, and immutable acceptance commit remain missing. |
+| Binance FAPI funding history | `ACCEPTED`: exact public REST request/response bytes, canonical receipt/Snapshot replay, three rate+funding-mark rows, exact Event/manifest/Bundle-ref publication, late receipt-derived observed-as-of, append-only predecessor evidence, and explicit provider-finality limitations. | Source `024e5f209a94bb358946f5c468630108981f0329`; report `sha256:29e639615c1e5f5fa05ffdff9bc77a630d56838c7b0e70230177922bdbffc37b`; canonical file `sha256:850cf2b5b2f3caffd7afc1cb4f364e6224c4022417ae46bb01a406600e971951`; final plan `sha256:8a5d5643db1baa6bd50d26e6ab4220df948ca3122a46214a710dd47cd9299686`. |
 
 Research notes, ad hoc files, inherited hash claims, development fixtures, or
 Builder objects without an accepted canonical cross-package boundary do not
@@ -166,6 +168,51 @@ closure, or provider finality. A corrected G12K capture is a new accepted canoni
 report whose direct predecessor was evidence-replayed; it cannot silently replace
 these identities.
 
+## Frozen Binance funding-history nominal reconstruction boundary
+
+A future Binance G12M Runtime implementation must independently consume exact
+canonical bytes for type
+`binance_usdm_funding_history_source_bounded_observation_report`, schema version
+`2`. It must use a closed nominal Runtime value mirroring every field; it must not
+import Builder or accept an open mapping, generic `ArtifactRef`, caller boolean,
+class-name assertion, or naked hash.
+
+Reconstruction must rebuild the compact three-row raw response from retained source
+rows, verify the member hash, rebuild the one-member SourceSnapshot with fixed
+provenance, normalize both funding rate and funding-time mark at exact scale `8`,
+rebuild all Event IDs/hashes and `canonical_bytes(events)`, and require exact G12C
+stream/manifest plus `MarketBundleRef` identity. It must bind:
+
+- implementation source `024e5f209a94bb358946f5c468630108981f0329`;
+- response and member `sha256:e9f73f9c845c28abb31037d8230df2d6f13d5d368c43436e891fcc757372c338`;
+- receipt `sha256:a92989478047de7d744744aedeaf365f7d16240b536c1ccece749abe3b4efa36`;
+- request scope `sha256:e749c6265a08ebc7095c96c3636e3070eceb3f5cd82e2e981d9d23167ef50be1`;
+- snapshot `sha256:a45d9acdcfb4d42d1c70af44969f6a5151fb260c4c3040943b3d961c1073aa3f`;
+- content tree `sha256:b992587527ddb79b5d752a0bc060cad8bdfd960b874f194d49f16033f171dfd0`;
+- provenance `sha256:8591a52c953f11179a3ddc59e9c16db7d28518d7220643f73b31967683e760f6`;
+- source rows `sha256:39883ccd15ba2aaa6dc5235214331eb0abc0ecacc6851aec007391415e2086f8`;
+- ordered source-record hashes `sha256:a580b16bdcd1093a2125a63d336649133400a930b6a44af9e592f2c22ddce2b2`;
+- ordered Event hashes `sha256:9ca70dd34ce79e0f3505f2bb40cace8299557d9b9b67895c5d4a9588262677de`;
+- stream `sha256:edac3e0e501190a063fbd11ba33da0a3a4cae576fed3434697a2f7a0824c25d7`;
+- manifest content `sha256:1a4e5db873e59e1c761531a926857c424d51494d02ba06c6f76ffc851e7e47f1`;
+- Bundle-ref manifest `sha256:352aa6a20c9c04dc998d07e6935f6bb635fb52459a361648262565d5773423fb`;
+- report `sha256:29e639615c1e5f5fa05ffdff9bc77a630d56838c7b0e70230177922bdbffc37b`;
+- canonical report file `sha256:850cf2b5b2f3caffd7afc1cb4f364e6224c4022417ae46bb01a406600e971951`;
+- final upstream plan `sha256:8a5d5643db1baa6bd50d26e6ab4220df948ca3122a46214a710dd47cd9299686`.
+
+The Runtime boundary must separately prove the bound run uses instrument
+`binance_usdm:btc-usdt-perpetual`, the exact three funding times and funding
+purpose, the accepted Bundle/Build/Profile/Environment/Integrity evidence, and an
+assessment instant not earlier than report `observed_at`. The rate-only monthly
+archive, a nearby mark-price stream, or manufactured funding mark cannot substitute
+for this report.
+
+Late local observation is explicit: this report proves the exact rows as observed,
+not immutable 2024 publication availability. Permanent provider identity, future
+finality, correction lineage, and provider-global completeness remain limitations.
+A correction requires a new accepted report whose direct predecessor receipt,
+Snapshot, raw response, Events, and report were evidence-replayed.
+
 ## Readiness exit criteria
 
 A provider-specific G12M contract may freeze only after every upstream lane required
@@ -186,10 +233,12 @@ by that exact case provides:
    closure owned by each upstream lane.
 
 The accepted G12I and fixed-singleton G12K lanes satisfy the upstream source-lane
-criteria for the exact Tushare-only A-share case. The remaining D1 work is to freeze
-the Runtime-owned closed nominal values, run/Integrity bindings, assessment
-artifact, failure precedence, tests, and write set. Binance is not a dependency of
-that case.
+criteria for the exact Tushare-only A-share case. The accepted Binance
+funding-history v2 lane independently satisfies the source-lane criteria for its
+exact Binance funding case. The remaining work is to freeze provider-specific
+Runtime closed nominal values, run/Integrity bindings, assessment artifacts,
+failure precedence, tests, and write sets. Neither provider case depends on the
+other.
 
 Any new G12M contract must bind the accepted finite artifacts directly; it must not
 introduce a provider registry, generic source framework, facts registry, or policy

@@ -178,9 +178,10 @@ artifact_hashes: []
 | G12L-BINANCE-USDM-MARK-PRICE-KLINES-V1 | PASSED — immutable commit `47d59e40081555ab9b555c3e632070a517509436` | market-bundle-builder Binance USD-M source slice | G10D, G12A–G12D | none |
 | G12L-BINANCE-USDM-AGGTRADES-V1 | PASSED — immutable commit `981429b4f0ff5fa219ccc8bc991458072b025bf8` | market-bundle-builder Binance USD-M source slice | G10D, G12A–G12D | none |
 | G12L-BINANCE-USDM-FUNDING-RATE-V1 | PASSED — immutable commit `ebd91f746c4a065ca06dba89d847e7d41ab06331` | market-bundle-builder Binance USD-M source slice | G10E, G12A–G12D | none |
-| G12L-BINANCE-USDM-FUNDING-HISTORY-V1 | DRAFT / BLOCKED | market-bundle-builder Binance USD-M source slice | G10E, G12A | Immutable provider revision/correction closure |
+| G12L-BINANCE-USDM-FUNDING-HISTORY-V1 | DRAFT / STRICT IMMUTABLE-PUBLICATION BLOCKED — additive source-bounded v2 accepted | market-bundle-builder Binance USD-M source slice | G10E, G12A | permanent checksum and provider revision/correction closure remain unavailable for the strict v1 claim |
+| G12L-BINANCE-USDM-FUNDING-HISTORY-SOURCE-BOUNDED-V2 | PASSED — implementation `024e5f209a94bb358946f5c468630108981f0329`; response `sha256:e9f73f9c845c28abb31037d8230df2d6f13d5d368c43436e891fcc757372c338`; receipt `sha256:a92989478047de7d744744aedeaf365f7d16240b536c1ccece749abe3b4efa36`; snapshot `sha256:a45d9acdcfb4d42d1c70af44969f6a5151fb260c4c3040943b3d961c1073aa3f`; request scope `sha256:e749c6265a08ebc7095c96c3636e3070eceb3f5cd82e2e981d9d23167ef50be1`; Event tuple `sha256:9ca70dd34ce79e0f3505f2bb40cace8299557d9b9b67895c5d4a9588262677de`; Bundle ref `sha256:352aa6a20c9c04dc998d07e6935f6bb635fb52459a361648262565d5773423fb`; report `sha256:29e639615c1e5f5fa05ffdff9bc77a630d56838c7b0e70230177922bdbffc37b`; report file `sha256:850cf2b5b2f3caffd7afc1cb4f364e6224c4022417ae46bb01a406600e971951`; final plan `sha256:8a5d5643db1baa6bd50d26e6ab4220df948ca3122a46214a710dd47cd9299686` | market-bundle-builder off-root Binance source-bounded observation/publication | ADR 0008, G10E, G12A/C/D, existing acquisition tool | exact three rate+funding-mark rows and late observed-as-of publication independently reviewed PASS; 24 focused, 253 adjacent, and 2237 full-repository tests pass; provider checksum/finality/completeness, immutable 2024 publication availability, grade, live, and deployment remain false |
 | G12L-TUSHARE-CN-A-SHARE-DAILY-LISTING-V1 | DRAFT / BLOCKED | market-bundle-builder China A-share source slice | G12A, G12-ACQ-TOOLS-V1, G12B-TUSHARE-CN-A-SHARE-DAILY-V1 | Normalizer acceptance, provider revision, listing history, and corporate-action authority |
-| G12M-* | DRAFT / PROVIDER-SPECIFIC A-SHARE NOMINAL READY — exact accepted G12I and fixed-singleton G12K boundaries frozen; ADR 0008 `e377dc37fa35c06ae528b420e0ec86f1df6d800b`, ADR `sha256:a213f151393d23e264eaf90de5d6ac7a556548de84c420a3cb5a5bb703f3c3a8`, G12I report `sha256:ff09c4ad9f8025e66689387b5132d3d85c4101276fbf7330dd5040af111cc029`, G12K report `sha256:5a49065d87286a9673893337328ddbbab9a19cd3addf178bf96033b9b1babfd7`, amended plan `sha256:5e22e8d697ba4873488eeb2960eaaf876b50e220045e4cc3ffc0041a16c90f46` | backtest-runtime qualification | accepted G12I + G12K Tushare canonical reports for exact singleton `xshe:000001`; Binance observed-as-of only for Binance case | next D1 may freeze a closed Runtime A-share interface that independently reconstructs both reports and binds a singleton/no-dynamic-selector run; general G12K and Binance cases remain blocked; G12M cannot mint grade, legal/live/deployment remain separate, and no generic self-attested mapping seam is authorized |
+| G12M-* | DRAFT / PROVIDER-SPECIFIC A-SHARE AND BINANCE NOMINAL READY — exact accepted G12I, fixed-singleton G12K, and Binance funding-history boundaries frozen; ADR 0008 `e377dc37fa35c06ae528b420e0ec86f1df6d800b`, ADR `sha256:a213f151393d23e264eaf90de5d6ac7a556548de84c420a3cb5a5bb703f3c3a8`, G12I report `sha256:ff09c4ad9f8025e66689387b5132d3d85c4101276fbf7330dd5040af111cc029`, G12K report `sha256:5a49065d87286a9673893337328ddbbab9a19cd3addf178bf96033b9b1babfd7`, Binance report `sha256:29e639615c1e5f5fa05ffdff9bc77a630d56838c7b0e70230177922bdbffc37b`, amended plan `sha256:a64890f3fc478daeee61138965bdd1e98437312cd28e28895638cee2957f2c0f` | backtest-runtime qualification | accepted G12I + G12K Tushare canonical reports for singleton `xshe:000001`; accepted Binance funding-history v2 report for `btc-usdt-perpetual` | next D1 contracts may freeze separate closed Runtime A-share and Binance interfaces; general/dynamic-universe and other provider combinations remain blocked; G12M cannot mint grade, legal/live/deployment remain separate, and no generic self-attested mapping seam is authorized |
 | BT-GAP-01 | PASSED — immutable commit `f2440f9658fbe2ae1cf0016a78c44e4230995394` | trading-domain | WP-02E, Platform BT-PORT-01 | none |
 | BT-GAP-02 | PASSED — immutable commit `39863c58ace1d996f3e814835836ec46e2aa3794` | backtest-runtime facade | BT-GAP-01, G07, BT-GAP-02A, BT-GAP-04 | none |
 | BT-GAP-02A | PASSED | backtest-runtime composition | G07, G08H, G10G, BT-GAP-02B, BT-GAP-02C | none |
@@ -11676,9 +11677,12 @@ artifact_hashes:
 ```
 
 The exact response supplies all G10E record fields, including the funding-time
-mark, and repeated fetches had identical bytes. It remains BLOCKED because the
-current REST endpoint provides no immutable revision/correction terminal set or
-provider checksum. No normalizer, G12C/D, G12I, G12M, or deployment claim follows.
+mark, and repeated fetches had identical bytes. Strict v1 remains BLOCKED because
+the current REST endpoint provides no immutable revision/correction terminal set or
+provider checksum. No strict-v1 normalizer, G12C/D, G12I, G12M, or deployment claim
+follows. The separate accepted source-bounded v2 lane provides exact observed-as-of
+normalization and G12C/D publication identities under ADR 0008 without satisfying
+this strict finality claim.
 
 ## 104E. G12B Tushare China A-share Daily Raw Bar and Purpose Projection v1
 
@@ -12854,8 +12858,9 @@ remaining_claims_false:
 5. The G12M plan freezes the nominal Runtime reconstruction boundary for these
    exact accepted G12I bytes and hashes. Together with the accepted fixed-singleton
    G12K boundary below, one Tushare-only A-share case is ready for a later exact D1
-   interface contract. It authorizes no Runtime function, generic mapping assessor,
-   grade change, legal/live/deployment claim, general-universe case, or Binance case.
+   interface contract. The accepted Binance case remains a separate boundary. No
+   Runtime function, generic mapping assessor, grade change, legal/live/deployment
+   claim, or general-universe case is authorized here.
 
 ### G12K Fixed-Instrument Source-Bounded Acceptance
 
@@ -12887,6 +12892,39 @@ remaining_claims_false:
    terminal report, dynamic selector, or general listing/universe claim. Historical
    listing/membership, whole-universe completeness, survivorship, action lifecycle,
    grade, profile, live, legal, and deployment remain false.
+
+### G12L Binance Funding-History Source-Bounded Acceptance
+
+1. The exact public request, compact three-row response, canonical receipt,
+   SourceSnapshot, member bytes/hash/time, request scope, and secret absence are
+   fail-closed. Duplicate-key, noncanonical, schema, scope, decimal, count,
+   missing-mark, and evidence-binding failures return one atomic structured failure.
+2. Both funding rate and funding-time mark are normalized at exact scale `8` without
+   float conversion or rounding. Receipt time is later than all three funding times
+   and is preserved as Event availability; the report does not claim immutable 2024
+   publication availability.
+3. Nominal reconstruction rebuilds raw response bytes from retained rows, verifies
+   their member hash, rebuilds the one-member Snapshot, then replays Event IDs/hashes,
+   canonical stream bytes, G12C manifest, and Bundle ref. Direct predecessors require
+   full receipt/Snapshot/raw/report replay; prior evidence and Runs are immutable.
+4. Accepted identities are implementation
+   `024e5f209a94bb358946f5c468630108981f0329`, response/receipt
+   `sha256:e9f73f9c845c28abb31037d8230df2d6f13d5d368c43436e891fcc757372c338` /
+   `sha256:a92989478047de7d744744aedeaf365f7d16240b536c1ccece749abe3b4efa36`,
+   Snapshot `sha256:a45d9acdcfb4d42d1c70af44969f6a5151fb260c4c3040943b3d961c1073aa3f`,
+   Event tuple `sha256:9ca70dd34ce79e0f3505f2bb40cace8299557d9b9b67895c5d4a9588262677de`,
+   Bundle-ref manifest
+   `sha256:352aa6a20c9c04dc998d07e6935f6bb635fb52459a361648262565d5773423fb`,
+   report `sha256:29e639615c1e5f5fa05ffdff9bc77a630d56838c7b0e70230177922bdbffc37b`,
+   canonical report file
+   `sha256:850cf2b5b2f3caffd7afc1cb4f364e6224c4022417ae46bb01a406600e971951`,
+   and final plan `sha256:8a5d5643db1baa6bd50d26e6ab4220df948ca3122a46214a710dd47cd9299686`.
+5. The off-root Builder module passed 24 focused, 253 adjacent, and 2237
+   full-repository tests plus Ruff, LSP, diff, gitleaks, and independent adversarial
+   review. Existing acquisition, strict v1, monthly rate-only v1, G10E, Builder root,
+   Runtime, and Kernel remain unchanged. Permanent checksum, future finality,
+   correction lineage, provider-global completeness, grade, live, and deployment
+   remain false.
 
 ## 115. PASSED 记录格式
 

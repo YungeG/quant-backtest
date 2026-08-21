@@ -13,7 +13,7 @@ consumes:
 depends_on:
   contract: [G10E, G12A]
   evidence: [official Binance Funding Rate History documentation]
-fan_out: [G12L-BINANCE-USDM-FUNDING-HISTORY-V2]
+fan_out: [G12L-BINANCE-USDM-FUNDING-HISTORY-SOURCE-BOUNDED-V2]
 ---
 
 # G12L Binance USDⓈ-M Funding History v1
@@ -22,17 +22,22 @@ fan_out: [G12L-BINANCE-USDM-FUNDING-HISTORY-V2]
 
 Freeze a finite real response proving that the official endpoint supplies exact
 funding rate, funding-time mark, rate type, and funding time for G10E development.
-Do not normalize or publish it as accepted G12B-D authority without immutable
-provider revision/correction closure.
+This v1 retains the strict immutable-publication closure question. The additive
+[source-bounded v2](g12l-binance-usdm-funding-history-source-bounded-v2.md)
+normalizes and publishes the same byte-identical response under ADR 0008 without
+changing v1.
 
 Research authority: `docs/research/g12l-binance-usdm-funding-history-v1.md`.
 
 ## Status
 
-`DRAFT / BLOCKED`. Exact request, repeated byte identity, three response records,
-and G12A identity are frozen. The endpoint has no provider checksum, immutable
-publication revision, or correction terminal set. Adding a normalizer now would
-only wrap evidence that cannot pass the common G12L READY checklist.
+`DRAFT / STRICT IMMUTABLE-PUBLICATION BLOCKED`. Exact request, repeated byte
+identity, three response records, and G12A identity are frozen. The endpoint has no
+provider checksum, immutable publication revision, or correction terminal set.
+Those assurances still block this strict v1 lane, but are explicit limitations—not
+ordinary historical-research blockers—for the accepted source-bounded v2 at
+`024e5f209a94bb358946f5c468630108981f0329`, report
+`sha256:29e639615c1e5f5fa05ffdff9bc77a630d56838c7b0e70230177922bdbffc37b`.
 
 ## Frozen finite scope
 
@@ -52,5 +57,7 @@ Provide one of:
    mark for the finite scope; or
 2. first-party revision/correction evidence that closes the exact REST result.
 
-Until then no provider normalizer, G12C manifest, G12D publication, G12I, or G12M
-claim is warranted.
+Until then no strict immutable-publication authority claim is warranted from v1.
+The accepted source-bounded v2 separately provides exact normalization, G12C/D
+publication identities, and one provider-specific G12M nominal seam; it does not
+satisfy this strict provider-finality condition.
