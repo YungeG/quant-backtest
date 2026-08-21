@@ -1,3 +1,5 @@
+# ruff: noqa: DTZ007 -- these validators parse provider calendar dates, not instants.
+
 from __future__ import annotations
 
 import argparse
@@ -17,14 +19,20 @@ from crypto_quant_bundle_builder import (
     freeze_source_snapshot,
 )
 
-from ._common import AcquisitionError, Post, json_bytes, publish_directory, require_new_output, sha256
+from ._common import (
+    AcquisitionError,
+    Post,
+    json_bytes,
+    publish_directory,
+    require_new_output,
+    sha256,
+)
 from .cn_a_share_tushare import (
     _post_with_retries,
     _provider_body,
     _rows,
     _stdlib_post,
 )
-
 
 _EXCHANGES = ("SSE", "SZSE")
 _DATE = re.compile(r"20[0-9]{6}\Z")
@@ -50,6 +58,45 @@ class TushareTradeCalendarRequest:
         return {"exchange": self.exchange, "trade_date": self.trade_date}
 
 
+def _validate_trade_calendar_range_v2(
+    rows: list[list[object]],
+    *,
+    exchange: str,
+    start_date: str,
+    end_date: str,
+) -> None:
+    keys: set[tuple[str, str]] = set()
+    for row in rows:
+        provider_exchange, calendar_text, is_open, pretrade_text = row
+        if (
+            type(provider_exchange) is not str
+            or type(calendar_text) is not str
+            or type(is_open) is not int
+            or type(pretrade_text) is not str
+        ):
+            raise AcquisitionError("provider trade_cal response violates request scope")
+        try:
+            calendar_date = datetime.strptime(calendar_text, "%Y%m%d").date()
+            pretrade_date = datetime.strptime(pretrade_text, "%Y%m%d").date()
+        except ValueError as error:
+            raise AcquisitionError(
+                "provider trade_cal response violates request scope"
+            ) from error
+        if (
+            provider_exchange != exchange
+            or not start_date <= calendar_text <= end_date
+            or is_open not in (0, 1)
+            or pretrade_date >= calendar_date
+        ):
+            raise AcquisitionError("provider trade_cal response violates request scope")
+        key = (provider_exchange, calendar_text)
+        if key in keys:
+            raise AcquisitionError(
+                "provider trade_cal response has duplicate logical rows"
+            )
+        keys.add(key)
+
+
 def acquire_trade_calendar(
     request: TushareTradeCalendarRequest,
     *,
@@ -64,7 +111,10 @@ def acquire_trade_calendar(
     require_new_output(output_dir)
     if type(token) is not str or not token or token != token.strip():
         raise AcquisitionError("TUSHARE_TOKEN must be canonical non-empty text")
-    if type(acquired_at_epoch_nanoseconds) is not int or acquired_at_epoch_nanoseconds < 0:
+    if (
+        type(acquired_at_epoch_nanoseconds) is not int
+        or acquired_at_epoch_nanoseconds < 0
+    ):
         raise AcquisitionError("acquired_at_epoch_nanoseconds must be nonnegative")
     body = _provider_body(
         api_name="trade_cal",
@@ -76,9 +126,7 @@ def acquire_trade_calendar(
         },
         fields=_FIELDS,
     )
-    response_bytes, attempts = _post_with_retries(
-        "trade_cal", body, post, sleep
-    )
+    response_bytes, attempts = _post_with_retries("trade_cal", body, post, sleep)
     rows = _rows(
         response_bytes,
         api_name="trade_cal",
@@ -86,25 +134,34 @@ def acquire_trade_calendar(
         forbidden_text=token,
     )
     if len(rows) != 1:
-        raise AcquisitionError("provider trade_cal response does not exact-cover request")
+        raise AcquisitionError(
+            "provider trade_cal response does not exact-cover request"
+        )
     exchange, calendar_text, is_open, pretrade_text = rows[0]
+    if (
+        type(calendar_text) is not str
+        or type(is_open) is not int
+        or type(pretrade_text) is not str
+    ):
+        raise AcquisitionError(
+            "provider trade_cal response does not exact-cover request"
+        )
     try:
         calendar_date = datetime.strptime(calendar_text, "%Y%m%d").date()
         pretrade_date = datetime.strptime(pretrade_text, "%Y%m%d").date()
-    except (TypeError, ValueError) as error:
+    except ValueError as error:
         raise AcquisitionError(
             "provider trade_cal response does not exact-cover request"
         ) from error
     if (
         exchange != request.exchange
-        or type(calendar_text) is not str
         or calendar_text != request.trade_date
-        or type(is_open) is not int
         or is_open not in (0, 1)
-        or type(pretrade_text) is not str
         or pretrade_date >= calendar_date
     ):
-        raise AcquisitionError("provider trade_cal response does not exact-cover request")
+        raise AcquisitionError(
+            "provider trade_cal response does not exact-cover request"
+        )
     response_hash = sha256(response_bytes)
     snapshot = freeze_source_snapshot(
         members=(
@@ -151,7 +208,9 @@ def acquire_trade_calendar(
         "acquisition-receipt.json": json_bytes(receipt),
     }
     if any(token.encode() in value for value in published.values()):
-        raise AcquisitionError("provider response unexpectedly contains credential material")
+        raise AcquisitionError(
+            "provider response unexpectedly contains credential material"
+        )
     publish_directory(output_dir, published)
     return receipt
 
