@@ -3,15 +3,12 @@ from __future__ import annotations
 import json
 from dataclasses import replace
 from pathlib import Path
-from typing import cast
 
 import pytest
 from crypto_quant_backtest import (
-    CashFillAccountingPlan,
     DefaultCashFinancialDispatcher,
     DeterministicBarEngine,
     EngineFailureCode,
-    FillAccountingDispatchPlan,
     FinancialDispatchFailureCode,
     FinancialStateView,
     default_cash_financial_dispatcher_spec,
@@ -54,6 +51,10 @@ from tests.kernel.accounting._fixtures import (
 from tests.kernel.accounting._fixtures import (
     COST_BASIS_POLICY as KERNEL_COST_BASIS_POLICY,
 )
+from tests.runtime.engine._financial_dispatch_fixtures import (
+    lot_books_from_ledger,
+    v2_cash_plan,
+)
 from tests.runtime.engine._fixtures import (
     MONEY_SCALE as RUNTIME_MONEY_SCALE,
 )
@@ -63,12 +64,7 @@ from tests.runtime.engine._fixtures import (
 from tests.runtime.engine._fixtures import (
     QUANTITY_SCALE as RUNTIME_QUANTITY_SCALE,
 )
-from tests.runtime.engine._fixtures import (
-    CashAccountingSemanticPayload,
-    SyntheticExecutionCaseBuilder,
-    cash_accounting_plan,
-    execution_case,
-)
+from tests.runtime.engine._fixtures import SyntheticExecutionCaseBuilder, execution_case
 
 
 def _kernel_ledger_schema() -> LedgerSchema:
@@ -78,29 +74,6 @@ def _kernel_ledger_schema() -> LedgerSchema:
             LedgerBalanceRegistration(POSITION_KEY, QUANTITY_SCALE),
         )
     )
-
-
-def _v2_cash_plan() -> FillAccountingDispatchPlan:
-    plan = cash_accounting_plan()
-    position_payload = replace(
-        cast(CashFillAccountingPlan, plan.position_payload),
-        cash_key=CASH_KEY,
-        position_key=POSITION_KEY,
-        cost_basis_policy=COST_BASIS_POLICY_V2,
-    )
-    semantic_payload = replace(
-        cast(CashAccountingSemanticPayload, plan.semantic_payload),
-        cash_key=CASH_KEY,
-        position_key=POSITION_KEY,
-        cost_basis_policy=COST_BASIS_POLICY_V2,
-    )
-    return replace(
-        plan,
-        position_payload=position_payload,
-        semantic_payload=semantic_payload,
-        fee_plan=replace(plan.fee_plan, cash_key=CASH_KEY),
-    )
-
 
 
 def _financial_state_view(
@@ -122,22 +95,6 @@ def _financial_state_view(
         lot_books,
         (),
     )
-
-
-def _lot_books_from_ledger(
-    ledger_state,
-) -> tuple[tuple[PositionBalanceKey, tuple[PositionLot, ...]], ...]:
-    return tuple(
-        sorted(
-            (
-                (position.key, position.lots)
-                for position in ledger_state.position_balances
-                if position.lots
-            ),
-            key=lambda value: canonical_bytes(value[0]),
-        )
-    )
-
 
 
 def test_engine_rejects_missing_or_invalid_financial_dispatcher() -> None:
@@ -179,9 +136,7 @@ def test_dispatcher_spec_mismatch_fails_before_fill_accounting() -> None:
     assert outcome.result is None
     assert outcome.engine_failure is not None
     assert outcome.engine_failure.code == EngineFailureCode.FINANCIAL_DISPATCH_FAILURE
-    expected_subjects = (
-        FinancialDispatchFailureCode.DISPATCHER_SPEC_MISMATCH.value,
-    )
+    expected_subjects = (FinancialDispatchFailureCode.DISPATCHER_SPEC_MISMATCH.value,)
     assert outcome.engine_failure.subject_keys == expected_subjects
 
 
@@ -257,7 +212,7 @@ def test_initial_lot_changes_alter_financial_semantics_without_changing_v1() -> 
 
 def test_v2_book_fill_ignores_legacy_side_state_and_returns_exact_evidence() -> None:
     dispatcher = DefaultCashFinancialDispatcher()
-    plan = _v2_cash_plan()
+    plan = v2_cash_plan()
     seed = fill(
         "1",
         side=OrderSide.BUY,
@@ -276,7 +231,9 @@ def test_v2_book_fill_ignores_legacy_side_state_and_returns_exact_evidence() -> 
         recorded_at=recorded_at(10),
     )
     assert seed_outcome.result is not None
-    initial_journal = AccountingJournal.from_entries((seed_outcome.result.journal_entry,))
+    initial_journal = AccountingJournal.from_entries(
+        (seed_outcome.result.journal_entry,)
+    )
     fill_fill = replace(
         fill(
             "2",
@@ -315,12 +272,12 @@ def test_v2_book_fill_ignores_legacy_side_state_and_returns_exact_evidence() -> 
             )
         )
     )
-    assert _lot_books_from_ledger(replay) == outcome.result.position_lot_books
+    assert lot_books_from_ledger(replay) == outcome.result.position_lot_books
 
 
 def test_v2_fee_dispatch_uses_ledger_lots_and_returns_exact_evidence() -> None:
     dispatcher = DefaultCashFinancialDispatcher()
-    plan = _v2_cash_plan()
+    plan = v2_cash_plan()
     target_fill = replace(
         fill(
             "2",
@@ -365,14 +322,14 @@ def test_v2_fee_dispatch_uses_ledger_lots_and_returns_exact_evidence() -> None:
     replay = GenericLedger(_kernel_ledger_schema()).project(
         filled_journal.append_many(outcome.result.journal_entries)
     )
-    assert _lot_books_from_ledger(replay) == outcome.result.position_lot_books
+    assert lot_books_from_ledger(replay) == outcome.result.position_lot_books
     allocated_lot = dict(outcome.result.position_lot_books)[POSITION_KEY][0]
     assert allocated_lot.allocated_fees == (assessed.result.assessment.amount,)
 
 
 def test_v2_fee_rejects_nonzero_position_with_empty_ledger_lot_books() -> None:
     dispatcher = DefaultCashFinancialDispatcher()
-    plan = _v2_cash_plan()
+    plan = v2_cash_plan()
     seed = fill(
         "1",
         side=OrderSide.BUY,
@@ -391,7 +348,9 @@ def test_v2_fee_rejects_nonzero_position_with_empty_ledger_lot_books() -> None:
         recorded_at=recorded_at(10),
     )
     assert seed_outcome.result is not None
-    initial_journal = AccountingJournal.from_entries((seed_outcome.result.journal_entry,))
+    initial_journal = AccountingJournal.from_entries(
+        (seed_outcome.result.journal_entry,)
+    )
 
     stale_lot = PositionLot(
         lot_id="lot:stale",
@@ -428,15 +387,19 @@ def test_v2_fee_rejects_nonzero_position_with_empty_ledger_lot_books() -> None:
     outcome = dispatcher.book_fee(plan, fill_fill, assessed.result, state)
     assert outcome.result is None
     assert outcome.failure is not None
-    assert outcome.failure.code.value == FinancialDispatchFailureCode.PROFILE_COMPONENT_FAILURE.value
+    assert (
+        outcome.failure.code.value
+        == FinancialDispatchFailureCode.PROFILE_COMPONENT_FAILURE.value
+    )
     assert "position_lot_books" in outcome.failure.subject_ids
 
 
 def test_v1_result_hash_parity_is_unchanged() -> None:
     fixture = json.loads(
-        (Path(__file__).parents[3] / "tests/fixtures/runtime/deterministic-engine-orchestration-v1.json").read_text(
-            encoding="utf-8"
-        )
+        (
+            Path(__file__).parents[3]
+            / "tests/fixtures/runtime/deterministic-engine-orchestration-v1.json"
+        ).read_text(encoding="utf-8")
     )
 
     outcome = DeterministicBarEngine().run(execution_case())

@@ -1,138 +1,44 @@
 from __future__ import annotations
 
-import json
 from dataclasses import dataclass, fields, replace
-from importlib import import_module
 from pathlib import Path
 
 import pytest
 from crypto_quant_backtest.cn_a_share_current_selected_fee_binding import (
-    CnAShareCurrentSelectedFeePreparedExecutionV2,
     prepare_cn_a_share_current_selected_fee_execution_v2,
 )
 from crypto_quant_backtest.cn_a_share_profile import CnAShareProfileComposer
-from crypto_quant_bundle_builder import (
-    LocalMarketBundleRepository,
-    LocalMarketBundleRepositoryConfig,
-    validate_market_bundle_v1,
-)
-from crypto_quant_bundle_builder.cn_a_share_current_selected_rule_coverage import (
-    analyze_cn_a_share_current_selected_rule_coverage_v1,
-)
 from crypto_quant_domain import (
-    Money,
     OrderSide,
-    Price,
-    Quantity,
     SourceSequence,
-    UtcInstant,
-    canonical_bytes,
 )
-from crypto_quant_market_data import EventCursor, LocalMarketBundleReader, MarketEvent
+from crypto_quant_market_data import MarketEvent
 
-from tests.kernel.profiles.cn_a_share._commission_tax_fixtures import fill as make_fill
 from tests.runtime.engine._fixtures import SyntheticExecutionCaseBuilder
-from tests.runtime.profiles.cn_a_share.test_route_product_fee_v2_binding import (
-    _build_manifest,
-    _forge,
-    _order,
-    _profile,
+from tests.runtime.profiles.cn_a_share._current_selected_fee_fixtures import (
+    build_artifact_manifest,
+    current_selected_fill,
+    july_order,
+    published_inputs,
+    resolved_profile,
 )
 
-ROOT = Path(__file__).resolve().parents[3]
-FIXTURE = (
-    ROOT / "fixtures/market_data/rule_authorities/"
-    "cn-a-share-current-selected-development-v2/declaration.json"
-)
-START = 1_783_267_200_000_000_000
-END = 1_785_427_200_000_000_000
-JULY_15 = 1_784_131_200_000_000_000
 
-
-def _published_inputs(tmp_path: Path):
-    tmp_path.mkdir(parents=True, exist_ok=True)
-    declaration = json.loads(FIXTURE.read_text())
-    events = import_module(
-        "crypto_quant_bundle_builder.cn_a_share_current_selected_rule_bundle"
-    ).project_cn_a_share_current_selected_rule_authority_events_v2(declaration)
-    validation = validate_market_bundle_v1(
-        bundle_key=declaration["publication"]["bundle_key"],
-        schema_version=2,
-        coverage_start=UtcInstant(START),
-        coverage_end_exclusive=UtcInstant(END),
-        instrument_catalog_hash="sha256:" + "0" * 64,
-        events=events,
-    )
-    assert validation.failure is None and validation.manifest is not None
-    publication = LocalMarketBundleRepository(
-        config=LocalMarketBundleRepositoryConfig(tmp_path.resolve())
-    ).publish_market_bundle_v1(
-        manifest=validation.manifest,
-        stream_payloads={
-            event.stream_key: canonical_bytes((event,)) for event in events
-        },
-        retention_policy_ref=declaration["publication"]["retention_policy_ref"],
-    )
-    assert publication.failure is None and publication.result is not None
-    reader = LocalMarketBundleReader.open(
-        repository_root=tmp_path.resolve(),
-        bundle_ref=publication.result.bundle_ref,
-    )
-    read_events = []
-    for event in events:
-        cursor = reader.open_cursor(event.stream_key, batch_size=1)
-        assert isinstance(cursor, EventCursor)
-        batch, cursor = reader.read_batch(cursor)
-        assert cursor.exhausted and len(batch) == 1
-        read_events.extend(batch)
-    report = analyze_cn_a_share_current_selected_rule_coverage_v1(declaration)
-    return declaration, reader.manifest, tuple(read_events), report.to_canonical_dict()
-
-
-def _july_order(profile, side: OrderSide):
-    order = _order(profile)
-    return replace(
-        order,
-        intent=replace(order.intent, side=side),
-        created_at=replace(order.created_at, instant=UtcInstant(JULY_15)),
-    )
-
-
-def _fill(prepared: CnAShareCurrentSelectedFeePreparedExecutionV2, digit: str):
-    order = prepared.execution_binding.order
-    base = make_fill(order, digit, UtcInstant(JULY_15 + 3_600_000_000_000))
-    instrument = prepared.binding.authority.scope.instrument
-    price = Price(
-        base.price.units,
-        base.price.scale,
-        str(instrument.instrument_id),
-        str(instrument.quote_currency),
-    )
-    return replace(
-        base,
-        account_id=order.account_id,
-        venue_id=instrument.instrument_id.venue,
-        instrument_id=instrument.instrument_id,
-        side=order.intent.side,
-        quantity=Quantity(
-            base.quantity.units,
-            base.quantity.scale,
-            str(instrument.instrument_id),
-        ),
-        reference_price=price,
-        price=price,
-        slippage_amount=Money(
-            0, base.slippage_amount.scale, str(instrument.quote_currency)
-        ),
-    )
+def _forge(value, /, **changes):
+    result = object.__new__(type(value))
+    for field in fields(value):
+        object.__setattr__(
+            result, field.name, changes.get(field.name, getattr(value, field.name))
+        )
+    return result
 
 
 def test_current_selected_reader_fan_in_binds_exact_fees_and_replays(
     tmp_path: Path,
 ) -> None:
-    _, manifest, events, report = _published_inputs(tmp_path)
-    profile = _profile()
-    build = _build_manifest(profile)
+    _, manifest, events, report = published_inputs(tmp_path)
+    profile = resolved_profile()
+    build = build_artifact_manifest(profile)
     spec = SyntheticExecutionCaseBuilder().semantic_spec()
 
     def prepare(side: OrderSide):
@@ -143,7 +49,7 @@ def test_current_selected_reader_fan_in_binds_exact_fees_and_replays(
             coverage_report=report,
             build_artifact_manifest=build,
             base_spec=spec,
-            order=_july_order(profile, side),
+            order=july_order(profile, side),
         )
 
     buy = prepare(OrderSide.BUY)
@@ -177,9 +83,9 @@ def test_current_selected_reader_fan_in_binds_exact_fees_and_replays(
     )
 
     buy_query = buy.reservation_query()
-    buy_final = buy.final_fill_query(_fill(buy, "8"))
+    buy_final = buy.final_fill_query(current_selected_fill(buy, "8"))
     sell_query = sell.reservation_query()
-    sell_final = sell.final_fill_query(_fill(sell, "9"))
+    sell_final = sell.final_fill_query(current_selected_fill(sell, "9"))
     buy_market, buy_tax = buy.policies()
     sell_market, sell_tax = sell.policies()
     for policy, query in (
@@ -234,11 +140,11 @@ def test_current_selected_reader_fan_in_binds_exact_fees_and_replays(
 
 
 def test_current_selected_substitutions_fail_before_policy_use(tmp_path: Path) -> None:
-    _, manifest, events, report = _published_inputs(tmp_path)
-    profile = _profile()
-    build = _build_manifest(profile)
+    _, manifest, events, report = published_inputs(tmp_path)
+    profile = resolved_profile()
+    build = build_artifact_manifest(profile)
     spec = SyntheticExecutionCaseBuilder().semantic_spec()
-    order = _july_order(profile, OrderSide.BUY)
+    order = july_order(profile, OrderSide.BUY)
 
     def prepare(**changes):
         values = {
