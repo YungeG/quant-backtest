@@ -208,6 +208,14 @@ calibrated, caller-selected, or configurable time is allowed.
 - no credential, cookie, header, environment value, raw exception, or object repr is
   serialized.
 
+### D2 fan-out contract
+
+H1 must also freeze one tiny provider-specific v3 stream contract consumed unchanged
+by D3 and D4: exact funding capability key/version, Event payload fields, decimal
+scales, purpose, and timeline phase. This is not a registry or availability policy;
+it is the shared contract that prevents source/Profile version drift during parallel
+work.
+
 ## D3 — Publish additive funding-history source v3
 
 Create a provider-specific off-root Builder module. It should reuse the accepted v2
@@ -257,14 +265,16 @@ mutate v3 history.
 - any output accidentally retains `available_time = observed_at` without an explicit
   post-hoc-only outcome.
 
-## D4 — Establish production decision-grade Profile authority
+## D4 — Freeze production Profile authority inputs and capability contract
 
-Freeze the additive/versioned production Profile capability contract before building
-the execution Bundle. Do not flip existing Binance Development registrations.
+In parallel with D3 after accepted H1, freeze the additive/versioned production
+Profile authority inputs and exact required capability contract. Consume the D2
+funding capability key/version unchanged. Do not flip or add a shared Runtime
+registration in this lane.
 
 The profile lane must independently close or explicitly reject at least:
 
-- funding-source eligibility;
+- funding-source eligibility requirements;
 - account/financial-event authority;
 - bar execution semantics and parity;
 - price-purpose coverage;
@@ -273,12 +283,15 @@ The profile lane must independently close or explicitly reject at least:
 - Build/Profile/Environment compatibility.
 
 If any required production limitation remains decision-grade blocking, G12M remains
-blocked. G12M does not own this lane and cannot waive it.
+blocked. G12M does not own this lane and cannot waive it. The exact resolved Profile
+identity cannot be finalized until D5 and D6 are available; D7 owns that single-writer
+composition and registration.
 
-This preserves the order:
+This preserves the authority order:
 
 ```text
-Profile and Integrity establish grade
+Profile inputs and source contracts are independently accepted
+Runtime composes the exact Profile and Integrity establishes grade
 G12M later binds source evidence to the already-graded Result
 ```
 
@@ -286,7 +299,8 @@ No G12M-to-grade bootstrap cycle is allowed.
 
 ## D5 — Build one complete execution Bundle
 
-Only after D4 freezes the exact required capabilities, build the execution Bundle.
+Only after D3 and D4 freeze the exact source stream and required capabilities, build
+the execution Bundle.
 The source evidence Bundle and production execution Bundle have different identities.
 Do not require their `MarketBundleRef` values to be equal.
 
@@ -320,7 +334,8 @@ allowed.
 
 ## D6 — Integrate v3 Events with the existing funding execution path
 
-Add one provider-specific, pure adapter at the Runtime-to-Kernel seam; do not add a
+In parallel with D5 after D3 and D4 are accepted, add one provider-specific, pure
+adapter at the Runtime-to-Kernel seam; do not add a
 second funding resolver. The adapter converts an exact accepted v3 `MarketEvent` into
 the existing `BinanceUsdmFundingRateRecord` consumed by G10E.
 
@@ -334,6 +349,13 @@ record.revision_id                 = event.revision_id
 record.source_ref.source_hash      = event.event_hash
 record.source_ref.supersedes_revision_id = event.supersedes_revision_id
 ```
+
+The current G10E funding source rejects any non-null source predecessor. Therefore
+this plan's canonical execution case accepts only initial v3 Events with
+`supersedes_revision_id = null`. The adapter must reject, not erase, a non-null v3
+predecessor. Corrective v3 Events remain valid append-only source evidence but are
+non-executable until a separately planned additive/versioned G10E correction lane is
+accepted; they cannot produce a successful historical G12M assessment in this plan.
 
 The adapter must validate exact event type, capability, instrument, phase, payload,
 decimal strings/units/scales, source-record hash, and funding purpose before returning
@@ -358,10 +380,12 @@ v3 MarketEvent ID/hash
 This crosswalk is evidence, not a new source registry or resolver. Architecture tests
 must prove Runtime does not import Builder and Kernel does not import Runtime.
 
-## D7 — Produce and verify one canonical Run
+## D7 — Compose the exact Profile, then produce one canonical Run
 
-Execute one persisted Run using the complete D5 Bundle, accepted D4 Profiles, and D6
-adapter. Freeze:
+As the shared Runtime single writer, first compose and register the exact additive
+production Profile using accepted D4 authority inputs, the complete D5 Bundle, and
+D6 funding-source resolution/crosswalk. Do not change the Development registration.
+Then execute one persisted Run using that exact Profile/Bundle/adapter set. Freeze:
 
 - request and semantic Run identity;
 - Bundle, Build, Profile, and Environment identities;
@@ -372,9 +396,11 @@ adapter. Freeze:
 - D6 adapter crosswalk;
 - accounting trace/journal.
 
-The canonical trace must contain every required funding Event ID/hash at the exact
-funding/Provider Availability Time, and the D6 crosswalk must prove that the same
-Event reached the selected funding-source resolution.
+The canonical trace must contain every required initial v3 funding Event ID/hash at
+the exact funding/Provider Availability Time, and the D6 crosswalk must prove that the
+same Event reached the selected funding-source resolution. Any selected Event with a
+non-null source predecessor blocks this Run rather than being flattened into an
+initial revision.
 
 Accounting proof is a disposition proof, not a requirement to manufacture money
 movement:
@@ -416,10 +442,10 @@ A Development Result produces a canonical non-qualified assessment. The assessor
 never mints, upgrades, or downgrades grade.
 
 Failure precedence must distinguish malformed bytes, invalid authority, source-row
-mismatch, Bundle membership mismatch, causal availability mismatch, adapter-crosswalk
-mismatch, missing trace, invalid accounting disposition, invalid Run identity, and
-invalid direct supersession. Failure artifacts contain identifiers only, never raw
-bytes or exception text.
+mismatch, Bundle membership mismatch, causal availability mismatch, unsupported
+executable source correction, adapter-crosswalk mismatch, missing trace, invalid
+accounting disposition, invalid Run identity, and invalid assessment supersession.
+Failure artifacts contain identifiers only, never raw bytes or exception text.
 
 ## D9 — Acceptance and governance fan-in
 
@@ -443,10 +469,10 @@ After independent review and validation:
 | D1 authority | raw-source replay, exact-scope hashes, independent primary-source review |
 | D2 availability | canonical golden reconstruction plus malformed/scope/time adversarial cases |
 | D3 source v3 | exact v2 replay, authority binding, Event/stream/manifest golden, correction test |
-| D4 Profile | production grade resolution and all blocking limitations fail closed |
+| D4 Profile inputs | exact capability contract and all blocking authority limitations fail closed; no shared registration |
 | D5 execution Bundle | required-capability resolution, stream membership, one-Bundle and no-resampling architecture tests |
 | D6 execution adapter | Event-to-record golden crosswalk, exact timing/phase, malformed payload, and import-boundary tests |
-| D7 Run | persisted replay, Integrity verification, funding trace/crosswalk, position and zero-position disposition tests |
+| D7 Profile + Run | additive registration, production grade resolution, persisted replay, Integrity verification, funding trace/crosswalk, position and zero-position disposition tests |
 | D8 G12M | success/non-qualified/failure/supersession golden tests and Runtime→Builder architecture test |
 | D9 fan-in | focused, adjacent, architecture, full repository, Ruff/LSP, diff, and secret scan |
 
@@ -455,25 +481,18 @@ After independent review and validation:
 Use independent worktrees and one writer per lane:
 
 ```text
-D0 governance
-  ↓
-D1 authority research
-  ├─ H1 → D2 availability authority
-  │         ↓
-  │       D3 source v3 ───────────────┐
-  │         ↓                         │
-  │       D4 production Profiles      │
-  │         ↓                         │
-  │       D5 execution Bundle         │
-  │         ↓                         │
-  │       D6 execution adapter        │
-  │         ↓                         │
-  │       D7 canonical Run            │
-  │         ↓                         │
-  │       D8 G12M assessment          │
-  │         └───────────────→ D9 governance fan-in
-  ├─ H2 → stop 2024 branch; author separate prospective plan
-  └─ H3 → permanent blocker
+D0 governance ───────────────┐
+D1 authority research ───────┴→ H1 → D2 authority + shared v3 contract
+                                      ├→ D3 source v3 ───────┬→ D5 execution Bundle ─┐
+                                      └→ D4 Profile inputs ──┼→ D6 execution adapter ┼→ D7 Profile fan-in + canonical Run
+                                                             │                       │
+                                                             └───────────────────────┘
+                                                                                              ↓
+                                                                                     D8 G12M assessment
+                                                                                              ↓
+                                                                                     D9 governance fan-in
+D1 H2 → stop 2024 branch; author separate prospective plan
+D1 H3 → permanent blocker
 ```
 
 Acceptance Matrix, G12 README, main branch, and final commits remain single-writer.
