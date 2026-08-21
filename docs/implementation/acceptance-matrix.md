@@ -158,6 +158,7 @@ artifact_hashes: []
 | G12B-TUSHARE-CN-A-SHARE-DAILY-V1 | PASSED — immutable commit `373817b762fbe0d68b286577e0396107694cc9a1` | market-bundle-builder internal Tushare normalization | G12A, G12B, G12G, frozen Tushare event-time/numeric evidence | none; G12C/D and provider closure remain separate |
 | G12CD-TUSHARE-CN-A-SHARE-DAILY-PUBLICATION-V1 | PASSED — immutable source `7400cad6531b2687ffb150959cbf534c6797359e` | market-bundle-builder internal Tushare daily projection | G12B-TUSHARE-CN-A-SHARE-DAILY-V1, G12C, G12D | none; G12L/listing, revision, corporate-action, G12I/K/M, and deployment remain BLOCKED |
 | G12I-TUSHARE-CN-A-SHARE-DAILY-PURPOSE-SCOPE-V1 | PASSED — immutable evidence `5fd8e94` | market-bundle-builder Tushare purpose declarations | G12I, G12CD-TUSHARE-CN-A-SHARE-DAILY-PUBLICATION-V1 | none for finite purpose scope; availability/revision/analyzer/provider qualification remain BLOCKED |
+| G12I-TUSHARE-CN-A-SHARE-DAILY-SOURCE-BOUNDED-V2 | PASSED — immutable source `4389877b8879fc9bb1a6d6544c4079a7d29312ab`; receipt `sha256:95ba0d8e28414aa997e232c90eee03318f13f2c9041b36f4da046bbc5b2fb623`; report `sha256:ff09c4ad9f8025e66689387b5132d3d85c4101276fbf7330dd5040af111cc029`; final plan `sha256:81297973849f1dc7d759d918d16486e80bcbd52c0d75a7a04e697ff400c13685` | market-bundle-builder off-root Tushare source-bounded observation | ADR 0008, G12A, G12B/G12C/D Tushare contracts, G12I purpose scope | none for exact `000001.SZ` July-2026 source-bounded price/availability/publication slice; general G12I, listing/corporate actions, G12M grade, live, and deployment remain separate |
 | G12CD-TUSHARE-CN-A-SHARE-DAILY-PUBLICATION-V2 | PASSED — immutable source `590901802915df79d69d9bd85f00bb6c3290f5a3`; fixture `sha256:d71ca8ed8977bf5fa0aa7cd1ab11fb85abcd5382f42c7e2bb2243d5b5290e456` | market-bundle-builder internal catalog-bound Tushare publication | G12B-TUSHARE-CN-A-SHARE-DAILY-V1, G12CD-TUSHARE-CN-A-SHARE-DAILY-PUBLICATION-V1, G12C, G12D | none for finite current-metadata catalog binding; historical listing/membership/revision/survivorship/corporate-action qualification remain false |
 | A-SHARE-INTRADAY-DQ-AUDIT-V1 | PASSED — audit source `9719829ea43e015272dfa2a1dd4ee101ef37d048`; DB `sha256:7d82c0408f09ef665ea93a718def3e5355920eca703ad4d145217e23c39992ef`; audit `sha256:4224e9ffcebde23c116107d091b40620620c4a6b828dee0b2e94eb64db9458cf` | repository read-only research/audit | stable external quant_a50 DuckDB | none for audit reproducibility; 13,356 conflicting groups remain unresolved and no dedup winner is authorized |
 | G12CD-CN-A-SHARE-DEVELOPMENT-RULE-AUTHORITIES-V1 | PASSED — immutable source `832f53a74d3f74436ecae8672bd1c0dd3530c814` | market-bundle-builder internal A-share rule projection | G08H, G12C, G12D | none; provider/G12H/decision/deployment qualification fixed false |
@@ -170,7 +171,7 @@ artifact_hashes: []
 | MRMD-01 | PASSED — F1 source `85eac498b70d98dccce524f7ec30198456983dbf`; F2 closure `8fc4fde588ef6f215576e8a3cf4de17acbdce8da` | backtest-runtime preparation and observation integration | G11B, G11D, G11E, G12G, BT-GAP-02B, BT-GAP-02C, PERF-OBS-01 | none |
 | PREP-COVERAGE-01 | PASSED — slices 1–3; final source `8fc4fde588ef6f215576e8a3cf4de17acbdce8da` | backtest-runtime preparation/preflight and Runtime fan-in | MRMD-01, PERF-OBS-01, G11B, G11D, G11E, G12E, BT-GAP-02B, BT-GAP-02C | none |
 | G12H | DRAFT / D1-D6 DEVELOPMENT PASSED — strict F1 BLOCKED; F1 scope blocker `14d79c44f8bfccb54c2ad9724b12c692a91f29b4`; authority research `fb288972aa57f9dbbffb2dc3440d91627fdca4d3`, report `sha256:cd6a0fc4799ea5e9f65fbe0f53fea148a90e50ae615f054e071d1df442849ca4`; latest-first sufficiency `44fca44fb077f36ca0d78fa370af7fa8576ff931`, report `sha256:5727bf4536750715eb3c16a22f3779ab11abaff2a3aabf62ac7ae6d78a0110fd`; verified capture plan `dd535d8dd9c88cffd9c71c180bf5180748f01cee`, report `sha256:81a319def0696e66c0f98186ee008f16097c297fff4dba01d5f3c2e670951db5`; Wave 1 capture `c253ca506d7c4f63fb650a4dec8794c7213e8ae3`, report `sha256:ebe9a425d4db415e8e8f257fc26d5daca7212d98a2415440e593366453a610d5`, evidence manifest `sha256:b54a3e34eb2aa9896306c48c9b3e971dff241dc97c282bc3fdf99b2616dcbe9c`, ledger `sha256:e57d89fb96ceba34d36c545e7c514d19a1588f9cb6e4da1d5c7110fe7979a610`; status-register discovery `26f3a040c88d289c236c626c69b7fce8405d140a`, report `sha256:6ba059601403a4d88c9f6da4ae03d01642c27bbb9346aa09b05f675d7a008d06`, manifest `sha256:fe2961439a04edfda08b07366ebaf4cb192f6a9356053ed7f788de2ba6e8daf4`, ledger `sha256:a84ab8a3a7aae8eac51cc57e3bb5aedd28bf8cd4b570a1ab69f7875a8d768da5`, assessment `sha256:57a3a3aa7c5cb75eb2d2f347a64f54a267ecc6ea4c872e9e0029ee89068fa0fc`; live-status governance `4c663bab458c075ee581becea06fef4908d6a57e`, ADR `sha256:333c3c946c71b1c51aacbb68967f5d03e86b055b9574a8d21dd9963765768360`, impact report `sha256:f1e3966162f86e4feaaa4180dbb5d528eb438db17ee8aeaddcaf9779e1eb6423`; live-status API probes `bf15f73186244a4d0a8204687fba8d61f20ec80b`, report `sha256:c989547c1d3e1ca9b39cb5738147f44ffabe702407a498ced95be6e8231e2dac`, manifest `sha256:cb1b868fc7ce63fb9b82e379385f832dd6184b97de3f48b0a177c0a65899342c`, ledger `sha256:04714734fcdef8e424281f7492ea0cdf1a6d8cff8d07f06c52489a4d2639d30a`, assessment `sha256:cf1b6b25192dd83652af8b96aca0424082fd3e22afd1a11cceaa585a67be80cf`; current-selected governance `c168d6c9faf82f23eb1653ae84fca0ce989cbdc9`, ADR `sha256:a977e057e8e3164dd18cb32f863590eb617f819e2177428cb460da3143f228d9`, authority report `sha256:22e2d48b61c8fa705f4197ba47b04e3e19f8d58b0ea3b08e0ffaaaf2866defc0`, plan `sha256:e4cc94c8083640d9bd5d14b3dc4128915a9b1002001dbbf8f54baf4ede7a3a37`; current-selected D1-D3 `cdc5a29133bbc0b863ec409219fb50bd0b299c77`, snapshot `sha256:747e5c88fd2810ca05841cc6bb3c9534fbfc203ccad3e0903dd3f14e25a8a5c8`, declaration `sha256:4b21421bbe112d47a63ff03578dcb2215946e394d9971ab39a65c381d3d697d1`, market RuleBook `sha256:7dc7d6316ff8e7c88435bb7a070adc18fe9f18db6fd79fd19f927d88b6384c40`, stamp RuleBook `sha256:f8ba2eae8d6d4eefb119a864ffc2c170b97ba0eb0537371ab4caf65bb25b01cb`, manifest `sha256:28fdfafe241c48cd4a12a8b7467ccfafdb1b2b28881e0608d938cbb3b4853989`, D1-D3 status plan `sha256:839db0967107c465a43113426490bd8d65b8fdb1df44ad8a4d7131b1c1c370eb`; D4 coverage `0215ed3a369bff10a64830c462c569b378914670`, report `sha256:5cbcc37871999b334709d1823f1c40ce6cdf73480f410f821cf4ebd38ceec9bb`, coverage fixture `sha256:f27dfa509772fbd2007f5aa0cfd834e5c941a4cc9eef1a1ef6f480b3d6ee56c9`, D1-D4 plan `sha256:19600a6f3a8cac43b9f36a2c14b9156eda95ab2a6b9769fcd98124914f82e761`; D5 Runtime fan-in `d1a472091deb7d844e696a814e9e52e46976ece4`, cleanup `1de4f80b51c2ae66687ccdae8771d06b000ab348`, authority `sha256:6019179179ba23ee5d637e95ac09813bcdd228dad2851cc514238a4cf89f7d97`, binding `sha256:9b022ca0ded3cde20d15e2c9b1608ae05a62c6a49119ff54ac8e093833809bea`, financial inputs `sha256:f39985966cc1c054f4ca8465ba93382291ecfd79b387c5d12943587aa719c8c5`, semantic spec `sha256:799a038b9f60171f11e737966d1a2d9838cb5c332f23377f02986cd4d4282c8b`, D1-D5 plan `sha256:8075f4d9c1e8ac7387325fe6cdfdd0995704b2dbc6b003a1f4895cff6c945177`; D6 financial-dispatch journey `54951d1d181274c7597c1c5b7cff2f81a4bd0f8f`, journey `sha256:0d8a916d7adf18d202df5f4365c837fb9b28dcd3f3d715c534318576938853f4`, final D1-D6 plan `sha256:8055a662a61a60f301072c3bbc25c0139be031a8ff979fd6f77fda05f7211742` | market-bundle-builder validation | G12C, G12CD-CN-A-SHARE-DEVELOPMENT-RULE-AUTHORITIES-V1, G08E-ROUTE-PRODUCT-FEE-V2C | D1-D6 current-selected development snapshot, finite v2 RuleBooks, five exact events, G12C/D publication, deterministic coverage, one-Bundle/Reader Runtime fan-in, and BUY-to-complete-SELL dispatcher/ledger replay independently reviewed PASS; D5 focused 39/70 tests and D6 focused 14/17 tests pass with import boundaries 123 files, canonical mapping/spoof rejection, shared fixtures, and deterministic replay; `official_record_as_of` stays unset and official successor closure, provider authority/completeness, `rule_coverage_qualified`, decision-grade, live, and deployment remain false |
-| G12I | DRAFT | market-bundle-builder validation | G12C, G12G | Real profile-purpose, provider/calendar availability, and terminal-set closure evidence |
+| G12I | DRAFT / PARTIAL SOURCE-BOUNDED CLOSURE — exact Tushare July-2026 sub-slice PASSED at `4389877b8879fc9bb1a6d6544c4079a7d29312ab` | market-bundle-builder validation | G12C, G12G | general multi-scope analyzer and nonaccepted provider/aggregation cases remain unfrozen; accepted Tushare sub-slice is available to future exact G12M binding |
 | G12J | DRAFT | trading-domain schema migration | real old artifact | No real source/target schema yet |
 | G12K | DRAFT / D1-D2 DEVELOPMENT PASSED — provider/history BLOCKED; contract `24b88d836d1451e30e975ebbe36d860b19388530`, implementation `a9be1d1bc4572fb27732dfefa8037ab9283fa28f`, synthetic catalog `sha256:954cac9b51cdfae55bcf0f5dd6fbcbda5c7c353baca43fd00fcddeb6c34104bb`, golden `sha256:c4b0a21a078240c9ad39f692c2ebbeae882e357c4a18eeacaf6121d4c781c9ec`, outcome `sha256:c78d15d6a3f4d73dcda2ce16cc05e337e551fa5e8dc44d066f4a7a517467fef4`, Universe report `sha256:61cc9c034aa0907a6ac24475f39078db0a13a2e72dc6a38af5c4cc7583259b63`, action report `sha256:c678b4bbe90654efeabc2307d5b8a77f1ea852cb813852943a7fdb8746caca46`, final plan `sha256:b3e925f6d686f3df4c120ddbf9bfd3b266e017371d9f417dfe405fe769c4e18a` | market-bundle-builder validation | G12C, G11C, G08F | finite synthetic July-2026 listing/membership/action closure and atomic reports independently reviewed PASS; 22 focused and 456 Builder/architecture tests pass; provider authority/completeness, historical authority, survivorship safety, decision-grade, profile/live/deployment remain false |
 | G12L-* | DRAFT | market-bundle-builder source adapter | G12A–G12K as applicable | Concrete provider/dataset/version, real raw fixtures, mapping and closure evidence |
@@ -179,7 +180,7 @@ artifact_hashes: []
 | G12L-BINANCE-USDM-FUNDING-RATE-V1 | PASSED — immutable commit `ebd91f746c4a065ca06dba89d847e7d41ab06331` | market-bundle-builder Binance USD-M source slice | G10E, G12A–G12D | none |
 | G12L-BINANCE-USDM-FUNDING-HISTORY-V1 | DRAFT / BLOCKED | market-bundle-builder Binance USD-M source slice | G10E, G12A | Immutable provider revision/correction closure |
 | G12L-TUSHARE-CN-A-SHARE-DAILY-LISTING-V1 | DRAFT / BLOCKED | market-bundle-builder China A-share source slice | G12A, G12-ACQ-TOOLS-V1, G12B-TUSHARE-CN-A-SHARE-DAILY-V1 | Normalizer acceptance, provider revision, listing history, and corporate-action authority |
-| G12M-* | DRAFT / SOURCE-BOUNDED GOVERNANCE PASSED — implementation waits exact provider slices; ADR 0008 `e377dc37fa35c06ae528b420e0ec86f1df6d800b`, ADR `sha256:a213f151393d23e264eaf90de5d6ac7a556548de84c420a3cb5a5bb703f3c3a8`, readiness plan `sha256:0e281dd93b6dcc51f5923fc866f17e1a5da8b85a71c83dfc3467f99451018835` | backtest-runtime qualification | exact accepted G12I SZSE, G12K SZSE/CNINFO, and Binance FAPI observed-as-of artifacts | source-bounded decision grade may treat unavailable provider permanent identity/finality/global completeness as limitations; G12M cannot mint grade, legal/live/deployment remain separate, and no generic self-attested mapping seam is authorized |
+| G12M-* | DRAFT / SOURCE-BOUNDED GOVERNANCE PASSED — exact G12I nominal boundary frozen; implementation waits G12K and Binance slices; ADR 0008 `e377dc37fa35c06ae528b420e0ec86f1df6d800b`, ADR `sha256:a213f151393d23e264eaf90de5d6ac7a556548de84c420a3cb5a5bb703f3c3a8`, governance baseline `sha256:0e281dd93b6dcc51f5923fc866f17e1a5da8b85a71c83dfc3467f99451018835`, amended plan `sha256:44ed882ff0c507b852bb68b637cc43d50d8cdc865bc190e86bb7c45a9b0a7765` | backtest-runtime qualification | accepted G12I SZSE plus exact accepted G12K SZSE/CNINFO and Binance FAPI observed-as-of artifacts | G12I report bytes/hash are the sole frozen nominal source seam so far; G12M cannot mint grade, legal/live/deployment remain separate, and no generic self-attested mapping seam is authorized |
 | BT-GAP-01 | PASSED — immutable commit `f2440f9658fbe2ae1cf0016a78c44e4230995394` | trading-domain | WP-02E, Platform BT-PORT-01 | none |
 | BT-GAP-02 | PASSED — immutable commit `39863c58ace1d996f3e814835836ec46e2aa3794` | backtest-runtime facade | BT-GAP-01, G07, BT-GAP-02A, BT-GAP-04 | none |
 | BT-GAP-02A | PASSED | backtest-runtime composition | G07, G08H, G10G, BT-GAP-02B, BT-GAP-02C | none |
@@ -12773,6 +12774,87 @@ remaining_blockers:
 17. Short/negative targets are rejected before publication and cannot manufacture provider-generated FAILED evidence. `BacktestAnalysisRuntime.publish_metric_profile()` publishes and returns the exact accepted opaque metric-profile ref, so Platform constructs no Backtest analysis payload.
 18. Backtest-owned FAILED acceptance publishes a real FAILED Attempt graph with `AttemptEvidenceWriter`, reloads the root and every manifest child through canonical structural `ArtifactReadResult` bytes, and verifies `BacktestEvidenceRepository.load_terminal(ref)` returns `TerminalStatus.FAILED` and the exact durable ref. No provider defect, Platform graph, or fake hydrated artifact is used.
 19. Clean acceptance at source revision `e3c04fb612d6798aef1420b60864d4f315ed12ac` (package implementation `a014e9389f36b6696653606c5ebcb845cabe9f24`) passed 1793 repository tests, 111 import-boundary files, unchanged 15-test Platform consumer contract, public clean install/imports, lock/diff/compile/LSP/lens/secret checks, unchanged frozen fixtures, and independent reviews `NONE` (`d2229a65`, `bce4c4da`, `eea3121a`). BT-GAP-09 is PASSED; Platform still owns P00-BTA-01/P00-SEAM-01.
+
+## 114B. G12I Tushare Daily Source-Bounded V2 Acceptance
+
+```yaml
+id: G12I-TUSHARE-CN-A-SHARE-DAILY-SOURCE-BOUNDED-V2
+status: PASSED
+implementation_source: 4389877b8879fc9bb1a6d6544c4079a7d29312ab
+owner_package: market-bundle-builder internal off-root module
+scope:
+  instrument: 000001.SZ / xshe:000001
+  local_dates: '[2026-07-06, 2026-07-31)'
+  utc_range: '[2026-07-05T16:00:00Z, 2026-07-30T16:00:00Z)'
+  datasets: [daily, trade_cal, suspend_d]
+  purposes: [EXECUTION_REFERENCE, VALUATION]
+capture:
+  response_members: 51
+  published_sessions: 19
+  no_session_dates: 6
+  suspended_dates: 0
+  fixture_files: 54
+artifact_hashes:
+  final_plan: sha256:81297973849f1dc7d759d918d16486e80bcbd52c0d75a7a04e697ff400c13685
+  g12m_amended_plan: sha256:44ed882ff0c507b852bb68b637cc43d50d8cdc865bc190e86bb7c45a9b0a7765
+  acquisition_receipt_file: sha256:95ba0d8e28414aa997e232c90eee03318f13f2c9041b36f4da046bbc5b2fb623
+  source_snapshot: sha256:9f1915e302e1a1f5b74a2cdccb54c08676642da3b48642eb9bbf728dc4c98f2e
+  source_content_tree: sha256:ef44ecd44476dcd3d1cd69f82305df29d186c82350c45f427b5bf008b62d57af
+  provenance: sha256:4dba800ca4688504c804009bcb21a4698cc431761be6847a81bfeef02a0e05e4
+  manifest_content: sha256:87e1209b5510e9d5489d414e63c1008117282a57e1d05555113103222f06a505
+  bundle_ref_manifest: sha256:d9f73a48eeb8b92600cd7fdd9017ba8b0536654cb466ce57c8bc6695f10271df
+  stream_content: sha256:da735d4545e458f8bb1432008b89e45b7c820812f0fed91ebc6610721ad491a1
+  execution_reference_requirement: sha256:9a4d38330cc1048cc5c7181d67614585e0d47f63f6a51e8ce8ed66b5488bbfcb
+  valuation_requirement: sha256:14a2f05bcaf6edc8540fd3ce1e850a04af5fb0e5a8405154ba1ab41d4faf5a6d
+  report: sha256:ff09c4ad9f8025e66689387b5132d3d85c4101276fbf7330dd5040af111cc029
+  report_file: sha256:9cbfc115e41f56d1e83eac520856c3f529f83972b97111238e5dbb1a68c4eae6
+  publication_file: sha256:2cdb6a121262946b726b5b7553c622d458a0079b226db6afc954b17ec43c4f69
+ordered_hash_arrays:
+  raw_members: tests/fixtures/market_data/providers/tushare/cn-a-share-daily-source-bounded-v2/acquisition-receipt.json#snapshot.members
+  published_events: tests/fixtures/market_data/providers/tushare/cn-a-share-daily-source-bounded-v2/observation-report.expected.json#published_event_hashes
+validation:
+  focused_and_compatibility: 92 passed
+  builder_and_adjacent_architecture: 284 passed
+  full_repository: 2188 passed
+  import_boundaries: 126 files passed
+  static_and_security: Ruff, Pyright, LSP, lock, diff, gitleaks, token absence passed
+  independent_review: PASS
+remaining_claims_false:
+  - availability_closure_complete
+  - revision_closure_complete
+  - generic_price_bars_capability
+  - g12i_analyzer_ready
+  - provider_qualified
+  - historical_listing_status_qualified
+  - corporate_actions_qualified
+  - decision_grade_eligible
+  - deployment_authorized
+```
+
+### G12I Source-Bounded Acceptance
+
+1. The exact 51-response receipt, SourceSnapshot, ordered member bytes/hashes/times,
+   local receipt-derived observation time, request scope, and secret absence are
+   fail-closed. Noncanonical or duplicate-key JSON, page continuation, conflicting
+   evidence, unresolved open-session absence, lookahead, purpose mismatch,
+   publication mismatch, and report substitution return one atomic structured
+   failure with no partial report.
+2. The capture publishes exactly 19 ascending daily Events, classifies the six
+   weekend dates as `NO_SESSION`, and classifies no suspension. Zero/one/many rows,
+   full-day versus intraday suspension, closed-day conflicts, and unknown open-day
+   absence are covered without promoting `count` into undocumented authority.
+3. The report deep-reconstructs exact nested values, rebuilds the stream and manifest,
+   and requires `MarketBundleRef.from_manifest()` identity. Corrections create a new
+   snapshot/report and bind the prior report through `supersedes_report_hash`; prior
+   evidence and Runs remain immutable.
+4. Accepted v1 normalizer/projector/root source bytes, signatures, fixtures, hashes,
+   and public APIs remain unchanged. The exact-scope v2 module is off-root and adds no
+   Runtime/Kernel import, provider framework, registry, repository, resampler, or
+   generic coverage DSL.
+5. The G12M plan now freezes only a nominal Runtime reconstruction boundary for these
+   exact accepted bytes and hashes. It authorizes no Runtime function, generic
+   mapping assessor, grade change, legal/live/deployment claim, or replacement of the
+   still-missing G12K and Binance provider slices.
 
 ## 115. PASSED 记录格式
 

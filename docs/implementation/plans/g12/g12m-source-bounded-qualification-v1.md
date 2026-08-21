@@ -27,10 +27,10 @@ publish exact accepted canonical artifacts and hashes.
 
 ## Status
 
-`DRAFT / BLOCKED`. ADR 0008 policy is accepted. G12M implementation readiness is
-blocked because the repository does not yet contain Runtime-verifiable source
-evidence contracts for the selected Tushare/SZSE, SZSE/CNINFO, and Binance FAPI
-slices.
+`DRAFT / BLOCKED`. ADR 0008 policy is accepted. The exact G12I Tushare/SZSE
+nominal reconstruction boundary below is now frozen. G12M implementation readiness
+remains blocked because the repository does not yet contain accepted exact
+SZSE/CNINFO G12K and Binance FAPI observed-as-of source evidence contracts.
 
 No production code, public type, function signature, serialized assessment body,
 failure enum, test contract, or write set is authorized by this plan.
@@ -75,13 +75,47 @@ either duplicate Builder authority or trust claims it cannot verify.
 
 | Lane | Exact evidence contract still needed before G12M design | Acceptance identity still needed |
 | --- | --- | --- |
-| G12I SZSE | Finite SZSE/Tushare price-purpose, availability, missing-data, no-lookahead, normalization, and publication evidence with exact observed-as-of semantics and a Runtime-consumable canonical boundary. | Accepted artifact type/schema, canonical bytes, content hashes, source/scope bindings, and immutable acceptance commit. |
+| G12I SZSE | `ACCEPTED`: exact July-2026 Tushare `daily`/`trade_cal`/`suspend_d` observation report, canonical replay, append-only correction identity, and nominal Runtime boundary below. | Source `4389877b8879fc9bb1a6d6544c4079a7d29312ab`; report `sha256:ff09c4ad9f8025e66689387b5132d3d85c4101276fbf7330dd5040af111cc029`; canonical file `sha256:9cbfc115e41f56d1e83eac520856c3f529f83972b97111238e5dbb1a68c4eae6`. |
 | G12K SZSE/CNINFO | Finite listing/universe and corporate-action evidence that binds SZSE/CNINFO source bytes, receipts, point-in-time scope, corrections, and supported completeness limits. | Accepted catalog/action artifact types, canonical hashes, correction identities, scope hash, and immutable acceptance commit. |
 | Binance FAPI observed-as-of | Finite Binance FAPI acquisition evidence that binds the exact request/response bytes, receipt-derived observed-as-of, local identity, normalization/publication boundary, and known archive limitations. | Accepted source/receipt/report artifact types, exact canonical hashes, request/scope identity, observed-as-of rule, and immutable acceptance commit. |
 
 Research notes, ad hoc files, inherited hash claims, development fixtures, or
 Builder objects without an accepted canonical cross-package boundary do not
 unblock G12M.
+
+## Frozen G12I nominal reconstruction boundary
+
+A future G12M Runtime implementation may consume the accepted G12I evidence only as
+exact canonical bytes for type
+`tushare_cn_a_share_daily_source_bounded_observation_report`, schema version `2`.
+It must use a closed nominal Runtime value that mirrors every accepted report field;
+it must not import Builder, accept an open mapping, generic `ArtifactRef`, caller
+boolean, class-name assertion, or naked hash.
+
+Reconstruction must reject noncanonical JSON, duplicate/extra/missing keys,
+constructor bypass, nested type substitution, and any mismatch in the fixed provider,
+datasets, instrument, XSHE/SZSE UTC scope, 51 ordered member identities/times, date
+partition, limitations, false qualification flags, or null first-capture
+`supersedes_report_hash`. It must recompute the complete report hash, reconstruct the
+one-stream `MarketBundleManifest` from the bound manifest/stream/Event fields, and
+require `MarketBundleRef.from_manifest()` identity. It must also bind these accepted
+identities:
+
+- receipt `sha256:95ba0d8e28414aa997e232c90eee03318f13f2c9041b36f4da046bbc5b2fb623`;
+- snapshot `sha256:9f1915e302e1a1f5b74a2cdccb54c08676642da3b48642eb9bbf728dc4c98f2e`;
+- content tree `sha256:ef44ecd44476dcd3d1cd69f82305df29d186c82350c45f427b5bf008b62d57af`;
+- provenance `sha256:4dba800ca4688504c804009bcb21a4698cc431761be6847a81bfeef02a0e05e4`;
+- manifest body `sha256:87e1209b5510e9d5489d414e63c1008117282a57e1d05555113103222f06a505`;
+- Bundle ref manifest `sha256:d9f73a48eeb8b92600cd7fdd9017ba8b0536654cb466ce57c8bc6695f10271df`;
+- stream `sha256:da735d4545e458f8bb1432008b89e45b7c820812f0fed91ebc6610721ad491a1`;
+- execution-reference requirement `sha256:9a4d38330cc1048cc5c7181d67614585e0d47f63f6a51e8ce8ed66b5488bbfcb`;
+- valuation requirement `sha256:14a2f05bcaf6edc8540fd3ce1e850a04af5fb0e5a8405154ba1ab41d4faf5a6d`;
+- report `sha256:ff09c4ad9f8025e66689387b5132d3d85c4101276fbf7330dd5040af111cc029`;
+- canonical report file `sha256:9cbfc115e41f56d1e83eac520856c3f529f83972b97111238e5dbb1a68c4eae6`.
+
+This freezes no Runtime function signature or public export. A later corrected G12I
+capture is a new upstream acceptance and must bind its predecessor through
+`supersedes_report_hash`; it cannot silently replace these identities.
 
 ## Readiness exit criteria
 

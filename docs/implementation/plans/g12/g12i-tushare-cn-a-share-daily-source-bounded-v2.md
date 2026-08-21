@@ -1,10 +1,10 @@
 ---
 id: G12I-TUSHARE-CN-A-SHARE-DAILY-SOURCE-BOUNDED-V2
-readiness: BLOCKED
-gate_status: DRAFT
+readiness: ACCEPTED_SOURCE_BOUNDED_SLICE
+gate_status: PASSED
 owner: market-bundle-builder Tushare daily coverage
 produces:
-  - future TushareCnAShareDailySourceBoundedObservationReportV2
+  - TushareCnAShareDailySourceBoundedObservationReportV2
 consumes:
   - ADR 0008
   - exact Tushare daily, trade_cal, and suspend_d raw responses and receipt
@@ -12,7 +12,7 @@ consumes:
   - existing Tushare daily normalization, publication, and purpose-scope seams
 depends_on:
   contract: [G12A, G12B-TUSHARE-CN-A-SHARE-DAILY-V1, G12CD-TUSHARE-CN-A-SHARE-DAILY-PUBLICATION-V1, G12I-TUSHARE-CN-A-SHARE-DAILY-PURPOSE-SCOPE-V1]
-  evidence: [credentialed July-2026 Tushare capture]
+  evidence: [accepted credentialed July-2026 Tushare capture at source 4389877b8879fc9bb1a6d6544c4079a7d29312ab]
 fan_out: [G12M-SOURCE-BOUNDED-QUALIFICATION-V1]
 ---
 
@@ -20,9 +20,10 @@ fan_out: [G12M-SOURCE-BOUNDED-QUALIFICATION-V1]
 
 ## Status and outcome
 
-`D1 CONTRACT FROZEN / D2-D4 BLOCKED`. Freeze the smallest source-bounded G12I
-vertical for one Tushare instrument. This document makes no acceptance, result-grade,
-G12M qualification, live, or deployment claim.
+D1-D4 `PASSED` at implementation source
+`4389877b8879fc9bb1a6d6544c4079a7d29312ab`. The exact source-bounded G12I
+vertical for one Tushare instrument is accepted. It does not grant result grade,
+G12M qualification, live, or deployment authority.
 
 Under [ADR 0008](../../../adr/0008-source-bounded-decision-grade.md), Tushare's lack
 of a provider-declared permanent checksum, proof of no future revision, complete
@@ -279,6 +280,45 @@ README, `g12m-source-bounded-qualification-v1.md`, and the Acceptance Matrix. Th
 G12M edit may freeze only the exact nominal reconstruction boundary after accepted
 report bytes/hashes exist; it may not add a generic mapping/provider framework. D1
 does not edit the Acceptance Matrix.
+
+## D4 acceptance closure
+
+The accepted capture contains 51 ordered provider responses plus one receipt: 25
+`daily` point responses, one `trade_cal` range response, and 25 `suspend_d` point
+responses. It classifies 19 published sessions, six `NO_SESSION` dates, and zero
+full-day suspensions. The retained fixture directory has 54 files after adding the
+canonical observation and publication expectations.
+
+Frozen identities:
+
+- implementation source: `4389877b8879fc9bb1a6d6544c4079a7d29312ab`;
+- acquisition receipt file: `sha256:95ba0d8e28414aa997e232c90eee03318f13f2c9041b36f4da046bbc5b2fb623`;
+- SourceSnapshot: `sha256:9f1915e302e1a1f5b74a2cdccb54c08676642da3b48642eb9bbf728dc4c98f2e`;
+- source content tree: `sha256:ef44ecd44476dcd3d1cd69f82305df29d186c82350c45f427b5bf008b62d57af`;
+- provenance: `sha256:4dba800ca4688504c804009bcb21a4698cc431761be6847a81bfeef02a0e05e4`;
+- Bundle manifest body: `sha256:87e1209b5510e9d5489d414e63c1008117282a57e1d05555113103222f06a505`;
+- Bundle ref manifest: `sha256:d9f73a48eeb8b92600cd7fdd9017ba8b0536654cb466ce57c8bc6695f10271df`;
+- stream: `sha256:da735d4545e458f8bb1432008b89e45b7c820812f0fed91ebc6610721ad491a1`;
+- execution-reference requirement: `sha256:9a4d38330cc1048cc5c7181d67614585e0d47f63f6a51e8ce8ed66b5488bbfcb`;
+- valuation requirement: `sha256:14a2f05bcaf6edc8540fd3ce1e850a04af5fb0e5a8405154ba1ab41d4faf5a6d`;
+- report: `sha256:ff09c4ad9f8025e66689387b5132d3d85c4101276fbf7330dd5040af111cc029`;
+- report canonical file: `sha256:9cbfc115e41f56d1e83eac520856c3f529f83972b97111238e5dbb1a68c4eae6`;
+- publication expectation: `sha256:2cdb6a121262946b726b5b7553c622d458a0079b226db6afc954b17ec43c4f69`.
+
+Acceptance passed 92 focused/compatibility tests, 284 Builder/adjacent architecture
+tests, and the full 2188-test repository suite. Import boundaries passed for 126
+files; Ruff, Pyright, primary/auxiliary LSP, lock, diff, full-repository gitleaks,
+token-absence checks, and independent review passed. Existing v1 normalizer,
+projector, Builder root, signatures, fixtures, and protected source hashes remain
+byte-identical. The accepted off-root v2 module is exact-scope because the frozen v1
+values hard-code the 2024 member/date/amount contract; it reuses their low-level
+JSON, numeric, source-record, Snapshot, Event payload, G12C validation, G12D
+publication, and purpose semantics without changing v1 bytes or adding a generic
+provider framework.
+
+All qualification flags remain false. Corrections require a new snapshot/report
+whose `supersedes_report_hash` binds the prior accepted report; no existing evidence
+or Run is overwritten.
 
 ## Non-goals
 
