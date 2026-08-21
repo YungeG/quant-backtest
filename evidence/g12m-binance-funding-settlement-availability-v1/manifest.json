@@ -53,9 +53,9 @@
       "sha256": "sha256:0f346850b9cb204318ab6f3dad45bebe624fb0714bf7d6f2e86d5789715a984b"
     },
     {
-      "byte_count": 2206,
+      "byte_count": 2182,
       "path": "source-snapshot.json",
-      "sha256": "sha256:768f4fefb81177323a6258c0751b350f1798d109c4506785323bbd8f39a249b6"
+      "sha256": "sha256:86ec9590cfc80239c16c93354d3d4428432454f2e1bdee31ad0846728b9c0bf0"
     },
     {
       "byte_count": 14028,
@@ -66,6 +66,6 @@
   "schema_version": 1,
   "source_snapshot_content_tree_hash": "sha256:218d95c3cb2ea769b2a52bc8633d162b76624e8dabb9829eccc5a60b2dcf0b1d",
   "source_snapshot_id": "sha256:ad5ee7b6981ffbd1048f3bd7b7966369e6cadc6654cde81aa670426f19d7c09f",
-  "source_snapshot_provenance_hash": "sha256:80a206059389d29ed710d57dd6cffdc4b84e481acbef668530206174f8db04ea",
+  "source_snapshot_provenance_hash": "sha256:d93b2459b858da590ac15093251909b3dc561c0aa2ccefa05e03ae19c3db8e54",
   "type": "g12m_binance_funding_settlement_availability_evidence_manifest_v1"
 }

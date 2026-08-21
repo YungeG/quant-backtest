@@ -36,7 +36,7 @@ SourceSnapshot:
 ```text
 snapshot_id: sha256:ad5ee7b6981ffbd1048f3bd7b7966369e6cadc6654cde81aa670426f19d7c09f
 content_tree_hash: sha256:218d95c3cb2ea769b2a52bc8633d162b76624e8dabb9829eccc5a60b2dcf0b1d
-provenance_hash: sha256:80a206059389d29ed710d57dd6cffdc4b84e481acbef668530206174f8db04ea
+provenance_hash: sha256:d93b2459b858da590ac15093251909b3dc561c0aa2ccefa05e03ae19c3db8e54
 ```
 
 See [manifest](../../evidence/g12m-binance-funding-settlement-availability-v1/manifest.json), [hash ledger](../../evidence/g12m-binance-funding-settlement-availability-v1/sha256sums.txt), and [structured assessment](../../evidence/g12m-binance-funding-settlement-availability-v1/research-assessment.json).
