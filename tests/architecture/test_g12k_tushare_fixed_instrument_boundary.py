@@ -6,6 +6,13 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[2]
 MODULE = ROOT / "tools/acquisition/cn_a_share_tushare_g12k_fixed_instrument.py"
+OBSERVATION_MODULE = (
+    ROOT
+    / "packages/market-bundle-builder/src/crypto_quant_bundle_builder/g12k_tushare_fixed_instrument_source_bounded_v1.py"
+)
+BUILDER_ROOT = (
+    ROOT / "packages/market-bundle-builder/src/crypto_quant_bundle_builder/__init__.py"
+)
 PACKAGES = ROOT / "packages"
 PROTECTED_SHA256 = {
     ROOT / "tools/acquisition/cn_a_share_tushare.py": (
@@ -93,3 +100,48 @@ def test_g12k_fixed_instrument_acquisition_signature_is_stable() -> None:
         ["argv"],
         [],
     )
+
+
+def test_g12k_fixed_instrument_observer_is_provider_specific_and_in_memory() -> None:
+    source = OBSERVATION_MODULE.read_text(encoding="utf-8")
+    imported = imports(OBSERVATION_MODULE)
+
+    assert function_arguments(
+        OBSERVATION_MODULE,
+        "observe_g12k_tushare_fixed_instrument_source_bounded_v1",
+    ) == (
+        [],
+        [
+            "g12i_report_bytes",
+            "acquisition_receipt_bytes",
+            "snapshot",
+            "instrument_catalog",
+            "supersedes_report",
+            "supersedes_acquisition_receipt_bytes",
+            "supersedes_snapshot",
+        ],
+    )
+    assert not any(
+        name.startswith(("crypto_quant_backtest", "crypto_quant_trading"))
+        for name in imported
+    )
+    assert not any(
+        name in imported for name in ("httpx", "requests", "socket", "pathlib", "os")
+    )
+    for forbidden in (
+        "MarketBundle",
+        "MarketEvent",
+        "Runtime",
+        "Kernel",
+        "LocalMarketBundleRepository",
+        "open(",
+        "repository head",
+        "current report",
+    ):
+        assert forbidden not in source
+
+
+def test_g12k_fixed_instrument_observer_has_no_root_export() -> None:
+    root_source = BUILDER_ROOT.read_text(encoding="utf-8")
+    assert "G12KFixedInstrumentSourceBoundedObservation" not in root_source
+    assert "observe_g12k_tushare_fixed_instrument_source_bounded_v1" not in root_source
