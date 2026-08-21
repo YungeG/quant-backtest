@@ -250,6 +250,31 @@ def test_deep_reconstruction_rejects_constructor_bypass_and_canonical_tampering(
         {key: value for key, value in row.items() if key != "report_hash"}
     )
     cases.append(row)
+
+    rederived = deepcopy(canonical)
+    rederived["source_rows"][0][2] = "0.00037408"
+    forged_rows = tuple(tuple(value) for value in rederived["source_rows"])
+    forged_publication = MODULE._replay_publication(
+        forged_rows,
+        snapshot_id=report.snapshot_id,
+        response_hash=report.member_content_hashes[0],
+        observed_at=report.observed_at,
+    )
+    rederived["source_record_hashes"] = [
+        MODULE._source_record_hash(value) for value in forged_rows
+    ]
+    rederived["bundle_ref"] = forged_publication.bundle_ref.to_canonical_dict()
+    rederived["manifest_content_hash"] = forged_publication.manifest.content_hash
+    rederived["stream_content_hash"] = forged_publication.manifest.streams[
+        0
+    ].content_hash
+    rederived["published_event_hashes"] = [
+        value.event_hash for value in forged_publication.events
+    ]
+    rederived["report_hash"] = canonical_sha256(
+        {key: value for key, value in rederived.items() if key != "report_hash"}
+    )
+    cases.append(rederived)
     event = deepcopy(canonical)
     event["published_event_hashes"][0] = "sha256:" + "f" * 64
     event["report_hash"] = canonical_sha256(

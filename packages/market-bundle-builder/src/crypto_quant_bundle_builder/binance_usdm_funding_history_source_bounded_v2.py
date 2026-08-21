@@ -27,9 +27,11 @@ from crypto_quant_market_data import (
 
 from .bundle_validation import validate_market_bundle_v1
 from .source_snapshots import (
+    RawSourceMember,
     SourceSnapshot,
     SourceSnapshotMember,
     SourceSnapshotProvenance,
+    freeze_source_snapshot,
     verify_source_snapshot,
 )
 
@@ -241,6 +243,15 @@ class _BuiltPublication:
 
 def _source_record_hash(row: _SourceRow) -> str:
     return canonical_sha256({"fields": _RESPONSE_FIELDS, "row": row})
+
+
+def _response_bytes(rows: tuple[_SourceRow, ...]) -> bytes:
+    return json.dumps(
+        [dict(zip(_RESPONSE_FIELDS, row, strict=True)) for row in rows],
+        ensure_ascii=False,
+        allow_nan=False,
+        separators=(",", ":"),
+    ).encode("utf-8")
 
 
 def _decimal_units(lexeme: str, *, positive: bool) -> tuple[str, int]:
@@ -503,6 +514,33 @@ class BinanceUsdmFundingHistorySourceBoundedObservationReportV2:
         hashes = _hash_tuple("source_record_hashes", self.source_record_hashes)
         if hashes != tuple(_source_record_hash(row) for row in rows):
             raise ValueError("report source row hash mismatch")
+        raw_response = _response_bytes(rows)
+        if _digest(raw_response) != response_hash:
+            raise ValueError("report raw response binding mismatch")
+        frozen_snapshot = freeze_source_snapshot(
+            members=(
+                RawSourceMember(
+                    _MEMBER_KEY,
+                    raw_response,
+                    "0644",
+                    acquired_at,
+                    None,
+                ),
+            ),
+            provenance=SourceSnapshotProvenance(
+                vendor_key=_PROVIDER_KEY,
+                source_key=_SOURCE_KEY,
+                license_ref="binance.api.terms",
+                retention_policy_ref="backtest.acquisition.candidate",
+            ),
+        ).snapshot
+        if (
+            frozen_snapshot is None
+            or frozen_snapshot.snapshot_id != self.snapshot_id
+            or frozen_snapshot.content_tree_hash != self.snapshot_content_tree_hash
+            or frozen_snapshot.provenance_hash != self.provenance_hash
+        ):
+            raise ValueError("report SourceSnapshot binding mismatch")
         publication = _replay_publication(
             rows,
             snapshot_id=self.snapshot_id,
