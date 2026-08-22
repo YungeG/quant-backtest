@@ -4,7 +4,7 @@ import re
 from collections.abc import Mapping, Sequence
 from dataclasses import dataclass
 from enum import Enum
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from crypto_quant_domain import (
     ArtifactDecodeError,
@@ -20,6 +20,7 @@ from crypto_quant_domain import (
     canonical_bytes,
     canonical_sha256,
 )
+from crypto_quant_market_data import MarketBundleRef
 
 from .analysis import (
     AnalysisArtifactRef,
@@ -37,7 +38,12 @@ from .execution_inputs import (
     _read_journal,
     _read_portfolio_snapshot,
 )
-from .integrity import AttemptConsistencySet, EngineExecutionContext, ResultGrade
+from .integrity import (
+    AttemptConsistencySet,
+    EngineExecutionContext,
+    IntegrityIssueCode,
+    ResultGrade,
+)
 from .ports import ArtifactEnvelopeReader
 from .publication_refs import (
     BacktestCanonicalPublicationRef,
@@ -51,7 +57,15 @@ from .verified_publications import (
     VerifiedCompletedPublicationV3,
     VerifiedExecutionSummary,
     VerifiedTerminalPublication,
+    _VerifiedArtifactIdentity,
+    _VerifiedCompletedEvidenceV3,
+    _VerifiedIntegrityArtifactIdentity,
 )
+
+if TYPE_CHECKING:
+    from .evidence import FinalizedAttemptEvidence
+    from .execution_hash import AttemptExecutionHash
+    from .runner import ReadyToFinalizeAttempt
 
 _HASH = re.compile(r"sha256:[0-9a-f]{64}\Z")
 _RUN = re.compile(r"run_[0-9a-f]{64}\Z")
@@ -318,6 +332,35 @@ class _Loaded:
     artifact: object
     source_bytes: bytes
     source_hash: str
+
+
+@dataclass(frozen=True, slots=True)
+class _CompletedV3Graph:
+    completed: VerifiedCompletedPublicationV3
+    resolved_request: ResolvedBacktestRequest
+    ready_attempts: tuple[ReadyToFinalizeAttempt, ReadyToFinalizeAttempt]
+    attempt_hashes: tuple[AttemptExecutionHash, AttemptExecutionHash]
+    finalized_attempts: tuple[FinalizedAttemptEvidence, FinalizedAttemptEvidence]
+    first_attempt: AttemptIdentity
+    retry_attempt: AttemptIdentity
+    canonical_root: tuple[ArtifactRef, str, str]
+    canonical_attempt: tuple[ArtifactRef, str, str]
+    integrity: tuple[ArtifactRef, str, str]
+    integrity_context_hash: str
+    integrity_result_grade: ResultGrade
+    integrity_issue_codes: tuple[str, ...]
+    completed_result: tuple[ArtifactRef, str, str]
+    rebuild_verification: tuple[ArtifactRef, str, str]
+    proof_publication_manifest: tuple[ArtifactRef, str, str]
+    evidence_manifests: tuple[
+        tuple[ArtifactRef, str, str], tuple[ArtifactRef, str, str]
+    ]
+    accepted_market_bundle_ref: MarketBundleRef
+    accepted_market_bundle_manifest_hash: str
+    execution_result_hash: str
+    execution_case_semantic_hash: str
+    execution_case_hash: str
+    trace_hash: str
 
 
 def _mapping(name: str, value: object) -> Mapping[str, Any]:
@@ -1970,12 +2013,91 @@ class BacktestEvidenceRepository:
                 BacktestEvidenceFailureCode.PORT_MANIFEST_INVALID, str(error)
             ) from error
 
+    def load_completed_evidence_v3(
+        self, ref: BacktestCanonicalPublicationRefV2
+    ) -> _VerifiedCompletedEvidenceV3:
+        if type(ref) is not BacktestCanonicalPublicationRefV2:
+            raise BacktestEvidenceError(
+                BacktestEvidenceFailureCode.PORT_REF_TYPE_MISMATCH,
+                "exact BacktestCanonicalPublicationRefV2 required",
+            )
+        try:
+            return self._load_completed_evidence_v3(ref, root=True)
+        except BacktestEvidenceError:
+            raise
+        except _CompletedVersionMismatch as error:
+            raise BacktestEvidenceError(
+                BacktestEvidenceFailureCode.PORT_COMPLETED_VERSION_MISMATCH,
+                str(error),
+            ) from error
+        except _StaticProofMismatch as error:
+            raise BacktestEvidenceError(
+                BacktestEvidenceFailureCode.PORT_STATIC_PROOF_MISMATCH,
+                str(error),
+            ) from error
+        except (KeyError, TypeError, ValueError) as error:
+            raise BacktestEvidenceError(
+                BacktestEvidenceFailureCode.PORT_MANIFEST_INVALID, str(error)
+            ) from error
+
     def _load_completed_v3(
         self,
         ref: BacktestCanonicalPublicationRefV2,
         *,
         root: bool,
     ) -> VerifiedCompletedPublicationV3:
+        return self._load_completed_v3_graph(ref, root=root).completed
+
+    def _load_completed_evidence_v3(
+        self,
+        ref: BacktestCanonicalPublicationRefV2,
+        *,
+        root: bool,
+    ) -> _VerifiedCompletedEvidenceV3:
+        graph = self._load_completed_v3_graph(ref, root=root)
+
+        def identity(values: tuple[ArtifactRef, str, str]) -> _VerifiedArtifactIdentity:
+            return _VerifiedArtifactIdentity(*values)
+
+        return _VerifiedCompletedEvidenceV3.create(
+            completed=graph.completed,
+            resolved_request=graph.resolved_request,
+            ready_attempts=graph.ready_attempts,
+            attempt_hashes=graph.attempt_hashes,
+            finalized_attempts=graph.finalized_attempts,
+            first_attempt=graph.first_attempt,
+            retry_attempt=graph.retry_attempt,
+            canonical_root=identity(graph.canonical_root),
+            canonical_attempt=identity(graph.canonical_attempt),
+            integrity=_VerifiedIntegrityArtifactIdentity(
+                identity(graph.integrity),
+                graph.integrity_context_hash,
+                graph.integrity_result_grade,
+                tuple(IntegrityIssueCode(value) for value in graph.integrity_issue_codes),
+            ),
+            completed_result=identity(graph.completed_result),
+            rebuild_verification=identity(graph.rebuild_verification),
+            proof_publication_manifest=identity(graph.proof_publication_manifest),
+            evidence_manifests=(
+                identity(graph.evidence_manifests[0]),
+                identity(graph.evidence_manifests[1]),
+            ),
+            accepted_market_bundle_ref=graph.accepted_market_bundle_ref,
+            accepted_market_bundle_manifest_hash=(
+                graph.accepted_market_bundle_manifest_hash
+            ),
+            execution_result_hash=graph.execution_result_hash,
+            execution_case_semantic_hash=graph.execution_case_semantic_hash,
+            execution_case_hash=graph.execution_case_hash,
+            trace_hash=graph.trace_hash,
+        )
+
+    def _load_completed_v3_graph(
+        self,
+        ref: BacktestCanonicalPublicationRefV2,
+        *,
+        root: bool,
+    ) -> _CompletedV3Graph:
         from ._durable_rebuild import (
             DeterministicRebuildVerificationPublicationManifestV1,
             DeterministicRebuildVerificationV1,
@@ -2107,8 +2229,10 @@ class BacktestEvidenceRepository:
         ):
             raise _StaticProofMismatch("completed v3 proof contains mismatch")
 
+        ready_attempts = []
         attempt_hashes = []
         finalized_attempts = []
+        evidence_manifest_identities = []
         resolved_request = None
         for verification_entry in verification.attempts:
             manifest_read = _read_ref(
@@ -2124,7 +2248,8 @@ class BacktestEvidenceRepository:
                 AttemptExecutionRecord,
             )
             record = record_read.artifact
-            if record.ready_to_finalize is None:
+            ready = record.ready_to_finalize
+            if ready is None:
                 raise _StaticProofMismatch("Attempt record is not ready")
             finalized = FinalizedAttemptEvidence(
                 attempt=verification_entry.attempt,
@@ -2137,13 +2262,19 @@ class BacktestEvidenceRepository:
                     f"{verification_entry.attempt.attempt_id}"
                 ),
             )
-            attempt_hashes.append(
-                ExecutionResultHasher.bind(record.ready_to_finalize, finalized)
-            )
+            ready_attempts.append(ready)
+            attempt_hashes.append(ExecutionResultHasher.bind(ready, finalized))
             finalized_attempts.append(finalized)
+            evidence_manifest_identities.append(
+                (
+                    verification_entry.evidence_manifest_ref,
+                    manifest_read.source_hash,
+                    verification_entry.evidence_manifest_ref.content_hash,
+                )
+            )
             if resolved_request is None:
-                resolved_request = record.ready_to_finalize.resolved_request
-            elif resolved_request != record.ready_to_finalize.resolved_request:
+                resolved_request = ready.resolved_request
+            elif resolved_request != ready.resolved_request:
                 raise _StaticProofMismatch("Attempt resolved roots mismatch")
         if resolved_request is None:
             raise _StaticProofMismatch("resolved request is unavailable")
@@ -2168,6 +2299,7 @@ class BacktestEvidenceRepository:
             != canonical_sha256(execution_check)
         ):
             raise _StaticProofMismatch("completed v3 static root hash mismatch")
+        integrity_grade = integrity.result_grade
         if (
             result.canonical_attempt_ref_hash != canonical_sha256(attempt.raw)
             or integrity.canonical_attempt_ref_hash
@@ -2176,7 +2308,7 @@ class BacktestEvidenceRepository:
             or integrity.context_hash != canonical_sha256(integrity.context)
             or integrity.context["comparison_outcome"] != "equal"
             or integrity.issues
-            or integrity.result_grade is not ResultGrade.DECISION_GRADE
+            or integrity_grade is not ResultGrade.DECISION_GRADE
             or result.result_grade is not ResultGrade.DECISION_GRADE
         ):
             raise _StaticProofMismatch("completed v3 Integrity link mismatch")
@@ -2238,7 +2370,7 @@ class BacktestEvidenceRepository:
             engine.final_journal,
             engine.final_portfolio_snapshot,
         )
-        return VerifiedCompletedPublicationV3(
+        completed = VerifiedCompletedPublicationV3(
             ref,
             result.semantic_run_id,
             result.execution_result_hash,
@@ -2248,6 +2380,52 @@ class BacktestEvidenceRepository:
             summary,
             verification_ref,
             proof_manifest_ref,
+        )
+        def artifact_identity(path: str) -> tuple[ArtifactRef, str, str]:
+            entry = entries[path]
+            return (
+                entry.artifact_ref,
+                loaded[path].source_hash,
+                entry.artifact_ref.content_hash,
+            )
+
+        return _CompletedV3Graph(
+            completed=completed,
+            resolved_request=resolved_request,
+            ready_attempts=(ready_attempts[0], ready_attempts[1]),
+            attempt_hashes=(attempt_hashes[0], attempt_hashes[1]),
+            finalized_attempts=(finalized_attempts[0], finalized_attempts[1]),
+            first_attempt=first,
+            retry_attempt=second,
+            canonical_root=(
+                ref.artifact_ref,
+                loaded_manifest.source_hash,
+                ref.artifact_ref.content_hash,
+            ),
+            canonical_attempt=artifact_identity("canonical-attempt-ref.json"),
+            integrity=artifact_identity("integrity.json"),
+            integrity_context_hash=integrity.context_hash,
+            integrity_result_grade=integrity_grade,
+            integrity_issue_codes=tuple(
+                str(value["code"]) for value in integrity.issues
+            ),
+            completed_result=artifact_identity("result.json"),
+            rebuild_verification=artifact_identity("rebuild-verification.json"),
+            proof_publication_manifest=artifact_identity(
+                "proof-publication-manifest.json"
+            ),
+            evidence_manifests=(
+                evidence_manifest_identities[0],
+                evidence_manifest_identities[1],
+            ),
+            accepted_market_bundle_ref=verification.market_bundle_ref,
+            accepted_market_bundle_manifest_hash=(
+                verification.market_bundle_ref.manifest_hash
+            ),
+            execution_result_hash=result.execution_result_hash,
+            execution_case_semantic_hash=verification.semantic_spec_hash,
+            execution_case_hash=first_entry.execution_case_hash,
+            trace_hash=first_entry.trace_hash,
         )
 
     def _verify_terminal_attempt_context(
