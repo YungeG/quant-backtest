@@ -1,6 +1,6 @@
 ---
 id: G12M-TUSHARE-FIXED-SINGLETON-QUALIFICATION-V1
-readiness: RESEARCH_GATE_REQUIRED
+readiness: BLOCKED_H2
 status_authority: ../../acceptance-matrix.md
 owner: Runtime source-bounded qualification consuming independent Profile/Resolution/Build and durable-proof authority
 produces:
@@ -52,65 +52,31 @@ A manually constructed `ResolvedExecutionCase`, fabricated finalized publication
 synthetic completed Result, test-only decision-grade Profile, or direct assessor-created
 grade is not acceptance authority.
 
-## Current decision: no code lane is Ready
+## Accepted H2 decision: qualification blocked
 
-**Current evidence does not support starting implementation after the contract node.**
-The accepted G12I and G12K reports close the provider-evidence inputs for this fixed
-source scope, but they do not close independent production
-Profile/Resolution/Build authority, the generic durable rebuild/retention proof
-prerequisite, or the causal Runtime market-data shape.
+BHA-01 is `DECIDED_H2` at accepted main commit
+`a786d9772f3732678851476ac9c51e3f10abb69b`, with semantic decision
+`sha256:a7a6fff66a34f20031178d82fd7da424799ecbc2b3e2c887bdd149e98cc826bb`.
+BHA-02 through BHA-04 are `TERMINATED_H2` with no outputs; BHA-05 is
+`ACCEPTED_H2` and the execution DAG is `BLOCKED_H2`.
 
-The immediate route is the independently owned prerequisite gate in
-[BHA-01](g12m-tushare-fixed-singleton-qualification-v1/bha-01-profile-resolution-build-authority-gate.md).
-BHA-02 through BHA-04 remain blocked unless BHA-01 reaches its exact accepted `H1`
-outcome after both independent prerequisites are accepted. An `H2` outcome terminates
-only those code nodes and routes directly to BHA-05 for the sole blocked governance
-receipt/registry update; it creates no code, Run, assessment, or grade.
+Accepted G12I and G12K remain provider evidence only. They do not authorize a
+production Profile, Build, Resolution, Integrity grade, Run, or G12M assessment.
+Tushare qualification is blocked by exactly two controllable prerequisites:
 
-Concrete blockers at current HEAD:
+1. no separately and independently accepted generic decision-grade durable
+   rebuild/retention proof seam exists with a durable canonical proof body, exact
+   versioned schema, independent pre-Integrity verification/recomputation, repository
+   replay of the same body/hash, and v1 API/byte preservation; and
+2. no separately and independently accepted applicable production China A-share
+   component/Profile/Build authority exists. Current A-share registrations and
+   current-selected rule authorities remain DEVELOPMENT-only.
 
-1. [`CnAShareResolvedProfile`](../../../../packages/backtest-runtime/src/crypto_quant_backtest/cn_a_share_profile.py)
-   exact-reconstructs DEVELOPMENT registrations with
-   `decision_grade_eligible=false`; the current-selected fee binding is likewise a
-   development projection. Those artifacts cannot self-authorize H1 and G12M cannot
-   relabel them.
-2. [`ProfileResolver`](../../../../packages/backtest-runtime/src/crypto_quant_backtest/resolution.py)
-   rejects a decision-grade request unless the exact Profile registrations and Build
-   presented at runtime are eligible and compatible. Existing
-   [`IntegrityEvaluator`](../../../../packages/backtest-runtime/src/crypto_quant_backtest/integrity.py)
-   independently preserves the same boundary and remains sole result-grade authority.
-3. Accepted G12I publishes only
-   `tushare_cn_a_share.daily-publications@1`. The current schema-3 multi-resolution
-   preparation path requires `price_bars@1` for each declared observation binding,
-   while the current DEVELOPMENT China A-share simulation Profile declares
-   `bar_open@1`. The accepted G12I report explicitly provides neither generic
-   capability.
-4. If the independently selected production simulation component still uses
-   [`BarOpenObservation`](../../../../packages/backtest-runtime/src/crypto_quant_backtest/execution.py),
-   it requires `event_time == available_time`; accepted G12I daily Events have July
-   event times and late August acquisition availability, so they cannot be relabeled
-   as causal bar-open Events. BHA-02 must use only a contract honestly supported by
-   the accepted H1 components and current Runtime seams.
-5. Accepted G12I Bundle coverage ends at the July target boundary, but the 19 Events
-   become available in August. Any execution Bundle and Timeline window claiming to
-   consume them must permit their exact Runtime availability; assessment time cannot
-   substitute for Timeline visibility.
-6. No independently accepted production Profile/component/Build authority exists for
-   this exact case. Missing strict G12H successor, official, or legal closure alone is
-   not a source-bounded blocker under ADR 0008; it remains a limitation/nonclaim unless
-   an exact selected production component has a controllable contract that genuinely
-   requires it.
-7. Current HEAD has no separately and independently accepted generic decision-grade
-   rebuild/retention proof seam. Integrity currently checks only whether the two proof
-   hash fields are non-null; it does not verify a durable proof body. Therefore a
-   facade-generated opaque hash—even after two reconstructions by the same
-   implementation—could clear those presence checks and is not acceptance evidence.
-   The missing accepted proof seam is an exact controllable H2 condition independent
-   of any missing applicable Profile/component/Build authority.
-
-These are independent authority, compatibility, proof, and causality boundaries, not
-requests for G12M to invent a Profile grade, Build eligibility, generic G07 proof
-implementation, resampler, or availability rule.
+Missing strict G12H successor, official closure, or legal closure remains an ADR-0008
+limitation/nonclaim. It is not an H2 cause. Resolution remains sole runtime
+compatibility authority and Integrity remains sole requested/result-grade authority.
+No package, test, fixture, Profile registration, Bundle, Run, Integrity result,
+assessment, qualification, or grade was emitted on H2.
 
 ## Frozen source bounds
 
@@ -458,8 +424,8 @@ BHA-04 pure Runtime schema-2 assessment ─────→ BHA-05 success govern
 ```
 
 See the [execution DAG](g12m-tushare-fixed-singleton-qualification-v1/README.md)
-for Ready states, typed edges, write conflicts, WIP policy, proof budget, and exact
-write sets.
+for final node states, typed edges, write conflicts, WIP policy, proof budget, and
+exact write sets.
 
 ## Protected history
 
@@ -470,14 +436,14 @@ Untouched throughout this version:
 - accepted Binance funding-history v1/v2 artifacts;
 - accepted Binance H3 decision/report/manifest and terminated BHA branch;
 - ADR 0008, all existing ResultGrade enums and meanings, exact
-  `VerifiedCompletedPublicationV2`, every existing v1 artifact/API/byte contract,
-  and the accepted generic proof prerequisite; and
+  `VerifiedCompletedPublicationV2`, and every existing v1 artifact/API/byte contract;
+  and
 - Binance H3 and unrelated Acceptance Matrix status.
 
-This amended docs-only BHA-00 contract minimally reconciles the Acceptance Matrix to
-Tushare `RESEARCH_GATE_REQUIRED` / code-not-ready status, including the missing
-accepted generic durable proof seam as an exact controllable H2 condition. BHA-05 alone later records
-the final H1-success or H2-blocked route status.
+BHA-05 records the accepted H2 route: BHA-01 `DECIDED_H2`, BHA-02 through BHA-04
+`TERMINATED_H2` without outputs, BHA-05 `ACCEPTED_H2`, and the execution DAG
+`BLOCKED_H2`. The two actionable blockers are the missing independently accepted
+generic durable proof seam and applicable production A-share Profile/Build authority.
 
 ## Nonclaims
 

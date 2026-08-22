@@ -1,6 +1,6 @@
 ---
 id: G12M-TFS-BHA-01
-status: INDEPENDENT_RESEARCH_READY
+status: DECIDED_H2
 owner: independent prerequisite-identity authority lane
 produces:
   - immutable H1 binding accepted applicable component/Profile/Build and durable-proof prerequisite identities
@@ -49,8 +49,8 @@ compatibility, the accepted generic seam independently verifies proof before
 Integrity, and existing Integrity remains sole requested/result-grade authority.
 G12M and BHA-04 may only bind those outcomes.
 
-Current HEAD supports research only, not H1: both applicable Profile/Build authority
-and the accepted generic durable proof seam are absent.
+The accepted H2 decision records that both the applicable Profile/Build authority
+and the independently accepted generic durable proof seam are absent.
 
 ## Questions that must close separately
 

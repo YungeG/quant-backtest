@@ -1,6 +1,6 @@
 ---
 id: G12M-TFS-BHA-05
-status: BLOCKED_ROUTE
+status: ACCEPTED_H2
 owner: governance single writer
 produces:
   - immutable H1-success acceptance receipt and registry status
@@ -63,9 +63,13 @@ H2 does not consume placeholder code-node tips.
 - `docs/implementation/acceptance-matrix.md`
 - `../README.md`
 - `../g12m-source-bounded-qualification-v1.md`
+- `../g12m-tushare-fixed-singleton-qualification-v1.md`
+- `bha-00-contract-freeze.md` final-outcome/historical-status reconciliation
+- `bha-01-profile-resolution-build-authority-gate.md` status field
 - `bha-02-builder-execution-bundle.md` status field
 - `bha-03-production-profile-run.md` status field
 - `bha-04-runtime-assessment.md` status field
+- this file's status field
 - this directory's `README.md` DAG status and node-table states
 - exactly one route receipt: `bha-05-h1-acceptance-receipt.md` on H1 or
   `bha-05-h2-blocked-receipt.md` on H2
@@ -76,10 +80,12 @@ the other is absent.
 
 Status writes are route-atomic and non-conflicting:
 
-- H1 sets BHA-02, BHA-03, and BHA-04 to `ACCEPTED_H1`, sets the DAG README status to
-  `ACCEPTED_H1`, and writes only `bha-05-h1-acceptance-receipt.md`;
-- H2 sets BHA-02, BHA-03, and BHA-04 to `TERMINATED_H2`, sets the DAG README status to
-  `BLOCKED_H2`, and writes only `bha-05-h2-blocked-receipt.md`; and
+- H1 sets BHA-01 and this BHA-05 status consistently with accepted H1, sets BHA-02,
+  BHA-03, and BHA-04 to `ACCEPTED_H1`, sets the DAG README status to `ACCEPTED_H1`,
+  and writes only `bha-05-h1-acceptance-receipt.md`;
+- H2 sets BHA-01 to `DECIDED_H2`, BHA-02, BHA-03, and BHA-04 to `TERMINATED_H2`,
+  this BHA-05 to `ACCEPTED_H2`, the DAG README to `BLOCKED_H2`, and writes only
+  `bha-05-h2-blocked-receipt.md`; and
 - no route may leave a prior blocked/terminated/accepted state that conflicts with
   the selected fan-in or mix H1 and H2 statuses.
 
@@ -126,8 +132,9 @@ Status writes are route-atomic and non-conflicting:
 15. accepted Binance H3 and v1/v2 artifacts are unchanged;
 16. BHA-02/BHA-03/BHA-04 and DAG statuses are atomically `ACCEPTED_H1`, exactly
     `bha-05-h1-acceptance-receipt.md` exists, and the H2 receipt is absent;
-17. this current BHA-00 status-authority reconciliation remains accurate until
-    BHA-05 writes the final H1/H2 status; and
+17. BHA-00's freeze-time status reconciliation remains labelled as historical, while
+    BHA-05 writes the selected final route status across every authorized authority,
+    including the parent plan; and
 18. links, Markdown, Ruff/Pyright, focused/full tests, import boundaries, lock, diff,
     gitleaks, and independent final review pass.
 
@@ -140,8 +147,9 @@ Status writes are route-atomic and non-conflicting:
    H2 contrary to ADR 0008;
 3. BHA-02 through BHA-04 are `TERMINATED_H2` and produced no package, test, fixture,
    Bundle, Profile registration, Run, publication, or assessment output;
-4. BHA-02/BHA-03/BHA-04 are atomically `TERMINATED_H2`, the DAG is `BLOCKED_H2`,
-   exactly `bha-05-h2-blocked-receipt.md` exists, and the H1 receipt is absent;
+4. BHA-01 is `DECIDED_H2`, BHA-02/BHA-03/BHA-04 are atomically `TERMINATED_H2`,
+   BHA-05 is `ACCEPTED_H2`, the DAG is `BLOCKED_H2`, exactly
+   `bha-05-h2-blocked-receipt.md` exists, and the H1 receipt is absent;
 5. the registry and receipt say blocked/terminated, not accepted or decision-grade;
 6. protected G12I/G12K/Binance bytes are unchanged; and
 7. links, Markdown, route/status consistency, diff, gitleaks, and independent final

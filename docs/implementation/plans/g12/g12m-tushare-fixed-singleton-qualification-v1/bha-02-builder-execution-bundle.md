@@ -1,6 +1,6 @@
 ---
 id: G12M-TFS-BHA-02
-status: BLOCKED_H1
+status: TERMINATED_H2
 owner: Builder execution-Bundle writer
 produces:
   - minimum causal Builder-owned projections required by accepted Profile/schema-3 contracts

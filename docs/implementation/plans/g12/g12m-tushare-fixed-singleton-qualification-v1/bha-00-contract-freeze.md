@@ -17,8 +17,10 @@ fan_in: G12M-TFS-BHA-01
 
 # BHA-00 Freeze the exact qualification contract
 
-This docs-only plan commit completes BHA-00. The independently owned BHA-01
-Profile/Resolution/Build authority lane is the immediate Ready node.
+This docs-only plan commit completed BHA-00. At that historical freeze point, the
+independently owned BHA-01 Profile/Resolution/Build authority lane was the sole
+eligible next node. BHA-01 later reached `DECIDED_H2`; BHA-05 accepted that route as
+`ACCEPTED_H2`. BHA-00 remains `CONTRACT_COMPLETE`.
 
 ## Outcome
 
@@ -66,29 +68,37 @@ Confirm from current HEAD that:
 - this execution DAG directory
 - link-only edits to `../g12m-source-bounded-qualification-v1.md`
 - link/status-only edits to `../README.md`
-- `docs/implementation/acceptance-matrix.md`, limited to the current G12M Tushare
-  research-gate/code-not-ready reconciliation
+- `docs/implementation/acceptance-matrix.md`, limited to the freeze-time G12M Tushare
+  pre-decision reconciliation
 
-No package, test, fixture, evidence, ADR, or research file. BHA-05 still owns the
-later final H1-success or H2-blocked status/receipt update.
+No package, test, fixture, evidence, ADR, or research file. BHA-05 retained ownership
+of the final H1-success or H2-blocked status/receipt update and has now written the
+accepted H2 outcome under its separately authorized exact write set.
 
-## Exit gate
+## Freeze-time exit gate (historical)
 
-- dependency graph is acyclic;
-- every fact has one owner;
-- independently owned BHA-01 is the only next node;
-- BHA-02 through BHA-05 are explicitly not Ready;
-- H2 terminates only BHA-02 through BHA-04 and routes directly to BHA-05;
+- the dependency graph was acyclic;
+- every fact had one owner;
+- independently owned BHA-01 was the sole eligible next node;
+- BHA-02 through BHA-05 were ineligible to execute before BHA-01 decided the route;
+- H2 would terminate only BHA-02 through BHA-04 and route directly to BHA-05;
 - exact future write sets, independent durable-proof prerequisite, public API
   preservation, WIP, proof budget, failure precedence, fan-in, and correction rules
-  are navigable;
-- the Acceptance Matrix now agrees that Tushare is at the independent research gate
-  with no code lane Ready, while Binance H3 remains unchanged; and
-- Markdown, links, `git diff --check`, gitleaks, and independent contract review pass.
+  were navigable;
+- the Acceptance Matrix recorded the independent prerequisite gate with all code
+  lanes closed, while Binance H3 remained unchanged; and
+- Markdown, links, `git diff --check`, gitleaks, and independent contract review passed.
 
-## Stop condition
+## Final outcome
 
-If review cannot preserve independent Profile/Build authority, the separately accepted
-generic durable-proof prerequisite, Resolution ownership, the Integrity grade
-firewall, or one owner per Bundle/assessment fact, revise BHA-00
-only. Do not start BHA-01 or code.
+BHA-01 later emitted the accepted `PREREQUISITE_INCOMPLETE` decision and is
+`DECIDED_H2`. BHA-02 through BHA-04 are `TERMINATED_H2` with no outputs. BHA-05 is
+`ACCEPTED_H2`, the execution DAG is `BLOCKED_H2`, and BHA-00 remains
+`CONTRACT_COMPLETE` as the historical contract-freeze record.
+
+## Freeze-time stop condition (historical)
+
+At contract freeze, any failure to preserve independent Profile/Build authority, the
+separately accepted generic durable-proof prerequisite, Resolution ownership, the
+Integrity grade firewall, or one owner per Bundle/assessment fact required revising
+BHA-00 before BHA-01 or code. The accepted H2 route has now closed that decision.

@@ -1,6 +1,6 @@
 ---
 id: G12M-SOURCE-BOUNDED-QUALIFICATION-V1
-readiness: A_SHARE_RESEARCH_GATE_CODE_NOT_READY_BINANCE_H3_PERMANENT_BLOCK
+readiness: A_SHARE_BLOCKED_H2_BINANCE_H3_PERMANENT_BLOCK
 gate_status: DRAFT
 owner: backtest-runtime qualification
 produces:
@@ -19,7 +19,7 @@ depends_on:
   write_conflict: [runtime-integrity-policy, acceptance-registry]
 ---
 
-# G12M source-bounded qualification readiness
+# G12M source-bounded qualification status
 
 ## Outcome
 
@@ -30,20 +30,23 @@ canonical artifacts, and one exact Binance funding-history case has an accepted
 observed-as-of canonical report. This governance plan does not itself authorize a
 production Runtime interface. The authoritative remaining Tushare decomposition is
 [G12M Tushare fixed-singleton qualification v1](g12m-tushare-fixed-singleton-qualification-v1.md);
-it permits H1 only after independently accepted applicable Profile/Build authority
-and a separately independently accepted generic durable rebuild/retention proof
-prerequisite exist before any code lane. BHA-01 only binds those immutable prerequisite
-identities. Resolution remains runtime compatibility authority and Integrity remains
-sole grade authority. Binance remains closed by its accepted H3 decision.
+its accepted BHA-01 H2 decision records that neither an independently accepted
+applicable production China A-share component/Profile/Build authority nor a separately
+independently accepted generic durable rebuild/retention proof prerequisite exists.
+BHA-02 through BHA-04 are terminated with no outputs and BHA-05 accepted the blocked
+route. Resolution remains runtime compatibility authority and Integrity remains sole
+grade authority. Binance remains closed by its accepted H3 decision.
 
 ## Status
 
-`DRAFT / TUSHARE INDEPENDENT RESEARCH GATE; CODE NOT READY; BINANCE H3
-PERMANENTLY BLOCKED`. ADR 0008 policy is unchanged. Accepted Tushare G12I/G12K
-artifacts are provider evidence only; BHA-01 is the sole Ready research node and no
-code lane is Ready. Current HEAD lacks the accepted generic durable proof seam, which
-is an exact controllable H2 condition independent of any missing applicable
-Profile/Build authority.
+`DRAFT / TUSHARE BLOCKED_H2; BINANCE H3 PERMANENTLY BLOCKED`. ADR 0008 policy is
+unchanged. Accepted Tushare G12I/G12K artifacts remain provider evidence only.
+Tushare qualification is blocked by two controllable prerequisites: no independently
+accepted generic durable rebuild/retention proof seam and no independently accepted
+applicable production China A-share component/Profile/Build authority. BHA-01 is
+`DECIDED_H2`, BHA-02 through BHA-04 are `TERMINATED_H2` with no outputs, BHA-05 is
+`ACCEPTED_H2`, and the execution DAG is `BLOCKED_H2`. Missing strict G12H successor,
+official closure, or legal closure remains a limitation/nonclaim, not an H2 cause.
 The Binance funding-history v2 report remains accepted as exact post-hoc upstream
 evidence, with `available_time` fixed at the 2026 receipt instant. Accepted H3
 `NO_CAUSAL_AUTHORITY` permanently terminates the historical BHA-03 through BHA-09
@@ -54,8 +57,8 @@ provider combinations remain blocked on their own missing lanes.
 No production code, generic G07 proof implementation, public type, function signature,
 serialized assessment body, failure enum, test contract, or write set is authorized
 by this common plan; the provider-specific Tushare plan owns only the gated
-provider-specific future write sets. Tushare research-gate
-status is independent of the Binance H3 decision.
+provider-specific future write sets. Tushare `BLOCKED_H2` status is independent of
+the Binance H3 decision.
 
 ## Decision frozen now
 
@@ -96,7 +99,7 @@ either duplicate Builder authority or trust claims it cannot verify.
 
 ## Prerequisite source lanes
 
-| Lane | Provider-specific readiness | Acceptance identity |
+| Lane | Provider-specific status | Acceptance identity |
 | --- | --- | --- |
 | G12I SZSE | `ACCEPTED`: exact July-2026 Tushare `daily`/`trade_cal`/`suspend_d` observation report, canonical replay, append-only correction identity, and nominal Runtime boundary below. | Source `4389877b8879fc9bb1a6d6544c4079a7d29312ab`; report `sha256:ff09c4ad9f8025e66689387b5132d3d85c4101276fbf7330dd5040af111cc029`; canonical file `sha256:9cbfc115e41f56d1e83eac520856c3f529f83972b97111238e5dbb1a68c4eae6`. |
 | G12K Tushare fixed singleton | `ACCEPTED`: exact full `dividend(ts_code="000001.SZ")` response, receipt/Snapshot replay, fixed July-2026 scope, 96 ordered source rows, zero target-relevant rows, append-only direct-predecessor evidence, and explicit limits. This is not listing/universe/survivorship/lifecycle authority. | Source `28a4d7234f5101e67bfa64f1eded92b81bfcf73d`; report `sha256:5a49065d87286a9673893337328ddbbab9a19cd3addf178bf96033b9b1babfd7`; canonical file `sha256:a386f4281374d1449c0b5ba4371b9e9d2de5b236bc8fc5b5cdd8de5e43c65956`; final plan `sha256:79402fe89df8bffc23be4ff2772bbba14510f6a6133de8fe48acca1b0656c5d8`. |
@@ -218,7 +221,7 @@ permanent provider identity/finality, complete correction lineage, provider-glob
 completeness, legal closure, live eligibility, and deployment authorization remain
 false or limited.
 
-## Readiness exit criteria
+## Qualification preconditions
 
 A provider-specific G12M contract may freeze only after every upstream lane required
 by that exact case provides:

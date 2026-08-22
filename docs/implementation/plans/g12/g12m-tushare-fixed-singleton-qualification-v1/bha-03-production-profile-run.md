@@ -1,6 +1,6 @@
 ---
 id: G12M-TFS-BHA-03
-status: BLOCKED_BHA02
+status: TERMINATED_H2
 owner: Runtime provider Profile/run/repository-view single writer
 produces:
   - exact Profile registrations implementing immutable BHA-01 authority

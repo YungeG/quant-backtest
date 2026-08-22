@@ -1,6 +1,6 @@
 ---
 id: G12M-TUSHARE-FIXED-SINGLETON-QUALIFICATION-V1-EXECUTION
-status: RESEARCH_GATE_REQUIRED
+status: BLOCKED_H2
 owner: Tushare fixed-singleton qualification consuming independent authority
 source_plan: ../g12m-tushare-fixed-singleton-qualification-v1.md
 status_authority: ../../../acceptance-matrix.md
@@ -14,26 +14,21 @@ Execute the [parent contract](../g12m-tushare-fixed-singleton-qualification-v1.m
 without allowing G12M, its assessor, or accepted provider evidence to bootstrap a
 production Profile, Build, resolved environment, Integrity grade, or assessment.
 
-## Current Ready state
+## Final H2 state
 
-- **Completed by this docs contract:** [BHA-00](bha-00-contract-freeze.md).
-- **Ready now:**
-  [BHA-01](bha-01-profile-resolution-build-authority-gate.md), independently owned
-  prerequisite-identity research only.
-- **Code Ready:** none. Current evidence does not satisfy BHA-01 H1.
-- **Current blockers:** the current China A-share Profile and selected rule/fee
-  bindings are DEVELOPMENT-only; no independently accepted exact applicable
-  component/Profile/Build authority exists; accepted G12I supplies neither the
-  schema-3 `price_bars@1` observation capability nor the current development
-  simulation's `bar_open@1`; no causal complete execution Bundle exists; and current
-  HEAD lacks a separately and independently accepted generic durable rebuild/retention
-  proof seam. Integrity checks only non-null proof-hash presence, so a facade-generated
-  opaque hash cannot be acceptance evidence. The missing proof seam is an exact
-  controllable H2 condition independent of any missing applicable Profile/Build
-  authority.
+- **Completed contract:** [BHA-00](bha-00-contract-freeze.md).
+- **Accepted route decision:** [BHA-01](bha-01-profile-resolution-build-authority-gate.md)
+  is `DECIDED_H2` at accepted main commit
+  `a786d9772f3732678851476ac9c51e3f10abb69b`.
+- **Terminated code nodes:** BHA-02, BHA-03, and BHA-04 are `TERMINATED_H2` and
+  produced no outputs.
+- **Governance fan-in:** BHA-05 is `ACCEPTED_H2`; this execution DAG is `BLOCKED_H2`.
+- **Actionable blockers:** accepted G12I/G12K remain provider evidence only. Tushare
+  qualification lacks both an independently accepted generic durable rebuild/retention
+  proof seam and an independently accepted applicable production China A-share
+  component/Profile/Build authority.
 - **Strict-closure disposition:** missing strict G12H successor, official, or legal
-  closure alone is an ADR-0008 limitation/nonclaim, not H2, unless an exact selected
-  production component makes that controllable fact applicable.
+  closure remains an ADR-0008 limitation/nonclaim, not an H2 cause.
 
 ## DAG
 
@@ -42,7 +37,7 @@ BHA-00 CONTRACT_COMPLETE ──────────────────�
 independently accepted applicable Profile/Build authority ─┤
 independently accepted generic durable proof prerequisite ─┤
                                                            ▼
-BHA-01 INDEPENDENT_RESEARCH_READY
+BHA-01 DECIDED_H2
    ├─ H2 ─× BHA-02, BHA-03, BHA-04 TERMINATED_H2
    │          │ blocked decision
    │          └──────────────────────────────→ BHA-05 H2 governance fan-in
@@ -70,14 +65,14 @@ enters BHA-05 directly.
 
 ## Nodes
 
-| ID | Ready state | Produces | Contract dependencies | Evidence dependencies | Write conflicts |
+| ID | Final state | Produces | Contract dependencies | Evidence dependencies | Write conflicts |
 | --- | --- | --- | --- | --- | --- |
 | [BHA-00](bha-00-contract-freeze.md) | CONTRACT_COMPLETE | accepted exact contract, protected-history baseline, and current status-authority reconciliation | parent plan, ADR 0008 | current HEAD seam findings | plan tree + minimal Acceptance Matrix/G12 README status |
-| [BHA-01](bha-01-profile-resolution-build-authority-gate.md) | INDEPENDENT_RESEARCH_READY | immutable H1 binding both accepted prerequisite identities, or H2 | BHA-00 case boundary, ADR 0008 | independently accepted applicable Profile/Build authority plus independently accepted generic durable proof prerequisite | independent decision artifacts |
-| [BHA-02](bha-02-builder-execution-bundle.md) | BLOCKED_H1 | minimum causal projections, one complete published execution Bundle, and exact G12D retention-proof identity | BHA-01 H1, G12C/D | exact G12I Events and accepted catalog | Builder provider module/fixture |
-| [BHA-03](bha-03-production-profile-run.md) | BLOCKED_BHA02 | exact Profile registrations, Resolution outcome, production-path consumption of the accepted proof implementation, facade/PREP Run, Integrity/canonical publication, and off-root verified-run repository view | BHA-01 H1, BHA-02 | immutable Build inputs, exact Bundle, accepted generic proof prerequisite | provider Profile/run/repository-view files only |
-| [BHA-04](bha-04-runtime-assessment.md) | BLOCKED_RUN | pure additive schema-2 initial source-to-Run assessment and fail-closed successor contract | BHA-01 H1, BHA-02, BHA-03 | exact independently accepted authority decision, exact G12I/G12K bytes, and provider-specific verified-run evidence | provider-specific Runtime assessor v2 |
-| [BHA-05](bha-05-governance-fanin.md) | BLOCKED_ROUTE | H1-success acceptance receipt or H2-blocked/terminated receipt and registry status | BHA-01 route; BHA-02/BHA-03/BHA-04 directly on H1 | route-specific immutable tips and protected fingerprints | Acceptance Matrix/G12 README/main branch |
+| [BHA-01](bha-01-profile-resolution-build-authority-gate.md) | DECIDED_H2 | immutable H1 binding both accepted prerequisite identities, or H2 | BHA-00 case boundary, ADR 0008 | independently accepted applicable Profile/Build authority plus independently accepted generic durable proof prerequisite | independent decision artifacts |
+| [BHA-02](bha-02-builder-execution-bundle.md) | TERMINATED_H2 | minimum causal projections, one complete published execution Bundle, and exact G12D retention-proof identity | BHA-01 H1, G12C/D | exact G12I Events and accepted catalog | Builder provider module/fixture |
+| [BHA-03](bha-03-production-profile-run.md) | TERMINATED_H2 | exact Profile registrations, Resolution outcome, production-path consumption of the accepted proof implementation, facade/PREP Run, Integrity/canonical publication, and off-root verified-run repository view | BHA-01 H1, BHA-02 | immutable Build inputs, exact Bundle, accepted generic proof prerequisite | provider Profile/run/repository-view files only |
+| [BHA-04](bha-04-runtime-assessment.md) | TERMINATED_H2 | pure additive schema-2 initial source-to-Run assessment and fail-closed successor contract | BHA-01 H1, BHA-02, BHA-03 | exact independently accepted authority decision, exact G12I/G12K bytes, and provider-specific verified-run evidence | provider-specific Runtime assessor v2 |
+| [BHA-05](bha-05-governance-fanin.md) | ACCEPTED_H2 | H1-success acceptance receipt or H2-blocked/terminated receipt and registry status | BHA-01 route; BHA-02/BHA-03/BHA-04 directly on H1 | route-specific immutable tips and protected fingerprints | Acceptance Matrix/G12 README/main branch |
 
 ## Typed edges
 
@@ -110,7 +105,7 @@ No write-conflict edge substitutes for a missing contract or evidence edge.
 | BHA-02 | `packages/market-bundle-builder/src/crypto_quant_bundle_builder/g12m_tushare_fixed_singleton_execution_bundle_v1.py`; `tests/bundle_builder/providers/tushare/test_g12m_tushare_fixed_singleton_execution_bundle_v1.py`; `tests/architecture/test_g12m_tushare_fixed_singleton_builder_boundary.py`; `tests/fixtures/market_data/providers/tushare/g12m-fixed-singleton-execution-bundle-v1/` |
 | BHA-03 | `packages/backtest-runtime/src/crypto_quant_backtest/g12m_tushare_fixed_singleton_profile_v1.py`; `packages/backtest-runtime/src/crypto_quant_backtest/evidence_repository.py`; `packages/backtest-runtime/src/crypto_quant_backtest/g12m_tushare_fixed_singleton_verified_run_v2.py`; `tests/runtime/g12m/test_tushare_fixed_singleton_production_run_v1.py`; `tests/runtime/evidence_repository/test_g12m_tushare_fixed_singleton_verified_run_v2.py`; `tests/runtime/analysis/test_analysis_derivation_boundary.py`; `tests/architecture/test_g12m_tushare_fixed_singleton_runtime_boundary.py`; `tests/fixtures/runtime/g12m-tushare-fixed-singleton-production-run-v1/` |
 | BHA-04 | `packages/backtest-runtime/src/crypto_quant_backtest/g12m_tushare_fixed_singleton_assessment_v2.py`; `tests/runtime/g12m/test_tushare_fixed_singleton_assessment_v2.py`; `tests/architecture/test_g12m_tushare_fixed_singleton_assessment_boundary.py`; `tests/fixtures/runtime/g12m-tushare-fixed-singleton-assessment-v2/` |
-| BHA-05 | `docs/implementation/acceptance-matrix.md`; `../README.md`; `../g12m-source-bounded-qualification-v1.md`; `bha-02-builder-execution-bundle.md`; `bha-03-production-profile-run.md`; `bha-04-runtime-assessment.md`; this `README.md`; exactly one of `bha-05-h1-acceptance-receipt.md` or `bha-05-h2-blocked-receipt.md` |
+| BHA-05 | `docs/implementation/acceptance-matrix.md`; `../README.md`; `../g12m-source-bounded-qualification-v1.md`; `../g12m-tushare-fixed-singleton-qualification-v1.md`; `bha-00-contract-freeze.md`; `bha-01-profile-resolution-build-authority-gate.md`; `bha-02-builder-execution-bundle.md`; `bha-03-production-profile-run.md`; `bha-04-runtime-assessment.md`; `bha-05-governance-fanin.md`; this `README.md`; exactly one of `bha-05-h1-acceptance-receipt.md` or `bha-05-h2-blocked-receipt.md` |
 
 A node may delete an unnecessary planned file after call-site tracing, but it may not
 write outside its row without a new contract decision. In particular, no node edits accepted G12I/G12K/Binance modules or fixtures. BHA-01
@@ -174,16 +169,16 @@ BHA-04            focused additive schema-2 assessment adversarial + adjacent Ru
 BHA-05            route receipt, immutable hashes, links, diff, gitleaks, registry consistency
 ```
 
-## Ready queue
+## Final route sequence
 
 | Priority | Node | Current state | Unblocks |
 | --- | --- | --- | --- |
 | 1 | BHA-00 | CONTRACT_COMPLETE | BHA-01 |
-| 2 | BHA-01 | INDEPENDENT_RESEARCH_READY | H1 starts BHA-02; H2 starts only BHA-05 |
-| 3 | BHA-02 | NOT_READY | BHA-03/BHA-04 on H1 |
-| 4 | BHA-03 | NOT_READY | BHA-04 on H1 |
-| 5 | BHA-04 | NOT_READY | BHA-05 success route |
-| 6 | BHA-05 | NOT_READY | final success or blocked registry receipt |
+| 2 | BHA-01 | DECIDED_H2 | BHA-05 blocked governance |
+| 3 | BHA-02 | TERMINATED_H2 | none |
+| 4 | BHA-03 | TERMINATED_H2 | none |
+| 5 | BHA-04 | TERMINATED_H2 | none |
+| 6 | BHA-05 | ACCEPTED_H2 | final blocked registry receipt |
 
 ## Fan-in acceptance
 
@@ -195,11 +190,13 @@ BHA-05 has exactly two legal inputs:
   BHA-02/BHA-03/BHA-04 to `ACCEPTED_H1`, this DAG to `ACCEPTED_H1`, writes
   `bha-05-h1-acceptance-receipt.md`, and must not create the H2 receipt.
 - **H2 blocked:** immutable accepted BHA-01 H2 only. It verifies BHA-02 through BHA-04
-  produced no output, sets each to `TERMINATED_H2`, this DAG to `BLOCKED_H2`, writes
+  produced no output, sets BHA-01 to `DECIDED_H2`, each code node to `TERMINATED_H2`,
+  BHA-05 to `ACCEPTED_H2`, this DAG to `BLOCKED_H2`, writes
   `bha-05-h2-blocked-receipt.md`, and must not create the H1 receipt.
 
 Both routes must verify protected G12I/G12K/Binance bytes, links, graph/status
 consistency, diff, and gitleaks. H2 must not imply a Profile registration, Bundle,
-Run, Integrity result, or assessment exists. BHA-00 has already reconciled the
-Acceptance Matrix to the current research-gate/code-not-ready state; BHA-05 alone
-later writes the final H1-success or H2-blocked route status.
+Run, Integrity result, or assessment exists. At the historical BHA-00 freeze, the
+Acceptance Matrix recorded the pre-decision state with all code lanes closed. BHA-05
+has now written the final H2-blocked status and receipt across every authorized
+route-status authority, including the parent plan.

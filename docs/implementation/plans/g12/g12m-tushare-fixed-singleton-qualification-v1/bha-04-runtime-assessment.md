@@ -1,6 +1,6 @@
 ---
 id: G12M-TFS-BHA-04
-status: BLOCKED_RUN
+status: TERMINATED_H2
 owner: provider-specific Runtime assessor writer
 produces:
   - pure read-only Tushare fixed-singleton assessment schema version 2
