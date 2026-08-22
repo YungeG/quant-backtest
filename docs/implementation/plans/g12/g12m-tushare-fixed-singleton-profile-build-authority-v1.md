@@ -1,6 +1,6 @@
 ---
 id: G12M-TUSHARE-FIXED-SINGLETON-PROFILE-BUILD-AUTHORITY-V1
-status: CANDIDATE
+status: ACCEPTED
 owner: independent China A-share Profile/Build authority lane
 ---
 
@@ -63,8 +63,18 @@ The authority binds accepted G12I report/file `ff09c4ad…` / `9cbfc115…` at A
 
 Strict G12H successor/official/legal/tax/compliance closure, historical listing membership, corporate-action lifecycle, historical Provider Availability Time, provider completeness, and provider future-revision finality are explicit nonclaims. Under ADR 0008 they are not limitations of this exact zero-exposure/no-trade Profile. This candidate does not mint G12M qualification or `ResultGrade`, authorize live use or deployment, execute a Run, or produce an assessment.
 
-## Validation and fan-in
+## Accepted fan-in
 
-Focused tests cover canonical golden equality, exact reconstruction and mutation rejection, adapter decoding to singleton zero, target misuse, zero-capacity risk rejection, exact Profile/Build Resolution, Build failures, no limitations, unchanged DEVELOPMENT bytes, and architecture isolation. Adjacent/full tests and static/secret checks run before the single candidate commit.
+The exact candidate is accepted at immutable commit `c52c8913ef680b34c1edecf46b1892b268e013e0` (parent `606b7e866673f3a5eb71a69196687dd653561b42`). Its seven-path write set is the module, two focused tests, this plan, the research report, canonical decision, and manifest.
 
-After this candidate commit, a separate governance fan-in may review and bind that immutable candidate commit in the Acceptance Matrix and G12 README. This commit does not reopen, supersede, or mutate the old BHA-01 H2 decision or any BHA-02 through BHA-05 artifact.
+Validation evidence:
+
+- clean-worktree broad-regression baseline: `uv run pytest -q` = `2320 passed` before the final narrow time/provenance/causal-binding corrections;
+- final candidate focused tests: `12 passed`;
+- final Ruff, primary LSP, compileall, diff-check, gitleaks, canonical hash replay, exact write-set, DEVELOPMENT/root protected hashes, and two independent reviews: PASS;
+- semantic authority `sha256:a0f0fb905dbc34d877c39130bf615f2f5d725b97aa618ed97bffdd1a12bce654`;
+- canonical decision file `sha256:0a22eb7368eb0838d772efbcd6fc08cf48d333783d3ae881a12ba304f25ae1ca`;
+- target commitment `sha256:8e4bdddbd91e1bafd65363e133d382673df88e4dc4061d1f0dd776a42afc6cee`;
+- Build manifest `sha256:a6a73cb72a9ad4cf98bca789c19a6a261f00dc4b1e538478a0ca9674137ab516`.
+
+Acceptance does not reopen, supersede, or mutate the old BHA-01 H2 decision or any BHA-02 through BHA-05 artifact. It authorizes only an additive successor G12M route to bind this authority together with accepted G07 durable-proof authority. Future execution must explicitly invoke the exact target validator before translation/risk, and any assessment consuming G12K must occur no earlier than `1787299622295499670`.
