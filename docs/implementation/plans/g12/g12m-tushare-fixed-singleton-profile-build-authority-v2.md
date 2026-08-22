@@ -1,6 +1,6 @@
 ---
 id: G12M-TUSHARE-FIXED-SINGLETON-PROFILE-BUILD-AUTHORITY-V2
-status: CANDIDATE
+status: ACCEPTED
 owner: independent China A-share Profile/Build authority lane
 ---
 
@@ -80,3 +80,20 @@ It resolves the v2 request/Build, creates an empty-position/empty-mark zero-trad
 V2 authorizes the exact execution component and required capability only. It does not publish or authorize causal `bar_open` projection bytes. A future Builder must publish the exact causal bar-open projection from accepted G12I `execution_reference.open_price`, preserving source identity and timing; it may not infer a current or alternative price.
 
 V2 does not qualify G12M, a provider, official/legal/tax/compliance completeness, live use, deployment, a Run, an Integrity result, or any new grade. V1 remains accepted and immutable, but production Runtime composition must use this v2 successor because the v1 execution ref/capability pair is not exact PREP authority.
+
+## Accepted fan-in
+
+The exact candidate is accepted at immutable commit `4e2da5b4cee8addf1a5caf2b9be9f1d037a2af3b` (parent `0c0a7df5b1f4b6d83928fec0b19d60696ff20d72`). Its seven-path write set is the off-root module, two focused tests, this plan, research report, canonical decision, and manifest.
+
+Validation and review:
+
+- final v1/v2 focused and write-set suite: `27 passed`;
+- adjacent PREP/Resolution suite: `63 passed`;
+- Ruff, Pyright, primary LSP, compileall, diff-check, patch and directory gitleaks, canonical decision/file hash replay, links, and protected v1/root hashes: PASS;
+- independent review found the component/PREP boundary sound; provenance and independent decision-file hash findings were corrected and follow-up review passed;
+- authority `sha256:3d19c05e552aa61a7f1ff33bc2451d2d0cc13e0d3ee30acde46462bdfa65becf`;
+- decision file `sha256:8b1da7ec4aaa4b652f69ce569ed0df953e8b9e30937368e9b32396baf090f21a`;
+- Market/Simulation/Account `sha256:52b02b86b4fb6ea0b481d1184f68148d8b3d074b93e332ca582cd417072c8fd1`, `sha256:a1f0e4dd163deebf7dd8cf10e199078b6ad1c68bf0467b1f7f449e3423114875`, `sha256:bac4efa7e4874d3ab915ae6d775c3213db29c12c992663e065dc363ac8c78406`;
+- Build `sha256:26048a80c045b8c49ab4f09936ab6ea3ef31acd767d54365caa20c8e457f7f45`.
+
+This acceptance supersedes v1 only as the production Runtime composition authority. It does not modify v1 bytes or upgrade any G12M/provider/live/deployment claim. The next route must still publish exact causal G12I-derived `bar_open@1` bytes, invoke the exact target validator, use the sole facade and accepted durable-proof path, and assess no earlier than G12K Assessment Time.
