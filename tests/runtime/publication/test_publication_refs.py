@@ -1,21 +1,21 @@
 from __future__ import annotations
 
-from dataclasses import FrozenInstanceError
 import json
 import tempfile
+from dataclasses import FrozenInstanceError
 from pathlib import Path
 from typing import Any, get_args
 
-import pytest
-
 import crypto_quant_backtest as backtest_runtime
+import pytest
 from crypto_quant_backtest import (
     BacktestCanonicalPublicationRef,
+    BacktestCanonicalPublicationRefV2,
     RunPublicationRef,
 )
 from crypto_quant_domain import ArtifactRef, canonical_bytes, canonical_sha256
-from tests.runtime.integration._fixtures import completed_journey, mismatch_journey
 
+from tests.runtime.integration._fixtures import completed_journey, mismatch_journey
 
 ROOT = Path(__file__).resolve().parents[3]
 FIXTURE_PATH = ROOT / "tests/fixtures/runtime/bt-gap04-publication-ref-v1.json"
@@ -92,6 +92,7 @@ def test_terminal_run_refs_remain_bare_artifact_refs() -> None:
 def test_run_publication_ref_is_exactly_one_direct_ref_union() -> None:
     assert get_args(RunPublicationRef) == (
         BacktestCanonicalPublicationRef,
+        BacktestCanonicalPublicationRefV2,
         ArtifactRef,
     )
     assert "RunPublicationRef" in backtest_runtime.__all__

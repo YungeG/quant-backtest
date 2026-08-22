@@ -2,14 +2,16 @@
 
 from __future__ import annotations
 
-from contextlib import suppress
-from dataclasses import dataclass
-from enum import Enum
 import hashlib
 import json
 import os
-from pathlib import Path, PurePosixPath
 import re
+import stat
+from contextlib import suppress
+from dataclasses import dataclass
+from enum import Enum
+from pathlib import Path, PurePosixPath
+from typing import TYPE_CHECKING
 
 from crypto_quant_domain import (
     ArtifactEnvelope,
@@ -23,16 +25,22 @@ from crypto_quant_domain import (
 
 from ._publication import (
     RunPublicationLock,
-    canonical_hash as _hash,
-    canonical_text as _text,
     ensure_directory,
     force_remove,
     fsync_directory,
     hide_and_remove,
-    optional_canonical_hash as _optional_hash,
     prepare_read_only_directory,
     verify_read_only,
     write_file,
+)
+from ._publication import (
+    canonical_hash as _hash,
+)
+from ._publication import (
+    canonical_text as _text,
+)
+from ._publication import (
+    optional_canonical_hash as _optional_hash,
 )
 from .engine import ResolvedFinancialState
 from .evidence import (
@@ -47,8 +55,12 @@ from .execution_hash import (
     ExecutionHashMismatch,
     ExecutionResultHasher,
 )
+from .publication_refs import BacktestCanonicalPublicationRefV2
 from .resolution import RequestedResultGrade, ResolvedBacktestRequest
 from .runner import AttemptIdentity, BacktestRunOutcome
+
+if TYPE_CHECKING:
+    from ._durable_rebuild import VerifiedDurableRebuildObservationV1
 
 
 _RUN_PATTERN = re.compile(r"run_[0-9a-f]{64}")
@@ -68,6 +80,7 @@ class IntegrityIssueCode(str, Enum):
     SUMMARY_TRACE = "summary_trace"
     BUNDLE_RETENTION_UNPROVEN = "bundle_retention_unproven"
     DETERMINISTIC_REBUILD_UNPROVEN = "deterministic_rebuild_unproven"
+    DETERMINISTIC_REBUILD_MISMATCH = "deterministic_rebuild_mismatch"
 
 
 class IntegrityTraceLevel(str, Enum):
@@ -699,6 +712,648 @@ class IntegrityEvaluator:
             ),
             deterministic_rebuild_evidence_hash=rebuild.evidence_hash,
         )
+
+
+@dataclass(frozen=True, slots=True)
+class CanonicalAttemptRefV2:
+    attempt: AttemptIdentity
+    consistency_set_hash: str
+    execution_result_hash: str
+    execution_case_semantic_hash: str
+    execution_case_hash: str
+    trace_hash: str
+    trace_level: str
+    market_bundle_manifest_hash: str
+    rebuild_verification_ref: ArtifactRef
+    rebuild_verification_source_hash: str
+    proof_publication_manifest_ref: ArtifactRef
+    proof_publication_manifest_source_hash: str
+    deployment_authorized: bool = False
+
+    def __post_init__(self) -> None:
+        if type(self.attempt) is not AttemptIdentity:
+            raise TypeError("attempt must be exact AttemptIdentity")
+        for name in (
+            "consistency_set_hash",
+            "execution_result_hash",
+            "execution_case_semantic_hash",
+            "execution_case_hash",
+            "trace_hash",
+            "market_bundle_manifest_hash",
+            "rebuild_verification_source_hash",
+            "proof_publication_manifest_source_hash",
+        ):
+            _hash(name, getattr(self, name))
+        if self.trace_level != "full_trace":
+            raise ValueError("trace_level must be full_trace")
+        for name, ref, artifact_type in (
+            (
+                "rebuild_verification_ref",
+                self.rebuild_verification_ref,
+                "deterministic_rebuild_verification",
+            ),
+            (
+                "proof_publication_manifest_ref",
+                self.proof_publication_manifest_ref,
+                "deterministic_rebuild_verification_publication_manifest",
+            ),
+        ):
+            if (
+                type(ref) is not ArtifactRef
+                or ref.artifact_type != artifact_type
+                or ref.schema_version != 1
+            ):
+                raise ValueError(f"{name} must target {artifact_type}@1")
+        if type(self.deployment_authorized) is not bool or self.deployment_authorized:
+            raise ValueError("canonical Attempt ref never authorizes deployment")
+
+    @property
+    def reference_hash(self) -> str:
+        return canonical_sha256(self)
+
+    def to_canonical_dict(self) -> dict[str, object]:
+        return {
+            "type": "canonical_attempt_ref",
+            "schema_version": 2,
+            "attempt": self.attempt,
+            "consistency_set_hash": self.consistency_set_hash,
+            "execution_result_hash": self.execution_result_hash,
+            "execution_case_semantic_hash": self.execution_case_semantic_hash,
+            "execution_case_hash": self.execution_case_hash,
+            "trace_hash": self.trace_hash,
+            "trace_level": self.trace_level,
+            "market_bundle_manifest_hash": self.market_bundle_manifest_hash,
+            "rebuild_verification_ref": self.rebuild_verification_ref,
+            "rebuild_verification_source_hash": (
+                self.rebuild_verification_source_hash
+            ),
+            "proof_publication_manifest_ref": self.proof_publication_manifest_ref,
+            "proof_publication_manifest_source_hash": (
+                self.proof_publication_manifest_source_hash
+            ),
+            "deployment_authorized": self.deployment_authorized,
+        }
+
+
+@dataclass(frozen=True, slots=True)
+class IntegrityEvaluationContextV2:
+    resolved_request: ResolvedBacktestRequest
+    attempts: AttemptConsistencySet
+    execution_hash_check: ExecutionHashCheck
+    observation: VerifiedDurableRebuildObservationV1
+
+    def __post_init__(self) -> None:
+        from ._durable_rebuild import (
+            RebuildComparisonOutcome,
+            VerifiedDurableRebuildObservationV1,
+        )
+
+        if type(self.resolved_request) is not ResolvedBacktestRequest:
+            raise TypeError("resolved_request must be exact ResolvedBacktestRequest")
+        if (
+            self.resolved_request.request.result_grade_requested
+            is not RequestedResultGrade.DECISION_GRADE
+        ):
+            raise ValueError("integrity v2 requires requested decision grade")
+        if type(self.attempts) is not AttemptConsistencySet:
+            raise TypeError("attempts must be exact AttemptConsistencySet")
+        if self.attempts.resolved_request != self.resolved_request:
+            raise ValueError("Attempt set does not bind resolved Request")
+        if type(self.execution_hash_check) is not ExecutionHashCheck:
+            raise TypeError("execution_hash_check must be exact ExecutionHashCheck")
+        if self.execution_hash_check != ExecutionResultHasher.check_same_semantic_run(
+            self.attempts.attempt_hashes
+        ):
+            raise ValueError("execution hash check does not bind Attempt set")
+        if type(self.observation) is not VerifiedDurableRebuildObservationV1:
+            raise TypeError(
+                "observation must be exact VerifiedDurableRebuildObservationV1"
+            )
+        verification = self.observation.verification
+        if verification.semantic_run_id != self.resolved_request.semantic_run_id:
+            raise ValueError("verification semantic run mismatch")
+        if verification.request_hash != canonical_sha256(
+            self.resolved_request.request
+        ):
+            raise ValueError("verification request hash mismatch")
+        if verification.normalized_request_hash != canonical_sha256(
+            self.resolved_request.normalized_request
+        ):
+            raise ValueError("verification normalized request hash mismatch")
+        if verification.resolved_environment_hash != (
+            self.resolved_request.environment.environment_hash
+        ):
+            raise ValueError("verification environment hash mismatch")
+        if verification.build_artifact_manifest_hash != (
+            self.resolved_request.build_artifact_manifest.manifest_hash
+        ):
+            raise ValueError("verification build hash mismatch")
+        if len(self.attempts.attempt_hashes) != 2 or len(verification.attempts) != 2:
+            raise ValueError("integrity v2 requires exactly two Attempts")
+        first = AttemptIdentity.first(self.resolved_request.semantic_run_id)
+        second = AttemptIdentity.retry(first, next_ordinal=2)
+        if tuple(value.attempt for value in verification.attempts) != (first, second):
+            raise ValueError("verification Attempt identities mismatch")
+        hashes = {value.attempt.attempt_id: value for value in self.attempts.attempt_hashes}
+        finalized = {
+            value.attempt.attempt_id: value
+            for value in self.attempts.finalized_attempts
+        }
+        for entry in verification.attempts:
+            attempt_hash = hashes[entry.attempt.attempt_id]
+            evidence = finalized[entry.attempt.attempt_id]
+            expected_manifest_ref = ArtifactRef.from_envelope(
+                ArtifactEnvelope.create("evidence_manifest", 1, evidence.manifest)
+            )
+            expected_engine_ref = ArtifactRef.from_envelope(
+                ArtifactEnvelope.create(
+                    "engine_execution_result", 1, attempt_hash.engine_result
+                )
+            )
+            if (
+                entry.evidence_manifest_ref != expected_manifest_ref
+                or entry.evidence_manifest_hash != evidence.manifest.manifest_hash
+                or entry.evidence_manifest_source_hash
+                != evidence.manifest_source_hash
+                or entry.evidence_publication_hash != evidence.publication_hash
+                or entry.engine_result_ref != expected_engine_ref
+                or entry.execution_case_hash != attempt_hash.engine_result.case_hash
+                or entry.trace_hash != attempt_hash.engine_result.trace.trace_hash
+                or entry.execution_result_hash != attempt_hash.execution_result_hash
+            ):
+                raise ValueError("verification Attempt evidence mismatch")
+        if tuple(value.comparison_id for value in verification.comparisons) != (
+            "attempt_1_vs_attempt_2",
+            "attempt_1_vs_rebuild",
+            "attempt_2_vs_rebuild",
+        ):
+            raise ValueError("verification comparison order mismatch")
+        expected_subjects = (
+            (first.attempt_id, second.attempt_id),
+            (first.attempt_id, "verifier_rebuild"),
+            (second.attempt_id, "verifier_rebuild"),
+        )
+        if tuple(
+            (value.left_subject, value.right_subject)
+            for value in verification.comparisons
+        ) != expected_subjects:
+            raise ValueError("verification comparison subjects mismatch")
+        if self.comparison_outcome == "equal" and any(
+            value.outcome is not RebuildComparisonOutcome.EQUAL
+            for value in verification.comparisons
+        ):
+            raise ValueError("comparison outcome mismatch")
+
+    @property
+    def semantic_run_id(self) -> str:
+        return self.resolved_request.semantic_run_id
+
+    @property
+    def comparison_outcome(self) -> str:
+        from ._durable_rebuild import RebuildComparisonOutcome
+
+        return (
+            "equal"
+            if all(
+                value.outcome is RebuildComparisonOutcome.EQUAL
+                for value in self.observation.verification.comparisons
+            )
+            else "mismatch"
+        )
+
+    @property
+    def context_hash(self) -> str:
+        return canonical_sha256(self)
+
+    def to_canonical_dict(self) -> dict[str, object]:
+        return {
+            "type": "integrity_evaluation_context",
+            "schema_version": 2,
+            "semantic_run_id": self.semantic_run_id,
+            "resolved_request_hash": canonical_sha256(self.resolved_request),
+            "attempt_consistency_set_hash": self.attempts.consistency_set_hash,
+            "execution_hash_check_hash": canonical_sha256(
+                self.execution_hash_check
+            ),
+            "rebuild_verification_ref": self.observation.verification_ref,
+            "proof_publication_manifest_ref": (
+                self.observation.publication_manifest_ref
+            ),
+            "comparison_outcome": self.comparison_outcome,
+        }
+
+
+@dataclass(frozen=True, slots=True)
+class IntegrityReportV2:
+    context: IntegrityEvaluationContextV2
+    result_grade: ResultGrade | None
+    issues: tuple[IntegrityIssue, ...]
+    canonical_attempt_ref: CanonicalAttemptRefV2 | None = None
+    deployment_authorized: bool = False
+
+    def __post_init__(self) -> None:
+        if type(self.context) is not IntegrityEvaluationContextV2:
+            raise TypeError("context must be exact IntegrityEvaluationContextV2")
+        if self.result_grade is not None and type(self.result_grade) is not ResultGrade:
+            raise TypeError("result_grade must be exact ResultGrade or None")
+        if type(self.issues) is not tuple or not all(
+            type(value) is IntegrityIssue for value in self.issues
+        ):
+            raise TypeError("issues must contain exact IntegrityIssue values")
+        expected_order = {
+            IntegrityIssueCode.EXECUTION_HASH_MISMATCH: 0,
+            IntegrityIssueCode.DETERMINISTIC_REBUILD_MISMATCH: 1,
+            IntegrityIssueCode.ENVIRONMENT_LIMITATION: 2,
+        }
+        if any(value.code not in expected_order for value in self.issues):
+            raise ValueError("integrity v2 issue code is unsupported")
+        if tuple(sorted(self.issues, key=lambda value: expected_order[value.code])) != self.issues:
+            raise ValueError("integrity v2 issues are not canonically ordered")
+        if len({value.code for value in self.issues}) != len(self.issues):
+            raise ValueError("integrity v2 issue codes must be unique")
+        if any(
+            value.severity is not IntegrityIssueSeverity.BLOCKING
+            for value in self.issues
+        ):
+            raise ValueError("integrity v2 issues must be blocking")
+        blocking = bool(self.issues)
+        if blocking:
+            if self.result_grade is not None or self.canonical_attempt_ref is not None:
+                raise ValueError("blocking report cannot grade or select an Attempt")
+        elif (
+            self.result_grade is not ResultGrade.DECISION_GRADE
+            or type(self.canonical_attempt_ref) is not CanonicalAttemptRefV2
+        ):
+            raise ValueError(
+                "nonblocking integrity v2 requires decision grade and canonical Attempt"
+            )
+        if (
+            self.canonical_attempt_ref is not None
+            and self.canonical_attempt_ref.attempt.semantic_run_id
+            != self.semantic_run_id
+        ):
+            raise ValueError("canonical Attempt ref semantic run mismatch")
+        if type(self.deployment_authorized) is not bool or self.deployment_authorized:
+            raise ValueError("Integrity never authorizes deployment")
+
+    @property
+    def semantic_run_id(self) -> str:
+        return self.context.semantic_run_id
+
+    @property
+    def requested_grade(self) -> RequestedResultGrade:
+        return RequestedResultGrade.DECISION_GRADE
+
+    @property
+    def blocking_issues(self) -> tuple[IntegrityIssue, ...]:
+        return self.issues
+
+    @property
+    def report_hash(self) -> str:
+        return canonical_sha256(self)
+
+    def to_canonical_dict(self) -> dict[str, object]:
+        return {
+            "type": "integrity_report",
+            "schema_version": 2,
+            "semantic_run_id": self.semantic_run_id,
+            "context": self.context,
+            "context_hash": self.context.context_hash,
+            "requested_grade": self.requested_grade.value,
+            "result_grade": self.result_grade.value if self.result_grade else None,
+            "issues": self.issues,
+            "canonical_attempt_ref_hash": (
+                self.canonical_attempt_ref.reference_hash
+                if self.canonical_attempt_ref is not None
+                else None
+            ),
+            "deployment_authorized": self.deployment_authorized,
+        }
+
+
+@dataclass(frozen=True, slots=True)
+class CompletedBacktestResultV3:
+    context: IntegrityEvaluationContextV2
+    canonical_attempt_ref: CanonicalAttemptRefV2
+    integrity_report: IntegrityReportV2
+    engine_context: EngineExecutionContext
+    deployment_authorized: bool = False
+
+    def __post_init__(self) -> None:
+        if type(self.context) is not IntegrityEvaluationContextV2:
+            raise TypeError("context must be exact IntegrityEvaluationContextV2")
+        if type(self.canonical_attempt_ref) is not CanonicalAttemptRefV2:
+            raise TypeError("canonical_attempt_ref must be exact CanonicalAttemptRefV2")
+        if type(self.integrity_report) is not IntegrityReportV2:
+            raise TypeError("integrity_report must be exact IntegrityReportV2")
+        if self.integrity_report.context != self.context:
+            raise ValueError("Integrity report does not bind Result context")
+        if self.integrity_report.canonical_attempt_ref != self.canonical_attempt_ref:
+            raise ValueError("Integrity report does not bind canonical Attempt ref")
+        if self.integrity_report.result_grade is not ResultGrade.DECISION_GRADE:
+            raise ValueError("completed v3 requires decision grade")
+        if self.canonical_attempt_ref.consistency_set_hash != (
+            self.context.attempts.consistency_set_hash
+        ):
+            raise ValueError("canonical Attempt ref does not bind consistency set")
+        first = self.context.observation.verification.attempts[0]
+        if (
+            self.canonical_attempt_ref.attempt != first.attempt
+            or self.canonical_attempt_ref.attempt.ordinal != 1
+        ):
+            raise ValueError("completed v3 must bind ordinal-1 Attempt")
+        if type(self.engine_context) is not EngineExecutionContext:
+            raise TypeError("engine_context must be exact EngineExecutionContext")
+        if self.engine_context.semantic_run_id != self.semantic_run_id:
+            raise ValueError("engine context semantic run mismatch")
+        if self.engine_context.semantic_spec_hash != (
+            self.canonical_attempt_ref.execution_case_semantic_hash
+        ):
+            raise ValueError("engine context semantic hash mismatch")
+        if self.engine_context.case_hash != self.canonical_attempt_ref.execution_case_hash:
+            raise ValueError("engine context case hash mismatch")
+        if self.engine_context.target_stream_digest != (
+            self.context.observation.verification.target_stream_digest
+        ):
+            raise ValueError("engine context target stream mismatch")
+        if type(self.deployment_authorized) is not bool or self.deployment_authorized:
+            raise ValueError("Completed backtest never authorizes deployment")
+
+    @property
+    def semantic_run_id(self) -> str:
+        return self.context.semantic_run_id
+
+    @property
+    def evidence_manifest_ref(self) -> ArtifactRef:
+        return self.context.observation.verification.attempts[0].evidence_manifest_ref
+
+    @property
+    def result_hash(self) -> str:
+        return canonical_sha256(self)
+
+    def to_canonical_dict(self) -> dict[str, object]:
+        verification = self.context.observation.verification
+        return {
+            "type": "completed_backtest_result",
+            "schema_version": 3,
+            "semantic_run_id": self.semantic_run_id,
+            "outcome": BacktestRunOutcome.COMPLETED.value,
+            "request_hash": verification.request_hash,
+            "resolved_request_hash": canonical_sha256(self.context.resolved_request),
+            "execution_result_hash": self.canonical_attempt_ref.execution_result_hash,
+            "consistency_set_hash": self.canonical_attempt_ref.consistency_set_hash,
+            "attempt_id": self.canonical_attempt_ref.attempt.attempt_id,
+            "evidence_manifest_ref": self.evidence_manifest_ref,
+            "canonical_attempt_ref_hash": self.canonical_attempt_ref.reference_hash,
+            "integrity_report_hash": self.integrity_report.report_hash,
+            "rebuild_verification_ref": self.context.observation.verification_ref,
+            "proof_publication_manifest_ref": (
+                self.context.observation.publication_manifest_ref
+            ),
+            "result_grade": ResultGrade.DECISION_GRADE.value,
+            "engine_execution_context": self.engine_context,
+            "deployment_authorized": self.deployment_authorized,
+        }
+
+
+@dataclass(frozen=True, slots=True)
+class IntegrityEvaluationRecordV2:
+    report: IntegrityReportV2
+    outcome: BacktestRunOutcome
+    deployment_authorized: bool = False
+
+    def __post_init__(self) -> None:
+        if type(self.report) is not IntegrityReportV2:
+            raise TypeError("report must be exact IntegrityReportV2")
+        if not self.report.issues:
+            raise ValueError("Integrity evaluation requires blocking issues")
+        mismatch_codes = {
+            IntegrityIssueCode.EXECUTION_HASH_MISMATCH,
+            IntegrityIssueCode.DETERMINISTIC_REBUILD_MISMATCH,
+        }
+        expected = (
+            BacktestRunOutcome.FAILED
+            if any(value.code in mismatch_codes for value in self.report.issues)
+            else BacktestRunOutcome.BLOCKED
+        )
+        if self.outcome is not expected:
+            raise ValueError("evaluation outcome does not match Integrity issues")
+        if type(self.deployment_authorized) is not bool or self.deployment_authorized:
+            raise ValueError("Integrity evaluation never authorizes deployment")
+
+    @property
+    def evaluation_id(self) -> str:
+        digest = canonical_sha256(
+            {
+                "type": "integrity_evaluation_identity_v2",
+                "semantic_run_id": self.report.semantic_run_id,
+                "integrity_report_hash": self.report.report_hash,
+                "outcome": self.outcome.value,
+            }
+        )
+        return f"evaluation_{digest.removeprefix('sha256:')}"
+
+    @property
+    def record_hash(self) -> str:
+        return canonical_sha256(self)
+
+    def to_canonical_dict(self) -> dict[str, object]:
+        return {
+            "type": "integrity_evaluation_record",
+            "schema_version": 2,
+            "evaluation_id": self.evaluation_id,
+            "semantic_run_id": self.report.semantic_run_id,
+            "outcome": self.outcome.value,
+            "integrity_report_hash": self.report.report_hash,
+            "deployment_authorized": self.deployment_authorized,
+        }
+
+
+@dataclass(frozen=True, slots=True)
+class _PublicationArtifactEntryV2:
+    relative_path: str
+    artifact_type: str
+    schema_version: int
+    content_hash: str
+    source_hash: str
+    byte_count: int
+
+    def __post_init__(self) -> None:
+        _text("relative_path", self.relative_path)
+        path = PurePosixPath(self.relative_path)
+        if path.is_absolute() or len(path.parts) != 1:
+            raise ValueError("publication artifact path must be a file name")
+        CanonicalSchema(self.artifact_type, self.schema_version)
+        _hash("content_hash", self.content_hash)
+        _hash("source_hash", self.source_hash)
+        if type(self.byte_count) is not int or self.byte_count <= 0:
+            raise ValueError("byte_count must be positive integer")
+
+    def to_canonical_dict(self) -> dict[str, object]:
+        return {
+            "relative_path": self.relative_path,
+            "artifact_type": self.artifact_type,
+            "schema_version": self.schema_version,
+            "content_hash": self.content_hash,
+            "source_hash": self.source_hash,
+            "byte_count": self.byte_count,
+        }
+
+
+@dataclass(frozen=True, slots=True)
+class CanonicalPublicationManifestV2:
+    semantic_run_id: str
+    publication_kind: str
+    publication_id: str
+    artifacts: tuple[_PublicationArtifactEntryV2, ...]
+    deployment_authorized: bool = False
+
+    def __post_init__(self) -> None:
+        if type(self.semantic_run_id) is not str or _RUN_PATTERN.fullmatch(
+            self.semantic_run_id
+        ) is None:
+            raise ValueError("semantic_run_id must use run_sha256 schema")
+        expected_kind = {
+            "canonical": "canonical-v3",
+            "integrity_evaluation": self.publication_id,
+        }
+        if self.publication_kind not in expected_kind:
+            raise ValueError("unsupported publication_kind")
+        _text("publication_id", self.publication_id)
+        if self.publication_kind == "canonical":
+            if self.publication_id != "canonical-v3":
+                raise ValueError("canonical manifest publication_id must be canonical-v3")
+            expected = {
+                "canonical-attempt-ref.json": ("canonical_attempt_ref", 2),
+                "integrity.json": ("integrity_report", 2),
+                "proof-publication-manifest.json": (
+                    "deterministic_rebuild_verification_publication_manifest",
+                    1,
+                ),
+                "rebuild-verification.json": (
+                    "deterministic_rebuild_verification",
+                    1,
+                ),
+                "result.json": ("completed_backtest_result", 3),
+            }
+        else:
+            if not self.publication_id.startswith("evaluation_"):
+                raise ValueError("evaluation publication_id is invalid")
+            expected = {
+                "evaluation-outcome.json": ("integrity_evaluation_record", 2),
+                "integrity.json": ("integrity_report", 2),
+                "proof-publication-manifest.json": (
+                    "deterministic_rebuild_verification_publication_manifest",
+                    1,
+                ),
+                "rebuild-verification.json": (
+                    "deterministic_rebuild_verification",
+                    1,
+                ),
+            }
+        if type(self.artifacts) is not tuple or not all(
+            type(value) is _PublicationArtifactEntryV2 for value in self.artifacts
+        ):
+            raise TypeError("artifacts must contain exact publication entries")
+        ordered = tuple(sorted(self.artifacts, key=lambda value: value.relative_path))
+        if ordered != self.artifacts or len({value.relative_path for value in ordered}) != len(ordered):
+            raise ValueError("publication artifact entries must be unique and sorted")
+        actual = {
+            value.relative_path: (value.artifact_type, value.schema_version)
+            for value in ordered
+        }
+        if actual != expected:
+            raise ValueError("publication manifest does not exact-cover files")
+        if type(self.deployment_authorized) is not bool or self.deployment_authorized:
+            raise ValueError("publication manifest never authorizes deployment")
+
+    @property
+    def manifest_hash(self) -> str:
+        return canonical_sha256(self)
+
+    def to_canonical_dict(self) -> dict[str, object]:
+        return {
+            "type": "canonical_publication_manifest",
+            "schema_version": 2,
+            "semantic_run_id": self.semantic_run_id,
+            "publication_kind": self.publication_kind,
+            "publication_id": self.publication_id,
+            "artifacts": self.artifacts,
+            "deployment_authorized": self.deployment_authorized,
+        }
+
+
+def _evaluate_integrity_v2(
+    context: IntegrityEvaluationContextV2,
+) -> IntegrityReportV2:
+    from ._durable_rebuild import RebuildComparisonOutcome
+
+    verification = context.observation.verification
+    issues: list[IntegrityIssue] = []
+    if verification.comparisons[0].outcome is RebuildComparisonOutcome.MISMATCH:
+        issues.append(
+            IntegrityIssue(
+                IntegrityIssueCode.EXECUTION_HASH_MISMATCH,
+                IntegrityIssueSeverity.BLOCKING,
+                (
+                    verification.attempts[0].attempt.attempt_id,
+                    verification.attempts[1].attempt.attempt_id,
+                ),
+                (context.observation.verification_ref.content_hash,),
+            )
+        )
+    rebuild_mismatches = tuple(
+        value.comparison_id
+        for value in verification.comparisons[1:]
+        if value.outcome is RebuildComparisonOutcome.MISMATCH
+    )
+    if rebuild_mismatches:
+        issues.append(
+            IntegrityIssue(
+                IntegrityIssueCode.DETERMINISTIC_REBUILD_MISMATCH,
+                IntegrityIssueSeverity.BLOCKING,
+                rebuild_mismatches,
+                (context.observation.verification_ref.content_hash,),
+            )
+        )
+    if not issues and context.resolved_request.environment.limitations:
+        issues.append(
+            IntegrityIssue(
+                IntegrityIssueCode.ENVIRONMENT_LIMITATION,
+                IntegrityIssueSeverity.BLOCKING,
+                context.resolved_request.environment.limitations,
+                (context.resolved_request.environment.environment_hash,),
+            )
+        )
+    if issues:
+        return IntegrityReportV2(context, None, tuple(issues))
+    first = verification.attempts[0]
+    reference = CanonicalAttemptRefV2(
+        attempt=first.attempt,
+        consistency_set_hash=context.attempts.consistency_set_hash,
+        execution_result_hash=first.execution_result_hash,
+        execution_case_semantic_hash=verification.semantic_spec_hash,
+        execution_case_hash=first.execution_case_hash,
+        trace_hash=first.trace_hash,
+        trace_level="full_trace",
+        market_bundle_manifest_hash=verification.market_bundle_ref.manifest_hash,
+        rebuild_verification_ref=context.observation.verification_ref,
+        rebuild_verification_source_hash=(
+            context.observation.verification_source_hash
+        ),
+        proof_publication_manifest_ref=(
+            context.observation.publication_manifest_ref
+        ),
+        proof_publication_manifest_source_hash=(
+            context.observation.publication_manifest_source_hash
+        ),
+    )
+    return IntegrityReportV2(
+        context,
+        ResultGrade.DECISION_GRADE,
+        (),
+        reference,
+    )
 
 
 class CanonicalPublicationFailureCode(str, Enum):
@@ -1446,6 +2101,21 @@ class _PublishedDirectory:
     relative_directory: str
 
 
+@dataclass(frozen=True, slots=True)
+class _PublishedDirectoryV2:
+    manifest: CanonicalPublicationManifestV2
+    publication_ref: BacktestCanonicalPublicationRefV2 | ArtifactRef
+    relative_directory: str
+
+
+@dataclass(frozen=True, slots=True)
+class _PublicationPlanV2:
+    relative_path: str
+    artifact_type: str
+    schema_version: int
+    source_bytes: bytes
+
+
 _PUBLICATION_CATALOG = SchemaCatalog(
     (
         *(
@@ -1577,6 +2247,414 @@ class CanonicalResultPublisher:
                     error,
                 )
             )
+
+    def publish_v3_locked(
+        self,
+        *,
+        lock: RunPublicationLock,
+        resolved_request: ResolvedBacktestRequest,
+        attempts: AttemptConsistencySet,
+        observation: VerifiedDurableRebuildObservationV1,
+        engine_context: EngineExecutionContext,
+    ) -> _PublishedDirectoryV2:
+        from ._durable_rebuild import (
+            DurableRebuildError,
+            DurableRebuildFailureCode,
+            VerifiedDurableRebuildObservationV1,
+        )
+
+        subject = f"runs/{resolved_request.semantic_run_id}"
+        try:
+            if type(attempts) is not AttemptConsistencySet:
+                raise TypeError("attempts must be exact AttemptConsistencySet")
+            if type(observation) is not VerifiedDurableRebuildObservationV1:
+                raise TypeError("observation must be exact verified durable observation")
+            context = IntegrityEvaluationContextV2(
+                resolved_request,
+                attempts,
+                ExecutionResultHasher.check_same_semantic_run(
+                    attempts.attempt_hashes
+                ),
+                observation,
+            )
+            report = _evaluate_integrity_v2(context)
+            proof_plans = (
+                _PublicationPlanV2(
+                    "rebuild-verification.json",
+                    "deterministic_rebuild_verification",
+                    1,
+                    observation.verification_source_bytes,
+                ),
+                _PublicationPlanV2(
+                    "proof-publication-manifest.json",
+                    "deterministic_rebuild_verification_publication_manifest",
+                    1,
+                    observation.publication_manifest_source_bytes,
+                ),
+            )
+            if not report.issues:
+                reference = report.canonical_attempt_ref
+                if type(reference) is not CanonicalAttemptRefV2:
+                    raise ValueError("completed Integrity report is missing canonical Attempt")
+                result = CompletedBacktestResultV3(
+                    context,
+                    reference,
+                    report,
+                    engine_context,
+                )
+                plans = (
+                    *proof_plans,
+                    self._v2_plan(
+                        "canonical-attempt-ref.json",
+                        "canonical_attempt_ref",
+                        2,
+                        reference,
+                    ),
+                    self._v2_plan(
+                        "integrity.json", "integrity_report", 2, report
+                    ),
+                    self._v2_plan(
+                        "result.json", "completed_backtest_result", 3, result
+                    ),
+                )
+                return self._publish_directory_v2(
+                    lock=lock,
+                    semantic_run_id=resolved_request.semantic_run_id,
+                    publication_kind="canonical",
+                    publication_id="canonical-v3",
+                    relative_directory=(
+                        f"runs/{resolved_request.semantic_run_id}/canonical-v3"
+                    ),
+                    plans=plans,
+                )
+            outcome = (
+                BacktestRunOutcome.FAILED
+                if any(
+                    value.code
+                    in {
+                        IntegrityIssueCode.EXECUTION_HASH_MISMATCH,
+                        IntegrityIssueCode.DETERMINISTIC_REBUILD_MISMATCH,
+                    }
+                    for value in report.issues
+                )
+                else BacktestRunOutcome.BLOCKED
+            )
+            record = IntegrityEvaluationRecordV2(report, outcome)
+            return self._publish_directory_v2(
+                lock=lock,
+                semantic_run_id=resolved_request.semantic_run_id,
+                publication_kind="integrity_evaluation",
+                publication_id=record.evaluation_id,
+                relative_directory=(
+                    f"runs/{resolved_request.semantic_run_id}/"
+                    f"integrity-evaluations-v2/{record.evaluation_id}"
+                ),
+                plans=(
+                    *proof_plans,
+                    self._v2_plan(
+                        "integrity.json", "integrity_report", 2, report
+                    ),
+                    self._v2_plan(
+                        "evaluation-outcome.json",
+                        "integrity_evaluation_record",
+                        2,
+                        record,
+                    ),
+                ),
+            )
+        except DurableRebuildError:
+            raise
+        except Exception:  # noqa: BLE001 - fail-closed redaction boundary
+            raise DurableRebuildError(
+                DurableRebuildFailureCode.PROOF_CONSTRUCTION_FAILED,
+                subject,
+            ) from None
+
+    @staticmethod
+    def _v2_plan(
+        relative_path: str,
+        artifact_type: str,
+        schema_version: int,
+        payload: object,
+    ) -> _PublicationPlanV2:
+        return _PublicationPlanV2(
+            relative_path,
+            artifact_type,
+            schema_version,
+            canonical_bytes(
+                ArtifactEnvelope.create(artifact_type, schema_version, payload)
+            ),
+        )
+
+    def _publish_directory_v2(
+        self,
+        *,
+        lock: RunPublicationLock,
+        semantic_run_id: str,
+        publication_kind: str,
+        publication_id: str,
+        relative_directory: str,
+        plans: tuple[_PublicationPlanV2, ...],
+    ) -> _PublishedDirectoryV2:
+        from ._durable_rebuild import DurableRebuildError
+
+        final = self._root / relative_directory
+        staging = final.with_name(f".{final.name}.staging")
+        parent_relative = str(PurePosixPath(relative_directory).parent)
+        staging_relative = str(
+            PurePosixPath(relative_directory).with_name(staging.name)
+        )
+        self._require_v2_lock(lock, semantic_run_id)
+        entries: list[_PublicationArtifactEntryV2] = []
+        sources: dict[str, bytes] = {}
+        for plan in plans:
+            try:
+                decoded = json.loads(plan.source_bytes)
+                envelope = ArtifactEnvelope(**decoded)
+            except (UnicodeDecodeError, json.JSONDecodeError, TypeError, ValueError):
+                raise DurableRebuildError(
+                    CanonicalPublicationFailureCode.PUBLICATION_VERIFICATION_FAILED,
+                    relative_directory,
+                ) from None
+            if (
+                plan.source_bytes != canonical_bytes(envelope)
+                or envelope.artifact_type != plan.artifact_type
+                or envelope.schema_version != plan.schema_version
+            ):
+                raise DurableRebuildError(
+                    CanonicalPublicationFailureCode.PUBLICATION_VERIFICATION_FAILED,
+                    relative_directory,
+                )
+            source_hash = f"sha256:{hashlib.sha256(plan.source_bytes).hexdigest()}"
+            entries.append(
+                _PublicationArtifactEntryV2(
+                    plan.relative_path,
+                    plan.artifact_type,
+                    plan.schema_version,
+                    envelope.content_hash,
+                    source_hash,
+                    len(plan.source_bytes),
+                )
+            )
+            sources[plan.relative_path] = plan.source_bytes
+        manifest = CanonicalPublicationManifestV2(
+            semantic_run_id,
+            publication_kind,
+            publication_id,
+            tuple(sorted(entries, key=lambda value: value.relative_path)),
+        )
+        manifest_source = canonical_bytes(
+            ArtifactEnvelope.create(
+                "canonical_publication_manifest", 2, manifest
+            )
+        )
+        sources["publication-manifest.json"] = manifest_source
+        manifest_ref = ArtifactRef.from_envelope(
+            ArtifactEnvelope(**json.loads(manifest_source))
+        )
+        publication_ref: BacktestCanonicalPublicationRefV2 | ArtifactRef = (
+            BacktestCanonicalPublicationRefV2.from_artifact_ref(manifest_ref)
+            if publication_kind == "canonical"
+            else manifest_ref
+        )
+        created_staging = False
+        try:
+            try:
+                self._prepare_v2_parent(lock, semantic_run_id, final.parent)
+            except DurableRebuildError:
+                raise
+            except Exception:  # noqa: BLE001 - fail-closed redaction boundary
+                raise DurableRebuildError(
+                    CanonicalPublicationFailureCode.STAGING_PREPARE_FAILED,
+                    parent_relative,
+                ) from None
+            if os.path.lexists(staging):
+                raise DurableRebuildError(
+                    CanonicalPublicationFailureCode.STAGING_EXISTS,
+                    staging_relative,
+                )
+            if os.path.lexists(final):
+                try:
+                    self._verify_v2_directory(final, sources, require_read_only=True)
+                except Exception:  # noqa: BLE001 - fail-closed redaction boundary
+                    raise DurableRebuildError(
+                        CanonicalPublicationFailureCode.PUBLICATION_VERIFICATION_FAILED,
+                        relative_directory,
+                    ) from None
+                try:
+                    self._fsync_directory(final)
+                    self._fsync_directory(final.parent)
+                except Exception:  # noqa: BLE001 - fail-closed redaction boundary
+                    raise DurableRebuildError(
+                        CanonicalPublicationFailureCode.ATOMIC_FINALIZE_FAILED,
+                        relative_directory,
+                    ) from None
+                return _PublishedDirectoryV2(
+                    manifest, publication_ref, relative_directory
+                )
+            try:
+                staging.mkdir(mode=0o755, exist_ok=False)
+                created_staging = True
+                self._fsync_directory(final.parent)
+            except Exception:  # noqa: BLE001 - fail-closed redaction boundary
+                raise DurableRebuildError(
+                    CanonicalPublicationFailureCode.STAGING_PREPARE_FAILED,
+                    staging_relative,
+                ) from None
+            for path, source in sources.items():
+                code = (
+                    CanonicalPublicationFailureCode.MANIFEST_WRITE_FAILED
+                    if path == "publication-manifest.json"
+                    else CanonicalPublicationFailureCode.ARTIFACT_WRITE_FAILED
+                )
+                try:
+                    self._write_file(staging / path, source)
+                except Exception:  # noqa: BLE001 - fail-closed redaction boundary
+                    raise DurableRebuildError(
+                        code, f"{staging_relative}/{path}"
+                    ) from None
+            try:
+                self._verify_v2_directory(
+                    staging, sources, require_read_only=False
+                )
+            except Exception:  # noqa: BLE001 - fail-closed redaction boundary
+                raise DurableRebuildError(
+                    CanonicalPublicationFailureCode.PUBLICATION_VERIFICATION_FAILED,
+                    staging_relative,
+                ) from None
+            try:
+                self._prepare_read_only_directory(staging)
+                self._verify_v2_exact_modes(staging)
+            except Exception:  # noqa: BLE001 - fail-closed redaction boundary
+                raise DurableRebuildError(
+                    CanonicalPublicationFailureCode.IMMUTABILITY_FAILED,
+                    staging_relative,
+                ) from None
+            if os.path.lexists(final):
+                created_staging = False
+                raise DurableRebuildError(
+                    CanonicalPublicationFailureCode.FINAL_DESTINATION_EXISTS,
+                    relative_directory,
+                )
+            try:
+                os.rename(staging, final)
+                created_staging = False
+            except Exception:  # noqa: BLE001 - fail-closed redaction boundary
+                raise DurableRebuildError(
+                    CanonicalPublicationFailureCode.ATOMIC_FINALIZE_FAILED,
+                    relative_directory,
+                ) from None
+            try:
+                self._verify_v2_directory(final, sources, require_read_only=True)
+            except Exception:  # noqa: BLE001 - fail-closed redaction boundary
+                raise DurableRebuildError(
+                    CanonicalPublicationFailureCode.PUBLICATION_VERIFICATION_FAILED,
+                    relative_directory,
+                ) from None
+            try:
+                self._fsync_directory(final)
+                self._fsync_directory(final.parent)
+            except Exception:  # noqa: BLE001 - fail-closed redaction boundary
+                raise DurableRebuildError(
+                    CanonicalPublicationFailureCode.ATOMIC_FINALIZE_FAILED,
+                    relative_directory,
+                ) from None
+            try:
+                self._verify_v2_directory(final, sources, require_read_only=True)
+            except Exception:  # noqa: BLE001 - fail-closed redaction boundary
+                raise DurableRebuildError(
+                    CanonicalPublicationFailureCode.PUBLICATION_VERIFICATION_FAILED,
+                    relative_directory,
+                ) from None
+            return _PublishedDirectoryV2(
+                manifest, publication_ref, relative_directory
+            )
+        except DurableRebuildError:
+            if created_staging and os.path.lexists(staging):
+                try:
+                    self._force_remove(staging)
+                    self._fsync_directory(final.parent)
+                except Exception:  # noqa: BLE001,S110 - best-effort scoped cleanup
+                    pass
+            raise
+
+    def _prepare_v2_parent(
+        self,
+        lock: RunPublicationLock,
+        semantic_run_id: str,
+        parent: Path,
+    ) -> None:
+        self._require_v2_lock(lock, semantic_run_id)
+        run = self._root / "runs" / semantic_run_id
+        self._require_v2_directory(run)
+        ensure_directory(parent)
+        self._require_v2_directory(parent)
+
+    def _require_v2_lock(
+        self, lock: RunPublicationLock, semantic_run_id: str
+    ) -> None:
+        from ._durable_rebuild import DurableRebuildError
+
+        run = self._root / "runs" / semantic_run_id
+        if (
+            type(lock) is not RunPublicationLock
+            or lock._held is not True
+            or lock.run_directory != run
+            or lock.path != run / ".publication.lock"
+            or not os.path.lexists(lock.path)
+        ):
+            raise DurableRebuildError(
+                CanonicalPublicationFailureCode.RUN_LOCK_UNAVAILABLE,
+                f"runs/{semantic_run_id}/.publication.lock",
+            )
+        info = lock.path.lstat()
+        if lock.path.is_symlink() or not stat.S_ISREG(info.st_mode):
+            raise DurableRebuildError(
+                CanonicalPublicationFailureCode.RUN_LOCK_UNAVAILABLE,
+                f"runs/{semantic_run_id}/.publication.lock",
+            )
+
+    @staticmethod
+    def _require_v2_directory(directory: Path) -> None:
+        info = directory.lstat()
+        if directory.is_symlink() or not stat.S_ISDIR(info.st_mode):
+            raise ValueError("publication parent must be an exact directory")
+
+    @staticmethod
+    def _verify_v2_directory(
+        directory: Path,
+        sources: dict[str, bytes],
+        *,
+        require_read_only: bool,
+    ) -> None:
+        CanonicalResultPublisher._require_v2_directory(directory)
+        children = {child.name: child for child in directory.iterdir()}
+        if set(children) != set(sources):
+            raise ValueError("publication directory coverage mismatch")
+        for name, expected in sources.items():
+            child = children[name]
+            info = child.lstat()
+            if child.is_symlink() or not stat.S_ISREG(info.st_mode):
+                raise ValueError("publication artifact must be a regular file")
+            source = child.read_bytes()
+            if source != expected:
+                raise ValueError("publication artifact bytes mismatch")
+            envelope = ArtifactEnvelope(**json.loads(source))
+            if source != canonical_bytes(envelope):
+                raise ValueError("publication artifact is not canonical")
+        if require_read_only:
+            verify_read_only(directory)
+            CanonicalResultPublisher._verify_v2_exact_modes(directory)
+
+    @staticmethod
+    def _verify_v2_exact_modes(directory: Path) -> None:
+        if stat.S_IMODE(directory.stat().st_mode) != 0o555:
+            raise PermissionError("publication directory mode must be 0555")
+        if any(
+            stat.S_IMODE(path.stat().st_mode) != 0o444
+            for path in directory.iterdir()
+        ):
+            raise PermissionError("publication artifact mode must be 0444")
 
     def _publish_locked(
         self,
@@ -2152,26 +3230,32 @@ class CanonicalResultPublisher:
 __all__ = [
     "AttemptConsistencySet",
     "CanonicalAttemptRef",
+    "CanonicalAttemptRefV2",
     "CanonicalPublicationFailure",
     "CanonicalPublicationFailureCode",
     "CanonicalPublicationManifest",
+    "CanonicalPublicationManifestV2",
     "CanonicalPublicationOutcome",
     "CanonicalPublicationOutcomeV2",
     "CanonicalResultPublisher",
     "CompletedBacktestResult",
     "CompletedBacktestResultV2",
+    "CompletedBacktestResultV3",
     "DeterministicRebuildEvidence",
     "EngineExecutionContext",
     "FinalizedCanonicalResult",
     "FinalizedCanonicalResultV2",
     "FinalizedIntegrityEvaluation",
     "IntegrityEvaluationContext",
+    "IntegrityEvaluationContextV2",
     "IntegrityEvaluationRecord",
+    "IntegrityEvaluationRecordV2",
     "IntegrityEvaluator",
     "IntegrityIssue",
     "IntegrityIssueCode",
     "IntegrityIssueSeverity",
     "IntegrityReport",
+    "IntegrityReportV2",
     "IntegrityTraceLevel",
     "ResultGrade",
 ]

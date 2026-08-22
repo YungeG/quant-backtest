@@ -1,17 +1,17 @@
 from __future__ import annotations
 
+import json
 from dataclasses import dataclass
 from hashlib import sha256
 from inspect import Parameter, signature
-import json
 from pathlib import Path
 from typing import get_args, get_type_hints
 
-import pytest
-
 import crypto_quant_backtest
+import pytest
 from crypto_quant_backtest import (
     BacktestCanonicalPublicationRef,
+    BacktestCanonicalPublicationRefV2,
     BacktestExecutionRequest,
     BacktestProfileRegistry,
     BacktestRuntime,
@@ -24,6 +24,7 @@ from crypto_quant_domain import (
     canonical_bytes,
     canonical_sha256,
 )
+
 from tests.runtime.evidence._fixtures import attempt_record
 from tests.runtime.resolution._fixtures import profile_registry
 from tests.runtime.runner._fixtures import resolved_request_and_case
@@ -180,6 +181,7 @@ def test_public_facade_hides_orchestration_and_returns_only_direct_refs() -> Non
     assert [value.name for value in run_parameters] == ["self", "request"]
     assert get_args(get_type_hints(BacktestRuntime.run)["return"]) == (
         BacktestCanonicalPublicationRef,
+        BacktestCanonicalPublicationRefV2,
         ArtifactRef,
     )
     assert {

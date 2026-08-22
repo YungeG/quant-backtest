@@ -9,6 +9,7 @@ from crypto_quant_backtest import (
     BacktestAnalysisRuntime,
     VerifiedCompletedPublication,
     VerifiedCompletedPublicationV2,
+    VerifiedCompletedPublicationV3,
 )
 
 _ROOT = Path(__file__).resolve().parents[3]
@@ -91,6 +92,7 @@ def test_verified_publication_module_owns_one_minimal_completed_view() -> None:
     assert public_classes == {
         "VerifiedCompletedPublication",
         "VerifiedCompletedPublicationV2",
+        "VerifiedCompletedPublicationV3",
         "VerifiedExecutionSummary",
         "VerifiedTerminalPublication",
         "TerminalStatus",
@@ -108,6 +110,17 @@ def test_verified_publication_module_owns_one_minimal_completed_view() -> None:
         "reporting_currency",
         "engine_context",
         "execution_summary",
+    ]
+    assert list(signature(VerifiedCompletedPublicationV3).parameters) == [
+        "source_publication_ref",
+        "semantic_run_id",
+        "source_execution_result_hash",
+        "result_grade",
+        "reporting_currency",
+        "engine_context",
+        "execution_summary",
+        "rebuild_verification_ref",
+        "proof_publication_manifest_ref",
     ]
 
     source = _VERIFIED.read_text(encoding="utf-8")

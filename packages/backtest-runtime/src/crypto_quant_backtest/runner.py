@@ -2,22 +2,28 @@
 
 from __future__ import annotations
 
+import hashlib
+import json
+import os
+import re
+import stat
+import unicodedata
 from abc import abstractmethod
 from collections.abc import Mapping
 from dataclasses import dataclass
 from enum import Enum
-import hashlib
-import json
-import os
 from pathlib import Path
-import re
 from typing import Protocol
-import unicodedata
 
-from crypto_quant_domain import ArtifactEnvelope, canonical_bytes, canonical_sha256
+from crypto_quant_domain import (
+    ArtifactEnvelope,
+    ArtifactRef,
+    canonical_bytes,
+    canonical_sha256,
+)
 from crypto_quant_market_data import InputValidationFailure
 
-from ._publication import RunPublicationLock, verify_read_only
+from ._publication import RunPublicationLock, fsync_directory, verify_read_only
 from .composition import (
     ExecutionCaseComposer,
     _execution_case_semantic_spec_from_case_v3,
@@ -33,8 +39,8 @@ from .engine import (
     ResolvedExecutionCase,
 )
 from .multi_resolution_preparation import MultiResolutionMarketDataPreparation
+from .publication_refs import BacktestCanonicalPublicationRefV2
 from .resolution import ResolvedBacktestRequest, StrategyFamily
-
 
 _HASH_PATTERN = re.compile(r"sha256:[0-9a-f]{64}")
 _RUN_PATTERN = re.compile(r"run_[0-9a-f]{64}")
@@ -653,6 +659,286 @@ def _read_canonical_cache_hit_v2(
         publication_id="canonical-v2",
         result_schema_version=2,
         expected_engine_context=expected_engine_context,
+    )
+
+
+@dataclass(frozen=True, slots=True)
+class _CanonicalResultCacheHitV3:
+    publication_ref: BacktestCanonicalPublicationRefV2
+    semantic_run_id: str
+    execution_result_hash: str
+    verification_ref: ArtifactRef
+    verification_source_hash: str
+    proof_manifest_ref: ArtifactRef
+    proof_manifest_source_hash: str
+    verification_source_bytes: bytes
+    proof_manifest_source_bytes: bytes
+
+
+def _read_canonical_cache_hit_v3(
+    *,
+    root: Path,
+    resolved_request: ResolvedBacktestRequest,
+    execution_input_source_hash: str,
+    market_bundle_publication_source_hash: str,
+    market_bundle_retention_source_hash: str,
+) -> _CanonicalResultCacheHitV3:
+    from ._durable_rebuild import (
+        _ARTIFACT_CATALOG,
+        DeterministicRebuildVerificationPublicationManifestV1,
+        DeterministicRebuildVerificationV1,
+        RebuildComparisonOutcome,
+        _validate_manifest_binding,
+    )
+
+    semantic_run_id = resolved_request.semantic_run_id
+    directory = root / "runs" / semantic_run_id / "canonical-v3"
+    if not directory.is_dir():
+        raise ValueError("canonical-v3 publication is not a directory")
+    verify_read_only(directory)
+    if stat.S_IMODE(directory.stat().st_mode) != 0o555:
+        raise ValueError("canonical-v3 directory mode mismatch")
+    expected = {
+        "canonical-attempt-ref.json": ("canonical_attempt_ref", 2),
+        "integrity.json": ("integrity_report", 2),
+        "proof-publication-manifest.json": (
+            "deterministic_rebuild_verification_publication_manifest",
+            1,
+        ),
+        "rebuild-verification.json": ("deterministic_rebuild_verification", 1),
+        "result.json": ("completed_backtest_result", 3),
+        "publication-manifest.json": ("canonical_publication_manifest", 2),
+    }
+    children = {path.name: path for path in directory.iterdir()}
+    if set(children) != set(expected):
+        raise ValueError("canonical-v3 publication file coverage mismatch")
+    if any(
+        path.is_symlink()
+        or not path.is_file()
+        or stat.S_IMODE(path.stat().st_mode) != 0o444
+        for path in children.values()
+    ):
+        raise ValueError("canonical-v3 publication mode mismatch")
+    artifacts = {
+        name: _read_canonical_artifact(children[name], artifact_type)
+        for name, (artifact_type, _) in expected.items()
+    }
+    for name, (_, version) in expected.items():
+        if artifacts[name][1].schema_version != version:
+            raise ValueError("canonical-v3 artifact version mismatch")
+    manifest, manifest_envelope, _manifest_source_hash = artifacts[
+        "publication-manifest.json"
+    ]
+    manifest_keys = {
+        "type",
+        "schema_version",
+        "semantic_run_id",
+        "publication_kind",
+        "publication_id",
+        "artifacts",
+        "deployment_authorized",
+    }
+    if (
+        set(manifest) != manifest_keys
+        or manifest["type"] != "canonical_publication_manifest"
+        or manifest["schema_version"] != 2
+        or manifest["semantic_run_id"] != semantic_run_id
+        or manifest["publication_kind"] != "canonical"
+        or manifest["publication_id"] != "canonical-v3"
+        or manifest["deployment_authorized"] is not False
+    ):
+        raise ValueError("canonical-v3 manifest identity mismatch")
+    entries_value = manifest["artifacts"]
+    if not isinstance(entries_value, tuple):
+        raise TypeError("canonical-v3 manifest artifacts must be tuple")
+    entries = tuple(dict(value) for value in entries_value if isinstance(value, Mapping))
+    if len(entries) != len(entries_value):
+        raise ValueError("canonical-v3 manifest entry mismatch")
+    by_path = {value.get("relative_path"): value for value in entries}
+    child_names = set(expected) - {"publication-manifest.json"}
+    if set(by_path) != child_names or len(by_path) != len(entries):
+        raise ValueError("canonical-v3 manifest coverage mismatch")
+    entry_keys = {
+        "relative_path",
+        "artifact_type",
+        "schema_version",
+        "content_hash",
+        "source_hash",
+        "byte_count",
+    }
+    for name in child_names:
+        entry = by_path[name]
+        _, envelope, source_hash = artifacts[name]
+        artifact_type, version = expected[name]
+        if (
+            set(entry) != entry_keys
+            or entry["artifact_type"] != artifact_type
+            or entry["schema_version"] != version
+            or entry["content_hash"] != envelope.content_hash
+            or entry["source_hash"] != source_hash
+            or entry["byte_count"] != len(children[name].read_bytes())
+        ):
+            raise ValueError("canonical-v3 manifest child mismatch")
+
+    verification_source = children["rebuild-verification.json"].read_bytes()
+    proof_source = children["proof-publication-manifest.json"].read_bytes()
+    verification_read = _ARTIFACT_CATALOG.read(verification_source)
+    proof_read = _ARTIFACT_CATALOG.read(proof_source)
+    if (
+        type(verification_read.artifact) is not DeterministicRebuildVerificationV1
+        or type(proof_read.artifact)
+        is not DeterministicRebuildVerificationPublicationManifestV1
+    ):
+        raise ValueError("canonical-v3 proof decoder mismatch")
+    verification_ref = ArtifactRef.from_envelope(verification_read.envelope)
+    proof_ref = ArtifactRef.from_envelope(proof_read.envelope)
+    _validate_manifest_binding(
+        verification_read.artifact,
+        verification_ref,
+        verification_source,
+        verification_read.source_hash,
+        proof_read.artifact,
+    )
+    verification = verification_read.artifact
+    if (
+        verification.semantic_run_id != semantic_run_id
+        or verification.execution_input_source_hash != execution_input_source_hash
+        or verification.market_bundle_publication_source_hash
+        != market_bundle_publication_source_hash
+        or verification.market_bundle_retention_source_hash
+        != market_bundle_retention_source_hash
+        or verification.request_hash != canonical_sha256(resolved_request.request)
+        or verification.normalized_request_hash
+        != canonical_sha256(resolved_request.normalized_request)
+        or verification.resolved_environment_hash
+        != resolved_request.environment.environment_hash
+        or verification.build_artifact_manifest_hash
+        != resolved_request.build_artifact_manifest.manifest_hash
+        or any(
+            value.outcome is not RebuildComparisonOutcome.EQUAL
+            for value in verification.comparisons
+        )
+    ):
+        raise ValueError("canonical-v3 current local root mismatch")
+
+    reference = artifacts["canonical-attempt-ref.json"][0]
+    integrity = artifacts["integrity.json"][0]
+    result = artifacts["result.json"][0]
+    first = AttemptIdentity.first(semantic_run_id)
+    reference_hash = canonical_sha256(reference)
+    integrity_hash = canonical_sha256(integrity)
+    context = integrity.get("context")
+    attempt_value = reference.get("attempt")
+    if not isinstance(context, Mapping) or not isinstance(attempt_value, Mapping):
+        raise TypeError("canonical-v3 trust chain shape mismatch")
+    if (
+        attempt_value != first.to_canonical_dict()
+        or reference.get("schema_version") != 2
+        or reference.get("rebuild_verification_ref")
+        != verification_ref.to_canonical_dict()
+        or reference.get("rebuild_verification_source_hash")
+        != verification_read.source_hash
+        or reference.get("proof_publication_manifest_ref")
+        != proof_ref.to_canonical_dict()
+        or reference.get("proof_publication_manifest_source_hash")
+        != proof_read.source_hash
+        or reference.get("execution_result_hash")
+        != verification.attempts[0].execution_result_hash
+        or reference.get("execution_case_semantic_hash")
+        != verification.semantic_spec_hash
+        or reference.get("execution_case_hash")
+        != verification.attempts[0].execution_case_hash
+        or reference.get("trace_hash") != verification.attempts[0].trace_hash
+        or reference.get("market_bundle_manifest_hash")
+        != verification.market_bundle_ref.manifest_hash
+        or integrity.get("schema_version") != 2
+        or integrity.get("semantic_run_id") != semantic_run_id
+        or integrity.get("context_hash") != canonical_sha256(context)
+        or integrity.get("requested_grade") != "decision_grade"
+        or integrity.get("result_grade") != "decision_grade"
+        or integrity.get("issues") != ()
+        or integrity.get("canonical_attempt_ref_hash") != reference_hash
+        or context.get("resolved_request_hash")
+        != canonical_sha256(resolved_request)
+        or context.get("rebuild_verification_ref")
+        != verification_ref.to_canonical_dict()
+        or context.get("proof_publication_manifest_ref")
+        != proof_ref.to_canonical_dict()
+        or context.get("comparison_outcome") != "equal"
+        or result.get("schema_version") != 3
+        or result.get("semantic_run_id") != semantic_run_id
+        or result.get("outcome") != "COMPLETED"
+        or result.get("request_hash") != verification.request_hash
+        or result.get("resolved_request_hash")
+        != canonical_sha256(resolved_request)
+        or result.get("attempt_id") != first.attempt_id
+        or result.get("evidence_manifest_ref")
+        != verification.attempts[0].evidence_manifest_ref.to_canonical_dict()
+        or result.get("canonical_attempt_ref_hash") != reference_hash
+        or result.get("integrity_report_hash") != integrity_hash
+        or result.get("rebuild_verification_ref")
+        != verification_ref.to_canonical_dict()
+        or result.get("proof_publication_manifest_ref")
+        != proof_ref.to_canonical_dict()
+        or result.get("execution_result_hash")
+        != verification.attempts[0].execution_result_hash
+        or result.get("result_grade") != "decision_grade"
+        or any(
+            value is not False
+            for value in (
+                reference.get("deployment_authorized"),
+                integrity.get("deployment_authorized"),
+                result.get("deployment_authorized"),
+            )
+        )
+    ):
+        raise ValueError("canonical-v3 trust chain mismatch")
+
+    proof_final = (
+        root
+        / "runs"
+        / semantic_run_id
+        / "rebuild-proofs"
+        / proof_read.artifact.proof_id
+    )
+    if not proof_final.is_dir():
+        raise ValueError("dedicated proof final is unavailable")
+    verify_read_only(proof_final)
+    if (
+        stat.S_IMODE(proof_final.stat().st_mode) != 0o555
+        or {path.name for path in proof_final.iterdir()}
+        != {"verification.json", "proof-publication-manifest.json"}
+        or (proof_final / "verification.json").read_bytes() != verification_source
+        or (proof_final / "proof-publication-manifest.json").read_bytes()
+        != proof_source
+        or any(
+            path.is_symlink()
+            or not path.is_file()
+            or stat.S_IMODE(path.stat().st_mode) != 0o444
+            for path in proof_final.iterdir()
+        )
+    ):
+        raise ValueError("dedicated proof final mismatch")
+    fsync_directory(proof_final)
+    fsync_directory(proof_final.parent)
+    fsync_directory(directory)
+    fsync_directory(directory.parent)
+    publication_ref = BacktestCanonicalPublicationRefV2.from_artifact_ref(
+        ArtifactRef.from_envelope(manifest_envelope)
+    )
+    execution_result_hash = result.get("execution_result_hash")
+    if type(execution_result_hash) is not str:
+        raise ValueError("canonical-v3 execution result hash is invalid")
+    return _CanonicalResultCacheHitV3(
+        publication_ref,
+        semantic_run_id,
+        execution_result_hash,
+        verification_ref,
+        verification_read.source_hash,
+        proof_ref,
+        proof_read.source_hash,
+        verification_source,
+        proof_source,
     )
 
 

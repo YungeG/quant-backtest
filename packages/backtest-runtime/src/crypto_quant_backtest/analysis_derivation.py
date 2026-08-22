@@ -1,6 +1,7 @@
 from __future__ import annotations
 
-from decimal import Decimal, ROUND_HALF_EVEN, localcontext
+from decimal import ROUND_HALF_EVEN, Decimal, localcontext
+
 from crypto_quant_domain import (
     AccountingEntryType,
     ArtifactEnvelope,
@@ -10,11 +11,17 @@ from crypto_quant_domain import (
 
 from .analysis import (
     AnalysisArtifactRef,
+    AnalysisArtifactRefV2,
     BacktestAnalysis,
+    BacktestAnalysisV2,
     BacktestMetricProfile,
 )
 from .artifact_envelope_publisher import ArtifactEnvelopePublisher
-from .verified_publications import VerifiedCompletedPublication, VerifiedCompletedPublicationV2
+from .verified_publications import (
+    VerifiedCompletedPublication,
+    VerifiedCompletedPublicationV2,
+    VerifiedCompletedPublicationV3,
+)
 
 __all__ = ["BacktestAnalysisRuntime"]
 
@@ -75,7 +82,13 @@ def _calculate_simple_period_return(
     return "0" if text in {"-0", ""} else text
 
 
-def _simple_period_return(completed: VerifiedCompletedPublication | VerifiedCompletedPublicationV2) -> str | None:
+def _simple_period_return(
+    completed: (
+        VerifiedCompletedPublication
+        | VerifiedCompletedPublicationV2
+        | VerifiedCompletedPublicationV3
+    ),
+) -> str | None:
     journal_entries = completed.execution_summary.final_journal.entries[
         completed.initial_journal_entry_count :
     ]
@@ -111,17 +124,34 @@ class BacktestAnalysisRuntime:
 
     def derive(
         self,
-        completed: VerifiedCompletedPublication | VerifiedCompletedPublicationV2,
+        completed: (
+            VerifiedCompletedPublication
+            | VerifiedCompletedPublicationV2
+            | VerifiedCompletedPublicationV3
+        ),
         metric_profile_ref: ArtifactRef,
-    ) -> AnalysisArtifactRef:
-        if type(completed) is not VerifiedCompletedPublication and type(completed) is not VerifiedCompletedPublicationV2:
-            raise TypeError("completed must be exact VerifiedCompletedPublication or VerifiedCompletedPublicationV2")
+    ) -> AnalysisArtifactRef | AnalysisArtifactRefV2:
+        if type(completed) not in {
+            VerifiedCompletedPublication,
+            VerifiedCompletedPublicationV2,
+            VerifiedCompletedPublicationV3,
+        }:
+            raise TypeError(
+                "completed must be exact VerifiedCompletedPublication, "
+                "VerifiedCompletedPublicationV2, or VerifiedCompletedPublicationV3"
+            )
         if type(metric_profile_ref) is not ArtifactRef:
             raise TypeError("metric_profile_ref must be exact ArtifactRef")
         if metric_profile_ref != _PROFILE_REF:
             raise ValueError("metric_profile_ref does not bind accepted metric profile")
 
-        analysis = BacktestAnalysis(
+        analysis_type = (
+            BacktestAnalysisV2
+            if type(completed) is VerifiedCompletedPublicationV3
+            else BacktestAnalysis
+        )
+        schema_version = 2 if analysis_type is BacktestAnalysisV2 else 1
+        analysis = analysis_type(
             metric_profile_ref=metric_profile_ref,
             source_publication_ref=completed.source_publication_ref,
             source_execution_result_hash=completed.source_execution_result_hash,
@@ -129,11 +159,17 @@ class BacktestAnalysisRuntime:
             trade_count=len(completed.execution_summary.fills),
             result_grade=completed.result_grade,
         )
-        envelope = ArtifactEnvelope.create("backtest_analysis", 1, analysis)
+        envelope = ArtifactEnvelope.create(
+            "backtest_analysis", schema_version, analysis
+        )
         expected_ref = ArtifactRef.from_envelope(envelope)
         stored_ref = self._publisher.put(envelope=envelope)
         if type(stored_ref) is not ArtifactRef:
             raise TypeError("publisher.put must return exact ArtifactRef")
         if stored_ref != expected_ref:
             raise ValueError("publisher.put returned ref does not bind envelope")
-        return AnalysisArtifactRef(stored_ref)
+        return (
+            AnalysisArtifactRefV2(stored_ref)
+            if schema_version == 2
+            else AnalysisArtifactRef(stored_ref)
+        )

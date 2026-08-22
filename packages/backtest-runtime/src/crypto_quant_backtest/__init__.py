@@ -2,9 +2,12 @@
 
 from .analysis import (
     AnalysisArtifactRef,
+    AnalysisArtifactRefV2,
     BacktestAnalysis,
+    BacktestAnalysisV2,
     BacktestMetricProfile,
     VerifiedBacktestAnalysis,
+    VerifiedBacktestAnalysisV2,
 )
 from .analysis_derivation import BacktestAnalysisRuntime
 from .binance_usdm_profile import (
@@ -223,11 +226,16 @@ from .ports import (
     SimulationPortType,
     SlippageModel,
 )
-from .publication_refs import BacktestCanonicalPublicationRef, RunPublicationRef
+from .publication_refs import (
+    BacktestCanonicalPublicationRef,
+    BacktestCanonicalPublicationRefV2,
+    RunPublicationRef,
+)
 from .verified_publications import (
     TerminalStatus,
     VerifiedCompletedPublication,
     VerifiedCompletedPublicationV2,
+    VerifiedCompletedPublicationV3,
     VerifiedExecutionSummary,
     VerifiedTerminalPublication,
 )
@@ -359,6 +367,7 @@ __version__ = "0.1.0"
 
 __all__ = [
     "AnalysisArtifactRef",
+    "AnalysisArtifactRefV2",
     "BAR_OPEN_CAPABILITY",
     "BAR_OPEN_EVENT_TYPE",
     "ArtifactInstallMode",
@@ -383,8 +392,10 @@ __all__ = [
     "BacktestResolutionOutcome",
     "BacktestRunOutcome",
     "BacktestCanonicalPublicationRef",
+    "BacktestCanonicalPublicationRefV2",
     "BacktestRuntime",
     "BacktestAnalysis",
+    "BacktestAnalysisV2",
     "BacktestAnalysisRuntime",
     "BacktestMetricProfile",
     "BinanceUsdmAccountCapacityEvidence",
@@ -653,8 +664,10 @@ __all__ = [
     "UniverseQuery",
     "UniverseSelection",
     "VerifiedBacktestAnalysis",
+    "VerifiedBacktestAnalysisV2",
     "VerifiedCompletedPublication",
     "VerifiedCompletedPublicationV2",
+    "VerifiedCompletedPublicationV3",
     "VerifiedExecutionSummary",
     "VerifiedTerminalPublication",
     "TerminalStatus",

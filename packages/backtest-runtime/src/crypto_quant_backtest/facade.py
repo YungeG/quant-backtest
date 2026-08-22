@@ -2,10 +2,10 @@
 
 from __future__ import annotations
 
-from collections.abc import Mapping
 import os
-from pathlib import Path, PurePosixPath
 import re
+from collections.abc import Mapping
+from pathlib import Path, PurePosixPath
 from typing import NoReturn
 
 from crypto_quant_domain import (
@@ -14,12 +14,24 @@ from crypto_quant_domain import (
     canonical_bytes,
     canonical_sha256,
 )
-from crypto_quant_market_data import InputValidationFailure, MarketBundleReader
+from crypto_quant_market_data import (
+    InputValidationFailure,
+    LocalMarketBundleReader,
+    MarketBundleIntegrityError,
+    MarketBundleReader,
+)
 
+from ._durable_rebuild import (
+    DurableRebuildError,
+    DurableRebuildFailureCode,
+    DurableRebuildPublisherV1,
+    DurableRebuildVerifierV1,
+    _read_execution_inputs_with_source,
+)
 from ._publication import RunPublicationLock
 from .artifact_envelope_publisher import ArtifactEnvelopePublisher
 from .artifact_envelope_reader import ArtifactEnvelopeReader
-from .composition import _HydratedExecutionCaseInputs, _compose_execution_case_v3
+from .composition import _compose_execution_case_v3, _HydratedExecutionCaseInputs
 from .engine import EngineCancellationRequest, ResolvedExecutionCase
 from .evidence import AttemptEvidenceWriter, FinalizedAttemptEvidence
 from .evidence_repository import (
@@ -38,6 +50,8 @@ from .execution_inputs import (
     _verify_execution_inputs_v3_after_resolution,
 )
 from .integrity import (
+    AttemptConsistencySet,
+    CanonicalPublicationFailureCode,
     CanonicalResultPublisher,
     DeterministicRebuildEvidence,
     EngineExecutionContext,
@@ -49,9 +63,16 @@ from .multi_resolution_preparation import (
     _capture_market_bundle_reader_v1,
     _prepare_multi_resolution_market_data_from_retained_v1,
 )
-from .publication_refs import BacktestCanonicalPublicationRef
-from .resolution import BacktestProfileRegistry, ProfileResolver, ResolvedBacktestRequest
-from .target_stream import PrecomputedTargetStream
+from .publication_refs import (
+    BacktestCanonicalPublicationRef,
+    BacktestCanonicalPublicationRefV2,
+)
+from .resolution import (
+    BacktestProfileRegistry,
+    ProfileResolver,
+    RequestedResultGrade,
+    ResolvedBacktestRequest,
+)
 from .runner import (
     AttemptExecutionRecord,
     AttemptIdentity,
@@ -61,7 +82,9 @@ from .runner import (
     InputOrigin,
     _read_canonical_artifact,
     _read_canonical_cache_hit_v2,
+    _read_canonical_cache_hit_v3,
 )
+from .target_stream import PrecomputedTargetStream
 
 _STORAGE_RUNNER_ISSUES = frozenset({"canonical_cache_invalid", "run_lock_unavailable"})
 _SHA256_PATTERN = re.compile(r"sha256:[0-9a-f]{64}\Z")
@@ -105,7 +128,11 @@ class BacktestRuntime:
 
     def run(
         self, request: BacktestExecutionRequest
-    ) -> BacktestCanonicalPublicationRef | ArtifactRef:
+    ) -> (
+        BacktestCanonicalPublicationRef
+        | BacktestCanonicalPublicationRefV2
+        | ArtifactRef
+    ):
         return self._run(request, cancellation=None)
 
     def run_with_cancellation(
@@ -122,7 +149,11 @@ class BacktestRuntime:
         request: BacktestExecutionRequest,
         *,
         cancellation: EngineCancellationRequest | None,
-    ) -> BacktestCanonicalPublicationRef | ArtifactRef:
+    ) -> (
+        BacktestCanonicalPublicationRef
+        | BacktestCanonicalPublicationRefV2
+        | ArtifactRef
+    ):
         if type(request) is not BacktestExecutionRequest:
             raise RuntimeError(
                 "execution input hydration failed: malformed_execution_request"
@@ -143,6 +174,15 @@ class BacktestRuntime:
             )
             if failure is not None or snapshot is None:
                 self._raise_v3_hydration_failure(failure)
+            selected_durable_lane = (
+                cancellation is None
+                and snapshot.request.result_grade_requested
+                is RequestedResultGrade.DECISION_GRADE
+                and type(self._market_reader) is LocalMarketBundleReader
+                and self._market_reader._has_repository_open_provenance_v1()
+            )
+            if selected_durable_lane:
+                return self._run_durable_v3(snapshot)
             return self._run_v3(snapshot, cancellation=cancellation)
         try:
             snapshot = BacktestExecutionRequest(
@@ -183,6 +223,417 @@ class BacktestRuntime:
             cancellation=cancellation,
             market_data_preparation=None,
         )
+
+    def _run_durable_v3(
+        self,
+        request: BacktestExecutionRequest,
+    ) -> BacktestCanonicalPublicationRefV2 | ArtifactRef:
+        source, bundle, failure = _read_execution_inputs_with_source(
+            self._artifact_reader,
+            request,
+        )
+        if failure is not None or source is None or bundle is None:
+            code = {
+                "execution_input_unavailable": (
+                    DurableRebuildFailureCode.EXECUTION_INPUT_UNAVAILABLE
+                ),
+                "execution_input_tampered": (
+                    DurableRebuildFailureCode.EXECUTION_INPUT_TAMPERED
+                ),
+            }.get(
+                failure.code.value if failure is not None else "",
+                DurableRebuildFailureCode.EXECUTION_INPUT_DECODE_FAILED,
+            )
+            self._raise_durable_failure(code)
+        if (
+            bundle.build_artifact_manifest.manifest_hash
+            != request.request.build_artifact_manifest_hash
+        ):
+            self._raise_durable_failure(
+                DurableRebuildFailureCode.EXECUTION_INPUT_TAMPERED
+            )
+        local = self._market_reader
+        if type(local) is not LocalMarketBundleReader:
+            raise RuntimeError("durable lane selected without exact Local Reader")
+        try:
+            (
+                reopened,
+                _publication_bytes,
+                publication_source_hash,
+                _publication_hash,
+                _retention_bytes,
+                retention_source_hash,
+                _retention_hash,
+            ) = local._reopen_with_provenance_v1()
+        except MarketBundleIntegrityError as error:
+            code = (
+                DurableRebuildFailureCode.LOCAL_REOPEN_UNAVAILABLE
+                if getattr(type(error), "_durable_reopen_kind_v1", None)
+                == "unavailable"
+                else DurableRebuildFailureCode.LOCAL_REOPEN_TAMPERED
+            )
+            self._raise_durable_failure(code)
+        except Exception:  # noqa: BLE001 - fail-closed redaction boundary
+            self._raise_durable_failure(
+                DurableRebuildFailureCode.LOCAL_REOPEN_TAMPERED
+            )
+        resolution = self._resolve(
+            request,
+            market_bundle_manifest=reopened.manifest,
+            build_artifact_manifest=bundle.build_artifact_manifest,
+        )
+        if resolution.failure is not None:
+            return self._publish_resolution_failure(resolution.failure)
+        resolved = resolution.resolved
+        if resolved is None:
+            raise RuntimeError("Backtest request resolution returned no result")
+        subject = f"runs/{resolved.semantic_run_id}"
+        lock = RunPublicationLock(
+            root=self._publication_root,
+            semantic_run_id=resolved.semantic_run_id,
+        )
+        try:
+            lock.__enter__()
+        except OSError:
+            self._raise_durable_failure(
+                CanonicalPublicationFailureCode.RUN_LOCK_UNAVAILABLE
+            )
+        try:
+            result = self._run_durable_v3_locked(
+                lock=lock,
+                request=request,
+                bundle=bundle,
+                execution_input_source_hash=source.source_hash,
+                reopened=reopened,
+                publication_source_hash=publication_source_hash,
+                retention_source_hash=retention_source_hash,
+                resolved=resolved,
+                subject=subject,
+            )
+        except DurableRebuildError as error:
+            lock.__exit__(None, None, None)
+            self._raise_durable_failure(error.code)
+        except BaseException:
+            lock.__exit__(None, None, None)
+            raise
+        lock.__exit__(None, None, None)
+        if lock.release_error is not None:
+            self._raise_durable_failure(
+                CanonicalPublicationFailureCode.RUN_LOCK_UNAVAILABLE
+            )
+        return result
+
+    def _run_durable_v3_locked(
+        self,
+        *,
+        lock: RunPublicationLock,
+        request: BacktestExecutionRequest,
+        bundle,
+        execution_input_source_hash: str,
+        reopened: LocalMarketBundleReader,
+        publication_source_hash: str,
+        retention_source_hash: str,
+        resolved: ResolvedBacktestRequest,
+        subject: str,
+    ) -> BacktestCanonicalPublicationRefV2 | ArtifactRef:
+        canonical = (
+            self._publication_root
+            / "runs"
+            / resolved.semantic_run_id
+            / "canonical-v3"
+        )
+        if os.path.lexists(canonical):
+            try:
+                local_hit = _read_canonical_cache_hit_v3(
+                    root=self._publication_root,
+                    resolved_request=resolved,
+                    execution_input_source_hash=execution_input_source_hash,
+                    market_bundle_publication_source_hash=publication_source_hash,
+                    market_bundle_retention_source_hash=retention_source_hash,
+                )
+            except Exception:  # noqa: BLE001 - fail-closed redaction boundary
+                self._raise_durable_failure(
+                    DurableRebuildFailureCode.CACHE_LOCAL_PROOF_MISMATCH
+                )
+            try:
+                completed = BacktestEvidenceRepository(
+                    reader=self._artifact_reader
+                ).load_completed_v3(local_hit.publication_ref)
+                if (
+                    completed.source_publication_ref != local_hit.publication_ref
+                    or completed.semantic_run_id != local_hit.semantic_run_id
+                    or completed.source_execution_result_hash
+                    != local_hit.execution_result_hash
+                    or completed.rebuild_verification_ref
+                    != local_hit.verification_ref
+                    or completed.proof_publication_manifest_ref
+                    != local_hit.proof_manifest_ref
+                ):
+                    raise ValueError("cache static/local identity mismatch")
+            except Exception:  # noqa: BLE001 - fail-closed redaction boundary
+                self._raise_durable_failure(
+                    DurableRebuildFailureCode.CACHE_STATIC_GRAPH_MISMATCH
+                )
+            return local_hit.publication_ref
+
+        prepared, execution_case = self._prepare_durable_case(
+            request=request,
+            bundle=bundle,
+            reopened=reopened,
+            resolved=resolved,
+        )
+        runner = self._runner_v2()
+        input_origin = self._input_origin(resolved)
+        runner._verify_v3_contract(
+            resolved_request=resolved,
+            execution_case=execution_case,
+            input_origin=input_origin,
+            market_data_preparation=prepared.preparation,
+        )
+        try:
+            terminal_ref = self._existing_terminal_ref_v3(
+                resolved, execution_case, input_origin
+            )
+        except Exception:  # noqa: BLE001 - fail-closed redaction boundary
+            raise DurableRebuildError(
+                DurableRebuildFailureCode.PROOF_CONSTRUCTION_FAILED,
+                subject,
+            ) from None
+        if terminal_ref is not None:
+            return terminal_ref
+
+        writer = self._attempt_writer()
+        first_attempt = AttemptIdentity.first(resolved.semantic_run_id)
+        try:
+            first_claim = writer._claim_v3_locked(
+                attempt=first_attempt,
+                resolved_request=resolved,
+                execution_case_hash=execution_case.case_hash,
+                execution_case_semantic_hash=execution_case.semantic_spec_hash,
+                input_origin=input_origin,
+            )
+            first = runner._execute_verified_locked(
+                resolved_request=resolved,
+                execution_case=execution_case,
+                attempt=first_attempt,
+                input_origin=input_origin,
+                cancellation=None,
+            )
+            first_evidence = self._finalize_v3_attempt_locked(
+                writer, first, first_claim
+            )
+        except DurableRebuildError:
+            raise
+        except Exception:  # noqa: BLE001 - fail-closed redaction boundary
+            raise DurableRebuildError(
+                DurableRebuildFailureCode.PROOF_CONSTRUCTION_FAILED,
+                subject,
+            ) from None
+        if first.ready_to_finalize is None:
+            return self._evidence_ref(first_evidence)
+        first_hash = ExecutionResultHasher.bind(
+            first.ready_to_finalize, first_evidence
+        )
+
+        second_attempt = AttemptIdentity.retry(first_attempt, next_ordinal=2)
+        try:
+            second_claim = writer._claim_v3_locked(
+                attempt=second_attempt,
+                resolved_request=resolved,
+                execution_case_hash=execution_case.case_hash,
+                execution_case_semantic_hash=execution_case.semantic_spec_hash,
+                input_origin=input_origin,
+                prior_ready=first_evidence,
+            )
+            second = runner._execute_verified_locked(
+                resolved_request=resolved,
+                execution_case=execution_case,
+                attempt=second_attempt,
+                input_origin=input_origin,
+                cancellation=None,
+            )
+            second_evidence = self._finalize_v3_attempt_locked(
+                writer, second, second_claim
+            )
+        except DurableRebuildError:
+            raise
+        except Exception:  # noqa: BLE001 - fail-closed redaction boundary
+            raise DurableRebuildError(
+                DurableRebuildFailureCode.PROOF_CONSTRUCTION_FAILED,
+                subject,
+            ) from None
+        if second.ready_to_finalize is None:
+            return self._evidence_ref(second_evidence)
+        second_hash = ExecutionResultHasher.bind(
+            second.ready_to_finalize, second_evidence
+        )
+        attempts = AttemptConsistencySet(
+            resolved,
+            (first_hash, second_hash),
+            (first_evidence, second_evidence),
+        )
+        verification = DurableRebuildVerifierV1(
+            artifact_reader=self._artifact_reader,
+            market_reader=reopened,
+            profile_registry=self._registry,
+        ).verify(
+            request=request,
+            resolved_request=resolved,
+            prepared_market_data=prepared,
+            execution_case=execution_case,
+            attempts=attempts,
+        )
+        observation = DurableRebuildPublisherV1(
+            root=self._publication_root,
+            artifact_reader=self._artifact_reader,
+        ).publish(lock=lock, verification=verification)
+        try:
+            proof_ref = self._mirror_manifest_graph(
+                relative_directory=(
+                    f"runs/{resolved.semantic_run_id}/rebuild-proofs/"
+                    f"{observation.publication_manifest.proof_id}"
+                ),
+                manifest_name="proof-publication-manifest.json",
+                manifest_type=(
+                    "deterministic_rebuild_verification_publication_manifest"
+                ),
+            )
+            if proof_ref != observation.publication_manifest_ref:
+                raise ValueError("proof mirror returned wrong ref")
+        except Exception:  # noqa: BLE001 - fail-closed redaction boundary
+            raise DurableRebuildError(
+                DurableRebuildFailureCode.PROOF_MIRROR_FAILED,
+                subject,
+            ) from None
+        publication = self._canonical_publisher().publish_v3_locked(
+            lock=lock,
+            resolved_request=resolved,
+            attempts=attempts,
+            observation=observation,
+            engine_context=self._engine_context(resolved, execution_case),
+        )
+        try:
+            mirrored = self._mirror_publication_graph(
+                publication.relative_directory
+            )
+            expected = (
+                publication.publication_ref.to_artifact_ref()
+                if type(publication.publication_ref)
+                is BacktestCanonicalPublicationRefV2
+                else publication.publication_ref
+            )
+            if mirrored != expected:
+                raise ValueError("publication mirror returned wrong ref")
+        except Exception:  # noqa: BLE001 - fail-closed redaction boundary
+            raise DurableRebuildError(
+                DurableRebuildFailureCode.PROOF_MIRROR_FAILED,
+                subject,
+            ) from None
+        return publication.publication_ref
+
+    def _prepare_durable_case(
+        self,
+        *,
+        request: BacktestExecutionRequest,
+        bundle,
+        reopened: LocalMarketBundleReader,
+        resolved: ResolvedBacktestRequest,
+    ):
+        retained_reader = _capture_market_bundle_reader_v1(
+            request.request.market_bundle_ref,
+            reopened,
+        )
+        if retained_reader is None:
+            self._raise_durable_failure(
+                DurableRebuildFailureCode.COMPOSITION_MISMATCH
+            )
+        try:
+            target_stream = self._target_stream_v3(bundle, retained_reader, request)
+        except Exception:  # noqa: BLE001 - fail-closed redaction boundary
+            self._raise_durable_failure(
+                DurableRebuildFailureCode.COMPOSITION_MISMATCH
+            )
+        binding_failure = _verify_execution_inputs_v3_after_resolution(
+            bundle,
+            request,
+            resolved,
+            retained_reader,
+        )
+        if binding_failure is not None:
+            self._raise_durable_failure(
+                DurableRebuildFailureCode.COMPOSITION_MISMATCH
+            )
+        plan = bundle.execution_case_plan
+        authority = MarketDataCaseAuthority(
+            decision_cycles=plan.decision_cycles,
+            bar_executions=plan.bar_executions,
+            execution_model=plan.execution_model,
+            snapshot_plan=plan.snapshot_plan,
+            target_stream=target_stream,
+        )
+        embedded = bundle.market_data_preparation
+        try:
+            preparation_outcome = (
+                _prepare_multi_resolution_market_data_from_retained_v1(
+                    expected_bundle_ref=request.request.market_bundle_ref,
+                    reader=retained_reader,
+                    schedule=embedded.decision_schedule,
+                    signal_binding_candidates=embedded.bindings.signal_bindings,
+                    execution_binding_candidates=(
+                        embedded.bindings.execution_bindings
+                    ),
+                    valuation_binding_candidates=(
+                        embedded.bindings.valuation_bindings
+                    ),
+                    signal_lineages=embedded.signal_lineages,
+                    case_authority=authority,
+                    resolved_request=resolved,
+                )
+            )
+            prepared = preparation_outcome.prepared
+            if prepared is None:
+                raise ValueError("preparation failed")
+        except Exception:  # noqa: BLE001 - fail-closed redaction boundary
+            self._raise_durable_failure(
+                DurableRebuildFailureCode.PREPARATION_MISMATCH
+            )
+        hydrated = _hydrate_execution_inputs_v3_from_decoded(
+            bundle,
+            request,
+            market_reader=retained_reader,
+            resolved_request=resolved,
+            prepared_market_data=prepared,
+            target_stream=target_stream,
+            bindings_verified=True,
+        )
+        if hydrated.failure is not None or hydrated.result is None:
+            self._raise_durable_failure(
+                DurableRebuildFailureCode.COMPOSITION_MISMATCH
+            )
+        values = hydrated.result
+        try:
+            execution_case = _compose_execution_case_v3(
+                resolved_request=resolved,
+                market_reader=retained_reader,
+                hydrated_inputs=_HydratedExecutionCaseInputs(
+                    values.execution_case_semantic_spec,
+                    values.timeline_stream_keys,
+                    values.target_stream,
+                    values.timeline_batch_size,
+                    values.execution_case_plan,
+                ),
+                market_data_preparation=values.market_data_preparation,
+            )
+        except Exception:  # noqa: BLE001 - fail-closed redaction boundary
+            self._raise_durable_failure(
+                DurableRebuildFailureCode.COMPOSITION_MISMATCH
+            )
+        return prepared, execution_case
+
+    @staticmethod
+    def _raise_durable_failure(code) -> NoReturn:
+        value = code.value if hasattr(code, "value") else str(code)
+        raise RuntimeError(f"Backtest durable rebuild failed: {value}") from None
 
     def _run_v3(
         self,
@@ -296,7 +747,7 @@ class BacktestRuntime:
         market_data_preparation: MultiResolutionMarketDataPreparation | None,
     ) -> BacktestCanonicalPublicationRef | ArtifactRef:
         input_origin = self._input_origin(resolved)
-        runner = AuditableBacktestRunner.for_v2(publication_root=self._publication_root)
+        runner = self._runner_v2()
         if market_data_preparation is not None:
             runner._verify_v3_contract(
                 resolved_request=resolved,
@@ -923,6 +1374,11 @@ class BacktestRuntime:
         if publication.finalized_result_v2 is not None:
             return BacktestCanonicalPublicationRef.from_artifact_ref(ref)
         return ref
+
+    def _runner_v2(self) -> AuditableBacktestRunner:
+        return AuditableBacktestRunner.for_v2(
+            publication_root=self._publication_root
+        )
 
     def _attempt_writer(self) -> AttemptEvidenceWriter:
         return AttemptEvidenceWriter(root=self._publication_root)

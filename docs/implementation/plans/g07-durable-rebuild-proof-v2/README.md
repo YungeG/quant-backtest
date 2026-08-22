@@ -27,17 +27,18 @@ DRP-01 ACCEPTED: minimal Local Reader reopen provenance
       ↓ contract + evidence
 DRP-02 ACCEPTED: durable verification observation + fresh recomputation
       ↓ verified observation contract
-DRP-03 READY: Backtest implementation candidate
+DRP-03 ACCEPTED_CANDIDATE: Backtest implementation candidate
       │  Integrity/manifest v2 + canonical-v3 + ref/repository/facade/analysis v2
       ↓ immutable Backtest candidate commit + typed consumer contract
-DRP-04 BLOCKED_CROSS_REPO: Platform consumer-v2 commit + exact Backtest gitlink pin
+DRP-04 READY: Platform consumer-v2 commit + exact Backtest gitlink pin
       ↓ immutable Platform commit + typed submodule-pin/consumer evidence
 DRP-05 BLOCKED_FAN_IN: Backtest docs-only governance fan-in + Matrix PASSED
 ```
 
 The graph is acyclic and has six nodes. DRP-00 accepted H1, DRP-01 and DRP-02 are
-accepted, the unique Matrix row is `READY`, and DRP-03 is the sole immediate Ready
-node. The unselected H2 route remains terminal history only.
+accepted, DRP-03 has produced the immutable Backtest candidate, the unique Matrix row
+is `READY`, and DRP-04 is the sole immediate Ready node. The unselected H2 route
+remains terminal history only.
 
 ## Nodes and node-status registry
 
@@ -46,8 +47,8 @@ node. The unselected H2 route remains terminal history only.
 | [DRP-00](drp-00-contract-and-hash-dag.md) | ACCEPTED_H1 | Backtest | accepted exact H1 contract, including operator recovery | parent, ADR 0008, accepted G12M prerequisite | base-HEAD source inventory and feasibility | research contract, node registry, new Matrix row |
 | [DRP-01](drp-01-attested-local-bundle-open.md) | ACCEPTED | Backtest | exact private repository reopen/read result from the existing Local Reader | DRP-00 H1 | current G12D local publication/retention fixtures | Local Reader private seam |
 | [DRP-02](drp-02-proof-and-recomputation.md) | ACCEPTED | Backtest | durable `deterministic_rebuild_verification@1` and proof-publication manifest@1 | DRP-00 H1, DRP-01 | schema-3/PREP/two-Attempt full-trace fixtures | execution/rebuild and proof-publication seam |
-| [DRP-03](drp-03-backtest-implementation-candidate.md) | READY | Backtest | one implementation candidate commit: Integrity v2, canonical-v3, V2 completed ref/replay/cache, and additive analysis v2 | DRP-02 | legacy goldens plus exact local schema-3 Run | Integrity/publication/ref/repository/facade/analysis seams |
-| [DRP-04](drp-04-platform-consumer-v2.md) | BLOCKED_CROSS_REPO | Platform superproject | one consumer-v2 commit pinning the exact DRP-03 Backtest commit | DRP-03 immutable commit | Platform V1 bytes plus consumer-v2 journey | Platform gitlink and consumer contract files |
+| [DRP-03](drp-03-backtest-implementation-candidate.md) | ACCEPTED_CANDIDATE | Backtest | one implementation candidate commit: Integrity v2, canonical-v3, V2 completed ref/replay/cache, and additive analysis v2 | DRP-02 | legacy goldens plus exact local schema-3 Run | Integrity/publication/ref/repository/facade/analysis seams |
+| [DRP-04](drp-04-platform-consumer-v2.md) | READY | Platform superproject | one consumer-v2 commit pinning the exact DRP-03 Backtest commit | DRP-03 immutable commit | Platform V1 bytes plus consumer-v2 journey | Platform gitlink and consumer contract files |
 | [DRP-05](drp-05-governance-fan-in.md) | BLOCKED_FAN_IN | Backtest | docs-only governance commit binding immutable DRP-03 and DRP-04 commits, atomically recording DRP-04/05 node closure, and setting the unique Matrix row to `PASSED` | DRP-03, DRP-04 | complete Backtest and Platform acceptance evidence | unique Matrix row plus this node-status registry |
 
 Only this table owns current DRP node statuses. Node frontmatter records ownership and
@@ -74,7 +75,7 @@ dependencies, not a second status.
 | DRP-00 | Backtest | `docs/research/g07-durable-rebuild-proof-v2-contract.md`; `docs/implementation/acceptance-matrix.md` (only the new row, H1 `READY` or H2 blocker); `docs/implementation/plans/README.md` (only this active-plan projection); `docs/implementation/plans/g07-durable-rebuild-proof-v2.md` (only accepted-H1/current-route projection); `docs/implementation/plans/g07-durable-rebuild-proof-v2/README.md`; `docs/implementation/plans/g07-durable-rebuild-proof-v2/drp-00-contract-and-hash-dag.md`; `docs/implementation/plans/g07-durable-rebuild-proof-v2/drp-01-attested-local-bundle-open.md`; `docs/implementation/plans/g07-durable-rebuild-proof-v2/drp-02-proof-and-recomputation.md`; `docs/implementation/plans/g07-durable-rebuild-proof-v2/drp-03-backtest-implementation-candidate.md`; `docs/implementation/plans/g07-durable-rebuild-proof-v2/drp-04-platform-consumer-v2.md` (Platform pathspec correction); `docs/implementation/plans/g07-durable-rebuild-proof-v2/drp-05-governance-fan-in.md` (successor plans only for exact status write-set reconciliation) |
 | DRP-01 | Backtest | `packages/market-data-contracts/src/crypto_quant_market_data/local_market_bundle_reader.py`; `tests/market_data/test_local_market_bundle_reader_provenance.py`; `docs/implementation/plans/g07-durable-rebuild-proof-v2/README.md` (only DRP-01 accepted / DRP-02 Ready status projection); no package-root export file |
 | DRP-02 | Backtest | `packages/backtest-runtime/src/crypto_quant_backtest/_durable_rebuild.py`; `tests/runtime/durable_rebuild/test_verification.py`; `tests/runtime/durable_rebuild/test_publication.py`; `tests/runtime/durable_rebuild/test_recovery.py`; `tests/fixtures/runtime/durable_rebuild/deterministic-rebuild-verification-v1.json`; `docs/implementation/plans/g07-durable-rebuild-proof-v2/README.md` (only DRP-02 accepted / DRP-03 Ready status projection); `execution_inputs.py` unchanged |
-| DRP-03 | Backtest | `packages/backtest-runtime/src/crypto_quant_backtest/integrity.py`; `packages/backtest-runtime/src/crypto_quant_backtest/publication_refs.py`; `packages/backtest-runtime/src/crypto_quant_backtest/verified_publications.py`; `packages/backtest-runtime/src/crypto_quant_backtest/analysis.py`; `packages/backtest-runtime/src/crypto_quant_backtest/analysis_derivation.py`; `packages/backtest-runtime/src/crypto_quant_backtest/evidence_repository.py`; `packages/backtest-runtime/src/crypto_quant_backtest/facade.py`; `packages/backtest-runtime/src/crypto_quant_backtest/__init__.py`; `packages/backtest-runtime/src/crypto_quant_backtest/runner.py`; `tests/runtime/integrity/test_durable_rebuild_v2.py`; `tests/runtime/evidence_repository/test_completed_v3.py`; `tests/runtime/analysis/test_analysis_v2.py`; `tests/runtime/test_durable_rebuild_facade.py`; `tests/architecture/test_durable_rebuild_boundary.py`; `docs/implementation/plans/g07-durable-rebuild-proof-v2/README.md` (only DRP-03 accepted-candidate / DRP-04 Ready status projection) |
+| DRP-03 | Backtest | `packages/backtest-runtime/src/crypto_quant_backtest/integrity.py`; `packages/backtest-runtime/src/crypto_quant_backtest/publication_refs.py`; `packages/backtest-runtime/src/crypto_quant_backtest/verified_publications.py`; `packages/backtest-runtime/src/crypto_quant_backtest/analysis.py`; `packages/backtest-runtime/src/crypto_quant_backtest/analysis_derivation.py`; `packages/backtest-runtime/src/crypto_quant_backtest/evidence_repository.py`; `packages/backtest-runtime/src/crypto_quant_backtest/facade.py`; `packages/backtest-runtime/src/crypto_quant_backtest/__init__.py`; `packages/backtest-runtime/src/crypto_quant_backtest/runner.py`; `tests/runtime/integrity/test_durable_rebuild_v2.py`; `tests/runtime/evidence_repository/test_completed_v3.py`; `tests/runtime/analysis/test_analysis_v2.py`; `tests/runtime/test_durable_rebuild_facade.py`; `tests/architecture/test_durable_rebuild_boundary.py`; `tests/runtime/test_bt_gap_02_facade.py` (additive direct run annotation assertion only); `tests/runtime/publication/test_publication_refs.py` (additive RunPublicationRef assertion only); `tests/runtime/analysis/test_analysis_boundary.py` (additive analysis V2 class set only); `tests/runtime/analysis/test_analysis_derivation_boundary.py` (additive completed V3 view set/signature only); `tests/architecture/test_g12e_local_reader_boundary.py` (allow exact Local Reader import only in `_durable_rebuild.py` and `facade.py`); `docs/implementation/plans/g07-durable-rebuild-proof-v2/README.md` (DRP-03 accepted-candidate / DRP-04 Ready projection and these discovered exact assertion-path governance decisions) |
 | DRP-04 | Platform superproject (`../`) | `../tests/contracts/backtest-consumer-port-v2.json`; `../tests/support/backtest_consumer_port.py`; `../tests/architecture/test_backtest_consumer_port.py`; `../backtest` gitlink only. `../tests/contracts/backtest-consumer-port-v1.json` is protected and unchanged |
 | DRP-05 | Backtest | `docs/implementation/acceptance-matrix.md` (only the unique `G07-DURABLE-REBUILD-PROOF-V2` row); `docs/implementation/plans/g07-durable-rebuild-proof-v2/README.md` (atomically record external DRP-04 accepted and DRP-05 accepted) |
 
@@ -166,8 +167,8 @@ implementation discretion.
 | --- | --- | --- | --- | --- |
 | 1 | DRP-01 | ACCEPTED | DRP-02 | Local Reader private seam only |
 | 2 | DRP-02 | ACCEPTED | DRP-03 | verification/recomputation/durable proof publication only |
-| 3 | DRP-03 | READY | DRP-04 | one Backtest implementation candidate commit |
-| 4 | DRP-04 | BLOCKED_CROSS_REPO | DRP-05 | one Platform consumer-v2/gitlink commit |
+| 3 | DRP-03 | ACCEPTED_CANDIDATE | DRP-04 | one Backtest implementation candidate commit |
+| 4 | DRP-04 | READY | DRP-05 | one Platform consumer-v2/gitlink commit |
 | 5 | DRP-05 | BLOCKED_FAN_IN | accepted generic prerequisite | one Backtest Matrix-row + DAG-status governance commit |
 
 ## Final acceptance route

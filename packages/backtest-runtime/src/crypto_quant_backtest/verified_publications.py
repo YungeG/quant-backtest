@@ -1,8 +1,8 @@
 from __future__ import annotations
 
+import re
 from dataclasses import dataclass
 from enum import Enum
-import re
 
 from crypto_quant_domain import (
     ArtifactEnvelope,
@@ -21,12 +21,16 @@ from .integrity import (
     FinalizedCanonicalResultV2,
     ResultGrade,
 )
-from .publication_refs import BacktestCanonicalPublicationRef
+from .publication_refs import (
+    BacktestCanonicalPublicationRef,
+    BacktestCanonicalPublicationRefV2,
+)
 
 __all__ = [
     "TerminalStatus",
     "VerifiedCompletedPublication",
     "VerifiedCompletedPublicationV2",
+    "VerifiedCompletedPublicationV3",
     "VerifiedExecutionSummary",
     "VerifiedTerminalPublication",
 ]
@@ -239,6 +243,91 @@ class VerifiedCompletedPublicationV2:
                 final_portfolio_snapshot=summary.final_portfolio_snapshot,
             ),
         )
+
+    @property
+    def starting_snapshot(self) -> PortfolioSnapshot:
+        return self.engine_context.financial_state.initial_snapshot
+
+    @property
+    def initial_journal_entry_count(self) -> int:
+        return len(self.engine_context.financial_state.journal.entries)
+
+
+@dataclass(frozen=True, slots=True)
+class VerifiedCompletedPublicationV3:
+    """Lean verified view of one analysis-ready canonical-v3 publication."""
+
+    source_publication_ref: BacktestCanonicalPublicationRefV2
+    semantic_run_id: str
+    source_execution_result_hash: str
+    result_grade: ResultGrade
+    reporting_currency: CurrencyId
+    engine_context: EngineExecutionContext
+    execution_summary: VerifiedExecutionSummary
+    rebuild_verification_ref: ArtifactRef
+    proof_publication_manifest_ref: ArtifactRef
+
+    def __post_init__(self) -> None:
+        if type(self.source_publication_ref) is not BacktestCanonicalPublicationRefV2:
+            raise TypeError(
+                "source_publication_ref must be exact BacktestCanonicalPublicationRefV2"
+            )
+        if type(self.semantic_run_id) is not str or _RUN_PATTERN.fullmatch(
+            self.semantic_run_id
+        ) is None:
+            raise ValueError("semantic_run_id must use run_sha256 schema")
+        if (
+            type(self.source_execution_result_hash) is not str
+            or _HASH_PATTERN.fullmatch(self.source_execution_result_hash) is None
+        ):
+            raise ValueError("source_execution_result_hash must use sha256 schema")
+        if type(self.result_grade) is not ResultGrade:
+            raise TypeError("result_grade must be exact ResultGrade")
+        if self.result_grade is not ResultGrade.DECISION_GRADE:
+            raise ValueError("canonical-v3 result_grade must be decision_grade")
+        if type(self.reporting_currency) is not CurrencyId:
+            raise TypeError("reporting_currency must be exact CurrencyId")
+        if type(self.engine_context) is not EngineExecutionContext:
+            raise TypeError("engine_context must be exact EngineExecutionContext")
+        if type(self.execution_summary) is not VerifiedExecutionSummary:
+            raise TypeError(
+                "execution_summary must be exact VerifiedExecutionSummary"
+            )
+        for name, ref, artifact_type in (
+            (
+                "rebuild_verification_ref",
+                self.rebuild_verification_ref,
+                "deterministic_rebuild_verification",
+            ),
+            (
+                "proof_publication_manifest_ref",
+                self.proof_publication_manifest_ref,
+                "deterministic_rebuild_verification_publication_manifest",
+            ),
+        ):
+            if (
+                type(ref) is not ArtifactRef
+                or ref.artifact_type != artifact_type
+                or ref.schema_version != 1
+            ):
+                raise ValueError(f"{name} must target {artifact_type}@1")
+        if self.engine_context.semantic_run_id != self.semantic_run_id:
+            raise ValueError("engine context semantic run mismatch")
+
+        initial = self.engine_context.financial_state
+        final_journal = self.execution_summary.final_journal
+        if final_journal.entries[: len(initial.journal.entries)] != (
+            initial.journal.entries
+        ):
+            raise ValueError("completed Journal does not preserve the run-start prefix")
+        starting = initial.initial_snapshot
+        ending = self.execution_summary.final_portfolio_snapshot
+        if (
+            starting.account_id != ending.account_id
+            or starting.reporting_currency != ending.reporting_currency
+            or starting.reporting_currency != self.reporting_currency
+        ):
+            raise ValueError("run-boundary PortfolioSnapshot context mismatch")
 
     @property
     def starting_snapshot(self) -> PortfolioSnapshot:

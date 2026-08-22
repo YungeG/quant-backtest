@@ -73,13 +73,21 @@ def test_market_data_root_exactly_adds_local_reader() -> None:
     assert market_data.LocalMarketBundleReader is LocalMarketBundleReader
 
 
-def test_runtime_kernel_and_builder_do_not_import_local_reader() -> None:
+def test_only_durable_runtime_seams_import_exact_local_reader() -> None:
+    runtime = ROOT / "packages/backtest-runtime/src/crypto_quant_backtest"
+    allowed_runtime_paths = {
+        runtime / "_durable_rebuild.py",
+        runtime / "facade.py",
+    }
     for directory in (
-        ROOT / "packages/backtest-runtime/src/crypto_quant_backtest",
+        runtime,
         ROOT / "packages/trading-kernel/src/crypto_quant_trading",
         ROOT / "packages/market-bundle-builder/src/crypto_quant_bundle_builder",
     ):
         for path in directory.rglob("*.py"):
             source = path.read_text(encoding="utf-8")
             assert "local_market_bundle_reader" not in source
-            assert "LocalMarketBundleReader" not in source
+            if path in allowed_runtime_paths:
+                assert "LocalMarketBundleReader" in source
+            else:
+                assert "LocalMarketBundleReader" not in source

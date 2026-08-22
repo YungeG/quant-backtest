@@ -1,18 +1,24 @@
 from __future__ import annotations
 
-from dataclasses import dataclass
 import re
+from dataclasses import dataclass
 
 from crypto_quant_domain import ArtifactEnvelope, ArtifactRef
 
 from .integrity import ResultGrade
-from .publication_refs import BacktestCanonicalPublicationRef
+from .publication_refs import (
+    BacktestCanonicalPublicationRef,
+    BacktestCanonicalPublicationRefV2,
+)
 
 __all__ = [
     "AnalysisArtifactRef",
+    "AnalysisArtifactRefV2",
     "BacktestAnalysis",
+    "BacktestAnalysisV2",
     "BacktestMetricProfile",
     "VerifiedBacktestAnalysis",
+    "VerifiedBacktestAnalysisV2",
 ]
 
 _SHA256 = re.compile(r"sha256:[0-9a-f]{64}\Z")
@@ -54,6 +60,44 @@ def _publication_ref(value: object) -> BacktestCanonicalPublicationRef:
     return rebuilt
 
 
+def _artifact_ref_v2(
+    value: object,
+    *,
+    artifact_type: str,
+    name: str,
+) -> ArtifactRef:
+    if type(value) is not ArtifactRef:
+        raise TypeError(f"{name} must be exact ArtifactRef")
+    rebuilt = ArtifactRef(
+        value.artifact_type,
+        value.schema_version,
+        value.content_hash,
+    )
+    if (
+        rebuilt != value
+        or rebuilt.artifact_type != artifact_type
+        or rebuilt.schema_version != 2
+    ):
+        raise ValueError(f"{name} must target {artifact_type}@2")
+    return rebuilt
+
+
+def _publication_ref_v2(value: object) -> BacktestCanonicalPublicationRefV2:
+    if type(value) is not BacktestCanonicalPublicationRefV2:
+        raise TypeError(
+            "source_publication_ref must be exact BacktestCanonicalPublicationRefV2"
+        )
+    artifact_ref = _artifact_ref_v2(
+        value.artifact_ref,
+        artifact_type="canonical_publication_manifest",
+        name="source_publication_ref.artifact_ref",
+    )
+    rebuilt = BacktestCanonicalPublicationRefV2.from_artifact_ref(artifact_ref)
+    if rebuilt != value:
+        raise ValueError("source_publication_ref is invalid")
+    return rebuilt
+
+
 def _execution_result_hash(value: object) -> str:
     if type(value) is not str or _SHA256.fullmatch(value) is None:
         raise ValueError("source_execution_result_hash must be canonical sha256")
@@ -90,6 +134,28 @@ class AnalysisArtifactRef:
     def to_canonical_dict(self) -> dict[str, object]:
         return {
             "type": "analysis_artifact_ref",
+            "artifact_ref": self.artifact_ref,
+        }
+
+
+@dataclass(frozen=True, slots=True)
+class AnalysisArtifactRefV2:
+    artifact_ref: ArtifactRef
+
+    def __post_init__(self) -> None:
+        object.__setattr__(
+            self,
+            "artifact_ref",
+            _artifact_ref_v2(
+                self.artifact_ref,
+                artifact_type="backtest_analysis",
+                name="artifact_ref",
+            ),
+        )
+
+    def to_canonical_dict(self) -> dict[str, object]:
+        return {
+            "type": "analysis_artifact_ref_v2",
             "artifact_ref": self.artifact_ref,
         }
 
@@ -180,6 +246,54 @@ class BacktestAnalysis:
 
 
 @dataclass(frozen=True, slots=True)
+class BacktestAnalysisV2:
+    metric_profile_ref: ArtifactRef
+    source_publication_ref: BacktestCanonicalPublicationRefV2
+    source_execution_result_hash: str
+    simple_period_return: str | None
+    trade_count: int
+    result_grade: ResultGrade
+
+    def __post_init__(self) -> None:
+        object.__setattr__(
+            self,
+            "metric_profile_ref",
+            _artifact_ref(
+                self.metric_profile_ref,
+                artifact_type="backtest_metric_profile",
+                name="metric_profile_ref",
+            ),
+        )
+        object.__setattr__(
+            self,
+            "source_publication_ref",
+            _publication_ref_v2(self.source_publication_ref),
+        )
+        _execution_result_hash(self.source_execution_result_hash)
+        object.__setattr__(
+            self,
+            "simple_period_return",
+            _period_return(self.simple_period_return),
+        )
+        if type(self.trade_count) is not int or self.trade_count < 0:
+            raise ValueError("trade_count must be a nonnegative integer")
+        if type(self.result_grade) is not ResultGrade:
+            raise TypeError("result_grade must be exact ResultGrade")
+
+    def to_canonical_dict(self) -> dict[str, object]:
+        return {
+            "type": "backtest_analysis",
+            "schema_version": 2,
+            "metric_profile_ref": self.metric_profile_ref,
+            "source_publication_ref": self.source_publication_ref,
+            "source_execution_result_hash": self.source_execution_result_hash,
+            "simple_period_return": self.simple_period_return,
+            "trade_count": self.trade_count,
+            "result_grade": self.result_grade.value,
+        }
+
+
+@dataclass(frozen=True, slots=True)
 class VerifiedBacktestAnalysis:
     analysis_ref: AnalysisArtifactRef
     analysis: BacktestAnalysis
@@ -214,6 +328,71 @@ class VerifiedBacktestAnalysis:
 
     @property
     def source_publication_ref(self) -> BacktestCanonicalPublicationRef:
+        return self.analysis.source_publication_ref
+
+    @property
+    def source_execution_result_hash(self) -> str:
+        return self.analysis.source_execution_result_hash
+
+    @property
+    def simple_period_return(self) -> str | None:
+        return self.analysis.simple_period_return
+
+    @property
+    def trade_count(self) -> int:
+        return self.analysis.trade_count
+
+    @property
+    def result_grade(self) -> ResultGrade:
+        return self.analysis.result_grade
+
+    def to_canonical_dict(self) -> dict[str, object]:
+        return {
+            "analysis_ref": self.analysis_ref,
+            "metric_profile_ref": self.metric_profile_ref,
+            "source_publication_ref": self.source_publication_ref,
+            "source_execution_result_hash": self.source_execution_result_hash,
+            "simple_period_return": self.simple_period_return,
+            "trade_count": self.trade_count,
+            "result_grade": self.result_grade.value,
+        }
+
+
+@dataclass(frozen=True, slots=True)
+class VerifiedBacktestAnalysisV2:
+    analysis_ref: AnalysisArtifactRefV2
+    analysis: BacktestAnalysisV2
+
+    def __post_init__(self) -> None:
+        if type(self.analysis_ref) is not AnalysisArtifactRefV2:
+            raise TypeError("analysis_ref must be exact AnalysisArtifactRefV2")
+        rebuilt_ref = AnalysisArtifactRefV2(self.analysis_ref.artifact_ref)
+        if rebuilt_ref != self.analysis_ref:
+            raise ValueError("analysis_ref is invalid")
+        if type(self.analysis) is not BacktestAnalysisV2:
+            raise TypeError("analysis must be exact BacktestAnalysisV2")
+        rebuilt_analysis = BacktestAnalysisV2(
+            self.analysis.metric_profile_ref,
+            self.analysis.source_publication_ref,
+            self.analysis.source_execution_result_hash,
+            self.analysis.simple_period_return,
+            self.analysis.trade_count,
+            self.analysis.result_grade,
+        )
+        if rebuilt_analysis != self.analysis:
+            raise ValueError("analysis is invalid")
+        expected_ref = ArtifactRef.from_envelope(
+            ArtifactEnvelope.create("backtest_analysis", 2, self.analysis)
+        )
+        if self.analysis_ref.artifact_ref != expected_ref:
+            raise ValueError("analysis_ref does not bind the analysis payload")
+
+    @property
+    def metric_profile_ref(self) -> ArtifactRef:
+        return self.analysis.metric_profile_ref
+
+    @property
+    def source_publication_ref(self) -> BacktestCanonicalPublicationRefV2:
         return self.analysis.source_publication_ref
 
     @property
