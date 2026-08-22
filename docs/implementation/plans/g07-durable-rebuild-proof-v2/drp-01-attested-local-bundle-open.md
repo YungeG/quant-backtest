@@ -69,5 +69,8 @@ never downgrades merely because fresh verification fails.
 - mutation tests prove selected-lane pre-Integrity failure/no fallback, and copied-
   valid-tree tests enforce the exact claim ceiling;
 - no path enters canonical serialization;
-- package root exports are byte-identical; and
-- architecture checks show no Runtime, Builder, registry, or generic Reader dependency.
+- package root exports are byte-identical;
+- architecture checks show no Runtime, Builder, registry, or generic Reader dependency;
+  and
+- the same commit updates only the DAG README projection from DRP-01 Ready / DRP-02
+  blocked to DRP-01 accepted / DRP-02 Ready.

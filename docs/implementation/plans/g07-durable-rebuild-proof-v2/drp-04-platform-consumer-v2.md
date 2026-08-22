@@ -97,7 +97,7 @@ behavior are explicit.
 
 Before commit, prove:
 
-- `git -C .. diff -- ../backtest ../tests/contracts/backtest-consumer-port-v2.json ../tests/support/backtest_consumer_port.py ../tests/architecture/test_backtest_consumer_port.py`
+- `git -C .. diff -- backtest tests/contracts/backtest-consumer-port-v2.json tests/support/backtest_consumer_port.py tests/architecture/test_backtest_consumer_port.py`
   is the complete Platform diff;
 - `git -C .. rev-parse :backtest` equals the immutable DRP-03 candidate SHA;
 - the v1 fixture hash and existing v1 consumer vectors are unchanged;

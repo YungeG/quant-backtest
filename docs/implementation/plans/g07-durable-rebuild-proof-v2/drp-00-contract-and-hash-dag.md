@@ -12,6 +12,8 @@ depends_on:
   contract: []
   evidence: [base-head-source-hashes, platform-v1-consumer-source-hashes]
   write_conflict: [drp-status-research-contract-new-matrix-row]
+decision: ACCEPTED_H1
+contract: ../../../research/g07-durable-rebuild-proof-v2-contract.md
 ---
 
 # DRP-00 contract and hash-DAG freeze
@@ -30,23 +32,29 @@ Freeze all of the following exactly:
 
 1. `BacktestRuntime.run(request)` exact unchanged parameters and lane predicate:
    exact schema 3 + requested decision grade + exact `LocalMarketBundleReader` type +
-   presence of private `open` provenance, selected before any fresh reopen; no new
+   exact private-sentinel `_has_repository_open_provenance_v1()` identity check,
+   selected before any fresh reopen; no new
    Runtime method and no fallback after selection;
-2. the smallest private provenance retained only by
-   `LocalMarketBundleReader.open`, the one exact versioned package-internal
-   read/reopen interface, its private exact result, and why direct construction,
+2. the one private-sentinel provenance tuple retained only after the same successful
+   `LocalMarketBundleReader.open` that verified and captured exact publication/
+   retention bytes and hashes; the exact private identity-check and reopen interfaces;
+   reopen bytes sourced from the reopened instance's same-open provenance; the
+   cooperative-process/private-sentinel limitation; and why direct construction,
    subclassing, in-memory, and arbitrary Readers never attest while constructor/open/
    root exports remain exact; direct construction remains the current non-attested/
    blocked path, while stale/tampered selected provenance fails pre-Integrity;
 3. exact current G12D publication/retention body decoding, hashes, and retrievability
    claim, including future-policy/trusted-root/remote/copied-tree nonclaims;
 4. exact proof/result/ref catalog: new verification@1 and proof-publication-manifest@1;
-   canonical-attempt-ref@2; Integrity context/report@2; completed Result@3; canonical
+   full first/retry `AttemptIdentity@1` bodies and evidence/record/manifest bindings;
+   ordinal-1 canonical selection; canonical-attempt-ref@2 containing the exact identity;
+   Integrity context/report@2; completed Result@3; canonical
    publication manifest@2; evaluation record@2 only because v1 exact-binds
    `IntegrityReport`; additive nominal `BacktestCanonicalPublicationRefV2` exact over
    manifest@2; preserved V1 constructor, wire, and behavior; `RunPublicationRef`/
-   facade union adds only V2 and leaves raw `ArtifactRef` for terminal/evaluation,
-   never canonical-v3 COMPLETED;
+   facade's actual direct return annotation adds only V2 and leaves raw `ArtifactRef`
+   for terminal/evaluation, never canonical-v3 COMPLETED; `RunPublicationRef` may
+   broaden consistently but does not substitute for the method annotation;
 5. exact additive analysis catalog for canonical-v3: `BacktestAnalysisV2` stored as
    `backtest_analysis@2`; `AnalysisArtifactRefV2` exact over that schema;
    `VerifiedBacktestAnalysisV2`; minimum `VerifiedCompletedPublicationV3` returned by
@@ -91,8 +99,12 @@ Freeze all of the following exactly:
     - if an operator recovery receipt is recorded, it is operational and noncanonical,
       outside CAS/proof/manifest/Integrity/Result authority. No filesystem path or PID
       is serialized into proof bytes;
-12. exact crash-state/failure mapping: stale `.publication.lock` is
-    `RUN_LOCK_UNAVAILABLE` / `run_lock_unavailable` during normal execution; staging
+12. exact crash-state/failure mapping reusing existing
+    `CanonicalPublicationFailureCode` for every prepare/write/file-fsync/manifest/
+    decode/coverage/hardening/destination-recheck/rename/final-verify/final-dir-fsync/
+    lock step, with exact cleanup and original-failure precedence: stale
+    `.publication.lock` is `RUN_LOCK_UNAVAILABLE` / `run_lock_unavailable` during
+    normal execution; staging
     residue is `STAGING_EXISTS` / `staging_exists`; rename-before-parent-fsync is
     absent-or-visible but untrusted from the crashed attempt; an exact visible final
     needs later under-lock verification plus parent fsync; malformed/partial/unmanaged/
@@ -134,7 +146,7 @@ Freeze all of the following exactly:
 20. exact six-node commit protocol: one writer and one clean commit per repository
     node; DRP-03 emits the immutable Backtest candidate; DRP-04 emits a separate
     Platform commit pinning exactly that SHA; DRP-05 emits a Backtest docs-only
-    Matrix-row-only governance commit binding both SHAs. Platform remains pinned to
+    Matrix-row plus DAG-status governance commit binding both SHAs. Platform remains pinned to
     DRP-03 because DRP-05 changes docs/status only;
 21. exact additive failure-code catalog and precedence for selected-lane fresh reopen/
     tamper, stale lock, staging residue, safe recovery cleanup/retry, unsafe cleanup
@@ -168,12 +180,24 @@ analysis values are additive, not permission for a generic wrapper hierarchy.
 The Matrix owns Gate status; the DAG owns node statuses. Accepted historical
 `G07 PASSED` is never overwritten or reinterpreted.
 
+## Accepted H1 record
+
+DRP-00 accepted H1 at Backtest source
+`bcbeff8415f4768335934c3961349cc8568e7489`. The exact implementation contract is
+[`g07-durable-rebuild-proof-v2-contract.md`](../../../research/g07-durable-rebuild-proof-v2-contract.md).
+The unique Matrix row is `READY — DRP-00 CONTRACT_FROZEN`; DRP-01 is the sole
+immediate Ready node. No package, test, or fixture implementation is part of this
+commit.
+
 ## Acceptance
 
 - exact source lines and current SHA-256 values are cited, including publication refs,
   analysis/derivation/verified-completed classes, repository methods, Platform v1
   consumer support, Resolution, and publication-lock/atomic helpers;
-- the runnable example reconstructs every ref/hash and both manifests without a cycle;
+- the runnable stdlib wire/hash-DAG example derives every sample ArtifactRef from a
+  concrete envelope, derives exact first/retry Attempt identities, freezes ordinal 1,
+  reconstructs both manifests without a cycle, and makes no repository/domain-decoder
+  acceptance claim; DRP-03 owns semantic reconstruction tests;
 - field audit proves transitive CAS bodies are not duplicated;
 - mismatch example reaches verified observation then FAILED evaluation;
 - compatibility fingerprints prove all existing completed/analysis ref construction,
@@ -185,7 +209,8 @@ The Matrix owns Gate status; the DAG owns node statuses. Accepted historical
 - recovery simulations prove exact scoped cleanup/retry and refuse malformed/partial/
   conflicting/escaping cleanup without adopting or deleting final state;
 - cross-repository checks prove DRP-04 pins exactly DRP-03 and DRP-05 changes only the
-  unique Matrix row while binding both immutable commits;
+  unique Matrix row plus DAG README DRP-04/05 projection while binding both immutable
+  commits;
 - independent review finds no grade backdoor, false durability/retention claim,
   unreachable BLOCKED fixture, heuristic unwrap/downgrade, or raw-ref canonical-v3
   success; and

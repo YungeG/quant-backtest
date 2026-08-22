@@ -35,13 +35,12 @@ requests, and schema-3 requests using any other Reader retain their current beha
 No `run_attested_v3` or other public Runtime method is added.
 
 The [Acceptance Matrix](../acceptance-matrix.md) is the sole Gate-status authority and
-records this initiative as `DRAFT / CONTRACT RESEARCH READY`. The
-[execution DAG](g07-durable-rebuild-proof-v2/README.md) owns only DRP node execution
-statuses. DRP-00 is the sole Ready node; implementation remains unauthorized until its
-H1 contract is accepted and the Matrix row becomes `READY`. The six-node route then
+records this initiative as `READY — DRP-00 CONTRACT_FROZEN`. The
+[execution DAG](g07-durable-rebuild-proof-v2/README.md) owns DRP node execution
+statuses. DRP-00 is `ACCEPTED_H1` and DRP-01 is the sole Ready node. The six-node route
 creates one immutable Backtest implementation candidate, one separate Platform
-consumer-v2 commit pinning that exact candidate, and one final Backtest Matrix-row-only
-docs/status commit.
+consumer-v2 commit pinning that exact candidate, and one final Backtest Matrix-row plus
+DAG-status docs-only governance commit.
 
 ## Problem bound at base HEAD
 
@@ -372,9 +371,10 @@ set, and creates a separate commit whose `backtest` gitlink equals exactly the D
 SHA. Typed cross-repository edges carry that immutable candidate, the exact gitlink,
 consumer-v2 contract results, and both commit SHAs.
 
-DRP-05 returns to Backtest and changes only the unique Matrix row in one docs/status-
-only governance commit. It binds both immutable commits and records final evidence
-before setting the row to `PASSED`. Platform remains correctly pinned to the DRP-03
+DRP-05 returns to Backtest and changes only the unique Matrix row plus the DAG README's
+DRP-04/DRP-05 status projection in one docs-only governance commit. It binds both
+immutable commits and records final evidence before atomically setting the row to
+`PASSED` and closing those node statuses. Platform remains correctly pinned to the DRP-03
 code commit because DRP-05 changes no code, fixture, public byte, operation, or
 consumer behavior. No node mixes Backtest submodule and Platform superproject writes.
 
@@ -427,12 +427,12 @@ This docs-only plan repair writes exactly:
 | current Gate status | [Acceptance Matrix](../acceptance-matrix.md), unique `G07-DURABLE-REBUILD-PROOF-V2` row |
 | current DRP node statuses, edges, WIP, Ready queue | [execution DAG](g07-durable-rebuild-proof-v2/README.md) |
 | invariant meanings and exclusions | this parent plan |
-| exact names, fields, preimages, failure codes, private seam, layouts | future DRP-00 research contract |
+| exact names, fields, preimages, failure codes, private seam, layouts | accepted DRP-00 research contract |
 | node-local implementation and evidence | each DRP node plan |
 
 Accepted historical `G07 PASSED` is unchanged and retains its development-run meaning.
-DRP-00 may update only the new Matrix row to `READY` after H1. DRP-03 creates the
-immutable Backtest code candidate; DRP-04 creates the separate Platform consumer-v2
-commit pinning that exact SHA; DRP-05 may update only that new Matrix row to `PASSED`
-after binding both commits. Platform may remain pinned to DRP-03 because DRP-05 is
+DRP-00 has updated the new Matrix row to `READY` after H1. DRP-03 creates the immutable
+Backtest code candidate; DRP-04 creates the separate Platform consumer-v2 commit
+pinning that exact SHA; DRP-05 may update only that new Matrix row plus the DAG
+README's DRP-04/DRP-05 projection after binding both commits. Platform may remain pinned to DRP-03 because DRP-05 is
 docs/status only.

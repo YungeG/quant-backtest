@@ -26,7 +26,8 @@ Create one clean Backtest commit that completes all Backtest-owned implementatio
 required before any Platform write: proof/Integrity/canonical-v3 publication,
 versioned nominal ref, repository static replay, facade/cache integration, and
 completed-v3→analysis-v2 support. The Acceptance Matrix remains `READY`; this node
-does not edit status or Platform files.
+edits no Matrix row or Platform file and updates only the DAG README projection to
+record DRP-03 accepted-candidate / DRP-04 Ready.
 
 Record the immutable candidate SHA and exact validation evidence for the typed
 cross-repository edge into DRP-04. No later Backtest code commit may be silently
@@ -177,6 +178,8 @@ Acceptance also requires:
 - exact-type tests proving V1 and V2 derive dispatch with no heuristic unwrap;
 - focused and full Backtest suites, architecture/import checks, static checks,
   diff-check, and gitleaks; and
+- the same candidate commit updates only the DAG README projection from DRP-03 blocked /
+  DRP-04 blocked to DRP-03 accepted-candidate / DRP-04 Ready; and
 - a clean Backtest working tree after creating one candidate commit.
 
 The node's acceptance record must name the immutable candidate SHA consumed by DRP-04.

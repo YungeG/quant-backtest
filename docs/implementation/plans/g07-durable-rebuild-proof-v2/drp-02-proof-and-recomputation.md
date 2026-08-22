@@ -76,8 +76,8 @@ Attempt mismatch or fresh-rebuild mismatch is valid observed evidence. Persist a
 read it back with exact comparison fields; DRP-03 maps it to FAILED. Do not require
 semantic equality to construct or verify the observation.
 
-Pre-Integrity failure is only inability to acquire/decode/freshly reopen/recompute,
-structurally construct, acquire the lock, durably publish, or read back. Fresh reopen
+Pre-Integrity failure is only inability to enter the single Run lock, acquire/decode/
+freshly reopen/recompute, structurally construct, durably publish, or read back. Fresh reopen
 or tamper failure after lane selection never falls back. Staging and orphan mirror
 content are never recognized as finalized. A visible rename-before-parent-fsync final
 is untrusted from the crashed attempt and is recognized only by the later normal
@@ -101,5 +101,7 @@ deployment field.
   retry, later exact idempotent acceptance, and refusal to mutate malformed/partial/
   escaping/simultaneous/conflicting final state with exact frozen codes;
 - counters prove fresh input read, reopen, PREP, Resolution, composition, and execution;
-- field audit proves no redundant transitive CAS body duplication; and
-- legacy schema-3 hydration/PREP behavior remains unchanged.
+- field audit proves no redundant transitive CAS body duplication;
+- legacy schema-3 hydration/PREP behavior remains unchanged; and
+- the same commit updates only the DAG README projection from DRP-02 blocked / DRP-03
+  blocked to DRP-02 accepted / DRP-03 Ready.

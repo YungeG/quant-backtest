@@ -21,10 +21,11 @@ depends_on:
 
 Create one final Backtest docs-only commit that changes only the unique
 `G07-DURABLE-REBUILD-PROOF-V2` row in
-`docs/implementation/acceptance-matrix.md`. Bind the immutable DRP-03 Backtest
-implementation-candidate SHA, immutable DRP-04 Platform consumer-v2 SHA, exact
-Platform `backtest` gitlink SHA, commands/results, and artifact hashes, then set that
-row to `PASSED`.
+`docs/implementation/acceptance-matrix.md` and the DRP-04/DRP-05 status projection in
+this DAG's `README.md`. Bind the immutable DRP-03 Backtest implementation-candidate
+SHA, immutable DRP-04 Platform consumer-v2 SHA, exact Platform `backtest` gitlink SHA,
+commands/results, and artifact hashes, then atomically record external DRP-04
+acceptance, DRP-05 acceptance, and Matrix `PASSED`.
 
 This node writes no code, tests, fixtures, other plan file, other Matrix row, Platform
 file, or submodule pointer. Accepted historical `G07 PASSED`, all G12M facts and
@@ -58,12 +59,15 @@ governance descendant.
 
 ## Acceptance
 
-- `git diff <DRP-03-sha>..HEAD -- docs/implementation/acceptance-matrix.md` shows only
-  the unique row's governance closure after accounting for this commit;
+- `git diff <DRP-03-sha>..HEAD -- docs/implementation/acceptance-matrix.md
+  docs/implementation/plans/g07-durable-rebuild-proof-v2/README.md` shows only the
+  unique row plus DRP-04/DRP-05 status governance closure after accounting for this
+  commit;
 - a row-uniqueness check finds exactly one `G07-DURABLE-REBUILD-PROOF-V2` registry row;
 - Matrix/DAG authority, Markdown/frontmatter/local links, and acyclicity checks pass;
 - `git diff --check`, docs-only/repository diff checks, and gitleaks pass;
-- the commit contains only `docs/implementation/acceptance-matrix.md`; and
+- the commit contains only `docs/implementation/acceptance-matrix.md` and
+  `docs/implementation/plans/g07-durable-rebuild-proof-v2/README.md`; and
 - the Backtest working tree is clean after one commit.
 
 Acceptance proves only the generic same-accepted-build local durable verification and
