@@ -99,10 +99,16 @@ from .multi_resolution_preparation import (
     MultiResolutionMarketDataPreparation,
     PreparedMultiResolutionMarketData,
     SignalObservationLineageBinding,
-    _bundle_ref as _rebuild_market_bundle_ref_v3,
-    _event as _rebuild_market_event_v3,
-    _manifest as _rebuild_market_bundle_manifest_v3,
     _prepare_multi_resolution_market_data_from_retained_v1,
+)
+from .multi_resolution_preparation import (
+    _bundle_ref as _rebuild_market_bundle_ref_v3,
+)
+from .multi_resolution_preparation import (
+    _event as _rebuild_market_event_v3,
+)
+from .multi_resolution_preparation import (
+    _manifest as _rebuild_market_bundle_manifest_v3,
 )
 from .observation_windows import BarDefinitionRef
 from .observations import ObservationPurposeRef, ObservationQuery
@@ -157,10 +163,12 @@ _ARTIFACT_TYPE = "backtest_execution_input_bundle"
 _SCHEMA_VERSION = 1
 _V2_SCHEMA_VERSION = 2
 _V3_SCHEMA_VERSION = 3
+_V4_SCHEMA_VERSION = 4
 _TEMPLATE_TYPE = "backtest_initial_financial_state_template"
 _V1_SCHEMA = CanonicalSchema(_ARTIFACT_TYPE, _SCHEMA_VERSION)
 _V2_SCHEMA = CanonicalSchema(_ARTIFACT_TYPE, _V2_SCHEMA_VERSION)
 _V3_SCHEMA = CanonicalSchema(_ARTIFACT_TYPE, _V3_SCHEMA_VERSION)
+_V4_SCHEMA = CanonicalSchema(_ARTIFACT_TYPE, _V4_SCHEMA_VERSION)
 _PAYLOAD_FIELDS = frozenset(
     {
         "type",
@@ -189,6 +197,7 @@ _V2_PAYLOAD_FIELDS = frozenset(
     }
 )
 _V3_PAYLOAD_FIELDS = _V2_PAYLOAD_FIELDS | {"market_data_preparation"}
+_V4_PAYLOAD_FIELDS = _V3_PAYLOAD_FIELDS | {"validation_instrument_catalogs"}
 _PLAN_FIELDS = frozenset(
     {
         "type",
@@ -388,6 +397,28 @@ class _DecodedExecutionInputBundleV3:
 
 
 @dataclass(frozen=True, slots=True)
+class _ValidationInstrumentCatalogBindingV1:
+    catalog_hash: str
+    catalog: domain.InstrumentCatalog
+
+    def __post_init__(self) -> None:
+        if type(self.catalog_hash) is not str or not self.catalog_hash:
+            raise ValueError("catalog_hash must be canonical non-empty text")
+        if type(self.catalog) is not domain.InstrumentCatalog:
+            raise TypeError("catalog must be exact InstrumentCatalog")
+        if canonical_sha256(self.catalog) != self.catalog_hash:
+            raise ValueError("validation instrument catalog hash mismatch")
+
+    def to_canonical_dict(self) -> dict[str, object]:
+        return {
+            "type": "validation_instrument_catalog_binding_v1",
+            "schema_version": 1,
+            "catalog_hash": self.catalog_hash,
+            "catalog": self.catalog,
+        }
+
+
+@dataclass(frozen=True, slots=True)
 class BacktestExecutionRequest:
     schema_version: int
     request: BacktestRequest
@@ -398,8 +429,11 @@ class BacktestExecutionRequest:
             _SCHEMA_VERSION,
             _V2_SCHEMA_VERSION,
             _V3_SCHEMA_VERSION,
+            _V4_SCHEMA_VERSION,
         ):
-            raise ValueError("BacktestExecutionRequest schema_version must be 1, 2, or 3")
+            raise ValueError(
+                "BacktestExecutionRequest schema_version must be 1, 2, 3, or 4"
+            )
         if type(self.request) is not BacktestRequest:
             raise TypeError("request must be exact BacktestRequest")
         if type(self.execution_input_bundle_ref) is not ArtifactRef:
@@ -997,11 +1031,147 @@ def _read_sizing_input(value: object) -> trading.InstrumentSizingInput:
     )
 
 
+def _read_catalog_instrument_definition_v4(
+    value: object,
+) -> domain.InstrumentDefinition:
+    data = _tagged("instrument_definition", value, "instrument_definition")
+    _exact_fields(
+        "instrument_definition",
+        data,
+        frozenset(
+            {
+                "type",
+                "instrument_id",
+                "instrument_type",
+                "base_currency",
+                "quote_currency",
+                "settlement_currency",
+            }
+        ),
+    )
+    return _canonical_reconstruction(
+        "instrument_definition",
+        data,
+        domain.InstrumentDefinition(
+            _read_instrument_id(data["instrument_id"]),
+            domain.InstrumentType(data["instrument_type"]),
+            _optional(data["base_currency"], _read_currency),
+            _read_currency(data["quote_currency"]),
+            _read_currency(data["settlement_currency"]),
+        ),
+    )
+
+
+def _read_symbol_interval(value: object) -> domain.SymbolInterval:
+    data = _mapping("symbol_interval", value)
+    _exact_fields(
+        "symbol_interval",
+        data,
+        frozenset({"symbol", "effective_from", "effective_until"}),
+    )
+    return _canonical_reconstruction(
+        "symbol_interval",
+        data,
+        domain.SymbolInterval(
+            _text("symbol", data["symbol"]),
+            _read_utc(data["effective_from"]),
+            _optional(data["effective_until"], _read_utc),
+        ),
+    )
+
+
+def _read_symbol_timeline(value: object) -> domain.SymbolTimeline:
+    data = _tagged("symbol_timeline", value, "symbol_timeline")
+    _exact_fields(
+        "symbol_timeline",
+        data,
+        frozenset({"type", "instrument_id", "intervals"}),
+    )
+    return _canonical_reconstruction(
+        "symbol_timeline",
+        data,
+        domain.SymbolTimeline(
+            _read_instrument_id(data["instrument_id"]),
+            _sequence("symbol intervals", data["intervals"], _read_symbol_interval),
+        ),
+    )
+
+
+def _read_instrument_catalog(value: object) -> domain.InstrumentCatalog:
+    data = _tagged("instrument_catalog", value, "instrument_catalog")
+    _exact_fields(
+        "instrument_catalog",
+        data,
+        frozenset({"type", "currencies", "instruments", "symbol_timelines"}),
+    )
+    return _canonical_reconstruction(
+        "instrument_catalog",
+        data,
+        domain.InstrumentCatalog(
+            _sequence("catalog currencies", data["currencies"], _read_currency),
+            _sequence(
+                "catalog instruments",
+                data["instruments"],
+                _read_catalog_instrument_definition_v4,
+            ),
+            _sequence(
+                "catalog symbol timelines",
+                data["symbol_timelines"],
+                _read_symbol_timeline,
+            ),
+        ),
+    )
+
+
+def _read_validation_catalog_binding(
+    value: object,
+) -> _ValidationInstrumentCatalogBindingV1:
+    data = _tagged(
+        "validation_instrument_catalog_binding",
+        value,
+        "validation_instrument_catalog_binding_v1",
+    )
+    _exact_fields(
+        "validation_instrument_catalog_binding",
+        data,
+        frozenset({"type", "schema_version", "catalog_hash", "catalog"}),
+    )
+    if data["schema_version"] != 1:
+        raise ValueError("validation instrument catalog binding must use schema 1")
+    return _canonical_reconstruction(
+        "validation_instrument_catalog_binding",
+        data,
+        _ValidationInstrumentCatalogBindingV1(
+            _text("catalog_hash", data["catalog_hash"]),
+            _read_instrument_catalog(data["catalog"]),
+        ),
+    )
+
+
 def _read_validation_catalog(
     value: Mapping[str, Any],
     sizing_inputs: tuple[trading.InstrumentSizingInput, ...],
+    catalog_lookup: Mapping[str, domain.InstrumentCatalog] | None = None,
 ) -> domain.InstrumentCatalog:
     universe = _sequence("validation universe", value["universe"], _read_instrument_id)
+    if catalog_lookup is not None:
+        catalog_hash = _text(
+            "instrument_catalog_hash", value["instrument_catalog_hash"]
+        )
+        try:
+            catalog = catalog_lookup[catalog_hash]
+        except KeyError:
+            raise ValueError("validation instrument catalog is missing") from None
+        if type(catalog) is not domain.InstrumentCatalog:
+            raise TypeError("validation catalog lookup values must be exact catalogs")
+        known = {definition.instrument_id for definition in catalog.instruments}
+        if not set(universe) <= known:
+            raise ValueError("validation universe is not covered by instrument catalog")
+        sizing_ids = {item.instrument_id for item in sizing_inputs}
+        if set(universe) != sizing_ids:
+            raise ValueError("validation universe must exact-cover sizing inputs")
+        return catalog
+
     definitions: list[domain.InstrumentDefinition] = []
     currencies: set[CurrencyId] = set()
     for instrument_id in universe:
@@ -1046,6 +1216,7 @@ def _read_validation_catalog(
 def _read_schedule_entry(
     value: object,
     sizing_inputs: tuple[trading.InstrumentSizingInput, ...],
+    catalog_lookup: Mapping[str, domain.InstrumentCatalog] | None = None,
 ) -> TargetStreamScheduleEntry:
     data = _tagged(
         "target_stream_schedule_entry", value, "target_stream_schedule_entry"
@@ -1064,7 +1235,7 @@ def _read_schedule_entry(
         context_value["expected_strategy_id"],
         domain.StrategySleeveId(context_value["expected_sleeve_id"]["value"]),
         _read_utc(context_value["decision_time"]),
-        _read_validation_catalog(context_value, sizing_inputs),
+        _read_validation_catalog(context_value, sizing_inputs, catalog_lookup),
         _sequence("validation universe", context_value["universe"], _read_instrument_id),
     )
     return TargetStreamScheduleEntry(data["event_id"], expectation, context)
@@ -1073,6 +1244,7 @@ def _read_schedule_entry(
 def _read_schedule(
     value: object,
     sizing_inputs: tuple[trading.InstrumentSizingInput, ...],
+    catalog_lookup: Mapping[str, domain.InstrumentCatalog] | None = None,
 ) -> TargetStreamDecisionSchedule:
     data = _tagged(
         "target_stream_decision_schedule",
@@ -1082,7 +1254,7 @@ def _read_schedule(
     entries = _sequence(
         "target stream schedule entries",
         data["entries"],
-        lambda item: _read_schedule_entry(item, sizing_inputs),
+        lambda item: _read_schedule_entry(item, sizing_inputs, catalog_lookup),
     )
     return TargetStreamDecisionSchedule(
         _read_utc(data["decision_time"]),
@@ -1545,11 +1717,14 @@ def _read_order_admission(value: object) -> ResolvedOrderAdmission:
     )
 
 
-def _read_decision_cycle(value: object) -> ResolvedDecisionCycle:
+def _read_decision_cycle(
+    value: object,
+    catalog_lookup: Mapping[str, domain.InstrumentCatalog] | None = None,
+) -> ResolvedDecisionCycle:
     data = _tagged("resolved_decision_cycle", value, "resolved_decision_cycle")
     sizing_inputs = _sequence("sizing inputs", data["sizing_inputs"], _read_sizing_input)
     return ResolvedDecisionCycle(
-        _read_schedule(data["schedule"], sizing_inputs),
+        _read_schedule(data["schedule"], sizing_inputs, catalog_lookup),
         _sequence("allocations", data["allocations"], _read_allocation),
         Scale(data["target_notional_scale"]),
         _read_portfolio_risk_policy(data["risk_policy"]),
@@ -2310,14 +2485,19 @@ def _read_simulation_port_spec(value: object) -> SimulationPortSpec:
     )
 
 
-def _read_execution_case_plan(value: object) -> _ExecutionCasePlan:
+def _read_execution_case_plan(
+    value: object,
+    catalog_lookup: Mapping[str, domain.InstrumentCatalog] | None = None,
+) -> _ExecutionCasePlan:
     plan = _mapping("execution_case_plan", value)
     _exact_fields("execution_case_plan", plan, _PLAN_FIELDS)
     if plan["type"] != "execution_case_plan" or plan["schema_version"] != 1:
         raise ValueError("execution case plan must be execution_case_plan@1")
 
     decision_cycles = _sequence(
-        "decision_cycles", plan["decision_cycles"], _read_decision_cycle
+        "decision_cycles",
+        plan["decision_cycles"],
+        lambda item: _read_decision_cycle(item, catalog_lookup),
     )
     bar_executions = _sequence(
         "bar_executions", plan["bar_executions"], _read_bar_execution
@@ -2666,6 +2846,64 @@ def _read_execution_input_payload_v3(value: object) -> _DecodedExecutionInputBun
     )
 
 
+def _read_execution_input_payload_v4(value: object) -> _DecodedExecutionInputBundleV3:
+    payload = _mapping("execution_input_bundle", value)
+    _exact_fields("execution_input_bundle", payload, _V4_PAYLOAD_FIELDS)
+    if (
+        payload["type"] != _ARTIFACT_TYPE
+        or payload["schema_version"] != _V4_SCHEMA_VERSION
+    ):
+        raise ValueError(
+            "execution input payload must be backtest_execution_input_bundle@4"
+        )
+    bindings = _sequence(
+        "validation_instrument_catalogs",
+        payload["validation_instrument_catalogs"],
+        _read_validation_catalog_binding,
+    )
+    hashes = tuple(binding.catalog_hash for binding in bindings)
+    if hashes != tuple(sorted(hashes)) or len(set(hashes)) != len(hashes):
+        raise ValueError(
+            "validation instrument catalogs must be strictly sorted and unique"
+        )
+    catalog_lookup = {
+        binding.catalog_hash: binding.catalog for binding in bindings
+    }
+    plan = _read_execution_case_plan(
+        payload["execution_case_plan"], catalog_lookup
+    )
+    used_hashes = {
+        canonical_sha256(entry.validation_context.instrument_catalog)
+        for cycle in plan.decision_cycles
+        for entry in cycle.schedule.entries
+    }
+    if used_hashes != set(catalog_lookup):
+        raise ValueError("validation instrument catalog table contains unused entries")
+    stream_keys = _stream_keys(payload["timeline_stream_keys"])
+    target_key = _text("target_stream_key", payload["target_stream_key"])
+    if target_key not in stream_keys:
+        raise ValueError("target_stream_key must be included in timeline_stream_keys")
+    return _DecodedExecutionInputBundleV3(
+        request_hash=_text("request_hash", payload["request_hash"]),
+        semantic_run_id=_text("semantic_run_id", payload["semantic_run_id"]),
+        build_artifact_manifest=_read_build_manifest(
+            payload["build_artifact_manifest"]
+        ),
+        execution_case_semantic_spec=_read_semantic_spec(
+            payload["execution_case_semantic_spec"]
+        ),
+        timeline_stream_keys=stream_keys,
+        target_stream_key=target_key,
+        timeline_batch_size=_positive_int(
+            "timeline_batch_size", payload["timeline_batch_size"]
+        ),
+        execution_case_plan=plan,
+        market_data_preparation=_read_market_data_preparation(
+            payload["market_data_preparation"]
+        ),
+    )
+
+
 _EXECUTION_INPUT_CATALOG = SchemaCatalog(
     (
         ArtifactSchemaRegistration(
@@ -2682,6 +2920,16 @@ _EXECUTION_INPUT_CATALOG = SchemaCatalog(
             artifact_type="backtest_execution_input_bundle",
             schema_version=3,
             payload_reader=_read_execution_input_payload_v3,
+        ),
+    )
+)
+
+_EXECUTION_INPUT_CATALOG_V4 = SchemaCatalog(
+    (
+        ArtifactSchemaRegistration(
+            artifact_type="backtest_execution_input_bundle",
+            schema_version=4,
+            payload_reader=_read_execution_input_payload_v4,
         ),
     )
 )
@@ -3106,6 +3354,7 @@ def _rebuild_execution_request_v3(
         _SCHEMA_VERSION,
         _V2_SCHEMA_VERSION,
         _V3_SCHEMA_VERSION,
+        _V4_SCHEMA_VERSION,
     ):
         raise ValueError("request schema_version is malformed")
     ref = value.execution_input_bundle_ref
@@ -3189,6 +3438,176 @@ def _materialize_execution_input_bundle_v3(
         "market_data_preparation": preparation.to_canonical_dict(),
     }
     return ArtifactEnvelope.create(_V3_SCHEMA.name, _V3_SCHEMA.version, payload)
+
+
+def _rebuild_instrument_catalog_v4(value: object) -> domain.InstrumentCatalog:
+    if type(value) is not domain.InstrumentCatalog:
+        raise TypeError("catalog must be exact InstrumentCatalog")
+    if type(value.currencies) is not tuple or any(
+        type(currency) is not CurrencyId for currency in value.currencies
+    ):
+        raise TypeError("catalog currencies must contain exact CurrencyId")
+    if type(value.instruments) is not tuple or any(
+        type(definition) is not domain.InstrumentDefinition
+        for definition in value.instruments
+    ):
+        raise TypeError(
+            "catalog instruments must contain exact InstrumentDefinition"
+        )
+    if type(value.symbol_timelines) is not tuple or any(
+        type(timeline) is not domain.SymbolTimeline
+        for timeline in value.symbol_timelines
+    ):
+        raise TypeError("catalog timelines must contain exact SymbolTimeline")
+    for definition in value.instruments:
+        if (
+            type(definition.instrument_id) is not domain.InstrumentId
+            or type(definition.instrument_id.venue) is not VenueId
+            or type(definition.instrument_type) is not domain.InstrumentType
+            or (
+                definition.base_currency is not None
+                and type(definition.base_currency) is not CurrencyId
+            )
+            or type(definition.quote_currency) is not CurrencyId
+            or type(definition.settlement_currency) is not CurrencyId
+        ):
+            raise TypeError("instrument definition contains non-exact values")
+    for timeline in value.symbol_timelines:
+        if (
+            type(timeline.instrument_id) is not domain.InstrumentId
+            or type(timeline.instrument_id.venue) is not VenueId
+            or type(timeline.intervals) is not tuple
+            or any(
+                type(interval) is not domain.SymbolInterval
+                or type(interval.symbol) is not str
+                or type(interval.effective_from) is not UtcInstant
+                or (
+                    interval.effective_until is not None
+                    and type(interval.effective_until) is not UtcInstant
+                )
+                for interval in timeline.intervals
+            )
+        ):
+            raise TypeError("symbol timeline contains non-exact values")
+    rebuilt = domain.InstrumentCatalog(
+        tuple(CurrencyId(currency.value) for currency in value.currencies),
+        tuple(
+            domain.InstrumentDefinition(
+                domain.InstrumentId(
+                    VenueId(definition.instrument_id.venue.value),
+                    definition.instrument_id.stable_key,
+                ),
+                domain.InstrumentType(definition.instrument_type.value),
+                (
+                    CurrencyId(definition.base_currency.value)
+                    if definition.base_currency is not None
+                    else None
+                ),
+                CurrencyId(definition.quote_currency.value),
+                CurrencyId(definition.settlement_currency.value),
+            )
+            for definition in value.instruments
+        ),
+        tuple(
+            domain.SymbolTimeline(
+                domain.InstrumentId(
+                    VenueId(timeline.instrument_id.venue.value),
+                    timeline.instrument_id.stable_key,
+                ),
+                tuple(
+                    domain.SymbolInterval(
+                        interval.symbol,
+                        UtcInstant(interval.effective_from.epoch_nanoseconds),
+                        (
+                            UtcInstant(interval.effective_until.epoch_nanoseconds)
+                            if interval.effective_until is not None
+                            else None
+                        ),
+                    )
+                    for interval in timeline.intervals
+                ),
+            )
+            for timeline in value.symbol_timelines
+        ),
+    )
+    if canonical_bytes(rebuilt) != canonical_bytes(value):
+        raise ValueError("instrument catalog did not reconstruct exactly")
+    return rebuilt
+
+
+def _validation_catalog_bindings_v4(
+    plan: _ExecutionCasePlan,
+) -> tuple[_ValidationInstrumentCatalogBindingV1, ...]:
+    if type(plan) is not _ExecutionCasePlan or type(plan.decision_cycles) is not tuple:
+        raise TypeError("execution case plan must contain exact decision cycles")
+    catalogs: dict[str, domain.InstrumentCatalog] = {}
+    catalog_bytes: dict[str, bytes] = {}
+    for cycle in plan.decision_cycles:
+        if (
+            type(cycle) is not ResolvedDecisionCycle
+            or type(cycle.schedule) is not TargetStreamDecisionSchedule
+            or type(cycle.schedule.entries) is not tuple
+            or type(cycle.sizing_inputs) is not tuple
+            or any(
+                type(sizing_input) is not trading.InstrumentSizingInput
+                for sizing_input in cycle.sizing_inputs
+            )
+        ):
+            raise TypeError("decision cycle catalog authority is malformed")
+        sizing_ids = {item.instrument_id for item in cycle.sizing_inputs}
+        for entry in cycle.schedule.entries:
+            if (
+                type(entry) is not TargetStreamScheduleEntry
+                or type(entry.validation_context)
+                is not trading.StrategyOutputValidationContext
+                or type(entry.validation_context.universe) is not tuple
+                or any(
+                    type(instrument_id) is not domain.InstrumentId
+                    or type(instrument_id.venue) is not VenueId
+                    for instrument_id in entry.validation_context.universe
+                )
+            ):
+                raise TypeError("validation catalog context is malformed")
+            if set(entry.validation_context.universe) != sizing_ids:
+                raise ValueError("validation universe must exact-cover sizing inputs")
+            catalog = _rebuild_instrument_catalog_v4(
+                entry.validation_context.instrument_catalog
+            )
+            known = {
+                definition.instrument_id for definition in catalog.instruments
+            }
+            if not set(entry.validation_context.universe) <= known:
+                raise ValueError(
+                    "validation universe is not covered by instrument catalog"
+                )
+            catalog_hash = canonical_sha256(catalog)
+            encoded = canonical_bytes(catalog)
+            if catalog_hash in catalog_bytes and catalog_bytes[catalog_hash] != encoded:
+                raise ValueError("validation instrument catalog hash collision")
+            catalogs.setdefault(catalog_hash, catalog)
+            catalog_bytes.setdefault(catalog_hash, encoded)
+    return tuple(
+        _ValidationInstrumentCatalogBindingV1(catalog_hash, catalogs[catalog_hash])
+        for catalog_hash in sorted(catalogs)
+    )
+
+
+def _materialize_execution_input_bundle_v4(
+    *,
+    resolved_request: ResolvedBacktestRequest,
+    hydrated_inputs: _HydratedExecutionCaseInputs,
+    market_data_preparation: MultiResolutionMarketDataPreparation,
+) -> ArtifactEnvelope:
+    v3 = _materialize_execution_input_bundle_v3(
+        resolved_request=resolved_request,
+        hydrated_inputs=hydrated_inputs,
+        market_data_preparation=market_data_preparation,
+    )
+    bindings = _validation_catalog_bindings_v4(hydrated_inputs.execution_case_plan)
+    payload = dict(v3.payload)
+    payload["schema_version"] = _V4_SCHEMA_VERSION
+    payload["validation_instrument_catalogs"] = bindings
+    return ArtifactEnvelope.create(_V4_SCHEMA.name, _V4_SCHEMA.version, payload)
 
 
 def _failure_v3(
@@ -3319,23 +3738,37 @@ def _preparation_replay_positions(
     return None, None, None
 
 
-def _snapshot_execution_request_v3(
+def _snapshot_execution_request_exact(
     request: BacktestExecutionRequest,
+    schema_version: int,
 ) -> tuple[BacktestExecutionRequest | None, _ExecutionInputsHydrationFailureV3 | None]:
     try:
         request_schema_version, ref = _rebuild_execution_request_v3(request)
-        if request_schema_version != _V3_SCHEMA_VERSION:
-            raise ValueError("request is not schema 3")
+        if request_schema_version != schema_version:
+            raise ValueError("request schema does not match")
         public_request = _rebuild_backtest_request_v3(request.request)
-        return BacktestExecutionRequest(3, public_request, ref), None
+        return BacktestExecutionRequest(schema_version, public_request, ref), None
     except Exception:
         return None, _ExecutionInputsHydrationFailureV3(
             _ExecutionInputsHydrationFailureCodeV3.MALFORMED_EXECUTION_REQUEST
         )
 
 
-def _snapshot_execution_request_v3_from_validated_schema(
+def _snapshot_execution_request_v3(
     request: BacktestExecutionRequest,
+) -> tuple[BacktestExecutionRequest | None, _ExecutionInputsHydrationFailureV3 | None]:
+    return _snapshot_execution_request_exact(request, _V3_SCHEMA_VERSION)
+
+
+def _snapshot_execution_request_v4(
+    request: BacktestExecutionRequest,
+) -> tuple[BacktestExecutionRequest | None, _ExecutionInputsHydrationFailureV3 | None]:
+    return _snapshot_execution_request_exact(request, _V4_SCHEMA_VERSION)
+
+
+def _snapshot_execution_request_from_validated_schema(
+    request: BacktestExecutionRequest,
+    schema_version: int,
 ) -> tuple[BacktestExecutionRequest | None, _ExecutionInputsHydrationFailureV3 | None]:
     try:
         ref = request.execution_input_bundle_ref
@@ -3352,18 +3785,52 @@ def _snapshot_execution_request_v3_from_validated_schema(
         )
     if (
         rebuilt_ref.artifact_type != _ARTIFACT_TYPE
-        or rebuilt_ref.schema_version != _V3_SCHEMA_VERSION
+        or rebuilt_ref.schema_version != schema_version
     ):
         return None, _ExecutionInputsHydrationFailureV3(
             _ExecutionInputsHydrationFailureCodeV3.WRONG_EXECUTION_INPUT_BUNDLE_REF
         )
     try:
         public_request = _rebuild_backtest_request_v3(request.request)
-        return BacktestExecutionRequest(3, public_request, rebuilt_ref), None
+        return BacktestExecutionRequest(schema_version, public_request, rebuilt_ref), None
     except Exception:
         return None, _ExecutionInputsHydrationFailureV3(
             _ExecutionInputsHydrationFailureCodeV3.MALFORMED_EXECUTION_REQUEST
         )
+
+
+def _snapshot_execution_request_v3_from_validated_schema(
+    request: BacktestExecutionRequest,
+) -> tuple[BacktestExecutionRequest | None, _ExecutionInputsHydrationFailureV3 | None]:
+    return _snapshot_execution_request_from_validated_schema(
+        request, _V3_SCHEMA_VERSION
+    )
+
+
+def _snapshot_execution_request_v4_from_validated_schema(
+    request: BacktestExecutionRequest,
+) -> tuple[BacktestExecutionRequest | None, _ExecutionInputsHydrationFailureV3 | None]:
+    return _snapshot_execution_request_from_validated_schema(
+        request, _V4_SCHEMA_VERSION
+    )
+
+
+def _read_execution_inputs_exact(
+    reader: ArtifactEnvelopeReader,
+    request: BacktestExecutionRequest,
+    schema_version: int,
+    *,
+    recorder: BoundedPerformanceRecorder | None = None,
+) -> tuple[_DecodedExecutionInputBundleV3 | None, _ExecutionInputsHydrationFailureV3 | None]:
+    snapshot, failure = _snapshot_execution_request_exact(request, schema_version)
+    if failure is not None or snapshot is None:
+        return None, failure
+    return _read_execution_inputs_from_snapshot_exact(
+        reader,
+        snapshot,
+        schema_version,
+        recorder=recorder,
+    )
 
 
 def _read_execution_inputs_v3(
@@ -3372,13 +3839,19 @@ def _read_execution_inputs_v3(
     *,
     recorder: BoundedPerformanceRecorder | None = None,
 ) -> tuple[_DecodedExecutionInputBundleV3 | None, _ExecutionInputsHydrationFailureV3 | None]:
-    snapshot, failure = _snapshot_execution_request_v3(request)
-    if failure is not None or snapshot is None:
-        return None, failure
-    return _read_execution_inputs_v3_from_snapshot(
-        reader,
-        snapshot,
-        recorder=recorder,
+    return _read_execution_inputs_exact(
+        reader, request, _V3_SCHEMA_VERSION, recorder=recorder
+    )
+
+
+def _read_execution_inputs_v4(
+    reader: ArtifactEnvelopeReader,
+    request: BacktestExecutionRequest,
+    *,
+    recorder: BoundedPerformanceRecorder | None = None,
+) -> tuple[_DecodedExecutionInputBundleV3 | None, _ExecutionInputsHydrationFailureV3 | None]:
+    return _read_execution_inputs_exact(
+        reader, request, _V4_SCHEMA_VERSION, recorder=recorder
     )
 
 
@@ -3388,11 +3861,37 @@ def _read_execution_inputs_v3_from_snapshot(
     *,
     recorder: BoundedPerformanceRecorder | None = None,
 ) -> tuple[_DecodedExecutionInputBundleV3 | None, _ExecutionInputsHydrationFailureV3 | None]:
+    return _read_execution_inputs_from_snapshot_exact(
+        reader, request, _V3_SCHEMA_VERSION, recorder=recorder
+    )
+
+
+def _read_execution_inputs_v4_from_snapshot(
+    reader: ArtifactEnvelopeReader,
+    request: BacktestExecutionRequest,
+    *,
+    recorder: BoundedPerformanceRecorder | None = None,
+) -> tuple[_DecodedExecutionInputBundleV3 | None, _ExecutionInputsHydrationFailureV3 | None]:
+    return _read_execution_inputs_from_snapshot_exact(
+        reader, request, _V4_SCHEMA_VERSION, recorder=recorder
+    )
+
+
+def _read_execution_inputs_from_snapshot_exact(
+    reader: ArtifactEnvelopeReader,
+    request: BacktestExecutionRequest,
+    schema_version: int,
+    *,
+    recorder: BoundedPerformanceRecorder | None = None,
+) -> tuple[_DecodedExecutionInputBundleV3 | None, _ExecutionInputsHydrationFailureV3 | None]:
     if recorder is not None and type(recorder) is not BoundedPerformanceRecorder:
         return None, _ExecutionInputsHydrationFailureV3(
             _ExecutionInputsHydrationFailureCodeV3.MALFORMED_EXECUTION_REQUEST
         )
-    if type(request) is not BacktestExecutionRequest or request.schema_version != 3:
+    if (
+        type(request) is not BacktestExecutionRequest
+        or request.schema_version != schema_version
+    ):
         return None, _ExecutionInputsHydrationFailureV3(
             _ExecutionInputsHydrationFailureCodeV3.MALFORMED_EXECUTION_REQUEST
         )
@@ -3424,8 +3923,13 @@ def _read_execution_inputs_v3_from_snapshot(
         )
 
     hydrate_started = _start_v3(recorder)
+    catalog = (
+        _EXECUTION_INPUT_CATALOG
+        if schema_version == _V3_SCHEMA_VERSION
+        else _EXECUTION_INPUT_CATALOG_V4
+    )
     try:
-        decoded = _EXECUTION_INPUT_CATALOG.read(source.source_bytes)
+        decoded = catalog.read(source.source_bytes)
     except Exception as error:
         _record_v3(
             recorder,
@@ -3484,12 +3988,16 @@ def _verify_execution_inputs_v3_after_resolution(
     request: BacktestExecutionRequest,
     resolved_request: ResolvedBacktestRequest,
     verified_reader: MarketBundleReader,
+    schema_version: int = _V3_SCHEMA_VERSION,
 ) -> _ExecutionInputsHydrationFailureV3 | None:
     try:
         if type(bundle) is not _DecodedExecutionInputBundleV3:
             raise TypeError("bundle must be exact decoded v3 execution inputs")
-        if type(request) is not BacktestExecutionRequest or request.schema_version != 3:
-            raise TypeError("request must be exact schema-3 snapshot")
+        if (
+            type(request) is not BacktestExecutionRequest
+            or request.schema_version != schema_version
+        ):
+            raise TypeError("request must be an exact execution input snapshot")
         if type(resolved_request) is not ResolvedBacktestRequest:
             raise TypeError("resolved_request must be exact ResolvedBacktestRequest")
         public_request = request.request
@@ -3535,6 +4043,7 @@ def _hydrate_execution_inputs_v3_from_decoded(
     target_stream: PrecomputedTargetStream | None = None,
     bindings_verified: bool = False,
     recorder: BoundedPerformanceRecorder | None = None,
+    _schema_version: int = _V3_SCHEMA_VERSION,
 ) -> _ExecutionInputsHydrationOutcomeV3:
     if recorder is not None and type(recorder) is not BoundedPerformanceRecorder:
         return _failure_v3(
@@ -3556,9 +4065,9 @@ def _hydrate_execution_inputs_v3_from_decoded(
         else:
             request_schema_version, ref = _rebuild_execution_request_v3(request)
             if (
-                request_schema_version != _V3_SCHEMA_VERSION
+                request_schema_version != _schema_version
                 or ref.artifact_type != _ARTIFACT_TYPE
-                or ref.schema_version != _V3_SCHEMA_VERSION
+                or ref.schema_version != _schema_version
             ):
                 return _failure_v3(
                     _ExecutionInputsHydrationFailureCodeV3.WRONG_EXECUTION_INPUT_BUNDLE_REF
@@ -3587,6 +4096,7 @@ def _hydrate_execution_inputs_v3_from_decoded(
             request,
             resolved,
             verified_reader,
+            _schema_version,
         )
         if failure is not None:
             return _ExecutionInputsHydrationOutcomeV3(failure=failure)
@@ -3785,6 +4295,30 @@ def _hydrate_execution_inputs_v3_from_decoded(
     )
 
 
+def _hydrate_execution_inputs_v4_from_decoded(
+    bundle: _DecodedExecutionInputBundleV3,
+    request: BacktestExecutionRequest,
+    *,
+    market_reader: MarketBundleReader,
+    resolved_request: ResolvedBacktestRequest,
+    prepared_market_data: PreparedMultiResolutionMarketData,
+    target_stream: PrecomputedTargetStream | None = None,
+    bindings_verified: bool = False,
+    recorder: BoundedPerformanceRecorder | None = None,
+) -> _ExecutionInputsHydrationOutcomeV3:
+    return _hydrate_execution_inputs_v3_from_decoded(
+        bundle,
+        request,
+        market_reader=market_reader,
+        resolved_request=resolved_request,
+        prepared_market_data=prepared_market_data,
+        target_stream=target_stream,
+        bindings_verified=bindings_verified,
+        recorder=recorder,
+        _schema_version=_V4_SCHEMA_VERSION,
+    )
+
+
 def _hydrate_execution_inputs_v3(
     reader: ArtifactEnvelopeReader,
     request: BacktestExecutionRequest,
@@ -3793,6 +4327,47 @@ def _hydrate_execution_inputs_v3(
     resolved_request: ResolvedBacktestRequest,
     prepared_market_data: PreparedMultiResolutionMarketData,
     recorder: BoundedPerformanceRecorder | None = None,
+) -> _ExecutionInputsHydrationOutcomeV3:
+    return _hydrate_execution_inputs_v3_or_v4(
+        reader,
+        request,
+        market_reader=market_reader,
+        resolved_request=resolved_request,
+        prepared_market_data=prepared_market_data,
+        recorder=recorder,
+        schema_version=_V3_SCHEMA_VERSION,
+    )
+
+
+def _hydrate_execution_inputs_v4(
+    reader: ArtifactEnvelopeReader,
+    request: BacktestExecutionRequest,
+    *,
+    market_reader: MarketBundleReader,
+    resolved_request: ResolvedBacktestRequest,
+    prepared_market_data: PreparedMultiResolutionMarketData,
+    recorder: BoundedPerformanceRecorder | None = None,
+) -> _ExecutionInputsHydrationOutcomeV3:
+    return _hydrate_execution_inputs_v3_or_v4(
+        reader,
+        request,
+        market_reader=market_reader,
+        resolved_request=resolved_request,
+        prepared_market_data=prepared_market_data,
+        recorder=recorder,
+        schema_version=_V4_SCHEMA_VERSION,
+    )
+
+
+def _hydrate_execution_inputs_v3_or_v4(
+    reader: ArtifactEnvelopeReader,
+    request: BacktestExecutionRequest,
+    *,
+    market_reader: MarketBundleReader,
+    resolved_request: ResolvedBacktestRequest,
+    prepared_market_data: PreparedMultiResolutionMarketData,
+    recorder: BoundedPerformanceRecorder | None,
+    schema_version: int,
 ) -> _ExecutionInputsHydrationOutcomeV3:
     if recorder is not None and type(recorder) is not BoundedPerformanceRecorder:
         return _failure_v3(
@@ -3805,9 +4380,9 @@ def _hydrate_execution_inputs_v3(
             _ExecutionInputsHydrationFailureCodeV3.MALFORMED_EXECUTION_REQUEST
         )
     if (
-        request_schema_version != _V3_SCHEMA_VERSION
+        request_schema_version != schema_version
         or ref.artifact_type != _ARTIFACT_TYPE
-        or ref.schema_version != _V3_SCHEMA_VERSION
+        or ref.schema_version != schema_version
     ):
         return _failure_v3(
             _ExecutionInputsHydrationFailureCodeV3.WRONG_EXECUTION_INPUT_BUNDLE_REF
@@ -3826,14 +4401,24 @@ def _hydrate_execution_inputs_v3(
         return _failure_v3(
             _ExecutionInputsHydrationFailureCodeV3.MALFORMED_EXECUTION_REQUEST
         )
-    bundle, failure = _read_execution_inputs_v3(reader, request, recorder=recorder)
+    read_inputs = (
+        _read_execution_inputs_v3
+        if schema_version == _V3_SCHEMA_VERSION
+        else _read_execution_inputs_v4
+    )
+    bundle, failure = read_inputs(reader, request, recorder=recorder)
     if failure is not None:
         return _ExecutionInputsHydrationOutcomeV3(failure=failure)
     if bundle is None:
         return _failure_v3(
             _ExecutionInputsHydrationFailureCodeV3.EXECUTION_INPUT_DECODE_FAILED
         )
-    return _hydrate_execution_inputs_v3_from_decoded(
+    hydrate_decoded = (
+        _hydrate_execution_inputs_v3_from_decoded
+        if schema_version == _V3_SCHEMA_VERSION
+        else _hydrate_execution_inputs_v4_from_decoded
+    )
+    return hydrate_decoded(
         bundle,
         request,
         market_reader=market_reader,
@@ -3841,6 +4426,7 @@ def _hydrate_execution_inputs_v3(
         prepared_market_data=prepared_market_data,
         recorder=recorder,
     )
+
 
 def _failure(
     code: _ExecutionInputsHydrationFailureCode, message: str
