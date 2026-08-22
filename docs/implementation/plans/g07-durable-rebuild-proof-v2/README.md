@@ -30,15 +30,15 @@ DRP-02 ACCEPTED: durable verification observation + fresh recomputation
 DRP-03 ACCEPTED_CANDIDATE: Backtest implementation candidate
       │  Integrity/manifest v2 + canonical-v3 + ref/repository/facade/analysis v2
       ↓ immutable Backtest candidate commit + typed consumer contract
-DRP-04 READY: Platform consumer-v2 commit + exact Backtest gitlink pin
+DRP-04 ACCEPTED: Platform consumer-v2 commit + exact Backtest gitlink pin
       ↓ immutable Platform commit + typed submodule-pin/consumer evidence
-DRP-05 BLOCKED_FAN_IN: Backtest docs-only governance fan-in + Matrix PASSED
+DRP-05 ACCEPTED: Backtest docs-only governance fan-in + Matrix PASSED
 ```
 
-The graph is acyclic and has six nodes. DRP-00 accepted H1, DRP-01 and DRP-02 are
-accepted, DRP-03 has produced the immutable Backtest candidate, the unique Matrix row
-is `READY`, and DRP-04 is the sole immediate Ready node. The unselected H2 route
-remains terminal history only.
+The graph is acyclic and complete. DRP-00 accepted H1; DRP-01 and DRP-02 are
+accepted; DRP-03 produced the immutable Backtest candidate; DRP-04 produced the
+immutable Platform consumer-v2/gitlink commit; DRP-05 bound both commits and set the
+unique Matrix row to `PASSED`. The unselected H2 route remains terminal history only.
 
 ## Nodes and node-status registry
 
@@ -48,8 +48,8 @@ remains terminal history only.
 | [DRP-01](drp-01-attested-local-bundle-open.md) | ACCEPTED | Backtest | exact private repository reopen/read result from the existing Local Reader | DRP-00 H1 | current G12D local publication/retention fixtures | Local Reader private seam |
 | [DRP-02](drp-02-proof-and-recomputation.md) | ACCEPTED | Backtest | durable `deterministic_rebuild_verification@1` and proof-publication manifest@1 | DRP-00 H1, DRP-01 | schema-3/PREP/two-Attempt full-trace fixtures | execution/rebuild and proof-publication seam |
 | [DRP-03](drp-03-backtest-implementation-candidate.md) | ACCEPTED_CANDIDATE | Backtest | one implementation candidate commit: Integrity v2, canonical-v3, V2 completed ref/replay/cache, and additive analysis v2 | DRP-02 | legacy goldens plus exact local schema-3 Run | Integrity/publication/ref/repository/facade/analysis seams |
-| [DRP-04](drp-04-platform-consumer-v2.md) | READY | Platform superproject | one consumer-v2 commit pinning the exact DRP-03 Backtest commit | DRP-03 immutable commit | Platform V1 bytes plus consumer-v2 journey | Platform gitlink and consumer contract files |
-| [DRP-05](drp-05-governance-fan-in.md) | BLOCKED_FAN_IN | Backtest | docs-only governance commit binding immutable DRP-03 and DRP-04 commits, atomically recording DRP-04/05 node closure, and setting the unique Matrix row to `PASSED` | DRP-03, DRP-04 | complete Backtest and Platform acceptance evidence | unique Matrix row plus this node-status registry |
+| [DRP-04](drp-04-platform-consumer-v2.md) | ACCEPTED | Platform superproject | one consumer-v2 commit pinning the exact DRP-03 Backtest commit | DRP-03 immutable commit | Platform V1 bytes plus consumer-v2 journey | Platform gitlink and consumer contract files |
+| [DRP-05](drp-05-governance-fan-in.md) | ACCEPTED | Backtest | docs-only governance commit binding immutable DRP-03 and DRP-04 commits, atomically recording DRP-04/05 node closure, and setting the unique Matrix row to `PASSED` | DRP-03, DRP-04 | complete Backtest and Platform acceptance evidence | unique Matrix row plus this node-status registry |
 
 Only this table owns current DRP node statuses. Node frontmatter records ownership and
 dependencies, not a second status.
@@ -168,8 +168,8 @@ implementation discretion.
 | 1 | DRP-01 | ACCEPTED | DRP-02 | Local Reader private seam only |
 | 2 | DRP-02 | ACCEPTED | DRP-03 | verification/recomputation/durable proof publication only |
 | 3 | DRP-03 | ACCEPTED_CANDIDATE | DRP-04 | one Backtest implementation candidate commit |
-| 4 | DRP-04 | READY | DRP-05 | one Platform consumer-v2/gitlink commit |
-| 5 | DRP-05 | BLOCKED_FAN_IN | accepted generic prerequisite | one Backtest Matrix-row + DAG-status governance commit |
+| 4 | DRP-04 | ACCEPTED | DRP-05 | one Platform consumer-v2/gitlink commit |
+| 5 | DRP-05 | ACCEPTED | accepted generic prerequisite | one Backtest Matrix-row + DAG-status governance commit |
 
 ## Final acceptance route
 
