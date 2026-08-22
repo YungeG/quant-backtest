@@ -31,6 +31,16 @@ from .bundles import (
 )
 
 
+class _LocalReopenUnavailable(MarketBundleIntegrityError):
+    _durable_reopen_kind_v1 = "unavailable"
+
+
+class _LocalReopenTampered(MarketBundleIntegrityError):
+    _durable_reopen_kind_v1 = "tampered"
+
+
+_REPOSITORY_OPEN_PROVENANCE_V1 = object()
+
 _HASH_RE = re.compile(r"sha256:[0-9a-f]{64}\Z")
 _POLICY_RE = re.compile(r"[a-z][a-z0-9._-]*\Z")
 _MANIFEST_KEYS = {
@@ -142,7 +152,7 @@ def _read_bytes(path: Path) -> bytes:
     try:
         return path.read_bytes()
     except OSError:
-        raise MarketBundleIntegrityError("required publication artifact is missing") from None
+        raise _LocalReopenUnavailable("required publication artifact is missing") from None
 
 
 def _read_canonical_json(path: Path, name: str) -> tuple[bytes, object]:
@@ -161,7 +171,7 @@ def _entry_mode(path: Path) -> int:
     try:
         return path.lstat().st_mode
     except OSError:
-        raise MarketBundleIntegrityError("required publication artifact is missing") from None
+        raise _LocalReopenUnavailable("required publication artifact is missing") from None
 
 
 def _assert_directory(path: Path, *, immutable: bool) -> None:
@@ -177,10 +187,14 @@ def _assert_readonly_tree(path: Path, *, expected_names: set[str] | None = None)
     try:
         entries = tuple(path.iterdir())
     except OSError:
-        raise MarketBundleIntegrityError("required publication artifact is missing") from None
+        raise _LocalReopenUnavailable("required publication artifact is missing") from None
 
-    if expected_names is not None and {entry.name for entry in entries} != expected_names:
-        raise MarketBundleIntegrityError("required publication artifact is malformed")
+    if expected_names is not None:
+        actual_names = {entry.name for entry in entries}
+        if not expected_names.issubset(actual_names):
+            raise _LocalReopenUnavailable("required publication artifact is missing")
+        if actual_names != expected_names:
+            raise MarketBundleIntegrityError("required publication artifact is malformed")
 
     for entry in entries:
         mode = _entry_mode(entry)
@@ -396,6 +410,17 @@ class LocalMarketBundleReader:
 
     def __init__(self, delegate: InMemoryMarketBundleReader) -> None:
         self._delegate = delegate
+        self._repository_open_provenance_v1: tuple[
+            object,
+            Path,
+            MarketBundleRef,
+            bytes,
+            str,
+            str,
+            bytes,
+            str,
+            str,
+        ] | None = None
 
     @property
     def bundle_ref(self) -> MarketBundleRef:
@@ -444,7 +469,7 @@ class LocalMarketBundleReader:
         if canonical_bytes(manifest) != manifest_bytes:
             raise _malformed("bundle manifest")
 
-        _, publication_value = _read_canonical_json(
+        publication_bytes, publication_value = _read_canonical_json(
             final_directory / "publication.json", "publication payload"
         )
         publication = _mapping(
@@ -497,7 +522,7 @@ class LocalMarketBundleReader:
         if _POLICY_RE.fullmatch(retention_policy_ref) is None:
             raise _malformed("publication retention policy")
 
-        _, retention_value = _read_canonical_json(
+        retention_bytes, retention_value = _read_canonical_json(
             final_directory / "retention-proof.json", "retention proof"
         )
         retention = _mapping(
@@ -574,7 +599,118 @@ class LocalMarketBundleReader:
             )
         except MarketBundleError:
             raise MarketBundleIntegrityError("published stream evidence is invalid") from None
-        return cls(delegate)
+
+        reader = cls(delegate)
+        if cls is LocalMarketBundleReader:
+            try:
+                resolved_root = repository_root.resolve(strict=True)
+            except OSError:
+                raise _LocalReopenUnavailable(
+                    "required publication artifact is missing"
+                ) from None
+            reader._repository_open_provenance_v1 = (
+                _REPOSITORY_OPEN_PROVENANCE_V1,
+                resolved_root,
+                bundle_ref,
+                publication_bytes,
+                _content_hash(publication_bytes),
+                publication_hash,
+                retention_bytes,
+                _content_hash(retention_bytes),
+                proof_hash,
+            )
+        return reader
+
+    def _has_repository_open_provenance_v1(self) -> bool:
+        if type(self) is not LocalMarketBundleReader:
+            return False
+        provenance = self._repository_open_provenance_v1
+        if type(provenance) is not tuple or len(provenance) != 9:
+            return False
+        (
+            sentinel,
+            root,
+            ref,
+            publication_bytes,
+            publication_source_hash,
+            publication_hash,
+            retention_bytes,
+            retention_source_hash,
+            proof_hash,
+        ) = provenance
+        if sentinel is not _REPOSITORY_OPEN_PROVENANCE_V1:
+            return False
+        if not isinstance(root, Path) or not root.is_absolute():
+            return False
+        if any(part in {".", ".."} for part in root.parts):
+            return False
+        if type(ref) is not MarketBundleRef or type(publication_bytes) is not bytes:
+            return False
+        hashes = (
+            publication_source_hash,
+            publication_hash,
+            retention_source_hash,
+            proof_hash,
+        )
+        if type(retention_bytes) is not bytes or any(
+            type(value) is not str or _HASH_RE.fullmatch(value) is None
+            for value in hashes
+        ):
+            return False
+        try:
+            return self.bundle_ref == ref
+        except (AttributeError, TypeError, ValueError):
+            return False
+
+    def _reopen_with_provenance_v1(
+        self,
+    ) -> tuple[
+        LocalMarketBundleReader,
+        bytes,
+        str,
+        str,
+        bytes,
+        str,
+        str,
+    ]:
+        if not self._has_repository_open_provenance_v1():
+            raise _LocalReopenTampered("repository-open provenance is invalid")
+        original = self._repository_open_provenance_v1
+        if type(original) is not tuple:
+            raise _LocalReopenTampered("repository-open provenance is invalid")
+        root = original[1]
+        ref = original[2]
+        if not isinstance(root, Path) or type(ref) is not MarketBundleRef:
+            raise _LocalReopenTampered("repository-open provenance is invalid")
+
+        try:
+            reopened = LocalMarketBundleReader.open(
+                repository_root=root,
+                bundle_ref=ref,
+            )
+        except _LocalReopenUnavailable:
+            raise
+        except OSError:
+            raise _LocalReopenUnavailable(
+                "required publication artifact is missing"
+            ) from None
+        except MarketBundleIntegrityError:
+            raise _LocalReopenTampered("repository-open evidence is invalid") from None
+
+        if not reopened._has_repository_open_provenance_v1():
+            raise _LocalReopenTampered("repository-open evidence is invalid")
+        current = reopened._repository_open_provenance_v1
+        if type(current) is not tuple or current[1:] != original[1:]:
+            raise _LocalReopenTampered("repository-open evidence has changed")
+        return (
+            reopened,
+            current[3],
+            current[4],
+            current[5],
+            current[6],
+            current[7],
+            current[8],
+        )
 
     def validate_requirements(
         self,
