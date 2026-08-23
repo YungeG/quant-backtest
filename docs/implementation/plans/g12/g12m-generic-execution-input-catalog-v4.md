@@ -169,7 +169,7 @@ C4-00 contract freeze
 | Node | Outcome | Exact write set |
 | --- | --- | --- |
 | C4-00 | this frozen contract | `docs/implementation/plans/g12/g12m-generic-execution-input-catalog-v4.md` |
-| C4-01 | schema-4 materialization, catalog decode, hydration | `packages/backtest-runtime/src/crypto_quant_backtest/execution_inputs.py`; `tests/runtime/execution_inputs/test_execution_input_bundle_v4.py`; `tests/fixtures/runtime/execution-input-bundle-v4/` |
+| C4-01 | schema-4 materialization, catalog decode, hydration | `packages/backtest-runtime/src/crypto_quant_backtest/execution_inputs.py`; `tests/runtime/execution_inputs/test_execution_input_bundle_v4.py`; `tests/runtime/execution_inputs/test_multi_resolution_bundle_v3.py`; `tests/architecture/test_bt_gap02a_composition_boundary.py`; `tests/architecture/test_bt_gap02b_execution_input_boundary.py`; `tests/architecture/test_bt_gap02c_execution_closure_boundary.py`; `tests/fixtures/runtime/execution-input-bundle-v4/` |
 | C4-02 | sole-facade durable proof and canonical-v3 fan-in | `packages/backtest-runtime/src/crypto_quant_backtest/facade.py`; `packages/backtest-runtime/src/crypto_quant_backtest/_durable_rebuild.py`; `tests/runtime/test_durable_rebuild_facade_v4.py`; `tests/architecture/test_execution_input_bundle_v4_boundary.py` |
 
 C4-01 and C4-02 may be one implementation candidate after this contract is accepted,

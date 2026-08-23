@@ -12,7 +12,7 @@ from crypto_quant_backtest.composition import (
     _HydratedExecutionCaseInputs,
 )
 from crypto_quant_backtest.execution_inputs import (
-    _EXECUTION_INPUT_CATALOG_V4,
+    _EXECUTION_INPUT_CATALOG,
     BacktestExecutionRequest,
     _DecodedExecutionInputBundleV3,
     _ExecutionInputsHydrationFailureCodeV3,
@@ -183,7 +183,7 @@ def test_v4_cash_materializes_decodes_and_hydrates_as_v3_common_value() -> None:
         resolved.request,
         ArtifactRef.from_envelope(envelope),
     )
-    decoded = _EXECUTION_INPUT_CATALOG_V4.read(canonical_bytes(envelope)).artifact
+    decoded = _EXECUTION_INPUT_CATALOG.read(canonical_bytes(envelope)).artifact
     assert type(decoded) is _DecodedExecutionInputBundleV3
     outcome = _hydrate_execution_inputs_v4(
         _Reader(envelope),
@@ -212,7 +212,7 @@ def test_v4_equity_catalog_round_trip_locks_nullable_base_and_symbol_timeline() 
     _, _, hydrated, catalog, envelope = _equity_contract()
     fixture = json.loads(_FIXTURE.read_text(encoding="utf-8"))
     assert fixture == json.loads(canonical_bytes(envelope).decode())
-    decoded = _EXECUTION_INPUT_CATALOG_V4.read(canonical_bytes(envelope)).artifact
+    decoded = _EXECUTION_INPUT_CATALOG.read(canonical_bytes(envelope)).artifact
     assert type(decoded) is _DecodedExecutionInputBundleV3
     context = decoded.execution_case_plan.decision_cycles[0].schedule.entries[
         0

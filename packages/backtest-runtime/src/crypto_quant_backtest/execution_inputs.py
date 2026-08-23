@@ -2921,11 +2921,6 @@ _EXECUTION_INPUT_CATALOG = SchemaCatalog(
             schema_version=3,
             payload_reader=_read_execution_input_payload_v3,
         ),
-    )
-)
-
-_EXECUTION_INPUT_CATALOG_V4 = SchemaCatalog(
-    (
         ArtifactSchemaRegistration(
             artifact_type="backtest_execution_input_bundle",
             schema_version=4,
@@ -3923,13 +3918,8 @@ def _read_execution_inputs_from_snapshot_exact(
         )
 
     hydrate_started = _start_v3(recorder)
-    catalog = (
-        _EXECUTION_INPUT_CATALOG
-        if schema_version == _V3_SCHEMA_VERSION
-        else _EXECUTION_INPUT_CATALOG_V4
-    )
     try:
-        decoded = catalog.read(source.source_bytes)
+        decoded = _EXECUTION_INPUT_CATALOG.read(source.source_bytes)
     except Exception as error:
         _record_v3(
             recorder,
