@@ -1,6 +1,6 @@
 ---
 id: G12M-SOURCE-BOUNDED-QUALIFICATION-V1
-readiness: A_SHARE_BLOCKED_H2_BINANCE_H3_PERMANENT_BLOCK
+readiness: A_SHARE_V2_ACCEPTED_H1_V1_IMMUTABLE_H2_BINANCE_H3_PERMANENT_BLOCK
 gate_status: DRAFT
 owner: backtest-runtime qualification
 produces:
@@ -28,25 +28,28 @@ backtest result under [ADR 0008](../../../adr/0008-source-bounded-decision-grade
 One exact Tushare-only A-share case has accepted G12I and fixed-singleton G12K
 canonical artifacts, and one exact Binance funding-history case has an accepted
 observed-as-of canonical report. This governance plan does not itself authorize a
-production Runtime interface. The authoritative remaining Tushare decomposition is
-[G12M Tushare fixed-singleton qualification v1](g12m-tushare-fixed-singleton-qualification-v1.md);
-its accepted BHA-01 H2 decision records that neither an independently accepted
-applicable production China A-share component/Profile/Build authority nor a separately
-independently accepted generic durable rebuild/retention proof prerequisite exists.
-BHA-02 through BHA-04 are terminated with no outputs and BHA-05 accepted the blocked
-route. Resolution remains runtime compatibility authority and Integrity remains sole
-grade authority. Binance remains closed by its accepted H3 decision.
+production Runtime interface. The historical Tushare decomposition remains immutable in
+[G12M Tushare fixed-singleton qualification v1](g12m-tushare-fixed-singleton-qualification-v1.md):
+its accepted BHA-01 H2 decision, terminated BHA-02 through BHA-04 nodes, and accepted
+BHA-05 blocked receipt are unchanged. The additive successor
+[G12M Tushare fixed-singleton qualification v2](g12m-tushare-fixed-singleton-qualification-v2.md)
+is now `ACCEPTED_H1` at main/candidate
+`2f2bc40cc5fcd06f4f47af9c5c6e691fee00f7a6`, with only the
+[H1 receipt](g12m-tushare-fixed-singleton-qualification-v2-h1-acceptance-receipt.md)
+present. Resolution remains compatibility authority and Integrity remains sole grade
+authority. Binance remains closed by its accepted H3 decision.
 
 ## Status
 
-`DRAFT / TUSHARE BLOCKED_H2; BINANCE H3 PERMANENTLY BLOCKED`. ADR 0008 policy is
-unchanged. Accepted Tushare G12I/G12K artifacts remain provider evidence only.
-Tushare qualification is blocked by two controllable prerequisites: no independently
-accepted generic durable rebuild/retention proof seam and no independently accepted
-applicable production China A-share component/Profile/Build authority. BHA-01 is
-`DECIDED_H2`, BHA-02 through BHA-04 are `TERMINATED_H2` with no outputs, BHA-05 is
-`ACCEPTED_H2`, and the execution DAG is `BLOCKED_H2`. Missing strict G12H successor,
-official closure, or legal closure remains a limitation/nonclaim, not an H2 cause.
+`DRAFT / EXACT TUSHARE V2 FIXED-SINGLETON ROUTE ACCEPTED_H1; TUSHARE V1
+IMMUTABLY BLOCKED_H2; BINANCE H3 PERMANENTLY BLOCKED`. ADR 0008 policy is
+unchanged. Accepted Tushare G12I/G12K artifacts remain provider evidence only outside
+the exact accepted successor binding. Historical v1 remains BHA-01 `DECIDED_H2`,
+BHA-02 through BHA-04 `TERMINATED_H2`, BHA-05 `ACCEPTED_H2`, and route
+`BLOCKED_H2`. Additive v2 is V2-01 through V2-05 and route `ACCEPTED_H1`; its
+schema-4 implementation does not rewrite the frozen schema-3 contract clause.
+Missing strict G12H successor, official closure, or legal closure remains a
+limitation/nonclaim, not an H2 cause.
 The Binance funding-history v2 report remains accepted as exact post-hoc upstream
 evidence, with `available_time` fixed at the 2026 receipt instant. Accepted H3
 `NO_CAUSAL_AUTHORITY` permanently terminates the historical BHA-03 through BHA-09
@@ -241,11 +244,11 @@ by that exact case provides:
    closure owned by each upstream lane.
 
 The accepted G12I and fixed-singleton G12K lanes satisfy the upstream provider-evidence
-criteria for the exact Tushare-only A-share case; they do not satisfy the independently
-accepted applicable Profile/Build prerequisite, the independently accepted generic
-durable rebuild/retention proof prerequisite, or Runtime market-data contracts.
-The remaining Tushare route and its honest code start gate are owned by
-[G12M-TUSHARE-FIXED-SINGLETON-QUALIFICATION-V1](g12m-tushare-fixed-singleton-qualification-v1.md).
+criteria for the exact Tushare-only A-share case. Their exact v2 binding now also
+consumes the independently accepted runnable Profile/Build authority and generic
+durable rebuild proof, producing the accepted 19-source + 19-projection + one-target
+schema-4 route and assessment recorded by the H1 receipt. This acceptance is not
+general G12I/G12K/provider qualification and does not alter historical v1 H2.
 The accepted Binance funding-history v2 lane supplies exact post-hoc upstream evidence only. H3
 `NO_CAUSAL_AUTHORITY` permanently closes the historical causal route: no closed
 nominal value, run/Integrity binding,

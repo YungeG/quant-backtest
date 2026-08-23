@@ -1,6 +1,6 @@
 ---
 id: G12M-TUSHARE-FIXED-SINGLETON-QUALIFICATION-V2
-status: CONTRACT_FROZEN
+status: CONTRACT_FROZEN / ROUTE_ACCEPTED_H1
 owner: additive Tushare fixed-singleton qualification successor
 status_authority: ../../acceptance-matrix.md
 predecessor_route: g12m-tushare-fixed-singleton-qualification-v1.md
@@ -204,6 +204,34 @@ and non-deployment. It does not claim historical Provider Availability Time, pro
 finality/completeness, listing continuity, survivorship, corporate-action lifecycle or
 absence, strict official/legal/tax closure, execution quality, live eligibility, or
 Binance qualification.
+
+## V2-05 acceptance closure
+
+At main/candidate `2f2bc40cc5fcd06f4f47af9c5c6e691fee00f7a6`, V2-01,
+V2-02, V2-03, V2-04, V2-05, and the route are `ACCEPTED_H1`. The sole receipt is
+[g12m-tushare-fixed-singleton-qualification-v2-h1-acceptance-receipt.md](g12m-tushare-fixed-singleton-qualification-v2-h1-acceptance-receipt.md)
+(`sha256:28c94f5530bdf4bf74707a0ece33c3d2b70ffb51c3d061b4950e17d6de58998c`);
+the H2 receipt is absent.
+
+The accepted implementation is additive schema 4 for the execution-input Bundle:
+manifest/content `sha256:2ea4d3c58076312ff86ee175fac2f1173fb28f01e4e4d31ca372ca0d345e750b` /
+`sha256:a0b6319c07aaa810ba490924f2267ebb93f72d5037432b30dd6a0a5bbb3fb8ff`.
+This closure does not rewrite the frozen historical schema-3 contract clause above.
+It records the accepted catalog fan-in while retaining the sole facade and authority
+order. The accepted route is
+`sha256:49051c693cd2ea4c1822c6e8ac6f929e0e952ccba8cfa7d5d248e18d9b7eb0f2`,
+the semantic Run is
+`run_1eebd60b81376e15fbe4b2496ed359ab24ed644c7416812d09eb3fb715f581a9`,
+and the final assessment is
+`sha256:31f29b9ab70e7c8da267b6c17dcbe294503088850c894b066116313233dca8bb`.
+The assessment binds 19 source Events, 19 projections, one target, 39 Timeline
+Events, zero trade/accounting effects, copied `decision_grade`, and assessment time
+at or after `1787299622295499670`.
+
+Historical Tushare v1 H2 and Binance H3 `NO_CAUSAL_AUTHORITY` remain unchanged. All
+provider availability/finality/completeness, listing/survivorship,
+corporate-action lifecycle/absence, strict legal/tax closure, execution-quality,
+live/deployment, and Binance-qualification nonclaims remain in force.
 
 ## Validation budget
 
