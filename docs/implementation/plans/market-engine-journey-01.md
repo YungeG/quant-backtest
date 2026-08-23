@@ -1,6 +1,6 @@
 ---
 id: MARKET-ENGINE-JOURNEY-01
-status: CONTRACT_FROZEN
+status: PASSED
 owner: backtest-runtime execution-input and engine integration
 status_authority: ../acceptance-matrix.md
 ---
@@ -111,8 +111,16 @@ existing precedence is unchanged:
 
 ## Acceptance
 
-Run the focused schema-5 journey and existing schema-4 off-lane locks, adjacent
-execution-input/PREP/facade/provider/G12M tests, import boundaries, LSP/lens,
-`uv lock --check`, and `git diff --check`, then one full repository suite. Final
-acceptance rechecks the protected main-worktree hashes/status and performs an
-independent blocker review.
+`PASSED` at implementation commit `2edd82b37f96b0d1ddad9c917993e11dc0d9074a`.
+The schema-5 journey and adjacent execution-input/PREP/facade/provider/architecture
+set passed `83` tests; import boundaries passed across `134` files; primary Python
+LSP reported zero diagnostics; `uv lock --check`, compile, diff, and gitleaks checks
+passed. The full repository passed `2389` tests. The first full rerun in the recreated
+`/tmp` worktree exposed only three missing external Platform fixture paths; after
+restoring the existing sibling fixture path through `/tmp/tests`, those ten exact
+contract tests and the complete full suite passed without repository changes.
+
+Independent review found the initial architecture schema-count locks and missing
+non-Local/read-count sentinels; both were fixed before the accepted commit. A final
+review must confirm no remaining blocker. Protected main-worktree hashes/status must
+remain exact before governance close.
