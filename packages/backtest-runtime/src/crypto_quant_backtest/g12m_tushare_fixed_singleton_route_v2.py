@@ -8,9 +8,9 @@ from pathlib import Path
 import crypto_quant_domain as domain
 import crypto_quant_trading as trading
 from crypto_quant_market_data import (
-    LocalMarketBundleReader,
     MarketBundleCapability,
     MarketBundleManifest,
+    MarketBundleReader,
     MarketBundleRef,
     MarketEvent,
 )
@@ -135,7 +135,7 @@ def _catalog(instrument: domain.InstrumentId) -> domain.InstrumentCatalog:
 
 
 def _retained_events(
-    market_reader: LocalMarketBundleReader,
+    market_reader: MarketBundleReader,
 ) -> tuple[
     MarketBundleRef,
     MarketBundleManifest,
@@ -143,10 +143,6 @@ def _retained_events(
     tuple[MarketEvent, ...],
     tuple[MarketEvent, ...],
 ]:
-    if type(market_reader) is not LocalMarketBundleReader:
-        raise TypeError("market_reader must be exact LocalMarketBundleReader")
-    if not market_reader._has_repository_open_provenance_v1():
-        raise ValueError("market_reader must retain Local repository-open provenance")
     expected_ref = MarketBundleRef(_BUNDLE_KEY, _BUNDLE_MANIFEST_HASH)
     retained = _capture_market_bundle_reader_v1(expected_ref, market_reader)
     if retained is None:
@@ -834,7 +830,7 @@ class _G12MTushareFixedSingletonRouteResultV2:
 
 def run_g12m_tushare_fixed_singleton_route_v2(
     *,
-    market_reader: LocalMarketBundleReader,
+    market_reader: MarketBundleReader,
     artifact_reader: ArtifactEnvelopeReader,
     artifact_publisher: ArtifactEnvelopePublisher,
     publication_root: Path,

@@ -194,9 +194,9 @@ def test_route_result_rejects_input_source_or_nested_identity_mutation(
         ResultSubclass(**values)
 
 
-def test_route_requires_exact_retained_local_reader(tmp_path: Path) -> None:
+def test_route_rejects_reader_without_exact_retained_bundle(tmp_path: Path) -> None:
     store = _Store()
-    with pytest.raises(TypeError, match="exact LocalMarketBundleReader"):
+    with pytest.raises(ValueError, match="retained Local Reader Bundle"):
         run_g12m_tushare_fixed_singleton_route_v2(
             market_reader=object(),  # type: ignore[arg-type]
             artifact_reader=store,

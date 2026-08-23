@@ -35,6 +35,7 @@ def test_route_uses_one_facade_without_builder_runner_or_engine_escape() -> None
         node.module or "" for node in ast.walk(tree) if isinstance(node, ast.ImportFrom)
     }
     assert not any(value.startswith("crypto_quant_bundle_builder") for value in imports)
+    assert "LocalMarketBundleReader" not in source
     assert "tests." not in source
     assert "DeterministicBarEngine" not in source
     assert "AuditableBacktestRunner" not in source
