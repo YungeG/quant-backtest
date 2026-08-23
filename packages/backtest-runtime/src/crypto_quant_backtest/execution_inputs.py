@@ -164,11 +164,13 @@ _SCHEMA_VERSION = 1
 _V2_SCHEMA_VERSION = 2
 _V3_SCHEMA_VERSION = 3
 _V4_SCHEMA_VERSION = 4
+_V5_SCHEMA_VERSION = 5
 _TEMPLATE_TYPE = "backtest_initial_financial_state_template"
 _V1_SCHEMA = CanonicalSchema(_ARTIFACT_TYPE, _SCHEMA_VERSION)
 _V2_SCHEMA = CanonicalSchema(_ARTIFACT_TYPE, _V2_SCHEMA_VERSION)
 _V3_SCHEMA = CanonicalSchema(_ARTIFACT_TYPE, _V3_SCHEMA_VERSION)
 _V4_SCHEMA = CanonicalSchema(_ARTIFACT_TYPE, _V4_SCHEMA_VERSION)
+_V5_SCHEMA = CanonicalSchema(_ARTIFACT_TYPE, _V5_SCHEMA_VERSION)
 _PAYLOAD_FIELDS = frozenset(
     {
         "type",
@@ -198,6 +200,7 @@ _V2_PAYLOAD_FIELDS = frozenset(
 )
 _V3_PAYLOAD_FIELDS = _V2_PAYLOAD_FIELDS | {"market_data_preparation"}
 _V4_PAYLOAD_FIELDS = _V3_PAYLOAD_FIELDS | {"validation_instrument_catalogs"}
+_V5_PAYLOAD_FIELDS = _V4_PAYLOAD_FIELDS
 _PLAN_FIELDS = frozenset(
     {
         "type",
@@ -430,9 +433,10 @@ class BacktestExecutionRequest:
             _V2_SCHEMA_VERSION,
             _V3_SCHEMA_VERSION,
             _V4_SCHEMA_VERSION,
+            _V5_SCHEMA_VERSION,
         ):
             raise ValueError(
-                "BacktestExecutionRequest schema_version must be 1, 2, 3, or 4"
+                "BacktestExecutionRequest schema_version must be 1, 2, 3, 4, or 5"
             )
         if type(self.request) is not BacktestRequest:
             raise TypeError("request must be exact BacktestRequest")
@@ -2846,15 +2850,25 @@ def _read_execution_input_payload_v3(value: object) -> _DecodedExecutionInputBun
     )
 
 
-def _read_execution_input_payload_v4(value: object) -> _DecodedExecutionInputBundleV3:
+def _read_execution_input_payload_with_catalog(
+    value: object,
+    schema_version: int,
+) -> _DecodedExecutionInputBundleV3:
+    if schema_version not in {_V4_SCHEMA_VERSION, _V5_SCHEMA_VERSION}:
+        raise ValueError("catalog execution input schema must be 4 or 5")
     payload = _mapping("execution_input_bundle", value)
-    _exact_fields("execution_input_bundle", payload, _V4_PAYLOAD_FIELDS)
+    fields = (
+        _V4_PAYLOAD_FIELDS
+        if schema_version == _V4_SCHEMA_VERSION
+        else _V5_PAYLOAD_FIELDS
+    )
+    _exact_fields("execution_input_bundle", payload, fields)
     if (
         payload["type"] != _ARTIFACT_TYPE
-        or payload["schema_version"] != _V4_SCHEMA_VERSION
+        or payload["schema_version"] != schema_version
     ):
         raise ValueError(
-            "execution input payload must be backtest_execution_input_bundle@4"
+            f"execution input payload must be backtest_execution_input_bundle@{schema_version}"
         )
     bindings = _sequence(
         "validation_instrument_catalogs",
@@ -2904,6 +2918,14 @@ def _read_execution_input_payload_v4(value: object) -> _DecodedExecutionInputBun
     )
 
 
+def _read_execution_input_payload_v4(value: object) -> _DecodedExecutionInputBundleV3:
+    return _read_execution_input_payload_with_catalog(value, _V4_SCHEMA_VERSION)
+
+
+def _read_execution_input_payload_v5(value: object) -> _DecodedExecutionInputBundleV3:
+    return _read_execution_input_payload_with_catalog(value, _V5_SCHEMA_VERSION)
+
+
 _EXECUTION_INPUT_CATALOG = SchemaCatalog(
     (
         ArtifactSchemaRegistration(
@@ -2925,6 +2947,11 @@ _EXECUTION_INPUT_CATALOG = SchemaCatalog(
             artifact_type="backtest_execution_input_bundle",
             schema_version=4,
             payload_reader=_read_execution_input_payload_v4,
+        ),
+        ArtifactSchemaRegistration(
+            artifact_type="backtest_execution_input_bundle",
+            schema_version=5,
+            payload_reader=_read_execution_input_payload_v5,
         ),
     )
 )
@@ -3350,6 +3377,7 @@ def _rebuild_execution_request_v3(
         _V2_SCHEMA_VERSION,
         _V3_SCHEMA_VERSION,
         _V4_SCHEMA_VERSION,
+        _V5_SCHEMA_VERSION,
     ):
         raise ValueError("request schema_version is malformed")
     ref = value.execution_input_bundle_ref
@@ -3587,11 +3615,12 @@ def _validation_catalog_bindings_v4(
     )
 
 
-def _materialize_execution_input_bundle_v4(
+def _materialize_execution_input_bundle_with_catalog(
     *,
     resolved_request: ResolvedBacktestRequest,
     hydrated_inputs: _HydratedExecutionCaseInputs,
     market_data_preparation: MultiResolutionMarketDataPreparation,
+    schema: CanonicalSchema,
 ) -> ArtifactEnvelope:
     v3 = _materialize_execution_input_bundle_v3(
         resolved_request=resolved_request,
@@ -3600,9 +3629,37 @@ def _materialize_execution_input_bundle_v4(
     )
     bindings = _validation_catalog_bindings_v4(hydrated_inputs.execution_case_plan)
     payload = dict(v3.payload)
-    payload["schema_version"] = _V4_SCHEMA_VERSION
+    payload["schema_version"] = schema.version
     payload["validation_instrument_catalogs"] = bindings
-    return ArtifactEnvelope.create(_V4_SCHEMA.name, _V4_SCHEMA.version, payload)
+    return ArtifactEnvelope.create(schema.name, schema.version, payload)
+
+
+def _materialize_execution_input_bundle_v4(
+    *,
+    resolved_request: ResolvedBacktestRequest,
+    hydrated_inputs: _HydratedExecutionCaseInputs,
+    market_data_preparation: MultiResolutionMarketDataPreparation,
+) -> ArtifactEnvelope:
+    return _materialize_execution_input_bundle_with_catalog(
+        resolved_request=resolved_request,
+        hydrated_inputs=hydrated_inputs,
+        market_data_preparation=market_data_preparation,
+        schema=_V4_SCHEMA,
+    )
+
+
+def _materialize_execution_input_bundle_v5(
+    *,
+    resolved_request: ResolvedBacktestRequest,
+    hydrated_inputs: _HydratedExecutionCaseInputs,
+    market_data_preparation: MultiResolutionMarketDataPreparation,
+) -> ArtifactEnvelope:
+    return _materialize_execution_input_bundle_with_catalog(
+        resolved_request=resolved_request,
+        hydrated_inputs=hydrated_inputs,
+        market_data_preparation=market_data_preparation,
+        schema=_V5_SCHEMA,
+    )
 
 
 def _failure_v3(
@@ -3810,6 +3867,14 @@ def _snapshot_execution_request_v4_from_validated_schema(
     )
 
 
+def _snapshot_execution_request_v5_from_validated_schema(
+    request: BacktestExecutionRequest,
+) -> tuple[BacktestExecutionRequest | None, _ExecutionInputsHydrationFailureV3 | None]:
+    return _snapshot_execution_request_from_validated_schema(
+        request, _V5_SCHEMA_VERSION
+    )
+
+
 def _read_execution_inputs_exact(
     reader: ArtifactEnvelopeReader,
     request: BacktestExecutionRequest,
@@ -3869,6 +3934,17 @@ def _read_execution_inputs_v4_from_snapshot(
 ) -> tuple[_DecodedExecutionInputBundleV3 | None, _ExecutionInputsHydrationFailureV3 | None]:
     return _read_execution_inputs_from_snapshot_exact(
         reader, request, _V4_SCHEMA_VERSION, recorder=recorder
+    )
+
+
+def _read_execution_inputs_v5_from_snapshot(
+    reader: ArtifactEnvelopeReader,
+    request: BacktestExecutionRequest,
+    *,
+    recorder: BoundedPerformanceRecorder | None = None,
+) -> tuple[_DecodedExecutionInputBundleV3 | None, _ExecutionInputsHydrationFailureV3 | None]:
+    return _read_execution_inputs_from_snapshot_exact(
+        reader, request, _V5_SCHEMA_VERSION, recorder=recorder
     )
 
 
@@ -4306,6 +4382,30 @@ def _hydrate_execution_inputs_v4_from_decoded(
         bindings_verified=bindings_verified,
         recorder=recorder,
         _schema_version=_V4_SCHEMA_VERSION,
+    )
+
+
+def _hydrate_execution_inputs_v5_from_decoded(
+    bundle: _DecodedExecutionInputBundleV3,
+    request: BacktestExecutionRequest,
+    *,
+    market_reader: MarketBundleReader,
+    resolved_request: ResolvedBacktestRequest,
+    prepared_market_data: PreparedMultiResolutionMarketData,
+    target_stream: PrecomputedTargetStream | None = None,
+    bindings_verified: bool = False,
+    recorder: BoundedPerformanceRecorder | None = None,
+) -> _ExecutionInputsHydrationOutcomeV3:
+    return _hydrate_execution_inputs_v3_from_decoded(
+        bundle,
+        request,
+        market_reader=market_reader,
+        resolved_request=resolved_request,
+        prepared_market_data=prepared_market_data,
+        target_stream=target_stream,
+        bindings_verified=bindings_verified,
+        recorder=recorder,
+        _schema_version=_V5_SCHEMA_VERSION,
     )
 
 

@@ -46,9 +46,12 @@ from .execution_inputs import (
     _hydrate_execution_inputs,
     _hydrate_execution_inputs_v3_from_decoded,
     _hydrate_execution_inputs_v4_from_decoded,
+    _hydrate_execution_inputs_v5_from_decoded,
     _read_execution_inputs_v3_from_snapshot,
+    _read_execution_inputs_v5_from_snapshot,
     _snapshot_execution_request_v3_from_validated_schema,
     _snapshot_execution_request_v4_from_validated_schema,
+    _snapshot_execution_request_v5_from_validated_schema,
     _verify_execution_inputs_v3_after_resolution,
 )
 from .integrity import (
@@ -166,29 +169,41 @@ class BacktestRuntime:
             raise RuntimeError(
                 "execution input hydration failed: malformed_execution_request"
             ) from None
-        if type(schema_version) is not int or schema_version not in {1, 2, 3, 4}:
+        if type(schema_version) is not int or schema_version not in {1, 2, 3, 4, 5}:
             raise RuntimeError(
                 "execution input hydration failed: malformed_execution_request"
             )
-        if schema_version in {3, 4}:
-            snapshotter = (
-                _snapshot_execution_request_v3_from_validated_schema
-                if schema_version == 3
-                else _snapshot_execution_request_v4_from_validated_schema
-            )
+        if schema_version in {3, 4, 5}:
+            snapshotter = {
+                3: _snapshot_execution_request_v3_from_validated_schema,
+                4: _snapshot_execution_request_v4_from_validated_schema,
+                5: _snapshot_execution_request_v5_from_validated_schema,
+            }[schema_version]
             snapshot, failure = snapshotter(request)
             if failure is not None or snapshot is None:
                 self._raise_v3_hydration_failure(failure)
+            local_reader = (
+                type(self._market_reader) is LocalMarketBundleReader
+                and self._market_reader._has_repository_open_provenance_v1()
+            )
             selected_durable_lane = (
                 cancellation is None
                 and snapshot.request.result_grade_requested
                 is RequestedResultGrade.DECISION_GRADE
-                and type(self._market_reader) is LocalMarketBundleReader
-                and self._market_reader._has_repository_open_provenance_v1()
+                and local_reader
             )
-            if selected_durable_lane:
+            if selected_durable_lane and schema_version in {3, 4}:
                 return self._run_durable_v3(snapshot)
             if schema_version == 4:
+                raise RuntimeError(
+                    "execution input hydration failed: malformed_execution_request"
+                )
+            if schema_version == 5 and not (
+                cancellation is None
+                and snapshot.request.result_grade_requested
+                is RequestedResultGrade.DEVELOPMENT
+                and local_reader
+            ):
                 raise RuntimeError(
                     "execution input hydration failed: malformed_execution_request"
                 )
@@ -656,10 +671,13 @@ class BacktestRuntime:
         *,
         cancellation: EngineCancellationRequest | None,
     ) -> BacktestCanonicalPublicationRef | ArtifactRef:
-        bundle, failure = _read_execution_inputs_v3_from_snapshot(
-            self._artifact_reader,
-            request,
+        schema_version = request.schema_version
+        read_inputs = (
+            _read_execution_inputs_v3_from_snapshot
+            if schema_version == 3
+            else _read_execution_inputs_v5_from_snapshot
         )
+        bundle, failure = read_inputs(self._artifact_reader, request)
         if failure is not None or bundle is None:
             self._raise_v3_hydration_failure(failure)
         if (
@@ -693,6 +711,7 @@ class BacktestRuntime:
             request,
             resolved,
             retained_reader,
+            schema_version,
         )
         if binding_failure is not None:
             self._raise_v3_hydration_failure(binding_failure)
@@ -722,7 +741,12 @@ class BacktestRuntime:
             raise RuntimeError(
                 "execution input hydration failed: prepared_market_data_replay_mismatch"
             )
-        hydrated = _hydrate_execution_inputs_v3_from_decoded(
+        hydrate_inputs = (
+            _hydrate_execution_inputs_v3_from_decoded
+            if schema_version == 3
+            else _hydrate_execution_inputs_v5_from_decoded
+        )
+        hydrated = hydrate_inputs(
             bundle,
             request,
             market_reader=retained_reader,

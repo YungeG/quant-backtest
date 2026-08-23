@@ -1,0 +1,86 @@
+{
+  "analysis_ref": {
+    "artifact_ref": {
+      "artifact_type": "backtest_analysis",
+      "content_hash": "sha256:de69efacd7b19f3c3395ec2a306d2d0d67560b3ced17e38ce7cede2938adec5d",
+      "schema_version": 1,
+      "type": "artifact_ref"
+    },
+    "type": "analysis_artifact_ref"
+  },
+  "decision_batch_count": 1,
+  "execution_case_hash": "sha256:43425eb7eaf40b4381d1a4e2ba2792b680c049f933335477fbf2b30920391ed1",
+  "execution_input_ref": {
+    "artifact_type": "backtest_execution_input_bundle",
+    "content_hash": "sha256:336e7bf273ca4649af5b67f375fffe0c2a091254ee0620fd9ad98101d0b01c42",
+    "schema_version": 5,
+    "type": "artifact_ref"
+  },
+  "execution_input_source_hash": "sha256:3b5e32b62967b1f9c4c752f77995363a9155d2e7c66ae4fd4ddf3d03ecd8b87b",
+  "execution_result_hash": "sha256:b2600e74208b1ba756f93f2dcf9cac6261cf7bfbdc5be074cff202eddb453b8a",
+  "fee_amount": {
+    "currency": "CNY",
+    "scale": 2,
+    "type": "money",
+    "units": 0
+  },
+  "fee_assessment_count": 1,
+  "fill_count": 1,
+  "fill_price": {
+    "instrument_id": "xshe:000001",
+    "quote_currency": "CNY",
+    "scale": 2,
+    "type": "price",
+    "units": 1128
+  },
+  "final_cash": {
+    "currency": "CNY",
+    "scale": 2,
+    "type": "money",
+    "units": 9097600
+  },
+  "final_equity": {
+    "currency": "CNY",
+    "scale": 2,
+    "type": "money",
+    "units": 10000000
+  },
+  "final_position": {
+    "instrument_id": "xshe:000001",
+    "scale": 0,
+    "type": "quantity",
+    "units": 800
+  },
+  "market_bundle_content_hash": "sha256:06845ca18c83533b66a2eb71b89fef8c1130135411bc76692fa33bb289e0445d",
+  "market_bundle_ref": {
+    "bundle_key": "todo140-tushare-market-engine-journey-v1",
+    "manifest_hash": "sha256:8b13d004ec2d8255db75c2d2c91d8a4a2d3e944399512ac169e2730adc7c78e2",
+    "type": "market_bundle_ref"
+  },
+  "order_count": 1,
+  "order_quantity": {
+    "instrument_id": "xshe:000001",
+    "scale": 0,
+    "type": "quantity",
+    "units": 800
+  },
+  "order_side": "buy",
+  "publication_ref": {
+    "artifact_ref": {
+      "artifact_type": "canonical_publication_manifest",
+      "content_hash": "sha256:62f8ea9ffc45eb786a6386c4a53adf6fe0aba36d1bf3672313d8c96aa344ec37",
+      "schema_version": 1,
+      "type": "artifact_ref"
+    },
+    "type": "backtest_canonical_publication_ref"
+  },
+  "result_grade": "development",
+  "schema_version": 1,
+  "semantic_run_id": "run_ab3eaf7357c76e9e74e07f613d31bb1838c26807847e2b07da1ecc10478ac233",
+  "target_stream_digest": "sha256:48777308866137d68bc405db765fb6572f03385c9693d057805ef350edbea095",
+  "timeline_event_count": 40,
+  "trace_hash": "sha256:4fc933e8d14ea1e583342290dda427b961716b339a590588ad650792520738ab",
+  "trade_count": 1,
+  "type": "g12m_tushare_market_engine_journey_identity_v1",
+  "valuation_event_hash": "sha256:520c79345bd0eb7ec8b54e374aa261881c215e355552268da60eee26f6d0fb01"
+}
