@@ -56,7 +56,9 @@ from .execution_inputs import (
     _ExecutionInputsHydrationFailureCodeV3,
     _ExecutionInputsHydrationFailureV3,
     _hydrate_execution_inputs_v3_from_decoded,
+    _hydrate_execution_inputs_v4_from_decoded,
     _read_execution_inputs_v3_from_snapshot,
+    _read_execution_inputs_v4_from_snapshot,
 )
 from .integrity import AttemptConsistencySet, CanonicalPublicationFailureCode
 from .multi_resolution_preparation import (
@@ -539,7 +541,10 @@ class DurableRebuildVerifierV1:
         attempts: AttemptConsistencySet,
     ) -> DeterministicRebuildVerificationV1:
         subject = _run_subject_from_request(request)
-        if type(request) is not BacktestExecutionRequest or request.schema_version != 3:
+        if (
+            type(request) is not BacktestExecutionRequest
+            or request.schema_version not in {3, 4}
+        ):
             raise DurableRebuildError(
                 DurableRebuildFailureCode.PROOF_CONSTRUCTION_FAILED, subject
             )
@@ -761,7 +766,12 @@ class DurableRebuildVerifierV1:
             raise DurableRebuildError(
                 DurableRebuildFailureCode.PREPARATION_MISMATCH, subject
             ) from None
-        hydrated = _hydrate_execution_inputs_v3_from_decoded(
+        hydrate = (
+            _hydrate_execution_inputs_v3_from_decoded
+            if request.schema_version == 3
+            else _hydrate_execution_inputs_v4_from_decoded
+        )
+        hydrated = hydrate(
             decoded,
             request,
             market_reader=retained,
@@ -1777,7 +1787,7 @@ def _validate_verification_structure(
         raise ValueError("verification common evidence binding mismatch")
 
     execution_request = BacktestExecutionRequest(
-        schema_version=3,
+        schema_version=verification.execution_input_bundle_ref.schema_version,
         request=common_request,
         execution_input_bundle_ref=verification.execution_input_bundle_ref,
     )
@@ -1838,10 +1848,26 @@ def _read_execution_inputs_with_source(
     _DecodedExecutionInputBundleV3 | None,
     _ExecutionInputsHydrationFailureV3 | None,
 ]:
+    if type(request) is not BacktestExecutionRequest or request.schema_version not in {
+        3,
+        4,
+    }:
+        return (
+            None,
+            None,
+            _ExecutionInputsHydrationFailureV3(
+                _ExecutionInputsHydrationFailureCodeV3.MALFORMED_EXECUTION_REQUEST
+            ),
+        )
+    read_inputs = (
+        _read_execution_inputs_v3_from_snapshot
+        if request.schema_version == 3
+        else _read_execution_inputs_v4_from_snapshot
+    )
     try:
         source = reader.read(ref=request.execution_input_bundle_ref)
     except Exception:  # noqa: BLE001 - exact decoder owns redacted classification
-        decoded, failure = _read_execution_inputs_v3_from_snapshot(reader, request)
+        decoded, failure = read_inputs(reader, request)
         return None, decoded, failure
     if type(source) is not ArtifactReadResult:
         source_result: ArtifactReadResult | None = None
@@ -1855,9 +1881,7 @@ def _read_execution_inputs_with_source(
                 raise ValueError("captured execution input ref mismatch")
             return source  # type: ignore[return-value]
 
-    decoded, failure = _read_execution_inputs_v3_from_snapshot(
-        CapturedReader(), request
-    )
+    decoded, failure = read_inputs(CapturedReader(), request)
     return source_result, decoded, failure
 
 
@@ -1904,9 +1928,9 @@ def _validate_verification(verification: DeterministicRebuildVerificationV1) -> 
     if type(verification.execution_input_bundle_ref) is not ArtifactRef or (
         verification.execution_input_bundle_ref.artifact_type
         != "backtest_execution_input_bundle"
-        or verification.execution_input_bundle_ref.schema_version != 3
+        or verification.execution_input_bundle_ref.schema_version not in {3, 4}
     ):
-        raise ValueError("execution_input_bundle_ref must target schema 3")
+        raise ValueError("execution_input_bundle_ref must target schema 3 or 4")
     if type(verification.market_bundle_ref) is not MarketBundleRef:
         raise TypeError("market_bundle_ref must be exact MarketBundleRef")
     publication = _validate_g12d_mapping(

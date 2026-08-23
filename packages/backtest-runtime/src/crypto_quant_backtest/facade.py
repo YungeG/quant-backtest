@@ -45,8 +45,10 @@ from .execution_inputs import (
     _ExecutionInputsHydrationFailureV3,
     _hydrate_execution_inputs,
     _hydrate_execution_inputs_v3_from_decoded,
+    _hydrate_execution_inputs_v4_from_decoded,
     _read_execution_inputs_v3_from_snapshot,
     _snapshot_execution_request_v3_from_validated_schema,
+    _snapshot_execution_request_v4_from_validated_schema,
     _verify_execution_inputs_v3_after_resolution,
 )
 from .integrity import (
@@ -164,14 +166,17 @@ class BacktestRuntime:
             raise RuntimeError(
                 "execution input hydration failed: malformed_execution_request"
             ) from None
-        if type(schema_version) is not int or schema_version not in {1, 2, 3}:
+        if type(schema_version) is not int or schema_version not in {1, 2, 3, 4}:
             raise RuntimeError(
                 "execution input hydration failed: malformed_execution_request"
             )
-        if schema_version == 3:
-            snapshot, failure = _snapshot_execution_request_v3_from_validated_schema(
-                request
+        if schema_version in {3, 4}:
+            snapshotter = (
+                _snapshot_execution_request_v3_from_validated_schema
+                if schema_version == 3
+                else _snapshot_execution_request_v4_from_validated_schema
             )
+            snapshot, failure = snapshotter(request)
             if failure is not None or snapshot is None:
                 self._raise_v3_hydration_failure(failure)
             selected_durable_lane = (
@@ -183,6 +188,10 @@ class BacktestRuntime:
             )
             if selected_durable_lane:
                 return self._run_durable_v3(snapshot)
+            if schema_version == 4:
+                raise RuntimeError(
+                    "execution input hydration failed: malformed_execution_request"
+                )
             return self._run_v3(snapshot, cancellation=cancellation)
         try:
             snapshot = BacktestExecutionRequest(
@@ -558,6 +567,7 @@ class BacktestRuntime:
             request,
             resolved,
             retained_reader,
+            request.schema_version,
         )
         if binding_failure is not None:
             self._raise_durable_failure(
@@ -597,7 +607,12 @@ class BacktestRuntime:
             self._raise_durable_failure(
                 DurableRebuildFailureCode.PREPARATION_MISMATCH
             )
-        hydrated = _hydrate_execution_inputs_v3_from_decoded(
+        hydrate = (
+            _hydrate_execution_inputs_v3_from_decoded
+            if request.schema_version == 3
+            else _hydrate_execution_inputs_v4_from_decoded
+        )
+        hydrated = hydrate(
             bundle,
             request,
             market_reader=retained_reader,
