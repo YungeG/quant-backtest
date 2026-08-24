@@ -1076,6 +1076,11 @@ class CompletedBacktestResultV3:
             self.context.observation.verification.target_stream_digest
         ):
             raise ValueError("engine context target stream mismatch")
+        if (
+            self.engine_context.model_binding
+            != self.context.resolved_request.request.model_binding
+        ):
+            raise ValueError("engine context model binding mismatch")
         if type(self.deployment_authorized) is not bool or self.deployment_authorized:
             raise ValueError("Completed backtest never authorizes deployment")
 
@@ -1681,6 +1686,8 @@ class CompletedBacktestResultV2(CompletedBacktestResult):
             raise ValueError("engine context case hash does not bind execution result")
         if engine_context.target_stream_digest != execution.target_stream_digest:
             raise ValueError("engine context target digest does not bind execution result")
+        if engine_context.model_binding != request.model_binding:
+            raise ValueError("engine context model binding does not bind request")
         initial = engine_context.financial_state
         if execution.final_journal.entries[: len(initial.journal.entries)] != initial.journal.entries:
             raise ValueError("completed Journal does not preserve the run-start prefix")

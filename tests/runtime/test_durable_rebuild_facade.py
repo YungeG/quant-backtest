@@ -21,6 +21,7 @@ from crypto_quant_backtest import (
     DeterministicBarEngine,
     ExecutionCaseComposer,
     InputOrigin,
+    ModelRequestBinding,
     ProfileResolver,
     RequestedResultGrade,
 )
@@ -142,7 +143,11 @@ def _decision_registry(
     )
 
 
-def _journey_values(*, limitations: tuple[str, ...] = ()):
+def _journey_values(
+    *,
+    limitations: tuple[str, ...] = (),
+    model_binding: ModelRequestBinding | None = None,
+):
     prepared, resolved, hydrated, _, _ = _contract()
     timeline = DeterministicTimeline.open(
         reader=prepared.verified_reader,
@@ -163,6 +168,7 @@ def _journey_values(*, limitations: tuple[str, ...] = ()):
         resolved.request,
         execution_case_semantic_hash=spec.semantic_spec_hash,
         result_grade_requested=RequestedResultGrade.DECISION_GRADE,
+        model_binding=model_binding,
     )
     resolution = ProfileResolver().resolve(
         request=request_value,

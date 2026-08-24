@@ -12,6 +12,7 @@ from crypto_quant_backtest import (
     BacktestExecutionRequest,
     BacktestRuntime,
     EngineCancellationRequest,
+    ModelRequestBinding,
     RequestedResultGrade,
 )
 from crypto_quant_backtest.composition import _HydratedExecutionCaseInputs
@@ -30,8 +31,8 @@ from tests.runtime.test_durable_rebuild_facade import (
 )
 
 
-def _v4_values():
-    values = _journey_values()
+def _v4_values(model_binding: ModelRequestBinding | None = None):
+    values = _journey_values(model_binding=model_binding)
     _, resolved, case, v3_envelope, _, registry = values
     decoded = _EXECUTION_INPUT_CATALOG.read(canonical_bytes(v3_envelope)).artifact
     assert type(decoded) is _DecodedExecutionInputBundleV3
@@ -88,6 +89,33 @@ def test_schema4_uses_existing_durable_proof_canonical_v3_and_analysis(
     assert analysis.source_publication_ref == publication_ref
     assert analysis.source_execution_result_hash == completed.source_execution_result_hash
 
+    before = store.puts
+    assert runtime.run(request) == publication_ref
+    assert store.puts == before
+
+
+def test_schema4_model_binding_survives_proof_repository_and_cache_replay(
+    tmp_path: Path,
+) -> None:
+    binding = ModelRequestBinding(
+        strategy_id="durable-v3-model-bound-strategy",
+        input_name="primary_model",
+        model_key="alpha.primary",
+        timeline_hash="sha256:" + "1" * 64,
+        artifact_ref_hash="sha256:" + "2" * 64,
+    )
+    values, envelope, request, registry = _v4_values(binding)
+    store, runtime = _runtime(tmp_path, values, envelope, registry)
+
+    publication_ref = runtime.run(request)
+    repository = BacktestEvidenceRepository(store)
+    completed = repository.load_completed_v3(publication_ref)
+    rich = repository.load_completed_evidence_v3(publication_ref)
+
+    assert request.request.model_binding == binding
+    assert completed.engine_context.model_binding == binding
+    assert rich.resolved_request.request.model_binding == binding
+    assert rich.completed.engine_context.model_binding == binding
     before = store.puts
     assert runtime.run(request) == publication_ref
     assert store.puts == before

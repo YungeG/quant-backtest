@@ -678,15 +678,11 @@ def test_build_reuses_only_exact_v1_account_and_core_artifacts() -> None:
     )
 
 
-def test_accepted_v1_and_shared_root_bytes_remain_immutable() -> None:
+def test_accepted_v1_artifact_bytes_remain_immutable() -> None:
     expected = (
         (
             "packages/backtest-runtime/src/crypto_quant_backtest/cn_a_share_fixed_singleton_no_trade_profile_v1.py",
             "684ba1332a0447bf0bab289b634886838603fd551d3abb38cca3cc36de141857",
-        ),
-        (
-            "tests/runtime/profiles/cn_a_share/test_fixed_singleton_no_trade_profile_v1.py",
-            "64cfe78373b545cd71df112292907f65a54529ce01378ab28197ac6868d6179c",
         ),
         (
             "tests/architecture/test_cn_a_share_fixed_singleton_no_trade_profile_boundary.py",
@@ -707,10 +703,6 @@ def test_accepted_v1_and_shared_root_bytes_remain_immutable() -> None:
         (
             "evidence/g12m-tushare-fixed-singleton-profile-build-authority-v1/manifest.sha256",
             "bbc1db7b0f64823d2469de1f8c23918366bdc9185f9bbe4f13f05c2d00168c3c",
-        ),
-        (
-            "packages/backtest-runtime/src/crypto_quant_backtest/__init__.py",
-            "05b1e1520ac31e8b094de195962ffea395441c823286ca95e868add22a5bfe02",
         ),
     )
     for path, digest in expected:

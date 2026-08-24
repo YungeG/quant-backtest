@@ -13,6 +13,7 @@ from crypto_quant_backtest import (
     CanonicalResultPublisher,
     CompletedBacktestResultV2,
     EngineExecutionContext,
+    ModelRequestBinding,
     VerifiedCompletedPublicationV2,
 )
 from crypto_quant_domain import ArtifactEnvelope, ArtifactRef, canonical_bytes
@@ -98,6 +99,16 @@ def test_v2_result_lives_under_v1_manifest_root_and_coexists_with_v1(tmp_path: P
     }
 
 
+def _model_binding() -> ModelRequestBinding:
+    return ModelRequestBinding(
+        strategy_id="integrity-model-binding-test",
+        input_name="primary_model",
+        model_key="alpha.primary",
+        timeline_hash="sha256:" + "1" * 64,
+        artifact_ref_hash="sha256:" + "2" * 64,
+    )
+
+
 def test_v2_context_tampering_is_rejected(tmp_path: Path) -> None:
     journey = completed_journey(tmp_path)
     v1 = journey.publication.finalized_result
@@ -112,6 +123,34 @@ def test_v2_context_tampering_is_rejected(tmp_path: Path) -> None:
         )
     with pytest.raises(TypeError, match="exact ResolvedFinancialState"):
         replace(context, financial_state=object())
+    with pytest.raises(ValueError, match="model binding"):
+        CompletedBacktestResultV2(
+            context=v1.result.context,
+            canonical_attempt_ref=v1.canonical_attempt_ref,
+            integrity_report=v1.integrity_report,
+            engine_context=replace(context, model_binding=_model_binding()),
+        )
+
+
+def test_v2_publication_rejects_model_binding_mismatch_before_canonical_files(
+    tmp_path: Path,
+) -> None:
+    journey = completed_journey(tmp_path)
+    publisher = CanonicalResultPublisher(root=tmp_path)
+    with pytest.raises(ValueError, match="model binding"):
+        publisher.publish_v2(
+            resolved_request=journey.attempts.resolved_request,
+            attempt_hashes=journey.attempts.attempt_hashes,
+            finalized_attempts=journey.attempts.finalized_attempts,
+            rebuild_evidence=rebuild_evidence(journey.attempts),
+            engine_context=replace(_context(journey), model_binding=_model_binding()),
+        )
+    assert not (
+        tmp_path
+        / "runs"
+        / journey.attempts.semantic_run_id
+        / "canonical-v2"
+    ).exists()
 
 
 def test_v2_publication_and_ref_are_deterministic(tmp_path: Path) -> None:

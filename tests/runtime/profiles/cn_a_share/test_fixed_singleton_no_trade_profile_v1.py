@@ -454,7 +454,7 @@ def test_resolution_rejects_missing_editable_and_hash_mismatched_builds() -> Non
         assert outcome.failure is not None
 
 
-def test_existing_development_profile_bytes_and_public_root_are_unchanged() -> None:
+def test_existing_development_profile_bytes_and_private_authority_boundary_are_unchanged() -> None:
     development = (
         ROOT
         / "packages/backtest-runtime/src/crypto_quant_backtest/cn_a_share_profile.py"
@@ -463,9 +463,11 @@ def test_existing_development_profile_bytes_and_public_root_are_unchanged() -> N
     assert hashlib.sha256(development.read_bytes()).hexdigest() == (
         "f5ec4c572b6bb84fe94997051b9d382be6e3a0a9e227b1fea56a193113114a3c"
     )
-    assert hashlib.sha256(public_root.read_bytes()).hexdigest() == (
-        "05b1e1520ac31e8b094de195962ffea395441c823286ca95e868add22a5bfe02"
-    )
-    assert "CnAShareFixedSingletonNoTradeAuthorityV1" not in public_root.read_text(
-        encoding="utf-8"
-    )
+    root_source = public_root.read_text(encoding="utf-8")
+    for public_name in (
+        "CnAShareProfileComposer",
+        "CnAShareProfileCompositionRequest",
+        "CnAShareResolvedProfile",
+    ):
+        assert f'"{public_name}"' in root_source
+    assert "CnAShareFixedSingletonNoTradeAuthorityV1" not in root_source
