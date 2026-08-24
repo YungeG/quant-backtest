@@ -105,11 +105,10 @@ existing assessment or Integrity result.
 | 1 | non-exact input type or subclass | `INVALID_EXACT_INPUT_TYPE` |
 | 2 | base assessment reconstruction/hash mismatch | `BASE_ASSESSMENT_MISMATCH` |
 | 3 | malformed, duplicate-key, invalid-number, or noncanonical G12L bytes | `MALFORMED_OR_NONCANONICAL_LISTING_REPORT` |
-| 4 | accepted G12L file/report/schema/scope/flag identity mismatch | `LISTING_REPORT_IDENTITY_MISMATCH` |
-| 5 | singleton/catalog/name/list-date/covering-interval cross-binding mismatch | `CROSS_EVIDENCE_MISMATCH` |
-| 6 | `bound_at` earlier than base assessment or G12L observation | `BINDING_TIME_INVALID` |
-| 7 | non-null or invalid predecessor on this first accepted binding | `DIRECT_PREDECESSOR_INVALID` |
-| 8 | final binding/body/hash reconstruction mismatch | `BINDING_RECONSTRUCTION_MISMATCH` |
+| 4 | accepted G12L file/report/schema/scope/flag or singleton/catalog/name/list-date/covering-interval mismatch | `LISTING_REPORT_IDENTITY_MISMATCH` |
+| 5 | `bound_at` earlier than base assessment or G12L observation | `BINDING_TIME_INVALID` |
+| 6 | non-null or invalid predecessor on this first accepted binding | `DIRECT_PREDECESSOR_INVALID` |
+| 7 | final binding/body/hash reconstruction mismatch | `BINDING_RECONSTRUCTION_MISMATCH` |
 
 ### Security and trust boundaries
 
