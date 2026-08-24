@@ -1,6 +1,6 @@
 ---
 id: G12L-TUSHARE-CN-A-SHARE-LISTING-SOURCE-BOUNDED-V2
-readiness: CONTRACT_FROZEN / ACQUISITION_TOOL_IMPLEMENTED / LIVE_CAPTURE_BLOCKED_ON_ROTATED_KEY
+readiness: CONTRACT_FROZEN / D2_D3_IMPLEMENTED / ACCEPTANCE_PENDING
 status: DRAFT
 gate_status: DRAFT
 owner: Backtest tools/acquisition + market-bundle-builder source observation
@@ -125,8 +125,8 @@ this plan
 
 ## D3 — source-bounded observer
 
-After a rotated credential produces accepted exact bytes, add one off-root pure
-Builder observer with only:
+After an operator-authorized credential produces accepted exact bytes, add one
+off-root pure Builder observer with only:
 
 ```text
 TushareCnAShareListingSourceBoundedObservationReportV2
@@ -150,6 +150,16 @@ Top-level failure precedence:
 6. `SOURCE_OBSERVATION_CONFLICT`;
 7. `REPORT_BINDING_MISMATCH`.
 
+D3 write set:
+
+```text
+packages/market-bundle-builder/src/crypto_quant_bundle_builder/tushare_cn_a_share_listing_source_bounded_v2.py
+tests/bundle_builder/providers/tushare/test_cn_a_share_listing_source_bounded_v2.py
+tests/architecture/test_g12l_tushare_listing_source_bounded_v2_observer_boundary.py
+tests/fixtures/market_data/providers/tushare/g12l-listing-source-bounded-v2/observation-report.expected.json
+this plan
+```
+
 ## Acceptance
 
 D2 acceptance runs the focused acquisition and architecture tests, existing Tushare
@@ -157,5 +167,8 @@ acquisition compatibility tests, import boundaries, LSP/lens, lock/diff/compile,
 gitleaks. D3 additionally freezes exact real fixture/report hashes and runs focused,
 adjacent, full-repository, and independent review gates.
 
-Live acquisition is forbidden until the exposed proxy credential is rotated. The
-replacement credential must remain outside chat and source control.
+The live capture used the sole operator-authorized credential after the operator
+explicitly accepted its prior chat exposure as the active credential. The credential
+remains outside source control, fixtures, receipts, reports, logs, and provenance.
+That operational exception does not elevate any completeness, lifecycle,
+decision-grade, live-eligibility, or deployment qualification.
