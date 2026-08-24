@@ -1,0 +1,1 @@
+{"request_id":"925f9e2c-eada-41bc-9c9c-a57318462634","code":0,"data":{"fields":["ts_code","symbol","name","market","exchange","list_status","list_date","delist_date"],"items":[["000001.SZ","000001","平安银行","主板","SZSE","L","19910403",null]],"has_more":false,"count":0},"msg":"","detail":"..."}
