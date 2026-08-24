@@ -132,6 +132,7 @@ from .resolution import (
     BuildArtifactRef,
     BuildArtifactRole,
     BuildProvenance,
+    ModelRequestBinding,
     NormalizedBacktestRequest,
     RequestedResultGrade,
     ResolvedBacktestEnvironment,
@@ -3118,6 +3119,17 @@ def _rebuild_backtest_request_v3(value: object) -> BacktestRequest:
         UtcInstant(value.timeline_window.trading_start.epoch_nanoseconds),
         UtcInstant(value.timeline_window.end_exclusive.epoch_nanoseconds),
     )
+    model_binding = None
+    if value.model_binding is not None:
+        if type(value.model_binding) is not ModelRequestBinding:
+            raise TypeError("model_binding must be exact ModelRequestBinding")
+        model_binding = ModelRequestBinding(
+            strategy_id=value.model_binding.strategy_id,
+            input_name=value.model_binding.input_name,
+            model_key=value.model_binding.model_key,
+            timeline_hash=value.model_binding.timeline_hash,
+            artifact_ref_hash=value.model_binding.artifact_ref_hash,
+        )
     return BacktestRequest(
         schema_version=value.schema_version,
         experiment_id=value.experiment_id,
@@ -3138,6 +3150,7 @@ def _rebuild_backtest_request_v3(value: object) -> BacktestRequest:
         strategy_family=value.strategy_family,
         engine_kind=value.engine_kind,
         result_grade_requested=value.result_grade_requested,
+        model_binding=model_binding,
     )
 
 

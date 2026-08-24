@@ -56,7 +56,7 @@ from .execution_hash import (
     ExecutionResultHasher,
 )
 from .publication_refs import BacktestCanonicalPublicationRefV2
-from .resolution import RequestedResultGrade, ResolvedBacktestRequest
+from .resolution import ModelRequestBinding, RequestedResultGrade, ResolvedBacktestRequest
 from .runner import AttemptIdentity, BacktestRunOutcome
 
 if TYPE_CHECKING:
@@ -1599,6 +1599,7 @@ class EngineExecutionContext:
     target_stream_digest: str
     identity_manifest_hash: str
     financial_state: ResolvedFinancialState
+    model_binding: ModelRequestBinding | None = None
 
     def __post_init__(self) -> None:
         if type(self.semantic_run_id) is not str or _RUN_PATTERN.fullmatch(
@@ -1611,13 +1612,15 @@ class EngineExecutionContext:
         _hash("identity_manifest_hash", self.identity_manifest_hash)
         if type(self.financial_state) is not ResolvedFinancialState:
             raise TypeError("financial_state must be exact ResolvedFinancialState")
+        if self.model_binding is not None and type(self.model_binding) is not ModelRequestBinding:
+            raise TypeError("model_binding must be exact ModelRequestBinding or None")
 
     @property
     def context_hash(self) -> str:
         return canonical_sha256(self)
 
     def to_canonical_dict(self) -> dict[str, object]:
-        return {
+        value = {
             "type": "engine_execution_context",
             "schema_version": 1,
             "semantic_run_id": self.semantic_run_id,
@@ -1627,6 +1630,9 @@ class EngineExecutionContext:
             "identity_manifest_hash": self.identity_manifest_hash,
             "financial_state": self.financial_state,
         }
+        if self.model_binding is not None:
+            value["model_binding"] = self.model_binding
+        return value
 
 
 @dataclass(frozen=True, slots=True)

@@ -650,6 +650,8 @@ def _read_canonical_cache_hit_v2(
         "identity_manifest_hash": identity_manifest.manifest_hash,
         "financial_state": execution_case.financial_state,
     }
+    if resolved_request.request.model_binding is not None:
+        expected_engine_context["model_binding"] = resolved_request.request.model_binding
     return _read_canonical_cache_hit_version(
         root=root,
         resolved_request=resolved_request,

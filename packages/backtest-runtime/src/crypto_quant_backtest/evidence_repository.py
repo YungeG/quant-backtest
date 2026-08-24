@@ -49,7 +49,7 @@ from .publication_refs import (
     BacktestCanonicalPublicationRef,
     BacktestCanonicalPublicationRefV2,
 )
-from .resolution import ResolvedBacktestRequest
+from .resolution import ModelRequestBinding, ResolvedBacktestRequest
 from .runner import AttemptIdentity, InputOrigin
 from .verified_publications import (
     TerminalStatus,
@@ -1366,10 +1366,46 @@ def _read_backtest_request(value: object) -> _DecodedEvidenceChild:
             "execution_case_semantic_hash",
         }
     )
-    data = _exact("backtest request", value, fields)
+    if not isinstance(value, Mapping) or set(value) not in {
+        fields,
+        fields | {"model_binding"},
+    }:
+        raise ValueError("backtest request must have exact fields")
+    data = dict(value)
     if data["type"] != "backtest_request" or data["schema_version"] != 1:
         raise ValueError("backtest request tag mismatch")
+    if "model_binding" in data:
+        ModelRequestBinding.from_canonical_dict(data["model_binding"])
     return _DecodedEvidenceChild("backtest_request", data)
+
+
+def _read_engine_context_fields(
+    value: object,
+) -> tuple[dict[str, Any], ModelRequestBinding | None]:
+    fields = frozenset(
+        {
+            "type",
+            "schema_version",
+            "semantic_run_id",
+            "semantic_spec_hash",
+            "case_hash",
+            "target_stream_digest",
+            "identity_manifest_hash",
+            "financial_state",
+        }
+    )
+    if not isinstance(value, Mapping) or set(value) not in {
+        fields,
+        fields | {"model_binding"},
+    }:
+        raise ValueError("engine execution context must have exact fields")
+    data = dict(value)
+    binding = (
+        None
+        if "model_binding" not in data
+        else ModelRequestBinding.from_canonical_dict(data["model_binding"])
+    )
+    return data, binding
 
 
 def _read_build_manifest(value: object) -> _DecodedEvidenceChild:
@@ -1922,21 +1958,8 @@ class BacktestEvidenceRepository:
         if canonical_sha256(summary_raw) != result.execution_result_hash:
             raise ValueError("canonical execution summary hash mismatch")
 
-        engine_context = _exact(
-            "engine execution context",
-            result.engine_context,
-            frozenset(
-                {
-                    "type",
-                    "schema_version",
-                    "semantic_run_id",
-                    "semantic_spec_hash",
-                    "case_hash",
-                    "target_stream_digest",
-                    "identity_manifest_hash",
-                    "financial_state",
-                }
-            ),
+        engine_context, model_binding = _read_engine_context_fields(
+            result.engine_context
         )
         if (
             engine_context["type"] != "engine_execution_context"
@@ -1951,6 +1974,13 @@ class BacktestEvidenceRepository:
             raise ValueError("engine context case hash mismatch")
         if engine_context["target_stream_digest"] != engine.target_stream_digest:
             raise ValueError("engine context target stream mismatch")
+        request_model_binding = (
+            None
+            if "model_binding" not in request
+            else ModelRequestBinding.from_canonical_dict(request["model_binding"])
+        )
+        if model_binding != request_model_binding:
+            raise ValueError("engine context model binding mismatch")
         engine_context_value = EngineExecutionContext(
             result.semantic_run_id,
             engine_context["semantic_spec_hash"],
@@ -1958,6 +1988,7 @@ class BacktestEvidenceRepository:
             engine_context["target_stream_digest"],
             _hash("identity_manifest_hash", engine_context["identity_manifest_hash"]),
             _read_financial_state(engine_context["financial_state"]),
+            model_binding,
         )
         if canonical_bytes(engine_context_value) != canonical_bytes(engine_context):
             raise ValueError("engine context did not reconstruct exactly")
@@ -2325,27 +2356,16 @@ class BacktestEvidenceRepository:
         ):
             raise _StaticProofMismatch("completed v3 canonical execution mismatch")
 
-        engine_context = _exact(
-            "engine execution context",
-            result.engine_context,
-            frozenset(
-                {
-                    "type",
-                    "schema_version",
-                    "semantic_run_id",
-                    "semantic_spec_hash",
-                    "case_hash",
-                    "target_stream_digest",
-                    "identity_manifest_hash",
-                    "financial_state",
-                }
-            ),
+        engine_context, model_binding = _read_engine_context_fields(
+            result.engine_context
         )
         if (
             engine_context["type"] != "engine_execution_context"
             or engine_context["schema_version"] != 1
         ):
             raise ValueError("engine execution context tag mismatch")
+        if model_binding != resolved_request.request.model_binding:
+            raise ValueError("completed v3 model binding mismatch")
         engine_context_value = EngineExecutionContext(
             result.semantic_run_id,
             engine_context["semantic_spec_hash"],
@@ -2353,6 +2373,7 @@ class BacktestEvidenceRepository:
             engine_context["target_stream_digest"],
             _hash("identity_manifest_hash", engine_context["identity_manifest_hash"]),
             _read_financial_state(engine_context["financial_state"]),
+            model_binding,
         )
         first_hash = attempt_hashes[0]
         engine = first_hash.engine_result
