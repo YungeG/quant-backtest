@@ -1,7 +1,7 @@
 ---
 id: G12L-TUSHARE-JULY-2026-LISTING-PRESENCE-V1
-readiness: READY
-status: CONTRACT_FROZEN
+readiness: ACCEPTED_SOURCE_AND_POST_ASSESSMENT_BINDING
+status: PASSED
 owner: Tushare acquisition + market-bundle-builder observation + Runtime post-assessment binding
 depends_on:
   contract: [ADR-0008, ADR-0010, G12I-TUSHARE-CN-A-SHARE-DAILY-SOURCE-BOUNDED-V2]
@@ -201,5 +201,29 @@ causal input. It does not change the accepted base assessment or grade.
 
 ### Open decision
 
-None. Formal D1 evidence acquisition remains required before D2/D3 identities can be
-frozen, but the live readiness probe removes provider-response uncertainty.
+None.
+
+## Acceptance closure
+
+```text
+contract: 4ca69b6ccb2d766ec9e304d3f7624f587685c771
+acquisition tool: da91f414911263e483c0b4a34774d5d243e069d9
+evidence: a5c67421083c406c7a2ad2207429128ea6fe44a3
+observer: 9aa99d9b338a938bf69e0d39983dcc9137741127
+Runtime binding: f6c81149b5a97088576e0f6d0fb5ed294b2cec05
+receipt file: sha256:b2160a51acc6a642fe471c87b946237bdb37b1087f56fc2e6262d86a834fb581
+Snapshot: sha256:3b8b35744bd14974e71ca7de4fe00d229290061df38b29cedf0f5d2eb3ca378c
+request scope: sha256:388fa357808ab359366b9ac1dad808ea53b01be07d1b83a80d798a1b75268cce
+G12L report: sha256:4c829bf707bf0876ada550ad44682d0fc362025379afe233b98e9d7751e22052
+G12M binding: sha256:30d1ef7480ad435e5a1e3f4948891c7d2f8c412b16731155bd5d2bf14126342f
+```
+
+All 19 formal calls returned exactly one accepted row in one attempt. Adjacent
+validation passed 29 tests during D2 review, the full repository passed 2424 tests,
+the 138-file import boundary passed, LSP/lens and gitleaks were clean, and independent
+D1/D2/D3 reviews returned `PASS` after blocker repair.
+
+Acceptance remains post-hoc and source-bounded. It does not establish provider-time
+availability before the Run, listing between observed dates, uninterrupted lifecycle,
+provider completeness/finality, authoritative absence, survivorship safety, grade
+upgrade, live eligibility, or deployment authorization.
