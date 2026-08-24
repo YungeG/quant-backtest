@@ -1,15 +1,33 @@
 ---
 id: G12L-TUSHARE-CN-A-SHARE-LISTING-SOURCE-BOUNDED-V2
-readiness: CONTRACT_FROZEN / D2_D3_IMPLEMENTED / ACCEPTANCE_PENDING
-status: DRAFT
-gate_status: DRAFT
+readiness: ACCEPTED_SOURCE_BOUNDED_SLICE
+status: ACCEPTED
+gate_status: PASSED
 owner: Backtest tools/acquisition + market-bundle-builder source observation
 depends_on:
   contract: [G12A, G12L-TUSHARE-CN-A-SHARE-DAILY-LISTING-V1, G12CD-TUSHARE-CN-A-SHARE-DAILY-PUBLICATION-V2, ADR-0010]
-  evidence: [exact proxy-delivered stock_basic, bak_basic, and namechange bytes]
+  evidence:
+    - stock_basic sha256:8922c3e8764f8c1223e28ed785f97dadecd4b6fee7399a6210c03dbb616abaae
+    - bak_basic sha256:38be7fdfb008fd015a939191c37279e328deef366f7a57293403654655057490
+    - namechange sha256:e61ae5499dd8293509df9da1752ea080958e1f3d3c9a70fe713c8740fdb9a881
 ---
 
 # G12L Tushare fixed-singleton listing source-bounded v2
+
+## Status and purpose
+
+D1-D3 `PASSED` at acquisition-tool implementation
+`f140e8efef90fa41b4847eb67b93f1e68304e126`, exact evidence commit
+`5c0311bcc793d10bfe2b301ed8cc317b8846a9da`, and observer implementation
+`dc8b1fb35115b61f951cd69df79e46c4c1057a8f`. The accepted report is
+`sha256:6d120c94b8d08fa00389d91894bc17d18ad4a6e0c1f9c42b859e7f1e26cc41c8`.
+Focused/adjacent validation passed 38 tests, full-repository validation passed
+2403 tests, the 135-file import boundary passed, and independent review returned
+`PASS`.
+
+This acceptance is only the exact source-bounded statement below. It does not
+upgrade the historical v1 listing/lifecycle gate or authorize decision grade,
+live eligibility, or deployment.
 
 ## Outcome
 
@@ -172,3 +190,14 @@ explicitly accepted its prior chat exposure as the active credential. The creden
 remains outside source control, fixtures, receipts, reports, logs, and provenance.
 That operational exception does not elevate any completeness, lifecycle,
 decision-grade, live-eligibility, or deployment qualification.
+
+Accepted identities:
+
+```text
+receipt file: sha256:fd2935816572c02773cef3fa5c3141a9db033fce4ebe3e70b91b4ac710550ba7
+snapshot: sha256:3144690c004ea0b8a727d33943e47c00cecd257bf8c142f15982d70f745c25e8
+request scope: sha256:aaa6995714b99510137c667783d272010c848c40aa2ac4a359b6de04a4ac3dd0
+instrument catalog: sha256:99df0de0dc3008cf557bb7634caf483fae27488c75016421218100df6a77a6cc
+report: sha256:6d120c94b8d08fa00389d91894bc17d18ad4a6e0c1f9c42b859e7f1e26cc41c8
+report file: sha256:24122b0a68c87f7bdc5723640724733a2d1f25a7c1b62b0f02eb17bdad2d0205
+```
