@@ -1,11 +1,11 @@
 # Platform V5 Backtest compatibility fan-in receipt
 
-- **Status:** CANDIDATE_VALIDATED / REMOTE_PUSH_PENDING
+- **Status:** PASSED
 - **Platform contract:** `integration-v5-decision-grade-proof-v1`
-- **Fan-in merge:** `599f62cd95ea480fe4b809cc3f34af7e86197c8f`
-- **Validated implementation candidate:** `10b0173762de8ab820a6b771a1ac983b149b4f9d`
-- **Model seam ancestor:** `033344172b24847e73941bb97a06da0490527edf`
-- **Durable-proof ancestor:** `cebb9b033b7eeffbbff712715fc017708ac5a247`
+- **integrated_at:** `599f62cd95ea480fe4b809cc3f34af7e86197c8f`
+- **implementation_validated_at:** `10b0173762de8ab820a6b771a1ac983b149b4f9d`
+- **model capability_accepted_at:** `033344172b24847e73941bb97a06da0490527edf`
+- **durable capability_accepted_at:** `cebb9b033b7eeffbbff712715fc017708ac5a247`
 
 ## Accepted compatibility result
 
@@ -46,7 +46,7 @@ public import smoke: passed
 model-bound canonical-v3 replay/cache regression: passed
 V2/V3 mismatched request/context model binding rejection: passed
 LSP: clean on 8 changed production files and focused changed tests
-lens: no new blocking findings; unrelated pre-existing facade/integrity findings deferred
+lens: no changed-line blocking findings; seven pre-existing parser findings reviewed as false positives
 uv lock --check: passed
 git diff --check: passed
 gitleaks candidate range: no leaks
@@ -77,8 +77,8 @@ git merge-base --is-ancestor \
   of scope;
 - private fixed-singleton authorities remain off the public root.
 
-## Remaining closure
+## Delivery
 
-Remote reachability is intentionally pending explicit push approval. After the final
-governance commit is pushed, the returned `backtest_fanin_sha` should be that remotely
-reachable descendant; Platform may pin it and rerun its full V5 acceptance.
+The governance descendant containing this receipt is the remotely reachable
+`backtest_fanin_sha` returned in the handoff. Platform may pin it and rerun its full
+V5 acceptance.
