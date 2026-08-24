@@ -187,6 +187,7 @@ artifact_hashes: []
 | G12M-TUSHARE-FIXED-SINGLETON-PROFILE-BUILD-AUTHORITY-V1 | PASSED / SUPERSEDED FOR PRODUCTION RUNTIME COMPOSITION BY V2 — immutable candidate `c52c8913ef680b34c1edecf46b1892b268e013e0`; semantic authority `sha256:a0f0fb905dbc34d877c39130bf615f2f5d725b97aa618ed97bffdd1a12bce654`; canonical decision `sha256:0a22eb7368eb0838d772efbcd6fc08cf48d333783d3ae881a12ba304f25ae1ca`; target `sha256:8e4bdddbd91e1bafd65363e133d382673df88e4dc4061d1f0dd776a42afc6cee`; Build `sha256:a6a73cb72a9ad4cf98bca789c19a6a261f00dc4b1e538478a0ca9674137ab516` | backtest-runtime off-root fixed-singleton Profile/Build authority | G07-DURABLE-REBUILD-PROOF-V2, accepted G12I/G12K singleton evidence, ADR 0008/0009 | none for the exact `xshe:000001` July-2026 zero-target/zero-exposure/no-trade Profile/Build authority; no G12M qualification, Run, Integrity result, provider availability/finality/completeness, legal, live, or deployment claim; v1 remains immutable authority history but its semantic execution ref and omitted `bar_open@1` requirement are not exact PREP authority; production Runtime composition must use accepted v2 |
 | G12M-TUSHARE-FIXED-SINGLETON-PROFILE-BUILD-AUTHORITY-V2 | PASSED — immutable candidate `4e2da5b4cee8addf1a5caf2b9be9f1d037a2af3b`; semantic authority `sha256:3d19c05e552aa61a7f1ff33bc2451d2d0cc13e0d3ee30acde46462bdfa65becf`; canonical decision `sha256:8b1da7ec4aaa4b652f69ce569ed0df953e8b9e30937368e9b32396baf090f21a`; Market `sha256:52b02b86b4fb6ea0b481d1184f68148d8b3d074b93e332ca582cd417072c8fd1`; Simulation `sha256:a1f0e4dd163deebf7dd8cf10e199078b6ad1c68bf0467b1f7f449e3423114875`; Build `sha256:26048a80c045b8c49ab4f09936ab6ea3ef31acd767d54365caa20c8e457f7f45` | backtest-runtime off-root runnable fixed-singleton Profile/Build authority | accepted v1 authority, G07-DURABLE-REBUILD-PROOF-V2, G12I/G12K, current PREP/Resolution | none for exact actual Runtime component refs and `bar_open@1`/target capability authority; accepted qualification v2 consumes the exact causal G12I-derived bar-open projection while provider/legal/live/deployment claims remain separate |
 | G12M-TUSHARE-FIXED-SINGLETON-QUALIFICATION-V2 | PASSED / ACCEPTED_H1 — main/candidate `2f2bc40cc5fcd06f4f47af9c5c6e691fee00f7a6`; frozen contract `3023865d87e9c1699b100d3dc50e25b6a2f49440`, file `sha256:6cee644f9482826fdea7791c8c0a23568e0517361c1517361490f57f96eb43b4`; V2-01 file/semantic/predecessor `sha256:920bd2b2b10108ef4cbcb631215b571a0198e55e526de1147e56b49d67b71ff6` / `sha256:7e8ca1ebf63aeb4f5f36ab72073d258db64083028e6e2f4c1662941bd46c7d62` / `sha256:a7a6fff66a34f20031178d82fd7da424799ecbc2b3e2c887bdd149e98cc826bb`; Bundle manifest/content `sha256:2ea4d3c58076312ff86ee175fac2f1173fb28f01e4e4d31ca372ca0d345e750b` / `sha256:a0b6319c07aaa810ba490924f2267ebb93f72d5037432b30dd6a0a5bbb3fb8ff`; route `sha256:49051c693cd2ea4c1822c6e8ac6f929e0e952ccba8cfa7d5d248e18d9b7eb0f2`; Run `run_1eebd60b81376e15fbe4b2496ed359ab24ed644c7416812d09eb3fb715f581a9`; assessment `sha256:31f29b9ab70e7c8da267b6c17dcbe294503088850c894b066116313233dca8bb`; [sole H1 receipt](plans/g12/g12m-tushare-fixed-singleton-qualification-v2-h1-acceptance-receipt.md) `sha256:28c94f5530bdf4bf74707a0ece33c3d2b70ffb51c3d061b4950e17d6de58998c`, H2 receipt absent | backtest-runtime exact fixed-singleton qualification | accepted G07, V2-01 H1, G12I/G12K, runnable authority v2 | V2-01 through V2-05 and route `ACCEPTED_H1`; additive schema-4 implementation preserves frozen schema-3 contract history; exact 19 source + 19 projection + one target / 39 Timeline Events, zero trade/accounting effects, Integrity-owned `decision_grade` copied only, assessment floor `1787299622295499670`; historical v1 H2, Binance H3, and all provider availability/finality/completeness, listing/survivorship, corporate-action lifecycle/absence, strict legal/tax, execution-quality, live/deployment, and Binance-qualification nonclaims remain unchanged |
+| G12M-TUSHARE-LISTING-PRESENCE-BINDING-V1 | PASSED — contract `f55ad5e00ec706f6f23db13bf630de6fdf99798b`; implementation `b6c5e2a57fb537b6c8b10045df7632527d21be90`; binding `sha256:ab9b0b750e55e34ff6e8fe5fb9e388143b83aa5140357061dfc7fe4c11ee6f8c`; implementation file `sha256:1f6efe379f18eb85205db6f21f209d8d3cdf74fcf428c26f11830d592c401c1e`; identity fixture `sha256:c886434bad6c4acc4fcd4094593edcdda016c769715cf4ef8d234c28174e65ec` | backtest-runtime off-root post-assessment evidence binding | accepted G12M v2 assessment `sha256:31f29b9ab70e7c8da267b6c17dcbe294503088850c894b066116313233dca8bb`; accepted G12L report `sha256:6d120c94b8d08fa00389d91894bc17d18ad4a6e0c1f9c42b859e7f1e26cc41c8` | Exact `20240102` listing/name presence is bound without changing route, Run, assessment, requested/result grade, or any accepted byte; observation is post-assessment and non-causal; continuity, completeness, lifecycle, authoritative absence, live, and deployment remain unclaimed; 20 focused/adjacent and 2409 full-repository tests pass; independent review PASS |
 | G12M-* | DRAFT / EXACT TUSHARE V2 FIXED-SINGLETON ROUTE ACCEPTED_H1; TUSHARE V1 IMMUTABLY BLOCKED_H2; BINANCE H3 PERMANENTLY BLOCKED — additive Tushare v2 V2-01 through V2-05 and route are accepted at `2f2bc40cc5fcd06f4f47af9c5c6e691fee00f7a6`; historical BHA-01 `DECIDED_H2`, BHA-02/BHA-03/BHA-04 `TERMINATED_H2`, BHA-05 `ACCEPTED_H2`, and v1 execution DAG `BLOCKED_H2` remain immutable; strict G12H/legal closure remains a limitation/nonclaim, not an H2 cause. Accepted Binance v2 remains exact post-hoc upstream evidence at `024e5f209a94bb358946f5c468630108981f0329`; H3 `NO_CAUSAL_AUTHORITY` remains accepted on main at `600259a9f22e44102e5e60faab3176cbf5761e6e`; [decision](../../evidence/g12m-binance-funding-availability-authority-decision-v1/decision.json) `sha256:a0f8fff9ed75db74abb9fd596ad6b3c79bd1a1c75e823e5bef5b5c63e0b2a3e2`; [report](../research/g12m-binance-funding-availability-authority-decision-v1.md) `sha256:130bfc81c8c97e47992a90354c64b28bebee8053fafc48eb63eb07c942f407af`; [manifest](../../evidence/g12m-binance-funding-availability-authority-decision-v1/manifest.sha256) `sha256:760d44f9a4b1627f7f2a176336ba74a2924f7eecaf44ac7ba72e78d93f99e6f6`; v2 Snapshot `sha256:a45d9acdcfb4d42d1c70af44969f6a5151fb260c4c3040943b3d961c1073aa3f`; v2 report `sha256:29e639615c1e5f5fa05ffdff9bc77a630d56838c7b0e70230177922bdbffc37b`; [receipt](plans/g12/g12m-binance-historical-availability-repair-v1/bha-10-acceptance-receipt.md) | backtest-runtime qualification | accepted G12I + G12K Tushare canonical reports for singleton `xshe:000001`; accepted Binance v2 post-hoc evidence plus accepted H3 decision | Tushare v2 is accepted only for the exact fixed-singleton historical source-bounded no-trade case; Binance historical BHA-03 through BHA-09 remain permanently `TERMINATED_H3`, with no historical-repair source v3/Profile/Bundle/adapter/Run/assessment and no prospective plan authorized; legal, live, deployment, permanent finality, and provider-global completeness remain false or limited; G12M cannot mint grade and no generic self-attested mapping seam is authorized |
 | BT-GAP-01 | PASSED — immutable commit `f2440f9658fbe2ae1cf0016a78c44e4230995394` | trading-domain | WP-02E, Platform BT-PORT-01 | none |
 | BT-GAP-02 | PASSED — immutable commit `39863c58ace1d996f3e814835836ec46e2aa3794` | backtest-runtime facade | BT-GAP-01, G07, BT-GAP-02A, BT-GAP-04 | none |
@@ -11954,6 +11955,47 @@ identity, and direct append-only supersession are replayed fail-closed. Provider
 revision completeness, authoritative absence, historical listing and corporate-action
 lifecycle closure, survivorship safety, decision grade, live eligibility, and
 deployment authorization remain false. The strict v1 gate remains blocked.
+
+## 104J. G12M Tushare listing-presence binding v1 (PASSED)
+
+```yaml
+id: G12M-TUSHARE-LISTING-PRESENCE-BINDING-V1
+status: PASSED
+owner_package: backtest-runtime off-root evidence binding
+public_interface:
+  - G12MTushareListingPresenceBindingV1
+  - G12MTushareListingPresenceBindingOutcomeV1
+  - bind_g12m_tushare_listing_presence_v1
+commits:
+  contract: f55ad5e00ec706f6f23db13bf630de6fdf99798b
+  implementation: b6c5e2a57fb537b6c8b10045df7632527d21be90
+accepted_inputs:
+  base_assessment: sha256:31f29b9ab70e7c8da267b6c17dcbe294503088850c894b066116313233dca8bb
+  semantic_run: run_1eebd60b81376e15fbe4b2496ed359ab24ed644c7416812d09eb3fb715f581a9
+  listing_report_file: sha256:24122b0a68c87f7bdc5723640724733a2d1f25a7c1b62b0f02eb17bdad2d0205
+  listing_report: sha256:6d120c94b8d08fa00389d91894bc17d18ad4a6e0c1f9c42b859e7f1e26cc41c8
+outputs:
+  binding: sha256:ab9b0b750e55e34ff6e8fe5fb9e388143b83aa5140357061dfc7fe4c11ee6f8c
+  identity_fixture: sha256:c886434bad6c4acc4fcd4094593edcdda016c769715cf4ef8d234c28174e65ec
+validation:
+  focused_and_adjacent: 20 passed
+  full_repository: 2409 passed
+  import_boundary: 136 files passed
+  lsp: clean
+  lens: clean
+  gitleaks: clean
+  independent_review: PASS
+```
+
+The binding consumes possessed canonical G12L bytes and the exact accepted G12M v2
+assessment object. It copies the existing Integrity-owned requested/result grades
+without changing them and records the `20240102` listing/name observation only as
+post-assessment evidence. Because G12L `observed_at=1787533249650679470` is later than
+the Run and base assessment, it is explicitly not causal execution input and does
+not establish listing continuity into July 2026. Existing route, Run, assessment,
+Profile, Bundle, G12I/G12K, and G12L bytes remain unchanged. Provider completeness,
+finality, lifecycle, authoritative absence, survivorship, grade upgrade, live
+eligibility, and deployment authorization remain unclaimed.
 
 ## 105. BT-GAP-01 Domain ArtifactRef
 

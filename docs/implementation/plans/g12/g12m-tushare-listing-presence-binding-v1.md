@@ -1,7 +1,7 @@
 ---
 id: G12M-TUSHARE-LISTING-PRESENCE-BINDING-V1
-readiness: READY
-status: CONTRACT_FROZEN
+readiness: ACCEPTED_POST_ASSESSMENT_BINDING
+status: PASSED
 owner: backtest-runtime additive post-assessment evidence binding
 depends_on:
   contract: [ADR-0008, G12M-TUSHARE-FIXED-SINGLETON-QUALIFICATION-V2]
@@ -152,3 +152,21 @@ Full acceptance: full repository plus independent blocker review and governance 
 
 None. The date mismatch is resolved by making this a post-assessment evidence binding,
 not a new causal qualification or replacement assessment.
+
+## Acceptance closure
+
+The contract freeze is `f55ad5e00ec706f6f23db13bf630de6fdf99798b` and the
+accepted implementation is `b6c5e2a57fb537b6c8b10045df7632527d21be90`.
+
+```text
+binding: sha256:ab9b0b750e55e34ff6e8fe5fb9e388143b83aa5140357061dfc7fe4c11ee6f8c
+implementation file: sha256:1f6efe379f18eb85205db6f21f209d8d3cdf74fcf428c26f11830d592c401c1e
+identity fixture: sha256:c886434bad6c4acc4fcd4094593edcdda016c769715cf4ef8d234c28174e65ec
+```
+
+Focused and adjacent validation passed 20 tests, the full repository passed 2409
+tests, the 136-file import boundary passed, LSP/lens and gitleaks were clean, and
+independent implementation review returned `PASS`. The accepted G12M assessment,
+route, grade, and Run remain byte-identical. This binding has no production caller,
+causal-input status, listing-continuity claim, grade authority, live eligibility, or
+deployment authorization.

@@ -1,6 +1,6 @@
 ---
 id: G12M-SOURCE-BOUNDED-QUALIFICATION-V1
-readiness: A_SHARE_V2_ACCEPTED_H1_V1_IMMUTABLE_H2_BINANCE_H3_PERMANENT_BLOCK
+readiness: A_SHARE_V2_ACCEPTED_H1_LISTING_BINDING_ACCEPTED_V1_IMMUTABLE_H2_BINANCE_H3_PERMANENT_BLOCK
 gate_status: DRAFT
 owner: backtest-runtime qualification
 produces:
@@ -9,6 +9,7 @@ consumes:
   - ADR 0008
   - accepted G12I SZSE evidence slice
   - accepted G12K Tushare fixed-instrument evidence slice
+  - accepted G12L Tushare fixed-singleton listing-presence evidence slice
   - accepted Binance FAPI funding-history observed-as-of evidence slice
 depends_on:
   contract: [G07, G12I, G12K, G12L-*]
@@ -36,8 +37,12 @@ BHA-05 blocked receipt are unchanged. The additive successor
 is now `ACCEPTED_H1` at main/candidate
 `2f2bc40cc5fcd06f4f47af9c5c6e691fee00f7a6`, with only the
 [H1 receipt](g12m-tushare-fixed-singleton-qualification-v2-h1-acceptance-receipt.md)
-present. Resolution remains compatibility authority and Integrity remains sole grade
-authority. Binance remains closed by its accepted H3 decision.
+present. The additive
+[G12M Tushare listing-presence binding v1](g12m-tushare-listing-presence-binding-v1.md)
+now binds that immutable assessment to the accepted G12L `000001.SZ / 20240102`
+listing report as post-assessment evidence only. Resolution remains compatibility
+authority and Integrity remains sole grade authority. Binance remains closed by its
+accepted H3 decision.
 
 ## Status
 
@@ -49,7 +54,8 @@ BHA-02 through BHA-04 `TERMINATED_H2`, BHA-05 `ACCEPTED_H2`, and route
 `BLOCKED_H2`. Additive v2 is V2-01 through V2-05 and route `ACCEPTED_H1`; its
 schema-4 implementation does not rewrite the frozen schema-3 contract clause.
 Missing strict G12H successor, official closure, or legal closure remains a
-limitation/nonclaim, not an H2 cause.
+limitation/nonclaim, not an H2 cause. The accepted listing-presence binding does not
+change route or assessment status, prove continuity into July 2026, or alter grade.
 The Binance funding-history v2 report remains accepted as exact post-hoc upstream
 evidence, with `available_time` fixed at the 2026 receipt instant. Accepted H3
 `NO_CAUSAL_AUTHORITY` permanently terminates the historical BHA-03 through BHA-09
@@ -106,6 +112,7 @@ either duplicate Builder authority or trust claims it cannot verify.
 | --- | --- | --- |
 | G12I SZSE | `ACCEPTED`: exact July-2026 Tushare `daily`/`trade_cal`/`suspend_d` observation report, canonical replay, append-only correction identity, and nominal Runtime boundary below. | Source `4389877b8879fc9bb1a6d6544c4079a7d29312ab`; report `sha256:ff09c4ad9f8025e66689387b5132d3d85c4101276fbf7330dd5040af111cc029`; canonical file `sha256:9cbfc115e41f56d1e83eac520856c3f529f83972b97111238e5dbb1a68c4eae6`. |
 | G12K Tushare fixed singleton | `ACCEPTED`: exact full `dividend(ts_code="000001.SZ")` response, receipt/Snapshot replay, fixed July-2026 scope, 96 ordered source rows, zero target-relevant rows, append-only direct-predecessor evidence, and explicit limits. This is not listing/universe/survivorship/lifecycle authority. | Source `28a4d7234f5101e67bfa64f1eded92b81bfcf73d`; report `sha256:5a49065d87286a9673893337328ddbbab9a19cd3addf178bf96033b9b1babfd7`; canonical file `sha256:a386f4281374d1449c0b5ba4371b9e9d2de5b236bc8fc5b5cdd8de5e43c65956`; final plan `sha256:79402fe89df8bffc23be4ff2772bbba14510f6a6133de8fe48acca1b0656c5d8`. |
+| G12L Tushare listing presence | `ACCEPTED POST-ASSESSMENT BINDING`: exact `000001.SZ / 20240102` current identity, historical-list row, and one covering name interval are bound to the immutable G12M v2 assessment. The report was observed after the Run/assessment and is not causal input or continuity authority. | G12L report `sha256:6d120c94b8d08fa00389d91894bc17d18ad4a6e0c1f9c42b859e7f1e26cc41c8`; canonical file `sha256:24122b0a68c87f7bdc5723640724733a2d1f25a7c1b62b0f02eb17bdad2d0205`; binding `sha256:ab9b0b750e55e34ff6e8fe5fb9e388143b83aa5140357061dfc7fe4c11ee6f8c`. |
 | Binance FAPI funding history | `UPSTREAM V2 EVIDENCE ACCEPTED / H3 PERMANENTLY BLOCKED`: exact v2 post-hoc evidence remains accepted, but H3 `NO_CAUSAL_AUTHORITY` terminates historical BHA-03 through BHA-09. No causal Runtime or prospective route is authorized. | Source `024e5f209a94bb358946f5c468630108981f0329`; v2 Snapshot `sha256:a45d9acdcfb4d42d1c70af44969f6a5151fb260c4c3040943b3d961c1073aa3f`; v2 report `sha256:29e639615c1e5f5fa05ffdff9bc77a630d56838c7b0e70230177922bdbffc37b`; H3 decision JSON `sha256:a0f8fff9ed75db74abb9fd596ad6b3c79bd1a1c75e823e5bef5b5c63e0b2a3e2`; decision report `sha256:130bfc81c8c97e47992a90354c64b28bebee8053fafc48eb63eb07c942f407af`; manifest file `sha256:760d44f9a4b1627f7f2a176336ba74a2924f7eecaf44ac7ba72e78d93f99e6f6`; accepted main `600259a9f22e44102e5e60faab3176cbf5761e6e`. |
 
 Research notes, ad hoc files, inherited hash claims, development fixtures, or
