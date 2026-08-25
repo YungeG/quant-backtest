@@ -23,18 +23,16 @@ from crypto_quant_bundle_builder import (
     verify_source_snapshot,
 )
 
-from ._common import (
-    AcquisitionError,
-    Post,
-    json_bytes,
-    publish_directory,
-    sha256,
-)
-from .cn_a_share_tushare import (
-    _post_with_retries,
-    _provider_body,
-    _source_bounded_rows_v2,
-    _stdlib_post,
+from ._common import AcquisitionError, json_bytes, publish_directory, sha256
+from .cn_a_share_tushare import _source_bounded_rows_v2
+from .cn_a_share_tushare_listing_source_bounded_v2 import (
+    ProxyPost,
+    _ALLOWED_ENDPOINTS as _PROXY_ENDPOINTS,
+    _PROXY_KEY,
+    _headers as _proxy_headers,
+    _post_with_retries as _proxy_post_with_retries,
+    _request_body as _proxy_request_body,
+    _stdlib_post as _proxy_stdlib_post,
 )
 from .cn_a_share_tushare_financial_sentinel_v1 import (
     FinancialSentinelAcquisitionError,
@@ -188,6 +186,7 @@ _LIMITATIONS = (
     "debt classification may remain incomplete",
     "no normalized revision, presentation selection, or formula evidence",
     "no five-year history, full-market coverage, or terminal-set closure",
+    "approved proxy transport is not provider completeness",
 )
 
 
@@ -318,8 +317,9 @@ def acquire_tushare_cn_a_share_financial_source_sentinel_v2(
     request: TushareCnAShareFinancialSourceSentinelRequestV2,
     *,
     token: str,
+    endpoint: str,
     output_dir: str | Path,
-    post: Post,
+    post: ProxyPost,
     get: Get,
     time_ns: Any = time.time_ns,
     sleep: Any = real_sleep,
@@ -327,6 +327,8 @@ def acquire_tushare_cn_a_share_financial_source_sentinel_v2(
     if (
         type(request) is not TushareCnAShareFinancialSourceSentinelRequestV2
         or request != TushareCnAShareFinancialSourceSentinelRequestV2()
+        or type(endpoint) is not str
+        or endpoint not in _PROXY_ENDPOINTS
         or not isinstance(output_dir, (str, Path))
         or not callable(post)
         or not callable(get)
@@ -336,7 +338,12 @@ def acquire_tushare_cn_a_share_financial_source_sentinel_v2(
         raise FinancialSentinelV2AcquisitionError(
             FinancialSentinelV2FailureCode.INPUT_MISMATCH
         )
-    if type(token) is not str or not token or token != token.strip():
+    if (
+        type(token) is not str
+        or len(token) != 56
+        or token != token.strip()
+        or any(character.isspace() for character in token)
+    ):
         raise FinancialSentinelV2AcquisitionError(
             FinancialSentinelV2FailureCode.CREDENTIAL_INPUT_INVALID
         )
@@ -354,14 +361,17 @@ def acquire_tushare_cn_a_share_financial_source_sentinel_v2(
     provider_requests: list[dict[str, object]] = []
 
     for api_name, fields, member_key in _REQUESTS:
-        body = _provider_body(
-            api_name=api_name,
-            token=token,
-            params=dict(_PARAMS),
-            fields=fields,
-        )
+        body = _proxy_request_body(api_name, dict(_PARAMS), fields)
+        headers = _proxy_headers(token)
         try:
-            response_bytes, attempts = _post_with_retries(api_name, body, post, sleep)
+            response_bytes, attempts = _proxy_post_with_retries(
+                api_name,
+                endpoint=endpoint,
+                body=body,
+                headers=headers,
+                post=post,
+                sleep=sleep,
+            )
         except Exception:  # noqa: BLE001 -- redact transport details.
             raise FinancialSentinelV2AcquisitionError(
                 FinancialSentinelV2FailureCode.PROVIDER_TRANSPORT_FAILURE
@@ -398,6 +408,7 @@ def acquire_tushare_cn_a_share_financial_source_sentinel_v2(
                 "api_name": api_name,
                 "params": body["params"],
                 "fields": body["fields"],
+                "auth_mode": "x-api-key",
                 "member_key": member_key,
                 "attempts": attempts,
                 "response_received_at_epoch_nanoseconds": response_received_at,
@@ -466,8 +477,8 @@ def acquire_tushare_cn_a_share_financial_source_sentinel_v2(
             for member_key, source_bytes in files.items()
         ),
         provenance=SourceSnapshotProvenance(
-            vendor_key="tushare.pro-cninfo.com.cn",
-            source_key="cn_a_share.financial_source_sentinel.000651.sz.20231231.v2",
+            vendor_key="tushare.pro-via-xiaodefa-cninfo.com.cn",
+            source_key="cn_a_share.financial_source_sentinel.000651.sz.20231231.v2.proxy",
             license_ref="tushare.pro.terms-cninfo.public-disclosure",
             retention_policy_ref="backtest.acquisition.candidate",
         ),
@@ -488,6 +499,8 @@ def acquire_tushare_cn_a_share_financial_source_sentinel_v2(
         "type": "tushare_cn_a_share_financial_source_sentinel_acquisition_receipt",
         "schema_version": 2,
         "request": request.to_canonical_dict(),
+        "transport_proxy_key": _PROXY_KEY,
+        "transport_endpoint": endpoint,
         "provider_requests": provider_requests,
         "official_documents": official_documents,
         "acquired_at_epoch_nanoseconds": max(received_at.values()),
@@ -546,21 +559,23 @@ def _parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
         description="Capture the frozen Tushare/CNINFO financial source sentinel v2"
     )
+    parser.add_argument("--endpoint", choices=_PROXY_ENDPOINTS, default=_PROXY_ENDPOINTS[0])
     parser.add_argument("--output-dir", required=True)
     return parser
 
 
 def main(argv: list[str] | None = None) -> int:
     args = _parser().parse_args(sys.argv[1:] if argv is None else argv)
-    token = os.environ.get("TUSHARE_TOKEN", "")
+    token = os.environ.get("TUSHARE_PROXY_TOKEN", "")
     if not token:
-        raise SystemExit("TUSHARE_TOKEN must be provided through the environment")
+        raise SystemExit("TUSHARE_PROXY_TOKEN must be provided through the environment")
     try:
         receipt = acquire_tushare_cn_a_share_financial_source_sentinel_v2(
             TushareCnAShareFinancialSourceSentinelRequestV2(),
             token=token,
+            endpoint=args.endpoint,
             output_dir=args.output_dir,
-            post=_stdlib_post,
+            post=_proxy_stdlib_post,
             get=_stdlib_get,
         )
     except (AcquisitionError, ValueError) as error:

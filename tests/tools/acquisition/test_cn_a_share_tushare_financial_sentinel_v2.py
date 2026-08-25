@@ -19,7 +19,7 @@ from tools.acquisition import _common
 from tools.acquisition._common import AcquisitionError
 from tools.acquisition import cn_a_share_tushare_financial_sentinel_v2 as sentinel
 
-TOKEN = "financial-sentinel-v2-secret"
+TOKEN = "p" * 56
 REPORT = b"%PDF-1.5\nannual-report\n"
 CONFIRMATION = b"%PDF-1.5\npublication-confirmation\n"
 
@@ -67,9 +67,16 @@ class FakePost:
         )
         self.statuses = list(statuses or [])
         self.calls: list[dict[str, object]] = []
+        self.headers: list[dict[str, str]] = []
 
-    def __call__(self, _url: str, body: dict[str, object]) -> tuple[int, bytes]:
+    def __call__(
+        self,
+        _url: str,
+        body: dict[str, object],
+        headers: dict[str, str],
+    ) -> tuple[int, bytes]:
         self.calls.append(body)
+        self.headers.append(headers)
         status = self.statuses.pop(0) if self.statuses else 200
         fields = tuple(str(body["fields"]).split(","))
         return (
@@ -91,7 +98,7 @@ def acquire(
     output: Path,
     monkeypatch: pytest.MonkeyPatch,
     *,
-    post: sentinel.Post | None = None,
+    post: sentinel.ProxyPost | None = None,
     get: sentinel.Get | None = None,
 ) -> dict[str, object]:
     monkeypatch.setattr(sentinel, "_REPORT_BYTES", len(REPORT))
@@ -127,6 +134,7 @@ def acquire(
     return sentinel.acquire_tushare_cn_a_share_financial_source_sentinel_v2(
         sentinel.TushareCnAShareFinancialSourceSentinelRequestV2(),
         token=TOKEN,
+        endpoint="https://fast.xiaodefa.cn",
         output_dir=output,
         post=post or FakePost(),
         get=get or default_get,
@@ -176,6 +184,9 @@ def test_v2_captures_expanded_fields_and_exact_five_members(
         "ts_code,ann_date,f_ann_date,end_date,report_type,comp_type,n_cashflow_act,c_pay_acq_const_fiolta,depr_fa_coga_dpba,use_right_asset_dep,amort_intang_assets,lt_amort_deferred_exp,c_cash_equ_end_period,free_cashflow,update_flag",
     ]
     assert [body["fields"] for body in post.calls] == expected_fields
+    assert receipt["transport_proxy_key"] == "xiaodefa.approved-tushare-proxy.v1"
+    assert receipt["transport_endpoint"] == "https://fast.xiaodefa.cn"
+    assert all(headers["x-api-key"] == TOKEN for headers in post.headers)
     assert all(
         body["params"]
         == {
@@ -203,6 +214,7 @@ def test_v2_captures_expanded_fields_and_exact_five_members(
         "debt classification may remain incomplete",
         "no normalized revision, presentation selection, or formula evidence",
         "no five-year history, full-market coverage, or terminal-set closure",
+        "approved proxy transport is not provider completeness",
     ]
     for request in receipt["provider_requests"]:
         payload = json.loads((output / request["member_key"]).read_bytes())
@@ -225,8 +237,8 @@ def test_v2_captures_expanded_fields_and_exact_five_members(
             for member_key, evidence in canonical_members.items()
         ),
         provenance=SourceSnapshotProvenance(
-            vendor_key="tushare.pro-cninfo.com.cn",
-            source_key="cn_a_share.financial_source_sentinel.000651.sz.20231231.v2",
+            vendor_key="tushare.pro-via-xiaodefa-cninfo.com.cn",
+            source_key="cn_a_share.financial_source_sentinel.000651.sz.20231231.v2.proxy",
             license_ref="tushare.pro.terms-cninfo.public-disclosure",
             retention_policy_ref="backtest.acquisition.candidate",
         ),
@@ -363,11 +375,25 @@ def test_v2_credential_and_output_scope_fail_before_network(
         sentinel.acquire_tushare_cn_a_share_financial_source_sentinel_v2(
             sentinel.TushareCnAShareFinancialSourceSentinelRequestV2(),
             token=TOKEN,
+            endpoint="https://fast.xiaodefa.cn",
             output_dir=tmp_path / TOKEN / "capture",
-            post=lambda _url, _body: calls.append("post") or (500, b""),
+            post=lambda _url, _body, _headers: calls.append("post") or (500, b""),
             get=lambda _url: calls.append("get") or (500, b"", ""),
         )
     assert caught.value.code is sentinel.FinancialSentinelV2FailureCode.CREDENTIAL_INPUT_INVALID
+    assert calls == []
+
+    for invalid in ("short", "x" * 27 + " " + "x" * 28):
+        with pytest.raises(sentinel.FinancialSentinelV2AcquisitionError) as malformed:
+            sentinel.acquire_tushare_cn_a_share_financial_source_sentinel_v2(
+                sentinel.TushareCnAShareFinancialSourceSentinelRequestV2(),
+                token=invalid,
+                endpoint="https://fast.xiaodefa.cn",
+                output_dir=tmp_path / "malformed",
+                post=lambda _url, _body, _headers: calls.append("post") or (500, b""),
+                get=lambda _url: calls.append("get") or (500, b"", ""),
+            )
+        assert malformed.value.code is sentinel.FinancialSentinelV2FailureCode.CREDENTIAL_INPUT_INVALID
     assert calls == []
 
 
@@ -399,7 +425,11 @@ def test_v2_symlink_traversal_and_transport_fail_closed(
     with pytest.raises(AcquisitionError, match="traversal"):
         acquire(tmp_path / "child" / ".." / "capture", monkeypatch)
 
-    def failed_post(_url: str, _body: dict[str, object]) -> tuple[int, bytes]:
+    def failed_post(
+        _url: str,
+        _body: dict[str, object],
+        _headers: dict[str, str],
+    ) -> tuple[int, bytes]:
         raise RuntimeError(TOKEN)
 
     with pytest.raises(sentinel.FinancialSentinelV2AcquisitionError) as caught:
@@ -458,3 +488,36 @@ def test_v2_no_clobber_and_transient_retries(
     receipt = acquire(tmp_path / "retry", monkeypatch, post=post, get=get)
     assert receipt["provider_requests"][0]["attempts"] == 2
     assert receipt["official_documents"]["annual_report"]["attempts"] == 2
+
+
+def test_v2_cli_uses_approved_proxy_token_and_endpoint(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    captured: dict[str, object] = {}
+
+    def fake_acquire(request: object, **kwargs: object) -> dict[str, object]:
+        captured["request"] = request
+        captured.update(kwargs)
+        return {"type": "fixture_receipt", "schema_version": 2}
+
+    monkeypatch.setenv("TUSHARE_PROXY_TOKEN", TOKEN)
+    monkeypatch.delenv("TUSHARE_TOKEN", raising=False)
+    monkeypatch.setattr(
+        sentinel,
+        "acquire_tushare_cn_a_share_financial_source_sentinel_v2",
+        fake_acquire,
+    )
+    assert sentinel.main(
+        [
+            "--endpoint",
+            "https://fast.xiaodefa.cn",
+            "--output-dir",
+            str(tmp_path / "capture"),
+        ]
+    ) == 0
+    assert captured["token"] == TOKEN
+    assert captured["endpoint"] == "https://fast.xiaodefa.cn"
+    assert captured["post"] is sentinel._proxy_stdlib_post
+    assert "fixture_receipt" in capsys.readouterr().out

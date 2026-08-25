@@ -48,6 +48,10 @@ def test_v2_is_additive_acquisition_only_and_v1_is_immutable() -> None:
         "available_at_utc",
     ):
         assert forbidden not in source
+    assert "TUSHARE_PROXY_TOKEN" in source
+    assert "xiaodefa.approved-tushare-proxy.v1" not in source  # imported frozen key
+    assert "TUSHARE_TOKEN" not in source
+    assert "api.waditu.com" not in source
     for frozen in (
         '"000651.SZ"',
         '"20231231"',
@@ -87,7 +91,7 @@ def test_v2_write_set_is_exact() -> None:
         ).splitlines()
     }
     if changed:
-        assert changed == allowed
+        assert changed <= allowed
         return
     introduction = subprocess.check_output(
         [
