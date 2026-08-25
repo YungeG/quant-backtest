@@ -1,17 +1,43 @@
 """Binance USD-M market-semantics profile components."""
 
-from .order_rules import (
-    BinanceUsdmDeferredRuleKey,
-    BinanceUsdmOrderAdmissionMode,
-    BinanceUsdmOrderRuleBand,
-    BinanceUsdmOrderRuleBook,
-    BinanceUsdmOrderRuleFailure,
-    BinanceUsdmOrderRuleFailureCode,
-    BinanceUsdmOrderRuleModel,
-    BinanceUsdmOrderRuleOutcome,
-    BinanceUsdmOrderRuleQuery,
-    BinanceUsdmOrderRuleResolution,
-    BinanceUsdmOrderRuleSourceRef,
+from .account_profile import (
+    BinanceUsdmAccountProfileBand,
+    BinanceUsdmAccountProfileFailure,
+    BinanceUsdmAccountProfileFailureCode,
+    BinanceUsdmAccountProfileModel,
+    BinanceUsdmAccountProfileOutcome,
+    BinanceUsdmAccountProfileQuery,
+    BinanceUsdmAccountProfileResolution,
+    BinanceUsdmAccountProfileScope,
+    BinanceUsdmAccountProfileSourceRef,
+    BinanceUsdmAccountSourceKind,
+    BinanceUsdmHistoricalAccountProfileBook,
+)
+from .funding_sources import (
+    BinanceUsdmFundingCoverage,
+    BinanceUsdmFundingRateRecord,
+    BinanceUsdmFundingSourceFailure,
+    BinanceUsdmFundingSourceFailureCode,
+    BinanceUsdmFundingSourceModel,
+    BinanceUsdmFundingSourceOutcome,
+    BinanceUsdmFundingSourceQuery,
+    BinanceUsdmFundingSourceRef,
+    BinanceUsdmFundingSourceResolution,
+    BinanceUsdmHistoricalFundingBook,
+)
+from .instrument_metadata import (
+    BINANCE_USDM_OPEN_ENDED_DELIVERY_AT,
+    BinanceUsdmContractStatus,
+    BinanceUsdmInstrumentMetadataFailure,
+    BinanceUsdmInstrumentMetadataFailureCode,
+    BinanceUsdmInstrumentMetadataOutcome,
+    BinanceUsdmInstrumentMetadataQuery,
+    BinanceUsdmInstrumentMetadataResolution,
+    BinanceUsdmInstrumentMetadataRevision,
+    BinanceUsdmInstrumentMetadataSourceRef,
+    BinanceUsdmInstrumentModel,
+    BinanceUsdmLinearContractMetadata,
+    BinanceUsdmListingInterval,
 )
 from .margin_tiers import (
     BinanceUsdmMarginTierBand,
@@ -25,6 +51,19 @@ from .margin_tiers import (
     BinanceUsdmMarginTierRuleBook,
     BinanceUsdmMarginTierScope,
     BinanceUsdmMarginTierSourceRef,
+)
+from .order_rules import (
+    BinanceUsdmDeferredRuleKey,
+    BinanceUsdmOrderAdmissionMode,
+    BinanceUsdmOrderRuleBand,
+    BinanceUsdmOrderRuleBook,
+    BinanceUsdmOrderRuleFailure,
+    BinanceUsdmOrderRuleFailureCode,
+    BinanceUsdmOrderRuleModel,
+    BinanceUsdmOrderRuleOutcome,
+    BinanceUsdmOrderRuleQuery,
+    BinanceUsdmOrderRuleResolution,
+    BinanceUsdmOrderRuleSourceRef,
 )
 from .price_streams import (
     BinanceUsdmAggregateTradePrice,
@@ -41,44 +80,11 @@ from .price_streams import (
     BinanceUsdmPriceStreamModel,
     BinanceUsdmPriceStreamOutcome,
 )
-from .funding_sources import (
-    BinanceUsdmFundingCoverage,
-    BinanceUsdmFundingRateRecord,
-    BinanceUsdmFundingSourceFailure,
-    BinanceUsdmFundingSourceFailureCode,
-    BinanceUsdmFundingSourceModel,
-    BinanceUsdmFundingSourceOutcome,
-    BinanceUsdmFundingSourceQuery,
-    BinanceUsdmFundingSourceRef,
-    BinanceUsdmFundingSourceResolution,
-    BinanceUsdmHistoricalFundingBook,
-)
-from .account_profile import (
-    BinanceUsdmAccountProfileBand,
-    BinanceUsdmAccountProfileFailure,
-    BinanceUsdmAccountProfileFailureCode,
-    BinanceUsdmAccountProfileModel,
-    BinanceUsdmAccountProfileOutcome,
-    BinanceUsdmAccountProfileQuery,
-    BinanceUsdmAccountProfileResolution,
-    BinanceUsdmAccountProfileScope,
-    BinanceUsdmAccountProfileSourceRef,
-    BinanceUsdmAccountSourceKind,
-    BinanceUsdmHistoricalAccountProfileBook,
-)
-from .instrument_metadata import (
-    BINANCE_USDM_OPEN_ENDED_DELIVERY_AT,
-    BinanceUsdmContractStatus,
-    BinanceUsdmInstrumentMetadataFailure,
-    BinanceUsdmInstrumentMetadataFailureCode,
-    BinanceUsdmInstrumentMetadataOutcome,
-    BinanceUsdmInstrumentMetadataQuery,
-    BinanceUsdmInstrumentMetadataResolution,
-    BinanceUsdmInstrumentMetadataRevision,
-    BinanceUsdmInstrumentMetadataSourceRef,
-    BinanceUsdmInstrumentModel,
-    BinanceUsdmLinearContractMetadata,
-    BinanceUsdmListingInterval,
+from .tradifi_instrument_metadata import (
+    BinanceUsdmTradifiInstrumentMetadataFailure,
+    BinanceUsdmTradifiInstrumentMetadataModel,
+    BinanceUsdmTradifiInstrumentMetadataOutcome,
+    BinanceUsdmTradifiInstrumentMetadataResolution,
 )
 
 __all__ = [
@@ -94,6 +100,10 @@ __all__ = [
     "BinanceUsdmInstrumentMetadataFailure",
     "BinanceUsdmInstrumentMetadataOutcome",
     "BinanceUsdmInstrumentModel",
+    "BinanceUsdmTradifiInstrumentMetadataFailure",
+    "BinanceUsdmTradifiInstrumentMetadataModel",
+    "BinanceUsdmTradifiInstrumentMetadataOutcome",
+    "BinanceUsdmTradifiInstrumentMetadataResolution",
     "BinanceUsdmOrderAdmissionMode",
     "BinanceUsdmDeferredRuleKey",
     "BinanceUsdmOrderRuleSourceRef",
