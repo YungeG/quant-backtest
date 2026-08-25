@@ -1,0 +1,20 @@
+{
+  "byte_count": 2221,
+  "captured_at_utc": "2026-08-25T09:44:42.170Z",
+  "date_header": "Tue, 25 Aug 2026 09:44:42 GMT",
+  "endpoint_url": "http://global.krx.co.kr/contents/GLB/99/GLB99000001.jspx",
+  "landing_date_header": "Tue, 25 Aug 2026 09:44:39 GMT",
+  "landing_sha256": "sha256:c181b15a7c08cc48a4fc390160cdf748c3680006155f1a0124465613f32b978e",
+  "landing_url": "http://global.krx.co.kr/contents/GLB/05/0501/0501110000/GLB0501110000.jsp",
+  "method": "POST",
+  "record_count": 17,
+  "request": {
+    "bld": "GLB/05/0501/0501110000/glb0501110000_01",
+    "gridTp": "KRX",
+    "search_bas_yy": "2026"
+  },
+  "response_sha256": "sha256:e60dc5a3d4f8a02afc842f34544f2edf162836bc124209b75dc7456030858dfe",
+  "schema_version": 1,
+  "status": 200,
+  "type": "krx_market_closing_2026_capture_receipt_v1"
+}

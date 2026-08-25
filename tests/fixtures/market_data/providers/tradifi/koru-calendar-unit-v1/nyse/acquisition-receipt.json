@@ -1,0 +1,12 @@
+{
+  "byte_count": 109180,
+  "captured_at_utc": "2026-08-25T09:44:43.172Z",
+  "date_header": "Tue, 25 Aug 2026 09:44:42 GMT",
+  "final_url": "https://www.nyse.com/trade/hours-calendars",
+  "method": "GET",
+  "response_sha256": "sha256:49ee8a651ec01ef2866e347842c0fb11309541f247d17aeaaf7ad9d6a513b1ed",
+  "schema_version": 1,
+  "status": 200,
+  "type": "nyse_hours_calendars_capture_receipt_v1",
+  "url": "https://www.nyse.com/trade/hours-calendars"
+}

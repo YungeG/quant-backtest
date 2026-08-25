@@ -1,0 +1,31 @@
+{
+  "captured_at_utc": "2026-08-25T09:47:14.087Z",
+  "records": [
+    {
+      "article_code": "c226162366c54b78a7f98021b38e10c5",
+      "byte_count": 111662,
+      "date_header": "Tue, 25 Aug 2026 09:46:00 GMT",
+      "final_url": "https://www.binance.com/bapi/composite/v1/public/cms/article/detail/query?articleCode=c226162366c54b78a7f98021b38e10c5",
+      "label": "adjustment-announcement",
+      "method": "GET",
+      "path": "tests/fixtures/market_data/providers/tradifi/koru-calendar-unit-v1/binance/adjustment-announcement.json",
+      "sha256": "sha256:0f06a75fa2b8291ee8ec1c749657576467a84092fa096ece181958069acae97e",
+      "status": 200,
+      "url": "https://www.binance.com/bapi/composite/v1/public/cms/article/detail/query?articleCode=c226162366c54b78a7f98021b38e10c5"
+    },
+    {
+      "article_code": "2ce887ba8fe14fdaa088e5bed7553a4e",
+      "byte_count": 68643,
+      "date_header": "Tue, 25 Aug 2026 09:46:00 GMT",
+      "final_url": "https://www.binance.com/bapi/composite/v1/public/cms/article/detail/query?articleCode=2ce887ba8fe14fdaa088e5bed7553a4e",
+      "label": "completion-announcement",
+      "method": "GET",
+      "path": "tests/fixtures/market_data/providers/tradifi/koru-calendar-unit-v1/binance/completion-announcement.json",
+      "sha256": "sha256:c194651673fbd80c014c8e3931403f6a51d14cb8bf920fcf17c0c3e609c9a143",
+      "status": 200,
+      "url": "https://www.binance.com/bapi/composite/v1/public/cms/article/detail/query?articleCode=2ce887ba8fe14fdaa088e5bed7553a4e"
+    }
+  ],
+  "schema_version": 1,
+  "type": "binance_koru_contract_adjustment_capture_receipt_v1"
+}
