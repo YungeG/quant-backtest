@@ -2,12 +2,12 @@
 
 from __future__ import annotations
 
-from collections.abc import Mapping
-from dataclasses import dataclass
-from enum import Enum
 import re
-from typing import Any, Self, cast
 import unicodedata
+from collections.abc import Mapping
+from dataclasses import dataclass, replace
+from enum import Enum
+from typing import Self, cast
 
 from crypto_quant_domain import (
     CurrencyId,
@@ -47,7 +47,6 @@ from .slippage import (
     SlippageMarketState,
     SlippageRequest,
 )
-
 
 BAR_OPEN_CAPABILITY = MarketBundleCapability("bar_open", 1)
 BAR_OPEN_EVENT_TYPE = "bar_open"
@@ -971,3 +970,36 @@ class FullFillBuilder:
             execution_time=candidate.observation.event.event_time,
         )
         return FullFillResult(decision, slippage, fill)
+
+
+@dataclass(frozen=True, slots=True)
+class LiquidityRoleFullFillBuilder:
+    liquidity_role: str
+
+    def __post_init__(self) -> None:
+        if type(self.liquidity_role) is not str:
+            raise TypeError("liquidity_role must be str")
+        if self.liquidity_role not in ("maker", "taker"):
+            raise ValueError("liquidity_role must be maker or taker")
+
+    def build(
+        self,
+        *,
+        decision: NextBarOpenDecision,
+        slippage_outcome: SimulationPortOutcome[
+            SlippageDecision, SlippageApplicabilityViolation
+        ],
+        fill_id: DomainId,
+    ) -> FullFillResult | FullFillConstructionFailure:
+        result = FullFillBuilder().build(
+            decision=decision,
+            slippage_outcome=slippage_outcome,
+            fill_id=fill_id,
+        )
+        if isinstance(result, FullFillConstructionFailure):
+            return result
+        return FullFillResult(
+            result.decision,
+            result.slippage_decision,
+            replace(result.fill, liquidity=self.liquidity_role),
+        )
