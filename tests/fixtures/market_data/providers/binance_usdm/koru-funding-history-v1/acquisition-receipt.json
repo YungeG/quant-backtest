@@ -1,0 +1,17 @@
+{
+  "byte_count": 14912,
+  "captured_at_utc": "2026-08-25T08:48:03.858Z",
+  "date_header": "Tue, 25 Aug 2026 08:48:03 GMT",
+  "record_count": 120,
+  "request": {
+    "end_time_milliseconds": 1787569199999,
+    "limit": 1000,
+    "start_time_milliseconds": 1784109600000,
+    "symbol": "KORUUSDT"
+  },
+  "response_sha256": "sha256:ace9f779682989befac94ffd1c835e7a6e97b2b8103e6ad347ec8dc38fa6c960",
+  "schema_version": 1,
+  "status": 200,
+  "type": "binance_usdm_koru_funding_history_provider_capture_receipt_v1",
+  "url": "https://fapi.binance.com/fapi/v1/fundingRate?symbol=KORUUSDT&startTime=1784109600000&endTime=1787569199999&limit=1000"
+}

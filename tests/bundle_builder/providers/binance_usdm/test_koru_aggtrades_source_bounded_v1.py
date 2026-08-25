@@ -149,7 +149,7 @@ def test_fixture_is_explicitly_synthetic_and_actual_provider_capture_remains_res
     assert ACTUAL_PROVIDER_RESIDUAL_ACCEPTANCE_ITEM == (
         "capture_and_golden_actual_koru_provider_archive_and_checksum"
     )
-    assert not tuple(fixture_root.rglob("*KORUUSDT*"))
+    assert not tuple(fixture_root.rglob("*KORUUSDT-aggTrades*"))
     assert archive_bytes() == archive_bytes()
 
 
