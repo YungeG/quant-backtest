@@ -582,6 +582,16 @@ def test_v3_transport_retries_redaction_and_document_identity(
     assert redirect.value.code is sentinel.FinancialHistorySentinelV3FailureCode.OFFICIAL_DOCUMENT_TRANSPORT_FAILURE
 
 
+def test_v3_creates_missing_output_parent(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    output = tmp_path / "missing" / "capture"
+    assert not output.parent.exists()
+    acquire(output, monkeypatch)
+    assert output.is_dir()
+    assert (output / "acquisition-receipt.json").is_file()
+
+
 def test_v3_output_preflight_atomic_visibility_lock_and_destination_race(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:

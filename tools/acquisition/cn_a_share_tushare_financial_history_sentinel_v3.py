@@ -668,6 +668,8 @@ def _preflight_output(final_dir: Path) -> Path:
     staging_dir = final_dir.parent / f".{final_dir.name}.staging-v3"
     try:
         _require_safe_output(final_dir)
+        final_dir.parent.mkdir(mode=0o700, parents=True, exist_ok=True)
+        _require_safe_output(final_dir)
         _require_safe_output(staging_dir)
     except (AcquisitionError, OSError, ValueError):
         raise FinancialHistorySentinelV3AcquisitionError(
