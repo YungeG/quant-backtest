@@ -197,6 +197,31 @@ targets = [
 ]
 
 [[forbidden_import_rules]]
+id = "bt-tradifi-source-01b-koru-price-bars-offline-rule-neutral"
+source_packages = ["market-bundle-builder"]
+include = ["crypto_quant_bundle_builder/binance_usdm_koru_price_bars_source_bounded_v1.py"]
+exclude = []
+targets = [
+  "aiohttp",
+  "boto3",
+  "ccxt",
+  "crypto_quant_backtest",
+  "crypto_quant_trading",
+  "ftplib",
+  "http.client",
+  "httpx",
+  "pandas",
+  "pathlib",
+  "requests",
+  "smtplib",
+  "socket",
+  "sqlalchemy",
+  "subprocess",
+  "urllib.request",
+  "websockets",
+]
+
+[[forbidden_import_rules]]
 id = "g12d-local-market-bundle-repository"
 source_packages = ["market-bundle-builder"]
 include = ["crypto_quant_bundle_builder/local_market_bundle_repository.py"]

@@ -1,0 +1,50 @@
+{
+  "captured_at_utc": "2026-08-25T08:27:02.400Z",
+  "instrument": "KORUUSDT",
+  "interval": "1h",
+  "records": [
+    {
+      "archive_available_at_utc": "2026-07-17T09:26:07Z",
+      "byte_count": 922,
+      "last_modified": "Fri, 17 Jul 2026 09:26:07 GMT",
+      "path": "tests/fixtures/market_data/providers/binance_usdm/koru-price-bars-v1/mark/KORUUSDT-1h-2026-07-16.zip",
+      "sha256": "sha256:1d24171e3eeeda02f6114da802bb6ed60d655b6b5c19c56825b3d2539f88cf0b",
+      "source_kind": "mark_price",
+      "status": 200,
+      "url": "https://data.binance.vision/data/futures/um/daily/markPriceKlines/KORUUSDT/1h/KORUUSDT-1h-2026-07-16.zip"
+    },
+    {
+      "archive_available_at_utc": "2026-07-17T09:26:07Z",
+      "byte_count": 93,
+      "last_modified": "Fri, 17 Jul 2026 09:26:07 GMT",
+      "path": "tests/fixtures/market_data/providers/binance_usdm/koru-price-bars-v1/mark/KORUUSDT-1h-2026-07-16.zip.CHECKSUM",
+      "sha256": "sha256:629977ec493c028e4095f4dbdbc60388d57eaee44976df511f8649aebac24e70",
+      "source_kind": "mark_price",
+      "status": 200,
+      "url": "https://data.binance.vision/data/futures/um/daily/markPriceKlines/KORUUSDT/1h/KORUUSDT-1h-2026-07-16.zip.CHECKSUM"
+    },
+    {
+      "archive_available_at_utc": "2026-07-17T09:00:04Z",
+      "byte_count": 1014,
+      "last_modified": "Fri, 17 Jul 2026 09:00:04 GMT",
+      "path": "tests/fixtures/market_data/providers/binance_usdm/koru-price-bars-v1/index/KORUUSDT-1h-2026-07-16.zip",
+      "sha256": "sha256:75ed044992cea272cc807526f489ec5879c43a8a828a72811dec2528d11b0606",
+      "source_kind": "index_price",
+      "status": 200,
+      "url": "https://data.binance.vision/data/futures/um/daily/indexPriceKlines/KORUUSDT/1h/KORUUSDT-1h-2026-07-16.zip"
+    },
+    {
+      "archive_available_at_utc": "2026-07-17T09:00:04Z",
+      "byte_count": 93,
+      "last_modified": "Fri, 17 Jul 2026 09:00:04 GMT",
+      "path": "tests/fixtures/market_data/providers/binance_usdm/koru-price-bars-v1/index/KORUUSDT-1h-2026-07-16.zip.CHECKSUM",
+      "sha256": "sha256:153e5ad46b80a217d849a26355d17935296108ce6a6203b9a982da34a9a59e5b",
+      "source_kind": "index_price",
+      "status": 200,
+      "url": "https://data.binance.vision/data/futures/um/daily/indexPriceKlines/KORUUSDT/1h/KORUUSDT-1h-2026-07-16.zip.CHECKSUM"
+    }
+  ],
+  "schema_version": 1,
+  "type": "binance_usdm_koru_price_bars_provider_capture_receipt_v1",
+  "utc_date": "2026-07-16"
+}
