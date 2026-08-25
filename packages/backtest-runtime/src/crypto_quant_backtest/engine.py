@@ -112,6 +112,8 @@ from .financial_dispatch import (
     FinancialDispatchResult,
     FinancialEventDispatcher,
     FinancialStateView,
+    financial_dispatcher_for_spec,
+    financial_dispatcher_owns_fee_accounting,
 )
 from .ports import CloseoutPolicy, SimulationPortOutcome
 from .run_end import (
@@ -1592,7 +1594,10 @@ class DeterministicBarEngine:
         self,
         financial_dispatcher: FinancialEventDispatcher | object = _DEFAULT_FINANCIAL_DISPATCHER,
     ) -> None:
-        if financial_dispatcher is _DEFAULT_FINANCIAL_DISPATCHER:
+        self._auto_select_financial_dispatcher = (
+            financial_dispatcher is _DEFAULT_FINANCIAL_DISPATCHER
+        )
+        if self._auto_select_financial_dispatcher:
             financial_dispatcher = DefaultCashFinancialDispatcher()
         if not isinstance(financial_dispatcher, FinancialEventDispatcher):
             raise TypeError("financial_dispatcher must satisfy FinancialEventDispatcher")
@@ -1612,7 +1617,12 @@ class DeterministicBarEngine:
             cancellation, EngineCancellationRequest
         ):
             raise TypeError("cancellation must be EngineCancellationRequest or None")
+        previous = self._financial_dispatcher
         try:
+            if self._auto_select_financial_dispatcher:
+                self._financial_dispatcher = financial_dispatcher_for_spec(
+                    case.financial_dispatch_plan.dispatcher_spec
+                )
             return self._execute(case, cancellation)
         except (JournalError, SettlementBookError, TypeError, ValueError) as error:
             trace = ExecutionTrace()
@@ -1625,6 +1635,8 @@ class DeterministicBarEngine:
                     (canonical_sha256({"error_type": type(error).__name__}),),
                 )
             )
+        finally:
+            self._financial_dispatcher = previous
 
     def _execute(
         self,
@@ -2740,12 +2752,14 @@ class DeterministicBarEngine:
         )
         # A zero assessment is authoritative evidence, not a cash mutation.
         if fee_outcome.result.assessment.amount.units:
-            if (
-                type(accounting.position_payload) is CashFillAccountingPlan
-                and accounting.position_payload.cost_basis_policy.policy_version >= 2
+            if financial_dispatcher_owns_fee_accounting(
+                self._financial_dispatcher, accounting
             ):
                 fee_dispatch = self._financial_dispatcher.book_fee(
-                    accounting, fill, fee_outcome.result, self._financial_state_view(state)
+                    accounting,
+                    fill,
+                    fee_outcome.result,
+                    self._financial_state_view(state),
                 )
                 failure = self._apply_financial_dispatch(
                     case,

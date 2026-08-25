@@ -147,6 +147,7 @@ from .execution_inputs import (
 )
 from .facade import BacktestRuntime
 from .financial_dispatch import (
+    BinanceUsdmTradifiLinearFinancialDispatcher,
     CashFillAccountingPlan,
     DefaultCashFinancialDispatcher,
     FeeAccountingDispatchPlan,
@@ -162,6 +163,8 @@ from .financial_dispatch import (
     FinancialStateView,
     ScheduledAccountEvent,
     default_cash_financial_dispatcher_spec,
+    financial_dispatcher_for_spec,
+    financial_dispatcher_owns_fee_accounting,
 )
 from .integrity import (
     AttemptConsistencySet,
@@ -425,6 +428,7 @@ __all__ = [
     "BinanceUsdmResolvedProfile",
     "BinanceUsdmSimulationProfile",
     "BinanceUsdmTradifiExecutionAccountProfile",
+    "BinanceUsdmTradifiLinearFinancialDispatcher",
     "BinanceUsdmTradifiMarketSemanticsProfile",
     "BinanceUsdmTradifiProfileComposer",
     "BinanceUsdmTradifiProfileCompositionFailure",
@@ -490,6 +494,8 @@ __all__ = [
     "FinancialStateView",
     "ScheduledAccountEvent",
     "default_cash_financial_dispatcher_spec",
+    "financial_dispatcher_for_spec",
+    "financial_dispatcher_owns_fee_accounting",
     "ArtifactEnvelopePublisher",
     "ArtifactEnvelopeReader",
     "CloseoutPolicy",

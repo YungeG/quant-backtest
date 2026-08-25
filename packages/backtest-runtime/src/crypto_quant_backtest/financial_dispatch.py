@@ -2,10 +2,10 @@
 
 from __future__ import annotations
 
+import unicodedata
 from dataclasses import dataclass
 from enum import Enum
 from typing import Any, Protocol, runtime_checkable
-import unicodedata
 
 from crypto_quant_domain import (
     AccountingJournalEntry,
@@ -27,12 +27,18 @@ from crypto_quant_trading import (
     AccountingJournal,
     CashInstrumentAccounting,
     CostBasisPolicy,
+    FeeChargedJournalTranslator,
     FinalFeeAssessmentResult,
     FinalFeeRuleSet,
     LedgerBalanceRegistration,
     LedgerState,
+    LinearDerivativeAccounting,
+    LinearDerivativeAccountingRequest,
+    LinearDerivativeJournalEntry,
     LinearFundingApplicationIdentity,
     LinearPerpetualContract,
+    LinearPositionProjectionRequest,
+    LinearPositionProjector,
     PortfolioSnapshotProjector,
     ProfileComponentRef,
     ProfilePortType,
@@ -41,9 +47,12 @@ from crypto_quant_trading import (
 
 from .ports import SimulationComponentRef, SimulationPortType
 
-
 _HASH_PREFIX = "sha256:"
 _CASH_DISPATCHER_KEY = "generic.cash.financial-dispatcher.v1"
+_TRADIFI_DISPATCHER_KEY = "crypto.binance_usdm.tradifi.linear-financial-dispatch.v1"
+_TRADIFI_FINANCING_KEY = "crypto.binance_usdm.tradifi.linear-funding-composition.v1"
+_TRADIFI_MARGIN_KEY = "crypto.binance_usdm.tradifi.linear-margin-composition.v1"
+_TRADIFI_SNAPSHOT_KEY = "crypto.binance_usdm.tradifi.linear-snapshot.v1"
 
 
 def _text(name: str, value: object) -> str:
@@ -831,6 +840,297 @@ def _position_lot_books_from_ledger(
     }
 
 
+class BinanceUsdmTradifiLinearFinancialDispatcher:
+    """Production fill/fee dispatcher for the exact Binance USD-M TradFi shape."""
+
+    def __init__(self, spec: FinancialDispatcherSpec) -> None:
+        if type(spec) is not FinancialDispatcherSpec:
+            raise TypeError("spec must be exact FinancialDispatcherSpec")
+        from .liquidation_audit import ConservativeLinearLiquidationAuditModel
+
+        expected_position = LinearDerivativeAccounting().component_ref
+        expected_liquidation = ConservativeLinearLiquidationAuditModel().component_ref
+        if (
+            spec.dispatcher_key != _TRADIFI_DISPATCHER_KEY
+            or spec.dispatcher_version != 1
+            or spec.position_accounting_component != expected_position
+            or spec.financing_component.component_key != _TRADIFI_FINANCING_KEY
+            or spec.financing_component.component_version != 1
+            or spec.margin_component.component_key != _TRADIFI_MARGIN_KEY
+            or spec.margin_component.component_version != 1
+            or spec.liquidation_audit_component != expected_liquidation
+            or spec.snapshot_projection_key != _TRADIFI_SNAPSHOT_KEY
+            or spec.snapshot_projection_version != 1
+        ):
+            raise ValueError("unsupported Binance USD-M TradFi dispatcher spec")
+        for name, digest in (
+            ("config_hash", spec.config_hash),
+            (
+                "position component digest",
+                spec.position_accounting_component.component_digest,
+            ),
+            ("financing component digest", spec.financing_component.component_digest),
+            ("margin component digest", spec.margin_component.component_digest),
+            (
+                "liquidation component digest",
+                spec.liquidation_audit_component.component_digest,
+            ),
+        ):
+            _hash(name, digest)
+        canonical_sha256(spec)
+        self._spec = spec
+
+    @property
+    def spec(self) -> FinancialDispatcherSpec:
+        return self._spec
+
+    def book_fill(
+        self,
+        plan: FillAccountingDispatchPlan,
+        fill: Fill,
+        state_view: FinancialStateView,
+        /,
+    ) -> FinancialDispatchOutcome:
+        input_hash = canonical_sha256(
+            {
+                "operation": "linear_book_fill",
+                "plan": plan,
+                "fill": fill,
+                "journal_hash": state_view.journal.journal_hash,
+            }
+        )
+        payload = plan.position_payload
+        if (
+            plan.position_accounting_component
+            != self.spec.position_accounting_component
+            or plan.expected_fill_id != fill.fill_id
+            or type(payload) is not LinearDerivativeFillAccountingPlan
+            or len(plan.expected_artifact_roles) != 1
+        ):
+            return _failure(
+                self.spec,
+                plan.source_event_id,
+                input_hash,
+                FinancialDispatchFailureCode.FILL_PLAN_MISMATCH,
+                str(fill.fill_id),
+            )
+
+        prior_fills: list[Fill] = []
+        for entry in state_view.journal.entries:
+            if isinstance(entry, LinearDerivativeJournalEntry):
+                if type(entry) is not LinearDerivativeJournalEntry:
+                    return _failure(
+                        self.spec,
+                        plan.source_event_id,
+                        input_hash,
+                        FinancialDispatchFailureCode.PROFILE_COMPONENT_FAILURE,
+                        "position_projection",
+                    )
+                if entry.request.transition.before.position_key == payload.position_key:
+                    if entry.request.transition.before.contract != payload.contract:
+                        return _failure(
+                            self.spec,
+                            plan.source_event_id,
+                            input_hash,
+                            FinancialDispatchFailureCode.PROFILE_COMPONENT_FAILURE,
+                            "contract_mismatch",
+                        )
+                    prior_fills.append(entry.request.transition.fill)
+        projected = LinearPositionProjector().project(
+            LinearPositionProjectionRequest(
+                payload.position_key,
+                payload.contract,
+                tuple(prior_fills) + (fill,),
+            )
+        )
+        if projected.result is None:
+            projection_failure = projected.failure
+            return _failure(
+                self.spec,
+                plan.source_event_id,
+                input_hash,
+                FinancialDispatchFailureCode.PROFILE_COMPONENT_FAILURE,
+                getattr(
+                    getattr(projection_failure, "code", None),
+                    "value",
+                    "position_projection",
+                ),
+                str(fill.fill_id),
+            )
+        accounting = LinearDerivativeAccounting().translate_position_fact(
+            LinearDerivativeAccountingRequest(
+                projected.result.transitions[-1],
+                payload.settlement_cash_registration,
+                payload.pnl_quantization,
+                plan.fill_journal_entry_id,
+                plan.fill_recorded_at,
+            )
+        )
+        if accounting.result is None:
+            accounting_failure = accounting.failure
+            return _failure(
+                self.spec,
+                plan.source_event_id,
+                input_hash,
+                FinancialDispatchFailureCode.PROFILE_COMPONENT_FAILURE,
+                getattr(
+                    getattr(accounting_failure, "code", None),
+                    "value",
+                    "position_accounting",
+                ),
+                str(fill.fill_id),
+            )
+        result_payload = accounting.result
+        artifact = FinancialDispatchArtifact(
+            plan.expected_artifact_roles[0],
+            plan.source_event_id,
+            plan.fill_recorded_at,
+            self.spec.position_accounting_component.component_key,
+            self.spec.position_accounting_component.component_version,
+            self.spec.position_accounting_component.component_digest,
+            input_hash,
+            result_payload.result_hash,
+            result_payload,
+        )
+        result = FinancialDispatchResult(
+            self.spec,
+            plan.source_event_id,
+            (result_payload.journal_entry,),
+            state_view.position_lot_books,
+            (artifact,),
+        )
+        return FinancialDispatchOutcome(self.spec, input_hash, result=result)
+
+    def book_fee(
+        self,
+        plan: FillAccountingDispatchPlan,
+        fill: Fill,
+        assessment: FinalFeeAssessmentResult,
+        state_view: FinancialStateView,
+        /,
+    ) -> FinancialDispatchOutcome:
+        input_hash = canonical_sha256(
+            {
+                "operation": "book_fee",
+                "fee_plan": plan.fee_plan,
+                "fill": fill,
+                "assessment": assessment,
+                "journal_hash": state_view.journal.journal_hash,
+                "ledger_state_hash": state_view.ledger_state.state_hash,
+                "dispatcher_spec": self.spec,
+            }
+        )
+        fee = plan.fee_plan
+        payload = plan.position_payload
+        if (
+            plan.position_accounting_component
+            != self.spec.position_accounting_component
+            or type(payload) is not LinearDerivativeFillAccountingPlan
+            or plan.expected_fill_id != fill.fill_id
+            or fee.cash_key != payload.settlement_cash_registration.key
+            or assessment.rule_set != fee.final_fee_rule_set
+            or assessment.assessment.fee_assessment_id != fee.fee_assessment_id
+            or assessment.assessment.assessment_time != fee.fee_assessment_time
+            or assessment.basis.fills != (fill,)
+        ):
+            return _failure(
+                self.spec,
+                plan.source_event_id,
+                input_hash,
+                FinancialDispatchFailureCode.FILL_PLAN_MISMATCH,
+                str(fill.fill_id),
+            )
+        translated = FeeChargedJournalTranslator().translate(
+            result=assessment,
+            cash_key=fee.cash_key,
+            journal_entry_id=fee.fee_journal_entry_id,
+            recorded_at=fee.fee_recorded_at,
+        )
+        if translated.result is None:
+            translation_failure = translated.failure
+            return _failure(
+                self.spec,
+                plan.source_event_id,
+                input_hash,
+                FinancialDispatchFailureCode.PROFILE_COMPONENT_FAILURE,
+                getattr(
+                    getattr(translation_failure, "code", None),
+                    "value",
+                    "fee_accounting",
+                ),
+                str(fill.fill_id),
+            )
+        result = FinancialDispatchResult(
+            self.spec,
+            plan.source_event_id,
+            (translated.result.journal_entry,),
+            state_view.position_lot_books,
+            (),
+        )
+        return FinancialDispatchOutcome(self.spec, input_hash, result=result)
+
+    def dispatch_scheduled_event(
+        self,
+        event: ScheduledAccountEvent,
+        state_view: FinancialStateView,
+        /,
+    ) -> FinancialDispatchOutcome:
+        input_hash = canonical_sha256(
+            {
+                "operation": "dispatch_scheduled_event",
+                "event": event,
+                "journal_hash": state_view.journal.journal_hash,
+            }
+        )
+        return _failure(
+            self.spec,
+            event.event_id,
+            input_hash,
+            FinancialDispatchFailureCode.EVENT_PLAN_MISMATCH,
+            "unsupported_in_bt_tradifi_dispatch_01a",
+            event.operation_key,
+        )
+
+    def project_final_snapshot(
+        self,
+        plan: FinancialDispatchPlan,
+        state_view: FinancialStateView,
+        /,
+    ) -> FinancialDispatchOutcome:
+        input_hash = canonical_sha256(
+            {
+                "operation": "project_final_snapshot",
+                "plan": plan,
+                "ledger_state_hash": state_view.ledger_state.state_hash,
+            }
+        )
+        if plan.dispatcher_spec != self.spec:
+            return _failure(
+                self.spec,
+                "engine-finalize",
+                input_hash,
+                FinancialDispatchFailureCode.DISPATCHER_SPEC_MISMATCH,
+                plan.dispatcher_spec.spec_hash,
+            )
+        return _failure(
+            self.spec,
+            "engine-finalize",
+            input_hash,
+            FinancialDispatchFailureCode.SNAPSHOT_PROJECTION_FAILURE,
+            "unsupported_in_bt_tradifi_dispatch_01a",
+        )
+
+
+def financial_dispatcher_for_spec(
+    spec: FinancialDispatcherSpec,
+) -> FinancialEventDispatcher:
+    if type(spec) is not FinancialDispatcherSpec:
+        raise TypeError("spec must be exact FinancialDispatcherSpec")
+    if spec == default_cash_financial_dispatcher_spec():
+        return DefaultCashFinancialDispatcher()
+    return BinanceUsdmTradifiLinearFinancialDispatcher(spec)
+
+
 class DefaultCashFinancialDispatcher:
     def __init__(self) -> None:
         self._spec = default_cash_financial_dispatcher_spec()
@@ -1141,7 +1441,23 @@ class DefaultCashFinancialDispatcher:
         return FinancialDispatchOutcome(self.spec, input_hash, result=result)
 
 
+def financial_dispatcher_owns_fee_accounting(
+    dispatcher: object,
+    plan: FillAccountingDispatchPlan,
+) -> bool:
+    if type(plan) is not FillAccountingDispatchPlan:
+        return False
+    payload = plan.position_payload
+    if type(payload) is CashFillAccountingPlan:
+        return payload.cost_basis_policy.policy_version >= 2
+    return (
+        isinstance(dispatcher, BinanceUsdmTradifiLinearFinancialDispatcher)
+        and type(payload) is LinearDerivativeFillAccountingPlan
+    )
+
+
 __all__ = [
+    "BinanceUsdmTradifiLinearFinancialDispatcher",
     "CashFillAccountingPlan",
     "DefaultCashFinancialDispatcher",
     "FeeAccountingDispatchPlan",
@@ -1157,4 +1473,6 @@ __all__ = [
     "FinancialStateView",
     "ScheduledAccountEvent",
     "default_cash_financial_dispatcher_spec",
+    "financial_dispatcher_for_spec",
+    "financial_dispatcher_owns_fee_accounting",
 ]
