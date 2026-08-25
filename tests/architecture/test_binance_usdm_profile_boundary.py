@@ -4,11 +4,12 @@ import ast
 import importlib
 from pathlib import Path
 
-
 ROOT = Path(__file__).resolve().parents[2]
 PROFILES = (
     ROOT
     / "packages/trading-kernel/src/crypto_quant_trading/profiles/binance_usdm/instrument_metadata.py",
+    ROOT
+    / "packages/trading-kernel/src/crypto_quant_trading/profiles/binance_usdm/tradifi_instrument_metadata.py",
     ROOT
     / "packages/trading-kernel/src/crypto_quant_trading/profiles/binance_usdm/order_rules.py",
     ROOT
@@ -85,6 +86,10 @@ PUBLIC_NAMES = (
     "BinanceUsdmInstrumentMetadataFailure",
     "BinanceUsdmInstrumentMetadataOutcome",
     "BinanceUsdmInstrumentModel",
+    "BinanceUsdmTradifiInstrumentMetadataFailure",
+    "BinanceUsdmTradifiInstrumentMetadataModel",
+    "BinanceUsdmTradifiInstrumentMetadataOutcome",
+    "BinanceUsdmTradifiInstrumentMetadataResolution",
     "BinanceUsdmOrderAdmissionMode",
     "BinanceUsdmDeferredRuleKey",
     "BinanceUsdmOrderRuleSourceRef",

@@ -1,0 +1,447 @@
+{
+  "decision_grade_eligible": false,
+  "deployment_authorized": false,
+  "execution_account_registration": {
+    "account_id": "account-1",
+    "account_type": "linear_perpetual",
+    "decision_grade_eligible": false,
+    "grade": "development",
+    "limitations": [
+      "aggregate_trade_event_represented_by_bar_open_v1",
+      "automatic_settlement_unsupported",
+      "bar_execution_not_matching_engine_parity",
+      "conservative_bar_extreme_liquidation_audit_only",
+      "development_profile",
+      "fee_rounding_parity_unproven",
+      "first_retained_trade_full_fill_only",
+      "historical_account_and_market_archive_completeness_unproven",
+      "post_adjustment_single_unit_regime_only",
+      "single_instrument_single_usdt_cross_account_only",
+      "taker_liquidity_role_only"
+    ],
+    "margin_mode": "cross_single_asset_one_way",
+    "profile_digest": "sha256:0978bebaaff85c90af168ab5fa3ed5441bf22a511aee436af8da9689120b2bbf",
+    "profile_key": "binance.usdm.standard-cross.v1",
+    "profile_version": 1,
+    "supported_reporting_currencies": [
+      {
+        "type": "currency_id",
+        "value": "USDT"
+      }
+    ],
+    "type": "execution_account_profile_registration",
+    "venue_id": "binance_usdm"
+  },
+  "financial_dispatcher_spec": {
+    "config_hash": "sha256:05a69531d37c3cbe1c76671d9a50436bad3de284a01f4b9faa626a8b44bc6172",
+    "dispatcher_key": "crypto.binance_usdm.tradifi.linear-financial-dispatch.v1",
+    "dispatcher_version": 1,
+    "financing_component": {
+      "component_digest": "sha256:92d35c2d8b5fc7abb69c6203399d5622e487e70f198d2c9ac427336bffe3cce3",
+      "component_key": "crypto.binance_usdm.tradifi.linear-funding-composition.v1",
+      "component_version": 1,
+      "port_type": "financing_model",
+      "type": "profile_component_ref"
+    },
+    "liquidation_audit_component": {
+      "component_digest": "sha256:964c7a9a0a30deaf872b3ed7563684bbc7c0af9437dc71bbbe2bc7f3da9d2422",
+      "component_key": "conservative.linear-perpetual.liquidation-audit.v1",
+      "component_version": 1,
+      "port_type": "liquidation_audit_model",
+      "type": "simulation_component_ref"
+    },
+    "margin_component": {
+      "component_digest": "sha256:e98a001dccd954c451daa7343a3d7ca500f33e06c1c7ac565aee559124524dc2",
+      "component_key": "crypto.binance_usdm.tradifi.linear-margin-composition.v1",
+      "component_version": 1,
+      "port_type": "margin_model",
+      "type": "profile_component_ref"
+    },
+    "position_accounting_component": {
+      "component_digest": "sha256:d95d6d5b761413ca961c94870774b4420870a476d8693f4da7e3b7fb4a568a3e",
+      "component_key": "instrument.linear-perpetual.accounting.v1",
+      "component_version": 1,
+      "port_type": "position_accounting_model",
+      "type": "profile_component_ref"
+    },
+    "schema_version": 1,
+    "snapshot_projection_key": "crypto.binance_usdm.tradifi.linear-snapshot.v1",
+    "snapshot_projection_version": 1,
+    "type": "financial_dispatcher_spec"
+  },
+  "fixture_id": "binance-usdm-tradifi-resolved-profile-composition-v1",
+  "limitations": [
+    "aggregate_trade_event_represented_by_bar_open_v1",
+    "bar_execution_not_matching_engine_parity",
+    "conservative_bar_extreme_liquidation_audit_only",
+    "development_profile",
+    "fee_rounding_parity_unproven",
+    "first_retained_trade_full_fill_only",
+    "historical_account_and_market_archive_completeness_unproven",
+    "post_adjustment_single_unit_regime_only",
+    "single_instrument_single_usdt_cross_account_only",
+    "taker_liquidity_role_only",
+    "automatic_settlement_unsupported"
+  ],
+  "market_registration": {
+    "component_manifest": [
+      {
+        "component_digest": "sha256:cc59751264f6316f8094b2f6870030e9e3579b947bf03a56de6feda37f0fafb6",
+        "component_key": "crypto.binance_usdm.tradifi.post-adjustment-unit-regime.v1",
+        "component_version": 1,
+        "port_type": "corporate_action_model",
+        "type": "profile_component_ref"
+      },
+      {
+        "component_digest": "sha256:439c75508ccc2a8a33766a999c697f4f35530bb2b82513d7db6a4af8b429d9eb",
+        "component_key": "crypto.binance_usdm.tradifi.usdt-identity-valuation.v1",
+        "component_version": 1,
+        "port_type": "currency_valuation_policy",
+        "type": "profile_component_ref"
+      },
+      {
+        "component_digest": "sha256:148fefabce97b2c2cfba394a8f0292ae9e751ed7ea3bb3660d88e366b0e7f46b",
+        "component_key": "crypto.binance_usdm.tradifi.account-fee-composition.v1",
+        "component_version": 1,
+        "port_type": "fee_assessment_policy",
+        "type": "profile_component_ref"
+      },
+      {
+        "component_digest": "sha256:92d35c2d8b5fc7abb69c6203399d5622e487e70f198d2c9ac427336bffe3cce3",
+        "component_key": "crypto.binance_usdm.tradifi.linear-funding-composition.v1",
+        "component_version": 1,
+        "port_type": "financing_model",
+        "type": "profile_component_ref"
+      },
+      {
+        "component_digest": "sha256:731cc32a54f7921a94e33dcd1a149c33760ca3bb58d5f19b8dc1e1f2fadd3fee",
+        "component_key": "crypto.binance_usdm.tradifi.instrument-metadata.v1",
+        "component_version": 1,
+        "port_type": "instrument_model",
+        "type": "profile_component_ref"
+      },
+      {
+        "component_digest": "sha256:598aaec6abf1a07031c99f6be99a450664dc98ae0be0451fd1205c3e159840ac",
+        "component_key": "crypto.binance_usdm.tradifi.conservative-liquidation-rules.v1",
+        "component_version": 1,
+        "port_type": "liquidation_rules",
+        "type": "profile_component_ref"
+      },
+      {
+        "component_digest": "sha256:e98a001dccd954c451daa7343a3d7ca500f33e06c1c7ac565aee559124524dc2",
+        "component_key": "crypto.binance_usdm.tradifi.linear-margin-composition.v1",
+        "component_version": 1,
+        "port_type": "margin_model",
+        "type": "profile_component_ref"
+      },
+      {
+        "component_digest": "sha256:3555e2ea33dcf0fe16881c2e64c827a12741e063d265ff585beea32a95f251d9",
+        "component_key": "crypto.binance_usdm.order-rules.v1",
+        "component_version": 1,
+        "port_type": "order_rule_model",
+        "type": "profile_component_ref"
+      },
+      {
+        "component_digest": "sha256:d95d6d5b761413ca961c94870774b4420870a476d8693f4da7e3b7fb4a568a3e",
+        "component_key": "instrument.linear-perpetual.accounting.v1",
+        "component_version": 1,
+        "port_type": "position_accounting_model",
+        "type": "profile_component_ref"
+      },
+      {
+        "component_digest": "sha256:9c0fedf47ba36de142a2ed9adf36564c107b312bc7e75911e1fdad5e0642688c",
+        "component_key": "crypto.binance_usdm.tradifi.dual-calendar-session.v1",
+        "component_version": 1,
+        "port_type": "session_model",
+        "type": "profile_component_ref"
+      },
+      {
+        "component_digest": "sha256:e6d7fca9afdba00352dcf461e87dcdebfa394094f82c9777fa3233fd243d580e",
+        "component_key": "crypto.binance_usdm.tradifi.perpetual-settlement-not-applicable.v1",
+        "component_version": 1,
+        "port_type": "settlement_model",
+        "type": "profile_component_ref"
+      },
+      {
+        "component_digest": "sha256:ca6c5e98a8e396500e0154e963d19bccba5f1c36b69261232deb419af5f0142b",
+        "component_key": "crypto.binance_usdm.tax-not-applicable.v1",
+        "component_version": 1,
+        "port_type": "tax_policy",
+        "type": "profile_component_ref"
+      }
+    ],
+    "decision_grade_eligible": false,
+    "grade": "development",
+    "limitations": [
+      "aggregate_trade_event_represented_by_bar_open_v1",
+      "automatic_settlement_unsupported",
+      "bar_execution_not_matching_engine_parity",
+      "conservative_bar_extreme_liquidation_audit_only",
+      "development_profile",
+      "fee_rounding_parity_unproven",
+      "first_retained_trade_full_fill_only",
+      "historical_account_and_market_archive_completeness_unproven",
+      "post_adjustment_single_unit_regime_only",
+      "single_instrument_single_usdt_cross_account_only",
+      "taker_liquidity_role_only"
+    ],
+    "profile_digest": "sha256:03bcad433ccb69b6ab1a5eb2c81e16975a55871278576180ee6c1415927a40a4",
+    "profile_key": "crypto.binance_usdm.tradifi.v1",
+    "profile_version": 1,
+    "required_bundle_capabilities": [
+      {
+        "key": "account.financial-event",
+        "type": "market_bundle_capability",
+        "version": 1
+      },
+      {
+        "key": "bar_open",
+        "type": "market_bundle_capability",
+        "version": 1
+      },
+      {
+        "key": "binance_usdm.funding-publications",
+        "type": "market_bundle_capability",
+        "version": 1
+      },
+      {
+        "key": "binance_usdm.price-purpose-streams",
+        "type": "market_bundle_capability",
+        "version": 1
+      }
+    ],
+    "type": "market_semantics_profile_registration",
+    "venue_id": "binance_usdm"
+  },
+  "profile_digest": "sha256:cfb3b13b01abb6e65328f92345fce2f4d9a5bd049155eb2203c125e5628fb6f7",
+  "simulation": {
+    "components": [
+      {
+        "component_digest": "sha256:d9be291bff3147a191296ec5b3d37cc79aecc9ee2bff4877d7bca86f9aeb0ea8",
+        "component_key": "mark_to_market.v1",
+        "component_version": 1,
+        "port_type": "closeout_policy",
+        "type": "simulation_component_ref"
+      },
+      {
+        "component_digest": "sha256:d69d6d96c9081f730db6ff8cdd02431d4babdef2e3967f0094971e73aedf30fe",
+        "component_key": "next_eligible_bar_open.v1",
+        "component_version": 1,
+        "port_type": "execution_model",
+        "type": "simulation_component_ref"
+      },
+      {
+        "component_digest": "sha256:7849b7662c0f43c05e52773d65fdaa8607da64585c9cac8868d15ed87583d737",
+        "component_key": "latency.zero.development.v1",
+        "component_version": 1,
+        "port_type": "latency_model",
+        "type": "simulation_component_ref"
+      },
+      {
+        "component_digest": "sha256:964c7a9a0a30deaf872b3ed7563684bbc7c0af9437dc71bbbe2bc7f3da9d2422",
+        "component_key": "conservative.linear-perpetual.liquidation-audit.v1",
+        "component_version": 1,
+        "port_type": "liquidation_audit_model",
+        "type": "simulation_component_ref"
+      },
+      {
+        "component_digest": "sha256:30ec48ebd9008c96631c227c166e556ad370b7fc2f112b6afcb1fc44f2e13c46",
+        "component_key": "liquidity.first-retained-trade.taker-full-fill.development.v1",
+        "component_version": 1,
+        "port_type": "liquidity_model",
+        "type": "simulation_component_ref"
+      },
+      {
+        "component_digest": "sha256:f3340c911628177df19de1b277ee80b49d2f8cb24e54a5708c4135c8fed07f99",
+        "component_key": "deterministic_bps.v1",
+        "component_version": 1,
+        "port_type": "slippage_model",
+        "type": "simulation_component_ref"
+      }
+    ],
+    "execution_model": {
+      "applicability": {
+        "schema_version": 1,
+        "tif_actions": [
+          {
+            "action": "expire",
+            "time_in_force": "day"
+          },
+          {
+            "action": "expire",
+            "time_in_force": "fok"
+          },
+          {
+            "action": "keep_active",
+            "time_in_force": "gtc"
+          },
+          {
+            "action": "keep_active",
+            "time_in_force": "gtx"
+          },
+          {
+            "action": "expire",
+            "time_in_force": "ioc"
+          }
+        ],
+        "type": "next_bar_open_applicability"
+      },
+      "component_ref": {
+        "component_digest": "sha256:d69d6d96c9081f730db6ff8cdd02431d4babdef2e3967f0094971e73aedf30fe",
+        "component_key": "next_eligible_bar_open.v1",
+        "component_version": 1,
+        "port_type": "execution_model",
+        "type": "simulation_component_ref"
+      },
+      "type": "next_eligible_bar_open_model_binding"
+    },
+    "fill_builder_identity": {
+      "builder": "crypto_quant_backtest.execution.LiquidityRoleFullFillBuilder",
+      "liquidity_role": "taker",
+      "type": "liquidity_role_full_fill_builder_identity"
+    },
+    "limitations": [
+      "aggregate_trade_event_represented_by_bar_open_v1",
+      "bar_execution_not_matching_engine_parity",
+      "conservative_bar_extreme_liquidation_audit_only",
+      "development_profile",
+      "fee_rounding_parity_unproven",
+      "first_retained_trade_full_fill_only",
+      "historical_account_and_market_archive_completeness_unproven",
+      "post_adjustment_single_unit_regime_only",
+      "single_instrument_single_usdt_cross_account_only",
+      "taker_liquidity_role_only",
+      "automatic_settlement_unsupported"
+    ],
+    "model_digest": "sha256:e7db6bc67c3402fbcc044ec2da59565052d2d7eeca7c9ea2fd61507c8f14ebe6",
+    "profile_key": "bar.next_eligible_trade_event.tradifi.v1",
+    "profile_version": 1,
+    "schema_version": 1,
+    "slippage_model": {
+      "applicability_envelope": {
+        "allowed_market_state_keys": [
+          "normal"
+        ],
+        "config_hash": "sha256:082ff173d9cc3bd3938504356b3ee1d59ee8dce8de5f0b830603947b5b7ebdc2",
+        "envelope_key": "koruusdt-first-retained-trade-v1",
+        "envelope_version": 1,
+        "instrument_id": {
+          "stable_key": "koru-usdt-tradifi-perpetual",
+          "type": "instrument_id",
+          "venue": "binance_usdm"
+        },
+        "maximum_quantity": {
+          "instrument_id": "binance_usdm:koru-usdt-tradifi-perpetual",
+          "scale": 3,
+          "type": "quantity",
+          "units": 1000000
+        },
+        "schema_version": 1,
+        "type": "slippage_applicability_envelope",
+        "valid_from": {
+          "epoch_nanoseconds": 1784160000000000000,
+          "type": "utc_instant"
+        },
+        "valid_to_exclusive": {
+          "epoch_nanoseconds": 1784167200000000000,
+          "type": "utc_instant"
+        }
+      },
+      "basis_points_scale": 0,
+      "basis_points_units": 5,
+      "calibration_ref": {
+        "calibration_digest": "sha256:0165dc96e62ad1089386eb319dfd534bf88a955478fb3abeee2783d61d69a2fb",
+        "calibration_key": "koruusdt-first-retained-trade-v1",
+        "calibration_version": 1,
+        "type": "slippage_calibration_ref"
+      },
+      "component_ref": {
+        "component_digest": "sha256:f3340c911628177df19de1b277ee80b49d2f8cb24e54a5708c4135c8fed07f99",
+        "component_key": "deterministic_bps.v1",
+        "component_version": 1,
+        "port_type": "slippage_model",
+        "type": "simulation_component_ref"
+      },
+      "limitations": [],
+      "rounding": "half_up",
+      "type": "deterministic_bps_slippage_model_binding"
+    },
+    "type": "binance_usdm_tradifi_simulation_profile"
+  },
+  "simulation_registration": {
+    "component_manifest": [
+      {
+        "component_digest": "sha256:d9be291bff3147a191296ec5b3d37cc79aecc9ee2bff4877d7bca86f9aeb0ea8",
+        "component_key": "mark_to_market.v1",
+        "component_version": 1,
+        "port_type": "closeout_policy",
+        "type": "simulation_component_ref"
+      },
+      {
+        "component_digest": "sha256:d69d6d96c9081f730db6ff8cdd02431d4babdef2e3967f0094971e73aedf30fe",
+        "component_key": "next_eligible_bar_open.v1",
+        "component_version": 1,
+        "port_type": "execution_model",
+        "type": "simulation_component_ref"
+      },
+      {
+        "component_digest": "sha256:7849b7662c0f43c05e52773d65fdaa8607da64585c9cac8868d15ed87583d737",
+        "component_key": "latency.zero.development.v1",
+        "component_version": 1,
+        "port_type": "latency_model",
+        "type": "simulation_component_ref"
+      },
+      {
+        "component_digest": "sha256:964c7a9a0a30deaf872b3ed7563684bbc7c0af9437dc71bbbe2bc7f3da9d2422",
+        "component_key": "conservative.linear-perpetual.liquidation-audit.v1",
+        "component_version": 1,
+        "port_type": "liquidation_audit_model",
+        "type": "simulation_component_ref"
+      },
+      {
+        "component_digest": "sha256:30ec48ebd9008c96631c227c166e556ad370b7fc2f112b6afcb1fc44f2e13c46",
+        "component_key": "liquidity.first-retained-trade.taker-full-fill.development.v1",
+        "component_version": 1,
+        "port_type": "liquidity_model",
+        "type": "simulation_component_ref"
+      },
+      {
+        "component_digest": "sha256:f3340c911628177df19de1b277ee80b49d2f8cb24e54a5708c4135c8fed07f99",
+        "component_key": "deterministic_bps.v1",
+        "component_version": 1,
+        "port_type": "slippage_model",
+        "type": "simulation_component_ref"
+      }
+    ],
+    "decision_grade_eligible": false,
+    "engine_kind": "bar",
+    "grade": "development",
+    "limitations": [
+      "aggregate_trade_event_represented_by_bar_open_v1",
+      "automatic_settlement_unsupported",
+      "bar_execution_not_matching_engine_parity",
+      "conservative_bar_extreme_liquidation_audit_only",
+      "development_profile",
+      "fee_rounding_parity_unproven",
+      "first_retained_trade_full_fill_only",
+      "historical_account_and_market_archive_completeness_unproven",
+      "post_adjustment_single_unit_regime_only",
+      "single_instrument_single_usdt_cross_account_only",
+      "taker_liquidity_role_only"
+    ],
+    "profile_digest": "sha256:2ad9c5c6199ad36400fe9c5c51b52e2cedb7b4e2bd4ea88f414508c708a7c592",
+    "profile_key": "bar.next_eligible_trade_event.tradifi.v1",
+    "profile_version": 1,
+    "required_bundle_capabilities": [
+      {
+        "key": "bar_open",
+        "type": "market_bundle_capability",
+        "version": 1
+      }
+    ],
+    "supported_strategy_families": [
+      "precomputed_target"
+    ],
+    "type": "simulation_profile_registration"
+  }
+}

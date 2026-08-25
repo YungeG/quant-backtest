@@ -22,6 +22,17 @@ from .binance_usdm_profile import (
     BinanceUsdmResolvedProfile,
     BinanceUsdmSimulationProfile,
 )
+from .binance_usdm_tradifi_profile import (
+    BinanceUsdmTradifiExecutionAccountProfile,
+    BinanceUsdmTradifiMarketSemanticsProfile,
+    BinanceUsdmTradifiProfileComposer,
+    BinanceUsdmTradifiProfileCompositionFailure,
+    BinanceUsdmTradifiProfileCompositionFailureCode,
+    BinanceUsdmTradifiProfileCompositionOutcome,
+    BinanceUsdmTradifiProfileCompositionRequest,
+    BinanceUsdmTradifiResolvedProfile,
+    BinanceUsdmTradifiSimulationProfile,
+)
 from .cash_development_provider import (
     CashDevelopmentProviderInputs,
     CashDevelopmentRequestIntent,
@@ -413,6 +424,15 @@ __all__ = [
     "BinanceUsdmProfileCompositionRequest",
     "BinanceUsdmResolvedProfile",
     "BinanceUsdmSimulationProfile",
+    "BinanceUsdmTradifiExecutionAccountProfile",
+    "BinanceUsdmTradifiMarketSemanticsProfile",
+    "BinanceUsdmTradifiProfileComposer",
+    "BinanceUsdmTradifiProfileCompositionFailure",
+    "BinanceUsdmTradifiProfileCompositionFailureCode",
+    "BinanceUsdmTradifiProfileCompositionOutcome",
+    "BinanceUsdmTradifiProfileCompositionRequest",
+    "BinanceUsdmTradifiResolvedProfile",
+    "BinanceUsdmTradifiSimulationProfile",
     "BarIneligibilityReason",
     "BarLiquidityEvidence",
     "BarOpenCandidate",
