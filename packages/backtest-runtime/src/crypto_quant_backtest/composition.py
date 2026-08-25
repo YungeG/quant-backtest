@@ -208,6 +208,23 @@ def _slippage_model_semantics(
     }
 
 
+def _bar_execution_semantics(
+    execution: ResolvedBarExecution,
+) -> dict[str, object]:
+    payload: dict[str, object] = {
+        "source_event_id": execution.event_id,
+        "pretrade_plan": execution.pretrade_plan,
+        "liquidity_evidence": execution.liquidity_evidence,
+        "market_state": execution.market_state,
+        "slippage_model": _slippage_model_semantics(execution.slippage_model),
+        "fill_event_at": execution.fill_event_at,
+        "accounting_plan": _accounting_plan_semantics(execution.accounting_plan),
+    }
+    if execution.fill_liquidity_role is not None:
+        payload["fill_liquidity_role"] = execution.fill_liquidity_role
+    return payload
+
+
 def _execution_semantics(case: ResolvedExecutionCase) -> dict[str, object]:
     return {
         "admissions": tuple(
@@ -216,19 +233,7 @@ def _execution_semantics(case: ResolvedExecutionCase) -> dict[str, object]:
             for admission in cycle.admissions
         ),
         "bar_executions": tuple(
-            {
-                "source_event_id": execution.event_id,
-                "pretrade_plan": execution.pretrade_plan,
-                "liquidity_evidence": execution.liquidity_evidence,
-                "market_state": execution.market_state,
-                "slippage_model": _slippage_model_semantics(
-                    execution.slippage_model
-                ),
-                "fill_event_at": execution.fill_event_at,
-                "accounting_plan": _accounting_plan_semantics(
-                    execution.accounting_plan
-                ),
-            }
+            _bar_execution_semantics(execution)
             for execution in case.bar_executions
         ),
         "execution_model_spec": case.execution_model.spec(),

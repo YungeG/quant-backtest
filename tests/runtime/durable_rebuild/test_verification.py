@@ -197,8 +197,11 @@ def _proof_fixture(
     *,
     changed_rebuild: bool = False,
     monkeypatch: pytest.MonkeyPatch | None = None,
+    values=None,
 ):
-    prepared, resolved, case, envelope, request, registry = _fresh_contract()
+    prepared, resolved, case, envelope, request, registry = (
+        _fresh_contract() if values is None else values
+    )
     local = _local_reader(tmp_path / "market", prepared.verified_reader)
     runner = AuditableBacktestRunner(
         engine=DeterministicBarEngine(), publication_root=tmp_path / "publication"
@@ -274,6 +277,7 @@ def _proof_fixture(
     original_prep = durable._prepare_multi_resolution_market_data_from_retained_v1
     original_compose = durable._compose_execution_case_v3
     original_run = durable.DeterministicBarEngine.run
+    rebuilt_result = None
 
     def read(*args, **kwargs):
         counts["read"] += 1
@@ -292,8 +296,10 @@ def _proof_fixture(
         return original_compose(*args, **kwargs)
 
     def run(self, *args, **kwargs):
+        nonlocal rebuilt_result
         counts["execution"] += 1
         outcome = original_run(self, *args, **kwargs)
+        rebuilt_result = outcome.result
         if not changed_rebuild or outcome.result is None:
             return outcome
         changed = replace(
@@ -346,6 +352,7 @@ def _proof_fixture(
         "case": case,
         "attempts": attempts,
         "counts": counts,
+        "rebuilt_result": rebuilt_result,
         "root": tmp_path / "publication",
     }
 

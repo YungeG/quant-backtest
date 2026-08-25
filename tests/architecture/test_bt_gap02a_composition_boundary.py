@@ -64,7 +64,7 @@ def test_execution_inputs_remains_the_only_canonical_decoder_and_catalog() -> No
     assert "json." not in composition_source
     assert "_read_" not in composition_source
     assert execution_source.count("SchemaCatalog(") == 1
-    assert execution_source.count("CanonicalSchema(") == 5
+    assert execution_source.count("CanonicalSchema(") == 6
 
 
 def test_generic_runtime_has_no_profile_branch_or_hidden_registration_builder() -> None:

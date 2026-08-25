@@ -2,10 +2,10 @@
 
 from __future__ import annotations
 
+import unicodedata
 from dataclasses import dataclass, field
 from enum import Enum
 from typing import Any, cast
-import unicodedata
 
 from crypto_quant_domain import (
     CurrencyId,
@@ -13,8 +13,8 @@ from crypto_quant_domain import (
     DomainId,
     DomainIdKind,
     FeeAssessment,
-    IdentityNamespace,
     Fill,
+    IdentityNamespace,
     Order,
     OrderEvent,
     OrderEventType,
@@ -74,10 +74,10 @@ from crypto_quant_trading import (
     PreTradeResourceRequirement,
     PreTradeRiskEvaluationInput,
     PreTradeRiskEvaluator,
-    ReportingCurrencyValuation,
-    ReservationCommitment,
     RebalanceCoordinator,
     RebalancePolicy,
+    ReportingCurrencyValuation,
+    ReservationCommitment,
     ResolvedMark,
     ResourceReservationBook,
     ResourceReservationState,
@@ -88,6 +88,19 @@ from crypto_quant_trading import (
     TargetValidity,
 )
 
+from .execution import (
+    BAR_OPEN_CAPABILITY,
+    BarLiquidityEvidence,
+    BarOpenCandidate,
+    BarOpenObservation,
+    FullFillBuilder,
+    FullFillConstructionFailure,
+    LiquidityRoleFullFillBuilder,
+    NextBarOpenDecision,
+    NextBarOpenRequest,
+    NextEligibleBarOpenModel,
+    NoEligibleBarAction,
+)
 from .financial_dispatch import (
     CashFillAccountingPlan,
     DefaultCashFinancialDispatcher,
@@ -99,18 +112,6 @@ from .financial_dispatch import (
     FinancialDispatchResult,
     FinancialEventDispatcher,
     FinancialStateView,
-)
-from .execution import (
-    BAR_OPEN_CAPABILITY,
-    BarLiquidityEvidence,
-    BarOpenCandidate,
-    BarOpenObservation,
-    FullFillBuilder,
-    FullFillConstructionFailure,
-    NextBarOpenDecision,
-    NextBarOpenRequest,
-    NextEligibleBarOpenModel,
-    NoEligibleBarAction,
 )
 from .ports import CloseoutPolicy, SimulationPortOutcome
 from .run_end import (
@@ -139,7 +140,6 @@ from .timeline import (
     TimelineEvent,
     TimelineSegment,
 )
-
 
 _HASH_PREFIX = "sha256:"
 _DEFAULT_FINANCIAL_DISPATCHER = object()
@@ -457,6 +457,7 @@ class ResolvedBarExecution:
     fill_event_id: str
     fill_event_at: SimulationInstant
     accounting_plan: FillAccountingDispatchPlan
+    fill_liquidity_role: str | None = None
 
     def __post_init__(self) -> None:
         _text("event_id", self.event_id)
@@ -475,6 +476,11 @@ class ResolvedBarExecution:
             raise TypeError("fill_event_at must be SimulationInstant")
         if not isinstance(self.accounting_plan, FillAccountingDispatchPlan):
             raise TypeError("accounting_plan must be FillAccountingDispatchPlan")
+        if self.fill_liquidity_role is not None:
+            if type(self.fill_liquidity_role) is not str:
+                raise TypeError("fill_liquidity_role must be exact str or None")
+            if self.fill_liquidity_role not in ("maker", "taker"):
+                raise ValueError("fill_liquidity_role must be maker, taker, or None")
         if (
             self.accounting_plan.source_event_id != self.event_id
             or self.accounting_plan.expected_fill_id != self.fill_id
@@ -498,7 +504,7 @@ class ResolvedBarExecution:
         }
 
     def to_canonical_dict(self) -> dict[str, object]:
-        return {
+        payload: dict[str, object] = {
             "type": "resolved_bar_execution",
             "event_id": self.event_id,
             "order_id": self.order_id,
@@ -511,6 +517,9 @@ class ResolvedBarExecution:
             "fill_event_at": self.fill_event_at,
             "accounting_plan": self.accounting_plan,
         }
+        if self.fill_liquidity_role is not None:
+            payload["fill_liquidity_role"] = self.fill_liquidity_role
+        return payload
 
 
 @dataclass(frozen=True, slots=True)
@@ -2625,7 +2634,12 @@ class DeterministicBarEngine:
             stream.order.order_id.value,
             canonical_sha256(slippage),
         )
-        fill_result = FullFillBuilder().build(
+        fill_builder = (
+            FullFillBuilder()
+            if plan.fill_liquidity_role is None
+            else LiquidityRoleFullFillBuilder(plan.fill_liquidity_role)
+        )
+        fill_result = fill_builder.build(
             decision=decision,
             slippage_outcome=cast(
                 SimulationPortOutcome[SlippageDecision, SlippageApplicabilityViolation],

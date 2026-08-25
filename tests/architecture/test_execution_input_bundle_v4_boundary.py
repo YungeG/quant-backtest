@@ -7,11 +7,27 @@ from pathlib import Path
 ROOT = Path(__file__).parents[2]
 FACADE = ROOT / "packages/backtest-runtime/src/crypto_quant_backtest/facade.py"
 DURABLE = ROOT / "packages/backtest-runtime/src/crypto_quant_backtest/_durable_rebuild.py"
-ALLOWED_FILES = {
+BASELINE_FILES = {
     "packages/backtest-runtime/src/crypto_quant_backtest/facade.py",
     "packages/backtest-runtime/src/crypto_quant_backtest/_durable_rebuild.py",
     "tests/runtime/test_durable_rebuild_facade_v4.py",
     "tests/architecture/test_execution_input_bundle_v4_boundary.py",
+}
+ALLOWED_FILES = {
+    "packages/backtest-runtime/src/crypto_quant_backtest/_durable_rebuild.py",
+    "packages/backtest-runtime/src/crypto_quant_backtest/composition.py",
+    "packages/backtest-runtime/src/crypto_quant_backtest/engine.py",
+    "packages/backtest-runtime/src/crypto_quant_backtest/execution_inputs.py",
+    "packages/backtest-runtime/src/crypto_quant_backtest/facade.py",
+    "tests/architecture/test_bt_gap02a_composition_boundary.py",
+    "tests/architecture/test_bt_gap02b_execution_input_boundary.py",
+    "tests/architecture/test_bt_gap02c_execution_closure_boundary.py",
+    "tests/architecture/test_execution_input_bundle_v4_boundary.py",
+    "tests/runtime/durable_rebuild/test_schema6.py",
+    "tests/runtime/durable_rebuild/test_verification.py",
+    "tests/runtime/engine/test_execution_liquidity_role.py",
+    "tests/runtime/execution_inputs/test_execution_liquidity_role_bundle_v6.py",
+    "tests/runtime/execution_inputs/test_multi_resolution_bundle_v3.py",
 }
 
 
@@ -38,7 +54,7 @@ def test_schema4_fanin_preserves_facade_and_provider_boundaries() -> None:
     assert "run_attested" not in facade
     assert "canonical-v4" not in facade + durable
     assert "_snapshot_execution_request_v4_from_validated_schema" in facade
-    assert "request.schema_version not in {3, 4}" in durable
+    assert "request.schema_version not in {3, 4, 6}" in durable
 
     root_export = (
         ROOT / "packages/backtest-runtime/src/crypto_quant_backtest/__init__.py"
@@ -89,4 +105,6 @@ def test_c4_02_write_set_is_exact() -> None:
                 text=True,
             ).stdout.splitlines()
         )
+        assert set(changed) == BASELINE_FILES
+        return
     assert set(changed) == ALLOWED_FILES

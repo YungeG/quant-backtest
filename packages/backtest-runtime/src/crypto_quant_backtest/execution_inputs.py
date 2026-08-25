@@ -166,12 +166,14 @@ _V2_SCHEMA_VERSION = 2
 _V3_SCHEMA_VERSION = 3
 _V4_SCHEMA_VERSION = 4
 _V5_SCHEMA_VERSION = 5
+_V6_SCHEMA_VERSION = 6
 _TEMPLATE_TYPE = "backtest_initial_financial_state_template"
 _V1_SCHEMA = CanonicalSchema(_ARTIFACT_TYPE, _SCHEMA_VERSION)
 _V2_SCHEMA = CanonicalSchema(_ARTIFACT_TYPE, _V2_SCHEMA_VERSION)
 _V3_SCHEMA = CanonicalSchema(_ARTIFACT_TYPE, _V3_SCHEMA_VERSION)
 _V4_SCHEMA = CanonicalSchema(_ARTIFACT_TYPE, _V4_SCHEMA_VERSION)
 _V5_SCHEMA = CanonicalSchema(_ARTIFACT_TYPE, _V5_SCHEMA_VERSION)
+_V6_SCHEMA = CanonicalSchema(_ARTIFACT_TYPE, _V6_SCHEMA_VERSION)
 _PAYLOAD_FIELDS = frozenset(
     {
         "type",
@@ -202,6 +204,7 @@ _V2_PAYLOAD_FIELDS = frozenset(
 _V3_PAYLOAD_FIELDS = _V2_PAYLOAD_FIELDS | {"market_data_preparation"}
 _V4_PAYLOAD_FIELDS = _V3_PAYLOAD_FIELDS | {"validation_instrument_catalogs"}
 _V5_PAYLOAD_FIELDS = _V4_PAYLOAD_FIELDS
+_V6_PAYLOAD_FIELDS = _V5_PAYLOAD_FIELDS
 _PLAN_FIELDS = frozenset(
     {
         "type",
@@ -215,6 +218,22 @@ _PLAN_FIELDS = frozenset(
         "closeout_policy_spec",
     }
 )
+_BAR_EXECUTION_FIELDS = frozenset(
+    {
+        "type",
+        "event_id",
+        "order_id",
+        "pretrade_plan",
+        "liquidity_evidence",
+        "market_state",
+        "slippage_model",
+        "fill_id",
+        "fill_event_id",
+        "fill_event_at",
+        "accounting_plan",
+    }
+)
+_BAR_EXECUTION_V2_FIELDS = _BAR_EXECUTION_FIELDS | {"fill_liquidity_role"}
 _TEMPLATE_FIELDS = frozenset(
     {
         "type",
@@ -435,9 +454,10 @@ class BacktestExecutionRequest:
             _V3_SCHEMA_VERSION,
             _V4_SCHEMA_VERSION,
             _V5_SCHEMA_VERSION,
+            _V6_SCHEMA_VERSION,
         ):
             raise ValueError(
-                "BacktestExecutionRequest schema_version must be 1, 2, 3, 4, or 5"
+                "BacktestExecutionRequest schema_version must be 1, 2, 3, 4, 5, or 6"
             )
         if type(self.request) is not BacktestRequest:
             raise TypeError("request must be exact BacktestRequest")
@@ -1985,8 +2005,20 @@ def _read_slippage_model(value: object) -> DeterministicBpsSlippageModel:
     )
 
 
-def _read_bar_execution(value: object) -> ResolvedBarExecution:
+def _read_bar_execution(
+    value: object,
+    *,
+    allow_liquidity_role: bool = False,
+) -> ResolvedBarExecution:
     data = _tagged("resolved_bar_execution", value, "resolved_bar_execution")
+    if type(allow_liquidity_role) is not bool:
+        raise TypeError("allow_liquidity_role must be exact bool")
+    fields = set(data)
+    if allow_liquidity_role:
+        if fields not in (_BAR_EXECUTION_FIELDS, _BAR_EXECUTION_V2_FIELDS):
+            raise ValueError("resolved_bar_execution contains unsupported fields")
+    else:
+        _exact_fields("resolved_bar_execution", data, _BAR_EXECUTION_FIELDS)
     market_state = _tagged(
         "slippage_market_state", data["market_state"], "slippage_market_state"
     )
@@ -2008,6 +2040,7 @@ def _read_bar_execution(value: object) -> ResolvedBarExecution:
         data["fill_event_id"],
         _read_simulation_instant(data["fill_event_at"]),
         _read_fill_accounting_plan(data["accounting_plan"]),
+        data.get("fill_liquidity_role"),
     )
 
 
@@ -2493,11 +2526,20 @@ def _read_simulation_port_spec(value: object) -> SimulationPortSpec:
 def _read_execution_case_plan(
     value: object,
     catalog_lookup: Mapping[str, domain.InstrumentCatalog] | None = None,
+    *,
+    schema_version: int = 1,
 ) -> _ExecutionCasePlan:
+    if type(schema_version) is not int or schema_version not in (1, 2):
+        raise ValueError("execution case plan schema_version must be 1 or 2")
     plan = _mapping("execution_case_plan", value)
     _exact_fields("execution_case_plan", plan, _PLAN_FIELDS)
-    if plan["type"] != "execution_case_plan" or plan["schema_version"] != 1:
-        raise ValueError("execution case plan must be execution_case_plan@1")
+    if (
+        plan["type"] != "execution_case_plan"
+        or plan["schema_version"] != schema_version
+    ):
+        raise ValueError(
+            f"execution case plan must be execution_case_plan@{schema_version}"
+        )
 
     decision_cycles = _sequence(
         "decision_cycles",
@@ -2505,7 +2547,12 @@ def _read_execution_case_plan(
         lambda item: _read_decision_cycle(item, catalog_lookup),
     )
     bar_executions = _sequence(
-        "bar_executions", plan["bar_executions"], _read_bar_execution
+        "bar_executions",
+        plan["bar_executions"],
+        lambda item: _read_bar_execution(
+            item,
+            allow_liquidity_role=schema_version == 2,
+        ),
     )
     financial_state = _read_financial_state(plan["financial_state"])
     financial_dispatch_plan = _read_financial_dispatch_plan(
@@ -2855,14 +2902,18 @@ def _read_execution_input_payload_with_catalog(
     value: object,
     schema_version: int,
 ) -> _DecodedExecutionInputBundleV3:
-    if schema_version not in {_V4_SCHEMA_VERSION, _V5_SCHEMA_VERSION}:
-        raise ValueError("catalog execution input schema must be 4 or 5")
+    if schema_version not in {
+        _V4_SCHEMA_VERSION,
+        _V5_SCHEMA_VERSION,
+        _V6_SCHEMA_VERSION,
+    }:
+        raise ValueError("catalog execution input schema must be 4, 5, or 6")
     payload = _mapping("execution_input_bundle", value)
-    fields = (
-        _V4_PAYLOAD_FIELDS
-        if schema_version == _V4_SCHEMA_VERSION
-        else _V5_PAYLOAD_FIELDS
-    )
+    fields = {
+        _V4_SCHEMA_VERSION: _V4_PAYLOAD_FIELDS,
+        _V5_SCHEMA_VERSION: _V5_PAYLOAD_FIELDS,
+        _V6_SCHEMA_VERSION: _V6_PAYLOAD_FIELDS,
+    }[schema_version]
     _exact_fields("execution_input_bundle", payload, fields)
     if (
         payload["type"] != _ARTIFACT_TYPE
@@ -2885,7 +2936,9 @@ def _read_execution_input_payload_with_catalog(
         binding.catalog_hash: binding.catalog for binding in bindings
     }
     plan = _read_execution_case_plan(
-        payload["execution_case_plan"], catalog_lookup
+        payload["execution_case_plan"],
+        catalog_lookup,
+        schema_version=2 if schema_version == _V6_SCHEMA_VERSION else 1,
     )
     used_hashes = {
         canonical_sha256(entry.validation_context.instrument_catalog)
@@ -2927,6 +2980,10 @@ def _read_execution_input_payload_v5(value: object) -> _DecodedExecutionInputBun
     return _read_execution_input_payload_with_catalog(value, _V5_SCHEMA_VERSION)
 
 
+def _read_execution_input_payload_v6(value: object) -> _DecodedExecutionInputBundleV3:
+    return _read_execution_input_payload_with_catalog(value, _V6_SCHEMA_VERSION)
+
+
 _EXECUTION_INPUT_CATALOG = SchemaCatalog(
     (
         ArtifactSchemaRegistration(
@@ -2953,6 +3010,11 @@ _EXECUTION_INPUT_CATALOG = SchemaCatalog(
             artifact_type="backtest_execution_input_bundle",
             schema_version=5,
             payload_reader=_read_execution_input_payload_v5,
+        ),
+        ArtifactSchemaRegistration(
+            artifact_type="backtest_execution_input_bundle",
+            schema_version=6,
+            payload_reader=_read_execution_input_payload_v6,
         ),
     )
 )
@@ -3003,6 +3065,27 @@ def materialize_execution_input_bundle(
         "initial_financial_state_template": template,
     }
     return ArtifactEnvelope.create(_V1_SCHEMA.name, _V1_SCHEMA.version, payload)
+
+
+def _validate_plan_liquidity_roles(
+    bar_executions: tuple[ResolvedBarExecution, ...],
+    *,
+    schema_version: int,
+) -> None:
+    if type(bar_executions) is not tuple or any(
+        type(execution) is not ResolvedBarExecution
+        for execution in bar_executions
+    ):
+        raise TypeError("bar_executions must contain exact ResolvedBarExecution")
+    if type(schema_version) is not int or schema_version not in (1, 2):
+        raise ValueError("execution case plan schema_version must be 1 or 2")
+    if schema_version == 1 and any(
+        execution.fill_liquidity_role is not None
+        for execution in bar_executions
+    ):
+        raise ValueError(
+            "execution_case_plan@1 cannot persist fill_liquidity_role"
+        )
 
 
 def materialize_execution_input_bundle_v2(
@@ -3075,6 +3158,10 @@ def materialize_execution_input_bundle_v2(
     )
     if any(component_refs.get(port_type) != ref for port_type, ref in required_refs.items()):
         raise ValueError("execution case component refs do not bind the resolved profile")
+    _validate_plan_liquidity_roles(
+        execution_case.bar_executions,
+        schema_version=1,
+    )
 
     payload = {
         "type": _ARTIFACT_TYPE,
@@ -3391,6 +3478,7 @@ def _rebuild_execution_request_v3(
         _V3_SCHEMA_VERSION,
         _V4_SCHEMA_VERSION,
         _V5_SCHEMA_VERSION,
+        _V6_SCHEMA_VERSION,
     ):
         raise ValueError("request schema_version is malformed")
     ref = value.execution_input_bundle_ref
@@ -3404,12 +3492,14 @@ def _rebuild_execution_request_v3(
     return schema_version, rebuilt_ref
 
 
-def _materialize_execution_input_bundle_v3(
+def _materialize_execution_input_payload_v3(
     *,
     resolved_request: ResolvedBacktestRequest,
     hydrated_inputs: _HydratedExecutionCaseInputs,
     market_data_preparation: MultiResolutionMarketDataPreparation,
-) -> ArtifactEnvelope:
+    bundle_schema_version: int,
+    execution_case_plan_schema_version: int,
+) -> dict[str, object]:
     try:
         resolved = _rebuild_resolved_request_v3(resolved_request)
         inputs = _rebuild_hydrated_inputs_v3(hydrated_inputs)
@@ -3424,6 +3514,18 @@ def _materialize_execution_input_bundle_v3(
         )
     except Exception:
         raise TypeError("v3 materialization authority is malformed") from None
+    expected_plan_version = 2 if bundle_schema_version == _V6_SCHEMA_VERSION else 1
+    if bundle_schema_version not in (
+        _V3_SCHEMA_VERSION,
+        _V4_SCHEMA_VERSION,
+        _V5_SCHEMA_VERSION,
+        _V6_SCHEMA_VERSION,
+    ) or execution_case_plan_schema_version != expected_plan_version:
+        raise ValueError("execution input bundle and plan schema versions do not match")
+    _validate_plan_liquidity_roles(
+        inputs.execution_case_plan.bar_executions,
+        schema_version=execution_case_plan_schema_version,
+    )
     request = resolved.request
     spec = inputs.execution_case_semantic_spec
     stream_keys = _stream_keys(inputs.timeline_stream_keys)
@@ -3452,7 +3554,7 @@ def _materialize_execution_input_bundle_v3(
 
     payload = {
         "type": _ARTIFACT_TYPE,
-        "schema_version": _V3_SCHEMA_VERSION,
+        "schema_version": bundle_schema_version,
         "request_hash": request.request_hash,
         "semantic_run_id": resolved.semantic_run_id,
         "build_artifact_manifest": resolved.build_artifact_manifest,
@@ -3462,7 +3564,7 @@ def _materialize_execution_input_bundle_v3(
         "timeline_batch_size": inputs.timeline_batch_size,
         "execution_case_plan": {
             "type": "execution_case_plan",
-            "schema_version": 1,
+            "schema_version": execution_case_plan_schema_version,
             "decision_cycles": inputs.execution_case_plan.decision_cycles,
             "bar_executions": inputs.execution_case_plan.bar_executions,
             "financial_state": inputs.execution_case_plan.financial_state,
@@ -3473,6 +3575,22 @@ def _materialize_execution_input_bundle_v3(
         },
         "market_data_preparation": preparation.to_canonical_dict(),
     }
+    return payload
+
+
+def _materialize_execution_input_bundle_v3(
+    *,
+    resolved_request: ResolvedBacktestRequest,
+    hydrated_inputs: _HydratedExecutionCaseInputs,
+    market_data_preparation: MultiResolutionMarketDataPreparation,
+) -> ArtifactEnvelope:
+    payload = _materialize_execution_input_payload_v3(
+        resolved_request=resolved_request,
+        hydrated_inputs=hydrated_inputs,
+        market_data_preparation=market_data_preparation,
+        bundle_schema_version=_V3_SCHEMA_VERSION,
+        execution_case_plan_schema_version=1,
+    )
     return ArtifactEnvelope.create(_V3_SCHEMA.name, _V3_SCHEMA.version, payload)
 
 
@@ -3634,14 +3752,24 @@ def _materialize_execution_input_bundle_with_catalog(
     hydrated_inputs: _HydratedExecutionCaseInputs,
     market_data_preparation: MultiResolutionMarketDataPreparation,
     schema: CanonicalSchema,
+    execution_case_plan_schema_version: int = 1,
 ) -> ArtifactEnvelope:
-    v3 = _materialize_execution_input_bundle_v3(
+    if schema not in (_V4_SCHEMA, _V5_SCHEMA, _V6_SCHEMA):
+        raise ValueError("catalog materializer schema must be 4, 5, or 6")
+    expected_plan_version = 2 if schema == _V6_SCHEMA else 1
+    if execution_case_plan_schema_version != expected_plan_version:
+        raise ValueError(
+            f"backtest_execution_input_bundle@{schema.version} requires "
+            f"execution_case_plan@{expected_plan_version}"
+        )
+    payload = _materialize_execution_input_payload_v3(
         resolved_request=resolved_request,
         hydrated_inputs=hydrated_inputs,
         market_data_preparation=market_data_preparation,
+        bundle_schema_version=schema.version,
+        execution_case_plan_schema_version=execution_case_plan_schema_version,
     )
     bindings = _validation_catalog_bindings_v4(hydrated_inputs.execution_case_plan)
-    payload = dict(v3.payload)
     payload["schema_version"] = schema.version
     payload["validation_instrument_catalogs"] = bindings
     return ArtifactEnvelope.create(schema.name, schema.version, payload)
@@ -3672,6 +3800,21 @@ def _materialize_execution_input_bundle_v5(
         hydrated_inputs=hydrated_inputs,
         market_data_preparation=market_data_preparation,
         schema=_V5_SCHEMA,
+    )
+
+
+def _materialize_execution_input_bundle_v6(
+    *,
+    resolved_request: ResolvedBacktestRequest,
+    hydrated_inputs: _HydratedExecutionCaseInputs,
+    market_data_preparation: MultiResolutionMarketDataPreparation,
+) -> ArtifactEnvelope:
+    return _materialize_execution_input_bundle_with_catalog(
+        resolved_request=resolved_request,
+        hydrated_inputs=hydrated_inputs,
+        market_data_preparation=market_data_preparation,
+        schema=_V6_SCHEMA,
+        execution_case_plan_schema_version=2,
     )
 
 
@@ -3888,6 +4031,14 @@ def _snapshot_execution_request_v5_from_validated_schema(
     )
 
 
+def _snapshot_execution_request_v6_from_validated_schema(
+    request: BacktestExecutionRequest,
+) -> tuple[BacktestExecutionRequest | None, _ExecutionInputsHydrationFailureV3 | None]:
+    return _snapshot_execution_request_from_validated_schema(
+        request, _V6_SCHEMA_VERSION
+    )
+
+
 def _read_execution_inputs_exact(
     reader: ArtifactEnvelopeReader,
     request: BacktestExecutionRequest,
@@ -3958,6 +4109,17 @@ def _read_execution_inputs_v5_from_snapshot(
 ) -> tuple[_DecodedExecutionInputBundleV3 | None, _ExecutionInputsHydrationFailureV3 | None]:
     return _read_execution_inputs_from_snapshot_exact(
         reader, request, _V5_SCHEMA_VERSION, recorder=recorder
+    )
+
+
+def _read_execution_inputs_v6_from_snapshot(
+    reader: ArtifactEnvelopeReader,
+    request: BacktestExecutionRequest,
+    *,
+    recorder: BoundedPerformanceRecorder | None = None,
+) -> tuple[_DecodedExecutionInputBundleV3 | None, _ExecutionInputsHydrationFailureV3 | None]:
+    return _read_execution_inputs_from_snapshot_exact(
+        reader, request, _V6_SCHEMA_VERSION, recorder=recorder
     )
 
 
@@ -4419,6 +4581,30 @@ def _hydrate_execution_inputs_v5_from_decoded(
         bindings_verified=bindings_verified,
         recorder=recorder,
         _schema_version=_V5_SCHEMA_VERSION,
+    )
+
+
+def _hydrate_execution_inputs_v6_from_decoded(
+    bundle: _DecodedExecutionInputBundleV3,
+    request: BacktestExecutionRequest,
+    *,
+    market_reader: MarketBundleReader,
+    resolved_request: ResolvedBacktestRequest,
+    prepared_market_data: PreparedMultiResolutionMarketData,
+    target_stream: PrecomputedTargetStream | None = None,
+    bindings_verified: bool = False,
+    recorder: BoundedPerformanceRecorder | None = None,
+) -> _ExecutionInputsHydrationOutcomeV3:
+    return _hydrate_execution_inputs_v3_from_decoded(
+        bundle,
+        request,
+        market_reader=market_reader,
+        resolved_request=resolved_request,
+        prepared_market_data=prepared_market_data,
+        target_stream=target_stream,
+        bindings_verified=bindings_verified,
+        recorder=recorder,
+        _schema_version=_V6_SCHEMA_VERSION,
     )
 
 

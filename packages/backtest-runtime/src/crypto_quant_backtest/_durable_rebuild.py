@@ -57,8 +57,10 @@ from .execution_inputs import (
     _ExecutionInputsHydrationFailureV3,
     _hydrate_execution_inputs_v3_from_decoded,
     _hydrate_execution_inputs_v4_from_decoded,
+    _hydrate_execution_inputs_v6_from_decoded,
     _read_execution_inputs_v3_from_snapshot,
     _read_execution_inputs_v4_from_snapshot,
+    _read_execution_inputs_v6_from_snapshot,
 )
 from .integrity import AttemptConsistencySet, CanonicalPublicationFailureCode
 from .multi_resolution_preparation import (
@@ -543,7 +545,7 @@ class DurableRebuildVerifierV1:
         subject = _run_subject_from_request(request)
         if (
             type(request) is not BacktestExecutionRequest
-            or request.schema_version not in {3, 4}
+            or request.schema_version not in {3, 4, 6}
         ):
             raise DurableRebuildError(
                 DurableRebuildFailureCode.PROOF_CONSTRUCTION_FAILED, subject
@@ -766,11 +768,11 @@ class DurableRebuildVerifierV1:
             raise DurableRebuildError(
                 DurableRebuildFailureCode.PREPARATION_MISMATCH, subject
             ) from None
-        hydrate = (
-            _hydrate_execution_inputs_v3_from_decoded
-            if request.schema_version == 3
-            else _hydrate_execution_inputs_v4_from_decoded
-        )
+        hydrate = {
+            3: _hydrate_execution_inputs_v3_from_decoded,
+            4: _hydrate_execution_inputs_v4_from_decoded,
+            6: _hydrate_execution_inputs_v6_from_decoded,
+        }[request.schema_version]
         hydrated = hydrate(
             decoded,
             request,
@@ -1851,6 +1853,7 @@ def _read_execution_inputs_with_source(
     if type(request) is not BacktestExecutionRequest or request.schema_version not in {
         3,
         4,
+        6,
     }:
         return (
             None,
@@ -1859,11 +1862,11 @@ def _read_execution_inputs_with_source(
                 _ExecutionInputsHydrationFailureCodeV3.MALFORMED_EXECUTION_REQUEST
             ),
         )
-    read_inputs = (
-        _read_execution_inputs_v3_from_snapshot
-        if request.schema_version == 3
-        else _read_execution_inputs_v4_from_snapshot
-    )
+    read_inputs = {
+        3: _read_execution_inputs_v3_from_snapshot,
+        4: _read_execution_inputs_v4_from_snapshot,
+        6: _read_execution_inputs_v6_from_snapshot,
+    }[request.schema_version]
     try:
         source = reader.read(ref=request.execution_input_bundle_ref)
     except Exception:  # noqa: BLE001 - exact decoder owns redacted classification
@@ -1928,9 +1931,9 @@ def _validate_verification(verification: DeterministicRebuildVerificationV1) -> 
     if type(verification.execution_input_bundle_ref) is not ArtifactRef or (
         verification.execution_input_bundle_ref.artifact_type
         != "backtest_execution_input_bundle"
-        or verification.execution_input_bundle_ref.schema_version not in {3, 4}
+        or verification.execution_input_bundle_ref.schema_version not in {3, 4, 6}
     ):
-        raise ValueError("execution_input_bundle_ref must target schema 3 or 4")
+        raise ValueError("execution_input_bundle_ref must target schema 3, 4, or 6")
     if type(verification.market_bundle_ref) is not MarketBundleRef:
         raise TypeError("market_bundle_ref must be exact MarketBundleRef")
     publication = _validate_g12d_mapping(

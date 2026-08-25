@@ -1,21 +1,21 @@
 from __future__ import annotations
 
+import hashlib
+import json
 from collections.abc import Mapping
 from dataclasses import fields, replace
 from enum import Enum
-import hashlib
 from inspect import signature
-import json
 from pathlib import Path
 
-import pytest
-
 import crypto_quant_backtest
+import pytest
 from crypto_quant_backtest.composition import (
+    _execution_case_semantic_spec_v3,
     _ExecutionCasePlan,
     _HydratedExecutionCaseInputs,
-    _execution_case_semantic_spec_v3,
 )
+from crypto_quant_backtest.engine import ExecutionCaseSemanticSpec
 from crypto_quant_backtest.execution_inputs import (
     _EXECUTION_INPUT_CATALOG,
     _ExecutionInputsHydrationFailureCode,
@@ -24,7 +24,6 @@ from crypto_quant_backtest.execution_inputs import (
     _hydrate_execution_inputs_v3,
     _materialize_execution_input_bundle_v3,
 )
-from crypto_quant_backtest.engine import ExecutionCaseSemanticSpec
 from crypto_quant_backtest.multi_resolution_market_data import (
     ExecutionDataBinding,
     MultiResolutionMarketDataBindings,
@@ -45,7 +44,6 @@ from crypto_quant_backtest.resolution import (
     RuntimeLibraryRef,
 )
 from crypto_quant_backtest.run_end import MarkToMarketCloseoutPolicy
-from crypto_quant_market_data import InMemoryMarketBundleReader, MarketBundleRef
 from crypto_quant_domain import (
     ArtifactCatalogError,
     ArtifactEnvelope,
@@ -54,10 +52,11 @@ from crypto_quant_domain import (
     canonical_bytes,
     canonical_sha256,
 )
+from crypto_quant_market_data import InMemoryMarketBundleReader, MarketBundleRef
+
 from tests.runtime.multi_resolution_preparation._fixtures import prepared_inputs
 from tests.runtime.resolution._fixtures import profile_registry
 from tests.runtime.runner._fixtures import resolved_request_and_case
-
 
 _FIXTURE = (
     Path(__file__).resolve().parents[2]
@@ -231,6 +230,7 @@ def test_v3_is_one_private_catalog_registration_and_exact_v2_plus_preparation() 
         ("backtest_execution_input_bundle", 3),
         ("backtest_execution_input_bundle", 4),
         ("backtest_execution_input_bundle", 5),
+        ("backtest_execution_input_bundle", 6),
     )
     assert set(envelope.payload) == {
         "type",

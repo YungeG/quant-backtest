@@ -47,11 +47,14 @@ from .execution_inputs import (
     _hydrate_execution_inputs_v3_from_decoded,
     _hydrate_execution_inputs_v4_from_decoded,
     _hydrate_execution_inputs_v5_from_decoded,
+    _hydrate_execution_inputs_v6_from_decoded,
     _read_execution_inputs_v3_from_snapshot,
     _read_execution_inputs_v5_from_snapshot,
+    _read_execution_inputs_v6_from_snapshot,
     _snapshot_execution_request_v3_from_validated_schema,
     _snapshot_execution_request_v4_from_validated_schema,
     _snapshot_execution_request_v5_from_validated_schema,
+    _snapshot_execution_request_v6_from_validated_schema,
     _verify_execution_inputs_v3_after_resolution,
 )
 from .integrity import (
@@ -169,15 +172,16 @@ class BacktestRuntime:
             raise RuntimeError(
                 "execution input hydration failed: malformed_execution_request"
             ) from None
-        if type(schema_version) is not int or schema_version not in {1, 2, 3, 4, 5}:
+        if type(schema_version) is not int or schema_version not in {1, 2, 3, 4, 5, 6}:
             raise RuntimeError(
                 "execution input hydration failed: malformed_execution_request"
             )
-        if schema_version in {3, 4, 5}:
+        if schema_version in {3, 4, 5, 6}:
             snapshotter = {
                 3: _snapshot_execution_request_v3_from_validated_schema,
                 4: _snapshot_execution_request_v4_from_validated_schema,
                 5: _snapshot_execution_request_v5_from_validated_schema,
+                6: _snapshot_execution_request_v6_from_validated_schema,
             }[schema_version]
             snapshot, failure = snapshotter(request)
             if failure is not None or snapshot is None:
@@ -198,7 +202,7 @@ class BacktestRuntime:
                 raise RuntimeError(
                     "execution input hydration failed: malformed_execution_request"
                 )
-            if schema_version == 5 and not (
+            if schema_version in {5, 6} and not (
                 cancellation is None
                 and snapshot.request.result_grade_requested
                 is RequestedResultGrade.DEVELOPMENT
@@ -672,11 +676,11 @@ class BacktestRuntime:
         cancellation: EngineCancellationRequest | None,
     ) -> BacktestCanonicalPublicationRef | ArtifactRef:
         schema_version = request.schema_version
-        read_inputs = (
-            _read_execution_inputs_v3_from_snapshot
-            if schema_version == 3
-            else _read_execution_inputs_v5_from_snapshot
-        )
+        read_inputs = {
+            3: _read_execution_inputs_v3_from_snapshot,
+            5: _read_execution_inputs_v5_from_snapshot,
+            6: _read_execution_inputs_v6_from_snapshot,
+        }[schema_version]
         bundle, failure = read_inputs(self._artifact_reader, request)
         if failure is not None or bundle is None:
             self._raise_v3_hydration_failure(failure)
@@ -741,11 +745,11 @@ class BacktestRuntime:
             raise RuntimeError(
                 "execution input hydration failed: prepared_market_data_replay_mismatch"
             )
-        hydrate_inputs = (
-            _hydrate_execution_inputs_v3_from_decoded
-            if schema_version == 3
-            else _hydrate_execution_inputs_v5_from_decoded
-        )
+        hydrate_inputs = {
+            3: _hydrate_execution_inputs_v3_from_decoded,
+            5: _hydrate_execution_inputs_v5_from_decoded,
+            6: _hydrate_execution_inputs_v6_from_decoded,
+        }[schema_version]
         hydrated = hydrate_inputs(
             bundle,
             request,
