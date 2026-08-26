@@ -1338,6 +1338,9 @@ def _validate_profile_wire(
         or profile.get("type") != _PROFILE_REQUEST_TYPE
         or type(profile.get("schema_version")) is not int
         or profile.get("schema_version") != _SCHEMA_VERSION
+        or not _canonical_equal(
+            profile.get("required_market_state_keys"), ("normal",)
+        )
         or canonical_sha256(profile) != request_hash
     ):
         raise ValueError("profile composition request wire/hash mismatch")
