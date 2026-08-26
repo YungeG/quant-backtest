@@ -97,7 +97,18 @@ def cninfo_bytes(request: sentinel.MetadataRequest, mutation: Callable[[dict[str
 def neeq_bytes(mutation: Callable[[dict[str, Any]], None] | None = None) -> bytes:
     row = dict(zip(("seccode", "secname", "f001d", "f002v", "f003v", "f004v"), EXPECTED_NEEQ_FACT, strict=True))
     row["retainedExtraField"] = "raw-source"
-    rows = [row, *({"seccode": f"extra-{index}"} for index in range(26))]
+    rows = [
+        row,
+        *(
+            {
+                "seccode": "400267",
+                "secname": "R鑫升1",
+                "f003v": f"http://example.invalid/extra-{index}.pdf",
+                "retainedExtraField": "raw-source-extra",
+            }
+            for index in range(26)
+        ),
+    ]
     payload: dict[str, Any] = {
         "code": 0,
         "errorMessage": None,

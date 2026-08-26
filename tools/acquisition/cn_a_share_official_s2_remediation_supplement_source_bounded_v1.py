@@ -282,7 +282,12 @@ def _parse_neeq_metadata(source: bytes) -> tuple[dict[str, object], int]:
         or len(inner["data"]) != 27
     ):
         raise AcquisitionError("NEEQ metadata response scope mismatch")
-    records = [record for record in inner["data"] if type(record) is dict and record.get("seccode") == _SELECTED_NEEQ_FACT[0]]
+    records = [
+        record
+        for record in inner["data"]
+        if type(record) is dict
+        and record.get("f003v") == _SELECTED_NEEQ_FACT[4]
+    ]
     if len(records) != 1:
         raise AcquisitionError("selected NEEQ metadata record mismatch")
     record = cast(dict[str, object], records[0])
