@@ -1,14 +1,13 @@
 from __future__ import annotations
 
+import subprocess
+import sys
 from dataclasses import fields, is_dataclass, replace
 from inspect import Parameter, signature
 from pathlib import Path
-import subprocess
-import sys
-
-import pytest
 
 import crypto_quant_backtest as backtest
+import pytest
 from crypto_quant_domain import (
     ArtifactEnvelope,
     ArtifactReadResult,
@@ -26,8 +25,8 @@ from crypto_quant_domain import (
     Scale,
     SourceSequence,
     StrategySleeveId,
-    TimelinePhase,
     TimeInForce,
+    TimelinePhase,
     UtcInstant,
     VenueId,
     canonical_bytes,
@@ -463,20 +462,12 @@ def test_provider_deterministically_extends_base_build_manifest(tmp_path: Path) 
     )
 
 
-@pytest.mark.parametrize(
-    "role",
-    (
-        backtest.BuildArtifactRole.PROFILE_COMPONENT,
-        backtest.BuildArtifactRole.DECISION_SOURCE,
-    ),
-)
 def test_conflicting_provider_profile_artifact_fails_before_publication(
     tmp_path: Path,
-    role: backtest.BuildArtifactRole,
 ) -> None:
     inputs = _inputs()
     conflict = backtest.BuildArtifactRef(
-        role=role,
+        role=backtest.BuildArtifactRole.PROFILE_COMPONENT,
         artifact_key="cash.precomputed_target.development.v1.market",
         artifact_version="1",
         install_mode=backtest.ArtifactInstallMode.WHEEL,

@@ -10,6 +10,8 @@ from .analysis import (
     VerifiedBacktestAnalysisV2,
 )
 from .analysis_derivation import BacktestAnalysisRuntime
+from .artifact_envelope_publisher import ArtifactEnvelopePublisher
+from .artifact_envelope_reader import ArtifactEnvelopeReader
 from .binance_usdm_profile import (
     BinanceUsdmAccountCapacityEvidence,
     BinanceUsdmExecutionAccountProfile,
@@ -21,6 +23,10 @@ from .binance_usdm_profile import (
     BinanceUsdmProfileCompositionRequest,
     BinanceUsdmResolvedProfile,
     BinanceUsdmSimulationProfile,
+)
+from .binance_usdm_tradifi_preparation import (
+    BinanceUsdmTradifiBarRequestIntent,
+    BinanceUsdmTradifiProviderInputs,
 )
 from .binance_usdm_tradifi_profile import (
     BinanceUsdmTradifiExecutionAccountProfile,
@@ -235,8 +241,6 @@ from .observations import (
     RevisionedObservationRecord,
 )
 from .ports import (
-    ArtifactEnvelopePublisher,
-    ArtifactEnvelopeReader,
     CloseoutPolicy,
     ExecutionModel,
     LatencyModel,
@@ -434,6 +438,7 @@ __all__ = [  # noqa: RUF022 - public API remains grouped by subsystem
     "BinanceUsdmProfileCompositionRequest",
     "BinanceUsdmResolvedProfile",
     "BinanceUsdmSimulationProfile",
+    "BinanceUsdmTradifiBarRequestIntent",
     "BinanceUsdmTradifiExecutionAccountProfile",
     "BinanceUsdmTradifiLinearFinancialDispatcher",
     "BinanceUsdmTradifiMarketSemanticsProfile",
@@ -442,6 +447,7 @@ __all__ = [  # noqa: RUF022 - public API remains grouped by subsystem
     "BinanceUsdmTradifiProfileCompositionFailureCode",
     "BinanceUsdmTradifiProfileCompositionOutcome",
     "BinanceUsdmTradifiProfileCompositionRequest",
+    "BinanceUsdmTradifiProviderInputs",
     "BinanceUsdmTradifiResolvedProfile",
     "BinanceUsdmTradifiSimulationProfile",
     "BarIneligibilityReason",

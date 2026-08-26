@@ -1,9 +1,9 @@
 from __future__ import annotations
 
-from dataclasses import dataclass, replace
-from pathlib import Path
 import re
 import unicodedata
+from dataclasses import dataclass
+from pathlib import Path
 
 import crypto_quant_domain as domain
 import crypto_quant_trading as trading
@@ -35,9 +35,9 @@ from .execution import (
     NoEligibleBarAction,
 )
 from .execution_inputs import (
+    _EXECUTION_INPUT_CATALOG,
     BacktestExecutionRequest,
     _DecodedExecutionInputBundleV2,
-    _EXECUTION_INPUT_CATALOG,
     materialize_execution_input_bundle_v2,
 )
 from .facade import BacktestRuntime
@@ -50,21 +50,18 @@ from .financial_dispatch import (
 )
 from .model_revisions import ModelRevisionTimeline
 from .ports import SimulationComponentRef, SimulationPortType
+from .profile_build_manifest import _provider_build_manifest
 from .request_registration import BacktestRequestRef
 from .resolution import (
-    ArtifactInstallMode,
     BacktestProfileRegistry,
     BacktestRequest,
     BuildArtifactManifest,
-    BuildArtifactRef,
-    BuildArtifactRole,
     ExecutionAccountProfileRegistration,
     MarketSemanticsProfileRegistration,
     ModelRequestBinding,
     ProfileResolver,
     RequestedResultGrade,
     SimulationProfileRegistration,
-    SourceTreeState,
     StrategyFamily,
 )
 from .run_end import MarkToMarketCloseoutPolicy
@@ -76,14 +73,19 @@ from .slippage import (
     SlippageMarketState,
 )
 from .target_stream import (
-    PrecomputedTargetStream,
-    PrecomputedTargetStreamAdapter,
     TARGET_STREAM_CAPABILITY,
     TARGET_STREAM_EVENT_TYPE,
+    PrecomputedTargetStream,
+    PrecomputedTargetStreamAdapter,
     TargetStreamDecisionSchedule,
     TargetStreamScheduleEntry,
 )
-from .timeline import DeterministicTimeline, TimelineEvent, TimelineSegment, TimelineWindow
+from .timeline import (
+    DeterministicTimeline,
+    TimelineEvent,
+    TimelineSegment,
+    TimelineWindow,
+)
 
 _RUN_ID_PATTERN = re.compile(r"run_[0-9a-f]{64}\Z")
 _HASH_PATTERN = re.compile(r"sha256:[0-9a-f]{64}\Z")
@@ -619,51 +621,6 @@ def _registry(values: _CaseInputs, case: ResolvedExecutionCase) -> BacktestProfi
     simulation = SimulationProfileRegistration(_SIMULATION_KEY, 1, simulation_impl.profile_digest, simulation_impl, "bar", (StrategyFamily.PRECOMPUTED_TARGET,), (BAR_OPEN_CAPABILITY, _TARGET_CAPABILITY), simulation_components, RequestedResultGrade.DEVELOPMENT, _LIMITATIONS, False)
     account = ExecutionAccountProfileRegistration(_ACCOUNT_KEY, 1, account_impl.profile_digest, account_impl, values.intent.execution_account_id, values.instrument.instrument_id.venue.value, "cash", "none", (values.intent.reporting_currency,), RequestedResultGrade.DEVELOPMENT, _LIMITATIONS, False)
     return BacktestProfileRegistry((market,), (simulation,), (account,))
-
-
-def _provider_build_manifest(
-    base: BuildArtifactManifest,
-    registry: BacktestProfileRegistry,
-) -> BuildArtifactManifest:
-    registrations = (
-        *registry.market_semantics_profiles,
-        *registry.simulation_profiles,
-        *registry.execution_account_profiles,
-    )
-    provider_refs = tuple(
-        BuildArtifactRef(
-            role=BuildArtifactRole.PROFILE_COMPONENT,
-            artifact_key=value.profile_key,
-            artifact_version=str(value.profile_version),
-            install_mode=ArtifactInstallMode.WHEEL,
-            source_tree_state=SourceTreeState.CLEAN,
-            content_hash=value.profile_digest,
-            source_snapshot_hash=None,
-        )
-        for value in registrations
-    )
-    expected_by_key = {value.artifact_key: value for value in provider_refs}
-    conflicts = tuple(
-        sorted(
-            {
-                value.artifact_key
-                for value in base.artifacts
-                if value.artifact_key in expected_by_key
-                and value != expected_by_key[value.artifact_key]
-            }
-        )
-    )
-    if conflicts:
-        raise ValueError(
-            "caller build manifest conflicts with provider profile keys: "
-            + ", ".join(conflicts)
-        )
-    artifacts = tuple(
-        value
-        for value in base.artifacts
-        if value.artifact_key not in expected_by_key
-    ) + provider_refs
-    return replace(base, artifacts=artifacts)
 
 
 def _publish(publisher: ArtifactEnvelopePublisher, envelope: domain.ArtifactEnvelope) -> domain.ArtifactRef:
