@@ -33,6 +33,9 @@ from .binance_usdm_tradifi_profile import (
     BinanceUsdmTradifiResolvedProfile,
     BinanceUsdmTradifiSimulationProfile,
 )
+from .binance_usdm_tradifi_profile_wire import (
+    decode_binance_usdm_tradifi_profile_composition_request_v1,
+)
 from .cash_development_provider import (
     CashDevelopmentProviderInputs,
     CashDevelopmentRequestIntent,
@@ -388,7 +391,7 @@ from .verified_publications import (
 
 __version__ = "0.1.0"
 
-__all__ = [
+__all__ = [  # noqa: RUF022 - public API remains grouped by subsystem
     "AnalysisArtifactRef",
     "AnalysisArtifactRefV2",
     "BAR_OPEN_CAPABILITY",
@@ -509,6 +512,7 @@ __all__ = [
     "CloseoutPolicy",
     "DeterministicBarEngine",
     "DeterministicBpsSlippageModel",
+    "decode_binance_usdm_tradifi_profile_composition_request_v1",
     "materialize_execution_input_bundle",
     "materialize_execution_input_bundle_v2",
     "prepare_cash_development_backtest",
