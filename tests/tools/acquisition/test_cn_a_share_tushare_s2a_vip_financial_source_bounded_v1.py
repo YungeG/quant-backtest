@@ -591,8 +591,15 @@ def test_validate_rows_allows_null_finite_numbers_bj_and_duplicate_revisions() -
         ts_code="833243!1.BJ",
         numeric=4,
     )
+    internal_period = row(
+        fields,
+        period="20240101",
+        ann_date="20240102",
+        ts_code="LEGACY.CODE.SH",
+        numeric=5,
+    )
     sentinel._validate_rows(
-        [first, first, second, legacy_bj, punctuated_bj],
+        [first, first, second, legacy_bj, punctuated_bj, internal_period],
         api_name="balancesheet_vip",
         period="20240101",
         start_date="20240101",
