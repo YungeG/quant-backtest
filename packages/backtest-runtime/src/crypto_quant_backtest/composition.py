@@ -10,6 +10,7 @@ from crypto_quant_domain import (
     IdentityNamespace,
     OrderIntent,
     PortfolioSnapshot,
+    canonical_bytes,
     canonical_sha256,
 )
 from crypto_quant_market_data import InputValidationFailure, MarketBundleReader
@@ -27,8 +28,16 @@ from .engine import (
     SnapshotProjectionPlan,
 )
 from .execution import NextEligibleBarOpenModel
-from .financial_dispatch import FillAccountingDispatchPlan, FinancialDispatchPlan
+from .financial_dispatch import (
+    FillAccountingDispatchPlan,
+    FinancialDispatchPlan,
+    LinearFundingAccountEventPlan,
+    LinearMarginLiquidationAuditPlan,
+    ScheduledAccountEvent,
+    default_cash_financial_dispatcher_spec,
+)
 from .multi_resolution_preparation import MultiResolutionMarketDataPreparation
+from .ports import SimulationPortType
 from .resolution import BacktestRequest, ResolvedBacktestRequest
 from .run_end import MarkToMarketCloseoutPolicy
 from .slippage import DeterministicBpsSlippageModel
@@ -68,7 +77,9 @@ class _ExecutionCasePlan:
         if type(self.financial_state) is not ResolvedFinancialState:
             raise TypeError("financial_state must be exact ResolvedFinancialState")
         if type(self.financial_dispatch_plan) is not FinancialDispatchPlan:
-            raise TypeError("financial_dispatch_plan must be exact FinancialDispatchPlan")
+            raise TypeError(
+                "financial_dispatch_plan must be exact FinancialDispatchPlan"
+            )
         if type(self.execution_model) is not NextEligibleBarOpenModel:
             raise TypeError("execution_model must be exact NextEligibleBarOpenModel")
         if type(self.snapshot_plan) is not SnapshotProjectionPlan:
@@ -233,8 +244,7 @@ def _execution_semantics(case: ResolvedExecutionCase) -> dict[str, object]:
             for admission in cycle.admissions
         ),
         "bar_executions": tuple(
-            _bar_execution_semantics(execution)
-            for execution in case.bar_executions
+            _bar_execution_semantics(execution) for execution in case.bar_executions
         ),
         "execution_model_spec": case.execution_model.spec(),
     }
@@ -279,21 +289,38 @@ def _snapshot_semantics(snapshot: PortfolioSnapshot) -> dict[str, object]:
     }
 
 
+def _scheduled_event_semantics(value: ScheduledAccountEvent) -> dict[str, object]:
+    payload = value.payload
+    authority = None
+    if isinstance(
+        payload, (LinearFundingAccountEventPlan, LinearMarginLiquidationAuditPlan)
+    ):
+        authority = payload.production_semantic_authority()
+    if authority is not None and canonical_bytes(
+        value.semantic_payload
+    ) != canonical_bytes(authority):
+        raise ValueError(
+            "scheduled event semantic payload does not match production authority"
+        )
+    return {
+        "event_id": value.event_id,
+        "event_at": value.event_at,
+        "operation_key": value.operation_key,
+        "component_keys": value.component_keys,
+        "semantic_payload": (
+            authority if authority is not None else value.semantic_payload
+        ),
+        "expected_artifact_roles": value.expected_artifact_roles,
+    }
+
+
 def _financial_dispatch_semantics(
     plan: FinancialDispatchPlan,
 ) -> dict[str, object]:
     return {
         "dispatcher_spec": plan.dispatcher_spec,
         "scheduled_account_events": tuple(
-            {
-                "event_id": value.event_id,
-                "event_at": value.event_at,
-                "operation_key": value.operation_key,
-                "component_keys": value.component_keys,
-                "semantic_payload": value.semantic_payload,
-                "expected_artifact_roles": value.expected_artifact_roles,
-            }
-            for value in plan.scheduled_account_events
+            _scheduled_event_semantics(value) for value in plan.scheduled_account_events
         ),
         "final_snapshot_payload": plan.final_snapshot_payload,
         "expected_artifact_roles": plan.expected_artifact_roles,
@@ -302,10 +329,7 @@ def _financial_dispatch_semantics(
 
 def _financial_semantics(case: ResolvedExecutionCase) -> dict[str, object]:
     financial = case.financial_state
-    if (
-        financial.settlement_book.obligations
-        or financial.settlement_book.events
-    ):
+    if financial.settlement_book.obligations or financial.settlement_book.events:
         raise ValueError(
             "ExecutionCaseSemanticSpec v1 requires pristine initial settlement state"
         )
@@ -451,13 +475,14 @@ def _compose_execution_case_from_authority(
     if type(semantic_run_id) is not str or not semantic_run_id:
         raise TypeError("semantic_run_id must be nonempty str")
     if type(hydrated_inputs) is not _HydratedExecutionCaseInputs:
-        raise TypeError(
-            "hydrated_inputs must be exact _HydratedExecutionCaseInputs"
-        )
+        raise TypeError("hydrated_inputs must be exact _HydratedExecutionCaseInputs")
     spec = hydrated_inputs.execution_case_semantic_spec
     if spec.semantic_spec_hash != request.execution_case_semantic_hash:
         raise ValueError("execution case semantic spec does not bind the request")
-    if hydrated_inputs.target_stream.target_stream_digest != request.target_stream_digest:
+    if (
+        hydrated_inputs.target_stream.target_stream_digest
+        != request.target_stream_digest
+    ):
         raise ValueError("target stream does not bind the request")
     if market_reader.bundle_ref != request.market_bundle_ref:
         raise ValueError("market reader does not bind the request")
@@ -469,7 +494,10 @@ def _compose_execution_case_from_authority(
     )
     if isinstance(timeline, InputValidationFailure):
         raise ValueError("execution timeline cannot be reconstructed")
-    if ExecutionCaseComposer.timeline_semantic_hash(timeline) != spec.timeline_semantic_hash:
+    if (
+        ExecutionCaseComposer.timeline_semantic_hash(timeline)
+        != spec.timeline_semantic_hash
+    ):
         raise ValueError("execution timeline semantic hash mismatch")
 
     identities = ExecutionCaseIdentityFactory(
@@ -528,9 +556,7 @@ def _compose_execution_case_from_authority_v3(
     if type(semantic_run_id) is not str or not semantic_run_id:
         raise TypeError("semantic_run_id must be nonempty str")
     if type(hydrated_inputs) is not _HydratedExecutionCaseInputs:
-        raise TypeError(
-            "hydrated_inputs must be exact _HydratedExecutionCaseInputs"
-        )
+        raise TypeError("hydrated_inputs must be exact _HydratedExecutionCaseInputs")
     if type(market_data_preparation) is not MultiResolutionMarketDataPreparation:
         raise TypeError(
             "market_data_preparation must be exact MultiResolutionMarketDataPreparation"
@@ -538,7 +564,10 @@ def _compose_execution_case_from_authority_v3(
     spec = hydrated_inputs.execution_case_semantic_spec
     if spec.semantic_spec_hash != request.execution_case_semantic_hash:
         raise ValueError("execution case semantic spec does not bind the request")
-    if hydrated_inputs.target_stream.target_stream_digest != request.target_stream_digest:
+    if (
+        hydrated_inputs.target_stream.target_stream_digest
+        != request.target_stream_digest
+    ):
         raise ValueError("target stream does not bind the request")
     if market_reader.bundle_ref != request.market_bundle_ref:
         raise ValueError("market reader does not bind the request")
@@ -550,7 +579,10 @@ def _compose_execution_case_from_authority_v3(
     )
     if isinstance(timeline, InputValidationFailure):
         raise ValueError("execution timeline cannot be reconstructed")
-    if ExecutionCaseComposer.timeline_semantic_hash(timeline) != spec.timeline_semantic_hash:
+    if (
+        ExecutionCaseComposer.timeline_semantic_hash(timeline)
+        != spec.timeline_semantic_hash
+    ):
         raise ValueError("execution timeline semantic hash mismatch")
 
     identities = ExecutionCaseIdentityFactory(
@@ -597,6 +629,49 @@ def _compose_execution_case_from_authority_v3(
     return result
 
 
+def _validate_financial_component_bindings(
+    resolved_request: ResolvedBacktestRequest,
+    plan: _ExecutionCasePlan,
+) -> None:
+    spec = plan.financial_dispatch_plan.dispatcher_spec
+    registered_spec = getattr(
+        resolved_request.environment.market_semantics.implementation,
+        "financial_dispatcher_spec",
+        None,
+    )
+    if registered_spec is not None and registered_spec != spec:
+        raise ValueError(
+            "financial dispatcher spec does not bind the registered market profile"
+        )
+    # Legacy generic-cash plans predate profile-owned dispatcher refs.
+    if spec == default_cash_financial_dispatcher_spec():
+        return
+    market = {
+        value.port_type: value
+        for value in resolved_request.environment.market_semantics.component_manifest
+    }
+    simulation = {
+        value.port_type: value
+        for value in resolved_request.environment.simulation.component_manifest
+    }
+    financial_refs = (
+        spec.position_accounting_component,
+        spec.financing_component,
+        spec.margin_component,
+    )
+    if any(market.get(value.port_type) != value for value in financial_refs):
+        raise ValueError(
+            "financial dispatcher refs do not bind the resolved market profile"
+        )
+    if (
+        simulation.get(SimulationPortType.LIQUIDATION_AUDIT_MODEL)
+        != spec.liquidation_audit_component
+    ):
+        raise ValueError(
+            "financial dispatcher liquidation ref does not bind the simulation profile"
+        )
+
+
 def _compose_execution_case(
     *,
     resolved_request: ResolvedBacktestRequest,
@@ -606,9 +681,7 @@ def _compose_execution_case(
     if type(resolved_request) is not ResolvedBacktestRequest:
         raise TypeError("resolved_request must be exact ResolvedBacktestRequest")
     if type(hydrated_inputs) is not _HydratedExecutionCaseInputs:
-        raise TypeError(
-            "hydrated_inputs must be exact _HydratedExecutionCaseInputs"
-        )
+        raise TypeError("hydrated_inputs must be exact _HydratedExecutionCaseInputs")
     request = resolved_request.request
     if (
         resolved_request.build_artifact_manifest.manifest_hash
@@ -627,7 +700,10 @@ def _compose_execution_case(
         *(value.slippage_model.component_ref for value in plan.bar_executions),
     )
     if any(selected.get(value.port_type) != value for value in represented):
-        raise ValueError("execution case component refs do not bind the resolved profile")
+        raise ValueError(
+            "execution case component refs do not bind the resolved profile"
+        )
+    _validate_financial_component_bindings(resolved_request, plan)
 
     return _compose_execution_case_from_authority(
         request=request,
@@ -647,9 +723,7 @@ def _compose_execution_case_v3(
     if type(resolved_request) is not ResolvedBacktestRequest:
         raise TypeError("resolved_request must be exact ResolvedBacktestRequest")
     if type(hydrated_inputs) is not _HydratedExecutionCaseInputs:
-        raise TypeError(
-            "hydrated_inputs must be exact _HydratedExecutionCaseInputs"
-        )
+        raise TypeError("hydrated_inputs must be exact _HydratedExecutionCaseInputs")
     request = resolved_request.request
     if (
         resolved_request.build_artifact_manifest.manifest_hash
@@ -668,7 +742,10 @@ def _compose_execution_case_v3(
         *(value.slippage_model.component_ref for value in plan.bar_executions),
     )
     if any(selected.get(value.port_type) != value for value in represented):
-        raise ValueError("execution case component refs do not bind the resolved profile")
+        raise ValueError(
+            "execution case component refs do not bind the resolved profile"
+        )
+    _validate_financial_component_bindings(resolved_request, plan)
 
     return _compose_execution_case_from_authority_v3(
         request=request,
@@ -779,7 +856,9 @@ class ExecutionCaseComposer:
             semantic_spec=spec,
         )
         if not composed.verify_identity_manifest(resolved_request.semantic_run_id):
-            raise ValueError("resolved Case identity manifest does not exact-cover Case")
+            raise ValueError(
+                "resolved Case identity manifest does not exact-cover Case"
+            )
         return composed
 
 

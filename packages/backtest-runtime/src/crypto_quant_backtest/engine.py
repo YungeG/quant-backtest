@@ -112,6 +112,7 @@ from .financial_dispatch import (
     FinancialDispatchResult,
     FinancialEventDispatcher,
     FinancialStateView,
+    LinearMarginProjectionPlan,
     financial_dispatcher_for_spec,
     financial_dispatcher_owns_fee_accounting,
 )
@@ -627,6 +628,9 @@ class SnapshotProjectionPlan:
     reporting_scale: Scale
     timestamp: UtcInstant
     currency_valuation_graph_hash: str
+    linear_margin_projection_plan: LinearMarginProjectionPlan | None = None
+    margin_projection_artifact_role: str | None = None
+    final_snapshot_artifact_role: str | None = None
 
     def __post_init__(self) -> None:
         if not isinstance(self.resolved_marks, tuple) or not all(
@@ -644,11 +648,29 @@ class SnapshotProjectionPlan:
         if not isinstance(self.timestamp, UtcInstant):
             raise TypeError("timestamp must be UtcInstant")
         _hash("currency_valuation_graph_hash", self.currency_valuation_graph_hash)
+        derivative = (
+            self.linear_margin_projection_plan,
+            self.margin_projection_artifact_role,
+            self.final_snapshot_artifact_role,
+        )
+        if any(value is not None for value in derivative):
+            if type(self.linear_margin_projection_plan) is not LinearMarginProjectionPlan:
+                raise TypeError(
+                    "linear_margin_projection_plan must be exact LinearMarginProjectionPlan"
+                )
+            if type(self.margin_projection_artifact_role) is not str or type(
+                self.final_snapshot_artifact_role
+            ) is not str:
+                raise TypeError("derivative snapshot artifact roles must be str")
+            _text("margin_projection_artifact_role", self.margin_projection_artifact_role)
+            _text("final_snapshot_artifact_role", self.final_snapshot_artifact_role)
+            if self.margin_projection_artifact_role == self.final_snapshot_artifact_role:
+                raise ValueError("derivative snapshot artifact roles must be distinct")
         object.__setattr__(self, "resolved_marks", _stable_tuple(self.resolved_marks))
         object.__setattr__(self, "valuations", _stable_tuple(self.valuations))
 
     def to_canonical_dict(self) -> dict[str, object]:
-        return {
+        payload: dict[str, object] = {
             "type": "snapshot_projection_plan",
             "resolved_marks": self.resolved_marks,
             "valuations": self.valuations,
@@ -657,6 +679,15 @@ class SnapshotProjectionPlan:
             "timestamp": self.timestamp,
             "currency_valuation_graph_hash": self.currency_valuation_graph_hash,
         }
+        if self.linear_margin_projection_plan is not None:
+            payload.update(
+                {
+                    "linear_margin_projection_plan": self.linear_margin_projection_plan,
+                    "margin_projection_artifact_role": self.margin_projection_artifact_role,
+                    "final_snapshot_artifact_role": self.final_snapshot_artifact_role,
+                }
+            )
+        return payload
 
 
 @dataclass(frozen=True, slots=True)

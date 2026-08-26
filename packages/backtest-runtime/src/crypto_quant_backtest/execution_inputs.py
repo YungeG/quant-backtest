@@ -41,6 +41,11 @@ from crypto_quant_trading import (
     LinearFundingApplicationKey,  # pyright: ignore[reportPrivateImportUsage]
     SettlementBook,
 )
+from crypto_quant_trading.funding_accounting import (
+    LinearFundingMarkEvidence,
+    LinearFundingSettlementEvidence,
+)
+from crypto_quant_trading.margin import LinearMarginTierBoundaryConvention
 
 from .composition import (
     ExecutionCaseComposer,
@@ -83,8 +88,10 @@ from .financial_dispatch import (
     LinearDerivativeFillAccountingPlan,
     LinearFundingAccountEventPlan,
     LinearMarginLiquidationAuditPlan,
+    LinearMarginProjectionPlan,
     ScheduledAccountEvent,
 )
+from .liquidation_audit import LinearLiquidationMarkBarEvidence
 from .multi_resolution_market_data import (
     ExecutionDataBinding,
     MultiResolutionMarketDataBindings,
@@ -2336,8 +2343,125 @@ def _read_reporting_valuation(value: object) -> trading.ReportingCurrencyValuati
     )
 
 
-def _read_snapshot_plan(value: object) -> SnapshotProjectionPlan:
+def _read_stale_mark_policy(value: object) -> trading.StaleMarkPolicy:
+    data = _tagged("stale_mark_policy", value, "stale_mark_policy")
+    return trading.StaleMarkPolicy(
+        data["policy_key"],
+        data["policy_version"],
+        domain.PricePurpose(data["price_purpose"]),
+        data["max_age_nanoseconds"],
+        data["allow_forward_fill"],
+    )
+
+
+def _read_margin_leverage_evidence(value: object) -> trading.LinearMarginLeverageEvidence:
+    data = _tagged(
+        "linear_margin_leverage_evidence", value, "linear_margin_leverage_evidence"
+    )
+    return trading.LinearMarginLeverageEvidence(
+        data["account_id"],
+        _read_instrument_id(data["instrument_id"]),
+        _read_rate(data["selected_leverage"]),
+        _read_utc(data["effective_from"]),
+        _optional(data["effective_to_exclusive"], _read_utc),
+        _read_simulation_instant(data["available_at"]),
+        data["source_key"],
+        data["source_hash"],
+    )
+
+
+def _read_margin_tier(value: object) -> trading.LinearMarginTier:
+    data = _tagged("linear_margin_tier", value, "linear_margin_tier")
+    return trading.LinearMarginTier(
+        data["tier_id"],
+        _read_money(data["notional_floor"]),
+        _optional(data["notional_cap"], _read_money),
+        _read_rate(data["maximum_leverage"]),
+        _read_rate(data["maintenance_margin_rate"]),
+        _read_money(data["maintenance_margin_deduction"]),
+    )
+
+
+def _read_margin_rule_interval(value: object) -> trading.LinearMarginRuleInterval:
+    data = _tagged(
+        "linear_margin_rule_interval", value, "linear_margin_rule_interval"
+    )
+    return trading.LinearMarginRuleInterval(
+        data["interval_id"],
+        _read_utc(data["effective_from"]),
+        _optional(data["effective_to_exclusive"], _read_utc),
+        _read_simulation_instant(data["available_at"]),
+        _sequence("linear margin tiers", data["tiers"], _read_margin_tier),
+        data["source_key"],
+        data["source_hash"],
+        LinearMarginTierBoundaryConvention(
+            data.get(
+                "tier_boundary_convention",
+                LinearMarginTierBoundaryConvention.LOWER_INCLUSIVE_UPPER_EXCLUSIVE.value,
+            )
+        ),
+    )
+
+
+def _read_margin_rule_book(value: object) -> trading.LinearMarginRuleBook:
+    data = _tagged("linear_margin_rule_book", value, "linear_margin_rule_book")
+    return trading.LinearMarginRuleBook(
+        data["rule_book_key"],
+        data["rule_book_version"],
+        _read_instrument_id(data["instrument_id"]),
+        _read_currency(data["settlement_currency_id"]),
+        Scale(data["tier_scale"]),
+        _sequence(
+            "linear margin rule intervals",
+            data["intervals"],
+            _read_margin_rule_interval,
+        ),
+        data["config_hash"],
+    )
+
+
+def _read_margin_mark_evidence(value: object) -> trading.LinearMarginMarkEvidence:
+    data = _tagged(
+        "linear_margin_mark_evidence", value, "linear_margin_mark_evidence"
+    )
+    return trading.LinearMarginMarkEvidence(
+        _read_resolved_mark(data["resolved_mark"]),
+        _read_stale_mark_policy(data["stale_policy"]),
+    )
+
+
+def _read_margin_projection_plan(value: object) -> LinearMarginProjectionPlan:
+    data = _tagged(
+        "linear_margin_projection_plan", value, "linear_margin_projection_plan"
+    )
+    return LinearMarginProjectionPlan(
+        data["account_id"],
+        _read_venue(data["venue_id"]),
+        _read_position_key(data["position_key"]),
+        _read_linear_perpetual_contract(data["contract"]),
+        _read_ledger_schema(data["ledger_schema"]),
+        _read_cash_key(data["settlement_cash_key"]),
+        _read_simulation_instant(data["evaluated_at"]),
+        _read_resolved_mark(data["valuation_mark"]),
+        _read_stale_mark_policy(data["valuation_stale_policy"]),
+        _read_margin_leverage_evidence(data["leverage_evidence"]),
+        _read_margin_rule_book(data["margin_rule_book"]),
+        _read_margin_mark_evidence(data["margin_mark_evidence"]),
+        _read_ledger_registration(data["settlement_cash_registration"]),
+        _read_quantization(data["margin_quantization"]),
+        _read_quantization(data["unrealized_pnl_quantization"]),
+        data["ledger_evidence_key"],
+        data["reservation_evidence_key"],
+    )
+
+
+def _read_snapshot_plan(
+    value: object, *, allow_derivative_authority: bool = False
+) -> SnapshotProjectionPlan:
     data = _tagged("snapshot_projection_plan", value, "snapshot_projection_plan")
+    derivative_present = "linear_margin_projection_plan" in data
+    if derivative_present and not allow_derivative_authority:
+        raise ValueError("derivative snapshot authority requires execution case plan v2")
     return SnapshotProjectionPlan(
         _sequence("resolved marks", data["resolved_marks"], _read_resolved_mark),
         _sequence("reporting valuations", data["valuations"], _read_reporting_valuation),
@@ -2345,6 +2469,13 @@ def _read_snapshot_plan(value: object) -> SnapshotProjectionPlan:
         Scale(data["reporting_scale"]),
         _read_utc(data["timestamp"]),
         data["currency_valuation_graph_hash"],
+        (
+            _read_margin_projection_plan(data["linear_margin_projection_plan"])
+            if derivative_present
+            else None
+        ),
+        data.get("margin_projection_artifact_role"),
+        data.get("final_snapshot_artifact_role"),
     )
 
 
@@ -2416,15 +2547,138 @@ def _read_funding_application_identity(
     )
 
 
-def _read_scheduled_event_payload(value: object) -> object:
+def _read_funding_publication(
+    value: object,
+) -> trading.LinearFundingRatePublicationCandidate:
+    data = _tagged(
+        "linear_funding_rate_publication_candidate",
+        value,
+        "linear_funding_rate_publication_candidate",
+    )
+    return trading.LinearFundingRatePublicationCandidate(
+        _read_funding_slot_id(data["slot_id"]),
+        trading.LinearFundingPublicationStatus(data["status"]),
+        _optional(data["published_rate"], _read_rate),
+        data["event_id"],
+        data["event_hash"],
+        _read_utc(data["event_time"]),
+        _read_simulation_instant(data["publication_available_at"]),
+        data["revision_id"],
+        data["supersedes_revision_id"],
+        data["source_key"],
+        data["source_hash"],
+    )
+
+
+def _read_funding_settlement_evidence(
+    value: object,
+) -> LinearFundingSettlementEvidence:
+    data = _tagged(
+        "linear_funding_settlement_evidence",
+        value,
+        "linear_funding_settlement_evidence",
+    )
+    return LinearFundingSettlementEvidence(
+        _read_funding_application_key(data["application_key"]),
+        _read_utc(data["effective_time"]),
+        _read_simulation_instant(data["applied_at"]),
+        _read_rate(data["applied_rate"]),
+        data["event_id"],
+        data["event_hash"],
+        data["revision_id"],
+        data["supersedes_revision_id"],
+        data["source_key"],
+        data["source_hash"],
+    )
+
+
+def _read_funding_mark_evidence(value: object) -> LinearFundingMarkEvidence:
+    data = _tagged(
+        "linear_funding_mark_evidence", value, "linear_funding_mark_evidence"
+    )
+    return LinearFundingMarkEvidence(
+        _read_resolved_mark(data["resolved_mark"]),
+        _read_stale_mark_policy(data["stale_policy"]),
+    )
+
+
+def _read_liquidation_bar(value: object) -> LinearLiquidationMarkBarEvidence:
+    data = _tagged(
+        "linear_liquidation_mark_bar_evidence",
+        value,
+        "linear_liquidation_mark_bar_evidence",
+    )
+    return LinearLiquidationMarkBarEvidence(
+        data["bar_id"],
+        _read_instrument_id(data["instrument_id"]),
+        domain.PricePurpose(data["price_purpose"]),
+        _read_utc(data["interval_start"]),
+        _read_utc(data["interval_end_exclusive"]),
+        _read_price(data["low"]),
+        _read_price(data["high"]),
+        _read_simulation_instant(data["closed_at"]),
+        _read_simulation_instant(data["available_at"]),
+        data["stream_id"],
+        data["event_id"],
+        data["revision_id"],
+        data["supersedes_revision_id"],
+        data["source_key"],
+        data["source_hash"],
+    )
+
+
+def _read_scheduled_event_payload(
+    value: object, *, allow_derivative_authority: bool = False
+) -> object:
     data = _mapping("scheduled event payload", value)
     tag = data.get("type")
     if tag == "synthetic_funding_dispatch_payload":
+        full = "ledger_schema" in data
+        if full and not allow_derivative_authority:
+            raise ValueError("production funding authority requires execution case plan v2")
         return LinearFundingAccountEventPlan(
             _read_funding_application_identity(data["settlement_identity"]),
             _read_simulation_instant(data["recorded_at"]),
+            _read_ledger_schema(data["ledger_schema"]) if full else None,
+            _read_cash_key(data["settlement_cash_key"]) if full else None,
+            _read_position_key(data["position_key"]) if full else None,
+            _read_linear_perpetual_contract(data["contract"]) if full else None,
+            _read_simulation_instant(data["eligibility_instant"]) if full else None,
+            (
+                _read_simulation_instant(data["position_snapshot_available_at"])
+                if full
+                else None
+            ),
+            data.get("position_snapshot_id"),
+            data.get("eligibility_series_id"),
+            data.get("position_revision_id"),
+            data.get("position_supersedes_revision_id"),
+            (
+                _sequence(
+                    "funding publication candidates",
+                    data["publication_candidates"],
+                    _read_funding_publication,
+                )
+                if full
+                else None
+            ),
+            _read_funding_settlement_evidence(data["settlement_evidence"])
+            if full
+            else None,
+            _read_funding_mark_evidence(data["funding_mark_evidence"])
+            if full
+            else None,
+            _read_ledger_registration(data["settlement_cash_registration"])
+            if full
+            else None,
+            _read_quantization(data["payment_quantization"]) if full else None,
         )
     if tag == "synthetic_margin_audit_payload":
+        full = "projection_plan" in data
+        if full and not allow_derivative_authority:
+            raise ValueError(
+                "production margin/liquidation authority requires execution case plan v2"
+            )
         return LinearMarginLiquidationAuditPlan(
             _read_simulation_instant(data["evaluated_at"]),
             _read_price(data["valuation_price"]),
@@ -2435,11 +2689,29 @@ def _read_scheduled_event_payload(value: object) -> object:
             _read_price(data["liquidation_high"]),
             _read_simulation_instant(data["audit_at"]),
             data["role_suffix"],
+            _read_margin_projection_plan(data["projection_plan"]) if full else None,
+            (
+                _sequence(
+                    "liquidation bars",
+                    data["liquidation_bars"],
+                    _read_liquidation_bar,
+                )
+                if full
+                else None
+            ),
+            RequestedResultGrade(data["requested_grade"]) if full else None,
+            data.get("account_window_evidence_key"),
+            data.get("interval_start_journal_hash"),
+            data.get("interval_end_journal_hash"),
+            data.get("interval_start_reservation_hash"),
+            data.get("interval_end_reservation_hash"),
         )
     return _read_persisted_canonical_payload(data)
 
 
-def _read_scheduled_account_event(value: object) -> ScheduledAccountEvent:
+def _read_scheduled_account_event(
+    value: object, *, allow_derivative_authority: bool = False
+) -> ScheduledAccountEvent:
     data = _tagged("scheduled_account_event", value, "scheduled_account_event")
     bindings = _sequence(
         "identity bindings",
@@ -2452,22 +2724,33 @@ def _read_scheduled_account_event(value: object) -> ScheduledAccountEvent:
         data["operation_key"],
         tuple(data["component_keys"]),
         bindings,
-        _read_scheduled_event_payload(data["payload"]),
+        _read_scheduled_event_payload(
+            data["payload"],
+            allow_derivative_authority=allow_derivative_authority,
+        ),
         _read_persisted_canonical_payload(data["semantic_payload"]),
         tuple(data["expected_artifact_roles"]),
     )
 
 
-def _read_financial_dispatch_plan(value: object) -> FinancialDispatchPlan:
+def _read_financial_dispatch_plan(
+    value: object, *, allow_derivative_authority: bool = False
+) -> FinancialDispatchPlan:
     data = _tagged("financial_dispatch_plan", value, "financial_dispatch_plan")
     return FinancialDispatchPlan(
         _read_financial_dispatcher_spec(data["dispatcher_spec"]),
         _sequence(
             "scheduled account events",
             data["scheduled_account_events"],
-            _read_scheduled_account_event,
+            lambda item: _read_scheduled_account_event(
+                item,
+                allow_derivative_authority=allow_derivative_authority,
+            ),
         ),
-        _read_snapshot_plan(data["final_snapshot_payload"]),
+        _read_snapshot_plan(
+            data["final_snapshot_payload"],
+            allow_derivative_authority=allow_derivative_authority,
+        ),
         tuple(data["expected_artifact_roles"]),
     )
 
@@ -2556,10 +2839,14 @@ def _read_execution_case_plan(
     )
     financial_state = _read_financial_state(plan["financial_state"])
     financial_dispatch_plan = _read_financial_dispatch_plan(
-        plan["financial_dispatch_plan"]
+        plan["financial_dispatch_plan"],
+        allow_derivative_authority=schema_version == 2,
     )
     execution_spec = _read_simulation_port_spec(plan["execution_model_spec"])
-    snapshot_plan = _read_snapshot_plan(plan["snapshot_plan"])
+    snapshot_plan = _read_snapshot_plan(
+        plan["snapshot_plan"],
+        allow_derivative_authority=schema_version == 2,
+    )
     closeout_spec = _read_simulation_port_spec(plan["closeout_policy_spec"])
     if not isinstance(execution_spec, SimulationPortSpec) or not isinstance(
         execution_spec.applicability, NextBarOpenApplicability
@@ -3088,6 +3375,44 @@ def _validate_plan_liquidity_roles(
         )
 
 
+def _validate_plan_derivative_authority(
+    financial_dispatch_plan: FinancialDispatchPlan,
+    snapshot_plan: SnapshotProjectionPlan,
+    *,
+    schema_version: int,
+) -> None:
+    if type(financial_dispatch_plan) is not FinancialDispatchPlan or type(
+        snapshot_plan
+    ) is not SnapshotProjectionPlan:
+        raise TypeError("financial and snapshot plans must be exact production plans")
+    if schema_version not in (1, 2):
+        raise ValueError("execution case plan schema_version must be 1 or 2")
+    additions = (
+        snapshot_plan.linear_margin_projection_plan is not None
+        or getattr(
+            financial_dispatch_plan.final_snapshot_payload,
+            "linear_margin_projection_plan",
+            None,
+        )
+        is not None
+        or any(
+            (
+                type(event.payload) is LinearFundingAccountEventPlan
+                and event.payload.has_production_authority
+            )
+            or (
+                type(event.payload) is LinearMarginLiquidationAuditPlan
+                and event.payload.has_production_authority
+            )
+            for event in financial_dispatch_plan.scheduled_account_events
+        )
+    )
+    if schema_version == 1 and additions:
+        raise ValueError(
+            "execution_case_plan@1 cannot persist derivative dispatch authority"
+        )
+
+
 def materialize_execution_input_bundle_v2(
     *,
     resolved_request: ResolvedBacktestRequest,
@@ -3160,6 +3485,11 @@ def materialize_execution_input_bundle_v2(
         raise ValueError("execution case component refs do not bind the resolved profile")
     _validate_plan_liquidity_roles(
         execution_case.bar_executions,
+        schema_version=1,
+    )
+    _validate_plan_derivative_authority(
+        execution_case.financial_dispatch_plan,
+        execution_case.snapshot_plan,
         schema_version=1,
     )
 
@@ -3524,6 +3854,11 @@ def _materialize_execution_input_payload_v3(
         raise ValueError("execution input bundle and plan schema versions do not match")
     _validate_plan_liquidity_roles(
         inputs.execution_case_plan.bar_executions,
+        schema_version=execution_case_plan_schema_version,
+    )
+    _validate_plan_derivative_authority(
+        inputs.execution_case_plan.financial_dispatch_plan,
+        inputs.execution_case_plan.snapshot_plan,
         schema_version=execution_case_plan_schema_version,
     )
     request = resolved.request

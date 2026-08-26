@@ -3,13 +3,15 @@
 from __future__ import annotations
 
 import unicodedata
+from collections.abc import Mapping
 from dataclasses import dataclass
 from enum import Enum
-from typing import Any, Protocol, runtime_checkable
+from typing import Any, Protocol, cast, runtime_checkable
 
 from crypto_quant_domain import (
     AccountingJournalEntry,
     CashBalanceKey,
+    CurrencyId,
     DomainId,
     DomainIdKind,
     Fill,
@@ -20,6 +22,8 @@ from crypto_quant_domain import (
     QuantizationPolicy,
     SimulationInstant,
     UtcInstant,
+    ValuationMarkReference,
+    VenueId,
     canonical_bytes,
     canonical_sha256,
 )
@@ -31,21 +35,56 @@ from crypto_quant_trading import (
     FinalFeeAssessmentResult,
     FinalFeeRuleSet,
     LedgerBalanceRegistration,
+    LedgerSchema,
     LedgerState,
+    LinearAccountMarginProjection,
+    LinearAccountMarginProjectionRequest,
+    LinearAccountMarginProjector,
     LinearDerivativeAccounting,
     LinearDerivativeAccountingRequest,
     LinearDerivativeJournalEntry,
+    LinearDerivativeLedgerProjection,
+    LinearDerivativeLedgerProjector,
+    LinearDerivativeLedgerReplayRequest,
+    LinearFundingAccounting,
     LinearFundingApplicationIdentity,
+    LinearFundingEligibilityPositionSnapshot,
+    LinearFundingEligibilityRequest,
+    LinearFundingEligibilityResolver,
+    LinearFundingRatePublicationCandidate,
+    LinearInstrumentMarginModel,
+    LinearInstrumentMarginRequest,
+    LinearInstrumentMarginResult,
+    LinearMarginLedgerEvidence,
+    LinearMarginLeverageEvidence,
+    LinearMarginMarkEvidence,
+    LinearMarginReservationEvidence,
+    LinearMarginRuleBook,
     LinearPerpetualContract,
     LinearPositionProjectionRequest,
     LinearPositionProjector,
+    LinearPositionValuationEvidence,
     PortfolioSnapshotProjector,
     ProfileComponentRef,
     ProfilePortType,
+    ResolvedMark,
     ResourceReservationState,
+    StaleMarkPolicy,
+)
+from crypto_quant_trading.funding_accounting import (
+    LinearFundingMarkEvidence,
+    LinearFundingSettlementEvidence,
+    LinearFundingSettlementRequest,
 )
 
+from .liquidation_audit import (
+    ConservativeLinearLiquidationAuditModel,
+    LinearLiquidationAccountWindowEvidence,
+    LinearLiquidationAuditRequest,
+    LinearLiquidationMarkBarEvidence,
+)
 from .ports import SimulationComponentRef, SimulationPortType
+from .resolution import RequestedResultGrade
 
 _HASH_PREFIX = "sha256:"
 _CASH_DISPATCHER_KEY = "generic.cash.financial-dispatcher.v1"
@@ -112,7 +151,10 @@ class FinancialDispatcherSpec:
             raise ValueError("dispatcher_version must be positive integer")
         _hash("config_hash", self.config_hash)
         expected = (
-            (self.position_accounting_component, ProfilePortType.POSITION_ACCOUNTING_MODEL),
+            (
+                self.position_accounting_component,
+                ProfilePortType.POSITION_ACCOUNTING_MODEL,
+            ),
             (self.financing_component, ProfilePortType.FINANCING_MODEL),
             (self.margin_component, ProfilePortType.MARGIN_MODEL),
         )
@@ -122,7 +164,9 @@ class FinancialDispatcherSpec:
             if component.port_type is not port_type:
                 raise ValueError("profile component port mismatch")
         if not isinstance(self.liquidation_audit_component, SimulationComponentRef):
-            raise TypeError("liquidation_audit_component must be SimulationComponentRef")
+            raise TypeError(
+                "liquidation_audit_component must be SimulationComponentRef"
+            )
         if (
             self.liquidation_audit_component.port_type
             is not SimulationPortType.LIQUIDATION_AUDIT_MODEL
@@ -185,9 +229,137 @@ class LinearDerivativeFillAccountingPlan:
 
 
 @dataclass(frozen=True, slots=True)
+class LinearMarginProjectionPlan:
+    account_id: str
+    venue_id: VenueId
+    position_key: PositionBalanceKey
+    contract: LinearPerpetualContract
+    ledger_schema: LedgerSchema
+    settlement_cash_key: CashBalanceKey
+    evaluated_at: SimulationInstant
+    valuation_mark: ResolvedMark
+    valuation_stale_policy: StaleMarkPolicy
+    leverage_evidence: LinearMarginLeverageEvidence
+    margin_rule_book: LinearMarginRuleBook
+    margin_mark_evidence: LinearMarginMarkEvidence
+    settlement_cash_registration: LedgerBalanceRegistration
+    margin_quantization: QuantizationPolicy
+    unrealized_pnl_quantization: QuantizationPolicy
+    ledger_evidence_key: str
+    reservation_evidence_key: str
+
+    def __post_init__(self) -> None:
+        _text("account_id", self.account_id)
+        if type(self.venue_id) is not VenueId:
+            raise TypeError("venue_id must be exact VenueId")
+        if type(self.position_key) is not PositionBalanceKey:
+            raise TypeError("position_key must be exact PositionBalanceKey")
+        if type(self.contract) is not LinearPerpetualContract:
+            raise TypeError("contract must be exact LinearPerpetualContract")
+        if type(self.ledger_schema) is not LedgerSchema:
+            raise TypeError("ledger_schema must be exact LedgerSchema")
+        if type(self.settlement_cash_key) is not CashBalanceKey:
+            raise TypeError("settlement_cash_key must be exact CashBalanceKey")
+        if type(self.evaluated_at) is not SimulationInstant:
+            raise TypeError("evaluated_at must be exact SimulationInstant")
+        if type(self.valuation_mark) is not ResolvedMark:
+            raise TypeError("valuation_mark must be exact ResolvedMark")
+        if type(self.valuation_stale_policy) is not StaleMarkPolicy:
+            raise TypeError("valuation_stale_policy must be exact StaleMarkPolicy")
+        if type(self.leverage_evidence) is not LinearMarginLeverageEvidence:
+            raise TypeError(
+                "leverage_evidence must be exact LinearMarginLeverageEvidence"
+            )
+        if type(self.margin_rule_book) is not LinearMarginRuleBook:
+            raise TypeError("margin_rule_book must be exact LinearMarginRuleBook")
+        if type(self.margin_mark_evidence) is not LinearMarginMarkEvidence:
+            raise TypeError(
+                "margin_mark_evidence must be exact LinearMarginMarkEvidence"
+            )
+        if type(self.settlement_cash_registration) is not LedgerBalanceRegistration:
+            raise TypeError(
+                "settlement_cash_registration must be exact LedgerBalanceRegistration"
+            )
+        for name in ("margin_quantization", "unrealized_pnl_quantization"):
+            if type(getattr(self, name)) is not QuantizationPolicy:
+                raise TypeError(f"{name} must be exact QuantizationPolicy")
+        _text("ledger_evidence_key", self.ledger_evidence_key)
+        _text("reservation_evidence_key", self.reservation_evidence_key)
+        if (
+            self.position_key.account_id != self.account_id
+            or self.position_key.venue_id != self.venue_id
+            or self.settlement_cash_key.account_id != self.account_id
+            or self.settlement_cash_key.venue_id != self.venue_id
+            or self.settlement_cash_registration.key != self.settlement_cash_key
+            or self.contract.instrument.instrument_id != self.position_key.instrument_id
+            or self.valuation_mark.instrument_id != self.position_key.instrument_id
+            or self.margin_mark_evidence.resolved_mark.instrument_id
+            != self.position_key.instrument_id
+            or self.leverage_evidence.account_id != self.account_id
+            or self.leverage_evidence.instrument_id != self.position_key.instrument_id
+        ):
+            raise ValueError("linear margin projection context mismatch")
+
+    def to_canonical_dict(self) -> dict[str, object]:
+        return {
+            "type": "linear_margin_projection_plan",
+            "schema_version": 1,
+            "account_id": self.account_id,
+            "venue_id": self.venue_id,
+            "position_key": self.position_key,
+            "contract": self.contract,
+            "ledger_schema": self.ledger_schema,
+            "settlement_cash_key": self.settlement_cash_key,
+            "evaluated_at": self.evaluated_at,
+            "valuation_mark": self.valuation_mark,
+            "valuation_stale_policy": self.valuation_stale_policy,
+            "leverage_evidence": self.leverage_evidence,
+            "margin_rule_book": self.margin_rule_book,
+            "margin_mark_evidence": self.margin_mark_evidence,
+            "settlement_cash_registration": self.settlement_cash_registration,
+            "margin_quantization": self.margin_quantization,
+            "unrealized_pnl_quantization": self.unrealized_pnl_quantization,
+            "ledger_evidence_key": self.ledger_evidence_key,
+            "reservation_evidence_key": self.reservation_evidence_key,
+        }
+
+
+@dataclass(frozen=True, slots=True)
+class _ProductionSemanticAuthority:
+    type_key: str
+    fields: Mapping[str, object]
+
+    def __post_init__(self) -> None:
+        _text("type_key", self.type_key)
+        if not isinstance(self.fields, Mapping):
+            raise TypeError("fields must be a mapping")
+        canonical_sha256(self.fields)
+
+    def to_canonical_dict(self) -> dict[str, object]:
+        return {"type": self.type_key, "schema_version": 1, **self.fields}
+
+
+@dataclass(frozen=True, slots=True)
 class LinearFundingAccountEventPlan:
     settlement_identity: LinearFundingApplicationIdentity
     recorded_at: SimulationInstant
+    ledger_schema: LedgerSchema | None = None
+    settlement_cash_key: CashBalanceKey | None = None
+    position_key: PositionBalanceKey | None = None
+    contract: LinearPerpetualContract | None = None
+    eligibility_instant: SimulationInstant | None = None
+    position_snapshot_available_at: SimulationInstant | None = None
+    position_snapshot_id: str | None = None
+    eligibility_series_id: str | None = None
+    position_revision_id: str | None = None
+    position_supersedes_revision_id: str | None = None
+    publication_candidates: tuple[LinearFundingRatePublicationCandidate, ...] | None = (
+        None
+    )
+    settlement_evidence: LinearFundingSettlementEvidence | None = None
+    funding_mark_evidence: LinearFundingMarkEvidence | None = None
+    settlement_cash_registration: LedgerBalanceRegistration | None = None
+    payment_quantization: QuantizationPolicy | None = None
 
     def __post_init__(self) -> None:
         if type(self.settlement_identity) is not LinearFundingApplicationIdentity:
@@ -196,13 +368,143 @@ class LinearFundingAccountEventPlan:
             )
         if type(self.recorded_at) is not SimulationInstant:
             raise TypeError("recorded_at must be exact SimulationInstant")
+        full = (
+            self.ledger_schema,
+            self.settlement_cash_key,
+            self.position_key,
+            self.contract,
+            self.eligibility_instant,
+            self.position_snapshot_available_at,
+            self.position_snapshot_id,
+            self.eligibility_series_id,
+            self.position_revision_id,
+            self.publication_candidates,
+            self.settlement_evidence,
+            self.funding_mark_evidence,
+            self.settlement_cash_registration,
+            self.payment_quantization,
+        )
+        if all(value is None for value in full):
+            if self.position_supersedes_revision_id is not None:
+                raise ValueError("legacy funding plan cannot set revision authority")
+            return
+        if any(value is None for value in full):
+            raise ValueError("production funding authority must be complete")
+        if type(self.ledger_schema) is not LedgerSchema:
+            raise TypeError("ledger_schema must be exact LedgerSchema")
+        if type(self.settlement_cash_key) is not CashBalanceKey:
+            raise TypeError("settlement_cash_key must be exact CashBalanceKey")
+        if type(self.position_key) is not PositionBalanceKey:
+            raise TypeError("position_key must be exact PositionBalanceKey")
+        if type(self.contract) is not LinearPerpetualContract:
+            raise TypeError("contract must be exact LinearPerpetualContract")
+        if (
+            type(self.eligibility_instant) is not SimulationInstant
+            or type(self.position_snapshot_available_at) is not SimulationInstant
+        ):
+            raise TypeError("eligibility and snapshot times must be SimulationInstant")
+        for name in (
+            "position_snapshot_id",
+            "eligibility_series_id",
+            "position_revision_id",
+        ):
+            _text(name, getattr(self, name))
+        if self.position_supersedes_revision_id is not None:
+            _text(
+                "position_supersedes_revision_id", self.position_supersedes_revision_id
+            )
+        if type(self.publication_candidates) is not tuple or not all(
+            type(value) is LinearFundingRatePublicationCandidate
+            for value in self.publication_candidates
+        ):
+            raise TypeError("publication_candidates must contain exact Candidates")
+        if type(self.settlement_evidence) is not LinearFundingSettlementEvidence:
+            raise TypeError("settlement_evidence must be exact Evidence")
+        if type(self.funding_mark_evidence) is not LinearFundingMarkEvidence:
+            raise TypeError("funding_mark_evidence must be exact Evidence")
+        if type(self.settlement_cash_registration) is not LedgerBalanceRegistration:
+            raise TypeError("settlement_cash_registration must be exact Registration")
+        if type(self.payment_quantization) is not QuantizationPolicy:
+            raise TypeError("payment_quantization must be exact QuantizationPolicy")
+        position_key = cast(PositionBalanceKey, self.position_key)
+        settlement_cash_key = cast(CashBalanceKey, self.settlement_cash_key)
+        registration = cast(
+            LedgerBalanceRegistration, self.settlement_cash_registration
+        )
+        contract = cast(LinearPerpetualContract, self.contract)
+        settlement = cast(LinearFundingSettlementEvidence, self.settlement_evidence)
+        if (
+            position_key.account_id
+            != self.settlement_identity.application_key.account_id
+            or settlement_cash_key.account_id != position_key.account_id
+            or settlement_cash_key.venue_id != position_key.venue_id
+            or registration.key != settlement_cash_key
+            or contract.instrument.instrument_id != position_key.instrument_id
+            or settlement.application_key != self.settlement_identity.application_key
+        ):
+            raise ValueError("production funding context mismatch")
+
+    @property
+    def has_production_authority(self) -> bool:
+        return self.ledger_schema is not None
+
+    def production_semantic_authority(self) -> object | None:
+        if not self.has_production_authority:
+            return None
+        return _ProductionSemanticAuthority(
+            "linear_funding_account_event_semantic_authority",
+            {
+                "application_key": self.settlement_identity.application_key,
+                "recorded_at": self.recorded_at,
+                "ledger_schema": self.ledger_schema,
+                "settlement_cash_key": self.settlement_cash_key,
+                "position_key": self.position_key,
+                "contract": self.contract,
+                "eligibility_instant": self.eligibility_instant,
+                "position_snapshot_available_at": self.position_snapshot_available_at,
+                "position_snapshot_id": self.position_snapshot_id,
+                "eligibility_series_id": self.eligibility_series_id,
+                "position_revision_id": self.position_revision_id,
+                "position_supersedes_revision_id": self.position_supersedes_revision_id,
+                "publication_candidates": self.publication_candidates,
+                "settlement_evidence": self.settlement_evidence,
+                "funding_mark_evidence": self.funding_mark_evidence,
+                "settlement_cash_registration": self.settlement_cash_registration,
+                "payment_quantization": self.payment_quantization,
+            },
+        )
 
     def to_canonical_dict(self) -> dict[str, object]:
-        return {
+        payload: dict[str, object] = {
             "type": "synthetic_funding_dispatch_payload",
             "settlement_identity": self.settlement_identity,
             "recorded_at": self.recorded_at,
         }
+        if self.has_production_authority:
+            payload.update(
+                {
+                    "ledger_schema": self.ledger_schema,
+                    "settlement_cash_key": self.settlement_cash_key,
+                    "position_key": self.position_key,
+                    "contract": self.contract,
+                    "eligibility_instant": self.eligibility_instant,
+                    "position_snapshot_available_at": (
+                        self.position_snapshot_available_at
+                    ),
+                    "position_snapshot_id": self.position_snapshot_id,
+                    "eligibility_series_id": self.eligibility_series_id,
+                    "position_revision_id": self.position_revision_id,
+                    "position_supersedes_revision_id": (
+                        self.position_supersedes_revision_id
+                    ),
+                    "publication_candidates": self.publication_candidates,
+                    "settlement_evidence": self.settlement_evidence,
+                    "funding_mark_evidence": self.funding_mark_evidence,
+                    "settlement_cash_registration": self.settlement_cash_registration,
+                    "payment_quantization": self.payment_quantization,
+                }
+            )
+        return payload
 
 
 @dataclass(frozen=True, slots=True)
@@ -216,11 +518,20 @@ class LinearMarginLiquidationAuditPlan:
     liquidation_high: Price
     audit_at: SimulationInstant
     role_suffix: str
+    projection_plan: LinearMarginProjectionPlan | None = None
+    liquidation_bars: tuple[LinearLiquidationMarkBarEvidence, ...] | None = None
+    requested_grade: RequestedResultGrade | None = None
+    account_window_evidence_key: str | None = None
+    interval_start_journal_hash: str | None = None
+    interval_end_journal_hash: str | None = None
+    interval_start_reservation_hash: str | None = None
+    interval_end_reservation_hash: str | None = None
 
     def __post_init__(self) -> None:
-        if type(self.evaluated_at) is not SimulationInstant or type(
-            self.audit_at
-        ) is not SimulationInstant:
+        if (
+            type(self.evaluated_at) is not SimulationInstant
+            or type(self.audit_at) is not SimulationInstant
+        ):
             raise TypeError("evaluation and audit times must be SimulationInstant")
         for name in (
             "valuation_price",
@@ -230,16 +541,94 @@ class LinearMarginLiquidationAuditPlan:
         ):
             if type(getattr(self, name)) is not Price:
                 raise TypeError(f"{name} must be exact Price")
-        if type(self.interval_start) is not UtcInstant or type(
-            self.interval_end_exclusive
-        ) is not UtcInstant:
+        if (
+            type(self.interval_start) is not UtcInstant
+            or type(self.interval_end_exclusive) is not UtcInstant
+        ):
             raise TypeError("audit interval must use exact UtcInstant")
         if self.interval_end_exclusive <= self.interval_start:
             raise ValueError("audit interval must be non-empty")
         _text("role_suffix", self.role_suffix)
+        full = (
+            self.projection_plan,
+            self.liquidation_bars,
+            self.requested_grade,
+            self.account_window_evidence_key,
+            self.interval_start_journal_hash,
+            self.interval_end_journal_hash,
+            self.interval_start_reservation_hash,
+            self.interval_end_reservation_hash,
+        )
+        if all(value is None for value in full):
+            return
+        if any(value is None for value in full):
+            raise ValueError("production margin/liquidation authority must be complete")
+        if type(self.projection_plan) is not LinearMarginProjectionPlan:
+            raise TypeError("projection_plan must be exact LinearMarginProjectionPlan")
+        if type(self.liquidation_bars) is not tuple or not all(
+            type(value) is LinearLiquidationMarkBarEvidence
+            for value in self.liquidation_bars
+        ):
+            raise TypeError("liquidation_bars must contain exact Evidence")
+        if self.requested_grade is not RequestedResultGrade.DEVELOPMENT:
+            raise ValueError("production liquidation audit requires development grade")
+        _text("account_window_evidence_key", self.account_window_evidence_key)
+        for name in (
+            "interval_start_journal_hash",
+            "interval_end_journal_hash",
+            "interval_start_reservation_hash",
+            "interval_end_reservation_hash",
+        ):
+            _hash(name, getattr(self, name))
+        if (
+            self.projection_plan.evaluated_at != self.evaluated_at
+            or self.projection_plan.valuation_mark.price != self.valuation_price
+            or self.projection_plan.margin_mark_evidence.resolved_mark.price
+            != self.margin_price
+            or any(
+                value.interval_start != self.interval_start
+                or value.interval_end_exclusive != self.interval_end_exclusive
+                or value.low != self.liquidation_low
+                or value.high != self.liquidation_high
+                for value in self.liquidation_bars
+            )
+        ):
+            raise ValueError("legacy and production margin authority mismatch")
+
+    @property
+    def has_production_authority(self) -> bool:
+        return self.projection_plan is not None
+
+    def production_semantic_authority(self) -> object | None:
+        if not self.has_production_authority:
+            return None
+        return _ProductionSemanticAuthority(
+            "linear_margin_liquidation_audit_semantic_authority",
+            {
+                "evaluated_at": self.evaluated_at,
+                "valuation_price": self.valuation_price,
+                "margin_price": self.margin_price,
+                "interval_start": self.interval_start,
+                "interval_end_exclusive": self.interval_end_exclusive,
+                "liquidation_low": self.liquidation_low,
+                "liquidation_high": self.liquidation_high,
+                "audit_at": self.audit_at,
+                "role_suffix": self.role_suffix,
+                "projection_plan": self.projection_plan,
+                "liquidation_bars": self.liquidation_bars,
+                "requested_grade": cast(
+                    RequestedResultGrade, self.requested_grade
+                ).value,
+                "account_window_evidence_key": self.account_window_evidence_key,
+                "interval_start_journal_hash": self.interval_start_journal_hash,
+                "interval_end_journal_hash": self.interval_end_journal_hash,
+                "interval_start_reservation_hash": self.interval_start_reservation_hash,
+                "interval_end_reservation_hash": self.interval_end_reservation_hash,
+            },
+        )
 
     def to_canonical_dict(self) -> dict[str, object]:
-        return {
+        payload: dict[str, object] = {
             "type": "synthetic_margin_audit_payload",
             "evaluated_at": self.evaluated_at,
             "valuation_price": self.valuation_price,
@@ -251,6 +640,24 @@ class LinearMarginLiquidationAuditPlan:
             "audit_at": self.audit_at,
             "role_suffix": self.role_suffix,
         }
+        if self.has_production_authority:
+            payload.update(
+                {
+                    "projection_plan": self.projection_plan,
+                    "liquidation_bars": self.liquidation_bars,
+                    "requested_grade": cast(
+                        RequestedResultGrade, self.requested_grade
+                    ).value,
+                    "account_window_evidence_key": self.account_window_evidence_key,
+                    "interval_start_journal_hash": self.interval_start_journal_hash,
+                    "interval_end_journal_hash": self.interval_end_journal_hash,
+                    "interval_start_reservation_hash": (
+                        self.interval_start_reservation_hash
+                    ),
+                    "interval_end_reservation_hash": self.interval_end_reservation_hash,
+                }
+            )
+        return payload
 
 
 @dataclass(frozen=True, slots=True)
@@ -441,7 +848,9 @@ class ScheduledAccountEvent:
         if not isinstance(self.event_at, SimulationInstant):
             raise TypeError("event_at must be SimulationInstant")
         _text("operation_key", self.operation_key)
-        object.__setattr__(self, "component_keys", _texts("component_keys", self.component_keys))
+        object.__setattr__(
+            self, "component_keys", _texts("component_keys", self.component_keys)
+        )
         if type(self.identity_bindings) is not tuple:
             raise TypeError("identity_bindings must be tuple")
         binding_keys: list[str] = []
@@ -493,7 +902,9 @@ class FinancialDispatchPlan:
             isinstance(value, ScheduledAccountEvent)
             for value in self.scheduled_account_events
         ):
-            raise TypeError("scheduled_account_events must contain ScheduledAccountEvent")
+            raise TypeError(
+                "scheduled_account_events must contain ScheduledAccountEvent"
+            )
         ordered = tuple(
             sorted(
                 self.scheduled_account_events,
@@ -575,8 +986,10 @@ def _validate_lot_state(values: PositionLotState) -> None:
     if type(values) is not tuple:
         raise TypeError("position_lot_books must be tuple")
     for key, lots in values:
-        if not isinstance(key, PositionBalanceKey) or type(lots) is not tuple or not all(
-            isinstance(value, PositionLot) for value in lots
+        if (
+            not isinstance(key, PositionBalanceKey)
+            or type(lots) is not tuple
+            or not all(isinstance(value, PositionLot) for value in lots)
         ):
             raise TypeError("invalid position lot state")
 
@@ -626,7 +1039,9 @@ class FinancialDispatchResult:
             raise TypeError("journal_entries must contain AccountingJournalEntry")
         _validate_lot_state(self.position_lot_books)
         _validate_artifacts(self.artifacts)
-        if self.snapshot is not None and not isinstance(self.snapshot, PortfolioSnapshot):
+        if self.snapshot is not None and not isinstance(
+            self.snapshot, PortfolioSnapshot
+        ):
             raise TypeError("snapshot must be PortfolioSnapshot or None")
 
     def to_canonical_dict(self) -> dict[str, object]:
@@ -833,11 +1248,151 @@ def _lot_state(
 def _position_lot_books_from_ledger(
     state: LedgerState,
 ) -> dict[PositionBalanceKey, tuple[PositionLot, ...]]:
-    return {
-        value.key: value.lots
-        for value in state.position_balances
-        if value.lots
-    }
+    return {value.key: value.lots for value in state.position_balances if value.lots}
+
+
+def _linear_replay(
+    journal: AccountingJournal,
+    ledger_schema: LedgerSchema,
+    position_key: PositionBalanceKey,
+    contract: LinearPerpetualContract,
+    settlement_cash_key: CashBalanceKey,
+    expected_ledger_state: LedgerState,
+) -> LinearDerivativeLedgerProjection:
+    outcome = LinearDerivativeLedgerProjector().project(
+        LinearDerivativeLedgerReplayRequest(
+            journal,
+            ledger_schema,
+            position_key,
+            contract,
+            settlement_cash_key,
+        )
+    )
+    if (
+        outcome.result is None
+        or outcome.result.ledger_state_hash != expected_ledger_state.state_hash
+        or expected_ledger_state.position_quantity(position_key)
+        != outcome.result.position_state.quantity
+    ):
+        raise ValueError("linear derivative replay contract/context mismatch")
+    return outcome.result
+
+
+def _linear_margin_projection(
+    plan: LinearMarginProjectionPlan,
+    state: FinancialStateView,
+) -> LinearAccountMarginProjection:
+    replay = _linear_replay(
+        state.journal,
+        plan.ledger_schema,
+        plan.position_key,
+        plan.contract,
+        plan.settlement_cash_key,
+        state.ledger_state,
+    )
+    position_valuations: tuple[LinearPositionValuationEvidence, ...] = ()
+    margin_results: tuple[LinearInstrumentMarginResult, ...] = ()
+    if replay.position_state.quantity.units != 0:
+        margin = LinearInstrumentMarginModel().evaluate_margin(
+            LinearInstrumentMarginRequest(
+                plan.position_key,
+                plan.contract,
+                replay.position_state.quantity,
+                plan.evaluated_at,
+                plan.leverage_evidence,
+                plan.margin_rule_book,
+                plan.margin_mark_evidence,
+                plan.settlement_cash_registration,
+                plan.margin_quantization,
+            )
+        )
+        if margin.result is None:
+            raise ValueError("linear instrument margin evaluation failed")
+        position_valuations = (
+            LinearPositionValuationEvidence(
+                replay.position_state,
+                plan.valuation_mark,
+                plan.valuation_stale_policy,
+            ),
+        )
+        margin_results = (margin.result,)
+    projected = LinearAccountMarginProjector().project(
+        LinearAccountMarginProjectionRequest(
+            plan.account_id,
+            plan.venue_id,
+            plan.evaluated_at,
+            LinearMarginLedgerEvidence(
+                state.ledger_state,
+                plan.evaluated_at,
+                plan.evaluated_at,
+                plan.ledger_evidence_key,
+                state.ledger_state.state_hash,
+            ),
+            position_valuations,
+            margin_results,
+            LinearMarginReservationEvidence(
+                state.reservation_state,
+                plan.evaluated_at,
+                plan.evaluated_at,
+                plan.reservation_evidence_key,
+                state.reservation_state.state_hash,
+            ),
+            plan.settlement_cash_registration,
+            plan.unrealized_pnl_quantization,
+        )
+    )
+    if projected.projection is None:
+        raise ValueError("linear account margin projection failed")
+    return projected.projection
+
+
+def _derivative_snapshot(
+    state: FinancialStateView,
+    projection: LinearAccountMarginProjection,
+    timestamp: UtcInstant,
+    reporting_currency: CurrencyId,
+    currency_valuation_graph_hash: str,
+) -> PortfolioSnapshot:
+    marks = tuple(
+        ValuationMarkReference(
+            value.resolved_mark.source_event_id,
+            value.resolved_mark.instrument_id,
+            value.resolved_mark.price_purpose,
+            value.resolved_mark.observed_at,
+        )
+        for value in projection.request.position_valuations
+    )
+    return PortfolioSnapshot(
+        projection.request.account_id,
+        timestamp,
+        reporting_currency,
+        state.ledger_state.cash_balances,
+        state.ledger_state.position_balances,
+        projection.realized_pnl,
+        projection.total_unrealized_pnl,
+        projection.fees,
+        projection.funding,
+        projection.equity,
+        marks,
+        state.ledger_state.state_hash,
+        canonical_sha256(marks),
+        canonical_sha256(
+            tuple(
+                value.stale_policy for value in projection.request.position_valuations
+            )
+        ),
+        currency_valuation_graph_hash,
+        timestamp_instant=projection.request.evaluated_at,
+    )
+
+
+def _ordered_artifacts(
+    roles: tuple[str, ...], artifacts: tuple[FinancialDispatchArtifact, ...]
+) -> tuple[FinancialDispatchArtifact, ...]:
+    by_role = {value.role: value for value in artifacts}
+    if len(by_role) != len(artifacts) or set(by_role) != set(roles):
+        raise ValueError("artifact role coverage mismatch")
+    return tuple(by_role[role] for role in roles)
 
 
 class BinanceUsdmTradifiLinearFinancialDispatcher:
@@ -846,8 +1401,6 @@ class BinanceUsdmTradifiLinearFinancialDispatcher:
     def __init__(self, spec: FinancialDispatcherSpec) -> None:
         if type(spec) is not FinancialDispatcherSpec:
             raise TypeError("spec must be exact FinancialDispatcherSpec")
-        from .liquidation_audit import ConservativeLinearLiquidationAuditModel
-
         expected_position = LinearDerivativeAccounting().component_ref
         expected_liquidation = ConservativeLinearLiquidationAuditModel().component_ref
         if (
@@ -1080,15 +1633,315 @@ class BinanceUsdmTradifiLinearFinancialDispatcher:
                 "operation": "dispatch_scheduled_event",
                 "event": event,
                 "journal_hash": state_view.journal.journal_hash,
+                "ledger_state_hash": state_view.ledger_state.state_hash,
+                "reservation_state_hash": state_view.reservation_state.state_hash,
             }
         )
+        try:
+            if event.operation_key == "funding":
+                return self._funding(event, state_view, input_hash)
+            if event.operation_key == "margin_liquidation_audit":
+                return self._margin_audit(event, state_view, input_hash)
+        except (TypeError, ValueError):
+            return _failure(
+                self.spec,
+                event.event_id,
+                input_hash,
+                FinancialDispatchFailureCode.PROFILE_COMPONENT_FAILURE,
+                event.operation_key,
+            )
         return _failure(
             self.spec,
             event.event_id,
             input_hash,
             FinancialDispatchFailureCode.EVENT_PLAN_MISMATCH,
-            "unsupported_in_bt_tradifi_dispatch_01a",
             event.operation_key,
+        )
+
+    def _funding(
+        self,
+        event: ScheduledAccountEvent,
+        state: FinancialStateView,
+        input_hash: str,
+    ) -> FinancialDispatchOutcome:
+        payload = event.payload
+        if (
+            type(payload) is not LinearFundingAccountEventPlan
+            or not payload.has_production_authority
+            or canonical_bytes(event.semantic_payload)
+            != canonical_bytes(payload.production_semantic_authority())
+            or event.component_keys != (self.spec.financing_component.component_key,)
+            or event.expected_artifact_roles
+            != ("funding_accounting", "funding_eligibility")
+        ):
+            return _failure(
+                self.spec,
+                event.event_id,
+                input_hash,
+                FinancialDispatchFailureCode.EVENT_PLAN_MISMATCH,
+                "funding_authority",
+            )
+        ledger_schema = cast(LedgerSchema, payload.ledger_schema)
+        settlement_cash_key = cast(CashBalanceKey, payload.settlement_cash_key)
+        position_key = cast(PositionBalanceKey, payload.position_key)
+        contract = cast(LinearPerpetualContract, payload.contract)
+        eligibility_instant = cast(SimulationInstant, payload.eligibility_instant)
+        snapshot_available_at = cast(
+            SimulationInstant, payload.position_snapshot_available_at
+        )
+        snapshot_id = cast(str, payload.position_snapshot_id)
+        series_id = cast(str, payload.eligibility_series_id)
+        revision_id = cast(str, payload.position_revision_id)
+        publications = cast(
+            tuple[LinearFundingRatePublicationCandidate, ...],
+            payload.publication_candidates,
+        )
+        settlement_evidence = cast(
+            LinearFundingSettlementEvidence, payload.settlement_evidence
+        )
+        funding_mark_evidence = cast(
+            LinearFundingMarkEvidence, payload.funding_mark_evidence
+        )
+        settlement_registration = cast(
+            LedgerBalanceRegistration, payload.settlement_cash_registration
+        )
+        payment_quantization = cast(QuantizationPolicy, payload.payment_quantization)
+        replay = _linear_replay(
+            state.journal,
+            ledger_schema,
+            position_key,
+            contract,
+            settlement_cash_key,
+            state.ledger_state,
+        )
+        slot = payload.settlement_identity.application_key.funding_slot_id
+        if (
+            slot.instrument_id != position_key.instrument_id
+            or slot.target_funding_time != event.event_at.instant
+            or settlement_evidence.effective_time != event.event_at.instant
+            or settlement_evidence.applied_at != event.event_at
+        ):
+            raise ValueError("funding event context mismatch")
+        cutoff = LinearDerivativeLedgerProjector().project(
+            LinearDerivativeLedgerReplayRequest(
+                AccountingJournal(
+                    tuple(
+                        entry
+                        for entry in state.journal.entries
+                        if entry.recorded_at < eligibility_instant
+                    )
+                ),
+                ledger_schema,
+                position_key,
+                contract,
+                settlement_cash_key,
+            )
+        )
+        if cutoff.result is None:
+            raise ValueError("funding eligibility cutoff replay failed")
+        snapshot = LinearFundingEligibilityPositionSnapshot(
+            snapshot_id,
+            series_id,
+            revision_id,
+            payload.position_supersedes_revision_id,
+            slot,
+            eligibility_instant,
+            snapshot_available_at,
+            cutoff.result.cursor,
+            replay,
+            cutoff.result.position_state,
+        )
+        eligibility_request = LinearFundingEligibilityRequest(
+            slot,
+            position_key,
+            contract,
+            eligibility_instant,
+            publications,
+            snapshot,
+            event.event_at,
+        )
+        eligibility = LinearFundingEligibilityResolver().resolve(eligibility_request)
+        if eligibility.result is None:
+            raise ValueError("funding eligibility failed")
+        settlement_request = LinearFundingSettlementRequest(
+            eligibility.result,
+            settlement_evidence,
+            funding_mark_evidence,
+            payload.settlement_identity,
+            position_key,
+            contract,
+            settlement_registration,
+            payment_quantization,
+        )
+        assessed = LinearFundingAccounting().assess_financing(settlement_request)
+        if assessed.result is None:
+            raise ValueError("funding accounting failed")
+        artifacts = _ordered_artifacts(
+            event.expected_artifact_roles,
+            (
+                FinancialDispatchArtifact(
+                    "funding_eligibility",
+                    event.event_id,
+                    event.event_at,
+                    eligibility.result.component_ref.component_key,
+                    eligibility.result.component_ref.component_version,
+                    eligibility.result.component_ref.component_digest,
+                    eligibility_request.request_hash,
+                    eligibility.result.eligibility_hash,
+                    eligibility.result,
+                ),
+                FinancialDispatchArtifact(
+                    "funding_accounting",
+                    event.event_id,
+                    payload.recorded_at,
+                    self.spec.financing_component.component_key,
+                    self.spec.financing_component.component_version,
+                    self.spec.financing_component.component_digest,
+                    settlement_request.request_hash,
+                    assessed.result.result_hash,
+                    assessed.result,
+                ),
+            ),
+        )
+        return FinancialDispatchOutcome(
+            self.spec,
+            input_hash,
+            result=FinancialDispatchResult(
+                self.spec,
+                event.event_id,
+                (assessed.result.journal_entry,),
+                state.position_lot_books,
+                artifacts,
+            ),
+        )
+
+    def _margin_audit(
+        self,
+        event: ScheduledAccountEvent,
+        state: FinancialStateView,
+        input_hash: str,
+    ) -> FinancialDispatchOutcome:
+        payload = event.payload
+        if type(payload) is not LinearMarginLiquidationAuditPlan:
+            raise TypeError("invalid margin audit payload")
+        expected_roles = tuple(
+            sorted(
+                (
+                    f"margin_projection.{payload.role_suffix}",
+                    f"liquidation_audit.{payload.role_suffix}",
+                )
+            )
+        )
+        if (
+            not payload.has_production_authority
+            or canonical_bytes(event.semantic_payload)
+            != canonical_bytes(payload.production_semantic_authority())
+            or event.component_keys
+            != tuple(
+                sorted(
+                    (
+                        self.spec.margin_component.component_key,
+                        self.spec.liquidation_audit_component.component_key,
+                    )
+                )
+            )
+            or event.expected_artifact_roles != expected_roles
+        ):
+            return _failure(
+                self.spec,
+                event.event_id,
+                input_hash,
+                FinancialDispatchFailureCode.EVENT_PLAN_MISMATCH,
+                "margin_liquidation_authority",
+            )
+        projection_plan = cast(LinearMarginProjectionPlan, payload.projection_plan)
+        liquidation_bars = cast(
+            tuple[LinearLiquidationMarkBarEvidence, ...], payload.liquidation_bars
+        )
+        requested_grade = cast(RequestedResultGrade, payload.requested_grade)
+        account_window_key = cast(str, payload.account_window_evidence_key)
+        start_journal_hash = cast(str, payload.interval_start_journal_hash)
+        end_journal_hash = cast(str, payload.interval_end_journal_hash)
+        start_reservation_hash = cast(str, payload.interval_start_reservation_hash)
+        end_reservation_hash = cast(str, payload.interval_end_reservation_hash)
+        if (
+            payload.audit_at != event.event_at
+            or start_journal_hash != end_journal_hash
+            or start_reservation_hash != end_reservation_hash
+            or state.journal.journal_hash != end_journal_hash
+            or state.reservation_state.state_hash != end_reservation_hash
+        ):
+            raise ValueError("liquidation account window state attestation mismatch")
+        projection = _linear_margin_projection(projection_plan, state)
+        window = LinearLiquidationAccountWindowEvidence(
+            projection,
+            payload.interval_start,
+            payload.interval_end_exclusive,
+            event.event_at,
+            account_window_key,
+            canonical_sha256(
+                {
+                    "type": "linear_liquidation_account_window_source",
+                    "schema_version": 1,
+                    "interval_start": payload.interval_start,
+                    "interval_end_exclusive": payload.interval_end_exclusive,
+                    "available_at": event.event_at,
+                    "journal_hash_at_start": start_journal_hash,
+                    "journal_hash_at_end": end_journal_hash,
+                    "reservation_hash_at_start": start_reservation_hash,
+                    "reservation_hash_at_end": end_reservation_hash,
+                    "ledger_state_hash_at_end": state.ledger_state.state_hash,
+                }
+            ),
+        )
+        request = LinearLiquidationAuditRequest(
+            window,
+            liquidation_bars,
+            payload.audit_at,
+            requested_grade,
+        )
+        audit = ConservativeLinearLiquidationAuditModel().audit_liquidation(request)
+        if audit.result is None:
+            raise ValueError("liquidation audit failed")
+        projection_role = f"margin_projection.{payload.role_suffix}"
+        audit_role = f"liquidation_audit.{payload.role_suffix}"
+        artifacts = _ordered_artifacts(
+            event.expected_artifact_roles,
+            (
+                FinancialDispatchArtifact(
+                    projection_role,
+                    event.event_id,
+                    event.event_at,
+                    projection.component_ref.component_key,
+                    projection.component_ref.component_version,
+                    projection.component_ref.component_digest,
+                    projection.request_hash,
+                    projection.projection_hash,
+                    projection,
+                ),
+                FinancialDispatchArtifact(
+                    audit_role,
+                    event.event_id,
+                    event.event_at,
+                    audit.result.component_ref.component_key,
+                    audit.result.component_ref.component_version,
+                    audit.result.component_ref.component_digest,
+                    request.request_hash,
+                    audit.result.result_hash,
+                    audit.result,
+                ),
+            ),
+        )
+        return FinancialDispatchOutcome(
+            self.spec,
+            input_hash,
+            result=FinancialDispatchResult(
+                self.spec,
+                event.event_id,
+                (),
+                state.position_lot_books,
+                artifacts,
+            ),
         )
 
     def project_final_snapshot(
@@ -1102,6 +1955,7 @@ class BinanceUsdmTradifiLinearFinancialDispatcher:
                 "operation": "project_final_snapshot",
                 "plan": plan,
                 "ledger_state_hash": state_view.ledger_state.state_hash,
+                "reservation_state_hash": state_view.reservation_state.state_hash,
             }
         )
         if plan.dispatcher_spec != self.spec:
@@ -1112,12 +1966,113 @@ class BinanceUsdmTradifiLinearFinancialDispatcher:
                 FinancialDispatchFailureCode.DISPATCHER_SPEC_MISMATCH,
                 plan.dispatcher_spec.spec_hash,
             )
-        return _failure(
+        snapshot_plan = plan.final_snapshot_payload
+        projection_plan = getattr(snapshot_plan, "linear_margin_projection_plan", None)
+        margin_role = getattr(snapshot_plan, "margin_projection_artifact_role", None)
+        snapshot_role = getattr(snapshot_plan, "final_snapshot_artifact_role", None)
+        if (
+            type(projection_plan) is not LinearMarginProjectionPlan
+            or type(margin_role) is not str
+            or type(snapshot_role) is not str
+            or getattr(snapshot_plan, "timestamp", None)
+            != projection_plan.evaluated_at.instant
+            or getattr(snapshot_plan, "reporting_currency", None)
+            != projection_plan.settlement_cash_key.currency_id
+            or getattr(snapshot_plan, "reporting_scale", None)
+            != projection_plan.settlement_cash_registration.scale
+            or tuple(sorted((margin_role, snapshot_role)))
+            != tuple(
+                role
+                for role in plan.expected_artifact_roles
+                if role in {margin_role, snapshot_role}
+            )
+        ):
+            return _failure(
+                self.spec,
+                "engine-finalize",
+                input_hash,
+                FinancialDispatchFailureCode.SNAPSHOT_PROJECTION_FAILURE,
+                "derivative_snapshot_authority",
+            )
+        snapshot_payload = cast(Any, snapshot_plan)
+        try:
+            projection = _linear_margin_projection(projection_plan, state_view)
+            expected_marks = (
+                (projection_plan.valuation_mark,)
+                if projection.request.position_valuations
+                else ()
+            )
+            projected_money = (
+                projection.wallet_balance,
+                projection.realized_pnl,
+                projection.fees,
+                projection.funding,
+                *(value.unrealized_pnl for value in projection.position_unrealized_pnl),
+                projection.total_unrealized_pnl,
+                projection.equity,
+                projection.total_initial_margin,
+                projection.total_maintenance_margin,
+                projection.working_order_margin_reservation,
+                projection.available_margin,
+            )
+            if snapshot_payload.resolved_marks != expected_marks or any(
+                value.scale != snapshot_payload.reporting_scale
+                for value in projected_money
+            ):
+                raise ValueError("derivative snapshot reporting authority mismatch")
+            snapshot = _derivative_snapshot(
+                state_view,
+                projection,
+                snapshot_payload.timestamp,
+                snapshot_payload.reporting_currency,
+                snapshot_payload.currency_valuation_graph_hash,
+            )
+            artifacts = _ordered_artifacts(
+                tuple(sorted((margin_role, snapshot_role))),
+                (
+                    FinancialDispatchArtifact(
+                        margin_role,
+                        "engine-finalize",
+                        projection.request.evaluated_at,
+                        projection.component_ref.component_key,
+                        projection.component_ref.component_version,
+                        projection.component_ref.component_digest,
+                        projection.request_hash,
+                        projection.projection_hash,
+                        projection,
+                    ),
+                    FinancialDispatchArtifact(
+                        snapshot_role,
+                        "engine-finalize",
+                        projection.request.evaluated_at,
+                        self.spec.snapshot_projection_key,
+                        self.spec.snapshot_projection_version,
+                        self.spec.config_hash,
+                        input_hash,
+                        canonical_sha256(snapshot),
+                        snapshot,
+                    ),
+                ),
+            )
+        except (TypeError, ValueError):
+            return _failure(
+                self.spec,
+                "engine-finalize",
+                input_hash,
+                FinancialDispatchFailureCode.SNAPSHOT_PROJECTION_FAILURE,
+                "derivative_snapshot_projection",
+            )
+        return FinancialDispatchOutcome(
             self.spec,
-            "engine-finalize",
             input_hash,
-            FinancialDispatchFailureCode.SNAPSHOT_PROJECTION_FAILURE,
-            "unsupported_in_bt_tradifi_dispatch_01a",
+            result=FinancialDispatchResult(
+                self.spec,
+                "engine-finalize",
+                (),
+                state_view.position_lot_books,
+                artifacts,
+                snapshot,
+            ),
         )
 
 
@@ -1185,9 +2140,7 @@ class DefaultCashFinancialDispatcher:
             )
 
         if payload.cost_basis_policy.policy_version >= 2:
-            lots_by_position = _position_lot_books_from_ledger(
-                state_view.ledger_state
-            )
+            lots_by_position = _position_lot_books_from_ledger(state_view.ledger_state)
             lots = lots_by_position.get(payload.position_key, ())
             if (
                 not lots
@@ -1229,7 +2182,10 @@ class DefaultCashFinancialDispatcher:
             )
 
         lots_by_position[payload.position_key] = booked.result.open_lots
-        if payload.cost_basis_policy.policy_version >= 2 and not booked.result.open_lots:
+        if (
+            payload.cost_basis_policy.policy_version >= 2
+            and not booked.result.open_lots
+        ):
             lots_by_position.pop(payload.position_key, None)
 
         artifact = FinancialDispatchArtifact(
@@ -1471,6 +2427,10 @@ __all__ = [
     "FinancialDispatcherSpec",
     "FinancialEventDispatcher",
     "FinancialStateView",
+    "LinearDerivativeFillAccountingPlan",
+    "LinearFundingAccountEventPlan",
+    "LinearMarginLiquidationAuditPlan",
+    "LinearMarginProjectionPlan",
     "ScheduledAccountEvent",
     "default_cash_financial_dispatcher_spec",
     "financial_dispatcher_for_spec",

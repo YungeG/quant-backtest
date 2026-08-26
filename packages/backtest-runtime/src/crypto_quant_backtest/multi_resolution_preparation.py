@@ -91,7 +91,6 @@ from .target_stream import (
 )
 from .timeline import TimelineEvent, TimelineSegment, TimelineWindow
 
-
 _SCHEMA_VERSION = 1
 _ROLE_SIGNAL = 0
 _ROLE_EXECUTION = 1
@@ -633,6 +632,9 @@ def _snapshot_plan(value: object) -> SnapshotProjectionPlan:
         value.reporting_scale,
         _utc(value.timestamp),
         value.currency_valuation_graph_hash,
+        value.linear_margin_projection_plan,
+        value.margin_projection_artifact_role,
+        value.final_snapshot_artifact_role,
     )
 
 

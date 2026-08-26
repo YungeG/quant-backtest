@@ -8,11 +8,11 @@ from typing import Any, cast
 from crypto_quant_backtest import (
     BAR_OPEN_CAPABILITY,
     BAR_OPEN_EVENT_TYPE,
+    BacktestProfileRegistry,
     BarLiquidityEvidence,
+    BuildArtifactRole,
     ConservativeLinearLiquidationAuditModel,
     DeterministicTimeline,
-    BacktestProfileRegistry,
-    BuildArtifactRole,
     ExecutionAccountProfileRegistration,
     ExecutionCaseComposer,
     ExecutionCaseIdentityFactory,
@@ -21,12 +21,12 @@ from crypto_quant_backtest import (
     FeeAccountingDispatchPlan,
     FillAccountingDispatchPlan,
     FinancialDispatchArtifact,
+    FinancialDispatcherSpec,
     FinancialDispatchFailure,
     FinancialDispatchFailureCode,
     FinancialDispatchOutcome,
     FinancialDispatchPlan,
     FinancialDispatchResult,
-    FinancialDispatcherSpec,
     FinancialStateView,
     LinearLiquidationAccountWindowEvidence,
     LinearLiquidationAuditRequest,
@@ -34,8 +34,8 @@ from crypto_quant_backtest import (
     MarketSemanticsProfileRegistration,
     MarkToMarketCloseoutPolicy,
     PositionLotBook,
-    ProfileResolver,
     PrecomputedTargetStream,
+    ProfileResolver,
     RequestedResultGrade,
     ResolvedBacktestRequest,
     ResolvedBarExecution,
@@ -43,8 +43,6 @@ from crypto_quant_backtest import (
     ResolvedFinancialState,
     ResolvedOrderAdmission,
     ScheduledAccountEvent,
-    SimulationComponentRef,
-    SimulationPortType,
     SimulationProfileRegistration,
     SlippageApplicabilityEnvelope,
     SlippageMarketState,
@@ -54,12 +52,14 @@ from crypto_quant_backtest import (
 )
 from crypto_quant_backtest.financial_dispatch import (
     LinearDerivativeFillAccountingPlan as SyntheticLinearFillPayload,
+)
+from crypto_quant_backtest.financial_dispatch import (
     LinearFundingAccountEventPlan as SyntheticFundingDispatchPayload,
+)
+from crypto_quant_backtest.financial_dispatch import (
     LinearMarginLiquidationAuditPlan as SyntheticMarginAuditPayload,
 )
 from crypto_quant_domain import (
-    AccountingEntryType,
-    CashBalanceKey,
     CurrencyId,
     DomainId,
     DomainIdKind,
@@ -76,8 +76,8 @@ from crypto_quant_domain import (
     PositionEffect,
     Price,
     PricePurpose,
-    QuantizationPolicy,
     Quantity,
+    QuantizationPolicy,
     Rate,
     RoundingPolicy,
     Scale,
@@ -97,7 +97,6 @@ from crypto_quant_trading import (
     AccountingJournal,
     FinalFeeAssessmentResult,
     FundingSlotId,
-    GenericLedger,
     LedgerBalanceRegistration,
     LinearAccountMarginProjection,
     LinearAccountMarginProjectionRequest,
@@ -113,7 +112,6 @@ from crypto_quant_trading import (
     LinearFundingEligibilityPositionSnapshot,
     LinearFundingEligibilityRequest,
     LinearFundingEligibilityResolver,
-    LinearFundingJournalEntry,
     LinearFundingMarkEvidence,
     LinearFundingPublicationStatus,
     LinearFundingRatePublicationCandidate,
@@ -147,7 +145,6 @@ from crypto_quant_trading import (
 from tests.kernel.market_rules import _fixtures as market_rules
 from tests.runtime.engine import _fixtures as cash
 from tests.runtime.resolution import _fixtures as resolution_fixtures
-
 
 PROFILE_KEY = "synthetic.linear-perpetual.development.v1"
 LIMITATIONS = (
@@ -1375,11 +1372,12 @@ def _build_execution_case(
     *,
     batch_size: int,
     semantic_spec_hash: str,
+    final_sell_quantity_units: int = 3_000,
 ) -> ResolvedExecutionCase:
     orders = (
         _order(ids.order_ids[0], 1, OrderSide.BUY, 3_000),
         _order(ids.order_ids[1], 2, OrderSide.SELL, 1_000),
-        _order(ids.order_ids[2], 3, OrderSide.SELL, 3_000),
+        _order(ids.order_ids[2], 3, OrderSide.SELL, final_sell_quantity_units),
     )
     bar_times = (200, 400, 600)
     admissions = tuple(
@@ -1489,12 +1487,15 @@ def _build_execution_case(
     )
 
 
-def build_execution_case(*, batch_size: int = 1) -> ResolvedExecutionCase:
+def build_execution_case(
+    *, batch_size: int = 1, final_sell_quantity_units: int = 3_000
+) -> ResolvedExecutionCase:
     return _build_execution_case(
         fixed_ids(),
         fixed_event_ids(),
         batch_size=batch_size,
         semantic_spec_hash="sha256:" + "9a" * 32,
+        final_sell_quantity_units=final_sell_quantity_units,
     )
 
 
