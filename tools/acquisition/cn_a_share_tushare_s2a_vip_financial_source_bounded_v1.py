@@ -4,6 +4,7 @@ import argparse
 import json
 import math
 import os
+import re
 import sys
 import time
 from collections.abc import Callable
@@ -30,7 +31,6 @@ from .cn_a_share_tushare_listing_source_bounded_v2 import (
     ProxyPost,
     _ALLOWED_ENDPOINTS,
     _PROXY_KEY,
-    _TS_CODE,
     _headers,
     _post_with_retries,
     _request_body,
@@ -41,6 +41,7 @@ _API_ORDER = ("income_vip", "balancesheet_vip", "cashflow_vip")
 _PERIOD_ORDER = tuple(f"{year}1231" for year in range(2012, 2025))
 _ROOT_END_DATE = "20260826"
 _CAPTURE_KEY = "20260826-s2a-vip-financial-candidate-01"
+_SOURCE_TS_CODE = re.compile(r"[^\s.]+\.(?:SZ|SH|BJ)\Z")
 _COMP_TYPE = "1"
 _REPORT_TYPE = "1"
 _INCOME_FIELDS = (
@@ -234,7 +235,7 @@ def _validate_rows(
         f_ann_date = row[positions["f_ann_date"]]
         if (
             type(ts_code) is not str
-            or _TS_CODE.fullmatch(ts_code) is None
+            or _SOURCE_TS_CODE.fullmatch(ts_code) is None
             or type(ann_date) is not str
             or type(f_ann_date) is not str
             or row[positions["end_date"]] != period
