@@ -29,12 +29,20 @@ class NonFilingDocumentRole(str, Enum):
     TERMINAL_CONFIRMATION = "TERMINAL_CONFIRMATION"
 
 
+class NonFilingEvidenceKind(str, Enum):
+    POST_DEADLINE_NONFILING_CONFIRMATION = "POST_DEADLINE_NONFILING_CONFIRMATION"
+    PREDEADLINE_DEFINITIVE_INABILITY = "PREDEADLINE_DEFINITIVE_INABILITY"
+    EXCHANGE_NONFILING_SUSPENSION_EFFECTIVE = "EXCHANGE_NONFILING_SUSPENSION_EFFECTIVE"
+    TERMINAL_NONFILING_CONFIRMATION = "TERMINAL_NONFILING_CONFIRMATION"
+
+
 class NonFilingAuthority(str, Enum):
     ISSUER = "ISSUER"
     SSE = "SSE"
     SZSE = "SZSE"
     CSRC = "CSRC"
     CSRC_BRANCH = "CSRC_BRANCH"
+    NEEQ_SPONSOR = "NEEQ_SPONSOR"
 
 
 class OfficialAnnualReportNonFilingFailure(str, Enum):
@@ -112,6 +120,7 @@ class ReviewedNonFilingDocumentV1:
     type: Literal["reviewed_nonfiling_document"]
     schema_version: Literal[1]
     role: NonFilingDocumentRole
+    evidence_kind: NonFilingEvidenceKind
     authority: NonFilingAuthority
     member_key: str
     source_url: str
@@ -135,6 +144,8 @@ class ReviewedNonFilingDocumentV1:
             raise ValueError("reviewed document schema_version mismatch")
         if type(self.role) is not NonFilingDocumentRole:
             raise TypeError("role must be exact NonFilingDocumentRole")
+        if type(self.evidence_kind) is not NonFilingEvidenceKind:
+            raise TypeError("evidence_kind must be exact NonFilingEvidenceKind")
         if type(self.authority) is not NonFilingAuthority:
             raise TypeError("authority must be exact NonFilingAuthority")
         for name in (
@@ -185,6 +196,7 @@ class ReviewedNonFilingDocumentV1:
             "type": self.type,
             "schema_version": self.schema_version,
             "role": self.role.value,
+            "evidence_kind": self.evidence_kind.value,
             "authority": self.authority.value,
             "member_key": self.member_key,
             "source_url": self.source_url,
@@ -385,6 +397,18 @@ class OfficialAnnualReportNonFilingDeclarationV1:
         if tuple(value.role for value in self.source_document_refs) != tuple(NonFilingDocumentRole):
             raise ValueError("declaration source terminal exact cover mismatch")
         if (
+            any(
+                not _evidence_compatibility_valid(value)
+                for value in self.source_document_refs
+            )
+            or not _initial_timing_valid(
+                initial,
+                self.statutory_deadline_date,
+                self.initial_availability,
+            )
+        ):
+            raise ValueError("declaration evidence compatibility mismatch")
+        if (
             initial.supersedes_member_key is not None
             or terminal.supersedes_member_key != initial.member_key
             or self.initial_availability.document_member_key != initial.member_key
@@ -497,6 +521,44 @@ def _ordered_documents(
             ),
         )
     )
+
+
+def _evidence_compatibility_valid(value: ReviewedNonFilingDocumentV1) -> bool:
+    allowed = {
+        (
+            NonFilingDocumentRole.INITIAL_NONFILING_PROOF,
+            NonFilingEvidenceKind.POST_DEADLINE_NONFILING_CONFIRMATION,
+        ): frozenset(NonFilingAuthority),
+        (
+            NonFilingDocumentRole.INITIAL_NONFILING_PROOF,
+            NonFilingEvidenceKind.PREDEADLINE_DEFINITIVE_INABILITY,
+        ): frozenset({NonFilingAuthority.ISSUER}),
+        (
+            NonFilingDocumentRole.INITIAL_NONFILING_PROOF,
+            NonFilingEvidenceKind.EXCHANGE_NONFILING_SUSPENSION_EFFECTIVE,
+        ): frozenset({NonFilingAuthority.SSE, NonFilingAuthority.SZSE}),
+        (
+            NonFilingDocumentRole.TERMINAL_CONFIRMATION,
+            NonFilingEvidenceKind.TERMINAL_NONFILING_CONFIRMATION,
+        ): frozenset(NonFilingAuthority),
+    }
+    return value.authority in allowed.get((value.role, value.evidence_kind), frozenset())
+
+
+def _initial_timing_valid(
+    value: ReviewedNonFilingDocumentV1,
+    statutory_deadline: date,
+    availability: OfficialNonFilingAvailabilityV1,
+) -> bool:
+    if value.evidence_kind is NonFilingEvidenceKind.PREDEADLINE_DEFINITIVE_INABILITY:
+        return value.published_date <= statutory_deadline
+    if value.evidence_kind is NonFilingEvidenceKind.EXCHANGE_NONFILING_SUSPENSION_EFFECTIVE:
+        return (
+            value.published_date >= statutory_deadline
+            and availability.source_visibility_at
+            >= availability.deadline_boundary_at
+        )
+    return value.published_date >= statutory_deadline
 
 
 def _availability_valid(value: OfficialNonFilingAvailabilityV1) -> bool:
@@ -652,10 +714,17 @@ def declare_official_annual_report_nonfiling_v1(
             or document.reviewed_at_epoch_nanoseconds < member.acquired_at_epoch_nanoseconds
         ):
             return _failed(OfficialAnnualReportNonFilingFailure.FINANCIAL_REVISION_MISMATCH)
-    if initial_values and initial_values[0].published_date < trusted.statutory_deadline_date:
-        return _failed(OfficialAnnualReportNonFilingFailure.FINANCIAL_REVISION_MISMATCH)
     if len(initial_values) != 1 or len(terminal_values) != 1:
         return _failed(OfficialAnnualReportNonFilingFailure.BUNDLE_EXACT_COVER_MISMATCH)
+    if (
+        any(not _evidence_compatibility_valid(value) for value in documents)
+        or not _initial_timing_valid(
+            initial_values[0],
+            trusted.statutory_deadline_date,
+            trusted.initial_availability,
+        )
+    ):
+        return _failed(OfficialAnnualReportNonFilingFailure.FINANCIAL_REVISION_MISMATCH)
     initial = initial_values[0]
     terminal = terminal_values[0]
     if (

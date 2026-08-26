@@ -74,6 +74,7 @@ def _documents(snapshot=None):
         type="reviewed_nonfiling_document",
         schema_version=1,
         role=nonfiling.NonFilingDocumentRole.INITIAL_NONFILING_PROOF,
+        evidence_kind=nonfiling.NonFilingEvidenceKind.POST_DEADLINE_NONFILING_CONFIRMATION,
         authority=nonfiling.NonFilingAuthority.SSE,
         member_key=INITIAL_KEY,
         source_url="https://example.invalid/initial",
@@ -94,6 +95,7 @@ def _documents(snapshot=None):
         type="reviewed_nonfiling_document",
         schema_version=1,
         role=nonfiling.NonFilingDocumentRole.TERMINAL_CONFIRMATION,
+        evidence_kind=nonfiling.NonFilingEvidenceKind.TERMINAL_NONFILING_CONFIRMATION,
         authority=nonfiling.NonFilingAuthority.SSE,
         member_key=TERMINAL_KEY,
         source_url="https://example.invalid/terminal",
@@ -223,6 +225,60 @@ def test_predeadline_proof_and_availability_conflicts_fail_financial_revision() 
     early = replace(initial, published_date=date(2022, 4, 29))
     outcome = _declare(replace(request, source_documents=(early, terminal)))
     assert outcome.failure is nonfiling.OfficialAnnualReportNonFilingFailure.FINANCIAL_REVISION_MISMATCH
+
+    definitive = replace(
+        early,
+        evidence_kind=nonfiling.NonFilingEvidenceKind.PREDEADLINE_DEFINITIVE_INABILITY,
+        authority=nonfiling.NonFilingAuthority.ISSUER,
+    )
+    outcome = _declare(replace(request, source_documents=(definitive, terminal)))
+    assert outcome.failure is None
+    assert outcome.declaration is not None
+
+    incompatible = replace(definitive, authority=nonfiling.NonFilingAuthority.SSE)
+    outcome = _declare(replace(request, source_documents=(incompatible, terminal)))
+    assert outcome.failure is nonfiling.OfficialAnnualReportNonFilingFailure.FINANCIAL_REVISION_MISMATCH
+
+    exchange_effective = replace(
+        initial,
+        evidence_kind=nonfiling.NonFilingEvidenceKind.EXCHANGE_NONFILING_SUSPENSION_EFFECTIVE,
+        authority=nonfiling.NonFilingAuthority.SZSE,
+    )
+    exchange_request = replace(
+        request,
+        source_documents=(exchange_effective, terminal),
+    )
+    outcome = _declare(exchange_request)
+    assert outcome.failure is None
+    assert outcome.declaration is not None
+
+    early_exchange_availability = _availability(
+        INITIAL_KEY,
+        UtcInstant(BOUNDARY.epoch_nanoseconds - 1),
+    )
+    outcome = _declare(
+        replace(
+            exchange_request,
+            initial_availability=early_exchange_availability,
+        )
+    )
+    assert outcome.failure is nonfiling.OfficialAnnualReportNonFilingFailure.FINANCIAL_REVISION_MISMATCH
+    valid_exchange = _declare(exchange_request)
+    assert valid_exchange.declaration is not None
+    with pytest.raises(ValueError, match="evidence compatibility"):
+        replace(
+            valid_exchange.declaration,
+            initial_availability=early_exchange_availability,
+            declaration_id="",
+        )
+
+    sponsor_terminal = replace(
+        terminal,
+        authority=nonfiling.NonFilingAuthority.NEEQ_SPONSOR,
+    )
+    outcome = _declare(replace(request, source_documents=(initial, sponsor_terminal)))
+    assert outcome.failure is None
+    assert outcome.declaration is not None
 
     wrong_id = replace(request.initial_availability, availability_id="sha256:" + "0" * 64)
     outcome = _declare(replace(request, initial_availability=wrong_id))

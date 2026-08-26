@@ -17,6 +17,7 @@ ALLOWED = {
 }
 REQUIRED_SYMBOLS = {
     "NonFilingDocumentRole",
+    "NonFilingEvidenceKind",
     "NonFilingAuthority",
     "ReviewedNonFilingDocumentV1",
     "OfficialNonFilingAvailabilityV1",
@@ -27,7 +28,7 @@ REQUIRED_SYMBOLS = {
     "declare_official_annual_report_nonfiling_v1",
 }
 DOCUMENT_FIELDS = (
-    "type", "schema_version", "role", "authority", "member_key",
+    "type", "schema_version", "role", "evidence_kind", "authority", "member_key",
     "source_url", "published_date", "publication_precision",
     "published_at_epoch_nanoseconds", "content_hash", "byte_count",
     "reviewed_pages", "reviewed_excerpt", "issuer_assertion",
@@ -133,6 +134,22 @@ def test_request_schema_and_builder_signature_are_exact() -> None:
             for node in declaration.body
             if isinstance(node, ast.AnnAssign) and isinstance(node.target, ast.Name)
         )
+
+    evidence_kind = next(
+        node
+        for node in tree.body
+        if isinstance(node, ast.ClassDef) and node.name == "NonFilingEvidenceKind"
+    )
+    assert tuple(
+        ast.literal_eval(node.value)
+        for node in evidence_kind.body
+        if isinstance(node, ast.Assign)
+    ) == (
+        "POST_DEADLINE_NONFILING_CONFIRMATION",
+        "PREDEADLINE_DEFINITIVE_INABILITY",
+        "EXCHANGE_NONFILING_SUSPENSION_EFFECTIVE",
+        "TERMINAL_NONFILING_CONFIRMATION",
+    )
 
     assert fields("ReviewedNonFilingDocumentV1") == DOCUMENT_FIELDS
     assert fields("OfficialNonFilingAvailabilityV1") == AVAILABILITY_FIELDS
