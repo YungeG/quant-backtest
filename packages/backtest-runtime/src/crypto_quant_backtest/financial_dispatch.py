@@ -524,6 +524,7 @@ class LinearMarginLiquidationAuditPlan:
     interval_end_journal_hash: str | None = None
     interval_start_reservation_hash: str | None = None
     interval_end_reservation_hash: str | None = None
+    window_start_at: UtcInstant | None = None
 
     def __post_init__(self) -> None:
         if (
@@ -547,20 +548,40 @@ class LinearMarginLiquidationAuditPlan:
         if self.interval_end_exclusive <= self.interval_start:
             raise ValueError("audit interval must be non-empty")
         _text("role_suffix", self.role_suffix)
-        full = (
+        authority = (
             self.projection_plan,
             self.liquidation_bars,
             self.requested_grade,
             self.account_window_evidence_key,
+        )
+        hashes = (
             self.interval_start_journal_hash,
             self.interval_end_journal_hash,
             self.interval_start_reservation_hash,
             self.interval_end_reservation_hash,
         )
-        if all(value is None for value in full):
+        if (
+            all(value is None for value in authority + hashes)
+            and self.window_start_at is None
+        ):
             return
-        if any(value is None for value in full):
+        if any(value is None for value in authority):
             raise ValueError("production margin/liquidation authority must be complete")
+        legacy_mode = self.window_start_at is None and all(
+            value is not None for value in hashes
+        )
+        runtime_checkpoint_mode = self.window_start_at is not None and all(
+            value is None for value in hashes
+        )
+        if legacy_mode == runtime_checkpoint_mode:
+            raise ValueError(
+                "production margin/liquidation authority requires exactly one account window mode"
+            )
+        if runtime_checkpoint_mode:
+            if type(self.window_start_at) is not UtcInstant:
+                raise TypeError("window_start_at must be exact UtcInstant")
+            if self.window_start_at != self.interval_start:
+                raise ValueError("window_start_at must equal interval_start")
         if type(self.projection_plan) is not LinearMarginProjectionPlan:
             raise TypeError("projection_plan must be exact LinearMarginProjectionPlan")
         if type(self.liquidation_bars) is not tuple or not all(
@@ -571,13 +592,14 @@ class LinearMarginLiquidationAuditPlan:
         if self.requested_grade is not RequestedResultGrade.DEVELOPMENT:
             raise ValueError("production liquidation audit requires development grade")
         _text("account_window_evidence_key", self.account_window_evidence_key)
-        for name in (
-            "interval_start_journal_hash",
-            "interval_end_journal_hash",
-            "interval_start_reservation_hash",
-            "interval_end_reservation_hash",
-        ):
-            _hash(name, getattr(self, name))
+        if legacy_mode:
+            for name in (
+                "interval_start_journal_hash",
+                "interval_end_journal_hash",
+                "interval_start_reservation_hash",
+                "interval_end_reservation_hash",
+            ):
+                _hash(name, getattr(self, name))
         if (
             self.projection_plan.evaluated_at != self.evaluated_at
             or self.projection_plan.valuation_mark.price != self.valuation_price
@@ -597,32 +619,43 @@ class LinearMarginLiquidationAuditPlan:
     def has_production_authority(self) -> bool:
         return self.projection_plan is not None
 
+    @property
+    def uses_runtime_checkpoint(self) -> bool:
+        return self.window_start_at is not None
+
     def production_semantic_authority(self) -> object | None:
         if not self.has_production_authority:
             return None
+        payload: dict[str, object] = {
+            "evaluated_at": self.evaluated_at,
+            "valuation_price": self.valuation_price,
+            "margin_price": self.margin_price,
+            "interval_start": self.interval_start,
+            "interval_end_exclusive": self.interval_end_exclusive,
+            "liquidation_low": self.liquidation_low,
+            "liquidation_high": self.liquidation_high,
+            "audit_at": self.audit_at,
+            "role_suffix": self.role_suffix,
+            "projection_plan": self.projection_plan,
+            "liquidation_bars": self.liquidation_bars,
+            "requested_grade": cast(
+                RequestedResultGrade, self.requested_grade
+            ).value,
+            "account_window_evidence_key": self.account_window_evidence_key,
+        }
+        if self.uses_runtime_checkpoint:
+            payload["window_start_at"] = self.window_start_at
+        else:
+            payload.update(
+                {
+                    "interval_start_journal_hash": self.interval_start_journal_hash,
+                    "interval_end_journal_hash": self.interval_end_journal_hash,
+                    "interval_start_reservation_hash": self.interval_start_reservation_hash,
+                    "interval_end_reservation_hash": self.interval_end_reservation_hash,
+                }
+            )
         return _ProductionSemanticAuthority(
-            "linear_margin_liquidation_audit_semantic_authority",
-            {
-                "evaluated_at": self.evaluated_at,
-                "valuation_price": self.valuation_price,
-                "margin_price": self.margin_price,
-                "interval_start": self.interval_start,
-                "interval_end_exclusive": self.interval_end_exclusive,
-                "liquidation_low": self.liquidation_low,
-                "liquidation_high": self.liquidation_high,
-                "audit_at": self.audit_at,
-                "role_suffix": self.role_suffix,
-                "projection_plan": self.projection_plan,
-                "liquidation_bars": self.liquidation_bars,
-                "requested_grade": cast(
-                    RequestedResultGrade, self.requested_grade
-                ).value,
-                "account_window_evidence_key": self.account_window_evidence_key,
-                "interval_start_journal_hash": self.interval_start_journal_hash,
-                "interval_end_journal_hash": self.interval_end_journal_hash,
-                "interval_start_reservation_hash": self.interval_start_reservation_hash,
-                "interval_end_reservation_hash": self.interval_end_reservation_hash,
-            },
+            "linear_margin_liquidation_audit_semantic_authority", payload
         )
 
     def to_canonical_dict(self) -> dict[str, object]:
@@ -647,14 +680,19 @@ class LinearMarginLiquidationAuditPlan:
                         RequestedResultGrade, self.requested_grade
                     ).value,
                     "account_window_evidence_key": self.account_window_evidence_key,
-                    "interval_start_journal_hash": self.interval_start_journal_hash,
-                    "interval_end_journal_hash": self.interval_end_journal_hash,
-                    "interval_start_reservation_hash": (
-                        self.interval_start_reservation_hash
-                    ),
-                    "interval_end_reservation_hash": self.interval_end_reservation_hash,
                 }
             )
+            if self.uses_runtime_checkpoint:
+                payload["window_start_at"] = self.window_start_at
+            else:
+                payload.update(
+                    {
+                        "interval_start_journal_hash": self.interval_start_journal_hash,
+                        "interval_end_journal_hash": self.interval_end_journal_hash,
+                        "interval_start_reservation_hash": self.interval_start_reservation_hash,
+                        "interval_end_reservation_hash": self.interval_end_reservation_hash,
+                    }
+                )
         return payload
 
 
@@ -1006,6 +1044,8 @@ class FinancialStateView:
     reservation_state: ResourceReservationState
     position_lot_books: PositionLotState
     artifacts: tuple[FinancialDispatchArtifact, ...]
+    window_start_journal_hash: str | None = None
+    window_start_reservation_state_hash: str | None = None
 
     def __post_init__(self) -> None:
         if not isinstance(self.journal, AccountingJournal):
@@ -1016,6 +1056,16 @@ class FinancialStateView:
             raise TypeError("reservation_state must be ResourceReservationState")
         _validate_lot_state(self.position_lot_books)
         _validate_artifacts(self.artifacts)
+        if (self.window_start_journal_hash is None) != (
+            self.window_start_reservation_state_hash is None
+        ):
+            raise ValueError("window start checkpoint hashes must be supplied together")
+        if self.window_start_journal_hash is not None:
+            _hash("window_start_journal_hash", self.window_start_journal_hash)
+            _hash(
+                "window_start_reservation_state_hash",
+                self.window_start_reservation_state_hash,
+            )
 
 
 @dataclass(frozen=True, slots=True)
@@ -1626,15 +1676,28 @@ class BinanceUsdmTradifiLinearFinancialDispatcher:
         state_view: FinancialStateView,
         /,
     ) -> FinancialDispatchOutcome:
-        input_hash = canonical_sha256(
-            {
-                "operation": "dispatch_scheduled_event",
-                "event": event,
-                "journal_hash": state_view.journal.journal_hash,
-                "ledger_state_hash": state_view.ledger_state.state_hash,
-                "reservation_state_hash": state_view.reservation_state.state_hash,
-            }
-        )
+        input_authority: dict[str, object] = {
+            "operation": "dispatch_scheduled_event",
+            "event": event,
+            "journal_hash": state_view.journal.journal_hash,
+            "ledger_state_hash": state_view.ledger_state.state_hash,
+            "reservation_state_hash": state_view.reservation_state.state_hash,
+        }
+        if (
+            state_view.window_start_journal_hash is not None
+            or state_view.window_start_reservation_state_hash is not None
+        ):
+            input_authority.update(
+                {
+                    "window_start_journal_hash": (
+                        state_view.window_start_journal_hash
+                    ),
+                    "window_start_reservation_state_hash": (
+                        state_view.window_start_reservation_state_hash
+                    ),
+                }
+            )
+        input_hash = canonical_sha256(input_authority)
         try:
             if event.operation_key == "funding":
                 return self._funding(event, state_view, input_hash)
@@ -1858,12 +1921,20 @@ class BinanceUsdmTradifiLinearFinancialDispatcher:
         )
         requested_grade = cast(RequestedResultGrade, payload.requested_grade)
         account_window_key = cast(str, payload.account_window_evidence_key)
-        start_journal_hash = cast(str, payload.interval_start_journal_hash)
-        end_journal_hash = cast(str, payload.interval_end_journal_hash)
-        start_reservation_hash = cast(str, payload.interval_start_reservation_hash)
-        end_reservation_hash = cast(str, payload.interval_end_reservation_hash)
+        end_journal_hash = state.journal.journal_hash
+        end_reservation_hash = state.reservation_state.state_hash
+        if payload.uses_runtime_checkpoint:
+            start_journal_hash = state.window_start_journal_hash
+            start_reservation_hash = state.window_start_reservation_state_hash
+        else:
+            start_journal_hash = payload.interval_start_journal_hash
+            end_journal_hash = cast(str, payload.interval_end_journal_hash)
+            start_reservation_hash = payload.interval_start_reservation_hash
+            end_reservation_hash = cast(str, payload.interval_end_reservation_hash)
         if (
             payload.audit_at != event.event_at
+            or start_journal_hash is None
+            or start_reservation_hash is None
             or start_journal_hash != end_journal_hash
             or start_reservation_hash != end_reservation_hash
             or state.journal.journal_hash != end_journal_hash
@@ -1871,26 +1942,27 @@ class BinanceUsdmTradifiLinearFinancialDispatcher:
         ):
             raise ValueError("liquidation account window state attestation mismatch")
         projection = _linear_margin_projection(projection_plan, state)
+        window_source: dict[str, object] = {
+            "type": "linear_liquidation_account_window_source",
+            "schema_version": 1,
+            "interval_start": payload.interval_start,
+            "interval_end_exclusive": payload.interval_end_exclusive,
+            "available_at": event.event_at,
+            "journal_hash_at_start": start_journal_hash,
+            "journal_hash_at_end": end_journal_hash,
+            "reservation_hash_at_start": start_reservation_hash,
+            "reservation_hash_at_end": end_reservation_hash,
+            "ledger_state_hash_at_end": state.ledger_state.state_hash,
+        }
+        if payload.uses_runtime_checkpoint:
+            window_source["window_start_at"] = payload.window_start_at
         window = LinearLiquidationAccountWindowEvidence(
             projection,
             payload.interval_start,
             payload.interval_end_exclusive,
             event.event_at,
             account_window_key,
-            canonical_sha256(
-                {
-                    "type": "linear_liquidation_account_window_source",
-                    "schema_version": 1,
-                    "interval_start": payload.interval_start,
-                    "interval_end_exclusive": payload.interval_end_exclusive,
-                    "available_at": event.event_at,
-                    "journal_hash_at_start": start_journal_hash,
-                    "journal_hash_at_end": end_journal_hash,
-                    "reservation_hash_at_start": start_reservation_hash,
-                    "reservation_hash_at_end": end_reservation_hash,
-                    "ledger_state_hash_at_end": state.ledger_state.state_hash,
-                }
-            ),
+            canonical_sha256(window_source),
         )
         request = LinearLiquidationAuditRequest(
             window,

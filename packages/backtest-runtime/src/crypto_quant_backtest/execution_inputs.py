@@ -2703,6 +2703,7 @@ def _read_scheduled_event_payload(
             data.get("interval_end_journal_hash"),
             data.get("interval_start_reservation_hash"),
             data.get("interval_end_reservation_hash"),
+            _read_utc(data["window_start_at"]) if "window_start_at" in data else None,
         )
     return _read_persisted_canonical_payload(data)
 

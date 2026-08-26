@@ -159,6 +159,15 @@ _REQUIRED_ADMISSION_EVENTS = (
 )
 
 
+def _scheduled_window_start_at(payload: object) -> UtcInstant | None:
+    value = getattr(payload, "window_start_at", None)
+    if value is None:
+        return None
+    if type(value) is not UtcInstant:
+        raise TypeError("window_start_at must be exact UtcInstant")
+    return value
+
+
 def _text(name: str, value: str) -> str:
     if (
         not isinstance(value, str)
@@ -1705,6 +1714,21 @@ class DeterministicBarEngine:
         processed_cycles: set[str] = set()
         processed_bars: set[str] = set()
         processed_account_events: set[str] = set()
+        timeline_checkpoints: dict[UtcInstant, tuple[str, str]] = {}
+        checkpoint_starts = tuple(
+            sorted(
+                {
+                    window_start_at
+                    for account_event in case.financial_dispatch_plan.scheduled_account_events
+                    if (
+                        window_start_at := _scheduled_window_start_at(
+                            account_event.payload
+                        )
+                    )
+                    is not None
+                }
+            )
+        )
         timeline_cursor = case.timeline.open_cursor(batch_size=case.timeline_batch_size)
 
         while not timeline_cursor.window_complete:
@@ -1723,6 +1747,14 @@ class DeterministicBarEngine:
             timeline_cursor = batch.next_cursor
             for timeline_event in batch.events:
                 event = timeline_event.event
+                for window_start_at in checkpoint_starts:
+                    if window_start_at > event.timeline_instant.instant:
+                        break
+                    if window_start_at not in timeline_checkpoints:
+                        timeline_checkpoints[window_start_at] = (
+                            state.journal.journal_hash,
+                            state.reservation_state.state_hash,
+                        )
                 if (
                     cancellation is not None
                     and event.event_id == cancellation.cancel_before_event_id
@@ -1773,9 +1805,15 @@ class DeterministicBarEngine:
                             (FinancialDispatchFailureCode.EVENT_PLAN_MISMATCH.value,),
                             (canonical_sha256(account_event), event.event_hash),
                         )
+                    window_start_at = _scheduled_window_start_at(account_event.payload)
+                    checkpoint = (
+                        timeline_checkpoints.get(window_start_at)
+                        if window_start_at is not None
+                        else None
+                    )
                     dispatch = self._financial_dispatcher.dispatch_scheduled_event(
                         account_event,
-                        self._financial_state_view(state),
+                        self._financial_state_view(state, checkpoint),
                     )
                     failure = self._apply_financial_dispatch(
                         case,
@@ -1965,9 +2003,17 @@ class DeterministicBarEngine:
         return None
 
     @staticmethod
-    def _financial_state_view(state: _EngineState) -> FinancialStateView:
+    def _financial_state_view(
+        state: _EngineState,
+        window_start_checkpoint: tuple[str, str] | None = None,
+    ) -> FinancialStateView:
         lot_books = tuple(
             sorted(state.lot_books.items(), key=lambda value: canonical_bytes(value[0]))
+        )
+        start_journal_hash, start_reservation_hash = (
+            window_start_checkpoint
+            if window_start_checkpoint is not None
+            else (None, None)
         )
         return FinancialStateView(
             state.journal,
@@ -1975,6 +2021,8 @@ class DeterministicBarEngine:
             state.reservation_state,
             lot_books,
             tuple(state.financial_artifacts),
+            window_start_journal_hash=start_journal_hash,
+            window_start_reservation_state_hash=start_reservation_hash,
         )
 
     def _apply_financial_dispatch(

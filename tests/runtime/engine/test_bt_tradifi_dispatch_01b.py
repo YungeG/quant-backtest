@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from dataclasses import replace
+from pathlib import Path
 
 import pytest
 from crypto_quant_backtest import (
@@ -66,6 +67,13 @@ from tests.support.synthetic_market.linear_perpetual import (
     _margin_rule_book,
     _resolved_mark,
     build_execution_case,
+)
+
+_MARGIN_FIXTURE_DIR = (
+    Path(__file__).resolve().parent.parent.parent
+    / "fixtures"
+    / "runtime"
+    / "engine"
 )
 
 
@@ -215,8 +223,12 @@ def _production_window_states(case) -> dict[str, FinancialStateView]:
     return dispatcher.states
 
 
-def _production_case(*, final_sell_quantity_units: int = 3_000):
-    case = build_execution_case(final_sell_quantity_units=final_sell_quantity_units)
+def _production_case(
+    *, final_sell_quantity_units: int = 3_000, case=None
+):
+    case = case or build_execution_case(
+        final_sell_quantity_units=final_sell_quantity_units
+    )
     baseline_states = _window_states(case)
     composed = BinanceUsdmTradifiProfileComposer().compose(composition_request())
     assert composed.result is not None
@@ -455,6 +467,54 @@ def _production_case(*, final_sell_quantity_units: int = 3_000):
     )
 
 
+def _runtime_checkpoint_case(
+    case,
+    event_id: str,
+    window_start_at: UtcInstant,
+    *,
+    remove_event_ids: frozenset[str] = frozenset(),
+):
+    scheduled = []
+    removed_roles: set[str] = set()
+    for event in case.financial_dispatch_plan.scheduled_account_events:
+        if event.event_id in remove_event_ids:
+            removed_roles.update(event.expected_artifact_roles)
+            continue
+        if event.event_id == event_id:
+            assert event.payload.liquidation_bars is not None
+            payload = replace(
+                event.payload,
+                interval_start=window_start_at,
+                liquidation_bars=tuple(
+                    replace(bar, interval_start=window_start_at)
+                    for bar in event.payload.liquidation_bars
+                ),
+                interval_start_journal_hash=None,
+                interval_end_journal_hash=None,
+                interval_start_reservation_hash=None,
+                interval_end_reservation_hash=None,
+                window_start_at=window_start_at,
+            )
+            event = replace(
+                event,
+                payload=payload,
+                semantic_payload=payload.production_semantic_authority(),
+            )
+        scheduled.append(event)
+    return replace(
+        case,
+        financial_dispatch_plan=replace(
+            case.financial_dispatch_plan,
+            scheduled_account_events=tuple(scheduled),
+            expected_artifact_roles=tuple(
+                role
+                for role in case.financial_dispatch_plan.expected_artifact_roles
+                if role not in removed_roles
+            ),
+        ),
+    )
+
+
 def _replace_event_payload(case, event_id: str, payload):
     events = tuple(
         replace(
@@ -568,6 +628,166 @@ def test_production_dispatch_runs_full_linear_derivative_journey() -> None:
     )
 
 
+def test_runtime_checkpoint_full_engine_audit_passes_without_window_mutation() -> None:
+    case = _runtime_checkpoint_case(
+        _production_case(),
+        "linear-long-audit-350",
+        UtcInstant(320),
+        remove_event_ids=frozenset(
+            {"linear-funding-300", "linear-short-audit-650"}
+        ),
+    )
+
+    outcome = DeterministicBarEngine().run(case)
+
+    assert outcome.engine_failure is None
+    assert outcome.result is not None
+    assert "liquidation_audit.long" in {
+        artifact.role for artifact in outcome.result.financial_artifacts
+    }
+
+
+@pytest.mark.parametrize(
+    ("event_id", "window_start_at", "remove_event_ids"),
+    (
+        (
+            "linear-long-audit-350",
+            UtcInstant(300),
+            frozenset({"linear-short-audit-650"}),
+        ),
+        ("linear-short-audit-650", UtcInstant(600), frozenset()),
+    ),
+    ids=("funding", "fill-and-reservation"),
+)
+def test_runtime_checkpoint_full_engine_rejects_window_mutation(
+    event_id: str,
+    window_start_at: UtcInstant,
+    remove_event_ids: frozenset[str],
+) -> None:
+    case = _runtime_checkpoint_case(
+        _production_case(),
+        event_id,
+        window_start_at,
+        remove_event_ids=remove_event_ids,
+    )
+
+    outcome = DeterministicBarEngine().run(case)
+
+    assert outcome.engine_failure is not None
+    assert outcome.engine_failure.code.value == "financial_dispatch_failure"
+
+
+def test_runtime_checkpoint_missing_and_reservation_mismatch_fail_closed() -> None:
+    production = _production_case()
+    event = next(
+        value
+        for value in production.financial_dispatch_plan.scheduled_account_events
+        if value.event_id == "linear-long-audit-350"
+    )
+    payload = replace(
+        event.payload,
+        interval_start_journal_hash=None,
+        interval_end_journal_hash=None,
+        interval_start_reservation_hash=None,
+        interval_end_reservation_hash=None,
+        window_start_at=UtcInstant(320),
+    )
+    event = replace(
+        event,
+        payload=payload,
+        semantic_payload=payload.production_semantic_authority(),
+    )
+    state = _production_window_states(production)[event.event_id]
+    dispatcher = BinanceUsdmTradifiLinearFinancialDispatcher(
+        production.financial_dispatch_plan.dispatcher_spec
+    )
+
+    missing = dispatcher.dispatch_scheduled_event(event, state)
+    reservation_changed = dispatcher.dispatch_scheduled_event(
+        event,
+        replace(
+            state,
+            window_start_journal_hash=state.journal.journal_hash,
+            window_start_reservation_state_hash="sha256:" + "19" * 32,
+        ),
+    )
+
+    assert missing.failure is not None
+    assert reservation_changed.failure is not None
+    with pytest.raises(ValueError, match="exactly one account window mode"):
+        replace(payload, interval_start_journal_hash="sha256:" + "20" * 32)
+    with pytest.raises(ValueError, match="window_start_at must equal interval_start"):
+        replace(payload, window_start_at=event.event_at.instant)
+
+
+def test_runtime_checkpoint_rejects_later_existing_checkpoint() -> None:
+    production = _production_case()
+    payload = next(
+        event.payload
+        for event in production.financial_dispatch_plan.scheduled_account_events
+        if event.event_id == "linear-long-audit-350"
+    )
+    assert payload.liquidation_bars is not None
+
+    with pytest.raises(ValueError, match="window_start_at must equal interval_start"):
+        replace(
+            payload,
+            interval_start=UtcInstant(200),
+            liquidation_bars=tuple(
+                replace(bar, interval_start=UtcInstant(200))
+                for bar in payload.liquidation_bars
+            ),
+            interval_start_journal_hash=None,
+            interval_end_journal_hash=None,
+            interval_start_reservation_hash=None,
+            interval_end_reservation_hash=None,
+            window_start_at=UtcInstant(300),
+        )
+
+
+def test_engine_supplies_runtime_checkpoint_through_generic_dispatch_boundary() -> None:
+    case = _runtime_checkpoint_case(
+        _production_case(),
+        "linear-long-audit-350",
+        UtcInstant(320),
+        remove_event_ids=frozenset(
+            {"linear-funding-300", "linear-short-audit-650"}
+        ),
+    )
+    delegate = BinanceUsdmTradifiLinearFinancialDispatcher(
+        case.financial_dispatch_plan.dispatcher_spec
+    )
+    captured: list[FinancialStateView] = []
+
+    class CapturingDispatcher:
+        @property
+        def spec(self):
+            return delegate.spec
+
+        def book_fill(self, *args):
+            return delegate.book_fill(*args)
+
+        def book_fee(self, *args):
+            return delegate.book_fee(*args)
+
+        def dispatch_scheduled_event(self, event, state):
+            captured.append(state)
+            return delegate.dispatch_scheduled_event(event, state)
+
+        def project_final_snapshot(self, *args):
+            return delegate.project_final_snapshot(*args)
+
+    outcome = DeterministicBarEngine(CapturingDispatcher()).run(case)
+
+    assert outcome.result is not None
+    assert len(captured) == 1
+    assert captured[0].window_start_journal_hash == captured[0].journal.journal_hash
+    assert (
+        captured[0].window_start_reservation_state_hash
+        == captured[0].reservation_state.state_hash
+    )
+
+
 def test_empty_position_funding_and_thin_plan_fails_closed() -> None:
     case = _production_case()
     event = next(
@@ -656,9 +876,48 @@ def test_execution_input_v6_round_trips_derivative_authority_and_v5_rejects_it()
         raise AssertionError("execution input v5 accepted derivative authority")
 
 
-def test_legacy_plan_bytes_remain_unchanged_when_production_authority_is_omitted() -> (
-    None
-):
+def test_execution_input_v6_round_trips_runtime_checkpoint_start() -> None:
+    prepared, resolved, hydrated, _, _ = _contract()
+    production = _runtime_checkpoint_case(
+        _production_case(),
+        "linear-long-audit-350",
+        UtcInstant(320),
+    )
+    plan = replace(
+        hydrated.execution_case_plan,
+        financial_state=production.financial_state,
+        financial_dispatch_plan=production.financial_dispatch_plan,
+        snapshot_plan=production.snapshot_plan,
+    )
+    spec = _execution_case_semantic_spec_v3(
+        base_spec=hydrated.execution_case_semantic_spec,
+        execution_case_plan=plan,
+        market_data_preparation=prepared.preparation,
+    )
+    envelope = _materialize_execution_input_bundle_v6(
+        resolved_request=_resolved_for_spec(prepared, resolved, spec),
+        hydrated_inputs=replace(
+            hydrated,
+            execution_case_semantic_spec=spec,
+            execution_case_plan=plan,
+        ),
+        market_data_preparation=prepared.preparation,
+    )
+
+    decoded = _read_execution_input_payload_v6(envelope.payload)
+    payload = next(
+        event.payload
+        for event in decoded.execution_case_plan.financial_dispatch_plan.scheduled_account_events
+        if event.event_id == "linear-long-audit-350"
+    )
+
+    assert payload.window_start_at == UtcInstant(320)
+    assert payload.interval_start_journal_hash is None
+    assert payload.interval_start_reservation_hash is None
+    assert payload.to_canonical_dict()["window_start_at"] == UtcInstant(320)
+
+
+def test_legacy_and_precommitted_margin_plan_bytes_remain_exact() -> None:
     case = build_execution_case()
     funding = next(
         event.payload
@@ -673,6 +932,30 @@ def test_legacy_plan_bytes_remain_unchanged_when_production_authority_is_omitted
             "recorded_at": funding.recorded_at,
         }
     )
+    margin = next(
+        event.payload
+        for event in case.financial_dispatch_plan.scheduled_account_events
+        if event.operation_key == "margin_liquidation_audit"
+    )
+    precommitted = next(
+        event.payload
+        for event in _production_case().financial_dispatch_plan.scheduled_account_events
+        if event.event_id == "linear-long-audit-350"
+    )
+    assert canonical_bytes(margin) == (
+        _MARGIN_FIXTURE_DIR / "linear-margin-audit-thin-v1.json"
+    ).read_bytes()
+    assert canonical_sha256(margin) == (
+        "sha256:f70e7c1ccda21aebc88368d309c316d4d43c9c63aebbe877a93bb66cdf8104db"
+    )
+    assert canonical_bytes(precommitted) == (
+        _MARGIN_FIXTURE_DIR / "linear-margin-audit-precommitted-v1.json"
+    ).read_bytes()
+    assert canonical_sha256(precommitted) == (
+        "sha256:c74b8b27c67a6d48c3f6bf78d3e88e8dbd48360591601bcc72298458d48f1b12"
+    )
+    assert "window_start_at" not in margin.to_canonical_dict()
+    assert "window_start_at" not in precommitted.to_canonical_dict()
     assert "linear_margin_projection_plan" not in case.snapshot_plan.to_canonical_dict()
 
 
