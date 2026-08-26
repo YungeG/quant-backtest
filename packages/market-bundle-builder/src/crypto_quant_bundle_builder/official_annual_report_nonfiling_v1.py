@@ -532,7 +532,13 @@ def _evidence_compatibility_valid(value: ReviewedNonFilingDocumentV1) -> bool:
         (
             NonFilingDocumentRole.INITIAL_NONFILING_PROOF,
             NonFilingEvidenceKind.PREDEADLINE_DEFINITIVE_INABILITY,
-        ): frozenset({NonFilingAuthority.ISSUER}),
+        ): frozenset(
+            {
+                NonFilingAuthority.ISSUER,
+                NonFilingAuthority.SSE,
+                NonFilingAuthority.SZSE,
+            }
+        ),
         (
             NonFilingDocumentRole.INITIAL_NONFILING_PROOF,
             NonFilingEvidenceKind.EXCHANGE_NONFILING_SUSPENSION_EFFECTIVE,
