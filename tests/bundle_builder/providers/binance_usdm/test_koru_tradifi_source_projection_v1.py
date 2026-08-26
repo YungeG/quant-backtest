@@ -91,14 +91,24 @@ def _aggregate_result(
     *,
     utc_date: str = aggregate_fixture.UTC_DATE,
     sequence_start: int = 0,
+    raw_trade_id_start: int | None = None,
+    raw_trade_id_starts: tuple[int, ...] | None = None,
 ):
+    first_raw_trade_id = (
+        900 + 2 * sequence_start
+        if raw_trade_id_start is None
+        else raw_trade_id_start
+    )
+    raw_starts = raw_trade_id_starts or tuple(
+        first_raw_trade_id + 2 * index for index in range(len(trades))
+    )
     rows = tuple(
         (
             str(700 + sequence_start + index),
             price,
             "1.250",
-            str(900 + 2 * (sequence_start + index)),
-            str(901 + 2 * (sequence_start + index)),
+            str(raw_starts[index]),
+            str(raw_starts[index] + 1),
             str(timestamp),
             "true",
         )
@@ -345,6 +355,95 @@ def test_price_cover_crosses_midnight_from_prior_open_date() -> None:
     )
 
 
+def test_intra_day_raw_id_gap_is_retained_and_source_projection_builds() -> None:
+    first = aggregate_fixture.DAY_START_MS + 20 * price_fixture.HOUR_MS + 10_000
+    second = aggregate_fixture.DAY_START_MS + 21 * price_fixture.HOUR_MS + 10_000
+    request = _request(((first, "12.340"), (second, "12.350")))
+    gapped = _aggregate_result(
+        ((first, "12.340"), (second, "12.350")),
+        raw_trade_id_starts=(900, 905),
+    )
+    result = build_binance_usdm_koru_tradifi_source_projection_v1(
+        replace(request, aggregate_trade_results=(gapped,))
+    ).result
+    assert result is not None
+    retained = result.request.aggregate_trade_results[0]
+    assert retained.internal_gap_classification == (
+        "provider_raw_id_gaps_observed_with_contiguous_aggregate_ids"
+    )
+    assert len(retained.raw_id_gaps) == 1
+    assert result.aggregate_trade_cross_date_raw_id_gaps == ()
+
+
+def test_cross_date_raw_id_gap_is_evidenced_replayed_and_tamper_rejected() -> None:
+    first = aggregate_fixture.DAY_START_MS + 23 * price_fixture.HOUR_MS + 45 * 60_000
+    second = aggregate_fixture.DAY_START_MS + 24 * price_fixture.HOUR_MS + 10 * 60_000
+    request = _request(
+        ((first, "12.340"), (second, "12.350")),
+        start_ns=aggregate_fixture.DAY_START_NS + 23 * _HOUR_NS + _HOUR_NS // 2,
+        end_ns=aggregate_fixture.DAY_START_NS + 24 * _HOUR_NS + _HOUR_NS // 2,
+    )
+    second_result = _aggregate_result(
+        ((second, "12.350"),),
+        utc_date="2026-07-17",
+        sequence_start=1,
+        raw_trade_id_start=905,
+    )
+    request = replace(
+        request,
+        aggregate_trade_results=(request.aggregate_trade_results[0], second_result),
+    )
+    result = build_binance_usdm_koru_tradifi_source_projection_v1(request).result
+    assert result is not None
+    assert len(result.aggregate_trade_cross_date_raw_id_gaps) == 1
+    gap = result.aggregate_trade_cross_date_raw_id_gaps[0]
+    assert (
+        gap.previous_aggregate_trade_id,
+        gap.current_aggregate_trade_id,
+        gap.previous_last_trade_id,
+        gap.current_first_trade_id,
+        gap.missing_first_trade_id,
+        gap.missing_last_trade_id,
+        gap.missing_trade_count,
+    ) == (700, 701, 901, 905, 902, 904, 3)
+    assert "aggregate_trade_cross_date_raw_id_gaps" in result.to_canonical_dict()
+
+    object.__setattr__(gap, "gap_hash", "sha256:" + "0" * 64)
+    with pytest.raises(ValueError, match="binding mismatch"):
+        replace(result)
+
+
+def test_cross_date_raw_overlap_regression_and_aggregate_id_gap_fail() -> None:
+    first = aggregate_fixture.DAY_START_MS + 23 * price_fixture.HOUR_MS + 45 * 60_000
+    second = aggregate_fixture.DAY_START_MS + 24 * price_fixture.HOUR_MS + 10 * 60_000
+    request = _request(
+        ((first, "12.340"), (second, "12.350")),
+        start_ns=aggregate_fixture.DAY_START_NS + 23 * _HOUR_NS + _HOUR_NS // 2,
+        end_ns=aggregate_fixture.DAY_START_NS + 24 * _HOUR_NS + _HOUR_NS // 2,
+    )
+    for sequence_start, raw_trade_id_start in ((1, 901), (1, 900), (2, 904)):
+        second_result = _aggregate_result(
+            ((second, "12.350"),),
+            utc_date="2026-07-17",
+            sequence_start=sequence_start,
+            raw_trade_id_start=raw_trade_id_start,
+        )
+        failed = build_binance_usdm_koru_tradifi_source_projection_v1(
+            replace(
+                request,
+                aggregate_trade_results=(
+                    request.aggregate_trade_results[0],
+                    second_result,
+                ),
+            )
+        )
+        assert failed.result is None
+        assert failed.failure is not None
+        assert failed.failure.code is (
+            BinanceUsdmKoruTradifiSourceProjectionFailureCodeV1.AGGREGATE_TRADES_INVALID
+        )
+
+
 def test_price_cover_respects_july_15_authorized_open_floor() -> None:
     july_15_start_ms = _day_start_ms("2026-07-15")
     start = july_15_start_ms * 1_000_000 + 10 * _HOUR_NS
@@ -479,6 +578,11 @@ def test_source_events_and_canonically_equal_authority_values_replay() -> None:
             ),
         )
     assert result.decision_grade_eligible is result.deployment_authorized is False
+    assert result.aggregate_trade_cross_date_raw_id_gaps == ()
+    assert (
+        "aggregate_trade_cross_date_raw_id_gaps"
+        not in result.to_canonical_dict()
+    )
 
 
 def test_replay_digest_and_projection_lineage_are_golden() -> None:

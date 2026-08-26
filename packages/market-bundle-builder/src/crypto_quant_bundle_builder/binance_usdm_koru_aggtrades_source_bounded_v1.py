@@ -5,9 +5,10 @@ import hashlib
 import io
 import re
 from collections.abc import Callable
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from datetime import date
 from enum import Enum
+from itertools import pairwise
 from zipfile import BadZipFile, ZipFile
 
 from crypto_quant_domain import (
@@ -50,6 +51,9 @@ _EVENT_TYPE = "binance_usdm_koru_aggregate_trade.v1"
 _PREFIX_GAP_CLASSIFICATION = "unknown_unproven"
 _SUFFIX_GAP_CLASSIFICATION = "unknown_unproven"
 _INTERNAL_GAP_CLASSIFICATION = "none_observed_by_contiguous_ids"
+_RAW_ID_GAP_CLASSIFICATION = (
+    "provider_raw_id_gaps_observed_with_contiguous_aggregate_ids"
+)
 _EVENT_PAYLOAD_KEYS = frozenset(
     {
         "price_purpose",
@@ -590,6 +594,65 @@ class _ParsedRow:
 
 
 @dataclass(frozen=True, slots=True)
+class BinanceUsdmKoruAggregateTradeRawIdGapEvidenceV1:
+    previous_aggregate_trade_id: int
+    current_aggregate_trade_id: int
+    previous_last_trade_id: int
+    current_first_trade_id: int
+    missing_first_trade_id: int
+    missing_last_trade_id: int
+    missing_trade_count: int
+    previous_transaction_time_milliseconds: int
+    current_transaction_time_milliseconds: int
+    gap_hash: str = field(init=False)
+
+    def __post_init__(self) -> None:
+        values = (
+            self.previous_aggregate_trade_id,
+            self.current_aggregate_trade_id,
+            self.previous_last_trade_id,
+            self.current_first_trade_id,
+            self.missing_first_trade_id,
+            self.missing_last_trade_id,
+            self.missing_trade_count,
+            self.previous_transaction_time_milliseconds,
+            self.current_transaction_time_milliseconds,
+        )
+        if any(type(value) is not int or value < 0 for value in values):
+            raise ValueError("raw-ID gap evidence values must be exact non-negative integers")
+        if (
+            self.current_aggregate_trade_id != self.previous_aggregate_trade_id + 1
+            or self.current_first_trade_id <= self.previous_last_trade_id + 1
+            or self.missing_first_trade_id != self.previous_last_trade_id + 1
+            or self.missing_last_trade_id != self.current_first_trade_id - 1
+            or self.missing_trade_count
+            != self.current_first_trade_id - self.previous_last_trade_id - 1
+            or self.current_transaction_time_milliseconds
+            < self.previous_transaction_time_milliseconds
+        ):
+            raise ValueError("raw-ID gap evidence does not bind an exact adjacent gap")
+        object.__setattr__(self, "gap_hash", canonical_sha256(self._body()))
+
+    def _body(self) -> dict[str, object]:
+        return {
+            "type": "binance_usdm_koru_aggregate_trade_raw_id_gap_evidence_v1",
+            "schema_version": _SCHEMA_VERSION,
+            "previous_aggregate_trade_id": self.previous_aggregate_trade_id,
+            "current_aggregate_trade_id": self.current_aggregate_trade_id,
+            "previous_last_trade_id": self.previous_last_trade_id,
+            "current_first_trade_id": self.current_first_trade_id,
+            "missing_first_trade_id": self.missing_first_trade_id,
+            "missing_last_trade_id": self.missing_last_trade_id,
+            "missing_trade_count": self.missing_trade_count,
+            "previous_transaction_time_milliseconds": self.previous_transaction_time_milliseconds,
+            "current_transaction_time_milliseconds": self.current_transaction_time_milliseconds,
+        }
+
+    def to_canonical_dict(self) -> dict[str, object]:
+        return {**self._body(), "gap_hash": self.gap_hash}
+
+
+@dataclass(frozen=True, slots=True)
 class _ReconstructedSource:
     requested_day_start: UtcInstant
     requested_day_end_exclusive: UtcInstant
@@ -599,6 +662,7 @@ class _ReconstructedSource:
     last_aggregate_trade_id: int
     source_member_hash: str
     events: tuple[MarketEvent, ...]
+    raw_id_gaps: tuple[BinanceUsdmKoruAggregateTradeRawIdGapEvidenceV1, ...]
 
 
 def _canonical_integer(value: str) -> int:
@@ -778,15 +842,9 @@ def _validated_rows(
                     "aggregate_trade_id_order",
                     row_number,
                 )
-            if current.first_trade_id > previous.last_trade_id + 1:
-                raise _NormalizationError(
-                    BinanceUsdmKoruAggregateTradesSourceBoundedFailureCodeV1.DATA_GAP_DETECTED,
-                    "trade_id_range_gap",
-                    row_number,
-                )
             if current.first_trade_id <= previous.last_trade_id:
                 raise _NormalizationError(
-                    BinanceUsdmKoruAggregateTradesSourceBoundedFailureCodeV1.DUPLICATE_OR_CONFLICT,
+                    BinanceUsdmKoruAggregateTradesSourceBoundedFailureCodeV1.DATA_GAP_DETECTED,
                     "trade_id_range_overlap",
                     row_number,
                 )
@@ -812,6 +870,26 @@ def _validated_rows(
         parsed.append(current)
         previous = current
     return tuple(parsed)
+
+
+def _raw_id_gaps(
+    rows: tuple[_ParsedRow, ...],
+) -> tuple[BinanceUsdmKoruAggregateTradeRawIdGapEvidenceV1, ...]:
+    return tuple(
+        BinanceUsdmKoruAggregateTradeRawIdGapEvidenceV1(
+            previous_aggregate_trade_id=previous.aggregate_trade_id,
+            current_aggregate_trade_id=current.aggregate_trade_id,
+            previous_last_trade_id=previous.last_trade_id,
+            current_first_trade_id=current.first_trade_id,
+            missing_first_trade_id=previous.last_trade_id + 1,
+            missing_last_trade_id=current.first_trade_id - 1,
+            missing_trade_count=current.first_trade_id - previous.last_trade_id - 1,
+            previous_transaction_time_milliseconds=previous.transaction_time_milliseconds,
+            current_transaction_time_milliseconds=current.transaction_time_milliseconds,
+        )
+        for previous, current in pairwise(rows)
+        if current.first_trade_id > previous.last_trade_id + 1
+    )
 
 
 def _event_from_row(
@@ -903,6 +981,7 @@ def _reconstruct_retained_source(
         last_aggregate_trade_id=rows[-1].aggregate_trade_id,
         source_member_hash=source_member_hash,
         events=events,
+        raw_id_gaps=_raw_id_gaps(rows),
     )
 
 
@@ -927,6 +1006,7 @@ class BinanceUsdmKoruAggregateTradesSourceBoundedNormalizationResultV1:
     events: tuple[MarketEvent, ...]
     decision_grade_eligible: bool = False
     deployment_authorized: bool = False
+    raw_id_gaps: tuple[BinanceUsdmKoruAggregateTradeRawIdGapEvidenceV1, ...] = ()
 
     def __post_init__(self) -> None:
         trusted = _trusted_capture(self.capture)
@@ -956,7 +1036,20 @@ class BinanceUsdmKoruAggregateTradesSourceBoundedNormalizationResultV1:
             or self.coverage_end_exclusive != reconstructed.coverage_end_exclusive
             or self.prefix_gap_classification != _PREFIX_GAP_CLASSIFICATION
             or self.suffix_gap_classification != _SUFFIX_GAP_CLASSIFICATION
-            or self.internal_gap_classification != _INTERNAL_GAP_CLASSIFICATION
+            or self.internal_gap_classification
+            != (
+                _RAW_ID_GAP_CLASSIFICATION
+                if reconstructed.raw_id_gaps
+                else _INTERNAL_GAP_CLASSIFICATION
+            )
+            or type(self.raw_id_gaps) is not tuple
+            or any(
+                type(gap) is not BinanceUsdmKoruAggregateTradeRawIdGapEvidenceV1
+                for gap in self.raw_id_gaps
+            )
+            or self.raw_id_gaps != reconstructed.raw_id_gaps
+            or [gap.to_canonical_dict() for gap in self.raw_id_gaps]
+            != [gap.to_canonical_dict() for gap in reconstructed.raw_id_gaps]
             or type(self.events) is not tuple
             or any(type(event) is not MarketEvent for event in self.events)
             or self.events != expected_events
@@ -981,7 +1074,7 @@ class BinanceUsdmKoruAggregateTradesSourceBoundedNormalizationResultV1:
         return canonical_sha256(self.to_canonical_dict())
 
     def to_canonical_dict(self) -> dict[str, object]:
-        return {
+        value: dict[str, object] = {
             "type": "binance_usdm_koru_aggregate_trades_source_bounded_normalization_result_v1",
             "schema_version": _SCHEMA_VERSION,
             "source_snapshot_id": self.source_snapshot_id,
@@ -1003,6 +1096,11 @@ class BinanceUsdmKoruAggregateTradesSourceBoundedNormalizationResultV1:
             "decision_grade_eligible": self.decision_grade_eligible,
             "deployment_authorized": self.deployment_authorized,
         }
+        if self.raw_id_gaps:
+            value["raw_id_gaps"] = [
+                gap.to_canonical_dict() for gap in self.raw_id_gaps
+            ]
+        return value
 
 
 def _trusted_normalization_result(
@@ -1034,6 +1132,7 @@ def _trusted_normalization_result(
             events=value.events,
             decision_grade_eligible=value.decision_grade_eligible,
             deployment_authorized=value.deployment_authorized,
+            raw_id_gaps=value.raw_id_gaps,
         )
         if rebuilt.to_canonical_dict() != value.to_canonical_dict():
             return None
@@ -1095,12 +1194,17 @@ def normalize_binance_usdm_koru_aggregate_trades_source_bounded_v1(
             coverage_end_exclusive=reconstructed.coverage_end_exclusive,
             prefix_gap_classification=_PREFIX_GAP_CLASSIFICATION,
             suffix_gap_classification=_SUFFIX_GAP_CLASSIFICATION,
-            internal_gap_classification=_INTERNAL_GAP_CLASSIFICATION,
+            internal_gap_classification=(
+                _RAW_ID_GAP_CLASSIFICATION
+                if reconstructed.raw_id_gaps
+                else _INTERNAL_GAP_CLASSIFICATION
+            ),
             row_count=len(reconstructed.events),
             first_aggregate_trade_id=reconstructed.first_aggregate_trade_id,
             last_aggregate_trade_id=reconstructed.last_aggregate_trade_id,
             source_member_hash=reconstructed.source_member_hash,
             events=reconstructed.events,
+            raw_id_gaps=reconstructed.raw_id_gaps,
         )
     except _NormalizationError as error:
         return _normalization_failure(error.code, error.subject, error.row_number)

@@ -29,6 +29,7 @@ from crypto_quant_market_data import (
 )
 
 from .binance_usdm_koru_aggtrades_source_bounded_v1 import (
+    BinanceUsdmKoruAggregateTradeRawIdGapEvidenceV1,
     BinanceUsdmKoruAggregateTradesSourceBoundedNormalizationResultV1,
     normalize_binance_usdm_koru_aggregate_trades_source_bounded_v1,
 )
@@ -428,6 +429,9 @@ class _ValidatedInputs:
     aggregate_lineage: Mapping[
         str, BinanceUsdmKoruAggregateTradesSourceBoundedNormalizationResultV1
     ]
+    aggregate_trade_cross_date_raw_id_gaps: tuple[
+        BinanceUsdmKoruAggregateTradeRawIdGapEvidenceV1, ...
+    ]
     sessions: tuple[tuple[int, int], ...]
     cash_opens: tuple[int, ...]
     unit_admission_start: int
@@ -440,6 +444,9 @@ class _Assembled:
     projection_lineage: tuple[BinanceUsdmKoruFirstRetainedTradeProjectionLineageV1, ...]
     missing_boundaries: tuple[BinanceUsdmKoruMissingBoundaryProjectionV1, ...]
     stream_manifests: tuple[MarketStreamManifest, ...]
+    aggregate_trade_cross_date_raw_id_gaps: tuple[
+        BinanceUsdmKoruAggregateTradeRawIdGapEvidenceV1, ...
+    ]
 
 
 class _ProjectionError(ValueError):
@@ -553,6 +560,7 @@ def _verified_aggregate_results(
 ) -> tuple[
     tuple[MarketEvent, ...],
     Mapping[str, BinanceUsdmKoruAggregateTradesSourceBoundedNormalizationResultV1],
+    tuple[BinanceUsdmKoruAggregateTradeRawIdGapEvidenceV1, ...],
 ]:
     expected_dates = _requested_dates(
         request.timeline_window_start, request.timeline_window_end_exclusive
@@ -574,6 +582,9 @@ def _verified_aggregate_results(
     previous: (
         BinanceUsdmKoruAggregateTradesSourceBoundedNormalizationResultV1 | None
     ) = None
+    cross_date_raw_id_gaps: list[
+        BinanceUsdmKoruAggregateTradeRawIdGapEvidenceV1
+    ] = []
     for result in request.aggregate_trade_results:
         replay = normalize_binance_usdm_koru_aggregate_trades_source_bounded_v1(
             result.capture
@@ -586,22 +597,59 @@ def _verified_aggregate_results(
         if (
             result.prefix_gap_classification != "unknown_unproven"
             or result.suffix_gap_classification != "unknown_unproven"
-            or result.internal_gap_classification != "none_observed_by_contiguous_ids"
+            or result.internal_gap_classification
+            not in {
+                "none_observed_by_contiguous_ids",
+                "provider_raw_id_gaps_observed_with_contiguous_aggregate_ids",
+            }
         ):
             raise _ProjectionError(
                 BinanceUsdmKoruTradifiSourceProjectionFailureCodeV1.AGGREGATE_TRADES_INVALID,
                 "aggregate_trade_gap_evidence",
             )
         if previous is not None:
-            first = result.events[0].payload
-            last = previous.events[-1].payload
+            first_event = result.events[0]
+            last_event = previous.events[-1]
+            first = first_event.payload
+            last = last_event.payload
+            previous_last_trade_id = cast(int, last["last_trade_id"])
+            current_first_trade_id = cast(int, first["first_trade_id"])
             if (
-                result.first_aggregate_trade_id != previous.last_aggregate_trade_id + 1
-                or first["first_trade_id"] != cast(int, last["last_trade_id"]) + 1
+                result.first_aggregate_trade_id
+                != previous.last_aggregate_trade_id + 1
             ):
                 raise _ProjectionError(
                     BinanceUsdmKoruTradifiSourceProjectionFailureCodeV1.AGGREGATE_TRADES_INVALID,
                     "aggregate_trade_cross_date_contiguity",
+                )
+            if current_first_trade_id <= previous_last_trade_id:
+                raise _ProjectionError(
+                    BinanceUsdmKoruTradifiSourceProjectionFailureCodeV1.AGGREGATE_TRADES_INVALID,
+                    "aggregate_trade_cross_date_raw_id_overlap",
+                )
+            if current_first_trade_id > previous_last_trade_id + 1:
+                cross_date_raw_id_gaps.append(
+                    BinanceUsdmKoruAggregateTradeRawIdGapEvidenceV1(
+                        previous_aggregate_trade_id=cast(
+                            int, last["aggregate_trade_id"]
+                        ),
+                        current_aggregate_trade_id=cast(
+                            int, first["aggregate_trade_id"]
+                        ),
+                        previous_last_trade_id=previous_last_trade_id,
+                        current_first_trade_id=current_first_trade_id,
+                        missing_first_trade_id=previous_last_trade_id + 1,
+                        missing_last_trade_id=current_first_trade_id - 1,
+                        missing_trade_count=(
+                            current_first_trade_id - previous_last_trade_id - 1
+                        ),
+                        previous_transaction_time_milliseconds=cast(
+                            int, last["transaction_time_milliseconds"]
+                        ),
+                        current_transaction_time_milliseconds=cast(
+                            int, first["transaction_time_milliseconds"]
+                        ),
+                    )
                 )
         previous = result
         for event in result.events:
@@ -633,7 +681,7 @@ def _verified_aggregate_results(
             ),
         )
     )
-    return ordered, by_event
+    return ordered, by_event, tuple(cross_date_raw_id_gaps)
 
 
 def _verified_price_results(
@@ -760,7 +808,11 @@ def _validate_inputs(
 ) -> _ValidatedInputs:
     request = _trusted_request(value)
     sessions, cash_opens, admission_start = _verified_authority(request)
-    aggregate_events, aggregate_lineage = _verified_aggregate_results(request)
+    (
+        aggregate_events,
+        aggregate_lineage,
+        aggregate_trade_cross_date_raw_id_gaps,
+    ) = _verified_aggregate_results(request)
     mark_grid, mark_events = _verified_price_results(
         request,
         request.mark_price_results,
@@ -793,6 +845,7 @@ def _validate_inputs(
         source_events,
         aggregate_events,
         aggregate_lineage,
+        aggregate_trade_cross_date_raw_id_gaps,
         sessions,
         cash_opens,
         admission_start,
@@ -1033,6 +1086,9 @@ def _assemble(value: object) -> _Assembled:
         projection_lineage=tuple(lineages),
         missing_boundaries=tuple(missing),
         stream_manifests=_stream_manifests(validated.source_events, projection_events),
+        aggregate_trade_cross_date_raw_id_gaps=(
+            validated.aggregate_trade_cross_date_raw_id_gaps
+        ),
     )
 
 
@@ -1052,6 +1108,9 @@ class BinanceUsdmKoruTradifiSourceProjectionResultV1:
     post_adjustment_unit_regime_ref: ArtifactRef
     decision_grade_eligible: bool = False
     deployment_authorized: bool = False
+    aggregate_trade_cross_date_raw_id_gaps: tuple[
+        BinanceUsdmKoruAggregateTradeRawIdGapEvidenceV1, ...
+    ] = ()
     fragment_digest: str = field(init=False)
 
     def __post_init__(self) -> None:
@@ -1076,6 +1135,16 @@ class BinanceUsdmKoruTradifiSourceProjectionResultV1:
                 or type(self.stream_manifests) is not tuple
                 or not _canonical_equal(
                     self.stream_manifests, assembled.stream_manifests
+                )
+                or type(self.aggregate_trade_cross_date_raw_id_gaps) is not tuple
+                or any(
+                    type(gap)
+                    is not BinanceUsdmKoruAggregateTradeRawIdGapEvidenceV1
+                    for gap in self.aggregate_trade_cross_date_raw_id_gaps
+                )
+                or not _canonical_equal(
+                    self.aggregate_trade_cross_date_raw_id_gaps,
+                    assembled.aggregate_trade_cross_date_raw_id_gaps,
                 )
                 or type(self.xkrx_calendar) is not ArtifactEnvelope
                 or not _canonical_equal(self.xkrx_calendar, authority.xkrx_calendar)
@@ -1120,7 +1189,7 @@ class BinanceUsdmKoruTradifiSourceProjectionResultV1:
         )
 
     def _body(self) -> dict[str, object]:
-        return {
+        value: dict[str, object] = {
             "type": "binance_usdm_koru_tradifi_source_projection_result_v1",
             "schema_version": _SCHEMA_VERSION,
             "request": self.request,
@@ -1158,6 +1227,11 @@ class BinanceUsdmKoruTradifiSourceProjectionResultV1:
             "decision_grade_eligible": self.decision_grade_eligible,
             "deployment_authorized": self.deployment_authorized,
         }
+        if self.aggregate_trade_cross_date_raw_id_gaps:
+            value["aggregate_trade_cross_date_raw_id_gaps"] = (
+                self.aggregate_trade_cross_date_raw_id_gaps
+            )
+        return value
 
     def to_canonical_dict(self) -> dict[str, object]:
         return {**self._body(), "fragment_digest": self.fragment_digest}
@@ -1185,6 +1259,9 @@ def _trusted_result(
             post_adjustment_unit_regime_ref=result.post_adjustment_unit_regime_ref,
             decision_grade_eligible=result.decision_grade_eligible,
             deployment_authorized=result.deployment_authorized,
+            aggregate_trade_cross_date_raw_id_gaps=(
+                result.aggregate_trade_cross_date_raw_id_gaps
+            ),
         )
         if not _canonical_equal(
             rebuilt, result
@@ -1243,6 +1320,9 @@ def build_binance_usdm_koru_tradifi_source_projection_v1(
             xkrx_calendar_ref=authority.xkrx_calendar_ref,
             arcx_calendar_ref=authority.arcx_calendar_ref,
             post_adjustment_unit_regime_ref=authority.post_adjustment_unit_regime_ref,
+            aggregate_trade_cross_date_raw_id_gaps=(
+                assembled.aggregate_trade_cross_date_raw_id_gaps
+            ),
         )
     except _ProjectionError as error:
         return _failed(error.code, error.subject)

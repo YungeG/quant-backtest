@@ -188,6 +188,8 @@ def test_successful_capture_and_normalization_are_golden_and_replay_deterministi
     assert result.prefix_gap_classification == "unknown_unproven"
     assert result.suffix_gap_classification == "unknown_unproven"
     assert result.internal_gap_classification == "none_observed_by_contiguous_ids"
+    assert result.raw_id_gaps == ()
+    assert "raw_id_gaps" not in result.to_canonical_dict()
     assert result.row_count == 3
     assert result.first_aggregate_trade_id == 700
     assert result.last_aggregate_trade_id == 702
@@ -496,39 +498,71 @@ def test_normalization_rejects_header_decimal_boolean_order_duplicate_gap_and_ti
     assert outcome.failure.code is expected_code
 
 
-@pytest.mark.parametrize(
-    ("second_first_trade_id", "expected_code"),
-    [
-        (
-            "903",
-            BinanceUsdmKoruAggregateTradesSourceBoundedFailureCodeV1.DATA_GAP_DETECTED,
-        ),
-        (
-            "901",
-            BinanceUsdmKoruAggregateTradesSourceBoundedFailureCodeV1.DUPLICATE_OR_CONFLICT,
-        ),
-    ],
-)
-def test_normalization_requires_contiguous_raw_trade_ranges(
-    second_first_trade_id: str,
-    expected_code: BinanceUsdmKoruAggregateTradesSourceBoundedFailureCodeV1,
-) -> None:
+def test_normalization_accepts_raw_id_gap_with_exact_replayable_evidence() -> None:
     rows = (
         ROWS[0],
         (
             "701",
             "12.350",
             "2.000",
-            second_first_trade_id,
-            "903",
+            "905",
+            "906",
             str(DAY_START_MS + 2_000),
             "false",
         ),
     )
-    outcome = normalize(rows)
-    assert outcome.result is None
-    assert outcome.failure is not None
-    assert outcome.failure.code is expected_code
+    captured = capture(rows)
+    outcome = normalize_binance_usdm_koru_aggregate_trades_source_bounded_v1(captured)
+    replay = normalize_binance_usdm_koru_aggregate_trades_source_bounded_v1(captured)
+    assert outcome.failure is replay.failure is None
+    assert outcome.result is not None
+    assert replay.result is not None
+    result = outcome.result
+    assert result.internal_gap_classification == (
+        "provider_raw_id_gaps_observed_with_contiguous_aggregate_ids"
+    )
+    assert result.raw_id_gaps == replay.result.raw_id_gaps
+    assert "raw_id_gaps" in result.to_canonical_dict()
+    assert len(result.raw_id_gaps) == 1
+    gap = result.raw_id_gaps[0]
+    assert (
+        gap.previous_aggregate_trade_id,
+        gap.current_aggregate_trade_id,
+        gap.previous_last_trade_id,
+        gap.current_first_trade_id,
+        gap.missing_first_trade_id,
+        gap.missing_last_trade_id,
+        gap.missing_trade_count,
+        gap.previous_transaction_time_milliseconds,
+        gap.current_transaction_time_milliseconds,
+    ) == (700, 701, 901, 905, 902, 904, 3, DAY_START_MS + 1_000, DAY_START_MS + 2_000)
+    assert gap.gap_hash.startswith("sha256:")
+
+    object.__setattr__(gap, "gap_hash", "sha256:" + "0" * 64)
+    with pytest.raises(ValueError, match="exactly reconstruct"):
+        replace(result)
+
+
+def test_normalization_rejects_raw_id_overlap_or_regression() -> None:
+    for second_first_trade_id in ("901", "900"):
+        rows = (
+            ROWS[0],
+            (
+                "701",
+                "12.350",
+                "2.000",
+                second_first_trade_id,
+                "903",
+                str(DAY_START_MS + 2_000),
+                "false",
+            ),
+        )
+        outcome = normalize(rows)
+        assert outcome.result is None
+        assert outcome.failure is not None
+        assert outcome.failure.code is (
+            BinanceUsdmKoruAggregateTradesSourceBoundedFailureCodeV1.DATA_GAP_DETECTED
+        )
 
 
 def test_normalization_rejects_wrong_zip_member_and_source_snapshot_mutation() -> None:
