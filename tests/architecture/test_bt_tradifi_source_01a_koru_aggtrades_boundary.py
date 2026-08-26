@@ -16,6 +16,8 @@ MODULE = (
     / "packages/market-bundle-builder/src/crypto_quant_bundle_builder/binance_usdm_koru_aggtrades_source_bounded_v1.py"
 )
 INTERNAL_NAMES = {
+    "BINANCE_USDM_KORU_AGGREGATE_TRADE_AVAILABILITY_AUTHORITY_V1",
+    "BinanceUsdmKoruAggregateTradeAvailabilityAuthorityV1",
     "BinanceUsdmKoruAggregateTradesSourceBoundedCaptureOutcomeV1",
     "BinanceUsdmKoruAggregateTradesSourceBoundedCaptureResultV1",
     "BinanceUsdmKoruAggregateTradesSourceBoundedFailureCodeV1",
@@ -23,6 +25,10 @@ INTERNAL_NAMES = {
     "BinanceUsdmKoruAggregateTradesSourceBoundedNormalizationOutcomeV1",
     "BinanceUsdmKoruAggregateTradesSourceBoundedNormalizationResultV1",
     "BinanceUsdmKoruAggregateTradesSourceBoundedRequestV1",
+    "BinanceUsdmKoruRetainedAggregateTradesAuthorityV1",
+    "BinanceUsdmKoruRetainedAggregateTradesPageV1",
+    "build_binance_usdm_koru_aggregate_trades_retained_rest_evidence_v1",
+    "capture_binance_usdm_koru_aggregate_trades_from_retained_rest_v1",
     "capture_binance_usdm_koru_aggregate_trades_source_bounded_v1",
     "normalize_binance_usdm_koru_aggregate_trades_source_bounded_v1",
 }

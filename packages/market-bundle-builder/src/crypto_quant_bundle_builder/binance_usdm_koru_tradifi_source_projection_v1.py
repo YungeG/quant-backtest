@@ -432,6 +432,7 @@ class _ValidatedInputs:
     aggregate_trade_cross_date_raw_id_gaps: tuple[
         BinanceUsdmKoruAggregateTradeRawIdGapEvidenceV1, ...
     ]
+    aggregate_trade_missing_prefixes: tuple[tuple[int, int], ...]
     sessions: tuple[tuple[int, int], ...]
     cash_opens: tuple[int, ...]
     unit_admission_start: int
@@ -561,6 +562,7 @@ def _verified_aggregate_results(
     tuple[MarketEvent, ...],
     Mapping[str, BinanceUsdmKoruAggregateTradesSourceBoundedNormalizationResultV1],
     tuple[BinanceUsdmKoruAggregateTradeRawIdGapEvidenceV1, ...],
+    tuple[tuple[int, int], ...],
 ]:
     expected_dates = _requested_dates(
         request.timeline_window_start, request.timeline_window_end_exclusive
@@ -585,6 +587,7 @@ def _verified_aggregate_results(
     cross_date_raw_id_gaps: list[
         BinanceUsdmKoruAggregateTradeRawIdGapEvidenceV1
     ] = []
+    missing_prefixes: list[tuple[int, int]] = []
     for result in request.aggregate_trade_results:
         replay = normalize_binance_usdm_koru_aggregate_trades_source_bounded_v1(
             result.capture
@@ -607,6 +610,14 @@ def _verified_aggregate_results(
                 BinanceUsdmKoruTradifiSourceProjectionFailureCodeV1.AGGREGATE_TRADES_INVALID,
                 "aggregate_trade_gap_evidence",
             )
+        retained_authority = result.capture.request.authority
+        if retained_authority is not None:
+            missing_prefixes.append(
+                (
+                    retained_authority.declared_missing_prefix_start.epoch_nanoseconds,
+                    retained_authority.declared_missing_prefix_end_exclusive.epoch_nanoseconds,
+                )
+            )
         if previous is not None:
             first_event = result.events[0]
             last_event = previous.events[-1]
@@ -614,20 +625,29 @@ def _verified_aggregate_results(
             last = last_event.payload
             previous_last_trade_id = cast(int, last["last_trade_id"])
             current_first_trade_id = cast(int, first["first_trade_id"])
-            if (
+            aggregate_ids_contiguous = (
                 result.first_aggregate_trade_id
-                != previous.last_aggregate_trade_id + 1
+                == previous.last_aggregate_trade_id + 1
+            )
+            if not aggregate_ids_contiguous and (
+                retained_authority is None
+                or result.first_aggregate_trade_id
+                <= previous.last_aggregate_trade_id
+                or current_first_trade_id <= previous_last_trade_id
             ):
                 raise _ProjectionError(
                     BinanceUsdmKoruTradifiSourceProjectionFailureCodeV1.AGGREGATE_TRADES_INVALID,
                     "aggregate_trade_cross_date_contiguity",
                 )
-            if current_first_trade_id <= previous_last_trade_id:
+            if aggregate_ids_contiguous and current_first_trade_id <= previous_last_trade_id:
                 raise _ProjectionError(
                     BinanceUsdmKoruTradifiSourceProjectionFailureCodeV1.AGGREGATE_TRADES_INVALID,
                     "aggregate_trade_cross_date_raw_id_overlap",
                 )
-            if current_first_trade_id > previous_last_trade_id + 1:
+            if (
+                aggregate_ids_contiguous
+                and current_first_trade_id > previous_last_trade_id + 1
+            ):
                 cross_date_raw_id_gaps.append(
                     BinanceUsdmKoruAggregateTradeRawIdGapEvidenceV1(
                         previous_aggregate_trade_id=cast(
@@ -681,7 +701,12 @@ def _verified_aggregate_results(
             ),
         )
     )
-    return ordered, by_event, tuple(cross_date_raw_id_gaps)
+    return (
+        ordered,
+        by_event,
+        tuple(cross_date_raw_id_gaps),
+        tuple(missing_prefixes),
+    )
 
 
 def _verified_price_results(
@@ -812,6 +837,7 @@ def _validate_inputs(
         aggregate_events,
         aggregate_lineage,
         aggregate_trade_cross_date_raw_id_gaps,
+        aggregate_trade_missing_prefixes,
     ) = _verified_aggregate_results(request)
     mark_grid, mark_events = _verified_price_results(
         request,
@@ -846,6 +872,7 @@ def _validate_inputs(
         aggregate_events,
         aggregate_lineage,
         aggregate_trade_cross_date_raw_id_gaps,
+        aggregate_trade_missing_prefixes,
         sessions,
         cash_opens,
         admission_start,
@@ -1042,13 +1069,23 @@ def _assemble(value: object) -> _Assembled:
     lineages: list[BinanceUsdmKoruFirstRetainedTradeProjectionLineageV1] = []
     missing: list[BinanceUsdmKoruMissingBoundaryProjectionV1] = []
     for boundary_ns in range(first_boundary, end, _HOUR_NS):
-        if boundary_ns < validated.unit_admission_start or _contains(
-            validated.sessions, boundary_ns
-        ):
+        if boundary_ns < validated.unit_admission_start:
             continue
         cutoff_ns = _cash_cutoff(validated.cash_opens, boundary_ns, end)
         boundary = UtcInstant(boundary_ns)
         cutoff = UtcInstant(cutoff_ns)
+        if any(
+            start <= boundary_ns < end_exclusive
+            for start, end_exclusive in validated.aggregate_trade_missing_prefixes
+        ):
+            missing.append(
+                BinanceUsdmKoruMissingBoundaryProjectionV1(
+                    boundary, cutoff, "missing_retained_aggregate_trade"
+                )
+            )
+            continue
+        if _contains(validated.sessions, boundary_ns):
+            continue
         index = bisect_left(aggregate_times, boundary_ns)
         if index >= len(validated.aggregate_events):
             missing.append(

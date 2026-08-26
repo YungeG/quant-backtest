@@ -23,6 +23,9 @@ from crypto_quant_domain import (
 )
 
 from tests.bundle_builder.providers.binance_usdm import (
+    test_koru_aggtrades_retained_rest_v1 as retained_aggregate_fixture,
+)
+from tests.bundle_builder.providers.binance_usdm import (
     test_koru_aggtrades_source_bounded_v1 as aggregate_fixture,
 )
 from tests.bundle_builder.providers.binance_usdm import (
@@ -308,6 +311,81 @@ def test_source_projection_accepts_exact_official_and_retained_aug24_price_mix()
     )
     assert derived
     assert all(event.payload["development_only"] is True for event in derived)
+
+
+def test_source_projection_mixes_official_dates_with_retained_aug24_aggregate_trades() -> None:
+    aug24_start_ms = retained_price_fixture.DAY_START_MS
+    start = (aug24_start_ms - 2 * price_fixture.HOUR_MS) * 1_000_000
+    end = (aug24_start_ms + 11 * price_fixture.HOUR_MS) * 1_000_000
+    request = _request(
+        (
+            (aug24_start_ms - 90 * 60_000, "12.340"),
+            (aug24_start_ms + 7 * price_fixture.HOUR_MS + 1_000, "12.350"),
+        ),
+        start_ns=start,
+        end_ns=end,
+    )
+    retained_rows = tuple(
+        {
+            **row,
+            "a": row["a"] + 5,
+            "f": row["f"] + 20,
+            "l": row["l"] + 20,
+        }
+        for row in retained_aggregate_fixture.ROWS
+    )
+    evidence = retained_aggregate_fixture.evidence_for(retained_rows)
+    retained_capture = retained_aggregate_fixture.capture(evidence).result
+    assert retained_capture is not None
+    retained_aggregate = retained_aggregate_fixture.normalize_binance_usdm_koru_aggregate_trades_source_bounded_v1(
+        retained_capture
+    ).result
+    assert retained_aggregate is not None
+    mixed = replace(
+        request,
+        aggregate_trade_results=(
+            request.aggregate_trade_results[0],
+            retained_aggregate,
+        ),
+        mark_price_results=(
+            request.mark_price_results[0],
+            retained_price_fixture.retained_result(_KIND.MARK_PRICE),
+        ),
+        index_price_results=(
+            request.index_price_results[0],
+            retained_price_fixture.retained_result(_KIND.INDEX_PRICE),
+        ),
+    )
+    outcome = build_binance_usdm_koru_tradifi_source_projection_v1(mixed)
+    assert outcome.failure is None
+    assert outcome.result is not None
+    result = outcome.result
+    retained_events = tuple(
+        event
+        for event in result.source_events
+        if event.payload.get("source_mode")
+        == "execution_manifest_bounded_rest_observations"
+    )
+    assert len(retained_events) == len(retained_rows)
+    assert all(event.event_time == event.available_time for event in retained_events)
+    assert tuple(
+        value.hourly_boundary.epoch_nanoseconds
+        for value in result.missing_boundaries
+        if value.hourly_boundary.epoch_nanoseconds >= aug24_start_ms * 1_000_000
+    ) == tuple(
+        (aug24_start_ms + hour * price_fixture.HOUR_MS) * 1_000_000
+        for hour in range(7)
+    )
+    retained_projection_sources = tuple(
+        lineage.source_event_id
+        for lineage in result.projection_lineage
+        if lineage.hourly_boundary.epoch_nanoseconds
+        >= (aug24_start_ms + 7 * price_fixture.HOUR_MS) * 1_000_000
+    )
+    assert retained_projection_sources
+    assert set(retained_projection_sources) <= {
+        event.event_id for event in retained_events
+    }
 
 
 def test_first_retained_trade_projects_distinct_boundaries_and_decodes() -> None:
