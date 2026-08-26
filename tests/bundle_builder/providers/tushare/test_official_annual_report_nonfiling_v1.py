@@ -235,7 +235,17 @@ def test_predeadline_proof_and_availability_conflicts_fail_financial_revision() 
     assert outcome.failure is None
     assert outcome.declaration is not None
 
-    incompatible = replace(definitive, authority=nonfiling.NonFilingAuthority.SSE)
+    for authority in (
+        nonfiling.NonFilingAuthority.SSE,
+        nonfiling.NonFilingAuthority.SZSE,
+    ):
+        outcome = _declare(
+            replace(request, source_documents=(replace(definitive, authority=authority), terminal))
+        )
+        assert outcome.failure is None
+        assert outcome.declaration is not None
+
+    incompatible = replace(definitive, authority=nonfiling.NonFilingAuthority.CSRC)
     outcome = _declare(replace(request, source_documents=(incompatible, terminal)))
     assert outcome.failure is nonfiling.OfficialAnnualReportNonFilingFailure.FINANCIAL_REVISION_MISMATCH
 
