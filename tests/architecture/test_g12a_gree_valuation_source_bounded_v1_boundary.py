@@ -74,7 +74,19 @@ def test_valuation_sentinel_is_additive_fixed_acquisition_only() -> None:
 
 
 def test_valuation_sentinel_write_set_is_exact() -> None:
-    changed = {
+    subprocess.run(
+        ["git", "merge-base", "--is-ancestor", PREDECESSOR, "HEAD"],
+        cwd=ROOT,
+        check=True,
+    )
+    committed = set(
+        subprocess.check_output(
+            ["git", "diff", "--name-only", f"{PREDECESSOR}..HEAD"],
+            cwd=ROOT,
+            text=True,
+        ).splitlines()
+    )
+    worktree = {
         line[3:]
         for line in subprocess.check_output(
             ["git", "status", "--short", "--untracked-files=all"],
@@ -82,35 +94,6 @@ def test_valuation_sentinel_write_set_is_exact() -> None:
             text=True,
         ).splitlines()
     }
-    if changed:
-        assert changed == ALLOWED
-        return
-
-    introduction = subprocess.check_output(
-        [
-            "git",
-            "log",
-            "--diff-filter=A",
-            "--format=%H",
-            "--",
-            MODULE.relative_to(ROOT).as_posix(),
-        ],
-        cwd=ROOT,
-        text=True,
-    ).splitlines()
-    assert len(introduction) == 1
-    committed = set(
-        subprocess.check_output(
-            [
-                "git",
-                "diff-tree",
-                "--no-commit-id",
-                "--name-only",
-                "-r",
-                introduction[0],
-            ],
-            cwd=ROOT,
-            text=True,
-        ).splitlines()
-    )
-    assert committed == ALLOWED
+    assert committed | worktree == ALLOWED
+    assert committed <= ALLOWED
+    assert worktree <= ALLOWED

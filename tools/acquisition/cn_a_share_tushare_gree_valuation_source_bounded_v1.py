@@ -88,6 +88,16 @@ def _optional_number(value: object) -> bool:
     return value is None or (type(value) in (int, float) and math.isfinite(value))
 
 
+def _timestamp(time_ns: Callable[[], int]) -> int:
+    try:
+        value = time_ns()
+    except Exception:  # noqa: BLE001 -- redact callback details.
+        raise AcquisitionError("response timestamp acquisition failed") from None
+    if type(value) is not int or value < 0:
+        raise AcquisitionError("response timestamp must be nonnegative integer")
+    return value
+
+
 def _validate_rows(rows: list[list[object]]) -> None:
     if len(rows) != _EXPECTED_ROWS:
         raise AcquisitionError("provider daily_basic response cardinality mismatch")
@@ -122,9 +132,9 @@ def acquire_tushare_gree_valuation_source_bounded_v1(
     token: str,
     endpoint: str,
     output_dir: str | Path,
-    acquired_at_epoch_nanoseconds: int,
     post: ProxyPost,
     sleep: Callable[[float], object] = time.sleep,
+    time_ns: Callable[[], int] = time.time_ns,
 ) -> dict[str, object]:
     if type(request) is not TushareGreeValuationSourceBoundedRequestV1:
         raise AcquisitionError(
@@ -140,11 +150,8 @@ def acquire_tushare_gree_valuation_source_bounded_v1(
         raise AcquisitionError("TUSHARE_PROXY_TOKEN must be exact 56-character text")
     if endpoint not in _ALLOWED_ENDPOINTS:
         raise AcquisitionError("proxy endpoint is not approved")
-    if (
-        type(acquired_at_epoch_nanoseconds) is not int
-        or acquired_at_epoch_nanoseconds < 0
-    ):
-        raise AcquisitionError("acquired_at_epoch_nanoseconds must be nonnegative")
+    if not callable(post) or not callable(sleep) or not callable(time_ns):
+        raise AcquisitionError("transport, sleep, and time callbacks must be callable")
 
     body = _request_body(
         "daily_basic",
@@ -155,14 +162,18 @@ def acquire_tushare_gree_valuation_source_bounded_v1(
         },
         _FIELDS,
     )
-    source_bytes, attempts = _post_with_retries(
-        "daily_basic",
-        endpoint=endpoint,
-        body=body,
-        headers=_headers(token),
-        post=post,
-        sleep=sleep,
-    )
+    try:
+        source_bytes, attempts = _post_with_retries(
+            "daily_basic",
+            endpoint=endpoint,
+            body=body,
+            headers=_headers(token),
+            post=post,
+            sleep=sleep,
+        )
+    except Exception:  # noqa: BLE001 -- redact transport/callback details.
+        raise AcquisitionError("provider daily_basic transport failed") from None
+    response_received_at = _timestamp(time_ns)
     rows = _authority_rows(
         source_bytes,
         api_name="daily_basic",
@@ -177,7 +188,7 @@ def acquire_tushare_gree_valuation_source_bounded_v1(
                 _MEMBER_KEY,
                 source_bytes,
                 "0644",
-                acquired_at_epoch_nanoseconds,
+                response_received_at,
                 None,
             ),
         ),
@@ -215,7 +226,7 @@ def acquire_tushare_gree_valuation_source_bounded_v1(
             "provider_revision_id": None,
             "declared_sha256": None,
         },
-        "acquired_at_epoch_nanoseconds": acquired_at_epoch_nanoseconds,
+        "acquired_at_epoch_nanoseconds": response_received_at,
         "snapshot": snapshot.to_canonical_dict(),
         "limitations": list(_LIMITATIONS),
         "source_bounded": True,
@@ -255,7 +266,6 @@ def main(argv: list[str] | None = None) -> int:
             token=token,
             endpoint=args.endpoint,
             output_dir=args.output_dir,
-            acquired_at_epoch_nanoseconds=time.time_ns(),
             post=_stdlib_post,
         )
     except (AcquisitionError, ValueError) as error:
