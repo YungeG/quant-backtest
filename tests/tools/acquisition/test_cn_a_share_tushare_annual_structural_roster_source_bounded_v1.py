@@ -86,6 +86,8 @@ def roster_rows(trade_date: str) -> list[list[object]]:
         values[0][2] = "same-code-across-years"
     if len(values) > 1:
         values[1][1] = "430001.BJ"
+    if len(values) > 2:
+        values[2][4] = "0"
     return values
 
 
@@ -262,10 +264,17 @@ def test_exact_capture_binds_wire_raw_snapshot_receipt_and_nonclaims(tmp_path: P
         "20160503 zero rows are a bounded provider gap, not an empty Universe",
         "Tushare trade_cal is source-bounded and not accepted Calendar authority",
         "bak_basic row presence is not exchange listing or tradability authority",
+        "bak_basic list_date=0 is retained as provider unknown, not a listing date",
         "board and official CSRC industry history are not established",
         "provider revision, absence, completeness, and terminal closure are not established",
         "formal S1, Fold, Strategy, Validation, and deployment authority are not granted",
     ]
+    roster_2017 = json.loads(
+        (output / "response/tushare/bak_basic/20170502-v1.json").read_text()
+    )["data"]["items"]
+    assert roster_2017[1][1] == "430001.BJ"
+    assert roster_2017[2][4] == "0"
+
     assert receipt["source_bounded"] is True
     assert receipt["provider_revision_id"] is None
     for key in (

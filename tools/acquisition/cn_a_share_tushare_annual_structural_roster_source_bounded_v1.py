@@ -71,6 +71,7 @@ _LIMITATIONS = (
     "20160503 zero rows are a bounded provider gap, not an empty Universe",
     "Tushare trade_cal is source-bounded and not accepted Calendar authority",
     "bak_basic row presence is not exchange listing or tradability authority",
+    "bak_basic list_date=0 is retained as provider unknown, not a listing date",
     "board and official CSRC industry history are not established",
     "provider revision, absence, completeness, and terminal closure are not established",
     "formal S1, Fold, Strategy, Validation, and deployment authority are not granted",
@@ -128,7 +129,9 @@ def _validate_roster_rows(rows: list[list[object]], trade_date: str) -> None:
             raise AcquisitionError("provider bak_basic row has empty identity field")
         if row[3] is not None and type(row[3]) is not str:
             raise AcquisitionError("provider bak_basic row has invalid industry")
-        if not _is_real_historical_date(row[4]) or row[4] > trade_date:
+        if row[4] != "0" and (
+            not _is_real_historical_date(row[4]) or row[4] > trade_date
+        ):
             raise AcquisitionError("provider bak_basic row has invalid list_date")
         if row[1] in seen:
             raise AcquisitionError("provider bak_basic response has duplicate ts_code")
