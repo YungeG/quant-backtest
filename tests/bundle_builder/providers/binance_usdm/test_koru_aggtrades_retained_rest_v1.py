@@ -110,43 +110,65 @@ def evidence_for(
     page_hash_override: tuple[int, str] | None = None,
     manifest_changes: dict[str, object] | None = None,
 ) -> Evidence:
-    page_bytes = tuple(canonical_json([row]) for row in rows)
+    page_bytes: list[bytes] = []
     page_entries: list[dict[str, object]] = []
     pages: list[BinanceUsdmKoruRetainedAggregateTradesPageV1] = []
-    for index, ((start, end), raw) in enumerate(zip(WINDOWS, page_bytes, strict=True)):
-        member_name = (
-            f"KORUUSDT-aggTrades-{token(start)}-{token(end)}-page-0001.json"
+    page_index = 0
+    grouped_rows = (
+        tuple((row,) for row in rows)
+        if len(rows) == len(WINDOWS)
+        else tuple(
+            tuple(row for row in rows if start <= row["T"] <= end)
+            for start, end in WINDOWS
         )
-        url = (
-            f"{ENDPOINT}?symbol=KORUUSDT&startTime={start}&endTime={end}&limit=1000"
-        )
-        if page_url_override is not None and page_url_override[0] == index:
-            url = page_url_override[1]
-        digest = sha256(raw)
-        if page_hash_override is not None and page_hash_override[0] == index:
-            digest = page_hash_override[1]
-        page_entries.append(
-            {
-                "path": SOURCE_PREFIX + member_name,
-                "provider_checksum": None,
-                "row_count": 1,
-                "sha256": digest,
-                "size_bytes": len(raw),
-                "source_url": url,
-                "status": "canonical_rest_response",
-            }
-        )
-        pages.append(
-            BinanceUsdmKoruRetainedAggregateTradesPageV1(
-                member_name,
-                digest,
-                url,
-                start,
-                end,
-                1,
-                1,
+    )
+    for (start, end), window_rows in zip(WINDOWS, grouped_rows, strict=True):
+        if not window_rows:
+            raise ValueError("each retained request window requires rows")
+        for page_number, offset in enumerate(range(0, len(window_rows), 1000), 1):
+            page_rows = window_rows[offset : offset + 1000]
+            raw = canonical_json(page_rows)
+            page_bytes.append(raw)
+            member_name = (
+                f"KORUUSDT-aggTrades-{token(start)}-{token(end)}-"
+                f"page-{page_number:04d}.json"
             )
-        )
+            from_id = page_rows[0]["a"] if page_number > 1 else None
+            url = (
+                f"{ENDPOINT}?symbol=KORUUSDT&startTime={start}&endTime={end}"
+                "&limit=1000"
+            )
+            if from_id is not None:
+                url += f"&fromId={from_id}"
+            if page_url_override is not None and page_url_override[0] == page_index:
+                url = page_url_override[1]
+            digest = sha256(raw)
+            if page_hash_override is not None and page_hash_override[0] == page_index:
+                digest = page_hash_override[1]
+            page_entries.append(
+                {
+                    "path": SOURCE_PREFIX + member_name,
+                    "provider_checksum": None,
+                    "row_count": len(page_rows),
+                    "sha256": digest,
+                    "size_bytes": len(raw),
+                    "source_url": url,
+                    "status": "canonical_rest_response",
+                }
+            )
+            pages.append(
+                BinanceUsdmKoruRetainedAggregateTradesPageV1(
+                    member_name,
+                    digest,
+                    url,
+                    start,
+                    end,
+                    page_number,
+                    len(page_rows),
+                    from_id,
+                )
+            )
+            page_index += 1
     derived = (
         HEADER
         + "".join(
@@ -247,7 +269,9 @@ def evidence_for(
         derived_csv_sha256=sha256(derived),
         derived_csv_schema_identity="binance_usdm_aggtrades_csv_7_column_v1",
     )
-    return Evidence(encoded_manifest, page_bytes, derived, archive, checksum, authority)
+    return Evidence(
+        encoded_manifest, tuple(page_bytes), derived, archive, checksum, authority
+    )
 
 
 def request_for(evidence: Evidence) -> BinanceUsdmKoruAggregateTradesSourceBoundedRequestV1:
