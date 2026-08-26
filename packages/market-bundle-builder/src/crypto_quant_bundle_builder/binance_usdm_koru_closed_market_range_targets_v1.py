@@ -7,7 +7,7 @@ from dataclasses import dataclass, field
 from datetime import UTC, datetime, timedelta
 from decimal import ROUND_HALF_EVEN, Decimal, localcontext
 from enum import Enum
-from typing import cast
+from typing import Protocol, cast
 
 from crypto_quant_domain import (
     ArtifactEnvelope,
@@ -104,6 +104,40 @@ def _formation_range_exceeds(high: int, low: int, maximum: Decimal) -> bool:
 
 def _artifact_ref_value(value: ArtifactRef) -> dict[str, object]:
     return value.to_canonical_dict()
+
+
+class _SourceProjectionRequest(Protocol):
+    @property
+    def timeline_window_start(self) -> UtcInstant: ...
+
+    @property
+    def timeline_window_end_exclusive(self) -> UtcInstant: ...
+
+
+class _SourceProjection(Protocol):
+    @property
+    def request(self) -> _SourceProjectionRequest: ...
+
+    @property
+    def source_events(self) -> tuple[MarketEvent, ...]: ...
+
+    @property
+    def xkrx_calendar(self) -> ArtifactEnvelope: ...
+
+    @property
+    def arcx_calendar(self) -> ArtifactEnvelope: ...
+
+    @property
+    def xkrx_calendar_ref(self) -> ArtifactRef: ...
+
+    @property
+    def arcx_calendar_ref(self) -> ArtifactRef: ...
+
+    @property
+    def post_adjustment_unit_regime_ref(self) -> ArtifactRef: ...
+
+    @property
+    def fragment_digest(self) -> str: ...
 
 
 @dataclass(frozen=True, slots=True)
@@ -434,9 +468,7 @@ def _parameter_bindings(
     return tuple(bindings)
 
 
-def _sessions(
-    source: BinanceUsdmKoruTradifiSourceProjectionResultV1,
-) -> tuple[tuple[int, int], ...]:
+def _sessions(source: _SourceProjection) -> tuple[tuple[int, int], ...]:
     start = source.request.timeline_window_start.epoch_nanoseconds
     end = source.request.timeline_window_end_exclusive.epoch_nanoseconds
     rows: list[tuple[int, int]] = []
@@ -468,7 +500,7 @@ def _sessions(
 
 
 def _closed_intervals(
-    source: BinanceUsdmKoruTradifiSourceProjectionResultV1,
+    source: _SourceProjection,
 ) -> tuple[tuple[int, int], ...]:
     cursor = source.request.timeline_window_start.epoch_nanoseconds
     end = source.request.timeline_window_end_exclusive.epoch_nanoseconds
@@ -482,9 +514,7 @@ def _closed_intervals(
     return tuple(result)
 
 
-def _strategy_pairs(
-    source: BinanceUsdmKoruTradifiSourceProjectionResultV1,
-) -> dict[int, _BarPair]:
+def _strategy_pairs(source: _SourceProjection) -> dict[int, _BarPair]:
     grouped: dict[int, dict[str, MarketEvent]] = {}
     for event in source.source_events:
         kind = event.payload.get("source_kind")
@@ -558,7 +588,7 @@ def _premium(pair: _BarPair) -> Decimal:
 
 def _evidence(
     *,
-    source: BinanceUsdmKoruTradifiSourceProjectionResultV1,
+    source: _SourceProjection,
     strategy_ref: ArtifactRef,
     parameter_ref: ArtifactRef,
     pair: _BarPair,
@@ -604,7 +634,7 @@ def _evidence(
 
 def _candidate(
     *,
-    source: BinanceUsdmKoruTradifiSourceProjectionResultV1,
+    source: _SourceProjection,
     strategy_ref: ArtifactRef,
     parameter_ref: ArtifactRef,
     pair: _BarPair,
@@ -740,17 +770,16 @@ def _exit(
     return None
 
 
-def _stream_events(
+def _stream_candidates(
     *,
-    source: BinanceUsdmKoruTradifiSourceProjectionResultV1,
+    source: _SourceProjection,
     strategy_ref: ArtifactRef,
     parameter: BinanceUsdmKoruClosedMarketRangeParameterArtifactBindingV1,
     closed: tuple[tuple[int, int], ...],
     pairs: dict[int, _BarPair],
     projections: dict[int, _Projection],
-) -> tuple[MarketEvent, ...]:
-    stream_key = _STREAM_PREFIX + parameter.parameter_id[1:] + ".v1"
-    events: list[MarketEvent] = []
+) -> tuple[dict[str, object], ...]:
+    candidates: list[dict[str, object]] = []
     for interval_start, interval_end in closed:
         interval_pairs = tuple(
             pairs[completed]
@@ -829,14 +858,34 @@ def _stream_events(
                 target="0",
                 reason=exit_reason,
             )
-            events.extend(
-                (
-                    _event(stream_key, len(events), entry_candidate),
-                    _event(stream_key, len(events) + 1, exit_candidate),
-                )
-            )
+            candidates.extend((entry_candidate, exit_candidate))
             break
-    return tuple(events)
+    return tuple(candidates)
+
+
+def _stream_events(
+    *,
+    source: _SourceProjection,
+    strategy_ref: ArtifactRef,
+    parameter: BinanceUsdmKoruClosedMarketRangeParameterArtifactBindingV1,
+    closed: tuple[tuple[int, int], ...],
+    pairs: dict[int, _BarPair],
+    projections: dict[int, _Projection],
+) -> tuple[MarketEvent, ...]:
+    stream_key = _STREAM_PREFIX + parameter.parameter_id[1:] + ".v1"
+    return tuple(
+        _event(stream_key, sequence, candidate)
+        for sequence, candidate in enumerate(
+            _stream_candidates(
+                source=source,
+                strategy_ref=strategy_ref,
+                parameter=parameter,
+                closed=closed,
+                pairs=pairs,
+                projections=projections,
+            )
+        )
+    )
 
 
 def _assemble(value: object) -> _Assembled:
