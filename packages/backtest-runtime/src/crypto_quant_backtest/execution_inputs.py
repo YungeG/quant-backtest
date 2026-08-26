@@ -153,12 +153,13 @@ from .slippage import (
     SlippageLimitation,
     SlippageMarketState,
 )
+from .target_repository import _read_precomputed_target_stream
 from .target_stream import (
     PrecomputedTargetStream,
     TargetStreamDecisionSchedule,
     TargetStreamScheduleEntry,
 )
-from .timeline import TimelineSegment, TimelineWindow
+from .timeline import DeterministicTimelineV2, TimelineSegment, TimelineWindow
 
 _ARTIFACT_TYPE = "backtest_execution_input_bundle"
 _SCHEMA_VERSION = 1
@@ -166,12 +167,14 @@ _V2_SCHEMA_VERSION = 2
 _V3_SCHEMA_VERSION = 3
 _V4_SCHEMA_VERSION = 4
 _V5_SCHEMA_VERSION = 5
+_V6_SCHEMA_VERSION = 6
 _TEMPLATE_TYPE = "backtest_initial_financial_state_template"
 _V1_SCHEMA = CanonicalSchema(_ARTIFACT_TYPE, _SCHEMA_VERSION)
 _V2_SCHEMA = CanonicalSchema(_ARTIFACT_TYPE, _V2_SCHEMA_VERSION)
 _V3_SCHEMA = CanonicalSchema(_ARTIFACT_TYPE, _V3_SCHEMA_VERSION)
 _V4_SCHEMA = CanonicalSchema(_ARTIFACT_TYPE, _V4_SCHEMA_VERSION)
 _V5_SCHEMA = CanonicalSchema(_ARTIFACT_TYPE, _V5_SCHEMA_VERSION)
+_V6_SCHEMA = CanonicalSchema(_ARTIFACT_TYPE, _V6_SCHEMA_VERSION)
 _PAYLOAD_FIELDS = frozenset(
     {
         "type",
@@ -202,6 +205,7 @@ _V2_PAYLOAD_FIELDS = frozenset(
 _V3_PAYLOAD_FIELDS = _V2_PAYLOAD_FIELDS | {"market_data_preparation"}
 _V4_PAYLOAD_FIELDS = _V3_PAYLOAD_FIELDS | {"validation_instrument_catalogs"}
 _V5_PAYLOAD_FIELDS = _V4_PAYLOAD_FIELDS
+_V6_PAYLOAD_FIELDS = (_V2_PAYLOAD_FIELDS - {"target_stream_key"}) | {"target_stream"}
 _PLAN_FIELDS = frozenset(
     {
         "type",
@@ -401,6 +405,18 @@ class _DecodedExecutionInputBundleV3:
 
 
 @dataclass(frozen=True, slots=True)
+class _DecodedExecutionInputBundleV6:
+    request_hash: str
+    semantic_run_id: str
+    build_artifact_manifest: BuildArtifactManifest
+    execution_case_semantic_spec: ExecutionCaseSemanticSpec
+    timeline_stream_keys: tuple[str, ...]
+    target_stream: PrecomputedTargetStream
+    timeline_batch_size: int
+    execution_case_plan: _ExecutionCasePlan
+
+
+@dataclass(frozen=True, slots=True)
 class _ValidationInstrumentCatalogBindingV1:
     catalog_hash: str
     catalog: domain.InstrumentCatalog
@@ -435,9 +451,10 @@ class BacktestExecutionRequest:
             _V3_SCHEMA_VERSION,
             _V4_SCHEMA_VERSION,
             _V5_SCHEMA_VERSION,
+            _V6_SCHEMA_VERSION,
         ):
             raise ValueError(
-                "BacktestExecutionRequest schema_version must be 1, 2, 3, 4, or 5"
+                "BacktestExecutionRequest schema_version must be 1, 2, 3, 4, 5, or 6"
             )
         if type(self.request) is not BacktestRequest:
             raise TypeError("request must be exact BacktestRequest")
@@ -2927,6 +2944,37 @@ def _read_execution_input_payload_v5(value: object) -> _DecodedExecutionInputBun
     return _read_execution_input_payload_with_catalog(value, _V5_SCHEMA_VERSION)
 
 
+def _read_execution_input_payload_v6(value: object) -> _DecodedExecutionInputBundleV6:
+    payload = _mapping("execution_input_bundle", value)
+    _exact_fields("execution_input_bundle", payload, _V6_PAYLOAD_FIELDS)
+    if payload["type"] != _ARTIFACT_TYPE or payload["schema_version"] != 6:
+        raise ValueError(
+            "execution input payload must be backtest_execution_input_bundle@6"
+        )
+    stream_keys = _stream_keys(payload["timeline_stream_keys"])
+    target_stream = _read_precomputed_target_stream(payload["target_stream"])
+    if target_stream.stream_key in stream_keys:
+        raise ValueError("embedded target stream must not be a market timeline stream")
+    return _DecodedExecutionInputBundleV6(
+        request_hash=_text("request_hash", payload["request_hash"]),
+        semantic_run_id=_text("semantic_run_id", payload["semantic_run_id"]),
+        build_artifact_manifest=_read_build_manifest(
+            payload["build_artifact_manifest"]
+        ),
+        execution_case_semantic_spec=_read_semantic_spec(
+            payload["execution_case_semantic_spec"]
+        ),
+        timeline_stream_keys=stream_keys,
+        target_stream=target_stream,
+        timeline_batch_size=_positive_int(
+            "timeline_batch_size", payload["timeline_batch_size"]
+        ),
+        execution_case_plan=_read_execution_case_plan(
+            payload["execution_case_plan"]
+        ),
+    )
+
+
 _EXECUTION_INPUT_CATALOG = SchemaCatalog(
     (
         ArtifactSchemaRegistration(
@@ -2953,6 +3001,11 @@ _EXECUTION_INPUT_CATALOG = SchemaCatalog(
             artifact_type="backtest_execution_input_bundle",
             schema_version=5,
             payload_reader=_read_execution_input_payload_v5,
+        ),
+        ArtifactSchemaRegistration(
+            artifact_type="backtest_execution_input_bundle",
+            schema_version=6,
+            payload_reader=_read_execution_input_payload_v6,
         ),
     )
 )
@@ -3099,6 +3152,30 @@ def materialize_execution_input_bundle_v2(
         },
     }
     return ArtifactEnvelope.create(_V2_SCHEMA.name, _V2_SCHEMA.version, payload)
+
+
+def materialize_execution_input_bundle_v6(
+    *,
+    resolved_request: ResolvedBacktestRequest,
+    execution_case: ResolvedExecutionCase,
+) -> ArtifactEnvelope:
+    if type(execution_case) is not ResolvedExecutionCase:
+        raise TypeError("execution_case must be exact ResolvedExecutionCase")
+    if type(execution_case.timeline) is not DeterministicTimelineV2:
+        raise TypeError("execution_case timeline must be exact DeterministicTimelineV2")
+    legacy = materialize_execution_input_bundle_v2(
+        resolved_request=resolved_request,
+        execution_case=execution_case,
+    )
+    payload = dict(legacy.payload)
+    payload["schema_version"] = _V6_SCHEMA_VERSION
+    payload.pop("target_stream_key")
+    payload["target_stream"] = execution_case.target_stream
+    envelope = ArtifactEnvelope.create(_V6_SCHEMA.name, _V6_SCHEMA.version, payload)
+    decoded = _EXECUTION_INPUT_CATALOG.read(canonical_bytes(envelope))
+    if type(decoded.artifact) is not _DecodedExecutionInputBundleV6:
+        raise ValueError("execution input bundle v6 did not round-trip")
+    return envelope
 
 
 def _rebuild_backtest_request_v3(value: object) -> BacktestRequest:
@@ -3391,6 +3468,7 @@ def _rebuild_execution_request_v3(
         _V3_SCHEMA_VERSION,
         _V4_SCHEMA_VERSION,
         _V5_SCHEMA_VERSION,
+        _V6_SCHEMA_VERSION,
     ):
         raise ValueError("request schema_version is malformed")
     ref = value.execution_input_bundle_ref
@@ -3888,6 +3966,14 @@ def _snapshot_execution_request_v5_from_validated_schema(
     )
 
 
+def _snapshot_execution_request_v6_from_validated_schema(
+    request: BacktestExecutionRequest,
+) -> tuple[BacktestExecutionRequest | None, _ExecutionInputsHydrationFailureV3 | None]:
+    return _snapshot_execution_request_from_validated_schema(
+        request, _V6_SCHEMA_VERSION
+    )
+
+
 def _read_execution_inputs_exact(
     reader: ArtifactEnvelopeReader,
     request: BacktestExecutionRequest,
@@ -3959,6 +4045,53 @@ def _read_execution_inputs_v5_from_snapshot(
     return _read_execution_inputs_from_snapshot_exact(
         reader, request, _V5_SCHEMA_VERSION, recorder=recorder
     )
+
+
+def _read_execution_inputs_v6_from_snapshot(
+    reader: ArtifactEnvelopeReader,
+    request: BacktestExecutionRequest,
+) -> tuple[_DecodedExecutionInputBundleV6 | None, _ExecutionInputsHydrationFailureV3 | None]:
+    if type(request) is not BacktestExecutionRequest or request.schema_version != 6:
+        return None, _ExecutionInputsHydrationFailureV3(
+            _ExecutionInputsHydrationFailureCodeV3.MALFORMED_EXECUTION_REQUEST
+        )
+    ref = request.execution_input_bundle_ref
+    try:
+        source = reader.read(ref=ref)
+    except Exception as error:
+        return None, _ExecutionInputsHydrationFailureV3(
+            _ExecutionInputsHydrationFailureCodeV3.EXECUTION_INPUT_TAMPERED
+            if isinstance(error, ArtifactIntegrityError)
+            else _ExecutionInputsHydrationFailureCodeV3.EXECUTION_INPUT_UNAVAILABLE
+        )
+    if type(source) is not ArtifactReadResult:
+        return None, _ExecutionInputsHydrationFailureV3(
+            _ExecutionInputsHydrationFailureCodeV3.EXECUTION_INPUT_UNAVAILABLE
+        )
+    try:
+        if (
+            source.source_bytes != canonical_bytes(source.envelope)
+            or source.source_hash != canonical_sha256(source.envelope)
+            or ArtifactRef.from_envelope(source.envelope) != ref
+        ):
+            raise ArtifactIntegrityError("execution input source mismatch")
+        decoded = _EXECUTION_INPUT_CATALOG.read(source.source_bytes)
+        bundle = decoded.artifact
+        if decoded.envelope != source.envelope or type(bundle) is not _DecodedExecutionInputBundleV6:
+            raise ArtifactDecodeError("execution input v6 decoded wrong artifact")
+    except (ArtifactIntegrityError, UnknownArtifactTypeError, UnsupportedSchemaVersionError):
+        return None, _ExecutionInputsHydrationFailureV3(
+            _ExecutionInputsHydrationFailureCodeV3.EXECUTION_INPUT_TAMPERED
+        )
+    except Exception:
+        return None, _ExecutionInputsHydrationFailureV3(
+            _ExecutionInputsHydrationFailureCodeV3.EXECUTION_INPUT_DECODE_FAILED
+        )
+    if bundle.request_hash != request.request.request_hash:
+        return None, _ExecutionInputsHydrationFailureV3(
+            _ExecutionInputsHydrationFailureCodeV3.REQUEST_BINDING_MISMATCH
+        )
+    return bundle, None
 
 
 def _read_execution_inputs_from_snapshot_exact(

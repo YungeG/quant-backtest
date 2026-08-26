@@ -88,6 +88,7 @@ def test_execution_input_module_preserves_one_way_repository_boundary() -> None:
     assert public_functions == {
         "materialize_execution_input_bundle",
         "materialize_execution_input_bundle_v2",
+        "materialize_execution_input_bundle_v6",
     }
     assert not any(
         name.endswith(FORBIDDEN_PUBLIC_SUFFIXES)
@@ -143,14 +144,17 @@ def test_only_the_bundle_has_one_private_versioned_schema_catalog() -> None:
         for node in ast.walk(module)
         if isinstance(node, ast.Call) and _call_name(node.func).endswith("SchemaCatalog")
     ]
-    expected_registrations = [
+    preserved_registrations = [
         ("backtest_execution_input_bundle", 1),
         ("backtest_execution_input_bundle", 2),
         ("backtest_execution_input_bundle", 3),
         ("backtest_execution_input_bundle", 4),
         ("backtest_execution_input_bundle", 5),
     ]
-    assert registrations == expected_registrations
+    assert registrations[:5] == preserved_registrations
+    assert registrations == preserved_registrations + [
+        ("backtest_execution_input_bundle", 6)
+    ]
     assert len(catalogs) == 1
 
 

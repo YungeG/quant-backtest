@@ -76,6 +76,7 @@ from .execution_inputs import (
     BacktestExecutionRequest,
     materialize_execution_input_bundle,
     materialize_execution_input_bundle_v2,
+    materialize_execution_input_bundle_v6,
 )
 from .evidence_repository import (
     BacktestEvidenceError,
@@ -101,6 +102,7 @@ from .cash_development_provider import (
     PreparedBacktestExecution,
     PreparedModelBoundBacktestExecution,
     prepare_cash_development_backtest,
+    prepare_cash_target_stream_backtest,
     prepare_model_bound_cash_development_backtest,
 )
 from .request_registration import BacktestRequestRef
@@ -330,6 +332,13 @@ from .strategy_state import (
     StrategyState,
     StrategyStateTransition,
 )
+from .target_repository import (
+    BacktestTargetStreamError,
+    BacktestTargetStreamFailureCode,
+    BacktestTargetStreamRef,
+    BacktestTargetStreamRepository,
+    VerifiedBacktestTargetStream,
+)
 from .target_stream import (
     TARGET_STREAM_CAPABILITY,
     TARGET_STREAM_EVENT_TYPE,
@@ -347,8 +356,10 @@ from .target_stream import (
 )
 from .timeline import (
     DeterministicTimeline,
+    DeterministicTimelineV2,
     TimelineBatch,
     TimelineCursor,
+    TimelineCursorV2,
     TimelineCursorError,
     TimelineError,
     TimelineEvent,
@@ -398,6 +409,10 @@ __all__ = [
     "BacktestCanonicalPublicationRef",
     "BacktestCanonicalPublicationRefV2",
     "BacktestRuntime",
+    "BacktestTargetStreamError",
+    "BacktestTargetStreamFailureCode",
+    "BacktestTargetStreamRef",
+    "BacktestTargetStreamRepository",
     "BacktestAnalysis",
     "BacktestAnalysisV2",
     "BacktestAnalysisRuntime",
@@ -476,10 +491,13 @@ __all__ = [
     "DeterministicBpsSlippageModel",
     "materialize_execution_input_bundle",
     "materialize_execution_input_bundle_v2",
+    "materialize_execution_input_bundle_v6",
     "prepare_cash_development_backtest",
+    "prepare_cash_target_stream_backtest",
     "prepare_model_bound_cash_development_backtest",
     "DeterministicRebuildEvidence",
     "DeterministicTimeline",
+    "DeterministicTimelineV2",
     "EngineCancellation",
     "EngineCancellationRequest",
     "EngineExecutionContext",
@@ -658,6 +676,7 @@ __all__ = [
     "TargetStreamWarmupSuppression",
     "TimelineBatch",
     "TimelineCursor",
+    "TimelineCursorV2",
     "TimelineCursorError",
     "TimelineError",
     "TimelineEvent",
@@ -673,6 +692,7 @@ __all__ = [
     "UniverseSelection",
     "VerifiedBacktestAnalysis",
     "VerifiedBacktestAnalysisV2",
+    "VerifiedBacktestTargetStream",
     "VerifiedCompletedPublication",
     "VerifiedCompletedPublicationV2",
     "VerifiedCompletedPublicationV3",

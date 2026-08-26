@@ -231,6 +231,7 @@ def test_v3_is_one_private_catalog_registration_and_exact_v2_plus_preparation() 
         ("backtest_execution_input_bundle", 3),
         ("backtest_execution_input_bundle", 4),
         ("backtest_execution_input_bundle", 5),
+        ("backtest_execution_input_bundle", 6),
     )
     assert set(envelope.payload) == {
         "type",

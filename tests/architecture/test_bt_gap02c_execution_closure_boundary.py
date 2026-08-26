@@ -21,11 +21,13 @@ def _tree(path: Path) -> ast.Module:
     return ast.parse(path.read_text(encoding="utf-8"), filename=str(path))
 
 
-def test_v2_adds_only_the_materializer_to_the_public_root() -> None:
+def test_v2_and_additive_v6_public_seams_are_root_exported() -> None:
     source = _PUBLIC_INIT.read_text(encoding="utf-8")
     assert "materialize_execution_input_bundle_v2" in source, (
         "BT-GAP-02C RED: v2 materializer is not root-exported"
     )
+    assert "materialize_execution_input_bundle_v6" in source
+    assert "prepare_cash_target_stream_backtest" in source
     for forbidden in (
         "ExecutionCasePlan",
         "ExecutionCaseBuilder",
@@ -61,9 +63,11 @@ def test_v2_uses_the_existing_catalog_and_no_second_selector() -> None:
         "BT-GAP-02C RED: v2 implementation is absent"
     )
     assert source.count("SchemaCatalog(") == 1
-    assert source.count("CanonicalSchema(") == 5, (
-        "MARKET-ENGINE-JOURNEY-01: bundle@5 must extend the existing catalog"
+    assert source.count("CanonicalSchema(") == 6, (
+        "bundle@6 must extend the existing v1-v5 catalog"
     )
+    assert all(f"_V{version}_SCHEMA" in source for version in range(1, 6))
+    assert "_V6_SCHEMA" in source
     generic_source = "\n".join(
         path.read_text(encoding="utf-8") for path in _GENERIC_RUNTIME
     )

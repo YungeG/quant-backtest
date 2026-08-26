@@ -31,7 +31,11 @@ from ._durable_rebuild import (
 from ._publication import RunPublicationLock
 from .artifact_envelope_publisher import ArtifactEnvelopePublisher
 from .artifact_envelope_reader import ArtifactEnvelopeReader
-from .composition import _compose_execution_case_v3, _HydratedExecutionCaseInputs
+from .composition import (
+    _compose_execution_case_from_authority_v2,
+    _compose_execution_case_v3,
+    _HydratedExecutionCaseInputs,
+)
 from .engine import EngineCancellationRequest, ResolvedExecutionCase
 from .evidence import AttemptEvidenceWriter, FinalizedAttemptEvidence
 from .evidence_repository import (
@@ -49,9 +53,11 @@ from .execution_inputs import (
     _hydrate_execution_inputs_v5_from_decoded,
     _read_execution_inputs_v3_from_snapshot,
     _read_execution_inputs_v5_from_snapshot,
+    _read_execution_inputs_v6_from_snapshot,
     _snapshot_execution_request_v3_from_validated_schema,
     _snapshot_execution_request_v4_from_validated_schema,
     _snapshot_execution_request_v5_from_validated_schema,
+    _snapshot_execution_request_v6_from_validated_schema,
     _verify_execution_inputs_v3_after_resolution,
 )
 from .integrity import (
@@ -169,10 +175,17 @@ class BacktestRuntime:
             raise RuntimeError(
                 "execution input hydration failed: malformed_execution_request"
             ) from None
-        if type(schema_version) is not int or schema_version not in {1, 2, 3, 4, 5}:
+        if type(schema_version) is not int or schema_version not in {1, 2, 3, 4, 5, 6}:
             raise RuntimeError(
                 "execution input hydration failed: malformed_execution_request"
             )
+        if schema_version == 6:
+            snapshot, failure = _snapshot_execution_request_v6_from_validated_schema(
+                request
+            )
+            if failure is not None or snapshot is None:
+                self._raise_v3_hydration_failure(failure)
+            return self._run_v6(snapshot, cancellation=cancellation)
         if schema_version in {3, 4, 5}:
             snapshotter = {
                 3: _snapshot_execution_request_v3_from_validated_schema,
@@ -219,6 +232,79 @@ class BacktestRuntime:
                 "execution input hydration failed: malformed_execution_request"
             ) from None
         return self._run_legacy(snapshot, cancellation=cancellation)
+
+    def _run_v6(
+        self,
+        request: BacktestExecutionRequest,
+        *,
+        cancellation: EngineCancellationRequest | None,
+    ) -> BacktestCanonicalPublicationRef | ArtifactRef:
+        bundle, failure = _read_execution_inputs_v6_from_snapshot(
+            self._artifact_reader, request
+        )
+        if failure is not None or bundle is None:
+            self._raise_v3_hydration_failure(failure)
+        public_request = request.request
+        if (
+            bundle.build_artifact_manifest.manifest_hash
+            != public_request.build_artifact_manifest_hash
+        ):
+            raise RuntimeError(
+                "execution input hydration failed: build_binding_mismatch"
+            )
+        if (
+            bundle.target_stream.target_stream_digest
+            != public_request.target_stream_digest
+            or bundle.execution_case_semantic_spec.target_stream_digest
+            != public_request.target_stream_digest
+        ):
+            raise RuntimeError(
+                "execution input hydration failed: target_binding_mismatch"
+            )
+        if self._market_reader.bundle_ref != public_request.market_bundle_ref:
+            raise RuntimeError(
+                "execution input hydration failed: target_binding_mismatch"
+            )
+        resolution = self._resolve(
+            request,
+            market_bundle_manifest=self._market_reader.manifest,
+            build_artifact_manifest=bundle.build_artifact_manifest,
+        )
+        if resolution.failure is not None:
+            return self._publish_resolution_failure(resolution.failure)
+        resolved = resolution.resolved
+        if resolved is None:
+            raise RuntimeError("Backtest request resolution returned no result")
+        if (
+            bundle.semantic_run_id != resolved.semantic_run_id
+            or bundle.build_artifact_manifest != resolved.build_artifact_manifest
+        ):
+            raise RuntimeError(
+                "execution input hydration failed: request_binding_mismatch"
+            )
+        try:
+            case = _compose_execution_case_from_authority_v2(
+                request=public_request,
+                semantic_run_id=resolved.semantic_run_id,
+                market_reader=self._market_reader,
+                hydrated_inputs=_HydratedExecutionCaseInputs(
+                    bundle.execution_case_semantic_spec,
+                    bundle.timeline_stream_keys,
+                    bundle.target_stream,
+                    bundle.timeline_batch_size,
+                    bundle.execution_case_plan,
+                ),
+            )
+        except Exception:
+            raise RuntimeError(
+                "execution input hydration failed: execution_case_semantic_hash_mismatch"
+            ) from None
+        return self._execute_case(
+            resolved,
+            case,
+            cancellation=cancellation,
+            market_data_preparation=None,
+        )
 
     def _run_legacy(
         self,

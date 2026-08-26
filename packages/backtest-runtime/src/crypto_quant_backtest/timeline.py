@@ -3,6 +3,7 @@ from __future__ import annotations
 from collections.abc import Iterable
 from dataclasses import dataclass
 from enum import Enum
+from typing import TYPE_CHECKING
 import unicodedata
 
 from crypto_quant_domain import (
@@ -19,6 +20,10 @@ from crypto_quant_market_data import (
     MarketBundleRef,
     MarketEvent,
 )
+
+
+if TYPE_CHECKING:
+    from .target_stream import PrecomputedTargetStream
 
 
 OrderingKey = tuple[int, int, str, int]
@@ -636,4 +641,313 @@ class DeterministicTimeline:
         )
         return TimelineReadOutcome.for_batch(
             TimelineBatch(tuple(emitted), timeline_cursor, window_complete=complete)
+        )
+
+
+@dataclass(frozen=True, slots=True)
+class TimelineCursorV2(TimelineCursor):
+    target_stream_digest: str = ""
+    target_position: int = 0
+
+    def __post_init__(self) -> None:
+        TimelineCursor.__post_init__(self)
+        _validate_hash("target_stream_digest", self.target_stream_digest)
+        if isinstance(self.target_position, bool) or not isinstance(
+            self.target_position, int
+        ):
+            raise TimelineCursorError("target_position must be an integer")
+        if self.target_position < 0:
+            raise TimelineCursorError("target_position must be nonnegative")
+
+    def to_canonical_dict(self) -> dict[str, object]:
+        return {
+            "type": "timeline_cursor_v2",
+            "timeline_id": self.timeline_id,
+            "bundle_ref": self.bundle_ref,
+            "window_hash": self.window_hash,
+            "streams": self.streams,
+            "target_stream_digest": self.target_stream_digest,
+            "target_position": self.target_position,
+            "batch_size": self.batch_size,
+            "emitted_count": self.emitted_count,
+            "last_ordering_key": (
+                None
+                if self.last_ordering_key is None
+                else _ordering_key_dict(self.last_ordering_key)
+            ),
+            "window_complete": self.window_complete,
+        }
+
+
+@dataclass(frozen=True, slots=True)
+class DeterministicTimelineV2(DeterministicTimeline):
+    target_stream: PrecomputedTargetStream
+
+    @classmethod
+    def open(
+        cls,
+        *,
+        reader: MarketBundleReader,
+        stream_keys: Iterable[str],
+        target_stream: PrecomputedTargetStream,
+        window: TimelineWindow,
+    ) -> DeterministicTimelineV2 | InputValidationFailure:
+        from .target_stream import PrecomputedTargetStream
+
+        if not isinstance(reader, MarketBundleReader):
+            raise TypeError("reader must satisfy MarketBundleReader")
+        if type(target_stream) is not PrecomputedTargetStream:
+            raise TypeError("target_stream must be exact PrecomputedTargetStream")
+        if not isinstance(window, TimelineWindow):
+            raise TypeError("window must be TimelineWindow")
+        keys = tuple(_canonical_stream_key(item) for item in stream_keys)
+        if not keys:
+            raise ValueError("timeline requires at least one market stream")
+        if len(set(keys)) != len(keys):
+            raise ValueError("market stream keys must be unique")
+        keys = tuple(sorted(keys))
+        if target_stream.stream_key in keys:
+            raise ValueError("target stream must not be a market reader stream")
+        failure = reader.validate_requirements(required_streams=keys)
+        if failure is not None:
+            return failure
+        timeline_id = canonical_sha256(
+            {
+                "type": "deterministic_timeline_config_v2",
+                "market_bundle_ref": reader.bundle_ref,
+                "market_stream_keys": keys,
+                "target_stream_digest": target_stream.target_stream_digest,
+                "window": window,
+            }
+        )
+        return cls(reader, keys, window, timeline_id, target_stream)
+
+    def __post_init__(self) -> None:
+        from .target_stream import PrecomputedTargetStream
+
+        if not isinstance(self.reader, MarketBundleReader):
+            raise TypeError("reader must satisfy MarketBundleReader")
+        if not self.stream_keys or tuple(sorted(self.stream_keys)) != self.stream_keys:
+            raise ValueError("stream_keys must be nonempty and canonical-sorted")
+        if len(set(self.stream_keys)) != len(self.stream_keys):
+            raise ValueError("stream_keys must be unique")
+        if type(self.target_stream) is not PrecomputedTargetStream:
+            raise TypeError("target_stream must be exact PrecomputedTargetStream")
+        if self.target_stream.stream_key in self.stream_keys:
+            raise ValueError("target stream must not be a market reader stream")
+        if not isinstance(self.window, TimelineWindow):
+            raise TypeError("window must be TimelineWindow")
+        _validate_hash("timeline_id", self.timeline_id)
+        expected = canonical_sha256(
+            {
+                "type": "deterministic_timeline_config_v2",
+                "market_bundle_ref": self.reader.bundle_ref,
+                "market_stream_keys": self.stream_keys,
+                "target_stream_digest": self.target_stream.target_stream_digest,
+                "window": self.window,
+            }
+        )
+        if self.timeline_id != expected:
+            raise ValueError("timeline_id does not match timeline configuration")
+
+    @property
+    def target_stream_digest(self) -> str:
+        return self.target_stream.target_stream_digest
+
+    def _complete(
+        self,
+        streams: tuple[TimelineStreamCursor, ...],
+        target_position: int,
+    ) -> bool | None:
+        available_times: list[int] = []
+        for item in streams:
+            if item.cursor.exhausted:
+                continue
+            try:
+                batch, next_cursor = self.reader.read_batch(item.cursor)
+            except MarketBundleError:
+                return None
+            if (
+                len(batch) != 1
+                or next_cursor.position != item.cursor.position + 1
+                or not isinstance(batch[0], MarketEvent)
+            ):
+                return None
+            available_times.append(batch[0].available_time.epoch_nanoseconds)
+        if target_position < len(self.target_stream.events):
+            available_times.append(
+                self.target_stream.events[target_position].available_time.epoch_nanoseconds
+            )
+        if not available_times:
+            return True
+        return min(available_times) >= self.window.end_exclusive.epoch_nanoseconds
+
+    def open_cursor(self, *, batch_size: int) -> TimelineCursorV2:
+        if isinstance(batch_size, bool) or not isinstance(batch_size, int):
+            raise TypeError("batch_size must be an integer")
+        if batch_size <= 0:
+            raise ValueError("batch_size must be positive")
+        source_cursors = []
+        for stream_key in self.stream_keys:
+            cursor = self.reader.open_cursor(stream_key, batch_size=1)
+            if isinstance(cursor, InputValidationFailure):
+                raise TimelineError("validated timeline stream became unavailable")
+            source_cursors.append(TimelineStreamCursor(stream_key, cursor))
+        streams = tuple(source_cursors)
+        return TimelineCursorV2(
+            timeline_id=self.timeline_id,
+            bundle_ref=self.reader.bundle_ref,
+            window_hash=self.window.window_hash,
+            streams=streams,
+            batch_size=batch_size,
+            window_complete=bool(self._complete(streams, 0)),
+            target_stream_digest=self.target_stream_digest,
+            target_position=0,
+        )
+
+    def resume_cursor(
+        self, cursor: TimelineCursorV2, *, batch_size: int | None = None
+    ) -> TimelineCursorV2:
+        if type(cursor) is not TimelineCursorV2:
+            raise TimelineCursorError("cursor must be exact TimelineCursorV2")
+        if (
+            cursor.timeline_id != self.timeline_id
+            or cursor.bundle_ref != self.reader.bundle_ref
+            or cursor.window_hash != self.window.window_hash
+            or cursor.target_stream_digest != self.target_stream_digest
+        ):
+            raise TimelineCursorError("cursor identity does not match timeline")
+        if tuple(item.stream_key for item in cursor.streams) != self.stream_keys:
+            raise TimelineCursorError("cursor source streams do not match timeline")
+        if cursor.target_position > len(self.target_stream.events):
+            raise TimelineCursorError("target cursor position is out of range")
+        verified_streams = []
+        previous_keys: list[OrderingKey] = []
+        for item in cursor.streams:
+            try:
+                verified = self.reader.resume_cursor(item.cursor, batch_size=1)
+            except MarketBundleError as error:
+                raise TimelineCursorError(
+                    f"source cursor cannot resume: {item.stream_key}"
+                ) from error
+            if verified.position != item.cursor.position:
+                raise TimelineCursorError("reader changed source cursor position")
+            verified_streams.append(TimelineStreamCursor(item.stream_key, verified))
+            if verified.position > 0:
+                previous = EventCursor(
+                    verified.bundle_ref,
+                    verified.stream_manifest,
+                    verified.position - 1,
+                    1,
+                )
+                try:
+                    batch, _ = self.reader.read_batch(previous)
+                except MarketBundleError as error:
+                    raise TimelineCursorError("source cursor prefix cannot be verified") from error
+                if len(batch) != 1 or not isinstance(batch[0], MarketEvent):
+                    raise TimelineCursorError("source cursor prefix event is malformed")
+                previous_keys.append(batch[0].ordering_key)
+        if cursor.target_position:
+            previous_keys.append(
+                self.target_stream.events[cursor.target_position - 1].ordering_key
+            )
+        if cursor.last_ordering_key != (max(previous_keys) if previous_keys else None):
+            raise TimelineCursorError("cursor positions do not match last ordering key")
+        completion = self._complete(tuple(verified_streams), cursor.target_position)
+        if completion is not None and cursor.window_complete != completion:
+            raise TimelineCursorError("cursor completion does not match positions")
+        resolved_size = cursor.batch_size if batch_size is None else batch_size
+        return TimelineCursorV2(
+            timeline_id=self.timeline_id,
+            bundle_ref=self.reader.bundle_ref,
+            window_hash=self.window.window_hash,
+            streams=tuple(verified_streams),
+            batch_size=resolved_size,
+            emitted_count=cursor.emitted_count,
+            last_ordering_key=cursor.last_ordering_key,
+            window_complete=cursor.window_complete,
+            target_stream_digest=cursor.target_stream_digest,
+            target_position=cursor.target_position,
+        )
+
+    def read_batch(self, cursor: TimelineCursorV2) -> TimelineReadOutcome:
+        current = self.resume_cursor(cursor)
+        if current.window_complete:
+            return TimelineReadOutcome.for_batch(
+                TimelineBatch((), current, window_complete=True)
+            )
+        source_cursors = {item.stream_key: item.cursor for item in current.streams}
+        target_position = current.target_position
+        emitted: list[TimelineEvent] = []
+        last_key = current.last_ordering_key
+        complete = False
+        while len(emitted) < current.batch_size:
+            heads: list[tuple[OrderingKey, str, MarketEvent, EventCursor | None]] = []
+            for stream_key in self.stream_keys:
+                head = self._head(
+                    TimelineStreamCursor(stream_key, source_cursors[stream_key]), current
+                )
+                if isinstance(head, TimelineReadOutcome):
+                    return head
+                if head is not None:
+                    event, next_cursor = head
+                    heads.append((event.ordering_key, stream_key, event, next_cursor))
+            if target_position < len(self.target_stream.events):
+                event = self.target_stream.events[target_position]
+                heads.append((event.ordering_key, event.stream_key, event, None))
+            if not heads:
+                complete = True
+                break
+            minimum_key = min(item[0] for item in heads)
+            minimum = [item for item in heads if item[0] == minimum_key]
+            if len(minimum) != 1:
+                return self._failure(
+                    current,
+                    TimelineFailureCode.DUPLICATE_ORDERING_KEY,
+                    (item[1] for item in minimum),
+                    (item[2].event_hash for item in minimum),
+                )
+            _, stream_key, event, next_source_cursor = minimum[0]
+            if last_key is not None and minimum_key <= last_key:
+                code = (
+                    TimelineFailureCode.DUPLICATE_ORDERING_KEY
+                    if minimum_key == last_key
+                    else TimelineFailureCode.ORDER_REGRESSION
+                )
+                return self._failure(current, code, (stream_key,), (event.event_hash,))
+            if event.available_time >= self.window.end_exclusive:
+                complete = True
+                break
+            if next_source_cursor is None:
+                target_position += 1
+            else:
+                source_cursors[stream_key] = next_source_cursor
+            last_key = minimum_key
+            if event.available_time < self.window.data_start:
+                continue
+            segment = (
+                TimelineSegment.WARMUP
+                if event.available_time < self.window.trading_start
+                else TimelineSegment.ACTIVE_TRADING
+            )
+            emitted.append(TimelineEvent(segment, event))
+        next_streams = tuple(
+            TimelineStreamCursor(key, source_cursors[key]) for key in self.stream_keys
+        )
+        if not complete and self._complete(next_streams, target_position):
+            complete = True
+        next_cursor = TimelineCursorV2(
+            timeline_id=self.timeline_id,
+            bundle_ref=self.reader.bundle_ref,
+            window_hash=self.window.window_hash,
+            streams=next_streams,
+            batch_size=current.batch_size,
+            emitted_count=current.emitted_count + len(emitted),
+            last_ordering_key=last_key,
+            window_complete=complete,
+            target_stream_digest=self.target_stream_digest,
+            target_position=target_position,
+        )
+        return TimelineReadOutcome.for_batch(
+            TimelineBatch(tuple(emitted), next_cursor, window_complete=complete)
         )

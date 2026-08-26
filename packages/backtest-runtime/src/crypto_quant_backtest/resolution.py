@@ -1265,7 +1265,13 @@ class ProfileResolver:
 
         required_capabilities = list(market.required_bundle_capabilities)
         required_capabilities.extend(simulation.required_bundle_capabilities)
-        if request.strategy_family is StrategyFamily.PRECOMPUTED_TARGET:
+        if (
+            request.strategy_family is StrategyFamily.PRECOMPUTED_TARGET
+            and any(
+                capability.key == "precomputed_target_stream"
+                for capability in required_capabilities
+            )
+        ):
             required_capabilities.append(
                 MarketBundleCapability("precomputed_target_stream", 1)
             )

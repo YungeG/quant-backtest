@@ -37,8 +37,10 @@ from .execution import (
 from .execution_inputs import (
     BacktestExecutionRequest,
     _DecodedExecutionInputBundleV2,
+    _DecodedExecutionInputBundleV6,
     _EXECUTION_INPUT_CATALOG,
     materialize_execution_input_bundle_v2,
+    materialize_execution_input_bundle_v6,
 )
 from .facade import BacktestRuntime
 from .financial_dispatch import (
@@ -75,6 +77,10 @@ from .slippage import (
     SlippageLimitation,
     SlippageMarketState,
 )
+from .target_repository import (
+    BacktestTargetStreamRef,
+    BacktestTargetStreamRepository,
+)
 from .target_stream import (
     PrecomputedTargetStream,
     PrecomputedTargetStreamAdapter,
@@ -83,7 +89,13 @@ from .target_stream import (
     TargetStreamDecisionSchedule,
     TargetStreamScheduleEntry,
 )
-from .timeline import DeterministicTimeline, TimelineEvent, TimelineSegment, TimelineWindow
+from .timeline import (
+    DeterministicTimeline,
+    DeterministicTimelineV2,
+    TimelineEvent,
+    TimelineSegment,
+    TimelineWindow,
+)
 
 _RUN_ID_PATTERN = re.compile(r"run_[0-9a-f]{64}\Z")
 _HASH_PATTERN = re.compile(r"sha256:[0-9a-f]{64}\Z")
@@ -334,7 +346,12 @@ def _resolved_mark(
     return outcome.resolved_mark
 
 
-def _case_inputs(intent: CashDevelopmentRequestIntent, provider: CashDevelopmentProviderInputs, reader: MarketBundleReader) -> _CaseInputs:
+def _case_inputs(
+    intent: CashDevelopmentRequestIntent,
+    provider: CashDevelopmentProviderInputs,
+    reader: MarketBundleReader,
+    embedded_target_stream: PrecomputedTargetStream | None = None,
+) -> _CaseInputs:
     if type(intent) is not CashDevelopmentRequestIntent or type(provider) is not CashDevelopmentProviderInputs:
         raise TypeError("request_intent and provider_inputs must be exact public values")
     if len(provider.instrument_catalog.instruments) != 1:
@@ -350,7 +367,15 @@ def _case_inputs(intent: CashDevelopmentRequestIntent, provider: CashDevelopment
         raise ValueError("quantity_lattice must bind the sole instrument")
     if reader.manifest.instrument_catalog_hash != domain.canonical_sha256(provider.instrument_catalog):
         raise ValueError("instrument_catalog does not bind MarketBundle manifest")
-    target_events, bar_events = _events(reader, _TARGET_STREAM), _events(reader, _BAR_STREAM)
+    if embedded_target_stream is None:
+        target_events = _events(reader, _TARGET_STREAM)
+        target_stream = None
+    else:
+        if type(embedded_target_stream) is not PrecomputedTargetStream:
+            raise TypeError("embedded_target_stream must be exact PrecomputedTargetStream")
+        target_events = embedded_target_stream.events
+        target_stream = embedded_target_stream
+    bar_events = _events(reader, _BAR_STREAM)
     if len(target_events) != 1 or len(bar_events) != 1:
         raise ValueError("cash development provider requires exactly one target and one bar")
     target, bar = target_events[0], bar_events[0]
@@ -395,10 +420,25 @@ def _case_inputs(intent: CashDevelopmentRequestIntent, provider: CashDevelopment
         max_age_nanoseconds=final_age,
         allow_forward_fill=True,
     )
-    timeline = DeterministicTimeline.open(reader=reader, stream_keys=(_BAR_STREAM, _TARGET_STREAM), window=intent.timeline_window)
-    if type(timeline) is not DeterministicTimeline:
-        raise ValueError("MarketBundle cannot open deterministic cash timeline")
-    return _CaseInputs(intent, provider, reader, instrument, target, bar, observation.open_price, decision, final, timeline, PrecomputedTargetStream(_TARGET_STREAM, (target,)))
+    if target_stream is None:
+        target_stream = PrecomputedTargetStream(_TARGET_STREAM, (target,))
+        timeline = DeterministicTimeline.open(
+            reader=reader,
+            stream_keys=(_BAR_STREAM, _TARGET_STREAM),
+            window=intent.timeline_window,
+        )
+        if type(timeline) is not DeterministicTimeline:
+            raise ValueError("MarketBundle cannot open deterministic cash timeline")
+    else:
+        timeline = DeterministicTimelineV2.open(
+            reader=reader,
+            stream_keys=(_BAR_STREAM,),
+            target_stream=target_stream,
+            window=intent.timeline_window,
+        )
+        if type(timeline) is not DeterministicTimelineV2:
+            raise ValueError("MarketBundle cannot open deterministic cash timeline v2")
+    return _CaseInputs(intent, provider, reader, instrument, target, bar, observation.open_price, decision, final, timeline, target_stream)
 
 
 def _cash_keys(values: _CaseInputs) -> tuple[domain.CashBalanceKey, domain.PositionBalanceKey]:
@@ -615,8 +655,13 @@ def _registry(values: _CaseInputs, case: ResolvedExecutionCase) -> BacktestProfi
     actual_simulation = {case.execution_model.component_ref.port_type: case.execution_model.component_ref, case.closeout_policy.spec().component_ref.port_type: case.closeout_policy.spec().component_ref, case.bar_executions[0].slippage_model.component_ref.port_type: case.bar_executions[0].slippage_model.component_ref, dispatcher.liquidation_audit_component.port_type: dispatcher.liquidation_audit_component}
     simulation_components = tuple(sorted((actual_simulation.get(port) or _simulation_ref(port, f"cash-development.{port.value}.v1") for port in SimulationPortType), key=lambda value: value.port_type.value))
     market_impl, simulation_impl, account_impl = _ProfileImplementation("market", market_components), _ProfileImplementation("simulation", simulation_components), _ProfileImplementation("account", ())
-    market = MarketSemanticsProfileRegistration(_MARKET_KEY, 1, market_impl.profile_digest, market_impl, values.instrument.instrument_id.venue.value, (BAR_OPEN_CAPABILITY, _TARGET_CAPABILITY), market_components, RequestedResultGrade.DEVELOPMENT, _LIMITATIONS, False)
-    simulation = SimulationProfileRegistration(_SIMULATION_KEY, 1, simulation_impl.profile_digest, simulation_impl, "bar", (StrategyFamily.PRECOMPUTED_TARGET,), (BAR_OPEN_CAPABILITY, _TARGET_CAPABILITY), simulation_components, RequestedResultGrade.DEVELOPMENT, _LIMITATIONS, False)
+    required_capabilities = (
+        (BAR_OPEN_CAPABILITY,)
+        if type(values.timeline) is DeterministicTimelineV2
+        else (BAR_OPEN_CAPABILITY, _TARGET_CAPABILITY)
+    )
+    market = MarketSemanticsProfileRegistration(_MARKET_KEY, 1, market_impl.profile_digest, market_impl, values.instrument.instrument_id.venue.value, required_capabilities, market_components, RequestedResultGrade.DEVELOPMENT, _LIMITATIONS, False)
+    simulation = SimulationProfileRegistration(_SIMULATION_KEY, 1, simulation_impl.profile_digest, simulation_impl, "bar", (StrategyFamily.PRECOMPUTED_TARGET,), required_capabilities, simulation_components, RequestedResultGrade.DEVELOPMENT, _LIMITATIONS, False)
     account = ExecutionAccountProfileRegistration(_ACCOUNT_KEY, 1, account_impl.profile_digest, account_impl, values.intent.execution_account_id, values.instrument.instrument_id.venue.value, "cash", "none", (values.intent.reporting_currency,), RequestedResultGrade.DEVELOPMENT, _LIMITATIONS, False)
     return BacktestProfileRegistry((market,), (simulation,), (account,))
 
@@ -704,6 +749,7 @@ def _prepare_cash_development_backtest(
     market_reader: MarketBundleReader,
     publication_root: Path,
     model_binding: ModelRequestBinding | None,
+    embedded_target_stream: PrecomputedTargetStream | None = None,
 ) -> PreparedBacktestExecution:
     if type(request_intent) is not CashDevelopmentRequestIntent or type(provider_inputs) is not CashDevelopmentProviderInputs:
         raise TypeError("request_intent and provider_inputs must be exact public values")
@@ -711,7 +757,12 @@ def _prepare_cash_development_backtest(
         raise TypeError("artifact reader and publisher must satisfy structural ports")
     if not isinstance(publication_root, Path):
         raise TypeError("publication_root must be pathlib.Path")
-    values = _case_inputs(request_intent, provider_inputs, market_reader)
+    values = _case_inputs(
+        request_intent,
+        provider_inputs,
+        market_reader,
+        embedded_target_stream,
+    )
     builder = _CashCaseBuilder(values)
     spec = builder.semantic_spec()
     provisional = _build_case(values, builder._placeholder_ids(), spec.semantic_spec_hash)
@@ -743,12 +794,22 @@ def _prepare_cash_development_backtest(
     if outcome.resolved is None:
         raise ValueError(f"cash development request cannot resolve: {outcome.failure.code.value if outcome.failure else 'unknown'}")
     case = ExecutionCaseComposer().compose(resolved_request=outcome.resolved, builder=builder)
-    bundle = materialize_execution_input_bundle_v2(resolved_request=outcome.resolved, execution_case=case)
+    if embedded_target_stream is None:
+        bundle = materialize_execution_input_bundle_v2(
+            resolved_request=outcome.resolved,
+            execution_case=case,
+        )
+        expected_decoded_type = _DecodedExecutionInputBundleV2
+        execution_schema_version = 2
+    else:
+        bundle = materialize_execution_input_bundle_v6(
+            resolved_request=outcome.resolved,
+            execution_case=case,
+        )
+        expected_decoded_type = _DecodedExecutionInputBundleV6
+        execution_schema_version = 6
     decoded_bundle = _EXECUTION_INPUT_CATALOG.read(domain.canonical_bytes(bundle))
-    if (
-        decoded_bundle.envelope != bundle
-        or type(decoded_bundle.artifact) is not _DecodedExecutionInputBundleV2
-    ):
+    if decoded_bundle.envelope != bundle or type(decoded_bundle.artifact) is not expected_decoded_type:
         raise ValueError("execution input bundle does not round-trip existing catalog")
     request_envelope = domain.ArtifactEnvelope.create("backtest_request", 1, request)
     request_artifact_ref = _publish(artifact_publisher, request_envelope)
@@ -756,7 +817,9 @@ def _prepare_cash_development_backtest(
     _verify_published(artifact_reader, request_artifact_ref, request_envelope)
     _verify_published(artifact_reader, bundle_ref, bundle)
     request_ref = BacktestRequestRef.from_artifact_ref(request_artifact_ref)
-    execution_request = BacktestExecutionRequest(2, request, bundle_ref)
+    execution_request = BacktestExecutionRequest(
+        execution_schema_version, request, bundle_ref
+    )
     runtime = BacktestRuntime(registry=registry, artifact_reader=artifact_reader, artifact_publisher=artifact_publisher, market_reader=market_reader, publication_root=publication_root)
     return PreparedBacktestExecution(request_ref, outcome.resolved.semantic_run_id, execution_request, runtime)
 
@@ -778,6 +841,45 @@ def prepare_cash_development_backtest(
         market_reader=market_reader,
         publication_root=publication_root,
         model_binding=None,
+    )
+
+
+def prepare_cash_target_stream_backtest(
+    *,
+    request_intent: CashDevelopmentRequestIntent,
+    provider_inputs: CashDevelopmentProviderInputs,
+    target_stream_ref: BacktestTargetStreamRef,
+    artifact_reader: ArtifactEnvelopeReader,
+    artifact_publisher: ArtifactEnvelopePublisher,
+    market_reader: MarketBundleReader,
+    publication_root: Path,
+) -> PreparedBacktestExecution:
+    if type(request_intent) is not CashDevelopmentRequestIntent:
+        raise TypeError("request_intent must be exact CashDevelopmentRequestIntent")
+    if type(provider_inputs) is not CashDevelopmentProviderInputs:
+        raise TypeError("provider_inputs must be exact CashDevelopmentProviderInputs")
+    if type(target_stream_ref) is not BacktestTargetStreamRef:
+        raise TypeError("target_stream_ref must be exact BacktestTargetStreamRef")
+    if not callable(getattr(artifact_reader, "read", None)):
+        raise TypeError("artifact_reader must provide read")
+    if not callable(getattr(artifact_publisher, "put", None)):
+        raise TypeError("artifact_publisher must provide put")
+    if not isinstance(market_reader, MarketBundleReader):
+        raise TypeError("market_reader must satisfy MarketBundleReader")
+    if not isinstance(publication_root, Path):
+        raise TypeError("publication_root must be pathlib.Path")
+    verified = BacktestTargetStreamRepository(reader=artifact_reader).load(
+        target_stream_ref
+    )
+    return _prepare_cash_development_backtest(
+        request_intent=request_intent,
+        provider_inputs=provider_inputs,
+        artifact_reader=artifact_reader,
+        artifact_publisher=artifact_publisher,
+        market_reader=market_reader,
+        publication_root=publication_root,
+        model_binding=None,
+        embedded_target_stream=verified.target_stream,
     )
 
 
