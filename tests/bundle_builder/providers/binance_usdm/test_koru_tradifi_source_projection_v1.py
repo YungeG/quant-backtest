@@ -29,6 +29,9 @@ from tests.bundle_builder.providers.binance_usdm import (
     test_koru_funding_rate_history_source_bounded_v1 as funding_fixture,
 )
 from tests.bundle_builder.providers.binance_usdm import (
+    test_koru_price_bars_retained_observations_v1 as retained_price_fixture,
+)
+from tests.bundle_builder.providers.binance_usdm import (
     test_koru_price_bars_source_bounded_v1 as price_fixture,
 )
 from tests.bundle_builder.providers.tradifi import (
@@ -264,6 +267,47 @@ def _price_strategy_events(
         if event.payload.get("source_kind") == source_kind
         and event.payload.get("price_purpose") == "strategy"
     )
+
+
+def test_source_projection_accepts_exact_official_and_retained_aug24_price_mix() -> (
+    None
+):
+    aug24_start_ms = retained_price_fixture.DAY_START_MS
+    start = (aug24_start_ms - 2 * price_fixture.HOUR_MS) * 1_000_000
+    end = (aug24_start_ms + 11 * price_fixture.HOUR_MS) * 1_000_000
+    request = _request(
+        (
+            (aug24_start_ms - 90 * 60_000, "12.340"),
+            (aug24_start_ms + 30 * 60_000, "12.350"),
+        ),
+        start_ns=start,
+        end_ns=end,
+    )
+    assert tuple(
+        result.capture.request.utc_date for result in request.mark_price_results
+    ) == ("2026-08-23", "2026-08-24")
+    mixed = replace(
+        request,
+        mark_price_results=(
+            request.mark_price_results[0],
+            retained_price_fixture.retained_result(_KIND.MARK_PRICE),
+        ),
+        index_price_results=(
+            request.index_price_results[0],
+            retained_price_fixture.retained_result(_KIND.INDEX_PRICE),
+        ),
+    )
+    outcome = build_binance_usdm_koru_tradifi_source_projection_v1(mixed)
+    assert outcome.failure is None
+    assert outcome.result is not None
+    derived = tuple(
+        event
+        for event in outcome.result.source_events
+        if event.payload.get("source_mode")
+        == "base_manifest_derived_raw_observations"
+    )
+    assert derived
+    assert all(event.payload["development_only"] is True for event in derived)
 
 
 def test_first_retained_trade_projects_distinct_boundaries_and_decodes() -> None:

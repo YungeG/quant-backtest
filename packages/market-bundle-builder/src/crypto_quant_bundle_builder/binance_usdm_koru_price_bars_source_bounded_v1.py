@@ -2,6 +2,8 @@
 
 Captured provider bytes are authoritative only for their frozen date, hashes, and
 availability receipt. Future dates require separately captured hashes and receipts.
+Retained observations use the official completed-kline close+1ms policy as
+provider-effective availability; later local acquisition never backdates a bar.
 """
 
 from __future__ import annotations
@@ -9,12 +11,13 @@ from __future__ import annotations
 import csv
 import hashlib
 import io
+import json
 import re
 from collections.abc import Callable
 from dataclasses import dataclass
-from datetime import date
+from datetime import UTC, date, datetime
 from enum import Enum
-from zipfile import BadZipFile, ZipFile
+from zipfile import ZIP_STORED, BadZipFile, ZipFile, ZipInfo
 
 from crypto_quant_domain import (
     InstrumentId,
@@ -29,6 +32,7 @@ from crypto_quant_market_data import MarketBundleCapability, MarketEvent
 from .source_snapshots import (
     RawSourceMember,
     SourceSnapshot,
+    SourceSnapshotMember,
     SourceSnapshotProvenance,
     freeze_source_snapshot,
     verify_source_snapshot,
@@ -63,6 +67,29 @@ _CSV_HEADER = (
     "taker_buy_quote_volume",
     "ignore",
 )
+_RETAINED_CSV_HEADER = (
+    "open_time_utc",
+    "open",
+    "high",
+    "low",
+    "close",
+    "close_time_utc",
+    "volume",
+)
+_RETAINED_CSV_SCHEMA_IDENTITY = (
+    "binance_usdm_koru_price_bars_discovery_bounded_csv_7_column_scale8_v1"
+)
+_RETAINED_SOURCE_ARTIFACT_TYPE = "binance_fapi_price_bars_raw_csv_v1"
+_RETAINED_BASE_MANIFEST_PATH = "research/koruusdt/data/manifest.json"
+_RETAINED_SOURCE_MODE = "base_manifest_derived_raw_observations"
+_RETAINED_UTC_DATE = "2026-08-24"
+_RETAINED_DAY_START_MS = 1_787_529_600_000
+_RETAINED_COVERAGE_END_MS = _RETAINED_DAY_START_MS + 11 * _HOUR_MILLISECONDS
+_RETAINED_ORIGINAL_REQUEST_START_MS = 1_782_136_500_000
+_RETAINED_ORIGINAL_REQUEST_END_EXCLUSIVE_MS = 1_787_569_200_000
+_RETAINED_PARAMETER_LIMIT = 1000
+_RETAINED_BASE_MANIFEST_MEMBER_KEY = "retained/base/manifest.json"
+_RETAINED_DERIVED_CSV_MEMBER_KEY = "derived/KORUUSDT-1h-2026-08-24.discovery-bounded.csv"
 _PHASE = TimelinePhase(0, "market_data")
 _POINT_CAPABILITY = MarketBundleCapability("price.point", 1)
 _BAR_CAPABILITY = MarketBundleCapability("price.bar", 1)
@@ -108,6 +135,46 @@ FetchBytes = Callable[[str], tuple[int, bytes]]
 class BinanceUsdmKoruPriceBarsSourceKindV1(str, Enum):
     MARK_PRICE = "mark_price"
     INDEX_PRICE = "index_price"
+
+
+_RETAINED_ENDPOINTS = {
+    BinanceUsdmKoruPriceBarsSourceKindV1.MARK_PRICE: (
+        "https://fapi.binance.com/fapi/v1/markPriceKlines"
+    ),
+    BinanceUsdmKoruPriceBarsSourceKindV1.INDEX_PRICE: (
+        "https://fapi.binance.com/fapi/v1/indexPriceKlines"
+    ),
+}
+_RETAINED_SOURCE_IDS = {
+    BinanceUsdmKoruPriceBarsSourceKindV1.MARK_PRICE: (
+        "binance_futures_mark_price_kline"
+    ),
+    BinanceUsdmKoruPriceBarsSourceKindV1.INDEX_PRICE: (
+        "binance_futures_index_price_kline"
+    ),
+}
+_RETAINED_SOURCE_PATHS = {
+    BinanceUsdmKoruPriceBarsSourceKindV1.MARK_PRICE: (
+        "research/koruusdt/data/binance_mark_raw.csv"
+    ),
+    BinanceUsdmKoruPriceBarsSourceKindV1.INDEX_PRICE: (
+        "research/koruusdt/data/binance_index_raw.csv"
+    ),
+}
+_RETAINED_SOURCE_SHA256 = {
+    BinanceUsdmKoruPriceBarsSourceKindV1.MARK_PRICE: (
+        "sha256:e46fd0296dea518616fa11905db3a07e6d8ab672d9867298f88be12e771918d4"
+    ),
+    BinanceUsdmKoruPriceBarsSourceKindV1.INDEX_PRICE: (
+        "sha256:a67e4be307cf2701b0c16b76a193129907e86bc4b7294b52ce11b304ce278046"
+    ),
+}
+_RETAINED_BASE_MANIFEST_FILE_SHA256 = (
+    "sha256:c20ab7e8444e4f2a60e6e2b10e9faf57345e68c6cd10a4682c744f3fe4f91a80"
+)
+_RETAINED_BASE_MANIFEST_IDENTITY = (
+    "sha256:066c775e60ba402b631b406fd8138da200d7e30a136e0efb7c2c13b196680d64"
+)
 
 
 @dataclass(frozen=True, slots=True)
@@ -243,6 +310,420 @@ def _source_key(
     )
 
 
+def _retained_parameters(
+    source_kind: BinanceUsdmKoruPriceBarsSourceKindV1,
+) -> dict[str, object]:
+    instrument_parameter = (
+        "symbol"
+        if source_kind is BinanceUsdmKoruPriceBarsSourceKindV1.MARK_PRICE
+        else "pair"
+    )
+    return {
+        "endTime": _RETAINED_ORIGINAL_REQUEST_END_EXCLUSIVE_MS - 1,
+        "interval": _INTERVAL,
+        "limit": _RETAINED_PARAMETER_LIMIT,
+        "startTime": _RETAINED_ORIGINAL_REQUEST_START_MS,
+        instrument_parameter: _SYMBOL,
+    }
+
+
+def _retained_parameter_hash(
+    source_kind: BinanceUsdmKoruPriceBarsSourceKindV1,
+) -> str:
+    return canonical_sha256(_retained_parameters(source_kind))
+
+
+@dataclass(frozen=True, slots=True)
+class BinanceUsdmKoruRetainedPriceBarsAuthorityV1:
+    source_artifact_type: str
+    source_artifact_path: str
+    source_artifact_sha256: str
+    source_acquired_at_epoch_nanoseconds: int
+    base_manifest_path: str
+    base_manifest_file_sha256: str
+    base_manifest_identity: str
+    original_binance_endpoint: str
+    original_binance_parameter_sha256: str
+    original_request_start: UtcInstant
+    original_request_end_exclusive: UtcInstant
+    provider_availability_authority_ref: str
+    selected_coverage_start: UtcInstant
+    selected_coverage_end_exclusive: UtcInstant
+    derived_csv_member_name: str
+    derived_csv_sha256: str
+    derived_csv_schema_identity: str
+    development_only: bool = True
+    decision_grade_eligible: bool = False
+    deployment_authorized: bool = False
+
+    def __post_init__(self) -> None:
+        if self.source_artifact_type != _RETAINED_SOURCE_ARTIFACT_TYPE:
+            raise ValueError("source artifact type must be exact")
+        _content_hash("source_artifact_sha256", self.source_artifact_sha256)
+        if (
+            type(self.source_acquired_at_epoch_nanoseconds) is not int
+            or self.source_acquired_at_epoch_nanoseconds <= 0
+        ):
+            raise ValueError("source acquisition must be an exact positive UTC instant")
+        if self.base_manifest_path != _RETAINED_BASE_MANIFEST_PATH:
+            raise ValueError("base manifest path must be exact")
+        _content_hash("base_manifest_file_sha256", self.base_manifest_file_sha256)
+        _content_hash("base_manifest_identity", self.base_manifest_identity)
+        if self.original_binance_endpoint not in _RETAINED_ENDPOINTS.values():
+            raise ValueError("original_binance_endpoint must be an exact KORU endpoint")
+        source_kind = next(
+            kind
+            for kind, endpoint in _RETAINED_ENDPOINTS.items()
+            if endpoint == self.original_binance_endpoint
+        )
+        if self.source_artifact_path != _RETAINED_SOURCE_PATHS[source_kind]:
+            raise ValueError("source artifact path must match the exact endpoint kind")
+        _content_hash(
+            "original_binance_parameter_sha256",
+            self.original_binance_parameter_sha256,
+        )
+        if self.original_binance_parameter_sha256 != _retained_parameter_hash(
+            source_kind
+        ):
+            raise ValueError("original Binance parameters must be exact")
+        if (
+            type(self.original_request_start) is not UtcInstant
+            or type(self.original_request_end_exclusive) is not UtcInstant
+            or self.original_request_start.epoch_nanoseconds
+            != _RETAINED_ORIGINAL_REQUEST_START_MS * 1_000_000
+            or self.original_request_end_exclusive.epoch_nanoseconds
+            != _RETAINED_ORIGINAL_REQUEST_END_EXCLUSIVE_MS * 1_000_000
+        ):
+            raise ValueError("original request must retain exact Jun22-Aug24 window")
+        if (
+            self.provider_availability_authority_ref
+            != _ECONOMIC_AVAILABILITY_POLICY_REF
+        ):
+            raise ValueError("provider availability authority ref must be exact")
+        if (
+            type(self.selected_coverage_start) is not UtcInstant
+            or type(self.selected_coverage_end_exclusive) is not UtcInstant
+        ):
+            raise TypeError("selected coverage must use exact UTC instants")
+        start_ms = self.selected_coverage_start.epoch_nanoseconds // 1_000_000
+        end_ms = self.selected_coverage_end_exclusive.epoch_nanoseconds // 1_000_000
+        if (
+            self.selected_coverage_start.epoch_nanoseconds % 1_000_000 != 0
+            or self.selected_coverage_end_exclusive.epoch_nanoseconds % 1_000_000 != 0
+            or start_ms != _RETAINED_DAY_START_MS
+            or end_ms != _RETAINED_COVERAGE_END_MS
+        ):
+            raise ValueError("selected coverage must be exact Aug24 [00:00,11:00) UTC")
+        if (
+            type(self.derived_csv_member_name) is not str
+            or self.derived_csv_member_name
+            != f"{_SYMBOL}-{_INTERVAL}-{_RETAINED_UTC_DATE}.discovery-bounded.csv"
+        ):
+            raise ValueError("derived CSV member name must be exact")
+        _content_hash("derived_csv_sha256", self.derived_csv_sha256)
+        if self.derived_csv_schema_identity != _RETAINED_CSV_SCHEMA_IDENTITY:
+            raise ValueError("derived CSV schema identity must be exact")
+        if (
+            type(self.development_only) is not bool
+            or not self.development_only
+            or type(self.decision_grade_eligible) is not bool
+            or self.decision_grade_eligible
+            or type(self.deployment_authorized) is not bool
+            or self.deployment_authorized
+        ):
+            raise ValueError("retained authority must remain development-only")
+
+    @property
+    def authority_hash(self) -> str:
+        return canonical_sha256(self.to_canonical_dict())
+
+    def to_canonical_dict(self) -> dict[str, object]:
+        return {
+            "type": "binance_usdm_koru_retained_price_bars_authority_v1",
+            "schema_version": _SCHEMA_VERSION,
+            "source_artifact_type": self.source_artifact_type,
+            "source_artifact_path": self.source_artifact_path,
+            "source_artifact_sha256": self.source_artifact_sha256,
+            "source_acquired_at_epoch_nanoseconds": self.source_acquired_at_epoch_nanoseconds,
+            "base_manifest_path": self.base_manifest_path,
+            "base_manifest_file_sha256": self.base_manifest_file_sha256,
+            "base_manifest_identity": self.base_manifest_identity,
+            "original_binance_endpoint": self.original_binance_endpoint,
+            "original_binance_parameter_sha256": self.original_binance_parameter_sha256,
+            "original_request_start": self.original_request_start.to_canonical_dict(),
+            "original_request_end_exclusive": self.original_request_end_exclusive.to_canonical_dict(),
+            "provider_availability_authority_ref": self.provider_availability_authority_ref,
+            "selected_coverage_start": self.selected_coverage_start.to_canonical_dict(),
+            "selected_coverage_end_exclusive": self.selected_coverage_end_exclusive.to_canonical_dict(),
+            "derived_csv_member_name": self.derived_csv_member_name,
+            "derived_csv_sha256": self.derived_csv_sha256,
+            "derived_csv_schema_identity": self.derived_csv_schema_identity,
+            "development_only": self.development_only,
+            "decision_grade_eligible": self.decision_grade_eligible,
+            "deployment_authorized": self.deployment_authorized,
+        }
+
+
+def _trusted_authority(
+    value: object,
+) -> BinanceUsdmKoruRetainedPriceBarsAuthorityV1 | None:
+    if type(value) is not BinanceUsdmKoruRetainedPriceBarsAuthorityV1:
+        return None
+    try:
+        rebuilt = BinanceUsdmKoruRetainedPriceBarsAuthorityV1(
+            source_artifact_type=value.source_artifact_type,
+            source_artifact_path=value.source_artifact_path,
+            source_artifact_sha256=value.source_artifact_sha256,
+            source_acquired_at_epoch_nanoseconds=value.source_acquired_at_epoch_nanoseconds,
+            base_manifest_path=value.base_manifest_path,
+            base_manifest_file_sha256=value.base_manifest_file_sha256,
+            base_manifest_identity=value.base_manifest_identity,
+            original_binance_endpoint=value.original_binance_endpoint,
+            original_binance_parameter_sha256=value.original_binance_parameter_sha256,
+            original_request_start=value.original_request_start,
+            original_request_end_exclusive=value.original_request_end_exclusive,
+            provider_availability_authority_ref=value.provider_availability_authority_ref,
+            selected_coverage_start=value.selected_coverage_start,
+            selected_coverage_end_exclusive=value.selected_coverage_end_exclusive,
+            derived_csv_member_name=value.derived_csv_member_name,
+            derived_csv_sha256=value.derived_csv_sha256,
+            derived_csv_schema_identity=value.derived_csv_schema_identity,
+            development_only=value.development_only,
+            decision_grade_eligible=value.decision_grade_eligible,
+            deployment_authorized=value.deployment_authorized,
+        )
+        if rebuilt.to_canonical_dict() != value.to_canonical_dict():
+            return None
+    except (AttributeError, TypeError, ValueError):
+        return None
+    return rebuilt
+
+
+def build_binance_usdm_koru_price_bars_retained_observations_evidence_v1(
+    authority: BinanceUsdmKoruRetainedPriceBarsAuthorityV1,
+    csv_bytes: bytes,
+) -> tuple[bytes, bytes]:
+    trusted = _trusted_authority(authority)
+    if (
+        trusted is None
+        or type(csv_bytes) is not bytes
+        or _sha256(csv_bytes) != trusted.derived_csv_sha256
+    ):
+        raise ValueError("derived CSV must exactly match retained authority")
+    output = io.BytesIO()
+    member = ZipInfo(trusted.derived_csv_member_name, (2026, 8, 24, 0, 0, 0))
+    member.compress_type = ZIP_STORED
+    member.external_attr = 0o644 << 16
+    with ZipFile(output, "w") as archive:
+        archive.writestr(member, csv_bytes)
+    archive_bytes = output.getvalue()
+    checksum_bytes = (
+        f"{_sha256(archive_bytes)[7:]}  {_archive_name(_RETAINED_UTC_DATE)}\n".encode()
+    )
+    return archive_bytes, checksum_bytes
+
+
+def _json_object(pairs: list[tuple[str, object]]) -> dict[str, object]:
+    result: dict[str, object] = {}
+    for key, value in pairs:
+        if key in result:
+            raise ValueError("duplicate JSON key")
+        result[key] = value
+    return result
+
+
+def _manifest_sha256(manifest: dict[str, object]) -> str:
+    hashable = dict(manifest)
+    hashable["manifest_sha256"] = ""
+    return _sha256(
+        json.dumps(
+            hashable,
+            ensure_ascii=False,
+            allow_nan=False,
+            separators=(",", ":"),
+            sort_keys=True,
+        ).encode()
+    )
+
+
+def _base_manifest(base_manifest_bytes: bytes) -> dict[str, object]:
+    if type(base_manifest_bytes) is not bytes:
+        raise ValueError("base manifest must be exact bytes")
+    try:
+        value = json.loads(base_manifest_bytes, object_pairs_hook=_json_object)
+    except (UnicodeDecodeError, json.JSONDecodeError, ValueError) as error:
+        raise ValueError("base manifest must be exact JSON") from error
+    if type(value) is not dict:
+        raise ValueError("base manifest must be a JSON object")
+    manifest = value
+    declared = manifest.get("manifest_sha256")
+    if type(declared) is not str or declared != _manifest_sha256(manifest):
+        raise ValueError("base manifest canonical hash mismatch")
+    return manifest
+
+
+def _exact_mapping(value: object, expected: dict[str, object]) -> bool:
+    return type(value) is dict and value == expected
+
+
+def _manifest_source(
+    manifest: dict[str, object],
+    source_kind: BinanceUsdmKoruPriceBarsSourceKindV1,
+) -> dict[str, object]:
+    sources = manifest.get("sources")
+    if type(sources) is not list:
+        raise ValueError("base manifest sources missing")
+    matches = [
+        source
+        for source in sources
+        if type(source) is dict
+        and source.get("source_id") == _RETAINED_SOURCE_IDS[source_kind]
+    ]
+    if len(matches) != 1:
+        raise ValueError("base manifest source must be unique")
+    source = matches[0]
+    if (
+        source.get("endpoint") != _RETAINED_ENDPOINTS[source_kind]
+        or not _exact_mapping(
+            source.get("parameters"), _retained_parameters(source_kind)
+        )
+        or source.get("type") != "BINANCE_KLINES"
+        or source.get("end_semantics")
+        != "endTime is inclusive at the endpoint; requested end is exclusive, so endTime=end_ms-1"
+    ):
+        raise ValueError("base manifest source request mismatch")
+    return source
+
+
+def _manifest_artifact_hash(
+    manifest: dict[str, object], source_kind: BinanceUsdmKoruPriceBarsSourceKindV1
+) -> str:
+    artifacts = manifest.get("artifacts")
+    artifact_name = _RETAINED_SOURCE_PATHS[source_kind].rsplit("/", 1)[-1]
+    if type(artifacts) is not list:
+        raise ValueError("base manifest artifacts missing")
+    matches = [
+        artifact
+        for artifact in artifacts
+        if type(artifact) is dict and artifact.get("path") == artifact_name
+    ]
+    if len(matches) != 1 or type(matches[0].get("sha256")) is not str:
+        raise ValueError("base manifest artifact must be unique")
+    return _content_hash("source artifact sha256", matches[0]["sha256"])
+
+
+def _derived_subset_from_source(source_csv_bytes: bytes) -> bytes:
+    if (
+        type(source_csv_bytes) is not bytes
+        or b"\r" in source_csv_bytes
+        or not source_csv_bytes.endswith(b"\n")
+    ):
+        raise ValueError("source CSV encoding mismatch")
+    lines = source_csv_bytes.splitlines(keepends=True)
+    header = (",".join(_RETAINED_CSV_HEADER) + "\n").encode()
+    if not lines or lines[0] != header:
+        raise ValueError("source CSV header mismatch")
+    prefix = (_RETAINED_UTC_DATE + "T").encode()
+    selected = tuple(line for line in lines[1:] if line.startswith(prefix))
+    derived = header + b"".join(selected)
+    rows = _validated_rows(
+        _csv_rows(derived, _RETAINED_CSV_HEADER),
+        UtcInstant(_RETAINED_DAY_START_MS * 1_000_000),
+        UtcInstant(_RETAINED_COVERAGE_END_MS * 1_000_000),
+        retained=True,
+    )
+    if len(rows) != 11:
+        raise ValueError("selected Aug24 source subset mismatch")
+    return derived
+
+
+def _reconstruct_retained_authority(
+    source_kind: BinanceUsdmKoruPriceBarsSourceKindV1,
+    source_csv_bytes: bytes,
+    base_manifest_bytes: bytes,
+    derived_csv_bytes: bytes,
+    archive_bytes: bytes,
+    checksum_bytes: bytes,
+) -> BinanceUsdmKoruRetainedPriceBarsAuthorityV1:
+    if any(
+        type(value) is not bytes
+        for value in (
+            source_csv_bytes,
+            base_manifest_bytes,
+            derived_csv_bytes,
+            archive_bytes,
+            checksum_bytes,
+        )
+    ):
+        raise ValueError("retained evidence must be exact bytes")
+    if _sha256(base_manifest_bytes) != _RETAINED_BASE_MANIFEST_FILE_SHA256:
+        raise ValueError("base manifest frozen file hash mismatch")
+    manifest = _base_manifest(base_manifest_bytes)
+    if manifest.get("manifest_sha256") != _RETAINED_BASE_MANIFEST_IDENTITY:
+        raise ValueError("base manifest frozen identity mismatch")
+    if not _exact_mapping(
+        manifest.get("requested_window"),
+        {
+            "end_ms_exclusive": _RETAINED_ORIGINAL_REQUEST_END_EXCLUSIVE_MS,
+            "end_utc_exclusive": "2026-08-24T11:00:00.000Z",
+            "interval": _INTERVAL,
+            "start_ms": _RETAINED_ORIGINAL_REQUEST_START_MS,
+            "start_utc_inclusive": "2026-06-22T13:55:00.000Z",
+        },
+    ):
+        raise ValueError("base manifest original request window mismatch")
+    manifest_identity = manifest.get("manifest_sha256")
+    if type(manifest_identity) is not str:
+        raise ValueError("base manifest identity missing")
+    artifact_hash = _manifest_artifact_hash(manifest, source_kind)
+    if (
+        artifact_hash != _RETAINED_SOURCE_SHA256[source_kind]
+        or _sha256(source_csv_bytes) != artifact_hash
+    ):
+        raise ValueError("source artifact bytes mismatch")
+    source = _manifest_source(manifest, source_kind)
+    acquired_text = source.get("as_of_utc")
+    if type(acquired_text) is not str:
+        raise ValueError("source acquisition missing")
+    source_acquired_at = _iso_milliseconds(acquired_text) * 1_000_000
+    expected_derived = _derived_subset_from_source(source_csv_bytes)
+    if derived_csv_bytes != expected_derived:
+        raise ValueError("derived CSV is not the byte-exact Aug24 source subset")
+    authority = BinanceUsdmKoruRetainedPriceBarsAuthorityV1(
+        source_artifact_type=_RETAINED_SOURCE_ARTIFACT_TYPE,
+        source_artifact_path=_RETAINED_SOURCE_PATHS[source_kind],
+        source_artifact_sha256=artifact_hash,
+        source_acquired_at_epoch_nanoseconds=source_acquired_at,
+        base_manifest_path=_RETAINED_BASE_MANIFEST_PATH,
+        base_manifest_file_sha256=_sha256(base_manifest_bytes),
+        base_manifest_identity=manifest_identity,
+        original_binance_endpoint=_RETAINED_ENDPOINTS[source_kind],
+        original_binance_parameter_sha256=_retained_parameter_hash(source_kind),
+        original_request_start=UtcInstant(
+            _RETAINED_ORIGINAL_REQUEST_START_MS * 1_000_000
+        ),
+        original_request_end_exclusive=UtcInstant(
+            _RETAINED_ORIGINAL_REQUEST_END_EXCLUSIVE_MS * 1_000_000
+        ),
+        provider_availability_authority_ref=_ECONOMIC_AVAILABILITY_POLICY_REF,
+        selected_coverage_start=UtcInstant(_RETAINED_DAY_START_MS * 1_000_000),
+        selected_coverage_end_exclusive=UtcInstant(
+            _RETAINED_COVERAGE_END_MS * 1_000_000
+        ),
+        derived_csv_member_name=_RETAINED_DERIVED_CSV_MEMBER_KEY.split("/", 1)[1],
+        derived_csv_sha256=_sha256(derived_csv_bytes),
+        derived_csv_schema_identity=_RETAINED_CSV_SCHEMA_IDENTITY,
+    )
+    expected_archive, expected_checksum = (
+        build_binance_usdm_koru_price_bars_retained_observations_evidence_v1(
+            authority, derived_csv_bytes
+        )
+    )
+    if archive_bytes != expected_archive or checksum_bytes != expected_checksum:
+        raise ValueError("derived ZIP/checksum must be deterministic")
+    return authority
+
+
 @dataclass(frozen=True, slots=True)
 class BinanceUsdmKoruPriceBarsSourceBoundedRequestV1:
     source_kind: BinanceUsdmKoruPriceBarsSourceKindV1
@@ -253,6 +734,7 @@ class BinanceUsdmKoruPriceBarsSourceBoundedRequestV1:
     acquired_at_epoch_nanoseconds: int
     expected_archive_sha256: str
     expected_checksum_sha256: str
+    authority: BinanceUsdmKoruRetainedPriceBarsAuthorityV1 | None = None
 
     def __post_init__(self) -> None:
         if type(self.source_kind) is not BinanceUsdmKoruPriceBarsSourceKindV1:
@@ -279,6 +761,23 @@ class BinanceUsdmKoruPriceBarsSourceBoundedRequestV1:
             raise ValueError("acquired_at cannot precede archive_available_at")
         _ = _content_hash("expected_archive_sha256", self.expected_archive_sha256)
         _ = _content_hash("expected_checksum_sha256", self.expected_checksum_sha256)
+        if self.authority is not None:
+            authority = _trusted_authority(self.authority)
+            if (
+                authority is None
+                or self.utc_date != _RETAINED_UTC_DATE
+                or authority.original_binance_endpoint
+                != _RETAINED_ENDPOINTS[self.source_kind]
+                or authority.original_binance_parameter_sha256
+                != _retained_parameter_hash(self.source_kind)
+                or authority.provider_availability_authority_ref
+                != _ECONOMIC_AVAILABILITY_POLICY_REF
+                or self.archive_available_at_epoch_nanoseconds
+                < authority.source_acquired_at_epoch_nanoseconds
+                or self.acquired_at_epoch_nanoseconds
+                < authority.source_acquired_at_epoch_nanoseconds
+            ):
+                raise ValueError("retained request authority does not exactly bind Aug24")
 
     @property
     def symbol(self) -> str:
@@ -294,10 +793,14 @@ class BinanceUsdmKoruPriceBarsSourceBoundedRequestV1:
 
     @property
     def csv_name(self) -> str:
+        if self.authority is not None:
+            return self.authority.derived_csv_member_name
         return _csv_name(self.utc_date)
 
     @property
     def urls(self) -> tuple[str, str]:
+        if self.authority is not None:
+            raise ValueError("retained observations do not claim provider archive URLs")
         base_url = _base_url(self.source_kind)
         return (base_url + self.archive_name, base_url + self.checksum_name)
 
@@ -306,7 +809,23 @@ class BinanceUsdmKoruPriceBarsSourceBoundedRequestV1:
         return canonical_sha256(self.to_canonical_dict())
 
     def to_canonical_dict(self) -> dict[str, object]:
-        archive_url, checksum_url = self.urls
+        if self.authority is None:
+            archive_url, checksum_url = self.urls
+            return {
+                "type": "binance_usdm_koru_price_bars_source_bounded_request_v1",
+                "schema_version": _SCHEMA_VERSION,
+                "source_kind": self.source_kind.value,
+                "instrument_id": self.instrument_id.to_canonical_dict(),
+                "symbol": _SYMBOL,
+                "interval": self.interval,
+                "utc_date": self.utc_date,
+                "archive_url": archive_url,
+                "checksum_url": checksum_url,
+                "archive_available_at_epoch_nanoseconds": self.archive_available_at_epoch_nanoseconds,
+                "acquired_at_epoch_nanoseconds": self.acquired_at_epoch_nanoseconds,
+                "expected_archive_sha256": self.expected_archive_sha256,
+                "expected_checksum_sha256": self.expected_checksum_sha256,
+            }
         return {
             "type": "binance_usdm_koru_price_bars_source_bounded_request_v1",
             "schema_version": _SCHEMA_VERSION,
@@ -315,8 +834,9 @@ class BinanceUsdmKoruPriceBarsSourceBoundedRequestV1:
             "symbol": _SYMBOL,
             "interval": self.interval,
             "utc_date": self.utc_date,
-            "archive_url": archive_url,
-            "checksum_url": checksum_url,
+            "source_mode": _RETAINED_SOURCE_MODE,
+            "authority": self.authority.to_canonical_dict(),
+            "authority_hash": self.authority.authority_hash,
             "archive_available_at_epoch_nanoseconds": self.archive_available_at_epoch_nanoseconds,
             "acquired_at_epoch_nanoseconds": self.acquired_at_epoch_nanoseconds,
             "expected_archive_sha256": self.expected_archive_sha256,
@@ -339,6 +859,7 @@ def _trusted_request(
             value.acquired_at_epoch_nanoseconds,
             value.expected_archive_sha256,
             value.expected_checksum_sha256,
+            value.authority,
         )
         if rebuilt.to_canonical_dict() != value.to_canonical_dict():
             return None
@@ -350,6 +871,18 @@ def _trusted_request(
 def _provenance(
     request: BinanceUsdmKoruPriceBarsSourceBoundedRequestV1,
 ) -> SourceSnapshotProvenance:
+    if request.authority is not None:
+        return SourceSnapshotProvenance(
+            vendor_key="repository.retained_binance_observations",
+            source_key=(
+                "binance.fapi.base-manifest-derived.koruusdt.1h.2026-08-24."
+                + request.source_kind.value
+                + ".authority-"
+                + request.authority.authority_hash[7:]
+            ),
+            license_ref="binance.api.terms",
+            retention_policy_ref="development.retained-observation-authority.v1",
+        )
     return SourceSnapshotProvenance(
         vendor_key="binance.public_data",
         source_key=_source_key(
@@ -418,34 +951,62 @@ def _failure(
     return BinanceUsdmKoruPriceBarsSourceBoundedFailureV1(code, subject, row_number)
 
 
+def _member_prefix(
+    request: BinanceUsdmKoruPriceBarsSourceBoundedRequestV1,
+) -> str:
+    return "derived/" if request.authority is not None else "archive/"
+
+
+def _retained_member_keys(
+    request: BinanceUsdmKoruPriceBarsSourceBoundedRequestV1,
+) -> tuple[str, ...]:
+    authority = request.authority
+    if authority is None:
+        raise ValueError("retained authority required")
+    return tuple(
+        sorted(
+            (
+                _RETAINED_BASE_MANIFEST_MEMBER_KEY,
+                "retained/source/" + authority.source_artifact_path.rsplit("/", 1)[-1],
+                _RETAINED_DERIVED_CSV_MEMBER_KEY,
+                "derived/" + request.archive_name,
+                "derived/" + request.checksum_name,
+            )
+        )
+    )
+
+
+def _snapshot_member(
+    snapshot: SourceSnapshot, member_key: str
+) -> SourceSnapshotMember:
+    return next(member for member in snapshot.members if member.member_key == member_key)
+
+
 def _snapshot_matches_request(
     request: BinanceUsdmKoruPriceBarsSourceBoundedRequestV1,
     snapshot: SourceSnapshot,
 ) -> bool:
-    archive_key = "archive/" + request.archive_name
-    checksum_key = "archive/" + request.checksum_name
+    archive_key = _member_prefix(request) + request.archive_name
+    checksum_key = _member_prefix(request) + request.checksum_name
+    expected_keys = (
+        _retained_member_keys(request)
+        if request.authority is not None
+        else (archive_key, checksum_key)
+    )
     if (
         type(snapshot) is not SourceSnapshot
         or verify_source_snapshot(snapshot).snapshot is None
-        or tuple(member.member_key for member in snapshot.members)
-        != (archive_key, checksum_key)
+        or tuple(member.member_key for member in snapshot.members) != expected_keys
         or snapshot.provenance != _provenance(request)
         or snapshot.decision_grade_eligible
         or snapshot.deployment_authorized
     ):
         return False
-    archive_member, checksum_member = snapshot.members
-    if (
-        archive_member.content_hash != request.expected_archive_sha256
-        or archive_member.declared_sha256 != request.expected_archive_sha256
-        or checksum_member.content_hash != request.expected_checksum_sha256
-        or checksum_member.declared_sha256 != request.expected_checksum_sha256
-        or archive_member.acquired_at_epoch_nanoseconds
-        != request.acquired_at_epoch_nanoseconds
-        or checksum_member.acquired_at_epoch_nanoseconds
-        != request.acquired_at_epoch_nanoseconds
-        or archive_member.mode != "0644"
-        or checksum_member.mode != "0644"
+    if any(
+        member.acquired_at_epoch_nanoseconds != request.acquired_at_epoch_nanoseconds
+        or member.mode != "0644"
+        or member.content_hash != member.declared_sha256
+        for member in snapshot.members
     ):
         return False
     try:
@@ -453,12 +1014,30 @@ def _snapshot_matches_request(
         checksum = snapshot.member_bytes(checksum_key)
     except ValueError:
         return False
-    return (
+    if not (
         _sha256(archive) == request.expected_archive_sha256
         and _sha256(checksum) == request.expected_checksum_sha256
         and checksum
         == f"{request.expected_archive_sha256[7:]}  {request.archive_name}\n".encode()
-    )
+    ):
+        return False
+    if request.authority is None:
+        return True
+    try:
+        source_key = "retained/source/" + request.authority.source_artifact_path.rsplit(
+            "/", 1
+        )[-1]
+        reconstructed = _reconstruct_retained_authority(
+            request.source_kind,
+            snapshot.member_bytes(source_key),
+            snapshot.member_bytes(_RETAINED_BASE_MANIFEST_MEMBER_KEY),
+            snapshot.member_bytes(_RETAINED_DERIVED_CSV_MEMBER_KEY),
+            archive,
+            checksum,
+        )
+        return reconstructed.to_canonical_dict() == request.authority.to_canonical_dict()
+    except (BadZipFile, KeyError, OSError, RuntimeError, StopIteration, ValueError):
+        return False
 
 
 @dataclass(frozen=True, slots=True)
@@ -632,7 +1211,7 @@ def capture_binance_usdm_koru_price_bars_source_bounded_v1(
     fetch: FetchBytes,
 ) -> BinanceUsdmKoruPriceBarsSourceBoundedCaptureOutcomeV1:
     trusted = _trusted_request(request)
-    if trusted is None or not callable(fetch):
+    if trusted is None or trusted.authority is not None or not callable(fetch):
         return BinanceUsdmKoruPriceBarsSourceBoundedCaptureOutcomeV1(
             failure=_failure(
                 BinanceUsdmKoruPriceBarsSourceBoundedFailureCodeV1.CONFIGURATION_INVALID
@@ -714,6 +1293,107 @@ def capture_binance_usdm_koru_price_bars_source_bounded_v1(
     return BinanceUsdmKoruPriceBarsSourceBoundedCaptureOutcomeV1(result=result)
 
 
+def capture_binance_usdm_koru_price_bars_from_retained_observations_v1(
+    request: BinanceUsdmKoruPriceBarsSourceBoundedRequestV1,
+    source_csv_bytes: bytes,
+    base_manifest_bytes: bytes,
+    derived_csv_bytes: bytes,
+    archive_bytes: bytes,
+    checksum_bytes: bytes,
+) -> BinanceUsdmKoruPriceBarsSourceBoundedCaptureOutcomeV1:
+    trusted = _trusted_request(request)
+    if trusted is None or trusted.authority is None:
+        return BinanceUsdmKoruPriceBarsSourceBoundedCaptureOutcomeV1(
+            failure=_failure(
+                BinanceUsdmKoruPriceBarsSourceBoundedFailureCodeV1.CONFIGURATION_INVALID
+            )
+        )
+    try:
+        reconstructed = _reconstruct_retained_authority(
+            trusted.source_kind,
+            source_csv_bytes,
+            base_manifest_bytes,
+            derived_csv_bytes,
+            archive_bytes,
+            checksum_bytes,
+        )
+    except (BadZipFile, KeyError, OSError, RuntimeError, ValueError):
+        reconstructed = None
+    if (
+        reconstructed is None
+        or reconstructed.to_canonical_dict()
+        != trusted.authority.to_canonical_dict()
+        or _sha256(archive_bytes) != trusted.expected_archive_sha256
+        or _sha256(checksum_bytes) != trusted.expected_checksum_sha256
+    ):
+        return BinanceUsdmKoruPriceBarsSourceBoundedCaptureOutcomeV1(
+            failure=_failure(
+                BinanceUsdmKoruPriceBarsSourceBoundedFailureCodeV1.SOURCE_HASH_MISMATCH,
+                "retained_authority",
+            )
+        )
+    source_key = "retained/source/" + reconstructed.source_artifact_path.rsplit(
+        "/", 1
+    )[-1]
+    frozen = freeze_source_snapshot(
+        members=(
+            RawSourceMember(
+                source_key,
+                source_csv_bytes,
+                "0644",
+                trusted.acquired_at_epoch_nanoseconds,
+                reconstructed.source_artifact_sha256,
+            ),
+            RawSourceMember(
+                _RETAINED_BASE_MANIFEST_MEMBER_KEY,
+                base_manifest_bytes,
+                "0644",
+                trusted.acquired_at_epoch_nanoseconds,
+                reconstructed.base_manifest_file_sha256,
+            ),
+            RawSourceMember(
+                _RETAINED_DERIVED_CSV_MEMBER_KEY,
+                derived_csv_bytes,
+                "0644",
+                trusted.acquired_at_epoch_nanoseconds,
+                reconstructed.derived_csv_sha256,
+            ),
+            RawSourceMember(
+                "derived/" + trusted.archive_name,
+                archive_bytes,
+                "0644",
+                trusted.acquired_at_epoch_nanoseconds,
+                trusted.expected_archive_sha256,
+            ),
+            RawSourceMember(
+                "derived/" + trusted.checksum_name,
+                checksum_bytes,
+                "0644",
+                trusted.acquired_at_epoch_nanoseconds,
+                trusted.expected_checksum_sha256,
+            ),
+        ),
+        provenance=_provenance(trusted),
+    )
+    if frozen.snapshot is None:
+        return BinanceUsdmKoruPriceBarsSourceBoundedCaptureOutcomeV1(
+            failure=_failure(
+                BinanceUsdmKoruPriceBarsSourceBoundedFailureCodeV1.SNAPSHOT_INVALID
+            )
+        )
+    try:
+        result = BinanceUsdmKoruPriceBarsSourceBoundedCaptureResultV1(
+            trusted, frozen.snapshot, 1, 1
+        )
+    except (TypeError, ValueError):
+        return BinanceUsdmKoruPriceBarsSourceBoundedCaptureOutcomeV1(
+            failure=_failure(
+                BinanceUsdmKoruPriceBarsSourceBoundedFailureCodeV1.SNAPSHOT_INVALID
+            )
+        )
+    return BinanceUsdmKoruPriceBarsSourceBoundedCaptureOutcomeV1(result=result)
+
+
 class _NormalizationError(ValueError):
     def __init__(
         self,
@@ -769,17 +1449,21 @@ def _canonical_nonnegative_decimal(value: str) -> None:
         raise ValueError("non-canonical decimal")
 
 
-def _price_units(value: str) -> int:
+def _scale8_units(value: str) -> int:
     match = _PRICE.fullmatch(value)
     if match is None:
-        raise ValueError("non-canonical price")
+        raise ValueError("non-canonical scale8 decimal")
     fraction = match.group(1) or ""
     try:
-        whole_units = int(value.partition(".")[0])
-        fractional_units = int(fraction.ljust(8, "0") or "0")
+        return int(value.partition(".")[0]) * 100_000_000 + int(
+            fraction.ljust(8, "0") or "0"
+        )
     except ValueError as error:
-        raise ValueError("non-canonical price") from error
-    units = whole_units * 100_000_000 + fractional_units
+        raise ValueError("non-canonical scale8 decimal") from error
+
+
+def _price_units(value: str) -> int:
+    units = _scale8_units(value)
     if units <= 0:
         raise ValueError("price must be positive")
     return units
@@ -789,8 +1473,9 @@ def _read_retained_csv(
     capture: BinanceUsdmKoruPriceBarsSourceBoundedCaptureResultV1,
 ) -> bytes:
     request = capture.request
-    archive_key = "archive/" + request.archive_name
-    checksum_key = "archive/" + request.checksum_name
+    prefix = _member_prefix(request)
+    archive_key = prefix + request.archive_name
+    checksum_key = prefix + request.checksum_name
     try:
         archive = capture.snapshot.member_bytes(archive_key)
         checksum = capture.snapshot.member_bytes(checksum_key)
@@ -816,7 +1501,21 @@ def _read_retained_csv(
                     BinanceUsdmKoruPriceBarsSourceBoundedFailureCodeV1.SOURCE_SCHEMA_MISMATCH,
                     "zip_member",
                 )
-            return zip_file.read(request.csv_name)
+            csv_bytes = zip_file.read(request.csv_name)
+            if request.authority is not None:
+                retained_csv = capture.snapshot.member_bytes(
+                    _RETAINED_DERIVED_CSV_MEMBER_KEY
+                )
+                if (
+                    csv_bytes != retained_csv
+                    or _sha256(retained_csv) != request.authority.derived_csv_sha256
+                ):
+                    raise _NormalizationError(
+                        BinanceUsdmKoruPriceBarsSourceBoundedFailureCodeV1.SOURCE_HASH_MISMATCH,
+                        "derived_csv",
+                    )
+                return retained_csv
+            return csv_bytes
     except _NormalizationError:
         raise
     except (
@@ -833,7 +1532,10 @@ def _read_retained_csv(
         ) from error
 
 
-def _csv_rows(csv_bytes: bytes) -> list[list[str]]:
+def _csv_rows(
+    csv_bytes: bytes,
+    header: tuple[str, ...] = _CSV_HEADER,
+) -> list[list[str]]:
     if not csv_bytes or b"\r" in csv_bytes or not csv_bytes.endswith(b"\n"):
         raise _NormalizationError(
             BinanceUsdmKoruPriceBarsSourceBoundedFailureCodeV1.SOURCE_SCHEMA_MISMATCH,
@@ -853,7 +1555,7 @@ def _csv_rows(csv_bytes: bytes) -> list[list[str]]:
             BinanceUsdmKoruPriceBarsSourceBoundedFailureCodeV1.SOURCE_SCHEMA_MISMATCH,
             "csv",
         ) from error
-    if not rows or tuple(rows[0]) != _CSV_HEADER:
+    if not rows or tuple(rows[0]) != header:
         raise _NormalizationError(
             BinanceUsdmKoruPriceBarsSourceBoundedFailureCodeV1.SOURCE_SCHEMA_MISMATCH,
             "csv_header",
@@ -870,6 +1572,59 @@ def _csv_rows(csv_bytes: bytes) -> list[list[str]]:
             "csv_grammar",
         )
     return rows[1:]
+
+
+def _iso_milliseconds(value: str) -> int:
+    try:
+        parsed = datetime.strptime(value, "%Y-%m-%dT%H:%M:%S.%fZ").replace(
+            tzinfo=UTC
+        )
+    except ValueError as error:
+        raise ValueError("non-canonical UTC milliseconds") from error
+    if parsed.strftime("%Y-%m-%dT%H:%M:%S.%fZ")[:-4] + "Z" != value:
+        raise ValueError("non-canonical UTC milliseconds")
+    delta = parsed - datetime(1970, 1, 1, tzinfo=UTC)
+    return delta.days * 86_400_000 + delta.seconds * 1000 + delta.microseconds // 1000
+
+
+def _parse_retained_row(row: list[str], row_number: int) -> _ParsedRow:
+    if len(row) != len(_RETAINED_CSV_HEADER):
+        raise _NormalizationError(
+            BinanceUsdmKoruPriceBarsSourceBoundedFailureCodeV1.SOURCE_SCHEMA_MISMATCH,
+            "csv_columns",
+            row_number,
+        )
+    try:
+        open_time = _iso_milliseconds(row[0])
+        open_units, high_units, low_units, close_units = tuple(
+            _scale8_units(value) for value in row[1:5]
+        )
+        close_time = _iso_milliseconds(row[5])
+        _ = _scale8_units(row[6])
+    except (TypeError, ValueError) as error:
+        raise _NormalizationError(
+            BinanceUsdmKoruPriceBarsSourceBoundedFailureCodeV1.NORMALIZATION_FAILED,
+            "row_value",
+            row_number,
+        ) from error
+    if (
+        not low_units <= open_units <= high_units
+        or not low_units <= close_units <= high_units
+    ):
+        raise _NormalizationError(
+            BinanceUsdmKoruPriceBarsSourceBoundedFailureCodeV1.NORMALIZATION_FAILED,
+            "ohlc",
+            row_number,
+        )
+    return _ParsedRow(
+        open_time,
+        close_time,
+        open_units,
+        high_units,
+        low_units,
+        close_units,
+        tuple(row),
+    )
 
 
 def _parse_row(row: list[str], row_number: int) -> _ParsedRow:
@@ -917,7 +1672,11 @@ def _parse_row(row: list[str], row_number: int) -> _ParsedRow:
 
 
 def _validated_rows(
-    rows: list[list[str]], requested_start: UtcInstant, requested_end: UtcInstant
+    rows: list[list[str]],
+    requested_start: UtcInstant,
+    requested_end: UtcInstant,
+    *,
+    retained: bool = False,
 ) -> tuple[_ParsedRow, ...]:
     day_start_ms = requested_start.epoch_nanoseconds // 1_000_000
     day_end_ms = requested_end.epoch_nanoseconds // 1_000_000
@@ -925,7 +1684,11 @@ def _validated_rows(
     observed: dict[int, tuple[str, ...]] = {}
     previous: _ParsedRow | None = None
     for row_number, row in enumerate(rows, 1):
-        current = _parse_row(row, row_number)
+        current = (
+            _parse_retained_row(row, row_number)
+            if retained
+            else _parse_row(row, row_number)
+        )
         duplicate = observed.get(current.open_time_milliseconds)
         if duplicate is not None:
             raise _NormalizationError(
@@ -976,6 +1739,15 @@ def _validated_rows(
                 )
         parsed.append(current)
         previous = current
+    if retained and (
+        not parsed
+        or parsed[0].open_time_milliseconds != day_start_ms
+        or parsed[-1].close_time_milliseconds + 1 != day_end_ms
+    ):
+        raise _NormalizationError(
+            BinanceUsdmKoruPriceBarsSourceBoundedFailureCodeV1.DATA_GAP_DETECTED,
+            "authority_coverage",
+        )
     return tuple(parsed)
 
 
@@ -1004,8 +1776,10 @@ def _event_from_row(
     source_member_hash: str,
 ) -> MarketEvent:
     request = capture.request
-    archive_member, checksum_member = capture.snapshot.members
-    archive_key = "archive/" + request.archive_name
+    archive_key = _member_prefix(request) + request.archive_name
+    checksum_key = _member_prefix(request) + request.checksum_name
+    archive_member = _snapshot_member(capture.snapshot, archive_key)
+    checksum_member = _snapshot_member(capture.snapshot, checksum_key)
     snapshot_hash = canonical_sha256(capture.snapshot.to_canonical_dict())
     identity = {
         "type": "binance_usdm_koru_price_bar_event_identity_v1",
@@ -1016,6 +1790,11 @@ def _event_from_row(
         "price_purpose": definition.price_purpose,
         "economic_availability_policy_ref": _ECONOMIC_AVAILABILITY_POLICY_REF,
     }
+    if request.authority is not None:
+        identity["retained_authority_hash"] = request.authority.authority_hash
+        identity["provider_availability_authority_ref"] = (
+            request.authority.provider_availability_authority_ref
+        )
     payload = {
         "source_kind": request.source_kind.value,
         "price_purpose": definition.price_purpose,
@@ -1043,9 +1822,34 @@ def _event_from_row(
         "archive_available_at_epoch_nanoseconds": request.archive_available_at_epoch_nanoseconds,
         "acquired_at_epoch_nanoseconds": request.acquired_at_epoch_nanoseconds,
     }
+    if request.authority is not None:
+        payload["source_mode"] = _RETAINED_SOURCE_MODE
+        payload["retained_authority_hash"] = request.authority.authority_hash
+        payload["provider_availability_authority_ref"] = (
+            request.authority.provider_availability_authority_ref
+        )
+        payload["source_acquired_at_epoch_nanoseconds"] = (
+            request.authority.source_acquired_at_epoch_nanoseconds
+        )
+        payload["local_retained_acquired_at_epoch_nanoseconds"] = (
+            request.acquired_at_epoch_nanoseconds
+        )
+        payload["development_only"] = True
     if definition.point:
         payload["price_units"] = row.close_units
-    expected_keys: frozenset[str] = _COMMON_PAYLOAD_KEYS | (
+    retained_keys = (
+        {
+            "source_mode",
+            "retained_authority_hash",
+            "provider_availability_authority_ref",
+            "source_acquired_at_epoch_nanoseconds",
+            "local_retained_acquired_at_epoch_nanoseconds",
+            "development_only",
+        }
+        if request.authority is not None
+        else set()
+    )
+    expected_keys: frozenset[str] = _COMMON_PAYLOAD_KEYS | retained_keys | (
         {"price_units"} if definition.point else set()
     )
     if frozenset(payload) != expected_keys:
@@ -1074,7 +1878,16 @@ def _reconstruct_retained_source(
 ) -> _ReconstructedSource:
     csv_bytes = _read_retained_csv(capture)
     requested_start, requested_end = _date_bounds(capture.request.utc_date)
-    rows = _validated_rows(_csv_rows(csv_bytes), requested_start, requested_end)
+    authority = capture.request.authority
+    if authority is None:
+        rows = _validated_rows(_csv_rows(csv_bytes), requested_start, requested_end)
+    else:
+        rows = _validated_rows(
+            _csv_rows(csv_bytes, _RETAINED_CSV_HEADER),
+            authority.selected_coverage_start,
+            authority.selected_coverage_end_exclusive,
+            retained=True,
+        )
     authorized_projection_start, prefix_gap_classification = _projection_policy(
         requested_start
     )

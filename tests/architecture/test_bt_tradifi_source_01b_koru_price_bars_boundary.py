@@ -23,6 +23,9 @@ INTERNAL_NAMES = {
     "BinanceUsdmKoruPriceBarsSourceBoundedNormalizationOutcomeV1",
     "BinanceUsdmKoruPriceBarsSourceBoundedNormalizationResultV1",
     "BinanceUsdmKoruPriceBarsSourceBoundedRequestV1",
+    "BinanceUsdmKoruRetainedPriceBarsAuthorityV1",
+    "build_binance_usdm_koru_price_bars_retained_observations_evidence_v1",
+    "capture_binance_usdm_koru_price_bars_from_retained_observations_v1",
     "capture_binance_usdm_koru_price_bars_source_bounded_v1",
     "normalize_binance_usdm_koru_price_bars_source_bounded_v1",
 }

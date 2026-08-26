@@ -1,0 +1,330 @@
+{
+  "artifacts": [
+    {
+      "path": "aligned_hourly.csv",
+      "rows": 1509,
+      "sha256": "sha256:ca6d2b068b5233a5c3387425a966e3a502872692e75835a5b2f20a28b5357251"
+    },
+    {
+      "path": "binance_funding_raw.csv",
+      "rows": 188,
+      "sha256": "sha256:0dfe5ee99762abdd8339da96bbd5b3c4a141e4db98a5b3f76ad2fb858762f00f"
+    },
+    {
+      "path": "binance_index_raw.csv",
+      "rows": 1509,
+      "sha256": "sha256:a67e4be307cf2701b0c16b76a193129907e86bc4b7294b52ce11b304ce278046"
+    },
+    {
+      "path": "binance_last_raw.csv",
+      "rows": 1509,
+      "sha256": "sha256:263b7df8510cba2062bc0847bc8d80323bb9bf79c417dd402a4e5e0591115af5"
+    },
+    {
+      "path": "binance_mark_raw.csv",
+      "rows": 1509,
+      "sha256": "sha256:e46fd0296dea518616fa11905db3a07e6d8ab672d9867298f88be12e771918d4"
+    },
+    {
+      "path": "binance_premium_raw.csv",
+      "rows": 1509,
+      "sha256": "sha256:2202312d6c6339682e0c1674376ce042f817fa016fac221d8eb47ee39ac3cff7"
+    },
+    {
+      "path": "yahoo_koru_raw.csv",
+      "rows": 309,
+      "sha256": "sha256:d99e26da05f0331ff669364096f135b62949b043d1a4fcba19fa39a7c8661bba"
+    },
+    {
+      "path": "yahoo_krwx_raw.csv",
+      "rows": 1041,
+      "sha256": "sha256:3213265d9ebe8e012ef0319af9dc9e3fc0737fb5a27426c96743b9809e9605e6"
+    },
+    {
+      "path": "yahoo_ks200_raw.csv",
+      "rows": 259,
+      "sha256": "sha256:ab63391d888a405e3ea685c696f91f0405843c3918d0b5246708798277f8dbe1"
+    },
+    {
+      "path": "yahoo_mu_raw.csv",
+      "rows": 309,
+      "sha256": "sha256:14f9ff724c78572835ea7697c30a80f587283a39d419a28f9e36b67fd0ade511"
+    },
+    {
+      "path": "yahoo_samsung_raw.csv",
+      "rows": 259,
+      "sha256": "sha256:65739b5aa3c9dfe0082993f64a8635bb106f654499bcf6bb3765defd98e669f6"
+    },
+    {
+      "path": "yahoo_skhynix_raw.csv",
+      "rows": 259,
+      "sha256": "sha256:f2135ce223fb5bf3f75514c31723f16968d3baa866a73fac01be95cfc219c910"
+    },
+    {
+      "path": "yahoo_sndk_raw.csv",
+      "rows": 309,
+      "sha256": "sha256:36c71f3d65a5f8da624d504798f3134721f25f9611bcf6e805d63ff08ac52df9"
+    },
+    {
+      "path": "yahoo_sox_raw.csv",
+      "rows": 308,
+      "sha256": "sha256:1f8b4a82ffb7e139e18a2412153e820136e188839f5e026734bd4dc1fa7daf9c"
+    }
+  ],
+  "builder": {
+    "path": "research/koruusdt/build_dataset.py",
+    "sha256": "sha256:e369b4867ed5a62b3db04f287ca8f15be3a4745afb5e0d2ff7524e61132e78f2"
+  },
+  "contractType": "TRADIFI_PERPETUAL",
+  "contract_metadata": {
+    "authoritative_listing_announcement_url": "https://www.binance.com/en/support/announcement/detail/88ea4a4f9f0b4ad4b7b308195c026fe4",
+    "listed_utc": "2026-06-22T13:55:00.000Z",
+    "split_adjustment": {
+      "authoritative_announcement_urls": [
+        "https://www.binance.com/en/support/announcement/detail/c226162366c54b78a7f98021b38e10c5",
+        "https://www.binance.com/en/support/announcement/detail/2ce887ba8fe14fdaa088e5bed7553a4e",
+        "https://www.direxion.com/press-release/direxion-to-split-nine-etfs"
+      ],
+      "economic_return_boundary_notes": "No forward-return columns are generated to avoid inferring economic return across the split boundary",
+      "pre_adjustment_base_qty_multiplier": 20.0,
+      "pre_adjustment_price_multiplier": 0.05,
+      "window_utc_end": "2026-07-15T09:35:00.000Z",
+      "window_utc_start": "2026-07-15T00:15:00.000Z"
+    }
+  },
+  "generated_at_utc": "2026-08-24T13:30:24.310Z",
+  "instrument": "KORUUSDT",
+  "manifest_sha256": "sha256:066c775e60ba402b631b406fd8138da200d7e30a136e0efb7c2c13b196680d64",
+  "requested_window": {
+    "end_ms_exclusive": 1787569200000,
+    "end_utc_exclusive": "2026-08-24T11:00:00.000Z",
+    "interval": "1h",
+    "start_ms": 1782136500000,
+    "start_utc_inclusive": "2026-06-22T13:55:00.000Z"
+  },
+  "runtime": {
+    "note": "stdlib-only builder; zoneinfo uses the host Python runtime and host IANA timezone database, whose versions can affect timezone-derived values",
+    "python_implementation": "CPython",
+    "python_version": "3.13.5"
+  },
+  "sampling": "1h mark-bar keyed",
+  "schema_version": 1,
+  "source_identifiers": {
+    "exchange": "Binance USD-M",
+    "symbol": "KORUUSDT",
+    "yahoo_grade": "secondary_non_decision"
+  },
+  "sources": [
+    {
+      "as_of_utc": "2026-08-24T13:26:17.243Z",
+      "end_semantics": "endTime is inclusive at the endpoint; requested end is exclusive, so endTime=end_ms-1",
+      "endpoint": "https://fapi.binance.com/fapi/v1/klines",
+      "parameters": {
+        "endTime": 1787569199999,
+        "interval": "1h",
+        "limit": 1000,
+        "startTime": 1782136500000,
+        "symbol": "KORUUSDT"
+      },
+      "source_id": "binance_futures_kline_last",
+      "type": "BINANCE_KLINES"
+    },
+    {
+      "as_of_utc": "2026-08-24T13:26:17.763Z",
+      "end_semantics": "endTime is inclusive at the endpoint; requested end is exclusive, so endTime=end_ms-1",
+      "endpoint": "https://fapi.binance.com/fapi/v1/markPriceKlines",
+      "parameters": {
+        "endTime": 1787569199999,
+        "interval": "1h",
+        "limit": 1000,
+        "startTime": 1782136500000,
+        "symbol": "KORUUSDT"
+      },
+      "source_id": "binance_futures_mark_price_kline",
+      "type": "BINANCE_KLINES"
+    },
+    {
+      "as_of_utc": "2026-08-24T13:26:18.248Z",
+      "end_semantics": "endTime is inclusive at the endpoint; requested end is exclusive, so endTime=end_ms-1",
+      "endpoint": "https://fapi.binance.com/fapi/v1/indexPriceKlines",
+      "parameters": {
+        "endTime": 1787569199999,
+        "interval": "1h",
+        "limit": 1000,
+        "pair": "KORUUSDT",
+        "startTime": 1782136500000
+      },
+      "source_id": "binance_futures_index_price_kline",
+      "type": "BINANCE_KLINES"
+    },
+    {
+      "as_of_utc": "2026-08-24T13:26:18.769Z",
+      "end_semantics": "endTime is inclusive at the endpoint; requested end is exclusive, so endTime=end_ms-1",
+      "endpoint": "https://fapi.binance.com/fapi/v1/premiumIndexKlines",
+      "parameters": {
+        "endTime": 1787569199999,
+        "interval": "1h",
+        "limit": 1000,
+        "startTime": 1782136500000,
+        "symbol": "KORUUSDT"
+      },
+      "source_id": "binance_futures_premium_index_kline",
+      "type": "BINANCE_KLINES"
+    },
+    {
+      "as_of_utc": "2026-08-24T13:26:19.004Z",
+      "end_semantics": "endTime is inclusive at the endpoint; requested end is exclusive, so endTime=end_ms-1",
+      "endpoint": "https://fapi.binance.com/fapi/v1/fundingRate",
+      "parameters": {
+        "endTime": 1787569199999,
+        "limit": 1000,
+        "startTime": 1782136500000,
+        "symbol": "KORUUSDT"
+      },
+      "source_id": "binance_futures_funding",
+      "type": "BINANCE_FUNDING"
+    },
+    {
+      "as_of_utc": "2026-08-24T13:26:49.442Z",
+      "end_semantics": "period2 is exclusive",
+      "endpoint": "https://query2.finance.yahoo.com/v8/finance/chart/KORU",
+      "grade": "secondary_not_decision_grade",
+      "parameters": {
+        "events": "div,splits",
+        "includeAdjustedClose": "true",
+        "includePrePost": "false",
+        "interval": "1h",
+        "period1": 1782136500,
+        "period2": 1787569200
+      },
+      "source_id": "KORU",
+      "type": "YAHOO_CHART"
+    },
+    {
+      "as_of_utc": "2026-08-24T13:27:19.890Z",
+      "end_semantics": "period2 is exclusive",
+      "endpoint": "https://query2.finance.yahoo.com/v8/finance/chart/%5EKS200",
+      "grade": "secondary_not_decision_grade",
+      "parameters": {
+        "events": "div,splits",
+        "includeAdjustedClose": "true",
+        "includePrePost": "false",
+        "interval": "1h",
+        "period1": 1782136500,
+        "period2": 1787569200
+      },
+      "source_id": "^KS200",
+      "type": "YAHOO_CHART"
+    },
+    {
+      "as_of_utc": "2026-08-24T13:27:50.369Z",
+      "end_semantics": "period2 is exclusive",
+      "endpoint": "https://query2.finance.yahoo.com/v8/finance/chart/005930.KS",
+      "grade": "secondary_not_decision_grade",
+      "parameters": {
+        "events": "div,splits",
+        "includeAdjustedClose": "true",
+        "includePrePost": "false",
+        "interval": "1h",
+        "period1": 1782136500,
+        "period2": 1787569200
+      },
+      "source_id": "005930.KS",
+      "type": "YAHOO_CHART"
+    },
+    {
+      "as_of_utc": "2026-08-24T13:28:22.081Z",
+      "end_semantics": "period2 is exclusive",
+      "endpoint": "https://query2.finance.yahoo.com/v8/finance/chart/000660.KS",
+      "grade": "secondary_not_decision_grade",
+      "parameters": {
+        "events": "div,splits",
+        "includeAdjustedClose": "true",
+        "includePrePost": "false",
+        "interval": "1h",
+        "period1": 1782136500,
+        "period2": 1787569200
+      },
+      "source_id": "000660.KS",
+      "type": "YAHOO_CHART"
+    },
+    {
+      "as_of_utc": "2026-08-24T13:28:52.535Z",
+      "end_semantics": "period2 is exclusive",
+      "endpoint": "https://query2.finance.yahoo.com/v8/finance/chart/MU",
+      "grade": "secondary_not_decision_grade",
+      "parameters": {
+        "events": "div,splits",
+        "includeAdjustedClose": "true",
+        "includePrePost": "false",
+        "interval": "1h",
+        "period1": 1782136500,
+        "period2": 1787569200
+      },
+      "source_id": "MU",
+      "type": "YAHOO_CHART"
+    },
+    {
+      "as_of_utc": "2026-08-24T13:29:23.024Z",
+      "end_semantics": "period2 is exclusive",
+      "endpoint": "https://query2.finance.yahoo.com/v8/finance/chart/SNDK",
+      "grade": "secondary_not_decision_grade",
+      "parameters": {
+        "events": "div,splits",
+        "includeAdjustedClose": "true",
+        "includePrePost": "false",
+        "interval": "1h",
+        "period1": 1782136500,
+        "period2": 1787569200
+      },
+      "source_id": "SNDK",
+      "type": "YAHOO_CHART"
+    },
+    {
+      "as_of_utc": "2026-08-24T13:29:53.539Z",
+      "end_semantics": "period2 is exclusive",
+      "endpoint": "https://query2.finance.yahoo.com/v8/finance/chart/KRW%3DX",
+      "grade": "secondary_not_decision_grade",
+      "parameters": {
+        "events": "div,splits",
+        "includeAdjustedClose": "true",
+        "includePrePost": "false",
+        "interval": "1h",
+        "period1": 1782136500,
+        "period2": 1787569200
+      },
+      "source_id": "KRW=X",
+      "type": "YAHOO_CHART"
+    },
+    {
+      "as_of_utc": "2026-08-24T13:30:24.009Z",
+      "end_semantics": "period2 is exclusive",
+      "endpoint": "https://query2.finance.yahoo.com/v8/finance/chart/%5ESOX",
+      "grade": "secondary_not_decision_grade",
+      "parameters": {
+        "events": "div,splits",
+        "includeAdjustedClose": "true",
+        "includePrePost": "false",
+        "interval": "1h",
+        "period1": 1782136500,
+        "period2": 1787569200
+      },
+      "source_id": "^SOX",
+      "type": "YAHOO_CHART"
+    }
+  ],
+  "time_range_utc": {
+    "end": "2026-08-24T11:00:00.000Z",
+    "start": "2026-06-22T13:55:00.000Z"
+  },
+  "transformation_notes": [
+    "raw Binance observations are preserved in separate *_raw.csv files",
+    "normalized price/base-quantity columns use explicit pre_adjustment, adjustment_window, and post_adjustment regimes; pre-adjustment price * 0.05 and base quantity * 20, bars overlapping the adjustment window null, post-adjustment unchanged",
+    "Binance last/index/premium observations require exact mark-bar timestamp matches; premium basis values are never price-scaled",
+    "Yahoo 1h timestamps are source bar starts; availability is min(start+1h, regular-session close) for KRX/US symbols and start+1h for KRW=X; values are backward/as-of joined on available_at only",
+    "Yahoo historical chart responses are mutable vendor data and may be revised or disappear; artifact hashes pin this retrieval but do not guarantee byte-identical regeneration",
+    "is_krx_regular_weekday_clock and is_us_core_weekday_clock encode weekday clock windows only; holidays are not encoded and the fields do not assert exchange-open truth",
+    "funding observations use backward/as-of joins and include observed timestamp, numeric millisecond timestamp, and age"
+  ],
+  "type": "koruusdt_research_dataset_manifest_v1"
+}
