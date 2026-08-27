@@ -250,6 +250,23 @@ def test_authorities_bind_streaming_digests_gaps_targets_profile_and_exact_refs(
     source = result.source_projection
     target = result.target_result
     preparation = result.preparation_authority_event.payload
+    derived_envelope, derived_ref = build_binance_usdm_koru_source_profile_authority_v2(
+        source
+    )
+    assert result.request.source_profile_authority_envelope == derived_envelope
+    assert result.request.source_profile_authority_ref == derived_ref
+    assert preparation["source_profile_authority_envelope"] == (
+        derived_envelope.to_canonical_dict()
+    )
+    assert preparation["source_profile_authority_ref"] == derived_ref.to_canonical_dict()
+    assert derived_envelope.payload["execution_projection_stream_manifest"] == (
+        source.projection_stream_manifest.to_canonical_dict()
+    )
+    assert derived_envelope.payload["execution_projection_event_bindings"]
+    assert source.projection_stream_manifest.stream_key not in {
+        value["stream_key"]
+        for value in derived_envelope.payload["source_stream_manifests"]
+    }
     price = result.price_purpose_authority_event.payload
     common = {
         "source_fragment_digest": source.fragment_digest,

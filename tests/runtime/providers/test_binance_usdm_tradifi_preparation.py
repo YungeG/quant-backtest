@@ -252,6 +252,20 @@ def test_all_eight_parameter_selections_resolve_including_empty_streams(
     )
 
 
+def test_v1_stage_a_canonical_hashes_remain_frozen() -> None:
+    outcome = _resolve()
+    assert outcome.outcome_hash == (
+        "sha256:7d95f1fe1183385d94977bd36e5948a19698ce8bc05f2c612991cc79c0de4257"
+    )
+    assert outcome.result is not None
+    assert canonical_sha256(outcome.result) == (
+        "sha256:415f32942ddd00af023971b251394ff53d831fbbd00aaa782bdd052f5cd5ddd7"
+    )
+    assert outcome.result.result_digest == (
+        "sha256:9f6de3f2e5c8ab2059dad7c78e58c11a050994831fc32d5402e30c5f7039aef8"
+    )
+
+
 def test_replay_is_exact_and_ordinary_profile_composition_is_unchanged() -> None:
     before = canonical_sha256(ordinary_composition_request())
     first = _resolve().result

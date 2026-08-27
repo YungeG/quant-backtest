@@ -118,6 +118,11 @@ _EXECUTION_EVENT_TYPE = "binance_usdm_koru_aggregate_trade.v1"
 _EXECUTION_CAPABILITY = MarketBundleCapability(
     "price.aggregate_trade.koru-usdt-tradifi-perpetual", 1
 )
+_EXECUTION_PROJECTION_STREAM = (
+    "binance_usdm.tradifi.bar_open.first_retained_aggregate_trade.koruusdt.1h.v2"
+)
+_EXECUTION_PROJECTION_EVENT_TYPE = "bar_open"
+_EXECUTION_PROJECTION_CAPABILITY = MarketBundleCapability("bar_open", 1)
 _FUNDING_STREAM = "binance_usdm.funding_history.publications.koruusdt.v1"
 _FUNDING_EVENT_TYPE = "binance_usdm_koru_funding_history_publication_v1"
 _FUNDING_CAPABILITY = MarketBundleCapability("binance_usdm.funding-publications", 1)
@@ -641,6 +646,8 @@ def _validate_source_profile_authority(
         "missing_boundaries",
         "source_stream_manifests",
         "source_event_bindings",
+        "execution_projection_stream_manifest",
+        "execution_projection_event_bindings",
         "source_stream_authorities",
         "xkrx_calendar_ref",
         "arcx_calendar_ref",
@@ -700,6 +707,90 @@ def _validate_source_profile_authority(
         raise _BuildError(
             BinanceUsdmKoruTradifiDevelopmentProfileFailureCodeV1.AUTHORITY_INVALID,
             "source_stream_manifests",
+        )
+    projection_manifest = payload.get("execution_projection_stream_manifest")
+    projection_bindings = payload.get("execution_projection_event_bindings")
+    if not isinstance(projection_manifest, Mapping) or not isinstance(
+        projection_bindings, tuple
+    ):
+        raise _BuildError(
+            BinanceUsdmKoruTradifiDevelopmentProfileFailureCodeV1.AUTHORITY_INVALID,
+            "execution_projection_authority",
+        )
+    try:
+        capability = projection_manifest["capability"]
+        if not isinstance(capability, Mapping):
+            raise TypeError
+        rebuilt_projection_manifest = MarketStreamManifest(
+            stream_key=projection_manifest["stream_key"],  # type: ignore[arg-type]
+            event_type=projection_manifest["event_type"],  # type: ignore[arg-type]
+            capability=MarketBundleCapability(
+                capability["key"], capability["version"]  # type: ignore[arg-type]
+            ),
+            event_count=projection_manifest["event_count"],  # type: ignore[arg-type]
+            content_hash=projection_manifest["content_hash"],  # type: ignore[arg-type]
+        )
+    except (KeyError, TypeError, ValueError) as error:
+        raise _BuildError(
+            BinanceUsdmKoruTradifiDevelopmentProfileFailureCodeV1.AUTHORITY_INVALID,
+            "execution_projection_stream_manifest",
+        ) from error
+    if (
+        set(projection_manifest)
+        != {
+            "type",
+            "stream_key",
+            "event_type",
+            "capability",
+            "event_count",
+            "content_hash",
+        }
+        or set(capability) != {"type", "key", "version"}
+        or canonical_bytes(projection_manifest)
+        != canonical_bytes(rebuilt_projection_manifest)
+        or rebuilt_projection_manifest.stream_key != _EXECUTION_PROJECTION_STREAM
+        or rebuilt_projection_manifest.event_type != _EXECUTION_PROJECTION_EVENT_TYPE
+        or rebuilt_projection_manifest.capability
+        != _EXECUTION_PROJECTION_CAPABILITY
+    ):
+        raise _BuildError(
+            BinanceUsdmKoruTradifiDevelopmentProfileFailureCodeV1.AUTHORITY_INVALID,
+            "execution_projection_stream_manifest",
+        )
+    normalized_projection_bindings = []
+    for value in projection_bindings:
+        if not isinstance(value, Mapping) or set(value) != {
+            "stream_key",
+            "event_id",
+            "event_hash",
+        }:
+            raise _BuildError(
+                BinanceUsdmKoruTradifiDevelopmentProfileFailureCodeV1.AUTHORITY_INVALID,
+                "execution_projection_event_bindings",
+            )
+        stream_key = value.get("stream_key")
+        event_id = value.get("event_id")
+        event_hash = value.get("event_hash")
+        if (
+            stream_key != _EXECUTION_PROJECTION_STREAM
+            or type(event_id) is not str
+            or not event_id
+            or not _canonical_digest(event_hash)
+        ):
+            raise _BuildError(
+                BinanceUsdmKoruTradifiDevelopmentProfileFailureCodeV1.AUTHORITY_INVALID,
+                "execution_projection_event_bindings",
+            )
+        normalized_projection_bindings.append((stream_key, event_id, event_hash))
+    projection_binding_values = tuple(normalized_projection_bindings)
+    if (
+        len(projection_binding_values) != rebuilt_projection_manifest.event_count
+        or len(set(projection_binding_values)) != len(projection_binding_values)
+        or projection_binding_values != tuple(sorted(projection_binding_values))
+    ):
+        raise _BuildError(
+            BinanceUsdmKoruTradifiDevelopmentProfileFailureCodeV1.AUTHORITY_INVALID,
+            "execution_projection_event_bindings",
         )
     expected_events = tuple(
         {

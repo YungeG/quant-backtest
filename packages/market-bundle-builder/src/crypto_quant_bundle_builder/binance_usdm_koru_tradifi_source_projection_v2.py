@@ -1287,6 +1287,26 @@ def build_binance_usdm_koru_source_profile_authority_v2(
             }
             for event in trusted.source_events
         ),
+        "execution_projection_stream_manifest": (
+            trusted.projection_stream_manifest.to_canonical_dict()
+        ),
+        "execution_projection_event_bindings": tuple(
+            sorted(
+                (
+                    {
+                        "stream_key": event.stream_key,
+                        "event_id": event.event_id,
+                        "event_hash": event.event_hash,
+                    }
+                    for event in trusted.projection_events
+                ),
+                key=lambda value: (
+                    value["stream_key"],
+                    value["event_id"],
+                    value["event_hash"],
+                ),
+            )
+        ),
         "source_stream_authorities": tuple(
             _source_profile_stream_authority(
                 manifest, tuple(grouped[manifest.stream_key])

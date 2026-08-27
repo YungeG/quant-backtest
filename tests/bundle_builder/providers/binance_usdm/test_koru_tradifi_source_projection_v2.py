@@ -304,6 +304,29 @@ def test_source_profile_authority_is_exact_derived_and_not_serialized() -> None:
     assert len(payload["source_stream_manifests"]) == len(
         {event.stream_key for event in result.source_events}
     )
+    assert payload["execution_projection_stream_manifest"] == (
+        result.projection_stream_manifest.to_canonical_dict()
+    )
+    assert payload["execution_projection_event_bindings"] == tuple(
+        sorted(
+            (
+                {
+                    "stream_key": event.stream_key,
+                    "event_id": event.event_id,
+                    "event_hash": event.event_hash,
+                }
+                for event in result.projection_events
+            ),
+            key=lambda value: (
+                value["stream_key"],
+                value["event_id"],
+                value["event_hash"],
+            ),
+        )
+    )
+    assert _V2_PROJECTION_STREAM not in {
+        value["stream_key"] for value in payload["source_stream_manifests"]
+    }
     assert "source_profile_authority" not in result.to_canonical_dict()
 
     object.__setattr__(result, "fragment_digest", "sha256:" + "0" * 64)

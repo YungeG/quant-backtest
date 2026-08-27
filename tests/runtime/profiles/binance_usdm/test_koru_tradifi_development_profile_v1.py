@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import json
 from dataclasses import replace
 from types import SimpleNamespace
 
@@ -26,6 +27,7 @@ from crypto_quant_domain import (
     SourceSequence,
     TimelinePhase,
     UtcInstant,
+    canonical_bytes,
     canonical_sha256,
 )
 
@@ -226,6 +228,39 @@ def test_authority_and_source_tamper_fail_closed(trusted_profile) -> None:
         assert outcome.result is None
         assert outcome.failure is not None
         assert outcome.failure.code is expected
+
+
+@pytest.mark.parametrize(
+    "mutation",
+    ("missing_manifest", "manifest_shape", "binding_hash"),
+)
+def test_execution_projection_authority_shape_tamper_fails_closed(
+    trusted_profile, mutation: str
+) -> None:
+    _, request, _ = trusted_profile
+    payload = json.loads(canonical_bytes(request.source_profile_authority_envelope.payload))
+    if mutation == "missing_manifest":
+        del payload["execution_projection_stream_manifest"]
+    elif mutation == "manifest_shape":
+        payload["execution_projection_stream_manifest"]["capability"]["extra"] = True
+    else:
+        payload["execution_projection_event_bindings"][0]["event_hash"] = "invalid"
+    envelope = ArtifactEnvelope.create(
+        "binance_usdm_koru_source_profile_authority", 2, payload
+    )
+    candidate = replace(
+        request,
+        source_profile_authority_envelope=envelope,
+        source_profile_authority_ref=ArtifactRef.from_envelope(envelope),
+    )
+
+    outcome = build_binance_usdm_koru_tradifi_development_profile_v1(candidate)
+
+    assert outcome.result is None
+    assert outcome.failure is not None
+    assert outcome.failure.code is (
+        BinanceUsdmKoruTradifiDevelopmentProfileFailureCodeV1.AUTHORITY_INVALID
+    )
 
 
 def test_calendar_unit_timeline_and_trading_start_tamper_fail_closed(

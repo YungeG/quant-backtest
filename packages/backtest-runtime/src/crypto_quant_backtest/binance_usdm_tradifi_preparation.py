@@ -22,6 +22,10 @@ from crypto_quant_market_data import (
 )
 
 from .artifact_envelope_reader import ArtifactEnvelopeReader
+from .binance_usdm_koru_tradifi_development_profile_v1 import (
+    BinanceUsdmKoruTradifiDevelopmentProfileRequestV1,
+    build_binance_usdm_koru_tradifi_development_profile_v1,
+)
 from .binance_usdm_tradifi_profile import (
     BinanceUsdmTradifiProfileComposer,
     BinanceUsdmTradifiProfileCompositionRequest,
@@ -46,11 +50,17 @@ from .target_stream import (
 from .timeline import TimelineWindow
 
 _SCHEMA_VERSION = 1
+_BUNDLE_SCHEMA_VERSION_V2 = 2
 _HASH = re.compile(r"sha256:[0-9a-f]{64}\Z")
+_V2_BUNDLE_KEY = re.compile(
+    r"binance-usdm-koru-tradifi-execution-development-v2-[0-9a-f]{64}\Z"
+)
 _PARAMETER_IDS = tuple(f"p{index:02d}" for index in range(1, 9))
 _TARGET_PREFIX = "binance_usdm.tradifi.target.koruusdt.closed_market_range."
 _PREPARATION_STREAM = "binance_usdm.tradifi.preparation_authority.v1"
 _PREPARATION_EVENT_TYPE = "binance_usdm_tradifi_preparation_authority_v1"
+_PREPARATION_STREAM_V2 = "binance_usdm.tradifi.preparation_authority.v2"
+_PREPARATION_EVENT_TYPE_V2 = "binance_usdm_tradifi_preparation_authority_v2"
 _PREPARATION_CAPABILITY = MarketBundleCapability(
     "binance_usdm.tradifi.preparation-authority", 1
 )
@@ -80,6 +90,41 @@ _AUTHORITY_PAYLOAD_KEYS = frozenset(
         "required_sleeve_allocation_fraction",
         "required_position_notional_usdt",
         "source_limitations",
+    }
+)
+_STREAMING_AUTHORITY_KEYS = frozenset(
+    {
+        "source_fragment_digest",
+        "target_result_digest",
+        "aggregate_trade_boundary_index_request_hash",
+        "aggregate_trade_boundary_index_result_digest",
+        "aggregate_trade_streamed_reconstruction_digest",
+        "aggregate_trade_intra_day_raw_id_gap_stream",
+        "aggregate_trade_cross_date_raw_id_gap_stream",
+        "aggregate_trade_coverage_gaps",
+        "missing_boundaries",
+        "source_profile_authority_ref",
+        "source_profile_authority_hash",
+        "profile_composition_request_hash",
+    }
+)
+_AUTHORITY_PAYLOAD_KEYS_V2 = frozenset(
+    {
+        "schema_version",
+        "profile_composition_request_wire",
+        "strategy_definition_ref",
+        "parameter_target_bindings",
+        "xkrx_calendar_ref",
+        "arcx_calendar_ref",
+        "post_adjustment_unit_regime_ref",
+        "source_profile_authority_envelope",
+        "source_snapshot_bindings",
+        "price_purpose_authority_binding",
+        "required_initial_equity",
+        "required_sleeve_allocation_fraction",
+        "required_position_notional_usdt",
+        "source_limitations",
+        *_STREAMING_AUTHORITY_KEYS,
     }
 )
 _PARAMETER_BINDING_KEYS = frozenset(
@@ -231,8 +276,16 @@ _SOURCE_LIMITATIONS = (
     "source_fragment_decision_grade_ineligible",
     "source_fragment_deployment_unauthorized",
 )
+_SOURCE_LIMITATIONS_V2 = (
+    "selected_source_events_form_the_executable_stream",
+    "full_raw_data_is_retained_transitively_in_source_snapshots",
+    "v2_projection_target_and_authority_identities",
+    "development_only",
+)
 _PRICE_PURPOSE_STREAM = "binance_usdm.tradifi.price_purpose.authority.koruusdt.v1"
 _PRICE_PURPOSE_EVENT_TYPE = "binance_usdm_tradifi_price_purpose_binding_v1"
+_PRICE_PURPOSE_STREAM_V2 = "binance_usdm.tradifi.price_purpose.authority.koruusdt.v2"
+_PRICE_PURPOSE_EVENT_TYPE_V2 = "binance_usdm_tradifi_price_purpose_binding_v2"
 _PRICE_PURPOSE_CAPABILITY = MarketBundleCapability(
     "binance_usdm.price-purpose-streams", 1
 )
@@ -315,6 +368,10 @@ _PRICE_AUTHORITY_PAYLOAD_KEYS = frozenset(
         "profile_composition_request_hash",
     }
 )
+_PRICE_AUTHORITY_PAYLOAD_KEYS_V2 = frozenset(
+    {"schema_version", "instrument_id", "price_purpose_bindings"}
+    | _STREAMING_AUTHORITY_KEYS
+)
 _PRICE_BINDING_KEYS = frozenset(
     {
         "price_purpose",
@@ -339,6 +396,79 @@ _SOURCE_MANIFEST_KEYS = frozenset(
 )
 _PRICE_EVENT_BINDING_KEYS = frozenset(
     {"stream_key", "event_type", "event_id", "event_hash"}
+)
+_SOURCE_SNAPSHOT_KEYS_V2 = frozenset(
+    {
+        "source_kind",
+        "source_snapshot_id",
+        "source_snapshot_hash",
+        "source_evidence_hash",
+    }
+)
+_SOURCE_PROFILE_AUTHORITY_TYPE = "binance_usdm_koru_source_profile_authority"
+_SOURCE_PROFILE_AUTHORITY_SCHEMA_VERSION = 2
+_EXECUTION_PROJECTION_STREAM_V1 = (
+    "binance_usdm.tradifi.bar_open.first_retained_aggregate_trade.koruusdt.1h.v1"
+)
+_EXECUTION_PROJECTION_STREAM_V2 = (
+    "binance_usdm.tradifi.bar_open.first_retained_aggregate_trade.koruusdt.1h.v2"
+)
+_EXECUTION_PROJECTION_EVENT_TYPE = "bar_open"
+_EXECUTION_PROJECTION_CAPABILITY = MarketBundleCapability("bar_open", 1)
+_EXECUTION_PROJECTION_SOURCE_V2 = (
+    "binance_usdm.tradifi.first_retained_aggregate_trade_projection.koruusdt.1h.v2"
+)
+_ACCOUNT_STREAM_V1 = "binance_usdm.tradifi.account.authority.koruusdt.v1"
+_ACCOUNT_STREAM_V2 = "binance_usdm.tradifi.account.authority.koruusdt.v2"
+_ACCOUNT_EVENT_TYPE = "account_financial_event"
+_ACCOUNT_CAPABILITY = MarketBundleCapability("account.financial-event", 1)
+_SOURCE_STREAM_KEYS = frozenset(
+    {
+        "binance_usdm.aggregate_trades.execution_reference.koruusdt.tradifi.v1",
+        "binance_usdm.funding_history.publications.koruusdt.v1",
+        "binance_usdm.mark_price.strategy.koruusdt.1h.v1",
+        "binance_usdm.mark_price.valuation.koruusdt.1h.v1",
+        "binance_usdm.mark_price.margin.koruusdt.1h.v1",
+        "binance_usdm.mark_price.liquidation.koruusdt.1h.v1",
+        "binance_usdm.index_price.strategy.koruusdt.1h.v1",
+    }
+)
+_SOURCE_PROFILE_AUTHORITY_PAYLOAD_KEYS = frozenset(
+    {
+        "type",
+        "schema_version",
+        "timeline_window",
+        "source_projection_request_hash",
+        "source_fragment_digest",
+        "aggregate_trade_boundary_index_request_hash",
+        "aggregate_trade_boundary_index_result_digest",
+        "aggregate_trade_streamed_reconstruction_digest",
+        "aggregate_trade_intra_day_raw_id_gap_stream",
+        "aggregate_trade_cross_date_raw_id_gap_stream",
+        "aggregate_trade_coverage_gaps",
+        "missing_boundaries",
+        "source_stream_manifests",
+        "source_event_bindings",
+        "execution_projection_stream_manifest",
+        "execution_projection_event_bindings",
+        "source_stream_authorities",
+        "xkrx_calendar_ref",
+        "arcx_calendar_ref",
+        "post_adjustment_unit_regime_ref",
+        "development_only",
+        "decision_grade_eligible",
+        "deployment_authorized",
+    }
+)
+_SOURCE_MANIFEST_WIRE_KEYS = frozenset(
+    {
+        "type",
+        "stream_key",
+        "event_type",
+        "capability",
+        "event_count",
+        "content_hash",
+    }
 )
 
 
@@ -556,6 +686,7 @@ class _VerifiedParameterTargetBinding:
     target_stream_digest: str
     stream_manifest: MarketStreamManifest
     target_stream: PrecomputedTargetStream
+    bundle_schema_version: int = 1
 
     def __post_init__(self) -> None:
         if self.parameter_id not in _PARAMETER_IDS:
@@ -563,7 +694,11 @@ class _VerifiedParameterTargetBinding:
         index = _PARAMETER_IDS.index(self.parameter_id)
         if self.parameter_ref != _EXPECTED_PARAMETER_REFS[index]:
             raise ValueError("parameter ref does not bind frozen parameter id")
-        if self.target_stream_key != f"{_TARGET_PREFIX}{self.parameter_id}.v1":
+        if self.bundle_schema_version not in (1, _BUNDLE_SCHEMA_VERSION_V2):
+            raise ValueError("bundle_schema_version must be exact V1 or V2")
+        if self.target_stream_key != (
+            f"{_TARGET_PREFIX}{self.parameter_id}.v{self.bundle_schema_version}"
+        ):
             raise ValueError("target stream key does not bind parameter id")
         _canonical_hash("target_stream_digest", self.target_stream_digest)
         if (
@@ -581,7 +716,7 @@ class _VerifiedParameterTargetBinding:
             raise ValueError("target stream evidence mismatch")
 
     def to_canonical_dict(self) -> dict[str, object]:
-        return {
+        value = {
             "type": "binance_usdm_tradifi_verified_parameter_target_binding",
             "schema_version": _SCHEMA_VERSION,
             "parameter_id": self.parameter_id,
@@ -591,6 +726,9 @@ class _VerifiedParameterTargetBinding:
             "stream_manifest": self.stream_manifest,
             "target_stream": self.target_stream,
         }
+        if self.bundle_schema_version == _BUNDLE_SCHEMA_VERSION_V2:
+            value["bundle_schema_version"] = self.bundle_schema_version
+        return value
 
 
 @dataclass(frozen=True, slots=True)
@@ -612,6 +750,9 @@ class BinanceUsdmTradifiPreparationResult:
     market_bundle_manifest: MarketBundleManifest
     market_bundle_ref: MarketBundleRef
     market_reader: MarketBundleReader
+    bundle_schema_version: int = 1
+    source_profile_authority_ref: domain.ArtifactRef | None = None
+    source_profile_authority_hash: str | None = None
     result_digest: str = field(init=False)
 
     def __post_init__(self) -> None:
@@ -674,8 +815,14 @@ class BinanceUsdmTradifiPreparationResult:
     def post_adjustment_unit_regime_ref(self) -> domain.ArtifactRef:
         return self.verified_artifacts[11].ref
 
+    @property
+    def source_profile_authority_envelope(self) -> domain.ArtifactEnvelope | None:
+        if self.bundle_schema_version == 1:
+            return None
+        return self.verified_artifacts[12].envelope
+
     def _body(self) -> dict[str, object]:
-        return {
+        value = {
             "type": "binance_usdm_tradifi_preparation_result",
             "schema_version": _SCHEMA_VERSION,
             "intent": self.intent,
@@ -695,6 +842,15 @@ class BinanceUsdmTradifiPreparationResult:
             "market_bundle_manifest": self.market_bundle_manifest,
             "market_bundle_ref": self.market_bundle_ref,
         }
+        if self.bundle_schema_version == _BUNDLE_SCHEMA_VERSION_V2:
+            value.update(
+                {
+                    "bundle_schema_version": self.bundle_schema_version,
+                    "source_profile_authority_ref": self.source_profile_authority_ref,
+                    "source_profile_authority_hash": self.source_profile_authority_hash,
+                }
+            )
+        return value
 
     def to_canonical_dict(self) -> dict[str, object]:
         return {**self._body(), "result_digest": self.result_digest}
@@ -724,6 +880,9 @@ def _trusted_result(
             market_bundle_manifest=value.market_bundle_manifest,
             market_bundle_ref=value.market_bundle_ref,
             market_reader=value.market_reader,
+            bundle_schema_version=value.bundle_schema_version,
+            source_profile_authority_ref=value.source_profile_authority_ref,
+            source_profile_authority_hash=value.source_profile_authority_hash,
         )
         if not _same(rebuilt, value) or value.result_digest != domain.canonical_sha256(
             value._body()
@@ -845,16 +1004,19 @@ def _read_stream(
     return result
 
 
-def _artifact_ref(value: object, subject: str) -> domain.ArtifactRef:
+def _artifact_ref(
+    value: object,
+    subject: str,
+    code: BinanceUsdmTradifiPreparationFailureCode = (
+        BinanceUsdmTradifiPreparationFailureCode.PARAMETER_TARGET_BINDING_INVALID
+    ),
+) -> domain.ArtifactRef:
     payload = _mapping(value, subject)
     if (
         set(payload) != {"type", "artifact_type", "schema_version", "content_hash"}
         or payload.get("type") != "artifact_ref"
     ):
-        raise _PreparationError(
-            BinanceUsdmTradifiPreparationFailureCode.PARAMETER_TARGET_BINDING_INVALID,
-            subject,
-        )
+        raise _PreparationError(code, subject)
     try:
         ref = domain.ArtifactRef(
             _canonical_text(f"{subject}.artifact_type", payload.get("artifact_type")),
@@ -862,15 +1024,9 @@ def _artifact_ref(value: object, subject: str) -> domain.ArtifactRef:
             _canonical_hash(f"{subject}.content_hash", payload.get("content_hash")),
         )
     except (TypeError, ValueError) as error:
-        raise _PreparationError(
-            BinanceUsdmTradifiPreparationFailureCode.PARAMETER_TARGET_BINDING_INVALID,
-            subject,
-        ) from error
+        raise _PreparationError(code, subject) from error
     if not _same(ref, payload):
-        raise _PreparationError(
-            BinanceUsdmTradifiPreparationFailureCode.PARAMETER_TARGET_BINDING_INVALID,
-            subject,
-        )
+        raise _PreparationError(code, subject)
     return ref
 
 
@@ -878,8 +1034,24 @@ def _authority(
     reader: MarketBundleReader,
     manifest: MarketBundleManifest,
     intent: BinanceUsdmTradifiBarRequestIntent,
+    bundle_schema_version: int = 1,
 ) -> tuple[MarketEvent, Mapping[str, object]]:
-    events = _read_stream(reader, manifest, _PREPARATION_STREAM)
+    stream_key = (
+        _PREPARATION_STREAM
+        if bundle_schema_version == 1
+        else _PREPARATION_STREAM_V2
+    )
+    event_type = (
+        _PREPARATION_EVENT_TYPE
+        if bundle_schema_version == 1
+        else _PREPARATION_EVENT_TYPE_V2
+    )
+    payload_keys = (
+        _AUTHORITY_PAYLOAD_KEYS
+        if bundle_schema_version == 1
+        else _AUTHORITY_PAYLOAD_KEYS_V2
+    )
+    events = _read_stream(reader, manifest, stream_key)
     if len(events) != 1:
         raise _PreparationError(
             BinanceUsdmTradifiPreparationFailureCode.PREPARATION_AUTHORITY_INVALID,
@@ -888,16 +1060,16 @@ def _authority(
     event = events[0]
     window = intent.timeline_window
     if (
-        event.stream_key != _PREPARATION_STREAM
-        or event.event_type != _PREPARATION_EVENT_TYPE
+        event.stream_key != stream_key
+        or event.event_type != event_type
         or event.capability != _PREPARATION_CAPABILITY
         or event.instrument_id is not None
         or event.event_time != window.data_start
         or event.available_time != window.data_start
         or event.phase != domain.TimelinePhase(0, "market_data")
         or event.source_sequence != domain.SourceSequence(0)
-        or set(event.payload) != _AUTHORITY_PAYLOAD_KEYS
-        or event.payload.get("schema_version") != 1
+        or set(event.payload) != payload_keys
+        or event.payload.get("schema_version") != bundle_schema_version
     ):
         raise _PreparationError(
             BinanceUsdmTradifiPreparationFailureCode.PREPARATION_AUTHORITY_INVALID,
@@ -909,6 +1081,7 @@ def _authority(
 def _target_bindings(
     payload: Mapping[str, object],
     intent: BinanceUsdmTradifiBarRequestIntent,
+    bundle_schema_version: int = 1,
 ) -> tuple[tuple[str, domain.ArtifactRef, str, str], ...]:
     strategy_ref = _artifact_ref(
         payload.get("strategy_definition_ref"), "strategy_definition_ref"
@@ -946,7 +1119,8 @@ def _target_bindings(
         if (
             parameter_id != _PARAMETER_IDS[index]
             or parameter_ref != _EXPECTED_PARAMETER_REFS[index]
-            or stream_key != f"{_TARGET_PREFIX}{parameter_id}.v1"
+            or stream_key
+            != f"{_TARGET_PREFIX}{parameter_id}.v{bundle_schema_version}"
         ):
             raise _PreparationError(
                 BinanceUsdmTradifiPreparationFailureCode.PARAMETER_TARGET_BINDING_INVALID,
@@ -1371,13 +1545,580 @@ def _validate_authority_support(
     return refs
 
 
+def _artifact_envelope(
+    value: object, subject: str
+) -> domain.ArtifactEnvelope:
+    payload = _mapping(value, subject)
+    if set(payload) != {
+        "artifact_type",
+        "schema_version",
+        "payload",
+        "content_hash",
+    }:
+        raise _PreparationError(
+            BinanceUsdmTradifiPreparationFailureCode.ARTIFACT_BINDING_INVALID,
+            subject,
+        )
+    try:
+        envelope = domain.ArtifactEnvelope.create(
+            _canonical_text(
+                f"{subject}.artifact_type", payload.get("artifact_type")
+            ),
+            payload.get("schema_version"),  # type: ignore[arg-type]
+            payload.get("payload"),
+        )
+    except (TypeError, ValueError) as error:
+        raise _PreparationError(
+            BinanceUsdmTradifiPreparationFailureCode.ARTIFACT_BINDING_INVALID,
+            subject,
+        ) from error
+    if not _same(envelope, payload):
+        raise _PreparationError(
+            BinanceUsdmTradifiPreparationFailureCode.ARTIFACT_BINDING_INVALID,
+            subject,
+        )
+    return envelope
+
+
+def _validate_source_snapshot_bindings_v2(payload: Mapping[str, object]) -> None:
+    rows = tuple(
+        _mapping(value, "source_snapshot_binding")
+        for value in _sequence(
+            payload.get("source_snapshot_bindings"), "source_snapshot_bindings"
+        )
+    )
+    normalized = []
+    for row in rows:
+        if set(row) != _SOURCE_SNAPSHOT_KEYS_V2:
+            raise _PreparationError(
+                BinanceUsdmTradifiPreparationFailureCode.PREPARATION_AUTHORITY_INVALID,
+                "source_snapshot_binding_schema",
+            )
+        normalized.append(
+            (
+                _canonical_text("source_kind", row.get("source_kind")),
+                _canonical_hash("source_snapshot_id", row.get("source_snapshot_id")),
+                _canonical_hash(
+                    "source_snapshot_hash", row.get("source_snapshot_hash")
+                ),
+                _canonical_hash(
+                    "source_evidence_hash", row.get("source_evidence_hash")
+                ),
+            )
+        )
+    values = tuple(normalized)
+    if (
+        not values
+        or len(set(values)) != len(values)
+        or values
+        != tuple(sorted(values, key=lambda value: (value[0], value[1], value[3])))
+        or tuple(sorted({value[0] for value in values}))
+        != (
+            "aggregate_trades",
+            "calendar_unit",
+            "funding_history",
+            "index_price",
+            "mark_price",
+        )
+        or sum(value[0] == "calendar_unit" for value in values) != 1
+        or sum(value[0] == "funding_history" for value in values) != 1
+        or sum(value[0] == "index_price" for value in values)
+        != sum(value[0] == "mark_price" for value in values)
+    ):
+        raise _PreparationError(
+            BinanceUsdmTradifiPreparationFailureCode.PREPARATION_AUTHORITY_INVALID,
+            "source_snapshot_binding_cover",
+        )
+
+
+def _validate_authority_support_v2(
+    payload: Mapping[str, object],
+    provider: BinanceUsdmTradifiProviderInputs,
+) -> tuple[
+    tuple[domain.ArtifactRef, domain.ArtifactRef, domain.ArtifactRef],
+    domain.ArtifactRef,
+]:
+    if (
+        not _same(payload.get("required_initial_equity"), provider.initial_equity)
+        or payload.get("required_sleeve_allocation_fraction")
+        != provider.sleeve_allocation_fraction
+        or payload.get("required_position_notional_usdt") != _REQUIRED_NOTIONAL
+        or not _same(payload.get("source_limitations"), _SOURCE_LIMITATIONS_V2)
+    ):
+        raise _PreparationError(
+            BinanceUsdmTradifiPreparationFailureCode.PREPARATION_AUTHORITY_INVALID,
+            "required_financial_authority",
+        )
+    refs = (
+        _artifact_ref(payload.get("xkrx_calendar_ref"), "xkrx_calendar_ref"),
+        _artifact_ref(payload.get("arcx_calendar_ref"), "arcx_calendar_ref"),
+        _artifact_ref(
+            payload.get("post_adjustment_unit_regime_ref"),
+            "post_adjustment_unit_regime_ref",
+        ),
+    )
+    if refs != _EXPECTED_AUTHORITY_REFS:
+        raise _PreparationError(
+            BinanceUsdmTradifiPreparationFailureCode.ARTIFACT_BINDING_INVALID,
+            "authority_artifact_refs",
+        )
+    source_ref = _artifact_ref(
+        payload.get("source_profile_authority_ref"),
+        "source_profile_authority_ref",
+        BinanceUsdmTradifiPreparationFailureCode.ARTIFACT_BINDING_INVALID,
+    )
+    if (
+        source_ref.artifact_type != _SOURCE_PROFILE_AUTHORITY_TYPE
+        or source_ref.schema_version != _SOURCE_PROFILE_AUTHORITY_SCHEMA_VERSION
+    ):
+        raise _PreparationError(
+            BinanceUsdmTradifiPreparationFailureCode.ARTIFACT_BINDING_INVALID,
+            "source_profile_authority_ref",
+        )
+    _validate_source_snapshot_bindings_v2(payload)
+    for name in (
+        "source_fragment_digest",
+        "target_result_digest",
+        "aggregate_trade_boundary_index_request_hash",
+        "aggregate_trade_boundary_index_result_digest",
+        "aggregate_trade_streamed_reconstruction_digest",
+        "source_profile_authority_hash",
+        "profile_composition_request_hash",
+    ):
+        _canonical_hash(name, payload.get(name))
+    for name in (
+        "aggregate_trade_intra_day_raw_id_gap_stream",
+        "aggregate_trade_cross_date_raw_id_gap_stream",
+        "aggregate_trade_coverage_gaps",
+        "missing_boundaries",
+    ):
+        if name.endswith("gaps") or name == "missing_boundaries":
+            _sequence(payload.get(name), name)
+        else:
+            _mapping(payload.get(name), name)
+    return refs, source_ref
+
+
+def _source_profile_authority_v2(
+    preparation_payload: Mapping[str, object],
+    artifact: _VerifiedArtifact,
+) -> Mapping[str, object]:
+    embedded = _artifact_envelope(
+        preparation_payload.get("source_profile_authority_envelope"),
+        "source_profile_authority_envelope",
+    )
+    if (
+        artifact.ref.artifact_type != _SOURCE_PROFILE_AUTHORITY_TYPE
+        or artifact.ref.schema_version != _SOURCE_PROFILE_AUTHORITY_SCHEMA_VERSION
+        or artifact.ref
+        != _artifact_ref(
+            preparation_payload.get("source_profile_authority_ref"),
+            "source_profile_authority_ref",
+            BinanceUsdmTradifiPreparationFailureCode.ARTIFACT_BINDING_INVALID,
+        )
+        or not _same(artifact.envelope, embedded)
+        or preparation_payload.get("source_profile_authority_hash")
+        != artifact.envelope.content_hash
+    ):
+        raise _PreparationError(
+            BinanceUsdmTradifiPreparationFailureCode.ARTIFACT_BINDING_INVALID,
+            "source_profile_authority",
+        )
+    payload = _mapping(artifact.envelope.payload, "source_profile_authority_payload")
+    if (
+        set(payload) != _SOURCE_PROFILE_AUTHORITY_PAYLOAD_KEYS
+        or payload.get("type") != "binance_usdm_koru_source_profile_authority_v2"
+        or payload.get("schema_version") != _SOURCE_PROFILE_AUTHORITY_SCHEMA_VERSION
+        or payload.get("development_only") is not True
+        or payload.get("decision_grade_eligible") is not False
+        or payload.get("deployment_authorized") is not False
+        or any(
+            not _same(payload.get(key), preparation_payload.get(key))
+            for key in (
+                "source_fragment_digest",
+                "aggregate_trade_boundary_index_request_hash",
+                "aggregate_trade_boundary_index_result_digest",
+                "aggregate_trade_streamed_reconstruction_digest",
+                "aggregate_trade_intra_day_raw_id_gap_stream",
+                "aggregate_trade_cross_date_raw_id_gap_stream",
+                "aggregate_trade_coverage_gaps",
+                "missing_boundaries",
+            )
+        )
+        or any(
+            not _same(payload.get(key), preparation_payload.get(key))
+            for key in (
+                "xkrx_calendar_ref",
+                "arcx_calendar_ref",
+                "post_adjustment_unit_regime_ref",
+            )
+        )
+    ):
+        raise _PreparationError(
+            BinanceUsdmTradifiPreparationFailureCode.ARTIFACT_BINDING_INVALID,
+            "source_profile_authority_payload",
+        )
+    _canonical_hash(
+        "source_projection_request_hash", payload.get("source_projection_request_hash")
+    )
+    return payload
+
+
+def _stream_manifest_wire(value: object, subject: str) -> MarketStreamManifest:
+    row = _mapping(value, subject)
+    capability = _mapping(row.get("capability"), f"{subject}.capability")
+    if (
+        set(row) != _SOURCE_MANIFEST_WIRE_KEYS
+        or set(capability) != {"type", "key", "version"}
+        or capability.get("type") != "market_bundle_capability"
+    ):
+        raise _PreparationError(
+            BinanceUsdmTradifiPreparationFailureCode.ARTIFACT_BINDING_INVALID,
+            subject,
+        )
+    try:
+        stream_manifest = MarketStreamManifest(
+            _canonical_text(f"{subject}.stream_key", row.get("stream_key")),
+            _canonical_text(f"{subject}.event_type", row.get("event_type")),
+            MarketBundleCapability(
+                _canonical_text(f"{subject}.capability.key", capability.get("key")),
+                capability.get("version"),  # type: ignore[arg-type]
+            ),
+            row.get("event_count"),  # type: ignore[arg-type]
+            _canonical_hash(f"{subject}.content_hash", row.get("content_hash")),
+        )
+    except (TypeError, ValueError) as error:
+        raise _PreparationError(
+            BinanceUsdmTradifiPreparationFailureCode.ARTIFACT_BINDING_INVALID,
+            subject,
+        ) from error
+    if not _same(stream_manifest, row):
+        raise _PreparationError(
+            BinanceUsdmTradifiPreparationFailureCode.ARTIFACT_BINDING_INVALID,
+            subject,
+        )
+    return stream_manifest
+
+
+def _source_manifest_rows_v2(
+    source_authority_payload: Mapping[str, object],
+) -> tuple[MarketStreamManifest, ...]:
+    rows = tuple(
+        _stream_manifest_wire(value, "source_stream_manifest")
+        for value in _sequence(
+            source_authority_payload.get("source_stream_manifests"),
+            "source_stream_manifests",
+        )
+    )
+    keys = tuple(value.stream_key for value in rows)
+    if (
+        frozenset(keys) != _SOURCE_STREAM_KEYS
+        or keys != tuple(sorted(keys))
+        or len(set(keys)) != len(keys)
+    ):
+        raise _PreparationError(
+            BinanceUsdmTradifiPreparationFailureCode.ARTIFACT_BINDING_INVALID,
+            "source_stream_manifests",
+        )
+    return rows
+
+
+def _source_events_v2(
+    reader: MarketBundleReader,
+    manifest: MarketBundleManifest,
+    source_authority_payload: Mapping[str, object],
+) -> tuple[MarketEvent, ...]:
+    events: list[MarketEvent] = []
+    for authority_manifest in _source_manifest_rows_v2(source_authority_payload):
+        bundle_manifest = _manifest_stream(manifest, authority_manifest.stream_key)
+        if not _same(authority_manifest, bundle_manifest):
+            raise _PreparationError(
+                BinanceUsdmTradifiPreparationFailureCode.ARTIFACT_BINDING_INVALID,
+                f"source_stream_manifest:{authority_manifest.stream_key}",
+            )
+        events.extend(_read_stream(reader, manifest, authority_manifest.stream_key))
+    return tuple(events)
+
+
+def _execution_projection_events_v2(
+    reader: MarketBundleReader,
+    manifest: MarketBundleManifest,
+    intent: BinanceUsdmTradifiBarRequestIntent,
+    source_authority_payload: Mapping[str, object],
+) -> tuple[MarketEvent, ...]:
+    authority_manifest = _stream_manifest_wire(
+        source_authority_payload.get("execution_projection_stream_manifest"),
+        "execution_projection_stream_manifest",
+    )
+    bundle_manifest = _manifest_stream(manifest, _EXECUTION_PROJECTION_STREAM_V2)
+    if (
+        authority_manifest.stream_key != _EXECUTION_PROJECTION_STREAM_V2
+        or authority_manifest.event_type != _EXECUTION_PROJECTION_EVENT_TYPE
+        or authority_manifest.capability != _EXECUTION_PROJECTION_CAPABILITY
+        or not _same(authority_manifest, bundle_manifest)
+    ):
+        raise _PreparationError(
+            BinanceUsdmTradifiPreparationFailureCode.ARTIFACT_BINDING_INVALID,
+            "execution_projection_stream_manifest",
+        )
+    events = _read_stream(reader, manifest, _EXECUTION_PROJECTION_STREAM_V2)
+    bindings = tuple(
+        _mapping(value, "execution_projection_event_binding")
+        for value in _sequence(
+            source_authority_payload.get("execution_projection_event_bindings"),
+            "execution_projection_event_bindings",
+        )
+    )
+    expected_bindings = tuple(
+        sorted(
+            (
+                {
+                    "stream_key": event.stream_key,
+                    "event_id": event.event_id,
+                    "event_hash": event.event_hash,
+                }
+                for event in events
+            ),
+            key=lambda value: (
+                value["stream_key"],
+                value["event_id"],
+                value["event_hash"],
+            ),
+        )
+    )
+    if not _same(bindings, expected_bindings):
+        raise _PreparationError(
+            BinanceUsdmTradifiPreparationFailureCode.ARTIFACT_BINDING_INVALID,
+            "execution_projection_event_bindings",
+        )
+    for index, event in enumerate(events):
+        open_price = _mapping(event.payload.get("open_price"), "bar_open.open_price")
+        if (
+            event.stream_key != _EXECUTION_PROJECTION_STREAM_V2
+            or event.event_type != _EXECUTION_PROJECTION_EVENT_TYPE
+            or event.capability != _EXECUTION_PROJECTION_CAPABILITY
+            or event.instrument_id is None
+            or not _same(event.instrument_id, _INSTRUMENT_WIRE)
+            or not intent.timeline_window.data_start
+            <= event.event_time
+            < intent.timeline_window.end_exclusive
+            or event.available_time != event.event_time
+            or event.phase != domain.TimelinePhase(20, "bar_open")
+            or event.source_sequence != domain.SourceSequence(index)
+            or event.supersedes_revision_id is not None
+            or event.source_key != _EXECUTION_PROJECTION_SOURCE_V2
+            or not event.event_id.startswith(
+                "binance-usdm-koru-first-retained-trade-bar-open-v2:sha256:"
+            )
+            or set(event.payload) != {"schema_version", "bar_kind", "open_price"}
+            or event.payload.get("schema_version") != 1
+            or event.payload.get("bar_kind") != "real"
+            or set(open_price) != {"units", "scale", "quote_currency"}
+            or type(open_price.get("units")) is not int
+            or open_price.get("units", 0) <= 0  # type: ignore[operator]
+            or open_price.get("scale") != 8
+            or open_price.get("quote_currency") != "USDT"
+        ):
+            raise _PreparationError(
+                BinanceUsdmTradifiPreparationFailureCode.MARKET_BUNDLE_MISMATCH,
+                "execution_projection_event",
+            )
+    return events
+
+
+def _account_authority_v2(
+    reader: MarketBundleReader,
+    manifest: MarketBundleManifest,
+    intent: BinanceUsdmTradifiBarRequestIntent,
+    provider_inputs: BinanceUsdmTradifiProviderInputs,
+    preparation_payload: Mapping[str, object],
+) -> MarketEvent:
+    events = _read_stream(reader, manifest, _ACCOUNT_STREAM_V2)
+    if len(events) != 1:
+        raise _PreparationError(
+            BinanceUsdmTradifiPreparationFailureCode.PREPARATION_AUTHORITY_INVALID,
+            "account_event_count",
+        )
+    event = events[0]
+    payload = event.payload
+    strategy_ref = _artifact_ref(payload.get("strategy_definition_ref"), "account_strategy_ref")
+    if (
+        event.stream_key != _ACCOUNT_STREAM_V2
+        or event.event_type != _ACCOUNT_EVENT_TYPE
+        or event.capability != _ACCOUNT_CAPABILITY
+        or event.instrument_id is None
+        or not _same(event.instrument_id, _INSTRUMENT_WIRE)
+        or event.event_time != intent.timeline_window.data_start
+        or event.available_time != intent.timeline_window.data_start
+        or event.phase != domain.TimelinePhase(110, "account_financial_dispatch")
+        or event.source_sequence != domain.SourceSequence(0)
+        or set(payload)
+        != {
+            "schema_version",
+            "account_id",
+            "initial_equity",
+            "sleeve_allocation_fraction",
+            "position_notional_usdt",
+            "profile_composition_request_hash",
+            "strategy_definition_ref",
+            "strategy_definition_hash",
+            "operation_authorized",
+            "order_authorized",
+            "deployment_authorized",
+        }
+        or payload.get("schema_version") != _BUNDLE_SCHEMA_VERSION_V2
+        or payload.get("account_id") != intent.execution_account_id
+        or not _same(payload.get("initial_equity"), provider_inputs.initial_equity)
+        or payload.get("sleeve_allocation_fraction")
+        != provider_inputs.sleeve_allocation_fraction
+        or payload.get("position_notional_usdt") != _REQUIRED_NOTIONAL
+        or payload.get("profile_composition_request_hash")
+        != preparation_payload.get("profile_composition_request_hash")
+        or strategy_ref != intent.strategy_definition_ref
+        or payload.get("strategy_definition_hash") != strategy_ref.content_hash
+        or not _exact_false(payload.get("operation_authorized"))
+        or not _exact_false(payload.get("order_authorized"))
+        or not _exact_false(payload.get("deployment_authorized"))
+    ):
+        raise _PreparationError(
+            BinanceUsdmTradifiPreparationFailureCode.PREPARATION_AUTHORITY_INVALID,
+            "account_event_contract",
+        )
+    return event
+
+
+def _expected_stream_keys_v2(
+    source_authority_payload: Mapping[str, object],
+) -> frozenset[str]:
+    source_keys = {
+        value.stream_key for value in _source_manifest_rows_v2(source_authority_payload)
+    }
+    projection_manifest = _stream_manifest_wire(
+        source_authority_payload.get("execution_projection_stream_manifest"),
+        "execution_projection_stream_manifest",
+    )
+    if projection_manifest.stream_key != _EXECUTION_PROJECTION_STREAM_V2:
+        raise _PreparationError(
+            BinanceUsdmTradifiPreparationFailureCode.ARTIFACT_BINDING_INVALID,
+            "execution_projection_stream_manifest",
+        )
+    return frozenset(
+        {
+            *source_keys,
+            _EXECUTION_PROJECTION_STREAM_V2,
+            *(f"{_TARGET_PREFIX}{value}.v2" for value in _PARAMETER_IDS),
+            _PREPARATION_STREAM_V2,
+            _PRICE_PURPOSE_STREAM_V2,
+            _ACCOUNT_STREAM_V2,
+        }
+    )
+
+
+def _validate_manifest_stream_cover_v2(
+    manifest: MarketBundleManifest,
+    source_authority_payload: Mapping[str, object],
+) -> None:
+    actual = tuple(value.stream_key for value in manifest.streams)
+    expected = _expected_stream_keys_v2(source_authority_payload)
+    if len(actual) != len(expected) or frozenset(actual) != expected:
+        raise _PreparationError(
+            BinanceUsdmTradifiPreparationFailureCode.MARKET_BUNDLE_MISMATCH,
+            "manifest_stream_cover",
+        )
+
+
+def _profile_v2(
+    preparation_payload: Mapping[str, object],
+    intent: BinanceUsdmTradifiBarRequestIntent,
+    refs: tuple[domain.ArtifactRef, ...],
+    source_artifact: _VerifiedArtifact,
+    source_events: tuple[MarketEvent, ...],
+) -> BinanceUsdmTradifiResolvedProfile:
+    resolved = _profile(preparation_payload, intent, refs)
+    request = resolved.request
+    development = build_binance_usdm_koru_tradifi_development_profile_v1(
+        BinanceUsdmKoruTradifiDevelopmentProfileRequestV1(
+            timeline_window=intent.timeline_window,
+            composed_at=request.composed_at,
+            account_id=intent.execution_account_id,
+            xkrx_calendar_ref=refs[2],
+            arcx_calendar_ref=refs[3],
+            post_adjustment_unit_regime_ref=refs[4],
+            source_profile_authority_envelope=source_artifact.envelope,
+            source_profile_authority_ref=source_artifact.ref,
+            source_events=source_events,
+        )
+    )
+    result = development.result
+    wire = _mapping(
+        preparation_payload.get("profile_composition_request_wire"), "profile_wire"
+    )
+    expected_hash = preparation_payload.get("profile_composition_request_hash")
+    if (
+        development.failure is not None
+        or result is None
+        or result.source_profile_authority_ref != source_artifact.ref
+        or result.source_profile_authority_hash != source_artifact.envelope.content_hash
+        or result.profile_composition_request_hash != expected_hash
+        or not _same(result.profile_composition_request_wire, wire)
+        or not _same(result.profile_composition_request, request)
+        or not _same(result.resolved_profile, resolved)
+        or not _same(result.profile_registry, resolved.profile_registry)
+        or not _same(
+            result.financial_dispatcher_spec, resolved.financial_dispatcher_spec
+        )
+    ):
+        raise _PreparationError(
+            BinanceUsdmTradifiPreparationFailureCode.PROFILE_BINDING_INVALID,
+            "development_profile_authority",
+        )
+    source_manifest_rows = tuple(
+        _mapping(value, "source_stream_manifest")
+        for value in _sequence(
+            _mapping(
+                source_artifact.envelope.payload, "source_profile_authority_payload"
+            ).get("source_stream_manifests"),
+            "source_stream_manifests",
+        )
+    )
+    expected_stream_hashes = tuple(
+        (
+            _canonical_text("stream_key", row.get("stream_key")),
+            _canonical_hash("content_hash", row.get("content_hash")),
+        )
+        for row in source_manifest_rows
+    )
+    if result.source_stream_hashes != expected_stream_hashes:
+        raise _PreparationError(
+            BinanceUsdmTradifiPreparationFailureCode.PROFILE_BINDING_INVALID,
+            "development_profile_stream_hashes",
+        )
+    return resolved
+
+
 def _price_purpose_authority(
     reader: MarketBundleReader,
     manifest: MarketBundleManifest,
     intent: BinanceUsdmTradifiBarRequestIntent,
     preparation_payload: Mapping[str, object],
+    bundle_schema_version: int = 1,
 ) -> MarketEvent:
-    events = _read_stream(reader, manifest, _PRICE_PURPOSE_STREAM)
+    stream_key = (
+        _PRICE_PURPOSE_STREAM
+        if bundle_schema_version == 1
+        else _PRICE_PURPOSE_STREAM_V2
+    )
+    event_type = (
+        _PRICE_PURPOSE_EVENT_TYPE
+        if bundle_schema_version == 1
+        else _PRICE_PURPOSE_EVENT_TYPE_V2
+    )
+    payload_keys = (
+        _PRICE_AUTHORITY_PAYLOAD_KEYS
+        if bundle_schema_version == 1
+        else _PRICE_AUTHORITY_PAYLOAD_KEYS_V2
+    )
+    events = _read_stream(reader, manifest, stream_key)
     if len(events) != 1:
         raise _PreparationError(
             BinanceUsdmTradifiPreparationFailureCode.PREPARATION_AUTHORITY_INVALID,
@@ -1396,8 +2137,8 @@ def _price_purpose_authority(
         "event_hash": event.event_hash,
     }
     if (
-        event.stream_key != _PRICE_PURPOSE_STREAM
-        or event.event_type != _PRICE_PURPOSE_EVENT_TYPE
+        event.stream_key != stream_key
+        or event.event_type != event_type
         or event.capability != _PRICE_PURPOSE_CAPABILITY
         or event.instrument_id is None
         or not _same(event.instrument_id.to_canonical_dict(), _INSTRUMENT_WIRE)
@@ -1407,13 +2148,20 @@ def _price_purpose_authority(
         or event.source_sequence != domain.SourceSequence(0)
         or set(binding) != _PRICE_EVENT_BINDING_KEYS
         or not _same(binding, expected_binding)
-        or set(payload) != _PRICE_AUTHORITY_PAYLOAD_KEYS
-        or payload.get("schema_version") != 1
+        or set(payload) != payload_keys
+        or payload.get("schema_version") != bundle_schema_version
         or not _same(payload.get("instrument_id"), _INSTRUMENT_WIRE)
         or payload.get("source_fragment_digest")
         != preparation_payload.get("source_fragment_digest")
         or payload.get("profile_composition_request_hash")
         != preparation_payload.get("profile_composition_request_hash")
+        or (
+            bundle_schema_version == _BUNDLE_SCHEMA_VERSION_V2
+            and any(
+                not _same(payload.get(key), preparation_payload.get(key))
+                for key in _STREAMING_AUTHORITY_KEYS
+            )
+        )
     ):
         raise _PreparationError(
             BinanceUsdmTradifiPreparationFailureCode.PREPARATION_AUTHORITY_INVALID,
@@ -1506,9 +2254,15 @@ def _price_purpose_authority(
     return event
 
 
-def _validate_preparation_result(
+def _validate_preparation_result_v1(
     result: BinanceUsdmTradifiPreparationResult,
 ) -> None:
+    if (
+        result.bundle_schema_version != 1
+        or result.source_profile_authority_ref is not None
+        or result.source_profile_authority_hash is not None
+    ):
+        raise ValueError("V1 result cannot retain V2 authority evidence")
     if type(result.intent) is not BinanceUsdmTradifiBarRequestIntent:
         raise TypeError("intent must be exact BinanceUsdmTradifiBarRequestIntent")
     if type(result.provider_inputs) is not BinanceUsdmTradifiProviderInputs:
@@ -1657,6 +2411,210 @@ def _validate_preparation_result(
         raise ValueError("profile bundle requirements are not retained")
 
 
+def _validate_preparation_result_v2(
+    result: BinanceUsdmTradifiPreparationResult,
+) -> None:
+    if type(result.intent) is not BinanceUsdmTradifiBarRequestIntent:
+        raise TypeError("intent must be exact BinanceUsdmTradifiBarRequestIntent")
+    if type(result.provider_inputs) is not BinanceUsdmTradifiProviderInputs:
+        raise TypeError(
+            "provider_inputs must be exact BinanceUsdmTradifiProviderInputs"
+        )
+    manifest = result.market_bundle_manifest
+    if (
+        result.bundle_schema_version != _BUNDLE_SCHEMA_VERSION_V2
+        or type(manifest) is not MarketBundleManifest
+        or manifest.schema_version != _BUNDLE_SCHEMA_VERSION_V2
+        or _V2_BUNDLE_KEY.fullmatch(manifest.bundle_key) is None
+        or type(result.market_bundle_ref) is not MarketBundleRef
+        or result.market_bundle_ref != result.intent.market_bundle_ref
+        or MarketBundleRef.from_manifest(manifest) != result.market_bundle_ref
+        or manifest.coverage_start != result.intent.timeline_window.data_start
+        or manifest.coverage_end_exclusive
+        != result.intent.timeline_window.end_exclusive
+        or getattr(result.market_reader, "bundle_ref", None)
+        != result.market_bundle_ref
+        or not _same(getattr(result.market_reader, "manifest", None), manifest)
+        or any(
+            stream.stream_key
+            in {
+                _PREPARATION_STREAM,
+                _PRICE_PURPOSE_STREAM,
+                _ACCOUNT_STREAM_V1,
+                _EXECUTION_PROJECTION_STREAM_V1,
+                *(f"{_TARGET_PREFIX}{value}.v1" for value in _PARAMETER_IDS),
+            }
+            for stream in manifest.streams
+        )
+    ):
+        raise ValueError("retained V2 market reader manifest/ref mismatch")
+    authority_event, payload = _authority(
+        result.market_reader,
+        manifest,
+        result.intent,
+        _BUNDLE_SCHEMA_VERSION_V2,
+    )
+    if (
+        type(result.preparation_authority_event) is not MarketEvent
+        or not _same(result.preparation_authority_event, authority_event)
+        or result.preparation_authority_hash != authority_event.event_hash
+    ):
+        raise ValueError("preparation authority evidence mismatch")
+    authority_refs, source_ref = _validate_authority_support_v2(
+        payload, result.provider_inputs
+    )
+    _price_purpose_authority(
+        result.market_reader,
+        manifest,
+        result.intent,
+        payload,
+        _BUNDLE_SCHEMA_VERSION_V2,
+    )
+    rows = _target_bindings(payload, result.intent, _BUNDLE_SCHEMA_VERSION_V2)
+    if (
+        type(result.verified_target_bindings) is not tuple
+        or len(result.verified_target_bindings) != 8
+        or any(
+            type(value) is not _VerifiedParameterTargetBinding
+            or value.bundle_schema_version != _BUNDLE_SCHEMA_VERSION_V2
+            for value in result.verified_target_bindings
+        )
+        or tuple(
+            (
+                value.parameter_id,
+                value.parameter_ref,
+                value.target_stream_key,
+                value.target_stream_digest,
+            )
+            for value in result.verified_target_bindings
+        )
+        != rows
+    ):
+        raise ValueError("verified V2 target binding evidence mismatch")
+    source_fragment_digest = _canonical_hash(
+        "source_fragment_digest", payload.get("source_fragment_digest")
+    )
+    for evidence in result.verified_target_bindings:
+        refs = (
+            _EXPECTED_STRATEGY_REF,
+            evidence.parameter_ref,
+            *authority_refs,
+        )
+        rebuilt = _target_stream(
+            result.market_reader,
+            manifest,
+            result.intent,
+            evidence.target_stream_key,
+            evidence.target_stream_digest,
+            refs,
+            source_fragment_digest,
+        )
+        if evidence.stream_manifest != _manifest_stream(
+            manifest, evidence.target_stream_key
+        ) or not _same(evidence.target_stream, rebuilt):
+            raise ValueError("retained V2 target stream evidence mismatch")
+    selected = next(
+        value
+        for value in result.verified_target_bindings
+        if value.parameter_ref == result.intent.strategy_parameter_set_ref
+    )
+    if (
+        type(result.target_stream) is not PrecomputedTargetStream
+        or not _same(result.target_stream, selected.target_stream)
+        or result.target_stream_key != selected.target_stream_key
+        or result.target_stream_digest != selected.target_stream_digest
+    ):
+        raise ValueError("selected V2 target stream mismatch")
+    if (
+        type(result.verified_artifacts) is not tuple
+        or len(result.verified_artifacts) != 13
+        or any(
+            type(value) is not _VerifiedArtifact for value in result.verified_artifacts
+        )
+    ):
+        raise ValueError("V2 verified_artifacts must exact-cover thirteen artifacts")
+    _payload_identity(result.verified_artifacts[:12])
+    source_artifact = result.verified_artifacts[12]
+    source_payload = _source_profile_authority_v2(payload, source_artifact)
+    _validate_manifest_stream_cover_v2(manifest, source_payload)
+    _execution_projection_events_v2(
+        result.market_reader, manifest, result.intent, source_payload
+    )
+    _account_authority_v2(
+        result.market_reader,
+        manifest,
+        result.intent,
+        result.provider_inputs,
+        payload,
+    )
+    if (
+        source_artifact.ref != source_ref
+        or result.source_profile_authority_ref != source_ref
+        or result.source_profile_authority_hash != source_artifact.envelope.content_hash
+    ):
+        raise ValueError("retained source profile authority evidence mismatch")
+    source_events = _source_events_v2(
+        result.market_reader, manifest, source_payload
+    )
+    refs = (
+        _EXPECTED_STRATEGY_REF,
+        result.intent.strategy_parameter_set_ref,
+        *authority_refs,
+    )
+    resolved = _profile_v2(
+        payload, result.intent, refs, source_artifact, source_events
+    )
+    if (
+        type(result.profile_composition_request)
+        is not BinanceUsdmTradifiProfileCompositionRequest
+        or not _same(result.profile_composition_request, resolved.request)
+        or type(result.resolved_profile) is not BinanceUsdmTradifiResolvedProfile
+        or not _same(result.resolved_profile, resolved)
+        or type(result.profile_registry) is not BacktestProfileRegistry
+        or not _same(result.profile_registry, resolved.profile_registry)
+        or type(result.financial_dispatcher_spec) is not FinancialDispatcherSpec
+        or not _same(
+            result.financial_dispatcher_spec,
+            resolved.financial_dispatcher_spec,
+        )
+    ):
+        raise ValueError("resolved V2 profile evidence mismatch")
+    expected_build_manifest = _provider_build_manifest(
+        result.provider_inputs.build_artifact_manifest,
+        resolved.profile_registry,
+    )
+    if type(result.build_artifact_manifest) is not BuildArtifactManifest or not _same(
+        result.build_artifact_manifest, expected_build_manifest
+    ):
+        raise ValueError("V2 build artifact manifest mismatch")
+    required_capabilities = tuple(
+        dict.fromkeys(
+            (
+                *resolved.market_registration.required_bundle_capabilities,
+                *resolved.simulation_registration.required_bundle_capabilities,
+            )
+        )
+    )
+    if (
+        result.market_reader.validate_requirements(
+            required_capabilities=required_capabilities
+        )
+        is not None
+    ):
+        raise ValueError("V2 profile bundle requirements are not retained")
+
+
+def _validate_preparation_result(
+    result: BinanceUsdmTradifiPreparationResult,
+) -> None:
+    if result.bundle_schema_version == 1:
+        _validate_preparation_result_v1(result)
+    elif result.bundle_schema_version == _BUNDLE_SCHEMA_VERSION_V2:
+        _validate_preparation_result_v2(result)
+    else:
+        raise ValueError("unsupported bundle_schema_version")
+
+
 def resolve_binance_usdm_tradifi_preparation_authority_v1(
     *,
     intent: BinanceUsdmTradifiBarRequestIntent,
@@ -1796,6 +2754,192 @@ def resolve_binance_usdm_tradifi_preparation_authority_v1(
         )
 
 
+def resolve_binance_usdm_tradifi_preparation_authority_v2(
+    *,
+    intent: BinanceUsdmTradifiBarRequestIntent,
+    provider_inputs: BinanceUsdmTradifiProviderInputs,
+    artifact_reader: ArtifactEnvelopeReader,
+    market_reader: MarketBundleReader,
+) -> BinanceUsdmTradifiPreparationOutcome:
+    if type(intent) is not BinanceUsdmTradifiBarRequestIntent:
+        return _fail(BinanceUsdmTradifiPreparationFailureCode.INVALID_INTENT, "intent")
+    if type(provider_inputs) is not BinanceUsdmTradifiProviderInputs:
+        return _fail(
+            BinanceUsdmTradifiPreparationFailureCode.INVALID_PROVIDER_INPUTS,
+            "provider_inputs",
+        )
+    if not callable(getattr(artifact_reader, "read", None)):
+        return _fail(
+            BinanceUsdmTradifiPreparationFailureCode.INVALID_PROVIDER_INPUTS,
+            "artifact_reader",
+        )
+    try:
+        bundle_ref = market_reader.bundle_ref
+        manifest = market_reader.manifest
+        mixed_streams = {
+            _PREPARATION_STREAM,
+            _PRICE_PURPOSE_STREAM,
+            _ACCOUNT_STREAM_V1,
+            _EXECUTION_PROJECTION_STREAM_V1,
+            *(f"{_TARGET_PREFIX}{value}.v1" for value in _PARAMETER_IDS),
+        }
+        if (
+            type(bundle_ref) is not MarketBundleRef
+            or type(manifest) is not MarketBundleManifest
+            or manifest.schema_version != _BUNDLE_SCHEMA_VERSION_V2
+            or _V2_BUNDLE_KEY.fullmatch(manifest.bundle_key) is None
+            or bundle_ref != intent.market_bundle_ref
+            or MarketBundleRef.from_manifest(manifest) != bundle_ref
+            or manifest.coverage_start != intent.timeline_window.data_start
+            or manifest.coverage_end_exclusive
+            != intent.timeline_window.end_exclusive
+            or any(value.stream_key in mixed_streams for value in manifest.streams)
+        ):
+            raise _PreparationError(
+                BinanceUsdmTradifiPreparationFailureCode.MARKET_BUNDLE_MISMATCH,
+                "bundle_ref_window_version",
+            )
+        target_stream_keys = tuple(
+            f"{_TARGET_PREFIX}{value}.v2" for value in _PARAMETER_IDS
+        )
+        requirement_failure = market_reader.validate_requirements(
+            required_capabilities=(
+                _PREPARATION_CAPABILITY,
+                _PRICE_PURPOSE_CAPABILITY,
+                TARGET_STREAM_CAPABILITY,
+            ),
+            required_streams=(
+                _PREPARATION_STREAM_V2,
+                _PRICE_PURPOSE_STREAM_V2,
+                _ACCOUNT_STREAM_V2,
+                _EXECUTION_PROJECTION_STREAM_V2,
+                *target_stream_keys,
+            ),
+        )
+        if requirement_failure is not None:
+            raise _PreparationError(
+                BinanceUsdmTradifiPreparationFailureCode.MARKET_BUNDLE_MISMATCH,
+                "authority_requirements",
+            )
+        authority_event, payload = _authority(
+            market_reader, manifest, intent, _BUNDLE_SCHEMA_VERSION_V2
+        )
+        rows = _target_bindings(payload, intent, _BUNDLE_SCHEMA_VERSION_V2)
+        authority_refs, source_ref = _validate_authority_support_v2(
+            payload, provider_inputs
+        )
+        _price_purpose_authority(
+            market_reader,
+            manifest,
+            intent,
+            payload,
+            _BUNDLE_SCHEMA_VERSION_V2,
+        )
+        source_fragment_digest = _canonical_hash(
+            "source_fragment_digest", payload.get("source_fragment_digest")
+        )
+        verified_targets = []
+        for parameter_id, parameter_ref, stream_key, target_digest in rows:
+            refs = (_EXPECTED_STRATEGY_REF, parameter_ref, *authority_refs)
+            target_stream = _target_stream(
+                market_reader,
+                manifest,
+                intent,
+                stream_key,
+                target_digest,
+                refs,
+                source_fragment_digest,
+            )
+            verified_targets.append(
+                _VerifiedParameterTargetBinding(
+                    parameter_id,
+                    parameter_ref,
+                    stream_key,
+                    target_digest,
+                    _manifest_stream(manifest, stream_key),
+                    target_stream,
+                    _BUNDLE_SCHEMA_VERSION_V2,
+                )
+            )
+        verified_target_bindings = tuple(verified_targets)
+        selected = next(
+            value
+            for value in verified_target_bindings
+            if value.parameter_ref == intent.strategy_parameter_set_ref
+        )
+        artifact_refs = (
+            _EXPECTED_STRATEGY_REF,
+            *_EXPECTED_PARAMETER_REFS,
+            *_EXPECTED_AUTHORITY_REFS,
+            source_ref,
+        )
+        artifacts = tuple(
+            _verify_artifact(artifact_reader, ref) for ref in artifact_refs
+        )
+        _payload_identity(artifacts[:12])
+        source_artifact = artifacts[12]
+        source_payload = _source_profile_authority_v2(payload, source_artifact)
+        _validate_manifest_stream_cover_v2(manifest, source_payload)
+        _execution_projection_events_v2(
+            market_reader, manifest, intent, source_payload
+        )
+        _account_authority_v2(
+            market_reader, manifest, intent, provider_inputs, payload
+        )
+        source_events = _source_events_v2(market_reader, manifest, source_payload)
+        profile_refs = (
+            _EXPECTED_STRATEGY_REF,
+            intent.strategy_parameter_set_ref,
+            *authority_refs,
+        )
+        resolved = _profile_v2(
+            payload,
+            intent,
+            profile_refs,
+            source_artifact,
+            source_events,
+        )
+        try:
+            build_manifest = _provider_build_manifest(
+                provider_inputs.build_artifact_manifest, resolved.profile_registry
+            )
+        except (TypeError, ValueError) as error:
+            raise _PreparationError(
+                BinanceUsdmTradifiPreparationFailureCode.BUILD_MANIFEST_CONFLICT,
+                "profile_registration",
+            ) from error
+        result = BinanceUsdmTradifiPreparationResult(
+            intent=intent,
+            provider_inputs=provider_inputs,
+            preparation_authority_event=authority_event,
+            preparation_authority_hash=authority_event.event_hash,
+            verified_target_bindings=verified_target_bindings,
+            target_stream=selected.target_stream,
+            target_stream_key=selected.target_stream_key,
+            target_stream_digest=selected.target_stream_digest,
+            profile_composition_request=resolved.request,
+            resolved_profile=resolved,
+            profile_registry=resolved.profile_registry,
+            financial_dispatcher_spec=resolved.financial_dispatcher_spec,
+            verified_artifacts=artifacts,
+            build_artifact_manifest=build_manifest,
+            market_bundle_manifest=manifest,
+            market_bundle_ref=bundle_ref,
+            market_reader=market_reader,
+            bundle_schema_version=_BUNDLE_SCHEMA_VERSION_V2,
+            source_profile_authority_ref=source_ref,
+            source_profile_authority_hash=source_artifact.envelope.content_hash,
+        )
+        return BinanceUsdmTradifiPreparationOutcome(result=result)
+    except _PreparationError as error:
+        return _fail(error.code, error.subject)
+    except Exception:  # noqa: BLE001 - the public boundary must fail closed
+        return _fail(
+            BinanceUsdmTradifiPreparationFailureCode.RESULT_INVALID,
+            "unexpected_input",
+        )
+
+
 __all__ = [
     "BinanceUsdmTradifiBarRequestIntent",
     "BinanceUsdmTradifiPreparationFailure",
@@ -1804,4 +2948,5 @@ __all__ = [
     "BinanceUsdmTradifiPreparationResult",
     "BinanceUsdmTradifiProviderInputs",
     "resolve_binance_usdm_tradifi_preparation_authority_v1",
+    "resolve_binance_usdm_tradifi_preparation_authority_v2",
 ]
