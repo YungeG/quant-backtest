@@ -1243,6 +1243,34 @@ def _load_nonfiling_n(
         ) from error
 
 
+def _ensure_output_parent(output: Path) -> None:
+    parent = output.parent.absolute()
+    missing: list[Path] = []
+    current = parent
+    try:
+        while not os.path.lexists(current):
+            missing.append(current)
+            if current == current.parent:
+                raise ValueError("output parent is invalid")
+            current = current.parent
+        if current.is_symlink() or not current.is_dir():
+            raise ValueError("output parent is invalid")
+        for directory in reversed(missing):
+            try:
+                os.mkdir(directory, 0o700)
+            except FileExistsError:
+                if directory.is_symlink() or not directory.is_dir():
+                    raise ValueError("output parent is invalid") from None
+            else:
+                os.chmod(directory, 0o700)
+        if parent.is_symlink() or not parent.is_dir():
+            raise ValueError("output parent is invalid")
+    except (OSError, ValueError) as error:
+        raise QualityBbandS2bProvisionalExactExtractionError(
+            QualityBbandS2bProvisionalExactExtractionFailure.PUBLICATION_INTEGRITY_FAILURE
+        ) from error
+
+
 def _rename_noreplace(source: Path, target: Path) -> None:
     libc = ctypes.CDLL(None, use_errno=True)
     renameat2 = getattr(libc, "renameat2", None)
@@ -1268,6 +1296,7 @@ def _rename_noreplace(source: Path, target: Path) -> None:
 
 
 def _atomic_publish(output: Path, published: dict[str, bytes]) -> None:
+    _ensure_output_parent(output)
     staging = output.parent / f".{output.name}.staging-{os.getpid()}"
     try:
         if output.exists() or output.is_symlink() or staging.exists() or staging.is_symlink():
@@ -1316,6 +1345,7 @@ def _preflight(paths: tuple[Path, ...], output: Path) -> None:
     try:
         if output.name in {"", ".", ".."} or output.is_symlink() or output.exists():
             raise ValueError
+        _ensure_output_parent(output)
         if output.parent.is_symlink() or not output.parent.is_dir():
             raise ValueError
         resolved_output = output.resolve(strict=False)

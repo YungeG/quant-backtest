@@ -275,7 +275,7 @@ def test_nonfiling_source_validation_precedes_official_build(
 def test_atomic_publication_sets_modes_is_no_clobber_and_writes_manifest_last(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
-    output = tmp_path / "candidate"
+    output = tmp_path / "new" / "deep" / "candidate"
     published = {
         "provisional-expected-set.json": b"a",
         "provider-rows.jsonl": b"b",
@@ -298,6 +298,8 @@ def test_atomic_publication_sets_modes_is_no_clobber_and_writes_manifest_last(
     monkeypatch.setattr(s2b.os, "open", recording_open)
     s2b._atomic_publish(output, published)
     assert stat.S_IMODE(output.stat().st_mode) == 0o700
+    assert stat.S_IMODE(output.parent.stat().st_mode) == 0o700
+    assert stat.S_IMODE(output.parent.parent.stat().st_mode) == 0o700
     assert {path.name for path in output.iterdir()} == set(published)
     assert opened == list(published)
     assert all(stat.S_IMODE(path.stat().st_mode) == 0o600 for path in output.iterdir())
