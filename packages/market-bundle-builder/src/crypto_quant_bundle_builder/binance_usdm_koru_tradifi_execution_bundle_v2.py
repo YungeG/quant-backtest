@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import json
 from collections import defaultdict
 from collections.abc import Mapping
 from dataclasses import dataclass, field
@@ -14,6 +15,7 @@ from crypto_quant_domain import (
     SourceSequence,
     TimelinePhase,
     UtcInstant,
+    canonical_bytes,
     canonical_sha256,
 )
 from crypto_quant_market_data import (
@@ -73,6 +75,10 @@ _PRICE_PURPOSE_CAPABILITY = MarketBundleCapability(
     "binance_usdm.price-purpose-streams", 1
 )
 _FUNDING_STREAM = "binance_usdm.funding_history.publications.koruusdt.v1"
+def _canonical_wire(value: object) -> object:
+    return json.loads(canonical_bytes(value))
+
+
 _LIMITATIONS = (
     "selected_source_events_form_the_executable_stream",
     "full_raw_data_is_retained_transitively_in_source_snapshots",
@@ -157,11 +163,10 @@ def _streaming_authority_bindings(
             source.aggregate_trade_cross_date_raw_id_gap_stream.to_canonical_dict()
         ),
         "aggregate_trade_coverage_gaps": tuple(
-            value.to_canonical_dict()
-            for value in source.aggregate_trade_coverage_gaps
+            _canonical_wire(value) for value in source.aggregate_trade_coverage_gaps
         ),
         "missing_boundaries": tuple(
-            value.to_canonical_dict() for value in source.missing_boundaries
+            _canonical_wire(value) for value in source.missing_boundaries
         ),
         "source_profile_authority_ref": (
             request.source_profile_authority_ref.to_canonical_dict()
@@ -868,7 +873,7 @@ def build_binance_usdm_koru_tradifi_execution_bundle_v2(
     except (AttributeError, KeyError, TypeError, ValueError) as error:
         return _failed(
             BinanceUsdmKoruTradifiExecutionBundleFailureCodeV2.STREAM_ASSEMBLY_INVALID,
-            type(error).__name__,
+            f"{type(error).__name__}:{error}"[:500],
         )
     try:
         result = BinanceUsdmKoruTradifiExecutionBundleResultV2(
@@ -884,6 +889,6 @@ def build_binance_usdm_koru_tradifi_execution_bundle_v2(
     except (AttributeError, KeyError, TypeError, ValueError) as error:
         return _failed(
             BinanceUsdmKoruTradifiExecutionBundleFailureCodeV2.RESULT_INVALID,
-            type(error).__name__,
+            f"{type(error).__name__}:{error}"[:500],
         )
     return BinanceUsdmKoruTradifiExecutionBundleOutcomeV2(result=result)
