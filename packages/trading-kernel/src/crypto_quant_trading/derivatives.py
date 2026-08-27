@@ -2,11 +2,11 @@
 
 from __future__ import annotations
 
+import re
 from dataclasses import dataclass
 from enum import Enum
 from math import gcd
 from typing import Any
-import re
 
 from crypto_quant_domain import (
     CurrencyId,
@@ -353,7 +353,12 @@ class LinearPositionTransition:
             self.before.contract,
             (self.fill,),
         )
-        if _first_failure(embedded_request) is not None:
+        if (
+            _first_failure(
+                embedded_request, allow_compatible_price_scale=True
+            )
+            is not None
+        ):
             raise ValueError("transition Fill must match before State context")
         expected = _transition_values(self.before, self.fill)
         if expected != (self.kind, self.after, self.closed_quantity):
@@ -394,7 +399,12 @@ class LinearPositionProjection:
             raise TypeError("transitions must be a tuple of LinearPositionTransition")
         if type(self.final_state) is not LinearPositionState:
             raise TypeError("final_state must be exact LinearPositionState")
-        if _first_failure(self.request) is not None:
+        if (
+            _first_failure(
+                self.request, allow_compatible_price_scale=True
+            )
+            is not None
+        ):
             raise ValueError("Projection Request must not contain a business failure")
         state = _flat_state(self.request.position_key, self.request.contract)
         expected: list[LinearPositionTransition] = []
@@ -422,8 +432,15 @@ class LinearPositionProjection:
         }
 
 
+def _price_fits_contract_scale(price: Price, scale: Scale) -> bool:
+    difference = price.scale.places - scale.places
+    return difference <= 0 or price.units % (10**difference) == 0
+
+
 def _first_failure(
     request: LinearPositionProjectionRequest,
+    *,
+    allow_compatible_price_scale: bool = False,
 ) -> tuple[
     LinearPositionProjectionFailureCode,
     int | None,
@@ -480,7 +497,13 @@ def _first_failure(
                 index,
                 fill.fill_id,
             )
-        if fill.price.scale != request.contract.price_scale:
+        if (
+            fill.price.scale != request.contract.price_scale
+            and not (
+                allow_compatible_price_scale
+                and _price_fits_contract_scale(fill.price, request.contract.price_scale)
+            )
+        ):
             return (
                 LinearPositionProjectionFailureCode.PRICE_SCALE_MISMATCH,
                 index,
@@ -687,6 +710,41 @@ class LinearPositionProjector:
                 None,
                 value,
             )
+        state = _flat_state(request.position_key, request.contract)
+        transitions: list[LinearPositionTransition] = []
+        for fill in request.fills:
+            transition = _project_fill(state, fill)
+            transitions.append(transition)
+            state = transition.after
+        projection = LinearPositionProjection(
+            request,
+            request.request_hash,
+            tuple(transitions),
+            state,
+        )
+        return LinearPositionProjectionOutcome(request.request_hash, projection, None)
+
+
+@dataclass(frozen=True, slots=True)
+class LinearPositionProjectorV2:
+    """Project exact fills whose price is representable on the contract lattice."""
+
+    def project(
+        self, request: LinearPositionProjectionRequest, /
+    ) -> LinearPositionProjectionOutcome:
+        if type(request) is not LinearPositionProjectionRequest:
+            raise TypeError("request must be exact LinearPositionProjectionRequest")
+        failure = _first_failure(request, allow_compatible_price_scale=True)
+        if failure is not None:
+            code, fill_index, fill_id = failure
+            value = LinearPositionProjectionFailure(
+                request,
+                request.request_hash,
+                code,
+                fill_index,
+                fill_id,
+            )
+            return LinearPositionProjectionOutcome(request.request_hash, None, value)
         state = _flat_state(request.position_key, request.contract)
         transitions: list[LinearPositionTransition] = []
         for fill in request.fills:

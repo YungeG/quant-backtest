@@ -50,6 +50,14 @@ from .binance_usdm_tradifi_profile import (
 from .binance_usdm_tradifi_profile_wire import (
     decode_binance_usdm_tradifi_profile_composition_request_v1,
 )
+from .binance_usdm_tradifi_provider import (
+    BinanceUsdmTradifiBarBacktestFailure,
+    BinanceUsdmTradifiBarBacktestFailureCode,
+    BinanceUsdmTradifiBarBacktestIntent,
+    BinanceUsdmTradifiBarBacktestOutcome,
+    BinanceUsdmTradifiBarBacktestResult,
+    prepare_binance_usdm_tradifi_bar_backtest,
+)
 from .cash_development_provider import (
     CashDevelopmentProviderInputs,
     CashDevelopmentRequestIntent,
@@ -451,6 +459,11 @@ __all__ = [  # noqa: RUF022 - public API remains grouped by subsystem
     "BinanceUsdmProfileCompositionRequest",
     "BinanceUsdmResolvedProfile",
     "BinanceUsdmSimulationProfile",
+    "BinanceUsdmTradifiBarBacktestFailure",
+    "BinanceUsdmTradifiBarBacktestFailureCode",
+    "BinanceUsdmTradifiBarBacktestIntent",
+    "BinanceUsdmTradifiBarBacktestOutcome",
+    "BinanceUsdmTradifiBarBacktestResult",
     "BinanceUsdmTradifiBarRequestIntent",
     "BinanceUsdmTradifiExecutionAccountProfile",
     "BinanceUsdmTradifiLinearFinancialDispatcher",
@@ -535,6 +548,7 @@ __all__ = [  # noqa: RUF022 - public API remains grouped by subsystem
     "decode_binance_usdm_tradifi_profile_composition_request_v1",
     "materialize_execution_input_bundle",
     "materialize_execution_input_bundle_v2",
+    "prepare_binance_usdm_tradifi_bar_backtest",
     "prepare_cash_development_backtest",
     "prepare_model_bound_cash_development_backtest",
     "DeterministicRebuildEvidence",

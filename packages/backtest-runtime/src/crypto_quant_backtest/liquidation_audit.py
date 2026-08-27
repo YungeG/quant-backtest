@@ -326,8 +326,8 @@ def _base_failure(
         return LinearLiquidationAuditFailureCode.LIQUIDATION_BAR_COVERAGE_MISMATCH
     for bar in supplied:
         if (
-            bar.interval_start != window.interval_start
-            or bar.interval_end_exclusive != window.interval_end_exclusive
+            bar.interval_start > window.interval_start
+            or bar.interval_end_exclusive < window.interval_end_exclusive
         ):
             return LinearLiquidationAuditFailureCode.LIQUIDATION_BAR_INTERVAL_MISMATCH
         if (

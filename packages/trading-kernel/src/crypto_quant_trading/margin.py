@@ -14,8 +14,8 @@ from crypto_quant_domain import (
     Money,
     PositionBalanceKey,
     PricePurpose,
-    QuantizationPolicy,
     Quantity,
+    QuantizationPolicy,
     Rate,
     RoundingPolicy,
     Scale,
@@ -78,6 +78,26 @@ def _component_ref() -> ProfileComponentRef:
         }
     )
     return ProfileComponentRef(ProfilePortType.MARGIN_MODEL, _COMPONENT_KEY, 1, digest)
+
+
+def _component_ref_v2() -> ProfileComponentRef:
+    digest = canonical_sha256(
+        {
+            "type": "linear_margin_requirement_component",
+            "schema_version": _SCHEMA_VERSION,
+            "component_key": _COMPONENT_KEY + ".independent-tier-scale",
+            "component_version": 2,
+            "algorithm_key": "linear-instrument-margin-requirement-v2",
+            "tier_scale_policy": "independent_exact_notional_scale",
+            "allowed_grade": "development",
+        }
+    )
+    return ProfileComponentRef(
+        ProfilePortType.MARGIN_MODEL,
+        _COMPONENT_KEY + ".independent-tier-scale",
+        2,
+        digest,
+    )
 
 
 @dataclass(frozen=True, slots=True)
@@ -711,6 +731,8 @@ type _EvaluationValues = tuple[
 
 def _evaluate(
     request: LinearInstrumentMarginRequest,
+    *,
+    allow_independent_tier_scale: bool = False,
 ) -> tuple[LinearInstrumentMarginFailureCode | None, _EvaluationValues | None]:
     leverage = request.leverage_evidence
     rule_book = request.rule_book
@@ -748,7 +770,10 @@ def _evaluate(
     if (
         rule_book.instrument_id != instrument_id
         or rule_book.settlement_currency_id != instrument.settlement_currency
-        or rule_book.tier_scale != request.contract.price_scale
+        or (
+            not allow_independent_tier_scale
+            and rule_book.tier_scale != request.contract.price_scale
+        )
     ):
         return LinearInstrumentMarginFailureCode.RULE_BOOK_CONTEXT_MISMATCH, None
 
@@ -915,13 +940,16 @@ class LinearInstrumentMarginResult:
     maintenance_margin: Money
 
     def __post_init__(self) -> None:
-        if self.component_ref != _component_ref():
+        if self.component_ref not in (_component_ref(), _component_ref_v2()):
             raise ValueError("component_ref must match Margin requirement component")
         if type(self.request) is not LinearInstrumentMarginRequest:
             raise TypeError("request must be exact LinearInstrumentMarginRequest")
         if self.request_hash != self.request.request_hash:
             raise ValueError("request_hash must match embedded Request")
-        failure, values = _evaluate(self.request)
+        failure, values = _evaluate(
+            self.request,
+            allow_independent_tier_scale=self.component_ref == _component_ref_v2(),
+        )
         if failure is not None or values is None:
             raise ValueError("Result Request must have no business failure")
         interval, tier, notional, initial, maintenance = values
@@ -976,7 +1004,7 @@ class LinearInstrumentMarginFailure:
     subject_ids: tuple[str, ...]
 
     def __post_init__(self) -> None:
-        if self.component_ref != _component_ref():
+        if self.component_ref not in (_component_ref(), _component_ref_v2()):
             raise ValueError("component_ref must match Margin requirement component")
         if type(self.request) is not LinearInstrumentMarginRequest:
             raise TypeError("request must be exact LinearInstrumentMarginRequest")
@@ -988,7 +1016,10 @@ class LinearInstrumentMarginFailure:
             type(value) is str for value in self.subject_ids
         ):
             raise TypeError("subject_ids must be an exact tuple of strings")
-        failure, _ = _evaluate(self.request)
+        failure, _ = _evaluate(
+            self.request,
+            allow_independent_tier_scale=self.component_ref == _component_ref_v2(),
+        )
         if failure is None or failure is not self.code:
             raise ValueError("Failure must match first Request failure")
         if self.subject_ids != _failure_subject_ids(self.request, self.code):
@@ -1024,6 +1055,47 @@ class LinearInstrumentMarginModel:
         if type(request) is not LinearInstrumentMarginRequest:
             raise TypeError("request must be exact LinearInstrumentMarginRequest")
         failure, values = _evaluate(request)
+        if failure is not None:
+            value = LinearInstrumentMarginFailure(
+                self.component_ref,
+                request,
+                request.request_hash,
+                failure,
+                _failure_subject_ids(request, failure),
+            )
+            return ProfilePortOutcome.for_failure(self.component_ref, request, value)
+        if values is None:
+            raise AssertionError("successful Margin evaluation requires values")
+        interval, tier, notional, initial, maintenance = values
+        result = LinearInstrumentMarginResult(
+            self.component_ref,
+            request,
+            request.request_hash,
+            interval,
+            tier,
+            notional,
+            initial,
+            maintenance,
+            _quantized(initial, request.requirement_quantization),
+            _quantized(maintenance, request.requirement_quantization),
+        )
+        return ProfilePortOutcome.for_result(self.component_ref, request, result)
+
+
+@dataclass(frozen=True, slots=True)
+class LinearInstrumentMarginModelV2:
+    @property
+    def component_ref(self) -> ProfileComponentRef:
+        return _component_ref_v2()
+
+    def evaluate_margin(
+        self, request: LinearInstrumentMarginRequest, /
+    ) -> ProfilePortOutcome[
+        LinearInstrumentMarginResult, LinearInstrumentMarginFailure
+    ]:
+        if type(request) is not LinearInstrumentMarginRequest:
+            raise TypeError("request must be exact LinearInstrumentMarginRequest")
+        failure, values = _evaluate(request, allow_independent_tier_scale=True)
         if failure is not None:
             value = LinearInstrumentMarginFailure(
                 self.component_ref,

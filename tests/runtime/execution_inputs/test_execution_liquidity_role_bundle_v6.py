@@ -173,6 +173,70 @@ def test_v6_taker_round_trip_hydration_and_rebuild_are_stable() -> None:
     )
 
 
+def test_v6_planning_snapshot_round_trip_binds_semantics_and_rejects_downgrade() -> None:
+    prepared, resolved, hydrated, _, _ = _contract()
+    cycle = hydrated.execution_case_plan.decision_cycles[0]
+    snapshot = replace(
+        hydrated.execution_case_plan.financial_state.initial_snapshot,
+        timestamp=cycle.planning_at,
+        timestamp_instant=None,
+    )
+    plan = replace(
+        hydrated.execution_case_plan,
+        decision_cycles=(
+            replace(cycle, planning_snapshot=snapshot),
+            *hydrated.execution_case_plan.decision_cycles[1:],
+        ),
+    )
+    spec = _execution_case_semantic_spec_v3(
+        base_spec=hydrated.execution_case_semantic_spec,
+        execution_case_plan=plan,
+        market_data_preparation=prepared.preparation,
+    )
+    resolved = _resolved_for_spec(prepared, resolved, spec)
+    inputs = replace(
+        hydrated,
+        execution_case_semantic_spec=spec,
+        execution_case_plan=plan,
+    )
+
+    with pytest.raises(ValueError, match="planning_snapshot"):
+        _materialize_execution_input_bundle_v5(
+            resolved_request=resolved,
+            hydrated_inputs=inputs,
+            market_data_preparation=prepared.preparation,
+        )
+
+    envelope = _materialize_execution_input_bundle_v6(
+        resolved_request=resolved,
+        hydrated_inputs=inputs,
+        market_data_preparation=prepared.preparation,
+    )
+    decoded = _EXECUTION_INPUT_CATALOG.read(canonical_bytes(envelope)).artifact
+    assert decoded.execution_case_plan.decision_cycles[0].planning_snapshot == snapshot
+
+    changed_plan = replace(
+        plan,
+        decision_cycles=(
+            replace(
+                plan.decision_cycles[0],
+                planning_snapshot=replace(
+                    snapshot,
+                    journal_state_hash="sha256:" + "12" * 32,
+                ),
+            ),
+            *plan.decision_cycles[1:],
+        ),
+    )
+    changed_spec = _execution_case_semantic_spec_v3(
+        base_spec=spec,
+        execution_case_plan=changed_plan,
+        market_data_preparation=prepared.preparation,
+    )
+    assert changed_spec.decision_inputs_hash != spec.decision_inputs_hash
+    assert changed_spec.semantic_spec_hash != spec.semantic_spec_hash
+
+
 def test_v6_plan_keeps_none_optional_without_emitting_role_field() -> None:
     prepared, resolved, hydrated, _, _ = _contract()
     envelope = _materialize_execution_input_bundle_v6(

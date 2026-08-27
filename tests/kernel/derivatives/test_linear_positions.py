@@ -3,6 +3,8 @@ from __future__ import annotations
 from dataclasses import replace
 from typing import cast
 
+import crypto_quant_trading
+import pytest
 from crypto_quant_domain import (
     CurrencyId,
     DomainId,
@@ -20,15 +22,13 @@ from crypto_quant_domain import (
     canonical_bytes,
     canonical_sha256,
 )
-import pytest
-import crypto_quant_trading
 from crypto_quant_trading import (
     ExactAverageEntryBasis,
-    LinearPerpetualContract,
     LinearPositionProjectionFailureCode,
     LinearPositionProjectionOutcome,
     LinearPositionProjectionRequest,
     LinearPositionProjector,
+    LinearPositionProjectorV2,
     LinearPositionState,
     LinearPositionTransition,
     LinearPositionTransitionKind,
@@ -348,6 +348,36 @@ def test_projection_failures_are_atomic_and_follow_frozen_precedence() -> None:
     )
 
     assert position_key() == request().position_key
+
+
+def test_v2_accepts_only_exactly_representable_finer_fill_prices() -> None:
+    valid = fill(
+        "1",
+        side=OrderSide.BUY,
+        quantity_units=1_000,
+        price_units=10_000,
+        execution_nanoseconds=10,
+    )
+    compatible = Price(
+        valid.price.units * 1_000_000,
+        Scale(8),
+        str(INSTRUMENT_ID),
+        str(QUOTE_CURRENCY),
+    )
+    accepted = LinearPositionProjectorV2().project(
+        request(replace(valid, reference_price=compatible, price=compatible))
+    )
+    assert accepted.failure is None and accepted.result is not None
+
+    incompatible = replace(compatible, units=compatible.units + 1)
+    rejected = LinearPositionProjectorV2().project(
+        request(replace(valid, reference_price=incompatible, price=incompatible))
+    )
+    assert rejected.failure is not None
+    assert (
+        rejected.failure.code
+        is LinearPositionProjectionFailureCode.PRICE_SCALE_MISMATCH
+    )
 
 
 def test_public_values_recompute_embedded_state_and_reject_forgery() -> None:

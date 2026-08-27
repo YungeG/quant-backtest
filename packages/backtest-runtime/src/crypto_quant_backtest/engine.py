@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import unicodedata
-from dataclasses import dataclass, field
+from dataclasses import dataclass, field, replace
 from enum import Enum
 from typing import Any, cast
 
@@ -18,6 +18,7 @@ from crypto_quant_domain import (
     Order,
     OrderEvent,
     OrderEventType,
+    OrderStatus,
     PortfolioSnapshot,
     PositionBalanceKey,
     PositionLot,
@@ -397,6 +398,7 @@ class ResolvedDecisionCycle:
     rebalance_policy: RebalancePolicy
     planning_at: UtcInstant
     admissions: tuple[ResolvedOrderAdmission, ...]
+    planning_snapshot: PortfolioSnapshot | None = None
 
     def __post_init__(self) -> None:
         if not isinstance(self.schedule, TargetStreamDecisionSchedule):
@@ -424,6 +426,13 @@ class ResolvedDecisionCycle:
             raise TypeError("rebalance_policy must be RebalancePolicy")
         if not isinstance(self.planning_at, UtcInstant):
             raise TypeError("planning_at must be UtcInstant")
+        if self.planning_snapshot is not None and type(self.planning_snapshot) is not PortfolioSnapshot:
+            raise TypeError("planning_snapshot must be exact PortfolioSnapshot or None")
+        if (
+            self.planning_snapshot is not None
+            and self.planning_snapshot.timestamp != self.planning_at
+        ):
+            raise ValueError("planning_snapshot timestamp must equal planning_at")
         if self.schedule.segment is TimelineSegment.ACTIVE_TRADING and (
             self.planning_at < self.schedule.decision_time
         ):
@@ -440,7 +449,7 @@ class ResolvedDecisionCycle:
         return canonical_sha256(self)
 
     def to_canonical_dict(self) -> dict[str, object]:
-        return {
+        payload: dict[str, object] = {
             "type": "resolved_decision_cycle",
             "schedule": self.schedule,
             "allocations": self.allocations,
@@ -453,6 +462,9 @@ class ResolvedDecisionCycle:
             "planning_at": self.planning_at,
             "admissions": self.admissions,
         }
+        if self.planning_snapshot is not None:
+            payload["planning_snapshot"] = self.planning_snapshot
+        return payload
 
 
 @dataclass(frozen=True, slots=True)
@@ -1130,8 +1142,29 @@ class ResolvedExecutionCase:
         }
         if target_event_ids != scheduled_event_ids:
             raise ValueError("TargetStream and Decision schedules must exact-cover events")
-        object.__setattr__(self, "decision_cycles", _stable_tuple(self.decision_cycles))
-        object.__setattr__(self, "bar_executions", _stable_tuple(self.bar_executions))
+        object.__setattr__(
+            self,
+            "decision_cycles",
+            tuple(
+                sorted(
+                    self.decision_cycles,
+                    key=lambda value: (
+                        value.schedule.decision_time,
+                        canonical_bytes(value.schedule),
+                    ),
+                )
+            ),
+        )
+        object.__setattr__(
+            self,
+            "bar_executions",
+            tuple(
+                sorted(
+                    self.bar_executions,
+                    key=lambda value: (value.fill_event_at, value.event_id),
+                )
+            ),
+        )
 
     @property
     def case_hash(self) -> str:
@@ -1714,7 +1747,7 @@ class DeterministicBarEngine:
         processed_cycles: set[str] = set()
         processed_bars: set[str] = set()
         processed_account_events: set[str] = set()
-        timeline_checkpoints: dict[UtcInstant, tuple[str, str]] = {}
+        timeline_checkpoints: dict[UtcInstant, FinancialStateView] = {}
         checkpoint_starts = tuple(
             sorted(
                 {
@@ -1752,8 +1785,7 @@ class DeterministicBarEngine:
                         break
                     if window_start_at not in timeline_checkpoints:
                         timeline_checkpoints[window_start_at] = (
-                            state.journal.journal_hash,
-                            state.reservation_state.state_hash,
+                            self._financial_state_view(state)
                         )
                 if (
                     cancellation is not None
@@ -2005,13 +2037,16 @@ class DeterministicBarEngine:
     @staticmethod
     def _financial_state_view(
         state: _EngineState,
-        window_start_checkpoint: tuple[str, str] | None = None,
+        window_start_checkpoint: FinancialStateView | None = None,
     ) -> FinancialStateView:
         lot_books = tuple(
             sorted(state.lot_books.items(), key=lambda value: canonical_bytes(value[0]))
         )
         start_journal_hash, start_reservation_hash = (
-            window_start_checkpoint
+            (
+                window_start_checkpoint.journal.journal_hash,
+                window_start_checkpoint.reservation_state.state_hash,
+            )
             if window_start_checkpoint is not None
             else (None, None)
         )
@@ -2023,6 +2058,26 @@ class DeterministicBarEngine:
             tuple(state.financial_artifacts),
             window_start_journal_hash=start_journal_hash,
             window_start_reservation_state_hash=start_reservation_hash,
+            window_start_journal=(
+                window_start_checkpoint.journal
+                if window_start_checkpoint is not None
+                else None
+            ),
+            window_start_ledger_state=(
+                window_start_checkpoint.ledger_state
+                if window_start_checkpoint is not None
+                else None
+            ),
+            window_start_reservation_state=(
+                window_start_checkpoint.reservation_state
+                if window_start_checkpoint is not None
+                else None
+            ),
+            window_start_position_lot_books=(
+                window_start_checkpoint.position_lot_books
+                if window_start_checkpoint is not None
+                else None
+            ),
         )
 
     def _apply_financial_dispatch(
@@ -2232,9 +2287,10 @@ class DeterministicBarEngine:
             canonical_sha256(injection.batch),
         )
 
+        planning_snapshot = cycle.planning_snapshot or state.snapshot
         allocation_outcome = PortfolioAllocator().allocate(
             sleeve_state=injection.state,
-            portfolio_snapshot=state.snapshot,
+            portfolio_snapshot=planning_snapshot,
             allocations=cycle.allocations,
             target_notional_scale=cycle.target_notional_scale,
         )
@@ -2305,11 +2361,26 @@ class DeterministicBarEngine:
             normalized.normalized_target_hash,
         )
 
+        coordination_snapshot = replace(
+            planning_snapshot,
+            journal_state_hash=state.ledger_state.state_hash,
+        )
         planning_outcome = RebalanceCoordinator().coordinate(
             target=normalized,
             target_validity=cycle.target_validity,
-            portfolio_snapshot=state.snapshot,
-            working_orders=tuple(state.order_streams.values()),
+            portfolio_snapshot=coordination_snapshot,
+            working_orders=tuple(
+                stream
+                for stream in state.order_streams.values()
+                if stream.state is not None
+                and stream.state.status
+                not in {
+                    OrderStatus.CANCELLED,
+                    OrderStatus.EXPIRED,
+                    OrderStatus.FILLED,
+                    OrderStatus.REJECTED,
+                }
+            ),
             reservations=state.reservation_state,
             availability=state.availability,
             policy=cycle.rebalance_policy,

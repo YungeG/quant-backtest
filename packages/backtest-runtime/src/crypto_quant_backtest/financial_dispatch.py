@@ -55,7 +55,7 @@ from crypto_quant_trading import (
     LinearFundingRatePublicationCandidate,
     LinearFundingSettlementEvidence,
     LinearFundingSettlementRequest,
-    LinearInstrumentMarginModel,
+    LinearInstrumentMarginModelV2,
     LinearInstrumentMarginRequest,
     LinearInstrumentMarginResult,
     LinearMarginLedgerEvidence,
@@ -65,7 +65,7 @@ from crypto_quant_trading import (
     LinearMarginRuleBook,
     LinearPerpetualContract,
     LinearPositionProjectionRequest,
-    LinearPositionProjector,
+    LinearPositionProjectorV2,
     LinearPositionValuationEvidence,
     PortfolioSnapshotProjector,
     ProfileComponentRef,
@@ -606,8 +606,8 @@ class LinearMarginLiquidationAuditPlan:
             or self.projection_plan.margin_mark_evidence.resolved_mark.price
             != self.margin_price
             or any(
-                value.interval_start != self.interval_start
-                or value.interval_end_exclusive != self.interval_end_exclusive
+                value.interval_start > self.interval_start
+                or value.interval_end_exclusive < self.interval_end_exclusive
                 or value.low != self.liquidation_low
                 or value.high != self.liquidation_high
                 for value in self.liquidation_bars
@@ -1046,6 +1046,10 @@ class FinancialStateView:
     artifacts: tuple[FinancialDispatchArtifact, ...]
     window_start_journal_hash: str | None = None
     window_start_reservation_state_hash: str | None = None
+    window_start_journal: AccountingJournal | None = None
+    window_start_ledger_state: LedgerState | None = None
+    window_start_reservation_state: ResourceReservationState | None = None
+    window_start_position_lot_books: PositionLotState | None = None
 
     def __post_init__(self) -> None:
         if not isinstance(self.journal, AccountingJournal):
@@ -1060,12 +1064,31 @@ class FinancialStateView:
             self.window_start_reservation_state_hash is None
         ):
             raise ValueError("window start checkpoint hashes must be supplied together")
+        checkpoint = (
+            self.window_start_journal,
+            self.window_start_ledger_state,
+            self.window_start_reservation_state,
+            self.window_start_position_lot_books,
+        )
+        if any(value is not None for value in checkpoint) != all(
+            value is not None for value in checkpoint
+        ):
+            raise ValueError("window start checkpoint state must be supplied together")
         if self.window_start_journal_hash is not None:
             _hash("window_start_journal_hash", self.window_start_journal_hash)
             _hash(
                 "window_start_reservation_state_hash",
                 self.window_start_reservation_state_hash,
             )
+            if all(value is not None for value in checkpoint):
+                if (
+                    self.window_start_journal.journal_hash
+                    != self.window_start_journal_hash
+                    or self.window_start_reservation_state.state_hash
+                    != self.window_start_reservation_state_hash
+                ):
+                    raise ValueError("window start checkpoint state/hash mismatch")
+                _validate_lot_state(self.window_start_position_lot_books)
 
 
 @dataclass(frozen=True, slots=True)
@@ -1341,7 +1364,7 @@ def _linear_margin_projection(
     position_valuations: tuple[LinearPositionValuationEvidence, ...] = ()
     margin_results: tuple[LinearInstrumentMarginResult, ...] = ()
     if replay.position_state.quantity.units != 0:
-        margin = LinearInstrumentMarginModel().evaluate_margin(
+        margin = LinearInstrumentMarginModelV2().evaluate_margin(
             LinearInstrumentMarginRequest(
                 plan.position_key,
                 plan.contract,
@@ -1537,7 +1560,7 @@ class BinanceUsdmTradifiLinearFinancialDispatcher:
                             "contract_mismatch",
                         )
                     prior_fills.append(entry.request.transition.fill)
-        projected = LinearPositionProjector().project(
+        projected = LinearPositionProjectorV2().project(
             LinearPositionProjectionRequest(
                 payload.position_key,
                 payload.contract,
@@ -1931,17 +1954,36 @@ class BinanceUsdmTradifiLinearFinancialDispatcher:
             end_journal_hash = cast(str, payload.interval_end_journal_hash)
             start_reservation_hash = payload.interval_start_reservation_hash
             end_reservation_hash = cast(str, payload.interval_end_reservation_hash)
+        stable_window = (
+            start_journal_hash == end_journal_hash
+            and start_reservation_hash == end_reservation_hash
+        )
         if (
             payload.audit_at != event.event_at
             or start_journal_hash is None
             or start_reservation_hash is None
-            or start_journal_hash != end_journal_hash
-            or start_reservation_hash != end_reservation_hash
             or state.journal.journal_hash != end_journal_hash
             or state.reservation_state.state_hash != end_reservation_hash
+            or (not payload.uses_runtime_checkpoint and not stable_window)
         ):
             raise ValueError("liquidation account window state attestation mismatch")
-        projection = _linear_margin_projection(projection_plan, state)
+        projection_state = state
+        if payload.uses_runtime_checkpoint and not stable_window:
+            if (
+                state.window_start_journal is None
+                or state.window_start_ledger_state is None
+                or state.window_start_reservation_state is None
+                or state.window_start_position_lot_books is None
+            ):
+                raise ValueError("liquidation runtime checkpoint state is missing")
+            projection_state = FinancialStateView(
+                state.window_start_journal,
+                state.window_start_ledger_state,
+                state.window_start_reservation_state,
+                state.window_start_position_lot_books,
+                state.artifacts,
+            )
+        projection = _linear_margin_projection(projection_plan, projection_state)
         window_source: dict[str, object] = {
             "type": "linear_liquidation_account_window_source",
             "schema_version": 1,

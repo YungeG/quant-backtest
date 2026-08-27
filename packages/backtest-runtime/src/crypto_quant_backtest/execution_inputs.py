@@ -239,6 +239,22 @@ _BAR_EXECUTION_FIELDS = frozenset(
     }
 )
 _BAR_EXECUTION_V2_FIELDS = _BAR_EXECUTION_FIELDS | {"fill_liquidity_role"}
+_DECISION_CYCLE_FIELDS = frozenset(
+    {
+        "type",
+        "schedule",
+        "allocations",
+        "target_notional_scale",
+        "risk_policy",
+        "sizing_policy",
+        "sizing_inputs",
+        "target_validity",
+        "rebalance_policy",
+        "planning_at",
+        "admissions",
+    }
+)
+_DECISION_CYCLE_V2_FIELDS = _DECISION_CYCLE_FIELDS | {"planning_snapshot"}
 _TEMPLATE_FIELDS = frozenset(
     {
         "type",
@@ -1048,6 +1064,16 @@ def _read_resolved_mark(value: object) -> trading.ResolvedMark:
         data["stale_policy_key"],
         data["stale_policy_version"],
         data["stale_policy_hash"],
+        available_at_instant=(
+            _read_simulation_instant(data["available_at_instant"])
+            if "available_at_instant" in data
+            else None
+        ),
+        resolved_at_instant=(
+            _read_simulation_instant(data["resolved_at_instant"])
+            if "resolved_at_instant" in data
+            else None
+        ),
     )
 
 
@@ -1750,8 +1776,18 @@ def _read_order_admission(value: object) -> ResolvedOrderAdmission:
 def _read_decision_cycle(
     value: object,
     catalog_lookup: Mapping[str, domain.InstrumentCatalog] | None = None,
+    *,
+    allow_planning_snapshot: bool = False,
 ) -> ResolvedDecisionCycle:
     data = _tagged("resolved_decision_cycle", value, "resolved_decision_cycle")
+    if type(allow_planning_snapshot) is not bool:
+        raise TypeError("allow_planning_snapshot must be exact bool")
+    fields = set(data)
+    if allow_planning_snapshot:
+        if fields not in (_DECISION_CYCLE_FIELDS, _DECISION_CYCLE_V2_FIELDS):
+            raise ValueError("resolved_decision_cycle contains unsupported fields")
+    else:
+        _exact_fields("resolved_decision_cycle", data, _DECISION_CYCLE_FIELDS)
     sizing_inputs = _sequence("sizing inputs", data["sizing_inputs"], _read_sizing_input)
     return ResolvedDecisionCycle(
         _read_schedule(data["schedule"], sizing_inputs, catalog_lookup),
@@ -1764,6 +1800,11 @@ def _read_decision_cycle(
         _read_rebalance_policy(data["rebalance_policy"]),
         _read_utc(data["planning_at"]),
         _sequence("order admissions", data["admissions"], _read_order_admission),
+        (
+            _read_portfolio_snapshot(data["planning_snapshot"])
+            if "planning_snapshot" in data
+            else None
+        ),
     )
 
 
@@ -2826,7 +2867,11 @@ def _read_execution_case_plan(
     decision_cycles = _sequence(
         "decision_cycles",
         plan["decision_cycles"],
-        lambda item: _read_decision_cycle(item, catalog_lookup),
+        lambda item: _read_decision_cycle(
+            item,
+            catalog_lookup,
+            allow_planning_snapshot=schema_version == 2,
+        ),
     )
     bar_executions = _sequence(
         "bar_executions",
@@ -3374,6 +3419,25 @@ def _validate_plan_liquidity_roles(
         )
 
 
+def _validate_plan_planning_snapshots(
+    decision_cycles: tuple[ResolvedDecisionCycle, ...],
+    *,
+    schema_version: int,
+) -> None:
+    if type(decision_cycles) is not tuple or any(
+        type(cycle) is not ResolvedDecisionCycle for cycle in decision_cycles
+    ):
+        raise TypeError("decision_cycles must contain exact ResolvedDecisionCycle")
+    if schema_version not in (1, 2):
+        raise ValueError("execution case plan schema_version must be 1 or 2")
+    if schema_version == 1 and any(
+        cycle.planning_snapshot is not None for cycle in decision_cycles
+    ):
+        raise ValueError(
+            "execution_case_plan@1 cannot persist planning_snapshot"
+        )
+
+
 def _validate_plan_derivative_authority(
     financial_dispatch_plan: FinancialDispatchPlan,
     snapshot_plan: SnapshotProjectionPlan,
@@ -3484,6 +3548,10 @@ def materialize_execution_input_bundle_v2(
         raise ValueError("execution case component refs do not bind the resolved profile")
     _validate_plan_liquidity_roles(
         execution_case.bar_executions,
+        schema_version=1,
+    )
+    _validate_plan_planning_snapshots(
+        execution_case.decision_cycles,
         schema_version=1,
     )
     _validate_plan_derivative_authority(
@@ -3853,6 +3921,10 @@ def _materialize_execution_input_payload_v3(
         raise ValueError("execution input bundle and plan schema versions do not match")
     _validate_plan_liquidity_roles(
         inputs.execution_case_plan.bar_executions,
+        schema_version=execution_case_plan_schema_version,
+    )
+    _validate_plan_planning_snapshots(
+        inputs.execution_case_plan.decision_cycles,
         schema_version=execution_case_plan_schema_version,
     )
     _validate_plan_derivative_authority(

@@ -497,6 +497,7 @@ def _decision_cycle(value: object) -> ResolvedDecisionCycle:
         value.rebalance_policy,
         _utc(value.planning_at),
         tuple(_admission(item) for item in value.admissions),
+        value.planning_snapshot,
     )
 
 

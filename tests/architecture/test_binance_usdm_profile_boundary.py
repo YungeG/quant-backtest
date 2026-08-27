@@ -135,6 +135,7 @@ PUBLIC_NAMES = (
     "BinanceUsdmFundingSourceFailure",
     "BinanceUsdmFundingSourceOutcome",
     "BinanceUsdmFundingSourceModel",
+    "BinanceUsdmFundingSourceModelV2",
     "BinanceUsdmAccountSourceKind",
     "BinanceUsdmAccountProfileSourceRef",
     "BinanceUsdmAccountProfileScope",

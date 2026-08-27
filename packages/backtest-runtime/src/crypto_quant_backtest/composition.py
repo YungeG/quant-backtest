@@ -167,8 +167,9 @@ def _admission_semantics(
 
 
 def _decision_semantics(case: ResolvedExecutionCase) -> tuple[dict[str, object], ...]:
-    return tuple(
-        {
+    output = []
+    for cycle in case.decision_cycles:
+        payload: dict[str, object] = {
             "schedule": cycle.schedule,
             "allocations": tuple(
                 _allocation_semantics(value) for value in cycle.allocations
@@ -184,8 +185,10 @@ def _decision_semantics(case: ResolvedExecutionCase) -> tuple[dict[str, object],
             "rebalance_policy": cycle.rebalance_policy,
             "planning_at": cycle.planning_at,
         }
-        for cycle in case.decision_cycles
-    )
+        if cycle.planning_snapshot is not None:
+            payload["planning_snapshot"] = cycle.planning_snapshot
+        output.append(payload)
+    return tuple(output)
 
 
 def _accounting_plan_semantics(
