@@ -357,115 +357,227 @@ def test_source_root_reconstruction_requires_exact_files_and_hashes(tmp_path: Pa
     assert raised.value.code is s1.QualityBbandTushareS1Failure.SOURCE_RECONSTRUCTION_FAILURE
 
 
-def test_preflight_rejects_output_inside_input_and_invalid_parent(tmp_path: Path) -> None:
-    s0 = tmp_path / "s0"
-    annual = tmp_path / "annual"
-    s0.mkdir()
-    annual.mkdir()
-    output = s0 / "new" / "candidate"
+def _publish(output: Path, content: bytes) -> None:
+    parent_fd = s1._open_output_parent(output, create=True)
+    try:
+        s1._atomic_publish(output, content, parent_fd)
+    finally:
+        os.close(parent_fd)
+
+
+def test_secure_output_parent_traversal_rejects_symlinks_and_dotdot_at_priority_one(
+    tmp_path: Path,
+) -> None:
+    s0_root = tmp_path / "s0"
+    annual_root = tmp_path / "annual"
+    outside = tmp_path / "outside"
+    for directory in (s0_root, annual_root, outside):
+        directory.mkdir()
+    (tmp_path / "linked").symlink_to(outside, target_is_directory=True)
+    for output in (tmp_path / "linked/candidate", tmp_path / "safe/../candidate"):
+        with pytest.raises(s1.QualityBbandTushareS1Error) as raised:
+            s1.build_quality_bband_tushare_s1_structural_v1(
+                s0_root=s0_root,
+                annual_roster_root=annual_root,
+                output_dir=output,
+            )
+        assert raised.value.code is s1.QualityBbandTushareS1Failure.INPUT_TYPE_OR_PATH
+
+
+def test_preflight_rejects_output_inside_input_without_creating_parent(tmp_path: Path) -> None:
+    s0_root = tmp_path / "s0"
+    annual_root = tmp_path / "annual"
+    s0_root.mkdir()
+    annual_root.mkdir()
+    output = s0_root / "new" / "candidate"
     with pytest.raises(s1.QualityBbandTushareS1Error) as raised:
-        s1._preflight(s0, annual, output)
+        s1.build_quality_bband_tushare_s1_structural_v1(
+            s0_root=s0_root,
+            annual_roster_root=annual_root,
+            output_dir=output,
+        )
     assert raised.value.code is s1.QualityBbandTushareS1Failure.INPUT_TYPE_OR_PATH
     assert not output.parent.exists()
 
-    real_parent = tmp_path / "real-parent"
-    real_parent.mkdir()
-    linked_parent = tmp_path / "linked-parent"
-    linked_parent.symlink_to(real_parent, target_is_directory=True)
-    with pytest.raises(s1.QualityBbandTushareS1Error) as invalid:
-        s1._preflight(s0, annual, linked_parent / "candidate")
-    assert invalid.value.code is s1.QualityBbandTushareS1Failure.INPUT_TYPE_OR_PATH
 
-
-def test_atomic_publication_is_bounded_durable_no_clobber_and_race_safe(
+def test_atomic_publication_is_no_clobber_exact_mode_and_preserves_racing_destination(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
-    output = tmp_path / "one" / "two" / "candidate"
-    content = b'{"fixture":true}'
-    seen: list[Path] = []
-    real_fsync = s1._fsync_directory
-
-    def recording_fsync(path: Path) -> None:
-        seen.append(path)
-        real_fsync(path)
-
-    monkeypatch.setattr(s1, "_fsync_directory", recording_fsync)
-    s1._atomic_publish(output, content)
-    published = output / s1._OUTPUT_NAME
-    assert published.read_bytes() == content
+    output = tmp_path / "candidate"
+    content = b"frozen"
+    _publish(output, content)
+    assert (output / s1._OUTPUT_NAME).read_bytes() == content
     assert stat.S_IMODE(output.stat().st_mode) == 0o700
-    assert stat.S_IMODE(published.stat().st_mode) == 0o600
-    assert output.parent in seen
-    with pytest.raises(s1.QualityBbandTushareS1Error) as clobber:
-        s1._atomic_publish(output, content)
-    assert clobber.value.code is s1.QualityBbandTushareS1Failure.PUBLICATION_INTEGRITY_FAILURE
+    assert stat.S_IMODE((output / s1._OUTPUT_NAME).stat().st_mode) == 0o600
+    with pytest.raises(s1.QualityBbandTushareS1Error) as existing:
+        _publish(output, content)
+    assert existing.value.code is s1.QualityBbandTushareS1Failure.PUBLICATION_INTEGRITY_FAILURE
+    assert (output / s1._OUTPUT_NAME).read_bytes() == content
 
-    race_parent = tmp_path / "race-parent"
-    race_parent.mkdir()
-    raced = race_parent / "candidate"
+    raced = tmp_path / "raced"
     real_rename = s1._rename_noreplace_at
+    real_fsync = os.fsync
+    fsynced: list[tuple[int, int]] = []
 
-    def target_racing_rename(parent_fd: int, source_name: str, target_name: str) -> None:
-        (race_parent / target_name).mkdir()
+    def recording_fsync(descriptor: int) -> None:
+        metadata = os.fstat(descriptor)
+        fsynced.append((metadata.st_dev, metadata.st_ino))
+        real_fsync(descriptor)
+
+    def racing_rename(parent_fd: int, source_name: str, target_name: str) -> None:
+        os.mkdir(target_name, dir_fd=parent_fd)
         real_rename(parent_fd, source_name, target_name)
 
-    monkeypatch.setattr(s1, "_rename_noreplace_at", target_racing_rename)
-    with pytest.raises(s1.QualityBbandTushareS1Error):
-        s1._atomic_publish(raced, content)
-    assert raced.is_dir() and not any(raced.iterdir())
-    assert not any(path.name.startswith(f".{raced.name}.staging-") for path in race_parent.iterdir())
-
-
-def test_atomic_publication_detects_staging_entry_substitution(
-    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
-) -> None:
-    parent = tmp_path / "parent"
-    parent.mkdir()
-    output = parent / "candidate"
-    content = b'{"fixture":true}'
-    real_rename = s1._rename_noreplace_at
-
-    def staging_racing_rename(parent_fd: int, source_name: str, target_name: str) -> None:
-        os.rename(
-            source_name,
-            "stolen-staging",
-            src_dir_fd=parent_fd,
-            dst_dir_fd=parent_fd,
-        )
-        os.mkdir(source_name, 0o700, dir_fd=parent_fd)
-        real_rename(parent_fd, source_name, target_name)
-
-    monkeypatch.setattr(s1, "_rename_noreplace_at", staging_racing_rename)
+    monkeypatch.setattr(s1.os, "fsync", recording_fsync)
+    monkeypatch.setattr(s1, "_rename_noreplace_at", racing_rename)
     with pytest.raises(s1.QualityBbandTushareS1Error) as raised:
-        s1._atomic_publish(output, content)
+        _publish(raced, content)
     assert raised.value.code is s1.QualityBbandTushareS1Failure.PUBLICATION_INTEGRITY_FAILURE
-    assert not output.exists()
-    stolen = parent / "stolen-staging"
-    assert (stolen / s1._OUTPUT_NAME).read_bytes() == content
-    shutil.rmtree(stolen)
+    assert raced.is_dir() and not any(raced.iterdir())
+    staging = list(tmp_path.glob(f".{raced.name}.staging-*"))
+    assert len(staging) == 1
+    assert (staging[0] / s1._OUTPUT_NAME).read_bytes() == content
+    parent_metadata = tmp_path.stat()
+    assert (parent_metadata.st_dev, parent_metadata.st_ino) in fsynced
 
 
-def test_atomic_publication_detects_parent_replacement(
+def test_atomic_publication_rejects_parent_replacement(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
     parent = tmp_path / "parent"
     parent.mkdir()
     output = parent / "candidate"
-    moved = tmp_path / "moved-parent"
-    content = b'{"fixture":true}'
+    displaced = tmp_path / "displaced-parent"
     real_rename = s1._rename_noreplace_at
 
-    def parent_racing_rename(parent_fd: int, source_name: str, target_name: str) -> None:
-        parent.rename(moved)
-        parent.mkdir()
+    def replace_parent(parent_fd: int, source_name: str, target_name: str) -> None:
         real_rename(parent_fd, source_name, target_name)
+        parent.rename(displaced)
+        parent.mkdir()
 
-    monkeypatch.setattr(s1, "_rename_noreplace_at", parent_racing_rename)
+    monkeypatch.setattr(s1, "_rename_noreplace_at", replace_parent)
     with pytest.raises(s1.QualityBbandTushareS1Error) as raised:
-        s1._atomic_publish(output, content)
+        _publish(output, b"frozen")
     assert raised.value.code is s1.QualityBbandTushareS1Failure.PUBLICATION_INTEGRITY_FAILURE
     assert parent.is_dir() and not any(parent.iterdir())
-    assert moved.is_dir() and not any(moved.iterdir())
+    assert (displaced / "candidate" / s1._OUTPUT_NAME).read_bytes() == b"frozen"
+
+
+def test_atomic_publication_rejects_ancestor_replacement(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    ancestor = tmp_path / "ancestor"
+    parent = ancestor / "parent"
+    parent.mkdir(parents=True)
+    output = parent / "candidate"
+    displaced = tmp_path / "displaced-ancestor"
+    real_rename = s1._rename_noreplace_at
+
+    def replace_ancestor(parent_fd: int, source_name: str, target_name: str) -> None:
+        real_rename(parent_fd, source_name, target_name)
+        ancestor.rename(displaced)
+        parent.mkdir(parents=True)
+
+    monkeypatch.setattr(s1, "_rename_noreplace_at", replace_ancestor)
+    with pytest.raises(s1.QualityBbandTushareS1Error) as raised:
+        _publish(output, b"frozen")
+    assert raised.value.code is s1.QualityBbandTushareS1Failure.PUBLICATION_INTEGRITY_FAILURE
+    assert parent.is_dir() and not any(parent.iterdir())
+    assert (displaced / "parent/candidate" / s1._OUTPUT_NAME).read_bytes() == b"frozen"
+
+
+def test_atomic_publication_never_deletes_directory_substituted_between_mkdir_and_open(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    output = tmp_path / "candidate"
+    real_open = os.open
+    substituted = False
+
+    def racing_open(
+        path: str | bytes | os.PathLike[str] | os.PathLike[bytes],
+        flags: int,
+        mode: int = 0o777,
+        *,
+        dir_fd: int | None = None,
+    ) -> int:
+        nonlocal substituted
+        if (
+            not substituted
+            and isinstance(path, str)
+            and path.startswith(f".{output.name}.staging-")
+            and flags & os.O_DIRECTORY
+            and dir_fd is not None
+        ):
+            substituted = True
+            os.rename(path, path + ".original", src_dir_fd=dir_fd, dst_dir_fd=dir_fd)
+            os.mkdir(path, 0o700, dir_fd=dir_fd)
+        return real_open(path, flags, mode, dir_fd=dir_fd)
+
+    monkeypatch.setattr(s1.os, "open", racing_open)
+    with pytest.raises(s1.QualityBbandTushareS1Error) as raised:
+        _publish(output, b"frozen")
+    assert raised.value.code is s1.QualityBbandTushareS1Failure.PUBLICATION_INTEGRITY_FAILURE
+    attacker_dirs = [
+        path
+        for path in tmp_path.glob(f".{output.name}.staging-*")
+        if not path.name.endswith(".original")
+    ]
+    assert len(attacker_dirs) == 1
+    assert not any(attacker_dirs[0].iterdir())
+    originals = list(tmp_path.glob(f".{output.name}.staging-*.original"))
+    assert len(originals) == 1 and not any(originals[0].iterdir())
+
+
+def test_atomic_publication_rejects_staging_inode_substitution_without_deleting_attacker(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    output = tmp_path / "candidate"
+    real_rename = s1._rename_noreplace_at
+
+    def substitute(parent_fd: int, source_name: str, target_name: str) -> None:
+        os.rename(source_name, source_name + ".original", src_dir_fd=parent_fd, dst_dir_fd=parent_fd)
+        os.mkdir(source_name, dir_fd=parent_fd)
+        real_rename(parent_fd, source_name, target_name)
+
+    monkeypatch.setattr(s1, "_rename_noreplace_at", substitute)
+    with pytest.raises(s1.QualityBbandTushareS1Error) as raised:
+        _publish(output, b"frozen")
+    assert raised.value.code is s1.QualityBbandTushareS1Failure.PUBLICATION_INTEGRITY_FAILURE
+    assert output.is_dir() and not any(output.iterdir())
+    originals = list(tmp_path.glob(f".{output.name}.staging-*.original"))
+    assert len(originals) == 1
+    assert (originals[0] / s1._OUTPUT_NAME).read_bytes() == b"frozen"
+
+
+def test_atomic_publication_rejects_member_substitution_without_deleting_attacker(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    output = tmp_path / "candidate"
+    real_rename = s1._rename_noreplace_at
+
+    def substitute_member(parent_fd: int, source_name: str, target_name: str) -> None:
+        staging_fd = os.open(source_name, os.O_RDONLY | os.O_DIRECTORY, dir_fd=parent_fd)
+        try:
+            os.unlink(s1._OUTPUT_NAME, dir_fd=staging_fd)
+            attacker_fd = os.open(
+                s1._OUTPUT_NAME,
+                os.O_WRONLY | os.O_CREAT | os.O_EXCL,
+                0o600,
+                dir_fd=staging_fd,
+            )
+            try:
+                os.write(attacker_fd, b"attacker")
+            finally:
+                os.close(attacker_fd)
+        finally:
+            os.close(staging_fd)
+        real_rename(parent_fd, source_name, target_name)
+
+    monkeypatch.setattr(s1, "_rename_noreplace_at", substitute_member)
+    with pytest.raises(s1.QualityBbandTushareS1Error) as raised:
+        _publish(output, b"frozen")
+    assert raised.value.code is s1.QualityBbandTushareS1Failure.PUBLICATION_INTEGRITY_FAILURE
+    assert (output / s1._OUTPUT_NAME).read_bytes() == b"attacker"
 
 
 _REAL_ROOT = Path("/srv/bcache-8t/ygguo/quant/artifacts/a-share-quality-bband")

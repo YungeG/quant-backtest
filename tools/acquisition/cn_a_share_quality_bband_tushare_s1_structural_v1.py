@@ -7,7 +7,6 @@ import json
 import math
 import os
 import re
-import shutil
 import stat
 from collections import Counter, defaultdict
 from dataclasses import dataclass
@@ -468,7 +467,7 @@ def _build_screen_dispositions(
         for key in annual_roster.member_bytes
         if "/bak_basic/" in key
     }
-    if set(_SCREEN_DATES) - set(member_by_screen) or "20160503" not in member_by_screen:
+    if any(screen not in member_by_screen for screen in _SCREEN_DATES) or "20160503" not in member_by_screen:
         _fail(QualityBbandTushareS1Failure.SCREEN_CALENDAR_REQUEST_MISMATCH)
     screens: list[dict[str, object]] = []
     roster_extras: list[dict[str, str]] = []
@@ -656,44 +655,87 @@ def _validate_frozen_hashes(manifest: dict[str, object]) -> None:
             _fail(QualityBbandTushareS1Failure.FROZEN_VALUE_MISMATCH)
 
 
-def _fsync_directory(path: Path) -> None:
-    descriptor = os.open(path, os.O_RDONLY | os.O_DIRECTORY)
-    try:
-        os.fsync(descriptor)
-    finally:
-        os.close(descriptor)
+def _output_parent_components(output: Path) -> tuple[str, tuple[str, ...]]:
+    if output.name in {"", ".", ".."}:
+        raise ValueError("invalid output name")
+    components = tuple(
+        component
+        for component in output.parent.parts
+        if component not in {output.anchor, "", "."}
+    )
+    if ".." in components:
+        raise ValueError("output parent traversal is forbidden")
+    return ("/" if output.is_absolute() else "."), components
 
 
-def _ensure_output_parent(
-    output: Path,
-    *,
-    failure: QualityBbandTushareS1Failure = QualityBbandTushareS1Failure.PUBLICATION_INTEGRITY_FAILURE,
-) -> None:
-    parent = output.parent.absolute()
-    missing: list[Path] = []
-    current = parent
+def _open_output_parent(output: Path, *, create: bool) -> int:
+    anchor, components = _output_parent_components(output)
+    flags = os.O_RDONLY | os.O_DIRECTORY | getattr(os, "O_NOFOLLOW", 0)
+    descriptor = os.open(anchor, flags)
     try:
-        while not os.path.lexists(current):
-            missing.append(current)
-            if current == current.parent:
-                raise ValueError
-            current = current.parent
-        if current.is_symlink() or not current.is_dir():
-            raise ValueError
-        for directory in reversed(missing):
+        for component in components:
             try:
-                os.mkdir(directory, 0o700)
-            except FileExistsError:
-                if directory.is_symlink() or not directory.is_dir():
-                    raise ValueError from None
-            else:
-                os.chmod(directory, 0o700)
-                _fsync_directory(directory)
-                _fsync_directory(directory.parent)
-        if parent.is_symlink() or not parent.is_dir():
-            raise ValueError
+                child_fd = os.open(component, flags, dir_fd=descriptor)
+            except FileNotFoundError:
+                if not create:
+                    raise
+                created = False
+                try:
+                    os.mkdir(component, 0o700, dir_fd=descriptor)
+                    created = True
+                except FileExistsError:
+                    pass
+                child_fd = os.open(component, flags, dir_fd=descriptor)
+                if created:
+                    os.fchmod(child_fd, 0o700)
+                    os.fsync(child_fd)
+                    os.fsync(descriptor)
+            os.close(descriptor)
+            descriptor = child_fd
+        return descriptor
+    except BaseException:
+        os.close(descriptor)
+        raise
+
+
+def _verify_visible_output_parent(output: Path, identity: os.stat_result) -> None:
+    current_fd = _open_output_parent(output, create=False)
+    try:
+        if not _same_inode(os.fstat(current_fd), identity):
+            raise OSError("visible output parent changed")
+    finally:
+        os.close(current_fd)
+
+
+def _preflight(s0_root: Path, annual_roster_root: Path, output: Path) -> int:
+    if any(not isinstance(path, Path) for path in (s0_root, annual_roster_root, output)):
+        _fail(QualityBbandTushareS1Failure.INPUT_TYPE_OR_PATH)
+    parent_fd = -1
+    try:
+        _output_parent_components(output)
+        resolved_output = output.resolve(strict=False)
+        for root in (s0_root, annual_roster_root):
+            if root.is_symlink() or not root.is_dir():
+                raise ValueError("unsafe input root")
+            resolved_root = root.resolve(strict=True)
+            if resolved_output == resolved_root or resolved_root in resolved_output.parents:
+                raise ValueError("output is inside input")
+        parent_fd = _open_output_parent(output, create=True)
+        parent_identity = os.fstat(parent_fd)
+        try:
+            os.stat(output.name, dir_fd=parent_fd, follow_symlinks=False)
+        except FileNotFoundError:
+            pass
+        else:
+            raise ValueError("output exists")
+        _verify_visible_output_parent(output, parent_identity)
+        return parent_fd
     except (OSError, ValueError) as error:
-        raise QualityBbandTushareS1Error(failure) from error
+        if parent_fd >= 0:
+            os.close(parent_fd)
+        raise QualityBbandTushareS1Error(
+            QualityBbandTushareS1Failure.INPUT_TYPE_OR_PATH
+        ) from error
 
 
 def _rename_noreplace_at(parent_fd: int, source_name: str, target_name: str) -> None:
@@ -703,169 +745,128 @@ def _rename_noreplace_at(parent_fd: int, source_name: str, target_name: str) -> 
         raise OSError("atomic no-replace rename is unavailable")
     renameat2.argtypes = (ctypes.c_int, ctypes.c_char_p, ctypes.c_int, ctypes.c_char_p, ctypes.c_uint)
     renameat2.restype = ctypes.c_int
-    if renameat2(
-        parent_fd,
-        os.fsencode(source_name),
-        parent_fd,
-        os.fsencode(target_name),
-        1,
-    ) != 0:
+    if renameat2(parent_fd, os.fsencode(source_name), parent_fd, os.fsencode(target_name), 1) != 0:
         error_number = ctypes.get_errno()
         raise OSError(error_number, os.strerror(error_number), target_name)
 
 
-def _remove_publication_at(parent_fd: int, directory_name: str) -> None:
-    try:
-        directory_fd = os.open(
-            directory_name,
-            os.O_RDONLY | os.O_DIRECTORY | getattr(os, "O_NOFOLLOW", 0),
-            dir_fd=parent_fd,
-        )
-    except FileNotFoundError:
-        return
-    try:
-        try:
-            os.unlink(_OUTPUT_NAME, dir_fd=directory_fd)
-        except FileNotFoundError:
-            pass
-    finally:
-        os.close(directory_fd)
-    os.rmdir(directory_name, dir_fd=parent_fd)
+def _same_inode(left: os.stat_result, right: os.stat_result) -> bool:
+    return (left.st_dev, left.st_ino) == (right.st_dev, right.st_ino)
 
 
-def _atomic_publish(output: Path, content: bytes) -> None:
-    _ensure_output_parent(output)
-    parent_fd = -1
+def _readback_matches(descriptor: int, content: bytes) -> bool:
+    metadata = os.fstat(descriptor)
+    os.lseek(descriptor, 0, os.SEEK_SET)
+    chunks: list[bytes] = []
+    total = 0
+    while total <= len(content):
+        chunk = os.read(descriptor, len(content) - total + 1)
+        if not chunk:
+            break
+        chunks.append(chunk)
+        total += len(chunk)
+    return (
+        stat.S_ISREG(metadata.st_mode)
+        and metadata.st_size == len(content)
+        and total == len(content)
+        and b"".join(chunks) == content
+    )
+
+
+def _atomic_publish(output: Path, content: bytes, parent_fd: int) -> None:
     staging_fd = -1
+    member_fd = -1
     staging_name = f".{output.name}.staging-{os.getpid()}"
-    renamed = False
+    staging_identity: os.stat_result | None = None
+    member_identity: os.stat_result | None = None
     try:
-        parent_fd = os.open(
-            output.parent,
-            os.O_RDONLY | os.O_DIRECTORY | getattr(os, "O_NOFOLLOW", 0),
-        )
         parent_identity = os.fstat(parent_fd)
+        if not stat.S_ISDIR(parent_identity.st_mode):
+            raise OSError("publication parent is not a directory")
+        _verify_visible_output_parent(output, parent_identity)
         for name in (output.name, staging_name):
             try:
                 os.stat(name, dir_fd=parent_fd, follow_symlinks=False)
             except FileNotFoundError:
                 pass
             else:
-                raise FileExistsError
+                raise FileExistsError(name)
         os.mkdir(staging_name, 0o700, dir_fd=parent_fd)
+        staging_identity = os.stat(staging_name, dir_fd=parent_fd, follow_symlinks=False)
         staging_fd = os.open(
             staging_name,
             os.O_RDONLY | os.O_DIRECTORY | getattr(os, "O_NOFOLLOW", 0),
             dir_fd=parent_fd,
         )
-        descriptor = os.open(
+        if not _same_inode(os.fstat(staging_fd), staging_identity):
+            raise OSError("staging directory changed before open")
+        member_fd = os.open(
             _OUTPUT_NAME,
-            os.O_WRONLY | os.O_CREAT | os.O_EXCL | getattr(os, "O_NOFOLLOW", 0),
+            os.O_RDWR | os.O_CREAT | os.O_EXCL | getattr(os, "O_NOFOLLOW", 0),
             0o600,
             dir_fd=staging_fd,
         )
-        try:
-            with os.fdopen(descriptor, "wb", closefd=False) as stream:
-                stream.write(content)
-                stream.flush()
-            os.fsync(descriptor)
-            os.fchmod(descriptor, 0o600)
-        finally:
-            os.close(descriptor)
-        read_fd = os.open(
-            _OUTPUT_NAME,
-            os.O_RDONLY | getattr(os, "O_NOFOLLOW", 0),
-            dir_fd=staging_fd,
-        )
-        try:
-            metadata = os.fstat(read_fd)
-            if not stat.S_ISREG(metadata.st_mode) or metadata.st_size != len(content):
-                raise OSError("publication readback mismatch")
-            with os.fdopen(read_fd, "rb", closefd=False) as stream:
-                readback = stream.read((128 << 20) + 1)
-        finally:
-            os.close(read_fd)
-        if readback != content:
+        offset = 0
+        while offset < len(content):
+            offset += os.write(member_fd, content[offset:])
+        os.fchmod(member_fd, 0o600)
+        os.fsync(member_fd)
+        member_identity = os.fstat(member_fd)
+        if not _readback_matches(member_fd, content):
             raise OSError("publication readback mismatch")
         os.fsync(staging_fd)
-        staging_identity = os.fstat(staging_fd)
+        if not _same_inode(os.stat(staging_name, dir_fd=parent_fd, follow_symlinks=False), staging_identity):
+            raise OSError("staging pathname changed")
+        if not _same_inode(os.stat(_OUTPUT_NAME, dir_fd=staging_fd, follow_symlinks=False), member_identity):
+            raise OSError("staged member pathname changed")
         _rename_noreplace_at(parent_fd, staging_name, output.name)
-        renamed = True
         published_fd = os.open(
             output.name,
             os.O_RDONLY | os.O_DIRECTORY | getattr(os, "O_NOFOLLOW", 0),
             dir_fd=parent_fd,
         )
         try:
-            published_identity = os.fstat(published_fd)
+            if not _same_inode(os.fstat(published_fd), staging_identity):
+                raise OSError("published directory inode mismatch")
+            published_member_fd = os.open(
+                _OUTPUT_NAME,
+                os.O_RDONLY | getattr(os, "O_NOFOLLOW", 0),
+                dir_fd=published_fd,
+            )
+            try:
+                if (
+                    not _same_inode(os.fstat(published_member_fd), member_identity)
+                    or not _readback_matches(published_member_fd, content)
+                ):
+                    raise OSError("published member mismatch")
+            finally:
+                os.close(published_member_fd)
         finally:
             os.close(published_fd)
-        if (published_identity.st_dev, published_identity.st_ino) != (
-            staging_identity.st_dev,
-            staging_identity.st_ino,
-        ):
-            raise OSError("publication staging entry changed")
-        current_parent_fd = os.open(
-            output.parent,
-            os.O_RDONLY | os.O_DIRECTORY | getattr(os, "O_NOFOLLOW", 0),
-        )
-        try:
-            current_identity = os.fstat(current_parent_fd)
-        finally:
-            os.close(current_parent_fd)
-        if (current_identity.st_dev, current_identity.st_ino) != (
-            parent_identity.st_dev,
-            parent_identity.st_ino,
-        ):
-            raise OSError("publication parent changed")
         os.fsync(parent_fd)
+        _verify_visible_output_parent(output, parent_identity)
     except (FileExistsError, OSError, ValueError) as error:
-        if parent_fd >= 0:
-            try:
-                _remove_publication_at(
-                    parent_fd,
-                    output.name if renamed else staging_name,
-                )
-            except OSError:
-                pass
+        try:
+            os.fsync(parent_fd)
+        except OSError:
+            pass
         raise QualityBbandTushareS1Error(
             QualityBbandTushareS1Failure.PUBLICATION_INTEGRITY_FAILURE
         ) from error
     finally:
+        if member_fd >= 0:
+            os.close(member_fd)
         if staging_fd >= 0:
             os.close(staging_fd)
-        if parent_fd >= 0:
-            os.close(parent_fd)
 
 
-def _preflight(s0_root: Path, annual_roster_root: Path, output: Path) -> None:
-    if any(not isinstance(path, Path) for path in (s0_root, annual_roster_root, output)):
-        _fail(QualityBbandTushareS1Failure.INPUT_TYPE_OR_PATH)
-    try:
-        if output.name in {"", ".", ".."} or output.is_symlink() or output.exists():
-            raise ValueError
-        resolved_output = output.resolve(strict=False)
-        for root in (s0_root, annual_roster_root):
-            if root.is_symlink() or not root.is_dir():
-                raise ValueError
-            resolved = root.resolve(strict=True)
-            if resolved == resolved_output or resolved in resolved_output.parents:
-                raise ValueError
-        _ensure_output_parent(
-            output,
-            failure=QualityBbandTushareS1Failure.INPUT_TYPE_OR_PATH,
-        )
-    except (OSError, ValueError) as error:
-        raise QualityBbandTushareS1Error(QualityBbandTushareS1Failure.INPUT_TYPE_OR_PATH) from error
-
-
-def build_quality_bband_tushare_s1_structural_v1(
+def _build_preflighted(
     *,
     s0_root: Path,
     annual_roster_root: Path,
     output_dir: Path,
+    output_parent_fd: int,
 ) -> dict[str, object]:
-    _preflight(s0_root, annual_roster_root, output_dir)
     s0 = _load_source_root(s0_root, _SOURCE_IDENTITIES["s0"])
     annual = _load_source_root(annual_roster_root, _SOURCE_IDENTITIES["annual_roster"])
     catalog, s0_extras, current_by_code = _derive_catalog_and_extras(s0)
@@ -950,8 +951,26 @@ def build_quality_bband_tushare_s1_structural_v1(
         or raw.endswith(b"\n")
     ):
         _fail(QualityBbandTushareS1Failure.PUBLICATION_INTEGRITY_FAILURE)
-    _atomic_publish(output_dir, raw)
+    _atomic_publish(output_dir, raw, output_parent_fd)
     return manifest
+
+
+def build_quality_bband_tushare_s1_structural_v1(
+    *,
+    s0_root: Path,
+    annual_roster_root: Path,
+    output_dir: Path,
+) -> dict[str, object]:
+    output_parent_fd = _preflight(s0_root, annual_roster_root, output_dir)
+    try:
+        return _build_preflighted(
+            s0_root=s0_root,
+            annual_roster_root=annual_roster_root,
+            output_dir=output_dir,
+            output_parent_fd=output_parent_fd,
+        )
+    finally:
+        os.close(output_parent_fd)
 
 
 def _parse_args(argv: list[str] | None = None) -> argparse.Namespace:

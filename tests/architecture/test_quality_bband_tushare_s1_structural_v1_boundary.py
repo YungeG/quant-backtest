@@ -8,6 +8,7 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[2]
 BASE = "0d373b71b263a53b6b00e50b26ae1508dcfc986f"
 MODULE = ROOT / "tools/acquisition/cn_a_share_quality_bband_tushare_s1_structural_v1.py"
+TEST_MODULE = ROOT / "tests/tools/acquisition/test_cn_a_share_quality_bband_tushare_s1_structural_v1.py"
 PACKET = ROOT.parent / "platform-qb-formal-s1-authority/implementation/plans/quality-bband-tushare-s1-authority-pivot-v1.md"
 ALLOWED = {
     "tools/acquisition/cn_a_share_quality_bband_tushare_s1_structural_v1.py",
@@ -26,8 +27,15 @@ PRIVATE_SYMBOLS = {
     "_build_screen_dispositions",
     "_build_financial_requirements",
     "_validate_frozen_hashes",
+    "_output_parent_components",
+    "_open_output_parent",
+    "_verify_visible_output_parent",
+    "_preflight",
     "_rename_noreplace_at",
+    "_same_inode",
+    "_readback_matches",
     "_atomic_publish",
+    "_build_preflighted",
     "_parse_args",
     "main",
 }
@@ -44,8 +52,14 @@ def test_tool_is_offline_source_bounded_atomic_and_has_exact_authority_flags() -
     } | {node.module or "" for node in ast.walk(tree) if isinstance(node, ast.ImportFrom)}
     assert not any(name.startswith(("urllib", "requests", "http", "socket")) for name in imports)
     assert "freeze_source_snapshot" in source and "verify_source_snapshot" in source
+    assert "_open_output_parent" in source and 'return ("/" if output.is_absolute() else ".")' in source
+    assert "dir_fd=descriptor" in source and 'if ".." in components' in source
+    assert "os.path.lexists" not in source and ".absolute()" not in source
     assert "dir_fd=staging_fd" in source and "dir_fd=parent_fd" in source
+    assert "staging_identity" in source and "member_identity" in source
+    assert "published_member_fd" in source and "_verify_visible_output_parent(output, parent_identity)" in source
     assert "_rename_noreplace_at(parent_fd, staging_name, output.name)" in source and "os.fsync" in source
+    assert "_remove_publication_at" not in source
     assert '"owner_approved_tushare_authority": True' in source
     assert '"formal_s1_qualified": True' in source
     assert '"provider_scope_exact": True' in source
@@ -89,6 +103,21 @@ def test_public_operation_cli_schema_and_required_symbols_are_exact() -> None:
     assert source.count("parser.add_argument(") == 3
     assert "/srv/" not in source
     assert "--filter" not in source and "--authority" not in source and "--count" not in source
+
+
+def test_publication_race_tests_cover_all_accepted_security_seams() -> None:
+    source = TEST_MODULE.read_text(encoding="utf-8")
+    for name in (
+        "test_secure_output_parent_traversal_rejects_symlinks_and_dotdot_at_priority_one",
+        "test_preflight_rejects_output_inside_input_without_creating_parent",
+        "test_atomic_publication_is_no_clobber_exact_mode_and_preserves_racing_destination",
+        "test_atomic_publication_rejects_parent_replacement",
+        "test_atomic_publication_rejects_ancestor_replacement",
+        "test_atomic_publication_never_deletes_directory_substituted_between_mkdir_and_open",
+        "test_atomic_publication_rejects_staging_inode_substitution_without_deleting_attacker",
+        "test_atomic_publication_rejects_member_substitution_without_deleting_attacker",
+    ):
+        assert name in source
 
 
 def test_packet_body_hash_is_self_excluding_and_frozen_in_tool() -> None:
