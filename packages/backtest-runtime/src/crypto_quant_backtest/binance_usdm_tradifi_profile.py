@@ -11,6 +11,7 @@ from crypto_quant_domain import (
     CurrencyId,
     InstrumentId,
     Money,
+    PricePurpose,
     Quantity,
     Scale,
     SimulationInstant,
@@ -40,6 +41,7 @@ from crypto_quant_trading.profiles.binance_usdm import (
     BinanceUsdmOrderRuleModel,
     BinanceUsdmOrderRuleResolution,
     BinanceUsdmPricePurposeResolution,
+    BinanceUsdmPriceSourceKind,
     BinanceUsdmTradifiInstrumentMetadataModel,
     BinanceUsdmTradifiInstrumentMetadataResolution,
 )
@@ -81,6 +83,9 @@ _REQUIRED_PURPOSES = (
     "liquidation",
     "margin",
     "valuation",
+)
+_SELECTED_EXECUTION_COVERAGE_KEY = (
+    "koru-tradifi-execution_reference-coverage-v2"
 )
 _RESOLVABLE_DEFERRED = (
     BinanceUsdmDeferredRuleKey.MAX_NUM_ALGO_ORDERS,
@@ -728,16 +733,37 @@ def _price_failure(request: BinanceUsdmTradifiProfileCompositionRequest) -> bool
         return False
     window = request.timeline_window
     purposes = _purpose_values(request)
+
+    def has_coverage(value: BinanceUsdmPricePurposeResolution) -> bool:
+        selected = tuple(
+            coverage
+            for coverage in value.active_coverages
+            if coverage.coverage_id == _SELECTED_EXECUTION_COVERAGE_KEY
+        )
+        if selected:
+            records = value.visible_source_records
+            return (
+                value.query.price_purpose is PricePurpose.EXECUTION_REFERENCE
+                and len(selected) == 1
+                and bool(records)
+                and selected[0].source_kind
+                is BinanceUsdmPriceSourceKind.AGGREGATE_TRADE
+                and selected[0].coverage_from == records[0].trade_at
+                and selected[0].coverage_to_exclusive.epoch_nanoseconds
+                == records[-1].trade_at.epoch_nanoseconds + 1
+            )
+        return any(
+            coverage.coverage_from <= window.data_start
+            and coverage.coverage_to_exclusive >= window.end_exclusive
+            for coverage in value.active_coverages
+        )
+
     return (
         tuple(sorted(purposes)) != _REQUIRED_PURPOSES
         or len(purposes) != len(_REQUIRED_PURPOSES)
         or any(
             value.query.instrument_metadata.instrument.instrument_id != instrument_id
-            or not any(
-                coverage.coverage_from <= window.data_start
-                and coverage.coverage_to_exclusive >= window.end_exclusive
-                for coverage in value.active_coverages
-            )
+            or not has_coverage(value)
             for value in request.price_purposes
         )
     )

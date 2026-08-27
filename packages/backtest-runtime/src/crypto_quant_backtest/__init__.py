@@ -12,6 +12,14 @@ from .analysis import (
 from .analysis_derivation import BacktestAnalysisRuntime
 from .artifact_envelope_publisher import ArtifactEnvelopePublisher
 from .artifact_envelope_reader import ArtifactEnvelopeReader
+from .binance_usdm_koru_tradifi_development_profile_v1 import (
+    BinanceUsdmKoruTradifiDevelopmentProfileFailureCodeV1,
+    BinanceUsdmKoruTradifiDevelopmentProfileFailureV1,
+    BinanceUsdmKoruTradifiDevelopmentProfileOutcomeV1,
+    BinanceUsdmKoruTradifiDevelopmentProfileRequestV1,
+    BinanceUsdmKoruTradifiDevelopmentProfileResultV1,
+    build_binance_usdm_koru_tradifi_development_profile_v1,
+)
 from .binance_usdm_profile import (
     BinanceUsdmAccountCapacityEvidence,
     BinanceUsdmExecutionAccountProfile,
@@ -430,6 +438,11 @@ __all__ = [  # noqa: RUF022 - public API remains grouped by subsystem
     "BacktestMetricProfile",
     "BinanceUsdmAccountCapacityEvidence",
     "BinanceUsdmExecutionAccountProfile",
+    "BinanceUsdmKoruTradifiDevelopmentProfileFailureCodeV1",
+    "BinanceUsdmKoruTradifiDevelopmentProfileFailureV1",
+    "BinanceUsdmKoruTradifiDevelopmentProfileOutcomeV1",
+    "BinanceUsdmKoruTradifiDevelopmentProfileRequestV1",
+    "BinanceUsdmKoruTradifiDevelopmentProfileResultV1",
     "BinanceUsdmMarketSemanticsProfile",
     "BinanceUsdmProfileComposer",
     "BinanceUsdmProfileCompositionFailure",
@@ -518,6 +531,7 @@ __all__ = [  # noqa: RUF022 - public API remains grouped by subsystem
     "CloseoutPolicy",
     "DeterministicBarEngine",
     "DeterministicBpsSlippageModel",
+    "build_binance_usdm_koru_tradifi_development_profile_v1",
     "decode_binance_usdm_tradifi_profile_composition_request_v1",
     "materialize_execution_input_bundle",
     "materialize_execution_input_bundle_v2",

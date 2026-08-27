@@ -21,6 +21,7 @@ INTERNAL_NAMES = {
     "BinanceUsdmKoruMissingBoundaryProjectionV2",
     "BinanceUsdmKoruTradifiSourceProjectionResultV2",
     "BinanceUsdmKoruTradifiSourceProjectionOutcomeV2",
+    "build_binance_usdm_koru_source_profile_authority_v2",
     "build_binance_usdm_koru_tradifi_source_projection_v2",
 }
 
@@ -88,7 +89,7 @@ def test_streaming_source_projection_is_internal_and_aggregate_bounded() -> None
         assert forbidden not in source
 
 
-def test_streaming_source_projection_has_one_public_build_seam() -> None:
+def test_streaming_source_projection_has_exact_public_build_seams() -> None:
     tree = ast.parse(MODULE.read_text(encoding="utf-8"))
     functions = [
         node.name
@@ -96,4 +97,7 @@ def test_streaming_source_projection_has_one_public_build_seam() -> None:
         if isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef))
         and not node.name.startswith("_")
     ]
-    assert functions == ["build_binance_usdm_koru_tradifi_source_projection_v2"]
+    assert functions == [
+        "build_binance_usdm_koru_source_profile_authority_v2",
+        "build_binance_usdm_koru_tradifi_source_projection_v2",
+    ]

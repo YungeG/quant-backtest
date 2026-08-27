@@ -18,6 +18,7 @@ from crypto_quant_bundle_builder.binance_usdm_koru_tradifi_source_projection_v2 
     BinanceUsdmKoruTradifiSourceProjectionFailureCodeV2,
     BinanceUsdmKoruTradifiSourceProjectionOutcomeV2,
     BinanceUsdmKoruTradifiSourceProjectionRequestV2,
+    build_binance_usdm_koru_source_profile_authority_v2,
     build_binance_usdm_koru_tradifi_source_projection_v2,
 )
 from crypto_quant_domain import UtcInstant, canonical_bytes, canonical_sha256
@@ -279,6 +280,35 @@ def test_streaming_projection_matches_v1_semantics_without_extra_aggregate_rows(
         and lineage.boundary_index_result_digest == index.result_digest
         for lineage in v2.projection_lineage
     )
+
+
+def test_source_profile_authority_is_exact_derived_and_not_serialized() -> None:
+    result = _built()
+    first = build_binance_usdm_koru_source_profile_authority_v2(result)
+    second = build_binance_usdm_koru_source_profile_authority_v2(result)
+    envelope, ref = first
+    payload = envelope.payload
+
+    assert canonical_bytes(first) == canonical_bytes(second)
+    assert ref.content_hash == envelope.content_hash
+    assert payload["source_fragment_digest"] == result.fragment_digest
+    assert payload["source_projection_request_hash"] == result.request.request_hash
+    assert payload["source_event_bindings"] == tuple(
+        {
+            "stream_key": event.stream_key,
+            "event_id": event.event_id,
+            "event_hash": event.event_hash,
+        }
+        for event in result.source_events
+    )
+    assert len(payload["source_stream_manifests"]) == len(
+        {event.stream_key for event in result.source_events}
+    )
+    assert "source_profile_authority" not in result.to_canonical_dict()
+
+    object.__setattr__(result, "fragment_digest", "sha256:" + "0" * 64)
+    with pytest.raises(ValueError, match="exact canonical"):
+        build_binance_usdm_koru_source_profile_authority_v2(result)
 
 
 def test_unselected_aggregate_rows_are_not_materialized_as_source_events() -> None:

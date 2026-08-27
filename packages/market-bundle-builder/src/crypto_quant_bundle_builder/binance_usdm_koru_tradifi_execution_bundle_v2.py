@@ -52,6 +52,7 @@ from .binance_usdm_koru_tradifi_execution_bundle_v1 import (
 )
 from .binance_usdm_koru_tradifi_source_projection_v2 import (
     BinanceUsdmKoruTradifiSourceProjectionResultV2,
+    build_binance_usdm_koru_source_profile_authority_v2,
 )
 from .binance_usdm_koru_tradifi_source_projection_v2 import (
     _trusted_result as _trusted_source_result,
@@ -162,6 +163,12 @@ def _streaming_authority_bindings(
         "missing_boundaries": tuple(
             value.to_canonical_dict() for value in source.missing_boundaries
         ),
+        "source_profile_authority_ref": (
+            request.source_profile_authority_ref.to_canonical_dict()
+        ),
+        "source_profile_authority_hash": (
+            request.source_profile_authority_envelope.content_hash
+        ),
         "profile_composition_request_hash": request.profile_composition_request_hash,
     }
 
@@ -170,6 +177,8 @@ def _streaming_authority_bindings(
 class BinanceUsdmKoruTradifiExecutionBundleRequestV2:
     source_projection: BinanceUsdmKoruTradifiSourceProjectionResultV2
     target_result: BinanceUsdmKoruClosedMarketRangeTargetsResultV2
+    source_profile_authority_envelope: ArtifactEnvelope
+    source_profile_authority_ref: ArtifactRef
     profile_composition_request_wire: Mapping[str, object]
     profile_composition_request_hash: str
     execution_account_id: str
@@ -190,6 +199,20 @@ class BinanceUsdmKoruTradifiExecutionBundleRequestV2:
             raise ValueError(
                 "target result must be generated from the accepted V2 source fragment"
             )
+        derived_envelope, derived_ref = (
+            build_binance_usdm_koru_source_profile_authority_v2(source)
+        )
+        if (
+            type(self.source_profile_authority_envelope) is not ArtifactEnvelope
+            or not _canonical_equal(
+                self.source_profile_authority_envelope, derived_envelope
+            )
+            or type(self.source_profile_authority_ref) is not ArtifactRef
+            or self.source_profile_authority_ref != derived_ref
+        ):
+            raise ValueError(
+                "source profile authority must be exactly derived from source projection"
+            )
         request_hash = _canonical_hash(
             "profile_composition_request_hash", self.profile_composition_request_hash
         )
@@ -200,10 +223,23 @@ class BinanceUsdmKoruTradifiExecutionBundleRequestV2:
             raise ValueError("sleeve_allocation_fraction must be exact full allocation 1")
         frozen_wire = _freeze_json(self.profile_composition_request_wire)
         profile, price_bindings = _validate_profile_wire(
-            frozen_wire, request_hash, source, account_id
+            frozen_wire,
+            request_hash,
+            source,
+            account_id,
+            execution_source_manifest=next(
+                value
+                for value in source.stream_manifests
+                if value.stream_key
+                == "binance_usdm.aggregate_trades.execution_reference.koruusdt.tradifi.v1"
+            ),
         )
         object.__setattr__(self, "source_projection", source)
         object.__setattr__(self, "target_result", target)
+        object.__setattr__(
+            self, "source_profile_authority_envelope", derived_envelope
+        )
+        object.__setattr__(self, "source_profile_authority_ref", derived_ref)
         object.__setattr__(self, "profile_composition_request_wire", profile)
         object.__setattr__(self, "_price_purpose_bindings", price_bindings)
 
@@ -221,6 +257,7 @@ class BinanceUsdmKoruTradifiExecutionBundleRequestV2:
                 "aggregate_trade_boundary_index_result_digest": (
                     self.source_projection.aggregate_trade_boundary_index_result_digest
                 ),
+                "source_profile_authority_ref": self.source_profile_authority_ref,
                 "profile_composition_request_hash": self.profile_composition_request_hash,
                 "execution_account_id": self.execution_account_id,
                 "initial_equity": self.initial_equity,
@@ -237,6 +274,8 @@ class BinanceUsdmKoruTradifiExecutionBundleRequestV2:
             "source_fragment_digest": self.source_projection.fragment_digest,
             "target_result": self.target_result,
             "target_result_digest": self.target_result.result_digest,
+            "source_profile_authority_envelope": self.source_profile_authority_envelope,
+            "source_profile_authority_ref": self.source_profile_authority_ref,
             "profile_composition_request_wire": self.profile_composition_request_wire,
             "profile_composition_request_hash": self.profile_composition_request_hash,
             "execution_account_id": self.execution_account_id,
@@ -356,6 +395,12 @@ def _preparation_payload(
         "arcx_calendar_ref": source.arcx_calendar_ref.to_canonical_dict(),
         "post_adjustment_unit_regime_ref": (
             source.post_adjustment_unit_regime_ref.to_canonical_dict()
+        ),
+        "source_profile_authority_envelope": (
+            request.source_profile_authority_envelope.to_canonical_dict()
+        ),
+        "source_profile_authority_ref": (
+            request.source_profile_authority_ref.to_canonical_dict()
         ),
         "source_snapshot_bindings": _source_snapshot_bindings(source),
         **_streaming_authority_bindings(request),
@@ -662,6 +707,7 @@ class BinanceUsdmKoruTradifiExecutionBundleResultV2:
             source.xkrx_calendar,
             source.arcx_calendar,
             source.post_adjustment_unit_regime,
+            self.request.source_profile_authority_envelope,
         )
 
     @property
@@ -671,6 +717,7 @@ class BinanceUsdmKoruTradifiExecutionBundleResultV2:
             source.xkrx_calendar_ref,
             source.arcx_calendar_ref,
             source.post_adjustment_unit_regime_ref,
+            self.request.source_profile_authority_ref,
         )
 
     @property
@@ -738,6 +785,10 @@ def _trusted_request(
         rebuilt = BinanceUsdmKoruTradifiExecutionBundleRequestV2(
             source_projection=value.source_projection,
             target_result=value.target_result,
+            source_profile_authority_envelope=(
+                value.source_profile_authority_envelope
+            ),
+            source_profile_authority_ref=value.source_profile_authority_ref,
             profile_composition_request_wire=value.profile_composition_request_wire,
             profile_composition_request_hash=value.profile_composition_request_hash,
             execution_account_id=value.execution_account_id,

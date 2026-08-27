@@ -1,8 +1,14 @@
 from __future__ import annotations
 
+from dataclasses import replace
 from typing import Any, cast
 
 import pytest
+from crypto_quant_backtest import (
+    BinanceUsdmKoruTradifiDevelopmentProfileRequestV1,
+    TimelineWindow,
+    build_binance_usdm_koru_tradifi_development_profile_v1,
+)
 from crypto_quant_bundle_builder.binance_usdm_koru_closed_market_range_targets_v2 import (
     BinanceUsdmKoruClosedMarketRangeTargetsRequestV2,
     build_binance_usdm_koru_closed_market_range_targets_v2,
@@ -14,13 +20,24 @@ from crypto_quant_bundle_builder.binance_usdm_koru_tradifi_execution_bundle_v2 i
     build_binance_usdm_koru_tradifi_execution_bundle_v2,
 )
 from crypto_quant_bundle_builder.binance_usdm_koru_tradifi_source_projection_v2 import (
+    build_binance_usdm_koru_source_profile_authority_v2,
     build_binance_usdm_koru_tradifi_source_projection_v2,
 )
-from crypto_quant_domain import canonical_bytes, canonical_sha256
+from crypto_quant_domain import (
+    SimulationInstant,
+    SourceSequence,
+    TimelinePhase,
+    UtcInstant,
+    canonical_bytes,
+    canonical_sha256,
+)
 from crypto_quant_market_data import EventCursor, MarketBundleRef
 
 from tests.bundle_builder.providers.binance_usdm import (
     test_koru_closed_market_range_targets_v1 as target_v1_fixture,
+)
+from tests.bundle_builder.providers.binance_usdm import (
+    test_koru_funding_rate_history_source_bounded_v1 as funding_fixture,
 )
 from tests.bundle_builder.providers.binance_usdm import (
     test_koru_tradifi_execution_bundle_v1 as bundle_v1_fixture,
@@ -35,8 +52,16 @@ from tests.bundle_builder.providers.binance_usdm import (
 
 def _source(v1_source=None):
     v1_source = target_v1_fixture._weekend_fragment() if v1_source is None else v1_source
+    source_request = v1_source.request
+    funding_time = source_request.timeline_window_start.epoch_nanoseconds // 1_000_000
+    source_request = replace(
+        source_request,
+        funding_result=source_v1_fixture._funding_result(
+            funding_fixture.compact([funding_fixture.row(funding_time)])
+        ),
+    )
     outcome = build_binance_usdm_koru_tradifi_source_projection_v2(
-        source_v2_fixture._from_v1_request(v1_source.request)
+        source_v2_fixture._from_v1_request(source_request)
     )
     assert outcome.failure is None and outcome.result is not None
     return outcome.result
@@ -50,13 +75,49 @@ def _target(source):
     return outcome.result
 
 
+def _profile(source):
+    envelope, ref = build_binance_usdm_koru_source_profile_authority_v2(source)
+    composed_ns = max(
+        event.payload.get("acquired_at_epoch_nanoseconds", 0)
+        for event in source.source_events
+    ) + 1
+    outcome = build_binance_usdm_koru_tradifi_development_profile_v1(
+        BinanceUsdmKoruTradifiDevelopmentProfileRequestV1(
+            TimelineWindow(
+                source.request.timeline_window_start,
+                source.request.timeline_window_start,
+                source.request.timeline_window_end_exclusive,
+            ),
+            SimulationInstant(
+                UtcInstant(composed_ns),
+                TimelinePhase(200, "profile_composition"),
+                SourceSequence(0),
+            ),
+            "account-1",
+            source.xkrx_calendar_ref,
+            source.arcx_calendar_ref,
+            source.post_adjustment_unit_regime_ref,
+            envelope,
+            ref,
+            source.source_events,
+        )
+    )
+    assert outcome.failure is None and outcome.result is not None
+    return outcome.result
+
+
 def _request(source=None, target=None, wire=None):
     source = _source() if source is None else source
     target = _target(source) if target is None else target
-    wire = bundle_v1_fixture._profile_wire(source) if wire is None else wire
+    profile = _profile(source)
+    wire = profile.profile_composition_request_wire if wire is None else wire
     return BinanceUsdmKoruTradifiExecutionBundleRequestV2(
         source_projection=source,
         target_result=target,
+        source_profile_authority_envelope=(
+            profile.request.source_profile_authority_envelope
+        ),
+        source_profile_authority_ref=profile.source_profile_authority_ref,
         profile_composition_request_wire=wire,
         profile_composition_request_hash=canonical_sha256(wire),
         execution_account_id="account-1",
@@ -136,16 +197,14 @@ def test_v1_v2_profile_account_and_artifact_semantics_match_with_distinct_identi
     v1 = bundle_v1_fixture._build(v1_source, target_v1_fixture._weekend_result())
     v2 = _build(_source(v1_source))
 
-    assert canonical_bytes(v2.request.profile_composition_request_wire) == canonical_bytes(
-        v1.request.profile_composition_request_wire
-    )
-    assert v2.request.profile_composition_request_hash == (
-        v1.request.profile_composition_request_hash
-    )
-    assert canonical_bytes(v2.authority_artifacts) == canonical_bytes(
+    assert canonical_bytes(v2.authority_artifacts[:3]) == canonical_bytes(
         v1.authority_artifacts
     )
-    assert canonical_bytes(v2.authority_refs) == canonical_bytes(v1.authority_refs)
+    assert canonical_bytes(v2.authority_refs[:3]) == canonical_bytes(v1.authority_refs)
+    assert v2.authority_artifacts[3] == (
+        v2.request.source_profile_authority_envelope
+    )
+    assert v2.authority_refs[3] == v2.request.source_profile_authority_ref
     assert canonical_bytes(v2.strategy_artifact) == canonical_bytes(v1.strategy_artifact)
     assert canonical_bytes(v2.parameter_artifacts) == canonical_bytes(
         v1.parameter_artifacts
@@ -154,6 +213,12 @@ def test_v1_v2_profile_account_and_artifact_semantics_match_with_distinct_identi
     v2_account = dict(v2.account_authority_event.payload)
     assert v1_account.pop("schema_version") == 1
     assert v2_account.pop("schema_version") == 2
+    assert v1_account.pop("profile_composition_request_hash") == (
+        v1.request.profile_composition_request_hash
+    )
+    assert v2_account.pop("profile_composition_request_hash") == (
+        v2.request.profile_composition_request_hash
+    )
     assert v2_account == v1_account
     assert v2.account_authority_event.stream_key != v1.account_authority_event.stream_key
     assert v2.account_authority_event.event_id != v1.account_authority_event.event_id
@@ -245,7 +310,10 @@ def test_executable_aggregate_source_count_is_bounded_by_selected_boundaries_not
             (day_start + 20 * (hour_ns // 1_000_000) + 10_000, "12.340"),
             (day_start + 20 * (hour_ns // 1_000_000) + 20_000, "12.341"),
             (day_start + 22 * (hour_ns // 1_000_000) + 30_000, "12.342"),
-        )
+        ),
+        funding_raw=funding_fixture.compact(
+            [funding_fixture.row(day_start + 20 * (hour_ns // 1_000_000))]
+        ),
     )
     source_outcome = build_binance_usdm_koru_tradifi_source_projection_v2(
         source_v2_fixture._from_v1_request(v1_request)

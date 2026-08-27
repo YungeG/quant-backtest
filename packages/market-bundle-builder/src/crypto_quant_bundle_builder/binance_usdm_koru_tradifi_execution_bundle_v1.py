@@ -1087,7 +1087,10 @@ def _validate_account_authority(
 
 
 def _validate_price_authority(
-    profile: Mapping[str, object], start: int, end: int
+    profile: Mapping[str, object],
+    start: int,
+    end: int,
+    execution_source_manifest: MarketStreamManifest | None = None,
 ) -> tuple[Mapping[str, object], ...]:
     prices = tuple(
         _exact_wire_object(
@@ -1297,12 +1300,33 @@ def _validate_price_authority(
                 or resolution.get("liquidation_bars") not in ((), [])
             ):
                 raise ValueError("point price resolution is stale")
+        exact_execution_cover = purpose == "execution_reference" and (
+            execution_source_manifest is not None
+        )
+        if exact_execution_cover:
+            trade_times = tuple(
+                _wire_instant(
+                    _mapping(record, "execution source record").get("trade_at"),
+                    "execution source record trade_at",
+                )
+                for record in visible_records
+            )
+            coverage_matches = (
+                execution_source_manifest is not None
+                and coverage.get("stream_id")
+                == execution_source_manifest.stream_key
+                and len(trade_times) == execution_source_manifest.event_count
+                and bool(trade_times)
+                and coverage_from == trade_times[0]
+                and coverage_to == trade_times[-1] + 1
+            )
+        else:
+            coverage_matches = coverage_from <= start and coverage_to >= end
         if (
             coverage.get("price_purpose") != purpose
             or coverage.get("source_kind") != expected_kind
             or not _canonical_equal(coverage.get("instrument_id"), _INSTRUMENT_WIRE)
-            or coverage_from > start
-            or coverage_to < end
+            or not coverage_matches
             or coverage_from >= coverage_to
             or not coverage_from <= requested_at < coverage_to
         ):
@@ -1331,6 +1355,7 @@ def _validate_profile_wire(
     request_hash: str,
     source: BinanceUsdmKoruTradifiSourceProjectionResultV1,
     account_id: str,
+    execution_source_manifest: MarketStreamManifest | None = None,
 ) -> tuple[Mapping[str, object], tuple[Mapping[str, object], ...]]:
     profile = _mapping(wire, "profile composition request wire")
     if (
@@ -1378,7 +1403,9 @@ def _validate_profile_wire(
     if not _canonical_equal(instrument.get("instrument_id"), _INSTRUMENT_WIRE):
         raise ValueError("profile instrument does not match KORU authority")
 
-    price_bindings = _validate_price_authority(profile, start, end)
+    price_bindings = _validate_price_authority(
+        profile, start, end, execution_source_manifest
+    )
     _validate_account_authority(profile, account_id)
     return profile, price_bindings
 

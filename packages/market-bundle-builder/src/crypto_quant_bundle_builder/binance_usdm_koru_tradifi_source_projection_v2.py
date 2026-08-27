@@ -59,6 +59,9 @@ from .koru_tradifi_calendar_unit_authority_v1 import (
 )
 
 _SCHEMA_VERSION = 2
+_SOURCE_PROFILE_AUTHORITY_ARTIFACT_TYPE = (
+    "binance_usdm_koru_source_profile_authority"
+)
 _HOUR_NS = 3_600_000_000_000
 _DAY_NS = 86_400_000_000_000
 _ALLOWED_START = 1_784_109_600_000_000_000
@@ -1178,6 +1181,129 @@ class BinanceUsdmKoruTradifiSourceProjectionResultV2:
 
     def to_canonical_dict(self) -> dict[str, object]:
         return {**self._body(), "fragment_digest": self.fragment_digest}
+
+
+def _source_profile_stream_authority(
+    manifest: MarketStreamManifest,
+    events: tuple[MarketEvent, ...],
+) -> dict[str, object]:
+    return {
+        "stream_manifest": manifest.to_canonical_dict(),
+        "event_bindings": tuple(
+            {
+                "event_id": event.event_id,
+                "event_hash": event.event_hash,
+                "instrument_id": event.instrument_id,
+                "source_key": event.source_key,
+                "source_hash": event.source_hash,
+                "revision_id": event.revision_id,
+                "payload_keys": tuple(sorted(event.payload)),
+                "payload_context": {
+                    key: event.payload[key]
+                    for key in (
+                        "price_purpose",
+                        "source_kind",
+                        "interval",
+                        "price_scale",
+                        "funding_purpose",
+                        "funding_rate_scale",
+                        "mark_price_scale",
+                        "rate_type",
+                    )
+                    if key in event.payload
+                },
+                "provenance": {
+                    key: event.payload[key]
+                    for key in (
+                        "source_snapshot_id",
+                        "source_snapshot_hash",
+                        "source_provenance_hash",
+                        "source_record_hash",
+                        "request_hash",
+                        "capture_hash",
+                    )
+                    if key in event.payload
+                },
+            }
+            for event in events
+        ),
+    }
+
+
+def build_binance_usdm_koru_source_profile_authority_v2(
+    result: BinanceUsdmKoruTradifiSourceProjectionResultV2,
+) -> tuple[ArtifactEnvelope, ArtifactRef]:
+    """Derive the exact runtime source-profile authority from trusted V2 replay."""
+
+    trusted = _trusted_result(result)
+    if trusted is None:
+        raise ValueError("result must be an exact canonical source-projection result")
+    grouped: dict[str, list[MarketEvent]] = defaultdict(list)
+    for event in trusted.source_events:
+        grouped[event.stream_key].append(event)
+    source_manifests = tuple(
+        MarketStreamManifest.from_events(stream_key, tuple(events))
+        for stream_key, events in sorted(grouped.items())
+    )
+    payload = {
+        "type": "binance_usdm_koru_source_profile_authority_v2",
+        "schema_version": _SCHEMA_VERSION,
+        "timeline_window": {
+            "data_start": trusted.request.timeline_window_start,
+            "trading_start": trusted.request.timeline_window_start,
+            "end_exclusive": trusted.request.timeline_window_end_exclusive,
+        },
+        "source_projection_request_hash": trusted.request.request_hash,
+        "source_fragment_digest": trusted.fragment_digest,
+        "aggregate_trade_boundary_index_request_hash": (
+            trusted.aggregate_trade_boundary_index_request_hash
+        ),
+        "aggregate_trade_boundary_index_result_digest": (
+            trusted.aggregate_trade_boundary_index_result_digest
+        ),
+        "aggregate_trade_streamed_reconstruction_digest": (
+            trusted.aggregate_trade_streamed_reconstruction_digest
+        ),
+        "aggregate_trade_intra_day_raw_id_gap_stream": (
+            trusted.aggregate_trade_intra_day_raw_id_gap_stream.to_canonical_dict()
+        ),
+        "aggregate_trade_cross_date_raw_id_gap_stream": (
+            trusted.aggregate_trade_cross_date_raw_id_gap_stream.to_canonical_dict()
+        ),
+        "aggregate_trade_coverage_gaps": tuple(
+            value.to_canonical_dict() for value in trusted.aggregate_trade_coverage_gaps
+        ),
+        "missing_boundaries": tuple(
+            value.to_canonical_dict() for value in trusted.missing_boundaries
+        ),
+        "source_stream_manifests": tuple(
+            value.to_canonical_dict() for value in source_manifests
+        ),
+        "source_event_bindings": tuple(
+            {
+                "stream_key": event.stream_key,
+                "event_id": event.event_id,
+                "event_hash": event.event_hash,
+            }
+            for event in trusted.source_events
+        ),
+        "source_stream_authorities": tuple(
+            _source_profile_stream_authority(
+                manifest, tuple(grouped[manifest.stream_key])
+            )
+            for manifest in source_manifests
+        ),
+        "xkrx_calendar_ref": trusted.xkrx_calendar_ref,
+        "arcx_calendar_ref": trusted.arcx_calendar_ref,
+        "post_adjustment_unit_regime_ref": trusted.post_adjustment_unit_regime_ref,
+        "development_only": trusted.development_only,
+        "decision_grade_eligible": trusted.decision_grade_eligible,
+        "deployment_authorized": trusted.deployment_authorized,
+    }
+    envelope = ArtifactEnvelope.create(
+        _SOURCE_PROFILE_AUTHORITY_ARTIFACT_TYPE, _SCHEMA_VERSION, payload
+    )
+    return envelope, ArtifactRef.from_envelope(envelope)
 
 
 def _trusted_result(
