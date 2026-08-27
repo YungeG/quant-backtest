@@ -3,7 +3,6 @@ from __future__ import annotations
 from dataclasses import replace
 
 import pytest
-
 from crypto_quant_domain import (
     InstrumentId,
     PricePurpose,
@@ -15,6 +14,7 @@ from crypto_quant_trading import LinearFundingPublicationStatus, LinearPerpetual
 from crypto_quant_trading.profiles.binance_usdm import (
     BinanceUsdmFundingSourceFailureCode,
     BinanceUsdmFundingSourceModel,
+    BinanceUsdmFundingSourceModelV2,
     BinanceUsdmFundingSourceResolution,
 )
 
@@ -36,6 +36,12 @@ from ._funding_source_fixtures import (
 
 def _resolve(**kwargs):
     return BinanceUsdmFundingSourceModel().resolve_funding_source(
+        funding_query(**kwargs)
+    )
+
+
+def _resolve_v2(**kwargs):
+    return BinanceUsdmFundingSourceModelV2().resolve_funding_source(
         funding_query(**kwargs)
     )
 
@@ -77,6 +83,37 @@ def test_maps_regular_history_row_to_frozen_funding_evidence() -> None:
     assert settlement.event_hash == result.publication.event_hash
     assert settlement.source_hash == result.publication.source_hash
     assert not result.decision_grade_eligible
+
+
+def test_v1_rejects_finer_nondivisible_mark_and_v2_preserves_raw_scale() -> None:
+    kwargs = {
+        "book": funding_book(
+            records=(funding_record(mark_price="20.39013424"),)
+        ),
+        "contract": linear_contract(price_scale=Scale(2)),
+    }
+
+    v1 = _resolve(**kwargs)
+    assert v1.result is None
+    assert v1.failure is not None
+    assert v1.failure.code is BinanceUsdmFundingSourceFailureCode.MARK_SCALE_MISMATCH
+
+    v2 = _resolve_v2(**kwargs)
+    assert v2.failure is None
+    assert v2.result is not None
+    assert v2.result.model_key == "crypto.binance_usdm.funding-sources.v2"
+    assert v2.result.model_version == 2
+    assert v2.result.model_digest == (
+        "sha256:0244952eb591fb6c4942179743478570506ad632801a9458104d50c5a61af5f4"
+    )
+    assert BinanceUsdmFundingSourceModel().model_digest == (
+        "sha256:25111c2eff3f6c05364b142e321c98c585117ffd9063271f0af52e2d35298db7"
+    )
+    assert v2.result.mark_observation.price.units == 2_039_013_424
+    assert v2.result.mark_observation.price.scale == Scale(8)
+    assert v2.result.funding_mark_evidence.resolved_mark.price.units == 2_039_013_424
+    assert v2.result.funding_mark_evidence.resolved_mark.price.scale == Scale(8)
+    assert replace(v2.result) == v2.result
 
 
 def test_signed_zero_rates_and_nonstandard_slot_times_map_without_schedule_inference() -> None:
@@ -239,7 +276,12 @@ def test_frozen_failure_precedence_covers_all_business_failures() -> None:
         ),
         (
             BinanceUsdmFundingSourceFailureCode.MARK_SCALE_MISMATCH,
-            {"contract": linear_contract(price_scale=Scale(2))},
+            {
+                "book": funding_book(
+                    records=(funding_record(mark_price="20.39013424"),)
+                ),
+                "contract": linear_contract(price_scale=Scale(2)),
+            },
         ),
     )
 

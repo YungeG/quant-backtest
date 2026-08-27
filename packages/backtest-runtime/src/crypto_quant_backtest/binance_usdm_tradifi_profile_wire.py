@@ -41,6 +41,7 @@ from crypto_quant_trading.profiles.binance_usdm import (
     BinanceUsdmFundingCoverage,
     BinanceUsdmFundingRateRecord,
     BinanceUsdmFundingSourceModel,
+    BinanceUsdmFundingSourceModelV2,
     BinanceUsdmFundingSourceQuery,
     BinanceUsdmFundingSourceRef,
     BinanceUsdmHistoricalAccountProfileBook,
@@ -1085,7 +1086,21 @@ def _funding(value: object):
         _simulation(query_wire["captured_at"]),
     )
     _same(query, query_wire)
-    outcome = BinanceUsdmFundingSourceModel().resolve_funding_source(query)
+    model_key = _text(payload["model_key"])
+    model_version = _integer(payload["model_version"])
+    if (model_key, model_version) == (
+        "crypto.binance_usdm.funding-sources.v1",
+        1,
+    ):
+        model = BinanceUsdmFundingSourceModel()
+    elif (model_key, model_version) == (
+        "crypto.binance_usdm.funding-sources.v2",
+        2,
+    ):
+        model = BinanceUsdmFundingSourceModelV2()
+    else:
+        raise ValueError
+    outcome = model.resolve_funding_source(query)
     if outcome.result is None:
         raise ValueError
     _same(outcome.result, payload)

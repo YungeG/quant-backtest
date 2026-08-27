@@ -44,7 +44,7 @@ from crypto_quant_trading.profiles.binance_usdm import (
     BinanceUsdmAggregateTradePrice,
     BinanceUsdmFundingCoverage,
     BinanceUsdmFundingRateRecord,
-    BinanceUsdmFundingSourceModel,
+    BinanceUsdmFundingSourceModelV2,
     BinanceUsdmFundingSourceQuery,
     BinanceUsdmFundingSourceRef,
     BinanceUsdmHistoricalAccountProfileBook,
@@ -775,13 +775,23 @@ def _validate_common_event(
             BinanceUsdmKoruTradifiDevelopmentProfileFailureCodeV1.SOURCE_CONTEXT_INVALID,
             "provenance:" + event.event_id,
         )
+    source_mode = event.payload.get("source_mode")
     if event.stream_key == _EXECUTION_STREAM:
         required = {
             "archive_member_hash",
             "checksum_member_hash",
             "source_member_hash",
         }
-        source_prefix = "binance.public_data.futures.um.daily.aggtrades."
+        if source_mode == "execution_manifest_bounded_rest_observations":
+            source_prefix = "binance.fapi.bounded-rest.koruusdt.aggtrades."
+            required |= {
+                "retained_authority_hash",
+                "execution_manifest_identity",
+                "execution_manifest_file_sha256",
+                "availability_authority_digest",
+            }
+        else:
+            source_prefix = "binance.public_data.futures.um.daily.aggtrades."
     elif event.stream_key == _FUNDING_STREAM:
         required = {
             "receipt_hash",
@@ -795,7 +805,11 @@ def _validate_common_event(
             "checksum_member_hash",
             "source_member_hash",
         }
-        source_prefix = "binance.public_data.futures.um.daily."
+        if source_mode == "base_manifest_derived_raw_observations":
+            source_prefix = "binance.fapi.base-manifest-derived.koruusdt.1h.2026-08-24."
+            required.add("retained_authority_hash")
+        else:
+            source_prefix = "binance.public_data.futures.um.daily."
     if (
         not required <= set(event.payload)
         or any(not _canonical_digest(event.payload.get(key)) for key in required)
@@ -1428,7 +1442,7 @@ def _funding_resolutions(request, events, order_rules):
             request.account_id,
             FundingSlotId.derive(_INSTRUMENT, target),
         )
-        outcome = BinanceUsdmFundingSourceModel().resolve_funding_source(
+        outcome = BinanceUsdmFundingSourceModelV2().resolve_funding_source(
             BinanceUsdmFundingSourceQuery(
                 ordinary,
                 contract,

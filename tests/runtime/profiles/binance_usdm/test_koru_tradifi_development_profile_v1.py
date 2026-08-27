@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from dataclasses import replace
+from types import SimpleNamespace
 
 import pytest
 from crypto_quant_backtest import (
@@ -10,6 +11,9 @@ from crypto_quant_backtest import (
     TimelineWindow,
     build_binance_usdm_koru_tradifi_development_profile_v1,
     decode_binance_usdm_tradifi_profile_composition_request_v1,
+)
+from crypto_quant_backtest.binance_usdm_koru_tradifi_development_profile_v1 import (
+    _funding_resolutions,
 )
 from crypto_quant_bundle_builder.binance_usdm_koru_tradifi_source_projection_v2 import (
     build_binance_usdm_koru_source_profile_authority_v2,
@@ -46,7 +50,9 @@ def _source():
     )
     v1_request = source_v1_fixture._request(
         ((start_ms + 30 * 60_000, "12.340"),),
-        funding_raw=funding_fixture.compact([funding_fixture.row(start_ms)]),
+        funding_raw=funding_fixture.compact(
+            [funding_fixture.row(start_ms, mark_price="20.39013424")]
+        ),
     )
     outcome = build_binance_usdm_koru_tradifi_source_projection_v2(
         source_v2_fixture._from_v1_request(v1_request)
@@ -106,6 +112,12 @@ def test_builds_from_real_trusted_source_projection_and_exact_wire_replay(
     )
 
     assert len(profile.funding_sources) == funding_manifest.event_count == 1
+    assert {value.model_key for value in profile.funding_sources} == {
+        "crypto.binance_usdm.funding-sources.v2"
+    }
+    funding_mark = profile.funding_sources[0].funding_mark_evidence.resolved_mark.price
+    assert funding_mark.units == 2_039_013_424
+    assert funding_mark.scale.places == 8
     assert len(
         {value.query.application_key for value in profile.funding_sources}
     ) == funding_manifest.event_count
@@ -141,6 +153,45 @@ def test_builds_from_real_trusted_source_projection_and_exact_wire_replay(
         == profile
     )
     assert result.result_digest == canonical_sha256(result._body())
+
+
+def test_koru_factory_resolves_all_120_actual_raw_funding_marks(
+    trusted_profile,
+) -> None:
+    _, request, result = trusted_profile
+    normalized = funding_fixture.normalize(funding_fixture.RAW).result
+    assert normalized is not None
+    first = normalized.events[0].event_time
+    last = normalized.events[-1].event_time
+    factory_request = SimpleNamespace(
+        account_id=request.account_id,
+        composed_at=SimulationInstant(
+            UtcInstant(funding_fixture.ACQUIRED_AT + 1),
+            TimelinePhase(200, "profile_composition"),
+            SourceSequence(0),
+        ),
+        timeline_window=TimelineWindow(
+            first,
+            first,
+            UtcInstant(last.epoch_nanoseconds + 1),
+        ),
+    )
+
+    resolutions = _funding_resolutions(
+        factory_request,
+        normalized.events,
+        result.profile_composition_request.order_rules,
+    )
+
+    assert len(resolutions) == 120
+    assert {value.model_key for value in resolutions} == {
+        "crypto.binance_usdm.funding-sources.v2"
+    }
+    assert [value.mark_observation.price.units for value in resolutions] == [
+        int(event.payload["raw_mark_price"].replace(".", ""))
+        for event in normalized.events
+    ]
+    assert {value.mark_observation.price.scale.places for value in resolutions} == {8}
 
 
 def test_authority_and_source_tamper_fail_closed(trusted_profile) -> None:

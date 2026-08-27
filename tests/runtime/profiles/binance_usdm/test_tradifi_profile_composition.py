@@ -116,6 +116,9 @@ def test_nonzero_slippage_calibration_changes_simulation_identity() -> None:
 
 def test_replay_is_stable_and_forged_resolved_profile_is_rejected() -> None:
     request = composition_request()
+    mark = request.funding_sources[0].funding_mark_evidence.resolved_mark.price
+    assert mark.units == 1_000
+    assert mark.scale == Scale(2)
     composer = BinanceUsdmTradifiProfileComposer()
 
     first = composer.compose(request)

@@ -27,6 +27,7 @@ from crypto_quant_backtest.execution_inputs import (
 )
 from crypto_quant_backtest.liquidation_audit import LinearLiquidationMarkBarEvidence
 from crypto_quant_domain import (
+    Price,
     PricePurpose,
     QuantizationPolicy,
     Rate,
@@ -41,6 +42,7 @@ from crypto_quant_domain import (
 )
 from crypto_quant_trading import (
     GenericLedger,
+    LinearFundingJournalEntry,
     LinearFundingMarkEvidence,
     LinearFundingPublicationStatus,
     LinearFundingRatePublicationCandidate,
@@ -224,7 +226,10 @@ def _production_window_states(case) -> dict[str, FinancialStateView]:
 
 
 def _production_case(
-    *, final_sell_quantity_units: int = 3_000, case=None
+    *,
+    final_sell_quantity_units: int = 3_000,
+    case=None,
+    funding_price: Price | None = None,
 ):
     case = case or build_execution_case(
         final_sell_quantity_units=final_sell_quantity_units
@@ -262,7 +267,7 @@ def _production_case(
             )
             funding_mark, funding_policy = _resolved_mark(
                 PricePurpose.FUNDING,
-                event.semantic_payload.funding_price,
+                funding_price or event.semantic_payload.funding_price,
                 event.event_at,
                 "funding",
             )
@@ -786,6 +791,32 @@ def test_engine_supplies_runtime_checkpoint_through_generic_dispatch_boundary() 
         captured[0].window_start_reservation_state_hash
         == captured[0].reservation_state.state_hash
     )
+
+
+def test_scale8_funding_mark_survives_dispatcher_and_accounting_journey() -> None:
+    case = _production_case(
+        funding_price=Price(
+            2_039_013_424,
+            Scale(8),
+            str(CONTRACT.instrument.instrument_id),
+            CONTRACT.instrument.settlement_currency.value,
+        )
+    )
+    outcome = DeterministicBarEngine(
+        BinanceUsdmTradifiLinearFinancialDispatcher(
+            case.financial_dispatch_plan.dispatcher_spec
+        )
+    ).run(case)
+
+    assert outcome.result is not None
+    funding_entry = next(
+        entry
+        for entry in outcome.result.final_journal.entries
+        if type(entry) is LinearFundingJournalEntry
+    )
+    evidence = funding_entry.request.funding_mark_evidence
+    assert evidence is not None
+    assert evidence.resolved_mark.price.scale == Scale(8)
 
 
 def test_empty_position_funding_and_thin_plan_fails_closed() -> None:

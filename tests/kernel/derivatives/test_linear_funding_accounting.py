@@ -4,7 +4,6 @@ from copy import deepcopy
 from dataclasses import fields, replace
 
 import pytest
-
 from crypto_quant_domain import (
     AccountingEntryType,
     AccountingJournalEntry,
@@ -26,11 +25,15 @@ from crypto_quant_domain import (
     derive_domain_id,
 )
 from crypto_quant_trading import (
+    AccountingJournal,
     FundingSlotId,
+    JournalEntryConflictError,
+    LedgerBalanceRegistration,
+    LedgerSchema,
+    LinearFundingAccounting,
     LinearFundingApplicationIdentity,
     LinearFundingApplicationKey,
     LinearFundingEligibility,
-    LinearFundingAccounting,
     LinearFundingEligibilityRequest,
     LinearFundingEligibilityResolver,
     LinearFundingJournalEntry,
@@ -41,10 +44,6 @@ from crypto_quant_trading import (
     LinearFundingSettlementEvidence,
     LinearFundingSettlementFailureCode,
     LinearFundingSettlementRequest,
-    AccountingJournal,
-    JournalEntryConflictError,
-    LedgerBalanceRegistration,
-    LedgerSchema,
     ResolvedMark,
     StaleMarkPolicy,
 )
@@ -60,6 +59,8 @@ from tests.kernel.derivatives._fixtures import (
 )
 from tests.kernel.derivatives.test_linear_funding_eligibility import (
     _instant as _eligibility_instant,
+)
+from tests.kernel.derivatives.test_linear_funding_eligibility import (
     _publication,
     _snapshot,
     _valid_request,
@@ -343,6 +344,39 @@ def test_settlement_uses_historical_quantity_and_one_money_boundary() -> None:
     assert not result.journal_entry.fees
 
 
+def test_settlement_accepts_exact_scale8_funding_mark() -> None:
+    request = _settlement_request()
+    evidence = request.funding_mark_evidence
+    assert evidence is not None
+    request = _with_mark(
+        request,
+        replace(
+            evidence.resolved_mark,
+            price=Price(
+                20_390_134_240,
+                Scale(8),
+                str(INSTRUMENT_ID),
+                str(QUOTE_CURRENCY),
+            ),
+        ),
+    )
+
+    outcome = LinearFundingAccounting().assess_financing(request)
+
+    assert outcome.failure is None
+    assert outcome.result is not None
+    result = outcome.result
+    assert (result.exact_cash_flow.numerator, result.exact_cash_flow.denominator) == (
+        -127_438_339,
+        3_125_000_000,
+    )
+    assert result.payment == result.journal_entry.payment
+    assert result.payment.units == -4
+    assert result.payment.scale == Scale(2)
+    assert result.journal_entry.balance_changes[0].value == result.payment
+    assert result.journal_entry.financing == (result.payment,)
+
+
 def _with_mark(
     request: LinearFundingSettlementRequest, resolved_mark: ResolvedMark
 ) -> LinearFundingSettlementRequest:
@@ -368,6 +402,10 @@ def _failure_cases() -> list[
     other_instrument = InstrumentId(VENUE_ID, "eth-usdt-linear-perpetual")
     forged_late_mark = deepcopy(mark)
     object.__setattr__(forged_late_mark, "available_at", UtcInstant(11))
+    forged_price_context_mark = deepcopy(mark)
+    forged_price = deepcopy(mark.price)
+    object.__setattr__(forged_price, "instrument_id", str(other_instrument))
+    object.__setattr__(forged_price_context_mark, "price", forged_price)
     return [
         (
             LinearFundingSettlementFailureCode.MISSING_ELIGIBILITY,
@@ -461,19 +499,8 @@ def _failure_cases() -> list[
             ),
         ),
         (
-            LinearFundingSettlementFailureCode.FUNDING_MARK_SCALE_MISMATCH,
-            _with_mark(
-                request,
-                replace(
-                    mark,
-                    price=Price(
-                        100_000,
-                        Scale(3),
-                        str(INSTRUMENT_ID),
-                        str(QUOTE_CURRENCY),
-                    ),
-                ),
-            ),
+            LinearFundingSettlementFailureCode.FUNDING_MARK_CONTEXT_MISMATCH,
+            _with_mark(request, forged_price_context_mark),
         ),
         (
             LinearFundingSettlementFailureCode.NON_POSITIVE_FUNDING_MARK,

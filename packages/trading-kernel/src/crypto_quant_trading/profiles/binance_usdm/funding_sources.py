@@ -1,8 +1,8 @@
 from __future__ import annotations
 
+import re
 from dataclasses import dataclass
 from enum import Enum
-import re
 
 from crypto_quant_domain import (
     InstrumentId,
@@ -16,6 +16,7 @@ from crypto_quant_domain import (
     UtcInstant,
     canonical_sha256,
 )
+
 from crypto_quant_trading.derivatives import LinearPerpetualContract
 from crypto_quant_trading.funding import (
     FundingSlotId,
@@ -31,10 +32,11 @@ from crypto_quant_trading.marks import MarkObservation, MarkResolver, StaleMarkP
 
 from .instrument_metadata import BinanceUsdmInstrumentMetadataResolution
 
-
 _SCHEMA_VERSION = 1
-_MODEL_KEY = "crypto.binance_usdm.funding-sources.v1"
-_MODEL_VERSION = 1
+_V1_MODEL_KEY = "crypto.binance_usdm.funding-sources.v1"
+_V1_MODEL_VERSION = 1
+_V2_MODEL_KEY = "crypto.binance_usdm.funding-sources.v2"
+_V2_MODEL_VERSION = 2
 _SOURCE_KIND = "funding_rate_history"
 _RATE_BASIS = "funding_fraction_of_notional"
 _SETTLEMENT_PHASE = TimelinePhase(110, "funding_settlement")
@@ -55,6 +57,28 @@ _LIMITATIONS = (
 _SHA256 = re.compile(r"sha256:[0-9a-f]{64}")
 _POSITIVE_DECIMAL = re.compile(r"(?:0|[1-9][0-9]*)(?:\.([0-9]{1,18}))?")
 _SIGNED_DECIMAL = re.compile(r"(-?)(?:0|[1-9][0-9]*)(?:\.([0-9]{1,18}))?")
+
+
+@dataclass(frozen=True, slots=True)
+class _FundingSourceModelSpec:
+    model_key: str
+    model_version: int
+    mark_scale_policy: str
+    preserve_raw_mark_scale: bool
+
+
+_V1_MODEL = _FundingSourceModelSpec(
+    _V1_MODEL_KEY,
+    _V1_MODEL_VERSION,
+    "exact_contract_price_scale",
+    False,
+)
+_V2_MODEL = _FundingSourceModelSpec(
+    _V2_MODEL_KEY,
+    _V2_MODEL_VERSION,
+    "independent_exact_raw_mark_scale",
+    True,
+)
 
 
 class BinanceUsdmFundingSourceFailureCode(str, Enum):
@@ -383,13 +407,13 @@ def _settlement_instant(target: UtcInstant) -> SimulationInstant:
     return SimulationInstant(target, _SETTLEMENT_PHASE, _SETTLEMENT_SEQUENCE)
 
 
-def _model_digest() -> str:
+def _model_digest(spec: _FundingSourceModelSpec = _V1_MODEL) -> str:
     return canonical_sha256(
         {
             "type": "binance_usdm_funding_source_model",
             "schema_version": _SCHEMA_VERSION,
-            "model_key": _MODEL_KEY,
-            "model_version": _MODEL_VERSION,
+            "model_key": spec.model_key,
+            "model_version": spec.model_version,
             "source_kind": _SOURCE_KIND,
             "slot_key": "instrument_id+funding_time",
             "supported_rate_type": "Regular",
@@ -402,11 +426,24 @@ def _model_digest() -> str:
             "mark_policy": _MARK_POLICY,
             "revision_policy": "one_visible_root_row_per_regular_slot",
             "decimal_policy": "ascii_ordinary_decimal_max_18_places",
-            "mark_scale_policy": "exact_contract_price_scale",
+            "mark_scale_policy": spec.mark_scale_policy,
             "allowed_grade": "development",
             "limitations": list(_LIMITATIONS),
         }
     )
+
+
+def _model_spec(
+    model_key: str, model_version: int, model_digest: str
+) -> _FundingSourceModelSpec:
+    for spec in (_V1_MODEL, _V2_MODEL):
+        if (
+            model_key == spec.model_key
+            and model_version == spec.model_version
+            and model_digest == _model_digest(spec)
+        ):
+            return spec
+    raise ValueError("funding source model identity is unsupported")
 
 
 def _expected_slot(query: BinanceUsdmFundingSourceQuery) -> FundingSlotId:
@@ -538,6 +575,7 @@ def _mark_units(value: _DecimalValue, target_scale: Scale) -> int | None:
 
 def _first_failure(
     query: BinanceUsdmFundingSourceQuery,
+    spec: _FundingSourceModelSpec = _V1_MODEL,
 ) -> BinanceUsdmFundingSourceFailureCode | None:
     if _instrument_mismatch(query):
         return BinanceUsdmFundingSourceFailureCode.INSTRUMENT_METADATA_MISMATCH
@@ -571,7 +609,10 @@ def _first_failure(
     if _identity_conflict(records):
         return BinanceUsdmFundingSourceFailureCode.SOURCE_IDENTITY_CONFLICT
     mark = _decimal(records[0].mark_price or "", signed=False)
-    if mark is None or _mark_units(mark, query.contract.price_scale) is None:
+    if mark is None or (
+        not spec.preserve_raw_mark_scale
+        and _mark_units(mark, query.contract.price_scale) is None
+    ):
         return BinanceUsdmFundingSourceFailureCode.MARK_SCALE_MISMATCH
     return None
 
@@ -587,16 +628,28 @@ class _ResolutionValues:
     settlement_evidence: LinearFundingSettlementEvidence
 
 
-def _resolution_values(query: BinanceUsdmFundingSourceQuery) -> _ResolutionValues:
+def _resolution_values(
+    query: BinanceUsdmFundingSourceQuery,
+    spec: _FundingSourceModelSpec = _V1_MODEL,
+) -> _ResolutionValues:
     record = _visible_target_records(query)[0]
     coverage = _target_coverages(query)[0]
     rate_value = _decimal(record.funding_rate or "", signed=True)
     mark_value = _decimal(record.mark_price or "", signed=False)
     if rate_value is None or mark_value is None:
         raise ValueError("funding resolution requires validated decimals")
-    mark_units = _mark_units(mark_value, query.contract.price_scale)
+    mark_units = (
+        mark_value.units
+        if spec.preserve_raw_mark_scale
+        else _mark_units(mark_value, query.contract.price_scale)
+    )
     if mark_units is None:
         raise ValueError("funding resolution requires exact mark scale")
+    mark_scale = (
+        Scale(mark_value.places)
+        if spec.preserve_raw_mark_scale
+        else query.contract.price_scale
+    )
     slot = _expected_slot(query)
     settlement_at = _settlement_instant(query.target_funding_time)
     rate = Rate(rate_value.units, Scale(rate_value.places), _RATE_BASIS)
@@ -619,7 +672,7 @@ def _resolution_values(query: BinanceUsdmFundingSourceQuery) -> _ResolutionValue
         price_purpose=PricePurpose.FUNDING,
         price=Price(
             mark_units,
-            query.contract.price_scale,
+            mark_scale,
             str(slot.instrument_id),
             query.contract.instrument.quote_currency.value,
         ),
@@ -682,11 +735,17 @@ class BinanceUsdmFundingSourceResolution:
     def __post_init__(self) -> None:
         if type(self.query) is not BinanceUsdmFundingSourceQuery:
             raise TypeError("query must be exact BinanceUsdmFundingSourceQuery")
-        values = _resolution_values(self.query)
+        try:
+            spec = _model_spec(self.model_key, self.model_version, self.model_digest)
+        except ValueError:
+            raise ValueError(
+                "resolution fields do not match funding source authority"
+            ) from None
+        values = _resolution_values(self.query, spec)
         expected = (
-            _MODEL_KEY,
-            _MODEL_VERSION,
-            _model_digest(),
+            spec.model_key,
+            spec.model_version,
+            _model_digest(spec),
             self.query.query_hash,
             values.selected_record,
             values.source_coverage,
@@ -762,12 +821,15 @@ class BinanceUsdmFundingSourceFailure:
             raise TypeError("query must be exact BinanceUsdmFundingSourceQuery")
         if type(self.code) is not BinanceUsdmFundingSourceFailureCode:
             raise TypeError("code must be exact BinanceUsdmFundingSourceFailureCode")
+        try:
+            spec = _model_spec(self.model_key, self.model_version, self.model_digest)
+        except ValueError:
+            raise ValueError(
+                "failure fields do not match funding source authority"
+            ) from None
         if (
-            self.model_key != _MODEL_KEY
-            or self.model_version != _MODEL_VERSION
-            or self.model_digest != _model_digest()
-            or self.query_hash != self.query.query_hash
-            or self.code is not _first_failure(self.query)
+            self.query_hash != self.query.query_hash
+            or self.code is not _first_failure(self.query, spec)
         ):
             raise ValueError("failure fields do not match funding source authority")
         expected_subjects = (
@@ -817,7 +879,7 @@ class BinanceUsdmFundingSourceOutcome:
         authority = self.result if self.result is not None else self.failure
         if authority is None:
             raise ValueError("funding source outcome authority is missing")
-        if self.model_digest != _model_digest() or authority.model_digest != self.model_digest:
+        if authority.model_digest != self.model_digest:
             raise ValueError("outcome model digest does not match authority")
         if self.query_hash != authority.query_hash:
             raise ValueError("outcome query hash does not match authority")
@@ -843,61 +905,82 @@ class BinanceUsdmFundingSourceOutcome:
         }
 
 
+def _resolve_funding_source(
+    query: BinanceUsdmFundingSourceQuery,
+    spec: _FundingSourceModelSpec,
+) -> BinanceUsdmFundingSourceOutcome:
+    if type(query) is not BinanceUsdmFundingSourceQuery:
+        raise TypeError("query must be exact BinanceUsdmFundingSourceQuery")
+    digest = _model_digest(spec)
+    code = _first_failure(query, spec)
+    if code is not None:
+        failure = BinanceUsdmFundingSourceFailure(
+            model_key=spec.model_key,
+            model_version=spec.model_version,
+            model_digest=digest,
+            query=query,
+            query_hash=query.query_hash,
+            code=code,
+            subject_ids=(
+                code.value,
+                query.application_key.value,
+                str(_expected_slot(query).instrument_id),
+                str(query.target_funding_time.epoch_nanoseconds),
+                query.funding_book.funding_book_hash,
+            ),
+        )
+        return BinanceUsdmFundingSourceOutcome(
+            model_digest=digest,
+            query_hash=query.query_hash,
+            result=None,
+            failure=failure,
+        )
+    values = _resolution_values(query, spec)
+    result = BinanceUsdmFundingSourceResolution(
+        model_key=spec.model_key,
+        model_version=spec.model_version,
+        model_digest=digest,
+        query=query,
+        query_hash=query.query_hash,
+        selected_record=values.selected_record,
+        source_coverage=values.source_coverage,
+        slot_id=values.slot_id,
+        publication=values.publication,
+        mark_observation=values.mark_observation,
+        funding_mark_evidence=values.funding_mark_evidence,
+        settlement_evidence=values.settlement_evidence,
+        limitations=_LIMITATIONS,
+        decision_grade_eligible=False,
+    )
+    return BinanceUsdmFundingSourceOutcome(
+        model_digest=digest,
+        query_hash=query.query_hash,
+        result=result,
+        failure=None,
+    )
+
+
 class BinanceUsdmFundingSourceModel:
     @property
     def model_digest(self) -> str:
-        return _model_digest()
+        return _model_digest(_V1_MODEL)
 
     def resolve_funding_source(
         self,
         query: BinanceUsdmFundingSourceQuery,
         /,
     ) -> BinanceUsdmFundingSourceOutcome:
-        if type(query) is not BinanceUsdmFundingSourceQuery:
-            raise TypeError("query must be exact BinanceUsdmFundingSourceQuery")
-        code = _first_failure(query)
-        if code is not None:
-            failure = BinanceUsdmFundingSourceFailure(
-                model_key=_MODEL_KEY,
-                model_version=_MODEL_VERSION,
-                model_digest=_model_digest(),
-                query=query,
-                query_hash=query.query_hash,
-                code=code,
-                subject_ids=(
-                    code.value,
-                    query.application_key.value,
-                    str(_expected_slot(query).instrument_id),
-                    str(query.target_funding_time.epoch_nanoseconds),
-                    query.funding_book.funding_book_hash,
-                ),
-            )
-            return BinanceUsdmFundingSourceOutcome(
-                model_digest=_model_digest(),
-                query_hash=query.query_hash,
-                result=None,
-                failure=failure,
-            )
-        values = _resolution_values(query)
-        result = BinanceUsdmFundingSourceResolution(
-            model_key=_MODEL_KEY,
-            model_version=_MODEL_VERSION,
-            model_digest=_model_digest(),
-            query=query,
-            query_hash=query.query_hash,
-            selected_record=values.selected_record,
-            source_coverage=values.source_coverage,
-            slot_id=values.slot_id,
-            publication=values.publication,
-            mark_observation=values.mark_observation,
-            funding_mark_evidence=values.funding_mark_evidence,
-            settlement_evidence=values.settlement_evidence,
-            limitations=_LIMITATIONS,
-            decision_grade_eligible=False,
-        )
-        return BinanceUsdmFundingSourceOutcome(
-            model_digest=_model_digest(),
-            query_hash=query.query_hash,
-            result=result,
-            failure=None,
-        )
+        return _resolve_funding_source(query, _V1_MODEL)
+
+
+class BinanceUsdmFundingSourceModelV2:
+    @property
+    def model_digest(self) -> str:
+        return _model_digest(_V2_MODEL)
+
+    def resolve_funding_source(
+        self,
+        query: BinanceUsdmFundingSourceQuery,
+        /,
+    ) -> BinanceUsdmFundingSourceOutcome:
+        return _resolve_funding_source(query, _V2_MODEL)

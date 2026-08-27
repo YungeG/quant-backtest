@@ -485,12 +485,13 @@ def _first_failure(
     if (
         mark.instrument_id != request.contract.instrument.instrument_id
         or mark.quote_currency_id != request.contract.instrument.settlement_currency
+        or mark.price.instrument_id != str(request.contract.instrument.instrument_id)
+        or mark.price.quote_currency
+        != request.contract.instrument.settlement_currency.value
     ):
         return LinearFundingSettlementFailureCode.FUNDING_MARK_CONTEXT_MISMATCH
     if mark.resolved_at != slot.target_funding_time:
         return LinearFundingSettlementFailureCode.FUNDING_MARK_INSTANT_MISMATCH
-    if mark.price.scale != request.contract.price_scale:
-        return LinearFundingSettlementFailureCode.FUNDING_MARK_SCALE_MISMATCH
     if mark.price.units <= 0:
         return LinearFundingSettlementFailureCode.NON_POSITIVE_FUNDING_MARK
     expected_age = (
