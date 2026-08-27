@@ -39,7 +39,9 @@ from .binance_usdm_koru_aggtrade_boundary_index_v1 import (
     BinanceUsdmKoruExecutionBoundaryV1,
     BinanceUsdmKoruRawIdGapStreamEvidenceV1,
     BinanceUsdmKoruSelectedAggregateTradeLineageV1,
-    build_binance_usdm_koru_aggregate_trade_boundary_index_v1,
+)
+from .binance_usdm_koru_aggtrade_boundary_index_v1 import (
+    _trusted_result as _trusted_boundary_index_result,
 )
 from .binance_usdm_koru_funding_rate_history_source_bounded_v1 import (
     BinanceUsdmKoruFundingRateHistorySourceBoundedNormalizationResultV1,
@@ -595,13 +597,13 @@ def _verified_boundary_index(
             BinanceUsdmKoruTradifiSourceProjectionFailureCodeV2.AGGREGATE_TRADES_INVALID,
             "aggregate_trade_boundary_index_request",
         )
-    replay = build_binance_usdm_koru_aggregate_trade_boundary_index_v1(index_request)
-    if replay.result is None or not _canonical_equal(replay.result, result):
+    trusted = _trusted_boundary_index_result(result)
+    if trusted is None:
         raise _ProjectionError(
             BinanceUsdmKoruTradifiSourceProjectionFailureCodeV2.AGGREGATE_TRADES_INVALID,
             "aggregate_trade_boundary_index_result",
         )
-    return replay.result
+    return trusted
 
 
 def _verified_price_results(

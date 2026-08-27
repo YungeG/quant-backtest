@@ -70,7 +70,7 @@ _RETAINED_DERIVED_CSV_NAME = (
     "KORUUSDT-aggTrades-2026-08-24.discovery-bounded.csv"
 )
 _RETAINED_DERIVED_CSV_MEMBER_KEY = "derived/" + _RETAINED_DERIVED_CSV_NAME
-_RETAINED_CSV_HEADER = (
+_CSV_HEADER = (
     "agg_trade_id",
     "price",
     "quantity",
@@ -825,10 +825,26 @@ def _execution_manifest(execution_manifest_bytes: bytes) -> dict[str, object]:
     declared = value.get("manifest_sha256")
     if type(declared) is not str or declared != _manifest_sha256(value):
         raise ValueError("execution manifest canonical hash mismatch")
-    if value.get("type") != "koruusdt_execution_data_manifest" or value.get(
-        "schema_version"
-    ) != 2:
+    schema_version = value.get("schema_version")
+    if value.get("type") != "koruusdt_execution_data_manifest" or schema_version not in (
+        2,
+        3,
+    ):
         raise ValueError("execution manifest identity mismatch")
+    if schema_version == 3:
+        metadata = value.get("official_archive_metadata_receipt")
+        if (
+            not isinstance(metadata, dict)
+            or set(metadata)
+            != {"path", "file_sha256", "receipt_sha256", "file_count"}
+            or metadata.get("path")
+            != "binance_usdm/official_archive_metadata_receipt.json"
+            or type(metadata.get("file_count")) is not int
+            or metadata.get("file_count") != 240
+        ):
+            raise ValueError("execution manifest metadata receipt mismatch")
+        _content_hash("metadata_receipt_file_sha256", metadata.get("file_sha256"))
+        _content_hash("metadata_receipt_sha256", metadata.get("receipt_sha256"))
     return value
 
 
@@ -1019,7 +1035,7 @@ def _rows_from_raw_pages(
 
 def _derived_csv_from_rows(rows: tuple[_ParsedRow, ...]) -> bytes:
     return (
-        ",".join(_RETAINED_CSV_HEADER)
+        ",".join(_CSV_HEADER)
         + "\n"
         + "".join(",".join(row.exact_row) + "\n" for row in rows)
     ).encode()
@@ -1850,8 +1866,15 @@ def _read_retained_csv(
         ) from error
 
 
+def _is_csv_header_like(row: tuple[str, ...], header: tuple[str, ...]) -> bool:
+    return any(value in header for value in row)
+
+
 def _csv_rows(
-    csv_bytes: bytes, header: tuple[str, ...] | None = None
+    csv_bytes: bytes,
+    header: tuple[str, ...] | None = None,
+    *,
+    optional_header: bool = False,
 ) -> list[list[str]]:
     if not csv_bytes or b"\r" in csv_bytes or not csv_bytes.endswith(b"\n"):
         raise _NormalizationError(
@@ -1872,20 +1895,24 @@ def _csv_rows(
             BinanceUsdmKoruAggregateTradesSourceBoundedFailureCodeV1.SOURCE_SCHEMA_MISMATCH,
             "csv",
         ) from error
+    header_present = False
     if header is not None:
-        if not rows or tuple(rows[0]) != header:
+        first_row = tuple(rows[0]) if rows else ()
+        header_present = first_row == header
+        if header_present:
+            rows = rows[1:]
+        elif not optional_header or _is_csv_header_like(first_row, header):
             raise _NormalizationError(
                 BinanceUsdmKoruAggregateTradesSourceBoundedFailureCodeV1.SOURCE_SCHEMA_MISMATCH,
                 "csv_header",
             )
-        rows = rows[1:]
     if not rows:
         raise _NormalizationError(
             BinanceUsdmKoruAggregateTradesSourceBoundedFailureCodeV1.DATA_GAP_DETECTED,
             "row_count",
         )
     canonical = "".join(",".join(row) + "\n" for row in rows).encode()
-    if header is not None:
+    if header_present:
         canonical = (",".join(header) + "\n").encode() + canonical
     if canonical != csv_bytes:
         raise _NormalizationError(
@@ -1912,12 +1939,9 @@ def _parse_row(row: list[str], row_number: int) -> _ParsedRow:
         if row[6] not in ("true", "false"):
             raise ValueError("non-canonical boolean")
     except (TypeError, ValueError) as error:
-        is_header = row_number == 1
-        if is_header:
-            is_header = row[0] == "agg_trade_id"
         code = (
             BinanceUsdmKoruAggregateTradesSourceBoundedFailureCodeV1.SOURCE_SCHEMA_MISMATCH
-            if is_header
+            if _is_csv_header_like(tuple(row), _CSV_HEADER)
             else BinanceUsdmKoruAggregateTradesSourceBoundedFailureCodeV1.NORMALIZATION_FAILED
         )
         raise _NormalizationError(code, "row_value", row_number) from error
@@ -2144,7 +2168,8 @@ def _reconstruct_retained_source(
     rows = _validated_rows(
         _csv_rows(
             csv_bytes,
-            _RETAINED_CSV_HEADER if authority is not None else None,
+            _CSV_HEADER,
+            optional_header=authority is None,
         ),
         authority.selected_coverage_start if authority is not None else requested_start,
         (

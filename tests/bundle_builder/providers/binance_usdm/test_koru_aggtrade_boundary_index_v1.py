@@ -63,6 +63,15 @@ DAY_NS = 86_400_000_000_000
 DAY_MS = DAY_NS // 1_000_000
 EPOCH = date(1970, 1, 1)
 INSTRUMENT = InstrumentId(VenueId("binance_usdm"), "koru-usdt-tradifi-perpetual")
+OFFICIAL_HEADER = (
+    "agg_trade_id",
+    "price",
+    "quantity",
+    "first_trade_id",
+    "last_trade_id",
+    "transact_time",
+    "is_buyer_maker",
+)
 
 
 def sha256(value: bytes) -> str:
@@ -76,8 +85,11 @@ def day_start_ns(utc_date: str) -> int:
 def official_capture(
     utc_date: str,
     rows: tuple[tuple[str, ...], ...],
+    *,
+    include_header: bool = False,
 ) -> BinanceUsdmKoruAggregateTradesSourceBoundedCaptureResultV1:
-    csv_bytes = b"".join((",".join(row) + "\n").encode() for row in rows)
+    csv_rows = (OFFICIAL_HEADER,) + rows if include_header else rows
+    csv_bytes = b"".join((",".join(row) + "\n").encode() for row in csv_rows)
     archive_output = io.BytesIO()
     csv_name = f"KORUUSDT-aggTrades-{utc_date}.csv"
     archive_name = f"KORUUSDT-aggTrades-{utc_date}.zip"
@@ -238,6 +250,7 @@ def test_streaming_selection_matches_v1_and_deduplicates_shared_source_event() -
             row(701, 902, 903, start_ms + 2_000),
             row(702, 904, 905, start_ms + 3_000),
         ),
+        include_header=True,
     )
     normalized = normalize_binance_usdm_koru_aggregate_trades_source_bounded_v1(
         capture
@@ -578,6 +591,144 @@ def test_trusted_replay_fresh_reconstruction_and_result_tamper() -> None:
         BinanceUsdmKoruAggregateTradeBoundaryIndexOutcomeV1(
             result=forged_gap_result
         )
+
+
+def test_certified_result_scans_once_and_mutation_forces_replay(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    boundary_index._CERTIFIED_RESULTS.clear()
+    start = day_start_ns("2026-07-16")
+    capture = official_capture(
+        "2026-07-16", (row(700, 900, 901, start // 1_000_000 + 1_000),)
+    )
+    request = build_request(
+        (capture,), start, start + DAY_NS, ((start, start + DAY_NS),)
+    )
+    streaming_build = boundary_index._build
+    scan_count = 0
+
+    def counted_build(value):
+        nonlocal scan_count
+        scan_count += 1
+        return streaming_build(value)
+
+    monkeypatch.setattr(boundary_index, "_build", counted_build)
+    result = build_binance_usdm_koru_aggregate_trade_boundary_index_v1(request).result
+    assert result is not None
+    fresh = replace(result)
+    assert scan_count == 1
+    assert boundary_index._trusted_result(result) is result
+    assert boundary_index._trusted_result(result) is result
+    assert scan_count == 1
+
+    object.__setattr__(result, "streamed_row_count", result.streamed_row_count + 1)
+    assert boundary_index._trusted_result(result) is None
+    assert id(result) not in boundary_index._CERTIFIED_RESULTS
+    assert scan_count == 2
+    with pytest.raises(ValueError, match="replay exactly"):
+        BinanceUsdmKoruAggregateTradeBoundaryIndexOutcomeV1(result=result)
+    assert scan_count == 3
+
+    replay = boundary_index._trusted_result(fresh)
+    assert replay is not None
+    assert replay is not fresh
+    assert replay.to_canonical_dict() == fresh.to_canonical_dict()
+    assert scan_count == 4
+
+
+def test_certification_fingerprint_rejects_embedded_snapshot_archive_mutation() -> None:
+    boundary_index._CERTIFIED_RESULTS.clear()
+    start = day_start_ns("2026-07-16")
+    capture = official_capture(
+        "2026-07-16", (row(700, 900, 901, start // 1_000_000 + 1_000),)
+    )
+    request = build_request(
+        (capture,), start, start + DAY_NS, ((start, start + DAY_NS),)
+    )
+    result = build_binance_usdm_koru_aggregate_trade_boundary_index_v1(request).result
+    assert result is not None
+    snapshot = result.request.captures[0].snapshot
+    original_archive_bytes = snapshot.archive_bytes
+
+    try:
+        try:
+            object.__setattr__(
+                snapshot, "archive_bytes", original_archive_bytes + b"tampered"
+            )
+            assert boundary_index._trusted_result(result) is None
+            assert id(result) not in boundary_index._CERTIFIED_RESULTS
+        finally:
+            object.__setattr__(snapshot, "archive_bytes", original_archive_bytes)
+
+        replay = boundary_index._trusted_result(result)
+        assert replay is not None
+        assert replay is not result
+        assert replay.to_canonical_dict() == result.to_canonical_dict()
+    finally:
+        boundary_index._CERTIFIED_RESULTS.clear()
+
+
+def test_certification_lru_evicts_oldest_after_nine_small_results() -> None:
+    boundary_index._CERTIFIED_RESULTS.clear()
+    start = day_start_ns("2026-07-16")
+    capture = official_capture(
+        "2026-07-16", (row(700, 900, 901, start // 1_000_000 + 1_000),)
+    )
+    request = build_request(
+        (capture,), start, start + DAY_NS, ((start, start + DAY_NS),)
+    )
+
+    try:
+        first_eight = tuple(
+            build_binance_usdm_koru_aggregate_trade_boundary_index_v1(request).result
+            for _ in range(8)
+        )
+        assert all(result is not None for result in first_eight)
+        assert boundary_index._trusted_result(first_eight[0]) is first_eight[0]
+        ninth = build_binance_usdm_koru_aggregate_trade_boundary_index_v1(
+            request
+        ).result
+        assert ninth is not None
+        assert len(boundary_index._CERTIFIED_RESULTS) == 8
+        assert tuple(boundary_index._CERTIFIED_RESULTS) == (
+            *(id(result) for result in first_eight[2:]),
+            id(first_eight[0]),
+            id(ninth),
+        )
+        assert id(first_eight[1]) not in boundary_index._CERTIFIED_RESULTS
+    finally:
+        boundary_index._CERTIFIED_RESULTS.clear()
+
+
+def test_cleared_cache_and_fresh_equivalent_replay_and_match(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    start = day_start_ns("2026-07-16")
+    capture = official_capture(
+        "2026-07-16", (row(700, 900, 901, start // 1_000_000 + 1_000),)
+    )
+    request = build_request(
+        (capture,), start, start + DAY_NS, ((start, start + DAY_NS),)
+    )
+    result = build_binance_usdm_koru_aggregate_trade_boundary_index_v1(request).result
+    assert result is not None
+    fresh = replace(result)
+    boundary_index._CERTIFIED_RESULTS.clear()
+    streaming_build = boundary_index._build
+    scan_count = 0
+
+    def counted_build(value):
+        nonlocal scan_count
+        scan_count += 1
+        return streaming_build(value)
+
+    monkeypatch.setattr(boundary_index, "_build", counted_build)
+    for candidate in (result, fresh):
+        replay = boundary_index._trusted_result(candidate)
+        assert replay is not None
+        assert replay is not candidate
+        assert replay.to_canonical_dict() == candidate.to_canonical_dict()
+    assert scan_count == 2
 
 
 def test_streaming_path_never_uses_v1_full_materialization_and_bounds_10k_selection(

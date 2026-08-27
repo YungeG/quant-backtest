@@ -7,6 +7,7 @@ import hashlib
 import io
 import json
 import tarfile
+from collections import OrderedDict
 from collections.abc import Iterator
 from dataclasses import dataclass, field
 from datetime import UTC, date, datetime, timedelta
@@ -17,11 +18,11 @@ from crypto_quant_domain import UtcInstant, canonical_bytes, canonical_sha256
 from crypto_quant_market_data import MarketEvent
 
 from .binance_usdm_koru_aggtrades_source_bounded_v1 import (
+    _CSV_HEADER,
     _DECIMAL,
     _MAX_ATTEMPTS,
     _RETAINED_AVAILABILITY_AUTHORITY_MEMBER_KEY,
     _RETAINED_COVERAGE_END_MS,
-    _RETAINED_CSV_HEADER,
     _RETAINED_DERIVED_CSV_MEMBER_KEY,
     _RETAINED_EXECUTION_MANIFEST_MEMBER_KEY,
     _RETAINED_RAW_PATH_PREFIX,
@@ -32,6 +33,7 @@ from .binance_usdm_koru_aggtrades_source_bounded_v1 import (
     _event_from_row,
     _exact_mapping,
     _execution_manifest,
+    _is_csv_header_like,
     _iso_milliseconds,
     _json_object,
     _manifest_file,
@@ -831,6 +833,41 @@ class BinanceUsdmKoruAggregateTradeBoundaryIndexResultV2:
         return {**self._body(), "result_digest": self.result_digest}
 
 
+_MAX_CERTIFIED_RESULTS = 8
+_CERTIFIED_RESULTS: OrderedDict[
+    int,
+    tuple[BinanceUsdmKoruAggregateTradeBoundaryIndexResultV2, str, str],
+] = OrderedDict()
+
+
+def _result_fingerprint(
+    value: BinanceUsdmKoruAggregateTradeBoundaryIndexResultV2,
+) -> str:
+    return canonical_sha256(
+        {
+            "result": value.to_canonical_dict(),
+            "capture_archive_hashes": tuple(
+                _sha256(capture.snapshot.archive_bytes)
+                for capture in value.request.captures
+            ),
+        }
+    )
+
+
+def _certify_result(
+    value: BinanceUsdmKoruAggregateTradeBoundaryIndexResultV2,
+) -> None:
+    key = id(value)
+    _CERTIFIED_RESULTS[key] = (
+        value,
+        value.result_digest,
+        _result_fingerprint(value),
+    )
+    _CERTIFIED_RESULTS.move_to_end(key)
+    while len(_CERTIFIED_RESULTS) > _MAX_CERTIFIED_RESULTS:
+        _CERTIFIED_RESULTS.popitem(last=False)
+
+
 class BinanceUsdmKoruAggregateTradeBoundaryIndexFailureCodeV1(str, Enum):
     REQUEST_INVALID = "request_invalid"
     CAPTURE_INVALID = "capture_invalid"
@@ -1279,7 +1316,7 @@ def _build(
                     with io.TextIOWrapper(
                         binary_member, encoding="utf-8", errors="strict", newline=""
                     ) as text_member:
-                        header_pending = authority is not None
+                        header_pending = True
                         try:
                             for line in text_member:
                                 if not line.endswith("\n") or "\r" in line:
@@ -1300,13 +1337,16 @@ def _build(
                                         "csv_grammar",
                                     )
                                 if header_pending:
-                                    if tuple(values) != _RETAINED_CSV_HEADER:
+                                    header_pending = False
+                                    if tuple(values) == _CSV_HEADER:
+                                        continue
+                                    if authority is not None or _is_csv_header_like(
+                                        tuple(values), _CSV_HEADER
+                                    ):
                                         raise _BoundaryIndexError(
                                             BinanceUsdmKoruAggregateTradeBoundaryIndexFailureCodeV1.SOURCE_INVALID,
                                             "csv_header",
                                         )
-                                    header_pending = False
-                                    continue
                                 row_ordinal += 1
                                 if raw_rows is not None:
                                     try:
@@ -1599,9 +1639,9 @@ def build_binance_usdm_koru_aggregate_trade_boundary_index_v1(
     if trusted is None:
         raise AssertionError("validated boundary-index request must replay")
     try:
-        return BinanceUsdmKoruAggregateTradeBoundaryIndexOutcomeV1(
-            result=_build(trusted)
-        )
+        result = _build(trusted)
+        _certify_result(result)
+        return BinanceUsdmKoruAggregateTradeBoundaryIndexOutcomeV1(result=result)
     except _BoundaryIndexError as error:
         return BinanceUsdmKoruAggregateTradeBoundaryIndexOutcomeV1(
             failure=BinanceUsdmKoruAggregateTradeBoundaryIndexFailureV1(
@@ -1622,6 +1662,20 @@ def _trusted_result(
 ) -> BinanceUsdmKoruAggregateTradeBoundaryIndexResultV2 | None:
     if type(value) is not BinanceUsdmKoruAggregateTradeBoundaryIndexResultV2:
         return None
+    certified = _CERTIFIED_RESULTS.get(id(value))
+    if certified is not None:
+        try:
+            matches = (
+                certified[0] is value
+                and certified[1] == value.result_digest
+                and certified[2] == _result_fingerprint(value)
+            )
+        except (AttributeError, TypeError, ValueError):
+            matches = False
+        if matches:
+            _CERTIFIED_RESULTS.move_to_end(id(value))
+            return value
+        _CERTIFIED_RESULTS.pop(id(value), None)
     try:
         trusted_request = _trusted_request(value.request)
         if trusted_request is None:

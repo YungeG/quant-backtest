@@ -305,6 +305,67 @@ def retained_result():
     return result
 
 
+def metadata_receipt(**changes: object) -> dict[str, object]:
+    receipt: dict[str, object] = {
+        "path": "binance_usdm/official_archive_metadata_receipt.json",
+        "file_sha256": "sha256:" + "1" * 64,
+        "receipt_sha256": "sha256:" + "2" * 64,
+        "file_count": 240,
+    }
+    receipt.update(changes)
+    return receipt
+
+
+def test_retained_execution_manifest_schema3_binds_metadata_receipt() -> None:
+    receipt = metadata_receipt()
+    evidence = evidence_for(
+        manifest_changes={
+            "schema_version": 3,
+            "official_archive_metadata_receipt": receipt,
+        }
+    )
+
+    assert json.loads(evidence.manifest)["official_archive_metadata_receipt"] == receipt
+    assert capture(evidence).result is not None
+
+
+@pytest.mark.parametrize(
+    "receipt",
+    (
+        None,
+        metadata_receipt(path="wrong/official_archive_metadata_receipt.json"),
+        metadata_receipt(file_sha256="not-a-sha256"),
+        metadata_receipt(receipt_sha256="not-a-sha256"),
+        metadata_receipt(file_count=239),
+    ),
+)
+def test_retained_execution_manifest_schema3_rejects_metadata_receipt_tamper(
+    receipt: dict[str, object] | None,
+) -> None:
+    evidence = evidence_for(
+        manifest_changes={
+            "schema_version": 3,
+            "official_archive_metadata_receipt": receipt,
+        }
+    )
+
+    outcome = capture(evidence)
+
+    assert outcome.result is None
+    assert outcome.failure is not None
+    assert outcome.failure.code is (
+        BinanceUsdmKoruAggregateTradesSourceBoundedFailureCodeV1.SOURCE_HASH_MISMATCH
+    )
+
+
+def test_retained_execution_manifest_schema2_remains_valid_without_metadata() -> None:
+    evidence = evidence_for()
+
+    assert json.loads(evidence.manifest)["schema_version"] == 2
+    assert "official_archive_metadata_receipt" not in json.loads(evidence.manifest)
+    assert capture(evidence).result is not None
+
+
 def test_exact_koru_aggregate_trade_availability_authority_is_canonical() -> None:
     authority = BINANCE_USDM_KORU_AGGREGATE_TRADE_AVAILABILITY_AUTHORITY_V1
     assert authority.to_canonical_dict() == {

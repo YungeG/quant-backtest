@@ -32,6 +32,15 @@ DAY_END_NS = 1_784_246_400_000_000_000
 DAY_START_MS = DAY_START_NS // 1_000_000
 ARCHIVE_AVAILABLE_AT = DAY_END_NS + 3_600_000_000_000
 ACQUIRED_AT = 1_784_332_800_000_000_000
+OFFICIAL_HEADER = (
+    "agg_trade_id",
+    "price",
+    "quantity",
+    "first_trade_id",
+    "last_trade_id",
+    "transact_time",
+    "is_buyer_maker",
+)
 ROWS = (
     ("700", "12.340", "1.250", "900", "901", str(DAY_START_MS + 1_000), "true"),
     ("701", "12.350", "2.000", "902", "903", str(DAY_START_MS + 2_000), "false"),
@@ -47,12 +56,20 @@ def sha256(value: bytes) -> str:
     return "sha256:" + hashlib.sha256(value).hexdigest()
 
 
+def official_csv_bytes(
+    rows: tuple[tuple[str, ...], ...] = ROWS, *, include_header: bool = False
+) -> bytes:
+    csv_rows = (OFFICIAL_HEADER,) + rows if include_header else rows
+    return b"".join((",".join(row) + "\n").encode() for row in csv_rows)
+
+
 def archive_bytes(
     rows: tuple[tuple[str, ...], ...] = ROWS,
     *,
     member_name: str = f"KORUUSDT-aggTrades-{UTC_DATE}.csv",
+    include_header: bool = False,
 ) -> bytes:
-    csv_bytes = b"".join((",".join(row) + "\n").encode() for row in rows)
+    csv_bytes = official_csv_bytes(rows, include_header=include_header)
     output = io.BytesIO()
     info = ZipInfo(member_name, (2026, 7, 16, 0, 0, 0))
     info.compress_type = ZIP_STORED
@@ -68,8 +85,11 @@ def evidence(
     member_name: str = f"KORUUSDT-aggTrades-{UTC_DATE}.csv",
     checksum_name: str = f"KORUUSDT-aggTrades-{UTC_DATE}.zip",
     checksum_separator: str = "  ",
+    include_header: bool = False,
 ) -> tuple[bytes, bytes]:
-    archive = archive_bytes(rows, member_name=member_name)
+    archive = archive_bytes(
+        rows, member_name=member_name, include_header=include_header
+    )
     checksum = (
         sha256(archive)[7:] + checksum_separator + checksum_name + "\n"
     ).encode()
@@ -115,8 +135,11 @@ def capture(
     *,
     member_name: str = f"KORUUSDT-aggTrades-{UTC_DATE}.csv",
     archive_available_at: int = ARCHIVE_AVAILABLE_AT,
+    include_header: bool = False,
 ) -> BinanceUsdmKoruAggregateTradesSourceBoundedCaptureResultV1:
-    archive, checksum = evidence(rows, member_name=member_name)
+    archive, checksum = evidence(
+        rows, member_name=member_name, include_header=include_header
+    )
     request = request_for(
         archive, checksum, archive_available_at=archive_available_at
     )
@@ -134,9 +157,10 @@ def normalize(
     rows: tuple[tuple[str, ...], ...] = ROWS,
     *,
     member_name: str = f"KORUUSDT-aggTrades-{UTC_DATE}.csv",
+    include_header: bool = False,
 ) -> BinanceUsdmKoruAggregateTradesSourceBoundedNormalizationOutcomeV1:
     return normalize_binance_usdm_koru_aggregate_trades_source_bounded_v1(
-        capture(rows, member_name=member_name)
+        capture(rows, member_name=member_name, include_header=include_header)
     )
 
 
@@ -232,6 +256,32 @@ def test_successful_capture_and_normalization_are_golden_and_replay_deterministi
     assert result.normalization_hash == (
         "sha256:cc8f563043fe29d6e2e81747f5c64393c9353b43e335f0b82ba70e37ccdbf0d2"
     )
+
+
+def test_official_provider_header_is_not_data_and_preserves_row_identity() -> None:
+    legacy = normalize().result
+    headered = normalize(include_header=True).result
+    assert legacy is not None
+    assert headered is not None
+
+    def row_identity(event: MarketEvent) -> tuple[object, ...]:
+        return (
+            event.source_sequence,
+            event.payload["aggregate_trade_id"],
+            event.payload["first_trade_id"],
+            event.payload["last_trade_id"],
+            event.payload["transaction_time_milliseconds"],
+            event.payload["source_record_hash"],
+        )
+
+    assert headered.row_count == len(ROWS)
+    assert tuple(map(row_identity, headered.events)) == tuple(
+        map(row_identity, legacy.events)
+    )
+    assert headered.source_member_hash == sha256(
+        official_csv_bytes(include_header=True)
+    )
+    assert headered.source_member_hash != legacy.source_member_hash
 
 
 def test_archive_availability_is_bound_into_request_snapshot_and_event_lineage() -> None:
@@ -448,7 +498,17 @@ def test_capture_http_retry_classification(
     ("rows", "expected_code"),
     [
         (
-            (("agg_trade_id", "price", "qty", "first", "last", "time", "maker"),)
+            (
+                (
+                    "agg_trade_id",
+                    "price",
+                    "qty",
+                    "first_trade_id",
+                    "last_trade_id",
+                    "transact_time",
+                    "is_buyer_maker",
+                ),
+            )
             + ROWS,
             BinanceUsdmKoruAggregateTradesSourceBoundedFailureCodeV1.SOURCE_SCHEMA_MISMATCH,
         ),

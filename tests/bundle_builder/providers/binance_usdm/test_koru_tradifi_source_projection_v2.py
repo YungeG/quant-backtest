@@ -3,6 +3,9 @@ from __future__ import annotations
 from dataclasses import replace
 
 import pytest
+from crypto_quant_bundle_builder import (
+    binance_usdm_koru_aggtrade_boundary_index_v1 as boundary_index,
+)
 from crypto_quant_bundle_builder.binance_usdm_koru_aggtrade_boundary_index_v1 import (
     BinanceUsdmKoruAggregateTradeBoundaryIndexRequestV1,
     BinanceUsdmKoruExecutionBoundaryV1,
@@ -409,6 +412,36 @@ def test_missing_boundaries_and_development_evidence_replay_exactly() -> None:
         index.cross_date_raw_id_gap_stream
     )
     assert first.aggregate_trade_coverage_gaps == index.aggregate_id_coverage_gaps
+
+
+def test_repeated_projection_builds_reuse_certified_boundary_index(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    _, request = _request(trade_hour=19)
+    streaming_build = boundary_index._build
+    scan_count = 0
+
+    def counted_build(value):
+        nonlocal scan_count
+        scan_count += 1
+        return streaming_build(value)
+
+    monkeypatch.setattr(boundary_index, "_build", counted_build)
+    first = build_binance_usdm_koru_tradifi_source_projection_v2(request)
+    second = build_binance_usdm_koru_tradifi_source_projection_v2(request)
+    assert first.result is not None
+    assert second.result is not None
+    assert scan_count == 0
+
+    index = request.aggregate_trade_boundary_index_result
+    object.__setattr__(index, "streamed_row_count", index.streamed_row_count + 1)
+    failed = build_binance_usdm_koru_tradifi_source_projection_v2(request)
+    assert failed.result is None
+    assert failed.failure is not None
+    assert failed.failure.code is (
+        BinanceUsdmKoruTradifiSourceProjectionFailureCodeV2.AGGREGATE_TRADES_INVALID
+    )
+    assert scan_count == 1
 
 
 def test_calendar_exact_cover_rejects_fresh_trusted_boundary_indexes() -> None:
