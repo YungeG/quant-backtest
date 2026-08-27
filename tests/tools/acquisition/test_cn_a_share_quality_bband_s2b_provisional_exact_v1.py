@@ -272,6 +272,29 @@ def test_nonfiling_source_validation_precedes_official_build(
     assert called["official"] is False
 
 
+def test_output_parent_creation_fsyncs_each_new_directory_and_parent(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    output = tmp_path / "one" / "two" / "candidate"
+    seen: list[Path] = []
+    real_fsync = s2b._fsync_directory
+
+    def recording_fsync(path: Path) -> None:
+        seen.append(path)
+        real_fsync(path)
+
+    monkeypatch.setattr(s2b, "_fsync_directory", recording_fsync)
+    s2b._ensure_output_parent(output)
+    assert output.parent.is_dir()
+    assert stat.S_IMODE((tmp_path / "one").stat().st_mode) == 0o700
+    assert stat.S_IMODE((tmp_path / "one" / "two").stat().st_mode) == 0o700
+    assert set(seen) == {
+        tmp_path,
+        tmp_path / "one",
+        tmp_path / "one" / "two",
+    }
+
+
 def test_atomic_publication_sets_modes_is_no_clobber_and_writes_manifest_last(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:

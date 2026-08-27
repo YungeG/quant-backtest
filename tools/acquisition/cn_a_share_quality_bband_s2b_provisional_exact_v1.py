@@ -1243,6 +1243,14 @@ def _load_nonfiling_n(
         ) from error
 
 
+def _fsync_directory(path: Path) -> None:
+    descriptor = os.open(path, os.O_RDONLY | os.O_DIRECTORY)
+    try:
+        os.fsync(descriptor)
+    finally:
+        os.close(descriptor)
+
+
 def _ensure_output_parent(output: Path) -> None:
     parent = output.parent.absolute()
     missing: list[Path] = []
@@ -1263,6 +1271,8 @@ def _ensure_output_parent(output: Path) -> None:
                     raise ValueError("output parent is invalid") from None
             else:
                 os.chmod(directory, 0o700)
+                _fsync_directory(directory)
+                _fsync_directory(directory.parent)
         if parent.is_symlink() or not parent.is_dir():
             raise ValueError("output parent is invalid")
     except (OSError, ValueError) as error:
