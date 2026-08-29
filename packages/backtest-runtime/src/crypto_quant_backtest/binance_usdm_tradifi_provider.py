@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import re
 from dataclasses import dataclass, field
 from enum import Enum
 
@@ -224,6 +225,13 @@ class BinanceUsdmTradifiBarBacktestOutcome:
         }
 
 
+def _planning_failure_subject(error: Exception) -> str:
+    if type(error) is not ValueError:
+        return "case_planning"
+    detail = re.sub(r"[^a-z0-9_]+", "_", str(error).lower()).strip("_")
+    return "case_planning" if not detail or len(detail) > 120 else detail
+
+
 def _failure(
     code: BinanceUsdmTradifiBarBacktestFailureCode,
     subject: str,
@@ -278,10 +286,10 @@ def prepare_binance_usdm_tradifi_bar_backtest(
                 ),
             )
         )
-    except Exception:  # noqa: BLE001 - public preparation must fail closed
+    except Exception as error:  # noqa: BLE001 - public preparation must fail closed
         return _failure(
             BinanceUsdmTradifiBarBacktestFailureCode.CASE_PLANNING_FAILED,
-            "case_planning",
+            _planning_failure_subject(error),
         )
 
 

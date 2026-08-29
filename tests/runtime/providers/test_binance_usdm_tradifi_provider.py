@@ -5,6 +5,7 @@ from dataclasses import replace
 from pathlib import Path
 from types import SimpleNamespace
 
+import crypto_quant_backtest.binance_usdm_tradifi_provider as provider
 import pytest
 from crypto_quant_backtest import (
     BinanceUsdmTradifiBarBacktestFailureCode,
@@ -198,6 +199,24 @@ def test_liquidation_window_checkpoint_starts_at_entry_projection_without_ns_shi
     assert first.plan.window_start_at == entry_at
     assert first.start_checkpoint == rows[0][4].timeline_instant
     assert first.start_side == "after"
+
+
+def test_public_reports_canonical_value_error_from_case_planning(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    def fail(_):
+        raise ValueError("liquidation subwindow start has no timeline event")
+
+    monkeypatch.setattr(provider, "plan_binance_usdm_tradifi_case_v1", fail)
+
+    outcome = _prepare(fixture._nonempty_bundle())
+
+    assert outcome.result is None and outcome.failure is not None
+    assert (
+        outcome.failure.code
+        is BinanceUsdmTradifiBarBacktestFailureCode.CASE_PLANNING_FAILED
+    )
+    assert outcome.failure.subject == "liquidation_subwindow_start_has_no_timeline_event"
 
 
 def test_public_v2_preserves_stage_a_authority_failure_code() -> None:
