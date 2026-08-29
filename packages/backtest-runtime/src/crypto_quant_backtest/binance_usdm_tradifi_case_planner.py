@@ -45,7 +45,9 @@ from .financial_dispatch import (
     FinancialDispatchPlan,
     LinearDerivativeFillAccountingPlan,
     LinearFundingAccountEventPlan,
+    LinearMarginLiquidationAuditBatchPlan,
     LinearMarginLiquidationAuditPlan,
+    LinearMarginLiquidationAuditSubwindowPlan,
     LinearMarginProjectionPlan,
     ScheduledAccountEvent,
 )
@@ -53,7 +55,6 @@ from .liquidation_audit import LinearLiquidationMarkBarEvidence
 from .multi_resolution_market_data import (
     ExecutionDataBinding,
     MultiResolutionMarketDataBindings,
-    ValuationDataBinding,
 )
 from .multi_resolution_preparation import MultiResolutionMarketDataPreparation
 from .resolution import (
@@ -639,71 +640,118 @@ def _margin_audits(
     ],
     funding: tuple[ScheduledAccountEvent, ...],
 ) -> tuple[ScheduledAccountEvent, ...]:
-    funding_times = tuple(event.event_at.instant for event in funding)
+    """Bind each exposure subwindow to actual timeline events, never invented ticks."""
+    intervals = _position_intervals(rows, result.intent.timeline_window.end_exclusive)
+    events_at = {
+        event.timeline_instant.instant: event.timeline_instant
+        for manifest in result.market_bundle_manifest.streams
+        for event in _events(result, manifest.stream_key)
+    }
     output: list[ScheduledAccountEvent] = []
-    window = result.intent.timeline_window
-    position_intervals = _position_intervals(rows, window.end_exclusive)
     for event in _events(result, _LIQUIDATION_STREAM):
         bar = _liquidation_bar(result, event)
-        overlaps = tuple(
-            (position_start, position_end)
-            for position_start, position_end in position_intervals
-            if bar.interval_start < position_end
-            and position_start < bar.interval_end_exclusive
-        )
         if (
-            bar.interval_start < window.trading_start
-            or bar.interval_end_exclusive > window.end_exclusive
-            or len(overlaps) != 1
+            bar.interval_start < result.intent.timeline_window.trading_start
+            or bar.interval_end_exclusive > result.intent.timeline_window.end_exclusive
         ):
             continue
-        position_start, position_end = overlaps[0]
-        interval_start = max(bar.interval_start, position_start)
-        interval_end = min(bar.interval_end_exclusive, position_end)
-        if any(
-            interval_start < funding_at < interval_end
-            for funding_at in funding_times
-        ):
-            raise ValueError("intra-bar funding mutation requires a split source bar")
-        if interval_start == position_start or interval_start in funding_times:
-            interval_start = domain.UtcInstant(
-                interval_start.epoch_nanoseconds + 1
-            )
-        if interval_start >= interval_end:
+        children: list[LinearMarginLiquidationAuditSubwindowPlan] = []
+        for position_start, position_end in intervals:
+            if not (bar.interval_start < position_end and position_start < bar.interval_end_exclusive):
+                continue
+            interval_start = max(bar.interval_start, position_start)
+            interval_end = min(bar.interval_end_exclusive, position_end)
+            if interval_start >= interval_end:
+                continue
+            if interval_start == position_start:
+                start_checkpoint = next(
+                    row[4].timeline_instant for row in rows if row[4].event_time == position_start
+                )
+                start_side = "after"
+            else:
+                start_checkpoint = events_at.get(interval_start)
+                if start_checkpoint is None:
+                    raise ValueError("liquidation subwindow start has no timeline event")
+                start_side = "after"
+            if interval_end == position_end:
+                end_checkpoint = next(
+                    row[4].timeline_instant for row in rows if row[4].event_time == position_end
+                )
+                end_side = "before"
+            else:
+                end_checkpoint = event.timeline_instant
+                end_side = "before"
+
+            boundaries = [(interval_start, start_checkpoint, start_side)]
+            for funding_event in funding:
+                funding_at = funding_event.event_at.instant
+                if interval_start < funding_at < interval_end:
+                    boundaries.extend(
+                        (
+                            (funding_at, funding_event.event_at, "before"),
+                            (funding_at, funding_event.event_at, "after"),
+                        )
+                    )
+            boundaries.append((interval_end, end_checkpoint, end_side))
+            pairs = zip(boundaries[::2], boundaries[1::2], strict=True)
+            for start, end in pairs:
+                start_at, start_instant, start_side = start
+                end_at, end_instant, end_side = end
+                if start_at >= end_at:
+                    continue
+                projection = _margin_projection(result, start_at)
+                suffix = f"hourly.{len(output) + 1}.{len(children) + 1}"
+                plan = LinearMarginLiquidationAuditPlan(
+                    projection.evaluated_at,
+                    projection.valuation_mark.price,
+                    projection.margin_mark_evidence.resolved_mark.price,
+                    start_at,
+                    end_at,
+                    bar.low,
+                    bar.high,
+                    event.timeline_instant,
+                    suffix,
+                    projection,
+                    (bar,),
+                    result.intent.result_grade_requested,
+                    "binance-usdm-tradifi.runtime-account-window.v1",
+                    window_start_at=start_at,
+                )
+                children.append(
+                    LinearMarginLiquidationAuditSubwindowPlan(
+                        plan, start_instant, start_side, end_instant, end_side
+                    )
+                )
+        if not children:
             continue
-        projection = _margin_projection(result, interval_start)
-        suffix = f"hourly.{len(output) + 1}"
-        payload = LinearMarginLiquidationAuditPlan(
-            projection.evaluated_at,
-            projection.valuation_mark.price,
-            projection.margin_mark_evidence.resolved_mark.price,
-            interval_start,
-            interval_end,
-            bar.low,
-            bar.high,
-            event.timeline_instant,
-            suffix,
-            projection,
-            (bar,),
-            result.intent.result_grade_requested,
-            "binance-usdm-tradifi.runtime-account-window.v1",
-            window_start_at=interval_start,
+        payload = LinearMarginLiquidationAuditBatchPlan(
+            event.timeline_instant, bar, tuple(children)
         )
         output.append(
             ScheduledAccountEvent(
                 event.event_id,
                 event.timeline_instant,
-                "margin_liquidation_audit",
-                (
-                    result.financial_dispatcher_spec.liquidation_audit_component.component_key,
-                    result.financial_dispatcher_spec.margin_component.component_key,
+                "margin_liquidation_audit_batch",
+                tuple(
+                    sorted(
+                        (
+                            result.financial_dispatcher_spec.liquidation_audit_component.component_key,
+                            result.financial_dispatcher_spec.margin_component.component_key,
+                        )
+                    )
                 ),
                 (),
                 payload,
                 payload.production_semantic_authority(),
-                (
-                    f"liquidation_audit.{suffix}",
-                    f"margin_projection.{suffix}",
+                tuple(
+                    sorted(
+                        role
+                        for child in children
+                        for role in (
+                            f"liquidation_audit.{child.plan.role_suffix}",
+                            f"margin_projection.{child.plan.role_suffix}",
+                        )
+                    )
                 ),
             )
         )
@@ -1166,7 +1214,7 @@ def _preparation(
                     _projection_stream(result),
                 ),
             ),
-            (ValuationDataBinding(_INSTRUMENT, _VALUATION_STREAM),),
+            (),
         ),
         (),
     )

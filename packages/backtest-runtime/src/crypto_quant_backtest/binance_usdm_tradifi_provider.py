@@ -25,7 +25,7 @@ from .binance_usdm_tradifi_preparation import (
 from .binance_usdm_tradifi_preparation import (
     _trusted_result as _trusted_preparation_result,
 )
-from .execution_inputs import _materialize_execution_input_bundle_v6
+from .execution_inputs import _materialize_execution_input_bundle_v7
 
 _SCHEMA_VERSION = 1
 
@@ -133,7 +133,7 @@ class BinanceUsdmTradifiBarBacktestResult:
             != self.preparation_result.result_digest
         ):
             raise ValueError("case planning does not bind preparation result")
-        expected_execution_input = _materialize_execution_input_bundle_v6(
+        expected_execution_input = _materialize_execution_input_bundle_v7(
             resolved_request=self.case_planning_result.resolved_request,
             hydrated_inputs=self.case_planning_result.hydrated_inputs,
             market_data_preparation=self.case_planning_result.market_data_preparation,
@@ -142,7 +142,7 @@ class BinanceUsdmTradifiBarBacktestResult:
             type(self.execution_input_envelope) is not domain.ArtifactEnvelope
             or self.execution_input_envelope.artifact_type
             != "backtest_execution_input_bundle"
-            or self.execution_input_envelope.schema_version != 6
+            or self.execution_input_envelope.schema_version != 7
             or domain.canonical_bytes(self.execution_input_envelope)
             != domain.canonical_bytes(expected_execution_input)
             or type(self.execution_input_ref) is not domain.ArtifactRef
@@ -153,7 +153,7 @@ class BinanceUsdmTradifiBarBacktestResult:
                 self.execution_input_envelope.content_hash,
             )
         ):
-            raise ValueError("execution input must be exact schema 6 envelope/ref")
+            raise ValueError("execution input must be exact schema 7 envelope/ref")
         object.__setattr__(self, "result_digest", domain.canonical_sha256(self._body()))
 
     @property
@@ -260,7 +260,7 @@ def prepare_binance_usdm_tradifi_bar_backtest(
                 "preparation_result",
             )
         planned = plan_binance_usdm_tradifi_case_v1(preparation.result)
-        execution_input = _materialize_execution_input_bundle_v6(
+        execution_input = _materialize_execution_input_bundle_v7(
             resolved_request=planned.resolved_request,
             hydrated_inputs=planned.hydrated_inputs,
             market_data_preparation=planned.market_data_preparation,

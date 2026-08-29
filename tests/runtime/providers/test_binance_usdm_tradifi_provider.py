@@ -17,7 +17,10 @@ from crypto_quant_backtest.binance_usdm_tradifi_case_planner import (
     _candidate_rows,
     _margin_audits,
 )
-from crypto_quant_backtest.execution_inputs import _EXECUTION_INPUT_CATALOG
+from crypto_quant_backtest.execution_inputs import (
+    _EXECUTION_INPUT_CATALOG,
+    _materialize_execution_input_bundle_v6,
+)
 from crypto_quant_domain import (
     SimulationInstant,
     SourceSequence,
@@ -55,7 +58,7 @@ def test_public_v2_nonempty_two_target_case_reaches_engine() -> None:
         0
     ].stream_key.endswith(".v2")
 
-    assert prepared.result.execution_input_envelope.schema_version == 6
+    assert prepared.result.execution_input_envelope.schema_version == 7
     assert prepared.result.execution_input_ref.content_hash == (
         prepared.result.execution_input_envelope.content_hash
     )
@@ -88,9 +91,32 @@ def test_public_v2_nonempty_two_target_case_reaches_engine() -> None:
     roles = tuple(value.role for value in executed.result.financial_artifacts)
     assert roles.count("funding_eligibility") == 1
     assert roles.count("funding_accounting") == 1
+    batches = tuple(
+        event.payload
+        for event in prepared.result.execution_case.financial_dispatch_plan.scheduled_account_events
+        if event.operation_key == "margin_liquidation_audit_batch"
+    )
+    assert len(batches) == 3
+    assert all(
+        child.plan.liquidation_bars == (batch.liquidation_bar,)
+        for batch in batches
+        for child in batch.subwindows
+    )
     assert sum(value.startswith("liquidation_audit.hourly.") for value in roles) == 3
     assert sum(value.startswith("margin_projection.hourly.") for value in roles) == 3
     assert executed.result.final_portfolio_snapshot.positions == ()
+
+
+def test_schema6_materializer_rejects_batch_downgrade() -> None:
+    prepared = _prepare(fixture._nonempty_bundle()).result
+    assert prepared is not None
+
+    with pytest.raises(ValueError, match="liquidation audit batch"):
+        _materialize_execution_input_bundle_v6(
+            resolved_request=prepared.case_planning_result.resolved_request,
+            hydrated_inputs=prepared.case_planning_result.hydrated_inputs,
+            market_data_preparation=prepared.case_planning_result.market_data_preparation,
+        )
 
 
 def test_public_v2_empty_case_runs_flat_and_replays_canonically() -> None:
@@ -123,7 +149,7 @@ def test_public_result_rejects_schema6_envelope_from_another_plan() -> None:
         )
 
 
-def test_liquidation_windows_fail_closed_on_interior_funding_mutation() -> None:
+def test_liquidation_windows_split_at_interior_funding_event() -> None:
     result = _prepare(fixture._nonempty_bundle()).result
     assert result is not None
     rows = _candidate_rows(result.preparation_result)
@@ -139,11 +165,19 @@ def test_liquidation_windows_fail_closed_on_interior_funding_mutation() -> None:
         ),
     )
 
-    with pytest.raises(ValueError, match="intra-bar funding mutation"):
-        _margin_audits(result.preparation_result, rows, funding)
+    audits = _margin_audits(result.preparation_result, rows, funding)
+
+    split = next(audit.payload for audit in audits if len(audit.payload.subwindows) == 2)
+    first, second = split.subwindows
+    assert first.plan.liquidation_bars == second.plan.liquidation_bars == (
+        split.liquidation_bar,
+    )
+    assert first.plan.interval_end_exclusive == second.plan.interval_start == interior
+    assert first.end_checkpoint == second.start_checkpoint == funding[0].event_at
+    assert (first.end_side, second.start_side) == ("before", "after")
 
 
-def test_liquidation_window_checkpoint_is_post_funding_at_interval_start() -> None:
+def test_liquidation_window_checkpoint_starts_at_entry_projection_without_ns_shift() -> None:
     result = _prepare(fixture._nonempty_bundle()).result
     assert result is not None
     rows = _candidate_rows(result.preparation_result)
@@ -160,9 +194,10 @@ def test_liquidation_window_checkpoint_is_post_funding_at_interval_start() -> No
 
     audits = _margin_audits(result.preparation_result, rows, funding)
 
-    assert audits[0].payload.window_start_at == UtcInstant(
-        entry_at.epoch_nanoseconds + 1
-    )
+    first = audits[0].payload.subwindows[0]
+    assert first.plan.window_start_at == entry_at
+    assert first.start_checkpoint == rows[0][4].timeline_instant
+    assert first.start_side == "after"
 
 
 def test_public_v2_preserves_stage_a_authority_failure_code() -> None:

@@ -150,6 +150,7 @@ def test_only_the_bundle_has_one_private_versioned_schema_catalog() -> None:
         ("backtest_execution_input_bundle", 4),
         ("backtest_execution_input_bundle", 5),
         ("backtest_execution_input_bundle", 6),
+        ("backtest_execution_input_bundle", 7),
     ]
     assert registrations == expected_registrations
     assert len(catalogs) == 1

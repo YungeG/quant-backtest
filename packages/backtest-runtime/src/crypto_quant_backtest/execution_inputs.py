@@ -85,7 +85,9 @@ from .financial_dispatch import (
     FinancialDispatchPlan,
     LinearDerivativeFillAccountingPlan,
     LinearFundingAccountEventPlan,
+    LinearMarginLiquidationAuditBatchPlan,
     LinearMarginLiquidationAuditPlan,
+    LinearMarginLiquidationAuditSubwindowPlan,
     LinearMarginProjectionPlan,
     ScheduledAccountEvent,
 )
@@ -172,6 +174,7 @@ _V3_SCHEMA_VERSION = 3
 _V4_SCHEMA_VERSION = 4
 _V5_SCHEMA_VERSION = 5
 _V6_SCHEMA_VERSION = 6
+_V7_SCHEMA_VERSION = 7
 _TEMPLATE_TYPE = "backtest_initial_financial_state_template"
 _V1_SCHEMA = CanonicalSchema(_ARTIFACT_TYPE, _SCHEMA_VERSION)
 _V2_SCHEMA = CanonicalSchema(_ARTIFACT_TYPE, _V2_SCHEMA_VERSION)
@@ -179,6 +182,7 @@ _V3_SCHEMA = CanonicalSchema(_ARTIFACT_TYPE, _V3_SCHEMA_VERSION)
 _V4_SCHEMA = CanonicalSchema(_ARTIFACT_TYPE, _V4_SCHEMA_VERSION)
 _V5_SCHEMA = CanonicalSchema(_ARTIFACT_TYPE, _V5_SCHEMA_VERSION)
 _V6_SCHEMA = CanonicalSchema(_ARTIFACT_TYPE, _V6_SCHEMA_VERSION)
+_V7_SCHEMA = CanonicalSchema(_ARTIFACT_TYPE, _V7_SCHEMA_VERSION)
 _PAYLOAD_FIELDS = frozenset(
     {
         "type",
@@ -476,9 +480,10 @@ class BacktestExecutionRequest:
             _V4_SCHEMA_VERSION,
             _V5_SCHEMA_VERSION,
             _V6_SCHEMA_VERSION,
+            _V7_SCHEMA_VERSION,
         ):
             raise ValueError(
-                "BacktestExecutionRequest schema_version must be 1, 2, 3, 4, 5, or 6"
+                "BacktestExecutionRequest schema_version must be 1, 2, 3, 4, 5, 6, or 7"
             )
         if type(self.request) is not BacktestRequest:
             raise TypeError("request must be exact BacktestRequest")
@@ -2667,7 +2672,7 @@ def _read_liquidation_bar(value: object) -> LinearLiquidationMarkBarEvidence:
 
 
 def _read_scheduled_event_payload(
-    value: object, *, allow_derivative_authority: bool = False
+    value: object, *, allow_derivative_authority: bool = False, allow_batch: bool = False
 ) -> object:
     data = _mapping("scheduled event payload", value)
     tag = data.get("type")
@@ -2712,6 +2717,12 @@ def _read_scheduled_event_payload(
             else None,
             _read_quantization(data["payment_quantization"]) if full else None,
         )
+    if tag == "linear_margin_liquidation_audit_batch_plan":
+        if not allow_batch:
+            raise ValueError("liquidation audit batch requires execution case plan v3")
+        return LinearMarginLiquidationAuditBatchPlan(
+            _read_simulation_instant(data["audit_at"]), _read_liquidation_bar(data["liquidation_bar"]),
+            _sequence("batch subwindows", data["subwindows"], lambda item: _read_batch_subwindow(item)))
     if tag == "synthetic_margin_audit_payload":
         full = "projection_plan" in data
         if full and not allow_derivative_authority:
@@ -2749,8 +2760,18 @@ def _read_scheduled_event_payload(
     return _read_persisted_canonical_payload(data)
 
 
+
+def _read_batch_subwindow(value: object) -> LinearMarginLiquidationAuditSubwindowPlan:
+    data = _tagged("batch subwindow", value, "linear_margin_liquidation_audit_subwindow_plan")
+    if data.get("schema_version") != 1:
+        raise ValueError("batch subwindow must be @1")
+    plan = _read_scheduled_event_payload(data["plan"], allow_derivative_authority=True)
+    if type(plan) is not LinearMarginLiquidationAuditPlan:
+        raise TypeError("batch child plan must be liquidation audit")
+    return LinearMarginLiquidationAuditSubwindowPlan(plan, _read_simulation_instant(data["start_checkpoint"]), data["start_side"], _read_simulation_instant(data["end_checkpoint"]), data["end_side"])
+
 def _read_scheduled_account_event(
-    value: object, *, allow_derivative_authority: bool = False
+    value: object, *, allow_derivative_authority: bool = False, allow_batch: bool = False
 ) -> ScheduledAccountEvent:
     data = _tagged("scheduled_account_event", value, "scheduled_account_event")
     bindings = _sequence(
@@ -2766,7 +2787,7 @@ def _read_scheduled_account_event(
         bindings,
         _read_scheduled_event_payload(
             data["payload"],
-            allow_derivative_authority=allow_derivative_authority,
+            allow_derivative_authority=allow_derivative_authority, allow_batch=allow_batch,
         ),
         _read_persisted_canonical_payload(data["semantic_payload"]),
         tuple(data["expected_artifact_roles"]),
@@ -2774,7 +2795,7 @@ def _read_scheduled_account_event(
 
 
 def _read_financial_dispatch_plan(
-    value: object, *, allow_derivative_authority: bool = False
+    value: object, *, allow_derivative_authority: bool = False, allow_batch: bool = False
 ) -> FinancialDispatchPlan:
     data = _tagged("financial_dispatch_plan", value, "financial_dispatch_plan")
     return FinancialDispatchPlan(
@@ -2784,7 +2805,7 @@ def _read_financial_dispatch_plan(
             data["scheduled_account_events"],
             lambda item: _read_scheduled_account_event(
                 item,
-                allow_derivative_authority=allow_derivative_authority,
+                allow_derivative_authority=allow_derivative_authority, allow_batch=allow_batch,
             ),
         ),
         _read_snapshot_plan(
@@ -2852,8 +2873,8 @@ def _read_execution_case_plan(
     *,
     schema_version: int = 1,
 ) -> _ExecutionCasePlan:
-    if type(schema_version) is not int or schema_version not in (1, 2):
-        raise ValueError("execution case plan schema_version must be 1 or 2")
+    if type(schema_version) is not int or schema_version not in (1, 2, 3):
+        raise ValueError("execution case plan schema_version must be 1, 2, or 3")
     plan = _mapping("execution_case_plan", value)
     _exact_fields("execution_case_plan", plan, _PLAN_FIELDS)
     if (
@@ -2870,7 +2891,7 @@ def _read_execution_case_plan(
         lambda item: _read_decision_cycle(
             item,
             catalog_lookup,
-            allow_planning_snapshot=schema_version == 2,
+            allow_planning_snapshot=schema_version >= 2,
         ),
     )
     bar_executions = _sequence(
@@ -2878,18 +2899,18 @@ def _read_execution_case_plan(
         plan["bar_executions"],
         lambda item: _read_bar_execution(
             item,
-            allow_liquidity_role=schema_version == 2,
+            allow_liquidity_role=schema_version >= 2,
         ),
     )
     financial_state = _read_financial_state(plan["financial_state"])
     financial_dispatch_plan = _read_financial_dispatch_plan(
         plan["financial_dispatch_plan"],
-        allow_derivative_authority=schema_version == 2,
+        allow_derivative_authority=schema_version >= 2, allow_batch=schema_version == 3,
     )
     execution_spec = _read_simulation_port_spec(plan["execution_model_spec"])
     snapshot_plan = _read_snapshot_plan(
         plan["snapshot_plan"],
-        allow_derivative_authority=schema_version == 2,
+        allow_derivative_authority=schema_version >= 2,
     )
     closeout_spec = _read_simulation_port_spec(plan["closeout_policy_spec"])
     if not isinstance(execution_spec, SimulationPortSpec) or not isinstance(
@@ -3237,13 +3258,15 @@ def _read_execution_input_payload_with_catalog(
         _V4_SCHEMA_VERSION,
         _V5_SCHEMA_VERSION,
         _V6_SCHEMA_VERSION,
+        _V7_SCHEMA_VERSION,
     }:
-        raise ValueError("catalog execution input schema must be 4, 5, or 6")
+        raise ValueError("catalog execution input schema must be 4, 5, 6, or 7")
     payload = _mapping("execution_input_bundle", value)
     fields = {
         _V4_SCHEMA_VERSION: _V4_PAYLOAD_FIELDS,
         _V5_SCHEMA_VERSION: _V5_PAYLOAD_FIELDS,
         _V6_SCHEMA_VERSION: _V6_PAYLOAD_FIELDS,
+        _V7_SCHEMA_VERSION: _V6_PAYLOAD_FIELDS,
     }[schema_version]
     _exact_fields("execution_input_bundle", payload, fields)
     if (
@@ -3269,7 +3292,7 @@ def _read_execution_input_payload_with_catalog(
     plan = _read_execution_case_plan(
         payload["execution_case_plan"],
         catalog_lookup,
-        schema_version=2 if schema_version == _V6_SCHEMA_VERSION else 1,
+        schema_version=3 if schema_version == _V7_SCHEMA_VERSION else 2 if schema_version == _V6_SCHEMA_VERSION else 1,
     )
     used_hashes = {
         canonical_sha256(entry.validation_context.instrument_catalog)
@@ -3314,6 +3337,9 @@ def _read_execution_input_payload_v5(value: object) -> _DecodedExecutionInputBun
 def _read_execution_input_payload_v6(value: object) -> _DecodedExecutionInputBundleV3:
     return _read_execution_input_payload_with_catalog(value, _V6_SCHEMA_VERSION)
 
+def _read_execution_input_payload_v7(value: object) -> _DecodedExecutionInputBundleV3:
+    return _read_execution_input_payload_with_catalog(value, _V7_SCHEMA_VERSION)
+
 
 _EXECUTION_INPUT_CATALOG = SchemaCatalog(
     (
@@ -3347,6 +3373,7 @@ _EXECUTION_INPUT_CATALOG = SchemaCatalog(
             schema_version=6,
             payload_reader=_read_execution_input_payload_v6,
         ),
+        ArtifactSchemaRegistration(artifact_type="backtest_execution_input_bundle", schema_version=7, payload_reader=_read_execution_input_payload_v7),
     )
 )
 
@@ -3408,8 +3435,8 @@ def _validate_plan_liquidity_roles(
         for execution in bar_executions
     ):
         raise TypeError("bar_executions must contain exact ResolvedBarExecution")
-    if type(schema_version) is not int or schema_version not in (1, 2):
-        raise ValueError("execution case plan schema_version must be 1 or 2")
+    if type(schema_version) is not int or schema_version not in (1, 2, 3):
+        raise ValueError("execution case plan schema_version must be 1, 2, or 3")
     if schema_version == 1 and any(
         execution.fill_liquidity_role is not None
         for execution in bar_executions
@@ -3428,8 +3455,8 @@ def _validate_plan_planning_snapshots(
         type(cycle) is not ResolvedDecisionCycle for cycle in decision_cycles
     ):
         raise TypeError("decision_cycles must contain exact ResolvedDecisionCycle")
-    if schema_version not in (1, 2):
-        raise ValueError("execution case plan schema_version must be 1 or 2")
+    if schema_version not in (1, 2, 3):
+        raise ValueError("execution case plan schema_version must be 1, 2, or 3")
     if schema_version == 1 and any(
         cycle.planning_snapshot is not None for cycle in decision_cycles
     ):
@@ -3448,8 +3475,8 @@ def _validate_plan_derivative_authority(
         snapshot_plan
     ) is not SnapshotProjectionPlan:
         raise TypeError("financial and snapshot plans must be exact production plans")
-    if schema_version not in (1, 2):
-        raise ValueError("execution case plan schema_version must be 1 or 2")
+    if schema_version not in (1, 2, 3):
+        raise ValueError("execution case plan schema_version must be 1, 2, or 3")
     additions = (
         snapshot_plan.linear_margin_projection_plan is not None
         or getattr(
@@ -3467,9 +3494,12 @@ def _validate_plan_derivative_authority(
                 type(event.payload) is LinearMarginLiquidationAuditPlan
                 and event.payload.has_production_authority
             )
+            or type(event.payload) is LinearMarginLiquidationAuditBatchPlan
             for event in financial_dispatch_plan.scheduled_account_events
         )
     )
+    if any(type(event.payload) is LinearMarginLiquidationAuditBatchPlan for event in financial_dispatch_plan.scheduled_account_events) and schema_version != 3:
+        raise ValueError("liquidation audit batch requires execution_case_plan@3")
     if schema_version == 1 and additions:
         raise ValueError(
             "execution_case_plan@1 cannot persist derivative dispatch authority"
@@ -3876,6 +3906,7 @@ def _rebuild_execution_request_v3(
         _V4_SCHEMA_VERSION,
         _V5_SCHEMA_VERSION,
         _V6_SCHEMA_VERSION,
+        _V7_SCHEMA_VERSION,
     ):
         raise ValueError("request schema_version is malformed")
     ref = value.execution_input_bundle_ref
@@ -3911,12 +3942,13 @@ def _materialize_execution_input_payload_v3(
         )
     except Exception:
         raise TypeError("v3 materialization authority is malformed") from None
-    expected_plan_version = 2 if bundle_schema_version == _V6_SCHEMA_VERSION else 1
+    expected_plan_version = 3 if bundle_schema_version == _V7_SCHEMA_VERSION else 2 if bundle_schema_version == _V6_SCHEMA_VERSION else 1
     if bundle_schema_version not in (
         _V3_SCHEMA_VERSION,
         _V4_SCHEMA_VERSION,
         _V5_SCHEMA_VERSION,
         _V6_SCHEMA_VERSION,
+        _V7_SCHEMA_VERSION,
     ) or execution_case_plan_schema_version != expected_plan_version:
         raise ValueError("execution input bundle and plan schema versions do not match")
     _validate_plan_liquidity_roles(
@@ -4160,9 +4192,9 @@ def _materialize_execution_input_bundle_with_catalog(
     schema: CanonicalSchema,
     execution_case_plan_schema_version: int = 1,
 ) -> ArtifactEnvelope:
-    if schema not in (_V4_SCHEMA, _V5_SCHEMA, _V6_SCHEMA):
-        raise ValueError("catalog materializer schema must be 4, 5, or 6")
-    expected_plan_version = 2 if schema == _V6_SCHEMA else 1
+    if schema not in (_V4_SCHEMA, _V5_SCHEMA, _V6_SCHEMA, _V7_SCHEMA):
+        raise ValueError("catalog materializer schema must be 4, 5, 6, or 7")
+    expected_plan_version = 3 if schema == _V7_SCHEMA else 2 if schema == _V6_SCHEMA else 1
     if execution_case_plan_schema_version != expected_plan_version:
         raise ValueError(
             f"backtest_execution_input_bundle@{schema.version} requires "
@@ -4222,6 +4254,10 @@ def _materialize_execution_input_bundle_v6(
         schema=_V6_SCHEMA,
         execution_case_plan_schema_version=2,
     )
+
+
+def _materialize_execution_input_bundle_v7(*, resolved_request: ResolvedBacktestRequest, hydrated_inputs: _HydratedExecutionCaseInputs, market_data_preparation: MultiResolutionMarketDataPreparation) -> ArtifactEnvelope:
+    return _materialize_execution_input_bundle_with_catalog(resolved_request=resolved_request, hydrated_inputs=hydrated_inputs, market_data_preparation=market_data_preparation, schema=_V7_SCHEMA, execution_case_plan_schema_version=3)
 
 
 def _failure_v3(
@@ -4442,6 +4478,14 @@ def _snapshot_execution_request_v6_from_validated_schema(
 ) -> tuple[BacktestExecutionRequest | None, _ExecutionInputsHydrationFailureV3 | None]:
     return _snapshot_execution_request_from_validated_schema(
         request, _V6_SCHEMA_VERSION
+    )
+
+
+def _snapshot_execution_request_v7_from_validated_schema(
+    request: BacktestExecutionRequest,
+) -> tuple[BacktestExecutionRequest | None, _ExecutionInputsHydrationFailureV3 | None]:
+    return _snapshot_execution_request_from_validated_schema(
+        request, _V7_SCHEMA_VERSION
     )
 
 
@@ -5012,6 +5056,21 @@ def _hydrate_execution_inputs_v6_from_decoded(
         recorder=recorder,
         _schema_version=_V6_SCHEMA_VERSION,
     )
+
+
+def _read_execution_inputs_v7_from_snapshot(
+    reader: ArtifactEnvelopeReader,
+    request: BacktestExecutionRequest,
+    *,
+    recorder: BoundedPerformanceRecorder | None = None,
+) -> tuple[_DecodedExecutionInputBundleV3 | None, _ExecutionInputsHydrationFailureV3 | None]:
+    return _read_execution_inputs_from_snapshot_exact(
+        reader, request, _V7_SCHEMA_VERSION, recorder=recorder
+    )
+
+
+def _hydrate_execution_inputs_v7_from_decoded(bundle: _DecodedExecutionInputBundleV3, request: BacktestExecutionRequest, *, market_reader: MarketBundleReader, resolved_request: ResolvedBacktestRequest, prepared_market_data: PreparedMultiResolutionMarketData, target_stream: PrecomputedTargetStream | None = None, bindings_verified: bool = False, recorder: BoundedPerformanceRecorder | None = None) -> _ExecutionInputsHydrationOutcomeV3:
+    return _hydrate_execution_inputs_v3_from_decoded(bundle, request, market_reader=market_reader, resolved_request=resolved_request, prepared_market_data=prepared_market_data, target_stream=target_stream, bindings_verified=bindings_verified, recorder=recorder, _schema_version=_V7_SCHEMA_VERSION)
 
 
 def _hydrate_execution_inputs_v3(

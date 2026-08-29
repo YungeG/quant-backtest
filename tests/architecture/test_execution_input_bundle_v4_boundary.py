@@ -15,19 +15,16 @@ BASELINE_FILES = {
 }
 ALLOWED_FILES = {
     "packages/backtest-runtime/src/crypto_quant_backtest/_durable_rebuild.py",
-    "packages/backtest-runtime/src/crypto_quant_backtest/composition.py",
+    "packages/backtest-runtime/src/crypto_quant_backtest/binance_usdm_tradifi_case_planner.py",
+    "packages/backtest-runtime/src/crypto_quant_backtest/binance_usdm_tradifi_provider.py",
     "packages/backtest-runtime/src/crypto_quant_backtest/engine.py",
     "packages/backtest-runtime/src/crypto_quant_backtest/execution_inputs.py",
     "packages/backtest-runtime/src/crypto_quant_backtest/facade.py",
-    "tests/architecture/test_bt_gap02a_composition_boundary.py",
+    "packages/backtest-runtime/src/crypto_quant_backtest/financial_dispatch.py",
     "tests/architecture/test_bt_gap02b_execution_input_boundary.py",
-    "tests/architecture/test_bt_gap02c_execution_closure_boundary.py",
     "tests/architecture/test_execution_input_bundle_v4_boundary.py",
     "tests/runtime/durable_rebuild/test_schema6.py",
-    "tests/runtime/durable_rebuild/test_verification.py",
-    "tests/runtime/engine/test_execution_liquidity_role.py",
-    "tests/runtime/execution_inputs/test_execution_liquidity_role_bundle_v6.py",
-    "tests/runtime/execution_inputs/test_multi_resolution_bundle_v3.py",
+    "tests/runtime/providers/test_binance_usdm_tradifi_provider.py",
 }
 
 
@@ -54,7 +51,7 @@ def test_schema4_fanin_preserves_facade_and_provider_boundaries() -> None:
     assert "run_attested" not in facade
     assert "canonical-v4" not in facade + durable
     assert "_snapshot_execution_request_v4_from_validated_schema" in facade
-    assert "request.schema_version not in {3, 4, 6}" in durable
+    assert "request.schema_version not in {3, 4, 6, 7}" in durable
 
     root_export = (
         ROOT / "packages/backtest-runtime/src/crypto_quant_backtest/__init__.py"

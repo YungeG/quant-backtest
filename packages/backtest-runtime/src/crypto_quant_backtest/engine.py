@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import unicodedata
+from collections.abc import Mapping
 from dataclasses import dataclass, field, replace
 from enum import Enum
 from typing import Any, cast
@@ -1748,20 +1749,8 @@ class DeterministicBarEngine:
         processed_bars: set[str] = set()
         processed_account_events: set[str] = set()
         timeline_checkpoints: dict[UtcInstant, FinancialStateView] = {}
-        checkpoint_starts = tuple(
-            sorted(
-                {
-                    window_start_at
-                    for account_event in case.financial_dispatch_plan.scheduled_account_events
-                    if (
-                        window_start_at := _scheduled_window_start_at(
-                            account_event.payload
-                        )
-                    )
-                    is not None
-                }
-            )
-        )
+        event_checkpoints: dict[tuple[SimulationInstant, str], FinancialStateView] = {}
+        checkpoint_starts = tuple(sorted({window_start_at for account_event in case.financial_dispatch_plan.scheduled_account_events if (window_start_at := _scheduled_window_start_at(account_event.payload)) is not None}))
         timeline_cursor = case.timeline.open_cursor(batch_size=case.timeline_batch_size)
 
         while not timeline_cursor.window_complete:
@@ -1799,6 +1788,7 @@ class DeterministicBarEngine:
                             self._trace(state).trace_hash,
                         )
                     )
+                event_checkpoints[(event.timeline_instant, "before")] = self._financial_state_view(state)
                 self._trace_add(
                     state,
                     EngineStage.TIMELINE_EVENT,
@@ -1845,7 +1835,7 @@ class DeterministicBarEngine:
                     )
                     dispatch = self._financial_dispatcher.dispatch_scheduled_event(
                         account_event,
-                        self._financial_state_view(state, checkpoint),
+                        self._financial_state_view(state, checkpoint, event_checkpoints),
                     )
                     failure = self._apply_financial_dispatch(
                         case,
@@ -1856,6 +1846,7 @@ class DeterministicBarEngine:
                     if failure is not None:
                         return failure
                     processed_account_events.add(account_event.event_id)
+                event_checkpoints[(event.timeline_instant, "after")] = self._financial_state_view(state)
 
         missing_cycles = tuple(
             cycle.cycle_hash
@@ -2038,6 +2029,7 @@ class DeterministicBarEngine:
     def _financial_state_view(
         state: _EngineState,
         window_start_checkpoint: FinancialStateView | None = None,
+        checkpoints: Mapping[tuple[SimulationInstant, str], FinancialStateView] | None = None,
     ) -> FinancialStateView:
         lot_books = tuple(
             sorted(state.lot_books.items(), key=lambda value: canonical_bytes(value[0]))
@@ -2056,6 +2048,7 @@ class DeterministicBarEngine:
             state.reservation_state,
             lot_books,
             tuple(state.financial_artifacts),
+            checkpoints=checkpoints,
             window_start_journal_hash=start_journal_hash,
             window_start_reservation_state_hash=start_reservation_hash,
             window_start_journal=(

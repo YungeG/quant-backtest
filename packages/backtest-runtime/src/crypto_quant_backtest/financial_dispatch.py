@@ -697,6 +697,73 @@ class LinearMarginLiquidationAuditPlan:
 
 
 @dataclass(frozen=True, slots=True)
+class LinearMarginLiquidationAuditSubwindowPlan:
+    """One exact state interval within a retained liquidation hour."""
+    plan: LinearMarginLiquidationAuditPlan
+    start_checkpoint: SimulationInstant
+    start_side: str
+    end_checkpoint: SimulationInstant
+    end_side: str
+
+    def __post_init__(self) -> None:
+        if type(self.plan) is not LinearMarginLiquidationAuditPlan or not self.plan.has_production_authority:
+            raise TypeError("subwindow plan requires production liquidation plan")
+        if type(self.start_checkpoint) is not SimulationInstant or type(self.end_checkpoint) is not SimulationInstant:
+            raise TypeError("subwindow checkpoints must be exact SimulationInstant")
+        if self.start_side not in ("before", "after") or self.end_side not in ("before", "after"):
+            raise ValueError("subwindow checkpoint side must be before or after")
+        if (
+            self.start_checkpoint > self.end_checkpoint
+            or self.start_checkpoint.instant != self.plan.interval_start
+            or self.end_checkpoint.instant != self.plan.interval_end_exclusive
+        ):
+            raise ValueError("subwindow checkpoints must bind its interval boundaries")
+
+    def to_canonical_dict(self) -> dict[str, object]:
+        return {"type": "linear_margin_liquidation_audit_subwindow_plan", "schema_version": 1,
+                "plan": self.plan, "start_checkpoint": self.start_checkpoint,
+                "start_side": self.start_side, "end_checkpoint": self.end_checkpoint,
+                "end_side": self.end_side}
+
+
+@dataclass(frozen=True, slots=True)
+class LinearMarginLiquidationAuditBatchPlan:
+    """Atomic retained-hour liquidation audit; children reuse its sole full bar."""
+    audit_at: SimulationInstant
+    liquidation_bar: LinearLiquidationMarkBarEvidence
+    subwindows: tuple[LinearMarginLiquidationAuditSubwindowPlan, ...]
+
+    def __post_init__(self) -> None:
+        if type(self.audit_at) is not SimulationInstant or type(self.liquidation_bar) is not LinearLiquidationMarkBarEvidence:
+            raise TypeError("batch audit time/bar must be exact")
+        if type(self.subwindows) is not tuple or not self.subwindows or any(type(v) is not LinearMarginLiquidationAuditSubwindowPlan for v in self.subwindows):
+            raise ValueError("batch subwindows must be nonempty exact tuple")
+        suffixes = tuple(v.plan.role_suffix for v in self.subwindows)
+        if len(set(suffixes)) != len(suffixes):
+            raise ValueError("batch subwindow role suffixes must be unique")
+        previous: UtcInstant | None = None
+        for child in self.subwindows:
+            plan = child.plan
+            if (
+                plan.audit_at != self.audit_at
+                or plan.liquidation_bars != (self.liquidation_bar,)
+                or (previous is not None and plan.interval_start != previous)
+                or plan.interval_start < self.liquidation_bar.interval_start
+                or plan.interval_end_exclusive > self.liquidation_bar.interval_end_exclusive
+            ):
+                raise ValueError("batch subwindows must contiguously reuse the retained bar")
+            previous = plan.interval_end_exclusive
+
+    def production_semantic_authority(self) -> object:
+        return _ProductionSemanticAuthority("linear_margin_liquidation_audit_batch_semantic_authority", self.to_canonical_dict())
+
+    def to_canonical_dict(self) -> dict[str, object]:
+        return {"type": "linear_margin_liquidation_audit_batch_plan", "schema_version": 1,
+                "audit_at": self.audit_at, "liquidation_bar": self.liquidation_bar,
+                "subwindows": self.subwindows}
+
+
+@dataclass(frozen=True, slots=True)
 class CashFillAccountingPlan:
     """Legacy cash payload retained as one concrete dispatcher payload."""
 
@@ -1044,6 +1111,7 @@ class FinancialStateView:
     reservation_state: ResourceReservationState
     position_lot_books: PositionLotState
     artifacts: tuple[FinancialDispatchArtifact, ...]
+    checkpoints: Mapping[tuple[SimulationInstant, str], FinancialStateView] | None = None
     window_start_journal_hash: str | None = None
     window_start_reservation_state_hash: str | None = None
     window_start_journal: AccountingJournal | None = None
@@ -1229,6 +1297,7 @@ class FinancialEventDispatcher(Protocol):
         state_view: FinancialStateView,
         /,
     ) -> FinancialDispatchOutcome: ...
+
 
     def project_final_snapshot(
         self,
@@ -1726,6 +1795,8 @@ class BinanceUsdmTradifiLinearFinancialDispatcher:
                 return self._funding(event, state_view, input_hash)
             if event.operation_key == "margin_liquidation_audit":
                 return self._margin_audit(event, state_view, input_hash)
+            if event.operation_key == "margin_liquidation_audit_batch":
+                return self._margin_audit_batch(event, state_view, input_hash)
         except (TypeError, ValueError):
             return _failure(
                 self.spec,
@@ -2055,6 +2126,42 @@ class BinanceUsdmTradifiLinearFinancialDispatcher:
                 artifacts,
             ),
         )
+
+    def _margin_audit_batch(self, event: ScheduledAccountEvent, state: FinancialStateView, input_hash: str) -> FinancialDispatchOutcome:
+        payload = event.payload
+        if type(payload) is not LinearMarginLiquidationAuditBatchPlan:
+            raise TypeError("invalid margin audit batch payload")
+        expected_roles = tuple(sorted(role for child in payload.subwindows for role in
+                                      (f"margin_projection.{child.plan.role_suffix}", f"liquidation_audit.{child.plan.role_suffix}")))
+        if (canonical_bytes(event.semantic_payload) != canonical_bytes(payload.production_semantic_authority())
+                or event.component_keys != tuple(sorted((self.spec.margin_component.component_key, self.spec.liquidation_audit_component.component_key)) )
+                or event.expected_artifact_roles != expected_roles):
+            return _failure(self.spec, event.event_id, input_hash, FinancialDispatchFailureCode.EVENT_PLAN_MISMATCH, "margin_liquidation_batch_authority")
+        checkpoints = state.checkpoints
+        if checkpoints is None:
+            raise ValueError("batch checkpoint map is missing")
+        artifacts: list[FinancialDispatchArtifact] = []
+        # Each child is evaluated through the old authority path; append only after all succeed.
+        for child in payload.subwindows:
+            start = checkpoints.get((child.start_checkpoint, child.start_side))
+            end = checkpoints.get((child.end_checkpoint, child.end_side))
+            if start is None or end is None:
+                raise ValueError("batch checkpoint binding is missing")
+            view = FinancialStateView(end.journal, end.ledger_state, end.reservation_state,
+                end.position_lot_books, end.artifacts,
+                window_start_journal_hash=start.journal.journal_hash,
+                window_start_reservation_state_hash=start.reservation_state.state_hash,
+                window_start_journal=start.journal, window_start_ledger_state=start.ledger_state,
+                window_start_reservation_state=start.reservation_state,
+                window_start_position_lot_books=start.position_lot_books)
+            single = ScheduledAccountEvent(event.event_id, event.event_at, "margin_liquidation_audit",
+                tuple(sorted((self.spec.margin_component.component_key, self.spec.liquidation_audit_component.component_key))), (), child.plan,
+                child.plan.production_semantic_authority(), tuple(sorted((f"margin_projection.{child.plan.role_suffix}", f"liquidation_audit.{child.plan.role_suffix}"))))
+            outcome = self._margin_audit(single, view, input_hash)
+            if outcome.failure is not None or outcome.result is None:
+                raise ValueError("batch child audit failed")
+            artifacts.extend(outcome.result.artifacts)
+        return FinancialDispatchOutcome(self.spec, input_hash, result=FinancialDispatchResult(self.spec, event.event_id, (), state.position_lot_books, _ordered_artifacts(event.expected_artifact_roles, tuple(artifacts))))
 
     def project_final_snapshot(
         self,
@@ -2541,6 +2648,8 @@ __all__ = [
     "FinancialStateView",
     "LinearDerivativeFillAccountingPlan",
     "LinearFundingAccountEventPlan",
+    "LinearMarginLiquidationAuditBatchPlan",
+    "LinearMarginLiquidationAuditSubwindowPlan",
     "LinearMarginLiquidationAuditPlan",
     "LinearMarginProjectionPlan",
     "ScheduledAccountEvent",

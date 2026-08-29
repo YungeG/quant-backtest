@@ -25,6 +25,7 @@ from crypto_quant_backtest.composition import (
     _HydratedExecutionCaseInputs,
 )
 from crypto_quant_backtest.engine import (
+    DeterministicBarEngine,
     ExecutionCaseIdentityFactory,
     ResolvedBarExecution,
 )
@@ -38,6 +39,9 @@ from crypto_quant_backtest.integrity import (
     IntegrityEvaluationContextV2,
     _evaluate_integrity_v2,
 )
+from crypto_quant_backtest.multi_resolution_preparation import (
+    PreparedMultiResolutionMarketData,
+)
 from crypto_quant_backtest.run_end import MarkToMarketCloseoutPolicy
 from crypto_quant_backtest.timeline import DeterministicTimeline
 from crypto_quant_domain import (
@@ -47,12 +51,17 @@ from crypto_quant_domain import (
     canonical_bytes,
     canonical_sha256,
 )
+from crypto_quant_market_data import InMemoryMarketBundleReader
 from crypto_quant_trading import FinalFeeRuleSet
 
 from tests.kernel.fees._fixtures import all_rules
 from tests.runtime.durable_rebuild.test_verification import _proof_fixture
 from tests.runtime.engine._fixtures import SyntheticExecutionCaseBuilder
 from tests.runtime.execution_inputs.test_multi_resolution_bundle_v3 import _contract
+from tests.runtime.providers import (
+    test_binance_usdm_tradifi_preparation_v2 as koru_fixture,
+)
+from tests.runtime.providers import test_binance_usdm_tradifi_provider as koru_provider
 from tests.runtime.test_durable_rebuild_facade import _decision_registry
 from tests.runtime.test_durable_rebuild_facade_v4 import _v4_values
 
@@ -181,6 +190,27 @@ def _schema6_values():
     return prepared, resolved, case, envelope, request, registry
 
 
+def _schema7_values():
+    outcome = koru_provider._prepare(koru_fixture._nonempty_bundle())
+    assert outcome.failure is None and outcome.result is not None
+    result = outcome.result
+    planned = result.case_planning_result
+    case = planned.execution_case
+    prepared = PreparedMultiResolutionMarketData(
+        planned.market_data_preparation,
+        (),
+        cast(InMemoryMarketBundleReader, result.preparation_result.market_reader),
+    )
+    return (
+        prepared,
+        planned.resolved_request,
+        case,
+        result.execution_input_envelope,
+        BacktestExecutionRequest(7, planned.request, result.execution_input_ref),
+        result.preparation_result.profile_registry,
+    )
+
+
 def _payload(envelope: ArtifactEnvelope) -> dict[str, Any]:
     return json.loads(canonical_bytes(envelope))["payload"]
 
@@ -209,6 +239,86 @@ def test_schema6_fresh_rebuild_preserves_taker_fill_and_result_hash(
     assert verification.fresh_rebuild.execution_result_hash == (
         fixture["attempts"].attempt_hashes[0].execution_result_hash
     )
+
+
+def test_schema7_durable_fresh_rebuild_runs_public_koru_batch_plan(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    fixture = _proof_fixture(
+        tmp_path,
+        monkeypatch=monkeypatch,
+        values=_schema7_values(),
+    )
+    payload = _payload(fixture["store"].values[fixture["request"].execution_input_bundle_ref].envelope)
+    plan = payload["execution_case_plan"]
+    batches = tuple(
+        event["payload"]
+        for event in plan["financial_dispatch_plan"]["scheduled_account_events"]
+        if event["operation_key"] == "margin_liquidation_audit_batch"
+    )
+    rebuilt = fixture["rebuilt_result"]
+
+    assert fixture["request"].schema_version == 7
+    assert fixture["verification"].execution_input_bundle_ref.schema_version == 7
+    assert plan["schema_version"] == 3
+    assert batches and all(batch["subwindows"] for batch in batches)
+    assert rebuilt is not None
+    assert rebuilt.result_hash == fixture["attempts"].attempt_hashes[0].engine_result.result_hash
+    assert len(rebuilt.fills) == 2
+    assert tuple(fill.liquidity for fill in rebuilt.fills) == ("taker", "taker")
+    assert rebuilt.final_portfolio_snapshot.positions == ()
+    roles = tuple(artifact.role for artifact in rebuilt.financial_artifacts)
+    for batch in batches:
+        for child in batch["subwindows"]:
+            assert child["plan"]["liquidation_bars"] == [batch["liquidation_bar"]]
+            assert child["start_checkpoint"]["instant"] == child["plan"]["interval_start"]
+            assert child["end_checkpoint"]["instant"] == child["plan"]["interval_end_exclusive"]
+            assert f"liquidation_audit.{child['plan']['role_suffix']}" in roles
+            assert f"margin_projection.{child['plan']['role_suffix']}" in roles
+
+
+@pytest.mark.parametrize("tamper", ("batch", "checkpoint"))
+def test_schema7_batch_tampering_fails_before_rebuild_execution(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+    tamper: str,
+) -> None:
+    values = _schema7_values()
+    fixture = _proof_fixture(tmp_path, values=values)
+    payload = _payload(values[3])
+    batch = next(
+        event["payload"]
+        for event in payload["execution_case_plan"]["financial_dispatch_plan"]["scheduled_account_events"]
+        if event["operation_key"] == "margin_liquidation_audit_batch"
+    )
+    if tamper == "batch":
+        batch["subwindows"] = []
+    else:
+        batch["subwindows"][0]["start_checkpoint"]["source_sequence"]["value"] += 1
+    envelope = ArtifactEnvelope.create("backtest_execution_input_bundle", 7, payload)
+    ref = ArtifactRef.from_envelope(envelope)
+    fixture["store"].values[ref] = ArtifactReadResult(
+        envelope=envelope,
+        artifact=object(),
+        source_bytes=canonical_bytes(envelope),
+        source_hash=canonical_sha256(envelope),
+    )
+    request = BacktestExecutionRequest(7, values[1].request, ref)
+    monkeypatch.setattr(
+        DeterministicBarEngine,  # pyright: ignore[reportPrivateUsage]
+        "run",
+        lambda *args, **kwargs: pytest.fail("tampered input reached rebuild execution"),
+    )
+
+    with pytest.raises(DurableRebuildError):
+        fixture["verifier"].verify(
+            request=request,
+            resolved_request=fixture["resolved"],
+            prepared_market_data=fixture["prepared"],
+            execution_case=fixture["case"],
+            attempts=fixture["attempts"],
+        )
 
 
 def test_schema6_proof_and_integrity_report_identities_bind_execution_input(
