@@ -65,6 +65,7 @@ _PROFILE_REQUEST_KEYS = frozenset(
         "slippage_model",
         "admitted_maximum_quantity",
         "required_market_state_keys",
+        "raw_exact_valuation",
     }
 )
 _ACCOUNT_PROFILE_KEYS = frozenset(
@@ -1359,7 +1360,11 @@ def _validate_profile_wire(
 ) -> tuple[Mapping[str, object], tuple[Mapping[str, object], ...]]:
     profile = _mapping(wire, "profile composition request wire")
     if (
-        set(profile) != _PROFILE_REQUEST_KEYS
+        set(profile) != (
+            _PROFILE_REQUEST_KEYS
+            if profile.get("raw_exact_valuation") is True
+            else _PROFILE_REQUEST_KEYS - {"raw_exact_valuation"}
+        )
         or profile.get("type") != _PROFILE_REQUEST_TYPE
         or type(profile.get("schema_version")) is not int
         or profile.get("schema_version") != _SCHEMA_VERSION

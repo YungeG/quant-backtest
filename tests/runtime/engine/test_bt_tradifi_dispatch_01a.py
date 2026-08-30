@@ -44,6 +44,7 @@ from crypto_quant_trading import (
     GenericLedger,
     LedgerBalanceRegistration,
     LedgerSchema,
+    LinearAccountMarginProjectorV2,
     LinearDerivativeAccounting,
     LinearDerivativeAccountingResult,
     LinearPositionTransitionKind,
@@ -201,6 +202,16 @@ def test_exact_financial_dispatcher_selector() -> None:
         financial_dispatcher_for_spec(mixed)
     with pytest.raises(ValueError, match="unsupported Binance USD-M TradFi"):
         financial_dispatcher_for_spec(unknown)
+
+
+def test_tradifi_dispatcher_rejects_nonexact_v2_margin_component() -> None:
+    v2 = LinearAccountMarginProjectorV2().component_ref
+    forged = replace(v2, component_digest="sha256:" + "a1" * 32)
+
+    with pytest.raises(ValueError, match="unsupported Binance USD-M TradFi margin component"):
+        BinanceUsdmTradifiLinearFinancialDispatcher(
+            replace(_tradifi_spec(), margin_component=forged)
+        )
 
 
 def test_fee_accounting_ownership_routing_is_generic_and_fail_closed() -> None:

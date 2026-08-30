@@ -40,6 +40,7 @@ from crypto_quant_trading import (
     LinearAccountMarginProjection,
     LinearAccountMarginProjectionRequest,
     LinearAccountMarginProjector,
+    LinearAccountMarginProjectorV2,
     LinearDerivativeAccounting,
     LinearDerivativeAccountingRequest,
     LinearDerivativeJournalEntry,
@@ -55,6 +56,7 @@ from crypto_quant_trading import (
     LinearFundingRatePublicationCandidate,
     LinearFundingSettlementEvidence,
     LinearFundingSettlementRequest,
+    LinearInstrumentMarginModel,
     LinearInstrumentMarginModelV2,
     LinearInstrumentMarginRequest,
     LinearInstrumentMarginResult,
@@ -65,6 +67,7 @@ from crypto_quant_trading import (
     LinearMarginRuleBook,
     LinearPerpetualContract,
     LinearPositionProjectionRequest,
+    LinearPositionProjector,
     LinearPositionProjectorV2,
     LinearPositionValuationEvidence,
     PortfolioSnapshotProjector,
@@ -1418,9 +1421,29 @@ def _linear_replay(
     return outcome.result
 
 
+def _margin_models(
+    margin_component: ProfileComponentRef,
+) -> tuple[
+    LinearInstrumentMarginModel | LinearInstrumentMarginModelV2,
+    LinearAccountMarginProjector | LinearAccountMarginProjectorV2,
+]:
+    if margin_component == LinearAccountMarginProjectorV2().component_ref:
+        return LinearInstrumentMarginModelV2(), LinearAccountMarginProjectorV2()
+    # Legacy V1 margin refs are composition-derived and vary with authority
+    # digests; ProfileResolver has already bound them before dispatch.
+    if (
+        margin_component.port_type is ProfilePortType.MARGIN_MODEL
+        and margin_component.component_key == _TRADIFI_MARGIN_KEY
+        and margin_component.component_version == 1
+    ):
+        return LinearInstrumentMarginModel(), LinearAccountMarginProjector()
+    raise ValueError("unsupported Binance USD-M TradFi margin component")
+
+
 def _linear_margin_projection(
     plan: LinearMarginProjectionPlan,
     state: FinancialStateView,
+    margin_component: ProfileComponentRef,
 ) -> LinearAccountMarginProjection:
     replay = _linear_replay(
         state.journal,
@@ -1433,7 +1456,7 @@ def _linear_margin_projection(
     position_valuations: tuple[LinearPositionValuationEvidence, ...] = ()
     margin_results: tuple[LinearInstrumentMarginResult, ...] = ()
     if replay.position_state.quantity.units != 0:
-        margin = LinearInstrumentMarginModelV2().evaluate_margin(
+        margin = _margin_models(margin_component)[0].evaluate_margin(
             LinearInstrumentMarginRequest(
                 plan.position_key,
                 plan.contract,
@@ -1456,7 +1479,7 @@ def _linear_margin_projection(
             ),
         )
         margin_results = (margin.result,)
-    projected = LinearAccountMarginProjector().project(
+    projected = _margin_models(margin_component)[1].project(
         LinearAccountMarginProjectionRequest(
             plan.account_id,
             plan.venue_id,
@@ -1549,13 +1572,12 @@ class BinanceUsdmTradifiLinearFinancialDispatcher:
             or spec.position_accounting_component != expected_position
             or spec.financing_component.component_key != _TRADIFI_FINANCING_KEY
             or spec.financing_component.component_version != 1
-            or spec.margin_component.component_key != _TRADIFI_MARGIN_KEY
-            or spec.margin_component.component_version != 1
             or spec.liquidation_audit_component != expected_liquidation
             or spec.snapshot_projection_key != _TRADIFI_SNAPSHOT_KEY
             or spec.snapshot_projection_version != 1
         ):
             raise ValueError("unsupported Binance USD-M TradFi dispatcher spec")
+        _margin_models(spec.margin_component)
         for name, digest in (
             ("config_hash", spec.config_hash),
             (
@@ -1629,7 +1651,12 @@ class BinanceUsdmTradifiLinearFinancialDispatcher:
                             "contract_mismatch",
                         )
                     prior_fills.append(entry.request.transition.fill)
-        projected = LinearPositionProjectorV2().project(
+        position_projector = (
+            LinearPositionProjectorV2()
+            if self.spec.margin_component == LinearAccountMarginProjectorV2().component_ref
+            else LinearPositionProjector()
+        )
+        projected = position_projector.project(
             LinearPositionProjectionRequest(
                 payload.position_key,
                 payload.contract,
@@ -2054,7 +2081,9 @@ class BinanceUsdmTradifiLinearFinancialDispatcher:
                 state.window_start_position_lot_books,
                 state.artifacts,
             )
-        projection = _linear_margin_projection(projection_plan, projection_state)
+        projection = _linear_margin_projection(
+            projection_plan, projection_state, self.spec.margin_component
+        )
         window_source: dict[str, object] = {
             "type": "linear_liquidation_account_window_source",
             "schema_version": 1,
@@ -2215,7 +2244,9 @@ class BinanceUsdmTradifiLinearFinancialDispatcher:
             )
         snapshot_payload = cast(Any, snapshot_plan)
         try:
-            projection = _linear_margin_projection(projection_plan, state_view)
+            projection = _linear_margin_projection(
+                projection_plan, state_view, self.spec.margin_component
+            )
             expected_marks = (
                 (projection_plan.valuation_mark,)
                 if projection.request.position_valuations

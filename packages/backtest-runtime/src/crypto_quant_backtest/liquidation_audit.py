@@ -287,7 +287,10 @@ def _margin_key(value: LinearInstrumentMarginResult) -> PositionBalanceKey:
 def _projection_context_invalid(projection: LinearAccountMarginProjection) -> bool:
     return (
         projection.component_ref.component_key
-        != "account.linear-perpetual.margin-projection.v1"
+        not in {
+            "account.linear-perpetual.margin-projection.v1",
+            "account.linear-perpetual.raw-valuation-margin-projection.v2",
+        }
         or projection.request_hash != projection.request.request_hash
     )
 

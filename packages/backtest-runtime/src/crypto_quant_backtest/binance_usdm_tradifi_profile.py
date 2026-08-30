@@ -24,6 +24,7 @@ from crypto_quant_trading import (
     AccountRiskPolicy,
     ExposureCapacityLimit,
     FeeReserveFundingSource,
+    LinearAccountMarginProjectorV2,
     LinearDerivativeAccounting,
     LinearFundingAccounting,
     LinearInstrumentMarginModel,
@@ -270,6 +271,7 @@ class BinanceUsdmTradifiProfileCompositionRequest:
     slippage_model: DeterministicBpsSlippageModel
     admitted_maximum_quantity: Quantity
     required_market_state_keys: tuple[str, ...]
+    raw_exact_valuation: bool = False
 
     def __post_init__(self) -> None:
         if self.instrument_metadata is not None and type(self.instrument_metadata) not in (
@@ -342,6 +344,8 @@ class BinanceUsdmTradifiProfileCompositionRequest:
             raise ValueError("admitted_maximum_quantity must be positive")
         if type(self.required_market_state_keys) is not tuple:
             raise TypeError("required_market_state_keys must be tuple")
+        if type(self.raw_exact_valuation) is not bool:
+            raise TypeError("raw_exact_valuation must be exact bool")
         states = tuple(
             sorted(
                 _text("required market state key", value)
@@ -374,6 +378,7 @@ class BinanceUsdmTradifiProfileCompositionRequest:
             "slippage_model": _slippage_payload(self.slippage_model),
             "admitted_maximum_quantity": self.admitted_maximum_quantity,
             "required_market_state_keys": self.required_market_state_keys,
+            **({"raw_exact_valuation": True} if self.raw_exact_valuation else {}),
         }
 
 
@@ -1010,7 +1015,11 @@ def _components(
         _profile_component(ProfilePortType.SETTLEMENT_MODEL, "crypto.binance_usdm.tradifi.perpetual-settlement-not-applicable.v1", {"model_digest": model_digest}),
         LinearDerivativeAccounting().component_ref,
         _profile_component(ProfilePortType.FINANCING_MODEL, "crypto.binance_usdm.tradifi.linear-funding-composition.v1", {"model_digest": model_digest, "funding_accounting": LinearFundingAccounting().component_ref, "funding_resolutions": [value.resolution_hash for value in request.funding_sources]}),
-        _profile_component(ProfilePortType.MARGIN_MODEL, "crypto.binance_usdm.tradifi.linear-margin-composition.v1", {"model_digest": model_digest, "instrument_margin": LinearInstrumentMarginModel().component_ref, "margin_resolution": margin.resolution_hash}),
+        (
+            LinearAccountMarginProjectorV2().component_ref
+            if request.raw_exact_valuation
+            else _profile_component(ProfilePortType.MARGIN_MODEL, "crypto.binance_usdm.tradifi.linear-margin-composition.v1", {"model_digest": model_digest, "instrument_margin": LinearInstrumentMarginModel().component_ref, "margin_resolution": margin.resolution_hash})
+        ),
         _profile_component(ProfilePortType.LIQUIDATION_RULES, "crypto.binance_usdm.tradifi.conservative-liquidation-rules.v1", {"model_digest": model_digest, "price_resolutions": [value.resolution_hash for value in request.price_purposes if value.query.price_purpose.value == "liquidation"]}),
         _profile_component(ProfilePortType.CORPORATE_ACTION_MODEL, "crypto.binance_usdm.tradifi.post-adjustment-unit-regime.v1", {"model_digest": model_digest, "unit_regime_ref": unit_ref}),
         _profile_component(ProfilePortType.CURRENCY_VALUATION_POLICY, "crypto.binance_usdm.tradifi.usdt-identity-valuation.v1", {"model_digest": model_digest, "currency": _USDT}),

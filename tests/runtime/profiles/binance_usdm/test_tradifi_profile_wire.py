@@ -54,6 +54,27 @@ def test_exact_wire_decodes_replays_and_matches_golden_hash() -> None:
     )
 
 
+def test_raw_exact_valuation_authority_is_explicit_and_hash_bound() -> None:
+    ordinary = composition_request()
+    raw = replace(ordinary, raw_exact_valuation=True)
+
+    assert "raw_exact_valuation" not in _wire(ordinary)
+    wire = _wire(raw)
+    assert wire["raw_exact_valuation"] is True
+    decoded = _decode(wire)
+    assert decoded.raw_exact_valuation is True
+    assert decoded.request_hash == canonical_sha256(wire)
+    assert decoded.request_hash != ordinary.request_hash
+
+
+def test_raw_exact_valuation_false_is_not_a_valid_wire_authority() -> None:
+    wire = _wire()
+    wire["raw_exact_valuation"] = False
+
+    with pytest.raises(ValueError, match=f"^{_ERROR}$"):
+        _decode(wire)
+
+
 @pytest.mark.parametrize(
     "mutate",
     (

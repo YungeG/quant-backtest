@@ -33,6 +33,7 @@ from crypto_quant_market_data import (
 )
 from crypto_quant_trading import (
     FundingSlotId,
+    LinearAccountMarginProjectorV2,
     LinearFundingApplicationKey,
     LinearPerpetualContract,
     StaleMarkPolicy,
@@ -354,6 +355,10 @@ class BinanceUsdmKoruTradifiDevelopmentProfileResultV1:
             raise TypeError("resolved_profile must be exact resolved profile")
         if self.resolved_profile.request != self.profile_composition_request:
             raise ValueError("resolved profile request binding mismatch")
+        if not self.profile_composition_request.raw_exact_valuation:
+            raise ValueError("KORU profile must authorize raw exact valuation")
+        if self.financial_dispatcher_spec.margin_component != LinearAccountMarginProjectorV2().component_ref:
+            raise ValueError("KORU profile must bind V2 account margin")
         if self.profile_registry != self.resolved_profile.profile_registry:
             raise ValueError("profile registry binding mismatch")
         if (
@@ -1706,6 +1711,7 @@ def _build_result(
         slippage_model=slippage,
         admitted_maximum_quantity=quantity,
         required_market_state_keys=("normal",),
+        raw_exact_valuation=True,
     )
     composed = BinanceUsdmTradifiProfileComposer().compose(composition_request)
     if composed.result is None:

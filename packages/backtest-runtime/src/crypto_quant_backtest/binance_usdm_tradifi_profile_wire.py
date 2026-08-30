@@ -1410,25 +1410,18 @@ def _timeline(value: object) -> TimelineWindow:
 def _decode(
     wire: dict[str, object], expected_hash: str
 ) -> BinanceUsdmTradifiProfileCompositionRequest:
+    fields = (
+        "account_capacity", "account_profile", "admitted_maximum_quantity",
+        "calendar_refs", "composed_at", "funding_sources", "instrument_metadata",
+        "margin_tiers", "order_rules", "post_adjustment_unit_regime_ref",
+        "price_purposes", "required_market_state_keys", "slippage_model",
+        "timeline_window",
+    )
+    raw_exact_valuation = wire.get("raw_exact_valuation") is True
     payload = _object(
         wire,
         "binance_usdm_tradifi_profile_composition_request",
-        (
-            "account_capacity",
-            "account_profile",
-            "admitted_maximum_quantity",
-            "calendar_refs",
-            "composed_at",
-            "funding_sources",
-            "instrument_metadata",
-            "margin_tiers",
-            "order_rules",
-            "post_adjustment_unit_regime_ref",
-            "price_purposes",
-            "required_market_state_keys",
-            "slippage_model",
-            "timeline_window",
-        ),
+        fields + (("raw_exact_valuation",) if raw_exact_valuation else ()),
     )
     instrument_wire = payload["instrument_metadata"]
     instrument = (
@@ -1476,6 +1469,7 @@ def _decode(
         required_market_state_keys=tuple(
             _text(item) for item in _array(payload["required_market_state_keys"])
         ),
+        raw_exact_valuation=raw_exact_valuation,
     )
     wire_hash = canonical_sha256(payload)
     if (

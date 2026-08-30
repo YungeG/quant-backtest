@@ -113,6 +113,11 @@ def test_builds_from_real_trusted_source_projection_and_exact_wire_replay(
         == "binance_usdm.aggregate_trades.execution_reference.koruusdt.tradifi.v1"
     )
 
+    assert profile.raw_exact_valuation is True
+    assert (
+        result.financial_dispatcher_spec.margin_component.component_key
+        == "account.linear-perpetual.raw-valuation-margin-projection.v2"
+    )
     assert len(profile.funding_sources) == funding_manifest.event_count == 1
     assert {value.model_key for value in profile.funding_sources} == {
         "crypto.binance_usdm.funding-sources.v2"

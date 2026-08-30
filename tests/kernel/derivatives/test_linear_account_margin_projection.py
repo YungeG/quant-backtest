@@ -4,7 +4,6 @@ from copy import deepcopy
 from dataclasses import replace
 
 import pytest
-
 from crypto_quant_domain import (
     CashBalance,
     CashBalanceKey,
@@ -18,8 +17,8 @@ from crypto_quant_domain import (
     PositionBalanceKey,
     Price,
     PricePurpose,
-    QuantizationPolicy,
     Quantity,
+    QuantizationPolicy,
     RoundingPolicy,
     SimulationInstant,
     SourceSequence,
@@ -35,12 +34,13 @@ from crypto_quant_trading import (
     LedgerBalanceRegistration,
     LedgerSchema,
     LedgerState,
-    LinearAccountMarginProjector,
     LinearAccountMarginProjection,
     LinearAccountMarginProjectionFailure,
     LinearAccountMarginProjectionFailureCode,
     LinearAccountMarginProjectionOutcome,
     LinearAccountMarginProjectionRequest,
+    LinearAccountMarginProjector,
+    LinearAccountMarginProjectorV2,
     LinearInstrumentMarginModel,
     LinearMarginLedgerEvidence,
     LinearMarginReservationEvidence,
@@ -60,18 +60,21 @@ from tests.kernel.derivatives._fixtures import (
     ACCOUNT_ID,
     INSTRUMENT_ID,
     PRICE_SCALE,
-    QUOTE_CURRENCY,
     QUANTITY_SCALE,
+    QUOTE_CURRENCY,
     VENUE_ID,
     fill,
     position_key,
+)
+from tests.kernel.derivatives._fixtures import (
     request as position_request,
 )
 from tests.kernel.derivatives.test_linear_margin_requirement import (
     EVALUATED_AT,
+)
+from tests.kernel.derivatives.test_linear_margin_requirement import (
     _request as margin_request,
 )
-
 
 CASH_KEY = CashBalanceKey(ACCOUNT_ID, VENUE_ID, QUOTE_CURRENCY)
 CASH_REGISTRATION = LedgerBalanceRegistration(CASH_KEY, PRICE_SCALE)
@@ -279,6 +282,41 @@ def test_wallet_unrealized_equity_and_margin_aggregates_are_exact() -> None:
     assert projection.total_maintenance_margin.units == 13
     assert projection.working_order_margin_reservation.units == 200
     assert projection.available_margin.units == 99_800
+
+
+def test_v2_accepts_raw_valuation_mark_scale_while_v1_rejects_it() -> None:
+    request = _request()
+    valuation = request.position_valuations[0]
+    raw_mark = replace(
+        valuation.resolved_mark,
+        price=Price(
+            10_000_000_001,
+            type(PRICE_SCALE)(8),
+            str(INSTRUMENT_ID),
+            str(QUOTE_CURRENCY),
+        ),
+    )
+    raw_request = _with_valuation(
+        request, replace(valuation, resolved_mark=raw_mark)
+    )
+
+    v1 = LinearAccountMarginProjector().project(raw_request)
+    v2 = LinearAccountMarginProjectorV2().project(raw_request)
+
+    assert v1.projection is None
+    assert v1.failure is not None
+    assert (
+        v1.failure.code
+        is LinearAccountMarginProjectionFailureCode.VALUATION_MARK_SCALE_MISMATCH
+    )
+    assert v2.failure is None
+    assert v2.projection is not None
+    assert v2.projection.component_ref == LinearAccountMarginProjectorV2().component_ref
+    assert v2.projection.position_unrealized_pnl[0].exact_unrealized_pnl == (
+        ExactLinearUnrealizedPnl(QUOTE_CURRENCY, 1_000_000_001, 800_000_000)
+    )
+    assert v2.projection.total_unrealized_pnl == Money(125, PRICE_SCALE, "USDT")
+    assert v2.projection.equity == Money(100_125, PRICE_SCALE, "USDT")
 
 
 def test_short_direction_and_non_margin_reservation_dimensions_are_not_net_equity() -> None:

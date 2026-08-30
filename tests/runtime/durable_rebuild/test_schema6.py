@@ -260,6 +260,10 @@ def test_schema7_durable_fresh_rebuild_runs_public_koru_batch_plan(
     rebuilt = fixture["rebuilt_result"]
 
     assert fixture["request"].schema_version == 7
+    assert (
+        fixture["case"].financial_dispatch_plan.dispatcher_spec.margin_component.component_key
+        == "account.linear-perpetual.raw-valuation-margin-projection.v2"
+    )
     assert fixture["verification"].execution_input_bundle_ref.schema_version == 7
     assert plan["schema_version"] == 3
     assert batches and all(batch["subwindows"] for batch in batches)

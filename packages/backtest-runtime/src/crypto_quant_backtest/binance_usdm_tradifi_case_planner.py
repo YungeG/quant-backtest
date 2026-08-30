@@ -137,9 +137,18 @@ def _price_event(
     if type(units) is not int or units <= 0 or type(scale) is not int or scale < 0:
         raise ValueError(f"malformed retained {purpose.value} mark")
     price_scale = result.resolved_profile.linear_contract.price_scale
-    divisor = 10 ** (scale - price_scale.places)
-    if scale < price_scale.places or units % divisor:
-        raise ValueError(f"retained {purpose.value} mark does not fit price lattice")
+    if (
+        purpose is domain.PricePurpose.VALUATION
+        and result.resolved_profile.request.raw_exact_valuation
+    ):
+        mark_units = units
+        mark_scale = domain.Scale(scale)
+    else:
+        divisor = 10 ** (scale - price_scale.places)
+        if scale < price_scale.places or units % divisor:
+            raise ValueError(f"retained {purpose.value} mark does not fit price lattice")
+        mark_units = units // divisor
+        mark_scale = price_scale
     age = requested_at.epoch_nanoseconds - event.event_time.epoch_nanoseconds
     policy = trading.StaleMarkPolicy(
         f"binance-usdm-tradifi-case.{purpose.value}.v1",
@@ -152,7 +161,7 @@ def _price_event(
         _INSTRUMENT,
         _USDT,
         purpose,
-        domain.Price(units // divisor, price_scale, str(_INSTRUMENT), "USDT"),
+        domain.Price(mark_units, mark_scale, str(_INSTRUMENT), "USDT"),
         event.event_time,
         event.available_time,
         requested_at,

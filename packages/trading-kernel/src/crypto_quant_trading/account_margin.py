@@ -21,15 +21,16 @@ from crypto_quant_domain import (
     round_ratio,
 )
 
+from .derivatives import LinearPositionState
 from .ledger import LedgerBalanceRegistration, LedgerState
 from .margin import LinearInstrumentMarginResult
 from .marks import ResolvedMark, StaleMarkPolicy
 from .ports import ProfileComponentRef, ProfilePortType
 from .reservations import ResourceReservationState
-from .derivatives import LinearPositionState
 
 _SCHEMA_VERSION = 1
 _COMPONENT_KEY = "account.linear-perpetual.margin-projection.v1"
+_COMPONENT_KEY_V2 = "account.linear-perpetual.raw-valuation-margin-projection.v2"
 _HEX = "0123456789abcdef"
 
 
@@ -76,6 +77,36 @@ def _component_ref() -> ProfileComponentRef:
         }
     )
     return ProfileComponentRef(ProfilePortType.MARGIN_MODEL, _COMPONENT_KEY, 1, digest)
+
+
+def _component_ref_v2() -> ProfileComponentRef:
+    digest = canonical_sha256(
+        {
+            "type": "linear_account_margin_projection_component",
+            "schema_version": _SCHEMA_VERSION,
+            "component_key": _COMPONENT_KEY_V2,
+            "component_version": 2,
+            "scope": "single-account-single-venue-single-settlement-currency",
+            "wallet_balance": "ledger-settlement-cash",
+            "unrealized_pnl": "signed-quantity*multiplier*(valuation-mark-average-entry)",
+            "equity": "wallet-balance+instrument-unrealized-pnl",
+            "position_margin": "g09e-results",
+            "working_order_margin": "reservation-state-totals-margin",
+            "available_margin": "equity-position-initial-margin-working-order-margin",
+            "pnl_quantization": "half-even-per-instrument",
+            "valuation_mark_scale": "exact-raw-mark-scale",
+            "allowed_grade": "development",
+        }
+    )
+    return ProfileComponentRef(ProfilePortType.MARGIN_MODEL, _COMPONENT_KEY_V2, 2, digest)
+
+
+def _is_v2_component(component_ref: ProfileComponentRef) -> bool:
+    return component_ref == _component_ref_v2()
+
+
+def _valid_component(component_ref: ProfileComponentRef) -> bool:
+    return component_ref in (_component_ref(), _component_ref_v2())
 
 
 @dataclass(frozen=True, slots=True)
@@ -397,6 +428,8 @@ def _mark_policy_invalid(evidence: LinearPositionValuationEvidence) -> bool:
 
 def _evaluate_failure(
     request: LinearAccountMarginProjectionRequest,
+    *,
+    allow_raw_valuation_mark_scale: bool = False,
 ) -> LinearAccountMarginProjectionFailureCode | None:
     ledger = request.ledger_evidence
     reservation = request.reservation_evidence
@@ -480,7 +513,10 @@ def _evaluate_failure(
             return LinearAccountMarginProjectionFailureCode.VALUATION_MARK_CONTEXT_MISMATCH
         if mark.resolved_at != request.evaluated_at.instant:
             return LinearAccountMarginProjectionFailureCode.VALUATION_MARK_INSTANT_MISMATCH
-        if mark.price.scale != contract.price_scale:
+        if (
+            not allow_raw_valuation_mark_scale
+            and mark.price.scale != contract.price_scale
+        ):
             return LinearAccountMarginProjectionFailureCode.VALUATION_MARK_SCALE_MISMATCH
         if mark.price.units <= 0:
             return LinearAccountMarginProjectionFailureCode.NON_POSITIVE_VALUATION_MARK
@@ -660,13 +696,16 @@ class LinearAccountMarginProjection:
     available_margin: Money
 
     def __post_init__(self) -> None:
-        if self.component_ref != _component_ref():
+        if not _valid_component(self.component_ref):
             raise ValueError("component_ref must match Account Margin component")
         if type(self.request) is not LinearAccountMarginProjectionRequest:
             raise TypeError("request must be exact Projection Request")
         if self.request_hash != self.request.request_hash:
             raise ValueError("request_hash must match Request")
-        if _evaluate_failure(self.request) is not None:
+        if _evaluate_failure(
+            self.request,
+            allow_raw_valuation_mark_scale=_is_v2_component(self.component_ref),
+        ) is not None:
             raise ValueError("Projection Request must have no business failure")
         actual = (
             self.wallet_balance,
@@ -718,7 +757,7 @@ class LinearAccountMarginProjectionFailure:
     subject_ids: tuple[str, ...]
 
     def __post_init__(self) -> None:
-        if self.component_ref != _component_ref():
+        if not _valid_component(self.component_ref):
             raise ValueError("component_ref must match Account Margin component")
         if type(self.request) is not LinearAccountMarginProjectionRequest:
             raise TypeError("request must be exact Projection Request")
@@ -726,7 +765,10 @@ class LinearAccountMarginProjectionFailure:
             raise ValueError("request_hash must match Request")
         if type(self.code) is not LinearAccountMarginProjectionFailureCode:
             raise TypeError("code must be exact Failure Code")
-        expected = _evaluate_failure(self.request)
+        expected = _evaluate_failure(
+            self.request,
+            allow_raw_valuation_mark_scale=_is_v2_component(self.component_ref),
+        )
         if expected is None or expected is not self.code:
             raise ValueError("Failure code must match first Request failure")
         if self.subject_ids != _subject_ids(self.request, self.code):
@@ -756,7 +798,7 @@ class LinearAccountMarginProjectionOutcome:
     failure: LinearAccountMarginProjectionFailure | None
 
     def __post_init__(self) -> None:
-        if self.component_ref != _component_ref():
+        if not _valid_component(self.component_ref):
             raise ValueError("component_ref must match Account Margin component")
         if (self.projection is None) == (self.failure is None):
             raise ValueError("Outcome requires exactly one Projection or Failure")
@@ -810,6 +852,37 @@ class LinearAccountMarginProjector:
             request,
             request.request_hash,
             *values,
+        )
+        return LinearAccountMarginProjectionOutcome(
+            self.component_ref, request.request_hash, projection, None
+        )
+
+
+@dataclass(frozen=True, slots=True)
+class LinearAccountMarginProjectorV2:
+    """Raw-valuation-mark variant; only its mark-scale admission differs from V1."""
+
+    @property
+    def component_ref(self) -> ProfileComponentRef:
+        return _component_ref_v2()
+
+    def project(
+        self, request: LinearAccountMarginProjectionRequest, /
+    ) -> LinearAccountMarginProjectionOutcome:
+        if type(request) is not LinearAccountMarginProjectionRequest:
+            raise TypeError("request must be exact Projection Request")
+        code = _evaluate_failure(request, allow_raw_valuation_mark_scale=True)
+        if code is not None:
+            failure = LinearAccountMarginProjectionFailure(
+                self.component_ref, request, request.request_hash, code,
+                _subject_ids(request, code),
+            )
+            return LinearAccountMarginProjectionOutcome(
+                self.component_ref, request.request_hash, None, failure
+            )
+        values = _projection_values(request)
+        projection = LinearAccountMarginProjection(
+            self.component_ref, request, request.request_hash, *values
         )
         return LinearAccountMarginProjectionOutcome(
             self.component_ref, request.request_hash, projection, None
