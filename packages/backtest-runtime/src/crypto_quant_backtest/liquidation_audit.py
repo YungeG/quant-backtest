@@ -38,6 +38,7 @@ from .resolution import RequestedResultGrade
 
 _SCHEMA_VERSION = 1
 _COMPONENT_KEY = "conservative.linear-perpetual.liquidation-audit.v1"
+_COMPONENT_KEY_V2 = "conservative.linear-perpetual.raw-exact-liquidation-audit.v2"
 _LIMITATION = "bar-extremes-do-not-identify-intrabar-path-or-liquidation-time"
 _HEX = "0123456789abcdef"
 
@@ -62,15 +63,22 @@ def _instant(name: str, value: SimulationInstant) -> None:
         raise TypeError(f"{name} must be exact SimulationInstant")
 
 
-def _component_ref() -> SimulationComponentRef:
+def _component_ref(
+    component_key: str = _COMPONENT_KEY, component_version: int = 1
+) -> SimulationComponentRef:
     digest = canonical_sha256(
         {
             "type": "conservative_linear_liquidation_audit_component",
             "schema_version": _SCHEMA_VERSION,
-            "component_key": _COMPONENT_KEY,
-            "component_version": 1,
+            "component_key": component_key,
+            "component_version": component_version,
             "account_scope": "g09f-single-account-projection",
             "bar_purpose": "liquidation",
+            **(
+                {"price_scale": "raw-exact-at-or-above-contract"}
+                if component_version == 2
+                else {}
+            ),
             "long_extreme": "low",
             "short_extreme": "high",
             "unrealized": "g09f-formula-half-even",
@@ -83,8 +91,8 @@ def _component_ref() -> SimulationComponentRef:
     )
     return SimulationComponentRef(
         SimulationPortType.LIQUIDATION_AUDIT_MODEL,
-        _COMPONENT_KEY,
-        1,
+        component_key,
+        component_version,
         digest,
     )
 
@@ -296,7 +304,7 @@ def _projection_context_invalid(projection: LinearAccountMarginProjection) -> bo
 
 
 def _base_failure(
-    request: LinearLiquidationAuditRequest,
+    request: LinearLiquidationAuditRequest, *, raw_exact: bool = False
 ) -> LinearLiquidationAuditFailureCode | None:
     window = request.account_window
     bars = request.liquidation_bars
@@ -356,8 +364,20 @@ def _base_failure(
         ):
             return LinearLiquidationAuditFailureCode.LIQUIDATION_BAR_CONTEXT_MISMATCH
         if (
-            bar.low.scale != contract.price_scale
-            or bar.high.scale != contract.price_scale
+            (
+                not raw_exact
+                and (
+                    bar.low.scale != contract.price_scale
+                    or bar.high.scale != contract.price_scale
+                )
+            )
+            or (
+                raw_exact
+                and (
+                    bar.low.scale.places < contract.price_scale.places
+                    or bar.high.scale.places < contract.price_scale.places
+                )
+            )
         ):
             return LinearLiquidationAuditFailureCode.LIQUIDATION_BAR_SCALE_MISMATCH
         if (
@@ -556,8 +576,8 @@ class LinearLiquidationPositionAudit:
             or self.bar.price_purpose is not PricePurpose.LIQUIDATION
             or self.bar.low.instrument_id != str(self.bar.instrument_id)
             or self.bar.high.instrument_id != str(self.bar.instrument_id)
-            or self.bar.low.scale != state.contract.price_scale
-            or self.bar.high.scale != state.contract.price_scale
+            or self.bar.low.scale.places < state.contract.price_scale.places
+            or self.bar.high.scale.places < state.contract.price_scale.places
             or self.bar.low.units <= 0
             or self.bar.high.units <= 0
             or self.bar.low.units > self.bar.high.units
@@ -682,9 +702,9 @@ def _audit_values(request: LinearLiquidationAuditRequest) -> _AuditValues:
 
 
 def _failure_code(
-    request: LinearLiquidationAuditRequest,
+    request: LinearLiquidationAuditRequest, *, raw_exact: bool = False
 ) -> LinearLiquidationAuditFailureCode | None:
-    code = _base_failure(request)
+    code = _base_failure(request, raw_exact=raw_exact)
     if code is not None:
         return code
     values = _audit_values(request)
@@ -729,13 +749,18 @@ class LinearLiquidationAuditResult:
     limitation: str
 
     def __post_init__(self) -> None:
-        if self.component_ref != _component_ref():
+        if self.component_ref not in (
+            _component_ref(), _component_ref(_COMPONENT_KEY_V2, 2)
+        ):
             raise ValueError("component_ref must match Liquidation Audit component")
         if type(self.request) is not LinearLiquidationAuditRequest:
             raise TypeError("request must be exact Liquidation Audit Request")
         if self.input_hash != self.request.request_hash:
             raise ValueError("input_hash must match Request")
-        if _failure_code(self.request) is not None:
+        if _failure_code(
+            self.request,
+            raw_exact=self.component_ref == _component_ref(_COMPONENT_KEY_V2, 2),
+        ) is not None:
             raise ValueError("Result Request must have no business failure")
         values = _audit_values(self.request)
         expected = (
@@ -792,7 +817,9 @@ class LinearLiquidationAuditFailure:
     subject_ids: tuple[str, ...]
 
     def __post_init__(self) -> None:
-        if self.component_ref != _component_ref():
+        if self.component_ref not in (
+            _component_ref(), _component_ref(_COMPONENT_KEY_V2, 2)
+        ):
             raise ValueError("component_ref must match Liquidation Audit component")
         if type(self.request) is not LinearLiquidationAuditRequest:
             raise TypeError("request must be exact Liquidation Audit Request")
@@ -800,7 +827,10 @@ class LinearLiquidationAuditFailure:
             raise ValueError("input_hash must match Request")
         if type(self.code) is not LinearLiquidationAuditFailureCode:
             raise TypeError("code must be exact Liquidation Audit Failure Code")
-        expected = _failure_code(self.request)
+        expected = _failure_code(
+            self.request,
+            raw_exact=self.component_ref == _component_ref(_COMPONENT_KEY_V2, 2),
+        )
         if expected is None or expected is not self.code:
             raise ValueError("Failure code must match first Request failure")
         if self.subject_ids != _subject_ids(self.request, self.code):
@@ -860,5 +890,41 @@ class ConservativeLinearLiquidationAuditModel:
             values[4],
             values[-1] is LinearLiquidationAuditClassification.SAFE,
             _LIMITATION,
+        )
+        return SimulationPortOutcome.for_result(self.component_ref, request, result)
+
+
+@dataclass(frozen=True, slots=True)
+class ConservativeLinearLiquidationAuditModelV2:
+    """Raw-price exact variant; V1 remains contract-lattice strict."""
+
+    @property
+    def component_ref(self) -> SimulationComponentRef:
+        return _component_ref(_COMPONENT_KEY_V2, 2)
+
+    def audit_liquidation(
+        self, request: LinearLiquidationAuditRequest, /
+    ) -> SimulationPortOutcome[
+        LinearLiquidationAuditResult, LinearLiquidationAuditFailure
+    ]:
+        if type(request) is not LinearLiquidationAuditRequest:
+            raise TypeError("request must be exact Liquidation Audit Request")
+        code = _failure_code(request, raw_exact=True)
+        if code is not None:
+            failure = LinearLiquidationAuditFailure(
+                self.component_ref,
+                request,
+                request.request_hash,
+                code,
+                _subject_ids(request, code),
+            )
+            return SimulationPortOutcome.for_failure(
+                self.component_ref, request, failure
+            )
+        values = _audit_values(request)
+        result = LinearLiquidationAuditResult(
+            self.component_ref, request, request.request_hash, values[-1], values[0],
+            values[1], values[2], values[3], values[4],
+            values[-1] is LinearLiquidationAuditClassification.SAFE, _LIMITATION,
         )
         return SimulationPortOutcome.for_result(self.component_ref, request, result)

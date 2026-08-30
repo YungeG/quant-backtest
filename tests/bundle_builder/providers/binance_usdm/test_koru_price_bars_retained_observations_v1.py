@@ -346,3 +346,26 @@ def test_capture_modes_remain_strictly_separate() -> None:
     assert capture_binance_usdm_koru_price_bars_source_bounded_v1(request, lambda _: (200, b"")).failure is not None
     official_request = replace(request, authority=None, utc_date="2026-08-23")
     assert capture(official_request, evidence).failure is not None
+
+
+def test_retained_raw_price_preflight_covers_strategy_liquidation_margin_valuation_and_funding() -> None:
+    """Before p01, all raw-price purposes are checked against execution's tick lattice."""
+    import csv
+    from decimal import Decimal
+
+    root = RESEARCH_DATA
+    bars = tuple(
+        value
+        for name in ("binance_mark_raw.csv", "binance_index_raw.csv")
+        for value in csv.DictReader((root / name).read_text().splitlines())
+    )
+    funding = json.loads(
+        (root.parent / "koru-funding-history-v1" / "funding-history.json").read_text()
+    )
+    tick = Decimal("0.01")
+    non_tick = lambda value: Decimal(value) % tick != 0
+    assert any(non_tick(row[key]) for row in bars for key in ("open", "high", "low", "close"))
+    assert any(non_tick(row["markPrice"]) for row in funding)
+
+    from tests.bundle_builder.providers.binance_usdm.test_koru_aggtrades_retained_rest_v1 import ROWS
+    assert ROWS and all(not non_tick(row["p"]) for row in ROWS)

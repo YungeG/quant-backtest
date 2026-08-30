@@ -1419,12 +1419,16 @@ def _decode(
     )
     raw_exact_valuation = wire.get("raw_exact_valuation") is True
     raw_exact_margin = wire.get("raw_exact_margin") is True
+    raw_exact_strategy = wire.get("raw_exact_strategy") is True
+    raw_exact_liquidation = wire.get("raw_exact_liquidation") is True
     payload = _object(
         wire,
         "binance_usdm_tradifi_profile_composition_request",
         fields
         + (("raw_exact_valuation",) if raw_exact_valuation else ())
-        + (("raw_exact_margin",) if raw_exact_margin else ()),
+        + (("raw_exact_margin",) if raw_exact_margin else ())
+        + (("raw_exact_strategy",) if raw_exact_strategy else ())
+        + (("raw_exact_liquidation",) if raw_exact_liquidation else ()),
     )
     instrument_wire = payload["instrument_metadata"]
     instrument = (
@@ -1474,6 +1478,8 @@ def _decode(
         ),
         raw_exact_valuation=raw_exact_valuation,
         raw_exact_margin=raw_exact_margin,
+        raw_exact_strategy=raw_exact_strategy,
+        raw_exact_liquidation=raw_exact_liquidation,
     )
     wire_hash = canonical_sha256(payload)
     if (

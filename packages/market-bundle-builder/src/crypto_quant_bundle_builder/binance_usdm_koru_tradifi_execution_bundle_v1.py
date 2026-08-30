@@ -67,6 +67,8 @@ _PROFILE_REQUEST_KEYS = frozenset(
         "required_market_state_keys",
         "raw_exact_valuation",
         "raw_exact_margin",
+        "raw_exact_strategy",
+        "raw_exact_liquidation",
     }
 )
 _ACCOUNT_PROFILE_KEYS = frozenset(
@@ -1365,7 +1367,12 @@ def _validate_profile_wire(
             _PROFILE_REQUEST_KEYS
             - {
                 name
-                for name in ("raw_exact_valuation", "raw_exact_margin")
+                for name in (
+                    "raw_exact_valuation",
+                    "raw_exact_margin",
+                    "raw_exact_strategy",
+                    "raw_exact_liquidation",
+                )
                 if profile.get(name) is not True
             }
         )

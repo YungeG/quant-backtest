@@ -54,7 +54,10 @@ from .execution import (
     NoEligibleBarAction,
 )
 from .financial_dispatch import FinancialDispatcherSpec
-from .liquidation_audit import ConservativeLinearLiquidationAuditModel
+from .liquidation_audit import (
+    ConservativeLinearLiquidationAuditModel,
+    ConservativeLinearLiquidationAuditModelV2,
+)
 from .ports import SimulationComponentRef, SimulationPortType
 from .resolution import (
     BacktestProfileRegistry,
@@ -273,6 +276,8 @@ class BinanceUsdmTradifiProfileCompositionRequest:
     required_market_state_keys: tuple[str, ...]
     raw_exact_valuation: bool = False
     raw_exact_margin: bool = False
+    raw_exact_strategy: bool = False
+    raw_exact_liquidation: bool = False
 
     def __post_init__(self) -> None:
         if self.instrument_metadata is not None and type(self.instrument_metadata) not in (
@@ -349,6 +354,10 @@ class BinanceUsdmTradifiProfileCompositionRequest:
             raise TypeError("raw_exact_valuation must be exact bool")
         if type(self.raw_exact_margin) is not bool:
             raise TypeError("raw_exact_margin must be exact bool")
+        if type(self.raw_exact_strategy) is not bool:
+            raise TypeError("raw_exact_strategy must be exact bool")
+        if type(self.raw_exact_liquidation) is not bool:
+            raise TypeError("raw_exact_liquidation must be exact bool")
         states = tuple(
             sorted(
                 _text("required market state key", value)
@@ -383,6 +392,8 @@ class BinanceUsdmTradifiProfileCompositionRequest:
             "required_market_state_keys": self.required_market_state_keys,
             **({"raw_exact_valuation": True} if self.raw_exact_valuation else {}),
             **({"raw_exact_margin": True} if self.raw_exact_margin else {}),
+            **({"raw_exact_strategy": True} if self.raw_exact_strategy else {}),
+            **({"raw_exact_liquidation": True} if self.raw_exact_liquidation else {}),
         }
 
 
@@ -1053,7 +1064,11 @@ def _simulation_components(
         slippage.component_ref,
         _simulation_component(SimulationPortType.LATENCY_MODEL, "latency.zero.development.v1", {"availability": "retained_trade_event_time"}),
         _taker_liquidity_component(),
-        ConservativeLinearLiquidationAuditModel().component_ref,
+        (
+            ConservativeLinearLiquidationAuditModelV2().component_ref
+            if request.raw_exact_liquidation
+            else ConservativeLinearLiquidationAuditModel().component_ref
+        ),
         MarkToMarketCloseoutPolicy().component_ref,
     )
     return tuple(sorted(components, key=lambda value: value.port_type.value))
@@ -1135,7 +1150,11 @@ def _values(request: BinanceUsdmTradifiProfileCompositionRequest) -> _Values:
         LinearDerivativeAccounting().component_ref,
         financing,
         margin_component,
-        ConservativeLinearLiquidationAuditModel().component_ref,
+        (
+            ConservativeLinearLiquidationAuditModelV2().component_ref
+            if request.raw_exact_liquidation
+            else ConservativeLinearLiquidationAuditModel().component_ref
+        ),
         "crypto.binance_usdm.tradifi.linear-snapshot.v1",
         1,
     )

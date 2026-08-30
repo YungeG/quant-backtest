@@ -223,6 +223,7 @@ from .integrity import (
 )
 from .liquidation_audit import (
     ConservativeLinearLiquidationAuditModel,
+    ConservativeLinearLiquidationAuditModelV2,
     LinearLiquidationAccountWindowEvidence,
     LinearLiquidationAuditClassification,
     LinearLiquidationAuditFailure,
@@ -490,6 +491,7 @@ __all__ = [  # noqa: RUF022 - public API remains grouped by subsystem
     "CancelledAttemptReport",
     "CanonicalResultCacheHit",
     "ConservativeLinearLiquidationAuditModel",
+    "ConservativeLinearLiquidationAuditModelV2",
     "CanonicalAttemptRef",
     "CanonicalPublicationFailure",
     "CanonicalPublicationFailureCode",

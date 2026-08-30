@@ -730,24 +730,26 @@ def _liquidation_bar(
     ):
         raise ValueError("liquidation bar must cover one exact hour")
     price_scale = result.resolved_profile.linear_contract.price_scale
+    raw_exact = result.resolved_profile.request.raw_exact_liquidation
     if source_scale < price_scale.places:
-        raise ValueError("liquidation bar does not fit contract price lattice")
+        raise ValueError("liquidation bar scale is below contract price lattice")
     divisor = 10 ** (source_scale - price_scale.places)
-    if (
-        low_units <= 0
-        or high_units < low_units
-        or low_units % divisor
-        or high_units % divisor
+    if low_units <= 0 or high_units < low_units or (
+        not raw_exact and (low_units % divisor or high_units % divisor)
     ):
         raise ValueError("malformed retained liquidation price range")
+    bar_scale = domain.Scale(source_scale) if raw_exact else price_scale
+    if not raw_exact:
+        low_units //= divisor
+        high_units //= divisor
     return LinearLiquidationMarkBarEvidence(
         event.event_id,
         _INSTRUMENT,
         domain.PricePurpose.LIQUIDATION,
         interval_start,
         interval_end,
-        domain.Price(low_units // divisor, price_scale, str(_INSTRUMENT), "USDT"),
-        domain.Price(high_units // divisor, price_scale, str(_INSTRUMENT), "USDT"),
+        domain.Price(low_units, bar_scale, str(_INSTRUMENT), "USDT"),
+        domain.Price(high_units, bar_scale, str(_INSTRUMENT), "USDT"),
         event.timeline_instant,
         event.timeline_instant,
         event.stream_key,
@@ -1022,9 +1024,13 @@ def _decision_mark(
     price_scale = result.resolved_profile.linear_contract.price_scale
     if type(units) is not int or type(scale) is not int or scale < price_scale.places:
         raise ValueError("candidate decision mark is malformed")
+    raw_exact = result.resolved_profile.request.raw_exact_strategy
     divisor = 10 ** (scale - price_scale.places)
-    if units <= 0 or units % divisor:
+    if units <= 0 or (not raw_exact and units % divisor):
         raise ValueError("candidate decision mark does not fit price lattice")
+    mark_scale = domain.Scale(scale) if raw_exact else price_scale
+    if not raw_exact:
+        units //= divisor
     age = (
         decision_event.event_time.epoch_nanoseconds
         - event.event_time.epoch_nanoseconds
@@ -1040,7 +1046,7 @@ def _decision_mark(
         _INSTRUMENT,
         _USDT,
         domain.PricePurpose.EXECUTION_REFERENCE,
-        domain.Price(units // divisor, price_scale, str(_INSTRUMENT), "USDT"),
+        domain.Price(units, mark_scale, str(_INSTRUMENT), "USDT"),
         event.event_time,
         event.available_time,
         decision_event.event_time,

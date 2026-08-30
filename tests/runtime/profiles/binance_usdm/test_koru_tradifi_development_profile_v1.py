@@ -115,6 +115,9 @@ def test_builds_from_real_trusted_source_projection_and_exact_wire_replay(
 
     assert profile.raw_exact_valuation is True
     assert profile.raw_exact_margin is True
+    assert profile.raw_exact_strategy is True
+    assert profile.raw_exact_liquidation is True
+    assert result.financial_dispatcher_spec.liquidation_audit_component.component_key == "conservative.linear-perpetual.raw-exact-liquidation-audit.v2"
     assert (
         result.financial_dispatcher_spec.margin_component.component_key
         == "account.linear-perpetual.raw-valuation-margin-projection.v2"

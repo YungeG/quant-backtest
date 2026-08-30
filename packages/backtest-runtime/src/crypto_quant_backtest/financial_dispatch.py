@@ -80,6 +80,7 @@ from crypto_quant_trading import (
 
 from .liquidation_audit import (
     ConservativeLinearLiquidationAuditModel,
+    ConservativeLinearLiquidationAuditModelV2,
     LinearLiquidationAccountWindowEvidence,
     LinearLiquidationAuditRequest,
     LinearLiquidationMarkBarEvidence,
@@ -1565,14 +1566,17 @@ class BinanceUsdmTradifiLinearFinancialDispatcher:
         if type(spec) is not FinancialDispatcherSpec:
             raise TypeError("spec must be exact FinancialDispatcherSpec")
         expected_position = LinearDerivativeAccounting().component_ref
-        expected_liquidation = ConservativeLinearLiquidationAuditModel().component_ref
+        expected_liquidations = {
+            ConservativeLinearLiquidationAuditModel().component_ref,
+            ConservativeLinearLiquidationAuditModelV2().component_ref,
+        }
         if (
             spec.dispatcher_key != _TRADIFI_DISPATCHER_KEY
             or spec.dispatcher_version != 1
             or spec.position_accounting_component != expected_position
             or spec.financing_component.component_key != _TRADIFI_FINANCING_KEY
             or spec.financing_component.component_version != 1
-            or spec.liquidation_audit_component != expected_liquidation
+            or spec.liquidation_audit_component not in expected_liquidations
             or spec.snapshot_projection_key != _TRADIFI_SNAPSHOT_KEY
             or spec.snapshot_projection_version != 1
         ):
@@ -2112,7 +2116,14 @@ class BinanceUsdmTradifiLinearFinancialDispatcher:
             payload.audit_at,
             requested_grade,
         )
-        audit = ConservativeLinearLiquidationAuditModel().audit_liquidation(request)
+        audit = (
+            ConservativeLinearLiquidationAuditModelV2().audit_liquidation(request)
+            if (
+                self.spec.liquidation_audit_component
+                == ConservativeLinearLiquidationAuditModelV2().component_ref
+            )
+            else ConservativeLinearLiquidationAuditModel().audit_liquidation(request)
+        )
         if audit.result is None:
             raise ValueError("liquidation audit failed")
         projection_role = f"margin_projection.{payload.role_suffix}"

@@ -4,7 +4,6 @@ from copy import deepcopy
 from dataclasses import replace
 
 import pytest
-
 from crypto_quant_backtest import (
     ConservativeLinearLiquidationAuditModel,
     LinearLiquidationAccountWindowEvidence,
@@ -22,8 +21,8 @@ from crypto_quant_domain import (
     InstrumentId,
     Money,
     Price,
-    Scale,
     PricePurpose,
+    Scale,
     SimulationInstant,
     SourceSequence,
     TimelinePhase,
@@ -44,12 +43,13 @@ from tests.kernel.derivatives._fixtures import (
 from tests.kernel.derivatives.test_linear_account_margin_projection import (
     CASH_KEY,
     _multi_instrument_projection,
+)
+from tests.kernel.derivatives.test_linear_account_margin_projection import (
     _request as account_margin_request,
 )
 from tests.kernel.derivatives.test_linear_margin_requirement import (
     _request as margin_request,
 )
-
 
 BAR_START = UtcInstant(10)
 BAR_END = UtcInstant(20)
@@ -576,3 +576,23 @@ def test_public_audit_values_are_frozen_contract_types() -> None:
     assert isinstance(outcome.result, LinearLiquidationAuditResult)
     assert not isinstance(outcome.failure, LinearLiquidationAuditFailure)
     assert isinstance(outcome.result.position_audits[0], LinearLiquidationPositionAudit)
+
+
+def test_v2_accepts_raw_scale8_extremes_while_v1_rejects_them() -> None:
+    from crypto_quant_backtest import ConservativeLinearLiquidationAuditModelV2
+
+    raw = replace(
+        _request(),
+        liquidation_bars=(
+            replace(
+                _bar(),
+                low=Price(80_000_001, Scale(8), str(INSTRUMENT_ID), str(QUOTE_CURRENCY)),
+                high=Price(120_000_001, Scale(8), str(INSTRUMENT_ID), str(QUOTE_CURRENCY)),
+            ),
+        ),
+    )
+    assert ConservativeLinearLiquidationAuditModel().audit_liquidation(raw).failure.code is LinearLiquidationAuditFailureCode.LIQUIDATION_BAR_SCALE_MISMATCH
+    result = ConservativeLinearLiquidationAuditModelV2().audit_liquidation(raw).result
+    assert result is not None
+    assert result.component_ref == ConservativeLinearLiquidationAuditModelV2().component_ref
+    assert result.position_audits[0].adverse_price.scale == Scale(8)

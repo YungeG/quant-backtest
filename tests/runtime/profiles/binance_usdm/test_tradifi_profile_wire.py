@@ -345,3 +345,13 @@ def test_hidden_metadata_revision_hash_is_rejected() -> None:
 
     with pytest.raises(ValueError, match=f"^{_ERROR}$"):
         _decode(wire)
+
+@pytest.mark.parametrize("authority", ("raw_exact_strategy", "raw_exact_liquidation"))
+def test_raw_strategy_and_liquidation_authorities_are_explicit_hash_bound(authority: str) -> None:
+    raw = replace(composition_request(), **{authority: True})
+    wire = _wire(raw)
+    assert wire[authority] is True
+    assert getattr(_decode(wire), authority) is True
+    wire[authority] = False
+    with pytest.raises(ValueError, match=f"^{_ERROR}$"):
+        _decode(wire)
