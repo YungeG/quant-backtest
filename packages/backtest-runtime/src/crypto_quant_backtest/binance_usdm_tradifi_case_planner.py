@@ -371,7 +371,7 @@ def _snapshot_plan(
     )
 
 
-def _funding_events(
+def _legacy_funding_events(
     result: BinanceUsdmTradifiPreparationResult,
     semantic_run_id: str,
 ) -> tuple[ScheduledAccountEvent, ...]:
@@ -487,6 +487,136 @@ def _funding_events(
             (publication,),
             settlement,
             trading.LinearFundingMarkEvidence(resolved_mark, policy),
+            cash_registration,
+            domain.QuantizationPolicy(
+                "binance-usdm-tradifi.funding-half-even.v1",
+                _MONEY_SCALE,
+                domain.RoundingPolicy.HALF_EVEN,
+            ),
+        )
+        output.append(
+            ScheduledAccountEvent(
+                event.event_id,
+                event.timeline_instant,
+                "funding",
+                (result.financial_dispatcher_spec.financing_component.component_key,),
+                (
+                    (f"settlement.funding.{index}", identity.settlement_id),
+                    (f"journal.funding.{index}", identity.journal_entry_id),
+                ),
+                plan,
+                plan.production_semantic_authority(),
+                ("funding_accounting", "funding_eligibility"),
+            )
+        )
+    return tuple(output)
+
+
+
+def _funding_events(
+    result: BinanceUsdmTradifiPreparationResult,
+    semantic_run_id: str,
+) -> tuple[ScheduledAccountEvent, ...]:
+    schema, cash_registration, position_key = _ledger_schema(result)
+    cash_key, _ = _keys(result)
+    events = _events(result, _FUNDING_STREAM)
+    resolutions = result.resolved_profile.request.funding_sources
+    if all(resolution.model_version == 1 for resolution in resolutions):
+        return _legacy_funding_events(result, semantic_run_id)
+    if len(resolutions) != len(events):
+        raise ValueError(
+            "retained funding events and profile resolutions must bind one-to-one"
+        )
+    output = []
+    used: set[str] = set()
+    for index, event in enumerate(events):
+        target = event.event_time
+        slot = trading.FundingSlotId.derive(_INSTRUMENT, target)
+        application_key = trading.LinearFundingApplicationKey.derive(
+            result.intent.execution_account_id, slot
+        )
+        matches = tuple(
+            resolution
+            for resolution in resolutions
+            if resolution.query.application_key == application_key
+            and resolution.slot_id == slot
+            and event.payload.get("funding_slot_milliseconds")
+            == resolution.selected_record.funding_time_milliseconds
+            and event.payload.get("raw_funding_rate")
+            == resolution.selected_record.funding_rate
+            and event.payload.get("raw_mark_price")
+            == resolution.selected_record.mark_price
+            and event.payload.get("rate_type") == resolution.selected_record.rate_type
+            and event.payload.get("response_member_hash")
+            == resolution.selected_record.source_ref.source_hash
+            and resolution.selected_record.event_id == event.event_id
+            and resolution.selected_record.source_ref.source_key == event.source_key
+            and resolution.selected_record.source_ref.source_hash == event.source_hash
+            and resolution.selected_record.source_ref.archive_key == event.stream_key
+            and resolution.selected_record.source_ref.revision_id == event.revision_id
+            and resolution.selected_record.source_ref.supersedes_revision_id
+            == event.supersedes_revision_id
+            and resolution.publication.event_id == event.event_id
+            and resolution.publication.event_hash
+            == resolution.selected_record.event_hash
+            and resolution.publication.event_time == target
+            and resolution.publication.revision_id == event.revision_id
+            and resolution.publication.supersedes_revision_id
+            == event.supersedes_revision_id
+            and resolution.publication.source_key == event.source_key
+            and resolution.publication.source_hash == event.source_hash
+            and resolution.settlement_evidence.application_key == application_key
+            and resolution.settlement_evidence.event_id == event.event_id
+            and resolution.settlement_evidence.event_hash
+            == resolution.selected_record.event_hash
+            and resolution.settlement_evidence.effective_time == target
+            and resolution.settlement_evidence.revision_id == event.revision_id
+            and resolution.settlement_evidence.supersedes_revision_id
+            == event.supersedes_revision_id
+            and resolution.settlement_evidence.source_key == event.source_key
+            and resolution.settlement_evidence.source_hash == event.source_hash
+            and resolution.funding_mark_evidence.resolved_mark.source_event_id
+            == event.event_id
+            and resolution.funding_mark_evidence.resolved_mark.revision_id
+            == event.revision_id
+        )
+        if len(matches) != 1 or matches[0].resolution_hash in used:
+            raise ValueError(
+                "retained funding event does not have one exact profile resolution"
+            )
+        resolution = matches[0]
+        used.add(resolution.resolution_hash)
+        identity = trading.LinearFundingApplicationIdentity.derive(
+            application_key, _NAMESPACE, semantic_run_id
+        )
+        plan = LinearFundingAccountEventPlan(
+            identity,
+            domain.SimulationInstant(
+                target,
+                domain.TimelinePhase(120, "funding_accounting"),
+                domain.SourceSequence(index),
+            ),
+            schema,
+            cash_key,
+            position_key,
+            result.resolved_profile.linear_contract,
+            domain.SimulationInstant(
+                target,
+                domain.TimelinePhase(100, "funding_eligibility"),
+                domain.SourceSequence(index),
+            ),
+            domain.SimulationInstant(
+                target,
+                domain.TimelinePhase(105, "position_snapshot"),
+                domain.SourceSequence(index),
+            ),
+            f"{event.event_id}:position-snapshot",
+            "binance-usdm-tradifi.position-series.v1",
+            event.revision_id,
+            event.supersedes_revision_id,
+            (resolution.publication,),
+            resolution.settlement_evidence,
+            resolution.funding_mark_evidence,
             cash_registration,
             domain.QuantizationPolicy(
                 "binance-usdm-tradifi.funding-half-even.v1",
