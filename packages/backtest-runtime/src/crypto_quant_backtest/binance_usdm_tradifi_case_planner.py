@@ -1451,6 +1451,18 @@ class _LinearFillSemantics:
         }
 
 
+def _expected_artifact_roles(roles: tuple[str, ...]) -> tuple[str, ...]:
+    ordered = tuple(sorted(roles))
+    duplicates = tuple(
+        value for index, value in enumerate(ordered[1:]) if value == ordered[index]
+    )
+    if duplicates:
+        raise ValueError(
+            "duplicate planned artifact roles: " + ",".join(sorted(set(duplicates)))
+        )
+    return ordered
+
+
 def _plan(
     result: BinanceUsdmTradifiPreparationResult,
     semantic_run_id: str,
@@ -1466,17 +1478,15 @@ def _plan(
     audits = _margin_audits(result, rows, funding)
     scheduled_events = (*funding, *audits)
     if not rows:
-        roles = tuple(
-            sorted(
-                (
-                    "final_snapshot",
-                    "margin_projection.final",
-                    *(
-                        role
-                        for event in scheduled_events
-                        for role in event.expected_artifact_roles
-                    ),
-                )
+        roles = _expected_artifact_roles(
+            (
+                "final_snapshot",
+                "margin_projection.final",
+                *(
+                    role
+                    for event in scheduled_events
+                    for role in event.expected_artifact_roles
+                ),
             )
         )
         return _ExecutionCasePlan(
@@ -1829,18 +1839,16 @@ def _plan(
             target_event.event_time,
         )
 
-    roles = tuple(
-        sorted(
-            (
-                "final_snapshot",
-                "margin_projection.final",
-                *(f"position_accounting.{index + 1}" for index in range(len(bars))),
-                *(
-                    role
-                    for event in scheduled_events
-                    for role in event.expected_artifact_roles
-                ),
-            )
+    roles = _expected_artifact_roles(
+        (
+            "final_snapshot",
+            "margin_projection.final",
+            *(f"position_accounting.{index + 1}" for index in range(len(bars))),
+            *(
+                role
+                for event in scheduled_events
+                for role in event.expected_artifact_roles
+            ),
         )
     )
     return _ExecutionCasePlan(

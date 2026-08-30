@@ -8,6 +8,7 @@ import crypto_quant_backtest.binance_usdm_tradifi_case_planner as case_planner
 import pytest
 from crypto_quant_backtest import DeterministicBarEngine
 from crypto_quant_backtest.binance_usdm_tradifi_case_planner import (
+    _expected_artifact_roles,
     _price_event,
     plan_binance_usdm_tradifi_case_v1,
 )
@@ -26,6 +27,13 @@ from tests.runtime.providers.test_binance_usdm_tradifi_preparation_v2 import (
 from tests.runtime.providers.test_binance_usdm_tradifi_preparation_v2 import (
     _resolve as _resolve_v2,
 )
+
+
+def test_planned_artifact_roles_reject_duplicates_with_exact_role_names() -> None:
+    with pytest.raises(
+        ValueError, match="duplicate planned artifact roles: funding_accounting"
+    ):
+        _expected_artifact_roles(("funding_accounting", "funding_accounting"))
 
 
 def test_empty_retained_bundle_plans_composes_and_runs_flat() -> None:
