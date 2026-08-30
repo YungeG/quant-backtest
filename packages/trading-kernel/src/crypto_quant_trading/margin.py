@@ -89,6 +89,7 @@ def _component_ref_v2() -> ProfileComponentRef:
             "component_version": 2,
             "algorithm_key": "linear-instrument-margin-requirement-v2",
             "tier_scale_policy": "independent_exact_notional_scale",
+            "margin_mark_scale": "exact-raw-mark-scale",
             "allowed_grade": "development",
         }
     )
@@ -733,6 +734,7 @@ def _evaluate(
     request: LinearInstrumentMarginRequest,
     *,
     allow_independent_tier_scale: bool = False,
+    allow_raw_margin_mark_scale: bool = False,
 ) -> tuple[LinearInstrumentMarginFailureCode | None, _EvaluationValues | None]:
     leverage = request.leverage_evidence
     rule_book = request.rule_book
@@ -811,7 +813,10 @@ def _evaluate(
         return LinearInstrumentMarginFailureCode.MARGIN_MARK_CONTEXT_MISMATCH, None
     if mark.resolved_at != request.evaluated_at.instant:
         return LinearInstrumentMarginFailureCode.MARGIN_MARK_INSTANT_MISMATCH, None
-    if mark.price.scale != request.contract.price_scale:
+    if (
+        not allow_raw_margin_mark_scale
+        and mark.price.scale != request.contract.price_scale
+    ):
         return LinearInstrumentMarginFailureCode.MARGIN_MARK_SCALE_MISMATCH, None
     if mark.price.units <= 0:
         return LinearInstrumentMarginFailureCode.NON_POSITIVE_MARGIN_MARK, None
@@ -949,6 +954,7 @@ class LinearInstrumentMarginResult:
         failure, values = _evaluate(
             self.request,
             allow_independent_tier_scale=self.component_ref == _component_ref_v2(),
+            allow_raw_margin_mark_scale=self.component_ref == _component_ref_v2(),
         )
         if failure is not None or values is None:
             raise ValueError("Result Request must have no business failure")
@@ -1019,6 +1025,7 @@ class LinearInstrumentMarginFailure:
         failure, _ = _evaluate(
             self.request,
             allow_independent_tier_scale=self.component_ref == _component_ref_v2(),
+            allow_raw_margin_mark_scale=self.component_ref == _component_ref_v2(),
         )
         if failure is None or failure is not self.code:
             raise ValueError("Failure must match first Request failure")
@@ -1095,7 +1102,11 @@ class LinearInstrumentMarginModelV2:
     ]:
         if type(request) is not LinearInstrumentMarginRequest:
             raise TypeError("request must be exact LinearInstrumentMarginRequest")
-        failure, values = _evaluate(request, allow_independent_tier_scale=True)
+        failure, values = _evaluate(
+            request,
+            allow_independent_tier_scale=True,
+            allow_raw_margin_mark_scale=True,
+        )
         if failure is not None:
             value = LinearInstrumentMarginFailure(
                 self.component_ref,

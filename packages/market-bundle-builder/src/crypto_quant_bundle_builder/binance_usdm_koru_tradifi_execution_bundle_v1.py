@@ -66,6 +66,7 @@ _PROFILE_REQUEST_KEYS = frozenset(
         "admitted_maximum_quantity",
         "required_market_state_keys",
         "raw_exact_valuation",
+        "raw_exact_margin",
     }
 )
 _ACCOUNT_PROFILE_KEYS = frozenset(
@@ -1362,8 +1363,11 @@ def _validate_profile_wire(
     if (
         set(profile) != (
             _PROFILE_REQUEST_KEYS
-            if profile.get("raw_exact_valuation") is True
-            else _PROFILE_REQUEST_KEYS - {"raw_exact_valuation"}
+            - {
+                name
+                for name in ("raw_exact_valuation", "raw_exact_margin")
+                if profile.get(name) is not True
+            }
         )
         or profile.get("type") != _PROFILE_REQUEST_TYPE
         or type(profile.get("schema_version")) is not int

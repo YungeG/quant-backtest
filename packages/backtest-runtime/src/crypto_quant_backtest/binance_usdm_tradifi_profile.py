@@ -272,6 +272,7 @@ class BinanceUsdmTradifiProfileCompositionRequest:
     admitted_maximum_quantity: Quantity
     required_market_state_keys: tuple[str, ...]
     raw_exact_valuation: bool = False
+    raw_exact_margin: bool = False
 
     def __post_init__(self) -> None:
         if self.instrument_metadata is not None and type(self.instrument_metadata) not in (
@@ -346,6 +347,8 @@ class BinanceUsdmTradifiProfileCompositionRequest:
             raise TypeError("required_market_state_keys must be tuple")
         if type(self.raw_exact_valuation) is not bool:
             raise TypeError("raw_exact_valuation must be exact bool")
+        if type(self.raw_exact_margin) is not bool:
+            raise TypeError("raw_exact_margin must be exact bool")
         states = tuple(
             sorted(
                 _text("required market state key", value)
@@ -379,6 +382,7 @@ class BinanceUsdmTradifiProfileCompositionRequest:
             "admitted_maximum_quantity": self.admitted_maximum_quantity,
             "required_market_state_keys": self.required_market_state_keys,
             **({"raw_exact_valuation": True} if self.raw_exact_valuation else {}),
+            **({"raw_exact_margin": True} if self.raw_exact_margin else {}),
         }
 
 
@@ -1017,7 +1021,7 @@ def _components(
         _profile_component(ProfilePortType.FINANCING_MODEL, "crypto.binance_usdm.tradifi.linear-funding-composition.v1", {"model_digest": model_digest, "funding_accounting": LinearFundingAccounting().component_ref, "funding_resolutions": [value.resolution_hash for value in request.funding_sources]}),
         (
             LinearAccountMarginProjectorV2().component_ref
-            if request.raw_exact_valuation
+            if request.raw_exact_valuation or request.raw_exact_margin
             else _profile_component(ProfilePortType.MARGIN_MODEL, "crypto.binance_usdm.tradifi.linear-margin-composition.v1", {"model_digest": model_digest, "instrument_margin": LinearInstrumentMarginModel().component_ref, "margin_resolution": margin.resolution_hash})
         ),
         _profile_component(ProfilePortType.LIQUIDATION_RULES, "crypto.binance_usdm.tradifi.conservative-liquidation-rules.v1", {"model_digest": model_digest, "price_resolutions": [value.resolution_hash for value in request.price_purposes if value.query.price_purpose.value == "liquidation"]}),

@@ -357,6 +357,8 @@ class BinanceUsdmKoruTradifiDevelopmentProfileResultV1:
             raise ValueError("resolved profile request binding mismatch")
         if not self.profile_composition_request.raw_exact_valuation:
             raise ValueError("KORU profile must authorize raw exact valuation")
+        if not self.profile_composition_request.raw_exact_margin:
+            raise ValueError("KORU profile must authorize raw exact margin")
         if self.financial_dispatcher_spec.margin_component != LinearAccountMarginProjectorV2().component_ref:
             raise ValueError("KORU profile must bind V2 account margin")
         if self.profile_registry != self.resolved_profile.profile_registry:
@@ -1712,6 +1714,7 @@ def _build_result(
         admitted_maximum_quantity=quantity,
         required_market_state_keys=("normal",),
         raw_exact_valuation=True,
+        raw_exact_margin=True,
     )
     composed = BinanceUsdmTradifiProfileComposer().compose(composition_request)
     if composed.result is None:

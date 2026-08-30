@@ -4,6 +4,7 @@ from dataclasses import replace
 from pathlib import Path
 from types import SimpleNamespace
 
+import crypto_quant_backtest.binance_usdm_tradifi_case_planner as case_planner
 from crypto_quant_backtest import DeterministicBarEngine
 from crypto_quant_backtest.binance_usdm_tradifi_case_planner import (
     _price_event,
@@ -90,6 +91,37 @@ def test_planner_preserves_non_lattice_scale8_valuation_marks() -> None:
 
     assert mark.price.units % 1_000_000 != 0
     assert mark.price.scale.places == 8
+
+
+def test_planner_preserves_non_lattice_scale8_margin_mark_with_koru_authority(
+    monkeypatch,
+) -> None:
+    bundle = _nonempty_bundle()
+    preparation = _resolve_v2(bundle).result
+    assert preparation is not None
+    stream_key = "binance_usdm.mark_price.margin.koruusdt.1h.v1"
+    events = case_planner._events
+
+    def raw_margin_events(result, stream):
+        values = events(result, stream)
+        if stream != stream_key:
+            return values
+        return tuple(
+            replace(
+                event,
+                payload={
+                    **event.payload,
+                    "price_units": event.payload["price_units"] + 1,
+                    "close_units": event.payload["close_units"] + 1,
+                },
+            )
+            for event in values
+        )
+
+    monkeypatch.setattr(case_planner, "_events", raw_margin_events)
+    planned = plan_binance_usdm_tradifi_case_v1(preparation)
+
+    assert planned.execution_case.financial_dispatch_plan is not None
 
 
 def test_production_planner_has_no_test_builder_or_financial_simulation_imports() -> None:

@@ -241,6 +241,8 @@ class BinanceUsdmKoruTradifiExecutionBundleRequestV2:
         )
         if profile.get("raw_exact_valuation") is not True:
             raise ValueError("V2 KORU profile must bind raw exact valuation")
+        if profile.get("raw_exact_margin") is not True:
+            raise ValueError("V2 KORU profile must bind raw exact margin")
         object.__setattr__(self, "source_projection", source)
         object.__setattr__(self, "target_result", target)
         object.__setattr__(

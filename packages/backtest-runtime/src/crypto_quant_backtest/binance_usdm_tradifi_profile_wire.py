@@ -1418,10 +1418,13 @@ def _decode(
         "timeline_window",
     )
     raw_exact_valuation = wire.get("raw_exact_valuation") is True
+    raw_exact_margin = wire.get("raw_exact_margin") is True
     payload = _object(
         wire,
         "binance_usdm_tradifi_profile_composition_request",
-        fields + (("raw_exact_valuation",) if raw_exact_valuation else ()),
+        fields
+        + (("raw_exact_valuation",) if raw_exact_valuation else ())
+        + (("raw_exact_margin",) if raw_exact_margin else ()),
     )
     instrument_wire = payload["instrument_metadata"]
     instrument = (
@@ -1470,6 +1473,7 @@ def _decode(
             _text(item) for item in _array(payload["required_market_state_keys"])
         ),
         raw_exact_valuation=raw_exact_valuation,
+        raw_exact_margin=raw_exact_margin,
     )
     wire_hash = canonical_sha256(payload)
     if (

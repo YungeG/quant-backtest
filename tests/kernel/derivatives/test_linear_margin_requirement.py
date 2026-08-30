@@ -4,7 +4,6 @@ from copy import deepcopy
 from dataclasses import replace
 
 import pytest
-
 from crypto_quant_domain import (
     CashBalanceKey,
     CurrencyId,
@@ -12,8 +11,8 @@ from crypto_quant_domain import (
     Money,
     Price,
     PricePurpose,
-    QuantizationPolicy,
     Quantity,
+    QuantizationPolicy,
     Rate,
     RoundingPolicy,
     Scale,
@@ -28,6 +27,7 @@ from crypto_quant_trading import (
     LinearInstrumentMarginFailure,
     LinearInstrumentMarginFailureCode,
     LinearInstrumentMarginModel,
+    LinearInstrumentMarginModelV2,
     LinearInstrumentMarginRequest,
     LinearInstrumentMarginResult,
     LinearMarginLeverageEvidence,
@@ -44,13 +44,12 @@ from tests.kernel.derivatives._fixtures import (
     ACCOUNT_ID,
     INSTRUMENT_ID,
     PRICE_SCALE,
-    QUOTE_CURRENCY,
     QUANTITY_SCALE,
+    QUOTE_CURRENCY,
     VENUE_ID,
     contract,
     position_key,
 )
-
 
 TIER_SCALE = Scale(2)
 EVALUATED_AT = SimulationInstant(
@@ -210,6 +209,36 @@ def _request(
         requirement_quantization=QuantizationPolicy(
             "synthetic.margin-requirement.v1", Scale(2), rounding
         ),
+    )
+
+
+def test_v2_accepts_positive_raw_scale8_margin_mark_exactly() -> None:
+    request = _request(
+        margin_mark_evidence=_with_mark(
+            _request(),
+            replace(
+                _mark_evidence().resolved_mark,
+                price=Price(
+                    10_000_000_001,
+                    Scale(8),
+                    str(INSTRUMENT_ID),
+                    str(QUOTE_CURRENCY),
+                ),
+            ),
+        ).margin_mark_evidence,
+    )
+
+    v1 = LinearInstrumentMarginModel().evaluate_margin(request)
+    v2 = LinearInstrumentMarginModelV2().evaluate_margin(request)
+
+    assert v1.failure is not None
+    assert v1.failure.code is LinearInstrumentMarginFailureCode.MARGIN_MARK_SCALE_MISMATCH
+    assert v2.failure is None and v2.result is not None
+    assert v2.result.exact_notional == ExactLinearMarginAmount(
+        QUOTE_CURRENCY, 10_000_000_001, 800_000_000
+    )
+    assert v2.result.exact_initial_margin == ExactLinearMarginAmount(
+        QUOTE_CURRENCY, 10_000_000_001, 8_000_000_000
     )
 
 

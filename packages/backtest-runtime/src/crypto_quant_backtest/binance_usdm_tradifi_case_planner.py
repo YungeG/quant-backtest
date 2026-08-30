@@ -138,8 +138,14 @@ def _price_event(
         raise ValueError(f"malformed retained {purpose.value} mark")
     price_scale = result.resolved_profile.linear_contract.price_scale
     if (
-        purpose is domain.PricePurpose.VALUATION
-        and result.resolved_profile.request.raw_exact_valuation
+        (
+            purpose is domain.PricePurpose.VALUATION
+            and result.resolved_profile.request.raw_exact_valuation
+        )
+        or (
+            purpose is domain.PricePurpose.MARGIN
+            and result.resolved_profile.request.raw_exact_margin
+        )
     ):
         mark_units = units
         mark_scale = domain.Scale(scale)

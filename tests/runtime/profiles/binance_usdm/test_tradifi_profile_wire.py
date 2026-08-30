@@ -67,10 +67,28 @@ def test_raw_exact_valuation_authority_is_explicit_and_hash_bound() -> None:
     assert decoded.request_hash != ordinary.request_hash
 
 
+def test_raw_exact_margin_authority_is_explicit_and_hash_bound() -> None:
+    ordinary = composition_request()
+    raw = replace(ordinary, raw_exact_margin=True)
+
+    assert "raw_exact_margin" not in _wire(ordinary)
+    wire = _wire(raw)
+    assert wire["raw_exact_margin"] is True
+    decoded = _decode(wire)
+    assert decoded.raw_exact_margin is True
+    assert decoded.request_hash == canonical_sha256(wire)
+    assert decoded.request_hash != ordinary.request_hash
+
+
 def test_raw_exact_valuation_false_is_not_a_valid_wire_authority() -> None:
     wire = _wire()
     wire["raw_exact_valuation"] = False
 
+    with pytest.raises(ValueError, match=f"^{_ERROR}$"):
+        _decode(wire)
+
+    wire = _wire()
+    wire["raw_exact_margin"] = False
     with pytest.raises(ValueError, match=f"^{_ERROR}$"):
         _decode(wire)
 
