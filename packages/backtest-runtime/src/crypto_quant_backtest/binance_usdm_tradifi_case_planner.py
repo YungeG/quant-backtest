@@ -847,7 +847,12 @@ def _margin_audits(
                 if start_at >= end_at:
                     continue
                 projection = _margin_projection(result, start_at)
-                suffix = f"hourly.{len(output) + 1}.{len(children) + 1}"
+                suffix = "hourly." + domain.canonical_sha256(
+                    {
+                        "liquidation_event_id": event.event_id,
+                        "subwindow_ordinal": len(children) + 1,
+                    }
+                ).removeprefix("sha256:")
                 plan = LinearMarginLiquidationAuditPlan(
                     projection.evaluated_at,
                     projection.valuation_mark.price,

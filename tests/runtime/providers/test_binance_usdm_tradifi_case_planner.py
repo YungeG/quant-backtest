@@ -181,6 +181,13 @@ def test_koru_funding_planner_reuses_exact_profile_evidence_and_fails_closed(
     monkeypatch.setattr(case_planner, "_events", original_events)
     planned = plan_binance_usdm_tradifi_case_v1(preparation)
     outcome = DeterministicBarEngine().run(planned.execution_case)
+    audit_roles = tuple(
+        role
+        for account_event in planned.execution_case.financial_dispatch_plan.scheduled_account_events
+        if account_event.operation_key == "margin_liquidation_audit_batch"
+        for role in account_event.expected_artifact_roles
+    )
+    assert len(audit_roles) == len(set(audit_roles))
     funding = planned.execution_case.financial_dispatch_plan.scheduled_account_events[0]
     payload = funding.payload
 
