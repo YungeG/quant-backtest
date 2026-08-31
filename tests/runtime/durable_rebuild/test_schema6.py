@@ -190,8 +190,8 @@ def _schema6_values():
     return prepared, resolved, case, envelope, request, registry
 
 
-def _schema7_values():
-    outcome = koru_provider._prepare(koru_fixture._nonempty_bundle())
+def _schema7_values(bundle=None):
+    outcome = koru_provider._prepare(bundle or koru_fixture._two_funding_bundle())
     assert outcome.failure is None and outcome.result is not None
     result = outcome.result
     planned = result.case_planning_result
@@ -248,7 +248,7 @@ def test_schema7_durable_fresh_rebuild_runs_public_koru_batch_plan(
     fixture = _proof_fixture(
         tmp_path,
         monkeypatch=monkeypatch,
-        values=_schema7_values(),
+        values=_schema7_values(koru_fixture._raw_scale8_two_funding_bundle()),
     )
     payload = _payload(fixture["store"].values[fixture["request"].execution_input_bundle_ref].envelope)
     plan = payload["execution_case_plan"]
@@ -267,10 +267,41 @@ def test_schema7_durable_fresh_rebuild_runs_public_koru_batch_plan(
     assert fixture["verification"].execution_input_bundle_ref.schema_version == 7
     assert plan["schema_version"] == 3
     assert batches and all(batch["subwindows"] for batch in batches)
+    funding = tuple(
+        event
+        for event in plan["financial_dispatch_plan"]["scheduled_account_events"]
+        if event["operation_key"] == "funding"
+    )
+    assert len(funding) == 2
+    assert all(
+        event["payload"]["funding_mark_evidence"]["resolved_mark"]["price"]["scale"]
+        == 8
+        and event["payload"]["funding_mark_evidence"]["resolved_mark"]["price"]["units"]
+        % 1_000_000
+        for event in funding
+    )
+    assert all(
+        price["scale"] == 8 and price["units"] % 1_000_000
+        for batch in batches
+        for price in (batch["liquidation_bar"]["low"], batch["liquidation_bar"]["high"])
+    )
+    assert len(
+        {role for event in funding for role in event["expected_artifact_roles"]}
+    ) == 4
+    assert all(
+        event["payload"]["settlement_evidence"]["event_id"] == event["event_id"]
+        and event["payload"]["settlement_evidence"]["application_key"]
+        == event["payload"]["settlement_identity"]["application_key"]
+        for event in funding
+    )
     assert rebuilt is not None
     assert rebuilt.result_hash == fixture["attempts"].attempt_hashes[0].engine_result.result_hash
     assert len(rebuilt.fills) == 2
     assert tuple(fill.liquidity for fill in rebuilt.fills) == ("taker", "taker")
+    assert sum(
+        artifact.role.startswith("funding_accounting.")
+        for artifact in rebuilt.financial_artifacts
+    ) == 2
     assert rebuilt.final_portfolio_snapshot.positions == ()
     roles = tuple(artifact.role for artifact in rebuilt.financial_artifacts)
     for batch in batches:

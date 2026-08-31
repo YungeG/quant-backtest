@@ -50,6 +50,7 @@ from .financial_dispatch import (
     LinearMarginLiquidationAuditSubwindowPlan,
     LinearMarginProjectionPlan,
     ScheduledAccountEvent,
+    _v2_funding_artifact_roles,
 )
 from .liquidation_audit import LinearLiquidationMarkBarEvidence
 from .multi_resolution_market_data import (
@@ -513,6 +514,39 @@ def _legacy_funding_events(
 
 
 
+def _preflight_v2_funding_resolution_artifacts(
+    result: BinanceUsdmTradifiPreparationResult,
+    semantic_run_id: str,
+) -> tuple[tuple[trading.LinearFundingApplicationIdentity, object], ...] | None:
+    resolutions = result.resolved_profile.request.funding_sources
+    model_versions = {resolution.model_version for resolution in resolutions}
+    if model_versions <= {1}:
+        return None
+    if model_versions != {2}:
+        raise ValueError("funding resolutions must use one supported model version")
+    resolution_artifacts = tuple(
+        (
+            trading.LinearFundingApplicationIdentity.derive(
+                resolution.query.application_key, _NAMESPACE, semantic_run_id
+            ),
+            resolution,
+        )
+        for resolution in resolutions
+    )
+    settlement_ids = tuple(
+        identity.settlement_id.value for identity, _ in resolution_artifacts
+    )
+    role_pairs = tuple(
+        _v2_funding_artifact_roles(identity)
+        for identity, _ in resolution_artifacts
+    )
+    if len(set(settlement_ids)) != len(settlement_ids):
+        raise ValueError("V2 funding resolutions must have unique settlement IDs")
+    if len(set(role_pairs)) != len(role_pairs):
+        raise ValueError("V2 funding resolutions must have unique artifact role pairs")
+    return resolution_artifacts
+
+
 def _funding_events(
     result: BinanceUsdmTradifiPreparationResult,
     semantic_run_id: str,
@@ -521,7 +555,10 @@ def _funding_events(
     cash_key, _ = _keys(result)
     events = _events(result, _FUNDING_STREAM)
     resolutions = result.resolved_profile.request.funding_sources
-    if all(resolution.model_version == 1 for resolution in resolutions):
+    resolution_artifacts = _preflight_v2_funding_resolution_artifacts(
+        result, semantic_run_id
+    )
+    if resolution_artifacts is None:
         return _legacy_funding_events(result, semantic_run_id)
     if len(resolutions) != len(events):
         raise ValueError(
@@ -589,6 +626,9 @@ def _funding_events(
         identity = trading.LinearFundingApplicationIdentity.derive(
             application_key, _NAMESPACE, semantic_run_id
         )
+        artifact_roles = _v2_funding_artifact_roles(identity)
+        if (identity, resolution) not in resolution_artifacts:
+            raise ValueError("funding resolution identity does not match retained event")
         plan = LinearFundingAccountEventPlan(
             identity,
             domain.SimulationInstant(
@@ -603,12 +643,12 @@ def _funding_events(
             domain.SimulationInstant(
                 target,
                 domain.TimelinePhase(100, "funding_eligibility"),
-                domain.SourceSequence(index),
+                domain.SourceSequence(0),
             ),
             domain.SimulationInstant(
                 target,
                 domain.TimelinePhase(105, "position_snapshot"),
-                domain.SourceSequence(index),
+                domain.SourceSequence(0),
             ),
             f"{event.event_id}:position-snapshot",
             "binance-usdm-tradifi.position-series.v1",
@@ -623,6 +663,9 @@ def _funding_events(
                 _MONEY_SCALE,
                 domain.RoundingPolicy.HALF_EVEN,
             ),
+            funding_model_version=2,
+            funding_eligibility_role=artifact_roles[0],
+            funding_accounting_role=artifact_roles[1],
         )
         output.append(
             ScheduledAccountEvent(
@@ -636,7 +679,7 @@ def _funding_events(
                 ),
                 plan,
                 plan.production_semantic_authority(),
-                ("funding_accounting", "funding_eligibility"),
+                tuple(sorted(artifact_roles)),
             )
         )
     return tuple(output)
@@ -1276,21 +1319,42 @@ def _identity_plan(
                 ),
             )
         )
-    for index, event in enumerate(_events(result, _FUNDING_STREAM)):
+    funding_events = _events(result, _FUNDING_STREAM)
+    funding_versions = {
+        resolution.model_version
+        for resolution in result.resolved_profile.request.funding_sources
+    }
+    if funding_versions <= {1}:
+        funding_model_version = 1
+    elif funding_versions == {2}:
+        funding_keys = tuple(
+            trading.LinearFundingApplicationKey.derive(
+                result.intent.execution_account_id,
+                trading.FundingSlotId.derive(_INSTRUMENT, event.event_time),
+            ).value
+            for event in funding_events
+        )
+        if len(set(funding_keys)) != len(funding_keys):
+            raise ValueError("V2 funding application slots must be unique")
+        funding_model_version = 2
+    else:
+        raise ValueError("funding resolutions must use one supported model version")
+    for index, event in enumerate(funding_events):
         key = trading.LinearFundingApplicationKey.derive(
             result.intent.execution_account_id,
             trading.FundingSlotId.derive(_INSTRUMENT, event.event_time),
         ).value
+        ordinal = index if funding_model_version == 1 else 0
         rules.extend(
             (
                 ExecutionCaseIdentityRule(
                     f"settlement.funding.{index}",
                     key,
-                    index,
+                    ordinal,
                     domain.DomainIdKind.SETTLEMENT,
                 ),
                 ExecutionCaseIdentityRule(
-                    f"journal.funding.{index}", key, index, domain.DomainIdKind.JOURNAL
+                    f"journal.funding.{index}", key, ordinal, domain.DomainIdKind.JOURNAL
                 ),
             )
         )
@@ -1945,6 +2009,7 @@ def plan_binance_usdm_tradifi_case_v1(
     trusted = _trusted_preparation(preparation_result)
     if trusted is None:
         raise ValueError("preparation_result must be an exact accepted result")
+    _preflight_v2_funding_resolution_artifacts(trusted, _PLACEHOLDER_RUN_ID)
     identity_plan = _identity_plan(trusted)
     timeline_keys = tuple(
         sorted(

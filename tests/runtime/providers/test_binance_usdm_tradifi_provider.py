@@ -46,8 +46,35 @@ def _prepare(bundle, parameter_index: int = 0, store=None):
     )
 
 
-def test_public_v2_nonempty_two_target_case_reaches_engine() -> None:
-    bundle = fixture._nonempty_bundle()
+def test_public_v2_raw_scale8_bundle_reaches_engine() -> None:
+    bundle = fixture._raw_scale8_two_funding_bundle()
+    source_events = bundle.source_projection.source_events
+    raw_bars = tuple(
+        event
+        for event in source_events
+        if event.payload.get("source_kind") == "mark_price"
+    )
+    raw_funding = tuple(
+        event
+        for event in source_events
+        if event.stream_key == "binance_usdm.funding_history.publications.koruusdt.v1"
+    )
+    aggregate_trades = tuple(
+        event
+        for event in source_events
+        if event.stream_key
+        == "binance_usdm.aggregate_trades.execution_reference.koruusdt.tradifi.v1"
+    )
+    assert raw_bars and raw_funding and aggregate_trades
+    assert all(event.payload["price_scale"] == 8 for event in raw_bars)
+    assert all(
+        event.payload[key] % 1_000_000
+        for event in raw_bars
+        for key in ("open_units", "high_units", "low_units", "close_units")
+    )
+    assert all(event.payload["mark_price_scale"] == 8 for event in raw_funding)
+    assert all(event.payload["mark_price_units"] % 1_000_000 for event in raw_funding)
+    assert all(event.payload["price"] == "100.00000000" for event in aggregate_trades)
 
     prepared = _prepare(bundle)
 
@@ -90,8 +117,55 @@ def test_public_v2_nonempty_two_target_case_reaches_engine() -> None:
     )
     assert len(executed.result.fee_assessments) == 2
     roles = tuple(value.role for value in executed.result.financial_artifacts)
-    assert roles.count("funding_eligibility") == 1
-    assert roles.count("funding_accounting") == 1
+    funding_events = tuple(
+        event
+        for event in prepared.result.execution_case.financial_dispatch_plan.scheduled_account_events
+        if event.operation_key == "funding"
+    )
+    resolutions = (
+        prepared.result.preparation_result.resolved_profile.request.funding_sources
+    )
+    assert len(funding_events) == len(resolutions) == 2
+    assert {event.event_id for event in funding_events} == {
+        resolution.selected_record.event_id for resolution in resolutions
+    }
+    assert len({role for event in funding_events for role in event.expected_artifact_roles}) == 4
+    assert tuple(event.expected_artifact_roles for event in funding_events) == tuple(
+        tuple(
+            sorted(
+                (
+                    f"funding_accounting.{event.payload.settlement_identity.settlement_id.value}",
+                    f"funding_eligibility.{event.payload.settlement_identity.settlement_id.value}",
+                )
+            )
+        )
+        for event in funding_events
+    )
+    for event in funding_events:
+        payload = event.payload
+        assert payload.funding_mark_evidence.resolved_mark.price.scale.places == 8
+        assert payload.funding_mark_evidence.resolved_mark.price.units % 1_000_000
+        assert payload.settlement_evidence.event_id == event.event_id
+        assert payload.settlement_evidence.application_key == payload.settlement_identity.application_key
+        assert event.expected_artifact_roles == tuple(
+            sorted((payload.funding_accounting_role, payload.funding_eligibility_role))
+        )
+    assert sum(role.startswith("funding_eligibility.") for role in roles) == 2
+    assert sum(role.startswith("funding_accounting.") for role in roles) == 2
+    funding_artifacts = tuple(
+        artifact
+        for artifact in executed.result.financial_artifacts
+        if artifact.source_event_id in {event.event_id for event in funding_events}
+    )
+    assert len(funding_artifacts) == 4
+    assert {artifact.role for artifact in funding_artifacts} == {
+        role for event in funding_events for role in event.expected_artifact_roles
+    }
+    assert all(
+        artifact.payload.position_state.quantity.units != 0
+        for artifact in funding_artifacts
+        if artifact.role.startswith("funding_eligibility.")
+    )
     batches = tuple(
         event.payload
         for event in prepared.result.execution_case.financial_dispatch_plan.scheduled_account_events
@@ -103,9 +177,60 @@ def test_public_v2_nonempty_two_target_case_reaches_engine() -> None:
         for batch in batches
         for child in batch.subwindows
     )
+    assert all(
+        price.scale.places == 8 and price.units % 1_000_000
+        for batch in batches
+        for price in (batch.liquidation_bar.low, batch.liquidation_bar.high)
+    )
     assert sum(value.startswith("liquidation_audit.hourly.") for value in roles) == 3
     assert sum(value.startswith("margin_projection.hourly.") for value in roles) == 3
+    margin_marks = tuple(
+        price
+        for artifact in executed.result.financial_artifacts
+        if artifact.role.startswith("margin_projection.hourly.")
+        for valuation in artifact.payload.request.position_valuations
+        for result in artifact.payload.request.margin_results
+        for price in (
+            valuation.resolved_mark.price,
+            result.request.margin_mark_evidence.resolved_mark.price,
+        )
+    )
+    assert margin_marks and all(
+        mark.scale.places == 8 and mark.units % 1_000_000 for mark in margin_marks
+    )
     assert executed.result.final_portfolio_snapshot.positions == ()
+
+
+def test_v2_funding_roles_reject_absence_and_forgery() -> None:
+    prepared = _prepare(fixture._two_funding_bundle())
+    assert prepared.result is not None
+    event = next(
+        value
+        for value in prepared.result.execution_case.financial_dispatch_plan.scheduled_account_events
+        if value.operation_key == "funding"
+    )
+    payload = event.payload
+
+    with pytest.raises(ValueError, match="V2 funding artifact roles"):
+        replace(
+            payload,
+            funding_eligibility_role="funding_eligibility.forged",
+            funding_accounting_role="funding_accounting.forged",
+        )
+    with pytest.raises(ValueError, match="V2 funding artifact roles must be present"):
+        replace(
+            payload,
+            funding_eligibility_role=None,
+            funding_accounting_role=None,
+        )
+    with pytest.raises(ValueError, match="funding artifact roles must match"):
+        replace(
+            event,
+            expected_artifact_roles=(
+                "funding_accounting.forged",
+                "funding_eligibility.forged",
+            ),
+        )
 
 
 def test_schema6_materializer_rejects_batch_downgrade() -> None:

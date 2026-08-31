@@ -76,6 +76,19 @@ def _empty_bundle():
     )
 
 
+def _two_funding_bundle():
+    source = target_v1_fixture._weekend_fragment()
+    start = source.request.timeline_window_start.epoch_nanoseconds // 1_000_000
+    return bundle_v2_fixture._build(
+        bundle_v2_fixture._source(source, (start + 18_000_000, start + 21_600_000))
+    )
+
+
+@cache
+def _raw_scale8_two_funding_bundle():
+    return bundle_v2_fixture._raw_scale8_two_funding_bundle()
+
+
 def _intent(bundle, parameter_index: int = 0):
     source = bundle.source_projection
     return BinanceUsdmTradifiBarRequestIntent(

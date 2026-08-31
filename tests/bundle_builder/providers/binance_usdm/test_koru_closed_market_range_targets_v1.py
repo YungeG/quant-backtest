@@ -114,14 +114,22 @@ _PARAMETER_ROWS = tuple(
 )
 
 
-def _rows(day_start_ms: int, closes: dict[int, str]) -> tuple[tuple[str, ...], ...]:
+def _rows(
+    day_start_ms: int,
+    closes: dict[int, str],
+    *,
+    open_price: str = "100.00000000",
+    high_price: str = "101.00000000",
+    low_price: str = "99.00000000",
+    close_price: str = "100.00000000",
+) -> tuple[tuple[str, ...], ...]:
     return tuple(
         (
             str(day_start_ms + hour * _HOUR_MS),
-            "100.00000000",
-            "101.00000000",
-            "99.00000000",
-            closes.get(hour, "100.00000000"),
+            open_price,
+            high_price,
+            low_price,
+            closes.get(hour, close_price),
             "0",
             str(day_start_ms + (hour + 1) * _HOUR_MS - 1),
             "0",
@@ -134,9 +142,14 @@ def _rows(day_start_ms: int, closes: dict[int, str]) -> tuple[tuple[str, ...], .
     )
 
 
-def _price_result(source_kind, utc_date: str, closes: dict[int, str]):
+def _price_result(
+    source_kind,
+    utc_date: str,
+    closes: dict[int, str],
+    **bar_prices: str,
+):
     day_start_ms = source_fixture._day_start_ms(utc_date)
-    rows = _rows(day_start_ms, closes)
+    rows = _rows(day_start_ms, closes, **bar_prices)
     archive, checksum = price_fixture.evidence(
         rows,
         member_name=f"KORUUSDT-1h-{utc_date}.csv",
@@ -171,8 +184,14 @@ def _base_fragment() -> BinanceUsdmKoruTradifiSourceProjectionResultV1:
     return source_fixture._built()
 
 
-@cache
-def _weekend_fragment() -> BinanceUsdmKoruTradifiSourceProjectionResultV1:
+def _weekend_fragment_with_prices(
+    *,
+    open_price: str = "100.00000000",
+    high_price: str = "101.00000000",
+    low_price: str = "99.00000000",
+    close_price: str = "100.00000000",
+    entry_close: str = "99.50000000",
+) -> BinanceUsdmKoruTradifiSourceProjectionResultV1:
     utc_date = "2026-07-18"
     day_start_ms = source_fixture._day_start_ms(utc_date)
     start = day_start_ms * 1_000_000
@@ -182,16 +201,24 @@ def _weekend_fragment() -> BinanceUsdmKoruTradifiSourceProjectionResultV1:
         for hour in range(12)
     )
     request = source_fixture._request(trades, start_ns=start, end_ns=end)
+    prices = {
+        "open_price": open_price,
+        "high_price": high_price,
+        "low_price": low_price,
+        "close_price": close_price,
+    }
     mark = (
         _price_result(
             price_fixture.BinanceUsdmKoruPriceBarsSourceKindV1.MARK_PRICE,
             "2026-07-17",
             {},
+            **prices,
         ),
         _price_result(
             price_fixture.BinanceUsdmKoruPriceBarsSourceKindV1.MARK_PRICE,
             utc_date,
-            {2: "99.50000000"},
+            {2: entry_close},
+            **prices,
         ),
     )
     index = (
@@ -199,11 +226,13 @@ def _weekend_fragment() -> BinanceUsdmKoruTradifiSourceProjectionResultV1:
             price_fixture.BinanceUsdmKoruPriceBarsSourceKindV1.INDEX_PRICE,
             "2026-07-17",
             {},
+            **prices,
         ),
         _price_result(
             price_fixture.BinanceUsdmKoruPriceBarsSourceKindV1.INDEX_PRICE,
             utc_date,
-            {2: "99.50000000"},
+            {2: entry_close},
+            **prices,
         ),
     )
     outcome = build_binance_usdm_koru_tradifi_source_projection_v1(
@@ -211,6 +240,22 @@ def _weekend_fragment() -> BinanceUsdmKoruTradifiSourceProjectionResultV1:
     )
     assert outcome.failure is None and outcome.result is not None
     return outcome.result
+
+
+@cache
+def _weekend_fragment() -> BinanceUsdmKoruTradifiSourceProjectionResultV1:
+    return _weekend_fragment_with_prices()
+
+
+@cache
+def _raw_scale8_weekend_fragment() -> BinanceUsdmKoruTradifiSourceProjectionResultV1:
+    return _weekend_fragment_with_prices(
+        open_price="100.00000001",
+        high_price="101.00000001",
+        low_price="99.00000001",
+        close_price="100.00000001",
+        entry_close="99.50000001",
+    )
 
 
 def _build(

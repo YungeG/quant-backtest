@@ -9,6 +9,7 @@ import pytest
 from crypto_quant_backtest import DeterministicBarEngine
 from crypto_quant_backtest.binance_usdm_tradifi_case_planner import (
     _expected_artifact_roles,
+    _identity_plan,
     _price_event,
     plan_binance_usdm_tradifi_case_v1,
 )
@@ -34,6 +35,33 @@ def test_planned_artifact_roles_reject_duplicates_with_exact_role_names() -> Non
         ValueError, match="duplicate planned artifact roles: funding_accounting"
     ):
         _expected_artifact_roles(("funding_accounting", "funding_accounting"))
+
+
+def test_v1_funding_roles_and_identities_remain_frozen() -> None:
+    preparation = _resolve(0).result
+    assert preparation is not None
+
+    planned = plan_binance_usdm_tradifi_case_v1(preparation)
+    funding = next(
+        event
+        for event in planned.execution_case.financial_dispatch_plan.scheduled_account_events
+        if event.operation_key == "funding"
+    )
+    rules = {rule.binding_key: rule for rule in _identity_plan(preparation)}
+
+    assert funding.payload.funding_model_version is None
+    assert funding.payload.funding_eligibility_role is None
+    assert funding.payload.funding_accounting_role is None
+    assert funding.expected_artifact_roles == (
+        "funding_accounting",
+        "funding_eligibility",
+    )
+    assert dict(funding.identity_bindings) == {
+        "journal.funding.0": funding.payload.settlement_identity.journal_entry_id,
+        "settlement.funding.0": funding.payload.settlement_identity.settlement_id,
+    }
+    assert rules["settlement.funding.0"].ordinal == 0
+    assert rules["journal.funding.0"].ordinal == 0
 
 
 def test_empty_retained_bundle_plans_composes_and_runs_flat() -> None:

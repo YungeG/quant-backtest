@@ -341,6 +341,19 @@ class _ProductionSemanticAuthority:
         return {"type": self.type_key, "schema_version": 1, **self.fields}
 
 
+def _v2_funding_artifact_roles(
+    settlement_identity: LinearFundingApplicationIdentity, /
+) -> tuple[str, str]:
+    """Derive the V2 funding artifact roles from its settlement identity."""
+    if type(settlement_identity) is not LinearFundingApplicationIdentity:
+        raise TypeError("settlement_identity must be exact LinearFundingApplicationIdentity")
+    settlement_id = settlement_identity.settlement_id.value
+    return (
+        f"funding_eligibility.{settlement_id}",
+        f"funding_accounting.{settlement_id}",
+    )
+
+
 @dataclass(frozen=True, slots=True)
 class LinearFundingAccountEventPlan:
     settlement_identity: LinearFundingApplicationIdentity
@@ -362,6 +375,9 @@ class LinearFundingAccountEventPlan:
     funding_mark_evidence: LinearFundingMarkEvidence | None = None
     settlement_cash_registration: LedgerBalanceRegistration | None = None
     payment_quantization: QuantizationPolicy | None = None
+    funding_model_version: int | None = None
+    funding_eligibility_role: str | None = None
+    funding_accounting_role: str | None = None
 
     def __post_init__(self) -> None:
         if type(self.settlement_identity) is not LinearFundingApplicationIdentity:
@@ -387,8 +403,13 @@ class LinearFundingAccountEventPlan:
             self.payment_quantization,
         )
         if all(value is None for value in full):
-            if self.position_supersedes_revision_id is not None:
-                raise ValueError("legacy funding plan cannot set revision authority")
+            if (
+                self.position_supersedes_revision_id is not None
+                or self.funding_model_version is not None
+                or self.funding_eligibility_role is not None
+                or self.funding_accounting_role is not None
+            ):
+                raise ValueError("legacy funding plan cannot set production authority")
             return
         if any(value is None for value in full):
             raise ValueError("production funding authority must be complete")
@@ -428,6 +449,26 @@ class LinearFundingAccountEventPlan:
             raise TypeError("settlement_cash_registration must be exact Registration")
         if type(self.payment_quantization) is not QuantizationPolicy:
             raise TypeError("payment_quantization must be exact QuantizationPolicy")
+        if self.funding_model_version is None:
+            if (
+                self.funding_eligibility_role is not None
+                or self.funding_accounting_role is not None
+            ):
+                raise ValueError("legacy funding plan cannot set V2 artifact roles")
+        elif type(self.funding_model_version) is not int or self.funding_model_version != 2:
+            raise ValueError("funding model version must be V2 when artifact roles exist")
+        elif (
+            self.funding_eligibility_role is None
+            or self.funding_accounting_role is None
+        ):
+            raise ValueError("V2 funding artifact roles must be present")
+        else:
+            roles = _v2_funding_artifact_roles(self.settlement_identity)
+            if (
+                _text("funding_eligibility_role", self.funding_eligibility_role),
+                _text("funding_accounting_role", self.funding_accounting_role),
+            ) != roles:
+                raise ValueError("V2 funding artifact roles must match settlement identity")
         position_key = cast(PositionBalanceKey, self.position_key)
         settlement_cash_key = cast(CashBalanceKey, self.settlement_cash_key)
         registration = cast(
@@ -504,6 +545,15 @@ class LinearFundingAccountEventPlan:
                     "funding_mark_evidence": self.funding_mark_evidence,
                     "settlement_cash_registration": self.settlement_cash_registration,
                     "payment_quantization": self.payment_quantization,
+                    **(
+                        {
+                            "funding_model_version": self.funding_model_version,
+                            "funding_eligibility_role": self.funding_eligibility_role,
+                            "funding_accounting_role": self.funding_accounting_role,
+                        }
+                        if self.funding_model_version is not None
+                        else {}
+                    ),
                 }
             )
         return payload
@@ -979,6 +1029,15 @@ class ScheduledAccountEvent:
             "expected_artifact_roles",
             _texts("expected_artifact_roles", self.expected_artifact_roles),
         )
+        if type(self.payload) is LinearFundingAccountEventPlan:
+            if self.payload.funding_model_version is None:
+                expected_roles = ("funding_accounting", "funding_eligibility")
+            else:
+                expected_roles = tuple(
+                    sorted(_v2_funding_artifact_roles(self.payload.settlement_identity))
+                )
+            if self.expected_artifact_roles != expected_roles:
+                raise ValueError("funding artifact roles must match the funding plan")
 
     def to_canonical_dict(self) -> dict[str, object]:
         return {
@@ -1021,6 +1080,11 @@ class FinancialDispatchPlan:
         if len({value.event_id for value in ordered}) != len(ordered):
             raise ValueError("scheduled Account Event IDs must be unique")
         object.__setattr__(self, "scheduled_account_events", ordered)
+        scheduled_roles = tuple(
+            role for event in ordered for role in event.expected_artifact_roles
+        )
+        if len(set(scheduled_roles)) != len(scheduled_roles):
+            raise ValueError("scheduled Account Event artifact roles must be globally unique")
         _canonical_payload("final_snapshot_payload", self.final_snapshot_payload)
         object.__setattr__(
             self,
@@ -1857,8 +1921,40 @@ class BinanceUsdmTradifiLinearFinancialDispatcher:
             or canonical_bytes(event.semantic_payload)
             != canonical_bytes(payload.production_semantic_authority())
             or event.component_keys != (self.spec.financing_component.component_key,)
-            or event.expected_artifact_roles
-            != ("funding_accounting", "funding_eligibility")
+        ):
+            return _failure(
+                self.spec,
+                event.event_id,
+                input_hash,
+                FinancialDispatchFailureCode.EVENT_PLAN_MISMATCH,
+                "funding_authority",
+            )
+        if payload.funding_model_version is None:
+            eligibility_role, accounting_role = (
+                "funding_eligibility",
+                "funding_accounting",
+            )
+        else:
+            eligibility_role, accounting_role = _v2_funding_artifact_roles(
+                payload.settlement_identity
+            )
+            if (
+                payload.funding_model_version != 2
+                or (
+                    payload.funding_eligibility_role,
+                    payload.funding_accounting_role,
+                )
+                != (eligibility_role, accounting_role)
+            ):
+                return _failure(
+                    self.spec,
+                    event.event_id,
+                    input_hash,
+                    FinancialDispatchFailureCode.EVENT_PLAN_MISMATCH,
+                    "funding_artifact_roles",
+                )
+        if event.expected_artifact_roles != tuple(
+            sorted((accounting_role, eligibility_role))
         ):
             return _failure(
                 self.spec,
@@ -1966,7 +2062,7 @@ class BinanceUsdmTradifiLinearFinancialDispatcher:
             event.expected_artifact_roles,
             (
                 FinancialDispatchArtifact(
-                    "funding_eligibility",
+                    eligibility_role,
                     event.event_id,
                     event.event_at,
                     eligibility.result.component_ref.component_key,
@@ -1977,7 +2073,7 @@ class BinanceUsdmTradifiLinearFinancialDispatcher:
                     eligibility.result,
                 ),
                 FinancialDispatchArtifact(
-                    "funding_accounting",
+                    accounting_role,
                     event.event_id,
                     payload.recorded_at,
                     self.spec.financing_component.component_key,

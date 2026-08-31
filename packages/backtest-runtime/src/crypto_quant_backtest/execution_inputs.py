@@ -2716,6 +2716,9 @@ def _read_scheduled_event_payload(
             if full
             else None,
             _read_quantization(data["payment_quantization"]) if full else None,
+            data.get("funding_model_version") if full else None,
+            data.get("funding_eligibility_role") if full else None,
+            data.get("funding_accounting_role") if full else None,
         )
     if tag == "linear_margin_liquidation_audit_batch_plan":
         if not allow_batch:

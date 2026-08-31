@@ -305,6 +305,12 @@ def _scheduled_event_semantics(value: ScheduledAccountEvent) -> dict[str, object
         raise ValueError(
             "scheduled event semantic payload does not match production authority"
         )
+    expected_artifact_roles = value.expected_artifact_roles
+    if (
+        type(payload) is LinearFundingAccountEventPlan
+        and payload.funding_model_version == 2
+    ):
+        expected_artifact_roles = ()
     return {
         "event_id": value.event_id,
         "event_at": value.event_at,
@@ -313,20 +319,29 @@ def _scheduled_event_semantics(value: ScheduledAccountEvent) -> dict[str, object
         "semantic_payload": (
             authority if authority is not None else value.semantic_payload
         ),
-        "expected_artifact_roles": value.expected_artifact_roles,
+        "expected_artifact_roles": expected_artifact_roles,
     }
 
 
 def _financial_dispatch_semantics(
     plan: FinancialDispatchPlan,
 ) -> dict[str, object]:
+    derived_roles = {
+        role
+        for event in plan.scheduled_account_events
+        if type(event.payload) is LinearFundingAccountEventPlan
+        and event.payload.funding_model_version == 2
+        for role in event.expected_artifact_roles
+    }
     return {
         "dispatcher_spec": plan.dispatcher_spec,
         "scheduled_account_events": tuple(
             _scheduled_event_semantics(value) for value in plan.scheduled_account_events
         ),
         "final_snapshot_payload": plan.final_snapshot_payload,
-        "expected_artifact_roles": plan.expected_artifact_roles,
+        "expected_artifact_roles": tuple(
+            role for role in plan.expected_artifact_roles if role not in derived_roles
+        ),
     }
 
 

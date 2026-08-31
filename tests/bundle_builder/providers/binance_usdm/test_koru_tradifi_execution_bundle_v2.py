@@ -50,14 +50,26 @@ from tests.bundle_builder.providers.binance_usdm import (
 )
 
 
-def _source(v1_source=None):
+def _source(
+    v1_source=None,
+    funding_times: tuple[int, ...] | None = None,
+    funding_mark_price: str = "20.00000000",
+):
     v1_source = target_v1_fixture._weekend_fragment() if v1_source is None else v1_source
     source_request = v1_source.request
-    funding_time = source_request.timeline_window_start.epoch_nanoseconds // 1_000_000
+    if funding_times is None:
+        funding_times = (
+            source_request.timeline_window_start.epoch_nanoseconds // 1_000_000,
+        )
     source_request = replace(
         source_request,
         funding_result=source_v1_fixture._funding_result(
-            funding_fixture.compact([funding_fixture.row(funding_time)])
+            funding_fixture.compact(
+                [
+                    funding_fixture.row(value, mark_price=funding_mark_price)
+                    for value in funding_times
+                ]
+            )
         ),
     )
     outcome = build_binance_usdm_koru_tradifi_source_projection_v2(
@@ -130,6 +142,18 @@ def _build(source=None):
     outcome = build_binance_usdm_koru_tradifi_execution_bundle_v2(_request(source))
     assert outcome.failure is None and outcome.result is not None
     return outcome.result
+
+
+def _raw_scale8_two_funding_bundle():
+    source = target_v1_fixture._raw_scale8_weekend_fragment()
+    start = source.request.timeline_window_start.epoch_nanoseconds // 1_000_000
+    return _build(
+        _source(
+            source,
+            (start + 18_000_000, start + 21_600_000),
+            funding_mark_price="20.00000001",
+        )
+    )
 
 
 def test_v1_final_bundle_golden_hashes_remain_exact() -> None:
