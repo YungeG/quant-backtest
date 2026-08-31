@@ -21,6 +21,7 @@ from crypto_quant_domain import (
     OrderStatus,
     PortfolioSnapshot,
     PositionBalanceKey,
+    QuantizationPolicy,
     PositionLot,
     Scale,
     SimulationInstant,
@@ -70,6 +71,9 @@ from crypto_quant_trading import (
     PortfolioAllocator,
     PortfolioRiskEvaluator,
     PortfolioRiskPolicy,
+    PortfolioSnapshotRefreshInputV1,
+    PortfolioSnapshotRefresherV1,
+    PortfolioSnapshotRefreshPolicyV1,
     PositionSizer,
     PositionSizingPolicy,
     PreTradeResourceRequirement,
@@ -87,6 +91,7 @@ from crypto_quant_trading import (
     SettlementBookState,
     StrategyAllocation,
     TargetValidity,
+    CurrencyValuationGraph,
 )
 
 from .financial_dispatch import (
@@ -501,10 +506,120 @@ class ResolvedDecisionCycle:
 
 
 @dataclass(frozen=True, slots=True)
+class _DecisionSnapshotArtifactPayloadV1:
+    decision_ordinal: int
+    snapshot: PortfolioSnapshot
+    journal_state_hash: str
+    lot_book_hash: str
+    working_order_set_hash: str
+    reservation_state_hash: str
+    settlement_state_hash: str
+    decision_mark_set_hash: str
+    refresh_policy_hash: str
+    refresh_input_hash: str
+
+    def __post_init__(self) -> None:
+        if type(self.decision_ordinal) is not int or self.decision_ordinal < 0:
+            raise ValueError("decision_ordinal must be nonnegative integer")
+        if not isinstance(self.snapshot, PortfolioSnapshot):
+            raise TypeError("snapshot must be PortfolioSnapshot")
+        for name in (
+            "journal_state_hash",
+            "lot_book_hash",
+            "working_order_set_hash",
+            "reservation_state_hash",
+            "settlement_state_hash",
+            "decision_mark_set_hash",
+            "refresh_policy_hash",
+            "refresh_input_hash",
+        ):
+            _hash(name, getattr(self, name))
+
+    def to_canonical_dict(self) -> dict[str, object]:
+        return {
+            "type": "decision_snapshot",
+            "schema_version": 1,
+            "decision_ordinal": self.decision_ordinal,
+            "snapshot": self.snapshot,
+            "journal_state_hash": self.journal_state_hash,
+            "lot_book_hash": self.lot_book_hash,
+            "working_order_set_hash": self.working_order_set_hash,
+            "reservation_state_hash": self.reservation_state_hash,
+            "settlement_state_hash": self.settlement_state_hash,
+            "decision_mark_set_hash": self.decision_mark_set_hash,
+            "refresh_policy_hash": self.refresh_policy_hash,
+            "refresh_input_hash": self.refresh_input_hash,
+        }
+
+
+@dataclass(frozen=True, slots=True)
+class ResolvedDecisionSnapshotRefreshPlanV1:
+    """Resolved decision-time authorities for one current-state Snapshot refresh."""
+
+    decision_ordinal: int
+    occurred_at: SimulationInstant
+    policy: PortfolioSnapshotRefreshPolicyV1
+    resolved_marks: tuple[ResolvedMark, ...]
+    currency_valuation_graph: CurrencyValuationGraph
+    reporting_currency: CurrencyId
+    quantization_policy: QuantizationPolicy
+
+    def __post_init__(self) -> None:
+        if type(self.decision_ordinal) is not int or self.decision_ordinal < 0:
+            raise ValueError("decision_ordinal must be nonnegative integer")
+        if not isinstance(self.occurred_at, SimulationInstant):
+            raise TypeError("occurred_at must be SimulationInstant")
+        if self.occurred_at.phase != TimelinePhase(30, "decision_snapshot"):
+            raise ValueError("decision Snapshot must use authoritative phase 30")
+        if not isinstance(self.policy, PortfolioSnapshotRefreshPolicyV1):
+            raise TypeError("policy must be PortfolioSnapshotRefreshPolicyV1")
+        if type(self.resolved_marks) is not tuple or not all(
+            isinstance(value, ResolvedMark) for value in self.resolved_marks
+        ):
+            raise TypeError("resolved_marks must contain ResolvedMark")
+        if not isinstance(self.currency_valuation_graph, CurrencyValuationGraph):
+            raise TypeError("currency_valuation_graph must be CurrencyValuationGraph")
+        if not isinstance(self.reporting_currency, CurrencyId):
+            raise TypeError("reporting_currency must be CurrencyId")
+        if not isinstance(self.quantization_policy, QuantizationPolicy):
+            raise TypeError("quantization_policy must be QuantizationPolicy")
+        if (
+            self.currency_valuation_graph.valuation_at != self.occurred_at.instant
+            or self.currency_valuation_graph.price_purpose
+            is not self.policy.price_purpose
+        ):
+            raise ValueError("decision Snapshot graph context mismatch")
+        object.__setattr__(self, "resolved_marks", _stable_tuple(self.resolved_marks))
+
+    @property
+    def source_event_id(self) -> str:
+        return f"decision-snapshot:{self.decision_ordinal}"
+
+    @property
+    def plan_hash(self) -> str:
+        return canonical_sha256(self)
+
+    def to_canonical_dict(self) -> dict[str, object]:
+        return {
+            "type": "resolved_decision_snapshot_refresh_plan_v1",
+            "schema_version": 1,
+            "decision_ordinal": self.decision_ordinal,
+            "occurred_at": self.occurred_at,
+            "policy": self.policy,
+            "resolved_marks": self.resolved_marks,
+            "currency_valuation_graph": self.currency_valuation_graph,
+            "reporting_currency": self.reporting_currency,
+            "quantization_policy": self.quantization_policy,
+            "source_event_id": self.source_event_id,
+        }
+
+
+@dataclass(frozen=True, slots=True)
 class ResolvedPortfolioDecisionCycleV2(ResolvedDecisionCycle):
-    """Additive portfolio cycle carrying target-bound cancellation identities."""
+    """Additive portfolio cycle carrying current-state and cancellation plans."""
 
     cancellation_plans: tuple[ResolvedOrderCancellationPlanV1, ...] = ()
+    snapshot_refresh_plan: ResolvedDecisionSnapshotRefreshPlanV1 | None = None
 
     def __post_init__(self) -> None:
         super(ResolvedPortfolioDecisionCycleV2, self).__post_init__()
@@ -528,6 +643,12 @@ class ResolvedPortfolioDecisionCycleV2(ResolvedDecisionCycle):
             raise ValueError("cancellation plans must have unique Order IDs")
         if len(set(event_ids)) != len(event_ids):
             raise ValueError("cancellation plans must have unique event IDs")
+        if self.snapshot_refresh_plan is not None and not isinstance(
+            self.snapshot_refresh_plan, ResolvedDecisionSnapshotRefreshPlanV1
+        ):
+            raise TypeError(
+                "snapshot_refresh_plan must be ResolvedDecisionSnapshotRefreshPlanV1 or None"
+            )
         object.__setattr__(
             self,
             "cancellation_plans",
@@ -539,6 +660,8 @@ class ResolvedPortfolioDecisionCycleV2(ResolvedDecisionCycle):
         payload["type"] = "resolved_portfolio_decision_cycle_v2"
         payload["schema_version"] = 2
         payload["cancellation_plans"] = self.cancellation_plans
+        if self.snapshot_refresh_plan is not None:
+            payload["snapshot_refresh_plan"] = self.snapshot_refresh_plan
         return payload
 
 
@@ -1440,6 +1563,7 @@ class EngineStage(str, Enum):
     PORTFOLIO_RISK = "portfolio_risk"
     POSITION_SIZING = "position_sizing"
     ORDER_PLAN = "order_plan"
+    DECISION_SNAPSHOT = "decision_snapshot"
     ORDER_CAPABILITY = "order_capability"
     ORDER_TRANSLATION = "order_translation"
     MARKET_RULE = "market_rule"
@@ -1864,6 +1988,15 @@ class DeterministicBarEngine:
             )
         cycles_by_event: dict[str, ResolvedDecisionCycle] = {}
         cycle_buffers: dict[str, list[TimelineEvent]] = {}
+        cycle_ordinals = {
+            cycle.cycle_hash: ordinal
+            for ordinal, cycle in enumerate(
+                sorted(
+                    case.decision_cycles,
+                    key=lambda value: (value.schedule.decision_time, value.cycle_hash),
+                )
+            )
+        }
         for resolved_cycle in case.decision_cycles:
             cycle_buffers[resolved_cycle.cycle_hash] = []
             for entry in resolved_cycle.schedule.entries:
@@ -1922,7 +2055,11 @@ class DeterministicBarEngine:
                     buffer.append(timeline_event)
                     if len(buffer) == len(matched_cycle.schedule.entries):
                         failure = self._decision_cycle(
-                            case, state, matched_cycle, tuple(buffer)
+                            case,
+                            state,
+                            matched_cycle,
+                            tuple(buffer),
+                            cycle_ordinals[matched_cycle.cycle_hash],
                         )
                         if failure is not None:
                             return failure
@@ -1996,7 +2133,16 @@ class DeterministicBarEngine:
         )
         if failure is not None:
             return failure
-        actual_roles = tuple(sorted(value.role for value in state.financial_artifacts))
+        actual_roles = tuple(
+            sorted(
+                value.role
+                for value in state.financial_artifacts
+                if not (
+                    value.role == "decision_snapshot"
+                    and value.source_event_id.startswith("decision-snapshot:")
+                )
+            )
+        )
         if actual_roles != case.financial_dispatch_plan.expected_artifact_roles:
             return self._failed(
                 case,
@@ -2293,12 +2439,109 @@ class DeterministicBarEngine:
             )
         return None
 
+    def _refresh_decision_snapshot(
+        self,
+        case: ResolvedExecutionCase,
+        state: _EngineState,
+        cycle: ResolvedDecisionCycle,
+        decision_ordinal: int,
+    ) -> EngineExecutionOutcome | None:
+        if not isinstance(cycle, ResolvedPortfolioDecisionCycleV2):
+            return None
+        plan = cycle.snapshot_refresh_plan
+        if plan is None:
+            return None
+        if (
+            plan.decision_ordinal != decision_ordinal
+            or plan.occurred_at.instant != cycle.schedule.decision_time
+            or any(
+                artifact.role == "decision_snapshot"
+                and artifact.source_event_id == plan.source_event_id
+                for artifact in state.financial_artifacts
+            )
+        ):
+            return self._failed(
+                case,
+                state,
+                EngineFailureCode.CASE_EVIDENCE_MISMATCH,
+                (plan.source_event_id, cycle.schedule.schedule_hash),
+                (plan.plan_hash,),
+            )
+        working_orders = tuple(
+            stream
+            for stream in state.order_streams.values()
+            if stream.state is not None
+            and stream.state.status
+            not in {
+                OrderStatus.FILLED,
+                OrderStatus.CANCELLED,
+                OrderStatus.EXPIRED,
+                OrderStatus.REJECTED,
+            }
+        )
+        refresh_input = PortfolioSnapshotRefreshInputV1(
+            ledger_state=state.ledger_state,
+            position_lot_books=_lot_state(state.lot_books),
+            settlement_state=state.settlement_state,
+            reservation_state=state.reservation_state,
+            working_orders=working_orders,
+            resolved_marks=plan.resolved_marks,
+            currency_valuation_graph=plan.currency_valuation_graph,
+            reporting_currency=plan.reporting_currency,
+            quantization_policy=plan.quantization_policy,
+            timestamp=plan.occurred_at.instant,
+        )
+        try:
+            snapshot = PortfolioSnapshotRefresherV1(plan.policy).refresh(refresh_input)
+        except (TypeError, ValueError) as error:
+            return self._failed(
+                case,
+                state,
+                EngineFailureCode.SNAPSHOT_PROJECTION_FAILURE,
+                (plan.source_event_id, type(error).__name__),
+                (refresh_input.input_hash, plan.plan_hash),
+            )
+        payload = _DecisionSnapshotArtifactPayloadV1(
+            decision_ordinal=decision_ordinal,
+            snapshot=snapshot,
+            journal_state_hash=state.ledger_state.state_hash,
+            lot_book_hash=refresh_input.lot_book_hash,
+            working_order_set_hash=refresh_input.working_order_set_hash,
+            reservation_state_hash=state.reservation_state.state_hash,
+            settlement_state_hash=state.settlement_state.state_hash,
+            decision_mark_set_hash=refresh_input.decision_mark_set_hash,
+            refresh_policy_hash=plan.policy.policy_hash,
+            refresh_input_hash=refresh_input.input_hash,
+        )
+        artifact = FinancialDispatchArtifact(
+            role="decision_snapshot",
+            source_event_id=plan.source_event_id,
+            occurred_at=plan.occurred_at,
+            component_key=plan.policy.policy_key,
+            component_version=plan.policy.policy_version,
+            component_digest=plan.policy.policy_hash,
+            input_hash=refresh_input.input_hash,
+            result_hash=canonical_sha256(payload),
+            payload=payload,
+        )
+        state.snapshot = snapshot
+        state.financial_artifacts.append(artifact)
+        self._trace_add(
+            state,
+            EngineStage.DECISION_SNAPSHOT,
+            plan.occurred_at,
+            plan.source_event_id,
+            artifact.artifact_hash,
+        )
+        return None
+
     def _decision_cycle(
         self,
         case: ResolvedExecutionCase,
         state: _EngineState,
         cycle: ResolvedDecisionCycle,
         events: tuple[TimelineEvent, ...],
+        decision_ordinal: int,
     ) -> EngineExecutionOutcome | None:
         injection_outcome = PrecomputedTargetStreamAdapter().inject(
             stream=case.target_stream,
@@ -2355,6 +2598,12 @@ class DeterministicBarEngine:
             injection.batch.decision_batch_id,
             canonical_sha256(injection.batch),
         )
+
+        snapshot_failure = self._refresh_decision_snapshot(
+            case, state, cycle, decision_ordinal
+        )
+        if snapshot_failure is not None:
+            return snapshot_failure
 
         allocation_outcome = PortfolioAllocator().allocate(
             sleeve_state=injection.state,
