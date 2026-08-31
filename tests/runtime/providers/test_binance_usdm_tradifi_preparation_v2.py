@@ -180,6 +180,20 @@ def test_v2_empty_streams_and_trusted_replay_are_canonical() -> None:
     assert canonical_sha256(result.to_canonical_dict()) == canonical_sha256(result)
 
 
+def test_v2_public_p01_preparation_preserves_compact_funding_books() -> None:
+    outcome = _resolve(_raw_scale8_two_funding_bundle())
+
+    assert outcome.failure is None and outcome.result is not None
+    funding = outcome.result.resolved_profile.request.funding_sources
+    assert len(funding) == 2
+    assert all(
+        len(value.query.funding_book.records)
+        == len(value.query.funding_book.coverages)
+        == 1
+        for value in funding
+    )
+
+
 def test_v2_manifest_exact_covers_source_projection_targets_and_authorities() -> None:
     bundle = _nonempty_bundle()
     source_payload = bundle.authority_artifacts[3].payload

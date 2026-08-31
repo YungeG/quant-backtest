@@ -204,6 +204,27 @@ def test_koru_factory_resolves_all_120_actual_raw_funding_marks(
     ]
     assert {value.mark_observation.price.scale.places for value in resolutions} == {8}
 
+    source_events = {event.event_id: event for event in normalized.events}
+    books = tuple(value.query.funding_book for value in resolutions)
+    assert all(len(book.records) == len(book.coverages) == 1 for book in books)
+    assert {book.records[0].event_id for book in books} == set(source_events)
+    for resolution, book in zip(resolutions, books, strict=True):
+        record = book.records[0]
+        source_event = source_events[record.event_id]
+        assert record.funding_time == resolution.query.target_funding_time
+        assert record.source_ref.source_key == source_event.source_key
+        assert record.source_ref.source_hash == source_event.source_hash
+        assert book.coverages[0].source_ref == record.source_ref
+        assert book.coverages[0].coverage_from == factory_request.timeline_window.data_start
+        assert book.coverages[0].coverage_to_exclusive == factory_request.timeline_window.end_exclusive
+    full_book = replace(
+        books[0],
+        records=tuple(value.selected_record for value in resolutions),
+    )
+    assert max(len(canonical_bytes(book)) for book in books) < len(
+        canonical_bytes(full_book)
+    )
+
 
 def test_authority_and_source_tamper_fail_closed(trusted_profile) -> None:
     _, request, _ = trusted_profile

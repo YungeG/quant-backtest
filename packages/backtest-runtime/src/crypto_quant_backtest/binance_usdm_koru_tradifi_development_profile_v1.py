@@ -1518,25 +1518,25 @@ def _funding_resolutions(request, events, order_rules):
         )
         for event in events
     )
-    coverage = BinanceUsdmFundingCoverage(
-        "koru-tradifi-funding-coverage-v1",
-        _INSTRUMENT,
-        request.timeline_window.data_start,
-        request.timeline_window.end_exclusive,
-        _FUNDING_STREAM,
-        1,
-        records[0].source_ref,
-    )
-    book = BinanceUsdmHistoricalFundingBook(
-        "binance-usdm-koru-tradifi-funding-v1",
-        1,
-        _INSTRUMENT,
-        (coverage,),
-        records,
-    )
     resolutions = []
     for record in records:
         target = record.funding_time
+        coverage = BinanceUsdmFundingCoverage(
+            "koru-tradifi-funding-coverage-v1",
+            _INSTRUMENT,
+            request.timeline_window.data_start,
+            request.timeline_window.end_exclusive,
+            _FUNDING_STREAM,
+            1,
+            record.source_ref,
+        )
+        book = BinanceUsdmHistoricalFundingBook(
+            "binance-usdm-koru-tradifi-funding-v1",
+            1,
+            _INSTRUMENT,
+            (coverage,),
+            (record,),
+        )
         ordinary = _ordinary_instrument(target, request.composed_at.instant)
         contract = LinearPerpetualContract(
             ordinary.instrument,
