@@ -396,8 +396,17 @@ class ResolvedOrderCancellationPlanV1:
             raise TypeError("cancellation times must be SimulationInstant")
         if self.cancel_requested_at.instant != self.cancelled_at.instant:
             raise ValueError("cancellation events must share one UTC decision time")
-        if self.cancel_requested_at.phase.rank >= self.cancelled_at.phase.rank:
-            raise ValueError("cancellation phases must be strictly increasing")
+        if self.cancel_requested_at.phase != TimelinePhase(
+            90, "order_cancel_requested"
+        ):
+            raise ValueError("cancel request must use authoritative phase 90")
+        if self.cancelled_at.phase != TimelinePhase(91, "order_cancelled"):
+            raise ValueError("cancel completion must use authoritative phase 91")
+        if (
+            self.cancel_requested_at.source_sequence
+            != self.cancelled_at.source_sequence
+        ):
+            raise ValueError("cancellation events must share one source sequence")
         _text("reason_code", self.reason_code)
         _hash("source_target_hash", self.source_target_hash)
 
@@ -2503,9 +2512,28 @@ class DeterministicBarEngine:
                 tuple(sorted(set(plans_by_order) ^ set(intents_by_order)))
                 or (cycle.schedule.schedule_hash,),
             )
-        for order_id in sorted(plans_by_order):
-            resolved = plans_by_order[order_id]
-            intent = intents_by_order[order_id]
+        ordered = tuple(
+            sorted(
+                (
+                    (intents_by_order[order_id], plans_by_order[order_id])
+                    for order_id in plans_by_order
+                ),
+                key=lambda value: (
+                    canonical_bytes(value[0].instrument_id),
+                    value[0].order_id.value,
+                ),
+            )
+        )
+        prepared: list[
+            tuple[
+                str,
+                ResolvedOrderCancellationPlanV1,
+                OrderEventStream,
+                OrderEventStream,
+            ]
+        ] = []
+        for source_sequence, (intent, resolved) in enumerate(ordered, start=1):
+            order_id = intent.order_id.value
             stream = state.order_streams.get(order_id)
             if (
                 stream is None
@@ -2522,6 +2550,8 @@ class DeterministicBarEngine:
                 or resolved.source_target_hash != plan.based_on_normalized_target_hash
                 or resolved.cancel_requested_at.instant
                 != cycle.schedule.decision_time
+                or resolved.cancel_requested_at.source_sequence.value
+                != source_sequence
             ):
                 return self._failed(
                     case,
@@ -2539,14 +2569,7 @@ class DeterministicBarEngine:
                 evidence_id=resolved.source_target_hash,
                 reason_code=resolved.reason_code,
             )
-            stream = stream.append(OrderEventRecord(requested))
-            self._trace_add(
-                state,
-                EngineStage.ORDER_CANCEL_REQUESTED,
-                resolved.cancel_requested_at,
-                order_id,
-                stream.stream_hash,
-            )
+            requested_stream = stream.append(OrderEventRecord(requested))
             cancelled = OrderEvent(
                 event_id=resolved.cancelled_event_id,
                 order_id=resolved.order_id,
@@ -2556,21 +2579,61 @@ class DeterministicBarEngine:
                 evidence_id=resolved.source_target_hash,
                 reason_code=resolved.reason_code,
             )
-            stream = stream.append(OrderEventRecord(cancelled))
-            state.order_streams[order_id] = stream
+            cancelled_stream = requested_stream.append(OrderEventRecord(cancelled))
+            prepared.append(
+                (order_id, resolved, requested_stream, cancelled_stream)
+            )
+
+        final_streams = dict(state.order_streams)
+        final_streams.update(
+            (order_id, cancelled_stream)
+            for order_id, _, _, cancelled_stream in prepared
+        )
+        try:
+            reservation_state = state.reservation_book.project(
+                tuple(final_streams.values()),
+                tuple(state.reservation_schedules.values()),
+            )
+            settlement_state = state.settlement_book.project()
+            availability = AvailabilityProjection().project(
+                state.ledger_state,
+                settlement_state,
+                reservation_state,
+                case.financial_state.settlement_rules,
+            )
+        except (TypeError, ValueError) as error:
+            return self._failed(
+                case,
+                state,
+                EngineFailureCode.CASE_EVIDENCE_MISMATCH,
+                (type(error).__name__,),
+                (canonical_sha256({"error_type": type(error).__name__}),),
+            )
+
+        for order_id, resolved, requested_stream, _ in prepared:
+            state.order_streams[order_id] = requested_stream
+            self._trace_add(
+                state,
+                EngineStage.ORDER_CANCEL_REQUESTED,
+                resolved.cancel_requested_at,
+                order_id,
+                requested_stream.stream_hash,
+            )
+        for order_id, resolved, _, cancelled_stream in prepared:
+            state.order_streams[order_id] = cancelled_stream
             self._trace_add(
                 state,
                 EngineStage.ORDER_CANCELLED,
                 resolved.cancelled_at,
                 order_id,
-                stream.stream_hash,
+                cancelled_stream.stream_hash,
             )
-        if plans_by_order:
-            self._refresh_resources(case, state)
-            latest = max(
-                cycle.cancellation_plans, key=lambda value: value.cancelled_at
-            )
-            self._trace_resource_refresh(state, latest.cancelled_at, latest.order_id.value)
+        if prepared:
+            state.reservation_state = reservation_state
+            state.settlement_state = settlement_state
+            state.availability = availability
+            latest = prepared[-1]
+            self._trace_resource_refresh(state, latest[1].cancelled_at, latest[0])
         return None
 
     def _admit_order(

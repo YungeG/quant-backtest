@@ -14,10 +14,14 @@ from crypto_quant_backtest import (
     ResolvedPortfolioDecisionCycleV2,
 )
 from crypto_quant_domain import (
+    DomainId,
+    DomainIdKind,
     ExecutionStyle,
+    InstrumentId,
     Money,
     OrderEventType,
     OrderStatus,
+    Quantity,
     SimulationInstant,
     SourceSequence,
     TimelinePhase,
@@ -282,6 +286,138 @@ def _expired_target_plan(case, stream, schedule):
     return planned.decision.plan
 
 
+def _two_order_cancellation_context(*, invalid_second: bool = False):
+    case, first_stream, first_admission, first_schedule = _working_case()
+    target_plan = _expired_target_plan(case, first_stream, first_schedule)
+    first_intent = target_plan.cancel_intents[0]
+
+    second_instrument = InstrumentId(
+        first_stream.order.intent.instrument_id.venue, "cash:eth-usd"
+    )
+    second_order_id = DomainId(DomainIdKind.ORDER, "ord_" + "9" * 64)
+    second_quantity = Quantity(
+        first_stream.order.intent.quantity.units,
+        first_stream.order.intent.quantity.scale,
+        str(second_instrument),
+    )
+    second_order = replace(
+        first_stream.order,
+        order_id=second_order_id,
+        intent=replace(
+            first_stream.order.intent,
+            instrument_id=second_instrument,
+            quantity=second_quantity,
+        ),
+    )
+    second_records = []
+    causation_id = second_order.intent.parent_id
+    for index, record in enumerate(first_stream.records):
+        event = replace(
+            record.event,
+            event_id=f"engine-order:second:{index}",
+            order_id=second_order_id,
+            causation_id=causation_id,
+        )
+        second_records.append(replace(record, event=event))
+        causation_id = event.event_id
+    second_stream = type(first_stream).from_records(
+        second_order, tuple(second_records)
+    )
+    second_admission = replace(
+        first_admission,
+        order=second_order,
+        event_plan=tuple(
+            replace(plan, event_id=record.event.event_id)
+            for plan, record in zip(
+                first_admission.event_plan, second_records, strict=True
+            )
+        ),
+    )
+    second_schedule = replace(
+        first_schedule,
+        order_id=second_order_id,
+        updates=tuple(
+            replace(
+                update,
+                order_id=second_order_id,
+                event_id=second_records[-1].event.event_id,
+                remaining_quantity=second_quantity,
+            )
+            for update in first_schedule.updates
+        ),
+    )
+    case = replace(
+        case,
+        financial_state=replace(
+            case.financial_state,
+            order_streams=(first_stream, second_stream),
+            order_admissions=(first_admission, second_admission),
+            reservation_schedules=(first_schedule, second_schedule),
+        ),
+    )
+    second_intent = replace(
+        first_intent,
+        cancel_intent_id="cancel-intent-v1:sha256:" + "c" * 64,
+        order_id=second_order_id,
+        instrument_id=second_instrument,
+    )
+    order_plan = type(target_plan).create(
+        account_id=target_plan.account_id,
+        created_at=target_plan.created_at,
+        based_on_normalized_target_id=target_plan.based_on_normalized_target_id,
+        based_on_normalized_target_hash=target_plan.based_on_normalized_target_hash,
+        based_on_target_validity_hash=target_plan.based_on_target_validity_hash,
+        based_on_portfolio_snapshot_hash=target_plan.based_on_portfolio_snapshot_hash,
+        based_on_working_order_set_hash=target_plan.based_on_working_order_set_hash,
+        based_on_reservation_state_hash=target_plan.based_on_reservation_state_hash,
+        based_on_availability_state_hash=target_plan.based_on_availability_state_hash,
+        policy=target_plan.policy,
+        valid_until=target_plan.valid_until,
+        planned_orders=target_plan.planned_orders,
+        cancel_intents=(first_intent, second_intent),
+        omissions=target_plan.omissions,
+        supersedes_plan_id=target_plan.supersedes_plan_id,
+    )
+    ordered_intents = tuple(
+        sorted(
+            order_plan.cancel_intents,
+            key=lambda value: (value.instrument_id, value.order_id.value),
+        )
+    )
+    cancellation_plans = tuple(
+        ResolvedOrderCancellationPlanV1(
+            order_id=intent.order_id,
+            cancel_requested_event_id=f"engine-order:{index}:cancel-requested",
+            cancel_requested_at=SimulationInstant(
+                TARGET_TIME,
+                TimelinePhase(90, "order_cancel_requested"),
+                SourceSequence(index),
+            ),
+            cancelled_event_id=f"engine-order:{index}:cancelled",
+            cancelled_at=SimulationInstant(
+                TARGET_TIME,
+                TimelinePhase(91, "order_cancelled"),
+                SourceSequence(index),
+            ),
+            reason_code=(
+                "invalid_later_reason"
+                if invalid_second and index == len(ordered_intents)
+                else intent.reason_code
+            ),
+            source_target_hash=order_plan.based_on_normalized_target_hash,
+        )
+        for index, intent in enumerate(ordered_intents, start=1)
+    )
+    cycle = replace(
+        case.decision_cycles[0],
+        planning_at=UtcInstant(260),
+        cancellation_plans=cancellation_plans,
+    )
+    engine = DeterministicBarEngine()
+    state = engine._initial_state(case)
+    return engine, case, state, cycle, order_plan, ordered_intents
+
+
 def test_day_expiry_is_terminal_releases_reservation_and_preserves_cash() -> None:
     case, schedule = _resolved_expiry_case()
     outcome = DeterministicBarEngine().run(case)
@@ -422,3 +558,78 @@ def test_target_cancellation_emits_ordered_events_and_releases_resources() -> No
     )
     assert result.final_ledger_state.cash_amount(CASH_KEY).units == 100_000
     assert result.final_ledger_state.position_balances == ()
+
+
+def test_two_order_cancellation_is_canonical_across_instruments() -> None:
+    engine, case, state, cycle, order_plan, ordered_intents = (
+        _two_order_cancellation_context()
+    )
+
+    failure = engine._apply_target_cancellations(case, state, cycle, order_plan)
+
+    assert failure is None
+    ordered_order_ids = tuple(value.order_id.value for value in ordered_intents)
+    lifecycle = tuple(
+        entry
+        for entry in state.trace_entries
+        if entry.stage
+        in {
+            EngineStage.ORDER_CANCEL_REQUESTED,
+            EngineStage.ORDER_CANCELLED,
+            EngineStage.RESOURCE_REFRESH,
+        }
+    )
+    assert tuple(entry.stage for entry in lifecycle) == (
+        EngineStage.ORDER_CANCEL_REQUESTED,
+        EngineStage.ORDER_CANCEL_REQUESTED,
+        EngineStage.ORDER_CANCELLED,
+        EngineStage.ORDER_CANCELLED,
+        EngineStage.RESOURCE_REFRESH,
+    )
+    assert tuple(entry.subject_id for entry in lifecycle[:2]) == ordered_order_ids
+    assert tuple(entry.subject_id for entry in lifecycle[2:4]) == ordered_order_ids
+    assert tuple(entry.instant.source_sequence.value for entry in lifecycle[:4]) == (
+        1,
+        2,
+        1,
+        2,
+    )
+    assert tuple(entry.instant.phase.rank for entry in lifecycle[:4]) == (
+        90,
+        90,
+        91,
+        91,
+    )
+    assert all(
+        state.order_streams[order_id].state is not None
+        and state.order_streams[order_id].state.status is OrderStatus.CANCELLED
+        for order_id in ordered_order_ids
+    )
+    assert state.reservation_state.active_reservations == ()
+
+
+def test_later_invalid_cancellation_plan_commits_nothing() -> None:
+    engine, case, state, cycle, order_plan, _ = _two_order_cancellation_context(
+        invalid_second=True
+    )
+    stream_hashes = {
+        order_id: stream.stream_hash for order_id, stream in state.order_streams.items()
+    }
+    trace_entries = tuple(state.trace_entries)
+    reservation_hash = state.reservation_state.state_hash
+    availability_hash = state.availability.state_hash
+    settlement_hash = state.settlement_state.state_hash
+
+    outcome = engine._apply_target_cancellations(case, state, cycle, order_plan)
+
+    assert outcome is not None
+    assert outcome.engine_failure is not None
+    assert outcome.engine_failure.code is EngineFailureCode.CASE_EVIDENCE_MISMATCH
+    assert {
+        order_id: stream.stream_hash for order_id, stream in state.order_streams.items()
+    } == stream_hashes
+    assert tuple(state.trace_entries) == trace_entries
+    assert state.reservation_state.state_hash == reservation_hash
+    assert state.availability.state_hash == availability_hash
+    assert state.settlement_state.state_hash == settlement_hash
+    assert len(state.reservation_state.active_reservations) == 2
