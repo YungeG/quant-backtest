@@ -30,6 +30,7 @@ from crypto_quant_domain import (
     canonical_bytes,
     canonical_sha256,
 )
+from crypto_quant_trading.profiles.binance_usdm import BinanceUsdmFundingSourceModelV2
 
 from tests.bundle_builder.providers.binance_usdm import (
     test_koru_funding_rate_history_source_bounded_v1 as funding_fixture,
@@ -170,6 +171,7 @@ def test_koru_factory_resolves_all_120_actual_raw_funding_marks(
     trusted_profile,
 ) -> None:
     _, request, result = trusted_profile
+    BinanceUsdmFundingSourceModelV2._reset_cache_for_test()
     normalized = funding_fixture.normalize(funding_fixture.RAW).result
     assert normalized is not None
     first = normalized.events[0].event_time
@@ -224,6 +226,25 @@ def test_koru_factory_resolves_all_120_actual_raw_funding_marks(
     assert max(len(canonical_bytes(book)) for book in books) < len(
         canonical_bytes(full_book)
     )
+    assert BinanceUsdmFundingSourceModelV2._cache_stats_for_test() == (120, 0, 120)
+
+    compact_request = replace(
+        result.profile_composition_request,
+        funding_sources=resolutions,
+    )
+    wire = json.loads(canonical_bytes(compact_request))
+    decoded = decode_binance_usdm_tradifi_profile_composition_request_v1(
+        wire,
+        compact_request.request_hash,
+    )
+    replay = decode_binance_usdm_tradifi_profile_composition_request_v1(
+        json.loads(canonical_bytes(compact_request)),
+        compact_request.request_hash,
+    )
+
+    assert canonical_bytes(decoded) == canonical_bytes(compact_request)
+    assert decoded == replay
+    assert BinanceUsdmFundingSourceModelV2._cache_stats_for_test() == (120, 240, 120)
 
 
 def test_authority_and_source_tamper_fail_closed(trusted_profile) -> None:

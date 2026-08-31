@@ -85,6 +85,56 @@ def test_maps_regular_history_row_to_frozen_funding_evidence() -> None:
     assert not result.decision_grade_eligible
 
 
+def test_v2_success_cache_is_bounded_and_excludes_failures() -> None:
+    model = BinanceUsdmFundingSourceModelV2()
+    model._reset_cache_for_test()
+    try:
+        failed_query = funding_query(book=funding_book(records=()))
+        first_failure = model.resolve_funding_source(failed_query)
+        second_failure = model.resolve_funding_source(failed_query)
+        assert first_failure.failure is not None
+        assert second_failure.failure is not None
+        assert first_failure is not second_failure
+        assert model._cache_stats_for_test() == (0, 0, 2)
+
+        query = funding_query()
+        first = model.resolve_funding_source(query)
+        assert first.result is not None
+        assert model.resolve_funding_source(query) is first
+        assert model._cache_stats_for_test() == (1, 1, 3)
+
+        tampered_query = replace(
+            query,
+            funding_book=replace(
+                query.funding_book,
+                funding_book_key="tampered-funding-cache",
+            ),
+        )
+        assert tampered_query.query_hash != query.query_hash
+        assert model.resolve_funding_source(tampered_query).result is not None
+        assert model._cache_stats_for_test() == (2, 1, 4)
+
+        for index in range(model._CACHE_CAPACITY):
+            outcome = model.resolve_funding_source(
+                replace(
+                    query,
+                    funding_book=replace(
+                        query.funding_book,
+                        funding_book_key=f"funding-cache-{index}",
+                    ),
+                )
+            )
+            assert outcome.result is not None
+
+        assert model._cache_stats_for_test() == (256, 1, 260)
+        assert model.resolve_funding_source(query) is not first
+        assert model._cache_stats_for_test() == (256, 1, 261)
+        assert model.resolve_funding_source(query).result is not None
+        assert model._cache_stats_for_test() == (256, 2, 261)
+    finally:
+        model._reset_cache_for_test()
+
+
 def test_v1_rejects_finer_nondivisible_mark_and_v2_preserves_raw_scale() -> None:
     kwargs = {
         "book": funding_book(

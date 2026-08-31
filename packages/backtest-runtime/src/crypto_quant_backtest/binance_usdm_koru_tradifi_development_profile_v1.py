@@ -3,10 +3,11 @@
 from __future__ import annotations
 
 import json
-from collections import defaultdict
+from collections import OrderedDict, defaultdict
 from collections.abc import Iterator, Mapping
 from dataclasses import dataclass, field
 from enum import Enum
+from threading import Lock
 
 from crypto_quant_domain import (
     ArtifactEnvelope,
@@ -191,6 +192,24 @@ _LIMITATIONS = (
     "single_instrument_single_usdt_cross_account_only",
     "deployment_unauthorized",
 )
+_PROFILE_CACHE_CAPACITY = 8
+_ProfileCacheKey = tuple[
+    ArtifactRef,
+    str,
+    TimelineWindow,
+    SimulationInstant,
+    str,
+    ArtifactRef,
+    ArtifactRef,
+    ArtifactRef,
+    tuple[tuple[str, str, str], ...],
+]
+_profile_cache: OrderedDict[
+    _ProfileCacheKey, BinanceUsdmKoruTradifiDevelopmentProfileOutcomeV1
+] = OrderedDict()
+_profile_cache_lock = Lock()
+_profile_cache_hits = 0
+_profile_cache_misses = 0
 
 
 class BinanceUsdmKoruTradifiDevelopmentProfileFailureCodeV1(str, Enum):

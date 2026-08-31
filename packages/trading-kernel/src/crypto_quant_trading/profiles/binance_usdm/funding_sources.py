@@ -1,8 +1,12 @@
 from __future__ import annotations
 
+import hashlib
 import re
+from collections import OrderedDict
 from dataclasses import dataclass
 from enum import Enum
+from threading import Lock
+from typing import ClassVar
 
 from crypto_quant_domain import (
     InstrumentId,
@@ -14,6 +18,7 @@ from crypto_quant_domain import (
     SourceSequence,
     TimelinePhase,
     UtcInstant,
+    canonical_bytes,
     canonical_sha256,
 )
 
@@ -974,13 +979,58 @@ class BinanceUsdmFundingSourceModel:
 
 
 class BinanceUsdmFundingSourceModelV2:
+    _CACHE_CAPACITY: ClassVar[int] = 256
+    _successful_resolution_cache: ClassVar[
+        OrderedDict[tuple[str, bytes], BinanceUsdmFundingSourceOutcome]
+    ] = OrderedDict()
+    _cache_lock: ClassVar[Lock] = Lock()
+    _cache_hits: ClassVar[int] = 0
+    _cache_misses: ClassVar[int] = 0
+
     @property
     def model_digest(self) -> str:
         return _model_digest(_V2_MODEL)
+
+    @classmethod
+    def _reset_cache_for_test(cls) -> None:
+        with cls._cache_lock:
+            cls._successful_resolution_cache.clear()
+            cls._cache_hits = 0
+            cls._cache_misses = 0
+
+    @classmethod
+    def _cache_stats_for_test(cls) -> tuple[int, int, int]:
+        with cls._cache_lock:
+            return (
+                len(cls._successful_resolution_cache),
+                cls._cache_hits,
+                cls._cache_misses,
+            )
 
     def resolve_funding_source(
         self,
         query: BinanceUsdmFundingSourceQuery,
         /,
     ) -> BinanceUsdmFundingSourceOutcome:
-        return _resolve_funding_source(query, _V2_MODEL)
+        if type(query) is not BinanceUsdmFundingSourceQuery:
+            return _resolve_funding_source(query, _V2_MODEL)
+        canonical_query = canonical_bytes(query)
+        cache_key = (
+            f"sha256:{hashlib.sha256(canonical_query).hexdigest()}",
+            canonical_query,
+        )
+        with self._cache_lock:
+            cached = self._successful_resolution_cache.get(cache_key)
+            if cached is not None:
+                self._successful_resolution_cache.move_to_end(cache_key)
+                type(self)._cache_hits += 1
+                return cached
+            type(self)._cache_misses += 1
+        outcome = _resolve_funding_source(query, _V2_MODEL)
+        if outcome.result is not None:
+            with self._cache_lock:
+                self._successful_resolution_cache[cache_key] = outcome
+                self._successful_resolution_cache.move_to_end(cache_key)
+                if len(self._successful_resolution_cache) > self._CACHE_CAPACITY:
+                    self._successful_resolution_cache.popitem(last=False)
+        return outcome
