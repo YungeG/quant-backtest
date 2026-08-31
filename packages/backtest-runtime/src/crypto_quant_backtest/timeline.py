@@ -1,9 +1,10 @@
 from __future__ import annotations
 
+import unicodedata
 from collections.abc import Iterable
 from dataclasses import dataclass
 from enum import Enum
-import unicodedata
+from heapq import heapify, heappop, heappush
 
 from crypto_quant_domain import (
     SimulationInstant,
@@ -19,7 +20,6 @@ from crypto_quant_market_data import (
     MarketBundleRef,
     MarketEvent,
 )
-
 
 OrderingKey = tuple[int, int, str, int]
 
@@ -554,40 +554,33 @@ class DeterministicTimeline:
             )
 
         source_cursors = {item.stream_key: item.cursor for item in current.streams}
+        heads: list[tuple[OrderingKey, str, MarketEvent, EventCursor]] = []
+        for stream_key in self.stream_keys:
+            head = self._head(
+                TimelineStreamCursor(stream_key, source_cursors[stream_key]), current
+            )
+            if isinstance(head, TimelineReadOutcome):
+                return head
+            if head is not None:
+                event, next_source_cursor = head
+                heads.append((event.ordering_key, stream_key, event, next_source_cursor))
+        heapify(heads)
+
         emitted: list[TimelineEvent] = []
         last_key = current.last_ordering_key
         complete = False
-
-        while len(emitted) < current.batch_size:
-            heads: list[tuple[OrderingKey, str, MarketEvent, EventCursor]] = []
-            for stream_key in self.stream_keys:
-                stream_cursor = TimelineStreamCursor(
-                    stream_key, source_cursors[stream_key]
-                )
-                head = self._head(stream_cursor, current)
-                if isinstance(head, TimelineReadOutcome):
-                    return head
-                if head is None:
-                    continue
-                event, head_next_cursor = head
-                heads.append(
-                    (event.ordering_key, stream_key, event, head_next_cursor)
-                )
-
-            if not heads:
-                complete = True
-                break
-
-            minimum_key = min(item[0] for item in heads)
-            minimum = [item for item in heads if item[0] == minimum_key]
-            if len(minimum) != 1:
+        while heads and len(emitted) < current.batch_size:
+            minimum_key, stream_key, event, next_source_cursor = heappop(heads)
+            if heads and heads[0][0] == minimum_key:
+                minimum = [(minimum_key, stream_key, event, next_source_cursor)]
+                while heads and heads[0][0] == minimum_key:
+                    minimum.append(heappop(heads))
                 return self._failure(
                     current,
                     TimelineFailureCode.DUPLICATE_ORDERING_KEY,
                     (item[1] for item in minimum),
                     (item[2].event_hash for item in minimum),
                 )
-            _, stream_key, event, next_source_cursor = minimum[0]
             if last_key is not None and minimum_key <= last_key:
                 code = (
                     TimelineFailureCode.DUPLICATE_ORDERING_KEY
@@ -606,6 +599,22 @@ class DeterministicTimeline:
 
             source_cursors[stream_key] = next_source_cursor
             last_key = minimum_key
+            head = self._head(
+                TimelineStreamCursor(stream_key, next_source_cursor), current
+            )
+            if isinstance(head, TimelineReadOutcome):
+                return head
+            if head is not None:
+                next_event, following_source_cursor = head
+                heappush(
+                    heads,
+                    (
+                        next_event.ordering_key,
+                        stream_key,
+                        next_event,
+                        following_source_cursor,
+                    ),
+                )
             if (
                 event.available_time.epoch_nanoseconds
                 < self.window.data_start.epoch_nanoseconds
@@ -618,6 +627,9 @@ class DeterministicTimeline:
                 else TimelineSegment.ACTIVE_TRADING
             )
             emitted.append(TimelineEvent(segment=segment, event=event))
+
+        if not heads:
+            complete = True
 
         next_streams = tuple(
             TimelineStreamCursor(key, source_cursors[key]) for key in self.stream_keys
