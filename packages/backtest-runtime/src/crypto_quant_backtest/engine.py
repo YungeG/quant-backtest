@@ -18,6 +18,7 @@ from crypto_quant_domain import (
     Order,
     OrderEvent,
     OrderEventType,
+    OrderStatus,
     PortfolioSnapshot,
     PositionBalanceKey,
     PositionLot,
@@ -372,6 +373,53 @@ class ResolvedOrderAdmission:
 
 
 @dataclass(frozen=True, slots=True)
+class ResolvedOrderCancellationPlanV1:
+    """Identity-bound target-driven cancellation events for one working Order."""
+
+    order_id: DomainId
+    cancel_requested_event_id: str
+    cancel_requested_at: SimulationInstant
+    cancelled_event_id: str
+    cancelled_at: SimulationInstant
+    reason_code: str
+    source_target_hash: str
+
+    def __post_init__(self) -> None:
+        _domain_id("order_id", self.order_id, DomainIdKind.ORDER)
+        _text("cancel_requested_event_id", self.cancel_requested_event_id)
+        _text("cancelled_event_id", self.cancelled_event_id)
+        if self.cancel_requested_event_id == self.cancelled_event_id:
+            raise ValueError("cancellation event IDs must be unique")
+        if not isinstance(self.cancel_requested_at, SimulationInstant) or not isinstance(
+            self.cancelled_at, SimulationInstant
+        ):
+            raise TypeError("cancellation times must be SimulationInstant")
+        if self.cancel_requested_at.instant != self.cancelled_at.instant:
+            raise ValueError("cancellation events must share one UTC decision time")
+        if self.cancel_requested_at.phase.rank >= self.cancelled_at.phase.rank:
+            raise ValueError("cancellation phases must be strictly increasing")
+        _text("reason_code", self.reason_code)
+        _hash("source_target_hash", self.source_target_hash)
+
+    @property
+    def plan_hash(self) -> str:
+        return canonical_sha256(self)
+
+    def to_canonical_dict(self) -> dict[str, object]:
+        return {
+            "type": "resolved_order_cancellation_plan_v1",
+            "schema_version": 1,
+            "order_id": self.order_id,
+            "cancel_requested_event_id": self.cancel_requested_event_id,
+            "cancel_requested_at": self.cancel_requested_at,
+            "cancelled_event_id": self.cancelled_event_id,
+            "cancelled_at": self.cancelled_at,
+            "reason_code": self.reason_code,
+            "source_target_hash": self.source_target_hash,
+        }
+
+
+@dataclass(frozen=True, slots=True)
 class ResolvedDecisionCycle:
     """One scheduled Target batch and all resolved G04/G05 inputs."""
 
@@ -444,6 +492,90 @@ class ResolvedDecisionCycle:
 
 
 @dataclass(frozen=True, slots=True)
+class ResolvedPortfolioDecisionCycleV2(ResolvedDecisionCycle):
+    """Additive portfolio cycle carrying target-bound cancellation identities."""
+
+    cancellation_plans: tuple[ResolvedOrderCancellationPlanV1, ...] = ()
+
+    def __post_init__(self) -> None:
+        super(ResolvedPortfolioDecisionCycleV2, self).__post_init__()
+        if not isinstance(self.cancellation_plans, tuple) or not all(
+            isinstance(value, ResolvedOrderCancellationPlanV1)
+            for value in self.cancellation_plans
+        ):
+            raise TypeError(
+                "cancellation_plans must contain ResolvedOrderCancellationPlanV1"
+            )
+        order_ids = tuple(value.order_id.value for value in self.cancellation_plans)
+        event_ids = tuple(
+            event_id
+            for value in self.cancellation_plans
+            for event_id in (
+                value.cancel_requested_event_id,
+                value.cancelled_event_id,
+            )
+        )
+        if len(set(order_ids)) != len(order_ids):
+            raise ValueError("cancellation plans must have unique Order IDs")
+        if len(set(event_ids)) != len(event_ids):
+            raise ValueError("cancellation plans must have unique event IDs")
+        object.__setattr__(
+            self,
+            "cancellation_plans",
+            tuple(sorted(self.cancellation_plans, key=lambda value: value.order_id.value)),
+        )
+
+    def to_canonical_dict(self) -> dict[str, object]:
+        payload = ResolvedDecisionCycle.to_canonical_dict(self)
+        payload["type"] = "resolved_portfolio_decision_cycle_v2"
+        payload["schema_version"] = 2
+        payload["cancellation_plans"] = self.cancellation_plans
+        return payload
+
+
+@dataclass(frozen=True, slots=True)
+class ResolvedOrderTerminalPlanV1:
+    """Identity-bound terminal event for an exhausted no-fill Bar decision."""
+
+    order_id: DomainId
+    trigger_action: NoEligibleBarAction
+    terminal_event_type: OrderEventType
+    event_id: str
+    occurred_at: SimulationInstant
+    reason_code: str
+    source_evidence_hash: str
+
+    def __post_init__(self) -> None:
+        _domain_id("order_id", self.order_id, DomainIdKind.ORDER)
+        if self.trigger_action is not NoEligibleBarAction.EXPIRE:
+            raise ValueError("terminal plan trigger_action must be EXPIRE")
+        if self.terminal_event_type is not OrderEventType.ORDER_EXPIRED:
+            raise ValueError("terminal plan event type must be ORDER_EXPIRED")
+        _text("event_id", self.event_id)
+        if not isinstance(self.occurred_at, SimulationInstant):
+            raise TypeError("occurred_at must be SimulationInstant")
+        _text("reason_code", self.reason_code)
+        _hash("source_evidence_hash", self.source_evidence_hash)
+
+    @property
+    def plan_hash(self) -> str:
+        return canonical_sha256(self)
+
+    def to_canonical_dict(self) -> dict[str, object]:
+        return {
+            "type": "resolved_order_terminal_plan_v1",
+            "schema_version": 1,
+            "order_id": self.order_id,
+            "trigger_action": self.trigger_action.value,
+            "terminal_event_type": self.terminal_event_type.value,
+            "event_id": self.event_id,
+            "occurred_at": self.occurred_at,
+            "reason_code": self.reason_code,
+            "source_evidence_hash": self.source_evidence_hash,
+        }
+
+
+@dataclass(frozen=True, slots=True)
 class ResolvedBarExecution:
     """One exact Bar Event/order execution and accounting plan."""
 
@@ -511,6 +643,30 @@ class ResolvedBarExecution:
             "fill_event_at": self.fill_event_at,
             "accounting_plan": self.accounting_plan,
         }
+
+
+@dataclass(frozen=True, slots=True)
+class ResolvedPortfolioBarExecutionV2(ResolvedBarExecution):
+    """Additive portfolio Bar execution with optional DAY terminal evidence."""
+
+    terminal_plan: ResolvedOrderTerminalPlanV1 | None = None
+
+    def __post_init__(self) -> None:
+        super(ResolvedPortfolioBarExecutionV2, self).__post_init__()
+        if self.terminal_plan is not None:
+            if not isinstance(self.terminal_plan, ResolvedOrderTerminalPlanV1):
+                raise TypeError(
+                    "terminal_plan must be ResolvedOrderTerminalPlanV1 or None"
+                )
+            if self.terminal_plan.order_id != self.order_id:
+                raise ValueError("terminal plan Order identity mismatch")
+
+    def to_canonical_dict(self) -> dict[str, object]:
+        payload = ResolvedBarExecution.to_canonical_dict(self)
+        payload["type"] = "resolved_portfolio_bar_execution_v2"
+        payload["schema_version"] = 2
+        payload["terminal_plan"] = self.terminal_plan
+        return payload
 
 
 @dataclass(frozen=True, slots=True)
@@ -1058,6 +1214,35 @@ class ResolvedExecutionCase:
         bar_ids = tuple(value.event_id for value in self.bar_executions)
         if len(set(bar_ids)) != len(bar_ids):
             raise ValueError("bar execution Event IDs must be unique")
+        lifecycle_event_ids = tuple(
+            event_id
+            for cycle in self.decision_cycles
+            if isinstance(cycle, ResolvedPortfolioDecisionCycleV2)
+            for cancellation in cycle.cancellation_plans
+            for event_id in (
+                cancellation.cancel_requested_event_id,
+                cancellation.cancelled_event_id,
+            )
+        ) + tuple(
+            execution.terminal_plan.event_id
+            for execution in self.bar_executions
+            if isinstance(execution, ResolvedPortfolioBarExecutionV2)
+            and execution.terminal_plan is not None
+        )
+        existing_order_event_ids = tuple(
+            event_plan.event_id
+            for cycle in self.decision_cycles
+            for admission in cycle.admissions
+            for event_plan in admission.event_plan
+        ) + tuple(
+            record.event.event_id
+            for stream in self.financial_state.order_streams
+            for record in stream.records
+        ) + tuple(value.fill_event_id for value in self.bar_executions)
+        if len(set(lifecycle_event_ids)) != len(lifecycle_event_ids) or set(
+            lifecycle_event_ids
+        ) & set(existing_order_event_ids):
+            raise ValueError("terminal lifecycle Event IDs must be globally unique")
         order_ids = tuple(
             admission.order.order_id.value
             for cycle in self.decision_cycles
@@ -1071,6 +1256,14 @@ class ResolvedExecutionCase:
         known_orders = set(order_ids)
         if any(value.order_id.value not in known_orders for value in self.bar_executions):
             raise ValueError("bar execution references unknown Order")
+        cancellation_order_ids = tuple(
+            cancellation.order_id.value
+            for cycle in self.decision_cycles
+            if isinstance(cycle, ResolvedPortfolioDecisionCycleV2)
+            for cancellation in cycle.cancellation_plans
+        )
+        if any(order_id not in known_orders for order_id in cancellation_order_ids):
+            raise ValueError("cancellation plan references unknown Order")
         target_event_ids = {value.event_id for value in self.target_stream.events}
         scheduled_event_ids = {
             entry.event_id
@@ -1156,6 +1349,16 @@ class ResolvedExecutionCase:
                     expected[
                         f"order-event.{cycle_index}.{admission_index}.{event_index}"
                     ] = (event_plan.event_id, None)
+            if isinstance(cycle, ResolvedPortfolioDecisionCycleV2):
+                for cancellation_index, cancellation in enumerate(
+                    cycle.cancellation_plans
+                ):
+                    expected[
+                        f"order-event.cancel-requested.{cycle_index}.{cancellation_index}"
+                    ] = (cancellation.cancel_requested_event_id, None)
+                    expected[
+                        f"order-event.cancelled.{cycle_index}.{cancellation_index}"
+                    ] = (cancellation.cancelled_event_id, None)
         for bar_index, execution in enumerate(self.bar_executions):
             expected[f"fill.{bar_index}"] = (
                 execution.fill_id.value,
@@ -1177,6 +1380,14 @@ class ResolvedExecutionCase:
                 execution.fill_event_id,
                 None,
             )
+            if (
+                isinstance(execution, ResolvedPortfolioBarExecutionV2)
+                and execution.terminal_plan is not None
+            ):
+                expected[f"order-event.terminal.{bar_index}"] = (
+                    execution.terminal_plan.event_id,
+                    None,
+                )
         for account_event in self.financial_dispatch_plan.scheduled_account_events:
             for binding_key, value in account_event.identity_bindings:
                 if binding_key in expected:
@@ -1226,7 +1437,11 @@ class EngineStage(str, Enum):
     FEE_RESERVATION = "fee_reservation"
     PRETRADE_RISK = "pretrade_risk"
     ORDER_ACCEPTED = "order_accepted"
+    ORDER_CANCEL_REQUESTED = "order_cancel_requested"
+    ORDER_CANCELLED = "order_cancelled"
     EXECUTION_DECISION = "execution_decision"
+    ORDER_EXPIRED = "order_expired"
+    RESOURCE_REFRESH = "resource_refresh"
     SLIPPAGE = "slippage"
     FILL = "fill"
     FILL_ACCOUNTING = "fill_accounting"
@@ -2233,14 +2448,11 @@ class DeterministicBarEngine:
             plan.plan_id,
             plan.plan_hash,
         )
-        if plan.cancel_intents:
-            return self._failed(
-                case,
-                state,
-                EngineFailureCode.ORDER_PLAN_MISMATCH,
-                tuple(value.order_id.value for value in plan.cancel_intents),
-                tuple(value.cancel_intent_hash for value in plan.cancel_intents),
-            )
+        cancellation_failure = self._apply_target_cancellations(
+            case, state, cycle, plan
+        )
+        if cancellation_failure is not None:
+            return cancellation_failure
         admission_by_intent = {
             canonical_sha256(value.order.intent): value for value in cycle.admissions
         }
@@ -2258,6 +2470,107 @@ class DeterministicBarEngine:
             if failure is not None:
                 return failure
         self._refresh_resources(case, state)
+        return None
+
+    def _apply_target_cancellations(
+        self,
+        case: ResolvedExecutionCase,
+        state: _EngineState,
+        cycle: ResolvedDecisionCycle,
+        plan: OrderPlan,
+    ) -> EngineExecutionOutcome | None:
+        if not isinstance(cycle, ResolvedPortfolioDecisionCycleV2):
+            if not plan.cancel_intents:
+                return None
+            return self._failed(
+                case,
+                state,
+                EngineFailureCode.ORDER_PLAN_MISMATCH,
+                tuple(value.order_id.value for value in plan.cancel_intents),
+                tuple(value.cancel_intent_hash for value in plan.cancel_intents),
+            )
+        plans_by_order = {
+            value.order_id.value: value for value in cycle.cancellation_plans
+        }
+        intents_by_order = {
+            value.order_id.value: value for value in plan.cancel_intents
+        }
+        if set(plans_by_order) != set(intents_by_order):
+            return self._failed(
+                case,
+                state,
+                EngineFailureCode.ORDER_PLAN_MISMATCH,
+                tuple(sorted(set(plans_by_order) ^ set(intents_by_order)))
+                or (cycle.schedule.schedule_hash,),
+            )
+        for order_id in sorted(plans_by_order):
+            resolved = plans_by_order[order_id]
+            intent = intents_by_order[order_id]
+            stream = state.order_streams.get(order_id)
+            if (
+                stream is None
+                or stream.state is None
+                or stream.state.status
+                not in {
+                    # ORDER_CANCEL_REQUESTED is excluded: this plan emits that event.
+                    OrderStatus.ACCEPTED,
+                    OrderStatus.ACTIVE,
+                    OrderStatus.PARTIALLY_FILLED,
+                    OrderStatus.SUBMITTED,
+                }
+                or resolved.reason_code != intent.reason_code
+                or resolved.source_target_hash != plan.based_on_normalized_target_hash
+                or resolved.cancel_requested_at.instant
+                != cycle.schedule.decision_time
+            ):
+                return self._failed(
+                    case,
+                    state,
+                    EngineFailureCode.CASE_EVIDENCE_MISMATCH,
+                    (order_id, intent.cancel_intent_id),
+                    (resolved.plan_hash, intent.cancel_intent_hash),
+                )
+            requested = OrderEvent(
+                event_id=resolved.cancel_requested_event_id,
+                order_id=resolved.order_id,
+                causation_id=stream.records[-1].event.event_id,
+                event_type=OrderEventType.ORDER_CANCEL_REQUESTED,
+                occurred_at=resolved.cancel_requested_at,
+                evidence_id=resolved.source_target_hash,
+                reason_code=resolved.reason_code,
+            )
+            stream = stream.append(OrderEventRecord(requested))
+            self._trace_add(
+                state,
+                EngineStage.ORDER_CANCEL_REQUESTED,
+                resolved.cancel_requested_at,
+                order_id,
+                stream.stream_hash,
+            )
+            cancelled = OrderEvent(
+                event_id=resolved.cancelled_event_id,
+                order_id=resolved.order_id,
+                causation_id=requested.event_id,
+                event_type=OrderEventType.ORDER_CANCELLED,
+                occurred_at=resolved.cancelled_at,
+                evidence_id=resolved.source_target_hash,
+                reason_code=resolved.reason_code,
+            )
+            stream = stream.append(OrderEventRecord(cancelled))
+            state.order_streams[order_id] = stream
+            self._trace_add(
+                state,
+                EngineStage.ORDER_CANCELLED,
+                resolved.cancelled_at,
+                order_id,
+                stream.stream_hash,
+            )
+        if plans_by_order:
+            self._refresh_resources(case, state)
+            latest = max(
+                cycle.cancellation_plans, key=lambda value: value.cancelled_at
+            )
+            self._trace_resource_refresh(state, latest.cancelled_at, latest.order_id.value)
         return None
 
     def _admit_order(
@@ -2574,11 +2887,16 @@ class DeterministicBarEngine:
             liquidity_evidence=plan.liquidity_evidence,
             market_state=plan.market_state,
         )
+        terminal_plan = (
+            plan.terminal_plan
+            if isinstance(plan, ResolvedPortfolioBarExecutionV2)
+            else None
+        )
         execution_outcome = case.execution_model.simulate_execution(
             NextBarOpenRequest(
                 order_stream=stream,
                 candidate=candidate,
-                eligibility_window_exhausted=False,
+                eligibility_window_exhausted=terminal_plan is not None,
             )
         )
         if execution_outcome.failure is not None:
@@ -2590,13 +2908,52 @@ class DeterministicBarEngine:
                 (canonical_sha256(execution_outcome.failure),),
             )
         decision = cast(NextBarOpenDecision, execution_outcome.result)
+        decision_hash = canonical_sha256(decision)
         self._trace_add(
             state,
             EngineStage.EXECUTION_DECISION,
             event.timeline_instant,
             stream.order.order_id.value,
-            canonical_sha256(decision),
+            decision_hash,
         )
+        if terminal_plan is not None:
+            if (
+                decision.action is not terminal_plan.trigger_action
+                or terminal_plan.source_evidence_hash != decision_hash
+                or terminal_plan.occurred_at.instant != event.event_time
+                or terminal_plan.occurred_at.phase.rank
+                <= event.timeline_instant.phase.rank
+            ):
+                return self._failed(
+                    case,
+                    state,
+                    EngineFailureCode.CASE_EVIDENCE_MISMATCH,
+                    (terminal_plan.event_id, plan.event_id),
+                    (terminal_plan.plan_hash, decision_hash),
+                )
+            terminal_event = OrderEvent(
+                event_id=terminal_plan.event_id,
+                order_id=terminal_plan.order_id,
+                causation_id=stream.records[-1].event.event_id,
+                event_type=terminal_plan.terminal_event_type,
+                occurred_at=terminal_plan.occurred_at,
+                evidence_id=terminal_plan.source_evidence_hash,
+                reason_code=terminal_plan.reason_code,
+            )
+            stream = stream.append(OrderEventRecord(terminal_event))
+            state.order_streams[plan.order_id.value] = stream
+            self._trace_add(
+                state,
+                EngineStage.ORDER_EXPIRED,
+                terminal_plan.occurred_at,
+                terminal_plan.order_id.value,
+                stream.stream_hash,
+            )
+            self._refresh_resources(case, state)
+            self._trace_resource_refresh(
+                state, terminal_plan.occurred_at, terminal_plan.order_id.value
+            )
+            return None
         if decision.action is not NoEligibleBarAction.FULL_FILL:
             return None
         if decision.reference_price is None or decision.fill_quantity is None:
@@ -2815,6 +3172,23 @@ class DeterministicBarEngine:
             state.settlement_state,
             state.reservation_state,
             case.financial_state.settlement_rules,
+        )
+
+    @staticmethod
+    def _trace_resource_refresh(
+        state: _EngineState, instant: SimulationInstant, subject_id: str
+    ) -> None:
+        DeterministicBarEngine._trace_add(
+            state,
+            EngineStage.RESOURCE_REFRESH,
+            instant,
+            subject_id,
+            canonical_sha256(
+                {
+                    "reservation_state_hash": state.reservation_state.state_hash,
+                    "availability_state_hash": state.availability.state_hash,
+                }
+            ),
         )
 
     @staticmethod
