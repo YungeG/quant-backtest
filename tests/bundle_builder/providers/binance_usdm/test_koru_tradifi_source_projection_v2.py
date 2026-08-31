@@ -6,6 +6,9 @@ import pytest
 from crypto_quant_bundle_builder import (
     binance_usdm_koru_aggtrade_boundary_index_v1 as boundary_index,
 )
+from crypto_quant_bundle_builder import (
+    binance_usdm_koru_tradifi_source_projection_v2 as source_projection_v2,
+)
 from crypto_quant_bundle_builder.binance_usdm_koru_aggtrade_boundary_index_v1 import (
     BinanceUsdmKoruAggregateTradeBoundaryIndexRequestV1,
     BinanceUsdmKoruExecutionBoundaryV1,
@@ -18,6 +21,9 @@ from crypto_quant_bundle_builder.binance_usdm_koru_tradifi_source_projection_v2 
     BinanceUsdmKoruTradifiSourceProjectionFailureCodeV2,
     BinanceUsdmKoruTradifiSourceProjectionOutcomeV2,
     BinanceUsdmKoruTradifiSourceProjectionRequestV2,
+    _reset_trusted_result_cache_for_test,
+    _trusted_result,
+    _trusted_result_cache_stats_for_test,
     build_binance_usdm_koru_source_profile_authority_v2,
     build_binance_usdm_koru_tradifi_source_projection_v2,
 )
@@ -329,9 +335,89 @@ def test_source_profile_authority_is_exact_derived_and_not_serialized() -> None:
     }
     assert "source_profile_authority" not in result.to_canonical_dict()
 
+    _reset_trusted_result_cache_for_test()
     object.__setattr__(result, "fragment_digest", "sha256:" + "0" * 64)
     with pytest.raises(ValueError, match="exact canonical"):
         build_binance_usdm_koru_source_profile_authority_v2(result)
+
+
+def test_trusted_result_cache_reuses_only_exact_canonical_results(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    result = _built()
+    _reset_trusted_result_cache_for_test()
+    canonical_equal = source_projection_v2._canonical_equal
+    canonical_calls = 0
+
+    def counted_canonical_equal(left: object, right: object) -> bool:
+        nonlocal canonical_calls
+        canonical_calls += 1
+        return canonical_equal(left, right)
+
+    monkeypatch.setattr(
+        source_projection_v2, "_canonical_equal", counted_canonical_equal
+    )
+    first = _trusted_result(result)
+    assert first is not None
+    assert _trusted_result_cache_stats_for_test() == (1, 0, 1)
+    first_canonical_calls = canonical_calls
+    assert first_canonical_calls > 0
+
+    cached = _trusted_result(result)
+    assert cached is not None
+    assert canonical_bytes(cached) == canonical_bytes(result)
+    assert canonical_calls == first_canonical_calls
+    assert _trusted_result_cache_stats_for_test() == (1, 1, 1)
+
+    replacement = replace(result)
+    assert _trusted_result(replacement) is not None
+    assert _trusted_result_cache_stats_for_test() == (2, 1, 2)
+
+    forged = replace(result)
+    object.__setattr__(forged, "fragment_digest", "sha256:" + "0" * 64)
+    before_forged = canonical_calls
+    assert _trusted_result(forged) is None
+    assert canonical_calls > before_forged
+    assert _trusted_result_cache_stats_for_test() == (2, 1, 3)
+
+
+def test_trusted_result_cache_revalidates_same_object_after_tampering() -> None:
+    result = _built()
+    _reset_trusted_result_cache_for_test()
+
+    assert _trusted_result(result) is not None
+    object.__setattr__(result, "fragment_digest", "sha256:" + "0" * 64)
+
+    assert _trusted_result(result) is None
+    assert _trusted_result_cache_stats_for_test() == (0, 0, 2)
+
+
+def test_trusted_result_cache_evicts_nested_event_tampering() -> None:
+    result = _built()
+    _reset_trusted_result_cache_for_test()
+
+    assert _trusted_result(result) is not None
+    object.__setattr__(result.source_events[0], "source_hash", "sha256:" + "0" * 64)
+
+    assert _trusted_result(result) is None
+    assert _trusted_result_cache_stats_for_test() == (0, 0, 2)
+
+
+def test_trusted_result_cache_is_bounded_lru() -> None:
+    result = _built()
+    candidates = tuple(replace(result) for _ in range(9))
+    _reset_trusted_result_cache_for_test()
+
+    for candidate in candidates[:8]:
+        assert _trusted_result(candidate) is not None
+    assert _trusted_result_cache_stats_for_test() == (8, 0, 8)
+
+    assert _trusted_result(candidates[0]) is not None
+    assert _trusted_result(candidates[8]) is not None
+    assert _trusted_result_cache_stats_for_test() == (8, 1, 9)
+
+    assert _trusted_result(candidates[1]) is not None
+    assert _trusted_result_cache_stats_for_test() == (8, 1, 10)
 
 
 def test_unselected_aggregate_rows_are_not_materialized_as_source_events() -> None:
@@ -579,6 +665,7 @@ def test_price_funding_authority_and_outcome_tamper_fail_closed() -> None:
     )
 
     result = _built()
+    _reset_trusted_result_cache_for_test()
     object.__setattr__(result, "fragment_digest", "sha256:" + "0" * 64)
     with pytest.raises(ValueError, match="exact canonical"):
         BinanceUsdmKoruTradifiSourceProjectionOutcomeV2(result=result)

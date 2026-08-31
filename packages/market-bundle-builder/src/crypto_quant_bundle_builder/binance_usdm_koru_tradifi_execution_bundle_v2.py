@@ -3,9 +3,9 @@
 from __future__ import annotations
 
 import json
-from collections import defaultdict
+from collections import OrderedDict, defaultdict
 from collections.abc import Mapping
-from dataclasses import dataclass, field
+from dataclasses import dataclass, field, fields, is_dataclass
 from enum import Enum
 
 from crypto_quant_domain import (
@@ -815,11 +815,115 @@ def _trusted_request(
     return rebuilt
 
 
+_TRUSTED_RESULT_CACHE_CAPACITY = 8
+_TRUSTED_RESULT_CACHE: OrderedDict[
+    int,
+    tuple[
+        BinanceUsdmKoruTradifiExecutionBundleResultV2,
+        BinanceUsdmKoruTradifiExecutionBundleResultV2,
+        tuple[object, ...],
+    ],
+] = OrderedDict()
+_TRUSTED_RESULT_CACHE_HITS = 0
+_TRUSTED_RESULT_CACHE_MISSES = 0
+
+
+def _reset_trusted_result_cache_for_test() -> None:
+    global _TRUSTED_RESULT_CACHE_HITS, _TRUSTED_RESULT_CACHE_MISSES
+    _TRUSTED_RESULT_CACHE.clear()
+    _TRUSTED_RESULT_CACHE_HITS = 0
+    _TRUSTED_RESULT_CACHE_MISSES = 0
+
+
+def _trusted_result_cache_stats_for_test() -> tuple[int, int, int]:
+    return (
+        len(_TRUSTED_RESULT_CACHE),
+        _TRUSTED_RESULT_CACHE_HITS,
+        _TRUSTED_RESULT_CACHE_MISSES,
+    )
+
+
+def _trusted_result_state_guard(
+    value: BinanceUsdmKoruTradifiExecutionBundleResultV2,
+) -> tuple[object, ...]:
+    guarded: list[object] = []
+    seen: set[int] = set()
+
+    def visit(item: object) -> None:
+        if id(item) in seen:
+            return
+        seen.add(id(item))
+        guarded.append(item)
+        if is_dataclass(item) and not isinstance(item, type):
+            for item_field in fields(item):
+                visit(getattr(item, item_field.name))
+        elif isinstance(item, (list, tuple)):
+            for child in item:
+                visit(child)
+        elif isinstance(item, (set, frozenset)):
+            for child in sorted(item, key=_trusted_result_identity_order):
+                visit(child)
+        elif isinstance(item, Mapping):
+            for key, child in sorted(
+                item.items(), key=lambda entry: _trusted_result_identity_order(entry[0])
+            ):
+                visit(key)
+                visit(child)
+        elif type(item).__module__.startswith("crypto_quant_"):
+            for slot in _trusted_result_slot_names(type(item)):
+                try:
+                    visit(getattr(item, slot))
+                except AttributeError:
+                    continue
+
+    visit(value)
+    return tuple(guarded)
+
+
+def _trusted_result_identity_order(value: object) -> tuple[str, str, int]:
+    value_type = type(value)
+    return value_type.__module__, value_type.__qualname__, id(value)
+
+
+def _trusted_result_slot_names(value_type: type[object]) -> tuple[str, ...]:
+    return tuple(
+        slot
+        for base in reversed(value_type.__mro__)
+        for slot in (
+            (base.__dict__["__slots__"],)
+            if isinstance(base.__dict__.get("__slots__"), str)
+            else base.__dict__.get("__slots__", ())
+        )
+        if slot not in {"__dict__", "__weakref__"}
+    )
+
+
 def _trusted_result(
     value: object,
 ) -> BinanceUsdmKoruTradifiExecutionBundleResultV2 | None:
+    global _TRUSTED_RESULT_CACHE_HITS, _TRUSTED_RESULT_CACHE_MISSES
     if type(value) is not BinanceUsdmKoruTradifiExecutionBundleResultV2:
         return None
+    key = id(value)
+    cached = _TRUSTED_RESULT_CACHE.get(key)
+    if cached is not None:
+        try:
+            current_state = _trusted_result_state_guard(value)
+        except AttributeError:
+            current_state = ()
+        if (
+            cached[0] is value
+            and len(current_state) == len(cached[2])
+            and all(
+                current is saved
+                for current, saved in zip(current_state, cached[2], strict=True)
+            )
+        ):
+            _TRUSTED_RESULT_CACHE.move_to_end(key)
+            _TRUSTED_RESULT_CACHE_HITS += 1
+            return cached[1]
+        _TRUSTED_RESULT_CACHE.pop(key)
+    _TRUSTED_RESULT_CACHE_MISSES += 1
     try:
         rebuilt = BinanceUsdmKoruTradifiExecutionBundleResultV2(
             request=value.request,
@@ -839,6 +943,14 @@ def _trusted_result(
             return None
     except (AttributeError, KeyError, TypeError, ValueError):
         return None
+    _TRUSTED_RESULT_CACHE[key] = (
+        value,
+        rebuilt,
+        _trusted_result_state_guard(value),
+    )
+    _TRUSTED_RESULT_CACHE.move_to_end(key)
+    if len(_TRUSTED_RESULT_CACHE) > _TRUSTED_RESULT_CACHE_CAPACITY:
+        _TRUSTED_RESULT_CACHE.popitem(last=False)
     return rebuilt
 
 

@@ -31,7 +31,7 @@ from crypto_quant_domain import (
 )
 
 from .derivatives import LinearPerpetualContract
-from .funding import FundingSlotId, LinearFundingEligibility
+from .funding import FundingSlotId, LinearFundingEligibility, LinearFundingEligibilityV2
 from .journal import AccountingJournal, JournalReplayCursor
 from .ledger import (
     GenericLedger,
@@ -924,6 +924,169 @@ class LinearFundingAccounting:
             entry,
         )
         return ProfilePortOutcome.for_result(self.component_ref, request, result)
+
+
+@dataclass(frozen=True, slots=True)
+class LinearFundingSettlementRequestV2:
+    """Thin-evidence settlement request; the dispatcher owns full replay validation."""
+
+    eligibility: LinearFundingEligibilityV2
+    settlement_evidence: LinearFundingSettlementEvidence
+    funding_mark_evidence: LinearFundingMarkEvidence
+    application_identity: LinearFundingApplicationIdentity
+    position_key: PositionBalanceKey
+    contract: LinearPerpetualContract
+    settlement_cash_registration: LedgerBalanceRegistration
+    payment_quantization: QuantizationPolicy
+
+    def __post_init__(self) -> None:
+        if type(self.eligibility) is not LinearFundingEligibilityV2:
+            raise TypeError("eligibility must be exact V2 eligibility")
+        if type(self.settlement_evidence) is not LinearFundingSettlementEvidence or type(self.funding_mark_evidence) is not LinearFundingMarkEvidence:
+            raise TypeError("V2 settlement evidence must be exact")
+        if type(self.application_identity) is not LinearFundingApplicationIdentity:
+            raise TypeError("application_identity must be exact")
+        _require_position_key(self.position_key)
+        if type(self.contract) is not LinearPerpetualContract:
+            raise TypeError("contract must be exact")
+        _require_registration(self.settlement_cash_registration)
+        _require_quantization(self.payment_quantization)
+        if (
+            self.eligibility.slot_id != self.application_identity.application_key.funding_slot_id
+            or self.eligibility.position_state.position_key != self.position_key
+            or self.eligibility.position_state.contract != self.contract
+            or self.settlement_evidence.application_key != self.application_identity.application_key
+            or self.settlement_evidence.applied_rate != self.eligibility.published_rate
+        ):
+            raise ValueError("V2 settlement context mismatch")
+
+    @property
+    def request_hash(self) -> str:
+        return canonical_sha256(self)
+
+    def to_canonical_dict(self) -> dict[str, Any]:
+        return {"type": "linear_funding_settlement_request", "schema_version": 2,
+                "eligibility": self.eligibility, "settlement_evidence": self.settlement_evidence,
+                "funding_mark_evidence": self.funding_mark_evidence,
+                "application_identity": self.application_identity, "position_key": self.position_key,
+                "contract": self.contract, "settlement_cash_registration": self.settlement_cash_registration,
+                "payment_quantization": self.payment_quantization}
+
+
+def _v2_entry_values(request: LinearFundingSettlementRequestV2) -> tuple[ExactLinearFundingCashFlow, Money, str, tuple[str, ...], tuple[BalanceChange, ...], tuple[Money, ...]]:
+    quantity = request.eligibility.position_state.quantity
+    multiplier = request.contract.contract_multiplier
+    mark = request.funding_mark_evidence.resolved_mark.price
+    rate = request.settlement_evidence.applied_rate
+    numerator = -(quantity.units * multiplier.units * mark.units * rate.units)
+    denominator = quantity.scale.factor * multiplier.scale.factor * mark.scale.factor * rate.scale.factor
+    divisor = gcd(abs(numerator), denominator)
+    exact = ExactLinearFundingCashFlow(request.contract.instrument.settlement_currency, numerator // divisor, denominator // divisor)
+    payment = _payment(exact, request.payment_quantization)
+    body = canonical_sha256({"type": "linear_funding_application_body", "schema_version": 2,
+                             "application_key": request.application_identity.application_key,
+                             "eligibility": request.eligibility, "settlement_evidence": request.settlement_evidence,
+                             "funding_mark_evidence": request.funding_mark_evidence, "position_key": request.position_key,
+                             "contract": request.contract, "settlement_cash_registration": request.settlement_cash_registration,
+                             "payment_quantization": request.payment_quantization, "exact_cash_flow": exact, "payment": payment})
+    identity, eligibility, mark_evidence, settlement = request.application_identity, request.eligibility, request.funding_mark_evidence, request.settlement_evidence
+    sources = tuple(sorted(set((identity.application_key.value, identity.settlement_id.value, eligibility.slot_id.value,
+        eligibility.eligibility_hash, eligibility.publication_hash, eligibility.event_id, eligibility.event_hash,
+        eligibility.publication_revision_id, eligibility.snapshot_hash, eligibility.state_hash,
+        mark_evidence.resolved_mark.mark_id, mark_evidence.stale_policy.policy_hash, settlement.event_id,
+        settlement.event_hash, settlement.revision_id, settlement.source_key, settlement.source_hash, request.request_hash))))
+    changes: tuple[BalanceChange, ...] = ()
+    financing: tuple[Money, ...] = ()
+    if payment.units:
+        changes = (BalanceChange(request.settlement_cash_registration.key, payment),)
+        financing = (payment,)
+    return exact, payment, body, sources, changes, financing
+
+
+@dataclass(frozen=True, slots=True)
+class LinearFundingJournalEntryV2(AccountingJournalEntry):
+    component_ref: ProfileComponentRef
+    request: LinearFundingSettlementRequestV2
+    request_hash: str
+    application_key: LinearFundingApplicationKey
+    settlement_id: DomainId
+    exact_cash_flow: ExactLinearFundingCashFlow
+    payment: Money
+    application_body_hash: str
+
+    def __post_init__(self) -> None:
+        AccountingJournalEntry.__post_init__(self)
+        if self.component_ref != _component_ref() or type(self.request) is not LinearFundingSettlementRequestV2 or self.request_hash != self.request.request_hash:
+            raise ValueError("V2 journal request evidence is invalid")
+        exact, payment, body, sources, changes, financing = _v2_entry_values(self.request)
+        identity = self.request.application_identity
+        expected = (identity.journal_entry_id, AccountingEntryType.FUNDING_APPLIED, identity.application_key.account_id,
+                    self.request.position_key.venue_id, identity.application_key.funding_slot_id.target_funding_time,
+                    self.request.settlement_evidence.applied_at, sources, changes, (), (), financing,
+                    identity.application_key, identity.settlement_id, exact, payment, body)
+        actual = (self.journal_entry_id, self.entry_type, self.account_id, self.venue_id, self.effective_time,
+                  self.recorded_at, self.source_ids, self.balance_changes, self.realized_pnl, self.fees,
+                  self.financing, self.application_key, self.settlement_id, self.exact_cash_flow, self.payment,
+                  self.application_body_hash)
+        if actual != expected:
+            raise ValueError("V2 funding journal fields must match request")
+
+    def to_canonical_dict(self) -> dict[str, Any]:
+        return {"type": "linear_funding_journal_entry", "schema_version": 2, "component_ref": self.component_ref,
+                "request": self.request, "request_hash": self.request_hash, "application_key": self.application_key,
+                "settlement_id": self.settlement_id, "exact_cash_flow": self.exact_cash_flow, "payment": self.payment,
+                "application_body_hash": self.application_body_hash,
+                "journal_entry": AccountingJournalEntry.to_canonical_dict(self)}
+
+
+@dataclass(frozen=True, slots=True)
+class LinearFundingSettlementResultV2:
+    component_ref: ProfileComponentRef
+    request: LinearFundingSettlementRequestV2
+    request_hash: str
+    application_key: LinearFundingApplicationKey
+    exact_cash_flow: ExactLinearFundingCashFlow
+    payment: Money
+    journal_entry: LinearFundingJournalEntryV2
+
+    def __post_init__(self) -> None:
+        if self.component_ref != _component_ref() or self.request_hash != self.request.request_hash:
+            raise ValueError("V2 settlement result evidence is invalid")
+        exact, payment, _, _, _, _ = _v2_entry_values(self.request)
+        if (self.application_key, self.exact_cash_flow, self.payment) != (self.request.application_identity.application_key, exact, payment):
+            raise ValueError("V2 settlement fields must match request")
+        if type(self.journal_entry) is not LinearFundingJournalEntryV2:
+            raise TypeError("journal_entry must be exact V2 journal")
+
+    @property
+    def result_hash(self) -> str:
+        return canonical_sha256(self)
+
+    def to_canonical_dict(self) -> dict[str, Any]:
+        return {"type": "linear_funding_settlement_result", "schema_version": 2,
+                "component_ref": self.component_ref, "request": self.request, "request_hash": self.request_hash,
+                "application_key": self.application_key, "exact_cash_flow": self.exact_cash_flow,
+                "payment": self.payment, "journal_entry": self.journal_entry}
+
+
+@dataclass(frozen=True, slots=True)
+class LinearFundingAccountingV2:
+    @property
+    def component_ref(self) -> ProfileComponentRef:
+        return _component_ref()
+
+    def assess_financing(self, request: LinearFundingSettlementRequestV2, /) -> LinearFundingSettlementResultV2:
+        if type(request) is not LinearFundingSettlementRequestV2:
+            raise TypeError("request must be exact V2 settlement request")
+        exact, payment, body, sources, changes, financing = _v2_entry_values(request)
+        identity = request.application_identity
+        entry = LinearFundingJournalEntryV2(identity.journal_entry_id, AccountingEntryType.FUNDING_APPLIED,
+            identity.application_key.account_id, request.position_key.venue_id,
+            identity.application_key.funding_slot_id.target_funding_time, request.settlement_evidence.applied_at,
+            sources, changes, (), (), financing, self.component_ref, request, request.request_hash,
+            identity.application_key, identity.settlement_id, exact, payment, body)
+        return LinearFundingSettlementResultV2(self.component_ref, request, request.request_hash,
+            identity.application_key, exact, payment, entry)
 
 
 class LinearFundingJournalReplayFailureCode(str, Enum):

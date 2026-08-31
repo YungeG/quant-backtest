@@ -206,7 +206,7 @@ def _schema7_values(bundle=None):
         planned.resolved_request,
         case,
         result.execution_input_envelope,
-        BacktestExecutionRequest(7, planned.request, result.execution_input_ref),
+        BacktestExecutionRequest(8, planned.request, result.execution_input_ref),
         result.preparation_result.profile_registry,
     )
 
@@ -259,13 +259,13 @@ def test_schema7_durable_fresh_rebuild_runs_public_koru_batch_plan(
     )
     rebuilt = fixture["rebuilt_result"]
 
-    assert fixture["request"].schema_version == 7
+    assert fixture["request"].schema_version == 8
     assert (
         fixture["case"].financial_dispatch_plan.dispatcher_spec.margin_component.component_key
         == "account.linear-perpetual.raw-valuation-margin-projection.v2"
     )
-    assert fixture["verification"].execution_input_bundle_ref.schema_version == 7
-    assert plan["schema_version"] == 3
+    assert fixture["verification"].execution_input_bundle_ref.schema_version == 8
+    assert plan["schema_version"] == 4
     assert batches and all(batch["subwindows"] for batch in batches)
     funding = tuple(
         event

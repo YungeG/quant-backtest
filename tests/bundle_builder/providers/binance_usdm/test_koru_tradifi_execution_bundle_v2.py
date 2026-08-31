@@ -9,6 +9,9 @@ from crypto_quant_backtest import (
     TimelineWindow,
     build_binance_usdm_koru_tradifi_development_profile_v1,
 )
+from crypto_quant_bundle_builder import (
+    binance_usdm_koru_tradifi_execution_bundle_v2 as execution_bundle_v2,
+)
 from crypto_quant_bundle_builder.binance_usdm_koru_closed_market_range_targets_v2 import (
     BinanceUsdmKoruClosedMarketRangeTargetsRequestV2,
     build_binance_usdm_koru_closed_market_range_targets_v2,
@@ -16,7 +19,9 @@ from crypto_quant_bundle_builder.binance_usdm_koru_closed_market_range_targets_v
 from crypto_quant_bundle_builder.binance_usdm_koru_tradifi_execution_bundle_v2 import (
     BinanceUsdmKoruTradifiExecutionBundleOutcomeV2,
     BinanceUsdmKoruTradifiExecutionBundleRequestV2,
+    _reset_trusted_result_cache_for_test,
     _trusted_result,
+    _trusted_result_cache_stats_for_test,
     build_binance_usdm_koru_tradifi_execution_bundle_v2,
 )
 from crypto_quant_bundle_builder.binance_usdm_koru_tradifi_source_projection_v2 import (
@@ -401,6 +406,85 @@ def test_request_boundary_source_target_profile_and_gap_tamper_fail_closed(
         _request(source, target, wire)
 
 
+def test_trusted_result_cache_reuses_only_exact_canonical_results(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    result = _build()
+    _reset_trusted_result_cache_for_test()
+    canonical_equal = execution_bundle_v2._canonical_equal
+    canonical_calls = 0
+
+    def counted_canonical_equal(left: object, right: object) -> bool:
+        nonlocal canonical_calls
+        canonical_calls += 1
+        return canonical_equal(left, right)
+
+    monkeypatch.setattr(
+        execution_bundle_v2, "_canonical_equal", counted_canonical_equal
+    )
+    first = _trusted_result(result)
+    assert first is not None
+    assert _trusted_result_cache_stats_for_test() == (1, 0, 1)
+    first_canonical_calls = canonical_calls
+    assert first_canonical_calls > 0
+
+    cached = _trusted_result(result)
+    assert cached is not None
+    assert canonical_bytes(cached) == canonical_bytes(result)
+    assert canonical_calls == first_canonical_calls
+    assert _trusted_result_cache_stats_for_test() == (1, 1, 1)
+
+    replacement = replace(result)
+    assert _trusted_result(replacement) is not None
+    assert _trusted_result_cache_stats_for_test() == (2, 1, 2)
+
+    forged = replace(result)
+    object.__setattr__(forged, "result_digest", "sha256:" + "0" * 64)
+    before_forged = canonical_calls
+    assert _trusted_result(forged) is None
+    assert canonical_calls > before_forged
+    assert _trusted_result_cache_stats_for_test() == (2, 1, 3)
+
+
+def test_trusted_result_cache_revalidates_same_object_after_tampering() -> None:
+    result = _build()
+    _reset_trusted_result_cache_for_test()
+
+    assert _trusted_result(result) is not None
+    object.__setattr__(result, "result_digest", "sha256:" + "0" * 64)
+
+    assert _trusted_result(result) is None
+    assert _trusted_result_cache_stats_for_test() == (0, 0, 2)
+
+
+def test_trusted_result_cache_evicts_nested_event_tampering() -> None:
+    result = _build()
+    _reset_trusted_result_cache_for_test()
+
+    assert _trusted_result(result) is not None
+    object.__setattr__(result.events[0], "source_hash", "sha256:" + "0" * 64)
+
+    assert _trusted_result(result) is None
+    assert _trusted_result_cache_stats_for_test() == (0, 0, 2)
+
+
+def test_trusted_result_cache_is_bounded_lru() -> None:
+    result = _build()
+    candidates = tuple(replace(result) for _ in range(9))
+    _reset_trusted_result_cache_for_test()
+
+    for candidate in candidates[:8]:
+        assert _trusted_result(candidate) is not None
+    assert _trusted_result_cache_stats_for_test() == (8, 0, 8)
+
+    assert _trusted_result(candidates[0]) is not None
+    assert _trusted_result(candidates[8]) is not None
+    assert _trusted_result_cache_stats_for_test() == (8, 1, 9)
+
+    assert _trusted_result(candidates[1]) is not None
+    assert _trusted_result_cache_stats_for_test() == (8, 1, 10)
+
+
 def test_result_ref_digest_and_reader_replay_are_trusted_and_tamper_evident() -> None:
     first = _build()
     second = _build()
@@ -416,6 +500,7 @@ def test_result_ref_digest_and_reader_replay_are_trusted_and_tamper_evident() ->
             replayed.extend(batch)
         assert tuple(replayed) == first.streams[stream.stream_key]
 
+    _reset_trusted_result_cache_for_test()
     object.__setattr__(
         second,
         "bundle_ref",
@@ -426,5 +511,6 @@ def test_result_ref_digest_and_reader_replay_are_trusted_and_tamper_evident() ->
         BinanceUsdmKoruTradifiExecutionBundleOutcomeV2(result=second)
 
     third = _build()
+    _reset_trusted_result_cache_for_test()
     object.__setattr__(third, "result_digest", "sha256:" + "0" * 64)
     assert _trusted_result(third) is None

@@ -666,6 +666,7 @@ def _funding_events(
             funding_model_version=2,
             funding_eligibility_role=artifact_roles[0],
             funding_accounting_role=artifact_roles[1],
+            funding_evidence_version=2,
         )
         output.append(
             ScheduledAccountEvent(

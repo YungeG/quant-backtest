@@ -59,10 +59,12 @@ from .execution_inputs import (
     _hydrate_execution_inputs_v4_from_decoded,
     _hydrate_execution_inputs_v6_from_decoded,
     _hydrate_execution_inputs_v7_from_decoded,
+    _hydrate_execution_inputs_v8_from_decoded,
     _read_execution_inputs_v3_from_snapshot,
     _read_execution_inputs_v4_from_snapshot,
     _read_execution_inputs_v6_from_snapshot,
     _read_execution_inputs_v7_from_snapshot,
+    _read_execution_inputs_v8_from_snapshot,
 )
 from .integrity import AttemptConsistencySet, CanonicalPublicationFailureCode
 from .multi_resolution_preparation import (
@@ -547,7 +549,7 @@ class DurableRebuildVerifierV1:
         subject = _run_subject_from_request(request)
         if (
             type(request) is not BacktestExecutionRequest
-            or request.schema_version not in {3, 4, 6, 7}
+            or request.schema_version not in {3, 4, 6, 7, 8}
         ):
             raise DurableRebuildError(
                 DurableRebuildFailureCode.PROOF_CONSTRUCTION_FAILED, subject
@@ -775,6 +777,7 @@ class DurableRebuildVerifierV1:
             4: _hydrate_execution_inputs_v4_from_decoded,
             6: _hydrate_execution_inputs_v6_from_decoded,
             7: _hydrate_execution_inputs_v7_from_decoded,
+            8: _hydrate_execution_inputs_v8_from_decoded,
         }[request.schema_version]
         hydrated = hydrate(
             decoded,
@@ -1858,6 +1861,7 @@ def _read_execution_inputs_with_source(
         4,
         6,
         7,
+        8,
     }:
         return (
             None,
@@ -1871,6 +1875,7 @@ def _read_execution_inputs_with_source(
         4: _read_execution_inputs_v4_from_snapshot,
         6: _read_execution_inputs_v6_from_snapshot,
         7: _read_execution_inputs_v7_from_snapshot,
+        8: _read_execution_inputs_v8_from_snapshot,
     }[request.schema_version]
     try:
         source = reader.read(ref=request.execution_input_bundle_ref)
@@ -1936,9 +1941,9 @@ def _validate_verification(verification: DeterministicRebuildVerificationV1) -> 
     if type(verification.execution_input_bundle_ref) is not ArtifactRef or (
         verification.execution_input_bundle_ref.artifact_type
         != "backtest_execution_input_bundle"
-        or verification.execution_input_bundle_ref.schema_version not in {3, 4, 6, 7}
+        or verification.execution_input_bundle_ref.schema_version not in {3, 4, 6, 7, 8}
     ):
-        raise ValueError("execution_input_bundle_ref must target schema 3, 4, 6, or 7")
+        raise ValueError("execution_input_bundle_ref must target schema 3, 4, 6, 7, or 8")
     if type(verification.market_bundle_ref) is not MarketBundleRef:
         raise TypeError("market_bundle_ref must be exact MarketBundleRef")
     publication = _validate_g12d_mapping(

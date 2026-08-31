@@ -2,10 +2,10 @@
 
 from __future__ import annotations
 
+import unicodedata
 from dataclasses import dataclass, replace
 from enum import Enum
 from typing import Any
-import unicodedata
 
 from crypto_quant_domain import (
     CashBalanceKey,
@@ -24,7 +24,6 @@ from crypto_quant_domain import (
 from .derivative_accounting import (
     LinearDerivativeLedgerProjection,
     LinearDerivativeLedgerProjector,
-    LinearDerivativeLedgerReplayRequest,
 )
 from .derivatives import LinearPerpetualContract, LinearPositionState
 from .journal import AccountingJournal, JournalReplayCursor
@@ -362,6 +361,287 @@ class LinearFundingEligibilityPositionSnapshot:
             "availability_projection": self.availability_projection,
             "position_state": self.position_state,
         }
+
+
+@dataclass(frozen=True, slots=True)
+class LinearFundingEligibilityPositionSnapshotV2:
+    """Thin funding eligibility attestation; full ledger replays stay runtime-local."""
+
+    snapshot_id: str
+    eligibility_series_id: str
+    revision_id: str
+    supersedes_revision_id: str | None
+    slot_id: FundingSlotId
+    eligibility_instant: SimulationInstant
+    available_at: SimulationInstant
+    eligibility_cursor: JournalReplayCursor
+    availability_cursor: JournalReplayCursor
+    eligibility_ledger_state_hash: str
+    availability_ledger_state_hash: str
+    eligibility_replay_hash: str
+    availability_replay_hash: str
+    eligibility_position_state: LinearPositionState
+    availability_position_state: LinearPositionState
+
+    def __post_init__(self) -> None:
+        for name in ("snapshot_id", "eligibility_series_id", "revision_id"):
+            _text(name, getattr(self, name))
+        if self.supersedes_revision_id is not None:
+            _text("supersedes_revision_id", self.supersedes_revision_id)
+        if type(self.slot_id) is not FundingSlotId:
+            raise TypeError("slot_id must be exact FundingSlotId")
+        _instant("eligibility_instant", self.eligibility_instant)
+        _instant("available_at", self.available_at)
+        if self.available_at < self.eligibility_instant:
+            raise ValueError("available_at must not precede eligibility_instant")
+        if type(self.eligibility_cursor) is not JournalReplayCursor or type(self.availability_cursor) is not JournalReplayCursor:
+            raise TypeError("thin snapshot cursors must be exact JournalReplayCursor")
+        for name in (
+            "eligibility_ledger_state_hash", "availability_ledger_state_hash",
+            "eligibility_replay_hash", "availability_replay_hash",
+        ):
+            _hash(name, getattr(self, name))
+        if type(self.eligibility_position_state) is not LinearPositionState or type(self.availability_position_state) is not LinearPositionState:
+            raise TypeError("thin snapshot position states must be exact LinearPositionState")
+        if self.eligibility_cursor.position > self.availability_cursor.position:
+            raise ValueError("eligibility cursor cannot exceed availability cursor")
+
+    @property
+    def snapshot_hash(self) -> str:
+        return canonical_sha256(self)
+
+    def to_canonical_dict(self) -> dict[str, Any]:
+        return {
+            "type": "linear_funding_eligibility_position_snapshot",
+            "schema_version": 2,
+            "snapshot_id": self.snapshot_id,
+            "eligibility_series_id": self.eligibility_series_id,
+            "revision_id": self.revision_id,
+            "supersedes_revision_id": self.supersedes_revision_id,
+            "slot_id": self.slot_id,
+            "eligibility_instant": self.eligibility_instant,
+            "available_at": self.available_at,
+            "eligibility_cursor": self.eligibility_cursor,
+            "availability_cursor": self.availability_cursor,
+            "eligibility_ledger_state_hash": self.eligibility_ledger_state_hash,
+            "availability_ledger_state_hash": self.availability_ledger_state_hash,
+            "eligibility_replay_hash": self.eligibility_replay_hash,
+            "availability_replay_hash": self.availability_replay_hash,
+            "eligibility_position_state": self.eligibility_position_state,
+            "availability_position_state": self.availability_position_state,
+        }
+
+
+def derive_linear_funding_eligibility_snapshot_v2(
+    *,
+    snapshot_id: str,
+    eligibility_series_id: str,
+    revision_id: str,
+    supersedes_revision_id: str | None,
+    slot_id: FundingSlotId,
+    eligibility_instant: SimulationInstant,
+    available_at: SimulationInstant,
+    eligibility_projection: LinearDerivativeLedgerProjection,
+    availability_projection: LinearDerivativeLedgerProjection,
+) -> LinearFundingEligibilityPositionSnapshotV2:
+    """Derive a thin attestation from the two verifier-owned full replays."""
+    if (
+        type(eligibility_projection) is not LinearDerivativeLedgerProjection
+        or type(availability_projection) is not LinearDerivativeLedgerProjection
+    ):
+        raise TypeError("thin snapshot replays must be exact G09B Projections")
+    expected_cutoff_request = replace(
+        availability_projection.request,
+        journal=AccountingJournal(
+            tuple(
+                entry
+                for entry in availability_projection.request.journal.entries
+                if entry.recorded_at < eligibility_instant
+            )
+        ),
+    )
+    if eligibility_projection.request != expected_cutoff_request:
+        raise ValueError("eligibility replay must equal the availability cutoff")
+    return LinearFundingEligibilityPositionSnapshotV2(
+        snapshot_id, eligibility_series_id, revision_id, supersedes_revision_id,
+        slot_id, eligibility_instant, available_at, eligibility_projection.cursor,
+        availability_projection.cursor, eligibility_projection.ledger_state_hash,
+        availability_projection.ledger_state_hash, canonical_sha256(eligibility_projection),
+        canonical_sha256(availability_projection), eligibility_projection.position_state,
+        availability_projection.position_state,
+    )
+
+
+def thin_snapshot_v2_matches_replay(
+    snapshot: LinearFundingEligibilityPositionSnapshotV2,
+    eligibility_projection: LinearDerivativeLedgerProjection,
+    availability_projection: LinearDerivativeLedgerProjection,
+) -> bool:
+    """Fail closed unless every thin attestation matches the supplied full replays."""
+    try:
+        expected = derive_linear_funding_eligibility_snapshot_v2(
+            snapshot_id=snapshot.snapshot_id,
+            eligibility_series_id=snapshot.eligibility_series_id,
+            revision_id=snapshot.revision_id,
+            supersedes_revision_id=snapshot.supersedes_revision_id,
+            slot_id=snapshot.slot_id,
+            eligibility_instant=snapshot.eligibility_instant,
+            available_at=snapshot.available_at,
+            eligibility_projection=eligibility_projection,
+            availability_projection=availability_projection,
+        )
+    except (TypeError, ValueError):
+        return False
+    return canonical_sha256(snapshot) == canonical_sha256(expected)
+
+
+@dataclass(frozen=True, slots=True)
+class LinearFundingEligibilityRequestV2:
+    slot_id: FundingSlotId
+    position_key: PositionBalanceKey
+    contract: LinearPerpetualContract
+    eligibility_instant: SimulationInstant
+    publications: tuple[LinearFundingRatePublicationCandidate, ...]
+    position_snapshot: LinearFundingEligibilityPositionSnapshotV2 | None
+    captured_at: SimulationInstant
+
+    def __post_init__(self) -> None:
+        if type(self.slot_id) is not FundingSlotId:
+            raise TypeError("slot_id must be exact FundingSlotId")
+        _position_key(self.position_key)
+        if type(self.contract) is not LinearPerpetualContract:
+            raise TypeError("contract must be exact LinearPerpetualContract")
+        _instant("eligibility_instant", self.eligibility_instant)
+        if type(self.publications) is not tuple or not all(type(value) is LinearFundingRatePublicationCandidate for value in self.publications):
+            raise TypeError("publications must be an exact tuple of Candidates")
+        if self.position_snapshot is not None and type(self.position_snapshot) is not LinearFundingEligibilityPositionSnapshotV2:
+            raise TypeError("position_snapshot must be exact V2 Snapshot or None")
+        _instant("captured_at", self.captured_at)
+
+    @property
+    def request_hash(self) -> str:
+        return canonical_sha256(self)
+
+    def to_canonical_dict(self) -> dict[str, Any]:
+        return {"type": "linear_funding_eligibility_request", "schema_version": 2,
+                "slot_id": self.slot_id, "position_key": self.position_key,
+                "contract": self.contract, "eligibility_instant": self.eligibility_instant,
+                "publications": self.publications, "position_snapshot": self.position_snapshot,
+                "captured_at": self.captured_at}
+
+
+def _v2_first_failure(request: LinearFundingEligibilityRequestV2) -> LinearFundingEligibilityFailureCode | None:
+    publications = request.publications
+    if not publications:
+        return LinearFundingEligibilityFailureCode.MISSING_PUBLICATION
+    if request.slot_id.instrument_id != request.contract.instrument.instrument_id:
+        return LinearFundingEligibilityFailureCode.SLOT_CONTEXT_MISMATCH
+    if request.position_key.venue_id != request.contract.instrument.instrument_id.venue or request.position_key.instrument_id != request.contract.instrument.instrument_id:
+        return LinearFundingEligibilityFailureCode.POSITION_CONTEXT_MISMATCH
+    if request.eligibility_instant.instant != request.slot_id.target_funding_time or request.eligibility_instant.phase != _ELIGIBILITY_PHASE or request.eligibility_instant.source_sequence != _ELIGIBILITY_SEQUENCE or request.captured_at < request.eligibility_instant:
+        return LinearFundingEligibilityFailureCode.INVALID_ELIGIBILITY_INSTANT
+    if any(value.slot_id != request.slot_id for value in publications):
+        return LinearFundingEligibilityFailureCode.PUBLICATION_SLOT_MISMATCH
+    if any(value.status is LinearFundingPublicationStatus.FINAL_RATE and value.published_rate is not None and value.published_rate.basis != _RATE_BASIS for value in publications):
+        return LinearFundingEligibilityFailureCode.UNSUPPORTED_RATE_BASIS
+    if not _revision_set_valid(publications):
+        return LinearFundingEligibilityFailureCode.INVALID_PUBLICATION_REVISION_SET
+    if any(value.publication_available_at.instant < value.event_time for value in publications):
+        return LinearFundingEligibilityFailureCode.INVALID_PUBLICATION_CAUSALITY
+    if any(value.event_time > request.slot_id.target_funding_time or value.publication_available_at.instant > request.slot_id.target_funding_time for value in publications):
+        return LinearFundingEligibilityFailureCode.LATE_PUBLICATION
+    if any(value.publication_available_at > request.captured_at for value in publications):
+        return LinearFundingEligibilityFailureCode.PUBLICATION_NOT_AVAILABLE
+    if publications[-1].status is LinearFundingPublicationStatus.CANCELLED:
+        return LinearFundingEligibilityFailureCode.FUNDING_SLOT_CANCELLED
+    snapshot = request.position_snapshot
+    if snapshot is None:
+        return LinearFundingEligibilityFailureCode.MISSING_ELIGIBILITY_POSITION
+    if snapshot.supersedes_revision_id is not None:
+        return LinearFundingEligibilityFailureCode.UNSUPPORTED_POSITION_REVISION
+    if snapshot.slot_id != request.slot_id:
+        return LinearFundingEligibilityFailureCode.SNAPSHOT_SLOT_MISMATCH
+    if snapshot.eligibility_position_state.position_key != request.position_key or snapshot.eligibility_position_state.contract != request.contract or snapshot.availability_position_state.position_key != request.position_key or snapshot.availability_position_state.contract != request.contract:
+        return LinearFundingEligibilityFailureCode.SNAPSHOT_POSITION_CONTEXT_MISMATCH
+    if snapshot.eligibility_instant != request.eligibility_instant:
+        return LinearFundingEligibilityFailureCode.ELIGIBILITY_INSTANT_MISMATCH
+    if snapshot.available_at > request.captured_at:
+        return LinearFundingEligibilityFailureCode.POSITION_SNAPSHOT_NOT_AVAILABLE
+    return None
+
+
+@dataclass(frozen=True, slots=True)
+class LinearFundingEligibilityV2:
+    component_ref: LinearFundingEligibilityComponentRef
+    request: LinearFundingEligibilityRequestV2
+    request_hash: str
+    slot_id: FundingSlotId
+    publication_hash: str
+    event_id: str
+    event_hash: str
+    publication_revision_id: str
+    snapshot_hash: str
+    position_state: LinearPositionState
+    state_hash: str
+    published_rate: Rate
+    eligibility_instant: SimulationInstant
+    captured_at: SimulationInstant
+
+    def __post_init__(self) -> None:
+        if self.component_ref != _component_ref() or self.request_hash != self.request.request_hash or _v2_first_failure(self.request) is not None:
+            raise ValueError("V2 eligibility evidence is invalid")
+        selected = self.request.publications[-1]
+        snapshot = self.request.position_snapshot
+        if snapshot is None or selected.published_rate is None:
+            raise ValueError("successful V2 eligibility requires evidence")
+        expected = (self.request.slot_id, selected.publication_hash, selected.event_id, selected.event_hash, selected.revision_id, snapshot.snapshot_hash, snapshot.eligibility_position_state, snapshot.eligibility_position_state.state_hash, selected.published_rate, self.request.eligibility_instant, self.request.captured_at)
+        if (self.slot_id, self.publication_hash, self.event_id, self.event_hash, self.publication_revision_id, self.snapshot_hash, self.position_state, self.state_hash, self.published_rate, self.eligibility_instant, self.captured_at) != expected:
+            raise ValueError("V2 eligibility fields must match request")
+
+    @property
+    def eligibility_hash(self) -> str:
+        return canonical_sha256(self)
+
+    def to_canonical_dict(self) -> dict[str, Any]:
+        return {"type": "linear_funding_eligibility", "schema_version": 2,
+                "component_ref": self.component_ref, "request": self.request,
+                "request_hash": self.request_hash, "slot_id": self.slot_id,
+                "publication_hash": self.publication_hash, "event_id": self.event_id,
+                "event_hash": self.event_hash, "publication_revision_id": self.publication_revision_id,
+                "snapshot_hash": self.snapshot_hash, "position_state": self.position_state,
+                "state_hash": self.state_hash, "published_rate": self.published_rate,
+                "eligibility_instant": self.eligibility_instant, "captured_at": self.captured_at}
+
+
+@dataclass(frozen=True, slots=True)
+class LinearFundingEligibilityOutcomeV2:
+    component_ref: LinearFundingEligibilityComponentRef
+    request_hash: str
+    result: LinearFundingEligibilityV2 | None
+    failure: LinearFundingEligibilityFailureCode | None
+
+    def __post_init__(self) -> None:
+        if self.component_ref != _component_ref() or (self.result is None) == (self.failure is None):
+            raise ValueError("V2 eligibility outcome must have one valid branch")
+
+
+@dataclass(frozen=True, slots=True)
+class LinearFundingEligibilityResolverV2:
+    @property
+    def component_ref(self) -> LinearFundingEligibilityComponentRef:
+        return _component_ref()
+
+    def resolve(self, request: LinearFundingEligibilityRequestV2, /) -> LinearFundingEligibilityOutcomeV2:
+        if type(request) is not LinearFundingEligibilityRequestV2:
+            raise TypeError("request must be exact V2 eligibility Request")
+        failure = _v2_first_failure(request)
+        if failure is not None:
+            return LinearFundingEligibilityOutcomeV2(self.component_ref, request.request_hash, None, failure)
+        selected, snapshot = request.publications[-1], request.position_snapshot
+        if selected.published_rate is None or snapshot is None:
+            raise AssertionError("valid V2 request requires funding evidence")
+        result = LinearFundingEligibilityV2(self.component_ref, request, request.request_hash, request.slot_id, selected.publication_hash, selected.event_id, selected.event_hash, selected.revision_id, snapshot.snapshot_hash, snapshot.eligibility_position_state, snapshot.eligibility_position_state.state_hash, selected.published_rate, request.eligibility_instant, request.captured_at)
+        return LinearFundingEligibilityOutcomeV2(self.component_ref, request.request_hash, result, None)
 
 
 def _snapshot_replay_valid(

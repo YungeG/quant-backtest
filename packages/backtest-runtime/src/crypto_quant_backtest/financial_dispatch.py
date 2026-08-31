@@ -48,14 +48,18 @@ from crypto_quant_trading import (
     LinearDerivativeLedgerProjector,
     LinearDerivativeLedgerReplayRequest,
     LinearFundingAccounting,
+    LinearFundingAccountingV2,
     LinearFundingApplicationIdentity,
     LinearFundingEligibilityPositionSnapshot,
     LinearFundingEligibilityRequest,
+    LinearFundingEligibilityRequestV2,
     LinearFundingEligibilityResolver,
+    LinearFundingEligibilityResolverV2,
     LinearFundingMarkEvidence,
     LinearFundingRatePublicationCandidate,
     LinearFundingSettlementEvidence,
     LinearFundingSettlementRequest,
+    LinearFundingSettlementRequestV2,
     LinearInstrumentMarginModel,
     LinearInstrumentMarginModelV2,
     LinearInstrumentMarginRequest,
@@ -76,6 +80,8 @@ from crypto_quant_trading import (
     ResolvedMark,
     ResourceReservationState,
     StaleMarkPolicy,
+    derive_linear_funding_eligibility_snapshot_v2,
+    thin_snapshot_v2_matches_replay,
 )
 
 from .liquidation_audit import (
@@ -378,6 +384,7 @@ class LinearFundingAccountEventPlan:
     funding_model_version: int | None = None
     funding_eligibility_role: str | None = None
     funding_accounting_role: str | None = None
+    funding_evidence_version: int | None = None
 
     def __post_init__(self) -> None:
         if type(self.settlement_identity) is not LinearFundingApplicationIdentity:
@@ -408,6 +415,7 @@ class LinearFundingAccountEventPlan:
                 or self.funding_model_version is not None
                 or self.funding_eligibility_role is not None
                 or self.funding_accounting_role is not None
+                or self.funding_evidence_version is not None
             ):
                 raise ValueError("legacy funding plan cannot set production authority")
             return
@@ -453,6 +461,7 @@ class LinearFundingAccountEventPlan:
             if (
                 self.funding_eligibility_role is not None
                 or self.funding_accounting_role is not None
+                or self.funding_evidence_version is not None
             ):
                 raise ValueError("legacy funding plan cannot set V2 artifact roles")
         elif type(self.funding_model_version) is not int or self.funding_model_version != 2:
@@ -462,6 +471,8 @@ class LinearFundingAccountEventPlan:
             or self.funding_accounting_role is None
         ):
             raise ValueError("V2 funding artifact roles must be present")
+        elif self.funding_evidence_version != 2:
+            raise ValueError("V2 funding evidence version must be 2")
         else:
             roles = _v2_funding_artifact_roles(self.settlement_identity)
             if (
@@ -514,6 +525,8 @@ class LinearFundingAccountEventPlan:
                 "funding_mark_evidence": self.funding_mark_evidence,
                 "settlement_cash_registration": self.settlement_cash_registration,
                 "payment_quantization": self.payment_quantization,
+                **({"funding_evidence_version": self.funding_evidence_version}
+                   if self.funding_evidence_version is not None else {}),
             },
         )
 
@@ -550,6 +563,8 @@ class LinearFundingAccountEventPlan:
                             "funding_model_version": self.funding_model_version,
                             "funding_eligibility_role": self.funding_eligibility_role,
                             "funding_accounting_role": self.funding_accounting_role,
+                            **({"funding_evidence_version": self.funding_evidence_version}
+                               if self.funding_evidence_version is not None else {}),
                         }
                         if self.funding_model_version is not None
                         else {}
@@ -2021,43 +2036,62 @@ class BinanceUsdmTradifiLinearFinancialDispatcher:
         )
         if cutoff.result is None:
             raise ValueError("funding eligibility cutoff replay failed")
-        snapshot = LinearFundingEligibilityPositionSnapshot(
-            snapshot_id,
-            series_id,
-            revision_id,
-            payload.position_supersedes_revision_id,
-            slot,
-            eligibility_instant,
-            snapshot_available_at,
-            cutoff.result.cursor,
-            replay,
-            cutoff.result.position_state,
-        )
-        eligibility_request = LinearFundingEligibilityRequest(
-            slot,
-            position_key,
-            contract,
-            eligibility_instant,
-            publications,
-            snapshot,
-            event.event_at,
-        )
-        eligibility = LinearFundingEligibilityResolver().resolve(eligibility_request)
-        if eligibility.result is None:
-            raise ValueError("funding eligibility failed")
-        settlement_request = LinearFundingSettlementRequest(
-            eligibility.result,
-            settlement_evidence,
-            funding_mark_evidence,
-            payload.settlement_identity,
-            position_key,
-            contract,
-            settlement_registration,
-            payment_quantization,
-        )
-        assessed = LinearFundingAccounting().assess_financing(settlement_request)
-        if assessed.result is None:
-            raise ValueError("funding accounting failed")
+        if payload.funding_model_version == 2:
+            snapshot = derive_linear_funding_eligibility_snapshot_v2(
+                snapshot_id=snapshot_id,
+                eligibility_series_id=series_id,
+                revision_id=revision_id,
+                supersedes_revision_id=payload.position_supersedes_revision_id,
+                slot_id=slot,
+                eligibility_instant=eligibility_instant,
+                available_at=snapshot_available_at,
+                eligibility_projection=cutoff.result,
+                availability_projection=replay,
+            )
+            if not thin_snapshot_v2_matches_replay(snapshot, cutoff.result, replay):
+                raise ValueError("thin funding snapshot replay attestation mismatch")
+            eligibility_request = LinearFundingEligibilityRequestV2(
+                slot, position_key, contract, eligibility_instant, publications, snapshot,
+                event.event_at,
+            )
+            eligibility = LinearFundingEligibilityResolverV2().resolve(eligibility_request)
+            if eligibility.result is None:
+                raise ValueError("V2 funding eligibility failed")
+            settlement_request = LinearFundingSettlementRequestV2(
+                eligibility.result, settlement_evidence, funding_mark_evidence,
+                payload.settlement_identity, position_key, contract,
+                settlement_registration, payment_quantization,
+            )
+            assessed_result = LinearFundingAccountingV2().assess_financing(settlement_request)
+        else:
+            snapshot = LinearFundingEligibilityPositionSnapshot(
+                snapshot_id,
+                series_id,
+                revision_id,
+                payload.position_supersedes_revision_id,
+                slot,
+                eligibility_instant,
+                snapshot_available_at,
+                cutoff.result.cursor,
+                replay,
+                cutoff.result.position_state,
+            )
+            eligibility_request = LinearFundingEligibilityRequest(
+                slot, position_key, contract, eligibility_instant, publications, snapshot,
+                event.event_at,
+            )
+            eligibility = LinearFundingEligibilityResolver().resolve(eligibility_request)
+            if eligibility.result is None:
+                raise ValueError("funding eligibility failed")
+            settlement_request = LinearFundingSettlementRequest(
+                eligibility.result, settlement_evidence, funding_mark_evidence,
+                payload.settlement_identity, position_key, contract,
+                settlement_registration, payment_quantization,
+            )
+            assessed = LinearFundingAccounting().assess_financing(settlement_request)
+            if assessed.result is None:
+                raise ValueError("funding accounting failed")
+            assessed_result = assessed.result
         artifacts = _ordered_artifacts(
             event.expected_artifact_roles,
             (
@@ -2080,8 +2114,8 @@ class BinanceUsdmTradifiLinearFinancialDispatcher:
                     self.spec.financing_component.component_version,
                     self.spec.financing_component.component_digest,
                     settlement_request.request_hash,
-                    assessed.result.result_hash,
-                    assessed.result,
+                    assessed_result.result_hash,
+                    assessed_result,
                 ),
             ),
         )
@@ -2091,7 +2125,7 @@ class BinanceUsdmTradifiLinearFinancialDispatcher:
             result=FinancialDispatchResult(
                 self.spec,
                 event.event_id,
-                (assessed.result.journal_entry,),
+                (assessed_result.journal_entry,),
                 state.position_lot_books,
                 artifacts,
             ),

@@ -22,6 +22,12 @@ from crypto_quant_backtest.execution_inputs import (
     _EXECUTION_INPUT_CATALOG,
     _materialize_execution_input_bundle_v6,
 )
+from crypto_quant_bundle_builder import (
+    binance_usdm_koru_tradifi_execution_bundle_v2 as execution_bundle_v2,
+)
+from crypto_quant_bundle_builder import (
+    binance_usdm_koru_tradifi_source_projection_v2 as source_projection_v2,
+)
 from crypto_quant_domain import (
     SimulationInstant,
     SourceSequence,
@@ -86,7 +92,7 @@ def test_public_v2_raw_scale8_bundle_reaches_engine() -> None:
         0
     ].stream_key.endswith(".v2")
 
-    assert prepared.result.execution_input_envelope.schema_version == 7
+    assert prepared.result.execution_input_envelope.schema_version == 8
     assert prepared.result.execution_input_ref.content_hash == (
         prepared.result.execution_input_envelope.content_hash
     )
@@ -201,6 +207,31 @@ def test_public_v2_raw_scale8_bundle_reaches_engine() -> None:
     assert executed.result.final_portfolio_snapshot.positions == ()
 
 
+def test_public_raw_scale8_preparation_replays_after_v2_authority_cache_reset() -> None:
+    def prepare_after_cache_reset():
+        source_projection_v2._reset_trusted_result_cache_for_test()
+        execution_bundle_v2._reset_trusted_result_cache_for_test()
+        fixture._raw_scale8_two_funding_bundle.cache_clear()
+        bundle = fixture._raw_scale8_two_funding_bundle()
+        assert execution_bundle_v2._trusted_result(bundle) is not None
+        prepared = _prepare(bundle)
+        assert source_projection_v2._trusted_result_cache_stats_for_test()[1] > 0
+        assert execution_bundle_v2._trusted_result_cache_stats_for_test()[1] > 0
+        return prepared
+
+    first = prepare_after_cache_reset()
+    second = prepare_after_cache_reset()
+
+    assert first.failure is None and first.result is not None
+    assert second.failure is None and second.result is not None
+    assert canonical_bytes(first.result.execution_input_envelope) == canonical_bytes(
+        second.result.execution_input_envelope
+    )
+    assert canonical_bytes(first.result.execution_case) == canonical_bytes(
+        second.result.execution_case
+    )
+
+
 def test_v2_funding_roles_reject_absence_and_forgery() -> None:
     prepared = _prepare(fixture._two_funding_bundle())
     assert prepared.result is not None
@@ -223,6 +254,8 @@ def test_v2_funding_roles_reject_absence_and_forgery() -> None:
             funding_eligibility_role=None,
             funding_accounting_role=None,
         )
+    with pytest.raises(ValueError, match="V2 funding evidence version must be 2"):
+        replace(payload, funding_evidence_version=None)
     with pytest.raises(ValueError, match="funding artifact roles must match"):
         replace(
             event,
@@ -237,8 +270,24 @@ def test_schema6_materializer_rejects_batch_downgrade() -> None:
     prepared = _prepare(fixture._nonempty_bundle()).result
     assert prepared is not None
 
-    with pytest.raises(ValueError, match="liquidation audit batch"):
+    with pytest.raises(ValueError, match="thin funding evidence|liquidation audit batch"):
         _materialize_execution_input_bundle_v6(
+            resolved_request=prepared.case_planning_result.resolved_request,
+            hydrated_inputs=prepared.case_planning_result.hydrated_inputs,
+            market_data_preparation=prepared.case_planning_result.market_data_preparation,
+        )
+
+
+def test_schema7_rejects_thin_funding_authority() -> None:
+    from crypto_quant_backtest.execution_inputs import (
+        _materialize_execution_input_bundle_v7,
+    )
+
+    prepared = _prepare(fixture._nonempty_bundle()).result
+    assert prepared is not None
+
+    with pytest.raises(ValueError, match="thin funding evidence"):
+        _materialize_execution_input_bundle_v7(
             resolved_request=prepared.case_planning_result.resolved_request,
             hydrated_inputs=prepared.case_planning_result.hydrated_inputs,
             market_data_preparation=prepared.case_planning_result.market_data_preparation,
