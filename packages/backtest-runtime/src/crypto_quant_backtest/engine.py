@@ -6,6 +6,7 @@ import unicodedata
 from collections.abc import Mapping
 from dataclasses import dataclass, field, replace
 from enum import Enum
+from types import MappingProxyType
 from typing import Any, cast
 
 from crypto_quant_domain import (
@@ -114,6 +115,7 @@ from .financial_dispatch import (
     FinancialDispatchResult,
     FinancialEventDispatcher,
     FinancialStateView,
+    LinearMarginLiquidationAuditBatchPlan,
     LinearMarginProjectionPlan,
     financial_dispatcher_for_spec,
     financial_dispatcher_owns_fee_accounting,
@@ -168,6 +170,22 @@ def _scheduled_window_start_at(payload: object) -> UtcInstant | None:
     if type(value) is not UtcInstant:
         raise TypeError("window_start_at must be exact UtcInstant")
     return value
+
+
+def _batch_checkpoint_bindings(
+    plan: FinancialDispatchPlan,
+) -> frozenset[tuple[SimulationInstant, str]]:
+    """Return the exact timeline views required by Schema 7 batch children."""
+    return frozenset(
+        binding
+        for event in plan.scheduled_account_events
+        if type(event.payload) is LinearMarginLiquidationAuditBatchPlan
+        for child in event.payload.subwindows
+        for binding in (
+            (child.start_checkpoint, child.start_side),
+            (child.end_checkpoint, child.end_side),
+        )
+    )
 
 
 def _text(name: str, value: str) -> str:
@@ -1750,6 +1768,10 @@ class DeterministicBarEngine:
         processed_account_events: set[str] = set()
         timeline_checkpoints: dict[UtcInstant, FinancialStateView] = {}
         event_checkpoints: dict[tuple[SimulationInstant, str], FinancialStateView] = {}
+        required_event_checkpoints = _batch_checkpoint_bindings(
+            case.financial_dispatch_plan
+        )
+        captures_batch_checkpoints = bool(required_event_checkpoints)
         checkpoint_starts = tuple(sorted({window_start_at for account_event in case.financial_dispatch_plan.scheduled_account_events if (window_start_at := _scheduled_window_start_at(account_event.payload)) is not None}))
         timeline_cursor = case.timeline.open_cursor(batch_size=case.timeline_batch_size)
 
@@ -1788,7 +1810,12 @@ class DeterministicBarEngine:
                             self._trace(state).trace_hash,
                         )
                     )
-                event_checkpoints[(event.timeline_instant, "before")] = self._financial_state_view(state)
+                checkpoint_key = (event.timeline_instant, "before")
+                if (
+                    not captures_batch_checkpoints
+                    or checkpoint_key in required_event_checkpoints
+                ):
+                    event_checkpoints[checkpoint_key] = self._financial_state_view(state)
                 self._trace_add(
                     state,
                     EngineStage.TIMELINE_EVENT,
@@ -1833,9 +1860,14 @@ class DeterministicBarEngine:
                         if window_start_at is not None
                         else None
                     )
+                    checkpoints: Mapping[
+                        tuple[SimulationInstant, str], FinancialStateView
+                    ] = event_checkpoints
+                    if type(account_event.payload) is LinearMarginLiquidationAuditBatchPlan:
+                        checkpoints = MappingProxyType(dict(event_checkpoints))
                     dispatch = self._financial_dispatcher.dispatch_scheduled_event(
                         account_event,
-                        self._financial_state_view(state, checkpoint, event_checkpoints),
+                        self._financial_state_view(state, checkpoint, checkpoints),
                     )
                     failure = self._apply_financial_dispatch(
                         case,
@@ -1846,7 +1878,12 @@ class DeterministicBarEngine:
                     if failure is not None:
                         return failure
                     processed_account_events.add(account_event.event_id)
-                event_checkpoints[(event.timeline_instant, "after")] = self._financial_state_view(state)
+                checkpoint_key = (event.timeline_instant, "after")
+                if (
+                    not captures_batch_checkpoints
+                    or checkpoint_key in required_event_checkpoints
+                ):
+                    event_checkpoints[checkpoint_key] = self._financial_state_view(state)
 
         missing_cycles = tuple(
             cycle.cycle_hash
