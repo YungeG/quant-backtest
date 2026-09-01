@@ -40,6 +40,8 @@ from crypto_quant_trading import (
     ApprovedPortfolioTarget,
     AvailabilityProjection,
     AvailabilityState,
+    CashAvailability,
+    CappedPortfolioTargetV1,
     ExecutableOrderSpec,
     FeeAssessmentBasisEvidence,
     FeeAssessmentEngine,
@@ -72,6 +74,11 @@ from crypto_quant_trading import (
     PortfolioAllocator,
     PortfolioRiskEvaluator,
     PortfolioRiskPolicy,
+    PortfolioOrderSizerV1,
+    PortfolioRebalanceCoordinatorV2,
+    PortfolioRebalanceExecutionPolicyV1,
+    PortfolioRebalancePlanV1,
+    PortfolioSizingCandidateV1,
     PortfolioSnapshotRefreshInputV1,
     PortfolioSnapshotRefresherV1,
     PortfolioSnapshotRefreshPolicyV1,
@@ -631,6 +638,9 @@ class ResolvedPortfolioDecisionCycleV2(ResolvedDecisionCycle):
 
     snapshot_refresh_plan: ResolvedDecisionSnapshotRefreshPlanV1
     cancellation_plans: tuple[ResolvedOrderCancellationPlanV1, ...] = ()
+    portfolio_sizing_candidates: tuple[PortfolioSizingCandidateV1, ...] = ()
+    portfolio_cash_availability: CashAvailability | None = None
+    portfolio_rebalance_policy: PortfolioRebalanceExecutionPolicyV1 | None = None
 
     def __post_init__(self) -> None:
         super(ResolvedPortfolioDecisionCycleV2, self).__post_init__()
@@ -665,6 +675,58 @@ class ResolvedPortfolioDecisionCycleV2(ResolvedDecisionCycle):
             "cancellation_plans",
             tuple(sorted(self.cancellation_plans, key=lambda value: value.order_id.value)),
         )
+        if not isinstance(self.portfolio_sizing_candidates, tuple) or not all(
+            isinstance(value, PortfolioSizingCandidateV1)
+            for value in self.portfolio_sizing_candidates
+        ):
+            raise TypeError("portfolio_sizing_candidates contains invalid values")
+        configured = (
+            bool(self.portfolio_sizing_candidates),
+            self.portfolio_cash_availability is not None,
+            self.portfolio_rebalance_policy is not None,
+        )
+        if any(configured) and not all(configured):
+            raise ValueError("portfolio sizing configuration must be exact-cover")
+        if self.portfolio_cash_availability is not None and not isinstance(
+            self.portfolio_cash_availability, CashAvailability
+        ):
+            raise TypeError("portfolio_cash_availability must be CashAvailability")
+        if self.portfolio_rebalance_policy is not None and not isinstance(
+            self.portfolio_rebalance_policy, PortfolioRebalanceExecutionPolicyV1
+        ):
+            raise TypeError(
+                "portfolio_rebalance_policy must be PortfolioRebalanceExecutionPolicyV1"
+            )
+        object.__setattr__(
+            self,
+            "portfolio_sizing_candidates",
+            tuple(
+                sorted(
+                    self.portfolio_sizing_candidates,
+                    key=lambda value: canonical_bytes(value.identity.instrument_id),
+                )
+            ),
+        )
+
+    def materialize_portfolio_plans(
+        self,
+    ) -> tuple[CappedPortfolioTargetV1, PortfolioRebalancePlanV1]:
+        if (
+            not self.portfolio_sizing_candidates
+            or self.portfolio_cash_availability is None
+            or self.portfolio_rebalance_policy is None
+        ):
+            raise ValueError("portfolio sizing configuration is absent")
+        capped = PortfolioOrderSizerV1().size(
+            source_target_hash=self.target_validity.normalized_target_hash,
+            candidates=self.portfolio_sizing_candidates,
+            cash_availability=self.portfolio_cash_availability,
+        )
+        return capped, PortfolioRebalanceCoordinatorV2().coordinate(
+            capped_target=capped,
+            policy=self.portfolio_rebalance_policy,
+            created_at=self.planning_at,
+        )
 
     def to_canonical_dict(self) -> dict[str, object]:
         payload = ResolvedDecisionCycle.to_canonical_dict(self)
@@ -672,6 +734,10 @@ class ResolvedPortfolioDecisionCycleV2(ResolvedDecisionCycle):
         payload["schema_version"] = 2
         payload["cancellation_plans"] = self.cancellation_plans
         payload["snapshot_refresh_plan"] = self.snapshot_refresh_plan
+        if self.portfolio_sizing_candidates:
+            payload["portfolio_sizing_candidates"] = self.portfolio_sizing_candidates
+            payload["portfolio_cash_availability"] = self.portfolio_cash_availability
+            payload["portfolio_rebalance_policy"] = self.portfolio_rebalance_policy
         return payload
 
 

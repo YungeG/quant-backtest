@@ -339,6 +339,23 @@ from .sizing import (
     QuantityLattice,
     ResidualPositionPolicy,
 )
+from .portfolio_order_sizing import (
+    CappedPortfolioTargetV1,
+    PortfolioOrderSizerV1,
+    PortfolioOrderSizingEvidenceV1,
+    PortfolioSizingCandidateV1,
+    PortfolioSizingOmissionReason,
+    PortfolioSizingOmissionV1,
+    PortfolioSizingOrderIdentityV1,
+)
+from .portfolio_rebalance import (
+    PortfolioPlanStageKind,
+    PortfolioPlanStageV1,
+    PortfolioPlannedOrderV1,
+    PortfolioRebalanceCoordinatorV2,
+    PortfolioRebalanceExecutionPolicyV1,
+    PortfolioRebalancePlanV1,
+)
 from .portfolio_snapshots import (
     PortfolioSnapshotRefreshInputV1,
     PortfolioSnapshotRefresherV1,
@@ -615,6 +632,19 @@ __all__ = [
     "PortfolioRiskPolicyRef",
     "PortfolioRiskReasonCode",
     "PortfolioRiskScope",
+    "CappedPortfolioTargetV1",
+    "PortfolioOrderSizerV1",
+    "PortfolioOrderSizingEvidenceV1",
+    "PortfolioSizingCandidateV1",
+    "PortfolioSizingOmissionReason",
+    "PortfolioSizingOmissionV1",
+    "PortfolioSizingOrderIdentityV1",
+    "PortfolioPlanStageKind",
+    "PortfolioPlanStageV1",
+    "PortfolioPlannedOrderV1",
+    "PortfolioRebalanceCoordinatorV2",
+    "PortfolioRebalanceExecutionPolicyV1",
+    "PortfolioRebalancePlanV1",
     "PortfolioSnapshotRefreshInputV1",
     "PortfolioSnapshotRefresherV1",
     "PortfolioSnapshotRefreshPolicyV1",
