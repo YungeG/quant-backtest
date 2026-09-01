@@ -1,15 +1,19 @@
 from __future__ import annotations
 
+import json
 import re
 from dataclasses import dataclass
 from enum import Enum
 
 from crypto_quant_domain import (
+    AccountingEntryType,
+    AccountingJournalEntry,
     ArtifactEnvelope,
     ArtifactRef,
     CurrencyId,
     Fill,
     PortfolioSnapshot,
+    canonical_bytes,
     canonical_sha256,
 )
 from crypto_quant_market_data import MarketBundleRef
@@ -30,6 +34,7 @@ from .execution_hash import (
     AttemptExecutionHash,
     CanonicalExecutionSummary,
 )
+from .execution_inputs import _read_journal_entry
 from .integrity import (
     EngineExecutionContext,
     FinalizedCanonicalResult,
@@ -46,21 +51,323 @@ from .runner import AttemptIdentity, ReadyToFinalizeAttempt
 
 __all__ = [
     "TerminalStatus",
+    "VerifiedCanonicalJournalEntryEvidenceV1",
+    "VerifiedCanonicalJournalEvidenceV1",
     "VerifiedCompletedPublication",
     "VerifiedCompletedPublicationV2",
     "VerifiedCompletedPublicationV3",
     "VerifiedExecutionSummary",
+    "VerifiedResearchCompletedPublicationV1",
+    "VerifiedResearchExecutionSummaryV1",
     "VerifiedTerminalPublication",
 ]
 
 _RUN_PATTERN = re.compile(r"run_[0-9a-f]{64}")
 _HASH_PATTERN = re.compile(r"sha256:[0-9a-f]{64}")
+_BASE_JOURNAL_ENTRY_FIELDS = frozenset(
+    {
+        "type",
+        "journal_entry_id",
+        "entry_type",
+        "account_id",
+        "venue_id",
+        "effective_time",
+        "recorded_at",
+        "source_ids",
+        "balance_changes",
+        "realized_pnl",
+        "fees",
+        "financing",
+    }
+)
+_DERIVATIVE_JOURNAL_ENTRY_FIELDS = frozenset(
+    {
+        "type",
+        "schema_version",
+        "component_ref",
+        "request",
+        "request_hash",
+        "exact_realized_pnl",
+        "journal_entry",
+    }
+)
+_FUNDING_JOURNAL_ENTRY_FIELDS = frozenset(
+    {
+        "type",
+        "schema_version",
+        "component_ref",
+        "request",
+        "request_hash",
+        "application_key",
+        "settlement_id",
+        "exact_cash_flow",
+        "payment",
+        "application_body_hash",
+        "journal_entry",
+    }
+)
+_JOURNAL_GENESIS_HASH = canonical_sha256(
+    {"type": "accounting_journal_genesis", "schema_version": 1}
+)
+
+
+def _exact_mapping(
+    name: str, value: object, fields: frozenset[str]
+) -> dict[str, object]:
+    if type(value) is not dict or not all(type(key) is str for key in value):
+        raise TypeError(f"{name} must be an exact mapping")
+    if set(value) != fields:
+        raise ValueError(f"{name} fields do not match the verified schema")
+    return value
+
+
+def _decode_canonical_journal_entry_payload(
+    payload: bytes,
+) -> tuple[AccountingJournalEntry, str]:
+    if type(payload) is not bytes:
+        raise TypeError("canonical_payload must be exact bytes")
+    try:
+        raw = json.loads(payload)
+    except (UnicodeDecodeError, json.JSONDecodeError) as error:
+        raise ValueError("canonical_payload must contain canonical JSON") from error
+    if canonical_bytes(raw) != payload:
+        raise ValueError("canonical_payload bytes are not canonical")
+    if type(raw) is not dict:
+        raise TypeError("journal entry payload must be an exact mapping")
+
+    entry_type = raw.get("type")
+    outer: dict[str, object] | None = None
+    if entry_type == "accounting_journal_entry":
+        inner = _exact_mapping(
+            "base accounting journal entry", raw, _BASE_JOURNAL_ENTRY_FIELDS
+        )
+        required_entry_type = None
+    elif entry_type == "linear_derivative_journal_entry":
+        outer = _exact_mapping(
+            "linear derivative journal entry",
+            raw,
+            _DERIVATIVE_JOURNAL_ENTRY_FIELDS,
+        )
+        if type(outer["schema_version"]) is not int or outer["schema_version"] != 1:
+            raise ValueError("linear derivative journal entry must use schema version 1")
+        inner = _exact_mapping(
+            "nested base accounting journal entry",
+            outer["journal_entry"],
+            _BASE_JOURNAL_ENTRY_FIELDS,
+        )
+        required_entry_type = AccountingEntryType.FILL_BOOKED
+    elif entry_type == "linear_funding_journal_entry":
+        outer = _exact_mapping(
+            "linear funding journal entry", raw, _FUNDING_JOURNAL_ENTRY_FIELDS
+        )
+        if type(outer["schema_version"]) is not int or outer["schema_version"] != 2:
+            raise ValueError("linear funding journal entry must use schema version 2")
+        inner = _exact_mapping(
+            "nested base accounting journal entry",
+            outer["journal_entry"],
+            _BASE_JOURNAL_ENTRY_FIELDS,
+        )
+        required_entry_type = AccountingEntryType.FUNDING_APPLIED
+    else:
+        raise ValueError("journal entry type/version is not evidence-allowlisted")
+
+    if entry_type != "accounting_journal_entry":
+        if outer is None:
+            raise AssertionError("specialized journal entry requires outer payload")
+        request = outer["request"]
+        if type(request) is not dict:
+            raise TypeError("journal entry request must be an exact mapping")
+        request_hash = outer["request_hash"]
+        if (
+            type(request_hash) is not str
+            or _HASH_PATTERN.fullmatch(request_hash) is None
+            or request_hash != canonical_sha256(request)
+        ):
+            raise ValueError("journal entry request_hash does not bind raw request")
+
+    journal_entry = _read_journal_entry(inner)
+    if type(journal_entry) is not AccountingJournalEntry:
+        raise TypeError("decoded journal_entry must be exact AccountingJournalEntry")
+    if canonical_bytes(journal_entry) != canonical_bytes(inner):
+        raise ValueError("nested journal_entry does not canonically bind the base entry")
+    if required_entry_type is not None and journal_entry.entry_type is not required_entry_type:
+        raise ValueError("specialized journal entry has the wrong base entry type")
+    return journal_entry, canonical_sha256(raw)
+
+
+def _next_journal_hash(previous_hash: str, entry_hash: str) -> str:
+    return canonical_sha256(
+        {
+            "type": "accounting_journal_link",
+            "schema_version": 1,
+            "previous_hash": previous_hash,
+            "entry_hash": entry_hash,
+        }
+    )
 
 
 class TerminalStatus(str, Enum):
     BLOCKED = "BLOCKED"
     FAILED = "FAILED"
     CANCELLED = "CANCELLED"
+
+
+@dataclass(frozen=True, slots=True)
+class VerifiedCanonicalJournalEntryEvidenceV1:
+    """Evidence-only view of one canonical allowlisted journal entry."""
+
+    canonical_payload: bytes
+    journal_entry: AccountingJournalEntry
+    entry_hash: str
+
+    def __post_init__(self) -> None:
+        if type(self) is not VerifiedCanonicalJournalEntryEvidenceV1:
+            raise TypeError("journal entry evidence must be exact")
+        decoded, entry_hash = _decode_canonical_journal_entry_payload(
+            self.canonical_payload
+        )
+        if type(self.journal_entry) is not AccountingJournalEntry:
+            raise TypeError("journal_entry must be exact AccountingJournalEntry")
+        if self.journal_entry != decoded:
+            raise ValueError("journal_entry does not bind canonical_payload")
+        if self.entry_hash != entry_hash:
+            raise ValueError("entry_hash does not bind canonical_payload")
+
+    @classmethod
+    def from_canonical_payload(
+        cls, payload: object
+    ) -> VerifiedCanonicalJournalEntryEvidenceV1:
+        canonical_payload = canonical_bytes(payload)
+        journal_entry, entry_hash = _decode_canonical_journal_entry_payload(
+            canonical_payload
+        )
+        return cls(canonical_payload, journal_entry, entry_hash)
+
+
+@dataclass(frozen=True, slots=True)
+class VerifiedCanonicalJournalEvidenceV1:
+    """Evidence-only canonical journal; intentionally provides no replay API."""
+
+    entries: tuple[VerifiedCanonicalJournalEntryEvidenceV1, ...]
+    journal_hash: str
+
+    def __post_init__(self) -> None:
+        if type(self) is not VerifiedCanonicalJournalEvidenceV1:
+            raise TypeError("journal evidence must be exact")
+        if type(self.entries) is not tuple or not all(
+            type(entry) is VerifiedCanonicalJournalEntryEvidenceV1
+            for entry in self.entries
+        ):
+            raise TypeError("entries must contain exact verified journal evidence")
+        if type(self.journal_hash) is not str or _HASH_PATTERN.fullmatch(
+            self.journal_hash
+        ) is None:
+            raise ValueError("journal_hash must use sha256 schema")
+
+        previous_key = None
+        seen_ids: set[str] = set()
+        computed_hash = _JOURNAL_GENESIS_HASH
+        for entry in self.entries:
+            entry.__post_init__()
+            journal_entry = entry.journal_entry
+            key = (journal_entry.recorded_at, journal_entry.journal_entry_id.value)
+            if previous_key is not None and key <= previous_key:
+                raise ValueError("journal entries must use strict stable order")
+            previous_key = key
+            journal_entry_id = journal_entry.journal_entry_id.value
+            if journal_entry_id in seen_ids:
+                raise ValueError("journal entry identities must be unique")
+            seen_ids.add(journal_entry_id)
+            computed_hash = _next_journal_hash(computed_hash, entry.entry_hash)
+        if computed_hash != self.journal_hash:
+            raise ValueError("journal_hash does not bind canonical entry chain")
+
+
+@dataclass(frozen=True, slots=True)
+class VerifiedResearchExecutionSummaryV1:
+    fills: tuple[Fill, ...]
+    final_journal: VerifiedCanonicalJournalEvidenceV1
+    final_portfolio_snapshot: PortfolioSnapshot
+
+    def __post_init__(self) -> None:
+        if type(self) is not VerifiedResearchExecutionSummaryV1:
+            raise TypeError("research execution summary must be exact")
+        if type(self.fills) is not tuple or not all(
+            type(fill) is Fill for fill in self.fills
+        ):
+            raise TypeError("fills must contain exact Fill values")
+        if type(self.final_journal) is not VerifiedCanonicalJournalEvidenceV1:
+            raise TypeError("final_journal must be exact verified journal evidence")
+        if type(self.final_portfolio_snapshot) is not PortfolioSnapshot:
+            raise TypeError("final_portfolio_snapshot must be exact PortfolioSnapshot")
+
+
+@dataclass(frozen=True, slots=True)
+class VerifiedResearchCompletedPublicationV1:
+    """Analysis-ready V1 publication with evidence-only journal semantics."""
+
+    source_publication_ref: BacktestCanonicalPublicationRef
+    semantic_run_id: str
+    source_execution_result_hash: str
+    result_grade: ResultGrade
+    reporting_currency: CurrencyId
+    engine_context: EngineExecutionContext
+    execution_summary: VerifiedResearchExecutionSummaryV1
+
+    def __post_init__(self) -> None:
+        if type(self) is not VerifiedResearchCompletedPublicationV1:
+            raise TypeError("research completed publication must be exact")
+        if type(self.source_publication_ref) is not BacktestCanonicalPublicationRef:
+            raise TypeError(
+                "source_publication_ref must be exact BacktestCanonicalPublicationRef"
+            )
+        if type(self.semantic_run_id) is not str or _RUN_PATTERN.fullmatch(
+            self.semantic_run_id
+        ) is None:
+            raise ValueError("semantic_run_id must use run_sha256 schema")
+        if (
+            type(self.source_execution_result_hash) is not str
+            or _HASH_PATTERN.fullmatch(self.source_execution_result_hash) is None
+        ):
+            raise ValueError("source_execution_result_hash must use sha256 schema")
+        if type(self.result_grade) is not ResultGrade:
+            raise TypeError("result_grade must be exact ResultGrade")
+        if type(self.reporting_currency) is not CurrencyId:
+            raise TypeError("reporting_currency must be exact CurrencyId")
+        if type(self.engine_context) is not EngineExecutionContext:
+            raise TypeError("engine_context must be exact EngineExecutionContext")
+        if type(self.execution_summary) is not VerifiedResearchExecutionSummaryV1:
+            raise TypeError(
+                "execution_summary must be exact VerifiedResearchExecutionSummaryV1"
+            )
+        if self.engine_context.semantic_run_id != self.semantic_run_id:
+            raise ValueError("engine context semantic run mismatch")
+        initial = self.engine_context.financial_state
+        initial_entries = initial.journal.entries
+        final_entries = self.execution_summary.final_journal.entries
+        if len(final_entries) < len(initial_entries) or any(
+            evidence.canonical_payload != canonical_bytes(entry)
+            for evidence, entry in zip(
+                final_entries[: len(initial_entries)], initial_entries, strict=True
+            )
+        ):
+            raise ValueError("completed Journal does not preserve the run-start prefix")
+        starting = initial.initial_snapshot
+        ending = self.execution_summary.final_portfolio_snapshot
+        if (
+            starting.account_id != ending.account_id
+            or starting.reporting_currency != ending.reporting_currency
+            or starting.reporting_currency != self.reporting_currency
+        ):
+            raise ValueError("run-boundary PortfolioSnapshot context mismatch")
+
+    @property
+    def starting_snapshot(self) -> PortfolioSnapshot:
+        return self.engine_context.financial_state.initial_snapshot
+
+    @property
+    def initial_journal_entry_count(self) -> int:
+        return len(self.engine_context.financial_state.journal.entries)
 
 
 @dataclass(frozen=True, slots=True)
@@ -243,6 +550,9 @@ class VerifiedCompletedPublicationV2:
             raise TypeError("publication must be exact FinalizedCanonicalResultV2")
         result = publication.result
         summary = result.context.attempts.canonical_attempt.summary
+        engine_context = result.engine_context
+        if type(engine_context) is not EngineExecutionContext:
+            raise ValueError("finalized publication must preserve engine context")
         manifest_envelope = ArtifactEnvelope.create(
             "canonical_publication_manifest", 1, publication.manifest
         )
@@ -254,7 +564,7 @@ class VerifiedCompletedPublicationV2:
             source_execution_result_hash=result.execution_result_hash,
             result_grade=result.result_grade,
             reporting_currency=result.context.resolved_request.request.reporting_currency,
-            engine_context=result.engine_context,
+            engine_context=engine_context,
             execution_summary=VerifiedExecutionSummary(
                 fills=summary.fills,
                 final_journal=summary.final_journal,

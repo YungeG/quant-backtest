@@ -21,6 +21,7 @@ from .verified_publications import (
     VerifiedCompletedPublication,
     VerifiedCompletedPublicationV2,
     VerifiedCompletedPublicationV3,
+    VerifiedResearchCompletedPublicationV1,
 )
 
 __all__ = ["BacktestAnalysisRuntime"]
@@ -87,23 +88,29 @@ def _simple_period_return(
         VerifiedCompletedPublication
         | VerifiedCompletedPublicationV2
         | VerifiedCompletedPublicationV3
+        | VerifiedResearchCompletedPublicationV1
     ),
 ) -> str | None:
     journal_entries = completed.execution_summary.final_journal.entries[
         completed.initial_journal_entry_count :
     ]
+    if type(completed) is VerifiedResearchCompletedPublicationV1:
+        journal_entries = tuple(entry.journal_entry for entry in journal_entries)
     external_changes = tuple(
         change.value
         for entry in journal_entries
         if entry.entry_type in _EXTERNAL_CASH_FLOW_TYPES
         for change in entry.balance_changes
     )
-    if not all(type(value) is Money for value in external_changes):
+    money_external_changes = tuple(
+        value for value in external_changes if type(value) is Money
+    )
+    if len(money_external_changes) != len(external_changes):
         return None
     return _calculate_simple_period_return(
         completed.starting_snapshot.equity,
         completed.execution_summary.final_portfolio_snapshot.equity,
-        external_changes,
+        money_external_changes,
     )
 
 
@@ -128,6 +135,7 @@ class BacktestAnalysisRuntime:
             VerifiedCompletedPublication
             | VerifiedCompletedPublicationV2
             | VerifiedCompletedPublicationV3
+            | VerifiedResearchCompletedPublicationV1
         ),
         metric_profile_ref: ArtifactRef,
     ) -> AnalysisArtifactRef | AnalysisArtifactRefV2:
@@ -135,30 +143,46 @@ class BacktestAnalysisRuntime:
             VerifiedCompletedPublication,
             VerifiedCompletedPublicationV2,
             VerifiedCompletedPublicationV3,
+            VerifiedResearchCompletedPublicationV1,
         }:
             raise TypeError(
-                "completed must be exact VerifiedCompletedPublication, "
-                "VerifiedCompletedPublicationV2, or VerifiedCompletedPublicationV3"
+                "completed must be an exact supported verified publication"
             )
         if type(metric_profile_ref) is not ArtifactRef:
             raise TypeError("metric_profile_ref must be exact ArtifactRef")
         if metric_profile_ref != _PROFILE_REF:
             raise ValueError("metric_profile_ref does not bind accepted metric profile")
 
-        analysis_type = (
-            BacktestAnalysisV2
-            if type(completed) is VerifiedCompletedPublicationV3
-            else BacktestAnalysis
-        )
-        schema_version = 2 if analysis_type is BacktestAnalysisV2 else 1
-        analysis = analysis_type(
-            metric_profile_ref=metric_profile_ref,
-            source_publication_ref=completed.source_publication_ref,
-            source_execution_result_hash=completed.source_execution_result_hash,
-            simple_period_return=_simple_period_return(completed),
-            trade_count=len(completed.execution_summary.fills),
-            result_grade=completed.result_grade,
-        )
+        if isinstance(completed, VerifiedCompletedPublicationV3):
+            schema_version = 2
+            analysis = BacktestAnalysisV2(
+                metric_profile_ref=metric_profile_ref,
+                source_publication_ref=completed.source_publication_ref,
+                source_execution_result_hash=completed.source_execution_result_hash,
+                simple_period_return=_simple_period_return(completed),
+                trade_count=len(completed.execution_summary.fills),
+                result_grade=completed.result_grade,
+            )
+        elif isinstance(completed, VerifiedResearchCompletedPublicationV1):
+            schema_version = 1
+            analysis = BacktestAnalysis(
+                metric_profile_ref=metric_profile_ref,
+                source_publication_ref=completed.source_publication_ref,
+                source_execution_result_hash=completed.source_execution_result_hash,
+                simple_period_return=_simple_period_return(completed),
+                trade_count=len(completed.execution_summary.fills),
+                result_grade=completed.result_grade,
+            )
+        else:
+            schema_version = 1
+            analysis = BacktestAnalysis(
+                metric_profile_ref=metric_profile_ref,
+                source_publication_ref=completed.source_publication_ref,
+                source_execution_result_hash=completed.source_execution_result_hash,
+                simple_period_return=_simple_period_return(completed),
+                trade_count=len(completed.execution_summary.fills),
+                result_grade=completed.result_grade,
+            )
         envelope = ArtifactEnvelope.create(
             "backtest_analysis", schema_version, analysis
         )

@@ -32,6 +32,10 @@ from .binance_usdm_profile import (
     BinanceUsdmResolvedProfile,
     BinanceUsdmSimulationProfile,
 )
+from .binance_usdm_tradifi_operations import (
+    BinanceUsdmTradifiBacktestOperations,
+    PreparedTradifiTrial,
+)
 from .binance_usdm_tradifi_preparation import (
     BinanceUsdmTradifiBarRequestIntent,
     BinanceUsdmTradifiProviderInputs,
@@ -56,6 +60,7 @@ from .binance_usdm_tradifi_provider import (
     BinanceUsdmTradifiBarBacktestIntent,
     BinanceUsdmTradifiBarBacktestOutcome,
     BinanceUsdmTradifiBarBacktestResult,
+    compose_binance_usdm_tradifi_bar_case,
     prepare_binance_usdm_tradifi_bar_backtest,
 )
 from .cash_development_provider import (
@@ -403,10 +408,14 @@ from .universe import (
 )
 from .verified_publications import (
     TerminalStatus,
+    VerifiedCanonicalJournalEntryEvidenceV1,
+    VerifiedCanonicalJournalEvidenceV1,
     VerifiedCompletedPublication,
     VerifiedCompletedPublicationV2,
     VerifiedCompletedPublicationV3,
     VerifiedExecutionSummary,
+    VerifiedResearchCompletedPublicationV1,
+    VerifiedResearchExecutionSummaryV1,
     VerifiedTerminalPublication,
 )
 
@@ -465,6 +474,7 @@ __all__ = [  # noqa: RUF022 - public API remains grouped by subsystem
     "BinanceUsdmTradifiBarBacktestIntent",
     "BinanceUsdmTradifiBarBacktestOutcome",
     "BinanceUsdmTradifiBarBacktestResult",
+    "BinanceUsdmTradifiBacktestOperations",
     "BinanceUsdmTradifiBarRequestIntent",
     "BinanceUsdmTradifiExecutionAccountProfile",
     "BinanceUsdmTradifiLinearFinancialDispatcher",
@@ -548,6 +558,7 @@ __all__ = [  # noqa: RUF022 - public API remains grouped by subsystem
     "DeterministicBpsSlippageModel",
     "build_binance_usdm_koru_tradifi_development_profile_v1",
     "decode_binance_usdm_tradifi_profile_composition_request_v1",
+    "compose_binance_usdm_tradifi_bar_case",
     "materialize_execution_input_bundle",
     "materialize_execution_input_bundle_v2",
     "prepare_binance_usdm_tradifi_bar_backtest",
@@ -636,6 +647,7 @@ __all__ = [  # noqa: RUF022 - public API remains grouped by subsystem
     "LiquidityModel",
     "PreparedBacktestExecution",
     "PreparedModelBoundBacktestExecution",
+    "PreparedTradifiTrial",
     "PrecomputedTargetStream",
     "NextBarOpenApplicability",
     "NextBarOpenDecision",
@@ -749,10 +761,14 @@ __all__ = [  # noqa: RUF022 - public API remains grouped by subsystem
     "UniverseSelection",
     "VerifiedBacktestAnalysis",
     "VerifiedBacktestAnalysisV2",
+    "VerifiedCanonicalJournalEntryEvidenceV1",
+    "VerifiedCanonicalJournalEvidenceV1",
     "VerifiedCompletedPublication",
     "VerifiedCompletedPublicationV2",
     "VerifiedCompletedPublicationV3",
     "VerifiedExecutionSummary",
+    "VerifiedResearchCompletedPublicationV1",
+    "VerifiedResearchExecutionSummaryV1",
     "VerifiedTerminalPublication",
     "TerminalStatus",
     "WarmupEligibility",

@@ -5,10 +5,12 @@ from __future__ import annotations
 import re
 from dataclasses import dataclass, field
 from enum import Enum
+from pathlib import Path
 
 import crypto_quant_domain as domain
 from crypto_quant_market_data import MarketBundleReader
 
+from .artifact_envelope_publisher import ArtifactEnvelopePublisher
 from .artifact_envelope_reader import ArtifactEnvelopeReader
 from .binance_usdm_tradifi_case_planner import (
     BinanceUsdmTradifiCasePlanningResult,
@@ -26,7 +28,13 @@ from .binance_usdm_tradifi_preparation import (
 from .binance_usdm_tradifi_preparation import (
     _trusted_result as _trusted_preparation_result,
 )
-from .execution_inputs import _materialize_execution_input_bundle_v8
+from .cash_development_provider import PreparedBacktestExecution
+from .execution_inputs import (
+    BacktestExecutionRequest,
+    _materialize_execution_input_bundle_v8,
+)
+from .facade import BacktestRuntime
+from .request_registration import BacktestRequestRef
 
 _SCHEMA_VERSION = 1
 
@@ -241,7 +249,7 @@ def _failure(
     )
 
 
-def prepare_binance_usdm_tradifi_bar_backtest(
+def compose_binance_usdm_tradifi_bar_case(
     intent: BinanceUsdmTradifiBarBacktestIntent,
     artifact_reader: ArtifactEnvelopeReader,
     bundle_reader: MarketBundleReader,
@@ -286,11 +294,104 @@ def prepare_binance_usdm_tradifi_bar_backtest(
                 ),
             )
         )
-    except Exception as error:  # noqa: BLE001 - public preparation must fail closed
+    except Exception as error:  # noqa: BLE001 - public diagnostic must fail closed
         return _failure(
             BinanceUsdmTradifiBarBacktestFailureCode.CASE_PLANNING_FAILED,
             _planning_failure_subject(error),
         )
+
+
+def _publish(
+    publisher: ArtifactEnvelopePublisher,
+    envelope: domain.ArtifactEnvelope,
+) -> domain.ArtifactRef:
+    ref = publisher.put(envelope=envelope)
+    expected = domain.ArtifactRef.from_envelope(envelope)
+    if type(ref) is not domain.ArtifactRef or ref != expected:
+        raise ValueError("publisher returned ref does not bind envelope")
+    return ref
+
+
+def _verify_published(
+    reader: ArtifactEnvelopeReader,
+    ref: domain.ArtifactRef,
+    envelope: domain.ArtifactEnvelope,
+) -> None:
+    try:
+        result = reader.read(ref=ref)
+    except Exception as error:
+        raise ValueError("published artifact readback unavailable") from error
+    if type(result) is not domain.ArtifactReadResult:
+        raise TypeError("artifact reader must return exact ArtifactReadResult")
+    if (
+        result.envelope != envelope
+        or result.source_bytes != domain.canonical_bytes(envelope)
+        or result.source_hash != domain.canonical_sha256(envelope)
+        or domain.ArtifactRef.from_envelope(result.envelope) != ref
+    ):
+        raise ValueError("published artifact readback does not bind envelope")
+
+
+def prepare_binance_usdm_tradifi_bar_backtest(
+    *,
+    request_intent: BinanceUsdmTradifiBarRequestIntent,
+    provider_inputs: BinanceUsdmTradifiProviderInputs,
+    artifact_reader: ArtifactEnvelopeReader,
+    artifact_publisher: ArtifactEnvelopePublisher,
+    market_reader: MarketBundleReader,
+    publication_root: Path,
+) -> PreparedBacktestExecution | BinanceUsdmTradifiBarBacktestFailure:
+    if (
+        type(request_intent) is not BinanceUsdmTradifiBarRequestIntent
+        or type(provider_inputs) is not BinanceUsdmTradifiProviderInputs
+    ):
+        raise TypeError("request_intent and provider_inputs must be exact public values")
+    if not callable(getattr(artifact_reader, "read", None)) or not callable(
+        getattr(artifact_publisher, "put", None)
+    ):
+        raise TypeError("artifact reader and publisher must satisfy structural ports")
+    if not isinstance(publication_root, Path):
+        raise TypeError("publication_root must be pathlib.Path")
+
+    outcome = compose_binance_usdm_tradifi_bar_case(
+        BinanceUsdmTradifiBarBacktestIntent(request_intent, provider_inputs),
+        artifact_reader,
+        market_reader,
+    )
+    if outcome.failure is not None:
+        return outcome.failure
+    result = outcome.result
+    if result is None:
+        raise ValueError("TradFi diagnostic returned no result")
+
+    request_envelope = domain.ArtifactEnvelope.create(
+        "backtest_request", 1, result.case_planning_result.request
+    )
+    request_artifact_ref = _publish(artifact_publisher, request_envelope)
+    execution_input_ref = _publish(
+        artifact_publisher, result.execution_input_envelope
+    )
+    _verify_published(artifact_reader, request_artifact_ref, request_envelope)
+    _verify_published(
+        artifact_reader, execution_input_ref, result.execution_input_envelope
+    )
+    request_ref = BacktestRequestRef.from_artifact_ref(request_artifact_ref)
+    execution_request = BacktestExecutionRequest(
+        8, result.case_planning_result.request, execution_input_ref
+    )
+    runtime = BacktestRuntime(
+        registry=result.preparation_result.profile_registry,
+        artifact_reader=artifact_reader,
+        artifact_publisher=artifact_publisher,
+        market_reader=market_reader,
+        publication_root=publication_root,
+    )
+    return PreparedBacktestExecution(
+        request_ref,
+        result.case_planning_result.resolved_request.semantic_run_id,
+        execution_request,
+        runtime,
+    )
 
 
 __all__ = [
@@ -299,5 +400,6 @@ __all__ = [
     "BinanceUsdmTradifiBarBacktestIntent",
     "BinanceUsdmTradifiBarBacktestOutcome",
     "BinanceUsdmTradifiBarBacktestResult",
+    "compose_binance_usdm_tradifi_bar_case",
     "prepare_binance_usdm_tradifi_bar_backtest",
 ]

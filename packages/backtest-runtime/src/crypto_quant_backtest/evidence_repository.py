@@ -21,6 +21,7 @@ from crypto_quant_domain import (
     canonical_sha256,
 )
 from crypto_quant_market_data import MarketBundleRef
+from crypto_quant_trading import AccountingJournal
 
 from .analysis import (
     AnalysisArtifactRef,
@@ -53,9 +54,13 @@ from .resolution import ModelRequestBinding, ResolvedBacktestRequest
 from .runner import AttemptIdentity, InputOrigin
 from .verified_publications import (
     TerminalStatus,
+    VerifiedCanonicalJournalEntryEvidenceV1,
+    VerifiedCanonicalJournalEvidenceV1,
     VerifiedCompletedPublicationV2,
     VerifiedCompletedPublicationV3,
     VerifiedExecutionSummary,
+    VerifiedResearchCompletedPublicationV1,
+    VerifiedResearchExecutionSummaryV1,
     VerifiedTerminalPublication,
     _VerifiedArtifactIdentity,
     _VerifiedCompletedEvidenceV3,
@@ -1132,6 +1137,30 @@ def _read_engine_summary(value: object) -> _EngineSummary:
     )
 
 
+def _read_research_journal(value: object) -> VerifiedCanonicalJournalEvidenceV1:
+    data = _exact(
+        "accounting journal evidence",
+        value,
+        frozenset({"type", "schema_version", "entries", "journal_hash"}),
+    )
+    if (
+        data["type"] != "accounting_journal"
+        or type(data["schema_version"]) is not int
+        or data["schema_version"] != 1
+    ):
+        raise ValueError("accounting journal evidence must use accounting_journal@1")
+    entries = data["entries"]
+    if not isinstance(entries, (tuple, list)):
+        raise TypeError("accounting journal evidence entries must be a sequence")
+    return VerifiedCanonicalJournalEvidenceV1(
+        tuple(
+            VerifiedCanonicalJournalEntryEvidenceV1.from_canonical_payload(entry)
+            for entry in entries
+        ),
+        _hash("journal_hash", data["journal_hash"]),
+    )
+
+
 def _read_resolution_failure(value: object) -> _ResolutionFailure:
     data = _exact(
         "resolution failure",
@@ -1764,7 +1793,30 @@ class BacktestEvidenceRepository:
                 "exact BacktestCanonicalPublicationRef required",
             )
         try:
-            return self._load_completed(ref, root=True)
+            completed = self._load_completed(ref, root=True, research_view=False)
+            if type(completed) is not VerifiedCompletedPublicationV2:
+                raise TypeError("standard completed loader returned research evidence")
+            return completed
+        except BacktestEvidenceError:
+            raise
+        except (KeyError, TypeError, ValueError) as error:
+            raise BacktestEvidenceError(
+                BacktestEvidenceFailureCode.PORT_MANIFEST_INVALID, str(error)
+            ) from error
+
+    def load_completed_research_v1(
+        self, ref: BacktestCanonicalPublicationRef
+    ) -> VerifiedResearchCompletedPublicationV1:
+        if type(ref) is not BacktestCanonicalPublicationRef:
+            raise BacktestEvidenceError(
+                BacktestEvidenceFailureCode.PORT_REF_TYPE_MISMATCH,
+                "exact BacktestCanonicalPublicationRef required",
+            )
+        try:
+            completed = self._load_completed(ref, root=True, research_view=True)
+            if type(completed) is not VerifiedResearchCompletedPublicationV1:
+                raise TypeError("research completed loader returned replay publication")
+            return completed
         except BacktestEvidenceError:
             raise
         except (KeyError, TypeError, ValueError) as error:
@@ -1773,8 +1825,14 @@ class BacktestEvidenceRepository:
             ) from error
 
     def _load_completed(
-        self, ref: BacktestCanonicalPublicationRef, *, root: bool
-    ) -> VerifiedCompletedPublicationV2:
+        self,
+        ref: BacktestCanonicalPublicationRef,
+        *,
+        root: bool,
+        research_view: bool,
+    ) -> VerifiedCompletedPublicationV2 | VerifiedResearchCompletedPublicationV1:
+        if type(research_view) is not bool:
+            raise TypeError("research_view must be exact bool")
         loaded_manifest = self._read_expected(
             ref.artifact_ref,
             "canonical_publication_manifest",
@@ -1994,9 +2052,12 @@ class BacktestEvidenceRepository:
             raise ValueError("engine context did not reconstruct exactly")
 
         fills = tuple(_read_fill(item) for item in engine.fills)
-        final_journal = _read_journal(engine.final_journal)
+        final_journal = (
+            _read_research_journal(engine.final_journal)
+            if research_view
+            else _read_journal(engine.final_journal)
+        )
         final_snapshot = _read_portfolio_snapshot(engine.final_portfolio_snapshot)
-        summary = VerifiedExecutionSummary(fills, final_journal, final_snapshot)
         request_currency = _exact(
             "request reporting currency",
             request["reporting_currency"],
@@ -2007,6 +2068,22 @@ class BacktestEvidenceRepository:
         reporting_currency = CurrencyId(request_currency["value"])
         if engine_context_value.target_stream_digest != rebuild["target_stream_digest"]:
             raise ValueError("engine context rebuild target mismatch")
+        if research_view:
+            if type(final_journal) is not VerifiedCanonicalJournalEvidenceV1:
+                raise TypeError("research journal decoder returned replay journal")
+            return VerifiedResearchCompletedPublicationV1(
+                ref,
+                result.semantic_run_id,
+                result.execution_result_hash,
+                result.result_grade,
+                reporting_currency,
+                engine_context_value,
+                VerifiedResearchExecutionSummaryV1(
+                    fills, final_journal, final_snapshot
+                ),
+            )
+        if type(final_journal) is not AccountingJournal:
+            raise TypeError("standard journal decoder returned evidence journal")
         return VerifiedCompletedPublicationV2(
             ref,
             result.semantic_run_id,
@@ -2014,7 +2091,7 @@ class BacktestEvidenceRepository:
             result.result_grade,
             reporting_currency,
             engine_context_value,
-            summary,
+            VerifiedExecutionSummary(fills, final_journal, final_snapshot),
         )
 
     def load_completed_v3(
@@ -2773,7 +2850,7 @@ class BacktestEvidenceRepository:
                 "exact AnalysisArtifactRef required",
             )
         try:
-            return self._load_analysis(ref)
+            return self._load_analysis(ref, research_view=False)
         except BacktestEvidenceError:
             raise
         except (KeyError, TypeError, ValueError) as error:
@@ -2781,7 +2858,28 @@ class BacktestEvidenceRepository:
                 BacktestEvidenceFailureCode.PORT_MANIFEST_INVALID, str(error)
             ) from error
 
-    def _load_analysis(self, ref: AnalysisArtifactRef) -> VerifiedBacktestAnalysis:
+    def load_analysis_research_v1(
+        self, ref: AnalysisArtifactRef
+    ) -> VerifiedBacktestAnalysis:
+        if type(ref) is not AnalysisArtifactRef:
+            raise BacktestEvidenceError(
+                BacktestEvidenceFailureCode.PORT_REF_TYPE_MISMATCH,
+                "exact AnalysisArtifactRef required",
+            )
+        try:
+            return self._load_analysis(ref, research_view=True)
+        except BacktestEvidenceError:
+            raise
+        except (KeyError, TypeError, ValueError) as error:
+            raise BacktestEvidenceError(
+                BacktestEvidenceFailureCode.PORT_MANIFEST_INVALID, str(error)
+            ) from error
+
+    def _load_analysis(
+        self, ref: AnalysisArtifactRef, *, research_view: bool
+    ) -> VerifiedBacktestAnalysis:
+        if type(research_view) is not bool:
+            raise TypeError("research_view must be exact bool")
         loaded = self._read_expected(
             ref.artifact_ref, "backtest_analysis", 1, root=True
         )
@@ -2809,12 +2907,11 @@ class BacktestEvidenceRepository:
                 BacktestEvidenceFailureCode.PORT_ANALYSIS_LINK_MISMATCH,
                 "analysis metric profile disagreement",
             )
-        try:
-            completed = self._load_completed(
-                analysis.source_publication_ref, root=False
-            )
-        except BacktestEvidenceError:
-            raise
+        completed = self._load_completed(
+            analysis.source_publication_ref,
+            root=False,
+            research_view=research_view,
+        )
         disagreements = (
             completed.source_publication_ref != analysis.source_publication_ref,
             completed.source_execution_result_hash

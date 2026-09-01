@@ -13,7 +13,7 @@ from crypto_quant_backtest import (
     BinanceUsdmTradifiBarBacktestIntent,
     BinanceUsdmTradifiBarBacktestResult,
     DeterministicBarEngine,
-    prepare_binance_usdm_tradifi_bar_backtest,
+    compose_binance_usdm_tradifi_bar_case,
 )
 from crypto_quant_backtest.binance_usdm_tradifi_case_planner import (
     _candidate_rows,
@@ -47,7 +47,7 @@ from tests.runtime.providers import test_binance_usdm_tradifi_preparation_v2 as 
 
 
 def _prepare(bundle, parameter_index: int = 0, store=None):
-    return prepare_binance_usdm_tradifi_bar_backtest(
+    return compose_binance_usdm_tradifi_bar_case(
         BinanceUsdmTradifiBarBacktestIntent(
             fixture._intent(bundle, parameter_index),
             fixture.BinanceUsdmTradifiProviderInputs(
@@ -426,6 +426,14 @@ def test_schema7_rejects_thin_funding_authority() -> None:
             hydrated_inputs=prepared.case_planning_result.hydrated_inputs,
             market_data_preparation=prepared.case_planning_result.market_data_preparation,
         )
+
+
+def test_public_diagnostic_case_composition_compatibility() -> None:
+    outcome = _prepare(fixture._empty_bundle(), 7)
+
+    assert outcome.failure is None and outcome.result is not None
+    assert outcome.result.execution_case.decision_cycles == ()
+    assert outcome.result.execution_input_envelope.schema_version == 8
 
 
 def test_public_v2_empty_case_runs_flat_and_replays_canonically() -> None:
