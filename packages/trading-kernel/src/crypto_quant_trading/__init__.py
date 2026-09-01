@@ -349,6 +349,8 @@ from .portfolio_order_sizing import (
     PortfolioSizingOrderIdentityV1,
 )
 from .portfolio_rebalance import (
+    PortfolioCancelReplaceV1,
+    PortfolioOrderPlanV2,
     PortfolioPlanStageKind,
     PortfolioPlanStageV1,
     PortfolioPlannedOrderV1,
@@ -639,6 +641,8 @@ __all__ = [
     "PortfolioSizingOmissionReason",
     "PortfolioSizingOmissionV1",
     "PortfolioSizingOrderIdentityV1",
+    "PortfolioCancelReplaceV1",
+    "PortfolioOrderPlanV2",
     "PortfolioPlanStageKind",
     "PortfolioPlanStageV1",
     "PortfolioPlannedOrderV1",

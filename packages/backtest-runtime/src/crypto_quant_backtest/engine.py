@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import copy
 from dataclasses import dataclass, field
 from enum import Enum
 from typing import Any, cast
@@ -42,6 +43,7 @@ from crypto_quant_trading import (
     AvailabilityProjection,
     AvailabilityState,
     CancelIntent,
+    CancelReplaceCausation,
     CashAvailability,
     CappedPortfolioTargetV1,
     ExecutableOrderSpec,
@@ -76,6 +78,8 @@ from crypto_quant_trading import (
     PortfolioAllocator,
     PortfolioRiskEvaluator,
     PortfolioRiskPolicy,
+    PortfolioCancelReplaceV1,
+    PortfolioOrderPlanV2,
     PortfolioOrderSizerV1,
     PortfolioRebalanceCoordinatorV2,
     PortfolioRebalanceExecutionPolicyV1,
@@ -635,12 +639,66 @@ class ResolvedDecisionSnapshotRefreshPlanV1:
 
 
 @dataclass(frozen=True, slots=True)
+class ResolvedPortfolioReplacementAdmissionV1:
+    schema_version: int
+    admission: ResolvedOrderAdmission
+    cancel_replace_hash: str
+    cancelled_order_id: DomainId
+    cancelled_event_id: str
+    replacement_order_id: DomainId
+    replacement_intent_created_event_id: str
+    occurred_at: SimulationInstant
+    source_sequence: SourceSequence
+    source_target_hash: str
+    plan_hash: str
+
+    def __post_init__(self) -> None:
+        if self.schema_version != 1:
+            raise ValueError("schema_version must be 1")
+        if not isinstance(self.admission, ResolvedOrderAdmission):
+            raise TypeError("admission must be ResolvedOrderAdmission")
+        if self.admission.order.order_id != self.replacement_order_id:
+            raise ValueError("replacement admission Order mismatch")
+        created = self.admission.event_plan[0]
+        if (
+            created.event_type is not OrderEventType.ORDER_INTENT_CREATED
+            or created.event_id != self.replacement_intent_created_event_id
+            or created.occurred_at != self.occurred_at
+            or self.occurred_at.source_sequence != self.source_sequence
+        ):
+            raise ValueError("replacement created event evidence mismatch")
+        for value in (self.cancelled_order_id, self.replacement_order_id):
+            _domain_id("replacement Order ID", value, DomainIdKind.ORDER)
+        for name in ("cancel_replace_hash", "source_target_hash", "plan_hash"):
+            _hash(name, getattr(self, name))
+        _text("cancelled_event_id", self.cancelled_event_id)
+
+    def to_canonical_dict(self) -> dict[str, object]:
+        return {
+            "type": "resolved_portfolio_replacement_admission_v1",
+            "schema_version": self.schema_version,
+            "admission": self.admission,
+            "cancel_replace_hash": self.cancel_replace_hash,
+            "cancelled_order_id": self.cancelled_order_id,
+            "cancelled_event_id": self.cancelled_event_id,
+            "replacement_order_id": self.replacement_order_id,
+            "replacement_intent_created_event_id": self.replacement_intent_created_event_id,
+            "occurred_at": self.occurred_at,
+            "source_sequence": self.source_sequence,
+            "source_target_hash": self.source_target_hash,
+            "plan_hash": self.plan_hash,
+        }
+
+
+@dataclass(frozen=True, slots=True)
 class ResolvedPortfolioDecisionCycleV2(ResolvedDecisionCycle):
     """Additive portfolio cycle carrying current-state and cancellation plans."""
 
     snapshot_refresh_plan: ResolvedDecisionSnapshotRefreshPlanV1
     portfolio_rebalance_policy: PortfolioRebalanceExecutionPolicyV1
+    portfolio_order_plan: PortfolioOrderPlanV2
     cancellation_plans: tuple[ResolvedOrderCancellationPlanV1, ...] = ()
+    replacement_admissions: tuple[ResolvedPortfolioReplacementAdmissionV1, ...] = ()
     portfolio_sizing_candidates: tuple[PortfolioSizingCandidateV1, ...] = ()
 
     def __post_init__(self) -> None:
@@ -687,6 +745,36 @@ class ResolvedPortfolioDecisionCycleV2(ResolvedDecisionCycle):
             raise TypeError(
                 "portfolio_rebalance_policy must be PortfolioRebalanceExecutionPolicyV1"
             )
+        if not isinstance(self.portfolio_order_plan, PortfolioOrderPlanV2):
+            raise TypeError("portfolio_order_plan must be PortfolioOrderPlanV2")
+        if (
+            self.portfolio_order_plan.source_normalized_target_id
+            != self.target_validity.normalized_target_id
+            or self.portfolio_order_plan.source_normalized_target_hash
+            != self.target_validity.normalized_target_hash
+            or self.portfolio_order_plan.policy_hash
+            != self.portfolio_rebalance_policy.policy_hash
+        ):
+            raise ValueError("portfolio Order plan context mismatch")
+        if not isinstance(self.replacement_admissions, tuple) or not all(
+            isinstance(value, ResolvedPortfolioReplacementAdmissionV1)
+            for value in self.replacement_admissions
+        ):
+            raise TypeError("replacement_admissions contains invalid values")
+        link_by_hash = {
+            value.link_hash: value
+            for value in self.portfolio_order_plan.cancel_replacements
+        }
+        for value in self.replacement_admissions:
+            link = link_by_hash.get(value.cancel_replace_hash)
+            if (
+                link is None
+                or value.cancelled_order_id != link.cancelled_order_id
+                or value.replacement_order_id != link.replacement_order_id
+                or value.source_target_hash != link.source_target_hash
+                or value.plan_hash != self.portfolio_order_plan.plan_hash
+            ):
+                raise ValueError("replacement admission link mismatch")
         if any(
             value.identity.source_target_hash
             != self.target_validity.normalized_target_hash
@@ -711,7 +799,7 @@ class ResolvedPortfolioDecisionCycleV2(ResolvedDecisionCycle):
         active_cash_reservations: Money,
         active_fee_reservations: Money,
         working_orders: tuple[OrderEventStream, ...],
-    ) -> tuple[CappedPortfolioTargetV1, PortfolioRebalancePlanV1]:
+    ) -> tuple[CappedPortfolioTargetV1, PortfolioRebalancePlanV1, PortfolioOrderPlanV2]:
         capped = PortfolioOrderSizerV1().size(
             source_target_hash=self.target_validity.normalized_target_hash,
             candidates=self.portfolio_sizing_candidates,
@@ -747,12 +835,44 @@ class ResolvedPortfolioDecisionCycleV2(ResolvedDecisionCycle):
                     normalized_target_id=self.target_validity.normalized_target_id,
                 )
             )
-        return capped, PortfolioRebalanceCoordinatorV2().coordinate(
+        rebalance = PortfolioRebalanceCoordinatorV2().coordinate(
             capped_target=capped,
             policy=self.portfolio_rebalance_policy,
             created_at=self.planning_at,
             cancellations=tuple(cancellations),
         )
+        cancellation_by_instrument = {
+            value.instrument_id: value for value in rebalance.cancellations
+        }
+        stream_by_id = {stream.order.order_id: stream for stream in working_orders}
+        links = tuple(
+            PortfolioCancelReplaceV1.create(
+                instrument_id=order.instrument_id,
+                cancelled_order_id=cancellation_by_instrument[order.instrument_id].order_id,
+                cancel_intent_id=cancellation_by_instrument[order.instrument_id].cancel_intent_id,
+                prior_working_order_stream_hash=stream_by_id[
+                    cancellation_by_instrument[order.instrument_id].order_id
+                ].stream_hash,
+                replacement_identity=order.sizing_evidence.identity,
+                source_target_hash=self.target_validity.normalized_target_hash,
+            )
+            for order in rebalance.planned_orders
+            if order.instrument_id in cancellation_by_instrument
+        )
+        order_plan = PortfolioOrderPlanV2.create(
+            source_normalized_target_id=self.target_validity.normalized_target_id,
+            source_normalized_target_hash=self.target_validity.normalized_target_hash,
+            decision_time=self.schedule.decision_time,
+            policy_hash=self.portfolio_rebalance_policy.policy_hash,
+            sizing_evidence_hash=canonical_sha256(capped.sizing_evidence),
+            cancellation_intents=rebalance.cancellations,
+            planned_orders=rebalance.planned_orders,
+            cancel_replacements=links,
+            omission_evidence_hashes=tuple(
+                canonical_sha256(value) for value in capped.omissions
+            ),
+        )
+        return capped, rebalance, order_plan
 
     def to_canonical_dict(self) -> dict[str, object]:
         payload = ResolvedDecisionCycle.to_canonical_dict(self)
@@ -761,6 +881,8 @@ class ResolvedPortfolioDecisionCycleV2(ResolvedDecisionCycle):
         payload["cancellation_plans"] = self.cancellation_plans
         payload["snapshot_refresh_plan"] = self.snapshot_refresh_plan
         payload["portfolio_rebalance_policy"] = self.portfolio_rebalance_policy
+        payload["portfolio_order_plan"] = self.portfolio_order_plan
+        payload["replacement_admissions"] = self.replacement_admissions
         if self.portfolio_sizing_candidates:
             payload["portfolio_sizing_candidates"] = self.portfolio_sizing_candidates
         return payload
@@ -2821,7 +2943,7 @@ class DeterministicBarEngine:
                 )
 
             try:
-                capped, portfolio_plan = cycle.materialize_portfolio_plans(
+                capped, portfolio_plan, materialized_order_plan = cycle.materialize_portfolio_plans(
                     cash_availability=cash_availability,
                     active_cash_reservations=reserved(
                         state.reservation_state.totals.cash
@@ -2839,21 +2961,20 @@ class DeterministicBarEngine:
                     ("portfolio_order_sizing", type(error).__name__),
                     (canonical_sha256({"error_type": type(error).__name__}),),
                 )
-            state.capped_portfolio_targets.append(capped)
-            state.portfolio_rebalance_plans.append(portfolio_plan)
-            self._trace_add(
+            if materialized_order_plan.plan_hash != cycle.portfolio_order_plan.plan_hash:
+                return self._failed(
+                    case,
+                    state,
+                    EngineFailureCode.ORDER_PLAN_MISMATCH,
+                    (materialized_order_plan.plan_hash, cycle.portfolio_order_plan.plan_hash),
+                )
+            return self._apply_portfolio_order_plan_v2(
+                case,
                 state,
-                EngineStage.PORTFOLIO_ORDER_SIZING,
+                cycle,
+                capped,
+                portfolio_plan,
                 trace_instant,
-                capped.source_target_hash,
-                capped.capped_target_hash,
-            )
-            self._trace_add(
-                state,
-                EngineStage.PORTFOLIO_REBALANCE_PLAN,
-                trace_instant,
-                portfolio_plan.plan_id,
-                portfolio_plan.plan_hash,
             )
 
         planning_outcome = RebalanceCoordinator().coordinate(
@@ -2906,6 +3027,176 @@ class DeterministicBarEngine:
             if failure is not None:
                 return failure
         self._refresh_resources(case, state)
+        return None
+
+    def _apply_portfolio_order_plan_v2(
+        self,
+        case: ResolvedExecutionCase,
+        state: _EngineState,
+        cycle: ResolvedPortfolioDecisionCycleV2,
+        capped: CappedPortfolioTargetV1,
+        rebalance: PortfolioRebalancePlanV1,
+        trace_instant: SimulationInstant,
+    ) -> EngineExecutionOutcome | None:
+        local = copy.copy(state)
+        local.lot_books = dict(state.lot_books)
+        local.order_streams = dict(state.order_streams)
+        local.reservation_schedules = dict(state.reservation_schedules)
+        local.admissions = dict(state.admissions)
+        local.trace_entries = list(state.trace_entries)
+        local.decision_batches = list(state.decision_batches)
+        local.allocations = list(state.allocations)
+        local.approved_targets = list(state.approved_targets)
+        local.normalized_targets = list(state.normalized_targets)
+        local.capped_portfolio_targets = list(state.capped_portfolio_targets)
+        local.portfolio_rebalance_plans = list(state.portfolio_rebalance_plans)
+        local.order_plans = list(state.order_plans)
+        local.fills = list(state.fills)
+        local.slippage_decisions = list(state.slippage_decisions)
+        local.fee_assessments = list(state.fee_assessments)
+        local.financial_artifacts = list(state.financial_artifacts)
+        local.capped_portfolio_targets.append(capped)
+        local.portfolio_rebalance_plans.append(rebalance)
+        self._trace_add(
+            local,
+            EngineStage.PORTFOLIO_ORDER_SIZING,
+            trace_instant,
+            capped.source_target_hash,
+            capped.capped_target_hash,
+        )
+        self._trace_add(
+            local,
+            EngineStage.PORTFOLIO_REBALANCE_PLAN,
+            trace_instant,
+            cycle.portfolio_order_plan.plan_hash,
+            cycle.portfolio_order_plan.plan_hash,
+        )
+        resolved_by_order = {
+            value.order_id: value for value in cycle.cancellation_plans
+        }
+        requested_streams: list[tuple[ResolvedOrderCancellationPlanV1, OrderEventStream]] = []
+        cancelled_streams: list[tuple[ResolvedOrderCancellationPlanV1, OrderEventStream]] = []
+        for intent in cycle.portfolio_order_plan.cancellation_intents:
+            resolved = resolved_by_order.get(intent.order_id)
+            stream = local.order_streams.get(intent.order_id.value)
+            if (
+                resolved is None
+                or stream is None
+                or stream.state is None
+                or stream.state.status
+                not in {
+                    OrderStatus.ACCEPTED,
+                    OrderStatus.ACTIVE,
+                    OrderStatus.PARTIALLY_FILLED,
+                    OrderStatus.SUBMITTED,
+                }
+                or resolved.reason_code != intent.reason_code
+                or resolved.source_target_hash
+                != cycle.portfolio_order_plan.source_normalized_target_hash
+            ):
+                return self._failed(
+                    case,
+                    local,
+                    EngineFailureCode.CASE_EVIDENCE_MISMATCH,
+                    (intent.order_id.value,),
+                )
+            requested = OrderEvent(
+                resolved.cancel_requested_event_id,
+                resolved.order_id,
+                stream.records[-1].event.event_id,
+                OrderEventType.ORDER_CANCEL_REQUESTED,
+                resolved.cancel_requested_at,
+                evidence_id=resolved.source_target_hash,
+                reason_code=resolved.reason_code,
+            )
+            requested_stream = stream.append(OrderEventRecord(requested))
+            cancelled = OrderEvent(
+                resolved.cancelled_event_id,
+                resolved.order_id,
+                requested.event_id,
+                OrderEventType.ORDER_CANCELLED,
+                resolved.cancelled_at,
+                evidence_id=resolved.source_target_hash,
+                reason_code=resolved.reason_code,
+            )
+            cancelled_stream = requested_stream.append(OrderEventRecord(cancelled))
+            requested_streams.append((resolved, requested_stream))
+            cancelled_streams.append((resolved, cancelled_stream))
+        for resolved, stream in requested_streams:
+            local.order_streams[resolved.order_id.value] = stream
+            self._trace_add(local, EngineStage.ORDER_CANCEL_REQUESTED, resolved.cancel_requested_at, resolved.order_id.value, stream.stream_hash)
+        for resolved, stream in cancelled_streams:
+            local.order_streams[resolved.order_id.value] = stream
+            self._trace_add(local, EngineStage.ORDER_CANCELLED, resolved.cancelled_at, resolved.order_id.value, stream.stream_hash)
+        self._refresh_resources(case, local)
+
+        replacement_by_order = {
+            value.replacement_order_id: value for value in cycle.replacement_admissions
+        }
+        ordinary_by_order = {
+            value.order.order_id: value for value in cycle.admissions
+        }
+        planned_ids = {
+            value.sizing_evidence.identity.preallocated_order_id
+            for value in cycle.portfolio_order_plan.planned_orders
+        }
+        if planned_ids != set(replacement_by_order) | set(ordinary_by_order):
+            return self._failed(
+                case,
+                local,
+                EngineFailureCode.ORDER_PLAN_MISMATCH,
+                tuple(value.value for value in planned_ids ^ (set(replacement_by_order) | set(ordinary_by_order))),
+            )
+        for planned in cycle.portfolio_order_plan.planned_orders:
+            order_id = planned.sizing_evidence.identity.preallocated_order_id
+            replacement = replacement_by_order.get(order_id)
+            if replacement is not None:
+                failure = self._admit_order(
+                    case,
+                    local,
+                    replacement.admission,
+                    created_causation_id=replacement.cancelled_event_id,
+                )
+            else:
+                failure = self._admit_order(case, local, ordinary_by_order[order_id])
+            if failure is not None:
+                return failure
+
+        link_by_replacement = {
+            value.replacement_order_id: value
+            for value in cycle.portfolio_order_plan.cancel_replacements
+        }
+        for replacement_order_id, replacement in replacement_by_order.items():
+            link = link_by_replacement.get(replacement_order_id)
+            cancelled_stream = local.order_streams.get(replacement.cancelled_order_id.value)
+            replacement_stream = local.order_streams.get(replacement_order_id.value)
+            if link is None or cancelled_stream is None or replacement_stream is None:
+                return self._failed(case, local, EngineFailureCode.CASE_EVIDENCE_MISMATCH, (replacement_order_id.value,))
+            causation = CancelReplaceCausation(cancelled_stream, replacement_stream)
+            if (
+                causation.cancelled_event_id != replacement.cancelled_event_id
+                or causation.replacement_created_event_id
+                != replacement.replacement_intent_created_event_id
+                or link.link_hash != replacement.cancel_replace_hash
+            ):
+                return self._failed(case, local, EngineFailureCode.CASE_EVIDENCE_MISMATCH, (replacement_order_id.value,), (canonical_sha256(causation), link.link_hash))
+        self._refresh_resources(case, local)
+        if cycle.portfolio_order_plan.cancellation_intents:
+            latest = max(
+                cycle.cancellation_plans, key=lambda value: value.cancelled_at
+            )
+            self._trace_resource_refresh(
+                local, latest.cancelled_at, latest.order_id.value
+            )
+        state.order_streams = local.order_streams
+        state.reservation_schedules = local.reservation_schedules
+        state.admissions = local.admissions
+        state.reservation_state = local.reservation_state
+        state.settlement_state = local.settlement_state
+        state.availability = local.availability
+        state.trace_entries = local.trace_entries
+        state.capped_portfolio_targets = local.capped_portfolio_targets
+        state.portfolio_rebalance_plans = local.portfolio_rebalance_plans
         return None
 
     def _apply_target_cancellations(
@@ -3068,6 +3359,8 @@ class DeterministicBarEngine:
         case: ResolvedExecutionCase,
         state: _EngineState,
         admission: ResolvedOrderAdmission,
+        *,
+        created_causation_id: str | None = None,
     ) -> EngineExecutionOutcome | None:
         order = admission.order
         if order.order_id.value in state.order_streams:
@@ -3160,7 +3453,7 @@ class DeterministicBarEngine:
             cast(str, admission.event_plan[7].external_evidence_id),
         )
         records: list[OrderEventRecord] = []
-        cause = order.intent.parent_id
+        cause = created_causation_id or order.intent.parent_id
         for planned, evidence_id in zip(
             admission.event_plan, evidence_ids, strict=True
         ):

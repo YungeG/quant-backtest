@@ -26,6 +26,9 @@ from crypto_quant_domain import (
 )
 from crypto_quant_trading import (
     CurrencyValuationGraph,
+    PortfolioOrderPlanV2,
+    PortfolioOrderSizerV1,
+    PortfolioRebalanceCoordinatorV2,
     PortfolioRebalanceExecutionPolicyV1,
     PortfolioSnapshotRefreshInputV1,
     PortfolioSnapshotRefresherV1,
@@ -48,6 +51,20 @@ from tests.runtime.engine._fixtures import (
 def _portfolio_policy() -> PortfolioRebalanceExecutionPolicyV1:
     return PortfolioRebalanceExecutionPolicyV1(
         "equity.cn_a_share.portfolio.rebalance-execution.v1", 1
+    )
+
+
+def _empty_order_plan(cycle, policy):
+    return PortfolioOrderPlanV2.create(
+        source_normalized_target_id=cycle.target_validity.normalized_target_id,
+        source_normalized_target_hash=cycle.target_validity.normalized_target_hash,
+        decision_time=cycle.schedule.decision_time,
+        policy_hash=policy.policy_hash,
+        sizing_evidence_hash=canonical_sha256(()),
+        cancellation_intents=(),
+        planned_orders=(),
+        cancel_replacements=(),
+        omission_evidence_hashes=(),
     )
 
 
@@ -88,6 +105,7 @@ def _refresh_plan(*, marks=(), decision_time=TARGET_TIME, ordinal=0):
 def test_v2_cycle_requires_snapshot_refresh_plan() -> None:
     cycle = execution_case().decision_cycles[0]
 
+    phase3_policy = _portfolio_policy()
     with pytest.raises(TypeError, match="snapshot_refresh_plan"):
         ResolvedPortfolioDecisionCycleV2(
             schedule=cycle.schedule,
@@ -101,7 +119,8 @@ def test_v2_cycle_requires_snapshot_refresh_plan() -> None:
             planning_at=cycle.planning_at,
             admissions=cycle.admissions,
             snapshot_refresh_plan=None,
-            portfolio_rebalance_policy=_portfolio_policy(),
+            portfolio_rebalance_policy=phase3_policy,
+            portfolio_order_plan=_empty_order_plan(cycle, phase3_policy),
         )
 
 
@@ -126,6 +145,7 @@ def test_refresh_plan_rejects_non_authoritative_mark_sets(marks) -> None:
 def test_input_construction_failure_is_structured_and_atomic() -> None:
     case = execution_case()
     cycle = case.decision_cycles[0]
+    phase3_policy = _portfolio_policy()
     portfolio_cycle = ResolvedPortfolioDecisionCycleV2(
         schedule=cycle.schedule,
         allocations=cycle.allocations,
@@ -138,7 +158,8 @@ def test_input_construction_failure_is_structured_and_atomic() -> None:
         planning_at=cycle.planning_at,
         admissions=cycle.admissions,
         snapshot_refresh_plan=_refresh_plan(),
-        portfolio_rebalance_policy=_portfolio_policy(),
+        portfolio_rebalance_policy=phase3_policy,
+        portfolio_order_plan=_empty_order_plan(cycle, phase3_policy),
     )
     engine = DeterministicBarEngine()
     state = engine._initial_state(case)
@@ -258,6 +279,27 @@ def test_second_decision_refreshes_current_financial_and_resource_state() -> Non
         allocation_nav=expected_snapshot.equity,
         source_portfolio_snapshot_hash=canonical_sha256(expected_snapshot),
     )
+    phase3_policy = _portfolio_policy()
+    sizing_candidates = ()
+    resolved_order_plan = _empty_order_plan(first_cycle, phase3_policy)
+    resolved_order_plan = replace(
+        resolved_order_plan,
+        decision_time=second_schedule.decision_time,
+        plan_hash=canonical_sha256(
+            {
+                "schema_version": 1,
+                "source_normalized_target_id": resolved_order_plan.source_normalized_target_id,
+                "source_normalized_target_hash": resolved_order_plan.source_normalized_target_hash,
+                "decision_time": second_schedule.decision_time,
+                "policy_hash": resolved_order_plan.policy_hash,
+                "sizing_evidence_hash": resolved_order_plan.sizing_evidence_hash,
+                "cancellation_intents": (),
+                "planned_orders": (),
+                "cancel_replacements": (),
+                "omission_evidence_hashes": (),
+            }
+        ),
+    )
     second_cycle = ResolvedPortfolioDecisionCycleV2(
         schedule=second_schedule,
         allocations=(allocation,),
@@ -282,23 +324,9 @@ def test_second_decision_refreshes_current_financial_and_resource_state() -> Non
         admissions=(),
         cancellation_plans=(),
         snapshot_refresh_plan=refresh_plan,
-        portfolio_rebalance_policy=_portfolio_policy(),
-        portfolio_sizing_candidates=(
-            _candidate(
-                side=OrderSide.SELL,
-                current=5_000,
-                target=0,
-                sellable=5_000,
-                order_digit="8",
-                source_hash=first_cycle.target_validity.normalized_target_hash,
-            ),
-            _candidate(
-                side=OrderSide.BUY,
-                current=0,
-                target=1_000,
-                source_hash=first_cycle.target_validity.normalized_target_hash,
-            ),
-        ),
+        portfolio_rebalance_policy=phase3_policy,
+        portfolio_order_plan=resolved_order_plan,
+        portfolio_sizing_candidates=sizing_candidates,
     )
     case = replace(
         base_case,
@@ -316,7 +344,7 @@ def test_second_decision_refreshes_current_financial_and_resource_state() -> Non
         1,
     )
 
-    assert failure is not None  # Later legacy rebalance evidence is intentionally absent.
+    assert failure is None
     assert canonical_sha256(state.snapshot) != stale_snapshot_hash
     assert state.snapshot == expected_snapshot
     assert state.allocations[-1].source_portfolio_snapshot_hash == canonical_sha256(
@@ -347,11 +375,7 @@ def test_second_decision_refreshes_current_financial_and_resource_state() -> Non
     )
     assert refresh_index < allocation_index
     portfolio_plan = state.portfolio_rebalance_plans[-1]
-    assert tuple(value.intent.side.value for value in portfolio_plan.planned_orders) == (
-        "sell",
-        "buy",
-    )
-    assert tuple(value.stage_rank for value in portfolio_plan.stages) == (100, 110)
+    assert portfolio_plan.planned_orders == ()
     raw_sizing_index = max(
         index for index, stage in enumerate(stages) if stage is EngineStage.POSITION_SIZING
     )

@@ -74,6 +74,7 @@ from .engine import (
     ResolvedOrderTerminalPlanV1,
     ResolvedPortfolioBarExecutionV2,
     ResolvedPortfolioDecisionCycleV2,
+    ResolvedPortfolioReplacementAdmissionV1,
     ResolvedPreTradePlan,
     SnapshotProjectionPlan,
 )
@@ -630,6 +631,7 @@ __all__ = [
     "ResolvedOrderTerminalPlanV1",
     "ResolvedPortfolioBarExecutionV2",
     "ResolvedPortfolioDecisionCycleV2",
+    "ResolvedPortfolioReplacementAdmissionV1",
     "ResolvedPreTradePlan",
     "ResultGrade",
     "ResolvedBacktestEnvironment",

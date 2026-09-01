@@ -6,6 +6,8 @@ from dataclasses import dataclass
 from enum import Enum
 
 from crypto_quant_domain import (
+    DomainId,
+    DomainIdKind,
     ExecutionStyle,
     InstrumentId,
     OrderIntent,
@@ -21,8 +23,88 @@ from crypto_quant_domain import (
 from .portfolio_order_sizing import (
     CappedPortfolioTargetV1,
     PortfolioOrderSizingEvidenceV1,
+    PortfolioSizingOrderIdentityV1,
 )
 from .rebalance import CancelIntent
+
+
+@dataclass(frozen=True, slots=True)
+class PortfolioCancelReplaceV1:
+    schema_version: int
+    instrument_id: InstrumentId
+    cancelled_order_id: DomainId
+    cancel_intent_id: str
+    prior_working_order_stream_hash: str
+    replacement_order_id: DomainId
+    replacement_sizing_identity_hash: str
+    source_target_hash: str
+    link_hash: str
+
+    def __post_init__(self) -> None:
+        if self.schema_version != 1:
+            raise ValueError("schema_version must be 1")
+        if not isinstance(self.instrument_id, InstrumentId):
+            raise TypeError("instrument_id must be InstrumentId")
+        for value in (self.cancelled_order_id, self.replacement_order_id):
+            if not isinstance(value, DomainId) or value.kind is not DomainIdKind.ORDER:
+                raise TypeError("cancel-replace Order IDs must be ORDER DomainId")
+        if self.cancelled_order_id == self.replacement_order_id:
+            raise ValueError("replacement requires a new Order identity")
+        if self.link_hash != canonical_sha256(self._body()):
+            raise ValueError("link_hash mismatch")
+
+    @classmethod
+    def create(
+        cls,
+        *,
+        instrument_id: InstrumentId,
+        cancelled_order_id: DomainId,
+        cancel_intent_id: str,
+        prior_working_order_stream_hash: str,
+        replacement_identity: PortfolioSizingOrderIdentityV1,
+        source_target_hash: str,
+    ) -> PortfolioCancelReplaceV1:
+        if (
+            replacement_identity.instrument_id != instrument_id
+            or replacement_identity.source_target_hash != source_target_hash
+        ):
+            raise ValueError("replacement sizing identity context mismatch")
+        body = {
+            "schema_version": 1,
+            "instrument_id": instrument_id,
+            "cancelled_order_id": cancelled_order_id,
+            "cancel_intent_id": cancel_intent_id,
+            "prior_working_order_stream_hash": prior_working_order_stream_hash,
+            "replacement_order_id": replacement_identity.preallocated_order_id,
+            "replacement_sizing_identity_hash": replacement_identity.identity_hash,
+            "source_target_hash": source_target_hash,
+        }
+        return cls(
+            1,
+            instrument_id,
+            cancelled_order_id,
+            cancel_intent_id,
+            prior_working_order_stream_hash,
+            replacement_identity.preallocated_order_id,
+            replacement_identity.identity_hash,
+            source_target_hash,
+            canonical_sha256(body),
+        )
+
+    def _body(self) -> dict[str, object]:
+        return {
+            "schema_version": self.schema_version,
+            "instrument_id": self.instrument_id,
+            "cancelled_order_id": self.cancelled_order_id,
+            "cancel_intent_id": self.cancel_intent_id,
+            "prior_working_order_stream_hash": self.prior_working_order_stream_hash,
+            "replacement_order_id": self.replacement_order_id,
+            "replacement_sizing_identity_hash": self.replacement_sizing_identity_hash,
+            "source_target_hash": self.source_target_hash,
+        }
+
+    def to_canonical_dict(self) -> dict[str, object]:
+        return {"type": "portfolio_cancel_replace_v1", **self._body(), "link_hash": self.link_hash}
 
 
 class PortfolioPlanStageKind(str, Enum):
@@ -154,6 +236,118 @@ class PortfolioRebalancePlanV1:
         }
 
 
+@dataclass(frozen=True, slots=True)
+class PortfolioOrderPlanV2:
+    schema_version: int
+    source_normalized_target_id: str
+    source_normalized_target_hash: str
+    decision_time: UtcInstant
+    policy_hash: str
+    sizing_evidence_hash: str
+    cancellation_intents: tuple[CancelIntent, ...]
+    planned_orders: tuple[PortfolioPlannedOrderV1, ...]
+    cancel_replacements: tuple[PortfolioCancelReplaceV1, ...]
+    omission_evidence_hashes: tuple[str, ...]
+    plan_hash: str
+
+    def __post_init__(self) -> None:
+        if self.schema_version != 1:
+            raise ValueError("schema_version must be 1")
+        body = {
+            "schema_version": self.schema_version,
+            "source_normalized_target_id": self.source_normalized_target_id,
+            "source_normalized_target_hash": self.source_normalized_target_hash,
+            "decision_time": self.decision_time,
+            "policy_hash": self.policy_hash,
+            "sizing_evidence_hash": self.sizing_evidence_hash,
+            "cancellation_intents": self.cancellation_intents,
+            "planned_orders": self.planned_orders,
+            "cancel_replacements": self.cancel_replacements,
+            "omission_evidence_hashes": self.omission_evidence_hashes,
+        }
+        if self.plan_hash != canonical_sha256(body):
+            raise ValueError("plan_hash mismatch")
+
+    @classmethod
+    def create(
+        cls,
+        *,
+        source_normalized_target_id: str,
+        source_normalized_target_hash: str,
+        decision_time: UtcInstant,
+        policy_hash: str,
+        sizing_evidence_hash: str,
+        cancellation_intents: tuple[CancelIntent, ...],
+        planned_orders: tuple[PortfolioPlannedOrderV1, ...],
+        cancel_replacements: tuple[PortfolioCancelReplaceV1, ...],
+        omission_evidence_hashes: tuple[str, ...],
+    ) -> PortfolioOrderPlanV2:
+        cancellations = tuple(sorted(cancellation_intents, key=lambda value: (canonical_bytes(value.instrument_id), value.order_id.value)))
+        orders = tuple(sorted(planned_orders, key=lambda value: (value.side_rank, canonical_bytes(value.instrument_id), value.sizing_evidence.identity.preallocated_order_id.value)))
+        links = tuple(sorted(cancel_replacements, key=lambda value: (canonical_bytes(value.instrument_id), value.cancelled_order_id.value, value.replacement_order_id.value)))
+        omissions = tuple(sorted(omission_evidence_hashes))
+        cancel_by_id = {value.order_id: value for value in cancellations}
+        order_by_id = {value.sizing_evidence.identity.preallocated_order_id: value for value in orders}
+        if len(cancel_by_id) != len(cancellations) or len(order_by_id) != len(orders):
+            raise ValueError("duplicate cancellation or replacement Order identity")
+        linked_cancel: set[DomainId] = set()
+        linked_replace: set[DomainId] = set()
+        for link in links:
+            cancellation = cancel_by_id.get(link.cancelled_order_id)
+            replacement = order_by_id.get(link.replacement_order_id)
+            if (
+                cancellation is None
+                or replacement is None
+                or cancellation.cancel_intent_id != link.cancel_intent_id
+                or cancellation.instrument_id != link.instrument_id
+                or replacement.instrument_id != link.instrument_id
+                or replacement.sizing_evidence.identity.identity_hash
+                != link.replacement_sizing_identity_hash
+                or link.cancelled_order_id in linked_cancel
+                or link.replacement_order_id in linked_replace
+            ):
+                raise ValueError("cancel-replace exact-cover mismatch")
+            linked_cancel.add(link.cancelled_order_id)
+            linked_replace.add(link.replacement_order_id)
+        cancel_instruments = {value.instrument_id: value.order_id for value in cancellations}
+        order_instruments = {value.instrument_id: value.sizing_evidence.identity.preallocated_order_id for value in orders}
+        for instrument_id in set(cancel_instruments) & set(order_instruments):
+            if (
+                cancel_instruments[instrument_id] not in linked_cancel
+                or order_instruments[instrument_id] not in linked_replace
+            ):
+                raise ValueError("same-instrument cancel and replacement requires link")
+        body = {
+            "schema_version": 1,
+            "source_normalized_target_id": source_normalized_target_id,
+            "source_normalized_target_hash": source_normalized_target_hash,
+            "decision_time": decision_time,
+            "policy_hash": policy_hash,
+            "sizing_evidence_hash": sizing_evidence_hash,
+            "cancellation_intents": cancellations,
+            "planned_orders": orders,
+            "cancel_replacements": links,
+            "omission_evidence_hashes": omissions,
+        }
+        return cls(1, source_normalized_target_id, source_normalized_target_hash, decision_time, policy_hash, sizing_evidence_hash, cancellations, orders, links, omissions, canonical_sha256(body))
+
+    def to_canonical_dict(self) -> dict[str, object]:
+        return {
+            "type": "portfolio_order_plan_v2",
+            "schema_version": self.schema_version,
+            "source_normalized_target_id": self.source_normalized_target_id,
+            "source_normalized_target_hash": self.source_normalized_target_hash,
+            "decision_time": self.decision_time,
+            "policy_hash": self.policy_hash,
+            "sizing_evidence_hash": self.sizing_evidence_hash,
+            "cancellation_intents": self.cancellation_intents,
+            "planned_orders": self.planned_orders,
+            "cancel_replacements": self.cancel_replacements,
+            "omission_evidence_hashes": self.omission_evidence_hashes,
+            "plan_hash": self.plan_hash,
+        }
+
+
 class PortfolioRebalanceCoordinatorV2:
     def coordinate(
         self,
@@ -247,6 +441,8 @@ class PortfolioRebalanceCoordinatorV2:
 
 
 __all__ = [
+    "PortfolioCancelReplaceV1",
+    "PortfolioOrderPlanV2",
     "PortfolioPlanStageKind",
     "PortfolioPlanStageV1",
     "PortfolioPlannedOrderV1",
