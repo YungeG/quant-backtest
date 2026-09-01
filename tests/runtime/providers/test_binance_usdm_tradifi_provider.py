@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import json
 from dataclasses import replace
+from datetime import UTC, datetime
 from pathlib import Path
 from types import SimpleNamespace
 
@@ -36,6 +37,12 @@ from crypto_quant_domain import (
     canonical_bytes,
 )
 
+from tests.bundle_builder.providers.binance_usdm import (
+    test_koru_closed_market_range_targets_v1 as target_fixture,
+)
+from tests.bundle_builder.providers.binance_usdm import (
+    test_koru_tradifi_source_projection_v1 as source_fixture,
+)
 from tests.runtime.providers import test_binance_usdm_tradifi_preparation_v2 as fixture
 
 
@@ -50,6 +57,109 @@ def _prepare(bundle, parameter_index: int = 0, store=None):
         store or fixture._Store(bundle),
         bundle.reader,
     )
+
+
+def _raw_scale8_six_fill_bundle():
+    utc_date = "2026-07-17"
+    start = source_fixture._day_start_ms(utc_date) * 1_000_000
+    end = start + 240 * target_fixture._HOUR_NS
+    trades = tuple(
+        (
+            start // 1_000_000
+            + hour * target_fixture._HOUR_MS
+            + 5 * 60_000,
+            "100.00000000",
+        )
+        for hour in range(240)
+    )
+    request = source_fixture._request(trades, start_ns=start, end_ns=end)
+    prices = {
+        "open_price": "100.00000001",
+        "high_price": "101.00000001",
+        "low_price": "99.00000001",
+        "close_price": "100.00000001",
+    }
+
+    price_dates = tuple(
+        str(
+            datetime.fromtimestamp(
+                value.requested_day_start.epoch_nanoseconds / 1_000_000_000,
+                UTC,
+            ).date()
+        )
+        for value in request.mark_price_results
+    )
+
+    def price_results(source_kind):
+        return tuple(
+            target_fixture._price_result(
+                source_kind,
+                date,
+                {2: "99.50000001", 22: "99.50000001"}
+                if date in (utc_date, "2026-07-18", "2026-07-24", "2026-07-25")
+                else {},
+                **prices,
+            )
+            for date in price_dates
+        )
+
+    outcome = target_fixture.build_binance_usdm_koru_tradifi_source_projection_v1(
+        replace(
+            request,
+            mark_price_results=price_results(
+                target_fixture.price_fixture.BinanceUsdmKoruPriceBarsSourceKindV1.MARK_PRICE
+            ),
+            index_price_results=price_results(
+                target_fixture.price_fixture.BinanceUsdmKoruPriceBarsSourceKindV1.INDEX_PRICE
+            ),
+        )
+    )
+    assert outcome.failure is None and outcome.result is not None
+    start_ms = start // 1_000_000
+    source = fixture.bundle_v2_fixture._source(
+        outcome.result,
+        tuple(
+            start_ms + hour * target_fixture._HOUR_MS + 30 * 60_000
+            for hour in range(4, 240, 20)
+        ),
+        funding_mark_price="20.00000001",
+    )
+    return fixture.bundle_v2_fixture._build(source)
+
+
+def test_public_v2_raw_scale8_six_fills_with_interior_funding_reaches_engine() -> None:
+    prepared = _prepare(_raw_scale8_six_fill_bundle())
+
+    assert prepared.failure is None and prepared.result is not None
+    case = prepared.result.execution_case
+    assert len(case.decision_cycles) == len(case.bar_executions) == 6
+    assert tuple(
+        cycle.admissions[0].order.intent.side.value for cycle in case.decision_cycles
+    ) == ("buy", "sell", "buy", "sell", "buy", "sell")
+    funding_at = {
+        event.event_at.instant
+        for event in case.financial_dispatch_plan.scheduled_account_events
+        if event.operation_key == "funding"
+    }
+    batches = tuple(
+        event.payload
+        for event in case.financial_dispatch_plan.scheduled_account_events
+        if event.operation_key == "margin_liquidation_audit_batch"
+    )
+    assert len(funding_at) == 12
+    assert len(batches) > 8
+    assert any(
+        len(batch.subwindows) == 2
+        and batch.subwindows[0].plan.interval_end_exclusive in funding_at
+        for batch in batches
+    )
+
+    executed = DeterministicBarEngine().run(case)
+
+    assert executed.engine_failure is None, executed.engine_failure
+    assert executed.result is not None
+    assert len(executed.result.fills) == 6
+    assert executed.result.final_portfolio_snapshot.positions == ()
 
 
 def test_public_v2_raw_scale8_bundle_reaches_engine() -> None:
