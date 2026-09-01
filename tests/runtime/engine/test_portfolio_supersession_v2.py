@@ -6,13 +6,19 @@ import pytest
 
 from crypto_quant_backtest import (
     DeterministicBarEngine,
+    EngineFailureCode,
     EngineStage,
+    ExecutionCaseComposer,
+    ExecutionCaseIdentityBinding,
+    ExecutionCaseIdentityManifest,
+    ExecutionCaseIdentityRule,
     ResolvedOrderCancellationPlanV1,
     ResolvedPortfolioReplacementAdmissionV1,
     TimelineEvent,
     TimelineSegment,
 )
 from crypto_quant_domain import (
+    IdentityNamespace,
     Order,
     OrderEventType,
     OrderSide,
@@ -29,6 +35,7 @@ from crypto_quant_trading import (
     PortfolioOrderPlanV2,
     PortfolioRebalanceCoordinatorV2,
     PortfolioSizingOmissionReason,
+    ReservationCommitment,
 )
 
 from tests.kernel.portfolio.test_portfolio_order_sizing import _candidate, _size
@@ -237,12 +244,12 @@ def test_phase4_field_and_canonical_key_order_is_frozen() -> None:
     assert tuple(value.name for value in fields(type(link))) == (
         "schema_version", "instrument_id", "cancelled_order_id", "cancel_intent_id",
         "prior_working_order_stream_hash", "replacement_order_id",
-        "replacement_sizing_identity_hash", "source_target_hash", "link_hash",
+        "replacement_sizing_identity", "source_target_hash", "link_hash",
     )
     assert tuple(link.to_canonical_dict()) == (
         "type", "schema_version", "instrument_id", "cancelled_order_id",
         "cancel_intent_id", "prior_working_order_stream_hash", "replacement_order_id",
-        "replacement_sizing_identity_hash", "source_target_hash", "link_hash",
+        "replacement_sizing_identity", "source_target_hash", "link_hash",
     )
     assert tuple(value.name for value in fields(type(plan))) == (
         "schema_version", "source_normalized_target_id", "source_normalized_target_hash",
@@ -262,30 +269,17 @@ def test_direct_constructor_rejects_invalid_exact_cover() -> None:
     _, _, cycle, _, _, _, _ = _single_replace_case()
     plan = cycle.portfolio_order_plan
     link = plan.cancel_replacements[0]
-    bad_source = "sha256:" + "0" * 64
-    bad_link = replace(
-        link,
-        source_target_hash=bad_source,
-        link_hash=canonical_sha256({**link._body(), "source_target_hash": bad_source}),
-    )
-    body = {
-        "schema_version": 1,
-        "source_normalized_target_id": plan.source_normalized_target_id,
-        "source_normalized_target_hash": plan.source_normalized_target_hash,
-        "decision_time": plan.decision_time,
-        "policy_hash": plan.policy_hash,
-        "sizing_evidence_hash": plan.sizing_evidence_hash,
-        "cancellation_intents": plan.cancellation_intents,
-        "planned_orders": plan.planned_orders,
-        "cancel_replacements": (bad_link,),
-        "omission_evidence_hashes": plan.omission_evidence_hashes,
-    }
-    with pytest.raises(ValueError, match="exact-cover"):
-        type(plan)(
-            1, plan.source_normalized_target_id, plan.source_normalized_target_hash,
-            plan.decision_time, plan.policy_hash, plan.sizing_evidence_hash,
-            plan.cancellation_intents, plan.planned_orders, (bad_link,),
-            plan.omission_evidence_hashes, canonical_sha256(body),
+    forged_order_id = replace(link.replacement_order_id, value="ord_" + "4" * 64)
+    with pytest.raises(ValueError, match="replacement sizing identity context"):
+        type(link)(
+            1,
+            link.instrument_id,
+            link.cancelled_order_id,
+            link.cancel_intent_id,
+            link.prior_working_order_stream_hash,
+            forged_order_id,
+            link.replacement_sizing_identity,
+            link.source_target_hash,
         )
 
     _, _, _, cycle2, _, _ = _two_order_cancellation_context()
@@ -309,6 +303,74 @@ def test_direct_constructor_rejects_invalid_exact_cover() -> None:
             plan2.decision_time, plan2.policy_hash, plan2.sizing_evidence_hash,
             reversed_cancellations, (), (), (), canonical_sha256(reversed_body),
         )
+
+
+def test_replacement_identity_collisions_are_rejected_globally() -> None:
+    case, _, cycle, _, _, source, replacement = _single_replace_case()
+    wrapper = cycle.replacement_admissions[0]
+    with pytest.raises(ValueError, match="disjoint"):
+        replace(cycle, admissions=(wrapper.admission,))
+
+    collided_order = replace(source.order, order_id=replacement.order_id)
+    collided_records = tuple(
+        replace(record, event=replace(record.event, order_id=replacement.order_id))
+        for record in source.records
+    )
+    collided_stream = type(source).from_records(collided_order, collided_records)
+    initial_admission = replace(
+        case.financial_state.order_admissions[0], order=collided_order
+    )
+    with pytest.raises(ValueError, match="globally unique"):
+        replace(
+            case,
+            decision_cycles=(cycle,),
+            financial_state=replace(
+                case.financial_state,
+                order_streams=(collided_stream,),
+                order_admissions=(initial_admission,),
+            ),
+        )
+
+
+def test_replacement_identities_participate_in_manifest_verification() -> None:
+    case, _, cycle, _, _, _, _ = _single_replace_case()
+    case = replace(case, decision_cycles=(cycle,))
+    expected = case._expected_identity_bindings()
+    rules = tuple(
+        ExecutionCaseIdentityRule(key, f"phase4.{index}", index, kind)
+        for index, (key, (_, kind)) in enumerate(sorted(expected.items()))
+    )
+    spec = ExecutionCaseComposer.semantic_spec_from_case(
+        case,
+        spec_key="phase4.replacement.identity-test.v1",
+        spec_version=1,
+        identity_namespace=IdentityNamespace("phase4-test", "1"),
+        identity_plan=rules,
+    )
+    bindings = tuple(
+        ExecutionCaseIdentityBinding(
+            rule.binding_key,
+            rule.semantic_key,
+            rule.ordinal,
+            expected[rule.binding_key][0],
+            rule.domain_kind,
+        )
+        for rule in rules
+    )
+    manifest = object.__new__(ExecutionCaseIdentityManifest)
+    object.__setattr__(manifest, "semantic_run_id", "phase4-semantic-run")
+    object.__setattr__(manifest, "namespace", spec.identity_namespace)
+    object.__setattr__(manifest, "bindings", bindings)
+    bound = replace(
+        case,
+        semantic_spec_hash=spec.semantic_spec_hash,
+        semantic_spec=spec,
+        identity_manifest=manifest,
+    )
+
+    assert bound.verify_identity_manifest("phase4-semantic-run")
+    assert any(key.startswith("order.replacement.") for key in expected)
+    assert any(key.startswith("order-event.replacement.") for key in expected)
 
 
 def test_failed_replacement_rolls_back_every_mutation() -> None:
@@ -397,15 +459,25 @@ def test_second_admission_cash_exhaustion_rolls_back_first_admission() -> None:
         bar_executions=(),
         financial_state=empty_financial,
     )
-    state = DeterministicBarEngine()._initial_state(case)
+    engine = DeterministicBarEngine()
+    control_state = engine._initial_state(case)
+    assert engine._admit_order(case, control_state, admissions[0]) is None
+    assert admissions[0].order.order_id.value in control_state.order_streams
+
+    state = engine._initial_state(case)
     streams = dict(state.order_streams)
     trace = tuple(state.trace_entries)
 
-    outcome = DeterministicBarEngine()._apply_portfolio_order_plan_v2(
+    outcome = engine._apply_portfolio_order_plan_v2(
         case, state, cycle, capped, rebalance, target_event().timeline_instant
     )
 
     assert outcome is not None and outcome.engine_failure is not None
+    assert outcome.engine_failure.code is EngineFailureCode.PRETRADE_REJECTED
+    assert outcome.engine_failure.subject_keys == (
+        admissions[1].order.order_id.value,
+        "tradable_cash:USD",
+    )
     assert state.order_streams == streams
     assert tuple(state.trace_entries) == trace
     assert state.reservation_state.active_reservations == ()
@@ -434,24 +506,62 @@ def test_multi_instrument_cancellation_commits_atomically() -> None:
     )
 
 
-def test_replacement_is_first_class_case_order_for_later_bar() -> None:
-    case, state, cycle, capped, rebalance, _, replacement = _single_replace_case(
+def test_full_run_replacement_is_followed_by_scheduled_bar_fill() -> None:
+    case, _, cycle, _, _, _, replacement = _single_replace_case(
         replacement_side=OrderSide.BUY
     )
-    bar = replace(execution_case().bar_executions[0], order_id=replacement.order_id)
-    case = replace(case, decision_cycles=(cycle,), bar_executions=(bar,))
-    engine = DeterministicBarEngine()
+    baseline = execution_case()
+    bar = replace(baseline.bar_executions[0], order_id=replacement.order_id)
+    schedule = case.financial_state.reservation_schedules[0]
+    update = schedule.updates[0]
+    fee_only = ReservationCommitment(fee_reserve=update.commitment.fee_reserve)
+    financial_state = replace(
+        case.financial_state,
+        reservation_schedules=(
+            replace(schedule, updates=(replace(update, commitment=fee_only),)),
+        ),
+    )
+    staged_case = replace(case, financial_state=financial_state)
+    staged_state = DeterministicBarEngine()._initial_state(staged_case)
+    cash = staged_state.availability.cash[0]
+    active_cash = replace(cash.tradable, units=0)
+    active_fee = replace(
+        cash.tradable,
+        units=sum(
+            value.units for value in staged_state.reservation_state.totals.fee_reserve
+        ),
+    )
+    _, _, resolved_plan = cycle.materialize_portfolio_plans(
+        cash_availability=cash,
+        active_cash_reservations=active_cash,
+        active_fee_reservations=active_fee,
+        working_orders=tuple(staged_state.order_streams.values()),
+    )
+    cycle = replace(
+        cycle,
+        portfolio_order_plan=resolved_plan,
+        replacement_admissions=(
+            replace(cycle.replacement_admissions[0], plan_hash=resolved_plan.plan_hash),
+        ),
+    )
+    case = replace(
+        staged_case,
+        decision_cycles=(cycle,),
+        bar_executions=(bar,),
+        snapshot_plan=baseline.snapshot_plan,
+        financial_dispatch_plan=baseline.financial_dispatch_plan,
+    )
 
-    assert engine._apply_portfolio_order_plan_v2(
-        case, state, cycle, capped, rebalance, target_event().timeline_instant
-    ) is None
-    assert engine._bar_execution(
-        case,
-        state,
-        bar,
-        TimelineEvent(TimelineSegment.ACTIVE_TRADING, bar_event()),
-    ) is None
-    assert state.order_streams[replacement.order_id.value].state.status is OrderStatus.FILLED
+    outcome = DeterministicBarEngine().run(case)
+
+    assert outcome.result is not None
+    result = outcome.result
+    replacement_stream = next(
+        value for value in result.order_streams if value.order.order_id == replacement.order_id
+    )
+    assert replacement_stream.state is not None
+    assert replacement_stream.state.status is OrderStatus.FILLED
+    assert result.fills[0].order_id == replacement.order_id
 
 
 def test_exact_cover_working_order_is_retained() -> None:

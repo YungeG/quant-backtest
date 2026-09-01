@@ -3220,6 +3220,14 @@ class DeterministicBarEngine:
             else:
                 failure = self._admit_order(case, local, ordinary_by_order[order_id])
             if failure is not None:
+                if failure.engine_failure is not None:
+                    return self._failed(
+                        case,
+                        local,
+                        failure.engine_failure.code,
+                        (order_id.value,) + failure.engine_failure.subject_keys,
+                        failure.engine_failure.evidence_hashes,
+                    )
                 return failure
             try:
                 self._refresh_resources(case, local)

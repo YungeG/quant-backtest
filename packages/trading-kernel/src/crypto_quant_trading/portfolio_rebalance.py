@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from enum import Enum
 
 from crypto_quant_domain import (
@@ -36,9 +36,9 @@ class PortfolioCancelReplaceV1:
     cancel_intent_id: str
     prior_working_order_stream_hash: str
     replacement_order_id: DomainId
-    replacement_sizing_identity_hash: str
+    replacement_sizing_identity: PortfolioSizingOrderIdentityV1
     source_target_hash: str
-    link_hash: str
+    link_hash: str = field(init=False)
 
     def __post_init__(self) -> None:
         if self.schema_version != 1:
@@ -54,16 +54,26 @@ class PortfolioCancelReplaceV1:
             "cancel-intent-v1:sha256:"
         ):
             raise ValueError("cancel_intent_id must be canonical identity")
+        if not isinstance(
+            self.replacement_sizing_identity, PortfolioSizingOrderIdentityV1
+        ) or (
+            self.replacement_sizing_identity.instrument_id != self.instrument_id
+            or self.replacement_sizing_identity.preallocated_order_id
+            != self.replacement_order_id
+            or self.replacement_sizing_identity.source_target_hash
+            != self.source_target_hash
+            or self.replacement_sizing_identity.identity_hash
+            != canonical_sha256(self.replacement_sizing_identity._body())
+        ):
+            raise ValueError("replacement sizing identity context mismatch")
         for name in (
             "prior_working_order_stream_hash",
-            "replacement_sizing_identity_hash",
             "source_target_hash",
         ):
             value = getattr(self, name)
             if not isinstance(value, str) or not value.startswith("sha256:"):
                 raise ValueError(f"{name} must be sha256 identity")
-        if self.link_hash != canonical_sha256(self._body()):
-            raise ValueError("link_hash mismatch")
+        object.__setattr__(self, "link_hash", canonical_sha256(self._body()))
 
     @classmethod
     def create(
@@ -81,16 +91,6 @@ class PortfolioCancelReplaceV1:
             or replacement_identity.source_target_hash != source_target_hash
         ):
             raise ValueError("replacement sizing identity context mismatch")
-        body = {
-            "schema_version": 1,
-            "instrument_id": instrument_id,
-            "cancelled_order_id": cancelled_order_id,
-            "cancel_intent_id": cancel_intent_id,
-            "prior_working_order_stream_hash": prior_working_order_stream_hash,
-            "replacement_order_id": replacement_identity.preallocated_order_id,
-            "replacement_sizing_identity_hash": replacement_identity.identity_hash,
-            "source_target_hash": source_target_hash,
-        }
         return cls(
             1,
             instrument_id,
@@ -98,9 +98,8 @@ class PortfolioCancelReplaceV1:
             cancel_intent_id,
             prior_working_order_stream_hash,
             replacement_identity.preallocated_order_id,
-            replacement_identity.identity_hash,
+            replacement_identity,
             source_target_hash,
-            canonical_sha256(body),
         )
 
     def _body(self) -> dict[str, object]:
@@ -111,7 +110,7 @@ class PortfolioCancelReplaceV1:
             "cancel_intent_id": self.cancel_intent_id,
             "prior_working_order_stream_hash": self.prior_working_order_stream_hash,
             "replacement_order_id": self.replacement_order_id,
-            "replacement_sizing_identity_hash": self.replacement_sizing_identity_hash,
+            "replacement_sizing_identity": self.replacement_sizing_identity,
             "source_target_hash": self.source_target_hash,
         }
 
@@ -291,8 +290,8 @@ class PortfolioOrderPlanV2:
                 or cancellation.cancel_intent_id != link.cancel_intent_id
                 or cancellation.instrument_id != link.instrument_id
                 or replacement.instrument_id != link.instrument_id
-                or replacement.sizing_evidence.identity.identity_hash
-                != link.replacement_sizing_identity_hash
+                or replacement.sizing_evidence.identity
+                != link.replacement_sizing_identity
                 or replacement.sizing_evidence.identity.source_target_hash
                 != link.source_target_hash
                 or link.source_target_hash != self.source_normalized_target_hash
@@ -361,8 +360,8 @@ class PortfolioOrderPlanV2:
                 or cancellation.cancel_intent_id != link.cancel_intent_id
                 or cancellation.instrument_id != link.instrument_id
                 or replacement.instrument_id != link.instrument_id
-                or replacement.sizing_evidence.identity.identity_hash
-                != link.replacement_sizing_identity_hash
+                or replacement.sizing_evidence.identity
+                != link.replacement_sizing_identity
                 or link.cancelled_order_id in linked_cancel
                 or link.replacement_order_id in linked_replace
             ):
