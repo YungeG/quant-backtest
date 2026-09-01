@@ -102,10 +102,22 @@ class PortfolioSnapshotRefreshInputV1:
         working = tuple(sorted(self.working_orders, key=lambda value: value.order.order_id.value))
         if len({value.order.order_id for value in working}) != len(working):
             raise ValueError("duplicate working Order")
+        if not isinstance(self.timestamp, UtcInstant):
+            raise TypeError("timestamp must be UtcInstant")
         if type(self.resolved_marks) is not tuple or not all(
             isinstance(value, ResolvedMark) for value in self.resolved_marks
         ):
             raise TypeError("resolved_marks must contain ResolvedMark")
+        if any(
+            mark.resolved_at != self.timestamp
+            or mark.price_purpose is not PricePurpose.VALUATION
+            for mark in self.resolved_marks
+        ):
+            raise ValueError("resolved marks must be decision-time VALUATION marks")
+        if len({mark.instrument_id for mark in self.resolved_marks}) != len(
+            self.resolved_marks
+        ):
+            raise ValueError("resolved marks must have unique Instrument identity")
         marks = tuple(sorted(self.resolved_marks, key=canonical_bytes))
         if not isinstance(self.currency_valuation_graph, CurrencyValuationGraph):
             raise TypeError("currency_valuation_graph must be CurrencyValuationGraph")
@@ -113,8 +125,6 @@ class PortfolioSnapshotRefreshInputV1:
             raise TypeError("reporting_currency must be CurrencyId")
         if not isinstance(self.quantization_policy, QuantizationPolicy):
             raise TypeError("quantization_policy must be QuantizationPolicy")
-        if not isinstance(self.timestamp, UtcInstant):
-            raise TypeError("timestamp must be UtcInstant")
         if (
             self.currency_valuation_graph.valuation_at != self.timestamp
             or self.currency_valuation_graph.price_purpose is not PricePurpose.VALUATION

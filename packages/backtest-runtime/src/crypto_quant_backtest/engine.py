@@ -21,6 +21,7 @@ from crypto_quant_domain import (
     OrderStatus,
     PortfolioSnapshot,
     PositionBalanceKey,
+    PricePurpose,
     QuantizationPolicy,
     PositionLot,
     Scale,
@@ -577,6 +578,16 @@ class ResolvedDecisionSnapshotRefreshPlanV1:
             isinstance(value, ResolvedMark) for value in self.resolved_marks
         ):
             raise TypeError("resolved_marks must contain ResolvedMark")
+        if any(
+            mark.resolved_at != self.occurred_at.instant
+            or mark.price_purpose is not PricePurpose.VALUATION
+            for mark in self.resolved_marks
+        ):
+            raise ValueError("resolved marks must be decision-time VALUATION marks")
+        if len({mark.instrument_id for mark in self.resolved_marks}) != len(
+            self.resolved_marks
+        ):
+            raise ValueError("resolved marks must have unique Instrument identity")
         if not isinstance(self.currency_valuation_graph, CurrencyValuationGraph):
             raise TypeError("currency_valuation_graph must be CurrencyValuationGraph")
         if not isinstance(self.reporting_currency, CurrencyId):
@@ -618,8 +629,8 @@ class ResolvedDecisionSnapshotRefreshPlanV1:
 class ResolvedPortfolioDecisionCycleV2(ResolvedDecisionCycle):
     """Additive portfolio cycle carrying current-state and cancellation plans."""
 
+    snapshot_refresh_plan: ResolvedDecisionSnapshotRefreshPlanV1
     cancellation_plans: tuple[ResolvedOrderCancellationPlanV1, ...] = ()
-    snapshot_refresh_plan: ResolvedDecisionSnapshotRefreshPlanV1 | None = None
 
     def __post_init__(self) -> None:
         super(ResolvedPortfolioDecisionCycleV2, self).__post_init__()
@@ -643,11 +654,11 @@ class ResolvedPortfolioDecisionCycleV2(ResolvedDecisionCycle):
             raise ValueError("cancellation plans must have unique Order IDs")
         if len(set(event_ids)) != len(event_ids):
             raise ValueError("cancellation plans must have unique event IDs")
-        if self.snapshot_refresh_plan is not None and not isinstance(
+        if not isinstance(
             self.snapshot_refresh_plan, ResolvedDecisionSnapshotRefreshPlanV1
         ):
             raise TypeError(
-                "snapshot_refresh_plan must be ResolvedDecisionSnapshotRefreshPlanV1 or None"
+                "snapshot_refresh_plan must be ResolvedDecisionSnapshotRefreshPlanV1"
             )
         object.__setattr__(
             self,
@@ -660,8 +671,7 @@ class ResolvedPortfolioDecisionCycleV2(ResolvedDecisionCycle):
         payload["type"] = "resolved_portfolio_decision_cycle_v2"
         payload["schema_version"] = 2
         payload["cancellation_plans"] = self.cancellation_plans
-        if self.snapshot_refresh_plan is not None:
-            payload["snapshot_refresh_plan"] = self.snapshot_refresh_plan
+        payload["snapshot_refresh_plan"] = self.snapshot_refresh_plan
         return payload
 
 
@@ -2449,8 +2459,6 @@ class DeterministicBarEngine:
         if not isinstance(cycle, ResolvedPortfolioDecisionCycleV2):
             return None
         plan = cycle.snapshot_refresh_plan
-        if plan is None:
-            return None
         if (
             plan.decision_ordinal != decision_ordinal
             or plan.occurred_at.instant != cycle.schedule.decision_time
@@ -2479,19 +2487,21 @@ class DeterministicBarEngine:
                 OrderStatus.REJECTED,
             }
         )
-        refresh_input = PortfolioSnapshotRefreshInputV1(
-            ledger_state=state.ledger_state,
-            position_lot_books=_lot_state(state.lot_books),
-            settlement_state=state.settlement_state,
-            reservation_state=state.reservation_state,
-            working_orders=working_orders,
-            resolved_marks=plan.resolved_marks,
-            currency_valuation_graph=plan.currency_valuation_graph,
-            reporting_currency=plan.reporting_currency,
-            quantization_policy=plan.quantization_policy,
-            timestamp=plan.occurred_at.instant,
-        )
         try:
+            refresh_input = PortfolioSnapshotRefreshInputV1(
+                ledger_state=state.ledger_state,
+                position_lot_books=_lot_state(
+                    {key: lots for key, lots in state.lot_books.items() if lots}
+                ),
+                settlement_state=state.settlement_state,
+                reservation_state=state.reservation_state,
+                working_orders=working_orders,
+                resolved_marks=plan.resolved_marks,
+                currency_valuation_graph=plan.currency_valuation_graph,
+                reporting_currency=plan.reporting_currency,
+                quantization_policy=plan.quantization_policy,
+                timestamp=plan.occurred_at.instant,
+            )
             snapshot = PortfolioSnapshotRefresherV1(plan.policy).refresh(refresh_input)
         except (TypeError, ValueError) as error:
             return self._failed(
@@ -2499,7 +2509,7 @@ class DeterministicBarEngine:
                 state,
                 EngineFailureCode.SNAPSHOT_PROJECTION_FAILURE,
                 (plan.source_event_id, type(error).__name__),
-                (refresh_input.input_hash, plan.plan_hash),
+                (plan.plan_hash,),
             )
         payload = _DecisionSnapshotArtifactPayloadV1(
             decision_ordinal=decision_ordinal,

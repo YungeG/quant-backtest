@@ -8,6 +8,7 @@ from crypto_quant_backtest import (
     EngineFailureCode,
     EngineStage,
     NoEligibleBarAction,
+    ResolvedDecisionSnapshotRefreshPlanV1,
     ResolvedOrderCancellationPlanV1,
     ResolvedOrderTerminalPlanV1,
     ResolvedPortfolioBarExecutionV2,
@@ -21,7 +22,10 @@ from crypto_quant_domain import (
     Money,
     OrderEventType,
     OrderStatus,
+    PricePurpose,
+    QuantizationPolicy,
     Quantity,
+    RoundingPolicy,
     SimulationInstant,
     SourceSequence,
     TimelinePhase,
@@ -30,12 +34,14 @@ from crypto_quant_domain import (
 )
 from crypto_quant_trading import (
     AvailabilityProjection,
+    CurrencyValuationGraph,
     GenericLedger,
     OrderCapabilitySet,
     OrderReservationSchedule,
     OrderReservationUpdate,
     PortfolioAllocator,
     PortfolioRiskEvaluator,
+    PortfolioSnapshotRefreshPolicyV1,
     PortfolioValueKind,
     PositionSizer,
     RebalanceCoordinator,
@@ -141,6 +147,31 @@ def _working_case():
         reservation_schedules=(schedule,),
     )
     cycle = admitted_case.decision_cycles[0]
+    refresh_plan = ResolvedDecisionSnapshotRefreshPlanV1(
+        decision_ordinal=0,
+        occurred_at=SimulationInstant(
+            cycle.schedule.decision_time,
+            TimelinePhase(30, "decision_snapshot"),
+            SourceSequence(0),
+        ),
+        policy=PortfolioSnapshotRefreshPolicyV1(
+            policy_key="equity.cn_a_share.portfolio.snapshot-refresh.v1",
+            policy_version=1,
+            price_purpose=PricePurpose.VALUATION,
+        ),
+        resolved_marks=(),
+        currency_valuation_graph=CurrencyValuationGraph(
+            valuation_at=cycle.schedule.decision_time,
+            price_purpose=PricePurpose.VALUATION,
+            edges=(),
+        ),
+        reporting_currency=admitted_case.snapshot_plan.reporting_currency,
+        quantization_policy=QuantizationPolicy(
+            version="phase1.snapshot-refresh-test.v1",
+            target_scale=admitted_case.snapshot_plan.reporting_scale,
+            rounding=RoundingPolicy.HALF_EVEN,
+        ),
+    )
     portfolio_cycle = ResolvedPortfolioDecisionCycleV2(
         schedule=cycle.schedule,
         allocations=cycle.allocations,
@@ -152,6 +183,7 @@ def _working_case():
         rebalance_policy=cycle.rebalance_policy,
         planning_at=UtcInstant(130),
         admissions=(),
+        snapshot_refresh_plan=refresh_plan,
         cancellation_plans=(),
     )
     return (

@@ -2,8 +2,11 @@ from __future__ import annotations
 
 from dataclasses import replace
 
+import pytest
+
 from crypto_quant_backtest import (
     DeterministicBarEngine,
+    EngineFailureCode,
     EngineStage,
     PrecomputedTargetStream,
     ResolvedDecisionSnapshotRefreshPlanV1,
@@ -25,16 +28,122 @@ from crypto_quant_trading import (
     PortfolioSnapshotRefreshInputV1,
     PortfolioSnapshotRefresherV1,
     PortfolioSnapshotRefreshPolicyV1,
+    ResourceReservationBook,
 )
 
 from tests.runtime.engine._fixtures import (
     MONEY_SCALE,
+    TARGET_TIME,
     bar_event,
     execution_case,
     target_event,
     target_payload,
     valuation_mark,
 )
+
+
+def _refresh_plan(*, marks=(), decision_time=TARGET_TIME, ordinal=0):
+    case = execution_case()
+    position_quantization = next(
+        value.quantization_policy
+        for value in case.snapshot_plan.valuations
+        if value.quantization_policy is not None
+    )
+    return ResolvedDecisionSnapshotRefreshPlanV1(
+        decision_ordinal=ordinal,
+        occurred_at=SimulationInstant(
+            decision_time,
+            TimelinePhase(30, "decision_snapshot"),
+            SourceSequence(0),
+        ),
+        policy=PortfolioSnapshotRefreshPolicyV1(
+            policy_key="equity.cn_a_share.portfolio.snapshot-refresh.v1",
+            policy_version=1,
+            price_purpose=PricePurpose.VALUATION,
+        ),
+        resolved_marks=marks,
+        currency_valuation_graph=CurrencyValuationGraph(
+            valuation_at=decision_time,
+            price_purpose=PricePurpose.VALUATION,
+            edges=(),
+        ),
+        reporting_currency=case.snapshot_plan.reporting_currency,
+        quantization_policy=QuantizationPolicy(
+            version="decision-snapshot.validation-fixture.v1",
+            target_scale=MONEY_SCALE,
+            rounding=position_quantization.rounding,
+        ),
+    )
+
+
+def test_v2_cycle_requires_snapshot_refresh_plan() -> None:
+    cycle = execution_case().decision_cycles[0]
+
+    with pytest.raises(TypeError, match="snapshot_refresh_plan"):
+        ResolvedPortfolioDecisionCycleV2(
+            schedule=cycle.schedule,
+            allocations=cycle.allocations,
+            target_notional_scale=cycle.target_notional_scale,
+            risk_policy=cycle.risk_policy,
+            sizing_policy=cycle.sizing_policy,
+            sizing_inputs=cycle.sizing_inputs,
+            target_validity=cycle.target_validity,
+            rebalance_policy=cycle.rebalance_policy,
+            planning_at=cycle.planning_at,
+            admissions=cycle.admissions,
+            snapshot_refresh_plan=None,
+        )
+
+
+@pytest.mark.parametrize(
+    "marks",
+    (
+        (valuation_mark(resolved_at=UtcInstant(99)),),
+        (
+            replace(
+                valuation_mark(),
+                price_purpose=PricePurpose.EXECUTION_REFERENCE,
+            ),
+        ),
+        (valuation_mark(), valuation_mark()),
+    ),
+)
+def test_refresh_plan_rejects_non_authoritative_mark_sets(marks) -> None:
+    with pytest.raises(ValueError, match="resolved marks"):
+        _refresh_plan(marks=marks)
+
+
+def test_input_construction_failure_is_structured_and_atomic() -> None:
+    case = execution_case()
+    cycle = case.decision_cycles[0]
+    portfolio_cycle = ResolvedPortfolioDecisionCycleV2(
+        schedule=cycle.schedule,
+        allocations=cycle.allocations,
+        target_notional_scale=cycle.target_notional_scale,
+        risk_policy=cycle.risk_policy,
+        sizing_policy=cycle.sizing_policy,
+        sizing_inputs=cycle.sizing_inputs,
+        target_validity=cycle.target_validity,
+        rebalance_policy=cycle.rebalance_policy,
+        planning_at=cycle.planning_at,
+        admissions=cycle.admissions,
+        snapshot_refresh_plan=_refresh_plan(),
+    )
+    engine = DeterministicBarEngine()
+    state = engine._initial_state(case)
+    state.reservation_state = ResourceReservationBook("account:wrong").project((), ())
+    snapshot = state.snapshot
+    artifacts = tuple(state.financial_artifacts)
+
+    outcome = engine._refresh_decision_snapshot(
+        case, state, portfolio_cycle, decision_ordinal=0
+    )
+
+    assert outcome is not None
+    assert outcome.engine_failure is not None
+    assert outcome.engine_failure.code is EngineFailureCode.SNAPSHOT_PROJECTION_FAILURE
+    assert state.snapshot is snapshot
+    assert tuple(state.financial_artifacts) == artifacts
 
 
 def test_second_decision_refreshes_current_financial_and_resource_state() -> None:
