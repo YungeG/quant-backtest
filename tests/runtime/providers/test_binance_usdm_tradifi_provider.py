@@ -59,7 +59,7 @@ def _prepare(bundle, parameter_index: int = 0, store=None):
     )
 
 
-def _raw_scale8_six_fill_bundle():
+def _raw_scale8_six_fill_bundle(entry_close: str = "18.10000001"):
     utc_date = "2026-07-17"
     start = source_fixture._day_start_ms(utc_date) * 1_000_000
     end = start + 240 * target_fixture._HOUR_NS
@@ -68,16 +68,16 @@ def _raw_scale8_six_fill_bundle():
             start // 1_000_000
             + hour * target_fixture._HOUR_MS
             + 5 * 60_000,
-            "100.00000000",
+            "18.28000000",
         )
         for hour in range(240)
     )
     request = source_fixture._request(trades, start_ns=start, end_ns=end)
     prices = {
-        "open_price": "100.00000001",
-        "high_price": "101.00000001",
-        "low_price": "99.00000001",
-        "close_price": "100.00000001",
+        "open_price": "18.28000001",
+        "high_price": "18.50000001",
+        "low_price": "18.00000001",
+        "close_price": "18.28000001",
     }
 
     price_dates = tuple(
@@ -95,7 +95,7 @@ def _raw_scale8_six_fill_bundle():
             target_fixture._price_result(
                 source_kind,
                 date,
-                {2: "99.50000001", 22: "99.50000001"}
+                {2: entry_close, 22: entry_close}
                 if date in (utc_date, "2026-07-18", "2026-07-24", "2026-07-25")
                 else {},
                 **prices,
@@ -125,6 +125,22 @@ def _raw_scale8_six_fill_bundle():
         funding_mark_price="20.00000001",
     )
     return fixture.bundle_v2_fixture._build(source)
+
+
+def test_public_v2_raw_scale8_short_batches_reach_engine() -> None:
+    prepared = _prepare(_raw_scale8_six_fill_bundle("18.40000001"))
+
+    assert prepared.failure is None and prepared.result is not None
+    case = prepared.result.execution_case
+    assert tuple(
+        cycle.admissions[0].order.intent.side.value for cycle in case.decision_cycles
+    ) == ("sell", "buy", "sell", "buy", "sell", "buy")
+
+    executed = DeterministicBarEngine().run(case)
+
+    assert executed.engine_failure is None, executed.engine_failure
+    assert executed.result is not None
+    assert executed.result.final_portfolio_snapshot.positions == ()
 
 
 def test_public_v2_raw_scale8_six_fills_with_interior_funding_reaches_engine() -> None:

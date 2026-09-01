@@ -192,3 +192,9 @@ def test_schema7_batch_missing_checkpoint_binding_fails_closed(schema7_case) -> 
     assert outcome.result is None
     assert outcome.engine_failure is not None
     assert outcome.engine_failure.code is EngineFailureCode.FINANCIAL_DISPATCH_FAILURE
+    assert set(outcome.engine_failure.subject_keys) == {
+        "profile_component_failure",
+        "batch_checkpoint_binding_missing",
+        child.plan.role_suffix,
+        "start",
+    }

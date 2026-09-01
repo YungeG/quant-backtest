@@ -835,8 +835,7 @@ def _margin_audits(
     intervals = _position_intervals(rows, result.intent.timeline_window.end_exclusive)
     events_at = {
         event.timeline_instant.instant: event.timeline_instant
-        for manifest in result.market_bundle_manifest.streams
-        for event in _events(result, manifest.stream_key)
+        for event in _events(result, _LIQUIDATION_STREAM)
     }
     output: list[ScheduledAccountEvent] = []
     for event in _events(result, _LIQUIDATION_STREAM):

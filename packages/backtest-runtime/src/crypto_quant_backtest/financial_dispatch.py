@@ -2309,14 +2309,28 @@ class BinanceUsdmTradifiLinearFinancialDispatcher:
             return _failure(self.spec, event.event_id, input_hash, FinancialDispatchFailureCode.EVENT_PLAN_MISMATCH, "margin_liquidation_batch_authority")
         checkpoints = state.checkpoints
         if checkpoints is None:
-            raise ValueError("batch checkpoint map is missing")
+            return _failure(
+                self.spec,
+                event.event_id,
+                input_hash,
+                FinancialDispatchFailureCode.PROFILE_COMPONENT_FAILURE,
+                "batch_checkpoint_map_missing",
+            )
         artifacts: list[FinancialDispatchArtifact] = []
         # Each child is evaluated through the old authority path; append only after all succeed.
         for child in payload.subwindows:
             start = checkpoints.get((child.start_checkpoint, child.start_side))
             end = checkpoints.get((child.end_checkpoint, child.end_side))
             if start is None or end is None:
-                raise ValueError("batch checkpoint binding is missing")
+                return _failure(
+                    self.spec,
+                    event.event_id,
+                    input_hash,
+                    FinancialDispatchFailureCode.PROFILE_COMPONENT_FAILURE,
+                    "batch_checkpoint_binding_missing",
+                    child.plan.role_suffix,
+                    "start" if start is None else "end",
+                )
             view = FinancialStateView(end.journal, end.ledger_state, end.reservation_state,
                 end.position_lot_books, end.artifacts,
                 window_start_journal_hash=start.journal.journal_hash,
@@ -2327,9 +2341,29 @@ class BinanceUsdmTradifiLinearFinancialDispatcher:
             single = ScheduledAccountEvent(event.event_id, event.event_at, "margin_liquidation_audit",
                 tuple(sorted((self.spec.margin_component.component_key, self.spec.liquidation_audit_component.component_key))), (), child.plan,
                 child.plan.production_semantic_authority(), tuple(sorted((f"margin_projection.{child.plan.role_suffix}", f"liquidation_audit.{child.plan.role_suffix}"))))
-            outcome = self._margin_audit(single, view, input_hash)
-            if outcome.failure is not None or outcome.result is None:
-                raise ValueError("batch child audit failed")
+            try:
+                outcome = self._margin_audit(single, view, input_hash)
+            except (TypeError, ValueError) as error:
+                return _failure(
+                    self.spec,
+                    event.event_id,
+                    input_hash,
+                    FinancialDispatchFailureCode.PROFILE_COMPONENT_FAILURE,
+                    "batch_child_exception",
+                    child.plan.role_suffix,
+                    str(error),
+                )
+            if outcome.failure is not None:
+                return outcome
+            if outcome.result is None:
+                return _failure(
+                    self.spec,
+                    event.event_id,
+                    input_hash,
+                    FinancialDispatchFailureCode.PROFILE_COMPONENT_FAILURE,
+                    "batch_child_result_missing",
+                    child.plan.role_suffix,
+                )
             artifacts.extend(outcome.result.artifacts)
         return FinancialDispatchOutcome(self.spec, input_hash, result=FinancialDispatchResult(self.spec, event.event_id, (), state.position_lot_books, _ordered_artifacts(event.expected_artifact_roles, tuple(artifacts))))
 
