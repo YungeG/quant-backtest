@@ -50,6 +50,18 @@ class PortfolioCancelReplaceV1:
                 raise TypeError("cancel-replace Order IDs must be ORDER DomainId")
         if self.cancelled_order_id == self.replacement_order_id:
             raise ValueError("replacement requires a new Order identity")
+        if not self.cancel_intent_id or not self.cancel_intent_id.startswith(
+            "cancel-intent-v1:sha256:"
+        ):
+            raise ValueError("cancel_intent_id must be canonical identity")
+        for name in (
+            "prior_working_order_stream_hash",
+            "replacement_sizing_identity_hash",
+            "source_target_hash",
+        ):
+            value = getattr(self, name)
+            if not isinstance(value, str) or not value.startswith("sha256:"):
+                raise ValueError(f"{name} must be sha256 identity")
         if self.link_hash != canonical_sha256(self._body()):
             raise ValueError("link_hash mismatch")
 
@@ -253,6 +265,54 @@ class PortfolioOrderPlanV2:
     def __post_init__(self) -> None:
         if self.schema_version != 1:
             raise ValueError("schema_version must be 1")
+        cancellations = tuple(sorted(self.cancellation_intents, key=lambda value: (canonical_bytes(value.instrument_id), value.order_id.value)))
+        orders = tuple(sorted(self.planned_orders, key=lambda value: (value.side_rank, canonical_bytes(value.instrument_id), value.sizing_evidence.identity.preallocated_order_id.value)))
+        links = tuple(sorted(self.cancel_replacements, key=lambda value: (canonical_bytes(value.instrument_id), value.cancelled_order_id.value, value.replacement_order_id.value)))
+        omissions = tuple(sorted(self.omission_evidence_hashes))
+        if (
+            self.cancellation_intents != cancellations
+            or self.planned_orders != orders
+            or self.cancel_replacements != links
+            or self.omission_evidence_hashes != omissions
+        ):
+            raise ValueError("portfolio Order plan tuples must be canonical order")
+        cancel_by_id = {value.order_id: value for value in cancellations}
+        order_by_id = {value.sizing_evidence.identity.preallocated_order_id: value for value in orders}
+        if len(cancel_by_id) != len(cancellations) or len(order_by_id) != len(orders):
+            raise ValueError("duplicate cancellation or replacement Order identity")
+        linked_cancel: set[DomainId] = set()
+        linked_replace: set[DomainId] = set()
+        for link in links:
+            cancellation = cancel_by_id.get(link.cancelled_order_id)
+            replacement = order_by_id.get(link.replacement_order_id)
+            if (
+                cancellation is None
+                or replacement is None
+                or cancellation.cancel_intent_id != link.cancel_intent_id
+                or cancellation.instrument_id != link.instrument_id
+                or replacement.instrument_id != link.instrument_id
+                or replacement.sizing_evidence.identity.identity_hash
+                != link.replacement_sizing_identity_hash
+                or replacement.sizing_evidence.identity.source_target_hash
+                != link.source_target_hash
+                or link.source_target_hash != self.source_normalized_target_hash
+                or link.cancelled_order_id in linked_cancel
+                or link.replacement_order_id in linked_replace
+            ):
+                raise ValueError("cancel-replace exact-cover mismatch")
+            linked_cancel.add(link.cancelled_order_id)
+            linked_replace.add(link.replacement_order_id)
+        cancel_instruments = {value.instrument_id: value.order_id for value in cancellations}
+        order_instruments = {value.instrument_id: value.sizing_evidence.identity.preallocated_order_id for value in orders}
+        for instrument_id in set(cancel_instruments) & set(order_instruments):
+            if cancel_instruments[instrument_id] not in linked_cancel or order_instruments[instrument_id] not in linked_replace:
+                raise ValueError("same-instrument cancel and replacement requires link")
+        if any(value.normalized_target_id != self.source_normalized_target_id for value in cancellations) or any(
+            value.sizing_evidence.identity.source_target_hash
+            != self.source_normalized_target_hash
+            for value in orders
+        ):
+            raise ValueError("portfolio Order plan source target mismatch")
         body = {
             "schema_version": self.schema_version,
             "source_normalized_target_id": self.source_normalized_target_id,

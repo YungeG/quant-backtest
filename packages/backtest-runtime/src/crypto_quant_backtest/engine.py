@@ -765,6 +765,26 @@ class ResolvedPortfolioDecisionCycleV2(ResolvedDecisionCycle):
             value.link_hash: value
             for value in self.portfolio_order_plan.cancel_replacements
         }
+        replacement_ids = tuple(
+            value.replacement_order_id for value in self.replacement_admissions
+        )
+        replacement_event_ids = tuple(
+            event.event_id
+            for value in self.replacement_admissions
+            for event in value.admission.event_plan
+        )
+        if len(set(replacement_ids)) != len(replacement_ids):
+            raise ValueError("duplicate replacement admission Order identity")
+        if len(set(replacement_event_ids)) != len(replacement_event_ids):
+            raise ValueError("duplicate replacement admission Event identity")
+        if set(replacement_ids) != {
+            value.replacement_order_id
+            for value in self.portfolio_order_plan.cancel_replacements
+        }:
+            raise ValueError("replacement_admissions must exact-cover cancel-replace links")
+        ordinary_ids = {value.order.order_id for value in self.admissions}
+        if ordinary_ids & set(replacement_ids):
+            raise ValueError("ordinary and replacement admissions must be disjoint")
         for value in self.replacement_admissions:
             link = link_by_hash.get(value.cancel_replace_hash)
             if (
@@ -1584,16 +1604,28 @@ class ResolvedExecutionCase:
             if isinstance(execution, ResolvedPortfolioBarExecutionV2)
             and execution.terminal_plan is not None
         )
+        replacement_admissions = tuple(
+            value.admission
+            for cycle in self.decision_cycles
+            if isinstance(cycle, ResolvedPortfolioDecisionCycleV2)
+            for value in cycle.replacement_admissions
+        )
         existing_order_event_ids = tuple(
             event_plan.event_id
             for cycle in self.decision_cycles
             for admission in cycle.admissions
             for event_plan in admission.event_plan
         ) + tuple(
+            event_plan.event_id
+            for admission in replacement_admissions
+            for event_plan in admission.event_plan
+        ) + tuple(
             record.event.event_id
             for stream in self.financial_state.order_streams
             for record in stream.records
         ) + tuple(value.fill_event_id for value in self.bar_executions)
+        if len(set(existing_order_event_ids)) != len(existing_order_event_ids):
+            raise ValueError("resolved admission Event IDs must be globally unique")
         if len(set(lifecycle_event_ids)) != len(lifecycle_event_ids) or set(
             lifecycle_event_ids
         ) & set(existing_order_event_ids):
@@ -1602,6 +1634,9 @@ class ResolvedExecutionCase:
             admission.order.order_id.value
             for cycle in self.decision_cycles
             for admission in cycle.admissions
+        ) + tuple(
+            admission.order.order_id.value
+            for admission in replacement_admissions
         ) + tuple(
             admission.order.order_id.value
             for admission in self.financial_state.order_admissions
@@ -1705,6 +1740,19 @@ class ResolvedExecutionCase:
                         f"order-event.{cycle_index}.{admission_index}.{event_index}"
                     ] = (event_plan.event_id, None)
             if isinstance(cycle, ResolvedPortfolioDecisionCycleV2):
+                for replacement_index, replacement in enumerate(
+                    cycle.replacement_admissions
+                ):
+                    expected[f"order.replacement.{cycle_index}.{replacement_index}"] = (
+                        replacement.replacement_order_id.value,
+                        DomainIdKind.ORDER,
+                    )
+                    for event_index, event_plan in enumerate(
+                        replacement.admission.event_plan
+                    ):
+                        expected[
+                            f"order-event.replacement.{cycle_index}.{replacement_index}.{event_index}"
+                        ] = (event_plan.event_id, None)
                 for cancellation_index, cancellation in enumerate(
                     cycle.cancellation_plans
                 ):
@@ -3140,12 +3188,24 @@ class DeterministicBarEngine:
             value.sizing_evidence.identity.preallocated_order_id
             for value in cycle.portfolio_order_plan.planned_orders
         }
-        if planned_ids != set(replacement_by_order) | set(ordinary_by_order):
+        linked_ids = {
+            value.replacement_order_id
+            for value in cycle.portfolio_order_plan.cancel_replacements
+        }
+        if (
+            set(replacement_by_order) != linked_ids
+            or set(ordinary_by_order) != planned_ids - linked_ids
+            or set(replacement_by_order) & set(ordinary_by_order)
+        ):
             return self._failed(
                 case,
                 local,
                 EngineFailureCode.ORDER_PLAN_MISMATCH,
-                tuple(value.value for value in planned_ids ^ (set(replacement_by_order) | set(ordinary_by_order))),
+                tuple(
+                    value.value
+                    for value in planned_ids
+                    ^ (set(replacement_by_order) | set(ordinary_by_order))
+                ) or ("replacement_admission_exact_cover",),
             )
         for planned in cycle.portfolio_order_plan.planned_orders:
             order_id = planned.sizing_evidence.identity.preallocated_order_id
@@ -3161,6 +3221,15 @@ class DeterministicBarEngine:
                 failure = self._admit_order(case, local, ordinary_by_order[order_id])
             if failure is not None:
                 return failure
+            try:
+                self._refresh_resources(case, local)
+            except (TypeError, ValueError) as error:
+                return self._failed(
+                    case,
+                    local,
+                    EngineFailureCode.PRETRADE_REJECTED,
+                    ("cumulative_portfolio_resources", type(error).__name__),
+                )
 
         link_by_replacement = {
             value.replacement_order_id: value
@@ -3180,7 +3249,25 @@ class DeterministicBarEngine:
                 or link.link_hash != replacement.cancel_replace_hash
             ):
                 return self._failed(case, local, EngineFailureCode.CASE_EVIDENCE_MISMATCH, (replacement_order_id.value,), (canonical_sha256(causation), link.link_hash))
-        self._refresh_resources(case, local)
+        try:
+            self._refresh_resources(case, local)
+            ResourceReservationBook(case.financial_state.initial_snapshot.account_id).project(
+                tuple(local.order_streams.values()),
+                tuple(local.reservation_schedules.values()),
+            )
+            AvailabilityProjection().project(
+                local.ledger_state,
+                local.settlement_state,
+                local.reservation_state,
+                case.financial_state.settlement_rules,
+            )
+        except (TypeError, ValueError) as error:
+            return self._failed(
+                case,
+                local,
+                EngineFailureCode.PRETRADE_REJECTED,
+                ("final_portfolio_resources", type(error).__name__),
+            )
         if cycle.portfolio_order_plan.cancellation_intents:
             latest = max(
                 cycle.cancellation_plans, key=lambda value: value.cancelled_at
