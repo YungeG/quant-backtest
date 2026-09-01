@@ -41,6 +41,7 @@ from crypto_quant_trading import (
     OrderReservationUpdate,
     PortfolioAllocator,
     PortfolioRiskEvaluator,
+    PortfolioRebalanceExecutionPolicyV1,
     PortfolioSnapshotRefreshPolicyV1,
     PortfolioValueKind,
     PositionSizer,
@@ -184,6 +185,9 @@ def _working_case():
         planning_at=UtcInstant(130),
         admissions=(),
         snapshot_refresh_plan=refresh_plan,
+        portfolio_rebalance_policy=PortfolioRebalanceExecutionPolicyV1(
+            "equity.cn_a_share.portfolio.rebalance-execution.v1", 1
+        ),
         cancellation_plans=(),
     )
     return (
@@ -526,6 +530,50 @@ def test_gtc_no_fill_remains_active_and_reserved() -> None:
     assert EngineStage.ORDER_EXPIRED not in {
         entry.stage for entry in result.trace.entries
     }
+
+
+def test_cycle_materialization_maps_resolved_cancellations_first() -> None:
+    case, stream, _, schedule = _working_case()
+    target_plan = _expired_target_plan(case, stream, schedule)
+    cancel_intent = target_plan.cancel_intents[0]
+    cancellation = ResolvedOrderCancellationPlanV1(
+        order_id=stream.order.order_id,
+        cancel_requested_event_id="engine-order:materialize-cancel-requested",
+        cancel_requested_at=SimulationInstant(
+            TARGET_TIME,
+            TimelinePhase(90, "order_cancel_requested"),
+            SourceSequence(1),
+        ),
+        cancelled_event_id="engine-order:materialize-cancelled",
+        cancelled_at=SimulationInstant(
+            TARGET_TIME,
+            TimelinePhase(91, "order_cancelled"),
+            SourceSequence(1),
+        ),
+        reason_code=cancel_intent.reason_code,
+        source_target_hash=target_plan.based_on_normalized_target_hash,
+    )
+    cycle = replace(
+        case.decision_cycles[0],
+        planning_at=UtcInstant(260),
+        cancellation_plans=(cancellation,),
+    )
+    state = DeterministicBarEngine()._initial_state(case)
+    cash = state.availability.cash[0]
+    zero = Money(0, cash.tradable.scale, cash.tradable.currency)
+
+    _, plan = cycle.materialize_portfolio_plans(
+        cash_availability=cash,
+        active_cash_reservations=zero,
+        active_fee_reservations=zero,
+        working_orders=tuple(state.order_streams.values()),
+    )
+
+    assert len(plan.cancellations) == 1
+    assert plan.cancellations[0].order_id == cancellation.order_id
+    assert plan.cancellations[0].cancel_intent_id == cancel_intent.cancel_intent_id
+    assert plan.cancellations[0].reason_code == cancellation.reason_code
+    assert tuple(value.stage_rank for value in plan.stages) == (90,)
 
 
 def test_target_cancellation_emits_ordered_events_and_releases_resources() -> None:

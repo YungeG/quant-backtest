@@ -15,6 +15,7 @@ from crypto_quant_domain import (
     FeeAssessment,
     IdentityNamespace,
     Fill,
+    Money,
     Order,
     OrderEvent,
     OrderEventType,
@@ -40,6 +41,7 @@ from crypto_quant_trading import (
     ApprovedPortfolioTarget,
     AvailabilityProjection,
     AvailabilityState,
+    CancelIntent,
     CashAvailability,
     CappedPortfolioTargetV1,
     ExecutableOrderSpec,
@@ -637,10 +639,9 @@ class ResolvedPortfolioDecisionCycleV2(ResolvedDecisionCycle):
     """Additive portfolio cycle carrying current-state and cancellation plans."""
 
     snapshot_refresh_plan: ResolvedDecisionSnapshotRefreshPlanV1
+    portfolio_rebalance_policy: PortfolioRebalanceExecutionPolicyV1
     cancellation_plans: tuple[ResolvedOrderCancellationPlanV1, ...] = ()
     portfolio_sizing_candidates: tuple[PortfolioSizingCandidateV1, ...] = ()
-    portfolio_cash_availability: CashAvailability | None = None
-    portfolio_rebalance_policy: PortfolioRebalanceExecutionPolicyV1 | None = None
 
     def __post_init__(self) -> None:
         super(ResolvedPortfolioDecisionCycleV2, self).__post_init__()
@@ -680,23 +681,18 @@ class ResolvedPortfolioDecisionCycleV2(ResolvedDecisionCycle):
             for value in self.portfolio_sizing_candidates
         ):
             raise TypeError("portfolio_sizing_candidates contains invalid values")
-        configured = (
-            bool(self.portfolio_sizing_candidates),
-            self.portfolio_cash_availability is not None,
-            self.portfolio_rebalance_policy is not None,
-        )
-        if any(configured) and not all(configured):
-            raise ValueError("portfolio sizing configuration must be exact-cover")
-        if self.portfolio_cash_availability is not None and not isinstance(
-            self.portfolio_cash_availability, CashAvailability
-        ):
-            raise TypeError("portfolio_cash_availability must be CashAvailability")
-        if self.portfolio_rebalance_policy is not None and not isinstance(
+        if not isinstance(
             self.portfolio_rebalance_policy, PortfolioRebalanceExecutionPolicyV1
         ):
             raise TypeError(
                 "portfolio_rebalance_policy must be PortfolioRebalanceExecutionPolicyV1"
             )
+        if any(
+            value.identity.source_target_hash
+            != self.target_validity.normalized_target_hash
+            for value in self.portfolio_sizing_candidates
+        ):
+            raise ValueError("portfolio sizing candidate target hash mismatch")
         object.__setattr__(
             self,
             "portfolio_sizing_candidates",
@@ -710,22 +706,52 @@ class ResolvedPortfolioDecisionCycleV2(ResolvedDecisionCycle):
 
     def materialize_portfolio_plans(
         self,
+        *,
+        cash_availability: CashAvailability,
+        active_cash_reservations: Money,
+        active_fee_reservations: Money,
+        working_orders: tuple[OrderEventStream, ...],
     ) -> tuple[CappedPortfolioTargetV1, PortfolioRebalancePlanV1]:
-        if (
-            not self.portfolio_sizing_candidates
-            or self.portfolio_cash_availability is None
-            or self.portfolio_rebalance_policy is None
-        ):
-            raise ValueError("portfolio sizing configuration is absent")
         capped = PortfolioOrderSizerV1().size(
             source_target_hash=self.target_validity.normalized_target_hash,
             candidates=self.portfolio_sizing_candidates,
-            cash_availability=self.portfolio_cash_availability,
+            cash_availability=cash_availability,
+            active_cash_reservations=active_cash_reservations,
+            active_fee_reservations=active_fee_reservations,
         )
+        streams_by_order = {
+            stream.order.order_id: stream for stream in working_orders
+        }
+        cancellations: list[CancelIntent] = []
+        for resolved in self.cancellation_plans:
+            stream = streams_by_order.get(resolved.order_id)
+            if stream is None:
+                raise ValueError("cancellation plan source stream is missing")
+            identity = {
+                "type": "cancel_intent_identity",
+                "schema_version": 1,
+                "order_id": resolved.order_id,
+                "stream_hash": stream.stream_hash,
+                "instrument_id": stream.order.intent.instrument_id,
+                "reason_code": resolved.reason_code,
+                "normalized_target_id": self.target_validity.normalized_target_id,
+            }
+            cancellations.append(
+                CancelIntent(
+                    cancel_intent_id=(
+                        f"cancel-intent-v1:{canonical_sha256(identity)}"
+                    ),
+                    order_id=resolved.order_id,
+                    instrument_id=stream.order.intent.instrument_id,
+                    reason_code=resolved.reason_code,
+                    normalized_target_id=self.target_validity.normalized_target_id,
+                )
+            )
         return capped, PortfolioRebalanceCoordinatorV2().coordinate(
             capped_target=capped,
             policy=self.portfolio_rebalance_policy,
             created_at=self.planning_at,
+            cancellations=tuple(cancellations),
         )
 
     def to_canonical_dict(self) -> dict[str, object]:
@@ -734,10 +760,9 @@ class ResolvedPortfolioDecisionCycleV2(ResolvedDecisionCycle):
         payload["schema_version"] = 2
         payload["cancellation_plans"] = self.cancellation_plans
         payload["snapshot_refresh_plan"] = self.snapshot_refresh_plan
+        payload["portfolio_rebalance_policy"] = self.portfolio_rebalance_policy
         if self.portfolio_sizing_candidates:
             payload["portfolio_sizing_candidates"] = self.portfolio_sizing_candidates
-            payload["portfolio_cash_availability"] = self.portfolio_cash_availability
-            payload["portfolio_rebalance_policy"] = self.portfolio_rebalance_policy
         return payload
 
 
@@ -1638,6 +1663,8 @@ class EngineStage(str, Enum):
     CAPITAL_ALLOCATION = "capital_allocation"
     PORTFOLIO_RISK = "portfolio_risk"
     POSITION_SIZING = "position_sizing"
+    PORTFOLIO_ORDER_SIZING = "portfolio_order_sizing"
+    PORTFOLIO_REBALANCE_PLAN = "portfolio_rebalance_plan"
     ORDER_PLAN = "order_plan"
     DECISION_SNAPSHOT = "decision_snapshot"
     ORDER_CAPABILITY = "order_capability"
@@ -1993,6 +2020,8 @@ class _EngineState:
     allocations: list[PortfolioAllocation] = field(default_factory=list)
     approved_targets: list[ApprovedPortfolioTarget] = field(default_factory=list)
     normalized_targets: list[NormalizedPortfolioTarget] = field(default_factory=list)
+    capped_portfolio_targets: list[CappedPortfolioTargetV1] = field(default_factory=list)
+    portfolio_rebalance_plans: list[PortfolioRebalancePlanV1] = field(default_factory=list)
     order_plans: list[OrderPlan] = field(default_factory=list)
     fills: list[Fill] = field(default_factory=list)
     slippage_decisions: list[SlippageDecision] = field(default_factory=list)
@@ -2753,6 +2782,79 @@ class DeterministicBarEngine:
             normalized.normalized_target_id,
             normalized.normalized_target_hash,
         )
+
+        if isinstance(cycle, ResolvedPortfolioDecisionCycleV2):
+            currency = (
+                cycle.portfolio_sizing_candidates[0].fee_rule_set.reservation_currency
+                if cycle.portfolio_sizing_candidates
+                else state.availability.cash[0].key.currency_id
+            )
+            matches = tuple(
+                value
+                for value in state.availability.cash
+                if value.key.currency_id == currency
+            )
+            if len(matches) != 1:
+                return self._failed(
+                    case,
+                    state,
+                    EngineFailureCode.POSITION_SIZING,
+                    ("portfolio_cash_availability", str(currency)),
+                )
+            cash_availability = matches[0]
+            zero = Money(
+                0,
+                cash_availability.tradable.scale,
+                cash_availability.tradable.currency,
+            )
+
+            def reserved(values: tuple[Money, ...]) -> Money:
+                selected = tuple(
+                    value
+                    for value in values
+                    if value.currency == zero.currency and value.scale == zero.scale
+                )
+                return Money(
+                    sum(value.units for value in selected),
+                    zero.scale,
+                    zero.currency,
+                )
+
+            try:
+                capped, portfolio_plan = cycle.materialize_portfolio_plans(
+                    cash_availability=cash_availability,
+                    active_cash_reservations=reserved(
+                        state.reservation_state.totals.cash
+                    ),
+                    active_fee_reservations=reserved(
+                        state.reservation_state.totals.fee_reserve
+                    ),
+                    working_orders=tuple(state.order_streams.values()),
+                )
+            except (TypeError, ValueError) as error:
+                return self._failed(
+                    case,
+                    state,
+                    EngineFailureCode.POSITION_SIZING,
+                    ("portfolio_order_sizing", type(error).__name__),
+                    (canonical_sha256({"error_type": type(error).__name__}),),
+                )
+            state.capped_portfolio_targets.append(capped)
+            state.portfolio_rebalance_plans.append(portfolio_plan)
+            self._trace_add(
+                state,
+                EngineStage.PORTFOLIO_ORDER_SIZING,
+                trace_instant,
+                capped.source_target_hash,
+                capped.capped_target_hash,
+            )
+            self._trace_add(
+                state,
+                EngineStage.PORTFOLIO_REBALANCE_PLAN,
+                trace_instant,
+                portfolio_plan.plan_id,
+                portfolio_plan.plan_hash,
+            )
 
         planning_outcome = RebalanceCoordinator().coordinate(
             target=normalized,

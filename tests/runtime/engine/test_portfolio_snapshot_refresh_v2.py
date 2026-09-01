@@ -15,6 +15,7 @@ from crypto_quant_backtest import (
     TimelineSegment,
 )
 from crypto_quant_domain import (
+    OrderSide,
     PricePurpose,
     QuantizationPolicy,
     SimulationInstant,
@@ -25,12 +26,14 @@ from crypto_quant_domain import (
 )
 from crypto_quant_trading import (
     CurrencyValuationGraph,
+    PortfolioRebalanceExecutionPolicyV1,
     PortfolioSnapshotRefreshInputV1,
     PortfolioSnapshotRefresherV1,
     PortfolioSnapshotRefreshPolicyV1,
     ResourceReservationBook,
 )
 
+from tests.kernel.portfolio.test_portfolio_order_sizing import _candidate
 from tests.runtime.engine._fixtures import (
     MONEY_SCALE,
     TARGET_TIME,
@@ -40,6 +43,12 @@ from tests.runtime.engine._fixtures import (
     target_payload,
     valuation_mark,
 )
+
+
+def _portfolio_policy() -> PortfolioRebalanceExecutionPolicyV1:
+    return PortfolioRebalanceExecutionPolicyV1(
+        "equity.cn_a_share.portfolio.rebalance-execution.v1", 1
+    )
 
 
 def _refresh_plan(*, marks=(), decision_time=TARGET_TIME, ordinal=0):
@@ -92,6 +101,7 @@ def test_v2_cycle_requires_snapshot_refresh_plan() -> None:
             planning_at=cycle.planning_at,
             admissions=cycle.admissions,
             snapshot_refresh_plan=None,
+            portfolio_rebalance_policy=_portfolio_policy(),
         )
 
 
@@ -128,6 +138,7 @@ def test_input_construction_failure_is_structured_and_atomic() -> None:
         planning_at=cycle.planning_at,
         admissions=cycle.admissions,
         snapshot_refresh_plan=_refresh_plan(),
+        portfolio_rebalance_policy=_portfolio_policy(),
     )
     engine = DeterministicBarEngine()
     state = engine._initial_state(case)
@@ -271,6 +282,23 @@ def test_second_decision_refreshes_current_financial_and_resource_state() -> Non
         admissions=(),
         cancellation_plans=(),
         snapshot_refresh_plan=refresh_plan,
+        portfolio_rebalance_policy=_portfolio_policy(),
+        portfolio_sizing_candidates=(
+            _candidate(
+                side=OrderSide.SELL,
+                current=5_000,
+                target=0,
+                sellable=5_000,
+                order_digit="8",
+                source_hash=first_cycle.target_validity.normalized_target_hash,
+            ),
+            _candidate(
+                side=OrderSide.BUY,
+                current=0,
+                target=1_000,
+                source_hash=first_cycle.target_validity.normalized_target_hash,
+            ),
+        ),
     )
     case = replace(
         base_case,
@@ -318,3 +346,23 @@ def test_second_decision_refreshes_current_financial_and_resource_state() -> Non
         index for index, stage in enumerate(stages) if stage is EngineStage.CAPITAL_ALLOCATION
     )
     assert refresh_index < allocation_index
+    portfolio_plan = state.portfolio_rebalance_plans[-1]
+    assert tuple(value.intent.side.value for value in portfolio_plan.planned_orders) == (
+        "sell",
+        "buy",
+    )
+    assert tuple(value.stage_rank for value in portfolio_plan.stages) == (100, 110)
+    raw_sizing_index = max(
+        index for index, stage in enumerate(stages) if stage is EngineStage.POSITION_SIZING
+    )
+    capped_index = max(
+        index
+        for index, stage in enumerate(stages)
+        if stage is EngineStage.PORTFOLIO_ORDER_SIZING
+    )
+    plan_index = max(
+        index
+        for index, stage in enumerate(stages)
+        if stage is EngineStage.PORTFOLIO_REBALANCE_PLAN
+    )
+    assert raw_sizing_index < capped_index < plan_index

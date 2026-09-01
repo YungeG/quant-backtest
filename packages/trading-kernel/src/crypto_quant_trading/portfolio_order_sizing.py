@@ -46,6 +46,7 @@ class PortfolioSizingOmissionReason(str, Enum):
     SETTLED_CASH_CAPPED = "SETTLED_CASH_CAPPED"
     MINIMUM_COMMISSION_CAPPED = "MINIMUM_COMMISSION_CAPPED"
     ACTIVE_ORDER_COVERAGE = "ACTIVE_ORDER_COVERAGE"
+    # Phase 4 owns supersession; Phase 3 reserves this durable code but never emits it.
     TARGET_SUPERSEDED = "TARGET_SUPERSEDED"
 
 
@@ -377,9 +378,26 @@ class PortfolioOrderSizerV1:
         source_target_hash: str,
         candidates: tuple[PortfolioSizingCandidateV1, ...],
         cash_availability: CashAvailability,
+        active_cash_reservations: Money | None = None,
+        active_fee_reservations: Money | None = None,
     ) -> CappedPortfolioTargetV1:
         if not isinstance(cash_availability, CashAvailability):
             raise TypeError("cash_availability must be CashAvailability")
+        zero = Money(
+            0,
+            cash_availability.tradable.scale,
+            cash_availability.tradable.currency,
+        )
+        active_cash_reservations = active_cash_reservations or zero
+        active_fee_reservations = active_fee_reservations or zero
+        if any(
+            not isinstance(value, Money)
+            or value.currency != cash_availability.tradable.currency
+            or value.scale != cash_availability.tradable.scale
+            or value.units < 0
+            for value in (active_cash_reservations, active_fee_reservations)
+        ):
+            raise ValueError("active reservations must match Cash availability")
         ordered = tuple(
             sorted(
                 candidates,
@@ -445,7 +463,13 @@ class PortfolioOrderSizerV1:
             sell_evidence.append(evidence)
             sell_fee_units += evidence.exact_fee_reservation.units
 
-        budget_units = max(cash_availability.tradable.units - sell_fee_units, 0)
+        budget_units = max(
+            min(cash_availability.settled.units, cash_availability.tradable.units)
+            - active_cash_reservations.units
+            - active_fee_reservations.units
+            - sell_fee_units,
+            0,
+        )
         full = tuple((candidate, self._round_units(candidate, candidate.requested_order_units)) for candidate in buy_candidates)
         full_cost = sum(self._cost(candidate, units)[0] for candidate, units in full if units)
         full_notional = sum(self._cost(candidate, units)[1] for candidate, units in full if units)
