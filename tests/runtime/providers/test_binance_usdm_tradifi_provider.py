@@ -227,6 +227,14 @@ def test_public_v2_raw_scale8_bundle_reaches_engine() -> None:
         "taker",
         "taker",
     )
+    assert tuple(
+        (value.reference_price.units, value.reference_price.scale.places)
+        for value in executed.result.fills
+    ) == ((10_000, 2), (10_000, 2))
+    assert tuple(
+        (value.price.units, value.price.scale.places)
+        for value in executed.result.fills
+    ) == ((10_005, 2), (9_995, 2))
     assert tuple(value.execution_time.epoch_nanoseconds for value in executed.result.fills) == (
         1_784_347_500_000_000_000,
         1_784_354_700_000_000_000,

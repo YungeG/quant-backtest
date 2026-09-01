@@ -24,6 +24,7 @@ from crypto_quant_domain import (
     PortfolioSnapshot,
     PositionBalanceKey,
     PositionLot,
+    Price,
     Scale,
     SimulationInstant,
     SourceSequence,
@@ -227,6 +228,23 @@ def _domain_id(name: str, value: DomainId, kind: DomainIdKind) -> DomainId:
 
 def _stable_tuple(values: tuple[Any, ...]) -> tuple[Any, ...]:
     return tuple(sorted(values, key=canonical_bytes))
+
+
+def _execution_price_on_lattice(
+    price: Price, price_scale: Scale, price_tick_units: int
+) -> Price | None:
+    """Canonicalize an exact source price before applying simulated slippage."""
+    difference = price.scale.places - price_scale.places
+    if difference >= 0:
+        divisor = 10**difference
+        if price.units % divisor:
+            return None
+        units = price.units // divisor
+    else:
+        units = price.units * 10 ** (-difference)
+    if units % price_tick_units:
+        return None
+    return Price(units, price_scale, price.instrument_id, price.quote_currency)
 
 
 def _lot_state(values: dict[PositionBalanceKey, tuple[PositionLot, ...]]) -> tuple[
@@ -2768,6 +2786,22 @@ class DeterministicBarEngine:
                 (event.event_hash,),
             )
         observation = BarOpenObservation.from_event(event)
+        if observation.open_price is not None:
+            snapshot = market_approval.resolved_interval.snapshot
+            normalized_price = _execution_price_on_lattice(
+                observation.open_price,
+                snapshot.price_scale,
+                snapshot.price_tick_units,
+            )
+            if normalized_price is None:
+                return self._failed(
+                    case,
+                    state,
+                    EngineFailureCode.EXECUTION_FAILURE,
+                    (event.event_id, "execution_reference_price_lattice"),
+                    (event.event_hash,),
+                )
+            observation = replace(observation, open_price=normalized_price)
         candidate = BarOpenCandidate(
             observation=observation,
             market_rule_approval=market_approval,
