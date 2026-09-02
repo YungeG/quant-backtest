@@ -7,14 +7,11 @@ from pathlib import Path
 import crypto_quant_bundle_builder as builder
 
 ROOT = Path(__file__).resolve().parents[2]
-BUILDER_ROOT = (
-    ROOT / "packages/market-bundle-builder/src/crypto_quant_bundle_builder/__init__.py"
-)
 MODULE = (
     ROOT
     / "packages/market-bundle-builder/src/crypto_quant_bundle_builder/binance_usdm_koru_funding_rate_history_source_bounded_v1.py"
 )
-INTERNAL_NAMES = {
+ROOT_EXPORTS = {
     "BinanceUsdmKoruFundingRateHistorySourceBoundedCaptureOutcomeV1",
     "BinanceUsdmKoruFundingRateHistorySourceBoundedCaptureResultV1",
     "BinanceUsdmKoruFundingRateHistorySourceBoundedFailureCodeV1",
@@ -36,7 +33,6 @@ KORU_FIXTURE_SHA256 = {
     / "funding-history.json": "ace9f779682989befac94ffd1c835e7a6e97b2b8103e6ad347ec8dc38fa6c960",
 }
 PROTECTED_SHA256 = {
-    BUILDER_ROOT: "ce723694c39feeb0f70976065f8e513a1a2277d93cc35401bbaf046520acc40e",
     ROOT
     / "packages/market-bundle-builder/src/crypto_quant_bundle_builder/binance_usdm_funding_history_source_bounded_v2.py": "552b67cd8b62a3a5b4d782f7cd5ab4041cd1910514ae451932cef3c57b917bc3",
     ROOT
@@ -48,14 +44,10 @@ PROTECTED_SHA256 = {
 }
 
 
-def test_koru_funding_history_is_package_internal_and_root_stays_frozen() -> None:
-    assert INTERNAL_NAMES.isdisjoint(builder.__all__)
-    assert len(set(builder.__all__)) == 45
-    assert all(not hasattr(builder, name) for name in INTERNAL_NAMES)
-    assert (
-        hashlib.sha256(BUILDER_ROOT.read_bytes()).hexdigest()
-        == PROTECTED_SHA256[BUILDER_ROOT]
-    )
+def test_koru_funding_history_root_exports_retained_construction_values() -> None:
+    assert ROOT_EXPORTS <= set(builder.__all__)
+    assert all(getattr(builder, name) is not None for name in ROOT_EXPORTS)
+    assert all(not name.startswith("_") for name in builder.__all__)
 
 
 def test_koru_funding_history_is_offline_rule_neutral_and_preparation_free() -> None:

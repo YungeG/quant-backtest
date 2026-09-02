@@ -7,14 +7,11 @@ from pathlib import Path
 import crypto_quant_bundle_builder as builder
 
 ROOT = Path(__file__).resolve().parents[2]
-BUILDER_ROOT = (
-    ROOT / "packages/market-bundle-builder/src/crypto_quant_bundle_builder/__init__.py"
-)
 MODULE = (
     ROOT
     / "packages/market-bundle-builder/src/crypto_quant_bundle_builder/binance_usdm_koru_price_bars_source_bounded_v1.py"
 )
-INTERNAL_NAMES = {
+ROOT_EXPORTS = {
     "BinanceUsdmKoruPriceBarsSourceKindV1",
     "BinanceUsdmKoruPriceBarsSourceBoundedCaptureOutcomeV1",
     "BinanceUsdmKoruPriceBarsSourceBoundedCaptureResultV1",
@@ -45,7 +42,6 @@ KORU_PROVIDER_FIXTURE_SHA256 = {
     / "index/KORUUSDT-1h-2026-07-16.zip.CHECKSUM": "153e5ad46b80a217d849a26355d17935296108ce6a6203b9a982da34a9a59e5b",
 }
 PROTECTED_SHA256 = {
-    BUILDER_ROOT: "ce723694c39feeb0f70976065f8e513a1a2277d93cc35401bbaf046520acc40e",
     ROOT
     / "packages/market-bundle-builder/src/crypto_quant_bundle_builder/binance_usdm_mark_price_archive.py": "34c8767a8d094a2f3bef0af702f17c6b9ab39a2fbe3717b34967e3458fc760b2",
     ROOT
@@ -61,14 +57,10 @@ PROTECTED_SHA256 = {
 }
 
 
-def test_koru_price_bars_v1_is_package_internal_and_root_stays_frozen() -> None:
-    assert INTERNAL_NAMES.isdisjoint(builder.__all__)
-    assert len(set(builder.__all__)) == 45
-    assert all(not hasattr(builder, name) for name in INTERNAL_NAMES)
-    assert (
-        hashlib.sha256(BUILDER_ROOT.read_bytes()).hexdigest()
-        == PROTECTED_SHA256[BUILDER_ROOT]
-    )
+def test_koru_price_bars_v1_root_exports_retained_construction_values() -> None:
+    assert ROOT_EXPORTS <= set(builder.__all__)
+    assert all(getattr(builder, name) is not None for name in ROOT_EXPORTS)
+    assert all(not name.startswith("_") for name in builder.__all__)
 
 
 def test_koru_price_bars_v1_is_offline_rule_neutral_and_scope_bounded() -> None:

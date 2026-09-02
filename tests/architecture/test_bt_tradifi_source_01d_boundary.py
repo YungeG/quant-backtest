@@ -9,9 +9,6 @@ MODULE = (
     ROOT
     / "packages/market-bundle-builder/src/crypto_quant_bundle_builder/koru_tradifi_calendar_unit_authority_v1.py"
 )
-BUILDER_ROOT = (
-    ROOT / "packages/market-bundle-builder/src/crypto_quant_bundle_builder/__init__.py"
-)
 COMPOSER = (
     ROOT
     / "packages/backtest-runtime/src/crypto_quant_backtest/binance_usdm_tradifi_profile.py"
@@ -30,8 +27,16 @@ FIXTURE_SHA256 = {
     "nyse/hours-calendars.html": "49ee8a651ec01ef2866e347842c0fb11309541f247d17aeaaf7ad9d6a513b1ed",
 }
 PROTECTED_SOURCE_SHA256 = {
-    BUILDER_ROOT: "ce723694c39feeb0f70976065f8e513a1a2277d93cc35401bbaf046520acc40e",
-    COMPOSER: "38de4c2bd0d95fe557e884320c76ba4c459e0ea88ce61fa31cbfdbe6273bbb76",
+    COMPOSER: "bc446f13479d0a784907f2227972e762a884be45d3cb9b81eed1a25079824189",
+}
+ROOT_EXPORTS = {
+    "APPROVED_MEMBER_HASHES",
+    "KoruTradifiCalendarUnitAuthorityFailureCode",
+    "KoruTradifiCalendarUnitAuthorityFailureV1",
+    "KoruTradifiCalendarUnitAuthorityOutcomeV1",
+    "KoruTradifiCalendarUnitAuthorityResultV1",
+    "build_koru_tradifi_calendar_unit_authority_v1",
+    "verify_koru_tradifi_calendar_unit_authority_v1",
 }
 
 
@@ -49,7 +54,7 @@ def _imports(path: Path) -> set[str]:
     }
 
 
-def test_authority_is_package_internal_additive_and_off_runtime_boundaries() -> None:
+def test_authority_root_exports_are_additive_and_off_runtime_boundaries() -> None:
     assert MODULE.is_file()
     assert _imports(MODULE) <= {
         "__future__",
@@ -84,9 +89,11 @@ def test_authority_is_package_internal_additive_and_off_runtime_boundaries() -> 
         "urllib",
     ):
         assert forbidden not in source
-    root_source = BUILDER_ROOT.read_text(encoding="utf-8")
-    assert "koru_tradifi_calendar_unit_authority_v1" not in root_source
-    assert "KoruTradifiCalendarUnitAuthority" not in root_source
+    import crypto_quant_bundle_builder as builder
+
+    assert ROOT_EXPORTS <= set(builder.__all__)
+    assert all(getattr(builder, name) is not None for name in ROOT_EXPORTS)
+    assert all(not name.startswith("_") for name in builder.__all__)
 
 
 def test_parent_captured_fixture_bytes_and_compatible_sources_are_pinned() -> None:

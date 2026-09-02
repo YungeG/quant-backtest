@@ -10,10 +10,7 @@ MODULE = (
     ROOT / "packages/market-bundle-builder/src/crypto_quant_bundle_builder/"
     "binance_usdm_koru_tradifi_source_projection_v2.py"
 )
-ROOT_EXPORT = (
-    ROOT / "packages/market-bundle-builder/src/crypto_quant_bundle_builder/__init__.py"
-)
-INTERNAL_NAMES = {
+ROOT_EXPORTS = {
     "BinanceUsdmKoruTradifiSourceProjectionRequestV2",
     "BinanceUsdmKoruTradifiSourceProjectionFailureCodeV2",
     "BinanceUsdmKoruTradifiSourceProjectionFailureV2",
@@ -40,12 +37,11 @@ def _imports() -> set[str]:
     }
 
 
-def test_streaming_source_projection_is_internal_and_aggregate_bounded() -> None:
+def test_streaming_source_projection_is_root_exported_and_aggregate_bounded() -> None:
     assert MODULE.is_file()
-    assert INTERNAL_NAMES.isdisjoint(builder.__all__)
-    assert all(not hasattr(builder, name) for name in INTERNAL_NAMES)
-    root = ROOT_EXPORT.read_text(encoding="utf-8")
-    assert "binance_usdm_koru_tradifi_source_projection_v2" not in root
+    assert ROOT_EXPORTS <= set(builder.__all__)
+    assert all(getattr(builder, name) is not None for name in ROOT_EXPORTS)
+    assert all(not name.startswith("_") for name in builder.__all__)
     assert _imports() <= {
         "__future__",
         "bisect",

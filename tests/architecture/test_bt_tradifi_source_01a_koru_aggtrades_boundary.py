@@ -7,16 +7,11 @@ from pathlib import Path
 import crypto_quant_bundle_builder as builder
 
 ROOT = Path(__file__).resolve().parents[2]
-BUILDER_ROOT = (
-    ROOT
-    / "packages/market-bundle-builder/src/crypto_quant_bundle_builder/__init__.py"
-)
 MODULE = (
     ROOT
     / "packages/market-bundle-builder/src/crypto_quant_bundle_builder/binance_usdm_koru_aggtrades_source_bounded_v1.py"
 )
-INTERNAL_NAMES = {
-    "BINANCE_USDM_KORU_AGGREGATE_TRADE_AVAILABILITY_AUTHORITY_V1",
+ROOT_EXPORTS = {
     "BinanceUsdmKoruAggregateTradeAvailabilityAuthorityV1",
     "BinanceUsdmKoruAggregateTradesSourceBoundedCaptureOutcomeV1",
     "BinanceUsdmKoruAggregateTradesSourceBoundedCaptureResultV1",
@@ -33,7 +28,6 @@ INTERNAL_NAMES = {
     "normalize_binance_usdm_koru_aggregate_trades_source_bounded_v1",
 }
 PROTECTED_SHA256 = {
-    BUILDER_ROOT: "ce723694c39feeb0f70976065f8e513a1a2277d93cc35401bbaf046520acc40e",
     ROOT
     / "packages/market-bundle-builder/src/crypto_quant_bundle_builder/binance_usdm_aggtrades_archive.py": "e00d8b058e1152aed73d2fa5198a23241550d60756245adcc9d8a0b2a1dc1079",
     ROOT
@@ -45,13 +39,13 @@ PROTECTED_SHA256 = {
 }
 
 
-def test_koru_source_bounded_v1_is_package_internal_and_root_stays_frozen() -> None:
-    assert INTERNAL_NAMES.isdisjoint(builder.__all__)
-    assert len(set(builder.__all__)) == 45
-    assert all(not hasattr(builder, name) for name in INTERNAL_NAMES)
-    assert hashlib.sha256(BUILDER_ROOT.read_bytes()).hexdigest() == PROTECTED_SHA256[
-        BUILDER_ROOT
-    ]
+def test_koru_source_bounded_v1_root_exports_retained_construction_values() -> None:
+    assert ROOT_EXPORTS <= set(builder.__all__)
+    assert all(getattr(builder, name) is not None for name in ROOT_EXPORTS)
+    assert all(not name.startswith("_") for name in builder.__all__)
+    assert not hasattr(
+        builder, "BINANCE_USDM_KORU_AGGREGATE_TRADE_AVAILABILITY_AUTHORITY_V1"
+    )
 
 
 def test_koru_source_bounded_v1_is_offline_and_rule_neutral() -> None:
