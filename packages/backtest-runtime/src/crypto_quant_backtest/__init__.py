@@ -12,6 +12,12 @@ from .analysis import (
 from .analysis_derivation import BacktestAnalysisRuntime
 from .artifact_envelope_publisher import ArtifactEnvelopePublisher
 from .artifact_envelope_reader import ArtifactEnvelopeReader
+from .binance_usdm_koru_directional_profile_v3 import (
+    BinanceUsdmKoruDirectionalPlannerV3,
+    BinanceUsdmKoruDirectionalTargetConsumptionV3,
+    KoruDirectionalV3StrategyAuthority,
+    verify_binance_usdm_koru_directional_strategy_authority_v3,
+)
 from .binance_usdm_koru_tradifi_development_profile_v1 import (
     BinanceUsdmKoruTradifiDevelopmentProfileFailureCodeV1,
     BinanceUsdmKoruTradifiDevelopmentProfileFailureV1,
@@ -31,6 +37,10 @@ from .binance_usdm_profile import (
     BinanceUsdmProfileCompositionRequest,
     BinanceUsdmResolvedProfile,
     BinanceUsdmSimulationProfile,
+)
+from .binance_usdm_tradifi_directional_preparation import (
+    prepare_binance_usdm_tradifi_directional_bar_backtest,
+    verify_binance_usdm_tradifi_directional_preparation_authority_v3,
 )
 from .binance_usdm_tradifi_operations import (
     BinanceUsdmTradifiBacktestOperations,
@@ -562,6 +572,12 @@ __all__ = [  # noqa: RUF022 - public API remains grouped by subsystem
     "materialize_execution_input_bundle",
     "materialize_execution_input_bundle_v2",
     "prepare_binance_usdm_tradifi_bar_backtest",
+    "prepare_binance_usdm_tradifi_directional_bar_backtest",
+    "BinanceUsdmKoruDirectionalPlannerV3",
+    "BinanceUsdmKoruDirectionalTargetConsumptionV3",
+    "KoruDirectionalV3StrategyAuthority",
+    "verify_binance_usdm_tradifi_directional_preparation_authority_v3",
+    "verify_binance_usdm_koru_directional_strategy_authority_v3",
     "prepare_cash_development_backtest",
     "prepare_model_bound_cash_development_backtest",
     "DeterministicRebuildEvidence",

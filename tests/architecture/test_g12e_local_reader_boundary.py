@@ -77,7 +77,9 @@ def test_only_durable_runtime_seams_import_exact_local_reader() -> None:
     runtime = ROOT / "packages/backtest-runtime/src/crypto_quant_backtest"
     allowed_runtime_paths = {
         runtime / "_durable_rebuild.py",
+        runtime / "binance_usdm_tradifi_directional_preparation.py",
         runtime / "facade.py",
+        ROOT / "packages/market-bundle-builder/src/crypto_quant_bundle_builder/binance_usdm_koru_directional_execution_bundle_v3.py",
     }
     for directory in (
         runtime,

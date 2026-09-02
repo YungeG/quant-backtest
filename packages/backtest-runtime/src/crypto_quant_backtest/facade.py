@@ -1350,7 +1350,7 @@ class BacktestRuntime:
             )
             completed = BacktestEvidenceRepository(
                 reader=self._artifact_reader
-            ).load_completed(publication_ref)
+            ).load_completed_research_v1(publication_ref)
             if (
                 completed.source_publication_ref != publication_ref
                 or completed.semantic_run_id != resolved.semantic_run_id

@@ -2017,10 +2017,19 @@ def _expected_stream_keys_v2(
 def _validate_manifest_stream_cover_v2(
     manifest: MarketBundleManifest,
     source_authority_payload: Mapping[str, object],
+    *,
+    hybrid_v3: bool = False,
 ) -> None:
     actual = tuple(value.stream_key for value in manifest.streams)
     expected = _expected_stream_keys_v2(source_authority_payload)
-    if len(actual) != len(expected) or frozenset(actual) != expected:
+    if hybrid_v3:
+        expected = frozenset(
+            key for key in expected if not key.startswith(_TARGET_PREFIX)
+        )
+        valid = expected <= frozenset(actual)
+    else:
+        valid = len(actual) == len(expected) and frozenset(actual) == expected
+    if not valid:
         raise _PreparationError(
             BinanceUsdmTradifiPreparationFailureCode.MARKET_BUNDLE_MISMATCH,
             "manifest_stream_cover",
