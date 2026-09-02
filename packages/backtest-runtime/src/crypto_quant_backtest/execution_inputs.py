@@ -2131,8 +2131,72 @@ def _read_position_lot_change(value: object) -> domain.PositionLotChange:
     )
 
 
-def _read_journal_entry(value: object) -> domain.AccountingJournalEntry:
+_BASE_JOURNAL_ENTRY_FIELDS = frozenset(
+    {
+        "type",
+        "journal_entry_id",
+        "entry_type",
+        "account_id",
+        "venue_id",
+        "effective_time",
+        "recorded_at",
+        "source_ids",
+        "balance_changes",
+        "realized_pnl",
+        "fees",
+        "financing",
+    }
+)
+_DERIVATIVE_JOURNAL_ENTRY_FIELDS = frozenset(
+    {
+        "type",
+        "schema_version",
+        "component_ref",
+        "request",
+        "request_hash",
+        "exact_realized_pnl",
+        "journal_entry",
+    }
+)
+_FUNDING_JOURNAL_ENTRY_FIELDS = frozenset(
+    {
+        "type",
+        "schema_version",
+        "component_ref",
+        "request",
+        "request_hash",
+        "application_key",
+        "settlement_id",
+        "exact_cash_flow",
+        "payment",
+        "application_body_hash",
+        "journal_entry",
+    }
+)
+
+
+def _exact_tagged(
+    name: str,
+    value: object,
+    expected_type: str,
+    fields: frozenset[str],
+    schema_version: int | None,
+) -> Mapping[str, Any]:
+    data = _tagged(name, value, expected_type)
+    _exact_fields(name, data, fields)
+    if schema_version is not None and data.get("schema_version") != schema_version:
+        raise ValueError(f"{name} must use schema_version {schema_version}")
+    return data
+
+
+def _read_base_journal_entry(value: object) -> domain.AccountingJournalEntry:
     data = _tagged("accounting_journal_entry", value, "accounting_journal_entry")
+    lot_fields = _BASE_JOURNAL_ENTRY_FIELDS | {"schema_version", "position_lot_changes"}
+    if set(data) == lot_fields:
+        if data["schema_version"] != 2:
+            raise ValueError("position-lot journal entry must use schema_version 2")
+    else:
+        _exact_fields("accounting_journal_entry", data, _BASE_JOURNAL_ENTRY_FIELDS)
     return domain.AccountingJournalEntry(
         _read_domain_id(data["journal_entry_id"]),
         domain.AccountingEntryType(data["entry_type"]),
@@ -2151,6 +2215,240 @@ def _read_journal_entry(value: object) -> domain.AccountingJournalEntry:
             _read_position_lot_change,
         ),
     )
+
+
+def _read_exact_average_entry_basis(value: object) -> trading.ExactAverageEntryBasis:
+    data = _exact_tagged(
+        "exact_average_entry_basis",
+        value,
+        "exact_average_entry_basis",
+        frozenset({"type", "schema_version", "instrument_id", "quote_currency", "numerator", "denominator"}),
+        1,
+    )
+    return trading.ExactAverageEntryBasis(
+        _read_instrument_id(data["instrument_id"]),
+        _read_currency(data["quote_currency"]),
+        data["numerator"],
+        data["denominator"],
+    )
+
+
+def _read_linear_position_state(value: object) -> trading.LinearPositionState:
+    data = _exact_tagged(
+        "linear_position_state",
+        value,
+        "linear_position_state",
+        frozenset({"type", "schema_version", "position_key", "contract", "quantity", "average_entry_basis"}),
+        1,
+    )
+    return trading.LinearPositionState(
+        _read_position_key(data["position_key"]),
+        _read_linear_perpetual_contract(data["contract"]),
+        _read_quantity(data["quantity"]),
+        _optional(data["average_entry_basis"], _read_exact_average_entry_basis),
+    )
+
+
+def _read_linear_position_transition(value: object) -> trading.LinearPositionTransition:
+    data = _exact_tagged(
+        "linear_position_transition",
+        value,
+        "linear_position_transition",
+        frozenset({"type", "schema_version", "kind", "fill", "before", "after", "closed_quantity"}),
+        1,
+    )
+    return trading.LinearPositionTransition(
+        trading.LinearPositionTransitionKind(data["kind"]),
+        _read_fill(data["fill"]),
+        _read_linear_position_state(data["before"]),
+        _read_linear_position_state(data["after"]),
+        _read_quantity(data["closed_quantity"]),
+    )
+
+
+def _read_linear_derivative_accounting_request(
+    value: object,
+) -> trading.LinearDerivativeAccountingRequest:
+    data = _exact_tagged(
+        "linear_derivative_accounting_request",
+        value,
+        "linear_derivative_accounting_request",
+        frozenset({"type", "schema_version", "transition", "settlement_cash_registration", "pnl_quantization", "journal_entry_id", "recorded_at"}),
+        1,
+    )
+    return trading.LinearDerivativeAccountingRequest(
+        _read_linear_position_transition(data["transition"]),
+        _read_ledger_registration(data["settlement_cash_registration"]),
+        _read_quantization(data["pnl_quantization"]),
+        _read_domain_id(data["journal_entry_id"]),
+        _read_simulation_instant(data["recorded_at"]),
+    )
+
+
+def _read_linear_derivative_journal_entry(
+    value: object,
+) -> trading.LinearDerivativeJournalEntry:
+    data = _exact_tagged(
+        "linear_derivative_journal_entry",
+        value,
+        "linear_derivative_journal_entry",
+        _DERIVATIVE_JOURNAL_ENTRY_FIELDS,
+        1,
+    )
+    outcome = trading.LinearDerivativeAccounting().translate_position_fact(
+        _read_linear_derivative_accounting_request(data["request"])
+    )
+    if outcome.result is None:
+        raise ValueError("linear derivative journal entry request is unsuccessful")
+    entry = outcome.result.journal_entry
+    if canonical_bytes(entry) != canonical_bytes(data):
+        raise ValueError("linear derivative journal entry did not reconstruct exactly")
+    return entry
+
+
+def _read_journal_replay_cursor(value: object) -> trading.JournalReplayCursor:
+    data = _exact_tagged(
+        "journal_replay_cursor",
+        value,
+        "journal_replay_cursor",
+        frozenset({"type", "position", "prefix_hash"}),
+        None,
+    )
+    return trading.JournalReplayCursor(data["position"], data["prefix_hash"])
+
+
+def _read_linear_funding_snapshot_v2(
+    value: object,
+) -> trading.LinearFundingEligibilityPositionSnapshotV2:
+    data = _exact_tagged(
+        "linear_funding_eligibility_position_snapshot",
+        value,
+        "linear_funding_eligibility_position_snapshot",
+        frozenset({"type", "schema_version", "snapshot_id", "eligibility_series_id", "revision_id", "supersedes_revision_id", "slot_id", "eligibility_instant", "available_at", "eligibility_cursor", "availability_cursor", "eligibility_ledger_state_hash", "availability_ledger_state_hash", "eligibility_replay_hash", "availability_replay_hash", "eligibility_position_state", "availability_position_state"}),
+        2,
+    )
+    return trading.LinearFundingEligibilityPositionSnapshotV2(
+        data["snapshot_id"], data["eligibility_series_id"], data["revision_id"],
+        data["supersedes_revision_id"], _read_funding_slot_id(data["slot_id"]),
+        _read_simulation_instant(data["eligibility_instant"]),
+        _read_simulation_instant(data["available_at"]),
+        _read_journal_replay_cursor(data["eligibility_cursor"]),
+        _read_journal_replay_cursor(data["availability_cursor"]),
+        data["eligibility_ledger_state_hash"], data["availability_ledger_state_hash"],
+        data["eligibility_replay_hash"], data["availability_replay_hash"],
+        _read_linear_position_state(data["eligibility_position_state"]),
+        _read_linear_position_state(data["availability_position_state"]),
+    )
+
+
+def _read_linear_funding_eligibility_request_v2(
+    value: object,
+) -> trading.LinearFundingEligibilityRequestV2:
+    data = _exact_tagged(
+        "linear_funding_eligibility_request",
+        value,
+        "linear_funding_eligibility_request",
+        frozenset({"type", "schema_version", "slot_id", "position_key", "contract", "eligibility_instant", "publications", "position_snapshot", "captured_at"}),
+        2,
+    )
+    return trading.LinearFundingEligibilityRequestV2(
+        _read_funding_slot_id(data["slot_id"]),
+        _read_position_key(data["position_key"]),
+        _read_linear_perpetual_contract(data["contract"]),
+        _read_simulation_instant(data["eligibility_instant"]),
+        _sequence("funding publications", data["publications"], _read_funding_publication),
+        _optional(data["position_snapshot"], _read_linear_funding_snapshot_v2),
+        _read_simulation_instant(data["captured_at"]),
+    )
+
+
+def _read_funding_eligibility_component_ref(
+    value: object,
+) -> trading.LinearFundingEligibilityComponentRef:
+    data = _exact_tagged(
+        "linear_funding_eligibility_component_ref",
+        value,
+        "linear_funding_eligibility_component_ref",
+        frozenset({"type", "schema_version", "component_key", "component_version", "component_digest"}),
+        1,
+    )
+    return trading.LinearFundingEligibilityComponentRef(
+        data["component_key"], data["component_version"], data["component_digest"]
+    )
+
+
+def _read_linear_funding_eligibility_v2(
+    value: object,
+) -> trading.LinearFundingEligibilityV2:
+    data = _exact_tagged(
+        "linear_funding_eligibility",
+        value,
+        "linear_funding_eligibility",
+        frozenset({"type", "schema_version", "component_ref", "request", "request_hash", "slot_id", "publication_hash", "event_id", "event_hash", "publication_revision_id", "snapshot_hash", "position_state", "state_hash", "published_rate", "eligibility_instant", "captured_at"}),
+        2,
+    )
+    return trading.LinearFundingEligibilityV2(
+        _read_funding_eligibility_component_ref(data["component_ref"]),
+        _read_linear_funding_eligibility_request_v2(data["request"]),
+        data["request_hash"], _read_funding_slot_id(data["slot_id"]),
+        data["publication_hash"], data["event_id"], data["event_hash"],
+        data["publication_revision_id"], data["snapshot_hash"],
+        _read_linear_position_state(data["position_state"]), data["state_hash"],
+        _read_rate(data["published_rate"]),
+        _read_simulation_instant(data["eligibility_instant"]),
+        _read_simulation_instant(data["captured_at"]),
+    )
+
+
+def _read_linear_funding_settlement_request_v2(
+    value: object,
+) -> trading.LinearFundingSettlementRequestV2:
+    data = _exact_tagged(
+        "linear_funding_settlement_request",
+        value,
+        "linear_funding_settlement_request",
+        frozenset({"type", "schema_version", "eligibility", "settlement_evidence", "funding_mark_evidence", "application_identity", "position_key", "contract", "settlement_cash_registration", "payment_quantization"}),
+        2,
+    )
+    return trading.LinearFundingSettlementRequestV2(
+        _read_linear_funding_eligibility_v2(data["eligibility"]),
+        _read_funding_settlement_evidence(data["settlement_evidence"]),
+        _read_funding_mark_evidence(data["funding_mark_evidence"]),
+        _read_funding_application_identity(data["application_identity"]),
+        _read_position_key(data["position_key"]),
+        _read_linear_perpetual_contract(data["contract"]),
+        _read_ledger_registration(data["settlement_cash_registration"]),
+        _read_quantization(data["payment_quantization"]),
+    )
+
+
+def _read_linear_funding_journal_entry(
+    value: object,
+) -> trading.LinearFundingJournalEntryV2:
+    data = _exact_tagged(
+        "linear_funding_journal_entry",
+        value,
+        "linear_funding_journal_entry",
+        _FUNDING_JOURNAL_ENTRY_FIELDS,
+        2,
+    )
+    entry = trading.LinearFundingAccountingV2().assess_financing(
+        _read_linear_funding_settlement_request_v2(data["request"])
+    ).journal_entry
+    if canonical_bytes(entry) != canonical_bytes(data):
+        raise ValueError("linear funding journal entry did not reconstruct exactly")
+    return entry
+
+
+def _read_journal_entry(value: object) -> domain.AccountingJournalEntry:
+    data = _mapping("accounting journal entry", value)
+    if data.get("type") == "accounting_journal_entry":
+        return _read_base_journal_entry(data)
+    if data.get("type") == "linear_derivative_journal_entry":
+        return _read_linear_derivative_journal_entry(data)
+    if data.get("type") == "linear_funding_journal_entry":
+        return _read_linear_funding_journal_entry(data)
+    raise ValueError("unsupported accounting journal entry type")
 
 
 def _read_journal(value: object) -> trading.AccountingJournal:

@@ -6,7 +6,6 @@ from pathlib import Path
 import crypto_quant_backtest.binance_usdm_tradifi_directional_preparation as directional_preparation
 import pytest
 from crypto_quant_backtest import (
-    BacktestEvidenceError,
     BacktestEvidenceRepository,
     BinanceUsdmTradifiProviderInputs,
     PreparedBacktestExecution,
@@ -22,6 +21,9 @@ from crypto_quant_bundle_builder import (
     compile_binance_usdm_koru_directional_targets_v1,
     publish_binance_usdm_koru_directional_hybrid_bundle_v3,
 )
+from crypto_quant_bundle_builder.binance_usdm_koru_tradifi_source_projection_v1 import (
+    build_binance_usdm_koru_tradifi_source_projection_v1,
+)
 from crypto_quant_domain import (
     ArtifactEnvelope,
     ArtifactReadResult,
@@ -31,6 +33,9 @@ from crypto_quant_domain import (
 )
 from crypto_quant_market_data import LocalMarketBundleReader
 
+from tests.bundle_builder.providers.binance_usdm import (
+    test_koru_closed_market_range_targets_v1 as closed_market_fixture,
+)
 from tests.bundle_builder.providers.binance_usdm import (
     test_koru_directional_target_compiler_v1 as compiler_fixture,
 )
@@ -58,8 +63,8 @@ class _Artifacts:
         return self.values[ref]
 
 
-def _authorities(*, target_key: str = "target.a"):
-    source = execution_fixture._source()
+def _authorities(*, target_key: str = "target.a", source=None):
+    source = execution_fixture._source() if source is None else source
     v2 = execution_fixture._build(source)
     compiled = compile_binance_usdm_koru_directional_targets_v1(
         compiler_fixture._request(source, (compiler_fixture._recipe(source, key=target_key),))
@@ -85,8 +90,10 @@ def _hybrid(v2, v3, tmp_path: Path):
     )
 
 
-def _prepare(tmp_path: Path, *, experiment_id: str = "directional-v3-smoke"):
-    v2, v3, artifacts = _authorities()
+def _prepare(
+    tmp_path: Path, *, experiment_id: str = "directional-v3-smoke", source=None
+):
+    v2, v3, artifacts = _authorities(source=source)
     prepared = prepare_binance_usdm_tradifi_directional_bar_backtest(
         experiment_id=experiment_id,
         market_reader=_hybrid(v2, v3, tmp_path),
@@ -115,17 +122,60 @@ def test_v3_hybrid_prepares_and_replays_a_bounded_normal_runtime(tmp_path: Path)
     assert prepared.runtime.run(prepared.execution_request) is not None
 
 
-def test_v3_hybrid_canonical_cache_replays_the_same_request_and_result(tmp_path: Path) -> None:
-    _, _, artifacts, prepared = _prepare(tmp_path)
+def _sealed_nonzero_source():
+    base = closed_market_fixture._weekend_fragment()
+    prices = {
+        "open_price": "100.00000000",
+        "high_price": "101.00000000",
+        "low_price": "99.00000000",
+        "close_price": "100.00000000",
+    }
+    mark_prices = (
+        closed_market_fixture._price_result(
+            closed_market_fixture.price_fixture.BinanceUsdmKoruPriceBarsSourceKindV1.MARK_PRICE,
+            "2026-07-17",
+            {},
+            **prices,
+        ),
+        closed_market_fixture._price_result(
+            closed_market_fixture.price_fixture.BinanceUsdmKoruPriceBarsSourceKindV1.MARK_PRICE,
+            "2026-07-18",
+            {0: "99.00000000", 1: "99.00000000", 2: "99.00000000"},
+            **prices,
+        ),
+    )
+    source = build_binance_usdm_koru_tradifi_source_projection_v1(
+        replace(base.request, mark_price_results=mark_prices)
+    ).result
+    assert source is not None
+    return execution_fixture._source(v1_source=source)
+
+
+def test_v3_sealed_nonzero_hybrid_runtime_loads_completed_evidence(
+    tmp_path: Path,
+) -> None:
+    _, v3, artifacts, prepared = _prepare(tmp_path, source=_sealed_nonzero_source())
+    assert [
+        event.payload["candidate"]["targets"][0]["value"]
+        for event in v3.selected_stream.events
+    ] == ["0", "0.25", "0.25", "0.25", "0", "0", "0", "0", "0", "0", "0", "0"]
+
     first_request = prepared.execution_request.request
     first = prepared.runtime.run(prepared.execution_request)
-    with pytest.raises(BacktestEvidenceError, match="accounting_journal_entry"):
-        BacktestEvidenceRepository(artifacts).load_completed(first)
     second = prepared.runtime.run(prepared.execution_request)
+
     assert second == first
     assert canonical_bytes(second) == canonical_bytes(first)
     assert prepared.execution_request.request == first_request
     assert prepared.semantic_run_id.startswith("run_")
+
+    first_completed = BacktestEvidenceRepository(artifacts).load_completed(first)
+    second_completed = BacktestEvidenceRepository(artifacts).load_completed(second)
+
+    assert first_completed == second_completed
+    assert first_completed.semantic_run_id == prepared.semantic_run_id
+    assert first_completed.execution_summary.fills
+    assert first_completed.execution_summary.final_journal.entry_count > 0
 
 
 def test_v3_hybrid_preserves_v1_v2_authority_bytes(tmp_path: Path) -> None:

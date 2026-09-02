@@ -7,7 +7,6 @@ from pathlib import Path
 import pytest
 from crypto_quant_backtest import (
     BacktestCanonicalPublicationRef,
-    BacktestEvidenceError,
     BacktestEvidenceRepository,
     BacktestMetricProfile,
     BinanceUsdmTradifiBacktestOperations,
@@ -118,8 +117,10 @@ def test_formal_prepare_publishes_runs_and_repository_loads_completion(
 
     assert type(publication_ref) is BacktestCanonicalPublicationRef
     repository = BacktestEvidenceRepository(store)
-    with pytest.raises(BacktestEvidenceError, match="accounting_journal_entry"):
-        repository.load_completed(publication_ref)
+    standard = repository.load_completed(publication_ref)
+    assert standard.semantic_run_id == prepared.semantic_run_id
+    assert standard.execution_summary.fills
+
     completed = repository.load_completed_research_v1(publication_ref)
     assert type(completed) is VerifiedResearchCompletedPublicationV1
     assert completed.semantic_run_id == prepared.semantic_run_id
