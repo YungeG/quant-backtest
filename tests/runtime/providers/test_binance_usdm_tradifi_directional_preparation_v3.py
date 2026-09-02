@@ -3,6 +3,7 @@ from __future__ import annotations
 from dataclasses import replace
 from pathlib import Path
 
+import crypto_quant_backtest.binance_usdm_tradifi_directional_preparation as directional_preparation
 import pytest
 from crypto_quant_backtest import (
     BacktestEvidenceError,
@@ -28,6 +29,8 @@ from crypto_quant_domain import (
     canonical_bytes,
     canonical_sha256,
 )
+from crypto_quant_market_data import LocalMarketBundleReader
+
 from tests.bundle_builder.providers.binance_usdm import (
     test_koru_directional_target_compiler_v1 as compiler_fixture,
 )
@@ -82,9 +85,10 @@ def _hybrid(v2, v3, tmp_path: Path):
     )
 
 
-def _prepare(tmp_path: Path):
+def _prepare(tmp_path: Path, *, experiment_id: str = "directional-v3-smoke"):
     v2, v3, artifacts = _authorities()
     prepared = prepare_binance_usdm_tradifi_directional_bar_backtest(
+        experiment_id=experiment_id,
         market_reader=_hybrid(v2, v3, tmp_path),
         provider_inputs=BinanceUsdmTradifiProviderInputs(build_manifest(), _EQUITY),
         artifact_reader=artifacts,
@@ -104,6 +108,7 @@ def test_v3_authority_replays_published_target_without_compilation(tmp_path: Pat
 
 def test_v3_hybrid_prepares_and_replays_a_bounded_normal_runtime(tmp_path: Path) -> None:
     v2, v3, _, prepared = _prepare(tmp_path)
+    assert prepared.execution_request.request.experiment_id == "directional-v3-smoke"
     assert prepared.execution_request.request.target_stream_digest == v3.selected_stream.target_stream_digest
     assert prepared.execution_request.request.market_bundle_ref != v2.bundle_ref
     # One normal runtime call executes its bounded deterministic replay attempts.
@@ -130,6 +135,51 @@ def test_v3_hybrid_preserves_v1_v2_authority_bytes(tmp_path: Path) -> None:
     _prepare(tmp_path)
     assert canonical_bytes(v1_fixture._accepted_bundle()) == v1_bytes
     assert canonical_bytes(v2) == v2_bytes
+
+
+@pytest.mark.parametrize("copy_provenance", (False, True))
+def test_v3_public_preparation_rejects_direct_reader_before_authority_verification(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+    copy_provenance: bool,
+) -> None:
+    v2, v3, artifacts = _authorities()
+    reader = _hybrid(v2, v3, tmp_path)
+    direct = LocalMarketBundleReader(reader._delegate)
+    if copy_provenance:
+        direct._repository_open_provenance_v1 = reader._repository_open_provenance_v1
+
+    def authority_not_called(*, market_reader: object) -> object:
+        raise AssertionError("V3 authority verification must not run")
+
+    monkeypatch.setattr(
+        directional_preparation,
+        "verify_binance_usdm_koru_directional_strategy_authority_v3",
+        authority_not_called,
+    )
+    with pytest.raises(ValueError, match="repository-open"):
+        prepare_binance_usdm_tradifi_directional_bar_backtest(
+            experiment_id="direct-reader",
+            market_reader=direct,
+            provider_inputs=BinanceUsdmTradifiProviderInputs(build_manifest(), _EQUITY),
+            artifact_reader=artifacts,
+            artifact_publisher=artifacts,
+            publication_root=tmp_path,
+        )
+
+
+def test_v3_public_preparation_accepts_repository_open_reader(tmp_path: Path) -> None:
+    v2, v3, artifacts = _authorities()
+    prepared = prepare_binance_usdm_tradifi_directional_bar_backtest(
+        experiment_id="repository-open-reader",
+        market_reader=_hybrid(v2, v3, tmp_path),
+        provider_inputs=BinanceUsdmTradifiProviderInputs(build_manifest(), _EQUITY),
+        artifact_reader=artifacts,
+        artifact_publisher=artifacts,
+        publication_root=tmp_path,
+    )
+
+    assert type(prepared) is PreparedBacktestExecution
 
 
 def test_v3_public_preparation_fails_closed_without_complete_v2_authority(tmp_path: Path) -> None:
@@ -265,6 +315,22 @@ def test_v3_rejects_v1_v2_target_authority_and_stream_collision(tmp_path: Path) 
             v3_execution_bundle=colliding_v3,
             publication_root=tmp_path,
         )
+
+@pytest.mark.parametrize("experiment_id", ("", " spaced", "spaced ", "bád", None))
+def test_v3_public_preparation_rejects_malformed_experiment_id(
+    tmp_path: Path, experiment_id: object
+) -> None:
+    v2, v3, artifacts = _authorities()
+    with pytest.raises((TypeError, ValueError), match="experiment_id"):
+        prepare_binance_usdm_tradifi_directional_bar_backtest(
+            experiment_id=experiment_id,  # type: ignore[arg-type]
+            market_reader=_hybrid(v2, v3, tmp_path),
+            provider_inputs=BinanceUsdmTradifiProviderInputs(build_manifest(), _EQUITY),
+            artifact_reader=artifacts,
+            artifact_publisher=artifacts,
+            publication_root=tmp_path,
+        )
+
 
 def test_v3_public_imports_are_stable() -> None:
     from crypto_quant_backtest import KoruDirectionalV3StrategyAuthority

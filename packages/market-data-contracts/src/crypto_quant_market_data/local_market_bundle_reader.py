@@ -25,6 +25,7 @@ from .bundles import (
     MarketBundleError,
     MarketBundleIntegrityError,
     MarketBundleManifest,
+    MarketBundleReader,
     MarketBundleRef,
     MarketEvent,
     MarketStreamManifest,
@@ -40,6 +41,7 @@ class _LocalReopenTampered(MarketBundleIntegrityError):
 
 
 _REPOSITORY_OPEN_PROVENANCE_V1 = object()
+_REPOSITORY_OPEN_IDENTITY_CAPABILITY_V1 = object()
 
 _HASH_RE = re.compile(r"sha256:[0-9a-f]{64}\Z")
 _POLICY_RE = re.compile(r"[a-z][a-z0-9._-]*\Z")
@@ -421,6 +423,7 @@ class LocalMarketBundleReader:
             str,
             str,
         ] | None = None
+        self._repository_open_identity_capability_v1: object | None = None
 
     @property
     def bundle_ref(self) -> MarketBundleRef:
@@ -619,6 +622,23 @@ class LocalMarketBundleReader:
                 _content_hash(retention_bytes),
                 proof_hash,
             )
+            reader._repository_open_identity_capability_v1 = (
+                _REPOSITORY_OPEN_IDENTITY_CAPABILITY_V1
+            )
+        return reader
+
+    @staticmethod
+    def validate_repository_open_reader_v1(
+        reader: MarketBundleReader,
+    ) -> LocalMarketBundleReader:
+        """Validate an exact reader created by :meth:`open`."""
+        if (
+            type(reader) is not LocalMarketBundleReader
+            or reader._repository_open_identity_capability_v1
+            is not _REPOSITORY_OPEN_IDENTITY_CAPABILITY_V1
+            or not reader._has_repository_open_provenance_v1()
+        ):
+            raise ValueError("reader must be an exact repository-open LocalMarketBundleReader")
         return reader
 
     def _has_repository_open_provenance_v1(self) -> bool:

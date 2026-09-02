@@ -5,6 +5,7 @@ import unicodedata
 from collections.abc import Mapping
 from dataclasses import replace
 from pathlib import Path
+from types import MappingProxyType
 
 import crypto_quant_domain as domain
 from crypto_quant_market_data import MarketBundleReader
@@ -13,6 +14,9 @@ from .analysis import AnalysisArtifactRef, AnalysisArtifactRefV2
 from .analysis_derivation import BacktestAnalysisRuntime
 from .artifact_envelope_publisher import ArtifactEnvelopePublisher
 from .artifact_envelope_reader import ArtifactEnvelopeReader
+from .binance_usdm_tradifi_directional_preparation import (
+    prepare_binance_usdm_tradifi_directional_bar_backtest,
+)
 from .binance_usdm_tradifi_preparation import (
     BinanceUsdmTradifiBarRequestIntent,
     BinanceUsdmTradifiProviderInputs,
@@ -312,7 +316,72 @@ class BinanceUsdmTradifiBacktestOperations:
         return _plain(self._repository.load_analysis_v2(nominal))
 
 
+class BinanceUsdmTradifiDirectionalBacktestOperationsV3(
+    BinanceUsdmTradifiBacktestOperations
+):
+    """Deferred V3 operations over caller-supplied published local readers."""
+
+    def __init__(
+        self,
+        *,
+        intent_readers: Mapping[str, MarketBundleReader],
+        provider_inputs: BinanceUsdmTradifiProviderInputs,
+        artifact_reader: ArtifactEnvelopeReader,
+        artifact_publisher: ArtifactEnvelopePublisher,
+        publication_root: Path,
+    ) -> None:
+        if not isinstance(intent_readers, Mapping) or not intent_readers:
+            raise TypeError("intent_readers must be a non-empty mapping")
+        readers = dict(intent_readers)
+        if any(_canonical_text("intent_key", key) != key for key in readers):
+            raise TypeError("intent_readers must bind canonical keys")
+        if type(provider_inputs) is not BinanceUsdmTradifiProviderInputs:
+            raise TypeError("provider_inputs must be exact BinanceUsdmTradifiProviderInputs")
+        if not callable(getattr(artifact_reader, "read", None)) or not callable(
+            getattr(artifact_publisher, "put", None)
+        ):
+            raise TypeError("artifact reader and publisher must satisfy structural ports")
+        if not isinstance(publication_root, Path):
+            raise TypeError("publication_root must be pathlib.Path")
+        self._intent_readers = MappingProxyType(readers)
+        self._provider_inputs = provider_inputs
+        self._artifact_reader = artifact_reader
+        self._artifact_publisher = artifact_publisher
+        self._publication_root = publication_root
+        self._repository = BacktestEvidenceRepository(artifact_reader)
+        self._analysis_runtime = BacktestAnalysisRuntime(artifact_publisher)
+        self._prepared_trials: set[PreparedTradifiTrial] = set()
+
+    def prepare(
+        self, request_spec: Mapping[str, object], experiment_id: str
+    ) -> PreparedTradifiTrial:
+        if type(request_spec) is not dict or set(request_spec) != {"intent_key"}:
+            raise ValueError("request_spec must exact-cover intent_key")
+        intent_key = _canonical_text("intent_key", request_spec["intent_key"])
+        _canonical_text("experiment_id", experiment_id)
+        try:
+            market_reader = self._intent_readers[intent_key]
+        except KeyError as error:
+            raise KeyError("unknown intent_key") from error
+        prepared = prepare_binance_usdm_tradifi_directional_bar_backtest(
+            experiment_id=experiment_id,
+            market_reader=market_reader,
+            provider_inputs=self._provider_inputs,
+            artifact_reader=self._artifact_reader,
+            artifact_publisher=self._artifact_publisher,
+            publication_root=self._publication_root,
+        )
+        if type(prepared) is BinanceUsdmTradifiBarBacktestFailure:
+            raise _PreparationFailed(prepared)
+        if type(prepared) is not PreparedBacktestExecution:
+            raise TypeError("formal preparation returned an invalid result")
+        trial = PreparedTradifiTrial(prepared, self)
+        self._prepared_trials.add(trial)
+        return trial
+
+
 __all__ = [
     "BinanceUsdmTradifiBacktestOperations",
+    "BinanceUsdmTradifiDirectionalBacktestOperationsV3",
     "PreparedTradifiTrial",
 ]

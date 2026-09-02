@@ -39,11 +39,13 @@ from .binance_usdm_profile import (
     BinanceUsdmSimulationProfile,
 )
 from .binance_usdm_tradifi_directional_preparation import (
+    BinanceUsdmTradifiDirectionalRequestIntentV3,
     prepare_binance_usdm_tradifi_directional_bar_backtest,
     verify_binance_usdm_tradifi_directional_preparation_authority_v3,
 )
 from .binance_usdm_tradifi_operations import (
     BinanceUsdmTradifiBacktestOperations,
+    BinanceUsdmTradifiDirectionalBacktestOperationsV3,
     PreparedTradifiTrial,
 )
 from .binance_usdm_tradifi_preparation import (
@@ -485,6 +487,8 @@ __all__ = [  # noqa: RUF022 - public API remains grouped by subsystem
     "BinanceUsdmTradifiBarBacktestOutcome",
     "BinanceUsdmTradifiBarBacktestResult",
     "BinanceUsdmTradifiBacktestOperations",
+    "BinanceUsdmTradifiDirectionalBacktestOperationsV3",
+    "BinanceUsdmTradifiDirectionalRequestIntentV3",
     "BinanceUsdmTradifiBarRequestIntent",
     "BinanceUsdmTradifiExecutionAccountProfile",
     "BinanceUsdmTradifiLinearFinancialDispatcher",

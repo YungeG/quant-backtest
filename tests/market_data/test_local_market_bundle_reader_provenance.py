@@ -49,11 +49,28 @@ def test_repository_open_provenance_requires_exact_open_and_reader_type(
         bundle_ref=ref,
     )
 
+    assert LocalMarketBundleReader.validate_repository_open_reader_v1(reader) is reader
+    with pytest.raises(ValueError, match="repository-open"):
+        LocalMarketBundleReader.validate_repository_open_reader_v1(direct)
+    with pytest.raises(ValueError, match="repository-open"):
+        LocalMarketBundleReader.validate_repository_open_reader_v1(derived)
     assert reader._has_repository_open_provenance_v1() is True
     assert direct._has_repository_open_provenance_v1() is False
     assert derived._has_repository_open_provenance_v1() is False
     assert direct._repository_open_provenance_v1 is None
     assert derived._repository_open_provenance_v1 is None
+
+
+def test_public_repository_open_validation_rejects_copied_provenance_tuple(
+    tmp_path: Path,
+) -> None:
+    _, _, reader = _open(tmp_path)
+    direct = LocalMarketBundleReader(reader._delegate)
+    direct._repository_open_provenance_v1 = reader._repository_open_provenance_v1
+
+    assert direct._has_repository_open_provenance_v1() is True
+    with pytest.raises(ValueError, match="repository-open"):
+        LocalMarketBundleReader.validate_repository_open_reader_v1(direct)
 
 
 def test_provenance_selection_does_not_dereference_the_filesystem(

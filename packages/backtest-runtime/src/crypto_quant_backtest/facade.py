@@ -194,10 +194,13 @@ class BacktestRuntime:
             snapshot, failure = snapshotter(request)
             if failure is not None or snapshot is None:
                 self._raise_v3_hydration_failure(failure)
-            local_reader = (
-                type(self._market_reader) is LocalMarketBundleReader
-                and self._market_reader._has_repository_open_provenance_v1()
-            )
+            try:
+                LocalMarketBundleReader.validate_repository_open_reader_v1(
+                    self._market_reader
+                )
+                local_reader = True
+            except ValueError:
+                local_reader = False
             selected_durable_lane = (
                 cancellation is None
                 and snapshot.request.result_grade_requested

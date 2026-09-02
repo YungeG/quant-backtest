@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import unicodedata
 from collections.abc import Mapping
 from dataclasses import dataclass
 from pathlib import Path
@@ -224,7 +225,9 @@ def verify_binance_usdm_tradifi_directional_preparation_authority_v3(
     return verify_binance_usdm_koru_directional_strategy_authority_v3(market_reader=market_reader)
 
 
-def _v2_validation_intent(reader: MarketBundleReader) -> tuple[BinanceUsdmTradifiBarRequestIntent, Mapping[str, object]]:
+def _v2_validation_intent(
+    reader: MarketBundleReader, experiment_id: str
+) -> tuple[BinanceUsdmTradifiBarRequestIntent, Mapping[str, object]]:
     manifest = reader.manifest
     bundle_ref = reader.bundle_ref
     if (
@@ -250,7 +253,7 @@ def _v2_validation_intent(reader: MarketBundleReader) -> tuple[BinanceUsdmTradif
     parameter_ref = _artifact_ref(bindings[0].get("parameter_ref"), "parameter_ref")
     return (
         BinanceUsdmTradifiBarRequestIntent(
-            experiment_id="binance-usdm-tradifi-directional-v3",
+            experiment_id=experiment_id,
             timeline_window=TimelineWindow(manifest.coverage_start, manifest.coverage_start, manifest.coverage_end_exclusive),
             execution_account_id="account-1",
             reporting_currency=domain.CurrencyId("USDT"),
@@ -274,10 +277,14 @@ def _read(reader: MarketBundleReader, stream_key: str) -> tuple:
 
 
 def _build_v3_economics_profile(
-    *, reader: MarketBundleReader, artifact_reader: ArtifactEnvelopeReader, provider_inputs: BinanceUsdmTradifiProviderInputs
+    *,
+    reader: MarketBundleReader,
+    experiment_id: str,
+    artifact_reader: ArtifactEnvelopeReader,
+    provider_inputs: BinanceUsdmTradifiProviderInputs,
 ) -> _V3EconomicsProfile:
     """Validate only the sealed V2 market, funding, and financial profile inputs."""
-    v2_intent, _ = _v2_validation_intent(reader)
+    v2_intent, _ = _v2_validation_intent(reader, experiment_id)
     manifest = reader.manifest
     _, payload = _authority(reader, manifest, v2_intent, 2)
     authority_refs, source_ref = _validate_authority_support_v2(payload, provider_inputs)
@@ -306,21 +313,32 @@ def _build_v3_economics_profile(
 
 def prepare_binance_usdm_tradifi_directional_bar_backtest(
     *,
-    market_reader: LocalMarketBundleReader,
+    experiment_id: str,
+    market_reader: MarketBundleReader,
     provider_inputs: BinanceUsdmTradifiProviderInputs,
     artifact_reader: ArtifactEnvelopeReader,
     artifact_publisher: ArtifactEnvelopePublisher,
     publication_root: Path,
 ) -> PreparedBacktestExecution | BinanceUsdmTradifiBarBacktestFailure:
     """Prepare a normal runtime only after both sealed authorities verify."""
+    if type(experiment_id) is not str:
+        raise TypeError("experiment_id must be canonical non-empty text")
+    if (
+        not experiment_id
+        or experiment_id.strip() != experiment_id
+        or unicodedata.normalize("NFC", experiment_id) != experiment_id
+    ):
+        raise ValueError("experiment_id must be canonical non-empty text")
     if (
         type(provider_inputs) is not BinanceUsdmTradifiProviderInputs
-        or type(market_reader) is not LocalMarketBundleReader
         or not callable(getattr(artifact_reader, "read", None))
         or not callable(getattr(artifact_publisher, "put", None))
         or not isinstance(publication_root, Path)
     ):
         raise TypeError("directional V3 public inputs are invalid")
+    market_reader = LocalMarketBundleReader.validate_repository_open_reader_v1(
+        market_reader
+    )
     directional = verify_binance_usdm_koru_directional_strategy_authority_v3(market_reader=market_reader)
     if isinstance(directional, BinanceUsdmTradifiBarBacktestFailure):
         return directional
@@ -328,6 +346,7 @@ def prepare_binance_usdm_tradifi_directional_bar_backtest(
         target = BinanceUsdmKoruDirectionalPlannerV3.target(directional)
         economics = _build_v3_economics_profile(
             reader=market_reader,
+            experiment_id=experiment_id,
             artifact_reader=artifact_reader,
             provider_inputs=provider_inputs,
         )
@@ -338,7 +357,7 @@ def prepare_binance_usdm_tradifi_directional_bar_backtest(
         ):
             raise ValueError("v3_v2_source_binding")
         intent = BinanceUsdmTradifiDirectionalRequestIntentV3(
-            "binance-usdm-tradifi-directional-v3",
+            experiment_id,
             TimelineWindow(market_reader.manifest.coverage_start, market_reader.manifest.coverage_start, market_reader.manifest.coverage_end_exclusive),
             "account-1",
             domain.CurrencyId("USDT"),
@@ -396,6 +415,7 @@ def prepare_binance_usdm_tradifi_directional_bar_backtest(
 
 __all__ = [
     "BinanceUsdmTradifiDirectionalPreparationV3",
+    "BinanceUsdmTradifiDirectionalRequestIntentV3",
     "prepare_binance_usdm_tradifi_directional_bar_backtest",
     "verify_binance_usdm_tradifi_directional_preparation_authority_v3",
 ]
