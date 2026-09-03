@@ -48,6 +48,7 @@ from .binance_usdm_tradifi_directional_preparation import (
     verify_binance_usdm_tradifi_directional_preparation_authority_v3,
 )
 from .binance_usdm_tradifi_operations import (
+    BinanceUsdmKoruPremiumBacktestOperationsV1,
     BinanceUsdmTradifiBacktestOperations,
     BinanceUsdmTradifiDirectionalBacktestOperationsV3,
     PreparedTradifiTrial,
@@ -490,6 +491,7 @@ __all__ = [  # noqa: RUF022 - public API remains grouped by subsystem
     "BinanceUsdmTradifiBarBacktestIntent",
     "BinanceUsdmTradifiBarBacktestOutcome",
     "BinanceUsdmTradifiBarBacktestResult",
+    "BinanceUsdmKoruPremiumBacktestOperationsV1",
     "BinanceUsdmTradifiBacktestOperations",
     "BinanceUsdmTradifiDirectionalBacktestOperationsV3",
     "BinanceUsdmTradifiDirectionalRequestIntentV3",

@@ -65,11 +65,12 @@ def test_local_reader_uses_only_public_offline_contracts() -> None:
         assert forbidden not in source
 
 
-def test_market_data_root_exactly_adds_local_reader() -> None:
+def test_market_data_root_exports_local_reader_and_shared_premium_reader_set() -> None:
     import crypto_quant_market_data as market_data
 
-    assert len(set(market_data.__all__)) == 15
+    assert len(set(market_data.__all__)) == 17
     assert market_data.LocalMarketBundleReader is LocalMarketBundleReader
+    assert market_data.KoruPremiumReaderSetV1.__module__ == "crypto_quant_market_data.koru_premium_reader_set_v1"
 
 
 def test_only_durable_runtime_seams_import_exact_local_reader() -> None:

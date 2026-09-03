@@ -8,12 +8,20 @@ from pathlib import Path
 from types import MappingProxyType
 
 import crypto_quant_domain as domain
-from crypto_quant_market_data import MarketBundleReader
+from crypto_quant_market_data import (
+    KoruPremiumReaderBindingV1,
+    KoruPremiumReaderSetV1,
+    LocalMarketBundleReader,
+    MarketBundleReader,
+)
 
 from .analysis import AnalysisArtifactRef, AnalysisArtifactRefV2
 from .analysis_derivation import BacktestAnalysisRuntime
 from .artifact_envelope_publisher import ArtifactEnvelopePublisher
 from .artifact_envelope_reader import ArtifactEnvelopeReader
+from .binance_usdm_koru_directional_profile_v3 import (
+    verify_binance_usdm_koru_directional_strategy_authority_v3,
+)
 from .binance_usdm_tradifi_directional_preparation import (
     prepare_binance_usdm_tradifi_directional_bar_backtest,
 )
@@ -109,6 +117,47 @@ def _completed_view(
             "result_grade": completed.result_grade.value,
         }
     )
+
+
+def _verify_premium_overlay_binding(
+    binding: KoruPremiumReaderBindingV1,
+    market_reader: MarketBundleReader,
+) -> LocalMarketBundleReader:
+    """Admit only the exact V3 overlay authority sealed into a premium row."""
+    reader = LocalMarketBundleReader.validate_repository_open_reader_v1(market_reader)
+    authority = verify_binance_usdm_koru_directional_strategy_authority_v3(
+        market_reader=reader
+    )
+    if isinstance(authority, BinanceUsdmTradifiBarBacktestFailure):
+        raise TypeError("premium overlay authority")
+    if (
+        reader.bundle_ref != binding.overlay_bundle_ref
+        or reader.bundle_ref.manifest_hash != binding.overlay_bundle_digest
+        or authority.bundle_ref != binding.overlay_bundle_ref
+        or authority.bundle_digest != binding.overlay_bundle_digest
+        or authority.selected_recipe_id != binding.premium_id
+        or authority.target_stream_key != binding.premium_key
+        or authority.target_stream_key != binding.target_stream_key
+        or authority.strategy_ref != binding.strategy_ref
+        or authority.parameter_ref != binding.parameter_ref
+        or domain.ArtifactRef.from_envelope(binding.strategy_definition_envelope)
+        != binding.strategy_ref
+        or domain.ArtifactRef.from_envelope(binding.strategy_parameter_set_envelope)
+        != binding.parameter_ref
+        or authority.recipe_digest != binding.recipe_digest
+        or authority.target_stream_digest != binding.target_stream_digest
+        or authority.compiler_result_ref != binding.compiler_result_ref
+        or authority.compiler_result_digest != binding.compiler_result_digest
+        or authority.scope_ref != binding.scope_ref
+        or authority.scope_digest != binding.scope_digest
+        or authority.source_projection_ref != binding.source_projection_ref
+        or authority.source_fragment_digest != binding.source_fragment_digest
+        or authority.economics_bundle_ref != binding.economics_bundle_ref
+        or authority.economics_bundle_digest != binding.economics_bundle_digest
+        or authority.economics_authority_digest != binding.economics_authority_digest
+    ):
+        raise ValueError("premium overlay binding")
+    return reader
 
 
 class _PreparationFailed(RuntimeError):
@@ -316,6 +365,67 @@ class BinanceUsdmTradifiBacktestOperations:
         return _plain(self._repository.load_analysis_v2(nominal))
 
 
+class BinanceUsdmKoruPremiumBacktestOperationsV1(BinanceUsdmTradifiBacktestOperations):
+    """Fixed PRM-01..04 operations over the sealed market-data reader set."""
+
+    def __init__(
+        self,
+        *,
+        reader_set: KoruPremiumReaderSetV1,
+        provider_inputs: BinanceUsdmTradifiProviderInputs,
+        artifact_reader: ArtifactEnvelopeReader,
+        artifact_publisher: ArtifactEnvelopePublisher,
+        publication_root: Path,
+    ) -> None:
+        if type(reader_set) is not KoruPremiumReaderSetV1:
+            raise TypeError("reader_set must be exact KoruPremiumReaderSetV1")
+        if type(provider_inputs) is not BinanceUsdmTradifiProviderInputs:
+            raise TypeError("provider_inputs must be exact BinanceUsdmTradifiProviderInputs")
+        if not callable(getattr(artifact_reader, "read", None)) or not callable(
+            getattr(artifact_publisher, "put", None)
+        ):
+            raise TypeError("artifact reader and publisher must satisfy structural ports")
+        if not isinstance(publication_root, Path):
+            raise TypeError("publication_root must be pathlib.Path")
+        self._reader_set = reader_set
+        self._provider_inputs = provider_inputs
+        self._artifact_reader = artifact_reader
+        self._artifact_publisher = artifact_publisher
+        self._publication_root = publication_root
+        self._repository = BacktestEvidenceRepository(artifact_reader)
+        self._analysis_runtime = BacktestAnalysisRuntime(artifact_publisher)
+        self._prepared_trials: set[PreparedTradifiTrial] = set()
+
+    def prepare(
+        self, request_spec: Mapping[str, object], experiment_id: str
+    ) -> PreparedTradifiTrial:
+        if type(request_spec) is not dict or set(request_spec) != {"intent_key"}:
+            raise ValueError("request_spec must exact-cover intent_key")
+        intent_key = _canonical_text("intent_key", request_spec["intent_key"])
+        if intent_key not in {"KORU-PRM-01", "KORU-PRM-02", "KORU-PRM-03", "KORU-PRM-04"}:
+            raise KeyError("unknown intent_key")
+        _canonical_text("experiment_id", experiment_id)
+        binding = next(row for row in self._reader_set.bindings if row.premium_id == intent_key)
+        market_reader = _verify_premium_overlay_binding(
+            binding, self._reader_set.reader_for(intent_key)
+        )
+        prepared = prepare_binance_usdm_tradifi_directional_bar_backtest(
+            experiment_id=experiment_id,
+            market_reader=market_reader,
+            provider_inputs=self._provider_inputs,
+            artifact_reader=self._artifact_reader,
+            artifact_publisher=self._artifact_publisher,
+            publication_root=self._publication_root,
+        )
+        if type(prepared) is BinanceUsdmTradifiBarBacktestFailure:
+            raise _PreparationFailed(prepared)
+        if type(prepared) is not PreparedBacktestExecution:
+            raise TypeError("formal preparation returned an invalid result")
+        trial = PreparedTradifiTrial(prepared, self)
+        self._prepared_trials.add(trial)
+        return trial
+
+
 class BinanceUsdmTradifiDirectionalBacktestOperationsV3(
     BinanceUsdmTradifiBacktestOperations
 ):
@@ -381,6 +491,7 @@ class BinanceUsdmTradifiDirectionalBacktestOperationsV3(
 
 
 __all__ = [
+    "BinanceUsdmKoruPremiumBacktestOperationsV1",
     "BinanceUsdmTradifiBacktestOperations",
     "BinanceUsdmTradifiDirectionalBacktestOperationsV3",
     "PreparedTradifiTrial",

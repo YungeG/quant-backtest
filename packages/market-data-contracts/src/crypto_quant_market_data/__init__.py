@@ -16,6 +16,10 @@ from .bundles import (
     MarketEvent,
     MarketStreamManifest,
 )
+from .koru_premium_reader_set_v1 import (
+    KoruPremiumReaderBindingV1,
+    KoruPremiumReaderSetV1,
+)
 from .local_market_bundle_reader import LocalMarketBundleReader
 
 __version__ = "0.1.0"
@@ -26,6 +30,8 @@ __all__ = [
     "InputValidationFailure",
     "InputValidationIssue",
     "InputValidationIssueCode",
+    "KoruPremiumReaderBindingV1",
+    "KoruPremiumReaderSetV1",
     "LocalMarketBundleReader",
     "MarketBundleCapability",
     "MarketBundleError",

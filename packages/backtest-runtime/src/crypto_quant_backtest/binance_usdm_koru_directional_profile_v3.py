@@ -102,7 +102,9 @@ class KoruDirectionalV3StrategyAuthority:
     economics_bundle_digest: str
     economics_authority_digest: str
     compiler_result_ref: domain.ArtifactRef
+    compiler_result_digest: str
     selected_recipe_id: str
+    recipe_digest: str
     strategy_ref: domain.ArtifactRef
     parameter_ref: domain.ArtifactRef
     strategy_id: str
@@ -111,25 +113,39 @@ class KoruDirectionalV3StrategyAuthority:
     target_stream_digest: str
     target_exposure: str
     scope_ref: domain.ArtifactRef
+    scope_digest: str
+    source_projection_ref: domain.ArtifactRef
     source_fragment_digest: str
     source_profile_authority_envelope: domain.ArtifactEnvelope
     source_profile_authority_ref: domain.ArtifactRef
     target_stream: PrecomputedTargetStream
 
     def __post_init__(self) -> None:
-        refs = (self.compiler_result_ref, self.strategy_ref, self.parameter_ref, self.scope_ref, self.source_profile_authority_ref)
+        refs = (
+            self.compiler_result_ref,
+            self.strategy_ref,
+            self.parameter_ref,
+            self.scope_ref,
+            self.source_projection_ref,
+            self.source_profile_authority_ref,
+        )
         if type(self.bundle_ref) is not MarketBundleRef or type(self.economics_bundle_ref) is not MarketBundleRef or any(type(value) is not domain.ArtifactRef for value in refs):
             raise TypeError("authority_refs")
         if (
             self.bundle_digest != self.bundle_ref.manifest_hash
             or self.economics_bundle_digest != self.economics_bundle_ref.manifest_hash
             or (self.compiler_result_ref.artifact_type, self.compiler_result_ref.schema_version) != ("koru_directional_target_compile_result", 1)
+            or self.compiler_result_ref != domain.ArtifactRef("koru_directional_target_compile_result", 1, self.compiler_result_digest)
             or (self.strategy_ref.artifact_type, self.strategy_ref.schema_version) != ("strategy_definition", 1)
             or (self.parameter_ref.artifact_type, self.parameter_ref.schema_version) != ("strategy_parameter_set", 1)
             or (self.scope_ref.artifact_type, self.scope_ref.schema_version) != ("koru_directional_discovery_scope", 1)
+            or self.scope_ref != domain.ArtifactRef("koru_directional_discovery_scope", 1, self.scope_digest)
+            or self.source_projection_ref != domain.ArtifactRef("binance_usdm_koru_source_projection", 2, self.source_fragment_digest)
             or (self.source_profile_authority_ref.artifact_type, self.source_profile_authority_ref.schema_version) != ("binance_usdm_koru_source_profile_authority", 2)
         ):
             raise ValueError("authority_refs")
+        for name in ("compiler_result_digest", "recipe_digest", "scope_digest", "source_fragment_digest"):
+            _digest(getattr(self, name), name)
         for name in ("selected_recipe_id", "strategy_id", "sleeve_id", "target_stream_key", "target_exposure"):
             _text(getattr(self, name), name)
         _digest(self.economics_authority_digest, "economics_authority_digest")
@@ -331,9 +347,10 @@ def verify_binance_usdm_koru_directional_strategy_authority_v3(
         return KoruDirectionalV3StrategyAuthority(
             bundle_ref, bundle_ref.manifest_hash, economics_ref, _digest(payload["economics_bundle_digest"], "economics_bundle_digest"),
             _digest(payload["economics_authority_digest"], "economics_authority_digest"), compiler_ref,
-            _text(recipe["recipe_id"], "recipe_id"), strategy_ref, recipe_ref, _text(payload["strategy_id"], "strategy_id"),
+            compiler_digest, _text(recipe["recipe_id"], "recipe_id"), _digest(payload["recipe_digest"], "recipe_digest"),
+            strategy_ref, recipe_ref, _text(payload["strategy_id"], "strategy_id"),
             _text(payload["sleeve_id"], "sleeve_id"), target_key, digest, _text(recipe["target_exposure"], "target_exposure"),
-            scope_ref, source_fragment, source_authority, source_authority_ref, target,
+            scope_ref, scope_digest, source_ref, source_fragment, source_authority, source_authority_ref, target,
         )
     except (AttributeError, KeyError, StopIteration, TypeError, ValueError):
         return _failure("unexpected_input")
