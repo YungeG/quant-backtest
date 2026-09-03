@@ -12,6 +12,7 @@ from tests.bundle_builder.providers.binance_usdm import (
 THIS_TEST = Path(__file__)
 RETAINED_V2_ROOT_EXPORTS = {
     "APPROVED_MEMBER_HASHES",
+    "BINANCE_USDM_KORU_AGGREGATE_TRADE_AVAILABILITY_AUTHORITY_V1",
     "BinanceUsdmKoruAggregateIdCoverageGapEvidenceV1",
     "BinanceUsdmKoruAggregateTradeAvailabilityAuthorityV1",
     "BinanceUsdmKoruAggregateTradeBoundaryIndexFailureCodeV1",

@@ -25,6 +25,7 @@ from .binance_usdm_koru_aggtrade_boundary_index_v1 import (
     build_binance_usdm_koru_aggregate_trade_boundary_index_v1,
 )
 from .binance_usdm_koru_aggtrades_source_bounded_v1 import (
+    BINANCE_USDM_KORU_AGGREGATE_TRADE_AVAILABILITY_AUTHORITY_V1,
     BinanceUsdmKoruAggregateTradeAvailabilityAuthorityV1,
     BinanceUsdmKoruAggregateTradeRawIdGapEvidenceV1,
     BinanceUsdmKoruAggregateTradesSourceBoundedCaptureOutcomeV1,
@@ -198,6 +199,7 @@ __version__ = "0.1.0"
 
 __all__ = [
     "APPROVED_MEMBER_HASHES",
+    "BINANCE_USDM_KORU_AGGREGATE_TRADE_AVAILABILITY_AUTHORITY_V1",
     "AvailabilityClosureDeclaration",
     "AvailabilitySpan",
     "BarAggregationFailure",
