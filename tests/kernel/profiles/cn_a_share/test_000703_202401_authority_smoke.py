@@ -6,7 +6,9 @@ from dataclasses import replace
 from datetime import date, datetime, timedelta
 from decimal import Decimal
 from pathlib import Path
-from typing import cast
+from typing import Callable, cast
+
+import pytest
 from zoneinfo import ZoneInfo
 
 from crypto_quant_domain import (
@@ -45,13 +47,17 @@ from crypto_quant_trading.profiles.cn_a_share import (
 from tools.acquisition.cn_a_share_tushare_000703_202401_month_smoke_v2 import (
     verify_tushare_000703_202401_month_smoke_v2,
 )
+from tools.acquisition.cn_a_share_tushare_000703_month_order_authority_v1 import (
+    verify_tushare_000703_month_order_authority_v1,
+)
 from tools.acquisition.cn_a_share_szse_trading_rules_2023_fixed_source_v1 import (
     verify_szse_trading_rules_2023_fixed_source_v1,
 )
 
 
 ROOT = Path(__file__).resolve().parents[4]
-EVIDENCE = ROOT / "evidence/tushare-000703-development-smoke-202401-v4"
+FIXED_EVIDENCE = ROOT / "evidence/tushare-000703-development-smoke-202401-v4"
+MONTH_AUTHORITY_EVIDENCE = ROOT / "evidence/tushare-000703-month-order-authority-202401-v1"
 CALENDAR_EVIDENCE = ROOT / "evidence/tushare-calendar-szse-development-month-202401-v3"
 MINUTE_EVIDENCE = ROOT / "evidence/tushare-minute-000703-development-month-202401-v2/sessions"
 SZSE_RULES_EVIDENCE = ROOT / "evidence/szse-trading-rules-2023-fixed-source-v1"
@@ -79,11 +85,23 @@ def _row(path: Path) -> dict[str, object]:
     return dict(zip(fields, items[0], strict=True))
 
 
-def test_000703_202401_verified_development_authority_reaches_order_rule_seam() -> None:
-    receipt = verify_tushare_000703_202401_month_smoke_v2(
-        EVIDENCE, calendar_authority_dir=CALENDAR_EVIDENCE, minute_authority_root=MINUTE_EVIDENCE
+@pytest.mark.parametrize(
+    ("authority_evidence", "verifier"),
+    (
+        (FIXED_EVIDENCE, verify_tushare_000703_202401_month_smoke_v2),
+        (MONTH_AUTHORITY_EVIDENCE, verify_tushare_000703_month_order_authority_v1),
+    ),
+)
+def test_000703_202401_verified_development_authority_reaches_order_rule_seam(
+    authority_evidence: Path,
+    verifier: Callable[..., dict[str, object]],
+) -> None:
+    receipt = verifier(
+        authority_evidence,
+        calendar_authority_dir=CALENDAR_EVIDENCE,
+        minute_authority_root=MINUTE_EVIDENCE,
     )
-    declaration_path = EVIDENCE / "declaration.json"
+    declaration_path = authority_evidence / "declaration.json"
     declaration = cast(dict[str, object], json.loads(declaration_path.read_bytes()))
     calendar_receipt = cast(
         dict[str, object],
@@ -186,10 +204,10 @@ def test_000703_202401_verified_development_authority_reaches_order_rule_seam() 
         assert session.phase_end_exclusive is not None
         daily_key = f"response/{day}/daily.json"
         limit_key = f"response/{day}/stk-limit.json"
-        daily = _row(EVIDENCE / daily_key)
-        limit = _row(EVIDENCE / limit_key)
-        assert _sha256(EVIDENCE / daily_key) == raw_members[daily_key]["sha256"]
-        assert _sha256(EVIDENCE / limit_key) == raw_members[limit_key]["sha256"]
+        daily = _row(authority_evidence / daily_key)
+        limit = _row(authority_evidence / limit_key)
+        assert _sha256(authority_evidence / daily_key) == raw_members[daily_key]["sha256"]
+        assert _sha256(authority_evidence / limit_key) == raw_members[limit_key]["sha256"]
         assert daily["ts_code"] == limit["ts_code"] == "000703.SZ"
         assert daily["trade_date"] == limit["trade_date"] == day
         pretrade_date = datetime.strptime(cast(str, open_rows[day]["pretrade_date"]), "%Y%m%d").date()
