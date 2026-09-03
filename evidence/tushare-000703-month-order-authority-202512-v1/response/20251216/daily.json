@@ -1,0 +1,1 @@
+{"request_id":"ddc19064-bad0-44da-adcb-1ea9acc5f126","code":0,"data":{"fields":["ts_code","trade_date","open","high","low","close","pre_close","change","pct_chg","vol","amount"],"items":[["000703.SZ","20251216",8.11,8.15,7.47,7.57,8.23,-0.66,-8.0194,699517.05,538818.071]],"has_more":false,"count":0},"msg":"","detail":"..."}

@@ -1,0 +1,1 @@
+{"request_id":"fba90ace-6465-4c63-a826-eb26afe5c1a0","code":0,"data":{"fields":["ts_code","trade_date","open","high","low","close","pre_close","change","pct_chg","vol","amount"],"items":[["000703.SZ","20250311",6.15,6.23,6.08,6.19,6.21,-0.02,-0.3221,280683.46,172694.12]],"has_more":false,"count":0},"msg":"","detail":"..."}

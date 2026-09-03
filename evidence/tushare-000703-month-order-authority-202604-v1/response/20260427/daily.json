@@ -1,0 +1,1 @@
+{"request_id":"544671be-65ca-4db8-9451-1ad571faa305","code":0,"data":{"fields":["ts_code","trade_date","open","high","low","close","pre_close","change","pct_chg","vol","amount"],"items":[["000703.SZ","20260427",15.15,15.6,14.97,15.35,14.97,0.38,2.5384,799115.01,1227223.096]],"has_more":false,"count":0},"msg":"","detail":"..."}
