@@ -109,7 +109,7 @@ def test_retains_exact_proxy_dividend_response_and_development_convention(
     assert verify_tushare_000703_dividend_authority_v1(tmp_path / "out") == receipt
 
 
-@pytest.mark.parametrize("mutation", ["raw", "receipt_hash", "timestamp"])
+@pytest.mark.parametrize("mutation", ["raw", "receipt_hash", "timestamp", "flag"])
 def test_verifier_rejects_raw_receipt_and_timestamp_tampering(
     tmp_path: Path, mutation: str
 ) -> None:
@@ -121,8 +121,11 @@ def test_verifier_rejects_raw_receipt_and_timestamp_tampering(
     else:
         receipt_path = root / "acquisition-receipt.json"
         receipt = json.loads(receipt_path.read_bytes())
-        key = "response_sha256" if mutation == "receipt_hash" else "response_acquired_at_epoch_nanoseconds"
-        receipt["provider_request"][key] = "sha256:" + "0" * 64 if mutation == "receipt_hash" else 99
+        if mutation == "flag":
+            receipt["development_only"] = 1
+        else:
+            key = "response_sha256" if mutation == "receipt_hash" else "response_acquired_at_epoch_nanoseconds"
+            receipt["provider_request"][key] = "sha256:" + "0" * 64 if mutation == "receipt_hash" else 99
         receipt_path.write_bytes(json.dumps(receipt, sort_keys=True, separators=(",", ":")).encode())
     with pytest.raises(AcquisitionError):
         verify_tushare_000703_dividend_authority_v1(root)

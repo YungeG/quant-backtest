@@ -287,6 +287,10 @@ def verify_tushare_000703_dividend_authority_v1(output_dir: str | Path) -> dict[
         or provider.get("declared_sha256") is not None
         or receipt_bytes != json_bytes(receipt)
         or receipt.get("action_selection") != _action_selection(_authority_rows(raw, api_name="dividend", expected_fields=_FIELDS, forbidden_text="\0"))
+        or any(type(receipt.get(key)) is not bool for key in (
+            "tushare_dividend_assumed_correct", "zero_row_authoritative", "source_bounded",
+            "development_only", "decision_grade_eligible", "live_eligible", "deployment_authorized",
+        ))
         or tuple(receipt.get(key) for key in (
             "tushare_dividend_assumed_correct", "zero_row_authoritative", "source_bounded",
             "development_only", "decision_grade_eligible", "live_eligible", "deployment_authorized",
