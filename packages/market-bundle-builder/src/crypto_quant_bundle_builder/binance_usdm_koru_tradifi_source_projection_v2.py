@@ -7,6 +7,8 @@ projection identities and intentionally cannot equal their V1 counterparts.
 
 from __future__ import annotations
 
+import base64
+import json
 from bisect import bisect_left
 from collections import OrderedDict, defaultdict
 from collections.abc import Mapping
@@ -89,6 +91,28 @@ _LIMITATIONS = (
 _MARK_PURPOSES = frozenset({"strategy", "valuation", "margin", "liquidation"})
 _INDEX_PURPOSES = frozenset({"strategy"})
 _EPOCH_DATE = date(1970, 1, 1)
+
+KORU_TRADIFI_SOURCE_PROJECTION_AUTHORITY_ARTIFACT_TYPE_V1 = (
+    "binance_usdm_koru_tradifi_source_projection_authority_v1"
+)
+KORU_TRADIFI_SOURCE_PROJECTION_AUTHORITY_SCHEMA_VERSION_V1 = 1
+_AUTHORITY_BUILDER_ID_V1 = "binance_usdm_koru_tradifi_source_projection_v2"
+_AUTHORITY_PAYLOAD_FIELDS_V1 = frozenset(
+    {
+        "type",
+        "schema_version",
+        "builder",
+        "discovery_scope",
+        "source_fragment_digest",
+        "source_projection",
+    }
+)
+_AUTHORITY_BUILDER_FIELDS_V1 = frozenset(
+    {"id", "source_projection_type", "source_projection_schema_version"}
+)
+_AUTHORITY_SCOPE_FIELDS_V1 = frozenset(
+    {"timeline_window_start", "timeline_window_end_exclusive"}
+)
 
 
 def _hash(name: str, value: object) -> str:
@@ -1181,6 +1205,332 @@ class BinanceUsdmKoruTradifiSourceProjectionResultV2:
 
     def to_canonical_dict(self) -> dict[str, object]:
         return {**self._body(), "fragment_digest": self.fragment_digest}
+
+
+def _authority_type_registry_v1() -> dict[str, type[object]]:
+    """Whitelist the exact model types needed to replay a V2 result."""
+
+    from crypto_quant_domain import artifacts, instruments, time
+    from crypto_quant_domain.numeric import scales
+    from crypto_quant_market_data import bundles
+
+    from . import (
+        binance_usdm_koru_aggtrade_boundary_index_v1,
+        binance_usdm_koru_aggtrades_source_bounded_v1,
+        binance_usdm_koru_funding_rate_history_source_bounded_v1,
+        binance_usdm_koru_price_bars_source_bounded_v1,
+        koru_tradifi_calendar_unit_authority_v1,
+        source_snapshots,
+    )
+
+    registry: dict[str, type[object]] = {}
+    for module in (
+        artifacts,
+        instruments,
+        time,
+        scales,
+        bundles,
+        binance_usdm_koru_aggtrade_boundary_index_v1,
+        binance_usdm_koru_aggtrades_source_bounded_v1,
+        binance_usdm_koru_funding_rate_history_source_bounded_v1,
+        binance_usdm_koru_price_bars_source_bounded_v1,
+        koru_tradifi_calendar_unit_authority_v1,
+        source_snapshots,
+    ):
+        for value in vars(module).values():
+            if (
+                isinstance(value, type)
+                and value.__module__ == module.__name__
+                and (is_dataclass(value) or issubclass(value, Enum))
+            ):
+                registry[f"{value.__module__}.{value.__qualname__}"] = value
+    for value in (
+        BinanceUsdmKoruTradifiSourceProjectionRequestV2,
+        BinanceUsdmKoruTradifiSourceProjectionResultV2,
+        BinanceUsdmKoruFirstRetainedTradeProjectionLineageV2,
+        BinanceUsdmKoruMissingBoundaryProjectionV2,
+    ):
+        registry[f"{__name__}.{value.__qualname__}"] = value
+    return registry
+
+
+def _authority_encode_v1(value: object) -> dict[str, object]:
+    registry = _authority_type_registry_v1()
+
+    def encode(item: object) -> dict[str, object]:
+        if item is None or type(item) in (bool, int, str):
+            return {"kind": "scalar", "value": item}
+        if type(item) is bytes:
+            return {
+                "kind": "bytes",
+                "base64": base64.b64encode(item).decode("ascii"),
+            }
+        if isinstance(item, Enum):
+            type_id = f"{type(item).__module__}.{type(item).__qualname__}"
+            if registry.get(type_id) is not type(item):
+                raise TypeError("source authority contains an unsupported enum")
+            return {"kind": "enum", "type": type_id, "value": item.value}
+        if type(item) is tuple:
+            return {"kind": "tuple", "items": [encode(child) for child in item]}
+        if isinstance(item, Mapping):
+            keys = tuple(sorted(item))
+            if any(type(key) is not str for key in keys):
+                raise TypeError("source authority mappings must use string keys")
+            return {
+                "kind": "mapping",
+                "items": [[key, encode(item[key])] for key in keys],
+            }
+        if is_dataclass(item) and not isinstance(item, type):
+            type_id = f"{type(item).__module__}.{type(item).__qualname__}"
+            if registry.get(type_id) is not type(item):
+                raise TypeError("source authority contains an unsupported model")
+            return {
+                "kind": "model",
+                "type": type_id,
+                "fields": [
+                    [item_field.name, encode(getattr(item, item_field.name))]
+                    for item_field in fields(item)
+                    if item_field.init
+                ],
+            }
+        raise TypeError("source authority contains an unsupported value")
+
+    return encode(value)
+
+
+def _authority_decode_v1(value: object) -> object:
+    registry = _authority_type_registry_v1()
+
+    def exact(value: object, keys: frozenset[str]) -> dict[str, object]:
+        if type(value) is not dict or set(value) != keys:
+            raise ValueError("source authority serialization schema mismatch")
+        return value
+
+    def decode(item: object) -> object:
+        if type(item) is not dict or type(item.get("kind")) is not str:
+            raise ValueError("source authority serialization schema mismatch")
+        kind = item["kind"]
+        expected_keys = {
+            "scalar": frozenset({"kind", "value"}),
+            "bytes": frozenset({"kind", "base64"}),
+            "enum": frozenset({"kind", "type", "value"}),
+            "tuple": frozenset({"kind", "items"}),
+            "mapping": frozenset({"kind", "items"}),
+            "model": frozenset({"kind", "type", "fields"}),
+        }.get(kind)
+        if expected_keys is None:
+            raise ValueError("source authority serialization schema mismatch")
+        node = exact(item, expected_keys)
+        if kind == "scalar":
+            if node["value"] is None or type(node["value"]) in (bool, int, str):
+                return node["value"]
+        elif kind == "bytes":
+            encoded = node["base64"]
+            if type(encoded) is str:
+                try:
+                    decoded = base64.b64decode(encoded, validate=True)
+                except ValueError as error:
+                    raise ValueError("source authority bytes are invalid") from error
+                if base64.b64encode(decoded).decode("ascii") == encoded:
+                    return decoded
+        elif kind == "enum":
+            type_id, enum_value = node["type"], node["value"]
+            enum_type = registry.get(type_id) if type(type_id) is str else None
+            if enum_type is not None and issubclass(enum_type, Enum):
+                return enum_type(enum_value)
+        elif kind == "tuple":
+            if type(node["items"]) is list:
+                return tuple(decode(child) for child in node["items"])
+        elif kind == "mapping":
+            entries = node["items"]
+            if type(entries) is list:
+                decoded: dict[str, object] = {}
+                previous = ""
+                for entry in entries:
+                    if (
+                        type(entry) is not list
+                        or len(entry) != 2
+                        or type(entry[0]) is not str
+                        or entry[0] <= previous
+                    ):
+                        raise ValueError("source authority mapping order is invalid")
+                    previous = entry[0]
+                    decoded[entry[0]] = decode(entry[1])
+                return decoded
+        elif kind == "model":
+            type_id = node["type"]
+            model_type = registry.get(type_id) if type(type_id) is str else None
+            model_fields = node["fields"]
+            if (
+                model_type is not None
+                and is_dataclass(model_type)
+                and type(model_fields) is list
+            ):
+                expected = tuple(
+                    item_field.name
+                    for item_field in fields(model_type)
+                    if item_field.init
+                )
+                if (
+                    len(model_fields) != len(expected)
+                    or any(
+                        type(entry) is not list
+                        or len(entry) != 2
+                        or type(entry[0]) is not str
+                        for entry in model_fields
+                    )
+                    or tuple(entry[0] for entry in model_fields) != expected
+                ):
+                    raise ValueError("source authority model field order is invalid")
+                return model_type(
+                    **{entry[0]: decode(entry[1]) for entry in model_fields}
+                )
+        raise ValueError("source authority serialization value is invalid")
+
+    return decode(value)
+
+
+def _discovery_scope_v1(
+    result: BinanceUsdmKoruTradifiSourceProjectionResultV2,
+) -> dict[str, object]:
+    request = result.request
+    return {
+        "timeline_window_start": request.timeline_window_start.to_canonical_dict(),
+        "timeline_window_end_exclusive": (
+            request.timeline_window_end_exclusive.to_canonical_dict()
+        ),
+    }
+
+
+def _source_projection_authority_payload_v1(
+    result: BinanceUsdmKoruTradifiSourceProjectionResultV2,
+) -> dict[str, object]:
+    trusted = _trusted_result(result)
+    if trusted is None:
+        raise ValueError("result must be an exact canonical source-projection result")
+    return {
+        "type": KORU_TRADIFI_SOURCE_PROJECTION_AUTHORITY_ARTIFACT_TYPE_V1,
+        "schema_version": KORU_TRADIFI_SOURCE_PROJECTION_AUTHORITY_SCHEMA_VERSION_V1,
+        "builder": {
+            "id": _AUTHORITY_BUILDER_ID_V1,
+            "source_projection_type": (
+                "binance_usdm_koru_tradifi_source_projection_result_v2"
+            ),
+            "source_projection_schema_version": _SCHEMA_VERSION,
+        },
+        "discovery_scope": _discovery_scope_v1(trusted),
+        "source_fragment_digest": trusted.fragment_digest,
+        "source_projection": _authority_encode_v1(trusted),
+    }
+
+
+def create_binance_usdm_koru_tradifi_source_projection_authority_v1(
+    result: BinanceUsdmKoruTradifiSourceProjectionResultV2,
+) -> tuple[ArtifactEnvelope, ArtifactRef]:
+    """Create the versioned, replayable authority envelope for an exact V2 result."""
+
+    envelope = ArtifactEnvelope.create(
+        KORU_TRADIFI_SOURCE_PROJECTION_AUTHORITY_ARTIFACT_TYPE_V1,
+        KORU_TRADIFI_SOURCE_PROJECTION_AUTHORITY_SCHEMA_VERSION_V1,
+        _source_projection_authority_payload_v1(result),
+    )
+    ref = ArtifactRef.from_envelope(envelope)
+    if ref.content_hash == result.fragment_digest:
+        raise ValueError(
+            "authority artifact identity must differ from fragment identity"
+        )
+    return envelope, ref
+
+
+def serialize_binance_usdm_koru_tradifi_source_projection_authority_v1(
+    result: BinanceUsdmKoruTradifiSourceProjectionResultV2,
+) -> bytes:
+    """Return the exact canonical authority envelope bytes for a V2 result."""
+
+    envelope, _ = create_binance_usdm_koru_tradifi_source_projection_authority_v1(
+        result
+    )
+    return canonical_bytes(envelope)
+
+
+def _authority_envelope_from_bytes_v1(source: bytes) -> ArtifactEnvelope:
+    if type(source) is not bytes:
+        raise TypeError("source authority envelope must be bytes")
+    try:
+        value = json.loads(source.decode("utf-8"))
+    except (UnicodeDecodeError, json.JSONDecodeError, RecursionError) as error:
+        raise ValueError("source authority envelope is not canonical JSON") from error
+    if type(value) is not dict or canonical_bytes(value) != source:
+        raise ValueError("source authority envelope must use exact canonical bytes")
+    try:
+        envelope = ArtifactEnvelope(
+            artifact_type=value["artifact_type"],
+            schema_version=value["schema_version"],
+            payload=value["payload"],
+            content_hash=value["content_hash"],
+        )
+    except (KeyError, TypeError, ValueError) as error:
+        raise ValueError("source authority envelope is invalid") from error
+    if (
+        set(value) != {"artifact_type", "schema_version", "payload", "content_hash"}
+        or canonical_bytes(envelope) != source
+    ):
+        raise ValueError("source authority envelope is invalid")
+    return envelope
+
+
+def open_binance_usdm_koru_tradifi_source_projection_authority_v1(
+    source: bytes,
+) -> BinanceUsdmKoruTradifiSourceProjectionResultV2:
+    """Open canonical authority bytes only after typed V2 replay and identity checks."""
+
+    envelope = _authority_envelope_from_bytes_v1(source)
+    if (
+        envelope.artifact_type
+        != KORU_TRADIFI_SOURCE_PROJECTION_AUTHORITY_ARTIFACT_TYPE_V1
+        or envelope.schema_version
+        != KORU_TRADIFI_SOURCE_PROJECTION_AUTHORITY_SCHEMA_VERSION_V1
+    ):
+        raise ValueError("source authority envelope schema is unsupported")
+    payload = json.loads(canonical_bytes(envelope.payload).decode("utf-8"))
+    if type(payload) is not dict or set(payload) != _AUTHORITY_PAYLOAD_FIELDS_V1:
+        raise ValueError("source authority payload schema is invalid")
+    if (
+        payload["type"]
+        != KORU_TRADIFI_SOURCE_PROJECTION_AUTHORITY_ARTIFACT_TYPE_V1
+        or payload["schema_version"]
+        != KORU_TRADIFI_SOURCE_PROJECTION_AUTHORITY_SCHEMA_VERSION_V1
+        or type(payload["builder"]) is not dict
+        or set(payload["builder"]) != _AUTHORITY_BUILDER_FIELDS_V1
+        or payload["builder"]
+        != {
+            "id": _AUTHORITY_BUILDER_ID_V1,
+            "source_projection_type": (
+                "binance_usdm_koru_tradifi_source_projection_result_v2"
+            ),
+            "source_projection_schema_version": _SCHEMA_VERSION,
+        }
+        or type(payload["discovery_scope"]) is not dict
+        or set(payload["discovery_scope"]) != _AUTHORITY_SCOPE_FIELDS_V1
+    ):
+        raise ValueError("source authority payload identity is invalid")
+    try:
+        rebuilt = _authority_decode_v1(payload["source_projection"])
+    except (IndexError, RecursionError, TypeError, ValueError) as error:
+        raise ValueError("source authority cannot reconstruct typed result") from error
+    if type(rebuilt) is not BinanceUsdmKoruTradifiSourceProjectionResultV2:
+        raise ValueError("source authority result type is invalid")
+    trusted = _trusted_result(rebuilt)
+    if trusted is None:
+        raise ValueError("source authority result does not pass trusted V2 replay")
+    if (
+        type(payload["source_fragment_digest"]) is not str
+        or payload["source_fragment_digest"] != trusted.fragment_digest
+        or payload["discovery_scope"] != _discovery_scope_v1(trusted)
+        or ArtifactRef.from_envelope(envelope).content_hash == trusted.fragment_digest
+    ):
+        raise ValueError("source authority identity binding is invalid")
+    return trusted
 
 
 def _source_profile_stream_authority(
