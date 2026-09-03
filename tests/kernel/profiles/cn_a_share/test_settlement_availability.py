@@ -1266,6 +1266,15 @@ _ALLOWED_IMPORTS_BY_FILE = {
         "crypto_quant_trading.fees",
         "crypto_quant_trading.ports",
     },
+    "january_2024_development_fee_authority.py": {
+        "__future__",
+        "dataclasses",
+        "crypto_quant_domain",
+        "crypto_quant_trading.fee_reservations",
+        "crypto_quant_trading.fees",
+        "crypto_quant_trading.orders",
+        "crypto_quant_trading.ports",
+    },
     "corporate_actions.py": {
         "__future__",
         "dataclasses",
@@ -1336,6 +1345,10 @@ _ALLOWED_RELATIVE_IMPORTS_BY_FILE = {
     "calendar.py": set(),
     "commission_tax.py": set(),
     "commission_tax_v2.py": {"commission_tax"},
+    "january_2024_development_fee_authority.py": {
+        "commission_tax",
+        "commission_tax_v2",
+    },
     "corporate_actions.py": {"calendar"},
     "corporate_action_accounting.py": {"corporate_actions"},
     "order_rules.py": {"calendar", "quantity_lattice"},
