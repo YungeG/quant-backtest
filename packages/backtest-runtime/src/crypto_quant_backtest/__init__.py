@@ -18,6 +18,10 @@ from .binance_usdm_koru_directional_profile_v3 import (
     KoruDirectionalV3StrategyAuthority,
     verify_binance_usdm_koru_directional_strategy_authority_v3,
 )
+from .koru_tradifi_economics_authority_v3 import (
+    KoruTradifiEconomicsAuthorityV3,
+    resolve_koru_tradifi_economics_authority_v3,
+)
 from .binance_usdm_koru_tradifi_development_profile_v1 import (
     BinanceUsdmKoruTradifiDevelopmentProfileFailureCodeV1,
     BinanceUsdmKoruTradifiDevelopmentProfileFailureV1,
@@ -580,8 +584,10 @@ __all__ = [  # noqa: RUF022 - public API remains grouped by subsystem
     "BinanceUsdmKoruDirectionalPlannerV3",
     "BinanceUsdmKoruDirectionalTargetConsumptionV3",
     "KoruDirectionalV3StrategyAuthority",
+    "KoruTradifiEconomicsAuthorityV3",
     "verify_binance_usdm_tradifi_directional_preparation_authority_v3",
     "verify_binance_usdm_koru_directional_strategy_authority_v3",
+    "resolve_koru_tradifi_economics_authority_v3",
     "prepare_cash_development_backtest",
     "prepare_model_bound_cash_development_backtest",
     "DeterministicRebuildEvidence",

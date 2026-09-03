@@ -5,7 +5,6 @@ from pathlib import Path
 
 from crypto_quant_market_data import LocalMarketBundleReader
 
-
 ROOT = Path(__file__).resolve().parents[2]
 MODULE = (
     ROOT
@@ -78,8 +77,10 @@ def test_only_durable_runtime_seams_import_exact_local_reader() -> None:
     allowed_runtime_paths = {
         runtime / "_durable_rebuild.py",
         runtime / "binance_usdm_tradifi_directional_preparation.py",
+        runtime / "koru_tradifi_economics_authority_v3.py",
         runtime / "facade.py",
-        ROOT / "packages/market-bundle-builder/src/crypto_quant_bundle_builder/binance_usdm_koru_directional_execution_bundle_v3.py",
+        ROOT / "packages/market-bundle-builder/src/crypto_quant_bundle_builder/koru_tradifi_economics_bundle_v3.py",
+        ROOT / "packages/market-bundle-builder/src/crypto_quant_bundle_builder/koru_tradifi_target_overlay_v3.py",
     }
     for directory in (
         runtime,

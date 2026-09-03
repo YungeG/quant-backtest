@@ -32,8 +32,8 @@ def _reader_bindings(tmp_path: Path, keys: tuple[str, ...] = _KEYS):
     readers = {}
     artifacts = None
     for key in keys:
-        v2, v3, artifacts = directional_fixture._authorities(target_key=f"v3.{key}")
-        readers[key] = directional_fixture._hybrid(v2, v3, tmp_path / key)
+        _, overlay, artifacts = directional_fixture._overlay(tmp_path / key, target_key=f"v3.{key}")
+        readers[key] = overlay.reader
     assert artifacts is not None
     return readers, artifacts
 

@@ -47,15 +47,6 @@ from .binance_usdm_koru_closed_market_range_targets_v2 import (
     BinanceUsdmKoruClosedMarketRangeTargetsResultV2,
     build_binance_usdm_koru_closed_market_range_targets_v2,
 )
-from .binance_usdm_koru_directional_execution_bundle_v3 import (
-    BinanceUsdmKoruDirectionalExecutionBundleFailureCodeV3,
-    BinanceUsdmKoruDirectionalExecutionBundleFailureV3,
-    BinanceUsdmKoruDirectionalExecutionBundleOutcomeV3,
-    BinanceUsdmKoruDirectionalExecutionBundleRequestV3,
-    BinanceUsdmKoruDirectionalExecutionBundleV3,
-    build_binance_usdm_koru_directional_execution_bundle_v3,
-    publish_binance_usdm_koru_directional_hybrid_bundle_v3,
-)
 from .binance_usdm_koru_directional_target_compiler_v1 import (
     KoruDirectionalDiscoveryScopeV1,
     KoruDirectionalTargetCompileFailureCodeV1,
@@ -166,6 +157,14 @@ from .koru_tradifi_economics_bundle_v3 import (
     KoruTradifiSourceProjectionContentIdentityV2,
     publish_koru_tradifi_economics_bundle_v3,
 )
+from .koru_tradifi_target_overlay_v3 import (
+    KoruTradifiTargetOverlayFailureCodeV3,
+    KoruTradifiTargetOverlayFailureV3,
+    KoruTradifiTargetOverlayOutcomeV3,
+    KoruTradifiTargetOverlayRequestV3,
+    KoruTradifiTargetOverlayV3,
+    publish_koru_tradifi_target_overlay_v3,
+)
 from .local_market_bundle_repository import (
     LocalMarketBundleRepository,
     LocalMarketBundleRepositoryConfig,
@@ -230,11 +229,6 @@ __all__ = [
     "BinanceUsdmKoruClosedMarketRangeTargetsOutcomeV2",
     "BinanceUsdmKoruClosedMarketRangeTargetsRequestV2",
     "BinanceUsdmKoruClosedMarketRangeTargetsResultV2",
-    "BinanceUsdmKoruDirectionalExecutionBundleFailureCodeV3",
-    "BinanceUsdmKoruDirectionalExecutionBundleFailureV3",
-    "BinanceUsdmKoruDirectionalExecutionBundleOutcomeV3",
-    "BinanceUsdmKoruDirectionalExecutionBundleRequestV3",
-    "BinanceUsdmKoruDirectionalExecutionBundleV3",
     "BinanceUsdmKoruExecutionBoundaryV1",
     "BinanceUsdmKoruFirstRetainedTradeProjectionLineageV2",
     "BinanceUsdmKoruFundingRateHistorySourceBoundedCaptureOutcomeV1",
@@ -304,6 +298,11 @@ __all__ = [
     "KoruTradifiEconomicsBundleV3",
     "KoruTradifiEconomicsTermsV3",
     "KoruTradifiSourceProjectionContentIdentityV2",
+    "KoruTradifiTargetOverlayFailureCodeV3",
+    "KoruTradifiTargetOverlayFailureV3",
+    "KoruTradifiTargetOverlayOutcomeV3",
+    "KoruTradifiTargetOverlayRequestV3",
+    "KoruTradifiTargetOverlayV3",
     "LocalMarketBundleRepository",
     "LocalMarketBundleRepositoryConfig",
     "LocalMarketBundleRetentionProof",
@@ -336,7 +335,6 @@ __all__ = [
     "build_binance_usdm_koru_aggregate_trade_boundary_index_v1",
     "build_binance_usdm_koru_aggregate_trades_retained_rest_evidence_v1",
     "build_binance_usdm_koru_closed_market_range_targets_v2",
-    "build_binance_usdm_koru_directional_execution_bundle_v3",
     "build_binance_usdm_koru_price_bars_retained_observations_evidence_v1",
     "build_binance_usdm_koru_source_profile_authority_v2",
     "build_binance_usdm_koru_tradifi_execution_bundle_v2",
@@ -357,8 +355,8 @@ __all__ = [
     "normalize_binance_usdm_koru_funding_rate_history_source_bounded_v1",
     "normalize_binance_usdm_koru_price_bars_source_bounded_v1",
     "normalize_synthetic_jsonl_v1",
-    "publish_binance_usdm_koru_directional_hybrid_bundle_v3",
     "publish_koru_tradifi_economics_bundle_v3",
+    "publish_koru_tradifi_target_overlay_v3",
     "validate_market_bundle_v1",
     "verify_koru_tradifi_calendar_unit_authority_v1",
     "verify_source_snapshot",
