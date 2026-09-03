@@ -23,9 +23,8 @@ from crypto_quant_domain import (
     VenueId,
     canonical_sha256,
 )
-from crypto_quant_trading import LedgerState
-from crypto_quant_trading.fees import FinalFeeAssessmentResult
-from crypto_quant_trading.profiles.cn_a_share.corporate_actions import (
+from crypto_quant_trading import FinalFeeAssessmentResult, LedgerState
+from crypto_quant_trading.profiles.cn_a_share import (
     CnAShareCorporateActionSourceRef,
     CnAShareRegisteredPositionSnapshot,
 )
