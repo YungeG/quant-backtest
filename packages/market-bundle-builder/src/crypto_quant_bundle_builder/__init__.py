@@ -173,6 +173,16 @@ from .local_market_bundle_repository import (
     MarketBundlePublicationResult,
     MarketBundleRepositoryPath,
 )
+from .raw_blob_snapshots import (
+    RAW_BLOB_SNAPSHOT_MANIFEST_ARTIFACT_TYPE,
+    RAW_BLOB_SNAPSHOT_SCHEMA_VERSION,
+    RawBlobPathReader,
+    RawBlobSnapshotManifest,
+    RawBlobSnapshotMember,
+    RawBlobSnapshotSourceMember,
+    RawBlobSnapshotView,
+    create_raw_blob_snapshot_manifest,
+)
 from .source_snapshots import (
     RawSourceMember,
     SourceSnapshot,
@@ -310,6 +320,13 @@ __all__ = [
     "MarketBundlePublicationResult",
     "MarketBundleRepositoryPath",
     "PricePurposeRequirement",
+    "RAW_BLOB_SNAPSHOT_MANIFEST_ARTIFACT_TYPE",
+    "RAW_BLOB_SNAPSHOT_SCHEMA_VERSION",
+    "RawBlobPathReader",
+    "RawBlobSnapshotManifest",
+    "RawBlobSnapshotMember",
+    "RawBlobSnapshotSourceMember",
+    "RawBlobSnapshotView",
     "RawSourceMember",
     "RevisionClosureDeclaration",
     "RevisionTerminalLineage",
@@ -346,6 +363,7 @@ __all__ = [
     "capture_binance_usdm_koru_price_bars_from_retained_observations_v1",
     "capture_binance_usdm_koru_price_bars_source_bounded_v1",
     "compile_binance_usdm_koru_directional_targets_v1",
+    "create_raw_blob_snapshot_manifest",
     "freeze_source_snapshot",
     "normalize_binance_usdm_koru_aggregate_trades_source_bounded_v1",
     "normalize_binance_usdm_koru_funding_rate_history_source_bounded_v1",
