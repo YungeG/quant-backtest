@@ -1688,3 +1688,793 @@ def _trusted_result(
     except (AttributeError, TypeError, ValueError):
         return None
     return replay
+
+
+@dataclass(frozen=True, slots=True)
+class BinanceUsdmKoruAggregateTradeBoundaryIndexRequestV3:
+    """One-pass KORU aggregate-trade boundary-index request."""
+
+    captures: tuple[BinanceUsdmKoruAggregateTradesSourceBoundedCaptureResultV1, ...]
+    timeline_window_start: UtcInstant
+    timeline_window_end_exclusive: UtcInstant
+    boundaries: tuple[BinanceUsdmKoruExecutionBoundaryV1, ...]
+
+    def __post_init__(self) -> None:
+        if (
+            type(self.timeline_window_start) is not UtcInstant
+            or type(self.timeline_window_end_exclusive) is not UtcInstant
+            or self.timeline_window_start >= self.timeline_window_end_exclusive
+        ):
+            raise ValueError("timeline window must be a nonempty half-open interval")
+        if (
+            type(self.captures) is not tuple
+            or not self.captures
+            or any(
+                type(capture)
+                is not BinanceUsdmKoruAggregateTradesSourceBoundedCaptureResultV1
+                for capture in self.captures
+            )
+        ):
+            raise TypeError("captures must be an exact nonempty capture tuple")
+        if tuple(capture.request.utc_date for capture in self.captures) != _requested_dates(
+            self.timeline_window_start, self.timeline_window_end_exclusive
+        ):
+            raise ValueError("captures must exact-cover timeline UTC dates in order")
+        if any(_trusted_capture_for_boundary(capture) is None for capture in self.captures):
+            raise ValueError("captures must replay exact official or retained evidence")
+        if type(self.boundaries) is not tuple or any(
+            type(boundary) is not BinanceUsdmKoruExecutionBoundaryV1
+            for boundary in self.boundaries
+        ):
+            raise TypeError("boundaries must be an exact boundary tuple")
+        boundary_values = tuple(
+            boundary.boundary.epoch_nanoseconds for boundary in self.boundaries
+        )
+        if boundary_values != tuple(sorted(set(boundary_values))):
+            raise ValueError("boundaries must be sorted and unique")
+        if any(
+            boundary.boundary < self.timeline_window_start
+            or boundary.boundary >= self.timeline_window_end_exclusive
+            or boundary.cutoff > self.timeline_window_end_exclusive
+            for boundary in self.boundaries
+        ):
+            raise ValueError("boundaries must stay inside the timeline window")
+
+    @property
+    def request_hash(self) -> str:
+        return canonical_sha256(self.to_canonical_dict())
+
+    def to_canonical_dict(self) -> dict[str, object]:
+        return {
+            "type": "binance_usdm_koru_aggregate_trade_boundary_index_request_v3",
+            "schema_version": 3,
+            "captures": [capture.to_canonical_dict() for capture in self.captures],
+            "timeline_window_start": self.timeline_window_start,
+            "timeline_window_end_exclusive": self.timeline_window_end_exclusive,
+            "boundaries": [
+                boundary.to_canonical_dict() for boundary in self.boundaries
+            ],
+        }
+
+
+def _trusted_request_v3(
+    value: object,
+) -> BinanceUsdmKoruAggregateTradeBoundaryIndexRequestV3 | None:
+    if type(value) is not BinanceUsdmKoruAggregateTradeBoundaryIndexRequestV3:
+        return None
+    try:
+        rebuilt = BinanceUsdmKoruAggregateTradeBoundaryIndexRequestV3(
+            value.captures,
+            value.timeline_window_start,
+            value.timeline_window_end_exclusive,
+            value.boundaries,
+        )
+        if canonical_bytes(rebuilt.to_canonical_dict()) != canonical_bytes(
+            value.to_canonical_dict()
+        ):
+            return None
+    except (AttributeError, TypeError, ValueError):
+        return None
+    return rebuilt
+
+
+@dataclass(frozen=True, slots=True)
+class BinanceUsdmKoruAggregateTradeCaptureFinalEvidenceV3:
+    capture_ordinal: int
+    utc_date: str
+    source_member_hash: str
+    final_row_chain_digest: str
+    source_snapshot_hash: str
+    source_request_hash: str
+    source_capture_hash: str
+    selected_boundary_indexes: tuple[int, ...]
+    missing_boundary_indexes: tuple[int, ...]
+    capture_final_digest: str = field(init=False)
+
+    def __post_init__(self) -> None:
+        if (
+            type(self.capture_ordinal) is not int
+            or self.capture_ordinal <= 0
+            or type(self.utc_date) is not str
+            or not self.utc_date
+            or type(self.selected_boundary_indexes) is not tuple
+            or type(self.missing_boundary_indexes) is not tuple
+            or any(type(index) is not int or index < 0 for index in self.selected_boundary_indexes)
+            or any(type(index) is not int or index < 0 for index in self.missing_boundary_indexes)
+            or self.selected_boundary_indexes != tuple(sorted(set(self.selected_boundary_indexes)))
+            or self.missing_boundary_indexes != tuple(sorted(set(self.missing_boundary_indexes)))
+            or set(self.selected_boundary_indexes) & set(self.missing_boundary_indexes)
+        ):
+            raise ValueError("capture-final boundary indexes must be exact and disjoint")
+        for name in (
+            "source_member_hash",
+            "final_row_chain_digest",
+            "source_snapshot_hash",
+            "source_request_hash",
+            "source_capture_hash",
+        ):
+            _hash(name, getattr(self, name))
+        object.__setattr__(self, "capture_final_digest", canonical_sha256(self._body()))
+
+    def _body(self) -> dict[str, object]:
+        return {
+            "type": "binance_usdm_koru_aggregate_trade_capture_final_evidence_v3",
+            "schema_version": 3,
+            "capture_ordinal": self.capture_ordinal,
+            "utc_date": self.utc_date,
+            "source_member_hash": self.source_member_hash,
+            "final_row_chain_digest": self.final_row_chain_digest,
+            "source_snapshot_hash": self.source_snapshot_hash,
+            "source_request_hash": self.source_request_hash,
+            "source_capture_hash": self.source_capture_hash,
+            "selected_boundary_indexes": self.selected_boundary_indexes,
+            "missing_boundary_indexes": self.missing_boundary_indexes,
+        }
+
+    def to_canonical_dict(self) -> dict[str, object]:
+        return {**self._body(), "capture_final_digest": self.capture_final_digest}
+
+
+@dataclass(frozen=True, slots=True)
+class BinanceUsdmKoruAggregateTradeBoundaryIndexResultV3:
+    request: BinanceUsdmKoruAggregateTradeBoundaryIndexRequestV3
+    selected_source_events: tuple[MarketEvent, ...]
+    selected_lineage: tuple[BinanceUsdmKoruSelectedAggregateTradeLineageV1, ...]
+    missing_boundaries: tuple[BinanceUsdmKoruMissingAggregateTradeBoundaryV1, ...]
+    intra_day_raw_id_gap_stream: BinanceUsdmKoruRawIdGapStreamEvidenceV1
+    cross_date_raw_id_gap_stream: BinanceUsdmKoruRawIdGapStreamEvidenceV1
+    aggregate_id_coverage_gaps: tuple[BinanceUsdmKoruAggregateIdCoverageGapEvidenceV1, ...]
+    streamed_row_count: int
+    streamed_reconstruction_digest: str
+    capture_final_evidence: tuple[BinanceUsdmKoruAggregateTradeCaptureFinalEvidenceV3, ...]
+    result_digest: str = field(init=False)
+    development_only: bool = True
+    decision_grade_eligible: bool = False
+    deployment_authorized: bool = False
+
+    def __post_init__(self) -> None:
+        if type(self.request) is not BinanceUsdmKoruAggregateTradeBoundaryIndexRequestV3:
+            raise TypeError("boundary-index result request must be exact")
+        if (
+            type(self.selected_source_events) is not tuple
+            or any(type(event) is not MarketEvent for event in self.selected_source_events)
+            or len({event.event_id for event in self.selected_source_events})
+            != len(self.selected_source_events)
+            or type(self.selected_lineage) is not tuple
+            or any(type(lineage) is not BinanceUsdmKoruSelectedAggregateTradeLineageV1 for lineage in self.selected_lineage)
+            or type(self.missing_boundaries) is not tuple
+            or any(type(missing) is not BinanceUsdmKoruMissingAggregateTradeBoundaryV1 for missing in self.missing_boundaries)
+        ):
+            raise ValueError("boundary-index selections must be exact immutable tuples")
+        selected_by_id = {event.event_id: event for event in self.selected_source_events}
+        if {lineage.source_event.event_id for lineage in self.selected_lineage} != set(selected_by_id) or any(
+            canonical_bytes(selected_by_id[lineage.source_event.event_id].to_canonical_dict())
+            != canonical_bytes(lineage.source_event.to_canonical_dict())
+            for lineage in self.selected_lineage
+        ):
+            raise ValueError("selected source events must exact-cover selected lineage")
+        resolved = tuple(
+            sorted(
+                (
+                    *((lineage.boundary.epoch_nanoseconds, lineage.cutoff.epoch_nanoseconds) for lineage in self.selected_lineage),
+                    *((missing.boundary.epoch_nanoseconds, missing.cutoff.epoch_nanoseconds) for missing in self.missing_boundaries),
+                )
+            )
+        )
+        expected = tuple(
+            (boundary.boundary.epoch_nanoseconds, boundary.cutoff.epoch_nanoseconds)
+            for boundary in self.request.boundaries
+        )
+        if resolved != expected or len(resolved) != len(set(resolved)):
+            raise ValueError("lineage and missing evidence must exact-cover boundaries")
+        if (
+            type(self.intra_day_raw_id_gap_stream) is not BinanceUsdmKoruRawIdGapStreamEvidenceV1
+            or type(self.cross_date_raw_id_gap_stream) is not BinanceUsdmKoruRawIdGapStreamEvidenceV1
+            or type(self.aggregate_id_coverage_gaps) is not tuple
+            or any(type(gap) is not BinanceUsdmKoruAggregateIdCoverageGapEvidenceV1 for gap in self.aggregate_id_coverage_gaps)
+            or len(self.aggregate_id_coverage_gaps) > len(self.request.captures) - 1
+            or type(self.streamed_row_count) is not int
+            or self.streamed_row_count <= 0
+            or type(self.capture_final_evidence) is not tuple
+            or len(self.capture_final_evidence) != len(self.request.captures)
+            or any(type(final) is not BinanceUsdmKoruAggregateTradeCaptureFinalEvidenceV3 for final in self.capture_final_evidence)
+            or tuple(final.capture_ordinal for final in self.capture_final_evidence) != tuple(range(1, len(self.request.captures) + 1))
+            or tuple(final.utc_date for final in self.capture_final_evidence) != tuple(capture.request.utc_date for capture in self.request.captures)
+            or any(index >= len(self.request.boundaries) for final in self.capture_final_evidence for index in (*final.selected_boundary_indexes, *final.missing_boundary_indexes))
+        ):
+            raise ValueError("V3 stream evidence must be exact and bounded")
+        _hash("streamed_reconstruction_digest", self.streamed_reconstruction_digest)
+        if (
+            type(self.development_only) is not bool
+            or not self.development_only
+            or type(self.decision_grade_eligible) is not bool
+            or self.decision_grade_eligible
+            or type(self.deployment_authorized) is not bool
+            or self.deployment_authorized
+        ):
+            raise ValueError("boundary index must remain development-only")
+        object.__setattr__(self, "result_digest", canonical_sha256(self._body()))
+
+    def _body(self) -> dict[str, object]:
+        return {
+            "type": "binance_usdm_koru_aggregate_trade_boundary_index_result_v3",
+            "schema_version": 3,
+            "request": self.request,
+            "request_hash": self.request.request_hash,
+            "selected_source_events": self.selected_source_events,
+            "selected_lineage": self.selected_lineage,
+            "missing_boundaries": self.missing_boundaries,
+            "intra_day_raw_id_gap_stream": self.intra_day_raw_id_gap_stream,
+            "cross_date_raw_id_gap_stream": self.cross_date_raw_id_gap_stream,
+            "aggregate_id_coverage_gaps": self.aggregate_id_coverage_gaps,
+            "streamed_row_count": self.streamed_row_count,
+            "streamed_reconstruction_digest": self.streamed_reconstruction_digest,
+            "capture_final_evidence": self.capture_final_evidence,
+            "development_only": self.development_only,
+            "decision_grade_eligible": self.decision_grade_eligible,
+            "deployment_authorized": self.deployment_authorized,
+        }
+
+    def to_canonical_dict(self) -> dict[str, object]:
+        return {**self._body(), "result_digest": self.result_digest}
+
+
+class BinanceUsdmKoruAggregateTradeBoundaryIndexFailureCodeV3(str, Enum):
+    REQUEST_INVALID = "request_invalid"
+    CAPTURE_INVALID = "capture_invalid"
+    BOUNDARY_INVALID = "boundary_invalid"
+    SOURCE_INVALID = "source_invalid"
+    DATA_GAP_DETECTED = "data_gap_detected"
+
+
+@dataclass(frozen=True, slots=True)
+class BinanceUsdmKoruAggregateTradeBoundaryIndexFailureV3:
+    code: BinanceUsdmKoruAggregateTradeBoundaryIndexFailureCodeV3
+    subject: str | None = None
+
+    def __post_init__(self) -> None:
+        if type(self.code) is not BinanceUsdmKoruAggregateTradeBoundaryIndexFailureCodeV3:
+            raise TypeError("boundary-index failure code must be exact")
+        if self.subject is not None and (
+            type(self.subject) is not str or not self.subject or self.subject != self.subject.strip()
+        ):
+            raise ValueError("failure subject must be canonical text or None")
+
+    @property
+    def failure_hash(self) -> str:
+        return canonical_sha256(self.to_canonical_dict())
+
+    def to_canonical_dict(self) -> dict[str, object]:
+        return {
+            "type": "binance_usdm_koru_aggregate_trade_boundary_index_failure_v3",
+            "schema_version": 3,
+            "code": self.code.value,
+            "subject": self.subject,
+        }
+
+
+@dataclass(frozen=True, slots=True)
+class BinanceUsdmKoruAggregateTradeBoundaryIndexOutcomeV3:
+    result: BinanceUsdmKoruAggregateTradeBoundaryIndexResultV3 | None = None
+    failure: BinanceUsdmKoruAggregateTradeBoundaryIndexFailureV3 | None = None
+
+    def __post_init__(self) -> None:
+        if (self.result is None) == (self.failure is None):
+            raise ValueError("boundary-index outcome must contain exactly one branch")
+        if self.result is not None and _trusted_result_v3(self.result) is None:
+            raise ValueError("boundary-index outcome result must replay exactly")
+        if self.failure is not None and type(self.failure) is not BinanceUsdmKoruAggregateTradeBoundaryIndexFailureV3:
+            raise TypeError("boundary-index outcome failure must be exact")
+
+
+class _V3BoundaryIndexError(ValueError):
+    def __init__(
+        self,
+        code: BinanceUsdmKoruAggregateTradeBoundaryIndexFailureCodeV3,
+        subject: str,
+    ) -> None:
+        super().__init__(subject)
+        self.code = code
+        self.subject = subject
+
+
+@dataclass(frozen=True, slots=True)
+class _V3SelectedCandidate:
+    boundary_index: int
+    capture: BinanceUsdmKoruAggregateTradesSourceBoundedCaptureResultV1
+    row: _ParsedRow
+    csv_row_ordinal: int
+
+
+def _v3_failure_code(
+    code: BinanceUsdmKoruAggregateTradeBoundaryIndexFailureCodeV1,
+) -> BinanceUsdmKoruAggregateTradeBoundaryIndexFailureCodeV3:
+    return BinanceUsdmKoruAggregateTradeBoundaryIndexFailureCodeV3(code.value)
+
+
+def _build_v3(
+    request: BinanceUsdmKoruAggregateTradeBoundaryIndexRequestV3,
+) -> BinanceUsdmKoruAggregateTradeBoundaryIndexResultV3:
+    resolutions: list[BinanceUsdmKoruSelectedAggregateTradeLineageV1 | BinanceUsdmKoruMissingAggregateTradeBoundaryV1 | None] = [None] * len(request.boundaries)
+    selected_events: dict[str, MarketEvent] = {}
+    intra_day_gaps = _GapStreamAccumulator("intra_day", request.request_hash)
+    cross_date_gaps = _GapStreamAccumulator("cross_date", request.request_hash)
+    aggregate_coverage_gaps: list[BinanceUsdmKoruAggregateIdCoverageGapEvidenceV1] = []
+    capture_finals: list[BinanceUsdmKoruAggregateTradeCaptureFinalEvidenceV3] = []
+    previous: _ParsedRow | None = None
+    previous_date: str | None = None
+    streamed_row_count = 0
+    next_boundary = 0
+    prefix_boundary = 0
+    chain = canonical_sha256(
+        {
+            "type": "binance_usdm_koru_aggregate_trade_streamed_reconstruction_genesis_v3",
+            "schema_version": 3,
+            "request_hash": request.request_hash,
+        }
+    )
+
+    for capture_index, capture in enumerate(request.captures, start=1):
+        source_request = capture.request
+        authority = source_request.authority
+        resolved_indexes: set[int] = set()
+        if authority is not None:
+            missing_start = authority.declared_missing_prefix_start
+            missing_end = authority.declared_missing_prefix_end_exclusive
+            while (
+                prefix_boundary < len(request.boundaries)
+                and request.boundaries[prefix_boundary].boundary < missing_end
+            ):
+                boundary = request.boundaries[prefix_boundary]
+                if missing_start <= boundary.boundary and resolutions[prefix_boundary] is None:
+                    resolutions[prefix_boundary] = _missing(boundary)
+                    resolved_indexes.add(prefix_boundary)
+                prefix_boundary += 1
+        prefix = "derived/" if authority is not None else "archive/"
+        archive_key = prefix + source_request.archive_name
+        try:
+            archive = _archive_bytes(capture, archive_key)
+        except _BoundaryIndexError as error:
+            raise _V3BoundaryIndexError(_v3_failure_code(error.code), error.subject) from error
+        raw_rows = iter(_retained_raw_rows(capture)) if authority is not None else None
+        capture_first: _ParsedRow | None = None
+        capture_last: _ParsedRow | None = None
+        archive_member = _snapshot_member(capture.snapshot, archive_key)
+        if _sha256(archive) != archive_member.content_hash:
+            raise _V3BoundaryIndexError(
+                BinanceUsdmKoruAggregateTradeBoundaryIndexFailureCodeV3.SOURCE_INVALID,
+                archive_key,
+            )
+        candidates: list[_V3SelectedCandidate] = []
+        try:
+            with ZipFile(io.BytesIO(archive)) as zip_file:
+                if zip_file.namelist() != [source_request.csv_name]:
+                    raise _V3BoundaryIndexError(
+                        BinanceUsdmKoruAggregateTradeBoundaryIndexFailureCodeV3.SOURCE_INVALID,
+                        "zip_member",
+                    )
+                snapshot_hash = canonical_sha256(capture.snapshot.to_canonical_dict())
+                coverage_start = (
+                    authority.selected_coverage_start.epoch_nanoseconds // 1_000_000
+                    if authority is not None
+                    else (date.fromisoformat(source_request.utc_date) - _EPOCH_DATE).days * (_DAY_NS // 1_000_000)
+                )
+                coverage_end = (
+                    authority.selected_coverage_end_exclusive.epoch_nanoseconds // 1_000_000
+                    if authority is not None
+                    else coverage_start + _DAY_NS // 1_000_000
+                )
+                row_ordinal = 0
+                header_pending = True
+                member_digest = hashlib.sha256()
+                with zip_file.open(source_request.csv_name) as binary_member:
+                    for binary_line in binary_member:
+                        member_digest.update(binary_line)
+                        try:
+                            line = binary_line.decode("utf-8", errors="strict")
+                        except UnicodeDecodeError as error:
+                            raise _V3BoundaryIndexError(
+                                BinanceUsdmKoruAggregateTradeBoundaryIndexFailureCodeV3.SOURCE_INVALID,
+                                "csv_encoding",
+                            ) from error
+                        if not line.endswith("\n") or "\r" in line:
+                            raise _V3BoundaryIndexError(
+                                BinanceUsdmKoruAggregateTradeBoundaryIndexFailureCodeV3.SOURCE_INVALID,
+                                "csv_encoding",
+                            )
+                        try:
+                            values = next(csv.reader((line,), strict=True))
+                        except csv.Error as error:
+                            raise _V3BoundaryIndexError(
+                                BinanceUsdmKoruAggregateTradeBoundaryIndexFailureCodeV3.SOURCE_INVALID,
+                                "csv",
+                            ) from error
+                        if line != ",".join(values) + "\n":
+                            raise _V3BoundaryIndexError(
+                                BinanceUsdmKoruAggregateTradeBoundaryIndexFailureCodeV3.SOURCE_INVALID,
+                                "csv_grammar",
+                            )
+                        if header_pending:
+                            header_pending = False
+                            if tuple(values) == _CSV_HEADER:
+                                continue
+                            if authority is not None or _is_csv_header_like(tuple(values), _CSV_HEADER):
+                                raise _V3BoundaryIndexError(
+                                    BinanceUsdmKoruAggregateTradeBoundaryIndexFailureCodeV3.SOURCE_INVALID,
+                                    "csv_header",
+                                )
+                        row_ordinal += 1
+                        if raw_rows is not None:
+                            try:
+                                raw_values = next(raw_rows)
+                            except StopIteration as error:
+                                raise _V3BoundaryIndexError(
+                                    BinanceUsdmKoruAggregateTradeBoundaryIndexFailureCodeV3.SOURCE_INVALID,
+                                    f"raw_page_row_count:row-{row_ordinal}",
+                                ) from error
+                            if tuple(values) != raw_values:
+                                raise _V3BoundaryIndexError(
+                                    BinanceUsdmKoruAggregateTradeBoundaryIndexFailureCodeV3.SOURCE_INVALID,
+                                    f"derived_raw_row_mismatch:row-{row_ordinal}",
+                                )
+                        try:
+                            current = _parse_row(values, row_ordinal)
+                        except _NormalizationError as error:
+                            normalized = _normalization_error(error)
+                            raise _V3BoundaryIndexError(
+                                _v3_failure_code(normalized.code), normalized.subject
+                            ) from error
+                        if not coverage_start <= current.transaction_time_milliseconds < coverage_end:
+                            raise _V3BoundaryIndexError(
+                                BinanceUsdmKoruAggregateTradeBoundaryIndexFailureCodeV3.DATA_GAP_DETECTED,
+                                f"transaction_time_window:row-{row_ordinal}",
+                            )
+                        if capture_first is None:
+                            capture_first = current
+                        capture_last = current
+                        if previous is not None:
+                            aggregate_contiguous = current.aggregate_trade_id == previous.aggregate_trade_id + 1
+                            if not aggregate_contiguous:
+                                if (
+                                    current.aggregate_trade_id > previous.aggregate_trade_id + 1
+                                    and row_ordinal == 1
+                                    and authority is not None
+                                    and previous_date != source_request.utc_date
+                                ):
+                                    try:
+                                        aggregate_coverage_gaps.append(_aggregate_coverage_gap(
+                                            previous,
+                                            current,
+                                            authority.authority_hash,
+                                            authority.declared_missing_prefix_start,
+                                            authority.declared_missing_prefix_end_exclusive,
+                                        ))
+                                    except (TypeError, ValueError) as error:
+                                        raise _V3BoundaryIndexError(
+                                            BinanceUsdmKoruAggregateTradeBoundaryIndexFailureCodeV3.DATA_GAP_DETECTED,
+                                            f"aggregate_trade_id_contiguity:row-{row_ordinal}",
+                                        ) from error
+                                else:
+                                    raise _V3BoundaryIndexError(
+                                        BinanceUsdmKoruAggregateTradeBoundaryIndexFailureCodeV3.DATA_GAP_DETECTED,
+                                        f"aggregate_trade_id_contiguity:row-{row_ordinal}",
+                                    )
+                            if current.first_trade_id <= previous.last_trade_id:
+                                raise _V3BoundaryIndexError(
+                                    BinanceUsdmKoruAggregateTradeBoundaryIndexFailureCodeV3.DATA_GAP_DETECTED,
+                                    f"raw_trade_id_overlap:row-{row_ordinal}",
+                                )
+                            if current.transaction_time_milliseconds < previous.transaction_time_milliseconds:
+                                raise _V3BoundaryIndexError(
+                                    BinanceUsdmKoruAggregateTradeBoundaryIndexFailureCodeV3.SOURCE_INVALID,
+                                    f"transaction_time_order:row-{row_ordinal}",
+                                )
+                            if aggregate_contiguous and current.first_trade_id > previous.last_trade_id + 1:
+                                (intra_day_gaps if previous_date == source_request.utc_date else cross_date_gaps).add(_gap(previous, current))
+                        streamed_row_count += 1
+                        chain = canonical_sha256(
+                            {
+                                "type": "binance_usdm_koru_aggregate_trade_streamed_reconstruction_row_link_v3",
+                                "schema_version": 3,
+                                "previous_digest": chain,
+                                "streamed_row_ordinal": streamed_row_count,
+                                "csv_row_ordinal": row_ordinal,
+                                "csv_row_hash": canonical_sha256(current.exact_row),
+                                "utc_date": source_request.utc_date,
+                                "source_snapshot_hash": snapshot_hash,
+                                "source_request_hash": source_request.request_hash,
+                                "source_capture_hash": capture.capture_hash,
+                            }
+                        )
+                        event_time = current.transaction_time_milliseconds * 1_000_000
+                        while (
+                            next_boundary < len(request.boundaries)
+                            and request.boundaries[next_boundary].boundary.epoch_nanoseconds <= event_time
+                        ):
+                            boundary = request.boundaries[next_boundary]
+                            if resolutions[next_boundary] is None:
+                                if event_time < boundary.cutoff.epoch_nanoseconds:
+                                    candidates.append(_V3SelectedCandidate(
+                                        next_boundary, capture, current, row_ordinal
+                                    ))
+                                else:
+                                    resolutions[next_boundary] = _missing(boundary)
+                                    resolved_indexes.add(next_boundary)
+                            next_boundary += 1
+                        previous = current
+                        previous_date = source_request.utc_date
+                if header_pending or row_ordinal == 0:
+                    raise _V3BoundaryIndexError(
+                        BinanceUsdmKoruAggregateTradeBoundaryIndexFailureCodeV3.DATA_GAP_DETECTED,
+                        f"row_count:{source_request.utc_date}",
+                    )
+                source_member_hash = _HASH_PREFIX + member_digest.hexdigest()
+                if authority is not None and source_member_hash != authority.derived_csv_sha256:
+                    raise _V3BoundaryIndexError(
+                        BinanceUsdmKoruAggregateTradeBoundaryIndexFailureCodeV3.SOURCE_INVALID,
+                        "derived_csv_hash",
+                    )
+                if raw_rows is not None:
+                    if next(raw_rows, None) is not None:
+                        raise _V3BoundaryIndexError(
+                            BinanceUsdmKoruAggregateTradeBoundaryIndexFailureCodeV3.SOURCE_INVALID,
+                            "raw_page_row_count",
+                        )
+                    if (
+                        capture_first is None
+                        or capture_last is None
+                        or not _retained_dataset_matches(capture, capture_first, capture_last, row_ordinal)
+                    ):
+                        raise _V3BoundaryIndexError(
+                            BinanceUsdmKoruAggregateTradeBoundaryIndexFailureCodeV3.SOURCE_INVALID,
+                            "retained_dataset",
+                        )
+        except _V3BoundaryIndexError:
+            raise
+        except (BadZipFile, KeyError, NotImplementedError, OSError, RuntimeError, ValueError) as error:
+            raise _V3BoundaryIndexError(
+                BinanceUsdmKoruAggregateTradeBoundaryIndexFailureCodeV3.SOURCE_INVALID,
+                source_request.archive_name,
+            ) from error
+        for candidate in candidates:
+            try:
+                event = _event_from_row(
+                    candidate.capture,
+                    candidate.row,
+                    candidate.csv_row_ordinal - 1,
+                    source_member_hash,
+                )
+                selected_events.setdefault(event.event_id, event)
+                resolutions[candidate.boundary_index] = _lineage(
+                    request.boundaries[candidate.boundary_index],
+                    candidate.capture,
+                    candidate.row,
+                    candidate.csv_row_ordinal,
+                    source_member_hash,
+                    event,
+                )
+                resolved_indexes.add(candidate.boundary_index)
+            except (TypeError, ValueError) as error:
+                raise _V3BoundaryIndexError(
+                    BinanceUsdmKoruAggregateTradeBoundaryIndexFailureCodeV3.SOURCE_INVALID,
+                    "market_event",
+                ) from error
+        if capture_index == len(request.captures):
+            for index, boundary in enumerate(request.boundaries):
+                if resolutions[index] is None:
+                    resolutions[index] = _missing(boundary)
+                    resolved_indexes.add(index)
+        final_row_chain_digest = chain
+        final = BinanceUsdmKoruAggregateTradeCaptureFinalEvidenceV3(
+            capture_index,
+            source_request.utc_date,
+            source_member_hash,
+            final_row_chain_digest,
+            snapshot_hash,
+            source_request.request_hash,
+            capture.capture_hash,
+            tuple(sorted(
+                index for index in resolved_indexes
+                if type(resolutions[index]) is BinanceUsdmKoruSelectedAggregateTradeLineageV1
+            )),
+            tuple(sorted(
+                index for index in resolved_indexes
+                if type(resolutions[index]) is BinanceUsdmKoruMissingAggregateTradeBoundaryV1
+            )),
+        )
+        capture_finals.append(final)
+        chain = canonical_sha256(
+            {
+                "type": "binance_usdm_koru_aggregate_trade_streamed_reconstruction_capture_final_link_v3",
+                "schema_version": 3,
+                "previous_digest": final_row_chain_digest,
+                "capture_final": final,
+            }
+        )
+
+    selected_lineage = tuple(
+        value for value in resolutions
+        if type(value) is BinanceUsdmKoruSelectedAggregateTradeLineageV1
+    )
+    missing_boundaries = tuple(
+        value for value in resolutions
+        if type(value) is BinanceUsdmKoruMissingAggregateTradeBoundaryV1
+    )
+    return BinanceUsdmKoruAggregateTradeBoundaryIndexResultV3(
+        request=request,
+        selected_source_events=tuple(selected_events.values()),
+        selected_lineage=selected_lineage,
+        missing_boundaries=missing_boundaries,
+        intra_day_raw_id_gap_stream=intra_day_gaps.evidence(),
+        cross_date_raw_id_gap_stream=cross_date_gaps.evidence(),
+        aggregate_id_coverage_gaps=tuple(aggregate_coverage_gaps),
+        streamed_row_count=streamed_row_count,
+        streamed_reconstruction_digest=chain,
+        capture_final_evidence=tuple(capture_finals),
+    )
+
+
+def _request_failure_v3(
+    value: object,
+) -> BinanceUsdmKoruAggregateTradeBoundaryIndexFailureV3 | None:
+    if type(value) is not BinanceUsdmKoruAggregateTradeBoundaryIndexRequestV3:
+        return BinanceUsdmKoruAggregateTradeBoundaryIndexFailureV3(
+            BinanceUsdmKoruAggregateTradeBoundaryIndexFailureCodeV3.REQUEST_INVALID,
+            "request",
+        )
+    try:
+        if (
+            type(value.timeline_window_start) is not UtcInstant
+            or type(value.timeline_window_end_exclusive) is not UtcInstant
+            or value.timeline_window_start >= value.timeline_window_end_exclusive
+            or type(value.captures) is not tuple
+            or not value.captures
+            or tuple(capture.request.utc_date for capture in value.captures)
+            != _requested_dates(value.timeline_window_start, value.timeline_window_end_exclusive)
+        ):
+            raise ValueError
+    except (AttributeError, TypeError, ValueError):
+        return BinanceUsdmKoruAggregateTradeBoundaryIndexFailureV3(
+            BinanceUsdmKoruAggregateTradeBoundaryIndexFailureCodeV3.REQUEST_INVALID,
+            "request",
+        )
+    if any(_trusted_capture_for_boundary(capture) is None for capture in value.captures):
+        return BinanceUsdmKoruAggregateTradeBoundaryIndexFailureV3(
+            BinanceUsdmKoruAggregateTradeBoundaryIndexFailureCodeV3.CAPTURE_INVALID,
+            "captures",
+        )
+    try:
+        boundary_values = tuple(boundary.boundary.epoch_nanoseconds for boundary in value.boundaries)
+        if (
+            type(value.boundaries) is not tuple
+            or any(
+                type(boundary) is not BinanceUsdmKoruExecutionBoundaryV1
+                or boundary.boundary >= boundary.cutoff
+                or boundary.boundary < value.timeline_window_start
+                or boundary.boundary >= value.timeline_window_end_exclusive
+                or boundary.cutoff > value.timeline_window_end_exclusive
+                for boundary in value.boundaries
+            )
+            or boundary_values != tuple(sorted(set(boundary_values)))
+        ):
+            raise ValueError
+    except (AttributeError, TypeError, ValueError):
+        return BinanceUsdmKoruAggregateTradeBoundaryIndexFailureV3(
+            BinanceUsdmKoruAggregateTradeBoundaryIndexFailureCodeV3.BOUNDARY_INVALID,
+            "boundaries",
+        )
+    if _trusted_request_v3(value) is None:
+        return BinanceUsdmKoruAggregateTradeBoundaryIndexFailureV3(
+            BinanceUsdmKoruAggregateTradeBoundaryIndexFailureCodeV3.REQUEST_INVALID,
+            "request",
+        )
+    return None
+
+
+_MAX_CERTIFIED_RESULTS_V3 = 8
+_CERTIFIED_RESULTS_V3: OrderedDict[
+    int, tuple[BinanceUsdmKoruAggregateTradeBoundaryIndexResultV3, str, str]
+] = OrderedDict()
+
+
+def _result_fingerprint_v3(
+    value: BinanceUsdmKoruAggregateTradeBoundaryIndexResultV3,
+) -> str:
+    return canonical_sha256(
+        {
+            "result": value.to_canonical_dict(),
+            "capture_archive_hashes": tuple(
+                _sha256(capture.snapshot.archive_bytes)
+                for capture in value.request.captures
+            ),
+        }
+    )
+
+
+def _certify_result_v3(value: BinanceUsdmKoruAggregateTradeBoundaryIndexResultV3) -> None:
+    key = id(value)
+    _CERTIFIED_RESULTS_V3[key] = (
+        value,
+        value.result_digest,
+        _result_fingerprint_v3(value),
+    )
+    _CERTIFIED_RESULTS_V3.move_to_end(key)
+    while len(_CERTIFIED_RESULTS_V3) > _MAX_CERTIFIED_RESULTS_V3:
+        _CERTIFIED_RESULTS_V3.popitem(last=False)
+
+
+def build_binance_usdm_koru_aggregate_trade_boundary_index_v3(
+    request: BinanceUsdmKoruAggregateTradeBoundaryIndexRequestV3,
+) -> BinanceUsdmKoruAggregateTradeBoundaryIndexOutcomeV3:
+    failure = _request_failure_v3(request)
+    if failure is not None:
+        return BinanceUsdmKoruAggregateTradeBoundaryIndexOutcomeV3(failure=failure)
+    trusted = _trusted_request_v3(request)
+    if trusted is None:
+        raise AssertionError("validated boundary-index request must replay")
+    try:
+        result = _build_v3(trusted)
+        _certify_result_v3(result)
+        return BinanceUsdmKoruAggregateTradeBoundaryIndexOutcomeV3(result=result)
+    except _V3BoundaryIndexError as error:
+        return BinanceUsdmKoruAggregateTradeBoundaryIndexOutcomeV3(
+            failure=BinanceUsdmKoruAggregateTradeBoundaryIndexFailureV3(error.code, error.subject)
+        )
+    except (AttributeError, TypeError, ValueError):
+        return BinanceUsdmKoruAggregateTradeBoundaryIndexOutcomeV3(
+            failure=BinanceUsdmKoruAggregateTradeBoundaryIndexFailureV3(
+                BinanceUsdmKoruAggregateTradeBoundaryIndexFailureCodeV3.SOURCE_INVALID,
+                "result",
+            )
+        )
+
+
+def _trusted_result_v3(
+    value: object,
+) -> BinanceUsdmKoruAggregateTradeBoundaryIndexResultV3 | None:
+    if type(value) is not BinanceUsdmKoruAggregateTradeBoundaryIndexResultV3:
+        return None
+    certified = _CERTIFIED_RESULTS_V3.get(id(value))
+    if certified is not None:
+        try:
+            matches = (
+                certified[0] is value
+                and certified[1] == value.result_digest
+                and certified[2] == _result_fingerprint_v3(value)
+            )
+        except (AttributeError, TypeError, ValueError):
+            matches = False
+        if matches:
+            _CERTIFIED_RESULTS_V3.move_to_end(id(value))
+            return value
+        _CERTIFIED_RESULTS_V3.pop(id(value), None)
+    try:
+        trusted_request = _trusted_request_v3(value.request)
+        if trusted_request is None:
+            return None
+        replay = _build_v3(trusted_request)
+        if canonical_bytes(replay.to_canonical_dict()) != canonical_bytes(value.to_canonical_dict()):
+            return None
+    except (AttributeError, TypeError, ValueError):
+        return None
+    return replay
