@@ -59,6 +59,7 @@ from .koru_tradifi_calendar_unit_authority_v1 import (
 )
 
 _SCHEMA_VERSION = 3
+_SOURCE_PROFILE_AUTHORITY_ARTIFACT_TYPE_V3 = "binance_usdm_koru_source_profile_authority"
 _HOUR_NS = 3_600_000_000_000
 _DAY_NS = 86_400_000_000_000
 _ALLOWED_START = 1_784_109_600_000_000_000
@@ -1798,3 +1799,64 @@ def build_binance_usdm_koru_tradifi_source_projection_v3(
             type(error).__name__,
         )
     return BinanceUsdmKoruTradifiSourceProjectionOutcomeV3(result=result)
+
+
+def build_binance_usdm_koru_source_profile_authority_v3(
+    result: BinanceUsdmKoruTradifiSourceProjectionResultV3,
+) -> tuple[ArtifactEnvelope, ArtifactRef]:
+    """Derive the V3 source-profile authority from a replayed V3 source result."""
+    trusted = _trusted_result(result)
+    if trusted is None:
+        raise ValueError("result must be an exact canonical source-projection result")
+    grouped: dict[str, list[MarketEvent]] = defaultdict(list)
+    for event in trusted.source_events:
+        grouped[event.stream_key].append(event)
+    source_manifests = tuple(
+        MarketStreamManifest.from_events(stream_key, tuple(events))
+        for stream_key, events in sorted(grouped.items())
+    )
+    payload = {
+        "type": "binance_usdm_koru_source_profile_authority_v3",
+        "schema_version": _SCHEMA_VERSION,
+        "timeline_window": {
+            "data_start": trusted.request.timeline_window_start,
+            "trading_start": trusted.request.timeline_window_start,
+            "end_exclusive": trusted.request.timeline_window_end_exclusive,
+        },
+        "source_projection_request_hash": trusted.request.request_hash,
+        "source_fragment_digest": trusted.fragment_digest,
+        "source_projection_authority_ref": create_binance_usdm_koru_tradifi_source_projection_authority_v3(trusted)[1],
+        "aggregate_trade_boundary_index_request_hash": trusted.aggregate_trade_boundary_index_request_hash,
+        "aggregate_trade_boundary_index_result_digest": trusted.aggregate_trade_boundary_index_result_digest,
+        "aggregate_trade_streamed_reconstruction_digest": trusted.aggregate_trade_streamed_reconstruction_digest,
+        "aggregate_trade_intra_day_raw_id_gap_stream": trusted.aggregate_trade_intra_day_raw_id_gap_stream.to_canonical_dict(),
+        "aggregate_trade_cross_date_raw_id_gap_stream": trusted.aggregate_trade_cross_date_raw_id_gap_stream.to_canonical_dict(),
+        "aggregate_trade_coverage_gaps": tuple(value.to_canonical_dict() for value in trusted.aggregate_trade_coverage_gaps),
+        "aggregate_trade_capture_final_evidence": tuple(value.to_canonical_dict() for value in trusted.aggregate_trade_capture_final_evidence),
+        "missing_boundaries": tuple(value.to_canonical_dict() for value in trusted.missing_boundaries),
+        "source_stream_manifests": tuple(value.to_canonical_dict() for value in source_manifests),
+        "source_event_bindings": tuple(
+            {"stream_key": event.stream_key, "event_id": event.event_id, "event_hash": event.event_hash}
+            for event in trusted.source_events
+        ),
+        "execution_projection_stream_manifest": trusted.projection_stream_manifest.to_canonical_dict(),
+        "execution_projection_event_bindings": tuple(
+            sorted(
+                (
+                    {"stream_key": event.stream_key, "event_id": event.event_id, "event_hash": event.event_hash}
+                    for event in trusted.projection_events
+                ),
+                key=lambda value: (value["stream_key"], value["event_id"], value["event_hash"]),
+            )
+        ),
+        "xkrx_calendar_ref": trusted.xkrx_calendar_ref,
+        "arcx_calendar_ref": trusted.arcx_calendar_ref,
+        "post_adjustment_unit_regime_ref": trusted.post_adjustment_unit_regime_ref,
+        "development_only": trusted.development_only,
+        "decision_grade_eligible": trusted.decision_grade_eligible,
+        "deployment_authorized": trusted.deployment_authorized,
+    }
+    envelope = ArtifactEnvelope.create(
+        _SOURCE_PROFILE_AUTHORITY_ARTIFACT_TYPE_V3, _SCHEMA_VERSION, payload
+    )
+    return envelope, ArtifactRef.from_envelope(envelope)
