@@ -63,6 +63,7 @@ from .binance_usdm_koru_aggtrades_source_bounded_v1 import (
 from .raw_blob_snapshots import RawBlobSnapshotView
 from .source_snapshots import (
     SourceSnapshot,
+    SourceSnapshotMember,
     _content_tree_hash,
     _provenance_hash,
 )
@@ -2684,6 +2685,39 @@ def _canonical_authority_mapping_v3(value: object, name: str) -> dict[str, objec
     return decoded
 
 
+def _generated_availability_binding_v3(
+    capture: BinanceUsdmKoruAggregateTradesSourceBoundedCaptureResultV1,
+    source_member: SourceSnapshotMember,
+) -> dict[str, object] | None:
+    """Bind the sealed retained availability policy without misclassifying it as raw."""
+    if source_member.member_key != _RETAINED_AVAILABILITY_AUTHORITY_MEMBER_KEY:
+        return None
+    authority = _trusted_authority(capture.request.authority)
+    if authority is None:
+        raise ValueError("generated availability authority requires retained capture")
+    availability = authority.availability_authority
+    availability_bytes = _availability_authority_bytes()
+    availability_value = availability.to_canonical_dict()
+    if (
+        canonical_bytes(availability_value) != availability_bytes
+        or source_member.content_hash != _sha256(availability_bytes)
+        or source_member.byte_count != len(availability_bytes)
+        or source_member.mode != "0644"
+        or source_member.declared_sha256 != _sha256(availability_bytes)
+    ):
+        raise ValueError("generated availability authority source member is invalid")
+    return {
+        "binding_kind": "koru_retained_availability_authority_v1",
+        "source_member_key": source_member.member_key,
+        "source_member_hash": source_member.content_hash,
+        "source_member_byte_count": source_member.byte_count,
+        "source_member_mode": source_member.mode,
+        "availability_authority_ref": availability.authority_ref,
+        "availability_authority_digest": availability.authority_digest,
+        "availability_authority": availability_value,
+    }
+
+
 def _raw_member_bindings_v3(
     result: BinanceUsdmKoruAggregateTradeBoundaryIndexResultV3,
     raw_snapshot_view: RawBlobSnapshotView,
@@ -2704,6 +2738,12 @@ def _raw_member_bindings_v3(
                     and raw_member.mode == source_member.mode
                 )
             )
+            if not matches:
+                generated = _generated_availability_binding_v3(capture, source_member)
+                if generated is None:
+                    raise ValueError("raw snapshot must bind each source member exactly once")
+                source_members.append(generated)
+                continue
             if len(matches) != 1:
                 raise ValueError("raw snapshot must bind each source member exactly once")
             raw_member = matches[0]
