@@ -2,19 +2,26 @@
 
 from __future__ import annotations
 
+import base64
 import csv
 import hashlib
 import io
 import json
 import tarfile
 from collections import OrderedDict
-from collections.abc import Iterator
-from dataclasses import dataclass, field
+from collections.abc import Iterator, Mapping
+from dataclasses import dataclass, field, fields, is_dataclass
 from datetime import UTC, date, datetime, timedelta
 from enum import Enum
 from zipfile import BadZipFile, ZipFile
 
-from crypto_quant_domain import UtcInstant, canonical_bytes, canonical_sha256
+from crypto_quant_domain import (
+    ArtifactEnvelope,
+    ArtifactRef,
+    UtcInstant,
+    canonical_bytes,
+    canonical_sha256,
+)
 from crypto_quant_market_data import MarketEvent
 
 from .binance_usdm_koru_aggtrades_source_bounded_v1 import (
@@ -53,6 +60,7 @@ from .binance_usdm_koru_aggtrades_source_bounded_v1 import (
 from .binance_usdm_koru_aggtrades_source_bounded_v1 import (
     _trusted_request as _trusted_source_request,
 )
+from .raw_blob_snapshots import RawBlobSnapshotView
 from .source_snapshots import (
     SourceSnapshot,
     _content_tree_hash,
@@ -2478,3 +2486,429 @@ def _trusted_result_v3(
     except (AttributeError, TypeError, ValueError):
         return None
     return replay
+
+KORU_AGGREGATE_TRADE_BOUNDARY_INDEX_AUTHORITY_ARTIFACT_TYPE_V3 = (
+    "binance_usdm_koru_aggregate_trade_boundary_index_authority_v3"
+)
+KORU_AGGREGATE_TRADE_BOUNDARY_INDEX_AUTHORITY_SCHEMA_VERSION_V3 = 3
+_BOUNDARY_AUTHORITY_PAYLOAD_FIELDS_V3 = frozenset(
+    {
+        "type",
+        "schema_version",
+        "builder",
+        "raw_snapshot_authority_identity",
+        "raw_snapshot_id",
+        "boundary_index_identity",
+        "capture_bindings",
+        "boundary_index_result",
+    }
+)
+
+
+def _authority_registry_v3() -> dict[str, type[object]]:
+    """Whitelist only value models needed to reconstruct a V3 boundary result."""
+    from crypto_quant_domain import artifacts, instruments, time
+    from crypto_quant_domain.numeric import scales
+    from crypto_quant_market_data import bundles
+
+    from . import binance_usdm_koru_aggtrades_source_bounded_v1, source_snapshots
+
+    registry: dict[str, type[object]] = {}
+    for module in (
+        artifacts,
+        instruments,
+        time,
+        scales,
+        bundles,
+        binance_usdm_koru_aggtrades_source_bounded_v1,
+        source_snapshots,
+    ):
+        for value in vars(module).values():
+            if (
+                isinstance(value, type)
+                and value.__module__ == module.__name__
+                and (is_dataclass(value) or issubclass(value, Enum))
+            ):
+                registry[f"{value.__module__}.{value.__qualname__}"] = value
+    for value in (
+        BinanceUsdmKoruAggregateTradeBoundaryIndexRequestV3,
+        BinanceUsdmKoruAggregateTradeBoundaryIndexResultV3,
+        BinanceUsdmKoruAggregateTradeCaptureFinalEvidenceV3,
+        BinanceUsdmKoruExecutionBoundaryV1,
+        BinanceUsdmKoruSelectedAggregateTradeLineageV1,
+        BinanceUsdmKoruMissingAggregateTradeBoundaryV1,
+        BinanceUsdmKoruRawIdGapStreamEvidenceV1,
+        BinanceUsdmKoruAggregateIdCoverageGapEvidenceV1,
+    ):
+        registry[f"{__name__}.{value.__qualname__}"] = value
+    return registry
+
+
+def _authority_encode_v3(value: object) -> dict[str, object]:
+    registry = _authority_registry_v3()
+
+    def encode(item: object) -> dict[str, object]:
+        if item is None or type(item) in (bool, int, str):
+            return {"kind": "scalar", "value": item}
+        if type(item) is bytes:
+            return {"kind": "bytes", "base64": base64.b64encode(item).decode("ascii")}
+        if isinstance(item, Enum):
+            type_id = f"{type(item).__module__}.{type(item).__qualname__}"
+            if registry.get(type_id) is not type(item):
+                raise TypeError("boundary authority contains an unsupported enum")
+            return {"kind": "enum", "type": type_id, "value": item.value}
+        if type(item) is tuple:
+            return {"kind": "tuple", "items": [encode(child) for child in item]}
+        if isinstance(item, Mapping):
+            keys = tuple(sorted(item))
+            if any(type(key) is not str for key in keys):
+                raise TypeError("boundary authority mappings must use string keys")
+            return {
+                "kind": "mapping",
+                "items": [[key, encode(item[key])] for key in keys],
+            }
+        if is_dataclass(item) and not isinstance(item, type):
+            type_id = f"{type(item).__module__}.{type(item).__qualname__}"
+            if registry.get(type_id) is not type(item):
+                raise TypeError("boundary authority contains an unsupported model")
+            return {
+                "kind": "model",
+                "type": type_id,
+                "fields": [
+                    [model_field.name, encode(getattr(item, model_field.name))]
+                    for model_field in fields(item)
+                    if model_field.init
+                ],
+            }
+        raise TypeError("boundary authority contains an unsupported value")
+
+    return encode(value)
+
+
+def _authority_decode_v3(value: object) -> object:
+    registry = _authority_registry_v3()
+
+    def exact(node: object, keys: frozenset[str]) -> dict[str, object]:
+        if type(node) is not dict or set(node) != keys:
+            raise ValueError("boundary authority serialization schema mismatch")
+        return node
+
+    def decode(item: object) -> object:
+        if type(item) is not dict or type(item.get("kind")) is not str:
+            raise ValueError("boundary authority serialization schema mismatch")
+        kind = item["kind"]
+        expected_keys = {
+            "scalar": frozenset({"kind", "value"}),
+            "bytes": frozenset({"kind", "base64"}),
+            "enum": frozenset({"kind", "type", "value"}),
+            "tuple": frozenset({"kind", "items"}),
+            "mapping": frozenset({"kind", "items"}),
+            "model": frozenset({"kind", "type", "fields"}),
+        }.get(kind)
+        if expected_keys is None:
+            raise ValueError("boundary authority serialization schema mismatch")
+        node = exact(item, expected_keys)
+        if kind == "scalar":
+            if node["value"] is None or type(node["value"]) in (bool, int, str):
+                return node["value"]
+        elif kind == "bytes":
+            encoded = node["base64"]
+            if type(encoded) is str:
+                try:
+                    decoded_bytes = base64.b64decode(encoded, validate=True)
+                except ValueError as error:
+                    raise ValueError("boundary authority bytes are invalid") from error
+                if base64.b64encode(decoded_bytes).decode("ascii") == encoded:
+                    return decoded_bytes
+        elif kind == "enum":
+            type_id, enum_value = node["type"], node["value"]
+            enum_type = registry.get(type_id) if type(type_id) is str else None
+            if enum_type is not None and issubclass(enum_type, Enum):
+                return enum_type(enum_value)
+        elif kind == "tuple" and type(node["items"]) is list:
+            return tuple(decode(child) for child in node["items"])
+        elif kind == "mapping" and type(node["items"]) is list:
+            decoded: dict[str, object] = {}
+            previous = ""
+            for entry in node["items"]:
+                if (
+                    type(entry) is not list
+                    or len(entry) != 2
+                    or type(entry[0]) is not str
+                    or entry[0] <= previous
+                ):
+                    raise ValueError("boundary authority mapping order is invalid")
+                previous = entry[0]
+                decoded[entry[0]] = decode(entry[1])
+            return decoded
+        elif kind == "model":
+            type_id, model_fields = node["type"], node["fields"]
+            model_type = registry.get(type_id) if type(type_id) is str else None
+            if (
+                model_type is not None
+                and is_dataclass(model_type)
+                and type(model_fields) is list
+            ):
+                expected = tuple(
+                    model_field.name
+                    for model_field in fields(model_type)
+                    if model_field.init
+                )
+                if (
+                    len(model_fields) == len(expected)
+                    and all(
+                        type(entry) is list
+                        and len(entry) == 2
+                        and type(entry[0]) is str
+                        for entry in model_fields
+                    )
+                    and tuple(entry[0] for entry in model_fields) == expected
+                ):
+                    return model_type(
+                        **{entry[0]: decode(entry[1]) for entry in model_fields}
+                    )
+        raise ValueError("boundary authority serialization value is invalid")
+
+    return decode(value)
+
+
+def _canonical_authority_mapping_v3(value: object, name: str) -> dict[str, object]:
+    if not isinstance(value, Mapping) or not value:
+        raise ValueError(f"{name} must be a non-empty canonical object")
+    try:
+        decoded = json.loads(canonical_bytes(value).decode("utf-8"))
+    except (TypeError, ValueError, UnicodeDecodeError, json.JSONDecodeError) as error:
+        raise ValueError(f"{name} must be canonical JSON") from error
+    if type(decoded) is not dict or canonical_bytes(decoded) != canonical_bytes(value):
+        raise ValueError(f"{name} must be a canonical object")
+    return decoded
+
+
+def _raw_member_bindings_v3(
+    result: BinanceUsdmKoruAggregateTradeBoundaryIndexResultV3,
+    raw_snapshot_view: RawBlobSnapshotView,
+) -> tuple[dict[str, object], ...]:
+    if type(raw_snapshot_view) is not RawBlobSnapshotView:
+        raise TypeError("raw_snapshot_view must be a RawBlobSnapshotView")
+    raw_members = raw_snapshot_view.manifest.members
+    bindings: list[dict[str, object]] = []
+    for ordinal, capture in enumerate(result.request.captures, start=1):
+        source_members: list[dict[str, object]] = []
+        for source_member in capture.snapshot.members:
+            matches = tuple(
+                raw_member
+                for raw_member in raw_members
+                if (
+                    raw_member.raw_blob_ref.content_hash == source_member.content_hash
+                    and raw_member.raw_blob_ref.byte_count == source_member.byte_count
+                    and raw_member.mode == source_member.mode
+                )
+            )
+            if len(matches) != 1:
+                raise ValueError("raw snapshot must bind each source member exactly once")
+            raw_member = matches[0]
+            source_members.append(
+                {
+                    "source_member_key": source_member.member_key,
+                    "source_member_hash": source_member.content_hash,
+                    "source_member_byte_count": source_member.byte_count,
+                    "raw_snapshot_member_key": raw_member.member_key,
+                    "raw_blob_ref": raw_member.raw_blob_ref.to_canonical_dict(),
+                }
+            )
+        retained_pages: list[dict[str, object]] = []
+        authority = capture.request.authority
+        if authority is not None:
+            source_by_key = {item["source_member_key"]: item for item in source_members}
+            for page in authority.pages:
+                source = source_by_key.get("retained/raw/" + page.member_name)
+                if source is None or source["source_member_hash"] != page.content_sha256:
+                    raise ValueError("retained raw page does not bind its source member")
+                retained_pages.append(
+                    {
+                        "member_name": page.member_name,
+                        "content_sha256": page.content_sha256,
+                        "raw_snapshot_member_key": source["raw_snapshot_member_key"],
+                    }
+                )
+        bindings.append(
+            {
+                "capture_ordinal": ordinal,
+                "utc_date": capture.request.utc_date,
+                "capture_hash": capture.capture_hash,
+                "source_snapshot_id": capture.snapshot.snapshot_id,
+                "source_snapshot_hash": canonical_sha256(capture.snapshot.to_canonical_dict()),
+                "source_members": source_members,
+                "retained_raw_pages": retained_pages,
+            }
+        )
+    return tuple(bindings)
+
+
+def _boundary_index_identity_v3(
+    result: BinanceUsdmKoruAggregateTradeBoundaryIndexResultV3,
+) -> dict[str, object]:
+    value = {
+        "request_hash": result.request.request_hash,
+        "result_digest": result.result_digest,
+        "ordered_boundaries": [
+            boundary.to_canonical_dict() for boundary in result.request.boundaries
+        ],
+        "selected_lineage": [
+            lineage.to_canonical_dict() for lineage in result.selected_lineage
+        ],
+        "missing_boundaries": [
+            missing.to_canonical_dict() for missing in result.missing_boundaries
+        ],
+        "intra_day_raw_id_gap_stream": result.intra_day_raw_id_gap_stream.to_canonical_dict(),
+        "cross_date_raw_id_gap_stream": result.cross_date_raw_id_gap_stream.to_canonical_dict(),
+        "aggregate_id_coverage_gaps": [
+            gap.to_canonical_dict() for gap in result.aggregate_id_coverage_gaps
+        ],
+        "streamed_reconstruction_digest": result.streamed_reconstruction_digest,
+        "capture_final_evidence": [
+            final.to_canonical_dict() for final in result.capture_final_evidence
+        ],
+    }
+    return json.loads(canonical_bytes(value).decode("utf-8"))
+
+
+def _boundary_authority_payload_v3(
+    result: BinanceUsdmKoruAggregateTradeBoundaryIndexResultV3,
+    raw_snapshot_view: RawBlobSnapshotView,
+    raw_snapshot_authority_identity: Mapping[str, object],
+) -> dict[str, object]:
+    trusted = _trusted_result_v3(result)
+    if trusted is None:
+        raise ValueError("result must be an exact canonical V3 boundary result")
+    raw_identity = _canonical_authority_mapping_v3(
+        raw_snapshot_authority_identity, "raw_snapshot_authority_identity"
+    )
+    return {
+        "type": KORU_AGGREGATE_TRADE_BOUNDARY_INDEX_AUTHORITY_ARTIFACT_TYPE_V3,
+        "schema_version": KORU_AGGREGATE_TRADE_BOUNDARY_INDEX_AUTHORITY_SCHEMA_VERSION_V3,
+        "builder": {
+            "id": "binance_usdm_koru_aggregate_trade_boundary_index_v3",
+            "result_type": "binance_usdm_koru_aggregate_trade_boundary_index_result_v3",
+            "result_schema_version": 3,
+        },
+        "raw_snapshot_authority_identity": raw_identity,
+        "raw_snapshot_id": raw_snapshot_view.manifest.snapshot_id,
+        "boundary_index_identity": _boundary_index_identity_v3(trusted),
+        "capture_bindings": list(_raw_member_bindings_v3(trusted, raw_snapshot_view)),
+        "boundary_index_result": _authority_encode_v3(trusted),
+    }
+
+
+def create_binance_usdm_koru_aggregate_trade_boundary_index_authority_v3(
+    result: BinanceUsdmKoruAggregateTradeBoundaryIndexResultV3,
+    raw_snapshot_view: RawBlobSnapshotView,
+    raw_snapshot_authority_identity: Mapping[str, object],
+) -> tuple[ArtifactEnvelope, ArtifactRef]:
+    """Create a V3 boundary authority; Foundation publication belongs to Research."""
+    envelope = ArtifactEnvelope.create(
+        KORU_AGGREGATE_TRADE_BOUNDARY_INDEX_AUTHORITY_ARTIFACT_TYPE_V3,
+        KORU_AGGREGATE_TRADE_BOUNDARY_INDEX_AUTHORITY_SCHEMA_VERSION_V3,
+        _boundary_authority_payload_v3(
+            result, raw_snapshot_view, raw_snapshot_authority_identity
+        ),
+    )
+    ref = ArtifactRef.from_envelope(envelope)
+    if ref.content_hash == result.result_digest:
+        raise ValueError("authority artifact identity must differ from result digest")
+    return envelope, ref
+
+
+def serialize_binance_usdm_koru_aggregate_trade_boundary_index_authority_v3(
+    result: BinanceUsdmKoruAggregateTradeBoundaryIndexResultV3,
+    raw_snapshot_view: RawBlobSnapshotView,
+    raw_snapshot_authority_identity: Mapping[str, object],
+) -> bytes:
+    envelope, _ = create_binance_usdm_koru_aggregate_trade_boundary_index_authority_v3(
+        result, raw_snapshot_view, raw_snapshot_authority_identity
+    )
+    return canonical_bytes(envelope)
+
+
+def _boundary_authority_envelope_from_bytes_v3(source: bytes) -> ArtifactEnvelope:
+    if type(source) is not bytes:
+        raise TypeError("boundary authority envelope must be bytes")
+    try:
+        value = json.loads(source.decode("utf-8"))
+        envelope = ArtifactEnvelope(
+            value["artifact_type"],
+            value["schema_version"],
+            value["payload"],
+            value["content_hash"],
+        )
+    except (KeyError, TypeError, UnicodeDecodeError, ValueError, json.JSONDecodeError) as error:
+        raise ValueError("boundary authority envelope is invalid") from error
+    if (
+        type(value) is not dict
+        or set(value) != {"artifact_type", "schema_version", "payload", "content_hash"}
+        or canonical_bytes(envelope) != source
+    ):
+        raise ValueError("boundary authority envelope must use exact canonical bytes")
+    return envelope
+
+
+def open_binance_usdm_koru_aggregate_trade_boundary_index_authority_v3(
+    source: bytes,
+    artifact_ref: ArtifactRef,
+    raw_snapshot_view: RawBlobSnapshotView,
+    raw_snapshot_authority_identity: Mapping[str, object],
+) -> BinanceUsdmKoruAggregateTradeBoundaryIndexResultV3:
+    """Open published V3 bytes from bound raw blobs without aggregate-row replay."""
+    if type(artifact_ref) is not ArtifactRef:
+        raise TypeError("artifact_ref must be an ArtifactRef")
+    envelope = _boundary_authority_envelope_from_bytes_v3(source)
+    if (
+        envelope.artifact_type
+        != KORU_AGGREGATE_TRADE_BOUNDARY_INDEX_AUTHORITY_ARTIFACT_TYPE_V3
+        or envelope.schema_version
+        != KORU_AGGREGATE_TRADE_BOUNDARY_INDEX_AUTHORITY_SCHEMA_VERSION_V3
+        or ArtifactRef.from_envelope(envelope) != artifact_ref
+    ):
+        raise ValueError("boundary authority envelope/ref schema is unsupported")
+    try:
+        payload = json.loads(canonical_bytes(envelope.payload).decode("utf-8"))
+    except (TypeError, ValueError, UnicodeDecodeError, json.JSONDecodeError) as error:
+        raise ValueError("boundary authority payload schema is invalid") from error
+    if type(payload) is not dict or set(payload) != _BOUNDARY_AUTHORITY_PAYLOAD_FIELDS_V3:
+        raise ValueError("boundary authority payload schema is invalid")
+    if (
+        payload["type"] != KORU_AGGREGATE_TRADE_BOUNDARY_INDEX_AUTHORITY_ARTIFACT_TYPE_V3
+        or payload["schema_version"] != KORU_AGGREGATE_TRADE_BOUNDARY_INDEX_AUTHORITY_SCHEMA_VERSION_V3
+        or payload["builder"]
+        != {
+            "id": "binance_usdm_koru_aggregate_trade_boundary_index_v3",
+            "result_type": "binance_usdm_koru_aggregate_trade_boundary_index_result_v3",
+            "result_schema_version": 3,
+        }
+        or payload["raw_snapshot_id"] != raw_snapshot_view.manifest.snapshot_id
+        or _canonical_authority_mapping_v3(
+            payload["raw_snapshot_authority_identity"],
+            "raw_snapshot_authority_identity",
+        )
+        != _canonical_authority_mapping_v3(
+            raw_snapshot_authority_identity,
+            "raw_snapshot_authority_identity",
+        )
+        or type(payload["capture_bindings"]) is not list
+        or type(payload["boundary_index_identity"]) is not dict
+    ):
+        raise ValueError("boundary authority identity binding is invalid")
+    try:
+        rebuilt = _authority_decode_v3(payload["boundary_index_result"])
+    except (IndexError, RecursionError, TypeError, ValueError) as error:
+        raise ValueError("boundary authority cannot reconstruct typed result") from error
+    if type(rebuilt) is not BinanceUsdmKoruAggregateTradeBoundaryIndexResultV3:
+        raise ValueError("boundary authority result type is invalid")
+    if (
+        _boundary_index_identity_v3(rebuilt) != payload["boundary_index_identity"]
+        or list(_raw_member_bindings_v3(rebuilt, raw_snapshot_view))
+        != payload["capture_bindings"]
+    ):
+        raise ValueError("boundary authority evidence or raw bindings are invalid")
+    # Do not call _trusted_result_v3 here: reopening must never replay aggregate rows.
+    return rebuilt

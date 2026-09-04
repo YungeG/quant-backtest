@@ -12,6 +12,8 @@ from .bar_aggregation import (
     aggregate_bars_v1,
 )
 from .binance_usdm_koru_aggtrade_boundary_index_v1 import (
+    KORU_AGGREGATE_TRADE_BOUNDARY_INDEX_AUTHORITY_ARTIFACT_TYPE_V3,
+    KORU_AGGREGATE_TRADE_BOUNDARY_INDEX_AUTHORITY_SCHEMA_VERSION_V3,
     BinanceUsdmKoruAggregateIdCoverageGapEvidenceV1,
     BinanceUsdmKoruAggregateTradeBoundaryIndexFailureCodeV1,
     BinanceUsdmKoruAggregateTradeBoundaryIndexFailureCodeV3,
@@ -30,6 +32,9 @@ from .binance_usdm_koru_aggtrade_boundary_index_v1 import (
     BinanceUsdmKoruSelectedAggregateTradeLineageV1,
     build_binance_usdm_koru_aggregate_trade_boundary_index_v1,
     build_binance_usdm_koru_aggregate_trade_boundary_index_v3,
+    create_binance_usdm_koru_aggregate_trade_boundary_index_authority_v3,
+    open_binance_usdm_koru_aggregate_trade_boundary_index_authority_v3,
+    serialize_binance_usdm_koru_aggregate_trade_boundary_index_authority_v3,
 )
 from .binance_usdm_koru_aggtrades_source_bounded_v1 import (
     BINANCE_USDM_KORU_AGGREGATE_TRADE_AVAILABILITY_AUTHORITY_V1,
@@ -222,6 +227,8 @@ __version__ = "0.1.0"
 __all__ = [
     "APPROVED_MEMBER_HASHES",
     "BINANCE_USDM_KORU_AGGREGATE_TRADE_AVAILABILITY_AUTHORITY_V1",
+    "KORU_AGGREGATE_TRADE_BOUNDARY_INDEX_AUTHORITY_ARTIFACT_TYPE_V3",
+    "KORU_AGGREGATE_TRADE_BOUNDARY_INDEX_AUTHORITY_SCHEMA_VERSION_V3",
     "KORU_TRADIFI_SOURCE_PROJECTION_AUTHORITY_ARTIFACT_TYPE_V1",
     "KORU_TRADIFI_SOURCE_PROJECTION_AUTHORITY_SCHEMA_VERSION_V1",
     "RAW_BLOB_SNAPSHOT_MANIFEST_ARTIFACT_TYPE",
@@ -384,6 +391,7 @@ __all__ = [
     "capture_binance_usdm_koru_price_bars_from_retained_observations_v1",
     "capture_binance_usdm_koru_price_bars_source_bounded_v1",
     "compile_binance_usdm_koru_directional_targets_v1",
+    "create_binance_usdm_koru_aggregate_trade_boundary_index_authority_v3",
     "create_binance_usdm_koru_tradifi_source_projection_authority_v1",
     "create_raw_blob_snapshot_manifest",
     "freeze_source_snapshot",
@@ -391,9 +399,11 @@ __all__ = [
     "normalize_binance_usdm_koru_funding_rate_history_source_bounded_v1",
     "normalize_binance_usdm_koru_price_bars_source_bounded_v1",
     "normalize_synthetic_jsonl_v1",
+    "open_binance_usdm_koru_aggregate_trade_boundary_index_authority_v3",
     "open_binance_usdm_koru_tradifi_source_projection_authority_v1",
     "publish_koru_tradifi_economics_bundle_v3",
     "publish_koru_tradifi_target_overlay_v3",
+    "serialize_binance_usdm_koru_aggregate_trade_boundary_index_authority_v3",
     "serialize_binance_usdm_koru_tradifi_source_projection_authority_v1",
     "validate_market_bundle_v1",
     "verify_koru_tradifi_calendar_unit_authority_v1",
