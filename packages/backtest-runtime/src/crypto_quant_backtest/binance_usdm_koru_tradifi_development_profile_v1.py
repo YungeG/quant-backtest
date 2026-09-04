@@ -134,6 +134,7 @@ _FUNDING_EVENT_TYPE = "binance_usdm_koru_funding_history_publication_v1"
 _FUNDING_CAPABILITY = MarketBundleCapability("binance_usdm.funding-publications", 1)
 _POINT_CAPABILITY = MarketBundleCapability("price.point", 1)
 _BAR_CAPABILITY = MarketBundleCapability("price.bar", 1)
+_INDEX_STRATEGY_STREAM = "binance_usdm.index_price.strategy.koruusdt.1h.v1"
 _PRICE_STREAMS = {
     ("mark_price", "strategy"): (
         "binance_usdm.mark_price.strategy.koruusdt.1h.v1",
@@ -156,7 +157,7 @@ _PRICE_STREAMS = {
         _BAR_CAPABILITY,
     ),
     ("index_price", "strategy"): (
-        "binance_usdm.index_price.strategy.koruusdt.1h.v1",
+        _INDEX_STRATEGY_STREAM,
         "binance_usdm_koru_index_price_strategy_bar_v1",
         _BAR_CAPABILITY,
     ),
@@ -271,7 +272,7 @@ class BinanceUsdmKoruTradifiDevelopmentProfileRequestV1:
             self.source_profile_authority_envelope.artifact_type
             != _SOURCE_AUTHORITY_ARTIFACT_TYPE
             or self.source_profile_authority_envelope.schema_version
-            != _SOURCE_AUTHORITY_SCHEMA_VERSION
+            not in {_SOURCE_AUTHORITY_SCHEMA_VERSION, 3}
             or self.source_profile_authority_ref
             != ArtifactRef.from_envelope(self.source_profile_authority_envelope)
         ):
@@ -651,7 +652,7 @@ def _validate_source_profile_authority(
     try:
         rebuilt = ArtifactEnvelope.create(
             _SOURCE_AUTHORITY_ARTIFACT_TYPE,
-            _SOURCE_AUTHORITY_SCHEMA_VERSION,
+            envelope.schema_version,
             envelope.payload,
         )
     except (TypeError, ValueError) as error:
@@ -665,6 +666,7 @@ def _validate_source_profile_authority(
             "source_profile_authority_ref",
         )
     payload = envelope.payload
+    v3_authority = envelope.schema_version == 3
     expected_keys = {
         "type",
         "schema_version",
@@ -682,13 +684,13 @@ def _validate_source_profile_authority(
         "source_event_bindings",
         "execution_projection_stream_manifest",
         "execution_projection_event_bindings",
-        "source_stream_authorities",
         "xkrx_calendar_ref",
         "arcx_calendar_ref",
         "post_adjustment_unit_regime_ref",
         "development_only",
         "decision_grade_eligible",
         "deployment_authorized",
+        *(("source_projection_authority_ref", "aggregate_trade_capture_final_evidence") if v3_authority else ("source_stream_authorities",)),
     }
     if not isinstance(payload, Mapping) or set(payload) != expected_keys:
         raise _BuildError(
@@ -717,8 +719,11 @@ def _validate_source_profile_authority(
         "aggregate_trade_streamed_reconstruction_digest",
     )
     if (
-        payload.get("type") != "binance_usdm_koru_source_profile_authority_v2"
-        or payload.get("schema_version") != _SOURCE_AUTHORITY_SCHEMA_VERSION
+        payload.get("type") != (
+            "binance_usdm_koru_source_profile_authority_v3" if v3_authority
+            else "binance_usdm_koru_source_profile_authority_v2"
+        )
+        or payload.get("schema_version") != envelope.schema_version
         or canonical_bytes(payload.get("timeline_window"))
         != canonical_bytes(expected_timeline)
         or any(
@@ -782,7 +787,10 @@ def _validate_source_profile_authority(
         or set(capability) != {"type", "key", "version"}
         or canonical_bytes(projection_manifest)
         != canonical_bytes(rebuilt_projection_manifest)
-        or rebuilt_projection_manifest.stream_key != _EXECUTION_PROJECTION_STREAM
+        or rebuilt_projection_manifest.stream_key != (
+            "binance_usdm.tradifi.bar_open.first_retained_aggregate_trade.koruusdt.1h.v3"
+            if v3_authority else _EXECUTION_PROJECTION_STREAM
+        )
         or rebuilt_projection_manifest.event_type != _EXECUTION_PROJECTION_EVENT_TYPE
         or rebuilt_projection_manifest.capability
         != _EXECUTION_PROJECTION_CAPABILITY
@@ -806,7 +814,10 @@ def _validate_source_profile_authority(
         event_id = value.get("event_id")
         event_hash = value.get("event_hash")
         if (
-            stream_key != _EXECUTION_PROJECTION_STREAM
+            stream_key != (
+                "binance_usdm.tradifi.bar_open.first_retained_aggregate_trade.koruusdt.1h.v3"
+                if v3_authority else _EXECUTION_PROJECTION_STREAM
+            )
             or type(event_id) is not str
             or not event_id
             or not _canonical_digest(event_hash)
@@ -844,17 +855,18 @@ def _validate_source_profile_authority(
     grouped: dict[str, list[MarketEvent]] = defaultdict(list)
     for event in request.source_events:
         grouped[event.stream_key].append(event)
-    expected_authorities = tuple(
-        _source_stream_authority(manifest, tuple(grouped[manifest.stream_key]))
-        for manifest in manifests
-    )
-    if canonical_bytes(payload.get("source_stream_authorities")) != canonical_bytes(
-        expected_authorities
-    ):
-        raise _BuildError(
-            BinanceUsdmKoruTradifiDevelopmentProfileFailureCodeV1.AUTHORITY_INVALID,
-            "source_stream_authorities",
+    if not v3_authority:
+        expected_authorities = tuple(
+            _source_stream_authority(manifest, tuple(grouped[manifest.stream_key]))
+            for manifest in manifests
         )
+        if canonical_bytes(payload.get("source_stream_authorities")) != canonical_bytes(
+            expected_authorities
+        ):
+            raise _BuildError(
+                BinanceUsdmKoruTradifiDevelopmentProfileFailureCodeV1.AUTHORITY_INVALID,
+                "source_stream_authorities",
+            )
     required_streams = {
         _EXECUTION_STREAM,
         _FUNDING_STREAM,
@@ -1063,7 +1075,7 @@ def _validated_sources(
             funding.append(event)
             continue
         try:
-            _, purpose, _ = _validate_price_event(event)
+            source_kind, purpose, _ = _validate_price_event(event)
         except ValueError as error:
             raise _BuildError(
                 BinanceUsdmKoruTradifiDevelopmentProfileFailureCodeV1.SOURCE_CONTEXT_INVALID,

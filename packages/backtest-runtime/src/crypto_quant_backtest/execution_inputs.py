@@ -4082,6 +4082,7 @@ def _rebuild_hydrated_inputs_v3(value: object) -> _HydratedExecutionCaseInputs:
     target_stream = PrecomputedTargetStream(
         value.target_stream.stream_key,
         value.target_stream.events,
+        value.target_stream.schema_version,
     )
     return _HydratedExecutionCaseInputs(
         execution_case_semantic_spec=_rebuild_semantic_spec_v3(

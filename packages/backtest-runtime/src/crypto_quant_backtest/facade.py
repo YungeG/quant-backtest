@@ -1201,7 +1201,8 @@ class BacktestRuntime:
                     raise ValueError("target cursor did not advance")
                 events.extend(batch)
             target_stream = PrecomputedTargetStream(
-                bundle.target_stream_key, tuple(events)
+                bundle.target_stream_key, tuple(events),
+                2 if retained_reader.manifest.schema_version == 4 else 1,
             )
             if (
                 target_stream.target_stream_digest

@@ -58,9 +58,12 @@ def _hash_text(name: str, value: object) -> str:
 class PrecomputedTargetStream:
     stream_key: str
     events: tuple[MarketEvent, ...]
+    schema_version: int = _TARGET_STREAM_SCHEMA_VERSION
 
     def __post_init__(self) -> None:
         _canonical_text("stream_key", self.stream_key)
+        if type(self.schema_version) is not int or self.schema_version not in {1, 2}:
+            raise ValueError("schema_version")
         if not isinstance(self.events, tuple) or not all(
             isinstance(event, MarketEvent) for event in self.events
         ):
@@ -95,7 +98,7 @@ class PrecomputedTargetStream:
     def to_canonical_dict(self) -> dict[str, object]:
         return {
             "type": "precomputed_target_stream",
-            "schema_version": _TARGET_STREAM_SCHEMA_VERSION,
+            "schema_version": self.schema_version,
             "stream_key": self.stream_key,
             "events": self.events,
         }

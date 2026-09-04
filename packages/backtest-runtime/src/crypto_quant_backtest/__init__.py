@@ -18,9 +18,11 @@ from .binance_usdm_koru_directional_profile_v3 import (
     KoruDirectionalV3StrategyAuthority,
     verify_binance_usdm_koru_directional_strategy_authority_v3,
 )
-from .koru_tradifi_economics_authority_v3 import (
-    KoruTradifiEconomicsAuthorityV3,
-    resolve_koru_tradifi_economics_authority_v3,
+from .binance_usdm_koru_directional_profile_v4 import (
+    BinanceUsdmKoruDirectionalPlannerV4,
+    BinanceUsdmKoruDirectionalTargetConsumptionV4,
+    KoruDirectionalV4StrategyAuthority,
+    verify_binance_usdm_koru_directional_strategy_authority_v4,
 )
 from .binance_usdm_koru_tradifi_development_profile_v1 import (
     BinanceUsdmKoruTradifiDevelopmentProfileFailureCodeV1,
@@ -46,6 +48,11 @@ from .binance_usdm_tradifi_directional_preparation import (
     BinanceUsdmTradifiDirectionalRequestIntentV3,
     prepare_binance_usdm_tradifi_directional_bar_backtest,
     verify_binance_usdm_tradifi_directional_preparation_authority_v3,
+)
+from .binance_usdm_tradifi_directional_preparation_v4 import (
+    BinanceUsdmTradifiDirectionalRequestIntentV4,
+    prepare_binance_usdm_tradifi_directional_bar_backtest_v4,
+    verify_binance_usdm_tradifi_directional_preparation_authority_v4,
 )
 from .binance_usdm_tradifi_operations import (
     BinanceUsdmKoruPremiumBacktestOperationsV1,
@@ -242,6 +249,14 @@ from .integrity import (
     IntegrityReport,
     IntegrityTraceLevel,
     ResultGrade,
+)
+from .koru_tradifi_economics_authority_v3 import (
+    KoruTradifiEconomicsAuthorityV3,
+    resolve_koru_tradifi_economics_authority_v3,
+)
+from .koru_tradifi_economics_authority_v4 import (
+    KoruTradifiEconomicsAuthorityV4,
+    resolve_koru_tradifi_economics_authority_v4,
 )
 from .liquidation_audit import (
     ConservativeLinearLiquidationAuditModel,
@@ -495,6 +510,7 @@ __all__ = [  # noqa: RUF022 - public API remains grouped by subsystem
     "BinanceUsdmTradifiBacktestOperations",
     "BinanceUsdmTradifiDirectionalBacktestOperationsV3",
     "BinanceUsdmTradifiDirectionalRequestIntentV3",
+    "BinanceUsdmTradifiDirectionalRequestIntentV4",
     "BinanceUsdmTradifiBarRequestIntent",
     "BinanceUsdmTradifiExecutionAccountProfile",
     "BinanceUsdmTradifiLinearFinancialDispatcher",
@@ -583,13 +599,21 @@ __all__ = [  # noqa: RUF022 - public API remains grouped by subsystem
     "materialize_execution_input_bundle_v2",
     "prepare_binance_usdm_tradifi_bar_backtest",
     "prepare_binance_usdm_tradifi_directional_bar_backtest",
+    "prepare_binance_usdm_tradifi_directional_bar_backtest_v4",
     "BinanceUsdmKoruDirectionalPlannerV3",
     "BinanceUsdmKoruDirectionalTargetConsumptionV3",
     "KoruDirectionalV3StrategyAuthority",
     "KoruTradifiEconomicsAuthorityV3",
+    "BinanceUsdmKoruDirectionalPlannerV4",
+    "BinanceUsdmKoruDirectionalTargetConsumptionV4",
+    "KoruDirectionalV4StrategyAuthority",
+    "KoruTradifiEconomicsAuthorityV4",
     "verify_binance_usdm_tradifi_directional_preparation_authority_v3",
+    "verify_binance_usdm_tradifi_directional_preparation_authority_v4",
     "verify_binance_usdm_koru_directional_strategy_authority_v3",
+    "verify_binance_usdm_koru_directional_strategy_authority_v4",
     "resolve_koru_tradifi_economics_authority_v3",
+    "resolve_koru_tradifi_economics_authority_v4",
     "prepare_cash_development_backtest",
     "prepare_model_bound_cash_development_backtest",
     "DeterministicRebuildEvidence",
