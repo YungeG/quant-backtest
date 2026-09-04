@@ -181,6 +181,13 @@ from .koru_premium_reader_set_v1 import (
     build_koru_premium_recipe_authority_v1,
     canonical_koru_premium_payload_v1,
 )
+from .koru_premium_reader_set_v2 import (
+    KoruPremiumReaderSetBuildRequestV2,
+    KoruPremiumReaderSetFailureCodeV2,
+    KoruPremiumReaderSetFailureV2,
+    KoruPremiumReaderSetOutcomeV2,
+    build_koru_premium_reader_set_v2,
+)
 from .koru_tradifi_calendar_unit_authority_v1 import (
     APPROVED_MEMBER_HASHES,
     KoruTradifiCalendarUnitAuthorityFailureCode,
@@ -383,9 +390,13 @@ __all__ = [
     "KoruEconomicsArtifactStoreV1",
     "KoruMarkIndexPremiumParametersV1",
     "KoruPremiumReaderSetBuildRequestV1",
+    "KoruPremiumReaderSetBuildRequestV2",
     "KoruPremiumReaderSetFailureCodeV1",
+    "KoruPremiumReaderSetFailureCodeV2",
     "KoruPremiumReaderSetFailureV1",
+    "KoruPremiumReaderSetFailureV2",
     "KoruPremiumReaderSetOutcomeV1",
+    "KoruPremiumReaderSetOutcomeV2",
     "KoruPremiumRecipeAuthorityV1",
     "KoruTradifiCalendarUnitAuthorityFailureCode",
     "KoruTradifiCalendarUnitAuthorityFailureV1",
@@ -462,6 +473,7 @@ __all__ = [
     "build_binance_usdm_koru_tradifi_source_projection_v2",
     "build_binance_usdm_koru_tradifi_source_projection_v3",
     "build_koru_premium_reader_set_v1",
+    "build_koru_premium_reader_set_v2",
     "build_koru_premium_recipe_authority_v1",
     "build_koru_tradifi_calendar_unit_authority_v1",
     "canonical_koru_premium_payload_v1",

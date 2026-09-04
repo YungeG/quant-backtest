@@ -20,6 +20,10 @@ from .koru_premium_reader_set_v1 import (
     KoruPremiumReaderBindingV1,
     KoruPremiumReaderSetV1,
 )
+from .koru_premium_reader_set_v2 import (
+    KoruPremiumReaderBindingV2,
+    KoruPremiumReaderSetV2,
+)
 from .local_market_bundle_reader import LocalMarketBundleReader
 
 __version__ = "0.1.0"
@@ -31,7 +35,9 @@ __all__ = [
     "InputValidationIssue",
     "InputValidationIssueCode",
     "KoruPremiumReaderBindingV1",
+    "KoruPremiumReaderBindingV2",
     "KoruPremiumReaderSetV1",
+    "KoruPremiumReaderSetV2",
     "LocalMarketBundleReader",
     "MarketBundleCapability",
     "MarketBundleError",
