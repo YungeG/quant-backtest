@@ -1,0 +1,36 @@
+{
+  "operators": [
+    {
+      "exact_executed_copy": true,
+      "path": "operator/executed/g12h_build_live_status_api_probes.executed.py",
+      "sha256": "sha256:d7d8c6e639f09c60d3d8a4825e0fdd903f018c4c478aba4f789ab2ee4fe8ba97"
+    },
+    {
+      "exact_executed_copy": true,
+      "path": "operator/executed/g12h_capture_live_status_api_probes.executed.py",
+      "sha256": "sha256:3873462441ef49e833e748b62f01094041c9c17980f5f238d63650b6b4543771"
+    },
+    {
+      "exact_executed_copy": true,
+      "path": "operator/executed/g12h_redact_live_status_probe_cookies.executed.py",
+      "sha256": "sha256:40a4eaf5743a2083b53f0af261eac571c533f085021f0d6c343e9e1b967120fa"
+    },
+    {
+      "exact_executed_copy": false,
+      "path": "operator/g12h_build_live_status_api_probes.py",
+      "sha256": "sha256:d7d8c6e639f09c60d3d8a4825e0fdd903f018c4c478aba4f789ab2ee4fe8ba97"
+    },
+    {
+      "exact_executed_copy": false,
+      "path": "operator/g12h_capture_live_status_api_probes.py",
+      "sha256": "sha256:3873462441ef49e833e748b62f01094041c9c17980f5f238d63650b6b4543771"
+    },
+    {
+      "exact_executed_copy": false,
+      "path": "operator/g12h_redact_live_status_probe_cookies.py",
+      "sha256": "sha256:40a4eaf5743a2083b53f0af261eac571c533f085021f0d6c343e9e1b967120fa"
+    }
+  ],
+  "schema_version": 1,
+  "type": "g12h_live_status_api_probe_operator_manifest_v1"
+}

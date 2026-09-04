@@ -1,0 +1,178 @@
+{
+  "captured_candidate_count": 459,
+  "category": "HKSCC",
+  "chunks": [
+    {
+      "entry_count": 20,
+      "raw_sha256": "sha256:78513a01389a3d0ba3e590f648ab9bcb8e1b06d009558070ef8998d941d527d1",
+      "source_id": "hkscc-circular-candidate-index-2025-09-to-2026-08",
+      "terminal": false
+    },
+    {
+      "entry_count": 20,
+      "raw_sha256": "sha256:898305f15e2a080686e49c2c83c3a18145ffd1e78b624ffc96eb044206c5ad4b",
+      "source_id": "hkscc-circular-loadmore-current-0020",
+      "terminal": false
+    },
+    {
+      "entry_count": 9,
+      "raw_sha256": "sha256:66470ce41a4ae2f83240b4e8fc37ed0708db19b9b07504881b4470b64449f439",
+      "source_id": "hkscc-circular-loadmore-current-0040",
+      "terminal": false
+    },
+    {
+      "entry_count": 20,
+      "raw_sha256": "sha256:d0f3a6955db1cfb71723591e810c42a5021e7bbd80344d9dbe18d8d0ed290d17",
+      "source_id": "hkscc-circular-loadmore-current-0060",
+      "terminal": false
+    },
+    {
+      "entry_count": 20,
+      "raw_sha256": "sha256:fc1e2ca9f4d4c4999fc1b41fec1766992d4547c21f10c4284c93e73b5aadec98",
+      "source_id": "hkscc-circular-loadmore-current-0080",
+      "terminal": false
+    },
+    {
+      "entry_count": 20,
+      "raw_sha256": "sha256:1c930751671c8608694d0d0fabb8986c5812f068857c025aa35e4c21892b3377",
+      "source_id": "hkscc-circular-loadmore-current-0100",
+      "terminal": false
+    },
+    {
+      "entry_count": 20,
+      "raw_sha256": "sha256:d52b45ea42d8d1e91602014c0cc602b9d876fbc10317f1deb90f6fe8b86e4d4a",
+      "source_id": "hkscc-circular-loadmore-current-0120",
+      "terminal": false
+    },
+    {
+      "entry_count": 20,
+      "raw_sha256": "sha256:5c8d6cbf846b5708d050e1afe2bb3ecb3dd475c395370a123a91dee6d610d6ab",
+      "source_id": "hkscc-circular-loadmore-current-0140",
+      "terminal": false
+    },
+    {
+      "entry_count": 20,
+      "raw_sha256": "sha256:9991b8602b59576eebb527f32bbb552f622d2a40d974abbb4b6ac66c72c70d74",
+      "source_id": "hkscc-circular-loadmore-current-0160",
+      "terminal": false
+    },
+    {
+      "entry_count": 20,
+      "raw_sha256": "sha256:fdbf2eff4e8c4f01ee3649958c64f60ab5f1c685ba220a4eaab1da7941adee8e",
+      "source_id": "hkscc-circular-loadmore-current-0180",
+      "terminal": false
+    },
+    {
+      "entry_count": 20,
+      "raw_sha256": "sha256:b9c9e97bd5c4314f2f8fa70e59b97f55babc794b074faa6112e09ad612aacfa9",
+      "source_id": "hkscc-circular-loadmore-current-0200",
+      "terminal": false
+    },
+    {
+      "entry_count": 3,
+      "raw_sha256": "sha256:dd82c2254d3941e31fc167f934ebcdcfc9fd06c2b80bdf46e0e308815205aee5",
+      "source_id": "hkscc-circular-loadmore-current-0220",
+      "terminal": false
+    },
+    {
+      "entry_count": 20,
+      "raw_sha256": "sha256:b34c0f4bd1bfb7b9e6e6a4b20c95b6fa104693e839a7844288f5570b877404c6",
+      "source_id": "hkscc-circular-loadmore-current-0240",
+      "terminal": false
+    },
+    {
+      "entry_count": 20,
+      "raw_sha256": "sha256:64a3be9c1dfe8329fe65121a5623bad1bd496ff861132270af922dc2500ad5f9",
+      "source_id": "hkscc-circular-loadmore-current-0260",
+      "terminal": false
+    },
+    {
+      "entry_count": 20,
+      "raw_sha256": "sha256:c2e5a11a81f4c29695a4daceb52e178d9ae8ac03d79ee4931bb59760bd8047db",
+      "source_id": "hkscc-circular-loadmore-current-0280",
+      "terminal": false
+    },
+    {
+      "entry_count": 20,
+      "raw_sha256": "sha256:3f46c908c7968287bce951cde444b79306e0067f8a09f4b3001556438d61021a",
+      "source_id": "hkscc-circular-loadmore-current-0300",
+      "terminal": false
+    },
+    {
+      "entry_count": 20,
+      "raw_sha256": "sha256:c5c317982ee82430266bf31b9c2ece39f793e156db4a22d0ce83d2a7875b3044",
+      "source_id": "hkscc-circular-loadmore-current-0320",
+      "terminal": false
+    },
+    {
+      "entry_count": 20,
+      "raw_sha256": "sha256:4665f1d84141fdb44a94d5d9ba8e2719eb30de6b6b8abbdfcf0d3f5c29bcbbb4",
+      "source_id": "hkscc-circular-loadmore-current-0340",
+      "terminal": false
+    },
+    {
+      "entry_count": 20,
+      "raw_sha256": "sha256:36edbef56c7867829b12827f26d4a682a76f9d97caf9bff93ce1ae7e5b47f6df",
+      "source_id": "hkscc-circular-loadmore-current-0360",
+      "terminal": false
+    },
+    {
+      "entry_count": 20,
+      "raw_sha256": "sha256:4e7650358dc36e9bbe2f03c69e65b25fd7dd1fc8101bb4fafcba0afde7fac9f3",
+      "source_id": "hkscc-circular-loadmore-current-0380",
+      "terminal": false
+    },
+    {
+      "entry_count": 20,
+      "raw_sha256": "sha256:ed18015f9e42e8fdf2afb5c5f736cc15d8a760a912883fae61ee0a2947354287",
+      "source_id": "hkscc-circular-loadmore-current-0400",
+      "terminal": false
+    },
+    {
+      "entry_count": 20,
+      "raw_sha256": "sha256:c7601fad58f0fe3502af0eafd6efcdc1717c72f1077ab99c0e6997cf8019d81b",
+      "source_id": "hkscc-circular-loadmore-current-0420",
+      "terminal": false
+    },
+    {
+      "entry_count": 20,
+      "raw_sha256": "sha256:440ffee613dd99f50094c59954dbcfd0fc6f02612e4e02c19c2f960d7376ad75",
+      "source_id": "hkscc-circular-loadmore-current-0440",
+      "terminal": false
+    },
+    {
+      "entry_count": 1,
+      "raw_sha256": "sha256:160ed5bd6e65c6a398ab893fd9068beeb209fcbf304fe993855e775062e88729",
+      "source_id": "hkscc-circular-loadmore-current-0460",
+      "terminal": false
+    },
+    {
+      "entry_count": 20,
+      "raw_sha256": "sha256:f2cac083d6c3589415e5a117433e3d0be9a9c09935765259c41acb9b1e4835ab",
+      "source_id": "hkscc-circular-loadmore-current-0480",
+      "terminal": false
+    },
+    {
+      "entry_count": 6,
+      "raw_sha256": "sha256:eebcc1ce9f433309882c54eb33a2a8e5dd09e843d0a9cf12a0e9e68ef8108137",
+      "source_id": "hkscc-circular-loadmore-current-0500",
+      "terminal": false
+    },
+    {
+      "entry_count": 0,
+      "raw_sha256": "sha256:ff2445bdef616e3f4e82423389acd378c7e947ab4439a004e11f804aaf25338d",
+      "source_id": "hkscc-circular-loadmore-current-0520",
+      "terminal": true
+    }
+  ],
+  "date_from": "2025-09-01",
+  "date_to_inclusive": "2026-08-31",
+  "duplicate_count": 0,
+  "initial_count": 20,
+  "load_more_count": 20,
+  "qualification_limit": "This range-terminated circular inventory does not itself prove that §21, Definitions, or the formal Operational Procedures amendment index is current through the target cutoff.",
+  "schema_version": 1,
+  "status": "RANGE_TERMINATED_DISCOVERY_ONLY",
+  "terminal_source_id": "hkscc-circular-loadmore-current-0520",
+  "type": "g12h_hkscc_circular_pagination_receipt_v1"
+}

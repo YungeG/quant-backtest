@@ -1,0 +1,91 @@
+* Host www.hkex.com.hk:443 was resolved.
+* IPv6: (none)
+* IPv4: 198.18.3.131
+*   Trying 198.18.3.131:443...
+* ALPN: curl offers h2,http/1.1
+} [5 bytes data]
+* TLSv1.3 (OUT), TLS handshake, Client hello (1):
+} [1570 bytes data]
+*  CAfile: /etc/ssl/certs/ca-certificates.crt
+*  CApath: /etc/ssl/certs
+{ [5 bytes data]
+* TLSv1.3 (IN), TLS handshake, Server hello (2):
+{ [1210 bytes data]
+* TLSv1.3 (IN), TLS change cipher, Change cipher spec (1):
+{ [1 bytes data]
+* TLSv1.3 (IN), TLS handshake, Encrypted Extensions (8):
+{ [19 bytes data]
+* TLSv1.3 (IN), TLS handshake, Certificate (11):
+{ [5166 bytes data]
+* TLSv1.3 (IN), TLS handshake, CERT verify (15):
+{ [264 bytes data]
+* TLSv1.3 (IN), TLS handshake, Finished (20):
+{ [52 bytes data]
+* TLSv1.3 (OUT), TLS change cipher, Change cipher spec (1):
+} [1 bytes data]
+* TLSv1.3 (OUT), TLS handshake, Finished (20):
+} [52 bytes data]
+* SSL connection using TLSv1.3 / TLS_AES_256_GCM_SHA384 / X25519MLKEM768 / RSASSA-PSS
+* ALPN: server accepted h2
+* Server certificate:
+*  subject: C=HK; ST=Hong Kong; O=Hong Kong Exchanges and Clearing Limited; CN=*.hkex.com.hk
+*  start date: Oct  2 00:00:00 2025 GMT
+*  expire date: Oct 31 23:59:59 2026 GMT
+*  subjectAltName: host "www.hkex.com.hk" matched cert's "*.hkex.com.hk"
+*  issuer: C=GB; O=Sectigo Limited; CN=Sectigo Public Server Authentication CA OV R36
+*  SSL certificate verify ok.
+*   Certificate level 0: Public key type RSA (2048/112 Bits/secBits), signed using sha256WithRSAEncryption
+*   Certificate level 1: Public key type RSA (3072/128 Bits/secBits), signed using sha384WithRSAEncryption
+*   Certificate level 2: Public key type RSA (4096/152 Bits/secBits), signed using sha384WithRSAEncryption
+* Connected to www.hkex.com.hk (198.18.3.131) port 443
+* using HTTP/2
+* [HTTP/2] [1] OPENED stream for https://www.hkex.com.hk/layouts/HKEX_Common/Tab/NewsCentreDetailsLoad.aspx/DisplayNewsCentreDetailsLoad
+* [HTTP/2] [1] [:method: POST]
+* [HTTP/2] [1] [:scheme: https]
+* [HTTP/2] [1] [:authority: www.hkex.com.hk]
+* [HTTP/2] [1] [:path: /layouts/HKEX_Common/Tab/NewsCentreDetailsLoad.aspx/DisplayNewsCentreDetailsLoad]
+* [HTTP/2] [1] [user-agent: Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 Chrome/130.0 Safari/537.36 G12HAuthorityCapture/1.0]
+* [HTTP/2] [1] [accept: application/json, text/javascript, */*; q=0.01]
+* [HTTP/2] [1] [accept-language: en,zh-CN;q=0.8,zh;q=0.7]
+* [HTTP/2] [1] [content-type: application/json; charset=utf-8]
+* [HTTP/2] [1] [origin: https://www.hkex.com.hk]
+* [HTTP/2] [1] [referer: https://www.hkex.com.hk/Services/Circulars-and-Notices/Participant-and-Members-Circulars?sc_lang=en&Category=HKSCC&DateFrom=2025-09-01&DateTo=2026-08-31]
+* [HTTP/2] [1] [x-requested-with: XMLHttpRequest]
+* [HTTP/2] [1] [content-length: 639]
+} [5 bytes data]
+> POST /layouts/HKEX_Common/Tab/NewsCentreDetailsLoad.aspx/DisplayNewsCentreDetailsLoad HTTP/2
+> Host: www.hkex.com.hk
+> User-Agent: Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 Chrome/130.0 Safari/537.36 G12HAuthorityCapture/1.0
+> Accept: application/json, text/javascript, */*; q=0.01
+> Accept-Language: en,zh-CN;q=0.8,zh;q=0.7
+> Content-Type: application/json; charset=utf-8
+> Origin: https://www.hkex.com.hk
+> Referer: https://www.hkex.com.hk/Services/Circulars-and-Notices/Participant-and-Members-Circulars?sc_lang=en&Category=HKSCC&DateFrom=2025-09-01&DateTo=2026-08-31
+> X-Requested-With: XMLHttpRequest
+> Content-Length: 639
+> 
+} [639 bytes data]
+* upload completely sent off: 639 bytes
+{ [5 bytes data]
+* TLSv1.3 (IN), TLS handshake, Newsession Ticket (4):
+{ [281 bytes data]
+* TLSv1.3 (IN), TLS handshake, Newsession Ticket (4):
+{ [281 bytes data]
+< HTTP/2 200 
+< cache-control: private, max-age=0,no-cache, no-store
+< pragma: no-cache
+< content-type: application/json; charset=utf-8
+< x-content-type-options: nosniff
+< strict-transport-security: max-age=31536000; includeSubDomains
+< access-control-allow-origin: *
+< content-security-policy: frame-ancestors 'self' https://www.hkex.com.hk https://sc.hkex.com.hk/ http://sc.hkex.com.hk/ http://www.hkgem.com http://www.hkex.com.hk http://www.hkexgroup.com http://sc.hkex.com.hk http://sc.hkexnews.hk http://www.hkexnews.hk https://google.com.hk https://www.recaptcha.net/ https://www1.hkex.com.hk https://assets.adobedtm.com https://hkexchanges.demdex.net https://dpm.demdex.net https://hkexchanges.data.adobedc.net https://hkexchanges.sc.omtrdc.net https://cm.everesttech.net https://hkexchanges.2o7.net https://*.mktoweb.com https://markets.hkex.com.hk https://piid.hkex.com.hk; frame-src 'self' http://www.hkgem.com http://www.hkex.com.hk http://www.hkexgroup.com http://sc.hkex.com.hk https://sc.hkex.com.hk http://sc.hkexnews.hk http://www.hkexnews.hk http://asia.tools.euroland.com https://google.com.hk https://www.hkexgroup.com https://view.vzaar.com https://video.vzaar.com https://www.google.com https://www.recaptcha.net/ https://www1.hkex.com.hk https://assets.adobedtm.com https://hkexchanges.demdex.net https://dpm.demdex.net https://hkexchanges.data.adobedc.net https://hkexchanges.sc.omtrdc.net https://cm.everesttech.net https://hkexchanges.2o7.net https://*.mktoweb.com https://markets.hkex.com.hk https://piid.hkex.com.hk; 
+< x-xss-protection: 1; mode=block
+< x-content-type-options: nosniff
+< x-frame-options: SameOrigin
+< access-control-allow-headers: Content-Type, Authorization, X-Requested-With
+< access-control-allow-methods: GET, POST, OPTIONS, PUT, DELETE
+< content-length: 3596
+< date: Thu, 20 Aug 2026 07:46:12 GMT
+< 
+{ [5 bytes data]
+* Connection #0 to host www.hkex.com.hk left intact

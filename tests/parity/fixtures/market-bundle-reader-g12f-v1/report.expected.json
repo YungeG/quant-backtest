@@ -1,0 +1,19 @@
+{
+  "actual_sha256": "46bf1d86925c736562972a8eea7a3a26c8603877bbfb091b47823c67c483094e",
+  "comparison_counts": {
+    "approved_change": 0,
+    "matched": 8,
+    "mismatched": 0
+  },
+  "contract_id": "market-bundle-reader-g12f-v1",
+  "contract_sha256": "57e40c6a9e15720a84f815e07f7e2184a2d680faf6ab393356dd023901f9617f",
+  "decision_grade_eligible": false,
+  "deployment_authorized": false,
+  "expected_sha256": "46bf1d86925c736562972a8eea7a3a26c8603877bbfb091b47823c67c483094e",
+  "first_divergence": null,
+  "migration_mode": "copy_with_parity",
+  "report_id": "market-bundle-reader-g12f-parity-report-v1",
+  "schema_version": 1,
+  "status": "completed",
+  "verdict": "MATCH"
+}

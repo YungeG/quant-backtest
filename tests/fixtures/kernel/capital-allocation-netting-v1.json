@@ -1,0 +1,274 @@
+{
+  "expected_allocation": {
+    "allocation_id": "portfolio-allocation-v1:sha256:51df57553c90f166f86706dc37f522d656ee4c5b2fcc664177933c2094ef3492",
+    "allocations": [
+      {
+        "allocation_nav": {
+          "currency": "USD",
+          "scale": 2,
+          "type": "money",
+          "units": 40000
+        },
+        "policy_ref": {
+          "config_hash": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+          "policy_key": "capital.current-equity-fraction.v1",
+          "policy_version": 1,
+          "type": "capital_allocation_policy_ref"
+        },
+        "sleeve_id": {
+          "type": "strategy_sleeve_id",
+          "value": "carry.primary"
+        },
+        "source_portfolio_snapshot_hash": "sha256:40d5919f797ce820bcef01dcae9dd1d05704a66668f6fa6af229b3f88cc022e9",
+        "strategy_id": "carry-v1",
+        "type": "strategy_allocation",
+        "valuation_currency": {
+          "type": "currency_id",
+          "value": "USD"
+        },
+        "valuation_time": {
+          "epoch_nanoseconds": 100,
+          "type": "utc_instant"
+        }
+      },
+      {
+        "allocation_nav": {
+          "currency": "USD",
+          "scale": 2,
+          "type": "money",
+          "units": 60000
+        },
+        "policy_ref": {
+          "config_hash": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+          "policy_key": "capital.current-equity-fraction.v1",
+          "policy_version": 1,
+          "type": "capital_allocation_policy_ref"
+        },
+        "sleeve_id": {
+          "type": "strategy_sleeve_id",
+          "value": "trend.primary"
+        },
+        "source_portfolio_snapshot_hash": "sha256:40d5919f797ce820bcef01dcae9dd1d05704a66668f6fa6af229b3f88cc022e9",
+        "strategy_id": "trend-v1",
+        "type": "strategy_allocation",
+        "valuation_currency": {
+          "type": "currency_id",
+          "value": "USD"
+        },
+        "valuation_time": {
+          "epoch_nanoseconds": 100,
+          "type": "utc_instant"
+        }
+      }
+    ],
+    "net_targets": [
+      {
+        "instrument_id": {
+          "stable_key": "cash:btc-usd",
+          "type": "instrument_id",
+          "venue": "synthetic"
+        },
+        "sleeve_attributions": [
+          {
+            "allocation_nav": {
+              "currency": "USD",
+              "scale": 2,
+              "type": "money",
+              "units": 40000
+            },
+            "instrument_id": {
+              "stable_key": "cash:btc-usd",
+              "type": "instrument_id",
+              "venue": "synthetic"
+            },
+            "sleeve_id": {
+              "type": "strategy_sleeve_id",
+              "value": "carry.primary"
+            },
+            "strategy_id": "carry-v1",
+            "target_fraction": {
+              "instrument_id": {
+                "stable_key": "cash:btc-usd",
+                "type": "instrument_id",
+                "venue": "synthetic"
+              },
+              "scale": 12,
+              "type": "target_exposure_fraction",
+              "units": -750000000000
+            },
+            "target_notional": {
+              "currency": "USD",
+              "scale": 14,
+              "type": "money",
+              "units": -30000000000000000
+            },
+            "type": "sleeve_target_notional"
+          },
+          {
+            "allocation_nav": {
+              "currency": "USD",
+              "scale": 2,
+              "type": "money",
+              "units": 60000
+            },
+            "instrument_id": {
+              "stable_key": "cash:btc-usd",
+              "type": "instrument_id",
+              "venue": "synthetic"
+            },
+            "sleeve_id": {
+              "type": "strategy_sleeve_id",
+              "value": "trend.primary"
+            },
+            "strategy_id": "trend-v1",
+            "target_fraction": {
+              "instrument_id": {
+                "stable_key": "cash:btc-usd",
+                "type": "instrument_id",
+                "venue": "synthetic"
+              },
+              "scale": 12,
+              "type": "target_exposure_fraction",
+              "units": 500000000000
+            },
+            "target_notional": {
+              "currency": "USD",
+              "scale": 14,
+              "type": "money",
+              "units": 30000000000000000
+            },
+            "type": "sleeve_target_notional"
+          }
+        ],
+        "target_notional": {
+          "currency": "USD",
+          "scale": 14,
+          "type": "money",
+          "units": 0
+        },
+        "type": "net_instrument_target",
+        "valuation_currency": {
+          "type": "currency_id",
+          "value": "USD"
+        }
+      }
+    ],
+    "policy_ref": {
+      "config_hash": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      "policy_key": "capital.current-equity-fraction.v1",
+      "policy_version": 1,
+      "type": "capital_allocation_policy_ref"
+    },
+    "sleeve_targets": [
+      {
+        "allocation_nav": {
+          "currency": "USD",
+          "scale": 2,
+          "type": "money",
+          "units": 40000
+        },
+        "instrument_id": {
+          "stable_key": "cash:btc-usd",
+          "type": "instrument_id",
+          "venue": "synthetic"
+        },
+        "sleeve_id": {
+          "type": "strategy_sleeve_id",
+          "value": "carry.primary"
+        },
+        "strategy_id": "carry-v1",
+        "target_fraction": {
+          "instrument_id": {
+            "stable_key": "cash:btc-usd",
+            "type": "instrument_id",
+            "venue": "synthetic"
+          },
+          "scale": 12,
+          "type": "target_exposure_fraction",
+          "units": -750000000000
+        },
+        "target_notional": {
+          "currency": "USD",
+          "scale": 14,
+          "type": "money",
+          "units": -30000000000000000
+        },
+        "type": "sleeve_target_notional"
+      },
+      {
+        "allocation_nav": {
+          "currency": "USD",
+          "scale": 2,
+          "type": "money",
+          "units": 60000
+        },
+        "instrument_id": {
+          "stable_key": "cash:btc-usd",
+          "type": "instrument_id",
+          "venue": "synthetic"
+        },
+        "sleeve_id": {
+          "type": "strategy_sleeve_id",
+          "value": "trend.primary"
+        },
+        "strategy_id": "trend-v1",
+        "target_fraction": {
+          "instrument_id": {
+            "stable_key": "cash:btc-usd",
+            "type": "instrument_id",
+            "venue": "synthetic"
+          },
+          "scale": 12,
+          "type": "target_exposure_fraction",
+          "units": 500000000000
+        },
+        "target_notional": {
+          "currency": "USD",
+          "scale": 14,
+          "type": "money",
+          "units": 30000000000000000
+        },
+        "type": "sleeve_target_notional"
+      }
+    ],
+    "source_portfolio_snapshot_hash": "sha256:40d5919f797ce820bcef01dcae9dd1d05704a66668f6fa6af229b3f88cc022e9",
+    "source_sleeve_state_hash": "sha256:a899acca48ed30562d4be05d0e2d701776096f7253ce9efecb3feb53e3439735",
+    "target_notional_scale": 14,
+    "total_allocation_nav": {
+      "currency": "USD",
+      "scale": 2,
+      "type": "money",
+      "units": 100000
+    },
+    "type": "portfolio_allocation",
+    "valuation_currency": {
+      "type": "currency_id",
+      "value": "USD"
+    },
+    "valuation_time": {
+      "epoch_nanoseconds": 100,
+      "type": "utc_instant"
+    }
+  },
+  "expected_allocation_sha256": "sha256:e053cf3e0d9a37557f6adf980efc1c341911fffd6b28d1987d98aa73a25a1afe",
+  "expected_failure": {
+    "decisions": [
+      {
+        "code": "target_notional_inexact",
+        "evidence_hash": "sha256:aac81c53e4ba61471d9fabb9f1c07b4867224a330d7b6ec0b4fdf96ede8cb8ea",
+        "subject_key": "trend.primary:synthetic:cash:btc-usd",
+        "type": "allocation_constraint_decision"
+      }
+    ],
+    "source_portfolio_snapshot_hash": "sha256:40d5919f797ce820bcef01dcae9dd1d05704a66668f6fa6af229b3f88cc022e9",
+    "source_sleeve_state_hash": "sha256:9addfff51874e599c50aea77c40d26a61a08951b6d88119f194b7009d5e81b35",
+    "type": "capital_allocation_failure",
+    "valuation_time": {
+      "epoch_nanoseconds": 100,
+      "type": "utc_instant"
+    }
+  },
+  "expected_failure_sha256": "sha256:73f8a59d4deafaf993d739626fc0eae211b92ca7c7790f1f5c86a61a52197e02",
+  "fixture_id": "capital-allocation-netting-v1",
+  "schema_version": 1
+}

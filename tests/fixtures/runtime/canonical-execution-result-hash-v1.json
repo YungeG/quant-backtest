@@ -1,0 +1,99 @@
+{
+  "attempt_independence": {
+    "execution_hashes_equal": true,
+    "first_attempt_id": "attempt_3c478bbb5e7141603744fadfe484c4859fac39a56b525df8b5be0fb2a8e1cdfa",
+    "manifest_hashes_differ": true,
+    "second_attempt_id": "attempt_39000746f7552464b07d9a8e1b2035a6e9e0fbf341f34dc6bf02c4a87fe82d8c"
+  },
+  "authoritative_mutation": {
+    "changed_execution_result_hash": "sha256:bd4230ae65904094a99f27d36eaf1b126ac0de38ed9bb162060e7ecd0f4b3b97",
+    "hash_changed": true,
+    "mismatch": {
+      "attempts": [
+        {
+          "attempt_id": "attempt_3c478bbb5e7141603744fadfe484c4859fac39a56b525df8b5be0fb2a8e1cdfa",
+          "evidence_manifest_hash": "sha256:cf0f80282d5ab79165ff81b73f737ea84ec90e8aa0263ccd33492867f7ec103a",
+          "execution_result_hash": "sha256:97a39c3e4aafe92db6bfb70df9230c6cbda44e9e8c9cf00cca51b0d6a2bf005b",
+          "semantic_run_id": "run_39ab44a26d7f719fe1648f3ccbf7cbdcb874a9bc43e8c15d3a51ab5aca421591"
+        },
+        {
+          "attempt_id": "attempt_84bba88ba7e8d624b4886ce0796d7789b4fb537efcbb84ccda359dda931b0b10",
+          "evidence_manifest_hash": "sha256:323c04eadb02beac535198b0e942dc122e2155b1dde1ddfbfda7584b34519f2c",
+          "execution_result_hash": "sha256:bd4230ae65904094a99f27d36eaf1b126ac0de38ed9bb162060e7ecd0f4b3b97",
+          "semantic_run_id": "run_39ab44a26d7f719fe1648f3ccbf7cbdcb874a9bc43e8c15d3a51ab5aca421591"
+        }
+      ],
+      "schema_version": 1,
+      "semantic_run_id": "run_39ab44a26d7f719fe1648f3ccbf7cbdcb874a9bc43e8c15d3a51ab5aca421591",
+      "type": "execution_hash_mismatch"
+    }
+  },
+  "canonical_summary_component_hashes": {
+    "allocations": [
+      "sha256:e4cb781ff14e19bf8370747a4d55d667e0ac778318b6dbd76c2c7c5a2f76c6e7"
+    ],
+    "approved_targets": [
+      "sha256:b37231d63fadc4bde17cc0850b14d3fdc81ed6b0449955843979771b2e7f106f"
+    ],
+    "decision_batches": [
+      "sha256:43699c7592376ceee4222cafe7fa4f57005675ab1ade3ecab1315c29944b7cd9"
+    ],
+    "fee_assessments": [
+      "sha256:b14485252fd818d70b573accc909daff12e8a8b12c32ba3c5490f997fef83dbf"
+    ],
+    "fills": [
+      "sha256:ec9b07189050b30906ce60e263c75a7126e5918a0870e275ec61856814adbdfd"
+    ],
+    "final_journal": "sha256:9042c33cf8e97e2098a87ef5e90798e064c578a3b9a4900283a53cd829563792",
+    "final_ledger_state": "sha256:bec9bac85f9a89e188ef06e0e730a088c015b9c4d709eb47c7bd4785fef313f8",
+    "final_portfolio_snapshot": "sha256:b8460e12ff51174f40180b9938fad588ca892cde1e718700f62a5f06dca9be68",
+    "normalized_targets": [
+      "sha256:6d852c9975cdd4c6081fc6f4ca7422788c1c4f9c7af38e3928858d695065ac57"
+    ],
+    "order_plans": [
+      "sha256:593d2d82e7bdd2206b63e04b1e28e40fc5cce62948d5e363cb97f401a540aa8c"
+    ],
+    "order_streams": [
+      "sha256:f9d890e2ab1e105b6178f6822dbe1897e93ea0d34aad41f0574e3eb1be807eac"
+    ],
+    "run_end_report": "sha256:07c76f87e56223ed59b24df7e75fe2ff3fa43982939a999b01a791577cfe5439",
+    "slippage_decisions": [
+      "sha256:2a6cf649a17d4e080109a651694fa0a6e7748664a947ae64c79795d17ab1d73b"
+    ],
+    "trace": "sha256:758a369a1777eb0d06ea1434412f36e382fb87de0fb3c4ca335b10613ed8dce7"
+  },
+  "consistent_attempts": {
+    "attempts": [
+      {
+        "attempt_id": "attempt_39000746f7552464b07d9a8e1b2035a6e9e0fbf341f34dc6bf02c4a87fe82d8c",
+        "evidence_manifest_hash": "sha256:1787609e0c6751b7cc8e782405470f921aae3687de38ae0cf25a6cb5b4ca394b",
+        "execution_result_hash": "sha256:97a39c3e4aafe92db6bfb70df9230c6cbda44e9e8c9cf00cca51b0d6a2bf005b",
+        "semantic_run_id": "run_39ab44a26d7f719fe1648f3ccbf7cbdcb874a9bc43e8c15d3a51ab5aca421591"
+      },
+      {
+        "attempt_id": "attempt_3c478bbb5e7141603744fadfe484c4859fac39a56b525df8b5be0fb2a8e1cdfa",
+        "evidence_manifest_hash": "sha256:cf0f80282d5ab79165ff81b73f737ea84ec90e8aa0263ccd33492867f7ec103a",
+        "execution_result_hash": "sha256:97a39c3e4aafe92db6bfb70df9230c6cbda44e9e8c9cf00cca51b0d6a2bf005b",
+        "semantic_run_id": "run_39ab44a26d7f719fe1648f3ccbf7cbdcb874a9bc43e8c15d3a51ab5aca421591"
+      }
+    ],
+    "execution_result_hash": "sha256:97a39c3e4aafe92db6bfb70df9230c6cbda44e9e8c9cf00cca51b0d6a2bf005b",
+    "schema_version": 1,
+    "semantic_run_id": "run_39ab44a26d7f719fe1648f3ccbf7cbdcb874a9bc43e8c15d3a51ab5aca421591",
+    "type": "execution_hash_consistency"
+  },
+  "deployment_authorized": false,
+  "excluded_from_execution_hash": [
+    "attempt_id",
+    "semantic_run_id",
+    "evidence_manifest_hash",
+    "evidence_relative_directory",
+    "logs",
+    "charts",
+    "derived_metrics",
+    "presentation"
+  ],
+  "execution_result_hash": "sha256:97a39c3e4aafe92db6bfb70df9230c6cbda44e9e8c9cf00cca51b0d6a2bf005b",
+  "no_integrity_or_completed_result": true,
+  "schema_version": 1
+}

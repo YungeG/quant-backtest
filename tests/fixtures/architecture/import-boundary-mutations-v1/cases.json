@@ -1,0 +1,138 @@
+{
+  "schema_version": 1,
+  "fixture_id": "import-boundary-mutations-v1",
+  "cases": [
+    {
+      "id": "domain-cannot-import-runtime",
+      "path": "packages/trading-domain/src/crypto_quant_domain/bad.py",
+      "source": "import crypto_quant_backtest\n",
+      "expected_rules": ["forbidden-workspace-import"]
+    },
+    {
+      "id": "kernel-cannot-import-pandas",
+      "path": "packages/trading-kernel/src/crypto_quant_trading/bad.py",
+      "source": "import pandas\n",
+      "expected_rules": ["forbidden-external-import"]
+    },
+    {
+      "id": "generic-kernel-cannot-import-concrete-profile",
+      "path": "packages/trading-kernel/src/crypto_quant_trading/planning.py",
+      "source": "from crypto_quant_trading.profiles.binance_usdm import Rules\n",
+      "expected_rules": ["generic-kernel-concrete-profile-import"]
+    },
+    {
+      "id": "runtime-cannot-import-builder",
+      "path": "packages/backtest-runtime/src/crypto_quant_backtest/bad.py",
+      "source": "import crypto_quant_bundle_builder\n",
+      "expected_rules": ["runtime-builder-import"]
+    },
+    {
+      "id": "generic-kernel-cannot-hide-profile-in-from-import",
+      "path": "packages/trading-kernel/src/crypto_quant_trading/planning.py",
+      "source": "from crypto_quant_trading.profiles import binance_usdm\n",
+      "expected_rules": ["generic-kernel-concrete-profile-import"]
+    },
+    {
+      "id": "runtime-cannot-import-network-module",
+      "path": "packages/backtest-runtime/src/crypto_quant_backtest/bad.py",
+      "source": "import socket\n",
+      "expected_rules": ["runtime-network-import"]
+    },
+    {
+      "id": "runtime-cannot-hide-network-module-in-from-import",
+      "path": "packages/backtest-runtime/src/crypto_quant_backtest/bad.py",
+      "source": "from urllib import request\n",
+      "expected_rules": ["runtime-network-import"]
+    },
+    {
+      "id": "nonliteral-dynamic-import-is-denied",
+      "path": "packages/backtest-runtime/src/crypto_quant_backtest/bad.py",
+      "source": "import importlib\nmodule_name = 'crypto_quant_domain'\nimportlib.import_module(module_name)\n",
+      "expected_rules": ["undeclared-dynamic-import"]
+    },
+    {
+      "id": "aliased-builtins-dynamic-import-is-denied",
+      "path": "packages/backtest-runtime/src/crypto_quant_backtest/bad.py",
+      "source": "import builtins as runtime_builtins\nmodule_name = 'crypto_quant_domain'\nruntime_builtins.__import__(module_name)\n",
+      "expected_rules": ["undeclared-dynamic-import"]
+    },
+    {
+      "id": "cross-package-internal-module-is-denied",
+      "path": "packages/backtest-runtime/src/crypto_quant_backtest/bad.py",
+      "source": "from crypto_quant_domain.numeric import Price\n",
+      "expected_rules": ["cross-package-internal-import"]
+    },
+    {
+      "id": "assigned-dynamic-import-alias-obeys-runtime-rules",
+      "path": "packages/backtest-runtime/src/crypto_quant_backtest/bad.py",
+      "source": "import importlib\nloader = importlib.import_module\nloader('crypto_quant_bundle_builder')\n",
+      "expected_rules": ["runtime-builder-import"]
+    },
+    {
+      "id": "dynamic-import-alias-before-rebind-is-not-erased",
+      "path": "packages/backtest-runtime/src/crypto_quant_backtest/bad.py",
+      "source": "import importlib\nloader = importlib.import_module\nloader('crypto_quant_bundle_builder')\nloader = print\n",
+      "expected_rules": ["runtime-builder-import"]
+    },
+    {
+      "id": "annotated-dynamic-import-alias-obeys-runtime-rules",
+      "path": "packages/backtest-runtime/src/crypto_quant_backtest/bad.py",
+      "source": "import importlib\nloader: object = importlib.import_module\nloader('crypto_quant_bundle_builder')\n",
+      "expected_rules": ["runtime-builder-import"]
+    },
+    {
+      "id": "bare-annotation-does-not-erase-dynamic-import-alias",
+      "path": "packages/backtest-runtime/src/crypto_quant_backtest/bad.py",
+      "source": "import importlib\nloader = importlib.import_module\nloader: object\nloader('crypto_quant_bundle_builder')\n",
+      "expected_rules": ["runtime-builder-import"]
+    },
+    {
+      "id": "rhs-call-before-rebind-remains-dynamic",
+      "path": "packages/backtest-runtime/src/crypto_quant_backtest/bad.py",
+      "source": "import importlib\nloader = importlib.import_module\nloader = loader('crypto_quant_bundle_builder')\n",
+      "expected_rules": ["runtime-builder-import"]
+    },
+    {
+      "id": "conditional-rebind-does-not-erase-dynamic-import-alias",
+      "path": "packages/backtest-runtime/src/crypto_quant_backtest/bad.py",
+      "source": "import importlib\nloader = importlib.import_module\nif False:\n    loader = print\nloader('crypto_quant_bundle_builder')\n",
+      "expected_rules": ["runtime-builder-import"]
+    },
+    {
+      "id": "assigned-importlib-module-alias-obeys-runtime-rules",
+      "path": "packages/backtest-runtime/src/crypto_quant_backtest/bad.py",
+      "source": "import importlib\nlib = importlib\nlib.import_module('crypto_quant_bundle_builder')\n",
+      "expected_rules": ["runtime-builder-import"]
+    },
+    {
+      "id": "imported-builtins-dictionary-alias-obeys-runtime-rules",
+      "path": "packages/backtest-runtime/src/crypto_quant_backtest/bad.py",
+      "source": "from crypto_quant_domain import __builtins__ as b\nb['__import__']('crypto_quant_bundle_builder')\n",
+      "expected_rules": ["runtime-builder-import"]
+    },
+    {
+      "id": "walrus-dynamic-import-alias-obeys-runtime-rules",
+      "path": "packages/backtest-runtime/src/crypto_quant_backtest/bad.py",
+      "source": "import importlib\n(loader := importlib.import_module)('crypto_quant_bundle_builder')\n",
+      "expected_rules": ["runtime-builder-import"]
+    },
+    {
+      "id": "unpacked-dynamic-import-alias-obeys-runtime-rules",
+      "path": "packages/backtest-runtime/src/crypto_quant_backtest/bad.py",
+      "source": "import importlib\n(loader,) = (importlib.import_module,)\nloader('crypto_quant_bundle_builder')\n",
+      "expected_rules": ["runtime-builder-import"]
+    },
+    {
+      "id": "literal-dynamic-import-obeys-workspace-rules",
+      "path": "packages/trading-domain/src/crypto_quant_domain/bad.py",
+      "source": "import importlib\nimportlib.import_module('crypto_quant_backtest.engine')\n",
+      "expected_rules": ["forbidden-workspace-import"]
+    },
+    {
+      "id": "market-data-contracts-cannot-import-vendor-sdk",
+      "path": "packages/market-data-contracts/src/crypto_quant_market_data/bad.py",
+      "source": "import hummingbot\n",
+      "expected_rules": ["forbidden-external-import"]
+    }
+  ]
+}

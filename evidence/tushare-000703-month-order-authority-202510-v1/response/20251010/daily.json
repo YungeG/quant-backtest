@@ -1,0 +1,1 @@
+{"request_id":"63bed453-7ca2-4d60-9cef-2b276add1da2","code":0,"data":{"fields":["ts_code","trade_date","open","high","low","close","pre_close","change","pct_chg","vol","amount"],"items":[["000703.SZ","20251010",6.63,6.95,6.58,6.86,6.66,0.2,3.003,333123.76,225984.073]],"has_more":false,"count":0},"msg":"","detail":"..."}

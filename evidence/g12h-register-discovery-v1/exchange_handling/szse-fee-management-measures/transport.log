@@ -1,0 +1,40 @@
+* Host docs.static.szse.cn:80 was resolved.
+* IPv6: (none)
+* IPv4: 125.39.155.24, 125.39.155.20, 125.39.155.22, 125.39.155.23, 125.39.155.25, 125.39.155.19, 125.39.155.21, 125.39.155.18
+*   Trying 125.39.155.24:80...
+* Connected to docs.static.szse.cn (125.39.155.24) port 80
+* using HTTP/1.x
+> GET /www/marketServices/deal/payFees/W020200228805325484325.pdf HTTP/1.1
+> Host: docs.static.szse.cn
+> User-Agent: Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 Chrome/130.0 Safari/537.36 G12HAuthorityCapture/1.0
+> Accept: */*
+> Accept-Language: zh-CN,zh;q=0.9,en;q=0.5
+> Cache-Control: no-cache
+> Pragma: no-cache
+> 
+* Request completely sent off
+< HTTP/1.1 200 OK
+< Server: Tengine
+< Content-Type: application/pdf
+< Content-Length: 136125
+< Connection: keep-alive
+< Set-Cookie: acw_tc=<redacted sha256:34518115cfd41e960b1e46f0881bb7fb54e3ed1d503778b8d201b5cacbe0f366>;path=/;HttpOnly;Max-Age=3600
+< Set-Cookie: cdn_sec_tc=<redacted sha256:34518115cfd41e960b1e46f0881bb7fb54e3ed1d503778b8d201b5cacbe0f366>;path=/;HttpOnly;Max-Age=3600
+< Date: Thu, 20 Aug 2026 02:08:37 GMT
+< X-UA-Compatible: IE=EDGE
+< X-Varnish: 873643752
+< Via: 1.1 varnish-v4, cache22.l2nu20-3[0,0,304-0,H], cache12.l2nu20-3[1,0], ens-cache13.cn8134[0,0,200-0,H], ens-cache7.cn8134[3,0]
+< X-UA-Compatible: IE=EDGE
+< Accept-Ranges: bytes
+< Last-Modified: Wed, 31 Dec 2025 07:00:30 GMT
+< ETag: "6954ca0e-213bd"
+< Age: 23762
+< Ali-Swift-Global-Savetime: 1787191717
+< X-Cache: HIT TCP_HIT dirn:8:190075088
+< X-Swift-SaveTime: Thu, 20 Aug 2026 03:39:35 GMT
+< X-Swift-CacheTime: 37742
+< Timing-Allow-Origin: *
+< EagleId: 3c1cf71b17872154790256831e
+< 
+{ [3460 bytes data]
+* Connection #0 to host docs.static.szse.cn left intact

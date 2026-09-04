@@ -1,0 +1,79 @@
+{
+  "responses": [
+    {
+      "headers": [
+        {
+          "name": "Server",
+          "value": "nginx"
+        },
+        {
+          "name": "Date",
+          "value": "Thu, 20 Aug 2026 07:47:47 GMT"
+        },
+        {
+          "name": "Content-Type",
+          "value": "text/html"
+        },
+        {
+          "name": "Content-Length",
+          "value": "92564"
+        },
+        {
+          "name": "Connection",
+          "value": "keep-alive"
+        },
+        {
+          "name": "Last-Modified",
+          "value": "Thu, 20 Aug 2026 06:56:26 GMT"
+        },
+        {
+          "name": "ETag",
+          "value": "W/\"6a86a51a-16994\""
+        },
+        {
+          "name": "Expires",
+          "value": "Thu, 20 Aug 2026 07:47:46 GMT"
+        },
+        {
+          "name": "Cache-Control",
+          "value": "no-cache"
+        },
+        {
+          "name": "X-UA-Compatible",
+          "value": "IE=EDGE"
+        },
+        {
+          "name": "Vary",
+          "value": "Accept-Encoding"
+        },
+        {
+          "name": "X-Varnish",
+          "value": "865007709"
+        },
+        {
+          "name": "Age",
+          "value": "0"
+        },
+        {
+          "name": "Via",
+          "value": "1.1 varnish-v4"
+        },
+        {
+          "name": "X-cache",
+          "value": "MISS"
+        },
+        {
+          "name": "Accept-Ranges",
+          "value": "bytes"
+        },
+        {
+          "name": "X-UA-Compatible",
+          "value": "IE=EDGE"
+        }
+      ],
+      "status_line": "HTTP/1.1 200 OK"
+    }
+  ],
+  "schema_version": 1,
+  "type": "g12h_http_response_chain_v1"
+}

@@ -1,0 +1,71 @@
+{
+  "responses": [
+    {
+      "headers": [
+        {
+          "name": "Date",
+          "value": "Thu, 20 Aug 2026 07:37:15 GMT"
+        },
+        {
+          "name": "Content-Type",
+          "value": "application/pdf"
+        },
+        {
+          "name": "Content-Length",
+          "value": "114722"
+        },
+        {
+          "name": "Connection",
+          "value": "keep-alive"
+        },
+        {
+          "name": "Server",
+          "value": "nginx"
+        },
+        {
+          "name": "Last-Modified",
+          "value": "Wed, 31 Dec 2025 09:09:34 GMT"
+        },
+        {
+          "name": "ETag",
+          "value": "\"6954e84e-1c022\""
+        },
+        {
+          "name": "X-XSS-Protection",
+          "value": "1; mode=block"
+        },
+        {
+          "name": "Content-Security-Policy",
+          "value": "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://cdn.chinaclear.cn https://qrconnect.chinaclear.cn https://hm.baidu.com https://inv.chinaclear.cn https://biz.chinaclear.cn https://g.alicdn.com"
+        },
+        {
+          "name": "X-Content-Type-Options",
+          "value": "nosniff"
+        },
+        {
+          "name": "Accept-Ranges",
+          "value": "bytes"
+        },
+        {
+          "name": "Via",
+          "value": "1.1 ID-1716635745747274 uproxy-9"
+        },
+        {
+          "name": "x-via",
+          "value": "1.1 PS-HFE-01V8s189:15 (Cdn Cache Server V2.0), 1.1 sx77:17 (Cdn Cache Server V2.0), 1.1 PS-PEK-01Ruz167:7 (Cdn Cache Server V2.0)"
+        },
+        {
+          "name": "age",
+          "value": "1"
+        },
+        {
+          "name": "x-ws-request-id",
+          "value": "6a86aeab_PS-PEK-01Ruz167_79449-40933"
+        }
+      ],
+      "status_line": "HTTP/1.1 200 OK"
+    }
+  ],
+  "schema_version": 1,
+  "type": "g12h_http_response_chain_v1"
+}

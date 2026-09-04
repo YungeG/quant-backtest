@@ -1,0 +1,117 @@
+{
+  "account_profile_book": {
+    "account_id": "account-1",
+    "account_profile_book_key": "binance-usdm-account-profile-v1",
+    "account_profile_book_version": 1,
+    "bands": [
+      {
+        "account_id": "account-1",
+        "available_at": {
+          "instant": {
+            "epoch_nanoseconds": 1710000000001000000,
+            "type": "utc_instant"
+          },
+          "phase": {
+            "code": "account_source",
+            "rank": 0,
+            "type": "timeline_phase"
+          },
+          "source_sequence": {
+            "type": "source_sequence",
+            "value": 0
+          },
+          "type": "simulation_instant"
+        },
+        "band_id": "account-profile-v1",
+        "can_trade": true,
+        "dual_side_position": false,
+        "effective_from": {
+          "epoch_nanoseconds": 1709999999999000000,
+          "type": "utc_instant"
+        },
+        "effective_to_exclusive": {
+          "epoch_nanoseconds": 1710000000001000000,
+          "type": "utc_instant"
+        },
+        "fee_burn": false,
+        "fee_tier": 0,
+        "instrument_id": {
+          "stable_key": "btc-usdt-perpetual",
+          "type": "instrument_id",
+          "venue": "binance_usdm"
+        },
+        "is_auto_add_margin": false,
+        "leverage": "10",
+        "maker_commission_rate": "0.00020000",
+        "margin_type": "CROSSED",
+        "max_notional_value": "1000000.00000000",
+        "multi_assets_margin": false,
+        "schema_version": 1,
+        "scope": "standard_um",
+        "source_refs": [
+          {
+            "evidence_key": "encrypted/account/account_config/account-1/BTCUSDT/account_config-v1.json",
+            "revision_id": "account_config-v1",
+            "schema_version": 1,
+            "source_hash": "sha256:bb703235fa90f4faf39530a1947f9c8106774575e6fd7373e2302e36b0999c37",
+            "source_key": "account/account_config/account-1/BTCUSDT",
+            "source_kind": "account_config",
+            "supersedes_revision_id": null,
+            "type": "binance_usdm_account_profile_source_ref"
+          },
+          {
+            "evidence_key": "encrypted/account/commission_rate/account-1/BTCUSDT/commission_rate-v1.json",
+            "revision_id": "commission_rate-v1",
+            "schema_version": 1,
+            "source_hash": "sha256:7fb5285a708d28cc7996f605d8f1d41399c1a6bd126b975c21d125dc15d10989",
+            "source_key": "account/commission_rate/account-1/BTCUSDT",
+            "source_kind": "commission_rate",
+            "supersedes_revision_id": null,
+            "type": "binance_usdm_account_profile_source_ref"
+          },
+          {
+            "evidence_key": "encrypted/account/fee_burn/account-1/BTCUSDT/fee_burn-v1.json",
+            "revision_id": "fee_burn-v1",
+            "schema_version": 1,
+            "source_hash": "sha256:892b8eb4786873f24dec0c03dc583d0570f83b918b223bf03b8465c6517e6089",
+            "source_key": "account/fee_burn/account-1/BTCUSDT",
+            "source_kind": "fee_burn",
+            "supersedes_revision_id": null,
+            "type": "binance_usdm_account_profile_source_ref"
+          },
+          {
+            "evidence_key": "encrypted/account/symbol_config/account-1/BTCUSDT/symbol_config-v1.json",
+            "revision_id": "symbol_config-v1",
+            "schema_version": 1,
+            "source_hash": "sha256:bea36af5eb61ef460976155cbb71cdc4335670c29de8e6e01cc5493376bb7bc9",
+            "source_key": "account/symbol_config/account-1/BTCUSDT",
+            "source_kind": "symbol_config",
+            "supersedes_revision_id": null,
+            "type": "binance_usdm_account_profile_source_ref"
+          }
+        ],
+        "taker_commission_rate": "0.00050000",
+        "trade_group_id": -1,
+        "type": "binance_usdm_account_profile_band"
+      }
+    ],
+    "coverage_from": {
+      "epoch_nanoseconds": 1709999999999000000,
+      "type": "utc_instant"
+    },
+    "coverage_to_exclusive": {
+      "epoch_nanoseconds": 1710000000001000000,
+      "type": "utc_instant"
+    },
+    "instrument_id": {
+      "stable_key": "btc-usdt-perpetual",
+      "type": "instrument_id",
+      "venue": "binance_usdm"
+    },
+    "schema_version": 1,
+    "type": "binance_usdm_historical_account_profile_book"
+  },
+  "fixture_id": "binance-usdm-historical-account-profile-source-v1",
+  "provider": "binance_usdm",
+  "source_contract": "account-symbol-commission-feeburn-snapshots"
+}

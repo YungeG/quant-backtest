@@ -1,0 +1,328 @@
+{
+  "bundle_ref": {
+    "bundle_key": "fixture.engine.bundle.v1",
+    "manifest_hash": "sha256:893e925061def7b79e2082e33f20b750fbfbd7d33ea58d3bb1f530440ab7510d",
+    "type": "market_bundle_ref"
+  },
+  "execution_account_profile_digest": "sha256:22a2310c4576f10967f5ba5ffc73ba4459f15a16a4e2e5041a6641ebc0c22035",
+  "execution_case_hash": "sha256:bb8fc4be36bc3fdfc4236237deace870c50513f1d4f2c3457d2c5d7f4bac4eb6",
+  "market_profile_digest": "sha256:3476a32b6367eabaed1ae4e2d5e2748ab236f333f03196335374948b14a6f02f",
+  "profile": {
+    "decision_grade_eligible": false,
+    "deployment_authorized": false,
+    "execution_account": {
+      "account_fee_schedule_key": "synthetic.cash.fee_schedule.development.v1",
+      "account_id": "account:primary",
+      "account_type": "cash",
+      "cost_basis_policy_key": "fifo.synthetic.development.v1",
+      "limitation": "synthetic_market_profile",
+      "margin_mode": "not_applicable",
+      "profile_key": "synthetic.cash.development.v1.account",
+      "profile_version": 1,
+      "type": "synthetic_execution_account_profile",
+      "venue_id": "synthetic"
+    },
+    "grade": "development",
+    "limitations": [
+      "synthetic_market_profile"
+    ],
+    "market_semantics": {
+      "components": [
+        {
+          "component_digest": "sha256:0d061cf48ddece34564e21978387e4de42e22a249a84f3d58e607fa247808fd9",
+          "component_key": "synthetic.cash.development.v1.corporate_action_model",
+          "component_version": 1,
+          "port_type": "corporate_action_model",
+          "type": "profile_component_ref"
+        },
+        {
+          "component_digest": "sha256:cc6971250b650a0f9e1831538125dfa7a250b152002e5a1cd824ab97b72a275b",
+          "component_key": "synthetic.cash.development.v1.currency_valuation_policy",
+          "component_version": 1,
+          "port_type": "currency_valuation_policy",
+          "type": "profile_component_ref"
+        },
+        {
+          "component_digest": "sha256:ab4885f67ff81d1b49b8717918c1e19fad8c2abf4f3861e4dac1aa1e1900caa2",
+          "component_key": "synthetic.cash.development.v1.fee_assessment_policy",
+          "component_version": 1,
+          "port_type": "fee_assessment_policy",
+          "type": "profile_component_ref"
+        },
+        {
+          "component_digest": "sha256:a093963b1c12b1a9743d48f60b4a5b97dfd444b56027ed277e67f8dec6c1fb2f",
+          "component_key": "synthetic.cash.development.v1.financing_model",
+          "component_version": 1,
+          "port_type": "financing_model",
+          "type": "profile_component_ref"
+        },
+        {
+          "component_digest": "sha256:3327762150558dc02a61d6a27fc0b995288ee863a0305eb863fa5883f48aefa5",
+          "component_key": "synthetic.cash.development.v1.instrument_model",
+          "component_version": 1,
+          "port_type": "instrument_model",
+          "type": "profile_component_ref"
+        },
+        {
+          "component_digest": "sha256:e8e36b7178fd9f65f9a6954b5c6f22ec85195eccea4355f6129557ff243ca728",
+          "component_key": "synthetic.cash.development.v1.liquidation_rules",
+          "component_version": 1,
+          "port_type": "liquidation_rules",
+          "type": "profile_component_ref"
+        },
+        {
+          "component_digest": "sha256:85bce19b096e4a93667ed0f55e665bf74e520b300e6a0532d34a636ea13aa861",
+          "component_key": "synthetic.cash.development.v1.margin_model",
+          "component_version": 1,
+          "port_type": "margin_model",
+          "type": "profile_component_ref"
+        },
+        {
+          "component_digest": "sha256:ea7465cb560a292eec8b1607c4af76ee6856597d806df32c9fbeddf40c08719d",
+          "component_key": "synthetic.cash.development.v1.order_rule_model",
+          "component_version": 1,
+          "port_type": "order_rule_model",
+          "type": "profile_component_ref"
+        },
+        {
+          "component_digest": "sha256:01b85d41058a5360ba6149de59805051f84a43ced5512965cc6843010d542e4e",
+          "component_key": "synthetic.cash.development.v1.position_accounting_model",
+          "component_version": 1,
+          "port_type": "position_accounting_model",
+          "type": "profile_component_ref"
+        },
+        {
+          "component_digest": "sha256:7e56701f22958d889de3d9ce15e3fb6a8b886253cfc9e3f55e178176969fb394",
+          "component_key": "synthetic.cash.development.v1.session_model",
+          "component_version": 1,
+          "port_type": "session_model",
+          "type": "profile_component_ref"
+        },
+        {
+          "component_digest": "sha256:f994d8ae47454267fe4593c01570776f4c203bfa3c200e3f520b3faf5a49d138",
+          "component_key": "synthetic.cash.development.v1.settlement_model",
+          "component_version": 1,
+          "port_type": "settlement_model",
+          "type": "profile_component_ref"
+        },
+        {
+          "component_digest": "sha256:90af179a371ba75eb31e90e737cc496caa8a442aad40721cf3b8385e75288998",
+          "component_key": "synthetic.cash.development.v1.tax_policy",
+          "component_version": 1,
+          "port_type": "tax_policy",
+          "type": "profile_component_ref"
+        }
+      ],
+      "limitation": "synthetic_market_profile",
+      "profile_key": "synthetic.cash.development.v1.market",
+      "profile_version": 1,
+      "type": "synthetic_market_semantics_profile"
+    },
+    "profile_key": "synthetic.cash.development.v1",
+    "profile_version": 1,
+    "simulation": {
+      "component_specs": [
+        {
+          "applicability": {
+            "schema_version": 1,
+            "tif_actions": [
+              {
+                "action": "expire",
+                "time_in_force": "day"
+              },
+              {
+                "action": "expire",
+                "time_in_force": "fok"
+              },
+              {
+                "action": "keep_active",
+                "time_in_force": "gtc"
+              },
+              {
+                "action": "keep_active",
+                "time_in_force": "gtx"
+              },
+              {
+                "action": "expire",
+                "time_in_force": "ioc"
+              }
+            ],
+            "type": "next_bar_open_applicability"
+          },
+          "component_ref": {
+            "component_digest": "sha256:d69d6d96c9081f730db6ff8cdd02431d4babdef2e3967f0094971e73aedf30fe",
+            "component_key": "next_eligible_bar_open.v1",
+            "component_version": 1,
+            "port_type": "execution_model",
+            "type": "simulation_component_ref"
+          },
+          "required_capabilities": [
+            {
+              "capability_key": "bar_open",
+              "minimum_version": 1,
+              "type": "simulation_capability_requirement"
+            }
+          ],
+          "type": "simulation_port_spec"
+        },
+        {
+          "applicability": {
+            "allowed_market_state_keys": [
+              "normal"
+            ],
+            "config_hash": "sha256:c713c66dd765dd88b44acb8f1f0305d143d27fb6ad8c7cc90f7713b5fcd12006",
+            "envelope_key": "slippage.engine-fixture.v1",
+            "envelope_version": 1,
+            "instrument_id": {
+              "stable_key": "cash:btc-usd",
+              "type": "instrument_id",
+              "venue": "synthetic"
+            },
+            "maximum_quantity": {
+              "instrument_id": "synthetic:cash:btc-usd",
+              "scale": 3,
+              "type": "quantity",
+              "units": 5000
+            },
+            "schema_version": 1,
+            "type": "slippage_applicability_envelope",
+            "valid_from": {
+              "epoch_nanoseconds": 190,
+              "type": "utc_instant"
+            },
+            "valid_to_exclusive": {
+              "epoch_nanoseconds": 210,
+              "type": "utc_instant"
+            }
+          },
+          "component_ref": {
+            "component_digest": "sha256:4141414141414141414141414141414141414141414141414141414141414141",
+            "component_key": "deterministic_bps.v1",
+            "component_version": 1,
+            "port_type": "slippage_model",
+            "type": "simulation_component_ref"
+          },
+          "required_capabilities": [],
+          "type": "simulation_port_spec"
+        },
+        {
+          "applicability": {
+            "limitation": "synthetic_market_profile",
+            "port_type": "latency_model",
+            "type": "synthetic_simulation_applicability"
+          },
+          "component_ref": {
+            "component_digest": "sha256:08779758aa013806239e6017396c51a16983dfe7768aea821819fe6352eb824f",
+            "component_key": "synthetic.cash.development.v1.latency_model",
+            "component_version": 1,
+            "port_type": "latency_model",
+            "type": "simulation_component_ref"
+          },
+          "required_capabilities": [],
+          "type": "simulation_port_spec"
+        },
+        {
+          "applicability": {
+            "limitation": "synthetic_market_profile",
+            "port_type": "liquidity_model",
+            "type": "synthetic_simulation_applicability"
+          },
+          "component_ref": {
+            "component_digest": "sha256:0b385ce6e81a7e4281a93fb477547d291388db8bb9dd855f82e79a158f63c1e2",
+            "component_key": "synthetic.cash.development.v1.liquidity_model",
+            "component_version": 1,
+            "port_type": "liquidity_model",
+            "type": "simulation_component_ref"
+          },
+          "required_capabilities": [],
+          "type": "simulation_port_spec"
+        },
+        {
+          "applicability": {
+            "limitation": "synthetic_market_profile",
+            "port_type": "liquidation_audit_model",
+            "type": "synthetic_simulation_applicability"
+          },
+          "component_ref": {
+            "component_digest": "sha256:aadd185215c0455ff0a2d4296738dbff98fd3dd9fc9ee9b4124eaf551d7b92c9",
+            "component_key": "synthetic.cash.development.v1.liquidation_audit_model",
+            "component_version": 1,
+            "port_type": "liquidation_audit_model",
+            "type": "simulation_component_ref"
+          },
+          "required_capabilities": [],
+          "type": "simulation_port_spec"
+        },
+        {
+          "applicability": {
+            "policy_mode": "mark_to_market",
+            "requires_pre_boundary_completion": false,
+            "schema_version": 1,
+            "type": "run_end_closeout_applicability"
+          },
+          "component_ref": {
+            "component_digest": "sha256:d9be291bff3147a191296ec5b3d37cc79aecc9ee2bff4877d7bca86f9aeb0ea8",
+            "component_key": "mark_to_market.v1",
+            "component_version": 1,
+            "port_type": "closeout_policy",
+            "type": "simulation_component_ref"
+          },
+          "required_capabilities": [],
+          "type": "simulation_port_spec"
+        }
+      ],
+      "components": [
+        {
+          "component_digest": "sha256:d9be291bff3147a191296ec5b3d37cc79aecc9ee2bff4877d7bca86f9aeb0ea8",
+          "component_key": "mark_to_market.v1",
+          "component_version": 1,
+          "port_type": "closeout_policy",
+          "type": "simulation_component_ref"
+        },
+        {
+          "component_digest": "sha256:d69d6d96c9081f730db6ff8cdd02431d4babdef2e3967f0094971e73aedf30fe",
+          "component_key": "next_eligible_bar_open.v1",
+          "component_version": 1,
+          "port_type": "execution_model",
+          "type": "simulation_component_ref"
+        },
+        {
+          "component_digest": "sha256:08779758aa013806239e6017396c51a16983dfe7768aea821819fe6352eb824f",
+          "component_key": "synthetic.cash.development.v1.latency_model",
+          "component_version": 1,
+          "port_type": "latency_model",
+          "type": "simulation_component_ref"
+        },
+        {
+          "component_digest": "sha256:aadd185215c0455ff0a2d4296738dbff98fd3dd9fc9ee9b4124eaf551d7b92c9",
+          "component_key": "synthetic.cash.development.v1.liquidation_audit_model",
+          "component_version": 1,
+          "port_type": "liquidation_audit_model",
+          "type": "simulation_component_ref"
+        },
+        {
+          "component_digest": "sha256:0b385ce6e81a7e4281a93fb477547d291388db8bb9dd855f82e79a158f63c1e2",
+          "component_key": "synthetic.cash.development.v1.liquidity_model",
+          "component_version": 1,
+          "port_type": "liquidity_model",
+          "type": "simulation_component_ref"
+        },
+        {
+          "component_digest": "sha256:4141414141414141414141414141414141414141414141414141414141414141",
+          "component_key": "deterministic_bps.v1",
+          "component_version": 1,
+          "port_type": "slippage_model",
+          "type": "simulation_component_ref"
+        }
+      ],
+      "limitation": "synthetic_market_profile",
+      "profile_key": "synthetic.cash.development.v1.simulation",
+      "profile_version": 1,
+      "type": "synthetic_simulation_profile"
+    },
+    "type": "synthetic_cash_development_profile"
+  },
+  "profile_digest": "sha256:b52e85e4d7f9ffd5a99bc84fa1c17cddb0da808b7aaedecae573d18585087ddc",
+  "simulation_profile_digest": "sha256:45915d737732c3d6b4a75f3b80049b0c8fd0abc0c64a415f69f5ddf33037974f",
+  "target_stream_digest": "sha256:ead473aba908a5d2ace5745a648d357c16666c47a726743b86dbde42768a539f"
+}

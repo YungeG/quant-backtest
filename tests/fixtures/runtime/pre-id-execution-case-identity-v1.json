@@ -1,0 +1,300 @@
+{
+  "deployment_authorized": false,
+  "derived_domain_ids": {
+    "fee_assessment_id": "fee_85ec13b00240dd63031731241557d0873213963b91d2d398006295178933a37c",
+    "fill_id": "fil_a564d9dce07bccb5d45d163846ba95e1004567f06ffdf8e0f34ab1bf0074efad",
+    "journal_entry_ids": [
+      "jnl_739084961dd691f617624422a7c07de553294c0f7ee15a06f5a19a29919da498",
+      "jnl_09a9c3aa5746036aa0e5eef052a85edb655e02fb3d0e97af5cc92ddde507ef7b",
+      "jnl_e916d4bcb5c47bc4256072eb9de6517decd9f42f252ba91cfd5bbb65ab043b74"
+    ],
+    "order_id": "ord_f7faa2594f4140f1a782908023e3acce53d56aa0f65a194698352dbfd5c4a614"
+  },
+  "final_execution_case_hash": "sha256:bdbcf92c176fedaf8fa89a056bc92fddeb9d70b75bcacb7cb6013b468374c87e",
+  "identity_manifest": {
+    "bindings": [
+      {
+        "binding_key": "fee.0",
+        "domain_kind": "fee",
+        "identity_type": "domain_id",
+        "ordinal": 0,
+        "semantic_key": "engine.cash.fee",
+        "value": "fee_85ec13b00240dd63031731241557d0873213963b91d2d398006295178933a37c"
+      },
+      {
+        "binding_key": "fill.0",
+        "domain_kind": "fill",
+        "identity_type": "domain_id",
+        "ordinal": 0,
+        "semantic_key": "engine.cash.fill",
+        "value": "fil_a564d9dce07bccb5d45d163846ba95e1004567f06ffdf8e0f34ab1bf0074efad"
+      },
+      {
+        "binding_key": "journal.fee.0",
+        "domain_kind": "journal",
+        "identity_type": "domain_id",
+        "ordinal": 0,
+        "semantic_key": "engine.cash.fee-journal",
+        "value": "jnl_e916d4bcb5c47bc4256072eb9de6517decd9f42f252ba91cfd5bbb65ab043b74"
+      },
+      {
+        "binding_key": "journal.fill.0",
+        "domain_kind": "journal",
+        "identity_type": "domain_id",
+        "ordinal": 0,
+        "semantic_key": "engine.cash.fill-journal",
+        "value": "jnl_09a9c3aa5746036aa0e5eef052a85edb655e02fb3d0e97af5cc92ddde507ef7b"
+      },
+      {
+        "binding_key": "journal.initial.0",
+        "domain_kind": "journal",
+        "identity_type": "domain_id",
+        "ordinal": 0,
+        "semantic_key": "engine.cash.deposit",
+        "value": "jnl_739084961dd691f617624422a7c07de553294c0f7ee15a06f5a19a29919da498"
+      },
+      {
+        "binding_key": "order-event.0.0.0",
+        "domain_kind": null,
+        "identity_type": "event_id",
+        "ordinal": 0,
+        "semantic_key": "engine.cash.order-event.order_intent_created",
+        "value": "evt_826d1da6507b4feed85ef79c5b70124e08d877e5145b3639bed1d26fcd1bea5a"
+      },
+      {
+        "binding_key": "order-event.0.0.1",
+        "domain_kind": null,
+        "identity_type": "event_id",
+        "ordinal": 1,
+        "semantic_key": "engine.cash.order-event.order_capability_approved",
+        "value": "evt_cb141b14f0ae30ff658407fff167161893abde13be3d16d10802ebb4cf459a3f"
+      },
+      {
+        "binding_key": "order-event.0.0.2",
+        "domain_kind": null,
+        "identity_type": "event_id",
+        "ordinal": 2,
+        "semantic_key": "engine.cash.order-event.order_translated",
+        "value": "evt_b1b62a11dc353065e1aa457a4c783153fc838f68b5f73635b7d3d531ce2cb071"
+      },
+      {
+        "binding_key": "order-event.0.0.3",
+        "domain_kind": null,
+        "identity_type": "event_id",
+        "ordinal": 3,
+        "semantic_key": "engine.cash.order-event.market_rule_approved",
+        "value": "evt_2210aeca8f85d78f3274cd53de2e97fddd5684fd857964bde18d92c32122f8a8"
+      },
+      {
+        "binding_key": "order-event.0.0.4",
+        "domain_kind": null,
+        "identity_type": "event_id",
+        "ordinal": 4,
+        "semantic_key": "engine.cash.order-event.fee_reservation_estimated",
+        "value": "evt_e734feb8ee988a2ecc08dca0168f28f864e5db3958096dd01da0f80e1d2142cf"
+      },
+      {
+        "binding_key": "order-event.0.0.5",
+        "domain_kind": null,
+        "identity_type": "event_id",
+        "ordinal": 5,
+        "semantic_key": "engine.cash.order-event.pre_trade_risk_approved",
+        "value": "evt_ab96012979dff08bc947156ace0f20c4cf9f331be4c5c9610a74d4a2ce3f6fbd"
+      },
+      {
+        "binding_key": "order-event.0.0.6",
+        "domain_kind": null,
+        "identity_type": "event_id",
+        "ordinal": 6,
+        "semantic_key": "engine.cash.order-event.order_submitted",
+        "value": "evt_6d09e4194deca88c734dc977b2d229343823a618a0d8aaf1a303ad3ca82ace79"
+      },
+      {
+        "binding_key": "order-event.0.0.7",
+        "domain_kind": null,
+        "identity_type": "event_id",
+        "ordinal": 7,
+        "semantic_key": "engine.cash.order-event.order_accepted",
+        "value": "evt_87c7a02cf5434c31c209d93c662ec6ae9d9aacb895015a2573daadb73e018915"
+      },
+      {
+        "binding_key": "order-event.fill.0",
+        "domain_kind": null,
+        "identity_type": "event_id",
+        "ordinal": 0,
+        "semantic_key": "engine.cash.order-event.fill",
+        "value": "evt_d09b0a849ffcb46ac7bb39c29b912bb91e3a67b75876c92d283eb02df3a4787e"
+      },
+      {
+        "binding_key": "order.0.0",
+        "domain_kind": "order",
+        "identity_type": "domain_id",
+        "ordinal": 0,
+        "semantic_key": "engine.cash.order",
+        "value": "ord_f7faa2594f4140f1a782908023e3acce53d56aa0f65a194698352dbfd5c4a614"
+      }
+    ],
+    "namespace": {
+      "algorithm": "sha256-length-prefixed-v1",
+      "value": "backtest",
+      "version": "1"
+    },
+    "schema_version": 1,
+    "semantic_run_id": "run_39ab44a26d7f719fe1648f3ccbf7cbdcb874a9bc43e8c15d3a51ab5aca421591",
+    "type": "execution_case_identity_manifest"
+  },
+  "identity_manifest_hash": "sha256:b9d575e5275aae0d4f3ac46dba4e5f8454ee639192b8881d2aa7833373f05e92",
+  "independent_composition_and_attempt_parity": {
+    "attempt_ids_differ": true,
+    "case_hashes_equal": true,
+    "cases_are_distinct_objects": true,
+    "fill_ids_equal": true,
+    "first_attempt_id": "attempt_3c478bbb5e7141603744fadfe484c4859fac39a56b525df8b5be0fb2a8e1cdfa",
+    "identity_manifests_equal": true,
+    "journal_ids_equal": true,
+    "second_attempt_id": "attempt_39000746f7552464b07d9a8e1b2035a6e9e0fbf341f34dc6bf02c4a87fe82d8c"
+  },
+  "operational_fields_absent_from_spec": [
+    "attempt_id",
+    "hostname",
+    "absolute_path",
+    "wall_clock",
+    "final_execution_case_hash"
+  ],
+  "schema_version": 1,
+  "semantic_input_change": {
+    "final_case_changed": true,
+    "semantic_run_changed": true,
+    "semantic_spec_changed": true
+  },
+  "semantic_run_id": "run_39ab44a26d7f719fe1648f3ccbf7cbdcb874a9bc43e8c15d3a51ab5aca421591",
+  "semantic_spec": {
+    "case_key": "engine.cash.fixture.v1",
+    "case_version": 1,
+    "decision_inputs_hash": "sha256:b1a53dc0745d9f3e0d3b27a1050bd8cb7e9fce6b85d4a73ee42b5424b90921a3",
+    "execution_inputs_hash": "sha256:0b938a774756a26d7425a0bc0550cbdf2dded0f47f29af43ecc5c0ed0086246f",
+    "financial_inputs_hash": "sha256:e8b6cd79bbdcd0d192b0cfe02af5b3fbcd6e47b97467547366095a24fa298ab6",
+    "identity_namespace": {
+      "algorithm": "sha256-length-prefixed-v1",
+      "value": "backtest",
+      "version": "1"
+    },
+    "identity_plan": [
+      {
+        "binding_key": "fee.0",
+        "domain_kind": "fee",
+        "identity_type": "domain_id",
+        "ordinal": 0,
+        "semantic_key": "engine.cash.fee"
+      },
+      {
+        "binding_key": "fill.0",
+        "domain_kind": "fill",
+        "identity_type": "domain_id",
+        "ordinal": 0,
+        "semantic_key": "engine.cash.fill"
+      },
+      {
+        "binding_key": "journal.fee.0",
+        "domain_kind": "journal",
+        "identity_type": "domain_id",
+        "ordinal": 0,
+        "semantic_key": "engine.cash.fee-journal"
+      },
+      {
+        "binding_key": "journal.fill.0",
+        "domain_kind": "journal",
+        "identity_type": "domain_id",
+        "ordinal": 0,
+        "semantic_key": "engine.cash.fill-journal"
+      },
+      {
+        "binding_key": "journal.initial.0",
+        "domain_kind": "journal",
+        "identity_type": "domain_id",
+        "ordinal": 0,
+        "semantic_key": "engine.cash.deposit"
+      },
+      {
+        "binding_key": "order-event.0.0.0",
+        "domain_kind": null,
+        "identity_type": "event_id",
+        "ordinal": 0,
+        "semantic_key": "engine.cash.order-event.order_intent_created"
+      },
+      {
+        "binding_key": "order-event.0.0.1",
+        "domain_kind": null,
+        "identity_type": "event_id",
+        "ordinal": 1,
+        "semantic_key": "engine.cash.order-event.order_capability_approved"
+      },
+      {
+        "binding_key": "order-event.0.0.2",
+        "domain_kind": null,
+        "identity_type": "event_id",
+        "ordinal": 2,
+        "semantic_key": "engine.cash.order-event.order_translated"
+      },
+      {
+        "binding_key": "order-event.0.0.3",
+        "domain_kind": null,
+        "identity_type": "event_id",
+        "ordinal": 3,
+        "semantic_key": "engine.cash.order-event.market_rule_approved"
+      },
+      {
+        "binding_key": "order-event.0.0.4",
+        "domain_kind": null,
+        "identity_type": "event_id",
+        "ordinal": 4,
+        "semantic_key": "engine.cash.order-event.fee_reservation_estimated"
+      },
+      {
+        "binding_key": "order-event.0.0.5",
+        "domain_kind": null,
+        "identity_type": "event_id",
+        "ordinal": 5,
+        "semantic_key": "engine.cash.order-event.pre_trade_risk_approved"
+      },
+      {
+        "binding_key": "order-event.0.0.6",
+        "domain_kind": null,
+        "identity_type": "event_id",
+        "ordinal": 6,
+        "semantic_key": "engine.cash.order-event.order_submitted"
+      },
+      {
+        "binding_key": "order-event.0.0.7",
+        "domain_kind": null,
+        "identity_type": "event_id",
+        "ordinal": 7,
+        "semantic_key": "engine.cash.order-event.order_accepted"
+      },
+      {
+        "binding_key": "order-event.fill.0",
+        "domain_kind": null,
+        "identity_type": "event_id",
+        "ordinal": 0,
+        "semantic_key": "engine.cash.order-event.fill"
+      },
+      {
+        "binding_key": "order.0.0",
+        "domain_kind": "order",
+        "identity_type": "domain_id",
+        "ordinal": 0,
+        "semantic_key": "engine.cash.order"
+      }
+    ],
+    "run_end_inputs_hash": "sha256:28dc354de0195018541031a4da3289b8718f890cebd89afc3c604e6e6cd1c06d",
+    "schema_version": 1,
+    "snapshot_inputs_hash": "sha256:3c1b280c22ad82af8d3fae8dc9034e1b7555a9302ef3253fdf5c344e5793a868",
+    "spec_key": "synthetic.cash.execution-case.v1",
+    "spec_version": 1,
+    "target_stream_digest": "sha256:ead473aba908a5d2ace5745a648d357c16666c47a726743b86dbde42768a539f",
+    "timeline_semantic_hash": "sha256:251d14b7f00fb30e31b6d1678146a2f39ac324c8830a56761d7dd77c57600e09",
+    "type": "execution_case_semantic_spec"
+  },
+  "semantic_spec_hash": "sha256:2592a4ee246b54632d3c63f3490ab68cdabb305406cc275eafabcc0fd5e8a690",
+  "spec_and_final_case_hashes_differ": true
+}

@@ -1,0 +1,146 @@
+{
+  "acquisition_tool_commit": "6f0bd99a93a349924996eb26708fbb0ac6fecf17",
+  "duckdb_backup_parity": {
+    "market_query": "select TradingDay,Symbol,TSCode,Open,High,Low,Close,Volume,Amount,PctChange,Source,UpdateAt from MarketData where Symbol='000001' and TradingDay=date '2024-01-02'",
+    "market_row": [
+      "2024-01-02",
+      "000001",
+      null,
+      9.39,
+      9.42,
+      9.21,
+      9.21,
+      115836645.0,
+      1075742252.0,
+      -1.9169,
+      "tushare_compatible_csv",
+      "2026-05-20 19:38:09"
+    ],
+    "path": "/srv/bcache-8t/ygguo/duckdb/quant-a50/quant_a50.duckdb.backup_20260521_daily_basic_2015",
+    "sha256": "sha256:cdc6ce41dee3fe9903d8c27ec5cc584455ad423989cd79e3eb0187c5bba8bd41",
+    "static_query": "select Symbol,TSCode,Name,Area,Industry,Market,ListDate,IsActive,UpdateAt from StaticData where Symbol='000001'",
+    "static_row": [
+      "000001",
+      "000001.SZ",
+      "平安银行",
+      "深圳",
+      "银行",
+      "主板",
+      "1991-04-03",
+      true,
+      "2026-04-09 16:32:34"
+    ],
+    "unit_mapping": {
+      "provider_amount_thousands_to_duckdb_currency": 1000,
+      "provider_vol_lots_to_duckdb_shares": 100
+    }
+  },
+  "fixture_id": "g12l-tushare-cn-a-share-daily-listing-v1",
+  "limitations": [
+    "single-symbol-single-trading-date-evidence",
+    "tushare-rest-has-no-provider-checksum",
+    "no-provider-revision-correction-terminal-closure",
+    "stock-basic-is-current-query-not-historical-snapshot",
+    "trade-date-has-no-approved-event-time-mapping",
+    "availability-is-late-g12a-acquisition-time",
+    "no-normalizer-or-g12c-g12d-publication",
+    "no-g12i-g12k-g12m-qualification",
+    "decision-grade-eligible-false",
+    "deployment-authorized-false"
+  ],
+  "provider_evidence": {
+    "daily_fields": [
+      "ts_code",
+      "trade_date",
+      "open",
+      "high",
+      "low",
+      "close",
+      "pre_close",
+      "change",
+      "pct_chg",
+      "vol",
+      "amount"
+    ],
+    "daily_row": [
+      "000001.SZ",
+      "20240102",
+      9.39,
+      9.42,
+      9.21,
+      9.21,
+      9.39,
+      -0.18,
+      -1.9169,
+      1158366.45,
+      1075742.252
+    ],
+    "listing_fields": [
+      "ts_code",
+      "symbol",
+      "name",
+      "area",
+      "industry",
+      "market",
+      "exchange",
+      "list_status",
+      "list_date",
+      "delist_date"
+    ],
+    "listing_row": [
+      "000001.SZ",
+      "000001",
+      "平安银行",
+      "深圳",
+      "银行",
+      "主板",
+      "SZSE",
+      "L",
+      "19910403",
+      null
+    ]
+  },
+  "request": {
+    "trade_date": "20240102",
+    "ts_code": "000001.SZ"
+  },
+  "schema_version": 1,
+  "snapshot": {
+    "content_tree_hash": "sha256:44c4cd1e11dca26ddfe62fc1d2b5d4d8175da701b288876d33d1be65e06eddb5",
+    "decision_grade_eligible": false,
+    "deployment_authorized": false,
+    "members": [
+      {
+        "acquired_at_epoch_nanoseconds": 1786943026685846805,
+        "byte_count": 327,
+        "content_hash": "sha256:c2950a35c093b983e538f97830b7b3fcb0bba1a7dac98a17bd20f6db9296f846",
+        "declared_sha256": null,
+        "member_key": "response/daily.json",
+        "mode": "0644"
+      },
+      {
+        "acquired_at_epoch_nanoseconds": 1786943026685846805,
+        "byte_count": 339,
+        "content_hash": "sha256:d78fc472268deacb5af7c59c113325e2a00c5b4619c53fbbfe6fa23c96d471d2",
+        "declared_sha256": null,
+        "member_key": "response/stock-basic.json",
+        "mode": "0644"
+      }
+    ],
+    "provenance": {
+      "license_ref": "tushare.pro.terms",
+      "retention_policy_ref": "backtest.acquisition.candidate",
+      "source_key": "tushare.pro.daily_listing.000001.sz.20240102",
+      "vendor_key": "tushare.pro"
+    },
+    "provenance_hash": "sha256:8745af52a950d0ba35eee381b32b6adad2d2ee144325de34ad3597389f2e73fb",
+    "schema_version": 1,
+    "snapshot_id": "sha256:6a360b17c1a5dd7686b2496f3b04006f902ef5705a1427dc2a7dbdaeadc2458a",
+    "type": "source_snapshot"
+  },
+  "source_hashes": {
+    "acquisition_receipt_sha256": "sha256:61106b7e974ff09dedf96c065070f4a097a7fe02121bfd7a81b5dacb5c4757da",
+    "daily_response_sha256": "sha256:c2950a35c093b983e538f97830b7b3fcb0bba1a7dac98a17bd20f6db9296f846",
+    "listing_response_sha256": "sha256:d78fc472268deacb5af7c59c113325e2a00c5b4619c53fbbfe6fa23c96d471d2"
+  }
+}

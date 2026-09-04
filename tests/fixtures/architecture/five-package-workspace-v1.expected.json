@@ -1,0 +1,57 @@
+{
+  "schema_version": 1,
+  "python": {
+    "default_minor": "3.13",
+    "requires_python": ">=3.13,<3.14"
+  },
+  "workspace": {
+    "build_backend": "setuptools.build_meta",
+    "members": [
+      "packages/*"
+    ],
+    "package_count": 5
+  },
+  "packages": [
+    {
+      "directory": "packages/trading-domain",
+      "project_name": "crypto-quant-domain",
+      "module_name": "crypto_quant_domain",
+      "dependencies": []
+    },
+    {
+      "directory": "packages/trading-kernel",
+      "project_name": "crypto-quant-trading",
+      "module_name": "crypto_quant_trading",
+      "dependencies": [
+        "crypto-quant-domain"
+      ]
+    },
+    {
+      "directory": "packages/market-data-contracts",
+      "project_name": "crypto-quant-market-data",
+      "module_name": "crypto_quant_market_data",
+      "dependencies": [
+        "crypto-quant-domain"
+      ]
+    },
+    {
+      "directory": "packages/market-bundle-builder",
+      "project_name": "crypto-quant-bundle-builder",
+      "module_name": "crypto_quant_bundle_builder",
+      "dependencies": [
+        "crypto-quant-domain",
+        "crypto-quant-market-data"
+      ]
+    },
+    {
+      "directory": "packages/backtest-runtime",
+      "project_name": "crypto-quant-backtest",
+      "module_name": "crypto_quant_backtest",
+      "dependencies": [
+        "crypto-quant-domain",
+        "crypto-quant-market-data",
+        "crypto-quant-trading"
+      ]
+    }
+  ]
+}

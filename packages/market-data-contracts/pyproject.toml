@@ -1,0 +1,21 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "crypto-quant-market-data"
+version = "0.1.0"
+description = "Immutable market-bundle manifests, readers, cursors, and repository contracts"
+requires-python = ">=3.13,<3.14"
+dependencies = [
+  "crypto-quant-domain",
+]
+
+[tool.uv.sources]
+crypto-quant-domain = { workspace = true }
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.setuptools.package-data]
+crypto_quant_market_data = ["py.typed"]

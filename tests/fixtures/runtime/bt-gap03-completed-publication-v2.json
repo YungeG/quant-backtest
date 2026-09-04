@@ -1,0 +1,54 @@
+{
+  "fixture_id": "bt-gap03-completed-publication-v2",
+  "schema_version": 1,
+  "engine_execution_context": {
+    "type": "engine_execution_context",
+    "schema_version": 1,
+    "required_fields": [
+      "semantic_run_id",
+      "semantic_spec_hash",
+      "case_hash",
+      "target_stream_digest",
+      "identity_manifest_hash",
+      "financial_state"
+    ]
+  },
+  "completed_result": {
+    "artifact_type": "completed_backtest_result",
+    "schema_version": 2,
+    "extends_v1_trust_chain": true,
+    "additional_fields": [
+      "engine_execution_context",
+      "canonical_evidence_manifest_ref"
+    ]
+  },
+  "publication": {
+    "manifest_artifact_type": "canonical_publication_manifest",
+    "manifest_schema_version": 1,
+    "publication_kind": "canonical",
+    "publication_id": "canonical-v2",
+    "relative_directory_template": "runs/{semantic_run_id}/canonical-v2",
+    "children": [
+      {
+        "relative_path": "canonical-attempt-ref.json",
+        "artifact_type": "canonical_attempt_ref",
+        "schema_version": 1
+      },
+      {
+        "relative_path": "integrity.json",
+        "artifact_type": "integrity_report",
+        "schema_version": 1
+      },
+      {
+        "relative_path": "result.json",
+        "artifact_type": "completed_backtest_result",
+        "schema_version": 2
+      }
+    ]
+  },
+  "legacy": {
+    "completed_result_schema_version": 1,
+    "relative_directory_template": "runs/{semantic_run_id}/canonical",
+    "bytes_unchanged": true
+  }
+}

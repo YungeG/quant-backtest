@@ -1,0 +1,8 @@
+{
+  "fixture_id": "accounting-contracts-v2",
+  "expected_sha256": {
+    "position_lot_v2": "sha256:8bc13eea157e6b70f78f08960d685ca561ff3ca7a196b8dc86acf967faf32f0a",
+    "position_lot_change_v2": "sha256:f8715eb30c302610699917a878bf8f9e6fea59b69524899f86514271af3a6a04",
+    "journal_entry_v2": "sha256:3e826877aefc26ccc5d45ad4e8577ebd5bbcdb65e9a2667cee9764a1f4d4010f"
+  }
+}

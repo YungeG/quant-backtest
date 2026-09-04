@@ -1,0 +1,36 @@
+[project]
+name = "crypto-quant-backtest-workspace"
+version = "0.0.0"
+description = "Workspace for deterministic cross-market trading and backtest packages"
+requires-python = ">=3.13,<3.14"
+dependencies = [
+  "crypto-quant-backtest",
+  "crypto-quant-bundle-builder",
+  "crypto-quant-domain",
+  "crypto-quant-market-data",
+  "crypto-quant-trading",
+]
+
+[dependency-groups]
+dev = [
+  "duckdb==1.5.1",
+  "PyYAML>=6.0.2,<7",
+  "pytest>=8.4,<9",
+]
+
+[tool.uv]
+package = false
+
+[tool.uv.workspace]
+members = ["packages/*"]
+
+[tool.uv.sources]
+crypto-quant-backtest = { workspace = true }
+crypto-quant-bundle-builder = { workspace = true }
+crypto-quant-domain = { workspace = true }
+crypto-quant-market-data = { workspace = true }
+crypto-quant-trading = { workspace = true }
+
+[tool.pytest.ini_options]
+addopts = "-ra"
+testpaths = ["tests"]

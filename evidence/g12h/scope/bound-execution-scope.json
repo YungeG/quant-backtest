@@ -1,0 +1,63 @@
+{
+  "adr_binding": {
+    "path": "docs/adr/0005-cn-a-share-fees-require-access-route-and-product-class.md",
+    "sha256": "sha256:2ae3cb57ecb3e313445225ea5b1421a4d36a0c8ebbd5e5130c100c94c92e14b1"
+  },
+  "authority_boundary": "This export binds execution scope only. It supplies no fee rate, applicability, official_record_as_of, closure_evidence_available_at, or successor/correction evidence.",
+  "declarations": {
+    "account_scope_declaration_hash": "sha256:de8e0f3df68fd3436da37f463a2d2265e7371ee3e68c980e182e6cd987067595",
+    "account_scope_snapshot_file": "account-scope-declaration.json",
+    "board_id_tuple_hash": "sha256:747354f83eb6b671d2a813f986f7e78cdc1d01e63cc1bd52b6e20284c52a43cc",
+    "instrument_scope_declaration_hash": "sha256:87d7ecd23fb0cc87c5c37edfa6a31b437f5646b161b43eaee1e1771cefa68058",
+    "instrument_scope_snapshot_file": "instrument-scope-declaration.json"
+  },
+  "frozen_fields": {
+    "access_route": "DOMESTIC",
+    "authorizes_available_margin_use": false,
+    "board_ids": [
+      "main"
+    ],
+    "fee_product_class": "ORDINARY_A_SHARE",
+    "has_differential_distribution": false,
+    "has_issuer_self_distribution": false,
+    "has_lending_or_repo": false,
+    "has_margin_or_short_permission": false,
+    "has_pledge_or_freeze": false,
+    "has_stock_connect_permission": false,
+    "instrument_type": "EQUITY",
+    "is_b_or_h_share": false,
+    "is_cash_account": true,
+    "is_domestic_access": true,
+    "is_fund_or_bond": false,
+    "is_ordinary_domestic_a_share": true,
+    "is_restricted_or_pre_ipo": false,
+    "is_standard_cash_auction": true,
+    "is_stock_connect": false,
+    "quote_currency": "CNY",
+    "settlement_currency": "CNY",
+    "trade_mechanism": "AUCTION",
+    "venue": "XSHE"
+  },
+  "producer_git_object": "5cbc3da58293d16571c662a1f1d2158f3c0f0017",
+  "schema_version": 1,
+  "status": "scope_bound_authority_insufficient",
+  "target": {
+    "from_inclusive": "2026-07-06T00:00:00+08:00",
+    "timezone": "Asia/Shanghai",
+    "to_exclusive": "2026-07-31T00:00:00+08:00"
+  },
+  "type": "g12h_bound_execution_scope_v1",
+  "v2c_fixture": {
+    "path": "tests/fixtures/kernel/profiles/cn_a_share/commission-tax-v2.json",
+    "sha256": "sha256:5f0241887237a568f411a7d4a664482848ee134202d930903404aaf367f463e0"
+  },
+  "verification": {
+    "adr_hash_verified": true,
+    "board_tuple_finite": true,
+    "fee_authority_supplied": false,
+    "fixture_hash_verified": true,
+    "result": "PASS_SCOPE_ONLY",
+    "route_product_explicit": true,
+    "target_profile_coverage_matches": true
+  }
+}

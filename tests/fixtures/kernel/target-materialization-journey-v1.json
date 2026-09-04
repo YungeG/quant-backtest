@@ -1,0 +1,48 @@
+{
+  "expected_active_target": {
+    "materialized_at": {
+      "epoch_nanoseconds": 100,
+      "type": "utc_instant"
+    },
+    "quantities": [
+      {
+        "instrument_id": {
+          "stable_key": "cash:btc-usd",
+          "type": "instrument_id",
+          "venue": "synthetic"
+        },
+        "quantity": {
+          "instrument_id": "synthetic:cash:btc-usd",
+          "scale": 3,
+          "type": "quantity",
+          "units": 10000
+        }
+      },
+      {
+        "instrument_id": {
+          "stable_key": "cash:eth-usd",
+          "type": "instrument_id",
+          "venue": "synthetic"
+        },
+        "quantity": {
+          "instrument_id": "synthetic:cash:eth-usd",
+          "scale": 3,
+          "type": "quantity",
+          "units": 16000
+        }
+      }
+    ],
+    "source_decision_batch_id": "decision-batch-v1:sha256:0fe253ff2c01e6059642f0fb680a563e0e0a8bf889ae1d57791ee37f74c9e6f6",
+    "type": "active_portfolio_target"
+  },
+  "expected_stage_hashes": {
+    "active": "sha256:5be86cf3646d668d8d4dadaaacc863ad4b4445ad33ae8a757946d64d4f3cb67b",
+    "allocation": "sha256:9cd34269979b6523d4c580444f49fe2afe6d06552cd91c32d8d9f018ad488ebc",
+    "approved": "sha256:321e70462dc2e92400a5ef18e8849d80c0e912f895cdf4a0ce350022e75d50ce",
+    "batch": "sha256:d9dbdf50f9a460f0e9d83c848e7c6dd9c210c8ee6656dc36f602a9c6828e7127",
+    "normalized": "sha256:60b76e412c5958931e69e21c8801ef35e5617348e5cdff1cfbfd003180eb967f",
+    "state": "sha256:52c4930f0ca47ac4f9b57965ca9ecca1e046f8ace226bda80884fc522805ea4c"
+  },
+  "fixture_id": "target-materialization-journey-v1",
+  "schema_version": 1
+}

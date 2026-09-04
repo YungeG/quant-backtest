@@ -1,0 +1,108 @@
+{
+  "ambiguous_failure": {
+    "failure": {
+      "candidate_count": 2,
+      "candidate_observation_hashes": [
+        "sha256:6a132e34a8ad70a2ac468b98fb3eac5312426f7fb106e53efa8337db19e75c6a",
+        "sha256:b729f72c0de2ea3f7089048d3edb538896075c75fa8e555fde8b679f5ba04dad"
+      ],
+      "code": "ambiguous_mark",
+      "instrument_id": {
+        "stable_key": "asset-1",
+        "type": "instrument_id",
+        "venue": "synthetic"
+      },
+      "price_purpose": "valuation",
+      "requested_at": {
+        "epoch_nanoseconds": 110,
+        "type": "utc_instant"
+      },
+      "selected_observed_at": {
+        "epoch_nanoseconds": 100,
+        "type": "utc_instant"
+      },
+      "stale_policy_hash": "sha256:12038b16e733cc56db849200d4427f2f6760a539e588f44d0fd5d4b6904149b9",
+      "type": "mark_resolution_failure"
+    },
+    "status": "failed",
+    "type": "mark_resolution_outcome"
+  },
+  "fixture_id": "deterministic-mark-resolution-v1",
+  "observation_hashes": [
+    "sha256:4b0ef0a05be7c68925db1a268816d223e9cd8167311c5d8c7aa6469643406369",
+    "sha256:6a132e34a8ad70a2ac468b98fb3eac5312426f7fb106e53efa8337db19e75c6a"
+  ],
+  "policy_hash": "sha256:12038b16e733cc56db849200d4427f2f6760a539e588f44d0fd5d4b6904149b9",
+  "stale_failure": {
+    "failure": {
+      "candidate_count": 1,
+      "candidate_observation_hashes": [
+        "sha256:6a132e34a8ad70a2ac468b98fb3eac5312426f7fb106e53efa8337db19e75c6a"
+      ],
+      "code": "stale_mark",
+      "instrument_id": {
+        "stable_key": "asset-1",
+        "type": "instrument_id",
+        "venue": "synthetic"
+      },
+      "price_purpose": "valuation",
+      "requested_at": {
+        "epoch_nanoseconds": 121,
+        "type": "utc_instant"
+      },
+      "selected_observed_at": {
+        "epoch_nanoseconds": 100,
+        "type": "utc_instant"
+      },
+      "stale_policy_hash": "sha256:12038b16e733cc56db849200d4427f2f6760a539e588f44d0fd5d4b6904149b9",
+      "type": "mark_resolution_failure"
+    },
+    "status": "failed",
+    "type": "mark_resolution_outcome"
+  },
+  "success": {
+    "resolved_mark": {
+      "age_nanoseconds": 10,
+      "available_at": {
+        "epoch_nanoseconds": 105,
+        "type": "utc_instant"
+      },
+      "instrument_id": {
+        "stable_key": "asset-1",
+        "type": "instrument_id",
+        "venue": "synthetic"
+      },
+      "mark_id": "sha256:2a48fbbbd1e454e186e197e4d73680fce7b51a29301b0f6f6f6765e1fddf48bb",
+      "observed_at": {
+        "epoch_nanoseconds": 100,
+        "type": "utc_instant"
+      },
+      "price": {
+        "instrument_id": "synthetic:asset-1",
+        "quote_currency": "USD",
+        "scale": 2,
+        "type": "price",
+        "units": 12500
+      },
+      "price_purpose": "valuation",
+      "quote_currency_id": {
+        "type": "currency_id",
+        "value": "USD"
+      },
+      "resolved_at": {
+        "epoch_nanoseconds": 110,
+        "type": "utc_instant"
+      },
+      "revision_id": "revision:3",
+      "source_event_id": "event:selected",
+      "stale_policy_hash": "sha256:12038b16e733cc56db849200d4427f2f6760a539e588f44d0fd5d4b6904149b9",
+      "stale_policy_key": "marks.valuation.v1",
+      "stale_policy_version": 1,
+      "stream_id": "stream:valuation",
+      "type": "resolved_mark"
+    },
+    "status": "resolved",
+    "type": "mark_resolution_outcome"
+  },
+  "success_hash": "sha256:1cdef05e861472dd46683b5fe165c086b595b8bc913986d98fa4d22a805ad76d"
+}

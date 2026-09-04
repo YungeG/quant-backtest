@@ -1,0 +1,99 @@
+{
+  "responses": [
+    {
+      "headers": [
+        {
+          "name": "pragma",
+          "value": "no-cache,no-cache"
+        },
+        {
+          "name": "content-type",
+          "value": "text/html; charset=utf-8"
+        },
+        {
+          "name": "x-content-type-options",
+          "value": "nosniff"
+        },
+        {
+          "name": "strict-transport-security",
+          "value": "max-age=31536000; includeSubDomains"
+        },
+        {
+          "name": "access-control-allow-origin",
+          "value": "*"
+        },
+        {
+          "name": "content-security-policy",
+          "value": "frame-ancestors 'self' https://www.hkex.com.hk https://sc.hkex.com.hk/ http://sc.hkex.com.hk/ http://www.hkgem.com http://www.hkex.com.hk http://www.hkexgroup.com http://sc.hkex.com.hk http://sc.hkexnews.hk http://www.hkexnews.hk https://google.com.hk https://www.recaptcha.net/ https://www1.hkex.com.hk https://assets.adobedtm.com https://hkexchanges.demdex.net https://dpm.demdex.net https://hkexchanges.data.adobedc.net https://hkexchanges.sc.omtrdc.net https://cm.everesttech.net https://hkexchanges.2o7.net https://*.mktoweb.com https://markets.hkex.com.hk https://piid.hkex.com.hk; frame-src 'self' http://www.hkgem.com http://www.hkex.com.hk http://www.hkexgroup.com http://sc.hkex.com.hk https://sc.hkex.com.hk http://sc.hkexnews.hk http://www.hkexnews.hk http://asia.tools.euroland.com https://google.com.hk https://www.hkexgroup.com https://view.vzaar.com https://video.vzaar.com https://www.google.com https://www.recaptcha.net/ https://www1.hkex.com.hk https://assets.adobedtm.com https://hkexchanges.demdex.net https://dpm.demdex.net https://hkexchanges.data.adobedc.net https://hkexchanges.sc.omtrdc.net https://cm.everesttech.net https://hkexchanges.2o7.net https://*.mktoweb.com https://markets.hkex.com.hk https://piid.hkex.com.hk; "
+        },
+        {
+          "name": "x-xss-protection",
+          "value": "1; mode=block"
+        },
+        {
+          "name": "x-content-type-options",
+          "value": "nosniff"
+        },
+        {
+          "name": "x-frame-options",
+          "value": "SameOrigin"
+        },
+        {
+          "name": "access-control-allow-headers",
+          "value": "Content-Type, Authorization, X-Requested-With"
+        },
+        {
+          "name": "access-control-allow-methods",
+          "value": "GET, POST, OPTIONS, PUT, DELETE"
+        },
+        {
+          "name": "x-akamai-transformed",
+          "value": "0 - 0 -"
+        },
+        {
+          "name": "cache-control",
+          "value": "no-cache, no-store"
+        },
+        {
+          "name": "expires",
+          "value": "Thu, 20 Aug 2026 07:37:19 GMT"
+        },
+        {
+          "name": "date",
+          "value": "Thu, 20 Aug 2026 07:37:19 GMT"
+        },
+        {
+          "name": "set-cookie",
+          "value": "website#lang=<redacted sha256:dbd3a49d0d906b4ed9216b73330d2fb080ef2f758c12f3885068222e5e17151c>; path=/; secure; HttpOnly; SameSite=Strict"
+        },
+        {
+          "name": "set-cookie",
+          "value": "ASP.NET_SessionID=<redacted sha256:b01cd21d941f19fc0ac85b6acabca7d0f3e67f7650021bb8345114bd81b8ae3e>; path=/; secure; HttpOnly; SameSite=Strict"
+        },
+        {
+          "name": "set-cookie",
+          "value": "website#lang=<redacted sha256:dbd3a49d0d906b4ed9216b73330d2fb080ef2f758c12f3885068222e5e17151c>; path=/; secure; HttpOnly; SameSite=Strict"
+        },
+        {
+          "name": "set-cookie",
+          "value": "ASP.NET_SessionID=<redacted sha256:b01cd21d941f19fc0ac85b6acabca7d0f3e67f7650021bb8345114bd81b8ae3e>; path=/; secure; HttpOnly; SameSite=Strict"
+        },
+        {
+          "name": "set-cookie",
+          "value": "__AntiXsrfToken=<redacted sha256:a19959464e0c831ddd5bdeaa443eb003db5499dac2d1c06ffa1a94919c46a71f>; path=/; secure; HttpOnly; SameSite=Strict"
+        },
+        {
+          "name": "set-cookie",
+          "value": "bm_s=<redacted sha256:79322ecdfb648dfaa0c887621296f9c31b9721148d3eb65f34529bf782a9ba48>; Domain=.hkex.com.hk; Path=/; Expires=Sun, 20 Sep 2026 07:37:19 GMT; Max-Age=2678400; Secure; HttpOnly"
+        },
+        {
+          "name": "set-cookie",
+          "value": "bm_so=<redacted sha256:8a42a9b4c05d160edd00f65c1d5659054faf860809fd21309460ccc6f00c6683>; Domain=.hkex.com.hk; Path=/; Expires=Fri, 21 Aug 2026 07:37:19 GMT; Max-Age=86400; Secure"
+        }
+      ],
+      "status_line": "HTTP/2 200 "
+    }
+  ],
+  "schema_version": 1,
+  "type": "g12h_http_response_chain_v1"
+}

@@ -1,0 +1,60 @@
+{
+  "adr_0006_effect": "Neither probe qualifies for receipt-time substitution because no explicit nonblank live-status API result exists for the probed act or fee table.",
+  "authorized_next_phase": null,
+  "exchange_handling": {
+    "content_assertions": [
+      "深交所收费及代收税费标准（2026年1月）",
+      "按成交额双边收取0.0341‰",
+      "按成交额双边收取0.02‰",
+      "代中国证监会收取"
+    ],
+    "document_doc_title_status_time": "",
+    "qualification": "INSUFFICIENT",
+    "reason": "The issuer-owned JSON selector identifies the currently selected fee document but exposes no explicit nonblank validity status or complete fee-table successor/correction corpus.",
+    "selector_doc_title_status_time": "",
+    "selector_json_path": "/marketServices/deal/payFees/t20251231_618209.json",
+    "selector_pub_time_epoch_ms": 1767144191000,
+    "status": "CURRENT_DOCUMENT_SELECTOR_CONFIRMED_STATUS_UNDECLARED"
+  },
+  "overall_status": "F1_BLOCKED_NO_COMMON_OFFICIAL_RECORD_AS_OF",
+  "schema_version": 1,
+  "stamp_duty": {
+    "qualification": "INSUFFICIENT",
+    "reason": "The exact No.39 record is returned only without an aging filter; every published status filter returns zero and the record's status, repeal date, and revision type remain blank.",
+    "status": "NO39_EXPLICITLY_UNCLASSIFIED_ACROSS_PUBLISHED_STATUS_FILTERS",
+    "status_filters": [
+      {
+        "source_id": "sta-no39-status-unfiltered-live",
+        "status_filter": "",
+        "total": 1
+      },
+      {
+        "source_id": "sta-no39-status-full-valid-live",
+        "status_filter": "全文有效",
+        "total": 0
+      },
+      {
+        "source_id": "sta-no39-status-modified-live",
+        "status_filter": "已修改",
+        "total": 0
+      },
+      {
+        "source_id": "sta-no39-status-invalid-live",
+        "status_filter": "全文失效",
+        "total": 0
+      },
+      {
+        "source_id": "sta-no39-status-repealed-live",
+        "status_filter": "全文废止",
+        "total": 0
+      },
+      {
+        "source_id": "sta-no39-status-not-yet-effective-live",
+        "status_filter": "尚未生效",
+        "total": 0
+      }
+    ]
+  },
+  "target_to_exclusive": "2026-07-30T16:00:00Z",
+  "type": "g12h_live_status_api_probe_assessment_v1"
+}

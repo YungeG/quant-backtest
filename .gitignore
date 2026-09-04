@@ -1,0 +1,13 @@
+# Python environments and caches
+.venv/
+__pycache__/
+*.py[cod]
+.pytest_cache/
+
+# Build and acceptance outputs
+build/
+dist/
+*.egg-info/
+
+# Runtime evidence is stored externally or uploaded as an artifact
+runs/

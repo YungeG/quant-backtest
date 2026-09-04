@@ -1,0 +1,33 @@
+{
+  "schema_version": 1,
+  "projection_id": "binance-usdm-g10h-legacy-projection-v1",
+  "case_id": "binance-usdm-g10h-case-v1",
+  "source_role": "LEGACY_CRYPT_GEMINI",
+  "layers": {
+    "00_SOURCE_IDENTITY": {"account_id": "account:g10h-pseudonymous", "instrument_id": "binance_usdm:BTCUSDT", "parity_case": "binance-usdm-g10h-case-v1"},
+    "01_DECISION": [
+      {"action": "OPEN_LONG", "economic_time": 20},
+      {"action": "CLOSE_LONG", "economic_time": 40}
+    ],
+    "02_ORDER_INTENT": [
+      {"order_key": "legacy-open", "quantity": "3.000", "side": "BUY"},
+      {"order_key": "legacy-close", "quantity": "3.000", "side": "SELL"}
+    ],
+    "03_ORDER_EVENT": [
+      {"event": "OPEN", "executor": "CausalLongRequest", "timestamp": 200},
+      {"event": "CLOSE", "executor": "CausalLongRequest", "timestamp": 600}
+    ],
+    "04_FILL": [
+      {"price": "100.00", "quantity": "3.000", "side": "BUY", "time": 200},
+      {"price": "100.00", "quantity": "3.000", "side": "SELL", "time": 600}
+    ],
+    "05_FEE": [{"amount": "0.60", "asset": "USDT", "basis": "fixed_rate"}],
+    "06_POSITION_PNL": {"final_position": "0.000", "realized_pnl": "0.00", "transitions": ["OPEN", "CLOSE"]},
+    "07_FUNDING": [{"amount": "-0.03", "asset": "USDT", "funding_time": 300, "rate": "0.0001"}],
+    "08_JOURNAL_LEDGER": {"fee_ledger": "-0.60", "funding_ledger": "-0.03", "position_records": 2, "quote_ledger": "-0.63"},
+    "09_MARGIN_SNAPSHOT": {"reserved_margin": "0.00", "wallet_equity": "999.37"},
+    "10_LIQUIDATION_AUDIT": {"modeled": false},
+    "11_LIQUIDATION_EXECUTION": {"modeled": false},
+    "12_FINAL_RESULT": {"fee": "-0.60", "funding": "-0.03", "net_pnl": "-0.63", "position": "0.000"}
+  }
+}

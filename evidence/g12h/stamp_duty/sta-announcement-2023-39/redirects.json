@@ -1,0 +1,47 @@
+{
+  "responses": [
+    {
+      "headers": [
+        {
+          "name": "Date",
+          "value": "Thu, 20 Aug 2026 07:37:16 GMT"
+        },
+        {
+          "name": "Content-Type",
+          "value": "text/html"
+        },
+        {
+          "name": "Transfer-Encoding",
+          "value": "chunked"
+        },
+        {
+          "name": "Connection",
+          "value": "keep-alive"
+        },
+        {
+          "name": "X-Frame-Options",
+          "value": "ALLOW-FROM https://www.chinatax.gov.cn/"
+        },
+        {
+          "name": "Access-Control-Allow-Origin",
+          "value": "https://www.chinatax.gov.cn"
+        },
+        {
+          "name": "x-via",
+          "value": "1.1 sanxian26:13 (Cdn Cache Server V2.0), 1.1 CS-000-01VaE187:9 (Cdn Cache Server V2.0), 1.1 PS-000-012jf27:5 (Cdn Cache Server V2.0)"
+        },
+        {
+          "name": "x-ws-request-id",
+          "value": "6a86aeac_PS-000-012jf27_28446-65105"
+        },
+        {
+          "name": "Age",
+          "value": "2516"
+        }
+      ],
+      "status_line": "HTTP/1.1 200 OK"
+    }
+  ],
+  "schema_version": 1,
+  "type": "g12h_http_response_chain_v1"
+}

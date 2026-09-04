@@ -1,0 +1,1059 @@
+{
+  "bundle_ref": {
+    "bundle_key": "tushare-cn-a-share-daily-000001-20240102-v2",
+    "manifest_hash": "sha256:1bb2541e2131bd71d5a08cb82581fb5d035a9880ccb7fc62e5f660a0287ab6e5",
+    "type": "market_bundle_ref"
+  },
+  "catalog_binding_hash": "sha256:d25d4d7104a9db0136668dc442b5ec60e01ff15e9deb8a4a4ec048f6a10f9f8e",
+  "catalog_source": {
+    "acquired_at": {
+      "epoch_nanoseconds": 1786943026685846805,
+      "type": "utc_instant"
+    },
+    "catalog_source_hash": "sha256:59d3267cbf79d4721357d5959f3e848d7a3c250802fe055b4cd40e0aa0a0b8f5",
+    "current_metadata_only": true,
+    "decision_grade_eligible": false,
+    "deployment_authorized": false,
+    "historical_listing_status_qualified": false,
+    "instrument_catalog_hash": "sha256:99df0de0dc3008cf557bb7634caf483fae27488c75016421218100df6a77a6cc",
+    "member_content_hash": "sha256:d78fc472268deacb5af7c59c113325e2a00c5b4619c53fbbfe6fa23c96d471d2",
+    "member_key": "response/stock-basic.json",
+    "provenance_hash": "sha256:8745af52a950d0ba35eee381b32b6adad2d2ee144325de34ad3597389f2e73fb",
+    "provider_area": "深圳",
+    "provider_delist_date": null,
+    "provider_exchange": "SZSE",
+    "provider_industry": "银行",
+    "provider_list_date": "19910403",
+    "provider_list_status": "L",
+    "provider_market": "主板",
+    "provider_name": "平安银行",
+    "provider_revision_id": null,
+    "provider_symbol": "000001",
+    "provider_ts_code": "000001.SZ",
+    "record_index": 0,
+    "revision_closure_complete": false,
+    "schema_version": 1,
+    "snapshot_id": "sha256:6a360b17c1a5dd7686b2496f3b04006f902ef5705a1427dc2a7dbdaeadc2458a",
+    "source_key": "tushare.pro.daily_listing.000001.sz.20240102",
+    "source_record_hash": "sha256:851faa23c64268676dccdb7365b058362aae6ca3a2613752466e460bd7bb1b1e",
+    "survivorship_bias_safe": false,
+    "type": "tushare_cn_a_share_acquisition_catalog_source"
+  },
+  "catalog_source_hash": "sha256:59d3267cbf79d4721357d5959f3e848d7a3c250802fe055b4cd40e0aa0a0b8f5",
+  "event": {
+    "available_time": {
+      "epoch_nanoseconds": 1786943026685846805,
+      "type": "utc_instant"
+    },
+    "capability": {
+      "key": "tushare_cn_a_share.daily-publications",
+      "type": "market_bundle_capability",
+      "version": 2
+    },
+    "event_id": "tushare-cn-a-share-daily-v2:sha256:d25d4d7104a9db0136668dc442b5ec60e01ff15e9deb8a4a4ec048f6a10f9f8e",
+    "event_time": {
+      "epoch_nanoseconds": 1704158100000000000,
+      "type": "utc_instant"
+    },
+    "event_type": "tushare_cn_a_share_daily_publication.v2",
+    "instrument_id": {
+      "stable_key": "000001",
+      "type": "instrument_id",
+      "venue": "xshe"
+    },
+    "payload": {
+      "catalog_binding_hash": "sha256:d25d4d7104a9db0136668dc442b5ec60e01ff15e9deb8a4a4ec048f6a10f9f8e",
+      "catalog_source": {
+        "acquired_at": {
+          "epoch_nanoseconds": 1786943026685846805,
+          "type": "utc_instant"
+        },
+        "catalog_source_hash": "sha256:59d3267cbf79d4721357d5959f3e848d7a3c250802fe055b4cd40e0aa0a0b8f5",
+        "current_metadata_only": true,
+        "decision_grade_eligible": false,
+        "deployment_authorized": false,
+        "historical_listing_status_qualified": false,
+        "instrument_catalog_hash": "sha256:99df0de0dc3008cf557bb7634caf483fae27488c75016421218100df6a77a6cc",
+        "member_content_hash": "sha256:d78fc472268deacb5af7c59c113325e2a00c5b4619c53fbbfe6fa23c96d471d2",
+        "member_key": "response/stock-basic.json",
+        "provenance_hash": "sha256:8745af52a950d0ba35eee381b32b6adad2d2ee144325de34ad3597389f2e73fb",
+        "provider_area": "深圳",
+        "provider_delist_date": null,
+        "provider_exchange": "SZSE",
+        "provider_industry": "银行",
+        "provider_list_date": "19910403",
+        "provider_list_status": "L",
+        "provider_market": "主板",
+        "provider_name": "平安银行",
+        "provider_revision_id": null,
+        "provider_symbol": "000001",
+        "provider_ts_code": "000001.SZ",
+        "record_index": 0,
+        "revision_closure_complete": false,
+        "schema_version": 1,
+        "snapshot_id": "sha256:6a360b17c1a5dd7686b2496f3b04006f902ef5705a1427dc2a7dbdaeadc2458a",
+        "source_key": "tushare.pro.daily_listing.000001.sz.20240102",
+        "source_record_hash": "sha256:851faa23c64268676dccdb7365b058362aae6ca3a2613752466e460bd7bb1b1e",
+        "survivorship_bias_safe": false,
+        "type": "tushare_cn_a_share_acquisition_catalog_source"
+      },
+      "execution_reference": {
+        "amount": {
+          "currency": "CNY",
+          "scale": 0,
+          "type": "money",
+          "units": 1075742252
+        },
+        "available_time": {
+          "epoch_nanoseconds": 1786943026685846805,
+          "type": "utc_instant"
+        },
+        "bucket": {
+          "bucket_hash": "sha256:b58489aeffd996cfa583caac981bfeb39edf0b93280f787d63b0f6b0855dc7b7",
+          "included_spans": [
+            {
+              "end_exclusive": {
+                "epoch_nanoseconds": 1704158700000000000,
+                "type": "utc_instant"
+              },
+              "start": {
+                "epoch_nanoseconds": 1704158100000000000,
+                "type": "utc_instant"
+              }
+            },
+            {
+              "end_exclusive": {
+                "epoch_nanoseconds": 1704166200000000000,
+                "type": "utc_instant"
+              },
+              "start": {
+                "epoch_nanoseconds": 1704159000000000000,
+                "type": "utc_instant"
+              }
+            },
+            {
+              "end_exclusive": {
+                "epoch_nanoseconds": 1704178620000000000,
+                "type": "utc_instant"
+              },
+              "start": {
+                "epoch_nanoseconds": 1704171600000000000,
+                "type": "utc_instant"
+              }
+            },
+            {
+              "end_exclusive": {
+                "epoch_nanoseconds": 1704178800000000000,
+                "type": "utc_instant"
+              },
+              "start": {
+                "epoch_nanoseconds": 1704178620000000000,
+                "type": "utc_instant"
+              }
+            }
+          ],
+          "interval_end_exclusive": {
+            "epoch_nanoseconds": 1704178800000000000,
+            "type": "utc_instant"
+          },
+          "interval_start": {
+            "epoch_nanoseconds": 1704158100000000000,
+            "type": "utc_instant"
+          },
+          "schema_version": 1,
+          "session_id": {
+            "calendar_id": "CN.XSHE",
+            "type": "session_id",
+            "value": "2024-01-02.regular"
+          },
+          "trading_date": {
+            "calendar_id": "CN.XSHE",
+            "date": "2024-01-02",
+            "type": "trading_date"
+          },
+          "type": "bar_bucket"
+        },
+        "close_price": {
+          "instrument_id": "xshe:000001",
+          "quote_currency": "CNY",
+          "scale": 2,
+          "type": "price",
+          "units": 921
+        },
+        "high_price": {
+          "instrument_id": "xshe:000001",
+          "quote_currency": "CNY",
+          "scale": 2,
+          "type": "price",
+          "units": 942
+        },
+        "instrument_id": {
+          "stable_key": "000001",
+          "type": "instrument_id",
+          "venue": "xshe"
+        },
+        "low_price": {
+          "instrument_id": "xshe:000001",
+          "quote_currency": "CNY",
+          "scale": 2,
+          "type": "price",
+          "units": 921
+        },
+        "open_price": {
+          "instrument_id": "xshe:000001",
+          "quote_currency": "CNY",
+          "scale": 2,
+          "type": "price",
+          "units": 939
+        },
+        "price_purpose": "execution_reference",
+        "projection_hash": "sha256:d283870ccf3042530bdc664aeb4f451b3723300fe3e22a59018b253c67b6bbb4",
+        "raw_bar_hash": "sha256:7f0739da15fa80c99ccfdf9a1bdcca617376c20ed7b205c9b1e82b88f2759da0",
+        "schema_version": 1,
+        "type": "tushare_cn_a_share_daily_execution_reference",
+        "volume": {
+          "instrument_id": "xshe:000001",
+          "scale": 0,
+          "type": "quantity",
+          "units": 115836645
+        }
+      },
+      "instrument_catalog": {
+        "currencies": [
+          {
+            "type": "currency_id",
+            "value": "CNY"
+          }
+        ],
+        "instruments": [
+          {
+            "base_currency": null,
+            "instrument_id": {
+              "stable_key": "000001",
+              "type": "instrument_id",
+              "venue": "xshe"
+            },
+            "instrument_type": "equity",
+            "quote_currency": {
+              "type": "currency_id",
+              "value": "CNY"
+            },
+            "settlement_currency": {
+              "type": "currency_id",
+              "value": "CNY"
+            },
+            "type": "instrument_definition"
+          }
+        ],
+        "symbol_timelines": [],
+        "type": "instrument_catalog"
+      },
+      "instrument_catalog_hash": "sha256:99df0de0dc3008cf557bb7634caf483fae27488c75016421218100df6a77a6cc",
+      "normalization_hash": "sha256:d01518de64eb48c9b796b83bb72eeb53fe6645d4dbcc00e88311148f23adb16c",
+      "qualification": {
+        "corporate_actions_qualified": false,
+        "current_metadata_only": true,
+        "decision_grade_eligible": false,
+        "deployment_authorized": false,
+        "historical_listing_status_qualified": false,
+        "provider_revision_closure_complete": false,
+        "provider_revision_id": null,
+        "revision_closure_complete": false,
+        "survivorship_bias_safe": false
+      },
+      "raw_bar": {
+        "amount": {
+          "currency": "CNY",
+          "scale": 0,
+          "type": "money",
+          "units": 1075742252
+        },
+        "amount_thousand_cny_lexeme": "1075742.252",
+        "available_time": {
+          "epoch_nanoseconds": 1786943026685846805,
+          "type": "utc_instant"
+        },
+        "bucket": {
+          "bucket_hash": "sha256:b58489aeffd996cfa583caac981bfeb39edf0b93280f787d63b0f6b0855dc7b7",
+          "included_spans": [
+            {
+              "end_exclusive": {
+                "epoch_nanoseconds": 1704158700000000000,
+                "type": "utc_instant"
+              },
+              "start": {
+                "epoch_nanoseconds": 1704158100000000000,
+                "type": "utc_instant"
+              }
+            },
+            {
+              "end_exclusive": {
+                "epoch_nanoseconds": 1704166200000000000,
+                "type": "utc_instant"
+              },
+              "start": {
+                "epoch_nanoseconds": 1704159000000000000,
+                "type": "utc_instant"
+              }
+            },
+            {
+              "end_exclusive": {
+                "epoch_nanoseconds": 1704178620000000000,
+                "type": "utc_instant"
+              },
+              "start": {
+                "epoch_nanoseconds": 1704171600000000000,
+                "type": "utc_instant"
+              }
+            },
+            {
+              "end_exclusive": {
+                "epoch_nanoseconds": 1704178800000000000,
+                "type": "utc_instant"
+              },
+              "start": {
+                "epoch_nanoseconds": 1704178620000000000,
+                "type": "utc_instant"
+              }
+            }
+          ],
+          "interval_end_exclusive": {
+            "epoch_nanoseconds": 1704178800000000000,
+            "type": "utc_instant"
+          },
+          "interval_start": {
+            "epoch_nanoseconds": 1704158100000000000,
+            "type": "utc_instant"
+          },
+          "schema_version": 1,
+          "session_id": {
+            "calendar_id": "CN.XSHE",
+            "type": "session_id",
+            "value": "2024-01-02.regular"
+          },
+          "trading_date": {
+            "calendar_id": "CN.XSHE",
+            "date": "2024-01-02",
+            "type": "trading_date"
+          },
+          "type": "bar_bucket"
+        },
+        "change_lexeme": "-0.18",
+        "change_scale": 2,
+        "change_units": -18,
+        "close_lexeme": "9.21",
+        "close_price": {
+          "instrument_id": "xshe:000001",
+          "quote_currency": "CNY",
+          "scale": 2,
+          "type": "price",
+          "units": 921
+        },
+        "decision_grade_eligible": false,
+        "deployment_authorized": false,
+        "high_lexeme": "9.42",
+        "high_price": {
+          "instrument_id": "xshe:000001",
+          "quote_currency": "CNY",
+          "scale": 2,
+          "type": "price",
+          "units": 942
+        },
+        "instrument_id": {
+          "stable_key": "000001",
+          "type": "instrument_id",
+          "venue": "xshe"
+        },
+        "limitations": [
+          "corporate_actions_unproven",
+          "historical_listing_status_unproven",
+          "late_historical_availability",
+          "provider_revision_closure_unproven"
+        ],
+        "low_lexeme": "9.21",
+        "low_price": {
+          "instrument_id": "xshe:000001",
+          "quote_currency": "CNY",
+          "scale": 2,
+          "type": "price",
+          "units": 921
+        },
+        "open_lexeme": "9.39",
+        "open_price": {
+          "instrument_id": "xshe:000001",
+          "quote_currency": "CNY",
+          "scale": 2,
+          "type": "price",
+          "units": 939
+        },
+        "pct_change": {
+          "basis": "percent",
+          "scale": 4,
+          "type": "rate",
+          "units": -19169
+        },
+        "pct_change_lexeme": "-1.9169",
+        "pre_close_lexeme": "9.39",
+        "pre_close_price": {
+          "instrument_id": "xshe:000001",
+          "quote_currency": "CNY",
+          "scale": 2,
+          "type": "price",
+          "units": 939
+        },
+        "provider_trade_date": "20240102",
+        "provider_ts_code": "000001.SZ",
+        "raw_bar_hash": "sha256:7f0739da15fa80c99ccfdf9a1bdcca617376c20ed7b205c9b1e82b88f2759da0",
+        "schema_version": 1,
+        "source_record_hash": "sha256:9b476b034dc596f296959ac817c7d797814b8e2b75498d5ec4c50da09e3d9f5e",
+        "type": "tushare_cn_a_share_daily_raw_bar",
+        "volume": {
+          "instrument_id": "xshe:000001",
+          "scale": 0,
+          "type": "quantity",
+          "units": 115836645
+        },
+        "volume_lots_lexeme": "1158366.45"
+      },
+      "source_trace": {
+        "member_content_hash": "sha256:c2950a35c093b983e538f97830b7b3fcb0bba1a7dac98a17bd20f6db9296f846",
+        "member_key": "response/daily.json",
+        "provenance_hash": "sha256:8745af52a950d0ba35eee381b32b6adad2d2ee144325de34ad3597389f2e73fb",
+        "raw_bar_hash": "sha256:7f0739da15fa80c99ccfdf9a1bdcca617376c20ed7b205c9b1e82b88f2759da0",
+        "record_index": 0,
+        "revision_closure_complete": false,
+        "revision_id": "sha256:c2950a35c093b983e538f97830b7b3fcb0bba1a7dac98a17bd20f6db9296f846",
+        "schema_version": 1,
+        "snapshot_id": "sha256:6a360b17c1a5dd7686b2496f3b04006f902ef5705a1427dc2a7dbdaeadc2458a",
+        "source_key": "tushare.pro.daily_listing.000001.sz.20240102",
+        "source_record_hash": "sha256:9b476b034dc596f296959ac817c7d797814b8e2b75498d5ec4c50da09e3d9f5e",
+        "supersedes_revision_id": null,
+        "trace_hash": "sha256:fc05a2fdc26d734bf6cd526eb22a149d36d5ab4022cfa2c67de0e807a7d6ee96",
+        "type": "tushare_cn_a_share_daily_source_trace"
+      },
+      "valuation": {
+        "available_time": {
+          "epoch_nanoseconds": 1786943026685846805,
+          "type": "utc_instant"
+        },
+        "close_price": {
+          "instrument_id": "xshe:000001",
+          "quote_currency": "CNY",
+          "scale": 2,
+          "type": "price",
+          "units": 921
+        },
+        "instrument_id": {
+          "stable_key": "000001",
+          "type": "instrument_id",
+          "venue": "xshe"
+        },
+        "price_purpose": "valuation",
+        "projection_hash": "sha256:2f9cf2a71c0f152e5377be0fdad798ec49cc411814b7cd3a372040286507a630",
+        "raw_bar_hash": "sha256:7f0739da15fa80c99ccfdf9a1bdcca617376c20ed7b205c9b1e82b88f2759da0",
+        "schema_version": 1,
+        "type": "tushare_cn_a_share_daily_valuation",
+        "valuation_at": {
+          "epoch_nanoseconds": 1704178800000000000,
+          "type": "utc_instant"
+        }
+      }
+    },
+    "phase": {
+      "code": "market_data",
+      "rank": 0,
+      "type": "timeline_phase"
+    },
+    "revision_id": "sha256:c2950a35c093b983e538f97830b7b3fcb0bba1a7dac98a17bd20f6db9296f846",
+    "source_hash": "sha256:c2950a35c093b983e538f97830b7b3fcb0bba1a7dac98a17bd20f6db9296f846",
+    "source_key": "tushare.pro.daily_listing.000001.sz.20240102",
+    "source_sequence": {
+      "type": "source_sequence",
+      "value": 0
+    },
+    "stream_key": "tushare_cn_a_share.daily.publication.xshe.000001.v2",
+    "supersedes_revision_id": null,
+    "type": "market_event"
+  },
+  "event_hash": "sha256:8ed74f580aef1b14b8ee43d55c537f8db4b5734b4b6740f3a0f5b7c36cd78015",
+  "instrument_catalog": {
+    "currencies": [
+      {
+        "type": "currency_id",
+        "value": "CNY"
+      }
+    ],
+    "instruments": [
+      {
+        "base_currency": null,
+        "instrument_id": {
+          "stable_key": "000001",
+          "type": "instrument_id",
+          "venue": "xshe"
+        },
+        "instrument_type": "equity",
+        "quote_currency": {
+          "type": "currency_id",
+          "value": "CNY"
+        },
+        "settlement_currency": {
+          "type": "currency_id",
+          "value": "CNY"
+        },
+        "type": "instrument_definition"
+      }
+    ],
+    "symbol_timelines": [],
+    "type": "instrument_catalog"
+  },
+  "instrument_catalog_hash": "sha256:99df0de0dc3008cf557bb7634caf483fae27488c75016421218100df6a77a6cc",
+  "manifest": {
+    "bundle_key": "tushare-cn-a-share-daily-000001-20240102-v2",
+    "capabilities": [
+      {
+        "key": "tushare_cn_a_share.daily-publications",
+        "type": "market_bundle_capability",
+        "version": 2
+      }
+    ],
+    "content_hash": "sha256:6a5eab718a3c6dc4ce7a5aebe9811b6e599c46b49991f7cc8a3eec66a9c3b3bb",
+    "coverage_end_exclusive": {
+      "epoch_nanoseconds": 1704178800000000000,
+      "type": "utc_instant"
+    },
+    "coverage_start": {
+      "epoch_nanoseconds": 1704158100000000000,
+      "type": "utc_instant"
+    },
+    "instrument_catalog_hash": "sha256:99df0de0dc3008cf557bb7634caf483fae27488c75016421218100df6a77a6cc",
+    "schema_version": 1,
+    "streams": [
+      {
+        "capability": {
+          "key": "tushare_cn_a_share.daily-publications",
+          "type": "market_bundle_capability",
+          "version": 2
+        },
+        "content_hash": "sha256:d4dbdd709b196ed897f481455e68866c62c0cd2ca829991e76975a47fc054d8e",
+        "event_count": 1,
+        "event_type": "tushare_cn_a_share_daily_publication.v2",
+        "stream_key": "tushare_cn_a_share.daily.publication.xshe.000001.v2",
+        "type": "market_stream_manifest"
+      }
+    ],
+    "type": "market_bundle_manifest"
+  },
+  "manifest_content_hash": "sha256:6a5eab718a3c6dc4ce7a5aebe9811b6e599c46b49991f7cc8a3eec66a9c3b3bb",
+  "manifest_hash": "sha256:1bb2541e2131bd71d5a08cb82581fb5d035a9880ccb7fc62e5f660a0287ab6e5",
+  "publication": {
+    "catalog_binding_hash": "sha256:d25d4d7104a9db0136668dc442b5ec60e01ff15e9deb8a4a4ec048f6a10f9f8e",
+    "catalog_source": {
+      "acquired_at": {
+        "epoch_nanoseconds": 1786943026685846805,
+        "type": "utc_instant"
+      },
+      "catalog_source_hash": "sha256:59d3267cbf79d4721357d5959f3e848d7a3c250802fe055b4cd40e0aa0a0b8f5",
+      "current_metadata_only": true,
+      "decision_grade_eligible": false,
+      "deployment_authorized": false,
+      "historical_listing_status_qualified": false,
+      "instrument_catalog_hash": "sha256:99df0de0dc3008cf557bb7634caf483fae27488c75016421218100df6a77a6cc",
+      "member_content_hash": "sha256:d78fc472268deacb5af7c59c113325e2a00c5b4619c53fbbfe6fa23c96d471d2",
+      "member_key": "response/stock-basic.json",
+      "provenance_hash": "sha256:8745af52a950d0ba35eee381b32b6adad2d2ee144325de34ad3597389f2e73fb",
+      "provider_area": "深圳",
+      "provider_delist_date": null,
+      "provider_exchange": "SZSE",
+      "provider_industry": "银行",
+      "provider_list_date": "19910403",
+      "provider_list_status": "L",
+      "provider_market": "主板",
+      "provider_name": "平安银行",
+      "provider_revision_id": null,
+      "provider_symbol": "000001",
+      "provider_ts_code": "000001.SZ",
+      "record_index": 0,
+      "revision_closure_complete": false,
+      "schema_version": 1,
+      "snapshot_id": "sha256:6a360b17c1a5dd7686b2496f3b04006f902ef5705a1427dc2a7dbdaeadc2458a",
+      "source_key": "tushare.pro.daily_listing.000001.sz.20240102",
+      "source_record_hash": "sha256:851faa23c64268676dccdb7365b058362aae6ca3a2613752466e460bd7bb1b1e",
+      "survivorship_bias_safe": false,
+      "type": "tushare_cn_a_share_acquisition_catalog_source"
+    },
+    "instrument_catalog": {
+      "currencies": [
+        {
+          "type": "currency_id",
+          "value": "CNY"
+        }
+      ],
+      "instruments": [
+        {
+          "base_currency": null,
+          "instrument_id": {
+            "stable_key": "000001",
+            "type": "instrument_id",
+            "venue": "xshe"
+          },
+          "instrument_type": "equity",
+          "quote_currency": {
+            "type": "currency_id",
+            "value": "CNY"
+          },
+          "settlement_currency": {
+            "type": "currency_id",
+            "value": "CNY"
+          },
+          "type": "instrument_definition"
+        }
+      ],
+      "symbol_timelines": [],
+      "type": "instrument_catalog"
+    },
+    "instrument_catalog_hash": "sha256:99df0de0dc3008cf557bb7634caf483fae27488c75016421218100df6a77a6cc",
+    "market_event": {
+      "available_time": {
+        "epoch_nanoseconds": 1786943026685846805,
+        "type": "utc_instant"
+      },
+      "capability": {
+        "key": "tushare_cn_a_share.daily-publications",
+        "type": "market_bundle_capability",
+        "version": 2
+      },
+      "event_id": "tushare-cn-a-share-daily-v2:sha256:d25d4d7104a9db0136668dc442b5ec60e01ff15e9deb8a4a4ec048f6a10f9f8e",
+      "event_time": {
+        "epoch_nanoseconds": 1704158100000000000,
+        "type": "utc_instant"
+      },
+      "event_type": "tushare_cn_a_share_daily_publication.v2",
+      "instrument_id": {
+        "stable_key": "000001",
+        "type": "instrument_id",
+        "venue": "xshe"
+      },
+      "payload": {
+        "catalog_binding_hash": "sha256:d25d4d7104a9db0136668dc442b5ec60e01ff15e9deb8a4a4ec048f6a10f9f8e",
+        "catalog_source": {
+          "acquired_at": {
+            "epoch_nanoseconds": 1786943026685846805,
+            "type": "utc_instant"
+          },
+          "catalog_source_hash": "sha256:59d3267cbf79d4721357d5959f3e848d7a3c250802fe055b4cd40e0aa0a0b8f5",
+          "current_metadata_only": true,
+          "decision_grade_eligible": false,
+          "deployment_authorized": false,
+          "historical_listing_status_qualified": false,
+          "instrument_catalog_hash": "sha256:99df0de0dc3008cf557bb7634caf483fae27488c75016421218100df6a77a6cc",
+          "member_content_hash": "sha256:d78fc472268deacb5af7c59c113325e2a00c5b4619c53fbbfe6fa23c96d471d2",
+          "member_key": "response/stock-basic.json",
+          "provenance_hash": "sha256:8745af52a950d0ba35eee381b32b6adad2d2ee144325de34ad3597389f2e73fb",
+          "provider_area": "深圳",
+          "provider_delist_date": null,
+          "provider_exchange": "SZSE",
+          "provider_industry": "银行",
+          "provider_list_date": "19910403",
+          "provider_list_status": "L",
+          "provider_market": "主板",
+          "provider_name": "平安银行",
+          "provider_revision_id": null,
+          "provider_symbol": "000001",
+          "provider_ts_code": "000001.SZ",
+          "record_index": 0,
+          "revision_closure_complete": false,
+          "schema_version": 1,
+          "snapshot_id": "sha256:6a360b17c1a5dd7686b2496f3b04006f902ef5705a1427dc2a7dbdaeadc2458a",
+          "source_key": "tushare.pro.daily_listing.000001.sz.20240102",
+          "source_record_hash": "sha256:851faa23c64268676dccdb7365b058362aae6ca3a2613752466e460bd7bb1b1e",
+          "survivorship_bias_safe": false,
+          "type": "tushare_cn_a_share_acquisition_catalog_source"
+        },
+        "execution_reference": {
+          "amount": {
+            "currency": "CNY",
+            "scale": 0,
+            "type": "money",
+            "units": 1075742252
+          },
+          "available_time": {
+            "epoch_nanoseconds": 1786943026685846805,
+            "type": "utc_instant"
+          },
+          "bucket": {
+            "bucket_hash": "sha256:b58489aeffd996cfa583caac981bfeb39edf0b93280f787d63b0f6b0855dc7b7",
+            "included_spans": [
+              {
+                "end_exclusive": {
+                  "epoch_nanoseconds": 1704158700000000000,
+                  "type": "utc_instant"
+                },
+                "start": {
+                  "epoch_nanoseconds": 1704158100000000000,
+                  "type": "utc_instant"
+                }
+              },
+              {
+                "end_exclusive": {
+                  "epoch_nanoseconds": 1704166200000000000,
+                  "type": "utc_instant"
+                },
+                "start": {
+                  "epoch_nanoseconds": 1704159000000000000,
+                  "type": "utc_instant"
+                }
+              },
+              {
+                "end_exclusive": {
+                  "epoch_nanoseconds": 1704178620000000000,
+                  "type": "utc_instant"
+                },
+                "start": {
+                  "epoch_nanoseconds": 1704171600000000000,
+                  "type": "utc_instant"
+                }
+              },
+              {
+                "end_exclusive": {
+                  "epoch_nanoseconds": 1704178800000000000,
+                  "type": "utc_instant"
+                },
+                "start": {
+                  "epoch_nanoseconds": 1704178620000000000,
+                  "type": "utc_instant"
+                }
+              }
+            ],
+            "interval_end_exclusive": {
+              "epoch_nanoseconds": 1704178800000000000,
+              "type": "utc_instant"
+            },
+            "interval_start": {
+              "epoch_nanoseconds": 1704158100000000000,
+              "type": "utc_instant"
+            },
+            "schema_version": 1,
+            "session_id": {
+              "calendar_id": "CN.XSHE",
+              "type": "session_id",
+              "value": "2024-01-02.regular"
+            },
+            "trading_date": {
+              "calendar_id": "CN.XSHE",
+              "date": "2024-01-02",
+              "type": "trading_date"
+            },
+            "type": "bar_bucket"
+          },
+          "close_price": {
+            "instrument_id": "xshe:000001",
+            "quote_currency": "CNY",
+            "scale": 2,
+            "type": "price",
+            "units": 921
+          },
+          "high_price": {
+            "instrument_id": "xshe:000001",
+            "quote_currency": "CNY",
+            "scale": 2,
+            "type": "price",
+            "units": 942
+          },
+          "instrument_id": {
+            "stable_key": "000001",
+            "type": "instrument_id",
+            "venue": "xshe"
+          },
+          "low_price": {
+            "instrument_id": "xshe:000001",
+            "quote_currency": "CNY",
+            "scale": 2,
+            "type": "price",
+            "units": 921
+          },
+          "open_price": {
+            "instrument_id": "xshe:000001",
+            "quote_currency": "CNY",
+            "scale": 2,
+            "type": "price",
+            "units": 939
+          },
+          "price_purpose": "execution_reference",
+          "projection_hash": "sha256:d283870ccf3042530bdc664aeb4f451b3723300fe3e22a59018b253c67b6bbb4",
+          "raw_bar_hash": "sha256:7f0739da15fa80c99ccfdf9a1bdcca617376c20ed7b205c9b1e82b88f2759da0",
+          "schema_version": 1,
+          "type": "tushare_cn_a_share_daily_execution_reference",
+          "volume": {
+            "instrument_id": "xshe:000001",
+            "scale": 0,
+            "type": "quantity",
+            "units": 115836645
+          }
+        },
+        "instrument_catalog": {
+          "currencies": [
+            {
+              "type": "currency_id",
+              "value": "CNY"
+            }
+          ],
+          "instruments": [
+            {
+              "base_currency": null,
+              "instrument_id": {
+                "stable_key": "000001",
+                "type": "instrument_id",
+                "venue": "xshe"
+              },
+              "instrument_type": "equity",
+              "quote_currency": {
+                "type": "currency_id",
+                "value": "CNY"
+              },
+              "settlement_currency": {
+                "type": "currency_id",
+                "value": "CNY"
+              },
+              "type": "instrument_definition"
+            }
+          ],
+          "symbol_timelines": [],
+          "type": "instrument_catalog"
+        },
+        "instrument_catalog_hash": "sha256:99df0de0dc3008cf557bb7634caf483fae27488c75016421218100df6a77a6cc",
+        "normalization_hash": "sha256:d01518de64eb48c9b796b83bb72eeb53fe6645d4dbcc00e88311148f23adb16c",
+        "qualification": {
+          "corporate_actions_qualified": false,
+          "current_metadata_only": true,
+          "decision_grade_eligible": false,
+          "deployment_authorized": false,
+          "historical_listing_status_qualified": false,
+          "provider_revision_closure_complete": false,
+          "provider_revision_id": null,
+          "revision_closure_complete": false,
+          "survivorship_bias_safe": false
+        },
+        "raw_bar": {
+          "amount": {
+            "currency": "CNY",
+            "scale": 0,
+            "type": "money",
+            "units": 1075742252
+          },
+          "amount_thousand_cny_lexeme": "1075742.252",
+          "available_time": {
+            "epoch_nanoseconds": 1786943026685846805,
+            "type": "utc_instant"
+          },
+          "bucket": {
+            "bucket_hash": "sha256:b58489aeffd996cfa583caac981bfeb39edf0b93280f787d63b0f6b0855dc7b7",
+            "included_spans": [
+              {
+                "end_exclusive": {
+                  "epoch_nanoseconds": 1704158700000000000,
+                  "type": "utc_instant"
+                },
+                "start": {
+                  "epoch_nanoseconds": 1704158100000000000,
+                  "type": "utc_instant"
+                }
+              },
+              {
+                "end_exclusive": {
+                  "epoch_nanoseconds": 1704166200000000000,
+                  "type": "utc_instant"
+                },
+                "start": {
+                  "epoch_nanoseconds": 1704159000000000000,
+                  "type": "utc_instant"
+                }
+              },
+              {
+                "end_exclusive": {
+                  "epoch_nanoseconds": 1704178620000000000,
+                  "type": "utc_instant"
+                },
+                "start": {
+                  "epoch_nanoseconds": 1704171600000000000,
+                  "type": "utc_instant"
+                }
+              },
+              {
+                "end_exclusive": {
+                  "epoch_nanoseconds": 1704178800000000000,
+                  "type": "utc_instant"
+                },
+                "start": {
+                  "epoch_nanoseconds": 1704178620000000000,
+                  "type": "utc_instant"
+                }
+              }
+            ],
+            "interval_end_exclusive": {
+              "epoch_nanoseconds": 1704178800000000000,
+              "type": "utc_instant"
+            },
+            "interval_start": {
+              "epoch_nanoseconds": 1704158100000000000,
+              "type": "utc_instant"
+            },
+            "schema_version": 1,
+            "session_id": {
+              "calendar_id": "CN.XSHE",
+              "type": "session_id",
+              "value": "2024-01-02.regular"
+            },
+            "trading_date": {
+              "calendar_id": "CN.XSHE",
+              "date": "2024-01-02",
+              "type": "trading_date"
+            },
+            "type": "bar_bucket"
+          },
+          "change_lexeme": "-0.18",
+          "change_scale": 2,
+          "change_units": -18,
+          "close_lexeme": "9.21",
+          "close_price": {
+            "instrument_id": "xshe:000001",
+            "quote_currency": "CNY",
+            "scale": 2,
+            "type": "price",
+            "units": 921
+          },
+          "decision_grade_eligible": false,
+          "deployment_authorized": false,
+          "high_lexeme": "9.42",
+          "high_price": {
+            "instrument_id": "xshe:000001",
+            "quote_currency": "CNY",
+            "scale": 2,
+            "type": "price",
+            "units": 942
+          },
+          "instrument_id": {
+            "stable_key": "000001",
+            "type": "instrument_id",
+            "venue": "xshe"
+          },
+          "limitations": [
+            "corporate_actions_unproven",
+            "historical_listing_status_unproven",
+            "late_historical_availability",
+            "provider_revision_closure_unproven"
+          ],
+          "low_lexeme": "9.21",
+          "low_price": {
+            "instrument_id": "xshe:000001",
+            "quote_currency": "CNY",
+            "scale": 2,
+            "type": "price",
+            "units": 921
+          },
+          "open_lexeme": "9.39",
+          "open_price": {
+            "instrument_id": "xshe:000001",
+            "quote_currency": "CNY",
+            "scale": 2,
+            "type": "price",
+            "units": 939
+          },
+          "pct_change": {
+            "basis": "percent",
+            "scale": 4,
+            "type": "rate",
+            "units": -19169
+          },
+          "pct_change_lexeme": "-1.9169",
+          "pre_close_lexeme": "9.39",
+          "pre_close_price": {
+            "instrument_id": "xshe:000001",
+            "quote_currency": "CNY",
+            "scale": 2,
+            "type": "price",
+            "units": 939
+          },
+          "provider_trade_date": "20240102",
+          "provider_ts_code": "000001.SZ",
+          "raw_bar_hash": "sha256:7f0739da15fa80c99ccfdf9a1bdcca617376c20ed7b205c9b1e82b88f2759da0",
+          "schema_version": 1,
+          "source_record_hash": "sha256:9b476b034dc596f296959ac817c7d797814b8e2b75498d5ec4c50da09e3d9f5e",
+          "type": "tushare_cn_a_share_daily_raw_bar",
+          "volume": {
+            "instrument_id": "xshe:000001",
+            "scale": 0,
+            "type": "quantity",
+            "units": 115836645
+          },
+          "volume_lots_lexeme": "1158366.45"
+        },
+        "source_trace": {
+          "member_content_hash": "sha256:c2950a35c093b983e538f97830b7b3fcb0bba1a7dac98a17bd20f6db9296f846",
+          "member_key": "response/daily.json",
+          "provenance_hash": "sha256:8745af52a950d0ba35eee381b32b6adad2d2ee144325de34ad3597389f2e73fb",
+          "raw_bar_hash": "sha256:7f0739da15fa80c99ccfdf9a1bdcca617376c20ed7b205c9b1e82b88f2759da0",
+          "record_index": 0,
+          "revision_closure_complete": false,
+          "revision_id": "sha256:c2950a35c093b983e538f97830b7b3fcb0bba1a7dac98a17bd20f6db9296f846",
+          "schema_version": 1,
+          "snapshot_id": "sha256:6a360b17c1a5dd7686b2496f3b04006f902ef5705a1427dc2a7dbdaeadc2458a",
+          "source_key": "tushare.pro.daily_listing.000001.sz.20240102",
+          "source_record_hash": "sha256:9b476b034dc596f296959ac817c7d797814b8e2b75498d5ec4c50da09e3d9f5e",
+          "supersedes_revision_id": null,
+          "trace_hash": "sha256:fc05a2fdc26d734bf6cd526eb22a149d36d5ab4022cfa2c67de0e807a7d6ee96",
+          "type": "tushare_cn_a_share_daily_source_trace"
+        },
+        "valuation": {
+          "available_time": {
+            "epoch_nanoseconds": 1786943026685846805,
+            "type": "utc_instant"
+          },
+          "close_price": {
+            "instrument_id": "xshe:000001",
+            "quote_currency": "CNY",
+            "scale": 2,
+            "type": "price",
+            "units": 921
+          },
+          "instrument_id": {
+            "stable_key": "000001",
+            "type": "instrument_id",
+            "venue": "xshe"
+          },
+          "price_purpose": "valuation",
+          "projection_hash": "sha256:2f9cf2a71c0f152e5377be0fdad798ec49cc411814b7cd3a372040286507a630",
+          "raw_bar_hash": "sha256:7f0739da15fa80c99ccfdf9a1bdcca617376c20ed7b205c9b1e82b88f2759da0",
+          "schema_version": 1,
+          "type": "tushare_cn_a_share_daily_valuation",
+          "valuation_at": {
+            "epoch_nanoseconds": 1704178800000000000,
+            "type": "utc_instant"
+          }
+        }
+      },
+      "phase": {
+        "code": "market_data",
+        "rank": 0,
+        "type": "timeline_phase"
+      },
+      "revision_id": "sha256:c2950a35c093b983e538f97830b7b3fcb0bba1a7dac98a17bd20f6db9296f846",
+      "source_hash": "sha256:c2950a35c093b983e538f97830b7b3fcb0bba1a7dac98a17bd20f6db9296f846",
+      "source_key": "tushare.pro.daily_listing.000001.sz.20240102",
+      "source_sequence": {
+        "type": "source_sequence",
+        "value": 0
+      },
+      "stream_key": "tushare_cn_a_share.daily.publication.xshe.000001.v2",
+      "supersedes_revision_id": null,
+      "type": "market_event"
+    },
+    "normalization_hash": "sha256:d01518de64eb48c9b796b83bb72eeb53fe6645d4dbcc00e88311148f23adb16c",
+    "publication_hash": "sha256:d6bada1c3a9aef99ddaab718e77e2f9329b1da5821a9136f62585d2e3bb1c59b",
+    "schema_version": 1,
+    "type": "tushare_cn_a_share_daily_catalog_publication_result"
+  },
+  "publication_hash": "sha256:d6bada1c3a9aef99ddaab718e77e2f9329b1da5821a9136f62585d2e3bb1c59b",
+  "retention_proof_hash": "sha256:22c4c7f51ecad3eed76ec94288a86b52a9e170aca0a6a01acb441b2047f73b0d",
+  "source_record_hash": "sha256:851faa23c64268676dccdb7365b058362aae6ca3a2613752466e460bd7bb1b1e",
+  "stream_content_hash": "sha256:d4dbdd709b196ed897f481455e68866c62c0cd2ca829991e76975a47fc054d8e"
+}

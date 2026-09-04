@@ -1,0 +1,320 @@
+{
+  "no_completed_publication": true,
+  "no_execution_summary_hash": true,
+  "no_integrity_or_result_grade": true,
+  "publications": {
+    "blocked": {
+      "artifacts": [
+        {
+          "artifact_type": "attempt_execution_record",
+          "byte_count": 12321,
+          "content_hash": "sha256:d12036666f6666385a0486d4cf376ca6624ea6319b51bf39b7176e180ac3705e",
+          "path": "attempt-execution-record.json",
+          "role": "attempt_execution_record",
+          "schema_version": 1,
+          "source_hash": "sha256:e0bd487eb43a3d0b509b9d87d41baa005b4f794a81e3ae7211596a3e7c4f28ba"
+        },
+        {
+          "artifact_type": "blocked_run_report",
+          "byte_count": 12144,
+          "content_hash": "sha256:e18434a194e9bcc2c8095dd0b4234d65d43c76ca048da594c5891b89293fa8da",
+          "path": "blocked-run-report.json",
+          "role": "blocked_report",
+          "schema_version": 1,
+          "source_hash": "sha256:36b527e35f9ff8a79227e5ed1bf364e030521366f5959ae0b8592f5f206bcdb6"
+        },
+        {
+          "artifact_type": "build_artifact_manifest",
+          "byte_count": 3315,
+          "content_hash": "sha256:6852d24bd1b274f04cf2d08d6906063409e48e96653523505ab1f3425fac7577",
+          "path": "build-artifact-manifest.json",
+          "role": "build_artifact_manifest",
+          "schema_version": 1,
+          "source_hash": "sha256:5d41285d4df7f049c1ef725f742ba3422961c1b3e1d44bad6ccd5568429be63f"
+        },
+        {
+          "artifact_type": "environment_compatibility_report",
+          "byte_count": 1812,
+          "content_hash": "sha256:faad5af891fc1dfe721a6278516e53d1fa2784fb07c80da6cc2977b2d31d68ef",
+          "path": "environment-compatibility-report.json",
+          "role": "environment_compatibility",
+          "schema_version": 1,
+          "source_hash": "sha256:346e54c7982be0ca81a5c8e9efda31b27aa64c3049bf7df051c6baab4a57bd5d"
+        },
+        {
+          "artifact_type": "resolved_backtest_environment",
+          "byte_count": 8014,
+          "content_hash": "sha256:99588cf8ef6490900bdc334c5e88ad87c0cc6ce92812af7d30b7ae5ddafc8806",
+          "path": "environment.json",
+          "role": "environment",
+          "schema_version": 1,
+          "source_hash": "sha256:24badb44368ab1055f2ceabfdab80bcb0331c41b56b223b7f1a4e2743ae99b5e"
+        },
+        {
+          "artifact_type": "market_bundle_ref",
+          "byte_count": 314,
+          "content_hash": "sha256:e2288f670d9c1565aa741fc59881c9e8260ea8634e0367f4c1be655d8f11662e",
+          "path": "market-bundle-ref.json",
+          "role": "market_bundle_reference",
+          "schema_version": 1,
+          "source_hash": "sha256:d7b80cae4eab90cfec0fd51ea9b4d6729ba6f21458d94130b9712a1807cb96de"
+        },
+        {
+          "artifact_type": "backtest_request",
+          "byte_count": 1389,
+          "content_hash": "sha256:5a64d2ea01f73a89c4819de82339699378a5ac76a823ecd323af727aa8df0c3f",
+          "path": "request.json",
+          "role": "request",
+          "schema_version": 1,
+          "source_hash": "sha256:5ae62e7a7ca145902497b2b6337d00d29fbd9b13f4be1cfbf4a5e9589a0351fa"
+        }
+      ],
+      "attempt_record_hash": "sha256:c7d6dc5d1c7ec1e68d0abd8cc1cf43b90bfde14065c23b0e7145ed90cea0c798",
+      "deployment_authorized": false,
+      "manifest_hash": "sha256:e201eae411c1ab6f9e2aa6374f8041a71310c6841ee921277cefe8d2a03c5eb2",
+      "manifest_source_hash": "sha256:07eae2d48fb7971b5264196af59f349a09dee2113e44a8912ac29acb72ac40b8",
+      "market_bundle_ref_hash": "sha256:7c4c4c1edfd5a45b485765e1e7e46f9cbb3887188b693d3d27efe951b6a51141",
+      "publication_hash": "sha256:03839b84285cd7a341aca519aeb0326355370332a3c67b085ce6e6c8318d7348",
+      "relative_directory": "runs/run_39ab44a26d7f719fe1648f3ccbf7cbdcb874a9bc43e8c15d3a51ab5aca421591/attempts/attempt_3c478bbb5e7141603744fadfe484c4859fac39a56b525df8b5be0fb2a8e1cdfa",
+      "status": "BLOCKED",
+      "terminal_outcome": "BLOCKED"
+    },
+    "cancelled": {
+      "artifacts": [
+        {
+          "artifact_type": "attempt_execution_record",
+          "byte_count": 11904,
+          "content_hash": "sha256:c942cc4e112aa88b1b840a8fda5efd23f20f131ebb4efc9b5224679b97596658",
+          "path": "attempt-execution-record.json",
+          "role": "attempt_execution_record",
+          "schema_version": 1,
+          "source_hash": "sha256:c923bcbae963110b6bc4307de84e302fc99c21758841fbe825b4e671d9554b60"
+        },
+        {
+          "artifact_type": "build_artifact_manifest",
+          "byte_count": 3315,
+          "content_hash": "sha256:6852d24bd1b274f04cf2d08d6906063409e48e96653523505ab1f3425fac7577",
+          "path": "build-artifact-manifest.json",
+          "role": "build_artifact_manifest",
+          "schema_version": 1,
+          "source_hash": "sha256:5d41285d4df7f049c1ef725f742ba3422961c1b3e1d44bad6ccd5568429be63f"
+        },
+        {
+          "artifact_type": "cancellation_report",
+          "byte_count": 11724,
+          "content_hash": "sha256:cd9879679230b6374eba250dad99e76372e7b108cfcc0e4de78448913ce0afcb",
+          "path": "cancellation-report.json",
+          "role": "cancellation_report",
+          "schema_version": 1,
+          "source_hash": "sha256:ad78fc19d4ef148350e3f9baaa06d54264b0c603a3a43f229b02beaa550a4102"
+        },
+        {
+          "artifact_type": "environment_compatibility_report",
+          "byte_count": 1812,
+          "content_hash": "sha256:faad5af891fc1dfe721a6278516e53d1fa2784fb07c80da6cc2977b2d31d68ef",
+          "path": "environment-compatibility-report.json",
+          "role": "environment_compatibility",
+          "schema_version": 1,
+          "source_hash": "sha256:346e54c7982be0ca81a5c8e9efda31b27aa64c3049bf7df051c6baab4a57bd5d"
+        },
+        {
+          "artifact_type": "resolved_backtest_environment",
+          "byte_count": 8014,
+          "content_hash": "sha256:99588cf8ef6490900bdc334c5e88ad87c0cc6ce92812af7d30b7ae5ddafc8806",
+          "path": "environment.json",
+          "role": "environment",
+          "schema_version": 1,
+          "source_hash": "sha256:24badb44368ab1055f2ceabfdab80bcb0331c41b56b223b7f1a4e2743ae99b5e"
+        },
+        {
+          "artifact_type": "market_bundle_ref",
+          "byte_count": 314,
+          "content_hash": "sha256:e2288f670d9c1565aa741fc59881c9e8260ea8634e0367f4c1be655d8f11662e",
+          "path": "market-bundle-ref.json",
+          "role": "market_bundle_reference",
+          "schema_version": 1,
+          "source_hash": "sha256:d7b80cae4eab90cfec0fd51ea9b4d6729ba6f21458d94130b9712a1807cb96de"
+        },
+        {
+          "artifact_type": "backtest_request",
+          "byte_count": 1389,
+          "content_hash": "sha256:5a64d2ea01f73a89c4819de82339699378a5ac76a823ecd323af727aa8df0c3f",
+          "path": "request.json",
+          "role": "request",
+          "schema_version": 1,
+          "source_hash": "sha256:5ae62e7a7ca145902497b2b6337d00d29fbd9b13f4be1cfbf4a5e9589a0351fa"
+        }
+      ],
+      "attempt_record_hash": "sha256:e880759890c6b5b0b297f4f133f2946039763b7dfaeffade4414a81b82434d6a",
+      "deployment_authorized": false,
+      "manifest_hash": "sha256:6d27bc753026651ff31a897f8d4d7dd8a48cd97d5260545dac2991394c40a7a4",
+      "manifest_source_hash": "sha256:8d131eed9a23fde3ccc4dc0de3035d6d24b232b8a87e60d79b6831f62731ddbe",
+      "market_bundle_ref_hash": "sha256:7c4c4c1edfd5a45b485765e1e7e46f9cbb3887188b693d3d27efe951b6a51141",
+      "publication_hash": "sha256:ec3910a14ae8d061325a63fdd8751e2d9f3c0cfa54e4f535329e8812f4120924",
+      "relative_directory": "runs/run_39ab44a26d7f719fe1648f3ccbf7cbdcb874a9bc43e8c15d3a51ab5aca421591/attempts/attempt_3c478bbb5e7141603744fadfe484c4859fac39a56b525df8b5be0fb2a8e1cdfa",
+      "status": "CANCELLED",
+      "terminal_outcome": "CANCELLED"
+    },
+    "failed": {
+      "artifacts": [
+        {
+          "artifact_type": "attempt_execution_record",
+          "byte_count": 12314,
+          "content_hash": "sha256:fae9ea8842da437c97eaab9f3113072b67760ef7807da5c5954cc0835ab18294",
+          "path": "attempt-execution-record.json",
+          "role": "attempt_execution_record",
+          "schema_version": 1,
+          "source_hash": "sha256:57f8b3d7c0112d7a123633c95c48e9ed240a188ec525c5acfb71131c2cf155a7"
+        },
+        {
+          "artifact_type": "build_artifact_manifest",
+          "byte_count": 3315,
+          "content_hash": "sha256:6852d24bd1b274f04cf2d08d6906063409e48e96653523505ab1f3425fac7577",
+          "path": "build-artifact-manifest.json",
+          "role": "build_artifact_manifest",
+          "schema_version": 1,
+          "source_hash": "sha256:5d41285d4df7f049c1ef725f742ba3422961c1b3e1d44bad6ccd5568429be63f"
+        },
+        {
+          "artifact_type": "environment_compatibility_report",
+          "byte_count": 1812,
+          "content_hash": "sha256:faad5af891fc1dfe721a6278516e53d1fa2784fb07c80da6cc2977b2d31d68ef",
+          "path": "environment-compatibility-report.json",
+          "role": "environment_compatibility",
+          "schema_version": 1,
+          "source_hash": "sha256:346e54c7982be0ca81a5c8e9efda31b27aa64c3049bf7df051c6baab4a57bd5d"
+        },
+        {
+          "artifact_type": "resolved_backtest_environment",
+          "byte_count": 8014,
+          "content_hash": "sha256:99588cf8ef6490900bdc334c5e88ad87c0cc6ce92812af7d30b7ae5ddafc8806",
+          "path": "environment.json",
+          "role": "environment",
+          "schema_version": 1,
+          "source_hash": "sha256:24badb44368ab1055f2ceabfdab80bcb0331c41b56b223b7f1a4e2743ae99b5e"
+        },
+        {
+          "artifact_type": "failure_report",
+          "byte_count": 12135,
+          "content_hash": "sha256:b5b84e7e5ada0d1ae096eb154c98ab180a0dc3bf6dccc66d8ee68c2b36504378",
+          "path": "failure-report.json",
+          "role": "failure_report",
+          "schema_version": 1,
+          "source_hash": "sha256:56a446675b1a0bebafc689dc1a2417aadcbdca762f731e3d8275c13606d8ab93"
+        },
+        {
+          "artifact_type": "market_bundle_ref",
+          "byte_count": 314,
+          "content_hash": "sha256:e2288f670d9c1565aa741fc59881c9e8260ea8634e0367f4c1be655d8f11662e",
+          "path": "market-bundle-ref.json",
+          "role": "market_bundle_reference",
+          "schema_version": 1,
+          "source_hash": "sha256:d7b80cae4eab90cfec0fd51ea9b4d6729ba6f21458d94130b9712a1807cb96de"
+        },
+        {
+          "artifact_type": "backtest_request",
+          "byte_count": 1389,
+          "content_hash": "sha256:5a64d2ea01f73a89c4819de82339699378a5ac76a823ecd323af727aa8df0c3f",
+          "path": "request.json",
+          "role": "request",
+          "schema_version": 1,
+          "source_hash": "sha256:5ae62e7a7ca145902497b2b6337d00d29fbd9b13f4be1cfbf4a5e9589a0351fa"
+        }
+      ],
+      "attempt_record_hash": "sha256:16574acc53dd444fc67d6a13e94c77ebfc3426c36449f1125f75dd4148aa9715",
+      "deployment_authorized": false,
+      "manifest_hash": "sha256:357b3e06d884572cd43b8cd22b4c1d55e5644692e3aa87e998b7ce5e615ab7af",
+      "manifest_source_hash": "sha256:bc7042421b740c0e32be99799312064770ac73b8730c2323c67965c29f3b8fd6",
+      "market_bundle_ref_hash": "sha256:7c4c4c1edfd5a45b485765e1e7e46f9cbb3887188b693d3d27efe951b6a51141",
+      "publication_hash": "sha256:3f1f0c977b80e927af615eb4a7945a27b15d235b95620a9e6c7e1cec42ab2050",
+      "relative_directory": "runs/run_39ab44a26d7f719fe1648f3ccbf7cbdcb874a9bc43e8c15d3a51ab5aca421591/attempts/attempt_3c478bbb5e7141603744fadfe484c4859fac39a56b525df8b5be0fb2a8e1cdfa",
+      "status": "FAILED",
+      "terminal_outcome": "FAILED"
+    },
+    "ready": {
+      "artifacts": [
+        {
+          "artifact_type": "attempt_execution_record",
+          "byte_count": 66778,
+          "content_hash": "sha256:f06b4105d4beab628aa66cc49049ca1606da70f25f8942f106db2869b713a50e",
+          "path": "attempt-execution-record.json",
+          "role": "attempt_execution_record",
+          "schema_version": 1,
+          "source_hash": "sha256:acd021a5a2997a36a210e6701e3a447d77b9c59016d4dcc4f1f0cbad61b97f0a"
+        },
+        {
+          "artifact_type": "build_artifact_manifest",
+          "byte_count": 3315,
+          "content_hash": "sha256:6852d24bd1b274f04cf2d08d6906063409e48e96653523505ab1f3425fac7577",
+          "path": "build-artifact-manifest.json",
+          "role": "build_artifact_manifest",
+          "schema_version": 1,
+          "source_hash": "sha256:5d41285d4df7f049c1ef725f742ba3422961c1b3e1d44bad6ccd5568429be63f"
+        },
+        {
+          "artifact_type": "engine_execution_result",
+          "byte_count": 55388,
+          "content_hash": "sha256:97169f18a0bf514604afc67880f4fbd7c76df643cad168f47a1cd3828658e03e",
+          "path": "engine-execution-result.json",
+          "role": "engine_execution_result",
+          "schema_version": 1,
+          "source_hash": "sha256:1fee7497e7fa882aae133ac1afe91d73d5fb7a05b84ed7f9de5ce6bdc5283300"
+        },
+        {
+          "artifact_type": "environment_compatibility_report",
+          "byte_count": 1812,
+          "content_hash": "sha256:faad5af891fc1dfe721a6278516e53d1fa2784fb07c80da6cc2977b2d31d68ef",
+          "path": "environment-compatibility-report.json",
+          "role": "environment_compatibility",
+          "schema_version": 1,
+          "source_hash": "sha256:346e54c7982be0ca81a5c8e9efda31b27aa64c3049bf7df051c6baab4a57bd5d"
+        },
+        {
+          "artifact_type": "resolved_backtest_environment",
+          "byte_count": 8014,
+          "content_hash": "sha256:99588cf8ef6490900bdc334c5e88ad87c0cc6ce92812af7d30b7ae5ddafc8806",
+          "path": "environment.json",
+          "role": "environment",
+          "schema_version": 1,
+          "source_hash": "sha256:24badb44368ab1055f2ceabfdab80bcb0331c41b56b223b7f1a4e2743ae99b5e"
+        },
+        {
+          "artifact_type": "market_bundle_ref",
+          "byte_count": 314,
+          "content_hash": "sha256:e2288f670d9c1565aa741fc59881c9e8260ea8634e0367f4c1be655d8f11662e",
+          "path": "market-bundle-ref.json",
+          "role": "market_bundle_reference",
+          "schema_version": 1,
+          "source_hash": "sha256:d7b80cae4eab90cfec0fd51ea9b4d6729ba6f21458d94130b9712a1807cb96de"
+        },
+        {
+          "artifact_type": "backtest_request",
+          "byte_count": 1389,
+          "content_hash": "sha256:5a64d2ea01f73a89c4819de82339699378a5ac76a823ecd323af727aa8df0c3f",
+          "path": "request.json",
+          "role": "request",
+          "schema_version": 1,
+          "source_hash": "sha256:5ae62e7a7ca145902497b2b6337d00d29fbd9b13f4be1cfbf4a5e9589a0351fa"
+        }
+      ],
+      "attempt_record_hash": "sha256:8d18b24cbed2f5eca45c78741a49c727d4ffbe5940ee5b98472973b900893f1f",
+      "deployment_authorized": false,
+      "manifest_hash": "sha256:cf0f80282d5ab79165ff81b73f737ea84ec90e8aa0263ccd33492867f7ec103a",
+      "manifest_source_hash": "sha256:3a2bded6eaed567bad95e0841c456b5c5465d347864abfbc9384192126a89f06",
+      "market_bundle_ref_hash": "sha256:7c4c4c1edfd5a45b485765e1e7e46f9cbb3887188b693d3d27efe951b6a51141",
+      "publication_hash": "sha256:cafe271e4a173f473ed30058a1fdb54a7e75c7a91f3aa53e0bdeb3226861bb19",
+      "relative_directory": "runs/run_39ab44a26d7f719fe1648f3ccbf7cbdcb874a9bc43e8c15d3a51ab5aca421591/attempts/attempt_3c478bbb5e7141603744fadfe484c4859fac39a56b525df8b5be0fb2a8e1cdfa",
+      "status": "READY_FOR_INTEGRITY",
+      "terminal_outcome": null
+    }
+  },
+  "schema_version": 1,
+  "writer_failure": {
+    "code": "staging_prepare_failed",
+    "deployment_authorized": false,
+    "exception_type": "builtins.NotADirectoryError",
+    "failure_hash": "sha256:127e512d3aa74d4e468862a40cd4886c11fb292a3ba1fe9dac54097afc40f989",
+    "outcome": "FAILED",
+    "relative_subject": "runs/run_39ab44a26d7f719fe1648f3ccbf7cbdcb874a9bc43e8c15d3a51ab5aca421591/attempts"
+  }
+}

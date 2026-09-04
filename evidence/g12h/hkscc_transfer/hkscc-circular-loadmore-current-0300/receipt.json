@@ -1,0 +1,26 @@
+{
+  "authority_status": "DISCOVERY_RANGE_CAPTURED_NOT_QUALIFIED",
+  "content_type": "application/json; charset=utf-8",
+  "curl_exit_code": 0,
+  "derivatives": {
+    "fragment_present": true,
+    "json_parse": {
+      "valid": true
+    }
+  },
+  "final_url": "https://www.hkex.com.hk/layouts/HKEX_Common/Tab/NewsCentreDetailsLoad.aspx/DisplayNewsCentreDetailsLoad",
+  "lineage": "hkscc_transfer",
+  "operator_harness_sha256": "sha256:2a3f4eef77b0b1fd02d9dcaec2cc69f1068dba06321a2c83299be155892291b6",
+  "raw_byte_length": 72146,
+  "raw_file": "raw.json",
+  "raw_sha256": "sha256:3f46c908c7968287bce951cde444b79306e0067f8a09f4b3001556438d61021a",
+  "redirect_count": 0,
+  "response_chain_count": 1,
+  "response_code": 200,
+  "retrieved_at": "2026-08-20T07:45:58.165821Z",
+  "schema_version": 1,
+  "source_id": "hkscc-circular-loadmore-current-0300",
+  "started_at": "2026-08-20T07:45:56.345187Z",
+  "tool": "curl 8.14.1 (x86_64-pc-linux-gnu) libcurl/8.14.1 OpenSSL/3.5.6 zlib/1.3.1 brotli/1.1.0 zstd/1.5.7 libidn2/2.3.8 libpsl/0.21.2 libssh2/1.11.1 nghttp2/1.64.0 nghttp3/1.8.0 librtmp/2.3 OpenLDAP/2.6.10",
+  "type": "g12h_official_http_capture_receipt_v1"
+}

@@ -1,0 +1,19 @@
+HTTP/1.1 200 OK
+Date: Thu, 20 Aug 2026 07:37:15 GMT
+Content-Type: text/html
+Content-Length: 8166
+Connection: keep-alive
+ETag: W/"8166-1720684196000"
+Last-Modified: Thu, 11 Jul 2024 07:49:56 GMT
+Vary: Accept-Encoding
+X-Cache: BYPASS
+X-Request-Id: e912cc0de8b4110c6099a373d8949546
+Server: WAF
+Accept-Ranges: bytes
+X-Ser: i27285_c18667, i2759126_c26763
+X-Cache: HIT from i2759126_c26763(cloudsvr)
+Cache-Control: no-store, no-cache
+Access-Control-Allow-Methods: GET,POST
+Content-Security-Policy: frame-ancestors 'self' https://fxsjcj.kaipuyun.cn
+Pragma: no-cache
+

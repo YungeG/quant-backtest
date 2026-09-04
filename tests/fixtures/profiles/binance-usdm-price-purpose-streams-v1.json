@@ -1,0 +1,112 @@
+{
+  "allowed_grade": "development",
+  "cases": {
+    "execution_reference": {
+      "decision_grade_eligible": false,
+      "liquidation_bar_hashes": [],
+      "observation_hashes": [
+        "sha256:11c6901d074d262f494b6e5adefbbf98e5749ede80d43dffbe57c0a4eb65f7fe"
+      ],
+      "outcome_hash": "sha256:329a24cb36d59a856ae1bf8cd72bec0c9e997c5c465f096112b3eb4164fd267f",
+      "query_hash": "sha256:4225d7608bb746160cf912f2d6af00755f32d64b4e6213b49e4562a01ecf776a",
+      "resolution_hash": "sha256:e0b3ab240ab975e4db34ce6fe1bcd52a2e4c3689606bae534cbcdf7ccd7c1786",
+      "resolved_mark_id": "sha256:f568fcc2d81f70aaf3af46b03ea785fa8cb99de5ec20575a9a17417ae71b1ed3"
+    },
+    "funding_owned_by_g10e": {
+      "failure_code": "price_purpose_owned_by_g10e",
+      "failure_hash": "sha256:78021b9f50397ed2eec9340bcce9d799f997670d37fd81a78a83c88da9d4f119",
+      "mark_failure_id": null,
+      "outcome_hash": "sha256:2c9315c084be7e33a4f1cc0eea8b9776b0f4f85a3194bfbe19ae19f4113db654",
+      "query_hash": "sha256:4b02bc28b562d9bc945090f68d010a19faecaa94b1963f93a5f45d057ed829a1"
+    },
+    "input_order_reverse": {
+      "decision_grade_eligible": false,
+      "liquidation_bar_hashes": [],
+      "observation_hashes": [
+        "sha256:d3f9d62043eaa3f36f975c022483fa9a1d5569add0de0b65bb4e211902670a35",
+        "sha256:e05a30911bbc10e7fd7e090d26d6643c0940c09b862979c0eaf3c51e144bdc17"
+      ],
+      "outcome_hash": "sha256:237943fe5d1cdf0961f8176f5a83817e8e988f4e576e0c2df87a1fefa747b19e",
+      "query_hash": "sha256:85d65726402dacf656b02dc9af292e33a966865e71b37d4cfe156f9f4ff2c055",
+      "resolution_hash": "sha256:31daae4663b11bbd7eea3334ab41c33193f0c6d7fc2e72785ac117e17ea0d4f1",
+      "resolved_mark_id": "sha256:c7a0ac2f5aef4ad22c332a6537c031e538ae97bb7a84bf4a6495da54f60c0c42"
+    },
+    "invalid_decimal": {
+      "failure_code": "invalid_decimal_field",
+      "failure_hash": "sha256:27efb662b72027d4d4d3179c8b46ee4d7245c9a2ec6183d6400a2b1aa5ef8bbd",
+      "mark_failure_id": null,
+      "outcome_hash": "sha256:347109c12b40ddfa98c813634c8c3808a2912ee88102da959cdbf3d6a9fc7e6c",
+      "query_hash": "sha256:0c5a202befc318f9f83cd36ec345d1b86017a23cb492809e5ab368bf84060bb7"
+    },
+    "liquidation": {
+      "decision_grade_eligible": false,
+      "liquidation_bar_hashes": [
+        "sha256:69434e68339746625fe8b047f00b89521abec4ff99b6a7f1aa3853f012ce83a7",
+        "sha256:b18f38229e01f9367a6615a7c8013e7cf04b89a4b78cdfd33c07908a628cf10f"
+      ],
+      "observation_hashes": [
+        "sha256:a9c4a6d53229655d0cdbfd2b83f620e429ff862c1c687d337ffc3acf4a3f216f",
+        "sha256:2d0fdd8a47d68c554e2dd1bf708a3af3dfa28efe70b76d2c3bc0d7d5684dbdbb"
+      ],
+      "outcome_hash": "sha256:1d4ceeccc91074fcd8f26e704290158475b90d66b3679cbd518fbf4d754b4129",
+      "query_hash": "sha256:918aa046fde3f9c21048fd2206df48e77066d3f4c1922ca751219da5980dfa7e",
+      "resolution_hash": "sha256:385e807f04f81fa8b9aa9df9eafe139f8216cb2ab8376c5dcca07df26ed2acd3",
+      "resolved_mark_id": null
+    },
+    "liquidation_gap": {
+      "failure_code": "missing_purpose_coverage",
+      "failure_hash": "sha256:ff7ec6040d2e4027fea15e3a1b93630602adc732378e499ace3d6c5b13f07d0f",
+      "mark_failure_id": null,
+      "outcome_hash": "sha256:5b78c8435db9145ea2b11cfc28bc619114bf5bf9d2e3d72bbbe7ad7404e73678",
+      "query_hash": "sha256:3fa9e6f4a6644b1064bcf2cf84cf9dcb1db58ffc83dd552c30f50bce74420ad4"
+    },
+    "margin": {
+      "decision_grade_eligible": false,
+      "liquidation_bar_hashes": [],
+      "observation_hashes": [
+        "sha256:cafc225667bb3f02cb2cf4f9b87698d98092f6c03eb7a951e49cb5f3512b8766",
+        "sha256:9988760e700e04ea290bbe768c5c5f85e584160fa83d3e4a6c2617cc04c90576"
+      ],
+      "outcome_hash": "sha256:b928bc1d79660c7e65031c856ebceaa92f0e0f8db946907db9119ec30e8479d3",
+      "query_hash": "sha256:d132b85730ae52b3676393e0af78bc66ab1d6aad80afdf0bab245e2ad5e09adf",
+      "resolution_hash": "sha256:2372c8d488d909c47575ed5659d547424995d37800c2eb1068cf1a61aa2556a9",
+      "resolved_mark_id": "sha256:a1194dffccb1ddb4098b308f08b0b7d471abc42a3ccb0ca85a35551d127b5e7a"
+    },
+    "same_utc_late": {
+      "failure_code": "unrepresentable_availability_order",
+      "failure_hash": "sha256:80d121f245040f0badb368dd9cee38c397a7a16f220ee3cd6648ee388c31efcf",
+      "mark_failure_id": null,
+      "outcome_hash": "sha256:013e7b94688e2949f64cf9eda11a6cb5ef5ce3509e6d7e542b082b8eeb92544e",
+      "query_hash": "sha256:f24e8dec00321da3a9403caf5abcb399e73c10ef7bc44bc694fe1af573c2227f"
+    },
+    "settlement_unsupported": {
+      "failure_code": "unsupported_price_purpose",
+      "failure_hash": "sha256:41597e0677c2030e0f81a7b034a1b0e279b5ef9cd2a8bb2751dd95ba8496d1f3",
+      "mark_failure_id": null,
+      "outcome_hash": "sha256:f5a0e8197e89d8a5dd992e98928cd5e952783045ec9bfed65df81bfc734dcb65",
+      "query_hash": "sha256:b4b702195b98dc26700dd3a5bb32ef44ced842e20d1123643705245bcc150fd3"
+    },
+    "valuation": {
+      "decision_grade_eligible": false,
+      "liquidation_bar_hashes": [],
+      "observation_hashes": [
+        "sha256:d3f9d62043eaa3f36f975c022483fa9a1d5569add0de0b65bb4e211902670a35",
+        "sha256:e05a30911bbc10e7fd7e090d26d6643c0940c09b862979c0eaf3c51e144bdc17"
+      ],
+      "outcome_hash": "sha256:237943fe5d1cdf0961f8176f5a83817e8e988f4e576e0c2df87a1fefa747b19e",
+      "query_hash": "sha256:85d65726402dacf656b02dc9af292e33a966865e71b37d4cfe156f9f4ff2c055",
+      "resolution_hash": "sha256:31daae4663b11bbd7eea3334ab41c33193f0c6d7fc2e72785ac117e17ea0d4f1",
+      "resolved_mark_id": "sha256:c7a0ac2f5aef4ad22c332a6537c031e538ae97bb7a84bf4a6495da54f60c0c42"
+    }
+  },
+  "deployment_authorized": false,
+  "fixture_id": "binance-usdm-price-purpose-streams-v1",
+  "limitations": [
+    "offline-caller-supplied-evidence-only",
+    "archive-completeness-owned-by-g12",
+    "settlement-price-unsupported",
+    "funding-price-owned-by-g10e",
+    "no-live-or-deployment-authorization"
+  ],
+  "model_digest": "sha256:e59ddc0ed2de244bfcebdfe74f66ebe4089c8735a97469879c5cb0ebe1d6186d"
+}

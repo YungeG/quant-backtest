@@ -1,0 +1,59 @@
+{
+  "fixture_id": "g12l-binance-usdm-funding-history-v1",
+  "limitations": [
+    "single-symbol-single-day-evidence",
+    "unauthenticated-current-api-capture",
+    "no-provider-checksum-or-immutable-publication-revision",
+    "archive-availability-is-late-g12a-acquisition-time",
+    "development-g10e-input-only",
+    "no-g12i-or-g12m-qualification",
+    "decision-grade-eligible-false",
+    "deployment-authorized-false"
+  ],
+  "request_url": "https://fapi.binance.com/fapi/v1/fundingRate?symbol=BTCUSDT&startTime=1704067200000&endTime=1704153599999&limit=100",
+  "response": {
+    "byte_count": 379,
+    "first_record": {
+      "fundingRate": "0.00037409",
+      "fundingTime": 1704067200000,
+      "markPrice": "42313.90000000",
+      "rateType": "Regular",
+      "symbol": "BTCUSDT"
+    },
+    "last_record": {
+      "fundingRate": "0.00033601",
+      "fundingTime": 1704124800000,
+      "markPrice": "42811.29637234",
+      "rateType": "Regular",
+      "symbol": "BTCUSDT"
+    },
+    "record_count": 3
+  },
+  "schema_version": 1,
+  "snapshot": {
+    "content_tree_hash": "sha256:a55fd58ce7f37e829b37c1a6fb94c1426a79c0b97aa0df3c6e793273506b4680",
+    "decision_grade_eligible": false,
+    "deployment_authorized": false,
+    "members": [
+      {
+        "acquired_at_epoch_nanoseconds": 1786934053390511612,
+        "byte_count": 379,
+        "content_hash": "sha256:e9f73f9c845c28abb31037d8230df2d6f13d5d368c43436e891fcc757372c338",
+        "declared_sha256": "sha256:e9f73f9c845c28abb31037d8230df2d6f13d5d368c43436e891fcc757372c338",
+        "member_key": "response/BTCUSDT-funding-history-2024-01-01.json",
+        "mode": "0644"
+      }
+    ],
+    "provenance": {
+      "license_ref": "binance.api.terms",
+      "retention_policy_ref": "backtest.fixture.retention",
+      "source_key": "binance.fapi.funding_rate_history.btcusdt.2024-01-01",
+      "vendor_key": "binance.fapi"
+    },
+    "provenance_hash": "sha256:18a2286003de03ae71aa343a83b75432653ed0e1b490dcf5f3608b37896aa058",
+    "schema_version": 1,
+    "snapshot_id": "sha256:0d4566742f51b18d66a28605c087ec3604769ab04e6fc551d71c9b32033b69a9",
+    "type": "source_snapshot"
+  },
+  "source_hash": "sha256:e9f73f9c845c28abb31037d8230df2d6f13d5d368c43436e891fcc757372c338"
+}

@@ -1,0 +1,32 @@
+{
+  "authority_status": "CAPTURED_NOT_QUALIFIED",
+  "content_type": "application/pdf",
+  "curl_exit_code": 0,
+  "curl_stderr": "",
+  "derivatives": {
+    "pdf": {
+      "extracted": true,
+      "pdf_valid": true,
+      "pdftoppm_exit_code": 0,
+      "pdftoppm_stderr": "",
+      "pdftotext_exit_code": 0,
+      "pdftotext_stderr": "",
+      "rendered_pages": 2
+    }
+  },
+  "final_url": "https://www.hkex.com.hk/-/media/HKEX-Market/Services/Rules-and-Forms-and-Fees/Rules/HKSCC/Rule-Update_Operational-Procedures/019_25_HKSCC-OP_Stock-settlement-fee-restructure_e.pdf",
+  "lineage": "hkscc_transfer",
+  "operator_harness_sha256": "sha256:85ccf78ce0d595ff9d372c85243d81c49c3bc1be19f868df5936cc2f6977d9ea",
+  "raw_byte_length": 161352,
+  "raw_file": "raw.pdf",
+  "raw_sha256": "sha256:c8806be7186e9230c1e42ad187c2e61a51f409bc7209b1159ea0bccee784a56d",
+  "redirect_count": 0,
+  "response_chain_count": 1,
+  "response_code": 200,
+  "retrieved_at": "2026-08-20T08:44:51.577320Z",
+  "schema_version": 1,
+  "source_id": "hkscc-rule-update-019-2025",
+  "started_at": "2026-08-20T08:44:39.074943Z",
+  "tool": "curl 8.14.1 (x86_64-pc-linux-gnu) libcurl/8.14.1 OpenSSL/3.5.6 zlib/1.3.1 brotli/1.1.0 zstd/1.5.7 libidn2/2.3.8 libpsl/0.21.2 libssh2/1.11.1 nghttp2/1.64.0 nghttp3/1.8.0 librtmp/2.3 OpenLDAP/2.6.10",
+  "type": "g12h_official_http_capture_receipt_v1"
+}

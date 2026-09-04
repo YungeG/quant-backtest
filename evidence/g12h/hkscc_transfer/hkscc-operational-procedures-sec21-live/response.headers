@@ -1,0 +1,19 @@
+HTTP/2 200 
+pragma: no-cache
+content-type: application/pdf
+last-modified: Thu, 25 Sep 2025 08:42:27 GMT
+accept-ranges: bytes
+x-content-type-options: nosniff
+content-disposition: inline; filename="SEC21.pdf"
+strict-transport-security: max-age=31536000; includeSubDomains
+access-control-allow-origin: *
+content-security-policy: frame-ancestors 'self' https://www.hkex.com.hk https://sc.hkex.com.hk/ http://sc.hkex.com.hk/ http://www.hkgem.com http://www.hkex.com.hk http://www.hkexgroup.com http://sc.hkex.com.hk http://sc.hkexnews.hk http://www.hkexnews.hk https://google.com.hk https://www.recaptcha.net/ https://www1.hkex.com.hk https://assets.adobedtm.com https://hkexchanges.demdex.net https://dpm.demdex.net https://hkexchanges.data.adobedc.net https://hkexchanges.sc.omtrdc.net https://cm.everesttech.net https://hkexchanges.2o7.net https://*.mktoweb.com https://markets.hkex.com.hk https://piid.hkex.com.hk; frame-src 'self' http://www.hkgem.com http://www.hkex.com.hk http://www.hkexgroup.com http://sc.hkex.com.hk https://sc.hkex.com.hk http://sc.hkexnews.hk http://www.hkexnews.hk http://asia.tools.euroland.com https://google.com.hk https://www.hkexgroup.com https://view.vzaar.com https://video.vzaar.com https://www.google.com https://www.recaptcha.net/ https://www1.hkex.com.hk https://assets.adobedtm.com https://hkexchanges.demdex.net https://dpm.demdex.net https://hkexchanges.data.adobedc.net https://hkexchanges.sc.omtrdc.net https://cm.everesttech.net https://hkexchanges.2o7.net https://*.mktoweb.com https://markets.hkex.com.hk https://piid.hkex.com.hk; 
+x-xss-protection: 1; mode=block
+x-content-type-options: nosniff
+x-frame-options: SameOrigin
+access-control-allow-headers: Content-Type, Authorization, X-Requested-With
+access-control-allow-methods: GET, POST, OPTIONS, PUT, DELETE
+content-length: 330272
+cache-control: private, no-cache, no-store
+date: Thu, 20 Aug 2026 07:37:16 GMT
+

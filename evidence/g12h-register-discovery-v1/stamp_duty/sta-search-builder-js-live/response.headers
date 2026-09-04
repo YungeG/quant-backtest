@@ -1,0 +1,14 @@
+HTTP/1.1 200 OK
+Date: Thu, 20 Aug 2026 08:44:44 GMT
+Content-Type: application/javascript
+Content-Length: 42708
+Connection: keep-alive
+Last-Modified: Mon, 05 Jan 2026 12:39:33 GMT
+ETag: "695bb105-a6d4"
+X-Frame-Options: ALLOW-FROM https://www.chinatax.gov.cn/
+Access-Control-Allow-Origin: https://www.chinatax.gov.cn
+Accept-Ranges: bytes
+x-via: 1.1 PS-WUH-01WYg96:12 (Cdn Cache Server V2.0), 1.1 CS-000-01LLy69:0 (Cdn Cache Server V2.0), 1.1 PS-000-012jf27:10 (Cdn Cache Server V2.0)
+age: 1
+x-ws-request-id: 6a86be7c_PS-000-012jf27_30304-7721
+

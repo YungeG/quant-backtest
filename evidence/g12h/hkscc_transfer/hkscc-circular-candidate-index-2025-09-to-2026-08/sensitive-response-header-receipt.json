@@ -1,0 +1,29 @@
+{
+  "files": [
+    {
+      "exact_private_path": "/srv/bcache-8t/ygguo/backtest/g12h-authority-private/20260820-wave1-response-headers/hkscc_transfer/hkscc-circular-candidate-index-2025-09-to-2026-08/response.headers",
+      "exact_private_sha256": "sha256:37130ba9b279fe5be2972b6c4f11af4c9ff2583b69a6a184fdd43a59a5ac6527",
+      "redaction": "Set-Cookie value replaced by its SHA-256; cookie name and attributes retained.",
+      "tracked_path": "hkscc_transfer/hkscc-circular-candidate-index-2025-09-to-2026-08/response.headers",
+      "tracked_redacted_sha256": "sha256:e7ec337f62ae954d3ff9c1a113e41d8c4d85336fe0d58b752b59824fc097b75d"
+    },
+    {
+      "exact_private_path": "/srv/bcache-8t/ygguo/backtest/g12h-authority-private/20260820-wave1-response-headers/hkscc_transfer/hkscc-circular-candidate-index-2025-09-to-2026-08/transport.log",
+      "exact_private_sha256": "sha256:8b5fc3f6f490b06605f26b531f76d8e7f13d628cbbf0cac327649a84004eeee4",
+      "redaction": "Set-Cookie value replaced by its SHA-256; cookie name and attributes retained.",
+      "tracked_path": "hkscc_transfer/hkscc-circular-candidate-index-2025-09-to-2026-08/transport.log",
+      "tracked_redacted_sha256": "sha256:c8802d2d14f493ddbf33c0f13eaf91db7e8400c2639a58ae3373cc8e87c0b0ed"
+    },
+    {
+      "exact_private_path": "/srv/bcache-8t/ygguo/backtest/g12h-authority-private/20260820-wave1-response-headers/hkscc_transfer/hkscc-circular-candidate-index-2025-09-to-2026-08/redirects.json",
+      "exact_private_sha256": "sha256:bf8fb19cf83f26fe9d012a3603ab3a39da8e240708eb7904972c91d8085abda4",
+      "redaction": "Set-Cookie value replaced by its SHA-256; cookie name and attributes retained.",
+      "tracked_path": "hkscc_transfer/hkscc-circular-candidate-index-2025-09-to-2026-08/redirects.json",
+      "tracked_redacted_sha256": "sha256:371548604caf1ded9719765a59fb31e9dec8d7ecf364c1ef18d2a668b6fd311c"
+    }
+  ],
+  "private_store_root": "/srv/bcache-8t/ygguo/backtest/g12h-authority-private/20260820-wave1-response-headers",
+  "schema_version": 1,
+  "source_id": "hkscc-circular-candidate-index-2025-09-to-2026-08",
+  "type": "g12h_sensitive_response_header_receipt_v1"
+}

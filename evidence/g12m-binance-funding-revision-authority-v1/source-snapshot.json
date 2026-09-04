@@ -1,0 +1,57 @@
+{
+  "content_tree_hash": "sha256:935355b119ac9445a17fc7e3be19eeb8156914081df21519604182a9fed73f5a",
+  "decision_grade_eligible": false,
+  "deployment_authorized": false,
+  "members": [
+    {
+      "acquired_at_epoch_nanoseconds": 1787323699521631895,
+      "byte_count": 212,
+      "content_hash": "sha256:919927e6693079c947eb7030fe96027aa4ae12bb4d7bb821f3b3064f43534b62",
+      "declared_sha256": "sha256:919927e6693079c947eb7030fe96027aa4ae12bb4d7bb821f3b3064f43534b62",
+      "member_key": "api/testnet-funding-rate-response.json",
+      "mode": "0644"
+    },
+    {
+      "acquired_at_epoch_nanoseconds": 1787323697712267053,
+      "byte_count": 18300,
+      "content_hash": "sha256:e50bd98895e218893124db4cce7126dd128d3621d7d0d14f3545ee9bbf8e3533",
+      "declared_sha256": "sha256:e50bd98895e218893124db4cce7126dd128d3621d7d0d14f3545ee9bbf8e3533",
+      "member_key": "github/funding-rate-request-2022.py",
+      "mode": "0644"
+    },
+    {
+      "acquired_at_epoch_nanoseconds": 1787323698324982579,
+      "byte_count": 3783,
+      "content_hash": "sha256:263f23947d53df86ca13d4955dedaf6fc8e13d64bd83542a99171e7c8929d32d",
+      "declared_sha256": "sha256:263f23947d53df86ca13d4955dedaf6fc8e13d64bd83542a99171e7c8929d32d",
+      "member_key": "github/funding-rate-response-model-2025.py",
+      "mode": "0644"
+    },
+    {
+      "acquired_at_epoch_nanoseconds": 1787323698800206180,
+      "byte_count": 4304,
+      "content_hash": "sha256:b3aa5b35ad034d409f60616ef7bed10fe6b553c6ad6eb145fdb32806a9d459d4",
+      "declared_sha256": "sha256:b3aa5b35ad034d409f60616ef7bed10fe6b553c6ad6eb145fdb32806a9d459d4",
+      "member_key": "github/funding-rate-response-model-2026.py",
+      "mode": "0644"
+    },
+    {
+      "acquired_at_epoch_nanoseconds": 1787323699295036395,
+      "byte_count": 33834,
+      "content_hash": "sha256:d360c5215dd600b5f21d0fe186d0d504c2bc1216ba1201d94848eea5b9745ddc",
+      "declared_sha256": "sha256:d360c5215dd600b5f21d0fe186d0d504c2bc1216ba1201d94848eea5b9745ddc",
+      "member_key": "github/usds-futures-changelog-2026.md",
+      "mode": "0644"
+    }
+  ],
+  "provenance": {
+    "license_ref": "binance.api.terms",
+    "retention_policy_ref": "backtest.research.evidence",
+    "source_key": "binance.g12m.bha01b.revision_authority_v1",
+    "vendor_key": "binance.public"
+  },
+  "provenance_hash": "sha256:9e0f8eaf21ec1feaaa5f1e3a7149fc5bf6777f26e6eff16df71b13bd2f5d6311",
+  "schema_version": 1,
+  "snapshot_id": "sha256:e8faeb5a146c0ff85f5afca6f740ee9a925a3d47134c4d3495b26fdb5e4b8f25",
+  "type": "source_snapshot"
+}

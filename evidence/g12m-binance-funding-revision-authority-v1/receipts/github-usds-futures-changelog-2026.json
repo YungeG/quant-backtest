@@ -1,0 +1,31 @@
+{
+  "authentication": "none",
+  "authority": "Binance official GitHub organization",
+  "body_byte_count": 33834,
+  "body_path": "evidence/g12m-binance-funding-revision-authority-v1/raw/github/usds-futures-changelog-2026.md",
+  "body_sha256": "d360c5215dd600b5f21d0fe186d0d504c2bc1216ba1201d94848eea5b9745ddc",
+  "completed_at_epoch_nanoseconds": 1787323699295036395,
+  "curl_stderr": "",
+  "curl_version": "8.14.1",
+  "git_blob_oid_sha1": "68887ea97763206d7f51bb6c5197209d2dc98a6e",
+  "http_status": 200,
+  "method": "GET",
+  "request_headers": {
+    "Accept": "*/*",
+    "User-Agent": "curl/8.14.1"
+  },
+  "request_scope": {
+    "commit": "e44cdc9e57c76154f08676764bb6f21fbdb49c4a",
+    "commit_time": "2026-07-28T11:47:50+02:00",
+    "path": "clients/derivatives_trading_usds_futures/CHANGELOG.md",
+    "repository": "https://github.com/binance/binance-connector-python.git"
+  },
+  "request_url": "https://raw.githubusercontent.com/binance/binance-connector-python/e44cdc9e57c76154f08676764bb6f21fbdb49c4a/clients/derivatives_trading_usds_futures/CHANGELOG.md",
+  "resolved_addresses": [
+    "198.18.0.75"
+  ],
+  "response_headers_raw_lf": "HTTP/2 200 \ncache-control: max-age=300\ncontent-security-policy: default-src 'none'; style-src 'unsafe-inline'; sandbox\ncontent-type: text/plain; charset=utf-8\netag: \"19955517c46dcfb00a2003614c0efc36bebefc2a924eb3ff7cb3d9a7b606df34\"\nstrict-transport-security: max-age=31536000\nx-content-type-options: nosniff\nx-frame-options: deny\nx-xss-protection: 1; mode=block\nx-github-request-id: 4698:279FC7:129B5:2370B:6A886532\nx-github-edge-region: japaneast\naccept-ranges: bytes\ndate: Fri, 21 Aug 2026 14:48:19 GMT\nvia: 1.1 varnish\nx-served-by: cache-nrt-rjtt7900034-NRT\nx-cache: MISS\nx-cache-hits: 0\nx-timer: S1787323699.995445,VS0,VE212\nvary: Authorization,Accept-Encoding\naccess-control-allow-origin: *\ncross-origin-resource-policy: cross-origin\nx-fastly-request-id: 8564f17bfb4c39a1fb5a4d4078a95102486a6042\nexpires: Fri, 21 Aug 2026 14:53:19 GMT\nsource-age: 0\ncontent-length: 33834\n\n",
+  "schema_version": 1,
+  "source_id": "G4",
+  "started_at_epoch_nanoseconds": 1787323698802627281
+}

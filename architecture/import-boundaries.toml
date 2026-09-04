@@ -1,0 +1,229 @@
+schema_version = 1
+report_schema_version = 1
+
+[dynamic_imports]
+nonliteral_default = "deny"
+
+[[packages]]
+id = "trading-domain"
+module = "crypto_quant_domain"
+source = "packages/trading-domain/src"
+allowed_workspace_modules = []
+
+[[packages]]
+id = "trading-kernel"
+module = "crypto_quant_trading"
+source = "packages/trading-kernel/src"
+allowed_workspace_modules = ["crypto_quant_domain"]
+public_submodules = [
+  "crypto_quant_trading.profiles.binance_usdm",
+  "crypto_quant_trading.profiles.cn_a_share",
+]
+
+[[packages]]
+id = "market-data-contracts"
+module = "crypto_quant_market_data"
+source = "packages/market-data-contracts/src"
+allowed_workspace_modules = ["crypto_quant_domain"]
+
+[[packages]]
+id = "market-bundle-builder"
+module = "crypto_quant_bundle_builder"
+source = "packages/market-bundle-builder/src"
+allowed_workspace_modules = ["crypto_quant_domain", "crypto_quant_market_data"]
+
+[[packages]]
+id = "backtest-runtime"
+module = "crypto_quant_backtest"
+source = "packages/backtest-runtime/src"
+allowed_workspace_modules = [
+  "crypto_quant_domain",
+  "crypto_quant_market_data",
+  "crypto_quant_trading",
+]
+
+[[forbidden_import_rules]]
+id = "forbidden-external-import"
+source_packages = ["trading-kernel", "market-data-contracts"]
+include = ["*.py", "**/*.py"]
+exclude = []
+targets = [
+  "aiohttp",
+  "binance",
+  "ccxt",
+  "httpx",
+  "hummingbot",
+  "paho",
+  "pandas",
+  "requests",
+  "websockets",
+]
+
+[[forbidden_import_rules]]
+id = "generic-kernel-concrete-profile-import"
+source_packages = ["trading-kernel"]
+include = ["crypto_quant_trading/*.py", "crypto_quant_trading/**/*.py"]
+exclude = [
+  "crypto_quant_trading/profiles/*.py",
+  "crypto_quant_trading/profiles/**/*.py",
+]
+targets = [
+  "crypto_quant_trading.profiles.binance_usdm",
+  "crypto_quant_trading.profiles.cn_a_share",
+]
+
+[[forbidden_import_rules]]
+id = "g12a-source-snapshot-offline-core"
+source_packages = ["market-bundle-builder"]
+include = ["crypto_quant_bundle_builder/source_snapshots.py"]
+exclude = []
+targets = [
+  "aiohttp",
+  "boto3",
+  "ccxt",
+  "ftplib",
+  "http.client",
+  "httpx",
+  "pandas",
+  "pathlib",
+  "requests",
+  "smtplib",
+  "socket",
+  "sqlalchemy",
+  "subprocess",
+  "urllib.request",
+  "websockets",
+]
+
+[[forbidden_import_rules]]
+id = "g12b-synthetic-jsonl-offline-core"
+source_packages = ["market-bundle-builder"]
+include = ["crypto_quant_bundle_builder/synthetic_jsonl.py"]
+exclude = []
+targets = [
+  "aiohttp",
+  "boto3",
+  "ccxt",
+  "ftplib",
+  "gzip",
+  "http.client",
+  "httpx",
+  "pandas",
+  "pathlib",
+  "requests",
+  "smtplib",
+  "socket",
+  "sqlalchemy",
+  "subprocess",
+  "tarfile",
+  "urllib.request",
+  "websockets",
+]
+
+[[forbidden_import_rules]]
+id = "g12c-bundle-validation-offline-core"
+source_packages = ["market-bundle-builder"]
+include = ["crypto_quant_bundle_builder/bundle_validation.py"]
+exclude = []
+targets = [
+  "aiohttp",
+  "boto3",
+  "ccxt",
+  "ftplib",
+  "gzip",
+  "http.client",
+  "httpx",
+  "pandas",
+  "pathlib",
+  "requests",
+  "smtplib",
+  "socket",
+  "sqlalchemy",
+  "subprocess",
+  "tarfile",
+  "urllib.request",
+  "websockets",
+]
+
+[[forbidden_import_rules]]
+id = "g12g-bar-aggregation-offline-core"
+source_packages = ["market-bundle-builder"]
+include = ["crypto_quant_bundle_builder/bar_aggregation.py"]
+exclude = []
+targets = [
+  "aiohttp",
+  "boto3",
+  "ccxt",
+  "ftplib",
+  "gzip",
+  "http.client",
+  "httpx",
+  "pandas",
+  "pathlib",
+  "polars",
+  "requests",
+  "smtplib",
+  "socket",
+  "sqlalchemy",
+  "subprocess",
+  "tarfile",
+  "urllib.request",
+  "websockets",
+]
+
+[[forbidden_import_rules]]
+id = "g12d-local-market-bundle-repository"
+source_packages = ["market-bundle-builder"]
+include = ["crypto_quant_bundle_builder/local_market_bundle_repository.py"]
+exclude = []
+targets = [
+  "aiohttp",
+  "boto3",
+  "ccxt",
+  "ftplib",
+  "http.client",
+  "httpx",
+  "hummingbot",
+  "pandas",
+  "requests",
+  "smtplib",
+  "socket",
+  "sqlalchemy",
+  "subprocess",
+  "urllib.request",
+  "websockets",
+]
+
+[[forbidden_import_rules]]
+id = "runtime-builder-import"
+source_packages = ["backtest-runtime"]
+include = ["*.py", "**/*.py"]
+exclude = []
+targets = ["crypto_quant_bundle_builder"]
+
+[[forbidden_import_rules]]
+id = "runtime-network-import"
+source_packages = ["backtest-runtime"]
+include = ["*.py", "**/*.py"]
+exclude = []
+targets = [
+  "aiohttp",
+  "binance",
+  "ccxt",
+  "ftplib",
+  "http.client",
+  "httpx",
+  "hummingbot",
+  "paho.mqtt",
+  "requests",
+  "smtplib",
+  "socket",
+  "urllib.request",
+  "websockets",
+]
+
+# Non-literal dynamic imports are denied by default. A future exception must use:
+# [[dynamic_import_allowlist]]
+# caller = "packages/.../module.py"
+# target_prefix = "fully.qualified.prefix"
+# reason = "audited reason"

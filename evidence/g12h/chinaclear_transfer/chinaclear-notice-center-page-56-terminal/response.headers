@@ -1,0 +1,42 @@
+HTTP/1.1 302 Moved Temporarily
+Date: Thu, 20 Aug 2026 07:47:09 GMT
+Content-Type: text/html
+Transfer-Encoding: chunked
+Connection: keep-alive
+Server: nginx
+Location: http://www.chinaclear.cn
+X-XSS-Protection: 1; mode=block
+Content-Security-Policy: script-src 'self' 'unsafe-inline' 'unsafe-eval' https://cdn.chinaclear.cn https://qrconnect.chinaclear.cn https://hm.baidu.com https://inv.chinaclear.cn https://biz.chinaclear.cn https://g.alicdn.com
+X-Content-Type-Options: nosniff
+Via: 1.1 ID-1716635745747274 uproxy-21
+x-via: 1.1 PSjsczBGPiv194:23 (Cdn Cache Server V2.0), 1.1 PS-HIA-01hIs198:9 (Cdn Cache Server V2.0), 1.1 PS-PEK-01S2L143:9 (Cdn Cache Server V2.0)
+x-ws-request-id: 6a86b0fd_PS-PEK-01S2L143_10618-60388
+
+HTTP/1.1 302 Moved Temporarily
+Date: Thu, 20 Aug 2026 07:47:10 GMT
+Content-Type: text/html
+Transfer-Encoding: chunked
+Connection: keep-alive
+Server: nginx
+Location: http://www.chinaclear.cn
+X-XSS-Protection: 1; mode=block
+Content-Security-Policy: script-src 'self' 'unsafe-inline' 'unsafe-eval' https://cdn.chinaclear.cn https://qrconnect.chinaclear.cn https://hm.baidu.com https://inv.chinaclear.cn https://biz.chinaclear.cn https://g.alicdn.com
+X-Content-Type-Options: nosniff
+Via: 1.1 ID-1716635745747274 uproxy-9
+x-via: 1.1 PS-HFE-01JxL183:18 (Cdn Cache Server V2.0), 1.1 PS-HIA-01hIs198:9 (Cdn Cache Server V2.0), 1.1 PS-PEK-01S2L143:9 (Cdn Cache Server V2.0)
+x-ws-request-id: 6a86b0fe_PS-PEK-01S2L143_10618-60505
+
+HTTP/1.1 302 Moved Temporarily
+Date: Thu, 20 Aug 2026 07:47:12 GMT
+Content-Type: text/html
+Transfer-Encoding: chunked
+Connection: keep-alive
+Server: nginx
+Location: http://www.chinaclear.cn
+X-XSS-Protection: 1; mode=block
+Content-Security-Policy: script-src 'self' 'unsafe-inline' 'unsafe-eval' https://cdn.chinaclear.cn https://qrconnect.chinaclear.cn https://hm.baidu.com https://inv.chinaclear.cn https://biz.chinaclear.cn https://g.alicdn.com
+X-Content-Type-Options: nosniff
+Via: 1.1 ID-1716635745747274 uproxy-5
+x-via: 1.1 PS-HFE-01V8s189:9 (Cdn Cache Server V2.0), 1.1 PS-HIA-01hIs198:9 (Cdn Cache Server V2.0), 1.1 PS-PEK-01S2L143:9 (Cdn Cache Server V2.0)
+x-ws-request-id: 6a86b100_PS-PEK-01S2L143_10618-60748
+

@@ -1,0 +1,24 @@
+{
+  "schema_version": 1,
+  "projection_id": "cn-a-share-g08h-runtime-projection-v1",
+  "case_id": "cn-a-share-g08h-budgeting-case-v1",
+  "source_role": "G08H_DEVELOPMENT_RUN",
+  "layers": {
+    "00_CASE_INPUT": {
+      "case_id": "cn-a-share-g08h-budgeting-case-v1",
+      "instrument_id": "xshe:000001",
+      "nav_cny": "100000.00",
+      "total_exposure_ratio": "0.95",
+      "target_count": 1,
+      "price_cny": "10.00",
+      "current_shares": 0,
+      "lot_size": 100
+    },
+    "03_DECISION_BUDGETING": [
+      {"target_value_cny": "95000.00", "target_weight": "0.95"}
+    ],
+    "04_ORDER_INTENT": [
+      {"side": "BUY", "quantity_units": 9500, "quantity_scale": 0, "reason": "open_to_target_weight"}
+    ]
+  }
+}

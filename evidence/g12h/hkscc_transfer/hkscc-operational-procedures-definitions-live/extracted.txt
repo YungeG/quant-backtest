@@ -1,0 +1,2409 @@
+                                            Definitions
+(a)       For the convenience of readers, the definitions contained in the Rules are repeated below.
+
+“Account Transfer Instruction” or “ATI”
+       means an instruction of a Participant other than an Investor Participant, in such form as
+       HKSCC may from time to time prescribe as being valid, to effect book-entry movements of
+       Eligible Securities between different Stock Accounts (except the Stock Collateral Control
+       Account and in the case of a Clearing Participant or a Custodian Participant, the SSA with
+       Statement Service and Special Segregated Accounts) of the Participant in CCASS, as
+       referred to in Rule 601;
+
+“Afternoon Session”
+        means the period in the afternoon during which trading can be conducted on the Exchange
+        pursuant to the Exchange Rules;
+
+“Appointed Depositary”
+        means a nominee of HKSCC or such other person whether appointed by HKSCC or
+        otherwise which performs or assists in performing the depository, custodian and nominee
+        services in respect of Eligible Securities held in CCASS, in accordance with Rule 817 or in
+        respect of Foreign Securities;
+
+“Assessments”
+        means additional contributions to the Guarantee Fund provided or required to be provided by
+        a Clearing Participant pursuant to Rule 2508;
+
+“Authorised User”
+         means, in relation to a Corporate Investor Participant or a Participant other than an Investor
+         Participant, a person approved by that Participant in the manner prescribed by HKSCC as
+         being authorised to access CCASS on behalf of that Participant via its CCASS Terminal or
+         its Participant Gateway or the CCASS Internet System, as referred to in Rule 704 and
+         Sections 3.4 and 3.10;
+
+“automatic order matching”
+       has the same meaning as defined in the Exchange Rules;
+
+
+“Back-Up Centre”
+       means a place where back-up facilities are provided by HKSCC to a Participant other than an
+       Investor Participant, as referred to in Rule 1301;
+
+“Banking (Capital) Rules”
+       means the Banking (Capital) Rules made by the HKMA under the Banking Ordinance
+       (Chapter 155 of the Laws of Hong Kong);
+
+“Base Currency”
+        means Hong Kong dollars, or such other currency as designated by HKSCC and notified to
+        Clearing Participants and Clearing Agency Participants from time to time;
+
+“Basic Contribution”
+        means a contribution made or required to be made by a Clearing Participant to the Guarantee
+        Fund pursuant to Rule 2502(i);
+
+“Batch-settlement-run”
+
+
+                                                - 1 -
+           means the process adopted by HKSCC to effect settlement at stated times on a Settlement
+           Day of certain transactions accepted for settlement in CCASS, whereby Eligible Securities
+           will be automatically debited from the Stock Clearing Accounts/Stock Account of the
+           delivering Participants and credited to the Stock Clearing Accounts/Stock Account of the
+           receiving Participants, as referred to in Rule 1003;
+
+“Board”
+           means the board of directors of HKSCC;
+
+“Board Lot”
+        means, in relation to a listed Eligible Security, the standard number of such Eligible
+        Securities constituting one lot for trading purposes and in relation to an unlisted Eligible
+        Security, the standard number of such Eligible Securities constituting one lot for transferring
+        purposes as specified in the offering documents;
+
+“Broker Participant”
+        means a Participant admitted to participate in CCASS as a Broker Participant immediately
+        before 3 December 2007 and whose Broker Participantship had not been terminated;
+
+“Business Day”
+         means a day on which CCASS is open for business to Participants (except Saturday, Sunday
+         and public holiday) and shall, for the purposes of or in connection with any depository,
+         nominee or other related services that may be provided by CCASS Depository or the
+         Customer Service Centre, exclude the day on which CCASS Depository and the Customer
+         Service Centre are closed at any time due to severe weather conditions pursuant to the
+         Operational Procedures unless otherwise determined by HKSCC;
+
+“Buy-in”
+           means a transaction as specified in paragraphs (iii) and (iv) of Rule 3501 or paragraph (ii) of
+           Rule 3501A in relation to the CNS System or in paragraphs (iii) and (iv) of Rule 3402 in
+           relation to the Isolated Trades System;
+
+“Capped Liability Period”
+       means the period beginning from the date on which HKSCC declares a Clearing Participant
+       or Clearing Agency Participant to be a defaulter for an Event of Default and ending on the 5th
+       Business Day following such declaration, provided that each time another Clearing
+       Participant or Clearing Agency Participant is declared a defaulter for an Event of Default
+       during a prevailing Capped Liability Period, such Capped Liability Period shall be extended
+       until the 5th Business Day following each such declaration and no new Capped Liability
+       Period will be established for such declaration;
+
+“CCASS”
+       means the Central Clearing and Settlement System operated by HKSCC, and unless
+       otherwise stated or the context requires otherwise, references in the Rules to “CCASS” shall
+       include RMS and CCMS;
+
+“CCASS Depository”
+       means, one or more securities depositories for CCASS, providing safe-keeping facilities for
+       Eligible Securities held in CCASS as well as to cater for withdrawals and deposits of Eligible
+       Securities by Participants;
+
+“CCASS Internet System”
+        means the website operated by HKSCC for enabling Investor Participants and, upon
+        authorization by a Clearing Participant or a Custodian Participant, SSA Statement Recipients
+        of that Clearing Participant or Custodian Participant to access CCASS in accordance with
+
+
+                                                 - 2 -
+          the Rules;
+
+“CCASS Terminal”
+        means, in relation to a Participant other than an Investor Participant or a Designated Bank, a
+        terminal which provides direct electronic linkage to the CCASS host computer of HKSCC,
+        as referred to in Section 3.1.1 of the Operational Procedures, installed at the office premises
+        of the Participant, its Settlement Agent or the Designated Bank;
+
+“CCASS Terminal User Guide” or “CCASS Terminal User Guide for Participants”
+        means the guide entitled "CCASS Terminal User Guide for Participants" of HKSCC in
+        relation to CCASS, containing information on the use of CCASS Terminals by Participants
+        other than Investor Participants, as from time to time in force;
+
+“CCMS”
+          means the Common Collateral Management System, a common sub-system of CCASS and
+          DCASS operated by HKSCC, HKFE Clearing Corporation Limited and The SEHK Options
+          Clearing House Limited, which enables Participants to manage their collateral paid, provided
+          or delivered to, or deposited with HKSCC;
+
+“CCMS Collateral Account “
+       means any account established in CCMS for a Participant other than an Investor Participant
+       for debiting and crediting collateral, as referred to in Rule 601A. For the purposes of the
+       Rules and the Operational Procedures, unless otherwise specified, the term “CCMS
+       Collateral Account” does not include an account established in CCMS for a Participant by
+       another Recognized Clearing House under its rules;
+
+“CCMS House Collateral Account “
+       means House Collateral Account 0001 established in CCMS for a Participant (other than an
+       Investor Participant) or, in the case of a Clearing Agency Participant which is a China
+       Connect Clearing House, for such Participant in respect of each Special Participant, as
+       referred to in Rule 601A;
+
+“Charged Property”
+        means the Collateral Securities and any Derived Assets of a Participant, as referred to in
+        Rule 3608;
+
+“CHATS”
+       means Clearing House Automated Transfer System operated by Hong Kong Interbank
+       Clearing Limited ;
+
+“CHATS Payment Instruction” or “CPI”
+       means a payment instruction generated by HKSCC and transmitted electronically (i) to a
+       Designated Bank requesting that Designated Bank to effect a CCASS-related CHATS
+       payment for a paying Participant or (ii) to a bank designated by HKSCC requesting that bank
+       to effect a CCASS-related CHATS payment for HKSCC in accordance with the Rules;
+
+“Chief Executive”
+         means the Chief Executive from time to time appointed by the Board or, as the context may
+         require, his designee;
+
+“China Connect Clearing House”
+        means a clearing house in Mainland China acceptable to HKSCC and included in the list of
+        China Connect Clearing Houses from time to time, as referred to in Rule 4105(b);
+
+“China Connect Clearing Participant”
+
+
+                                               - 3 -
+          means a Clearing Participant which is registered as a China Connect Clearing Participant by
+          HKSCC;
+
+“China Connect Clearing Participant Registration Criteria”
+        means the eligibility criteria in Rule 4103 and any additional eligibility criteria which
+        HKSCC may prescribe from time to time for a Participant to be, and to remain, registered as
+        a China Connect Clearing Participant as referred to in Rule 4103;
+
+“China Connect Clearing Services”
+       means the clearing, settlement, depository, nominee and other services that may be provided
+       by HKSCC to Participants other than Investor Participants for the purposes of or in
+       connection with establishing and operating a Clearing Link as referred to in Rule 4102;
+
+“China Connect Exchange Participant”
+       has the same meaning as defined in the Exchange Rules;
+
+“China Connect Market”
+       has the same meaning as defined in the Exchange Rules;
+
+“China Connect Market Operator”
+       has the same meaning as defined in the Exchange Rules;
+
+“China Connect Securities”
+       has the same meaning as defined in the Exchange Rules. Unless the context otherwise
+       requires, any reference in the Rules to “China Connect Securities” includes “Special China
+       Connect Securities”;
+
+“China Connect Securities Trade”
+       means a trade in China Connect Securities (including Special China Connect Securities)
+       executed on a China Connect Market through an SEHK Subsidiary under a Trading Link;
+
+“Clearing Agency Participant”
+        means a Participant admitted to participate in CCASS as a Clearing Agency Participant.
+        Where applicable, references in the Rules to “Clearing Agency Participant” shall be construed
+        to include the Clearing Agency Participant in its capacity as a China Connect Clearing House;
+
+“Clearing Agency Transaction”
+        means a transaction other than an SI Transaction between (i) a Participant other than an
+        Investor Participant or in the case of a GCP, including its NCP, and (ii) a Clearing Agency
+        Participant for settlement in CCASS as referred to in Rule 902. For the avoidance of doubt,
+        a Clearing Agency Transaction does not include an Exchange Trade, one of the parties to
+        which has been substituted by a Clearing Agency Participant under Rule 901;
+
+“Clearing Agreement”
+        means a written agreement between an NCCCP and a GCP made pursuant to Rule 4001 or
+        between a Special Participant and a China Connect Clearing House made pursuant to Rule
+        4205;
+
+“Clearing House of HKAB” or “Clearing House”
+        means the clearing house of The Hong Kong Association of Banks managed by Hong Kong
+        Interbank Clearing Limited for the clearance of payment transactions between its members
+        (which include the Designated Banks and HKSCC);
+
+“Clearing Link”
+        means any cross-boundary arrangement that may be entered into by HKSCC with a China
+
+
+                                              - 4 -
+         Connect Clearing House as referred to in Rule 4101 or Rule 4201;
+
+“Clearing Links Agreement”
+        means an agreement that is or may be entered into by HKSCC with a China Connect
+        Clearing House relating to one or more Clearing Links (as may be amended, restated and/or
+        supplemented from time to time);
+
+“Clearing Participant”
+        means a Participant admitted to participate in CCASS as a Direct Clearing Participant or a
+        General Clearing Participant. Where applicable, references in the Rules to “Clearing
+        Participant” shall be construed to include the Clearing Participant in its capacity as a China
+        Connect Clearing Participant;
+
+“Clearing Service Termination Event”
+          means an event in relation to the winding down of clearing and settlement services by
+          HKSCC in relation to Market Contracts pursuant to Rule 4301;
+
+“Closing-out Contract”
+       means a contract entered into by HKSCC on behalf of a defaulting Clearing Participant or
+       Clearing Agency Participant pursuant to Rule 3607;
+
+“CMU”
+     means the Central Moneymarkets Unit of the HKMA;
+
+“CMU Account”
+     means a custody account within the CMU in the name of a person who is a Recognized Dealer
+     and/or a CMU Member recording the Exchange Fund Notes, Government Bonds, Specified
+     Instruments and/or CMU Instruments (as the case may be) for the time being held by HKMA
+     on behalf of that person within CMU, including any sub-account under it;
+
+“CMU Instruments”
+     means those money market or capital market instruments (i) which are specified by the HKMA,
+     and notified to CMU Members, as a CMU Instrument, (ii) which are listed or to be listed on
+     the Exchange and (iii) (where the issuer is a company or a non-Hong Kong company, within
+     the meaning of those terms in the Companies Ordinance) in respect of which a prospectus has
+     been registered with the Registrar of Companies in Hong Kong;
+
+“CMU Member”
+     means a person who has entered into a CMU membership agreement with HKMA regulating
+     that person’s membership of the CMU Service;
+
+“CMU Service”
+     means the service which HKMA offers through CMU providing a central depository for the
+     custody of CMU Instruments, an electronic system for the recording of the transfer of CMU
+     Instruments by book entry between CMU Members;
+
+“Code”
+         means the United States Internal Revenue Code of 1986, as amended;
+
+“Collateral”
+       means collateral, in such form as HKSCC may from time to time require, to be provided by a
+       Participant pursuant to Rule 602, 806, 3501, 3501A or 3602 and additionally, to be provided by
+       a TSF CCASS Participant pursuant to Rule 12A14 or a China Connect Clearing Participant
+       pursuant to Rule 4107(iii) or 4107(viii);
+
+
+
+                                               - 5 -
+“Collateral Security”
+       means an Eligible Security which is from time to time held by or deposited with HKSCC by a
+       Participant for credit into the relevant CCMS Collateral Account of such Participant, in
+       accordance with Rule 3601, 3601A, 3603 or 3608;
+
+“Commission”
+     means the Securities and Futures Commission referred to in section 3(1) of the Securities and
+     Futures Ordinance;
+
+“Common Participant”
+     means a person admitted as a Participant of CCASS and duly registered as a participant of one
+     or more of the other Recognized Clearing Houses and “Common Participantship” shall be
+     construed accordingly;
+
+“Compulsory Stock Borrowing and Lending Regulations”
+     means the regulations which appear at Appendix 6 to the Operational Procedures as amended
+        from time to time;
+
+“Compulsory Stock Borrowing Transaction”
+     means a transaction between a Lender and HKSCC which is contemplated by Rule 3503 and is
+     entered into in accordance with section 2.2 of the Compulsory Stock Borrowing and Lending
+     Regulations;
+
+“Continuous Net Settlement System” or “CNS System”
+       means the method of settlement in relation to certain Exchange Trades, China Connect
+       Securities Trades and Clearing Agency Transactions as referred to in Rules 3301 to 3308;
+
+“Contributions”
+       means, in relation to a Clearing Participant, both the Basic Contribution and the Dynamic
+       Contribution of the Clearing Participant;
+
+“controller”
+       has the meaning assigned to it by section 18(1) of the Securities and Futures Ordinance;
+
+“Corporate Investor Participant”
+       means an Investor Participant which is a corporation as referred to in Rule 302;
+
+“Cross-Border Transfer Instructions”
+       means instructions given by a Participant to HKSCC (in such form as HKSCC may prescribed
+       from time to time) in relation to the transfer of (i) Foreign Securities; or (ii) Uncertificated
+       Eligible Securities, as referred to in Rule 907;
+
+“Custodian Participant”
+      means a Participant admitted to participate in CCASS as a Custodian Participant;
+
+“Customer Service Centre”
+      means the location specified by HKSCC from time to time at which Investor Participants may
+      give instructions (in such form as HKSCC may require) in connection with the HKSCC
+      services available to them to HKSCC;
+
+“DB Nominee Account”
+       means in relation to any Participant, any (or, as the context may require, each) bank account
+       denominated in an Eligible Currency maintained by that Participant’s Designated Bank in
+       accordance with the requirements in the FINI Terms and Conditions and the FINI User Guide
+
+
+                                               - 6 -
+         and approved by HKSCC for FINI money settlement purposes in respect of that Participant’s
+         Electronic Application Instructions for New Issue Shares;
+
+“DCASS”
+     means the Derivatives Clearing and Settlement System operated by HKFE Clearing
+     Corporation Limited and The SEHK Options Clearing House Limited;
+
+“de-earmark”
+       means the designation of earmarked TSF Stocks as not subject to earmarking, and
+       “de-earmarking” shall be construed accordingly;
+
+“Debt Securities”
+       means an issue of debenture or loan stock, debentures, bonds and notes (including Exchange
+       Fund Notes, Government Bonds, Specified Instruments and CMU Instruments) and other
+       securities or instruments, either interest bearing or non-interest bearing, acknowledging,
+       evidencing or creating indebtedness whether secured or unsecured, options, warrants or similar
+       rights to subscribe or purchase any of the foregoing and convertible debt securities, but
+       excluding ELI (as defined in the Exchange Rules);
+
+“Default Information”
+       means any information provided by HKSCC to a Receiving Clearing Participant relating to a
+       Defaulter including any information given relating to any action carried out pursuant to Rule
+       3702;
+
+“Delivery Instruction” or “DI”
+       means an instruction of a Participant in such form as HKSCC may from time to time prescribe
+       as being valid to effect book-entry delivery of Eligible Securities in CCASS to another
+       Participant or HKSCC in respect of transactions in Eligible Securities accepted for settlement
+       in CCASS, as referred to in Rule 1003;
+
+“Depositary”
+       has the same meaning as “depositary” in the Exchange’s Listing Rules;
+
+“Depositary Receipts”
+       has the same meaning as “depositary receipts” in the Exchange’s Listing Rules;
+
+“Derived Assets”
+       means all non-cash distributions, securities, rights, entitlements or other property which accrue
+       or are offered or issued at any time (by way of bonus, rights, redemption, conversion, exchange,
+       substitution, consolidation, subdivision, preference, warrant, option, purchase, takeover or
+       otherwise) in respect of Collateral Securities;
+
+“Designated Bank”
+       means, in relation to any Participant, any bank in Hong Kong designated by that Participant
+       and approved by HKSCC for money settlement purposes;
+
+“Designated Bank Account”
+       means, in relation to any Participant, any (or, as the context may require, each) bank account
+       denominated in an Eligible Currency maintained by that Participant with its Designated Bank
+       and approved by HKSCC for money settlement purposes;
+
+“Direct Clearing Participant” or “DCP”
+       means a Participant admitted to participate in CCASS as a Direct Clearing Participant or a
+       Broker Participant which is deemed to be a Direct Clearing Participant under Rule 305;
+
+
+
+                                                - 7 -
+“Direct Credit Instruction” or “DCI”
+       means a payment instruction generated by HKSCC and forwarded for processing to the
+       Designated Bank of a Participant via the Clearing House of HKAB, to effect payment of sums
+       owing by HKSCC to a Participant in respect of certain CCASS operations or services,
+       including any risk management measures adopted by HKSCC;
+
+“Direct Debit Instruction” or “DDI”
+       means a payment instruction generated by HKSCC and forwarded for processing to the
+       Designated Bank of a Participant via the Clearing House of HKAB, to effect payment of sums
+       owing by a Participant to HKSCC in respect of certain CCASS operations or services,
+       including any risk management measures adopted by HKSCC;
+
+“Disciplinary Appeals Committee”
+       means the committee designated by the Board consisting of one or more independent
+       non-executive directors of HKEX and/or other persons co-opted by the Board;
+
+“Disciplinary Committee”
+       means the committee of the Board designated as the Disciplinary Committee, consisting of one
+       or more directors of HKSCC and/or such other persons as the Board may appoint;
+
+“Dynamic Contribution”
+      means (i) a contribution made or required to be made by a Clearing Participant to the
+      Guarantee Fund pursuant to Rule 2502(ii) ; (ii) where any Assessment has been demanded by
+      HKSCC, any Assessment provided or required to be provided by the Clearing Participant; and
+      (iii) where any Voluntary Recap Amount has been requested by HKSCC, any Voluntary Recap
+      Amount provided by the Clearing Participant which will not be refunded by HKSCC to such
+      Clearing Participant in accordance with Rule 2509A(iv);
+
+“Dynamic Contribution Credit”
+      means a credit limit in respect of Dynamic Contribution (other than any Assessment or
+      Voluntary Recap Amount) that may be allowed to each Clearing Participant, as referred to in
+      Rule 2502;
+
+“E-mail”
+       means the electronic mail services for sending messages through electronic mail or other
+       means specified by HKSCC to SSA Statement Recipients upon authorization by a Clearing
+       Participant or a Custodian Participant;
+
+“Early Termination Date”
+       means, in respect of a Market Contract registered in the name of a Clearing Participant or
+       Clearing Agency Participant, the date determined as an Early Termination Date for such
+       Market Contract in accordance with Rule 3705 or 3706, as the case may be. A Market
+       Contract shall be terminated or novated with effect from the Early Termination Date relating to
+       it;
+
+“earmark”
+      means the designation of TSF Stocks as stocks purchased with the support of the FX Services,
+      and “earmarking” shall be construed accordingly;
+
+“earmarked TSF Stocks”
+      means TSF Stocks purchased with the support of the FX Services and which shall be held in a
+      TSF Account unless otherwise provided in the Rules or determined by HKSCC;
+
+“Electronic Application Instructions for New Issue Shares”
+       means instructions by a Participant via FINI for an application to be made on its behalf for
+
+
+                                               - 8 -
+        New Issue Shares and for the payment of application moneys, as referred to in Rule 1101(vi);
+
+“Electronic Payment Instruction” or “EPI”
+       means a payment instruction generated by HKSCC and forwarded for processing to the
+       Designated Bank of a Participant via the Clearing House of HKAB, to effect (i) money
+       settlement between two Participants in relation to Isolated Trades or SI or ISI Transactions in
+       CCASS on a DVP basis; (ii) payment of money by Clearing Participants or Custodian
+       Participants to their SSA Statement Recipients in respect of STI Transfers on a DVP basis; (iii)
+       payment of fees and expenses by Participants other than Investor Participants to HKSCC for
+       CCASS services; or (iv) redelivery to China Connect Clearing Participants of Collateral
+       provided to HKSCC for the early release of China Connect Securities that are
+       Securities-on-hold;
+
+“Eligible Currency”
+        means a currency which is from time to time and for the time being accepted by HKSCC as
+        being a currency in which an Eligible Security may be traded and settled;
+
+“Eligible Security”
+          means an issue of securities including but not limited to China Connect Securities, Foreign
+          Securities, Debt Securities, Depositary Receipts, Structured Products, Exchange Fund Notes,
+          Government Bonds, Specified Instruments, CMU Instruments, warrants, options and Units
+          and other rights under collective investment schemes, which is from time to time and for the
+          time being accepted as eligible by HKSCC for deposit, clearance and settlement in CCASS,
+          in accordance with Rule 501, and (a) where the context so requires shall include any
+          particular security or securities of such an issue and (b) unless the context will not admit,
+          shall include, upon their issue, all New Issue Shares so accepted as eligible;
+
+“Eligible U.S. Securities”
+          means any U.S. securities that are regularly traded on (i) a national securities exchange
+          which is registered under section 6 of the Securities Exchange Act of 1934 or (ii) the
+          NASDAQ, provided that no such securities are (x) U.S. real property interests as defined in
+          section 897 of the Code, (y) partnerships, trusts, or real estate investment trusts subject to
+          withholding pursuant to Code section 1445(e), or (z) partnerships subject to withholding
+          pursuant to Code section 1446;
+
+“Entitlement Account”
+         means, in relation to each Participant other than an Investor Participant, that Stock
+         Segregated Account (account number 02) of that Participant which is designated as its
+         Entitlement Account;
+
+“Exchange”
+        means The Stock Exchange of Hong Kong Limited;
+
+“Exchange Fund Bills and Notes Clearing and Settlement System” or “EFCS”
+        means the Exchange Fund Bills and Notes Clearing and Settlement System established and
+        operated by the HKMA;
+
+“Exchange Fund Notes”
+        means notes which are (i) issued or to be issued by the HKMA on behalf of the Hong Kong
+        Government under the Exchange Fund Ordinance (Cap. 66) for the account of the Exchange
+        Fund established under that Ordinance and (ii) listed or to be listed on the Exchange;
+
+“Exchange Participant”
+       has the same meaning as in the Exchange Rules and “Exchange Participantship” should be
+       construed accordingly;
+
+
+                                                - 9 -
+“Exchange Rules”
+        means the Rules of the Exchange as from time to time in force;
+
+“Exchange Trade”
+        means a trade in an Eligible Security (other than a China Connect Security) either    reported
+        to the Exchange by an Exchange Participant or effected on the Exchange;
+
+“Exchange Traded Fund”
+        Means any open-ended fund, Unit Trust or similar investment arrangement that is listed
+        and/or traded on the Exchange;
+
+“Exchange Trading System”
+        means the automatic order matching and execution system as installed and operated by the
+        Exchange for securities trading;
+
+“Exchange's Listing Rules”
+        means the “Rules governing the listing of securities on The Stock Exchange of Hong Kong
+        Limited”, as from time to time in force;
+
+“Executive Committee”
+         means the committee of the Board designated as the Executive Committee, consisting of one
+         or more directors of HKSCC and/or such other persons as the Board may appoint;
+
+“Expected Uncollateralised Loss”
+        means, in respect of a Clearing Participant, the net projected loss calculated under daily
+        stress testing arising from all CNS stock positions of the Clearing Participant;
+
+“Event of Default”
+         means an event relating to a Clearing Participant or Clearing Agency Participant as referred
+         to in Rule 3701;
+
+“Failure to Pay Notice”
+          means a written notification provided by a Clearing Participant or Clearing Agency
+          Participant to HKSCC pursuant to Rule 3705 upon the failure by HKSCC to make, when due,
+          any payment to a Clearing Participant or Clearing Agency Participant (other than a defaulting
+          Clearing Participant or Clearing Agency Participant) under a Market Contract;
+
+“Financial Resources Rules”
+        means the Securities and Futures (Financial Resources) Rules made by the Commission under
+        the Securities and Futures Ordinance (Chapter 571 of the laws of Hong Kong) and any
+        amendments, supplements, variations or modifications thereto from time to time in force;
+
+“FINI”
+         means “Fast Interface for New Issuance”, an online platform operated by HKSCC that is
+         mandatory for admission to trading and, where applicable, the collection and processing of
+         specified information on subscription in and settlement for all New Issues;
+
+“FINI CP User”
+        means a Participant which is accepted by HKSCC to use FINI in its capacity as an “HKSCC
+        Participant”;
+
+“FINI PFR”
+
+
+                                               - 10 -
+         means the pre-funding requirement to be satisfied by a Participant in respect of its Electronic
+         Application Instructions for New Issue Shares, as referred to in Section 8.18A.4;
+
+“FINI Terms and Conditions”
+        means the terms and conditions governing the use of FINI, as from time to time prescribed by
+        HKSCC;
+
+“FINI User Guide”
+        means the "FINI User Guide" of HKSCC in relation to FINI, containing information on the
+        use of FINI by FINI users, as from time to time in force;
+
+“Forced-Sale Notice”
+        means a notice which may from time to time be issued by HKSCC, the Exchange or an
+        SEHK Subsidiary to a Participant or an NCCCP of the Participant, requiring the Participant or
+        the NCCCP to reduce its or its clients’ relevant holdings in a China Connect Security in
+        compliance with any foreign shareholding limit imposed under the applicable laws of
+        Mainland China;
+
+“Foreign Securities”
+        means the securities which are either listed both on the Exchange and on an overseas
+        exchange (including NASDAQ or AMEX) or listed on an overseas exchange and admitted to
+        trading on the Exchange, which may be held in an account in the name of HKSCC with an
+        Appointed Depositary and in respect of which HKSCC provides settlement and clearing
+        services. For the avoidance of doubt, Foreign Securities do not include China Connect
+        Securities;
+
+“Former Clearing Participant”
+        means, at any time, a person who was a Clearing Participant but whose participantship had
+        been terminated prior to such time;
+
+“FX”
+         means foreign exchange;
+
+“FX Services”
+        means, the foreign exchange services which may be provided by HKSCC as set out in
+        Chapter 12A of the Rules;
+
+“GEM Listing Rules”
+        means the “Rules Governing the Listing of Securities on the Growth Enterprise Market of
+        The Stock Exchange of Hong Kong Limited”, as from time to time in force;
+
+“General Clearing Participant” or “GCP”
+         means a Participant admitted to participate in CCASS as a General Clearing Participant;
+
+“General Purpose Designated Bank Account”
+         means, in relation to any Participant, the General Purpose Designated Bank Account which it
+         is required to maintain in accordance with Rule 1201;
+
+“Government Bonds”
+       means bonds which are issued or to be issued by the Hong Kong Government acting through
+       the HKMA under the Loans Ordinance (Chapter 61 of the Laws of Hong Kong) for the
+       purpose of promoting the further development of the Hong Kong bond market and the
+       proceeds of which will be credited to a special purpose fund established under the Public
+
+
+                                                - 11 -
+         Finance Ordinance (Chapter 2 of the Laws of Hong Kong);
+
+“Guarantee Fund”
+        means the fund referred to in Rule 2501;
+
+“Guarantee Fund Contribution Balance”
+        means, on any Business Day, with respect to each Clearing Participant, the aggregate value
+        of the Basic Contribution and Dynamic Contribution provided by the Clearing Participant,
+        as reduced by payments out of the Guarantee Fund allocated to such Basic Contribution
+        and/or Dynamic Contribution, as applicable, in accordance with Rule 2507;
+
+“Guarantee Fund Expected Uncollateralised Loss”
+        has the meaning given to it in Section 10.11.3C of the Operational Procedures;
+
+“Guarantee Fund Resources”
+        means the Guarantee Fund and any other amounts specified as forming part of the Guarantee
+        Fund Resources in the Rules;
+
+“Guarantee Fund Risk Collateral”
+        means collateral collected by HKSCC under Section 10.11.3C of the Operational Procedures;
+
+“Guarantee Fund Risk Predefined Limit”
+        means an amount equal to 50% of the Guarantee Fund Threshold or such other percentage as
+        HKSCC deems appropriate from time to time;
+
+“Guarantee Fund Threshold”
+        means the Guarantee Fund size prescribed by HKSCC from time to time pursuant to Rule
+        2501;
+
+“HKEX”
+          means Hong Kong Exchanges and Clearing Limited;
+
+“HKEX website”
+       means the official website of HKEX at http://www.hkex.com.hk or at such other website
+       address specified by HKEX from time to time;
+
+“HKMA”
+      means the Monetary Authority appointed under Section 5A of the Exchange Fund Ordinance
+      (Cap. 66) and includes, where the context admits or requires, the authority of the
+      Government of Hong Kong known as the Hong Kong Monetary Authority;
+
+“HKSCC”
+      means the Hong Kong Securities Clearing Company Limited including, where the context so
+      requires, its agents, nominees, representatives, officers and employees;
+
+“HKSCC Default Applicable Percentage”
+      means, in respect of an HKSCC Failure to Pay Event or an HKSCC Insolvency Event, a
+      percentage applied by HKSCC to determine the HKSCC Default CP Receivable of a
+      Clearing Participant and the amount payable by HKSCC in respect of its Guarantee Fund
+      Contribution Balance pursuant to Section 17B.1 of the Operational Procedures;
+
+“HKSCC Default CP Receivable”
+      means, in respect of an HKSCC Failure to Pay Event or an HKSCC Insolvency Event, the
+      amount payable by HKSCC to each relevant Clearing Participant or Clearing Agency
+      Participant pursuant to Section 17B.1.3(ii) of the Operational Procedures;
+
+
+                                              - 12 -
+“HKSCC Default Final CP Payable”
+      means, in respect of an HKSCC Failure to Pay Event or an HKSCC Insolvency Event, the
+      final net amount payable by each relevant Clearing Participant or Clearing Agency
+      Participant to HKSCC, after taking into account the operation of Sections 17B.1.3(i)(a) and
+      17B.1.3(i)(b) of the Operational Procedures;
+
+“HKSCC Default Interim CP Payable”
+      means, in respect of an HKSCC Failure to Pay Event or an HKSCC Insolvency Event, the
+      amount payable by each relevant Clearing Participant or Clearing Agency Participant to
+      HKSCC, after taking into account any Margin Balance applied pursuant to Section
+      17B.1.3(i)(a) of the Operational Procedures;
+
+“HKSCC Failure to Pay Event”
+      means an event arising from the failure of HKSCC to make all relevant payments under a
+      Market Contract to a Clearing Participant or Clearing Agency Participant by the end of the
+      relevant HKSCC Failure to Pay Grace Period, provided that no such event shall occur if (1)
+      such failure to pay arises as a result of technical or administrative reasons beyond the control
+      of HKSCC; or (2) during the HKSCC Failure to Pay Grace Period, HKSCC has exercised its
+      powers under Rules 3705(iii)(1) and/or 3705(iii)(2);
+
+“HKSCC Failure to Pay Grace Period”
+      means the period from (but excluding) the day on which HKSCC receives a Failure to Pay
+      Notice from a Clearing Participant or Clearing Agency Participant to (and including) the
+      21st Business Day following such day;
+
+“HKSCC Insolvency Event”
+      means an event relating to the insolvency of HKSCC as referred to in Rule 3706;
+
+“Hong Kong”
+        means the Hong Kong Special Administrative Region of the People's Republic of China;
+
+“Hong Kong dollar”, “HKD” or “$”
+       means Hong Kong dollar, the lawful currency of Hong Kong;
+
+“Identified Market Contracts”
+          means the Market Contracts (including the unsettled Market Contracts of a defaulting
+          Clearing Participant or Clearing Agency Participant and those of any non-defaulting
+          Clearing Participants or Clearing Agency Participants so determined by HKSCC pursuant to
+          Rule 3709, but excluding the Market Contracts between HKSCC and each China Connect
+          Clearing Participant arising from China Connect Securities Trades) to be terminated under
+          the contract termination process as referred to in Rule 3709;
+
+“Individual Investor Participant”
+         means an Investor Participant who is an individual referred to in Rule 302;
+
+“Initial Margin Calculation Guide”
+          means the guide entitled “Initial Margin Calculation Guide” of HKSCC in relation to RMS,
+          containing information on the calculation of Margin under the CNS System, as from time to
+          time in force;
+
+“Input”
+          means a successful input into CCASS;
+
+“Investor Participant”
+         means a person admitted to participate in CCASS as an Investor Participant who may be an
+
+
+                                               - 13 -
+           individual or joint individuals or a corporation;
+
+“Investor Settlement Instruction” or “ISI”
+         means an instruction relating to an Investor Participant, in such form as HKSCC may from
+         time to time prescribe as being valid, relating to transactions in Eligible Securities (other
+         than Exchange Trades, China Connect Securities Trades, Clearing Agency Transactions,
+         Settlement Instructions, Transfer Instructions and Cross-border Transfer Instructions) to be
+         settled in CCASS, as referred to in Rule 905;
+
+“ISI Transaction”
+         means a transaction to be settled in CCASS between an Investor Participant and a Participant
+         other than an Investor Participant as a result of (i) the input (and authorisation, if required) of
+         an Investor Settlement Instruction (without affirmation) or (ii) the input (and authorisation, if
+         required) of an Investor Settlement Instruction (with affirmation) affirmed by the Investor
+         Participant concerned;
+
+“Isolated Trade”
+          means, as the case may be, either, in relation to an Exchange Trade, a trade which is
+          designated by the two counterparty Exchange Participants concerned to be settled under the
+          Isolated Trades System or, in relation to a Clearing Agency Transaction, a trade which is
+          reported by a Clearing Agency Participant to be settled under the Isolated Trade System or,
+          such other trade or transaction between Participants (including an Exchange Trade and a
+          Clearing Agency Transaction but excluding a SI Transaction) which is not accepted by
+          HKSCC for settlement under the CNS System;
+
+“Isolated Trades System”
+          means the method of settlement in CCASS between Participants in relation to Isolated
+          Trades;
+
+“Issuer”
+           means any company or other legal person (i) any of whose shares, warrants, Structured
+           Products or Debt Securities, or (ii) whose shares are represented by Depositary Receipts of
+           which or (iii) which is the trustee or manager of any Units and the Units in which, are the
+           subject of an application for listing on the Exchange in connection with an initial public
+           offering of those shares, warrants, Depositary Receipts, Structured Products, Debt Securities
+           or Units or are listed on the Exchange or are otherwise accepted by HKSCC as Eligible
+           Securities;
+
+“Joint Individual Investor Participant”
+         means an Investor Participant consisting of more than one but not more than four individuals
+         as referred to in Rule 302;
+
+“Lender”
+           means, in respect of any Compulsory Stock Borrowing Transaction, a Participant other than
+           an Investor Participant which has lent Eligible Securities to HKSCC under that transaction;
+
+“Limited Recourse Applicable Percentage”
+        means, in respect of a Clearing Service Termination Event, a percentage applied by HKSCC
+        to determine the Limited Recourse CP Receivable of a Clearing Participant and the amount
+        payable by HKSCC in respect of its Guarantee Fund Contribution Balance pursuant to
+        Section 17A.1 of the Operational Procedures;
+
+“Limited Recourse CP Receivable”
+        means, in respect of a Clearing Service Termination Event, the amount payable by HKSCC
+         to each relevant Clearing Participant or Clearing Agency Participant pursuant to Section
+
+
+                                                  - 14 -
+          17A.1.3(ii) of the Operational Procedures;
+
+“Limited Recourse Final CP Payable”
+        means, in respect of a Clearing Service Termination Event, the final net amount payable by
+        each relevant Clearing Participant or Clearing Agency Participant to HKSCC, after taking
+        into account the operation of Sections 17A.1.3(i)(a) and 17A.1.3(i)(b) of the Operational
+        Procedures;
+
+“Limited Recourse Interim CP Payable”
+        means, in respect of a Clearing Service Termination Event, the amount payable by each
+         relevant Clearing Participant or Clearing Agency Participant to HKSCC, after taking into
+         account any Margin Balance applied pursuant to Section 17A.1.3(i)(a) of the Operational
+         Procedures;
+
+“Mainland Business Day”
+        means, in relation to a China Connect Market, a day on which the China Connect Clearing
+        Services relating to the clearing and settlement of China Connect Securities Trades on the
+        China Connect Market are available and CCASS is open for business to China Connect
+        Clearing Participants (except a Saturday, Sunday or a public holiday in either Hong Kong or
+        Mainland China);
+
+“Mainland China”
+       means the People’s Republic of China, other than Hong Kong, the Macau Special
+       Administrative Region and Taiwan;
+
+“Mainland Security Deposit”
+       means an amount determined by HKSCC as Mainland Security Deposit required to be
+       provided by a China Connect Clearing Participant pursuant to Rule 4107(i);
+
+“Mainland Settlement Deposit”
+       means an amount determined by HKSCC as Mainland Settlement Deposit required to be
+       provided by a China Connect Clearing Participant pursuant to Rule 4107(i);
+
+“Margin”
+      means an amount determined by HKSCC as required to be provided by a Clearing Participant
+      or Clearing Agency Participant pursuant to Rule 3601A;
+
+“Margin Balance”
+        means, in respect of a Clearing Participant or Clearing Agency Participant, the aggregate
+        value of Marks, Margin and other Collateral (including any excess Collateral but excluding
+        the Mainland Settlement Deposit, Mainland Security Deposit, Marks and other Collateral
+        provided for its China Connect Securities Trades) provided by such Clearing Participant or
+        Clearing Agency Participant, in each case, as recorded in its CCMS Collateral Account;
+
+“Margin Credit”
+          means a credit limit in respect of Margin that may be allowed to each Clearing Participant or
+          Clearing Agency Participant, as referred to in Section 10.10A of the Operational Procedures;
+
+“Marginable Position”
+      means the Mark-to-market value of the unsettled stock position of a Clearing Participant or
+      Clearing Agency Participant under the CNS System, as determined by HKSCC for
+      computation of Margin;
+
+“Marks”
+          means an amount required to be provided by a Clearing Participant (including a Clearing
+
+                                                - 15 -
+          Participant which is a China Connect Clearing Participant) or a Clearing Agency Participant
+          to HKSCC pursuant to Rule 3601 or Rule 4107(ii);
+
+“Mark-to-market”
+        means the evaluation of the extent, in money terms, to which the value of an unsettled
+        position in Eligible Securities of a Clearing Participant or a Clearing Agency Participant has
+        changed, in accordance with Rule 3601;
+
+“Market Contract”
+        means (i) a contract between HKSCC and a Clearing Participant or a Clearing Agency
+        Participant arising as a result of the Novation of an Exchange Trade to be settled under the
+        CNS System, or (ii) a contract between HKSCC and a China Connect Clearing Participant
+        arising as a result of the Novation of a China Connect Securities Trade to be settled under the
+        CNS System, or (iii) a contract between HKSCC and a Participant arising as a result of the
+        Novation of a Clearing Agency Transaction to be settled under the CNS System, as referred
+        to in Rule 3301;
+
+“Master SPSA Holder”
+          means an entity which has been assigned with a Master SPSA ID for using the
+          services for Special Segregated Accounts mapped to the Master SPSA ID;
+
+“Master SPSA ID”
+          means a 6-digit investor identification number in CCASS assigned to a Master SPSA
+          Holder pursuant to the terms and conditions (as approved by the Commission from
+          time to time) governing the use of the services for Special Segregated Accounts
+          mapped to a Master SPSA ID;
+
+“Morning Session”
+       means the period in the morning during which trading can be conducted on the Exchange
+       pursuant to the Exchange Rules;
+
+“Multi-counter Eligible Security”
+         means an Eligible Security of the same class of an Issuer which have been approved or
+         accepted for listing and trading on the Exchange in different Eligible Currencies under
+         separate stock code numbers;
+
+“Negative Confirmation of Payment” or “Negative Confirmation”
+         means, in relation to any DDI or debit EPI, a negative confirmation has been obtained if a
+         Designated Bank concerned has not issued to HKSCC before the specified time a
+         confirmation that payment will not be made in response to the DDI or debit EPI, and vice
+         versa, as referred to in Sections 14.4.3 and 14.5.3 of the Operational Procedures;
+
+“New Certificate”
+        means, in relation to Eligible Securities in registered form, each certificate for such Eligible
+        Securities which has been registered or re-issued in the name of HKSCC or its nominee since
+        it was last deposited with HKSCC by a Participant or, in the case of Eligible Securities newly
+        issued, each certificate issued in the name of HKSCC or its nominees;
+
+“New Issue”
+         means, in relation to any Issuer falling within paragraphs (i) and (ii) of the definition of that
+         term in the Rules, the issue or sale of shares in the capital, warrants, Depositary Receipts,
+         Structured Products or Debt Securities of that Issuer and in relation to any Issuer falling
+         within paragraph (iii) of that definition, the first issue or sale of Units on the Exchange
+         Traded Fund of which the Issuer is the manager or trustee, in each case in accordance with
+
+
+                                                 - 16 -
+          the terms and conditions of a Prospectus;
+
+“New Issue Brokerage”
+         means, in relation to a New Issue, the brokerage in respect of a successful application for
+         New Issue Shares to be passed on by an Issuer to an Exchange Participant under the
+         Exchange’s Listing Rules or the GEM Listing Rules, as the case may be;
+
+“New Issue Shares”
+         means, in relation to any New Issue, the shares, Depositary Receipts, warrants, Structured
+         Products, Debt Securities or Units which are the subject of that New Issue;
+
+“Nominee”
+        means HKSCC Nominees Limited or such other nominee company as may be used by
+        HKSCC from time to time in relation to the provision of nominee services to Participants;
+
+“Non-China Connect Clearing Participant” or “NCCCP”
+       means (i) an NCP or (ii) a Clearing Participant which is not a China Connect Clearing
+       Participant and which has entered into a Clearing Agreement with a GCP for the clearing of
+       its China Connect Securities Trades;
+
+“Non-Clearing Participant” or “NCP”
+        means: (i) an Exchange Participant; or (ii) a registered institution registered to carry on Type
+        1 regulated activity under the Securities and Futures Ordinance (Chapter 571 of the Laws of
+        Hong Kong) registered as a general clearing participant of The SEHK Options Clearing
+        House Limited which, in either case, is not a Clearing Participant;
+
+“non-trade transfer”
+         means, in relation to China Connect Securities, a transfer which involves a change in the
+         beneficial ownership of the China Connect Securities and which is not conducted through
+         the relevant Trading Link and executed on the relevant China Connect Market;
+
+“Notice of Assessment”
+           means a written notification provided by HKSCC to Clearing Participants of any demand
+           for Assessments pursuant to Rule 2508;
+
+“Novation”
+         means the legal process of novation, pursuant to which Market Contracts are made in
+         accordance with Rule 3301 or, in the case of China Connect Securities Trades, Rule 4106;
+
+“Old Certificate”
+        means, in relation to Eligible Securities in registered form, each certificate for such Eligible
+        Securities which is not a New Certificate;
+
+“Operational Procedures”
+         means the Operational Procedures of HKSCC, containing the practices, procedures and
+         administrative or other requirements relating to HKSCC’s services and the operations and
+         functions of the Systems, as from time to time in force;
+
+“Overseas Account”
+        means an overseas account from or to which Uncertificated Eligible Securities may be
+        transferred, as referred to in Rule 823;
+
+“Overseas Issuer”
+        means, in relation to Uncertificated Eligible Securities, an Issuer incorporated or otherwise
+        established outside Hong Kong;
+
+
+                                                - 17 -
+“Parallel Trading Conversion Instruction”
+          means an instruction given by a Participant other than an Investor Participant to HKSCC in
+          such form as HKSCC may prescribe from time to time, to effect the conversion of its
+          holdings in an Eligible Security subject to parallel trading arrangements, as referred to in
+          Rule 816B;
+
+“Participant”
+         means a person admitted for the time being by HKSCC as a participant of CCASS;
+
+“Participant Admission Appeals Committee”
+         means the committee convened to hear any appeal against the decisions by HKSCC on any
+         application to admit as a Participant other than an Investor Participant;
+
+“Participant Agreement”
+         means the agreement in prescribed form between a Participant other than an Investor
+         Participant and HKSCC regulating the terms and conditions of participation in CCASS;
+
+“Participant Gateway” or “PG”
+         means, in relation to a Participant other than an Investor Participant, its Settlement Agent or
+         a Designated Bank, an optional technical device which provides communication interface
+         with CCASS in respect of particular functions specified by HKSCC from time to time,
+         installed at the office premises in Hong Kong of the Participant, its Settlement Agent or the
+         Designated Bank;
+
+“Permitted Purpose”
+         means any purpose, the objective of which is to allow the Receiving Clearing Participant to
+         assist HKSCC in any actions HKSCC chooses to take pursuant to Rule 3702;
+
+“Pre-opening Session”
+         has the same meaning as defined in the Exchange Rules;
+
+“Prospectus”
+         means any prospectus, notice, circular or other document offering or calculated to invite
+         offers by the public to subscribe for or purchase securities (including shares, warrants,
+         Depositary Receipts, Debt Securities and Units), as supplemented or amended, and includes,
+         unless inconsistent with the context, its associated application form or forms;
+
+“Realtime Delivery versus Payment” or “RDP”
+         means, in relation to settlement of a stock position in CCASS by a Participant, the settlement
+         of such a stock position in CCASS immediately following the settlement of the
+         corresponding money position of such stock position by the Clearing House of the Hong
+         Kong Association of Banks;
+
+“Receiving Clearing Participant”
+         has the meaning as defined in Rule 3702A(i);
+
+“Receiving Clearing Participant Affiliates”
+         means, in relation to a Receiving Clearing Participant, any subsidiary or holding company, or
+         a subsidiary of a holding company of that Receiving Clearing Participant. For the purposes
+         of this definition, the terms “holding company” and “subsidiary” shall bear the same
+         respective meanings herein as in the Companies Ordinance (Chapter 622 of the Laws of
+         Hong Kong);
+
+“Recognized Clearing House”
+
+
+                                                - 18 -
+         means Hong Kong Securities Clearing Company Limited, HKFE Clearing Corporation
+         Limited or The SEHK Options Clearing House Limited;
+
+“Recognized Dealer”
+        means a person appointed as such by the HKMA under the EFCS;
+
+“recognized exchange controller”
+        has the meaning assigned to it by section 1 of Part 1 of Schedule 1 to the Securities and
+        Futures Ordinance;
+
+“Relevant Clearing Participant”
+        means, in relation to a Relevant Event, a Participant which participates in CCASS as a
+        Clearing Participant on the date of occurrence of the Relevant Event, notwithstanding the
+        subsequent cessation of its participation in CCASS of a Clearing Participant for whatever
+        reason. For the purposes of the Rules and the Operational Procedures, unless otherwise
+        specified, the term “Relevant Clearing Participant” includes the Clearing Participant in
+        default (if applicable);
+
+“Relevant CP Contracts”
+        means the Market Contracts of the relevant Clearing Participant or Clearing Agency
+        Participant to be terminated under an HKSCC Failure to Pay Event as referred to in Rule
+        3705;
+
+“Relevant Event”
+        means an event or circumstances, including but not limited to an Event of Default, which
+        results in or, in the opinion of HKSCC, may result in payments out of the Guarantee Fund
+        under Rule 2507 to satisfy the obligations and liabilities of HKSCC referred to in Rule 2506;
+        and in the case of a Clearing Participant or Clearing Agency Participant being declared a
+        defaulter because of an Event of Default, the date of occurrence of the Relevant Event refers
+        to the date the Clearing Participant or Clearing Agency Participant is declared to be a
+        defaulter;
+
+“Risk Management Committee”
+        means the committee of the Board designated as the Risk Management Committee,
+        consisting of one or more directors of HKSCC and/or such other persons as the Board may
+        appoint;
+
+“RMB”
+         means Renminbi, the lawful currency of the People’s Republic of China, for settlement in
+         Hong Kong;
+
+“RMB Buy Final FX Rate”
+      has the meaning as set out in Rule 12A10(iii);
+
+“RMB Buy Indicative FX Rate”
+      has the meaning as set out in Rule 12A10(i);
+
+“RMB Sell Final FX Rate”
+       has the meaning as set out in Rule 12A10(iv);
+
+“RMB Sell Indicative FX Rate”
+       has the meaning as set out in Rule 12A10(ii);
+
+“RMS”
+
+
+
+                                               - 19 -
+          means a sub-system of CCASS operated by HKSCC which enables Participants other than
+          Investor Participants to conduct risk monitoring and risk management functions on their stock
+          positions under the CNS System;
+
+“RMS Guide”
+      means the guide entitled “RMS Guide” of HKSCC in relation to RMS, containing
+      information on the use of RMS, the Initial Margin Calculation Guide, the Stress Test Value
+      Calculation Guide and such other information as may be included by HKSCC as part of the
+      RMS Guide from time to time;
+
+“Rules”
+          means the General Rules of HKSCC as set out herein and as may be amended or modified
+          from time to time and where the context so permits, shall include the Operational Procedures;
+
+“Scheme Effective Date”
+       means the date on which the Stock Exchange Scheme became effective, being the date on
+       which an official copy of the order of the High Court of Hong Kong sanctioning the Stock
+       Exchange Scheme together with the minute containing the particulars as required by section
+       61 of the Companies Ordinance were registered by the Registrar of Companies. For
+       purposes herein, Stock Exchange Scheme means the scheme of arrangement between the
+       Exchange and its shareholders under section 166 of the Companies Ordinance as set out in
+       the Stock Exchange Scheme document dated 3rd September, 1999;
+
+“Securities Loss”
+          means a loss of Eligible Securities, as referred to in Rule 2401;
+
+“Securities-on-hold”
+        means the Eligible Securities allocated to a Stock Clearing Account of a Clearing Participant
+        (including a Clearing Participant which is a China Connect Clearing Participant) or a Clearing
+        Agency Participant which is a party to a Market Contract by HKSCC under the CNS System,
+        as referred to in Rule 3604 or Rule 4107(viii);
+
+“SEHK Securities”
+      has the same meaning as defined in the Exchange Rules;
+
+“SEHK Subsidiary”
+      has the same meaning as defined in the Exchange Rules;
+
+“SEOCH Participant”
+      has the same meaning as in the Exchange Rules;
+
+“Settlement Agent”
+        means a person appointed by a Participant other than an Investor Participant, pursuant to Rule
+        3801 to access CCASS and conduct settlement and other activities in CCASS on behalf of the
+        Participant;
+
+“Settlement Day”
+        means (i) in relation to Eligible Securities other than China Connect Securities, a Business
+        Day on which the settlement services of CCASS in respect of such Eligible Securities are
+        open for use by Participants, and (ii) in relation to China Connect Securities, a day on which
+        the China Connect Clearing Services of CCASS in respect of the clearing and settlement of
+        such China Connect Securities are open for use by China Connect Clearing Participants;
+
+“Settlement Instruction” or “SI”
+        means an instruction of a Participant, in such form or manner as HKSCC may from time to
+
+
+                                                 - 20 -
+         time prescribe as being valid (including through a CCASS Terminal or Synapse), relating to
+         transactions in Eligible Securities (other than Exchange Trades, China Connect Securities
+         Trades, Clearing Agency Transactions, Electronic Application Instructions for New Issue
+         Shares, Investor Settlement Instructions, Transfer Instructions and Cross-border Transfer
+         Instructions) to be settled in CCASS, as referred to in Rule 904;
+
+“SI Transaction”
+        means a transaction to be settled in CCASS between two Participants other than Investor
+        Participants as a result of the input of a Settlement Instruction, authorized, if required, by
+        each of the Participants (such Settlement Instructions being matched in CCASS);
+
+“SMS”
+         means the short message services for sending messages via mobile phone or fixed line phone
+         or through other means specified by HKSCC to Investor Participants who have subscribed to
+         the services and to SSA Statement Recipients upon authorization by a Clearing Participant or
+         a Custodian Participant;
+
+“Specific Cash Collateral”
+       means cash in the relevant Eligible Currency which is from time to time provided by a
+       Participant to HKSCC in accordance with Rule 3601 or 3601A;
+
+“Special China Connect Securities”
+       has the same meaning as defined in the Exchange Rules;
+
+“Special Participant”
+        has the same meaning as defined in the Exchange Rules;
+
+“Special Segregated Account” or “SPSA”
+        means a Stock Segregated Account within the range of account codes specified by HKSCC
+        which is designated by a Custodian Participant or a GCP which is not an Exchange
+        Participant for one of its clients for the purpose of maintaining holdings of China Connect
+        Securities of this client and for facilitating the determination of the maximum amount of
+        China Connect Securities that may be sold by this client on a particular Trading day;
+
+“Special SEHK Securities”
+        has the same meaning as defined in the Exchange Rules. Unless the context requires
+        otherwise, any reference in the Rules to “SEHK Securities” includes “Special SEHK
+        Securities”;
+
+“Specified Instruments”
+         means those capital market instruments (other than Exchange Fund Notes, Government
+         Bonds and CMU Instruments) (i) which are for the time being specified as capable of being
+         held in the EFCS, (ii) which are listed or to be listed on the Exchange and (iii) (where the
+         issuer is a company or a non-Hong Kong company, within the meaning of those terms in the
+         Companies Ordinance) in respect of which a prospectus has been registered with the Registrar
+         of Companies in Hong Kong;
+
+“SPSA ID”
+       means a 6-digit investor identification number assigned to a Special Segregated Account;
+
+“SSA Statement Recipient”
+        means, in relation to a SSA with Statement Service of a Clearing Participant or a Custodian
+        Participant, the person or persons named and/or maintained by such Participant in the manner
+        prescribed by HKSCC in respect of that SSA with Statement Service, as referred to in Section
+        3.4A of the Operational Procedures. For the purposes of the Rules, such person or persons
+
+
+                                               - 21 -
+         named and/or maintained by the Participant in respect of the SSA with Statement Service shall
+         be treated as a single SSA Statement Recipient in respect of that SSA with Statement Service;
+
+“SSA with Statement Service”
+       means a Stock Segregated Account of a Clearing Participant or a Custodian Participant in
+       relation to which SSA Statement Recipient is named and/or maintained by such Participant;
+
+“STI Transfer”
+       means a transfer to be effected in CCASS between an SSA with Statement Service or a
+       Special Segregated Account and any other Stock Account (including any other SSA with
+       Statement Service or Special Segregated Account but excluding the Stock Collateral Control
+       Account and TSF Accounts) of a Clearing Participant or Custodian Participant as a result of (i)
+       the input (and authorisation, if required) of a Stock Segregated Account Transfer Instruction
+       (without affirmation) or (ii) the input (and authorisation, if required) of a Stock Segregated
+       Account Transfer Instruction (with affirmation) affirmed by the relevant SSA Statement
+       Recipient;
+
+“Stock Account”
+        means, (i) in relation to each Clearing Participant or Clearing Agency Participant, each Stock
+        Clearing Account, Stock Segregated Account, Stock Lending Account and Stock Collateral
+        Control Account; (ii) in relation to each Investor Participant, each Stock Clearing Account;
+        and (iii) in relation to each Participant other than a Clearing Participant, a Clearing Agency
+        Participant or an Investor Participant, each Stock Clearing Account, Stock Segregated
+        Account and Stock Lending Account, allocated to and operated by it in which Eligible
+        Securities of such Participant are credited or debited, as referred to in Rule 601, and in
+        relation to a TSF CCASS Participant, means, additionally, each TSF Account allocated to it by
+        HKSCC under Rule 12A08;
+
+“Stock Clearing Account”
+        means, in relation to each Participant, the main Stock Account in CCASS of such Participant
+        used for settlement purposes, as referred to in Rule 601;
+
+“Stock Collateral Control Account”
+        means, in relation to each Clearing Participant or Clearing Agency Participant, the Stock
+        Account in CCASS of such Participant which records (i) the Collateral Securities that have
+        been transferred from Stock Accounts of that Participant to its CCMS Collateral Account(s),
+        as referred to in Rule 601 and (ii) the Eligible Securities that have been transferred from Stock
+        Accounts of that Participant to a collateral account established in CCMS for that Participant
+        by another Recognized Clearing House under its rules;
+
+“Stock Exchange Trading Right”
+        has the same meaning as in the Exchange Rules;
+
+“Stock Lender Participant”
+         means a Participant admitted to participate in CCASS as a Stock Lender Participant;
+
+“Stock Lending Account”
+         means, an account which has been designated by HKSCC, in accordance with Rule 601, as
+         such for the purposes of the Compulsory Stock Borrowing and Lending Regulations;
+
+“Stock Pledgee Participant”
+         means a Participant admitted to participate in CCASS as a Stock Pledgee Participant;
+
+“Stock Release FX Transaction”
+
+
+
+                                                - 22 -
+         means a FX transaction relating to the sale of RMB by a TSF CCASS Participant to HKSCC
+         as TSF operator arising from or generated by the submission of a Stock Release Request by
+         such Participant, as referred to in Rule 12A12;
+
+“Stock Release Request”
+        means a request submitted by a TSF CCASS Participant to HKSCC for the purpose of
+        de-earmarking earmarked TSF Stocks, as referred to in Rule 12A12;
+
+“Stock Segregated Accounts” or “SSA”
+        means, (i) in relation to each Clearing Participant or Clearing Agency Participant, the Stock
+        Accounts in CCASS of such Participant other than its Stock Clearing Account, Stock
+        Lending Account and Stock Collateral Control Account; and (ii) in relation to each
+        Participant other than a Clearing Participant, a Clearing Agency Participant or an Investor
+        Participant, the Stock Accounts in CCASS of such Participant other than its Stock Clearing
+        Account and Stock Lending Account, as referred to in Rule 601, including but not limited to
+        SSA with Statement Service and Special Segregated Accounts of the Participant, and in
+        relation to a TSF CCASS Participant, TSF Accounts shall not be regarded as Stock
+        Segregated Accounts;
+
+“Stock Segregated Account Transfer Instruction” or “STI”
+        means an instruction of a Clearing Participant or Custodian Participant, in such form or
+        manner as HKSCC may from time to time prescribe as being valid (including through a
+        CCASS Terminal or Synapse), to effect book-entry movements of Eligible Securities
+        between an SSA with Statement Service or a Special Segregated Account and any other
+        Stock Account of the Participant in CCASS (including any other SSA with Statement Service
+        or Special Segregated Account but excluding the Stock Collateral Control Account and
+        where a Clearing Participant or a Custodian Participant is a TSF CCASS Participant,
+        excluding also the TSF Accounts), as referred to in Rule 601;
+
+“Stress Test Value Calculation Guide”
+         means the guide entitled “Stress Test Value Calculation Guide” of HKSCC in relation to
+         RMS, containing information on the calculation of stress test value under the CNS System,
+         as from time to time in force;
+
+“Structured Products”
+         means synthetic products, whether or not listed on the Exchange or any other exchange,
+         whose investment returns are linked to the performance of the underlying assets and which
+         include, but are not limited to, derivative warrants, ELI, Callable Bull/Bear Contracts (as
+         these terms are defined in the Exchange Rules) and other equity linked investments;
+
+“Synapse”
+      means the communications platform operated by HKSCC which provides a channel for the
+      transmission of information and instructions among Synapse Users, CCASS and any other
+      system that interfaces with Synapse for the facilitation of post-trade processes and workflows
+      pertaining to China Connect Securities Trades or for such other purposes as may be prescribed
+      or permitted by HKSCC from time to time;
+
+    “Synapse Terms and Conditions”
+       means the terms and conditions governing the use of Synapse, as from time to time prescribed
+       by HKSCC;
+
+    “Synapse User”
+       means, for the purposes of these Rules, a Participant which is accepted by HKSCC to use
+
+                                               - 23 -
+        Synapse as a “Clearing Participant” or “Local Custodian” under the Synapse Terms and
+        Conditions;
+
+    “Synapse User Guide”
+       means the “Synapse User Guide” of HKSCC in relation to Synapse, containing information on
+       the use of Synapse by Synapse users, as from time to time in force;
+
+“System”
+           means CCASS, FINI or any other platform, facility or system established, operated and/or
+           otherwise provided by or through HKSCC;
+
+“T-day”
+           means, in relation to a transaction in Eligible Securities other than China Connect Securities,
+           the day of the transaction as reported by the Exchange, and in relation to a transaction in
+           China Connect Securities, the day of the transaction as reported by the relevant SEHK
+           Subsidiary, its designated person or the relevant China Connect Clearing House;
+
+“T+1”
+           means the Settlement Day immediately following T-day;
+
+“T+2”
+           means the second Settlement Day following T-day;
+
+“T+3”
+           means the third Settlement Day following T-day;
+
+“Tax Information Exchange Framework”
+         means (i) (a) sections 1471 to 1474 of the Code, (b) any similar or successor legislation to (a)
+         introduced by the United States, (c) any agreement described in section 1471(b) of the Code,
+         (d) any regulations or guidance pursuant to any of the foregoing, (e) any official
+         interpretations of any of the foregoing, (f) any intergovernmental agreement to facilitate the
+         implementation of any of the foregoing (an “IGA”), or (g) any law implementing an IGA; or
+         (ii) (a) Part 8A and any other relevant provisions of the Inland Revenue Ordinance (Cap.112
+         of the Laws of Hong Kong), (b) any similar or successor legislation to the immediately
+         preceding (a) introduced by the Hong Kong Special Administrative Region Government, (c)
+         any guidance pursuant to any of the foregoing in (ii), (d) any official interpretations of any of
+         the foregoing in (ii), or (e) any agreement entered into between the Inland Revenue
+         Department of the Hong Kong Special Administrative Region and the relevant competent
+         authority of an overseas jurisdiction to facilitate the implementation of any of the foregoing
+         in (ii);
+
+“Tender Instructions”
+         means instructions by a Participant (in such form as HKSCC may from time to time
+         prescribe) for (i) a tender or application to be made on its behalf for Exchange Fund Notes,
+         Government Bonds, Specified Instruments or CMU Instruments and (ii) the payment and
+         refund of tender moneys or application moneys (as the case may be), as referred to Rule
+         1101(vii);
+
+“Termination Value Applicable Percentage”
+        means, under the contract termination process, a percentage applied by HKSCC to determine
+        the Termination Value Receivable of a Clearing Participant pursuant to Section 10.16 of the
+        Operational Procedures;
+
+“Termination Value Payable”
+
+                                                 - 24 -
+         means, under the contract termination process, the amount payable by each relevant Clearing
+         Participant or Clearing Agency Participant to HKSCC pursuant to Section 10.16 of the
+         Operational Procedures;
+
+“Termination Value Receivable”
+        means, under the contract termination process, the amount payable by HKSCC to each
+        relevant Clearing Participant or Clearing Agency Participant pursuant to 10.16 of the
+        Operational Procedures;
+
+“Terms and Conditions”
+        means, the Terms and Conditions for Investor Participants governing the participation of
+        Investor Participants in CCASS, as from time to time in force;
+
+“Trade Amendment”
+        means, in relation to an Exchange Trade, errors relating to details of such Exchange Trade
+        reported to HKSCC by the Exchange, the rectification of which have been approved by the
+        Exchange in accordance with the Exchange Rules;
+
+“Trading day”
+        means, in relation to securities and other products which are traded on the Exchange, a day
+        on which trading is conducted on the Exchange and in relation to China Connect Securities
+        which are traded on a China Connect Market, a day on which trading is conducted on the
+        China Connect Market via the relevant Trading Link and the China Connect Clearing
+        Services of CCASS in respect of the clearing and settlement of such China Connect
+        Securities are open for use by China Connect Clearing Participants;
+
+“Trading Links”
+       has the same meaning as defined in the Exchange Rules;
+
+“Transfer Instructions” or “TIs”
+         means instructions by a Participant (in such form as HKSCC may from time to time
+         prescribe) to effect a book-entry transfer of Exchange Fund Notes, Government Bonds or
+         Specified Instruments between the Participant’s Stock Account in CCASS, and a Recognized
+         Dealer’s CMU Account or a book entry transfer of CMU Instruments between the
+         Participant’s Stock Account in CCASS and a CMU Member’s CMU Account, as referred to
+         in Rule 906;
+
+“Treasury Shares”
+        has the same meaning as “treasury shares” in the Exchange’s Listing Rules or the GEM
+        Listing Rules, as the case may be;
+
+“Treasury Units”
+        has the same meaning as “treasury units” in the Exchange’s Listing Rules or the GEM
+        Listing Rules, as the case may be;
+
+“TSF”
+         means the trading support facility in the form of FX Services which HKSCC may provide for
+         the purposes of facilitating the purchase and sale of TSF Stocks. Where the FX Services
+         are provided, HKSCC shall do so as TSF operator and not in its capacity as, or for the
+         purposes of acting as, the central counterparty for the clearing of Exchange Trades; and
+         unless the context otherwise requires, references in Chapter 12A to HKSCC shall be
+         construed accordingly;
+
+“TSF Account”
+       means the TSF Principal Account or the TSF Segregated Account, as the context may
+
+                                              - 25 -
+         require;
+
+“TSF Buy Exchange Trade”
+       means an Exchange Trade with respect to the purchase of TSF Stocks by a TSF Exchange
+       Participant through the Exchange Trading System which is (i) supported by a TSF Buy FX
+       Order prior to the effect of the Exchange Trade on the Exchange Trading System; and (ii)
+       supported by a TSF Buy FX Transaction upon the effect of the Exchange Trade on the
+       Exchange Trading System;
+
+“TSF Buy FX Order”
+       means an order for the conversion of HKD to RMB by a TSF Exchange Participant to
+       HKSCC as TSF operator through an input into the Exchange Trading System for the purpose
+       of supporting an order to purchase TSF Stocks, which order shall, upon matching on the
+       Exchange Trading System, constitute a TSF Buy Exchange Trade;
+
+“TSF Buy FX Transaction”
+       means the FX transaction between HKSCC as TSF operator and a TSF Exchange Participant
+       relating to a TSF Buy FX Order for the purpose of settlement of a TSF Buy Exchange Trade;
+
+“TSF CCASS Participant”
+       means a TSF Clearing Participant or a TSF Custodian Participant, as the context may
+       require;
+
+“TSF Clearing Participant”
+        means a Direct Clearing Participant or a General Clearing Participant which has been
+        accepted for registration and to remain registered as a TSF CCASS Participant by HKSCC;
+
+“TSF Custodian Participant”
+       means a Custodian Participant which has been accepted for registration and to remain
+       registered as a TSF CCASS Participant by HKSCC;
+
+“TSF Exchange Participant”
+       means, in the context of trading of TSF Stocks, an Exchange Participant which has been
+       accepted for registration and to remain registered as a TSF Exchange Participant by the
+       Exchange;
+
+“TSF Exchange Trade”
+       means a TSF Buy Exchange Trade or a TSF Sell Exchange Trade, as the context may
+       require;
+
+“TSF FX Order”
+       means a TSF Buy FX Order or a TSF Sell FX Order, as the context may require;
+
+“TSF FX Transaction”
+       means a TSF Buy FX Transaction or a TSF Sell FX Transaction, as the context may require;
+
+“TSF Participant”
+       means, a TSF Exchange Participant and/or a TSF CCASS Participant, as the context may
+       require;
+
+“TSF Participant Registration Criteria”
+       means the eligibility criteria which HKSCC may prescribe from time to time for Participants
+       to be accepted for registration and to remain registered as TSF CCASS Participants for the
+       purposes of providing clearing and settlement services in respect of TSF Exchange Trades
+       and/or providing custodian services in respect of earmarked TSF Stocks;
+
+
+                                             - 26 -
+“TSF Partner Bank”
+       means a financial institution which has entered into an agreement or arrangement with
+       HKSCC for the purposes of providing RMB to HKD or HKD to RMB conversion services
+       and/or liquidity to HKSCC as TSF operator;
+
+“TSF Principal Account”
+        means a Stock Account established by HKSCC in the name of a TSF CCASS Participant
+        principally for the purposes of facilitating the credit and debit of TSF Stocks for such
+        Participant to earmark or de-earmark TSF Stocks;
+
+“TSF Segregated Account”
+        means a Stock Account established by HKSCC in the name of a TSF CCASS Participant for
+        the sole purpose of holding earmarked TSF Stocks of such Participant, whether as principal
+        or as agent for its clients;
+
+“TSF Sell Exchange Trade”
+        means an Exchange Trade with respect to the sale of TSF Stocks by a TSF Exchange
+        Participant through the Exchange Trading System which is (i) supported by a TSF Sell FX
+        Order prior to the effect of the Exchange Trade on the Exchange Trading System; and (ii)
+        supported by a TSF Sell FX Transaction upon the effect of the Exchange Trade on the
+        Exchange Trading System;
+
+“TSF Sell FX Order”
+        means an order for the conversion of RMB to HKD by a TSF Exchange Participant to
+        HKSCC as TSF operator through an input into the Exchange Trading System for the purpose
+        of supporting an order to sell TSF Stocks, which order shall, upon matching on the Exchange
+        Trading System, constitute a TSF Sell Exchange Trade;
+
+“TSF Sell FX Transaction”
+        means the FX transaction between HKSCC as TSF operator and a TSF Exchange Participant
+        relating to a TSF Sell FX Order for the purpose of settlement of a TSF Sell Exchange Trade;
+
+“TSF Stocks”
+        means Eligible Securities which are included in the list of TSF Stocks by HKSCC from time
+        to time under Rule 12A04;
+
+“Unadjusted HKSCC Default CP Receivable”
+       means, in respect of an HKSCC Failure to Pay Event or an HKSCC Insolvency Event, the
+       amount determined to be payable by HKSCC to each relevant Clearing Participant or
+       Clearing Agency Participant, without taking into account any adjustment pursuant to Section
+       17B.1.3(ii) of the Operational Procedures;
+
+“Unadjusted Limited Recourse CP Receivable”
+       means, in respect of a Clearing Service Termination Event, the amount determined to be
+       payable by HKSCC to each relevant Clearing Participant or Clearing Agency Participant,
+       without taking into account any adjustment pursuant to Section 17A.1.3(ii) of the
+       Operational Procedures;
+
+“Unadjusted Termination Value Receivable”
+       means, under the contract termination process, the amount payable by HKSCC to each
+       relevant Clearing Participant or Clearing Agency Participant, without taking into account any
+       adjustment pursuant to Section 10.16.3(ii) of the Operational Procedures;
+
+“Uncertificated Eligible Security”
+
+
+                                              - 27 -
+          means an Eligible Security (other than a Foreign Security or a China Connect Security)
+          issued by an Overseas Issuer in uncertificated form and designated by HKSCC as an
+          “Uncertificated Eligible Security” for the purposes of the Rules;
+
+“Unit”
+          means one undivided share or undivided beneficial interest in an Exchange Traded Fund, a
+          fund or similar investment arrangement;
+
+“Unit Trust”
+         means any arrangement made for the purpose, or having the effect, of providing facilities for
+         the participation by persons, as beneficiaries under a trust, in profits or income arising from
+         the acquisition, holding, management or disposal of securities or any other property
+         whatsoever; and
+
+“USD”
+          means United States dollar, the lawful currency of the United States of America, for
+          settlement in Hong Kong;
+
+“Voluntary Recap Amount”
+         means a voluntary contribution to the Guarantee Fund, as requested by HKSCC pursuant to a
+         Voluntary Recap Request Notice;
+
+“Voluntary Recap Request Notice”
+         means a written notification provided by HKSCC pursuant to Rule 2509A to a Clearing
+         Participant requesting for a Voluntary Recap Amount;
+
+“Withholding Tax”
+        means any withholding or deduction pursuant to the Tax Information Exchange Framework.
+
+(b)      When used in the Operational Procedures, the following expressions shall have the following
+         meanings unless the context otherwise requires:
+
+“Access Level”
+         means, in relation to an Authorised User of a Participant other than an Investor Participant,
+         the pre-determined level of CCASS functions or services to be made available to that
+         Authorised User via the CCASS Terminal and/or RMS of that Participant, such level to be
+         determined by that Participant from time to time, as referred to in Section 3.4;
+
+“Administration Rights”
+        means the pre-determined security management functions available to Delegated
+        Administrators via the CCASS Terminals and/or RMS of Participants other than Investor
+        Participants, as referred to in Section 3.5.2;
+
+“Afternoon FX Settlement Time”
+        means no later than 3:00 p.m. on T+2, being the deadline for settlement of a TSF Final FX
+        Position by a TSF Clearing Participant, as referred to in Sections 12A.3.1(ii) and 12A.3.5;
+
+“Allocated Positions"
+         means, in relation to a Market Contract, long stock positions under the CNS System of a
+         Clearing Participant or a Clearing Agency Participant to which Eligible Securities have been
+         allocated but monies payment obligations arising therefrom remain outstanding and are not
+         covered in full by cash prepayment;
+
+“Alternate Designated Officer”
+         means, in relation to a Participant other than an Investor Participant, a person designated by
+
+
+                                                - 28 -
+          that Participant as being, in the absence of the Designated Officer of that Participant, the
+          person to be contacted by HKSCC in respect of matters relating to that Participant's daily
+          operations in CCASS, as referred to in Section 2.6;
+
+“ATI Batch Input Control Report”
+        means, in relation to each Participant which is provided by HKSCC with facilities for ATI
+        batch file transfer, a report provided by HKSCC to it (after each scheduled ATI batch
+        validation run) showing the processing results of its ATI batch file transfers, as referred to in
+        Section 16.6 (refer to the CCASS Terminal User Guide for Participants for details);
+
+“Authorisation Code”
+         means in relation to a Delegated Administrator of a Participant who executes his/her
+         Administration Rights in the capacity of a checker, a unique code assigned to that Delegated
+         Administrator for his/her input in order to authorise a user administration transaction via the
+         CCASS Terminal of that Participant;
+
+“Authorised Signatories”
+         means, in relation to a Participant other than an Investor Participant, the persons authorised
+         by that Participant in the manner prescribed by HKSCC as being authorised to give written
+         instructions to HKSCC in connection with any matters relating to the Participant's
+         participation and operations in CCASS, as referred to in Section 2.5;
+
+“Billing Account”
+          means, in relation to each Participant, a sub-account in the Money Ledger of that Participant
+          which is used for billing purposes in CCASS, as referred to in Section 2.4.2;
+
+“Book-Close Reminder”
+        means the section in the Entitlement Statement of a Participant other than an Investor
+        Participant which provides information on corporate actions or activities affecting Eligible
+        Securities, as referred to in Section 8.3.2;
+
+“Broadcast Message Service”
+        means the service made available by HKSCC to Participants other than Investor Participants to
+        provide certain types of information through their CCASS Terminals and Participant Gateways;
+
+“Broker-to-Client Assigned Number” or “BCAN”
+         has the code, number or identifier that is assigned to uniquely and consistently identify a
+         client as required under Rule 538A of the Exchange Rules;
+
+“Buy-in Notification Report”
+         means a report provided by HKSCC informing a Clearing Participant, Clearing Agency
+         Participant or China Connect Clearing Participant of its overdue short stock positions under
+         the CNS System which are subject to Buy-in and confirmations of Buy-in orders that have
+         been executed, as referred to in Sections 10.8 and 10A.6 and the CCASS Terminal User Guide
+         for Participants;
+
+“CA ISO Message Service”
+        means a service under which subscribers may receive from HKSCC, information on
+        corporate actions in the form of ISO Messages;
+
+“Cash Prepayment Instruction”
+        means an instruction in such details as HKSCC may prescribe from time to time, given by a
+        Clearing Participant to HKSCC via the “Cash Prepayment Instruction” maintenance functions
+        of its CCASS Terminal or generated pursuant to a Cash Prepayment Standing Instruction, to
+
+
+                                                - 29 -
+         effect payment in same day available funds to HKSCC to release Eligible Securities received
+         under a Buy-in as referred to in Section 10.8.8 or Securities-on-hold as referred to in Section
+         10.12.4 or Section 10A.14.5;
+
+“Cash Prepayment Standing Instruction”
+        means a standing instruction in such details as HKSCC may prescribe from time to time,
+        given by a Clearing Participant to HKSCC via the “Cash Prepayment / TSF Payment
+        Standing Instruction” maintenance functions of its CCASS Terminal, to authorize HKSCC
+        to generate Cash Prepayment Instructions on behalf of the Clearing Participant;
+
+“CCASS Funding Projection Report for Designated Bank”
+       means, in relation to a Designated Bank, a report provided by HKSCC to the Designated
+       Bank showing the relevant funding projection, as referred to in Section 16.7 and the CCASS
+       Terminal User Guide for Designated Banks;
+
+“CCASS Funding Projection Report for Participant”
+       means, in relation to a Participant other than an Investor Participant, a report provided by
+       HKSCC to the Participant showing the relevant funding projection, as referred to in Section
+       16.6 and the CCASS Terminal User Guide for Participants;
+
+“CCASS Participant Contact List”
+       means a list containing the contact details of Participants other than Investor Participants
+       which is provided by HKSCC to the issuers of Eligible Securities and their registrars, as
+       referred to in Section 8.5.2;
+
+“CCASS Primary Password”
+       means, (i) in relation to a person who is an Individual Investor Participant or an individual
+       member of a Joint Individual Investor Participant or an Authorised User of a Corporate
+       Investor Participant, a password provided by HKSCC to that person or as specified by that
+       person and (ii) in relation to SSA Statement Recipient in respect of a SSA with Statement
+       Service of a Clearing Participant or a Custodian Participant, a password provided by the
+       Clearing Participant or Custodian Participant to that SSA Statement Recipient, the input of
+       which is required to enable such person or SSA Statement Recipient to register a set of
+       Internet User ID and Internet User Password and/or his Hongkong Post e-Cert (as the case
+       may be) with HKSCC for access to the CCASS Internet System, as referred to in Section
+       3.10.2;
+
+“CCASS Primary User ID”
+       means, (i) in relation to a person who is an Individual Investor Participant or an individual
+       member of a Joint Individual Investor Participant or an Authorised User of a Corporate
+       Investor Participant, a unique identification number provided by HKSCC to that person and
+       (ii) in relation to SSA Statement Recipient in respect of a SSA with Statement Service of a
+       Clearing Participant or a Custodian Participant, a unique identification number provided by
+       HKSCC to that SSA Statement Recipient via the Clearing Participant or Custodian
+       Participant to enable such person or SSA Statement Recipient to register a set of Internet
+       User ID and Internet User Password and/or his Hongkong Post e-Cert with HKSCC for
+       access to CCASS via the CCASS Internet System, as referred to in Section 3.10.2;
+
+“CCASS Record Date”
+       means the date(s) designated by HKSCC from time to time on which an entitlement to a
+       declared payment or other benefit accruing to eligible Debt Securities in bearer form will be
+       determined for Participants' Stock Account holdings in such Debt Securities in bearer form
+       on that date;
+
+“CCASS Terminal User Guide for Designated Banks”
+
+
+                                               - 30 -
+          means the guide entitled “CCASS Terminal User Guide for Designated Banks” of HKSCC in
+          relation to CCASS, containing information on the use of CCASS Terminals by Designated
+          Banks, as from time to time in force;
+
+“Clearing House of HKAB” or “Clearing House”
+         means the clearing house of HKAB managed by the Hong Kong Interbank Clearing Limited
+         for the clearance of payment transactions between its members (which include the
+         Designated Banks);
+
+“Client Identification Data” or “CID”
+       has the same meaning as defined in the Exchange Rules;
+
+“Closing-out”
+         means the effecting of a Closing-out Contract (as defined in the Rules) in respect of an
+         unsettled stock position of a defaulting Clearing Participant or a Clearing Agency Participant
+         under the CNS System, as referred to in Sections 10.14 and 12.2.9(v) respectively;
+
+“Collateral Security Batch-run”
+         means the process adopted by HKSCC to effect, at stated times, the provision of Collateral
+         Securities by Clearing Participants or Clearing Agency Participants to HKSCC whereby
+         Eligible Securities will be automatically debited from the Stock Accounts of the Clearing
+         Participants or Clearing Agency Participants and credited to the CCMS Collateral Accounts
+         of such Clearing Participants or Clearing Agency Participants for HKSCC’s waiver of
+         computation of Marks and reduction of Marginable Position for computation of Margin, as
+         referred to in Sections 10.10.3 and the Initial Margin Calculation Guide;
+
+“Collateral Security Batch Input Control Report”
+         means, in relation to a Clearing Participant or Clearing Agency Participant which is provided
+         with facilities for Collateral Security Batch-run, a report provided by HKSCC to the Clearing
+         Participant or Clearing Agency Participant showing the processing results of its Collateral
+         Security Batch-run, as referred to in Section 16.6 and the CCASS Terminal User Guide for
+         Participants;
+
+“Contract Currency Collateral”
+        means, in relation to a Clearing Participant, (i) cash payment made by the Participant to
+        HKSCC pursuant to CPIs or DDIs issued by HKSCC in respect of the collection of Marks,
+        Margin and/or Collateral pursuant to Section 14 of the Operational Procedures; (ii) cash
+        balance transferred from the General Collateral Inventory of the CCMS House Collateral
+        Account of the Participant and provided by the Participant as cover for Marks, Margin and/or
+        Collateral and other obligations (actual or contingent) denominated in the same currency;
+        and (iii) cash payment made by the Participant, in its capacity as a SEOCH Participant, to a
+        Clearing Agency Participant to satisfy the Participant’s Marks, Margin and/or Collateral
+        obligations relating to Clearing Agency Transactions, and transferred to HKSCC by the
+        Clearing Agency Participant;
+
+“corresponding CNS money position”
+         means, in relation to the settlement of TSF FX Transactions, the CNS money position of a
+         TSF Clearing Participant in respect of a TSF Stock that corresponds to the TSF FX Position
+         of the Participant in respect of the same TSF Stock (if any) as referred to in Section
+         12A.3.4(ii)(c);
+
+“Daily Stock Balance Report”
+
+
+
+
+                                               - 31 -
+          means, in relation to a Participant other than an Investor Participant, a daily report provided
+          by HKSCC to the Participant showing the balances and value by stock and the total portfolio
+          value, as referred to in Section 16.6 and the CCASS Terminal User Guide for Participants;
+
+“DDI/DCI/EPI Exception Report”
+       means, in relation to a Designated Bank, a report provided by HKSCC to the Designated
+       Bank showing details of the DDIs, DCIs and EPIs to be excluded from settlement by the
+       Clearing House of HKAB for the relevant Eligible Currency, if any, as referred to in Section
+       16.7 and the CCASS Terminal User Guide for Designated Banks;
+
+“DDI/DCI/EPI Listing for Designated Bank”
+       means, in relation to a Designated Bank, a report provided by HKSCC to the Designated
+       Bank providing details of the DDIs, DCIs and EPIs which affect the Participants other than
+       Investor Participants for which the Designated Bank acts, as referred to in Section 16.7 and
+       the CCASS Terminal User Guide for Designated Banks;
+
+“DDI/DCI/EPI Listing for IP Related Transactions”
+       means, in relation to a Designated Bank, a report provided by HKSCC to the Designated
+       Bank providing details of the DDIs, DCIs and EPIs which affect the Investor Participants for
+       which the Designated Bank acts, as referred to in Section 16.7 and the CCASS Terminal
+       User Guide for Designated Banks;
+
+“DDI/DCI/EPI Rejection Listing”
+       means, in relation to a Designated Bank, a report provided by HKSCC to the Designated
+       Bank showing details of the payment status of DDIs, DCIs and EPIs, if any, as referred to in
+       Section 16.7 and the CCASS Terminal User Guide for Designated Banks;
+
+“DDI/DCI/EPI Summary for Participant”
+       means, in relation to a Participant other than an Investor Participant, a report provided by
+       HKSCC to the Participant providing details of DDIs, DCIs and EPIs, as referred to in
+       Section 16.6 and the CCASS Terminal User Guide for Participants;
+
+“Delegated Administrator”
+         means in relation to a Participant (other than an Investor Participant), a person appointed by
+         that Participant in a manner prescribed by HKSCC from time to time as being authorised to
+         administer the access profile of an Authorised User of that Participant via the CCASS
+         Terminal, as referred to in Section 3.3;
+
+“Delivery versus Payment” or “DVP”
+         means, in relation to settlement of a stock position in CCASS by a Participant, the settlement
+         of such a stock position in CCASS on the basis that settlement of the corresponding money
+         position of such stock position will follow as part of the CCASS money settlement process;
+
+“Designated Exchange Traded Funds”
+         has the same meaning as defined in the Exchange Rules;
+
+“Designated Officer”
+         means, in relation to a Corporate Investor Participant and a Participant other than an Investor
+         Participant, a person designated by that Participant as being the person to be contacted by
+         HKSCC in respect of matters relating to that Participant's daily operations in CCASS, as
+         referred to in Section 2.6;
+
+“Designated Specialist”
+         has the same meaning as “Designated Specialist” in the Exchange Rules;
+
+
+
+                                                - 32 -
+“Discounted Market Value”
+        means the value of a collateral in the CCMS House Collateral Account of the Clearing
+        Participant, determined in accordance with Section 10.15.2 for the purpose of the
+        collateralization process in Section 10.15.3;
+
+“Ear-marked Value”
+        means (i) cash Ear-marked Value, being the collateralized amount of cash in other currencies
+        (as referred to in Section 10.15.3(iii)) in the CCMS House Collateral Account of a Clearing
+        Participant, as referred to in Section 10.15.3(c); and (ii) non-cash Ear-marked Value, being
+        the collateralized value of the Non-cash Collateral in CCMS House Collateral Account of a
+        Clearing Participant, as referred to in Section 10.15.3(a);
+
+“EIPO”
+          means the arrangement in these Operational Procedures for instructions to be given
+          electronically to HKSCC by Participants via FINI for applications to be made on their behalf
+          for New Issue Shares and for the payment of application moneys, and for those instructions
+          to be acted upon;
+
+“Entitlement Account”
+         means, in relation to a Participant other than an Investor Participant, the Stock Segregated
+         Account (account number 02) which is designated by HKSCC as its “Entitlement Account”
+         and which is primarily used by such Participant for the purpose of receiving securities
+         entitlements accruing to Eligible Securities, as referred to in Section 2.3.7;
+
+“Entitlements Account”
+         means, in relation to each Participant, a sub-account in the Money Ledger of that Participant
+         which is primarily used for receiving money entitlements accruing to Eligible Securities, as
+         referred to in Section 2.4.2;
+
+“Entitlement Statement”
+         means, in relation to a Participant other than an Investor Participant, a statement provided by
+         HKSCC to such Participant showing the entitlements accruing to Eligible Securities which
+         are receivable or payable by that Participant or paid by or distributed to that Participant by
+         HKSCC, as referred to in Section 8.3.3;
+
+“Evening FX Settlement Time”
+        means the time when the final Batch-settlement-run is completed on T+2, being the deadline
+        for settlement of the TSF Final FX Position by a TSF Clearing Participant, as referred to in
+        Sections 12A.3.1(ii) and 12A.3.5;
+
+“Favourable Marks”
+        means Marks computed by the Mark-to-market of a stock position under the CNS System
+        which are favourable to a Clearing Participant or Clearing Agency Participant, as referred to
+        in Sections 10.10.2 and 10A.10;
+
+“Fidelity Fund”
+         means the Fidelity Fund established by the Exchange in accordance with the Exchange Rules;
+
+“Final Clearing Statement” or “FCS”
+         means, in relation to Exchange Trades or Clearing Agency Transactions executed or effected
+         on T-day for clearing and settlement by a Clearing Participant or a Clearing Agency
+         Participant, a statement issued by HKSCC to that Participant on T+1, the Business Day
+         following the relevant day of the transaction, as referred to in Sections 10.2.3 and 12.2.2; and in
+         relation to China Connect Securities Trades executed on T-day for clearing and settlement by a
+         China Connect Clearing Participant, a statement issued by HKSCC to that Participant on T-day,
+
+
+                                                  - 33 -
+         as referred to in Sections 10A.1.4 and the CCASS Terminal User Guide for Participants;
+
+“FINI CHATS Payment Instruction” or “FINI CPI”
+        means a CHATS Payment Instruction generated by FINI and transmitted electronically (i) to
+        a Designated Bank requesting that Designated Bank to effect a FINI-related CHATS
+        payment for a paying Participant or (ii) to a bank designated by HKSCC requesting that bank
+        to effect a FINI-related CHATS payment for HKSCC in accordance with the Rules;
+
+“FINI Report”
+        means the report to be generated by FINI in relation to FINI-related activities, including but
+        not limited to EIPO subscriptions, money settlement and FINI CPI, as from time to time
+        prescribed in the FINI User Guide;
+
+“Free of Payment” or “FOP”
+         means, in relation to the settlement of a stock position in CCASS by a Participant, the
+         settlement of such a stock position in CCASS which does not require the settlement of the
+         corresponding money position of such stock position to be effected thereafter as part of the
+         CCASS money settlement process (noting that money settlement may still take place outside
+         CCASS);
+
+“General Collateral Inventory”
+        means the inventory of cash, Collateral Securities and other Non-cash Collateral in a CCMS
+        Collateral Account that, in the opinion of HKSCC, can be treated as, or be used as cover or to
+        secure against Ear-marked Value;
+
+“Guarantee Scheme”
+       means the Guarantee Scheme established by the Exchange in accordance with the Exchange Rules;
+
+“H Shares”
+        means shares issued by an Issuer incorporated in the People's Republic of China which are
+        the subject of an application for listing or are listed on the Exchange and are to be or are
+        subscribed for and traded in Hong Kong dollars;
+
+“H-1 day”
+        means, in relation to China Connect Securities, the Settlement Day immediately preceding a
+        day which is a public holiday in Hong Kong but not in Mainland China;
+
+“HK Bank”
+       means The Hongkong and Shanghai Banking Corporation Limited;
+
+“HKAB”
+      means The Hong Kong Association of Banks;
+
+“HKSCC HKD RTGS Account”
+      means the Hong Kong dollar settlement account (including a CHATS ledger account)
+      maintained by HKSCC with the HKMA;
+
+“Input Transaction Limit”
+        means, in relation to an Authorised User of a Corporate Investor Participant and a Participant
+        other than an Investor Participant, the pre-determined limit (in money terms) of that
+        Authorised User above which certain instructions input into CCASS by that Authorised User
+        will not be processed in CCASS by HKSCC, such limit to be determined by that Participant
+        from time to time, as referred to in Section 3.4;
+
+
+
+                                               - 34 -
+“Internet User ID and Internet User Password”
+         means a unique identification number and a password registered with HKSCC by an
+         Individual Investor Participant or an individual member of a Joint Individual Investor
+         Participant or an Authorised User of a Corporate Investor Participant or a SSA Statement
+         Recipient in respect of a SSA with Statement Service for access to the CCASS Internet
+         System, as referred to in Section 3.10.2;
+
+“Intra-day Mainland Settlement Deposit Payable Report”
+        means a report provided by HKSCC to a China Connect Clearing Participant, showing
+         the amount and computation of the intra-day Mainland Settlement Deposit payable by
+         such Participant;
+
+“Intra-day Payment”
+        means, in relation to an Intra-day Payment Standing Instruction of a Participant other than an
+        Investor Participant, (i) the amount of cash payment in an Eligible Currency arising out of
+        nominee services on a Business Day, as referred to in Section 8.25 and/or (ii) the amount of
+        intra-day settlement of money obligations due to the Participant from HKSCC under the CNS
+        System on a Settlement Day, as referred to in Section 10.5.8 and/or (iii) the amount of surplus
+        cash arising from overpaid cash prepayment on a Settlement Day, as referred to in Section
+        10.12.8 (as the case may be) determined by HKSCC to be paid to the Participant via IPI
+        pursuant to that Intra-day Payment Standing Instruction;
+
+“Intra-day Payment Instruction” or “IPI”
+        means, for a Participant other than an Investor Participant, a payment instruction issued by
+        HKSCC pursuant to an Intra-day Payment Standing Instruction and forwarded for processing
+        (i) to the Designated Bank of a Participant; or (ii) for certain Hong Kong dollar money
+        obligations, to the Clearing House of HKAB, to effect payment of the Intra-day Payment by
+        HKSCC to that Participant during a Business Day or a Settlement Day, as the case may be;
+
+“Intra-day Payment Standing Instruction”
+        means a standing instruction in such details as HKSCC may prescribe from time to time,
+        given by a Participant other than an Investor Participant to HKSCC via the “Intra-day
+        Payment Standing Instruction” maintenance functions of its CCASS Terminal, to request
+        HKSCC to issue an Intra-day Payment Instruction in relation to Intra-day Payment on each
+        Business Day and/or each Settlement Day;
+
+“Investor Confirmation Report”
+         means, in relation to a Designated Bank, a report provided by HKSCC to the Designated
+         Bank showing details of the payment status of DDIs and debit EPIs, if any, as referred to in
+         Section 16.7 and the CCASS Terminal User Guide for Designated Banks;
+
+“ISIN”
+         means an ISIN (International Securities Identification Number) code uniquely assigned to
+         security by the relevant National Numbering Agencies in accordance with Association of
+         National Numbering Agencies Regulation ISO 6166;
+
+“ISO Message”
+       means an electronic message transmitted through SWIFT;
+
+“Mainland Security Deposit Payable Report”
+        means, in relation to a China Connect Clearing Participant, a report provided by HKSCC to
+        such Participant, containing details of the computation of Mainland Security Deposit payable
+        by such Participant in respect of each China Connect Market with reference to the net
+        settlement amount in China Connect Securities Trades of such Participant and its NCCCPs
+
+
+                                               - 35 -
+         on that China Connect Market, as referred to in the CCASS Terminal User Guide for
+         Participants;
+
+“Mainland Settlement Deposit Payable Report”
+        means, in relation to a China Connect Clearing Participant, a report provided by HKSCC to
+        such Participant, containing details of the computation of Mainland Settlement Deposit
+        payable by such Participant in respect of each China Connect Market with reference to the
+        buy turnover in China Connect Securities and overdue short CNS positions in China Connect
+        Securities of such Participant and its NCCCPs on that China Connect Market and the sell
+        turnover in China Connect Securities that are executed on that China Connect Market by
+        such Participant and its NCCCPs for Special Segregated Accounts, as referred to in and the
+        CCASS Terminal User Guide for Participants;
+
+“Margin Multiplier”
+       means a parameter defined by HKSCC at individual Participant level for the purpose of
+       computation of Margin requirement of that Participant, as referred to in Section 10.10A;
+
+“Margin Rate”
+       means the percentage determined by HKSCC to be applied to Marginable Position in the
+       computation of Margin, as referred to in Section 10.10A;
+
+“Market Making Security”
+       has the same meaning as “Market Making Security” in the Exchange Rules;
+
+“Marks and Margin Account”
+        means, in relation to a Clearing Participant or a Clearing Agency Participant, a sub-account
+        in the Money Ledger of that Participant which is used to record Marks and Margin on all
+        unsettled stock positions of that Participant under the CNS System, as referred to in Section
+        10.10.11 or 10.10A.8;
+
+“Mass ATI”
+       means an instruction of a Participant other than an Investor Participant, in such a form as
+       HKSCC may from time to time prescribe as being valid, to effect book-entry movements of
+       Eligible Securities from the Stock Clearing Account to a designated Stock Segregated
+       Account other than an SSA with Statement Service or a Special Segregated Account of the
+       Participant in CCASS;
+
+“Mass STI”
+       means an instruction of a Clearing Participant or a Custodian Participant, in such form as
+       HKSCC may from time to time prescribe as being valid, to effect book-entry movements of
+       Eligible Securities from the Stock Clearing Account to an SSA with Statement Service or a
+       Special Segregated Account of the Participant in CCASS;
+
+“Miscellaneous Account”
+         means, in relation to a Participant, a sub-account in the Money Ledger of that Participant
+         which is used for recording miscellaneous money obligations between that Participant and
+         HKSCC, as referred to in Section 2.4.2;
+
+“Money Ledger”
+       means, in relation to a Participant, a statement of the outstanding money positions in CCASS
+       between that Participant and HKSCC, as referred to Section 2.4;
+
+“Monthly Stock Balance Report”
+       means, in relation to a Participant (other than an Investor Participant), a monthly statement
+
+
+                                               - 36 -
+         provided by HKSCC to it showing the stock balances in each Eligible Security held in
+         CCASS by the Participant as at the end of a month (as well as other securities entitlements
+         which are not Eligible Securities) and the stock custody fee payable by the Participant for the
+         month, as referred to in Section 16.6 (refer to the CCASS Terminal User Guide for
+         Participants for details);
+
+“Net Favourable Mark”
+        means, in relation to the relevant stock positions of a Clearing Participant or a Clearing
+        Agency Participant under the CNS System, where the aggregate amount of the Favourable
+        Marks in respect of such stock positions exceeds the aggregate amount of the Unfavourable
+        Marks of such stock positions, the amount by which the aggregate amount of such Favourable
+        Marks exceeds the aggregate amount of such Unfavourable Marks;
+
+“Net Unfavourable Mark”
+        means, in relation to the relevant stock positions of a Clearing Participant or a Clearing
+        Agency Participant under the CNS System, where the aggregate amount of the Unfavourable
+        Marks in respect of such stock positions exceeds the aggregate amount of the Favourable
+        Marks of such stock positions, the amount by which the aggregate amount of such
+        Unfavourable Marks exceeds the aggregate amount of such Favourable Marks;
+
+“Next Settlement Day Due/Overdue Position Report”
+        means, in relation to a Participant (other than an Investor Participant), a daily report provided
+        by HKSCC to it showing the stock positions of the Participant which are due or overdue for
+        settlement in CCASS on the current day, as referred to in Section 16.6 (refer to the CCASS
+        Terminal User Guide for Participants for details);
+
+“Night Settlement”
+        means the money settlement for SI Transactions in China Connect Securities in RMB starting
+        at around 9:30 p.m. through the Clearing House of HKAB;
+
+“Nominee”
+       means HKSCC Nominees Limited or such other nominee company as may be used by
+       HKSCC from time to time in relation to the provision of nominee services to or for the
+       account of Participants;
+
+“Nominee Payment (Evening) Standing Instruction”
+        means a standing instruction in such details as HKSCC may prescribe from time to time,
+        given by a Participant other than an Investor Participant to HKSCC via the “Nominee
+        Payment (Evening) Standing Instruction” maintenance functions provided by its CCASS
+        Terminal, requesting HKSCC to issue a DCI on each Business Day to effect evening
+        distribution of cash payments arising out of nominee services by HKSCC to the Participant;
+
+“Non-cash Collateral”
+        means collateral not in the form of cash, including Collateral Securities, that is accepted by
+        HKSCC for credit to the CCMS House Collateral Account of a Participant to cover the
+        Marks, Margin, Collateral and other obligations (actual and contingent) of the Participant
+        due to HKSCC under the CNS System;
+
+“Non-cash Collateral Cap”
+        means a percentage of Marks, Margin, Collateral and other obligations (actual and
+        contingent) of a Participant, as determined by HKSCC from time to time in order to calculate
+        the maximum amount of Non-cash Collateral that may be allowed as cover for the Marks,
+        Margin, Collateral and other obligations (actual and contingent) of the Participant due to
+        HKSCC under the CNS System. For the avoidance of doubt, the provision of Collateral
+        Security to cover a part or the whole of a short CNS stock position from a Clearing
+
+
+                                                - 37 -
+         Participant or Clearing Agency Participant for HKSCC’s waiver of computation of Marks
+         and reduction of Marginable Position for computation of Margin required from such
+         Participant will not be included in such calculation of the maximum amount of Non-cash
+         Collateral;
+
+“Operating Guide for Investor Participants”
+        means the “Operating Guide for Investor Participants” of HKSCC in relation to CCASS,
+        containing information on the use of CCASS services by Investor Participants, as from time
+        to time in force;
+
+“Participant Gateway Smartcard Password”
+         means, in relation to a Participant Gateway of a Participant or a Designated Bank, a password
+         specified by that Participant or Designated Bank or provided by HKSCC to that Participant or
+         Designated Bank, the input of which is required before the Participant or the Designated
+         Bank is allowed access to CCASS via the Participant Gateway, as referred to in Section 3;
+
+“Participant Supplied System” or “PSS”
+         means the system developed according to HKSCC’s specifications and operated by a
+         Participant other than an Investor Participant or a Designated Bank for the purpose of
+         conducting CCASS related activities, and includes any server, terminal and any other device
+         connected to it;
+
+“PC”
+          means a personal computer used by a Participant other than an Investor Participant as a
+          CCASS Terminal or a Participant Gateway;
+
+“Preferred Single Settlement Currency”
+         means an Eligible Currency selected by a Clearing Participant and accepted by HKSCC as
+         the currency for cash settlement of the shortfall in Marks and Margin of the Clearing
+         Participant after the collateralization process under Section 10.15.3 of the Operational
+         Procedures;
+
+“Provisional Clearing Statement” or “PCS”
+         means, in relation to Exchange Trades executed on T-day for clearing and settlement by a
+         Clearing Participant or in relation to Clearing Agency Transactions for clearing and
+         settlement by a Clearing Agency Participant or a Clearing Participant, a statement issued by
+         HKSCC to that Participant on T-day, as referred to in Section 10.1.2;
+
+“Recipient”
+         means, in relation to corporate communications, a person or company being a non-registered
+         holder of Eligible Securities entitled under the Listing Rules and designated by a Participant
+         to receive corporate communications, including but not limited to SSA Statement Recipient
+         in respect of a SSA with Statement Service of a Clearing Participant or a Custodian
+         Participant designated by that Participant;
+
+“RMS Authorised User”
+      means, in relation to a Participant other than an Investor Participant, a person approved by
+      that Participant in the manner prescribed by HKSCC from time to time as being authorised to
+      access RMS on behalf of that Participant, as referred to in Section 3.4.2;
+
+“RMS Delegated Administrator”
+      means, in relation to a Participant other than an Investor Participant, a person appointed by
+      that Participant in a manner prescribed by HKSCC from time to time as being authorised to
+      administer the access profile of a RMS Authorised User of that Participant via the RMS, as
+      referred to in Section 3.3.2;
+
+
+                                               - 38 -
+“Rule Enforcement Team”
+        means the division, department, section or unit of HKEX delegated from time to time by
+        HKSCC with the responsibilities of, inter alia, investigating Participants’ compliance with
+        the Rules and instigating disciplinary proceedings against Participants;
+
+“Securities and Futures Ordinance”
+          means Chapter 571 of the laws of Hong Kong as in force from time to time, and unless the
+          context otherwise requires, any subsidiary legislation made thereunder;
+
+“Securities Market Maker”
+          has the same meaning as “Securities Market Maker” in the Exchange Rules;
+
+“Settled Position Report”
+          means, in relation to a Participant (other than an Investor Participant), a daily report provided
+          by HKSCC to it showing the stock positions in CCASS of the Participants which are settled
+          on the day, as referred to in Section 16.6 (refer to the CCASS Terminal User Guide for
+          Participants for details);
+
+“Settlement Account”
+         means, in relation to a Clearing Participant or a Clearing Agency Participant, a sub-account
+         in the Money Ledger of that Participant which is used for recording money obligations
+         between that Participant and HKSCC arising from the settlement of stock positions under the
+         CNS System, as referred to in Section 2.4.2;
+
+“Settlement Position Number”
+         means a unique reference number assigned by HKSCC to each CNS stock position, Isolated
+         Trade, SI Transaction and ISI Transaction;
+
+“Settlement Related EPI Listing”
+         means, in relation to a Participant other than an Investor Participant, a report provided by
+         HKSCC to the Participant showing details of EPIs issued by HKSCC for the settlement of
+         money obligations in relation to Isolated Trades, SI Transactions and ISI Transactions on a
+         DVP basis, as referred to in Section 16.6 and the CCASS Terminal User Guide for
+         Participants;
+
+“Settlement Report”
+         means, in relation to a Participant other than an Investor Participant, a daily report provided
+         by HKSCC to the Participant showing (i) all of its stock positions which are settled on the
+         previous day; (ii) its stock positions, if any, which are cancelled, purged or revoked in
+         CCASS on the previous day; and (iii) all of its stock positions which remain unsettled as at
+         the end of the previous day;
+
+“S-day”
+          means, in relation to a transaction in Eligible Securities, the due date of settlement of such
+          transaction;
+
+“S-1”
+          means the Settlement Day immediately preceding S-day;
+
+“S-2”
+          means the Settlement Day immediately preceding S-1:
+
+“Shareholding Category Disclosure”
+        means, in relation to China Connect Securities, the disclosure required to be made by a
+
+
+                                                 - 39 -
+          Participant other than an Investor Participant to HKSCC in respect of votes on shareholder
+          resolutions cast by its clients based on such categorization or other parameter as HKSCC
+          may prescribe from time to time according to the requirements of the relevant issuers or
+          applicable laws, rules or regulations;
+
+“SI Activity Report”
+          means, in relation to a Participant (other than an Investor Participant), a daily report provided
+          by HKSCC to it showing (i) details of all SI input activities of the Participant on the previous
+          day, and (ii) details of its SIs that are matched, revoked (either using a CCASS Terminal or
+          via Synapse) or purged by CCASS before the end of the previous day, as referred to in
+          Section 12.1.8 (refer to the CCASS Terminal User Guide for Participants for details);
+
+“SI Batch Input Control Report”
+         means, in relation to a Participant (other than an Investor Participant) which is provided by
+         HKSCC with facilities for SI batch file transfer, a report provided by HKSCC to it (after each
+         individual SI batch validation run) showing the processing results of its SI batch file transfers,
+         as referred to in Section 16.6 (refer to the CCASS Terminal User Guide for Participants for
+         details);
+
+“SI Input Number”
+         means a unique number assigned by HKSCC for each SI input by a Participant other than an
+         Investor Participant;
+
+“SI Status Report”
+         means, in relation to a Participant (other than an Investor Participant), a daily report provided
+         by HKSCC to it showing its SIs which remain unmatched at the end of the previous day and
+         its SIs that are matched but which are not yet due for settlement on the current day, as
+         referred to in Section 12.8.3 (refer to the CCASS Terminal User Guide for Participants for
+         details);
+
+“SPSA Delivery Failure”
+        means the failed delivery of the relevant quantity of a China Connect Security from a Special
+        Segregated Account to a China Connect Clearing Participant for CNS settlement on a
+        settlement day;
+
+“SSE Market”
+       has the same meaning as defined in Chapter 14A of the Exchange Rules;
+
+“Statement of Money Ledger”
+        means, in relation to a Participant (other than an Investor Participant), a daily statement
+        provided by HKSCC to it showing the debit and credit entries to each sub-account of its
+        Money Ledger, as referred to in Section 14.4.2 (v) (refer to the CCASS Terminal User Guide
+        for Participants for details);
+
+“Statement of Stock Movement (By Account) Report”
+        means, in relation to a Participant (other than an Investor Participant), a daily report provided
+        by HKSCC to it showing by account the debit and credit entries made to its Stock Accounts,
+        as referred to in Section 16.6 (refer to the CCASS Terminal User Guide for Participants for
+        details);
+
+“Statement of Stock Movement (By Stock) Report”
+        means, in relation to a Participant (other than an Investor Participant), a daily report provided
+        by HKSCC to it showing by stocks the debit and credit entries made to its Stock Accounts, as
+        referred to in Section 16.6 (refer to the CCASS Terminal User Guide for Participants for
+        details);
+
+
+                                                 - 40 -
+“STI Batch-run”
+        means the process adopted by HKSCC to effect at stated times STI Transfers accepted by
+        CCASS whereby Eligible Securities will be automatically debited from the delivering Stock
+        Accounts of the Clearing Participants or Custodian Participants and credited to the receiving
+        Stock Accounts of the Clearing Participants or Custodian Participants;
+
+“SWIFT”
+       means the secured messaging services platform and interface software provided by the
+       Society for Worldwide Interbank Financial Telecommunication;
+
+“Synapse Report”
+          means the report to be available in Synapse in relation to Synapse-related activities as from
+          time to time prescribed in the Synapse User Guide;
+
+“SZSE Market”
+       has the same meaning as defined in Chapter 14B of the Exchange Rules;
+
+“Trade for trade”
+         means, in relation to those transactions in Eligible Securities between Participants which are
+         accepted for settlement in CCASS, those transactions which are not accepted for the
+         settlement under the CNS System and settlement of each such transaction is processed in
+         CCASS separately without any netting;
+
+“T+2”
+          means the second Settlement Day following T-day;
+
+“T+3”
+          means the third Settlement Day following T-day;
+
+“T+6”
+          means the sixth Settlement Day following T-day;
+
+“TSF Confirmation Report”
+       means the report to be provided by HKSCC to a TSF CCASS Participant setting out
+       information regarding TSF Exchange Trades, TSF FX Transactions, Stock Release FX
+       Transactions and other related information as referred to in Section 12A.2.3;
+
+“TSF Final FX Position”
+        means, in relation to the settlement of TSF FX Transactions, the final money positions in
+        respect of TSF Stocks for settlement by a TSF Clearing Participant and HKSCC, as
+        determined in accordance with 12A.3.5;
+
+“TSF FX Position”
+       means, in relation to the settlement of TSF FX Transactions, the money positions in respect
+       of a TSF Stock for settlement by a TSF Clearing Participant and HKSCC, as determined in
+       accordance with Section 12A.3.2;
+
+“TSF FX Transaction / Stock Release Activity / Status Report”
+       means, in relation to (i) the maintenance activities of Stock Release Requests performed by
+       the TSF CCASS Participants; and (ii) the settlement status of TSF FX Transactions and
+       Stock Release FX Transactions on the current Business Day, a daily report provided by
+
+
+
+                                               - 41 -
+         HKSCC to that Participant as referred to in Section 16.6 (refer to the CCASS Terminal User
+         Guide for Participants for details);
+
+“TSF payment instruction”
+        means the payment instructions generated by HKSCC in respect of TSF Final FX Positions
+        as referred to in Section 12A.4.1 or in respect of money positions arising from Stock Release
+        FX Transactions, as referred to in Section 12A.6.3(i);
+
+“TSF Payment Standing Instruction”
+       means the standing instruction set up by a TSF Clearing Participant for the payment of TSF
+       payment instructions via CPIs, as referred to in Section 12A.4.1(i);
+
+“TSF Share De-earmarking Process”
+       means the process adopted by HKSCC to de-earmark TSF Stocks for the settlement of TSF
+       Sell Exchange Trades, as referred to in Rule 12A09 and Section 12A.5.6;
+
+“TSF Share Earmarking Process”
+       means the process adopted by HKSCC to earmark TSF Stocks following the settlement of
+       TSF Buy Exchange Trades, as referred to in Rule 12A09 and Section 12A.5.4;
+
+“TSF stock position”
+        means the net long or net short stock position in respect of a TSF Stock, as referred to in
+        Section 12A.5.3;
+
+“Unfavourable Marks”
+       means Marks computed by the Mark-to-market of a stock position under the CNS System
+       which are unfavourable to a Clearing Participant or Clearing Agency Participant, as referred
+       to in Sections 10.10.2 and 10A.10; and
+
+“User ID”
+         means, in relation to a Participant other than an Investor Participant, a unique identification
+         number provided by HKSCC to an Authorised User of that Participant to enable him to gain
+         access to CCASS via the CCASS Terminal of the Participant, as referred to in Section 3.3.1.
+
+
+(c)   When used in the Operational Procedures, the masculine gender shall include the feminine and
+      the neuter and the singular number shall include the plural and vice versa.
+
+      Reference herein to persons shall include individuals, partnerships and bodies corporate.
+
+      References herein to times and days are, unless otherwise stated, references to Hong Kong times
+      and days.
+
+      References to any law or regulation in the Operational Procedures shall be construed as
+      references to such law or regulation as in force from time to time.
+
+      Headings are provided for ease of reference only and shall not affect the interpretation or
+      construction of the provisions of the Rules (which includes the Operational Procedures).
+
+      For the avoidance of doubt, if there is any conflict in meaning between the English version and
+      Chinese version of a Rule (which includes a provision in the Operational Procedures), the
+      English version shall prevail.
+
+
+
+
+                                                - 42 -
+

@@ -1,0 +1,29 @@
+{
+  "files": [
+    {
+      "exact_private_path": "/srv/bcache-8t/ygguo/backtest/g12h-authority-private/20260820-wave1-response-headers/stamp_duty/sta-search-half-securities-transaction-stamp-duty-terminal-page-1/response.headers",
+      "exact_private_sha256": "sha256:1f89b3682482e4f6240661714cb393e16b8a9452e3ad4db87e7817631d45d2d1",
+      "redaction": "Set-Cookie value replaced by its SHA-256; cookie name and attributes retained.",
+      "tracked_path": "stamp_duty/sta-search-half-securities-transaction-stamp-duty-terminal-page-1/response.headers",
+      "tracked_redacted_sha256": "sha256:d906a188fe7a185609f7eec7532cac0ff6b71504a5697e64d211575d6af10c3b"
+    },
+    {
+      "exact_private_path": "/srv/bcache-8t/ygguo/backtest/g12h-authority-private/20260820-wave1-response-headers/stamp_duty/sta-search-half-securities-transaction-stamp-duty-terminal-page-1/transport.log",
+      "exact_private_sha256": "sha256:fcaf85ee4134cd8ccd725f024d2ed0915704a33f3a3b987582cb97baf7f9eebc",
+      "redaction": "Set-Cookie value replaced by its SHA-256; cookie name and attributes retained.",
+      "tracked_path": "stamp_duty/sta-search-half-securities-transaction-stamp-duty-terminal-page-1/transport.log",
+      "tracked_redacted_sha256": "sha256:31b0e7cb47d985c39854d6c733b7cd32608e6daf860fd28a8b2134e008fb3e92"
+    },
+    {
+      "exact_private_path": "/srv/bcache-8t/ygguo/backtest/g12h-authority-private/20260820-wave1-response-headers/stamp_duty/sta-search-half-securities-transaction-stamp-duty-terminal-page-1/redirects.json",
+      "exact_private_sha256": "sha256:c08d45a64fe6b4adc24bc309568e5d3df3f0cf72f0eb945d6d68dceada65b2bc",
+      "redaction": "Set-Cookie value replaced by its SHA-256; cookie name and attributes retained.",
+      "tracked_path": "stamp_duty/sta-search-half-securities-transaction-stamp-duty-terminal-page-1/redirects.json",
+      "tracked_redacted_sha256": "sha256:ddf9fe7e81b486fab6de96c73a70237cde5aaebf8ba7a5a1c2a5dc1702c90c6c"
+    }
+  ],
+  "private_store_root": "/srv/bcache-8t/ygguo/backtest/g12h-authority-private/20260820-wave1-response-headers",
+  "schema_version": 1,
+  "source_id": "sta-search-half-securities-transaction-stamp-duty-terminal-page-1",
+  "type": "g12h_sensitive_response_header_receipt_v1"
+}

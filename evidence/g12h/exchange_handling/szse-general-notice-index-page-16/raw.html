@@ -1,0 +1,3352 @@
+<!DOCTYPE html>
+<html lang="zh-cmn-Hans">
+<head>
+    <meta charset="utf-8">
+<!--   <title>深交所主页</title>   -->
+<script>
+    var title = '<a href="./" class="CurrChnlCls">通知公告</a> ';
+    title = title.substring(title.indexOf('>')+1,title.indexOf('</'));
+    document.write('<title>深圳证券交易所-'+ title +'</title>')
+</script>
+<script>
+  if(location.protocol == 'https:'){
+    document.write('<link href="https://res.szse.cn/common/images/favicon.ico" rel="shortcut icon" type="image/x-icon" />');
+  }else{
+    document.write('<link href="http://res.static.szse.cn/common/images/favicon.ico" rel="shortcut icon" type="image/x-icon" />');
+  }
+</script>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1, user-scalable=0" />
+<meta http-equiv="cache-control" content="max-age=0">
+<meta http-equiv="cache-control" content="no-cache, no-store, must-revalidate">
+<meta http-equiv="expires" content="0">
+<meta http-equiv="expires" content="Web, 26 Feb 1997 08:21:57 GMT">
+<meta http-equiv="pragma" content="no-cache">
+<meta name="author" content="www.szse.cn">
+<meta name="description" content="深交所官网">
+<meta name="keywords" content="深交所,深交所官网,深圳证券交易所,交易所,交易所官网,深圳证券交易所官网">
+<meta name="renderer" content=webkit>
+<meta name="X-UA-Compatible" content="IE=edge">
+<meta name="google" value="notranslate"> 
+<meta name="format-detection" content="telephone=no">
+<meta name="format-detection" content="email=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black">
+<meta name="screen-orientation" content="portrait">
+<meta name="full-screen" content="yes">
+<meta name="browermode" content="application">
+<meta name="x5-orientation" content="portrait">
+<meta name="HandheldFriendly" content="true">
+<script type="text/javascript">
+	var u = navigator.userAgent;
+	var isAndroid = u.indexOf('Android') > -1 || u.indexOf('Adr') > -1;//android终端
+
+	function addElementMeta(name,  content) {
+		var head = document.getElementsByTagName('head')[0];
+		var meta = document.createElement('meta');
+
+		meta.setAttribute('name', name);
+		meta.setAttribute('content', content);
+		head.appendChild(meta);
+	}
+	if(isAndroid) {
+		addElementMeta('x5-fullscreen', 'true');
+		addElementMeta('x5-page-mode', 'app');
+	}
+</script> 
+    <script>
+  (function() {
+    var _versionDate = new Date().getTime();
+    if(location.protocol == 'https:'){
+      var _path = 'https://res.szse.cn';
+    }else{
+      var _path = 'http://res.static.szse.cn';
+    }
+    _path = _path.replace(".static.", ".");
+    //var _path = 'http://res.szse.cn';
+    //document.write( " <script src='" + _path + "/common/js/first.js?random=" + _versionDate + "'> <\/script> ");
+    var _host = 'http://www.szse.cn';
+    if(location.protocol == 'https:'){
+        _host = 'https://www.szse.cn';
+    }
+    document.write( " <script src='" + _host + "/szsePath.js?random=" + _versionDate + "'> <\/script> "
+    +" <script src='" + _path + "/common/js/concatversion.js?random=" + _versionDate + "'> <\/script> ");
+  }());
+</script>
+<!-- <script src="http://res.static.szse.cn/lib/td-h5-website-sdk.js" td-appid="56FD3F8B428A47FAB9A3F2191498B29D"></script> -->
+<script>
+    addComCssFile()
+</script> 
+</head>
+<body>
+    <!--[if lt IE 9]>
+	<div class="low_version">
+	 	<div class="g-container inner">
+		    <div class="tip">系统检测到您正在使用IE8以下内核的浏览器，不能实现完美体验，请及时更新浏览器版本！</div>
+		    <span class="low_close">&times;</span>
+		</div>
+	</div>
+<style type="text/css">
+.top-header-container{
+  margin-top:30px;
+}
+</style>
+    <script src="http://res.static.szse.cn/lib/ie8fix/html5shiv/3.7.3/html5shiv.min.js"></script>       
+    <script src="http://res.static.szse.cn/lib/ie8fix/Respond-master/dest/respond.min.js"> </script>
+    <script src="http://res.static.szse.cn/lib/ie8fix/es5-shim/4.2.0/es5-shim.min.js"></script>
+    <script src="http://res.static.szse.cn/lib/ie8fix/JSON/3.3.2/json3.min.js"></script>
+    <script src="http://res.static.szse.cn/lib/ie8fix/iefix/ie8fix.js"></script>
+<![endif]-->
+<div class="top-header-container clearfix  hidden-xs">
+    <div class="g-container">
+        <div class="pull-left" style="display: none;">
+            <div class="top-subweb-list item">
+                <a href="javascript:void(0);" class="">乐富基金子网站</a>
+                <a href="javascript:void(0);" class="ml10">固收子网站</a>
+                <a href="javascript:void(0);" class="ml10">投教子网站</a>
+            </div>
+        </div>
+        <div class="pull-right">
+            <div class="top-menu-list">
+
+
+                <div class="item item-home"><a class="link-home" href="/">官网首页</a></div>
+                <div class="item item-loginregist">
+                    <a class="link-login" href="javascript:void(0)">个人中心</a>
+                    <!--<span class="sepline">|</span>
+                    <a class="link-reg" href="/modules/regist/views/index.html">注册</a>-->
+                </div>
+                <div class="item item-subsiteLink">
+                    <span class="subsiteLink">子站链接</span>
+                    <ul class="dropdown-menu mouseover-menu">
+                      <li>
+                        <a href="http://listing.szse.cn" target="_blank">
+                          创业板注册制
+                        </a>
+                       </li>
+                       <li>
+                           <a href="http://www.szse.cn/ydyl/index.html" target="_blank">
+                               一带一路
+                           </a>
+                       </li>
+                       <li>
+                           <a href="http://www.szse.cn/szhk/index.html" target="_blank">
+                               深港通
+                           </a>
+                       </li>
+                       <li>
+                           <a href="http://investor.szse.cn/" target="_blank">
+                               投资者教育
+                           </a>
+                       </li>
+                       <li>
+                        <a href="http://dr.szse.cn" target="_blank" >
+                            互联互通存托凭证
+                          </a>
+                      </li>
+                    </ul>   
+                </div>
+                <div class="item">
+                    <div class="languageswitch">
+                        <a class="btn-goenglish itemlink-goenglish" href="#" target="_blank">English</a>
+                    </div>
+                   
+                </div>
+                <div class="item">
+                    <div class="languageswitch" >
+                        <a class="big5OrSimp" href="">繁体中文</a>
+                    </div>
+                    <script>
+                        changeVertion('/common/js/toggleBig5.js','js');
+                    </script>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<div class="navbar szse-navbar szse-navbar-pc">
+    <div class="g-container clearfix">
+        <div class="navbar-headers ">
+            <a href="/" class="navbar-brand">
+               <img class="nav-logo" src="http://res.static.szse.cn/common/icon/logo.png" alt="深交所" />
+            </a>
+            <div class="nav-logo-tit">
+                <div>用户入口</div>
+            </div>
+        </div>
+        <div class="slogans">
+          <p id="slogans-values">价值观：公 诚 勤 廉</p>
+          <p id="slogans-sop">使命：汇聚创新资本 激发成长动力</p>
+          <p id="slogans-vision">愿景：建成以优质创新资本中心为特色的世界一流交易所</p>
+        </div>
+       <div class="top-search-el">
+              <form class="search-form" action target="frameFile">
+                  <input id="pcSearchInput" type="search" maxlength="100" class="search-input need-repaired-placeholder" autocomplete="off" placeholder="请输入关键字" />
+                  <input type="text" style="display: none;" />
+                  <span class="clear-keyword">&times;</span>
+                  <button class="search-btn" type="button"><span class="glyphicon glyphicon-search"></span></button>
+              </form>
+              <div class="search-hot"></div>
+       </div>
+     
+    </div>
+    <nav class="collapse navbar-collapse bs-navbar-collapse  navbar-wrap">
+        <div class="g-container">
+            <div class="nav-customize-item">
+                <a href="/application/userCenter/customize/" class="nav-customize"><i></i>我的定制<span></span></a>
+            </div>
+            <div class="nav-box szsenav-box">
+              <script>
+                try {
+                  navMenuAJAX('/navMenu/index.html', '/navMenu/index.html','pcMenu','www');
+                } catch (e) {
+
+                }
+              </script>
+            </div>
+        </div>
+    </nav>
+</div>
+<div class="navbar-fixed-top navmobile szse-navbar szse-navbar-mobile szsenavbarmobile">
+    <div class="mobile-search">
+        <div class="mobile-search_container">
+        	<div class="mobile-search_form">
+        	    <div class="top-search-el">
+        	           <div class="search-form">
+                               <form action target="frameFile" id="searh_form">
+                                   <input id="mobileSearchInput" type="search" class="mobile-search_input search-input need-repaired-placeholder" placeholder="请输入关键字" />
+                                   <input type="text" style="display: none;" />
+                                   <iframe name="frameFile" style="display: none;"></iframe>
+                               </form>
+
+        	              
+        	               <!-- <input type="button" class="search-btn" value="搜索" /> -->
+        	           </div>
+        	       </div>
+        	    <!-- <input class="mobile-search_input" type="text" name="topbarSearch" placeholder="搜索行情/公告/其他信息" /> -->
+        	    <img class="mobile-search_close" src="http://res.static.szse.cn/common/icon/mobile-search_close.png" alt="search close" />
+        	</div>
+        </div>
+    </div>
+   <div id="dl-menu" class="dl-menuwrapper">
+             <a class="navipone_block"><span class="glyphicon glyphicon-search"></span></a>
+             <a class="navbar-brand" href="/"><img src="http://res.static.szse.cn/common/icon/logo.png" alt="深交所" /></a>
+             <button class="dl-trigger dl-phmenu"></button>
+             
+             <script>
+                try {
+                  navMenuAJAX('/navMenu/index.html', '/navMenu/index.html','mobileMenu','www');
+                } catch (e) {
+
+                }
+              </script>
+             <script>
+                changeVertion('/common/js/toggleBig5.js','js');
+             </script>
+         </div>
+</div>
+<div class="g-locationnav">
+    <div class="banner-wrap">
+      <img src="http://res.static.szse.cn/common/images/legalrules-banner.jpg" />
+    </div>
+    <div class="g-container">
+      <div class="g-banner-txt">
+            <h2 class="hidden-xs">通知公告</h2>
+            <p>
+              <img src="http://res.static.szse.cn/common/icon/er-banneradr.png" />位置：<a href="../../" class="CurrChnlCls">信息披露</a>/<a href="../" class="CurrChnlCls">本所公告</a>/<a href="./" class="CurrChnlCls">通知公告</a>
+            </p>
+          </div>
+    </div>
+</div>
+    <script>
+        var articleCount=0
+        
+                 articleCount=1
+            
+            
+        
+            
+        
+            
+        
+            
+        
+            
+        
+            
+        
+            
+        
+            
+        
+            
+        
+            
+        
+            
+        
+            
+        
+            
+        
+            
+        
+            
+        
+            
+        
+            
+        
+            
+        
+            
+        
+            
+        
+            
+        
+            
+        
+            
+        
+            
+        
+            
+        
+            
+        
+            
+        
+            
+        
+            
+        
+            
+        
+            
+        
+            
+        
+            
+        
+            
+        
+            
+        
+            
+        
+            
+        
+            
+        
+            
+        
+            
+        
+            
+        
+            
+        
+            
+        
+            
+        
+            
+        
+            
+        
+            
+        
+            
+        
+            
+        
+            
+        
+            
+        
+            
+        
+            
+        
+            
+        
+            
+        
+            
+        
+            
+        
+            
+        
+            
+        
+            
+        
+            
+        
+            
+        
+            
+        
+            
+        
+            
+        
+            
+        
+            
+        
+            
+        
+            
+        
+            
+        
+            
+        
+            
+        
+            
+        
+            
+        
+            
+        
+            
+        
+            
+        
+            
+        
+            
+        
+            
+        
+            
+        
+            
+        
+            
+        
+            
+        
+            
+        
+            
+        
+            
+        
+            
+        
+            
+        
+            
+        
+            
+        
+            
+        
+            
+        
+            
+        
+            
+        
+            
+        
+            
+        
+            
+        
+            
+        
+            
+        
+            
+        
+            
+        
+            
+        
+            
+        
+            
+        
+            
+        
+            
+        
+            
+        
+            
+        
+            
+        
+            
+        
+            
+        
+            
+        
+            
+        
+            
+        
+            
+        
+            
+        
+            
+        
+            
+        
+            
+        
+            
+        
+            
+        
+            
+        
+            
+        
+            
+        
+            
+        
+            
+        
+            
+        
+            
+        
+            
+        
+            
+        
+            
+        
+            
+        
+            
+        
+            
+        
+            
+        
+            
+        
+            
+        
+            
+        
+            
+        
+            
+        
+            
+        
+            
+        
+            
+        
+            
+        
+            
+        
+            
+        
+            
+        
+            
+        
+            
+        
+            
+        
+            
+        
+            
+        
+            
+        
+            
+        
+            
+        
+            
+        
+            
+        
+            
+        
+            
+        
+            
+        
+            
+        
+            
+        
+            
+        
+            
+        
+            
+        
+            
+        
+            
+        
+            
+        
+            
+        
+            
+        
+            
+        
+            
+        
+            
+        
+            
+        
+            
+        
+            
+        
+            
+        
+            
+        
+            
+        
+            
+        
+            
+        
+            
+        
+            
+        
+            
+        
+            
+        
+            
+        
+            
+        
+            
+        
+            
+        
+            
+        
+            
+        
+            
+        
+            
+        
+            
+        
+            
+        
+            
+        
+            
+        
+            
+        
+            
+        
+            
+        
+            
+        
+            
+        
+            
+        
+            
+        
+            
+        
+            
+        
+            
+        
+            
+        
+            
+        
+            
+        
+            
+        
+            
+        
+            
+        
+            
+        
+            
+        
+            
+        
+            
+        
+            
+        
+            
+        
+            
+        
+            
+        
+            
+        
+            
+        
+            
+        
+            
+        
+            
+        
+            
+        
+            
+        
+            
+        
+            
+        
+            
+        
+            
+        
+            
+        
+            
+        
+            
+        
+            
+        
+            
+        
+            
+        
+            
+        
+            
+        
+            
+        
+            
+        
+            
+        
+            
+        
+            
+        
+            
+        
+            
+        
+            
+        
+            
+        
+            
+        
+            
+        
+            
+        
+            
+        
+            
+        
+            
+        
+            
+        
+            
+        
+            
+        
+            
+        
+            
+        
+            
+        
+            
+        
+            
+        
+            
+        
+            
+        
+            
+        
+            
+        
+            
+        
+            
+        
+            
+        
+            
+        
+            
+        
+            
+        
+            
+        
+            
+        
+            
+        
+            
+        
+            
+        
+            
+        
+            
+        
+            
+        
+            
+        
+            
+        
+            
+        
+            
+        
+            
+        
+            
+        
+            
+        
+            
+        
+            
+        
+            
+        
+            
+        
+            
+        
+            
+        
+            
+        
+            
+        
+            
+        
+            
+        
+            
+        
+            
+        
+            
+        
+            
+        
+            
+        
+            
+        
+            
+        
+            
+        
+            
+        
+            
+        
+            
+        
+            
+        
+            
+        
+            
+        
+            
+        
+            
+        
+            
+        
+            
+        
+            
+        
+            
+        
+            
+        
+            
+        
+            
+        
+            
+        
+            
+        
+            
+        
+            
+        
+            
+        
+            
+        
+            
+        
+            
+        
+            
+        
+            
+        
+            
+        
+            
+        
+            
+        
+            
+        
+            
+        
+            
+        
+            
+        
+            
+        
+            
+        
+            
+        
+            
+        
+            
+        
+            
+        
+            
+        
+            
+        
+            
+        
+            
+        
+            
+        
+            
+        
+            
+        
+            
+        
+            
+        
+            
+        
+            
+        
+            
+        
+            
+        
+            
+        
+            
+        
+            
+        
+            
+        
+            
+        
+            
+        
+            
+        
+            
+        
+            
+        
+            
+        
+            
+        
+            
+        
+            
+        
+            
+        
+            
+        
+            
+        
+            
+        
+            
+        
+            
+        
+            
+        
+            
+        
+            
+        
+            
+        
+            
+        
+            
+        
+            
+        
+            
+        
+            
+        
+            
+        
+            
+        
+            
+        
+            
+        
+            
+        
+            
+        
+            
+        
+            
+        
+            
+        
+            
+        
+            
+        
+            
+        
+            
+        
+            
+        
+            
+        
+            
+        
+            
+        
+            
+        
+            
+        
+            
+        
+            
+        
+            
+        
+            
+        
+            
+        
+            
+        
+            
+        
+            
+        
+            
+        
+            
+        
+            
+        
+            
+        
+            
+        
+            
+        
+            
+        
+            
+        
+            
+        
+            
+        
+            
+        
+            
+        
+            
+        
+            
+        
+            
+        
+            
+        
+            
+        
+            
+        
+            
+        
+            
+        
+            
+        
+            
+        
+            
+        
+            
+        
+            
+        
+            
+        
+            
+        
+            
+        
+            
+        
+            
+        
+            
+        
+            
+        
+            
+        
+            
+        
+            
+        
+            
+        
+            
+        
+            
+        
+            
+        
+            
+        
+            
+        
+            
+        
+            
+        
+            
+        
+            
+        
+            
+        
+            
+        
+            
+        
+            
+        
+            
+        
+            
+        
+            
+        
+            
+        
+            
+        
+            
+        
+            
+        
+            
+        
+            
+        
+            
+        
+            
+        
+            
+        
+            
+        
+            
+        
+            
+        
+            
+        
+            
+        
+            
+        
+            
+        
+            
+        
+            
+        
+            
+        
+            
+        
+            
+        
+            
+        
+            
+        
+            
+        
+            
+        
+            
+        
+            
+        
+            
+        
+            
+        
+            
+        
+            
+        
+            
+        
+            
+        
+            
+        
+            
+        
+    </script>
+    <div class="g-container-wrap">
+        <div class="g-container">
+            <div class="g-sidemenu">
+                
+
+<div class="menu-container">
+	<h2 class="title">信息披露</h2>
+	<div class="side-menu-container">
+		<ul class="side-menu-con">
+           <li class="level1 last" type="0" chnlcode="dealinstruct_report">
+
+			            <a href="../../../disclosure/memo/index.html">
+					<div>交易备忘
+					
+					</div>
+				</a>
+				
+	  </li>
+           <li class="level1 active" chnlcode="announcement">
+
+			        <a class="dropup">
+					<div>本所公告
+					
+					  <b class="caret"></b>
+					</div>
+				</a>
+				
+				<ul>
+           <li class="level2 active last" chnlcode="general_news">
+
+			            <a href="../../../disclosure/notice/general/index.html">
+					<div>通知公告
+					
+					</div>
+				</a>
+				
+	  </li>
+           <li class="level2 last" type="0" chnlcode="tempsuspension_news">
+
+			            <a href="../../../disclosure/notice/temp/index.html">
+					<div>停复牌
+					
+					</div>
+				</a>
+				
+	  </li>
+           <li class="level2 last" type="0" chnlcode="ipocompany_news">
+
+			            <a href="../../../disclosure/notice/company/index.html">
+					<div>上市公司
+					
+					</div>
+				</a>
+				
+	  </li>
+           <li class="level2 last" type="0" chnlcode="bond_news">
+
+			            <a href="../../../disclosure/notice/bond/index.html">
+					<div>固收产品
+					
+					</div>
+				</a>
+				
+	  </li>
+           <li class="level2 last" type="0" chnlcode="fund_news">
+
+			            <a href="../../../disclosure/notice/fund/index.html">
+					<div>基金
+					
+					</div>
+				</a>
+				
+	  </li>
+				</ul>
+	  </li>
+            <li class="level1" type="0" chnlcode="dealinfo">
+
+			        <a> 
+					<div>交易信息
+					
+					  <b class="caret"></b>
+					</div>
+				</a>
+				
+				<ul>
+           <li class="level2 last" type="0" chnlcode="public_report">
+
+			            <a href="../../../disclosure/deal/public/index.html">
+					<div>竞价交易公开信息
+					
+					</div>
+				</a>
+				
+	  </li>
+            <li class="level2" type="0" chnlcode="block_report">
+
+			        <a> 
+					<div>大宗交易信息
+					
+					  <b class="caret"></b>
+					</div>
+				</a>
+				
+				<ul>
+           <li class="level3 last" type="0" chnlcode="equityBlock_report">
+
+			            <a href="../../../disclosure/deal/block/equity/index.html">
+					<div>权益类证券大宗交易
+					
+					</div>
+				</a>
+				
+	  </li>
+           <li class="level3 last" type="0" chnlcode="reitsBlock_report">
+
+			            <a href="../../../disclosure/deal/block/reits/index.html">
+					<div>基础设施基金大宗交易
+					
+					</div>
+				</a>
+				
+	  </li>
+           <li class="level3 last" type="0" chnlcode="reitsBlockReal_report">
+
+			            <a href="../../../disclosure/deal/block/reitsReal/index.html">
+					<div>基础设施基金大宗交易（实时）
+					
+					</div>
+				</a>
+				
+	  </li>
+				</ul>
+	  </li>
+            <li class="level2" type="0" chnlcode="InquiryTrading_report">
+
+			        <a> 
+					<div>询价交易信息
+					
+					  <b class="caret"></b>
+					</div>
+				</a>
+				
+				<ul>
+           <li class="level3 last" type="0" chnlcode="reitsInquiryTradingReal_report">
+
+			            <a href="../../../disclosure/deal/inquiry/reitsReal/index.html">
+					<div>基础设施基金询价交易（逐笔）
+					
+					</div>
+				</a>
+				
+	  </li>
+           <li class="level3 last" type="0" chnlcode="reitsInquiryTrading_report">
+
+			            <a href="../../../disclosure/deal/inquiry/reits/index.html">
+					<div>基础设施基金询价交易
+					
+					</div>
+				</a>
+				
+	  </li>
+				</ul>
+	  </li>
+            <li class="level2" type="0" chnlcode="xxpl-jyxx-kzz">
+
+			        <a> 
+					<div>可转债信息
+					
+					  <b class="caret"></b>
+					</div>
+				</a>
+				
+				<ul>
+            <li class="level3" type="0" chnlcode="xxpl-jyxx-kzz-bdxkzz_report">
+
+			        <a> 
+					<div>上市公司向不特定对象发行的可转债信息
+					
+					  <b class="caret"></b>
+					</div>
+				</a>
+				
+				<ul>
+           <li class="level4 last" type="0" chnlcode="xxpl-jyxx-kzz-ppcj_report">
+
+			            <a href="../../../disclosure/deal/conv/nd/mb/index.html">
+					<div>匹配成交交易公开信息
+					
+					</div>
+				</a>
+				
+	  </li>
+           <li class="level4 last" type="0" chnlcode="xxpl-jyxx-kzz-xscjph_report">
+
+			            <a href="../../../disclosure/deal/conv/nd/nbap/index.html">
+					<div>协商成交及盘后定价成交交易信息
+					
+					</div>
+				</a>
+				
+	  </li>
+           <li class="level4 last" type="0" chnlcode="xxpl-jyxx-kzz-xscjsb_report">
+
+			            <a href="../../../disclosure/deal/conv/nd/nbd/index.html">
+					<div>协商成交申报信息
+					
+					</div>
+				</a>
+				
+	  </li>
+				</ul>
+	  </li>
+           <li class="level3 last" type="0" chnlcode="xxpl-jyxx-kzz-dxkzz_report">
+
+			            <a href="../../../disclosure/deal/conv/dx/index.html">
+					<div>上市公司向特定对象发行的可转债信息
+					
+					</div>
+				</a>
+				
+	  </li>
+				</ul>
+	  </li>
+           <li class="level2 last" type="0" chnlcode="holder_report">
+
+			            <a href="../../../disclosure/deal/holder/index.html">
+					<div>权证持有人信息
+					
+					</div>
+				</a>
+				
+	  </li>
+           <li class="level2 last" type="0" chnlcode="qfii_report">
+
+			            <a href="../../../disclosure/deal/qfii/index.html">
+					<div>境外投资者持股信息
+					
+					</div>
+				</a>
+				
+	  </li>
+           <li class="level2 last" type="0" chnlcode="tenderoffer_news">
+
+			            <a href="../../../disclosure/deal/offer/index.html">
+					<div>要约收购
+					
+					</div>
+				</a>
+				
+	  </li>
+           <li class="level2 last" type="0" chnlcode="transfer_news">
+
+			            <a href="../../../disclosure/deal/transfer/index.html">
+					<div>非流通股转让
+					
+					</div>
+				</a>
+				
+	  </li>
+           <li class="level2 last" type="0" chnlcode="prefer_report">
+
+			            <a href="../../../disclosure/deal/prefer/index.html">
+					<div>优先股信息
+					
+					</div>
+				</a>
+				
+	  </li>
+				</ul>
+	  </li>
+            <li class="level1" type="0" chnlcode="margin">
+
+			        <a> 
+					<div>融资融券
+					
+					  <b class="caret"></b>
+					</div>
+				</a>
+				
+				<ul>
+           <li class="level2 last" type="0" chnlcode="business_news">
+
+			            <a href="../../../disclosure/margin/business/index.html">
+					<div>业务公告
+					
+					</div>
+				</a>
+				
+	  </li>
+           <li class="level2 last" type="0" chnlcode="object_report">
+
+			            <a href="../../../disclosure/margin/object/index.html">
+					<div>标的证券信息
+					
+					</div>
+				</a>
+				
+	  </li>
+           <li class="level2 last" type="0" chnlcode="securites_report">
+
+			            <a href="../../../disclosure/margin/securites/index.html">
+					<div>可充抵保证金证券
+					
+					</div>
+				</a>
+				
+	  </li>
+           <li class="level2 last" type="0" chnlcode="marginDeal_report">
+
+			            <a href="../../../disclosure/margin/margin/index.html">
+					<div>融资融券交易
+					
+					</div>
+				</a>
+				
+	  </li>
+           <li class="level2 last" type="0" chnlcode="borrowedintent_report">
+
+			            <a href="../../../disclosure/margin/intent/index.html">
+					<div>有借入意向标的证券
+					
+					</div>
+				</a>
+				
+	  </li>
+           <li class="level2 last" type="0" chnlcode="lendeddeal_report">
+
+			            <a href="../../../disclosure/margin/lended/index.html">
+					<div>证券出借交易
+					
+					</div>
+				</a>
+				
+	  </li>
+           <li class="level2 last" type="0" chnlcode="restrictedShares_report">
+
+			            <a href="../../../disclosure/margin/restrict/index.html">
+					<div>限售股可出借信息
+					
+					</div>
+				</a>
+				
+	  </li>
+				</ul>
+	  </li>
+            <li class="level1" type="0" chnlcode="supervision">
+
+			        <a> 
+					<div>监管信息公开
+					
+					  <b class="caret"></b>
+					</div>
+				</a>
+				
+				<ul>
+           <li class="level2 last" type="0" chnlcode="dynamic_news">
+
+			            <a href="../../../disclosure/supervision/dynamic/index.html">
+					<div>监管动态
+					
+					</div>
+				</a>
+				
+	  </li>
+            <li class="level2" type="0" chnlcode="measure_report">
+
+			        <a> 
+					<div>监管措施与纪律处分
+					
+					  <b class="caret"></b>
+					</div>
+				</a>
+				
+				<ul>
+           <li class="level3 last" type="0" chnlcode="superviseMeasure_report">
+
+			            <a href="../../../disclosure/supervision/measure/measure/index.html">
+					<div>监管措施
+					
+					</div>
+				</a>
+				
+	  </li>
+           <li class="level3 last" type="0" chnlcode="disciplinaryAction_report">
+
+			            <a href="../../../disclosure/supervision/measure/pushish/index.html">
+					<div>纪律处分
+					
+					</div>
+				</a>
+				
+	  </li>
+           <li class="level3 last" type="0" chnlcode="reviewDecision">
+
+			            <a href="../../../disclosure/supervision/measure/decision/index.html">
+					<div>复核决定
+					
+					</div>
+				</a>
+				
+	  </li>
+				</ul>
+	  </li>
+            <li class="level2" type="0" chnlcode="supervision_trading">
+
+			        <a> 
+					<div>交易监管
+					
+					  <b class="caret"></b>
+					</div>
+				</a>
+				
+				<ul>
+           <li class="level3 last" type="0" chnlcode="restrict_trading">
+
+			            <a href="../../../disclosure/supervision/transaction/restrict/index.html">
+					<div>限制交易
+					
+					</div>
+				</a>
+				
+	  </li>
+           <li class="level3 last" type="0" chnlcode="supervision_case">
+
+			            <a href="../../../disclosure/supervision/transaction/case/index.html">
+					<div>监管案例
+					
+					</div>
+				</a>
+				
+	  </li>
+				</ul>
+	  </li>
+           <li class="level2 last" type="0" chnlcode="sup_participant">
+
+			            <a href="../../../disclosure/supervision/participant/index.html">
+					<div>会员及其他交易参与人监管
+					
+					</div>
+				</a>
+				
+	  </li>
+           <li class="level2 last" type="0" chnlcode="intermediarysupervise">
+
+			            <a href="../../../disclosure/supervision/supervise/index.html">
+					<div>中介机构监管
+					
+					</div>
+				</a>
+				
+	  </li>
+           <li class="level2 last" type="0" chnlcode="superviseIssuance_news">
+
+			            <a href="../../../disclosure/supervision/issue/index.html">
+					<div>发行承销监管
+					
+					</div>
+				</a>
+				
+	  </li>
+           <li class="level2 last" type="0" chnlcode="inquire_report">
+
+			            <a href="../../../disclosure/supervision/inquire/index.html">
+					<div>问询函件
+					
+					</div>
+				</a>
+				
+	  </li>
+           <li class="level2 last" type="0" chnlcode="progress_report">
+
+			            <a href="../../../disclosure/supervision/progress/index.html">
+					<div>业务办理进度
+					
+					</div>
+				</a>
+				
+	  </li>
+           <li class="level2 last" type="0" chnlcode="check_report">
+
+			            <a href="../../../disclosure/supervision/check/index.html">
+					<div>信息披露考评
+					
+					</div>
+				</a>
+				
+	  </li>
+           <li class="level2 last" type="0" chnlcode="promise_report">
+
+			            <a href="../../../disclosure/supervision/promise/index.html">
+					<div>承诺事项及履行情况
+					
+					</div>
+				</a>
+				
+	  </li>
+           <li class="level2 last" type="0" chnlcode="change_report">
+
+			            <a href="../../../disclosure/supervision/change/index.html">
+					<div>董监高人员股份变动
+					
+					</div>
+				</a>
+				
+	  </li>
+           <li class="level2 last" type="0" chnlcode="remarketapply_news">
+
+			            <a href="../../../disclosure/supervision/remarket/index.html">
+					<div>重新上市申请审核进度
+					
+					</div>
+				</a>
+				
+	  </li>
+				</ul>
+	  </li>
+            <li class="level1" type="0" chnlcode="listedinfo">
+
+			        <a> 
+					<div>上市公司信息
+					
+					  <b class="caret"></b>
+					</div>
+				</a>
+				
+				<ul>
+           <li class="level2 last" type="0" chnlcode="listedNotice_disc">
+
+			            <a href="../../../disclosure/listed/notice/index.html">
+					<div>上市公司公告
+					
+					</div>
+				</a>
+				
+	  </li>
+           <li class="level2 last" type="0" chnlcode="fixed_disc">
+
+			            <a href="../../../disclosure/listed/fixed/index.html">
+					<div>定期报告
+					
+					</div>
+				</a>
+				
+	  </li>
+           <li class="level2 last" type="0" chnlcode="summary_report">
+
+			            <a href="../../../disclosure/listed/summary/index.html">
+					<div>当日公告摘要
+					
+					</div>
+				</a>
+				
+	  </li>
+           <li class="level2 last" type="0" chnlcode="riskwarning_disclosure">
+
+			            <a href="../../../disclosure/listed/warn/index.html">
+					<div>风险警示板
+					
+					</div>
+				</a>
+				
+	  </li>
+           <li class="level2 last" type="0" chnlcode="director">
+
+			            <a href="../../../disclosure/listed/director/index.html">
+					<div>独立董事信息库
+					
+					</div>
+				</a>
+				
+	  </li>
+           <li class="level2 last" type="0" chnlcode="secretary_report">
+
+			            <a href="../../../disclosure/listed/secretary/index.html">
+					<div>董秘资格信息库
+					
+					</div>
+				</a>
+				
+	  </li>
+           <li class="level2 last" type="0" chnlcode="reduction_report">
+
+			            <a href="../../../disclosure/listed/reduction/index.html">
+					<div>限售股份解限与减持
+					
+					</div>
+				</a>
+				
+	  </li>
+            <li class="level2" type="0" chnlcode="credit_report">
+
+			        <a> 
+					<div>上市公司诚信档案
+					
+					  <b class="caret"></b>
+					</div>
+				</a>
+				
+				<ul>
+           <li class="level3 last" type="0" chnlcode="punishRecord_report">
+
+			            <a href="../../../disclosure/listed/credit/record/index.html">
+					<div>处罚与处分记录
+					
+					</div>
+				</a>
+				
+	  </li>
+           <li class="level3 last" type="0" chnlcode="agencyPunish_report">
+
+			            <a href="../../../disclosure/listed/credit/message/index.html">
+					<div>中介机构处罚与处分信息
+					
+					</div>
+				</a>
+				
+	  </li>
+				</ul>
+	  </li>
+            <li class="level2" type="0" chnlcode="suggestion_disc">
+
+			        <a> 
+					<div>持续督导意见
+					
+					  <b class="caret"></b>
+					</div>
+				</a>
+				
+				<ul>
+           <li class="level3 last" type="0" chnlcode="finance_disc">
+
+			            <a href="../../../disclosure/listed/suggestion/finance/index.html">
+					<div>财务顾问持续督导意见
+					
+					</div>
+				</a>
+				
+	  </li>
+           <li class="level3 last" type="0" chnlcode="sponsor_disc">
+
+			            <a href="../../../disclosure/listed/suggestion/sponsor/index.html">
+					<div>保荐机构持续督导意见
+					
+					</div>
+				</a>
+				
+	  </li>
+				</ul>
+	  </li>
+				</ul>
+	  </li>
+            <li class="level1" type="0" chnlcode="fundinfo">
+
+			        <a> 
+					<div>基金信息
+					
+					  <b class="caret"></b>
+					</div>
+				</a>
+				
+				<ul>
+           <li class="level2 last" type="0" chnlcode="fundinfoNotice_disc">
+
+			            <a href="../../../disclosure/fund/notice/index.html">
+					<div>基金公告
+					
+					</div>
+				</a>
+				
+	  </li>
+           <li class="level2 last" type="0" chnlcode="etfNotice_disc">
+
+			            <a href="../../../disclosure/fund/etf/index.html">
+					<div>ETF公告
+					
+					</div>
+				</a>
+				
+	  </li>
+           <li class="level2 last" type="0" chnlcode="closeType_report">
+
+			            <a href="../../../disclosure/fund/close/index.html">
+					<div>封闭式基金净值
+					
+					</div>
+				</a>
+				
+	  </li>
+           <li class="level2 last" type="0" chnlcode="openType_news">
+
+			            <a href="../../../disclosure/fund/open/index.html">
+					<div>开放式基金净值
+					
+					</div>
+				</a>
+				
+	  </li>
+           <li class="level2 last" type="0" chnlcode="fundinfoCurrency_report">
+
+			            <a href="../../../disclosure/fund/currency/index.html">
+					<div>申购赎回清单
+					
+					</div>
+				</a>
+				
+	  </li>
+            <li class="level2" type="0" chnlcode="fundinfo_jjtpt">
+
+			        <a> 
+					<div>基金通平台
+					
+					  <b class="caret"></b>
+					</div>
+				</a>
+				
+				<ul>
+           <li class="level3 last" type="0" chnlcode="jjtProduceList_report">
+
+			            <a href="../../../disclosure/fund/jjt/list/index.html">
+					<div>产品列表
+					
+					</div>
+				</a>
+				
+	  </li>
+            <li class="level3" type="0" chnlcode="jjtInfoTransferInfo">
+
+			        <a> 
+					<div>转让信息
+					
+					  <b class="caret"></b>
+					</div>
+				</a>
+				
+				<ul>
+           <li class="level4 last" type="0" chnlcode="jjtOfferTransfer_report">
+
+			            <a href="../../../disclosure/fund/jjt/transfer/offer/index.html">
+					<div>报价转让
+					
+					</div>
+				</a>
+				
+	  </li>
+           <li class="level4 last" type="0" chnlcode="jjtDealSurvey">
+
+			            <a href="../../../disclosure/fund/jjt/transfer/deal/index.html">
+					<div>成交概况
+					
+					</div>
+				</a>
+				
+	  </li>
+				</ul>
+	  </li>
+            <li class="level3" type="0" chnlcode="jjtOrgan">
+
+			        <a> 
+					<div>机构信息
+					
+					  <b class="caret"></b>
+					</div>
+				</a>
+				
+				<ul>
+           <li class="level4 last" type="0" chnlcode="jjtMarkersInfo_report">
+
+			            <a href="../../../disclosure/fund/jjt/organ/market/index.html">
+					<div>做市商信息
+					
+					</div>
+				</a>
+				
+	  </li>
+           <li class="level4 last" type="0" chnlcode="jjtSalesOrganInfo_report">
+
+			            <a href="../../../disclosure/fund/jjt/organ/sales/index.html">
+					<div>基金销售机构信息
+					
+					</div>
+				</a>
+				
+	  </li>
+				</ul>
+	  </li>
+				</ul>
+	  </li>
+				</ul>
+	  </li>
+            <li class="level1" type="0" chnlcode="bondinfo">
+
+			        <a> 
+					<div>债券信息
+					
+					  <b class="caret"></b>
+					</div>
+				</a>
+				
+				<ul>
+           <li class="level2 last" type="0" chnlcode="bondinfoNotice_disc">
+
+			            <a href="../../../disclosure/bond/notice/index.html">
+					<div>债券公告
+					
+					</div>
+				</a>
+				
+	  </li>
+           <li class="level2 last" type="11" chnlcode="chinaclear_link">
+
+			           <a href="http://www.chinaclear.cn/zdjs/zshenzhen/center_clist.shtml" target='_blank'>
+					<div>通用质押式回购质押券折算率
+					
+					</div>
+				</a>
+				
+	  </li>
+           <li class="level2 last" type="0" chnlcode="bondInquire_report">
+
+			            <a href="../../../disclosure/bond/inquire/index.html">
+					<div>问询函
+					
+					</div>
+				</a>
+				
+	  </li>
+           <li class="level2 last" type="0" chnlcode="bondMeasure_report">
+
+			            <a href="../../../disclosure/bond/measure/index.html">
+					<div>监管措施
+					
+					</div>
+				</a>
+				
+	  </li>
+           <li class="level2 last" type="0" chnlcode="punish_report">
+
+			            <a href="../../../disclosure/bond/punish/index.html">
+					<div>纪律处分
+					
+					</div>
+				</a>
+				
+	  </li>
+				</ul>
+	  </li>
+           <li class="level1 last" type="0" chnlcode="warrantinfo_disc">
+
+			            <a href="../../../disclosure/warrant/index.html">
+					<div>权证信息
+					
+					</div>
+				</a>
+				
+	  </li>
+            <li class="level1" type="0" chnlcode="innovate">
+
+			        <a> 
+					<div>会员创新产品
+					
+					  <b class="caret"></b>
+					</div>
+				</a>
+				
+				<ul>
+            <li class="level2" type="0" chnlcode="asset">
+
+			        <a> 
+					<div>资管计划份额转让
+					
+					  <b class="caret"></b>
+					</div>
+				</a>
+				
+				<ul>
+           <li class="level3 last" type="0" chnlcode="product_report">
+
+			            <a href="../../../disclosure/innovate/asset/product/index.html">
+					<div>产品信息
+					
+					</div>
+				</a>
+				
+	  </li>
+           <li class="level3 last" type="0" chnlcode="assetNotice_news">
+
+			            <a href="../../../disclosure/innovate/asset/notice/index.html">
+					<div>业务公告
+					
+					</div>
+				</a>
+				
+	  </li>
+           <li class="level3 last" type="0" chnlcode="assetDeal_report">
+
+			            <a href="../../../disclosure/innovate/asset/deal/index.html">
+					<div>成交信息
+					
+					</div>
+				</a>
+				
+	  </li>
+				</ul>
+	  </li>
+            <li class="level2" type="0" chnlcode="stockrepo_report">
+
+			        <a> 
+					<div>股票质押式回购交易
+					
+					  <b class="caret"></b>
+					</div>
+				</a>
+				
+				<ul>
+           <li class="level3 last" type="0" chnlcode="rate_report">
+
+			            <a href="../../../disclosure/innovate/stock/rate/index.html">
+					<div>平均质押率
+					
+					</div>
+				</a>
+				
+	  </li>
+           <li class="level3 last" type="0" chnlcode="stockrepoDeal_report">
+
+			            <a href="../../../disclosure/innovate/stock/message/index.html">
+					<div>交易信息
+					
+					</div>
+				</a>
+				
+	  </li>
+				</ul>
+	  </li>
+            <li class="level2" type="0" chnlcode="promiserepo_report">
+
+			        <a> 
+					<div>约定购回式证券交易
+					
+					  <b class="caret"></b>
+					</div>
+				</a>
+				
+				<ul>
+           <li class="level3 last" type="0" chnlcode="transactionInfo_report">
+
+			            <a href="../../../disclosure/innovate/promise/message/index.html">
+					<div>交易信息
+					
+					</div>
+				</a>
+				
+	  </li>
+				</ul>
+	  </li>
+            <li class="level2" type="0" chnlcode="pricerepo_report">
+
+			        <a> 
+					<div>质押式报价回购交易
+					
+					  <b class="caret"></b>
+					</div>
+				</a>
+				
+				<ul>
+           <li class="level3 last" type="0" chnlcode="pricerepoTransaction_report">
+
+			            <a href="../../../disclosure/innovate/price/message/index.html">
+					<div>交易信息
+					
+					</div>
+				</a>
+				
+	  </li>
+				</ul>
+	  </li>
+				</ul>
+	  </li>
+           <li class="level1 last" type="11" chnlcode="gudingshouyi_link">
+
+			           <a href="http://bond.szse.cn" target='_blank'>
+					<div>固定收益产品
+					
+					</div>
+				</a>
+				
+	  </li>
+           <li class="level1 last" type="11" chnlcode="crossBorder_link">
+
+			           <a href="http://bond.szse.cn/crossborder/ltb/index.html" target='_blank'>
+					<div>跨境信息展示
+					
+					</div>
+				</a>
+				
+	  </li>
+		</ul>
+	</div>
+</div>
+
+
+            </div>
+            <div class="g-content">
+                <div class="g-conbox">
+                    <div class="g-contitle">
+                        <!-- <a class="more" href="" target="_blank">更多 &gt;</a> -->
+                          <h2 class="title">  通知公告</h2>
+                    </div>
+                               
+                    <div class="report-query  mainquery-container">                
+                      <div class="form-group form-condition">
+                        <label class="sr-only" for="code">输入关键字</label> 
+                          <input maxlength="100" type="text" class="form-control report-query-item input-typeahead" id="article-text" placeholder="输入关键字" value="" />
+                      </div>
+                      <div class="form-group form-condition">
+                        <label class="sr-only" for="aticle-datepicker">发布日期</label>
+                          <input type="text" class="form-control report-query-item" id="aticle-datepicker" value="" placeholder="发布日期" />
+                      </div>
+                      <div class="form-group form-condition">
+                        <button type="button" class= "confirm-query btn-query-primary">查询</button>  
+                      </div>              
+                    </div>  
+                    <div class="article-list">
+                        <div class="g-content-list">
+                           <ul class="newslist date-right">
+                                
+                                    <li>  
+                                          <div class="title">
+                                          
+                                           <script>
+  
+    var curHref = './t20200730_580117.html';
+    //var curTitle = '关于深港通下的港股通股票名单调整的公告';
+//var subTitle = '';
+ var curTitle ='关于深港通下的港股通股票名单调整的公告';
+    var curCmsDocType = '20'
+    var curTarget = '';
+    var pointIndex = curHref.lastIndexOf('.');
+    var docType = curHref.substring(pointIndex+1).toLocaleLowerCase();
+    if (!(docType == 'html' || docType == 'pdf' || docType == 'xml' || docType == 'txt' || docType == 'jpg' || docType == 'png' || docType == 'jpeg' || docType == 'bmp') && curCmsDocType != 30) {
+        curTarget = '_self';
+    } else {
+        curTarget = '_blank';
+    }
+    var channelName = 'general_news';
+    var doingFlagHtml='';
+    //进行中标识
+    if(channelName == 'questionnaire_news' && subTitle =='进行中'){
+    	doingFlagHtml = '<span class="surveyIsDoing">进行中</span>';
+    	document.write('<a class="ellipsis art-list-link" href="' + curHref + '" title="' + curTitle + '" target="' + curTarget + '">'+ doingFlagHtml + curTitle + '</a>');  
+    } else if((channelName  == 'introduce_hidden' || channelName  == 'serveGuide_hidden' || channelName  == 'dataInterface_hidden' || channelName  == 'technicalGuide_hidden')&& '321'==1){
+    //技术服务页面，判断是否第一条是置顶
+       doingFlagHtml = '<span class="surveyIsDoing">置顶</span>';
+       document.write('<a class="ellipsis art-list-link" href="' + curHref + '" title="' + curTitle + '" target="' + curTarget + '">'+ doingFlagHtml + curTitle + '</a>'); 
+    }else{
+    	document.write('<a class="ellipsis art-list-link" href="' + curHref + '" title="' + curTitle + '" target="' + curTarget + '">' + curTitle + '</a>');  
+    }
+
+    
+    
+</script>
+
+                                            <span class="time">
+                                             2020-07-30
+                                            </span>
+                                        </div>
+                                    </li>
+                                
+                                    <li>  
+                                          <div class="title">
+                                          
+                                           <script>
+  
+    var curHref = './t20200727_580003.html';
+    //var curTitle = '关于终止为乐视网信息技术（北京）股份有限公司提供证券交易所市场A股登记服务的公告';
+//var subTitle = '';
+ var curTitle ='关于终止为乐视网信息技术（北京）股份有限公司提供证券交易所市场A股登记服务的公告';
+    var curCmsDocType = '20'
+    var curTarget = '';
+    var pointIndex = curHref.lastIndexOf('.');
+    var docType = curHref.substring(pointIndex+1).toLocaleLowerCase();
+    if (!(docType == 'html' || docType == 'pdf' || docType == 'xml' || docType == 'txt' || docType == 'jpg' || docType == 'png' || docType == 'jpeg' || docType == 'bmp') && curCmsDocType != 30) {
+        curTarget = '_self';
+    } else {
+        curTarget = '_blank';
+    }
+    var channelName = 'general_news';
+    var doingFlagHtml='';
+    //进行中标识
+    if(channelName == 'questionnaire_news' && subTitle =='进行中'){
+    	doingFlagHtml = '<span class="surveyIsDoing">进行中</span>';
+    	document.write('<a class="ellipsis art-list-link" href="' + curHref + '" title="' + curTitle + '" target="' + curTarget + '">'+ doingFlagHtml + curTitle + '</a>');  
+    } else if((channelName  == 'introduce_hidden' || channelName  == 'serveGuide_hidden' || channelName  == 'dataInterface_hidden' || channelName  == 'technicalGuide_hidden')&& '322'==1){
+    //技术服务页面，判断是否第一条是置顶
+       doingFlagHtml = '<span class="surveyIsDoing">置顶</span>';
+       document.write('<a class="ellipsis art-list-link" href="' + curHref + '" title="' + curTitle + '" target="' + curTarget + '">'+ doingFlagHtml + curTitle + '</a>'); 
+    }else{
+    	document.write('<a class="ellipsis art-list-link" href="' + curHref + '" title="' + curTitle + '" target="' + curTarget + '">' + curTitle + '</a>');  
+    }
+
+    
+    
+</script>
+
+                                            <span class="time">
+                                             2020-07-27
+                                            </span>
+                                        </div>
+                                    </li>
+                                
+                                    <li>  
+                                          <div class="title">
+                                          
+                                           <script>
+  
+    var curHref = './t20200727_580002.html';
+    //var curTitle = '关于终止为山东龙力生物科技股份有限公司提供证券交易所市场A股登记服务的公告';
+//var subTitle = '';
+ var curTitle ='关于终止为山东龙力生物科技股份有限公司提供证券交易所市场A股登记服务的公告';
+    var curCmsDocType = '20'
+    var curTarget = '';
+    var pointIndex = curHref.lastIndexOf('.');
+    var docType = curHref.substring(pointIndex+1).toLocaleLowerCase();
+    if (!(docType == 'html' || docType == 'pdf' || docType == 'xml' || docType == 'txt' || docType == 'jpg' || docType == 'png' || docType == 'jpeg' || docType == 'bmp') && curCmsDocType != 30) {
+        curTarget = '_self';
+    } else {
+        curTarget = '_blank';
+    }
+    var channelName = 'general_news';
+    var doingFlagHtml='';
+    //进行中标识
+    if(channelName == 'questionnaire_news' && subTitle =='进行中'){
+    	doingFlagHtml = '<span class="surveyIsDoing">进行中</span>';
+    	document.write('<a class="ellipsis art-list-link" href="' + curHref + '" title="' + curTitle + '" target="' + curTarget + '">'+ doingFlagHtml + curTitle + '</a>');  
+    } else if((channelName  == 'introduce_hidden' || channelName  == 'serveGuide_hidden' || channelName  == 'dataInterface_hidden' || channelName  == 'technicalGuide_hidden')&& '323'==1){
+    //技术服务页面，判断是否第一条是置顶
+       doingFlagHtml = '<span class="surveyIsDoing">置顶</span>';
+       document.write('<a class="ellipsis art-list-link" href="' + curHref + '" title="' + curTitle + '" target="' + curTarget + '">'+ doingFlagHtml + curTitle + '</a>'); 
+    }else{
+    	document.write('<a class="ellipsis art-list-link" href="' + curHref + '" title="' + curTitle + '" target="' + curTarget + '">' + curTitle + '</a>');  
+    }
+
+    
+    
+</script>
+
+                                            <span class="time">
+                                             2020-07-27
+                                            </span>
+                                        </div>
+                                    </li>
+                                
+                                    <li>  
+                                          <div class="title">
+                                          
+                                           <script>
+  
+    var curHref = './t20200727_579987.html';
+    //var curTitle = '关于深港通下的港股通股票名单调整的公告';
+//var subTitle = '';
+ var curTitle ='关于深港通下的港股通股票名单调整的公告';
+    var curCmsDocType = '20'
+    var curTarget = '';
+    var pointIndex = curHref.lastIndexOf('.');
+    var docType = curHref.substring(pointIndex+1).toLocaleLowerCase();
+    if (!(docType == 'html' || docType == 'pdf' || docType == 'xml' || docType == 'txt' || docType == 'jpg' || docType == 'png' || docType == 'jpeg' || docType == 'bmp') && curCmsDocType != 30) {
+        curTarget = '_self';
+    } else {
+        curTarget = '_blank';
+    }
+    var channelName = 'general_news';
+    var doingFlagHtml='';
+    //进行中标识
+    if(channelName == 'questionnaire_news' && subTitle =='进行中'){
+    	doingFlagHtml = '<span class="surveyIsDoing">进行中</span>';
+    	document.write('<a class="ellipsis art-list-link" href="' + curHref + '" title="' + curTitle + '" target="' + curTarget + '">'+ doingFlagHtml + curTitle + '</a>');  
+    } else if((channelName  == 'introduce_hidden' || channelName  == 'serveGuide_hidden' || channelName  == 'dataInterface_hidden' || channelName  == 'technicalGuide_hidden')&& '324'==1){
+    //技术服务页面，判断是否第一条是置顶
+       doingFlagHtml = '<span class="surveyIsDoing">置顶</span>';
+       document.write('<a class="ellipsis art-list-link" href="' + curHref + '" title="' + curTitle + '" target="' + curTarget + '">'+ doingFlagHtml + curTitle + '</a>'); 
+    }else{
+    	document.write('<a class="ellipsis art-list-link" href="' + curHref + '" title="' + curTitle + '" target="' + curTarget + '">' + curTitle + '</a>');  
+    }
+
+    
+    
+</script>
+
+                                            <span class="time">
+                                             2020-07-27
+                                            </span>
+                                        </div>
+                                    </li>
+                                
+                                    <li>  
+                                          <div class="title">
+                                          
+                                           <script>
+  
+    var curHref = './t20200724_579979.html';
+    //var curTitle = '关于发布《深圳证券交易所上市公司股份协议转让业务办理指引（2020年修订）》的通知';
+//var subTitle = '';
+ var curTitle ='关于发布《深圳证券交易所上市公司股份协议转让业务办理指引（2020年修订）》的通知';
+    var curCmsDocType = '20'
+    var curTarget = '';
+    var pointIndex = curHref.lastIndexOf('.');
+    var docType = curHref.substring(pointIndex+1).toLocaleLowerCase();
+    if (!(docType == 'html' || docType == 'pdf' || docType == 'xml' || docType == 'txt' || docType == 'jpg' || docType == 'png' || docType == 'jpeg' || docType == 'bmp') && curCmsDocType != 30) {
+        curTarget = '_self';
+    } else {
+        curTarget = '_blank';
+    }
+    var channelName = 'general_news';
+    var doingFlagHtml='';
+    //进行中标识
+    if(channelName == 'questionnaire_news' && subTitle =='进行中'){
+    	doingFlagHtml = '<span class="surveyIsDoing">进行中</span>';
+    	document.write('<a class="ellipsis art-list-link" href="' + curHref + '" title="' + curTitle + '" target="' + curTarget + '">'+ doingFlagHtml + curTitle + '</a>');  
+    } else if((channelName  == 'introduce_hidden' || channelName  == 'serveGuide_hidden' || channelName  == 'dataInterface_hidden' || channelName  == 'technicalGuide_hidden')&& '325'==1){
+    //技术服务页面，判断是否第一条是置顶
+       doingFlagHtml = '<span class="surveyIsDoing">置顶</span>';
+       document.write('<a class="ellipsis art-list-link" href="' + curHref + '" title="' + curTitle + '" target="' + curTarget + '">'+ doingFlagHtml + curTitle + '</a>'); 
+    }else{
+    	document.write('<a class="ellipsis art-list-link" href="' + curHref + '" title="' + curTitle + '" target="' + curTarget + '">' + curTitle + '</a>');  
+    }
+
+    
+    
+</script>
+
+                                            <span class="time">
+                                             2020-07-24
+                                            </span>
+                                        </div>
+                                    </li>
+                                
+                                    <li>  
+                                          <div class="title">
+                                          
+                                           <script>
+  
+    var curHref = './t20200724_579973.html';
+    //var curTitle = '关于发布《向不特定对象发行的可转换公司债券投资风险揭示书必备条款》及相关事项的通知';
+//var subTitle = '';
+ var curTitle ='关于发布《向不特定对象发行的可转换公司债券投资风险揭示书必备条款》及相关事项的通知';
+    var curCmsDocType = '20'
+    var curTarget = '';
+    var pointIndex = curHref.lastIndexOf('.');
+    var docType = curHref.substring(pointIndex+1).toLocaleLowerCase();
+    if (!(docType == 'html' || docType == 'pdf' || docType == 'xml' || docType == 'txt' || docType == 'jpg' || docType == 'png' || docType == 'jpeg' || docType == 'bmp') && curCmsDocType != 30) {
+        curTarget = '_self';
+    } else {
+        curTarget = '_blank';
+    }
+    var channelName = 'general_news';
+    var doingFlagHtml='';
+    //进行中标识
+    if(channelName == 'questionnaire_news' && subTitle =='进行中'){
+    	doingFlagHtml = '<span class="surveyIsDoing">进行中</span>';
+    	document.write('<a class="ellipsis art-list-link" href="' + curHref + '" title="' + curTitle + '" target="' + curTarget + '">'+ doingFlagHtml + curTitle + '</a>');  
+    } else if((channelName  == 'introduce_hidden' || channelName  == 'serveGuide_hidden' || channelName  == 'dataInterface_hidden' || channelName  == 'technicalGuide_hidden')&& '326'==1){
+    //技术服务页面，判断是否第一条是置顶
+       doingFlagHtml = '<span class="surveyIsDoing">置顶</span>';
+       document.write('<a class="ellipsis art-list-link" href="' + curHref + '" title="' + curTitle + '" target="' + curTarget + '">'+ doingFlagHtml + curTitle + '</a>'); 
+    }else{
+    	document.write('<a class="ellipsis art-list-link" href="' + curHref + '" title="' + curTitle + '" target="' + curTarget + '">' + curTitle + '</a>');  
+    }
+
+    
+    
+</script>
+
+                                            <span class="time">
+                                             2020-07-24
+                                            </span>
+                                        </div>
+                                    </li>
+                                
+                                    <li>  
+                                          <div class="title">
+                                          
+                                           <script>
+  
+    var curHref = './t20200724_579959.html';
+    //var curTitle = '关于终止为东沣科技股份有限公司提供证券交易所市场B股登记服务的公告';
+//var subTitle = '';
+ var curTitle ='关于终止为东沣科技股份有限公司提供证券交易所市场B股登记服务的公告';
+    var curCmsDocType = '20'
+    var curTarget = '';
+    var pointIndex = curHref.lastIndexOf('.');
+    var docType = curHref.substring(pointIndex+1).toLocaleLowerCase();
+    if (!(docType == 'html' || docType == 'pdf' || docType == 'xml' || docType == 'txt' || docType == 'jpg' || docType == 'png' || docType == 'jpeg' || docType == 'bmp') && curCmsDocType != 30) {
+        curTarget = '_self';
+    } else {
+        curTarget = '_blank';
+    }
+    var channelName = 'general_news';
+    var doingFlagHtml='';
+    //进行中标识
+    if(channelName == 'questionnaire_news' && subTitle =='进行中'){
+    	doingFlagHtml = '<span class="surveyIsDoing">进行中</span>';
+    	document.write('<a class="ellipsis art-list-link" href="' + curHref + '" title="' + curTitle + '" target="' + curTarget + '">'+ doingFlagHtml + curTitle + '</a>');  
+    } else if((channelName  == 'introduce_hidden' || channelName  == 'serveGuide_hidden' || channelName  == 'dataInterface_hidden' || channelName  == 'technicalGuide_hidden')&& '327'==1){
+    //技术服务页面，判断是否第一条是置顶
+       doingFlagHtml = '<span class="surveyIsDoing">置顶</span>';
+       document.write('<a class="ellipsis art-list-link" href="' + curHref + '" title="' + curTitle + '" target="' + curTarget + '">'+ doingFlagHtml + curTitle + '</a>'); 
+    }else{
+    	document.write('<a class="ellipsis art-list-link" href="' + curHref + '" title="' + curTitle + '" target="' + curTarget + '">' + curTitle + '</a>');  
+    }
+
+    
+    
+</script>
+
+                                            <span class="time">
+                                             2020-07-24
+                                            </span>
+                                        </div>
+                                    </li>
+                                
+                                    <li>  
+                                          <div class="title">
+                                          
+                                           <script>
+  
+    var curHref = './t20200723_579942.html';
+    //var curTitle = '关于终止为天广中茂股份有限公司提供证券交易所市场A股登记服务的公告';
+//var subTitle = '';
+ var curTitle ='关于终止为天广中茂股份有限公司提供证券交易所市场A股登记服务的公告';
+    var curCmsDocType = '20'
+    var curTarget = '';
+    var pointIndex = curHref.lastIndexOf('.');
+    var docType = curHref.substring(pointIndex+1).toLocaleLowerCase();
+    if (!(docType == 'html' || docType == 'pdf' || docType == 'xml' || docType == 'txt' || docType == 'jpg' || docType == 'png' || docType == 'jpeg' || docType == 'bmp') && curCmsDocType != 30) {
+        curTarget = '_self';
+    } else {
+        curTarget = '_blank';
+    }
+    var channelName = 'general_news';
+    var doingFlagHtml='';
+    //进行中标识
+    if(channelName == 'questionnaire_news' && subTitle =='进行中'){
+    	doingFlagHtml = '<span class="surveyIsDoing">进行中</span>';
+    	document.write('<a class="ellipsis art-list-link" href="' + curHref + '" title="' + curTitle + '" target="' + curTarget + '">'+ doingFlagHtml + curTitle + '</a>');  
+    } else if((channelName  == 'introduce_hidden' || channelName  == 'serveGuide_hidden' || channelName  == 'dataInterface_hidden' || channelName  == 'technicalGuide_hidden')&& '328'==1){
+    //技术服务页面，判断是否第一条是置顶
+       doingFlagHtml = '<span class="surveyIsDoing">置顶</span>';
+       document.write('<a class="ellipsis art-list-link" href="' + curHref + '" title="' + curTitle + '" target="' + curTarget + '">'+ doingFlagHtml + curTitle + '</a>'); 
+    }else{
+    	document.write('<a class="ellipsis art-list-link" href="' + curHref + '" title="' + curTitle + '" target="' + curTarget + '">' + curTitle + '</a>');  
+    }
+
+    
+    
+</script>
+
+                                            <span class="time">
+                                             2020-07-23
+                                            </span>
+                                        </div>
+                                    </li>
+                                
+                                    <li>  
+                                          <div class="title">
+                                          
+                                           <script>
+  
+    var curHref = './t20200720_579776.html';
+    //var curTitle = '关于深港通下的港股通股票名单调整的公告';
+//var subTitle = '';
+ var curTitle ='关于深港通下的港股通股票名单调整的公告';
+    var curCmsDocType = '20'
+    var curTarget = '';
+    var pointIndex = curHref.lastIndexOf('.');
+    var docType = curHref.substring(pointIndex+1).toLocaleLowerCase();
+    if (!(docType == 'html' || docType == 'pdf' || docType == 'xml' || docType == 'txt' || docType == 'jpg' || docType == 'png' || docType == 'jpeg' || docType == 'bmp') && curCmsDocType != 30) {
+        curTarget = '_self';
+    } else {
+        curTarget = '_blank';
+    }
+    var channelName = 'general_news';
+    var doingFlagHtml='';
+    //进行中标识
+    if(channelName == 'questionnaire_news' && subTitle =='进行中'){
+    	doingFlagHtml = '<span class="surveyIsDoing">进行中</span>';
+    	document.write('<a class="ellipsis art-list-link" href="' + curHref + '" title="' + curTitle + '" target="' + curTarget + '">'+ doingFlagHtml + curTitle + '</a>');  
+    } else if((channelName  == 'introduce_hidden' || channelName  == 'serveGuide_hidden' || channelName  == 'dataInterface_hidden' || channelName  == 'technicalGuide_hidden')&& '329'==1){
+    //技术服务页面，判断是否第一条是置顶
+       doingFlagHtml = '<span class="surveyIsDoing">置顶</span>';
+       document.write('<a class="ellipsis art-list-link" href="' + curHref + '" title="' + curTitle + '" target="' + curTarget + '">'+ doingFlagHtml + curTitle + '</a>'); 
+    }else{
+    	document.write('<a class="ellipsis art-list-link" href="' + curHref + '" title="' + curTitle + '" target="' + curTarget + '">' + curTitle + '</a>');  
+    }
+
+    
+    
+</script>
+
+                                            <span class="time">
+                                             2020-07-20
+                                            </span>
+                                        </div>
+                                    </li>
+                                
+                                    <li>  
+                                          <div class="title">
+                                          
+                                           <script>
+  
+    var curHref = './t20200716_579706.html';
+    //var curTitle = '深圳证券交易所《纪律处分事先告知书》送达公告';
+//var subTitle = '';
+ var curTitle ='深圳证券交易所《纪律处分事先告知书》送达公告';
+    var curCmsDocType = '20'
+    var curTarget = '';
+    var pointIndex = curHref.lastIndexOf('.');
+    var docType = curHref.substring(pointIndex+1).toLocaleLowerCase();
+    if (!(docType == 'html' || docType == 'pdf' || docType == 'xml' || docType == 'txt' || docType == 'jpg' || docType == 'png' || docType == 'jpeg' || docType == 'bmp') && curCmsDocType != 30) {
+        curTarget = '_self';
+    } else {
+        curTarget = '_blank';
+    }
+    var channelName = 'general_news';
+    var doingFlagHtml='';
+    //进行中标识
+    if(channelName == 'questionnaire_news' && subTitle =='进行中'){
+    	doingFlagHtml = '<span class="surveyIsDoing">进行中</span>';
+    	document.write('<a class="ellipsis art-list-link" href="' + curHref + '" title="' + curTitle + '" target="' + curTarget + '">'+ doingFlagHtml + curTitle + '</a>');  
+    } else if((channelName  == 'introduce_hidden' || channelName  == 'serveGuide_hidden' || channelName  == 'dataInterface_hidden' || channelName  == 'technicalGuide_hidden')&& '330'==1){
+    //技术服务页面，判断是否第一条是置顶
+       doingFlagHtml = '<span class="surveyIsDoing">置顶</span>';
+       document.write('<a class="ellipsis art-list-link" href="' + curHref + '" title="' + curTitle + '" target="' + curTarget + '">'+ doingFlagHtml + curTitle + '</a>'); 
+    }else{
+    	document.write('<a class="ellipsis art-list-link" href="' + curHref + '" title="' + curTitle + '" target="' + curTarget + '">' + curTitle + '</a>');  
+    }
+
+    
+    
+</script>
+
+                                            <span class="time">
+                                             2020-07-16
+                                            </span>
+                                        </div>
+                                    </li>
+                                
+                                    <li>  
+                                          <div class="title">
+                                          
+                                           <script>
+  
+    var curHref = './t20200713_579470.html';
+    //var curTitle = '关于深港通下的港股通股票名单调整的公告';
+//var subTitle = '';
+ var curTitle ='关于深港通下的港股通股票名单调整的公告';
+    var curCmsDocType = '20'
+    var curTarget = '';
+    var pointIndex = curHref.lastIndexOf('.');
+    var docType = curHref.substring(pointIndex+1).toLocaleLowerCase();
+    if (!(docType == 'html' || docType == 'pdf' || docType == 'xml' || docType == 'txt' || docType == 'jpg' || docType == 'png' || docType == 'jpeg' || docType == 'bmp') && curCmsDocType != 30) {
+        curTarget = '_self';
+    } else {
+        curTarget = '_blank';
+    }
+    var channelName = 'general_news';
+    var doingFlagHtml='';
+    //进行中标识
+    if(channelName == 'questionnaire_news' && subTitle =='进行中'){
+    	doingFlagHtml = '<span class="surveyIsDoing">进行中</span>';
+    	document.write('<a class="ellipsis art-list-link" href="' + curHref + '" title="' + curTitle + '" target="' + curTarget + '">'+ doingFlagHtml + curTitle + '</a>');  
+    } else if((channelName  == 'introduce_hidden' || channelName  == 'serveGuide_hidden' || channelName  == 'dataInterface_hidden' || channelName  == 'technicalGuide_hidden')&& '331'==1){
+    //技术服务页面，判断是否第一条是置顶
+       doingFlagHtml = '<span class="surveyIsDoing">置顶</span>';
+       document.write('<a class="ellipsis art-list-link" href="' + curHref + '" title="' + curTitle + '" target="' + curTarget + '">'+ doingFlagHtml + curTitle + '</a>'); 
+    }else{
+    	document.write('<a class="ellipsis art-list-link" href="' + curHref + '" title="' + curTitle + '" target="' + curTarget + '">' + curTitle + '</a>');  
+    }
+
+    
+    
+</script>
+
+                                            <span class="time">
+                                             2020-07-13
+                                            </span>
+                                        </div>
+                                    </li>
+                                
+                                    <li>  
+                                          <div class="title">
+                                          
+                                           <script>
+  
+    var curHref = './t20200710_579459.html';
+    //var curTitle = '关于创业板风险警示股票和退市整理期股票交易制度安排的通知';
+//var subTitle = '';
+ var curTitle ='关于创业板风险警示股票和退市整理期股票交易制度安排的通知';
+    var curCmsDocType = '20'
+    var curTarget = '';
+    var pointIndex = curHref.lastIndexOf('.');
+    var docType = curHref.substring(pointIndex+1).toLocaleLowerCase();
+    if (!(docType == 'html' || docType == 'pdf' || docType == 'xml' || docType == 'txt' || docType == 'jpg' || docType == 'png' || docType == 'jpeg' || docType == 'bmp') && curCmsDocType != 30) {
+        curTarget = '_self';
+    } else {
+        curTarget = '_blank';
+    }
+    var channelName = 'general_news';
+    var doingFlagHtml='';
+    //进行中标识
+    if(channelName == 'questionnaire_news' && subTitle =='进行中'){
+    	doingFlagHtml = '<span class="surveyIsDoing">进行中</span>';
+    	document.write('<a class="ellipsis art-list-link" href="' + curHref + '" title="' + curTitle + '" target="' + curTarget + '">'+ doingFlagHtml + curTitle + '</a>');  
+    } else if((channelName  == 'introduce_hidden' || channelName  == 'serveGuide_hidden' || channelName  == 'dataInterface_hidden' || channelName  == 'technicalGuide_hidden')&& '332'==1){
+    //技术服务页面，判断是否第一条是置顶
+       doingFlagHtml = '<span class="surveyIsDoing">置顶</span>';
+       document.write('<a class="ellipsis art-list-link" href="' + curHref + '" title="' + curTitle + '" target="' + curTarget + '">'+ doingFlagHtml + curTitle + '</a>'); 
+    }else{
+    	document.write('<a class="ellipsis art-list-link" href="' + curHref + '" title="' + curTitle + '" target="' + curTarget + '">' + curTitle + '</a>');  
+    }
+
+    
+    
+</script>
+
+                                            <span class="time">
+                                             2020-07-10
+                                            </span>
+                                        </div>
+                                    </li>
+                                
+                                    <li>  
+                                          <div class="title">
+                                          
+                                           <script>
+  
+    var curHref = './t20200710_579447.html';
+    //var curTitle = '关于融资融券标的证券2020年第二季度定期调整有关事项的通知';
+//var subTitle = '';
+ var curTitle ='关于融资融券标的证券2020年第二季度定期调整有关事项的通知';
+    var curCmsDocType = '20'
+    var curTarget = '';
+    var pointIndex = curHref.lastIndexOf('.');
+    var docType = curHref.substring(pointIndex+1).toLocaleLowerCase();
+    if (!(docType == 'html' || docType == 'pdf' || docType == 'xml' || docType == 'txt' || docType == 'jpg' || docType == 'png' || docType == 'jpeg' || docType == 'bmp') && curCmsDocType != 30) {
+        curTarget = '_self';
+    } else {
+        curTarget = '_blank';
+    }
+    var channelName = 'general_news';
+    var doingFlagHtml='';
+    //进行中标识
+    if(channelName == 'questionnaire_news' && subTitle =='进行中'){
+    	doingFlagHtml = '<span class="surveyIsDoing">进行中</span>';
+    	document.write('<a class="ellipsis art-list-link" href="' + curHref + '" title="' + curTitle + '" target="' + curTarget + '">'+ doingFlagHtml + curTitle + '</a>');  
+    } else if((channelName  == 'introduce_hidden' || channelName  == 'serveGuide_hidden' || channelName  == 'dataInterface_hidden' || channelName  == 'technicalGuide_hidden')&& '333'==1){
+    //技术服务页面，判断是否第一条是置顶
+       doingFlagHtml = '<span class="surveyIsDoing">置顶</span>';
+       document.write('<a class="ellipsis art-list-link" href="' + curHref + '" title="' + curTitle + '" target="' + curTarget + '">'+ doingFlagHtml + curTitle + '</a>'); 
+    }else{
+    	document.write('<a class="ellipsis art-list-link" href="' + curHref + '" title="' + curTitle + '" target="' + curTarget + '">' + curTitle + '</a>');  
+    }
+
+    
+    
+</script>
+
+                                            <span class="time">
+                                             2020-07-10
+                                            </span>
+                                        </div>
+                                    </li>
+                                
+                                    <li>  
+                                          <div class="title">
+                                          
+                                           <script>
+  
+    var curHref = './t20200709_579381.html';
+    //var curTitle = '关于深港通下的港股通股票名单调整的公告';
+//var subTitle = '';
+ var curTitle ='关于深港通下的港股通股票名单调整的公告';
+    var curCmsDocType = '20'
+    var curTarget = '';
+    var pointIndex = curHref.lastIndexOf('.');
+    var docType = curHref.substring(pointIndex+1).toLocaleLowerCase();
+    if (!(docType == 'html' || docType == 'pdf' || docType == 'xml' || docType == 'txt' || docType == 'jpg' || docType == 'png' || docType == 'jpeg' || docType == 'bmp') && curCmsDocType != 30) {
+        curTarget = '_self';
+    } else {
+        curTarget = '_blank';
+    }
+    var channelName = 'general_news';
+    var doingFlagHtml='';
+    //进行中标识
+    if(channelName == 'questionnaire_news' && subTitle =='进行中'){
+    	doingFlagHtml = '<span class="surveyIsDoing">进行中</span>';
+    	document.write('<a class="ellipsis art-list-link" href="' + curHref + '" title="' + curTitle + '" target="' + curTarget + '">'+ doingFlagHtml + curTitle + '</a>');  
+    } else if((channelName  == 'introduce_hidden' || channelName  == 'serveGuide_hidden' || channelName  == 'dataInterface_hidden' || channelName  == 'technicalGuide_hidden')&& '334'==1){
+    //技术服务页面，判断是否第一条是置顶
+       doingFlagHtml = '<span class="surveyIsDoing">置顶</span>';
+       document.write('<a class="ellipsis art-list-link" href="' + curHref + '" title="' + curTitle + '" target="' + curTarget + '">'+ doingFlagHtml + curTitle + '</a>'); 
+    }else{
+    	document.write('<a class="ellipsis art-list-link" href="' + curHref + '" title="' + curTitle + '" target="' + curTarget + '">' + curTitle + '</a>');  
+    }
+
+    
+    
+</script>
+
+                                            <span class="time">
+                                             2020-07-09
+                                            </span>
+                                        </div>
+                                    </li>
+                                
+                                    <li>  
+                                          <div class="title">
+                                          
+                                           <script>
+  
+    var curHref = './t20200709_579377.html';
+    //var curTitle = '关于调整深证1000等指数样本股的公告';
+//var subTitle = '';
+ var curTitle ='关于调整深证1000等指数样本股的公告';
+    var curCmsDocType = '20'
+    var curTarget = '';
+    var pointIndex = curHref.lastIndexOf('.');
+    var docType = curHref.substring(pointIndex+1).toLocaleLowerCase();
+    if (!(docType == 'html' || docType == 'pdf' || docType == 'xml' || docType == 'txt' || docType == 'jpg' || docType == 'png' || docType == 'jpeg' || docType == 'bmp') && curCmsDocType != 30) {
+        curTarget = '_self';
+    } else {
+        curTarget = '_blank';
+    }
+    var channelName = 'general_news';
+    var doingFlagHtml='';
+    //进行中标识
+    if(channelName == 'questionnaire_news' && subTitle =='进行中'){
+    	doingFlagHtml = '<span class="surveyIsDoing">进行中</span>';
+    	document.write('<a class="ellipsis art-list-link" href="' + curHref + '" title="' + curTitle + '" target="' + curTarget + '">'+ doingFlagHtml + curTitle + '</a>');  
+    } else if((channelName  == 'introduce_hidden' || channelName  == 'serveGuide_hidden' || channelName  == 'dataInterface_hidden' || channelName  == 'technicalGuide_hidden')&& '335'==1){
+    //技术服务页面，判断是否第一条是置顶
+       doingFlagHtml = '<span class="surveyIsDoing">置顶</span>';
+       document.write('<a class="ellipsis art-list-link" href="' + curHref + '" title="' + curTitle + '" target="' + curTarget + '">'+ doingFlagHtml + curTitle + '</a>'); 
+    }else{
+    	document.write('<a class="ellipsis art-list-link" href="' + curHref + '" title="' + curTitle + '" target="' + curTarget + '">' + curTitle + '</a>');  
+    }
+
+    
+    
+</script>
+
+                                            <span class="time">
+                                             2020-07-09
+                                            </span>
+                                        </div>
+                                    </li>
+                                
+                                    <li>  
+                                          <div class="title">
+                                          
+                                           <script>
+  
+    var curHref = './t20200703_579254.html';
+    //var curTitle = '关于发布《深圳证券交易所创业板首次公开发行股票发行与上市指南》的通知';
+//var subTitle = '';
+ var curTitle ='关于发布《深圳证券交易所创业板首次公开发行股票发行与上市指南》的通知';
+    var curCmsDocType = '20'
+    var curTarget = '';
+    var pointIndex = curHref.lastIndexOf('.');
+    var docType = curHref.substring(pointIndex+1).toLocaleLowerCase();
+    if (!(docType == 'html' || docType == 'pdf' || docType == 'xml' || docType == 'txt' || docType == 'jpg' || docType == 'png' || docType == 'jpeg' || docType == 'bmp') && curCmsDocType != 30) {
+        curTarget = '_self';
+    } else {
+        curTarget = '_blank';
+    }
+    var channelName = 'general_news';
+    var doingFlagHtml='';
+    //进行中标识
+    if(channelName == 'questionnaire_news' && subTitle =='进行中'){
+    	doingFlagHtml = '<span class="surveyIsDoing">进行中</span>';
+    	document.write('<a class="ellipsis art-list-link" href="' + curHref + '" title="' + curTitle + '" target="' + curTarget + '">'+ doingFlagHtml + curTitle + '</a>');  
+    } else if((channelName  == 'introduce_hidden' || channelName  == 'serveGuide_hidden' || channelName  == 'dataInterface_hidden' || channelName  == 'technicalGuide_hidden')&& '336'==1){
+    //技术服务页面，判断是否第一条是置顶
+       doingFlagHtml = '<span class="surveyIsDoing">置顶</span>';
+       document.write('<a class="ellipsis art-list-link" href="' + curHref + '" title="' + curTitle + '" target="' + curTarget + '">'+ doingFlagHtml + curTitle + '</a>'); 
+    }else{
+    	document.write('<a class="ellipsis art-list-link" href="' + curHref + '" title="' + curTitle + '" target="' + curTarget + '">' + curTitle + '</a>');  
+    }
+
+    
+    
+</script>
+
+                                            <span class="time">
+                                             2020-07-03
+                                            </span>
+                                        </div>
+                                    </li>
+                                
+                                    <li>  
+                                          <div class="title">
+                                          
+                                           <script>
+  
+    var curHref = './t20200702_579175.html';
+    //var curTitle = '关于深港通下的港股通股票名单调整的公告';
+//var subTitle = '';
+ var curTitle ='关于深港通下的港股通股票名单调整的公告';
+    var curCmsDocType = '20'
+    var curTarget = '';
+    var pointIndex = curHref.lastIndexOf('.');
+    var docType = curHref.substring(pointIndex+1).toLocaleLowerCase();
+    if (!(docType == 'html' || docType == 'pdf' || docType == 'xml' || docType == 'txt' || docType == 'jpg' || docType == 'png' || docType == 'jpeg' || docType == 'bmp') && curCmsDocType != 30) {
+        curTarget = '_self';
+    } else {
+        curTarget = '_blank';
+    }
+    var channelName = 'general_news';
+    var doingFlagHtml='';
+    //进行中标识
+    if(channelName == 'questionnaire_news' && subTitle =='进行中'){
+    	doingFlagHtml = '<span class="surveyIsDoing">进行中</span>';
+    	document.write('<a class="ellipsis art-list-link" href="' + curHref + '" title="' + curTitle + '" target="' + curTarget + '">'+ doingFlagHtml + curTitle + '</a>');  
+    } else if((channelName  == 'introduce_hidden' || channelName  == 'serveGuide_hidden' || channelName  == 'dataInterface_hidden' || channelName  == 'technicalGuide_hidden')&& '337'==1){
+    //技术服务页面，判断是否第一条是置顶
+       doingFlagHtml = '<span class="surveyIsDoing">置顶</span>';
+       document.write('<a class="ellipsis art-list-link" href="' + curHref + '" title="' + curTitle + '" target="' + curTarget + '">'+ doingFlagHtml + curTitle + '</a>'); 
+    }else{
+    	document.write('<a class="ellipsis art-list-link" href="' + curHref + '" title="' + curTitle + '" target="' + curTarget + '">' + curTitle + '</a>');  
+    }
+
+    
+    
+</script>
+
+                                            <span class="time">
+                                             2020-07-02
+                                            </span>
+                                        </div>
+                                    </li>
+                                
+                                    <li>  
+                                          <div class="title">
+                                          
+                                           <script>
+  
+    var curHref = './t20200701_579117.html';
+    //var curTitle = '关于终止为国泰信用互利债券型证券投资基金提供证券交易所市场登记服务的公告';
+//var subTitle = '';
+ var curTitle ='关于终止为国泰信用互利债券型证券投资基金提供证券交易所市场登记服务的公告';
+    var curCmsDocType = '20'
+    var curTarget = '';
+    var pointIndex = curHref.lastIndexOf('.');
+    var docType = curHref.substring(pointIndex+1).toLocaleLowerCase();
+    if (!(docType == 'html' || docType == 'pdf' || docType == 'xml' || docType == 'txt' || docType == 'jpg' || docType == 'png' || docType == 'jpeg' || docType == 'bmp') && curCmsDocType != 30) {
+        curTarget = '_self';
+    } else {
+        curTarget = '_blank';
+    }
+    var channelName = 'general_news';
+    var doingFlagHtml='';
+    //进行中标识
+    if(channelName == 'questionnaire_news' && subTitle =='进行中'){
+    	doingFlagHtml = '<span class="surveyIsDoing">进行中</span>';
+    	document.write('<a class="ellipsis art-list-link" href="' + curHref + '" title="' + curTitle + '" target="' + curTarget + '">'+ doingFlagHtml + curTitle + '</a>');  
+    } else if((channelName  == 'introduce_hidden' || channelName  == 'serveGuide_hidden' || channelName  == 'dataInterface_hidden' || channelName  == 'technicalGuide_hidden')&& '338'==1){
+    //技术服务页面，判断是否第一条是置顶
+       doingFlagHtml = '<span class="surveyIsDoing">置顶</span>';
+       document.write('<a class="ellipsis art-list-link" href="' + curHref + '" title="' + curTitle + '" target="' + curTarget + '">'+ doingFlagHtml + curTitle + '</a>'); 
+    }else{
+    	document.write('<a class="ellipsis art-list-link" href="' + curHref + '" title="' + curTitle + '" target="' + curTarget + '">' + curTitle + '</a>');  
+    }
+
+    
+    
+</script>
+
+                                            <span class="time">
+                                             2020-07-01
+                                            </span>
+                                        </div>
+                                    </li>
+                                
+                                    <li>  
+                                          <div class="title">
+                                          
+                                           <script>
+  
+    var curHref = './t20200630_579042.html';
+    //var curTitle = '关于聘任深圳证券交易所行业咨询专家库专家的公告';
+//var subTitle = '';
+ var curTitle ='关于聘任深圳证券交易所行业咨询专家库专家的公告';
+    var curCmsDocType = '20'
+    var curTarget = '';
+    var pointIndex = curHref.lastIndexOf('.');
+    var docType = curHref.substring(pointIndex+1).toLocaleLowerCase();
+    if (!(docType == 'html' || docType == 'pdf' || docType == 'xml' || docType == 'txt' || docType == 'jpg' || docType == 'png' || docType == 'jpeg' || docType == 'bmp') && curCmsDocType != 30) {
+        curTarget = '_self';
+    } else {
+        curTarget = '_blank';
+    }
+    var channelName = 'general_news';
+    var doingFlagHtml='';
+    //进行中标识
+    if(channelName == 'questionnaire_news' && subTitle =='进行中'){
+    	doingFlagHtml = '<span class="surveyIsDoing">进行中</span>';
+    	document.write('<a class="ellipsis art-list-link" href="' + curHref + '" title="' + curTitle + '" target="' + curTarget + '">'+ doingFlagHtml + curTitle + '</a>');  
+    } else if((channelName  == 'introduce_hidden' || channelName  == 'serveGuide_hidden' || channelName  == 'dataInterface_hidden' || channelName  == 'technicalGuide_hidden')&& '339'==1){
+    //技术服务页面，判断是否第一条是置顶
+       doingFlagHtml = '<span class="surveyIsDoing">置顶</span>';
+       document.write('<a class="ellipsis art-list-link" href="' + curHref + '" title="' + curTitle + '" target="' + curTarget + '">'+ doingFlagHtml + curTitle + '</a>'); 
+    }else{
+    	document.write('<a class="ellipsis art-list-link" href="' + curHref + '" title="' + curTitle + '" target="' + curTarget + '">' + curTitle + '</a>');  
+    }
+
+    
+    
+</script>
+
+                                            <span class="time">
+                                             2020-06-30
+                                            </span>
+                                        </div>
+                                    </li>
+                                
+                                    <li>  
+                                          <div class="title">
+                                          
+                                           <script>
+  
+    var curHref = './t20200630_579041.html';
+    //var curTitle = '关于聘任深圳证券交易所第一届创业板上市委员会委员的公告';
+//var subTitle = '';
+ var curTitle ='关于聘任深圳证券交易所第一届创业板上市委员会委员的公告';
+    var curCmsDocType = '20'
+    var curTarget = '';
+    var pointIndex = curHref.lastIndexOf('.');
+    var docType = curHref.substring(pointIndex+1).toLocaleLowerCase();
+    if (!(docType == 'html' || docType == 'pdf' || docType == 'xml' || docType == 'txt' || docType == 'jpg' || docType == 'png' || docType == 'jpeg' || docType == 'bmp') && curCmsDocType != 30) {
+        curTarget = '_self';
+    } else {
+        curTarget = '_blank';
+    }
+    var channelName = 'general_news';
+    var doingFlagHtml='';
+    //进行中标识
+    if(channelName == 'questionnaire_news' && subTitle =='进行中'){
+    	doingFlagHtml = '<span class="surveyIsDoing">进行中</span>';
+    	document.write('<a class="ellipsis art-list-link" href="' + curHref + '" title="' + curTitle + '" target="' + curTarget + '">'+ doingFlagHtml + curTitle + '</a>');  
+    } else if((channelName  == 'introduce_hidden' || channelName  == 'serveGuide_hidden' || channelName  == 'dataInterface_hidden' || channelName  == 'technicalGuide_hidden')&& '340'==1){
+    //技术服务页面，判断是否第一条是置顶
+       doingFlagHtml = '<span class="surveyIsDoing">置顶</span>';
+       document.write('<a class="ellipsis art-list-link" href="' + curHref + '" title="' + curTitle + '" target="' + curTarget + '">'+ doingFlagHtml + curTitle + '</a>'); 
+    }else{
+    	document.write('<a class="ellipsis art-list-link" href="' + curHref + '" title="' + curTitle + '" target="' + curTarget + '">' + curTitle + '</a>');  
+    }
+
+    
+    
+</script>
+
+                                            <span class="time">
+                                             2020-06-30
+                                            </span>
+                                        </div>
+                                    </li>
+                                         
+                            </ul>
+                             <script>
+                                if(articleCount == 0){
+                                   var nodataHtml = ' <div class="report-nodata">'
+                                                 +       '<span class="nodata-text">没有找到符合条件的数据！</span>'
+                                                 +     '</div>';
+                                   document.write(nodataHtml);
+                                }
+                             </script>
+                        </div>
+                        <div class="article-list-paginator">
+                            <div class="paginator">
+                                <ul class="paginator-ul pagination paginator-article-cms"></ul>
+                                 <ul class="paginator-ul pagination paginator-article-list"></ul>                                                          
+                            </div>
+                            <script>
+                               var pageHtml = '';
+                               if(articleCount == 0){
+                                  pageHtml = ' <div class="current-page" style="display:none">'
+                                            +       '当前第<span class="num-cur"></span>页&nbsp;&nbsp;共<span class="num-all"></span>页'
+                                            +     '</div>';
+                                  document.write(pageHtml);
+                               }else{
+                                  pageHtml = ' <div class="current-page">'
+                                          +       '当前第<span class="num-cur"></span>页&nbsp;&nbsp;共<span class="num-all"></span>页'
+                                          +     '</div>';
+                                  document.write(pageHtml);
+                               }
+                            </script>
+                            
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <footer class="footer-wrap">
+    <div class="footer-content">
+        <div class="g-container">
+            <div class="footer-contract clearfix">
+                <div class="footer-left relatedlinks">
+                    <div class="select_index_box">
+                        <div class="dropdown" id="dLabel">
+                            <a id="relatedlinksBtn" class="select_index" href="#dropdown-menu-1">
+                                <span class="tit">相关链接</span>
+                                <span class="con">   <i class="glyphicon glyphicon-chevron-down"></i>  </span>
+
+                            </a>
+                            <ul id="dropdown-menu-1" class="dropdown-menu">
+                                <li><a href="http://www.csrc.gov.cn/" target="_blank">中国证券监督管理委员会</a></li>
+                                <li><a href="http://www.sse.com.cn" target="_blank">上海证券交易所</a></li>
+                                <li><a href="http://www.bse.cn" target="_blank">北京证券交易所</a></li>
+                                <li><a href="http://www.cninfo.com.cn/" target="_blank">巨潮资讯网</a></li>
+                                <li><a href="http://www.cnindex.com.cn/" target="_blank">国证指数网</a></li>
+                                <li><a href="http://www.csindex.com.cn/" target="_blank">中证指数公司</a></li>
+                                <li><a href="http://www.neeq.com.cn/index" target="_blank">全国中小企业股份转让系统</a></li>
+                                <li><a href="http://www.capco.org.cn/" target="_blank">中国上市公司协会</a></li>
+                                <li><a href="http://www.ccmi.edu.cn/" target="_blank">资本市场学院</a></li>
+                                <li><a href="http://www.cesc.com/sc/index.html" target="_blank">中华证券交易服务</a></li>
+                                <li><a href="http://alsstjjh.org.cn/" target="_blank">阿拉善生态基金会</a></li>
+                            </ul>
+                        </div>
+                    </div> 
+                </div>
+                <div class="footer-center">
+                    <span class="footer-ipone">
+                      <i class="img imgtel"></i>400-808-9999</span>
+                    <span class="footer-email">
+                      <i class="img imgemail"></i>cis@szse.cn</span>
+                </div>
+                <div class="footer-right">
+                    <span>
+                        <a class="wxlink">
+                            <img class="wxcodeimg" src="http://res.static.szse.cn/common/images/wx_pic.gif" title="深交所二维码" alt="深交所二维码" />
+                            <img class="wxshareimg" src="http://res.static.szse.cn/common/icon/share-w.png" title="扫一扫关注" alt="扫一扫关注" /></a>
+                        <a class="wblink" href="http://weibo.com/szse" target="_blank">
+                            <img src="http://res.static.szse.cn/common/icon/share-wb.png" alt="微博" title="微博" /></a>
+
+<a class="applink">
+                               <img class="appcodeimg" src="http://res.static.szse.cn/common/images/appcode.png" alt="官网APP" title="官网APP" />
+                               <img class="appshareimg" src="http://res.static.szse.cn/common/icon/share-app.png" alt="扫一扫下载深交所官网APP" title="扫一扫下载深交所官网APP" />
+                           </a>
+
+
+                           <span class="footer-feedback" style="cursor: pointer;">意见反馈</span>
+                      </span>
+                    <!--   <span>信息订阅
+                        <a href="#">
+                          <img src="http://res.static.szse.cn/common/icon/share-wf.png" alt="" /></a>
+                      </span>   -->
+                </div>
+            </div>
+            <script>
+  try {
+    navMenuAJAX('/footerWrap/index.html','/footerWrap/index.html', 'footerMenu','www');
+  } catch (e) {
+
+  }
+
+
+</script>
+        </div>
+    </div>
+    <div class="footer-copyright">
+        <div class="g-container hidden-xs">
+            <div class="footersafe-con">
+                <a href="//bszs.conac.cn/sitename?method=show&amp;id=541B4DBFF36A103AE053022819ACAC5A" target="_blank">
+                    <img id="imgConac" src="http://res.static.szse.cn/common/icon/footer-icon-1.png" />
+                </a>
+                <a href="http://www.sznet110.gov.cn/netalarm/index.jsp" target="_blank">
+                    <img src="http://res.static.szse.cn/common/icon/footer-icon-2.png" />
+                </a>
+
+                <a href="http://www.sznet110.gov.cn/webrecord/innernet/Welcome.jsp?bano=4403201010119" target="_blank">
+                    <img src="http://res.static.szse.cn/common/icon/footer-icon-3.png" />
+                </a> 
+            </div>
+            <div class="con">
+                <div class="rule-tip">
+                    <a class="lawspublishlink" href="http://www.szse.cn/application/laws/index.html" target="_blank ">法律声明</a>
+                                          &nbsp;
+                        <a class="copyright-tip" href="http://beian.miit.gov.cn">粤ICP备05012689号</a><span>深圳证券交易所 版权所有 ©<span class="copyright-year"></span> Shenzhen Stock Exchange. All Rights Reserved</span>
+                </div>
+                <div class="ie-tip ">
+                    建议使用IE9.0以上浏览器，1280*800以上分辨率  <span style="margin-left: 20px;">本网站支持ipv6访问</span>
+                </div>
+            </div>
+        </div>
+        
+        <div class="footer-copyright-mobile visible-xs ">
+            <div class="footersafe-con">
+                <a href="//bszs.conac.cn/sitename?method=show&amp;id=541B4DBFF36A103AE053022819ACAC5A" target="_blank">
+                                  <img id="imgConac" src="http://res.static.szse.cn/common/icon/footer-icon-1.png" />
+                              </a>
+                <a href="http://www.sznet110.gov.cn/netalarm/index.jsp" target="_blank">
+                                  <img src="http://res.static.szse.cn/common/icon/footer-icon-2.png" />
+                              </a>
+                <a href="http://www.sznet110.gov.cn/webrecord/innernet/Welcome.jsp?bano=4403201010119" target="_blank">
+                                  <img src="http://res.static.szse.cn/common/icon/footer-icon-3.png" />
+                              </a>
+            </div>
+                <div class="con"> <a class="lawspublishlink" href="http://www.szse.cn/application/laws/index.html" target="_blank ">法律声明</a>  &nbsp;<a href="http://beian.miit.gov.cn">粤ICP备05012689号</a>
+                    <br>©<span class="copyright-year"></span>深圳证券交易所 版权所有<br>本网站支持ipv6访问</div>
+        </div>
+    </div>
+</footer>
+<div class="elevator_fix">
+    <div class="elevator_totop">
+        <i></i>
+        <p class="describe">返回顶部</p>
+    </div>
+    <div class="elevator_feedback">
+        <i></i>
+        <p class="describe">意见反馈</p>
+    </div>
+    <div class="elevator_share">
+        <i></i>
+        <div id="weixin_qrcode" class="weixin_qrcode">
+
+            <s></s>
+            <span class="describe">微信扫一扫，分享好友</span>
+        </div>
+    </div>
+</div>
+<script>
+    addComJsFile();
+</script>
+    <script id="article-template" type="text/html">
+    <ul class="newslist date-right">
+                <% _.each(data,function(item){ %>           
+                  <li>         
+                    <div class="title">
+                      <%if(!(item.doctype== 'html' || item.doctype== 'pdf' || item.doctype== 'xml' || item.doctype== 'txt' || item.doctype== 'jpg' || item.doctype== 'png' || item.doctype== 'jpeg' || item.doctype== 'bmp')&& curCmsDocType != 30 && item.doctype !== 'link'){%>
+                                    <a class="ellipsis art-list-link" href="<%=item.docpuburl%>" title="<%=replaceTitle(item.doctitle)%>" target="_self">
+                      <%}else{%>
+                      <a class="ellipsis art-list-link" href="<%=item.docpuburl%>" title="<%=replaceTitle(item.doctitle)%>" target="_blank">
+                      <%}%>
+        <!-- <a class="ellipsis art-list-link" href="<%=item.docpuburl%>" title="<%=replaceTitle(item.doctitle)%>" target="_blank"> -->
+                          <%=item.doctitle%>
+                        </a>
+                        <span class="time"><%- formateDate(item.docpubtime) %></span>
+                    </div>
+                  </li>
+                <% }) %>                                      
+    </ul>
+        <% if (data.length<=0) {%> 
+              <div class="report-nodata">
+                    <span class="nodata-text"><%= enlangflag ? 'No data was found that fit the condition!' : '没有找到符合条件的数据！' %></span>
+              </div>
+        <% }%>   
+</script>
+<script>
+    changeVertion('/common/js/articleList.js','js');        
+</script>
+
+<script type="text/javascript">
+      
+    var cmsParam = {
+        pageCount:154,
+        pageIndex:16,
+        currentMenuId:'general_news'
+    }
+    if(IEVersion() <= 10 && IEVersion() > 0){
+             window.onload = function(){
+                createPageHTML(154, 16, "index", "html");
+                $('#article-text').val('');
+                artInitHtml(cmsParam);
+             }
+           }else{
+             window.onpageshow = function(){
+                createPageHTML(154, 16, "index", "html");
+                $('#article-text').val('');
+                artInitHtml(cmsParam);
+             }
+           }
+       $('.current-page .num-cur').html( cmsParam.pageIndex + 1 );
+      $('.current-page .num-all').html( cmsParam.pageCount );
+</script>
+
+</body>
+</html>

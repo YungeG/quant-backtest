@@ -1,0 +1,10 @@
+{
+  "fixture_id": "accounting-contracts-v1",
+  "expected_sha256": {
+    "cash_balance_key": "sha256:de8bd58512cef42df52253d1075510f40e3d1479e6d2de6893b540d4d7dcb3ad",
+    "journal_entry": "sha256:87b84feaf95981af5949d2d0b53b9ea743fe57c12a2d577dc087647236b7f99e",
+    "portfolio_snapshot": "sha256:b6dfefcffdff1fd9936bbe5bce5908aa83cf9f22b80f591be0da20a675acc5cd",
+    "position_balance_key": "sha256:3894a9e1db54fd28e7f7d2295004704b0800770e091dc12f8f4c6b41260b330f",
+    "position_lot": "sha256:cfce2f89fb9494f6f4bb0f66af635e238f0c09f4f5fbf0c8466de3eff2d69603"
+  }
+}

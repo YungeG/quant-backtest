@@ -1,0 +1,603 @@
+{
+  "fee_charged_journal": {
+    "journal_entry": {
+      "account_id": "account:primary",
+      "balance_changes": [
+        {
+          "key": {
+            "account_id": "account:primary",
+            "currency_id": {
+              "type": "currency_id",
+              "value": "USD"
+            },
+            "type": "cash_balance_key",
+            "venue_id": {
+              "type": "venue_id",
+              "value": "synthetic"
+            }
+          },
+          "type": "balance_change",
+          "value": {
+            "currency": "USD",
+            "scale": 2,
+            "type": "money",
+            "units": -500
+          }
+        }
+      ],
+      "effective_time": {
+        "epoch_nanoseconds": 220,
+        "type": "utc_instant"
+      },
+      "entry_type": "fee_charged",
+      "fees": [
+        {
+          "currency": "USD",
+          "scale": 2,
+          "type": "money",
+          "units": 500
+        }
+      ],
+      "financing": [],
+      "journal_entry_id": {
+        "kind": "journal",
+        "type": "domain_id",
+        "value": "jnl_eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee"
+      },
+      "realized_pnl": [],
+      "recorded_at": {
+        "instant": {
+          "epoch_nanoseconds": 230,
+          "type": "utc_instant"
+        },
+        "phase": {
+          "code": "fees",
+          "rank": 90,
+          "type": "timeline_phase"
+        },
+        "source_sequence": {
+          "type": "source_sequence",
+          "value": 1
+        },
+        "type": "simulation_instant"
+      },
+      "source_ids": [
+        "account-fee:synthetic.cash.final-account-fee.v1:v1:sha256:ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff",
+        "account-order",
+        "account-order-minimum",
+        "fee-basis:sha256:40322f6aae93fbcf910275d15ded5b997bbe426963e05383a7f2c16a5d8f9d57",
+        "fee_6666666666666666666666666666666666666666666666666666666666666666",
+        "final-fee-rule-set:sha256:253f0a0266105764c9b179f44f8a9fc6782315ab8942025353a63814a94a0d8e",
+        "market-order",
+        "ord_1111111111111111111111111111111111111111111111111111111111111111",
+        "profile:synthetic.cash.final-market-fee.v1:v1:sha256:dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd",
+        "profile:synthetic.cash.final-tax.v1:v1:sha256:eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee",
+        "tax-order"
+      ],
+      "type": "accounting_journal_entry",
+      "venue_id": {
+        "type": "venue_id",
+        "value": "synthetic"
+      }
+    },
+    "outcome_hash": "sha256:0aa93ca319dd811105aadc024f686bfc7124a5f2f9a96127ea9e46ba0c50eb78",
+    "result_hash": "sha256:556b5c6c21c6bd7a677ddd7898bda16fd68cf0d1501db397d889082a37490674"
+  },
+  "fill": {
+    "assessment": {
+      "account_fee_schedule_id": "account-fee:synthetic.cash.final-account-fee.v1:v1:sha256:ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff",
+      "amount": {
+        "currency": "USD",
+        "scale": 2,
+        "type": "money",
+        "units": 15
+      },
+      "assessment_time": {
+        "epoch_nanoseconds": 220,
+        "type": "utc_instant"
+      },
+      "basis_ids": [
+        {
+          "kind": "fill",
+          "type": "domain_id",
+          "value": "fil_2222222222222222222222222222222222222222222222222222222222222222"
+        }
+      ],
+      "basis_type": "fill",
+      "fee_assessment_id": {
+        "kind": "fee",
+        "type": "domain_id",
+        "value": "fee_5555555555555555555555555555555555555555555555555555555555555555"
+      },
+      "market_fee_rule_id": "profile:synthetic.cash.final-market-fee.v1:v1:sha256:dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd",
+      "tax_rule_id": "profile:synthetic.cash.final-tax.v1:v1:sha256:eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee",
+      "type": "fee_assessment"
+    },
+    "basis_hash": "sha256:1aa7d0bd54f82cdda0e108f4b3b1df4c02011fb743ef7d7004092cb7173389fc",
+    "lines": [
+      {
+        "amount": {
+          "currency": "USD",
+          "scale": 2,
+          "type": "money",
+          "units": 10
+        },
+        "applicable_fill_ids": [
+          {
+            "kind": "fill",
+            "type": "domain_id",
+            "value": "fil_2222222222222222222222222222222222222222222222222222222222222222"
+          }
+        ],
+        "applied": true,
+        "notional": {
+          "currency": "USD",
+          "scale": 2,
+          "type": "money",
+          "units": 10000
+        },
+        "rule": {
+          "applicability": "taker_only",
+          "basis_type": "fill",
+          "calculation_basis": "notional_rate",
+          "flat_amount": null,
+          "quantization": {
+            "rounding": "ceiling",
+            "target_scale": 2,
+            "type": "quantization_policy",
+            "version": "final-fee.usd-cent.ceiling.v1"
+          },
+          "rate": {
+            "basis": "fee_fraction",
+            "scale": 4,
+            "type": "rate",
+            "units": 10
+          },
+          "rule_id": "market-fill",
+          "source": "market_fee",
+          "type": "final_fee_charge_rule"
+        },
+        "type": "final_fee_line"
+      },
+      {
+        "amount": {
+          "currency": "USD",
+          "scale": 2,
+          "type": "money",
+          "units": 5
+        },
+        "applicable_fill_ids": [
+          {
+            "kind": "fill",
+            "type": "domain_id",
+            "value": "fil_2222222222222222222222222222222222222222222222222222222222222222"
+          }
+        ],
+        "applied": true,
+        "notional": {
+          "currency": "USD",
+          "scale": 2,
+          "type": "money",
+          "units": 10000
+        },
+        "rule": {
+          "applicability": "sell_only",
+          "basis_type": "fill",
+          "calculation_basis": "notional_rate",
+          "flat_amount": null,
+          "quantization": {
+            "rounding": "ceiling",
+            "target_scale": 2,
+            "type": "quantization_policy",
+            "version": "final-fee.usd-cent.ceiling.v1"
+          },
+          "rate": {
+            "basis": "fee_fraction",
+            "scale": 4,
+            "type": "rate",
+            "units": 5
+          },
+          "rule_id": "tax-fill",
+          "source": "tax",
+          "type": "final_fee_charge_rule"
+        },
+        "type": "final_fee_line"
+      },
+      {
+        "amount": {
+          "currency": "USD",
+          "scale": 2,
+          "type": "money",
+          "units": 0
+        },
+        "applicable_fill_ids": [],
+        "applied": false,
+        "notional": {
+          "currency": "USD",
+          "scale": 2,
+          "type": "money",
+          "units": 0
+        },
+        "rule": {
+          "applicability": "not_applicable",
+          "basis_type": "fill",
+          "calculation_basis": "notional_rate",
+          "flat_amount": null,
+          "quantization": {
+            "rounding": "ceiling",
+            "target_scale": 2,
+            "type": "quantization_policy",
+            "version": "final-fee.usd-cent.ceiling.v1"
+          },
+          "rate": {
+            "basis": "fee_fraction",
+            "scale": 4,
+            "type": "rate",
+            "units": 10
+          },
+          "rule_id": "account-fill",
+          "source": "account_schedule",
+          "type": "final_fee_charge_rule"
+        },
+        "type": "final_fee_line"
+      }
+    ],
+    "minimum_adjustments": [],
+    "outcome_hash": "sha256:d951b29f9068f81ae6c150150a49ed31387bbfdd56c9e085961a4b24e7770b60",
+    "result_hash": "sha256:173b44ffe8d936e2a55cc5ef968dc5425a68032c982d074ba40b54fb3137a4a4",
+    "rule_set_hash": "sha256:253f0a0266105764c9b179f44f8a9fc6782315ab8942025353a63814a94a0d8e"
+  },
+  "fixture_id": "final-fee-assessment-v1",
+  "order": {
+    "assessment": {
+      "account_fee_schedule_id": "account-fee:synthetic.cash.final-account-fee.v1:v1:sha256:ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff",
+      "amount": {
+        "currency": "USD",
+        "scale": 2,
+        "type": "money",
+        "units": 500
+      },
+      "assessment_time": {
+        "epoch_nanoseconds": 220,
+        "type": "utc_instant"
+      },
+      "basis_ids": [
+        {
+          "kind": "order",
+          "type": "domain_id",
+          "value": "ord_1111111111111111111111111111111111111111111111111111111111111111"
+        }
+      ],
+      "basis_type": "order",
+      "fee_assessment_id": {
+        "kind": "fee",
+        "type": "domain_id",
+        "value": "fee_6666666666666666666666666666666666666666666666666666666666666666"
+      },
+      "market_fee_rule_id": "profile:synthetic.cash.final-market-fee.v1:v1:sha256:dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd",
+      "tax_rule_id": "profile:synthetic.cash.final-tax.v1:v1:sha256:eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee",
+      "type": "fee_assessment"
+    },
+    "basis_hash": "sha256:40322f6aae93fbcf910275d15ded5b997bbe426963e05383a7f2c16a5d8f9d57",
+    "lines": [
+      {
+        "amount": {
+          "currency": "USD",
+          "scale": 2,
+          "type": "money",
+          "units": 0
+        },
+        "applicable_fill_ids": [],
+        "applied": false,
+        "notional": {
+          "currency": "USD",
+          "scale": 2,
+          "type": "money",
+          "units": 0
+        },
+        "rule": {
+          "applicability": "not_applicable",
+          "basis_type": "order",
+          "calculation_basis": "notional_rate",
+          "flat_amount": null,
+          "quantization": {
+            "rounding": "ceiling",
+            "target_scale": 2,
+            "type": "quantization_policy",
+            "version": "final-fee.usd-cent.ceiling.v1"
+          },
+          "rate": {
+            "basis": "fee_fraction",
+            "scale": 4,
+            "type": "rate",
+            "units": 10
+          },
+          "rule_id": "market-order",
+          "source": "market_fee",
+          "type": "final_fee_charge_rule"
+        },
+        "type": "final_fee_line"
+      },
+      {
+        "amount": {
+          "currency": "USD",
+          "scale": 2,
+          "type": "money",
+          "units": 0
+        },
+        "applicable_fill_ids": [],
+        "applied": false,
+        "notional": {
+          "currency": "USD",
+          "scale": 2,
+          "type": "money",
+          "units": 0
+        },
+        "rule": {
+          "applicability": "not_applicable",
+          "basis_type": "order",
+          "calculation_basis": "notional_rate",
+          "flat_amount": null,
+          "quantization": {
+            "rounding": "ceiling",
+            "target_scale": 2,
+            "type": "quantization_policy",
+            "version": "final-fee.usd-cent.ceiling.v1"
+          },
+          "rate": {
+            "basis": "fee_fraction",
+            "scale": 4,
+            "type": "rate",
+            "units": 5
+          },
+          "rule_id": "tax-order",
+          "source": "tax",
+          "type": "final_fee_charge_rule"
+        },
+        "type": "final_fee_line"
+      },
+      {
+        "amount": {
+          "currency": "USD",
+          "scale": 2,
+          "type": "money",
+          "units": 10
+        },
+        "applicable_fill_ids": [
+          {
+            "kind": "fill",
+            "type": "domain_id",
+            "value": "fil_2222222222222222222222222222222222222222222222222222222222222222"
+          },
+          {
+            "kind": "fill",
+            "type": "domain_id",
+            "value": "fil_3333333333333333333333333333333333333333333333333333333333333333"
+          }
+        ],
+        "applied": true,
+        "notional": {
+          "currency": "USD",
+          "scale": 2,
+          "type": "money",
+          "units": 10000
+        },
+        "rule": {
+          "applicability": "always",
+          "basis_type": "order",
+          "calculation_basis": "notional_rate",
+          "flat_amount": null,
+          "quantization": {
+            "rounding": "ceiling",
+            "target_scale": 2,
+            "type": "quantization_policy",
+            "version": "final-fee.usd-cent.ceiling.v1"
+          },
+          "rate": {
+            "basis": "fee_fraction",
+            "scale": 4,
+            "type": "rate",
+            "units": 10
+          },
+          "rule_id": "account-order",
+          "source": "account_schedule",
+          "type": "final_fee_charge_rule"
+        },
+        "type": "final_fee_line"
+      }
+    ],
+    "minimum_adjustments": [
+      {
+        "amount": {
+          "currency": "USD",
+          "scale": 2,
+          "type": "money",
+          "units": 490
+        },
+        "minimum": {
+          "basis_type": "order",
+          "charge_rule_ids": [
+            "account-order"
+          ],
+          "minimum_amount": {
+            "currency": "USD",
+            "scale": 2,
+            "type": "money",
+            "units": 500
+          },
+          "minimum_id": "account-order-minimum",
+          "source": "account_schedule",
+          "type": "final_fee_minimum"
+        },
+        "subtotal": {
+          "currency": "USD",
+          "scale": 2,
+          "type": "money",
+          "units": 10
+        },
+        "type": "final_fee_minimum_adjustment"
+      }
+    ],
+    "outcome_hash": "sha256:f12a6ae3f13546fa1062232f5a3fbf21486cec26808035f3ac740f259dedca8a",
+    "result_hash": "sha256:e7e061c44a82f1b8f31eefa6a79e0e40308712ccad481106af845cad571787f5",
+    "rule_set_hash": "sha256:253f0a0266105764c9b179f44f8a9fc6782315ab8942025353a63814a94a0d8e"
+  },
+  "session": {
+    "assessment": {
+      "account_fee_schedule_id": "account-fee:synthetic.cash.final-account-fee.v1:v1:sha256:ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff",
+      "amount": {
+        "currency": "USD",
+        "scale": 2,
+        "type": "money",
+        "units": 200
+      },
+      "assessment_time": {
+        "epoch_nanoseconds": 220,
+        "type": "utc_instant"
+      },
+      "basis_ids": [
+        {
+          "calendar_id": "synthetic.calendar.v1",
+          "type": "session_id",
+          "value": "2026-01-05.regular"
+        }
+      ],
+      "basis_type": "session",
+      "fee_assessment_id": {
+        "kind": "fee",
+        "type": "domain_id",
+        "value": "fee_7777777777777777777777777777777777777777777777777777777777777777"
+      },
+      "market_fee_rule_id": "profile:synthetic.cash.final-market-fee.v1:v1:sha256:dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd",
+      "tax_rule_id": "profile:synthetic.cash.final-tax.v1:v1:sha256:eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee",
+      "type": "fee_assessment"
+    },
+    "basis_hash": "sha256:4c1091b437198afbdad56d62a529e4eb2d33c6d9724a438629529d4c5f1a8fa0",
+    "lines": [
+      {
+        "amount": {
+          "currency": "USD",
+          "scale": 2,
+          "type": "money",
+          "units": 0
+        },
+        "applicable_fill_ids": [],
+        "applied": false,
+        "notional": {
+          "currency": "USD",
+          "scale": 2,
+          "type": "money",
+          "units": 0
+        },
+        "rule": {
+          "applicability": "not_applicable",
+          "basis_type": "session",
+          "calculation_basis": "notional_rate",
+          "flat_amount": null,
+          "quantization": {
+            "rounding": "ceiling",
+            "target_scale": 2,
+            "type": "quantization_policy",
+            "version": "final-fee.usd-cent.ceiling.v1"
+          },
+          "rate": {
+            "basis": "fee_fraction",
+            "scale": 4,
+            "type": "rate",
+            "units": 10
+          },
+          "rule_id": "market-session",
+          "source": "market_fee",
+          "type": "final_fee_charge_rule"
+        },
+        "type": "final_fee_line"
+      },
+      {
+        "amount": {
+          "currency": "USD",
+          "scale": 2,
+          "type": "money",
+          "units": 0
+        },
+        "applicable_fill_ids": [],
+        "applied": false,
+        "notional": {
+          "currency": "USD",
+          "scale": 2,
+          "type": "money",
+          "units": 0
+        },
+        "rule": {
+          "applicability": "not_applicable",
+          "basis_type": "session",
+          "calculation_basis": "notional_rate",
+          "flat_amount": null,
+          "quantization": {
+            "rounding": "ceiling",
+            "target_scale": 2,
+            "type": "quantization_policy",
+            "version": "final-fee.usd-cent.ceiling.v1"
+          },
+          "rate": {
+            "basis": "fee_fraction",
+            "scale": 4,
+            "type": "rate",
+            "units": 5
+          },
+          "rule_id": "tax-session",
+          "source": "tax",
+          "type": "final_fee_charge_rule"
+        },
+        "type": "final_fee_line"
+      },
+      {
+        "amount": {
+          "currency": "USD",
+          "scale": 2,
+          "type": "money",
+          "units": 200
+        },
+        "applicable_fill_ids": [
+          {
+            "kind": "fill",
+            "type": "domain_id",
+            "value": "fil_2222222222222222222222222222222222222222222222222222222222222222"
+          },
+          {
+            "kind": "fill",
+            "type": "domain_id",
+            "value": "fil_3333333333333333333333333333333333333333333333333333333333333333"
+          }
+        ],
+        "applied": true,
+        "notional": null,
+        "rule": {
+          "applicability": "always",
+          "basis_type": "session",
+          "calculation_basis": "flat_per_basis",
+          "flat_amount": {
+            "currency": "USD",
+            "scale": 2,
+            "type": "money",
+            "units": 200
+          },
+          "quantization": {
+            "rounding": "ceiling",
+            "target_scale": 2,
+            "type": "quantization_policy",
+            "version": "final-fee.usd-cent.ceiling.v1"
+          },
+          "rate": null,
+          "rule_id": "account-session",
+          "source": "account_schedule",
+          "type": "final_fee_charge_rule"
+        },
+        "type": "final_fee_line"
+      }
+    ],
+    "minimum_adjustments": [],
+    "outcome_hash": "sha256:c5dc71663af421c8c87a2513be87f87dd2e8942b465b6fa443b9912dde3c47d3",
+    "result_hash": "sha256:e2e69438556f023b2a5dee6d1863b7a6d43f6b3de188a4bde7789233be3f89ed",
+    "rule_set_hash": "sha256:253f0a0266105764c9b179f44f8a9fc6782315ab8942025353a63814a94a0d8e"
+  }
+}

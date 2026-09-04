@@ -1,0 +1,71 @@
+{
+  "credentials_or_cookies_retained": false,
+  "decision_contribution": "PROSPECTIVE_ONLY",
+  "files": [
+    {
+      "byte_count": 6642,
+      "path": "raw/binance-futures-connector-python-d30576a.patch",
+      "sha256": "sha256:49e23a8aefc09dcfa08a7efd788b9076451d0527fa1eac44284656f7860dc689"
+    },
+    {
+      "byte_count": 18300,
+      "path": "raw/binance-futures-connector-python-market-d30576a.py",
+      "sha256": "sha256:e50bd98895e218893124db4cce7126dd128d3621d7d0d14f3545ee9bbf8e3533"
+    },
+    {
+      "byte_count": 91413,
+      "path": "raw/binance-support-article-360033525031.json",
+      "sha256": "sha256:94104929c6a1c381a5435bc235d9ac12f26645ad649583b05e1c1de8464ccc30"
+    },
+    {
+      "byte_count": 379,
+      "path": "raw/target-funding-history-response.json",
+      "sha256": "sha256:e9f73f9c845c28abb31037d8230df2d6f13d5d368c43436e891fcc757372c338"
+    },
+    {
+      "byte_count": 2298,
+      "path": "receipts/access-limitations.json",
+      "sha256": "sha256:d855d5da9f53cd19d15497a86fc4883533f280375882a70785f7027df538c152"
+    },
+    {
+      "byte_count": 1102,
+      "path": "receipts/binance-support-article.json",
+      "sha256": "sha256:3c84c5ff6a54167f17bc01bc93c66aae6c58cf947f8dd14253ea57525740a790"
+    },
+    {
+      "byte_count": 1157,
+      "path": "receipts/connector-commit-patch.json",
+      "sha256": "sha256:ee8df566f1c15c881904e4f0fce7b9d1c72ed7b2ae4544842fa89cf26a6dd1f7"
+    },
+    {
+      "byte_count": 1251,
+      "path": "receipts/connector-market-pinned.json",
+      "sha256": "sha256:4b3ee7c6c1ec369e7f4d3b324439b8b26a49fe0df31b7aa9a1ddaaf37f451c94"
+    },
+    {
+      "byte_count": 752,
+      "path": "receipts/target-funding-history-response.json",
+      "sha256": "sha256:17f66ad79e2fa3b5f15ba9a1f1d53e423572dad108c8305e1fa0cad78b829c5b"
+    },
+    {
+      "byte_count": 8826,
+      "path": "research-assessment.json",
+      "sha256": "sha256:0f346850b9cb204318ab6f3dad45bebe624fb0714bf7d6f2e86d5789715a984b"
+    },
+    {
+      "byte_count": 2182,
+      "path": "source-snapshot.json",
+      "sha256": "sha256:86ec9590cfc80239c16c93354d3d4428432454f2e1bdee31ad0846728b9c0bf0"
+    },
+    {
+      "byte_count": 14028,
+      "path": "source-snapshot.tar.gz",
+      "sha256": "sha256:ad5ee7b6981ffbd1048f3bd7b7966369e6cadc6654cde81aa670426f19d7c09f"
+    }
+  ],
+  "schema_version": 1,
+  "source_snapshot_content_tree_hash": "sha256:218d95c3cb2ea769b2a52bc8633d162b76624e8dabb9829eccc5a60b2dcf0b1d",
+  "source_snapshot_id": "sha256:ad5ee7b6981ffbd1048f3bd7b7966369e6cadc6654cde81aa670426f19d7c09f",
+  "source_snapshot_provenance_hash": "sha256:d93b2459b858da590ac15093251909b3dc561c0aa2ccefa05e03ae19c3db8e54",
+  "type": "g12m_binance_funding_settlement_availability_evidence_manifest_v1"
+}

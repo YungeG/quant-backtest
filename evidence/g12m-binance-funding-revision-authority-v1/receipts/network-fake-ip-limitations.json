@@ -1,0 +1,47 @@
+{
+  "failures": [
+    {
+      "authentication": "none",
+      "body_received": false,
+      "completed_at_epoch_nanoseconds": 1787323699705714396,
+      "curl_exit_code": 35,
+      "curl_version": "8.14.1",
+      "http_status": null,
+      "method": "GET",
+      "request_headers": {
+        "Accept": "*/*",
+        "User-Agent": "curl/8.14.1"
+      },
+      "request_url": "https://developers.binance.com/docs/derivatives/usds-margined-futures/market-data/rest-api/Get-Funding-Rate-History",
+      "resolved_addresses": [
+        "198.18.3.250"
+      ],
+      "response_headers_raw_lf": "",
+      "source_id": "N1",
+      "started_at_epoch_nanoseconds": 1787323699524907664,
+      "stderr": "curl: (35) TLS connect error: error:0A000126:SSL routines::unexpected eof while reading"
+    },
+    {
+      "authentication": "none",
+      "body_received": false,
+      "completed_at_epoch_nanoseconds": 1787323700892796777,
+      "curl_exit_code": 35,
+      "curl_version": "8.14.1",
+      "http_status": null,
+      "method": "GET",
+      "request_headers": {
+        "Accept": "*/*",
+        "User-Agent": "curl/8.14.1"
+      },
+      "request_url": "https://fapi.binance.com/fapi/v1/fundingRate?symbol=BTCUSDT&limit=2",
+      "resolved_addresses": [
+        "198.18.1.87"
+      ],
+      "response_headers_raw_lf": "",
+      "source_id": "N2",
+      "started_at_epoch_nanoseconds": 1787323699707722843,
+      "stderr": "curl: (35) TLS connect error: error:0A000126:SSL routines::unexpected eof while reading"
+    }
+  ],
+  "schema_version": 1
+}

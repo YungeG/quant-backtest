@@ -1,0 +1,183 @@
+{
+  "archive_file": "crypt-gemini-d6e6feca46b61586e890a441443738dc9e911a58428c940e86055459361eda80.tar.gz",
+  "archive_sha256": "d6e6feca46b61586e890a441443738dc9e911a58428c940e86055459361eda80",
+  "content_tree_sha256": "704dee87020ad119e417fbec3831875f8203787ba06206f625a07e2414a068bb",
+  "files": [
+    {
+      "mode": "0644",
+      "path": "research/blend_v2/execution.py",
+      "sha256": "fe95a6326883208dc80c585eff087e492e4874433d82b657a0d710ad5c58c4ef",
+      "size": 32053
+    },
+    {
+      "mode": "0644",
+      "path": "research/hummingbot_audited/__init__.py",
+      "sha256": "882c12ae614012316cc4c4f70e704d5bc4503a8ec997b07919b0a6a2b5e69778",
+      "size": 623
+    },
+    {
+      "mode": "0644",
+      "path": "research/hummingbot_audited/cli.py",
+      "sha256": "5ebbfeea45c6e5cdfeb3df56ed9ba5e4aebf747197d5adce818864768a41f19e",
+      "size": 49043
+    },
+    {
+      "mode": "0644",
+      "path": "research/hummingbot_audited/contracts.py",
+      "sha256": "21aa7d57b7894cf75f79fb7462e899ce79cdfb39053f2c3d9dac0ddcc5bce0f9",
+      "size": 27842
+    },
+    {
+      "mode": "0644",
+      "path": "research/hummingbot_audited/engine.py",
+      "sha256": "2238b96c551863e0c3e8137a12056806febeef759ff1ef10616a182c4cb79e61",
+      "size": 47738
+    },
+    {
+      "mode": "0644",
+      "path": "research/hummingbot_audited/market_data.py",
+      "sha256": "cb680ecc3707a13bd54b70f790e936d1329baaed64a78bcc7d7becefb911bb43",
+      "size": 38373
+    },
+    {
+      "mode": "0644",
+      "path": "research/hummingbot_audited/result.py",
+      "sha256": "73cfe2b1fd07b8ae71226181ac8252750af877a24413802887efa8cb6a6dc939",
+      "size": 9512
+    },
+    {
+      "mode": "0644",
+      "path": "research/hummingbot_audited/rules.py",
+      "sha256": "1b908d3311dc62ca02ac845837de63f282270039c915d2fd8a654a39c29b0f1a",
+      "size": 12778
+    },
+    {
+      "mode": "0644",
+      "path": "research/hummingbot_audited/runtime/__init__.py",
+      "sha256": "ad013dac2d1fdbe700603170bdb4d09e103bbe8cfe5dcd6cb6a0591802a0eb00",
+      "size": 66
+    },
+    {
+      "mode": "0644",
+      "path": "research/hummingbot_audited/runtime/action_adapter.py",
+      "sha256": "69123d503a48a24d1b12808d4a41621d0483175797379390a487a36222c16bf5",
+      "size": 16610
+    },
+    {
+      "mode": "0644",
+      "path": "research/hummingbot_audited/runtime/provider.py",
+      "sha256": "f98244144f4924535e5700d3e54e2ffc8fc8f314c7ecb08a203de46b5c7ef9b3",
+      "size": 34340
+    },
+    {
+      "mode": "0644",
+      "path": "research/hummingbot_audited/runtime/runner.py",
+      "sha256": "bd7634118c700665abeea93888e9964a2a49b9af2091c45a3460f7bb7aa5ce9d",
+      "size": 20872
+    },
+    {
+      "mode": "0644",
+      "path": "research/hummingbot_audited/timeline.py",
+      "sha256": "ed3b4da93024379f0bf83423398bfb33fb09c74a9a368882d21bf13bf80bab19",
+      "size": 7690
+    },
+    {
+      "mode": "0644",
+      "path": "research/mm_l1_replay/__init__.py",
+      "sha256": "35844143f89feb1aa6d53cdbe78c96b49b5667aefce509981a3f64370f1f73ec",
+      "size": 1393
+    },
+    {
+      "mode": "0644",
+      "path": "research/mm_l1_replay/aggressive_policy.py",
+      "sha256": "136ab285176ecd538aeaa1e6cfbd5c1b07bd5229cf3c412d2b3ea24d9dfe33b2",
+      "size": 12688
+    },
+    {
+      "mode": "0644",
+      "path": "research/mm_l1_replay/aggressive_signals.py",
+      "sha256": "9ca2b7edcba89dd76ca4507b0ba797ab4c3660299c5f1ec64d181b317b5a7597",
+      "size": 17687
+    },
+    {
+      "mode": "0644",
+      "path": "research/mm_l1_replay/bundle.py",
+      "sha256": "abed4642534e9b4260914b130c176c2f355f6b75a064791584fd5d636e909ec7",
+      "size": 99484
+    },
+    {
+      "mode": "0644",
+      "path": "research/mm_l1_replay/cli.py",
+      "sha256": "364d29302587e1473003131909915a350009d56df483c36d4b090e6727c0424f",
+      "size": 21611
+    },
+    {
+      "mode": "0644",
+      "path": "research/mm_l1_replay/contracts.py",
+      "sha256": "c227a70771ec7b75e443ca8dbe9e36a762c50670e261948153bedf52c912e0bd",
+      "size": 6180
+    },
+    {
+      "mode": "0644",
+      "path": "research/mm_l1_replay/engine.py",
+      "sha256": "48c822b3821b2b1b53a62cac3f64d88472e2cd051e2d4605e2b529ecd552cf68",
+      "size": 80362
+    },
+    {
+      "mode": "0644",
+      "path": "research/mm_l1_replay/exchange_rules.py",
+      "sha256": "af1173e843d829908a3242975176a08615e108ef8a9dbce36a5b74dee0fbf1f9",
+      "size": 16088
+    },
+    {
+      "mode": "0644",
+      "path": "research/mm_l1_replay/experiment.py",
+      "sha256": "0ee3dfb3c5cbe2d41b09e1ed06a44201202310f5206e8c42155ef90409d5da5f",
+      "size": 51054
+    },
+    {
+      "mode": "0644",
+      "path": "research/mm_l1_replay/fetch.py",
+      "sha256": "2ebcbe0f337ced2112b4bd68ff00cc5100cacc3aa34fc67b995b2f41fd9d197a",
+      "size": 13075
+    },
+    {
+      "mode": "0644",
+      "path": "research/mm_l1_replay/pareto.py",
+      "sha256": "1404da5384008ef5083728799173ee6b18079789737bbeb999075c740acaef46",
+      "size": 11772
+    },
+    {
+      "mode": "0644",
+      "path": "research/mm_l1_replay/partitioned_bundle.py",
+      "sha256": "bebc1d27b73907d7b53eb20a840fb0083ea5c1d11caf81defc9303be0321bfc7",
+      "size": 1927
+    },
+    {
+      "mode": "0644",
+      "path": "research/mm_l1_replay/profile_runner.py",
+      "sha256": "9fbd35818424d936fb1ac00a7a956e379cba0fce124fab011dfec698fc7cad45",
+      "size": 7491
+    },
+    {
+      "mode": "0644",
+      "path": "research/mm_l1_replay/profiles.py",
+      "sha256": "053cff55a97d90211accfa0aa677d507c18950fe48aa14cf1c90e19f56192095",
+      "size": 9972
+    },
+    {
+      "mode": "0644",
+      "path": "research/mm_l1_replay/report.py",
+      "sha256": "a3c9468b0889a4eef7b39b7d13b5cfa5d6d167223d17c0ae16a27d95552dabf3",
+      "size": 19397
+    }
+  ],
+  "provenance": {
+    "base_commit": "ba36e8a2b9ca1b1a949cf71cc93e175c9ef5e014",
+    "remote": "git@github.com:YungeG/crypt-gemini.git",
+    "worktree_state": "dirty"
+  },
+  "schema_version": 1,
+  "snapshot_id": "sha256:d6e6feca46b61586e890a441443738dc9e911a58428c940e86055459361eda80",
+  "source_id": "crypt-gemini"
+}

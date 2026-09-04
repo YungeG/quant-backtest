@@ -1,0 +1,28 @@
+{
+  "files": [
+    {
+      "exact_private_path": "/srv/bcache-8t/ygguo/backtest/g12h-authority-private/20260820-live-status-api-probes-response-headers/stamp_duty/sta-no39-status-full-valid-live/response.headers",
+      "exact_private_sha256": "sha256:fdad5cbc23c2340ae3e148d87bf07679a4c07e6e03ad41ce0e33100a905970bf",
+      "redaction": "Set-Cookie value replaced by SHA-256; name and attributes retained.",
+      "tracked_path": "stamp_duty/sta-no39-status-full-valid-live/response.headers",
+      "tracked_redacted_sha256": "sha256:416efd2d7016dec50367adcb877e40268c755960a307c3f53c4a2baaf297ec75"
+    },
+    {
+      "exact_private_path": "/srv/bcache-8t/ygguo/backtest/g12h-authority-private/20260820-live-status-api-probes-response-headers/stamp_duty/sta-no39-status-full-valid-live/transport.log",
+      "exact_private_sha256": "sha256:0f781250e16cc716c4cbb42913ffc810ecad560a7248ccc253b69b552b12b422",
+      "redaction": "Set-Cookie value replaced by SHA-256; name and attributes retained.",
+      "tracked_path": "stamp_duty/sta-no39-status-full-valid-live/transport.log",
+      "tracked_redacted_sha256": "sha256:ca13a63e0b34e915b75f613e578c4d11b5bd70750e7563d359582493fda00e76"
+    },
+    {
+      "exact_private_path": "/srv/bcache-8t/ygguo/backtest/g12h-authority-private/20260820-live-status-api-probes-response-headers/stamp_duty/sta-no39-status-full-valid-live/redirects.json",
+      "exact_private_sha256": "sha256:f6192aaf2d2e9427a41f9a10b6b30ecde5e1780499ea3157a609c65f8725fe69",
+      "redaction": "Set-Cookie value replaced by SHA-256; name and attributes retained.",
+      "tracked_path": "stamp_duty/sta-no39-status-full-valid-live/redirects.json",
+      "tracked_redacted_sha256": "sha256:0be3b920bacf85d4aef0269405a56b07f602311a871b1a5cbc5dd0c49ef94480"
+    }
+  ],
+  "schema_version": 1,
+  "source_id": "sta-no39-status-full-valid-live",
+  "type": "g12h_live_status_probe_sensitive_response_header_receipt_v1"
+}

@@ -1,0 +1,29 @@
+{
+  "files": [
+    {
+      "exact_private_path": "/srv/bcache-8t/ygguo/backtest/g12h-authority-private/20260820-wave1-response-headers/hkscc_transfer/hkscc-operational-procedures-index-live/response.headers",
+      "exact_private_sha256": "sha256:8a1a6913ba85a9c54995c1ead4c5a37f54fcf5da7cfd58bf9d4630dccad49183",
+      "redaction": "Set-Cookie value replaced by its SHA-256; cookie name and attributes retained.",
+      "tracked_path": "hkscc_transfer/hkscc-operational-procedures-index-live/response.headers",
+      "tracked_redacted_sha256": "sha256:a558e8f69be2f183fa2444035847cca8b29f487a9693b2b6c6c8573dce1b024e"
+    },
+    {
+      "exact_private_path": "/srv/bcache-8t/ygguo/backtest/g12h-authority-private/20260820-wave1-response-headers/hkscc_transfer/hkscc-operational-procedures-index-live/transport.log",
+      "exact_private_sha256": "sha256:3ae2862bf2f488827bf6be1116ad1e663ee9add18335d8ad548ef0771d0b948b",
+      "redaction": "Set-Cookie value replaced by its SHA-256; cookie name and attributes retained.",
+      "tracked_path": "hkscc_transfer/hkscc-operational-procedures-index-live/transport.log",
+      "tracked_redacted_sha256": "sha256:9d6b7a2e2a780bb478092e7a79f3afd6eb000755f983ddf804ebcccb661a8fa5"
+    },
+    {
+      "exact_private_path": "/srv/bcache-8t/ygguo/backtest/g12h-authority-private/20260820-wave1-response-headers/hkscc_transfer/hkscc-operational-procedures-index-live/redirects.json",
+      "exact_private_sha256": "sha256:450f48c553f2311f2976e22c0dabd2a6019ba86e6bc4aae490d377088ad02b10",
+      "redaction": "Set-Cookie value replaced by its SHA-256; cookie name and attributes retained.",
+      "tracked_path": "hkscc_transfer/hkscc-operational-procedures-index-live/redirects.json",
+      "tracked_redacted_sha256": "sha256:ea866f785c7118f2add034cc7a1548144d1f4a2bacc8d2bd8036dfac1f385e54"
+    }
+  ],
+  "private_store_root": "/srv/bcache-8t/ygguo/backtest/g12h-authority-private/20260820-wave1-response-headers",
+  "schema_version": 1,
+  "source_id": "hkscc-operational-procedures-index-live",
+  "type": "g12h_sensitive_response_header_receipt_v1"
+}

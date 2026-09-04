@@ -1,0 +1,72 @@
+* Host www.gov.cn:443 was resolved.
+* IPv6: (none)
+* IPv4: 221.204.95.145, 221.204.95.151, 221.204.95.143, 221.204.95.168, 221.204.95.167, 221.204.95.141, 221.204.95.166
+*   Trying 221.204.95.145:443...
+* ALPN: curl offers h2,http/1.1
+} [5 bytes data]
+* TLSv1.3 (OUT), TLS handshake, Client hello (1):
+} [1565 bytes data]
+*  CAfile: /etc/ssl/certs/ca-certificates.crt
+*  CApath: /etc/ssl/certs
+{ [5 bytes data]
+* TLSv1.3 (IN), TLS handshake, Server hello (2):
+{ [122 bytes data]
+* TLSv1.3 (IN), TLS change cipher, Change cipher spec (1):
+{ [1 bytes data]
+* TLSv1.3 (IN), TLS handshake, Encrypted Extensions (8):
+{ [25 bytes data]
+* TLSv1.3 (IN), TLS handshake, Certificate (11):
+{ [4729 bytes data]
+* TLSv1.3 (IN), TLS handshake, CERT verify (15):
+{ [264 bytes data]
+* TLSv1.3 (IN), TLS handshake, Finished (20):
+{ [52 bytes data]
+* TLSv1.3 (OUT), TLS change cipher, Change cipher spec (1):
+} [1 bytes data]
+* TLSv1.3 (OUT), TLS handshake, Finished (20):
+} [52 bytes data]
+* SSL connection using TLSv1.3 / TLS_AES_256_GCM_SHA384 / x25519 / RSASSA-PSS
+* ALPN: server accepted http/1.1
+* Server certificate:
+*  subject: C=CN; ST=\U5317\U4EAC; L=\U5317\U4EAC; O=\U56FD\U52A1\U9662\U529E\U516C\U5385\U79D8\U4E66\U5C40; CN=*.www.gov.cn
+*  start date: Apr 24 07:24:10 2026 GMT
+*  expire date: Nov  9 07:24:08 2026 GMT
+*  subjectAltName: host "www.gov.cn" matched cert's "www.gov.cn"
+*  issuer: C=CN; O=China Financial Certification Authority; CN=CFCA OV OCA
+*  SSL certificate verify ok.
+*   Certificate level 0: Public key type RSA (2048/112 Bits/secBits), signed using sha256WithRSAEncryption
+*   Certificate level 1: Public key type RSA (2048/112 Bits/secBits), signed using sha256WithRSAEncryption
+*   Certificate level 2: Public key type RSA (4096/152 Bits/secBits), signed using sha256WithRSAEncryption
+* Connected to www.gov.cn (221.204.95.145) port 443
+* using HTTP/1.x
+} [5 bytes data]
+> GET /zhengce/zhengceku/202308/content_6900443.htm HTTP/1.1
+> Host: www.gov.cn
+> User-Agent: Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 Chrome/130.0 Safari/537.36 G12HAuthorityCapture/1.0
+> Accept: */*
+> Accept-Language: zh-CN,zh;q=0.9,en;q=0.5
+> Cache-Control: no-cache
+> Pragma: no-cache
+> 
+* Request completely sent off
+{ [5 bytes data]
+* TLSv1.3 (IN), TLS handshake, Newsession Ticket (4):
+{ [265 bytes data]
+* TLSv1.3 (IN), TLS handshake, Newsession Ticket (4):
+{ [265 bytes data]
+< HTTP/1.1 200 OK
+< Date: Thu, 20 Aug 2026 07:37:16 GMT
+< Content-Type: text/html
+< Transfer-Encoding: chunked
+< Connection: keep-alive
+< Vary: Accept-Encoding
+< Access-Control-Allow-Origin: *
+< Access-Control-Allow-Headers: DNT,X-CustomHeader,Keep-Alive,User-Agent,X-Requested-With,If-Modified-Since,Cache-Control,Content-Type
+< Access-Control-Allow-Methods: GET,POST,OPTIONS
+< Access-Control-Allow-Credentials: true
+< Set-Cookie: SERVERID=<redacted sha256:5f54a1b5987a33ed1159b8449500f527141f0decc9782536cc775dce04af0e62>;Path=/
+< X-Ser: i37404_c25893, i2282335_c26763
+< X-Cache: MISS from i2282335_c26763(cloudsvr)
+< 
+{ [15805 bytes data]
+* Connection #0 to host www.gov.cn left intact

@@ -1,0 +1,161 @@
+{
+  "accepted_2024_v2": {
+    "canonical_report_file_sha256": "sha256:850cf2b5b2f3caffd7afc1cb4f364e6224c4022417ae46bb01a406600e971951",
+    "causal_input": false,
+    "implementation_commit": "024e5f209a94bb358946f5c468630108981f0329",
+    "post_hoc_only": true,
+    "report_sha256": "sha256:29e639615c1e5f5fa05ffdff9bc77a630d56838c7b0e70230177922bdbffc37b",
+    "response_sha256": "sha256:e9f73f9c845c28abb31037d8230df2d6f13d5d368c43436e891fcc757372c338",
+    "source_snapshot_id": "sha256:a45d9acdcfb4d42d1c70af44969f6a5151fb260c4c3040943b3d961c1073aa3f"
+  },
+  "authority_emitted": false,
+  "authority_module_emitted": false,
+  "branch_decision": "H3",
+  "decision_label": "NO_CAUSAL_AUTHORITY",
+  "decision_owner": "G12M-BHA-02",
+  "evidence_bindings": {
+    "adr_0009": {
+      "path": "docs/adr/0009-historical-provider-availability-is-distinct-from-local-acquisition.md",
+      "sha256": "sha256:cba2054010ed8acc9aeb57fb3ce57628163134e1d1382ab88e8384f03f68a94f"
+    },
+    "bha_01a": {
+      "commit": "7a808d3b7b7a58a354212e0da0fc67c3dcefd85c",
+      "evidence_manifest": {
+        "path": "evidence/g12m-binance-funding-settlement-availability-v1/manifest.json",
+        "sha256": "sha256:637546d642a822cad3ab89a1f21749bfbe54688987c43b1dc08df650a090522a"
+      },
+      "research_assessment": {
+        "path": "evidence/g12m-binance-funding-settlement-availability-v1/research-assessment.json",
+        "sha256": "sha256:0f346850b9cb204318ab6f3dad45bebe624fb0714bf7d6f2e86d5789715a984b"
+      },
+      "research_report": {
+        "conclusion": "PROSPECTIVE_ONLY",
+        "path": "docs/research/g12m-binance-funding-settlement-availability-authority-v1.md",
+        "sha256": "sha256:76a47f7c95ea958e519edceb0d4789c82bc857641532e84dca147e30f1a536d5"
+      },
+      "source_snapshot": {
+        "content_tree_hash": "sha256:218d95c3cb2ea769b2a52bc8633d162b76624e8dabb9829eccc5a60b2dcf0b1d",
+        "file_path": "evidence/g12m-binance-funding-settlement-availability-v1/source-snapshot.json",
+        "file_sha256": "sha256:86ec9590cfc80239c16c93354d3d4428432454f2e1bdee31ad0846728b9c0bf0",
+        "provenance_hash": "sha256:d93b2459b858da590ac15093251909b3dc561c0aa2ccefa05e03ae19c3db8e54",
+        "snapshot_id": "sha256:ad5ee7b6981ffbd1048f3bd7b7966369e6cadc6654cde81aa670426f19d7c09f"
+      }
+    },
+    "bha_01b": {
+      "closed_limitations": {
+        "path": "evidence/g12m-binance-funding-revision-authority-v1/closed-limitations.md",
+        "sha256": "sha256:f9fe5cb3a7bc4d0a55e5501f8d8eec74f00cbe9742783e2c0f43950a4faa0afd"
+      },
+      "commit": "366575914cd4066ad6cfa593b8df219df7021c54",
+      "evidence_hash_ledger": {
+        "path": "evidence/g12m-binance-funding-revision-authority-v1/manifest.sha256",
+        "sha256": "sha256:238364bcf8945481af2b18ca47e2afa542ffe953d11b1719862f44a61b069dd6"
+      },
+      "primary_source_review": {
+        "path": "evidence/g12m-binance-funding-revision-authority-v1/primary-source-review.md",
+        "sha256": "sha256:b37b3d1f37986486abaf3285e8aaa0d7e188b8065c60b0f50685f446d7b78975"
+      },
+      "research_report": {
+        "conclusion": "UNKNOWN_CAUSAL_BLOCKER",
+        "path": "docs/research/g12m-binance-funding-revision-authority-v1.md",
+        "sha256": "sha256:8374d76c09df8d8479bc9364d949aafa47b138f63fa9eac9a4e6d8fad0885fc4"
+      },
+      "source_snapshot": {
+        "content_tree_hash": "sha256:935355b119ac9445a17fc7e3be19eeb8156914081df21519604182a9fed73f5a",
+        "file_path": "evidence/g12m-binance-funding-revision-authority-v1/source-snapshot.json",
+        "file_sha256": "sha256:e938b07351d75c8a381ee7c9bef78e31ab96b65986e42a6b11a71ff26a7d612a",
+        "provenance_hash": "sha256:9e0f8eaf21ec1feaaa5f1e3a7149fc5bf6777f26e6eff16df71b13bd2f5d6311",
+        "snapshot_id": "sha256:e8faeb5a146c0ff85f5afca6f740ee9a925a3d47134c4d3495b26fdb5e4b8f25"
+      }
+    },
+    "governance": {
+      "commit": "d9ec8631385247249fcd91bd814c1342948c53b5"
+    },
+    "parent_repair_plan": {
+      "path": "docs/implementation/plans/g12/g12m-binance-historical-availability-repair-v1.md",
+      "sha256": "sha256:da1785cddcd6e23e63b01e2d187e71f169427520c8ea609996cdf6c273d07ad7"
+    }
+  },
+  "execution_bindings": {
+    "bha_02_subplan": {
+      "path": "docs/implementation/plans/g12/g12m-binance-historical-availability-repair-v1/bha-02-availability-authority.md",
+      "sha256": "sha256:6009f9bb87d3697fb3f446f5020ee5be4a7a77f22f7d22d52e48996dad13913f"
+    },
+    "bha_10_route": {
+      "path": "docs/implementation/plans/g12/g12m-binance-historical-availability-repair-v1/bha-10-governance-fanin.md",
+      "sha256": "sha256:3b5674bd2b7f9387da9a8d9dab5687236172045160b7d3ccda47c6ae64246c8c",
+      "status": "READY_H3"
+    },
+    "decision_report": {
+      "path": "docs/research/g12m-binance-funding-availability-authority-decision-v1.md",
+      "sha256": "sha256:130bfc81c8c97e47992a90354c64b28bebee8053fafc48eb63eb07c942f407af"
+    },
+    "execution_dag": {
+      "path": "docs/implementation/plans/g12/g12m-binance-historical-availability-repair-v1/README.md",
+      "sha256": "sha256:8a9e6cb9c28bf132e66983d0f02ea7973a7aa85832ffb621f88435eab1785389"
+    }
+  },
+  "grade_minted_or_changed": false,
+  "h1_available": false,
+  "h3_basis": [
+    "ADR 0009 requires the earliest defensible Provider Availability Time for the exact revision; a prospective REST receipt cannot prove that this earliest time exactly equals fundingTime.",
+    "MarketEvent requires available_time at or after event_time and G10E fixes publication and settlement at fundingTime; later receipt fails equality, while at-or-before observation still does not prove exact first availability.",
+    "Funding Rate History exposes no revision/as-of selector or complete correction history; polling cannot prove a complete settlement-visible revision lineage or exclude revisions between samples."
+  ],
+  "h3_selected": true,
+  "historical_code_lane_authorized": false,
+  "next_route": {
+    "id": "G12M-BHA-10",
+    "only_ready_route": true,
+    "status": "READY_H3"
+  },
+  "outputs": {
+    "assessment_emitted": false,
+    "bundle_emitted": false,
+    "code_emitted": false,
+    "profile_input_emitted": false,
+    "prospective_plan_authorized": false,
+    "run_emitted": false,
+    "source_v3_emitted": false
+  },
+  "schema_version": 1,
+  "secret_safety": {
+    "account_identifiers_retained": false,
+    "authorization_headers_retained": false,
+    "cookies_retained": false,
+    "credentials_retained": false,
+    "environment_values_retained": false,
+    "raw_exception_text_retained": false
+  },
+  "terminated_nodes": [
+    {
+      "id": "G12M-BHA-03",
+      "status": "TERMINATED_H3"
+    },
+    {
+      "id": "G12M-BHA-04",
+      "status": "TERMINATED_H3"
+    },
+    {
+      "id": "G12M-BHA-05",
+      "status": "TERMINATED_H3"
+    },
+    {
+      "id": "G12M-BHA-06",
+      "status": "TERMINATED_H3"
+    },
+    {
+      "id": "G12M-BHA-07",
+      "status": "TERMINATED_H3"
+    },
+    {
+      "id": "G12M-BHA-08",
+      "status": "TERMINATED_H3"
+    },
+    {
+      "id": "G12M-BHA-09",
+      "status": "TERMINATED_H3"
+    }
+  ],
+  "type": "g12m_binance_funding_availability_authority_decision_v1"
+}

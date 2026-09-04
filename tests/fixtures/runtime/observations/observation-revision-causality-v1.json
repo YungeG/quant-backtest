@@ -1,0 +1,1049 @@
+{
+  "at_correction": {
+    "failure": null,
+    "outcome_hash": "sha256:03c021a0d21ed35807d94e8804c425aeec8c93eb65a87e6562f2ef2b73faa440",
+    "result": {
+      "decision_instant": {
+        "instant": {
+          "epoch_nanoseconds": 200,
+          "type": "utc_instant"
+        },
+        "phase": {
+          "code": "market_data",
+          "rank": 20,
+          "type": "timeline_phase"
+        },
+        "source_sequence": {
+          "type": "source_sequence",
+          "value": 3
+        },
+        "type": "simulation_instant"
+      },
+      "events": [
+        {
+          "available_time": {
+            "epoch_nanoseconds": 150,
+            "type": "utc_instant"
+          },
+          "capability": {
+            "key": "price_bars",
+            "type": "market_bundle_capability",
+            "version": 1
+          },
+          "event_id": "bar-b-v1",
+          "event_time": {
+            "epoch_nanoseconds": 140,
+            "type": "utc_instant"
+          },
+          "event_type": "bar",
+          "instrument_id": {
+            "stable_key": "asset-a",
+            "type": "instrument_id",
+            "venue": "test"
+          },
+          "payload": {
+            "close": {
+              "scale": 2,
+              "units": 20100
+            }
+          },
+          "phase": {
+            "code": "market_data",
+            "rank": 20,
+            "type": "timeline_phase"
+          },
+          "revision_id": "source-v1",
+          "source_hash": "sha256:6261722d622d7631000000000000000000000000000000000000000000000000",
+          "source_key": "fixture.bars.1m",
+          "source_sequence": {
+            "type": "source_sequence",
+            "value": 1
+          },
+          "stream_key": "bars.1m",
+          "supersedes_revision_id": null,
+          "type": "market_event"
+        },
+        {
+          "available_time": {
+            "epoch_nanoseconds": 200,
+            "type": "utc_instant"
+          },
+          "capability": {
+            "key": "price_bars",
+            "type": "market_bundle_capability",
+            "version": 1
+          },
+          "event_id": "bar-a-v2",
+          "event_time": {
+            "epoch_nanoseconds": 90,
+            "type": "utc_instant"
+          },
+          "event_type": "bar",
+          "instrument_id": {
+            "stable_key": "asset-a",
+            "type": "instrument_id",
+            "venue": "test"
+          },
+          "payload": {
+            "close": {
+              "scale": 2,
+              "units": 10200
+            }
+          },
+          "phase": {
+            "code": "market_data",
+            "rank": 20,
+            "type": "timeline_phase"
+          },
+          "revision_id": "source-v2",
+          "source_hash": "sha256:6261722d612d7632000000000000000000000000000000000000000000000000",
+          "source_key": "fixture.bars.1m",
+          "source_sequence": {
+            "type": "source_sequence",
+            "value": 3
+          },
+          "stream_key": "bars.1m",
+          "supersedes_revision_id": "source-v1",
+          "type": "market_event"
+        }
+      ],
+      "query": {
+        "capability": {
+          "key": "price_bars",
+          "type": "market_bundle_capability",
+          "version": 1
+        },
+        "dataset_key": "bars.1m",
+        "instrument_id": {
+          "stable_key": "asset-a",
+          "type": "instrument_id",
+          "venue": "test"
+        },
+        "purpose": {
+          "key": "bar.ohlcv",
+          "purpose_hash": "sha256:269ed047b5bf12e4e1963f7ebf704ebe502580285731bd3fde184b2e66afc59f",
+          "schema_version": 1,
+          "type": "observation_purpose_ref",
+          "version": 1
+        },
+        "query_hash": "sha256:fe6f9764c5c454740497a3908197053d0a1618ca2a2ad30ffade86be5f76f03f",
+        "schema_version": 1,
+        "type": "observation_query"
+      },
+      "result_hash": "sha256:1312ee0c64f939a95c9ebd30ad4ad163cae31c4d5f190ebabe500c903b6ce408",
+      "schema_version": 1,
+      "trace": {
+        "candidate_record_hashes": [
+          "sha256:170673bcda195615fa4ff33f9f42d61dc59eb90a347e0c586847912b77da1a25",
+          "sha256:38505e8df3aa14bd06554be1428852b20c6acc7e8262d2808764891cd18574e4",
+          "sha256:f6bc0ec5a0ed7b326d6f9da9059cb8a44c5e3f059f88232a0655e8e724616a1b"
+        ],
+        "dataset_hash": "sha256:af66133de05d6ed4208b22a503c37daea9ec5be1183fda16a0c3bd603cf5b545",
+        "decision_instant": {
+          "instant": {
+            "epoch_nanoseconds": 200,
+            "type": "utc_instant"
+          },
+          "phase": {
+            "code": "market_data",
+            "rank": 20,
+            "type": "timeline_phase"
+          },
+          "source_sequence": {
+            "type": "source_sequence",
+            "value": 3
+          },
+          "type": "simulation_instant"
+        },
+        "event_count": 2,
+        "max_available_instant": {
+          "instant": {
+            "epoch_nanoseconds": 200,
+            "type": "utc_instant"
+          },
+          "phase": {
+            "code": "market_data",
+            "rank": 20,
+            "type": "timeline_phase"
+          },
+          "source_sequence": {
+            "type": "source_sequence",
+            "value": 3
+          },
+          "type": "simulation_instant"
+        },
+        "max_event_time": {
+          "epoch_nanoseconds": 140,
+          "type": "utc_instant"
+        },
+        "query": {
+          "capability": {
+            "key": "price_bars",
+            "type": "market_bundle_capability",
+            "version": 1
+          },
+          "dataset_key": "bars.1m",
+          "instrument_id": {
+            "stable_key": "asset-a",
+            "type": "instrument_id",
+            "venue": "test"
+          },
+          "purpose": {
+            "key": "bar.ohlcv",
+            "purpose_hash": "sha256:269ed047b5bf12e4e1963f7ebf704ebe502580285731bd3fde184b2e66afc59f",
+            "schema_version": 1,
+            "type": "observation_purpose_ref",
+            "version": 1
+          },
+          "query_hash": "sha256:fe6f9764c5c454740497a3908197053d0a1618ca2a2ad30ffade86be5f76f03f",
+          "schema_version": 1,
+          "type": "observation_query"
+        },
+        "revision_set_hash": "sha256:9fee05e209599e5977ab58468e759bbc37fe64a29bc23f3feb5c4bf74ba9bdfd",
+        "schema_version": 1,
+        "selected_event_hashes": [
+          "sha256:8731a5c9db50601ef2133a769677039f27dcf8d16b8fab2a936dd60cd43071b5",
+          "sha256:d771f96c7bda27103ed1a716edf1fab88b8cb1dca0c8e074692deb2da0598819"
+        ],
+        "selected_observation_keys": [
+          "bar-b",
+          "bar-a"
+        ],
+        "selected_revision_ids": [
+          "source-v1",
+          "source-v2"
+        ],
+        "selected_source_hashes": [
+          "sha256:6261722d622d7631000000000000000000000000000000000000000000000000",
+          "sha256:6261722d612d7632000000000000000000000000000000000000000000000000"
+        ],
+        "trace_hash": "sha256:56eed9da464701c8b169d01ed587f7d8e26b76ca533490587263b8514b6b7d7a",
+        "type": "observation_causality_trace",
+        "view_hash": "sha256:6a58fa390c29e33a91b76445005becff7133f304bb2240baa7d0b91d3283e47e"
+      },
+      "type": "point_in_time_observation_query_result",
+      "view_hash": "sha256:6a58fa390c29e33a91b76445005becff7133f304bb2240baa7d0b91d3283e47e"
+    },
+    "schema_version": 1,
+    "type": "point_in_time_observation_query_outcome"
+  },
+  "authorization_failures": [
+    {
+      "failure": {
+        "code": "dataset_not_authorized",
+        "failure_hash": "sha256:e9431452796707b00498d40b6a08067621dccc40823c9ba98a71c0143e215356",
+        "query": {
+          "capability": {
+            "key": "price_bars",
+            "type": "market_bundle_capability",
+            "version": 1
+          },
+          "dataset_key": "trades",
+          "instrument_id": {
+            "stable_key": "asset-a",
+            "type": "instrument_id",
+            "venue": "test"
+          },
+          "purpose": {
+            "key": "bar.ohlcv",
+            "purpose_hash": "sha256:269ed047b5bf12e4e1963f7ebf704ebe502580285731bd3fde184b2e66afc59f",
+            "schema_version": 1,
+            "type": "observation_purpose_ref",
+            "version": 1
+          },
+          "query_hash": "sha256:1407933020a52e1d4affebfac5396c5ebeadea54706a2036bf81dc8e4a9dadd4",
+          "schema_version": 1,
+          "type": "observation_query"
+        },
+        "schema_version": 1,
+        "type": "observation_query_failure",
+        "view_hash": "sha256:2f417e21df5b6f18d6c2743da95db219de9b6e7293f94a25c48f1e77475c5ee0"
+      },
+      "outcome_hash": "sha256:9e1a953c8d11ba094cd82b52777619f96afeb107bec4114a26e3003825437c7d",
+      "result": null,
+      "schema_version": 1,
+      "type": "point_in_time_observation_query_outcome"
+    },
+    {
+      "failure": {
+        "code": "instrument_not_authorized",
+        "failure_hash": "sha256:13a9fd2857dd66a0bf39074299cb2610e442702ebb58cb9d74aabd3e51768ea1",
+        "query": {
+          "capability": {
+            "key": "price_bars",
+            "type": "market_bundle_capability",
+            "version": 1
+          },
+          "dataset_key": "bars.1m",
+          "instrument_id": {
+            "stable_key": "asset-b",
+            "type": "instrument_id",
+            "venue": "test"
+          },
+          "purpose": {
+            "key": "bar.ohlcv",
+            "purpose_hash": "sha256:269ed047b5bf12e4e1963f7ebf704ebe502580285731bd3fde184b2e66afc59f",
+            "schema_version": 1,
+            "type": "observation_purpose_ref",
+            "version": 1
+          },
+          "query_hash": "sha256:2d3172762ec365db02940b170d20b65c1b172e7401361e9309a27eea444d7ce4",
+          "schema_version": 1,
+          "type": "observation_query"
+        },
+        "schema_version": 1,
+        "type": "observation_query_failure",
+        "view_hash": "sha256:2f417e21df5b6f18d6c2743da95db219de9b6e7293f94a25c48f1e77475c5ee0"
+      },
+      "outcome_hash": "sha256:bc3a5941d3da2d25b5ba651587c6544fafe44eafb45df330a51a6f23e882a170",
+      "result": null,
+      "schema_version": 1,
+      "type": "point_in_time_observation_query_outcome"
+    },
+    {
+      "failure": {
+        "code": "purpose_not_authorized",
+        "failure_hash": "sha256:4633cf85b13af19d1468bbab5ed6199f8e9a0465492c1a03c97426b71c3f9249",
+        "query": {
+          "capability": {
+            "key": "price_bars",
+            "type": "market_bundle_capability",
+            "version": 1
+          },
+          "dataset_key": "bars.1m",
+          "instrument_id": {
+            "stable_key": "asset-a",
+            "type": "instrument_id",
+            "venue": "test"
+          },
+          "purpose": {
+            "key": "bar.typical-price",
+            "purpose_hash": "sha256:bd5a70dab3b571422a5822570531ab2e5d42bf56b1da06e1b863a25cae589b22",
+            "schema_version": 1,
+            "type": "observation_purpose_ref",
+            "version": 1
+          },
+          "query_hash": "sha256:011c6264f2fedc192128fec3cfacd4375ffc6e630df81f022f7d88910a5dacd4",
+          "schema_version": 1,
+          "type": "observation_query"
+        },
+        "schema_version": 1,
+        "type": "observation_query_failure",
+        "view_hash": "sha256:2f417e21df5b6f18d6c2743da95db219de9b6e7293f94a25c48f1e77475c5ee0"
+      },
+      "outcome_hash": "sha256:6a8199952d4f2a34c15efda77d9b5889a7733f35034040e0a452ced2115be54f",
+      "result": null,
+      "schema_version": 1,
+      "type": "point_in_time_observation_query_outcome"
+    },
+    {
+      "failure": {
+        "code": "capability_not_authorized",
+        "failure_hash": "sha256:80a057e52876bdcb1e0ee158a2fb8576f5aef875c4ed5ba7d1c20ace7eda3e15",
+        "query": {
+          "capability": {
+            "key": "price_bars",
+            "type": "market_bundle_capability",
+            "version": 2
+          },
+          "dataset_key": "bars.1m",
+          "instrument_id": {
+            "stable_key": "asset-a",
+            "type": "instrument_id",
+            "venue": "test"
+          },
+          "purpose": {
+            "key": "bar.ohlcv",
+            "purpose_hash": "sha256:269ed047b5bf12e4e1963f7ebf704ebe502580285731bd3fde184b2e66afc59f",
+            "schema_version": 1,
+            "type": "observation_purpose_ref",
+            "version": 1
+          },
+          "query_hash": "sha256:de032868c116b1d497a99f30649635fb0d3eec689f9a56671da1d5990478635c",
+          "schema_version": 1,
+          "type": "observation_query"
+        },
+        "schema_version": 1,
+        "type": "observation_query_failure",
+        "view_hash": "sha256:2f417e21df5b6f18d6c2743da95db219de9b6e7293f94a25c48f1e77475c5ee0"
+      },
+      "outcome_hash": "sha256:609214eb6d3cf3d93b1b0b9583fe5e3d9cf55e8de8ad98d44f66bc336424187a",
+      "result": null,
+      "schema_version": 1,
+      "type": "point_in_time_observation_query_outcome"
+    }
+  ],
+  "before_correction": {
+    "failure": null,
+    "outcome_hash": "sha256:d3702de566c3309683c4058619a6db08089536c06f9bc7d605eca090b3c6eed8",
+    "result": {
+      "decision_instant": {
+        "instant": {
+          "epoch_nanoseconds": 200,
+          "type": "utc_instant"
+        },
+        "phase": {
+          "code": "market_data",
+          "rank": 20,
+          "type": "timeline_phase"
+        },
+        "source_sequence": {
+          "type": "source_sequence",
+          "value": 2
+        },
+        "type": "simulation_instant"
+      },
+      "events": [
+        {
+          "available_time": {
+            "epoch_nanoseconds": 100,
+            "type": "utc_instant"
+          },
+          "capability": {
+            "key": "price_bars",
+            "type": "market_bundle_capability",
+            "version": 1
+          },
+          "event_id": "bar-a-v1",
+          "event_time": {
+            "epoch_nanoseconds": 90,
+            "type": "utc_instant"
+          },
+          "event_type": "bar",
+          "instrument_id": {
+            "stable_key": "asset-a",
+            "type": "instrument_id",
+            "venue": "test"
+          },
+          "payload": {
+            "close": {
+              "scale": 2,
+              "units": 10100
+            }
+          },
+          "phase": {
+            "code": "market_data",
+            "rank": 20,
+            "type": "timeline_phase"
+          },
+          "revision_id": "source-v1",
+          "source_hash": "sha256:6261722d612d7631000000000000000000000000000000000000000000000000",
+          "source_key": "fixture.bars.1m",
+          "source_sequence": {
+            "type": "source_sequence",
+            "value": 1
+          },
+          "stream_key": "bars.1m",
+          "supersedes_revision_id": null,
+          "type": "market_event"
+        },
+        {
+          "available_time": {
+            "epoch_nanoseconds": 150,
+            "type": "utc_instant"
+          },
+          "capability": {
+            "key": "price_bars",
+            "type": "market_bundle_capability",
+            "version": 1
+          },
+          "event_id": "bar-b-v1",
+          "event_time": {
+            "epoch_nanoseconds": 140,
+            "type": "utc_instant"
+          },
+          "event_type": "bar",
+          "instrument_id": {
+            "stable_key": "asset-a",
+            "type": "instrument_id",
+            "venue": "test"
+          },
+          "payload": {
+            "close": {
+              "scale": 2,
+              "units": 20100
+            }
+          },
+          "phase": {
+            "code": "market_data",
+            "rank": 20,
+            "type": "timeline_phase"
+          },
+          "revision_id": "source-v1",
+          "source_hash": "sha256:6261722d622d7631000000000000000000000000000000000000000000000000",
+          "source_key": "fixture.bars.1m",
+          "source_sequence": {
+            "type": "source_sequence",
+            "value": 1
+          },
+          "stream_key": "bars.1m",
+          "supersedes_revision_id": null,
+          "type": "market_event"
+        }
+      ],
+      "query": {
+        "capability": {
+          "key": "price_bars",
+          "type": "market_bundle_capability",
+          "version": 1
+        },
+        "dataset_key": "bars.1m",
+        "instrument_id": {
+          "stable_key": "asset-a",
+          "type": "instrument_id",
+          "venue": "test"
+        },
+        "purpose": {
+          "key": "bar.ohlcv",
+          "purpose_hash": "sha256:269ed047b5bf12e4e1963f7ebf704ebe502580285731bd3fde184b2e66afc59f",
+          "schema_version": 1,
+          "type": "observation_purpose_ref",
+          "version": 1
+        },
+        "query_hash": "sha256:fe6f9764c5c454740497a3908197053d0a1618ca2a2ad30ffade86be5f76f03f",
+        "schema_version": 1,
+        "type": "observation_query"
+      },
+      "result_hash": "sha256:0156b292f8868e05acbf833996da321e1888ade8cb153d213050de7d8e3c8d92",
+      "schema_version": 1,
+      "trace": {
+        "candidate_record_hashes": [
+          "sha256:170673bcda195615fa4ff33f9f42d61dc59eb90a347e0c586847912b77da1a25",
+          "sha256:38505e8df3aa14bd06554be1428852b20c6acc7e8262d2808764891cd18574e4"
+        ],
+        "dataset_hash": "sha256:f87a6755cd82bc97308a14d705798940e5facaa3428b72cc47642f4eaca04415",
+        "decision_instant": {
+          "instant": {
+            "epoch_nanoseconds": 200,
+            "type": "utc_instant"
+          },
+          "phase": {
+            "code": "market_data",
+            "rank": 20,
+            "type": "timeline_phase"
+          },
+          "source_sequence": {
+            "type": "source_sequence",
+            "value": 2
+          },
+          "type": "simulation_instant"
+        },
+        "event_count": 2,
+        "max_available_instant": {
+          "instant": {
+            "epoch_nanoseconds": 150,
+            "type": "utc_instant"
+          },
+          "phase": {
+            "code": "market_data",
+            "rank": 20,
+            "type": "timeline_phase"
+          },
+          "source_sequence": {
+            "type": "source_sequence",
+            "value": 1
+          },
+          "type": "simulation_instant"
+        },
+        "max_event_time": {
+          "epoch_nanoseconds": 140,
+          "type": "utc_instant"
+        },
+        "query": {
+          "capability": {
+            "key": "price_bars",
+            "type": "market_bundle_capability",
+            "version": 1
+          },
+          "dataset_key": "bars.1m",
+          "instrument_id": {
+            "stable_key": "asset-a",
+            "type": "instrument_id",
+            "venue": "test"
+          },
+          "purpose": {
+            "key": "bar.ohlcv",
+            "purpose_hash": "sha256:269ed047b5bf12e4e1963f7ebf704ebe502580285731bd3fde184b2e66afc59f",
+            "schema_version": 1,
+            "type": "observation_purpose_ref",
+            "version": 1
+          },
+          "query_hash": "sha256:fe6f9764c5c454740497a3908197053d0a1618ca2a2ad30ffade86be5f76f03f",
+          "schema_version": 1,
+          "type": "observation_query"
+        },
+        "revision_set_hash": "sha256:43676677d55bdd8d765314b9028f7e3c92e0110da96a2232de5e89bd15a9d8c7",
+        "schema_version": 1,
+        "selected_event_hashes": [
+          "sha256:c5a95f0a6fa238ff249e91d022caa0f3ec84247e2269549902d3d26717a07237",
+          "sha256:8731a5c9db50601ef2133a769677039f27dcf8d16b8fab2a936dd60cd43071b5"
+        ],
+        "selected_observation_keys": [
+          "bar-a",
+          "bar-b"
+        ],
+        "selected_revision_ids": [
+          "source-v1",
+          "source-v1"
+        ],
+        "selected_source_hashes": [
+          "sha256:6261722d612d7631000000000000000000000000000000000000000000000000",
+          "sha256:6261722d622d7631000000000000000000000000000000000000000000000000"
+        ],
+        "trace_hash": "sha256:357423edb18c6cb55b069006a751ad5621a699d1638ba8061873895d422db57d",
+        "type": "observation_causality_trace",
+        "view_hash": "sha256:ede74aec8e2e792cd39e1de9797516d478c3b8087fca36769a72ffca6b54dd49"
+      },
+      "type": "point_in_time_observation_query_result",
+      "view_hash": "sha256:ede74aec8e2e792cd39e1de9797516d478c3b8087fca36769a72ffca6b54dd49"
+    },
+    "schema_version": 1,
+    "type": "point_in_time_observation_query_outcome"
+  },
+  "causality_failures": {
+    "revision_availability_regression": {
+      "failure": {
+        "candidate_record_hashes": [
+          "sha256:50f63128565a7a5efbb903aff2f45d79512397798b2a6c8a1f9fbf9d955cef1f",
+          "sha256:7d650a9a22d60002e12fdbd0af6a02e9135878dc176c9218aadad7391c7c3c09"
+        ],
+        "code": "revision_availability_regression",
+        "decision_instant": {
+          "instant": {
+            "epoch_nanoseconds": 500,
+            "type": "utc_instant"
+          },
+          "phase": {
+            "code": "market_data",
+            "rank": 20,
+            "type": "timeline_phase"
+          },
+          "source_sequence": {
+            "type": "source_sequence",
+            "value": 9
+          },
+          "type": "simulation_instant"
+        },
+        "failure_hash": "sha256:42f6529f5f17137d0f09824a87c64baa3fd819e35d1cf1bf8fc9b76982d52370",
+        "observation_keys": [
+          "regression"
+        ],
+        "query": {
+          "capability": {
+            "key": "price_bars",
+            "type": "market_bundle_capability",
+            "version": 1
+          },
+          "dataset_key": "bars.1m",
+          "instrument_id": {
+            "stable_key": "asset-a",
+            "type": "instrument_id",
+            "venue": "test"
+          },
+          "purpose": {
+            "key": "bar.ohlcv",
+            "purpose_hash": "sha256:269ed047b5bf12e4e1963f7ebf704ebe502580285731bd3fde184b2e66afc59f",
+            "schema_version": 1,
+            "type": "observation_purpose_ref",
+            "version": 1
+          },
+          "query_hash": "sha256:fe6f9764c5c454740497a3908197053d0a1618ca2a2ad30ffade86be5f76f03f",
+          "schema_version": 1,
+          "type": "observation_query"
+        },
+        "revision_ids": [
+          "v1",
+          "v2"
+        ],
+        "schema_version": 1,
+        "type": "observation_causality_failure",
+        "view_hash": "sha256:95a61c9caea9c5cd71262c72f3d37b6ec93d20fb796f004a1e5a2186e9e897b9"
+      },
+      "outcome_hash": "sha256:dd9b7efc77058f5e19ee3b92321e1f793ce0821d7cfc812599493c77e6d95b72",
+      "result": null,
+      "schema_version": 1,
+      "type": "point_in_time_observation_query_outcome"
+    },
+    "revision_chain_conflict": {
+      "failure": {
+        "candidate_record_hashes": [
+          "sha256:250db035f76140c216ec946ef06b874c76ddcafa706a63acde362f293efd645a",
+          "sha256:30770c854f15556021804b9fc48f6240e1adbe2a041f18e49886b91e7b808f02",
+          "sha256:ccd69de137a8215f43eb22a691908c5a0e11c7a8d68f69acbbb4d0323397c964"
+        ],
+        "code": "revision_chain_conflict",
+        "decision_instant": {
+          "instant": {
+            "epoch_nanoseconds": 500,
+            "type": "utc_instant"
+          },
+          "phase": {
+            "code": "market_data",
+            "rank": 20,
+            "type": "timeline_phase"
+          },
+          "source_sequence": {
+            "type": "source_sequence",
+            "value": 9
+          },
+          "type": "simulation_instant"
+        },
+        "failure_hash": "sha256:e6fec55da0d7ac5ee23b6cf630f16688e1a7efa188b8c54f35f4e7403b33011b",
+        "observation_keys": [
+          "branch"
+        ],
+        "query": {
+          "capability": {
+            "key": "price_bars",
+            "type": "market_bundle_capability",
+            "version": 1
+          },
+          "dataset_key": "bars.1m",
+          "instrument_id": {
+            "stable_key": "asset-a",
+            "type": "instrument_id",
+            "venue": "test"
+          },
+          "purpose": {
+            "key": "bar.ohlcv",
+            "purpose_hash": "sha256:269ed047b5bf12e4e1963f7ebf704ebe502580285731bd3fde184b2e66afc59f",
+            "schema_version": 1,
+            "type": "observation_purpose_ref",
+            "version": 1
+          },
+          "query_hash": "sha256:fe6f9764c5c454740497a3908197053d0a1618ca2a2ad30ffade86be5f76f03f",
+          "schema_version": 1,
+          "type": "observation_query"
+        },
+        "revision_ids": [
+          "v1",
+          "v2a",
+          "v2b"
+        ],
+        "schema_version": 1,
+        "type": "observation_causality_failure",
+        "view_hash": "sha256:1b8fb03ce889bae7308b962ff031c9a47d6247f46fbe58940b56e56811883ec0"
+      },
+      "outcome_hash": "sha256:031e66f4dbfaad930f03e1ad5f448fec39e095b7aab85329068eaef79e0100f8",
+      "result": null,
+      "schema_version": 1,
+      "type": "point_in_time_observation_query_outcome"
+    },
+    "revision_context_mismatch": {
+      "failure": {
+        "candidate_record_hashes": [
+          "sha256:169f11077ca89608369c3f0177bf3a5c39e23c1cedd0455d2ad071e033ac4877",
+          "sha256:9fd388aa79db99774644f674cfd91b4c13526f750bf4a8970194962029b8a0c7"
+        ],
+        "code": "revision_context_mismatch",
+        "decision_instant": {
+          "instant": {
+            "epoch_nanoseconds": 500,
+            "type": "utc_instant"
+          },
+          "phase": {
+            "code": "market_data",
+            "rank": 20,
+            "type": "timeline_phase"
+          },
+          "source_sequence": {
+            "type": "source_sequence",
+            "value": 9
+          },
+          "type": "simulation_instant"
+        },
+        "failure_hash": "sha256:0428f35c01250fd880065f4e889a4d56656aea89b5609401f19abd1f8182c838",
+        "observation_keys": [
+          "context"
+        ],
+        "query": {
+          "capability": {
+            "key": "price_bars",
+            "type": "market_bundle_capability",
+            "version": 1
+          },
+          "dataset_key": "bars.1m",
+          "instrument_id": {
+            "stable_key": "asset-a",
+            "type": "instrument_id",
+            "venue": "test"
+          },
+          "purpose": {
+            "key": "bar.ohlcv",
+            "purpose_hash": "sha256:269ed047b5bf12e4e1963f7ebf704ebe502580285731bd3fde184b2e66afc59f",
+            "schema_version": 1,
+            "type": "observation_purpose_ref",
+            "version": 1
+          },
+          "query_hash": "sha256:fe6f9764c5c454740497a3908197053d0a1618ca2a2ad30ffade86be5f76f03f",
+          "schema_version": 1,
+          "type": "observation_query"
+        },
+        "revision_ids": [
+          "v1",
+          "v2"
+        ],
+        "schema_version": 1,
+        "type": "observation_causality_failure",
+        "view_hash": "sha256:f8667cff32db52a540dfca0bc3c42af16d7e35d99b24ff64ae185d0f065f6f3f"
+      },
+      "outcome_hash": "sha256:e4d41c53cb8415a355db356e3493da40919d3913806fb085a931fcf34d0e8dfd",
+      "result": null,
+      "schema_version": 1,
+      "type": "point_in_time_observation_query_outcome"
+    },
+    "revision_id_conflict": {
+      "failure": {
+        "candidate_record_hashes": [
+          "sha256:6453a6986aa8c4366fa4520004bd3aa89adf654a7b9fcd83ec49c76de1f015b8",
+          "sha256:6b218618e1384b6cc2a681f7f0173dba99200e70d5716ba09c148ee35794c6eb"
+        ],
+        "code": "revision_id_conflict",
+        "decision_instant": {
+          "instant": {
+            "epoch_nanoseconds": 500,
+            "type": "utc_instant"
+          },
+          "phase": {
+            "code": "market_data",
+            "rank": 20,
+            "type": "timeline_phase"
+          },
+          "source_sequence": {
+            "type": "source_sequence",
+            "value": 9
+          },
+          "type": "simulation_instant"
+        },
+        "failure_hash": "sha256:dbc326e58bfc2372bef7eecd61ee99b2f4cebc51ddbd160291447843df08a86d",
+        "observation_keys": [
+          "conflict"
+        ],
+        "query": {
+          "capability": {
+            "key": "price_bars",
+            "type": "market_bundle_capability",
+            "version": 1
+          },
+          "dataset_key": "bars.1m",
+          "instrument_id": {
+            "stable_key": "asset-a",
+            "type": "instrument_id",
+            "venue": "test"
+          },
+          "purpose": {
+            "key": "bar.ohlcv",
+            "purpose_hash": "sha256:269ed047b5bf12e4e1963f7ebf704ebe502580285731bd3fde184b2e66afc59f",
+            "schema_version": 1,
+            "type": "observation_purpose_ref",
+            "version": 1
+          },
+          "query_hash": "sha256:fe6f9764c5c454740497a3908197053d0a1618ca2a2ad30ffade86be5f76f03f",
+          "schema_version": 1,
+          "type": "observation_query"
+        },
+        "revision_ids": [
+          "v1",
+          "v1"
+        ],
+        "schema_version": 1,
+        "type": "observation_causality_failure",
+        "view_hash": "sha256:8c1438de7902131b3a0c8d5b9662be10d1bd5ee74cbe554cb5e8e7c9e6f0922e"
+      },
+      "outcome_hash": "sha256:b21cec49cc574dca74b201889385b1a673c60855684b3864409ffa70f7bf9259",
+      "result": null,
+      "schema_version": 1,
+      "type": "point_in_time_observation_query_outcome"
+    },
+    "revision_parent_missing": {
+      "failure": {
+        "candidate_record_hashes": [
+          "sha256:5f828f982d44a109ce3a9bb88c0a47bcbd0c3bb7a8c612797c30bf6ab1251f8f"
+        ],
+        "code": "revision_parent_missing",
+        "decision_instant": {
+          "instant": {
+            "epoch_nanoseconds": 500,
+            "type": "utc_instant"
+          },
+          "phase": {
+            "code": "market_data",
+            "rank": 20,
+            "type": "timeline_phase"
+          },
+          "source_sequence": {
+            "type": "source_sequence",
+            "value": 9
+          },
+          "type": "simulation_instant"
+        },
+        "failure_hash": "sha256:ffb0d0af3e30169351e7a32d4d7b09d77a17ebe9b01c07c5dd6f8df36cce3a00",
+        "observation_keys": [
+          "missing"
+        ],
+        "query": {
+          "capability": {
+            "key": "price_bars",
+            "type": "market_bundle_capability",
+            "version": 1
+          },
+          "dataset_key": "bars.1m",
+          "instrument_id": {
+            "stable_key": "asset-a",
+            "type": "instrument_id",
+            "venue": "test"
+          },
+          "purpose": {
+            "key": "bar.ohlcv",
+            "purpose_hash": "sha256:269ed047b5bf12e4e1963f7ebf704ebe502580285731bd3fde184b2e66afc59f",
+            "schema_version": 1,
+            "type": "observation_purpose_ref",
+            "version": 1
+          },
+          "query_hash": "sha256:fe6f9764c5c454740497a3908197053d0a1618ca2a2ad30ffade86be5f76f03f",
+          "schema_version": 1,
+          "type": "observation_query"
+        },
+        "revision_ids": [
+          "v2"
+        ],
+        "schema_version": 1,
+        "type": "observation_causality_failure",
+        "view_hash": "sha256:5b66496bab302245857d9139027fb26e63d9727f0b15474e9ce4ecdea83004d2"
+      },
+      "outcome_hash": "sha256:daf4db915a3f93b9120a6eda07ae16ce1cfa49fbc90ed1e12c41a3f46049dc49",
+      "result": null,
+      "schema_version": 1,
+      "type": "point_in_time_observation_query_outcome"
+    }
+  },
+  "empty_success": {
+    "failure": null,
+    "outcome_hash": "sha256:0a8714a5b0d34aa2c6b58e5b89e1728de085732a4f7bfae6560295f2872384ef",
+    "result": {
+      "decision_instant": {
+        "instant": {
+          "epoch_nanoseconds": 500,
+          "type": "utc_instant"
+        },
+        "phase": {
+          "code": "market_data",
+          "rank": 20,
+          "type": "timeline_phase"
+        },
+        "source_sequence": {
+          "type": "source_sequence",
+          "value": 9
+        },
+        "type": "simulation_instant"
+      },
+      "events": [],
+      "query": {
+        "capability": {
+          "key": "price_bars",
+          "type": "market_bundle_capability",
+          "version": 1
+        },
+        "dataset_key": "bars.empty",
+        "instrument_id": {
+          "stable_key": "asset-a",
+          "type": "instrument_id",
+          "venue": "test"
+        },
+        "purpose": {
+          "key": "bar.ohlcv",
+          "purpose_hash": "sha256:269ed047b5bf12e4e1963f7ebf704ebe502580285731bd3fde184b2e66afc59f",
+          "schema_version": 1,
+          "type": "observation_purpose_ref",
+          "version": 1
+        },
+        "query_hash": "sha256:23d37176d22bb944b1aeaf5b71fba14ffe3b00013205214a1bb1c3e91745ade5",
+        "schema_version": 1,
+        "type": "observation_query"
+      },
+      "result_hash": "sha256:255d3d2674f6af17fe155b3eafcd7b14061374207b89c72c4b10afcf82d31ad5",
+      "schema_version": 1,
+      "trace": {
+        "candidate_record_hashes": [],
+        "dataset_hash": "sha256:d54d30f628bc5ab30afdc41ac70d8164e4e65d642030663a881050fe895b8360",
+        "decision_instant": {
+          "instant": {
+            "epoch_nanoseconds": 500,
+            "type": "utc_instant"
+          },
+          "phase": {
+            "code": "market_data",
+            "rank": 20,
+            "type": "timeline_phase"
+          },
+          "source_sequence": {
+            "type": "source_sequence",
+            "value": 9
+          },
+          "type": "simulation_instant"
+        },
+        "event_count": 0,
+        "max_available_instant": null,
+        "max_event_time": null,
+        "query": {
+          "capability": {
+            "key": "price_bars",
+            "type": "market_bundle_capability",
+            "version": 1
+          },
+          "dataset_key": "bars.empty",
+          "instrument_id": {
+            "stable_key": "asset-a",
+            "type": "instrument_id",
+            "venue": "test"
+          },
+          "purpose": {
+            "key": "bar.ohlcv",
+            "purpose_hash": "sha256:269ed047b5bf12e4e1963f7ebf704ebe502580285731bd3fde184b2e66afc59f",
+            "schema_version": 1,
+            "type": "observation_purpose_ref",
+            "version": 1
+          },
+          "query_hash": "sha256:23d37176d22bb944b1aeaf5b71fba14ffe3b00013205214a1bb1c3e91745ade5",
+          "schema_version": 1,
+          "type": "observation_query"
+        },
+        "revision_set_hash": "sha256:0e9886097a5593f434ea03343fc282185a75162066a52063598b2db6e65e5977",
+        "schema_version": 1,
+        "selected_event_hashes": [],
+        "selected_observation_keys": [],
+        "selected_revision_ids": [],
+        "selected_source_hashes": [],
+        "trace_hash": "sha256:bbb5dca4acc1a215ba21bd72c96d0a9377bba7f55c4028712ffba2d8f57e77b8",
+        "type": "observation_causality_trace",
+        "view_hash": "sha256:18711edb8d1700311f3fa1aa6564256d815851597021a7a8690af7a5f45532a8"
+      },
+      "type": "point_in_time_observation_query_result",
+      "view_hash": "sha256:18711edb8d1700311f3fa1aa6564256d815851597021a7a8690af7a5f45532a8"
+    },
+    "schema_version": 1,
+    "type": "point_in_time_observation_query_outcome"
+  },
+  "fixture_id": "observation-revision-causality-v1",
+  "forgery_controls": {
+    "dataset_hash": true,
+    "future_result": true,
+    "trace_context": true
+  },
+  "future_and_unauthorized_noninterference": {
+    "outcome_hash_matches": true,
+    "view_hash_matches": true
+  },
+  "input_order_repeat_parity": {
+    "failure_precedence_matches": true,
+    "outcome_hash_matches": true,
+    "view_hash_matches": true
+  },
+  "limitations": [
+    "no_universe_semantics",
+    "no_window_or_gap_classification",
+    "no_strategy_invocation",
+    "no_aggregate_decision_audit"
+  ],
+  "schema_version": 1
+}

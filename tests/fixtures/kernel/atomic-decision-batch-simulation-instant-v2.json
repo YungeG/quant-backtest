@@ -1,0 +1,530 @@
+{
+  "first_batch": {
+    "decision_batch_id": "decision-batch-v2:sha256:64e6b8d85a843b05d25b43d0c850463395e58571db1886b34a794c342d6612fa",
+    "decision_instant": {
+      "instant": {
+        "epoch_nanoseconds": 100,
+        "type": "utc_instant"
+      },
+      "phase": {
+        "code": "decision",
+        "rank": 60,
+        "type": "timeline_phase"
+      },
+      "source_sequence": {
+        "type": "source_sequence",
+        "value": 1
+      },
+      "type": "simulation_instant"
+    },
+    "decision_time": {
+      "epoch_nanoseconds": 100,
+      "type": "utc_instant"
+    },
+    "decisions": [
+      {
+        "confidence": null,
+        "decision_instant": {
+          "instant": {
+            "epoch_nanoseconds": 100,
+            "type": "utc_instant"
+          },
+          "phase": {
+            "code": "decision",
+            "rank": 60,
+            "type": "timeline_phase"
+          },
+          "source_sequence": {
+            "type": "source_sequence",
+            "value": 1
+          },
+          "type": "simulation_instant"
+        },
+        "decision_time": {
+          "epoch_nanoseconds": 100,
+          "type": "utc_instant"
+        },
+        "evidence": {
+          "model_revision": "sha256:model-v1"
+        },
+        "observed_through": {
+          "epoch_nanoseconds": 99,
+          "type": "utc_instant"
+        },
+        "reason": "scheduled rebalance",
+        "strategy_id": "carry-v1",
+        "target_snapshot": {
+          "effective_time": {
+            "epoch_nanoseconds": 100,
+            "type": "utc_instant"
+          },
+          "expires_at": {
+            "epoch_nanoseconds": 200,
+            "type": "utc_instant"
+          },
+          "sleeve_id": {
+            "type": "strategy_sleeve_id",
+            "value": "carry.primary"
+          },
+          "targets": [
+            {
+              "instrument_id": {
+                "stable_key": "linear_perpetual:eth-usdt",
+                "type": "instrument_id",
+                "venue": "binance_usdm"
+              },
+              "scale": 12,
+              "type": "target_exposure_fraction",
+              "units": -250000000000
+            }
+          ],
+          "type": "target_snapshot"
+        },
+        "type": "strategy_decision"
+      },
+      {
+        "confidence": null,
+        "decision_instant": {
+          "instant": {
+            "epoch_nanoseconds": 100,
+            "type": "utc_instant"
+          },
+          "phase": {
+            "code": "decision",
+            "rank": 60,
+            "type": "timeline_phase"
+          },
+          "source_sequence": {
+            "type": "source_sequence",
+            "value": 1
+          },
+          "type": "simulation_instant"
+        },
+        "decision_time": {
+          "epoch_nanoseconds": 100,
+          "type": "utc_instant"
+        },
+        "evidence": {
+          "model_revision": "sha256:model-v1"
+        },
+        "observed_through": {
+          "epoch_nanoseconds": 99,
+          "type": "utc_instant"
+        },
+        "reason": "scheduled rebalance",
+        "strategy_id": "trend-v1",
+        "target_snapshot": {
+          "effective_time": {
+            "epoch_nanoseconds": 100,
+            "type": "utc_instant"
+          },
+          "expires_at": {
+            "epoch_nanoseconds": 200,
+            "type": "utc_instant"
+          },
+          "sleeve_id": {
+            "type": "strategy_sleeve_id",
+            "value": "trend.primary"
+          },
+          "targets": [
+            {
+              "instrument_id": {
+                "stable_key": "linear_perpetual:btc-usdt",
+                "type": "instrument_id",
+                "venue": "binance_usdm"
+              },
+              "scale": 12,
+              "type": "target_exposure_fraction",
+              "units": 500000000000
+            }
+          ],
+          "type": "target_snapshot"
+        },
+        "type": "strategy_decision"
+      }
+    ],
+    "type": "decision_batch"
+  },
+  "first_batch_sha256": "sha256:ac0e28ceaa351164b7e9ad304d3770537d615ca5e8220915861216c8ace47cf9",
+  "first_state": {
+    "as_of": {
+      "epoch_nanoseconds": 100,
+      "type": "utc_instant"
+    },
+    "as_of_instant": {
+      "instant": {
+        "epoch_nanoseconds": 100,
+        "type": "utc_instant"
+      },
+      "phase": {
+        "code": "decision",
+        "rank": 60,
+        "type": "timeline_phase"
+      },
+      "source_sequence": {
+        "type": "source_sequence",
+        "value": 1
+      },
+      "type": "simulation_instant"
+    },
+    "decisions": [
+      {
+        "confidence": null,
+        "decision_instant": {
+          "instant": {
+            "epoch_nanoseconds": 100,
+            "type": "utc_instant"
+          },
+          "phase": {
+            "code": "decision",
+            "rank": 60,
+            "type": "timeline_phase"
+          },
+          "source_sequence": {
+            "type": "source_sequence",
+            "value": 1
+          },
+          "type": "simulation_instant"
+        },
+        "decision_time": {
+          "epoch_nanoseconds": 100,
+          "type": "utc_instant"
+        },
+        "evidence": {
+          "model_revision": "sha256:model-v1"
+        },
+        "observed_through": {
+          "epoch_nanoseconds": 99,
+          "type": "utc_instant"
+        },
+        "reason": "scheduled rebalance",
+        "strategy_id": "carry-v1",
+        "target_snapshot": {
+          "effective_time": {
+            "epoch_nanoseconds": 100,
+            "type": "utc_instant"
+          },
+          "expires_at": {
+            "epoch_nanoseconds": 200,
+            "type": "utc_instant"
+          },
+          "sleeve_id": {
+            "type": "strategy_sleeve_id",
+            "value": "carry.primary"
+          },
+          "targets": [
+            {
+              "instrument_id": {
+                "stable_key": "linear_perpetual:eth-usdt",
+                "type": "instrument_id",
+                "venue": "binance_usdm"
+              },
+              "scale": 12,
+              "type": "target_exposure_fraction",
+              "units": -250000000000
+            }
+          ],
+          "type": "target_snapshot"
+        },
+        "type": "strategy_decision"
+      },
+      {
+        "confidence": null,
+        "decision_instant": {
+          "instant": {
+            "epoch_nanoseconds": 100,
+            "type": "utc_instant"
+          },
+          "phase": {
+            "code": "decision",
+            "rank": 60,
+            "type": "timeline_phase"
+          },
+          "source_sequence": {
+            "type": "source_sequence",
+            "value": 1
+          },
+          "type": "simulation_instant"
+        },
+        "decision_time": {
+          "epoch_nanoseconds": 100,
+          "type": "utc_instant"
+        },
+        "evidence": {
+          "model_revision": "sha256:model-v1"
+        },
+        "observed_through": {
+          "epoch_nanoseconds": 99,
+          "type": "utc_instant"
+        },
+        "reason": "scheduled rebalance",
+        "strategy_id": "trend-v1",
+        "target_snapshot": {
+          "effective_time": {
+            "epoch_nanoseconds": 100,
+            "type": "utc_instant"
+          },
+          "expires_at": {
+            "epoch_nanoseconds": 200,
+            "type": "utc_instant"
+          },
+          "sleeve_id": {
+            "type": "strategy_sleeve_id",
+            "value": "trend.primary"
+          },
+          "targets": [
+            {
+              "instrument_id": {
+                "stable_key": "linear_perpetual:btc-usdt",
+                "type": "instrument_id",
+                "venue": "binance_usdm"
+              },
+              "scale": 12,
+              "type": "target_exposure_fraction",
+              "units": 500000000000
+            }
+          ],
+          "type": "target_snapshot"
+        },
+        "type": "strategy_decision"
+      }
+    ],
+    "type": "latest_sleeve_decision_state"
+  },
+  "first_state_sha256": "sha256:d5130418ac8c8175c8c8d6366550a68a07f11e13e1c92148b968b19adf79dbbc",
+  "fixture_id": "atomic-decision-batch-simulation-instant-v2",
+  "later_batch": {
+    "decision_batch_id": "decision-batch-v2:sha256:68969521f6054090b136ad508dea8630def135221671c0a8fce83fc65a4d48c3",
+    "decision_instant": {
+      "instant": {
+        "epoch_nanoseconds": 100,
+        "type": "utc_instant"
+      },
+      "phase": {
+        "code": "decision",
+        "rank": 60,
+        "type": "timeline_phase"
+      },
+      "source_sequence": {
+        "type": "source_sequence",
+        "value": 2
+      },
+      "type": "simulation_instant"
+    },
+    "decision_time": {
+      "epoch_nanoseconds": 100,
+      "type": "utc_instant"
+    },
+    "decisions": [
+      {
+        "confidence": null,
+        "decision_instant": {
+          "instant": {
+            "epoch_nanoseconds": 100,
+            "type": "utc_instant"
+          },
+          "phase": {
+            "code": "decision",
+            "rank": 60,
+            "type": "timeline_phase"
+          },
+          "source_sequence": {
+            "type": "source_sequence",
+            "value": 2
+          },
+          "type": "simulation_instant"
+        },
+        "decision_time": {
+          "epoch_nanoseconds": 100,
+          "type": "utc_instant"
+        },
+        "evidence": {
+          "model_revision": "sha256:model-v1"
+        },
+        "observed_through": {
+          "epoch_nanoseconds": 99,
+          "type": "utc_instant"
+        },
+        "reason": "scheduled rebalance",
+        "strategy_id": "trend-v1",
+        "target_snapshot": {
+          "effective_time": {
+            "epoch_nanoseconds": 100,
+            "type": "utc_instant"
+          },
+          "expires_at": {
+            "epoch_nanoseconds": 200,
+            "type": "utc_instant"
+          },
+          "sleeve_id": {
+            "type": "strategy_sleeve_id",
+            "value": "trend.primary"
+          },
+          "targets": [
+            {
+              "instrument_id": {
+                "stable_key": "linear_perpetual:btc-usdt",
+                "type": "instrument_id",
+                "venue": "binance_usdm"
+              },
+              "scale": 12,
+              "type": "target_exposure_fraction",
+              "units": 750000000000
+            }
+          ],
+          "type": "target_snapshot"
+        },
+        "type": "strategy_decision"
+      }
+    ],
+    "type": "decision_batch"
+  },
+  "later_batch_sha256": "sha256:7bdf1bc4d1bbfa6c8e6e95d66131c3b12e9f3e0cf1460930ad9a4562e04023da",
+  "later_state": {
+    "as_of": {
+      "epoch_nanoseconds": 100,
+      "type": "utc_instant"
+    },
+    "as_of_instant": {
+      "instant": {
+        "epoch_nanoseconds": 100,
+        "type": "utc_instant"
+      },
+      "phase": {
+        "code": "decision",
+        "rank": 60,
+        "type": "timeline_phase"
+      },
+      "source_sequence": {
+        "type": "source_sequence",
+        "value": 2
+      },
+      "type": "simulation_instant"
+    },
+    "decisions": [
+      {
+        "confidence": null,
+        "decision_instant": {
+          "instant": {
+            "epoch_nanoseconds": 100,
+            "type": "utc_instant"
+          },
+          "phase": {
+            "code": "decision",
+            "rank": 60,
+            "type": "timeline_phase"
+          },
+          "source_sequence": {
+            "type": "source_sequence",
+            "value": 1
+          },
+          "type": "simulation_instant"
+        },
+        "decision_time": {
+          "epoch_nanoseconds": 100,
+          "type": "utc_instant"
+        },
+        "evidence": {
+          "model_revision": "sha256:model-v1"
+        },
+        "observed_through": {
+          "epoch_nanoseconds": 99,
+          "type": "utc_instant"
+        },
+        "reason": "scheduled rebalance",
+        "strategy_id": "carry-v1",
+        "target_snapshot": {
+          "effective_time": {
+            "epoch_nanoseconds": 100,
+            "type": "utc_instant"
+          },
+          "expires_at": {
+            "epoch_nanoseconds": 200,
+            "type": "utc_instant"
+          },
+          "sleeve_id": {
+            "type": "strategy_sleeve_id",
+            "value": "carry.primary"
+          },
+          "targets": [
+            {
+              "instrument_id": {
+                "stable_key": "linear_perpetual:eth-usdt",
+                "type": "instrument_id",
+                "venue": "binance_usdm"
+              },
+              "scale": 12,
+              "type": "target_exposure_fraction",
+              "units": -250000000000
+            }
+          ],
+          "type": "target_snapshot"
+        },
+        "type": "strategy_decision"
+      },
+      {
+        "confidence": null,
+        "decision_instant": {
+          "instant": {
+            "epoch_nanoseconds": 100,
+            "type": "utc_instant"
+          },
+          "phase": {
+            "code": "decision",
+            "rank": 60,
+            "type": "timeline_phase"
+          },
+          "source_sequence": {
+            "type": "source_sequence",
+            "value": 2
+          },
+          "type": "simulation_instant"
+        },
+        "decision_time": {
+          "epoch_nanoseconds": 100,
+          "type": "utc_instant"
+        },
+        "evidence": {
+          "model_revision": "sha256:model-v1"
+        },
+        "observed_through": {
+          "epoch_nanoseconds": 99,
+          "type": "utc_instant"
+        },
+        "reason": "scheduled rebalance",
+        "strategy_id": "trend-v1",
+        "target_snapshot": {
+          "effective_time": {
+            "epoch_nanoseconds": 100,
+            "type": "utc_instant"
+          },
+          "expires_at": {
+            "epoch_nanoseconds": 200,
+            "type": "utc_instant"
+          },
+          "sleeve_id": {
+            "type": "strategy_sleeve_id",
+            "value": "trend.primary"
+          },
+          "targets": [
+            {
+              "instrument_id": {
+                "stable_key": "linear_perpetual:btc-usdt",
+                "type": "instrument_id",
+                "venue": "binance_usdm"
+              },
+              "scale": 12,
+              "type": "target_exposure_fraction",
+              "units": 750000000000
+            }
+          ],
+          "type": "target_snapshot"
+        },
+        "type": "strategy_decision"
+      }
+    ],
+    "type": "latest_sleeve_decision_state"
+  },
+  "later_state_sha256": "sha256:ea34311a0468f8d53d6c33a8ebd4fccaed25c47e55554bea66c8e6b0d01d93b6",
+  "schema_version": 2
+}

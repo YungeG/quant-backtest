@@ -1,0 +1,68 @@
+{
+  "authority_status": "CAPTURED_NOT_QUALIFIED",
+  "content_type": "text/html",
+  "curl_exit_code": 0,
+  "curl_stderr": "",
+  "derivatives": {
+    "rendered_dom": {
+      "available": false,
+      "reason": "No browser renderer is installed in the acquisition environment; raw server response and deterministic text extraction retained."
+    },
+    "text_extraction": {
+      "charset": "utf-8",
+      "decode_errors": false
+    }
+  },
+  "final_url": "https://www.ndrc.gov.cn/xxgk/wjk/index.html?tab=all&qt=%E8%AF%81%E5%88%B8%E6%9C%9F%E8%B4%A7%E4%B8%9A%E7%9B%91%E7%AE%A1%E8%B4%B9",
+  "lineage": "securities_regulatory",
+  "operator_harness_sha256": "sha256:85ccf78ce0d595ff9d372c85243d81c49c3bc1be19f868df5936cc2f6977d9ea",
+  "raw_byte_length": 14309,
+  "raw_file": "raw.html",
+  "raw_sha256": "sha256:df653fb51762252924ac3788e6282ff2bcd0d45f41ee7ccc3fe65def6531a638",
+  "redirect_count": 0,
+  "response_chain_count": 1,
+  "response_code": 200,
+  "retrieved_at": "2026-08-20T07:37:15.897501Z",
+  "scanner_sensitive_exact_bytes": {
+    "exact_private_byte_length": 14309,
+    "exact_private_path": "/srv/bcache-8t/ygguo/backtest/g12h-authority-private/20260820-wave1-scanner-sensitive-exact-bytes/securities_regulatory/ndrc-document-library-regulatory-query-live/raw.html",
+    "exact_private_sha256": "sha256:df653fb51762252924ac3788e6282ff2bcd0d45f41ee7ccc3fe65def6531a638",
+    "redaction": "Public client-side NDRC search key replaced by its SHA-256 in Git to satisfy secret scanning; exact official bytes retained externally.",
+    "tracked_path": "securities_regulatory/ndrc-document-library-regulatory-query-live/raw.html",
+    "tracked_redacted_byte_length": 14409,
+    "tracked_redacted_sha256": "sha256:4c3e6988c56744c8360e4490914b63c90d0ad73a8136c18d05b1764db5210cff"
+  },
+  "schema_version": 1,
+  "sensitive_response_headers": {
+    "files": [
+      {
+        "exact_private_path": "/srv/bcache-8t/ygguo/backtest/g12h-authority-private/20260820-wave1-response-headers/securities_regulatory/ndrc-document-library-regulatory-query-live/response.headers",
+        "exact_private_sha256": "sha256:1629cabc37a2cc8227579cb38bebf971f0c7e3c895264c602a425d2a80cc8d8a",
+        "redaction": "Set-Cookie value replaced by its SHA-256; cookie name and attributes retained.",
+        "tracked_path": "securities_regulatory/ndrc-document-library-regulatory-query-live/response.headers",
+        "tracked_redacted_sha256": "sha256:f96a7665eb7517e80146eeee5c28b1c426e6625c9c6e987e4a4da9b143f1aae6"
+      },
+      {
+        "exact_private_path": "/srv/bcache-8t/ygguo/backtest/g12h-authority-private/20260820-wave1-response-headers/securities_regulatory/ndrc-document-library-regulatory-query-live/transport.log",
+        "exact_private_sha256": "sha256:d1cbfc1c76cd01e561c4a7ff7ba83b50285d5784cda731664b5746e7b1152191",
+        "redaction": "Set-Cookie value replaced by its SHA-256; cookie name and attributes retained.",
+        "tracked_path": "securities_regulatory/ndrc-document-library-regulatory-query-live/transport.log",
+        "tracked_redacted_sha256": "sha256:335542b1660424607b533ed1421168cac6c4b21d16291af178badd3efabb29f9"
+      },
+      {
+        "exact_private_path": "/srv/bcache-8t/ygguo/backtest/g12h-authority-private/20260820-wave1-response-headers/securities_regulatory/ndrc-document-library-regulatory-query-live/redirects.json",
+        "exact_private_sha256": "sha256:d5392e5d2db202ee339fa8ed9c78a9fb9003ad3f2698f39728bc320d50c9d958",
+        "redaction": "Set-Cookie value replaced by its SHA-256; cookie name and attributes retained.",
+        "tracked_path": "securities_regulatory/ndrc-document-library-regulatory-query-live/redirects.json",
+        "tracked_redacted_sha256": "sha256:887d41d0962c57672d2bf7eafbfd4c09fc0de35b26d1d1b82fbb766397b0c708"
+      }
+    ],
+    "policy": "Exact server-issued cookie values are excluded from Git and retained in the mode-restricted private evidence store."
+  },
+  "source_id": "ndrc-document-library-regulatory-query-live",
+  "started_at": "2026-08-20T07:37:15.700431Z",
+  "tool": "curl 8.14.1 (x86_64-pc-linux-gnu) libcurl/8.14.1 OpenSSL/3.5.6 zlib/1.3.1 brotli/1.1.0 zstd/1.5.7 libidn2/2.3.8 libpsl/0.21.2 libssh2/1.11.1 nghttp2/1.64.0 nghttp3/1.8.0 librtmp/2.3 OpenLDAP/2.6.10",
+  "tracked_raw_byte_length": 14409,
+  "tracked_raw_sha256": "sha256:4c3e6988c56744c8360e4490914b63c90d0ad73a8136c18d05b1764db5210cff",
+  "type": "g12h_official_http_capture_receipt_v1"
+}

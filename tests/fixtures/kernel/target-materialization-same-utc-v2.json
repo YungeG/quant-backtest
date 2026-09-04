@@ -1,0 +1,63 @@
+{
+  "active_target": {
+    "materialized_at": {
+      "epoch_nanoseconds": 100,
+      "type": "utc_instant"
+    },
+    "materialized_instant": {
+      "instant": {
+        "epoch_nanoseconds": 100,
+        "type": "utc_instant"
+      },
+      "phase": {
+        "code": "decision",
+        "rank": 60,
+        "type": "timeline_phase"
+      },
+      "source_sequence": {
+        "type": "source_sequence",
+        "value": 2
+      },
+      "type": "simulation_instant"
+    },
+    "quantities": [
+      {
+        "instrument_id": {
+          "stable_key": "cash:btc-usd",
+          "type": "instrument_id",
+          "venue": "synthetic"
+        },
+        "quantity": {
+          "instrument_id": "synthetic:cash:btc-usd",
+          "scale": 3,
+          "type": "quantity",
+          "units": 20000
+        }
+      },
+      {
+        "instrument_id": {
+          "stable_key": "cash:eth-usd",
+          "type": "instrument_id",
+          "venue": "synthetic"
+        },
+        "quantity": {
+          "instrument_id": "synthetic:cash:eth-usd",
+          "scale": 3,
+          "type": "quantity",
+          "units": 4000
+        }
+      }
+    ],
+    "source_decision_batch_id": "decision-batch-v2:sha256:279189379e08e623c538c4171a170c8cec147cfd1d24789d6c7366c7179e41e1",
+    "type": "active_portfolio_target"
+  },
+  "allocation_hash": "sha256:a8640a988218fc5783e434b9a832d1f10bff305aca429eca11a7d079f87705af",
+  "approved_target_hash": "sha256:5c8969de22c5409d34a9816b35a60f15405993bfc2b17643447027e87d3cbbbf",
+  "first_batch_hash": "sha256:5a1d458853d6c158b2829de458041a34c5aed3f741483f494cdba8135adf74a0",
+  "first_state_hash": "sha256:2973cf375db7a87b313f19ade5d43f1c9758ddc564d1c15146f49cdd83e02b78",
+  "fixture_id": "target-materialization-same-utc-v2",
+  "later_batch_hash": "sha256:34fddfda7bb3a0ec51df5409ae35b65ea17184ae65c379bde9cdb2b80f3cf10f",
+  "later_state_hash": "sha256:1b29ad9d1ddd81460c7c5ed7e2e078ea043004e885a9efeec644dc09eec9d22a",
+  "normalized_target_hash": "sha256:802e046f297d026969ceb8d607179dae89bbcd3e52c6b37f88bea9273b7a18ea",
+  "schema_version": 2
+}
