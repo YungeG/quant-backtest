@@ -26,7 +26,7 @@ from .engine import (
     ResolvedOrderAdmission,
     SnapshotProjectionPlan,
 )
-from .execution import NextEligibleBarOpenModel
+from .execution import NextEligibleBarCloseModel, NextEligibleBarOpenModel
 from .financial_dispatch import FillAccountingDispatchPlan, FinancialDispatchPlan
 from .multi_resolution_preparation import MultiResolutionMarketDataPreparation
 from .resolution import BacktestRequest, ResolvedBacktestRequest
@@ -52,7 +52,7 @@ class _ExecutionCasePlan:
     bar_executions: tuple[ResolvedBarExecution, ...]
     financial_state: ResolvedFinancialState
     financial_dispatch_plan: FinancialDispatchPlan
-    execution_model: NextEligibleBarOpenModel
+    execution_model: NextEligibleBarOpenModel | NextEligibleBarCloseModel
     snapshot_plan: SnapshotProjectionPlan
     closeout_policy: MarkToMarketCloseoutPolicy
 
@@ -69,8 +69,8 @@ class _ExecutionCasePlan:
             raise TypeError("financial_state must be exact ResolvedFinancialState")
         if type(self.financial_dispatch_plan) is not FinancialDispatchPlan:
             raise TypeError("financial_dispatch_plan must be exact FinancialDispatchPlan")
-        if type(self.execution_model) is not NextEligibleBarOpenModel:
-            raise TypeError("execution_model must be exact NextEligibleBarOpenModel")
+        if type(self.execution_model) not in {NextEligibleBarOpenModel, NextEligibleBarCloseModel}:
+            raise TypeError("execution_model must be exact NextEligibleBarOpenModel or NextEligibleBarCloseModel")
         if type(self.snapshot_plan) is not SnapshotProjectionPlan:
             raise TypeError("snapshot_plan must be exact SnapshotProjectionPlan")
         if type(self.closeout_policy) is not MarkToMarketCloseoutPolicy:

@@ -41,8 +41,11 @@ from .engine import (
     SnapshotProjectionPlan,
 )
 from .execution import (
+    BarCloseObservation,
     BarLiquidityEvidence,
+    NextBarCloseApplicability,
     NextBarOpenApplicability,
+    NextEligibleBarCloseModel,
     NextEligibleBarOpenModel,
 )
 from .multi_resolution_market_data import (
@@ -388,7 +391,7 @@ class MultiResolutionMarketDataPreparation:
 class MarketDataCaseAuthority:
     decision_cycles: tuple[ResolvedDecisionCycle, ...]
     bar_executions: tuple[ResolvedBarExecution, ...]
-    execution_model: NextEligibleBarOpenModel
+    execution_model: NextEligibleBarOpenModel | NextEligibleBarCloseModel
     snapshot_plan: SnapshotProjectionPlan
     target_stream: PrecomputedTargetStream
 
@@ -401,8 +404,8 @@ class MarketDataCaseAuthority:
             type(value) is not ResolvedBarExecution for value in self.bar_executions
         ):
             raise TypeError("bar_executions must contain exact ResolvedBarExecution")
-        if type(self.execution_model) is not NextEligibleBarOpenModel:
-            raise TypeError("execution_model must be exact NextEligibleBarOpenModel")
+        if type(self.execution_model) not in {NextEligibleBarOpenModel, NextEligibleBarCloseModel}:
+            raise TypeError("execution_model must be exact NextEligibleBarOpenModel or NextEligibleBarCloseModel")
         if type(self.snapshot_plan) is not SnapshotProjectionPlan:
             raise TypeError("snapshot_plan must be exact SnapshotProjectionPlan")
         if type(self.target_stream) is not PrecomputedTargetStream:
@@ -580,16 +583,18 @@ def _bar_execution(value: object) -> ResolvedBarExecution:
     )
 
 
-def _execution_model(value: object) -> NextEligibleBarOpenModel:
-    if type(value) is not NextEligibleBarOpenModel:
-        raise TypeError("execution_model must be exact NextEligibleBarOpenModel")
-    applicability = value.applicability
-    if type(applicability) is not NextBarOpenApplicability:
-        raise TypeError("execution applicability must be exact NextBarOpenApplicability")
-    return NextEligibleBarOpenModel(
-        _component_ref(value.component_ref),
-        NextBarOpenApplicability(applicability.tif_actions),
-    )
+def _execution_model(value: object) -> NextEligibleBarOpenModel | NextEligibleBarCloseModel:
+    if type(value) is NextEligibleBarOpenModel:
+        applicability = value.applicability
+        if type(applicability) is not NextBarOpenApplicability:
+            raise TypeError("execution applicability must be exact NextBarOpenApplicability")
+        return NextEligibleBarOpenModel(_component_ref(value.component_ref), NextBarOpenApplicability(applicability.tif_actions))
+    if type(value) is NextEligibleBarCloseModel:
+        applicability = value.applicability
+        if type(applicability) is not NextBarCloseApplicability:
+            raise TypeError("execution applicability must be exact NextBarCloseApplicability")
+        return NextEligibleBarCloseModel(_component_ref(value.component_ref), NextBarCloseApplicability(applicability.tif_actions))
+    raise TypeError("execution_model must be exact NextEligibleBarOpenModel or NextEligibleBarCloseModel")
 
 
 def _resolved_mark(value: object) -> ResolvedMark:
@@ -994,7 +999,8 @@ def _execution_failure(
         for value in requirements
     ):
         return 0, None
-    events = {value.event_id: value for value in reader.streams[binding.stream_key]}
+    stream_events = reader.streams[binding.stream_key]
+    events = {value.event_id: value for value in stream_events}
     admissions_by_order: dict[object, list[ResolvedOrderAdmission]] = {}
     for cycle in authority.decision_cycles:
         for admission in cycle.admissions:
@@ -1005,6 +1011,9 @@ def _execution_failure(
         state = execution.market_state
         admissions = admissions_by_order.get(execution.order_id, [])
         if event is None or (
+            isinstance(model, NextEligibleBarCloseModel)
+            and not _first_close_after_admission(event, admissions, stream_events)
+        ) or (
             evidence.market_event_id != event.event_id
             or evidence.market_event_hash != event.event_hash
             or evidence.evaluated_at != event.available_time
@@ -1021,6 +1030,29 @@ def _execution_failure(
         ):
             return 0, position
     return None
+
+
+def _first_close_after_admission(
+    event: MarketEvent,
+    admissions: list[ResolvedOrderAdmission],
+    stream_events: tuple[MarketEvent, ...],
+) -> bool:
+    if len(admissions) != 1:
+        return False
+    accepted_at = admissions[0].event_plan[-1].occurred_at.instant
+    try:
+        candidates = [
+            value
+            for value in stream_events
+            if (
+                value.instrument_id == admissions[0].order.intent.instrument_id
+                and value.event_time > accepted_at
+                and BarCloseObservation.from_event(value)
+            )
+        ]
+    except (TypeError, ValueError):
+        return False
+    return bool(candidates) and min(candidates, key=lambda value: value.timeline_instant) == event
 
 
 def _valuation_failure(

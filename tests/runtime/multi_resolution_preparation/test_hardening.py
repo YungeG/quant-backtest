@@ -5,6 +5,8 @@ from dataclasses import fields, replace
 import pytest
 
 from crypto_quant_backtest import (
+    BAR_CLOSE_CAPABILITY,
+    BAR_CLOSE_EVENT_TYPE,
     BarLiquidityEvidence,
     PrecomputedTargetStream,
     TimelineSegment,
@@ -13,6 +15,7 @@ from crypto_quant_backtest.multi_resolution_market_data import ValuationDataBind
 from crypto_quant_backtest.multi_resolution_preparation import (
     MarketDataPreparationFailureCode,
     SignalObservationLineageBinding,
+    _first_close_after_admission,
     prepare_multi_resolution_market_data_v1,
 )
 from crypto_quant_backtest.performance_observations import (
@@ -31,7 +34,7 @@ from crypto_quant_domain import (
     TimelinePhase,
     UtcInstant,
 )
-from crypto_quant_market_data import EventCursor, InMemoryMarketBundleReader
+from crypto_quant_market_data import EventCursor, InMemoryMarketBundleReader, MarketEvent
 
 from tests.runtime.engine._fixtures import (
     bar_event,
@@ -316,6 +319,46 @@ def test_orphan_execution_and_warmup_only_execution_authority_fail_cycle_closure
     _assert_failure(
         values, MarketDataPreparationFailureCode.DECISION_CYCLE_ELIGIBILITY_MISMATCH
     )
+
+
+def test_first_close_after_admission_ignores_other_instruments() -> None:
+    values = prepared_inputs()
+    admissions = list(values["case_authority"].decision_cycles[0].admissions)
+    accepted_at = admissions[0].event_plan[-1].occurred_at.instant.epoch_nanoseconds
+    instrument = admissions[0].order.intent.instrument_id
+
+    def close_event(event_id: str, event_time: int, instrument_id: InstrumentId) -> MarketEvent:
+        return MarketEvent(
+            event_id=event_id,
+            stream_key="bars.close",
+            event_type=BAR_CLOSE_EVENT_TYPE,
+            capability=BAR_CLOSE_CAPABILITY,
+            instrument_id=instrument_id,
+            event_time=UtcInstant(event_time),
+            available_time=UtcInstant(event_time),
+            phase=TimelinePhase(60, "bar_close"),
+            source_sequence=SourceSequence(0),
+            revision_id="rev-1",
+            supersedes_revision_id=None,
+            source_key="fixture.bar-close.v1",
+            source_hash="sha256:" + "75" * 32,
+            payload={
+                "schema_version": 1,
+                "bar_kind": "real",
+                "close_price": {"units": 10_500, "scale": 2, "quote_currency": "USD"},
+                "interval_start": UtcInstant(event_time - 300_000_000_000).to_canonical_dict(),
+                "interval_end_exclusive": UtcInstant(event_time).to_canonical_dict(),
+            },
+        )
+
+    foreign = close_event(
+        "foreign-close",
+        accepted_at + 300_000_000_000,
+        InstrumentId(instrument.venue, "cash:eth-usd"),
+    )
+    expected = close_event("own-close", accepted_at + 600_000_000_000, instrument)
+
+    assert _first_close_after_admission(expected, admissions, (foreign, expected))
 
 
 def test_execution_event_instrument_must_match_admitted_order() -> None:

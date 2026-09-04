@@ -12,7 +12,13 @@ from crypto_quant_backtest import (
     EngineFailureCode,
     EngineStage,
 )
-from crypto_quant_domain import Money, Quantity, Scale, canonical_sha256
+from crypto_quant_domain import (
+    Money,
+    Quantity,
+    Scale,
+    TimelinePhase,
+    canonical_sha256,
+)
 from crypto_quant_trading import (
     FinalFeeApplicability,
     FinalFeeRuleSet,
@@ -65,6 +71,17 @@ def test_engine_runs_target_to_fill_accounting_snapshot_and_run_end() -> None:
     assert not hasattr(result, "semantic_run_id")
     assert not hasattr(result, "attempt_id")
     assert not hasattr(result, "outcome")
+
+
+def test_fill_event_cannot_precede_its_market_event_at_the_same_instant() -> None:
+    case = execution_case()
+    execution = case.bar_executions[0]
+    prior_phase = replace(execution.fill_event_at, phase=TimelinePhase(59, "pre_fill"))
+    outcome = DeterministicBarEngine().run(
+        replace(case, bar_executions=(replace(execution, fill_event_at=prior_phase),))
+    )
+    assert outcome.engine_failure is not None
+    assert outcome.engine_failure.code is EngineFailureCode.CASE_EVIDENCE_MISMATCH
 
 
 def test_zero_fee_assessment_skips_fee_journal_without_changing_positive_path() -> None:

@@ -70,7 +70,9 @@ from .engine import (
 )
 from .execution import (
     BarLiquidityEvidence,
+    NextBarCloseApplicability,
     NextBarOpenApplicability,
+    NextEligibleBarCloseModel,
     NextEligibleBarOpenModel,
     NoEligibleBarAction,
 )
@@ -2457,9 +2459,7 @@ def _read_financial_dispatch_plan(value: object) -> FinancialDispatchPlan:
 
 
 def _read_next_bar_applicability(value: object) -> NextBarOpenApplicability:
-    data = _tagged(
-        "next_bar_open_applicability", value, "next_bar_open_applicability"
-    )
+    data = _tagged("next_bar_open_applicability", value, "next_bar_open_applicability")
     return NextBarOpenApplicability(
         _sequence(
             "tif actions",
@@ -2472,12 +2472,24 @@ def _read_next_bar_applicability(value: object) -> NextBarOpenApplicability:
     )
 
 
+def _read_next_bar_close_applicability(value: object) -> NextBarCloseApplicability:
+    data = _tagged("next_bar_close_applicability", value, "next_bar_close_applicability")
+    return NextBarCloseApplicability(
+        _sequence("tif actions", data["tif_actions"], lambda item: (
+            TimeInForce(_mapping("tif_action", item)["time_in_force"]),
+            NoEligibleBarAction(_mapping("tif_action", item)["action"]),
+        ))
+    )
+
+
 def _read_simulation_port_spec(value: object) -> SimulationPortSpec:
     data = _tagged("simulation_port_spec", value, "simulation_port_spec")
     applicability_value = _mapping("simulation applicability", data["applicability"])
     applicability: SimulationPortContract
     if applicability_value.get("type") == "next_bar_open_applicability":
         applicability = _read_next_bar_applicability(applicability_value)
+    elif applicability_value.get("type") == "next_bar_close_applicability":
+        applicability = _read_next_bar_close_applicability(applicability_value)
     elif applicability_value.get("type") == "run_end_closeout_applicability":
         applicability = _RunEndCloseoutApplicability(
             RunEndCloseoutMode(applicability_value["policy_mode"]),
@@ -2531,13 +2543,14 @@ def _read_execution_case_plan(
     execution_spec = _read_simulation_port_spec(plan["execution_model_spec"])
     snapshot_plan = _read_snapshot_plan(plan["snapshot_plan"])
     closeout_spec = _read_simulation_port_spec(plan["closeout_policy_spec"])
-    if not isinstance(execution_spec, SimulationPortSpec) or not isinstance(
-        execution_spec.applicability, NextBarOpenApplicability
-    ):
-        raise TypeError("execution_model_spec must describe NextEligibleBarOpenModel")
-    execution_model = NextEligibleBarOpenModel.create(
-        actions=execution_spec.applicability.tif_actions
-    )
+    if not isinstance(execution_spec, SimulationPortSpec):
+        raise TypeError("execution_model_spec must be SimulationPortSpec")
+    if isinstance(execution_spec.applicability, NextBarOpenApplicability):
+        execution_model = NextEligibleBarOpenModel.create(actions=execution_spec.applicability.tif_actions)
+    elif isinstance(execution_spec.applicability, NextBarCloseApplicability):
+        execution_model = NextEligibleBarCloseModel.create(actions=execution_spec.applicability.tif_actions)
+    else:
+        raise TypeError("execution_model_spec must describe a supported execution model")
     if execution_model.spec() != execution_spec:
         raise ValueError("execution model spec does not match the concrete runtime model")
     closeout_policy = MarkToMarketCloseoutPolicy()

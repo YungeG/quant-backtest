@@ -101,14 +101,20 @@ from .financial_dispatch import (
     FinancialStateView,
 )
 from .execution import (
+    BAR_CLOSE_CAPABILITY,
     BAR_OPEN_CAPABILITY,
+    BarCloseCandidate,
+    BarCloseObservation,
     BarLiquidityEvidence,
     BarOpenCandidate,
     BarOpenObservation,
     FullFillBuilder,
     FullFillConstructionFailure,
+    NextBarCloseDecision,
+    NextBarCloseRequest,
     NextBarOpenDecision,
     NextBarOpenRequest,
+    NextEligibleBarCloseModel,
     NextEligibleBarOpenModel,
     NoEligibleBarAction,
 )
@@ -984,7 +990,7 @@ class ResolvedExecutionCase:
     bar_executions: tuple[ResolvedBarExecution, ...]
     financial_state: ResolvedFinancialState
     financial_dispatch_plan: FinancialDispatchPlan
-    execution_model: NextEligibleBarOpenModel
+    execution_model: NextEligibleBarOpenModel | NextEligibleBarCloseModel
     snapshot_plan: SnapshotProjectionPlan
     closeout_policy: CloseoutPolicy[
         RunEndCloseoutRequest, RunEndCloseoutDecision, RunEndCloseoutFailure
@@ -1025,8 +1031,8 @@ class ResolvedExecutionCase:
             raise TypeError("financial_dispatch_plan must be FinancialDispatchPlan")
         if self.financial_dispatch_plan.final_snapshot_payload != self.snapshot_plan:
             raise ValueError("financial dispatch final Snapshot payload mismatch")
-        if not isinstance(self.execution_model, NextEligibleBarOpenModel):
-            raise TypeError("execution_model must be NextEligibleBarOpenModel")
+        if not isinstance(self.execution_model, (NextEligibleBarOpenModel, NextEligibleBarCloseModel)):
+            raise TypeError("execution_model must be NextEligibleBarOpenModel or NextEligibleBarCloseModel")
         if not isinstance(self.snapshot_plan, SnapshotProjectionPlan):
             raise TypeError("snapshot_plan must be SnapshotProjectionPlan")
         if not callable(getattr(self.closeout_policy, "spec", None)) or not callable(
@@ -1757,6 +1763,13 @@ class DeterministicBarEngine:
                 EngineFailureCode.MISSING_SCHEDULED_EVENT,
                 missing_cycles + missing_bars + missing_account_events,
             )
+
+        # A close model must see the explicit end-of-window no-candidate branch;
+        # open execution retains its established run-end behavior.
+        if isinstance(case.execution_model, NextEligibleBarCloseModel):
+            failure = self._close_execution_window(case, state)
+            if failure is not None:
+                return failure
 
         # Cursor batch size is an operational read concern, not economic evidence.
         timeline_cursor = case.timeline.resume_cursor(timeline_cursor, batch_size=1)
@@ -2506,6 +2519,33 @@ class DeterministicBarEngine:
             raise ValueError("PreTradeRisk returned invalid success branch")
         return approval, fees, risk.approval
 
+    def _close_execution_window(
+        self, case: ResolvedExecutionCase, state: _EngineState
+    ) -> EngineExecutionOutcome | None:
+        model = cast(NextEligibleBarCloseModel, case.execution_model)
+        occurred_at = SimulationInstant(case.timeline.window.end_exclusive, _FINALIZE_PHASE, SourceSequence(0))
+        for order_id, stream in tuple(state.order_streams.items()):
+            if stream.state is None or stream.state.status not in {OrderStatus.ACCEPTED, OrderStatus.ACTIVE}:
+                continue
+            outcome = model.simulate_execution(NextBarCloseRequest(stream, None, True))
+            if outcome.failure is not None:
+                return self._failed(case, state, EngineFailureCode.EXECUTION_FAILURE, (outcome.failure.code.value,), (canonical_sha256(outcome.failure),))
+            decision = cast(NextBarCloseDecision, outcome.result)
+            self._trace_add(state, EngineStage.EXECUTION_DECISION, occurred_at, order_id, canonical_sha256(decision))
+            if decision.action is not NoEligibleBarAction.EXPIRE:
+                continue
+            expiration = OrderEvent(
+                event_id=f"execution-window-expired:{order_id}",
+                order_id=stream.order.order_id,
+                causation_id=stream.records[-1].event.event_id,
+                event_type=OrderEventType.ORDER_EXPIRED,
+                occurred_at=occurred_at,
+                fill_id=None,
+                evidence_id=decision.decision_id,
+            )
+            state.order_streams[order_id] = stream.append(OrderEventRecord(expiration))
+        return None
+
     def _bar_execution(
         self,
         case: ResolvedExecutionCase,
@@ -2558,29 +2598,16 @@ class DeterministicBarEngine:
             return gate
         market_approval, _, pretrade_approval = gate
         event = timeline_event.event
-        if event.capability != BAR_OPEN_CAPABILITY:
-            return self._failed(
-                case,
-                state,
-                EngineFailureCode.EXECUTION_FAILURE,
-                (event.event_id, event.capability.identity),
-                (event.event_hash,),
-            )
-        observation = BarOpenObservation.from_event(event)
-        candidate = BarOpenCandidate(
-            observation=observation,
-            market_rule_approval=market_approval,
-            pretrade_risk_approval=pretrade_approval,
-            liquidity_evidence=plan.liquidity_evidence,
-            market_state=plan.market_state,
-        )
-        execution_outcome = case.execution_model.simulate_execution(
-            NextBarOpenRequest(
-                order_stream=stream,
-                candidate=candidate,
-                eligibility_window_exhausted=False,
-            )
-        )
+        if isinstance(case.execution_model, NextEligibleBarOpenModel):
+            if event.capability != BAR_OPEN_CAPABILITY:
+                return self._failed(case, state, EngineFailureCode.EXECUTION_FAILURE, (event.event_id, event.capability.identity), (event.event_hash,))
+            candidate = BarOpenCandidate(BarOpenObservation.from_event(event), market_approval, pretrade_approval, plan.liquidity_evidence, plan.market_state)
+            execution_outcome = case.execution_model.simulate_execution(NextBarOpenRequest(stream, candidate, False))
+        else:
+            if event.capability != BAR_CLOSE_CAPABILITY:
+                return self._failed(case, state, EngineFailureCode.EXECUTION_FAILURE, (event.event_id, event.capability.identity), (event.event_hash,))
+            candidate = BarCloseCandidate(BarCloseObservation.from_event(event), market_approval, pretrade_approval, plan.liquidity_evidence, plan.market_state)
+            execution_outcome = case.execution_model.simulate_execution(NextBarCloseRequest(stream, candidate, False))
         if execution_outcome.failure is not None:
             return self._failed(
                 case,
@@ -2589,7 +2616,7 @@ class DeterministicBarEngine:
                 (execution_outcome.failure.code.value,),
                 (canonical_sha256(execution_outcome.failure),),
             )
-        decision = cast(NextBarOpenDecision, execution_outcome.result)
+        decision = cast(NextBarOpenDecision | NextBarCloseDecision, execution_outcome.result)
         self._trace_add(
             state,
             EngineStage.EXECUTION_DECISION,
@@ -2642,7 +2669,19 @@ class DeterministicBarEngine:
                 (fill_result.failure_id,),
             )
         fill = fill_result.fill
-        if plan.fill_event_at.instant != fill.execution_time:
+        if (
+            plan.fill_event_at.instant != fill.execution_time
+            or (
+                plan.fill_event_at.phase.rank,
+                plan.fill_event_at.phase.code,
+                plan.fill_event_at.source_sequence.value,
+            )
+            <= (
+                event.phase.rank,
+                event.phase.code,
+                event.source_sequence.value,
+            )
+        ):
             return self._failed(
                 case,
                 state,
