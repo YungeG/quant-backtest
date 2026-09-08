@@ -103,6 +103,7 @@ def _dividend_profile():
     return compose_tushare_000703_dividend_profile_v2(
         json.loads(canonical_bytes(action_set)),
         "account:000703-development",
+        source_receipt_bytes=(EVIDENCE / "acquisition-receipt.json").read_bytes(),
     )
 
 
@@ -480,6 +481,32 @@ def test_public_v2_composer_returns_existing_structured_failures(
     assert outcome.failure.code is expected
 
 
+@pytest.mark.parametrize("offset_ns", (-1, 0, 1))
+def test_dividend_source_must_be_acquired_by_composition(offset_ns: int) -> None:
+    request = _request()
+    acquired = json.loads((EVIDENCE / "acquisition-receipt.json").read_bytes())[
+        "acquired_at_epoch_nanoseconds"
+    ]
+    composed_at = replace(AVAILABLE, instant=UtcInstant(acquired + offset_ns))
+    request = _rebind(
+        request,
+        instrument_scope=replace(request.instrument_scope, available_at=composed_at),
+        account_scope=replace(request.account_scope, available_at=composed_at),
+        minute_authorities=tuple(
+            replace(value, available_at=composed_at) for value in request.minute_authorities
+        ),
+        composed_at=composed_at,
+    )
+    outcome = CnAShareProfileComposerV2().compose(request)
+    if offset_ns < 0:
+        assert outcome.result is None
+        assert outcome.failure is not None
+        assert outcome.failure.code is CnAShareProfileCompositionFailureCode.EVIDENCE_NOT_AVAILABLE
+    else:
+        assert outcome.result is not None
+        assert outcome.failure is None
+
+
 def test_commission_scenario_rejects_unrelated_schedule_identity() -> None:
     three_bps, five_bps, _ = january_2024_commission_scenarios()
     with pytest.raises(ValueError, match="account_fee_schedule_ref"):
@@ -489,6 +516,44 @@ def test_commission_scenario_rejects_unrelated_schedule_identity() -> None:
             three_bps.account_fee_schedule_ref,
             True,
         )
+
+
+@pytest.mark.parametrize("name", ("market_fee_rule_book", "stamp_duty_rule_book"))
+@pytest.mark.parametrize("mutation", ("rate", "applicability", "source", "outside_authority", "book_identity"))
+def test_fee_economics_must_match_the_selected_january_source(
+    name: str, mutation: str,
+) -> None:
+    request = _request()
+    book = getattr(request, name)
+    [band] = book.bands
+    rate_field, applies_field, sources_field = (
+        ("handling_rate", "handling_applies", "handling_source_refs")
+        if name == "market_fee_rule_book"
+        else ("rate", "applies_to_sell", "source_refs")
+    )
+    if mutation == "rate":
+        original = getattr(band, rate_field)
+        changes = {rate_field: replace(original, units=original.units + 1)}
+    elif mutation == "applicability":
+        changes = {applies_field: False, rate_field: Rate(0, Scale(0), "fee_fraction")}
+    elif mutation == "source":
+        sources = getattr(band, sources_field)
+        changes = {sources_field: (
+            replace(sources[0], source_hash="sha256:" + "f" * 64), *sources[1:],
+        )}
+    elif mutation == "outside_authority":
+        changes = {"effective_to_exclusive": UtcInstant(END.epoch_nanoseconds + 1)}
+    else:
+        changes = {}
+    changed = replace(
+        book,
+        bands=(replace(band, **changes),),
+        rule_book_key="unapproved-rule-book" if mutation == "book_identity" else book.rule_book_key,
+    )
+    outcome = CnAShareProfileComposerV2().compose(_rebind(request, **{name: changed}))
+    assert outcome.result is None
+    assert outcome.failure is not None
+    assert outcome.failure.code is CnAShareProfileCompositionFailureCode.AUTHORITY_CONTEXT_MISMATCH
 
 
 def test_foreign_fee_route_returns_authority_context_failure() -> None:

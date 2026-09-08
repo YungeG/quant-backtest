@@ -2386,6 +2386,8 @@ class BacktestEvidenceRepository:
             != canonical_bytes(engine_context)
         ):
             raise ValueError("completed v3 engine context mismatch")
+        if engine_context_value.identity_manifest_hash != verification.identity_manifest_hash:
+            raise _StaticProofMismatch("completed v3 identity manifest mismatch")
         summary = VerifiedExecutionSummary(
             tuple(engine.fills),
             engine.final_journal,

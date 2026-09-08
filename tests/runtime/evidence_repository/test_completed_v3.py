@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import json
 from pathlib import Path
+from typing import cast
 
 import pytest
 from crypto_quant_backtest import (
@@ -109,6 +110,44 @@ def test_completed_v3_rejects_mismatch_context_with_decision_grade(
 
     with pytest.raises(BacktestEvidenceError) as error:
         BacktestEvidenceRepository(store).load_completed_v3(tampered)
+
+    assert error.value.code is BacktestEvidenceFailureCode.PORT_STATIC_PROOF_MISMATCH
+
+
+@pytest.mark.parametrize("loader", ("load_completed_v3", "load_completed_evidence_v3"))
+def test_completed_v3_rejects_reenveloped_identity_that_disagrees_with_proof(
+    tmp_path: Path, loader: str,
+) -> None:
+    store, ref = _completed(tmp_path)
+    repository = BacktestEvidenceRepository(store)
+    original = repository.load_completed_v3(ref)
+    manifest = json.loads(store.values[ref.artifact_ref].source_bytes)["payload"]
+    entry = _entry(manifest, "result.json")
+    result_ref = ArtifactRef(
+        cast(str, entry["artifact_type"]), cast(int, entry["schema_version"]),
+        cast(str, entry["content_hash"]),
+    )
+    original_bytes = store.values[result_ref].source_bytes
+    result = json.loads(original_bytes)["payload"]
+    conflicting_hash = "sha256:" + "a1" * 32
+    assert original.engine_context.identity_manifest_hash != conflicting_hash
+    result["engine_execution_context"]["identity_manifest_hash"] = conflicting_hash
+    envelope = ArtifactEnvelope.create("completed_backtest_result", 3, result)
+    new_ref = store.put(envelope=envelope)
+    entry.update(
+        content_hash=new_ref.content_hash,
+        source_hash=canonical_sha256(envelope),
+        byte_count=len(canonical_bytes(envelope)),
+    )
+    tampered = BacktestCanonicalPublicationRefV2.from_artifact_ref(store.put(
+        envelope=ArtifactEnvelope.create("canonical_publication_manifest", 2, manifest)
+    ))
+    assert tampered != ref
+    assert store.values[result_ref].source_bytes == original_bytes
+    assert repository.load_completed_v3(ref) == original
+
+    with pytest.raises(BacktestEvidenceError) as error:
+        getattr(repository, loader)(tampered)
 
     assert error.value.code is BacktestEvidenceFailureCode.PORT_STATIC_PROOF_MISMATCH
 

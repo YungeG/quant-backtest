@@ -55,7 +55,8 @@ def _profile():
         INSTRUMENT,
     )
     return compose_tushare_000703_dividend_profile_v2(
-        json.loads(canonical_bytes(action_set)), ACCOUNT
+        json.loads(canonical_bytes(action_set)), ACCOUNT,
+        source_receipt_bytes=(EVIDENCE / "acquisition-receipt.json").read_bytes(),
     )
 
 

@@ -1,11 +1,12 @@
 from __future__ import annotations
 
 from dataclasses import replace
+import hashlib
 import json
 from pathlib import Path
 
 import pytest
-from crypto_quant_domain import InstrumentId, Money, Scale, VenueId
+from crypto_quant_domain import InstrumentId, Money, Scale, UtcInstant, VenueId
 from crypto_quant_bundle_builder.tushare_000703_dividend_action_set_v2 import (
     map_tushare_000703_dividend_action_set_v2,
 )
@@ -56,6 +57,8 @@ def test_maps_the_three_selected_cash_actions_in_record_date_order() -> None:
     assert action_set.source_response_sha256 == receipt["provider_request"][
         "response_sha256"
     ]
+    assert action_set.source_acquired_at == UtcInstant(receipt["acquired_at_epoch_nanoseconds"])
+    assert action_set.source_receipt_sha256 == "sha256:" + hashlib.sha256(receipt_bytes).hexdigest()
 
 
 @pytest.mark.parametrize("target", ("selection_hash", "cash_tax", "stock_distribution"))
@@ -95,6 +98,18 @@ def test_tampered_or_unsupported_selected_action_fails_closed(target: str) -> No
         )
 
 
+def test_mapper_rejects_backdated_receipt_with_unchanged_snapshot() -> None:
+    receipt_bytes, raw = _inputs()
+    receipt = json.loads(receipt_bytes)
+    receipt["acquired_at_epoch_nanoseconds"] -= 1
+    receipt["provider_request"]["response_acquired_at_epoch_nanoseconds"] -= 1
+    forged = json.dumps(
+        receipt, ensure_ascii=False, sort_keys=True, separators=(",", ":")
+    ).encode() + b"\n"
+    with pytest.raises(ValueError, match="snapshot identity mismatch"):
+        map_tushare_000703_dividend_action_set_v2(forged, raw, INSTRUMENT)
+
+
 def test_constructor_rejects_forged_action_set() -> None:
     receipt_bytes, raw = _inputs()
     action_set = map_tushare_000703_dividend_action_set_v2(
@@ -102,3 +117,7 @@ def test_constructor_rejects_forged_action_set() -> None:
     )
     with pytest.raises(ValueError, match="action set identity mismatch"):
         replace(action_set, source_response_sha256="sha256:" + "0" * 64)
+    with pytest.raises(ValueError, match="action set identity mismatch"):
+        replace(action_set, source_acquired_at=UtcInstant(0))
+    with pytest.raises(ValueError, match="action set identity mismatch"):
+        replace(action_set, source_receipt_sha256="sha256:" + "0" * 64)

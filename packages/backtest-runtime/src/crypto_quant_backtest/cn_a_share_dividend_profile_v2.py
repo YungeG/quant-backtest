@@ -2,8 +2,10 @@
 
 from __future__ import annotations
 
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from datetime import datetime
+import hashlib
+import json
 import re
 from typing import Any, Mapping
 
@@ -12,6 +14,7 @@ from crypto_quant_domain import (
     Money,
     PositionBalanceKey,
     Scale,
+    UtcInstant,
     VenueId,
     canonical_sha256,
 )
@@ -26,6 +29,8 @@ _ACTION_SET_FIELDS = {
     "coverage_end_date_exclusive",
     "source_snapshot_hash",
     "source_response_sha256",
+    "source_receipt_sha256",
+    "source_acquired_at",
     "actions",
     "tushare_dividend_assumed_correct",
     "zero_row_authoritative",
@@ -74,6 +79,14 @@ def _mapping(name: str, value: object, fields: set[str]) -> Mapping[str, object]
     if type(value) is not dict or set(value) != fields:
         raise ValueError(f"{name} has an invalid canonical shape")
     return value
+
+
+def _acquired_at(value: object) -> UtcInstant:
+    data = _mapping("source_acquired_at", value, {"type", "epoch_nanoseconds"})
+    instant = data["epoch_nanoseconds"]
+    if data["type"] != "utc_instant" or type(instant) is not int or instant < 0:
+        raise ValueError("source_acquired_at must be nonnegative canonical UtcInstant")
+    return UtcInstant(instant)
 
 
 def _money(value: object) -> Money:
@@ -185,6 +198,9 @@ class CnAShareDividendProfileV2:
     deployment_authorized: bool
     source_manifest: tuple[str, ...]
     profile_hash: str
+    source_receipt_sha256: str = field(kw_only=True)
+    source_acquired_at: UtcInstant = field(kw_only=True)
+    source_receipt_bytes: bytes = field(kw_only=True, repr=False)
 
     def __post_init__(self) -> None:
         if type(self.instrument_id) is not InstrumentId or self.instrument_id != InstrumentId(VenueId("xshe"), "000703"):
@@ -193,8 +209,12 @@ class CnAShareDividendProfileV2:
         end = _date("coverage_end_date_exclusive", self.coverage_end_date_exclusive)
         if start >= end:
             raise ValueError("profile coverage must be finite and nonempty")
-        for name in ("source_snapshot_hash", "source_response_sha256", "source_action_set_hash"):
+        for name in ("source_snapshot_hash", "source_response_sha256", "source_action_set_hash", "source_receipt_sha256"):
             _hash(name, getattr(self, name))
+        if type(self.source_acquired_at) is not UtcInstant or self.source_acquired_at.epoch_nanoseconds < 0:
+            raise ValueError("source_acquired_at must be nonnegative exact UtcInstant")
+        if not self._receipt_matches():
+            raise ValueError("profile acquisition must match the retained receipt")
         if type(self.actions) is not tuple or not all(type(value) is CnAShareDividendCashActionProfileV2 for value in self.actions):
             raise TypeError("actions must contain exact CnAShareDividendCashActionProfileV2")
         if self.actions != tuple(sorted(self.actions, key=lambda value: (value.record_date, value.action_id))):
@@ -222,10 +242,52 @@ class CnAShareDividendProfileV2:
             raise ValueError("profile must retain the approved development convention")
         if type(self.source_manifest) is not tuple or self.source_manifest != tuple(sorted(set(self.source_manifest))):
             raise ValueError("source_manifest must be canonical unique tuple")
-        if self.source_manifest != tuple(sorted((self.source_snapshot_hash, self.source_response_sha256, self.source_action_set_hash))):
+        if self.source_manifest != tuple(sorted((self.source_snapshot_hash, self.source_response_sha256, self.source_action_set_hash, self.source_receipt_sha256))):
             raise ValueError("source_manifest must exact-cover action identities")
+        source_body = {
+            key: value for key, value in self._body().items() if key in _ACTION_SET_FIELDS
+        }
+        source_body["type"] = "tushare_000703_dividend_action_set_v2"
+        source_body["actions"] = tuple(
+            {**action.to_canonical_dict(), "type": "tushare_000703_dividend_cash_action_v2"}
+            for action in self.actions
+        )
+        if canonical_sha256(source_body) != self.source_action_set_hash:
+            raise ValueError("profile source action set identity mismatch")
         if self.profile_hash != canonical_sha256(self._body()):
             raise ValueError("profile identity mismatch")
+
+    def _receipt_matches(self) -> bool:
+        if (
+            type(self.source_receipt_bytes) is not bytes
+            or "sha256:" + hashlib.sha256(self.source_receipt_bytes).hexdigest()
+            != self.source_receipt_sha256
+        ):
+            return False
+        try:
+            receipt = json.loads(self.source_receipt_bytes)
+            acquired = receipt["acquired_at_epoch_nanoseconds"]
+            provider = receipt["provider_request"]
+            snapshot = receipt["snapshot"]
+            [member] = snapshot["members"]
+            return (
+                json.dumps(receipt, ensure_ascii=False, sort_keys=True,
+                           separators=(",", ":"), allow_nan=False).encode() + b"\n"
+                == self.source_receipt_bytes
+                and receipt["type"] == "tushare_000703_dividend_authority_acquisition_receipt_v1"
+                and type(receipt["schema_version"]) is int and receipt["schema_version"] == 1
+                and provider["api_name"] == "dividend"
+                and provider["params"] == {"ts_code": "000703.SZ"}
+                and type(acquired) is int
+                and acquired == self.source_acquired_at.epoch_nanoseconds
+                and provider["response_acquired_at_epoch_nanoseconds"] == acquired
+                and member["acquired_at_epoch_nanoseconds"] == acquired
+                and snapshot["snapshot_id"] == self.source_snapshot_hash
+                and provider["response_sha256"] == self.source_response_sha256
+                and member["content_hash"] == self.source_response_sha256
+            )
+        except (KeyError, TypeError, ValueError):
+            return False
 
     def _body(self) -> dict[str, object]:
         return {
@@ -237,6 +299,8 @@ class CnAShareDividendProfileV2:
             "source_snapshot_hash": self.source_snapshot_hash,
             "source_response_sha256": self.source_response_sha256,
             "source_action_set_hash": self.source_action_set_hash,
+            "source_receipt_sha256": self.source_receipt_sha256,
+            "source_acquired_at": self.source_acquired_at,
             "actions": self.actions,
             "simulated_register_policy": self.simulated_register_policy,
             "tushare_dividend_assumed_correct": self.tushare_dividend_assumed_correct,
@@ -272,6 +336,8 @@ def compose_tushare_000703_dividend_profile_v2(
     action_set_payload: object,
     account_id: str,
     /,
+    *,
+    source_receipt_bytes: bytes,
 ) -> CnAShareDividendProfileV2:
     data = _mapping("action_set_payload", action_set_payload, _ACTION_SET_FIELDS)
     body = dict(data)
@@ -300,7 +366,9 @@ def compose_tushare_000703_dividend_profile_v2(
     )
     snapshot_hash = _hash("source_snapshot_hash", data["source_snapshot_hash"])
     response_hash = _hash("source_response_sha256", data["source_response_sha256"])
-    manifest = tuple(sorted((snapshot_hash, response_hash, action_set_hash)))
+    receipt_hash = _hash("source_receipt_sha256", data["source_receipt_sha256"])
+    acquired_at = _acquired_at(data["source_acquired_at"])
+    manifest = tuple(sorted((snapshot_hash, response_hash, action_set_hash, receipt_hash)))
     provisional = CnAShareDividendProfileV2.__new__(CnAShareDividendProfileV2)
     for name, value in (
         ("instrument_id", instrument),
@@ -309,6 +377,9 @@ def compose_tushare_000703_dividend_profile_v2(
         ("source_snapshot_hash", snapshot_hash),
         ("source_response_sha256", response_hash),
         ("source_action_set_hash", action_set_hash),
+        ("source_receipt_sha256", receipt_hash),
+        ("source_acquired_at", acquired_at),
+        ("source_receipt_bytes", source_receipt_bytes),
         ("actions", actions),
         ("simulated_register_policy", policy),
         ("tushare_dividend_assumed_correct", data["tushare_dividend_assumed_correct"]),

@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from dataclasses import dataclass, field
+from dataclasses import dataclass, field, replace
 from datetime import date, datetime, time, timedelta
 import re
 from zoneinfo import ZoneInfo
@@ -40,6 +40,7 @@ from crypto_quant_trading.profiles.cn_a_share import (
     CnAShareOrderRuleBook,
     CnAShareRiskClass,
     CnAShareStampDutyRuleBookV2,
+    january_2024_fee_rule_books,
 )
 from .cn_a_share_dividend_profile_v2 import CnAShareDividendProfileV2
 from .cn_a_share_profile import (
@@ -515,6 +516,28 @@ def _minute_coverage_matches(request: CnAShareProfileCompositionRequestV2) -> bo
     return True
 
 
+def _frozen_fee_economics_match(request: CnAShareProfileCompositionRequestV2) -> bool:
+    for candidate, approved in zip(
+        (request.market_fee_rule_book, request.stamp_duty_rule_book),
+        january_2024_fee_rule_books(),
+        strict=True,
+    ):
+        if replace(candidate, bands=approved.bands) != approved:
+            return False
+        [expected] = approved.bands
+        for band in candidate.bands:
+            if not (
+                expected.effective_from <= band.effective_from
+                < band.effective_to_exclusive <= expected.effective_to_exclusive
+            ) or replace(
+                band,
+                effective_from=expected.effective_from,
+                effective_to_exclusive=expected.effective_to_exclusive,
+            ) != expected:
+                return False
+    return True
+
+
 def _first_failure(
     request: CnAShareProfileCompositionRequestV2,
 ) -> CnAShareProfileCompositionFailureCode | None:
@@ -630,9 +653,12 @@ def _first_failure(
         )
     ) or not _minute_coverage_matches(request):
         return CnAShareProfileCompositionFailureCode.TIMELINE_COVERAGE_MISMATCH
+    if not _frozen_fee_economics_match(request):
+        return CnAShareProfileCompositionFailureCode.AUTHORITY_CONTEXT_MISMATCH
     if (
         instrument.available_at > request.composed_at
         or account.available_at > request.composed_at
+        or profile.source_acquired_at > request.composed_at.instant
         or any(value.available_at > request.composed_at for value in request.minute_authorities)
     ):
         return CnAShareProfileCompositionFailureCode.EVIDENCE_NOT_AVAILABLE

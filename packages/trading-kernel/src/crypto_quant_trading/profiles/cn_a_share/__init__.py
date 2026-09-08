@@ -73,6 +73,7 @@ from .commission_tax_v2 import (
     create_cn_a_share_fee_execution_authority_v2,
     project_cn_a_share_domestic_ordinary_fee_rules_v2,
 )
+from .january_2024_development_fee_authority import january_2024_fee_rule_books
 from .order_rules import (
     CnAShareBarLimitLiquidityEvaluator,
     CnAShareBoard,
@@ -235,4 +236,5 @@ __all__ = [
     "create_cn_a_share_fee_execution_authority_v2",
     "bind_cn_a_share_fee_execution_v2",
     "project_cn_a_share_domestic_ordinary_fee_rules_v2",
+    "january_2024_fee_rule_books",
 ]

@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from datetime import datetime
 from decimal import Decimal, InvalidOperation
 import hashlib
@@ -10,7 +10,7 @@ import json
 import math
 import re
 
-from crypto_quant_domain import InstrumentId, Money, Scale, canonical_sha256
+from crypto_quant_domain import InstrumentId, Money, Scale, UtcInstant, canonical_sha256
 
 from .source_snapshots import RawSourceMember, SourceSnapshotProvenance, freeze_source_snapshot
 
@@ -248,6 +248,8 @@ class Tushare000703DividendActionSetV2:
     live_eligible: bool
     deployment_authorized: bool
     action_set_hash: str
+    source_receipt_sha256: str = field(kw_only=True)
+    source_acquired_at: UtcInstant = field(kw_only=True)
 
     def __post_init__(self) -> None:
         if (
@@ -262,6 +264,9 @@ class Tushare000703DividendActionSetV2:
             raise ValueError("action set coverage must be finite and nonempty")
         _source_hash("source_snapshot_hash", self.source_snapshot_hash)
         _source_hash("source_response_sha256", self.source_response_sha256)
+        _source_hash("source_receipt_sha256", self.source_receipt_sha256)
+        if type(self.source_acquired_at) is not UtcInstant or self.source_acquired_at.epoch_nanoseconds < 0:
+            raise ValueError("source_acquired_at must be nonnegative exact UtcInstant")
         if type(self.actions) is not tuple or not all(
             type(value) is Tushare000703DividendCashActionV2
             for value in self.actions
@@ -302,6 +307,8 @@ class Tushare000703DividendActionSetV2:
             "coverage_end_date_exclusive": self.coverage_end_date_exclusive,
             "source_snapshot_hash": self.source_snapshot_hash,
             "source_response_sha256": self.source_response_sha256,
+            "source_receipt_sha256": self.source_receipt_sha256,
+            "source_acquired_at": self.source_acquired_at,
             "actions": self.actions,
             "tushare_dividend_assumed_correct": self.tushare_dividend_assumed_correct,
             "zero_row_authoritative": self.zero_row_authoritative,
@@ -320,6 +327,9 @@ class Tushare000703DividendActionSetV2:
         source_snapshot_hash: str,
         source_response_sha256: str,
         actions: tuple[Tushare000703DividendCashActionV2, ...],
+        *,
+        source_receipt_sha256: str,
+        source_acquired_at: UtcInstant,
     ) -> Tushare000703DividendActionSetV2:
         provisional = cls.__new__(cls)
         for name, value in (
@@ -328,6 +338,8 @@ class Tushare000703DividendActionSetV2:
             ("coverage_end_date_exclusive", coverage_end_date_exclusive),
             ("source_snapshot_hash", source_snapshot_hash),
             ("source_response_sha256", source_response_sha256),
+            ("source_receipt_sha256", source_receipt_sha256),
+            ("source_acquired_at", source_acquired_at),
             ("actions", actions),
             ("tushare_dividend_assumed_correct", True),
             ("zero_row_authoritative", True),
@@ -421,7 +433,8 @@ def map_tushare_000703_dividend_action_set_v2(
     }:
         raise ValueError("selected dividend row hash or scope mismatch")
     snapshot = receipt["snapshot"]
-    assert type(snapshot) is dict
+    acquired_at = receipt["acquired_at_epoch_nanoseconds"]
+    assert type(snapshot) is dict and type(acquired_at) is int
     return Tushare000703DividendActionSetV2.create(
         instrument_id,
         _COVERAGE_START,
@@ -429,4 +442,6 @@ def map_tushare_000703_dividend_action_set_v2(
         _source_hash("source_snapshot_hash", snapshot["snapshot_id"]),
         _raw_hash(raw_response),
         tuple(sorted(actions, key=lambda value: (value.record_date, value.action_id))),
+        source_receipt_sha256=_raw_hash(receipt_bytes),
+        source_acquired_at=UtcInstant(acquired_at),
     )
