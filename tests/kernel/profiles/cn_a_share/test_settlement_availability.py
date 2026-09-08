@@ -1336,6 +1336,7 @@ _ALLOWED_RELATIVE_IMPORTS_BY_FILE = {
         "calendar",
         "commission_tax",
         "commission_tax_v2",
+        "january_2024_development_fee_authority",
         "corporate_actions",
         "corporate_action_accounting",
         "order_rules",
