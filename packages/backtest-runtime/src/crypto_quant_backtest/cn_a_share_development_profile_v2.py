@@ -2,8 +2,8 @@
 
 from __future__ import annotations
 
-from dataclasses import dataclass
-from datetime import datetime
+from dataclasses import dataclass, field
+from datetime import date, datetime, time, timedelta
 import re
 from zoneinfo import ZoneInfo
 
@@ -22,12 +22,16 @@ from crypto_quant_domain import (
     canonical_sha256,
 )
 from crypto_quant_market_data import (
+    InMemoryMarketBundleReader,
     MarketBundleCapability,
     MarketBundleManifest,
+    MarketBundleRef,
+    MarketEvent,
 )
 from crypto_quant_trading import AccountFeeScheduleRef
 from crypto_quant_trading.profiles.cn_a_share import (
     CnAShareBoard,
+    CnAShareCalendarDayKind,
     CnAShareExecutionAccessRoute,
     CnAShareFeeProductClass,
     CnAShareFrozenCalendar,
@@ -43,6 +47,7 @@ from .cn_a_share_profile import (
     CnAShareInstrumentScopeDeclaration,
     CnAShareProfileCompositionFailureCode,
 )
+from .execution import BarCloseKind, BarCloseObservation
 from .timeline import TimelineWindow
 
 
@@ -77,24 +82,35 @@ def _hash(name: str, value: object) -> str:
     return value
 
 
+def _covered_once(
+    intervals: tuple[tuple[int, int], ...], start: int, end: int
+) -> bool:
+    """Require exactly one interval at every point of [start, end)."""
+    cursor = start
+    for lower, upper in sorted(
+        (max(lower, start), min(upper, end))
+        for lower, upper in intervals
+        if lower < end and upper > start
+    ):
+        if lower != cursor or upper <= lower:
+            return False
+        cursor = upper
+    return cursor == end
+
+
 def _utc_covered(
     intervals: tuple[tuple[UtcInstant, UtcInstant], ...],
     window: TimelineWindow,
 ) -> bool:
-    cursor = window.data_start
-    for start, end in sorted(intervals):
-        if end <= cursor:
-            continue
-        if start > cursor:
-            return False
-        cursor = max(cursor, end)
-        if cursor >= window.end_exclusive:
-            return True
-    return False
+    return _covered_once(
+        tuple((start.epoch_nanoseconds, end.epoch_nanoseconds) for start, end in intervals),
+        window.data_start.epoch_nanoseconds,
+        window.end_exclusive.epoch_nanoseconds,
+    )
 
 
 def _date_covered(
-    intervals: tuple[tuple[object, object], ...],
+    intervals: tuple[tuple[date, date], ...],
     window: TimelineWindow,
 ) -> bool:
     start = datetime.fromtimestamp(
@@ -105,16 +121,11 @@ def _date_covered(
         (window.end_exclusive.epoch_nanoseconds - 1) // 1_000_000_000,
         _SHANGHAI,
     ).date()
-    cursor = start
-    for interval_start, interval_end in sorted(intervals):
-        if interval_end <= cursor:
-            continue
-        if interval_start > cursor:
-            return False
-        cursor = max(cursor, interval_end)
-        if cursor > end:
-            return True
-    return False
+    return _covered_once(
+        tuple((lower.toordinal(), upper.toordinal()) for lower, upper in intervals),
+        start.toordinal(),
+        end.toordinal() + 1,
+    )
 
 
 @dataclass(frozen=True, slots=True)
@@ -223,6 +234,7 @@ class CnAShareDevelopmentMinuteAuthorityV2:
     decision_grade_eligible: bool
     live_eligible: bool
     deployment_authorized: bool
+    events: tuple[MarketEvent, ...] = field(kw_only=True)
 
     def __post_init__(self) -> None:
         if type(self.instrument_id) is not InstrumentId:
@@ -234,6 +246,19 @@ class CnAShareDevelopmentMinuteAuthorityV2:
             raise TypeError("available_at must be exact SimulationInstant")
         if _CLOSE_CAPABILITY not in self.manifest.capabilities:
             raise ValueError("minute authority must declare bar_close capability")
+        if type(self.events) is not tuple or any(type(event) is not MarketEvent for event in self.events):
+            raise TypeError("events must be an exact MarketEvent tuple")
+        events = tuple(sorted(self.events, key=lambda event: event.ordering_key))
+        streams: dict[str, list[MarketEvent]] = {}
+        for event in events:
+            streams.setdefault(event.stream_key, []).append(event)
+        # The manifest alone cannot prove that the underlying closed bars exist.
+        InMemoryMarketBundleReader(
+            MarketBundleRef.from_manifest(self.manifest),
+            self.manifest,
+            {key: tuple(values) for key, values in streams.items()},
+        )
+        object.__setattr__(self, "events", events)
         if (
             type(self.development_only) is not bool
             or type(self.decision_grade_eligible) is not bool
@@ -251,6 +276,7 @@ class CnAShareDevelopmentMinuteAuthorityV2:
             "instrument_id": self.instrument_id,
             "manifest": self.manifest,
             "source_receipt_hash": self.source_receipt_hash,
+            "events": self.events,
             "available_at": self.available_at,
             "development_only": self.development_only,
             "decision_grade_eligible": self.decision_grade_eligible,
@@ -444,6 +470,51 @@ def _source_hashes(request: CnAShareProfileCompositionRequestV2) -> tuple[str, .
     ).source_hashes
 
 
+def _minute_coverage_matches(request: CnAShareProfileCompositionRequestV2) -> bool:
+    calendar = request.calendar
+    for authority in request.minute_authorities:
+        manifest = authority.manifest
+        if (
+            manifest.capabilities != (_CLOSE_CAPABILITY,)
+            or len(manifest.streams) != 1
+            or manifest.streams[0].capability != _CLOSE_CAPABILITY
+            or manifest.streams[0].event_type != "bar_close"
+            or not authority.events
+            or not _date_covered(
+                ((calendar.coverage_start, calendar.coverage_end_exclusive),),
+                TimelineWindow(manifest.coverage_start, manifest.coverage_start, manifest.coverage_end_exclusive),
+            )
+        ):
+            return False
+        expected = tuple(
+            instant
+            for day in calendar.days
+            if day.kind is CnAShareCalendarDayKind.TRADING
+            for session_start in (time(9, 30), time(13))
+            for index in range(1, 25)
+            if manifest.coverage_start <= (instant := UtcInstant.from_datetime(
+                datetime.combine(day.local_date, session_start, _SHANGHAI)
+                + timedelta(minutes=index * 5)
+            )) < manifest.coverage_end_exclusive
+        )
+        # Exact labels, not just counts: no anchors, lunch bars, duplicates or missing days.
+        if tuple(event.event_time for event in authority.events) != expected:
+            return False
+        for event in authority.events:
+            try:
+                observation = BarCloseObservation.from_event(event)
+            except (TypeError, ValueError):
+                return False
+            if (
+                event.instrument_id != authority.instrument_id
+                or observation.kind is not BarCloseKind.REAL
+                or observation.close_price is None
+                or observation.close_price.quote_currency != "CNY"
+            ):
+                return False
+    return True
+
+
 def _first_failure(
     request: CnAShareProfileCompositionRequestV2,
 ) -> CnAShareProfileCompositionFailureCode | None:
@@ -470,7 +541,13 @@ def _first_failure(
         )
         or any(
             band.venue_id != profile.instrument_id.venue
+            or band.board is not instrument.rule_context.board
             for band in request.order_rule_book.bands
+        )
+        or any(
+            band.venue_id != profile.instrument_id.venue
+            for book in (request.market_fee_rule_book, request.stamp_duty_rule_book)
+            for band in book.bands
         )
         or request.market_fee_rule_book.access_route
         is not CnAShareExecutionAccessRoute.DOMESTIC
@@ -551,7 +628,7 @@ def _first_failure(
             ),),
             window,
         )
-    ):
+    ) or not _minute_coverage_matches(request):
         return CnAShareProfileCompositionFailureCode.TIMELINE_COVERAGE_MISMATCH
     if (
         instrument.available_at > request.composed_at

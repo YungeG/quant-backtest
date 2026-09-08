@@ -18,6 +18,7 @@ from crypto_quant_domain import (
     Order,
     OrderEvent,
     OrderEventType,
+    OrderStatus,
     PortfolioSnapshot,
     PositionBalanceKey,
     PositionLot,
@@ -2523,7 +2524,12 @@ class DeterministicBarEngine:
         self, case: ResolvedExecutionCase, state: _EngineState
     ) -> EngineExecutionOutcome | None:
         model = cast(NextEligibleBarCloseModel, case.execution_model)
-        occurred_at = SimulationInstant(case.timeline.window.end_exclusive, _FINALIZE_PHASE, SourceSequence(0))
+        # Order events must remain inside the half-open trading window.
+        occurred_at = SimulationInstant(
+            UtcInstant(case.timeline.window.end_exclusive.epoch_nanoseconds - 1),
+            _FINALIZE_PHASE,
+            SourceSequence(0),
+        )
         for order_id, stream in tuple(state.order_streams.items()):
             if stream.state is None or stream.state.status not in {OrderStatus.ACCEPTED, OrderStatus.ACTIVE}:
                 continue
@@ -2544,6 +2550,7 @@ class DeterministicBarEngine:
                 evidence_id=decision.decision_id,
             )
             state.order_streams[order_id] = stream.append(OrderEventRecord(expiration))
+            self._refresh_resources(case, state)
         return None
 
     def _bar_execution(
