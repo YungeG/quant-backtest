@@ -1,0 +1,52 @@
+{
+  "authority_status": "CAPTURED_NOT_QUALIFIED",
+  "content_type": "application/json;charset=UTF-8",
+  "curl_exit_code": 0,
+  "curl_stderr": "",
+  "derivatives": {
+    "json_parse": {
+      "valid": true
+    }
+  },
+  "final_url": "https://fwfx.ndrc.gov.cn/api/query?qt=%E5%8F%91%E6%94%B9%E4%BB%B7%E6%A0%BC%E8%A7%84%E3%80%942018%E3%80%95917%E5%8F%B7&tab=all&page=1&pageSize=20&siteCode=bm04000fgk&key=CAB549A94CF659904A7D6B0E8FC8A7E9&startDateStr=1900-01-01&endDateStr=2026-08-20&timeOption=2&sort=dateDesc",
+  "lineage": "securities_regulatory",
+  "operator_harness_sha256": "sha256:85ccf78ce0d595ff9d372c85243d81c49c3bc1be19f868df5936cc2f6977d9ea",
+  "raw_byte_length": 3413,
+  "raw_file": "raw.json",
+  "raw_sha256": "sha256:0fabf2356105c09ba63fc04a35270e4f25fb4e9ad2bbf50a890a61b3bdc168e1",
+  "redirect_count": 0,
+  "response_chain_count": 1,
+  "response_code": 200,
+  "retrieved_at": "2026-08-20T07:41:53.233594Z",
+  "schema_version": 1,
+  "sensitive_response_headers": {
+    "files": [
+      {
+        "exact_private_path": "/srv/bcache-8t/ygguo/backtest/g12h-authority-private/20260820-wave1-response-headers/securities_regulatory/ndrc-query-ndrc-2018-917-exact-page-1/response.headers",
+        "exact_private_sha256": "sha256:196db892e61ebd894377191b70f8ea85b535e0f36fa80be651ef51288b226951",
+        "redaction": "Set-Cookie value replaced by its SHA-256; cookie name and attributes retained.",
+        "tracked_path": "securities_regulatory/ndrc-query-ndrc-2018-917-exact-page-1/response.headers",
+        "tracked_redacted_sha256": "sha256:d715c8becdda0dfc24a75debbcacc480694951480af215189c45f0c67c8ac2b3"
+      },
+      {
+        "exact_private_path": "/srv/bcache-8t/ygguo/backtest/g12h-authority-private/20260820-wave1-response-headers/securities_regulatory/ndrc-query-ndrc-2018-917-exact-page-1/transport.log",
+        "exact_private_sha256": "sha256:32dce76eb625066496b55ae86b66d77f29526ef9af7381a0951c3e13c912b0e3",
+        "redaction": "Set-Cookie value replaced by its SHA-256; cookie name and attributes retained.",
+        "tracked_path": "securities_regulatory/ndrc-query-ndrc-2018-917-exact-page-1/transport.log",
+        "tracked_redacted_sha256": "sha256:75a891959bb125518437ad860781e1df766e6db6b652190e0888beb702f8f446"
+      },
+      {
+        "exact_private_path": "/srv/bcache-8t/ygguo/backtest/g12h-authority-private/20260820-wave1-response-headers/securities_regulatory/ndrc-query-ndrc-2018-917-exact-page-1/redirects.json",
+        "exact_private_sha256": "sha256:477b39e1ad5fd7d7344e19cb4d73189a0d56d9f3b7a63f96c361bf73e5e54e28",
+        "redaction": "Set-Cookie value replaced by its SHA-256; cookie name and attributes retained.",
+        "tracked_path": "securities_regulatory/ndrc-query-ndrc-2018-917-exact-page-1/redirects.json",
+        "tracked_redacted_sha256": "sha256:2029ab751766fa65a4d2c59da638502dcdd9d84657de1f1a84f833b8ba1b183f"
+      }
+    ],
+    "policy": "Exact server-issued cookie values are excluded from Git and retained in the mode-restricted private evidence store."
+  },
+  "source_id": "ndrc-query-ndrc-2018-917-exact-page-1",
+  "started_at": "2026-08-20T07:41:53.093776Z",
+  "tool": "curl 8.14.1 (x86_64-pc-linux-gnu) libcurl/8.14.1 OpenSSL/3.5.6 zlib/1.3.1 brotli/1.1.0 zstd/1.5.7 libidn2/2.3.8 libpsl/0.21.2 libssh2/1.11.1 nghttp2/1.64.0 nghttp3/1.8.0 librtmp/2.3 OpenLDAP/2.6.10",
+  "type": "g12h_official_http_capture_receipt_v1"
+}

@@ -1,0 +1,2885 @@
+{
+  "fixture_id": "precomputed-vs-strategy-g11j-v1",
+  "layers": {
+    "00_NORMALIZED_ENTRY": {
+      "decision_instant": {
+        "instant": {
+          "epoch_nanoseconds": 100,
+          "type": "utc_instant"
+        },
+        "phase": {
+          "code": "strategy_decision",
+          "rank": 30,
+          "type": "timeline_phase"
+        },
+        "source_sequence": {
+          "type": "source_sequence",
+          "value": 1
+        },
+        "type": "simulation_instant"
+      },
+      "execution_case_hash": "sha256:bdbcf92c176fedaf8fa89a056bc92fddeb9d70b75bcacb7cb6013b468374c87e",
+      "semantic_run_id": "run_39ab44a26d7f719fe1648f3ccbf7cbdcb874a9bc43e8c15d3a51ab5aca421591",
+      "target_snapshots": [
+        {
+          "effective_time": {
+            "epoch_nanoseconds": 100,
+            "type": "utc_instant"
+          },
+          "expires_at": {
+            "epoch_nanoseconds": 250,
+            "type": "utc_instant"
+          },
+          "sleeve_id": {
+            "type": "strategy_sleeve_id",
+            "value": "trend.primary"
+          },
+          "targets": [
+            {
+              "instrument_id": {
+                "stable_key": "cash:btc-usd",
+                "type": "instrument_id",
+                "venue": "synthetic"
+              },
+              "scale": 12,
+              "type": "target_exposure_fraction",
+              "units": 500000000000
+            }
+          ],
+          "type": "target_snapshot"
+        }
+      ],
+      "type": "normalized_entry_v1",
+      "validated_decisions": [
+        {
+          "confidence": {
+            "basis": "confidence",
+            "scale": 12,
+            "type": "rate",
+            "units": 1000000000000
+          },
+          "decision_instant": {
+            "instant": {
+              "epoch_nanoseconds": 100,
+              "type": "utc_instant"
+            },
+            "phase": {
+              "code": "strategy_decision",
+              "rank": 30,
+              "type": "timeline_phase"
+            },
+            "source_sequence": {
+              "type": "source_sequence",
+              "value": 1
+            },
+            "type": "simulation_instant"
+          },
+          "decision_time": {
+            "epoch_nanoseconds": 100,
+            "type": "utc_instant"
+          },
+          "evidence": {
+            "model_revision": "sha256:model-engine-v1"
+          },
+          "observed_through": {
+            "epoch_nanoseconds": 99,
+            "type": "utc_instant"
+          },
+          "reason": "engine fixture scheduled rebalance",
+          "strategy_id": "trend-v1",
+          "target_snapshot": {
+            "effective_time": {
+              "epoch_nanoseconds": 100,
+              "type": "utc_instant"
+            },
+            "expires_at": {
+              "epoch_nanoseconds": 250,
+              "type": "utc_instant"
+            },
+            "sleeve_id": {
+              "type": "strategy_sleeve_id",
+              "value": "trend.primary"
+            },
+            "targets": [
+              {
+                "instrument_id": {
+                  "stable_key": "cash:btc-usd",
+                  "type": "instrument_id",
+                  "venue": "synthetic"
+                },
+                "scale": 12,
+                "type": "target_exposure_fraction",
+                "units": 500000000000
+              }
+            ],
+            "type": "target_snapshot"
+          },
+          "type": "strategy_decision"
+        }
+      ]
+    },
+    "01_DECISION_BATCH": [
+      {
+        "decision_batch_id": "decision-batch-v1:sha256:c9126ea400897e9cd53d5bfa8640f6199db37db7a77435de15141d429d871d52",
+        "decision_time": {
+          "epoch_nanoseconds": 100,
+          "type": "utc_instant"
+        },
+        "decisions": [
+          {
+            "confidence": {
+              "basis": "confidence",
+              "scale": 12,
+              "type": "rate",
+              "units": 1000000000000
+            },
+            "decision_time": {
+              "epoch_nanoseconds": 100,
+              "type": "utc_instant"
+            },
+            "evidence": {
+              "model_revision": "sha256:model-engine-v1"
+            },
+            "observed_through": {
+              "epoch_nanoseconds": 99,
+              "type": "utc_instant"
+            },
+            "reason": "engine fixture scheduled rebalance",
+            "strategy_id": "trend-v1",
+            "target_snapshot": {
+              "effective_time": {
+                "epoch_nanoseconds": 100,
+                "type": "utc_instant"
+              },
+              "expires_at": {
+                "epoch_nanoseconds": 250,
+                "type": "utc_instant"
+              },
+              "sleeve_id": {
+                "type": "strategy_sleeve_id",
+                "value": "trend.primary"
+              },
+              "targets": [
+                {
+                  "instrument_id": {
+                    "stable_key": "cash:btc-usd",
+                    "type": "instrument_id",
+                    "venue": "synthetic"
+                  },
+                  "scale": 12,
+                  "type": "target_exposure_fraction",
+                  "units": 500000000000
+                }
+              ],
+              "type": "target_snapshot"
+            },
+            "type": "strategy_decision"
+          }
+        ],
+        "type": "decision_batch"
+      }
+    ],
+    "02_ALLOCATION": [
+      {
+        "allocation_id": "portfolio-allocation-v1:sha256:b6828536cdf35db9380d72e83cac85377251f524eb7d75a40652db9d97a8f241",
+        "allocations": [
+          {
+            "allocation_nav": {
+              "currency": "USD",
+              "scale": 2,
+              "type": "money",
+              "units": 100000
+            },
+            "policy_ref": {
+              "config_hash": "sha256:3131313131313131313131313131313131313131313131313131313131313131",
+              "policy_key": "capital.engine-fixture.v1",
+              "policy_version": 1,
+              "type": "capital_allocation_policy_ref"
+            },
+            "sleeve_id": {
+              "type": "strategy_sleeve_id",
+              "value": "trend.primary"
+            },
+            "source_portfolio_snapshot_hash": "sha256:5390939f70e7a6d6b34f0e4b1b5ce1ee92dca70b2426e3f3b5974e10e6f54572",
+            "strategy_id": "trend-v1",
+            "type": "strategy_allocation",
+            "valuation_currency": {
+              "type": "currency_id",
+              "value": "USD"
+            },
+            "valuation_time": {
+              "epoch_nanoseconds": 100,
+              "type": "utc_instant"
+            }
+          }
+        ],
+        "net_targets": [
+          {
+            "instrument_id": {
+              "stable_key": "cash:btc-usd",
+              "type": "instrument_id",
+              "venue": "synthetic"
+            },
+            "sleeve_attributions": [
+              {
+                "allocation_nav": {
+                  "currency": "USD",
+                  "scale": 2,
+                  "type": "money",
+                  "units": 100000
+                },
+                "instrument_id": {
+                  "stable_key": "cash:btc-usd",
+                  "type": "instrument_id",
+                  "venue": "synthetic"
+                },
+                "sleeve_id": {
+                  "type": "strategy_sleeve_id",
+                  "value": "trend.primary"
+                },
+                "strategy_id": "trend-v1",
+                "target_fraction": {
+                  "instrument_id": {
+                    "stable_key": "cash:btc-usd",
+                    "type": "instrument_id",
+                    "venue": "synthetic"
+                  },
+                  "scale": 12,
+                  "type": "target_exposure_fraction",
+                  "units": 500000000000
+                },
+                "target_notional": {
+                  "currency": "USD",
+                  "scale": 2,
+                  "type": "money",
+                  "units": 50000
+                },
+                "type": "sleeve_target_notional"
+              }
+            ],
+            "target_notional": {
+              "currency": "USD",
+              "scale": 2,
+              "type": "money",
+              "units": 50000
+            },
+            "type": "net_instrument_target",
+            "valuation_currency": {
+              "type": "currency_id",
+              "value": "USD"
+            }
+          }
+        ],
+        "policy_ref": {
+          "config_hash": "sha256:3131313131313131313131313131313131313131313131313131313131313131",
+          "policy_key": "capital.engine-fixture.v1",
+          "policy_version": 1,
+          "type": "capital_allocation_policy_ref"
+        },
+        "sleeve_targets": [
+          {
+            "allocation_nav": {
+              "currency": "USD",
+              "scale": 2,
+              "type": "money",
+              "units": 100000
+            },
+            "instrument_id": {
+              "stable_key": "cash:btc-usd",
+              "type": "instrument_id",
+              "venue": "synthetic"
+            },
+            "sleeve_id": {
+              "type": "strategy_sleeve_id",
+              "value": "trend.primary"
+            },
+            "strategy_id": "trend-v1",
+            "target_fraction": {
+              "instrument_id": {
+                "stable_key": "cash:btc-usd",
+                "type": "instrument_id",
+                "venue": "synthetic"
+              },
+              "scale": 12,
+              "type": "target_exposure_fraction",
+              "units": 500000000000
+            },
+            "target_notional": {
+              "currency": "USD",
+              "scale": 2,
+              "type": "money",
+              "units": 50000
+            },
+            "type": "sleeve_target_notional"
+          }
+        ],
+        "source_portfolio_snapshot_hash": "sha256:5390939f70e7a6d6b34f0e4b1b5ce1ee92dca70b2426e3f3b5974e10e6f54572",
+        "source_sleeve_state_hash": "sha256:ef3e5ca5a9e2c6b470b451203505974841e6e66c47ea5694df40124786330ce0",
+        "target_notional_scale": 2,
+        "total_allocation_nav": {
+          "currency": "USD",
+          "scale": 2,
+          "type": "money",
+          "units": 100000
+        },
+        "type": "portfolio_allocation",
+        "valuation_currency": {
+          "type": "currency_id",
+          "value": "USD"
+        },
+        "valuation_time": {
+          "epoch_nanoseconds": 100,
+          "type": "utc_instant"
+        }
+      }
+    ],
+    "03_PORTFOLIO_RISK": [
+      {
+        "approved_at": {
+          "epoch_nanoseconds": 100,
+          "type": "utc_instant"
+        },
+        "approved_target_id": "approved-portfolio-target-v1:sha256:ec9592aeced9004690c25ed75c5cb8b4783faaddc366b7f1a6600ed8645f215c",
+        "decisions": [
+          {
+            "action": "approve",
+            "after_notional": {
+              "currency": "USD",
+              "scale": 2,
+              "type": "money",
+              "units": 50000
+            },
+            "before_notional": {
+              "currency": "USD",
+              "scale": 2,
+              "type": "money",
+              "units": 50000
+            },
+            "instrument_id": null,
+            "limit_id": "aggregate.net.v1",
+            "limit_notional": {
+              "currency": "USD",
+              "scale": 2,
+              "type": "money",
+              "units": 100000
+            },
+            "policy_ref": {
+              "config_hash": "sha256:f3656b980e20ed399d28decdcda2687e6ece15bf4e84a73766993d5a95e2e193",
+              "policy_key": "risk.engine-fixture.v1",
+              "policy_version": 1,
+              "type": "portfolio_risk_policy_ref"
+            },
+            "reason_code": "within_limit",
+            "scope": "absolute_net_exposure",
+            "type": "portfolio_risk_decision"
+          },
+          {
+            "action": "approve",
+            "after_notional": {
+              "currency": "USD",
+              "scale": 2,
+              "type": "money",
+              "units": 50000
+            },
+            "before_notional": {
+              "currency": "USD",
+              "scale": 2,
+              "type": "money",
+              "units": 50000
+            },
+            "instrument_id": null,
+            "limit_id": "aggregate.gross.v1",
+            "limit_notional": {
+              "currency": "USD",
+              "scale": 2,
+              "type": "money",
+              "units": 100000
+            },
+            "policy_ref": {
+              "config_hash": "sha256:f3656b980e20ed399d28decdcda2687e6ece15bf4e84a73766993d5a95e2e193",
+              "policy_key": "risk.engine-fixture.v1",
+              "policy_version": 1,
+              "type": "portfolio_risk_policy_ref"
+            },
+            "reason_code": "within_limit",
+            "scope": "gross_exposure",
+            "type": "portfolio_risk_decision"
+          },
+          {
+            "action": "approve",
+            "after_notional": {
+              "currency": "USD",
+              "scale": 2,
+              "type": "money",
+              "units": 50000
+            },
+            "before_notional": {
+              "currency": "USD",
+              "scale": 2,
+              "type": "money",
+              "units": 50000
+            },
+            "instrument_id": {
+              "stable_key": "cash:btc-usd",
+              "type": "instrument_id",
+              "venue": "synthetic"
+            },
+            "limit_id": "target.btc.absolute.v1",
+            "limit_notional": {
+              "currency": "USD",
+              "scale": 2,
+              "type": "money",
+              "units": 100000
+            },
+            "policy_ref": {
+              "config_hash": "sha256:f3656b980e20ed399d28decdcda2687e6ece15bf4e84a73766993d5a95e2e193",
+              "policy_key": "risk.engine-fixture.v1",
+              "policy_version": 1,
+              "type": "portfolio_risk_policy_ref"
+            },
+            "reason_code": "within_limit",
+            "scope": "target_absolute_notional",
+            "type": "portfolio_risk_decision"
+          }
+        ],
+        "economic_rejected": false,
+        "gross_exposure": {
+          "currency": "USD",
+          "scale": 2,
+          "type": "money",
+          "units": 50000
+        },
+        "net_exposure": {
+          "currency": "USD",
+          "scale": 2,
+          "type": "money",
+          "units": 50000
+        },
+        "policy_ref": {
+          "config_hash": "sha256:f3656b980e20ed399d28decdcda2687e6ece15bf4e84a73766993d5a95e2e193",
+          "policy_key": "risk.engine-fixture.v1",
+          "policy_version": 1,
+          "type": "portfolio_risk_policy_ref"
+        },
+        "source_allocation_hash": "sha256:e4cb781ff14e19bf8370747a4d55d667e0ac778318b6dbd76c2c7c5a2f76c6e7",
+        "source_allocation_id": "portfolio-allocation-v1:sha256:b6828536cdf35db9380d72e83cac85377251f524eb7d75a40652db9d97a8f241",
+        "targets": [
+          {
+            "approved_notional": {
+              "currency": "USD",
+              "scale": 2,
+              "type": "money",
+              "units": 50000
+            },
+            "source_target": {
+              "instrument_id": {
+                "stable_key": "cash:btc-usd",
+                "type": "instrument_id",
+                "venue": "synthetic"
+              },
+              "sleeve_attributions": [
+                {
+                  "allocation_nav": {
+                    "currency": "USD",
+                    "scale": 2,
+                    "type": "money",
+                    "units": 100000
+                  },
+                  "instrument_id": {
+                    "stable_key": "cash:btc-usd",
+                    "type": "instrument_id",
+                    "venue": "synthetic"
+                  },
+                  "sleeve_id": {
+                    "type": "strategy_sleeve_id",
+                    "value": "trend.primary"
+                  },
+                  "strategy_id": "trend-v1",
+                  "target_fraction": {
+                    "instrument_id": {
+                      "stable_key": "cash:btc-usd",
+                      "type": "instrument_id",
+                      "venue": "synthetic"
+                    },
+                    "scale": 12,
+                    "type": "target_exposure_fraction",
+                    "units": 500000000000
+                  },
+                  "target_notional": {
+                    "currency": "USD",
+                    "scale": 2,
+                    "type": "money",
+                    "units": 50000
+                  },
+                  "type": "sleeve_target_notional"
+                }
+              ],
+              "target_notional": {
+                "currency": "USD",
+                "scale": 2,
+                "type": "money",
+                "units": 50000
+              },
+              "type": "net_instrument_target",
+              "valuation_currency": {
+                "type": "currency_id",
+                "value": "USD"
+              }
+            },
+            "type": "approved_instrument_target"
+          }
+        ],
+        "type": "approved_portfolio_target"
+      }
+    ],
+    "04_NORMALIZED_ACTIVE_TARGET": [
+      {
+        "active_target": {
+          "materialized_at": {
+            "epoch_nanoseconds": 100,
+            "type": "utc_instant"
+          },
+          "quantities": [
+            {
+              "instrument_id": {
+                "stable_key": "cash:btc-usd",
+                "type": "instrument_id",
+                "venue": "synthetic"
+              },
+              "quantity": {
+                "instrument_id": "synthetic:cash:btc-usd",
+                "scale": 3,
+                "type": "quantity",
+                "units": 5000
+              }
+            }
+          ],
+          "source_decision_batch_id": "decision-batch-v1:sha256:c9126ea400897e9cd53d5bfa8640f6199db37db7a77435de15141d429d871d52",
+          "type": "active_portfolio_target"
+        },
+        "materialized_at": {
+          "epoch_nanoseconds": 100,
+          "type": "utc_instant"
+        },
+        "normalized_target_id": "normalized-portfolio-target-v1:sha256:86bde32ef958752adc033ae238d53c5cd734e9102193d0b9c4be7f819da117af",
+        "policy": {
+          "config_hash": "sha256:518120c2909d992be5383fdbf21313fc9a3da9e7583f3faf629c6c4d1ef7dca2",
+          "policy_key": "sizing.engine-fixture.v1",
+          "policy_version": 1,
+          "price_purpose": "valuation",
+          "residual_policy": "fail",
+          "rounding": "toward_zero",
+          "schema_version": 1,
+          "type": "position_sizing_policy"
+        },
+        "schema_version": 1,
+        "source_approved_target_hash": "sha256:b37231d63fadc4bde17cc0850b14d3fdc81ed6b0449955843979771b2e7f106f",
+        "source_approved_target_id": "approved-portfolio-target-v1:sha256:ec9592aeced9004690c25ed75c5cb8b4783faaddc366b7f1a6600ed8645f215c",
+        "source_decision_batch_id": "decision-batch-v1:sha256:c9126ea400897e9cd53d5bfa8640f6199db37db7a77435de15141d429d871d52",
+        "targets": [
+          {
+            "decision": {
+              "actions": [
+                "exact"
+              ],
+              "applied_lot_units": 1,
+              "approved_notional": {
+                "currency": "USD",
+                "scale": 2,
+                "type": "money",
+                "units": 50000
+              },
+              "current_quantity": {
+                "instrument_id": "synthetic:cash:btc-usd",
+                "scale": 3,
+                "type": "quantity",
+                "units": 0
+              },
+              "final_notional": {
+                "currency": "USD",
+                "scale": 2,
+                "type": "money",
+                "units": 50000
+              },
+              "final_quantity": {
+                "instrument_id": "synthetic:cash:btc-usd",
+                "scale": 3,
+                "type": "quantity",
+                "units": 5000
+              },
+              "instrument_id": {
+                "stable_key": "cash:btc-usd",
+                "type": "instrument_id",
+                "venue": "synthetic"
+              },
+              "lattice_hash": "sha256:5c94572dabe9c0ec0705ecae7f4aea5707c6e6bde7fa2a516c2ac90a6885424f",
+              "mark_id": "sha256:ee5258bc6535ac7c7382b0152a2a9c3955cab5446b56669411b2bb6937caa417",
+              "policy_hash": "sha256:d84fbd18a2b497d21f27a056502f28625af668c67c2e52a3011b1e8894ed3bda",
+              "raw_quantity": {
+                "instrument_id": "synthetic:cash:btc-usd",
+                "scale": 3,
+                "type": "quantity",
+                "units": 5000
+              },
+              "reason_codes": [
+                "exact_lattice"
+              ],
+              "residual_quantity": {
+                "instrument_id": "synthetic:cash:btc-usd",
+                "scale": 3,
+                "type": "quantity",
+                "units": 0
+              },
+              "type": "position_sizing_decision"
+            },
+            "sizing_input": {
+              "current_quantity": {
+                "instrument_id": "synthetic:cash:btc-usd",
+                "scale": 3,
+                "type": "quantity",
+                "units": 0
+              },
+              "instrument_id": {
+                "stable_key": "cash:btc-usd",
+                "type": "instrument_id",
+                "venue": "synthetic"
+              },
+              "lattice": {
+                "atomic_scale": 3,
+                "buy_lot_units": 1,
+                "config_hash": "sha256:0d822eb8af37e548001987045068d814ff47e1612ff1b5838d342ba7d4d2fe7d",
+                "instrument_id": {
+                  "stable_key": "cash:btc-usd",
+                  "type": "instrument_id",
+                  "venue": "synthetic"
+                },
+                "lattice_key": "lattice.engine-fixture.v1",
+                "lattice_version": 1,
+                "min_notional": {
+                  "currency": "USD",
+                  "scale": 2,
+                  "type": "money",
+                  "units": 100
+                },
+                "min_quantity_units": 1,
+                "odd_lot_close_permitted": false,
+                "schema_version": 1,
+                "sell_lot_units": 1,
+                "step_units": 1,
+                "type": "quantity_lattice"
+              },
+              "mark": {
+                "age_nanoseconds": 10,
+                "available_at": {
+                  "epoch_nanoseconds": 95,
+                  "type": "utc_instant"
+                },
+                "instrument_id": {
+                  "stable_key": "cash:btc-usd",
+                  "type": "instrument_id",
+                  "venue": "synthetic"
+                },
+                "mark_id": "sha256:ee5258bc6535ac7c7382b0152a2a9c3955cab5446b56669411b2bb6937caa417",
+                "observed_at": {
+                  "epoch_nanoseconds": 90,
+                  "type": "utc_instant"
+                },
+                "price": {
+                  "instrument_id": "synthetic:cash:btc-usd",
+                  "quote_currency": "USD",
+                  "scale": 2,
+                  "type": "price",
+                  "units": 10000
+                },
+                "price_purpose": "valuation",
+                "quote_currency_id": {
+                  "type": "currency_id",
+                  "value": "USD"
+                },
+                "resolved_at": {
+                  "epoch_nanoseconds": 100,
+                  "type": "utc_instant"
+                },
+                "revision_id": "rev-1",
+                "source_event_id": "valuation:100",
+                "stale_policy_hash": "sha256:3232323232323232323232323232323232323232323232323232323232323232",
+                "stale_policy_key": "valuation.engine-fixture.v1",
+                "stale_policy_version": 1,
+                "stream_id": "bars.valuation",
+                "type": "resolved_mark"
+              },
+              "type": "instrument_sizing_input"
+            },
+            "source_target": {
+              "approved_notional": {
+                "currency": "USD",
+                "scale": 2,
+                "type": "money",
+                "units": 50000
+              },
+              "source_target": {
+                "instrument_id": {
+                  "stable_key": "cash:btc-usd",
+                  "type": "instrument_id",
+                  "venue": "synthetic"
+                },
+                "sleeve_attributions": [
+                  {
+                    "allocation_nav": {
+                      "currency": "USD",
+                      "scale": 2,
+                      "type": "money",
+                      "units": 100000
+                    },
+                    "instrument_id": {
+                      "stable_key": "cash:btc-usd",
+                      "type": "instrument_id",
+                      "venue": "synthetic"
+                    },
+                    "sleeve_id": {
+                      "type": "strategy_sleeve_id",
+                      "value": "trend.primary"
+                    },
+                    "strategy_id": "trend-v1",
+                    "target_fraction": {
+                      "instrument_id": {
+                        "stable_key": "cash:btc-usd",
+                        "type": "instrument_id",
+                        "venue": "synthetic"
+                      },
+                      "scale": 12,
+                      "type": "target_exposure_fraction",
+                      "units": 500000000000
+                    },
+                    "target_notional": {
+                      "currency": "USD",
+                      "scale": 2,
+                      "type": "money",
+                      "units": 50000
+                    },
+                    "type": "sleeve_target_notional"
+                  }
+                ],
+                "target_notional": {
+                  "currency": "USD",
+                  "scale": 2,
+                  "type": "money",
+                  "units": 50000
+                },
+                "type": "net_instrument_target",
+                "valuation_currency": {
+                  "type": "currency_id",
+                  "value": "USD"
+                }
+              },
+              "type": "approved_instrument_target"
+            },
+            "type": "normalized_instrument_target"
+          }
+        ],
+        "type": "normalized_portfolio_target"
+      }
+    ],
+    "05_ORDER_PLAN_INTENT": [
+      {
+        "account_id": "account:primary",
+        "based_on_availability_state_hash": "sha256:08bfc71537128325b5b9ba5829363093bddb40b9d63f4d8683f287359d9cf0c6",
+        "based_on_normalized_target_hash": "sha256:6d852c9975cdd4c6081fc6f4ca7422788c1c4f9c7af38e3928858d695065ac57",
+        "based_on_normalized_target_id": "normalized-portfolio-target-v1:sha256:86bde32ef958752adc033ae238d53c5cd734e9102193d0b9c4be7f819da117af",
+        "based_on_portfolio_snapshot_hash": "sha256:5390939f70e7a6d6b34f0e4b1b5ce1ee92dca70b2426e3f3b5974e10e6f54572",
+        "based_on_reservation_state_hash": "sha256:5fda03b4fa74dc40aedbcf79794a9fc21c2d0bd2e7dc2f673bb0c2649a978ab3",
+        "based_on_target_validity_hash": "sha256:67e30ad9b77d2823d6c6bb4eba04603e31adada7df47847559533b1bd3b67f9f",
+        "based_on_working_order_set_hash": "sha256:4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+        "cancel_intents": [],
+        "created_at": {
+          "epoch_nanoseconds": 105,
+          "type": "utc_instant"
+        },
+        "omissions": [],
+        "plan_id": "order-plan-v1:sha256:5579929e13a28c6cb3970b88b08058946fd5fa96f3ee6c652cb71c2f7f0b4adf",
+        "planned_orders": [
+          {
+            "current_quantity": {
+              "instrument_id": "synthetic:cash:btc-usd",
+              "scale": 3,
+              "type": "quantity",
+              "units": 0
+            },
+            "instrument_id": {
+              "stable_key": "cash:btc-usd",
+              "type": "instrument_id",
+              "venue": "synthetic"
+            },
+            "intent": {
+              "execution_style": "market",
+              "instrument_id": {
+                "stable_key": "cash:btc-usd",
+                "type": "instrument_id",
+                "venue": "synthetic"
+              },
+              "parent_id": "normalized-portfolio-target-v1:sha256:86bde32ef958752adc033ae238d53c5cd734e9102193d0b9c4be7f819da117af",
+              "position_effect": "open",
+              "price_constraint": null,
+              "quantity": {
+                "instrument_id": "synthetic:cash:btc-usd",
+                "scale": 3,
+                "type": "quantity",
+                "units": 5000
+              },
+              "reason": "rebalance:rebalance.engine-fixture.v1",
+              "reduce_only": false,
+              "side": "buy",
+              "time_in_force": "day",
+              "type": "order_intent",
+              "urgency": "normal"
+            },
+            "planned_delta": {
+              "instrument_id": "synthetic:cash:btc-usd",
+              "scale": 3,
+              "type": "quantity",
+              "units": 5000
+            },
+            "planned_order_id": "planned-order-v1:sha256:e17b1333332cae7425eb4b7b2cc61f36c770264d97d2e04e39600515c050aa9a",
+            "policy_hash": "sha256:803d0c2a8fb8a4282b362f14fb42b7b54499d71332577a657d66fb5e0e878377",
+            "retained_working_coverage": {
+              "instrument_id": "synthetic:cash:btc-usd",
+              "scale": 3,
+              "type": "quantity",
+              "units": 0
+            },
+            "schema_version": 1,
+            "target_quantity": {
+              "instrument_id": "synthetic:cash:btc-usd",
+              "scale": 3,
+              "type": "quantity",
+              "units": 5000
+            },
+            "type": "planned_order"
+          }
+        ],
+        "policy": {
+          "config_hash": "sha256:2b799d27ab068b9aa0f0756da3310327849c22a42193711adfcb78addf3d1f19",
+          "execution_style": "market",
+          "plan_valid_for_nanoseconds": 100,
+          "policy_key": "rebalance.engine-fixture.v1",
+          "policy_version": 1,
+          "schema_version": 1,
+          "time_in_force": "day",
+          "type": "rebalance_policy",
+          "urgency": "normal"
+        },
+        "schema_version": 1,
+        "supersedes_plan_id": null,
+        "type": "order_plan",
+        "valid_until": {
+          "epoch_nanoseconds": 205,
+          "type": "utc_instant"
+        }
+      }
+    ],
+    "06_ORDER_EVENT": [
+      {
+        "order": {
+          "account_id": "account:primary",
+          "created_at": {
+            "instant": {
+              "epoch_nanoseconds": 110,
+              "type": "utc_instant"
+            },
+            "phase": {
+              "code": "order_admission",
+              "rank": 80,
+              "type": "timeline_phase"
+            },
+            "source_sequence": {
+              "type": "source_sequence",
+              "value": 1
+            },
+            "type": "simulation_instant"
+          },
+          "intent": {
+            "execution_style": "market",
+            "instrument_id": {
+              "stable_key": "cash:btc-usd",
+              "type": "instrument_id",
+              "venue": "synthetic"
+            },
+            "parent_id": "normalized-portfolio-target-v1:sha256:86bde32ef958752adc033ae238d53c5cd734e9102193d0b9c4be7f819da117af",
+            "position_effect": "open",
+            "price_constraint": null,
+            "quantity": {
+              "instrument_id": "synthetic:cash:btc-usd",
+              "scale": 3,
+              "type": "quantity",
+              "units": 5000
+            },
+            "reason": "rebalance:rebalance.engine-fixture.v1",
+            "reduce_only": false,
+            "side": "buy",
+            "time_in_force": "day",
+            "type": "order_intent",
+            "urgency": "normal"
+          },
+          "order_id": {
+            "kind": "order",
+            "type": "domain_id",
+            "value": "ord_f7faa2594f4140f1a782908023e3acce53d56aa0f65a194698352dbfd5c4a614"
+          },
+          "type": "order"
+        },
+        "records": [
+          {
+            "event": {
+              "causation_id": "normalized-portfolio-target-v1:sha256:86bde32ef958752adc033ae238d53c5cd734e9102193d0b9c4be7f819da117af",
+              "event_id": "evt_826d1da6507b4feed85ef79c5b70124e08d877e5145b3639bed1d26fcd1bea5a",
+              "event_type": "order_intent_created",
+              "evidence_id": "sha256:1acb1e44e2ec82bcf0eb63f7d8e8f06d3065cc6f1052155f0868d0f315f5173c",
+              "fill_id": null,
+              "occurred_at": {
+                "instant": {
+                  "epoch_nanoseconds": 110,
+                  "type": "utc_instant"
+                },
+                "phase": {
+                  "code": "order_admission",
+                  "rank": 80,
+                  "type": "timeline_phase"
+                },
+                "source_sequence": {
+                  "type": "source_sequence",
+                  "value": 1
+                },
+                "type": "simulation_instant"
+              },
+              "order_id": {
+                "kind": "order",
+                "type": "domain_id",
+                "value": "ord_f7faa2594f4140f1a782908023e3acce53d56aa0f65a194698352dbfd5c4a614"
+              },
+              "reason_code": null,
+              "type": "order_event"
+            },
+            "fill": null,
+            "type": "order_event_record"
+          },
+          {
+            "event": {
+              "causation_id": "evt_826d1da6507b4feed85ef79c5b70124e08d877e5145b3639bed1d26fcd1bea5a",
+              "event_id": "evt_cb141b14f0ae30ff658407fff167161893abde13be3d16d10802ebb4cf459a3f",
+              "event_type": "order_capability_approved",
+              "evidence_id": "order-capability-decision-v1:sha256:d57be5f74a3c759269e2c037dadf7c77abd8c12ae6d4e7887b1a419af458c018",
+              "fill_id": null,
+              "occurred_at": {
+                "instant": {
+                  "epoch_nanoseconds": 111,
+                  "type": "utc_instant"
+                },
+                "phase": {
+                  "code": "order_admission",
+                  "rank": 80,
+                  "type": "timeline_phase"
+                },
+                "source_sequence": {
+                  "type": "source_sequence",
+                  "value": 2
+                },
+                "type": "simulation_instant"
+              },
+              "order_id": {
+                "kind": "order",
+                "type": "domain_id",
+                "value": "ord_f7faa2594f4140f1a782908023e3acce53d56aa0f65a194698352dbfd5c4a614"
+              },
+              "reason_code": null,
+              "type": "order_event"
+            },
+            "fill": null,
+            "type": "order_event_record"
+          },
+          {
+            "event": {
+              "causation_id": "evt_cb141b14f0ae30ff658407fff167161893abde13be3d16d10802ebb4cf459a3f",
+              "event_id": "evt_b1b62a11dc353065e1aa457a4c783153fc838f68b5f73635b7d3d531ce2cb071",
+              "event_type": "order_translated",
+              "evidence_id": "sha256:c9b7584a42d8cd8826ef63d6eb00204db9d9a8358205bbcc75dd83d0c35fb48f",
+              "fill_id": null,
+              "occurred_at": {
+                "instant": {
+                  "epoch_nanoseconds": 112,
+                  "type": "utc_instant"
+                },
+                "phase": {
+                  "code": "order_admission",
+                  "rank": 80,
+                  "type": "timeline_phase"
+                },
+                "source_sequence": {
+                  "type": "source_sequence",
+                  "value": 3
+                },
+                "type": "simulation_instant"
+              },
+              "order_id": {
+                "kind": "order",
+                "type": "domain_id",
+                "value": "ord_f7faa2594f4140f1a782908023e3acce53d56aa0f65a194698352dbfd5c4a614"
+              },
+              "reason_code": null,
+              "type": "order_event"
+            },
+            "fill": null,
+            "type": "order_event_record"
+          },
+          {
+            "event": {
+              "causation_id": "evt_b1b62a11dc353065e1aa457a4c783153fc838f68b5f73635b7d3d531ce2cb071",
+              "event_id": "evt_2210aeca8f85d78f3274cd53de2e97fddd5684fd857964bde18d92c32122f8a8",
+              "event_type": "market_rule_approved",
+              "evidence_id": "market-rule-decision-v1:sha256:bfafc929b16361024c43144ae93868160cbe0f212c9c12fe3242e5c53e10c3f4",
+              "fill_id": null,
+              "occurred_at": {
+                "instant": {
+                  "epoch_nanoseconds": 113,
+                  "type": "utc_instant"
+                },
+                "phase": {
+                  "code": "order_admission",
+                  "rank": 80,
+                  "type": "timeline_phase"
+                },
+                "source_sequence": {
+                  "type": "source_sequence",
+                  "value": 4
+                },
+                "type": "simulation_instant"
+              },
+              "order_id": {
+                "kind": "order",
+                "type": "domain_id",
+                "value": "ord_f7faa2594f4140f1a782908023e3acce53d56aa0f65a194698352dbfd5c4a614"
+              },
+              "reason_code": null,
+              "type": "order_event"
+            },
+            "fill": null,
+            "type": "order_event_record"
+          },
+          {
+            "event": {
+              "causation_id": "evt_2210aeca8f85d78f3274cd53de2e97fddd5684fd857964bde18d92c32122f8a8",
+              "event_id": "evt_e734feb8ee988a2ecc08dca0168f28f864e5db3958096dd01da0f80e1d2142cf",
+              "event_type": "fee_reservation_estimated",
+              "evidence_id": "fee-reservation-estimate-v1:sha256:c06cdbe05c3a4e6e712f94bbdcdfb1b329a146ba8fcac66c533096a98e6fad9f",
+              "fill_id": null,
+              "occurred_at": {
+                "instant": {
+                  "epoch_nanoseconds": 114,
+                  "type": "utc_instant"
+                },
+                "phase": {
+                  "code": "order_admission",
+                  "rank": 80,
+                  "type": "timeline_phase"
+                },
+                "source_sequence": {
+                  "type": "source_sequence",
+                  "value": 5
+                },
+                "type": "simulation_instant"
+              },
+              "order_id": {
+                "kind": "order",
+                "type": "domain_id",
+                "value": "ord_f7faa2594f4140f1a782908023e3acce53d56aa0f65a194698352dbfd5c4a614"
+              },
+              "reason_code": null,
+              "type": "order_event"
+            },
+            "fill": null,
+            "type": "order_event_record"
+          },
+          {
+            "event": {
+              "causation_id": "evt_e734feb8ee988a2ecc08dca0168f28f864e5db3958096dd01da0f80e1d2142cf",
+              "event_id": "evt_ab96012979dff08bc947156ace0f20c4cf9f331be4c5c9610a74d4a2ce3f6fbd",
+              "event_type": "pre_trade_risk_approved",
+              "evidence_id": "pretrade-risk-decision-v1:sha256:a247e7e512388824ad82cd72f7004a681112470fb31c820788ffb8ba0b9f90b7",
+              "fill_id": null,
+              "occurred_at": {
+                "instant": {
+                  "epoch_nanoseconds": 115,
+                  "type": "utc_instant"
+                },
+                "phase": {
+                  "code": "order_admission",
+                  "rank": 80,
+                  "type": "timeline_phase"
+                },
+                "source_sequence": {
+                  "type": "source_sequence",
+                  "value": 6
+                },
+                "type": "simulation_instant"
+              },
+              "order_id": {
+                "kind": "order",
+                "type": "domain_id",
+                "value": "ord_f7faa2594f4140f1a782908023e3acce53d56aa0f65a194698352dbfd5c4a614"
+              },
+              "reason_code": null,
+              "type": "order_event"
+            },
+            "fill": null,
+            "type": "order_event_record"
+          },
+          {
+            "event": {
+              "causation_id": "evt_ab96012979dff08bc947156ace0f20c4cf9f331be4c5c9610a74d4a2ce3f6fbd",
+              "event_id": "evt_6d09e4194deca88c734dc977b2d229343823a618a0d8aaf1a303ad3ca82ace79",
+              "event_type": "order_submitted",
+              "evidence_id": "external:order_submitted",
+              "fill_id": null,
+              "occurred_at": {
+                "instant": {
+                  "epoch_nanoseconds": 116,
+                  "type": "utc_instant"
+                },
+                "phase": {
+                  "code": "order_admission",
+                  "rank": 80,
+                  "type": "timeline_phase"
+                },
+                "source_sequence": {
+                  "type": "source_sequence",
+                  "value": 7
+                },
+                "type": "simulation_instant"
+              },
+              "order_id": {
+                "kind": "order",
+                "type": "domain_id",
+                "value": "ord_f7faa2594f4140f1a782908023e3acce53d56aa0f65a194698352dbfd5c4a614"
+              },
+              "reason_code": null,
+              "type": "order_event"
+            },
+            "fill": null,
+            "type": "order_event_record"
+          },
+          {
+            "event": {
+              "causation_id": "evt_6d09e4194deca88c734dc977b2d229343823a618a0d8aaf1a303ad3ca82ace79",
+              "event_id": "evt_87c7a02cf5434c31c209d93c662ec6ae9d9aacb895015a2573daadb73e018915",
+              "event_type": "order_accepted",
+              "evidence_id": "external:order_accepted",
+              "fill_id": null,
+              "occurred_at": {
+                "instant": {
+                  "epoch_nanoseconds": 117,
+                  "type": "utc_instant"
+                },
+                "phase": {
+                  "code": "order_admission",
+                  "rank": 80,
+                  "type": "timeline_phase"
+                },
+                "source_sequence": {
+                  "type": "source_sequence",
+                  "value": 8
+                },
+                "type": "simulation_instant"
+              },
+              "order_id": {
+                "kind": "order",
+                "type": "domain_id",
+                "value": "ord_f7faa2594f4140f1a782908023e3acce53d56aa0f65a194698352dbfd5c4a614"
+              },
+              "reason_code": null,
+              "type": "order_event"
+            },
+            "fill": null,
+            "type": "order_event_record"
+          },
+          {
+            "event": {
+              "causation_id": "evt_87c7a02cf5434c31c209d93c662ec6ae9d9aacb895015a2573daadb73e018915",
+              "event_id": "evt_d09b0a849ffcb46ac7bb39c29b912bb91e3a67b75876c92d283eb02df3a4787e",
+              "event_type": "order_filled",
+              "evidence_id": "sha256:f270ad35efc72c0bb6379390abf0eba995979f883006ebf2b56f14cbdeee23cc",
+              "fill_id": {
+                "kind": "fill",
+                "type": "domain_id",
+                "value": "fil_a564d9dce07bccb5d45d163846ba95e1004567f06ffdf8e0f34ab1bf0074efad"
+              },
+              "occurred_at": {
+                "instant": {
+                  "epoch_nanoseconds": 200,
+                  "type": "utc_instant"
+                },
+                "phase": {
+                  "code": "fill",
+                  "rank": 70,
+                  "type": "timeline_phase"
+                },
+                "source_sequence": {
+                  "type": "source_sequence",
+                  "value": 1
+                },
+                "type": "simulation_instant"
+              },
+              "order_id": {
+                "kind": "order",
+                "type": "domain_id",
+                "value": "ord_f7faa2594f4140f1a782908023e3acce53d56aa0f65a194698352dbfd5c4a614"
+              },
+              "reason_code": null,
+              "type": "order_event"
+            },
+            "fill": {
+              "account_id": "account:primary",
+              "execution_time": {
+                "epoch_nanoseconds": 200,
+                "type": "utc_instant"
+              },
+              "fill_id": {
+                "kind": "fill",
+                "type": "domain_id",
+                "value": "fil_a564d9dce07bccb5d45d163846ba95e1004567f06ffdf8e0f34ab1bf0074efad"
+              },
+              "instrument_id": {
+                "stable_key": "cash:btc-usd",
+                "type": "instrument_id",
+                "venue": "synthetic"
+              },
+              "liquidity": "full",
+              "order_id": {
+                "kind": "order",
+                "type": "domain_id",
+                "value": "ord_f7faa2594f4140f1a782908023e3acce53d56aa0f65a194698352dbfd5c4a614"
+              },
+              "price": {
+                "instrument_id": "synthetic:cash:btc-usd",
+                "quote_currency": "USD",
+                "scale": 2,
+                "type": "price",
+                "units": 10511
+              },
+              "quantity": {
+                "instrument_id": "synthetic:cash:btc-usd",
+                "scale": 3,
+                "type": "quantity",
+                "units": 5000
+              },
+              "reference_price": {
+                "instrument_id": "synthetic:cash:btc-usd",
+                "quote_currency": "USD",
+                "scale": 2,
+                "type": "price",
+                "units": 10500
+              },
+              "reference_price_purpose": "execution_reference",
+              "side": "buy",
+              "slippage_amount": {
+                "currency": "USD",
+                "scale": 2,
+                "type": "money",
+                "units": 11
+              },
+              "slippage_calibration_id": "sha256:f0442ecbf925ffb1c56be4d39ce3a7bd37be12de17511433bd277be2591d6414",
+              "slippage_decision_id": "sha256:4e3a71fdcf846ee9e2f2c9770109b0f69c5a143ee4ad02d899c6595f342dd076",
+              "slippage_model_key": "deterministic_bps.v1",
+              "type": "fill",
+              "venue_id": {
+                "type": "venue_id",
+                "value": "synthetic"
+              }
+            },
+            "type": "order_event_record"
+          }
+        ],
+        "schema_version": 1,
+        "state_hash": "sha256:75155921bdb42b583a958c38a107071d9b62dcc6a146e2cc81a39071ec514de6",
+        "stream_hash": "sha256:7d133dbfebfa0cb92f3af3dd51f54fa6bb834e56a97266fbbe67d94f144e5d2c",
+        "type": "order_event_stream"
+      }
+    ],
+    "07_FILL": [
+      {
+        "account_id": "account:primary",
+        "execution_time": {
+          "epoch_nanoseconds": 200,
+          "type": "utc_instant"
+        },
+        "fill_id": {
+          "kind": "fill",
+          "type": "domain_id",
+          "value": "fil_a564d9dce07bccb5d45d163846ba95e1004567f06ffdf8e0f34ab1bf0074efad"
+        },
+        "instrument_id": {
+          "stable_key": "cash:btc-usd",
+          "type": "instrument_id",
+          "venue": "synthetic"
+        },
+        "liquidity": "full",
+        "order_id": {
+          "kind": "order",
+          "type": "domain_id",
+          "value": "ord_f7faa2594f4140f1a782908023e3acce53d56aa0f65a194698352dbfd5c4a614"
+        },
+        "price": {
+          "instrument_id": "synthetic:cash:btc-usd",
+          "quote_currency": "USD",
+          "scale": 2,
+          "type": "price",
+          "units": 10511
+        },
+        "quantity": {
+          "instrument_id": "synthetic:cash:btc-usd",
+          "scale": 3,
+          "type": "quantity",
+          "units": 5000
+        },
+        "reference_price": {
+          "instrument_id": "synthetic:cash:btc-usd",
+          "quote_currency": "USD",
+          "scale": 2,
+          "type": "price",
+          "units": 10500
+        },
+        "reference_price_purpose": "execution_reference",
+        "side": "buy",
+        "slippage_amount": {
+          "currency": "USD",
+          "scale": 2,
+          "type": "money",
+          "units": 11
+        },
+        "slippage_calibration_id": "sha256:f0442ecbf925ffb1c56be4d39ce3a7bd37be12de17511433bd277be2591d6414",
+        "slippage_decision_id": "sha256:4e3a71fdcf846ee9e2f2c9770109b0f69c5a143ee4ad02d899c6595f342dd076",
+        "slippage_model_key": "deterministic_bps.v1",
+        "type": "fill",
+        "venue_id": {
+          "type": "venue_id",
+          "value": "synthetic"
+        }
+      }
+    ],
+    "08_SLIPPAGE": [
+      {
+        "applicability": {
+          "applicable": true,
+          "checked_dimensions": [
+            "instrument",
+            "time_window",
+            "quantity",
+            "market_state"
+          ],
+          "envelope_hash": "sha256:a6593cea9f1dcb5029fb1fb79afaa997b666d2a5733890b7c3e3953bb805822b",
+          "market_state_hash": "sha256:8b06667eaa3ff28edbfba121fcea19c5655195a3742475287b46c704799c49e6",
+          "type": "slippage_applicability_result"
+        },
+        "basis_points_scale": 0,
+        "basis_points_units": 10,
+        "calibration_ref": {
+          "calibration_digest": "sha256:4242424242424242424242424242424242424242424242424242424242424242",
+          "calibration_key": "calibration.engine-fixture.v1",
+          "calibration_version": 1,
+          "type": "slippage_calibration_ref"
+        },
+        "component_ref": {
+          "component_digest": "sha256:4141414141414141414141414141414141414141414141414141414141414141",
+          "component_key": "deterministic_bps.v1",
+          "component_version": 1,
+          "port_type": "slippage_model",
+          "type": "simulation_component_ref"
+        },
+        "decision_id": "sha256:4e3a71fdcf846ee9e2f2c9770109b0f69c5a143ee4ad02d899c6595f342dd076",
+        "execution_price": {
+          "instrument_id": "synthetic:cash:btc-usd",
+          "quote_currency": "USD",
+          "scale": 2,
+          "type": "price",
+          "units": 10511
+        },
+        "limitations": [],
+        "request": {
+          "market_state": {
+            "available_at": {
+              "epoch_nanoseconds": 200,
+              "type": "utc_instant"
+            },
+            "evidence_hash": "sha256:f2b8b826ea288cade860431bb1468d05054a1839a94f7ba28e55fe898b740d18",
+            "observed_at": {
+              "epoch_nanoseconds": 200,
+              "type": "utc_instant"
+            },
+            "revision_id": "rev-1",
+            "source_event_id": "engine-bar-open-200",
+            "state_key": "normal",
+            "type": "slippage_market_state"
+          },
+          "quantity": {
+            "instrument_id": "synthetic:cash:btc-usd",
+            "scale": 3,
+            "type": "quantity",
+            "units": 5000
+          },
+          "reference_price": {
+            "mark": {
+              "age_nanoseconds": 0,
+              "available_at": {
+                "epoch_nanoseconds": 200,
+                "type": "utc_instant"
+              },
+              "instrument_id": {
+                "stable_key": "cash:btc-usd",
+                "type": "instrument_id",
+                "venue": "synthetic"
+              },
+              "mark_id": "sha256:8dc612b21b4302a52cb23374a74fe153fac3e8fd8075982f16762606de907715",
+              "observed_at": {
+                "epoch_nanoseconds": 200,
+                "type": "utc_instant"
+              },
+              "price": {
+                "instrument_id": "synthetic:cash:btc-usd",
+                "quote_currency": "USD",
+                "scale": 2,
+                "type": "price",
+                "units": 10500
+              },
+              "price_purpose": "execution_reference",
+              "quote_currency_id": {
+                "type": "currency_id",
+                "value": "USD"
+              },
+              "resolved_at": {
+                "epoch_nanoseconds": 200,
+                "type": "utc_instant"
+              },
+              "revision_id": "rev-1",
+              "source_event_id": "engine-bar-open-200",
+              "stale_policy_hash": "sha256:69d28d07151645d3f5ebefa7727cda922dc27de5778eb6da2fee57021674fe32",
+              "stale_policy_key": "bar_open_exact.v1",
+              "stale_policy_version": 1,
+              "stream_id": "bars.open",
+              "type": "resolved_mark"
+            },
+            "type": "execution_reference_price"
+          },
+          "side": "buy",
+          "type": "slippage_request"
+        },
+        "rounding": "half_up",
+        "slippage_amount": {
+          "instrument_id": "synthetic:cash:btc-usd",
+          "quote_currency": "USD",
+          "scale": 2,
+          "type": "price",
+          "units": 11
+        },
+        "type": "slippage_decision"
+      }
+    ],
+    "09_FEE": [
+      {
+        "account_fee_schedule_id": "account-fee:synthetic.cash.final-account-fee.v1:v1:sha256:ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff",
+        "amount": {
+          "currency": "USD",
+          "scale": 2,
+          "type": "money",
+          "units": 53
+        },
+        "assessment_time": {
+          "epoch_nanoseconds": 211,
+          "type": "utc_instant"
+        },
+        "basis_ids": [
+          {
+            "kind": "fill",
+            "type": "domain_id",
+            "value": "fil_a564d9dce07bccb5d45d163846ba95e1004567f06ffdf8e0f34ab1bf0074efad"
+          }
+        ],
+        "basis_type": "fill",
+        "fee_assessment_id": {
+          "kind": "fee",
+          "type": "domain_id",
+          "value": "fee_85ec13b00240dd63031731241557d0873213963b91d2d398006295178933a37c"
+        },
+        "market_fee_rule_id": "profile:synthetic.cash.final-market-fee.v1:v1:sha256:dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd",
+        "tax_rule_id": "profile:synthetic.cash.final-tax.v1:v1:sha256:eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee",
+        "type": "fee_assessment"
+      }
+    ],
+    "10_FINANCIAL_ARTIFACT": [
+      {
+        "component_digest": "sha256:4afab2bdcc0a850f518cf1e57dd4fbbd5656e4fd008ec1ccf4d0061e55259b83",
+        "component_key": "cash.instrument.position-accounting.v1",
+        "component_version": 1,
+        "input_hash": "sha256:d3b1f2a754b44b265becab757dd8ff7a69dc0aa5c48432967cf26955abf03934",
+        "occurred_at": {
+          "instant": {
+            "epoch_nanoseconds": 210,
+            "type": "utc_instant"
+          },
+          "phase": {
+            "code": "accounting",
+            "rank": 90,
+            "type": "timeline_phase"
+          },
+          "source_sequence": {
+            "type": "source_sequence",
+            "value": 1
+          },
+          "type": "simulation_instant"
+        },
+        "payload": {
+          "cost_basis_policy": {
+            "fee_allocation_rounding": "half_even",
+            "method": "fifo",
+            "policy_key": "cost-basis.engine-fixture.v1",
+            "policy_version": 1,
+            "type": "cost_basis_policy"
+          },
+          "gross_realized_pnl": null,
+          "journal_entry": {
+            "account_id": "account:primary",
+            "balance_changes": [
+              {
+                "key": {
+                  "account_id": "account:primary",
+                  "currency_id": {
+                    "type": "currency_id",
+                    "value": "USD"
+                  },
+                  "type": "cash_balance_key",
+                  "venue_id": {
+                    "type": "venue_id",
+                    "value": "synthetic"
+                  }
+                },
+                "type": "balance_change",
+                "value": {
+                  "currency": "USD",
+                  "scale": 2,
+                  "type": "money",
+                  "units": -52555
+                }
+              },
+              {
+                "key": {
+                  "account_id": "account:primary",
+                  "instrument_id": {
+                    "stable_key": "cash:btc-usd",
+                    "type": "instrument_id",
+                    "venue": "synthetic"
+                  },
+                  "type": "position_balance_key",
+                  "venue_id": {
+                    "type": "venue_id",
+                    "value": "synthetic"
+                  }
+                },
+                "type": "balance_change",
+                "value": {
+                  "instrument_id": "synthetic:cash:btc-usd",
+                  "scale": 3,
+                  "type": "quantity",
+                  "units": 5000
+                }
+              }
+            ],
+            "effective_time": {
+              "epoch_nanoseconds": 200,
+              "type": "utc_instant"
+            },
+            "entry_type": "fill_booked",
+            "fees": [],
+            "financing": [],
+            "journal_entry_id": {
+              "kind": "journal",
+              "type": "domain_id",
+              "value": "jnl_09a9c3aa5746036aa0e5eef052a85edb655e02fb3d0e97af5cc92ddde507ef7b"
+            },
+            "realized_pnl": [],
+            "recorded_at": {
+              "instant": {
+                "epoch_nanoseconds": 210,
+                "type": "utc_instant"
+              },
+              "phase": {
+                "code": "accounting",
+                "rank": 90,
+                "type": "timeline_phase"
+              },
+              "source_sequence": {
+                "type": "source_sequence",
+                "value": 1
+              },
+              "type": "simulation_instant"
+            },
+            "source_ids": [
+              "fil_a564d9dce07bccb5d45d163846ba95e1004567f06ffdf8e0f34ab1bf0074efad",
+              "ord_f7faa2594f4140f1a782908023e3acce53d56aa0f65a194698352dbfd5c4a614"
+            ],
+            "type": "accounting_journal_entry",
+            "venue_id": {
+              "type": "venue_id",
+              "value": "synthetic"
+            }
+          },
+          "lot_consumptions": [],
+          "open_lots": [
+            {
+              "allocated_fees": [],
+              "lot_id": "lot:fil_a564d9dce07bccb5d45d163846ba95e1004567f06ffdf8e0f34ab1bf0074efad",
+              "opened_at": {
+                "epoch_nanoseconds": 200,
+                "type": "utc_instant"
+              },
+              "position_key": {
+                "account_id": "account:primary",
+                "instrument_id": {
+                  "stable_key": "cash:btc-usd",
+                  "type": "instrument_id",
+                  "venue": "synthetic"
+                },
+                "type": "position_balance_key",
+                "venue_id": {
+                  "type": "venue_id",
+                  "value": "synthetic"
+                }
+              },
+              "quantity": {
+                "instrument_id": "synthetic:cash:btc-usd",
+                "scale": 3,
+                "type": "quantity",
+                "units": 5000
+              },
+              "source_id": "fil_a564d9dce07bccb5d45d163846ba95e1004567f06ffdf8e0f34ab1bf0074efad",
+              "type": "position_lot",
+              "unit_cost": {
+                "instrument_id": "synthetic:cash:btc-usd",
+                "quote_currency": "USD",
+                "scale": 2,
+                "type": "price",
+                "units": 10511
+              }
+            }
+          ],
+          "opened_lot": {
+            "allocated_fees": [],
+            "lot_id": "lot:fil_a564d9dce07bccb5d45d163846ba95e1004567f06ffdf8e0f34ab1bf0074efad",
+            "opened_at": {
+              "epoch_nanoseconds": 200,
+              "type": "utc_instant"
+            },
+            "position_key": {
+              "account_id": "account:primary",
+              "instrument_id": {
+                "stable_key": "cash:btc-usd",
+                "type": "instrument_id",
+                "venue": "synthetic"
+              },
+              "type": "position_balance_key",
+              "venue_id": {
+                "type": "venue_id",
+                "value": "synthetic"
+              }
+            },
+            "quantity": {
+              "instrument_id": "synthetic:cash:btc-usd",
+              "scale": 3,
+              "type": "quantity",
+              "units": 5000
+            },
+            "source_id": "fil_a564d9dce07bccb5d45d163846ba95e1004567f06ffdf8e0f34ab1bf0074efad",
+            "type": "position_lot",
+            "unit_cost": {
+              "instrument_id": "synthetic:cash:btc-usd",
+              "quote_currency": "USD",
+              "scale": 2,
+              "type": "price",
+              "units": 10511
+            }
+          },
+          "price_cost_basis": null,
+          "type": "cash_fill_accounting_result"
+        },
+        "result_hash": "sha256:794f21b6b82fe8eda084a47d0d52533f8517cc094b239dac9ddac0245781ded1",
+        "role": "position_accounting",
+        "schema_version": 1,
+        "source_event_id": "engine-bar-open-200",
+        "type": "financial_dispatch_artifact"
+      },
+      {
+        "component_digest": "sha256:9f26ed8d6c47b3963020008e8688d9a235b0443d86438186b89790d86bce5c62",
+        "component_key": "generic.cash.portfolio-snapshot.v1",
+        "component_version": 1,
+        "input_hash": "sha256:cb714dfb6bad5026a7bcc38e6ca32f2bb5c40d13df5d367606bbee7b3f292277",
+        "occurred_at": {
+          "instant": {
+            "epoch_nanoseconds": 300,
+            "type": "utc_instant"
+          },
+          "phase": {
+            "code": "accounting",
+            "rank": 90,
+            "type": "timeline_phase"
+          },
+          "source_sequence": {
+            "type": "source_sequence",
+            "value": 3
+          },
+          "type": "simulation_instant"
+        },
+        "payload": {
+          "account_id": "account:primary",
+          "cash": [
+            {
+              "amount": {
+                "currency": "USD",
+                "scale": 2,
+                "type": "money",
+                "units": 47392
+              },
+              "key": {
+                "account_id": "account:primary",
+                "currency_id": {
+                  "type": "currency_id",
+                  "value": "USD"
+                },
+                "type": "cash_balance_key",
+                "venue_id": {
+                  "type": "venue_id",
+                  "value": "synthetic"
+                }
+              },
+              "type": "cash_balance"
+            }
+          ],
+          "currency_valuation_graph_hash": "sha256:7271c5e689282c390123c4253c8f7d143a134af08bc848d6c714f534034b5b76",
+          "equity": {
+            "currency": "USD",
+            "scale": 2,
+            "type": "money",
+            "units": 102392
+          },
+          "fees": {
+            "currency": "USD",
+            "scale": 2,
+            "type": "money",
+            "units": 53
+          },
+          "financing": {
+            "currency": "USD",
+            "scale": 2,
+            "type": "money",
+            "units": 0
+          },
+          "journal_state_hash": "sha256:bec9bac85f9a89e188ef06e0e730a088c015b9c4d709eb47c7bd4785fef313f8",
+          "positions": [
+            {
+              "key": {
+                "account_id": "account:primary",
+                "instrument_id": {
+                  "stable_key": "cash:btc-usd",
+                  "type": "instrument_id",
+                  "venue": "synthetic"
+                },
+                "type": "position_balance_key",
+                "venue_id": {
+                  "type": "venue_id",
+                  "value": "synthetic"
+                }
+              },
+              "lots": [],
+              "quantity": {
+                "instrument_id": "synthetic:cash:btc-usd",
+                "scale": 3,
+                "type": "quantity",
+                "units": 5000
+              },
+              "type": "position_balance"
+            }
+          ],
+          "realized_pnl": {
+            "currency": "USD",
+            "scale": 2,
+            "type": "money",
+            "units": 0
+          },
+          "reporting_currency": {
+            "type": "currency_id",
+            "value": "USD"
+          },
+          "timestamp": {
+            "epoch_nanoseconds": 300,
+            "type": "utc_instant"
+          },
+          "type": "portfolio_snapshot",
+          "unrealized_pnl": {
+            "currency": "USD",
+            "scale": 2,
+            "type": "money",
+            "units": 2445
+          },
+          "valuation_mark_set_hash": "sha256:9e548cf192ddf1ac285e107ba159a058a572c96c643831d566985b2e7c8055be",
+          "valuation_marks": [
+            {
+              "instrument_id": {
+                "stable_key": "cash:btc-usd",
+                "type": "instrument_id",
+                "venue": "synthetic"
+              },
+              "mark_id": "sha256:1b7e4749dc51652d5b18a6084b91fac7e16b58b4bdc0971618be6cbc403db170",
+              "observed_at": {
+                "epoch_nanoseconds": 290,
+                "type": "utc_instant"
+              },
+              "price_purpose": "valuation",
+              "type": "valuation_mark_reference"
+            }
+          ],
+          "valuation_staleness_report_hash": "sha256:ecae20c3c3dc9326563281e2cc4fd3e7873f324d4b7973a1e709894d89e45bbe"
+        },
+        "result_hash": "sha256:b8460e12ff51174f40180b9938fad588ca892cde1e718700f62a5f06dca9be68",
+        "role": "final_snapshot",
+        "schema_version": 1,
+        "source_event_id": "engine-finalize",
+        "type": "financial_dispatch_artifact"
+      }
+    ],
+    "11_JOURNAL": [
+      {
+        "account_id": "account:primary",
+        "balance_changes": [
+          {
+            "key": {
+              "account_id": "account:primary",
+              "currency_id": {
+                "type": "currency_id",
+                "value": "USD"
+              },
+              "type": "cash_balance_key",
+              "venue_id": {
+                "type": "venue_id",
+                "value": "synthetic"
+              }
+            },
+            "type": "balance_change",
+            "value": {
+              "currency": "USD",
+              "scale": 2,
+              "type": "money",
+              "units": 100000
+            }
+          }
+        ],
+        "effective_time": {
+          "epoch_nanoseconds": 0,
+          "type": "utc_instant"
+        },
+        "entry_type": "capital_deposited",
+        "fees": [],
+        "financing": [],
+        "journal_entry_id": {
+          "kind": "journal",
+          "type": "domain_id",
+          "value": "jnl_739084961dd691f617624422a7c07de553294c0f7ee15a06f5a19a29919da498"
+        },
+        "realized_pnl": [],
+        "recorded_at": {
+          "instant": {
+            "epoch_nanoseconds": 1,
+            "type": "utc_instant"
+          },
+          "phase": {
+            "code": "accounting",
+            "rank": 90,
+            "type": "timeline_phase"
+          },
+          "source_sequence": {
+            "type": "source_sequence",
+            "value": 1
+          },
+          "type": "simulation_instant"
+        },
+        "source_ids": [
+          "capital:engine-fixture"
+        ],
+        "type": "accounting_journal_entry",
+        "venue_id": {
+          "type": "venue_id",
+          "value": "synthetic"
+        }
+      },
+      {
+        "account_id": "account:primary",
+        "balance_changes": [
+          {
+            "key": {
+              "account_id": "account:primary",
+              "currency_id": {
+                "type": "currency_id",
+                "value": "USD"
+              },
+              "type": "cash_balance_key",
+              "venue_id": {
+                "type": "venue_id",
+                "value": "synthetic"
+              }
+            },
+            "type": "balance_change",
+            "value": {
+              "currency": "USD",
+              "scale": 2,
+              "type": "money",
+              "units": -52555
+            }
+          },
+          {
+            "key": {
+              "account_id": "account:primary",
+              "instrument_id": {
+                "stable_key": "cash:btc-usd",
+                "type": "instrument_id",
+                "venue": "synthetic"
+              },
+              "type": "position_balance_key",
+              "venue_id": {
+                "type": "venue_id",
+                "value": "synthetic"
+              }
+            },
+            "type": "balance_change",
+            "value": {
+              "instrument_id": "synthetic:cash:btc-usd",
+              "scale": 3,
+              "type": "quantity",
+              "units": 5000
+            }
+          }
+        ],
+        "effective_time": {
+          "epoch_nanoseconds": 200,
+          "type": "utc_instant"
+        },
+        "entry_type": "fill_booked",
+        "fees": [],
+        "financing": [],
+        "journal_entry_id": {
+          "kind": "journal",
+          "type": "domain_id",
+          "value": "jnl_09a9c3aa5746036aa0e5eef052a85edb655e02fb3d0e97af5cc92ddde507ef7b"
+        },
+        "realized_pnl": [],
+        "recorded_at": {
+          "instant": {
+            "epoch_nanoseconds": 210,
+            "type": "utc_instant"
+          },
+          "phase": {
+            "code": "accounting",
+            "rank": 90,
+            "type": "timeline_phase"
+          },
+          "source_sequence": {
+            "type": "source_sequence",
+            "value": 1
+          },
+          "type": "simulation_instant"
+        },
+        "source_ids": [
+          "fil_a564d9dce07bccb5d45d163846ba95e1004567f06ffdf8e0f34ab1bf0074efad",
+          "ord_f7faa2594f4140f1a782908023e3acce53d56aa0f65a194698352dbfd5c4a614"
+        ],
+        "type": "accounting_journal_entry",
+        "venue_id": {
+          "type": "venue_id",
+          "value": "synthetic"
+        }
+      },
+      {
+        "account_id": "account:primary",
+        "balance_changes": [
+          {
+            "key": {
+              "account_id": "account:primary",
+              "currency_id": {
+                "type": "currency_id",
+                "value": "USD"
+              },
+              "type": "cash_balance_key",
+              "venue_id": {
+                "type": "venue_id",
+                "value": "synthetic"
+              }
+            },
+            "type": "balance_change",
+            "value": {
+              "currency": "USD",
+              "scale": 2,
+              "type": "money",
+              "units": -53
+            }
+          }
+        ],
+        "effective_time": {
+          "epoch_nanoseconds": 211,
+          "type": "utc_instant"
+        },
+        "entry_type": "fee_charged",
+        "fees": [
+          {
+            "currency": "USD",
+            "scale": 2,
+            "type": "money",
+            "units": 53
+          }
+        ],
+        "financing": [],
+        "journal_entry_id": {
+          "kind": "journal",
+          "type": "domain_id",
+          "value": "jnl_e916d4bcb5c47bc4256072eb9de6517decd9f42f252ba91cfd5bbb65ab043b74"
+        },
+        "realized_pnl": [],
+        "recorded_at": {
+          "instant": {
+            "epoch_nanoseconds": 212,
+            "type": "utc_instant"
+          },
+          "phase": {
+            "code": "accounting",
+            "rank": 90,
+            "type": "timeline_phase"
+          },
+          "source_sequence": {
+            "type": "source_sequence",
+            "value": 3
+          },
+          "type": "simulation_instant"
+        },
+        "source_ids": [
+          "account-fee:synthetic.cash.final-account-fee.v1:v1:sha256:ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff",
+          "account-fill",
+          "fee-basis:sha256:fd04e7c486d0b324508b297d1a127f456bf08910e0bfcb56b599cb8954bba60a",
+          "fee_85ec13b00240dd63031731241557d0873213963b91d2d398006295178933a37c",
+          "fil_a564d9dce07bccb5d45d163846ba95e1004567f06ffdf8e0f34ab1bf0074efad",
+          "final-fee-rule-set:sha256:36bb836172860857a5ab8237ecba75a733df670ca51f72f0bb2938abb2b425f9",
+          "market-fill",
+          "profile:synthetic.cash.final-market-fee.v1:v1:sha256:dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd",
+          "profile:synthetic.cash.final-tax.v1:v1:sha256:eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee",
+          "tax-fill"
+        ],
+        "type": "accounting_journal_entry",
+        "venue_id": {
+          "type": "venue_id",
+          "value": "synthetic"
+        }
+      }
+    ],
+    "12_LEDGER": {
+      "cash_balances": [
+        {
+          "amount": {
+            "currency": "USD",
+            "scale": 2,
+            "type": "money",
+            "units": 47392
+          },
+          "key": {
+            "account_id": "account:primary",
+            "currency_id": {
+              "type": "currency_id",
+              "value": "USD"
+            },
+            "type": "cash_balance_key",
+            "venue_id": {
+              "type": "venue_id",
+              "value": "synthetic"
+            }
+          },
+          "type": "cash_balance"
+        }
+      ],
+      "cursor": {
+        "position": 3,
+        "prefix_hash": "sha256:507d56af609a64e9f722fbb0387145902cb10a4c16b5fa5afccd9d938632c29d",
+        "type": "journal_replay_cursor"
+      },
+      "fees": [
+        {
+          "amount": {
+            "currency": "USD",
+            "scale": 2,
+            "type": "money",
+            "units": 53
+          },
+          "key": {
+            "account_id": "account:primary",
+            "currency_id": {
+              "type": "currency_id",
+              "value": "USD"
+            },
+            "type": "cash_balance_key",
+            "venue_id": {
+              "type": "venue_id",
+              "value": "synthetic"
+            }
+          },
+          "type": "cash_balance"
+        }
+      ],
+      "financing": [],
+      "position_balances": [
+        {
+          "key": {
+            "account_id": "account:primary",
+            "instrument_id": {
+              "stable_key": "cash:btc-usd",
+              "type": "instrument_id",
+              "venue": "synthetic"
+            },
+            "type": "position_balance_key",
+            "venue_id": {
+              "type": "venue_id",
+              "value": "synthetic"
+            }
+          },
+          "lots": [],
+          "quantity": {
+            "instrument_id": "synthetic:cash:btc-usd",
+            "scale": 3,
+            "type": "quantity",
+            "units": 5000
+          },
+          "type": "position_balance"
+        }
+      ],
+      "realized_pnl": [],
+      "schema_hash": "sha256:d2f72817e1cc8211d92511eca52e518fc4df4d108c7a44848368a9f77a27bb72",
+      "type": "ledger_state"
+    },
+    "13_FINAL_SNAPSHOT": {
+      "account_id": "account:primary",
+      "cash": [
+        {
+          "amount": {
+            "currency": "USD",
+            "scale": 2,
+            "type": "money",
+            "units": 47392
+          },
+          "key": {
+            "account_id": "account:primary",
+            "currency_id": {
+              "type": "currency_id",
+              "value": "USD"
+            },
+            "type": "cash_balance_key",
+            "venue_id": {
+              "type": "venue_id",
+              "value": "synthetic"
+            }
+          },
+          "type": "cash_balance"
+        }
+      ],
+      "currency_valuation_graph_hash": "sha256:7271c5e689282c390123c4253c8f7d143a134af08bc848d6c714f534034b5b76",
+      "equity": {
+        "currency": "USD",
+        "scale": 2,
+        "type": "money",
+        "units": 102392
+      },
+      "fees": {
+        "currency": "USD",
+        "scale": 2,
+        "type": "money",
+        "units": 53
+      },
+      "financing": {
+        "currency": "USD",
+        "scale": 2,
+        "type": "money",
+        "units": 0
+      },
+      "journal_state_hash": "sha256:bec9bac85f9a89e188ef06e0e730a088c015b9c4d709eb47c7bd4785fef313f8",
+      "positions": [
+        {
+          "key": {
+            "account_id": "account:primary",
+            "instrument_id": {
+              "stable_key": "cash:btc-usd",
+              "type": "instrument_id",
+              "venue": "synthetic"
+            },
+            "type": "position_balance_key",
+            "venue_id": {
+              "type": "venue_id",
+              "value": "synthetic"
+            }
+          },
+          "lots": [],
+          "quantity": {
+            "instrument_id": "synthetic:cash:btc-usd",
+            "scale": 3,
+            "type": "quantity",
+            "units": 5000
+          },
+          "type": "position_balance"
+        }
+      ],
+      "realized_pnl": {
+        "currency": "USD",
+        "scale": 2,
+        "type": "money",
+        "units": 0
+      },
+      "reporting_currency": {
+        "type": "currency_id",
+        "value": "USD"
+      },
+      "timestamp": {
+        "epoch_nanoseconds": 300,
+        "type": "utc_instant"
+      },
+      "type": "portfolio_snapshot",
+      "unrealized_pnl": {
+        "currency": "USD",
+        "scale": 2,
+        "type": "money",
+        "units": 2445
+      },
+      "valuation_mark_set_hash": "sha256:9e548cf192ddf1ac285e107ba159a058a572c96c643831d566985b2e7c8055be",
+      "valuation_marks": [
+        {
+          "instrument_id": {
+            "stable_key": "cash:btc-usd",
+            "type": "instrument_id",
+            "venue": "synthetic"
+          },
+          "mark_id": "sha256:1b7e4749dc51652d5b18a6084b91fac7e16b58b4bdc0971618be6cbc403db170",
+          "observed_at": {
+            "epoch_nanoseconds": 290,
+            "type": "utc_instant"
+          },
+          "price_purpose": "valuation",
+          "type": "valuation_mark_reference"
+        }
+      ],
+      "valuation_staleness_report_hash": "sha256:ecae20c3c3dc9326563281e2cc4fd3e7873f324d4b7973a1e709894d89e45bbe"
+    },
+    "14_RUN_END": {
+      "account_id": "account:primary",
+      "closeout_component_ref": {
+        "component_digest": "sha256:d9be291bff3147a191296ec5b3d37cc79aecc9ee2bff4877d7bca86f9aeb0ea8",
+        "component_key": "mark_to_market.v1",
+        "component_version": 1,
+        "port_type": "closeout_policy",
+        "type": "simulation_component_ref"
+      },
+      "closeout_mode": "mark_to_market",
+      "closeout_outcome_hash": "sha256:26e986d0268eb0a8a78402693feacf7ce186efcb7348e0fe857cf8d4d75ce8fc",
+      "closeout_status": "positions_preserved",
+      "final_snapshot_hash": "sha256:b8460e12ff51174f40180b9938fad588ca892cde1e718700f62a5f06dca9be68",
+      "journal_state_hash": "sha256:bec9bac85f9a89e188ef06e0e730a088c015b9c4d709eb47c7bd4785fef313f8",
+      "last_valuation_mark_ids": [
+        "sha256:1b7e4749dc51652d5b18a6084b91fac7e16b58b4bdc0971618be6cbc403db170"
+      ],
+      "open_positions": [
+        {
+          "key": {
+            "account_id": "account:primary",
+            "instrument_id": {
+              "stable_key": "cash:btc-usd",
+              "type": "instrument_id",
+              "venue": "synthetic"
+            },
+            "type": "position_balance_key",
+            "venue_id": {
+              "type": "venue_id",
+              "value": "synthetic"
+            }
+          },
+          "lots": [],
+          "quantity": {
+            "instrument_id": "synthetic:cash:btc-usd",
+            "scale": 3,
+            "type": "quantity",
+            "units": 5000
+          },
+          "type": "position_balance"
+        }
+      ],
+      "pending_fee_assessments": [],
+      "pending_settlements": [],
+      "released_reservations": [],
+      "report_id": "sha256:e90813046de93e5f98008ac105535427a972f59b3eaaacbe21cebfbca02c245d",
+      "reservation_state_hash": "sha256:3def2bd31059ffa09b920e3d3e1b0191d50d97dd69609defc1c081c07aa2d800",
+      "run_end_evidence_hash": "sha256:36a25e46c89f7e40844526fec88f52b473f4b1e29ee4e3ba34e2e1e5ea40e7ac",
+      "schema_version": 1,
+      "settlement_state_hash": "sha256:9549d058d74a8dc1e147c4defdd78bb25264194f70f7a861a29ebaa84b6810b5",
+      "terminated_orders": [],
+      "timeline_cursor_hash": "sha256:dd23caf22b229d2b4d4208f7a6be0d005c7b5a9fdf187b0c08ba65c8af7b7257",
+      "trading_end_exclusive": {
+        "epoch_nanoseconds": 300,
+        "type": "utc_instant"
+      },
+      "type": "run_end_report"
+    },
+    "15_TRACE": {
+      "entries": [
+        {
+          "evidence_hash": "sha256:d8ce3cd92509e2f0f4cfce2f4e77783e99de2e5e33ad97610c8fc259ba3dc3a0",
+          "instant": {
+            "instant": {
+              "epoch_nanoseconds": 100,
+              "type": "utc_instant"
+            },
+            "phase": {
+              "code": "strategy_decision",
+              "rank": 30,
+              "type": "timeline_phase"
+            },
+            "source_sequence": {
+              "type": "source_sequence",
+              "value": 1
+            },
+            "type": "simulation_instant"
+          },
+          "sequence": 0,
+          "stage": "timeline_event",
+          "subject_id": "engine-target-100"
+        },
+        {
+          "evidence_hash": "sha256:43699c7592376ceee4222cafe7fa4f57005675ab1ade3ecab1315c29944b7cd9",
+          "instant": {
+            "instant": {
+              "epoch_nanoseconds": 100,
+              "type": "utc_instant"
+            },
+            "phase": {
+              "code": "strategy_decision",
+              "rank": 30,
+              "type": "timeline_phase"
+            },
+            "source_sequence": {
+              "type": "source_sequence",
+              "value": 1
+            },
+            "type": "simulation_instant"
+          },
+          "sequence": 1,
+          "stage": "decision_batch",
+          "subject_id": "decision-batch-v1:sha256:c9126ea400897e9cd53d5bfa8640f6199db37db7a77435de15141d429d871d52"
+        },
+        {
+          "evidence_hash": "sha256:e4cb781ff14e19bf8370747a4d55d667e0ac778318b6dbd76c2c7c5a2f76c6e7",
+          "instant": {
+            "instant": {
+              "epoch_nanoseconds": 100,
+              "type": "utc_instant"
+            },
+            "phase": {
+              "code": "strategy_decision",
+              "rank": 30,
+              "type": "timeline_phase"
+            },
+            "source_sequence": {
+              "type": "source_sequence",
+              "value": 1
+            },
+            "type": "simulation_instant"
+          },
+          "sequence": 2,
+          "stage": "capital_allocation",
+          "subject_id": "portfolio-allocation-v1:sha256:b6828536cdf35db9380d72e83cac85377251f524eb7d75a40652db9d97a8f241"
+        },
+        {
+          "evidence_hash": "sha256:b37231d63fadc4bde17cc0850b14d3fdc81ed6b0449955843979771b2e7f106f",
+          "instant": {
+            "instant": {
+              "epoch_nanoseconds": 100,
+              "type": "utc_instant"
+            },
+            "phase": {
+              "code": "strategy_decision",
+              "rank": 30,
+              "type": "timeline_phase"
+            },
+            "source_sequence": {
+              "type": "source_sequence",
+              "value": 1
+            },
+            "type": "simulation_instant"
+          },
+          "sequence": 3,
+          "stage": "portfolio_risk",
+          "subject_id": "approved-portfolio-target-v1:sha256:ec9592aeced9004690c25ed75c5cb8b4783faaddc366b7f1a6600ed8645f215c"
+        },
+        {
+          "evidence_hash": "sha256:6d852c9975cdd4c6081fc6f4ca7422788c1c4f9c7af38e3928858d695065ac57",
+          "instant": {
+            "instant": {
+              "epoch_nanoseconds": 100,
+              "type": "utc_instant"
+            },
+            "phase": {
+              "code": "strategy_decision",
+              "rank": 30,
+              "type": "timeline_phase"
+            },
+            "source_sequence": {
+              "type": "source_sequence",
+              "value": 1
+            },
+            "type": "simulation_instant"
+          },
+          "sequence": 4,
+          "stage": "position_sizing",
+          "subject_id": "normalized-portfolio-target-v1:sha256:86bde32ef958752adc033ae238d53c5cd734e9102193d0b9c4be7f819da117af"
+        },
+        {
+          "evidence_hash": "sha256:593d2d82e7bdd2206b63e04b1e28e40fc5cce62948d5e363cb97f401a540aa8c",
+          "instant": {
+            "instant": {
+              "epoch_nanoseconds": 100,
+              "type": "utc_instant"
+            },
+            "phase": {
+              "code": "strategy_decision",
+              "rank": 30,
+              "type": "timeline_phase"
+            },
+            "source_sequence": {
+              "type": "source_sequence",
+              "value": 1
+            },
+            "type": "simulation_instant"
+          },
+          "sequence": 5,
+          "stage": "order_plan",
+          "subject_id": "order-plan-v1:sha256:5579929e13a28c6cb3970b88b08058946fd5fa96f3ee6c652cb71c2f7f0b4adf"
+        },
+        {
+          "evidence_hash": "sha256:9ce272b68edc1bd56fd5a96ed5621ea87e2f8556120612e0d9cf147dd1d9bfb0",
+          "instant": {
+            "instant": {
+              "epoch_nanoseconds": 111,
+              "type": "utc_instant"
+            },
+            "phase": {
+              "code": "order_admission",
+              "rank": 80,
+              "type": "timeline_phase"
+            },
+            "source_sequence": {
+              "type": "source_sequence",
+              "value": 2
+            },
+            "type": "simulation_instant"
+          },
+          "sequence": 6,
+          "stage": "order_capability",
+          "subject_id": "ord_f7faa2594f4140f1a782908023e3acce53d56aa0f65a194698352dbfd5c4a614"
+        },
+        {
+          "evidence_hash": "sha256:c9b7584a42d8cd8826ef63d6eb00204db9d9a8358205bbcc75dd83d0c35fb48f",
+          "instant": {
+            "instant": {
+              "epoch_nanoseconds": 112,
+              "type": "utc_instant"
+            },
+            "phase": {
+              "code": "order_admission",
+              "rank": 80,
+              "type": "timeline_phase"
+            },
+            "source_sequence": {
+              "type": "source_sequence",
+              "value": 3
+            },
+            "type": "simulation_instant"
+          },
+          "sequence": 7,
+          "stage": "order_translation",
+          "subject_id": "ord_f7faa2594f4140f1a782908023e3acce53d56aa0f65a194698352dbfd5c4a614"
+        },
+        {
+          "evidence_hash": "sha256:a6daa9c2c4bb6b29829f7eea39be80f4189c23ea738114e2f9cd15ecc59775f5",
+          "instant": {
+            "instant": {
+              "epoch_nanoseconds": 113,
+              "type": "utc_instant"
+            },
+            "phase": {
+              "code": "order_admission",
+              "rank": 80,
+              "type": "timeline_phase"
+            },
+            "source_sequence": {
+              "type": "source_sequence",
+              "value": 4
+            },
+            "type": "simulation_instant"
+          },
+          "sequence": 8,
+          "stage": "market_rule",
+          "subject_id": "ord_f7faa2594f4140f1a782908023e3acce53d56aa0f65a194698352dbfd5c4a614"
+        },
+        {
+          "evidence_hash": "sha256:26378ea601c5bd064fdc3d73f89a5e3bfd2cdebfd511a5fd881f9903ef6a062f",
+          "instant": {
+            "instant": {
+              "epoch_nanoseconds": 114,
+              "type": "utc_instant"
+            },
+            "phase": {
+              "code": "order_admission",
+              "rank": 80,
+              "type": "timeline_phase"
+            },
+            "source_sequence": {
+              "type": "source_sequence",
+              "value": 5
+            },
+            "type": "simulation_instant"
+          },
+          "sequence": 9,
+          "stage": "fee_reservation",
+          "subject_id": "ord_f7faa2594f4140f1a782908023e3acce53d56aa0f65a194698352dbfd5c4a614"
+        },
+        {
+          "evidence_hash": "sha256:d8548157fd5b85da7625d4bbc66de7662a41bc26f297d47648022740d4ebe0f7",
+          "instant": {
+            "instant": {
+              "epoch_nanoseconds": 115,
+              "type": "utc_instant"
+            },
+            "phase": {
+              "code": "order_admission",
+              "rank": 80,
+              "type": "timeline_phase"
+            },
+            "source_sequence": {
+              "type": "source_sequence",
+              "value": 6
+            },
+            "type": "simulation_instant"
+          },
+          "sequence": 10,
+          "stage": "pretrade_risk",
+          "subject_id": "ord_f7faa2594f4140f1a782908023e3acce53d56aa0f65a194698352dbfd5c4a614"
+        },
+        {
+          "evidence_hash": "sha256:b8802857df1d25721de34296b1265511c86fdbaf44cb4eff1e11f41e6c40fc5a",
+          "instant": {
+            "instant": {
+              "epoch_nanoseconds": 117,
+              "type": "utc_instant"
+            },
+            "phase": {
+              "code": "order_admission",
+              "rank": 80,
+              "type": "timeline_phase"
+            },
+            "source_sequence": {
+              "type": "source_sequence",
+              "value": 8
+            },
+            "type": "simulation_instant"
+          },
+          "sequence": 11,
+          "stage": "order_accepted",
+          "subject_id": "ord_f7faa2594f4140f1a782908023e3acce53d56aa0f65a194698352dbfd5c4a614"
+        },
+        {
+          "evidence_hash": "sha256:f2b8b826ea288cade860431bb1468d05054a1839a94f7ba28e55fe898b740d18",
+          "instant": {
+            "instant": {
+              "epoch_nanoseconds": 200,
+              "type": "utc_instant"
+            },
+            "phase": {
+              "code": "bar_open",
+              "rank": 60,
+              "type": "timeline_phase"
+            },
+            "source_sequence": {
+              "type": "source_sequence",
+              "value": 2
+            },
+            "type": "simulation_instant"
+          },
+          "sequence": 12,
+          "stage": "timeline_event",
+          "subject_id": "engine-bar-open-200"
+        },
+        {
+          "evidence_hash": "sha256:e827b4e1881f3ae80cbc52d0a517f6d16f01fd23c89b0e0ae7b0aced56619afa",
+          "instant": {
+            "instant": {
+              "epoch_nanoseconds": 200,
+              "type": "utc_instant"
+            },
+            "phase": {
+              "code": "bar_open",
+              "rank": 60,
+              "type": "timeline_phase"
+            },
+            "source_sequence": {
+              "type": "source_sequence",
+              "value": 2
+            },
+            "type": "simulation_instant"
+          },
+          "sequence": 13,
+          "stage": "execution_decision",
+          "subject_id": "ord_f7faa2594f4140f1a782908023e3acce53d56aa0f65a194698352dbfd5c4a614"
+        },
+        {
+          "evidence_hash": "sha256:2a6cf649a17d4e080109a651694fa0a6e7748664a947ae64c79795d17ab1d73b",
+          "instant": {
+            "instant": {
+              "epoch_nanoseconds": 200,
+              "type": "utc_instant"
+            },
+            "phase": {
+              "code": "bar_open",
+              "rank": 60,
+              "type": "timeline_phase"
+            },
+            "source_sequence": {
+              "type": "source_sequence",
+              "value": 2
+            },
+            "type": "simulation_instant"
+          },
+          "sequence": 14,
+          "stage": "slippage",
+          "subject_id": "ord_f7faa2594f4140f1a782908023e3acce53d56aa0f65a194698352dbfd5c4a614"
+        },
+        {
+          "evidence_hash": "sha256:ec9b07189050b30906ce60e263c75a7126e5918a0870e275ec61856814adbdfd",
+          "instant": {
+            "instant": {
+              "epoch_nanoseconds": 200,
+              "type": "utc_instant"
+            },
+            "phase": {
+              "code": "fill",
+              "rank": 70,
+              "type": "timeline_phase"
+            },
+            "source_sequence": {
+              "type": "source_sequence",
+              "value": 1
+            },
+            "type": "simulation_instant"
+          },
+          "sequence": 15,
+          "stage": "fill",
+          "subject_id": "fil_a564d9dce07bccb5d45d163846ba95e1004567f06ffdf8e0f34ab1bf0074efad"
+        },
+        {
+          "evidence_hash": "sha256:ebae1259122117fa2003027c108fbad2c5f11aa6f27fa5fbe68f8d57ed2bcc36",
+          "instant": {
+            "instant": {
+              "epoch_nanoseconds": 210,
+              "type": "utc_instant"
+            },
+            "phase": {
+              "code": "accounting",
+              "rank": 90,
+              "type": "timeline_phase"
+            },
+            "source_sequence": {
+              "type": "source_sequence",
+              "value": 1
+            },
+            "type": "simulation_instant"
+          },
+          "sequence": 16,
+          "stage": "financial_event",
+          "subject_id": "engine-bar-open-200"
+        },
+        {
+          "evidence_hash": "sha256:357a87b9ce622d8bbad3a94060ba90bae8c4037594ab924d01ea440ffde3bbe8",
+          "instant": {
+            "instant": {
+              "epoch_nanoseconds": 210,
+              "type": "utc_instant"
+            },
+            "phase": {
+              "code": "accounting",
+              "rank": 90,
+              "type": "timeline_phase"
+            },
+            "source_sequence": {
+              "type": "source_sequence",
+              "value": 1
+            },
+            "type": "simulation_instant"
+          },
+          "sequence": 17,
+          "stage": "fill_accounting",
+          "subject_id": "jnl_09a9c3aa5746036aa0e5eef052a85edb655e02fb3d0e97af5cc92ddde507ef7b"
+        },
+        {
+          "evidence_hash": "sha256:be14a00ded34796fbcfef8feec6a4f4cb5fe4d8b11369984c1f81b6f795d5441",
+          "instant": {
+            "instant": {
+              "epoch_nanoseconds": 211,
+              "type": "utc_instant"
+            },
+            "phase": {
+              "code": "accounting",
+              "rank": 90,
+              "type": "timeline_phase"
+            },
+            "source_sequence": {
+              "type": "source_sequence",
+              "value": 2
+            },
+            "type": "simulation_instant"
+          },
+          "sequence": 18,
+          "stage": "fee_assessment",
+          "subject_id": "fee_85ec13b00240dd63031731241557d0873213963b91d2d398006295178933a37c"
+        },
+        {
+          "evidence_hash": "sha256:12ccdcf9070d782ef9a5dae12012d117369c3357fcd539b793b2a184ff6983e0",
+          "instant": {
+            "instant": {
+              "epoch_nanoseconds": 212,
+              "type": "utc_instant"
+            },
+            "phase": {
+              "code": "accounting",
+              "rank": 90,
+              "type": "timeline_phase"
+            },
+            "source_sequence": {
+              "type": "source_sequence",
+              "value": 3
+            },
+            "type": "simulation_instant"
+          },
+          "sequence": 19,
+          "stage": "fee_accounting",
+          "subject_id": "jnl_e916d4bcb5c47bc4256072eb9de6517decd9f42f252ba91cfd5bbb65ab043b74"
+        },
+        {
+          "evidence_hash": "sha256:bec9bac85f9a89e188ef06e0e730a088c015b9c4d709eb47c7bd4785fef313f8",
+          "instant": {
+            "instant": {
+              "epoch_nanoseconds": 212,
+              "type": "utc_instant"
+            },
+            "phase": {
+              "code": "accounting",
+              "rank": 90,
+              "type": "timeline_phase"
+            },
+            "source_sequence": {
+              "type": "source_sequence",
+              "value": 3
+            },
+            "type": "simulation_instant"
+          },
+          "sequence": 20,
+          "stage": "ledger_state",
+          "subject_id": "account:primary"
+        },
+        {
+          "evidence_hash": "sha256:960f2c952af8465418243a2d8382ad1b2618ad2f45069e91db2b009501808b12",
+          "instant": {
+            "instant": {
+              "epoch_nanoseconds": 300,
+              "type": "utc_instant"
+            },
+            "phase": {
+              "code": "accounting",
+              "rank": 90,
+              "type": "timeline_phase"
+            },
+            "source_sequence": {
+              "type": "source_sequence",
+              "value": 3
+            },
+            "type": "simulation_instant"
+          },
+          "sequence": 21,
+          "stage": "financial_event",
+          "subject_id": "engine-finalize"
+        },
+        {
+          "evidence_hash": "sha256:b8460e12ff51174f40180b9938fad588ca892cde1e718700f62a5f06dca9be68",
+          "instant": {
+            "instant": {
+              "epoch_nanoseconds": 300,
+              "type": "utc_instant"
+            },
+            "phase": {
+              "code": "engine_finalize",
+              "rank": 1000000,
+              "type": "timeline_phase"
+            },
+            "source_sequence": {
+              "type": "source_sequence",
+              "value": 0
+            },
+            "type": "simulation_instant"
+          },
+          "sequence": 22,
+          "stage": "portfolio_snapshot",
+          "subject_id": "account:primary"
+        },
+        {
+          "evidence_hash": "sha256:07c76f87e56223ed59b24df7e75fe2ff3fa43982939a999b01a791577cfe5439",
+          "instant": {
+            "instant": {
+              "epoch_nanoseconds": 300,
+              "type": "utc_instant"
+            },
+            "phase": {
+              "code": "engine_finalize",
+              "rank": 1000000,
+              "type": "timeline_phase"
+            },
+            "source_sequence": {
+              "type": "source_sequence",
+              "value": 0
+            },
+            "type": "simulation_instant"
+          },
+          "sequence": 23,
+          "stage": "run_end",
+          "subject_id": "account:primary"
+        }
+      ],
+      "schema_version": 1,
+      "type": "execution_trace"
+    },
+    "16_EXECUTION_RESULT_HASH": {
+      "case_hash": "sha256:bdbcf92c176fedaf8fa89a056bc92fddeb9d70b75bcacb7cb6013b468374c87e",
+      "engine_result_hash": "sha256:a43505a1bb566b05988115683918a01e5f99f7865c9ae648b417c0281fd1c53b",
+      "execution_result_hash": "sha256:97a39c3e4aafe92db6bfb70df9230c6cbda44e9e8c9cf00cca51b0d6a2bf005b",
+      "journal_hash": "sha256:507d56af609a64e9f722fbb0387145902cb10a4c16b5fa5afccd9d938632c29d",
+      "ledger_state_hash": "sha256:bec9bac85f9a89e188ef06e0e730a088c015b9c4d709eb47c7bd4785fef313f8",
+      "run_end_report_hash": "sha256:07c76f87e56223ed59b24df7e75fe2ff3fa43982939a999b01a791577cfe5439",
+      "semantic_run_id": "run_39ab44a26d7f719fe1648f3ccbf7cbdcb874a9bc43e8c15d3a51ab5aca421591",
+      "snapshot_hash": "sha256:b8460e12ff51174f40180b9938fad588ca892cde1e718700f62a5f06dca9be68",
+      "trace_hash": "sha256:758a369a1777eb0d06ea1434412f36e382fb87de0fb3c4ca335b10613ed8dce7"
+    }
+  },
+  "qualification": {
+    "decision_grade_eligible": false,
+    "deployment_authorized": false
+  },
+  "schema_version": 1
+}

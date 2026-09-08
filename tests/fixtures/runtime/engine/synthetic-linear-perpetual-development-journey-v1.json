@@ -1,0 +1,66 @@
+{
+  "artifact_hashes": [
+    "sha256:5cd37759eddb185cb218a0f8d5c10bb0349073e97716c8e2941e82a2a198ba53",
+    "sha256:4dca0005ad82082668db0bd89f03aa29e3ee9f33d6770bca2d9c95b386f12076",
+    "sha256:47966a3d45d98eb45befd78594e6e51d34daee0bbdd1d1082a0d9ff40991ca95",
+    "sha256:0d962734ba007253055c75e29e5851acac2ebc1ad07355feaa5649a0076878a9",
+    "sha256:1d41237f0e2d2328ebd5041c06bdbaaac88bb1dfad44bc994f4a108cefc2f4d5",
+    "sha256:80bc08cf79c578e18b495690cff09d86a69683eae9273b6fd3cb8b2ada6aba64",
+    "sha256:89205f7f98bb28c057e816eb7964e0eb4a44c75d93f85a711df6b59b16841764",
+    "sha256:1ecdf246f27de32f9a39dc20eb98eeb148b03988d30ee2ed45ca1ea7be48f788",
+    "sha256:fb0487d6cb2d1ab261a09e3f0b7dac6cc58692a584785bf707a712e0cb5482c2",
+    "sha256:b00143c26c02d2ee37c4e34b7e901400c67bc6dbd2ab602202e84b7d82432bdc",
+    "sha256:d9d6b5c6bbdf24ae2a532767f2329bb6c636f3a9274caefbf74a20fe53e92561"
+  ],
+  "artifact_roles": [
+    "position_accounting.1",
+    "funding_eligibility",
+    "funding_accounting",
+    "liquidation_audit.long",
+    "margin_projection.long",
+    "position_accounting.2",
+    "position_accounting.3",
+    "liquidation_audit.short",
+    "margin_projection.short",
+    "final_snapshot",
+    "margin_projection.final"
+  ],
+  "case_hash": "sha256:4cdfa0167695d21a03664c9bb7eccc14bb92ab5b261369bf3d0e676bbf04e76b",
+  "decision_grade_eligible": false,
+  "deployment_authorized": false,
+  "dispatcher_spec_hash": "sha256:843d37dada62219117ba574aeaca8476b3d95e41eac52bf11fe08a3311287b3a",
+  "fee_units": 91,
+  "fixture_id": "synthetic-linear-perpetual-development-journey-v1",
+  "funding_units": -3,
+  "identity_manifest_hash": "sha256:a2c8c7e01394f17a950443c5f14fdc8a46b156b82b3e63e380eaf1bc36b42fed",
+  "journal_entry_types": [
+    "AccountingJournalEntry",
+    "LinearDerivativeJournalEntry",
+    "AccountingJournalEntry",
+    "LinearFundingJournalEntry",
+    "LinearDerivativeJournalEntry",
+    "AccountingJournalEntry",
+    "LinearDerivativeJournalEntry",
+    "AccountingJournalEntry"
+  ],
+  "journal_hash": "sha256:26d805451e52113a4af18be977e0f72666341f12cdd320b06d9a7d6c4fdb8501",
+  "ledger_state_hash": "sha256:b5d904fd2f213416e86fc3273f953e4033b00d87cc90e18f3802c0e6896537c0",
+  "limitations": [
+    "bar-extremes-do-not-identify-intrabar-path-or-liquidation-time",
+    "synthetic_market_profile"
+  ],
+  "position_units": -1000,
+  "profile_digest": "sha256:4fe52535609c22e1892f867ddad396bdf0b2a0d57982853ddd3f8de4845e1781",
+  "realized_pnl_units": -60,
+  "result_hash": "sha256:5cd912606f1daa6c308e790009a94a139e829e64b8c00ba46234c63411ce4bf5",
+  "run_end_report_hash": "sha256:a0955dbb661037c03c8439fc12145bd224773676cdee5645f90a8793c5c2dcf4",
+  "semantic_run_id": "run_86af79e15b99cc037ed6bd799727ecf8ec27a01b9d5c07eb5cd60c7971315963",
+  "semantic_spec_hash": "sha256:50af4ef0fb004bc2bfcb0345a7a74d54b5de7d02927f3d411a287234390eb47f",
+  "snapshot_hash": "sha256:aba084eb56600705441b2d4ae2fd1b2164a50abb230480e2c829d4d0b896f880",
+  "trace_hash": "sha256:937e832ce2d1071f8d4779b5b7f68105df59c1912859e75936f9f48749b6caaa",
+  "transitions": [
+    "open",
+    "reduce",
+    "flip"
+  ]
+}

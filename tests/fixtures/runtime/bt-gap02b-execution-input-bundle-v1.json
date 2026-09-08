@@ -1,0 +1,1173 @@
+{
+  "bundle": {
+    "envelope": {
+      "artifact_type": "backtest_execution_input_bundle",
+      "content_hash": "sha256:cde469808ba86f5b55702a85c4d30111cb3408db2932db402d069d5889817c02",
+      "payload": {
+        "build_artifact_manifest": {
+          "identity": {
+            "artifacts": [
+              {
+                "artifact_key": "crypto-quant-backtest",
+                "artifact_version": "0.1.0",
+                "content_hash": "sha256:5555555555555555555555555555555555555555555555555555555555555555",
+                "install_mode": "wheel",
+                "role": "backtest_runtime",
+                "source_snapshot_hash": null,
+                "source_tree_state": "clean",
+                "type": "build_artifact_ref"
+              },
+              {
+                "artifact_key": "precomputed-target-stream-adapter",
+                "artifact_version": "0.1.0",
+                "content_hash": "sha256:1111111111111111111111111111111111111111111111111111111111111111",
+                "install_mode": "wheel",
+                "role": "decision_source",
+                "source_snapshot_hash": null,
+                "source_tree_state": "clean",
+                "type": "build_artifact_ref"
+              },
+              {
+                "artifact_key": "crypto-quant-market-data",
+                "artifact_version": "0.1.0",
+                "content_hash": "sha256:4444444444444444444444444444444444444444444444444444444444444444",
+                "install_mode": "wheel",
+                "role": "market_data_contracts",
+                "source_snapshot_hash": null,
+                "source_tree_state": "clean",
+                "type": "build_artifact_ref"
+              },
+              {
+                "artifact_key": "synthetic.cash.development.v1.account",
+                "artifact_version": "1",
+                "content_hash": "sha256:22a2310c4576f10967f5ba5ffc73ba4459f15a16a4e2e5041a6641ebc0c22035",
+                "install_mode": "wheel",
+                "role": "profile_component",
+                "source_snapshot_hash": null,
+                "source_tree_state": "clean",
+                "type": "build_artifact_ref"
+              },
+              {
+                "artifact_key": "synthetic.cash.development.v1.market",
+                "artifact_version": "1",
+                "content_hash": "sha256:3476a32b6367eabaed1ae4e2d5e2748ab236f333f03196335374948b14a6f02f",
+                "install_mode": "wheel",
+                "role": "profile_component",
+                "source_snapshot_hash": null,
+                "source_tree_state": "clean",
+                "type": "build_artifact_ref"
+              },
+              {
+                "artifact_key": "synthetic.cash.development.v1.simulation",
+                "artifact_version": "1",
+                "content_hash": "sha256:45915d737732c3d6b4a75f3b80049b0c8fd0abc0c64a415f69f5ddf33037974f",
+                "install_mode": "wheel",
+                "role": "profile_component",
+                "source_snapshot_hash": null,
+                "source_tree_state": "clean",
+                "type": "build_artifact_ref"
+              },
+              {
+                "artifact_key": "crypto-quant-domain",
+                "artifact_version": "0.1.0",
+                "content_hash": "sha256:2222222222222222222222222222222222222222222222222222222222222222",
+                "install_mode": "wheel",
+                "role": "trading_domain",
+                "source_snapshot_hash": null,
+                "source_tree_state": "clean",
+                "type": "build_artifact_ref"
+              },
+              {
+                "artifact_key": "crypto-quant-trading",
+                "artifact_version": "0.1.0",
+                "content_hash": "sha256:3333333333333333333333333333333333333333333333333333333333333333",
+                "install_mode": "wheel",
+                "role": "trading_kernel",
+                "source_snapshot_hash": null,
+                "source_tree_state": "clean",
+                "type": "build_artifact_ref"
+              }
+            ],
+            "build_key": "synthetic.backtest.build.v1",
+            "container_image_digest": null,
+            "dependency_lock_hash": "sha256:6666666666666666666666666666666666666666666666666666666666666666",
+            "runtime_libraries": [
+              {
+                "content_hash": "sha256:7777777777777777777777777777777777777777777777777777777777777777",
+                "library_key": "python",
+                "type": "runtime_library_ref",
+                "version": "3.13.5"
+              }
+            ],
+            "schema_version": 1,
+            "type": "build_artifact_manifest_identity"
+          },
+          "manifest_hash": "sha256:454c178057ea340bffb6ac6a2d443da11b836471cb1c97c0b5501b0577b633d9",
+          "provenance": {
+            "built_at": {
+              "epoch_nanoseconds": 1000,
+              "type": "utc_instant"
+            },
+            "git_commit": "0e481d4f9e06f073446749149756f38ea0054739",
+            "hostname": "builder-a",
+            "source_root": "/workspace/backtest",
+            "type": "build_provenance"
+          },
+          "type": "build_artifact_manifest"
+        },
+        "execution_case_semantic_spec": {
+          "case_key": "engine.cash.fixture.v1",
+          "case_version": 1,
+          "decision_inputs_hash": "sha256:b1a53dc0745d9f3e0d3b27a1050bd8cb7e9fce6b85d4a73ee42b5424b90921a3",
+          "execution_inputs_hash": "sha256:0b938a774756a26d7425a0bc0550cbdf2dded0f47f29af43ecc5c0ed0086246f",
+          "financial_inputs_hash": "sha256:e8b6cd79bbdcd0d192b0cfe02af5b3fbcd6e47b97467547366095a24fa298ab6",
+          "identity_namespace": {
+            "algorithm": "sha256-length-prefixed-v1",
+            "value": "backtest",
+            "version": "1"
+          },
+          "identity_plan": [
+            {
+              "binding_key": "fee.0",
+              "domain_kind": "fee",
+              "identity_type": "domain_id",
+              "ordinal": 0,
+              "semantic_key": "engine.cash.fee"
+            },
+            {
+              "binding_key": "fill.0",
+              "domain_kind": "fill",
+              "identity_type": "domain_id",
+              "ordinal": 0,
+              "semantic_key": "engine.cash.fill"
+            },
+            {
+              "binding_key": "journal.fee.0",
+              "domain_kind": "journal",
+              "identity_type": "domain_id",
+              "ordinal": 0,
+              "semantic_key": "engine.cash.fee-journal"
+            },
+            {
+              "binding_key": "journal.fill.0",
+              "domain_kind": "journal",
+              "identity_type": "domain_id",
+              "ordinal": 0,
+              "semantic_key": "engine.cash.fill-journal"
+            },
+            {
+              "binding_key": "journal.initial.0",
+              "domain_kind": "journal",
+              "identity_type": "domain_id",
+              "ordinal": 0,
+              "semantic_key": "engine.cash.deposit"
+            },
+            {
+              "binding_key": "order-event.0.0.0",
+              "domain_kind": null,
+              "identity_type": "event_id",
+              "ordinal": 0,
+              "semantic_key": "engine.cash.order-event.order_intent_created"
+            },
+            {
+              "binding_key": "order-event.0.0.1",
+              "domain_kind": null,
+              "identity_type": "event_id",
+              "ordinal": 1,
+              "semantic_key": "engine.cash.order-event.order_capability_approved"
+            },
+            {
+              "binding_key": "order-event.0.0.2",
+              "domain_kind": null,
+              "identity_type": "event_id",
+              "ordinal": 2,
+              "semantic_key": "engine.cash.order-event.order_translated"
+            },
+            {
+              "binding_key": "order-event.0.0.3",
+              "domain_kind": null,
+              "identity_type": "event_id",
+              "ordinal": 3,
+              "semantic_key": "engine.cash.order-event.market_rule_approved"
+            },
+            {
+              "binding_key": "order-event.0.0.4",
+              "domain_kind": null,
+              "identity_type": "event_id",
+              "ordinal": 4,
+              "semantic_key": "engine.cash.order-event.fee_reservation_estimated"
+            },
+            {
+              "binding_key": "order-event.0.0.5",
+              "domain_kind": null,
+              "identity_type": "event_id",
+              "ordinal": 5,
+              "semantic_key": "engine.cash.order-event.pre_trade_risk_approved"
+            },
+            {
+              "binding_key": "order-event.0.0.6",
+              "domain_kind": null,
+              "identity_type": "event_id",
+              "ordinal": 6,
+              "semantic_key": "engine.cash.order-event.order_submitted"
+            },
+            {
+              "binding_key": "order-event.0.0.7",
+              "domain_kind": null,
+              "identity_type": "event_id",
+              "ordinal": 7,
+              "semantic_key": "engine.cash.order-event.order_accepted"
+            },
+            {
+              "binding_key": "order-event.fill.0",
+              "domain_kind": null,
+              "identity_type": "event_id",
+              "ordinal": 0,
+              "semantic_key": "engine.cash.order-event.fill"
+            },
+            {
+              "binding_key": "order.0.0",
+              "domain_kind": "order",
+              "identity_type": "domain_id",
+              "ordinal": 0,
+              "semantic_key": "engine.cash.order"
+            }
+          ],
+          "run_end_inputs_hash": "sha256:28dc354de0195018541031a4da3289b8718f890cebd89afc3c604e6e6cd1c06d",
+          "schema_version": 1,
+          "snapshot_inputs_hash": "sha256:3c1b280c22ad82af8d3fae8dc9034e1b7555a9302ef3253fdf5c344e5793a868",
+          "spec_key": "synthetic.cash.execution-case.v1",
+          "spec_version": 1,
+          "target_stream_digest": "sha256:ead473aba908a5d2ace5745a648d357c16666c47a726743b86dbde42768a539f",
+          "timeline_semantic_hash": "sha256:251d14b7f00fb30e31b6d1678146a2f39ac324c8830a56761d7dd77c57600e09",
+          "type": "execution_case_semantic_spec"
+        },
+        "initial_financial_state_template": {
+          "initial_snapshot_template": {
+            "account_id": "account:primary",
+            "cash": [
+              {
+                "amount": {
+                  "currency": "USD",
+                  "scale": 2,
+                  "type": "money",
+                  "units": 100000
+                },
+                "key": {
+                  "account_id": "account:primary",
+                  "currency_id": {
+                    "type": "currency_id",
+                    "value": "USD"
+                  },
+                  "type": "cash_balance_key",
+                  "venue_id": {
+                    "type": "venue_id",
+                    "value": "synthetic"
+                  }
+                },
+                "type": "cash_balance"
+              }
+            ],
+            "currency_valuation_graph_hash": "sha256:34f15030f21b3be7bee7373ddc6a659b4a6b50424b814710feeeac7753fa2e14",
+            "equity": {
+              "currency": "USD",
+              "scale": 2,
+              "type": "money",
+              "units": 100000
+            },
+            "fees": {
+              "currency": "USD",
+              "scale": 2,
+              "type": "money",
+              "units": 0
+            },
+            "financing": {
+              "currency": "USD",
+              "scale": 2,
+              "type": "money",
+              "units": 0
+            },
+            "positions": [],
+            "realized_pnl": {
+              "currency": "USD",
+              "scale": 2,
+              "type": "money",
+              "units": 0
+            },
+            "reporting_currency": {
+              "type": "currency_id",
+              "value": "USD"
+            },
+            "timestamp": {
+              "epoch_nanoseconds": 100,
+              "type": "utc_instant"
+            },
+            "type": "portfolio_snapshot",
+            "unrealized_pnl": {
+              "currency": "USD",
+              "scale": 2,
+              "type": "money",
+              "units": 0
+            },
+            "valuation_mark_set_hash": "sha256:4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+            "valuation_marks": [],
+            "valuation_staleness_report_hash": "sha256:4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+          },
+          "journal_entry_templates": [
+            {
+              "account_id": "account:primary",
+              "balance_changes": [
+                {
+                  "key": {
+                    "account_id": "account:primary",
+                    "currency_id": {
+                      "type": "currency_id",
+                      "value": "USD"
+                    },
+                    "type": "cash_balance_key",
+                    "venue_id": {
+                      "type": "venue_id",
+                      "value": "synthetic"
+                    }
+                  },
+                  "type": "balance_change",
+                  "value": {
+                    "currency": "USD",
+                    "scale": 2,
+                    "type": "money",
+                    "units": 100000
+                  }
+                }
+              ],
+              "effective_time": {
+                "epoch_nanoseconds": 0,
+                "type": "utc_instant"
+              },
+              "entry_type": "capital_deposited",
+              "fees": [],
+              "financing": [],
+              "identity_binding_key": "journal.initial.0",
+              "realized_pnl": [],
+              "recorded_at": {
+                "instant": {
+                  "epoch_nanoseconds": 1,
+                  "type": "utc_instant"
+                },
+                "phase": {
+                  "code": "accounting",
+                  "rank": 90,
+                  "type": "timeline_phase"
+                },
+                "source_sequence": {
+                  "type": "source_sequence",
+                  "value": 1
+                },
+                "type": "simulation_instant"
+              },
+              "source_ids": [
+                "capital:engine-fixture"
+              ],
+              "type": "accounting_journal_entry",
+              "venue_id": {
+                "type": "venue_id",
+                "value": "synthetic"
+              }
+            }
+          ],
+          "ledger_schema": {
+            "registrations": [
+              {
+                "key": {
+                  "account_id": "account:primary",
+                  "currency_id": {
+                    "type": "currency_id",
+                    "value": "USD"
+                  },
+                  "type": "cash_balance_key",
+                  "venue_id": {
+                    "type": "venue_id",
+                    "value": "synthetic"
+                  }
+                },
+                "scale": 2,
+                "type": "ledger_balance_registration"
+              },
+              {
+                "key": {
+                  "account_id": "account:primary",
+                  "instrument_id": {
+                    "stable_key": "cash:btc-usd",
+                    "type": "instrument_id",
+                    "venue": "synthetic"
+                  },
+                  "type": "position_balance_key",
+                  "venue_id": {
+                    "type": "venue_id",
+                    "value": "synthetic"
+                  }
+                },
+                "scale": 3,
+                "type": "ledger_balance_registration"
+              }
+            ],
+            "schema_version": 1,
+            "type": "ledger_schema"
+          },
+          "lot_books": [
+            {
+              "lots": [],
+              "position_key": {
+                "account_id": "account:primary",
+                "instrument_id": {
+                  "stable_key": "cash:btc-usd",
+                  "type": "instrument_id",
+                  "venue": "synthetic"
+                },
+                "type": "position_balance_key",
+                "venue_id": {
+                  "type": "venue_id",
+                  "value": "synthetic"
+                }
+              },
+              "type": "position_lot_book"
+            }
+          ],
+          "order_admissions": [],
+          "order_streams": [],
+          "reservation_schedules": [],
+          "schema_version": 1,
+          "settlement_rules": {
+            "account_id": "account:primary",
+            "cash_rules": [
+              {
+                "available_margin_reservation_uses": [
+                  "margin"
+                ],
+                "key": {
+                  "account_id": "account:primary",
+                  "currency_id": {
+                    "type": "currency_id",
+                    "value": "USD"
+                  },
+                  "type": "cash_balance_key",
+                  "venue_id": {
+                    "type": "venue_id",
+                    "value": "synthetic"
+                  }
+                },
+                "pending_receivable_margin_eligible": false,
+                "pending_receivable_tradable": false,
+                "pending_receivable_withdrawable": false,
+                "tradable_reservation_uses": [
+                  "cash",
+                  "fee_reserve"
+                ],
+                "type": "cash_availability_rule",
+                "withdrawable_reservation_uses": [
+                  "cash",
+                  "fee_reserve"
+                ]
+              }
+            ],
+            "config_hash": "sha256:b337e255741405539f1349bd60fff63818459a223bd8ea8f3cf27da02bfd6765",
+            "policy_key": "settlement.engine-fixture.v1",
+            "policy_version": 1,
+            "position_rules": [
+              {
+                "key": {
+                  "account_id": "account:primary",
+                  "instrument_id": {
+                    "stable_key": "cash:btc-usd",
+                    "type": "instrument_id",
+                    "venue": "synthetic"
+                  },
+                  "type": "position_balance_key",
+                  "venue_id": {
+                    "type": "venue_id",
+                    "value": "synthetic"
+                  }
+                },
+                "pending_receivable_sellable": false,
+                "type": "position_availability_rule"
+              }
+            ],
+            "schema_version": 1,
+            "type": "market_settlement_rules"
+          },
+          "settlement_state": {
+            "account_id": "account:primary",
+            "applied_obligations": [],
+            "cursor": {
+              "position": 0,
+              "prefix_hash": "sha256:5a8944efd7a6570c322ad411aea39c29bc3131afd45c3e8c8723020bbb9543ae",
+              "type": "settlement_book_cursor"
+            },
+            "pending_obligations": [],
+            "schema_version": 1,
+            "type": "settlement_book_state"
+          },
+          "type": "backtest_initial_financial_state_template"
+        },
+        "request_hash": "sha256:be4e37d6ef69b6ac01493ab8a62e311fa397fcc9e462add5d316c52a616c36c3",
+        "schema_version": 1,
+        "target_stream_key": "targets",
+        "timeline_batch_size": 1,
+        "timeline_stream_keys": [
+          "bars.open",
+          "targets"
+        ],
+        "type": "backtest_execution_input_bundle"
+      },
+      "schema_version": 1
+    },
+    "expected_canonical_sha256": "sha256:092ba85fd71b31ff2e43c13c025b2aa7f5eec0a347f87dd5c792c24c83a2dc0d",
+    "expected_canonical_utf8": "{\"artifact_type\":\"backtest_execution_input_bundle\",\"content_hash\":\"sha256:cde469808ba86f5b55702a85c4d30111cb3408db2932db402d069d5889817c02\",\"payload\":{\"build_artifact_manifest\":{\"identity\":{\"artifacts\":[{\"artifact_key\":\"crypto-quant-backtest\",\"artifact_version\":\"0.1.0\",\"content_hash\":\"sha256:5555555555555555555555555555555555555555555555555555555555555555\",\"install_mode\":\"wheel\",\"role\":\"backtest_runtime\",\"source_snapshot_hash\":null,\"source_tree_state\":\"clean\",\"type\":\"build_artifact_ref\"},{\"artifact_key\":\"precomputed-target-stream-adapter\",\"artifact_version\":\"0.1.0\",\"content_hash\":\"sha256:1111111111111111111111111111111111111111111111111111111111111111\",\"install_mode\":\"wheel\",\"role\":\"decision_source\",\"source_snapshot_hash\":null,\"source_tree_state\":\"clean\",\"type\":\"build_artifact_ref\"},{\"artifact_key\":\"crypto-quant-market-data\",\"artifact_version\":\"0.1.0\",\"content_hash\":\"sha256:4444444444444444444444444444444444444444444444444444444444444444\",\"install_mode\":\"wheel\",\"role\":\"market_data_contracts\",\"source_snapshot_hash\":null,\"source_tree_state\":\"clean\",\"type\":\"build_artifact_ref\"},{\"artifact_key\":\"synthetic.cash.development.v1.account\",\"artifact_version\":\"1\",\"content_hash\":\"sha256:22a2310c4576f10967f5ba5ffc73ba4459f15a16a4e2e5041a6641ebc0c22035\",\"install_mode\":\"wheel\",\"role\":\"profile_component\",\"source_snapshot_hash\":null,\"source_tree_state\":\"clean\",\"type\":\"build_artifact_ref\"},{\"artifact_key\":\"synthetic.cash.development.v1.market\",\"artifact_version\":\"1\",\"content_hash\":\"sha256:3476a32b6367eabaed1ae4e2d5e2748ab236f333f03196335374948b14a6f02f\",\"install_mode\":\"wheel\",\"role\":\"profile_component\",\"source_snapshot_hash\":null,\"source_tree_state\":\"clean\",\"type\":\"build_artifact_ref\"},{\"artifact_key\":\"synthetic.cash.development.v1.simulation\",\"artifact_version\":\"1\",\"content_hash\":\"sha256:45915d737732c3d6b4a75f3b80049b0c8fd0abc0c64a415f69f5ddf33037974f\",\"install_mode\":\"wheel\",\"role\":\"profile_component\",\"source_snapshot_hash\":null,\"source_tree_state\":\"clean\",\"type\":\"build_artifact_ref\"},{\"artifact_key\":\"crypto-quant-domain\",\"artifact_version\":\"0.1.0\",\"content_hash\":\"sha256:2222222222222222222222222222222222222222222222222222222222222222\",\"install_mode\":\"wheel\",\"role\":\"trading_domain\",\"source_snapshot_hash\":null,\"source_tree_state\":\"clean\",\"type\":\"build_artifact_ref\"},{\"artifact_key\":\"crypto-quant-trading\",\"artifact_version\":\"0.1.0\",\"content_hash\":\"sha256:3333333333333333333333333333333333333333333333333333333333333333\",\"install_mode\":\"wheel\",\"role\":\"trading_kernel\",\"source_snapshot_hash\":null,\"source_tree_state\":\"clean\",\"type\":\"build_artifact_ref\"}],\"build_key\":\"synthetic.backtest.build.v1\",\"container_image_digest\":null,\"dependency_lock_hash\":\"sha256:6666666666666666666666666666666666666666666666666666666666666666\",\"runtime_libraries\":[{\"content_hash\":\"sha256:7777777777777777777777777777777777777777777777777777777777777777\",\"library_key\":\"python\",\"type\":\"runtime_library_ref\",\"version\":\"3.13.5\"}],\"schema_version\":1,\"type\":\"build_artifact_manifest_identity\"},\"manifest_hash\":\"sha256:454c178057ea340bffb6ac6a2d443da11b836471cb1c97c0b5501b0577b633d9\",\"provenance\":{\"built_at\":{\"epoch_nanoseconds\":1000,\"type\":\"utc_instant\"},\"git_commit\":\"0e481d4f9e06f073446749149756f38ea0054739\",\"hostname\":\"builder-a\",\"source_root\":\"/workspace/backtest\",\"type\":\"build_provenance\"},\"type\":\"build_artifact_manifest\"},\"execution_case_semantic_spec\":{\"case_key\":\"engine.cash.fixture.v1\",\"case_version\":1,\"decision_inputs_hash\":\"sha256:b1a53dc0745d9f3e0d3b27a1050bd8cb7e9fce6b85d4a73ee42b5424b90921a3\",\"execution_inputs_hash\":\"sha256:0b938a774756a26d7425a0bc0550cbdf2dded0f47f29af43ecc5c0ed0086246f\",\"financial_inputs_hash\":\"sha256:e8b6cd79bbdcd0d192b0cfe02af5b3fbcd6e47b97467547366095a24fa298ab6\",\"identity_namespace\":{\"algorithm\":\"sha256-length-prefixed-v1\",\"value\":\"backtest\",\"version\":\"1\"},\"identity_plan\":[{\"binding_key\":\"fee.0\",\"domain_kind\":\"fee\",\"identity_type\":\"domain_id\",\"ordinal\":0,\"semantic_key\":\"engine.cash.fee\"},{\"binding_key\":\"fill.0\",\"domain_kind\":\"fill\",\"identity_type\":\"domain_id\",\"ordinal\":0,\"semantic_key\":\"engine.cash.fill\"},{\"binding_key\":\"journal.fee.0\",\"domain_kind\":\"journal\",\"identity_type\":\"domain_id\",\"ordinal\":0,\"semantic_key\":\"engine.cash.fee-journal\"},{\"binding_key\":\"journal.fill.0\",\"domain_kind\":\"journal\",\"identity_type\":\"domain_id\",\"ordinal\":0,\"semantic_key\":\"engine.cash.fill-journal\"},{\"binding_key\":\"journal.initial.0\",\"domain_kind\":\"journal\",\"identity_type\":\"domain_id\",\"ordinal\":0,\"semantic_key\":\"engine.cash.deposit\"},{\"binding_key\":\"order-event.0.0.0\",\"domain_kind\":null,\"identity_type\":\"event_id\",\"ordinal\":0,\"semantic_key\":\"engine.cash.order-event.order_intent_created\"},{\"binding_key\":\"order-event.0.0.1\",\"domain_kind\":null,\"identity_type\":\"event_id\",\"ordinal\":1,\"semantic_key\":\"engine.cash.order-event.order_capability_approved\"},{\"binding_key\":\"order-event.0.0.2\",\"domain_kind\":null,\"identity_type\":\"event_id\",\"ordinal\":2,\"semantic_key\":\"engine.cash.order-event.order_translated\"},{\"binding_key\":\"order-event.0.0.3\",\"domain_kind\":null,\"identity_type\":\"event_id\",\"ordinal\":3,\"semantic_key\":\"engine.cash.order-event.market_rule_approved\"},{\"binding_key\":\"order-event.0.0.4\",\"domain_kind\":null,\"identity_type\":\"event_id\",\"ordinal\":4,\"semantic_key\":\"engine.cash.order-event.fee_reservation_estimated\"},{\"binding_key\":\"order-event.0.0.5\",\"domain_kind\":null,\"identity_type\":\"event_id\",\"ordinal\":5,\"semantic_key\":\"engine.cash.order-event.pre_trade_risk_approved\"},{\"binding_key\":\"order-event.0.0.6\",\"domain_kind\":null,\"identity_type\":\"event_id\",\"ordinal\":6,\"semantic_key\":\"engine.cash.order-event.order_submitted\"},{\"binding_key\":\"order-event.0.0.7\",\"domain_kind\":null,\"identity_type\":\"event_id\",\"ordinal\":7,\"semantic_key\":\"engine.cash.order-event.order_accepted\"},{\"binding_key\":\"order-event.fill.0\",\"domain_kind\":null,\"identity_type\":\"event_id\",\"ordinal\":0,\"semantic_key\":\"engine.cash.order-event.fill\"},{\"binding_key\":\"order.0.0\",\"domain_kind\":\"order\",\"identity_type\":\"domain_id\",\"ordinal\":0,\"semantic_key\":\"engine.cash.order\"}],\"run_end_inputs_hash\":\"sha256:28dc354de0195018541031a4da3289b8718f890cebd89afc3c604e6e6cd1c06d\",\"schema_version\":1,\"snapshot_inputs_hash\":\"sha256:3c1b280c22ad82af8d3fae8dc9034e1b7555a9302ef3253fdf5c344e5793a868\",\"spec_key\":\"synthetic.cash.execution-case.v1\",\"spec_version\":1,\"target_stream_digest\":\"sha256:ead473aba908a5d2ace5745a648d357c16666c47a726743b86dbde42768a539f\",\"timeline_semantic_hash\":\"sha256:251d14b7f00fb30e31b6d1678146a2f39ac324c8830a56761d7dd77c57600e09\",\"type\":\"execution_case_semantic_spec\"},\"initial_financial_state_template\":{\"initial_snapshot_template\":{\"account_id\":\"account:primary\",\"cash\":[{\"amount\":{\"currency\":\"USD\",\"scale\":2,\"type\":\"money\",\"units\":100000},\"key\":{\"account_id\":\"account:primary\",\"currency_id\":{\"type\":\"currency_id\",\"value\":\"USD\"},\"type\":\"cash_balance_key\",\"venue_id\":{\"type\":\"venue_id\",\"value\":\"synthetic\"}},\"type\":\"cash_balance\"}],\"currency_valuation_graph_hash\":\"sha256:34f15030f21b3be7bee7373ddc6a659b4a6b50424b814710feeeac7753fa2e14\",\"equity\":{\"currency\":\"USD\",\"scale\":2,\"type\":\"money\",\"units\":100000},\"fees\":{\"currency\":\"USD\",\"scale\":2,\"type\":\"money\",\"units\":0},\"financing\":{\"currency\":\"USD\",\"scale\":2,\"type\":\"money\",\"units\":0},\"positions\":[],\"realized_pnl\":{\"currency\":\"USD\",\"scale\":2,\"type\":\"money\",\"units\":0},\"reporting_currency\":{\"type\":\"currency_id\",\"value\":\"USD\"},\"timestamp\":{\"epoch_nanoseconds\":100,\"type\":\"utc_instant\"},\"type\":\"portfolio_snapshot\",\"unrealized_pnl\":{\"currency\":\"USD\",\"scale\":2,\"type\":\"money\",\"units\":0},\"valuation_mark_set_hash\":\"sha256:4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945\",\"valuation_marks\":[],\"valuation_staleness_report_hash\":\"sha256:4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945\"},\"journal_entry_templates\":[{\"account_id\":\"account:primary\",\"balance_changes\":[{\"key\":{\"account_id\":\"account:primary\",\"currency_id\":{\"type\":\"currency_id\",\"value\":\"USD\"},\"type\":\"cash_balance_key\",\"venue_id\":{\"type\":\"venue_id\",\"value\":\"synthetic\"}},\"type\":\"balance_change\",\"value\":{\"currency\":\"USD\",\"scale\":2,\"type\":\"money\",\"units\":100000}}],\"effective_time\":{\"epoch_nanoseconds\":0,\"type\":\"utc_instant\"},\"entry_type\":\"capital_deposited\",\"fees\":[],\"financing\":[],\"identity_binding_key\":\"journal.initial.0\",\"realized_pnl\":[],\"recorded_at\":{\"instant\":{\"epoch_nanoseconds\":1,\"type\":\"utc_instant\"},\"phase\":{\"code\":\"accounting\",\"rank\":90,\"type\":\"timeline_phase\"},\"source_sequence\":{\"type\":\"source_sequence\",\"value\":1},\"type\":\"simulation_instant\"},\"source_ids\":[\"capital:engine-fixture\"],\"type\":\"accounting_journal_entry\",\"venue_id\":{\"type\":\"venue_id\",\"value\":\"synthetic\"}}],\"ledger_schema\":{\"registrations\":[{\"key\":{\"account_id\":\"account:primary\",\"currency_id\":{\"type\":\"currency_id\",\"value\":\"USD\"},\"type\":\"cash_balance_key\",\"venue_id\":{\"type\":\"venue_id\",\"value\":\"synthetic\"}},\"scale\":2,\"type\":\"ledger_balance_registration\"},{\"key\":{\"account_id\":\"account:primary\",\"instrument_id\":{\"stable_key\":\"cash:btc-usd\",\"type\":\"instrument_id\",\"venue\":\"synthetic\"},\"type\":\"position_balance_key\",\"venue_id\":{\"type\":\"venue_id\",\"value\":\"synthetic\"}},\"scale\":3,\"type\":\"ledger_balance_registration\"}],\"schema_version\":1,\"type\":\"ledger_schema\"},\"lot_books\":[{\"lots\":[],\"position_key\":{\"account_id\":\"account:primary\",\"instrument_id\":{\"stable_key\":\"cash:btc-usd\",\"type\":\"instrument_id\",\"venue\":\"synthetic\"},\"type\":\"position_balance_key\",\"venue_id\":{\"type\":\"venue_id\",\"value\":\"synthetic\"}},\"type\":\"position_lot_book\"}],\"order_admissions\":[],\"order_streams\":[],\"reservation_schedules\":[],\"schema_version\":1,\"settlement_rules\":{\"account_id\":\"account:primary\",\"cash_rules\":[{\"available_margin_reservation_uses\":[\"margin\"],\"key\":{\"account_id\":\"account:primary\",\"currency_id\":{\"type\":\"currency_id\",\"value\":\"USD\"},\"type\":\"cash_balance_key\",\"venue_id\":{\"type\":\"venue_id\",\"value\":\"synthetic\"}},\"pending_receivable_margin_eligible\":false,\"pending_receivable_tradable\":false,\"pending_receivable_withdrawable\":false,\"tradable_reservation_uses\":[\"cash\",\"fee_reserve\"],\"type\":\"cash_availability_rule\",\"withdrawable_reservation_uses\":[\"cash\",\"fee_reserve\"]}],\"config_hash\":\"sha256:b337e255741405539f1349bd60fff63818459a223bd8ea8f3cf27da02bfd6765\",\"policy_key\":\"settlement.engine-fixture.v1\",\"policy_version\":1,\"position_rules\":[{\"key\":{\"account_id\":\"account:primary\",\"instrument_id\":{\"stable_key\":\"cash:btc-usd\",\"type\":\"instrument_id\",\"venue\":\"synthetic\"},\"type\":\"position_balance_key\",\"venue_id\":{\"type\":\"venue_id\",\"value\":\"synthetic\"}},\"pending_receivable_sellable\":false,\"type\":\"position_availability_rule\"}],\"schema_version\":1,\"type\":\"market_settlement_rules\"},\"settlement_state\":{\"account_id\":\"account:primary\",\"applied_obligations\":[],\"cursor\":{\"position\":0,\"prefix_hash\":\"sha256:5a8944efd7a6570c322ad411aea39c29bc3131afd45c3e8c8723020bbb9543ae\",\"type\":\"settlement_book_cursor\"},\"pending_obligations\":[],\"schema_version\":1,\"type\":\"settlement_book_state\"},\"type\":\"backtest_initial_financial_state_template\"},\"request_hash\":\"sha256:be4e37d6ef69b6ac01493ab8a62e311fa397fcc9e462add5d316c52a616c36c3\",\"schema_version\":1,\"target_stream_key\":\"targets\",\"timeline_batch_size\":1,\"timeline_stream_keys\":[\"bars.open\",\"targets\"],\"type\":\"backtest_execution_input_bundle\"},\"schema_version\":1}",
+    "ref": {
+      "artifact_type": "backtest_execution_input_bundle",
+      "content_hash": "sha256:cde469808ba86f5b55702a85c4d30111cb3408db2932db402d069d5889817c02",
+      "schema_version": 1,
+      "type": "artifact_ref"
+    }
+  },
+  "failure_precedence": [
+    "malformed_execution_request",
+    "wrong_execution_input_bundle_ref",
+    "execution_input_unavailable",
+    "execution_input_tampered",
+    "execution_input_decode_failed",
+    "request_binding_mismatch",
+    "build_binding_mismatch",
+    "target_binding_mismatch",
+    "initial_state_binding_mismatch",
+    "execution_case_semantic_hash_mismatch"
+  ],
+  "fixture_id": "bt-gap02b-execution-input-bundle-v1",
+  "forbidden_bundle_fields": [
+    "market_bundle_manifest",
+    "market_event_bytes",
+    "platform_context",
+    "provider_path",
+    "repository"
+  ],
+  "forbidden_transport_fields": [
+    "content_hash",
+    "created_at",
+    "path",
+    "reader",
+    "repository",
+    "request_hash",
+    "status",
+    "transport_ref"
+  ],
+  "materializer_arguments": {
+    "build_artifact_manifest": {
+      "identity": {
+        "artifacts": [
+          {
+            "artifact_key": "crypto-quant-backtest",
+            "artifact_version": "0.1.0",
+            "content_hash": "sha256:5555555555555555555555555555555555555555555555555555555555555555",
+            "install_mode": "wheel",
+            "role": "backtest_runtime",
+            "source_snapshot_hash": null,
+            "source_tree_state": "clean",
+            "type": "build_artifact_ref"
+          },
+          {
+            "artifact_key": "precomputed-target-stream-adapter",
+            "artifact_version": "0.1.0",
+            "content_hash": "sha256:1111111111111111111111111111111111111111111111111111111111111111",
+            "install_mode": "wheel",
+            "role": "decision_source",
+            "source_snapshot_hash": null,
+            "source_tree_state": "clean",
+            "type": "build_artifact_ref"
+          },
+          {
+            "artifact_key": "crypto-quant-market-data",
+            "artifact_version": "0.1.0",
+            "content_hash": "sha256:4444444444444444444444444444444444444444444444444444444444444444",
+            "install_mode": "wheel",
+            "role": "market_data_contracts",
+            "source_snapshot_hash": null,
+            "source_tree_state": "clean",
+            "type": "build_artifact_ref"
+          },
+          {
+            "artifact_key": "synthetic.cash.development.v1.account",
+            "artifact_version": "1",
+            "content_hash": "sha256:22a2310c4576f10967f5ba5ffc73ba4459f15a16a4e2e5041a6641ebc0c22035",
+            "install_mode": "wheel",
+            "role": "profile_component",
+            "source_snapshot_hash": null,
+            "source_tree_state": "clean",
+            "type": "build_artifact_ref"
+          },
+          {
+            "artifact_key": "synthetic.cash.development.v1.market",
+            "artifact_version": "1",
+            "content_hash": "sha256:3476a32b6367eabaed1ae4e2d5e2748ab236f333f03196335374948b14a6f02f",
+            "install_mode": "wheel",
+            "role": "profile_component",
+            "source_snapshot_hash": null,
+            "source_tree_state": "clean",
+            "type": "build_artifact_ref"
+          },
+          {
+            "artifact_key": "synthetic.cash.development.v1.simulation",
+            "artifact_version": "1",
+            "content_hash": "sha256:45915d737732c3d6b4a75f3b80049b0c8fd0abc0c64a415f69f5ddf33037974f",
+            "install_mode": "wheel",
+            "role": "profile_component",
+            "source_snapshot_hash": null,
+            "source_tree_state": "clean",
+            "type": "build_artifact_ref"
+          },
+          {
+            "artifact_key": "crypto-quant-domain",
+            "artifact_version": "0.1.0",
+            "content_hash": "sha256:2222222222222222222222222222222222222222222222222222222222222222",
+            "install_mode": "wheel",
+            "role": "trading_domain",
+            "source_snapshot_hash": null,
+            "source_tree_state": "clean",
+            "type": "build_artifact_ref"
+          },
+          {
+            "artifact_key": "crypto-quant-trading",
+            "artifact_version": "0.1.0",
+            "content_hash": "sha256:3333333333333333333333333333333333333333333333333333333333333333",
+            "install_mode": "wheel",
+            "role": "trading_kernel",
+            "source_snapshot_hash": null,
+            "source_tree_state": "clean",
+            "type": "build_artifact_ref"
+          }
+        ],
+        "build_key": "synthetic.backtest.build.v1",
+        "container_image_digest": null,
+        "dependency_lock_hash": "sha256:6666666666666666666666666666666666666666666666666666666666666666",
+        "runtime_libraries": [
+          {
+            "content_hash": "sha256:7777777777777777777777777777777777777777777777777777777777777777",
+            "library_key": "python",
+            "type": "runtime_library_ref",
+            "version": "3.13.5"
+          }
+        ],
+        "schema_version": 1,
+        "type": "build_artifact_manifest_identity"
+      },
+      "manifest_hash": "sha256:454c178057ea340bffb6ac6a2d443da11b836471cb1c97c0b5501b0577b633d9",
+      "provenance": {
+        "built_at": {
+          "epoch_nanoseconds": 1000,
+          "type": "utc_instant"
+        },
+        "git_commit": "0e481d4f9e06f073446749149756f38ea0054739",
+        "hostname": "builder-a",
+        "source_root": "/workspace/backtest",
+        "type": "build_provenance"
+      },
+      "type": "build_artifact_manifest"
+    },
+    "execution_case_semantic_spec": {
+      "case_key": "engine.cash.fixture.v1",
+      "case_version": 1,
+      "decision_inputs_hash": "sha256:b1a53dc0745d9f3e0d3b27a1050bd8cb7e9fce6b85d4a73ee42b5424b90921a3",
+      "execution_inputs_hash": "sha256:0b938a774756a26d7425a0bc0550cbdf2dded0f47f29af43ecc5c0ed0086246f",
+      "financial_inputs_hash": "sha256:e8b6cd79bbdcd0d192b0cfe02af5b3fbcd6e47b97467547366095a24fa298ab6",
+      "identity_namespace": {
+        "algorithm": "sha256-length-prefixed-v1",
+        "value": "backtest",
+        "version": "1"
+      },
+      "identity_plan": [
+        {
+          "binding_key": "fee.0",
+          "domain_kind": "fee",
+          "identity_type": "domain_id",
+          "ordinal": 0,
+          "semantic_key": "engine.cash.fee"
+        },
+        {
+          "binding_key": "fill.0",
+          "domain_kind": "fill",
+          "identity_type": "domain_id",
+          "ordinal": 0,
+          "semantic_key": "engine.cash.fill"
+        },
+        {
+          "binding_key": "journal.fee.0",
+          "domain_kind": "journal",
+          "identity_type": "domain_id",
+          "ordinal": 0,
+          "semantic_key": "engine.cash.fee-journal"
+        },
+        {
+          "binding_key": "journal.fill.0",
+          "domain_kind": "journal",
+          "identity_type": "domain_id",
+          "ordinal": 0,
+          "semantic_key": "engine.cash.fill-journal"
+        },
+        {
+          "binding_key": "journal.initial.0",
+          "domain_kind": "journal",
+          "identity_type": "domain_id",
+          "ordinal": 0,
+          "semantic_key": "engine.cash.deposit"
+        },
+        {
+          "binding_key": "order-event.0.0.0",
+          "domain_kind": null,
+          "identity_type": "event_id",
+          "ordinal": 0,
+          "semantic_key": "engine.cash.order-event.order_intent_created"
+        },
+        {
+          "binding_key": "order-event.0.0.1",
+          "domain_kind": null,
+          "identity_type": "event_id",
+          "ordinal": 1,
+          "semantic_key": "engine.cash.order-event.order_capability_approved"
+        },
+        {
+          "binding_key": "order-event.0.0.2",
+          "domain_kind": null,
+          "identity_type": "event_id",
+          "ordinal": 2,
+          "semantic_key": "engine.cash.order-event.order_translated"
+        },
+        {
+          "binding_key": "order-event.0.0.3",
+          "domain_kind": null,
+          "identity_type": "event_id",
+          "ordinal": 3,
+          "semantic_key": "engine.cash.order-event.market_rule_approved"
+        },
+        {
+          "binding_key": "order-event.0.0.4",
+          "domain_kind": null,
+          "identity_type": "event_id",
+          "ordinal": 4,
+          "semantic_key": "engine.cash.order-event.fee_reservation_estimated"
+        },
+        {
+          "binding_key": "order-event.0.0.5",
+          "domain_kind": null,
+          "identity_type": "event_id",
+          "ordinal": 5,
+          "semantic_key": "engine.cash.order-event.pre_trade_risk_approved"
+        },
+        {
+          "binding_key": "order-event.0.0.6",
+          "domain_kind": null,
+          "identity_type": "event_id",
+          "ordinal": 6,
+          "semantic_key": "engine.cash.order-event.order_submitted"
+        },
+        {
+          "binding_key": "order-event.0.0.7",
+          "domain_kind": null,
+          "identity_type": "event_id",
+          "ordinal": 7,
+          "semantic_key": "engine.cash.order-event.order_accepted"
+        },
+        {
+          "binding_key": "order-event.fill.0",
+          "domain_kind": null,
+          "identity_type": "event_id",
+          "ordinal": 0,
+          "semantic_key": "engine.cash.order-event.fill"
+        },
+        {
+          "binding_key": "order.0.0",
+          "domain_kind": "order",
+          "identity_type": "domain_id",
+          "ordinal": 0,
+          "semantic_key": "engine.cash.order"
+        }
+      ],
+      "run_end_inputs_hash": "sha256:28dc354de0195018541031a4da3289b8718f890cebd89afc3c604e6e6cd1c06d",
+      "schema_version": 1,
+      "snapshot_inputs_hash": "sha256:3c1b280c22ad82af8d3fae8dc9034e1b7555a9302ef3253fdf5c344e5793a868",
+      "spec_key": "synthetic.cash.execution-case.v1",
+      "spec_version": 1,
+      "target_stream_digest": "sha256:ead473aba908a5d2ace5745a648d357c16666c47a726743b86dbde42768a539f",
+      "timeline_semantic_hash": "sha256:251d14b7f00fb30e31b6d1678146a2f39ac324c8830a56761d7dd77c57600e09",
+      "type": "execution_case_semantic_spec"
+    },
+    "initial_financial_state_template": {
+      "initial_snapshot_template": {
+        "account_id": "account:primary",
+        "cash": [
+          {
+            "amount": {
+              "currency": "USD",
+              "scale": 2,
+              "type": "money",
+              "units": 100000
+            },
+            "key": {
+              "account_id": "account:primary",
+              "currency_id": {
+                "type": "currency_id",
+                "value": "USD"
+              },
+              "type": "cash_balance_key",
+              "venue_id": {
+                "type": "venue_id",
+                "value": "synthetic"
+              }
+            },
+            "type": "cash_balance"
+          }
+        ],
+        "currency_valuation_graph_hash": "sha256:34f15030f21b3be7bee7373ddc6a659b4a6b50424b814710feeeac7753fa2e14",
+        "equity": {
+          "currency": "USD",
+          "scale": 2,
+          "type": "money",
+          "units": 100000
+        },
+        "fees": {
+          "currency": "USD",
+          "scale": 2,
+          "type": "money",
+          "units": 0
+        },
+        "financing": {
+          "currency": "USD",
+          "scale": 2,
+          "type": "money",
+          "units": 0
+        },
+        "positions": [],
+        "realized_pnl": {
+          "currency": "USD",
+          "scale": 2,
+          "type": "money",
+          "units": 0
+        },
+        "reporting_currency": {
+          "type": "currency_id",
+          "value": "USD"
+        },
+        "timestamp": {
+          "epoch_nanoseconds": 100,
+          "type": "utc_instant"
+        },
+        "type": "portfolio_snapshot",
+        "unrealized_pnl": {
+          "currency": "USD",
+          "scale": 2,
+          "type": "money",
+          "units": 0
+        },
+        "valuation_mark_set_hash": "sha256:4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+        "valuation_marks": [],
+        "valuation_staleness_report_hash": "sha256:4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+      },
+      "journal_entry_templates": [
+        {
+          "account_id": "account:primary",
+          "balance_changes": [
+            {
+              "key": {
+                "account_id": "account:primary",
+                "currency_id": {
+                  "type": "currency_id",
+                  "value": "USD"
+                },
+                "type": "cash_balance_key",
+                "venue_id": {
+                  "type": "venue_id",
+                  "value": "synthetic"
+                }
+              },
+              "type": "balance_change",
+              "value": {
+                "currency": "USD",
+                "scale": 2,
+                "type": "money",
+                "units": 100000
+              }
+            }
+          ],
+          "effective_time": {
+            "epoch_nanoseconds": 0,
+            "type": "utc_instant"
+          },
+          "entry_type": "capital_deposited",
+          "fees": [],
+          "financing": [],
+          "identity_binding_key": "journal.initial.0",
+          "realized_pnl": [],
+          "recorded_at": {
+            "instant": {
+              "epoch_nanoseconds": 1,
+              "type": "utc_instant"
+            },
+            "phase": {
+              "code": "accounting",
+              "rank": 90,
+              "type": "timeline_phase"
+            },
+            "source_sequence": {
+              "type": "source_sequence",
+              "value": 1
+            },
+            "type": "simulation_instant"
+          },
+          "source_ids": [
+            "capital:engine-fixture"
+          ],
+          "type": "accounting_journal_entry",
+          "venue_id": {
+            "type": "venue_id",
+            "value": "synthetic"
+          }
+        }
+      ],
+      "ledger_schema": {
+        "registrations": [
+          {
+            "key": {
+              "account_id": "account:primary",
+              "currency_id": {
+                "type": "currency_id",
+                "value": "USD"
+              },
+              "type": "cash_balance_key",
+              "venue_id": {
+                "type": "venue_id",
+                "value": "synthetic"
+              }
+            },
+            "scale": 2,
+            "type": "ledger_balance_registration"
+          },
+          {
+            "key": {
+              "account_id": "account:primary",
+              "instrument_id": {
+                "stable_key": "cash:btc-usd",
+                "type": "instrument_id",
+                "venue": "synthetic"
+              },
+              "type": "position_balance_key",
+              "venue_id": {
+                "type": "venue_id",
+                "value": "synthetic"
+              }
+            },
+            "scale": 3,
+            "type": "ledger_balance_registration"
+          }
+        ],
+        "schema_version": 1,
+        "type": "ledger_schema"
+      },
+      "lot_books": [
+        {
+          "lots": [],
+          "position_key": {
+            "account_id": "account:primary",
+            "instrument_id": {
+              "stable_key": "cash:btc-usd",
+              "type": "instrument_id",
+              "venue": "synthetic"
+            },
+            "type": "position_balance_key",
+            "venue_id": {
+              "type": "venue_id",
+              "value": "synthetic"
+            }
+          },
+          "type": "position_lot_book"
+        }
+      ],
+      "order_admissions": [],
+      "order_streams": [],
+      "reservation_schedules": [],
+      "schema_version": 1,
+      "settlement_rules": {
+        "account_id": "account:primary",
+        "cash_rules": [
+          {
+            "available_margin_reservation_uses": [
+              "margin"
+            ],
+            "key": {
+              "account_id": "account:primary",
+              "currency_id": {
+                "type": "currency_id",
+                "value": "USD"
+              },
+              "type": "cash_balance_key",
+              "venue_id": {
+                "type": "venue_id",
+                "value": "synthetic"
+              }
+            },
+            "pending_receivable_margin_eligible": false,
+            "pending_receivable_tradable": false,
+            "pending_receivable_withdrawable": false,
+            "tradable_reservation_uses": [
+              "cash",
+              "fee_reserve"
+            ],
+            "type": "cash_availability_rule",
+            "withdrawable_reservation_uses": [
+              "cash",
+              "fee_reserve"
+            ]
+          }
+        ],
+        "config_hash": "sha256:b337e255741405539f1349bd60fff63818459a223bd8ea8f3cf27da02bfd6765",
+        "policy_key": "settlement.engine-fixture.v1",
+        "policy_version": 1,
+        "position_rules": [
+          {
+            "key": {
+              "account_id": "account:primary",
+              "instrument_id": {
+                "stable_key": "cash:btc-usd",
+                "type": "instrument_id",
+                "venue": "synthetic"
+              },
+              "type": "position_balance_key",
+              "venue_id": {
+                "type": "venue_id",
+                "value": "synthetic"
+              }
+            },
+            "pending_receivable_sellable": false,
+            "type": "position_availability_rule"
+          }
+        ],
+        "schema_version": 1,
+        "type": "market_settlement_rules"
+      },
+      "settlement_state": {
+        "account_id": "account:primary",
+        "applied_obligations": [],
+        "cursor": {
+          "position": 0,
+          "prefix_hash": "sha256:5a8944efd7a6570c322ad411aea39c29bc3131afd45c3e8c8723020bbb9543ae",
+          "type": "settlement_book_cursor"
+        },
+        "pending_obligations": [],
+        "schema_version": 1,
+        "type": "settlement_book_state"
+      },
+      "type": "backtest_initial_financial_state_template"
+    },
+    "request": {
+      "build_artifact_manifest_hash": "sha256:454c178057ea340bffb6ac6a2d443da11b836471cb1c97c0b5501b0577b633d9",
+      "engine_kind": "bar",
+      "execution_account_id": "account:primary",
+      "execution_account_profile_key": "synthetic.cash.development.v1.account",
+      "execution_case_semantic_hash": "sha256:2592a4ee246b54632d3c63f3490ab68cdabb305406cc275eafabcc0fd5e8a690",
+      "experiment_id": "synthetic-cash-resolution",
+      "market_bundle_ref": {
+        "bundle_key": "fixture.engine.bundle.v1",
+        "manifest_hash": "sha256:893e925061def7b79e2082e33f20b750fbfbd7d33ea58d3bb1f530440ab7510d",
+        "type": "market_bundle_ref"
+      },
+      "market_semantics_profile_key": "synthetic.cash.development.v1.market",
+      "master_random_seed": 7,
+      "reporting_currency": {
+        "type": "currency_id",
+        "value": "USD"
+      },
+      "result_grade_requested": "development",
+      "schema_version": 1,
+      "simulation_profile_key": "synthetic.cash.development.v1.simulation",
+      "strategy_family": "precomputed_target",
+      "target_stream_digest": "sha256:ead473aba908a5d2ace5745a648d357c16666c47a726743b86dbde42768a539f",
+      "timeline_window": {
+        "data_start": {
+          "epoch_nanoseconds": 0,
+          "type": "utc_instant"
+        },
+        "end_exclusive": {
+          "epoch_nanoseconds": 300,
+          "type": "utc_instant"
+        },
+        "trading_start": {
+          "epoch_nanoseconds": 90,
+          "type": "utc_instant"
+        },
+        "type": "timeline_window"
+      },
+      "type": "backtest_request"
+    },
+    "target_stream_key": "targets",
+    "timeline_batch_size": 1,
+    "timeline_stream_keys": [
+      "bars.open",
+      "targets"
+    ]
+  },
+  "request_identity": {
+    "expected_canonical_utf8": "{\"build_artifact_manifest_hash\":\"sha256:454c178057ea340bffb6ac6a2d443da11b836471cb1c97c0b5501b0577b633d9\",\"engine_kind\":\"bar\",\"execution_account_id\":\"account:primary\",\"execution_account_profile_key\":\"synthetic.cash.development.v1.account\",\"execution_case_semantic_hash\":\"sha256:2592a4ee246b54632d3c63f3490ab68cdabb305406cc275eafabcc0fd5e8a690\",\"experiment_id\":\"synthetic-cash-resolution\",\"market_bundle_ref\":{\"bundle_key\":\"fixture.engine.bundle.v1\",\"manifest_hash\":\"sha256:893e925061def7b79e2082e33f20b750fbfbd7d33ea58d3bb1f530440ab7510d\",\"type\":\"market_bundle_ref\"},\"market_semantics_profile_key\":\"synthetic.cash.development.v1.market\",\"master_random_seed\":7,\"reporting_currency\":{\"type\":\"currency_id\",\"value\":\"USD\"},\"result_grade_requested\":\"development\",\"schema_version\":1,\"simulation_profile_key\":\"synthetic.cash.development.v1.simulation\",\"strategy_family\":\"precomputed_target\",\"target_stream_digest\":\"sha256:ead473aba908a5d2ace5745a648d357c16666c47a726743b86dbde42768a539f\",\"timeline_window\":{\"data_start\":{\"epoch_nanoseconds\":0,\"type\":\"utc_instant\"},\"end_exclusive\":{\"epoch_nanoseconds\":300,\"type\":\"utc_instant\"},\"trading_start\":{\"epoch_nanoseconds\":90,\"type\":\"utc_instant\"},\"type\":\"timeline_window\"},\"type\":\"backtest_request\"}",
+    "expected_request_hash": "sha256:be4e37d6ef69b6ac01493ab8a62e311fa397fcc9e462add5d316c52a616c36c3"
+  },
+  "schema_version": 1,
+  "transport": {
+    "expected_canonical_sha256": "sha256:b28cfb5334bf0d87a5b2a5ef82b02afb5761ead717791bc08e000cba8325765d",
+    "expected_canonical_utf8": "{\"execution_input_bundle_ref\":{\"artifact_type\":\"backtest_execution_input_bundle\",\"content_hash\":\"sha256:cde469808ba86f5b55702a85c4d30111cb3408db2932db402d069d5889817c02\",\"schema_version\":1,\"type\":\"artifact_ref\"},\"request\":{\"build_artifact_manifest_hash\":\"sha256:454c178057ea340bffb6ac6a2d443da11b836471cb1c97c0b5501b0577b633d9\",\"engine_kind\":\"bar\",\"execution_account_id\":\"account:primary\",\"execution_account_profile_key\":\"synthetic.cash.development.v1.account\",\"execution_case_semantic_hash\":\"sha256:2592a4ee246b54632d3c63f3490ab68cdabb305406cc275eafabcc0fd5e8a690\",\"experiment_id\":\"synthetic-cash-resolution\",\"market_bundle_ref\":{\"bundle_key\":\"fixture.engine.bundle.v1\",\"manifest_hash\":\"sha256:893e925061def7b79e2082e33f20b750fbfbd7d33ea58d3bb1f530440ab7510d\",\"type\":\"market_bundle_ref\"},\"market_semantics_profile_key\":\"synthetic.cash.development.v1.market\",\"master_random_seed\":7,\"reporting_currency\":{\"type\":\"currency_id\",\"value\":\"USD\"},\"result_grade_requested\":\"development\",\"schema_version\":1,\"simulation_profile_key\":\"synthetic.cash.development.v1.simulation\",\"strategy_family\":\"precomputed_target\",\"target_stream_digest\":\"sha256:ead473aba908a5d2ace5745a648d357c16666c47a726743b86dbde42768a539f\",\"timeline_window\":{\"data_start\":{\"epoch_nanoseconds\":0,\"type\":\"utc_instant\"},\"end_exclusive\":{\"epoch_nanoseconds\":300,\"type\":\"utc_instant\"},\"trading_start\":{\"epoch_nanoseconds\":90,\"type\":\"utc_instant\"},\"type\":\"timeline_window\"},\"type\":\"backtest_request\"},\"schema_version\":1,\"type\":\"backtest_execution_request\"}",
+    "value": {
+      "execution_input_bundle_ref": {
+        "artifact_type": "backtest_execution_input_bundle",
+        "content_hash": "sha256:cde469808ba86f5b55702a85c4d30111cb3408db2932db402d069d5889817c02",
+        "schema_version": 1,
+        "type": "artifact_ref"
+      },
+      "request": {
+        "build_artifact_manifest_hash": "sha256:454c178057ea340bffb6ac6a2d443da11b836471cb1c97c0b5501b0577b633d9",
+        "engine_kind": "bar",
+        "execution_account_id": "account:primary",
+        "execution_account_profile_key": "synthetic.cash.development.v1.account",
+        "execution_case_semantic_hash": "sha256:2592a4ee246b54632d3c63f3490ab68cdabb305406cc275eafabcc0fd5e8a690",
+        "experiment_id": "synthetic-cash-resolution",
+        "market_bundle_ref": {
+          "bundle_key": "fixture.engine.bundle.v1",
+          "manifest_hash": "sha256:893e925061def7b79e2082e33f20b750fbfbd7d33ea58d3bb1f530440ab7510d",
+          "type": "market_bundle_ref"
+        },
+        "market_semantics_profile_key": "synthetic.cash.development.v1.market",
+        "master_random_seed": 7,
+        "reporting_currency": {
+          "type": "currency_id",
+          "value": "USD"
+        },
+        "result_grade_requested": "development",
+        "schema_version": 1,
+        "simulation_profile_key": "synthetic.cash.development.v1.simulation",
+        "strategy_family": "precomputed_target",
+        "target_stream_digest": "sha256:ead473aba908a5d2ace5745a648d357c16666c47a726743b86dbde42768a539f",
+        "timeline_window": {
+          "data_start": {
+            "epoch_nanoseconds": 0,
+            "type": "utc_instant"
+          },
+          "end_exclusive": {
+            "epoch_nanoseconds": 300,
+            "type": "utc_instant"
+          },
+          "trading_start": {
+            "epoch_nanoseconds": 90,
+            "type": "utc_instant"
+          },
+          "type": "timeline_window"
+        },
+        "type": "backtest_request"
+      },
+      "schema_version": 1,
+      "type": "backtest_execution_request"
+    }
+  }
+}

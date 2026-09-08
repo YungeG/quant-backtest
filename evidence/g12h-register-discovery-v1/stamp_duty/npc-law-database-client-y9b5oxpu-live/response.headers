@@ -1,0 +1,13 @@
+HTTP/1.1 200 OK
+Date: Thu, 20 Aug 2026 08:42:17 GMT
+Content-Type: application/javascript; charset=utf-8
+Content-Length: 1348995
+Connection: keep-alive
+Etag: W/"6a69b790-149583"
+Last-Modified: Wed, 29 Jul 2026 08:19:28 GMT
+Vary: Accept-Encoding
+Wzws-Ray: 1129-1787242969.775-s1bjbgp-cache02bjtp3-waf01bjtp3
+Cache-Control: max-age=14400
+age: 0
+VAR-Cache: hit
+

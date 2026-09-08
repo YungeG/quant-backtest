@@ -1,0 +1,10 @@
+{
+  "schema_version": 1,
+  "id": "core-accounting-wp03f-v1",
+  "rules": [
+    {"path": "/fees", "comparison": "exact"},
+    {"path": "/funding", "comparison": "exact"},
+    {"path": "/gross_price_pnl", "comparison": "exact"},
+    {"path": "/net_pnl", "comparison": "exact"}
+  ]
+}

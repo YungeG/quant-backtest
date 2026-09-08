@@ -1,0 +1,37 @@
+{
+  "authentication": "none",
+  "headers": [
+    {
+      "name": "User-Agent",
+      "value": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 Chrome/130.0 Safari/537.36 G12HAuthorityCapture/1.0"
+    },
+    {
+      "name": "Accept",
+      "value": "*/*"
+    },
+    {
+      "name": "Accept-Language",
+      "value": "zh-CN,zh;q=0.9,en;q=0.5"
+    },
+    {
+      "name": "Cache-Control",
+      "value": "no-cache"
+    },
+    {
+      "name": "Pragma",
+      "value": "no-cache"
+    }
+  ],
+  "method": "GET",
+  "redirect_policy": {
+    "follow": true,
+    "maximum": 10,
+    "redirect_protocols": [
+      "https"
+    ]
+  },
+  "request_body": null,
+  "schema_version": 1,
+  "type": "g12h_official_http_request_v1",
+  "url": "https://fwfx.ndrc.gov.cn/api/query?qt=%E5%8F%91%E6%94%B9%E4%BB%B7%E6%A0%BC%E8%A7%84%E3%80%942018%E3%80%95917%E5%8F%B7&tab=all&page=1&pageSize=20&siteCode=bm04000fgk&key=CAB549A94CF659904A7D6B0E8FC8A7E9&startDateStr=1900-01-01&endDateStr=2026-08-20&timeOption=2&sort=dateDesc"
+}

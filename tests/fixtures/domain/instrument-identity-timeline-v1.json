@@ -1,0 +1,24 @@
+{
+  "fixture_id": "instrument-identity-timeline-v1",
+  "schema_version": 1,
+  "instrument": {
+    "venue": "binance_usdm",
+    "stable_key": "linear_perpetual:btc-usdt",
+    "type": "linear_perpetual",
+    "base_currency": "BTC",
+    "quote_currency": "USDT",
+    "settlement_currency": "USDT"
+  },
+  "symbols": [
+    {
+      "symbol": "BTCUSDT",
+      "effective_from": 0,
+      "effective_until": 100
+    },
+    {
+      "symbol": "XBTUSDT",
+      "effective_from": 100,
+      "effective_until": null
+    }
+  ]
+}

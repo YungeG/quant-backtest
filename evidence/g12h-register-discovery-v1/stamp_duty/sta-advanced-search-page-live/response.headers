@@ -1,0 +1,11 @@
+HTTP/1.1 200 OK
+Date: Thu, 20 Aug 2026 08:44:44 GMT
+Content-Type: text/html
+Transfer-Encoding: chunked
+Connection: keep-alive
+X-Frame-Options: ALLOW-FROM http://www.chinatax.gov.cn/
+Access-Control-Allow-Origin: http://www.chinatax.gov.cn
+x-via: 1.1 PSjsczsx2xc90:14 (Cdn Cache Server V2.0), 1.1 CS-000-018Qb189:15 (Cdn Cache Server V2.0), 1.1 PS-000-012jf27:1 (Cdn Cache Server V2.0)
+x-ws-request-id: 6a86be7c_PS-000-012jf27_27548-22875
+Age: 26270
+

@@ -1,0 +1,152 @@
+{
+  "schema_version": 1,
+  "id": "cn-a-share-g08h-parity-plan-v1",
+  "layer_order": [
+    "00_CASE_INPUT",
+    "01_CALENDAR_SESSION",
+    "02_PRICE_LIMIT",
+    "03_DECISION_BUDGETING",
+    "04_ORDER_INTENT",
+    "05_FEE_TAX",
+    "06_SETTLEMENT_T1",
+    "07_CORPORATE_ACTION",
+    "08_ACCOUNTING_LEDGER",
+    "09_FINAL_RESULT"
+  ],
+  "sources": [
+    {
+      "role": "LEGACY_CYCLE_ROTATION",
+      "source_id": "cycle-rotation-platform",
+      "snapshot_sha256": "1fea4f5a4ec8ab12ddb25c6c5bb525f91f8bac9e887f3e5b382b641a948c91c3",
+      "content_tree_sha256": "65f9812bd86241ac5fcfdfcca1cb8c28868edbdf007d747ecee8cc68ee20d089",
+      "projection": "tests/parity/fixtures/cn-a-share-g08h-v1/legacy.expected.json",
+      "projection_sha256": "e6b267b42f5983187a0807c3514beae80e0676ea2987dd4dea2c6c816f680b2a"
+    },
+    {
+      "role": "G08H_DEVELOPMENT_RUN",
+      "source_id": "cn-a-share-resolved-profile-development-journey-v1",
+      "snapshot_sha256": "08358c1c0d2144fb23c1b1c8862fa6c879bd285533e5fa415e5cc0273013e905",
+      "content_tree_sha256": "aa032668a5207b61b6c8815894e0087f1c1e734d41e9707c7d32111b6c1cd79f",
+      "projection": "tests/parity/fixtures/cn-a-share-g08h-v1/g08h.actual.json",
+      "projection_sha256": "6a565b912671b88fe0c9ab70b24705aa5259fdb99fd644d19bac7ac3178a7174"
+    }
+  ],
+  "pairs": [
+    {
+      "id": "LEGACY_TO_G08H",
+      "expected_role": "LEGACY_CYCLE_ROTATION",
+      "actual_role": "G08H_DEVELOPMENT_RUN",
+      "contract": "tests/parity/contracts/cn-a-share-g08h-legacy-to-g08h-v1.json",
+      "migration_mode": "copy_with_parity",
+      "expected_verdict": "MATCH"
+    }
+  ],
+  "coverage": [
+    {
+      "pair": "LEGACY_TO_G08H",
+      "layer": "00_CASE_INPUT",
+      "status": "COMPARABLE",
+      "reason": "same frozen NAV/exposure/price/holding/lot-size case is projected on both sides",
+      "evidence_refs": [
+        "cycle-rotation-platform:trading/position_management.py",
+        "g08h:development-journey-input"
+      ]
+    },
+    {
+      "pair": "LEGACY_TO_G08H",
+      "layer": "01_CALENDAR_SESSION",
+      "status": "NOT_COMPARABLE_LEGACY_SCOPE",
+      "reason": "legacy snapshot has no exchange calendar or session authority",
+      "evidence_refs": [
+        "cycle-rotation-platform:manifest",
+        "g08a:calendar-session-v1"
+      ]
+    },
+    {
+      "pair": "LEGACY_TO_G08H",
+      "layer": "02_PRICE_LIMIT",
+      "status": "NOT_COMPARABLE_LEGACY_SCOPE",
+      "reason": "legacy snapshot has no historical price-limit authority",
+      "evidence_refs": [
+        "cycle-rotation-platform:manifest",
+        "g08d:historical-order-rules-v1"
+      ]
+    },
+    {
+      "pair": "LEGACY_TO_G08H",
+      "layer": "03_DECISION_BUDGETING",
+      "status": "COMPARABLE",
+      "reason": "legacy build_equal_weight_targets and G08H target input expose the same normalized budget",
+      "evidence_refs": [
+        "cycle-rotation-platform:trading/position_management.py:build_equal_weight_targets",
+        "g08h:target-budget-projection"
+      ]
+    },
+    {
+      "pair": "LEGACY_TO_G08H",
+      "layer": "04_ORDER_INTENT",
+      "status": "COMPARABLE",
+      "reason": "legacy plan_target_rebalance_orders and G08H normalized order intent expose side quantity and reason",
+      "evidence_refs": [
+        "cycle-rotation-platform:trading/position_management.py:plan_target_rebalance_orders",
+        "g08h:normalized-order-intent"
+      ]
+    },
+    {
+      "pair": "LEGACY_TO_G08H",
+      "layer": "05_FEE_TAX",
+      "status": "NOT_COMPARABLE_LEGACY_SCOPE",
+      "reason": "legacy snapshot has no exact exchange fee or stamp-duty authority",
+      "evidence_refs": [
+        "cycle-rotation-platform:manifest",
+        "g08e:commission-tax-v1"
+      ]
+    },
+    {
+      "pair": "LEGACY_TO_G08H",
+      "layer": "06_SETTLEMENT_T1",
+      "status": "NOT_COMPARABLE_LEGACY_SCOPE",
+      "reason": "legacy snapshot mutates positions immediately and has no T+1 availability authority",
+      "evidence_refs": [
+        "cycle-rotation-platform:trading/engine/execution_engine.py",
+        "g08b:settlement-availability-v1"
+      ]
+    },
+    {
+      "pair": "LEGACY_TO_G08H",
+      "layer": "07_CORPORATE_ACTION",
+      "status": "NOT_COMPARABLE_LEGACY_SCOPE",
+      "reason": "legacy snapshot has no corporate-action entitlement or payment/listing authority",
+      "evidence_refs": [
+        "cycle-rotation-platform:manifest",
+        "g08f:corporate-action-entitlement-v1",
+        "g08g:corporate-action-accounting-v1"
+      ]
+    },
+    {
+      "pair": "LEGACY_TO_G08H",
+      "layer": "08_ACCOUNTING_LEDGER",
+      "status": "NOT_COMPARABLE_LEGACY_SCOPE",
+      "reason": "legacy SQLite/dictionary state is not the canonical Journal/GenericLedger authority",
+      "evidence_refs": [
+        "cycle-rotation-platform:trading/engine/execution_engine.py",
+        "g08g:corporate-action-journal-replay-v1"
+      ]
+    },
+    {
+      "pair": "LEGACY_TO_G08H",
+      "layer": "09_FINAL_RESULT",
+      "status": "NOT_COMPARABLE_LEGACY_SCOPE",
+      "reason": "unsupported upstream semantics make aggregate final economics non-comparable",
+      "evidence_refs": [
+        "g08h:coverage-map"
+      ]
+    }
+  ],
+  "limitations": [
+    "development_grade_profile",
+    "legacy_platform_not_authoritative"
+  ],
+  "decision_grade_eligible": false,
+  "deployment_authorized": false
+}

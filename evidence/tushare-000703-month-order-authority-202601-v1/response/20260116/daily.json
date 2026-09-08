@@ -1,0 +1,1 @@
+{"request_id":"37886ce2-a30d-41c5-a0d3-5ee13f858aa6","code":0,"data":{"fields":["ts_code","trade_date","open","high","low","close","pre_close","change","pct_chg","vol","amount"],"items":[["000703.SZ","20260116",10.62,10.67,10.35,10.46,10.67,-0.21,-1.9681,248646.03,260082.393]],"has_more":false,"count":0},"msg":"","detail":"..."}

@@ -1,0 +1,37 @@
+{
+  "approved": {
+    "capability_set_hash": "sha256:d62a7144aff9bcc6a563a77cf27e2fbc97397285c241a2fd8ce1aa78cde6caba",
+    "decision_hash": "sha256:85905613df9d8a3284f1a7afe49b33d30a48bde57abcca9c5cf234a2d419dc41",
+    "decision_id": "order-capability-decision-v1:sha256:fa55891204d111d0db91b295b68e76cd00a69503616b4b7243d5d63b17048e80",
+    "intent_hash": "sha256:7be0cf5ae88947677d1b1e432fdcb643d5d7c5a6256294c826294d6cf065f3e3"
+  },
+  "fixture_id": "order-capability-validation-v1",
+  "rejected": {
+    "capability_set_hash": "sha256:cfc4c0cd6b939929219f20d67f6dace39379c5f7978bb5252be2cdb6336405ee",
+    "decision_hash": "sha256:94328d428e1376cb1026566722a2d777a49f0a454e4bd69dd40b92b61433c38b",
+    "decision_id": "order-capability-decision-v1:sha256:e46bae4e5c31124075c48417af3bac1a62536b3324e93ffa9aead9985f0295c3",
+    "intent_hash": "sha256:fd61699396e3fbe1149e26eef8b1bc9852759d682a40392442f77381b301926a",
+    "unsupported": [
+      {
+        "capability": "position_effect",
+        "reason_code": "unsupported_position_effect",
+        "requested_value": "close"
+      },
+      {
+        "capability": "price_constraint",
+        "reason_code": "unsupported_price_constraint",
+        "requested_value": "limit"
+      },
+      {
+        "capability": "reduce_only",
+        "reason_code": "unsupported_reduce_only",
+        "requested_value": "true"
+      },
+      {
+        "capability": "time_in_force",
+        "reason_code": "unsupported_time_in_force",
+        "requested_value": "gtc"
+      }
+    ]
+  }
+}

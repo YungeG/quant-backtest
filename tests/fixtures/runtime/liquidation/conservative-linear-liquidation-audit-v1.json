@@ -1,0 +1,185 @@
+{
+  "cases": {
+    "decision_grade_ambiguous": {
+      "failure_code": "ambiguous_breach_not_decision_grade",
+      "failure_hash": "sha256:ba0ba62ba83e9cf64fb4416c3402a18883a877e020027740256e0644fd95b201",
+      "request_hash": "sha256:cf2195b955200f596d6b7ee369f6a754ffbb592742ce590084866c7e084b5144",
+      "subject_ids": [
+        "ambiguous_breach_not_decision_grade",
+        "sha256:f5bc9b7ea40219682196ee4119e1320e374fa56839bcd561d1666ec910a5aefc",
+        "22",
+        "decision_grade"
+      ]
+    },
+    "development_ambiguous": {
+      "adverse_equity_units": -1012,
+      "adverse_maintenance_units": 1,
+      "adverse_unrealized_units": -1112,
+      "classification": "ambiguous_breach",
+      "decision_grade_eligible": false,
+      "limitation": "bar-extremes-do-not-identify-intrabar-path-or-liquidation-time",
+      "position_audits": [
+        {
+          "adverse_price_units": 100,
+          "audit_hash": "sha256:e80a7cf349228ef10076eab7e1492ff90bb28cf7a5542f3efc114c6edc0a942a",
+          "direction": "long",
+          "exact_maintenance": [
+            1,
+            800
+          ],
+          "exact_unrealized": [
+            -89,
+            8
+          ],
+          "maintenance_units": 1,
+          "tier_id": "synthetic-margin-tier-1",
+          "unrealized_units": -1112
+        }
+      ],
+      "request_hash": "sha256:99b4ee4ba4697814b7564a8b612242bd32730aa36f3b3d34ba65b570af690062",
+      "result_hash": "sha256:c9c6f0aebc5a90cdcfafb12440f089b38107a2969dfbfc725e2e17b0f8a7a710",
+      "wallet_units": 100
+    },
+    "equality_safe": {
+      "adverse_equity_units": 10,
+      "adverse_maintenance_units": 10,
+      "adverse_unrealized_units": -125,
+      "classification": "safe",
+      "decision_grade_eligible": true,
+      "limitation": "bar-extremes-do-not-identify-intrabar-path-or-liquidation-time",
+      "position_audits": [
+        {
+          "adverse_price_units": 8000,
+          "audit_hash": "sha256:a7a6484461d94ea9d4cb7b62b3310661a0064e7ecfe4042056df40b19251c4d5",
+          "direction": "long",
+          "exact_maintenance": [
+            1,
+            10
+          ],
+          "exact_unrealized": [
+            -5,
+            4
+          ],
+          "maintenance_units": 10,
+          "tier_id": "synthetic-margin-tier-1",
+          "unrealized_units": -125
+        }
+      ],
+      "request_hash": "sha256:70e13d765eb5e9549afb3450e162c16578190f49dafac594eec05fbe11adb342",
+      "result_hash": "sha256:9e92b23e7047df53970be954ef16dd7786547c2265dd30186231d71f040d861d",
+      "wallet_units": 135
+    },
+    "long_safe": {
+      "adverse_equity_units": 99875,
+      "adverse_maintenance_units": 10,
+      "adverse_unrealized_units": -125,
+      "classification": "safe",
+      "decision_grade_eligible": true,
+      "limitation": "bar-extremes-do-not-identify-intrabar-path-or-liquidation-time",
+      "position_audits": [
+        {
+          "adverse_price_units": 8000,
+          "audit_hash": "sha256:a7a6484461d94ea9d4cb7b62b3310661a0064e7ecfe4042056df40b19251c4d5",
+          "direction": "long",
+          "exact_maintenance": [
+            1,
+            10
+          ],
+          "exact_unrealized": [
+            -5,
+            4
+          ],
+          "maintenance_units": 10,
+          "tier_id": "synthetic-margin-tier-1",
+          "unrealized_units": -125
+        }
+      ],
+      "request_hash": "sha256:3cf76a1cfe7661512d77f7f056a6a4da4a57c5df979c3c7434d872d814383bbb",
+      "result_hash": "sha256:7186640ef2cd1ab17dce98cf413045f655c848ac7093cef564e27a2b173fd51e",
+      "wallet_units": 100000
+    },
+    "mixed_long_short_safe": {
+      "adverse_equity_units": 99500,
+      "adverse_maintenance_units": 25,
+      "adverse_unrealized_units": -500,
+      "classification": "safe",
+      "decision_grade_eligible": true,
+      "limitation": "bar-extremes-do-not-identify-intrabar-path-or-liquidation-time",
+      "position_audits": [
+        {
+          "adverse_price_units": 8000,
+          "audit_hash": "sha256:a7a6484461d94ea9d4cb7b62b3310661a0064e7ecfe4042056df40b19251c4d5",
+          "direction": "long",
+          "exact_maintenance": [
+            1,
+            10
+          ],
+          "exact_unrealized": [
+            -5,
+            4
+          ],
+          "maintenance_units": 10,
+          "tier_id": "synthetic-margin-tier-1",
+          "unrealized_units": -125
+        },
+        {
+          "adverse_price_units": 12000,
+          "audit_hash": "sha256:34b057dfc41c58d04545da45a0c312ed82953a66ef7f814f92c1373b24df36e9",
+          "direction": "short",
+          "exact_maintenance": [
+            3,
+            20
+          ],
+          "exact_unrealized": [
+            -15,
+            4
+          ],
+          "maintenance_units": 15,
+          "tier_id": "synthetic-margin-tier-1",
+          "unrealized_units": -375
+        }
+      ],
+      "request_hash": "sha256:d674604b7df95ad08378eaa49159de66c4546ca1f37b3f1e1707fbc584eafefe",
+      "result_hash": "sha256:f2077cf7ff1ca80226c0d194e818a02741066e570c5c3a0ddd5458bc9d079c96",
+      "wallet_units": 100000
+    },
+    "short_cross_tier_safe": {
+      "adverse_equity_units": 94875,
+      "adverse_maintenance_units": 75,
+      "adverse_unrealized_units": -5125,
+      "classification": "safe",
+      "decision_grade_eligible": true,
+      "limitation": "bar-extremes-do-not-identify-intrabar-path-or-liquidation-time",
+      "position_audits": [
+        {
+          "adverse_price_units": 50000,
+          "audit_hash": "sha256:2f2d208e7b82e5956f6d638efd0fb02f68a5e26460cc48f465da28e6c1f2b076",
+          "direction": "short",
+          "exact_maintenance": [
+            3,
+            4
+          ],
+          "exact_unrealized": [
+            -205,
+            4
+          ],
+          "maintenance_units": 75,
+          "tier_id": "synthetic-margin-tier-2",
+          "unrealized_units": -5125
+        }
+      ],
+      "request_hash": "sha256:b15413d561d627fa9dd2d987c9b5ec05e8283e37687acde66c1b4ba48925c54e",
+      "result_hash": "sha256:6069039f43e872b895d15d0b60dac3c86a94058d52b74f6d415d15fae0dca113",
+      "wallet_units": 100000
+    }
+  },
+  "component_ref": {
+    "component_digest": "sha256:964c7a9a0a30deaf872b3ed7563684bbc7c0af9437dc71bbbe2bc7f3da9d2422",
+    "component_key": "conservative.linear-perpetual.liquidation-audit.v1",
+    "component_version": 1,
+    "port_type": "liquidation_audit_model",
+    "type": "simulation_component_ref"
+  },
+  "fixture_id": "synthetic-conservative-linear-liquidation-audit-v1",
+  "schema_version": 1
+}

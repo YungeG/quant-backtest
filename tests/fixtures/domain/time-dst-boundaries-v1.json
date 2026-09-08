@@ -1,0 +1,9 @@
+{
+  "fixture_id": "time-dst-boundaries-v1",
+  "schema_version": 1,
+  "zone": "America/New_York",
+  "ambiguous_local": "2024-11-03T01:30:00",
+  "ambiguous_earlier_epoch_nanoseconds": 1730611800000000000,
+  "ambiguous_later_epoch_nanoseconds": 1730615400000000000,
+  "nonexistent_local": "2024-03-10T02:30:00"
+}

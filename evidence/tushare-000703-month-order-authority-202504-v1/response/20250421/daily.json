@@ -1,0 +1,1 @@
+{"request_id":"00113977-aa12-40cd-8a30-a94dcb68aec2","code":0,"data":{"fields":["ts_code","trade_date","open","high","low","close","pre_close","change","pct_chg","vol","amount"],"items":[["000703.SZ","20250421",5.92,5.94,5.89,5.9,5.92,-0.02,-0.3378,35541.58,20998.666]],"has_more":false,"count":0},"msg":"","detail":"..."}

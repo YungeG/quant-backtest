@@ -1,0 +1,31 @@
+{
+  "authority_status": "CAPTURED_NOT_QUALIFIED",
+  "content_type": "text/html",
+  "curl_exit_code": 0,
+  "curl_stderr": "",
+  "derivatives": {
+    "rendered_dom": {
+      "available": false,
+      "reason": "No browser renderer is installed in the acquisition environment; raw server response and deterministic text extraction retained."
+    },
+    "text_extraction": {
+      "charset": "utf-8",
+      "decode_errors": false
+    }
+  },
+  "final_url": "https://www.szse.cn/disclosure/notice/general/index_1.html",
+  "lineage": "exchange_handling",
+  "operator_harness_sha256": "sha256:85ccf78ce0d595ff9d372c85243d81c49c3bc1be19f868df5936cc2f6977d9ea",
+  "raw_byte_length": 92531,
+  "raw_file": "raw.html",
+  "raw_sha256": "sha256:a95609254bfeadba9b4bbc82ba22dba7c22647af4e800922ab4f400e9bd45cf7",
+  "redirect_count": 0,
+  "response_chain_count": 1,
+  "response_code": 200,
+  "retrieved_at": "2026-08-20T07:48:24.570985Z",
+  "schema_version": 1,
+  "source_id": "szse-general-notice-index-page-01",
+  "started_at": "2026-08-20T07:48:24.193297Z",
+  "tool": "curl 8.14.1 (x86_64-pc-linux-gnu) libcurl/8.14.1 OpenSSL/3.5.6 zlib/1.3.1 brotli/1.1.0 zstd/1.5.7 libidn2/2.3.8 libpsl/0.21.2 libssh2/1.11.1 nghttp2/1.64.0 nghttp3/1.8.0 librtmp/2.3 OpenLDAP/2.6.10",
+  "type": "g12h_official_http_capture_receipt_v1"
+}

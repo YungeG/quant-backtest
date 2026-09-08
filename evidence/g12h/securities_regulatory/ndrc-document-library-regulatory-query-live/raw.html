@@ -1,0 +1,394 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1"/>
+    <meta name="renderer" content="webkit|ie-comp|ie-stand"/>
+    <meta name="renderer" content="webkit"/>
+    <title>文件库-国家发展和改革委员会</title>
+    <meta name="SiteName" content="中华人民共和国国家发展和改革委员会">
+    <meta name="SiteDomain" content="www.ndrc.gov.cn">
+    <meta name="SiteIDCode" content="bm04000007">
+    <meta name="ColumnName"content="文件库">
+    <meta name="ColumnDescription"content="为您提供政策文件、解读信息的查询功能">
+    <meta name="ColumnKeywords"content="文件库,文件检索,文件资源中心">
+    <meta name="ColumnType"content="政策文件">
+    <link href="/images/alert.css" rel="stylesheet" type="text/css">
+    <link href="../../images/swiper4.min.css" rel="stylesheet" type="text/css">
+    <link href="/images/common-wza.css" rel="stylesheet" type="text/css">
+    <link href="/images/column-wza.css" rel="stylesheet" type="text/css">
+    <script src="../../images/jquery.min.js"></script>
+    <script src="../../jslm/tongji/tongji.js"></script>
+    <script src="../../images/uaredirect.js"></script>
+    <script type="text/javascript">
+        var link =window.location.href;
+        if(link.indexOf("index.html")){
+            uaredirect(window.location.href+"wap_index.html");
+        }else{
+            uaredirect(link.replace('index.html','wap_index.html'));
+        }
+    </script>
+    <style>
+        .search-file-result th:nth-child(2){
+            width: 78%;
+        }
+    </style>
+</head>
+<body>
+<div class="header">
+    <script src="../../jslm/headtop/headtop.js"></script>
+    <script src="../../jslm/nav/nav.js"></script>
+    <script type="text/javascript">
+        var tmp = "6840";
+        $("#fgw_"+tmp).siblings('li').removeClass("cur");
+        $("#fgw_"+tmp).addClass("cur");
+    </script>
+</div>
+
+<div class="container">
+    <div class="path"><a href="../../" class="CurrChnlCls">首页</a>&nbsp;&gt;&nbsp;<a href="../" class="CurrChnlCls">政务公开</a>&nbsp;&gt;&nbsp;<a href="./" class="CurrChnlCls">文件库</a></div>
+    <div class="filebase">
+        <div class="search-file">
+            <a class="gwyfile" href="http://www.gov.cn/zhengce/zhengcewenjianku/index.htm">国务院政策文件库 ></a>
+            <dl>
+                <dt>
+                <div class="search-form">
+                    <input type="text"placeholder="请输入关键字" id="search-qt" aria-label="请输入关键词" /><button id="searchBtn" aria-label="搜索文件">搜索</button>
+                </div>
+                <!--<span>在结果中检索</span>
+                <a href="">高级搜索 ></a>-->
+                </dt>
+                <dd>
+                    <strong>发布年份：</strong>
+                    <ul>
+                        <li data-nf="all" class="selected">全部</li>
+                        <li data-nf="2026">2026</li>
+                        <li data-nf="2025">2025</li>
+                        <li data-nf="2024">2024</li>
+                        <li data-nf="2023">2023</li>
+                        <li data-nf="2022">2022</li>
+                        <li data-nf="2021">2021</li>
+                        <li data-nf="2020">2020</li>
+                        <li data-nf="2019">2019</li>
+                        <li data-nf="2018ago">2018以前</li>
+                        
+                    </ul>
+                </dd>
+                <dd>
+                    <strong>文件类型：</strong>
+                    <ul>
+                        <li data-lb="all">全部</li>
+                        <li data-lb="fzggwl">发展改革委令</li>
+                        <li data-lb="gfxwj">规范性文件</li>
+                        <li data-lb="gg">公告</li>
+                        <li data-lb="ghwb">规划文本</li>
+                        <li data-lb="tz">通知</li>
+                        <li data-lb="zcjd">政策解读</li>
+                        <li data-lb="qt">其他</li>
+                        
+                    </ul>
+                </dd>
+                <dd>
+                    <strong>排序方式：</strong>
+                    <a  data-sort="weight">相关程度排序</a>
+                    <a class="cur" data-sort="dateDesc">按时间排序</a>
+                </dd>
+            </dl>
+        </div>
+        <p style="font-size: 14px;color: rgba(51,51,51,0.7);margin-top: 10px;">注：数据查询只显示最新500条数据</p>
+        <div class="search-file-result" style="margin-top: 10px;">
+            <table border="0" cellpadding="0" cellspacing="0" width="100%" id="result">
+            </table>
+            <p class="clr"></p>
+            <div class="page">
+                <ul id="pagination"></ul>
+
+            </div>
+        </div>
+    </div>
+</div>
+
+<p class="clr"></p>
+<script src="../../jslm/footer/footer.js"></script>
+<script src="../../images/swiper4.js"></script>
+<script src="/images/common-wza.js"></script>
+<script src="/images/jquery.simplePagination.js"></script>
+<script>
+
+    function isempty(data) {
+        return data ? data : "— —";
+    }
+    var Request = new Object();
+    Request = GetRequest();
+    function GetRequest() {
+        var url = location.search;
+        var theRequest = new Object();
+        if (url.indexOf('?') != -1) {
+            var str = url.substr(1);
+            strs = str.split('&');
+            for (var i = 0; i < strs.length; i++) {
+                theRequest[strs[i].split('=')[0]] = decodeURIComponent(strs[i].split('=')[1]);
+            }
+        }
+        return theRequest;
+    }
+    console.log(Request);
+    if (Request.qt)
+        $('#search-qt').val(Request.qt);
+    var qt= $('#search-qt').val();
+    var tab=Request.tab? Request.tab : "all" ;
+    tab=tab+'';
+    var dateStr=Request.date ? Request.date : "" ;
+    dateStr=dateStr+'';
+    var startDateStr = dateStr ? dateStr+"-01-01" : "" ;
+    var endDateStr = dateStr ? dateStr+"-12-31" : "" ;
+    if (dateStr.indexOf("ago")>-1){
+        startDateStr = "1990-01-01";
+        endDateStr = dateStr.replace("ago","")+"-12-31";
+    }
+    var timeOption = dateStr ? 2 : 0;
+    var sort = Request.sort ? Request.sort : "dateDesc";
+    if (qt=="")
+        sort = "dateDesc";
+    //////////////////////////////
+    var url = "https://fwfx.ndrc.gov.cn/api/query";
+
+    console.log(tab,dateStr);
+    $('.search-file dt span').click(function () {
+        $(this).toggleClass('selected')
+    });
+    $('.search-file dd li').each(function () {
+        $(this).on('keyup',function(){
+            var keycode = event.keyCode || event.which
+            if(keycode==9){
+                $(this).trigger('click')
+            }
+        })
+
+        $(this).on('click',function () {
+            $(this).addClass('selected').siblings().removeClass('selected')
+            if ($(this).data("lb"))
+                tab = $(this).data("lb");
+            if ($(this).data("nf")){
+                dateStr = $(this).data("nf");
+                if (dateStr == 'all')
+                {
+                    dateStr = false;
+                }else{
+                    dateStr=dateStr+'';
+                    startDateStr = dateStr ? dateStr+"-01-01" : "" ;
+                    endDateStr = dateStr ? dateStr+"-12-31" : "" ;
+                    if (dateStr.indexOf("ago")>-1){
+                        startDateStr = "1990-01-01";
+                        endDateStr = dateStr.replace("ago","")+"-12-31";
+                    }
+                }
+                timeOption = dateStr ? 2 : 0;
+            }
+            getList(1);
+        })
+    });
+
+    $('#searchBtn').click(function () {
+        qt= $('#search-qt').val();
+        getList(1);
+    })
+
+
+
+    $('.search-file dd a').each(function () {
+        $(this).on('keyup',function(){
+            var keycode = event.keyCode || event.which
+            if(keycode==9){
+                $(this).trigger('click')
+            }
+        })
+
+        $(this).on('click',function () {
+            $(this).addClass('cur').siblings().removeClass('cur')
+            sort = $(this).data("sort");
+            getList(1);
+        })
+    });
+
+
+    $.each(tab.split(","), function (i, n) {
+        $('.search-file dd li').each(function () {
+            if ($(this).data("lb") == tab.split(",")[i])
+            {
+                $(this).addClass('selected').siblings().removeClass('selected')
+            }
+        })
+    });
+
+    $.each(dateStr.split(","), function (i, n) {
+        $('.search-file dd li').each(function () {
+            if ($(this).data("nf") == dateStr.split(",")[i])
+            {
+                $(this).addClass('selected').siblings().removeClass('selected')
+            }
+        })
+    });
+
+
+    var pageParam={
+        qt: '',
+        tab: tab,
+        page: 1,
+        pageSize: 20,
+        siteCode: 'bm04000fgk',
+        key: '<redacted sha256:445beb7ad05b7f30d85ebe02f11722ce1d2276d43bf8db00577fea0b7155766d>',
+        startDateStr: startDateStr,
+        endDateStr: endDateStr,
+        timeOption: timeOption,
+        sort: sort
+    }
+
+    var getList=function(pageNum){
+        var pageflag = pageNum-1;
+        var param={
+            qt: qt,
+            tab: tab,
+            page: pageNum,
+            pageSize: 20,
+            siteCode: 'bm04000fgk',
+            key: '<redacted sha256:445beb7ad05b7f30d85ebe02f11722ce1d2276d43bf8db00577fea0b7155766d>',
+            startDateStr:  startDateStr,
+            endDateStr: endDateStr,
+            timeOption: timeOption,
+            sort: sort
+        };
+
+        jQuery.ajax({
+            url: url,
+            type: 'GET',
+            data: param,
+            dataType: 'json',
+            success: function (data) {
+
+                if(data.ok){
+                    if( data.data.totalHits == 0 ) {
+                        $('#result').html('').end().find('.pages').hide();
+                        $('.no-data').show();
+                        return;
+                    }else {
+                        $('#result').html('').end().find('.pages').show();
+                        $('.no-data').show();
+                        var totalhit = data.data.totalHits;
+                        if (totalhit > 500)
+                           {
+                            totalhit = 500;
+                           }
+                        var totalPageCount = Math.ceil(totalhit/pageParam.pageSize);
+                        $('#total').val(totalPageCount);
+                        $('#pagination').pagination({
+                            pages: totalPageCount,
+                            currentPage:pageNum,
+                            onPageClick: function(num) {
+                                getList(num);
+                            }
+                        });
+
+                        if (totalPageCount <= 1) {
+                            $('#pagination').hide();
+                        }else{
+                            $('#pagination').show();
+                        }
+                        var html =tpl(data,pageflag,pageParam.pageSize);
+                        $('#result').html(html);
+                        $(".no-data-tab1").removeClass("show").addClass("hide");
+
+                    }
+                }
+            },
+            error: function (error) {
+                $('#result').html('').end().find('.pages').hide();
+                $('.no-data').show();
+            },
+        });
+
+    }
+
+    var  tpl=function(data,pageflag,pageSize){
+
+        var str= '<tr>';
+        str+= '<th>序号</th>';
+        str+= '<th>标题</th>';
+//        str+= '<th>发文字号</th>';
+        str+= '<th>制发日期</th>';
+        str+= '</tr>';
+        $.each(data.data.resultList, function (i, n) {
+            str += '<tr>';
+            str += '<td>';
+            str += pageflag*pageSize+i+1;
+            str += '</td>';
+            str += '<td>';
+            str += '<a title="'+data.data.resultList[i].title+'" href="'+data.data.resultList[i].url+'" target="_blank">'+data.data.resultList[i].title+'</a>';
+            str += '</td>';
+//            str += '<td>';
+//            str += data.data.resultList[i].author;
+//            str += '</td>';
+            str += '<td>';
+            str += data.data.resultList[i].docDate.split(" ")[0];
+            str += '</td>';
+            str += '</tr>';
+
+        });
+        return str;
+    }
+
+    //初始化
+    getList(1)
+    //回车键出发搜索
+    $('#flSearch').keydown(function (e) {
+        if (e.keyCode === 13) {
+            $(".infoCheckBtn").trigger('click');
+        }
+    });
+    //点击按钮触发搜索
+    //搜索按钮搜索
+    $(".infoCheckBtn").on("click", function() {
+        //第一步组装参数
+        // if(!($("#flSearch").val() != "")) {
+        //     M.dialog = jqueryAlert({
+        //         'style'   : 'pc',
+        //         'title'   : '提示',
+        //         'content' :  "请输入关键字",
+        //         'modal'   : true,
+        //         'contentTextAlign' : 'center',
+        //         'animateType': 'scale',
+        //         'bodyScroll' : 'true',
+        //         'buttons' : {
+        //             '关闭' : function(){
+        //                 M.dialog.close();
+        //             }
+        //         }
+        //     });
+        //     return;
+        // } else {
+        var keyword = $("#flSearch").val();
+        pageParam.keyword = keyword.replace(/<.*?>(.*?)<\/.*?>/g,'').replace(/<.*?\/>/g,'').replace(/src[\r\n]*=[\r\n]*\\\'(.*?)\\\'/g,'').replace(/src[\r\n]*=[\r\n]*\\\"(.*?)\\\"/g,'').replace(/eval\\((.*?)\\)/g,'').replace(/e­xpression\\((.*?)\\)/g,'').replace(/javascript:/g,'').replace(/onload(.*?)=/g,'');
+        // }
+        //第二步触发搜索
+        getList(1)
+    });
+
+
+
+    /////////////////////////
+    //    $('.pagination').on('click', '.page-btn', function () {
+    //     var pageNum = parseInt($(this).parent().prev().find('input').val());
+    //     pageNum && $(this).parents('.pagination').pagination('selectPage', pageNum);
+    // });
+
+    $(document).on('click','.page-btn', function () {
+        var pageNum = parseInt($(this).parent().prev().find('input').val());
+        console.log(pageNum);
+        pageNum && $(this).parents('.pagination').pagination('selectPage', pageNum);
+    });
+
+</script>
+
+</body>
+</html>

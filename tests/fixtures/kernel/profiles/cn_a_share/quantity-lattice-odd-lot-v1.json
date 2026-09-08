@@ -1,0 +1,3220 @@
+{
+  "fixture_id": "cn-a-share-quantity-lattice-odd-lot-v1",
+  "qualification": {
+    "allowed_grade": "development",
+    "deployment_authorized": false,
+    "limitations": [
+      "odd-sell-order-admission-awaits-g08d-position-evidence",
+      "single-order-caps-and-board-history-await-g08d-g08h",
+      "no-broker-auto-split-retry-or-fill-guarantee"
+    ],
+    "official_quantity_facts": {
+      "buy_lot_shares": 100,
+      "normal_sell_lot_shares": 100,
+      "residual_split_permitted": false,
+      "whole_residual_sale_permitted": true
+    },
+    "system_preconditions": [
+      "ordinary-rmb-a-share-standard-cash-auction",
+      "current-holding-equals-authoritative-sellable-balance",
+      "no-working-order-or-reservation",
+      "long-only-cash-account"
+    ]
+  },
+  "residual_policies": {
+    "close_if_permitted": {
+      "decision": {
+        "actions": [
+          "rounded_toward_zero"
+        ],
+        "applied_lot_units": 100,
+        "approved_notional": {
+          "currency": "CNY",
+          "scale": 2,
+          "type": "money",
+          "units": 251000
+        },
+        "current_quantity": {
+          "instrument_id": "xshg:600000",
+          "scale": 0,
+          "type": "quantity",
+          "units": 55
+        },
+        "final_notional": {
+          "currency": "CNY",
+          "scale": 2,
+          "type": "money",
+          "units": 155000
+        },
+        "final_quantity": {
+          "instrument_id": "xshg:600000",
+          "scale": 0,
+          "type": "quantity",
+          "units": 155
+        },
+        "instrument_id": {
+          "stable_key": "600000",
+          "type": "instrument_id",
+          "venue": "xshg"
+        },
+        "lattice_hash": "sha256:5035652be70b3e10e9d59aac126eaecdd0b091be44e3e1ee3258c2aca35777b5",
+        "mark_id": "sha256:52f25780337a6261ee42de47d439fa4b1f8f08123f6c44730130c7d09bbe760a",
+        "policy_hash": "sha256:67d5fad631a8955056fc5211601e6904ec2e70b7091195da5845cf4c1593ca26",
+        "raw_quantity": {
+          "instrument_id": "xshg:600000",
+          "scale": 0,
+          "type": "quantity",
+          "units": 251
+        },
+        "reason_codes": [
+          "buy_lot",
+          "quantity_step"
+        ],
+        "residual_quantity": {
+          "instrument_id": "xshg:600000",
+          "scale": 0,
+          "type": "quantity",
+          "units": 96
+        },
+        "type": "position_sizing_decision"
+      },
+      "normalized_target_id": "normalized-portfolio-target-v1:sha256:78453e8f1cbf44c27226affd62fb9e6e3e58b107b25370532451c9ab3f85d81a",
+      "policy": {
+        "config_hash": "sha256:50b49f9e22da3937fbc585be652c68e71f183b14d25a226b86163b0278a675e0",
+        "policy_key": "equity.cn_a_share.cash.position-sizing.v1",
+        "policy_version": 1,
+        "price_purpose": "valuation",
+        "residual_policy": "close_if_permitted",
+        "rounding": "toward_zero",
+        "schema_version": 1,
+        "type": "position_sizing_policy"
+      }
+    },
+    "fail_buy": {
+      "code": "residual_not_permitted",
+      "evidence_hashes": [
+        "sha256:33801c5035f4cf68f13d036b78fce303daf5b3373579a36e945bac3ca6558a70"
+      ],
+      "policy_hash": "sha256:c3e2481630352275a1aaf75c477aa57ee564047503d85e95465f205224a4fca2",
+      "source_approved_target_hash": "sha256:3d6ad7f36d408c2baba1ff9844ded75fa3f3796e5ea05fb867c4b3fffd030e8f",
+      "source_approved_target_id": "approved-portfolio-target-v1:sha256:d454b687a4b1c8790c437da0e617c8c85367cccb957632b74422b1c167a83a88",
+      "subject_keys": [
+        "xshg:600000"
+      ],
+      "type": "position_sizing_failure"
+    },
+    "fail_legal": {
+      "decision": {
+        "actions": [
+          "exact",
+          "sell_residual_component"
+        ],
+        "applied_lot_units": 100,
+        "approved_notional": {
+          "currency": "CNY",
+          "scale": 2,
+          "type": "money",
+          "units": 200000
+        },
+        "current_quantity": {
+          "instrument_id": "xshg:600000",
+          "scale": 0,
+          "type": "quantity",
+          "units": 299
+        },
+        "final_notional": {
+          "currency": "CNY",
+          "scale": 2,
+          "type": "money",
+          "units": 200000
+        },
+        "final_quantity": {
+          "instrument_id": "xshg:600000",
+          "scale": 0,
+          "type": "quantity",
+          "units": 200
+        },
+        "instrument_id": {
+          "stable_key": "600000",
+          "type": "instrument_id",
+          "venue": "xshg"
+        },
+        "lattice_hash": "sha256:5035652be70b3e10e9d59aac126eaecdd0b091be44e3e1ee3258c2aca35777b5",
+        "mark_id": "sha256:52f25780337a6261ee42de47d439fa4b1f8f08123f6c44730130c7d09bbe760a",
+        "policy_hash": "sha256:c3e2481630352275a1aaf75c477aa57ee564047503d85e95465f205224a4fca2",
+        "raw_quantity": {
+          "instrument_id": "xshg:600000",
+          "scale": 0,
+          "type": "quantity",
+          "units": 200
+        },
+        "reason_codes": [
+          "exact_lattice",
+          "sell_residual_component_permitted"
+        ],
+        "residual_quantity": {
+          "instrument_id": "xshg:600000",
+          "scale": 0,
+          "type": "quantity",
+          "units": 0
+        },
+        "type": "position_sizing_decision"
+      },
+      "normalized_target_id": "normalized-portfolio-target-v1:sha256:0336906af35c575560bb892ad73676507eb304e1e1ef4bad768ecdab9599e653",
+      "policy": {
+        "config_hash": "sha256:8f0a29f76caec4728b38b8bb3e7b942a5d778052699382365bf8fa56c4270613",
+        "policy_key": "equity.cn_a_share.cash.position-sizing.v1",
+        "policy_version": 1,
+        "price_purpose": "valuation",
+        "residual_policy": "fail",
+        "rounding": "toward_zero",
+        "schema_version": 1,
+        "type": "position_sizing_policy"
+      }
+    },
+    "fail_regular": {
+      "code": "residual_not_permitted",
+      "evidence_hashes": [
+        "sha256:7c229410a819efd18310473d11562635655f80f5701cefb74e97acd53a030b1f"
+      ],
+      "policy_hash": "sha256:c3e2481630352275a1aaf75c477aa57ee564047503d85e95465f205224a4fca2",
+      "source_approved_target_hash": "sha256:7104e399e6e64ccac441420db20db82c4c45da1eb46aa8d7f63e57f02694d160",
+      "source_approved_target_id": "approved-portfolio-target-v1:sha256:befad514e54e04350177f60eb3d085faa297569dc81ce57f6955b5951b467bbe",
+      "subject_keys": [
+        "xshg:600000"
+      ],
+      "type": "position_sizing_failure"
+    },
+    "fail_residual": {
+      "code": "residual_not_permitted",
+      "evidence_hashes": [
+        "sha256:85e9641549ef362cd4b29f16147e16186cb353a63adbd4eefd3e0390e07f93d1"
+      ],
+      "policy_hash": "sha256:c3e2481630352275a1aaf75c477aa57ee564047503d85e95465f205224a4fca2",
+      "source_approved_target_hash": "sha256:2bcba2b54fdb5b8b41d6d372f6e8b6976c453ee55a70c312405c4b9442a1ea9a",
+      "source_approved_target_id": "approved-portfolio-target-v1:sha256:c9efbe546aa3fc12b11c51dea948e779c3c5b153b65bb743aae6741def6f1670",
+      "subject_keys": [
+        "xshg:600000"
+      ],
+      "type": "position_sizing_failure"
+    },
+    "hold_dust": {
+      "decision": {
+        "actions": [
+          "rounded_toward_zero"
+        ],
+        "applied_lot_units": 100,
+        "approved_notional": {
+          "currency": "CNY",
+          "scale": 2,
+          "type": "money",
+          "units": 251000
+        },
+        "current_quantity": {
+          "instrument_id": "xshg:600000",
+          "scale": 0,
+          "type": "quantity",
+          "units": 55
+        },
+        "final_notional": {
+          "currency": "CNY",
+          "scale": 2,
+          "type": "money",
+          "units": 155000
+        },
+        "final_quantity": {
+          "instrument_id": "xshg:600000",
+          "scale": 0,
+          "type": "quantity",
+          "units": 155
+        },
+        "instrument_id": {
+          "stable_key": "600000",
+          "type": "instrument_id",
+          "venue": "xshg"
+        },
+        "lattice_hash": "sha256:5035652be70b3e10e9d59aac126eaecdd0b091be44e3e1ee3258c2aca35777b5",
+        "mark_id": "sha256:52f25780337a6261ee42de47d439fa4b1f8f08123f6c44730130c7d09bbe760a",
+        "policy_hash": "sha256:f21b1c1983b49f5d2db3afddfaa19a7077a6c23b54e36a3c1d515e68d3c0a0bb",
+        "raw_quantity": {
+          "instrument_id": "xshg:600000",
+          "scale": 0,
+          "type": "quantity",
+          "units": 251
+        },
+        "reason_codes": [
+          "buy_lot",
+          "quantity_step"
+        ],
+        "residual_quantity": {
+          "instrument_id": "xshg:600000",
+          "scale": 0,
+          "type": "quantity",
+          "units": 96
+        },
+        "type": "position_sizing_decision"
+      },
+      "normalized_target_id": "normalized-portfolio-target-v1:sha256:9b7e5cbad5328333557e9520df6a6c65bb4334191eb48bd4d2896b51787db1a1",
+      "policy": {
+        "config_hash": "sha256:017b47d7052254fe540043925bf1a74d7f941986feb4d3439ae7f62bc538f3d2",
+        "policy_key": "equity.cn_a_share.cash.position-sizing.v1",
+        "policy_version": 1,
+        "price_purpose": "valuation",
+        "residual_policy": "hold_dust",
+        "rounding": "toward_zero",
+        "schema_version": 1,
+        "type": "position_sizing_policy"
+      }
+    }
+  },
+  "scenarios": {
+    "flat-buy": {
+      "active_target": {
+        "materialized_at": {
+          "epoch_nanoseconds": 100,
+          "type": "utc_instant"
+        },
+        "quantities": [
+          {
+            "instrument_id": {
+              "stable_key": "600000",
+              "type": "instrument_id",
+              "venue": "xshg"
+            },
+            "quantity": {
+              "instrument_id": "xshg:600000",
+              "scale": 0,
+              "type": "quantity",
+              "units": 200
+            }
+          }
+        ],
+        "source_decision_batch_id": "decision-batch-v1:sha256:8888888888888888888888888888888888888888888888888888888888888888",
+        "type": "active_portfolio_target"
+      },
+      "approved_target_hash": "sha256:3d6ad7f36d408c2baba1ff9844ded75fa3f3796e5ea05fb867c4b3fffd030e8f",
+      "decision": {
+        "actions": [
+          "rounded_toward_zero"
+        ],
+        "applied_lot_units": 100,
+        "approved_notional": {
+          "currency": "CNY",
+          "scale": 2,
+          "type": "money",
+          "units": 251000
+        },
+        "current_quantity": {
+          "instrument_id": "xshg:600000",
+          "scale": 0,
+          "type": "quantity",
+          "units": 0
+        },
+        "final_notional": {
+          "currency": "CNY",
+          "scale": 2,
+          "type": "money",
+          "units": 200000
+        },
+        "final_quantity": {
+          "instrument_id": "xshg:600000",
+          "scale": 0,
+          "type": "quantity",
+          "units": 200
+        },
+        "instrument_id": {
+          "stable_key": "600000",
+          "type": "instrument_id",
+          "venue": "xshg"
+        },
+        "lattice_hash": "sha256:5035652be70b3e10e9d59aac126eaecdd0b091be44e3e1ee3258c2aca35777b5",
+        "mark_id": "sha256:52f25780337a6261ee42de47d439fa4b1f8f08123f6c44730130c7d09bbe760a",
+        "policy_hash": "sha256:67d5fad631a8955056fc5211601e6904ec2e70b7091195da5845cf4c1593ca26",
+        "raw_quantity": {
+          "instrument_id": "xshg:600000",
+          "scale": 0,
+          "type": "quantity",
+          "units": 251
+        },
+        "reason_codes": [
+          "buy_lot",
+          "quantity_step"
+        ],
+        "residual_quantity": {
+          "instrument_id": "xshg:600000",
+          "scale": 0,
+          "type": "quantity",
+          "units": 51
+        },
+        "type": "position_sizing_decision"
+      },
+      "normalized_target_hash": "sha256:c99621976850bb5c584cf1837383a86e0cd326eaecc37b470399bd9d6377bb3c",
+      "normalized_target_id": "normalized-portfolio-target-v1:sha256:d037ec07252311765436de38a7711fc7719e2945b28d868bfd5a0494215c8fdf",
+      "order_plan": {
+        "account_id": "account:cn-a-primary",
+        "based_on_availability_state_hash": "sha256:4aa86172407d172272e4e668a0ab1deff566b0bf69173e78fa73df2aac2699b5",
+        "based_on_normalized_target_hash": "sha256:c99621976850bb5c584cf1837383a86e0cd326eaecc37b470399bd9d6377bb3c",
+        "based_on_normalized_target_id": "normalized-portfolio-target-v1:sha256:d037ec07252311765436de38a7711fc7719e2945b28d868bfd5a0494215c8fdf",
+        "based_on_portfolio_snapshot_hash": "sha256:bc328910b8643d49a4bba23b25f594429f69ebeffdc0a94373165686da6561ec",
+        "based_on_reservation_state_hash": "sha256:073ded593c9e6a4e41612552f0d022e159da05e9c1e709abe92c5492887a0fed",
+        "based_on_target_validity_hash": "sha256:dfa525f9f2e5c05c47e88d02b9374470b9fee73f8d150265f953ab211c2c2fe8",
+        "based_on_working_order_set_hash": "sha256:4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+        "cancel_intents": [],
+        "created_at": {
+          "epoch_nanoseconds": 200,
+          "type": "utc_instant"
+        },
+        "omissions": [],
+        "plan_id": "order-plan-v1:sha256:59dc4006843aec45db1437a7528914f477d71a386a7d8833f51c0b693c64f29b",
+        "planned_orders": [
+          {
+            "current_quantity": {
+              "instrument_id": "xshg:600000",
+              "scale": 0,
+              "type": "quantity",
+              "units": 0
+            },
+            "instrument_id": {
+              "stable_key": "600000",
+              "type": "instrument_id",
+              "venue": "xshg"
+            },
+            "intent": {
+              "execution_style": "market",
+              "instrument_id": {
+                "stable_key": "600000",
+                "type": "instrument_id",
+                "venue": "xshg"
+              },
+              "parent_id": "normalized-portfolio-target-v1:sha256:d037ec07252311765436de38a7711fc7719e2945b28d868bfd5a0494215c8fdf",
+              "position_effect": "open",
+              "price_constraint": null,
+              "quantity": {
+                "instrument_id": "xshg:600000",
+                "scale": 0,
+                "type": "quantity",
+                "units": 200
+              },
+              "reason": "rebalance:equity.cn_a_share.cash.rebalance.v1",
+              "reduce_only": false,
+              "side": "buy",
+              "time_in_force": "day",
+              "type": "order_intent",
+              "urgency": "normal"
+            },
+            "planned_delta": {
+              "instrument_id": "xshg:600000",
+              "scale": 0,
+              "type": "quantity",
+              "units": 200
+            },
+            "planned_order_id": "planned-order-v1:sha256:121a2aa98f4a80b4395fdacd4939ca960777a86b0c50f1cfd43f06fe74cb0e6a",
+            "policy_hash": "sha256:b093f640074ae56bc8d83b445c73b4c7fb616910459e2b9bcb54574622ae1427",
+            "retained_working_coverage": {
+              "instrument_id": "xshg:600000",
+              "scale": 0,
+              "type": "quantity",
+              "units": 0
+            },
+            "schema_version": 1,
+            "target_quantity": {
+              "instrument_id": "xshg:600000",
+              "scale": 0,
+              "type": "quantity",
+              "units": 200
+            },
+            "type": "planned_order"
+          }
+        ],
+        "policy": {
+          "config_hash": "sha256:cc480e5b7f64b035e3349215f571d27a8401520760bca804d1200d06410ef346",
+          "execution_style": "market",
+          "plan_valid_for_nanoseconds": 50,
+          "policy_key": "equity.cn_a_share.cash.rebalance.v1",
+          "policy_version": 1,
+          "schema_version": 1,
+          "time_in_force": "day",
+          "type": "rebalance_policy",
+          "urgency": "normal"
+        },
+        "schema_version": 1,
+        "supersedes_plan_id": null,
+        "type": "order_plan",
+        "valid_until": {
+          "epoch_nanoseconds": 250,
+          "type": "utc_instant"
+        }
+      },
+      "sizing_input_hash": "sha256:7aed59ce309fec5e51269492df56e4af3e8b5360333cdf6ce78e2f3e91a24694"
+    },
+    "flat-noop": {
+      "active_target": {
+        "materialized_at": {
+          "epoch_nanoseconds": 100,
+          "type": "utc_instant"
+        },
+        "quantities": [
+          {
+            "instrument_id": {
+              "stable_key": "600000",
+              "type": "instrument_id",
+              "venue": "xshg"
+            },
+            "quantity": {
+              "instrument_id": "xshg:600000",
+              "scale": 0,
+              "type": "quantity",
+              "units": 0
+            }
+          }
+        ],
+        "source_decision_batch_id": "decision-batch-v1:sha256:8888888888888888888888888888888888888888888888888888888888888888",
+        "type": "active_portfolio_target"
+      },
+      "approved_target_hash": "sha256:83cc893c465e6348ce427cd2016905dabd5c9c6e2a1e52f7a4e5cc6adc56832e",
+      "decision": {
+        "actions": [
+          "exact"
+        ],
+        "applied_lot_units": 1,
+        "approved_notional": {
+          "currency": "CNY",
+          "scale": 2,
+          "type": "money",
+          "units": 0
+        },
+        "current_quantity": {
+          "instrument_id": "xshg:600000",
+          "scale": 0,
+          "type": "quantity",
+          "units": 0
+        },
+        "final_notional": {
+          "currency": "CNY",
+          "scale": 2,
+          "type": "money",
+          "units": 0
+        },
+        "final_quantity": {
+          "instrument_id": "xshg:600000",
+          "scale": 0,
+          "type": "quantity",
+          "units": 0
+        },
+        "instrument_id": {
+          "stable_key": "600000",
+          "type": "instrument_id",
+          "venue": "xshg"
+        },
+        "lattice_hash": "sha256:5035652be70b3e10e9d59aac126eaecdd0b091be44e3e1ee3258c2aca35777b5",
+        "mark_id": "sha256:52f25780337a6261ee42de47d439fa4b1f8f08123f6c44730130c7d09bbe760a",
+        "policy_hash": "sha256:67d5fad631a8955056fc5211601e6904ec2e70b7091195da5845cf4c1593ca26",
+        "raw_quantity": {
+          "instrument_id": "xshg:600000",
+          "scale": 0,
+          "type": "quantity",
+          "units": 0
+        },
+        "reason_codes": [
+          "exact_lattice"
+        ],
+        "residual_quantity": {
+          "instrument_id": "xshg:600000",
+          "scale": 0,
+          "type": "quantity",
+          "units": 0
+        },
+        "type": "position_sizing_decision"
+      },
+      "normalized_target_hash": "sha256:5d469cb9273da9fd5b844653cd70aeb4d2cf0192c41b17b6ae300757a67ecf24",
+      "normalized_target_id": "normalized-portfolio-target-v1:sha256:cf4e07c17523aa9f05ad6ae48356c8975f660116b366603affdf16d3f149f0f1",
+      "order_plan": {
+        "account_id": "account:cn-a-primary",
+        "based_on_availability_state_hash": "sha256:4aa86172407d172272e4e668a0ab1deff566b0bf69173e78fa73df2aac2699b5",
+        "based_on_normalized_target_hash": "sha256:5d469cb9273da9fd5b844653cd70aeb4d2cf0192c41b17b6ae300757a67ecf24",
+        "based_on_normalized_target_id": "normalized-portfolio-target-v1:sha256:cf4e07c17523aa9f05ad6ae48356c8975f660116b366603affdf16d3f149f0f1",
+        "based_on_portfolio_snapshot_hash": "sha256:bc328910b8643d49a4bba23b25f594429f69ebeffdc0a94373165686da6561ec",
+        "based_on_reservation_state_hash": "sha256:073ded593c9e6a4e41612552f0d022e159da05e9c1e709abe92c5492887a0fed",
+        "based_on_target_validity_hash": "sha256:407e703964fbe3692e7fc237b0bdac2fa1b24e719ddb7e2b3b1c7943d3c7000d",
+        "based_on_working_order_set_hash": "sha256:4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+        "cancel_intents": [],
+        "created_at": {
+          "epoch_nanoseconds": 200,
+          "type": "utc_instant"
+        },
+        "omissions": [
+          {
+            "code": "already_covered",
+            "current_quantity": {
+              "instrument_id": "xshg:600000",
+              "scale": 0,
+              "type": "quantity",
+              "units": 0
+            },
+            "instrument_id": {
+              "stable_key": "600000",
+              "type": "instrument_id",
+              "venue": "xshg"
+            },
+            "retained_working_coverage": {
+              "instrument_id": "xshg:600000",
+              "scale": 0,
+              "type": "quantity",
+              "units": 0
+            },
+            "target_quantity": {
+              "instrument_id": "xshg:600000",
+              "scale": 0,
+              "type": "quantity",
+              "units": 0
+            },
+            "type": "planning_omission"
+          }
+        ],
+        "plan_id": "order-plan-v1:sha256:40bf682ec8f1054a0a56daf9d8b66390e0972358c76cfdc967932c3124ee77b7",
+        "planned_orders": [],
+        "policy": {
+          "config_hash": "sha256:cc480e5b7f64b035e3349215f571d27a8401520760bca804d1200d06410ef346",
+          "execution_style": "market",
+          "plan_valid_for_nanoseconds": 50,
+          "policy_key": "equity.cn_a_share.cash.rebalance.v1",
+          "policy_version": 1,
+          "schema_version": 1,
+          "time_in_force": "day",
+          "type": "rebalance_policy",
+          "urgency": "normal"
+        },
+        "schema_version": 1,
+        "supersedes_plan_id": null,
+        "type": "order_plan",
+        "valid_until": {
+          "epoch_nanoseconds": 250,
+          "type": "utc_instant"
+        }
+      },
+      "sizing_input_hash": "sha256:7aed59ce309fec5e51269492df56e4af3e8b5360333cdf6ce78e2f3e91a24694"
+    },
+    "full-odd-close-299": {
+      "active_target": {
+        "materialized_at": {
+          "epoch_nanoseconds": 100,
+          "type": "utc_instant"
+        },
+        "quantities": [
+          {
+            "instrument_id": {
+              "stable_key": "600000",
+              "type": "instrument_id",
+              "venue": "xshg"
+            },
+            "quantity": {
+              "instrument_id": "xshg:600000",
+              "scale": 0,
+              "type": "quantity",
+              "units": 0
+            }
+          }
+        ],
+        "source_decision_batch_id": "decision-batch-v1:sha256:8888888888888888888888888888888888888888888888888888888888888888",
+        "type": "active_portfolio_target"
+      },
+      "approved_target_hash": "sha256:0d2c28ce0ff5a53f93d950db56aefeea755195ac0b800255a4e067008c08299e",
+      "decision": {
+        "actions": [
+          "odd_lot_close",
+          "rounded_toward_zero"
+        ],
+        "applied_lot_units": 100,
+        "approved_notional": {
+          "currency": "CNY",
+          "scale": 2,
+          "type": "money",
+          "units": 98000
+        },
+        "current_quantity": {
+          "instrument_id": "xshg:600000",
+          "scale": 0,
+          "type": "quantity",
+          "units": 299
+        },
+        "final_notional": {
+          "currency": "CNY",
+          "scale": 2,
+          "type": "money",
+          "units": 0
+        },
+        "final_quantity": {
+          "instrument_id": "xshg:600000",
+          "scale": 0,
+          "type": "quantity",
+          "units": 0
+        },
+        "instrument_id": {
+          "stable_key": "600000",
+          "type": "instrument_id",
+          "venue": "xshg"
+        },
+        "lattice_hash": "sha256:5035652be70b3e10e9d59aac126eaecdd0b091be44e3e1ee3258c2aca35777b5",
+        "mark_id": "sha256:52f25780337a6261ee42de47d439fa4b1f8f08123f6c44730130c7d09bbe760a",
+        "policy_hash": "sha256:67d5fad631a8955056fc5211601e6904ec2e70b7091195da5845cf4c1593ca26",
+        "raw_quantity": {
+          "instrument_id": "xshg:600000",
+          "scale": 0,
+          "type": "quantity",
+          "units": 98
+        },
+        "reason_codes": [
+          "odd_lot_close_permitted",
+          "quantity_step",
+          "sell_lot"
+        ],
+        "residual_quantity": {
+          "instrument_id": "xshg:600000",
+          "scale": 0,
+          "type": "quantity",
+          "units": 98
+        },
+        "type": "position_sizing_decision"
+      },
+      "normalized_target_hash": "sha256:81f45a3dc1be954c8807f86bc73d7bbc73d868679d24463ddfd4d871443b7569",
+      "normalized_target_id": "normalized-portfolio-target-v1:sha256:2b4c50115205368094538a3e944d4910d6306b84ddbbf9fb6c1856417ab7bed8",
+      "order_plan": {
+        "account_id": "account:cn-a-primary",
+        "based_on_availability_state_hash": "sha256:4aa86172407d172272e4e668a0ab1deff566b0bf69173e78fa73df2aac2699b5",
+        "based_on_normalized_target_hash": "sha256:81f45a3dc1be954c8807f86bc73d7bbc73d868679d24463ddfd4d871443b7569",
+        "based_on_normalized_target_id": "normalized-portfolio-target-v1:sha256:2b4c50115205368094538a3e944d4910d6306b84ddbbf9fb6c1856417ab7bed8",
+        "based_on_portfolio_snapshot_hash": "sha256:6a604956b9c870880865cf44a9d3ac3b0d9efe1c1e30bfc69c5c83a77042a70d",
+        "based_on_reservation_state_hash": "sha256:073ded593c9e6a4e41612552f0d022e159da05e9c1e709abe92c5492887a0fed",
+        "based_on_target_validity_hash": "sha256:5a61087675b4df74d305f820009f2b70afe261a8948dcf0659f5fea2228a585a",
+        "based_on_working_order_set_hash": "sha256:4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+        "cancel_intents": [],
+        "created_at": {
+          "epoch_nanoseconds": 200,
+          "type": "utc_instant"
+        },
+        "omissions": [],
+        "plan_id": "order-plan-v1:sha256:432205518eb6b285f0d540ce61f4a48809a87dd5d6b61e046aef85f701d0ba5f",
+        "planned_orders": [
+          {
+            "current_quantity": {
+              "instrument_id": "xshg:600000",
+              "scale": 0,
+              "type": "quantity",
+              "units": 299
+            },
+            "instrument_id": {
+              "stable_key": "600000",
+              "type": "instrument_id",
+              "venue": "xshg"
+            },
+            "intent": {
+              "execution_style": "market",
+              "instrument_id": {
+                "stable_key": "600000",
+                "type": "instrument_id",
+                "venue": "xshg"
+              },
+              "parent_id": "normalized-portfolio-target-v1:sha256:2b4c50115205368094538a3e944d4910d6306b84ddbbf9fb6c1856417ab7bed8",
+              "position_effect": "close",
+              "price_constraint": null,
+              "quantity": {
+                "instrument_id": "xshg:600000",
+                "scale": 0,
+                "type": "quantity",
+                "units": 299
+              },
+              "reason": "rebalance:equity.cn_a_share.cash.rebalance.v1",
+              "reduce_only": true,
+              "side": "sell",
+              "time_in_force": "day",
+              "type": "order_intent",
+              "urgency": "normal"
+            },
+            "planned_delta": {
+              "instrument_id": "xshg:600000",
+              "scale": 0,
+              "type": "quantity",
+              "units": -299
+            },
+            "planned_order_id": "planned-order-v1:sha256:ff5fae81ac8b9bbca10c21bd02e55fdf1d090929ae169caccffdeb2861c1b299",
+            "policy_hash": "sha256:b093f640074ae56bc8d83b445c73b4c7fb616910459e2b9bcb54574622ae1427",
+            "retained_working_coverage": {
+              "instrument_id": "xshg:600000",
+              "scale": 0,
+              "type": "quantity",
+              "units": 0
+            },
+            "schema_version": 1,
+            "target_quantity": {
+              "instrument_id": "xshg:600000",
+              "scale": 0,
+              "type": "quantity",
+              "units": 0
+            },
+            "type": "planned_order"
+          }
+        ],
+        "policy": {
+          "config_hash": "sha256:cc480e5b7f64b035e3349215f571d27a8401520760bca804d1200d06410ef346",
+          "execution_style": "market",
+          "plan_valid_for_nanoseconds": 50,
+          "policy_key": "equity.cn_a_share.cash.rebalance.v1",
+          "policy_version": 1,
+          "schema_version": 1,
+          "time_in_force": "day",
+          "type": "rebalance_policy",
+          "urgency": "normal"
+        },
+        "schema_version": 1,
+        "supersedes_plan_id": null,
+        "type": "order_plan",
+        "valid_until": {
+          "epoch_nanoseconds": 250,
+          "type": "utc_instant"
+        }
+      },
+      "sizing_input_hash": "sha256:85e9641549ef362cd4b29f16147e16186cb353a63adbd4eefd3e0390e07f93d1"
+    },
+    "full-odd-close-55": {
+      "active_target": {
+        "materialized_at": {
+          "epoch_nanoseconds": 100,
+          "type": "utc_instant"
+        },
+        "quantities": [
+          {
+            "instrument_id": {
+              "stable_key": "600000",
+              "type": "instrument_id",
+              "venue": "xshg"
+            },
+            "quantity": {
+              "instrument_id": "xshg:600000",
+              "scale": 0,
+              "type": "quantity",
+              "units": 0
+            }
+          }
+        ],
+        "source_decision_batch_id": "decision-batch-v1:sha256:8888888888888888888888888888888888888888888888888888888888888888",
+        "type": "active_portfolio_target"
+      },
+      "approved_target_hash": "sha256:83cc893c465e6348ce427cd2016905dabd5c9c6e2a1e52f7a4e5cc6adc56832e",
+      "decision": {
+        "actions": [
+          "exact",
+          "odd_lot_close"
+        ],
+        "applied_lot_units": 100,
+        "approved_notional": {
+          "currency": "CNY",
+          "scale": 2,
+          "type": "money",
+          "units": 0
+        },
+        "current_quantity": {
+          "instrument_id": "xshg:600000",
+          "scale": 0,
+          "type": "quantity",
+          "units": 55
+        },
+        "final_notional": {
+          "currency": "CNY",
+          "scale": 2,
+          "type": "money",
+          "units": 0
+        },
+        "final_quantity": {
+          "instrument_id": "xshg:600000",
+          "scale": 0,
+          "type": "quantity",
+          "units": 0
+        },
+        "instrument_id": {
+          "stable_key": "600000",
+          "type": "instrument_id",
+          "venue": "xshg"
+        },
+        "lattice_hash": "sha256:5035652be70b3e10e9d59aac126eaecdd0b091be44e3e1ee3258c2aca35777b5",
+        "mark_id": "sha256:52f25780337a6261ee42de47d439fa4b1f8f08123f6c44730130c7d09bbe760a",
+        "policy_hash": "sha256:67d5fad631a8955056fc5211601e6904ec2e70b7091195da5845cf4c1593ca26",
+        "raw_quantity": {
+          "instrument_id": "xshg:600000",
+          "scale": 0,
+          "type": "quantity",
+          "units": 0
+        },
+        "reason_codes": [
+          "exact_lattice",
+          "odd_lot_close_permitted"
+        ],
+        "residual_quantity": {
+          "instrument_id": "xshg:600000",
+          "scale": 0,
+          "type": "quantity",
+          "units": 0
+        },
+        "type": "position_sizing_decision"
+      },
+      "normalized_target_hash": "sha256:dd5602d4ab91e20710c055d81fbf2f6e42da7e011e1ce9fed8c218d92a2a220b",
+      "normalized_target_id": "normalized-portfolio-target-v1:sha256:1f82be16718d35d2595df710511c98db6aa1769981795b0f5a3d792dd5dd416d",
+      "order_plan": {
+        "account_id": "account:cn-a-primary",
+        "based_on_availability_state_hash": "sha256:4aa86172407d172272e4e668a0ab1deff566b0bf69173e78fa73df2aac2699b5",
+        "based_on_normalized_target_hash": "sha256:dd5602d4ab91e20710c055d81fbf2f6e42da7e011e1ce9fed8c218d92a2a220b",
+        "based_on_normalized_target_id": "normalized-portfolio-target-v1:sha256:1f82be16718d35d2595df710511c98db6aa1769981795b0f5a3d792dd5dd416d",
+        "based_on_portfolio_snapshot_hash": "sha256:2a9ca2e103068982f2d7897030bbb6dfc997f90856f9138dc05336e875755c72",
+        "based_on_reservation_state_hash": "sha256:073ded593c9e6a4e41612552f0d022e159da05e9c1e709abe92c5492887a0fed",
+        "based_on_target_validity_hash": "sha256:2576bc512f56d7e7c408a4d08f707da317ee86114d1b7b2c61ba54010110b264",
+        "based_on_working_order_set_hash": "sha256:4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+        "cancel_intents": [],
+        "created_at": {
+          "epoch_nanoseconds": 200,
+          "type": "utc_instant"
+        },
+        "omissions": [],
+        "plan_id": "order-plan-v1:sha256:ca18a14fe9e9af1ac2b84fff4c1c7a958460f863a9bbc5be53856acd75815e5e",
+        "planned_orders": [
+          {
+            "current_quantity": {
+              "instrument_id": "xshg:600000",
+              "scale": 0,
+              "type": "quantity",
+              "units": 55
+            },
+            "instrument_id": {
+              "stable_key": "600000",
+              "type": "instrument_id",
+              "venue": "xshg"
+            },
+            "intent": {
+              "execution_style": "market",
+              "instrument_id": {
+                "stable_key": "600000",
+                "type": "instrument_id",
+                "venue": "xshg"
+              },
+              "parent_id": "normalized-portfolio-target-v1:sha256:1f82be16718d35d2595df710511c98db6aa1769981795b0f5a3d792dd5dd416d",
+              "position_effect": "close",
+              "price_constraint": null,
+              "quantity": {
+                "instrument_id": "xshg:600000",
+                "scale": 0,
+                "type": "quantity",
+                "units": 55
+              },
+              "reason": "rebalance:equity.cn_a_share.cash.rebalance.v1",
+              "reduce_only": true,
+              "side": "sell",
+              "time_in_force": "day",
+              "type": "order_intent",
+              "urgency": "normal"
+            },
+            "planned_delta": {
+              "instrument_id": "xshg:600000",
+              "scale": 0,
+              "type": "quantity",
+              "units": -55
+            },
+            "planned_order_id": "planned-order-v1:sha256:832632aff6dd66bb40fbd6968b3f32d61e9a1bc6b2e0418194477581f6dfa219",
+            "policy_hash": "sha256:b093f640074ae56bc8d83b445c73b4c7fb616910459e2b9bcb54574622ae1427",
+            "retained_working_coverage": {
+              "instrument_id": "xshg:600000",
+              "scale": 0,
+              "type": "quantity",
+              "units": 0
+            },
+            "schema_version": 1,
+            "target_quantity": {
+              "instrument_id": "xshg:600000",
+              "scale": 0,
+              "type": "quantity",
+              "units": 0
+            },
+            "type": "planned_order"
+          }
+        ],
+        "policy": {
+          "config_hash": "sha256:cc480e5b7f64b035e3349215f571d27a8401520760bca804d1200d06410ef346",
+          "execution_style": "market",
+          "plan_valid_for_nanoseconds": 50,
+          "policy_key": "equity.cn_a_share.cash.rebalance.v1",
+          "policy_version": 1,
+          "schema_version": 1,
+          "time_in_force": "day",
+          "type": "rebalance_policy",
+          "urgency": "normal"
+        },
+        "schema_version": 1,
+        "supersedes_plan_id": null,
+        "type": "order_plan",
+        "valid_until": {
+          "epoch_nanoseconds": 250,
+          "type": "utc_instant"
+        }
+      },
+      "sizing_input_hash": "sha256:33801c5035f4cf68f13d036b78fce303daf5b3373579a36e945bac3ca6558a70"
+    },
+    "invalid-sell-101": {
+      "active_target": {
+        "materialized_at": {
+          "epoch_nanoseconds": 100,
+          "type": "utc_instant"
+        },
+        "quantities": [
+          {
+            "instrument_id": {
+              "stable_key": "600000",
+              "type": "instrument_id",
+              "venue": "xshg"
+            },
+            "quantity": {
+              "instrument_id": "xshg:600000",
+              "scale": 0,
+              "type": "quantity",
+              "units": 100
+            }
+          }
+        ],
+        "source_decision_batch_id": "decision-batch-v1:sha256:8888888888888888888888888888888888888888888888888888888888888888",
+        "type": "active_portfolio_target"
+      },
+      "approved_target_hash": "sha256:21babf141d9f847a27f3677b0ec73b90c686a4bc21eb957c9aef20818582051f",
+      "decision": {
+        "actions": [
+          "rounded_toward_zero",
+          "sell_residual_component"
+        ],
+        "applied_lot_units": 100,
+        "approved_notional": {
+          "currency": "CNY",
+          "scale": 2,
+          "type": "money",
+          "units": 198000
+        },
+        "current_quantity": {
+          "instrument_id": "xshg:600000",
+          "scale": 0,
+          "type": "quantity",
+          "units": 299
+        },
+        "final_notional": {
+          "currency": "CNY",
+          "scale": 2,
+          "type": "money",
+          "units": 100000
+        },
+        "final_quantity": {
+          "instrument_id": "xshg:600000",
+          "scale": 0,
+          "type": "quantity",
+          "units": 100
+        },
+        "instrument_id": {
+          "stable_key": "600000",
+          "type": "instrument_id",
+          "venue": "xshg"
+        },
+        "lattice_hash": "sha256:5035652be70b3e10e9d59aac126eaecdd0b091be44e3e1ee3258c2aca35777b5",
+        "mark_id": "sha256:52f25780337a6261ee42de47d439fa4b1f8f08123f6c44730130c7d09bbe760a",
+        "policy_hash": "sha256:67d5fad631a8955056fc5211601e6904ec2e70b7091195da5845cf4c1593ca26",
+        "raw_quantity": {
+          "instrument_id": "xshg:600000",
+          "scale": 0,
+          "type": "quantity",
+          "units": 198
+        },
+        "reason_codes": [
+          "quantity_step",
+          "sell_lot",
+          "sell_residual_component_permitted"
+        ],
+        "residual_quantity": {
+          "instrument_id": "xshg:600000",
+          "scale": 0,
+          "type": "quantity",
+          "units": 98
+        },
+        "type": "position_sizing_decision"
+      },
+      "normalized_target_hash": "sha256:4450f00e5211e1207baa255a5b6af641131e51198bfa0f48d160c0ad01eebe83",
+      "normalized_target_id": "normalized-portfolio-target-v1:sha256:f2781ab50dc6e434b60a8f51b69e7e5e5264ca30ce86b0c0224d901636c99d8e",
+      "order_plan": {
+        "account_id": "account:cn-a-primary",
+        "based_on_availability_state_hash": "sha256:4aa86172407d172272e4e668a0ab1deff566b0bf69173e78fa73df2aac2699b5",
+        "based_on_normalized_target_hash": "sha256:4450f00e5211e1207baa255a5b6af641131e51198bfa0f48d160c0ad01eebe83",
+        "based_on_normalized_target_id": "normalized-portfolio-target-v1:sha256:f2781ab50dc6e434b60a8f51b69e7e5e5264ca30ce86b0c0224d901636c99d8e",
+        "based_on_portfolio_snapshot_hash": "sha256:6a604956b9c870880865cf44a9d3ac3b0d9efe1c1e30bfc69c5c83a77042a70d",
+        "based_on_reservation_state_hash": "sha256:073ded593c9e6a4e41612552f0d022e159da05e9c1e709abe92c5492887a0fed",
+        "based_on_target_validity_hash": "sha256:9d158785e4244815d955b746d6ece43625b92c5097c3e0558792b023743f73ad",
+        "based_on_working_order_set_hash": "sha256:4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+        "cancel_intents": [],
+        "created_at": {
+          "epoch_nanoseconds": 200,
+          "type": "utc_instant"
+        },
+        "omissions": [],
+        "plan_id": "order-plan-v1:sha256:232da3e61be6a7e73fc5b2fa1e48b2ac66700ac25a800009a1f0b930ffc073fc",
+        "planned_orders": [
+          {
+            "current_quantity": {
+              "instrument_id": "xshg:600000",
+              "scale": 0,
+              "type": "quantity",
+              "units": 299
+            },
+            "instrument_id": {
+              "stable_key": "600000",
+              "type": "instrument_id",
+              "venue": "xshg"
+            },
+            "intent": {
+              "execution_style": "market",
+              "instrument_id": {
+                "stable_key": "600000",
+                "type": "instrument_id",
+                "venue": "xshg"
+              },
+              "parent_id": "normalized-portfolio-target-v1:sha256:f2781ab50dc6e434b60a8f51b69e7e5e5264ca30ce86b0c0224d901636c99d8e",
+              "position_effect": "close",
+              "price_constraint": null,
+              "quantity": {
+                "instrument_id": "xshg:600000",
+                "scale": 0,
+                "type": "quantity",
+                "units": 199
+              },
+              "reason": "rebalance:equity.cn_a_share.cash.rebalance.v1",
+              "reduce_only": true,
+              "side": "sell",
+              "time_in_force": "day",
+              "type": "order_intent",
+              "urgency": "normal"
+            },
+            "planned_delta": {
+              "instrument_id": "xshg:600000",
+              "scale": 0,
+              "type": "quantity",
+              "units": -199
+            },
+            "planned_order_id": "planned-order-v1:sha256:dc7056aaea0740621c71bc1ff8cd78b955a2beaaf14ec4cd30e269f0144993d5",
+            "policy_hash": "sha256:b093f640074ae56bc8d83b445c73b4c7fb616910459e2b9bcb54574622ae1427",
+            "retained_working_coverage": {
+              "instrument_id": "xshg:600000",
+              "scale": 0,
+              "type": "quantity",
+              "units": 0
+            },
+            "schema_version": 1,
+            "target_quantity": {
+              "instrument_id": "xshg:600000",
+              "scale": 0,
+              "type": "quantity",
+              "units": 100
+            },
+            "type": "planned_order"
+          }
+        ],
+        "policy": {
+          "config_hash": "sha256:cc480e5b7f64b035e3349215f571d27a8401520760bca804d1200d06410ef346",
+          "execution_style": "market",
+          "plan_valid_for_nanoseconds": 50,
+          "policy_key": "equity.cn_a_share.cash.rebalance.v1",
+          "policy_version": 1,
+          "schema_version": 1,
+          "time_in_force": "day",
+          "type": "rebalance_policy",
+          "urgency": "normal"
+        },
+        "schema_version": 1,
+        "supersedes_plan_id": null,
+        "type": "order_plan",
+        "valid_until": {
+          "epoch_nanoseconds": 250,
+          "type": "utc_instant"
+        }
+      },
+      "sizing_input_hash": "sha256:85e9641549ef362cd4b29f16147e16186cb353a63adbd4eefd3e0390e07f93d1"
+    },
+    "invalid-sell-one": {
+      "active_target": {
+        "materialized_at": {
+          "epoch_nanoseconds": 100,
+          "type": "utc_instant"
+        },
+        "quantities": [
+          {
+            "instrument_id": {
+              "stable_key": "600000",
+              "type": "instrument_id",
+              "venue": "xshg"
+            },
+            "quantity": {
+              "instrument_id": "xshg:600000",
+              "scale": 0,
+              "type": "quantity",
+              "units": 200
+            }
+          }
+        ],
+        "source_decision_batch_id": "decision-batch-v1:sha256:8888888888888888888888888888888888888888888888888888888888888888",
+        "type": "active_portfolio_target"
+      },
+      "approved_target_hash": "sha256:2bcba2b54fdb5b8b41d6d372f6e8b6976c453ee55a70c312405c4b9442a1ea9a",
+      "decision": {
+        "actions": [
+          "rounded_toward_zero",
+          "sell_residual_component"
+        ],
+        "applied_lot_units": 100,
+        "approved_notional": {
+          "currency": "CNY",
+          "scale": 2,
+          "type": "money",
+          "units": 298000
+        },
+        "current_quantity": {
+          "instrument_id": "xshg:600000",
+          "scale": 0,
+          "type": "quantity",
+          "units": 299
+        },
+        "final_notional": {
+          "currency": "CNY",
+          "scale": 2,
+          "type": "money",
+          "units": 200000
+        },
+        "final_quantity": {
+          "instrument_id": "xshg:600000",
+          "scale": 0,
+          "type": "quantity",
+          "units": 200
+        },
+        "instrument_id": {
+          "stable_key": "600000",
+          "type": "instrument_id",
+          "venue": "xshg"
+        },
+        "lattice_hash": "sha256:5035652be70b3e10e9d59aac126eaecdd0b091be44e3e1ee3258c2aca35777b5",
+        "mark_id": "sha256:52f25780337a6261ee42de47d439fa4b1f8f08123f6c44730130c7d09bbe760a",
+        "policy_hash": "sha256:67d5fad631a8955056fc5211601e6904ec2e70b7091195da5845cf4c1593ca26",
+        "raw_quantity": {
+          "instrument_id": "xshg:600000",
+          "scale": 0,
+          "type": "quantity",
+          "units": 298
+        },
+        "reason_codes": [
+          "quantity_step",
+          "sell_lot",
+          "sell_residual_component_permitted"
+        ],
+        "residual_quantity": {
+          "instrument_id": "xshg:600000",
+          "scale": 0,
+          "type": "quantity",
+          "units": 98
+        },
+        "type": "position_sizing_decision"
+      },
+      "normalized_target_hash": "sha256:791111155a8db9d2dc157dccb7040004ad2904c110ccd0a8e69c010a939c9cbd",
+      "normalized_target_id": "normalized-portfolio-target-v1:sha256:c12da4ff7f8a14c58a22a079d31aef9c87d989dd9f23c913eb365585343be5e6",
+      "order_plan": {
+        "account_id": "account:cn-a-primary",
+        "based_on_availability_state_hash": "sha256:4aa86172407d172272e4e668a0ab1deff566b0bf69173e78fa73df2aac2699b5",
+        "based_on_normalized_target_hash": "sha256:791111155a8db9d2dc157dccb7040004ad2904c110ccd0a8e69c010a939c9cbd",
+        "based_on_normalized_target_id": "normalized-portfolio-target-v1:sha256:c12da4ff7f8a14c58a22a079d31aef9c87d989dd9f23c913eb365585343be5e6",
+        "based_on_portfolio_snapshot_hash": "sha256:6a604956b9c870880865cf44a9d3ac3b0d9efe1c1e30bfc69c5c83a77042a70d",
+        "based_on_reservation_state_hash": "sha256:073ded593c9e6a4e41612552f0d022e159da05e9c1e709abe92c5492887a0fed",
+        "based_on_target_validity_hash": "sha256:8cfc077691bb18e1be22f5331cb3eee6a96607171934143463c0c14a3333b2cb",
+        "based_on_working_order_set_hash": "sha256:4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+        "cancel_intents": [],
+        "created_at": {
+          "epoch_nanoseconds": 200,
+          "type": "utc_instant"
+        },
+        "omissions": [],
+        "plan_id": "order-plan-v1:sha256:44bbb8b5622ad9fb6657ffbc41f2729c8163dea09911da05de225778787ca10b",
+        "planned_orders": [
+          {
+            "current_quantity": {
+              "instrument_id": "xshg:600000",
+              "scale": 0,
+              "type": "quantity",
+              "units": 299
+            },
+            "instrument_id": {
+              "stable_key": "600000",
+              "type": "instrument_id",
+              "venue": "xshg"
+            },
+            "intent": {
+              "execution_style": "market",
+              "instrument_id": {
+                "stable_key": "600000",
+                "type": "instrument_id",
+                "venue": "xshg"
+              },
+              "parent_id": "normalized-portfolio-target-v1:sha256:c12da4ff7f8a14c58a22a079d31aef9c87d989dd9f23c913eb365585343be5e6",
+              "position_effect": "close",
+              "price_constraint": null,
+              "quantity": {
+                "instrument_id": "xshg:600000",
+                "scale": 0,
+                "type": "quantity",
+                "units": 99
+              },
+              "reason": "rebalance:equity.cn_a_share.cash.rebalance.v1",
+              "reduce_only": true,
+              "side": "sell",
+              "time_in_force": "day",
+              "type": "order_intent",
+              "urgency": "normal"
+            },
+            "planned_delta": {
+              "instrument_id": "xshg:600000",
+              "scale": 0,
+              "type": "quantity",
+              "units": -99
+            },
+            "planned_order_id": "planned-order-v1:sha256:821560aab1982a33f489ba6318a3d122f799f872ca48309aaab7b2f3bdc47cea",
+            "policy_hash": "sha256:b093f640074ae56bc8d83b445c73b4c7fb616910459e2b9bcb54574622ae1427",
+            "retained_working_coverage": {
+              "instrument_id": "xshg:600000",
+              "scale": 0,
+              "type": "quantity",
+              "units": 0
+            },
+            "schema_version": 1,
+            "target_quantity": {
+              "instrument_id": "xshg:600000",
+              "scale": 0,
+              "type": "quantity",
+              "units": 200
+            },
+            "type": "planned_order"
+          }
+        ],
+        "policy": {
+          "config_hash": "sha256:cc480e5b7f64b035e3349215f571d27a8401520760bca804d1200d06410ef346",
+          "execution_style": "market",
+          "plan_valid_for_nanoseconds": 50,
+          "policy_key": "equity.cn_a_share.cash.rebalance.v1",
+          "policy_version": 1,
+          "schema_version": 1,
+          "time_in_force": "day",
+          "type": "rebalance_policy",
+          "urgency": "normal"
+        },
+        "schema_version": 1,
+        "supersedes_plan_id": null,
+        "type": "order_plan",
+        "valid_until": {
+          "epoch_nanoseconds": 250,
+          "type": "utc_instant"
+        }
+      },
+      "sizing_input_hash": "sha256:85e9641549ef362cd4b29f16147e16186cb353a63adbd4eefd3e0390e07f93d1"
+    },
+    "odd-holding-buy": {
+      "active_target": {
+        "materialized_at": {
+          "epoch_nanoseconds": 100,
+          "type": "utc_instant"
+        },
+        "quantities": [
+          {
+            "instrument_id": {
+              "stable_key": "600000",
+              "type": "instrument_id",
+              "venue": "xshg"
+            },
+            "quantity": {
+              "instrument_id": "xshg:600000",
+              "scale": 0,
+              "type": "quantity",
+              "units": 155
+            }
+          }
+        ],
+        "source_decision_batch_id": "decision-batch-v1:sha256:8888888888888888888888888888888888888888888888888888888888888888",
+        "type": "active_portfolio_target"
+      },
+      "approved_target_hash": "sha256:3d6ad7f36d408c2baba1ff9844ded75fa3f3796e5ea05fb867c4b3fffd030e8f",
+      "decision": {
+        "actions": [
+          "rounded_toward_zero"
+        ],
+        "applied_lot_units": 100,
+        "approved_notional": {
+          "currency": "CNY",
+          "scale": 2,
+          "type": "money",
+          "units": 251000
+        },
+        "current_quantity": {
+          "instrument_id": "xshg:600000",
+          "scale": 0,
+          "type": "quantity",
+          "units": 55
+        },
+        "final_notional": {
+          "currency": "CNY",
+          "scale": 2,
+          "type": "money",
+          "units": 155000
+        },
+        "final_quantity": {
+          "instrument_id": "xshg:600000",
+          "scale": 0,
+          "type": "quantity",
+          "units": 155
+        },
+        "instrument_id": {
+          "stable_key": "600000",
+          "type": "instrument_id",
+          "venue": "xshg"
+        },
+        "lattice_hash": "sha256:5035652be70b3e10e9d59aac126eaecdd0b091be44e3e1ee3258c2aca35777b5",
+        "mark_id": "sha256:52f25780337a6261ee42de47d439fa4b1f8f08123f6c44730130c7d09bbe760a",
+        "policy_hash": "sha256:67d5fad631a8955056fc5211601e6904ec2e70b7091195da5845cf4c1593ca26",
+        "raw_quantity": {
+          "instrument_id": "xshg:600000",
+          "scale": 0,
+          "type": "quantity",
+          "units": 251
+        },
+        "reason_codes": [
+          "buy_lot",
+          "quantity_step"
+        ],
+        "residual_quantity": {
+          "instrument_id": "xshg:600000",
+          "scale": 0,
+          "type": "quantity",
+          "units": 96
+        },
+        "type": "position_sizing_decision"
+      },
+      "normalized_target_hash": "sha256:cfef6f984d2392c251877d0fcca70b2edb52144fba41ee698094d2c4facab600",
+      "normalized_target_id": "normalized-portfolio-target-v1:sha256:78453e8f1cbf44c27226affd62fb9e6e3e58b107b25370532451c9ab3f85d81a",
+      "order_plan": {
+        "account_id": "account:cn-a-primary",
+        "based_on_availability_state_hash": "sha256:4aa86172407d172272e4e668a0ab1deff566b0bf69173e78fa73df2aac2699b5",
+        "based_on_normalized_target_hash": "sha256:cfef6f984d2392c251877d0fcca70b2edb52144fba41ee698094d2c4facab600",
+        "based_on_normalized_target_id": "normalized-portfolio-target-v1:sha256:78453e8f1cbf44c27226affd62fb9e6e3e58b107b25370532451c9ab3f85d81a",
+        "based_on_portfolio_snapshot_hash": "sha256:2a9ca2e103068982f2d7897030bbb6dfc997f90856f9138dc05336e875755c72",
+        "based_on_reservation_state_hash": "sha256:073ded593c9e6a4e41612552f0d022e159da05e9c1e709abe92c5492887a0fed",
+        "based_on_target_validity_hash": "sha256:44f4e1018bcdb7f4ee5b1992c29a987b4d16802cc5110922c24190fc1b475d7c",
+        "based_on_working_order_set_hash": "sha256:4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+        "cancel_intents": [],
+        "created_at": {
+          "epoch_nanoseconds": 200,
+          "type": "utc_instant"
+        },
+        "omissions": [],
+        "plan_id": "order-plan-v1:sha256:e5235d7b6fd8e1d4f8df5a749545126b0ea1102b57e15f98a5ed5eae7c8aa77b",
+        "planned_orders": [
+          {
+            "current_quantity": {
+              "instrument_id": "xshg:600000",
+              "scale": 0,
+              "type": "quantity",
+              "units": 55
+            },
+            "instrument_id": {
+              "stable_key": "600000",
+              "type": "instrument_id",
+              "venue": "xshg"
+            },
+            "intent": {
+              "execution_style": "market",
+              "instrument_id": {
+                "stable_key": "600000",
+                "type": "instrument_id",
+                "venue": "xshg"
+              },
+              "parent_id": "normalized-portfolio-target-v1:sha256:78453e8f1cbf44c27226affd62fb9e6e3e58b107b25370532451c9ab3f85d81a",
+              "position_effect": "open",
+              "price_constraint": null,
+              "quantity": {
+                "instrument_id": "xshg:600000",
+                "scale": 0,
+                "type": "quantity",
+                "units": 100
+              },
+              "reason": "rebalance:equity.cn_a_share.cash.rebalance.v1",
+              "reduce_only": false,
+              "side": "buy",
+              "time_in_force": "day",
+              "type": "order_intent",
+              "urgency": "normal"
+            },
+            "planned_delta": {
+              "instrument_id": "xshg:600000",
+              "scale": 0,
+              "type": "quantity",
+              "units": 100
+            },
+            "planned_order_id": "planned-order-v1:sha256:3a28822d2b1ad1905b63325951ea786ddfd7d44bcba7b997d0dfa7de7050ad95",
+            "policy_hash": "sha256:b093f640074ae56bc8d83b445c73b4c7fb616910459e2b9bcb54574622ae1427",
+            "retained_working_coverage": {
+              "instrument_id": "xshg:600000",
+              "scale": 0,
+              "type": "quantity",
+              "units": 0
+            },
+            "schema_version": 1,
+            "target_quantity": {
+              "instrument_id": "xshg:600000",
+              "scale": 0,
+              "type": "quantity",
+              "units": 155
+            },
+            "type": "planned_order"
+          }
+        ],
+        "policy": {
+          "config_hash": "sha256:cc480e5b7f64b035e3349215f571d27a8401520760bca804d1200d06410ef346",
+          "execution_style": "market",
+          "plan_valid_for_nanoseconds": 50,
+          "policy_key": "equity.cn_a_share.cash.rebalance.v1",
+          "policy_version": 1,
+          "schema_version": 1,
+          "time_in_force": "day",
+          "type": "rebalance_policy",
+          "urgency": "normal"
+        },
+        "schema_version": 1,
+        "supersedes_plan_id": null,
+        "type": "order_plan",
+        "valid_until": {
+          "epoch_nanoseconds": 250,
+          "type": "utc_instant"
+        }
+      },
+      "sizing_input_hash": "sha256:33801c5035f4cf68f13d036b78fce303daf5b3373579a36e945bac3ca6558a70"
+    },
+    "one-share-residual": {
+      "active_target": {
+        "materialized_at": {
+          "epoch_nanoseconds": 100,
+          "type": "utc_instant"
+        },
+        "quantities": [
+          {
+            "instrument_id": {
+              "stable_key": "600000",
+              "type": "instrument_id",
+              "venue": "xshg"
+            },
+            "quantity": {
+              "instrument_id": "xshg:600000",
+              "scale": 0,
+              "type": "quantity",
+              "units": 100
+            }
+          }
+        ],
+        "source_decision_batch_id": "decision-batch-v1:sha256:8888888888888888888888888888888888888888888888888888888888888888",
+        "type": "active_portfolio_target"
+      },
+      "approved_target_hash": "sha256:39764a0491f9ed9c9d8ddb5d01b6b0f785dd808abb0d2e99608fcac3b48ee7a9",
+      "decision": {
+        "actions": [
+          "exact",
+          "sell_residual_component"
+        ],
+        "applied_lot_units": 100,
+        "approved_notional": {
+          "currency": "CNY",
+          "scale": 2,
+          "type": "money",
+          "units": 100000
+        },
+        "current_quantity": {
+          "instrument_id": "xshg:600000",
+          "scale": 0,
+          "type": "quantity",
+          "units": 101
+        },
+        "final_notional": {
+          "currency": "CNY",
+          "scale": 2,
+          "type": "money",
+          "units": 100000
+        },
+        "final_quantity": {
+          "instrument_id": "xshg:600000",
+          "scale": 0,
+          "type": "quantity",
+          "units": 100
+        },
+        "instrument_id": {
+          "stable_key": "600000",
+          "type": "instrument_id",
+          "venue": "xshg"
+        },
+        "lattice_hash": "sha256:5035652be70b3e10e9d59aac126eaecdd0b091be44e3e1ee3258c2aca35777b5",
+        "mark_id": "sha256:52f25780337a6261ee42de47d439fa4b1f8f08123f6c44730130c7d09bbe760a",
+        "policy_hash": "sha256:67d5fad631a8955056fc5211601e6904ec2e70b7091195da5845cf4c1593ca26",
+        "raw_quantity": {
+          "instrument_id": "xshg:600000",
+          "scale": 0,
+          "type": "quantity",
+          "units": 100
+        },
+        "reason_codes": [
+          "exact_lattice",
+          "sell_residual_component_permitted"
+        ],
+        "residual_quantity": {
+          "instrument_id": "xshg:600000",
+          "scale": 0,
+          "type": "quantity",
+          "units": 0
+        },
+        "type": "position_sizing_decision"
+      },
+      "normalized_target_hash": "sha256:417684ba571f31573704686c6c75af1cd7564b1352c939e8ada694e921345fce",
+      "normalized_target_id": "normalized-portfolio-target-v1:sha256:2497e85a0269e19b9432d3cf75846283b9d8b67ffa9f2e5e8ef255ece100e270",
+      "order_plan": {
+        "account_id": "account:cn-a-primary",
+        "based_on_availability_state_hash": "sha256:4aa86172407d172272e4e668a0ab1deff566b0bf69173e78fa73df2aac2699b5",
+        "based_on_normalized_target_hash": "sha256:417684ba571f31573704686c6c75af1cd7564b1352c939e8ada694e921345fce",
+        "based_on_normalized_target_id": "normalized-portfolio-target-v1:sha256:2497e85a0269e19b9432d3cf75846283b9d8b67ffa9f2e5e8ef255ece100e270",
+        "based_on_portfolio_snapshot_hash": "sha256:de6a48cbcddd1dc5534d218f3f29739b423192b588361e4c66c0d88ba6d66125",
+        "based_on_reservation_state_hash": "sha256:073ded593c9e6a4e41612552f0d022e159da05e9c1e709abe92c5492887a0fed",
+        "based_on_target_validity_hash": "sha256:8bc4226922a1e06765714346b9c06145fc4d48ec51d67c148c79050a1af1e5e7",
+        "based_on_working_order_set_hash": "sha256:4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+        "cancel_intents": [],
+        "created_at": {
+          "epoch_nanoseconds": 200,
+          "type": "utc_instant"
+        },
+        "omissions": [],
+        "plan_id": "order-plan-v1:sha256:c7e8d624df253d69a9d45b9c0912dea7467458aa48749a24d6927593c47b78bf",
+        "planned_orders": [
+          {
+            "current_quantity": {
+              "instrument_id": "xshg:600000",
+              "scale": 0,
+              "type": "quantity",
+              "units": 101
+            },
+            "instrument_id": {
+              "stable_key": "600000",
+              "type": "instrument_id",
+              "venue": "xshg"
+            },
+            "intent": {
+              "execution_style": "market",
+              "instrument_id": {
+                "stable_key": "600000",
+                "type": "instrument_id",
+                "venue": "xshg"
+              },
+              "parent_id": "normalized-portfolio-target-v1:sha256:2497e85a0269e19b9432d3cf75846283b9d8b67ffa9f2e5e8ef255ece100e270",
+              "position_effect": "close",
+              "price_constraint": null,
+              "quantity": {
+                "instrument_id": "xshg:600000",
+                "scale": 0,
+                "type": "quantity",
+                "units": 1
+              },
+              "reason": "rebalance:equity.cn_a_share.cash.rebalance.v1",
+              "reduce_only": true,
+              "side": "sell",
+              "time_in_force": "day",
+              "type": "order_intent",
+              "urgency": "normal"
+            },
+            "planned_delta": {
+              "instrument_id": "xshg:600000",
+              "scale": 0,
+              "type": "quantity",
+              "units": -1
+            },
+            "planned_order_id": "planned-order-v1:sha256:81f042be95deeb10fdeee5e657c3354bc1ee00861bc59dd7eaeea428575fa1e9",
+            "policy_hash": "sha256:b093f640074ae56bc8d83b445c73b4c7fb616910459e2b9bcb54574622ae1427",
+            "retained_working_coverage": {
+              "instrument_id": "xshg:600000",
+              "scale": 0,
+              "type": "quantity",
+              "units": 0
+            },
+            "schema_version": 1,
+            "target_quantity": {
+              "instrument_id": "xshg:600000",
+              "scale": 0,
+              "type": "quantity",
+              "units": 100
+            },
+            "type": "planned_order"
+          }
+        ],
+        "policy": {
+          "config_hash": "sha256:cc480e5b7f64b035e3349215f571d27a8401520760bca804d1200d06410ef346",
+          "execution_style": "market",
+          "plan_valid_for_nanoseconds": 50,
+          "policy_key": "equity.cn_a_share.cash.rebalance.v1",
+          "policy_version": 1,
+          "schema_version": 1,
+          "time_in_force": "day",
+          "type": "rebalance_policy",
+          "urgency": "normal"
+        },
+        "schema_version": 1,
+        "supersedes_plan_id": null,
+        "type": "order_plan",
+        "valid_until": {
+          "epoch_nanoseconds": 250,
+          "type": "utc_instant"
+        }
+      },
+      "sizing_input_hash": "sha256:9db40d342070cd23adf8ca346620af1afcec030b82e3c5d01fb0d1c1b0d5e321"
+    },
+    "regular-close": {
+      "active_target": {
+        "materialized_at": {
+          "epoch_nanoseconds": 100,
+          "type": "utc_instant"
+        },
+        "quantities": [
+          {
+            "instrument_id": {
+              "stable_key": "600000",
+              "type": "instrument_id",
+              "venue": "xshg"
+            },
+            "quantity": {
+              "instrument_id": "xshg:600000",
+              "scale": 0,
+              "type": "quantity",
+              "units": 0
+            }
+          }
+        ],
+        "source_decision_batch_id": "decision-batch-v1:sha256:8888888888888888888888888888888888888888888888888888888888888888",
+        "type": "active_portfolio_target"
+      },
+      "approved_target_hash": "sha256:83cc893c465e6348ce427cd2016905dabd5c9c6e2a1e52f7a4e5cc6adc56832e",
+      "decision": {
+        "actions": [
+          "exact"
+        ],
+        "applied_lot_units": 100,
+        "approved_notional": {
+          "currency": "CNY",
+          "scale": 2,
+          "type": "money",
+          "units": 0
+        },
+        "current_quantity": {
+          "instrument_id": "xshg:600000",
+          "scale": 0,
+          "type": "quantity",
+          "units": 200
+        },
+        "final_notional": {
+          "currency": "CNY",
+          "scale": 2,
+          "type": "money",
+          "units": 0
+        },
+        "final_quantity": {
+          "instrument_id": "xshg:600000",
+          "scale": 0,
+          "type": "quantity",
+          "units": 0
+        },
+        "instrument_id": {
+          "stable_key": "600000",
+          "type": "instrument_id",
+          "venue": "xshg"
+        },
+        "lattice_hash": "sha256:5035652be70b3e10e9d59aac126eaecdd0b091be44e3e1ee3258c2aca35777b5",
+        "mark_id": "sha256:52f25780337a6261ee42de47d439fa4b1f8f08123f6c44730130c7d09bbe760a",
+        "policy_hash": "sha256:67d5fad631a8955056fc5211601e6904ec2e70b7091195da5845cf4c1593ca26",
+        "raw_quantity": {
+          "instrument_id": "xshg:600000",
+          "scale": 0,
+          "type": "quantity",
+          "units": 0
+        },
+        "reason_codes": [
+          "exact_lattice"
+        ],
+        "residual_quantity": {
+          "instrument_id": "xshg:600000",
+          "scale": 0,
+          "type": "quantity",
+          "units": 0
+        },
+        "type": "position_sizing_decision"
+      },
+      "normalized_target_hash": "sha256:dbefdf1863796b7e6d2ea9fd56101c58589a451fc286b3fdc55e84e89a2c9dd3",
+      "normalized_target_id": "normalized-portfolio-target-v1:sha256:2bc2fd5cbf4637abafeb7af6f8392e6e16e23ffc1ed9523ed5898db629878ce5",
+      "order_plan": {
+        "account_id": "account:cn-a-primary",
+        "based_on_availability_state_hash": "sha256:4aa86172407d172272e4e668a0ab1deff566b0bf69173e78fa73df2aac2699b5",
+        "based_on_normalized_target_hash": "sha256:dbefdf1863796b7e6d2ea9fd56101c58589a451fc286b3fdc55e84e89a2c9dd3",
+        "based_on_normalized_target_id": "normalized-portfolio-target-v1:sha256:2bc2fd5cbf4637abafeb7af6f8392e6e16e23ffc1ed9523ed5898db629878ce5",
+        "based_on_portfolio_snapshot_hash": "sha256:c5b5d4882f577dd01874862050531535ba5fef721fbc966f1da59e5e52b0aa6e",
+        "based_on_reservation_state_hash": "sha256:073ded593c9e6a4e41612552f0d022e159da05e9c1e709abe92c5492887a0fed",
+        "based_on_target_validity_hash": "sha256:e79031185d5b1334f0b32f05a9d80e54db2a9d1b6504c5bbeda71380d2e69d38",
+        "based_on_working_order_set_hash": "sha256:4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+        "cancel_intents": [],
+        "created_at": {
+          "epoch_nanoseconds": 200,
+          "type": "utc_instant"
+        },
+        "omissions": [],
+        "plan_id": "order-plan-v1:sha256:52ecab3d4dc85629da952ae198d2a6134b24f91cdcf3a730cabbbe6a8f2f0936",
+        "planned_orders": [
+          {
+            "current_quantity": {
+              "instrument_id": "xshg:600000",
+              "scale": 0,
+              "type": "quantity",
+              "units": 200
+            },
+            "instrument_id": {
+              "stable_key": "600000",
+              "type": "instrument_id",
+              "venue": "xshg"
+            },
+            "intent": {
+              "execution_style": "market",
+              "instrument_id": {
+                "stable_key": "600000",
+                "type": "instrument_id",
+                "venue": "xshg"
+              },
+              "parent_id": "normalized-portfolio-target-v1:sha256:2bc2fd5cbf4637abafeb7af6f8392e6e16e23ffc1ed9523ed5898db629878ce5",
+              "position_effect": "close",
+              "price_constraint": null,
+              "quantity": {
+                "instrument_id": "xshg:600000",
+                "scale": 0,
+                "type": "quantity",
+                "units": 200
+              },
+              "reason": "rebalance:equity.cn_a_share.cash.rebalance.v1",
+              "reduce_only": true,
+              "side": "sell",
+              "time_in_force": "day",
+              "type": "order_intent",
+              "urgency": "normal"
+            },
+            "planned_delta": {
+              "instrument_id": "xshg:600000",
+              "scale": 0,
+              "type": "quantity",
+              "units": -200
+            },
+            "planned_order_id": "planned-order-v1:sha256:21ed14d02c9c36dde13362435a53bfa57ff7ee1a783cee25249314b572178e6e",
+            "policy_hash": "sha256:b093f640074ae56bc8d83b445c73b4c7fb616910459e2b9bcb54574622ae1427",
+            "retained_working_coverage": {
+              "instrument_id": "xshg:600000",
+              "scale": 0,
+              "type": "quantity",
+              "units": 0
+            },
+            "schema_version": 1,
+            "target_quantity": {
+              "instrument_id": "xshg:600000",
+              "scale": 0,
+              "type": "quantity",
+              "units": 0
+            },
+            "type": "planned_order"
+          }
+        ],
+        "policy": {
+          "config_hash": "sha256:cc480e5b7f64b035e3349215f571d27a8401520760bca804d1200d06410ef346",
+          "execution_style": "market",
+          "plan_valid_for_nanoseconds": 50,
+          "policy_key": "equity.cn_a_share.cash.rebalance.v1",
+          "policy_version": 1,
+          "schema_version": 1,
+          "time_in_force": "day",
+          "type": "rebalance_policy",
+          "urgency": "normal"
+        },
+        "schema_version": 1,
+        "supersedes_plan_id": null,
+        "type": "order_plan",
+        "valid_until": {
+          "epoch_nanoseconds": 250,
+          "type": "utc_instant"
+        }
+      },
+      "sizing_input_hash": "sha256:19def9d51c12c83bc2e4316de675e8f43caf00b51f636c5bd992ca1b92576354"
+    },
+    "regular-from-odd": {
+      "active_target": {
+        "materialized_at": {
+          "epoch_nanoseconds": 100,
+          "type": "utc_instant"
+        },
+        "quantities": [
+          {
+            "instrument_id": {
+              "stable_key": "600000",
+              "type": "instrument_id",
+              "venue": "xshg"
+            },
+            "quantity": {
+              "instrument_id": "xshg:600000",
+              "scale": 0,
+              "type": "quantity",
+              "units": 199
+            }
+          }
+        ],
+        "source_decision_batch_id": "decision-batch-v1:sha256:8888888888888888888888888888888888888888888888888888888888888888",
+        "type": "active_portfolio_target"
+      },
+      "approved_target_hash": "sha256:3ed3b6f3115d0d20d5641f080f510873046724be0762fe4614db2b48936f374d",
+      "decision": {
+        "actions": [
+          "exact"
+        ],
+        "applied_lot_units": 100,
+        "approved_notional": {
+          "currency": "CNY",
+          "scale": 2,
+          "type": "money",
+          "units": 199000
+        },
+        "current_quantity": {
+          "instrument_id": "xshg:600000",
+          "scale": 0,
+          "type": "quantity",
+          "units": 299
+        },
+        "final_notional": {
+          "currency": "CNY",
+          "scale": 2,
+          "type": "money",
+          "units": 199000
+        },
+        "final_quantity": {
+          "instrument_id": "xshg:600000",
+          "scale": 0,
+          "type": "quantity",
+          "units": 199
+        },
+        "instrument_id": {
+          "stable_key": "600000",
+          "type": "instrument_id",
+          "venue": "xshg"
+        },
+        "lattice_hash": "sha256:5035652be70b3e10e9d59aac126eaecdd0b091be44e3e1ee3258c2aca35777b5",
+        "mark_id": "sha256:52f25780337a6261ee42de47d439fa4b1f8f08123f6c44730130c7d09bbe760a",
+        "policy_hash": "sha256:67d5fad631a8955056fc5211601e6904ec2e70b7091195da5845cf4c1593ca26",
+        "raw_quantity": {
+          "instrument_id": "xshg:600000",
+          "scale": 0,
+          "type": "quantity",
+          "units": 199
+        },
+        "reason_codes": [
+          "exact_lattice"
+        ],
+        "residual_quantity": {
+          "instrument_id": "xshg:600000",
+          "scale": 0,
+          "type": "quantity",
+          "units": 0
+        },
+        "type": "position_sizing_decision"
+      },
+      "normalized_target_hash": "sha256:590e3e6cebb06d3a4809604404b5611fc2e5b065013dd16f2b99a9b92b61c24f",
+      "normalized_target_id": "normalized-portfolio-target-v1:sha256:482932cfd7a957ad57dbfb17851fe8d751ae975ffda561595d7e1ca6acefa338",
+      "order_plan": {
+        "account_id": "account:cn-a-primary",
+        "based_on_availability_state_hash": "sha256:4aa86172407d172272e4e668a0ab1deff566b0bf69173e78fa73df2aac2699b5",
+        "based_on_normalized_target_hash": "sha256:590e3e6cebb06d3a4809604404b5611fc2e5b065013dd16f2b99a9b92b61c24f",
+        "based_on_normalized_target_id": "normalized-portfolio-target-v1:sha256:482932cfd7a957ad57dbfb17851fe8d751ae975ffda561595d7e1ca6acefa338",
+        "based_on_portfolio_snapshot_hash": "sha256:6a604956b9c870880865cf44a9d3ac3b0d9efe1c1e30bfc69c5c83a77042a70d",
+        "based_on_reservation_state_hash": "sha256:073ded593c9e6a4e41612552f0d022e159da05e9c1e709abe92c5492887a0fed",
+        "based_on_target_validity_hash": "sha256:c28216c8b485342373ed5c060020401e29e36e2d91b89a79e96b9a1e32f82740",
+        "based_on_working_order_set_hash": "sha256:4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+        "cancel_intents": [],
+        "created_at": {
+          "epoch_nanoseconds": 200,
+          "type": "utc_instant"
+        },
+        "omissions": [],
+        "plan_id": "order-plan-v1:sha256:02944fe57b75ec8e46a43ccc69a6e1c604ac6cf17c2d6348ad1f2e70b62c5b25",
+        "planned_orders": [
+          {
+            "current_quantity": {
+              "instrument_id": "xshg:600000",
+              "scale": 0,
+              "type": "quantity",
+              "units": 299
+            },
+            "instrument_id": {
+              "stable_key": "600000",
+              "type": "instrument_id",
+              "venue": "xshg"
+            },
+            "intent": {
+              "execution_style": "market",
+              "instrument_id": {
+                "stable_key": "600000",
+                "type": "instrument_id",
+                "venue": "xshg"
+              },
+              "parent_id": "normalized-portfolio-target-v1:sha256:482932cfd7a957ad57dbfb17851fe8d751ae975ffda561595d7e1ca6acefa338",
+              "position_effect": "close",
+              "price_constraint": null,
+              "quantity": {
+                "instrument_id": "xshg:600000",
+                "scale": 0,
+                "type": "quantity",
+                "units": 100
+              },
+              "reason": "rebalance:equity.cn_a_share.cash.rebalance.v1",
+              "reduce_only": true,
+              "side": "sell",
+              "time_in_force": "day",
+              "type": "order_intent",
+              "urgency": "normal"
+            },
+            "planned_delta": {
+              "instrument_id": "xshg:600000",
+              "scale": 0,
+              "type": "quantity",
+              "units": -100
+            },
+            "planned_order_id": "planned-order-v1:sha256:4f5d7f61c762851caf287dce6cc671c55db2e476c552f840d1b194f90c7e63ca",
+            "policy_hash": "sha256:b093f640074ae56bc8d83b445c73b4c7fb616910459e2b9bcb54574622ae1427",
+            "retained_working_coverage": {
+              "instrument_id": "xshg:600000",
+              "scale": 0,
+              "type": "quantity",
+              "units": 0
+            },
+            "schema_version": 1,
+            "target_quantity": {
+              "instrument_id": "xshg:600000",
+              "scale": 0,
+              "type": "quantity",
+              "units": 199
+            },
+            "type": "planned_order"
+          }
+        ],
+        "policy": {
+          "config_hash": "sha256:cc480e5b7f64b035e3349215f571d27a8401520760bca804d1200d06410ef346",
+          "execution_style": "market",
+          "plan_valid_for_nanoseconds": 50,
+          "policy_key": "equity.cn_a_share.cash.rebalance.v1",
+          "policy_version": 1,
+          "schema_version": 1,
+          "time_in_force": "day",
+          "type": "rebalance_policy",
+          "urgency": "normal"
+        },
+        "schema_version": 1,
+        "supersedes_plan_id": null,
+        "type": "order_plan",
+        "valid_until": {
+          "epoch_nanoseconds": 250,
+          "type": "utc_instant"
+        }
+      },
+      "sizing_input_hash": "sha256:85e9641549ef362cd4b29f16147e16186cb353a63adbd4eefd3e0390e07f93d1"
+    },
+    "regular-holding-invalid-one": {
+      "active_target": {
+        "materialized_at": {
+          "epoch_nanoseconds": 100,
+          "type": "utc_instant"
+        },
+        "quantities": [
+          {
+            "instrument_id": {
+              "stable_key": "600000",
+              "type": "instrument_id",
+              "venue": "xshg"
+            },
+            "quantity": {
+              "instrument_id": "xshg:600000",
+              "scale": 0,
+              "type": "quantity",
+              "units": 100
+            }
+          }
+        ],
+        "source_decision_batch_id": "decision-batch-v1:sha256:8888888888888888888888888888888888888888888888888888888888888888",
+        "type": "active_portfolio_target"
+      },
+      "approved_target_hash": "sha256:3ed3b6f3115d0d20d5641f080f510873046724be0762fe4614db2b48936f374d",
+      "decision": {
+        "actions": [
+          "rounded_toward_zero"
+        ],
+        "applied_lot_units": 100,
+        "approved_notional": {
+          "currency": "CNY",
+          "scale": 2,
+          "type": "money",
+          "units": 199000
+        },
+        "current_quantity": {
+          "instrument_id": "xshg:600000",
+          "scale": 0,
+          "type": "quantity",
+          "units": 200
+        },
+        "final_notional": {
+          "currency": "CNY",
+          "scale": 2,
+          "type": "money",
+          "units": 100000
+        },
+        "final_quantity": {
+          "instrument_id": "xshg:600000",
+          "scale": 0,
+          "type": "quantity",
+          "units": 100
+        },
+        "instrument_id": {
+          "stable_key": "600000",
+          "type": "instrument_id",
+          "venue": "xshg"
+        },
+        "lattice_hash": "sha256:5035652be70b3e10e9d59aac126eaecdd0b091be44e3e1ee3258c2aca35777b5",
+        "mark_id": "sha256:52f25780337a6261ee42de47d439fa4b1f8f08123f6c44730130c7d09bbe760a",
+        "policy_hash": "sha256:67d5fad631a8955056fc5211601e6904ec2e70b7091195da5845cf4c1593ca26",
+        "raw_quantity": {
+          "instrument_id": "xshg:600000",
+          "scale": 0,
+          "type": "quantity",
+          "units": 199
+        },
+        "reason_codes": [
+          "quantity_step",
+          "sell_lot"
+        ],
+        "residual_quantity": {
+          "instrument_id": "xshg:600000",
+          "scale": 0,
+          "type": "quantity",
+          "units": 99
+        },
+        "type": "position_sizing_decision"
+      },
+      "normalized_target_hash": "sha256:95235d3963180d8645babe3d06e2a9143e95c2eeb5ad1c68cf3da4109486bc94",
+      "normalized_target_id": "normalized-portfolio-target-v1:sha256:837876df1173a63c0f17cc460796b134378be1063349bac2ca4f16b556c681cc",
+      "order_plan": {
+        "account_id": "account:cn-a-primary",
+        "based_on_availability_state_hash": "sha256:4aa86172407d172272e4e668a0ab1deff566b0bf69173e78fa73df2aac2699b5",
+        "based_on_normalized_target_hash": "sha256:95235d3963180d8645babe3d06e2a9143e95c2eeb5ad1c68cf3da4109486bc94",
+        "based_on_normalized_target_id": "normalized-portfolio-target-v1:sha256:837876df1173a63c0f17cc460796b134378be1063349bac2ca4f16b556c681cc",
+        "based_on_portfolio_snapshot_hash": "sha256:c5b5d4882f577dd01874862050531535ba5fef721fbc966f1da59e5e52b0aa6e",
+        "based_on_reservation_state_hash": "sha256:073ded593c9e6a4e41612552f0d022e159da05e9c1e709abe92c5492887a0fed",
+        "based_on_target_validity_hash": "sha256:bfee1f9de7fdbe31eb9cb5a741638cf992bea19387639d2895a07a07e15db334",
+        "based_on_working_order_set_hash": "sha256:4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+        "cancel_intents": [],
+        "created_at": {
+          "epoch_nanoseconds": 200,
+          "type": "utc_instant"
+        },
+        "omissions": [],
+        "plan_id": "order-plan-v1:sha256:069ca87d84f3ddb71ca1291c31d15e46a5cb91414f8d6556bb195aedcf4dce04",
+        "planned_orders": [
+          {
+            "current_quantity": {
+              "instrument_id": "xshg:600000",
+              "scale": 0,
+              "type": "quantity",
+              "units": 200
+            },
+            "instrument_id": {
+              "stable_key": "600000",
+              "type": "instrument_id",
+              "venue": "xshg"
+            },
+            "intent": {
+              "execution_style": "market",
+              "instrument_id": {
+                "stable_key": "600000",
+                "type": "instrument_id",
+                "venue": "xshg"
+              },
+              "parent_id": "normalized-portfolio-target-v1:sha256:837876df1173a63c0f17cc460796b134378be1063349bac2ca4f16b556c681cc",
+              "position_effect": "close",
+              "price_constraint": null,
+              "quantity": {
+                "instrument_id": "xshg:600000",
+                "scale": 0,
+                "type": "quantity",
+                "units": 100
+              },
+              "reason": "rebalance:equity.cn_a_share.cash.rebalance.v1",
+              "reduce_only": true,
+              "side": "sell",
+              "time_in_force": "day",
+              "type": "order_intent",
+              "urgency": "normal"
+            },
+            "planned_delta": {
+              "instrument_id": "xshg:600000",
+              "scale": 0,
+              "type": "quantity",
+              "units": -100
+            },
+            "planned_order_id": "planned-order-v1:sha256:21ae9620ecaa4949041d969e0c24adeeb21f8ff04a8b538c5e1c0447c137fd85",
+            "policy_hash": "sha256:b093f640074ae56bc8d83b445c73b4c7fb616910459e2b9bcb54574622ae1427",
+            "retained_working_coverage": {
+              "instrument_id": "xshg:600000",
+              "scale": 0,
+              "type": "quantity",
+              "units": 0
+            },
+            "schema_version": 1,
+            "target_quantity": {
+              "instrument_id": "xshg:600000",
+              "scale": 0,
+              "type": "quantity",
+              "units": 100
+            },
+            "type": "planned_order"
+          }
+        ],
+        "policy": {
+          "config_hash": "sha256:cc480e5b7f64b035e3349215f571d27a8401520760bca804d1200d06410ef346",
+          "execution_style": "market",
+          "plan_valid_for_nanoseconds": 50,
+          "policy_key": "equity.cn_a_share.cash.rebalance.v1",
+          "policy_version": 1,
+          "schema_version": 1,
+          "time_in_force": "day",
+          "type": "rebalance_policy",
+          "urgency": "normal"
+        },
+        "schema_version": 1,
+        "supersedes_plan_id": null,
+        "type": "order_plan",
+        "valid_until": {
+          "epoch_nanoseconds": 250,
+          "type": "utc_instant"
+        }
+      },
+      "sizing_input_hash": "sha256:19def9d51c12c83bc2e4316de675e8f43caf00b51f636c5bd992ca1b92576354"
+    },
+    "regular-sell": {
+      "active_target": {
+        "materialized_at": {
+          "epoch_nanoseconds": 100,
+          "type": "utc_instant"
+        },
+        "quantities": [
+          {
+            "instrument_id": {
+              "stable_key": "600000",
+              "type": "instrument_id",
+              "venue": "xshg"
+            },
+            "quantity": {
+              "instrument_id": "xshg:600000",
+              "scale": 0,
+              "type": "quantity",
+              "units": 400
+            }
+          }
+        ],
+        "source_decision_batch_id": "decision-batch-v1:sha256:8888888888888888888888888888888888888888888888888888888888888888",
+        "type": "active_portfolio_target"
+      },
+      "approved_target_hash": "sha256:963e32bf6db4282a8be4748832ea00b7221826310ae54a06068ca467e7818f63",
+      "decision": {
+        "actions": [
+          "rounded_toward_zero"
+        ],
+        "applied_lot_units": 100,
+        "approved_notional": {
+          "currency": "CNY",
+          "scale": 2,
+          "type": "money",
+          "units": 451000
+        },
+        "current_quantity": {
+          "instrument_id": "xshg:600000",
+          "scale": 0,
+          "type": "quantity",
+          "units": 500
+        },
+        "final_notional": {
+          "currency": "CNY",
+          "scale": 2,
+          "type": "money",
+          "units": 400000
+        },
+        "final_quantity": {
+          "instrument_id": "xshg:600000",
+          "scale": 0,
+          "type": "quantity",
+          "units": 400
+        },
+        "instrument_id": {
+          "stable_key": "600000",
+          "type": "instrument_id",
+          "venue": "xshg"
+        },
+        "lattice_hash": "sha256:5035652be70b3e10e9d59aac126eaecdd0b091be44e3e1ee3258c2aca35777b5",
+        "mark_id": "sha256:52f25780337a6261ee42de47d439fa4b1f8f08123f6c44730130c7d09bbe760a",
+        "policy_hash": "sha256:67d5fad631a8955056fc5211601e6904ec2e70b7091195da5845cf4c1593ca26",
+        "raw_quantity": {
+          "instrument_id": "xshg:600000",
+          "scale": 0,
+          "type": "quantity",
+          "units": 451
+        },
+        "reason_codes": [
+          "quantity_step",
+          "sell_lot"
+        ],
+        "residual_quantity": {
+          "instrument_id": "xshg:600000",
+          "scale": 0,
+          "type": "quantity",
+          "units": 51
+        },
+        "type": "position_sizing_decision"
+      },
+      "normalized_target_hash": "sha256:ff61979f1c35b2f791d65ecd31d6600b24290748a9ca6d42c41e47470071ae64",
+      "normalized_target_id": "normalized-portfolio-target-v1:sha256:bebbaf2daf7e68f4b65d12f773079159685fb00257dc48ba544eee921c2d9728",
+      "order_plan": {
+        "account_id": "account:cn-a-primary",
+        "based_on_availability_state_hash": "sha256:4aa86172407d172272e4e668a0ab1deff566b0bf69173e78fa73df2aac2699b5",
+        "based_on_normalized_target_hash": "sha256:ff61979f1c35b2f791d65ecd31d6600b24290748a9ca6d42c41e47470071ae64",
+        "based_on_normalized_target_id": "normalized-portfolio-target-v1:sha256:bebbaf2daf7e68f4b65d12f773079159685fb00257dc48ba544eee921c2d9728",
+        "based_on_portfolio_snapshot_hash": "sha256:2e7328617b75318fe54cac980bcffc020d3e717216fdbaae15c4048eaf14a88c",
+        "based_on_reservation_state_hash": "sha256:073ded593c9e6a4e41612552f0d022e159da05e9c1e709abe92c5492887a0fed",
+        "based_on_target_validity_hash": "sha256:1cc0038ba6a2b0550cf1bd19c281b83428a6bdbc135fbdb956f1ecdfdf283487",
+        "based_on_working_order_set_hash": "sha256:4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+        "cancel_intents": [],
+        "created_at": {
+          "epoch_nanoseconds": 200,
+          "type": "utc_instant"
+        },
+        "omissions": [],
+        "plan_id": "order-plan-v1:sha256:ba5d628aacdd55d809d10fc5218bd2ed7ac04f8ec86cab70752f7c8f74be510d",
+        "planned_orders": [
+          {
+            "current_quantity": {
+              "instrument_id": "xshg:600000",
+              "scale": 0,
+              "type": "quantity",
+              "units": 500
+            },
+            "instrument_id": {
+              "stable_key": "600000",
+              "type": "instrument_id",
+              "venue": "xshg"
+            },
+            "intent": {
+              "execution_style": "market",
+              "instrument_id": {
+                "stable_key": "600000",
+                "type": "instrument_id",
+                "venue": "xshg"
+              },
+              "parent_id": "normalized-portfolio-target-v1:sha256:bebbaf2daf7e68f4b65d12f773079159685fb00257dc48ba544eee921c2d9728",
+              "position_effect": "close",
+              "price_constraint": null,
+              "quantity": {
+                "instrument_id": "xshg:600000",
+                "scale": 0,
+                "type": "quantity",
+                "units": 100
+              },
+              "reason": "rebalance:equity.cn_a_share.cash.rebalance.v1",
+              "reduce_only": true,
+              "side": "sell",
+              "time_in_force": "day",
+              "type": "order_intent",
+              "urgency": "normal"
+            },
+            "planned_delta": {
+              "instrument_id": "xshg:600000",
+              "scale": 0,
+              "type": "quantity",
+              "units": -100
+            },
+            "planned_order_id": "planned-order-v1:sha256:e6b48acc55a2761b06aa51d574f606a9d1a4c825d64d50d036ddfbdeda9ca749",
+            "policy_hash": "sha256:b093f640074ae56bc8d83b445c73b4c7fb616910459e2b9bcb54574622ae1427",
+            "retained_working_coverage": {
+              "instrument_id": "xshg:600000",
+              "scale": 0,
+              "type": "quantity",
+              "units": 0
+            },
+            "schema_version": 1,
+            "target_quantity": {
+              "instrument_id": "xshg:600000",
+              "scale": 0,
+              "type": "quantity",
+              "units": 400
+            },
+            "type": "planned_order"
+          }
+        ],
+        "policy": {
+          "config_hash": "sha256:cc480e5b7f64b035e3349215f571d27a8401520760bca804d1200d06410ef346",
+          "execution_style": "market",
+          "plan_valid_for_nanoseconds": 50,
+          "policy_key": "equity.cn_a_share.cash.rebalance.v1",
+          "policy_version": 1,
+          "schema_version": 1,
+          "time_in_force": "day",
+          "type": "rebalance_policy",
+          "urgency": "normal"
+        },
+        "schema_version": 1,
+        "supersedes_plan_id": null,
+        "type": "order_plan",
+        "valid_until": {
+          "epoch_nanoseconds": 250,
+          "type": "utc_instant"
+        }
+      },
+      "sizing_input_hash": "sha256:7c229410a819efd18310473d11562635655f80f5701cefb74e97acd53a030b1f"
+    },
+    "residual-alone": {
+      "active_target": {
+        "materialized_at": {
+          "epoch_nanoseconds": 100,
+          "type": "utc_instant"
+        },
+        "quantities": [
+          {
+            "instrument_id": {
+              "stable_key": "600000",
+              "type": "instrument_id",
+              "venue": "xshg"
+            },
+            "quantity": {
+              "instrument_id": "xshg:600000",
+              "scale": 0,
+              "type": "quantity",
+              "units": 200
+            }
+          }
+        ],
+        "source_decision_batch_id": "decision-batch-v1:sha256:8888888888888888888888888888888888888888888888888888888888888888",
+        "type": "active_portfolio_target"
+      },
+      "approved_target_hash": "sha256:f84093e2993aeff036c4a708bbebf49826dd3ceb264b23251ff14d31acd19608",
+      "decision": {
+        "actions": [
+          "exact",
+          "sell_residual_component"
+        ],
+        "applied_lot_units": 100,
+        "approved_notional": {
+          "currency": "CNY",
+          "scale": 2,
+          "type": "money",
+          "units": 200000
+        },
+        "current_quantity": {
+          "instrument_id": "xshg:600000",
+          "scale": 0,
+          "type": "quantity",
+          "units": 299
+        },
+        "final_notional": {
+          "currency": "CNY",
+          "scale": 2,
+          "type": "money",
+          "units": 200000
+        },
+        "final_quantity": {
+          "instrument_id": "xshg:600000",
+          "scale": 0,
+          "type": "quantity",
+          "units": 200
+        },
+        "instrument_id": {
+          "stable_key": "600000",
+          "type": "instrument_id",
+          "venue": "xshg"
+        },
+        "lattice_hash": "sha256:5035652be70b3e10e9d59aac126eaecdd0b091be44e3e1ee3258c2aca35777b5",
+        "mark_id": "sha256:52f25780337a6261ee42de47d439fa4b1f8f08123f6c44730130c7d09bbe760a",
+        "policy_hash": "sha256:67d5fad631a8955056fc5211601e6904ec2e70b7091195da5845cf4c1593ca26",
+        "raw_quantity": {
+          "instrument_id": "xshg:600000",
+          "scale": 0,
+          "type": "quantity",
+          "units": 200
+        },
+        "reason_codes": [
+          "exact_lattice",
+          "sell_residual_component_permitted"
+        ],
+        "residual_quantity": {
+          "instrument_id": "xshg:600000",
+          "scale": 0,
+          "type": "quantity",
+          "units": 0
+        },
+        "type": "position_sizing_decision"
+      },
+      "normalized_target_hash": "sha256:8900d8568da99ba62bc40803e49255af301e6cddbca0f5e2ef4a56465f886774",
+      "normalized_target_id": "normalized-portfolio-target-v1:sha256:90e59a1b2e03212cbd2b9bda821aae2c3d05de93ff8257a50216d8068678fe6b",
+      "order_plan": {
+        "account_id": "account:cn-a-primary",
+        "based_on_availability_state_hash": "sha256:4aa86172407d172272e4e668a0ab1deff566b0bf69173e78fa73df2aac2699b5",
+        "based_on_normalized_target_hash": "sha256:8900d8568da99ba62bc40803e49255af301e6cddbca0f5e2ef4a56465f886774",
+        "based_on_normalized_target_id": "normalized-portfolio-target-v1:sha256:90e59a1b2e03212cbd2b9bda821aae2c3d05de93ff8257a50216d8068678fe6b",
+        "based_on_portfolio_snapshot_hash": "sha256:6a604956b9c870880865cf44a9d3ac3b0d9efe1c1e30bfc69c5c83a77042a70d",
+        "based_on_reservation_state_hash": "sha256:073ded593c9e6a4e41612552f0d022e159da05e9c1e709abe92c5492887a0fed",
+        "based_on_target_validity_hash": "sha256:35fff69209630f2725074477909636a96d1fc2037da3473bebc84855d4c80de5",
+        "based_on_working_order_set_hash": "sha256:4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+        "cancel_intents": [],
+        "created_at": {
+          "epoch_nanoseconds": 200,
+          "type": "utc_instant"
+        },
+        "omissions": [],
+        "plan_id": "order-plan-v1:sha256:04174f8c6b9b04e3c19c3991ec297d9dacab94b2a70ce9aee00f8c8a96998708",
+        "planned_orders": [
+          {
+            "current_quantity": {
+              "instrument_id": "xshg:600000",
+              "scale": 0,
+              "type": "quantity",
+              "units": 299
+            },
+            "instrument_id": {
+              "stable_key": "600000",
+              "type": "instrument_id",
+              "venue": "xshg"
+            },
+            "intent": {
+              "execution_style": "market",
+              "instrument_id": {
+                "stable_key": "600000",
+                "type": "instrument_id",
+                "venue": "xshg"
+              },
+              "parent_id": "normalized-portfolio-target-v1:sha256:90e59a1b2e03212cbd2b9bda821aae2c3d05de93ff8257a50216d8068678fe6b",
+              "position_effect": "close",
+              "price_constraint": null,
+              "quantity": {
+                "instrument_id": "xshg:600000",
+                "scale": 0,
+                "type": "quantity",
+                "units": 99
+              },
+              "reason": "rebalance:equity.cn_a_share.cash.rebalance.v1",
+              "reduce_only": true,
+              "side": "sell",
+              "time_in_force": "day",
+              "type": "order_intent",
+              "urgency": "normal"
+            },
+            "planned_delta": {
+              "instrument_id": "xshg:600000",
+              "scale": 0,
+              "type": "quantity",
+              "units": -99
+            },
+            "planned_order_id": "planned-order-v1:sha256:9abe98a463bba759ca3d36a0ca1d86c524f0bf150b5635c09db34189b798f5c1",
+            "policy_hash": "sha256:b093f640074ae56bc8d83b445c73b4c7fb616910459e2b9bcb54574622ae1427",
+            "retained_working_coverage": {
+              "instrument_id": "xshg:600000",
+              "scale": 0,
+              "type": "quantity",
+              "units": 0
+            },
+            "schema_version": 1,
+            "target_quantity": {
+              "instrument_id": "xshg:600000",
+              "scale": 0,
+              "type": "quantity",
+              "units": 200
+            },
+            "type": "planned_order"
+          }
+        ],
+        "policy": {
+          "config_hash": "sha256:cc480e5b7f64b035e3349215f571d27a8401520760bca804d1200d06410ef346",
+          "execution_style": "market",
+          "plan_valid_for_nanoseconds": 50,
+          "policy_key": "equity.cn_a_share.cash.rebalance.v1",
+          "policy_version": 1,
+          "schema_version": 1,
+          "time_in_force": "day",
+          "type": "rebalance_policy",
+          "urgency": "normal"
+        },
+        "schema_version": 1,
+        "supersedes_plan_id": null,
+        "type": "order_plan",
+        "valid_until": {
+          "epoch_nanoseconds": 250,
+          "type": "utc_instant"
+        }
+      },
+      "sizing_input_hash": "sha256:85e9641549ef362cd4b29f16147e16186cb353a63adbd4eefd3e0390e07f93d1"
+    },
+    "residual-combined": {
+      "active_target": {
+        "materialized_at": {
+          "epoch_nanoseconds": 100,
+          "type": "utc_instant"
+        },
+        "quantities": [
+          {
+            "instrument_id": {
+              "stable_key": "600000",
+              "type": "instrument_id",
+              "venue": "xshg"
+            },
+            "quantity": {
+              "instrument_id": "xshg:600000",
+              "scale": 0,
+              "type": "quantity",
+              "units": 100
+            }
+          }
+        ],
+        "source_decision_batch_id": "decision-batch-v1:sha256:8888888888888888888888888888888888888888888888888888888888888888",
+        "type": "active_portfolio_target"
+      },
+      "approved_target_hash": "sha256:39764a0491f9ed9c9d8ddb5d01b6b0f785dd808abb0d2e99608fcac3b48ee7a9",
+      "decision": {
+        "actions": [
+          "exact",
+          "sell_residual_component"
+        ],
+        "applied_lot_units": 100,
+        "approved_notional": {
+          "currency": "CNY",
+          "scale": 2,
+          "type": "money",
+          "units": 100000
+        },
+        "current_quantity": {
+          "instrument_id": "xshg:600000",
+          "scale": 0,
+          "type": "quantity",
+          "units": 299
+        },
+        "final_notional": {
+          "currency": "CNY",
+          "scale": 2,
+          "type": "money",
+          "units": 100000
+        },
+        "final_quantity": {
+          "instrument_id": "xshg:600000",
+          "scale": 0,
+          "type": "quantity",
+          "units": 100
+        },
+        "instrument_id": {
+          "stable_key": "600000",
+          "type": "instrument_id",
+          "venue": "xshg"
+        },
+        "lattice_hash": "sha256:5035652be70b3e10e9d59aac126eaecdd0b091be44e3e1ee3258c2aca35777b5",
+        "mark_id": "sha256:52f25780337a6261ee42de47d439fa4b1f8f08123f6c44730130c7d09bbe760a",
+        "policy_hash": "sha256:67d5fad631a8955056fc5211601e6904ec2e70b7091195da5845cf4c1593ca26",
+        "raw_quantity": {
+          "instrument_id": "xshg:600000",
+          "scale": 0,
+          "type": "quantity",
+          "units": 100
+        },
+        "reason_codes": [
+          "exact_lattice",
+          "sell_residual_component_permitted"
+        ],
+        "residual_quantity": {
+          "instrument_id": "xshg:600000",
+          "scale": 0,
+          "type": "quantity",
+          "units": 0
+        },
+        "type": "position_sizing_decision"
+      },
+      "normalized_target_hash": "sha256:07bc0deb42dfa1f8f15f85340c009e17d9f2b571d0e69e91d82be12320d0df8f",
+      "normalized_target_id": "normalized-portfolio-target-v1:sha256:d8d997b2e68a2b70c7d06ddbca51a9525f9b462eaed4e9b103c0c28e9a6f9acf",
+      "order_plan": {
+        "account_id": "account:cn-a-primary",
+        "based_on_availability_state_hash": "sha256:4aa86172407d172272e4e668a0ab1deff566b0bf69173e78fa73df2aac2699b5",
+        "based_on_normalized_target_hash": "sha256:07bc0deb42dfa1f8f15f85340c009e17d9f2b571d0e69e91d82be12320d0df8f",
+        "based_on_normalized_target_id": "normalized-portfolio-target-v1:sha256:d8d997b2e68a2b70c7d06ddbca51a9525f9b462eaed4e9b103c0c28e9a6f9acf",
+        "based_on_portfolio_snapshot_hash": "sha256:6a604956b9c870880865cf44a9d3ac3b0d9efe1c1e30bfc69c5c83a77042a70d",
+        "based_on_reservation_state_hash": "sha256:073ded593c9e6a4e41612552f0d022e159da05e9c1e709abe92c5492887a0fed",
+        "based_on_target_validity_hash": "sha256:38f80cfb3643f79dccb1eccf57b283b5b0093b6c1d526d42124f7790437c50dc",
+        "based_on_working_order_set_hash": "sha256:4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+        "cancel_intents": [],
+        "created_at": {
+          "epoch_nanoseconds": 200,
+          "type": "utc_instant"
+        },
+        "omissions": [],
+        "plan_id": "order-plan-v1:sha256:6d9c6bef0583d78695f17e4073f90fbd3777b143f17e65216efd9e42f06326f4",
+        "planned_orders": [
+          {
+            "current_quantity": {
+              "instrument_id": "xshg:600000",
+              "scale": 0,
+              "type": "quantity",
+              "units": 299
+            },
+            "instrument_id": {
+              "stable_key": "600000",
+              "type": "instrument_id",
+              "venue": "xshg"
+            },
+            "intent": {
+              "execution_style": "market",
+              "instrument_id": {
+                "stable_key": "600000",
+                "type": "instrument_id",
+                "venue": "xshg"
+              },
+              "parent_id": "normalized-portfolio-target-v1:sha256:d8d997b2e68a2b70c7d06ddbca51a9525f9b462eaed4e9b103c0c28e9a6f9acf",
+              "position_effect": "close",
+              "price_constraint": null,
+              "quantity": {
+                "instrument_id": "xshg:600000",
+                "scale": 0,
+                "type": "quantity",
+                "units": 199
+              },
+              "reason": "rebalance:equity.cn_a_share.cash.rebalance.v1",
+              "reduce_only": true,
+              "side": "sell",
+              "time_in_force": "day",
+              "type": "order_intent",
+              "urgency": "normal"
+            },
+            "planned_delta": {
+              "instrument_id": "xshg:600000",
+              "scale": 0,
+              "type": "quantity",
+              "units": -199
+            },
+            "planned_order_id": "planned-order-v1:sha256:390161df8e70343a4795bb05ef031bd8557ae8887c5950428502d9c826491669",
+            "policy_hash": "sha256:b093f640074ae56bc8d83b445c73b4c7fb616910459e2b9bcb54574622ae1427",
+            "retained_working_coverage": {
+              "instrument_id": "xshg:600000",
+              "scale": 0,
+              "type": "quantity",
+              "units": 0
+            },
+            "schema_version": 1,
+            "target_quantity": {
+              "instrument_id": "xshg:600000",
+              "scale": 0,
+              "type": "quantity",
+              "units": 100
+            },
+            "type": "planned_order"
+          }
+        ],
+        "policy": {
+          "config_hash": "sha256:cc480e5b7f64b035e3349215f571d27a8401520760bca804d1200d06410ef346",
+          "execution_style": "market",
+          "plan_valid_for_nanoseconds": 50,
+          "policy_key": "equity.cn_a_share.cash.rebalance.v1",
+          "policy_version": 1,
+          "schema_version": 1,
+          "time_in_force": "day",
+          "type": "rebalance_policy",
+          "urgency": "normal"
+        },
+        "schema_version": 1,
+        "supersedes_plan_id": null,
+        "type": "order_plan",
+        "valid_until": {
+          "epoch_nanoseconds": 250,
+          "type": "utc_instant"
+        }
+      },
+      "sizing_input_hash": "sha256:85e9641549ef362cd4b29f16147e16186cb353a63adbd4eefd3e0390e07f93d1"
+    }
+  },
+  "xshe": {
+    "active_target": {
+      "materialized_at": {
+        "epoch_nanoseconds": 100,
+        "type": "utc_instant"
+      },
+      "quantities": [
+        {
+          "instrument_id": {
+            "stable_key": "000001",
+            "type": "instrument_id",
+            "venue": "xshe"
+          },
+          "quantity": {
+            "instrument_id": "xshe:000001",
+            "scale": 0,
+            "type": "quantity",
+            "units": 200
+          }
+        }
+      ],
+      "source_decision_batch_id": "decision-batch-v1:sha256:8888888888888888888888888888888888888888888888888888888888888888",
+      "type": "active_portfolio_target"
+    },
+    "component_ref": {
+      "component_digest": "sha256:03902ce5aa70e65560a5ea4049402cf67024d1a5d8c3eae72f5bdc21bd7e6c86",
+      "component_key": "equity.cn_a_share.cash.quantity-lattice.v1",
+      "component_version": 1,
+      "port_type": "instrument_model",
+      "type": "profile_component_ref"
+    },
+    "decision": {
+      "actions": [
+        "exact",
+        "sell_residual_component"
+      ],
+      "applied_lot_units": 100,
+      "approved_notional": {
+        "currency": "CNY",
+        "scale": 2,
+        "type": "money",
+        "units": 400000
+      },
+      "current_quantity": {
+        "instrument_id": "xshe:000001",
+        "scale": 0,
+        "type": "quantity",
+        "units": 299
+      },
+      "final_notional": {
+        "currency": "CNY",
+        "scale": 2,
+        "type": "money",
+        "units": 400000
+      },
+      "final_quantity": {
+        "instrument_id": "xshe:000001",
+        "scale": 0,
+        "type": "quantity",
+        "units": 200
+      },
+      "instrument_id": {
+        "stable_key": "000001",
+        "type": "instrument_id",
+        "venue": "xshe"
+      },
+      "lattice_hash": "sha256:f470c21d0d8392c70ee28f0057cfeab12d991263da9a215509447b54fc10c34c",
+      "mark_id": "sha256:e8b0fc6bde988a84330a22912d206ce4d236edae69f12cb42646418119400a68",
+      "policy_hash": "sha256:67d5fad631a8955056fc5211601e6904ec2e70b7091195da5845cf4c1593ca26",
+      "raw_quantity": {
+        "instrument_id": "xshe:000001",
+        "scale": 0,
+        "type": "quantity",
+        "units": 200
+      },
+      "reason_codes": [
+        "exact_lattice",
+        "sell_residual_component_permitted"
+      ],
+      "residual_quantity": {
+        "instrument_id": "xshe:000001",
+        "scale": 0,
+        "type": "quantity",
+        "units": 0
+      },
+      "type": "position_sizing_decision"
+    },
+    "normalized_target_hash": "sha256:a16acbb054332019076c61c7a3f246f14782a4808c1116d73c952f247bce9033",
+    "normalized_target_id": "normalized-portfolio-target-v1:sha256:711390cb36d0627356e95c4992ef335a3cb00f33894dfb7c04fbb28231ba864d",
+    "order_plan": {
+      "account_id": "account:cn-a-primary",
+      "based_on_availability_state_hash": "sha256:4aa86172407d172272e4e668a0ab1deff566b0bf69173e78fa73df2aac2699b5",
+      "based_on_normalized_target_hash": "sha256:a16acbb054332019076c61c7a3f246f14782a4808c1116d73c952f247bce9033",
+      "based_on_normalized_target_id": "normalized-portfolio-target-v1:sha256:711390cb36d0627356e95c4992ef335a3cb00f33894dfb7c04fbb28231ba864d",
+      "based_on_portfolio_snapshot_hash": "sha256:b6df0c359fa522bed9489b614be38df30cc2e271f4195031284af2a96a00ca93",
+      "based_on_reservation_state_hash": "sha256:073ded593c9e6a4e41612552f0d022e159da05e9c1e709abe92c5492887a0fed",
+      "based_on_target_validity_hash": "sha256:622892fc8b86a44f4668b7b53a8e454e0b61b706634f68bebe9f69882b3be68d",
+      "based_on_working_order_set_hash": "sha256:4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+      "cancel_intents": [],
+      "created_at": {
+        "epoch_nanoseconds": 200,
+        "type": "utc_instant"
+      },
+      "omissions": [],
+      "plan_id": "order-plan-v1:sha256:100d31c657849ebf2662dc54c345f0417f58d6bb652e4072bcf92c4e37821248",
+      "planned_orders": [
+        {
+          "current_quantity": {
+            "instrument_id": "xshe:000001",
+            "scale": 0,
+            "type": "quantity",
+            "units": 299
+          },
+          "instrument_id": {
+            "stable_key": "000001",
+            "type": "instrument_id",
+            "venue": "xshe"
+          },
+          "intent": {
+            "execution_style": "market",
+            "instrument_id": {
+              "stable_key": "000001",
+              "type": "instrument_id",
+              "venue": "xshe"
+            },
+            "parent_id": "normalized-portfolio-target-v1:sha256:711390cb36d0627356e95c4992ef335a3cb00f33894dfb7c04fbb28231ba864d",
+            "position_effect": "close",
+            "price_constraint": null,
+            "quantity": {
+              "instrument_id": "xshe:000001",
+              "scale": 0,
+              "type": "quantity",
+              "units": 99
+            },
+            "reason": "rebalance:equity.cn_a_share.cash.rebalance.v1",
+            "reduce_only": true,
+            "side": "sell",
+            "time_in_force": "day",
+            "type": "order_intent",
+            "urgency": "normal"
+          },
+          "planned_delta": {
+            "instrument_id": "xshe:000001",
+            "scale": 0,
+            "type": "quantity",
+            "units": -99
+          },
+          "planned_order_id": "planned-order-v1:sha256:d0544b555fcd299a80de3879e7160c76e191c138441ac6eb7f10b5463eebcf9f",
+          "policy_hash": "sha256:b093f640074ae56bc8d83b445c73b4c7fb616910459e2b9bcb54574622ae1427",
+          "retained_working_coverage": {
+            "instrument_id": "xshe:000001",
+            "scale": 0,
+            "type": "quantity",
+            "units": 0
+          },
+          "schema_version": 1,
+          "target_quantity": {
+            "instrument_id": "xshe:000001",
+            "scale": 0,
+            "type": "quantity",
+            "units": 200
+          },
+          "type": "planned_order"
+        }
+      ],
+      "policy": {
+        "config_hash": "sha256:cc480e5b7f64b035e3349215f571d27a8401520760bca804d1200d06410ef346",
+        "execution_style": "market",
+        "plan_valid_for_nanoseconds": 50,
+        "policy_key": "equity.cn_a_share.cash.rebalance.v1",
+        "policy_version": 1,
+        "schema_version": 1,
+        "time_in_force": "day",
+        "type": "rebalance_policy",
+        "urgency": "normal"
+      },
+      "schema_version": 1,
+      "supersedes_plan_id": null,
+      "type": "order_plan",
+      "valid_until": {
+        "epoch_nanoseconds": 250,
+        "type": "utc_instant"
+      }
+    },
+    "resolution": {
+      "instrument_id": {
+        "stable_key": "000001",
+        "type": "instrument_id",
+        "venue": "xshe"
+      },
+      "quantity_lattice": {
+        "atomic_scale": 0,
+        "buy_lot_units": 100,
+        "config_hash": "sha256:caa3460edd6be4b928e50e12df81d74b3c04cf954364ef7474e753f791fe51ba",
+        "instrument_id": {
+          "stable_key": "000001",
+          "type": "instrument_id",
+          "venue": "xshe"
+        },
+        "lattice_key": "equity.cn_a_share.cash.quantity-lattice.v1",
+        "lattice_version": 1,
+        "min_notional": {
+          "currency": "CNY",
+          "scale": 2,
+          "type": "money",
+          "units": 0
+        },
+        "min_quantity_units": 0,
+        "odd_lot_close_permitted": true,
+        "schema_version": 2,
+        "sell_lot_units": 100,
+        "step_units": 1,
+        "type": "quantity_lattice",
+        "whole_sell_residual_permitted": true
+      },
+      "schema_version": 1,
+      "type": "cn_a_share_quantity_lattice_resolution",
+      "venue_id": {
+        "type": "venue_id",
+        "value": "xshe"
+      }
+    },
+    "sizing_policy": {
+      "config_hash": "sha256:50b49f9e22da3937fbc585be652c68e71f183b14d25a226b86163b0278a675e0",
+      "policy_key": "equity.cn_a_share.cash.position-sizing.v1",
+      "policy_version": 1,
+      "price_purpose": "valuation",
+      "residual_policy": "close_if_permitted",
+      "rounding": "toward_zero",
+      "schema_version": 1,
+      "type": "position_sizing_policy"
+    }
+  },
+  "xshg": {
+    "active_target": {
+      "materialized_at": {
+        "epoch_nanoseconds": 100,
+        "type": "utc_instant"
+      },
+      "quantities": [
+        {
+          "instrument_id": {
+            "stable_key": "600000",
+            "type": "instrument_id",
+            "venue": "xshg"
+          },
+          "quantity": {
+            "instrument_id": "xshg:600000",
+            "scale": 0,
+            "type": "quantity",
+            "units": 200
+          }
+        }
+      ],
+      "source_decision_batch_id": "decision-batch-v1:sha256:8888888888888888888888888888888888888888888888888888888888888888",
+      "type": "active_portfolio_target"
+    },
+    "component_ref": {
+      "component_digest": "sha256:fab920b0ad96ead710bfe34de9a5dd5c1167bf34c60046bf7d305650d4f24412",
+      "component_key": "equity.cn_a_share.cash.quantity-lattice.v1",
+      "component_version": 1,
+      "port_type": "instrument_model",
+      "type": "profile_component_ref"
+    },
+    "decision": {
+      "actions": [
+        "exact",
+        "sell_residual_component"
+      ],
+      "applied_lot_units": 100,
+      "approved_notional": {
+        "currency": "CNY",
+        "scale": 2,
+        "type": "money",
+        "units": 200000
+      },
+      "current_quantity": {
+        "instrument_id": "xshg:600000",
+        "scale": 0,
+        "type": "quantity",
+        "units": 299
+      },
+      "final_notional": {
+        "currency": "CNY",
+        "scale": 2,
+        "type": "money",
+        "units": 200000
+      },
+      "final_quantity": {
+        "instrument_id": "xshg:600000",
+        "scale": 0,
+        "type": "quantity",
+        "units": 200
+      },
+      "instrument_id": {
+        "stable_key": "600000",
+        "type": "instrument_id",
+        "venue": "xshg"
+      },
+      "lattice_hash": "sha256:5035652be70b3e10e9d59aac126eaecdd0b091be44e3e1ee3258c2aca35777b5",
+      "mark_id": "sha256:52f25780337a6261ee42de47d439fa4b1f8f08123f6c44730130c7d09bbe760a",
+      "policy_hash": "sha256:67d5fad631a8955056fc5211601e6904ec2e70b7091195da5845cf4c1593ca26",
+      "raw_quantity": {
+        "instrument_id": "xshg:600000",
+        "scale": 0,
+        "type": "quantity",
+        "units": 200
+      },
+      "reason_codes": [
+        "exact_lattice",
+        "sell_residual_component_permitted"
+      ],
+      "residual_quantity": {
+        "instrument_id": "xshg:600000",
+        "scale": 0,
+        "type": "quantity",
+        "units": 0
+      },
+      "type": "position_sizing_decision"
+    },
+    "normalized_target_hash": "sha256:8900d8568da99ba62bc40803e49255af301e6cddbca0f5e2ef4a56465f886774",
+    "normalized_target_id": "normalized-portfolio-target-v1:sha256:90e59a1b2e03212cbd2b9bda821aae2c3d05de93ff8257a50216d8068678fe6b",
+    "order_plan": {
+      "account_id": "account:cn-a-primary",
+      "based_on_availability_state_hash": "sha256:4aa86172407d172272e4e668a0ab1deff566b0bf69173e78fa73df2aac2699b5",
+      "based_on_normalized_target_hash": "sha256:8900d8568da99ba62bc40803e49255af301e6cddbca0f5e2ef4a56465f886774",
+      "based_on_normalized_target_id": "normalized-portfolio-target-v1:sha256:90e59a1b2e03212cbd2b9bda821aae2c3d05de93ff8257a50216d8068678fe6b",
+      "based_on_portfolio_snapshot_hash": "sha256:6a604956b9c870880865cf44a9d3ac3b0d9efe1c1e30bfc69c5c83a77042a70d",
+      "based_on_reservation_state_hash": "sha256:073ded593c9e6a4e41612552f0d022e159da05e9c1e709abe92c5492887a0fed",
+      "based_on_target_validity_hash": "sha256:35fff69209630f2725074477909636a96d1fc2037da3473bebc84855d4c80de5",
+      "based_on_working_order_set_hash": "sha256:4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+      "cancel_intents": [],
+      "created_at": {
+        "epoch_nanoseconds": 200,
+        "type": "utc_instant"
+      },
+      "omissions": [],
+      "plan_id": "order-plan-v1:sha256:04174f8c6b9b04e3c19c3991ec297d9dacab94b2a70ce9aee00f8c8a96998708",
+      "planned_orders": [
+        {
+          "current_quantity": {
+            "instrument_id": "xshg:600000",
+            "scale": 0,
+            "type": "quantity",
+            "units": 299
+          },
+          "instrument_id": {
+            "stable_key": "600000",
+            "type": "instrument_id",
+            "venue": "xshg"
+          },
+          "intent": {
+            "execution_style": "market",
+            "instrument_id": {
+              "stable_key": "600000",
+              "type": "instrument_id",
+              "venue": "xshg"
+            },
+            "parent_id": "normalized-portfolio-target-v1:sha256:90e59a1b2e03212cbd2b9bda821aae2c3d05de93ff8257a50216d8068678fe6b",
+            "position_effect": "close",
+            "price_constraint": null,
+            "quantity": {
+              "instrument_id": "xshg:600000",
+              "scale": 0,
+              "type": "quantity",
+              "units": 99
+            },
+            "reason": "rebalance:equity.cn_a_share.cash.rebalance.v1",
+            "reduce_only": true,
+            "side": "sell",
+            "time_in_force": "day",
+            "type": "order_intent",
+            "urgency": "normal"
+          },
+          "planned_delta": {
+            "instrument_id": "xshg:600000",
+            "scale": 0,
+            "type": "quantity",
+            "units": -99
+          },
+          "planned_order_id": "planned-order-v1:sha256:9abe98a463bba759ca3d36a0ca1d86c524f0bf150b5635c09db34189b798f5c1",
+          "policy_hash": "sha256:b093f640074ae56bc8d83b445c73b4c7fb616910459e2b9bcb54574622ae1427",
+          "retained_working_coverage": {
+            "instrument_id": "xshg:600000",
+            "scale": 0,
+            "type": "quantity",
+            "units": 0
+          },
+          "schema_version": 1,
+          "target_quantity": {
+            "instrument_id": "xshg:600000",
+            "scale": 0,
+            "type": "quantity",
+            "units": 200
+          },
+          "type": "planned_order"
+        }
+      ],
+      "policy": {
+        "config_hash": "sha256:cc480e5b7f64b035e3349215f571d27a8401520760bca804d1200d06410ef346",
+        "execution_style": "market",
+        "plan_valid_for_nanoseconds": 50,
+        "policy_key": "equity.cn_a_share.cash.rebalance.v1",
+        "policy_version": 1,
+        "schema_version": 1,
+        "time_in_force": "day",
+        "type": "rebalance_policy",
+        "urgency": "normal"
+      },
+      "schema_version": 1,
+      "supersedes_plan_id": null,
+      "type": "order_plan",
+      "valid_until": {
+        "epoch_nanoseconds": 250,
+        "type": "utc_instant"
+      }
+    },
+    "resolution": {
+      "instrument_id": {
+        "stable_key": "600000",
+        "type": "instrument_id",
+        "venue": "xshg"
+      },
+      "quantity_lattice": {
+        "atomic_scale": 0,
+        "buy_lot_units": 100,
+        "config_hash": "sha256:d2d88aaff93b05fafd92d3deb0ff6b6cd450d9b43556a6acb715e7dcd596e6f9",
+        "instrument_id": {
+          "stable_key": "600000",
+          "type": "instrument_id",
+          "venue": "xshg"
+        },
+        "lattice_key": "equity.cn_a_share.cash.quantity-lattice.v1",
+        "lattice_version": 1,
+        "min_notional": {
+          "currency": "CNY",
+          "scale": 2,
+          "type": "money",
+          "units": 0
+        },
+        "min_quantity_units": 0,
+        "odd_lot_close_permitted": true,
+        "schema_version": 2,
+        "sell_lot_units": 100,
+        "step_units": 1,
+        "type": "quantity_lattice",
+        "whole_sell_residual_permitted": true
+      },
+      "schema_version": 1,
+      "type": "cn_a_share_quantity_lattice_resolution",
+      "venue_id": {
+        "type": "venue_id",
+        "value": "xshg"
+      }
+    },
+    "sizing_policy": {
+      "config_hash": "sha256:50b49f9e22da3937fbc585be652c68e71f183b14d25a226b86163b0278a675e0",
+      "policy_key": "equity.cn_a_share.cash.position-sizing.v1",
+      "policy_version": 1,
+      "price_purpose": "valuation",
+      "residual_policy": "close_if_permitted",
+      "rounding": "toward_zero",
+      "schema_version": 1,
+      "type": "position_sizing_policy"
+    }
+  }
+}

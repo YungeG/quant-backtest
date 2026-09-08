@@ -1,0 +1,29 @@
+{
+  "files": [
+    {
+      "exact_private_path": "/srv/bcache-8t/ygguo/backtest/g12h-authority-private/20260820-wave1-response-headers/stamp_duty/sta-search-stamp-duty-law-title-terminal-page-2/response.headers",
+      "exact_private_sha256": "sha256:669a9bae3b6a69e2fac92842362e3e14e17e57b046cd751aa31f260f78ff998c",
+      "redaction": "Set-Cookie value replaced by its SHA-256; cookie name and attributes retained.",
+      "tracked_path": "stamp_duty/sta-search-stamp-duty-law-title-terminal-page-2/response.headers",
+      "tracked_redacted_sha256": "sha256:78e8249d0688ad45d36ff4c7cecafc592ee125a76b2a5b5e17ba760367365909"
+    },
+    {
+      "exact_private_path": "/srv/bcache-8t/ygguo/backtest/g12h-authority-private/20260820-wave1-response-headers/stamp_duty/sta-search-stamp-duty-law-title-terminal-page-2/transport.log",
+      "exact_private_sha256": "sha256:c7368d9d9f54c6908be4392ea761859f11e15c9d1e3313e72abc4ebf4abd3679",
+      "redaction": "Set-Cookie value replaced by its SHA-256; cookie name and attributes retained.",
+      "tracked_path": "stamp_duty/sta-search-stamp-duty-law-title-terminal-page-2/transport.log",
+      "tracked_redacted_sha256": "sha256:b37eee32d87de88ab8065f8d39556c7fa6eef8151e59ea8d3d3160d667e2cf2e"
+    },
+    {
+      "exact_private_path": "/srv/bcache-8t/ygguo/backtest/g12h-authority-private/20260820-wave1-response-headers/stamp_duty/sta-search-stamp-duty-law-title-terminal-page-2/redirects.json",
+      "exact_private_sha256": "sha256:a7a9ae5438c77f207689e042e46df5777d1e4c329c87d8bdbdf15e70daf6cd71",
+      "redaction": "Set-Cookie value replaced by its SHA-256; cookie name and attributes retained.",
+      "tracked_path": "stamp_duty/sta-search-stamp-duty-law-title-terminal-page-2/redirects.json",
+      "tracked_redacted_sha256": "sha256:97dd80cab8b6f47c633d36218c05aaf08ac5ac09a5e79b8b2c9b15e5d453c5d8"
+    }
+  ],
+  "private_store_root": "/srv/bcache-8t/ygguo/backtest/g12h-authority-private/20260820-wave1-response-headers",
+  "schema_version": 1,
+  "source_id": "sta-search-stamp-duty-law-title-terminal-page-2",
+  "type": "g12h_sensitive_response_header_receipt_v1"
+}

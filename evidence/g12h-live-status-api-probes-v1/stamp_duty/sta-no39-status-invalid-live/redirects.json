@@ -1,0 +1,95 @@
+{
+  "responses": [
+    {
+      "headers": [
+        {
+          "name": "Date",
+          "value": "Thu, 20 Aug 2026 09:41:40 GMT"
+        },
+        {
+          "name": "Content-Type",
+          "value": "application/json;charset=UTF-8"
+        },
+        {
+          "name": "Transfer-Encoding",
+          "value": "chunked"
+        },
+        {
+          "name": "Connection",
+          "value": "keep-alive"
+        },
+        {
+          "name": "Access-Control-Allow-Origin",
+          "value": "*"
+        },
+        {
+          "name": "Access-Control-Allow-Methods",
+          "value": "get, post"
+        },
+        {
+          "name": "Access-Control-Allow-Headers",
+          "value": "origin, content-type, accept"
+        },
+        {
+          "name": "Access-Control-Allow-Credentials",
+          "value": "true"
+        },
+        {
+          "name": "expries",
+          "value": "Thu, 01 Jan 1970 00:14:24 GMT"
+        },
+        {
+          "name": "Cache-Control",
+          "value": "no-cache"
+        },
+        {
+          "name": "Set-Cookie",
+          "value": "bm29000002=<redacted sha256:1fb900abb5bc55e5ce29039981a627e2b2302d496beec28a73d2e86e5a16775d>; Path=/; HttpOnly"
+        },
+        {
+          "name": "Set-Cookie",
+          "value": "JSESSIONID=<redacted sha256:c061fe4acc9add44dcda617b3b072c06eb52447136fd10bd9269dec3c253717a>; Path=/guestweb; HttpOnly"
+        },
+        {
+          "name": "X-Content-Type-Options",
+          "value": "nosniff"
+        },
+        {
+          "name": "X-XSS-Protection",
+          "value": "1; mode=block"
+        },
+        {
+          "name": "Content-Security-Policy",
+          "value": "object-src 'self'"
+        },
+        {
+          "name": "Referer-Policy",
+          "value": "origin"
+        },
+        {
+          "name": "X-Permitted-Cross-Domain-Policies",
+          "value": "master-only"
+        },
+        {
+          "name": "X-Download-Options",
+          "value": "noopen"
+        },
+        {
+          "name": "X-Frame-Options",
+          "value": "SAMEORIGIN"
+        },
+        {
+          "name": "x-via",
+          "value": "1.1 PS-WUH-01zHf95:16 (Cdn Cache Server V2.0), 1.1 PS-000-01Mba83:1 (Cdn Cache Server V2.0)"
+        },
+        {
+          "name": "x-ws-request-id",
+          "value": "6a86cbd3_PS-000-01Mba83_16666-57108"
+        }
+      ],
+      "status_line": "HTTP/1.1 200 "
+    }
+  ],
+  "schema_version": 1,
+  "type": "g12h_http_response_chain_v1"
+}

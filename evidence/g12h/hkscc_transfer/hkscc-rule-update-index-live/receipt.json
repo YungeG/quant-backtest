@@ -1,0 +1,57 @@
+{
+  "authority_status": "CAPTURED_NOT_QUALIFIED",
+  "content_type": "text/html; charset=utf-8",
+  "curl_exit_code": 0,
+  "curl_stderr": "",
+  "derivatives": {
+    "rendered_dom": {
+      "available": false,
+      "reason": "No browser renderer is installed in the acquisition environment; raw server response and deterministic text extraction retained."
+    },
+    "text_extraction": {
+      "charset": "utf-8",
+      "decode_errors": false
+    }
+  },
+  "final_url": "https://www.hkex.com.hk/Services/Rules-and-Forms-and-Fees/Rules/HKSCC/Rules/Rule-Update_HKSCC-Operational-Procedures?sc_lang=en",
+  "lineage": "hkscc_transfer",
+  "operator_harness_sha256": "sha256:85ccf78ce0d595ff9d372c85243d81c49c3bc1be19f868df5936cc2f6977d9ea",
+  "raw_byte_length": 423592,
+  "raw_file": "raw.html",
+  "raw_sha256": "sha256:2ea5790d749eca6feb188bbe12bf61d6cc98e82d1ca9a79c0995a7ce75362519",
+  "redirect_count": 0,
+  "response_chain_count": 1,
+  "response_code": 200,
+  "retrieved_at": "2026-08-20T07:37:20.441796Z",
+  "schema_version": 1,
+  "sensitive_response_headers": {
+    "files": [
+      {
+        "exact_private_path": "/srv/bcache-8t/ygguo/backtest/g12h-authority-private/20260820-wave1-response-headers/hkscc_transfer/hkscc-rule-update-index-live/response.headers",
+        "exact_private_sha256": "sha256:b47e93af718c594483e0680ac732c2eac56113ddaedfb845217f7fbc03d06949",
+        "redaction": "Set-Cookie value replaced by its SHA-256; cookie name and attributes retained.",
+        "tracked_path": "hkscc_transfer/hkscc-rule-update-index-live/response.headers",
+        "tracked_redacted_sha256": "sha256:138c7a91e3ed5520cb7655451383d2217fc647ea6eb02ada6b2169634a7da25a"
+      },
+      {
+        "exact_private_path": "/srv/bcache-8t/ygguo/backtest/g12h-authority-private/20260820-wave1-response-headers/hkscc_transfer/hkscc-rule-update-index-live/transport.log",
+        "exact_private_sha256": "sha256:b3d80fc65594594b3b398b2a676735176d5e40f633f5329d8300d26f99b9d35f",
+        "redaction": "Set-Cookie value replaced by its SHA-256; cookie name and attributes retained.",
+        "tracked_path": "hkscc_transfer/hkscc-rule-update-index-live/transport.log",
+        "tracked_redacted_sha256": "sha256:1bc87610599dc830a6723d046276377f4aea78f74fa8e7d22d4cfc82bb37f8eb"
+      },
+      {
+        "exact_private_path": "/srv/bcache-8t/ygguo/backtest/g12h-authority-private/20260820-wave1-response-headers/hkscc_transfer/hkscc-rule-update-index-live/redirects.json",
+        "exact_private_sha256": "sha256:1eccd024ea8cd88798f389752a2be1fa35b2f00c7e76051423a66c1fb97be8f2",
+        "redaction": "Set-Cookie value replaced by its SHA-256; cookie name and attributes retained.",
+        "tracked_path": "hkscc_transfer/hkscc-rule-update-index-live/redirects.json",
+        "tracked_redacted_sha256": "sha256:a3cb536cbaf7dc81f3135be0bb81da9b104305b04d17b1772a8f0469241e36f9"
+      }
+    ],
+    "policy": "Exact server-issued cookie values are excluded from Git and retained in the mode-restricted private evidence store."
+  },
+  "source_id": "hkscc-rule-update-index-live",
+  "started_at": "2026-08-20T07:37:15.942290Z",
+  "tool": "curl 8.14.1 (x86_64-pc-linux-gnu) libcurl/8.14.1 OpenSSL/3.5.6 zlib/1.3.1 brotli/1.1.0 zstd/1.5.7 libidn2/2.3.8 libpsl/0.21.2 libssh2/1.11.1 nghttp2/1.64.0 nghttp3/1.8.0 librtmp/2.3 OpenLDAP/2.6.10",
+  "type": "g12h_official_http_capture_receipt_v1"
+}

@@ -37,8 +37,8 @@
 ### 2.2 架构目标
 
 - 回测主循环不包含 `if market == "crypto"` 一类市场分支。
-- 策略不直接生成交易所或 Hummingbot 命令。
-- 市场差异通过可组合的 `MarketProfile` 表达。
+- Portfolio Strategy 输出目标；Liquidity/Execution Strategy 输出 venue-neutral Order Intent。两者都不生成交易所或 Hummingbot 专用命令。
+- 真实市场差异通过 `MarketSemanticsProfile` 表达，回测近似通过独立 `SimulationProfile` 表达。
 - Accounting 是回测账户状态和 PnL 的唯一权威实现。
 - Bar Engine 与 Microstructure Replay Engine 共用领域契约，但不强行共用内部撮合实现。
 - 历史运行与实时运行尽可能共用 Strategy、Portfolio/Risk 和 Order Planning 模块。
@@ -49,10 +49,13 @@
 第一阶段不追求：
 
 - 一次性完整支持所有交易所和资产类型。
+- 在一次 Backtest Run 中同时交易多个 MarketSemanticsProfile 或 Execution Account。
+- 跨账户资金转移、跨币种 FX 估值和 Consolidated Portfolio。
 - 使用一个万能引擎统一 Bar 回测和逐笔订单簿回放。
-- 在回测系统内部实现策略研究、参数搜索和实验管理。
+- 在 Backtest Runtime 内部实现策略训练、参数搜索、候选选择和实验管理。
 - 由回测结果自动授权 Shadow 或 Live。
 - 为尚不存在的市场提前设计大量抽象。
+- 在 Bar Engine v1 中实现任意中途恢复或原地续跑。
 - 把 Hummingbot 作为领域模型的一部分。
 
 ## 4. 核心原则
@@ -77,33 +80,108 @@
 - 不同市场的结算方式
 - 不同资产类型的融资和公司行为
 
-### 4.2 策略输出目标，不输出交易命令
+### 4.2 两类策略契约
 
-策略输出 `StrategyDecision`。组合风险模块将其转换为 `ApprovedPortfolioTarget`，订单规划模块再生成 `OrderPlan`。
+系统承认两类具有不同输出语义的策略，避免用目标仓位强行表达做市和队列管理。
 
 ```text
-MarketObservation
-      ↓
-StrategyDecision
-      ↓
-ApprovedPortfolioTarget
-      ↓
-OrderPlan
-      ↓
-ExecutionReport
-      ↓
-PortfolioSnapshot
+Portfolio Strategies
+    → Atomic DecisionBatch(StrategyDecisions) ─────┐
+                                                    ├→ Strategy Sleeves
+PortfolioSnapshot → CapitalAllocationPolicy        │
+                  → StrategyAllocations ────────────┘
+    → Portfolio Allocation / Cross-strategy Netting
+    → Account-level ApprovedPortfolioTarget
+    → Position Sizing
+    → ActivePortfolioTarget(Decision-time Quantity)
+    → RebalanceCoordinator(Current Portfolio + Working Orders)
+    → OrderPlan
+    → OrderIntent
+
+Liquidity/Execution Strategy
+    → OrderIntent / CancelIntent
 ```
 
-### 4.3 市场能力组合优于巨型 Market Adapter
+`PortfolioStrategy` 使用 `TargetExposureFraction` 表达相对于 Strategy Allocation NAV 的有符号目标名义暴露。Strategy 不决定 Allocation NAV；`CapitalAllocationPolicy` 在每个决策点根据权威 `PortfolioSnapshot` 和运行配置为每个 Strategy Sleeve 产生 `StrategyAllocation`。
 
-不同市场的交易时间、价格限制、交收、融资和公司行为相互独立。系统使用多个能力模块组成 `MarketProfile`，避免一个拥有大量可选方法的浅接口。
+Portfolio Allocation 将各 Sleeve 的目标转换为名义暴露，并对同一 Instrument 的相反或重复目标进行账户级净额化。Portfolio/Risk 审批账户级目标后，Position Sizing 根据价格、合约乘数和 Lot/step size 转换为可交易数量，Order Planning 再生成账户订单意图。
 
-### 4.4 确定性和 Fail-closed
+`LiquidityStrategy` 或 `ExecutionStrategy` 可以表达挂单、改单和撤单意图，但不能生成 Binance、Hummingbot 或券商专用命令。
+
+两类策略最终都必须经过统一的 Order Capability Validation、Order Translation、Market Rule Evaluation、Fee Reservation、Pre-trade Risk、Execution、Fee Assessment、Settlement 和 Accounting。Portfolio Strategy 在 Position Sizing 前还必须经过 Portfolio Risk。
+
+### 4.3 单一权威执行与核算内核
+
+回测系统只有一套权威执行与核算内核。完整 Portfolio Strategy 路径和预计算 Target Stream 路径只在 `StrategyDecision` 产生方式上不同，从组合风险审批开始共享相同实现。
+
+```text
+完整组合策略路径：
+Market Events → PortfolioStrategy ──────┐
+                                        ▼
+预计算目标路径：Precomputed Target Stream
+                                        │
+                                        ▼
+                 Atomic DecisionBatch(TargetSnapshots) ──────┐
+                                                              ├→ Strategy Sleeves
+PortfolioSnapshot → CapitalAllocationPolicy                   │
+                  → StrategyAllocations ───────────────────────┘
+                                        ↓
+                         Portfolio Allocation / Netting
+                                        ↓
+                    Account-level ApprovedPortfolioTarget
+                                        ↓
+                               Position Sizing
+                                        ↓
+                ActivePortfolioTarget(Exact Quantity)
+                                        ↓
+RebalanceCoordinator(Current Portfolio + Working Orders)
+                                        ↓
+                                  OrderPlan
+                                        ↓
+                                  OrderIntent ─────┐
+                                                  │
+Liquidity/Execution Strategy → Order/CancelIntent ┤
+                                                  ▼
+                                  Order Capability Validation
+                                                  ↓
+                                       Order Translation
+                                                  ↓
+                                     Market Rule Evaluation
+                                                  ↓
+                              Fee/Resource Reservation Proposal
+                                                  ↓
+                                          Pre-trade Risk
+                                                  ↓
+                                             Execution
+                                                  ↓
+                              Fee Assessment + Settlement + Accounting
+```
+
+预计算 Target Stream 是按 `decision_time` 排序的 `StrategyDecision` 序列；每个 Decision 携带一个完整、绝对的 `TargetSnapshot`，而不是仓位变化命令、已成交仓位或收益率序列。它可以绕过策略计算，但不能绕过 Portfolio/Risk、Order Planning、Market Rules、Execution、Settlement 或 Accounting。独立的向量化收益计算器只能作为非权威分析工具。
+
+### 4.4 市场事实与模拟假设分离
+
+不同市场的交易时间、价格限制、交收、融资和公司行为相互独立。系统使用 `MarketSemanticsProfile` 组合真实市场语义，使用 `SimulationProfile` 组合历史执行近似，避免把事实和假设混入一个巨型 Market Adapter。
+
+外部调用者不能为 decision-grade 运行任意拼装能力模块，只能通过版本化 key 使用 Registry 中已经注册、兼容性验证并计算 digest 的 Profile。Research 可以使用 custom profile，但结果最高只能是 development-grade，并必须保存完整 resolved component manifest。
+
+### 4.5 分层数值语义
+
+指标、统计、优化和展示可以使用 `float64`。Order、Fill、Fee、Funding、Cash、Position、市场规则和 Accounting Journal 等权威交易数值使用有类型的固定精度整数。
+
+```text
+real_value = units / 10**scale
+```
+
+权威领域对象使用 `Price`、`Quantity`、`Money`、`Rate` 和 `ExposureFraction` 等类型，不暴露无业务身份的裸整数。`Decimal` 只用于外部字符串解析、格式转换和参考测试，不作为权威存储模型。
+
+所有除法、Scale 降低和市场格点量化必须指定显式 `RoundingPolicy`。Strategy/Analytics 的 float 值进入交易领域时必须通过版本化规范化边界。
+
+### 4.6 确定性和 Fail-closed
 
 在缺少必需数据、规则、Funding slot、公司行为或结算信息时，decision-grade 运行必须失败关闭。近似模型必须显式写入结果限制，不得静默降级。
 
-### 4.5 回测不等于部署授权
+### 4.7 回测不等于部署授权
 
 所有回测结果默认：
 
@@ -123,75 +201,192 @@ PortfolioSnapshot
                     └─────────┬────────┘
                               │ BacktestRequest
                               ▼
-┌──────────────┐      ┌──────────────────────┐      ┌─────────────────┐
-│ Market Data  │─────▶│   Backtest System    │─────▶│ Evidence Store  │
-│ Bundles      │      │                      │      │ / Registry      │
-└──────────────┘      └──────────┬───────────┘      └─────────────────┘
+┌──────────────────┐      ┌──────────────────────┐      ┌─────────────────┐
+│ Immutable Market │─────▶│   Backtest System    │─────▶│ Evidence Store  │
+│ Bundle Repository│      │                      │      │ / Registry      │
+└──────────────────┘      └──────────┬───────────┘      └─────────────────┘
                                 │
                  ┌──────────────┼──────────────┐
                  ▼              ▼              ▼
-             Strategy     Portfolio/Risk   MarketProfile
+             Strategy     Trading Kernel   Backtest Environment
 ```
 
-回测系统负责组合这些模块，但不拥有具体策略研究流程和部署审批。
+回测系统负责在历史环境中组合这些模块，但不拥有具体策略研究流程和部署审批。Capital Allocation、Portfolio/Risk、Position Sizing、Order Planning、Pre-trade Risk 和 Accounting 属于共享 Trading Kernel，由 Backtest Runtime 和未来 Live Runtime 共同依赖。
 
 ## 6. 总体模块图
 
 ```text
-backtest-contracts
-       ▲
-       │
-       ├──────── market-bundles
-       ├──────── market-profiles
-       ├──────── accounting-ledger
-       ├──────── portfolio-risk
-       ├──────── order-planning
-       ├──────── bar-engine
-       ├──────── microstructure-engine
-       ├──────── metrics
-       └──────── evidence
-                      ▲
-                      │
-                backtest-runner
+trading-domain                         market-data-contracts
+      ▲                                ├── bundle-manifest
+      │                                ├── bundle-reader
+trading-kernel                         ├── event-cursor
+├── ports                              └── repository-contract
+├── strategy-output-validation                    ▲
+├── capital-allocation                            │
+├── portfolio-aggregation              market-bundle-builder
+├── portfolio-risk                    ├── source-adapters
+├── position-sizing                   ├── normalization
+├── rebalance-coordinator             ├── validation
+├── order-planning                    └── immutable-bundle-publisher
+├── order-capability-validation                   │
+├── order-translation                             │
+├── market-rule-evaluation                        │
+├── fee-reservation-estimation                    │
+├── fee-assessment                                │
+├── settlement-book                               │
+├── availability-projection                       ▼
+├── resource-reservations             immutable-bundle-repository
+├── pre-trade-risk                                ▲
+├── accounting-journal-ledger                     │
+├── mark-resolver                                 │
+├── currency-valuation-graph                      │
+├── portfolio-snapshot-projector                  │
+└── profiles                                      │
+    ├── binance-usdm                              │
+    └── cn-a-share                                │
+      ▲                                           │
+      └──────────────────┬────────────────────────┘
+                         │
+                  backtest-runtime
+                  ├── historical-timeline
+                  ├── deterministic-cursor-merge
+                  ├── observation-replay
+                  ├── simulation
+                  │   ├── ports
+                  │   └── profiles
+                  ├── bar-engine
+                  ├── run-end-coordinator
+                  ├── microstructure-engine
+                  ├── evidence
+                  └── analysis-runtime
+                      └── versioned-metrics
 ```
+
+未来 Live Runtime 只依赖 `trading-domain` 和 `trading-kernel`，不能依赖 `backtest-runtime`。
 
 ### 6.1 依赖规则
 
-- `backtest-contracts` 不依赖其他业务模块。
-- `market-profiles` 只依赖领域契约和必要的纯计算模块。
+- `trading-domain` 不依赖其他业务模块，并拥有权威 Artifact Envelope、Schema Catalog 与纯 Migration contract；没有真实旧 Artifact 时不实现 speculative Migration Chain。
+- `trading-kernel` 依赖 `trading-domain`，不依赖 Backtest 或 Live Adapter；拥有真实市场和账户行为 Ports，RebalanceCoordinator 在两种运行环境中共享。
+- Generic Trading Kernel 只能依赖 Ports，禁止导入具体 `binance_usdm` 或 `cn_a_share` Profile；具体 Profile 实现依赖 Ports 并可由 Backtest/Live composition root 注册。
+- `market-data-contracts` 依赖 `trading-domain`，拥有轻量 Bundle Manifest、Reader、EventCursor 和 Repository contract，不依赖在线 Source Adapter 或供应商 SDK。
+- `market-bundle-builder` 依赖 `market-data-contracts`，通过 Source Adapter 构建并发布内容寻址 Bundle；不被 Backtest Runtime 反向调用。
+- `backtest-runtime` 依赖 `trading-kernel` 和 `market-data-contracts`，只读 Bundle Repository，并提供历史 Timeline 和模拟 Execution Adapter；不得依赖 `market-bundle-builder`。
 - Strategy 不依赖 Backtest Engine。
-- Strategy 不依赖具体 MarketProfile 实现。
+- Strategy 不依赖具体 MarketSemanticsProfile 或 SimulationProfile 实现。
 - Accounting 不依赖 Strategy。
 - Bar Engine 不依赖 Microstructure Engine，反之亦然。
 - Evidence 模块只消费运行结果，不修改运行语义。
-- Hummingbot 不进入回测核心依赖图。
+- Hummingbot DTO 不进入 Trading Domain、Trading Kernel 或 Backtest Runtime，只存在于具体 Live Venue Adapter。
 - Platform 可以组合所有模块，其他模块不能反向依赖 Platform。
 
 ## 7. 外部接口
 
-第一阶段建议只提供一个主要调用接口：
+第一阶段提供三个面向不同决策来源的入口，三者必须进入同一个权威执行与核算内核：
 
 ```python
-def run_backtest(
+def run_portfolio_strategy_backtest(
     *,
     request: BacktestRequest,
-    market_bundle: MarketBundle,
-    strategy: Strategy,
-    market_profile: MarketProfile,
-) -> BacktestResult:
+    market_bundle_repository: MarketBundleRepository,
+    strategy: PortfolioStrategy,
+    environment_registry: BacktestEnvironmentRegistry,
+) -> BacktestRunOutcome:
+    ...
+
+
+def run_target_backtest(
+    *,
+    request: BacktestRequest,
+    market_bundle_repository: MarketBundleRepository,
+    target_stream: TargetStream,
+    environment_registry: BacktestEnvironmentRegistry,
+) -> BacktestRunOutcome:
+    ...
+
+
+def run_liquidity_strategy_backtest(
+    *,
+    request: BacktestRequest,
+    market_bundle_repository: MarketBundleRepository,
+    strategy: LiquidityStrategy,
+    environment_registry: BacktestEnvironmentRegistry,
+) -> BacktestRunOutcome:
     ...
 ```
 
-调用者需要理解四个概念：请求、数据包、策略和市场 Profile。时间推进、订单生命周期、结算、核算和证据生成隐藏在模块内部。
+Runner 根据 `BacktestRequest.market_bundle_hash` 从只读 `MarketBundleRepository` 解析不可变 Bundle，并根据 `market_semantics_profile_key`、`simulation_profile_key` 和 `execution_account_profile_key` 解析 `ResolvedBacktestEnvironment`。Runner 验证三类 Profile、InitialAccountState 与 MarketBundle 的兼容性，并把三个 profile digest 和 bundle hash 纳入 request hash。调用者不能直接向 decision-grade 运行传入随意拼装的 Profile 或可变数据对象。
 
-对于不同精度的引擎，可以通过请求中的 `engine_profile` 选择，也可以暴露两个明确入口：
+`run_portfolio_strategy_backtest` 在历史时间线上调用 Portfolio Strategy 产生 `StrategyDecisionCandidate`；`run_target_backtest` 从预计算 Target Stream Payload 解码出相同 Candidate。两条路径经过同一个 StrategyOutputValidator，只有 Validated `StrategyDecision` 才能从 DecisionBatch 开始进入共享 Portfolio/Risk 实现。
+
+`run_liquidity_strategy_backtest` 驱动需要 Quote、Trade 或订单簿事件的策略，接收其 venue-neutral Order/Cancel Intent，并从 Pre-trade Risk 开始进入共享执行与核算内核。
+
+禁止调用者直接驱动内部事件队列、直接注入 Fill 或手工修改 Ledger。
+
+### 7.1 Strategy 调用与数据可见性
+
+Portfolio Strategy 由显式 `DecisionSchedule` 调用：
 
 ```python
-run_bar_backtest(...) -> BacktestResult
-run_microstructure_replay(...) -> BacktestResult
+decision_candidate, new_state = strategy.decide(
+    context=DecisionContext(
+        decision_time=decision_time,
+        observations=observation_view,
+        previous_target_snapshot=previous_target_snapshot,
+        schedule_context=schedule_context,
+    ),
+    previous_state=strategy_state,
+)
 ```
 
-禁止让调用者直接驱动内部事件队列或手工修改 Ledger。
+Liquidity/Execution Strategy 由其订阅的市场事件调用：
+
+```python
+intents = strategy.on_market_event(
+    event=visible_market_event,
+    context=microstructure_context,
+)
+```
+
+Strategy Context 采用最小权限：
+
+- Portfolio Strategy 只能访问 ObservationView、自己的 Previous TargetSnapshot、StrategyState 和 DecisionSchedule context；禁止读取账户 Cash、NAV、Margin、其他 Sleeve 和 Working Orders。
+- Liquidity Strategy 可以访问订阅 Instrument 的权威 InventoryView、WorkingOrderView 和 RecentFillView，但不能直接读取完整 Accounting Journal。
+- Execution Strategy 可以访问 Parent Execution Demand、Working Orders、Fills 和 Remaining Quantity，不决定上游投资目标。
+
+两类 Strategy 只能通过只读 `ObservationView` 访问市场数据。所有影响未来 Decision 或 OrderIntent 的业务状态必须进入可 canonical serialization 的 `StrategyState`；每次调用记录 before/after state hash。Strategy 随机性只能使用分配给该 Strategy 的命名 RandomStream。
+
+Liquidity Strategy 的 Inventory 必须来自权威 PortfolioSnapshot，不能在 StrategyState 中维护第二套财务持仓。性能缓存可以不进入 State，但必须可从市场数据和权威 State 重建。
+
+`ObservationView` 必须强制：
+
+```text
+observation.available_time <= current decision/simulation time
+```
+
+对于可修订数据，ObservationView 返回当前模拟时点已经可用的最新合法 Revision。后续 Revision 不得重写此前 Strategy 已观察的 DecisionContext。
+
+Strategy 不接收原始 `MarketBundle`，不得自行读取市场数据文件、访问网络或读取系统当前时间。Strategy 只能通过 ObservationView 的 point-in-time universe query 获取可交易 Instrument，并通过命名 BarDefinition key 查询 canonical Bar Stream；不能扫描数据目录推断 Universe，也不能执行未经版本化的时间 Resample。ObservationView 内部可以使用向量化或缓存优化，但不能扩大可见数据范围。
+
+G11A先冻结capability isolation seam：每个query exact声明dataset、single Instrument、versioned semantic Purpose与exact MarketBundle capability；View从caller-supplied immutable `MarketEvent` records中只保留allowlist exact授权的selector。Unauthorized backing records不能进入View state、改变View/Result identity或被返回；同一source Event跨Purpose必须separate explicit record/grant。Authorization failure只按Dataset→Instrument→Purpose→Capability precedence检查allowlist，authorized empty是成功而不是coverage结论。V1不实现cache，使用deterministic linear scan；若未来加入private cache，必须在authorization后按exact query identity工作且不改变visibility或canonical output。
+
+G11A不接收Decision Instant，也不执行availability cutoff、revision selection或causality trace，因此不能单独提供完整point-in-time Strategy context。G11B在同一seam上补这些规则；G11C/G11D再增加Universe和Bar/window typed queries。G11A module及Strategy-facing interface不暴露MarketBundle/Reader/Manifest/Cursor、Ledger/Snapshot/Account、filesystem/network/process/clock或callback。该接口隔离不冒充arbitrary in-process Python sandbox；可执行Strategy artifact qualification由later build/invocation gates负责。Frozen seam记录于`docs/research/g11a-observation-view-capability-isolation.md`；implementation commit为`72fe31f5b10d785340b11ca0fd3d0fec8c1c4a34`。
+
+G11B新增独立`PointInTimeObservationView`，由caller注入one `SimulationInstant`。Construction必须先丢弃unauthorized records，再用full `(UtcInstant, TimelinePhase, SourceSequence)` cutoff丢弃future records，最后冻结visible revision evidence；因此same UTC later phase/sequence仍不可见，future correction或future conflict不能改变prior view/hash。G11A no-time View与canonical artifacts保持不变，Strategy invocation只可接收G11B safe view。
+
+`MarketEvent.event_id`标识immutable version record，`revision_id`是可被多个事实共享的source revision provenance，二者都不是logical observation lineage。G11B由caller-supplied canonical observation key显式分组。每个exact Query+observation key的visible chain必须one root、existing same-lineage parents、no fork/cycle/disconnected root、stable Event type/time与strictly increasing availability Simulation Instant；选择unique terminal revision。Causality trace保存all visible candidate record hashes/revision-set hash、selected observation/Event/Revision/source identities、selected dataset hash、max event time与max available Simulation Instant。Primary seam note为`docs/research/g11b-observation-revision-causality.md`。
+
+每次 Strategy 调用必须记录：
+
+- 调用时间和 Timeline Phase
+- 查询的数据集和 Instrument
+- 最大 event time
+- 最大 available time
+- 观察数据 revision IDs、版本/hash
+- StrategyState before/after hash
+- Strategy-specific RNG state hash（如适用）
+
+这些记录构成因果性审计的一部分。
 
 ## 8. 领域模型
 
@@ -201,25 +396,42 @@ run_microstructure_replay(...) -> BacktestResult
 @dataclass(frozen=True)
 class BacktestRequest:
     schema_version: int
-    run_id: str | None
-    start_time: datetime
-    end_time: datetime
-    initial_account: InitialAccount
-    strategy_spec: StrategySpec
+    experiment_id: str | None
+    data_start_time: UtcInstant
+    trading_start_time: UtcInstant
+    trading_end_time_exclusive: UtcInstant
+    execution_account_profile_key: str
+    initial_account_state: InitialAccountState
+    external_cash_flow_timeline_hash: str | None
+    reporting_currency: str
+    currency_valuation_policy_key: str
+    strategy_book_spec: StrategyBookSpec
+    model_artifact_refs: tuple[ModelArtifactRef, ...]
+    capital_allocation_spec: CapitalAllocationSpec
     risk_spec: RiskSpec
-    market_profile_key: str
-    engine_profile_key: str
-    data_manifest_hash: str
-    random_seed: int
+    rebalance_policy_spec: RebalancePolicySpec
+    closeout_policy: CloseoutPolicy
+    market_semantics_profile_key: str
+    simulation_profile_key: str
+    market_bundle_hash: str
+    master_random_seed: int
+    build_artifact_manifest_hash: str
+    stale_target_policy: StaleTargetPolicy
     result_grade_requested: str
 ```
 
 约束：
 
-- `start_time < end_time`
+- `data_start_time <= trading_start_time < trading_end_time_exclusive`
+- Warmup 区间为 `[data_start_time, trading_start_time)`
+- Active Trading 区间为 `[trading_start_time, trading_end_time_exclusive)`
 - 所有配置可规范化序列化并计算 hash
 - request 不包含密钥
+- decision-grade request 必须引用不可变 `BuildArtifactManifest`
 - request 不使用隐式当前时间或当前目录
+- Backtest Run 只读已冻结 MarketBundle，运行期间禁止网络和可变外部数据查询
+- 第一阶段一个 request 只能引用一个 MarketSemanticsProfile、一个 SimulationProfile、一个 ExecutionAccountProfile、一个 Execution Account 和一个 Reporting Currency
+- 配置多个 account_id、execution_account_profile_key 或 market_semantics_profile_key 时必须在运行前失败关闭
 
 ### 8.2 MarketBundle
 
@@ -227,42 +439,118 @@ class BacktestRequest:
 @dataclass(frozen=True)
 class MarketBundle:
     manifest: MarketManifest
-    instruments: tuple[InstrumentSpec, ...]
-    events: MarketEventSource
+    instruments: tuple[InstrumentIdentity, ...]
+    instrument_reference_timeline: InstrumentReferenceSource
+    universe_timeline: TradableUniverseSource
+    price_streams: Mapping[PricePurpose, PriceEventSource]
+    bar_streams: Mapping[BarDefinitionKey, BarEventSource]
+    availability_timeline: MarketAvailabilitySource
     exchange_rules: RuleTimeline
+    funding_publications: FundingPublicationSource
+    funding_settlements: FundingSettlementSource
     corporate_actions: CorporateActionSource
 ```
 
-`MarketBundle` 是经过验证的历史证据包，不是任意 DataFrame 集合。
+`MarketBundle` 是经过验证的历史证据包，不是任意 DataFrame 集合。Backtest Runtime 通过只读 `MarketBundleReader` 和多个 `EventCursor` 流式消费，不要求一次性载入内存，也不直接暴露给 Strategy。
+
+Price Stream 必须按用途区分：`EXECUTION_REFERENCE`、`VALUATION`、`MARGIN`、`LIQUIDATION` 和 `SETTLEMENT`。MarketSemanticsProfile 声明必需用途，MarketBundle 生成 `PriceStreamCoverageReport`。模块不得自行从任意价格列选择替代值。
+
+可修订 Observation 记录使用双时间和 Revision identity：`event_time`、`available_time`、`revision_id`、`supersedes_revision_id`、source 和 source hash。Vendor 修订必须作为新 Revision 进入 Bundle，不能原地覆盖旧版本。
+
+所有预期数据缺口必须由 `MarketAvailabilitySource` 分类为 `NO_SESSION`、`SUSPENDED`、`NO_TRADES`、`MISSING` 或 `SOURCE_OUTAGE`。Execution 禁止使用 forward-filled 或合成 Bar 成交。ObservationView 必须向 Strategy 暴露 availability status。
+
+Execution、Market Rules 和 Accounting 使用的 Price/Quantity 必须能够无损解析为 typed scaled integer；ObservationView 可以为指标计算提供 float64 数组。复权观察序列必须根据 point-in-time Corporate Action Timeline 派生。
 
 Manifest 至少记录：
 
 - 数据源
 - 生成时间
 - 覆盖区间
-- Symbol 和 Instrument identity
+- 稳定 Instrument identity、时点 Symbol 和 listing/delisting coverage
+- Point-in-time Universe membership coverage
 - 数据 schema version
 - 文件 hash
 - 缺口和限制
-- Exchange rule coverage
-- Funding coverage
+- Exchange rule coverage 和 `RuleCoverageReport` hash
+- Funding publication、settlement slot、eligibility instant 和 funding mark coverage
 - Corporate action coverage
+- 各 PricePurpose 的 stream identity、覆盖区间和 hash
+- Market availability/gap classification coverage
+- Revision-aware data coverage 和 revision provenance
+- BarDefinition、BarAggregationManifest 和 canonical Bar stream hash
+- Source Snapshot 和 normalization provenance
 
-### 8.3 StrategyDecision
+### 8.3 MarketBundle Builder
+
+MarketBundle 构建是独立于 Backtest Run 的数据流程：
+
+```text
+Raw Source Adapters
+        ↓
+Content-addressed Source Snapshots
+        ↓
+Normalization
+        ↓
+MarketBundle Builder
+        ↓
+Validation Reports
+        ↓
+Immutable MarketBundle Repository
+```
+
+Binance API、Vendor、CSV、Parquet 和 DuckDB 只存在于 Source Adapter/Builder 层。Normalizer 映射到统一 Instrument Identity、Timeline、Price Stream、Rule Timeline、Revision、Universe 和 Corporate Action schema。`BarDefinition` 明确 duration、Session scope、anchor、included phases、price source、volume semantics、empty interval policy 和 Calendar；日线按 TradingDate/Session 聚合，不按 UTC date 猜测。数据刷新或 BarDefinition 变化产生新的 Bundle hash，不得修改旧 Bundle。
+
+MarketBundle 声明 capabilities；ResolvedBacktestEnvironment 在运行前验证 SimulationProfile 所需 capability。Backtest Runtime 运行期间不得访问网络、调用供应商 API 或读取未冻结的可变数据源。
+
+Reader Contract：
+
+- `MarketBundleReader` 打开内容寻址 Bundle。
+- 每类 Event Stream 提供按规范排序的 `EventCursor`。
+- Timeline 对 Cursor 按 `(epoch_nanoseconds, phase, source_sequence)` 做确定性 merge。
+- ObservationView 可请求有界历史窗口并返回向量化数组。
+- Parquet、Arrow、memory map、Pandas 和 in-memory Fixture 都是 Reader Adapter 或内部优化。
+- 存储格式、分区和 batch size 不能改变领域事件顺序。
+- Cursor position 可进入未来 EngineCheckpoint。
+
+### 8.4 StrategyState 与 StrategyDecision
+
+`StrategyState` 是 Strategy 所有影响未来行为的显式业务状态。它必须可序列化、可恢复并具有稳定 hash。随机行为使用 BacktestRequest seed 派生的 Strategy-specific RNG state。文件、网络、系统时钟和不可重建缓存不能成为隐藏业务状态。
+
+Backtest Runtime 不训练模型、不搜索参数、不选择最佳候选。普通 Strategy 使用 immutable StrategySpec；训练型 Strategy 使用内容寻址 `ModelArtifact`，记录 model hash、training data hash、training interval、training code hash、feature schema hash 和 available time。
+
+ModelArtifact 只有在 `available_time <= decision_time` 时可用。Walk-forward 通过 point-in-time `ModelRevisionTimeline` 切换 Artifact；每次切换进入 Strategy State 和 Decision trace。每个参数组合形成独立 Semantic Run，由外部 Research/Experiment 层比较和选择。
+
+Portfolio Strategy 和预计算 TargetStream 都先产生不受信任的 `StrategyDecisionCandidate`。Candidate 可以保留重复 Instrument、未知 Instrument、非法时间或尚未量化数值，以便 Validator 生成完整失败证据；它不是权威执行对象，也不进入 canonical execution trace。
+
+```python
+@dataclass(frozen=True)
+class StrategyDecisionCandidate:
+    payload: StrategyDecisionPayload
+```
+
+`StrategyOutputValidator` 将 Candidate 转换为 Validated `StrategyDecision` 或结构化 `ValidationFailure`。只有 Validated StrategyDecision 才是 Portfolio Strategy 的权威输出契约；它不用于表达做市挂单和撤单。
 
 ```python
 @dataclass(frozen=True)
 class StrategyDecision:
     strategy_id: str
-    decision_time: datetime
-    observed_through: datetime
-    targets: tuple[DesiredPosition, ...]
-    confidence: Decimal | None
+    decision_time: UtcInstant
+    observed_through: UtcInstant
+    target_snapshot: TargetSnapshot
+    confidence: ConfidenceScore | None
     reason: str
     evidence: Mapping[str, CanonicalValue]
+
+
+@dataclass(frozen=True)
+class TargetSnapshot:
+    sleeve_id: str
+    effective_time: UtcInstant
+    expires_at: UtcInstant | None
+    targets: tuple[TargetExposureFraction, ...]
 ```
 
-关键约束：
+Validated StrategyDecision 的关键约束：
 
 ```text
 observed_through <= decision_time
@@ -270,104 +558,457 @@ observed_through <= decision_time
 
 策略目标使用领域 Instrument ID，不使用 Hummingbot trading pair 或券商专用字段。
 
-### 8.4 ApprovedPortfolioTarget
+`TargetExposureFraction` 是有类型的固定精度整数，定义为：
+
+```text
+有符号目标名义暴露 / Strategy Allocation NAV
+real_value = units / 10**scale
+```
+
+其 canonical scale 由 Trading Domain schema version 固定，不由单个 Strategy 任意选择。v1 固定为 12 位小数（`real_value = units / 10**12`），足以 exact 表达现有 round-12 Strategy weight；经济杠杆范围由 Portfolio Risk 而不是数据契约限制。
+
+第一阶段它是 Portfolio Strategy 唯一允许的目标单位：
+
+- `+0.5`：目标多头名义暴露为分配 NAV 的 50%
+- `-0.8`：目标空头名义暴露为分配 NAV 的 80%
+- `+2.0`：目标多头名义暴露为分配 NAV 的 200%
+- `0`：目标空仓
+
+Strategy 不直接输出 Instrument 数量、交易金额、Allocation NAV 或订单。原始信号、排名和指标属于 Strategy 内部语义。Capital Allocation、Portfolio Allocation、Position Sizing 和 MarketSemanticsProfile 负责将目标比例转换为符合市场规则的可交易数量。
+
+`TargetSnapshot` 使用完整、绝对、原子替换语义：
+
+- 数值表示最终目标暴露，不表示对旧目标的增量。
+- 新快照整体替换同一 Sleeve 的旧快照。
+- 旧快照中存在而新快照省略的 Instrument 目标归零。
+- 不支持隐式继承旧值的稀疏 Patch。
+- `effective_time` 不得早于 `decision_time`。
+- 到达 `expires_at` 后，由请求中显式配置的 `StaleTargetPolicy` 决定 `hold_last`、`flatten` 或 `halt_new_orders`。
+- Decision-grade 运行不允许使用隐藏的过期默认策略。
+
+### 8.5 DecisionBatch
+
+同一 `DecisionBatchInstant` 调度的 Portfolio Strategies 独立读取各自最小权限 Context。每个 StrategyDecisionCandidate 先经过 Trading Kernel 的 `StrategyOutputValidator`；全部得到 Validated StrategyDecision 后才原子收集到 `DecisionBatch`，之后执行 Capital Allocation、Portfolio Netting、Risk 和 Active Target materialization。
+
+Strategy 注册顺序不得改变结果；同 Batch Strategy 互相不可见。不同 Decision Instant 的 Strategy 保留其他 Sleeve 最近有效的 ActivePortfolioTarget。整个 Batch 完成前禁止生成 OrderPlan。
+
+每个 Batch 使用稳定 `decision_batch_id`。Validator 只返回 `Validated StrategyDecision | ValidationFailure`，不知道 Candidate 来自 Runtime Strategy 还是预计算输入，也不返回 Run Outcome。
+
+Backtest Runtime 根据 `InputOrigin` 映射失败：Runtime Strategy 的未处理错误或 Contract/Causality violation 产生 FAILED；预计算 TargetStream 的 decode/validation failure 产生 BLOCKED。两者都不允许使用部分成功 DecisionBatch。无法解码的原始 Payload 在输入 Adapter 层产生 `InputDecodeFailure`。
+
+Contract violation 包括未知或未上市 Instrument、重复 Target、observed-through 越过 Decision Time、非法 effective time、Schema 错误和 float-to-fixed quantization 失败。合法但超出风险预算的 economic target 不属于 Contract violation，应交给 Portfolio Risk approve、clamp 或 reject。非法 Candidate 不进入 canonical execution trace，但 payload hash 和 Validation Report 必须进入失败证据。
+
+Validator 的可信输入使用 `StrategyOutputValidationContext` 固定 expected Strategy/Sleeve identity、authoritative Decision Time、InstrumentCatalog 和已在该时点解析完成的 Universe。Validator 不自行查询或推断 Universe。Candidate v1 目标数值仅允许 integer、`Decimal` 或 canonical decimal string exact 转换到 scale 12；bool/float、非有限值和需要 rounding 的值均 fail closed。ValidationFailure 只保存稳定 type-tagged payload evidence hash 和规范排序 Issue，不获得 Candidate 的 canonical execution authority。
+
+### 8.6 StrategyAllocation
+
+```python
+@dataclass(frozen=True)
+class StrategyAllocation:
+    strategy_id: str
+    sleeve_id: StrategySleeveId
+    valuation_time: UtcInstant
+    valuation_currency: CurrencyId
+    allocation_nav: Money
+    policy_ref: CapitalAllocationPolicyRef
+    source_portfolio_snapshot_hash: str
+```
+
+`CapitalAllocationPolicy` 在每个决策点为每个 Strategy Sleeve 生成 `StrategyAllocation`。第一阶段至少支持：
+
+- `fixed_initial_allocation`：以运行开始时的固定资本为基准，不随盈亏复利。
+- `current_equity_fraction`：以当前权威 Portfolio Equity 的配置比例为基准，随盈亏复利。
+
+Allocation Policy、比例和估值货币必须进入规范化请求和 request hash，不允许由 Strategy 隐式决定。WP-04C 的 Allocator 消费带有完整 Policy/Snapshot provenance 的 supplied `StrategyAllocation`；具体 Policy 执行由组合层显式完成，Kernel 不提供隐式默认 Allocation。
+
+### 8.7 StrategySleeve
+
+`StrategySleeve` 是一个 Portfolio Strategy 在共享执行账户中的逻辑资本和目标边界。多个 Sleeve 可以对同一 Instrument 产生不同目标，但不能直接维护相互独立的真实现金或交易所持仓。
+
+Portfolio Allocation 必须：
+
+1. 将每个 Sleeve 的 Target Exposure Fraction 转换为目标名义暴露。
+2. 按 Instrument 聚合所有 Sleeve。
+3. 在账户级净额化相反目标。
+4. 将净目标交给 Portfolio/Risk。
+
+第一条纵向切片可以只配置一个 Sleeve，但领域契约和聚合器必须允许多个 Sleeve。
+
+### 8.8 ApprovedPortfolioTarget
 
 ```python
 @dataclass(frozen=True)
 class ApprovedPortfolioTarget:
     decision_id: str
-    approved_at: datetime
+    approved_at: UtcInstant
     targets: tuple[ApprovedPosition, ...]
-    gross_exposure: Decimal
-    net_exposure: Decimal
-    margin_requirement: Decimal
+    gross_exposure: Money
+    net_exposure: Money
+    margin_requirement: Money
     applied_limits: tuple[AppliedLimit, ...]
     rejections: tuple[TargetRejection, ...]
 ```
 
-它负责表达组合聚合和风险审批后的最终目标，而非原始策略观点。
+它负责表达组合聚合和 Portfolio Risk 审批后的最大允许目标，而非原始策略观点。Portfolio Risk 可以 approve、clamp 或 reject Target，但每次变换必须记录原目标、应用规则和最终目标。
 
-### 8.5 OrderPlan
+v1 的 Target-level absolute-notional limit 可以向零 clamp 或 reject 为显式零目标；aggregate gross/absolute-net limit 只做 approve 或 reject whole target set。v1 不做 proportional aggregate clamp，因为该行为必须额外冻结 Instrument 优先级、离散 rounding 和 residual 分配语义。Risk Policy 必须覆盖每个输入 Instrument 并绑定 valuation Currency/Scale；coverage 或 context 错误属于 Contract Failure，合法 economic target 的 clamp/reject 则是成功的 Risk Assessment。`ApprovedPortfolioTarget` 保留原始 `NetInstrumentTarget` 的 Sleeve attribution；Risk 不创建 Quantity、Venue Order 或 Margin 值。
+
+### 8.9 NormalizedPortfolioTarget
+
+Position Sizing 使用 supplied Decision-Instant Mark 和时点有效、版本化的 `QuantityLattice`，将已审批目标名义暴露转换为市场可交易的定点整数数量。Sizer 不查询 MarkResolver、Market Profile 或 Reader；Composition Root 必须把已解析的 Mark/Lattice 作为 immutable input 提供。
+
+规则：
+
+- v1 `PositionSizingPolicy` 必须显式声明 key/version/config hash、Sizing PricePurpose、`RoundingPolicy.TOWARD_ZERO` 和 `ResidualPositionPolicy`；不允许隐式默认 Policy。
+- Notional/Price 先直接量化到 Lattice atomic Scale。静态 Lattice 沿用 signed target 的 buy/sell lot 向零量化；声明 `whole_sell_residual_permitted=true` 的 Lattice 必须使用 current-position-relative 可达数量，不能把订单方向规则误写成 absolute target multiple。
+- 对 G08C non-negative cash Position，增加仓位只能使用 buy-lot 整数倍的 delta；减少仓位时，sell delta 可以是 sell-lot 整数倍，或在 capability 允许时一次包含当前完整 Sell Residual Component。Sizer 只朝 raw target 单向调整，不通过先卖后买或先买后卖扩大可达集合，并选择不超过 raw target、且最接近 raw target 的 final Quantity；这是系统 toward-zero sizing 约定，不冒充交易所规定的目标仓位算法。
+- 普通规格化禁止绝对名义暴露超过已审批暴露；显式 `hold_dust` 可以保留无法合法关闭的既有 odd-lot，但必须记录该 approved-target 偏差，不能伪装成已达到目标。
+- Mark resolved instant 必须等于 Approved Target instant，Price 必须为正，Price quote Currency 必须等于 approved Notional Currency；本边界不发明 FX path 或 stablecoin peg。
+- 每个 Instrument 同时提供当前 exact Quantity。完整平仓若遇到 odd lot，只能按 Lattice 的显式 full-close capability 和 Residual Policy 处理。Sizing 使用 current Quantity 证明 target reachability；最终订单准入仍必须使用 OrderRuleModel 冻结的权威 holding/sellable evidence。
+- 反向持仓的 exact Active Target 可以被物化，但后续 Order Planner 必须拆为 close/open 两阶段，禁止一个含糊净订单隐式穿越零点。G08C 的 position-relative capability 只声明普通 A 股 long-cash applicability，不扩展 short sizing。
+- 无法交易的 Sizing Residual 由显式 `ResidualPositionPolicy` 处理：`hold_dust`、`close_if_permitted` 或 `fail`。任一 Instrument 失败时不产生部分账户级 Active Target。
+- Normalized target、current/raw/final Quantity、Sizing Residual、Sell Residual Component action、Mark/Lattice identity、RoundingPolicy 和 Residual decision 都属于权威证据。
+
+```python
+@dataclass(frozen=True)
+class QuantityLattice:
+    instrument_id: InstrumentId
+    lattice_key: str
+    lattice_version: int
+    atomic_scale: Scale
+    step_units: int
+    buy_lot_units: int | None
+    sell_lot_units: int | None
+    min_quantity_units: int
+    min_notional: Money
+    odd_lot_close_permitted: bool
+    config_hash: str
+    whole_sell_residual_permitted: bool = False
+```
+
+`QuantityLattice.create(..., whole_sell_residual_permitted: bool = False)` 把新参数置于 keyword-only 参数末尾。false 保持既有 canonical schema v1 和 hash；schema 选择只取决于该字段。true 使用 canonical schema v2，并要求显式 `sell_lot_units`、`odd_lot_close_permitted=true`、`min_quantity_units=0` 和 `min_notional.units=0`；它表示完整 Sell Residual Component 可以单独或与正常卖出 Lot 合并，不表示任意 odd quantity 合法。
+
+Order Planner 只消费已经物化的 exact `ActivePortfolioTarget` Quantity，不得再次执行数量舍入。Contract multiplier 或非 quote-currency sizing 必须由后续显式 Instrument/Profile Gate 扩展，不能在 v1 内隐式猜测。
+
+### 8.10 ActivePortfolioTarget
+
+`TargetExposureFraction` 只在 StrategyDecision 生效时，使用该 Decision Instant 的 Strategy Allocation NAV、Price、Risk 和 QuantityLattice 原子物化为精确 `ActivePortfolioTarget` Quantity。
+
+持续有效的是 ActivePortfolioTarget Quantity，而不是动态 Exposure Fraction。Price、NAV 或 External Cash Flow 变化本身不会重新计算旧目标。只有新 StrategyDecision、明确 Capital Reallocation event 或 Target expiry policy 可以产生新的 ActivePortfolioTarget。
+
+需要恒定权重的 Strategy 必须通过 DecisionSchedule 发布新 TargetSnapshot。未来若增加连续动态目标，必须使用显式 `DynamicTargetPolicy`，不能改变 v1 默认语义。
+
+### 8.11 RebalanceCoordinator
+
+`TargetSnapshot` 是策略决策证据；其物化后的 `ActivePortfolioTarget` 才是 RebalanceCoordinator 持续逼近的目标状态。Target Validity、OrderPlan Validity 和 Venue Order Time-in-Force 是三种独立生命周期。
+
+`RebalanceCoordinator` 根据以下状态持续生成 OrderPlan、CancelIntent 或 PlanningOmission：
+
+- 当前 ActivePortfolioTarget 及其来源 TargetSnapshot
+- 当前 PortfolioSnapshot
+- Working Orders 及其剩余数量
+- Session 和 Market Rule 状态
+- 版本化 RebalancePolicy
+
+重新规划触发器至少包括：
+
+- 新 TargetSnapshot
+- Fill 或 Partial Fill
+- Order reject、cancel 或 expire
+- Session open
+- Rule Timeline change
+- Target expiration
+- Account state change
+
+新 TargetSnapshot 原子替换旧目标，并取消与新目标冲突的 Working Orders。Planner 必须将 Working Order 剩余数量计入预期仓位，禁止对相同未完成目标重复下单。
+
+使用 position-relative Lattice 的 Normalized Target 绑定 sizing 时的 current Quantity 与 lattice hash。兼容的 active/partially-filled Working Order remainder 可以继续覆盖该 Target；但 Partial Fill 后若 remainder cancel/expire 并从 working set 消失、current 已变化且未到 target，Planner 不得从 stale target 重新推导新的 odd quantity，即使该 delta 看似合法，也必须返回 `PlanningOmissionCode.POSITION_RELATIVE_REACHABILITY_STALE` 等待新的 Normalized Target。Target expired 与 cancel-requested precedence 高于 stale；current 已到 target 不 stale；zero-fill order 消失且 current 仍等于 sizing baseline 可正常重发。Fixture 固定 `H=299,R=199→SELL100`，若只成交 1 股后取消剩余，则 `H=298` 时不得重发 `SELL99`。Effective-lattice change 的 current rule evidence 不在 RebalanceCoordinator 现有 seam 中，留给 G08D/H 扩展，G08C 不宣称验证。
+
+OrderPlan 必须引用生成时的 Target Snapshot、Portfolio Snapshot 和 Working Order set hash；任一前提变化后旧 Plan 进入 `superseded`，不能继续产生新订单。Plan superseded 不会让已提交订单静默消失，必须通过 CancelIntent 处理。
+
+Venue Order 使用明确 Time-in-Force，例如 DAY、GTC、IOC、FOK 或 GTX/Post-only。合法 TIF 由 MarketSemanticsProfile 和 ExecutionAccountProfile 判断，具体历史行为由 SimulationProfile 模拟。Order expiry 不清除 Target，RebalanceCoordinator 可以根据 RebalancePolicy 在后续触发点继续逼近仍然有效的目标。
+
+### 8.12 OrderPlan
 
 ```python
 @dataclass(frozen=True)
 class OrderPlan:
     plan_id: str
-    created_at: datetime
-    expires_at: datetime | None
+    created_at: UtcInstant
+    based_on_target_snapshot_id: str
+    based_on_portfolio_snapshot_id: str
+    based_on_working_order_set_hash: str
+    valid_until: UtcInstant | None
     orders: tuple[PlannedOrder, ...]
     assumptions: tuple[str, ...]
 ```
 
-`PlannedOrder` 至少包括：
+`PlannedOrder` 产生 canonical `OrderIntent`，至少包括：
 
 - Instrument ID
 - Side
 - Quantity
-- Order type
-- Limit/stop price
-- Time in force
+- Execution style
+- Price constraint
+- Venue Time in Force
 - Reduce-only
+- Position effect
+- Urgency
 - Reason
 - Parent decision/target ID
 
-### 8.6 ExecutionReport
+v1 canonical values 为 `OrderSide = buy | sell`、`ExecutionStyle = market | limit | stop | stop_limit`、`TimeInForce = day | gtc | ioc | fok | gtx`、`PositionEffect = auto | open | close`。`PriceConstraint` 只承载可选 typed limit/trigger price；Style 与 Constraint 的合法组合由 Capability/Market Rule 判断。
+
+Canonical OrderIntent 不包含任意 extensions/metadata、trading pair、Hummingbot `PositionAction`、券商 Board 或其他 Venue DTO 字段。OrderTranslator 将其解析为 `ExecutableOrderSpec` 并生成 OrderTranslationReport；ExecutableOrderSpec 可以包含已解析的 Profile capability 和账户约束，但仍不是 Hummingbot 或券商 DTO。
+
+### 8.13 OrderEventStream 与 ExecutionReport
+
+`OrderEventStream` 是订单生命周期的权威证据，`OrderState` 是可重建投影。它不意味着整个回测引擎采用 Event Sourcing。
+
+具体 OrderIntent 的门控顺序固定为：
+
+```text
+Canonical OrderIntent
+→ Order Capability Validation
+→ Order Translation + OrderTranslationReport
+→ ExecutableOrderSpec
+→ Market Rule Evaluation
+→ Fee Reservation Estimate
+→ Resource Reservation Proposal
+→ Pre-trade Risk
+→ Submission
+→ Reservation Activation on accepted/active order
+```
+
+OrderCapabilityValidator 只判断 canonical 语义是否受支持；OrderTranslator 不得静默降级语义；MarketRuleEvaluator 只产生 MarketRuleDecision；FeeReservationEstimator 产生最坏费用承诺但不写 Journal。Pre-trade Risk 只 approve/reject，不能修改 Quantity、Price、TIF 或 Order Type。
+
+`MarketRuleEvaluator` 只消费 supplied immutable `OrderRuleTimeline`。Timeline 按 Evaluation Instant 从半开有效区间中解析且必须恰好命中一个 `OrderRuleInterval`；缺失或重叠产生 `DataIntegrityFailure`，禁止回退最后规则或当前交易所规则。Snapshot 绑定 `ORDER_RULE_MODEL` Component identity、Instrument、Session、`QuantityLattice`、Price tick/limits、permissions 和显式 supplemental rule decisions。Evaluator 只验证，不能再次舍入或修改 Price/Quantity。Minimum Notional 使用显式 `OrderRuleNotionalEvidence`：constraint basis 必须 exact 引用 Intent Price，supplied reference basis 必须携带 source hash；Generic Kernel 不自行选择市场价、FX path 或 stablecoin peg。具体 A 股/Binance 规则只由后续 Profile Adapter 构造 Snapshot/Timeline，Generic Evaluator 不含市场条件分支。
+
+Portfolio Risk 位于上游目标层，可以显式 approve、clamp 或 reject。Pre-trade Risk 位于具体订单层，只能 approve 或 reject，不得修改 Price、Quantity 或 TIF。它使用当前 Availability、现有 Resource Reservations、Fee 的 worst-case `ResourceReservationProposal` 以及 supplied immutable 完整 `ReservationCommitment` requirement 进行判断。完整 requirement 由 Market/Account Profile 组合提供并绑定 source Order、Market Rule 和 Fee Proposal identity；Generic PreTradeRisk 不自行猜测 Spot、Margin 或 Derivative 的资源公式。Cash、Sellable Quantity、Margin、Fee Reserve、Order Capacity 和 Exposure Capacity 必须分类比较；Fee Reserve 使用 Tradable Cash 还是 Available Margin 由显式版本化 Account Risk Policy 声明。若拒绝后允许重试，由 RebalanceCoordinator 根据显式 RebalancePolicy 重新规划。
+
+```text
+OrderIntentCreated
+OrderCapabilityApproved / OrderCapabilityRejected
+OrderTranslated
+MarketRuleApproved / MarketRuleRejected
+FeeReservationEstimated
+PreTradeRiskApproved / PreTradeRiskRejected
+OrderSubmitted
+OrderAccepted / OrderRejected
+OrderActivated
+OrderPartiallyFilled
+OrderFilled
+OrderCancelRequested
+OrderCancelled
+OrderExpired
+```
+
+每个 Order Event 必须具有稳定 Event ID、Order ID、Causation ID 和 Simulation Instant，并支持幂等应用。模拟领域 ID 根据 semantic run ID、因果父 ID、稳定 ordinal 和必要 Simulation Instant 确定性派生；不同 Attempt 产生相同领域 ID。第一阶段订单修改使用 cancel-and-replace，不支持隐式原地修改。
+
+失败必须区分：
+
+- `PlanningOmission`：没有生成订单，例如落入 Deadband。
+- `PreTradeRiskRejection`：未通过账户风险检查，订单未提交。
+- `MarketRuleRejection`：数量、价格、Session 或权限不合法。
+- `ExecutionRejection`：模拟或真实执行场所拒绝。
+- `DataIntegrityFailure`：数据不足或不一致，阻断整个 decision-grade Run。
 
 ```python
 @dataclass(frozen=True)
 class ExecutionReport:
     plan_id: str
-    accepted_orders: tuple[AcceptedOrder, ...]
-    rejected_orders: tuple[RejectedOrder, ...]
+    final_order_states: tuple[OrderState, ...]
     fills: tuple[Fill, ...]
-    cancellations: tuple[Cancellation, ...]
+    lifecycle_event_hash: str
 ```
 
-### 8.7 Fill
+### 8.14 ResourceReservationBook
+
+Working Order 尚未成交的现金、保守 Fee Reservation Estimate、可卖数量、初始保证金、借贷能力和订单/暴露额度承诺由独立 `ResourceReservationBook` 管理，不写入 Accounting Journal。
+
+Reservation 生命周期由 Order Event 驱动：
+
+```text
+OrderAccepted/Activated → reserve
+PartialFill             → reduce reservation
+Cancel/Reject/Expire    → release
+Fill                    → convert to Accounting Journal facts
+```
+
+Reservation 必须引用 Order ID，并可从 Order Event Stream 重建。MarketSemanticsProfile 和 ExecutionAccountProfile 共同定义具体 Reservation 计算规则。终态订单不得继续占用资源，重复 Event 不得重复冻结。
+
+Generic `ResourceReservationBook` 只投影 supplied immutable reservation evidence，不实现上述规则计算。每个 Order 的 `OrderReservationSchedule` 必须指定恰好一个 Accepted 或 Activated Event 作为 activation point，并为每个后续 Partial Fill 提供与 exact remaining Quantity 对齐的 replacement commitment。Cash、Sellable Quantity、Margin、Fee Reserve、Order Capacity 和 Exposure Capacity 分类别保留；Partial Fill 更新不得增加任何既有维度或引入新维度，固定承诺可以保持不变。Cancel、Reject、Expire 或 Final Fill 无条件释放全部剩余 commitment。Book 只能在同一 Execution Account 内聚合 typed totals，不把 Reservation 写入 Journal、SettlementBook 或 AvailabilityProjection。
+
+### 8.15 SettlementBook 与 AvailabilityProjection
+
+Fill 发生后立即记录经济风险和 PnL，但资产或现金是否可卖、可交易或可提现由 Settlement 状态决定。
+
+`SettlementBook` 保存可从 Fill 和 Settlement Event 重建的待结算义务：
+
+```python
+@dataclass(frozen=True)
+class SettlementObligation:
+    settlement_obligation_id: DomainId  # SETTLEMENT
+    source_fill_id: DomainId             # FILL
+    trade_time: UtcInstant
+    settlement_time: UtcInstant
+    instrument_id: InstrumentId | None
+    quantity: Quantity | None
+    currency_id: CurrencyId | None
+    amount: Money | None
+```
+
+恰好一个 `(instrument_id, quantity)` 或 `(currency_id, amount)` pair 必须存在；signed units 表达收付方向，零义务非法。
+
+`AvailabilityProjection` 根据 Accounting Ledger、SettlementBook、ResourceReservationBook 和 Market Settlement Rules 计算：
+
+- Total Position
+- Sellable Quantity
+- Settled Cash
+- Tradable Cash
+- Withdrawable Cash
+- Available Margin
+
+Settlement 到达时产生明确 `SettlementApplied` Event 和对应 Availability 状态转换；Fill 的经济 Cash/Position 已由 Journal/Ledger 入账，SettlementApplied 不重复写经济事实。Pre-trade Risk 使用 Available Resources，而不是只查看总 Cash 或 Position。Settlement Obligation 与 Working Order Reservation 是不同概念。
+
+#### A 股现金账户 availability maturation
+
+普通人民币 A 股的 G08B Adapter 把官方规则与系统约定分开：交易所规则规定普通 A 股 T 日买入不得 T 日卖出，中国结算规则与公告提供下一交易日及参与人层资金交收证据；客户账户的 exact intraday availability 则由显式版本化 Profile 约定。
+
+```text
+Fill economic booking on T
+├── negative Cash/Position delivery       → mature at Fill time
+├── positive bought Position receivable   → sellable next TradingDate 00:00 CST
+└── positive sale Cash receivable         → tradable on T,
+                                            withdrawable next TradingDate 16:00 CST
+```
+
+这里的 `SettlementObligation.settlement_time` 是版本化客户现金账户中该交付义务完成并进入相应可用资源维度的 account-settlement/availability-maturation instant；本 Adapter 不模拟中央结算参与人层净额交收、法定权属登记或所有券商统一提现时点。Position 00:00 允许开盘前 Planning/Reservation 看到 T+1 可卖数量；Cash 16:00 是参考中国结算最晚参与人资金交收边界而选择的保守 development-grade 客户账户约定，不是逐 Fill 的中央交收事实。改变任一时点或 pending-receivable policy 必须改变 component digest。
+
+Concrete Adapter 必须消费 supplied immutable `FILL_BOOKED` Accounting Entry，直接映射其中 signed Cash/Position effects，禁止独立重算 Notional。Adapter 只能验证 Entry 结构与 Fill context；该 Entry 已包含于权威 Journal、所消费 LedgerState 引用同一 Journal prefix，以及 Settlement Recorded evidence 绑定该 Resolution hash，必须由 G08B integration/G08H composition 证明。Adapter 只产生 caller-ID-bound `AccountSettlementObligation` 与固定 `MarketSettlementRules`；`SettlementBook`、`AvailabilityProjection`、Event identity/scheduling 和 Ledger 仍由已有共享模块拥有。
+
+### 8.16 Fill
+
+`Price`、`Quantity`、`Money`、`Rate` 和 `ExposureFraction` 使用 typed scaled integer 表示。Canonical serialization 必须包含 `units`、`scale` 以及 Instrument/Currency identity。
 
 ```python
 @dataclass(frozen=True)
 class Fill:
-    fill_id: str
-    order_id: str
-    instrument_id: str
-    side: str
-    quantity: Decimal
-    price: Decimal
-    fee: Money
+    fill_id: DomainId   # FILL
+    order_id: DomainId  # ORDER
+    account_id: str
+    venue_id: VenueId
+    instrument_id: InstrumentId
+    side: OrderSide
+    quantity: Quantity
+    reference_price: Price
+    reference_price_purpose: PricePurpose
+    price: Price
+    slippage_amount: Money
+    slippage_decision_id: str
+    slippage_model_key: str
+    slippage_calibration_id: str | None
     liquidity: str | None
-    execution_time: datetime
-    venue: str
+    execution_time: UtcInstant
 ```
 
-### 8.8 PortfolioSnapshot
+### 8.17 FeeAssessment
+
+Fill 是成交事实，不直接拥有唯一最终 Fee。`FeeAssessment` 独立表达按 Fill、Order 或 Session 计算的费用：
+
+```python
+@dataclass(frozen=True)
+class FeeAssessment:
+    fee_assessment_id: DomainId  # FEE
+    basis_type: FeeBasisType
+    basis_ids: tuple[DomainId | SessionId, ...]
+    market_fee_rule_id: str | None
+    account_fee_schedule_id: str | None
+    tax_rule_id: str | None
+    amount: Money
+    assessment_time: UtcInstant
+```
+
+Per-fill maker/taker fee、per-order minimum commission、sell-only tax 和 order cancel 后的最终费用都由独立 `FeeAssessmentEngine` 根据相应 Fee/Tax/Account Policy 生成 FeeAssessment，再生成幂等 `FeeCharged` Journal Entry。Fee 的 Scale 和 RoundingPolicy 必须由对应规则明确规定。
+
+FeeReservationEstimate 是下单前最坏费用承诺，只影响 Reservation 和 Available Resources；它不是 FeeAssessment 或 Accounting Journal。最终 Fee 可以低于预留，终态订单必须释放差额。
+
+G08E 将 A 股公共市场收费、国家税项和账户合同 exact 分开：证券交易经手费、证券业务监管费和交易过户费属于 immutable `MarketFeePolicy` RuleBook；卖方证券交易印花税属于独立 `TaxPolicy` RuleBook；券商净佣金和每 Order 最低佣金只属于 caller-supplied `ExecutionAccountProfile.account_fee_schedule`。Concrete market/tax Adapter 不得生成或猜测账户佣金，也不得把 synthetic development schedule 伪装成统一券商规则。
+
+A 股 v1 最终市场费用与印花税使用 `FeeBasisType.FILL`，按每个 Fill 的 execution time 重新解析有限历史区间并逐 component 量化；最终券商佣金使用 terminal `FeeBasisType.ORDER`，按实际 Fill notional 聚合后只应用一次 minimum。这样跨规则切换时点的长生命周期 Order 不会把 acceptance-time Rule 错套到后续 Fill，partial cancel 也不会按原始订单名义金额最终收费。
+
+Aggregate Reservation 在多 Fill 独立舍入下可能低于 final charge，因此 caller 必须提供由 Execution/Simulation Profile 证明的 positive `maximum_fill_count=N`。`CnAShareFeeReservationBuffer` 对每个 applicable final component 额外预留 `floor(N/2)` 个 CNY cent，并把 N、Market/Tax resolution identities 和公式写入 canonical identity；实际 Fill 数超过 N 的 Attempt 必须 fail closed，不能发布低于已发生费用上界的“保守预留”声明。
+
+G08E 的 CNY Scale 2、逐 component `HALF_UP` 和 final Fill/Order basis 是 development-grade system convention，不冒充所有交易所结算参与人或券商的账单舍入。Rule gap/overlap、unsupported block-trade mechanism 或非 CNY/非 A 股输入必须 fail closed；current-rule page、最近区间和账户 schedule 都不能补市场/税费历史缺口。
+
+FeeAssessment 通过 basis IDs 引用 Fill/Order，而不是事后修改 immutable Fill。Cash Instrument Lot 的 fee allocation 可以在 FeeAssessment 完成后通过明确 Journal Entry 更新成本基础。
+
+### 8.18 AccountingJournal
+
+`AccountingJournal` 是执行账户现金、持仓、费用、外部资金流和已实现 PnL 的唯一财务权威。它由不可变且具有稳定 ID 的经济事实组成，例如：
+
+- `CapitalDeposited`
+- `CapitalWithdrawn`
+- `FillBooked`
+- `FeeCharged`
+- `FundingApplied`
+- `BorrowFeeCharged`
+- `SettlementApplied`（仅当 Settlement 独立产生新的经济 Cash/Position 事实；availability-only maturation 不写 Journal）
+- `CorporateActionEntitlementBooked`
+- `CorporateActionPositionAdjusted`
+- `CorporateActionCashPaid`
+- `LiquidationApplied`
+
+每条 Journal Entry 必须记录事件来源，例如 `fill_id`、`fee_assessment_id`、Funding slot、Settlement ID 或 Corporate Action ID，并支持按稳定 ID 幂等应用。Market Event trace、Strategy trace 和 Accounting Journal 是不同证据流，不得混为一个无类型事件文件。
+
+### 8.19 PortfolioSnapshot
 
 ```python
 @dataclass(frozen=True)
 class PortfolioSnapshot:
-    timestamp: datetime
-    cash: tuple[CashBalance, ...]
-    positions: tuple[Position, ...]
-    realized_pnl: tuple[Money, ...]
-    unrealized_pnl: tuple[Money, ...]
-    fees: tuple[Money, ...]
-    financing: tuple[Money, ...]
-    margin: MarginSnapshot | None
-    equity: tuple[Money, ...]
+    account_id: str
+    timestamp: UtcInstant
+    reporting_currency: CurrencyId
+    cash: tuple[CashBalance, ...]               # native currency balances
+    positions: tuple[PositionBalance, ...]      # native instrument quantities/lots
+    realized_pnl: Money                         # reporting currency
+    unrealized_pnl: Money                       # reporting currency
+    fees: Money                                 # reporting currency
+    financing: Money                            # reporting currency
+    equity: Money                               # reporting currency
+    valuation_marks: tuple[ValuationMarkReference, ...]
+    journal_state_hash: str
+    valuation_mark_set_hash: str
+    valuation_staleness_report_hash: str
+    currency_valuation_graph_hash: str
 ```
 
 ## 9. 时间模型
 
+所有权威时间使用：
+
+```python
+@dataclass(frozen=True)
+class UtcInstant:
+    epoch_nanoseconds: int
+```
+
+Event ordering 只使用 UtcInstant。Exchange local time 仅用于 Source parsing、Session rule 和展示；禁止 naive datetime 进入权威领域对象。
+
+`TradingDate` 和 `SessionId` 由 SessionModel 根据 Exchange time zone、Calendar 和夜盘归属规则计算，不能用 UTC date 或本地自然日猜测。Source timestamp、解析时区和 DST resolution 必须进入 provenance。
+
 系统必须区分：
 
 | 时间 | 含义 |
-|---|---|
+| --- | --- |
 | `event_time` | 市场事件实际发生时间 |
 | `available_time` | 数据对策略可见的时间 |
 | `decision_time` | 策略作出决策的时间 |
 | `submission_time` | 订单提交时间 |
 | `execution_time` | 订单成交时间 |
-| `settlement_time` | 资金或持仓完成交收的时间 |
+| `settlement_time` | 资金或持仓完成交收的 UtcInstant |
+| `trading_date` | SessionModel 赋予事件的交易日期标签，不参与 Instant 排序 |
+| `session_id` | 事件所属交易 Session 的稳定身份 |
 
 基本因果约束：
 
@@ -377,7 +1018,39 @@ event_time <= available_time <= decision_time <= submission_time <= execution_ti
 
 不是所有事件都需要经历所有阶段，例如 Funding 和公司行为可以直接进入 Ledger，但必须有明确时间语义。
 
-### 9.1 Bar 数据示例
+所有事件使用以下总排序键：
+
+```text
+(epoch_nanoseconds, phase, source_sequence)
+```
+
+只按 UtcInstant 排序不构成确定性回测。
+
+### 9.1 Warmup 与 Active Trading 区间
+
+Warmup 区间 `[data_start_time, trading_start_time)`：
+
+- Timeline 和 ObservationView 正常推进。
+- Strategy 可以构建初始 StrategyState。
+- Microstructure Engine 可以建立 Market/Order Book 状态。
+- 禁止产生 OrderIntent、Fill 和 Accounting Journal Entry。
+- 不计算策略收益和绩效。
+- `InitialAccountState` 定义为 trading start 时点的账户状态，不受 Warmup economic event 修改。
+- Warmup 结束时生成 Strategy State checkpoint。
+
+StrategySpec 必须声明 `LookbackRequirement`。MarketBundle validator 生成 `LookbackCoverageReport`；数据不足时 decision-grade 失败关闭。
+
+Active Trading 使用半开区间 `[trading_start_time, trading_end_time_exclusive)`，避免结束边界事件是否包含的歧义。
+
+独立 `RunEndCoordinator` 在 Timeline 到达 `trading_end_time_exclusive` 时停止新 Strategy Decision，拒绝边界及之后的业务事件，终止 Working Orders，应用 CloseoutPolicy，识别未完成 Settlement/Funding/Fee basis，并请求 Final PortfolioSnapshot。
+
+默认 `CloseoutPolicy` 为 `mark_to_market`：到达结束边界时保留 Position，使用边界前最后一个合法 Valuation Mark 生成 Final PortfolioSnapshot，分别报告 Realized 和 Unrealized PnL。Working Orders 进入 `OrderTerminatedByRunEnd`，不产生 Fill。边界时点及之后的 Funding、Settlement 和 Corporate Action 不计入结果。
+
+如果研究要求最终平仓，必须显式配置 CloseoutPolicy，并在结束边界前预留执行窗口，使平仓经过正常 Capability、Translation、Market Rules、Fee Reservation、Risk、Slippage、Execution、Fee Assessment 和 Accounting Journal。禁止在最后收盘价隐式强平。
+
+RunEndCoordinator 必须生成 `RunEndReport`，至少记录 terminated order IDs、open positions、pending settlements、pending fee assessments、last valuation mark IDs 和 closeout status。
+
+### 9.2 Bar 数据示例
 
 ```text
 Bar close_time      = 10:00:00
@@ -387,7 +1060,7 @@ order submission    = 10:00:03
 next-bar execution  = 10:01:00
 ```
 
-### 9.2 宏观数据示例
+### 9.3 宏观数据示例
 
 ```text
 统计月份            = 2026-01
@@ -396,6 +1069,43 @@ available_time      = 2026-02-10 10:00
 decision_time       = 2026-02-10 close
 execution_time      = 2026-02-11 open
 ```
+
+### 9.4 同时间戳阶段协议
+
+Timeline Engine 拥有统一阶段协议，MarketSemanticsProfile 只能声明市场特有事件的合法阶段，不能重新实现完整事件循环。
+
+```text
+1. BOUNDARY_PRE
+   Session、规则切换和公司行为等边界前事件
+
+2. MARKET_UPDATE
+   Bar、Quote 和 Trade 更新市场状态
+
+3. MATCH_RESTING
+   使用当前市场事件撮合此前已经有效的订单
+
+4. ACCOUNT_EVENT
+   Funding、结算和其他计划账户事件
+
+5. OBSERVATION_RELEASE
+   available_time 已到的数据对 Strategy 可见
+
+6. DECISION
+   Strategy 产生 StrategyDecision 或 Order/Cancel Intent
+
+7. PLAN_AND_SUBMIT
+   Allocation、Risk、Position Sizing、Planning 和订单激活
+
+8. MATCH_IMMEDIATE
+   仅在 ExecutionModel 明确允许时撮合新订单
+
+9. MARK_AND_SNAPSHOT
+   Mark-to-market 并生成 PortfolioSnapshot
+```
+
+具体 Funding、公司行为或结算位于撮合前还是撮合后，由 MarketSemanticsProfile 根据真实市场规则声明。SimulationProfile 中的 ExecutionModel 决定新订单从哪个阶段开始具备模拟成交资格。
+
+同一 UtcInstant 和 phase 内使用稳定的 `source_sequence`；它必须来自可重建的数据顺序或明确生成规则，不能依赖容器遍历顺序。Full trace 必须记录 epoch nanoseconds、phase 和 source sequence。无法证明同时间顺序时，decision-grade 运行失败关闭。
 
 ## 10. 事件模型
 
@@ -409,11 +1119,19 @@ execution_time      = 2026-02-11 open
 - `BarClosed`
 - `QuoteUpdated`
 - `TradePrinted`
-- `FundingPublished`
-- `FundingApplied`
-- `CorporateActionApplied`
+- `FundingRatePublished`
+- `FundingSettlementOccurred`
+- `CorporateActionAnnounced`
+- `CorporateActionEntitlementCaptured`
+- `CorporateActionPositionAdjustmentApplied`
+- `CorporateActionCashDistributionPaid`
 - `SettlementOccurred`
 - `ContractExpired`
+- `RuleTimelineChanged`
+- `InstrumentListed`
+- `InstrumentDelisted`
+- `InstrumentRenamed`
+- `UniverseMembershipChanged`
 - `TradingSuspended`
 - `TradingResumed`
 
@@ -421,124 +1139,336 @@ execution_time      = 2026-02-11 open
 
 - `DecisionScheduled`
 - `DecisionMade`
+- `StrategyOutputValidated`
+- `StrategyOutputValidationFailed`
+- `DecisionBatchCompleted`
 - `TargetApproved`
 - `OrderPlanned`
+- `OrderPlanSuperseded`
+- `OrderIntentCreated`
+- `MarketRuleValidated`
+- `MarketRuleRejected`
+- `PreTradeRiskApproved`
+- `PreTradeRiskRejected`
 - `OrderSubmitted`
 - `OrderAccepted`
 - `OrderRejected`
+- `OrderActivated`
+- `LiquidityBlockedAtLimit`
 - `OrderPartiallyFilled`
 - `OrderFilled`
+- `OrderCancelRequested`
 - `OrderCancelled`
 - `OrderExpired`
+- `OrderTerminatedByRunEnd`
 
 ### 10.3 账户事件
 
+- `CapitalDeposited`
+- `CapitalWithdrawn`
+- `CapitalTransferred`
 - `CashChanged`
 - `PositionChanged`
+- `FeeAssessed`
 - `FeeCharged`
 - `FinancingCharged`
 - `MarginChanged`
 - `EquityMarked`
 - `LiquidationTriggered`
+- `PostTradeRiskBreach`
+- `IntegrityFinding`
 
 事件是否完整持久化由 trace level 决定，但内部状态转换必须遵守统一语义。
 
-## 11. MarketProfile
+## 11. 市场语义与模拟 Profile
+
+### 11.1 ResolvedMarketSemanticsProfile
+
+Trading Kernel 拥有真实市场与账户行为 Ports，包括 SessionModel、InstrumentModel、OrderRuleModel、FeeAssessmentPolicy、TaxPolicy、SettlementModel、PositionAccountingModel、FinancingModel、MarginModel、LiquidationRules、CorporateActionModel 和 CurrencyValuationPolicy。
+
+`MarketSemanticsProfile` 是这些 Ports 的具体组合，是回测与实时共同使用的版本化市场事实集合。它必须声明 Execution Reference、Valuation、Margin、Liquidation 和 Settlement 各用途所需的 Price Stream，以及每类 Stream 的期望覆盖、合法 gap reason 和 `StaleMarkPolicy`；不适用的用途必须显式声明为 `not_applicable`。
 
 ```python
 @dataclass(frozen=True)
-class MarketProfile:
-    key: str
+class ResolvedMarketSemanticsProfile:
+    profile_key: str
+    profile_version: int
+    profile_digest: str
     session_model: SessionModel
     instrument_model: InstrumentModel
     order_rule_model: OrderRuleModel
-    execution_model: ExecutionModel
+    position_accounting_model: PositionAccountingModel
     settlement_model: SettlementModel
     financing_model: FinancingModel
+    margin_rules: MarginRules
+    liquidation_rules: LiquidationRules
     corporate_action_model: CorporateActionModel
+    market_fee_rules: MarketFeeRules
+    tax_rules: TaxRules
+    component_manifest: tuple[ProfileComponentRef, ...]
 ```
 
-### 11.1 SessionModel
+它描述市场是什么，不包含 Bar Fill、Slippage、Latency、Queue 或其他回测近似。
 
-负责：
+### 11.2 ResolvedSimulationProfile
 
-- 时区
-- 交易日历
-- Session 阶段
-- Decision schedule
-- 开盘、午休、收盘和夜盘
+Backtest Runtime 拥有模拟行为 Ports，包括 ExecutionModel、SlippageModel、LatencyModel、LiquidityModel、LiquidationAuditModel 和 CloseoutPolicy。
 
-### 11.2 InstrumentModel
+`SimulationProfile` 仅由 Backtest Runtime 使用，描述如何近似历史执行。Decision-grade SlippageModel 必须具有版本、校准证据和可机器验证的适用范围，禁止隐式零滑点。
 
-负责：
+```python
+@dataclass(frozen=True)
+class ResolvedSimulationProfile:
+    profile_key: str
+    profile_version: int
+    profile_digest: str
+    engine_kind: str
+    execution_model: ExecutionModel
+    slippage_model: SlippageModel
+    slippage_calibration: CalibrationEvidence
+    slippage_applicability: ApplicabilityEnvelope
+    latency_model: LatencyModel
+    liquidity_model: LiquidityModel
+    intrabar_ambiguity_policy: IntrabarAmbiguityPolicy
+    liquidation_audit_model: LiquidationAuditModel
+    closeout_policy: CloseoutPolicy
+    component_manifest: tuple[ProfileComponentRef, ...]
+    random_stream_requirements: tuple[RandomStreamRequirement, ...]
+```
 
-- Equity、Spot、Perpetual、Future、Option
-- Base/quote currency
-- Contract multiplier
-- Tick size 和 lot/step size
-- Expiry
-- Long/short 能力
+Stochastic SimulationProfile 必须显式声明，并使用从 master seed、semantic component key、Instrument ID 和 purpose 派生的命名独立 RandomStream。禁止共享全局 RNG。
 
-### 11.3 OrderRuleModel
+### 11.3 ResolvedExecutionAccountProfile
 
-负责：
+`ExecutionAccountProfile` 是回测与实时共同使用的版本化账户行为和合同集合，与期初经济状态分离。
 
-- 订单类型是否合法
-- 最小数量和最小名义金额
-- Price limit
-- T+1 可卖数量
-- Suspension
-- Reduce-only
-- 保证金前置检查
+```python
+@dataclass(frozen=True)
+class ResolvedExecutionAccountProfile:
+    profile_key: str
+    profile_version: int
+    profile_digest: str
+    venue_id: str
+    account_type: str
+    margin_mode: str
+    leverage_policy: LeveragePolicy
+    account_fee_schedule: AccountFeeSchedule
+    cost_basis_policy: CostBasisPolicy
+    permissions: AccountPermissions
+    borrow_policy: BorrowPolicy | None
+    component_manifest: tuple[ProfileComponentRef, ...]
+```
 
-### 11.4 ExecutionModel
+`InitialAccountState` 只保存期初现金、Position Lots、待结算项目和必要成本基础，不保存账户行为规则。
 
-负责：
+### 11.4 ResolvedBacktestEnvironment
 
-- Next-open/next-bar
-- OHLC conservative fill
-- 固定或比例滑点
-- Spread
-- Participation rate
-- Partial fill
-- 延迟
-- L1/L2 queue 模拟
+```python
+@dataclass(frozen=True)
+class ResolvedBacktestEnvironment:
+    market_semantics: ResolvedMarketSemanticsProfile
+    simulation: ResolvedSimulationProfile
+    execution_account: ResolvedExecutionAccountProfile
+    market_bundle_hash: str
+    currency_valuation_policy: CurrencyValuationPolicy
+    compatibility_report: EnvironmentCompatibilityReport
+```
 
-### 11.5 SettlementModel
+Backtest Runtime composition root 中的 `ProfileResolver` 根据 BacktestRequest、Profile Registries 和 MarketBundle capabilities 构造 ResolvedBacktestEnvironment。Resolver 只负责组合与兼容性验证，不实现市场规则、Fee、Accounting 或 Slippage。
 
-负责：
+Registry 必须验证至少以下兼容性：
 
-- T+0/T+1
-- 可用资金
-- 可卖数量
-- Futures daily settlement
-- Contract expiry 和 rollover
+- Instrument 类型与 PositionAccountingModel
+- Instrument 类型与 Margin/LiquidationRules
+- SettlementModel 与 SessionModel
+- OrderRuleModel 与 Venue/Instrument
+- FinancingModel、MarketFeeRules、TaxRules 和 AccountFeeSchedule 的结算币种
+- ExecutionAccountProfile 的 Venue、账户类型、权限和 Margin mode 与 MarketSemanticsProfile 兼容
+- SimulationProfile 的 Engine kind 与 Strategy family
+- Execution/Slippage/Liquidity Model 要求的数据能力是否由 MarketBundle 提供
+- MarketBundle 是否完整覆盖 MarketSemanticsProfile 声明的 PricePurpose
+- LiquidationAuditModel 是否能消费 MarketSemanticsProfile 的 LiquidationRules
+- CurrencyValuationPolicy 能否为全部非 Reporting Currency balance 解析唯一 Price Stream path
+- SlippageModel 是否具有校准证据，且本次订单与市场状态位于 applicability envelope 内
 
-### 11.6 FinancingModel
+任何会改变结果语义的组件版本、配置或代码身份变化都必须产生新的 digest。Decision-grade 只允许已注册且兼容性验证通过的三类 Profile；custom profile 必须降级为 development-grade。
 
-负责：
+G06 Fixture 使用的 `synthetic.cash.development.v1` 只存在于 TestProfileRegistry 或显式 `allow_development_profiles=True` 路径，默认 Production Profile Registry 不得注册。使用 Synthetic Profile 的 Evidence 必须记录 `synthetic_market_profile` limitation，且永远不能产生 decision-grade。真实 A 股/Binance Profile 不得继承 Synthetic Profile，只能实现相同 Ports。
 
-- Crypto funding
-- Borrow fee
-- Margin interest
-- Futures carry
-- 现金利息
+FeeReservationEstimator 和 FeeAssessmentEngine 共同消费 MarketFeeRules、TaxRules 和 ExecutionAccountProfile 的 AccountFeeSchedule。前者产生非财务最坏承诺，后者产生最终权威 FeeAssessment。每个 Fee Journal Entry 必须记录所使用的市场规则、税费规则和账户 Profile identity。
 
-### 11.7 CorporateActionModel
+### 11.5 SessionModel
 
-负责：
+负责时区、有限交易日历、Session 阶段、TradingDate 归属、开盘、午休、收盘和夜盘语义。G08A concrete Adapter 只实现 point-in-time Session query；DecisionSchedule、Warmup schedule 和 Timeline/MarketEvent 生成属于 G11E/Runtime，不由 concrete SessionModel 拥有。
 
-- 分红
-- 拆股和送转
-- 配股
-- Symbol migration
-- 合约换月
+已知周末或已声明节假日与 Calendar coverage 缺失必须分离：前者是 canonical known no-session result，后者是 fail-closed component failure。Concrete SessionModel 只能消费注入的 immutable calendar，不得在运行时查询网络、provider、wall clock 或 G12 Builder。Market-specific phase enum 不得复用 Engine ordering 的 `TimelinePhase`。
 
-不需要公司行为的市场使用显式的 No-op 实现，而不是空值分支。
+A 股 G08A v1 固定 `VenueId("xshg")`/`calendar_id="CN.XSHG"` 与 `VenueId("xshe")`/`calendar_id="CN.XSHE"`，统一使用 IANA `Asia/Shanghai`。现金股票竞价阶段按 official exchange clock ranges 解释为系统半开区间：09:15–09:25 opening call、09:25–09:30 opening pause、09:30–11:30 morning continuous、11:30–13:00 lunch、13:00–14:57 afternoon continuous、14:57–15:00 closing call；15:00 起 closed。`SessionId` 在同一 Venue/TradingDate 全部 phase 内保持稳定，Calendar/phase semantics 进入 component digest。
+
+### 11.6 InstrumentModel
+
+负责 Equity、Spot、Perpetual、Future、Option、base/quote currency、contract multiplier、tick size、lot/step size、expiry 和 long/short 能力。
+
+Instrument 使用跨 Symbol 变化稳定的 `instrument_id`。Symbol、listing、delisting、分类和 Universe membership 是 point-in-time 属性；上市前 Instrument 不可观察，退市 Instrument 不得从历史 Bundle 删除。Delisting Position 必须由 SettlementModel 或 CorporateActionModel 明确处理。
+
+G08C concrete A-share Adapter 复用 `InstrumentModel` seam 解析 supplied `InstrumentDefinition` 对应的 immutable static v1 `QuantityLattice` template；它不创建新的 lattice port，也不把 caller-selected `ResidualPositionPolicy` 伪装成交易所事实。当前 `InstrumentDefinition` 只能观察 Venue、broad InstrumentType 和 Currency，普通 A 股/STAR/ETF/Stock Connect 等细分资格仍由 G08H/G08D caller precondition 提供。未来 G08D/G08H 组合时，`InstrumentSizingInput.lattice` 必须来自 Approved Target instant 的唯一 `OrderRuleSnapshot.quantity_lattice`，或与 static template 具有相同 lattice hash；不匹配时 fail closed，InstrumentModel result 不能成为第二个 runtime lattice authority。
+
+### 11.7 OrderRuleModel
+
+MarketSemanticsProfile 必须通过 `required_rule_dimensions()` 声明会影响结果的历史规则维度。MarketBundle 使用这些要求生成 `RuleCoverageReport`。
+
+每条历史规则至少记录：
+
+```text
+instrument_id
+effective_from
+effective_until
+source
+source_hash
+```
+
+Decision-grade 要求每个必需维度在回测有效区间内无缺口、无重叠，并且任一模拟时点只能解析到唯一有效规则。禁止缺失时回退到当前规则或估算值。
+
+OrderRuleModel 负责 `OrderCapabilitySet`、合法 Execution style、Price constraint、Time-in-Force、时点有效 `QuantityLattice`、最小/最大数量、最小名义金额、Price limit、T+1 可卖数量、Suspension、Reduce-only、odd-lot close 和保证金前置规则。依赖当前余额的 Sell Residual Component 准入必须绑定权威 holding/sellable evidence；仅凭 `PositionEffect.CLOSE`、target Quantity 或静态 lot 不能批准任意 odd sell。
+
+G08D 的 generic `OrderRulePositionEvidence` exact 包含 evaluated-at `PortfolioSnapshot`、canonical ACTIVE/PARTIALLY_FILLED `OrderEventStream` set、`ResourceReservationState`、`AvailabilityState`、explicit total/sellable Quantity 和 resolved lattice hash。其内部 hash chain 必须证明 Portfolio Journal prefix、Availability Ledger/Reservation refs、Working Order remaining 与 Reservation cursor/commitment 一致。缺失证据或 chain/lattice/account/instrument/time mismatch 是 DataIntegrityFailure；证据有效但 residual 被拆分、已由 active odd order 保留或超过 sellable 是 MarketRuleRejection。
+
+`OrderRuleEvaluationInput.position_evidence` 默认 None；None 时保留 schema-v1 bytes/hash，只有 non-None 使用 schema v2。`OrderRuleSnapshot` 的 execution-style maximum Quantity 同样使用 optional schema-v2 extension，cap 缺失时 legacy schema-v1 不变。Regular lot order 不因新增 seam 强制携带 Position evidence。
+
+A 股 concrete `CnAShareOrderRuleBook` 是 caller-injected finite immutable evidence，按 Venue、Board 和 half-open TradingDate interval 解析。Board/risk/listing phase、Previous Close 和 Trade Status 都由 point-in-time source evidence提供，不得从 symbol、缺 Bar、零 Volume 或 current rule 推断。Known G08A no-session 是成功的 NoTrade；explicit instrument suspension 与 missing status/session/rule evidence 分离。Rule gap/overlap 一律 fail closed。
+
+G08D v1 只批准 standard seasoned Main/STAR/ChiNext cash auction。Risk-warning投资者累计买入、无涨跌幅新股价格笼子与盘中临停在缺少完整 seam 时结构化阻断。这样可以冻结历史 daily-limit、tick rounding、single-order cap 和 suspension，而不把部分规则包装成完整 decision-grade support。
+
+### 11.8 ExecutionModel
+
+属于 SimulationProfile，负责 Next-open/next-bar、OHLC path、Spread、Participation、Partial Fill、延迟生效和 L1/L2 Queue 等模拟行为。真实交易规则不能放入此模型。
+
+Simulation Execution Adapter 和未来 Live Venue Adapter 都消费 canonical OrderIntent，并产生 `OrderTranslationReport`。Report 记录 Intent 语义、目标能力、映射结果和任何拒绝原因。Adapter 禁止静默把 Post-only、Reduce-only、TIF 或其他约束降级为不同语义；无法精确映射时必须 reject 或 BLOCKED。
+
+### 11.9 PositionAccountingModel
+
+负责将 Fill 和其他 Position 经济事实翻译为不可变 Accounting Journal Entry。不同 Instrument 使用不同实现，例如 `CashInstrumentAccounting`、`LinearDerivativeAccounting`、`InverseDerivativeAccounting` 和 `FuturesSettlementAccounting`。它理解合约乘数、PnL 公式和结算币种，但不能直接修改 Ledger State。
+
+Cash Instrument Accounting 保留不可变 `AcquisitionLot`：lot ID、source fill ID、quantity、unit cost、allocated fees 和 acquisition time。卖出时由 ExecutionAccountProfile 的版本化 `CostBasisPolicy` 选择 FIFO、LIFO、Weighted Average 或 Specific Identification，并在 Journal Entry 中记录被消耗 Lot ID。不能为了平均成本投影丢弃原始 Fill/Lot provenance。
+
+Derivative Entry Price 和 PnL 由具体 PositionAccountingModel 定义，不强行套用 Cash Instrument Lot 模型。
+
+G09A 在 Accounting translation 之前增加 market-neutral `LinearPositionProjector` deep module：caller 提供 `LinearPerpetualContract`、Position key 与 ordered Fill tuple，Projector 从 Flat state确定性产生 signed net Position、exact rational average-entry basis 和 OPEN/ADD/REDUCE/CLOSE/FLIP transitions。它不读取 Ledger/Lot/Runtime mutable state，也不产生 Journal。Average entry 禁止 fixed-scale rounding；contract multiplier 使用 `base_quantity_per_contract` typed Rate 并进入 State identity。G09B 的 `LinearDerivativeAccounting` 消费 G09A Transition，独立负责 realized PnL Money boundary 与 Journal translation；G09E 消费同一 Contract/State identity计算 multiplier-aware margin notional。
+
+该 seam 保持 Generic Ledger branchless：G09A State 是 projection evidence，不冒充 `PositionBalance` 或 Cash `PositionLot`。只有 G09B 冻结 replayable derivative Journal effects 后，Ledger/Snapshot composition 才能持有 authoritative derivative Position。Funding eligibility、MarginProjection 和 LiquidationAudit 同样等待各自 Gate，不在 Position Projector 中累积可选字段。
+
+G09B 使用 specialized-Journal-subclass seam：`LinearDerivativeJournalEntry` 继承通用 `AccountingJournalEntry`，因此完整 G09A Transition、exact realized-PnL、QuantizationPolicy 与 translation Request 直接进入 immutable Journal Entry identity；同时 Generic Ledger 只消费 inherited `balance_changes/realized_pnl/fees/financing`，不需要识别 Instrument type。这个 subclass 不是第二套 Journal，也不是外部 evidence map：它由既有 `AccountingJournal` 排序、哈希、幂等与冲突检测，并由 derivative replay projector按 Journal published order重建 exact average-entry State。
+
+Linear perpetual Fill 不交换 principal notional。每个 Transition 的 Position change exact 为 after-before；只有 per-transition quantized realized PnL 非零时，才产生同额 settlement Cash change与 gross realized-PnL attribution。Exact PnL 使用 prior sign、closed Quantity、contract multiplier、exit Price 与 before exact basis形成单一有理数，最后通过 caller-injected `QuantizationPolicy` 和 public `round_ratio` 一次映射到 Money。Fee、Funding 与 Unrealized PnL 保持独立事实。`LinearDerivativeLedgerProjector` 同时验证 Journal specialized-entry lineage与 branchless Generic Ledger signed Quantity parity；mixed Journal 只做 target per-entry parity，不把整个 Cash-key attribution误当成单一 Instrument PnL。
+
+### 11.10 SettlementModel
+
+负责 T+0/T+1、Settlement Obligation、可交易/可提现资金、可卖数量、Futures daily settlement、Contract expiry 和 rollover。T+1 等规则必须通过 SettlementBook 和 AvailabilityProjection 实现，不能只作为 Strategy 条件判断。
+
+### 11.11 FinancingModel
+
+负责 Crypto funding、Borrow fee、Margin interest、Futures carry 和现金利息。
+
+Funding 使用两个不同事件：
+
+- `FundingRatePublished` 是 Strategy 可观察的市场事件，具有 event time、available time 和目标 funding time。
+- `FundingSettlement` 是账户经济事件，具有稳定 `funding_slot_id`、settlement instant、eligibility instant、applied rate、Funding Mark 和 settlement currency。
+
+Funding Payment 使用 eligibility instant 的合格 Position 计算，并由 FinancingModel 生成唯一 `FundingApplied` Accounting Journal Entry。Applied Rate 不得在 available time 前暴露给 Strategy，不允许按 Bar 隐式均摊 Funding。
+
+G09C 在经济结算前增加 pure Funding eligibility seam。`FundingSlotId` 只由 Instrument 与 target funding UTC 派生；MarketEvent publication以完整 `SimulationInstant`控制可见性，caller提供同 Slot 的 closed linear revision chain，Resolver选择唯一 final Rate或显式取消。该 Resolver不实现 FinancingModel，不创建 obligation。
+
+Eligibility Position不是 current Ledger读取。`LinearFundingEligibilityPositionSnapshot` 嵌入 G09B availability projection、同一 Journal 的 eligibility cursor和 cutoff State；cutoff exact 为最大 `entry.recorded_at < eligibility_instant` prefix，因此 same-UTC earlier phase/sequence进入、eligibility boundary及之后的 Entry排除。Snapshot constructor用 G09B projector重放 prefix并绑定完整 Journal/cursor/state identity；availability projection中后续 close/flip不改变已捕获 eligibility。Cross-Query revision/history completeness由 G09H拥有，Binance publication/finality mapping由 G10E拥有。
+
+G09D 以既有 `FinancingModel` 把G09C Eligibility翻译为唯一`FUNDING_APPLIED` specialized Journal Entry。Funding Application identity exact为Account与Funding Slot；同一canonical semantic key在同一Identity Namespace/Semantic Run下分别派生SETTLEMENT/JOURNAL ID，因此same-ID retry由Accounting Journal原生实现no-op/conflict，完整Journal中的alternate-ID duplicate/conflict由dedicated funding projector审计。Translator不读取prior Journal，也不append或mutate authority。
+
+Linear Funding账户Cash exact为`-(signed eligibility quantity × contract multiplier × Funding Mark × applied Rate)`；所有Scale保持有理数，直到每个Application的单一Money quantization boundary。Applied Rate必须exact等于G09C final published Rate。Funding Mark必须使用`PricePurpose.FUNDING`并绑定完整StaleMarkPolicy、target Funding UTC resolution、settlement Currency/Price Scale和既有Mark Resolver authoritative UTC availability；G09D不伪造额外phase/sequence，也不得由Settlement、Valuation、Margin、Liquidation、execution或trade price替代。Entry只写同额Cash change和financing attribution，不修改Position；zero/rounded-zero仍保留Application identity evidence。Generic Ledger保持branchless。
+
+### 11.12 MarginRules 与 LiquidationRules
+
+属于 MarketSemanticsProfile，表达真实 Initial Margin、Maintenance Margin、保证金层级和强平条件，不包含 Bar 数据下的近似判断。
+
+G09E增加pure单Instrument Margin requirement seam。Caller提供signed Margin Exposure Quantity、historical account leverage evidence、historical Margin Rule Book、`PricePurpose.MARGIN` ResolvedMark、settlement Cash registration和conservative Money quantization；module不从current Position、Order、Working Order、symbol或provider current-tier API推导任何authority。
+
+对Quantity `q/Q`、positive contract multiplier `m/M`和positive Margin Mark `p/P`，exact absolute notional为`abs(q)*m*p/(Q*M*P)`。Selected leverage `l/L`下initial requirement exact为`notional*L/l`；selected leverage不得超过resolved tier maximum。Maintenance requirement exact为`notional*maintenance_rate-maintenance_deduction`，不得为负。Tier按未量化notional使用lower-inclusive/upper-exclusive区间选择，随后Initial与Maintenance各只在自身Money boundary执行一次`round_ratio(..., CEILING)`。
+
+Historical leverage和Rule interval均按`SimulationInstant` availability fail closed；Rule timeline缺口、重叠、tier order/gap/overlap或未来/current rule回填历史均不能产生Requirement。G09E原始Tier区间保持lower-inclusive/upper-exclusive并默认unbounded terminal coverage。G10C增加backward-compatible provider-neutral boundary convention与finite terminal cap支持：既有schema bytes/hash及选择行为不变；upper-inclusive规则在shared cap exact归前一Tier，超过finite terminal cap structured fail closed。G09E只返回单Instrument exact/quantized Initial与Maintenance结果，不创建Reservation、不读取Ledger/Snapshot Equity、不聚合账户、不决定Available Margin或Liquidation；这些分别由G09F/G09G拥有。G10C把provider tier `maximum leverage`、maintenance ratio/deduction映射到该generic seam；G10F后续提供account leverage evidence，二者都不得在G09E加入provider分支。
+
+G09F增加pure单Execution Account Margin Projection seam。v1限定同一Account、同一Venue、同一settlement Currency/Scale：caller提供完整Ledger State authority及其full availability、G09A Position States、`PricePurpose.VALUATION` Marks/Policies、G09E Margin Results和ResourceReservationState authority。Module不读取Runtime current state，也不把Margin或Unrealized PnL写入Generic Ledger。
+
+Derivative Wallet Balance exact取Ledger settlement Cash；Realized PnL、Fee与Funding attribution只作为audit components返回，因为它们已进入Cash，Equity不得重复相加。逐Instrument Unrealized PnL exact为`signed_quantity × multiplier × (valuation_mark - exact_average_entry)`，在每个Instrument Money boundary按frozen HALF_EVEN量化；`Equity = Wallet Balance + Σ Unrealized PnL`，`Available Margin = Equity - Σ Position Initial Margin - Working Order Margin Reservation`。Aggregate Maintenance Margin独立保存给G09G conservative Liquidation audit；negative Available Margin是状态而不是Projection failure。
+
+G09F exact coverage要求每个non-flat authoritative Position恰有一个matching G09E Result和一个VALUATION Mark，G09E exposure必须等于Position quantity，所有evidence必须在evaluated-at完整可用。Working Order Margin只来自ResourceReservationState active commitment totals；Cash、fee reserve、sellable quantity、order/exposure capacity不得静默当作margin。跨Currency FX、stablecoin peg、cross-Venue/cross-account collateral、isolated/cross mode、Margin Ratio、Liquidation和provider wallet mapping均不属于G09F。
+
+G10C已实现的Binance USDⓈ-M Adapter只消费caller-supplied archived Contract Info bracket-update evidence。Raw `bs/bnf/bnc/mmr/cf/mi/ma`与source lineage进入identity；`bnf/bnc`映射settlement-currency floor/finite cap，`ma`映射maximum leverage，`mmr`映射maintenance rate，`cf`映射maintenance deduction。`mi`不是minimum selected account leverage；account leverage由G10F单独提供。Contract Info event/Band availability按point-in-time解析，current authenticated endpoint不得补历史；`notionalCoef`或其他account-adjusted bracket v1 structured reject。G12拥有stream acquisition、initial-state retention及coverage proof，未证明完整archive时只允许development-grade。Implementation commit为`50fa838f901385498ce18d65a897d4eb1dc31337`。
+
+### 11.13 LiquidationAuditModel
+
+属于 SimulationProfile，决定如何根据当前数据粒度检查真实 LiquidationRules。
+
+G09G Bar Engine v1只做conservative audit。Caller提供bar开始时的G09F Account Margin Projection、证明该账户状态在完整bar interval内无Journal/Reservation mutation的Account Window evidence，以及每个non-flat Position唯一的historical `PricePurpose.LIQUIDATION` closed Mark Bar。所有Bar必须同interval、full availability不晚于audit-at，且Account Window exact覆盖该interval；缺口、重复、extra、未closed或未来available均fail closed。
+
+Long使用Liquidation Mark low，Short使用high。Audit以G09F Wallet为不变量，对每个Position按adverse extreme重新计算`signed quantity × multiplier × (extreme - exact average entry)`，并用G09E resolved historical Rule Interval/Tiers在adverse exact notional重新选择Tier、计算Maintenance requirement；不能把current G09F Maintenance固定值用于Short上行，也不能使用G09E MARGIN Mark替代LIQUIDATION Bar。Per-Instrument Unrealized继续HALF_EVEN，Maintenance继续CEILING，Scale/Currency沿用G09F authority。
+
+Adverse Account Equity为`wallet + Σ adverse unrealized`，Adverse Maintenance为`Σ adverse maintenance`。若`equity >= maintenance`则`SAFE`；否则只证明bar内存在可能breach，返回`AMBIGUOUS_BREACH`，不声明精确Liquidation time、trigger price、fill、partial close、bankruptcy或ADL。Decision-grade Request遇到ambiguity返回structured failure；Development-grade保留完整adverse Position audit、limitation和`decision_grade_eligible=false`。
+
+精确 Liquidation 需要足够粒度的历史 Liquidation Mark Price 或 Microstructure 数据。Trade、Execution Reference、Valuation、Margin或Settlement OHLC不得静默替代Liquidation Mark OHLC；Generic Bar Engine/Runner不增加derivative分支，G09H才注入该Model。
+
+### 11.13.1 G09H Financial Dispatcher Composition
+
+G09H以单一profile-neutral Financial Dispatcher seam把Position Accounting、Financing、Margin Projection、Liquidation Audit和Final Snapshot composition注入Generic Bar Engine。Engine只认识canonical Financial Dispatch Plan、Fill Accounting Plan、Scheduled Account Event、immutable Financial State View与canonical Dispatch Outcome；不得认识Cash/Linear/Binance concrete type或按Instrument kind、Profile key、operation key执行经济分支。
+
+ResolvedExecutionCase保存versioned Dispatcher Spec、每个planned Fill的opaque canonical accounting payload、按Timeline Event绑定的ordered Account Events、final Snapshot authority与expected artifact roles。Implementation object、callback、module path、runtime address、Attempt ID和wall clock不进入Case；ExecutionCaseSemanticSpec与Case hash必须覆盖所有Plan bytes，Engine启动时验证injected Dispatcher Spec exact匹配Case。
+
+Cash和Linear Perpetual都走相同调用顺序：Engine产生Fill后调用`book_fill`；Timeline触发Account Event时调用`dispatch_scheduled_event`；Timeline完成后调用`project_final_snapshot`。Dispatcher只返回append-only Accounting Journal Entries、replacement Cash lot state、ordered typed artifacts或Final PortfolioSnapshot；Engine继续拥有Journal append、Generic Ledger replay、Reservation/Settlement refresh、Trace和Run End。Cash dispatcher保留G06/G07现有CashInstrumentAccounting/Lot语义；Linear dispatcher由test Profile composition调用G09A–G09G，不允许Linear Fill交换principal notional或创建Cash Lot。
+
+Scheduled Account Event不等同Market Event经济解释。它是resolved composition plan对一个已存在Timeline Event的账户操作绑定：stable Event ID、完整SimulationInstant、versioned operation key、component refs、canonical payload和expected artifact roles必须exact匹配，且available-at不得晚于dispatch。Engine不解释payload；Synthetic Linear dispatcher内部完成Funding eligibility/application、Margin Projection与Liquidation Audit。未处理、duplicate、extra、reordered或partial artifact均fail closed。
+
+EngineExecutionResult保存canonical ordered Financial Dispatch Artifacts。每个Artifact携带role、source Timeline Event、component/request/result identity及完整typed payload，使Final Journal→Generic Ledger、specialized Journal→Linear Position、Ledger+Marks/Rules/Reservations→G09F MarginProjection、Ledger+G09F+Mark authority→PortfolioSnapshot四条重建路径可独立验证。Generic spot-style Position market value projector不能用于Linear derivative equity。
+
+Synthetic Linear Perpetual Profile只存在于tests/support并通过显式development opt-in加载；固定`decision_grade_eligible=false`、`deployment_authorized=false`，记录`synthetic_market_profile`与Bar liquidation ambiguity limitations。Generic Runner接口不变，至少两个独立Attempt、不同Timeline batch size与input registration order必须保持Case、Trace、Journal、Ledger、Margin、Snapshot、Artifact和Result hash parity。
+
+### 11.14 CorporateActionModel
+
+负责现金分红、拆股和送转、除权除息生效时间、配股、Symbol migration 和合约换月。
+
+公司行为使用同一稳定 `corporate_action_id` 的生命周期，但必须区分市场观察与账户事实：
+
+- `CorporateActionAnnounced`：普通 immutable `MarketEvent`，只在完整 `SimulationInstant(available_time, phase, source_sequence)` boundary 后可见；未来 Record/Ex/Payment/Listing 日期是 Announcement payload terms，不得用 `available_time < future event_time` 的提前 Future Event 绕过 causality。
+- `EntitlementCaptured`：以 Record/Eligibility Instant 的权威历史 registered-position snapshot 锁定账户权利。Snapshot 可以在 Record boundary 后才可用，因此 Entitlement 同时记录 eligibility instant 与 captured-at；当前 Portfolio/Ledger Position 不能替代历史 Register。
+- `PositionAdjustmentApplied`：在独立 Effective/Listing trigger 下调整 Position Lot quantity 和 cost basis。
+- `CashDistributionPaid`：在独立 Payment trigger 下产生 Cash Journal Entry。
+
+G08F 的 A 股 development convention 使用 Record TradingDate local 15:00 session-close 作为 engine eligibility ordering boundary，但不声称 ChinaClear 在 15:00 完成登记。Frozen current-rule scope 要求 declared Ex/适用 Payment/适用 Listing date exact 等于 Record 后首个 known G08A TradingDate，且 share Rate basis 为 `shares_per_share`；日期字段必须由 Announcement 提供，不能因规则可推导而省略。XSHE v1 支持 cash/bonus/capitalization entitlement；XSHG share-listing provenance 未消歧，v1 仅支持 cash并对 bonus/capitalization fail closed。Plan-only、late、cancelled、supplied revision、invalid lifecycle/basis/venue-action combination、negative、fractional 或缺少 Register evidence 的 Action fail closed；complete closed revision-set 与 Candidate 不可观察的账户上下文由 G08H/Profile composition 验证。G08F 只产生 immutable gross Entitlement，不修改 Journal、Ledger、Lot、Settlement 或 Availability。
+
+Position Adjustment 必须以 Journal-replayable Lot effect 为权威，并保存可精确守恒的 total Cost Basis；fixed-scale unit cost 只能是派生值。Account-level integer entitlement 不证明每个 Lot allocation 都是整数，必须有 authoritative per-Lot evidence 或显式单 Lot scope。若 Generic Ledger 仍拒绝 Lot、Runtime 仍维护未由 Journal 重建的 mutable lot side-state，则 Adjustment/Payment Gate 不得 READY。Tax/withholding 由 Market Tax Rules、ExecutionAccountProfile 与账户持有期事实共同决定，不能从 gross Entitlement 推断；deferred-tax disposition 必须由 G08G typed 输出并由 G08H/Runtime 阻断尚未支持的后续 taxable transfer。
+
+Execution、Market Rules 和 Accounting 必须使用原始可交易价格。Ex reference price 只属于 Market Rule/reference metadata；不得 retroactively rewrite OHLC、Fill 或 accounting price。拆股、送转和分红只能通过明确 lifecycle trigger 生成 Accounting Journal Entry，调整 Position quantity、exact cost basis 或 cash。
+
+Strategy 可以通过 ObservationView 请求 point-in-time adjusted series，但调整只能使用在当前模拟时点已经公布或生效的公司行为。Vendor 预先生成的全历史复权序列不能直接作为 decision-grade 执行证据。
+
+第一阶段 A 股至少支持现金分红、拆股/送转和除权除息生效时间。遇到尚未支持但会影响持仓或价格连续性的公司行为时，decision-grade 必须失败关闭。无公司行为的市场使用显式 No-op 实现，而不是空值分支。
 
 ## 12. 引擎划分
 
 ### 12.1 Bar/Portfolio Engine
+
+Bar Engine 是无 Run Outcome 的确定性执行 Harness：
+
+```text
+ResolvedExecutionCase
+        ↓
+Bar Engine
+        ↓
+EngineExecutionResult
+├── ExecutionTrace
+├── Final Ledger State
+├── Final PortfolioSnapshot
+├── target_stream_digest
+└── EngineTermination
+```
+
+Engine 不拥有 BacktestRequest resolution、Semantic Run ID、Attempt ID、FAILED/BLOCKED/CANCELLED 映射或 Canonical Evidence publication。它返回结构化 InputValidationFailure、EngineFailure 或 EngineCancellation。Backtest Runtime composition root 在 Engine 外部完成 Profile resolution 和 ExecutionCase 构建；Auditable Runner 负责 Run identity、Outcome mapping、Evidence、Integrity 和 atomic finalize。
 
 适用：
 
@@ -546,14 +1476,29 @@ class MarketProfile:
 - 趋势、轮动、Carry、Cross-sectional
 - 多资产组合
 
-第一阶段支持的 Execution Profile：
+第一阶段唯一允许产生 decision-grade 结果的 Bar Execution Profile 是：
 
-- `next_open`
-- `next_bar_open`
-- `bar_close`
-- `ohlc_conservative`
-- `fixed_slippage`
-- `participation_limited`
+```text
+next_eligible_bar_open.v1
+```
+
+ExecutionModel 只决定成交资格、ExecutionReferencePrice 和 full/partial/no-fill，不计算 Slippage 数值。独立 SlippageModel 根据 Side、Quantity、Reference Price 和允许的市场状态产生 `SlippageDecision`；每个 Decision 记录 model/calibration identity 和 applicability result。
+
+规则：
+
+- 只服务于 Portfolio Strategy 的再平衡订单。
+- 决策产生的订单禁止在信号所属同一 Bar 成交。
+- 订单最早在下一根满足 Session、交易状态、数据 availability 和 Order Rules 的真实 Bar open 成交。
+- ExecutionModel 使用该 open 作为 reference price；SimulationProfile 中的版本化确定性 SlippageModel 独立计算 execution price，Fee 由 FeeAssessmentEngine 计算。
+- 通过规则和资金检查后默认 full fill。
+- 停牌、价格限制、数据终止或无合格 Bar 时，根据明确 TIF 产生 keep-active、liquidity-blocked 或 expire；流动性阻断不等同于 MarketRuleRejection。
+- 不使用未来 Bar close、high 或 low 决定开盘成交价格。
+- 不使用 forward-filled、合成或 gap placeholder Bar 成交。
+- A 股方向敏感价格限制：G08D pure Adapter 只消费 resolved OrderRuleSnapshot、Side 与 contemporaneous bar open；Buy 在 upper-limit open、Sell 在 lower-limit open 时产生 `LiquidityBlockedAtLimit`，反方向可以继续评估。该结果是 `next_eligible_bar_open.v1` 的 conservative Simulation convention，不是“所有涨跌停订单永不成交”的交易所事实。
+- Adapter input 不含全天 Volume；不得用全天 Volume 推断涨跌停 Queue 成交，日频模型也不在盘中打开价格限制后补成交。未来只有携带 L1/L2 contemporaneous Queue evidence 的独立 Simulation Profile 才能放宽。
+- Bar 内 Stop、Limit、Queue、Partial Fill 和精确 Liquidation 不属于该 Profile 的能力。
+
+后续可以增加 Limit、Stop、OHLC path 或 participation model，但在获得独立验证前只能产生 development-grade 结果。Liquidity Strategy 和做市不能使用 Bar Engine。
 
 ### 12.2 Microstructure Replay Engine
 
@@ -566,11 +1511,13 @@ class MarketProfile:
 - Hedge execution
 - Second-level execution
 
+它接收 `LiquidityStrategy` 或 `ExecutionStrategy` 产生的 venue-neutral Order/Cancel Intent。
+
 它与 Bar Engine 共用：
 
-- Instrument、Order、Fill 和 Ledger 契约
+- Instrument、Order Intent、Order、Fill 和 Ledger 契约
 - Market manifest
-- Result 和 evidence 契约
+- Result、evidence 和派生 analysis 契约
 - 费用与交易规则的权威定义
 
 它不与 Bar Engine 强行共用：
@@ -580,9 +1527,85 @@ class MarketProfile:
 - Queue 模型
 - 高频性能优化
 
+Microstructure Engine 出现真实性能需求后可以增加版本化 `EngineCheckpoint`，内容至少包括 Timeline cursor、StrategyState、OrderState、ReservationBook、SettlementBook、Accounting state/journal hash、Market/Order Book state、RandomStream counters 和 Artifact offsets/hashes。
+
+Checkpoint 只能在安全 Timeline Phase 边界创建。恢复必须创建新的 child Attempt，保留 parent Attempt 和 checkpoint identity；恢复结果必须与从头运行产生相同 execution result hash。旧 Attempt 不允许原地修改。
+
 ## 13. Accounting Ledger
 
-Accounting Ledger 是账户状态的唯一权威来源。
+`AccountingJournal` 是共享执行账户现金、持仓、费用和已实现 PnL 的唯一财务权威来源。`PortfolioSnapshot` 是 Journal 状态加当前 Market Marks 计算出的派生投影，可以缓存，但必须能够重建，不能覆盖或修改历史 Journal。
+
+```text
+Fill / Funding / Settlement / Corporate Action
+                         ↓
+       Instrument-specific Accounting Models
+                         ↓
+          Immutable Accounting Journal
+                         ↓
+              Generic Accounting Ledger
+                         +
+PricePurpose Streams → MarkResolver
+                         ↓
+             Native Currency Valuations
+                         ↓
+              CurrencyValuationGraph
+                         ↓
+             Reporting Currency Values
+                         ↓
+            PortfolioSnapshotProjector
+                         ↓
+                PortfolioSnapshot
+```
+
+Generic Ledger 不包含 `if instrument_type` 分支，不读取 MarketSemanticsProfile、ExecutionAccountProfile 或 Risk Policy。它只保证 Journal Entry schema、稳定 Entry ID 幂等、已注册 Account/Balance Key、Debit/Credit 或等价财务不变量以及确定性 replay。
+
+Immutable Journal 使用 `(recorded_at, journal_entry_id.value)` 作为唯一稳定顺序。单次 append batch 可以无序输入，但在发布 cursor 后不得向既有 prefix 插入更早 Entry；否则历史 cursor 和 projection identity 将失去含义。相同 Entry ID 与相同 canonical content 是 no-op，相同 ID 与不同 content 是冲突。Replay cursor 同时携带已消费 Entry 数量和 prefix hash-chain identity，所有 replay range 使用半开区间并校验 position/hash，不能只信任整数 offset。空 Journal 从固定 genesis hash 开始，每个 prefix identity 只由前一 prefix hash 与当前 Entry canonical hash 推导。Journal Store/Replay 本身不计算 Cash、Position 或 PnL，也不拥有外部 mutable persistence。
+
+`PositionAccountingModel`、`FinancingModel`、`SettlementModel` 和 `CorporateActionModel` 只在市场事件产生新的经济 Cash/Position/PnL 事实时把它翻译为 Journal Entry，且不能直接修改 Ledger State。若 Fill 已完整入账，后续 SettlementBook Event 只使既有账户交付义务成熟并改变 Availability，则不得再写 `SettlementApplied` Journal Entry；该名称保留给确有独立经济变化的 Settlement。是否允许负现金、Short Position、Margin exposure 或某项账户权限由 ExecutionAccountProfile、PreTradeRisk、MarginModel 和 AvailabilityProjection 决定，不由 Ledger 决定。
+
+实际 Fill 即使暴露风险或权限违规也必须如实入账；系统随后产生 `PostTradeRiskBreach` 或 `IntegrityFinding`。禁止为了维持“合法状态”而丢弃已发生 Fill 或拒绝 Accounting。
+
+Strategy Sleeve 级 PnL attribution 属于分析结果，第一阶段不作为独立财务账本。未实现 PnL 不写入 Journal，由当前 Position 和 Mark 派生。
+
+第一阶段一个 Backtest Run 只允许一个 Execution Account 和一个 Reporting Currency。Journal Entry 仍必须保留 `account_id`、`venue_id` 和原生 `currency`，不能依赖“系统永远只有一个账户或币种”的隐式假设。
+
+External Cash Flow 使用 `CapitalDeposited`、`CapitalWithdrawn` 和 `CapitalTransferred` 等明确事件，改变 Cash 和 Equity，但不计入 Trading PnL。每个事件具有稳定 ID、时间、原生币种、金额、来源和审批 provenance。第一阶段默认 timeline 为空，且不支持跨 Execution Account transfer。Strategy 不得在事件可用前观察未来资金流。资金流只影响后续 CapitalAllocationPolicy 计算，不自动重算已有 ActivePortfolioTarget。
+
+`MarkResolver` 按 PricePurpose 和 UtcInstant 选择唯一合法 Mark，执行 StaleMarkPolicy，并禁止用 Execution Price 隐式替代 Valuation Price。缺失、歧义或过期 Mark 返回结构化失败。
+
+G10D 的 Binance USDⓈ-M Price Stream Adapter保持纯离线并复用该Resolver。Accepted source exact为official public-data `aggTrades`与closed `markPriceKlines`：aggregate-trade price按provider trade time映射`EXECUTION_REFERENCE`；closed Mark Kline close分别生成独立`VALUATION`与`MARGIN` observation；同一raw Mark row另生成独立`LIQUIDATION` close observation及low/high Bar。共享source row不授权跨Purpose fallback，ordinary contract kline open/close、book ticker、index price、moving-average mark和estimated settlement price均不能替代上述authority。
+
+Source economic time与knowledge time分离。Aggregate trade observed-at exact为trade time；Mark close observed-at exact为provider close time，interval end-exclusive为close time加1ms；caller-supplied closed-at/available-at/captured-at控制可见性且不得前移。若late availability只能靠same-UTC `SimulationInstant.phase/source_sequence`表达，现有`MarkObservation`的Utc-only availability不能无损保存，Adapter structured fail closed而不是抹平顺序。Point ambiguity/staleness继续由purpose-specific `StaleMarkPolicy`与generic Resolver处理；Liquidation OHLC coverage独立检查，不允许point forward fill。
+
+G10D v1显式不支持`SETTLEMENT`：Mark Price Stream字段`P`只是estimated settlement price，index/mark/trade close也不是final automatic-settlement authority。`FUNDING`仍由G10E使用Funding Rate History关联mark和Slot publication semantics提供。每个purpose独立保存finite coverage、source/revision lineage和stream identity；mapping/schema/limitations进入G10D model digest并由G10G纳入最终Profile digest。G12证明ZIP/CSV/checksum/revision/gap completeness前全部Resolution固定development-grade。Primary-source boundary记录于`docs/research/binance-usdm-price-purpose-streams-primary-sources.md`；implementation commit为`790469d80ddcf3797f03c96c975b77d75a3d49a5`。
+
+G10E只接受caller-supplied immutable USDⓈ-M Funding Rate History row。Exact `fundingTime`与stable Instrument派生既有G09C `FundingSlotId`；`fundingRate`直接映射basis `funding_fraction_of_notional`；同一row的associated `markPrice`唯一映射`PricePurpose.FUNDING`。Adapter不按8h/4h/1h cadence推断Slot，不调用Funding Info/current Mark Price/Mark Price Stream，不从nearby G10D Mark Kline、index、estimated settlement或trade price补Rate/Mark，也不重放premium-index公式。
+
+G10E v1只支持一个visible immutable `Regular` root row。`Special` additional funding、missing/unknown rate type、same-slot duplicate/conflict或superseding archive revision structured fail closed；不sum/net，也不扩展G09C `(instrument,target_funding_time)` identity。Provider只提供millisecond UTC，系统ordering convention固定在target UTC的`TimelinePhase(110,"funding_settlement")/SourceSequence(0)`，位于G09C eligibility phase 100之后；Publication availability与G09D `applied_at`共用该instant，archive capture/revision visibility另由caller-supplied `SimulationInstant`控制。
+
+G10E Resolution直接形成Slot、G09C final-rate Publication Candidate、zero-age/no-forward-fill Funding Mark Evidence与绑定caller Application Key的G09D Settlement Evidence。Mark必须positive并在supplied G09A Contract price Scale exact representable；Rate允许signed或zero；全部decimal用string/integer arithmetic且只在G09D Money boundary量化。Adapter不拥有Position cutoff、Eligibility result、cash-flow formula、Journal append或Ledger mutation。Source/coverage/schema/phase/revision/decimal/limitation进入G10E model digest并由G10G纳入Profile identity；G12证明funding files/checksums/revisions/slot gaps前固定development-grade。Primary-source boundary记录于`docs/research/binance-usdm-funding-source-semantics-primary-sources.md`；implementation commit为`195265b1ed830e62b91882ff315b115e7ac80597`。
+
+G10F以caller-supplied immutable Historical Account Profile Book统一对齐Account Config、Symbol Config、User Commission Rate与feeBurn四类first-party account source。每个Band保存Account/Instrument、finite effective interval、full available-at、feeTier/canTrade/dualSide/multiAssets、marginType/autoAdd/selected leverage/maxNotional、maker/taker与feeBurn，并为四类source分别保存revision lineage。Current authenticated response不能回填历史，G12必须证明initial snapshot和全部update。
+
+首个Binance account profile只支持standard UM、tradable、One-way、Single-Asset、CROSSED、no-auto-add、feeBurn off与exact USDT quote/settlement/reporting。Hedge与当前signed-net Position authority不兼容；Multi-Assets需要collateral FX/haircut；isolated/auto-add需要separate wallet/liquidation authority；BNB discount需要effective discount、fee asset与conversion；Portfolio Margin另有账户语义。上述模式全部structured fail closed，不作为cross single-asset alias。
+
+G10F把selected integral leverage映射既有`LinearMarginLeverageEvidence`；把account-specific maker/taker映射共享一个`AccountFeeScheduleRef`的Fee Reservation/Final Rule Sets。Reservation按`max(maker,taker)`、USDT Scale 8、CEILING预留；Final按actual Fill maker/taker、USDT Scale 8、TOWARD_ZERO逐Fill计算。Market fee与Tax显式not-applicable，并分别使用generic Estimator/Engine可执行的zero-rate `ORDER_NOTIONAL`/`NOTIONAL_RATE` coverage rule，而不是会被generic unknown-basis检查拒绝的UNKNOWN；negative maker rebate不clip为zero。Rounding在Account Trade List parity前是development limitation。G10F只输出后续G10G组合所需的normalized mode与`AVAILABLE_MARGIN` fee-reserve source，不独立创建缺少G10B capacity/G09F state的完整`AccountRiskPolicy`。Primary-source boundary记录于`docs/research/binance-usdm-fee-account-profile-primary-sources.md`；implementation commit为`07cc15823ec3790b0491220f248a64c334e3a81b`。
+
+G10G是pure offline composition boundary。它把G10A Instrument/multiplier与G10B exact scales组成G09A Linear Contract；要求G10D Execution Reference、Valuation、Margin、Liquidation purpose exact coverage及G10E Funding authority；把G10F account mode/fee schedule/leverage与G10C finite tier coverage、matching historical Account Capacity Evidence组成single-instrument generic `AccountRiskPolicy`。任何deferred G10B rule都不能在composition时被静默清空。
+
+Binance的`MAX_NUM_ORDERS`与`MAX_NUM_ALGO_ORDERS`是不同provider counters，而generic Policy当前只有一个order-cap dimension。G10G v1保守取二者minimum并把该lossy mapping写入digest/limitations；它可能过度拒绝但不能扩大权限。Exposure ceiling exact取G10F raw selected-leverage `maxNotionalValue`与G10C finite terminal cap的USDT minimum；G09F current exposure、Available Margin、Working Orders与Reservation仍在PreTradeRisk evaluation time supplied，不成为static Profile state。Pure composition、three development-only profiles、Financial Dispatcher Spec、ProfileResolver/Runner integration与frozen Journey已由implementation commit `12286dbf6b7289fcb2f6069c46fc648d8f5a5be0`验证通过。
+
+Resolved registrations固定Market `crypto.binance_usdm.v1`、Simulation `bar.next_eligible_open.conservative.v1`、Execution Account `binance.usdm.standard-cross.v1`。Market/Simulation manifests exact-cover全部existing ports；no Tax、no Corporate Action、no automatic delivery Settlement与single-USDT valuation都必须有versioned component identity。Financial dispatcher spec固定`crypto.binance_usdm.linear-financial-dispatch.v1`并绑定all provider resolutions、Contract、Risk Policy、component manifests和limitations；Engine/Runner继续只识别profile-neutral Spec/Plan/Payload。Bar-open execution、zero-bps deterministic slippage与bar-extreme liquidation audit是repository development conventions，不是Binance parity。Primary-source/system boundary记录于`docs/research/binance-usdm-profile-composition-primary-sources.md`。
+
+G10H在Runtime外复用WP-00C Comparator Contract v1，对固定`crypt-gemini` snapshot projection、G10G development-run projection与caller-supplied canonical Binance account-record projection做分层比较。固定顺序从Source Identity、Decision、Order、Fill、Fee、Position/PnL、Funding、Journal/Ledger、Margin/Snapshot到Liquidation与Final Result；first divergence优先于最终aggregate equality。每个source pair必须exact-cover全部layers，并将缺少legacy scope、provider evidence或G12 archive completeness显式标记为`NOT_COMPARABLE`，不能用zero、empty、global epsilon或silent omission伪装Match。
+
+Binance Account Trade是per-Fill price/quantity/maker/commission/realized-PnL authority；Income History只作linked cash-flow reconciliation，不能double-book；Order/User Data event、matching-engine/economic、capture与availability time保持分离。User Force Orders区分Liquidation与ADL，public liquidation stream不作complete account archive；G09G/G10G conservative bar-extreme audit只比较detection/classification，不冒充actual liquidation execution。Known legacy/G10G semantic differences通过`docs/adr/0001-g10h-legacy-binance-parity-boundary.md`逐path声明。Completed Mismatch仍是有效parity evidence；G10H通过证明report truthful/repeatable，不授权decision-grade或deployment。Primary-source boundary记录于`docs/research/binance-usdm-parity-primary-sources.md`；implementation commit为`468c91ad3fdbad221c959182f8751300f20a2424`。Frozen report verdict为`APPROVED_CHANGE`且coverage incomplete，所有decision/deployment flags保持false。
+
+`CurrencyValuationGraph` 把原生 Currency Balance 转换为 Reporting Currency。每条转换边引用 point-in-time Price Stream；存在多条路径时由版本化 `CurrencyValuationPolicy` 选择。Stablecoin 不默认 1:1，除非 Profile 明确提供版本化 Peg Valuation Policy。缺少路径或路径不唯一时 decision-grade 失败关闭。
+
+`PortfolioSnapshotProjector` 只消费 Ledger State、Resolved Marks 和 Reporting Currency Valuations；它不查询数据源、不选择价格、不决定换算路径。
+
+第一批 Binance USD-M 和 A 股 Profile 可以分别限制为主要单结算币种 USDT 和 CNY。多账户、跨 Venue 资金和 Consolidated Portfolio 留作后续独立扩展。
 
 必须支持：
 
@@ -602,14 +1625,19 @@ Accounting Ledger 是账户状态的唯一权威来源。
 
 禁止引擎和策略各自计算另一套 PnL。
 
-Ledger 接口建议：
+接口组合建议：
 
 ```python
-new_state = ledger.apply(state, account_event)
-snapshot = ledger.mark(state, market_marks, timestamp)
+new_state = ledger.apply_entry(state, journal_entry)
+rebuilt_state = ledger.replay(journal_entries)
+resolved_marks = mark_resolver.resolve(price_view, price_purposes, utc_instant)
+valuations = currency_valuation_graph.value(new_state, resolved_marks, reporting_currency)
+snapshot = snapshot_projector.project(new_state, resolved_marks, valuations, utc_instant)
 ```
 
-Ledger 的状态转换必须可用小型事件 Fixture 独立测试。
+`apply_entry` 必须按稳定 Entry ID 幂等；重复应用同一经济事实不能产生重复现金、仓位或费用。Ledger 的状态转换和 Journal replay 必须使用小型事件 Fixture 独立测试。
+
+这不意味着整个回测引擎采用 Event Sourcing。订单簿、指标缓存和其他引擎内部状态可以使用专门实现，只要求财务状态可从 Accounting Journal 重建。
 
 ## 14. 数据完整性和结果等级
 
@@ -619,6 +1647,9 @@ Ledger 的状态转换必须可用小型事件 Fixture 独立测试。
 
 - 当前交易规则快照代替历史规则
 - 固定滑点
+- 使用 OHLC 假想路径处理 Stop/Limit
+- 使用 Bar volume 近似 Partial Fill
+- 使用无校准证据的 SlippageModel
 - 缺少订单簿深度
 
 但必须记录限制。
@@ -628,60 +1659,220 @@ Ledger 的状态转换必须可用小型事件 Fixture 独立测试。
 要求：
 
 - 完整 Market manifest
-- 所有观察满足时间因果性
-- 历史交易规则覆盖
-- 必需 Funding slot 完整
-- 必需 Corporate action 完整
+- 已生成并通过 `PriceStreamCoverageReport`、`MarketAvailabilityReport` 和 `UniverseCoverageReport`
+- 所有非 Reporting Currency 余额具有唯一、完整的 Currency Valuation path
+- 所有观察满足时间因果性和 point-in-time revision 规则
+- MarketSemanticsProfile 声明的结果相关历史规则在有效区间内无缺口、无重叠且具有来源证据
+- 已生成并通过 `RuleCoverageReport`
+- SlippageModel 具有版本、校准证据，且所有 Fill 均位于适用范围
+- 必需 Funding publication、settlement slot、eligibility instant 和 Funding Mark 完整
+- 必需 Corporate action announcement、record/eligibility、effective 和 payment lifecycle 完整
 - 确定性运行
 - 无 blocking integrity issue
 
 ### 14.3 失败关闭条件
 
 - MarketBundle hash 不匹配
-- Symbol/Instrument identity 冲突
-- 时间倒序、重复或不允许的缺口
+- Backtest Run 访问网络、供应商 API 或未冻结可变数据源
+- MarketSemanticsProfile、SimulationProfile 或 ExecutionAccountProfile 未注册、组件不兼容或 digest 不匹配
+- 权威 Artifact 缺少 Schema version、Migration chain 不可用或旧 Artifact 被原地改写
+- Canonical OrderIntent 不受 OrderCapabilitySet 支持或 Adapter 发生静默语义降级
+- InitialAccountState 与 ExecutionAccountProfile 不兼容
+- SlippageModel 缺少校准证据、使用隐式零滑点或订单超出 applicability envelope
+- ExecutionModel 自行计算 Slippage、SlippageDecision identity 缺失或读取未来 Bar 字段
+- Fill 直接承载唯一最终 Fee、FeeAssessment 重复/遗漏或 minimum commission 被按 Fill 重复收取
+- Symbol/Instrument identity 冲突、未来上市 Instrument 提前可见或退市 Instrument 从历史 Universe 消失
+- Strategy 绕过 ObservationView 构造 Universe，或 StaticUniverseSpec 冒充无幸存者偏差全市场结果
+- Strategy 执行未经版本化 Resample、Bar 跨 Session 聚合或 BarDefinition/aggregation hash 缺失
+- 时间倒序、重复或未分类/不允许的数据缺口
+- 权威对象使用 naive/local datetime、DST 解析不明确或 TradingDate 由 UTC date 猜测
+- 同一时间戳的 phase 或 source sequence 未定义
 - 使用 `available_time > decision_time` 的数据
-- 必需规则时间段缺失
-- Funding slot 缺失
-- 公司行为缺失
-- Settlement 无法完成
+- Strategy 使用 Decision Time 之后才可见的 Revision，或 Vendor correction 原地覆盖旧数据
+- Strategy/Simulation 使用全局 RNG、未注册 RandomStream 或 RandomStream derivation 无法重建
+- Backtest Runtime 内训练/调参/候选选择，或 Strategy 使用 available time 晚于 Decision Time 的 ModelArtifact
+- Strategy 绕过 ObservationView 读取外部市场数据或非确定性时钟
+- Portfolio Strategy 读取账户 Cash/NAV/Margin、其他 Sleeve 或 Working Orders，或 Strategy Family 越权访问 Context capability
+- Decision-grade 使用 editable install、不可确定源码、缺失依赖锁或 Build Artifact hash 不匹配
+- Warmup 期间产生 OrderIntent、Fill、Accounting Journal Entry 或绩效结果
+- Run end 使用隐式最后收盘价强平、缺少合法 Final Valuation Mark 或结束边界后的经济事件被计入结果
+- Strategy LookbackRequirement 未满足或交易结束边界不是 exclusive
+- 影响未来行为的 Strategy 状态无法序列化、恢复或 hash，或 Liquidity Strategy 维护第二套 Inventory
+- 必需规则时间段缺失、重叠、来源不明或解析结果不唯一
+- 历史规则缺失时回退当前规则或估算值
+- Instrument 缺少明确的 PositionAccountingModel、MarginModel 或结算语义
+- Bar LiquidationAudit 返回 `AMBIGUOUS_BREACH`
+- 必需 PricePurpose 缺失、覆盖不足或模块使用错误用途的价格
+- Execution 使用 forward-filled/合成 Bar，或 Valuation 使用未经 StaleMarkPolicy 批准的旧 Mark
+- `MISSING`/`SOURCE_OUTAGE` 未阻断 decision-grade，或 gap reason 与 Session/Suspension 证据冲突
+- 非 Reporting Currency 余额缺少估值路径、存在未决多路径或使用隐式 Stablecoin 1:1
+- Decision-grade 中使用 PriceFallbackPolicy
+- Funding publication、settlement slot、eligibility instant、Funding Mark 或 cutoff Position 证据缺失
+- Funding slot 重复入账或 Applied Rate 在 available time 前暴露给 Strategy
+- 公司行为 announcement、record/eligibility、effective 或 payment 证据缺失，类型不受支持，或使用当前 Position 替代历史 Entitlement
+- 使用事后复权价格作为执行证据
+- Settlement 无法完成、Obligation 重复/遗漏或 AvailabilityProjection 与 Settlement Rules 不一致
 - Accounting 不平衡
-- 非法订单状态转换
+- Accounting Journal 出现重复来源、非幂等 Entry 或无法重建 Snapshot
+- Cash Instrument Lot provenance 丢失、CostBasisPolicy 未配置或 Journal 消耗不存在/重复的 Lot
+- External Cash Flow 被计入 Trading PnL、缺少 provenance 或在事件发生前影响 Capital Allocation
+- 非法订单状态转换、重复非幂等 Order Event 或无法从 Order Event Stream 重建 OrderState
+- Decision-grade Bar 运行发生 same-bar fill 或使用未来 high/low/close/volume 决定开盘成交
+- A 股在 upper-limit open 买入或 lower-limit open 卖出仍成交，或把流动性阻断误记为规则拒绝
+- 数量舍入扩大已审批风险、Residual Policy 未配置或 Order Planner 再次隐式舍入
+- RebalanceCoordinator 忽略 Working Order、重复规划未完成数量或新目标未取消冲突订单
+- 同一 Decision Instant 按 Strategy 注册顺序逐个下单、暴露其他 Strategy 输出或使用部分完成 DecisionBatch
+- Runtime Strategy 产生 Contract/Causality violation 却继续运行，或把正常 Portfolio Risk rejection 误判为 Contract failure
+- Pre-trade Risk 修改订单，或 Capability Validation、Translation、Market Rule Evaluation、Fee/Resource Reservation、Pre-trade Risk 和 Submission 顺序颠倒
+- Resource Reservation 重复冻结、释放不完整、终态订单仍占用资源或可用资源变成非法负值
+- Target、OrderPlan 和 Venue Order 生命周期混用，或 superseded Plan 继续产生订单
 
-## 15. 结果与证据契约
+上述可预期完整性和适用性条件产生 `BLOCKED`。未处理异常、实现不变量被破坏或 Artifact 持久化失败产生 `FAILED`，不得混用。
+
+## 15. 结果、Outcome 与证据契约
+
+`RunOutcome` 与 `ResultGrade` 是两个独立维度。
+
+```text
+PENDING → RUNNING → COMPLETED
+                  ↘ BLOCKED
+                  ↘ FAILED
+                  ↘ CANCELLED
+```
+
+- `COMPLETED`：完整运行结束，才允许产生正式 BacktestResult，grade 可以是 development 或 decision。
+- `BLOCKED`：预期内的数据完整性、因果性、模型适用性或市场歧义阻断，产生 BlockedRunReport。
+- `FAILED`：系统缺陷、未处理异常、不变量实现错误或 Artifact 写入失败，产生 FailureReport。
+- `CANCELLED`：由操作者或资源管理系统终止。
+
+Partial metrics 只能标记为 diagnostic-only。Platform 不得把 BLOCKED、FAILED 或 CANCELLED 当成零收益或普通 Completed 样本。所有 Outcome 的 `deployment_authorized` 固定为 false。
+
+Decision-grade 永久保存权威决策、执行、财务和完整性轨迹；大型 MarketBundle 不在每个 Run 中复制，而是通过不可变内容 hash 引用。
+
+相同语义输入产生相同 `semantic_run_id`；每次实际执行产生独立 `attempt_id`。Completed canonical evidence 通过 staging 原子 finalize，此后不可修改。
 
 标准运行目录：
 
 ```text
-runs/<run-id>/
-├── request.json
-├── environment.json
-├── market-manifest.json
-├── strategy-spec.json
-├── decisions.jsonl
-├── targets.jsonl
-├── orders.jsonl
-├── fills.jsonl
-├── positions.jsonl
-├── equity.jsonl
-├── financing.jsonl
-├── rejections.jsonl
-├── metrics.json
-├── integrity.json
-└── result.json
+runs/<semantic-run-id>/
+├── .publication.lock                  # operational exclusive lock；不进入 canonical hash
+├── canonical/                         # 仅 atomic、immutable COMPLETED publication
+│   ├── canonical-attempt-ref.json
+│   ├── integrity.json
+│   ├── result.json
+│   └── publication-manifest.json
+├── integrity-evaluations/
+│   └── <evaluation-id>/               # post-integrity BLOCKED/FAILED immutable record
+│       ├── integrity.json
+│       ├── evaluation-outcome.json
+│       └── publication-manifest.json
+└── attempts/
+    └── <attempt-id>/                   # independently atomic、immutable Attempt evidence
 ```
 
-### 15.1 Result 最小结构
+只有 `COMPLETED` 可以创建 `canonical/`。Integrity 的预期 blocking 产生独立 `BLOCKED` evaluation，execution-hash mismatch 产生独立 `FAILED` evaluation；二者都不得写 `result.json` 或占用 canonical destination。Evaluation 目录与 canonical 目录分别通过同一文件系统内 staging→rename 原子发布。
+
+每个 Attempt 目录包含：
+
+```text
+<attempt-id>/
+├── request.json
+├── environment.json
+├── build-artifact-manifest.json
+├── schema-migration-manifests/
+├── market-bundle-ref.json
+├── bar-aggregation-manifest.json
+├── corporate-action-lifecycle-events.jsonl
+├── resolved-market-semantics-profile.json
+├── resolved-simulation-profile.json
+├── resolved-execution-account-profile.json
+├── initial-account-state.json
+├── external-cash-flow-events.jsonl
+├── environment-compatibility-report.json
+├── slippage-applicability-report.json
+├── strategy-book-spec.json
+├── model-artifact-manifest.json
+├── model-revision-timeline.jsonl
+├── random-stream-manifest.json
+├── id-derivation-manifest.json
+├── checkpoint-manifest.json             # future microstructure child attempt only
+├── parity-report.json                    # migration/verification attempts
+├── allocation-risk-execution-specs.json
+├── observation-causality-audit.jsonl
+├── revision-provenance-report.json
+├── universe-coverage-report.json
+├── strategy-state-checkpoints.jsonl
+├── lookback-coverage-report.json
+├── rule-coverage-report.json
+├── price-stream-coverage-report.json
+├── market-availability-report.json
+├── valuation-staleness-report.json
+├── currency-valuation-report.json
+├── decision-candidate-payload-refs.jsonl
+├── decisions.jsonl
+├── strategy-output-validation.jsonl
+├── decision-batches.jsonl
+├── target-snapshots.jsonl
+├── strategy-allocations.jsonl
+├── portfolio-netting.jsonl
+├── portfolio-risk-decisions.jsonl
+├── normalized-targets.jsonl
+├── active-portfolio-targets.jsonl
+├── market-rule-decisions.jsonl
+├── pre-trade-risk-decisions.jsonl
+├── residual-decisions.jsonl
+├── rebalance-decisions.jsonl
+├── order-plans.jsonl
+├── order-translation-reports.jsonl
+├── order-events.jsonl
+├── liquidity-block-events.jsonl
+├── slippage-decisions.jsonl
+├── reservation-events.jsonl
+├── settlement-obligations.jsonl
+├── availability-checkpoints.jsonl
+├── fills.jsonl
+├── fee-assessments.jsonl
+├── accounting-journal.jsonl
+├── position-lots.jsonl
+├── portfolio-checkpoints.jsonl
+├── funding-events.jsonl
+├── financing.jsonl
+├── liquidation-audit.jsonl
+├── final-portfolio-snapshot.json        # future full-trace expansion; G07 v1 is inside Engine result envelope
+├── run-end-report.json                  # future full-trace expansion; G07 v1 is inside Engine result envelope
+├── blocked-run-report.json              # BLOCKED only
+├── failure-report.json                  # FAILED only
+├── cancellation-report.json             # CANCELLED only
+└── evidence-manifest.json
+```
+
+`integrity.json`、`result.json`、`canonical-attempt-ref.json`、evaluation outcome 和 publication manifest 只属于 run-level publication，不得追加到 WP-07C 已 atomic-finalize 的 Attempt 目录。上表中的细粒度 full-trace 文件是后续 Evidence schema 扩展目标；G07 v1 Attempt exact coverage 以 WP-07C ArtifactEnvelope 集合为准。
+
+派生分析独立存放，不修改 immutable canonical evidence：
+
+```text
+analyses/<semantic-run-id>/<metric-profile-digest>/
+├── metric-profile.json
+├── metrics.json
+├── analysis-evidence.json
+└── analysis-artifact-hash.json
+```
+
+MarketBundle 必须在 Retention Policy 下保持可取回。如果引用的数据包已经丢失，即使运行目录仍存在，该运行也不再是 Rebuildable。G07 v1 的 caller-supplied `DeterministicRebuildEvidence` 必须 canonically 绑定 Request、Resolved Environment、BuildArtifactManifest、MarketBundle manifest/retention proof、TargetStream digest、ExecutionCase identity manifest、Execution trace hash/level 和 execution result hash；`CanonicalAttemptRef` 绑定该 evidence hash，不能只保存布尔 `rebuildable=true`。
+
+### 15.1 Completed Result 最小结构
 
 ```json
 {
   "schema_version": 1,
-  "run_id": "...",
+  "semantic_run_id": "...",
+  "attempt_id": "...",
+  "outcome": "COMPLETED",
   "request_hash": "...",
-  "canonical_result_hash": "...",
+  "execution_result_hash": "...",
+  "evidence_manifest_hash": "...",
   "result_grade": "development",
   "deployment_authorized": false,
-  "metrics": {},
   "integrity": {
     "blocking": [],
     "limitations": []
@@ -689,27 +1880,135 @@ runs/<run-id>/
 }
 ```
 
-### 15.2 Trace Level
+只有 Auditable Runner 可以发布 BacktestRunOutcome。EngineExecutionResult 不是 Completed Result；Evidence atomic finalize 和 Integrity validation 成功前不得发布 `COMPLETED`。
 
-- `summary`：request、manifest、metrics、integrity、result
-- `full_trace`：增加 decisions、orders、fills、positions、equity
-- `microstructure_trace`：增加 quote/trade/queue 级诊断
+### 15.2 Canonical publication hash DAG
 
-Decision-grade 默认要求 `full_trace`。
+```text
+finalized Attempt evidence + AttemptExecutionHash + DeterministicRebuildEvidence
+                              ↓
+                 canonical-attempt-ref.json
+                              ↓ ref hash
+integrity closed-attempt-set + canonical ref + retention/rebuild checks
+                              ↓
+                       integrity.json
+                              ↓ integrity hash
+                         result.json
+                              ↓
+                 publication-manifest.json
+```
+
+- `canonical-attempt-ref.json` 不引用 Integrity、Result 或 Publication Manifest；它绑定 canonical Attempt identity/ordinal、Attempt Evidence Manifest hash、AttemptExecutionHash artifact/content hash、execution result hash、Bundle/Trace/Rebuild evidence 和 final ExecutionCase identity。
+- `integrity.json` 绑定 closed Attempt set hash、全部 eligible Attempt 的 evidence/execution hash tuple、canonical Attempt ref hash、blocking/limitation 和 grade inputs；不引用 Result 或 Publication Manifest。
+- `result.json` 绑定 canonical Attempt ref hash、Integrity hash、request/execution identity、Outcome/grade 和 `deployment_authorized=false`；不引用 Publication Manifest。
+- `publication-manifest.json` exact-cover 同目录其他权威文件及其 schema/content hash，是 DAG root；任何子文件都不得反向引用 manifest hash。
+- BLOCKED/FAILED integrity evaluation 使用独立 DAG：closed Attempt set → Integrity → EvaluationOutcome → evaluation PublicationManifest；它没有 `canonical-attempt-ref.json` 或 `result.json`。
+
+### 15.3 Semantic Run、Attempt 与领域 ID
+
+```text
+semantic_run_id = hash(
+    normalized request including ID-free ExecutionCaseSemanticSpec hash
+    + MarketBundle hash
+    + all profile digests
+    + BuildArtifactManifest hash
+)
+```
+
+- 相同语义输入必须得到相同 semantic run ID。
+- 每次实际执行使用不同 attempt ID，Attempt 之间不得覆盖。
+- Bar Engine v1 的 FAILED/CANCELLED Attempt 不支持 in-place resume；Auditable Runner 重试时创建新 Attempt 并从初始 ResolvedExecutionCase 运行。
+- G07 v1 的 `COMPLETED` closure 至少需要两个 finalized `READY_FOR_INTEGRITY` Attempt。Publisher 在获取 run-level exclusive lock 后 exact-cover 当时全部 eligible Attempt；execution result hash 必须完全一致，canonical Attempt 固定选择最小 ordinal。
+- `canonical/` 原子发布后 Semantic Run 永久关闭：Evidence Writer 拒绝新 Attempt；Auditable Runner 必须绑定 publication root，在同一锁内验证只读 canonical 目录、Artifact Envelope、Publication Manifest exact coverage 和 Result hash chain 后返回 cache hit，不得创建 Attempt、映射 FAILED 或重跑 Engine；同一 Semantic Run 的 post-publication parity/revocation 不在 v1 内，不能绕过 closure 继续写入。
+- closure 前发现 execution hash mismatch 产生独立 durable `FAILED` integrity evaluation，不得选择 winner。少于两个 eligible Attempt 或其他预期 Integrity deficit 产生独立 durable `BLOCKED` evaluation。
+- v1 filesystem threat model 固定为 trusted cooperative single-writer：受控本地同一文件系统、同一个 run-level exclusive lock 和 staging→rename。锁不得按 wall clock 自动回收；shared/adversarial filesystem、NFS/object-store rename 语义、symlink 攻击和恶意并发写者明确不支持，不能用于 decision-grade publication。
+- `ExecutionCaseSemanticSpec` 必须在领域 ID 派生前冻结，且不得包含 Order、OrderEvent、Fill、FeeAssessment、SettlementObligation、JournalEntry 等派生 ID 或 final ExecutionCase hash。它必须 exact-cover 所有行为相关的 typed execution input，包括 Slippage calibration/configuration，而不能只绑定省略参数的端口描述。
+- Spec 同时冻结 role-aware `identity_plan`：每个 Case role 显式绑定 identity type、Domain kind、semantic key 和 ordinal。Factory 只能按 role 请求身份，不能由 builder 在派生时重新选择 key/ordinal；Plan 任一变化都会先改变 Semantic Run ID。
+- Composition root 先由 ID-free Spec 生成 Semantic Run ID，再用 semantic run namespace、role-aware identity plan 和稳定 ordinal 确定性派生领域 ID，最后构造完整 `ResolvedExecutionCase`。Final case hash 独立进入 Attempt/Engine evidence，不回流到 Semantic Run ID preimage。
+- `ResolvedExecutionCase` 同时保存完整 Semantic Spec、其 hash 和 Identity Manifest。Composer 与 Runner 都从最终 Case 重新计算 ID-free Spec，校验 Request/Spec/Case、Order parent→NormalizedTarget 关系、Manifest derivation plan 和 Case role exact coverage 后，才允许 Engine 执行。
+- Order、OrderEvent、Fill、FeeAssessment、SettlementObligation 和 JournalEntry 等模拟领域 ID 使用 semantic run namespace、causation 和稳定 ordinal 确定性派生。
+- Attempt ID 是独立操作身份，不进入模拟领域 ID。
+- Live Adapter 同时保存内部 canonical ID 和 Venue ID。
+- ID algorithm 和 namespace version 进入 Schema/Build identity。
+
+### 15.4 Schema 演进
+
+每个权威 Artifact 都有独立 `schema_version`。第一阶段先实现 Artifact Envelope v1、Schema Catalog、当前版本 Writer/Reader dispatch 和 unknown-version fail-closed。只有出现真实 immutable 旧 Artifact 和明确 source/target Schema 后，Reader 才增加显式、纯、单向的 migration chain；禁止为了框架测试发明虚构旧版本。
+
+```text
+original artifact v1 + original hash
+             ↓ explicit migration
+canonical view v3 + migration manifest
+```
+
+原始 Artifact 和 Evidence Manifest 永远保留，不允许原地升级。首个真实 Migration 必须记录 source/target schema、migration chain 和 migration code hash。Legacy 对象如果不是旧 Artifact Schema，应通过 Legacy Adapter、Comparator Contract 和 ParityReport 迁移，不能伪装成 Schema Migration。
+
+Schema Migration 只能处理结构表达变化。如果 Instrument、Accounting、Order 或其他经济语义发生变化，必须建立新领域类型、Profile 或语义版本，不能通过 migration 静默重新解释旧证据。Parity 工具可以把不同版本显式迁移到共同 Canonical View 后比较。
+
+### 15.5 权威 Hash
+
+- `request_hash`：覆盖全部规范化语义输入及其引用 identity。
+- `execution_result_hash`：覆盖影响交易和财务结果的规范化 Decision、Allocation、Risk、Order、Fill、Journal 和最终 Snapshot 轨迹。
+- `evidence_manifest_hash`：覆盖本次运行所有权威证据 artifact 的路径、角色、schema version 和内容 hash。
+
+图表、展示格式和可重建 Metrics 的变化不应改变 `execution_result_hash`。
+
+### 15.6 派生 Metrics
+
+Metrics 不属于 Backtest Engine 的权威状态，而是以下输入的版本化派生分析：
+
+```text
+Accounting Journal
++ MarketBundle
++ Valuation Marks
++ MetricProfile
+        ↓
+Derived Metrics
+```
+
+`MetricProfile` 必须声明 valuation schedule、return method、annualization basis、risk-free source、cash-flow treatment、drawdown sampling、reporting currency 和 benchmark。每份分析具有独立 `metric_profile_digest` 和 `analysis_artifact_hash`。
+
+同一个 execution result 可以派生多个 MetricProfile 结果。Promotion Gate 必须指定接受的 MetricProfile；跨市场比较前必须验证 Profile 兼容性。派生分析不能回写或改变 immutable canonical run evidence。
+
+### 15.7 Trace Level
+
+- `summary`：仅允许 completed development-grade，保存请求、引用、最终结果和限制。
+- `full_trace`：保存权威决策、执行、Journal、Checkpoint 和完整性证据。
+- `microstructure_trace`：在 full trace 上增加必要的 Queue 和撮合诊断；原始 Quote/Trade 仍优先引用 MarketBundle。
+
+Decision-grade 必须使用 `full_trace` 或 `microstructure_trace`。
+
+PortfolioSnapshot checkpoint 至少在决策后、成交后、结算后和运行结束生成。Final Snapshot 必须区分 Realized/Unrealized PnL，并记录未平仓 Position、Margin exposure、结束前最后合法 Valuation Mark identity 和被 Run End 终止的 Working Orders。其他时点 Snapshot 可以由 Journal 与 MarketBundle 重建，不要求永久保存。
 
 ## 16. 确定性和性能
 
 ### 16.1 确定性
 
-- 所有随机行为必须使用 request seed。
+Decision-grade 使用不可变 `BuildArtifactManifest` 定义实际执行代码身份。Manifest 至少记录 Strategy、Trading Domain、Trading Kernel、Backtest Runtime 和 Profile component 的 Artifact hash，依赖 lock hash，Python/NumPy 等结果相关运行库版本，以及可选 container image digest。Git commit 只作为 provenance，不是唯一代码身份。
+
+主机名、绝对路径和运行时间等不影响语义的 Attempt 信息不进入 semantic run ID。Dirty source 只有在打包成不可变内容寻址 Artifact 后才能被准确记录；正式 decision-grade 禁止无法确定内容的 editable install。
+
+- 所有随机行为必须使用 master seed 派生的命名独立 RandomStream。
+- RandomStream 使用版本化 counter-based RNG 或等价可定位算法，记录 algorithm、version、stream key 和 seed derivation。
+- 新增其他组件的随机调用不得改变现有 Stream 结果。
+- 一个 master seed 表示一个模拟场景；多 Seed 稳健性由外部 Experiment/Promotion 层创建多个 Semantic Run。
 - 配置和结果采用 canonical serialization。
-- Decimal 字段禁止通过 JSON number 隐式转换。
-- 相同 request、MarketBundle 和代码版本应产生相同 result hash。
+- Typed scaled integer 必须显式序列化 `units`、`scale` 和领域 identity，禁止转成 JSON 浮点数。
+- `Decimal` 仅允许用于字符串解析、外部格式转换和参考测试。
+- Analytics float64 进入 StrategyDecision 时必须经过版本化 QuantizationPolicy。
+- 相同 request、MarketBundle、market semantics digest、simulation digest、execution account digest 和代码版本应产生相同 execution result hash。
+- Order、Fill、Fee、Settlement 和 Journal ID 必须按因果链与稳定 ordinal 确定性生成。
+- 同一 semantic run 的 Completed attempts 必须产生相同 execution result hash。
+- 权威交易计算不得依赖平台相关的二进制浮点舍入结果。
+- 同 UtcInstant 事件必须按 `(epoch_nanoseconds, phase, source_sequence)` 稳定排序。
+- MarketBundle 分区、Reader batch size 和存储 Adapter 变化不得改变事件顺序或 execution result hash。
 - Engine 不读取系统当前时间决定业务行为。
 
 ### 16.2 性能分层
 
 - 低中频优先保证语义正确和 traceability。
+- Runtime 使用流式 EventCursor 和有界 Observation cache，不假设 MarketBundle 可以完全载入内存。
+- Metrics 由独立 analysis runtime 从 Journal、MarketBundle 和 MetricProfile 派生。
 - Bar Engine 可对纯指标计算使用向量化，但账户和订单状态转换保持权威语义。
 - Microstructure Engine 可以采用专门的数据结构和批处理优化。
 - 任何 fast path 都必须通过黄金 Fixture 与权威路径做 parity。
@@ -719,17 +2018,70 @@ Decision-grade 默认要求 `full_trace`。
 ### 17.1 Binance USD-M Perpetual
 
 ```yaml
-market_profile: crypto.binance_usdm.v1
-session_model: continuous_24x7
-instrument_model: perpetual
-order_rule_model: binance_historical_rules
-execution_model: next_bar_with_slippage
-settlement_model: realtime
-financing_model: historical_funding
-corporate_action_model: none
-margin_model: cross_margin
-liquidation_model: historical_tiers
+market_semantics_profile: crypto.binance_usdm.v1
+semantics:
+  session_model: continuous_24x7
+  instrument_model: linear_perpetual
+  order_rule_model: binance_historical_rules
+  position_accounting_model: linear_derivative
+  settlement_model: perpetual_delivery_not_applicable
+  financing_model: historical_funding
+  market_fee_rules: account_specific_maker_taker
+  tax_rules: none
+  margin_rules: exchange_margin_tiers
+  liquidation_rules: conservative_bar_extreme_audit
+  corporate_action_model: none
+  price_streams:
+    execution_reference: historical_aggregate_trade_price
+    valuation: historical_mark_price_kline_close
+    margin: historical_mark_price_kline_close
+    liquidation: historical_mark_price_kline_range
+    settlement: unsupported_until_final_settlement_source
+
+simulation_profile: bar.next_eligible_open.conservative.v1
+simulation:
+  engine_kind: bar
+  execution_model: next_eligible_bar_open.v1
+  slippage_model: deterministic_bps.v1
+  latency_model: next_bar_eligibility.v1
+  liquidity_model: full_fill_after_rules.v1
+  liquidation_audit_model: conservative_intrabar_audit.v1
+
+execution_account_profile: binance.usdm.standard-cross.v1
+account:
+  account_type: derivatives
+  margin_mode: cross_single_asset_one_way
+  leverage_policy: configured_per_instrument
+  account_fee_schedule: account_specific_symbol_timeline
+  cost_basis_policy: not_applicable
+  permissions:
+    long: true
+    short: true
 ```
+
+G10A 的 Binance USDⓈ-M Instrument Model 是纯离线 Profile Adapter。它只消费caller-supplied frozen `exchangeInfo` revisions与source hashes，不创建HTTP client、不读取current API、不扫描本地文件。每条Revision绑定stable lineage key、`symbol`/`pair`、`contractType`、`status`、`onboardDate`、`deliveryDate`、base/quote/margin assets、effective/available instant和revision lineage。`captured_at`只允许选择已可见的closed revision set；当前response不得反向重写历史。
+
+Stable `InstrumentId`由caller-supplied lineage key派生，不能从current `symbol`、`pair`、base/quote拼接或去后缀猜测。Symbol变更只更新同一Instrument的`SymbolTimeline`；若缺少显式lineage evidence，则rebranding前后contract保持不同Instrument。退市只关闭listing interval，不删除历史identity、Symbol interval或Bundle evidence。上市前、有限delivery边界之后或无唯一visible metadata时fail closed。
+
+USDⓈ-M官方schema把base asset定义为quantity asset、quote asset定义为price asset、margin asset定义为margin asset，并且不提供COIN-M `contractSize`。G10A仅在`contractType=PERPETUAL`且quote asset等于margin/settlement asset的冻结scope内产生`InstrumentType.LINEAR_PERPETUAL`与exact multiplier `1 base quantity per contract`。`deliveryDate=4133404800000`按官方perpetual example处理为open-ended sentinel；delist announcement后的finite `deliveryDate`才关闭interval。`pricePrecision`/`quantityPrecision`明确不能替代tick/step，历史Price/Quantity lattice仍由G10B拥有。G10G结合G10A currency/multiplier与G10B scales构造G09A `LinearPerpetualContract`。
+
+Contract status保存为provider evidence。只有`TRADING`为普通tradable；`PENDING_TRADING`、delivery/settlement、`CLOSE`、`TRADING_HALT`和`TRADING_CANCEL_ONLY`均不由G10A伪装为普通可交易。Reduce-only/no-new-position窗口属于G10B historical order rules，不能仅从G10A status猜测。
+
+Primary-source boundary记录于`docs/research/binance-usdm-instrument-metadata-primary-sources.md`。Binance first-party public-data repository记录了部分`onboardDate`更正和consumer对expired-contract retention的风险报告，因此source revision、availability与retention provenance是decision-grade前置条件；后者不冒充official API completeness guarantee。
+
+G10B 的 Binance USDⓈ-M Order Rule Model 同样是纯离线 Adapter。它消费caller-supplied finite `BinanceUsdmOrderRuleBook`，每个half-open Band绑定G10A stable Instrument、economic interval、`available_at`、source key/hash、raw canonical decimal filter strings、provider order type/TIF集合、symbol-time admission mode和显式deferred rule keys。`captured_at`只允许使用已公布Band；coverage gap、overlap、late-only evidence或current `exchangeInfo` fallback均fail closed。
+
+Static rule projection exact覆盖`PRICE_FILTER`、`LOT_SIZE`、`MARKET_LOT_SIZE`和`MIN_NOTIONAL`。Provider decimal string用整数/字符串算术映射到最小exact Scale，不使用float、process Decimal context、`pricePrecision`或`quantityPrecision`。Enabled `minPrice`必须位于zero-origin tick lattice；Limit与Market quantity filter必须各自满足minimum/maximum/step geometry，不能把不同的`MARKET_LOT_SIZE`压成普通`LOT_SIZE`。
+
+Generic `OrderRuleSnapshot`因此增加backward-compatible optional `market_quantity_lattice`：缺失时v1/v2 canonical bytes与hash不变；存在时使用schema v3。`LIMIT`/`STOP_LIMIT`使用primary lattice和limit cap，`MARKET`/`STOP`使用market lattice和market cap；notional、position evidence与quantity issue均使用selected lattice。两条lattice必须属于同Instrument、共享exact atomic Scale和MIN_NOTIONAL authority。
+
+Provider admission mode exact区分`normal`、`reduce_only`与`closed`。Reduce-only只允许`PositionEffect.CLOSE`并要求`reduce_only=true`；closed或G10A non-tradable status产生suspended admission，不推断Order或Fill。Account one-way/hedge compatibility仍由G10F拥有，G10B不能因为provider支持reduceOnly就授权Hedge Mode参数。
+
+`PERCENT_PRICE`、open/algo-order counts、`marketTakeBound`、`triggerProtect`和advanced order/TIF组合不能被静默忽略。Band必须声明known deferred keys；Resolution保存未解析keys并在非空时`decision_grade_eligible=false`。G10D/G10F/G10G必须补齐对应Mark、account-state或translation evidence后才能升级；unknown key直接fail closed。
+
+Tick transition只影响transition后新admission。Transition前已获批Order保留原MarketRuleDecision、resolved interval和rule hash，不按current tick重新解释；官方声明的temporary suspension必须由独立Band/G10A status evidence表达，不能由“tick changed”猜测。
+
+Primary-source boundary记录于`docs/research/binance-usdm-order-rules-primary-sources.md`。G10B不拥有HTTP/JSON/file parsing、MarketBundle Builder、Mark lookup、account lookup、open-order counting、wire translation、fill behavior、Engine branch、live或deployment。
 
 关键场景：
 
@@ -737,20 +2089,51 @@ liquidation_model: historical_tiers
 - Long/short
 - Step size 和 min notional
 - Cross margin
-- Intrabar liquidation audit
+- Intrabar LiquidationAudit：SAFE 或 AMBIGUOUS_BREACH
 - Rule timeline 变化
 
 ### 17.2 A 股
 
 ```yaml
-market_profile: equity.cn_a_share.v1
-session_model: cn_exchange_calendar
-instrument_model: cash_equity
-order_rule_model: board_aware_price_limits
-execution_model: next_open
-settlement_model: cash_t0_position_t1
-financing_model: none
-corporate_action_model: cn_equity_actions
+market_semantics_profile: equity.cn_a_share.v1
+semantics:
+  session_model: cn_exchange_calendar
+  instrument_model: cash_equity
+  order_rule_model: board_aware_price_limits
+  position_accounting_model: cash_instrument
+  settlement_model: cash_t0_position_t1
+  financing_model: none
+  market_fee_rules: exchange_mandatory_fees
+  tax_rules: historical_stamp_duty
+  margin_rules: cash_only
+  liquidation_rules: none
+  corporate_action_model: cn_equity_actions.v1
+  price_streams:
+    execution_reference: raw_tradable_open
+    valuation: raw_tradable_close
+    margin: not_applicable
+    liquidation: not_applicable
+    settlement: raw_settlement_price
+  strategy_adjustment: point_in_time_optional
+
+simulation_profile: bar.next_eligible_open.conservative.v1
+simulation:
+  engine_kind: bar
+  execution_model: next_eligible_bar_open.v1
+  slippage_model: deterministic_bps.v1
+  latency_model: next_bar_eligibility.v1
+  liquidity_model: full_fill_after_rules.v1
+  liquidation_audit_model: none
+
+execution_account_profile: cn_broker.cash.standard.v1
+account:
+  account_type: cash_equity
+  margin_mode: none
+  account_fee_schedule: broker_commission_with_minimum
+  cost_basis_policy: configured_cash_instrument_policy
+  permissions:
+    long: true
+    short: false
 ```
 
 关键场景：
@@ -760,89 +2143,217 @@ corporate_action_model: cn_equity_actions
 - 涨停买入和跌停卖出
 - 停牌
 - 印花税
-- 分红送转和复权
+- 现金分红、拆股/送转和 point-in-time 复权
 
-这两个市场差异足够大，可用于验证 MarketProfile 接缝是否真实成立。
+这两个市场差异足够大，可用于验证 MarketSemanticsProfile 接缝以及同一 SimulationProfile 的跨市场复用是否真实成立。
 
 ## 18. 测试策略
 
 ### 18.1 契约测试
 
-- 时间因果性
+- UtcInstant canonical serialization、DST 重复/缺失本地时间、夜盘 TradingDate 和 point-in-time Revision selection
+- Point-in-time Universe、listing/delisting、Symbol rename 和 survivorship-bias fixture
+- RuleTimeline 无缺口、无重叠和唯一解析
+- PricePurpose 隔离与 PriceStreamCoverageReport
+- Gap classification、禁止 forward-fill execution 和 StaleMarkPolicy max-age
+- CurrencyValuationGraph 唯一路径、Stablecoin 非隐式 peg 和 PortfolioSnapshot 换算
+- StrategyState canonical round-trip、checkpoint restore 和命名 RandomStream replay
+- Random Stream independence：新增无关随机调用不改变其他组件结果
+- Immutable StrategySpec/ModelArtifact、training cutoff 和 walk-forward ModelRevisionTimeline
+- Portfolio/Liquidity/Execution Strategy Context capability isolation
+- StrategyOutputValidator：runtime violation→FAILED、precomputed input violation→BLOCKED、economic limit→Portfolio Risk
+- Warmup 禁止交易副作用、LookbackCoverageReport 和半开区间边界
+- 默认 Mark-to-market 结束、Working Order termination 和显式 CloseoutPolicy
+- Run Outcome 状态机以及 BLOCKED/FAILED/CANCELLED 不产生 Completed Result
+- Semantic run ID 稳定性、attempt 隔离、cache hit、并发 dedup 和 canonical atomic finalize
+- Deterministic domain ID derivation、重复经济内容不碰撞和跨 Attempt ID parity
+- Bar retry 从头重跑；未来 EngineCheckpoint child attempt 与 full replay parity
+- BuildArtifactManifest 内容寻址、editable install 阻断和 Artifact hash 验证
+- Schema Registry、单向 Migration、原始 hash 保持和跨版本 Canonical View parity
+- 分层 ParityContract、无全局 epsilon 和 first-divergence report
+- G01–G03 模块级 source provenance/parity，不把基础语义比较推迟到端到端阶段
+- MarketBundle Builder source snapshot/normalization provenance 与 Runtime offline enforcement
+- In-memory/Parquet 不同 Reader Adapter 和 batch size 的事件顺序/result parity
+- BarDefinition Session anchor、夜盘 TradingDate、午休和 empty interval aggregation fixture
+- 同一 execution result 派生多个 MetricProfile 且不改变 canonical evidence
+- Profile required rule dimensions 与 MarketBundle coverage 匹配
+- Synthetic Profile 默认 Production Registry lookup 失败、显式 development opt-in 和固定 limitation
 - Canonical hash
-- Order lifecycle
-- Fill 和 Ledger 平衡
+- Canonical OrderIntent capability validation、Translation Report 和禁止静默降级
+- Order Event Stream 幂等应用、合法状态转换和 OrderState replay
+- PlanningOmission、PreTradeRiskRejection、MarketRuleRejection、ExecutionRejection 和 DataIntegrityFailure 分类
+- Portfolio Risk clamp trace，以及 Pre-trade Risk 只能 approve/reject 的不变量
+- Reservation Book 从 Order Event replay、partial fill 缩减和终态零泄漏
+- SettlementBook replay、T+1 sellable quantity、tradable/withdrawable cash 和 AvailabilityProjection
+- Fill reference price、SlippageDecision amount 和成交价一致
+- ExecutionModel 与 SlippageModel 职责隔离、ApplicabilityEnvelope 和显式 zero-slippage limitation
+- Per-fill/per-order FeeAssessment、minimum commission、tax 和 FeeCharged 幂等
+- Slippage applicability envelope 边界和越界失败
+- Fill 和 Accounting Journal 平衡
+- 已发生但违反账户权限/风险的 Fill 仍完整入账，并产生 PostTradeRiskBreach/IntegrityFinding
+- FIFO/LIFO/Weighted Average/Specific Identification Lot consumption fixture
+- Funding publication causality、eligibility Position、slot 幂等和 Journal booking
+- External Cash Flow 与 PnL 分离、Capital Allocation 更新和 MetricProfile cash-flow treatment
+- Corporate Action historical entitlement、position adjustment、payment 和 tax lifecycle
+- Journal 幂等应用和 Snapshot replay
 - Result schema
 
-### 18.2 市场 Profile 黄金 Fixture
+### 18.2 多策略聚合 Fixture
+
+至少验证：
+
+1. 同一 Decision Instant 的 Strategy 注册顺序变化不改变 DecisionBatch、净目标和订单。
+2. 两个 Sleeve 对同一 Instrument 提出相反目标。
+3. Portfolio Allocation 根据各自 Strategy Allocation NAV 转换名义暴露。
+4. 相反暴露在下单前净额化。
+5. Account Ledger 只记录账户级订单、成交和持仓。
+6. Sleeve attribution 不改变账户权益。
+
+### 18.3 市场 Profile 黄金 Fixture
 
 Binance Fixture：
 
 1. 开多仓。
-2. 经历一次 Funding。
+2. 观察 FundingRatePublished，并在 eligibility instant 保持仓位后经历 FundingSettlement。
 3. 部分平仓。
-4. 价格不利变化。
-5. 验证 margin、PnL 和 equity。
+4. 价格不利变化但最不利 extreme 下仍为 `SAFE`。
+5. 构造可能触发强平的 Bar 并验证 `AMBIGUOUS_BREACH` 阻断 decision-grade。
+6. 验证 margin、PnL 和 equity。
 
 A 股 Fixture：
 
 1. T 日开盘买入。
 2. T 日尝试卖出并被拒绝。
-3. T+1 日涨停状态下尝试买入。
-4. T+1 日卖出已有持仓。
-5. 验证 lot、印花税、可卖数量和现金。
+3. T+1 日 upper-limit open 尝试买入，验证 `LiquidityBlockedAtLimit` 且不使用全天 Volume 补成交。
+4. 应用 Announcement、Entitlement、Ex/Effective 和 Payment 完整现金分红及拆股/送转生命周期。
+5. 验证 Execution 仍使用原始价格，Strategy 可按 point-in-time 观察复权序列。
+6. T+1 日卖出已有持仓。
+7. 验证 lot、印花税、可卖数量、数量调整和现金。
 
-### 18.3 Parity 测试
+### 18.4 Parity 测试
+
+采用分层 `ParityContract`：
+
+- 新架构内部的 TargetSnapshot、Normalized Target、OrderIntent、Order Event、Fill Price/Quantity、FeeAssessment、Accounting Journal 和 Final PortfolioSnapshot 在规范化后要求 exact parity。
+- 旧系统迁移为每个字段显式选择 `exact`、`quantized-equal`、`ordered-sequence-equal`、`explicit-tolerance` 或 `known-intentional-change` Comparator，禁止全局 epsilon。
+- Metrics 只在明确 MetricProfile 下比较，并区分 Execution、Accounting 和 MetricProfile 差异。
+
+`ParityReport` 必须记录 first divergence、affected domain、expected/actual、comparator、source provenance 和 intentional change reference。
+
+具体迁移：
 
 - 从 `crypt-gemini` 抽取策略和回测场景。
 - 从 `cycle-rotation-platform` 抽取 A 股 T+1 和订单规划场景。
-- 比较 decisions、orders、fills、positions 和 PnL。
-- 迁移阶段不只比较最终收益率。
+- 比较 decisions、normalized targets、orders、fills、fees、journal、positions 和 PnL。
+- 不只比较最终收益率。
 
-### 18.4 性质测试
+### 18.5 性质测试
 
 - 无成交时现金和持仓不变。
 - Fee 不能增加账户权益。
 - Full close 后 Position quantity 为零。
+- TargetSnapshot 重放不会累加为增量仓位。
+- Price/NAV/External Cash Flow 变化不会隐式重算 ActivePortfolioTarget Quantity。
+- Next eligible bar open 模型不会发生 same-bar fill。
+- A 股价格限制开盘阻断具有方向敏感性并触发后续 Rebalance。
+- 成交价不依赖成交时点之后的 Bar 字段。
+- 新 TargetSnapshot 省略的旧目标被归零。
 - 不允许卖出超过可卖数量。
 - 缺少必需数据时 decision-grade 不得成功。
 
 ## 19. 建议代码组织
 
-逻辑模块先于物理仓库拆分。初始可以放在一个独立仓库中：
+逻辑模块先于物理仓库拆分。第一阶段在当前 `backtest/` 仓库中建立五个可独立打包和测试的 Python package：
 
 ```text
-crypto-quant-backtest/
-├── src/crypto_quant_backtest/
-│   ├── contracts/
-│   ├── runner/
-│   ├── timeline/
-│   ├── ledger/
-│   ├── planning/
-│   ├── engines/
-│   │   ├── bar/
-│   │   └── microstructure/
-│   ├── markets/
-│   │   ├── binance_usdm/
-│   │   └── cn_a_share/
-│   ├── metrics/
-│   └── evidence/
+backtest/
+├── packages/
+│   ├── trading-domain/
+│   │   ├── pyproject.toml
+│   │   └── src/crypto_quant_domain/
+│   ├── trading-kernel/
+│   │   ├── pyproject.toml
+│   │   └── src/crypto_quant_trading/
+│   │       ├── ports/
+│   │       │   ├── market_semantics.py
+│   │       │   ├── accounting.py
+│   │       │   ├── settlement.py
+│   │       │   └── risk.py
+│   │       ├── allocation/
+│   │       ├── risk/
+│   │       ├── planning/
+│   │       ├── accounting/
+│   │       ├── profiles/
+│   │       │   ├── binance_usdm/
+│   │       │   └── cn_a_share/
+│   │       └── execution_account_profiles/
+│   ├── market-data-contracts/
+│   │   ├── pyproject.toml
+│   │   └── src/crypto_quant_market_data/
+│   │       ├── manifests/
+│   │       ├── readers/
+│   │       ├── cursors/
+│   │       └── repository/
+│   ├── market-bundle-builder/
+│   │   ├── pyproject.toml
+│   │   └── src/crypto_quant_bundle_builder/
+│   │       ├── source_adapters/
+│   │       ├── normalization/
+│   │       ├── validation/
+│   │       └── publishing/
+│   └── backtest-runtime/
+│       ├── pyproject.toml
+│       └── src/crypto_quant_backtest/
+│           ├── runner/
+│           ├── timeline/
+│           ├── observations/
+│           ├── engines/
+│           │   ├── bar/
+│           │   └── microstructure/
+│           ├── simulation/
+│           │   ├── ports.py
+│           │   └── profiles/
+│           │       ├── bar/
+│           │       └── microstructure/
+│           ├── evidence/
+│           └── analysis/
 ├── tests/
-│   ├── contracts/
-│   ├── ledger/
+│   ├── support/
+│   │   └── synthetic_market/
+│   │       ├── profile.py
+│   │       ├── bundle_factory.py
+│   │       ├── target_factory.py
+│   │       └── expected_evidence.py
+│   ├── domain/
+│   ├── trading_kernel/
+│   ├── market_data/
+│   ├── bundle_builder/
+│   ├── backtest_runtime/
 │   ├── markets/
 │   ├── parity/
 │   └── fixtures/
 └── docs/
 ```
 
-如果部分契约已属于 `crypto-quant-core`，回测仓库应依赖 core，而不是复制定义。
+固定依赖方向：
+
+```text
+crypto_quant_domain ← crypto_quant_trading ← crypto_quant_backtest
+crypto_quant_domain ← crypto_quant_market_data ← crypto_quant_backtest
+crypto_quant_market_data ← crypto_quant_bundle_builder
+```
+
+`crypto_quant_backtest` 只依赖 `crypto_quant_market_data` 的只读 Bundle Repository contract，不依赖 `crypto_quant_bundle_builder` 或在线 Source Adapter。
+
+五个 package 稳定后再决定是否拆为独立 Git 仓库。Live Runtime 只能依赖 Trading Domain 和 Trading Kernel。现有 `crypto-quant-core` 中可复用的契约必须通过 provenance 和 parity 迁移，不能复制后形成双权威实现。
 
 ## 20. 与现有项目的关系
 
 ### 20.1 `crypto-quant-core`
 
-应提供：
+现有项目作为契约和核算语义的迁移来源，而不是与新 Trading Domain/Kernel 并存的第二套权威实现。
+
+候选迁移内容：
 
 - Instrument、Order、Fill、Money 等基础契约
 - Canonical serialization
@@ -850,23 +2361,24 @@ crypto-quant-backtest/
 - Accounting primitives
 - Exchange rule primitives
 
-需移出：
+迁移后需要补齐：
 
-- Hummingbot DTO
-
-需增强：
-
-- 多 Fill Ledger
-- Partial close
+- 不可变 Accounting Journal 和幂等 Entry
+- Journal replay 与派生 PortfolioSnapshot
+- Instrument-specific PositionAccountingModel
+- Linear/Inverse derivative 核算语义
+- 多 Fill 和 Partial close
 - 多币种现金
 - Margin 和 Financing
+
+Hummingbot DTO 不进入 Trading Domain。迁移完成后应选择单一权威 package，并删除或弃用旧定义。
 
 ### 20.2 `crypto-quant-platform`
 
 应负责：
 
 - 构建 BacktestRequest
-- 选择 Strategy 和 MarketProfile
+- 选择 Strategy、MarketSemanticsProfile、SimulationProfile 和 ExecutionAccountProfile
 - 调用回测系统
 - 注册运行证据
 - 执行 Promotion Gate
@@ -883,7 +2395,9 @@ crypto-quant-backtest/
 - Binance historical rule evidence
 - Funding 和因果性实现
 
-迁移必须保留源 commit 和 parity Fixture。
+迁移必须保留 base commit、源文件 hash、Migration Mode、Comparator contract 和 parity Fixture。迁移来源仓库是否 dirty 不构成资格条件；所有来源都按声明范围冻结内容寻址 Source Snapshot。范围内使用 Snapshot 时的实际文件字节，可以包含 modified/untracked 文件；范围外 dirty 内容不进入 Snapshot。Base commit 和 clean/dirty 状态只作为 provenance，aggregate snapshot hash 是唯一权威来源身份。
+
+基础数值、契约和 Accounting 的 Parity 必须在对应 G01–G03 Work Package 中完成模块级验证，不能等待市场 Profile 或端到端 G12。G12 只承担真实 MarketBundle、完整策略和端到端 Parity。
 
 ### 20.4 `cycle-rotation-platform`
 
@@ -900,83 +2414,96 @@ crypto-quant-backtest/
 
 ## 21. 实施阶段
 
+本节只保留高层路线。可独立合并的 Work Package、依赖 Gate、失败边界和逐项验收标准见：
+
+- `docs/implementation/target-driven-bar-v1-plan.md`
+- `docs/implementation/acceptance-matrix.md`
+
+实现不得把本节任一“阶段”作为单一大任务；必须按详细计划中的 WP/Gate 交付。只有 Acceptance Matrix 状态为 `READY` 的 Work Package 才允许实现；`PASSED` 必须记录 immutable commit、实际验收命令和 Artifact hash。
+
 ### 阶段 0：架构冻结
 
 - 确认领域词汇。
+- 建立 Legacy Migration Source Map，冻结 `crypto-quant-core`、`crypt-gemini` 和 `cycle-rotation-platform` 的 immutable source identity。
+- 建立 Comparator Contracts 和模块级 ParityReport Harness。
 - 确认模块依赖图。
 - 确认 BacktestRequest/Result schema。
-- 确认时间和结果等级语义。
+- 确认 Warmup、半开交易区间、时间和结果等级语义。
 
-### 阶段 1：Contracts 和 Ledger
+### 阶段 1：Foundation（G00–G03）
 
-- Money、Instrument、Order、Fill。
-- 多 Fill 和 Partial close。
-- Canonical hash。
-- Ledger 黄金 Fixture。
+- 建立五个独立 package 和依赖护栏。
+- 冻结 Legacy source identity 与模块级 Parity Harness。
+- 实现 Typed Scaled Integer、UtcInstant、确定性 ID 和 Canonical Envelope。
+- 建立 Candidate/Validated Domain contracts 与 Profile Ports。
+- 实现 Journal/Ledger、MarkResolver、CurrencyValuationGraph、PortfolioSnapshotProjector 和 Cash Accounting。
 
-### 阶段 2：Bar Engine
+### 阶段 2：Target-to-Order Kernel（G04–G05）
 
-- 事件时间线。
-- Strategy decision schedule。
-- Target → OrderPlan。
-- Next-open/next-bar 执行。
-- Full trace result。
+- StrategyOutputValidator 与 Atomic DecisionBatch。
+- Capital Allocation、Portfolio Risk、Position Sizing 和 ActivePortfolioTarget。
+- RebalanceCoordinator、Order lifecycle、Settlement、Availability 和 Reservation。
+- Capability、Translation、Market Rules、Fee Reservation、Pre-trade Risk 和 Fee Assessment。
 
-### 阶段 3：Binance USD-M Profile
+### 阶段 3：Synthetic Bar Engine 与 Auditable Runner（G06–G07）
 
-- Historical rules。
-- Funding。
-- Margin。
-- Liquidation audit。
-- 与 `crypt-gemini` parity。
+- In-memory MarketBundle Reader、确定性 Timeline 和 Precomputed TargetStream。
+- 独立 SlippageModel 与 `next_eligible_bar_open.v1`。
+- 无 Run Outcome 的 Engine Harness 和 RunEndCoordinator。
+- Semantic Run、Attempt、Outcome mapping、Canonical Evidence、Integrity 和 atomic finalize。
 
-### 阶段 4：A 股 Profile
+### 阶段 4：市场语义分支（G08、G09）
 
-- Calendar。
-- T+1。
-- Lot 和 price limits。
-- Tax。
-- 与 `cycle-rotation-platform` parity。
+- G08A–G08H：A 股 Calendar、T+1、Lot/Price Limit、Fee/Tax、Corporate Action 和 `cycle-rotation-platform` parity。
+- G09A–G09H：通用 Linear Perpetual Position、Funding、Margin 和 LiquidationAudit。
+- 两个分支不得在 Generic Kernel、Runner 或 Bar Engine 主循环增加 market-specific 分支。若真实市场语义暴露出可复用的 market-neutral contract 缺口，Gate 可以在 Acceptance Card 中显式冻结向后兼容的 generic extension；旧 schema/hash/行为必须保持，且 generic implementation 不得引用具体市场 package 或 identity。
 
-### 阶段 5：Evidence 和 Registry
+### 阶段 5：Binance USD-M Profile（G10）
 
-- Immutable run bundle。
-- Result hash。
-- Decision-grade validation。
-- Platform integration。
+- Instrument identity、Historical rules、Margin tiers 和 PricePurpose streams。
+- Funding source、Fee/Account Profile 和 ResolvedEnvironment composition。
+- 与固定 `crypt-gemini` Source Snapshot 做分层 parity。
 
-### 阶段 6：Microstructure Engine
+### 阶段 6：Portfolio Strategy Runtime（G11）
 
+- ObservationView、Revision、Universe、Bar Window、DecisionSchedule 和 Warmup。
+- StrategyState、Named RandomStream、ModelArtifact 和 Walk-forward。
+- Strategy Candidate → Validated Decision → Atomic DecisionBatch。
+- 与预计算 TargetStream 路径做下游 exact parity。
+
+### 阶段 7：真实 MarketBundle 与逐市场资格（G12）
+
+- SourceSnapshot、Normalization、Validation、Publishing 和 Columnar Reader。
+- Bar aggregation 与 Rule/Price/Availability/Revision/Universe/Corporate Action coverage。
+- 每个供应商 Source Adapter 独立 Gate。
+- A 股和 Binance 分别评估 decision-grade，且始终 `deployment_authorized=false`。
+
+### 阶段 8：Microstructure Engine
+
+- Liquidity/Execution Strategy 契约。
+- Venue-neutral Order/Cancel Intent。
 - L1/L2 events。
+- Pre-trade Risk。
 - Queue/fill model。
+- 真实需要后增加版本化 EngineCheckpoint 和 child-attempt resume。
 - 与 `crypt-gemini/mm_l1_replay` parity。
 
 ## 22. 待确认的架构问题
 
-以下问题需要在实现前继续讨论：
-
-1. `StrategyDecision` 应直接输出目标数量、目标权重，还是同时支持两者？
-2. Portfolio/Risk 和 Order Planning 属于回测仓库，还是独立共享仓库？
-3. Accounting Ledger 是否直接进入 `crypto-quant-core`？
-4. Bar Engine 的第一批成交 Profile 需要支持到什么精度？
-5. Binance 第一版是否要求完整 liquidation，还是先提供 intrabar audit？
-6. A 股第一版是否包含公司行为，还是只支持已复权数据并显式声明限制？
-7. 是否需要在 v1 支持多账户和多基础币种？
-8. Decision-grade 的历史交易规则覆盖标准如何定义？
-9. Strategy 接口采用逐事件调用还是 Decision schedule 批调用？
-10. BacktestResult 中哪些 trace 是必须长期保留的权威证据？
+通过架构拷问继续逐项确认；已确认的决定立即从本节移除并写入对应正文和领域词汇表。
 
 ## 23. 架构验收标准
 
 本设计可进入稳定实施阶段的最低条件：
 
-- Binance 永续和 A 股两个 Profile 不要求修改回测主循环。
+- Binance 永续和 A 股两个 Profile 可以分别运行且不要求修改回测主循环。
+- 第一阶段明确拒绝单次运行配置多个 MarketSemanticsProfile、ExecutionAccountProfile 或 Execution Account。
 - 同一个 Ledger 能核算两个市场的账户状态。
 - Strategy 不依赖具体回测引擎和交易 Adapter。
 - 历史和实时路径可以共享 StrategyDecision 和 OrderPlan 语义。
 - 缺少规则、Funding 或时间证据时能够失败关闭。
 - 相同输入能够产生相同 run ID/result hash。
-- 可以从 source commit 和 Fixture 验证迁移前后 parity。
+- 可以从 source provenance 和 Fixture 生成分层 ParityReport，并定位 first divergence。
 - Platform 只通过公开接口运行回测，不读取引擎内部状态。
 
 ---

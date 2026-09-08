@@ -1,0 +1,99 @@
+{
+  "schema_version": 1,
+  "id": "binance-usdm-g10h-parity-plan-v1",
+  "layer_order": [
+    "SOURCE_IDENTITY",
+    "DECISION",
+    "ORDER_INTENT",
+    "ORDER_EVENT",
+    "FILL",
+    "FEE",
+    "POSITION_PNL",
+    "FUNDING",
+    "JOURNAL_LEDGER",
+    "MARGIN_SNAPSHOT",
+    "LIQUIDATION_AUDIT",
+    "LIQUIDATION_EXECUTION",
+    "FINAL_RESULT"
+  ],
+  "sources": [
+    {
+      "role": "LEGACY_CRYPT_GEMINI",
+      "source_id": "crypt-gemini",
+      "snapshot_sha256": "d6e6feca46b61586e890a441443738dc9e911a58428c940e86055459361eda80",
+      "content_tree_sha256": "704dee87020ad119e417fbec3831875f8203787ba06206f625a07e2414a068bb",
+      "projection": "tests/parity/fixtures/binance-usdm-g10h-v1/legacy.expected.json",
+      "projection_sha256": "c0e2eae246cafa2dfd9440470503ae6a364afbb62ce82ebd50a3d51b53dee65e"
+    },
+    {
+      "role": "G10G_DEVELOPMENT_RUN",
+      "source_id": "binance-usdm-resolved-profile-development-journey-v1",
+      "snapshot_sha256": "179e63dc6d56b52ee3bd9bd0751ef0480bbdfb3bd344ca1de60b393d9e4efb16",
+      "content_tree_sha256": "e9e329b4cd2dfd990a8eec8460767b6b05fffcc126e876a2cdf86f15a6d06bd9",
+      "projection": "tests/parity/fixtures/binance-usdm-g10h-v1/g10g.actual.json",
+      "projection_sha256": "6f35b75ccace175ca0c9dba0e6462bcc31a14b9a1332bc29ee0b5bc44870c0f3"
+    },
+    {
+      "role": "BINANCE_ACCOUNT_RECORDS",
+      "source_id": "binance-usdm-first-party-schema-example-v1",
+      "snapshot_sha256": "1e9b0652f8a4c62e985d542824a6d98f31e4836d3d7a44bbdafd37dccdd1a6d5",
+      "content_tree_sha256": "1e9b0652f8a4c62e985d542824a6d98f31e4836d3d7a44bbdafd37dccdd1a6d5",
+      "projection": "tests/parity/fixtures/binance-usdm-g10h-v1/provider.expected.json",
+      "projection_sha256": "e10437121a562180f6535e9043370a1a150ac29453843e384b10868683b0f291"
+    }
+  ],
+  "pairs": [
+    {
+      "id": "LEGACY_TO_G10G",
+      "expected_role": "LEGACY_CRYPT_GEMINI",
+      "actual_role": "G10G_DEVELOPMENT_RUN",
+      "contract": "tests/parity/contracts/binance-usdm-g10h-legacy-to-g10g-v1.json",
+      "migration_mode": "intentional_semantic_change",
+      "expected_verdict": "APPROVED_CHANGE"
+    },
+    {
+      "id": "BINANCE_TO_G10G",
+      "expected_role": "BINANCE_ACCOUNT_RECORDS",
+      "actual_role": "G10G_DEVELOPMENT_RUN",
+      "contract": "tests/parity/contracts/binance-usdm-g10h-provider-to-g10g-v1.json",
+      "migration_mode": "copy_with_parity",
+      "expected_verdict": "MATCH"
+    }
+  ],
+  "coverage": [
+    {"pair": "LEGACY_TO_G10G", "layer": "SOURCE_IDENTITY", "status": "COMPARABLE", "reason": "semantic case identity is mapped explicitly", "evidence_refs": ["crypt-gemini:contracts.py", "g10g:case_hash"]},
+    {"pair": "LEGACY_TO_G10G", "layer": "DECISION", "status": "COMPARABLE", "reason": "both paths expose ordered actions", "evidence_refs": ["crypt-gemini:order-trace", "g10g:journey-transitions"]},
+    {"pair": "LEGACY_TO_G10G", "layer": "ORDER_INTENT", "status": "COMPARABLE", "reason": "both paths expose ordered requested sides and quantities", "evidence_refs": ["crypt-gemini:causal-long-request", "g10g:resolved-orders"]},
+    {"pair": "LEGACY_TO_G10G", "layer": "ORDER_EVENT", "status": "COMPARABLE", "reason": "both paths expose ordered lifecycle traces", "evidence_refs": ["crypt-gemini:order-trace", "g10g:order-event-stream"]},
+    {"pair": "LEGACY_TO_G10G", "layer": "FILL", "status": "COMPARABLE", "reason": "both paths expose deterministic execution records", "evidence_refs": ["crypt-gemini:next-open-fill", "g10g:engine-fills"]},
+    {"pair": "LEGACY_TO_G10G", "layer": "FEE", "status": "COMPARABLE", "reason": "both paths expose fee amounts while semantics intentionally differ", "evidence_refs": ["crypt-gemini:fixed-fee", "g10g:g10f-fee-assessment"]},
+    {"pair": "LEGACY_TO_G10G", "layer": "POSITION_PNL", "status": "COMPARABLE", "reason": "both paths expose position and realized pnl", "evidence_refs": ["crypt-gemini:position-record", "g10g:linear-position-transition"]},
+    {"pair": "LEGACY_TO_G10G", "layer": "FUNDING", "status": "COMPARABLE", "reason": "fixture freezes the same economic funding amount", "evidence_refs": ["crypt-gemini:funding-ledger", "g10g:g10e-funding-settlement"]},
+    {"pair": "LEGACY_TO_G10G", "layer": "JOURNAL_LEDGER", "status": "COMPARABLE", "reason": "both paths expose reconciled accounting summaries", "evidence_refs": ["crypt-gemini:quote-ledger", "g10g:journal-ledger"]},
+    {"pair": "LEGACY_TO_G10G", "layer": "MARGIN_SNAPSHOT", "status": "COMPARABLE", "reason": "both paths expose account summary values with intentional semantic differences", "evidence_refs": ["crypt-gemini:reserved-margin", "g10g:margin-snapshot"]},
+    {"pair": "LEGACY_TO_G10G", "layer": "LIQUIDATION_AUDIT", "status": "COMPARABLE", "reason": "absence versus conservative audit is an intentional semantic difference", "evidence_refs": ["adr:0001", "g10g:liquidation-audit"]},
+    {"pair": "LEGACY_TO_G10G", "layer": "LIQUIDATION_EXECUTION", "status": "NOT_COMPARABLE_LEGACY_SCOPE", "reason": "legacy snapshot has no liquidation or adl execution authority", "evidence_refs": ["crypt-gemini:snapshot-scope"]},
+    {"pair": "LEGACY_TO_G10G", "layer": "FINAL_RESULT", "status": "COMPARABLE", "reason": "both paths expose final reconciled summaries", "evidence_refs": ["crypt-gemini:result", "g10g:run-end"]},
+    {"pair": "BINANCE_TO_G10G", "layer": "SOURCE_IDENTITY", "status": "COMPARABLE", "reason": "semantic account instrument and case identity are mapped explicitly", "evidence_refs": ["binance:account-trade", "g10g:case_hash"]},
+    {"pair": "BINANCE_TO_G10G", "layer": "DECISION", "status": "NOT_COMPARABLE_PROVIDER_EVIDENCE", "reason": "account records do not preserve strategy decision authority", "evidence_refs": ["binance:account-record-scope"]},
+    {"pair": "BINANCE_TO_G10G", "layer": "ORDER_INTENT", "status": "NOT_COMPARABLE_PROVIDER_EVIDENCE", "reason": "account records do not prove original strategy intent", "evidence_refs": ["binance:account-record-scope"]},
+    {"pair": "BINANCE_TO_G10G", "layer": "ORDER_EVENT", "status": "COMPARABLE", "reason": "order update rows preserve ordered trade lifecycle facts", "evidence_refs": ["binance:order-trade-update", "g10g:order-event-stream"]},
+    {"pair": "BINANCE_TO_G10G", "layer": "FILL", "status": "COMPARABLE", "reason": "account trade rows preserve per-fill economics", "evidence_refs": ["binance:account-trade", "g10g:engine-fills"]},
+    {"pair": "BINANCE_TO_G10G", "layer": "FEE", "status": "COMPARABLE", "reason": "account trade commission is compared per fill", "evidence_refs": ["binance:account-trade-commission", "g10g:g10f-fee-assessment"]},
+    {"pair": "BINANCE_TO_G10G", "layer": "POSITION_PNL", "status": "COMPARABLE", "reason": "trade realized pnl and position transitions are linked", "evidence_refs": ["binance:account-trade-realized-pnl", "g10g:linear-position-transition"]},
+    {"pair": "BINANCE_TO_G10G", "layer": "FUNDING", "status": "COMPARABLE", "reason": "funding income is linked to the scheduled settlement", "evidence_refs": ["binance:income-funding-fee", "g10g:g10e-funding-settlement"]},
+    {"pair": "BINANCE_TO_G10G", "layer": "JOURNAL_LEDGER", "status": "NOT_COMPARABLE_PROVIDER_EVIDENCE", "reason": "provider rows are not the generic journal or ledger", "evidence_refs": ["binance:account-record-scope"]},
+    {"pair": "BINANCE_TO_G10G", "layer": "MARGIN_SNAPSHOT", "status": "COMPARABLE", "reason": "static account update state is mapped to the same snapshot fields", "evidence_refs": ["binance:account-update", "g10g:margin-snapshot"]},
+    {"pair": "BINANCE_TO_G10G", "layer": "LIQUIDATION_AUDIT", "status": "NOT_COMPARABLE_PROVIDER_EVIDENCE", "reason": "provider records do not contain conservative audit output", "evidence_refs": ["binance:user-force-order-scope"]},
+    {"pair": "BINANCE_TO_G10G", "layer": "LIQUIDATION_EXECUTION", "status": "NOT_COMPARABLE_PROVIDER_EVIDENCE", "reason": "static example contains no user force order", "evidence_refs": ["binance:user-force-order-scope"]},
+    {"pair": "BINANCE_TO_G10G", "layer": "FINAL_RESULT", "status": "NOT_COMPARABLE_ARCHIVE_COMPLETENESS", "reason": "initial state all pages revisions and gaps are unproved", "evidence_refs": ["g12:archive-completeness-required"]}
+  ],
+  "limitations": [
+    "account_archive_completeness_unproven",
+    "liquidation_execution_unproven",
+    "matching_engine_parity_unproven",
+    "static_provider_schema_example_only"
+  ],
+  "decision_grade_eligible": false,
+  "deployment_authorized": false
+}

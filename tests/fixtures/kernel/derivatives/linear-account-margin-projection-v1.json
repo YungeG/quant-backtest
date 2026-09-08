@@ -1,0 +1,93 @@
+{
+  "cases": {
+    "long_reserved": {
+      "available_margin_units": 99800,
+      "equity_units": 100125,
+      "exact_unrealized": [
+        5,
+        4
+      ],
+      "fee_units": 100,
+      "funding_units": 50,
+      "initial_margin_units": 125,
+      "maintenance_margin_units": 13,
+      "projection_hash": "sha256:044af06541aaad95f1fc53b57ed37c4ddaee3542b9030164d6b5a48257258cdd",
+      "quantity_units": 1000,
+      "realized_pnl_units": 200,
+      "request_hash": "sha256:4be7c0a58c65a361b91c5bea07bb31adc01a4d9789af6bc5bc89ec8f7fbe855c",
+      "reservation_units": 200,
+      "unrealized_units": 125,
+      "wallet_units": 100000,
+      "working_order_margin_units": 200
+    },
+    "long_unreserved": {
+      "available_margin_units": 100000,
+      "equity_units": 100125,
+      "exact_unrealized": [
+        5,
+        4
+      ],
+      "fee_units": 100,
+      "funding_units": 50,
+      "initial_margin_units": 125,
+      "maintenance_margin_units": 13,
+      "projection_hash": "sha256:d2a9b1d1bb2886ef5aed419b0444b41c565f9358c85fe22483f55ebef1c15f8a",
+      "quantity_units": 1000,
+      "realized_pnl_units": 200,
+      "request_hash": "sha256:e37c7e7ca74693af8cac2cbe2adb6e9d8206fa33589936fe75660eebf5424df9",
+      "reservation_units": 0,
+      "unrealized_units": 125,
+      "wallet_units": 100000,
+      "working_order_margin_units": 0
+    },
+    "negative_available": {
+      "available_margin_units": -100000,
+      "equity_units": 100125,
+      "exact_unrealized": [
+        5,
+        4
+      ],
+      "fee_units": 100,
+      "funding_units": 50,
+      "initial_margin_units": 125,
+      "maintenance_margin_units": 13,
+      "projection_hash": "sha256:cf2c4efa6d765f1edfd97ce858673b759a356533a92878c887597139a051f180",
+      "quantity_units": 1000,
+      "realized_pnl_units": 200,
+      "request_hash": "sha256:b844a2b6b9275fb48180387a71e2db12b6a23d314d7110184c2f3095c4e6a744",
+      "reservation_units": 200000,
+      "unrealized_units": 125,
+      "wallet_units": 100000,
+      "working_order_margin_units": 200000
+    },
+    "short_reserved": {
+      "available_margin_units": 99550,
+      "equity_units": 99875,
+      "exact_unrealized": [
+        -5,
+        4
+      ],
+      "fee_units": 100,
+      "funding_units": 50,
+      "initial_margin_units": 125,
+      "maintenance_margin_units": 13,
+      "projection_hash": "sha256:b89556058bb878d9447f0601d3b86e532a2ac67797025cb38e05e3603168806b",
+      "quantity_units": -1000,
+      "realized_pnl_units": 200,
+      "request_hash": "sha256:fe8f7a3c2b95c094fc5f4ae35c2fcad58da9af8a207f5dc1b5871eabdece25cf",
+      "reservation_units": 200,
+      "unrealized_units": -125,
+      "wallet_units": 100000,
+      "working_order_margin_units": 200
+    }
+  },
+  "component_ref": {
+    "component_digest": "sha256:ad1704ceb41bdb026c8807f7bac3c40e63f2107767e105f7cbe8e7874d10eac5",
+    "component_key": "account.linear-perpetual.margin-projection.v1",
+    "component_version": 1,
+    "port_type": "margin_model",
+    "type": "profile_component_ref"
+  },
+  "fixture_id": "synthetic-linear-account-margin-projection-v1",
+  "schema_version": 1
+}

@@ -1,0 +1,1 @@
+{"request_id":"bcb25fc5-2451-4543-8551-02d1542aaede","code":0,"data":{"fields":["ts_code","trade_date","open","high","low","close","pre_close","change","pct_chg","vol","amount"],"items":[["000703.SZ","20260410",15.59,16.2,15.59,15.9,15.6,0.3,1.9231,643196.4,1024719.939]],"has_more":false,"count":0},"msg":"","detail":"..."}

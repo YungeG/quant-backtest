@@ -1,0 +1,86 @@
+{
+  "consumed_source_fills": [
+    [],
+    [],
+    [],
+    [
+      "fil_1111111111111111111111111111111111111111111111111111111111111111"
+    ],
+    [],
+    [
+      "fil_1111111111111111111111111111111111111111111111111111111111111111",
+      "fil_2222222222222222222222222222222222222222222222222222222222222222"
+    ]
+  ],
+  "cost_basis_policy": {
+    "fee_allocation_rounding": "half_even",
+    "method": "fifo",
+    "policy_key": "cash-cost-basis.fifo.v1",
+    "policy_version": 1,
+    "type": "cost_basis_policy"
+  },
+  "cost_basis_policy_hash": "sha256:a0eebe20cc75d3233ef8763948325d34bb7b6362e70626c3188cfad723ce79da",
+  "fee_attribution_units": [
+    0,
+    100,
+    0,
+    0,
+    150,
+    0
+  ],
+  "final_open_lots": [],
+  "fixture_id": "cash-instrument-accounting-v1",
+  "gross_realized_pnl_units": [
+    null,
+    null,
+    null,
+    3000,
+    null,
+    6000
+  ],
+  "journal_entry_hashes": [
+    "sha256:3a95dc284de76eebfa2930cc15a55ce73e448c7d8a920925d4eff50d196cff94",
+    "sha256:5d8c2e99058e0768d8c1a077ba9a4d18f8f9384ed621e85103fd8149554ffbd3",
+    "sha256:543367c00dae4a9e0e3638fef0362535a8035bc2053c51cf33391084429c3785",
+    "sha256:2bf825498acdb5f41c7b19f58e977fd527032067230350dd8c6747f10acee4bc",
+    "sha256:347422bb924639099fb58c445a7df0237de9954ce9da89c4869c0a143e9e4a69",
+    "sha256:3cbde7ea5bf154303955abba31a054679de42302e7e51e12cd43d045101266da"
+  ],
+  "open_lot_hashes_after_each_step": [
+    [
+      "sha256:b851c68e662664fce085d28a2a38a86714350fd2bd4833b6974a57bd44749d6b"
+    ],
+    [
+      "sha256:43c09b16cf87e5a459abe9c7d91a992cc9afbee79ced4a2ff36d36360bf4f48c"
+    ],
+    [
+      "sha256:43c09b16cf87e5a459abe9c7d91a992cc9afbee79ced4a2ff36d36360bf4f48c",
+      "sha256:2a152e473981baf5483cacc89d00aed4e0f88276c4aa8a561a91a07b6e25a06a"
+    ],
+    [
+      "sha256:338813709993ce91b38e862f946712f0afaa9403e97d71af1d2937c5111e8d97",
+      "sha256:2a152e473981baf5483cacc89d00aed4e0f88276c4aa8a561a91a07b6e25a06a"
+    ],
+    [
+      "sha256:338813709993ce91b38e862f946712f0afaa9403e97d71af1d2937c5111e8d97",
+      "sha256:2a152e473981baf5483cacc89d00aed4e0f88276c4aa8a561a91a07b6e25a06a"
+    ],
+    []
+  ],
+  "price_cost_basis_units": [
+    null,
+    null,
+    null,
+    10000,
+    null,
+    22000
+  ],
+  "result_hashes": [
+    "sha256:516ab2ca09629557bf389d0addc19aedca000fdbf43ebc065109737617a1d0e9",
+    "sha256:6225844d6db340033fc31075d3efa30780dc7cf9932d37a6bcf1af5516fd1dd2",
+    "sha256:405066b27ede4e06a30241f77f7ef95afa4742c4a5c08693fa787c72a47fe5c9",
+    "sha256:e8f45530c5903c345668644cb155d7c0cb6d737ae515e02feae685c6648cc576",
+    "sha256:a2a36bf83bdaf846785ca69af06880a2da685b80941f6a77f4d5d383cd16c190",
+    "sha256:e120e0066e6bb021af197cc19ddefcd07ab28bb8730c2bc2a744d88b13d80aa5"
+  ]
+}

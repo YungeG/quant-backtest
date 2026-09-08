@@ -1,0 +1,19 @@
+{
+  "code": 0,
+  "data": [
+    {
+      "channelId": 452,
+      "chnlCode": "payFees",
+      "docAbstract": "",
+      "docPeople": "",
+      "docTitleStatusTime": "",
+      "jsonPath": "/marketServices/deal/payFees/t20251231_618209.json",
+      "pubTime": 1767144191000,
+      "subDocTitle": "",
+      "title": "深交所收费标准",
+      "type": 20,
+      "url": "/marketServices/deal/payFees/t20251231_618209.html"
+    }
+  ],
+  "message": "成功"
+}

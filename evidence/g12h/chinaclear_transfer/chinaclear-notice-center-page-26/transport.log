@@ -1,0 +1,72 @@
+* Host www.chinaclear.cn:443 was resolved.
+* IPv6: (none)
+* IPv4: 211.154.245.133, 123.126.74.241, 123.126.74.240, 123.126.74.239
+*   Trying 211.154.245.133:443...
+* ALPN: curl offers h2,http/1.1
+} [5 bytes data]
+* TLSv1.3 (OUT), TLS handshake, Client hello (1):
+} [1572 bytes data]
+*  CAfile: /etc/ssl/certs/ca-certificates.crt
+*  CApath: /etc/ssl/certs
+{ [5 bytes data]
+* TLSv1.3 (IN), TLS handshake, Server hello (2):
+{ [122 bytes data]
+* TLSv1.3 (IN), TLS change cipher, Change cipher spec (1):
+{ [1 bytes data]
+* TLSv1.3 (IN), TLS handshake, Encrypted Extensions (8):
+{ [25 bytes data]
+* TLSv1.3 (IN), TLS handshake, Certificate (11):
+{ [4201 bytes data]
+* TLSv1.3 (IN), TLS handshake, CERT verify (15):
+{ [264 bytes data]
+* TLSv1.3 (IN), TLS handshake, Finished (20):
+{ [36 bytes data]
+* TLSv1.3 (OUT), TLS change cipher, Change cipher spec (1):
+} [1 bytes data]
+* TLSv1.3 (OUT), TLS handshake, Finished (20):
+} [36 bytes data]
+* SSL connection using TLSv1.3 / TLS_AES_128_GCM_SHA256 / x25519 / RSASSA-PSS
+* ALPN: server accepted http/1.1
+* Server certificate:
+*  subject: C=CN; ST=\U5317\U4EAC\U5E02; L=\U5317\U4EAC\U5E02; O=\U4E2D\U56FD\U8BC1\U5238\U767B\U8BB0\U7ED3\U7B97\U6709\U9650\U8D23\U4EFB\U516C\U53F8; CN=cdn.chinaclear.cn
+*  start date: Mar 16 09:49:43 2026 GMT
+*  expire date: Oct  1 09:49:42 2026 GMT
+*  subjectAltName: host "www.chinaclear.cn" matched cert's "www.chinaclear.cn"
+*  issuer: C=CN; O=iTrusChina Co., Ltd.; CN=vTrus OV SSL CA G2
+*  SSL certificate verify ok.
+*   Certificate level 0: Public key type RSA (2048/112 Bits/secBits), signed using sha256WithRSAEncryption
+*   Certificate level 1: Public key type RSA (2048/112 Bits/secBits), signed using sha256WithRSAEncryption
+*   Certificate level 2: Public key type RSA (2048/112 Bits/secBits), signed using sha256WithRSAEncryption
+*   Certificate level 3: Public key type RSA (2048/112 Bits/secBits), signed using sha1WithRSAEncryption
+* Connected to www.chinaclear.cn (211.154.245.133) port 443
+* using HTTP/1.x
+} [5 bytes data]
+> GET /zdjs/xtzgg/center_flist/code_1_26.shtml HTTP/1.1
+> Host: www.chinaclear.cn
+> User-Agent: Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 Chrome/130.0 Safari/537.36 G12HAuthorityCapture/1.0
+> Accept: */*
+> Accept-Language: zh-CN,zh;q=0.9,en;q=0.5
+> Cache-Control: no-cache
+> Pragma: no-cache
+> 
+* Request completely sent off
+{ [5 bytes data]
+* TLSv1.3 (IN), TLS handshake, Newsession Ticket (4):
+{ [265 bytes data]
+* TLSv1.3 (IN), TLS handshake, Newsession Ticket (4):
+{ [265 bytes data]
+< HTTP/1.1 200 OK
+< Date: Thu, 20 Aug 2026 07:47:09 GMT
+< Content-Type: text/html
+< Transfer-Encoding: chunked
+< Connection: keep-alive
+< Server: nginx
+< X-XSS-Protection: 1; mode=block
+< Content-Security-Policy: script-src 'self' 'unsafe-inline' 'unsafe-eval' https://cdn.chinaclear.cn https://qrconnect.chinaclear.cn https://hm.baidu.com https://inv.chinaclear.cn https://biz.chinaclear.cn https://g.alicdn.com
+< X-Content-Type-Options: nosniff
+< Via: 1.1 ID-1716635745747274 uproxy-23
+< x-via: 1.1 PSjsczBGPnc229:20 (Cdn Cache Server V2.0), 1.1 PS-CZX-01Ylz220:18 (Cdn Cache Server V2.0), 1.1 PS-PEK-01S2L143:7 (Cdn Cache Server V2.0)
+< x-ws-request-id: 6a86b0fc_PS-PEK-01S2L143_10065-35950
+< 
+{ [7647 bytes data]
+* Connection #0 to host www.chinaclear.cn left intact

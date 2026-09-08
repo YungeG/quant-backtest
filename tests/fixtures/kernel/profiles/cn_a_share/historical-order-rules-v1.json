@@ -1,0 +1,751 @@
+{
+  "availability_classification": {
+    "missing_status": {
+      "code": "missing_trade_status_evidence",
+      "evaluated_at": {
+        "epoch_nanoseconds": 1707357600000000000,
+        "type": "utc_instant"
+      },
+      "instrument_id": {
+        "stable_key": "600000",
+        "type": "instrument_id",
+        "venue": "xshg"
+      },
+      "schema_version": 1,
+      "subject_key": "instrument:xshg:600000",
+      "type": "cn_a_share_order_rule_failure",
+      "venue_id": {
+        "type": "venue_id",
+        "value": "xshg"
+      }
+    },
+    "no_trade": {
+      "board": "main",
+      "evaluated_at": {
+        "epoch_nanoseconds": 1707444000000000000,
+        "type": "utc_instant"
+      },
+      "instrument_id": {
+        "stable_key": "600000",
+        "type": "instrument_id",
+        "venue": "xshg"
+      },
+      "kind": "no_trade",
+      "previous_close_evidence_hash": null,
+      "rule_band_hash": null,
+      "schema_version": 1,
+      "session_resolution_hash": "sha256:d9b1c1aa9fd6b6226683c0c029d8ac9341a34d225ec069658dfe4596759b3ebd",
+      "timeline": null,
+      "trade_status_evidence_hash": null,
+      "type": "cn_a_share_order_rule_resolution",
+      "venue_id": {
+        "type": "venue_id",
+        "value": "xshg"
+      }
+    },
+    "suspended": {
+      "board": "main",
+      "evaluated_at": {
+        "epoch_nanoseconds": 1707357600000000000,
+        "type": "utc_instant"
+      },
+      "instrument_id": {
+        "stable_key": "600000",
+        "type": "instrument_id",
+        "venue": "xshg"
+      },
+      "kind": "rules",
+      "previous_close_evidence_hash": "sha256:eb15ef79da7def4f94eeb65c1fa69c8a6020e3f0f9dc46ea4e38abec4462e5d9",
+      "rule_band_hash": "sha256:97f9e69816bb4cdc3b0be94fe7d950aa392e6390bde8a527328fb82ed5852f64",
+      "schema_version": 1,
+      "session_resolution_hash": "sha256:d941e46cc78814fa9cd90499267240b57ee549f98ae69966910fc5af8f5e4356",
+      "timeline": {
+        "config_hash": "sha256:1dc2b4cd32ca0ead612fc33521bd2425a1d6337d6b0848ca243afef9fb7e2a9f",
+        "instrument_id": {
+          "stable_key": "600000",
+          "type": "instrument_id",
+          "venue": "xshg"
+        },
+        "intervals": [
+          {
+            "effective_from": {
+              "epoch_nanoseconds": 1707355800000000000,
+              "type": "utc_instant"
+            },
+            "effective_to_exclusive": {
+              "epoch_nanoseconds": 1707363000000000000,
+              "type": "utc_instant"
+            },
+            "interval_id": "order-rule-interval-v1:sha256:ab0348aca57bc9b1ba4ac16e902de8dbf9f79135b5777eae09ea427795e556c7",
+            "schema_version": 1,
+            "snapshot": {
+              "component_ref": {
+                "component_digest": "sha256:a1d105123366a80a7d54077bf10f38ce511e6722b85e940904d8324cd073b133",
+                "component_key": "equity.cn_a_share.cash.order-rules.v1",
+                "component_version": 1,
+                "port_type": "order_rule_model",
+                "type": "profile_component_ref"
+              },
+              "config_hash": "sha256:9f646335ed3c4eb41e63c744be7aefe2cd1a78872783174c3f2eca71ab252f13",
+              "instrument_id": {
+                "stable_key": "600000",
+                "type": "instrument_id",
+                "venue": "xshg"
+              },
+              "lower_price_limit": {
+                "instrument_id": "xshg:600000",
+                "quote_currency": "CNY",
+                "scale": 2,
+                "type": "price",
+                "units": 900
+              },
+              "max_limit_order_quantity_units": 1000000,
+              "max_market_order_quantity_units": 1000000,
+              "notional_rounding": "half_up",
+              "permitted_position_effects": [
+                "auto",
+                "close",
+                "open"
+              ],
+              "permitted_sides": [
+                "buy",
+                "sell"
+              ],
+              "price_scale": 2,
+              "price_tick_units": 1,
+              "quantity_lattice": {
+                "atomic_scale": 0,
+                "buy_lot_units": 100,
+                "config_hash": "sha256:d2d88aaff93b05fafd92d3deb0ff6b6cd450d9b43556a6acb715e7dcd596e6f9",
+                "instrument_id": {
+                  "stable_key": "600000",
+                  "type": "instrument_id",
+                  "venue": "xshg"
+                },
+                "lattice_key": "equity.cn_a_share.cash.quantity-lattice.v1",
+                "lattice_version": 1,
+                "min_notional": {
+                  "currency": "CNY",
+                  "scale": 2,
+                  "type": "money",
+                  "units": 0
+                },
+                "min_quantity_units": 0,
+                "odd_lot_close_permitted": true,
+                "schema_version": 2,
+                "sell_lot_units": 100,
+                "step_units": 1,
+                "type": "quantity_lattice",
+                "whole_sell_residual_permitted": true
+              },
+              "reduce_only_required": false,
+              "schema_version": 2,
+              "session_id": {
+                "calendar_id": "CN.XSHG",
+                "type": "session_id",
+                "value": "2024-02-08.regular"
+              },
+              "session_state": "suspended",
+              "supplemental_decisions": [],
+              "type": "order_rule_snapshot",
+              "upper_price_limit": {
+                "instrument_id": "xshg:600000",
+                "quote_currency": "CNY",
+                "scale": 2,
+                "type": "price",
+                "units": 1100
+              }
+            },
+            "type": "order_rule_interval"
+          }
+        ],
+        "schema_version": 1,
+        "timeline_key": "equity.cn_a_share.cash.main.600000.order-rules.v1",
+        "timeline_version": 1,
+        "type": "order_rule_timeline"
+      },
+      "trade_status_evidence_hash": "sha256:ac0c31167f76a6df15e9bcf74fe0347fcb017ca2f2b18ef5ee31eee27e548e80",
+      "type": "cn_a_share_order_rule_resolution",
+      "venue_id": {
+        "type": "venue_id",
+        "value": "xshg"
+      }
+    }
+  },
+  "chinext": {
+    "after": {
+      "board": "chinext",
+      "evaluated_at": {
+        "epoch_nanoseconds": 1598234400000000000,
+        "type": "utc_instant"
+      },
+      "instrument_id": {
+        "stable_key": "300001",
+        "type": "instrument_id",
+        "venue": "xshe"
+      },
+      "kind": "rules",
+      "previous_close_evidence_hash": "sha256:d4754709668d9e1019f3b45d3721bc3d76dbbdee00f0737e4d2f4a1c3d389097",
+      "rule_band_hash": "sha256:1caeb0cfd8e9012bcb426e5799599ac8c4f78a660483fb7665ae133aaae4f236",
+      "schema_version": 1,
+      "session_resolution_hash": "sha256:d29a48c397f9bcb2a655c20bb5843fdee6f6b50b25b53fb84d522d57715b9af1",
+      "timeline": {
+        "config_hash": "sha256:68292901f6cefe6053ff474a4b6e2f8faeda7f1f43549d233d0f9566785ed655",
+        "instrument_id": {
+          "stable_key": "300001",
+          "type": "instrument_id",
+          "venue": "xshe"
+        },
+        "intervals": [
+          {
+            "effective_from": {
+              "epoch_nanoseconds": 1598232600000000000,
+              "type": "utc_instant"
+            },
+            "effective_to_exclusive": {
+              "epoch_nanoseconds": 1598239800000000000,
+              "type": "utc_instant"
+            },
+            "interval_id": "order-rule-interval-v1:sha256:598a82be502aaf2cdf682caebff083818f3c5acc0b17480a3cf061e5220ddc87",
+            "schema_version": 1,
+            "snapshot": {
+              "component_ref": {
+                "component_digest": "sha256:f0901c226d51890c36c8f9a9fdc3fb5ac0660a0a6db684251426fc1076e20ac1",
+                "component_key": "equity.cn_a_share.cash.order-rules.v1",
+                "component_version": 1,
+                "port_type": "order_rule_model",
+                "type": "profile_component_ref"
+              },
+              "config_hash": "sha256:5a440ac0cb53e523dd2028a814ac47a7157f7c90f772aff430e81ed1ba1c6938",
+              "instrument_id": {
+                "stable_key": "300001",
+                "type": "instrument_id",
+                "venue": "xshe"
+              },
+              "lower_price_limit": {
+                "instrument_id": "xshe:300001",
+                "quote_currency": "CNY",
+                "scale": 2,
+                "type": "price",
+                "units": 800
+              },
+              "max_limit_order_quantity_units": 300000,
+              "max_market_order_quantity_units": 150000,
+              "notional_rounding": "half_up",
+              "permitted_position_effects": [
+                "auto",
+                "close",
+                "open"
+              ],
+              "permitted_sides": [
+                "buy",
+                "sell"
+              ],
+              "price_scale": 2,
+              "price_tick_units": 1,
+              "quantity_lattice": {
+                "atomic_scale": 0,
+                "buy_lot_units": 100,
+                "config_hash": "sha256:65b15b6dfd1f621e407fceed4cc937642dd9cb728ba3b9c2d96f6711145308c2",
+                "instrument_id": {
+                  "stable_key": "300001",
+                  "type": "instrument_id",
+                  "venue": "xshe"
+                },
+                "lattice_key": "equity.cn_a_share.cash.chinext.quantity-lattice.v1",
+                "lattice_version": 1,
+                "min_notional": {
+                  "currency": "CNY",
+                  "scale": 2,
+                  "type": "money",
+                  "units": 0
+                },
+                "min_quantity_units": 0,
+                "odd_lot_close_permitted": true,
+                "schema_version": 2,
+                "sell_lot_units": 100,
+                "step_units": 1,
+                "type": "quantity_lattice",
+                "whole_sell_residual_permitted": true
+              },
+              "reduce_only_required": false,
+              "schema_version": 2,
+              "session_id": {
+                "calendar_id": "CN.XSHE",
+                "type": "session_id",
+                "value": "2020-08-24.regular"
+              },
+              "session_state": "open",
+              "supplemental_decisions": [],
+              "type": "order_rule_snapshot",
+              "upper_price_limit": {
+                "instrument_id": "xshe:300001",
+                "quote_currency": "CNY",
+                "scale": 2,
+                "type": "price",
+                "units": 1200
+              }
+            },
+            "type": "order_rule_interval"
+          }
+        ],
+        "schema_version": 1,
+        "timeline_key": "equity.cn_a_share.cash.chinext.300001.order-rules.v1",
+        "timeline_version": 1,
+        "type": "order_rule_timeline"
+      },
+      "trade_status_evidence_hash": "sha256:567e4bdbca29d356236c03e7f7e1390aef5518fe02649be93bf482666e07dfc5",
+      "type": "cn_a_share_order_rule_resolution",
+      "venue_id": {
+        "type": "venue_id",
+        "value": "xshe"
+      }
+    },
+    "before": {
+      "board": "chinext",
+      "evaluated_at": {
+        "epoch_nanoseconds": 1597975200000000000,
+        "type": "utc_instant"
+      },
+      "instrument_id": {
+        "stable_key": "300001",
+        "type": "instrument_id",
+        "venue": "xshe"
+      },
+      "kind": "rules",
+      "previous_close_evidence_hash": "sha256:c9fdfcab680de6dc9bb23062b2d127a116c1b9e53bcc3e5aea12bdd59e891fd8",
+      "rule_band_hash": "sha256:88f1496c001727741838d04d854518c82f05d31dd1356810b3368fbfa61aa727",
+      "schema_version": 1,
+      "session_resolution_hash": "sha256:83d85b92116c6f9e999b0497a0859d42c16b8598d804eb7d4b15e7690a3e40e6",
+      "timeline": {
+        "config_hash": "sha256:0dc49c449f731e734253b30c902d3482cbcf190ae6e61ae6bf4a21f6845bf028",
+        "instrument_id": {
+          "stable_key": "300001",
+          "type": "instrument_id",
+          "venue": "xshe"
+        },
+        "intervals": [
+          {
+            "effective_from": {
+              "epoch_nanoseconds": 1597973400000000000,
+              "type": "utc_instant"
+            },
+            "effective_to_exclusive": {
+              "epoch_nanoseconds": 1597980600000000000,
+              "type": "utc_instant"
+            },
+            "interval_id": "order-rule-interval-v1:sha256:5fd8201f0cc46aa1218932e5ce88f2674ba0fbde055dbb3113ae897e9c00677f",
+            "schema_version": 1,
+            "snapshot": {
+              "component_ref": {
+                "component_digest": "sha256:f0901c226d51890c36c8f9a9fdc3fb5ac0660a0a6db684251426fc1076e20ac1",
+                "component_key": "equity.cn_a_share.cash.order-rules.v1",
+                "component_version": 1,
+                "port_type": "order_rule_model",
+                "type": "profile_component_ref"
+              },
+              "config_hash": "sha256:8803f1bd5b4e37970ce0044d71972ba80a208d981474d4ff667fa0ab23aa3dce",
+              "instrument_id": {
+                "stable_key": "300001",
+                "type": "instrument_id",
+                "venue": "xshe"
+              },
+              "lower_price_limit": {
+                "instrument_id": "xshe:300001",
+                "quote_currency": "CNY",
+                "scale": 2,
+                "type": "price",
+                "units": 900
+              },
+              "max_limit_order_quantity_units": 1000000,
+              "max_market_order_quantity_units": 1000000,
+              "notional_rounding": "half_up",
+              "permitted_position_effects": [
+                "auto",
+                "close",
+                "open"
+              ],
+              "permitted_sides": [
+                "buy",
+                "sell"
+              ],
+              "price_scale": 2,
+              "price_tick_units": 1,
+              "quantity_lattice": {
+                "atomic_scale": 0,
+                "buy_lot_units": 100,
+                "config_hash": "sha256:65b15b6dfd1f621e407fceed4cc937642dd9cb728ba3b9c2d96f6711145308c2",
+                "instrument_id": {
+                  "stable_key": "300001",
+                  "type": "instrument_id",
+                  "venue": "xshe"
+                },
+                "lattice_key": "equity.cn_a_share.cash.chinext.quantity-lattice.v1",
+                "lattice_version": 1,
+                "min_notional": {
+                  "currency": "CNY",
+                  "scale": 2,
+                  "type": "money",
+                  "units": 0
+                },
+                "min_quantity_units": 0,
+                "odd_lot_close_permitted": true,
+                "schema_version": 2,
+                "sell_lot_units": 100,
+                "step_units": 1,
+                "type": "quantity_lattice",
+                "whole_sell_residual_permitted": true
+              },
+              "reduce_only_required": false,
+              "schema_version": 2,
+              "session_id": {
+                "calendar_id": "CN.XSHE",
+                "type": "session_id",
+                "value": "2020-08-21.regular"
+              },
+              "session_state": "open",
+              "supplemental_decisions": [],
+              "type": "order_rule_snapshot",
+              "upper_price_limit": {
+                "instrument_id": "xshe:300001",
+                "quote_currency": "CNY",
+                "scale": 2,
+                "type": "price",
+                "units": 1100
+              }
+            },
+            "type": "order_rule_interval"
+          }
+        ],
+        "schema_version": 1,
+        "timeline_key": "equity.cn_a_share.cash.chinext.300001.order-rules.v1",
+        "timeline_version": 1,
+        "type": "order_rule_timeline"
+      },
+      "trade_status_evidence_hash": "sha256:b063959158d9418154f445175d9598fa3c9c5b5d8ff71924b2f9de287534467b",
+      "type": "cn_a_share_order_rule_resolution",
+      "venue_id": {
+        "type": "venue_id",
+        "value": "xshe"
+      }
+    },
+    "component_ref": {
+      "component_digest": "sha256:f0901c226d51890c36c8f9a9fdc3fb5ac0660a0a6db684251426fc1076e20ac1",
+      "component_key": "equity.cn_a_share.cash.order-rules.v1",
+      "component_version": 1,
+      "port_type": "order_rule_model",
+      "type": "profile_component_ref"
+    }
+  },
+  "fixture_id": "cn-a-share-historical-order-rules-v1",
+  "legacy_compatibility": {
+    "evaluation_input_hash": "sha256:7e0aba759add4cf38ef82a4cef78085978366fb916237d3374319cb33b509cd4",
+    "snapshot_hash": "sha256:bb698906ddea161ac22b9e828d70107508070e60f574830194e241b43d8c1dcf"
+  },
+  "limit_liquidity": {
+    "buy-lower": {
+      "bar_open": {
+        "instrument_id": "xshg:600000",
+        "quote_currency": "CNY",
+        "scale": 2,
+        "type": "price",
+        "units": 900
+      },
+      "code": "continue",
+      "observation_state": "available",
+      "schema_version": 1,
+      "side": "buy",
+      "snapshot_hash": "sha256:b6d8a7c2df4d93f7f0a094eccd891e3ae72f831ca14e6dc6dd8cbc24fda88752",
+      "type": "cn_a_share_limit_liquidity_decision"
+    },
+    "buy-upper": {
+      "bar_open": {
+        "instrument_id": "xshg:600000",
+        "quote_currency": "CNY",
+        "scale": 2,
+        "type": "price",
+        "units": 1100
+      },
+      "code": "liquidity_blocked_at_limit",
+      "observation_state": "available",
+      "schema_version": 1,
+      "side": "buy",
+      "snapshot_hash": "sha256:b6d8a7c2df4d93f7f0a094eccd891e3ae72f831ca14e6dc6dd8cbc24fda88752",
+      "type": "cn_a_share_limit_liquidity_decision"
+    },
+    "sell-lower": {
+      "bar_open": {
+        "instrument_id": "xshg:600000",
+        "quote_currency": "CNY",
+        "scale": 2,
+        "type": "price",
+        "units": 900
+      },
+      "code": "liquidity_blocked_at_limit",
+      "observation_state": "available",
+      "schema_version": 1,
+      "side": "sell",
+      "snapshot_hash": "sha256:b6d8a7c2df4d93f7f0a094eccd891e3ae72f831ca14e6dc6dd8cbc24fda88752",
+      "type": "cn_a_share_limit_liquidity_decision"
+    },
+    "sell-upper": {
+      "bar_open": {
+        "instrument_id": "xshg:600000",
+        "quote_currency": "CNY",
+        "scale": 2,
+        "type": "price",
+        "units": 1100
+      },
+      "code": "continue",
+      "observation_state": "available",
+      "schema_version": 1,
+      "side": "sell",
+      "snapshot_hash": "sha256:b6d8a7c2df4d93f7f0a094eccd891e3ae72f831ca14e6dc6dd8cbc24fda88752",
+      "type": "cn_a_share_limit_liquidity_decision"
+    }
+  },
+  "main": {
+    "component_ref": {
+      "component_digest": "sha256:a1d105123366a80a7d54077bf10f38ce511e6722b85e940904d8324cd073b133",
+      "component_key": "equity.cn_a_share.cash.order-rules.v1",
+      "component_version": 1,
+      "port_type": "order_rule_model",
+      "type": "profile_component_ref"
+    },
+    "input_hash": "sha256:c12ba175f2d920e871564d4aec8c8a2140a8c44a96a116935f8b22eb0cf14015",
+    "resolution": {
+      "board": "main",
+      "evaluated_at": {
+        "epoch_nanoseconds": 1707357600000000000,
+        "type": "utc_instant"
+      },
+      "instrument_id": {
+        "stable_key": "600000",
+        "type": "instrument_id",
+        "venue": "xshg"
+      },
+      "kind": "rules",
+      "previous_close_evidence_hash": "sha256:eb15ef79da7def4f94eeb65c1fa69c8a6020e3f0f9dc46ea4e38abec4462e5d9",
+      "rule_band_hash": "sha256:97f9e69816bb4cdc3b0be94fe7d950aa392e6390bde8a527328fb82ed5852f64",
+      "schema_version": 1,
+      "session_resolution_hash": "sha256:d941e46cc78814fa9cd90499267240b57ee549f98ae69966910fc5af8f5e4356",
+      "timeline": {
+        "config_hash": "sha256:c01d03d8f74bd0984f980a66385dd28d76db2b1a8048e497cba2d86200bc0310",
+        "instrument_id": {
+          "stable_key": "600000",
+          "type": "instrument_id",
+          "venue": "xshg"
+        },
+        "intervals": [
+          {
+            "effective_from": {
+              "epoch_nanoseconds": 1707355800000000000,
+              "type": "utc_instant"
+            },
+            "effective_to_exclusive": {
+              "epoch_nanoseconds": 1707363000000000000,
+              "type": "utc_instant"
+            },
+            "interval_id": "order-rule-interval-v1:sha256:cc106c15e4136026a15b0e64ea6fc40ca2c2aafb2e51cbca41885a40858775e6",
+            "schema_version": 1,
+            "snapshot": {
+              "component_ref": {
+                "component_digest": "sha256:a1d105123366a80a7d54077bf10f38ce511e6722b85e940904d8324cd073b133",
+                "component_key": "equity.cn_a_share.cash.order-rules.v1",
+                "component_version": 1,
+                "port_type": "order_rule_model",
+                "type": "profile_component_ref"
+              },
+              "config_hash": "sha256:9d04c15f0109cb2c3f0a83f29046f7c0d813f1b1b80e312ef282eedac7546f7f",
+              "instrument_id": {
+                "stable_key": "600000",
+                "type": "instrument_id",
+                "venue": "xshg"
+              },
+              "lower_price_limit": {
+                "instrument_id": "xshg:600000",
+                "quote_currency": "CNY",
+                "scale": 2,
+                "type": "price",
+                "units": 900
+              },
+              "max_limit_order_quantity_units": 1000000,
+              "max_market_order_quantity_units": 1000000,
+              "notional_rounding": "half_up",
+              "permitted_position_effects": [
+                "auto",
+                "close",
+                "open"
+              ],
+              "permitted_sides": [
+                "buy",
+                "sell"
+              ],
+              "price_scale": 2,
+              "price_tick_units": 1,
+              "quantity_lattice": {
+                "atomic_scale": 0,
+                "buy_lot_units": 100,
+                "config_hash": "sha256:d2d88aaff93b05fafd92d3deb0ff6b6cd450d9b43556a6acb715e7dcd596e6f9",
+                "instrument_id": {
+                  "stable_key": "600000",
+                  "type": "instrument_id",
+                  "venue": "xshg"
+                },
+                "lattice_key": "equity.cn_a_share.cash.quantity-lattice.v1",
+                "lattice_version": 1,
+                "min_notional": {
+                  "currency": "CNY",
+                  "scale": 2,
+                  "type": "money",
+                  "units": 0
+                },
+                "min_quantity_units": 0,
+                "odd_lot_close_permitted": true,
+                "schema_version": 2,
+                "sell_lot_units": 100,
+                "step_units": 1,
+                "type": "quantity_lattice",
+                "whole_sell_residual_permitted": true
+              },
+              "reduce_only_required": false,
+              "schema_version": 2,
+              "session_id": {
+                "calendar_id": "CN.XSHG",
+                "type": "session_id",
+                "value": "2024-02-08.regular"
+              },
+              "session_state": "open",
+              "supplemental_decisions": [],
+              "type": "order_rule_snapshot",
+              "upper_price_limit": {
+                "instrument_id": "xshg:600000",
+                "quote_currency": "CNY",
+                "scale": 2,
+                "type": "price",
+                "units": 1100
+              }
+            },
+            "type": "order_rule_interval"
+          }
+        ],
+        "schema_version": 1,
+        "timeline_key": "equity.cn_a_share.cash.main.600000.order-rules.v1",
+        "timeline_version": 1,
+        "type": "order_rule_timeline"
+      },
+      "trade_status_evidence_hash": "sha256:24e92ac22838491fbb3f6a5a5afad14b93db7bdcddecb0dd918affd1e0e9ed9b",
+      "type": "cn_a_share_order_rule_resolution",
+      "venue_id": {
+        "type": "venue_id",
+        "value": "xshg"
+      }
+    }
+  },
+  "qualification": {
+    "allowed_grade": "development",
+    "deployment_authorized": false,
+    "limitations": [
+      "risk-warning-cumulative-buy-not-supported",
+      "no-daily-limit-price-cage-and-intraday-halt-not-supported",
+      "no-full-day-volume-or-queue-inference",
+      "no-fee-tax-corporate-action-or-runtime-engine-integration"
+    ],
+    "official_facts": {
+      "chinext_limit_market_caps": [
+        300000,
+        150000
+      ],
+      "chinext_transition_date": "2020-08-24",
+      "main_daily_limit_fraction": "0.10",
+      "main_limit_market_caps": [
+        1000000,
+        1000000
+      ],
+      "price_tick_cny": "0.01",
+      "rounding": "half_up",
+      "star_daily_limit_fraction": "0.20",
+      "star_limit_market_caps": [
+        100000,
+        50000
+      ]
+    },
+    "supported": [
+      "standard-seasoned-xshg-main",
+      "standard-seasoned-xshg-star",
+      "standard-seasoned-xshe-main",
+      "standard-seasoned-xshe-chinext"
+    ]
+  },
+  "residual_sell_admission": {
+    "sell-99": {
+      "data_integrity_code": null,
+      "decision_hash": "sha256:fe664f875dac4efc4cacca00e8d4098c5f868bbd9a7f1c92cc8f0506620ba387",
+      "decision_id": "market-rule-decision-v1:sha256:8f3801f57d97cc7d7366a922643efd63973c8fa90526819e2f00e520dbb20e8c",
+      "issues": [],
+      "outcome": "approved"
+    },
+    "sellable-98-sell-99": {
+      "data_integrity_code": null,
+      "decision_hash": "sha256:fe67f247f8e42e7889e175d372a02087f52d4fd2c36f54b29a08dff431f779f5",
+      "decision_id": "market-rule-decision-v1:sha256:f4165df9ef84c97dccafc31c6592e75e82db00a24802e770c6782aa223f767cb",
+      "issues": [
+        {
+          "actual": "99",
+          "code": "sellable_quantity",
+          "expected": "<=98",
+          "subject_key": "quantity",
+          "type": "market_rule_issue"
+        }
+      ],
+      "outcome": "rejected"
+    },
+    "split-sell-1": {
+      "data_integrity_code": null,
+      "decision_hash": "sha256:97cbdce4c17c82ee479d4184ac2a02135fe7a5528e4202ac2bfc6c7ffc59da08",
+      "decision_id": "market-rule-decision-v1:sha256:78936439783f8127172d0652d0a41cc14e78fd4063c6c5221be4b065d7ad6754",
+      "issues": [
+        {
+          "actual": "1",
+          "code": "sell_residual_not_permitted",
+          "expected": "complete-unreserved-residual",
+          "subject_key": "quantity",
+          "type": "market_rule_issue"
+        }
+      ],
+      "outcome": "rejected"
+    }
+  },
+  "star_band": {
+    "board": "star",
+    "buy_lot_units": 1,
+    "daily_price_limit_ratio": {
+      "basis": "fraction",
+      "scale": 4,
+      "type": "rate",
+      "units": 2000
+    },
+    "effective_from": "2019-07-22",
+    "effective_to_exclusive": "2025-01-01",
+    "max_limit_order_quantity_units": 100000,
+    "max_market_order_quantity_units": 50000,
+    "min_quantity_units": 200,
+    "odd_lot_close_permitted": true,
+    "price_tick_units": 1,
+    "quantity_step_units": 1,
+    "schema_version": 1,
+    "sell_lot_units": 1,
+    "source_ref": {
+      "schema_version": 1,
+      "source_hash": "sha256:eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee",
+      "source_key": "sse-star-rules-fixture",
+      "type": "cn_a_share_rule_source_ref"
+    },
+    "type": "cn_a_share_order_rule_band",
+    "venue_id": {
+      "type": "venue_id",
+      "value": "xshg"
+    },
+    "whole_sell_residual_permitted": false
+  }
+}

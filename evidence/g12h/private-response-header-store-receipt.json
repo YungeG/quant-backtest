@@ -1,0 +1,8 @@
+{
+  "private_manifest_sha256": "sha256:4cb9879039ca9ed9d5582e23013557099253bcbf1c0bde709d9b0e0ccbcdef05",
+  "private_store_root": "/srv/bcache-8t/ygguo/backtest/g12h-authority-private/20260820-wave1-response-headers",
+  "schema_version": 1,
+  "source_count": 32,
+  "status": "EXACT_COOKIE_BEARING_HEADERS_PRIVATE_TRACKED_HEADERS_REDACTED",
+  "type": "g12h_private_response_header_store_receipt_v1"
+}

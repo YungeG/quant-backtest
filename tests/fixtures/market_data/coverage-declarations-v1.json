@@ -1,0 +1,128 @@
+{
+  "availability_closure": {
+    "bar_aggregation_manifest_hash": "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+    "closure_scope_key": [
+      "bars.explicit",
+      "test:asset",
+      "valuation"
+    ],
+    "coverage_end_exclusive": {
+      "epoch_nanoseconds": 1000,
+      "type": "utc_instant"
+    },
+    "coverage_start": {
+      "epoch_nanoseconds": 0,
+      "type": "utc_instant"
+    },
+    "decision_grade_eligible": false,
+    "declaration_hash": "sha256:e52eb008d2390f2fc842723b709a4c320c73528925b0cf2e11f8a31b7ed044ff",
+    "deployment_authorized": false,
+    "schema_version": 1,
+    "source_hash": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+    "source_key": "test.calendar-provider-claim.v1",
+    "spans": [
+      {
+        "end_exclusive": {
+          "epoch_nanoseconds": 600,
+          "type": "utc_instant"
+        },
+        "reason": "NO_TRADES",
+        "schema_version": 1,
+        "start": {
+          "epoch_nanoseconds": 0,
+          "type": "utc_instant"
+        },
+        "type": "availability_span"
+      },
+      {
+        "end_exclusive": {
+          "epoch_nanoseconds": 1000,
+          "type": "utc_instant"
+        },
+        "reason": "NO_SESSION",
+        "schema_version": 1,
+        "start": {
+          "epoch_nanoseconds": 600,
+          "type": "utc_instant"
+        },
+        "type": "availability_span"
+      }
+    ],
+    "type": "availability_closure_declaration"
+  },
+  "fixture_id": "coverage-declarations-v1",
+  "price_purpose_requirement": {
+    "capability": {
+      "key": "price_bars",
+      "type": "market_bundle_capability",
+      "version": 1
+    },
+    "coverage_end_exclusive": {
+      "epoch_nanoseconds": 1000,
+      "type": "utc_instant"
+    },
+    "coverage_start": {
+      "epoch_nanoseconds": 0,
+      "type": "utc_instant"
+    },
+    "decision_grade_eligible": false,
+    "deployment_authorized": false,
+    "event_type": "bar",
+    "instrument_id": {
+      "stable_key": "asset",
+      "type": "instrument_id",
+      "venue": "test"
+    },
+    "price_purpose": "valuation",
+    "requirement_hash": "sha256:9a03303c4ca1f73909796172cc157421dd317397cbb9bf67877173c19f30d6e7",
+    "requirement_key": "test.price-purpose.v1",
+    "requirement_version": 1,
+    "schema_version": 1,
+    "scope_key": "test.scope.v1",
+    "source_hash": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+    "source_key": "test.coverage-authority.v1",
+    "stale_policy": {
+      "allow_forward_fill": true,
+      "max_age_nanoseconds": 1000,
+      "policy_key": "test.valuation.v1",
+      "policy_version": 1,
+      "price_purpose": "valuation",
+      "type": "stale_mark_policy"
+    },
+    "stale_policy_hash": "sha256:3573e346a9fa7c7e8a184ce1c5e36e9f2a0507f168df08b67c471dd18cfac4d0",
+    "stream_key": "bars.explicit",
+    "type": "price_purpose_requirement"
+  },
+  "revision_closure": {
+    "causal_visibility_limit": {
+      "epoch_nanoseconds": 1000,
+      "type": "utc_instant"
+    },
+    "closure_scope_key": [
+      "bars.explicit",
+      "test:asset",
+      "valuation"
+    ],
+    "decision_grade_eligible": false,
+    "declaration_hash": "sha256:28115fb990530b2618d2147f45d4b6e35fc349f8dca98e5ce501ad675389b6b5",
+    "deployment_authorized": false,
+    "schema_version": 1,
+    "source_hash": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+    "source_key": "test.terminal-set-claim.v1",
+    "terminals": [
+      {
+        "logical_lineage_key": "lineage-a",
+        "schema_version": 1,
+        "terminal_event_hash": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "type": "revision_terminal_lineage"
+      },
+      {
+        "logical_lineage_key": "lineage-b",
+        "schema_version": 1,
+        "terminal_event_hash": "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+        "type": "revision_terminal_lineage"
+      }
+    ],
+    "type": "revision_closure_declaration"
+  }
+}

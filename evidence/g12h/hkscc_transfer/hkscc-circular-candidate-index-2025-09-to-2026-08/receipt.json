@@ -1,0 +1,57 @@
+{
+  "authority_status": "CAPTURED_NOT_QUALIFIED",
+  "content_type": "text/html; charset=utf-8",
+  "curl_exit_code": 0,
+  "curl_stderr": "",
+  "derivatives": {
+    "rendered_dom": {
+      "available": false,
+      "reason": "No browser renderer is installed in the acquisition environment; raw server response and deterministic text extraction retained."
+    },
+    "text_extraction": {
+      "charset": "utf-8",
+      "decode_errors": false
+    }
+  },
+  "final_url": "https://www.hkex.com.hk/Services/Circulars-and-Notices/Participant-and-Members-Circulars?sc_lang=en&Category=HKSCC&DateFrom=2025-09-01&DateTo=2026-08-31",
+  "lineage": "hkscc_transfer",
+  "operator_harness_sha256": "sha256:85ccf78ce0d595ff9d372c85243d81c49c3bc1be19f868df5936cc2f6977d9ea",
+  "raw_byte_length": 432717,
+  "raw_file": "raw.html",
+  "raw_sha256": "sha256:78513a01389a3d0ba3e590f648ab9bcb8e1b06d009558070ef8998d941d527d1",
+  "redirect_count": 0,
+  "response_chain_count": 1,
+  "response_code": 200,
+  "retrieved_at": "2026-08-20T07:40:19.353128Z",
+  "schema_version": 1,
+  "sensitive_response_headers": {
+    "files": [
+      {
+        "exact_private_path": "/srv/bcache-8t/ygguo/backtest/g12h-authority-private/20260820-wave1-response-headers/hkscc_transfer/hkscc-circular-candidate-index-2025-09-to-2026-08/response.headers",
+        "exact_private_sha256": "sha256:37130ba9b279fe5be2972b6c4f11af4c9ff2583b69a6a184fdd43a59a5ac6527",
+        "redaction": "Set-Cookie value replaced by its SHA-256; cookie name and attributes retained.",
+        "tracked_path": "hkscc_transfer/hkscc-circular-candidate-index-2025-09-to-2026-08/response.headers",
+        "tracked_redacted_sha256": "sha256:e7ec337f62ae954d3ff9c1a113e41d8c4d85336fe0d58b752b59824fc097b75d"
+      },
+      {
+        "exact_private_path": "/srv/bcache-8t/ygguo/backtest/g12h-authority-private/20260820-wave1-response-headers/hkscc_transfer/hkscc-circular-candidate-index-2025-09-to-2026-08/transport.log",
+        "exact_private_sha256": "sha256:8b5fc3f6f490b06605f26b531f76d8e7f13d628cbbf0cac327649a84004eeee4",
+        "redaction": "Set-Cookie value replaced by its SHA-256; cookie name and attributes retained.",
+        "tracked_path": "hkscc_transfer/hkscc-circular-candidate-index-2025-09-to-2026-08/transport.log",
+        "tracked_redacted_sha256": "sha256:c8802d2d14f493ddbf33c0f13eaf91db7e8400c2639a58ae3373cc8e87c0b0ed"
+      },
+      {
+        "exact_private_path": "/srv/bcache-8t/ygguo/backtest/g12h-authority-private/20260820-wave1-response-headers/hkscc_transfer/hkscc-circular-candidate-index-2025-09-to-2026-08/redirects.json",
+        "exact_private_sha256": "sha256:bf8fb19cf83f26fe9d012a3603ab3a39da8e240708eb7904972c91d8085abda4",
+        "redaction": "Set-Cookie value replaced by its SHA-256; cookie name and attributes retained.",
+        "tracked_path": "hkscc_transfer/hkscc-circular-candidate-index-2025-09-to-2026-08/redirects.json",
+        "tracked_redacted_sha256": "sha256:371548604caf1ded9719765a59fb31e9dec8d7ecf364c1ef18d2a668b6fd311c"
+      }
+    ],
+    "policy": "Exact server-issued cookie values are excluded from Git and retained in the mode-restricted private evidence store."
+  },
+  "source_id": "hkscc-circular-candidate-index-2025-09-to-2026-08",
+  "started_at": "2026-08-20T07:40:12.878886Z",
+  "tool": "curl 8.14.1 (x86_64-pc-linux-gnu) libcurl/8.14.1 OpenSSL/3.5.6 zlib/1.3.1 brotli/1.1.0 zstd/1.5.7 libidn2/2.3.8 libpsl/0.21.2 libssh2/1.11.1 nghttp2/1.64.0 nghttp3/1.8.0 librtmp/2.3 OpenLDAP/2.6.10",
+  "type": "g12h_official_http_capture_receipt_v1"
+}

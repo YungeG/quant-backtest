@@ -1,0 +1,157 @@
+{
+  "fixture_id": "target-decision-contracts-v1",
+  "schema_version": 1,
+  "candidate_payload": {
+    "strategy_id": "trend-v1",
+    "sleeve_id": "trend.primary",
+    "decision_time": "not-an-instant",
+    "observed_through": 101,
+    "targets": [
+      {
+        "instrument_id": "unknown:asset",
+        "value": 0.1
+      },
+      {
+        "instrument_id": "unknown:asset",
+        "value": 0.1
+      }
+    ],
+    "tags": [
+      "untrusted",
+      "duplicate-preserved"
+    ]
+  },
+  "validated": {
+    "strategy_id": "trend-v1",
+    "sleeve_id": "trend.primary",
+    "decision_time": 100,
+    "observed_through": 90,
+    "effective_time": 110,
+    "expires_at": 200,
+    "confidence_units": 875000000000,
+    "reason": "scheduled rebalance",
+    "evidence": {
+      "model_revision": "sha256:model-v1",
+      "signal_count": 2
+    },
+    "targets": [
+      {
+        "venue": "binance_usdm",
+        "stable_key": "linear_perpetual:eth-usdt",
+        "units": -250000000000
+      },
+      {
+        "venue": "binance_usdm",
+        "stable_key": "linear_perpetual:btc-usdt",
+        "units": 500000000000
+      }
+    ]
+  },
+  "expected_decision": {
+    "type": "strategy_decision",
+    "strategy_id": "trend-v1",
+    "decision_time": {
+      "type": "utc_instant",
+      "epoch_nanoseconds": 100
+    },
+    "observed_through": {
+      "type": "utc_instant",
+      "epoch_nanoseconds": 90
+    },
+    "target_snapshot": {
+      "type": "target_snapshot",
+      "sleeve_id": {
+        "type": "strategy_sleeve_id",
+        "value": "trend.primary"
+      },
+      "effective_time": {
+        "type": "utc_instant",
+        "epoch_nanoseconds": 110
+      },
+      "expires_at": {
+        "type": "utc_instant",
+        "epoch_nanoseconds": 200
+      },
+      "targets": [
+        {
+          "type": "target_exposure_fraction",
+          "instrument_id": {
+            "type": "instrument_id",
+            "venue": "binance_usdm",
+            "stable_key": "linear_perpetual:btc-usdt"
+          },
+          "units": 500000000000,
+          "scale": 12
+        },
+        {
+          "type": "target_exposure_fraction",
+          "instrument_id": {
+            "type": "instrument_id",
+            "venue": "binance_usdm",
+            "stable_key": "linear_perpetual:eth-usdt"
+          },
+          "units": -250000000000,
+          "scale": 12
+        }
+      ]
+    },
+    "confidence": {
+      "type": "rate",
+      "units": 875000000000,
+      "scale": 12,
+      "basis": "confidence"
+    },
+    "reason": "scheduled rebalance",
+    "evidence": {
+      "model_revision": "sha256:model-v1",
+      "signal_count": 2
+    }
+  },
+  "expected_decision_sha256": "sha256:1f539a9e106a7baa79555c2b30342ab9f57db254263b40fd1781222bc2fa8f1e",
+  "expected_batch_header": {
+    "type": "decision_batch",
+    "decision_batch_id": "batch:100",
+    "decision_time": {
+      "type": "utc_instant",
+      "epoch_nanoseconds": 100
+    }
+  },
+  "expected_batch_sha256": "sha256:ee1e40c61104252401fa25dde3b1041ab0d342b42d1e91240201c9cdce3e4ff5",
+  "expected_active_target": {
+    "type": "active_portfolio_target",
+    "source_decision_batch_id": "batch:100",
+    "materialized_at": {
+      "type": "utc_instant",
+      "epoch_nanoseconds": 110
+    },
+    "quantities": [
+      {
+        "instrument_id": {
+          "type": "instrument_id",
+          "venue": "binance_usdm",
+          "stable_key": "linear_perpetual:btc-usdt"
+        },
+        "quantity": {
+          "type": "quantity",
+          "units": 125000000,
+          "scale": 8,
+          "instrument_id": "binance_usdm:linear_perpetual:btc-usdt"
+        }
+      },
+      {
+        "instrument_id": {
+          "type": "instrument_id",
+          "venue": "binance_usdm",
+          "stable_key": "linear_perpetual:eth-usdt"
+        },
+        "quantity": {
+          "type": "quantity",
+          "units": -200000000,
+          "scale": 8,
+          "instrument_id": "binance_usdm:linear_perpetual:eth-usdt"
+        }
+      }
+    ]
+  },
+  "expected_active_target_sha256": "sha256:afdb1c973dfe9c06e9f10222dfa158508e4c9a865f8541243b5cbe4752977d25"
+}

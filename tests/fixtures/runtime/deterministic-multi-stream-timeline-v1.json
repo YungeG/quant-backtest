@@ -1,0 +1,315 @@
+{
+  "events": [
+    {
+      "event": {
+        "available_time": {
+          "epoch_nanoseconds": 120,
+          "type": "utc_instant"
+        },
+        "capability": {
+          "key": "universe",
+          "type": "market_bundle_capability",
+          "version": 1
+        },
+        "event_id": "universe-warmup",
+        "event_time": {
+          "epoch_nanoseconds": 119,
+          "type": "utc_instant"
+        },
+        "event_type": "universe",
+        "instrument_id": {
+          "stable_key": "asset-1",
+          "type": "instrument_id",
+          "venue": "test"
+        },
+        "payload": {
+          "event": "universe-warmup"
+        },
+        "phase": {
+          "code": "reference",
+          "rank": 10,
+          "type": "timeline_phase"
+        },
+        "revision_id": "rev-1",
+        "source_hash": "sha256:756e6976657273652d7761726d75700000000000000000000000000000000000",
+        "source_key": "fixture.universe",
+        "source_sequence": {
+          "type": "source_sequence",
+          "value": 3
+        },
+        "stream_key": "universe",
+        "supersedes_revision_id": null,
+        "type": "market_event"
+      },
+      "segment": "warmup",
+      "type": "timeline_event"
+    },
+    {
+      "event": {
+        "available_time": {
+          "epoch_nanoseconds": 120,
+          "type": "utc_instant"
+        },
+        "capability": {
+          "key": "price_bars",
+          "type": "market_bundle_capability",
+          "version": 1
+        },
+        "event_id": "bar-warmup",
+        "event_time": {
+          "epoch_nanoseconds": 119,
+          "type": "utc_instant"
+        },
+        "event_type": "price_bars",
+        "instrument_id": {
+          "stable_key": "asset-1",
+          "type": "instrument_id",
+          "venue": "test"
+        },
+        "payload": {
+          "event": "bar-warmup"
+        },
+        "phase": {
+          "code": "market_data",
+          "rank": 20,
+          "type": "timeline_phase"
+        },
+        "revision_id": "rev-1",
+        "source_hash": "sha256:6261722d7761726d757000000000000000000000000000000000000000000000",
+        "source_key": "fixture.bars",
+        "source_sequence": {
+          "type": "source_sequence",
+          "value": 4
+        },
+        "stream_key": "bars",
+        "supersedes_revision_id": null,
+        "type": "market_event"
+      },
+      "segment": "warmup",
+      "type": "timeline_event"
+    },
+    {
+      "event": {
+        "available_time": {
+          "epoch_nanoseconds": 200,
+          "type": "utc_instant"
+        },
+        "capability": {
+          "key": "corporate_actions",
+          "type": "market_bundle_capability",
+          "version": 1
+        },
+        "event_id": "corporate-action-active",
+        "event_time": {
+          "epoch_nanoseconds": 199,
+          "type": "utc_instant"
+        },
+        "event_type": "corporate_actions",
+        "instrument_id": {
+          "stable_key": "asset-1",
+          "type": "instrument_id",
+          "venue": "test"
+        },
+        "payload": {
+          "event": "corporate-action-active"
+        },
+        "phase": {
+          "code": "corporate_action",
+          "rank": 5,
+          "type": "timeline_phase"
+        },
+        "revision_id": "rev-1",
+        "source_hash": "sha256:636f72706f726174652d616374696f6e2d616374697665000000000000000000",
+        "source_key": "fixture.corporate_actions",
+        "source_sequence": {
+          "type": "source_sequence",
+          "value": 5
+        },
+        "stream_key": "corporate_actions",
+        "supersedes_revision_id": null,
+        "type": "market_event"
+      },
+      "segment": "active_trading",
+      "type": "timeline_event"
+    },
+    {
+      "event": {
+        "available_time": {
+          "epoch_nanoseconds": 200,
+          "type": "utc_instant"
+        },
+        "capability": {
+          "key": "universe",
+          "type": "market_bundle_capability",
+          "version": 1
+        },
+        "event_id": "universe-active",
+        "event_time": {
+          "epoch_nanoseconds": 199,
+          "type": "utc_instant"
+        },
+        "event_type": "universe",
+        "instrument_id": {
+          "stable_key": "asset-1",
+          "type": "instrument_id",
+          "venue": "test"
+        },
+        "payload": {
+          "event": "universe-active"
+        },
+        "phase": {
+          "code": "market_data",
+          "rank": 20,
+          "type": "timeline_phase"
+        },
+        "revision_id": "rev-1",
+        "source_hash": "sha256:756e6976657273652d6163746976650000000000000000000000000000000000",
+        "source_key": "fixture.universe",
+        "source_sequence": {
+          "type": "source_sequence",
+          "value": 6
+        },
+        "stream_key": "universe",
+        "supersedes_revision_id": null,
+        "type": "market_event"
+      },
+      "segment": "active_trading",
+      "type": "timeline_event"
+    },
+    {
+      "event": {
+        "available_time": {
+          "epoch_nanoseconds": 200,
+          "type": "utc_instant"
+        },
+        "capability": {
+          "key": "price_bars",
+          "type": "market_bundle_capability",
+          "version": 1
+        },
+        "event_id": "bar-active",
+        "event_time": {
+          "epoch_nanoseconds": 199,
+          "type": "utc_instant"
+        },
+        "event_type": "price_bars",
+        "instrument_id": {
+          "stable_key": "asset-1",
+          "type": "instrument_id",
+          "venue": "test"
+        },
+        "payload": {
+          "event": "bar-active"
+        },
+        "phase": {
+          "code": "market_data",
+          "rank": 20,
+          "type": "timeline_phase"
+        },
+        "revision_id": "rev-1",
+        "source_hash": "sha256:6261722d61637469766500000000000000000000000000000000000000000000",
+        "source_key": "fixture.bars",
+        "source_sequence": {
+          "type": "source_sequence",
+          "value": 7
+        },
+        "stream_key": "bars",
+        "supersedes_revision_id": null,
+        "type": "market_event"
+      },
+      "segment": "active_trading",
+      "type": "timeline_event"
+    }
+  ],
+  "final_cursor": {
+    "batch_size": 2,
+    "bundle_ref": {
+      "bundle_key": "fixture.timeline.v1",
+      "manifest_hash": "sha256:d115e6d84dffb4250d769f676aff0758373de9fc8871a6e928b22abe0e0e2d66",
+      "type": "market_bundle_ref"
+    },
+    "emitted_count": 5,
+    "last_ordering_key": {
+      "epoch_nanoseconds": 200,
+      "phase_code": "market_data",
+      "phase_rank": 20,
+      "source_sequence": 7
+    },
+    "streams": [
+      {
+        "cursor": {
+          "batch_size": 1,
+          "bundle_ref": {
+            "bundle_key": "fixture.timeline.v1",
+            "manifest_hash": "sha256:d115e6d84dffb4250d769f676aff0758373de9fc8871a6e928b22abe0e0e2d66",
+            "type": "market_bundle_ref"
+          },
+          "position": 3,
+          "stream_content_hash": "sha256:ac9208b41d93e935e6906e02a9659548b386e7d15bea2d5898fd435a491c68f3",
+          "stream_key": "bars",
+          "type": "event_cursor"
+        },
+        "stream_key": "bars",
+        "type": "timeline_stream_cursor"
+      },
+      {
+        "cursor": {
+          "batch_size": 1,
+          "bundle_ref": {
+            "bundle_key": "fixture.timeline.v1",
+            "manifest_hash": "sha256:d115e6d84dffb4250d769f676aff0758373de9fc8871a6e928b22abe0e0e2d66",
+            "type": "market_bundle_ref"
+          },
+          "position": 1,
+          "stream_content_hash": "sha256:95f5411b5273e62976da11073c2bda897bf0bc5ef41864066ee3fc7ab74481f0",
+          "stream_key": "corporate_actions",
+          "type": "event_cursor"
+        },
+        "stream_key": "corporate_actions",
+        "type": "timeline_stream_cursor"
+      },
+      {
+        "cursor": {
+          "batch_size": 1,
+          "bundle_ref": {
+            "bundle_key": "fixture.timeline.v1",
+            "manifest_hash": "sha256:d115e6d84dffb4250d769f676aff0758373de9fc8871a6e928b22abe0e0e2d66",
+            "type": "market_bundle_ref"
+          },
+          "position": 2,
+          "stream_content_hash": "sha256:071a05d458272a26013b37aa344a43c237001149e39cb22fc226ec105522d94b",
+          "stream_key": "universe",
+          "type": "event_cursor"
+        },
+        "stream_key": "universe",
+        "type": "timeline_stream_cursor"
+      }
+    ],
+    "timeline_id": "sha256:121d2ba73b769dfd12b83b45e37b811be2a0d5fc54810dd9e8ea08f8eae771a0",
+    "type": "timeline_cursor",
+    "window_complete": true,
+    "window_hash": "sha256:ade555dd17a6c7732c8760a8a2b963205e7f4caf4ce2ec46e72a6fce388d5650"
+  },
+  "fixture_id": "deterministic-multi-stream-timeline-v1",
+  "output_batch_size_parity_hashes": {
+    "1": "sha256:86f62a330592135cbe683f56d131ccf2c8d5d4de2c889f717ae51ea33670bee6",
+    "10": "sha256:86f62a330592135cbe683f56d131ccf2c8d5d4de2c889f717ae51ea33670bee6",
+    "2": "sha256:86f62a330592135cbe683f56d131ccf2c8d5d4de2c889f717ae51ea33670bee6"
+  },
+  "timeline_id": "sha256:121d2ba73b769dfd12b83b45e37b811be2a0d5fc54810dd9e8ea08f8eae771a0",
+  "window": {
+    "data_start": {
+      "epoch_nanoseconds": 100,
+      "type": "utc_instant"
+    },
+    "end_exclusive": {
+      "epoch_nanoseconds": 500,
+      "type": "utc_instant"
+    },
+    "trading_start": {
+      "epoch_nanoseconds": 200,
+      "type": "utc_instant"
+    },
+    "type": "timeline_window"
+  }
+}

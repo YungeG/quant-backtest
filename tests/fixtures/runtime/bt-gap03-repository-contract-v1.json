@@ -1,0 +1,19 @@
+{
+  "contract_id": "BT-GAP-03",
+  "schema_version": 1,
+  "description": "BacktestEvidenceRepository public contract",
+  "operations": [
+    "load_completed",
+    "load_terminal",
+    "load_analysis"
+  ],
+  "failure_codes": [
+    "PORT_REF_TYPE_MISMATCH",
+    "PORT_REF_NOT_FOUND",
+    "PORT_EVIDENCE_TAMPERED",
+    "PORT_MANIFEST_INVALID",
+    "PORT_RETENTION_UNAVAILABLE",
+    "PORT_TERMINAL_NOT_ANALYZABLE",
+    "PORT_ANALYSIS_LINK_MISMATCH"
+  ]
+}

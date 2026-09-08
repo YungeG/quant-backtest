@@ -1,0 +1,126 @@
+{
+  "cash_units": 92750,
+  "currency_valuation_graph_hash": "sha256:1cc53bbd5eb94799d80afbb44e02a0f9190411f640ed86b8a0b46b6113a285b1",
+  "equity_units": 104750,
+  "fee_units": 250,
+  "fixture_id": "foundation-financial-journey-v1",
+  "gross_realized_pnl_units": 3000,
+  "journal_entry_count": 5,
+  "journal_hash": "sha256:e61cdc47f61a2ee377f4c7797f30f581b43b5d01795f2c826c5633b654bfe929",
+  "ledger_state_hash": "sha256:e75a1ba2dd23fe8a41f0763efb72f46337c0c4a4b57fb788368e8c36e92b7336",
+  "mark_id": "sha256:16e3228fd261401afe2a7c2d2050975ed9c53bd7623f9a9523376d8c6f436698",
+  "net_economic_change_units": 4750,
+  "position_units": 10,
+  "snapshot": {
+    "account_id": "account:primary",
+    "cash": [
+      {
+        "amount": {
+          "currency": "USD",
+          "scale": 2,
+          "type": "money",
+          "units": 92750
+        },
+        "key": {
+          "account_id": "account:primary",
+          "currency_id": {
+            "type": "currency_id",
+            "value": "USD"
+          },
+          "type": "cash_balance_key",
+          "venue_id": {
+            "type": "venue_id",
+            "value": "synthetic"
+          }
+        },
+        "type": "cash_balance"
+      }
+    ],
+    "currency_valuation_graph_hash": "sha256:1cc53bbd5eb94799d80afbb44e02a0f9190411f640ed86b8a0b46b6113a285b1",
+    "equity": {
+      "currency": "USD",
+      "scale": 2,
+      "type": "money",
+      "units": 104750
+    },
+    "fees": {
+      "currency": "USD",
+      "scale": 2,
+      "type": "money",
+      "units": 250
+    },
+    "financing": {
+      "currency": "USD",
+      "scale": 2,
+      "type": "money",
+      "units": 0
+    },
+    "journal_state_hash": "sha256:e75a1ba2dd23fe8a41f0763efb72f46337c0c4a4b57fb788368e8c36e92b7336",
+    "positions": [
+      {
+        "key": {
+          "account_id": "account:primary",
+          "instrument_id": {
+            "stable_key": "cash-asset-1",
+            "type": "instrument_id",
+            "venue": "synthetic"
+          },
+          "type": "position_balance_key",
+          "venue_id": {
+            "type": "venue_id",
+            "value": "synthetic"
+          }
+        },
+        "lots": [],
+        "quantity": {
+          "instrument_id": "synthetic:cash-asset-1",
+          "scale": 1,
+          "type": "quantity",
+          "units": 10
+        },
+        "type": "position_balance"
+      }
+    ],
+    "realized_pnl": {
+      "currency": "USD",
+      "scale": 2,
+      "type": "money",
+      "units": 3000
+    },
+    "reporting_currency": {
+      "type": "currency_id",
+      "value": "USD"
+    },
+    "timestamp": {
+      "epoch_nanoseconds": 50,
+      "type": "utc_instant"
+    },
+    "type": "portfolio_snapshot",
+    "unrealized_pnl": {
+      "currency": "USD",
+      "scale": 2,
+      "type": "money",
+      "units": 2000
+    },
+    "valuation_mark_set_hash": "sha256:e19046e6e0ba2a42f43cc28698582426d7ce745188060b3d212ad412571eebc9",
+    "valuation_marks": [
+      {
+        "instrument_id": {
+          "stable_key": "cash-asset-1",
+          "type": "instrument_id",
+          "venue": "synthetic"
+        },
+        "mark_id": "sha256:16e3228fd261401afe2a7c2d2050975ed9c53bd7623f9a9523376d8c6f436698",
+        "observed_at": {
+          "epoch_nanoseconds": 45,
+          "type": "utc_instant"
+        },
+        "price_purpose": "valuation",
+        "type": "valuation_mark_reference"
+      }
+    ],
+    "valuation_staleness_report_hash": "sha256:9e5a6d757e365ff5a77b20feb6a19a62e7099ef9d6d36dea1ca5a066c73a90de"
+  },
+  "snapshot_hash": "sha256:bc84ab2dfd90fb40b65800abc9da061b708dc1e83fd04ccc3a5cb529ccf40187",
+  "unrealized_pnl_units": 2000
+}

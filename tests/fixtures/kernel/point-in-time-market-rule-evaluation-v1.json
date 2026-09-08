@@ -1,0 +1,21 @@
+{
+  "calculated_notional": {
+    "currency": "USD",
+    "scale": 2,
+    "type": "money",
+    "units": 6000000
+  },
+  "decision_hash": "sha256:d774fb27ebf3df3e3218d904851861676c99988d4f7e77689f1615d095d4c6bc",
+  "decision_id": "market-rule-decision-v1:sha256:73c4d73451997a028c024018e3e2d61c96b42673a91c906ca903ea138f84c44f",
+  "fixture_id": "point-in-time-market-rule-evaluation-v1",
+  "interval": {
+    "interval_hash": "sha256:f2d62d65da7f222e95d2b481e6590ede48e524afc2e72ca78e10eddc0dfb060c",
+    "interval_id": "order-rule-interval-v1:sha256:9b950e8ff95c9411f156ca32c31f0b2620c7dcd93479d1d854e18aa022386bec",
+    "snapshot_hash": "sha256:bb698906ddea161ac22b9e828d70107508070e60f574830194e241b43d8c1dcf"
+  },
+  "notional_evidence_hash": "sha256:cc5f1a60558138f22849de37202758013919f0e734c93ea0bb5636657e2b0f65",
+  "timeline": {
+    "config_hash": "sha256:2757fd1e7b76ddf25b8a7623fd52d57814f9b480ab9751ec48c5ef95fd8bbc1f",
+    "timeline_hash": "sha256:bcaac3f7cd0fe32a018150aaa0e1f0e0dfbec1e36a4444a2eafde71556cf6fbd"
+  }
+}

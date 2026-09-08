@@ -1,0 +1,28 @@
+{
+  "files": [
+    {
+      "exact_private_path": "/srv/bcache-8t/ygguo/backtest/g12h-authority-private/20260820-register-discovery-response-headers/hkscc_transfer/hkscc-usm-page-live/response.headers",
+      "exact_private_sha256": "sha256:10bd9c51e6591a28892e92cb50f75bc3046ed899890d2a58752466d2b76f9eb2",
+      "redaction": "Set-Cookie value replaced by SHA-256; name and attributes retained.",
+      "tracked_path": "hkscc_transfer/hkscc-usm-page-live/response.headers",
+      "tracked_redacted_sha256": "sha256:61fa731dd371c3fca391336f1482abc9e8692b66349119c6752e575b0acccf23"
+    },
+    {
+      "exact_private_path": "/srv/bcache-8t/ygguo/backtest/g12h-authority-private/20260820-register-discovery-response-headers/hkscc_transfer/hkscc-usm-page-live/transport.log",
+      "exact_private_sha256": "sha256:ad68f9c427d66869260786cef365fe6b27d2bd90932f28d23652cfa9d5820a26",
+      "redaction": "Set-Cookie value replaced by SHA-256; name and attributes retained.",
+      "tracked_path": "hkscc_transfer/hkscc-usm-page-live/transport.log",
+      "tracked_redacted_sha256": "sha256:8ead80463e4d1cf8b4227c64afaece587517e07cae7204c92cea6414067d0257"
+    },
+    {
+      "exact_private_path": "/srv/bcache-8t/ygguo/backtest/g12h-authority-private/20260820-register-discovery-response-headers/hkscc_transfer/hkscc-usm-page-live/redirects.json",
+      "exact_private_sha256": "sha256:5809c7310f2ff29581f7e0f9e9c26b40fc0250bf5ada1335db895b2dbcec03d7",
+      "redaction": "Set-Cookie value replaced by SHA-256; name and attributes retained.",
+      "tracked_path": "hkscc_transfer/hkscc-usm-page-live/redirects.json",
+      "tracked_redacted_sha256": "sha256:9bf2870112eb555a0a185fe120c306addc5209300c3a921850e9b4f4ee36afa6"
+    }
+  ],
+  "schema_version": 1,
+  "source_id": "hkscc-usm-page-live",
+  "type": "g12h_register_discovery_sensitive_response_header_receipt_v1"
+}

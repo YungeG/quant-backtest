@@ -1,0 +1,67 @@
+{
+  "responses": [
+    {
+      "headers": [
+        {
+          "name": "Date",
+          "value": "Thu, 20 Aug 2026 07:41:52 GMT"
+        },
+        {
+          "name": "Content-Type",
+          "value": "application/json;charset=UTF-8"
+        },
+        {
+          "name": "Transfer-Encoding",
+          "value": "chunked"
+        },
+        {
+          "name": "Connection",
+          "value": "keep-alive"
+        },
+        {
+          "name": "Expires",
+          "value": "Thu, 20 Aug 2026 07:41:52 GMT"
+        },
+        {
+          "name": "Set-Cookie",
+          "value": "http_waf_cookie=<redacted sha256:06072928e3bf37bca24ac4e66d9545066fb67f9aa24be9f826464afea905c663>; Expires=1787218912; Path=/; HttpOnly"
+        },
+        {
+          "name": "X-Content-Type-Options",
+          "value": "nosniff"
+        },
+        {
+          "name": "X-XSS-Protection",
+          "value": "1; mode=block"
+        },
+        {
+          "name": "Cache-Control",
+          "value": "no-cache, no-store, max-age=0, must-revalidate"
+        },
+        {
+          "name": "Pragma",
+          "value": "no-cache"
+        },
+        {
+          "name": "X-Frame-Options",
+          "value": "DENY"
+        },
+        {
+          "name": "X-Request-Id",
+          "value": "7982140bf9ec0a134cecf162b8b94e9f"
+        },
+        {
+          "name": "Server",
+          "value": "WAF"
+        },
+        {
+          "name": "X-Ser",
+          "value": "i2282315_c26763"
+        }
+      ],
+      "status_line": "HTTP/1.1 200 OK"
+    }
+  ],
+  "schema_version": 1,
+  "type": "g12h_http_response_chain_v1"
+}

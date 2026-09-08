@@ -1,0 +1,113 @@
+{
+  "at_correction": {
+    "selected": {
+      "artifact_ref_hash": "sha256:55a19bd09ddbc876a990b1d2a5d4a0a579db3ea21791c6504a34e2ad6ad8f79e",
+      "available_at": {
+        "instant": {
+          "epoch_nanoseconds": 200,
+          "type": "utc_instant"
+        },
+        "phase": {
+          "code": "model_availability",
+          "rank": 70,
+          "type": "timeline_phase"
+        },
+        "source_sequence": {
+          "type": "source_sequence",
+          "value": 3
+        },
+        "type": "simulation_instant"
+      },
+      "feature_schema_hash": "sha256:ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff",
+      "model_hash": "sha256:6d6f64656c2d7632000000000000000000000000000000000000000000000000",
+      "model_key": "portfolio.momentum.alpha",
+      "revision_id": "v2",
+      "schema_version": 1,
+      "supersedes_revision_id": "v1",
+      "training_code_hash": "sha256:747261696e696e672d636f64652d763100000000000000000000000000000000",
+      "training_data_hash": "sha256:646174612d763200000000000000000000000000000000000000000000000000",
+      "training_end": {
+        "epoch_nanoseconds": 190,
+        "type": "utc_instant"
+      },
+      "training_start": {
+        "epoch_nanoseconds": 100,
+        "type": "utc_instant"
+      },
+      "type": "model_artifact_ref"
+    },
+    "timeline_hash": "sha256:fa50d6dc8b8ede12bbcb07873eefc8b0d9119d78fb88e49f749cd42b596b9f18"
+  },
+  "before_correction": {
+    "selected": {
+      "artifact_ref_hash": "sha256:ac2d6804b4fea323318dbd23ade29ddd11ae63c952440795b2aa36b0ea6c0101",
+      "available_at": {
+        "instant": {
+          "epoch_nanoseconds": 100,
+          "type": "utc_instant"
+        },
+        "phase": {
+          "code": "model_availability",
+          "rank": 70,
+          "type": "timeline_phase"
+        },
+        "source_sequence": {
+          "type": "source_sequence",
+          "value": 1
+        },
+        "type": "simulation_instant"
+      },
+      "feature_schema_hash": "sha256:ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff",
+      "model_hash": "sha256:6d6f64656c2d7631000000000000000000000000000000000000000000000000",
+      "model_key": "portfolio.momentum.alpha",
+      "revision_id": "v1",
+      "schema_version": 1,
+      "supersedes_revision_id": null,
+      "training_code_hash": "sha256:747261696e696e672d636f64652d763100000000000000000000000000000000",
+      "training_data_hash": "sha256:646174612d763100000000000000000000000000000000000000000000000000",
+      "training_end": {
+        "epoch_nanoseconds": 90,
+        "type": "utc_instant"
+      },
+      "training_start": {
+        "epoch_nanoseconds": 0,
+        "type": "utc_instant"
+      },
+      "type": "model_artifact_ref"
+    },
+    "timeline_hash": "sha256:3772eaa26ed02b18d6acc9e9f7272d1fe101dc56d4471e43055e015050c5e9c9"
+  },
+  "empty_success": {
+    "selected": null,
+    "timeline_hash": "sha256:95cc3cfae717b392ce9a4fa88b7b05a7083c39694c1a56637c6bf5a98ceff68a"
+  },
+  "failure_controls": {
+    "availability_regression": true,
+    "cycle": true,
+    "feature_schema_change": true,
+    "fork": true,
+    "invalid_model_hash": true,
+    "invalid_training_window": true,
+    "missing_parent": true,
+    "multiple_roots": true,
+    "revision_identity_conflict": true,
+    "training_after_availability": true
+  },
+  "fixture_id": "walk-forward-model-revision-v1",
+  "future_and_unrelated_noninterference": {
+    "selection_hash_matches": true,
+    "timeline_hash_matches": true
+  },
+  "input_repeat_parity": {
+    "selection_hash_matches": true,
+    "timeline_hash_matches": true
+  },
+  "limitations": [
+    "no_model_loading_or_inference",
+    "no_training_or_candidate_selection",
+    "no_strategy_state_mutation",
+    "no_model-quality-claim",
+    "no-deployment-authorization"
+  ],
+  "schema_version": 1
+}

@@ -1,0 +1,8 @@
+{
+  "type": "artifact_ref",
+  "artifact_type": "engine_execution_result",
+  "schema_version": 1,
+  "content_hash": "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+  "expected_canonical_utf8": "{\"artifact_type\":\"engine_execution_result\",\"content_hash\":\"sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb\",\"schema_version\":1,\"type\":\"artifact_ref\"}",
+  "expected_canonical_sha256": "sha256:d2747a10d8d73548536ac6ce7f49c3bc05d7d1e7fb18b98cb0fa8e48cca87a2b"
+}

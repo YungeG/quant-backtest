@@ -1,0 +1,55 @@
+{
+  "responses": [
+    {
+      "headers": [
+        {
+          "name": "Date",
+          "value": "Thu, 20 Aug 2026 07:47:08 GMT"
+        },
+        {
+          "name": "Content-Type",
+          "value": "text/html"
+        },
+        {
+          "name": "Transfer-Encoding",
+          "value": "chunked"
+        },
+        {
+          "name": "Connection",
+          "value": "keep-alive"
+        },
+        {
+          "name": "Server",
+          "value": "nginx"
+        },
+        {
+          "name": "X-XSS-Protection",
+          "value": "1; mode=block"
+        },
+        {
+          "name": "Content-Security-Policy",
+          "value": "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://cdn.chinaclear.cn https://qrconnect.chinaclear.cn https://hm.baidu.com https://inv.chinaclear.cn https://biz.chinaclear.cn https://g.alicdn.com"
+        },
+        {
+          "name": "X-Content-Type-Options",
+          "value": "nosniff"
+        },
+        {
+          "name": "Via",
+          "value": "1.1 ID-1716635745747274 uproxy-9"
+        },
+        {
+          "name": "x-via",
+          "value": "1.1 PSjsczBGPkv230:12 (Cdn Cache Server V2.0), 1.1 PS-NTG-010GD53:4 (Cdn Cache Server V2.0), 1.1 PS-PEK-01Ruz167:17 (Cdn Cache Server V2.0)"
+        },
+        {
+          "name": "x-ws-request-id",
+          "value": "6a86b0fc_PS-PEK-01Ruz167_11246-13496"
+        }
+      ],
+      "status_line": "HTTP/1.1 200 OK"
+    }
+  ],
+  "schema_version": 1,
+  "type": "g12h_http_response_chain_v1"
+}

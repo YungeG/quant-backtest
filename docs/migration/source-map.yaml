@@ -1,0 +1,180 @@
+schema_version: 1
+snapshot_manifest_schema_version: 1
+allowed_migration_modes:
+  - copy_with_parity
+  - intentional_semantic_change
+  - new_capability
+  - reimplement_with_reference
+sources:
+  - id: crypto-quant-core
+    provenance:
+      base_commit: 348b9e56b99c8ee2999aa8cdfcf91a18ecce9019
+      remote: null
+      worktree_state: clean
+    include_files:
+      - README.md
+      - pyproject.toml
+      - src/crypto_quant_core/__init__.py
+      - src/crypto_quant_core/accounting.py
+      - src/crypto_quant_core/adapters/__init__.py
+      - src/crypto_quant_core/adapters/hummingbot.py
+      - src/crypto_quant_core/causality.py
+      - src/crypto_quant_core/contracts.py
+      - src/crypto_quant_core/exchange_rules.py
+      - src/crypto_quant_core/portfolio.py
+      - tests/test_core.py
+      - tests/test_crypt_gemini_parity.py
+    snapshot:
+      id: sha256:33ca4055b16fd966d92263248289fcd960a1cb93f52c4d8a0db00030b3e3d0d1
+      archive: tests/parity/fixtures/legacy-sources/crypto-quant-core-33ca4055b16fd966d92263248289fcd960a1cb93f52c4d8a0db00030b3e3d0d1.tar.gz
+      manifest: tests/parity/fixtures/legacy-sources/crypto-quant-core-33ca4055b16fd966d92263248289fcd960a1cb93f52c4d8a0db00030b3e3d0d1.manifest.json
+      manifest_sha256: 58fc5e0b8b96515e506e885406e37a9dde2f4f7f0c3e9435aeea6d68d5177a01
+  - id: cycle-rotation-platform
+    provenance:
+      base_commit: 91cd8e182b736a07319e0f504e64572b32ea7dea
+      remote: git@github.com:YungeG/quaaant.git
+      worktree_state: dirty
+    include_files:
+      - operations/platform-architecture.md
+      - strategies/contracts.py
+      - strategies/registry.py
+      - strategies/template_adapter.py
+      - trading/engine/execution_engine.py
+      - trading/engine/risk_gate.py
+      - trading/orders.py
+      - trading/position_management.py
+    snapshot:
+      id: sha256:1fea4f5a4ec8ab12ddb25c6c5bb525f91f8bac9e887f3e5b382b641a948c91c3
+      archive: tests/parity/fixtures/legacy-sources/cycle-rotation-platform-1fea4f5a4ec8ab12ddb25c6c5bb525f91f8bac9e887f3e5b382b641a948c91c3.tar.gz
+      manifest: tests/parity/fixtures/legacy-sources/cycle-rotation-platform-1fea4f5a4ec8ab12ddb25c6c5bb525f91f8bac9e887f3e5b382b641a948c91c3.manifest.json
+      manifest_sha256: 5074f0b6f1130a6bc6b755e8dc9c582dbf15631ef92520b6f7a601eb763c03e2
+  - id: crypt-gemini
+    provenance:
+      base_commit: ba36e8a2b9ca1b1a949cf71cc93e175c9ef5e014
+      remote: git@github.com:YungeG/crypt-gemini.git
+      worktree_state: dirty
+    include_files:
+      - research/blend_v2/execution.py
+      - research/hummingbot_audited/__init__.py
+      - research/hummingbot_audited/cli.py
+      - research/hummingbot_audited/contracts.py
+      - research/hummingbot_audited/engine.py
+      - research/hummingbot_audited/market_data.py
+      - research/hummingbot_audited/result.py
+      - research/hummingbot_audited/rules.py
+      - research/hummingbot_audited/runtime/__init__.py
+      - research/hummingbot_audited/runtime/action_adapter.py
+      - research/hummingbot_audited/runtime/provider.py
+      - research/hummingbot_audited/runtime/runner.py
+      - research/hummingbot_audited/timeline.py
+      - research/mm_l1_replay/__init__.py
+      - research/mm_l1_replay/aggressive_policy.py
+      - research/mm_l1_replay/aggressive_signals.py
+      - research/mm_l1_replay/bundle.py
+      - research/mm_l1_replay/cli.py
+      - research/mm_l1_replay/contracts.py
+      - research/mm_l1_replay/engine.py
+      - research/mm_l1_replay/exchange_rules.py
+      - research/mm_l1_replay/experiment.py
+      - research/mm_l1_replay/fetch.py
+      - research/mm_l1_replay/pareto.py
+      - research/mm_l1_replay/partitioned_bundle.py
+      - research/mm_l1_replay/profile_runner.py
+      - research/mm_l1_replay/profiles.py
+      - research/mm_l1_replay/report.py
+    snapshot:
+      id: sha256:d6e6feca46b61586e890a441443738dc9e911a58428c940e86055459361eda80
+      archive: tests/parity/fixtures/legacy-sources/crypt-gemini-d6e6feca46b61586e890a441443738dc9e911a58428c940e86055459361eda80.tar.gz
+      manifest: tests/parity/fixtures/legacy-sources/crypt-gemini-d6e6feca46b61586e890a441443738dc9e911a58428c940e86055459361eda80.manifest.json
+      manifest_sha256: 002fbec9fad3de169fd91be99078c316b2a0896fad890c3e2004518dc6e6eac4
+migration_units:
+  - id: core-accounting
+    source_id: crypto-quant-core
+    source_paths:
+      - src/crypto_quant_core/accounting.py
+    target_owner: trading-kernel
+    target_module: crypto_quant_trading.accounting
+    mode: copy_with_parity
+    status: active
+    qualification_gate: WP-03F
+    comparator_contract: tests/parity/contracts/core-accounting-wp03f-v1.json
+  - id: core-contracts
+    source_id: crypto-quant-core
+    source_paths:
+      - src/crypto_quant_core/contracts.py
+    target_owner: trading-domain
+    target_module: crypto_quant_domain.contracts
+    mode: reimplement_with_reference
+    status: planned
+    qualification_gate: G02
+    comparator_contract: null
+  - id: core-portfolio
+    source_id: crypto-quant-core
+    source_paths:
+      - src/crypto_quant_core/portfolio.py
+    target_owner: trading-kernel
+    target_module: crypto_quant_trading.allocation
+    mode: reimplement_with_reference
+    status: planned
+    qualification_gate: G04
+    comparator_contract: null
+  - id: crypt-blend-execution
+    source_id: crypt-gemini
+    source_paths:
+      - research/blend_v2/execution.py
+    target_owner: backtest-runtime
+    target_module: crypto_quant_backtest.execution
+    mode: reimplement_with_reference
+    status: planned
+    qualification_gate: WP-06E
+    comparator_contract: null
+  - id: crypt-hummingbot-audited
+    source_id: crypt-gemini
+    source_paths:
+      - research/hummingbot_audited/contracts.py
+      - research/hummingbot_audited/engine.py
+      - research/hummingbot_audited/rules.py
+      - research/hummingbot_audited/timeline.py
+    target_owner: backtest-runtime
+    target_module: crypto_quant_backtest.engine
+    mode: reimplement_with_reference
+    status: planned
+    qualification_gate: G07
+    comparator_contract: null
+  - id: crypt-mm-l1-replay
+    source_id: crypt-gemini
+    source_paths:
+      - research/mm_l1_replay/contracts.py
+      - research/mm_l1_replay/engine.py
+      - research/mm_l1_replay/exchange_rules.py
+    target_owner: backtest-runtime
+    target_module: crypto_quant_backtest.microstructure
+    mode: reimplement_with_reference
+    status: planned
+    qualification_gate: future-microstructure-gate
+    comparator_contract: null
+  - id: cycle-strategy-contracts
+    source_id: cycle-rotation-platform
+    source_paths:
+      - strategies/contracts.py
+      - strategies/registry.py
+      - strategies/template_adapter.py
+    target_owner: backtest-runtime
+    target_module: crypto_quant_backtest.strategy
+    mode: reimplement_with_reference
+    status: planned
+    qualification_gate: G11
+    comparator_contract: null
+  - id: cycle-trading-semantics
+    source_id: cycle-rotation-platform
+    source_paths:
+      - trading/engine/execution_engine.py
+      - trading/engine/risk_gate.py
+      - trading/orders.py
+      - trading/position_management.py
+    target_owner: trading-kernel
+    target_module: crypto_quant_trading
+    mode: reimplement_with_reference
+    status: planned
+    qualification_gate: G05
+    comparator_contract: null

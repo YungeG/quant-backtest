@@ -1,0 +1,42 @@
+{
+  "authentication": "none",
+  "headers": [
+    {
+      "name": "User-Agent",
+      "value": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 Chrome/130.0 Safari/537.36 G12HAuthorityCapture/1.0"
+    },
+    {
+      "name": "Accept",
+      "value": "application/json, text/plain, */*"
+    },
+    {
+      "name": "Accept-Language",
+      "value": "zh-CN,zh;q=0.9,en;q=0.5"
+    },
+    {
+      "name": "Content-Type",
+      "value": "application/json;charset=UTF-8"
+    },
+    {
+      "name": "Cache-Control",
+      "value": "no-cache"
+    },
+    {
+      "name": "Pragma",
+      "value": "no-cache"
+    }
+  ],
+  "method": "POST",
+  "redirect_policy": {
+    "follow": true,
+    "maximum": 10,
+    "redirect_protocols": [
+      "https"
+    ]
+  },
+  "request_body_file": "request.body",
+  "request_body_sha256": "sha256:e5c49892db66e47c28a2debfbbe3fa5fee45c6558f7223a99c7364f6bf390226",
+  "schema_version": 1,
+  "type": "g12h_official_http_request_v1",
+  "url": "https://flk.npc.gov.cn/law-search/search/list"
+}

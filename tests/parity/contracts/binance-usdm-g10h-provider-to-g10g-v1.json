@@ -1,0 +1,14 @@
+{
+  "schema_version": 1,
+  "id": "binance-usdm-g10h-provider-to-g10g-v1",
+  "rules": [
+    {"path": "/case_id", "comparison": "exact"},
+    {"path": "/layers/00_SOURCE_IDENTITY", "comparison": "exact"},
+    {"path": "/layers/03_ORDER_EVENT", "comparison": "sequence"},
+    {"path": "/layers/04_FILL", "comparison": "sequence"},
+    {"path": "/layers/05_FEE", "comparison": "sequence"},
+    {"path": "/layers/06_POSITION_PNL", "comparison": "exact"},
+    {"path": "/layers/07_FUNDING", "comparison": "sequence"},
+    {"path": "/layers/09_MARGIN_SNAPSHOT", "comparison": "exact"}
+  ]
+}

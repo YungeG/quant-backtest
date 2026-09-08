@@ -1,0 +1,51 @@
+{
+  "schema_version": 1,
+  "completed": {
+    "ref": {
+      "type": "backtest_canonical_publication_ref",
+      "artifact_ref": {
+        "type": "artifact_ref",
+        "artifact_type": "canonical_publication_manifest",
+        "schema_version": 1,
+        "content_hash": "sha256:2f45ccefe4b9fa5541ef595f8279cdafe45a70f821a66aa9bbab41225a822a75"
+      }
+    },
+    "expected_canonical_utf8": "{\"artifact_ref\":{\"artifact_type\":\"canonical_publication_manifest\",\"content_hash\":\"sha256:2f45ccefe4b9fa5541ef595f8279cdafe45a70f821a66aa9bbab41225a822a75\",\"schema_version\":1,\"type\":\"artifact_ref\"},\"type\":\"backtest_canonical_publication_ref\"}",
+    "expected_canonical_sha256": "sha256:fa6443c6814fed7c1a8fb439a415ad3e241b57830171279ea45972249defb625"
+  },
+  "terminals": [
+    {
+      "status": "BLOCKED",
+      "ref": {
+        "type": "artifact_ref",
+        "artifact_type": "backtest_resolution_failure",
+        "schema_version": 1,
+        "content_hash": "sha256:dda4812159a0e6576d00b3c5eaf9a230eb28789146c4f9f0e533b8ba64be2bdc"
+      },
+      "expected_canonical_utf8": "{\"artifact_type\":\"backtest_resolution_failure\",\"content_hash\":\"sha256:dda4812159a0e6576d00b3c5eaf9a230eb28789146c4f9f0e533b8ba64be2bdc\",\"schema_version\":1,\"type\":\"artifact_ref\"}",
+      "expected_canonical_sha256": "sha256:aeac40ef894664cbc23191a48d5227386fb0b4a6d759f82fdcb30b7466e8109b"
+    },
+    {
+      "status": "FAILED",
+      "ref": {
+        "type": "artifact_ref",
+        "artifact_type": "evidence_manifest",
+        "schema_version": 1,
+        "content_hash": "sha256:d31e7170ec9591276ee5baa1df69c458dce4236b008a9298a077f9891b7d4b5b"
+      },
+      "expected_canonical_utf8": "{\"artifact_type\":\"evidence_manifest\",\"content_hash\":\"sha256:d31e7170ec9591276ee5baa1df69c458dce4236b008a9298a077f9891b7d4b5b\",\"schema_version\":1,\"type\":\"artifact_ref\"}",
+      "expected_canonical_sha256": "sha256:bc40c0e74061cd87b888f9764d12abe61187598b38a335bafa95ef62c7577420"
+    },
+    {
+      "status": "CANCELLED",
+      "ref": {
+        "type": "artifact_ref",
+        "artifact_type": "evidence_manifest",
+        "schema_version": 1,
+        "content_hash": "sha256:29d9f80eb7d697e5c60674a10c05cc647d1aa422bf719624c3c82aaf874da8b5"
+      },
+      "expected_canonical_utf8": "{\"artifact_type\":\"evidence_manifest\",\"content_hash\":\"sha256:29d9f80eb7d697e5c60674a10c05cc647d1aa422bf719624c3c82aaf874da8b5\",\"schema_version\":1,\"type\":\"artifact_ref\"}",
+      "expected_canonical_sha256": "sha256:d8ab57a5cadcdcae6f32686872fe13c1eba1ed037eaa1ea28ad51278e48f747a"
+    }
+  ]
+}

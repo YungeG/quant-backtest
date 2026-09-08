@@ -1,0 +1,14 @@
+HTTP/1.1 200 OK
+Date: Thu, 03 Sep 2026 06:33:48 GMT
+Content-Type: application/vnd.ms-powerpoint
+Content-Length: 305152
+Connection: keep-alive
+Last-Modified: Tue, 02 Jun 2026 04:10:58 GMT
+ETag: "6a1e57d2-4a800"
+X-Frame-Options: ALLOW-FROM https://www.chinatax.gov.cn/
+Access-Control-Allow-Origin: https://www.chinatax.gov.cn
+Accept-Ranges: bytes
+x-via: 1.1 PS-WUH-01nYu93:4 (Cdn Cache Server V2.0), 1.1 PS-000-014Ru65:18 (Cdn Cache Server V2.0), 1.1 PS-000-01TG482:6 (Cdn Cache Server V2.0)
+x-ws-request-id: 6a9914cc_PS-000-01TG482_1539-30683
+Age: 64088
+

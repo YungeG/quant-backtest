@@ -1,0 +1,114 @@
+{
+  "analysis": {
+    "path": "analysis/live-status-api-probe-assessment.json",
+    "sha256": "sha256:cf1b6b25192dd83652af8b96aca0424082fd3e22afd1a11cceaa585a67be80cf"
+  },
+  "authority_references": {
+    "acceptance_registry_commit": "2c531017dd0822a60b48bf8e1965f6eccb7767db",
+    "adr_0006_commit": "4c663bab458c075ee581becea06fef4908d6a57e",
+    "register_discovery_commit": "26f3a040c88d289c236c626c69b7fce8405d140a"
+  },
+  "generated_at": "2026-08-20T09:44:34.610379Z",
+  "limitations": [
+    "SZSE code=0 and message=成功 are retrieval success, not legal validity status.",
+    "Blank docTitleStatusTime does not qualify under ADR 0006.",
+    "STA status=1000 is search-service success, not legal validity status.",
+    "Zero filtered results prove only that No.39 is unclassified under the published filters at capture time.",
+    "No probe supplies complete fee-table or announcement successor/correction lineage coverage."
+  ],
+  "operator_manifest": {
+    "path": "operator/manifest.json",
+    "sha256": "sha256:b891675094feb3ebcb4da3e51647e520dcd492fd8085ac4415cd02494834ee0d"
+  },
+  "private_response_header_store": {
+    "path": "private-response-header-store-receipt.json",
+    "sha256": "sha256:33d7b5cc81e5d173369c5e3f950ace7a80c2b4fe3ed7a8b3286e637f48856037"
+  },
+  "schema_version": 1,
+  "source_count": 9,
+  "sources": [
+    {
+      "lineage": "exchange_handling",
+      "method": "GET",
+      "raw_sha256": "sha256:1d2d0260a93045635179ba58dd20f55940b39c2e11e6d7fa8979d7a15ee07199",
+      "receipt_sha256": "sha256:35f04cca16874c41533455e3efc085acb2a0d378d9e33a6756ae593ecf98c071",
+      "retrieved_at": "2026-08-20T09:41:39.782897Z",
+      "source_id": "szse-fee-document-2026-01-html-live",
+      "url": "https://www.szse.cn/marketServices/deal/payFees/t20251231_618209.html"
+    },
+    {
+      "lineage": "exchange_handling",
+      "method": "GET",
+      "raw_sha256": "sha256:e64eb8ad2692722a9ba8dbf633fea63c94ccba12aac14826211df72a3cdce3e0",
+      "receipt_sha256": "sha256:68ed4924422dc1b30ee9b09b4c80ecfb88c96d1080a61db99fccb1ccebf45e88",
+      "retrieved_at": "2026-08-20T09:41:39.799658Z",
+      "source_id": "szse-fee-document-2026-01-json-live",
+      "url": "https://www.szse.cn/marketServices/deal/payFees/t20251231_618209.json"
+    },
+    {
+      "lineage": "exchange_handling",
+      "method": "GET",
+      "raw_sha256": "sha256:34ce00d7302d79f7779c1774ba75db6775caf3d1772c5d60fe85eeeb0a1f0400",
+      "receipt_sha256": "sha256:aac38dbee2d4df5ae6bed6f62bda63d43768c12b604b4dea62a5b99c13c2e9b4",
+      "retrieved_at": "2026-08-20T09:41:39.647898Z",
+      "source_id": "szse-fee-selector-json-live",
+      "url": "https://www.szse.cn/marketServices/deal/payFees/index.json"
+    },
+    {
+      "lineage": "stamp_duty",
+      "method": "GET",
+      "raw_sha256": "sha256:9f6404568dd30f495c20f7e6f543d0df447ff0dae8103bccce40a3cad3262c6e",
+      "receipt_sha256": "sha256:e8efb6facab0ad35826dd19f6db45d659225beea0e9b82e4f8509db55d9ccb3a",
+      "retrieved_at": "2026-08-20T09:41:39.879149Z",
+      "source_id": "sta-no39-status-full-valid-live",
+      "url": "https://www.chinatax.gov.cn/search5/search/s?siteCode=bm29000002&column=%E6%94%BF%E7%AD%96%E6%B3%95%E8%A7%84&searchWord=%E8%B4%A2%E6%94%BF%E9%83%A8+%E7%A8%8E%E5%8A%A1%E6%80%BB%E5%B1%80%E5%85%AC%E5%91%8A2023%E5%B9%B4%E7%AC%AC39%E5%8F%B7&wordPlace=0&docType=%E8%B4%A2%E6%94%BF%E9%83%A8%E7%A8%8E%E5%8A%A1%E6%80%BB%E5%B1%80%E5%85%AC%E5%91%8A&docYear=2023&docNo=39&xxgkTaxPolicy=%E7%A8%8E%E6%94%B6%E6%94%BF%E7%AD%96&xxgkSonTaxPolicy=%E5%8D%B0%E8%8A%B1%E7%A8%8E&xxgkFormulatedYear=2023&orderBy=5&participleRule=5&searchSiteName=GSFFK&pageNum=0&xxgkAging=%E5%85%A8%E6%96%87%E6%9C%89%E6%95%88"
+    },
+    {
+      "lineage": "stamp_duty",
+      "method": "GET",
+      "raw_sha256": "sha256:488e07fbf43cb49c0605f3aa75bf973ff1436ec8d0640d1fb08f592caa73ff7e",
+      "receipt_sha256": "sha256:6f953665a89c12b2f60a246f3500a79dcf9b6d3e00d2a3cf6b68f5c966fc07f6",
+      "retrieved_at": "2026-08-20T09:41:40.090651Z",
+      "source_id": "sta-no39-status-invalid-live",
+      "url": "https://www.chinatax.gov.cn/search5/search/s?siteCode=bm29000002&column=%E6%94%BF%E7%AD%96%E6%B3%95%E8%A7%84&searchWord=%E8%B4%A2%E6%94%BF%E9%83%A8+%E7%A8%8E%E5%8A%A1%E6%80%BB%E5%B1%80%E5%85%AC%E5%91%8A2023%E5%B9%B4%E7%AC%AC39%E5%8F%B7&wordPlace=0&docType=%E8%B4%A2%E6%94%BF%E9%83%A8%E7%A8%8E%E5%8A%A1%E6%80%BB%E5%B1%80%E5%85%AC%E5%91%8A&docYear=2023&docNo=39&xxgkTaxPolicy=%E7%A8%8E%E6%94%B6%E6%94%BF%E7%AD%96&xxgkSonTaxPolicy=%E5%8D%B0%E8%8A%B1%E7%A8%8E&xxgkFormulatedYear=2023&orderBy=5&participleRule=5&searchSiteName=GSFFK&pageNum=0&xxgkAging=%E5%85%A8%E6%96%87%E5%A4%B1%E6%95%88"
+    },
+    {
+      "lineage": "stamp_duty",
+      "method": "GET",
+      "raw_sha256": "sha256:15ebb7cb9d0b7a955e098b4fb4e63a5088529c9b123b4f0c0b714f3445256140",
+      "receipt_sha256": "sha256:c7a82527c0739e314bc3446d34b6713f1670b78aa07926ad2be9e5340c7966df",
+      "retrieved_at": "2026-08-20T09:41:39.881367Z",
+      "source_id": "sta-no39-status-modified-live",
+      "url": "https://www.chinatax.gov.cn/search5/search/s?siteCode=bm29000002&column=%E6%94%BF%E7%AD%96%E6%B3%95%E8%A7%84&searchWord=%E8%B4%A2%E6%94%BF%E9%83%A8+%E7%A8%8E%E5%8A%A1%E6%80%BB%E5%B1%80%E5%85%AC%E5%91%8A2023%E5%B9%B4%E7%AC%AC39%E5%8F%B7&wordPlace=0&docType=%E8%B4%A2%E6%94%BF%E9%83%A8%E7%A8%8E%E5%8A%A1%E6%80%BB%E5%B1%80%E5%85%AC%E5%91%8A&docYear=2023&docNo=39&xxgkTaxPolicy=%E7%A8%8E%E6%94%B6%E6%94%BF%E7%AD%96&xxgkSonTaxPolicy=%E5%8D%B0%E8%8A%B1%E7%A8%8E&xxgkFormulatedYear=2023&orderBy=5&participleRule=5&searchSiteName=GSFFK&pageNum=0&xxgkAging=%E5%B7%B2%E4%BF%AE%E6%94%B9"
+    },
+    {
+      "lineage": "stamp_duty",
+      "method": "GET",
+      "raw_sha256": "sha256:bb900b4a53e5667bf0a35e5fd68d78e080831a974e74482621637df93888d05f",
+      "receipt_sha256": "sha256:ce78440c8793d3d5781c77a707b5dc73d78c389e5cc7b1f7a5fb59e86ff1afef",
+      "retrieved_at": "2026-08-20T09:41:40.203518Z",
+      "source_id": "sta-no39-status-not-yet-effective-live",
+      "url": "https://www.chinatax.gov.cn/search5/search/s?siteCode=bm29000002&column=%E6%94%BF%E7%AD%96%E6%B3%95%E8%A7%84&searchWord=%E8%B4%A2%E6%94%BF%E9%83%A8+%E7%A8%8E%E5%8A%A1%E6%80%BB%E5%B1%80%E5%85%AC%E5%91%8A2023%E5%B9%B4%E7%AC%AC39%E5%8F%B7&wordPlace=0&docType=%E8%B4%A2%E6%94%BF%E9%83%A8%E7%A8%8E%E5%8A%A1%E6%80%BB%E5%B1%80%E5%85%AC%E5%91%8A&docYear=2023&docNo=39&xxgkTaxPolicy=%E7%A8%8E%E6%94%B6%E6%94%BF%E7%AD%96&xxgkSonTaxPolicy=%E5%8D%B0%E8%8A%B1%E7%A8%8E&xxgkFormulatedYear=2023&orderBy=5&participleRule=5&searchSiteName=GSFFK&pageNum=0&xxgkAging=%E5%B0%9A%E6%9C%AA%E7%94%9F%E6%95%88"
+    },
+    {
+      "lineage": "stamp_duty",
+      "method": "GET",
+      "raw_sha256": "sha256:e56de9553ae44ed513a3180ad0e723419ded8725a88bf85adaa9c937443ffb9d",
+      "receipt_sha256": "sha256:2ac9b9d62d4e0ca8a38a0be6195a4476d042cb0eaae7f9a0f9bc0f723bd24f43",
+      "retrieved_at": "2026-08-20T09:41:40.204605Z",
+      "source_id": "sta-no39-status-repealed-live",
+      "url": "https://www.chinatax.gov.cn/search5/search/s?siteCode=bm29000002&column=%E6%94%BF%E7%AD%96%E6%B3%95%E8%A7%84&searchWord=%E8%B4%A2%E6%94%BF%E9%83%A8+%E7%A8%8E%E5%8A%A1%E6%80%BB%E5%B1%80%E5%85%AC%E5%91%8A2023%E5%B9%B4%E7%AC%AC39%E5%8F%B7&wordPlace=0&docType=%E8%B4%A2%E6%94%BF%E9%83%A8%E7%A8%8E%E5%8A%A1%E6%80%BB%E5%B1%80%E5%85%AC%E5%91%8A&docYear=2023&docNo=39&xxgkTaxPolicy=%E7%A8%8E%E6%94%B6%E6%94%BF%E7%AD%96&xxgkSonTaxPolicy=%E5%8D%B0%E8%8A%B1%E7%A8%8E&xxgkFormulatedYear=2023&orderBy=5&participleRule=5&searchSiteName=GSFFK&pageNum=0&xxgkAging=%E5%85%A8%E6%96%87%E5%BA%9F%E6%AD%A2"
+    },
+    {
+      "lineage": "stamp_duty",
+      "method": "GET",
+      "raw_sha256": "sha256:214628eb5c32c3dcaecc9661c1a86a6c1731286d118f9bc98844468358f365bf",
+      "receipt_sha256": "sha256:24aea529a4f0ad4b2d11d76f9756c53c31b084f59760a8e9579c1024773e050b",
+      "retrieved_at": "2026-08-20T09:41:39.879628Z",
+      "source_id": "sta-no39-status-unfiltered-live",
+      "url": "https://www.chinatax.gov.cn/search5/search/s?siteCode=bm29000002&column=%E6%94%BF%E7%AD%96%E6%B3%95%E8%A7%84&searchWord=%E8%B4%A2%E6%94%BF%E9%83%A8+%E7%A8%8E%E5%8A%A1%E6%80%BB%E5%B1%80%E5%85%AC%E5%91%8A2023%E5%B9%B4%E7%AC%AC39%E5%8F%B7&wordPlace=0&docType=%E8%B4%A2%E6%94%BF%E9%83%A8%E7%A8%8E%E5%8A%A1%E6%80%BB%E5%B1%80%E5%85%AC%E5%91%8A&docYear=2023&docNo=39&xxgkTaxPolicy=%E7%A8%8E%E6%94%B6%E6%94%BF%E7%AD%96&xxgkSonTaxPolicy=%E5%8D%B0%E8%8A%B1%E7%A8%8E&xxgkFormulatedYear=2023&orderBy=5&participleRule=5&searchSiteName=GSFFK&pageNum=0&xxgkAging="
+    }
+  ],
+  "status": "F1_BLOCKED_NO_COMMON_OFFICIAL_RECORD_AS_OF",
+  "type": "g12h_live_status_api_probe_manifest_v1"
+}

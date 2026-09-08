@@ -1,0 +1,19 @@
+{
+  "affected_source_ids": [
+    "szse-fee-management-measures",
+    "hkscc-usm-page-live",
+    "sta-no39-exact-status-query"
+  ],
+  "executed_operator": {
+    "path": "operator/executed/g12h_redact_register_cookies.executed.py",
+    "sha256": "sha256:47895c343fd59abe8d1883240e16429b2a09e2907f0091e82d3d0c5f87e92c7b"
+  },
+  "private_manifest_sha256": "sha256:890c417a4916aa9ada25188e7d3503490dc28162bc53937901e0bb67080eddcd",
+  "public_private_store_receipt": {
+    "path": "private-response-header-store-receipt.json",
+    "sha256": "sha256:e0da51c3347ad2bdf01c6ddb0142e109f22f78725b419deb441c132b288012f3"
+  },
+  "schema_version": 1,
+  "status": "EXECUTED_OPERATOR_BOUND_TO_OUTPUTS",
+  "type": "g12h_register_discovery_redaction_execution_receipt_v1"
+}

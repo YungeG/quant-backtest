@@ -1,0 +1,25 @@
+{
+  "authority_status": "DISCOVERY_ONLY_NOT_SUCCESSOR_CLOSURE",
+  "content_type": "application/json;charset=UTF-8",
+  "curl_exit_code": 0,
+  "derivatives": {
+    "json_parse": {
+      "valid": true
+    }
+  },
+  "final_url": "https://www.szse.cn/api/search/content",
+  "lineage": "exchange_handling",
+  "operator_harness_sha256": "sha256:9d2a56b78fe9bdf2882226e746ab413fd73d69fae2afc4caf5d14b602730c8f5",
+  "raw_byte_length": 2417,
+  "raw_file": "raw.json",
+  "raw_sha256": "sha256:815ed7919c060e828072c53417c615586085c93d26cf001e2413268db71797d4",
+  "redirect_count": 0,
+  "response_chain_count": 1,
+  "response_code": 200,
+  "retrieved_at": "2026-08-20T07:41:21.608298Z",
+  "schema_version": 1,
+  "source_id": "szse-search-transaction-handling-page-1",
+  "started_at": "2026-08-20T07:41:21.357530Z",
+  "tool": "curl 8.14.1 (x86_64-pc-linux-gnu) libcurl/8.14.1 OpenSSL/3.5.6 zlib/1.3.1 brotli/1.1.0 zstd/1.5.7 libidn2/2.3.8 libpsl/0.21.2 libssh2/1.11.1 nghttp2/1.64.0 nghttp3/1.8.0 librtmp/2.3 OpenLDAP/2.6.10",
+  "type": "g12h_official_http_capture_receipt_v1"
+}

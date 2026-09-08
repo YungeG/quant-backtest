@@ -1,0 +1,4231 @@
+{
+  "closure_limit": "Neither the general-notice index nor the keyword result is issuer-declared as a complete fee-table amendment/correction/successor register.",
+  "declared_current_index": {
+    "captured_entry_count": 320,
+    "entries": [
+      {
+        "candidate_id": "szse-general-000-00",
+        "disposition": "unresolved",
+        "page_index": 0,
+        "position": 0,
+        "published_date": "2026-08-14",
+        "source_ref": {
+          "raw_sha256": "sha256:169b065a6b04061770ed96b1099f61adb6b77517831d409edf24083a54d15d9f",
+          "source_id": "szse-general-notice-index-live"
+        },
+        "title": "关于深港通下的港股通标的证券名单调整的公告",
+        "url": "https://www.szse.cn/disclosure/notice/general/t20260814_622159.html"
+      },
+      {
+        "candidate_id": "szse-general-000-01",
+        "disposition": "unresolved",
+        "page_index": 0,
+        "position": 1,
+        "published_date": "2026-08-07",
+        "source_ref": {
+          "raw_sha256": "sha256:169b065a6b04061770ed96b1099f61adb6b77517831d409edf24083a54d15d9f",
+          "source_id": "szse-general-notice-index-live"
+        },
+        "title": "关于深港通下的港股通标的证券名单调整的公告",
+        "url": "https://www.szse.cn/disclosure/notice/general/t20260807_622046.html"
+      },
+      {
+        "candidate_id": "szse-general-000-02",
+        "disposition": "unresolved",
+        "page_index": 0,
+        "position": 2,
+        "published_date": "2026-08-06",
+        "source_ref": {
+          "raw_sha256": "sha256:169b065a6b04061770ed96b1099f61adb6b77517831d409edf24083a54d15d9f",
+          "source_id": "szse-general-notice-index-live"
+        },
+        "title": "关于深港通下的港股通标的证券名单调整的公告",
+        "url": "https://www.szse.cn/disclosure/notice/general/t20260806_622027.html"
+      },
+      {
+        "candidate_id": "szse-general-000-03",
+        "disposition": "unresolved",
+        "page_index": 0,
+        "position": 3,
+        "published_date": "2026-07-30",
+        "source_ref": {
+          "raw_sha256": "sha256:169b065a6b04061770ed96b1099f61adb6b77517831d409edf24083a54d15d9f",
+          "source_id": "szse-general-notice-index-live"
+        },
+        "title": "深圳证券交易所《纪律处分事先告知书》送达公告",
+        "url": "https://www.szse.cn/disclosure/notice/general/t20260730_621924.html"
+      },
+      {
+        "candidate_id": "szse-general-000-04",
+        "disposition": "unresolved",
+        "page_index": 0,
+        "position": 4,
+        "published_date": "2026-07-30",
+        "source_ref": {
+          "raw_sha256": "sha256:169b065a6b04061770ed96b1099f61adb6b77517831d409edf24083a54d15d9f",
+          "source_id": "szse-general-notice-index-live"
+        },
+        "title": "深圳证券交易所《纪律处分事先告知书》送达公告",
+        "url": "https://www.szse.cn/disclosure/notice/general/t20260730_621923.html"
+      },
+      {
+        "candidate_id": "szse-general-000-05",
+        "disposition": "unresolved",
+        "page_index": 0,
+        "position": 5,
+        "published_date": "2026-07-30",
+        "source_ref": {
+          "raw_sha256": "sha256:169b065a6b04061770ed96b1099f61adb6b77517831d409edf24083a54d15d9f",
+          "source_id": "szse-general-notice-index-live"
+        },
+        "title": "深圳证券交易所《纪律处分事先告知书》送达公告",
+        "url": "https://www.szse.cn/disclosure/notice/general/t20260730_621922.html"
+      },
+      {
+        "candidate_id": "szse-general-000-06",
+        "disposition": "unresolved",
+        "page_index": 0,
+        "position": 6,
+        "published_date": "2026-07-27",
+        "source_ref": {
+          "raw_sha256": "sha256:169b065a6b04061770ed96b1099f61adb6b77517831d409edf24083a54d15d9f",
+          "source_id": "szse-general-notice-index-live"
+        },
+        "title": "关于深港通下的港股通标的证券名单调整的公告",
+        "url": "https://www.szse.cn/disclosure/notice/general/t20260727_621845.html"
+      },
+      {
+        "candidate_id": "szse-general-000-07",
+        "disposition": "unresolved",
+        "page_index": 0,
+        "position": 7,
+        "published_date": "2026-07-24",
+        "source_ref": {
+          "raw_sha256": "sha256:169b065a6b04061770ed96b1099f61adb6b77517831d409edf24083a54d15d9f",
+          "source_id": "szse-general-notice-index-live"
+        },
+        "title": "关于深港通下的港股通标的证券名单调整的公告",
+        "url": "https://www.szse.cn/disclosure/notice/general/t20260724_621799.html"
+      },
+      {
+        "candidate_id": "szse-general-000-08",
+        "disposition": "unresolved",
+        "page_index": 0,
+        "position": 8,
+        "published_date": "2026-07-10",
+        "source_ref": {
+          "raw_sha256": "sha256:169b065a6b04061770ed96b1099f61adb6b77517831d409edf24083a54d15d9f",
+          "source_id": "szse-general-notice-index-live"
+        },
+        "title": "关于深港通下的港股通标的证券名单调整的公告",
+        "url": "https://www.szse.cn/disclosure/notice/general/t20260710_621585.html"
+      },
+      {
+        "candidate_id": "szse-general-000-09",
+        "disposition": "unresolved",
+        "page_index": 0,
+        "position": 9,
+        "published_date": "2026-07-09",
+        "source_ref": {
+          "raw_sha256": "sha256:169b065a6b04061770ed96b1099f61adb6b77517831d409edf24083a54d15d9f",
+          "source_id": "szse-general-notice-index-live"
+        },
+        "title": "关于深港通下的港股通标的证券名单调整的公告",
+        "url": "https://www.szse.cn/disclosure/notice/general/t20260709_621574.html"
+      },
+      {
+        "candidate_id": "szse-general-000-10",
+        "disposition": "unresolved",
+        "page_index": 0,
+        "position": 10,
+        "published_date": "2026-07-07",
+        "source_ref": {
+          "raw_sha256": "sha256:169b065a6b04061770ed96b1099f61adb6b77517831d409edf24083a54d15d9f",
+          "source_id": "szse-general-notice-index-live"
+        },
+        "title": "深圳证券交易所《纪律处分事先告知书》送达公告",
+        "url": "https://www.szse.cn/disclosure/notice/general/t20260707_621538.html"
+      },
+      {
+        "candidate_id": "szse-general-000-11",
+        "disposition": "unresolved",
+        "page_index": 0,
+        "position": 11,
+        "published_date": "2026-07-03",
+        "source_ref": {
+          "raw_sha256": "sha256:169b065a6b04061770ed96b1099f61adb6b77517831d409edf24083a54d15d9f",
+          "source_id": "szse-general-notice-index-live"
+        },
+        "title": "关于就修订《深圳证券交易所上市公司证券发行上市审核规则》公开征求意见的通知",
+        "url": "https://www.szse.cn/disclosure/notice/general/t20260703_621509.html"
+      },
+      {
+        "candidate_id": "szse-general-000-12",
+        "disposition": "unresolved",
+        "page_index": 0,
+        "position": 12,
+        "published_date": "2026-07-03",
+        "source_ref": {
+          "raw_sha256": "sha256:169b065a6b04061770ed96b1099f61adb6b77517831d409edf24083a54d15d9f",
+          "source_id": "szse-general-notice-index-live"
+        },
+        "title": "关于就修订《深圳证券交易所上市公司证券发行与承销业务实施细则》公开征求意见的通知",
+        "url": "https://www.szse.cn/disclosure/notice/general/t20260703_621508.html"
+      },
+      {
+        "candidate_id": "szse-general-000-13",
+        "disposition": "unresolved",
+        "page_index": 0,
+        "position": 13,
+        "published_date": "2026-07-03",
+        "source_ref": {
+          "raw_sha256": "sha256:169b065a6b04061770ed96b1099f61adb6b77517831d409edf24083a54d15d9f",
+          "source_id": "szse-general-notice-index-live"
+        },
+        "title": "关于深港通下的港股通标的证券名单调整的公告",
+        "url": "https://www.szse.cn/disclosure/notice/general/t20260703_621487.html"
+      },
+      {
+        "candidate_id": "szse-general-000-14",
+        "disposition": "unresolved",
+        "page_index": 0,
+        "position": 14,
+        "published_date": "2026-06-30",
+        "source_ref": {
+          "raw_sha256": "sha256:169b065a6b04061770ed96b1099f61adb6b77517831d409edf24083a54d15d9f",
+          "source_id": "szse-general-notice-index-live"
+        },
+        "title": "关于深港通下的港股通标的证券名单调整的公告",
+        "url": "https://www.szse.cn/disclosure/notice/general/t20260630_621363.html"
+      },
+      {
+        "candidate_id": "szse-general-000-15",
+        "disposition": "unresolved",
+        "page_index": 0,
+        "position": 15,
+        "published_date": "2026-06-26",
+        "source_ref": {
+          "raw_sha256": "sha256:169b065a6b04061770ed96b1099f61adb6b77517831d409edf24083a54d15d9f",
+          "source_id": "szse-general-notice-index-live"
+        },
+        "title": "关于深港通下的港股通标的证券名单调整的公告",
+        "url": "https://www.szse.cn/disclosure/notice/general/t20260626_621272.html"
+      },
+      {
+        "candidate_id": "szse-general-000-16",
+        "disposition": "unresolved",
+        "page_index": 0,
+        "position": 16,
+        "published_date": "2026-06-25",
+        "source_ref": {
+          "raw_sha256": "sha256:169b065a6b04061770ed96b1099f61adb6b77517831d409edf24083a54d15d9f",
+          "source_id": "szse-general-notice-index-live"
+        },
+        "title": "关于深港通下的港股通交易日安排的通知",
+        "url": "https://www.szse.cn/disclosure/notice/general/t20260625_621265.html"
+      },
+      {
+        "candidate_id": "szse-general-000-17",
+        "disposition": "unresolved",
+        "page_index": 0,
+        "position": 17,
+        "published_date": "2026-06-23",
+        "source_ref": {
+          "raw_sha256": "sha256:169b065a6b04061770ed96b1099f61adb6b77517831d409edf24083a54d15d9f",
+          "source_id": "szse-general-notice-index-live"
+        },
+        "title": "关于深港通下的港股通标的证券名单调整的公告",
+        "url": "https://www.szse.cn/disclosure/notice/general/t20260623_621195.html"
+      },
+      {
+        "candidate_id": "szse-general-000-18",
+        "disposition": "unresolved",
+        "page_index": 0,
+        "position": 18,
+        "published_date": "2026-06-16",
+        "source_ref": {
+          "raw_sha256": "sha256:169b065a6b04061770ed96b1099f61adb6b77517831d409edf24083a54d15d9f",
+          "source_id": "szse-general-notice-index-live"
+        },
+        "title": "深圳证券交易所《纪律处分事先告知书》送达公告",
+        "url": "https://www.szse.cn/disclosure/notice/general/t20260616_621053.html"
+      },
+      {
+        "candidate_id": "szse-general-000-19",
+        "disposition": "unresolved",
+        "page_index": 0,
+        "position": 19,
+        "published_date": "2026-06-12",
+        "source_ref": {
+          "raw_sha256": "sha256:169b065a6b04061770ed96b1099f61adb6b77517831d409edf24083a54d15d9f",
+          "source_id": "szse-general-notice-index-live"
+        },
+        "title": "深圳证券交易所《纪律处分事先告知书》送达公告",
+        "url": "https://www.szse.cn/disclosure/notice/general/t20260612_620996.html"
+      },
+      {
+        "candidate_id": "szse-general-001-00",
+        "disposition": "unresolved",
+        "page_index": 1,
+        "position": 0,
+        "published_date": "2026-06-12",
+        "source_ref": {
+          "raw_sha256": "sha256:a95609254bfeadba9b4bbc82ba22dba7c22647af4e800922ab4f400e9bd45cf7",
+          "source_id": "szse-general-notice-index-page-01"
+        },
+        "title": "深圳证券交易所《纪律处分事先告知书》送达公告",
+        "url": "https://www.szse.cn/disclosure/notice/general/t20260612_620995.html"
+      },
+      {
+        "candidate_id": "szse-general-001-01",
+        "disposition": "unresolved",
+        "page_index": 1,
+        "position": 1,
+        "published_date": "2026-06-11",
+        "source_ref": {
+          "raw_sha256": "sha256:a95609254bfeadba9b4bbc82ba22dba7c22647af4e800922ab4f400e9bd45cf7",
+          "source_id": "szse-general-notice-index-page-01"
+        },
+        "title": "关于深港通下的港股通交易日安排的通知",
+        "url": "https://www.szse.cn/disclosure/notice/general/t20260611_620990.html"
+      },
+      {
+        "candidate_id": "szse-general-001-02",
+        "disposition": "unresolved",
+        "page_index": 1,
+        "position": 2,
+        "published_date": "2026-06-11",
+        "source_ref": {
+          "raw_sha256": "sha256:a95609254bfeadba9b4bbc82ba22dba7c22647af4e800922ab4f400e9bd45cf7",
+          "source_id": "szse-general-notice-index-page-01"
+        },
+        "title": "关于2026年端午节休市安排的通知",
+        "url": "https://www.szse.cn/disclosure/notice/general/t20260611_620979.html"
+      },
+      {
+        "candidate_id": "szse-general-001-03",
+        "disposition": "unresolved",
+        "page_index": 1,
+        "position": 3,
+        "published_date": "2026-06-08",
+        "source_ref": {
+          "raw_sha256": "sha256:a95609254bfeadba9b4bbc82ba22dba7c22647af4e800922ab4f400e9bd45cf7",
+          "source_id": "szse-general-notice-index-page-01"
+        },
+        "title": "关于深港通下的港股通标的证券名单调整的公告",
+        "url": "https://www.szse.cn/disclosure/notice/general/t20260608_620919.html"
+      },
+      {
+        "candidate_id": "szse-general-001-04",
+        "disposition": "unresolved",
+        "page_index": 1,
+        "position": 4,
+        "published_date": "2026-06-04",
+        "source_ref": {
+          "raw_sha256": "sha256:a95609254bfeadba9b4bbc82ba22dba7c22647af4e800922ab4f400e9bd45cf7",
+          "source_id": "szse-general-notice-index-page-01"
+        },
+        "title": "关于深港通下的港股通标的证券名单调整的公告",
+        "url": "https://www.szse.cn/disclosure/notice/general/t20260604_620887.html"
+      },
+      {
+        "candidate_id": "szse-general-001-05",
+        "disposition": "unresolved",
+        "page_index": 1,
+        "position": 5,
+        "published_date": "2026-06-02",
+        "source_ref": {
+          "raw_sha256": "sha256:a95609254bfeadba9b4bbc82ba22dba7c22647af4e800922ab4f400e9bd45cf7",
+          "source_id": "szse-general-notice-index-page-01"
+        },
+        "title": "关于深港通下的港股通标的证券名单调整的公告",
+        "url": "https://www.szse.cn/disclosure/notice/general/t20260602_620854.html"
+      },
+      {
+        "candidate_id": "szse-general-001-06",
+        "disposition": "unresolved",
+        "page_index": 1,
+        "position": 6,
+        "published_date": "2026-05-29",
+        "source_ref": {
+          "raw_sha256": "sha256:a95609254bfeadba9b4bbc82ba22dba7c22647af4e800922ab4f400e9bd45cf7",
+          "source_id": "szse-general-notice-index-page-01"
+        },
+        "title": "关于调整深证成指、创业板指、深证100、创业板50等指数样本股的公告",
+        "url": "https://www.szse.cn/disclosure/notice/general/t20260529_620819.html"
+      },
+      {
+        "candidate_id": "szse-general-001-07",
+        "disposition": "unresolved",
+        "page_index": 1,
+        "position": 7,
+        "published_date": "2026-05-28",
+        "source_ref": {
+          "raw_sha256": "sha256:a95609254bfeadba9b4bbc82ba22dba7c22647af4e800922ab4f400e9bd45cf7",
+          "source_id": "szse-general-notice-index-page-01"
+        },
+        "title": "关于深港通下的港股通标的证券名单调整的公告",
+        "url": "https://www.szse.cn/disclosure/notice/general/t20260528_620776.html"
+      },
+      {
+        "candidate_id": "szse-general-001-08",
+        "disposition": "unresolved",
+        "page_index": 1,
+        "position": 8,
+        "published_date": "2026-05-21",
+        "source_ref": {
+          "raw_sha256": "sha256:a95609254bfeadba9b4bbc82ba22dba7c22647af4e800922ab4f400e9bd45cf7",
+          "source_id": "szse-general-notice-index-page-01"
+        },
+        "title": "关于深港通下的港股通交易日安排的通知",
+        "url": "https://www.szse.cn/disclosure/notice/general/t20260521_620622.html"
+      },
+      {
+        "candidate_id": "szse-general-001-09",
+        "disposition": "unresolved",
+        "page_index": 1,
+        "position": 9,
+        "published_date": "2026-05-21",
+        "source_ref": {
+          "raw_sha256": "sha256:a95609254bfeadba9b4bbc82ba22dba7c22647af4e800922ab4f400e9bd45cf7",
+          "source_id": "szse-general-notice-index-page-01"
+        },
+        "title": "关于深港通下的港股通标的证券名单调整的公告",
+        "url": "https://www.szse.cn/disclosure/notice/general/t20260521_620604.html"
+      },
+      {
+        "candidate_id": "szse-general-001-10",
+        "disposition": "unresolved",
+        "page_index": 1,
+        "position": 10,
+        "published_date": "2026-05-18",
+        "source_ref": {
+          "raw_sha256": "sha256:a95609254bfeadba9b4bbc82ba22dba7c22647af4e800922ab4f400e9bd45cf7",
+          "source_id": "szse-general-notice-index-page-01"
+        },
+        "title": "关于深港通下的港股通标的证券名单调整的公告",
+        "url": "https://www.szse.cn/disclosure/notice/general/t20260518_620548.html"
+      },
+      {
+        "candidate_id": "szse-general-001-11",
+        "disposition": "unresolved",
+        "page_index": 1,
+        "position": 11,
+        "published_date": "2026-05-15",
+        "source_ref": {
+          "raw_sha256": "sha256:a95609254bfeadba9b4bbc82ba22dba7c22647af4e800922ab4f400e9bd45cf7",
+          "source_id": "szse-general-notice-index-page-01"
+        },
+        "title": "关于修订创业板中盘200等3条指数编制方案的公告",
+        "url": "https://www.szse.cn/disclosure/notice/general/t20260515_620540.html"
+      },
+      {
+        "candidate_id": "szse-general-001-12",
+        "disposition": "unresolved",
+        "page_index": 1,
+        "position": 12,
+        "published_date": "2026-05-06",
+        "source_ref": {
+          "raw_sha256": "sha256:a95609254bfeadba9b4bbc82ba22dba7c22647af4e800922ab4f400e9bd45cf7",
+          "source_id": "szse-general-notice-index-page-01"
+        },
+        "title": "关于深港通下的港股通标的证券名单调整的公告",
+        "url": "https://www.szse.cn/disclosure/notice/general/t20260506_620354.html"
+      },
+      {
+        "candidate_id": "szse-general-001-13",
+        "disposition": "unresolved",
+        "page_index": 1,
+        "position": 13,
+        "published_date": "2026-04-28",
+        "source_ref": {
+          "raw_sha256": "sha256:a95609254bfeadba9b4bbc82ba22dba7c22647af4e800922ab4f400e9bd45cf7",
+          "source_id": "szse-general-notice-index-page-01"
+        },
+        "title": "关于深港通下的港股通标的证券名单调整的公告",
+        "url": "https://www.szse.cn/disclosure/notice/general/t20260428_620239.html"
+      },
+      {
+        "candidate_id": "szse-general-001-14",
+        "disposition": "unresolved",
+        "page_index": 1,
+        "position": 14,
+        "published_date": "2026-04-24",
+        "source_ref": {
+          "raw_sha256": "sha256:a95609254bfeadba9b4bbc82ba22dba7c22647af4e800922ab4f400e9bd45cf7",
+          "source_id": "szse-general-notice-index-page-01"
+        },
+        "title": "关于深港通下的港股通ETF名单调整的公告",
+        "url": "https://www.szse.cn/disclosure/notice/general/t20260424_620188.html"
+      },
+      {
+        "candidate_id": "szse-general-001-15",
+        "disposition": "unresolved",
+        "page_index": 1,
+        "position": 15,
+        "published_date": "2026-04-23",
+        "source_ref": {
+          "raw_sha256": "sha256:a95609254bfeadba9b4bbc82ba22dba7c22647af4e800922ab4f400e9bd45cf7",
+          "source_id": "szse-general-notice-index-page-01"
+        },
+        "title": "关于2026年劳动节期间深港通下的港股通交易日安排的通知",
+        "url": "https://www.szse.cn/disclosure/notice/general/t20260423_620143.html"
+      },
+      {
+        "candidate_id": "szse-general-001-16",
+        "disposition": "unresolved",
+        "page_index": 1,
+        "position": 16,
+        "published_date": "2026-04-23",
+        "source_ref": {
+          "raw_sha256": "sha256:a95609254bfeadba9b4bbc82ba22dba7c22647af4e800922ab4f400e9bd45cf7",
+          "source_id": "szse-general-notice-index-page-01"
+        },
+        "title": "关于2026年劳动节休市安排的通知",
+        "url": "https://www.szse.cn/disclosure/notice/general/t20260423_620142.html"
+      },
+      {
+        "candidate_id": "szse-general-001-17",
+        "disposition": "unresolved",
+        "page_index": 1,
+        "position": 17,
+        "published_date": "2026-04-21",
+        "source_ref": {
+          "raw_sha256": "sha256:a95609254bfeadba9b4bbc82ba22dba7c22647af4e800922ab4f400e9bd45cf7",
+          "source_id": "szse-general-notice-index-page-01"
+        },
+        "title": "关于深港通下的港股通标的证券名单调整的公告",
+        "url": "https://www.szse.cn/disclosure/notice/general/t20260421_620089.html"
+      },
+      {
+        "candidate_id": "szse-general-001-18",
+        "disposition": "unresolved",
+        "page_index": 1,
+        "position": 18,
+        "published_date": "2026-04-20",
+        "source_ref": {
+          "raw_sha256": "sha256:a95609254bfeadba9b4bbc82ba22dba7c22647af4e800922ab4f400e9bd45cf7",
+          "source_id": "szse-general-notice-index-page-01"
+        },
+        "title": "关于深港通下的港股通标的证券名单调整的公告",
+        "url": "https://www.szse.cn/disclosure/notice/general/t20260420_620056.html"
+      },
+      {
+        "candidate_id": "szse-general-001-19",
+        "disposition": "unresolved",
+        "page_index": 1,
+        "position": 19,
+        "published_date": "2026-04-17",
+        "source_ref": {
+          "raw_sha256": "sha256:a95609254bfeadba9b4bbc82ba22dba7c22647af4e800922ab4f400e9bd45cf7",
+          "source_id": "szse-general-notice-index-page-01"
+        },
+        "title": "深圳证券交易所《纪律处分事先告知书》送达公告",
+        "url": "https://www.szse.cn/disclosure/notice/general/t20260417_620052.html"
+      },
+      {
+        "candidate_id": "szse-general-002-00",
+        "disposition": "unresolved",
+        "page_index": 2,
+        "position": 0,
+        "published_date": "2026-04-16",
+        "source_ref": {
+          "raw_sha256": "sha256:281e15d54eb5878af7dda85d411c3a182b1773e407dc48d7f721dd2dd7db612a",
+          "source_id": "szse-general-notice-index-page-02"
+        },
+        "title": "关于深港通下的港股通标的证券名单调整的公告",
+        "url": "https://www.szse.cn/disclosure/notice/general/t20260416_619995.html"
+      },
+      {
+        "candidate_id": "szse-general-002-01",
+        "disposition": "unresolved",
+        "page_index": 2,
+        "position": 1,
+        "published_date": "2026-04-10",
+        "source_ref": {
+          "raw_sha256": "sha256:281e15d54eb5878af7dda85d411c3a182b1773e407dc48d7f721dd2dd7db612a",
+          "source_id": "szse-general-notice-index-page-02"
+        },
+        "title": "关于深港通下的港股通标的证券名单调整的公告",
+        "url": "https://www.szse.cn/disclosure/notice/general/t20260410_619897.html"
+      },
+      {
+        "candidate_id": "szse-general-002-02",
+        "disposition": "unresolved",
+        "page_index": 2,
+        "position": 2,
+        "published_date": "2026-04-09",
+        "source_ref": {
+          "raw_sha256": "sha256:281e15d54eb5878af7dda85d411c3a182b1773e407dc48d7f721dd2dd7db612a",
+          "source_id": "szse-general-notice-index-page-02"
+        },
+        "title": "关于深港通下的港股通标的证券名单调整的公告",
+        "url": "https://www.szse.cn/disclosure/notice/general/t20260409_619881.html"
+      },
+      {
+        "candidate_id": "szse-general-002-03",
+        "disposition": "unresolved",
+        "page_index": 2,
+        "position": 3,
+        "published_date": "2026-04-08",
+        "source_ref": {
+          "raw_sha256": "sha256:281e15d54eb5878af7dda85d411c3a182b1773e407dc48d7f721dd2dd7db612a",
+          "source_id": "szse-general-notice-index-page-02"
+        },
+        "title": "深圳证券交易所《纪律处分事先告知书》送达公告",
+        "url": "https://www.szse.cn/disclosure/notice/general/t20260408_619874.html"
+      },
+      {
+        "candidate_id": "szse-general-002-04",
+        "disposition": "unresolved",
+        "page_index": 2,
+        "position": 4,
+        "published_date": "2026-04-08",
+        "source_ref": {
+          "raw_sha256": "sha256:281e15d54eb5878af7dda85d411c3a182b1773e407dc48d7f721dd2dd7db612a",
+          "source_id": "szse-general-notice-index-page-02"
+        },
+        "title": "关于深港通下的港股通标的证券名单调整的公告",
+        "url": "https://www.szse.cn/disclosure/notice/general/t20260408_619865.html"
+      },
+      {
+        "candidate_id": "szse-general-002-05",
+        "disposition": "unresolved",
+        "page_index": 2,
+        "position": 5,
+        "published_date": "2026-04-03",
+        "source_ref": {
+          "raw_sha256": "sha256:281e15d54eb5878af7dda85d411c3a182b1773e407dc48d7f721dd2dd7db612a",
+          "source_id": "szse-general-notice-index-page-02"
+        },
+        "title": "深圳证券交易所《纪律处分事先告知书》送达公告",
+        "url": "https://www.szse.cn/disclosure/notice/general/t20260403_619831.html"
+      },
+      {
+        "candidate_id": "szse-general-002-06",
+        "disposition": "unresolved",
+        "page_index": 2,
+        "position": 6,
+        "published_date": "2026-03-31",
+        "source_ref": {
+          "raw_sha256": "sha256:281e15d54eb5878af7dda85d411c3a182b1773e407dc48d7f721dd2dd7db612a",
+          "source_id": "szse-general-notice-index-page-02"
+        },
+        "title": "关于2026年香港耶稣受难节、清明节、复活节期间深港通下的港股通交易日安排的通知",
+        "url": "https://www.szse.cn/disclosure/notice/general/t20260331_619781.html"
+      },
+      {
+        "candidate_id": "szse-general-002-07",
+        "disposition": "unresolved",
+        "page_index": 2,
+        "position": 7,
+        "published_date": "2026-03-31",
+        "source_ref": {
+          "raw_sha256": "sha256:281e15d54eb5878af7dda85d411c3a182b1773e407dc48d7f721dd2dd7db612a",
+          "source_id": "szse-general-notice-index-page-02"
+        },
+        "title": "关于2026年清明节休市安排的通知",
+        "url": "https://www.szse.cn/disclosure/notice/general/t20260331_619774.html"
+      },
+      {
+        "candidate_id": "szse-general-002-08",
+        "disposition": "unresolved",
+        "page_index": 2,
+        "position": 8,
+        "published_date": "2026-03-23",
+        "source_ref": {
+          "raw_sha256": "sha256:281e15d54eb5878af7dda85d411c3a182b1773e407dc48d7f721dd2dd7db612a",
+          "source_id": "szse-general-notice-index-page-02"
+        },
+        "title": "关于深港通下的港股通标的证券名单调整的公告",
+        "url": "https://www.szse.cn/disclosure/notice/general/t20260323_619549.html"
+      },
+      {
+        "candidate_id": "szse-general-002-09",
+        "disposition": "unresolved",
+        "page_index": 2,
+        "position": 9,
+        "published_date": "2026-03-20",
+        "source_ref": {
+          "raw_sha256": "sha256:281e15d54eb5878af7dda85d411c3a182b1773e407dc48d7f721dd2dd7db612a",
+          "source_id": "szse-general-notice-index-page-02"
+        },
+        "title": "关于深港通下的港股通标的证券名单调整的公告",
+        "url": "https://www.szse.cn/disclosure/notice/general/t20260320_619510.html"
+      },
+      {
+        "candidate_id": "szse-general-002-10",
+        "disposition": "unresolved",
+        "page_index": 2,
+        "position": 10,
+        "published_date": "2026-03-13",
+        "source_ref": {
+          "raw_sha256": "sha256:281e15d54eb5878af7dda85d411c3a182b1773e407dc48d7f721dd2dd7db612a",
+          "source_id": "szse-general-notice-index-page-02"
+        },
+        "title": "深圳证券交易所《纪律处分事先告知书》送达公告",
+        "url": "https://www.szse.cn/disclosure/notice/general/t20260313_619386.html"
+      },
+      {
+        "candidate_id": "szse-general-002-11",
+        "disposition": "unresolved",
+        "page_index": 2,
+        "position": 11,
+        "published_date": "2026-03-13",
+        "source_ref": {
+          "raw_sha256": "sha256:281e15d54eb5878af7dda85d411c3a182b1773e407dc48d7f721dd2dd7db612a",
+          "source_id": "szse-general-notice-index-page-02"
+        },
+        "title": "深圳证券交易所《纪律处分事先告知书》送达公告",
+        "url": "https://www.szse.cn/disclosure/notice/general/t20260313_619385.html"
+      },
+      {
+        "candidate_id": "szse-general-002-12",
+        "disposition": "unresolved",
+        "page_index": 2,
+        "position": 12,
+        "published_date": "2026-03-13",
+        "source_ref": {
+          "raw_sha256": "sha256:281e15d54eb5878af7dda85d411c3a182b1773e407dc48d7f721dd2dd7db612a",
+          "source_id": "szse-general-notice-index-page-02"
+        },
+        "title": "深圳证券交易所《纪律处分事先告知书》送达公告",
+        "url": "https://www.szse.cn/disclosure/notice/general/t20260313_619384.html"
+      },
+      {
+        "candidate_id": "szse-general-002-13",
+        "disposition": "unresolved",
+        "page_index": 2,
+        "position": 13,
+        "published_date": "2026-03-11",
+        "source_ref": {
+          "raw_sha256": "sha256:281e15d54eb5878af7dda85d411c3a182b1773e407dc48d7f721dd2dd7db612a",
+          "source_id": "szse-general-notice-index-page-02"
+        },
+        "title": "关于深港通下的港股通标的证券名单调整的公告",
+        "url": "https://www.szse.cn/disclosure/notice/general/t20260311_619348.html"
+      },
+      {
+        "candidate_id": "szse-general-002-14",
+        "disposition": "unresolved",
+        "page_index": 2,
+        "position": 14,
+        "published_date": "2026-03-10",
+        "source_ref": {
+          "raw_sha256": "sha256:281e15d54eb5878af7dda85d411c3a182b1773e407dc48d7f721dd2dd7db612a",
+          "source_id": "szse-general-notice-index-page-02"
+        },
+        "title": "关于深港通下的港股通标的证券名单调整的公告",
+        "url": "https://www.szse.cn/disclosure/notice/general/t20260310_619337.html"
+      },
+      {
+        "candidate_id": "szse-general-002-15",
+        "disposition": "unresolved",
+        "page_index": 2,
+        "position": 15,
+        "published_date": "2026-03-06",
+        "source_ref": {
+          "raw_sha256": "sha256:281e15d54eb5878af7dda85d411c3a182b1773e407dc48d7f721dd2dd7db612a",
+          "source_id": "szse-general-notice-index-page-02"
+        },
+        "title": "关于深港通下的港股通标的证券名单调整的公告",
+        "url": "https://www.szse.cn/disclosure/notice/general/t20260306_619320.html"
+      },
+      {
+        "candidate_id": "szse-general-002-16",
+        "disposition": "unresolved",
+        "page_index": 2,
+        "position": 16,
+        "published_date": "2026-03-06",
+        "source_ref": {
+          "raw_sha256": "sha256:281e15d54eb5878af7dda85d411c3a182b1773e407dc48d7f721dd2dd7db612a",
+          "source_id": "szse-general-notice-index-page-02"
+        },
+        "title": "关于深港通下的港股通标的证券名单调整的公告",
+        "url": "https://www.szse.cn/disclosure/notice/general/t20260306_619310.html"
+      },
+      {
+        "candidate_id": "szse-general-002-17",
+        "disposition": "unresolved",
+        "page_index": 2,
+        "position": 17,
+        "published_date": "2026-03-02",
+        "source_ref": {
+          "raw_sha256": "sha256:281e15d54eb5878af7dda85d411c3a182b1773e407dc48d7f721dd2dd7db612a",
+          "source_id": "szse-general-notice-index-page-02"
+        },
+        "title": "关于深港通下的港股通标的证券名单调整的公告",
+        "url": "https://www.szse.cn/disclosure/notice/general/t20260302_619249.html"
+      },
+      {
+        "candidate_id": "szse-general-002-18",
+        "disposition": "unresolved",
+        "page_index": 2,
+        "position": 18,
+        "published_date": "2026-02-24",
+        "source_ref": {
+          "raw_sha256": "sha256:281e15d54eb5878af7dda85d411c3a182b1773e407dc48d7f721dd2dd7db612a",
+          "source_id": "szse-general-notice-index-page-02"
+        },
+        "title": "关于深港通下的港股通标的证券名单调整的公告",
+        "url": "https://www.szse.cn/disclosure/notice/general/t20260224_619187.html"
+      },
+      {
+        "candidate_id": "szse-general-002-19",
+        "disposition": "unresolved",
+        "page_index": 2,
+        "position": 19,
+        "published_date": "2026-02-13",
+        "source_ref": {
+          "raw_sha256": "sha256:281e15d54eb5878af7dda85d411c3a182b1773e407dc48d7f721dd2dd7db612a",
+          "source_id": "szse-general-notice-index-page-02"
+        },
+        "title": "关于华福证券股份有限公司会员名称变更的公告",
+        "url": "https://www.szse.cn/disclosure/notice/general/t20260213_619184.html"
+      },
+      {
+        "candidate_id": "szse-general-003-00",
+        "disposition": "unresolved",
+        "page_index": 3,
+        "position": 0,
+        "published_date": "2026-02-13",
+        "source_ref": {
+          "raw_sha256": "sha256:f72702d7963edf14a13f474a6019502958fb1f7100a7322b808f8a293e38c939",
+          "source_id": "szse-general-notice-index-page-03"
+        },
+        "title": "关于深港通下的港股通标的证券名单调整的公告",
+        "url": "https://www.szse.cn/disclosure/notice/general/t20260213_619176.html"
+      },
+      {
+        "candidate_id": "szse-general-003-01",
+        "disposition": "unresolved",
+        "page_index": 3,
+        "position": 1,
+        "published_date": "2026-02-09",
+        "source_ref": {
+          "raw_sha256": "sha256:f72702d7963edf14a13f474a6019502958fb1f7100a7322b808f8a293e38c939",
+          "source_id": "szse-general-notice-index-page-03"
+        },
+        "title": "关于深港通下的港股通标的证券名单调整的公告",
+        "url": "https://www.szse.cn/disclosure/notice/general/t20260209_619039.html"
+      },
+      {
+        "candidate_id": "szse-general-003-02",
+        "disposition": "unresolved",
+        "page_index": 3,
+        "position": 2,
+        "published_date": "2026-02-06",
+        "source_ref": {
+          "raw_sha256": "sha256:f72702d7963edf14a13f474a6019502958fb1f7100a7322b808f8a293e38c939",
+          "source_id": "szse-general-notice-index-page-03"
+        },
+        "title": "关于2026年春节休市安排的通知",
+        "url": "https://www.szse.cn/disclosure/notice/general/t20260206_618970.html"
+      },
+      {
+        "candidate_id": "szse-general-003-03",
+        "disposition": "unresolved",
+        "page_index": 3,
+        "position": 3,
+        "published_date": "2026-02-06",
+        "source_ref": {
+          "raw_sha256": "sha256:f72702d7963edf14a13f474a6019502958fb1f7100a7322b808f8a293e38c939",
+          "source_id": "szse-general-notice-index-page-03"
+        },
+        "title": "关于深港通下的港股通标的证券名单调整的公告",
+        "url": "https://www.szse.cn/disclosure/notice/general/t20260206_618969.html"
+      },
+      {
+        "candidate_id": "szse-general-003-04",
+        "disposition": "unresolved",
+        "page_index": 3,
+        "position": 4,
+        "published_date": "2026-02-05",
+        "source_ref": {
+          "raw_sha256": "sha256:f72702d7963edf14a13f474a6019502958fb1f7100a7322b808f8a293e38c939",
+          "source_id": "szse-general-notice-index-page-03"
+        },
+        "title": "关于2026年春节期间深港通下的港股通交易日安排的通知",
+        "url": "https://www.szse.cn/disclosure/notice/general/t20260205_618962.html"
+      },
+      {
+        "candidate_id": "szse-general-003-05",
+        "disposition": "unresolved",
+        "page_index": 3,
+        "position": 5,
+        "published_date": "2026-02-04",
+        "source_ref": {
+          "raw_sha256": "sha256:f72702d7963edf14a13f474a6019502958fb1f7100a7322b808f8a293e38c939",
+          "source_id": "szse-general-notice-index-page-03"
+        },
+        "title": "关于深港通下的港股通标的证券名单调整的公告",
+        "url": "https://www.szse.cn/disclosure/notice/general/t20260204_618926.html"
+      },
+      {
+        "candidate_id": "szse-general-003-06",
+        "disposition": "unresolved",
+        "page_index": 3,
+        "position": 6,
+        "published_date": "2026-01-29",
+        "source_ref": {
+          "raw_sha256": "sha256:f72702d7963edf14a13f474a6019502958fb1f7100a7322b808f8a293e38c939",
+          "source_id": "szse-general-notice-index-page-03"
+        },
+        "title": "深圳证券交易所《纪律处分事先告知书》送达公告",
+        "url": "https://www.szse.cn/disclosure/notice/general/t20260129_618815.html"
+      },
+      {
+        "candidate_id": "szse-general-003-07",
+        "disposition": "unresolved",
+        "page_index": 3,
+        "position": 7,
+        "published_date": "2026-01-28",
+        "source_ref": {
+          "raw_sha256": "sha256:f72702d7963edf14a13f474a6019502958fb1f7100a7322b808f8a293e38c939",
+          "source_id": "szse-general-notice-index-page-03"
+        },
+        "title": "深圳证券交易所《纪律处分事先告知书》送达公告",
+        "url": "https://www.szse.cn/disclosure/notice/general/t20260128_618792.html"
+      },
+      {
+        "candidate_id": "szse-general-003-08",
+        "disposition": "unresolved",
+        "page_index": 3,
+        "position": 8,
+        "published_date": "2026-01-26",
+        "source_ref": {
+          "raw_sha256": "sha256:f72702d7963edf14a13f474a6019502958fb1f7100a7322b808f8a293e38c939",
+          "source_id": "szse-general-notice-index-page-03"
+        },
+        "title": "关于深港通下的港股通标的证券名单调整的公告",
+        "url": "https://www.szse.cn/disclosure/notice/general/t20260126_618723.html"
+      },
+      {
+        "candidate_id": "szse-general-003-09",
+        "disposition": "unresolved",
+        "page_index": 3,
+        "position": 9,
+        "published_date": "2026-01-21",
+        "source_ref": {
+          "raw_sha256": "sha256:f72702d7963edf14a13f474a6019502958fb1f7100a7322b808f8a293e38c939",
+          "source_id": "szse-general-notice-index-page-03"
+        },
+        "title": "关于国盛证券股份有限公司成为深圳证券交易所会员和终止国盛证券有限责任公司深圳证券交易所会员资格的公告",
+        "url": "https://www.szse.cn/disclosure/notice/general/t20260121_618663.html"
+      },
+      {
+        "candidate_id": "szse-general-003-10",
+        "disposition": "unresolved",
+        "page_index": 3,
+        "position": 10,
+        "published_date": "2026-01-19",
+        "source_ref": {
+          "raw_sha256": "sha256:f72702d7963edf14a13f474a6019502958fb1f7100a7322b808f8a293e38c939",
+          "source_id": "szse-general-notice-index-page-03"
+        },
+        "title": "关于终止海通证券股份有限公司深圳证券交易所会员资格的公告",
+        "url": "https://www.szse.cn/disclosure/notice/general/t20260119_618634.html"
+      },
+      {
+        "candidate_id": "szse-general-003-11",
+        "disposition": "unresolved",
+        "page_index": 3,
+        "position": 11,
+        "published_date": "2026-01-19",
+        "source_ref": {
+          "raw_sha256": "sha256:f72702d7963edf14a13f474a6019502958fb1f7100a7322b808f8a293e38c939",
+          "source_id": "szse-general-notice-index-page-03"
+        },
+        "title": "关于深港通下的港股通标的证券名单调整的公告",
+        "url": "https://www.szse.cn/disclosure/notice/general/t20260119_618629.html"
+      },
+      {
+        "candidate_id": "szse-general-003-12",
+        "disposition": "unresolved",
+        "page_index": 3,
+        "position": 12,
+        "published_date": "2026-01-15",
+        "source_ref": {
+          "raw_sha256": "sha256:f72702d7963edf14a13f474a6019502958fb1f7100a7322b808f8a293e38c939",
+          "source_id": "szse-general-notice-index-page-03"
+        },
+        "title": "关于深港通下的港股通标的证券名单调整的公告",
+        "url": "https://www.szse.cn/disclosure/notice/general/t20260115_618550.html"
+      },
+      {
+        "candidate_id": "szse-general-003-13",
+        "disposition": "unresolved",
+        "page_index": 3,
+        "position": 13,
+        "published_date": "2026-01-14",
+        "source_ref": {
+          "raw_sha256": "sha256:f72702d7963edf14a13f474a6019502958fb1f7100a7322b808f8a293e38c939",
+          "source_id": "szse-general-notice-index-page-03"
+        },
+        "title": "关于调整融资保证金比例的通知",
+        "url": "https://www.szse.cn/disclosure/notice/general/t20260114_618495.html"
+      },
+      {
+        "candidate_id": "szse-general-003-14",
+        "disposition": "unresolved",
+        "page_index": 3,
+        "position": 14,
+        "published_date": "2026-01-08",
+        "source_ref": {
+          "raw_sha256": "sha256:f72702d7963edf14a13f474a6019502958fb1f7100a7322b808f8a293e38c939",
+          "source_id": "szse-general-notice-index-page-03"
+        },
+        "title": "深圳证券交易所《纪律处分事先告知书》送达公告",
+        "url": "https://www.szse.cn/disclosure/notice/general/t20260108_618321.html"
+      },
+      {
+        "candidate_id": "szse-general-003-15",
+        "disposition": "unresolved",
+        "page_index": 3,
+        "position": 15,
+        "published_date": "2026-01-06",
+        "source_ref": {
+          "raw_sha256": "sha256:f72702d7963edf14a13f474a6019502958fb1f7100a7322b808f8a293e38c939",
+          "source_id": "szse-general-notice-index-page-03"
+        },
+        "title": "深圳证券交易所《纪律处分事先告知书》送达公告",
+        "url": "https://www.szse.cn/disclosure/notice/general/t20260106_618289.html"
+      },
+      {
+        "candidate_id": "szse-general-003-16",
+        "disposition": "unresolved",
+        "page_index": 3,
+        "position": 16,
+        "published_date": "2026-01-05",
+        "source_ref": {
+          "raw_sha256": "sha256:f72702d7963edf14a13f474a6019502958fb1f7100a7322b808f8a293e38c939",
+          "source_id": "szse-general-notice-index-page-03"
+        },
+        "title": "关于深港通下的港股通标的证券名单调整的公告",
+        "url": "https://www.szse.cn/disclosure/notice/general/t20260105_618248.html"
+      },
+      {
+        "candidate_id": "szse-general-003-17",
+        "disposition": "unresolved",
+        "page_index": 3,
+        "position": 17,
+        "published_date": "2025-12-31",
+        "source_ref": {
+          "raw_sha256": "sha256:f72702d7963edf14a13f474a6019502958fb1f7100a7322b808f8a293e38c939",
+          "source_id": "szse-general-notice-index-page-03"
+        },
+        "title": "2025年深圳证券市场概况",
+        "url": "https://www.szse.cn/disclosure/notice/general/P020251231674893217325.pdf"
+      },
+      {
+        "candidate_id": "szse-general-003-18",
+        "disposition": "unresolved",
+        "page_index": 3,
+        "position": 18,
+        "published_date": "2025-12-26",
+        "source_ref": {
+          "raw_sha256": "sha256:f72702d7963edf14a13f474a6019502958fb1f7100a7322b808f8a293e38c939",
+          "source_id": "szse-general-notice-index-page-03"
+        },
+        "title": "关于减免2026年度相关费用的通知",
+        "url": "https://www.szse.cn/disclosure/notice/general/t20251226_618146.html"
+      },
+      {
+        "candidate_id": "szse-general-003-19",
+        "disposition": "unresolved",
+        "page_index": 3,
+        "position": 19,
+        "published_date": "2025-12-24",
+        "source_ref": {
+          "raw_sha256": "sha256:f72702d7963edf14a13f474a6019502958fb1f7100a7322b808f8a293e38c939",
+          "source_id": "szse-general-notice-index-page-03"
+        },
+        "title": "关于深港通下的港股通标的证券名单调整的公告",
+        "url": "https://www.szse.cn/disclosure/notice/general/t20251224_618115.html"
+      },
+      {
+        "candidate_id": "szse-general-004-00",
+        "disposition": "unresolved",
+        "page_index": 4,
+        "position": 0,
+        "published_date": "2025-12-22",
+        "source_ref": {
+          "raw_sha256": "sha256:d8167434e65b5a9bf0d16f1b8042f1120c5b3a70f913b2912e4cd9888c760b2f",
+          "source_id": "szse-general-notice-index-page-04"
+        },
+        "title": "关于2026年深港通下的港股通交易日有关安排的通知",
+        "url": "https://www.szse.cn/disclosure/notice/general/t20251222_618088.html"
+      },
+      {
+        "candidate_id": "szse-general-004-01",
+        "disposition": "unresolved",
+        "page_index": 4,
+        "position": 1,
+        "published_date": "2025-12-22",
+        "source_ref": {
+          "raw_sha256": "sha256:d8167434e65b5a9bf0d16f1b8042f1120c5b3a70f913b2912e4cd9888c760b2f",
+          "source_id": "szse-general-notice-index-page-04"
+        },
+        "title": "关于2026年部分节假日休市安排的通知",
+        "url": "https://www.szse.cn/disclosure/notice/general/t20251222_618087.html"
+      },
+      {
+        "candidate_id": "szse-general-004-02",
+        "disposition": "unresolved",
+        "page_index": 4,
+        "position": 2,
+        "published_date": "2025-12-18",
+        "source_ref": {
+          "raw_sha256": "sha256:d8167434e65b5a9bf0d16f1b8042f1120c5b3a70f913b2912e4cd9888c760b2f",
+          "source_id": "szse-general-notice-index-page-04"
+        },
+        "title": "关于2025年底深港通下的港股通交易日安排的通知",
+        "url": "https://www.szse.cn/disclosure/notice/general/t20251218_618040.html"
+      },
+      {
+        "candidate_id": "szse-general-004-03",
+        "disposition": "unresolved",
+        "page_index": 4,
+        "position": 3,
+        "published_date": "2025-12-16",
+        "source_ref": {
+          "raw_sha256": "sha256:d8167434e65b5a9bf0d16f1b8042f1120c5b3a70f913b2912e4cd9888c760b2f",
+          "source_id": "szse-general-notice-index-page-04"
+        },
+        "title": "深圳证券交易所《纪律处分事先告知书》送达公告",
+        "url": "https://www.szse.cn/disclosure/notice/general/t20251216_618005.html"
+      },
+      {
+        "candidate_id": "szse-general-004-04",
+        "disposition": "unresolved",
+        "page_index": 4,
+        "position": 4,
+        "published_date": "2025-12-15",
+        "source_ref": {
+          "raw_sha256": "sha256:d8167434e65b5a9bf0d16f1b8042f1120c5b3a70f913b2912e4cd9888c760b2f",
+          "source_id": "szse-general-notice-index-page-04"
+        },
+        "title": "关于深港通下的港股通标的证券名单调整的公告",
+        "url": "https://www.szse.cn/disclosure/notice/general/t20251215_617966.html"
+      },
+      {
+        "candidate_id": "szse-general-004-05",
+        "disposition": "unresolved",
+        "page_index": 4,
+        "position": 5,
+        "published_date": "2025-12-09",
+        "source_ref": {
+          "raw_sha256": "sha256:d8167434e65b5a9bf0d16f1b8042f1120c5b3a70f913b2912e4cd9888c760b2f",
+          "source_id": "szse-general-notice-index-page-04"
+        },
+        "title": "关于深港通下的港股通标的证券名单调整的公告",
+        "url": "https://www.szse.cn/disclosure/notice/general/t20251209_617833.html"
+      },
+      {
+        "candidate_id": "szse-general-004-06",
+        "disposition": "unresolved",
+        "page_index": 4,
+        "position": 6,
+        "published_date": "2025-12-08",
+        "source_ref": {
+          "raw_sha256": "sha256:d8167434e65b5a9bf0d16f1b8042f1120c5b3a70f913b2912e4cd9888c760b2f",
+          "source_id": "szse-general-notice-index-page-04"
+        },
+        "title": "关于深港通下的港股通标的证券名单调整的公告",
+        "url": "https://www.szse.cn/disclosure/notice/general/t20251208_617792.html"
+      },
+      {
+        "candidate_id": "szse-general-004-07",
+        "disposition": "unresolved",
+        "page_index": 4,
+        "position": 7,
+        "published_date": "2025-12-04",
+        "source_ref": {
+          "raw_sha256": "sha256:d8167434e65b5a9bf0d16f1b8042f1120c5b3a70f913b2912e4cd9888c760b2f",
+          "source_id": "szse-general-notice-index-page-04"
+        },
+        "title": "关于深港通下的港股通标的证券名单调整的公告",
+        "url": "https://www.szse.cn/disclosure/notice/general/t20251204_617702.html"
+      },
+      {
+        "candidate_id": "szse-general-004-08",
+        "disposition": "unresolved",
+        "page_index": 4,
+        "position": 8,
+        "published_date": "2025-12-01",
+        "source_ref": {
+          "raw_sha256": "sha256:d8167434e65b5a9bf0d16f1b8042f1120c5b3a70f913b2912e4cd9888c760b2f",
+          "source_id": "szse-general-notice-index-page-04"
+        },
+        "title": "关于深港通下的港股通标的证券名单调整的公告",
+        "url": "https://www.szse.cn/disclosure/notice/general/t20251201_617603.html"
+      },
+      {
+        "candidate_id": "szse-general-004-09",
+        "disposition": "unresolved",
+        "page_index": 4,
+        "position": 9,
+        "published_date": "2025-11-28",
+        "source_ref": {
+          "raw_sha256": "sha256:d8167434e65b5a9bf0d16f1b8042f1120c5b3a70f913b2912e4cd9888c760b2f",
+          "source_id": "szse-general-notice-index-page-04"
+        },
+        "title": "关于调整深证成指、创业板指、深证100、创业板50等指数样本股的公告",
+        "url": "https://www.szse.cn/disclosure/notice/general/t20251128_617545.html"
+      },
+      {
+        "candidate_id": "szse-general-004-10",
+        "disposition": "unresolved",
+        "page_index": 4,
+        "position": 10,
+        "published_date": "2025-11-25",
+        "source_ref": {
+          "raw_sha256": "sha256:d8167434e65b5a9bf0d16f1b8042f1120c5b3a70f913b2912e4cd9888c760b2f",
+          "source_id": "szse-general-notice-index-page-04"
+        },
+        "title": "关于深港通下的港股通标的证券名单调整的公告",
+        "url": "https://www.szse.cn/disclosure/notice/general/t20251125_617430.html"
+      },
+      {
+        "candidate_id": "szse-general-004-11",
+        "disposition": "unresolved",
+        "page_index": 4,
+        "position": 11,
+        "published_date": "2025-11-24",
+        "source_ref": {
+          "raw_sha256": "sha256:d8167434e65b5a9bf0d16f1b8042f1120c5b3a70f913b2912e4cd9888c760b2f",
+          "source_id": "szse-general-notice-index-page-04"
+        },
+        "title": "关于深港通下的港股通标的证券名单调整的公告",
+        "url": "https://www.szse.cn/disclosure/notice/general/t20251124_617391.html"
+      },
+      {
+        "candidate_id": "szse-general-004-12",
+        "disposition": "unresolved",
+        "page_index": 4,
+        "position": 12,
+        "published_date": "2025-11-18",
+        "source_ref": {
+          "raw_sha256": "sha256:d8167434e65b5a9bf0d16f1b8042f1120c5b3a70f913b2912e4cd9888c760b2f",
+          "source_id": "szse-general-notice-index-page-04"
+        },
+        "title": "关于金融街证券股份有限公司会员名称变更的公告",
+        "url": "https://www.szse.cn/disclosure/notice/general/t20251118_617301.html"
+      },
+      {
+        "candidate_id": "szse-general-004-13",
+        "disposition": "unresolved",
+        "page_index": 4,
+        "position": 13,
+        "published_date": "2025-11-17",
+        "source_ref": {
+          "raw_sha256": "sha256:d8167434e65b5a9bf0d16f1b8042f1120c5b3a70f913b2912e4cd9888c760b2f",
+          "source_id": "szse-general-notice-index-page-04"
+        },
+        "title": "关于深港通下的港股通标的证券名单调整的公告",
+        "url": "https://www.szse.cn/disclosure/notice/general/t20251117_617279.html"
+      },
+      {
+        "candidate_id": "szse-general-004-14",
+        "disposition": "unresolved",
+        "page_index": 4,
+        "position": 14,
+        "published_date": "2025-11-12",
+        "source_ref": {
+          "raw_sha256": "sha256:d8167434e65b5a9bf0d16f1b8042f1120c5b3a70f913b2912e4cd9888c760b2f",
+          "source_id": "szse-general-notice-index-page-04"
+        },
+        "title": "关于深港通下的港股通标的证券名单调整的公告",
+        "url": "https://www.szse.cn/disclosure/notice/general/t20251112_617177.html"
+      },
+      {
+        "candidate_id": "szse-general-004-15",
+        "disposition": "unresolved",
+        "page_index": 4,
+        "position": 15,
+        "published_date": "2025-11-07",
+        "source_ref": {
+          "raw_sha256": "sha256:d8167434e65b5a9bf0d16f1b8042f1120c5b3a70f913b2912e4cd9888c760b2f",
+          "source_id": "szse-general-notice-index-page-04"
+        },
+        "title": "深圳证券交易所《纪律处分事先告知书》送达公告",
+        "url": "https://www.szse.cn/disclosure/notice/general/t20251107_617137.html"
+      },
+      {
+        "candidate_id": "szse-general-004-16",
+        "disposition": "unresolved",
+        "page_index": 4,
+        "position": 16,
+        "published_date": "2025-11-04",
+        "source_ref": {
+          "raw_sha256": "sha256:d8167434e65b5a9bf0d16f1b8042f1120c5b3a70f913b2912e4cd9888c760b2f",
+          "source_id": "szse-general-notice-index-page-04"
+        },
+        "title": "深圳证券交易所《纪律处分事先告知书》送达公告",
+        "url": "https://www.szse.cn/disclosure/notice/general/t20251104_617048.html"
+      },
+      {
+        "candidate_id": "szse-general-004-17",
+        "disposition": "unresolved",
+        "page_index": 4,
+        "position": 17,
+        "published_date": "2025-10-31",
+        "source_ref": {
+          "raw_sha256": "sha256:d8167434e65b5a9bf0d16f1b8042f1120c5b3a70f913b2912e4cd9888c760b2f",
+          "source_id": "szse-general-notice-index-page-04"
+        },
+        "title": "关于深市上市公司2024-2025年度信息披露工作评价结果的通报",
+        "url": "https://www.szse.cn/disclosure/notice/general/t20251031_617016.html"
+      },
+      {
+        "candidate_id": "szse-general-004-18",
+        "disposition": "unresolved",
+        "page_index": 4,
+        "position": 18,
+        "published_date": "2025-10-31",
+        "source_ref": {
+          "raw_sha256": "sha256:d8167434e65b5a9bf0d16f1b8042f1120c5b3a70f913b2912e4cd9888c760b2f",
+          "source_id": "szse-general-notice-index-page-04"
+        },
+        "title": "关于深港通下的港股通ETF名单调整的公告",
+        "url": "https://www.szse.cn/disclosure/notice/general/t20251031_617017.html"
+      },
+      {
+        "candidate_id": "szse-general-004-19",
+        "disposition": "unresolved",
+        "page_index": 4,
+        "position": 19,
+        "published_date": "2025-10-31",
+        "source_ref": {
+          "raw_sha256": "sha256:d8167434e65b5a9bf0d16f1b8042f1120c5b3a70f913b2912e4cd9888c760b2f",
+          "source_id": "szse-general-notice-index-page-04"
+        },
+        "title": "关于深港通下的港股通标的证券名单调整的公告",
+        "url": "https://www.szse.cn/disclosure/notice/general/t20251031_616976.html"
+      },
+      {
+        "candidate_id": "szse-general-005-00",
+        "disposition": "unresolved",
+        "page_index": 5,
+        "position": 0,
+        "published_date": "2025-10-29",
+        "source_ref": {
+          "raw_sha256": "sha256:b6576d810de9dfb55751e5c02bd71ef1659a2ec6f66d9804e3200e93a559b6c8",
+          "source_id": "szse-general-notice-index-page-05"
+        },
+        "title": "深圳证券交易所《纪律处分事先告知书》送达公告",
+        "url": "https://www.szse.cn/disclosure/notice/general/t20251029_616870.html"
+      },
+      {
+        "candidate_id": "szse-general-005-01",
+        "disposition": "unresolved",
+        "page_index": 5,
+        "position": 1,
+        "published_date": "2025-10-29",
+        "source_ref": {
+          "raw_sha256": "sha256:b6576d810de9dfb55751e5c02bd71ef1659a2ec6f66d9804e3200e93a559b6c8",
+          "source_id": "szse-general-notice-index-page-05"
+        },
+        "title": "深圳证券交易所《纪律处分事先告知书》送达公告",
+        "url": "https://www.szse.cn/disclosure/notice/general/t20251029_616869.html"
+      },
+      {
+        "candidate_id": "szse-general-005-02",
+        "disposition": "unresolved",
+        "page_index": 5,
+        "position": 2,
+        "published_date": "2025-10-27",
+        "source_ref": {
+          "raw_sha256": "sha256:b6576d810de9dfb55751e5c02bd71ef1659a2ec6f66d9804e3200e93a559b6c8",
+          "source_id": "szse-general-notice-index-page-05"
+        },
+        "title": "关于深港通下的港股通标的证券名单调整的公告",
+        "url": "https://www.szse.cn/disclosure/notice/general/t20251027_616675.html"
+      },
+      {
+        "candidate_id": "szse-general-005-03",
+        "disposition": "unresolved",
+        "page_index": 5,
+        "position": 3,
+        "published_date": "2025-10-23",
+        "source_ref": {
+          "raw_sha256": "sha256:b6576d810de9dfb55751e5c02bd71ef1659a2ec6f66d9804e3200e93a559b6c8",
+          "source_id": "szse-general-notice-index-page-05"
+        },
+        "title": "关于2025年香港重阳节假期深港通下的港股通交易日安排的通知",
+        "url": "https://www.szse.cn/disclosure/notice/general/t20251023_616612.html"
+      },
+      {
+        "candidate_id": "szse-general-005-04",
+        "disposition": "unresolved",
+        "page_index": 5,
+        "position": 4,
+        "published_date": "2025-10-22",
+        "source_ref": {
+          "raw_sha256": "sha256:b6576d810de9dfb55751e5c02bd71ef1659a2ec6f66d9804e3200e93a559b6c8",
+          "source_id": "szse-general-notice-index-page-05"
+        },
+        "title": "深圳证券交易所《纪律处分事先告知书》送达公告",
+        "url": "https://www.szse.cn/disclosure/notice/general/t20251022_616600.html"
+      },
+      {
+        "candidate_id": "szse-general-005-05",
+        "disposition": "unresolved",
+        "page_index": 5,
+        "position": 5,
+        "published_date": "2025-10-16",
+        "source_ref": {
+          "raw_sha256": "sha256:b6576d810de9dfb55751e5c02bd71ef1659a2ec6f66d9804e3200e93a559b6c8",
+          "source_id": "szse-general-notice-index-page-05"
+        },
+        "title": "关于北京证券有限责任公司会员名称变更的公告",
+        "url": "https://www.szse.cn/disclosure/notice/general/t20251016_616497.html"
+      },
+      {
+        "candidate_id": "szse-general-005-06",
+        "disposition": "unresolved",
+        "page_index": 5,
+        "position": 6,
+        "published_date": "2025-10-16",
+        "source_ref": {
+          "raw_sha256": "sha256:b6576d810de9dfb55751e5c02bd71ef1659a2ec6f66d9804e3200e93a559b6c8",
+          "source_id": "szse-general-notice-index-page-05"
+        },
+        "title": "关于深港通下的港股通标的证券名单调整的公告",
+        "url": "https://www.szse.cn/disclosure/notice/general/t20251016_616490.html"
+      },
+      {
+        "candidate_id": "szse-general-005-07",
+        "disposition": "unresolved",
+        "page_index": 5,
+        "position": 7,
+        "published_date": "2025-10-09",
+        "source_ref": {
+          "raw_sha256": "sha256:b6576d810de9dfb55751e5c02bd71ef1659a2ec6f66d9804e3200e93a559b6c8",
+          "source_id": "szse-general-notice-index-page-05"
+        },
+        "title": "关于深港通下的港股通标的证券名单调整的公告",
+        "url": "https://www.szse.cn/disclosure/notice/general/t20251009_616427.html"
+      },
+      {
+        "candidate_id": "szse-general-005-08",
+        "disposition": "unresolved",
+        "page_index": 5,
+        "position": 8,
+        "published_date": "2025-09-25",
+        "source_ref": {
+          "raw_sha256": "sha256:b6576d810de9dfb55751e5c02bd71ef1659a2ec6f66d9804e3200e93a559b6c8",
+          "source_id": "szse-general-notice-index-page-05"
+        },
+        "title": "关于2025年国庆节、中秋节休市安排的通知",
+        "url": "https://www.szse.cn/disclosure/notice/general/t20250925_616324.html"
+      },
+      {
+        "candidate_id": "szse-general-005-09",
+        "disposition": "unresolved",
+        "page_index": 5,
+        "position": 9,
+        "published_date": "2025-09-25",
+        "source_ref": {
+          "raw_sha256": "sha256:b6576d810de9dfb55751e5c02bd71ef1659a2ec6f66d9804e3200e93a559b6c8",
+          "source_id": "szse-general-notice-index-page-05"
+        },
+        "title": "关于2025年国庆节、中秋节期间深港通下的港股通交易日安排的通知",
+        "url": "https://www.szse.cn/disclosure/notice/general/t20250925_616323.html"
+      },
+      {
+        "candidate_id": "szse-general-005-10",
+        "disposition": "unresolved",
+        "page_index": 5,
+        "position": 10,
+        "published_date": "2025-09-23",
+        "source_ref": {
+          "raw_sha256": "sha256:b6576d810de9dfb55751e5c02bd71ef1659a2ec6f66d9804e3200e93a559b6c8",
+          "source_id": "szse-general-notice-index-page-05"
+        },
+        "title": "关于深港通下的港股通标的证券名单调整的公告",
+        "url": "https://www.szse.cn/disclosure/notice/general/t20250923_616212.html"
+      },
+      {
+        "candidate_id": "szse-general-005-11",
+        "disposition": "unresolved",
+        "page_index": 5,
+        "position": 11,
+        "published_date": "2025-09-15",
+        "source_ref": {
+          "raw_sha256": "sha256:b6576d810de9dfb55751e5c02bd71ef1659a2ec6f66d9804e3200e93a559b6c8",
+          "source_id": "szse-general-notice-index-page-05"
+        },
+        "title": "关于深港通下的港股通标的证券名单调整的公告",
+        "url": "https://www.szse.cn/disclosure/notice/general/t20250915_616076.html"
+      },
+      {
+        "candidate_id": "szse-general-005-12",
+        "disposition": "unresolved",
+        "page_index": 5,
+        "position": 12,
+        "published_date": "2025-09-08",
+        "source_ref": {
+          "raw_sha256": "sha256:b6576d810de9dfb55751e5c02bd71ef1659a2ec6f66d9804e3200e93a559b6c8",
+          "source_id": "szse-general-notice-index-page-05"
+        },
+        "title": "关于深港通下的港股通标的证券名单调整的公告",
+        "url": "https://www.szse.cn/disclosure/notice/general/t20250908_615862.html"
+      },
+      {
+        "candidate_id": "szse-general-005-13",
+        "disposition": "unresolved",
+        "page_index": 5,
+        "position": 13,
+        "published_date": "2025-08-18",
+        "source_ref": {
+          "raw_sha256": "sha256:b6576d810de9dfb55751e5c02bd71ef1659a2ec6f66d9804e3200e93a559b6c8",
+          "source_id": "szse-general-notice-index-page-05"
+        },
+        "title": "深圳证券交易所《纪律处分事先告知书》送达公告",
+        "url": "https://www.szse.cn/disclosure/notice/general/t20250818_615506.html"
+      },
+      {
+        "candidate_id": "szse-general-005-14",
+        "disposition": "unresolved",
+        "page_index": 5,
+        "position": 14,
+        "published_date": "2025-08-04",
+        "source_ref": {
+          "raw_sha256": "sha256:b6576d810de9dfb55751e5c02bd71ef1659a2ec6f66d9804e3200e93a559b6c8",
+          "source_id": "szse-general-notice-index-page-05"
+        },
+        "title": "关于深港通下的港股通标的证券名单调整的公告",
+        "url": "https://www.szse.cn/disclosure/notice/general/t20250804_615322.html"
+      },
+      {
+        "candidate_id": "szse-general-005-15",
+        "disposition": "unresolved",
+        "page_index": 5,
+        "position": 15,
+        "published_date": "2025-07-31",
+        "source_ref": {
+          "raw_sha256": "sha256:b6576d810de9dfb55751e5c02bd71ef1659a2ec6f66d9804e3200e93a559b6c8",
+          "source_id": "szse-general-notice-index-page-05"
+        },
+        "title": "关于深港通下的港股通标的证券名单调整的公告",
+        "url": "https://www.szse.cn/disclosure/notice/general/t20250731_615264.html"
+      },
+      {
+        "candidate_id": "szse-general-005-16",
+        "disposition": "unresolved",
+        "page_index": 5,
+        "position": 16,
+        "published_date": "2025-07-30",
+        "source_ref": {
+          "raw_sha256": "sha256:b6576d810de9dfb55751e5c02bd71ef1659a2ec6f66d9804e3200e93a559b6c8",
+          "source_id": "szse-general-notice-index-page-05"
+        },
+        "title": "关于深港通下的港股通标的证券名单调整的公告",
+        "url": "https://www.szse.cn/disclosure/notice/general/t20250730_615237.html"
+      },
+      {
+        "candidate_id": "szse-general-005-17",
+        "disposition": "unresolved",
+        "page_index": 5,
+        "position": 17,
+        "published_date": "2025-07-25",
+        "source_ref": {
+          "raw_sha256": "sha256:b6576d810de9dfb55751e5c02bd71ef1659a2ec6f66d9804e3200e93a559b6c8",
+          "source_id": "szse-general-notice-index-page-05"
+        },
+        "title": "深圳证券交易所《纪律处分事先告知书》送达公告",
+        "url": "https://www.szse.cn/disclosure/notice/general/t20250725_615152.html"
+      },
+      {
+        "candidate_id": "szse-general-005-18",
+        "disposition": "unresolved",
+        "page_index": 5,
+        "position": 18,
+        "published_date": "2025-07-25",
+        "source_ref": {
+          "raw_sha256": "sha256:b6576d810de9dfb55751e5c02bd71ef1659a2ec6f66d9804e3200e93a559b6c8",
+          "source_id": "szse-general-notice-index-page-05"
+        },
+        "title": "关于宏信证券有限责任公司会员名称变更为天府证券有限责任公司的公告",
+        "url": "https://www.szse.cn/disclosure/notice/general/t20250724_615110.html"
+      },
+      {
+        "candidate_id": "szse-general-005-19",
+        "disposition": "unresolved",
+        "page_index": 5,
+        "position": 19,
+        "published_date": "2025-07-21",
+        "source_ref": {
+          "raw_sha256": "sha256:b6576d810de9dfb55751e5c02bd71ef1659a2ec6f66d9804e3200e93a559b6c8",
+          "source_id": "szse-general-notice-index-page-05"
+        },
+        "title": "关于深港通下的港股通标的证券名单调整的公告",
+        "url": "https://www.szse.cn/disclosure/notice/general/t20250721_615020.html"
+      },
+      {
+        "candidate_id": "szse-general-006-00",
+        "disposition": "unresolved",
+        "page_index": 6,
+        "position": 0,
+        "published_date": "2025-07-17",
+        "source_ref": {
+          "raw_sha256": "sha256:e608111d4d91b137f9310f99e791d1ba876e8b3ccb82608103350fac0c983afb",
+          "source_id": "szse-general-notice-index-page-06"
+        },
+        "title": "关于深港通下的港股通标的证券名单调整的公告",
+        "url": "https://www.szse.cn/disclosure/notice/general/t20250717_614970.html"
+      },
+      {
+        "candidate_id": "szse-general-006-01",
+        "disposition": "unresolved",
+        "page_index": 6,
+        "position": 1,
+        "published_date": "2025-07-11",
+        "source_ref": {
+          "raw_sha256": "sha256:e608111d4d91b137f9310f99e791d1ba876e8b3ccb82608103350fac0c983afb",
+          "source_id": "szse-general-notice-index-page-06"
+        },
+        "title": "关于增补深圳证券交易所行业咨询专家库专家的公告",
+        "url": "https://www.szse.cn/disclosure/notice/general/t20260110_618394.html"
+      },
+      {
+        "candidate_id": "szse-general-006-02",
+        "disposition": "unresolved",
+        "page_index": 6,
+        "position": 2,
+        "published_date": "2025-07-11",
+        "source_ref": {
+          "raw_sha256": "sha256:e608111d4d91b137f9310f99e791d1ba876e8b3ccb82608103350fac0c983afb",
+          "source_id": "szse-general-notice-index-page-06"
+        },
+        "title": "关于修订创业板综合指数编制方案的公告",
+        "url": "https://www.szse.cn/disclosure/notice/general/t20250711_614839.html"
+      },
+      {
+        "candidate_id": "szse-general-006-03",
+        "disposition": "unresolved",
+        "page_index": 6,
+        "position": 3,
+        "published_date": "2025-07-11",
+        "source_ref": {
+          "raw_sha256": "sha256:e608111d4d91b137f9310f99e791d1ba876e8b3ccb82608103350fac0c983afb",
+          "source_id": "szse-general-notice-index-page-06"
+        },
+        "title": "关于深港通下的港股通标的证券名单调整的公告",
+        "url": "https://www.szse.cn/disclosure/notice/general/t20250711_614835.html"
+      },
+      {
+        "candidate_id": "szse-general-006-04",
+        "disposition": "unresolved",
+        "page_index": 6,
+        "position": 4,
+        "published_date": "2025-07-07",
+        "source_ref": {
+          "raw_sha256": "sha256:e608111d4d91b137f9310f99e791d1ba876e8b3ccb82608103350fac0c983afb",
+          "source_id": "szse-general-notice-index-page-06"
+        },
+        "title": "关于发布深证专精特新等2条指数的公告",
+        "url": "https://www.szse.cn/disclosure/notice/general/t20250707_614770.html"
+      },
+      {
+        "candidate_id": "szse-general-006-05",
+        "disposition": "unresolved",
+        "page_index": 6,
+        "position": 5,
+        "published_date": "2025-07-04",
+        "source_ref": {
+          "raw_sha256": "sha256:e608111d4d91b137f9310f99e791d1ba876e8b3ccb82608103350fac0c983afb",
+          "source_id": "szse-general-notice-index-page-06"
+        },
+        "title": "深圳证券交易所《纪律处分事先告知书》送达公告",
+        "url": "https://www.szse.cn/disclosure/notice/general/t20250704_614735.html"
+      },
+      {
+        "candidate_id": "szse-general-006-06",
+        "disposition": "unresolved",
+        "page_index": 6,
+        "position": 6,
+        "published_date": "2025-07-04",
+        "source_ref": {
+          "raw_sha256": "sha256:e608111d4d91b137f9310f99e791d1ba876e8b3ccb82608103350fac0c983afb",
+          "source_id": "szse-general-notice-index-page-06"
+        },
+        "title": "深圳证券交易所《纪律处分事先告知书》送达公告",
+        "url": "https://www.szse.cn/disclosure/notice/general/t20250704_614734.html"
+      },
+      {
+        "candidate_id": "szse-general-006-07",
+        "disposition": "unresolved",
+        "page_index": 6,
+        "position": 7,
+        "published_date": "2025-06-26",
+        "source_ref": {
+          "raw_sha256": "sha256:e608111d4d91b137f9310f99e791d1ba876e8b3ccb82608103350fac0c983afb",
+          "source_id": "szse-general-notice-index-page-06"
+        },
+        "title": "关于2025年香港特别行政区成立纪念日假期深港通下的港股通交易日安排的通知",
+        "url": "https://www.szse.cn/disclosure/notice/general/t20250626_614589.html"
+      },
+      {
+        "candidate_id": "szse-general-006-08",
+        "disposition": "unresolved",
+        "page_index": 6,
+        "position": 8,
+        "published_date": "2025-06-24",
+        "source_ref": {
+          "raw_sha256": "sha256:e608111d4d91b137f9310f99e791d1ba876e8b3ccb82608103350fac0c983afb",
+          "source_id": "szse-general-notice-index-page-06"
+        },
+        "title": "关于深港通下的港股通标的证券名单调整的公告",
+        "url": "https://www.szse.cn/disclosure/notice/general/t20250624_614455.html"
+      },
+      {
+        "candidate_id": "szse-general-006-09",
+        "disposition": "unresolved",
+        "page_index": 6,
+        "position": 9,
+        "published_date": "2025-06-20",
+        "source_ref": {
+          "raw_sha256": "sha256:e608111d4d91b137f9310f99e791d1ba876e8b3ccb82608103350fac0c983afb",
+          "source_id": "szse-general-notice-index-page-06"
+        },
+        "title": "关于深港通下的港股通标的证券名单调整的公告",
+        "url": "https://www.szse.cn/disclosure/notice/general/t20250620_614281.html"
+      },
+      {
+        "candidate_id": "szse-general-006-10",
+        "disposition": "unresolved",
+        "page_index": 6,
+        "position": 10,
+        "published_date": "2025-06-17",
+        "source_ref": {
+          "raw_sha256": "sha256:e608111d4d91b137f9310f99e791d1ba876e8b3ccb82608103350fac0c983afb",
+          "source_id": "szse-general-notice-index-page-06"
+        },
+        "title": "关于深港通下的港股通标的证券名单调整的公告",
+        "url": "https://www.szse.cn/disclosure/notice/general/t20250617_614194.html"
+      },
+      {
+        "candidate_id": "szse-general-006-11",
+        "disposition": "unresolved",
+        "page_index": 6,
+        "position": 11,
+        "published_date": "2025-06-16",
+        "source_ref": {
+          "raw_sha256": "sha256:e608111d4d91b137f9310f99e791d1ba876e8b3ccb82608103350fac0c983afb",
+          "source_id": "szse-general-notice-index-page-06"
+        },
+        "title": "关于深港通下的港股通标的证券名单调整的公告",
+        "url": "https://www.szse.cn/disclosure/notice/general/t20250616_614097.html"
+      },
+      {
+        "candidate_id": "szse-general-006-12",
+        "disposition": "unresolved",
+        "page_index": 6,
+        "position": 12,
+        "published_date": "2025-06-09",
+        "source_ref": {
+          "raw_sha256": "sha256:e608111d4d91b137f9310f99e791d1ba876e8b3ccb82608103350fac0c983afb",
+          "source_id": "szse-general-notice-index-page-06"
+        },
+        "title": "关于深港通下的港股通标的证券名单调整的公告",
+        "url": "https://www.szse.cn/disclosure/notice/general/t20250609_613958.html"
+      },
+      {
+        "candidate_id": "szse-general-006-13",
+        "disposition": "unresolved",
+        "page_index": 6,
+        "position": 13,
+        "published_date": "2025-06-03",
+        "source_ref": {
+          "raw_sha256": "sha256:e608111d4d91b137f9310f99e791d1ba876e8b3ccb82608103350fac0c983afb",
+          "source_id": "szse-general-notice-index-page-06"
+        },
+        "title": "关于深港通下的港股通标的证券名单调整的公告",
+        "url": "https://www.szse.cn/disclosure/notice/general/t20250603_613878.html"
+      },
+      {
+        "candidate_id": "szse-general-006-14",
+        "disposition": "unresolved",
+        "page_index": 6,
+        "position": 14,
+        "published_date": "2025-06-03",
+        "source_ref": {
+          "raw_sha256": "sha256:e608111d4d91b137f9310f99e791d1ba876e8b3ccb82608103350fac0c983afb",
+          "source_id": "szse-general-notice-index-page-06"
+        },
+        "title": "关于调整深证成指、创业板指、深证100等指数样本股的公告",
+        "url": "https://www.szse.cn/disclosure/notice/general/t20250603_613877.html"
+      },
+      {
+        "candidate_id": "szse-general-006-15",
+        "disposition": "unresolved",
+        "page_index": 6,
+        "position": 15,
+        "published_date": "2025-05-27",
+        "source_ref": {
+          "raw_sha256": "sha256:e608111d4d91b137f9310f99e791d1ba876e8b3ccb82608103350fac0c983afb",
+          "source_id": "szse-general-notice-index-page-06"
+        },
+        "title": "关于深港通下的港股通标的证券名单调整的公告",
+        "url": "https://www.szse.cn/disclosure/notice/general/t20250527_613811.html"
+      },
+      {
+        "candidate_id": "szse-general-006-16",
+        "disposition": "unresolved",
+        "page_index": 6,
+        "position": 16,
+        "published_date": "2025-05-26",
+        "source_ref": {
+          "raw_sha256": "sha256:e608111d4d91b137f9310f99e791d1ba876e8b3ccb82608103350fac0c983afb",
+          "source_id": "szse-general-notice-index-page-06"
+        },
+        "title": "关于深港通下的港股通标的证券名单调整的公告",
+        "url": "https://www.szse.cn/disclosure/notice/general/t20250526_613784.html"
+      },
+      {
+        "candidate_id": "szse-general-006-17",
+        "disposition": "unresolved",
+        "page_index": 6,
+        "position": 17,
+        "published_date": "2025-05-23",
+        "source_ref": {
+          "raw_sha256": "sha256:e608111d4d91b137f9310f99e791d1ba876e8b3ccb82608103350fac0c983afb",
+          "source_id": "szse-general-notice-index-page-06"
+        },
+        "title": "关于华英证券有限责任公司会员名称变更为国联民生证券承销保荐有限公司的公告",
+        "url": "https://www.szse.cn/disclosure/notice/general/t20250523_613751.html"
+      },
+      {
+        "candidate_id": "szse-general-006-18",
+        "disposition": "unresolved",
+        "page_index": 6,
+        "position": 18,
+        "published_date": "2025-05-22",
+        "source_ref": {
+          "raw_sha256": "sha256:e608111d4d91b137f9310f99e791d1ba876e8b3ccb82608103350fac0c983afb",
+          "source_id": "szse-general-notice-index-page-06"
+        },
+        "title": "关于2025年端午节休市安排的通知",
+        "url": "https://www.szse.cn/disclosure/notice/general/t20250522_613726.html"
+      },
+      {
+        "candidate_id": "szse-general-006-19",
+        "disposition": "unresolved",
+        "page_index": 6,
+        "position": 19,
+        "published_date": "2025-05-22",
+        "source_ref": {
+          "raw_sha256": "sha256:e608111d4d91b137f9310f99e791d1ba876e8b3ccb82608103350fac0c983afb",
+          "source_id": "szse-general-notice-index-page-06"
+        },
+        "title": "关于2025年端午节期间深港通下的港股通交易日安排的通知",
+        "url": "https://www.szse.cn/disclosure/notice/general/t20250522_613725.html"
+      },
+      {
+        "candidate_id": "szse-general-007-00",
+        "disposition": "unresolved",
+        "page_index": 7,
+        "position": 0,
+        "published_date": "2025-05-20",
+        "source_ref": {
+          "raw_sha256": "sha256:e7fe02a62f0ea6fd342a0468c64748a6370b657b0abac3d3cb1a7020d0bc104e",
+          "source_id": "szse-general-notice-index-page-07"
+        },
+        "title": "关于深港通下的港股通标的证券名单调整的公告",
+        "url": "https://www.szse.cn/disclosure/notice/general/t20250520_613655.html"
+      },
+      {
+        "candidate_id": "szse-general-007-01",
+        "disposition": "unresolved",
+        "page_index": 7,
+        "position": 1,
+        "published_date": "2025-05-16",
+        "source_ref": {
+          "raw_sha256": "sha256:e7fe02a62f0ea6fd342a0468c64748a6370b657b0abac3d3cb1a7020d0bc104e",
+          "source_id": "szse-general-notice-index-page-07"
+        },
+        "title": "深圳证券交易所《纪律处分事先告知书》送达公告",
+        "url": "https://www.szse.cn/disclosure/notice/general/t20250516_613573.html"
+      },
+      {
+        "candidate_id": "szse-general-007-02",
+        "disposition": "unresolved",
+        "page_index": 7,
+        "position": 2,
+        "published_date": "2025-05-15",
+        "source_ref": {
+          "raw_sha256": "sha256:e7fe02a62f0ea6fd342a0468c64748a6370b657b0abac3d3cb1a7020d0bc104e",
+          "source_id": "szse-general-notice-index-page-07"
+        },
+        "title": "关于深港通下的港股通标的证券名单调整的公告",
+        "url": "https://www.szse.cn/disclosure/notice/general/t20250515_613541.html"
+      },
+      {
+        "candidate_id": "szse-general-007-03",
+        "disposition": "unresolved",
+        "page_index": 7,
+        "position": 3,
+        "published_date": "2025-05-08",
+        "source_ref": {
+          "raw_sha256": "sha256:e7fe02a62f0ea6fd342a0468c64748a6370b657b0abac3d3cb1a7020d0bc104e",
+          "source_id": "szse-general-notice-index-page-07"
+        },
+        "title": "深圳证券交易所《纪律处分事先告知书》送达公告",
+        "url": "https://www.szse.cn/disclosure/notice/general/t20250508_613404.html"
+      },
+      {
+        "candidate_id": "szse-general-007-04",
+        "disposition": "unresolved",
+        "page_index": 7,
+        "position": 4,
+        "published_date": "2025-05-08",
+        "source_ref": {
+          "raw_sha256": "sha256:e7fe02a62f0ea6fd342a0468c64748a6370b657b0abac3d3cb1a7020d0bc104e",
+          "source_id": "szse-general-notice-index-page-07"
+        },
+        "title": "关于深港通下的港股通标的证券名单调整的公告",
+        "url": "https://www.szse.cn/disclosure/notice/general/t20250508_613391.html"
+      },
+      {
+        "candidate_id": "szse-general-007-05",
+        "disposition": "unresolved",
+        "page_index": 7,
+        "position": 5,
+        "published_date": "2025-05-06",
+        "source_ref": {
+          "raw_sha256": "sha256:e7fe02a62f0ea6fd342a0468c64748a6370b657b0abac3d3cb1a7020d0bc104e",
+          "source_id": "szse-general-notice-index-page-07"
+        },
+        "title": "关于深港通下的港股通标的证券名单调整的公告",
+        "url": "https://www.szse.cn/disclosure/notice/general/t20250506_613364.html"
+      },
+      {
+        "candidate_id": "szse-general-007-06",
+        "disposition": "unresolved",
+        "page_index": 7,
+        "position": 6,
+        "published_date": "2025-04-30",
+        "source_ref": {
+          "raw_sha256": "sha256:e7fe02a62f0ea6fd342a0468c64748a6370b657b0abac3d3cb1a7020d0bc104e",
+          "source_id": "szse-general-notice-index-page-07"
+        },
+        "title": "关于修订创业板指数编制方案的公告",
+        "url": "https://www.szse.cn/disclosure/notice/general/t20250430_613353.html"
+      },
+      {
+        "candidate_id": "szse-general-007-07",
+        "disposition": "unresolved",
+        "page_index": 7,
+        "position": 7,
+        "published_date": "2025-04-25",
+        "source_ref": {
+          "raw_sha256": "sha256:e7fe02a62f0ea6fd342a0468c64748a6370b657b0abac3d3cb1a7020d0bc104e",
+          "source_id": "szse-general-notice-index-page-07"
+        },
+        "title": "关于聘任深圳证券交易所第二届并购重组审核委员会委员的公告",
+        "url": "https://www.szse.cn/disclosure/notice/general/t20260110_618397.html"
+      },
+      {
+        "candidate_id": "szse-general-007-08",
+        "disposition": "unresolved",
+        "page_index": 7,
+        "position": 8,
+        "published_date": "2025-04-25",
+        "source_ref": {
+          "raw_sha256": "sha256:e7fe02a62f0ea6fd342a0468c64748a6370b657b0abac3d3cb1a7020d0bc104e",
+          "source_id": "szse-general-notice-index-page-07"
+        },
+        "title": "关于聘任深圳证券交易所第二届上市审核委员会委员的公告",
+        "url": "https://www.szse.cn/disclosure/notice/general/t20260110_618386.html"
+      },
+      {
+        "candidate_id": "szse-general-007-09",
+        "disposition": "unresolved",
+        "page_index": 7,
+        "position": 9,
+        "published_date": "2025-04-25",
+        "source_ref": {
+          "raw_sha256": "sha256:e7fe02a62f0ea6fd342a0468c64748a6370b657b0abac3d3cb1a7020d0bc104e",
+          "source_id": "szse-general-notice-index-page-07"
+        },
+        "title": "关于深港通下的港股通ETF标的定期调整情况的公告",
+        "url": "https://www.szse.cn/disclosure/notice/general/t20250425_613223.html"
+      },
+      {
+        "candidate_id": "szse-general-007-10",
+        "disposition": "unresolved",
+        "page_index": 7,
+        "position": 10,
+        "published_date": "2025-04-24",
+        "source_ref": {
+          "raw_sha256": "sha256:e7fe02a62f0ea6fd342a0468c64748a6370b657b0abac3d3cb1a7020d0bc104e",
+          "source_id": "szse-general-notice-index-page-07"
+        },
+        "title": "关于2025年劳动节休市安排的通知",
+        "url": "https://www.szse.cn/disclosure/notice/general/t20250424_613215.html"
+      },
+      {
+        "candidate_id": "szse-general-007-11",
+        "disposition": "unresolved",
+        "page_index": 7,
+        "position": 11,
+        "published_date": "2025-04-24",
+        "source_ref": {
+          "raw_sha256": "sha256:e7fe02a62f0ea6fd342a0468c64748a6370b657b0abac3d3cb1a7020d0bc104e",
+          "source_id": "szse-general-notice-index-page-07"
+        },
+        "title": "关于2025年劳动节、香港佛诞日期间深港通下的港股通交易日安排的通知",
+        "url": "https://www.szse.cn/disclosure/notice/general/t20250424_613214.html"
+      },
+      {
+        "candidate_id": "szse-general-007-12",
+        "disposition": "unresolved",
+        "page_index": 7,
+        "position": 12,
+        "published_date": "2025-04-16",
+        "source_ref": {
+          "raw_sha256": "sha256:e7fe02a62f0ea6fd342a0468c64748a6370b657b0abac3d3cb1a7020d0bc104e",
+          "source_id": "szse-general-notice-index-page-07"
+        },
+        "title": "关于国联证券股份有限公司会员名称变更为国联民生证券股份有限公司的公告",
+        "url": "https://www.szse.cn/disclosure/notice/general/t20250416_612913.html"
+      },
+      {
+        "candidate_id": "szse-general-007-13",
+        "disposition": "unresolved",
+        "page_index": 7,
+        "position": 13,
+        "published_date": "2025-04-10",
+        "source_ref": {
+          "raw_sha256": "sha256:e7fe02a62f0ea6fd342a0468c64748a6370b657b0abac3d3cb1a7020d0bc104e",
+          "source_id": "szse-general-notice-index-page-07"
+        },
+        "title": "关于2025年香港耶稣受难节、复活节深港通下的港股通交易日安排的通知",
+        "url": "https://www.szse.cn/disclosure/notice/general/t20250410_612834.html"
+      },
+      {
+        "candidate_id": "szse-general-007-14",
+        "disposition": "unresolved",
+        "page_index": 7,
+        "position": 14,
+        "published_date": "2025-04-07",
+        "source_ref": {
+          "raw_sha256": "sha256:e7fe02a62f0ea6fd342a0468c64748a6370b657b0abac3d3cb1a7020d0bc104e",
+          "source_id": "szse-general-notice-index-page-07"
+        },
+        "title": "关于国泰君安证券股份有限公司会员名称变更为国泰海通证券股份有限公司的公告",
+        "url": "https://www.szse.cn/disclosure/notice/general/t20250407_612783.html"
+      },
+      {
+        "candidate_id": "szse-general-007-15",
+        "disposition": "unresolved",
+        "page_index": 7,
+        "position": 15,
+        "published_date": "2025-04-07",
+        "source_ref": {
+          "raw_sha256": "sha256:e7fe02a62f0ea6fd342a0468c64748a6370b657b0abac3d3cb1a7020d0bc104e",
+          "source_id": "szse-general-notice-index-page-07"
+        },
+        "title": "关于深港通下的港股通标的证券名单调整的公告",
+        "url": "https://www.szse.cn/disclosure/notice/general/t20250407_612780.html"
+      },
+      {
+        "candidate_id": "szse-general-007-16",
+        "disposition": "unresolved",
+        "page_index": 7,
+        "position": 16,
+        "published_date": "2025-04-03",
+        "source_ref": {
+          "raw_sha256": "sha256:e7fe02a62f0ea6fd342a0468c64748a6370b657b0abac3d3cb1a7020d0bc104e",
+          "source_id": "szse-general-notice-index-page-07"
+        },
+        "title": "关于就《深圳证券交易所证券交易业务指引第3号——深股通投资者程序化交易报告（征求意见稿）》公开征求意见的通知",
+        "url": "https://www.szse.cn/disclosure/notice/general/t20250403_612771.html"
+      },
+      {
+        "candidate_id": "szse-general-007-17",
+        "disposition": "unresolved",
+        "page_index": 7,
+        "position": 17,
+        "published_date": "2025-03-28",
+        "source_ref": {
+          "raw_sha256": "sha256:e7fe02a62f0ea6fd342a0468c64748a6370b657b0abac3d3cb1a7020d0bc104e",
+          "source_id": "szse-general-notice-index-page-07"
+        },
+        "title": "深圳证券交易所《纪律处分事先告知书》送达公告",
+        "url": "https://www.szse.cn/disclosure/notice/general/t20250328_612634.html"
+      },
+      {
+        "candidate_id": "szse-general-007-18",
+        "disposition": "unresolved",
+        "page_index": 7,
+        "position": 18,
+        "published_date": "2025-03-27",
+        "source_ref": {
+          "raw_sha256": "sha256:e7fe02a62f0ea6fd342a0468c64748a6370b657b0abac3d3cb1a7020d0bc104e",
+          "source_id": "szse-general-notice-index-page-07"
+        },
+        "title": "关于2025年清明节期间深港通下的港股通交易日安排的通知",
+        "url": "https://www.szse.cn/disclosure/notice/general/t20250327_612549.html"
+      },
+      {
+        "candidate_id": "szse-general-007-19",
+        "disposition": "unresolved",
+        "page_index": 7,
+        "position": 19,
+        "published_date": "2025-03-27",
+        "source_ref": {
+          "raw_sha256": "sha256:e7fe02a62f0ea6fd342a0468c64748a6370b657b0abac3d3cb1a7020d0bc104e",
+          "source_id": "szse-general-notice-index-page-07"
+        },
+        "title": "关于深港通下的港股通标的证券名单调整的公告",
+        "url": "https://www.szse.cn/disclosure/notice/general/t20250327_612551.html"
+      },
+      {
+        "candidate_id": "szse-general-008-00",
+        "disposition": "unresolved",
+        "page_index": 8,
+        "position": 0,
+        "published_date": "2025-03-27",
+        "source_ref": {
+          "raw_sha256": "sha256:c1c55476e1996ad908167fd5e79ead94b470a7358f9d38979247615011fee089",
+          "source_id": "szse-general-notice-index-page-08"
+        },
+        "title": "关于2025年清明节休市安排的通知",
+        "url": "https://www.szse.cn/disclosure/notice/general/t20250327_612548.html"
+      },
+      {
+        "candidate_id": "szse-general-008-01",
+        "disposition": "unresolved",
+        "page_index": 8,
+        "position": 1,
+        "published_date": "2025-03-26",
+        "source_ref": {
+          "raw_sha256": "sha256:c1c55476e1996ad908167fd5e79ead94b470a7358f9d38979247615011fee089",
+          "source_id": "szse-general-notice-index-page-08"
+        },
+        "title": "深圳证券交易所《纪律处分事先告知书》送达公告",
+        "url": "https://www.szse.cn/disclosure/notice/general/t20250326_612545.html"
+      },
+      {
+        "candidate_id": "szse-general-008-02",
+        "disposition": "unresolved",
+        "page_index": 8,
+        "position": 2,
+        "published_date": "2025-03-26",
+        "source_ref": {
+          "raw_sha256": "sha256:c1c55476e1996ad908167fd5e79ead94b470a7358f9d38979247615011fee089",
+          "source_id": "szse-general-notice-index-page-08"
+        },
+        "title": "深圳证券交易所《纪律处分事先告知书》送达公告",
+        "url": "https://www.szse.cn/disclosure/notice/general/t20250326_612544.html"
+      },
+      {
+        "candidate_id": "szse-general-008-03",
+        "disposition": "unresolved",
+        "page_index": 8,
+        "position": 3,
+        "published_date": "2025-03-10",
+        "source_ref": {
+          "raw_sha256": "sha256:c1c55476e1996ad908167fd5e79ead94b470a7358f9d38979247615011fee089",
+          "source_id": "szse-general-notice-index-page-08"
+        },
+        "title": "关于深港通下的港股通标的证券名单调整的公告",
+        "url": "https://www.szse.cn/disclosure/notice/general/t20250310_612239.html"
+      },
+      {
+        "candidate_id": "szse-general-008-04",
+        "disposition": "unresolved",
+        "page_index": 8,
+        "position": 4,
+        "published_date": "2025-03-06",
+        "source_ref": {
+          "raw_sha256": "sha256:c1c55476e1996ad908167fd5e79ead94b470a7358f9d38979247615011fee089",
+          "source_id": "szse-general-notice-index-page-08"
+        },
+        "title": "关于深港通下的港股通标的证券名单调整的公告",
+        "url": "https://www.szse.cn/disclosure/notice/general/t20250306_612206.html"
+      },
+      {
+        "candidate_id": "szse-general-008-05",
+        "disposition": "unresolved",
+        "page_index": 8,
+        "position": 5,
+        "published_date": "2025-03-04",
+        "source_ref": {
+          "raw_sha256": "sha256:c1c55476e1996ad908167fd5e79ead94b470a7358f9d38979247615011fee089",
+          "source_id": "szse-general-notice-index-page-08"
+        },
+        "title": "关于深港通下的港股通标的证券名单调整的公告",
+        "url": "https://www.szse.cn/disclosure/notice/general/t20250304_612166.html"
+      },
+      {
+        "candidate_id": "szse-general-008-06",
+        "disposition": "unresolved",
+        "page_index": 8,
+        "position": 6,
+        "published_date": "2025-02-25",
+        "source_ref": {
+          "raw_sha256": "sha256:c1c55476e1996ad908167fd5e79ead94b470a7358f9d38979247615011fee089",
+          "source_id": "szse-general-notice-index-page-08"
+        },
+        "title": "深圳证券交易所《纪律处分事先告知书》送达公告",
+        "url": "https://www.szse.cn/disclosure/notice/general/t20250225_612032.html"
+      },
+      {
+        "candidate_id": "szse-general-008-07",
+        "disposition": "unresolved",
+        "page_index": 8,
+        "position": 7,
+        "published_date": "2025-02-25",
+        "source_ref": {
+          "raw_sha256": "sha256:c1c55476e1996ad908167fd5e79ead94b470a7358f9d38979247615011fee089",
+          "source_id": "szse-general-notice-index-page-08"
+        },
+        "title": "深圳证券交易所《纪律处分事先告知书》送达公告",
+        "url": "https://www.szse.cn/disclosure/notice/general/t20250225_612031.html"
+      },
+      {
+        "candidate_id": "szse-general-008-08",
+        "disposition": "unresolved",
+        "page_index": 8,
+        "position": 8,
+        "published_date": "2025-02-21",
+        "source_ref": {
+          "raw_sha256": "sha256:c1c55476e1996ad908167fd5e79ead94b470a7358f9d38979247615011fee089",
+          "source_id": "szse-general-notice-index-page-08"
+        },
+        "title": "关于深港通下的港股通标的证券名单调整的公告",
+        "url": "https://www.szse.cn/disclosure/notice/general/t20250221_611976.html"
+      },
+      {
+        "candidate_id": "szse-general-008-09",
+        "disposition": "unresolved",
+        "page_index": 8,
+        "position": 9,
+        "published_date": "2025-02-20",
+        "source_ref": {
+          "raw_sha256": "sha256:c1c55476e1996ad908167fd5e79ead94b470a7358f9d38979247615011fee089",
+          "source_id": "szse-general-notice-index-page-08"
+        },
+        "title": "关于深港通下的港股通标的证券名单调整的公告",
+        "url": "https://www.szse.cn/disclosure/notice/general/t20250220_611959.html"
+      },
+      {
+        "candidate_id": "szse-general-008-10",
+        "disposition": "unresolved",
+        "page_index": 8,
+        "position": 10,
+        "published_date": "2025-02-14",
+        "source_ref": {
+          "raw_sha256": "sha256:c1c55476e1996ad908167fd5e79ead94b470a7358f9d38979247615011fee089",
+          "source_id": "szse-general-notice-index-page-08"
+        },
+        "title": "深圳证券交易所《纪律处分事先告知书》送达公告",
+        "url": "https://www.szse.cn/disclosure/notice/general/t20250214_611887.html"
+      },
+      {
+        "candidate_id": "szse-general-008-11",
+        "disposition": "unresolved",
+        "page_index": 8,
+        "position": 11,
+        "published_date": "2025-01-23",
+        "source_ref": {
+          "raw_sha256": "sha256:c1c55476e1996ad908167fd5e79ead94b470a7358f9d38979247615011fee089",
+          "source_id": "szse-general-notice-index-page-08"
+        },
+        "title": "关于2025年春节休市安排的通知",
+        "url": "https://www.szse.cn/disclosure/notice/general/t20250123_611741.html"
+      },
+      {
+        "candidate_id": "szse-general-008-12",
+        "disposition": "unresolved",
+        "page_index": 8,
+        "position": 12,
+        "published_date": "2025-01-23",
+        "source_ref": {
+          "raw_sha256": "sha256:c1c55476e1996ad908167fd5e79ead94b470a7358f9d38979247615011fee089",
+          "source_id": "szse-general-notice-index-page-08"
+        },
+        "title": "关于2025年春节期间深港通下的港股通交易日安排的通知",
+        "url": "https://www.szse.cn/disclosure/notice/general/t20250123_611740.html"
+      },
+      {
+        "candidate_id": "szse-general-008-13",
+        "disposition": "unresolved",
+        "page_index": 8,
+        "position": 13,
+        "published_date": "2025-01-23",
+        "source_ref": {
+          "raw_sha256": "sha256:c1c55476e1996ad908167fd5e79ead94b470a7358f9d38979247615011fee089",
+          "source_id": "szse-general-notice-index-page-08"
+        },
+        "title": "关于深港通下的港股通标的证券名单调整的公告",
+        "url": "https://www.szse.cn/disclosure/notice/general/t20250123_611725.html"
+      },
+      {
+        "candidate_id": "szse-general-008-14",
+        "disposition": "unresolved",
+        "page_index": 8,
+        "position": 14,
+        "published_date": "2025-01-22",
+        "source_ref": {
+          "raw_sha256": "sha256:c1c55476e1996ad908167fd5e79ead94b470a7358f9d38979247615011fee089",
+          "source_id": "szse-general-notice-index-page-08"
+        },
+        "title": "深圳证券交易所《纪律处分事先告知书》送达公告",
+        "url": "https://www.szse.cn/disclosure/notice/general/t20250122_611692.html"
+      },
+      {
+        "candidate_id": "szse-general-008-15",
+        "disposition": "unresolved",
+        "page_index": 8,
+        "position": 15,
+        "published_date": "2025-01-03",
+        "source_ref": {
+          "raw_sha256": "sha256:c1c55476e1996ad908167fd5e79ead94b470a7358f9d38979247615011fee089",
+          "source_id": "szse-general-notice-index-page-08"
+        },
+        "title": "关于法巴证券（中国）有限公司成为深圳证券交易所会员的公告",
+        "url": "https://www.szse.cn/disclosure/notice/general/t20250103_611412.html"
+      },
+      {
+        "candidate_id": "szse-general-008-16",
+        "disposition": "unresolved",
+        "page_index": 8,
+        "position": 16,
+        "published_date": "2024-12-31",
+        "source_ref": {
+          "raw_sha256": "sha256:c1c55476e1996ad908167fd5e79ead94b470a7358f9d38979247615011fee089",
+          "source_id": "szse-general-notice-index-page-08"
+        },
+        "title": "2024年深圳证券市场概况",
+        "url": "https://www.szse.cn/disclosure/notice/general/P020241231627621196204.pdf"
+      },
+      {
+        "candidate_id": "szse-general-008-17",
+        "disposition": "unresolved",
+        "page_index": 8,
+        "position": 17,
+        "published_date": "2024-12-27",
+        "source_ref": {
+          "raw_sha256": "sha256:c1c55476e1996ad908167fd5e79ead94b470a7358f9d38979247615011fee089",
+          "source_id": "szse-general-notice-index-page-08"
+        },
+        "title": "关于减免2025年度相关费用的通知",
+        "url": "https://www.szse.cn/disclosure/notice/general/t20241227_611344.html"
+      },
+      {
+        "candidate_id": "szse-general-008-18",
+        "disposition": "unresolved",
+        "page_index": 8,
+        "position": 18,
+        "published_date": "2024-12-23",
+        "source_ref": {
+          "raw_sha256": "sha256:c1c55476e1996ad908167fd5e79ead94b470a7358f9d38979247615011fee089",
+          "source_id": "szse-general-notice-index-page-08"
+        },
+        "title": "关于2025年部分节假日休市安排的通知",
+        "url": "https://www.szse.cn/disclosure/notice/general/t20241223_611283.html"
+      },
+      {
+        "candidate_id": "szse-general-008-19",
+        "disposition": "unresolved",
+        "page_index": 8,
+        "position": 19,
+        "published_date": "2024-12-23",
+        "source_ref": {
+          "raw_sha256": "sha256:c1c55476e1996ad908167fd5e79ead94b470a7358f9d38979247615011fee089",
+          "source_id": "szse-general-notice-index-page-08"
+        },
+        "title": "关于2024年底及2025年深港通下的港股通交易日有关安排的通知",
+        "url": "https://www.szse.cn/disclosure/notice/general/t20241223_611282.html"
+      },
+      {
+        "candidate_id": "szse-general-009-00",
+        "disposition": "unresolved",
+        "page_index": 9,
+        "position": 0,
+        "published_date": "2024-12-23",
+        "source_ref": {
+          "raw_sha256": "sha256:29d7d3ca59923687b7c5f1f67553f34b2e0e3c692f90bd0531a218229c07f461",
+          "source_id": "szse-general-notice-index-page-09"
+        },
+        "title": "关于深港通下的港股通标的证券名单调整的公告",
+        "url": "https://www.szse.cn/disclosure/notice/general/t20241220_611257.html"
+      },
+      {
+        "candidate_id": "szse-general-009-01",
+        "disposition": "unresolved",
+        "page_index": 9,
+        "position": 1,
+        "published_date": "2024-12-19",
+        "source_ref": {
+          "raw_sha256": "sha256:29d7d3ca59923687b7c5f1f67553f34b2e0e3c692f90bd0531a218229c07f461",
+          "source_id": "szse-general-notice-index-page-09"
+        },
+        "title": "关于2024年香港圣诞节期间深港通下的港股通交易日安排的通知",
+        "url": "https://www.szse.cn/disclosure/notice/general/t20241219_611218.html"
+      },
+      {
+        "candidate_id": "szse-general-009-02",
+        "disposition": "unresolved",
+        "page_index": 9,
+        "position": 2,
+        "published_date": "2024-12-09",
+        "source_ref": {
+          "raw_sha256": "sha256:29d7d3ca59923687b7c5f1f67553f34b2e0e3c692f90bd0531a218229c07f461",
+          "source_id": "szse-general-notice-index-page-09"
+        },
+        "title": "关于深港通下的港股通标的证券名单调整的公告",
+        "url": "https://www.szse.cn/disclosure/notice/general/t20241209_610868.html"
+      },
+      {
+        "candidate_id": "szse-general-009-03",
+        "disposition": "unresolved",
+        "page_index": 9,
+        "position": 3,
+        "published_date": "2024-12-02",
+        "source_ref": {
+          "raw_sha256": "sha256:29d7d3ca59923687b7c5f1f67553f34b2e0e3c692f90bd0531a218229c07f461",
+          "source_id": "szse-general-notice-index-page-09"
+        },
+        "title": "关于调整深证成指、创业板指、深证100等指数样本股的公告",
+        "url": "https://www.szse.cn/disclosure/notice/general/t20241202_610741.html"
+      },
+      {
+        "candidate_id": "szse-general-009-04",
+        "disposition": "unresolved",
+        "page_index": 9,
+        "position": 4,
+        "published_date": "2024-11-26",
+        "source_ref": {
+          "raw_sha256": "sha256:29d7d3ca59923687b7c5f1f67553f34b2e0e3c692f90bd0531a218229c07f461",
+          "source_id": "szse-general-notice-index-page-09"
+        },
+        "title": "深圳证券交易所《纪律处分事先告知书》送达公告",
+        "url": "https://www.szse.cn/disclosure/notice/general/t20241126_610641.html"
+      },
+      {
+        "candidate_id": "szse-general-009-05",
+        "disposition": "unresolved",
+        "page_index": 9,
+        "position": 5,
+        "published_date": "2024-11-25",
+        "source_ref": {
+          "raw_sha256": "sha256:29d7d3ca59923687b7c5f1f67553f34b2e0e3c692f90bd0531a218229c07f461",
+          "source_id": "szse-general-notice-index-page-09"
+        },
+        "title": "关于深港通下的港股通标的证券名单调整的公告",
+        "url": "https://www.szse.cn/disclosure/notice/general/t20241125_610619.html"
+      },
+      {
+        "candidate_id": "szse-general-009-06",
+        "disposition": "unresolved",
+        "page_index": 9,
+        "position": 6,
+        "published_date": "2024-11-22",
+        "source_ref": {
+          "raw_sha256": "sha256:29d7d3ca59923687b7c5f1f67553f34b2e0e3c692f90bd0531a218229c07f461",
+          "source_id": "szse-general-notice-index-page-09"
+        },
+        "title": "深圳证券交易所《纪律处分事先告知书》送达公告",
+        "url": "https://www.szse.cn/disclosure/notice/general/t20241122_610611.html"
+      },
+      {
+        "candidate_id": "szse-general-009-07",
+        "disposition": "unresolved",
+        "page_index": 9,
+        "position": 7,
+        "published_date": "2024-11-08",
+        "source_ref": {
+          "raw_sha256": "sha256:29d7d3ca59923687b7c5f1f67553f34b2e0e3c692f90bd0531a218229c07f461",
+          "source_id": "szse-general-notice-index-page-09"
+        },
+        "title": "关于终止东方证券承销保荐有限公司深圳证券交易所会员资格的公告",
+        "url": "https://www.szse.cn/disclosure/notice/general/t20241108_610422.html"
+      },
+      {
+        "candidate_id": "szse-general-009-08",
+        "disposition": "unresolved",
+        "page_index": 9,
+        "position": 8,
+        "published_date": "2024-11-01",
+        "source_ref": {
+          "raw_sha256": "sha256:29d7d3ca59923687b7c5f1f67553f34b2e0e3c692f90bd0531a218229c07f461",
+          "source_id": "szse-general-notice-index-page-09"
+        },
+        "title": "深圳证券交易所《纪律处分事先告知书》送达公告",
+        "url": "https://www.szse.cn/disclosure/notice/general/t20241101_610352.html"
+      },
+      {
+        "candidate_id": "szse-general-009-09",
+        "disposition": "unresolved",
+        "page_index": 9,
+        "position": 9,
+        "published_date": "2024-10-14",
+        "source_ref": {
+          "raw_sha256": "sha256:29d7d3ca59923687b7c5f1f67553f34b2e0e3c692f90bd0531a218229c07f461",
+          "source_id": "szse-general-notice-index-page-09"
+        },
+        "title": "关于深港通下的港股通标的证券名单调整的公告",
+        "url": "https://www.szse.cn/disclosure/notice/general/t20241014_609962.html"
+      },
+      {
+        "candidate_id": "szse-general-009-10",
+        "disposition": "unresolved",
+        "page_index": 9,
+        "position": 10,
+        "published_date": "2024-10-11",
+        "source_ref": {
+          "raw_sha256": "sha256:29d7d3ca59923687b7c5f1f67553f34b2e0e3c692f90bd0531a218229c07f461",
+          "source_id": "szse-general-notice-index-page-09"
+        },
+        "title": "关于深市上市公司2023-2024年度信息披露工作评价结果的通报",
+        "url": "https://www.szse.cn/disclosure/notice/general/t20241011_609932.html"
+      },
+      {
+        "candidate_id": "szse-general-009-11",
+        "disposition": "unresolved",
+        "page_index": 9,
+        "position": 11,
+        "published_date": "2024-10-09",
+        "source_ref": {
+          "raw_sha256": "sha256:29d7d3ca59923687b7c5f1f67553f34b2e0e3c692f90bd0531a218229c07f461",
+          "source_id": "szse-general-notice-index-page-09"
+        },
+        "title": "关于深港通下的港股通标的证券名单调整的公告",
+        "url": "https://www.szse.cn/disclosure/notice/general/t20241009_609801.html"
+      },
+      {
+        "candidate_id": "szse-general-009-12",
+        "disposition": "unresolved",
+        "page_index": 9,
+        "position": 12,
+        "published_date": "2024-09-26",
+        "source_ref": {
+          "raw_sha256": "sha256:29d7d3ca59923687b7c5f1f67553f34b2e0e3c692f90bd0531a218229c07f461",
+          "source_id": "szse-general-notice-index-page-09"
+        },
+        "title": "关于2024年香港重阳节假期深港通下的港股通交易日安排的通知",
+        "url": "https://www.szse.cn/disclosure/notice/general/t20240926_609680.html"
+      },
+      {
+        "candidate_id": "szse-general-009-13",
+        "disposition": "unresolved",
+        "page_index": 9,
+        "position": 13,
+        "published_date": "2024-09-24",
+        "source_ref": {
+          "raw_sha256": "sha256:29d7d3ca59923687b7c5f1f67553f34b2e0e3c692f90bd0531a218229c07f461",
+          "source_id": "szse-general-notice-index-page-09"
+        },
+        "title": "关于就修订《深圳证券交易所上市公司重大资产重组审核规则》公开征求意见的通知",
+        "url": "https://www.szse.cn/disclosure/notice/general/t20240924_609549.html"
+      },
+      {
+        "candidate_id": "szse-general-009-14",
+        "disposition": "unresolved",
+        "page_index": 9,
+        "position": 14,
+        "published_date": "2024-09-20",
+        "source_ref": {
+          "raw_sha256": "sha256:29d7d3ca59923687b7c5f1f67553f34b2e0e3c692f90bd0531a218229c07f461",
+          "source_id": "szse-general-notice-index-page-09"
+        },
+        "title": "深圳证券交易所《纪律处分事先告知书》送达公告",
+        "url": "https://www.szse.cn/disclosure/notice/general/t20240920_609450.html"
+      },
+      {
+        "candidate_id": "szse-general-009-15",
+        "disposition": "unresolved",
+        "page_index": 9,
+        "position": 15,
+        "published_date": "2024-09-19",
+        "source_ref": {
+          "raw_sha256": "sha256:29d7d3ca59923687b7c5f1f67553f34b2e0e3c692f90bd0531a218229c07f461",
+          "source_id": "szse-general-notice-index-page-09"
+        },
+        "title": "关于2024年国庆节期间深港通下的港股通交易日安排的通知",
+        "url": "https://www.szse.cn/disclosure/notice/general/t20240919_609421.html"
+      },
+      {
+        "candidate_id": "szse-general-009-16",
+        "disposition": "unresolved",
+        "page_index": 9,
+        "position": 16,
+        "published_date": "2024-09-19",
+        "source_ref": {
+          "raw_sha256": "sha256:29d7d3ca59923687b7c5f1f67553f34b2e0e3c692f90bd0531a218229c07f461",
+          "source_id": "szse-general-notice-index-page-09"
+        },
+        "title": "关于2024年国庆节休市安排的通知",
+        "url": "https://www.szse.cn/disclosure/notice/general/t20240919_609420.html"
+      },
+      {
+        "candidate_id": "szse-general-009-17",
+        "disposition": "unresolved",
+        "page_index": 9,
+        "position": 17,
+        "published_date": "2024-09-19",
+        "source_ref": {
+          "raw_sha256": "sha256:29d7d3ca59923687b7c5f1f67553f34b2e0e3c692f90bd0531a218229c07f461",
+          "source_id": "szse-general-notice-index-page-09"
+        },
+        "title": "关于深港通下的港股通标的证券名单调整的公告",
+        "url": "https://www.szse.cn/disclosure/notice/general/t20240919_609414.html"
+      },
+      {
+        "candidate_id": "szse-general-009-18",
+        "disposition": "unresolved",
+        "page_index": 9,
+        "position": 18,
+        "published_date": "2024-09-09",
+        "source_ref": {
+          "raw_sha256": "sha256:29d7d3ca59923687b7c5f1f67553f34b2e0e3c692f90bd0531a218229c07f461",
+          "source_id": "szse-general-notice-index-page-09"
+        },
+        "title": "关于深港通下的港股通标的证券名单调整的公告",
+        "url": "https://www.szse.cn/disclosure/notice/general/t20240909_609288.html"
+      },
+      {
+        "candidate_id": "szse-general-009-19",
+        "disposition": "unresolved",
+        "page_index": 9,
+        "position": 19,
+        "published_date": "2024-09-06",
+        "source_ref": {
+          "raw_sha256": "sha256:29d7d3ca59923687b7c5f1f67553f34b2e0e3c692f90bd0531a218229c07f461",
+          "source_id": "szse-general-notice-index-page-09"
+        },
+        "title": "关于深港通下的港股通暂停交易的通知",
+        "url": "https://www.szse.cn/disclosure/notice/general/t20240906_609266.html"
+      },
+      {
+        "candidate_id": "szse-general-010-00",
+        "disposition": "unresolved",
+        "page_index": 10,
+        "position": 0,
+        "published_date": "2024-09-05",
+        "source_ref": {
+          "raw_sha256": "sha256:d6b35cd019453d562617c000d3fd10c0fb25514bec29024212d207c2b2af79f6",
+          "source_id": "szse-general-notice-index-page-10"
+        },
+        "title": "关于2024年中秋节休市安排的通知",
+        "url": "https://www.szse.cn/disclosure/notice/general/t20240905_609257.html"
+      },
+      {
+        "candidate_id": "szse-general-010-01",
+        "disposition": "unresolved",
+        "page_index": 10,
+        "position": 1,
+        "published_date": "2024-09-05",
+        "source_ref": {
+          "raw_sha256": "sha256:d6b35cd019453d562617c000d3fd10c0fb25514bec29024212d207c2b2af79f6",
+          "source_id": "szse-general-notice-index-page-10"
+        },
+        "title": "关于2024年中秋节期间深港通下的港股通交易日安排的通知",
+        "url": "https://www.szse.cn/disclosure/notice/general/t20240905_609256.html"
+      },
+      {
+        "candidate_id": "szse-general-010-02",
+        "disposition": "unresolved",
+        "page_index": 10,
+        "position": 2,
+        "published_date": "2024-09-02",
+        "source_ref": {
+          "raw_sha256": "sha256:d6b35cd019453d562617c000d3fd10c0fb25514bec29024212d207c2b2af79f6",
+          "source_id": "szse-general-notice-index-page-10"
+        },
+        "title": "关于深港通下的港股通标的证券名单调整的公告",
+        "url": "https://www.szse.cn/disclosure/notice/general/t20240902_609182.html"
+      },
+      {
+        "candidate_id": "szse-general-010-03",
+        "disposition": "unresolved",
+        "page_index": 10,
+        "position": 3,
+        "published_date": "2024-08-26",
+        "source_ref": {
+          "raw_sha256": "sha256:d6b35cd019453d562617c000d3fd10c0fb25514bec29024212d207c2b2af79f6",
+          "source_id": "szse-general-notice-index-page-10"
+        },
+        "title": "深圳证券交易所《纪律处分事先告知书》送达公告",
+        "url": "https://www.szse.cn/disclosure/notice/general/t20240826_608951.html"
+      },
+      {
+        "candidate_id": "szse-general-010-04",
+        "disposition": "unresolved",
+        "page_index": 10,
+        "position": 4,
+        "published_date": "2024-08-22",
+        "source_ref": {
+          "raw_sha256": "sha256:d6b35cd019453d562617c000d3fd10c0fb25514bec29024212d207c2b2af79f6",
+          "source_id": "szse-general-notice-index-page-10"
+        },
+        "title": "深圳证券交易所《纪律处分事先告知书》送达公告",
+        "url": "https://www.szse.cn/disclosure/notice/general/t20240822_608909.html"
+      },
+      {
+        "candidate_id": "szse-general-010-05",
+        "disposition": "unresolved",
+        "page_index": 10,
+        "position": 5,
+        "published_date": "2024-08-22",
+        "source_ref": {
+          "raw_sha256": "sha256:d6b35cd019453d562617c000d3fd10c0fb25514bec29024212d207c2b2af79f6",
+          "source_id": "szse-general-notice-index-page-10"
+        },
+        "title": "深圳证券交易所《纪律处分事先告知书》送达公告",
+        "url": "https://www.szse.cn/disclosure/notice/general/t20240822_608908.html"
+      },
+      {
+        "candidate_id": "szse-general-010-06",
+        "disposition": "unresolved",
+        "page_index": 10,
+        "position": 6,
+        "published_date": "2024-08-16",
+        "source_ref": {
+          "raw_sha256": "sha256:d6b35cd019453d562617c000d3fd10c0fb25514bec29024212d207c2b2af79f6",
+          "source_id": "szse-general-notice-index-page-10"
+        },
+        "title": "深圳证券交易所《纪律处分事先告知书》送达公告",
+        "url": "https://www.szse.cn/disclosure/notice/general/t20240816_608731.html"
+      },
+      {
+        "candidate_id": "szse-general-010-07",
+        "disposition": "unresolved",
+        "page_index": 10,
+        "position": 7,
+        "published_date": "2024-08-07",
+        "source_ref": {
+          "raw_sha256": "sha256:d6b35cd019453d562617c000d3fd10c0fb25514bec29024212d207c2b2af79f6",
+          "source_id": "szse-general-notice-index-page-10"
+        },
+        "title": "深圳证券交易所《纪律处分事先告知书》送达公告",
+        "url": "https://www.szse.cn/disclosure/notice/general/t20240807_608543.html"
+      },
+      {
+        "candidate_id": "szse-general-010-08",
+        "disposition": "unresolved",
+        "page_index": 10,
+        "position": 8,
+        "published_date": "2024-08-06",
+        "source_ref": {
+          "raw_sha256": "sha256:d6b35cd019453d562617c000d3fd10c0fb25514bec29024212d207c2b2af79f6",
+          "source_id": "szse-general-notice-index-page-10"
+        },
+        "title": "深圳证券交易所《纪律处分事先告知书》送达公告",
+        "url": "https://www.szse.cn/disclosure/notice/general/t20240806_608540.html"
+      },
+      {
+        "candidate_id": "szse-general-010-09",
+        "disposition": "unresolved",
+        "page_index": 10,
+        "position": 9,
+        "published_date": "2024-08-02",
+        "source_ref": {
+          "raw_sha256": "sha256:d6b35cd019453d562617c000d3fd10c0fb25514bec29024212d207c2b2af79f6",
+          "source_id": "szse-general-notice-index-page-10"
+        },
+        "title": "关于深港通下的港股通标的证券名单调整的公告",
+        "url": "https://www.szse.cn/disclosure/notice/general/t20240802_608438.html"
+      },
+      {
+        "candidate_id": "szse-general-010-10",
+        "disposition": "unresolved",
+        "page_index": 10,
+        "position": 10,
+        "published_date": "2024-07-31",
+        "source_ref": {
+          "raw_sha256": "sha256:d6b35cd019453d562617c000d3fd10c0fb25514bec29024212d207c2b2af79f6",
+          "source_id": "szse-general-notice-index-page-10"
+        },
+        "title": "深圳证券交易所《纪律处分事先告知书》送达公告",
+        "url": "https://www.szse.cn/disclosure/notice/general/t20240731_608419.html"
+      },
+      {
+        "candidate_id": "szse-general-010-11",
+        "disposition": "unresolved",
+        "page_index": 10,
+        "position": 11,
+        "published_date": "2024-07-26",
+        "source_ref": {
+          "raw_sha256": "sha256:d6b35cd019453d562617c000d3fd10c0fb25514bec29024212d207c2b2af79f6",
+          "source_id": "szse-general-notice-index-page-10"
+        },
+        "title": "关于启用地方政府债券、公司债券和资产支持证券新代码区间的通知",
+        "url": "https://www.szse.cn/disclosure/notice/general/t20240726_608352.html"
+      },
+      {
+        "candidate_id": "szse-general-010-12",
+        "disposition": "unresolved",
+        "page_index": 10,
+        "position": 12,
+        "published_date": "2024-07-15",
+        "source_ref": {
+          "raw_sha256": "sha256:d6b35cd019453d562617c000d3fd10c0fb25514bec29024212d207c2b2af79f6",
+          "source_id": "szse-general-notice-index-page-10"
+        },
+        "title": "深圳证券交易所《纪律处分事先告知书》送达公告",
+        "url": "https://www.szse.cn/disclosure/notice/general/t20240715_608194.html"
+      },
+      {
+        "candidate_id": "szse-general-010-13",
+        "disposition": "unresolved",
+        "page_index": 10,
+        "position": 13,
+        "published_date": "2024-07-15",
+        "source_ref": {
+          "raw_sha256": "sha256:d6b35cd019453d562617c000d3fd10c0fb25514bec29024212d207c2b2af79f6",
+          "source_id": "szse-general-notice-index-page-10"
+        },
+        "title": "深圳证券交易所《纪律处分事先告知书》送达公告",
+        "url": "https://www.szse.cn/disclosure/notice/general/t20240715_608193.html"
+      },
+      {
+        "candidate_id": "szse-general-010-14",
+        "disposition": "unresolved",
+        "page_index": 10,
+        "position": 14,
+        "published_date": "2024-07-12",
+        "source_ref": {
+          "raw_sha256": "sha256:d6b35cd019453d562617c000d3fd10c0fb25514bec29024212d207c2b2af79f6",
+          "source_id": "szse-general-notice-index-page-10"
+        },
+        "title": "关于深港通下的港股通ETF名单调整的公告",
+        "url": "https://www.szse.cn/disclosure/notice/general/t20240712_608181.html"
+      },
+      {
+        "candidate_id": "szse-general-010-15",
+        "disposition": "unresolved",
+        "page_index": 10,
+        "position": 15,
+        "published_date": "2024-07-11",
+        "source_ref": {
+          "raw_sha256": "sha256:d6b35cd019453d562617c000d3fd10c0fb25514bec29024212d207c2b2af79f6",
+          "source_id": "szse-general-notice-index-page-10"
+        },
+        "title": "深圳证券交易所《纪律处分事先告知书》送达公告",
+        "url": "https://www.szse.cn/disclosure/notice/general/t20240711_608138.html"
+      },
+      {
+        "candidate_id": "szse-general-010-16",
+        "disposition": "unresolved",
+        "page_index": 10,
+        "position": 16,
+        "published_date": "2024-07-10",
+        "source_ref": {
+          "raw_sha256": "sha256:d6b35cd019453d562617c000d3fd10c0fb25514bec29024212d207c2b2af79f6",
+          "source_id": "szse-general-notice-index-page-10"
+        },
+        "title": "关于调整融券交易保证金比例的通知",
+        "url": "https://www.szse.cn/disclosure/notice/general/t20240710_608116.html"
+      },
+      {
+        "candidate_id": "szse-general-010-17",
+        "disposition": "unresolved",
+        "page_index": 10,
+        "position": 17,
+        "published_date": "2024-07-10",
+        "source_ref": {
+          "raw_sha256": "sha256:d6b35cd019453d562617c000d3fd10c0fb25514bec29024212d207c2b2af79f6",
+          "source_id": "szse-general-notice-index-page-10"
+        },
+        "title": "关于深港通下的港股通标的证券名单调整的公告",
+        "url": "https://www.szse.cn/disclosure/notice/general/t20240710_608095.html"
+      },
+      {
+        "candidate_id": "szse-general-010-18",
+        "disposition": "unresolved",
+        "page_index": 10,
+        "position": 18,
+        "published_date": "2024-06-28",
+        "source_ref": {
+          "raw_sha256": "sha256:d6b35cd019453d562617c000d3fd10c0fb25514bec29024212d207c2b2af79f6",
+          "source_id": "szse-general-notice-index-page-10"
+        },
+        "title": "关于深港通下的港股通标的证券名单调整的公告",
+        "url": "https://www.szse.cn/disclosure/notice/general/t20240628_607928.html"
+      },
+      {
+        "candidate_id": "szse-general-010-19",
+        "disposition": "unresolved",
+        "page_index": 10,
+        "position": 19,
+        "published_date": "2024-06-21",
+        "source_ref": {
+          "raw_sha256": "sha256:d6b35cd019453d562617c000d3fd10c0fb25514bec29024212d207c2b2af79f6",
+          "source_id": "szse-general-notice-index-page-10"
+        },
+        "title": "关于深港通下的港股通标的证券名单调整的公告",
+        "url": "https://www.szse.cn/disclosure/notice/general/t20240621_607798.html"
+      },
+      {
+        "candidate_id": "szse-general-011-00",
+        "disposition": "unresolved",
+        "page_index": 11,
+        "position": 0,
+        "published_date": "2024-06-20",
+        "source_ref": {
+          "raw_sha256": "sha256:db6bceb21e51c9034fa243d2c8a3f54a767bbb5ffd28e191c15d8c5cdf0bc602",
+          "source_id": "szse-general-notice-index-page-11"
+        },
+        "title": "关于2024年香港特别行政区成立纪念日假期深港通下的港股通交易日安排的通知",
+        "url": "https://www.szse.cn/disclosure/notice/general/t20240620_607790.html"
+      },
+      {
+        "candidate_id": "szse-general-011-01",
+        "disposition": "unresolved",
+        "page_index": 11,
+        "position": 1,
+        "published_date": "2024-06-14",
+        "source_ref": {
+          "raw_sha256": "sha256:db6bceb21e51c9034fa243d2c8a3f54a767bbb5ffd28e191c15d8c5cdf0bc602",
+          "source_id": "szse-general-notice-index-page-11"
+        },
+        "title": "深圳证券交易所《纪律处分事先告知书》送达公告",
+        "url": "https://www.szse.cn/disclosure/notice/general/t20240614_607684.html"
+      },
+      {
+        "candidate_id": "szse-general-011-02",
+        "disposition": "unresolved",
+        "page_index": 11,
+        "position": 2,
+        "published_date": "2024-06-11",
+        "source_ref": {
+          "raw_sha256": "sha256:db6bceb21e51c9034fa243d2c8a3f54a767bbb5ffd28e191c15d8c5cdf0bc602",
+          "source_id": "szse-general-notice-index-page-11"
+        },
+        "title": "关于深港通下的港股通标的证券名单调整的公告",
+        "url": "https://www.szse.cn/disclosure/notice/general/t20240611_607641.html"
+      },
+      {
+        "candidate_id": "szse-general-011-03",
+        "disposition": "unresolved",
+        "page_index": 11,
+        "position": 3,
+        "published_date": "2024-06-07",
+        "source_ref": {
+          "raw_sha256": "sha256:db6bceb21e51c9034fa243d2c8a3f54a767bbb5ffd28e191c15d8c5cdf0bc602",
+          "source_id": "szse-general-notice-index-page-11"
+        },
+        "title": "关于就《深圳证券交易所程序化交易管理实施细则（征求意见稿）》公开征求意见的通知",
+        "url": "https://www.szse.cn/disclosure/notice/general/t20240607_607634.html"
+      },
+      {
+        "candidate_id": "szse-general-011-04",
+        "disposition": "unresolved",
+        "page_index": 11,
+        "position": 4,
+        "published_date": "2024-06-04",
+        "source_ref": {
+          "raw_sha256": "sha256:db6bceb21e51c9034fa243d2c8a3f54a767bbb5ffd28e191c15d8c5cdf0bc602",
+          "source_id": "szse-general-notice-index-page-11"
+        },
+        "title": "关于深港通下的港股通标的证券名单调整的公告",
+        "url": "https://www.szse.cn/disclosure/notice/general/t20240604_607589.html"
+      },
+      {
+        "candidate_id": "szse-general-011-05",
+        "disposition": "unresolved",
+        "page_index": 11,
+        "position": 5,
+        "published_date": "2024-06-03",
+        "source_ref": {
+          "raw_sha256": "sha256:db6bceb21e51c9034fa243d2c8a3f54a767bbb5ffd28e191c15d8c5cdf0bc602",
+          "source_id": "szse-general-notice-index-page-11"
+        },
+        "title": "关于调整深证成指、创业板指、深证100等指数样本股的公告",
+        "url": "https://www.szse.cn/disclosure/notice/general/t20240531_607513.html"
+      },
+      {
+        "candidate_id": "szse-general-011-06",
+        "disposition": "unresolved",
+        "page_index": 11,
+        "position": 6,
+        "published_date": "2024-05-30",
+        "source_ref": {
+          "raw_sha256": "sha256:db6bceb21e51c9034fa243d2c8a3f54a767bbb5ffd28e191c15d8c5cdf0bc602",
+          "source_id": "szse-general-notice-index-page-11"
+        },
+        "title": "关于2024年端午节假期深港通下的港股通交易日安排的通知",
+        "url": "https://www.szse.cn/disclosure/notice/general/t20240530_607481.html"
+      },
+      {
+        "candidate_id": "szse-general-011-07",
+        "disposition": "unresolved",
+        "page_index": 11,
+        "position": 7,
+        "published_date": "2024-05-30",
+        "source_ref": {
+          "raw_sha256": "sha256:db6bceb21e51c9034fa243d2c8a3f54a767bbb5ffd28e191c15d8c5cdf0bc602",
+          "source_id": "szse-general-notice-index-page-11"
+        },
+        "title": "关于2024年端午节休市安排的通知",
+        "url": "https://www.szse.cn/disclosure/notice/general/t20240530_607480.html"
+      },
+      {
+        "candidate_id": "szse-general-011-08",
+        "disposition": "unresolved",
+        "page_index": 11,
+        "position": 8,
+        "published_date": "2024-05-29",
+        "source_ref": {
+          "raw_sha256": "sha256:db6bceb21e51c9034fa243d2c8a3f54a767bbb5ffd28e191c15d8c5cdf0bc602",
+          "source_id": "szse-general-notice-index-page-11"
+        },
+        "title": "关于深港通下的港股通标的证券名单调整的公告",
+        "url": "https://www.szse.cn/disclosure/notice/general/t20240529_607408.html"
+      },
+      {
+        "candidate_id": "szse-general-011-09",
+        "disposition": "unresolved",
+        "page_index": 11,
+        "position": 9,
+        "published_date": "2024-05-13",
+        "source_ref": {
+          "raw_sha256": "sha256:db6bceb21e51c9034fa243d2c8a3f54a767bbb5ffd28e191c15d8c5cdf0bc602",
+          "source_id": "szse-general-notice-index-page-11"
+        },
+        "title": "深圳证券交易所《纪律处分事先告知书》送达公告",
+        "url": "https://www.szse.cn/disclosure/notice/general/t20240513_607206.html"
+      },
+      {
+        "candidate_id": "szse-general-011-10",
+        "disposition": "unresolved",
+        "page_index": 11,
+        "position": 10,
+        "published_date": "2024-05-09",
+        "source_ref": {
+          "raw_sha256": "sha256:db6bceb21e51c9034fa243d2c8a3f54a767bbb5ffd28e191c15d8c5cdf0bc602",
+          "source_id": "szse-general-notice-index-page-11"
+        },
+        "title": "关于2024年香港佛诞日假期深港通下的港股通交易日安排的通知",
+        "url": "https://www.szse.cn/disclosure/notice/general/t20240509_607154.html"
+      },
+      {
+        "candidate_id": "szse-general-011-11",
+        "disposition": "unresolved",
+        "page_index": 11,
+        "position": 11,
+        "published_date": "2024-04-26",
+        "source_ref": {
+          "raw_sha256": "sha256:db6bceb21e51c9034fa243d2c8a3f54a767bbb5ffd28e191c15d8c5cdf0bc602",
+          "source_id": "szse-general-notice-index-page-11"
+        },
+        "title": "关于深港通下的港股通ETF名单调整的公告",
+        "url": "https://www.szse.cn/disclosure/notice/general/t20240426_607017.html"
+      },
+      {
+        "candidate_id": "szse-general-011-12",
+        "disposition": "unresolved",
+        "page_index": 11,
+        "position": 12,
+        "published_date": "2024-04-26",
+        "source_ref": {
+          "raw_sha256": "sha256:db6bceb21e51c9034fa243d2c8a3f54a767bbb5ffd28e191c15d8c5cdf0bc602",
+          "source_id": "szse-general-notice-index-page-11"
+        },
+        "title": "关于深港通下的港股通标的证券名单调整的公告",
+        "url": "https://www.szse.cn/disclosure/notice/general/t20240426_606991.html"
+      },
+      {
+        "candidate_id": "szse-general-011-13",
+        "disposition": "unresolved",
+        "page_index": 11,
+        "position": 13,
+        "published_date": "2024-04-25",
+        "source_ref": {
+          "raw_sha256": "sha256:db6bceb21e51c9034fa243d2c8a3f54a767bbb5ffd28e191c15d8c5cdf0bc602",
+          "source_id": "szse-general-notice-index-page-11"
+        },
+        "title": "关于2024年劳动节期间深港通下的港股通交易日安排的通知",
+        "url": "https://www.szse.cn/disclosure/notice/general/t20240425_606987.html"
+      },
+      {
+        "candidate_id": "szse-general-011-14",
+        "disposition": "unresolved",
+        "page_index": 11,
+        "position": 14,
+        "published_date": "2024-04-25",
+        "source_ref": {
+          "raw_sha256": "sha256:db6bceb21e51c9034fa243d2c8a3f54a767bbb5ffd28e191c15d8c5cdf0bc602",
+          "source_id": "szse-general-notice-index-page-11"
+        },
+        "title": "关于2024年劳动节休市安排的通知",
+        "url": "https://www.szse.cn/disclosure/notice/general/t20240425_606984.html"
+      },
+      {
+        "candidate_id": "szse-general-011-15",
+        "disposition": "unresolved",
+        "page_index": 11,
+        "position": 15,
+        "published_date": "2024-04-24",
+        "source_ref": {
+          "raw_sha256": "sha256:db6bceb21e51c9034fa243d2c8a3f54a767bbb5ffd28e191c15d8c5cdf0bc602",
+          "source_id": "szse-general-notice-index-page-11"
+        },
+        "title": "深圳证券交易所《纪律处分事先告知书》送达公告",
+        "url": "https://www.szse.cn/disclosure/notice/general/t20240424_606959.html"
+      },
+      {
+        "candidate_id": "szse-general-011-16",
+        "disposition": "unresolved",
+        "page_index": 11,
+        "position": 16,
+        "published_date": "2024-04-17",
+        "source_ref": {
+          "raw_sha256": "sha256:db6bceb21e51c9034fa243d2c8a3f54a767bbb5ffd28e191c15d8c5cdf0bc602",
+          "source_id": "szse-general-notice-index-page-11"
+        },
+        "title": "深圳证券交易所《纪律处分事先告知书》送达公告",
+        "url": "https://www.szse.cn/disclosure/notice/general/t20240417_606892.html"
+      },
+      {
+        "candidate_id": "szse-general-011-17",
+        "disposition": "unresolved",
+        "page_index": 11,
+        "position": 17,
+        "published_date": "2024-04-17",
+        "source_ref": {
+          "raw_sha256": "sha256:db6bceb21e51c9034fa243d2c8a3f54a767bbb5ffd28e191c15d8c5cdf0bc602",
+          "source_id": "szse-general-notice-index-page-11"
+        },
+        "title": "关于深港通下的港股通标的证券名单调整的公告",
+        "url": "https://www.szse.cn/disclosure/notice/general/t20240417_606886.html"
+      },
+      {
+        "candidate_id": "szse-general-011-18",
+        "disposition": "unresolved",
+        "page_index": 11,
+        "position": 18,
+        "published_date": "2024-04-12",
+        "source_ref": {
+          "raw_sha256": "sha256:db6bceb21e51c9034fa243d2c8a3f54a767bbb5ffd28e191c15d8c5cdf0bc602",
+          "source_id": "szse-general-notice-index-page-11"
+        },
+        "title": "关于就修订《深圳证券交易所股票发行上市审核规则》等6件规则公开征求意见的通知",
+        "url": "https://www.szse.cn/disclosure/notice/general/t20240412_606827.html"
+      },
+      {
+        "candidate_id": "szse-general-011-19",
+        "disposition": "unresolved",
+        "page_index": 11,
+        "position": 19,
+        "published_date": "2024-04-12",
+        "source_ref": {
+          "raw_sha256": "sha256:db6bceb21e51c9034fa243d2c8a3f54a767bbb5ffd28e191c15d8c5cdf0bc602",
+          "source_id": "szse-general-notice-index-page-11"
+        },
+        "title": "深圳证券交易所《纪律处分事先告知书》送达公告",
+        "url": "https://www.szse.cn/disclosure/notice/general/t20240412_606826.html"
+      },
+      {
+        "candidate_id": "szse-general-012-00",
+        "disposition": "unresolved",
+        "page_index": 12,
+        "position": 0,
+        "published_date": "2024-04-11",
+        "source_ref": {
+          "raw_sha256": "sha256:3c86bfef61a20a378ed5b4f1a7ae38aa17b3a02e96295f90871403faadc1d887",
+          "source_id": "szse-general-notice-index-page-12"
+        },
+        "title": "独立董事和审计委员会履职手册",
+        "url": "https://www.szse.cn/disclosure/notice/general/P020240411602069636872.docx"
+      },
+      {
+        "candidate_id": "szse-general-012-01",
+        "disposition": "unresolved",
+        "page_index": 12,
+        "position": 1,
+        "published_date": "2024-04-02",
+        "source_ref": {
+          "raw_sha256": "sha256:3c86bfef61a20a378ed5b4f1a7ae38aa17b3a02e96295f90871403faadc1d887",
+          "source_id": "szse-general-notice-index-page-12"
+        },
+        "title": "关于深港通下的港股通标的证券名单调整的公告",
+        "url": "https://www.szse.cn/disclosure/notice/general/t20240402_606570.html"
+      },
+      {
+        "candidate_id": "szse-general-012-02",
+        "disposition": "unresolved",
+        "page_index": 12,
+        "position": 2,
+        "published_date": "2024-03-25",
+        "source_ref": {
+          "raw_sha256": "sha256:3c86bfef61a20a378ed5b4f1a7ae38aa17b3a02e96295f90871403faadc1d887",
+          "source_id": "szse-general-notice-index-page-12"
+        },
+        "title": "深圳证券交易所《纪律处分事先告知书》送达公告",
+        "url": "https://www.szse.cn/disclosure/notice/general/t20240325_606442.html"
+      },
+      {
+        "candidate_id": "szse-general-012-03",
+        "disposition": "unresolved",
+        "page_index": 12,
+        "position": 3,
+        "published_date": "2024-03-21",
+        "source_ref": {
+          "raw_sha256": "sha256:3c86bfef61a20a378ed5b4f1a7ae38aa17b3a02e96295f90871403faadc1d887",
+          "source_id": "szse-general-notice-index-page-12"
+        },
+        "title": "关于2024年香港耶稣受难节、复活节和清明节深港通下的港股通交易日安排的通知",
+        "url": "https://www.szse.cn/disclosure/notice/general/t20240321_606397.html"
+      },
+      {
+        "candidate_id": "szse-general-012-04",
+        "disposition": "unresolved",
+        "page_index": 12,
+        "position": 4,
+        "published_date": "2024-03-21",
+        "source_ref": {
+          "raw_sha256": "sha256:3c86bfef61a20a378ed5b4f1a7ae38aa17b3a02e96295f90871403faadc1d887",
+          "source_id": "szse-general-notice-index-page-12"
+        },
+        "title": "关于2024年清明节休市安排的通知",
+        "url": "https://www.szse.cn/disclosure/notice/general/t20240321_606396.html"
+      },
+      {
+        "candidate_id": "szse-general-012-05",
+        "disposition": "unresolved",
+        "page_index": 12,
+        "position": 5,
+        "published_date": "2024-03-19",
+        "source_ref": {
+          "raw_sha256": "sha256:3c86bfef61a20a378ed5b4f1a7ae38aa17b3a02e96295f90871403faadc1d887",
+          "source_id": "szse-general-notice-index-page-12"
+        },
+        "title": "深圳证券交易所《纪律处分事先告知书》送达公告",
+        "url": "https://www.szse.cn/disclosure/notice/general/t20240319_606353.html"
+      },
+      {
+        "candidate_id": "szse-general-012-06",
+        "disposition": "unresolved",
+        "page_index": 12,
+        "position": 6,
+        "published_date": "2024-03-19",
+        "source_ref": {
+          "raw_sha256": "sha256:3c86bfef61a20a378ed5b4f1a7ae38aa17b3a02e96295f90871403faadc1d887",
+          "source_id": "szse-general-notice-index-page-12"
+        },
+        "title": "深圳证券交易所《纪律处分事先告知书》送达公告",
+        "url": "https://www.szse.cn/disclosure/notice/general/t20240319_606351.html"
+      },
+      {
+        "candidate_id": "szse-general-012-07",
+        "disposition": "unresolved",
+        "page_index": 12,
+        "position": 7,
+        "published_date": "2024-03-04",
+        "source_ref": {
+          "raw_sha256": "sha256:3c86bfef61a20a378ed5b4f1a7ae38aa17b3a02e96295f90871403faadc1d887",
+          "source_id": "szse-general-notice-index-page-12"
+        },
+        "title": "关于深港通下的港股通标的证券名单调整的公告",
+        "url": "https://www.szse.cn/disclosure/notice/general/t20240304_606195.html"
+      },
+      {
+        "candidate_id": "szse-general-012-08",
+        "disposition": "unresolved",
+        "page_index": 12,
+        "position": 8,
+        "published_date": "2024-02-21",
+        "source_ref": {
+          "raw_sha256": "sha256:3c86bfef61a20a378ed5b4f1a7ae38aa17b3a02e96295f90871403faadc1d887",
+          "source_id": "szse-general-notice-index-page-12"
+        },
+        "title": "关于深港通下的港股通标的证券名单调整的公告",
+        "url": "https://www.szse.cn/disclosure/notice/general/t20240221_606078.html"
+      },
+      {
+        "candidate_id": "szse-general-012-09",
+        "disposition": "unresolved",
+        "page_index": 12,
+        "position": 9,
+        "published_date": "2024-02-01",
+        "source_ref": {
+          "raw_sha256": "sha256:3c86bfef61a20a378ed5b4f1a7ae38aa17b3a02e96295f90871403faadc1d887",
+          "source_id": "szse-general-notice-index-page-12"
+        },
+        "title": "关于2024年春节休市安排的通知",
+        "url": "https://www.szse.cn/disclosure/notice/general/t20240201_605828.html"
+      },
+      {
+        "candidate_id": "szse-general-012-10",
+        "disposition": "unresolved",
+        "page_index": 12,
+        "position": 10,
+        "published_date": "2024-02-01",
+        "source_ref": {
+          "raw_sha256": "sha256:3c86bfef61a20a378ed5b4f1a7ae38aa17b3a02e96295f90871403faadc1d887",
+          "source_id": "szse-general-notice-index-page-12"
+        },
+        "title": "关于2024年春节期间深港通下的港股通交易日安排的通知",
+        "url": "https://www.szse.cn/disclosure/notice/general/t20240201_605827.html"
+      },
+      {
+        "candidate_id": "szse-general-012-11",
+        "disposition": "unresolved",
+        "page_index": 12,
+        "position": 11,
+        "published_date": "2024-01-28",
+        "source_ref": {
+          "raw_sha256": "sha256:3c86bfef61a20a378ed5b4f1a7ae38aa17b3a02e96295f90871403faadc1d887",
+          "source_id": "szse-general-notice-index-page-12"
+        },
+        "title": "关于暂停战略投资者在承诺的持有期限内出借获配股票的通知",
+        "url": "https://www.szse.cn/disclosure/notice/general/t20240128_605765.html"
+      },
+      {
+        "candidate_id": "szse-general-012-12",
+        "disposition": "unresolved",
+        "page_index": 12,
+        "position": 12,
+        "published_date": "2024-01-15",
+        "source_ref": {
+          "raw_sha256": "sha256:3c86bfef61a20a378ed5b4f1a7ae38aa17b3a02e96295f90871403faadc1d887",
+          "source_id": "szse-general-notice-index-page-12"
+        },
+        "title": "关于渣打证券（中国）有限公司成为深圳证券交易所会员的公告",
+        "url": "https://www.szse.cn/disclosure/notice/general/t20240115_605631.html"
+      },
+      {
+        "candidate_id": "szse-general-012-13",
+        "disposition": "unresolved",
+        "page_index": 12,
+        "position": 13,
+        "published_date": "2024-01-04",
+        "source_ref": {
+          "raw_sha256": "sha256:3c86bfef61a20a378ed5b4f1a7ae38aa17b3a02e96295f90871403faadc1d887",
+          "source_id": "szse-general-notice-index-page-12"
+        },
+        "title": "关于国投证券股份有限公司会员名称变更的公告",
+        "url": "https://www.szse.cn/disclosure/notice/general/t20240104_605530.html"
+      },
+      {
+        "candidate_id": "szse-general-012-14",
+        "disposition": "unresolved",
+        "page_index": 12,
+        "position": 14,
+        "published_date": "2024-01-02",
+        "source_ref": {
+          "raw_sha256": "sha256:3c86bfef61a20a378ed5b4f1a7ae38aa17b3a02e96295f90871403faadc1d887",
+          "source_id": "szse-general-notice-index-page-12"
+        },
+        "title": "关于深港通下的港股通标的证券名单调整的公告",
+        "url": "https://www.szse.cn/disclosure/notice/general/t20240102_605504.html"
+      },
+      {
+        "candidate_id": "szse-general-012-15",
+        "disposition": "unresolved",
+        "page_index": 12,
+        "position": 15,
+        "published_date": "2023-12-29",
+        "source_ref": {
+          "raw_sha256": "sha256:3c86bfef61a20a378ed5b4f1a7ae38aa17b3a02e96295f90871403faadc1d887",
+          "source_id": "szse-general-notice-index-page-12"
+        },
+        "title": "2023年深圳证券市场概况",
+        "url": "https://www.szse.cn/disclosure/notice/general/P020231229671782403559.pdf"
+      },
+      {
+        "candidate_id": "szse-general-012-16",
+        "disposition": "unresolved",
+        "page_index": 12,
+        "position": 16,
+        "published_date": "2023-12-29",
+        "source_ref": {
+          "raw_sha256": "sha256:3c86bfef61a20a378ed5b4f1a7ae38aa17b3a02e96295f90871403faadc1d887",
+          "source_id": "szse-general-notice-index-page-12"
+        },
+        "title": "深市上市公司可持续发展信息披露白皮书",
+        "url": "https://www.szse.cn/disclosure/notice/general/P020231229587911636183.pdf"
+      },
+      {
+        "candidate_id": "szse-general-012-17",
+        "disposition": "unresolved",
+        "page_index": 12,
+        "position": 17,
+        "published_date": "2023-12-29",
+        "source_ref": {
+          "raw_sha256": "sha256:3c86bfef61a20a378ed5b4f1a7ae38aa17b3a02e96295f90871403faadc1d887",
+          "source_id": "szse-general-notice-index-page-12"
+        },
+        "title": "关于减免2024年度相关费用的通知",
+        "url": "https://www.szse.cn/disclosure/notice/general/t20231229_605161.html"
+      },
+      {
+        "candidate_id": "szse-general-012-18",
+        "disposition": "unresolved",
+        "page_index": 12,
+        "position": 18,
+        "published_date": "2023-12-26",
+        "source_ref": {
+          "raw_sha256": "sha256:3c86bfef61a20a378ed5b4f1a7ae38aa17b3a02e96295f90871403faadc1d887",
+          "source_id": "szse-general-notice-index-page-12"
+        },
+        "title": "关于2023年底及2024年深港通下的港股通交易日有关安排的通知",
+        "url": "https://www.szse.cn/disclosure/notice/general/t20231226_605109.html"
+      },
+      {
+        "candidate_id": "szse-general-012-19",
+        "disposition": "unresolved",
+        "page_index": 12,
+        "position": 19,
+        "published_date": "2023-12-26",
+        "source_ref": {
+          "raw_sha256": "sha256:3c86bfef61a20a378ed5b4f1a7ae38aa17b3a02e96295f90871403faadc1d887",
+          "source_id": "szse-general-notice-index-page-12"
+        },
+        "title": "关于2024年部分节假日休市安排的通知",
+        "url": "https://www.szse.cn/disclosure/notice/general/t20231226_605108.html"
+      },
+      {
+        "candidate_id": "szse-general-013-00",
+        "disposition": "unresolved",
+        "page_index": 13,
+        "position": 0,
+        "published_date": "2023-12-15",
+        "source_ref": {
+          "raw_sha256": "sha256:713622a47913d3a822e6484666f68603559bf309827a1eb1afe1d788667dcb56",
+          "source_id": "szse-general-notice-index-page-13"
+        },
+        "title": "关于发布《深圳证券交易所上市公司自律监管指引第9号——回购股份（2023年修订）》的通知",
+        "url": "https://www.szse.cn/disclosure/notice/general/t20250327_612564.html"
+      },
+      {
+        "candidate_id": "szse-general-013-01",
+        "disposition": "unresolved",
+        "page_index": 13,
+        "position": 1,
+        "published_date": "2023-12-15",
+        "source_ref": {
+          "raw_sha256": "sha256:713622a47913d3a822e6484666f68603559bf309827a1eb1afe1d788667dcb56",
+          "source_id": "szse-general-notice-index-page-13"
+        },
+        "title": "深圳证券交易所《纪律处分事先告知书》送达公告",
+        "url": "https://www.szse.cn/disclosure/notice/general/t20231215_605005.html"
+      },
+      {
+        "candidate_id": "szse-general-013-02",
+        "disposition": "unresolved",
+        "page_index": 13,
+        "position": 2,
+        "published_date": "2023-12-14",
+        "source_ref": {
+          "raw_sha256": "sha256:713622a47913d3a822e6484666f68603559bf309827a1eb1afe1d788667dcb56",
+          "source_id": "szse-general-notice-index-page-13"
+        },
+        "title": "关于2023年香港圣诞节期间深港通下的港股通交易日安排的通知",
+        "url": "https://www.szse.cn/disclosure/notice/general/t20231214_604992.html"
+      },
+      {
+        "candidate_id": "szse-general-013-03",
+        "disposition": "unresolved",
+        "page_index": 13,
+        "position": 3,
+        "published_date": "2023-12-12",
+        "source_ref": {
+          "raw_sha256": "sha256:713622a47913d3a822e6484666f68603559bf309827a1eb1afe1d788667dcb56",
+          "source_id": "szse-general-notice-index-page-13"
+        },
+        "title": "深圳证券交易所《纪律处分事先告知书》送达公告",
+        "url": "https://www.szse.cn/disclosure/notice/general/t20231212_604956.html"
+      },
+      {
+        "candidate_id": "szse-general-013-04",
+        "disposition": "unresolved",
+        "page_index": 13,
+        "position": 4,
+        "published_date": "2023-12-04",
+        "source_ref": {
+          "raw_sha256": "sha256:713622a47913d3a822e6484666f68603559bf309827a1eb1afe1d788667dcb56",
+          "source_id": "szse-general-notice-index-page-13"
+        },
+        "title": "关于深港通下的港股通标的证券名单调整的公告",
+        "url": "https://www.szse.cn/disclosure/notice/general/t20231204_604822.html"
+      },
+      {
+        "candidate_id": "szse-general-013-05",
+        "disposition": "unresolved",
+        "page_index": 13,
+        "position": 5,
+        "published_date": "2023-11-30",
+        "source_ref": {
+          "raw_sha256": "sha256:713622a47913d3a822e6484666f68603559bf309827a1eb1afe1d788667dcb56",
+          "source_id": "szse-general-notice-index-page-13"
+        },
+        "title": "关于深港通下的港股通标的证券名单调整的公告",
+        "url": "https://www.szse.cn/disclosure/notice/general/t20231130_604788.html"
+      },
+      {
+        "candidate_id": "szse-general-013-06",
+        "disposition": "unresolved",
+        "page_index": 13,
+        "position": 6,
+        "published_date": "2023-11-27",
+        "source_ref": {
+          "raw_sha256": "sha256:713622a47913d3a822e6484666f68603559bf309827a1eb1afe1d788667dcb56",
+          "source_id": "szse-general-notice-index-page-13"
+        },
+        "title": "关于调整深证成指、创业板指、深证100等指数样本股的公告",
+        "url": "https://www.szse.cn/disclosure/notice/general/t20231127_604734.html"
+      },
+      {
+        "candidate_id": "szse-general-013-07",
+        "disposition": "unresolved",
+        "page_index": 13,
+        "position": 7,
+        "published_date": "2023-11-09",
+        "source_ref": {
+          "raw_sha256": "sha256:713622a47913d3a822e6484666f68603559bf309827a1eb1afe1d788667dcb56",
+          "source_id": "szse-general-notice-index-page-13"
+        },
+        "title": "关于深港通下的港股通标的证券名单调整的公告",
+        "url": "https://www.szse.cn/disclosure/notice/general/t20231109_604537.html"
+      },
+      {
+        "candidate_id": "szse-general-013-08",
+        "disposition": "unresolved",
+        "page_index": 13,
+        "position": 8,
+        "published_date": "2023-11-08",
+        "source_ref": {
+          "raw_sha256": "sha256:713622a47913d3a822e6484666f68603559bf309827a1eb1afe1d788667dcb56",
+          "source_id": "szse-general-notice-index-page-13"
+        },
+        "title": "关于发布深证主板50、创业板中盘200、创业板小盘300等3条指数的公告",
+        "url": "https://www.szse.cn/disclosure/notice/general/t20231108_604520.html"
+      },
+      {
+        "candidate_id": "szse-general-013-09",
+        "disposition": "unresolved",
+        "page_index": 13,
+        "position": 9,
+        "published_date": "2023-11-02",
+        "source_ref": {
+          "raw_sha256": "sha256:713622a47913d3a822e6484666f68603559bf309827a1eb1afe1d788667dcb56",
+          "source_id": "szse-general-notice-index-page-13"
+        },
+        "title": "关于联储证券股份有限公司会员名称变更的公告",
+        "url": "https://www.szse.cn/disclosure/notice/general/t20231102_604457.html"
+      },
+      {
+        "candidate_id": "szse-general-013-10",
+        "disposition": "unresolved",
+        "page_index": 13,
+        "position": 10,
+        "published_date": "2023-10-27",
+        "source_ref": {
+          "raw_sha256": "sha256:713622a47913d3a822e6484666f68603559bf309827a1eb1afe1d788667dcb56",
+          "source_id": "szse-general-notice-index-page-13"
+        },
+        "title": "关于深港通下的港股通ETF名单调整的公告",
+        "url": "https://www.szse.cn/disclosure/notice/general/t20231027_604373.html"
+      },
+      {
+        "candidate_id": "szse-general-013-11",
+        "disposition": "unresolved",
+        "page_index": 13,
+        "position": 11,
+        "published_date": "2023-10-26",
+        "source_ref": {
+          "raw_sha256": "sha256:713622a47913d3a822e6484666f68603559bf309827a1eb1afe1d788667dcb56",
+          "source_id": "szse-general-notice-index-page-13"
+        },
+        "title": "关于深港通下的港股通标的证券名单调整的公告",
+        "url": "https://www.szse.cn/disclosure/notice/general/t20231026_604309.html"
+      },
+      {
+        "candidate_id": "szse-general-013-12",
+        "disposition": "unresolved",
+        "page_index": 13,
+        "position": 12,
+        "published_date": "2023-10-20",
+        "source_ref": {
+          "raw_sha256": "sha256:713622a47913d3a822e6484666f68603559bf309827a1eb1afe1d788667dcb56",
+          "source_id": "szse-general-notice-index-page-13"
+        },
+        "title": "关于深市上市公司2022-2023年度信息披露评价结果的通报",
+        "url": "https://www.szse.cn/disclosure/notice/general/t20231020_604227.html"
+      },
+      {
+        "candidate_id": "szse-general-013-13",
+        "disposition": "unresolved",
+        "page_index": 13,
+        "position": 13,
+        "published_date": "2023-10-20",
+        "source_ref": {
+          "raw_sha256": "sha256:713622a47913d3a822e6484666f68603559bf309827a1eb1afe1d788667dcb56",
+          "source_id": "szse-general-notice-index-page-13"
+        },
+        "title": "关于企业债券衔接工作安排的通知",
+        "url": "https://www.szse.cn/disclosure/notice/general/t20220422_592533.html"
+      },
+      {
+        "candidate_id": "szse-general-013-14",
+        "disposition": "unresolved",
+        "page_index": 13,
+        "position": 14,
+        "published_date": "2023-10-20",
+        "source_ref": {
+          "raw_sha256": "sha256:713622a47913d3a822e6484666f68603559bf309827a1eb1afe1d788667dcb56",
+          "source_id": "szse-general-notice-index-page-13"
+        },
+        "title": "深圳证券交易所《纪律处分事先告知书》送达公告",
+        "url": "https://www.szse.cn/disclosure/notice/general/t20231020_604204.html"
+      },
+      {
+        "candidate_id": "szse-general-013-15",
+        "disposition": "unresolved",
+        "page_index": 13,
+        "position": 15,
+        "published_date": "2023-10-20",
+        "source_ref": {
+          "raw_sha256": "sha256:713622a47913d3a822e6484666f68603559bf309827a1eb1afe1d788667dcb56",
+          "source_id": "szse-general-notice-index-page-13"
+        },
+        "title": "深圳证券交易所《纪律处分事先告知书》送达公告",
+        "url": "https://www.szse.cn/disclosure/notice/general/t20231020_604203.html"
+      },
+      {
+        "candidate_id": "szse-general-013-16",
+        "disposition": "unresolved",
+        "page_index": 13,
+        "position": 16,
+        "published_date": "2023-10-19",
+        "source_ref": {
+          "raw_sha256": "sha256:713622a47913d3a822e6484666f68603559bf309827a1eb1afe1d788667dcb56",
+          "source_id": "szse-general-notice-index-page-13"
+        },
+        "title": "关于华源证券股份有限公司会员名称变更的公告",
+        "url": "https://www.szse.cn/disclosure/notice/general/t20231019_604149.html"
+      },
+      {
+        "candidate_id": "szse-general-013-17",
+        "disposition": "unresolved",
+        "page_index": 13,
+        "position": 17,
+        "published_date": "2023-10-17",
+        "source_ref": {
+          "raw_sha256": "sha256:713622a47913d3a822e6484666f68603559bf309827a1eb1afe1d788667dcb56",
+          "source_id": "szse-general-notice-index-page-13"
+        },
+        "title": "深圳证券交易所《纪律处分事先告知书》送达公告",
+        "url": "https://www.szse.cn/disclosure/notice/general/t20231017_604089.html"
+      },
+      {
+        "candidate_id": "szse-general-013-18",
+        "disposition": "unresolved",
+        "page_index": 13,
+        "position": 18,
+        "published_date": "2023-10-14",
+        "source_ref": {
+          "raw_sha256": "sha256:713622a47913d3a822e6484666f68603559bf309827a1eb1afe1d788667dcb56",
+          "source_id": "szse-general-notice-index-page-13"
+        },
+        "title": "关于优化融券交易和转融通证券出借交易相关安排的通知",
+        "url": "https://www.szse.cn/disclosure/notice/general/t20231013_604060.html"
+      },
+      {
+        "candidate_id": "szse-general-013-19",
+        "disposition": "unresolved",
+        "page_index": 13,
+        "position": 19,
+        "published_date": "2023-10-13",
+        "source_ref": {
+          "raw_sha256": "sha256:713622a47913d3a822e6484666f68603559bf309827a1eb1afe1d788667dcb56",
+          "source_id": "szse-general-notice-index-page-13"
+        },
+        "title": "关于发布深证50指数的公告",
+        "url": "https://www.szse.cn/disclosure/notice/general/t20231013_604057.html"
+      },
+      {
+        "candidate_id": "szse-general-014-00",
+        "disposition": "unresolved",
+        "page_index": 14,
+        "position": 0,
+        "published_date": "2023-10-12",
+        "source_ref": {
+          "raw_sha256": "sha256:d5dd2ac21db752280d874691af611d564a5daa003e53638e956fd3899e2ec863",
+          "source_id": "szse-general-notice-index-page-14"
+        },
+        "title": "关于2023年香港重阳节假期深港通下的港股通交易日安排的通知",
+        "url": "https://www.szse.cn/disclosure/notice/general/t20231012_604021.html"
+      },
+      {
+        "candidate_id": "szse-general-014-01",
+        "disposition": "unresolved",
+        "page_index": 14,
+        "position": 1,
+        "published_date": "2023-10-12",
+        "source_ref": {
+          "raw_sha256": "sha256:d5dd2ac21db752280d874691af611d564a5daa003e53638e956fd3899e2ec863",
+          "source_id": "szse-general-notice-index-page-14"
+        },
+        "title": "关于对摩根士丹利国际股份有限公司予以互联互通全球存托凭证境外跨境转换机构备案的公告",
+        "url": "https://www.szse.cn/disclosure/notice/general/t20231012_604011.html"
+      },
+      {
+        "candidate_id": "szse-general-014-02",
+        "disposition": "unresolved",
+        "page_index": 14,
+        "position": 2,
+        "published_date": "2023-10-09",
+        "source_ref": {
+          "raw_sha256": "sha256:d5dd2ac21db752280d874691af611d564a5daa003e53638e956fd3899e2ec863",
+          "source_id": "szse-general-notice-index-page-14"
+        },
+        "title": "关于深港通下的港股通暂停交易的通知",
+        "url": "https://www.szse.cn/disclosure/notice/general/t20231009_603908.html"
+      },
+      {
+        "candidate_id": "szse-general-014-03",
+        "disposition": "unresolved",
+        "page_index": 14,
+        "position": 3,
+        "published_date": "2023-09-21",
+        "source_ref": {
+          "raw_sha256": "sha256:d5dd2ac21db752280d874691af611d564a5daa003e53638e956fd3899e2ec863",
+          "source_id": "szse-general-notice-index-page-14"
+        },
+        "title": "关于2023年中秋节、国庆节休市安排的通知",
+        "url": "https://www.szse.cn/disclosure/notice/general/t20230921_603664.html"
+      },
+      {
+        "candidate_id": "szse-general-014-04",
+        "disposition": "unresolved",
+        "page_index": 14,
+        "position": 4,
+        "published_date": "2023-09-21",
+        "source_ref": {
+          "raw_sha256": "sha256:d5dd2ac21db752280d874691af611d564a5daa003e53638e956fd3899e2ec863",
+          "source_id": "szse-general-notice-index-page-14"
+        },
+        "title": "关于2023年中秋节、国庆节假期深港通下的港股通交易日安排的通知",
+        "url": "https://www.szse.cn/disclosure/notice/general/t20230921_603663.html"
+      },
+      {
+        "candidate_id": "szse-general-014-05",
+        "disposition": "unresolved",
+        "page_index": 14,
+        "position": 5,
+        "published_date": "2023-09-11",
+        "source_ref": {
+          "raw_sha256": "sha256:d5dd2ac21db752280d874691af611d564a5daa003e53638e956fd3899e2ec863",
+          "source_id": "szse-general-notice-index-page-14"
+        },
+        "title": "深圳证券交易所《纪律处分事先告知书》送达公告",
+        "url": "https://www.szse.cn/disclosure/notice/general/t20230911_603441.html"
+      },
+      {
+        "candidate_id": "szse-general-014-06",
+        "disposition": "unresolved",
+        "page_index": 14,
+        "position": 6,
+        "published_date": "2023-09-08",
+        "source_ref": {
+          "raw_sha256": "sha256:d5dd2ac21db752280d874691af611d564a5daa003e53638e956fd3899e2ec863",
+          "source_id": "szse-general-notice-index-page-14"
+        },
+        "title": "关于深港通下的港股通暂停交易的通知",
+        "url": "https://www.szse.cn/disclosure/notice/general/t20230908_603336.html"
+      },
+      {
+        "candidate_id": "szse-general-014-07",
+        "disposition": "unresolved",
+        "page_index": 14,
+        "position": 7,
+        "published_date": "2023-09-05",
+        "source_ref": {
+          "raw_sha256": "sha256:d5dd2ac21db752280d874691af611d564a5daa003e53638e956fd3899e2ec863",
+          "source_id": "szse-general-notice-index-page-14"
+        },
+        "title": "关于深港通下的港股通标的证券名单调整的公告",
+        "url": "https://www.szse.cn/disclosure/notice/general/t20230905_603224.html"
+      },
+      {
+        "candidate_id": "szse-general-014-08",
+        "disposition": "unresolved",
+        "page_index": 14,
+        "position": 8,
+        "published_date": "2023-09-01",
+        "source_ref": {
+          "raw_sha256": "sha256:d5dd2ac21db752280d874691af611d564a5daa003e53638e956fd3899e2ec863",
+          "source_id": "szse-general-notice-index-page-14"
+        },
+        "title": "关于加强程序化交易管理有关事项的通知",
+        "url": "https://www.szse.cn/disclosure/notice/general/t20230901_603195.html"
+      },
+      {
+        "candidate_id": "szse-general-014-09",
+        "disposition": "unresolved",
+        "page_index": 14,
+        "position": 9,
+        "published_date": "2023-09-01",
+        "source_ref": {
+          "raw_sha256": "sha256:d5dd2ac21db752280d874691af611d564a5daa003e53638e956fd3899e2ec863",
+          "source_id": "szse-general-notice-index-page-14"
+        },
+        "title": "关于股票程序化交易报告工作有关事项的通知",
+        "url": "https://www.szse.cn/disclosure/notice/general/t20230901_603194.html"
+      },
+      {
+        "candidate_id": "szse-general-014-10",
+        "disposition": "unresolved",
+        "page_index": 14,
+        "position": 10,
+        "published_date": "2023-08-27",
+        "source_ref": {
+          "raw_sha256": "sha256:d5dd2ac21db752280d874691af611d564a5daa003e53638e956fd3899e2ec863",
+          "source_id": "szse-general-notice-index-page-14"
+        },
+        "title": "关于做好证券交易印花税减半征收工作的通知",
+        "url": "https://www.szse.cn/disclosure/notice/general/t20230827_602970.html"
+      },
+      {
+        "candidate_id": "szse-general-014-11",
+        "disposition": "unresolved",
+        "page_index": 14,
+        "position": 11,
+        "published_date": "2023-08-25",
+        "source_ref": {
+          "raw_sha256": "sha256:d5dd2ac21db752280d874691af611d564a5daa003e53638e956fd3899e2ec863",
+          "source_id": "szse-general-notice-index-page-14"
+        },
+        "title": "关于深港通下的港股通标的证券名单调整的公告",
+        "url": "https://www.szse.cn/disclosure/notice/general/t20230825_602938.html"
+      },
+      {
+        "candidate_id": "szse-general-014-12",
+        "disposition": "unresolved",
+        "page_index": 14,
+        "position": 12,
+        "published_date": "2023-08-24",
+        "source_ref": {
+          "raw_sha256": "sha256:d5dd2ac21db752280d874691af611d564a5daa003e53638e956fd3899e2ec863",
+          "source_id": "szse-general-notice-index-page-14"
+        },
+        "title": "深圳证券交易所《纪律处分事先告知书》送达公告",
+        "url": "https://www.szse.cn/disclosure/notice/general/t20230824_602894.html"
+      },
+      {
+        "candidate_id": "szse-general-014-13",
+        "disposition": "unresolved",
+        "page_index": 14,
+        "position": 13,
+        "published_date": "2023-08-23",
+        "source_ref": {
+          "raw_sha256": "sha256:d5dd2ac21db752280d874691af611d564a5daa003e53638e956fd3899e2ec863",
+          "source_id": "szse-general-notice-index-page-14"
+        },
+        "title": "关于终止为海航投资集团股份有限公司提供证券交易所市场A股登记服务的公告",
+        "url": "https://www.szse.cn/disclosure/notice/general/t20230823_602885.html"
+      },
+      {
+        "candidate_id": "szse-general-014-14",
+        "disposition": "unresolved",
+        "page_index": 14,
+        "position": 14,
+        "published_date": "2023-08-23",
+        "source_ref": {
+          "raw_sha256": "sha256:d5dd2ac21db752280d874691af611d564a5daa003e53638e956fd3899e2ec863",
+          "source_id": "szse-general-notice-index-page-14"
+        },
+        "title": "深圳证券交易所《纪律处分事先告知书》送达公告",
+        "url": "https://www.szse.cn/disclosure/notice/general/t20230823_602859.html"
+      },
+      {
+        "candidate_id": "szse-general-014-15",
+        "disposition": "unresolved",
+        "page_index": 14,
+        "position": 15,
+        "published_date": "2023-08-21",
+        "source_ref": {
+          "raw_sha256": "sha256:d5dd2ac21db752280d874691af611d564a5daa003e53638e956fd3899e2ec863",
+          "source_id": "szse-general-notice-index-page-14"
+        },
+        "title": "深圳证券交易所《纪律处分事先告知书》送达公告",
+        "url": "https://www.szse.cn/disclosure/notice/general/t20230821_602822.html"
+      },
+      {
+        "candidate_id": "szse-general-014-16",
+        "disposition": "unresolved",
+        "page_index": 14,
+        "position": 16,
+        "published_date": "2023-08-21",
+        "source_ref": {
+          "raw_sha256": "sha256:d5dd2ac21db752280d874691af611d564a5daa003e53638e956fd3899e2ec863",
+          "source_id": "szse-general-notice-index-page-14"
+        },
+        "title": "关于终止为北京弘高创意建筑设计股份有限公司提供证券交易所市场A股登记服务的公告",
+        "url": "https://www.szse.cn/disclosure/notice/general/t20230821_602821.html"
+      },
+      {
+        "candidate_id": "szse-general-014-17",
+        "disposition": "unresolved",
+        "page_index": 14,
+        "position": 17,
+        "published_date": "2023-08-21",
+        "source_ref": {
+          "raw_sha256": "sha256:d5dd2ac21db752280d874691af611d564a5daa003e53638e956fd3899e2ec863",
+          "source_id": "szse-general-notice-index-page-14"
+        },
+        "title": "深圳证券交易所《纪律处分事先告知书》送达公告",
+        "url": "https://www.szse.cn/disclosure/notice/general/t20230821_602812.html"
+      },
+      {
+        "candidate_id": "szse-general-014-18",
+        "disposition": "unresolved",
+        "page_index": 14,
+        "position": 18,
+        "published_date": "2023-08-18",
+        "source_ref": {
+          "raw_sha256": "sha256:d5dd2ac21db752280d874691af611d564a5daa003e53638e956fd3899e2ec863",
+          "source_id": "szse-general-notice-index-page-14"
+        },
+        "title": "关于下调股票交易经手费收费标准的通知",
+        "url": "https://www.szse.cn/disclosure/notice/general/t20230818_602805.html"
+      },
+      {
+        "candidate_id": "szse-general-014-19",
+        "disposition": "unresolved",
+        "page_index": 14,
+        "position": 19,
+        "published_date": "2023-08-16",
+        "source_ref": {
+          "raw_sha256": "sha256:d5dd2ac21db752280d874691af611d564a5daa003e53638e956fd3899e2ec863",
+          "source_id": "szse-general-notice-index-page-14"
+        },
+        "title": "关于终止为阳光城集团股份有限公司提供证券交易所市场A股登记服务的公告",
+        "url": "https://www.szse.cn/disclosure/notice/general/t20230816_602714.html"
+      },
+      {
+        "candidate_id": "szse-general-015-00",
+        "disposition": "unresolved",
+        "page_index": 15,
+        "position": 0,
+        "published_date": "2023-08-11",
+        "source_ref": {
+          "raw_sha256": "sha256:4fa3f828549233d6d4086df1c8b6ffe0a5e7fd374b4fc28da22a23380518b710",
+          "source_id": "szse-general-notice-index-page-15"
+        },
+        "title": "关于终止为湖南天润数字娱乐文化传媒股份有限公司提供证券交易所市场A股登记服务的公告",
+        "url": "https://www.szse.cn/disclosure/notice/general/t20230811_602628.html"
+      },
+      {
+        "candidate_id": "szse-general-015-01",
+        "disposition": "unresolved",
+        "page_index": 15,
+        "position": 1,
+        "published_date": "2023-08-11",
+        "source_ref": {
+          "raw_sha256": "sha256:4fa3f828549233d6d4086df1c8b6ffe0a5e7fd374b4fc28da22a23380518b710",
+          "source_id": "szse-general-notice-index-page-15"
+        },
+        "title": "关于终止为搜于特集团股份有限公司提供证券交易所市场A股及可转换公司债券登记服务的公告",
+        "url": "https://www.szse.cn/disclosure/notice/general/t20230811_602627.html"
+      },
+      {
+        "candidate_id": "szse-general-015-02",
+        "disposition": "unresolved",
+        "page_index": 15,
+        "position": 2,
+        "published_date": "2023-08-08",
+        "source_ref": {
+          "raw_sha256": "sha256:4fa3f828549233d6d4086df1c8b6ffe0a5e7fd374b4fc28da22a23380518b710",
+          "source_id": "szse-general-notice-index-page-15"
+        },
+        "title": "关于高盛（中国）证券有限责任公司会员名称变更的公告",
+        "url": "https://www.szse.cn/disclosure/notice/general/t20230808_602532.html"
+      },
+      {
+        "candidate_id": "szse-general-015-03",
+        "disposition": "unresolved",
+        "page_index": 15,
+        "position": 3,
+        "published_date": "2023-08-07",
+        "source_ref": {
+          "raw_sha256": "sha256:4fa3f828549233d6d4086df1c8b6ffe0a5e7fd374b4fc28da22a23380518b710",
+          "source_id": "szse-general-notice-index-page-15"
+        },
+        "title": "关于终止为泰禾集团股份有限公司提供证券交易所市场A股登记服务的公告",
+        "url": "https://www.szse.cn/disclosure/notice/general/t20230807_602525.html"
+      },
+      {
+        "candidate_id": "szse-general-015-04",
+        "disposition": "unresolved",
+        "page_index": 15,
+        "position": 4,
+        "published_date": "2023-08-04",
+        "source_ref": {
+          "raw_sha256": "sha256:4fa3f828549233d6d4086df1c8b6ffe0a5e7fd374b4fc28da22a23380518b710",
+          "source_id": "szse-general-notice-index-page-15"
+        },
+        "title": "关于就《深圳证券交易所上市公司自律监管指引第16号——创业板上市公司股东询价转让和配售方式减持股份（征求意见稿）》公开征求意见的通知",
+        "url": "https://www.szse.cn/disclosure/notice/general/t20230804_602491.html"
+      },
+      {
+        "candidate_id": "szse-general-015-05",
+        "disposition": "unresolved",
+        "page_index": 15,
+        "position": 5,
+        "published_date": "2023-08-04",
+        "source_ref": {
+          "raw_sha256": "sha256:4fa3f828549233d6d4086df1c8b6ffe0a5e7fd374b4fc28da22a23380518b710",
+          "source_id": "szse-general-notice-index-page-15"
+        },
+        "title": "（9月4日施行）关于发布《深圳证券交易所创业板上市公司自律监管指南第2号——公告格式（2023年8月修订）》的通知",
+        "url": "https://www.szse.cn/disclosure/notice/general/t20230804_602484.html"
+      },
+      {
+        "candidate_id": "szse-general-015-06",
+        "disposition": "unresolved",
+        "page_index": 15,
+        "position": 6,
+        "published_date": "2023-08-04",
+        "source_ref": {
+          "raw_sha256": "sha256:4fa3f828549233d6d4086df1c8b6ffe0a5e7fd374b4fc28da22a23380518b710",
+          "source_id": "szse-general-notice-index-page-15"
+        },
+        "title": "（9月4日施行）关于发布《深圳证券交易所上市公司自律监管指南第2号——公告格式（2023年8月修订）》的通知",
+        "url": "https://www.szse.cn/disclosure/notice/general/t20230804_602483.html"
+      },
+      {
+        "candidate_id": "szse-general-015-07",
+        "disposition": "unresolved",
+        "page_index": 15,
+        "position": 7,
+        "published_date": "2023-08-04",
+        "source_ref": {
+          "raw_sha256": "sha256:4fa3f828549233d6d4086df1c8b6ffe0a5e7fd374b4fc28da22a23380518b710",
+          "source_id": "szse-general-notice-index-page-15"
+        },
+        "title": "（9月4日施行）关于发布《深圳证券交易所创业板上市公司自律监管指南第1号——业务办理（2023年8月修订）》的通知",
+        "url": "https://www.szse.cn/disclosure/notice/general/t20230804_602482.html"
+      },
+      {
+        "candidate_id": "szse-general-015-08",
+        "disposition": "unresolved",
+        "page_index": 15,
+        "position": 8,
+        "published_date": "2023-08-04",
+        "source_ref": {
+          "raw_sha256": "sha256:4fa3f828549233d6d4086df1c8b6ffe0a5e7fd374b4fc28da22a23380518b710",
+          "source_id": "szse-general-notice-index-page-15"
+        },
+        "title": "（9月4日施行）关于发布《深圳证券交易所上市公司自律监管指南第1号——业务办理（2023年8月修订）》的通知",
+        "url": "https://www.szse.cn/disclosure/notice/general/t20230804_602481.html"
+      },
+      {
+        "candidate_id": "szse-general-015-09",
+        "disposition": "unresolved",
+        "page_index": 15,
+        "position": 9,
+        "published_date": "2023-08-04",
+        "source_ref": {
+          "raw_sha256": "sha256:4fa3f828549233d6d4086df1c8b6ffe0a5e7fd374b4fc28da22a23380518b710",
+          "source_id": "szse-general-notice-index-page-15"
+        },
+        "title": "（9月4日施行）关于发布《深圳证券交易所上市公司自律监管指引第2号——创业板上市公司规范运作（2023年修订）》的通知",
+        "url": "https://www.szse.cn/disclosure/notice/general/t20230804_602480.html"
+      },
+      {
+        "candidate_id": "szse-general-015-10",
+        "disposition": "unresolved",
+        "page_index": 15,
+        "position": 10,
+        "published_date": "2023-08-04",
+        "source_ref": {
+          "raw_sha256": "sha256:4fa3f828549233d6d4086df1c8b6ffe0a5e7fd374b4fc28da22a23380518b710",
+          "source_id": "szse-general-notice-index-page-15"
+        },
+        "title": "（9月4日施行）关于发布《深圳证券交易所上市公司自律监管指引第1号——主板上市公司规范运作（2023年修订）》的通知",
+        "url": "https://www.szse.cn/disclosure/notice/general/t20230804_602479.html"
+      },
+      {
+        "candidate_id": "szse-general-015-11",
+        "disposition": "unresolved",
+        "page_index": 15,
+        "position": 11,
+        "published_date": "2023-08-04",
+        "source_ref": {
+          "raw_sha256": "sha256:4fa3f828549233d6d4086df1c8b6ffe0a5e7fd374b4fc28da22a23380518b710",
+          "source_id": "szse-general-notice-index-page-15"
+        },
+        "title": "（9月4日施行）关于发布《深圳证券交易所创业板股票上市规则（2023年8月修订）》的通知",
+        "url": "https://www.szse.cn/disclosure/notice/general/t20230804_602478.html"
+      },
+      {
+        "candidate_id": "szse-general-015-12",
+        "disposition": "unresolved",
+        "page_index": 15,
+        "position": 12,
+        "published_date": "2023-08-04",
+        "source_ref": {
+          "raw_sha256": "sha256:4fa3f828549233d6d4086df1c8b6ffe0a5e7fd374b4fc28da22a23380518b710",
+          "source_id": "szse-general-notice-index-page-15"
+        },
+        "title": "（9月4日施行）关于发布《深圳证券交易所股票上市规则（2023年8月修订）》的通知",
+        "url": "https://www.szse.cn/disclosure/notice/general/t20230804_602477.html"
+      },
+      {
+        "candidate_id": "szse-general-015-13",
+        "disposition": "unresolved",
+        "page_index": 15,
+        "position": 13,
+        "published_date": "2023-08-04",
+        "source_ref": {
+          "raw_sha256": "sha256:4fa3f828549233d6d4086df1c8b6ffe0a5e7fd374b4fc28da22a23380518b710",
+          "source_id": "szse-general-notice-index-page-15"
+        },
+        "title": "关于终止为吉林紫鑫药业股份有限公司提供证券交易所市场A股登记服务的公告",
+        "url": "https://www.szse.cn/disclosure/notice/general/t20230804_602474.html"
+      },
+      {
+        "candidate_id": "szse-general-015-14",
+        "disposition": "unresolved",
+        "page_index": 15,
+        "position": 14,
+        "published_date": "2023-08-03",
+        "source_ref": {
+          "raw_sha256": "sha256:4fa3f828549233d6d4086df1c8b6ffe0a5e7fd374b4fc28da22a23380518b710",
+          "source_id": "szse-general-notice-index-page-15"
+        },
+        "title": "关于终止为蓝盾信息安全技术股份有限公司提供证券交易所市场A股及可转换公司债券登记服务的公告",
+        "url": "https://www.szse.cn/disclosure/notice/general/t20230803_602458.html"
+      },
+      {
+        "candidate_id": "szse-general-015-15",
+        "disposition": "unresolved",
+        "page_index": 15,
+        "position": 15,
+        "published_date": "2023-08-03",
+        "source_ref": {
+          "raw_sha256": "sha256:4fa3f828549233d6d4086df1c8b6ffe0a5e7fd374b4fc28da22a23380518b710",
+          "source_id": "szse-general-notice-index-page-15"
+        },
+        "title": "关于发布深证先进制造、深证绿色低碳等4条指数的公告",
+        "url": "https://www.szse.cn/disclosure/notice/general/t20230803_602430.html"
+      },
+      {
+        "candidate_id": "szse-general-015-16",
+        "disposition": "unresolved",
+        "page_index": 15,
+        "position": 16,
+        "published_date": "2023-07-31",
+        "source_ref": {
+          "raw_sha256": "sha256:4fa3f828549233d6d4086df1c8b6ffe0a5e7fd374b4fc28da22a23380518b710",
+          "source_id": "szse-general-notice-index-page-15"
+        },
+        "title": "关于深圳证券交易所ETF期权做市商的公告",
+        "url": "https://www.szse.cn/disclosure/notice/general/t20230731_602352.html"
+      },
+      {
+        "candidate_id": "szse-general-015-17",
+        "disposition": "unresolved",
+        "page_index": 15,
+        "position": 17,
+        "published_date": "2023-07-31",
+        "source_ref": {
+          "raw_sha256": "sha256:4fa3f828549233d6d4086df1c8b6ffe0a5e7fd374b4fc28da22a23380518b710",
+          "source_id": "szse-general-notice-index-page-15"
+        },
+        "title": "关于深港通下的港股通标的证券名单调整的公告",
+        "url": "https://www.szse.cn/disclosure/notice/general/t20230731_602320.html"
+      },
+      {
+        "candidate_id": "szse-general-015-18",
+        "disposition": "unresolved",
+        "page_index": 15,
+        "position": 18,
+        "published_date": "2023-07-28",
+        "source_ref": {
+          "raw_sha256": "sha256:4fa3f828549233d6d4086df1c8b6ffe0a5e7fd374b4fc28da22a23380518b710",
+          "source_id": "szse-general-notice-index-page-15"
+        },
+        "title": "关于终止为嘉凯城集团股份有限公司提供证券交易所市场A股登记服务的公告",
+        "url": "https://www.szse.cn/disclosure/notice/general/t20230728_602312.html"
+      },
+      {
+        "candidate_id": "szse-general-015-19",
+        "disposition": "unresolved",
+        "page_index": 15,
+        "position": 19,
+        "published_date": "2023-07-18",
+        "source_ref": {
+          "raw_sha256": "sha256:4fa3f828549233d6d4086df1c8b6ffe0a5e7fd374b4fc28da22a23380518b710",
+          "source_id": "szse-general-notice-index-page-15"
+        },
+        "title": "关于发布《深圳证券交易所与境外证券交易所互联互通存托凭证上市交易暂行办法（2023年修订）》的通知",
+        "url": "https://www.szse.cn/disclosure/notice/general/t20250327_612575.html"
+      }
+    ],
+    "latest_source_declared_notice_date": "2026-08-14",
+    "page_count": 16,
+    "page_index_range": [
+      0,
+      15
+    ]
+  },
+  "keyword_search": {
+    "candidates": [
+      {
+        "candidate_id": "szse-search-602805",
+        "disposition": "unresolved",
+        "json_url": "https://www.szse.cn/disclosure/notice/general/t20230818_602805.json",
+        "published_epoch_milliseconds": 1692348409000,
+        "source_ref": {
+          "raw_sha256": "sha256:815ed7919c060e828072c53417c615586085c93d26cf001e2413268db71797d4",
+          "source_id": "szse-search-transaction-handling-page-1"
+        },
+        "title": "关于下调股票交易经手费收费标准的通知",
+        "url": "https://www.szse.cn/disclosure/notice/general/t20230818_602805.html"
+      },
+      {
+        "candidate_id": "szse-search-586725",
+        "disposition": "unresolved",
+        "json_url": "https://www.szse.cn/disclosure/notice/general/t20210630_586725.json",
+        "published_epoch_milliseconds": 1624982400000,
+        "source_ref": {
+          "raw_sha256": "sha256:815ed7919c060e828072c53417c615586085c93d26cf001e2413268db71797d4",
+          "source_id": "szse-search-transaction-handling-page-1"
+        },
+        "title": "关于下调基金交易经手费收费标准的通知",
+        "url": "https://www.szse.cn/disclosure/notice/general/t20210630_586725.html"
+      },
+      {
+        "candidate_id": "szse-search-500994",
+        "disposition": "unresolved",
+        "json_url": "https://www.szse.cn/disclosure/notice/general/t20120802_500994.json",
+        "published_epoch_milliseconds": 1343898992000,
+        "source_ref": {
+          "raw_sha256": "sha256:815ed7919c060e828072c53417c615586085c93d26cf001e2413268db71797d4",
+          "source_id": "szse-search-transaction-handling-page-1"
+        },
+        "title": "关于调整深圳市场A股交易经手费收费标准的通知",
+        "url": "https://www.szse.cn/disclosure/notice/general/t20120802_500994.html"
+      }
+    ],
+    "keyword": "交易经手费",
+    "page_1_source_id": "szse-search-transaction-handling-page-1",
+    "terminal_page_2_source_id": "szse-search-transaction-handling-terminal-page-2",
+    "total_size": 3
+  },
+  "out_of_declared_range_captures": [
+    {
+      "reason": "Accessible but outside page 0..15 declared by the captured current index.",
+      "source_id": "szse-general-notice-index-page-16"
+    },
+    {
+      "reason": "Accessible but outside page 0..15 declared by the captured current index; not accepted as terminal proof.",
+      "source_id": "szse-general-notice-index-page-17-terminal"
+    }
+  ],
+  "schema_version": 1,
+  "status": "DISCOVERY_ONLY_INSUFFICIENT",
+  "type": "g12h_exchange_handling_candidate_inventory_discovery_v1"
+}

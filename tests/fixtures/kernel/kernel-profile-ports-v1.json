@@ -1,0 +1,59 @@
+{
+  "fixture_id": "kernel-profile-ports-v1",
+  "schema_version": 1,
+  "port_types": [
+    "session_model",
+    "instrument_model",
+    "order_rule_model",
+    "fee_assessment_policy",
+    "tax_policy",
+    "settlement_model",
+    "position_accounting_model",
+    "financing_model",
+    "margin_model",
+    "liquidation_rules",
+    "corporate_action_model",
+    "currency_valuation_policy"
+  ],
+  "success_outcome": {
+    "type": "profile_port_outcome",
+    "component_ref": {
+      "type": "profile_component_ref",
+      "port_type": "session_model",
+      "component_key": "test.session_model.v1",
+      "component_version": 1,
+      "component_digest": "sha256:abababababababababababababababababababababababababababababababab"
+    },
+    "input_hash": "sha256:8fe7eff3b2c2a363b6573f278417e9cccc23a6cdf95ad44f1dbafc21e5ee3c6c",
+    "result": {
+      "type": "session_resolution",
+      "session_id": {
+        "type": "session_id",
+        "calendar_id": "test-venue",
+        "value": "2023-11-15.regular"
+      },
+      "trading_date": {
+        "type": "trading_date",
+        "calendar_id": "test-venue",
+        "date": "2023-11-15"
+      }
+    },
+    "failure": null
+  },
+  "failure_outcome": {
+    "type": "profile_port_outcome",
+    "component_ref": {
+      "type": "profile_component_ref",
+      "port_type": "session_model",
+      "component_key": "test.session_model.v1",
+      "component_version": 1,
+      "component_digest": "sha256:abababababababababababababababababababababababababababababababab"
+    },
+    "input_hash": "sha256:8fe7eff3b2c2a363b6573f278417e9cccc23a6cdf95ad44f1dbafc21e5ee3c6c",
+    "result": null,
+    "failure": {
+      "type": "session_failure",
+      "failure_kind": "no_session"
+    }
+  }
+}

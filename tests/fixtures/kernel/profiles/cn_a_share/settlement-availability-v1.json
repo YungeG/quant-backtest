@@ -1,0 +1,3930 @@
+{
+  "caller_preconditions": [
+    "ordinary-rmb-a-share",
+    "cash-account",
+    "authoritative-journal-prefix-includes-fill-entries"
+  ],
+  "cross_venue": {
+    "availability_hashes_differ": true,
+    "normalized_obligation_units_equal": true,
+    "rules_hashes_differ": true,
+    "settlement_book_hashes_differ": true
+  },
+  "failures": {
+    "calendar_coverage_missing": {
+      "component_ref": {
+        "component_digest": "sha256:af93c4de6f0b17293bd72d6de27f8adfbd779864f0ae4d628ca76972895df1ea",
+        "component_key": "equity.cn_a_share.cash.settlement.v1",
+        "component_version": 1,
+        "port_type": "settlement_model",
+        "type": "profile_component_ref"
+      },
+      "failure": {
+        "calendar_id": "CN.XSHG",
+        "code": "calendar_coverage_missing",
+        "fill_id": {
+          "kind": "fill",
+          "type": "domain_id",
+          "value": "fil_1111111111111111111111111111111111111111111111111111111111111111"
+        },
+        "schema_version": 1,
+        "subject_key": "fil_1111111111111111111111111111111111111111111111111111111111111111",
+        "type": "cn_a_share_settlement_failure",
+        "venue_id": {
+          "type": "venue_id",
+          "value": "xshg"
+        }
+      },
+      "input_hash": "sha256:9b094008d3b68f6c91d20bb6965e9e613a68a546718e810863fecbffed4c4b6f",
+      "result": null,
+      "type": "profile_port_outcome"
+    },
+    "trade_time_not_open": {
+      "component_ref": {
+        "component_digest": "sha256:af93c4de6f0b17293bd72d6de27f8adfbd779864f0ae4d628ca76972895df1ea",
+        "component_key": "equity.cn_a_share.cash.settlement.v1",
+        "component_version": 1,
+        "port_type": "settlement_model",
+        "type": "profile_component_ref"
+      },
+      "failure": {
+        "calendar_id": "CN.XSHG",
+        "code": "trade_time_not_open",
+        "fill_id": {
+          "kind": "fill",
+          "type": "domain_id",
+          "value": "fil_1111111111111111111111111111111111111111111111111111111111111111"
+        },
+        "schema_version": 1,
+        "subject_key": "fil_1111111111111111111111111111111111111111111111111111111111111111",
+        "type": "cn_a_share_settlement_failure",
+        "venue_id": {
+          "type": "venue_id",
+          "value": "xshg"
+        }
+      },
+      "input_hash": "sha256:075a28dcad532dbed5a38bf4e6d3395122dc75f57f796dbe670393ecc8d44559",
+      "result": null,
+      "type": "profile_port_outcome"
+    },
+    "unsupported_venue": {
+      "component_ref": {
+        "component_digest": "sha256:af93c4de6f0b17293bd72d6de27f8adfbd779864f0ae4d628ca76972895df1ea",
+        "component_key": "equity.cn_a_share.cash.settlement.v1",
+        "component_version": 1,
+        "port_type": "settlement_model",
+        "type": "profile_component_ref"
+      },
+      "failure": {
+        "calendar_id": "CN.XSHG",
+        "code": "unsupported_venue",
+        "fill_id": {
+          "kind": "fill",
+          "type": "domain_id",
+          "value": "fil_1111111111111111111111111111111111111111111111111111111111111111"
+        },
+        "schema_version": 1,
+        "subject_key": "xshe",
+        "type": "cn_a_share_settlement_failure",
+        "venue_id": {
+          "type": "venue_id",
+          "value": "xshe"
+        }
+      },
+      "input_hash": "sha256:2f708333f35dc15bd46c5928a72b4059f38a1b4068e622ae77e1f1a45519edc6",
+      "result": null,
+      "type": "profile_port_outcome"
+    }
+  },
+  "fixture_id": "cn-a-share-settlement-availability-v1",
+  "qualification": {
+    "current_live_calendar_claimed": false,
+    "deployment_authorized": false,
+    "grade": "development"
+  },
+  "system_conventions": {
+    "buy_position_availability": "next-trading-date-local-00:00",
+    "negative_delivery": "fill-execution-time",
+    "sell_cash_withdrawal": "next-trading-date-local-16:00"
+  },
+  "xshe": {
+    "availability": {
+      "before": {
+        "account_id": "account:cn-a-primary",
+        "cash": [
+          {
+            "available_margin": {
+              "currency": "CNY",
+              "scale": 2,
+              "type": "money",
+              "units": 900000
+            },
+            "key": {
+              "account_id": "account:cn-a-primary",
+              "currency_id": {
+                "type": "currency_id",
+                "value": "CNY"
+              },
+              "type": "cash_balance_key",
+              "venue_id": {
+                "type": "venue_id",
+                "value": "xshe"
+              }
+            },
+            "settled": {
+              "currency": "CNY",
+              "scale": 2,
+              "type": "money",
+              "units": 900000
+            },
+            "total": {
+              "currency": "CNY",
+              "scale": 2,
+              "type": "money",
+              "units": 1020000
+            },
+            "tradable": {
+              "currency": "CNY",
+              "scale": 2,
+              "type": "money",
+              "units": 999000
+            },
+            "type": "cash_availability",
+            "withdrawable": {
+              "currency": "CNY",
+              "scale": 2,
+              "type": "money",
+              "units": 879000
+            }
+          }
+        ],
+        "ledger_state_hash": "sha256:a032947accd01926989705f8902e53a310253908a8b2a1d80caecd25f77151bf",
+        "market_settlement_rules_hash": "sha256:a8fdb16ecb543c366e1a7cd484449a60cda744371fdebc6f11bab1f1bea4b9a0",
+        "positions": [
+          {
+            "key": {
+              "account_id": "account:cn-a-primary",
+              "instrument_id": {
+                "stable_key": "000001",
+                "type": "instrument_id",
+                "venue": "xshe"
+              },
+              "type": "position_balance_key",
+              "venue_id": {
+                "type": "venue_id",
+                "value": "xshe"
+              }
+            },
+            "sellable": {
+              "instrument_id": "xshe:000001",
+              "scale": 0,
+              "type": "quantity",
+              "units": 80
+            },
+            "total": {
+              "instrument_id": "xshe:000001",
+              "scale": 0,
+              "type": "quantity",
+              "units": 200
+            },
+            "type": "position_availability"
+          }
+        ],
+        "reservation_state_hash": "sha256:48f28f4476390a68ab1f2fa0f0cbb277542c1f38a816b736378b8d0b9aedb777",
+        "schema_version": 1,
+        "settlement_state_hash": "sha256:a44da0ef60fb471d988978dd52d4d911cd3a043d009a35ad549fb25892b5ece2",
+        "type": "availability_state"
+      },
+      "cash_available": {
+        "account_id": "account:cn-a-primary",
+        "cash": [
+          {
+            "available_margin": {
+              "currency": "CNY",
+              "scale": 2,
+              "type": "money",
+              "units": 1020000
+            },
+            "key": {
+              "account_id": "account:cn-a-primary",
+              "currency_id": {
+                "type": "currency_id",
+                "value": "CNY"
+              },
+              "type": "cash_balance_key",
+              "venue_id": {
+                "type": "venue_id",
+                "value": "xshe"
+              }
+            },
+            "settled": {
+              "currency": "CNY",
+              "scale": 2,
+              "type": "money",
+              "units": 1020000
+            },
+            "total": {
+              "currency": "CNY",
+              "scale": 2,
+              "type": "money",
+              "units": 1020000
+            },
+            "tradable": {
+              "currency": "CNY",
+              "scale": 2,
+              "type": "money",
+              "units": 999000
+            },
+            "type": "cash_availability",
+            "withdrawable": {
+              "currency": "CNY",
+              "scale": 2,
+              "type": "money",
+              "units": 999000
+            }
+          }
+        ],
+        "ledger_state_hash": "sha256:a032947accd01926989705f8902e53a310253908a8b2a1d80caecd25f77151bf",
+        "market_settlement_rules_hash": "sha256:a8fdb16ecb543c366e1a7cd484449a60cda744371fdebc6f11bab1f1bea4b9a0",
+        "positions": [
+          {
+            "key": {
+              "account_id": "account:cn-a-primary",
+              "instrument_id": {
+                "stable_key": "000001",
+                "type": "instrument_id",
+                "venue": "xshe"
+              },
+              "type": "position_balance_key",
+              "venue_id": {
+                "type": "venue_id",
+                "value": "xshe"
+              }
+            },
+            "sellable": {
+              "instrument_id": "xshe:000001",
+              "scale": 0,
+              "type": "quantity",
+              "units": 180
+            },
+            "total": {
+              "instrument_id": "xshe:000001",
+              "scale": 0,
+              "type": "quantity",
+              "units": 200
+            },
+            "type": "position_availability"
+          }
+        ],
+        "reservation_state_hash": "sha256:48f28f4476390a68ab1f2fa0f0cbb277542c1f38a816b736378b8d0b9aedb777",
+        "schema_version": 1,
+        "settlement_state_hash": "sha256:b9055583e9430fa24403880038e727e2771963c7332f770fd511688d308ede85",
+        "type": "availability_state"
+      },
+      "position_available": {
+        "account_id": "account:cn-a-primary",
+        "cash": [
+          {
+            "available_margin": {
+              "currency": "CNY",
+              "scale": 2,
+              "type": "money",
+              "units": 900000
+            },
+            "key": {
+              "account_id": "account:cn-a-primary",
+              "currency_id": {
+                "type": "currency_id",
+                "value": "CNY"
+              },
+              "type": "cash_balance_key",
+              "venue_id": {
+                "type": "venue_id",
+                "value": "xshe"
+              }
+            },
+            "settled": {
+              "currency": "CNY",
+              "scale": 2,
+              "type": "money",
+              "units": 900000
+            },
+            "total": {
+              "currency": "CNY",
+              "scale": 2,
+              "type": "money",
+              "units": 1020000
+            },
+            "tradable": {
+              "currency": "CNY",
+              "scale": 2,
+              "type": "money",
+              "units": 999000
+            },
+            "type": "cash_availability",
+            "withdrawable": {
+              "currency": "CNY",
+              "scale": 2,
+              "type": "money",
+              "units": 879000
+            }
+          }
+        ],
+        "ledger_state_hash": "sha256:a032947accd01926989705f8902e53a310253908a8b2a1d80caecd25f77151bf",
+        "market_settlement_rules_hash": "sha256:a8fdb16ecb543c366e1a7cd484449a60cda744371fdebc6f11bab1f1bea4b9a0",
+        "positions": [
+          {
+            "key": {
+              "account_id": "account:cn-a-primary",
+              "instrument_id": {
+                "stable_key": "000001",
+                "type": "instrument_id",
+                "venue": "xshe"
+              },
+              "type": "position_balance_key",
+              "venue_id": {
+                "type": "venue_id",
+                "value": "xshe"
+              }
+            },
+            "sellable": {
+              "instrument_id": "xshe:000001",
+              "scale": 0,
+              "type": "quantity",
+              "units": 180
+            },
+            "total": {
+              "instrument_id": "xshe:000001",
+              "scale": 0,
+              "type": "quantity",
+              "units": 200
+            },
+            "type": "position_availability"
+          }
+        ],
+        "reservation_state_hash": "sha256:48f28f4476390a68ab1f2fa0f0cbb277542c1f38a816b736378b8d0b9aedb777",
+        "schema_version": 1,
+        "settlement_state_hash": "sha256:044a0180797beaaf445fab934a52bef838334e765b09d00363166b0bad10c626",
+        "type": "availability_state"
+      }
+    },
+    "calendar_ref": {
+      "calendar_hash": "sha256:99c4a2c8e06ccb696c15b6b8d676c42195f54465d6b46237ed74dfd699d3bb73",
+      "calendar_id": "CN.XSHE",
+      "venue_id": {
+        "type": "venue_id",
+        "value": "xshe"
+      }
+    },
+    "component_ref": {
+      "component_digest": "sha256:4739aafb8232502e92a567743baa78ce5ab5c129ae327d4dd474268a9dfe8134",
+      "component_key": "equity.cn_a_share.cash.settlement.v1",
+      "component_version": 1,
+      "port_type": "settlement_model",
+      "type": "profile_component_ref"
+    },
+    "hashes": {
+      "before_availability": "sha256:1dc3b66b380f9aca8e1cd3af153a8dd4af01ec427467f4318fd47875ad378c18",
+      "cash_available": "sha256:40b9a21265f7bffd06c933a9c4f3abbeb2467b8028f00e2869a358614fc5a08c",
+      "journal": "sha256:e3a1d3fb87405c96c3f8a630997647f9c2464ac0680968cdde00d5083a6eac9a",
+      "ledger": "sha256:a032947accd01926989705f8902e53a310253908a8b2a1d80caecd25f77151bf",
+      "position_available": "sha256:5085a0b34e1c5753e306d6290ce3c1a9ab240ac8a18b55e798baf0ec01e9025c",
+      "reservations": "sha256:48f28f4476390a68ab1f2fa0f0cbb277542c1f38a816b736378b8d0b9aedb777",
+      "rules": "sha256:a8fdb16ecb543c366e1a7cd484449a60cda744371fdebc6f11bab1f1bea4b9a0",
+      "settlement_book": "sha256:d4eae7baa6644e6dc3e610a61ad2730769fed050b3218dbaceeab53134e1dea0",
+      "settlement_state": "sha256:b9055583e9430fa24403880038e727e2771963c7332f770fd511688d308ede85"
+    },
+    "journal": {
+      "entries": [
+        {
+          "account_id": "account:cn-a-primary",
+          "balance_changes": [
+            {
+              "key": {
+                "account_id": "account:cn-a-primary",
+                "currency_id": {
+                  "type": "currency_id",
+                  "value": "CNY"
+                },
+                "type": "cash_balance_key",
+                "venue_id": {
+                  "type": "venue_id",
+                  "value": "xshe"
+                }
+              },
+              "type": "balance_change",
+              "value": {
+                "currency": "CNY",
+                "scale": 2,
+                "type": "money",
+                "units": 1000000
+              }
+            },
+            {
+              "key": {
+                "account_id": "account:cn-a-primary",
+                "instrument_id": {
+                  "stable_key": "000001",
+                  "type": "instrument_id",
+                  "venue": "xshe"
+                },
+                "type": "position_balance_key",
+                "venue_id": {
+                  "type": "venue_id",
+                  "value": "xshe"
+                }
+              },
+              "type": "balance_change",
+              "value": {
+                "instrument_id": "xshe:000001",
+                "scale": 0,
+                "type": "quantity",
+                "units": 200
+              }
+            }
+          ],
+          "effective_time": {
+            "epoch_nanoseconds": 1707354000000000000,
+            "type": "utc_instant"
+          },
+          "entry_type": "capital_deposited",
+          "fees": [],
+          "financing": [],
+          "journal_entry_id": {
+            "kind": "journal",
+            "type": "domain_id",
+            "value": "jnl_0000000000000000000000000000000000000000000000000000000000000000"
+          },
+          "realized_pnl": [],
+          "recorded_at": {
+            "instant": {
+              "epoch_nanoseconds": 1707354000000000000,
+              "type": "utc_instant"
+            },
+            "phase": {
+              "code": "accounting",
+              "rank": 50,
+              "type": "timeline_phase"
+            },
+            "source_sequence": {
+              "type": "source_sequence",
+              "value": 1
+            },
+            "type": "simulation_instant"
+          },
+          "source_ids": [
+            "initial:cash-position"
+          ],
+          "type": "accounting_journal_entry",
+          "venue_id": {
+            "type": "venue_id",
+            "value": "xshe"
+          }
+        },
+        {
+          "account_id": "account:cn-a-primary",
+          "balance_changes": [
+            {
+              "key": {
+                "account_id": "account:cn-a-primary",
+                "currency_id": {
+                  "type": "currency_id",
+                  "value": "CNY"
+                },
+                "type": "cash_balance_key",
+                "venue_id": {
+                  "type": "venue_id",
+                  "value": "xshe"
+                }
+              },
+              "type": "balance_change",
+              "value": {
+                "currency": "CNY",
+                "scale": 2,
+                "type": "money",
+                "units": -100000
+              }
+            },
+            {
+              "key": {
+                "account_id": "account:cn-a-primary",
+                "instrument_id": {
+                  "stable_key": "000001",
+                  "type": "instrument_id",
+                  "venue": "xshe"
+                },
+                "type": "position_balance_key",
+                "venue_id": {
+                  "type": "venue_id",
+                  "value": "xshe"
+                }
+              },
+              "type": "balance_change",
+              "value": {
+                "instrument_id": "xshe:000001",
+                "scale": 0,
+                "type": "quantity",
+                "units": 100
+              }
+            }
+          ],
+          "effective_time": {
+            "epoch_nanoseconds": 1707357600000000000,
+            "type": "utc_instant"
+          },
+          "entry_type": "fill_booked",
+          "fees": [],
+          "financing": [],
+          "journal_entry_id": {
+            "kind": "journal",
+            "type": "domain_id",
+            "value": "jnl_2222222222222222222222222222222222222222222222222222222222222222"
+          },
+          "realized_pnl": [],
+          "recorded_at": {
+            "instant": {
+              "epoch_nanoseconds": 1707357600000000000,
+              "type": "utc_instant"
+            },
+            "phase": {
+              "code": "accounting",
+              "rank": 50,
+              "type": "timeline_phase"
+            },
+            "source_sequence": {
+              "type": "source_sequence",
+              "value": 1
+            },
+            "type": "simulation_instant"
+          },
+          "source_ids": [
+            "fil_1111111111111111111111111111111111111111111111111111111111111111",
+            "ord_1111111111111111111111111111111111111111111111111111111111111111"
+          ],
+          "type": "accounting_journal_entry",
+          "venue_id": {
+            "type": "venue_id",
+            "value": "xshe"
+          }
+        },
+        {
+          "account_id": "account:cn-a-primary",
+          "balance_changes": [
+            {
+              "key": {
+                "account_id": "account:cn-a-primary",
+                "currency_id": {
+                  "type": "currency_id",
+                  "value": "CNY"
+                },
+                "type": "cash_balance_key",
+                "venue_id": {
+                  "type": "venue_id",
+                  "value": "xshe"
+                }
+              },
+              "type": "balance_change",
+              "value": {
+                "currency": "CNY",
+                "scale": 2,
+                "type": "money",
+                "units": 120000
+              }
+            },
+            {
+              "key": {
+                "account_id": "account:cn-a-primary",
+                "instrument_id": {
+                  "stable_key": "000001",
+                  "type": "instrument_id",
+                  "venue": "xshe"
+                },
+                "type": "position_balance_key",
+                "venue_id": {
+                  "type": "venue_id",
+                  "value": "xshe"
+                }
+              },
+              "type": "balance_change",
+              "value": {
+                "instrument_id": "xshe:000001",
+                "scale": 0,
+                "type": "quantity",
+                "units": -100
+              }
+            }
+          ],
+          "effective_time": {
+            "epoch_nanoseconds": 1707357600000000000,
+            "type": "utc_instant"
+          },
+          "entry_type": "fill_booked",
+          "fees": [],
+          "financing": [],
+          "journal_entry_id": {
+            "kind": "journal",
+            "type": "domain_id",
+            "value": "jnl_1111111111111111111111111111111111111111111111111111111111111111"
+          },
+          "realized_pnl": [],
+          "recorded_at": {
+            "instant": {
+              "epoch_nanoseconds": 1707357600000000000,
+              "type": "utc_instant"
+            },
+            "phase": {
+              "code": "accounting",
+              "rank": 50,
+              "type": "timeline_phase"
+            },
+            "source_sequence": {
+              "type": "source_sequence",
+              "value": 2
+            },
+            "type": "simulation_instant"
+          },
+          "source_ids": [
+            "fil_2222222222222222222222222222222222222222222222222222222222222222",
+            "ord_2222222222222222222222222222222222222222222222222222222222222222"
+          ],
+          "type": "accounting_journal_entry",
+          "venue_id": {
+            "type": "venue_id",
+            "value": "xshe"
+          }
+        }
+      ],
+      "journal_hash": "sha256:e3a1d3fb87405c96c3f8a630997647f9c2464ac0680968cdde00d5083a6eac9a"
+    },
+    "ledger": {
+      "cash_balances": [
+        {
+          "amount": {
+            "currency": "CNY",
+            "scale": 2,
+            "type": "money",
+            "units": 1020000
+          },
+          "key": {
+            "account_id": "account:cn-a-primary",
+            "currency_id": {
+              "type": "currency_id",
+              "value": "CNY"
+            },
+            "type": "cash_balance_key",
+            "venue_id": {
+              "type": "venue_id",
+              "value": "xshe"
+            }
+          },
+          "type": "cash_balance"
+        }
+      ],
+      "cursor": {
+        "position": 3,
+        "prefix_hash": "sha256:e3a1d3fb87405c96c3f8a630997647f9c2464ac0680968cdde00d5083a6eac9a",
+        "type": "journal_replay_cursor"
+      },
+      "fees": [],
+      "financing": [],
+      "position_balances": [
+        {
+          "key": {
+            "account_id": "account:cn-a-primary",
+            "instrument_id": {
+              "stable_key": "000001",
+              "type": "instrument_id",
+              "venue": "xshe"
+            },
+            "type": "position_balance_key",
+            "venue_id": {
+              "type": "venue_id",
+              "value": "xshe"
+            }
+          },
+          "lots": [],
+          "quantity": {
+            "instrument_id": "xshe:000001",
+            "scale": 0,
+            "type": "quantity",
+            "units": 200
+          },
+          "type": "position_balance"
+        }
+      ],
+      "realized_pnl": [],
+      "schema_hash": "sha256:e6f5e259089b4f99b9672b732bdf1265a72242be447d954e9e54461168b7208e",
+      "type": "ledger_state"
+    },
+    "queries": [
+      {
+        "cash_obligation_id": {
+          "kind": "settlement",
+          "type": "domain_id",
+          "value": "stl_1111111111111111111111111111111111111111111111111111111111111111"
+        },
+        "fill": {
+          "account_id": "account:cn-a-primary",
+          "execution_time": {
+            "epoch_nanoseconds": 1707357600000000000,
+            "type": "utc_instant"
+          },
+          "fill_id": {
+            "kind": "fill",
+            "type": "domain_id",
+            "value": "fil_1111111111111111111111111111111111111111111111111111111111111111"
+          },
+          "instrument_id": {
+            "stable_key": "000001",
+            "type": "instrument_id",
+            "venue": "xshe"
+          },
+          "liquidity": "taker",
+          "order_id": {
+            "kind": "order",
+            "type": "domain_id",
+            "value": "ord_1111111111111111111111111111111111111111111111111111111111111111"
+          },
+          "price": {
+            "instrument_id": "xshe:000001",
+            "quote_currency": "CNY",
+            "scale": 2,
+            "type": "price",
+            "units": 1000
+          },
+          "quantity": {
+            "instrument_id": "xshe:000001",
+            "scale": 0,
+            "type": "quantity",
+            "units": 100
+          },
+          "reference_price": {
+            "instrument_id": "xshe:000001",
+            "quote_currency": "CNY",
+            "scale": 2,
+            "type": "price",
+            "units": 1000
+          },
+          "reference_price_purpose": "execution_reference",
+          "side": "buy",
+          "slippage_amount": {
+            "currency": "CNY",
+            "scale": 2,
+            "type": "money",
+            "units": 0
+          },
+          "slippage_calibration_id": null,
+          "slippage_decision_id": "slippage:1",
+          "slippage_model_key": "slippage.zero.fixture.v1",
+          "type": "fill",
+          "venue_id": {
+            "type": "venue_id",
+            "value": "xshe"
+          }
+        },
+        "fill_accounting_entry": {
+          "account_id": "account:cn-a-primary",
+          "balance_changes": [
+            {
+              "key": {
+                "account_id": "account:cn-a-primary",
+                "currency_id": {
+                  "type": "currency_id",
+                  "value": "CNY"
+                },
+                "type": "cash_balance_key",
+                "venue_id": {
+                  "type": "venue_id",
+                  "value": "xshe"
+                }
+              },
+              "type": "balance_change",
+              "value": {
+                "currency": "CNY",
+                "scale": 2,
+                "type": "money",
+                "units": -100000
+              }
+            },
+            {
+              "key": {
+                "account_id": "account:cn-a-primary",
+                "instrument_id": {
+                  "stable_key": "000001",
+                  "type": "instrument_id",
+                  "venue": "xshe"
+                },
+                "type": "position_balance_key",
+                "venue_id": {
+                  "type": "venue_id",
+                  "value": "xshe"
+                }
+              },
+              "type": "balance_change",
+              "value": {
+                "instrument_id": "xshe:000001",
+                "scale": 0,
+                "type": "quantity",
+                "units": 100
+              }
+            }
+          ],
+          "effective_time": {
+            "epoch_nanoseconds": 1707357600000000000,
+            "type": "utc_instant"
+          },
+          "entry_type": "fill_booked",
+          "fees": [],
+          "financing": [],
+          "journal_entry_id": {
+            "kind": "journal",
+            "type": "domain_id",
+            "value": "jnl_2222222222222222222222222222222222222222222222222222222222222222"
+          },
+          "realized_pnl": [],
+          "recorded_at": {
+            "instant": {
+              "epoch_nanoseconds": 1707357600000000000,
+              "type": "utc_instant"
+            },
+            "phase": {
+              "code": "accounting",
+              "rank": 50,
+              "type": "timeline_phase"
+            },
+            "source_sequence": {
+              "type": "source_sequence",
+              "value": 1
+            },
+            "type": "simulation_instant"
+          },
+          "source_ids": [
+            "fil_1111111111111111111111111111111111111111111111111111111111111111",
+            "ord_1111111111111111111111111111111111111111111111111111111111111111"
+          ],
+          "type": "accounting_journal_entry",
+          "venue_id": {
+            "type": "venue_id",
+            "value": "xshe"
+          }
+        },
+        "instrument": {
+          "base_currency": null,
+          "instrument_id": {
+            "stable_key": "000001",
+            "type": "instrument_id",
+            "venue": "xshe"
+          },
+          "instrument_type": "equity",
+          "quote_currency": {
+            "type": "currency_id",
+            "value": "CNY"
+          },
+          "settlement_currency": {
+            "type": "currency_id",
+            "value": "CNY"
+          },
+          "type": "instrument_definition"
+        },
+        "position_obligation_id": {
+          "kind": "settlement",
+          "type": "domain_id",
+          "value": "stl_3333333333333333333333333333333333333333333333333333333333333333"
+        },
+        "schema_version": 1,
+        "type": "cn_a_share_settlement_query"
+      },
+      {
+        "cash_obligation_id": {
+          "kind": "settlement",
+          "type": "domain_id",
+          "value": "stl_2222222222222222222222222222222222222222222222222222222222222222"
+        },
+        "fill": {
+          "account_id": "account:cn-a-primary",
+          "execution_time": {
+            "epoch_nanoseconds": 1707357600000000000,
+            "type": "utc_instant"
+          },
+          "fill_id": {
+            "kind": "fill",
+            "type": "domain_id",
+            "value": "fil_2222222222222222222222222222222222222222222222222222222222222222"
+          },
+          "instrument_id": {
+            "stable_key": "000001",
+            "type": "instrument_id",
+            "venue": "xshe"
+          },
+          "liquidity": "taker",
+          "order_id": {
+            "kind": "order",
+            "type": "domain_id",
+            "value": "ord_2222222222222222222222222222222222222222222222222222222222222222"
+          },
+          "price": {
+            "instrument_id": "xshe:000001",
+            "quote_currency": "CNY",
+            "scale": 2,
+            "type": "price",
+            "units": 1200
+          },
+          "quantity": {
+            "instrument_id": "xshe:000001",
+            "scale": 0,
+            "type": "quantity",
+            "units": 100
+          },
+          "reference_price": {
+            "instrument_id": "xshe:000001",
+            "quote_currency": "CNY",
+            "scale": 2,
+            "type": "price",
+            "units": 1200
+          },
+          "reference_price_purpose": "execution_reference",
+          "side": "sell",
+          "slippage_amount": {
+            "currency": "CNY",
+            "scale": 2,
+            "type": "money",
+            "units": 0
+          },
+          "slippage_calibration_id": null,
+          "slippage_decision_id": "slippage:2",
+          "slippage_model_key": "slippage.zero.fixture.v1",
+          "type": "fill",
+          "venue_id": {
+            "type": "venue_id",
+            "value": "xshe"
+          }
+        },
+        "fill_accounting_entry": {
+          "account_id": "account:cn-a-primary",
+          "balance_changes": [
+            {
+              "key": {
+                "account_id": "account:cn-a-primary",
+                "currency_id": {
+                  "type": "currency_id",
+                  "value": "CNY"
+                },
+                "type": "cash_balance_key",
+                "venue_id": {
+                  "type": "venue_id",
+                  "value": "xshe"
+                }
+              },
+              "type": "balance_change",
+              "value": {
+                "currency": "CNY",
+                "scale": 2,
+                "type": "money",
+                "units": 120000
+              }
+            },
+            {
+              "key": {
+                "account_id": "account:cn-a-primary",
+                "instrument_id": {
+                  "stable_key": "000001",
+                  "type": "instrument_id",
+                  "venue": "xshe"
+                },
+                "type": "position_balance_key",
+                "venue_id": {
+                  "type": "venue_id",
+                  "value": "xshe"
+                }
+              },
+              "type": "balance_change",
+              "value": {
+                "instrument_id": "xshe:000001",
+                "scale": 0,
+                "type": "quantity",
+                "units": -100
+              }
+            }
+          ],
+          "effective_time": {
+            "epoch_nanoseconds": 1707357600000000000,
+            "type": "utc_instant"
+          },
+          "entry_type": "fill_booked",
+          "fees": [],
+          "financing": [],
+          "journal_entry_id": {
+            "kind": "journal",
+            "type": "domain_id",
+            "value": "jnl_1111111111111111111111111111111111111111111111111111111111111111"
+          },
+          "realized_pnl": [],
+          "recorded_at": {
+            "instant": {
+              "epoch_nanoseconds": 1707357600000000000,
+              "type": "utc_instant"
+            },
+            "phase": {
+              "code": "accounting",
+              "rank": 50,
+              "type": "timeline_phase"
+            },
+            "source_sequence": {
+              "type": "source_sequence",
+              "value": 2
+            },
+            "type": "simulation_instant"
+          },
+          "source_ids": [
+            "fil_2222222222222222222222222222222222222222222222222222222222222222",
+            "ord_2222222222222222222222222222222222222222222222222222222222222222"
+          ],
+          "type": "accounting_journal_entry",
+          "venue_id": {
+            "type": "venue_id",
+            "value": "xshe"
+          }
+        },
+        "instrument": {
+          "base_currency": null,
+          "instrument_id": {
+            "stable_key": "000001",
+            "type": "instrument_id",
+            "venue": "xshe"
+          },
+          "instrument_type": "equity",
+          "quote_currency": {
+            "type": "currency_id",
+            "value": "CNY"
+          },
+          "settlement_currency": {
+            "type": "currency_id",
+            "value": "CNY"
+          },
+          "type": "instrument_definition"
+        },
+        "position_obligation_id": {
+          "kind": "settlement",
+          "type": "domain_id",
+          "value": "stl_4444444444444444444444444444444444444444444444444444444444444444"
+        },
+        "schema_version": 1,
+        "type": "cn_a_share_settlement_query"
+      }
+    ],
+    "reservations": {
+      "account_id": "account:cn-a-primary",
+      "active_reservations": [
+        {
+          "account_id": "account:cn-a-primary",
+          "commitment": {
+            "cash": [
+              {
+                "currency": "CNY",
+                "scale": 2,
+                "type": "money",
+                "units": 20000
+              }
+            ],
+            "exposure_capacity": [],
+            "fee_reserve": [
+              {
+                "currency": "CNY",
+                "scale": 2,
+                "type": "money",
+                "units": 1000
+              }
+            ],
+            "margin": [],
+            "order_capacity_units": 0,
+            "schema_version": 1,
+            "sellable_quantities": [
+              {
+                "instrument_id": "xshe:000001",
+                "scale": 0,
+                "type": "quantity",
+                "units": 20
+              }
+            ],
+            "type": "reservation_commitment"
+          },
+          "last_update_event_id": "order-event:accepted:9",
+          "order_id": {
+            "kind": "order",
+            "type": "domain_id",
+            "value": "ord_9999999999999999999999999999999999999999999999999999999999999999"
+          },
+          "remaining_quantity": {
+            "instrument_id": "xshe:000001",
+            "scale": 0,
+            "type": "quantity",
+            "units": 20
+          },
+          "source_proposal_hash": "sha256:6666666666666666666666666666666666666666666666666666666666666666",
+          "type": "active_order_reservation"
+        }
+      ],
+      "cursors": [
+        {
+          "event_count": 1,
+          "evidence_prefix_hash": "sha256:7777777777777777777777777777777777777777777777777777777777777777",
+          "order_id": {
+            "kind": "order",
+            "type": "domain_id",
+            "value": "ord_9999999999999999999999999999999999999999999999999999999999999999"
+          },
+          "stream_hash": "sha256:8888888888888888888888888888888888888888888888888888888888888888",
+          "type": "order_reservation_cursor"
+        }
+      ],
+      "schema_version": 1,
+      "totals": {
+        "cash": [
+          {
+            "currency": "CNY",
+            "scale": 2,
+            "type": "money",
+            "units": 20000
+          }
+        ],
+        "exposure_capacity": [],
+        "fee_reserve": [
+          {
+            "currency": "CNY",
+            "scale": 2,
+            "type": "money",
+            "units": 1000
+          }
+        ],
+        "margin": [],
+        "order_capacity_units": 0,
+        "schema_version": 1,
+        "sellable_quantities": [
+          {
+            "instrument_id": "xshe:000001",
+            "scale": 0,
+            "type": "quantity",
+            "units": 20
+          }
+        ],
+        "type": "reservation_commitment"
+      },
+      "type": "resource_reservation_state"
+    },
+    "resolutions": [
+      {
+        "cash_withdrawal_time": {
+          "epoch_nanoseconds": 1708329600000000000,
+          "type": "utc_instant"
+        },
+        "fill_accounting_entry_hash": "sha256:dcfab7ffc586067174a09c61f5dc0f07196e9c9e27e9a0fc9f51ec56c83e9d5e",
+        "fill_id": {
+          "kind": "fill",
+          "type": "domain_id",
+          "value": "fil_1111111111111111111111111111111111111111111111111111111111111111"
+        },
+        "next_trading_date": {
+          "calendar_id": "CN.XSHE",
+          "date": "2024-02-19",
+          "type": "trading_date"
+        },
+        "obligations": [
+          {
+            "balance_key": {
+              "account_id": "account:cn-a-primary",
+              "currency_id": {
+                "type": "currency_id",
+                "value": "CNY"
+              },
+              "type": "cash_balance_key",
+              "venue_id": {
+                "type": "venue_id",
+                "value": "xshe"
+              }
+            },
+            "obligation": {
+              "amount": {
+                "currency": "CNY",
+                "scale": 2,
+                "type": "money",
+                "units": -100000
+              },
+              "currency_id": {
+                "type": "currency_id",
+                "value": "CNY"
+              },
+              "instrument_id": null,
+              "quantity": null,
+              "settlement_obligation_id": {
+                "kind": "settlement",
+                "type": "domain_id",
+                "value": "stl_1111111111111111111111111111111111111111111111111111111111111111"
+              },
+              "settlement_time": {
+                "epoch_nanoseconds": 1707357600000000000,
+                "type": "utc_instant"
+              },
+              "source_fill_id": {
+                "kind": "fill",
+                "type": "domain_id",
+                "value": "fil_1111111111111111111111111111111111111111111111111111111111111111"
+              },
+              "trade_time": {
+                "epoch_nanoseconds": 1707357600000000000,
+                "type": "utc_instant"
+              },
+              "type": "settlement_obligation"
+            },
+            "type": "account_settlement_obligation"
+          },
+          {
+            "balance_key": {
+              "account_id": "account:cn-a-primary",
+              "instrument_id": {
+                "stable_key": "000001",
+                "type": "instrument_id",
+                "venue": "xshe"
+              },
+              "type": "position_balance_key",
+              "venue_id": {
+                "type": "venue_id",
+                "value": "xshe"
+              }
+            },
+            "obligation": {
+              "amount": null,
+              "currency_id": null,
+              "instrument_id": {
+                "stable_key": "000001",
+                "type": "instrument_id",
+                "venue": "xshe"
+              },
+              "quantity": {
+                "instrument_id": "xshe:000001",
+                "scale": 0,
+                "type": "quantity",
+                "units": 100
+              },
+              "settlement_obligation_id": {
+                "kind": "settlement",
+                "type": "domain_id",
+                "value": "stl_3333333333333333333333333333333333333333333333333333333333333333"
+              },
+              "settlement_time": {
+                "epoch_nanoseconds": 1708272000000000000,
+                "type": "utc_instant"
+              },
+              "source_fill_id": {
+                "kind": "fill",
+                "type": "domain_id",
+                "value": "fil_1111111111111111111111111111111111111111111111111111111111111111"
+              },
+              "trade_time": {
+                "epoch_nanoseconds": 1707357600000000000,
+                "type": "utc_instant"
+              },
+              "type": "settlement_obligation"
+            },
+            "type": "account_settlement_obligation"
+          }
+        ],
+        "position_availability_time": {
+          "epoch_nanoseconds": 1708272000000000000,
+          "type": "utc_instant"
+        },
+        "schema_version": 1,
+        "trade_date": {
+          "calendar_id": "CN.XSHE",
+          "date": "2024-02-08",
+          "type": "trading_date"
+        },
+        "type": "cn_a_share_settlement_resolution",
+        "venue_id": {
+          "type": "venue_id",
+          "value": "xshe"
+        }
+      },
+      {
+        "cash_withdrawal_time": {
+          "epoch_nanoseconds": 1708329600000000000,
+          "type": "utc_instant"
+        },
+        "fill_accounting_entry_hash": "sha256:01942a817a4ce1a992e35477d9f5c5098b67061da7e0fea222e9fa1795030818",
+        "fill_id": {
+          "kind": "fill",
+          "type": "domain_id",
+          "value": "fil_2222222222222222222222222222222222222222222222222222222222222222"
+        },
+        "next_trading_date": {
+          "calendar_id": "CN.XSHE",
+          "date": "2024-02-19",
+          "type": "trading_date"
+        },
+        "obligations": [
+          {
+            "balance_key": {
+              "account_id": "account:cn-a-primary",
+              "currency_id": {
+                "type": "currency_id",
+                "value": "CNY"
+              },
+              "type": "cash_balance_key",
+              "venue_id": {
+                "type": "venue_id",
+                "value": "xshe"
+              }
+            },
+            "obligation": {
+              "amount": {
+                "currency": "CNY",
+                "scale": 2,
+                "type": "money",
+                "units": 120000
+              },
+              "currency_id": {
+                "type": "currency_id",
+                "value": "CNY"
+              },
+              "instrument_id": null,
+              "quantity": null,
+              "settlement_obligation_id": {
+                "kind": "settlement",
+                "type": "domain_id",
+                "value": "stl_2222222222222222222222222222222222222222222222222222222222222222"
+              },
+              "settlement_time": {
+                "epoch_nanoseconds": 1708329600000000000,
+                "type": "utc_instant"
+              },
+              "source_fill_id": {
+                "kind": "fill",
+                "type": "domain_id",
+                "value": "fil_2222222222222222222222222222222222222222222222222222222222222222"
+              },
+              "trade_time": {
+                "epoch_nanoseconds": 1707357600000000000,
+                "type": "utc_instant"
+              },
+              "type": "settlement_obligation"
+            },
+            "type": "account_settlement_obligation"
+          },
+          {
+            "balance_key": {
+              "account_id": "account:cn-a-primary",
+              "instrument_id": {
+                "stable_key": "000001",
+                "type": "instrument_id",
+                "venue": "xshe"
+              },
+              "type": "position_balance_key",
+              "venue_id": {
+                "type": "venue_id",
+                "value": "xshe"
+              }
+            },
+            "obligation": {
+              "amount": null,
+              "currency_id": null,
+              "instrument_id": {
+                "stable_key": "000001",
+                "type": "instrument_id",
+                "venue": "xshe"
+              },
+              "quantity": {
+                "instrument_id": "xshe:000001",
+                "scale": 0,
+                "type": "quantity",
+                "units": -100
+              },
+              "settlement_obligation_id": {
+                "kind": "settlement",
+                "type": "domain_id",
+                "value": "stl_4444444444444444444444444444444444444444444444444444444444444444"
+              },
+              "settlement_time": {
+                "epoch_nanoseconds": 1707357600000000000,
+                "type": "utc_instant"
+              },
+              "source_fill_id": {
+                "kind": "fill",
+                "type": "domain_id",
+                "value": "fil_2222222222222222222222222222222222222222222222222222222222222222"
+              },
+              "trade_time": {
+                "epoch_nanoseconds": 1707357600000000000,
+                "type": "utc_instant"
+              },
+              "type": "settlement_obligation"
+            },
+            "type": "account_settlement_obligation"
+          }
+        ],
+        "position_availability_time": {
+          "epoch_nanoseconds": 1708272000000000000,
+          "type": "utc_instant"
+        },
+        "schema_version": 1,
+        "trade_date": {
+          "calendar_id": "CN.XSHE",
+          "date": "2024-02-08",
+          "type": "trading_date"
+        },
+        "type": "cn_a_share_settlement_resolution",
+        "venue_id": {
+          "type": "venue_id",
+          "value": "xshe"
+        }
+      }
+    ],
+    "rules": {
+      "account_id": "account:cn-a-primary",
+      "cash_rules": [
+        {
+          "available_margin_reservation_uses": [],
+          "key": {
+            "account_id": "account:cn-a-primary",
+            "currency_id": {
+              "type": "currency_id",
+              "value": "CNY"
+            },
+            "type": "cash_balance_key",
+            "venue_id": {
+              "type": "venue_id",
+              "value": "xshe"
+            }
+          },
+          "pending_receivable_margin_eligible": false,
+          "pending_receivable_tradable": true,
+          "pending_receivable_withdrawable": false,
+          "tradable_reservation_uses": [
+            "cash",
+            "fee_reserve"
+          ],
+          "type": "cash_availability_rule",
+          "withdrawable_reservation_uses": [
+            "cash",
+            "fee_reserve"
+          ]
+        }
+      ],
+      "config_hash": "sha256:a4048566491e23496499839009a5b2e5163f5e9a384e72c8805dc8995c328462",
+      "policy_key": "equity.cn_a_share.cash.availability.v1",
+      "policy_version": 1,
+      "position_rules": [
+        {
+          "key": {
+            "account_id": "account:cn-a-primary",
+            "instrument_id": {
+              "stable_key": "000001",
+              "type": "instrument_id",
+              "venue": "xshe"
+            },
+            "type": "position_balance_key",
+            "venue_id": {
+              "type": "venue_id",
+              "value": "xshe"
+            }
+          },
+          "pending_receivable_sellable": false,
+          "type": "position_availability_rule"
+        }
+      ],
+      "schema_version": 1,
+      "type": "market_settlement_rules"
+    },
+    "settlement_book": {
+      "account_id": "account:cn-a-primary",
+      "book_hash": "sha256:d4eae7baa6644e6dc3e610a61ad2730769fed050b3218dbaceeab53134e1dea0",
+      "events": [
+        {
+          "causation_id": "fil_1111111111111111111111111111111111111111111111111111111111111111",
+          "event_id": "settlement-event:recorded:4",
+          "event_type": "settlement_obligation_recorded",
+          "occurred_at": {
+            "instant": {
+              "epoch_nanoseconds": 1707357600000000000,
+              "type": "utc_instant"
+            },
+            "phase": {
+              "code": "settlement_recorded",
+              "rank": 60,
+              "type": "timeline_phase"
+            },
+            "source_sequence": {
+              "type": "source_sequence",
+              "value": 1
+            },
+            "type": "simulation_instant"
+          },
+          "settlement_obligation_id": {
+            "kind": "settlement",
+            "type": "domain_id",
+            "value": "stl_1111111111111111111111111111111111111111111111111111111111111111"
+          },
+          "source_evidence_hash": "sha256:4f1d8d6f8e65c141d57957ec235ae78e4380cc408b1d6a5108ef826f62704940",
+          "type": "settlement_event"
+        },
+        {
+          "causation_id": "fil_1111111111111111111111111111111111111111111111111111111111111111",
+          "event_id": "settlement-event:recorded:3",
+          "event_type": "settlement_obligation_recorded",
+          "occurred_at": {
+            "instant": {
+              "epoch_nanoseconds": 1707357600000000000,
+              "type": "utc_instant"
+            },
+            "phase": {
+              "code": "settlement_recorded",
+              "rank": 60,
+              "type": "timeline_phase"
+            },
+            "source_sequence": {
+              "type": "source_sequence",
+              "value": 2
+            },
+            "type": "simulation_instant"
+          },
+          "settlement_obligation_id": {
+            "kind": "settlement",
+            "type": "domain_id",
+            "value": "stl_3333333333333333333333333333333333333333333333333333333333333333"
+          },
+          "source_evidence_hash": "sha256:4f1d8d6f8e65c141d57957ec235ae78e4380cc408b1d6a5108ef826f62704940",
+          "type": "settlement_event"
+        },
+        {
+          "causation_id": "fil_2222222222222222222222222222222222222222222222222222222222222222",
+          "event_id": "settlement-event:recorded:2",
+          "event_type": "settlement_obligation_recorded",
+          "occurred_at": {
+            "instant": {
+              "epoch_nanoseconds": 1707357600000000000,
+              "type": "utc_instant"
+            },
+            "phase": {
+              "code": "settlement_recorded",
+              "rank": 60,
+              "type": "timeline_phase"
+            },
+            "source_sequence": {
+              "type": "source_sequence",
+              "value": 3
+            },
+            "type": "simulation_instant"
+          },
+          "settlement_obligation_id": {
+            "kind": "settlement",
+            "type": "domain_id",
+            "value": "stl_2222222222222222222222222222222222222222222222222222222222222222"
+          },
+          "source_evidence_hash": "sha256:68af1d5000a8cd9b59dd46956a5594a9f57b0766012136700ee7a76a35fdd87e",
+          "type": "settlement_event"
+        },
+        {
+          "causation_id": "fil_2222222222222222222222222222222222222222222222222222222222222222",
+          "event_id": "settlement-event:recorded:1",
+          "event_type": "settlement_obligation_recorded",
+          "occurred_at": {
+            "instant": {
+              "epoch_nanoseconds": 1707357600000000000,
+              "type": "utc_instant"
+            },
+            "phase": {
+              "code": "settlement_recorded",
+              "rank": 60,
+              "type": "timeline_phase"
+            },
+            "source_sequence": {
+              "type": "source_sequence",
+              "value": 4
+            },
+            "type": "simulation_instant"
+          },
+          "settlement_obligation_id": {
+            "kind": "settlement",
+            "type": "domain_id",
+            "value": "stl_4444444444444444444444444444444444444444444444444444444444444444"
+          },
+          "source_evidence_hash": "sha256:68af1d5000a8cd9b59dd46956a5594a9f57b0766012136700ee7a76a35fdd87e",
+          "type": "settlement_event"
+        },
+        {
+          "causation_id": "settlement-event:recorded:4",
+          "event_id": "settlement-event:applied:4",
+          "event_type": "settlement_applied",
+          "occurred_at": {
+            "instant": {
+              "epoch_nanoseconds": 1707357600000000000,
+              "type": "utc_instant"
+            },
+            "phase": {
+              "code": "settlement_applied",
+              "rank": 61,
+              "type": "timeline_phase"
+            },
+            "source_sequence": {
+              "type": "source_sequence",
+              "value": 1
+            },
+            "type": "simulation_instant"
+          },
+          "settlement_obligation_id": {
+            "kind": "settlement",
+            "type": "domain_id",
+            "value": "stl_1111111111111111111111111111111111111111111111111111111111111111"
+          },
+          "source_evidence_hash": "sha256:1b3ce35e8cf9f139804aa58db3d4f098931214548c4fd1beadf7b9c724eada24",
+          "type": "settlement_event"
+        },
+        {
+          "causation_id": "settlement-event:recorded:1",
+          "event_id": "settlement-event:applied:3",
+          "event_type": "settlement_applied",
+          "occurred_at": {
+            "instant": {
+              "epoch_nanoseconds": 1707357600000000000,
+              "type": "utc_instant"
+            },
+            "phase": {
+              "code": "settlement_applied",
+              "rank": 61,
+              "type": "timeline_phase"
+            },
+            "source_sequence": {
+              "type": "source_sequence",
+              "value": 2
+            },
+            "type": "simulation_instant"
+          },
+          "settlement_obligation_id": {
+            "kind": "settlement",
+            "type": "domain_id",
+            "value": "stl_4444444444444444444444444444444444444444444444444444444444444444"
+          },
+          "source_evidence_hash": "sha256:d49535bba1aa07daf333cc0de6511e87604da6ff90c5ed43eb43aad10492bd93",
+          "type": "settlement_event"
+        },
+        {
+          "causation_id": "settlement-event:recorded:3",
+          "event_id": "settlement-event:applied:2",
+          "event_type": "settlement_applied",
+          "occurred_at": {
+            "instant": {
+              "epoch_nanoseconds": 1708272000000000000,
+              "type": "utc_instant"
+            },
+            "phase": {
+              "code": "settlement_applied",
+              "rank": 61,
+              "type": "timeline_phase"
+            },
+            "source_sequence": {
+              "type": "source_sequence",
+              "value": 3
+            },
+            "type": "simulation_instant"
+          },
+          "settlement_obligation_id": {
+            "kind": "settlement",
+            "type": "domain_id",
+            "value": "stl_3333333333333333333333333333333333333333333333333333333333333333"
+          },
+          "source_evidence_hash": "sha256:a1a9d487143259bf4c9054000c0adc6c77b62a905a88336fc7954b7e179c1b08",
+          "type": "settlement_event"
+        },
+        {
+          "causation_id": "settlement-event:recorded:2",
+          "event_id": "settlement-event:applied:1",
+          "event_type": "settlement_applied",
+          "occurred_at": {
+            "instant": {
+              "epoch_nanoseconds": 1708329600000000000,
+              "type": "utc_instant"
+            },
+            "phase": {
+              "code": "settlement_applied",
+              "rank": 61,
+              "type": "timeline_phase"
+            },
+            "source_sequence": {
+              "type": "source_sequence",
+              "value": 4
+            },
+            "type": "simulation_instant"
+          },
+          "settlement_obligation_id": {
+            "kind": "settlement",
+            "type": "domain_id",
+            "value": "stl_2222222222222222222222222222222222222222222222222222222222222222"
+          },
+          "source_evidence_hash": "sha256:c1e80add26240612989eb574167430ad37884cb1a3c73789d077297ca314601e",
+          "type": "settlement_event"
+        }
+      ],
+      "obligations": [
+        {
+          "balance_key": {
+            "account_id": "account:cn-a-primary",
+            "currency_id": {
+              "type": "currency_id",
+              "value": "CNY"
+            },
+            "type": "cash_balance_key",
+            "venue_id": {
+              "type": "venue_id",
+              "value": "xshe"
+            }
+          },
+          "obligation": {
+            "amount": {
+              "currency": "CNY",
+              "scale": 2,
+              "type": "money",
+              "units": -100000
+            },
+            "currency_id": {
+              "type": "currency_id",
+              "value": "CNY"
+            },
+            "instrument_id": null,
+            "quantity": null,
+            "settlement_obligation_id": {
+              "kind": "settlement",
+              "type": "domain_id",
+              "value": "stl_1111111111111111111111111111111111111111111111111111111111111111"
+            },
+            "settlement_time": {
+              "epoch_nanoseconds": 1707357600000000000,
+              "type": "utc_instant"
+            },
+            "source_fill_id": {
+              "kind": "fill",
+              "type": "domain_id",
+              "value": "fil_1111111111111111111111111111111111111111111111111111111111111111"
+            },
+            "trade_time": {
+              "epoch_nanoseconds": 1707357600000000000,
+              "type": "utc_instant"
+            },
+            "type": "settlement_obligation"
+          },
+          "type": "account_settlement_obligation"
+        },
+        {
+          "balance_key": {
+            "account_id": "account:cn-a-primary",
+            "currency_id": {
+              "type": "currency_id",
+              "value": "CNY"
+            },
+            "type": "cash_balance_key",
+            "venue_id": {
+              "type": "venue_id",
+              "value": "xshe"
+            }
+          },
+          "obligation": {
+            "amount": {
+              "currency": "CNY",
+              "scale": 2,
+              "type": "money",
+              "units": 120000
+            },
+            "currency_id": {
+              "type": "currency_id",
+              "value": "CNY"
+            },
+            "instrument_id": null,
+            "quantity": null,
+            "settlement_obligation_id": {
+              "kind": "settlement",
+              "type": "domain_id",
+              "value": "stl_2222222222222222222222222222222222222222222222222222222222222222"
+            },
+            "settlement_time": {
+              "epoch_nanoseconds": 1708329600000000000,
+              "type": "utc_instant"
+            },
+            "source_fill_id": {
+              "kind": "fill",
+              "type": "domain_id",
+              "value": "fil_2222222222222222222222222222222222222222222222222222222222222222"
+            },
+            "trade_time": {
+              "epoch_nanoseconds": 1707357600000000000,
+              "type": "utc_instant"
+            },
+            "type": "settlement_obligation"
+          },
+          "type": "account_settlement_obligation"
+        },
+        {
+          "balance_key": {
+            "account_id": "account:cn-a-primary",
+            "instrument_id": {
+              "stable_key": "000001",
+              "type": "instrument_id",
+              "venue": "xshe"
+            },
+            "type": "position_balance_key",
+            "venue_id": {
+              "type": "venue_id",
+              "value": "xshe"
+            }
+          },
+          "obligation": {
+            "amount": null,
+            "currency_id": null,
+            "instrument_id": {
+              "stable_key": "000001",
+              "type": "instrument_id",
+              "venue": "xshe"
+            },
+            "quantity": {
+              "instrument_id": "xshe:000001",
+              "scale": 0,
+              "type": "quantity",
+              "units": 100
+            },
+            "settlement_obligation_id": {
+              "kind": "settlement",
+              "type": "domain_id",
+              "value": "stl_3333333333333333333333333333333333333333333333333333333333333333"
+            },
+            "settlement_time": {
+              "epoch_nanoseconds": 1708272000000000000,
+              "type": "utc_instant"
+            },
+            "source_fill_id": {
+              "kind": "fill",
+              "type": "domain_id",
+              "value": "fil_1111111111111111111111111111111111111111111111111111111111111111"
+            },
+            "trade_time": {
+              "epoch_nanoseconds": 1707357600000000000,
+              "type": "utc_instant"
+            },
+            "type": "settlement_obligation"
+          },
+          "type": "account_settlement_obligation"
+        },
+        {
+          "balance_key": {
+            "account_id": "account:cn-a-primary",
+            "instrument_id": {
+              "stable_key": "000001",
+              "type": "instrument_id",
+              "venue": "xshe"
+            },
+            "type": "position_balance_key",
+            "venue_id": {
+              "type": "venue_id",
+              "value": "xshe"
+            }
+          },
+          "obligation": {
+            "amount": null,
+            "currency_id": null,
+            "instrument_id": {
+              "stable_key": "000001",
+              "type": "instrument_id",
+              "venue": "xshe"
+            },
+            "quantity": {
+              "instrument_id": "xshe:000001",
+              "scale": 0,
+              "type": "quantity",
+              "units": -100
+            },
+            "settlement_obligation_id": {
+              "kind": "settlement",
+              "type": "domain_id",
+              "value": "stl_4444444444444444444444444444444444444444444444444444444444444444"
+            },
+            "settlement_time": {
+              "epoch_nanoseconds": 1707357600000000000,
+              "type": "utc_instant"
+            },
+            "source_fill_id": {
+              "kind": "fill",
+              "type": "domain_id",
+              "value": "fil_2222222222222222222222222222222222222222222222222222222222222222"
+            },
+            "trade_time": {
+              "epoch_nanoseconds": 1707357600000000000,
+              "type": "utc_instant"
+            },
+            "type": "settlement_obligation"
+          },
+          "type": "account_settlement_obligation"
+        }
+      ]
+    },
+    "states": {
+      "cash_boundary_after": {
+        "applied_ids": [
+          "stl_1111111111111111111111111111111111111111111111111111111111111111",
+          "stl_2222222222222222222222222222222222222222222222222222222222222222",
+          "stl_3333333333333333333333333333333333333333333333333333333333333333",
+          "stl_4444444444444444444444444444444444444444444444444444444444444444"
+        ],
+        "cursor": {
+          "position": 8,
+          "prefix_hash": "sha256:d4eae7baa6644e6dc3e610a61ad2730769fed050b3218dbaceeab53134e1dea0",
+          "type": "settlement_book_cursor"
+        },
+        "pending_ids": [],
+        "state_hash": "sha256:b9055583e9430fa24403880038e727e2771963c7332f770fd511688d308ede85"
+      },
+      "cash_boundary_before": {
+        "applied_ids": [
+          "stl_1111111111111111111111111111111111111111111111111111111111111111",
+          "stl_3333333333333333333333333333333333333333333333333333333333333333",
+          "stl_4444444444444444444444444444444444444444444444444444444444444444"
+        ],
+        "cursor": {
+          "position": 7,
+          "prefix_hash": "sha256:29fab730a1cea65feb27915850142fab29ce37d2bcc8ab81be67109a650a4b18",
+          "type": "settlement_book_cursor"
+        },
+        "pending_ids": [
+          "stl_2222222222222222222222222222222222222222222222222222222222222222"
+        ],
+        "state_hash": "sha256:044a0180797beaaf445fab934a52bef838334e765b09d00363166b0bad10c626"
+      },
+      "full": {
+        "applied_ids": [
+          "stl_1111111111111111111111111111111111111111111111111111111111111111",
+          "stl_2222222222222222222222222222222222222222222222222222222222222222",
+          "stl_3333333333333333333333333333333333333333333333333333333333333333",
+          "stl_4444444444444444444444444444444444444444444444444444444444444444"
+        ],
+        "cursor": {
+          "position": 8,
+          "prefix_hash": "sha256:d4eae7baa6644e6dc3e610a61ad2730769fed050b3218dbaceeab53134e1dea0",
+          "type": "settlement_book_cursor"
+        },
+        "pending_ids": [],
+        "state_hash": "sha256:b9055583e9430fa24403880038e727e2771963c7332f770fd511688d308ede85"
+      },
+      "position_boundary_after": {
+        "applied_ids": [
+          "stl_1111111111111111111111111111111111111111111111111111111111111111",
+          "stl_3333333333333333333333333333333333333333333333333333333333333333",
+          "stl_4444444444444444444444444444444444444444444444444444444444444444"
+        ],
+        "cursor": {
+          "position": 7,
+          "prefix_hash": "sha256:29fab730a1cea65feb27915850142fab29ce37d2bcc8ab81be67109a650a4b18",
+          "type": "settlement_book_cursor"
+        },
+        "pending_ids": [
+          "stl_2222222222222222222222222222222222222222222222222222222222222222"
+        ],
+        "state_hash": "sha256:044a0180797beaaf445fab934a52bef838334e765b09d00363166b0bad10c626"
+      },
+      "position_boundary_before": {
+        "applied_ids": [
+          "stl_1111111111111111111111111111111111111111111111111111111111111111",
+          "stl_4444444444444444444444444444444444444444444444444444444444444444"
+        ],
+        "cursor": {
+          "position": 6,
+          "prefix_hash": "sha256:e0ec8103aa91d935fcd98851b766e339b797fbe9f9c153675f2ae7967bd5d567",
+          "type": "settlement_book_cursor"
+        },
+        "pending_ids": [
+          "stl_2222222222222222222222222222222222222222222222222222222222222222",
+          "stl_3333333333333333333333333333333333333333333333333333333333333333"
+        ],
+        "state_hash": "sha256:a44da0ef60fb471d988978dd52d4d911cd3a043d009a35ad549fb25892b5ece2"
+      },
+      "resumed": {
+        "applied_ids": [
+          "stl_1111111111111111111111111111111111111111111111111111111111111111",
+          "stl_2222222222222222222222222222222222222222222222222222222222222222",
+          "stl_3333333333333333333333333333333333333333333333333333333333333333",
+          "stl_4444444444444444444444444444444444444444444444444444444444444444"
+        ],
+        "cursor": {
+          "position": 8,
+          "prefix_hash": "sha256:d4eae7baa6644e6dc3e610a61ad2730769fed050b3218dbaceeab53134e1dea0",
+          "type": "settlement_book_cursor"
+        },
+        "pending_ids": [],
+        "state_hash": "sha256:b9055583e9430fa24403880038e727e2771963c7332f770fd511688d308ede85"
+      }
+    }
+  },
+  "xshg": {
+    "availability": {
+      "before": {
+        "account_id": "account:cn-a-primary",
+        "cash": [
+          {
+            "available_margin": {
+              "currency": "CNY",
+              "scale": 2,
+              "type": "money",
+              "units": 900000
+            },
+            "key": {
+              "account_id": "account:cn-a-primary",
+              "currency_id": {
+                "type": "currency_id",
+                "value": "CNY"
+              },
+              "type": "cash_balance_key",
+              "venue_id": {
+                "type": "venue_id",
+                "value": "xshg"
+              }
+            },
+            "settled": {
+              "currency": "CNY",
+              "scale": 2,
+              "type": "money",
+              "units": 900000
+            },
+            "total": {
+              "currency": "CNY",
+              "scale": 2,
+              "type": "money",
+              "units": 1020000
+            },
+            "tradable": {
+              "currency": "CNY",
+              "scale": 2,
+              "type": "money",
+              "units": 999000
+            },
+            "type": "cash_availability",
+            "withdrawable": {
+              "currency": "CNY",
+              "scale": 2,
+              "type": "money",
+              "units": 879000
+            }
+          }
+        ],
+        "ledger_state_hash": "sha256:6df3acc734d094f5ade20e9ebfc481432e3f73bf8cb9d363868152d490952828",
+        "market_settlement_rules_hash": "sha256:8ea0bddd46a1897e67ca8da9ea57aaa26331cb30003e17e2e8463aa93fd5e4c4",
+        "positions": [
+          {
+            "key": {
+              "account_id": "account:cn-a-primary",
+              "instrument_id": {
+                "stable_key": "600000",
+                "type": "instrument_id",
+                "venue": "xshg"
+              },
+              "type": "position_balance_key",
+              "venue_id": {
+                "type": "venue_id",
+                "value": "xshg"
+              }
+            },
+            "sellable": {
+              "instrument_id": "xshg:600000",
+              "scale": 0,
+              "type": "quantity",
+              "units": 80
+            },
+            "total": {
+              "instrument_id": "xshg:600000",
+              "scale": 0,
+              "type": "quantity",
+              "units": 200
+            },
+            "type": "position_availability"
+          }
+        ],
+        "reservation_state_hash": "sha256:95dba9440655526f12d24f24c101bf89ce4f16eaa7b281cd8148700721c79049",
+        "schema_version": 1,
+        "settlement_state_hash": "sha256:f07fffadb26a491b08d4410efbb41c40d0140b1fdcf5f7c388deddc613c48506",
+        "type": "availability_state"
+      },
+      "cash_available": {
+        "account_id": "account:cn-a-primary",
+        "cash": [
+          {
+            "available_margin": {
+              "currency": "CNY",
+              "scale": 2,
+              "type": "money",
+              "units": 1020000
+            },
+            "key": {
+              "account_id": "account:cn-a-primary",
+              "currency_id": {
+                "type": "currency_id",
+                "value": "CNY"
+              },
+              "type": "cash_balance_key",
+              "venue_id": {
+                "type": "venue_id",
+                "value": "xshg"
+              }
+            },
+            "settled": {
+              "currency": "CNY",
+              "scale": 2,
+              "type": "money",
+              "units": 1020000
+            },
+            "total": {
+              "currency": "CNY",
+              "scale": 2,
+              "type": "money",
+              "units": 1020000
+            },
+            "tradable": {
+              "currency": "CNY",
+              "scale": 2,
+              "type": "money",
+              "units": 999000
+            },
+            "type": "cash_availability",
+            "withdrawable": {
+              "currency": "CNY",
+              "scale": 2,
+              "type": "money",
+              "units": 999000
+            }
+          }
+        ],
+        "ledger_state_hash": "sha256:6df3acc734d094f5ade20e9ebfc481432e3f73bf8cb9d363868152d490952828",
+        "market_settlement_rules_hash": "sha256:8ea0bddd46a1897e67ca8da9ea57aaa26331cb30003e17e2e8463aa93fd5e4c4",
+        "positions": [
+          {
+            "key": {
+              "account_id": "account:cn-a-primary",
+              "instrument_id": {
+                "stable_key": "600000",
+                "type": "instrument_id",
+                "venue": "xshg"
+              },
+              "type": "position_balance_key",
+              "venue_id": {
+                "type": "venue_id",
+                "value": "xshg"
+              }
+            },
+            "sellable": {
+              "instrument_id": "xshg:600000",
+              "scale": 0,
+              "type": "quantity",
+              "units": 180
+            },
+            "total": {
+              "instrument_id": "xshg:600000",
+              "scale": 0,
+              "type": "quantity",
+              "units": 200
+            },
+            "type": "position_availability"
+          }
+        ],
+        "reservation_state_hash": "sha256:95dba9440655526f12d24f24c101bf89ce4f16eaa7b281cd8148700721c79049",
+        "schema_version": 1,
+        "settlement_state_hash": "sha256:68e049998bef789cd7171cb42ae0f5e828e2b06b17bb682ce798c767ba0c486d",
+        "type": "availability_state"
+      },
+      "position_available": {
+        "account_id": "account:cn-a-primary",
+        "cash": [
+          {
+            "available_margin": {
+              "currency": "CNY",
+              "scale": 2,
+              "type": "money",
+              "units": 900000
+            },
+            "key": {
+              "account_id": "account:cn-a-primary",
+              "currency_id": {
+                "type": "currency_id",
+                "value": "CNY"
+              },
+              "type": "cash_balance_key",
+              "venue_id": {
+                "type": "venue_id",
+                "value": "xshg"
+              }
+            },
+            "settled": {
+              "currency": "CNY",
+              "scale": 2,
+              "type": "money",
+              "units": 900000
+            },
+            "total": {
+              "currency": "CNY",
+              "scale": 2,
+              "type": "money",
+              "units": 1020000
+            },
+            "tradable": {
+              "currency": "CNY",
+              "scale": 2,
+              "type": "money",
+              "units": 999000
+            },
+            "type": "cash_availability",
+            "withdrawable": {
+              "currency": "CNY",
+              "scale": 2,
+              "type": "money",
+              "units": 879000
+            }
+          }
+        ],
+        "ledger_state_hash": "sha256:6df3acc734d094f5ade20e9ebfc481432e3f73bf8cb9d363868152d490952828",
+        "market_settlement_rules_hash": "sha256:8ea0bddd46a1897e67ca8da9ea57aaa26331cb30003e17e2e8463aa93fd5e4c4",
+        "positions": [
+          {
+            "key": {
+              "account_id": "account:cn-a-primary",
+              "instrument_id": {
+                "stable_key": "600000",
+                "type": "instrument_id",
+                "venue": "xshg"
+              },
+              "type": "position_balance_key",
+              "venue_id": {
+                "type": "venue_id",
+                "value": "xshg"
+              }
+            },
+            "sellable": {
+              "instrument_id": "xshg:600000",
+              "scale": 0,
+              "type": "quantity",
+              "units": 180
+            },
+            "total": {
+              "instrument_id": "xshg:600000",
+              "scale": 0,
+              "type": "quantity",
+              "units": 200
+            },
+            "type": "position_availability"
+          }
+        ],
+        "reservation_state_hash": "sha256:95dba9440655526f12d24f24c101bf89ce4f16eaa7b281cd8148700721c79049",
+        "schema_version": 1,
+        "settlement_state_hash": "sha256:5a7a79db61c4f59f56bb8c215ce14147227d0d52decff7a4dd117e2536446c6d",
+        "type": "availability_state"
+      }
+    },
+    "calendar_ref": {
+      "calendar_hash": "sha256:0eb554a4554b1ff8eafb841ab447a720ca69383fca9a20b400a7e4a030a1462d",
+      "calendar_id": "CN.XSHG",
+      "venue_id": {
+        "type": "venue_id",
+        "value": "xshg"
+      }
+    },
+    "component_ref": {
+      "component_digest": "sha256:af93c4de6f0b17293bd72d6de27f8adfbd779864f0ae4d628ca76972895df1ea",
+      "component_key": "equity.cn_a_share.cash.settlement.v1",
+      "component_version": 1,
+      "port_type": "settlement_model",
+      "type": "profile_component_ref"
+    },
+    "hashes": {
+      "before_availability": "sha256:6bd49797cf092e7a01a9fcac3fcacdc829424e400e2caf0a37a9019a6a294041",
+      "cash_available": "sha256:7972ccd1296cfa0df13e1c8baaa1a24134f9519150cbbd5c1dc5b66036a9dc07",
+      "journal": "sha256:0e221fd4538f03a63e3d8f883157ef82d39ca7acceadd2bdb8ce66f2e41cba57",
+      "ledger": "sha256:6df3acc734d094f5ade20e9ebfc481432e3f73bf8cb9d363868152d490952828",
+      "position_available": "sha256:755bb18bb1a48e0f8ad1ce4ee360e1969a620b914f1348708082c600408dfb9b",
+      "reservations": "sha256:95dba9440655526f12d24f24c101bf89ce4f16eaa7b281cd8148700721c79049",
+      "rules": "sha256:8ea0bddd46a1897e67ca8da9ea57aaa26331cb30003e17e2e8463aa93fd5e4c4",
+      "settlement_book": "sha256:f32e97dab91dbb3615bbe6b7794140087f5ed5a019f9f8396ad3c815c08d1ae2",
+      "settlement_state": "sha256:68e049998bef789cd7171cb42ae0f5e828e2b06b17bb682ce798c767ba0c486d"
+    },
+    "journal": {
+      "entries": [
+        {
+          "account_id": "account:cn-a-primary",
+          "balance_changes": [
+            {
+              "key": {
+                "account_id": "account:cn-a-primary",
+                "currency_id": {
+                  "type": "currency_id",
+                  "value": "CNY"
+                },
+                "type": "cash_balance_key",
+                "venue_id": {
+                  "type": "venue_id",
+                  "value": "xshg"
+                }
+              },
+              "type": "balance_change",
+              "value": {
+                "currency": "CNY",
+                "scale": 2,
+                "type": "money",
+                "units": 1000000
+              }
+            },
+            {
+              "key": {
+                "account_id": "account:cn-a-primary",
+                "instrument_id": {
+                  "stable_key": "600000",
+                  "type": "instrument_id",
+                  "venue": "xshg"
+                },
+                "type": "position_balance_key",
+                "venue_id": {
+                  "type": "venue_id",
+                  "value": "xshg"
+                }
+              },
+              "type": "balance_change",
+              "value": {
+                "instrument_id": "xshg:600000",
+                "scale": 0,
+                "type": "quantity",
+                "units": 200
+              }
+            }
+          ],
+          "effective_time": {
+            "epoch_nanoseconds": 1707354000000000000,
+            "type": "utc_instant"
+          },
+          "entry_type": "capital_deposited",
+          "fees": [],
+          "financing": [],
+          "journal_entry_id": {
+            "kind": "journal",
+            "type": "domain_id",
+            "value": "jnl_0000000000000000000000000000000000000000000000000000000000000000"
+          },
+          "realized_pnl": [],
+          "recorded_at": {
+            "instant": {
+              "epoch_nanoseconds": 1707354000000000000,
+              "type": "utc_instant"
+            },
+            "phase": {
+              "code": "accounting",
+              "rank": 50,
+              "type": "timeline_phase"
+            },
+            "source_sequence": {
+              "type": "source_sequence",
+              "value": 1
+            },
+            "type": "simulation_instant"
+          },
+          "source_ids": [
+            "initial:cash-position"
+          ],
+          "type": "accounting_journal_entry",
+          "venue_id": {
+            "type": "venue_id",
+            "value": "xshg"
+          }
+        },
+        {
+          "account_id": "account:cn-a-primary",
+          "balance_changes": [
+            {
+              "key": {
+                "account_id": "account:cn-a-primary",
+                "currency_id": {
+                  "type": "currency_id",
+                  "value": "CNY"
+                },
+                "type": "cash_balance_key",
+                "venue_id": {
+                  "type": "venue_id",
+                  "value": "xshg"
+                }
+              },
+              "type": "balance_change",
+              "value": {
+                "currency": "CNY",
+                "scale": 2,
+                "type": "money",
+                "units": -100000
+              }
+            },
+            {
+              "key": {
+                "account_id": "account:cn-a-primary",
+                "instrument_id": {
+                  "stable_key": "600000",
+                  "type": "instrument_id",
+                  "venue": "xshg"
+                },
+                "type": "position_balance_key",
+                "venue_id": {
+                  "type": "venue_id",
+                  "value": "xshg"
+                }
+              },
+              "type": "balance_change",
+              "value": {
+                "instrument_id": "xshg:600000",
+                "scale": 0,
+                "type": "quantity",
+                "units": 100
+              }
+            }
+          ],
+          "effective_time": {
+            "epoch_nanoseconds": 1707357600000000000,
+            "type": "utc_instant"
+          },
+          "entry_type": "fill_booked",
+          "fees": [],
+          "financing": [],
+          "journal_entry_id": {
+            "kind": "journal",
+            "type": "domain_id",
+            "value": "jnl_2222222222222222222222222222222222222222222222222222222222222222"
+          },
+          "realized_pnl": [],
+          "recorded_at": {
+            "instant": {
+              "epoch_nanoseconds": 1707357600000000000,
+              "type": "utc_instant"
+            },
+            "phase": {
+              "code": "accounting",
+              "rank": 50,
+              "type": "timeline_phase"
+            },
+            "source_sequence": {
+              "type": "source_sequence",
+              "value": 1
+            },
+            "type": "simulation_instant"
+          },
+          "source_ids": [
+            "fil_1111111111111111111111111111111111111111111111111111111111111111",
+            "ord_1111111111111111111111111111111111111111111111111111111111111111"
+          ],
+          "type": "accounting_journal_entry",
+          "venue_id": {
+            "type": "venue_id",
+            "value": "xshg"
+          }
+        },
+        {
+          "account_id": "account:cn-a-primary",
+          "balance_changes": [
+            {
+              "key": {
+                "account_id": "account:cn-a-primary",
+                "currency_id": {
+                  "type": "currency_id",
+                  "value": "CNY"
+                },
+                "type": "cash_balance_key",
+                "venue_id": {
+                  "type": "venue_id",
+                  "value": "xshg"
+                }
+              },
+              "type": "balance_change",
+              "value": {
+                "currency": "CNY",
+                "scale": 2,
+                "type": "money",
+                "units": 120000
+              }
+            },
+            {
+              "key": {
+                "account_id": "account:cn-a-primary",
+                "instrument_id": {
+                  "stable_key": "600000",
+                  "type": "instrument_id",
+                  "venue": "xshg"
+                },
+                "type": "position_balance_key",
+                "venue_id": {
+                  "type": "venue_id",
+                  "value": "xshg"
+                }
+              },
+              "type": "balance_change",
+              "value": {
+                "instrument_id": "xshg:600000",
+                "scale": 0,
+                "type": "quantity",
+                "units": -100
+              }
+            }
+          ],
+          "effective_time": {
+            "epoch_nanoseconds": 1707357600000000000,
+            "type": "utc_instant"
+          },
+          "entry_type": "fill_booked",
+          "fees": [],
+          "financing": [],
+          "journal_entry_id": {
+            "kind": "journal",
+            "type": "domain_id",
+            "value": "jnl_1111111111111111111111111111111111111111111111111111111111111111"
+          },
+          "realized_pnl": [],
+          "recorded_at": {
+            "instant": {
+              "epoch_nanoseconds": 1707357600000000000,
+              "type": "utc_instant"
+            },
+            "phase": {
+              "code": "accounting",
+              "rank": 50,
+              "type": "timeline_phase"
+            },
+            "source_sequence": {
+              "type": "source_sequence",
+              "value": 2
+            },
+            "type": "simulation_instant"
+          },
+          "source_ids": [
+            "fil_2222222222222222222222222222222222222222222222222222222222222222",
+            "ord_2222222222222222222222222222222222222222222222222222222222222222"
+          ],
+          "type": "accounting_journal_entry",
+          "venue_id": {
+            "type": "venue_id",
+            "value": "xshg"
+          }
+        }
+      ],
+      "journal_hash": "sha256:0e221fd4538f03a63e3d8f883157ef82d39ca7acceadd2bdb8ce66f2e41cba57"
+    },
+    "ledger": {
+      "cash_balances": [
+        {
+          "amount": {
+            "currency": "CNY",
+            "scale": 2,
+            "type": "money",
+            "units": 1020000
+          },
+          "key": {
+            "account_id": "account:cn-a-primary",
+            "currency_id": {
+              "type": "currency_id",
+              "value": "CNY"
+            },
+            "type": "cash_balance_key",
+            "venue_id": {
+              "type": "venue_id",
+              "value": "xshg"
+            }
+          },
+          "type": "cash_balance"
+        }
+      ],
+      "cursor": {
+        "position": 3,
+        "prefix_hash": "sha256:0e221fd4538f03a63e3d8f883157ef82d39ca7acceadd2bdb8ce66f2e41cba57",
+        "type": "journal_replay_cursor"
+      },
+      "fees": [],
+      "financing": [],
+      "position_balances": [
+        {
+          "key": {
+            "account_id": "account:cn-a-primary",
+            "instrument_id": {
+              "stable_key": "600000",
+              "type": "instrument_id",
+              "venue": "xshg"
+            },
+            "type": "position_balance_key",
+            "venue_id": {
+              "type": "venue_id",
+              "value": "xshg"
+            }
+          },
+          "lots": [],
+          "quantity": {
+            "instrument_id": "xshg:600000",
+            "scale": 0,
+            "type": "quantity",
+            "units": 200
+          },
+          "type": "position_balance"
+        }
+      ],
+      "realized_pnl": [],
+      "schema_hash": "sha256:1e53c2b4916eee0338d7a52d82240138fb7162668631ac3c72c325689749b446",
+      "type": "ledger_state"
+    },
+    "queries": [
+      {
+        "cash_obligation_id": {
+          "kind": "settlement",
+          "type": "domain_id",
+          "value": "stl_1111111111111111111111111111111111111111111111111111111111111111"
+        },
+        "fill": {
+          "account_id": "account:cn-a-primary",
+          "execution_time": {
+            "epoch_nanoseconds": 1707357600000000000,
+            "type": "utc_instant"
+          },
+          "fill_id": {
+            "kind": "fill",
+            "type": "domain_id",
+            "value": "fil_1111111111111111111111111111111111111111111111111111111111111111"
+          },
+          "instrument_id": {
+            "stable_key": "600000",
+            "type": "instrument_id",
+            "venue": "xshg"
+          },
+          "liquidity": "taker",
+          "order_id": {
+            "kind": "order",
+            "type": "domain_id",
+            "value": "ord_1111111111111111111111111111111111111111111111111111111111111111"
+          },
+          "price": {
+            "instrument_id": "xshg:600000",
+            "quote_currency": "CNY",
+            "scale": 2,
+            "type": "price",
+            "units": 1000
+          },
+          "quantity": {
+            "instrument_id": "xshg:600000",
+            "scale": 0,
+            "type": "quantity",
+            "units": 100
+          },
+          "reference_price": {
+            "instrument_id": "xshg:600000",
+            "quote_currency": "CNY",
+            "scale": 2,
+            "type": "price",
+            "units": 1000
+          },
+          "reference_price_purpose": "execution_reference",
+          "side": "buy",
+          "slippage_amount": {
+            "currency": "CNY",
+            "scale": 2,
+            "type": "money",
+            "units": 0
+          },
+          "slippage_calibration_id": null,
+          "slippage_decision_id": "slippage:1",
+          "slippage_model_key": "slippage.zero.fixture.v1",
+          "type": "fill",
+          "venue_id": {
+            "type": "venue_id",
+            "value": "xshg"
+          }
+        },
+        "fill_accounting_entry": {
+          "account_id": "account:cn-a-primary",
+          "balance_changes": [
+            {
+              "key": {
+                "account_id": "account:cn-a-primary",
+                "currency_id": {
+                  "type": "currency_id",
+                  "value": "CNY"
+                },
+                "type": "cash_balance_key",
+                "venue_id": {
+                  "type": "venue_id",
+                  "value": "xshg"
+                }
+              },
+              "type": "balance_change",
+              "value": {
+                "currency": "CNY",
+                "scale": 2,
+                "type": "money",
+                "units": -100000
+              }
+            },
+            {
+              "key": {
+                "account_id": "account:cn-a-primary",
+                "instrument_id": {
+                  "stable_key": "600000",
+                  "type": "instrument_id",
+                  "venue": "xshg"
+                },
+                "type": "position_balance_key",
+                "venue_id": {
+                  "type": "venue_id",
+                  "value": "xshg"
+                }
+              },
+              "type": "balance_change",
+              "value": {
+                "instrument_id": "xshg:600000",
+                "scale": 0,
+                "type": "quantity",
+                "units": 100
+              }
+            }
+          ],
+          "effective_time": {
+            "epoch_nanoseconds": 1707357600000000000,
+            "type": "utc_instant"
+          },
+          "entry_type": "fill_booked",
+          "fees": [],
+          "financing": [],
+          "journal_entry_id": {
+            "kind": "journal",
+            "type": "domain_id",
+            "value": "jnl_2222222222222222222222222222222222222222222222222222222222222222"
+          },
+          "realized_pnl": [],
+          "recorded_at": {
+            "instant": {
+              "epoch_nanoseconds": 1707357600000000000,
+              "type": "utc_instant"
+            },
+            "phase": {
+              "code": "accounting",
+              "rank": 50,
+              "type": "timeline_phase"
+            },
+            "source_sequence": {
+              "type": "source_sequence",
+              "value": 1
+            },
+            "type": "simulation_instant"
+          },
+          "source_ids": [
+            "fil_1111111111111111111111111111111111111111111111111111111111111111",
+            "ord_1111111111111111111111111111111111111111111111111111111111111111"
+          ],
+          "type": "accounting_journal_entry",
+          "venue_id": {
+            "type": "venue_id",
+            "value": "xshg"
+          }
+        },
+        "instrument": {
+          "base_currency": null,
+          "instrument_id": {
+            "stable_key": "600000",
+            "type": "instrument_id",
+            "venue": "xshg"
+          },
+          "instrument_type": "equity",
+          "quote_currency": {
+            "type": "currency_id",
+            "value": "CNY"
+          },
+          "settlement_currency": {
+            "type": "currency_id",
+            "value": "CNY"
+          },
+          "type": "instrument_definition"
+        },
+        "position_obligation_id": {
+          "kind": "settlement",
+          "type": "domain_id",
+          "value": "stl_3333333333333333333333333333333333333333333333333333333333333333"
+        },
+        "schema_version": 1,
+        "type": "cn_a_share_settlement_query"
+      },
+      {
+        "cash_obligation_id": {
+          "kind": "settlement",
+          "type": "domain_id",
+          "value": "stl_2222222222222222222222222222222222222222222222222222222222222222"
+        },
+        "fill": {
+          "account_id": "account:cn-a-primary",
+          "execution_time": {
+            "epoch_nanoseconds": 1707357600000000000,
+            "type": "utc_instant"
+          },
+          "fill_id": {
+            "kind": "fill",
+            "type": "domain_id",
+            "value": "fil_2222222222222222222222222222222222222222222222222222222222222222"
+          },
+          "instrument_id": {
+            "stable_key": "600000",
+            "type": "instrument_id",
+            "venue": "xshg"
+          },
+          "liquidity": "taker",
+          "order_id": {
+            "kind": "order",
+            "type": "domain_id",
+            "value": "ord_2222222222222222222222222222222222222222222222222222222222222222"
+          },
+          "price": {
+            "instrument_id": "xshg:600000",
+            "quote_currency": "CNY",
+            "scale": 2,
+            "type": "price",
+            "units": 1200
+          },
+          "quantity": {
+            "instrument_id": "xshg:600000",
+            "scale": 0,
+            "type": "quantity",
+            "units": 100
+          },
+          "reference_price": {
+            "instrument_id": "xshg:600000",
+            "quote_currency": "CNY",
+            "scale": 2,
+            "type": "price",
+            "units": 1200
+          },
+          "reference_price_purpose": "execution_reference",
+          "side": "sell",
+          "slippage_amount": {
+            "currency": "CNY",
+            "scale": 2,
+            "type": "money",
+            "units": 0
+          },
+          "slippage_calibration_id": null,
+          "slippage_decision_id": "slippage:2",
+          "slippage_model_key": "slippage.zero.fixture.v1",
+          "type": "fill",
+          "venue_id": {
+            "type": "venue_id",
+            "value": "xshg"
+          }
+        },
+        "fill_accounting_entry": {
+          "account_id": "account:cn-a-primary",
+          "balance_changes": [
+            {
+              "key": {
+                "account_id": "account:cn-a-primary",
+                "currency_id": {
+                  "type": "currency_id",
+                  "value": "CNY"
+                },
+                "type": "cash_balance_key",
+                "venue_id": {
+                  "type": "venue_id",
+                  "value": "xshg"
+                }
+              },
+              "type": "balance_change",
+              "value": {
+                "currency": "CNY",
+                "scale": 2,
+                "type": "money",
+                "units": 120000
+              }
+            },
+            {
+              "key": {
+                "account_id": "account:cn-a-primary",
+                "instrument_id": {
+                  "stable_key": "600000",
+                  "type": "instrument_id",
+                  "venue": "xshg"
+                },
+                "type": "position_balance_key",
+                "venue_id": {
+                  "type": "venue_id",
+                  "value": "xshg"
+                }
+              },
+              "type": "balance_change",
+              "value": {
+                "instrument_id": "xshg:600000",
+                "scale": 0,
+                "type": "quantity",
+                "units": -100
+              }
+            }
+          ],
+          "effective_time": {
+            "epoch_nanoseconds": 1707357600000000000,
+            "type": "utc_instant"
+          },
+          "entry_type": "fill_booked",
+          "fees": [],
+          "financing": [],
+          "journal_entry_id": {
+            "kind": "journal",
+            "type": "domain_id",
+            "value": "jnl_1111111111111111111111111111111111111111111111111111111111111111"
+          },
+          "realized_pnl": [],
+          "recorded_at": {
+            "instant": {
+              "epoch_nanoseconds": 1707357600000000000,
+              "type": "utc_instant"
+            },
+            "phase": {
+              "code": "accounting",
+              "rank": 50,
+              "type": "timeline_phase"
+            },
+            "source_sequence": {
+              "type": "source_sequence",
+              "value": 2
+            },
+            "type": "simulation_instant"
+          },
+          "source_ids": [
+            "fil_2222222222222222222222222222222222222222222222222222222222222222",
+            "ord_2222222222222222222222222222222222222222222222222222222222222222"
+          ],
+          "type": "accounting_journal_entry",
+          "venue_id": {
+            "type": "venue_id",
+            "value": "xshg"
+          }
+        },
+        "instrument": {
+          "base_currency": null,
+          "instrument_id": {
+            "stable_key": "600000",
+            "type": "instrument_id",
+            "venue": "xshg"
+          },
+          "instrument_type": "equity",
+          "quote_currency": {
+            "type": "currency_id",
+            "value": "CNY"
+          },
+          "settlement_currency": {
+            "type": "currency_id",
+            "value": "CNY"
+          },
+          "type": "instrument_definition"
+        },
+        "position_obligation_id": {
+          "kind": "settlement",
+          "type": "domain_id",
+          "value": "stl_4444444444444444444444444444444444444444444444444444444444444444"
+        },
+        "schema_version": 1,
+        "type": "cn_a_share_settlement_query"
+      }
+    ],
+    "reservations": {
+      "account_id": "account:cn-a-primary",
+      "active_reservations": [
+        {
+          "account_id": "account:cn-a-primary",
+          "commitment": {
+            "cash": [
+              {
+                "currency": "CNY",
+                "scale": 2,
+                "type": "money",
+                "units": 20000
+              }
+            ],
+            "exposure_capacity": [],
+            "fee_reserve": [
+              {
+                "currency": "CNY",
+                "scale": 2,
+                "type": "money",
+                "units": 1000
+              }
+            ],
+            "margin": [],
+            "order_capacity_units": 0,
+            "schema_version": 1,
+            "sellable_quantities": [
+              {
+                "instrument_id": "xshg:600000",
+                "scale": 0,
+                "type": "quantity",
+                "units": 20
+              }
+            ],
+            "type": "reservation_commitment"
+          },
+          "last_update_event_id": "order-event:accepted:9",
+          "order_id": {
+            "kind": "order",
+            "type": "domain_id",
+            "value": "ord_9999999999999999999999999999999999999999999999999999999999999999"
+          },
+          "remaining_quantity": {
+            "instrument_id": "xshg:600000",
+            "scale": 0,
+            "type": "quantity",
+            "units": 20
+          },
+          "source_proposal_hash": "sha256:6666666666666666666666666666666666666666666666666666666666666666",
+          "type": "active_order_reservation"
+        }
+      ],
+      "cursors": [
+        {
+          "event_count": 1,
+          "evidence_prefix_hash": "sha256:7777777777777777777777777777777777777777777777777777777777777777",
+          "order_id": {
+            "kind": "order",
+            "type": "domain_id",
+            "value": "ord_9999999999999999999999999999999999999999999999999999999999999999"
+          },
+          "stream_hash": "sha256:8888888888888888888888888888888888888888888888888888888888888888",
+          "type": "order_reservation_cursor"
+        }
+      ],
+      "schema_version": 1,
+      "totals": {
+        "cash": [
+          {
+            "currency": "CNY",
+            "scale": 2,
+            "type": "money",
+            "units": 20000
+          }
+        ],
+        "exposure_capacity": [],
+        "fee_reserve": [
+          {
+            "currency": "CNY",
+            "scale": 2,
+            "type": "money",
+            "units": 1000
+          }
+        ],
+        "margin": [],
+        "order_capacity_units": 0,
+        "schema_version": 1,
+        "sellable_quantities": [
+          {
+            "instrument_id": "xshg:600000",
+            "scale": 0,
+            "type": "quantity",
+            "units": 20
+          }
+        ],
+        "type": "reservation_commitment"
+      },
+      "type": "resource_reservation_state"
+    },
+    "resolutions": [
+      {
+        "cash_withdrawal_time": {
+          "epoch_nanoseconds": 1708329600000000000,
+          "type": "utc_instant"
+        },
+        "fill_accounting_entry_hash": "sha256:f473733f6ace848974ce80455b1272c084b7200bfa58630ec3f5c878bf8eea49",
+        "fill_id": {
+          "kind": "fill",
+          "type": "domain_id",
+          "value": "fil_1111111111111111111111111111111111111111111111111111111111111111"
+        },
+        "next_trading_date": {
+          "calendar_id": "CN.XSHG",
+          "date": "2024-02-19",
+          "type": "trading_date"
+        },
+        "obligations": [
+          {
+            "balance_key": {
+              "account_id": "account:cn-a-primary",
+              "currency_id": {
+                "type": "currency_id",
+                "value": "CNY"
+              },
+              "type": "cash_balance_key",
+              "venue_id": {
+                "type": "venue_id",
+                "value": "xshg"
+              }
+            },
+            "obligation": {
+              "amount": {
+                "currency": "CNY",
+                "scale": 2,
+                "type": "money",
+                "units": -100000
+              },
+              "currency_id": {
+                "type": "currency_id",
+                "value": "CNY"
+              },
+              "instrument_id": null,
+              "quantity": null,
+              "settlement_obligation_id": {
+                "kind": "settlement",
+                "type": "domain_id",
+                "value": "stl_1111111111111111111111111111111111111111111111111111111111111111"
+              },
+              "settlement_time": {
+                "epoch_nanoseconds": 1707357600000000000,
+                "type": "utc_instant"
+              },
+              "source_fill_id": {
+                "kind": "fill",
+                "type": "domain_id",
+                "value": "fil_1111111111111111111111111111111111111111111111111111111111111111"
+              },
+              "trade_time": {
+                "epoch_nanoseconds": 1707357600000000000,
+                "type": "utc_instant"
+              },
+              "type": "settlement_obligation"
+            },
+            "type": "account_settlement_obligation"
+          },
+          {
+            "balance_key": {
+              "account_id": "account:cn-a-primary",
+              "instrument_id": {
+                "stable_key": "600000",
+                "type": "instrument_id",
+                "venue": "xshg"
+              },
+              "type": "position_balance_key",
+              "venue_id": {
+                "type": "venue_id",
+                "value": "xshg"
+              }
+            },
+            "obligation": {
+              "amount": null,
+              "currency_id": null,
+              "instrument_id": {
+                "stable_key": "600000",
+                "type": "instrument_id",
+                "venue": "xshg"
+              },
+              "quantity": {
+                "instrument_id": "xshg:600000",
+                "scale": 0,
+                "type": "quantity",
+                "units": 100
+              },
+              "settlement_obligation_id": {
+                "kind": "settlement",
+                "type": "domain_id",
+                "value": "stl_3333333333333333333333333333333333333333333333333333333333333333"
+              },
+              "settlement_time": {
+                "epoch_nanoseconds": 1708272000000000000,
+                "type": "utc_instant"
+              },
+              "source_fill_id": {
+                "kind": "fill",
+                "type": "domain_id",
+                "value": "fil_1111111111111111111111111111111111111111111111111111111111111111"
+              },
+              "trade_time": {
+                "epoch_nanoseconds": 1707357600000000000,
+                "type": "utc_instant"
+              },
+              "type": "settlement_obligation"
+            },
+            "type": "account_settlement_obligation"
+          }
+        ],
+        "position_availability_time": {
+          "epoch_nanoseconds": 1708272000000000000,
+          "type": "utc_instant"
+        },
+        "schema_version": 1,
+        "trade_date": {
+          "calendar_id": "CN.XSHG",
+          "date": "2024-02-08",
+          "type": "trading_date"
+        },
+        "type": "cn_a_share_settlement_resolution",
+        "venue_id": {
+          "type": "venue_id",
+          "value": "xshg"
+        }
+      },
+      {
+        "cash_withdrawal_time": {
+          "epoch_nanoseconds": 1708329600000000000,
+          "type": "utc_instant"
+        },
+        "fill_accounting_entry_hash": "sha256:105b5160af203eb7ddff68017fcecb5cc5bd9f14c334dd918b96ba6e30d8af11",
+        "fill_id": {
+          "kind": "fill",
+          "type": "domain_id",
+          "value": "fil_2222222222222222222222222222222222222222222222222222222222222222"
+        },
+        "next_trading_date": {
+          "calendar_id": "CN.XSHG",
+          "date": "2024-02-19",
+          "type": "trading_date"
+        },
+        "obligations": [
+          {
+            "balance_key": {
+              "account_id": "account:cn-a-primary",
+              "currency_id": {
+                "type": "currency_id",
+                "value": "CNY"
+              },
+              "type": "cash_balance_key",
+              "venue_id": {
+                "type": "venue_id",
+                "value": "xshg"
+              }
+            },
+            "obligation": {
+              "amount": {
+                "currency": "CNY",
+                "scale": 2,
+                "type": "money",
+                "units": 120000
+              },
+              "currency_id": {
+                "type": "currency_id",
+                "value": "CNY"
+              },
+              "instrument_id": null,
+              "quantity": null,
+              "settlement_obligation_id": {
+                "kind": "settlement",
+                "type": "domain_id",
+                "value": "stl_2222222222222222222222222222222222222222222222222222222222222222"
+              },
+              "settlement_time": {
+                "epoch_nanoseconds": 1708329600000000000,
+                "type": "utc_instant"
+              },
+              "source_fill_id": {
+                "kind": "fill",
+                "type": "domain_id",
+                "value": "fil_2222222222222222222222222222222222222222222222222222222222222222"
+              },
+              "trade_time": {
+                "epoch_nanoseconds": 1707357600000000000,
+                "type": "utc_instant"
+              },
+              "type": "settlement_obligation"
+            },
+            "type": "account_settlement_obligation"
+          },
+          {
+            "balance_key": {
+              "account_id": "account:cn-a-primary",
+              "instrument_id": {
+                "stable_key": "600000",
+                "type": "instrument_id",
+                "venue": "xshg"
+              },
+              "type": "position_balance_key",
+              "venue_id": {
+                "type": "venue_id",
+                "value": "xshg"
+              }
+            },
+            "obligation": {
+              "amount": null,
+              "currency_id": null,
+              "instrument_id": {
+                "stable_key": "600000",
+                "type": "instrument_id",
+                "venue": "xshg"
+              },
+              "quantity": {
+                "instrument_id": "xshg:600000",
+                "scale": 0,
+                "type": "quantity",
+                "units": -100
+              },
+              "settlement_obligation_id": {
+                "kind": "settlement",
+                "type": "domain_id",
+                "value": "stl_4444444444444444444444444444444444444444444444444444444444444444"
+              },
+              "settlement_time": {
+                "epoch_nanoseconds": 1707357600000000000,
+                "type": "utc_instant"
+              },
+              "source_fill_id": {
+                "kind": "fill",
+                "type": "domain_id",
+                "value": "fil_2222222222222222222222222222222222222222222222222222222222222222"
+              },
+              "trade_time": {
+                "epoch_nanoseconds": 1707357600000000000,
+                "type": "utc_instant"
+              },
+              "type": "settlement_obligation"
+            },
+            "type": "account_settlement_obligation"
+          }
+        ],
+        "position_availability_time": {
+          "epoch_nanoseconds": 1708272000000000000,
+          "type": "utc_instant"
+        },
+        "schema_version": 1,
+        "trade_date": {
+          "calendar_id": "CN.XSHG",
+          "date": "2024-02-08",
+          "type": "trading_date"
+        },
+        "type": "cn_a_share_settlement_resolution",
+        "venue_id": {
+          "type": "venue_id",
+          "value": "xshg"
+        }
+      }
+    ],
+    "rules": {
+      "account_id": "account:cn-a-primary",
+      "cash_rules": [
+        {
+          "available_margin_reservation_uses": [],
+          "key": {
+            "account_id": "account:cn-a-primary",
+            "currency_id": {
+              "type": "currency_id",
+              "value": "CNY"
+            },
+            "type": "cash_balance_key",
+            "venue_id": {
+              "type": "venue_id",
+              "value": "xshg"
+            }
+          },
+          "pending_receivable_margin_eligible": false,
+          "pending_receivable_tradable": true,
+          "pending_receivable_withdrawable": false,
+          "tradable_reservation_uses": [
+            "cash",
+            "fee_reserve"
+          ],
+          "type": "cash_availability_rule",
+          "withdrawable_reservation_uses": [
+            "cash",
+            "fee_reserve"
+          ]
+        }
+      ],
+      "config_hash": "sha256:436f4a9d09cb8fe0b90833a57816133848b4fdd7505e25b55daa46bde21aeb75",
+      "policy_key": "equity.cn_a_share.cash.availability.v1",
+      "policy_version": 1,
+      "position_rules": [
+        {
+          "key": {
+            "account_id": "account:cn-a-primary",
+            "instrument_id": {
+              "stable_key": "600000",
+              "type": "instrument_id",
+              "venue": "xshg"
+            },
+            "type": "position_balance_key",
+            "venue_id": {
+              "type": "venue_id",
+              "value": "xshg"
+            }
+          },
+          "pending_receivable_sellable": false,
+          "type": "position_availability_rule"
+        }
+      ],
+      "schema_version": 1,
+      "type": "market_settlement_rules"
+    },
+    "settlement_book": {
+      "account_id": "account:cn-a-primary",
+      "book_hash": "sha256:f32e97dab91dbb3615bbe6b7794140087f5ed5a019f9f8396ad3c815c08d1ae2",
+      "events": [
+        {
+          "causation_id": "fil_1111111111111111111111111111111111111111111111111111111111111111",
+          "event_id": "settlement-event:recorded:4",
+          "event_type": "settlement_obligation_recorded",
+          "occurred_at": {
+            "instant": {
+              "epoch_nanoseconds": 1707357600000000000,
+              "type": "utc_instant"
+            },
+            "phase": {
+              "code": "settlement_recorded",
+              "rank": 60,
+              "type": "timeline_phase"
+            },
+            "source_sequence": {
+              "type": "source_sequence",
+              "value": 1
+            },
+            "type": "simulation_instant"
+          },
+          "settlement_obligation_id": {
+            "kind": "settlement",
+            "type": "domain_id",
+            "value": "stl_1111111111111111111111111111111111111111111111111111111111111111"
+          },
+          "source_evidence_hash": "sha256:b3372e6a2eed4edae0cd33e906903b3a4ce8cf41d63d7d588c4159090d23673c",
+          "type": "settlement_event"
+        },
+        {
+          "causation_id": "fil_1111111111111111111111111111111111111111111111111111111111111111",
+          "event_id": "settlement-event:recorded:3",
+          "event_type": "settlement_obligation_recorded",
+          "occurred_at": {
+            "instant": {
+              "epoch_nanoseconds": 1707357600000000000,
+              "type": "utc_instant"
+            },
+            "phase": {
+              "code": "settlement_recorded",
+              "rank": 60,
+              "type": "timeline_phase"
+            },
+            "source_sequence": {
+              "type": "source_sequence",
+              "value": 2
+            },
+            "type": "simulation_instant"
+          },
+          "settlement_obligation_id": {
+            "kind": "settlement",
+            "type": "domain_id",
+            "value": "stl_3333333333333333333333333333333333333333333333333333333333333333"
+          },
+          "source_evidence_hash": "sha256:b3372e6a2eed4edae0cd33e906903b3a4ce8cf41d63d7d588c4159090d23673c",
+          "type": "settlement_event"
+        },
+        {
+          "causation_id": "fil_2222222222222222222222222222222222222222222222222222222222222222",
+          "event_id": "settlement-event:recorded:2",
+          "event_type": "settlement_obligation_recorded",
+          "occurred_at": {
+            "instant": {
+              "epoch_nanoseconds": 1707357600000000000,
+              "type": "utc_instant"
+            },
+            "phase": {
+              "code": "settlement_recorded",
+              "rank": 60,
+              "type": "timeline_phase"
+            },
+            "source_sequence": {
+              "type": "source_sequence",
+              "value": 3
+            },
+            "type": "simulation_instant"
+          },
+          "settlement_obligation_id": {
+            "kind": "settlement",
+            "type": "domain_id",
+            "value": "stl_2222222222222222222222222222222222222222222222222222222222222222"
+          },
+          "source_evidence_hash": "sha256:6f60fef1eace8f95ca08d2240059d9abdd906cfe3e14b5acd6bf26146101e90f",
+          "type": "settlement_event"
+        },
+        {
+          "causation_id": "fil_2222222222222222222222222222222222222222222222222222222222222222",
+          "event_id": "settlement-event:recorded:1",
+          "event_type": "settlement_obligation_recorded",
+          "occurred_at": {
+            "instant": {
+              "epoch_nanoseconds": 1707357600000000000,
+              "type": "utc_instant"
+            },
+            "phase": {
+              "code": "settlement_recorded",
+              "rank": 60,
+              "type": "timeline_phase"
+            },
+            "source_sequence": {
+              "type": "source_sequence",
+              "value": 4
+            },
+            "type": "simulation_instant"
+          },
+          "settlement_obligation_id": {
+            "kind": "settlement",
+            "type": "domain_id",
+            "value": "stl_4444444444444444444444444444444444444444444444444444444444444444"
+          },
+          "source_evidence_hash": "sha256:6f60fef1eace8f95ca08d2240059d9abdd906cfe3e14b5acd6bf26146101e90f",
+          "type": "settlement_event"
+        },
+        {
+          "causation_id": "settlement-event:recorded:4",
+          "event_id": "settlement-event:applied:4",
+          "event_type": "settlement_applied",
+          "occurred_at": {
+            "instant": {
+              "epoch_nanoseconds": 1707357600000000000,
+              "type": "utc_instant"
+            },
+            "phase": {
+              "code": "settlement_applied",
+              "rank": 61,
+              "type": "timeline_phase"
+            },
+            "source_sequence": {
+              "type": "source_sequence",
+              "value": 1
+            },
+            "type": "simulation_instant"
+          },
+          "settlement_obligation_id": {
+            "kind": "settlement",
+            "type": "domain_id",
+            "value": "stl_1111111111111111111111111111111111111111111111111111111111111111"
+          },
+          "source_evidence_hash": "sha256:ed6cd47c7cf0e71c2d8e140b699d1a353345544334b9c914efd9690b523179c9",
+          "type": "settlement_event"
+        },
+        {
+          "causation_id": "settlement-event:recorded:1",
+          "event_id": "settlement-event:applied:3",
+          "event_type": "settlement_applied",
+          "occurred_at": {
+            "instant": {
+              "epoch_nanoseconds": 1707357600000000000,
+              "type": "utc_instant"
+            },
+            "phase": {
+              "code": "settlement_applied",
+              "rank": 61,
+              "type": "timeline_phase"
+            },
+            "source_sequence": {
+              "type": "source_sequence",
+              "value": 2
+            },
+            "type": "simulation_instant"
+          },
+          "settlement_obligation_id": {
+            "kind": "settlement",
+            "type": "domain_id",
+            "value": "stl_4444444444444444444444444444444444444444444444444444444444444444"
+          },
+          "source_evidence_hash": "sha256:69d358ace1c57f8dfabb39676be3fa752b41d80d7ba04c3dcab05a172c990395",
+          "type": "settlement_event"
+        },
+        {
+          "causation_id": "settlement-event:recorded:3",
+          "event_id": "settlement-event:applied:2",
+          "event_type": "settlement_applied",
+          "occurred_at": {
+            "instant": {
+              "epoch_nanoseconds": 1708272000000000000,
+              "type": "utc_instant"
+            },
+            "phase": {
+              "code": "settlement_applied",
+              "rank": 61,
+              "type": "timeline_phase"
+            },
+            "source_sequence": {
+              "type": "source_sequence",
+              "value": 3
+            },
+            "type": "simulation_instant"
+          },
+          "settlement_obligation_id": {
+            "kind": "settlement",
+            "type": "domain_id",
+            "value": "stl_3333333333333333333333333333333333333333333333333333333333333333"
+          },
+          "source_evidence_hash": "sha256:7df67ccc83f52a6d09f55ce05a24deed25dca06268a9f0b268c207c3ff66913a",
+          "type": "settlement_event"
+        },
+        {
+          "causation_id": "settlement-event:recorded:2",
+          "event_id": "settlement-event:applied:1",
+          "event_type": "settlement_applied",
+          "occurred_at": {
+            "instant": {
+              "epoch_nanoseconds": 1708329600000000000,
+              "type": "utc_instant"
+            },
+            "phase": {
+              "code": "settlement_applied",
+              "rank": 61,
+              "type": "timeline_phase"
+            },
+            "source_sequence": {
+              "type": "source_sequence",
+              "value": 4
+            },
+            "type": "simulation_instant"
+          },
+          "settlement_obligation_id": {
+            "kind": "settlement",
+            "type": "domain_id",
+            "value": "stl_2222222222222222222222222222222222222222222222222222222222222222"
+          },
+          "source_evidence_hash": "sha256:4dc9a8dcf2ed3e011d26531b3a5df54a833d1f375db5870da37232f3e90757c6",
+          "type": "settlement_event"
+        }
+      ],
+      "obligations": [
+        {
+          "balance_key": {
+            "account_id": "account:cn-a-primary",
+            "currency_id": {
+              "type": "currency_id",
+              "value": "CNY"
+            },
+            "type": "cash_balance_key",
+            "venue_id": {
+              "type": "venue_id",
+              "value": "xshg"
+            }
+          },
+          "obligation": {
+            "amount": {
+              "currency": "CNY",
+              "scale": 2,
+              "type": "money",
+              "units": -100000
+            },
+            "currency_id": {
+              "type": "currency_id",
+              "value": "CNY"
+            },
+            "instrument_id": null,
+            "quantity": null,
+            "settlement_obligation_id": {
+              "kind": "settlement",
+              "type": "domain_id",
+              "value": "stl_1111111111111111111111111111111111111111111111111111111111111111"
+            },
+            "settlement_time": {
+              "epoch_nanoseconds": 1707357600000000000,
+              "type": "utc_instant"
+            },
+            "source_fill_id": {
+              "kind": "fill",
+              "type": "domain_id",
+              "value": "fil_1111111111111111111111111111111111111111111111111111111111111111"
+            },
+            "trade_time": {
+              "epoch_nanoseconds": 1707357600000000000,
+              "type": "utc_instant"
+            },
+            "type": "settlement_obligation"
+          },
+          "type": "account_settlement_obligation"
+        },
+        {
+          "balance_key": {
+            "account_id": "account:cn-a-primary",
+            "currency_id": {
+              "type": "currency_id",
+              "value": "CNY"
+            },
+            "type": "cash_balance_key",
+            "venue_id": {
+              "type": "venue_id",
+              "value": "xshg"
+            }
+          },
+          "obligation": {
+            "amount": {
+              "currency": "CNY",
+              "scale": 2,
+              "type": "money",
+              "units": 120000
+            },
+            "currency_id": {
+              "type": "currency_id",
+              "value": "CNY"
+            },
+            "instrument_id": null,
+            "quantity": null,
+            "settlement_obligation_id": {
+              "kind": "settlement",
+              "type": "domain_id",
+              "value": "stl_2222222222222222222222222222222222222222222222222222222222222222"
+            },
+            "settlement_time": {
+              "epoch_nanoseconds": 1708329600000000000,
+              "type": "utc_instant"
+            },
+            "source_fill_id": {
+              "kind": "fill",
+              "type": "domain_id",
+              "value": "fil_2222222222222222222222222222222222222222222222222222222222222222"
+            },
+            "trade_time": {
+              "epoch_nanoseconds": 1707357600000000000,
+              "type": "utc_instant"
+            },
+            "type": "settlement_obligation"
+          },
+          "type": "account_settlement_obligation"
+        },
+        {
+          "balance_key": {
+            "account_id": "account:cn-a-primary",
+            "instrument_id": {
+              "stable_key": "600000",
+              "type": "instrument_id",
+              "venue": "xshg"
+            },
+            "type": "position_balance_key",
+            "venue_id": {
+              "type": "venue_id",
+              "value": "xshg"
+            }
+          },
+          "obligation": {
+            "amount": null,
+            "currency_id": null,
+            "instrument_id": {
+              "stable_key": "600000",
+              "type": "instrument_id",
+              "venue": "xshg"
+            },
+            "quantity": {
+              "instrument_id": "xshg:600000",
+              "scale": 0,
+              "type": "quantity",
+              "units": 100
+            },
+            "settlement_obligation_id": {
+              "kind": "settlement",
+              "type": "domain_id",
+              "value": "stl_3333333333333333333333333333333333333333333333333333333333333333"
+            },
+            "settlement_time": {
+              "epoch_nanoseconds": 1708272000000000000,
+              "type": "utc_instant"
+            },
+            "source_fill_id": {
+              "kind": "fill",
+              "type": "domain_id",
+              "value": "fil_1111111111111111111111111111111111111111111111111111111111111111"
+            },
+            "trade_time": {
+              "epoch_nanoseconds": 1707357600000000000,
+              "type": "utc_instant"
+            },
+            "type": "settlement_obligation"
+          },
+          "type": "account_settlement_obligation"
+        },
+        {
+          "balance_key": {
+            "account_id": "account:cn-a-primary",
+            "instrument_id": {
+              "stable_key": "600000",
+              "type": "instrument_id",
+              "venue": "xshg"
+            },
+            "type": "position_balance_key",
+            "venue_id": {
+              "type": "venue_id",
+              "value": "xshg"
+            }
+          },
+          "obligation": {
+            "amount": null,
+            "currency_id": null,
+            "instrument_id": {
+              "stable_key": "600000",
+              "type": "instrument_id",
+              "venue": "xshg"
+            },
+            "quantity": {
+              "instrument_id": "xshg:600000",
+              "scale": 0,
+              "type": "quantity",
+              "units": -100
+            },
+            "settlement_obligation_id": {
+              "kind": "settlement",
+              "type": "domain_id",
+              "value": "stl_4444444444444444444444444444444444444444444444444444444444444444"
+            },
+            "settlement_time": {
+              "epoch_nanoseconds": 1707357600000000000,
+              "type": "utc_instant"
+            },
+            "source_fill_id": {
+              "kind": "fill",
+              "type": "domain_id",
+              "value": "fil_2222222222222222222222222222222222222222222222222222222222222222"
+            },
+            "trade_time": {
+              "epoch_nanoseconds": 1707357600000000000,
+              "type": "utc_instant"
+            },
+            "type": "settlement_obligation"
+          },
+          "type": "account_settlement_obligation"
+        }
+      ]
+    },
+    "states": {
+      "cash_boundary_after": {
+        "applied_ids": [
+          "stl_1111111111111111111111111111111111111111111111111111111111111111",
+          "stl_2222222222222222222222222222222222222222222222222222222222222222",
+          "stl_3333333333333333333333333333333333333333333333333333333333333333",
+          "stl_4444444444444444444444444444444444444444444444444444444444444444"
+        ],
+        "cursor": {
+          "position": 8,
+          "prefix_hash": "sha256:f32e97dab91dbb3615bbe6b7794140087f5ed5a019f9f8396ad3c815c08d1ae2",
+          "type": "settlement_book_cursor"
+        },
+        "pending_ids": [],
+        "state_hash": "sha256:68e049998bef789cd7171cb42ae0f5e828e2b06b17bb682ce798c767ba0c486d"
+      },
+      "cash_boundary_before": {
+        "applied_ids": [
+          "stl_1111111111111111111111111111111111111111111111111111111111111111",
+          "stl_3333333333333333333333333333333333333333333333333333333333333333",
+          "stl_4444444444444444444444444444444444444444444444444444444444444444"
+        ],
+        "cursor": {
+          "position": 7,
+          "prefix_hash": "sha256:844b3b9661326843ebe467b6c653447db669e6bd96828ccde612944735ac9c00",
+          "type": "settlement_book_cursor"
+        },
+        "pending_ids": [
+          "stl_2222222222222222222222222222222222222222222222222222222222222222"
+        ],
+        "state_hash": "sha256:5a7a79db61c4f59f56bb8c215ce14147227d0d52decff7a4dd117e2536446c6d"
+      },
+      "full": {
+        "applied_ids": [
+          "stl_1111111111111111111111111111111111111111111111111111111111111111",
+          "stl_2222222222222222222222222222222222222222222222222222222222222222",
+          "stl_3333333333333333333333333333333333333333333333333333333333333333",
+          "stl_4444444444444444444444444444444444444444444444444444444444444444"
+        ],
+        "cursor": {
+          "position": 8,
+          "prefix_hash": "sha256:f32e97dab91dbb3615bbe6b7794140087f5ed5a019f9f8396ad3c815c08d1ae2",
+          "type": "settlement_book_cursor"
+        },
+        "pending_ids": [],
+        "state_hash": "sha256:68e049998bef789cd7171cb42ae0f5e828e2b06b17bb682ce798c767ba0c486d"
+      },
+      "position_boundary_after": {
+        "applied_ids": [
+          "stl_1111111111111111111111111111111111111111111111111111111111111111",
+          "stl_3333333333333333333333333333333333333333333333333333333333333333",
+          "stl_4444444444444444444444444444444444444444444444444444444444444444"
+        ],
+        "cursor": {
+          "position": 7,
+          "prefix_hash": "sha256:844b3b9661326843ebe467b6c653447db669e6bd96828ccde612944735ac9c00",
+          "type": "settlement_book_cursor"
+        },
+        "pending_ids": [
+          "stl_2222222222222222222222222222222222222222222222222222222222222222"
+        ],
+        "state_hash": "sha256:5a7a79db61c4f59f56bb8c215ce14147227d0d52decff7a4dd117e2536446c6d"
+      },
+      "position_boundary_before": {
+        "applied_ids": [
+          "stl_1111111111111111111111111111111111111111111111111111111111111111",
+          "stl_4444444444444444444444444444444444444444444444444444444444444444"
+        ],
+        "cursor": {
+          "position": 6,
+          "prefix_hash": "sha256:39404318c334107c76e0c1213b63632c1dc93de12ec701611ad8bdfc068f5d26",
+          "type": "settlement_book_cursor"
+        },
+        "pending_ids": [
+          "stl_2222222222222222222222222222222222222222222222222222222222222222",
+          "stl_3333333333333333333333333333333333333333333333333333333333333333"
+        ],
+        "state_hash": "sha256:f07fffadb26a491b08d4410efbb41c40d0140b1fdcf5f7c388deddc613c48506"
+      },
+      "resumed": {
+        "applied_ids": [
+          "stl_1111111111111111111111111111111111111111111111111111111111111111",
+          "stl_2222222222222222222222222222222222222222222222222222222222222222",
+          "stl_3333333333333333333333333333333333333333333333333333333333333333",
+          "stl_4444444444444444444444444444444444444444444444444444444444444444"
+        ],
+        "cursor": {
+          "position": 8,
+          "prefix_hash": "sha256:f32e97dab91dbb3615bbe6b7794140087f5ed5a019f9f8396ad3c815c08d1ae2",
+          "type": "settlement_book_cursor"
+        },
+        "pending_ids": [],
+        "state_hash": "sha256:68e049998bef789cd7171cb42ae0f5e828e2b06b17bb682ce798c767ba0c486d"
+      }
+    }
+  }
+}

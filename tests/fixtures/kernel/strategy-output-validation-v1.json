@@ -1,0 +1,222 @@
+{
+  "fixture_id": "strategy-output-validation-v1",
+  "schema_version": 1,
+  "context": {
+    "expected_strategy_id": "trend-v1",
+    "expected_sleeve_id": "trend.primary",
+    "decision_time": 100,
+    "universe": [
+      "binance_usdm:linear_perpetual:btc-usdt"
+    ]
+  },
+  "valid_candidate": {
+    "schema_version": 1,
+    "strategy_id": "trend-v1",
+    "sleeve_id": "trend.primary",
+    "decision_time": 100,
+    "observed_through": 90,
+    "effective_time": 110,
+    "expires_at": 200,
+    "targets": [
+      {
+        "instrument_id": {
+          "venue": "binance_usdm",
+          "stable_key": "linear_perpetual:btc-usdt"
+        },
+        "value": "0.5"
+      }
+    ],
+    "confidence": "0.875",
+    "reason": "scheduled rebalance",
+    "evidence": {
+      "model_revision": "sha256:model-v1",
+      "signal_count": 2
+    }
+  },
+  "expected_decision": {
+    "type": "strategy_decision",
+    "strategy_id": "trend-v1",
+    "decision_time": {
+      "type": "utc_instant",
+      "epoch_nanoseconds": 100
+    },
+    "observed_through": {
+      "type": "utc_instant",
+      "epoch_nanoseconds": 90
+    },
+    "target_snapshot": {
+      "type": "target_snapshot",
+      "sleeve_id": {
+        "type": "strategy_sleeve_id",
+        "value": "trend.primary"
+      },
+      "effective_time": {
+        "type": "utc_instant",
+        "epoch_nanoseconds": 110
+      },
+      "expires_at": {
+        "type": "utc_instant",
+        "epoch_nanoseconds": 200
+      },
+      "targets": [
+        {
+          "type": "target_exposure_fraction",
+          "instrument_id": {
+            "type": "instrument_id",
+            "venue": "binance_usdm",
+            "stable_key": "linear_perpetual:btc-usdt"
+          },
+          "units": 500000000000,
+          "scale": 12
+        }
+      ]
+    },
+    "confidence": {
+      "type": "rate",
+      "units": 875000000000,
+      "scale": 12,
+      "basis": "confidence"
+    },
+    "reason": "scheduled rebalance",
+    "evidence": {
+      "model_revision": "sha256:model-v1",
+      "signal_count": 2
+    }
+  },
+  "expected_decision_sha256": "sha256:6aad7eb0fc574be8fe4f3b28e0a33beadb3f59409c43502f4390ecf593cfd3ce",
+  "invalid_candidate": {
+    "schema_version": 2,
+    "strategy_id": "other-strategy",
+    "sleeve_id": "trend.primary",
+    "decision_time": 101,
+    "observed_through": 102,
+    "effective_time": 99,
+    "expires_at": 99,
+    "targets": [
+      {
+        "instrument_id": {
+          "venue": "binance_usdm",
+          "stable_key": "linear_perpetual:unknown-usdt"
+        },
+        "value": "0.1"
+      },
+      {
+        "instrument_id": {
+          "venue": "binance_usdm",
+          "stable_key": "linear_perpetual:eth-usdt"
+        },
+        "value": "0.2"
+      },
+      {
+        "instrument_id": {
+          "venue": "binance_usdm",
+          "stable_key": "linear_perpetual:btc-usdt"
+        },
+        "value": "0.3"
+      },
+      {
+        "instrument_id": {
+          "venue": "binance_usdm",
+          "stable_key": "linear_perpetual:btc-usdt"
+        },
+        "value": "0.0000000000001"
+      }
+    ],
+    "confidence": "1.1",
+    "reason": " not canonical ",
+    "evidence": {
+      "score": 0.5
+    },
+    "unexpected": true
+  },
+  "expected_failure": {
+    "type": "strategy_validation_failure",
+    "candidate_payload_hash": "sha256:58cc4d320e1c72cf4ab3276404d1f70d85c2b2fba25e6bbd40d4941c8e66f476",
+    "issues": [
+      {
+        "type": "strategy_validation_issue",
+        "code": "invalid_value",
+        "path": "$.confidence",
+        "subject_key": "confidence"
+      },
+      {
+        "type": "strategy_validation_issue",
+        "code": "identity_mismatch",
+        "path": "$.decision_time",
+        "subject_key": "decision_time"
+      },
+      {
+        "type": "strategy_validation_issue",
+        "code": "time_causality_violation",
+        "path": "$.effective_time",
+        "subject_key": "effective_time"
+      },
+      {
+        "type": "strategy_validation_issue",
+        "code": "canonical_value_failure",
+        "path": "$.evidence",
+        "subject_key": "evidence"
+      },
+      {
+        "type": "strategy_validation_issue",
+        "code": "time_causality_violation",
+        "path": "$.expires_at",
+        "subject_key": "expires_at"
+      },
+      {
+        "type": "strategy_validation_issue",
+        "code": "time_causality_violation",
+        "path": "$.observed_through",
+        "subject_key": "observed_through"
+      },
+      {
+        "type": "strategy_validation_issue",
+        "code": "canonical_value_failure",
+        "path": "$.reason",
+        "subject_key": "reason"
+      },
+      {
+        "type": "strategy_validation_issue",
+        "code": "invalid_value",
+        "path": "$.schema_version",
+        "subject_key": "schema_version"
+      },
+      {
+        "type": "strategy_validation_issue",
+        "code": "identity_mismatch",
+        "path": "$.strategy_id",
+        "subject_key": "strategy_id"
+      },
+      {
+        "type": "strategy_validation_issue",
+        "code": "unknown_instrument",
+        "path": "$.targets[0].instrument_id",
+        "subject_key": "binance_usdm:linear_perpetual:unknown-usdt"
+      },
+      {
+        "type": "strategy_validation_issue",
+        "code": "instrument_outside_universe",
+        "path": "$.targets[1].instrument_id",
+        "subject_key": "binance_usdm:linear_perpetual:eth-usdt"
+      },
+      {
+        "type": "strategy_validation_issue",
+        "code": "duplicate_target",
+        "path": "$.targets[3].instrument_id",
+        "subject_key": "binance_usdm:linear_perpetual:btc-usdt"
+      },
+      {
+        "type": "strategy_validation_issue",
+        "code": "quantization_failure",
+        "path": "$.targets[3].value",
+        "subject_key": "value"
+      },
+      {
+        "type": "strategy_validation_issue",
+        "code": "unexpected_field",
+        "path": "$.unexpected",
+        "subject_key": "unexpected"
+      }
+    ]
+  }
+}

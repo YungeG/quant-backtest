@@ -1,0 +1,1 @@
+{"request_id":"bed0891d-9030-47cb-9918-7e95cb767a48","code":0,"data":{"fields":["ts_code","trade_date","open","high","low","close","pre_close","change","pct_chg","vol","amount"],"items":[["000703.SZ","20241121",6.45,6.51,6.35,6.45,6.44,0.01,0.1553,189815.14,121639.719]],"has_more":false,"count":0},"msg":"","detail":"..."}

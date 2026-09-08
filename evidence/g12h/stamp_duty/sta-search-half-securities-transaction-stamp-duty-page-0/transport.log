@@ -1,0 +1,77 @@
+* Host www.chinatax.gov.cn:443 was resolved.
+* IPv6: (none)
+* IPv4: 116.179.52.55, 110.242.22.27
+*   Trying 116.179.52.55:443...
+* ALPN: curl offers h2,http/1.1
+} [5 bytes data]
+* TLSv1.3 (OUT), TLS handshake, Client hello (1):
+} [1574 bytes data]
+*  CAfile: /etc/ssl/certs/ca-certificates.crt
+*  CApath: /etc/ssl/certs
+{ [5 bytes data]
+* TLSv1.3 (IN), TLS handshake, Server hello (2):
+{ [112 bytes data]
+* TLSv1.2 (IN), TLS handshake, Certificate (11):
+{ [3413 bytes data]
+* TLSv1.2 (IN), TLS handshake, Server key exchange (12):
+{ [300 bytes data]
+* TLSv1.2 (IN), TLS handshake, Server finished (14):
+{ [4 bytes data]
+* TLSv1.2 (OUT), TLS handshake, Client key exchange (16):
+} [37 bytes data]
+* TLSv1.2 (OUT), TLS change cipher, Change cipher spec (1):
+} [1 bytes data]
+* TLSv1.2 (OUT), TLS handshake, Finished (20):
+} [16 bytes data]
+* TLSv1.2 (IN), TLS handshake, Finished (20):
+{ [16 bytes data]
+* SSL connection using TLSv1.2 / ECDHE-RSA-CHACHA20-POLY1305 / x25519 / RSASSA-PSS
+* ALPN: server accepted http/1.1
+* Server certificate:
+*  subject: C=CN; ST=\U5317\U4EAC; L=\U5317\U4EAC; O=\U56FD\U5BB6\U7A0E\U52A1\U603B\U5C40\U7535\U5B50\U7A0E\U52A1\U7BA1\U7406\U4E2D\U5FC3; CN=www.chinatax.gov.cn
+*  start date: Jul 13 02:22:47 2026 GMT
+*  expire date: Jan 28 02:22:46 2027 GMT
+*  subjectAltName: host "www.chinatax.gov.cn" matched cert's "www.chinatax.gov.cn"
+*  issuer: C=CN; O=China Financial Certification Authority; CN=CFCA TLS OV OCA
+*  SSL certificate verify ok.
+*   Certificate level 0: Public key type RSA (2048/112 Bits/secBits), signed using sha256WithRSAEncryption
+*   Certificate level 1: Public key type RSA (2048/112 Bits/secBits), signed using sha256WithRSAEncryption
+*   Certificate level 2: Public key type RSA (4096/152 Bits/secBits), signed using sha256WithRSAEncryption
+* Connected to www.chinatax.gov.cn (116.179.52.55) port 443
+* using HTTP/1.x
+} [5 bytes data]
+> GET /search5/search/s?siteCode=bm29000002&searchSiteName=GSFFK&searchWord=%E5%87%8F%E5%8D%8A%E5%BE%81%E6%94%B6%E8%AF%81%E5%88%B8%E4%BA%A4%E6%98%93%E5%8D%B0%E8%8A%B1%E7%A8%8E&pageNum=0&pageSize=10 HTTP/1.1
+> Host: www.chinatax.gov.cn
+> User-Agent: Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 Chrome/130.0 Safari/537.36 G12HAuthorityCapture/1.0
+> Accept: */*
+> Accept-Language: zh-CN,zh;q=0.9,en;q=0.5
+> Cache-Control: no-cache
+> Pragma: no-cache
+> 
+* Request completely sent off
+{ [5 bytes data]
+< HTTP/1.1 200 
+< Date: Thu, 20 Aug 2026 07:43:06 GMT
+< Content-Type: application/json;charset=UTF-8
+< Transfer-Encoding: chunked
+< Connection: keep-alive
+< Access-Control-Allow-Origin: *
+< Access-Control-Allow-Methods: get, post
+< Access-Control-Allow-Headers: origin, content-type, accept
+< Access-Control-Allow-Credentials: true
+< expries: Thu, 01 Jan 1970 00:14:24 GMT
+< Cache-Control: no-cache
+< Set-Cookie: bm29000002=<redacted sha256:563e468577a5d8adace8697106bd6e7e6e44f423572c39059e82eb9e25165baa>; Path=/; HttpOnly
+< Set-Cookie: JSESSIONID=<redacted sha256:e5a3e2144448d62297cae74b239de3a7e183c483045a3915059ae64ed6d37057>; Path=/guestweb; HttpOnly
+< X-Content-Type-Options: nosniff
+< X-XSS-Protection: 1; mode=block
+< Content-Security-Policy: object-src 'self'
+< Referer-Policy: origin
+< X-Permitted-Cross-Domain-Policies: master-only
+< X-Download-Options: noopen
+< X-Frame-Options: SAMEORIGIN
+< x-via: 1.1 PS-WUH-01nYu93:11 (Cdn Cache Server V2.0), 1.1 PS-000-012jf27:7 (Cdn Cache Server V2.0)
+< x-ws-request-id: 6a86b005_PS-000-012jf27_29036-21939
+< 
+{ [526 bytes data]
+* Connection #0 to host www.chinatax.gov.cn left intact

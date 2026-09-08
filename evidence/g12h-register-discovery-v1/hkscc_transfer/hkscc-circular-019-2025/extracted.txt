@@ -1,0 +1,120 @@
+                                                                                       編號
+                                                                                       Ref. No.:   LSD/019/2025
+
+                                                                                       日期
+                                                                                       Date:       29/05/2025
+
+
+
+香港中央結算有限公司
+(香港交易及結算所有限公司全資附屬公司)
+
+HONG KONG SECURITIES CLEARING COMPANY LIMITED
+(A wholly-owned subsidiary of Hong Kong Exchanges and Clearing Limited)
+
+
+
+通告 CIRCULAR
+
+
+Subject:         Amendments to the HKSCC Operational Procedures (“Operational Procedures”)
+                 of Hong Kong Securities Clearing Company Limited (“HKSCC”)
+
+Enquiry:         CCASS Hotline1 : 2979 7111 / E-mail: clearingps@hkex.com.hk
+
+
+
+Participants of HKSCC are requested to note that the Securities and Futures Commission has
+approved amendments to the Operational Procedures of HKSCC for the purposes of revising
+the existing stock settlement fee for exchange trades and crossed exchange trades payable to
+HKSCC and introducing a separate rate for eligible exchange trades and crossed exchange
+trades in designated exchange traded funds undertaken by securities market markers.
+
+The amendments, as set out in Appendix, will come into effect on Monday, 30 June 2025.
+
+The marked-up version of the amendments to the Operational Procedures can be downloaded
+from the "Rule Update - HKSCC Operational Procedures section of the HKEX website.
+
+
+
+
+Beatrice Lung
+Head of Legal
+
+
+
+
+1 Calls to and from the CCASS Hotline may be recorded. HKEX Privacy Notice is available here.
+                                                                                            Appendix
+HKSCC Operational Procedures
+
+
+                                           Definitions
+
+(b)    When used in the Operational Procedures, the following expressions shall have the following
+       meanings unless the context otherwise requires:
+
+“Designated Exchange Traded Funds”
+       has the same meaning as defined in the Exchange Rules;
+
+
+                                            Section 21
+                                     Costs and Expenses
+In this Section 21, references to “HKD” or “HK$” mean Hong Kong Dollar; references to “CNY” mean
+Chinese Yuan (Renminbi) and references to “USD” mean US Dollar.
+
+21.1     CLEARING AND SETTLEMENT OF EXCHANGE TRADES
+
+
+           ⎯   Stock clearing fee                          NIL
+
+           ⎯   Stock settlement fee payable by each        0.0042% per side of gross value of an
+               Clearing Participant and each               Exchange Trade, except for such
+               Clearing Agency Participant for each        Exchange Trade in Designated
+               Exchange Trade cleared and settled          Exchange Traded Funds conducted by a
+               through CCASS.                              Securities Market Maker which meets
+                                                           such eligibility requirements as from
+               Notes:                                      time to time prescribed by HKSCC and
+               Gross value refers to transacted            published on the HKEX website, in
+               market value of eligible non-Debt           which case a rate of 0.002% shall apply.
+               Securities or nominal value of
+               eligible Debt Securities.
+
+               Exercised stock options positions
+               processed in CCASS between the
+               two      settlement     counterparty
+               Participants are subject to the same
+               stock settlement fee and payable by
+               both Participants.
+
+               Fee debited on T+1.
+
+
+
+
+                                                  1
+⎯   Stock settlement fee payable by the     0.0021% per side of gross value of a
+    Clearing Participant for each crossed   crossed Exchange Trade, except for
+    Exchange Trade cleared and settled      such crossed Exchange Trade in
+    through CCASS, i.e. where the buy       Designated Exchange Traded Funds
+    and sell of an Exchange Trade is        conducted by a Securities Market
+    handled by the same Exchange            Maker which meets such eligibility
+    Participant.                            requirements as from time to time
+                                            prescribed by HKSCC and published
+    Notes:                                  on the HKEX website, in which case a
+    Gross value refers to transacted        rate of 0.001% shall apply.
+    market value of eligible non-Debt
+    Securities or nominal value of
+    eligible Debt Securities.
+
+    Not applicable to an Exchange Trade
+    effected by a Special Participant on
+    the Exchange.
+
+    Fee debited on T+1.
+
+
+
+
+                                       2
+

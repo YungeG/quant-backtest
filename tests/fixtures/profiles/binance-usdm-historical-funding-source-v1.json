@@ -1,0 +1,92 @@
+{
+  "fixture_id": "binance-usdm-historical-funding-source-v1",
+  "funding_book": {
+    "coverages": [
+      {
+        "coverage_from": {
+          "epoch_nanoseconds": 1709999999999000000,
+          "type": "utc_instant"
+        },
+        "coverage_id": "btc-usdt-funding-coverage-v1",
+        "coverage_to_exclusive": {
+          "epoch_nanoseconds": 1710000000001000000,
+          "type": "utc_instant"
+        },
+        "instrument_id": {
+          "stable_key": "btc-usdt-perpetual",
+          "type": "instrument_id",
+          "venue": "binance_usdm"
+        },
+        "schema_version": 1,
+        "source_ref": {
+          "archive_key": "data/futures/um/monthly/fundingRate/BTCUSDT/2024-03.zip",
+          "revision_id": "funding-archive-v1",
+          "schema_version": 1,
+          "source_hash": "sha256:16da3a1e9586be96659e415cb6453dedf30f0eba21c0f25821c4dec9cc5b6aca",
+          "source_key": "fundingRate/BTCUSDT/2024-03",
+          "source_kind": "funding_rate_history",
+          "supersedes_revision_id": null,
+          "type": "binance_usdm_funding_source_ref"
+        },
+        "stream_key": "binance-usdm-funding-rate-history-v1",
+        "stream_version": 1,
+        "type": "binance_usdm_funding_coverage"
+      }
+    ],
+    "funding_book_key": "binance-usdm-historical-funding-v1",
+    "funding_book_version": 1,
+    "instrument_id": {
+      "stable_key": "btc-usdt-perpetual",
+      "type": "instrument_id",
+      "venue": "binance_usdm"
+    },
+    "records": [
+      {
+        "archive_available_at": {
+          "instant": {
+            "epoch_nanoseconds": 1710000000001000000,
+            "type": "utc_instant"
+          },
+          "phase": {
+            "code": "archive_capture",
+            "rank": 0,
+            "type": "timeline_phase"
+          },
+          "source_sequence": {
+            "type": "source_sequence",
+            "value": 0
+          },
+          "type": "simulation_instant"
+        },
+        "event_hash": "sha256:48c4ce2ca87fbcbf677de0c1799c78068e8a9d04359a1f5e8fc7f73e180fa63e",
+        "event_id": "funding:BTCUSDT:1710000000000:Regular",
+        "funding_rate": "0.00010000",
+        "funding_time_milliseconds": 1710000000000,
+        "instrument_id": {
+          "stable_key": "btc-usdt-perpetual",
+          "type": "instrument_id",
+          "venue": "binance_usdm"
+        },
+        "mark_price": "50000.12345678",
+        "rate_type": "Regular",
+        "revision_id": "funding-archive-v1",
+        "schema_version": 1,
+        "source_ref": {
+          "archive_key": "data/futures/um/monthly/fundingRate/BTCUSDT/2024-03.zip",
+          "revision_id": "funding-archive-v1",
+          "schema_version": 1,
+          "source_hash": "sha256:16da3a1e9586be96659e415cb6453dedf30f0eba21c0f25821c4dec9cc5b6aca",
+          "source_key": "fundingRate/BTCUSDT/2024-03",
+          "source_kind": "funding_rate_history",
+          "supersedes_revision_id": null,
+          "type": "binance_usdm_funding_source_ref"
+        },
+        "type": "binance_usdm_funding_rate_record"
+      }
+    ],
+    "schema_version": 1,
+    "type": "binance_usdm_historical_funding_book"
+  },
+  "provider": "binance_usdm",
+  "source_contract": "funding-rate-history-regular-root-row"
+}

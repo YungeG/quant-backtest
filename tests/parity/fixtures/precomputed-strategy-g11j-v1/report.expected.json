@@ -1,0 +1,19 @@
+{
+  "actual_sha256": "ff8ccefe1407f7f6d1aa8427706f9dcd7b22b57886b034069082663978e05811",
+  "comparison_counts": {
+    "approved_change": 0,
+    "matched": 20,
+    "mismatched": 0
+  },
+  "contract_id": "precomputed-strategy-g11j-v1",
+  "contract_sha256": "72356cb7be8fae03e6faa674be758f87b8a87337e5d67d6011274f6b2bfc1248",
+  "decision_grade_eligible": false,
+  "deployment_authorized": false,
+  "expected_sha256": "ff8ccefe1407f7f6d1aa8427706f9dcd7b22b57886b034069082663978e05811",
+  "first_divergence": null,
+  "migration_mode": "copy_with_parity",
+  "report_id": "precomputed-vs-strategy-g11j-parity-report-v1",
+  "schema_version": 1,
+  "status": "completed",
+  "verdict": "MATCH"
+}

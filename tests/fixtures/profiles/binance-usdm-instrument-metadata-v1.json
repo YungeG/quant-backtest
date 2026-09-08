@@ -1,0 +1,1763 @@
+{
+  "allowed_grade": "development",
+  "component_ref": {
+    "component_digest": "sha256:eb8155ec923c2d21f2ad0dd321fa1ad948c72cbe25c7dccdadf3d0a5268b6963",
+    "component_key": "crypto.binance_usdm.instrument_metadata.v1",
+    "component_version": 1,
+    "port_type": "instrument_model",
+    "type": "profile_component_ref"
+  },
+  "deployment_authorized": false,
+  "fixture_id": "binance-usdm-instrument-metadata-v1",
+  "limitations": [
+    "offline-frozen-source-only",
+    "no-tick-step-notional-margin-fee-funding-or-account-mode",
+    "no-current-api-history-fallback",
+    "no-live-or-deployment-authorization"
+  ],
+  "outcome_hashes": {
+    "corrected_onboard_hidden": "sha256:838dabc95ead8a69294aa738d66548fe07cfb6612230ae4cda5b9975d687b312",
+    "corrected_onboard_visible": "sha256:47aed20d355b57aba8b7140a135ebd10cc2575863c86f429731ae8df58286998",
+    "finite_delist": "sha256:c0634fa20509ad32981d36b58e31bfab1103020aa952d1675e350cec0ffbb015",
+    "invalid_currency": "sha256:cdd87659c64be4f22438ad6e32f735595c47370753795c112b58f0418c4bc2c8",
+    "known_nontrading": "sha256:146a039bfbb5d86d4091f0c0b9e8e07aee9039e6a7d81fb1fc2c4a99701a4723",
+    "open_ended": "sha256:1912091be7ca2ca3be117238b8a5dcdb82190b91601a1b04982da28eb940b022",
+    "post_delisting": "sha256:03c3b6bde6b9026d9a34410071f4b3f40b76d8775780bab2e89b7f81d11e929d",
+    "pre_listing": "sha256:2981051f53bc3493e7a1e56a0722e67ab1e1111b1edd84df884a60a3d7d047de",
+    "renamed": "sha256:1bf47894d2bd765cf6d2a1041f636858c7cbe0cb048575775fee1cbeacc868c9",
+    "separate_lineage": "sha256:5c53b088c099ebea8a7e8856d038d67bb4ba25ffe307582d26edc13b417c0be2",
+    "unsupported_status": "sha256:36987d0c89d4690f402e82a3a2a93d0b97f8f36d92765e0c172781cfe591b007",
+    "unsupported_type": "sha256:912fd96f39dcf442cdb4a0d6b01ce411ceba4dc74c8b264df68bb4c3cad45098"
+  },
+  "outcomes": {
+    "corrected_onboard_hidden": {
+      "component_ref": {
+        "component_digest": "sha256:eb8155ec923c2d21f2ad0dd321fa1ad948c72cbe25c7dccdadf3d0a5268b6963",
+        "component_key": "crypto.binance_usdm.instrument_metadata.v1",
+        "component_version": 1,
+        "port_type": "instrument_model",
+        "type": "profile_component_ref"
+      },
+      "failure": {
+        "code": "not_listed_at_query_instant",
+        "message": "not listed at query instant",
+        "query": {
+          "captured_at": {
+            "epoch_nanoseconds": 1710000000000000000,
+            "type": "utc_instant"
+          },
+          "effective_at": {
+            "epoch_nanoseconds": 1699999999999999950,
+            "type": "utc_instant"
+          },
+          "revision_hashes": [
+            "sha256:eb4336b228c77fbf5c5b2d72e96942a3a8382c634852b81bbbbdfa4947802443",
+            "sha256:244596d496df1ac3d760eb0b84dd084d1a560667a7b26eb1f1a0fef022d24c9f"
+          ],
+          "schema_version": 1,
+          "stable_instrument_key": "btc-usdt-perpetual",
+          "type": "binance_usdm_instrument_metadata_query"
+        },
+        "schema_version": 1,
+        "subject_ids": [
+          "btc-usdt-perpetual"
+        ],
+        "type": "binance_usdm_instrument_metadata_failure"
+      },
+      "input_hash": "sha256:3d9680a63dacce457137f81e9771c7c2c146a577931e4d71f980a19ac8a66126",
+      "result": null,
+      "type": "profile_port_outcome"
+    },
+    "corrected_onboard_visible": {
+      "component_ref": {
+        "component_digest": "sha256:eb8155ec923c2d21f2ad0dd321fa1ad948c72cbe25c7dccdadf3d0a5268b6963",
+        "component_key": "crypto.binance_usdm.instrument_metadata.v1",
+        "component_version": 1,
+        "port_type": "instrument_model",
+        "type": "profile_component_ref"
+      },
+      "failure": null,
+      "input_hash": "sha256:016445cf8c0d32dab8d81a160e5163ca33d8aa3e8452c7a76f9f76950672411d",
+      "result": {
+        "active_pair": "BTCUSDT",
+        "active_revision": {
+          "available_at": {
+            "epoch_nanoseconds": 1700000000000000001,
+            "type": "utc_instant"
+          },
+          "base_asset": "BTC",
+          "contract_type": "PERPETUAL",
+          "delivery_at": {
+            "epoch_nanoseconds": 4133404800000000000,
+            "type": "utc_instant"
+          },
+          "effective_from": {
+            "epoch_nanoseconds": 1700000000000000000,
+            "type": "utc_instant"
+          },
+          "margin_asset": "USDT",
+          "onboard_at": {
+            "epoch_nanoseconds": 1700000000000000000,
+            "type": "utc_instant"
+          },
+          "pair": "BTCUSDT",
+          "quote_asset": "USDT",
+          "revision_id": "btc-v1",
+          "schema_version": 1,
+          "source_ref": {
+            "schema_version": 1,
+            "source_hash": "sha256:74cff442688248dd63a2dba438c16ad52d49bf934de3c7f59e4f499cef88ae40",
+            "source_key": "exchange-info/btc-v1.json",
+            "type": "binance_usdm_instrument_metadata_source_ref"
+          },
+          "stable_instrument_key": "btc-usdt-perpetual",
+          "status": "TRADING",
+          "supersedes_revision_id": null,
+          "symbol": "BTCUSDT",
+          "type": "binance_usdm_instrument_metadata_revision"
+        },
+        "active_symbol": "BTCUSDT",
+        "contract_metadata": {
+          "base_currency": {
+            "type": "currency_id",
+            "value": "BTC"
+          },
+          "contract_multiplier": {
+            "basis": "base_quantity_per_contract",
+            "scale": 0,
+            "type": "rate",
+            "units": 1
+          },
+          "instrument_id": {
+            "stable_key": "btc-usdt-perpetual",
+            "type": "instrument_id",
+            "venue": "binance_usdm"
+          },
+          "quote_currency": {
+            "type": "currency_id",
+            "value": "USDT"
+          },
+          "schema_version": 1,
+          "settlement_currency": {
+            "type": "currency_id",
+            "value": "USDT"
+          },
+          "type": "binance_usdm_linear_contract_metadata"
+        },
+        "instrument": {
+          "base_currency": {
+            "type": "currency_id",
+            "value": "BTC"
+          },
+          "instrument_id": {
+            "stable_key": "btc-usdt-perpetual",
+            "type": "instrument_id",
+            "venue": "binance_usdm"
+          },
+          "instrument_type": "linear_perpetual",
+          "quote_currency": {
+            "type": "currency_id",
+            "value": "USDT"
+          },
+          "settlement_currency": {
+            "type": "currency_id",
+            "value": "USDT"
+          },
+          "type": "instrument_definition"
+        },
+        "listing_interval": {
+          "delisted_at": null,
+          "instrument_id": {
+            "stable_key": "btc-usdt-perpetual",
+            "type": "instrument_id",
+            "venue": "binance_usdm"
+          },
+          "listed_at": {
+            "epoch_nanoseconds": 1699999999999999900,
+            "type": "utc_instant"
+          },
+          "schema_version": 1,
+          "type": "binance_usdm_listing_interval"
+        },
+        "query": {
+          "captured_at": {
+            "epoch_nanoseconds": 1710000000000000002,
+            "type": "utc_instant"
+          },
+          "effective_at": {
+            "epoch_nanoseconds": 1699999999999999950,
+            "type": "utc_instant"
+          },
+          "revision_hashes": [
+            "sha256:eb4336b228c77fbf5c5b2d72e96942a3a8382c634852b81bbbbdfa4947802443",
+            "sha256:244596d496df1ac3d760eb0b84dd084d1a560667a7b26eb1f1a0fef022d24c9f"
+          ],
+          "schema_version": 1,
+          "stable_instrument_key": "btc-usdt-perpetual",
+          "type": "binance_usdm_instrument_metadata_query"
+        },
+        "schema_version": 1,
+        "status": "TRADING",
+        "symbol_timeline": {
+          "instrument_id": {
+            "stable_key": "btc-usdt-perpetual",
+            "type": "instrument_id",
+            "venue": "binance_usdm"
+          },
+          "intervals": [
+            {
+              "effective_from": {
+                "epoch_nanoseconds": 1699999999999999900,
+                "type": "utc_instant"
+              },
+              "effective_until": null,
+              "symbol": "BTCUSDT"
+            }
+          ],
+          "type": "symbol_timeline"
+        },
+        "tradable": true,
+        "type": "binance_usdm_instrument_metadata_resolution",
+        "visible_revisions": [
+          {
+            "available_at": {
+              "epoch_nanoseconds": 1700000000000000001,
+              "type": "utc_instant"
+            },
+            "base_asset": "BTC",
+            "contract_type": "PERPETUAL",
+            "delivery_at": {
+              "epoch_nanoseconds": 4133404800000000000,
+              "type": "utc_instant"
+            },
+            "effective_from": {
+              "epoch_nanoseconds": 1700000000000000000,
+              "type": "utc_instant"
+            },
+            "margin_asset": "USDT",
+            "onboard_at": {
+              "epoch_nanoseconds": 1700000000000000000,
+              "type": "utc_instant"
+            },
+            "pair": "BTCUSDT",
+            "quote_asset": "USDT",
+            "revision_id": "btc-v1",
+            "schema_version": 1,
+            "source_ref": {
+              "schema_version": 1,
+              "source_hash": "sha256:74cff442688248dd63a2dba438c16ad52d49bf934de3c7f59e4f499cef88ae40",
+              "source_key": "exchange-info/btc-v1.json",
+              "type": "binance_usdm_instrument_metadata_source_ref"
+            },
+            "stable_instrument_key": "btc-usdt-perpetual",
+            "status": "TRADING",
+            "supersedes_revision_id": null,
+            "symbol": "BTCUSDT",
+            "type": "binance_usdm_instrument_metadata_revision"
+          },
+          {
+            "available_at": {
+              "epoch_nanoseconds": 1710000000000000001,
+              "type": "utc_instant"
+            },
+            "base_asset": "BTC",
+            "contract_type": "PERPETUAL",
+            "delivery_at": {
+              "epoch_nanoseconds": 4133404800000000000,
+              "type": "utc_instant"
+            },
+            "effective_from": {
+              "epoch_nanoseconds": 1710000000000000000,
+              "type": "utc_instant"
+            },
+            "margin_asset": "USDT",
+            "onboard_at": {
+              "epoch_nanoseconds": 1699999999999999900,
+              "type": "utc_instant"
+            },
+            "pair": "BTCUSDT",
+            "quote_asset": "USDT",
+            "revision_id": "btc-v2",
+            "schema_version": 1,
+            "source_ref": {
+              "schema_version": 1,
+              "source_hash": "sha256:8f8677e26eb3db1aa5b6b9c7cb08e0ee526a3b2cfed011755296e1a807b923a6",
+              "source_key": "exchange-info/btc-v2.json",
+              "type": "binance_usdm_instrument_metadata_source_ref"
+            },
+            "stable_instrument_key": "btc-usdt-perpetual",
+            "status": "TRADING",
+            "supersedes_revision_id": "btc-v1",
+            "symbol": "BTCUSDT",
+            "type": "binance_usdm_instrument_metadata_revision"
+          }
+        ]
+      },
+      "type": "profile_port_outcome"
+    },
+    "finite_delist": {
+      "component_ref": {
+        "component_digest": "sha256:eb8155ec923c2d21f2ad0dd321fa1ad948c72cbe25c7dccdadf3d0a5268b6963",
+        "component_key": "crypto.binance_usdm.instrument_metadata.v1",
+        "component_version": 1,
+        "port_type": "instrument_model",
+        "type": "profile_component_ref"
+      },
+      "failure": null,
+      "input_hash": "sha256:1cd871d993733b98237cb2f0d7a1225411bd0feb22a2f151397a4c19a9d526ee",
+      "result": {
+        "active_pair": "BTCUSDT",
+        "active_revision": {
+          "available_at": {
+            "epoch_nanoseconds": 1710000000000000001,
+            "type": "utc_instant"
+          },
+          "base_asset": "BTC",
+          "contract_type": "PERPETUAL",
+          "delivery_at": {
+            "epoch_nanoseconds": 1720000000000000000,
+            "type": "utc_instant"
+          },
+          "effective_from": {
+            "epoch_nanoseconds": 1710000000000000000,
+            "type": "utc_instant"
+          },
+          "margin_asset": "USDT",
+          "onboard_at": {
+            "epoch_nanoseconds": 1700000000000000000,
+            "type": "utc_instant"
+          },
+          "pair": "BTCUSDT",
+          "quote_asset": "USDT",
+          "revision_id": "btc-v2",
+          "schema_version": 1,
+          "source_ref": {
+            "schema_version": 1,
+            "source_hash": "sha256:8f8677e26eb3db1aa5b6b9c7cb08e0ee526a3b2cfed011755296e1a807b923a6",
+            "source_key": "exchange-info/btc-v2.json",
+            "type": "binance_usdm_instrument_metadata_source_ref"
+          },
+          "stable_instrument_key": "btc-usdt-perpetual",
+          "status": "TRADING",
+          "supersedes_revision_id": "btc-v1",
+          "symbol": "BTCUSDT",
+          "type": "binance_usdm_instrument_metadata_revision"
+        },
+        "active_symbol": "BTCUSDT",
+        "contract_metadata": {
+          "base_currency": {
+            "type": "currency_id",
+            "value": "BTC"
+          },
+          "contract_multiplier": {
+            "basis": "base_quantity_per_contract",
+            "scale": 0,
+            "type": "rate",
+            "units": 1
+          },
+          "instrument_id": {
+            "stable_key": "btc-usdt-perpetual",
+            "type": "instrument_id",
+            "venue": "binance_usdm"
+          },
+          "quote_currency": {
+            "type": "currency_id",
+            "value": "USDT"
+          },
+          "schema_version": 1,
+          "settlement_currency": {
+            "type": "currency_id",
+            "value": "USDT"
+          },
+          "type": "binance_usdm_linear_contract_metadata"
+        },
+        "instrument": {
+          "base_currency": {
+            "type": "currency_id",
+            "value": "BTC"
+          },
+          "instrument_id": {
+            "stable_key": "btc-usdt-perpetual",
+            "type": "instrument_id",
+            "venue": "binance_usdm"
+          },
+          "instrument_type": "linear_perpetual",
+          "quote_currency": {
+            "type": "currency_id",
+            "value": "USDT"
+          },
+          "settlement_currency": {
+            "type": "currency_id",
+            "value": "USDT"
+          },
+          "type": "instrument_definition"
+        },
+        "listing_interval": {
+          "delisted_at": {
+            "epoch_nanoseconds": 1720000000000000000,
+            "type": "utc_instant"
+          },
+          "instrument_id": {
+            "stable_key": "btc-usdt-perpetual",
+            "type": "instrument_id",
+            "venue": "binance_usdm"
+          },
+          "listed_at": {
+            "epoch_nanoseconds": 1700000000000000000,
+            "type": "utc_instant"
+          },
+          "schema_version": 1,
+          "type": "binance_usdm_listing_interval"
+        },
+        "query": {
+          "captured_at": {
+            "epoch_nanoseconds": 1710000000000000020,
+            "type": "utc_instant"
+          },
+          "effective_at": {
+            "epoch_nanoseconds": 1719999999999999999,
+            "type": "utc_instant"
+          },
+          "revision_hashes": [
+            "sha256:eb4336b228c77fbf5c5b2d72e96942a3a8382c634852b81bbbbdfa4947802443",
+            "sha256:bf64ca65537c2aac09ab0a364060126191d5f2522c39f2a6adaa1d0aae9bc9e3"
+          ],
+          "schema_version": 1,
+          "stable_instrument_key": "btc-usdt-perpetual",
+          "type": "binance_usdm_instrument_metadata_query"
+        },
+        "schema_version": 1,
+        "status": "TRADING",
+        "symbol_timeline": {
+          "instrument_id": {
+            "stable_key": "btc-usdt-perpetual",
+            "type": "instrument_id",
+            "venue": "binance_usdm"
+          },
+          "intervals": [
+            {
+              "effective_from": {
+                "epoch_nanoseconds": 1700000000000000000,
+                "type": "utc_instant"
+              },
+              "effective_until": {
+                "epoch_nanoseconds": 1720000000000000000,
+                "type": "utc_instant"
+              },
+              "symbol": "BTCUSDT"
+            }
+          ],
+          "type": "symbol_timeline"
+        },
+        "tradable": true,
+        "type": "binance_usdm_instrument_metadata_resolution",
+        "visible_revisions": [
+          {
+            "available_at": {
+              "epoch_nanoseconds": 1700000000000000001,
+              "type": "utc_instant"
+            },
+            "base_asset": "BTC",
+            "contract_type": "PERPETUAL",
+            "delivery_at": {
+              "epoch_nanoseconds": 4133404800000000000,
+              "type": "utc_instant"
+            },
+            "effective_from": {
+              "epoch_nanoseconds": 1700000000000000000,
+              "type": "utc_instant"
+            },
+            "margin_asset": "USDT",
+            "onboard_at": {
+              "epoch_nanoseconds": 1700000000000000000,
+              "type": "utc_instant"
+            },
+            "pair": "BTCUSDT",
+            "quote_asset": "USDT",
+            "revision_id": "btc-v1",
+            "schema_version": 1,
+            "source_ref": {
+              "schema_version": 1,
+              "source_hash": "sha256:74cff442688248dd63a2dba438c16ad52d49bf934de3c7f59e4f499cef88ae40",
+              "source_key": "exchange-info/btc-v1.json",
+              "type": "binance_usdm_instrument_metadata_source_ref"
+            },
+            "stable_instrument_key": "btc-usdt-perpetual",
+            "status": "TRADING",
+            "supersedes_revision_id": null,
+            "symbol": "BTCUSDT",
+            "type": "binance_usdm_instrument_metadata_revision"
+          },
+          {
+            "available_at": {
+              "epoch_nanoseconds": 1710000000000000001,
+              "type": "utc_instant"
+            },
+            "base_asset": "BTC",
+            "contract_type": "PERPETUAL",
+            "delivery_at": {
+              "epoch_nanoseconds": 1720000000000000000,
+              "type": "utc_instant"
+            },
+            "effective_from": {
+              "epoch_nanoseconds": 1710000000000000000,
+              "type": "utc_instant"
+            },
+            "margin_asset": "USDT",
+            "onboard_at": {
+              "epoch_nanoseconds": 1700000000000000000,
+              "type": "utc_instant"
+            },
+            "pair": "BTCUSDT",
+            "quote_asset": "USDT",
+            "revision_id": "btc-v2",
+            "schema_version": 1,
+            "source_ref": {
+              "schema_version": 1,
+              "source_hash": "sha256:8f8677e26eb3db1aa5b6b9c7cb08e0ee526a3b2cfed011755296e1a807b923a6",
+              "source_key": "exchange-info/btc-v2.json",
+              "type": "binance_usdm_instrument_metadata_source_ref"
+            },
+            "stable_instrument_key": "btc-usdt-perpetual",
+            "status": "TRADING",
+            "supersedes_revision_id": "btc-v1",
+            "symbol": "BTCUSDT",
+            "type": "binance_usdm_instrument_metadata_revision"
+          }
+        ]
+      },
+      "type": "profile_port_outcome"
+    },
+    "invalid_currency": {
+      "component_ref": {
+        "component_digest": "sha256:eb8155ec923c2d21f2ad0dd321fa1ad948c72cbe25c7dccdadf3d0a5268b6963",
+        "component_key": "crypto.binance_usdm.instrument_metadata.v1",
+        "component_version": 1,
+        "port_type": "instrument_model",
+        "type": "profile_component_ref"
+      },
+      "failure": {
+        "code": "invalid_currency_context",
+        "message": "invalid currency context",
+        "query": {
+          "captured_at": {
+            "epoch_nanoseconds": 1710000000000000020,
+            "type": "utc_instant"
+          },
+          "effective_at": {
+            "epoch_nanoseconds": 1710000000000000010,
+            "type": "utc_instant"
+          },
+          "revision_hashes": [
+            "sha256:ec847c22d8a09c910f4dc03c61b9f819ef5434321cb75146d2293cd1d9fb7f2e"
+          ],
+          "schema_version": 1,
+          "stable_instrument_key": "btc-usdt-perpetual",
+          "type": "binance_usdm_instrument_metadata_query"
+        },
+        "schema_version": 1,
+        "subject_ids": [
+          "btc-v1"
+        ],
+        "type": "binance_usdm_instrument_metadata_failure"
+      },
+      "input_hash": "sha256:f153fbd5a689c178d5b4662a1087eb6305b720ae468f2b4ee51ac2f65382ff2c",
+      "result": null,
+      "type": "profile_port_outcome"
+    },
+    "known_nontrading": {
+      "component_ref": {
+        "component_digest": "sha256:eb8155ec923c2d21f2ad0dd321fa1ad948c72cbe25c7dccdadf3d0a5268b6963",
+        "component_key": "crypto.binance_usdm.instrument_metadata.v1",
+        "component_version": 1,
+        "port_type": "instrument_model",
+        "type": "profile_component_ref"
+      },
+      "failure": null,
+      "input_hash": "sha256:a612904ccb34510bdd0129b9450d75ff1d134404b25c22afed807e76e1dc2fbd",
+      "result": {
+        "active_pair": "BTCUSDT",
+        "active_revision": {
+          "available_at": {
+            "epoch_nanoseconds": 1710000000000000001,
+            "type": "utc_instant"
+          },
+          "base_asset": "BTC",
+          "contract_type": "PERPETUAL",
+          "delivery_at": {
+            "epoch_nanoseconds": 4133404800000000000,
+            "type": "utc_instant"
+          },
+          "effective_from": {
+            "epoch_nanoseconds": 1710000000000000000,
+            "type": "utc_instant"
+          },
+          "margin_asset": "USDT",
+          "onboard_at": {
+            "epoch_nanoseconds": 1700000000000000000,
+            "type": "utc_instant"
+          },
+          "pair": "BTCUSDT",
+          "quote_asset": "USDT",
+          "revision_id": "btc-v2",
+          "schema_version": 1,
+          "source_ref": {
+            "schema_version": 1,
+            "source_hash": "sha256:8f8677e26eb3db1aa5b6b9c7cb08e0ee526a3b2cfed011755296e1a807b923a6",
+            "source_key": "exchange-info/btc-v2.json",
+            "type": "binance_usdm_instrument_metadata_source_ref"
+          },
+          "stable_instrument_key": "btc-usdt-perpetual",
+          "status": "TRADING_HALT",
+          "supersedes_revision_id": "btc-v1",
+          "symbol": "BTCUSDT",
+          "type": "binance_usdm_instrument_metadata_revision"
+        },
+        "active_symbol": "BTCUSDT",
+        "contract_metadata": {
+          "base_currency": {
+            "type": "currency_id",
+            "value": "BTC"
+          },
+          "contract_multiplier": {
+            "basis": "base_quantity_per_contract",
+            "scale": 0,
+            "type": "rate",
+            "units": 1
+          },
+          "instrument_id": {
+            "stable_key": "btc-usdt-perpetual",
+            "type": "instrument_id",
+            "venue": "binance_usdm"
+          },
+          "quote_currency": {
+            "type": "currency_id",
+            "value": "USDT"
+          },
+          "schema_version": 1,
+          "settlement_currency": {
+            "type": "currency_id",
+            "value": "USDT"
+          },
+          "type": "binance_usdm_linear_contract_metadata"
+        },
+        "instrument": {
+          "base_currency": {
+            "type": "currency_id",
+            "value": "BTC"
+          },
+          "instrument_id": {
+            "stable_key": "btc-usdt-perpetual",
+            "type": "instrument_id",
+            "venue": "binance_usdm"
+          },
+          "instrument_type": "linear_perpetual",
+          "quote_currency": {
+            "type": "currency_id",
+            "value": "USDT"
+          },
+          "settlement_currency": {
+            "type": "currency_id",
+            "value": "USDT"
+          },
+          "type": "instrument_definition"
+        },
+        "listing_interval": {
+          "delisted_at": null,
+          "instrument_id": {
+            "stable_key": "btc-usdt-perpetual",
+            "type": "instrument_id",
+            "venue": "binance_usdm"
+          },
+          "listed_at": {
+            "epoch_nanoseconds": 1700000000000000000,
+            "type": "utc_instant"
+          },
+          "schema_version": 1,
+          "type": "binance_usdm_listing_interval"
+        },
+        "query": {
+          "captured_at": {
+            "epoch_nanoseconds": 1710000000000000020,
+            "type": "utc_instant"
+          },
+          "effective_at": {
+            "epoch_nanoseconds": 1710000000000000010,
+            "type": "utc_instant"
+          },
+          "revision_hashes": [
+            "sha256:eb4336b228c77fbf5c5b2d72e96942a3a8382c634852b81bbbbdfa4947802443",
+            "sha256:dc6f9742febf29e850720b171c55aaccc132279478f57913ed86095857d793e6"
+          ],
+          "schema_version": 1,
+          "stable_instrument_key": "btc-usdt-perpetual",
+          "type": "binance_usdm_instrument_metadata_query"
+        },
+        "schema_version": 1,
+        "status": "TRADING_HALT",
+        "symbol_timeline": {
+          "instrument_id": {
+            "stable_key": "btc-usdt-perpetual",
+            "type": "instrument_id",
+            "venue": "binance_usdm"
+          },
+          "intervals": [
+            {
+              "effective_from": {
+                "epoch_nanoseconds": 1700000000000000000,
+                "type": "utc_instant"
+              },
+              "effective_until": null,
+              "symbol": "BTCUSDT"
+            }
+          ],
+          "type": "symbol_timeline"
+        },
+        "tradable": false,
+        "type": "binance_usdm_instrument_metadata_resolution",
+        "visible_revisions": [
+          {
+            "available_at": {
+              "epoch_nanoseconds": 1700000000000000001,
+              "type": "utc_instant"
+            },
+            "base_asset": "BTC",
+            "contract_type": "PERPETUAL",
+            "delivery_at": {
+              "epoch_nanoseconds": 4133404800000000000,
+              "type": "utc_instant"
+            },
+            "effective_from": {
+              "epoch_nanoseconds": 1700000000000000000,
+              "type": "utc_instant"
+            },
+            "margin_asset": "USDT",
+            "onboard_at": {
+              "epoch_nanoseconds": 1700000000000000000,
+              "type": "utc_instant"
+            },
+            "pair": "BTCUSDT",
+            "quote_asset": "USDT",
+            "revision_id": "btc-v1",
+            "schema_version": 1,
+            "source_ref": {
+              "schema_version": 1,
+              "source_hash": "sha256:74cff442688248dd63a2dba438c16ad52d49bf934de3c7f59e4f499cef88ae40",
+              "source_key": "exchange-info/btc-v1.json",
+              "type": "binance_usdm_instrument_metadata_source_ref"
+            },
+            "stable_instrument_key": "btc-usdt-perpetual",
+            "status": "TRADING",
+            "supersedes_revision_id": null,
+            "symbol": "BTCUSDT",
+            "type": "binance_usdm_instrument_metadata_revision"
+          },
+          {
+            "available_at": {
+              "epoch_nanoseconds": 1710000000000000001,
+              "type": "utc_instant"
+            },
+            "base_asset": "BTC",
+            "contract_type": "PERPETUAL",
+            "delivery_at": {
+              "epoch_nanoseconds": 4133404800000000000,
+              "type": "utc_instant"
+            },
+            "effective_from": {
+              "epoch_nanoseconds": 1710000000000000000,
+              "type": "utc_instant"
+            },
+            "margin_asset": "USDT",
+            "onboard_at": {
+              "epoch_nanoseconds": 1700000000000000000,
+              "type": "utc_instant"
+            },
+            "pair": "BTCUSDT",
+            "quote_asset": "USDT",
+            "revision_id": "btc-v2",
+            "schema_version": 1,
+            "source_ref": {
+              "schema_version": 1,
+              "source_hash": "sha256:8f8677e26eb3db1aa5b6b9c7cb08e0ee526a3b2cfed011755296e1a807b923a6",
+              "source_key": "exchange-info/btc-v2.json",
+              "type": "binance_usdm_instrument_metadata_source_ref"
+            },
+            "stable_instrument_key": "btc-usdt-perpetual",
+            "status": "TRADING_HALT",
+            "supersedes_revision_id": "btc-v1",
+            "symbol": "BTCUSDT",
+            "type": "binance_usdm_instrument_metadata_revision"
+          }
+        ]
+      },
+      "type": "profile_port_outcome"
+    },
+    "open_ended": {
+      "component_ref": {
+        "component_digest": "sha256:eb8155ec923c2d21f2ad0dd321fa1ad948c72cbe25c7dccdadf3d0a5268b6963",
+        "component_key": "crypto.binance_usdm.instrument_metadata.v1",
+        "component_version": 1,
+        "port_type": "instrument_model",
+        "type": "profile_component_ref"
+      },
+      "failure": null,
+      "input_hash": "sha256:21b56924617be389ff0112299ebf60506a9b9e85f01517b6f07cc7d54f10b253",
+      "result": {
+        "active_pair": "BTCUSDT",
+        "active_revision": {
+          "available_at": {
+            "epoch_nanoseconds": 1700000000000000001,
+            "type": "utc_instant"
+          },
+          "base_asset": "BTC",
+          "contract_type": "PERPETUAL",
+          "delivery_at": {
+            "epoch_nanoseconds": 4133404800000000000,
+            "type": "utc_instant"
+          },
+          "effective_from": {
+            "epoch_nanoseconds": 1700000000000000000,
+            "type": "utc_instant"
+          },
+          "margin_asset": "USDT",
+          "onboard_at": {
+            "epoch_nanoseconds": 1700000000000000000,
+            "type": "utc_instant"
+          },
+          "pair": "BTCUSDT",
+          "quote_asset": "USDT",
+          "revision_id": "btc-v1",
+          "schema_version": 1,
+          "source_ref": {
+            "schema_version": 1,
+            "source_hash": "sha256:74cff442688248dd63a2dba438c16ad52d49bf934de3c7f59e4f499cef88ae40",
+            "source_key": "exchange-info/btc-v1.json",
+            "type": "binance_usdm_instrument_metadata_source_ref"
+          },
+          "stable_instrument_key": "btc-usdt-perpetual",
+          "status": "TRADING",
+          "supersedes_revision_id": null,
+          "symbol": "BTCUSDT",
+          "type": "binance_usdm_instrument_metadata_revision"
+        },
+        "active_symbol": "BTCUSDT",
+        "contract_metadata": {
+          "base_currency": {
+            "type": "currency_id",
+            "value": "BTC"
+          },
+          "contract_multiplier": {
+            "basis": "base_quantity_per_contract",
+            "scale": 0,
+            "type": "rate",
+            "units": 1
+          },
+          "instrument_id": {
+            "stable_key": "btc-usdt-perpetual",
+            "type": "instrument_id",
+            "venue": "binance_usdm"
+          },
+          "quote_currency": {
+            "type": "currency_id",
+            "value": "USDT"
+          },
+          "schema_version": 1,
+          "settlement_currency": {
+            "type": "currency_id",
+            "value": "USDT"
+          },
+          "type": "binance_usdm_linear_contract_metadata"
+        },
+        "instrument": {
+          "base_currency": {
+            "type": "currency_id",
+            "value": "BTC"
+          },
+          "instrument_id": {
+            "stable_key": "btc-usdt-perpetual",
+            "type": "instrument_id",
+            "venue": "binance_usdm"
+          },
+          "instrument_type": "linear_perpetual",
+          "quote_currency": {
+            "type": "currency_id",
+            "value": "USDT"
+          },
+          "settlement_currency": {
+            "type": "currency_id",
+            "value": "USDT"
+          },
+          "type": "instrument_definition"
+        },
+        "listing_interval": {
+          "delisted_at": null,
+          "instrument_id": {
+            "stable_key": "btc-usdt-perpetual",
+            "type": "instrument_id",
+            "venue": "binance_usdm"
+          },
+          "listed_at": {
+            "epoch_nanoseconds": 1700000000000000000,
+            "type": "utc_instant"
+          },
+          "schema_version": 1,
+          "type": "binance_usdm_listing_interval"
+        },
+        "query": {
+          "captured_at": {
+            "epoch_nanoseconds": 1700000000000000020,
+            "type": "utc_instant"
+          },
+          "effective_at": {
+            "epoch_nanoseconds": 1700000000000000010,
+            "type": "utc_instant"
+          },
+          "revision_hashes": [
+            "sha256:eb4336b228c77fbf5c5b2d72e96942a3a8382c634852b81bbbbdfa4947802443"
+          ],
+          "schema_version": 1,
+          "stable_instrument_key": "btc-usdt-perpetual",
+          "type": "binance_usdm_instrument_metadata_query"
+        },
+        "schema_version": 1,
+        "status": "TRADING",
+        "symbol_timeline": {
+          "instrument_id": {
+            "stable_key": "btc-usdt-perpetual",
+            "type": "instrument_id",
+            "venue": "binance_usdm"
+          },
+          "intervals": [
+            {
+              "effective_from": {
+                "epoch_nanoseconds": 1700000000000000000,
+                "type": "utc_instant"
+              },
+              "effective_until": null,
+              "symbol": "BTCUSDT"
+            }
+          ],
+          "type": "symbol_timeline"
+        },
+        "tradable": true,
+        "type": "binance_usdm_instrument_metadata_resolution",
+        "visible_revisions": [
+          {
+            "available_at": {
+              "epoch_nanoseconds": 1700000000000000001,
+              "type": "utc_instant"
+            },
+            "base_asset": "BTC",
+            "contract_type": "PERPETUAL",
+            "delivery_at": {
+              "epoch_nanoseconds": 4133404800000000000,
+              "type": "utc_instant"
+            },
+            "effective_from": {
+              "epoch_nanoseconds": 1700000000000000000,
+              "type": "utc_instant"
+            },
+            "margin_asset": "USDT",
+            "onboard_at": {
+              "epoch_nanoseconds": 1700000000000000000,
+              "type": "utc_instant"
+            },
+            "pair": "BTCUSDT",
+            "quote_asset": "USDT",
+            "revision_id": "btc-v1",
+            "schema_version": 1,
+            "source_ref": {
+              "schema_version": 1,
+              "source_hash": "sha256:74cff442688248dd63a2dba438c16ad52d49bf934de3c7f59e4f499cef88ae40",
+              "source_key": "exchange-info/btc-v1.json",
+              "type": "binance_usdm_instrument_metadata_source_ref"
+            },
+            "stable_instrument_key": "btc-usdt-perpetual",
+            "status": "TRADING",
+            "supersedes_revision_id": null,
+            "symbol": "BTCUSDT",
+            "type": "binance_usdm_instrument_metadata_revision"
+          }
+        ]
+      },
+      "type": "profile_port_outcome"
+    },
+    "post_delisting": {
+      "component_ref": {
+        "component_digest": "sha256:eb8155ec923c2d21f2ad0dd321fa1ad948c72cbe25c7dccdadf3d0a5268b6963",
+        "component_key": "crypto.binance_usdm.instrument_metadata.v1",
+        "component_version": 1,
+        "port_type": "instrument_model",
+        "type": "profile_component_ref"
+      },
+      "failure": {
+        "code": "not_listed_at_query_instant",
+        "message": "not listed at query instant",
+        "query": {
+          "captured_at": {
+            "epoch_nanoseconds": 1720000000000000002,
+            "type": "utc_instant"
+          },
+          "effective_at": {
+            "epoch_nanoseconds": 1720000000000000000,
+            "type": "utc_instant"
+          },
+          "revision_hashes": [
+            "sha256:eb4336b228c77fbf5c5b2d72e96942a3a8382c634852b81bbbbdfa4947802443",
+            "sha256:bf64ca65537c2aac09ab0a364060126191d5f2522c39f2a6adaa1d0aae9bc9e3"
+          ],
+          "schema_version": 1,
+          "stable_instrument_key": "btc-usdt-perpetual",
+          "type": "binance_usdm_instrument_metadata_query"
+        },
+        "schema_version": 1,
+        "subject_ids": [
+          "btc-usdt-perpetual"
+        ],
+        "type": "binance_usdm_instrument_metadata_failure"
+      },
+      "input_hash": "sha256:4e071d519649f4f4ed7c545f568e53eb90c3aaad8ff032a2e84503770cef4cfb",
+      "result": null,
+      "type": "profile_port_outcome"
+    },
+    "pre_listing": {
+      "component_ref": {
+        "component_digest": "sha256:eb8155ec923c2d21f2ad0dd321fa1ad948c72cbe25c7dccdadf3d0a5268b6963",
+        "component_key": "crypto.binance_usdm.instrument_metadata.v1",
+        "component_version": 1,
+        "port_type": "instrument_model",
+        "type": "profile_component_ref"
+      },
+      "failure": {
+        "code": "not_listed_at_query_instant",
+        "message": "not listed at query instant",
+        "query": {
+          "captured_at": {
+            "epoch_nanoseconds": 1710000000000000020,
+            "type": "utc_instant"
+          },
+          "effective_at": {
+            "epoch_nanoseconds": 1699999999999999999,
+            "type": "utc_instant"
+          },
+          "revision_hashes": [
+            "sha256:eb4336b228c77fbf5c5b2d72e96942a3a8382c634852b81bbbbdfa4947802443"
+          ],
+          "schema_version": 1,
+          "stable_instrument_key": "btc-usdt-perpetual",
+          "type": "binance_usdm_instrument_metadata_query"
+        },
+        "schema_version": 1,
+        "subject_ids": [
+          "btc-usdt-perpetual"
+        ],
+        "type": "binance_usdm_instrument_metadata_failure"
+      },
+      "input_hash": "sha256:84ef54bf0b4119887a9875628399a462eb9a37fa8b9b255e077d8ee0a26950a6",
+      "result": null,
+      "type": "profile_port_outcome"
+    },
+    "renamed": {
+      "component_ref": {
+        "component_digest": "sha256:eb8155ec923c2d21f2ad0dd321fa1ad948c72cbe25c7dccdadf3d0a5268b6963",
+        "component_key": "crypto.binance_usdm.instrument_metadata.v1",
+        "component_version": 1,
+        "port_type": "instrument_model",
+        "type": "profile_component_ref"
+      },
+      "failure": null,
+      "input_hash": "sha256:ecef42dac5ba1ed66c3d0a1ad9466a428eed2f2c7f99cddfd0d062103a09d904",
+      "result": {
+        "active_pair": "XBTUSDT",
+        "active_revision": {
+          "available_at": {
+            "epoch_nanoseconds": 1710000000000000001,
+            "type": "utc_instant"
+          },
+          "base_asset": "BTC",
+          "contract_type": "PERPETUAL",
+          "delivery_at": {
+            "epoch_nanoseconds": 4133404800000000000,
+            "type": "utc_instant"
+          },
+          "effective_from": {
+            "epoch_nanoseconds": 1710000000000000000,
+            "type": "utc_instant"
+          },
+          "margin_asset": "USDT",
+          "onboard_at": {
+            "epoch_nanoseconds": 1700000000000000000,
+            "type": "utc_instant"
+          },
+          "pair": "XBTUSDT",
+          "quote_asset": "USDT",
+          "revision_id": "btc-v2",
+          "schema_version": 1,
+          "source_ref": {
+            "schema_version": 1,
+            "source_hash": "sha256:8f8677e26eb3db1aa5b6b9c7cb08e0ee526a3b2cfed011755296e1a807b923a6",
+            "source_key": "exchange-info/btc-v2.json",
+            "type": "binance_usdm_instrument_metadata_source_ref"
+          },
+          "stable_instrument_key": "btc-usdt-perpetual",
+          "status": "TRADING",
+          "supersedes_revision_id": "btc-v1",
+          "symbol": "XBTUSDT",
+          "type": "binance_usdm_instrument_metadata_revision"
+        },
+        "active_symbol": "XBTUSDT",
+        "contract_metadata": {
+          "base_currency": {
+            "type": "currency_id",
+            "value": "BTC"
+          },
+          "contract_multiplier": {
+            "basis": "base_quantity_per_contract",
+            "scale": 0,
+            "type": "rate",
+            "units": 1
+          },
+          "instrument_id": {
+            "stable_key": "btc-usdt-perpetual",
+            "type": "instrument_id",
+            "venue": "binance_usdm"
+          },
+          "quote_currency": {
+            "type": "currency_id",
+            "value": "USDT"
+          },
+          "schema_version": 1,
+          "settlement_currency": {
+            "type": "currency_id",
+            "value": "USDT"
+          },
+          "type": "binance_usdm_linear_contract_metadata"
+        },
+        "instrument": {
+          "base_currency": {
+            "type": "currency_id",
+            "value": "BTC"
+          },
+          "instrument_id": {
+            "stable_key": "btc-usdt-perpetual",
+            "type": "instrument_id",
+            "venue": "binance_usdm"
+          },
+          "instrument_type": "linear_perpetual",
+          "quote_currency": {
+            "type": "currency_id",
+            "value": "USDT"
+          },
+          "settlement_currency": {
+            "type": "currency_id",
+            "value": "USDT"
+          },
+          "type": "instrument_definition"
+        },
+        "listing_interval": {
+          "delisted_at": null,
+          "instrument_id": {
+            "stable_key": "btc-usdt-perpetual",
+            "type": "instrument_id",
+            "venue": "binance_usdm"
+          },
+          "listed_at": {
+            "epoch_nanoseconds": 1700000000000000000,
+            "type": "utc_instant"
+          },
+          "schema_version": 1,
+          "type": "binance_usdm_listing_interval"
+        },
+        "query": {
+          "captured_at": {
+            "epoch_nanoseconds": 1710000000000000020,
+            "type": "utc_instant"
+          },
+          "effective_at": {
+            "epoch_nanoseconds": 1710000000000000010,
+            "type": "utc_instant"
+          },
+          "revision_hashes": [
+            "sha256:eb4336b228c77fbf5c5b2d72e96942a3a8382c634852b81bbbbdfa4947802443",
+            "sha256:139c48f7ab31c4592919b7ac83b0e17206030e3d9711f155dff6322fabe7894d"
+          ],
+          "schema_version": 1,
+          "stable_instrument_key": "btc-usdt-perpetual",
+          "type": "binance_usdm_instrument_metadata_query"
+        },
+        "schema_version": 1,
+        "status": "TRADING",
+        "symbol_timeline": {
+          "instrument_id": {
+            "stable_key": "btc-usdt-perpetual",
+            "type": "instrument_id",
+            "venue": "binance_usdm"
+          },
+          "intervals": [
+            {
+              "effective_from": {
+                "epoch_nanoseconds": 1700000000000000000,
+                "type": "utc_instant"
+              },
+              "effective_until": {
+                "epoch_nanoseconds": 1710000000000000000,
+                "type": "utc_instant"
+              },
+              "symbol": "BTCUSDT"
+            },
+            {
+              "effective_from": {
+                "epoch_nanoseconds": 1710000000000000000,
+                "type": "utc_instant"
+              },
+              "effective_until": null,
+              "symbol": "XBTUSDT"
+            }
+          ],
+          "type": "symbol_timeline"
+        },
+        "tradable": true,
+        "type": "binance_usdm_instrument_metadata_resolution",
+        "visible_revisions": [
+          {
+            "available_at": {
+              "epoch_nanoseconds": 1700000000000000001,
+              "type": "utc_instant"
+            },
+            "base_asset": "BTC",
+            "contract_type": "PERPETUAL",
+            "delivery_at": {
+              "epoch_nanoseconds": 4133404800000000000,
+              "type": "utc_instant"
+            },
+            "effective_from": {
+              "epoch_nanoseconds": 1700000000000000000,
+              "type": "utc_instant"
+            },
+            "margin_asset": "USDT",
+            "onboard_at": {
+              "epoch_nanoseconds": 1700000000000000000,
+              "type": "utc_instant"
+            },
+            "pair": "BTCUSDT",
+            "quote_asset": "USDT",
+            "revision_id": "btc-v1",
+            "schema_version": 1,
+            "source_ref": {
+              "schema_version": 1,
+              "source_hash": "sha256:74cff442688248dd63a2dba438c16ad52d49bf934de3c7f59e4f499cef88ae40",
+              "source_key": "exchange-info/btc-v1.json",
+              "type": "binance_usdm_instrument_metadata_source_ref"
+            },
+            "stable_instrument_key": "btc-usdt-perpetual",
+            "status": "TRADING",
+            "supersedes_revision_id": null,
+            "symbol": "BTCUSDT",
+            "type": "binance_usdm_instrument_metadata_revision"
+          },
+          {
+            "available_at": {
+              "epoch_nanoseconds": 1710000000000000001,
+              "type": "utc_instant"
+            },
+            "base_asset": "BTC",
+            "contract_type": "PERPETUAL",
+            "delivery_at": {
+              "epoch_nanoseconds": 4133404800000000000,
+              "type": "utc_instant"
+            },
+            "effective_from": {
+              "epoch_nanoseconds": 1710000000000000000,
+              "type": "utc_instant"
+            },
+            "margin_asset": "USDT",
+            "onboard_at": {
+              "epoch_nanoseconds": 1700000000000000000,
+              "type": "utc_instant"
+            },
+            "pair": "XBTUSDT",
+            "quote_asset": "USDT",
+            "revision_id": "btc-v2",
+            "schema_version": 1,
+            "source_ref": {
+              "schema_version": 1,
+              "source_hash": "sha256:8f8677e26eb3db1aa5b6b9c7cb08e0ee526a3b2cfed011755296e1a807b923a6",
+              "source_key": "exchange-info/btc-v2.json",
+              "type": "binance_usdm_instrument_metadata_source_ref"
+            },
+            "stable_instrument_key": "btc-usdt-perpetual",
+            "status": "TRADING",
+            "supersedes_revision_id": "btc-v1",
+            "symbol": "XBTUSDT",
+            "type": "binance_usdm_instrument_metadata_revision"
+          }
+        ]
+      },
+      "type": "profile_port_outcome"
+    },
+    "separate_lineage": {
+      "component_ref": {
+        "component_digest": "sha256:eb8155ec923c2d21f2ad0dd321fa1ad948c72cbe25c7dccdadf3d0a5268b6963",
+        "component_key": "crypto.binance_usdm.instrument_metadata.v1",
+        "component_version": 1,
+        "port_type": "instrument_model",
+        "type": "profile_component_ref"
+      },
+      "failure": null,
+      "input_hash": "sha256:4529603f1a429e6ec528e7a2c50edf916a5469403bd8c4df7cb88cea40b3339b",
+      "result": {
+        "active_pair": "BTCUSDT",
+        "active_revision": {
+          "available_at": {
+            "epoch_nanoseconds": 1700000000000000001,
+            "type": "utc_instant"
+          },
+          "base_asset": "BTC",
+          "contract_type": "PERPETUAL",
+          "delivery_at": {
+            "epoch_nanoseconds": 4133404800000000000,
+            "type": "utc_instant"
+          },
+          "effective_from": {
+            "epoch_nanoseconds": 1700000000000000000,
+            "type": "utc_instant"
+          },
+          "margin_asset": "USDT",
+          "onboard_at": {
+            "epoch_nanoseconds": 1700000000000000000,
+            "type": "utc_instant"
+          },
+          "pair": "BTCUSDT",
+          "quote_asset": "USDT",
+          "revision_id": "btc-v1",
+          "schema_version": 1,
+          "source_ref": {
+            "schema_version": 1,
+            "source_hash": "sha256:74cff442688248dd63a2dba438c16ad52d49bf934de3c7f59e4f499cef88ae40",
+            "source_key": "exchange-info/btc-v1.json",
+            "type": "binance_usdm_instrument_metadata_source_ref"
+          },
+          "stable_instrument_key": "renamed-btc-usdt",
+          "status": "TRADING",
+          "supersedes_revision_id": null,
+          "symbol": "BTCUSDT",
+          "type": "binance_usdm_instrument_metadata_revision"
+        },
+        "active_symbol": "BTCUSDT",
+        "contract_metadata": {
+          "base_currency": {
+            "type": "currency_id",
+            "value": "BTC"
+          },
+          "contract_multiplier": {
+            "basis": "base_quantity_per_contract",
+            "scale": 0,
+            "type": "rate",
+            "units": 1
+          },
+          "instrument_id": {
+            "stable_key": "renamed-btc-usdt",
+            "type": "instrument_id",
+            "venue": "binance_usdm"
+          },
+          "quote_currency": {
+            "type": "currency_id",
+            "value": "USDT"
+          },
+          "schema_version": 1,
+          "settlement_currency": {
+            "type": "currency_id",
+            "value": "USDT"
+          },
+          "type": "binance_usdm_linear_contract_metadata"
+        },
+        "instrument": {
+          "base_currency": {
+            "type": "currency_id",
+            "value": "BTC"
+          },
+          "instrument_id": {
+            "stable_key": "renamed-btc-usdt",
+            "type": "instrument_id",
+            "venue": "binance_usdm"
+          },
+          "instrument_type": "linear_perpetual",
+          "quote_currency": {
+            "type": "currency_id",
+            "value": "USDT"
+          },
+          "settlement_currency": {
+            "type": "currency_id",
+            "value": "USDT"
+          },
+          "type": "instrument_definition"
+        },
+        "listing_interval": {
+          "delisted_at": null,
+          "instrument_id": {
+            "stable_key": "renamed-btc-usdt",
+            "type": "instrument_id",
+            "venue": "binance_usdm"
+          },
+          "listed_at": {
+            "epoch_nanoseconds": 1700000000000000000,
+            "type": "utc_instant"
+          },
+          "schema_version": 1,
+          "type": "binance_usdm_listing_interval"
+        },
+        "query": {
+          "captured_at": {
+            "epoch_nanoseconds": 1700000000000000020,
+            "type": "utc_instant"
+          },
+          "effective_at": {
+            "epoch_nanoseconds": 1700000000000000010,
+            "type": "utc_instant"
+          },
+          "revision_hashes": [
+            "sha256:ef20b23f8ef4247aa9d3d7631506dd905f51e24af0911da8edcd05c7e3bc6da6"
+          ],
+          "schema_version": 1,
+          "stable_instrument_key": "renamed-btc-usdt",
+          "type": "binance_usdm_instrument_metadata_query"
+        },
+        "schema_version": 1,
+        "status": "TRADING",
+        "symbol_timeline": {
+          "instrument_id": {
+            "stable_key": "renamed-btc-usdt",
+            "type": "instrument_id",
+            "venue": "binance_usdm"
+          },
+          "intervals": [
+            {
+              "effective_from": {
+                "epoch_nanoseconds": 1700000000000000000,
+                "type": "utc_instant"
+              },
+              "effective_until": null,
+              "symbol": "BTCUSDT"
+            }
+          ],
+          "type": "symbol_timeline"
+        },
+        "tradable": true,
+        "type": "binance_usdm_instrument_metadata_resolution",
+        "visible_revisions": [
+          {
+            "available_at": {
+              "epoch_nanoseconds": 1700000000000000001,
+              "type": "utc_instant"
+            },
+            "base_asset": "BTC",
+            "contract_type": "PERPETUAL",
+            "delivery_at": {
+              "epoch_nanoseconds": 4133404800000000000,
+              "type": "utc_instant"
+            },
+            "effective_from": {
+              "epoch_nanoseconds": 1700000000000000000,
+              "type": "utc_instant"
+            },
+            "margin_asset": "USDT",
+            "onboard_at": {
+              "epoch_nanoseconds": 1700000000000000000,
+              "type": "utc_instant"
+            },
+            "pair": "BTCUSDT",
+            "quote_asset": "USDT",
+            "revision_id": "btc-v1",
+            "schema_version": 1,
+            "source_ref": {
+              "schema_version": 1,
+              "source_hash": "sha256:74cff442688248dd63a2dba438c16ad52d49bf934de3c7f59e4f499cef88ae40",
+              "source_key": "exchange-info/btc-v1.json",
+              "type": "binance_usdm_instrument_metadata_source_ref"
+            },
+            "stable_instrument_key": "renamed-btc-usdt",
+            "status": "TRADING",
+            "supersedes_revision_id": null,
+            "symbol": "BTCUSDT",
+            "type": "binance_usdm_instrument_metadata_revision"
+          }
+        ]
+      },
+      "type": "profile_port_outcome"
+    },
+    "unsupported_status": {
+      "component_ref": {
+        "component_digest": "sha256:eb8155ec923c2d21f2ad0dd321fa1ad948c72cbe25c7dccdadf3d0a5268b6963",
+        "component_key": "crypto.binance_usdm.instrument_metadata.v1",
+        "component_version": 1,
+        "port_type": "instrument_model",
+        "type": "profile_component_ref"
+      },
+      "failure": {
+        "code": "unsupported_contract_status",
+        "message": "unsupported contract status",
+        "query": {
+          "captured_at": {
+            "epoch_nanoseconds": 1710000000000000020,
+            "type": "utc_instant"
+          },
+          "effective_at": {
+            "epoch_nanoseconds": 1710000000000000010,
+            "type": "utc_instant"
+          },
+          "revision_hashes": [
+            "sha256:606530ead3f1e73624e8863abfb1512bb09d5e63c3d7c1d6d79b11500ce8efd2"
+          ],
+          "schema_version": 1,
+          "stable_instrument_key": "btc-usdt-perpetual",
+          "type": "binance_usdm_instrument_metadata_query"
+        },
+        "schema_version": 1,
+        "subject_ids": [
+          "btc-v1"
+        ],
+        "type": "binance_usdm_instrument_metadata_failure"
+      },
+      "input_hash": "sha256:365e37363b94ce7737c27ba7c25fcaf0297905ad7a3d401c0e6d7386373e6277",
+      "result": null,
+      "type": "profile_port_outcome"
+    },
+    "unsupported_type": {
+      "component_ref": {
+        "component_digest": "sha256:eb8155ec923c2d21f2ad0dd321fa1ad948c72cbe25c7dccdadf3d0a5268b6963",
+        "component_key": "crypto.binance_usdm.instrument_metadata.v1",
+        "component_version": 1,
+        "port_type": "instrument_model",
+        "type": "profile_component_ref"
+      },
+      "failure": {
+        "code": "unsupported_contract_type",
+        "message": "unsupported contract type",
+        "query": {
+          "captured_at": {
+            "epoch_nanoseconds": 1710000000000000020,
+            "type": "utc_instant"
+          },
+          "effective_at": {
+            "epoch_nanoseconds": 1710000000000000010,
+            "type": "utc_instant"
+          },
+          "revision_hashes": [
+            "sha256:0f582d9ab6a8cae02e3b8ac138aab2b2780908828472e801536d1ea8ddc82d11"
+          ],
+          "schema_version": 1,
+          "stable_instrument_key": "btc-usdt-perpetual",
+          "type": "binance_usdm_instrument_metadata_query"
+        },
+        "schema_version": 1,
+        "subject_ids": [
+          "btc-v1"
+        ],
+        "type": "binance_usdm_instrument_metadata_failure"
+      },
+      "input_hash": "sha256:05ae2a8e4932b87e464930f89b34fd0433849147c044ce27f6d0155e137d9361",
+      "result": null,
+      "type": "profile_port_outcome"
+    }
+  },
+  "queries": {
+    "corrected_onboard_hidden": {
+      "captured_at": {
+        "epoch_nanoseconds": 1710000000000000000,
+        "type": "utc_instant"
+      },
+      "effective_at": {
+        "epoch_nanoseconds": 1699999999999999950,
+        "type": "utc_instant"
+      },
+      "revision_hashes": [
+        "sha256:eb4336b228c77fbf5c5b2d72e96942a3a8382c634852b81bbbbdfa4947802443",
+        "sha256:244596d496df1ac3d760eb0b84dd084d1a560667a7b26eb1f1a0fef022d24c9f"
+      ],
+      "schema_version": 1,
+      "stable_instrument_key": "btc-usdt-perpetual",
+      "type": "binance_usdm_instrument_metadata_query"
+    },
+    "corrected_onboard_visible": {
+      "captured_at": {
+        "epoch_nanoseconds": 1710000000000000002,
+        "type": "utc_instant"
+      },
+      "effective_at": {
+        "epoch_nanoseconds": 1699999999999999950,
+        "type": "utc_instant"
+      },
+      "revision_hashes": [
+        "sha256:eb4336b228c77fbf5c5b2d72e96942a3a8382c634852b81bbbbdfa4947802443",
+        "sha256:244596d496df1ac3d760eb0b84dd084d1a560667a7b26eb1f1a0fef022d24c9f"
+      ],
+      "schema_version": 1,
+      "stable_instrument_key": "btc-usdt-perpetual",
+      "type": "binance_usdm_instrument_metadata_query"
+    },
+    "finite_delist": {
+      "captured_at": {
+        "epoch_nanoseconds": 1710000000000000020,
+        "type": "utc_instant"
+      },
+      "effective_at": {
+        "epoch_nanoseconds": 1719999999999999999,
+        "type": "utc_instant"
+      },
+      "revision_hashes": [
+        "sha256:eb4336b228c77fbf5c5b2d72e96942a3a8382c634852b81bbbbdfa4947802443",
+        "sha256:bf64ca65537c2aac09ab0a364060126191d5f2522c39f2a6adaa1d0aae9bc9e3"
+      ],
+      "schema_version": 1,
+      "stable_instrument_key": "btc-usdt-perpetual",
+      "type": "binance_usdm_instrument_metadata_query"
+    },
+    "invalid_currency": {
+      "captured_at": {
+        "epoch_nanoseconds": 1710000000000000020,
+        "type": "utc_instant"
+      },
+      "effective_at": {
+        "epoch_nanoseconds": 1710000000000000010,
+        "type": "utc_instant"
+      },
+      "revision_hashes": [
+        "sha256:ec847c22d8a09c910f4dc03c61b9f819ef5434321cb75146d2293cd1d9fb7f2e"
+      ],
+      "schema_version": 1,
+      "stable_instrument_key": "btc-usdt-perpetual",
+      "type": "binance_usdm_instrument_metadata_query"
+    },
+    "known_nontrading": {
+      "captured_at": {
+        "epoch_nanoseconds": 1710000000000000020,
+        "type": "utc_instant"
+      },
+      "effective_at": {
+        "epoch_nanoseconds": 1710000000000000010,
+        "type": "utc_instant"
+      },
+      "revision_hashes": [
+        "sha256:eb4336b228c77fbf5c5b2d72e96942a3a8382c634852b81bbbbdfa4947802443",
+        "sha256:dc6f9742febf29e850720b171c55aaccc132279478f57913ed86095857d793e6"
+      ],
+      "schema_version": 1,
+      "stable_instrument_key": "btc-usdt-perpetual",
+      "type": "binance_usdm_instrument_metadata_query"
+    },
+    "open_ended": {
+      "captured_at": {
+        "epoch_nanoseconds": 1700000000000000020,
+        "type": "utc_instant"
+      },
+      "effective_at": {
+        "epoch_nanoseconds": 1700000000000000010,
+        "type": "utc_instant"
+      },
+      "revision_hashes": [
+        "sha256:eb4336b228c77fbf5c5b2d72e96942a3a8382c634852b81bbbbdfa4947802443"
+      ],
+      "schema_version": 1,
+      "stable_instrument_key": "btc-usdt-perpetual",
+      "type": "binance_usdm_instrument_metadata_query"
+    },
+    "post_delisting": {
+      "captured_at": {
+        "epoch_nanoseconds": 1720000000000000002,
+        "type": "utc_instant"
+      },
+      "effective_at": {
+        "epoch_nanoseconds": 1720000000000000000,
+        "type": "utc_instant"
+      },
+      "revision_hashes": [
+        "sha256:eb4336b228c77fbf5c5b2d72e96942a3a8382c634852b81bbbbdfa4947802443",
+        "sha256:bf64ca65537c2aac09ab0a364060126191d5f2522c39f2a6adaa1d0aae9bc9e3"
+      ],
+      "schema_version": 1,
+      "stable_instrument_key": "btc-usdt-perpetual",
+      "type": "binance_usdm_instrument_metadata_query"
+    },
+    "pre_listing": {
+      "captured_at": {
+        "epoch_nanoseconds": 1710000000000000020,
+        "type": "utc_instant"
+      },
+      "effective_at": {
+        "epoch_nanoseconds": 1699999999999999999,
+        "type": "utc_instant"
+      },
+      "revision_hashes": [
+        "sha256:eb4336b228c77fbf5c5b2d72e96942a3a8382c634852b81bbbbdfa4947802443"
+      ],
+      "schema_version": 1,
+      "stable_instrument_key": "btc-usdt-perpetual",
+      "type": "binance_usdm_instrument_metadata_query"
+    },
+    "renamed": {
+      "captured_at": {
+        "epoch_nanoseconds": 1710000000000000020,
+        "type": "utc_instant"
+      },
+      "effective_at": {
+        "epoch_nanoseconds": 1710000000000000010,
+        "type": "utc_instant"
+      },
+      "revision_hashes": [
+        "sha256:eb4336b228c77fbf5c5b2d72e96942a3a8382c634852b81bbbbdfa4947802443",
+        "sha256:139c48f7ab31c4592919b7ac83b0e17206030e3d9711f155dff6322fabe7894d"
+      ],
+      "schema_version": 1,
+      "stable_instrument_key": "btc-usdt-perpetual",
+      "type": "binance_usdm_instrument_metadata_query"
+    },
+    "separate_lineage": {
+      "captured_at": {
+        "epoch_nanoseconds": 1700000000000000020,
+        "type": "utc_instant"
+      },
+      "effective_at": {
+        "epoch_nanoseconds": 1700000000000000010,
+        "type": "utc_instant"
+      },
+      "revision_hashes": [
+        "sha256:ef20b23f8ef4247aa9d3d7631506dd905f51e24af0911da8edcd05c7e3bc6da6"
+      ],
+      "schema_version": 1,
+      "stable_instrument_key": "renamed-btc-usdt",
+      "type": "binance_usdm_instrument_metadata_query"
+    },
+    "unsupported_status": {
+      "captured_at": {
+        "epoch_nanoseconds": 1710000000000000020,
+        "type": "utc_instant"
+      },
+      "effective_at": {
+        "epoch_nanoseconds": 1710000000000000010,
+        "type": "utc_instant"
+      },
+      "revision_hashes": [
+        "sha256:606530ead3f1e73624e8863abfb1512bb09d5e63c3d7c1d6d79b11500ce8efd2"
+      ],
+      "schema_version": 1,
+      "stable_instrument_key": "btc-usdt-perpetual",
+      "type": "binance_usdm_instrument_metadata_query"
+    },
+    "unsupported_type": {
+      "captured_at": {
+        "epoch_nanoseconds": 1710000000000000020,
+        "type": "utc_instant"
+      },
+      "effective_at": {
+        "epoch_nanoseconds": 1710000000000000010,
+        "type": "utc_instant"
+      },
+      "revision_hashes": [
+        "sha256:0f582d9ab6a8cae02e3b8ac138aab2b2780908828472e801536d1ea8ddc82d11"
+      ],
+      "schema_version": 1,
+      "stable_instrument_key": "btc-usdt-perpetual",
+      "type": "binance_usdm_instrument_metadata_query"
+    }
+  }
+}

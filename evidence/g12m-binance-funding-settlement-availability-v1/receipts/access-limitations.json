@@ -1,0 +1,40 @@
+{
+  "attempts": [
+    {
+      "exact_response_bytes_retained": false,
+      "local_receipt_timestamp_retained": false,
+      "request": {
+        "authentication": "none",
+        "method": "GET",
+        "url": "https://developers.binance.com/docs/derivatives/usds-margined-futures/market-data/rest-api/Get-Funding-Rate-History"
+      },
+      "result": "Initial 302 redirect was followed by HTTP 202 with x-amzn-waf-action=challenge and a zero-byte body. Public headers displayed by the fetch command included Date Fri, 21 Aug 2026 14:27:02 GMT for the challenge response. The temporary headers were inspected but not retained because they contained no source document bytes and this receipt was authored after the attempt.",
+      "secret_or_cookie_value_retained": false
+    },
+    {
+      "exact_response_bytes_retained": false,
+      "local_receipt_timestamp_retained": false,
+      "request": {
+        "authentication": "none",
+        "method": "GET",
+        "url": "https://developers.binance.com/legacy-docs/derivatives/usds-margined-futures/market-data/rest-api/Get-Funding-Rate-History"
+      },
+      "result": "TLS connection failed through the configured fetch path; no HTTP response body was received.",
+      "secret_or_cookie_value_retained": false
+    },
+    {
+      "exact_response_bytes_retained": false,
+      "local_receipt_timestamp_retained": false,
+      "request": {
+        "authentication": "none",
+        "method": "GET",
+        "url": "https://fapi.binance.com/fapi/v1/fundingRate?symbol=BTCUSDT&startTime=1704067200000&endTime=1704153599999&limit=100"
+      },
+      "result": "TLS connection failed through the configured fetch path; no new HTTP response body was received. The dedicated evidence subtree instead retains an exact copy of the already-accepted response and binds its original accepted receipt path.",
+      "secret_or_cookie_value_retained": false
+    }
+  ],
+  "network_path_limitation": "Successful fetch commands in this lane reported remote addresses in reserved range 198.18.0.0/15. Exact returned bodies are retained and hashed, but direct-origin routing is not asserted. Failed attempts do not mint source bytes, availability, headers, or provider state.",
+  "schema_version": 1,
+  "type": "g12m_first_party_access_limitation_receipt_v1"
+}

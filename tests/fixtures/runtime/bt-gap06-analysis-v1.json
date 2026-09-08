@@ -1,0 +1,217 @@
+{
+  "fixture_id": "bt-gap06-analysis-v1",
+  "schema_version": 1,
+  "metric_profile": {
+    "payload": {
+      "type": "backtest_metric_profile",
+      "schema_version": 1,
+      "profile_key": "simple_period_return.fill_count.v1",
+      "profile_version": 1,
+      "valuation_schedule": "run_boundary_snapshots",
+      "return_method": "simple_period_return",
+      "annualization_basis": "not_applicable",
+      "risk_free_source": "not_applicable",
+      "cash_flow_treatment": "subtract_net_external_cash_flow",
+      "drawdown_sampling": "not_applicable",
+      "reporting_currency_source": "source_execution_result",
+      "benchmark": "not_applicable",
+      "trade_count_method": "authoritative_fill_count",
+      "decimal_policy": {
+        "maximum_fractional_digits": 18,
+        "rounding": "half_even",
+        "notation": "ordinary",
+        "strip_trailing_fractional_zeros": true,
+        "normalize_negative_zero": true
+      },
+      "missing_metric_encoding": "null"
+    },
+    "payload_canonical_sha256": "sha256:d2448e93df20789c4f74064bfb5cf34bc116ab3f070010342a3eadc60ec2275f",
+    "envelope": {
+      "artifact_type": "backtest_metric_profile",
+      "content_hash": "sha256:bced4dbef8bbf6e1ec9821ae3b68e8c6ce2bbed953f95fe1214c8e21676dbd6a",
+      "payload": {
+        "annualization_basis": "not_applicable",
+        "benchmark": "not_applicable",
+        "cash_flow_treatment": "subtract_net_external_cash_flow",
+        "decimal_policy": {
+          "maximum_fractional_digits": 18,
+          "normalize_negative_zero": true,
+          "notation": "ordinary",
+          "rounding": "half_even",
+          "strip_trailing_fractional_zeros": true
+        },
+        "drawdown_sampling": "not_applicable",
+        "missing_metric_encoding": "null",
+        "profile_key": "simple_period_return.fill_count.v1",
+        "profile_version": 1,
+        "reporting_currency_source": "source_execution_result",
+        "return_method": "simple_period_return",
+        "risk_free_source": "not_applicable",
+        "schema_version": 1,
+        "trade_count_method": "authoritative_fill_count",
+        "type": "backtest_metric_profile",
+        "valuation_schedule": "run_boundary_snapshots"
+      },
+      "schema_version": 1
+    },
+    "ref": {
+      "artifact_type": "backtest_metric_profile",
+      "content_hash": "sha256:bced4dbef8bbf6e1ec9821ae3b68e8c6ce2bbed953f95fe1214c8e21676dbd6a",
+      "schema_version": 1,
+      "type": "artifact_ref"
+    },
+    "expected_canonical_utf8": "{\"artifact_type\":\"backtest_metric_profile\",\"content_hash\":\"sha256:bced4dbef8bbf6e1ec9821ae3b68e8c6ce2bbed953f95fe1214c8e21676dbd6a\",\"payload\":{\"annualization_basis\":\"not_applicable\",\"benchmark\":\"not_applicable\",\"cash_flow_treatment\":\"subtract_net_external_cash_flow\",\"decimal_policy\":{\"maximum_fractional_digits\":18,\"normalize_negative_zero\":true,\"notation\":\"ordinary\",\"rounding\":\"half_even\",\"strip_trailing_fractional_zeros\":true},\"drawdown_sampling\":\"not_applicable\",\"missing_metric_encoding\":\"null\",\"profile_key\":\"simple_period_return.fill_count.v1\",\"profile_version\":1,\"reporting_currency_source\":\"source_execution_result\",\"return_method\":\"simple_period_return\",\"risk_free_source\":\"not_applicable\",\"schema_version\":1,\"trade_count_method\":\"authoritative_fill_count\",\"type\":\"backtest_metric_profile\",\"valuation_schedule\":\"run_boundary_snapshots\"},\"schema_version\":1}"
+  },
+  "conclusive_analysis": {
+    "stored_payload": {
+      "type": "backtest_analysis",
+      "schema_version": 1,
+      "metric_profile_ref": {
+        "artifact_type": "backtest_metric_profile",
+        "content_hash": "sha256:bced4dbef8bbf6e1ec9821ae3b68e8c6ce2bbed953f95fe1214c8e21676dbd6a",
+        "schema_version": 1,
+        "type": "artifact_ref"
+      },
+      "source_publication_ref": {
+        "type": "backtest_canonical_publication_ref",
+        "artifact_ref": {
+          "type": "artifact_ref",
+          "artifact_type": "canonical_publication_manifest",
+          "schema_version": 1,
+          "content_hash": "sha256:2f45ccefe4b9fa5541ef595f8279cdafe45a70f821a66aa9bbab41225a822a75"
+        }
+      },
+      "source_execution_result_hash": "sha256:38051210e447e22bbcb435bd7410d0457cd0add28aea88ed1a19eda30b69ff26",
+      "simple_period_return": "-0.1",
+      "trade_count": 1,
+      "result_grade": "development"
+    },
+    "payload_canonical_sha256": "sha256:e425e84d809f45a5306f7e374a95bec414464cc5c4cdef20141da71bf7726862",
+    "envelope": {
+      "artifact_type": "backtest_analysis",
+      "content_hash": "sha256:29279641f97e3e3b2d752642c884561fc0c65947e11e064aba5aad755e9a69c0",
+      "payload": {
+        "metric_profile_ref": {
+          "artifact_type": "backtest_metric_profile",
+          "content_hash": "sha256:bced4dbef8bbf6e1ec9821ae3b68e8c6ce2bbed953f95fe1214c8e21676dbd6a",
+          "schema_version": 1,
+          "type": "artifact_ref"
+        },
+        "result_grade": "development",
+        "schema_version": 1,
+        "simple_period_return": "-0.1",
+        "source_execution_result_hash": "sha256:38051210e447e22bbcb435bd7410d0457cd0add28aea88ed1a19eda30b69ff26",
+        "source_publication_ref": {
+          "artifact_ref": {
+            "artifact_type": "canonical_publication_manifest",
+            "content_hash": "sha256:2f45ccefe4b9fa5541ef595f8279cdafe45a70f821a66aa9bbab41225a822a75",
+            "schema_version": 1,
+            "type": "artifact_ref"
+          },
+          "type": "backtest_canonical_publication_ref"
+        },
+        "trade_count": 1,
+        "type": "backtest_analysis"
+      },
+      "schema_version": 1
+    },
+    "ref": {
+      "type": "analysis_artifact_ref",
+      "artifact_ref": {
+        "artifact_type": "backtest_analysis",
+        "content_hash": "sha256:29279641f97e3e3b2d752642c884561fc0c65947e11e064aba5aad755e9a69c0",
+        "schema_version": 1,
+        "type": "artifact_ref"
+      }
+    },
+    "loaded_view": {
+      "analysis_ref": {
+        "type": "analysis_artifact_ref",
+        "artifact_ref": {
+          "artifact_type": "backtest_analysis",
+          "content_hash": "sha256:29279641f97e3e3b2d752642c884561fc0c65947e11e064aba5aad755e9a69c0",
+          "schema_version": 1,
+          "type": "artifact_ref"
+        }
+      },
+      "metric_profile_ref": {
+        "artifact_type": "backtest_metric_profile",
+        "content_hash": "sha256:bced4dbef8bbf6e1ec9821ae3b68e8c6ce2bbed953f95fe1214c8e21676dbd6a",
+        "schema_version": 1,
+        "type": "artifact_ref"
+      },
+      "source_publication_ref": {
+        "type": "backtest_canonical_publication_ref",
+        "artifact_ref": {
+          "type": "artifact_ref",
+          "artifact_type": "canonical_publication_manifest",
+          "schema_version": 1,
+          "content_hash": "sha256:2f45ccefe4b9fa5541ef595f8279cdafe45a70f821a66aa9bbab41225a822a75"
+        }
+      },
+      "source_execution_result_hash": "sha256:38051210e447e22bbcb435bd7410d0457cd0add28aea88ed1a19eda30b69ff26",
+      "simple_period_return": "-0.1",
+      "trade_count": 1,
+      "result_grade": "development"
+    },
+    "expected_canonical_utf8": "{\"artifact_type\":\"backtest_analysis\",\"content_hash\":\"sha256:29279641f97e3e3b2d752642c884561fc0c65947e11e064aba5aad755e9a69c0\",\"payload\":{\"metric_profile_ref\":{\"artifact_type\":\"backtest_metric_profile\",\"content_hash\":\"sha256:bced4dbef8bbf6e1ec9821ae3b68e8c6ce2bbed953f95fe1214c8e21676dbd6a\",\"schema_version\":1,\"type\":\"artifact_ref\"},\"result_grade\":\"development\",\"schema_version\":1,\"simple_period_return\":\"-0.1\",\"source_execution_result_hash\":\"sha256:38051210e447e22bbcb435bd7410d0457cd0add28aea88ed1a19eda30b69ff26\",\"source_publication_ref\":{\"artifact_ref\":{\"artifact_type\":\"canonical_publication_manifest\",\"content_hash\":\"sha256:2f45ccefe4b9fa5541ef595f8279cdafe45a70f821a66aa9bbab41225a822a75\",\"schema_version\":1,\"type\":\"artifact_ref\"},\"type\":\"backtest_canonical_publication_ref\"},\"trade_count\":1,\"type\":\"backtest_analysis\"},\"schema_version\":1}"
+  },
+  "inconclusive_analysis": {
+    "stored_payload": {
+      "type": "backtest_analysis",
+      "schema_version": 1,
+      "metric_profile_ref": {
+        "artifact_type": "backtest_metric_profile",
+        "content_hash": "sha256:bced4dbef8bbf6e1ec9821ae3b68e8c6ce2bbed953f95fe1214c8e21676dbd6a",
+        "schema_version": 1,
+        "type": "artifact_ref"
+      },
+      "source_publication_ref": {
+        "type": "backtest_canonical_publication_ref",
+        "artifact_ref": {
+          "type": "artifact_ref",
+          "artifact_type": "canonical_publication_manifest",
+          "schema_version": 1,
+          "content_hash": "sha256:2f45ccefe4b9fa5541ef595f8279cdafe45a70f821a66aa9bbab41225a822a75"
+        }
+      },
+      "source_execution_result_hash": "sha256:38051210e447e22bbcb435bd7410d0457cd0add28aea88ed1a19eda30b69ff26",
+      "simple_period_return": null,
+      "trade_count": 0,
+      "result_grade": "development"
+    },
+    "payload_canonical_sha256": "sha256:de380151e8a6e1921b4a3ef8cb539e025d7a9a0ca52d71d4be6ff0ae40c4f6e0"
+  },
+  "worked_examples": [
+    {
+      "starting_equity": "100",
+      "ending_equity": "90",
+      "net_external_cash_flow": "0",
+      "expected_simple_period_return": "-0.1"
+    },
+    {
+      "starting_equity": "100",
+      "ending_equity": "110",
+      "net_external_cash_flow": "20",
+      "expected_simple_period_return": "-0.1"
+    },
+    {
+      "starting_equity": "2000000000000000000",
+      "ending_equity": "2000000000000000001",
+      "net_external_cash_flow": "0",
+      "expected_simple_period_return": "0"
+    },
+    {
+      "starting_equity": "2000000000000000000",
+      "ending_equity": "2000000000000000003",
+      "net_external_cash_flow": "0",
+      "expected_simple_period_return": "0.000000000000000002"
+    }
+  ],
+  "preserved_platform_projection": {
+    "simple_period_return": "-0.1",
+    "trade_count": 1,
+    "result_grade": "development",
+    "source_execution_result_hash": "sha256:38051210e447e22bbcb435bd7410d0457cd0add28aea88ed1a19eda30b69ff26"
+  }
+}

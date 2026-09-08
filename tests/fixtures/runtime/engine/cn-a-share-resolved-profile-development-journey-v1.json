@@ -1,0 +1,51 @@
+{
+  "fixture_id": "cn-a-share-resolved-profile-development-journey-v1",
+  "schema_version": 1,
+  "profile_fixture_id": "cn-a-share-resolved-profile-composition-v1",
+  "venue_id": "xshe",
+  "operation_keys": [
+    "cn_a_share.corporate_action.cash_payment.v1",
+    "cn_a_share.corporate_action.share_delivery.v1"
+  ],
+  "event_phases": [110, 120],
+  "cash_payment": {
+    "outcome_hash": "sha256:001196b5827c7b08d65f7564b80ee7e04c8739e184ad03e2d4ce384fe859f27e",
+    "entry_type": "corporate_action_cash_paid",
+    "currency": "CNY",
+    "scale": 2,
+    "units": 7000
+  },
+  "share_delivery": {
+    "outcome_hash": "sha256:7b46da3c1aaa504b8f5a4b4a4639d2879977d6cf4b880cadfe6b42ea72c607c1",
+    "entry_type": "corporate_action_position_adjusted",
+    "quantity_scale": 0,
+    "delivered_units": 210,
+    "before_units": 500,
+    "after_units": 710,
+    "total_cost_basis_currency": "CNY",
+    "total_cost_basis_scale": 2,
+    "total_cost_basis_units": 750000
+  },
+  "replay_controls": {
+    "full_equals_prefix_resume_ledger": true,
+    "full_equals_prefix_resume_lot_book": true,
+    "snapshot_binds_final_journal_state": true
+  },
+  "negative_cases": [
+    "applied_tax_before_effects",
+    "deferred_unsupported_tax_before_effects",
+    "xshg_share_delivery_before_effects",
+    "event_before_available_at",
+    "wrong_event_phase",
+    "fractional_share_delivery",
+    "sub_cent_cash_payment",
+    "multiple_or_missing_target_lot",
+    "dispatcher_plan_divergence"
+  ],
+  "qualification": {
+    "allowed_grade": "development",
+    "decision_grade_eligible": false,
+    "profile_qualified": false,
+    "deployment_authorized": false
+  }
+}

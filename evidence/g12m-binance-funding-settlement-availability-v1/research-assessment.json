@@ -1,0 +1,90 @@
+{
+  "decision_contribution": "PROSPECTIVE_ONLY",
+  "documented_facts": [
+    {
+      "effective_date_basis": "Immutable official Binance connector source pinned to commit d30576a6d8e6edb706c8b013eb11167b58e9c33a; the retained official commit patch dates that commit 2022-08-29, before the target 2024 rows.",
+      "quote": ":API endpoint: ``GET /fapi/v1/fundingRate``",
+      "source_member": "raw/binance-futures-connector-python-market-d30576a.py",
+      "scope": "The public Funding Rate History endpoint and startTime/endTime ascending query behavior existed before 2024. The pinned connector does not define fundingTime, response markPrice, settlement finality, or publication timing."
+    },
+    {
+      "effective_date_basis": "Exact accepted first-party response bytes for the target request, acquired in 2026 and copied without change into this lane. This is row-content evidence, not 2024 availability evidence.",
+      "quote": "{\"symbol\":\"BTCUSDT\",\"fundingTime\":1704067200000,\"fundingRate\":\"0.00037409\",\"markPrice\":\"42313.90000000\",\"rateType\":\"Regular\"}",
+      "source_member": "raw/target-funding-history-response.json",
+      "scope": "The three target rows contain fundingTime, fundingRate, markPrice, and rateType. The response has no provider publication timestamp or historical first-availability field."
+    },
+    {
+      "effective_date_basis": "Current mutable Binance Support article: publishDate 2019-09-09T02:27:12Z; lastUpdateTime 2026-03-06T07:01:00Z. No retained first-party version history proves that the quoted wording was effective for 2024, so these passages are current-only context.",
+      "quote": "The funding rate is then calculated with this 8-Hour interest rate component and the 8-Hour premium component. A +/- 0.05% damper is also added. For example, the funding rates calculated from 00:00 - 08:00 are exchanged at 08:00.",
+      "source_member": "raw/binance-support-article-360033525031.json",
+      "scope": "Current Binance explanation places exchange/application of the calculated rate at the scheduled funding time."
+    },
+    {
+      "effective_date_basis": "Current-only for the same mutable-article reason.",
+      "quote": "Funding Amount = Nominal Value of Positions * Funding Rate",
+      "source_member": "raw/binance-support-article-360033525031.json",
+      "scope": "Current funding-amount formula."
+    },
+    {
+      "effective_date_basis": "Current-only for the same mutable-article reason.",
+      "quote": "(Nominal Value of Positions = Mark Price * Size of a Contract)",
+      "source_member": "raw/binance-support-article-360033525031.json",
+      "scope": "Current explanation says a mark price is used in funding nominal value, but does not identify the REST history row's markPrice as the exact settled mark."
+    },
+    {
+      "effective_date_basis": "Current-only for the same mutable-article reason.",
+      "quote": "There is a 15-second deviation in the actual funding fee transaction time. For example, when you open a position at 08:00:05 (UTC), the funding fee could still apply (you’ll either pay or receive the funding fee).",
+      "source_member": "raw/binance-support-article-360033525031.json",
+      "scope": "Current Binance wording distinguishes the scheduled funding time from actual fee-transaction timing; it supplies no REST row publication timestamp."
+    }
+  ],
+  "inferences": [
+    "The target fundingTime values align with the scheduled 00:00, 08:00, and 16:00 UTC funding slots, so fundingTime is reasonably interpreted as the funding event/settlement slot, not as an endpoint publication timestamp. This is not a retained target-effective Binance definition.",
+    "Because the support formula uses Mark Price and the target REST rows contain markPrice, the row field may be associated with funding calculation. No retained target-effective first-party passage proves byte-for-byte that it is the exact mark used for each settled charge.",
+    "A rate can be applied/exchanged at a scheduled funding time without the exact REST history row being published to participants at that same instant. Application and API publication are separate facts."
+  ],
+  "limitations": [
+    "No retained target-effective first-party Binance source defines fundingTime beyond the endpoint/field label or equates it to provider publication time.",
+    "No retained target-effective first-party Binance source states when the final funding rate is frozen relative to the target settlement instant.",
+    "No retained target-effective first-party Binance source proves Funding Rate History markPrice is the exact settlement mark used for each target charge.",
+    "No first-party source found in the bounded search states that the exact rate+mark revision was exposed through Funding Rate History at or before fundingTime.",
+    "The target response was acquired in 2026; acquisition time cannot be backdated to 2024 provider availability.",
+    "The configured network path reports reserved 198.18.0.0/15 addresses. Exact bodies were retained where the proxy returned them, but direct-origin routing is not asserted. Developers documentation and a new fapi target fetch were blocked/challenged, so no bytes are fabricated for those attempts.",
+    "This lane does not decide correction/revision closure and does not claim provider immutability, completeness, decision grade, live readiness, or deployment authority."
+  ],
+  "negative_searches_and_access_attempts": [
+    {
+      "result": "302 redirect followed by HTTP 202 WAF challenge with zero body bytes; no document bytes retained from this attempt.",
+      "url": "https://developers.binance.com/docs/derivatives/usds-margined-futures/market-data/rest-api/Get-Funding-Rate-History"
+    },
+    {
+      "result": "TLS connection failed through the configured reserved-range network path; no response bytes retained.",
+      "url": "https://developers.binance.com/legacy-docs/derivatives/usds-margined-futures/market-data/rest-api/Get-Funding-Rate-History"
+    },
+    {
+      "result": "TLS connection failed through the configured reserved-range network path; no new response bytes retained. The already-accepted exact response bytes were copied without modification and remain tied to their original receipt.",
+      "url": "https://fapi.binance.com/fapi/v1/fundingRate?symbol=BTCUSDT&startTime=1704067200000&endTime=1704153599999&limit=100"
+    },
+    {
+      "result": "Bounded review of the retained pinned connector source found endpoint and pagination/order notes only; no response-field settlement or availability semantics.",
+      "url": "https://raw.githubusercontent.com/binance/binance-futures-connector-python/d30576a6d8e6edb706c8b013eb11167b58e9c33a/binance/um_futures/market.py"
+    },
+    {
+      "result": "The current CMS response exposes publishDate and lastUpdateTime but no historical article body/version that can be frozen as the 2024 wording.",
+      "url": "https://www.binance.com/bapi/composite/v1/public/cms/article/detail/query?articleCode=360033525031"
+    },
+    {
+      "result": "No first-party historical publication timestamp, first-appearance log, or target-row availability field was found in the bounded official materials retained by this lane.",
+      "url": "bounded first-party Binance search"
+    }
+  ],
+  "question_answers": {
+    "exact_rate_and_mark_revision_usable_at_settlement": "Not proven for the 2024 rows. No retained target-effective authority establishes provider_available_time == fundingTime for either field.",
+    "final_rate_application_instant": "Current Binance support wording says rates calculated over 00:00-08:00 are exchanged at 08:00 and discusses the rate at settlement time. Because the retained page was updated in 2026, target-effective 2024 final-freeze semantics remain unproven.",
+    "fundingTime_meaning": "Best bounded interpretation: the scheduled funding event/settlement slot represented by the history row. It is not documented here as publication time, and exact target-effective wording was not retained.",
+    "history_markPrice_exact_settlement_mark": "Not proven. Current support material says funding nominal value uses Mark Price, while the target rows carry markPrice, but no retained target-effective first-party passage equates that response field with the exact mark used for the settled charge."
+  },
+  "rationale": "Historical equality fails closed because application at a funding slot does not prove publication of the exact REST rate+mark revision at that slot. A separately versioned prospective capture can retain contemporaneous first-party row/account evidence and local receipt bounds for future settlements; it must not backdate or qualify these 2024 rows.",
+  "schema_version": 1,
+  "type": "g12m_binance_funding_settlement_availability_research_assessment_v1"
+}

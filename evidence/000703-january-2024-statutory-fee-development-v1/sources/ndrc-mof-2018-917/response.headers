@@ -1,0 +1,22 @@
+HTTP/1.1 200 OK
+Date: Thu, 03 Sep 2026 06:26:35 GMT
+Content-Type: text/html
+Content-Length: 8166
+Connection: keep-alive
+Set-Cookie: http_waf_cookie=bafe61e4-6e30-407d0300a1f64be5b6d27386acfa827a1dc1; Expires=1788423995; Path=/; HttpOnly
+ETag: W/"8166-1720684196000"
+Last-Modified: Thu, 11 Jul 2024 07:49:56 GMT
+Vary: Accept-Encoding
+SS: s
+Set-Cookie: SF_cookie_3=64138882; path=/
+X-Cache: BYPASS
+X-Request-Id: 8386b8cb6e75a305e324e866b8281514
+Server: WAF
+Accept-Ranges: bytes
+X-Ser: i27285_c18667, i2759126_c26763
+X-Cache: MISS from i2759126_c26763(cloudsvr)
+Cache-Control: no-store, no-cache
+Access-Control-Allow-Methods: GET,POST
+Content-Security-Policy: frame-ancestors 'self' https://fxsjcj.kaipuyun.cn
+Pragma: no-cache
+

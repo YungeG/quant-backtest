@@ -1,0 +1,166 @@
+{
+  "batch_orders": {
+    "1": [
+      "synthetic-jsonl-v1:sha256:0ab6dc2d43b5c94526ec6109f1fb9345191af9f33d633b5b049273b275f7d9c8",
+      "synthetic-jsonl-v1:sha256:9f7c0283f61233e096e75f5c3e4b9d3794f82e2bf71239d1b320037a10c3c87a",
+      "synthetic-jsonl-v1:sha256:dd76beb4469e06deac565e780292e35299b0bdb9069d70b71a9180fd75402075"
+    ],
+    "10": [
+      "synthetic-jsonl-v1:sha256:0ab6dc2d43b5c94526ec6109f1fb9345191af9f33d633b5b049273b275f7d9c8",
+      "synthetic-jsonl-v1:sha256:9f7c0283f61233e096e75f5c3e4b9d3794f82e2bf71239d1b320037a10c3c87a",
+      "synthetic-jsonl-v1:sha256:dd76beb4469e06deac565e780292e35299b0bdb9069d70b71a9180fd75402075"
+    ],
+    "2": [
+      "synthetic-jsonl-v1:sha256:0ab6dc2d43b5c94526ec6109f1fb9345191af9f33d633b5b049273b275f7d9c8",
+      "synthetic-jsonl-v1:sha256:9f7c0283f61233e096e75f5c3e4b9d3794f82e2bf71239d1b320037a10c3c87a",
+      "synthetic-jsonl-v1:sha256:dd76beb4469e06deac565e780292e35299b0bdb9069d70b71a9180fd75402075"
+    ]
+  },
+  "bundle_ref": {
+    "bundle_key": "synthetic-jsonl-bundle-validation-v1",
+    "manifest_hash": "sha256:55cfd4b222e5c56798471d56a531e14f8142a361baf27638a3ac86dd9fe72857",
+    "type": "market_bundle_ref"
+  },
+  "event_hashes": [
+    "sha256:5f0e819965655e0cff03744aecf2e188adca38bcfecf7969a2256a2b75a2cf47",
+    "sha256:d38fb7ee5883f926775b5eba14b91b65c003f54c43a4fe60b36c4b1d03f05094",
+    "sha256:3218030ffc220f732aea09e5490a69b3f49846a471f936c6738065a4a71c38ec"
+  ],
+  "event_ids": [
+    "synthetic-jsonl-v1:sha256:0ab6dc2d43b5c94526ec6109f1fb9345191af9f33d633b5b049273b275f7d9c8",
+    "synthetic-jsonl-v1:sha256:9f7c0283f61233e096e75f5c3e4b9d3794f82e2bf71239d1b320037a10c3c87a",
+    "synthetic-jsonl-v1:sha256:dd76beb4469e06deac565e780292e35299b0bdb9069d70b71a9180fd75402075"
+  ],
+  "exhausted_cursor": {
+    "batch_size": 2,
+    "bundle_ref": {
+      "bundle_key": "synthetic-jsonl-bundle-validation-v1",
+      "manifest_hash": "sha256:55cfd4b222e5c56798471d56a531e14f8142a361baf27638a3ac86dd9fe72857",
+      "type": "market_bundle_ref"
+    },
+    "position": 3,
+    "stream_content_hash": "sha256:cbb9697caa7847efb0b3401e286bb9d804d36cca50f7d647e1f2221f3fc6375c",
+    "stream_key": "synthetic.prices",
+    "type": "event_cursor"
+  },
+  "fixture_id": "local-market-bundle-reader-v1",
+  "manifest": {
+    "bundle_key": "synthetic-jsonl-bundle-validation-v1",
+    "capabilities": [
+      {
+        "key": "price_points",
+        "type": "market_bundle_capability",
+        "version": 1
+      }
+    ],
+    "content_hash": "sha256:c12911fe32e1388338c0c94abfe36df48f3c9fea2c7c73301b8f45939830bd62",
+    "coverage_end_exclusive": {
+      "epoch_nanoseconds": 1000,
+      "type": "utc_instant"
+    },
+    "coverage_start": {
+      "epoch_nanoseconds": 0,
+      "type": "utc_instant"
+    },
+    "instrument_catalog_hash": "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+    "schema_version": 1,
+    "streams": [
+      {
+        "capability": {
+          "key": "price_points",
+          "type": "market_bundle_capability",
+          "version": 1
+        },
+        "content_hash": "sha256:cbb9697caa7847efb0b3401e286bb9d804d36cca50f7d647e1f2221f3fc6375c",
+        "event_count": 3,
+        "event_type": "synthetic_price_point.v1",
+        "stream_key": "synthetic.prices",
+        "type": "market_stream_manifest"
+      }
+    ],
+    "type": "market_bundle_manifest"
+  },
+  "missing_capability": {
+    "bundle_ref": {
+      "bundle_key": "synthetic-jsonl-bundle-validation-v1",
+      "manifest_hash": "sha256:55cfd4b222e5c56798471d56a531e14f8142a361baf27638a3ac86dd9fe72857",
+      "type": "market_bundle_ref"
+    },
+    "issues": [
+      {
+        "code": "missing_required_capability",
+        "subject_key": "funding_publications@1",
+        "type": "input_validation_issue"
+      }
+    ],
+    "type": "market_bundle_input_validation_failure"
+  },
+  "missing_stream": {
+    "bundle_ref": {
+      "bundle_key": "synthetic-jsonl-bundle-validation-v1",
+      "manifest_hash": "sha256:55cfd4b222e5c56798471d56a531e14f8142a361baf27638a3ac86dd9fe72857",
+      "type": "market_bundle_ref"
+    },
+    "issues": [
+      {
+        "code": "unknown_stream",
+        "subject_key": "missing.stream",
+        "type": "input_validation_issue"
+      }
+    ],
+    "type": "market_bundle_input_validation_failure"
+  },
+  "paths": {
+    "final_directory_relative_path": "bundles/synthetic-jsonl-bundle-validation-v1/55cfd4b222e5c56798471d56a531e14f8142a361baf27638a3ac86dd9fe72857",
+    "manifest_relative_path": "bundles/synthetic-jsonl-bundle-validation-v1/55cfd4b222e5c56798471d56a531e14f8142a361baf27638a3ac86dd9fe72857/manifest.json",
+    "publication_relative_path": "bundles/synthetic-jsonl-bundle-validation-v1/55cfd4b222e5c56798471d56a531e14f8142a361baf27638a3ac86dd9fe72857/publication.json",
+    "retention_proof_relative_path": "bundles/synthetic-jsonl-bundle-validation-v1/55cfd4b222e5c56798471d56a531e14f8142a361baf27638a3ac86dd9fe72857/retention-proof.json",
+    "stream_relative_paths": [
+      "bundles/synthetic-jsonl-bundle-validation-v1/55cfd4b222e5c56798471d56a531e14f8142a361baf27638a3ac86dd9fe72857/streams/000.payload"
+    ]
+  },
+  "publication": {
+    "bundle_ref": {
+      "bundle_key": "synthetic-jsonl-bundle-validation-v1",
+      "manifest_hash": "sha256:55cfd4b222e5c56798471d56a531e14f8142a361baf27638a3ac86dd9fe72857",
+      "type": "market_bundle_ref"
+    },
+    "manifest_relative_path": "bundles/synthetic-jsonl-bundle-validation-v1/55cfd4b222e5c56798471d56a531e14f8142a361baf27638a3ac86dd9fe72857/manifest.json",
+    "publication_hash": "sha256:6fb2a4720a047bafba2e93d942a109f98dd1de02a0359b6fa70d22fe04be23de",
+    "retention_policy_ref": "retention.local-market-bundle-repository-v1",
+    "retention_proof_hash": "sha256:995c718dabcd3902bd5fd4b0ba05ee0e9e36d703c69de75ac50dab56458e6907",
+    "retention_proof_relative_path": "bundles/synthetic-jsonl-bundle-validation-v1/55cfd4b222e5c56798471d56a531e14f8142a361baf27638a3ac86dd9fe72857/retention-proof.json",
+    "schema_version": 1,
+    "stream_payload_hashes": [
+      "sha256:cbb9697caa7847efb0b3401e286bb9d804d36cca50f7d647e1f2221f3fc6375c"
+    ],
+    "stream_relative_paths": [
+      "bundles/synthetic-jsonl-bundle-validation-v1/55cfd4b222e5c56798471d56a531e14f8142a361baf27638a3ac86dd9fe72857/streams/000.payload"
+    ],
+    "type": "market_bundle_publication"
+  },
+  "retention_proof": {
+    "bundle_ref": {
+      "bundle_key": "synthetic-jsonl-bundle-validation-v1",
+      "manifest_hash": "sha256:55cfd4b222e5c56798471d56a531e14f8142a361baf27638a3ac86dd9fe72857",
+      "type": "market_bundle_ref"
+    },
+    "manifest_relative_path": "bundles/synthetic-jsonl-bundle-validation-v1/55cfd4b222e5c56798471d56a531e14f8142a361baf27638a3ac86dd9fe72857/manifest.json",
+    "manifest_source_hash": "sha256:55cfd4b222e5c56798471d56a531e14f8142a361baf27638a3ac86dd9fe72857",
+    "proof_hash": "sha256:995c718dabcd3902bd5fd4b0ba05ee0e9e36d703c69de75ac50dab56458e6907",
+    "publication_relative_path": "bundles/synthetic-jsonl-bundle-validation-v1/55cfd4b222e5c56798471d56a531e14f8142a361baf27638a3ac86dd9fe72857/publication.json",
+    "retention_policy_ref": "retention.local-market-bundle-repository-v1",
+    "schema_version": 1,
+    "stream_payload_hashes": [
+      "sha256:cbb9697caa7847efb0b3401e286bb9d804d36cca50f7d647e1f2221f3fc6375c"
+    ],
+    "stream_relative_paths": [
+      "bundles/synthetic-jsonl-bundle-validation-v1/55cfd4b222e5c56798471d56a531e14f8142a361baf27638a3ac86dd9fe72857/streams/000.payload"
+    ],
+    "type": "market_bundle_retention_proof"
+  },
+  "schema_version": 1,
+  "stream_payload_hashes": [
+    "sha256:cbb9697caa7847efb0b3401e286bb9d804d36cca50f7d647e1f2221f3fc6375c"
+  ]
+}

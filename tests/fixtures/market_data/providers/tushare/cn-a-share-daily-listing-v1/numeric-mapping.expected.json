@@ -1,0 +1,84 @@
+{
+  "amount": {
+    "multiplier_to_CNY": 1000,
+    "normalized_scale": 0,
+    "normalized_unit": "CNY",
+    "normalized_units": 1075742252,
+    "raw": "1075742.252",
+    "source_scale": 3,
+    "source_unit": "thousand_CNY",
+    "source_units": 1075742252
+  },
+  "change": {
+    "raw": "-0.18",
+    "scale": 2,
+    "unit": "CNY_per_share",
+    "units": -18
+  },
+  "event_time_fixture_sha256": "sha256:5df297b69479629aa4baf19ea0199fa2f22d2ab42a0ccbb406315052a80a0425",
+  "instrument_id": {
+    "stable_key": "000001",
+    "type": "instrument_id",
+    "venue": "xshe"
+  },
+  "limitations": [
+    "single-row-mapping",
+    "source-json-number-lexemes-only",
+    "no-price-purpose-selection",
+    "no-market-event-or-bundle-publication"
+  ],
+  "mapping_hash": "sha256:8b59762e8820cda614687677733e105ddc62ce4ca84ef6409f1131a7af60c0ad",
+  "pct_change": {
+    "basis": "percent",
+    "raw": "-1.9169",
+    "scale": 4,
+    "units": -19169
+  },
+  "prices": {
+    "close": {
+      "raw": "9.21",
+      "scale": 2,
+      "unit": "CNY_per_share",
+      "units": 921
+    },
+    "high": {
+      "raw": "9.42",
+      "scale": 2,
+      "unit": "CNY_per_share",
+      "units": 942
+    },
+    "low": {
+      "raw": "9.21",
+      "scale": 2,
+      "unit": "CNY_per_share",
+      "units": 921
+    },
+    "open": {
+      "raw": "9.39",
+      "scale": 2,
+      "unit": "CNY_per_share",
+      "units": 939
+    },
+    "pre_close": {
+      "raw": "9.39",
+      "scale": 2,
+      "unit": "CNY_per_share",
+      "units": 939
+    }
+  },
+  "quote_currency": "CNY",
+  "schema_version": 1,
+  "source_daily_sha256": "sha256:c2950a35c093b983e538f97830b7b3fcb0bba1a7dac98a17bd20f6db9296f846",
+  "trade_date": "2024-01-02",
+  "type": "tushare_cn_a_share_daily_numeric_mapping",
+  "volume": {
+    "lot_size_shares": 100,
+    "normalized_scale": 0,
+    "normalized_unit": "share",
+    "normalized_units": 115836645,
+    "raw": "1158366.45",
+    "source_scale": 2,
+    "source_unit": "lot",
+    "source_units": 115836645
+  }
+}

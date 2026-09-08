@@ -1,0 +1,26 @@
+{
+  "cancel_order_ids": [],
+  "canonical_plan_hash": "sha256:79af0a279cee69f2ecd7d0f69fe13528b4917da9802f67090f312d3a63cfecd7",
+  "decision_hash": "sha256:c818597ecd814dd5aecd9adae516b0c64585bc16e72d5c5ef5806ac4d6ab176c",
+  "decision_id": "rebalance-decision-v1:sha256:79af0a279cee69f2ecd7d0f69fe13528b4917da9802f67090f312d3a63cfecd7",
+  "fixture_id": "rebalance-coordination-v1",
+  "omissions": [
+    {
+      "code": "already_covered",
+      "instrument_id": "synthetic:cash:eth-usd"
+    }
+  ],
+  "plan_hash": "sha256:79af0a279cee69f2ecd7d0f69fe13528b4917da9802f67090f312d3a63cfecd7",
+  "plan_id": "order-plan-v1:sha256:09b2f65cb3eb111a3b19538710fc187790640e5f914c74173e8f8d73065ef51a",
+  "planned": [
+    {
+      "instrument_id": "synthetic:cash:btc-usd",
+      "planned_order_id": "planned-order-v1:sha256:fb9d443022b1f33ad84c9aafb41063fd28a52f3f164b1214354337afc51a89be",
+      "position_effect": "open",
+      "quantity_units": 5000,
+      "reduce_only": false,
+      "side": "buy"
+    }
+  ],
+  "working_order_set_hash": "sha256:075a6ca3cd3519d4c7e0a2f6324b28b8a448af01e8c3a440d16d3521d08d7645"
+}

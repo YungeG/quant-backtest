@@ -1,0 +1,70 @@
+{
+  "archive_size": 180,
+  "failure_control": {
+    "code": "acquisition_failed",
+    "expected": "acquisition_failed",
+    "failure_hash": "sha256:21f56c8b1262024f9decdb7a0fcde9f49d4a5caa81ca3846b29d3c9cbb6bd924",
+    "member_key": "missing.dat"
+  },
+  "fixture_id": "source-snapshot-v1",
+  "limitations": [
+    "synthetic-secret-free-fixture",
+    "no-network-or-filesystem-acquisition",
+    "no-normalization",
+    "no-durable-publication",
+    "no-retention-or-retrieval-proof",
+    "no-decision-grade-or-deployment-authorization"
+  ],
+  "member_bytes": {
+    "bin/run.sh": "23212f62696e2f73680a6563686f20666978747572650a",
+    "data/alpha.txt": "616c7068610a",
+    "empty.dat": ""
+  },
+  "repeat_parity": {
+    "archive_bytes_match": true,
+    "provenance_hash_matches": true,
+    "snapshot_id_matches": true
+  },
+  "schema_version": 1,
+  "snapshot": {
+    "content_tree_hash": "sha256:abdd2aa6c1694dd55e14007d4ccc46b65d25a435902ceb58b4b76a180edff05c",
+    "decision_grade_eligible": false,
+    "deployment_authorized": false,
+    "members": [
+      {
+        "acquired_at_epoch_nanoseconds": 12,
+        "byte_count": 23,
+        "content_hash": "sha256:6ecf06f6dbbab6a920b5b208bc7c4069ca266b150d6c00533a00b5975a8417ca",
+        "declared_sha256": "sha256:6ecf06f6dbbab6a920b5b208bc7c4069ca266b150d6c00533a00b5975a8417ca",
+        "member_key": "bin/run.sh",
+        "mode": "0755"
+      },
+      {
+        "acquired_at_epoch_nanoseconds": 10,
+        "byte_count": 6,
+        "content_hash": "sha256:b6a98d9ce9a2d9149288fa3df42d377c3e42737afdcdaf714e33c0a100b51060",
+        "declared_sha256": null,
+        "member_key": "data/alpha.txt",
+        "mode": "0644"
+      },
+      {
+        "acquired_at_epoch_nanoseconds": 11,
+        "byte_count": 0,
+        "content_hash": "sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "declared_sha256": null,
+        "member_key": "empty.dat",
+        "mode": "0644"
+      }
+    ],
+    "provenance": {
+      "license_ref": "license.fixture",
+      "retention_policy_ref": "retention.fixture",
+      "source_key": "fixture.source",
+      "vendor_key": "fixture.vendor"
+    },
+    "provenance_hash": "sha256:1d2b14f175f63a8070f7390cb8cf12737d6c3733757cddda2b011d8e9f30cf4f",
+    "schema_version": 1,
+    "snapshot_id": "sha256:e828f1bafff2f9499c2c7c0916dd7cea1cc4eb20bf960a9ff3b93d4c4e711cd3",
+    "type": "source_snapshot"
+  }
+}

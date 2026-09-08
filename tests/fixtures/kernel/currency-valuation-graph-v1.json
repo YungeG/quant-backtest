@@ -1,0 +1,566 @@
+{
+  "ambiguous": {
+    "failure": {
+      "candidate_path_hashes": [
+        "sha256:be66cd38f8d7a7f8b8a0e9673c23b44c7bd5b9be37c99c27bc3b7e5a0c54fc69",
+        "sha256:d225e02d6453f59b75cf6eabf80bac5d72924d46476f7a3051136ad6590023a3"
+      ],
+      "code": "non_unique_path",
+      "graph_hash": "sha256:7636659c76d05066b008c10bf88c968c02eb3c42dfbab080f5d6bec2627e2109",
+      "policy_outcome": null,
+      "policy_request": null,
+      "price_purpose": "valuation",
+      "reporting_currency_id": {
+        "type": "currency_id",
+        "value": "USD"
+      },
+      "source_currency_id": {
+        "type": "currency_id",
+        "value": "BTC"
+      },
+      "type": "currency_valuation_failure",
+      "valuation_at": {
+        "epoch_nanoseconds": 100,
+        "type": "utc_instant"
+      }
+    },
+    "status": "failed",
+    "type": "currency_valuation_outcome"
+  },
+  "fixture_id": "currency-valuation-graph-v1",
+  "graph": {
+    "edges": [
+      {
+        "edge_id": "sha256:882500df0ff29b5570f9ce02c8459d6aa41b4f48d14825ab3a5599370a605514",
+        "resolved_mark": {
+          "age_nanoseconds": 1,
+          "available_at": {
+            "epoch_nanoseconds": 100,
+            "type": "utc_instant"
+          },
+          "instrument_id": {
+            "stable_key": "BTC-EUR",
+            "type": "instrument_id",
+            "venue": "synthetic"
+          },
+          "mark_id": "sha256:8143fa3af7c54e99fd97760aef3a9ed7af248db1d31bd18f9f5b349413a2558c",
+          "observed_at": {
+            "epoch_nanoseconds": 99,
+            "type": "utc_instant"
+          },
+          "price": {
+            "instrument_id": "synthetic:BTC-EUR",
+            "quote_currency": "EUR",
+            "scale": 4,
+            "type": "price",
+            "units": 550000000
+          },
+          "price_purpose": "valuation",
+          "quote_currency_id": {
+            "type": "currency_id",
+            "value": "EUR"
+          },
+          "resolved_at": {
+            "epoch_nanoseconds": 100,
+            "type": "utc_instant"
+          },
+          "revision_id": "revision:1",
+          "source_event_id": "event:BTC-EUR:100",
+          "stale_policy_hash": "sha256:8038b36a3ac4f90fd503db2d4c85d305cd9f610325a056532fd18e05d1102ee7",
+          "stale_policy_key": "marks.valuation.v1",
+          "stale_policy_version": 1,
+          "stream_id": "stream:BTC-EUR:valuation",
+          "type": "resolved_mark"
+        },
+        "source_currency_id": {
+          "type": "currency_id",
+          "value": "BTC"
+        },
+        "target_currency_id": {
+          "type": "currency_id",
+          "value": "EUR"
+        },
+        "type": "currency_valuation_edge"
+      },
+      {
+        "edge_id": "sha256:c4597fc906a356cfce51d7fe5b184ca0b5108264ea3a1c798e8c638e11ae1b5b",
+        "resolved_mark": {
+          "age_nanoseconds": 1,
+          "available_at": {
+            "epoch_nanoseconds": 100,
+            "type": "utc_instant"
+          },
+          "instrument_id": {
+            "stable_key": "BTC-USD",
+            "type": "instrument_id",
+            "venue": "synthetic"
+          },
+          "mark_id": "sha256:44b6f215e66e8c11c44296ae1d80f3ef03877814dc68e7e297699086df61d240",
+          "observed_at": {
+            "epoch_nanoseconds": 99,
+            "type": "utc_instant"
+          },
+          "price": {
+            "instrument_id": "synthetic:BTC-USD",
+            "quote_currency": "USD",
+            "scale": 4,
+            "type": "price",
+            "units": 600000000
+          },
+          "price_purpose": "valuation",
+          "quote_currency_id": {
+            "type": "currency_id",
+            "value": "USD"
+          },
+          "resolved_at": {
+            "epoch_nanoseconds": 100,
+            "type": "utc_instant"
+          },
+          "revision_id": "revision:1",
+          "source_event_id": "event:BTC-USD:100",
+          "stale_policy_hash": "sha256:8038b36a3ac4f90fd503db2d4c85d305cd9f610325a056532fd18e05d1102ee7",
+          "stale_policy_key": "marks.valuation.v1",
+          "stale_policy_version": 1,
+          "stream_id": "stream:BTC-USD:valuation",
+          "type": "resolved_mark"
+        },
+        "source_currency_id": {
+          "type": "currency_id",
+          "value": "BTC"
+        },
+        "target_currency_id": {
+          "type": "currency_id",
+          "value": "USD"
+        },
+        "type": "currency_valuation_edge"
+      },
+      {
+        "edge_id": "sha256:ea2b629a8b261e95938b17d13102f85c775eb9c2426ecb34a6e53cf2c55b3e47",
+        "resolved_mark": {
+          "age_nanoseconds": 1,
+          "available_at": {
+            "epoch_nanoseconds": 100,
+            "type": "utc_instant"
+          },
+          "instrument_id": {
+            "stable_key": "EUR-USD",
+            "type": "instrument_id",
+            "venue": "synthetic"
+          },
+          "mark_id": "sha256:aefeb74e9da257600f4c5e9f5d95c47c2b85b55b873e2a5230fcf983d52b9f47",
+          "observed_at": {
+            "epoch_nanoseconds": 99,
+            "type": "utc_instant"
+          },
+          "price": {
+            "instrument_id": "synthetic:EUR-USD",
+            "quote_currency": "USD",
+            "scale": 4,
+            "type": "price",
+            "units": 10900
+          },
+          "price_purpose": "valuation",
+          "quote_currency_id": {
+            "type": "currency_id",
+            "value": "USD"
+          },
+          "resolved_at": {
+            "epoch_nanoseconds": 100,
+            "type": "utc_instant"
+          },
+          "revision_id": "revision:1",
+          "source_event_id": "event:EUR-USD:100",
+          "stale_policy_hash": "sha256:8038b36a3ac4f90fd503db2d4c85d305cd9f610325a056532fd18e05d1102ee7",
+          "stale_policy_key": "marks.valuation.v1",
+          "stale_policy_version": 1,
+          "stream_id": "stream:EUR-USD:valuation",
+          "type": "resolved_mark"
+        },
+        "source_currency_id": {
+          "type": "currency_id",
+          "value": "EUR"
+        },
+        "target_currency_id": {
+          "type": "currency_id",
+          "value": "USD"
+        },
+        "type": "currency_valuation_edge"
+      }
+    ],
+    "price_purpose": "valuation",
+    "type": "currency_valuation_graph",
+    "valuation_at": {
+      "epoch_nanoseconds": 100,
+      "type": "utc_instant"
+    }
+  },
+  "graph_hash": "sha256:7636659c76d05066b008c10bf88c968c02eb3c42dfbab080f5d6bec2627e2109",
+  "identity": {
+    "resolution": {
+      "path": {
+        "edges": [],
+        "is_identity": true,
+        "path_hash": "sha256:4e39c8194277212cbb6fa04953d7ec76caa99e8e010c5c337878161e8d889202",
+        "price_purpose": "valuation",
+        "reporting_currency_id": {
+          "type": "currency_id",
+          "value": "USD"
+        },
+        "source_currency_id": {
+          "type": "currency_id",
+          "value": "USD"
+        },
+        "type": "currency_valuation_path",
+        "valuation_at": {
+          "epoch_nanoseconds": 100,
+          "type": "utc_instant"
+        }
+      },
+      "policy_outcome": null,
+      "policy_request": null,
+      "type": "currency_valuation_resolution"
+    },
+    "status": "resolved",
+    "type": "currency_valuation_outcome"
+  },
+  "missing": {
+    "failure": {
+      "candidate_path_hashes": [],
+      "code": "missing_path",
+      "graph_hash": "sha256:7636659c76d05066b008c10bf88c968c02eb3c42dfbab080f5d6bec2627e2109",
+      "policy_outcome": null,
+      "policy_request": null,
+      "price_purpose": "valuation",
+      "reporting_currency_id": {
+        "type": "currency_id",
+        "value": "USD"
+      },
+      "source_currency_id": {
+        "type": "currency_id",
+        "value": "USDT"
+      },
+      "type": "currency_valuation_failure",
+      "valuation_at": {
+        "epoch_nanoseconds": 100,
+        "type": "utc_instant"
+      }
+    },
+    "status": "failed",
+    "type": "currency_valuation_outcome"
+  },
+  "path_hashes": [
+    "sha256:be66cd38f8d7a7f8b8a0e9673c23b44c7bd5b9be37c99c27bc3b7e5a0c54fc69",
+    "sha256:d225e02d6453f59b75cf6eabf80bac5d72924d46476f7a3051136ad6590023a3"
+  ],
+  "selected": {
+    "resolution": {
+      "path": {
+        "edges": [
+          {
+            "edge_id": "sha256:c4597fc906a356cfce51d7fe5b184ca0b5108264ea3a1c798e8c638e11ae1b5b",
+            "resolved_mark": {
+              "age_nanoseconds": 1,
+              "available_at": {
+                "epoch_nanoseconds": 100,
+                "type": "utc_instant"
+              },
+              "instrument_id": {
+                "stable_key": "BTC-USD",
+                "type": "instrument_id",
+                "venue": "synthetic"
+              },
+              "mark_id": "sha256:44b6f215e66e8c11c44296ae1d80f3ef03877814dc68e7e297699086df61d240",
+              "observed_at": {
+                "epoch_nanoseconds": 99,
+                "type": "utc_instant"
+              },
+              "price": {
+                "instrument_id": "synthetic:BTC-USD",
+                "quote_currency": "USD",
+                "scale": 4,
+                "type": "price",
+                "units": 600000000
+              },
+              "price_purpose": "valuation",
+              "quote_currency_id": {
+                "type": "currency_id",
+                "value": "USD"
+              },
+              "resolved_at": {
+                "epoch_nanoseconds": 100,
+                "type": "utc_instant"
+              },
+              "revision_id": "revision:1",
+              "source_event_id": "event:BTC-USD:100",
+              "stale_policy_hash": "sha256:8038b36a3ac4f90fd503db2d4c85d305cd9f610325a056532fd18e05d1102ee7",
+              "stale_policy_key": "marks.valuation.v1",
+              "stale_policy_version": 1,
+              "stream_id": "stream:BTC-USD:valuation",
+              "type": "resolved_mark"
+            },
+            "source_currency_id": {
+              "type": "currency_id",
+              "value": "BTC"
+            },
+            "target_currency_id": {
+              "type": "currency_id",
+              "value": "USD"
+            },
+            "type": "currency_valuation_edge"
+          }
+        ],
+        "is_identity": false,
+        "path_hash": "sha256:be66cd38f8d7a7f8b8a0e9673c23b44c7bd5b9be37c99c27bc3b7e5a0c54fc69",
+        "price_purpose": "valuation",
+        "reporting_currency_id": {
+          "type": "currency_id",
+          "value": "USD"
+        },
+        "source_currency_id": {
+          "type": "currency_id",
+          "value": "BTC"
+        },
+        "type": "currency_valuation_path",
+        "valuation_at": {
+          "epoch_nanoseconds": 100,
+          "type": "utc_instant"
+        }
+      },
+      "policy_outcome": {
+        "component_ref": {
+          "component_digest": "sha256:abababababababababababababababababababababababababababababababab",
+          "component_key": "fixture.currency-path.direct.v1",
+          "component_version": 1,
+          "port_type": "currency_valuation_policy",
+          "type": "profile_component_ref"
+        },
+        "failure": null,
+        "input_hash": "sha256:a0aa9a8d3d813f3cd184bff986f7d41aad8a3383f3eaa43a3b3b850b3c46bf2d",
+        "result": {
+          "selected_path_hash": "sha256:be66cd38f8d7a7f8b8a0e9673c23b44c7bd5b9be37c99c27bc3b7e5a0c54fc69",
+          "type": "currency_valuation_path_selection"
+        },
+        "type": "profile_port_outcome"
+      },
+      "policy_request": {
+        "candidate_paths": [
+          {
+            "edges": [
+              {
+                "edge_id": "sha256:c4597fc906a356cfce51d7fe5b184ca0b5108264ea3a1c798e8c638e11ae1b5b",
+                "resolved_mark": {
+                  "age_nanoseconds": 1,
+                  "available_at": {
+                    "epoch_nanoseconds": 100,
+                    "type": "utc_instant"
+                  },
+                  "instrument_id": {
+                    "stable_key": "BTC-USD",
+                    "type": "instrument_id",
+                    "venue": "synthetic"
+                  },
+                  "mark_id": "sha256:44b6f215e66e8c11c44296ae1d80f3ef03877814dc68e7e297699086df61d240",
+                  "observed_at": {
+                    "epoch_nanoseconds": 99,
+                    "type": "utc_instant"
+                  },
+                  "price": {
+                    "instrument_id": "synthetic:BTC-USD",
+                    "quote_currency": "USD",
+                    "scale": 4,
+                    "type": "price",
+                    "units": 600000000
+                  },
+                  "price_purpose": "valuation",
+                  "quote_currency_id": {
+                    "type": "currency_id",
+                    "value": "USD"
+                  },
+                  "resolved_at": {
+                    "epoch_nanoseconds": 100,
+                    "type": "utc_instant"
+                  },
+                  "revision_id": "revision:1",
+                  "source_event_id": "event:BTC-USD:100",
+                  "stale_policy_hash": "sha256:8038b36a3ac4f90fd503db2d4c85d305cd9f610325a056532fd18e05d1102ee7",
+                  "stale_policy_key": "marks.valuation.v1",
+                  "stale_policy_version": 1,
+                  "stream_id": "stream:BTC-USD:valuation",
+                  "type": "resolved_mark"
+                },
+                "source_currency_id": {
+                  "type": "currency_id",
+                  "value": "BTC"
+                },
+                "target_currency_id": {
+                  "type": "currency_id",
+                  "value": "USD"
+                },
+                "type": "currency_valuation_edge"
+              }
+            ],
+            "is_identity": false,
+            "path_hash": "sha256:be66cd38f8d7a7f8b8a0e9673c23b44c7bd5b9be37c99c27bc3b7e5a0c54fc69",
+            "price_purpose": "valuation",
+            "reporting_currency_id": {
+              "type": "currency_id",
+              "value": "USD"
+            },
+            "source_currency_id": {
+              "type": "currency_id",
+              "value": "BTC"
+            },
+            "type": "currency_valuation_path",
+            "valuation_at": {
+              "epoch_nanoseconds": 100,
+              "type": "utc_instant"
+            }
+          },
+          {
+            "edges": [
+              {
+                "edge_id": "sha256:882500df0ff29b5570f9ce02c8459d6aa41b4f48d14825ab3a5599370a605514",
+                "resolved_mark": {
+                  "age_nanoseconds": 1,
+                  "available_at": {
+                    "epoch_nanoseconds": 100,
+                    "type": "utc_instant"
+                  },
+                  "instrument_id": {
+                    "stable_key": "BTC-EUR",
+                    "type": "instrument_id",
+                    "venue": "synthetic"
+                  },
+                  "mark_id": "sha256:8143fa3af7c54e99fd97760aef3a9ed7af248db1d31bd18f9f5b349413a2558c",
+                  "observed_at": {
+                    "epoch_nanoseconds": 99,
+                    "type": "utc_instant"
+                  },
+                  "price": {
+                    "instrument_id": "synthetic:BTC-EUR",
+                    "quote_currency": "EUR",
+                    "scale": 4,
+                    "type": "price",
+                    "units": 550000000
+                  },
+                  "price_purpose": "valuation",
+                  "quote_currency_id": {
+                    "type": "currency_id",
+                    "value": "EUR"
+                  },
+                  "resolved_at": {
+                    "epoch_nanoseconds": 100,
+                    "type": "utc_instant"
+                  },
+                  "revision_id": "revision:1",
+                  "source_event_id": "event:BTC-EUR:100",
+                  "stale_policy_hash": "sha256:8038b36a3ac4f90fd503db2d4c85d305cd9f610325a056532fd18e05d1102ee7",
+                  "stale_policy_key": "marks.valuation.v1",
+                  "stale_policy_version": 1,
+                  "stream_id": "stream:BTC-EUR:valuation",
+                  "type": "resolved_mark"
+                },
+                "source_currency_id": {
+                  "type": "currency_id",
+                  "value": "BTC"
+                },
+                "target_currency_id": {
+                  "type": "currency_id",
+                  "value": "EUR"
+                },
+                "type": "currency_valuation_edge"
+              },
+              {
+                "edge_id": "sha256:ea2b629a8b261e95938b17d13102f85c775eb9c2426ecb34a6e53cf2c55b3e47",
+                "resolved_mark": {
+                  "age_nanoseconds": 1,
+                  "available_at": {
+                    "epoch_nanoseconds": 100,
+                    "type": "utc_instant"
+                  },
+                  "instrument_id": {
+                    "stable_key": "EUR-USD",
+                    "type": "instrument_id",
+                    "venue": "synthetic"
+                  },
+                  "mark_id": "sha256:aefeb74e9da257600f4c5e9f5d95c47c2b85b55b873e2a5230fcf983d52b9f47",
+                  "observed_at": {
+                    "epoch_nanoseconds": 99,
+                    "type": "utc_instant"
+                  },
+                  "price": {
+                    "instrument_id": "synthetic:EUR-USD",
+                    "quote_currency": "USD",
+                    "scale": 4,
+                    "type": "price",
+                    "units": 10900
+                  },
+                  "price_purpose": "valuation",
+                  "quote_currency_id": {
+                    "type": "currency_id",
+                    "value": "USD"
+                  },
+                  "resolved_at": {
+                    "epoch_nanoseconds": 100,
+                    "type": "utc_instant"
+                  },
+                  "revision_id": "revision:1",
+                  "source_event_id": "event:EUR-USD:100",
+                  "stale_policy_hash": "sha256:8038b36a3ac4f90fd503db2d4c85d305cd9f610325a056532fd18e05d1102ee7",
+                  "stale_policy_key": "marks.valuation.v1",
+                  "stale_policy_version": 1,
+                  "stream_id": "stream:EUR-USD:valuation",
+                  "type": "resolved_mark"
+                },
+                "source_currency_id": {
+                  "type": "currency_id",
+                  "value": "EUR"
+                },
+                "target_currency_id": {
+                  "type": "currency_id",
+                  "value": "USD"
+                },
+                "type": "currency_valuation_edge"
+              }
+            ],
+            "is_identity": false,
+            "path_hash": "sha256:d225e02d6453f59b75cf6eabf80bac5d72924d46476f7a3051136ad6590023a3",
+            "price_purpose": "valuation",
+            "reporting_currency_id": {
+              "type": "currency_id",
+              "value": "USD"
+            },
+            "source_currency_id": {
+              "type": "currency_id",
+              "value": "BTC"
+            },
+            "type": "currency_valuation_path",
+            "valuation_at": {
+              "epoch_nanoseconds": 100,
+              "type": "utc_instant"
+            }
+          }
+        ],
+        "graph_hash": "sha256:7636659c76d05066b008c10bf88c968c02eb3c42dfbab080f5d6bec2627e2109",
+        "price_purpose": "valuation",
+        "reporting_currency_id": {
+          "type": "currency_id",
+          "value": "USD"
+        },
+        "source_currency_id": {
+          "type": "currency_id",
+          "value": "BTC"
+        },
+        "type": "currency_valuation_path_request",
+        "valuation_at": {
+          "epoch_nanoseconds": 100,
+          "type": "utc_instant"
+        }
+      },
+      "type": "currency_valuation_resolution"
+    },
+    "status": "resolved",
+    "type": "currency_valuation_outcome"
+  },
+  "selected_hash": "sha256:bfff2e50cdf2566ef24be70bd087fb67208602012f62f08ff2f65be710c70442"
+}

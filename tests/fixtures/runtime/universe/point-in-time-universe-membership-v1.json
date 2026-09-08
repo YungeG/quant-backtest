@@ -1,0 +1,238 @@
+{
+  "at_correction": {
+    "selection": {
+      "candidate_revision_hashes": [
+        "sha256:0df3ad0071c9fe0645a3bdcf5432bc44cb76ddfb9d7187dbe1acf3d5cb6f18b9",
+        "sha256:79d88c143a540ae14593fdc856c137c25cb1b93155ebd3e6a73e194f175d8d62",
+        "sha256:a8f26f0aae6ea839e6b772d1c36d581a08c405af319672a2f51e9492c7d3f828"
+      ],
+      "decision_grade_eligible": false,
+      "deployment_authorized": false,
+      "instruments": [],
+      "max_selected_available_at": null,
+      "point_in_time": true,
+      "query": {
+        "decision_instant": {
+          "instant": {
+            "epoch_nanoseconds": 200,
+            "type": "utc_instant"
+          },
+          "phase": {
+            "code": "universe_availability",
+            "rank": 60,
+            "type": "timeline_phase"
+          },
+          "source_sequence": {
+            "type": "source_sequence",
+            "value": 3
+          },
+          "type": "simulation_instant"
+        },
+        "kind": "point_in_time",
+        "query_hash": "sha256:ec54adf3a0d4f913a4bec8f487199482d0bea470aa5f6c9b282af7dcdc458564",
+        "schema_version": 1,
+        "type": "universe_query",
+        "universe_key": "portfolio.primary"
+      },
+      "schema_version": 1,
+      "selected_revision_hashes": [],
+      "selection_hash": "sha256:26dea0450e9ee8cffee515f135e2904d942574610d5c60f9de90c1c34197df8f",
+      "static_universe": false,
+      "survivorship_bias_safe": false,
+      "type": "universe_selection"
+    },
+    "view_hash": "sha256:0a9438adc876384ac67571d8c4309afec4206a2d4731596b6f9dc081ce96ac87"
+  },
+  "before_correction": {
+    "selection": {
+      "candidate_revision_hashes": [
+        "sha256:0df3ad0071c9fe0645a3bdcf5432bc44cb76ddfb9d7187dbe1acf3d5cb6f18b9",
+        "sha256:79d88c143a540ae14593fdc856c137c25cb1b93155ebd3e6a73e194f175d8d62"
+      ],
+      "decision_grade_eligible": false,
+      "deployment_authorized": false,
+      "instruments": [
+        {
+          "stable_key": "asset-a",
+          "type": "instrument_id",
+          "venue": "test"
+        }
+      ],
+      "max_selected_available_at": {
+        "instant": {
+          "epoch_nanoseconds": 100,
+          "type": "utc_instant"
+        },
+        "phase": {
+          "code": "universe_availability",
+          "rank": 60,
+          "type": "timeline_phase"
+        },
+        "source_sequence": {
+          "type": "source_sequence",
+          "value": 1
+        },
+        "type": "simulation_instant"
+      },
+      "point_in_time": true,
+      "query": {
+        "decision_instant": {
+          "instant": {
+            "epoch_nanoseconds": 200,
+            "type": "utc_instant"
+          },
+          "phase": {
+            "code": "universe_availability",
+            "rank": 60,
+            "type": "timeline_phase"
+          },
+          "source_sequence": {
+            "type": "source_sequence",
+            "value": 2
+          },
+          "type": "simulation_instant"
+        },
+        "kind": "point_in_time",
+        "query_hash": "sha256:6ee7915fabca024d810b61e0f02285e5fac1d3c5c32b50e580e16902e6aad374",
+        "schema_version": 1,
+        "type": "universe_query",
+        "universe_key": "portfolio.primary"
+      },
+      "schema_version": 1,
+      "selected_revision_hashes": [
+        "sha256:0df3ad0071c9fe0645a3bdcf5432bc44cb76ddfb9d7187dbe1acf3d5cb6f18b9"
+      ],
+      "selection_hash": "sha256:67134afeb3838dd407a8a51c05699a8aa225041a0249bb08cd48c0b6cfcfc8cc",
+      "static_universe": false,
+      "survivorship_bias_safe": false,
+      "type": "universe_selection"
+    },
+    "view_hash": "sha256:53228943f1d28dc1e4935c3708c54bbd6c9ac7d6ce0d1ea8a4ce4f37c19621a1"
+  },
+  "empty_success": {
+    "candidate_revision_hashes": [],
+    "decision_grade_eligible": false,
+    "deployment_authorized": false,
+    "instruments": [],
+    "max_selected_available_at": null,
+    "point_in_time": true,
+    "query": {
+      "decision_instant": {
+        "instant": {
+          "epoch_nanoseconds": 500,
+          "type": "utc_instant"
+        },
+        "phase": {
+          "code": "universe_availability",
+          "rank": 60,
+          "type": "timeline_phase"
+        },
+        "source_sequence": {
+          "type": "source_sequence",
+          "value": 9
+        },
+        "type": "simulation_instant"
+      },
+      "kind": "point_in_time",
+      "query_hash": "sha256:73c33fd4c4f02f1f7258ca674326bb72becbd4ed8fc088fda8d3c632d87851db",
+      "schema_version": 1,
+      "type": "universe_query",
+      "universe_key": "portfolio.primary"
+    },
+    "schema_version": 1,
+    "selected_revision_hashes": [],
+    "selection_hash": "sha256:7feacb087393e2a7fa3443e5521dab4bb618d37d21b3e04cdff860cb7a721108",
+    "static_universe": false,
+    "survivorship_bias_safe": false,
+    "type": "universe_selection"
+  },
+  "failure_controls": {
+    "availability_regression": true,
+    "fork": true,
+    "invalid_listing_interval": true,
+    "invalid_membership_interval": true,
+    "invalid_source_hash": true,
+    "membership_after_delisting": true,
+    "missing_parent": true,
+    "revision_identity_conflict": true
+  },
+  "fixture_id": "point-in-time-universe-membership-v1",
+  "future_and_unrelated_noninterference": {
+    "selection_hash_matches": true,
+    "view_hash_matches": true
+  },
+  "input_repeat_parity": {
+    "selection_hash_matches": true,
+    "view_hash_matches": true
+  },
+  "limitations": [
+    "no_universe-completeness-claim",
+    "no_survivorship-safety-claim",
+    "no_bar-window-semantics",
+    "no_strategy-invocation",
+    "no_deployment-authorization"
+  ],
+  "schema_version": 1,
+  "static_universe": {
+    "candidate_revision_hashes": [
+      "sha256:82c414737c2d8351f93432c2ba636125f507b0f20d97ca175875283cfab96d77"
+    ],
+    "decision_grade_eligible": false,
+    "deployment_authorized": false,
+    "instruments": [
+      {
+        "stable_key": "asset-a",
+        "type": "instrument_id",
+        "venue": "test"
+      }
+    ],
+    "max_selected_available_at": {
+      "instant": {
+        "epoch_nanoseconds": 0,
+        "type": "utc_instant"
+      },
+      "phase": {
+        "code": "universe_availability",
+        "rank": 60,
+        "type": "timeline_phase"
+      },
+      "source_sequence": {
+        "type": "source_sequence",
+        "value": 1
+      },
+      "type": "simulation_instant"
+    },
+    "point_in_time": false,
+    "query": {
+      "decision_instant": {
+        "instant": {
+          "epoch_nanoseconds": 500,
+          "type": "utc_instant"
+        },
+        "phase": {
+          "code": "universe_availability",
+          "rank": 60,
+          "type": "timeline_phase"
+        },
+        "source_sequence": {
+          "type": "source_sequence",
+          "value": 9
+        },
+        "type": "simulation_instant"
+      },
+      "kind": "static",
+      "query_hash": "sha256:abe840fca05b9aae00d593fdbc15af8b4fe13251ef6ac6c48848ca0772ee5bf0",
+      "schema_version": 1,
+      "type": "universe_query",
+      "universe_key": "portfolio.primary"
+    },
+    "schema_version": 1,
+    "selected_revision_hashes": [
+      "sha256:82c414737c2d8351f93432c2ba636125f507b0f20d97ca175875283cfab96d77"
+    ],
+    "selection_hash": "sha256:6559f21528d0da293366e0bba9b3580c04acb28c3a76a849e084edb60b768648",
+    "static_universe": true,
+    "survivorship_bias_safe": false,
+    "type": "universe_selection"
+  }
+}

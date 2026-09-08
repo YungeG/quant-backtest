@@ -1,0 +1,36 @@
+{
+  "bindings": {
+    "type": "multi_resolution_market_data_bindings",
+    "schema_version": 1,
+    "signal_bindings": [
+      {
+        "type": "signal_bar_binding",
+        "schema_version": 1,
+        "requirement_hash": "sha256:1111111111111111111111111111111111111111111111111111111111111111",
+        "stream_key": "bars.1m",
+        "price_purpose": "valuation",
+        "aggregation_input_hash": "sha256:2222222222222222222222222222222222222222222222222222222222222222",
+        "signal_binding_hash": "sha256:9ba3ba246b4a4e84fe69e3960b23f85a8ad2dd07fc436c9f434e5501a9b931b8"
+      }
+    ],
+    "execution_bindings": [
+      {
+        "type": "execution_data_binding",
+        "schema_version": 1,
+        "profile_binding_key": "profile.execution.5s",
+        "stream_key": "trades.5s",
+        "execution_binding_hash": "sha256:a22b4c39ad4b7962018eddd611182d0992d31009720a756adb89f3f4897f4625"
+      }
+    ],
+    "valuation_bindings": [
+      {
+        "type": "valuation_data_binding",
+        "schema_version": 1,
+        "instrument_id": {"type": "instrument_id", "venue": "test", "stable_key": "asset"},
+        "stream_key": "marks.1m",
+        "valuation_binding_hash": "sha256:5d19023e18b893ed3c4d755188d2c6fdb514daf30f72b701f25f82e272224549"
+      }
+    ],
+    "bindings_hash": "sha256:ac97a6db8fa0f3bffb8004303914ca5ae330c0e425c4ac380bd267c701d3a221"
+  }
+}

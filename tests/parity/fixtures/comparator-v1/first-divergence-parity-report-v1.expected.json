@@ -1,0 +1,28 @@
+{
+  "actual_sha256": "d190f6202cfd0e5cb39384b6c8ddd2a0896b340e2f077c49471e9c081d412126",
+  "comparison_counts": {
+    "approved_change": 0,
+    "matched": 3,
+    "mismatched": 1
+  },
+  "contract_id": "mixed-contract-v1",
+  "contract_sha256": "fe95b5c0bac96753a9d5939344ffd1173bca0d93c3ff6324e5fc006e980d9717",
+  "expected_sha256": "7993da0063a5aba3721d4e98c32b6231d65589b0c7a4b2fc18ff488acc7433f2",
+  "first_divergence": {
+    "actual": {
+      "sequence": 3,
+      "type": "cancelled"
+    },
+    "comparison": "sequence",
+    "expected": {
+      "sequence": 2,
+      "type": "filled"
+    },
+    "path": "/events/1",
+    "reason": "sequence-item-mismatch"
+  },
+  "migration_mode": "reimplement_with_reference",
+  "schema_version": 1,
+  "status": "completed",
+  "verdict": "MISMATCH"
+}

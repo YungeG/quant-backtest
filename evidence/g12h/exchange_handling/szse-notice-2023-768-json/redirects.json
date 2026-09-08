@@ -1,0 +1,67 @@
+{
+  "responses": [
+    {
+      "headers": [
+        {
+          "name": "Server",
+          "value": "nginx"
+        },
+        {
+          "name": "Date",
+          "value": "Thu, 20 Aug 2026 07:37:15 GMT"
+        },
+        {
+          "name": "Content-Type",
+          "value": "application/json"
+        },
+        {
+          "name": "Content-Length",
+          "value": "9064"
+        },
+        {
+          "name": "Connection",
+          "value": "keep-alive"
+        },
+        {
+          "name": "Last-Modified",
+          "value": "Sat, 30 May 2026 09:01:55 GMT"
+        },
+        {
+          "name": "ETag",
+          "value": "\"6a1aa783-2368\""
+        },
+        {
+          "name": "X-UA-Compatible",
+          "value": "IE=EDGE"
+        },
+        {
+          "name": "X-Varnish",
+          "value": "881264747"
+        },
+        {
+          "name": "Age",
+          "value": "0"
+        },
+        {
+          "name": "Via",
+          "value": "1.1 varnish-v4"
+        },
+        {
+          "name": "X-cache",
+          "value": "MISS"
+        },
+        {
+          "name": "Accept-Ranges",
+          "value": "bytes"
+        },
+        {
+          "name": "X-UA-Compatible",
+          "value": "IE=EDGE"
+        }
+      ],
+      "status_line": "HTTP/1.1 200 OK"
+    }
+  ],
+  "schema_version": 1,
+  "type": "g12h_http_response_chain_v1"
+}

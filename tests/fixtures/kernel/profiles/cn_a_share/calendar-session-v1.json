@@ -1,0 +1,790 @@
+{
+  "calendars": {
+    "xshe": {
+      "calendar": {
+        "calendar_id": "CN.XSHE",
+        "coverage_end_exclusive": "2024-02-20",
+        "coverage_start": "2024-02-08",
+        "days": [
+          {
+            "kind": "trading",
+            "local_date": "2024-02-08",
+            "schema_version": 1,
+            "type": "cn_a_share_frozen_calendar_day"
+          },
+          {
+            "kind": "frozen_holiday",
+            "local_date": "2024-02-09",
+            "schema_version": 1,
+            "type": "cn_a_share_frozen_calendar_day"
+          },
+          {
+            "kind": "frozen_holiday",
+            "local_date": "2024-02-10",
+            "schema_version": 1,
+            "type": "cn_a_share_frozen_calendar_day"
+          },
+          {
+            "kind": "frozen_holiday",
+            "local_date": "2024-02-11",
+            "schema_version": 1,
+            "type": "cn_a_share_frozen_calendar_day"
+          },
+          {
+            "kind": "frozen_holiday",
+            "local_date": "2024-02-12",
+            "schema_version": 1,
+            "type": "cn_a_share_frozen_calendar_day"
+          },
+          {
+            "kind": "frozen_holiday",
+            "local_date": "2024-02-13",
+            "schema_version": 1,
+            "type": "cn_a_share_frozen_calendar_day"
+          },
+          {
+            "kind": "frozen_holiday",
+            "local_date": "2024-02-14",
+            "schema_version": 1,
+            "type": "cn_a_share_frozen_calendar_day"
+          },
+          {
+            "kind": "frozen_holiday",
+            "local_date": "2024-02-15",
+            "schema_version": 1,
+            "type": "cn_a_share_frozen_calendar_day"
+          },
+          {
+            "kind": "frozen_holiday",
+            "local_date": "2024-02-16",
+            "schema_version": 1,
+            "type": "cn_a_share_frozen_calendar_day"
+          },
+          {
+            "kind": "frozen_holiday",
+            "local_date": "2024-02-17",
+            "schema_version": 1,
+            "type": "cn_a_share_frozen_calendar_day"
+          },
+          {
+            "kind": "weekend",
+            "local_date": "2024-02-18",
+            "schema_version": 1,
+            "type": "cn_a_share_frozen_calendar_day"
+          },
+          {
+            "kind": "trading",
+            "local_date": "2024-02-19",
+            "schema_version": 1,
+            "type": "cn_a_share_frozen_calendar_day"
+          }
+        ],
+        "schema_version": 1,
+        "timezone_name": "Asia/Shanghai",
+        "type": "cn_a_share_frozen_calendar",
+        "venue_id": {
+          "type": "venue_id",
+          "value": "xshe"
+        }
+      },
+      "calendar_hash": "sha256:99c4a2c8e06ccb696c15b6b8d676c42195f54465d6b46237ed74dfd699d3bb73",
+      "component_ref": {
+        "component_digest": "sha256:58377db746d9c37967b94c1291ede824ac6a4597402d92c05e7d386f36bf1d52",
+        "component_key": "equity.cn_a_share.cash.session.v1",
+        "component_version": 1,
+        "port_type": "session_model",
+        "type": "profile_component_ref"
+      }
+    },
+    "xshg": {
+      "calendar": {
+        "calendar_id": "CN.XSHG",
+        "coverage_end_exclusive": "2024-02-20",
+        "coverage_start": "2024-02-08",
+        "days": [
+          {
+            "kind": "trading",
+            "local_date": "2024-02-08",
+            "schema_version": 1,
+            "type": "cn_a_share_frozen_calendar_day"
+          },
+          {
+            "kind": "frozen_holiday",
+            "local_date": "2024-02-09",
+            "schema_version": 1,
+            "type": "cn_a_share_frozen_calendar_day"
+          },
+          {
+            "kind": "frozen_holiday",
+            "local_date": "2024-02-10",
+            "schema_version": 1,
+            "type": "cn_a_share_frozen_calendar_day"
+          },
+          {
+            "kind": "frozen_holiday",
+            "local_date": "2024-02-11",
+            "schema_version": 1,
+            "type": "cn_a_share_frozen_calendar_day"
+          },
+          {
+            "kind": "frozen_holiday",
+            "local_date": "2024-02-12",
+            "schema_version": 1,
+            "type": "cn_a_share_frozen_calendar_day"
+          },
+          {
+            "kind": "frozen_holiday",
+            "local_date": "2024-02-13",
+            "schema_version": 1,
+            "type": "cn_a_share_frozen_calendar_day"
+          },
+          {
+            "kind": "frozen_holiday",
+            "local_date": "2024-02-14",
+            "schema_version": 1,
+            "type": "cn_a_share_frozen_calendar_day"
+          },
+          {
+            "kind": "frozen_holiday",
+            "local_date": "2024-02-15",
+            "schema_version": 1,
+            "type": "cn_a_share_frozen_calendar_day"
+          },
+          {
+            "kind": "frozen_holiday",
+            "local_date": "2024-02-16",
+            "schema_version": 1,
+            "type": "cn_a_share_frozen_calendar_day"
+          },
+          {
+            "kind": "frozen_holiday",
+            "local_date": "2024-02-17",
+            "schema_version": 1,
+            "type": "cn_a_share_frozen_calendar_day"
+          },
+          {
+            "kind": "weekend",
+            "local_date": "2024-02-18",
+            "schema_version": 1,
+            "type": "cn_a_share_frozen_calendar_day"
+          },
+          {
+            "kind": "trading",
+            "local_date": "2024-02-19",
+            "schema_version": 1,
+            "type": "cn_a_share_frozen_calendar_day"
+          }
+        ],
+        "schema_version": 1,
+        "timezone_name": "Asia/Shanghai",
+        "type": "cn_a_share_frozen_calendar",
+        "venue_id": {
+          "type": "venue_id",
+          "value": "xshg"
+        }
+      },
+      "calendar_hash": "sha256:0eb554a4554b1ff8eafb841ab447a720ca69383fca9a20b400a7e4a030a1462d",
+      "component_ref": {
+        "component_digest": "sha256:351957c2fd1fab7b63da654ccbde9a95c03047dc74fa2d85e089cc3e14f5be8f",
+        "component_key": "equity.cn_a_share.cash.session.v1",
+        "component_version": 1,
+        "port_type": "session_model",
+        "type": "profile_component_ref"
+      }
+    }
+  },
+  "failures": {
+    "coverage_missing": {
+      "component_ref": {
+        "component_digest": "sha256:351957c2fd1fab7b63da654ccbde9a95c03047dc74fa2d85e089cc3e14f5be8f",
+        "component_key": "equity.cn_a_share.cash.session.v1",
+        "component_version": 1,
+        "port_type": "session_model",
+        "type": "profile_component_ref"
+      },
+      "failure": {
+        "calendar_id": "CN.XSHG",
+        "code": "calendar_coverage_missing",
+        "instant": {
+          "epoch_nanoseconds": 1708394400000000000,
+          "type": "utc_instant"
+        },
+        "schema_version": 1,
+        "subject_key": "instant:sha256:88b75502013940513793c0c3ff816f60d9daaab474ed093e97c91a2971500354",
+        "type": "cn_a_share_session_failure",
+        "venue_id": {
+          "type": "venue_id",
+          "value": "xshg"
+        }
+      },
+      "input_hash": "sha256:dc07912ed669fc0ba4834d32432d890cffbcf714bd7db8acb5d116cb43b4189c",
+      "result": null,
+      "type": "profile_port_outcome"
+    },
+    "unsupported_venue": {
+      "component_ref": {
+        "component_digest": "sha256:351957c2fd1fab7b63da654ccbde9a95c03047dc74fa2d85e089cc3e14f5be8f",
+        "component_key": "equity.cn_a_share.cash.session.v1",
+        "component_version": 1,
+        "port_type": "session_model",
+        "type": "profile_component_ref"
+      },
+      "failure": {
+        "calendar_id": "CN.XSHG",
+        "code": "unsupported_venue",
+        "instant": {
+          "epoch_nanoseconds": 1708308000000000000,
+          "type": "utc_instant"
+        },
+        "schema_version": 1,
+        "subject_key": "venue:xbse",
+        "type": "cn_a_share_session_failure",
+        "venue_id": {
+          "type": "venue_id",
+          "value": "xbse"
+        }
+      },
+      "input_hash": "sha256:a6f4b1c8f6931acc558f31840f0564c0e3d5045ef3b582c15949180cf8046c99",
+      "result": null,
+      "type": "profile_port_outcome"
+    }
+  },
+  "fixture_id": "cn-a-share-calendar-session-v1",
+  "known_closures": {
+    "frozen_holiday": {
+      "component_ref": {
+        "component_digest": "sha256:351957c2fd1fab7b63da654ccbde9a95c03047dc74fa2d85e089cc3e14f5be8f",
+        "component_key": "equity.cn_a_share.cash.session.v1",
+        "component_version": 1,
+        "port_type": "session_model",
+        "type": "profile_component_ref"
+      },
+      "failure": null,
+      "input_hash": "sha256:0c3784495c57aa55ea03e781eb972d8aad75514560a2cee0c462bd5def062fe6",
+      "result": {
+        "day_kind": "frozen_holiday",
+        "instant": {
+          "epoch_nanoseconds": 1707530400000000000,
+          "type": "utc_instant"
+        },
+        "is_open": false,
+        "local_date": "2024-02-10",
+        "phase": null,
+        "phase_end_exclusive": null,
+        "phase_start": null,
+        "schema_version": 1,
+        "session_id": null,
+        "trading_date": null,
+        "type": "cn_a_share_session_resolution",
+        "venue_id": {
+          "type": "venue_id",
+          "value": "xshg"
+        }
+      },
+      "type": "profile_port_outcome"
+    },
+    "weekend": {
+      "component_ref": {
+        "component_digest": "sha256:351957c2fd1fab7b63da654ccbde9a95c03047dc74fa2d85e089cc3e14f5be8f",
+        "component_key": "equity.cn_a_share.cash.session.v1",
+        "component_version": 1,
+        "port_type": "session_model",
+        "type": "profile_component_ref"
+      },
+      "failure": null,
+      "input_hash": "sha256:4091701435e2783037dfd0633981c87c7b0e704d29ad239da7bb86b714e4f8b9",
+      "result": {
+        "day_kind": "weekend",
+        "instant": {
+          "epoch_nanoseconds": 1708221600000000000,
+          "type": "utc_instant"
+        },
+        "is_open": false,
+        "local_date": "2024-02-18",
+        "phase": null,
+        "phase_end_exclusive": null,
+        "phase_start": null,
+        "schema_version": 1,
+        "session_id": null,
+        "trading_date": null,
+        "type": "cn_a_share_session_resolution",
+        "venue_id": {
+          "type": "venue_id",
+          "value": "xshg"
+        }
+      },
+      "type": "profile_port_outcome"
+    }
+  },
+  "phase_boundaries": {
+    "closing_call": {
+      "component_ref": {
+        "component_digest": "sha256:351957c2fd1fab7b63da654ccbde9a95c03047dc74fa2d85e089cc3e14f5be8f",
+        "component_key": "equity.cn_a_share.cash.session.v1",
+        "component_version": 1,
+        "port_type": "session_model",
+        "type": "profile_component_ref"
+      },
+      "failure": null,
+      "input_hash": "sha256:534cc7743511f982461b7436dfbb790277091aefbf464ef38ac363e5b1e7081e",
+      "result": {
+        "day_kind": "trading",
+        "instant": {
+          "epoch_nanoseconds": 1708325820000000000,
+          "type": "utc_instant"
+        },
+        "is_open": true,
+        "local_date": "2024-02-19",
+        "phase": "closing_call",
+        "phase_end_exclusive": {
+          "epoch_nanoseconds": 1708326000000000000,
+          "type": "utc_instant"
+        },
+        "phase_start": {
+          "epoch_nanoseconds": 1708325820000000000,
+          "type": "utc_instant"
+        },
+        "schema_version": 1,
+        "session_id": {
+          "calendar_id": "CN.XSHG",
+          "type": "session_id",
+          "value": "2024-02-19.regular"
+        },
+        "trading_date": {
+          "calendar_id": "CN.XSHG",
+          "date": "2024-02-19",
+          "type": "trading_date"
+        },
+        "type": "cn_a_share_session_resolution",
+        "venue_id": {
+          "type": "venue_id",
+          "value": "xshg"
+        }
+      },
+      "type": "profile_port_outcome"
+    },
+    "continuous_afternoon": {
+      "component_ref": {
+        "component_digest": "sha256:351957c2fd1fab7b63da654ccbde9a95c03047dc74fa2d85e089cc3e14f5be8f",
+        "component_key": "equity.cn_a_share.cash.session.v1",
+        "component_version": 1,
+        "port_type": "session_model",
+        "type": "profile_component_ref"
+      },
+      "failure": null,
+      "input_hash": "sha256:ed5f2ff06db565f07c1c13915a27a82760d84d2fd07a6f97ec2091798ef0a2c4",
+      "result": {
+        "day_kind": "trading",
+        "instant": {
+          "epoch_nanoseconds": 1708318800000000000,
+          "type": "utc_instant"
+        },
+        "is_open": true,
+        "local_date": "2024-02-19",
+        "phase": "continuous_afternoon",
+        "phase_end_exclusive": {
+          "epoch_nanoseconds": 1708325820000000000,
+          "type": "utc_instant"
+        },
+        "phase_start": {
+          "epoch_nanoseconds": 1708318800000000000,
+          "type": "utc_instant"
+        },
+        "schema_version": 1,
+        "session_id": {
+          "calendar_id": "CN.XSHG",
+          "type": "session_id",
+          "value": "2024-02-19.regular"
+        },
+        "trading_date": {
+          "calendar_id": "CN.XSHG",
+          "date": "2024-02-19",
+          "type": "trading_date"
+        },
+        "type": "cn_a_share_session_resolution",
+        "venue_id": {
+          "type": "venue_id",
+          "value": "xshg"
+        }
+      },
+      "type": "profile_port_outcome"
+    },
+    "continuous_morning": {
+      "component_ref": {
+        "component_digest": "sha256:351957c2fd1fab7b63da654ccbde9a95c03047dc74fa2d85e089cc3e14f5be8f",
+        "component_key": "equity.cn_a_share.cash.session.v1",
+        "component_version": 1,
+        "port_type": "session_model",
+        "type": "profile_component_ref"
+      },
+      "failure": null,
+      "input_hash": "sha256:d1117020b0364aa8139fde39f35a532b86c39b57d55f2c1e926b766943d8581b",
+      "result": {
+        "day_kind": "trading",
+        "instant": {
+          "epoch_nanoseconds": 1708306200000000000,
+          "type": "utc_instant"
+        },
+        "is_open": true,
+        "local_date": "2024-02-19",
+        "phase": "continuous_morning",
+        "phase_end_exclusive": {
+          "epoch_nanoseconds": 1708313400000000000,
+          "type": "utc_instant"
+        },
+        "phase_start": {
+          "epoch_nanoseconds": 1708306200000000000,
+          "type": "utc_instant"
+        },
+        "schema_version": 1,
+        "session_id": {
+          "calendar_id": "CN.XSHG",
+          "type": "session_id",
+          "value": "2024-02-19.regular"
+        },
+        "trading_date": {
+          "calendar_id": "CN.XSHG",
+          "date": "2024-02-19",
+          "type": "trading_date"
+        },
+        "type": "cn_a_share_session_resolution",
+        "venue_id": {
+          "type": "venue_id",
+          "value": "xshg"
+        }
+      },
+      "type": "profile_port_outcome"
+    },
+    "lunch_break": {
+      "component_ref": {
+        "component_digest": "sha256:351957c2fd1fab7b63da654ccbde9a95c03047dc74fa2d85e089cc3e14f5be8f",
+        "component_key": "equity.cn_a_share.cash.session.v1",
+        "component_version": 1,
+        "port_type": "session_model",
+        "type": "profile_component_ref"
+      },
+      "failure": null,
+      "input_hash": "sha256:c0424b6f802f87bc38feb6a2d3d05ee415c4ea91dcf9e1c554b2cd28daada3ad",
+      "result": {
+        "day_kind": "trading",
+        "instant": {
+          "epoch_nanoseconds": 1708313400000000000,
+          "type": "utc_instant"
+        },
+        "is_open": false,
+        "local_date": "2024-02-19",
+        "phase": "lunch_break",
+        "phase_end_exclusive": {
+          "epoch_nanoseconds": 1708318800000000000,
+          "type": "utc_instant"
+        },
+        "phase_start": {
+          "epoch_nanoseconds": 1708313400000000000,
+          "type": "utc_instant"
+        },
+        "schema_version": 1,
+        "session_id": {
+          "calendar_id": "CN.XSHG",
+          "type": "session_id",
+          "value": "2024-02-19.regular"
+        },
+        "trading_date": {
+          "calendar_id": "CN.XSHG",
+          "date": "2024-02-19",
+          "type": "trading_date"
+        },
+        "type": "cn_a_share_session_resolution",
+        "venue_id": {
+          "type": "venue_id",
+          "value": "xshg"
+        }
+      },
+      "type": "profile_port_outcome"
+    },
+    "opening_call": {
+      "component_ref": {
+        "component_digest": "sha256:351957c2fd1fab7b63da654ccbde9a95c03047dc74fa2d85e089cc3e14f5be8f",
+        "component_key": "equity.cn_a_share.cash.session.v1",
+        "component_version": 1,
+        "port_type": "session_model",
+        "type": "profile_component_ref"
+      },
+      "failure": null,
+      "input_hash": "sha256:e2e5b1b039dd2b2caa80fc67336ae1f1d76c631133314fc65a33c3e2a6991ac7",
+      "result": {
+        "day_kind": "trading",
+        "instant": {
+          "epoch_nanoseconds": 1708305300000000000,
+          "type": "utc_instant"
+        },
+        "is_open": true,
+        "local_date": "2024-02-19",
+        "phase": "opening_call",
+        "phase_end_exclusive": {
+          "epoch_nanoseconds": 1708305900000000000,
+          "type": "utc_instant"
+        },
+        "phase_start": {
+          "epoch_nanoseconds": 1708305300000000000,
+          "type": "utc_instant"
+        },
+        "schema_version": 1,
+        "session_id": {
+          "calendar_id": "CN.XSHG",
+          "type": "session_id",
+          "value": "2024-02-19.regular"
+        },
+        "trading_date": {
+          "calendar_id": "CN.XSHG",
+          "date": "2024-02-19",
+          "type": "trading_date"
+        },
+        "type": "cn_a_share_session_resolution",
+        "venue_id": {
+          "type": "venue_id",
+          "value": "xshg"
+        }
+      },
+      "type": "profile_port_outcome"
+    },
+    "opening_pause": {
+      "component_ref": {
+        "component_digest": "sha256:351957c2fd1fab7b63da654ccbde9a95c03047dc74fa2d85e089cc3e14f5be8f",
+        "component_key": "equity.cn_a_share.cash.session.v1",
+        "component_version": 1,
+        "port_type": "session_model",
+        "type": "profile_component_ref"
+      },
+      "failure": null,
+      "input_hash": "sha256:7583c04951ebdf8aaac0aa95422d492a49f5d31d4b6b61e677b758c7581b5ba1",
+      "result": {
+        "day_kind": "trading",
+        "instant": {
+          "epoch_nanoseconds": 1708305900000000000,
+          "type": "utc_instant"
+        },
+        "is_open": false,
+        "local_date": "2024-02-19",
+        "phase": "opening_pause",
+        "phase_end_exclusive": {
+          "epoch_nanoseconds": 1708306200000000000,
+          "type": "utc_instant"
+        },
+        "phase_start": {
+          "epoch_nanoseconds": 1708305900000000000,
+          "type": "utc_instant"
+        },
+        "schema_version": 1,
+        "session_id": {
+          "calendar_id": "CN.XSHG",
+          "type": "session_id",
+          "value": "2024-02-19.regular"
+        },
+        "trading_date": {
+          "calendar_id": "CN.XSHG",
+          "date": "2024-02-19",
+          "type": "trading_date"
+        },
+        "type": "cn_a_share_session_resolution",
+        "venue_id": {
+          "type": "venue_id",
+          "value": "xshg"
+        }
+      },
+      "type": "profile_port_outcome"
+    },
+    "post_close": {
+      "component_ref": {
+        "component_digest": "sha256:351957c2fd1fab7b63da654ccbde9a95c03047dc74fa2d85e089cc3e14f5be8f",
+        "component_key": "equity.cn_a_share.cash.session.v1",
+        "component_version": 1,
+        "port_type": "session_model",
+        "type": "profile_component_ref"
+      },
+      "failure": null,
+      "input_hash": "sha256:f5d982e7e98685031c34beb80c1213b8b4a060955c8f67ebf493b03f06561ca4",
+      "result": {
+        "day_kind": "trading",
+        "instant": {
+          "epoch_nanoseconds": 1708326000000000000,
+          "type": "utc_instant"
+        },
+        "is_open": false,
+        "local_date": "2024-02-19",
+        "phase": "post_close",
+        "phase_end_exclusive": {
+          "epoch_nanoseconds": 1708358400000000000,
+          "type": "utc_instant"
+        },
+        "phase_start": {
+          "epoch_nanoseconds": 1708326000000000000,
+          "type": "utc_instant"
+        },
+        "schema_version": 1,
+        "session_id": {
+          "calendar_id": "CN.XSHG",
+          "type": "session_id",
+          "value": "2024-02-19.regular"
+        },
+        "trading_date": {
+          "calendar_id": "CN.XSHG",
+          "date": "2024-02-19",
+          "type": "trading_date"
+        },
+        "type": "cn_a_share_session_resolution",
+        "venue_id": {
+          "type": "venue_id",
+          "value": "xshg"
+        }
+      },
+      "type": "profile_port_outcome"
+    },
+    "pre_open": {
+      "component_ref": {
+        "component_digest": "sha256:351957c2fd1fab7b63da654ccbde9a95c03047dc74fa2d85e089cc3e14f5be8f",
+        "component_key": "equity.cn_a_share.cash.session.v1",
+        "component_version": 1,
+        "port_type": "session_model",
+        "type": "profile_component_ref"
+      },
+      "failure": null,
+      "input_hash": "sha256:58301e9c9a8e6743a12e194fa23d9113a7340c02b858047134ad3ed63c9021be",
+      "result": {
+        "day_kind": "trading",
+        "instant": {
+          "epoch_nanoseconds": 1708272000000000000,
+          "type": "utc_instant"
+        },
+        "is_open": false,
+        "local_date": "2024-02-19",
+        "phase": "pre_open",
+        "phase_end_exclusive": {
+          "epoch_nanoseconds": 1708305300000000000,
+          "type": "utc_instant"
+        },
+        "phase_start": {
+          "epoch_nanoseconds": 1708272000000000000,
+          "type": "utc_instant"
+        },
+        "schema_version": 1,
+        "session_id": {
+          "calendar_id": "CN.XSHG",
+          "type": "session_id",
+          "value": "2024-02-19.regular"
+        },
+        "trading_date": {
+          "calendar_id": "CN.XSHG",
+          "date": "2024-02-19",
+          "type": "trading_date"
+        },
+        "type": "cn_a_share_session_resolution",
+        "venue_id": {
+          "type": "venue_id",
+          "value": "xshg"
+        }
+      },
+      "type": "profile_port_outcome"
+    }
+  },
+  "pre_open_utc_previous_date": {
+    "component_ref": {
+      "component_digest": "sha256:351957c2fd1fab7b63da654ccbde9a95c03047dc74fa2d85e089cc3e14f5be8f",
+      "component_key": "equity.cn_a_share.cash.session.v1",
+      "component_version": 1,
+      "port_type": "session_model",
+      "type": "profile_component_ref"
+    },
+    "failure": null,
+    "input_hash": "sha256:6d4a67e705419c6881a22127968699947895c9f6d30a45f7ff3ae09c41303bc6",
+    "result": {
+      "day_kind": "trading",
+      "instant": {
+        "epoch_nanoseconds": 1708273800000000000,
+        "type": "utc_instant"
+      },
+      "is_open": false,
+      "local_date": "2024-02-19",
+      "phase": "pre_open",
+      "phase_end_exclusive": {
+        "epoch_nanoseconds": 1708305300000000000,
+        "type": "utc_instant"
+      },
+      "phase_start": {
+        "epoch_nanoseconds": 1708272000000000000,
+        "type": "utc_instant"
+      },
+      "schema_version": 1,
+      "session_id": {
+        "calendar_id": "CN.XSHG",
+        "type": "session_id",
+        "value": "2024-02-19.regular"
+      },
+      "trading_date": {
+        "calendar_id": "CN.XSHG",
+        "date": "2024-02-19",
+        "type": "trading_date"
+      },
+      "type": "cn_a_share_session_resolution",
+      "venue_id": {
+        "type": "venue_id",
+        "value": "xshg"
+      }
+    },
+    "type": "profile_port_outcome"
+  },
+  "qualification": {
+    "allowed_grade": "development",
+    "current_live": false,
+    "decision_grade": false
+  },
+  "query_venue_identity": {
+    "type": "venue_id",
+    "value": "xshg"
+  },
+  "repeat_resolution": {
+    "component_ref": {
+      "component_digest": "sha256:351957c2fd1fab7b63da654ccbde9a95c03047dc74fa2d85e089cc3e14f5be8f",
+      "component_key": "equity.cn_a_share.cash.session.v1",
+      "component_version": 1,
+      "port_type": "session_model",
+      "type": "profile_component_ref"
+    },
+    "failure": null,
+    "input_hash": "sha256:e2e5b1b039dd2b2caa80fc67336ae1f1d76c631133314fc65a33c3e2a6991ac7",
+    "result": {
+      "day_kind": "trading",
+      "instant": {
+        "epoch_nanoseconds": 1708305300000000000,
+        "type": "utc_instant"
+      },
+      "is_open": true,
+      "local_date": "2024-02-19",
+      "phase": "opening_call",
+      "phase_end_exclusive": {
+        "epoch_nanoseconds": 1708305900000000000,
+        "type": "utc_instant"
+      },
+      "phase_start": {
+        "epoch_nanoseconds": 1708305300000000000,
+        "type": "utc_instant"
+      },
+      "schema_version": 1,
+      "session_id": {
+        "calendar_id": "CN.XSHG",
+        "type": "session_id",
+        "value": "2024-02-19.regular"
+      },
+      "trading_date": {
+        "calendar_id": "CN.XSHG",
+        "date": "2024-02-19",
+        "type": "trading_date"
+      },
+      "type": "cn_a_share_session_resolution",
+      "venue_id": {
+        "type": "venue_id",
+        "value": "xshg"
+      }
+    },
+    "type": "profile_port_outcome"
+  }
+}

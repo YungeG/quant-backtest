@@ -1,0 +1,43 @@
+{
+  "responses": [
+    {
+      "headers": [
+        {
+          "name": "Date",
+          "value": "Thu, 20 Aug 2026 08:44:44 GMT"
+        },
+        {
+          "name": "Content-Type",
+          "value": "text/html"
+        },
+        {
+          "name": "Content-Length",
+          "value": "12332"
+        },
+        {
+          "name": "Connection",
+          "value": "keep-alive"
+        },
+        {
+          "name": "WZWS-RAY",
+          "value": "002-1787215484.677-cache02bjtp3-waf03bjtp3"
+        },
+        {
+          "name": "Cache-Control",
+          "value": "max-age=14400"
+        },
+        {
+          "name": "age",
+          "value": "0"
+        },
+        {
+          "name": "VAR-Cache",
+          "value": "hit"
+        }
+      ],
+      "status_line": "HTTP/1.1 200 OK"
+    }
+  ],
+  "schema_version": 1,
+  "type": "g12h_http_response_chain_v1"
+}

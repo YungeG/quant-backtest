@@ -1,0 +1,1 @@
+{"request_id":"cda03508-4bc2-438b-bc74-a30249576980","code":0,"data":{"fields":["ts_code","trade_date","open","high","low","close","pre_close","change","pct_chg","vol","amount"],"items":[["000703.SZ","20240910",5.75,5.77,5.6,5.65,5.74,-0.09,-1.5679,124905.49,70677.66]],"has_more":false,"count":0},"msg":"","detail":"..."}

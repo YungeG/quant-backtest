@@ -1,0 +1,1 @@
+{"request_id":"0ad088ce-59cd-4874-94e4-e38aedb2f111","code":0,"data":{"fields":["ts_code","trade_date","open","high","low","close","pre_close","change","pct_chg","vol","amount"],"items":[["000703.SZ","20260817",16.9,16.96,16.39,16.86,16.78,0.08,0.4768,663863.77,1107890.20116]],"has_more":false,"count":0},"msg":"","detail":"..."}

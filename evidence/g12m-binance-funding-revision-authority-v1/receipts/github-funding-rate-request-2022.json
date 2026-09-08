@@ -1,0 +1,31 @@
+{
+  "authentication": "none",
+  "authority": "Binance official GitHub organization",
+  "body_byte_count": 18300,
+  "body_path": "evidence/g12m-binance-funding-revision-authority-v1/raw/github/funding-rate-request-2022.py",
+  "body_sha256": "e50bd98895e218893124db4cce7126dd128d3621d7d0d14f3545ee9bbf8e3533",
+  "completed_at_epoch_nanoseconds": 1787323697712267053,
+  "curl_stderr": "",
+  "curl_version": "8.14.1",
+  "git_blob_oid_sha1": "aa4d46f3ea256b7befb26c2c0f746cdd9d8a1fa1",
+  "http_status": 200,
+  "method": "GET",
+  "request_headers": {
+    "Accept": "*/*",
+    "User-Agent": "curl/8.14.1"
+  },
+  "request_scope": {
+    "commit": "d30576a6d8e6edb706c8b013eb11167b58e9c33a",
+    "commit_time": "2022-08-29T12:29:28+08:00",
+    "path": "binance/um_futures/market.py",
+    "repository": "https://github.com/binance/binance-futures-connector-python.git"
+  },
+  "request_url": "https://raw.githubusercontent.com/binance/binance-futures-connector-python/d30576a6d8e6edb706c8b013eb11167b58e9c33a/binance/um_futures/market.py",
+  "resolved_addresses": [
+    "198.18.0.75"
+  ],
+  "response_headers_raw_lf": "HTTP/2 200 \ncache-control: max-age=300\ncontent-security-policy: default-src 'none'; style-src 'unsafe-inline'; sandbox\ncontent-type: text/plain; charset=utf-8\netag: \"07928942bd15dbb91bb4e0c53c262c885617c0fe4512cf5bc2c38a0db06c7e34\"\nstrict-transport-security: max-age=31536000\nx-content-type-options: nosniff\nx-frame-options: deny\nx-xss-protection: 1; mode=block\nx-github-request-id: FCDA:EE54:C8C3:16562:6A886129\nx-github-edge-region: japaneast\naccept-ranges: bytes\ndate: Fri, 21 Aug 2026 14:48:17 GMT\nvia: 1.1 varnish\nx-served-by: cache-nrt-rjtt7900060-NRT\nx-cache: HIT\nx-cache-hits: 0\nx-timer: S1787323697.394523,VS0,VE170\nvary: Authorization,Accept-Encoding\naccess-control-allow-origin: *\ncross-origin-resource-policy: cross-origin\nx-fastly-request-id: 492f6ef33a281b65df1c24b2fb52e8cb1cdde9b7\nexpires: Fri, 21 Aug 2026 14:53:17 GMT\nsource-age: 0\ncontent-length: 18300\n\n",
+  "schema_version": 1,
+  "source_id": "G1",
+  "started_at_epoch_nanoseconds": 1787323693770175945
+}

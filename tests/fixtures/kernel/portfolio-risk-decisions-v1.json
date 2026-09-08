@@ -1,0 +1,315 @@
+{
+  "expected_approved_target": {
+    "approved_at": {
+      "epoch_nanoseconds": 100,
+      "type": "utc_instant"
+    },
+    "approved_target_id": "approved-portfolio-target-v1:sha256:f9b44ecce971a133202c707e900f9077298ba29100e62cd4eb47d4abc96efd20",
+    "decisions": [
+      {
+        "action": "approve",
+        "after_notional": {
+          "currency": "USD",
+          "scale": 14,
+          "type": "money",
+          "units": 25000000000000000
+        },
+        "before_notional": {
+          "currency": "USD",
+          "scale": 14,
+          "type": "money",
+          "units": 25000000000000000
+        },
+        "instrument_id": null,
+        "limit_id": "aggregate.absolute-net.v1",
+        "limit_notional": {
+          "currency": "USD",
+          "scale": 14,
+          "type": "money",
+          "units": 80000000000000000
+        },
+        "policy_ref": {
+          "config_hash": "sha256:6ed47996b00a55f898589902cee4e72395dfa5268a9ce3b2e510120f6c435bd2",
+          "policy_key": "portfolio.absolute-notional.v1",
+          "policy_version": 1,
+          "type": "portfolio_risk_policy_ref"
+        },
+        "reason_code": "within_limit",
+        "scope": "absolute_net_exposure",
+        "type": "portfolio_risk_decision"
+      },
+      {
+        "action": "approve",
+        "after_notional": {
+          "currency": "USD",
+          "scale": 14,
+          "type": "money",
+          "units": 25000000000000000
+        },
+        "before_notional": {
+          "currency": "USD",
+          "scale": 14,
+          "type": "money",
+          "units": 25000000000000000
+        },
+        "instrument_id": null,
+        "limit_id": "aggregate.gross.v1",
+        "limit_notional": {
+          "currency": "USD",
+          "scale": 14,
+          "type": "money",
+          "units": 80000000000000000
+        },
+        "policy_ref": {
+          "config_hash": "sha256:6ed47996b00a55f898589902cee4e72395dfa5268a9ce3b2e510120f6c435bd2",
+          "policy_key": "portfolio.absolute-notional.v1",
+          "policy_version": 1,
+          "type": "portfolio_risk_policy_ref"
+        },
+        "reason_code": "within_limit",
+        "scope": "gross_exposure",
+        "type": "portfolio_risk_decision"
+      },
+      {
+        "action": "clamp",
+        "after_notional": {
+          "currency": "USD",
+          "scale": 14,
+          "type": "money",
+          "units": 25000000000000000
+        },
+        "before_notional": {
+          "currency": "USD",
+          "scale": 14,
+          "type": "money",
+          "units": 30000000000000000
+        },
+        "instrument_id": {
+          "stable_key": "cash:btc-usd",
+          "type": "instrument_id",
+          "venue": "synthetic"
+        },
+        "limit_id": "target.btc.absolute.v1",
+        "limit_notional": {
+          "currency": "USD",
+          "scale": 14,
+          "type": "money",
+          "units": 25000000000000000
+        },
+        "policy_ref": {
+          "config_hash": "sha256:6ed47996b00a55f898589902cee4e72395dfa5268a9ce3b2e510120f6c435bd2",
+          "policy_key": "portfolio.absolute-notional.v1",
+          "policy_version": 1,
+          "type": "portfolio_risk_policy_ref"
+        },
+        "reason_code": "target_limit_exceeded",
+        "scope": "target_absolute_notional",
+        "type": "portfolio_risk_decision"
+      },
+      {
+        "action": "reject",
+        "after_notional": {
+          "currency": "USD",
+          "scale": 14,
+          "type": "money",
+          "units": 0
+        },
+        "before_notional": {
+          "currency": "USD",
+          "scale": 14,
+          "type": "money",
+          "units": -30000000000000000
+        },
+        "instrument_id": {
+          "stable_key": "cash:eth-usd",
+          "type": "instrument_id",
+          "venue": "synthetic"
+        },
+        "limit_id": "target.eth.absolute.v1",
+        "limit_notional": {
+          "currency": "USD",
+          "scale": 14,
+          "type": "money",
+          "units": 20000000000000000
+        },
+        "policy_ref": {
+          "config_hash": "sha256:6ed47996b00a55f898589902cee4e72395dfa5268a9ce3b2e510120f6c435bd2",
+          "policy_key": "portfolio.absolute-notional.v1",
+          "policy_version": 1,
+          "type": "portfolio_risk_policy_ref"
+        },
+        "reason_code": "target_limit_exceeded",
+        "scope": "target_absolute_notional",
+        "type": "portfolio_risk_decision"
+      }
+    ],
+    "economic_rejected": true,
+    "gross_exposure": {
+      "currency": "USD",
+      "scale": 14,
+      "type": "money",
+      "units": 25000000000000000
+    },
+    "net_exposure": {
+      "currency": "USD",
+      "scale": 14,
+      "type": "money",
+      "units": 25000000000000000
+    },
+    "policy_ref": {
+      "config_hash": "sha256:6ed47996b00a55f898589902cee4e72395dfa5268a9ce3b2e510120f6c435bd2",
+      "policy_key": "portfolio.absolute-notional.v1",
+      "policy_version": 1,
+      "type": "portfolio_risk_policy_ref"
+    },
+    "source_allocation_hash": "sha256:c128968acfd70579a219d1bb94569c47f27de06c4a7cefc7f33700876dfc7d27",
+    "source_allocation_id": "portfolio-allocation-v1:sha256:2f290c2556cfe4ce0fba0e14e2ec9f9d292439f247b210c2110db1d6ca38b9bd",
+    "targets": [
+      {
+        "approved_notional": {
+          "currency": "USD",
+          "scale": 14,
+          "type": "money",
+          "units": 25000000000000000
+        },
+        "source_target": {
+          "instrument_id": {
+            "stable_key": "cash:btc-usd",
+            "type": "instrument_id",
+            "venue": "synthetic"
+          },
+          "sleeve_attributions": [
+            {
+              "allocation_nav": {
+                "currency": "USD",
+                "scale": 2,
+                "type": "money",
+                "units": 60000
+              },
+              "instrument_id": {
+                "stable_key": "cash:btc-usd",
+                "type": "instrument_id",
+                "venue": "synthetic"
+              },
+              "sleeve_id": {
+                "type": "strategy_sleeve_id",
+                "value": "trend.primary"
+              },
+              "strategy_id": "trend-v1",
+              "target_fraction": {
+                "instrument_id": {
+                  "stable_key": "cash:btc-usd",
+                  "type": "instrument_id",
+                  "venue": "synthetic"
+                },
+                "scale": 12,
+                "type": "target_exposure_fraction",
+                "units": 500000000000
+              },
+              "target_notional": {
+                "currency": "USD",
+                "scale": 14,
+                "type": "money",
+                "units": 30000000000000000
+              },
+              "type": "sleeve_target_notional"
+            }
+          ],
+          "target_notional": {
+            "currency": "USD",
+            "scale": 14,
+            "type": "money",
+            "units": 30000000000000000
+          },
+          "type": "net_instrument_target",
+          "valuation_currency": {
+            "type": "currency_id",
+            "value": "USD"
+          }
+        },
+        "type": "approved_instrument_target"
+      },
+      {
+        "approved_notional": {
+          "currency": "USD",
+          "scale": 14,
+          "type": "money",
+          "units": 0
+        },
+        "source_target": {
+          "instrument_id": {
+            "stable_key": "cash:eth-usd",
+            "type": "instrument_id",
+            "venue": "synthetic"
+          },
+          "sleeve_attributions": [
+            {
+              "allocation_nav": {
+                "currency": "USD",
+                "scale": 2,
+                "type": "money",
+                "units": 40000
+              },
+              "instrument_id": {
+                "stable_key": "cash:eth-usd",
+                "type": "instrument_id",
+                "venue": "synthetic"
+              },
+              "sleeve_id": {
+                "type": "strategy_sleeve_id",
+                "value": "carry.primary"
+              },
+              "strategy_id": "carry-v1",
+              "target_fraction": {
+                "instrument_id": {
+                  "stable_key": "cash:eth-usd",
+                  "type": "instrument_id",
+                  "venue": "synthetic"
+                },
+                "scale": 12,
+                "type": "target_exposure_fraction",
+                "units": -750000000000
+              },
+              "target_notional": {
+                "currency": "USD",
+                "scale": 14,
+                "type": "money",
+                "units": -30000000000000000
+              },
+              "type": "sleeve_target_notional"
+            }
+          ],
+          "target_notional": {
+            "currency": "USD",
+            "scale": 14,
+            "type": "money",
+            "units": -30000000000000000
+          },
+          "type": "net_instrument_target",
+          "valuation_currency": {
+            "type": "currency_id",
+            "value": "USD"
+          }
+        },
+        "type": "approved_instrument_target"
+      }
+    ],
+    "type": "approved_portfolio_target"
+  },
+  "expected_approved_target_sha256": "sha256:4d9ad160b02d7a0cbae191c9a7c1e7bd255b04a90b4ec5a7d30cd9e2285d1464",
+  "expected_missing_policy_failure": {
+    "issues": [
+      {
+        "code": "missing_policy",
+        "evidence_hash": "sha256:b6e7f9803ca57be9dcc5d9bbd76250621a62a39dacfebc2cae8901679b1360e6",
+        "subject_key": "portfolio-risk-policy",
+        "type": "portfolio_risk_contract_issue"
+      }
+    ],
+    "policy_hash": null,
+    "source_allocation_hash": "sha256:c128968acfd70579a219d1bb94569c47f27de06c4a7cefc7f33700876dfc7d27",
+    "source_allocation_id": "portfolio-allocation-v1:sha256:2f290c2556cfe4ce0fba0e14e2ec9f9d292439f247b210c2110db1d6ca38b9bd",
+    "type": "portfolio_risk_contract_failure"
+  },
+  "expected_missing_policy_sha256": "sha256:978379a9a6413fe21a8052eb209d7bdeee843064e2e27ec71b423d1416fcad1d"
+}

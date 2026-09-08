@@ -1,0 +1,228 @@
+{
+  "closure_evidence_available_at": null,
+  "lineages": [
+    {
+      "lineage": "exchange_handling",
+      "reason": "SZSE fee table and Fee Management Measures establish rate/collection context, while business-rule and repeal categories do not declare the fee-table corpus or a complete status/history lineage.",
+      "source_refs": [
+        {
+          "path": "exchange_handling/szse-fee-management-measures",
+          "raw_sha256": "sha256:024acf264b9d735f711154525d8ef698bf1fedd8ad5651d327adfad226c5cd55",
+          "retrieved_at": "2026-08-20T08:44:39.050616Z",
+          "source_id": "szse-fee-management-measures"
+        },
+        {
+          "path": "exchange_handling/szse-all-business-rules-live",
+          "raw_sha256": "sha256:78ae356c20ca1c0bfea407a2714b8f3778d71eced27ab4ec40dca4785f0d6273",
+          "retrieved_at": "2026-08-20T08:44:39.222318Z",
+          "source_id": "szse-all-business-rules-live"
+        },
+        {
+          "path": "exchange_handling/szse-repeal-announcements-live",
+          "raw_sha256": "sha256:a93ace35445327b8d46296bed485f1de63494f24e27127b126320485a55f17b0",
+          "retrieved_at": "2026-08-20T08:44:39.267996Z",
+          "source_id": "szse-repeal-announcements-live"
+        },
+        {
+          "path": "exchange_handling/szse-repealed-rules-live",
+          "raw_sha256": "sha256:aa787d6c91c86f1878f6b2825cd9d862fbbb0bec80f41e7de2907a29480919d7",
+          "retrieved_at": "2026-08-20T08:44:39.224949Z",
+          "source_id": "szse-repealed-rules-live"
+        }
+      ],
+      "verdict": "FAIL"
+    },
+    {
+      "lineage": "securities_regulatory",
+      "reason": "Individual NDRC/MOF acts remain substantive authority, but no competent post-target complete validity/amendment/repeal/correction/successor register was located.",
+      "source_refs": [],
+      "verdict": "FAIL"
+    },
+    {
+      "lineage": "chinaclear_transfer",
+      "reason": "ChinaClear repealed-business-rule categories are issuer-declared for business rules, not fee-standard tables; they cannot close the stock-transfer-fee lineage.",
+      "source_refs": [
+        {
+          "path": "chinaclear_transfer/chinaclear-repealed-business-rules-live",
+          "raw_sha256": "sha256:47804be4fa501fe91144f0ca1d3f4533b31f84733e27cb6d1094b21458835a13",
+          "retrieved_at": "2026-08-20T08:44:39.065374Z",
+          "source_id": "chinaclear-repealed-business-rules-live"
+        },
+        {
+          "path": "chinaclear_transfer/chinaclear-repealed-business-rules-iframe-live",
+          "raw_sha256": "sha256:6d2d70a21c03483d8af8e5e583adebeab3e0765d3b693e87d256004c4c30fd54",
+          "retrieved_at": "2026-08-20T08:44:39.034896Z",
+          "source_id": "chinaclear-repealed-business-rules-iframe-live"
+        },
+        {
+          "path": "chinaclear_transfer/chinaclear-repealed-rule-texts-live",
+          "raw_sha256": "sha256:a2f2f69d17d2a7fa2e46add928e9faa43904148abc905877e2434164fa40cc87",
+          "retrieved_at": "2026-08-20T08:44:39.029957Z",
+          "source_id": "chinaclear-repealed-rule-texts-live"
+        },
+        {
+          "path": "chinaclear_transfer/chinaclear-repealed-rule-texts-iframe-live",
+          "raw_sha256": "sha256:3a83d1bafca3822607aa0b43911c9e98370a11c7b1d75c084c47f8d740091b01",
+          "retrieved_at": "2026-08-20T08:44:39.135247Z",
+          "source_id": "chinaclear-repealed-rule-texts-iframe-live"
+        }
+      ],
+      "verdict": "FAIL"
+    },
+    {
+      "lineage": "hkscc_transfer",
+      "reason": "Specific approved 2025 amendments and the explicitly prospective 2026 USM package are dispositioned, but no source declares the clean Definitions/Section 21 version at the cutoff or completeness of the amendment/correction register.",
+      "source_refs": [
+        {
+          "path": "hkscc_transfer/hkscc-circular-019-2025",
+          "raw_sha256": "sha256:94a316f1ac879f3761d38ccec7b97e3805a969ed9a106ba44471c5ea01b827f7",
+          "retrieved_at": "2026-08-20T08:44:45.813945Z",
+          "source_id": "hkscc-circular-019-2025"
+        },
+        {
+          "path": "hkscc_transfer/hkscc-rule-update-019-2025",
+          "raw_sha256": "sha256:c8806be7186e9230c1e42ad187c2e61a51f409bc7209b1159ea0bccee784a56d",
+          "retrieved_at": "2026-08-20T08:44:51.577320Z",
+          "source_id": "hkscc-rule-update-019-2025"
+        },
+        {
+          "path": "hkscc_transfer/hkscc-rule-update-022-2025-stmc-markup",
+          "raw_sha256": "sha256:3a23d924163a45f2301b24bb036d67bfd950e416ff94c7614f173ffd320f1c4b",
+          "retrieved_at": "2026-08-20T08:44:40.133480Z",
+          "source_id": "hkscc-rule-update-022-2025-stmc-markup"
+        },
+        {
+          "path": "hkscc_transfer/hkscc-circular-038-2025",
+          "raw_sha256": "sha256:4d94c55e1432dcc978517cd79f1787839744431fbf20fe1583c45c145bef9e96",
+          "retrieved_at": "2026-08-20T08:44:40.439060Z",
+          "source_id": "hkscc-circular-038-2025"
+        },
+        {
+          "path": "hkscc_transfer/hkscc-rule-update-038-2025-markup",
+          "raw_sha256": "sha256:a6d23d53e0962919d400ecac08c86fb2c771e184ae4a1e9d63d9b688a6dd7071",
+          "retrieved_at": "2026-08-20T08:44:40.176861Z",
+          "source_id": "hkscc-rule-update-038-2025-markup"
+        },
+        {
+          "path": "hkscc_transfer/hkscc-usm-page-live",
+          "raw_sha256": "sha256:59bcedb05fa2f4a84a0fd33c2dabe6caf09bac538cb24b6dea97aa5cb817b39c",
+          "retrieved_at": "2026-08-20T08:44:46.831281Z",
+          "source_id": "hkscc-usm-page-live"
+        },
+        {
+          "path": "hkscc_transfer/hkscc-usm-draft-op-markup-2026",
+          "raw_sha256": "sha256:6f2fade166ba5b148a39f3544d7d2ca748aadcdac9015d4dcdef045cfb809ca3",
+          "retrieved_at": "2026-08-20T08:44:45.825135Z",
+          "source_id": "hkscc-usm-draft-op-markup-2026"
+        },
+        {
+          "path": "hkscc_transfer/hkscc-circular-100-2026-usm",
+          "raw_sha256": "sha256:38d0b9b8fae2315d3fa808b74cb5cbd3be7034e8840930b7936b1a453657644c",
+          "retrieved_at": "2026-08-20T08:44:43.326222Z",
+          "source_id": "hkscc-circular-100-2026-usm"
+        },
+        {
+          "path": "hkscc_transfer/hkscc-circular-dps-005-2026-usm",
+          "raw_sha256": "sha256:cfa29f8bb806b9716ae2aaf2c071349a35536174a38d1a13ae1b21b4ab10fecb",
+          "retrieved_at": "2026-08-20T08:44:45.807109Z",
+          "source_id": "hkscc-circular-dps-005-2026-usm"
+        }
+      ],
+      "verdict": "FAIL"
+    },
+    {
+      "announcement_2023_39_status": {
+        "gov_doc": {
+          "docNo": "39",
+          "docNum": "财政部 税务总局公告2023年第39号",
+          "docType": "财政部税务总局公告",
+          "docYear": "2023"
+        },
+        "source_refs": [
+          {
+            "path": "stamp_duty/sta-advanced-search-page-live",
+            "raw_sha256": "sha256:0adc6bef7293f8bb90923233e67f2e4e005b36664ff49194f2e6645f13c66663",
+            "retrieved_at": "2026-08-20T08:44:44.074789Z",
+            "source_id": "sta-advanced-search-page-live"
+          },
+          {
+            "path": "stamp_duty/sta-search-builder-js-live",
+            "raw_sha256": "sha256:8a16a478f9980ebfdc53ef483dc1210f4e92a2ebd10139d4b375be9423c1e672",
+            "retrieved_at": "2026-08-20T08:44:44.156638Z",
+            "source_id": "sta-search-builder-js-live"
+          },
+          {
+            "path": "stamp_duty/sta-no39-exact-status-query",
+            "raw_sha256": "sha256:0d10a1d4e51def160bda84851deb827d8686c6e6a463baf7e4910800cdac7c53",
+            "retrieved_at": "2026-08-20T08:44:44.567013Z",
+            "source_id": "sta-no39-exact-status-query"
+          },
+          {
+            "path": "stamp_duty/mof-announcement-2023-39",
+            "raw_sha256": "sha256:64783f48ef9b4a0650d058cec330268431f28b7ffad527add1a047a1b0184b36",
+            "retrieved_at": "2026-08-20T08:44:44.658949Z",
+            "source_id": "mof-announcement-2023-39"
+          }
+        ],
+        "status_interpretation": "UNDECLARED_BLANK_NOT_EFFECTIVE",
+        "xxgk_abolishDate": "",
+        "xxgk_aging": "",
+        "xxgk_reviseType": ""
+      },
+      "law_status": {
+        "bbbs": "ff80818179f5da5e0179f890885b0481",
+        "detail_flfg": null,
+        "detail_lsyg": null,
+        "detail_xgwj": [],
+        "gbrq": "2021-06-10",
+        "search_total": 1,
+        "source_refs": [
+          {
+            "path": "stamp_duty/npc-law-database-client-y9b5oxpu-live",
+            "raw_sha256": "sha256:8a07d3e33ec624e2a81a8a8f23688a55dd0ff053ca717281de208efd93ca3ac8",
+            "retrieved_at": "2026-08-20T08:42:17.450075Z",
+            "source_id": "npc-law-database-client-y9b5oxpu-live"
+          },
+          {
+            "path": "stamp_duty/npc-stamp-duty-law-current-status-search",
+            "raw_sha256": "sha256:9b380f51f753df85cc0868f37c1817620affdca2da979c773a9d2b519e30c6b3",
+            "retrieved_at": "2026-08-20T08:43:06.883420Z",
+            "source_id": "npc-stamp-duty-law-current-status-search"
+          },
+          {
+            "path": "stamp_duty/npc-stamp-duty-law-current-status-detail",
+            "raw_sha256": "sha256:36d9986df1c05debef0c7d60ad7c112f1349d46aea7ac005cdcc751067df3fdd",
+            "retrieved_at": "2026-08-20T08:42:17.318388Z",
+            "source_id": "npc-stamp-duty-law-current-status-detail"
+          },
+          {
+            "path": "stamp_duty/npc-law-database-aggregate-live",
+            "raw_sha256": "sha256:ffd1fc9a33bca3fca8ec7f62a0e05112eb600098c9a685aea31b84f96bab6727",
+            "retrieved_at": "2026-08-20T08:42:17.310327Z",
+            "source_id": "npc-law-database-aggregate-live"
+          },
+          {
+            "path": "stamp_duty/npc-stamp-duty-law-original",
+            "raw_sha256": "sha256:ba117e7be4f7e48f44c3f7e79e3f2363844eb6844738c3210f2f8f9dcef635c3",
+            "retrieved_at": "2026-08-20T08:44:44.692324Z",
+            "source_id": "npc-stamp-duty-law-original"
+          }
+        ],
+        "status_label": "有效",
+        "status_mapping_fragment": "L4e=[{label:\"尚未生效\",key:4},{label:\"有效\",key:3},{label:\"已修改\",key:2},{label:\"已废止\",key:1}]",
+        "status_mapping_source_offset": 1180567,
+        "sxrq": "2022-07-01",
+        "sxx": 3
+      },
+      "lineage": "stamp_duty",
+      "reason": "NPC current-status machinery returns the Stamp Duty Law as effective with no history/repeal relations, but the official response has no source-declared record-state timestamp at/after the cutoff. Announcement 2023 No.39 returns blank status/repeal/revision fields and no history chain.",
+      "verdict": "FAIL_PARTIAL_LAW_STATUS_ONLY"
+    }
+  ],
+  "official_record_as_of": null,
+  "schema_version": 1,
+  "status": "ALL_LINEAGES_INSUFFICIENT_NO_COMMON_OFFICIAL_RECORD_AS_OF",
+  "stop_reason": "No lineage has all required source-declared post-target record-state time, complete register scope, terminal coverage, and candidate relations. Receipt time and transport metadata are not substituted.",
+  "target_to_exclusive": "2026-07-30T16:00:00Z",
+  "type": "g12h_competent_status_register_assessment_v1"
+}

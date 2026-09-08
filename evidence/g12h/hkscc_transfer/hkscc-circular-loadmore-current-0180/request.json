@@ -1,0 +1,47 @@
+{
+  "authentication": "none",
+  "derived_from_source_id": "hkscc-circular-candidate-index-2025-09-to-2026-08",
+  "headers": [
+    {
+      "name": "User-Agent",
+      "value": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 Chrome/130.0 Safari/537.36 G12HAuthorityCapture/1.0"
+    },
+    {
+      "name": "Accept",
+      "value": "application/json, text/javascript, */*; q=0.01"
+    },
+    {
+      "name": "Accept-Language",
+      "value": "en,zh-CN;q=0.8,zh;q=0.7"
+    },
+    {
+      "name": "Content-Type",
+      "value": "application/json; charset=utf-8"
+    },
+    {
+      "name": "Origin",
+      "value": "https://www.hkex.com.hk"
+    },
+    {
+      "name": "Referer",
+      "value": "https://www.hkex.com.hk/Services/Circulars-and-Notices/Participant-and-Members-Circulars?sc_lang=en&Category=HKSCC&DateFrom=2025-09-01&DateTo=2026-08-31"
+    },
+    {
+      "name": "X-Requested-With",
+      "value": "XMLHttpRequest"
+    }
+  ],
+  "method": "POST",
+  "redirect_policy": {
+    "follow": true,
+    "maximum": 10,
+    "redirect_protocols": [
+      "https"
+    ]
+  },
+  "request_body_file": "request.body",
+  "request_body_sha256": "sha256:6f504afd253f8b31afb66ca64bee4127555538308bd47e37683ea30f71952aa4",
+  "schema_version": 1,
+  "type": "g12h_official_http_request_v1",
+  "url": "https://www.hkex.com.hk/layouts/HKEX_Common/Tab/NewsCentreDetailsLoad.aspx/DisplayNewsCentreDetailsLoad"
+}

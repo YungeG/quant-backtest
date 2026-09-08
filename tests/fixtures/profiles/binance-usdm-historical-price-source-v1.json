@@ -1,0 +1,309 @@
+{
+  "fixture_id": "binance-usdm-historical-price-source-v1",
+  "price_book": {
+    "aggregate_trades": [
+      {
+        "aggregate_trade_id": 101,
+        "available_at": {
+          "instant": {
+            "epoch_nanoseconds": 1709999999996000000,
+            "type": "utc_instant"
+          },
+          "phase": {
+            "code": "market_data",
+            "rank": 0,
+            "type": "timeline_phase"
+          },
+          "source_sequence": {
+            "type": "source_sequence",
+            "value": 0
+          },
+          "type": "simulation_instant"
+        },
+        "buyer_is_maker": false,
+        "event_id": "agg:101",
+        "first_trade_id": 1010,
+        "instrument_id": {
+          "stable_key": "btc-usdt-perpetual",
+          "type": "instrument_id",
+          "venue": "binance_usdm"
+        },
+        "last_trade_id": 1011,
+        "price": "50000.10",
+        "quantity": "0.250",
+        "schema_version": 1,
+        "source_ref": {
+          "archive_key": "data/futures/um/daily/aggTrades/BTCUSDT/agg:101",
+          "revision_id": "archive-v1",
+          "schema_version": 1,
+          "source_hash": "sha256:710adacbc85bfdb932e03cee8d595bedb553f47b5dc86f3d7954c66e765ee3a4",
+          "source_key": "daily/aggTrades/BTCUSDT/agg:101",
+          "supersedes_revision_id": null,
+          "type": "binance_usdm_price_source_ref"
+        },
+        "trade_at": {
+          "epoch_nanoseconds": 1709999999995000000,
+          "type": "utc_instant"
+        },
+        "type": "binance_usdm_aggregate_trade_price"
+      }
+    ],
+    "coverages": [
+      {
+        "coverage_from": {
+          "epoch_nanoseconds": 1709999880000000000,
+          "type": "utc_instant"
+        },
+        "coverage_id": "execution_reference-coverage-v1",
+        "coverage_to_exclusive": {
+          "epoch_nanoseconds": 1710000000001000000,
+          "type": "utc_instant"
+        },
+        "instrument_id": {
+          "stable_key": "btc-usdt-perpetual",
+          "type": "instrument_id",
+          "venue": "binance_usdm"
+        },
+        "price_purpose": "execution_reference",
+        "schema_version": 1,
+        "source_kind": "aggregate_trade",
+        "source_ref": {
+          "archive_key": "data/futures/um/coverage/execution_reference",
+          "revision_id": "archive-v1",
+          "schema_version": 1,
+          "source_hash": "sha256:62c6058695f7ebeaad4be5a164afa4b37959e3f4bcfce8caa658d8d1cc1c1d82",
+          "source_key": "coverage/execution_reference",
+          "supersedes_revision_id": null,
+          "type": "binance_usdm_price_source_ref"
+        },
+        "stream_id": "binance_usdm.aggregate_trade.execution_reference.v1",
+        "type": "binance_usdm_price_stream_coverage"
+      },
+      {
+        "coverage_from": {
+          "epoch_nanoseconds": 1709999880000000000,
+          "type": "utc_instant"
+        },
+        "coverage_id": "liquidation-coverage-v1",
+        "coverage_to_exclusive": {
+          "epoch_nanoseconds": 1710000000001000000,
+          "type": "utc_instant"
+        },
+        "instrument_id": {
+          "stable_key": "btc-usdt-perpetual",
+          "type": "instrument_id",
+          "venue": "binance_usdm"
+        },
+        "price_purpose": "liquidation",
+        "schema_version": 1,
+        "source_kind": "mark_price_kline",
+        "source_ref": {
+          "archive_key": "data/futures/um/coverage/liquidation",
+          "revision_id": "archive-v1",
+          "schema_version": 1,
+          "source_hash": "sha256:5c17d287ab1f2c25762524dff2e2de9eadc4c5153fbd6d9827ad5416e68c420c",
+          "source_key": "coverage/liquidation",
+          "supersedes_revision_id": null,
+          "type": "binance_usdm_price_source_ref"
+        },
+        "stream_id": "binance_usdm.mark_price_kline.liquidation.v1",
+        "type": "binance_usdm_price_stream_coverage"
+      },
+      {
+        "coverage_from": {
+          "epoch_nanoseconds": 1709999880000000000,
+          "type": "utc_instant"
+        },
+        "coverage_id": "margin-coverage-v1",
+        "coverage_to_exclusive": {
+          "epoch_nanoseconds": 1710000000001000000,
+          "type": "utc_instant"
+        },
+        "instrument_id": {
+          "stable_key": "btc-usdt-perpetual",
+          "type": "instrument_id",
+          "venue": "binance_usdm"
+        },
+        "price_purpose": "margin",
+        "schema_version": 1,
+        "source_kind": "mark_price_kline",
+        "source_ref": {
+          "archive_key": "data/futures/um/coverage/margin",
+          "revision_id": "archive-v1",
+          "schema_version": 1,
+          "source_hash": "sha256:985c2958452349b06fef244425e3e2f015a0b3eac3d0a4c5222b48172f5fca5f",
+          "source_key": "coverage/margin",
+          "supersedes_revision_id": null,
+          "type": "binance_usdm_price_source_ref"
+        },
+        "stream_id": "binance_usdm.mark_price_kline.margin.v1",
+        "type": "binance_usdm_price_stream_coverage"
+      },
+      {
+        "coverage_from": {
+          "epoch_nanoseconds": 1709999880000000000,
+          "type": "utc_instant"
+        },
+        "coverage_id": "valuation-coverage-v1",
+        "coverage_to_exclusive": {
+          "epoch_nanoseconds": 1710000000001000000,
+          "type": "utc_instant"
+        },
+        "instrument_id": {
+          "stable_key": "btc-usdt-perpetual",
+          "type": "instrument_id",
+          "venue": "binance_usdm"
+        },
+        "price_purpose": "valuation",
+        "schema_version": 1,
+        "source_kind": "mark_price_kline",
+        "source_ref": {
+          "archive_key": "data/futures/um/coverage/valuation",
+          "revision_id": "archive-v1",
+          "schema_version": 1,
+          "source_hash": "sha256:cff450e7eefd0097d5ebb07019a50c66824b891ff8c5d6215838c24d0a6a4189",
+          "source_key": "coverage/valuation",
+          "supersedes_revision_id": null,
+          "type": "binance_usdm_price_source_ref"
+        },
+        "stream_id": "binance_usdm.mark_price_kline.valuation.v1",
+        "type": "binance_usdm_price_stream_coverage"
+      }
+    ],
+    "instrument_id": {
+      "stable_key": "btc-usdt-perpetual",
+      "type": "instrument_id",
+      "venue": "binance_usdm"
+    },
+    "mark_price_klines": [
+      {
+        "available_at": {
+          "instant": {
+            "epoch_nanoseconds": 1709999940000000000,
+            "type": "utc_instant"
+          },
+          "phase": {
+            "code": "market_data",
+            "rank": 0,
+            "type": "timeline_phase"
+          },
+          "source_sequence": {
+            "type": "source_sequence",
+            "value": 0
+          },
+          "type": "simulation_instant"
+        },
+        "close_price": "50000.00",
+        "close_time_milliseconds": 1709999939999,
+        "closed_at": {
+          "instant": {
+            "epoch_nanoseconds": 1709999940000000000,
+            "type": "utc_instant"
+          },
+          "phase": {
+            "code": "market_data",
+            "rank": 0,
+            "type": "timeline_phase"
+          },
+          "source_sequence": {
+            "type": "source_sequence",
+            "value": 0
+          },
+          "type": "simulation_instant"
+        },
+        "closed_final": true,
+        "event_id": "mark:1",
+        "high_price": "50100.00",
+        "instrument_id": {
+          "stable_key": "btc-usdt-perpetual",
+          "type": "instrument_id",
+          "venue": "binance_usdm"
+        },
+        "interval_key": "1m",
+        "low_price": "49800.00",
+        "open_price": "49900.00",
+        "open_time_milliseconds": 1709999880000,
+        "schema_version": 1,
+        "source_ref": {
+          "archive_key": "data/futures/um/daily/markPriceKlines/BTCUSDT/mark:1",
+          "revision_id": "archive-v1",
+          "schema_version": 1,
+          "source_hash": "sha256:b5bd87bd47fa55a7a13df8e35c17e96a441f5f1e0c0887eea107b50777d5df17",
+          "source_key": "daily/markPriceKlines/BTCUSDT/mark:1",
+          "supersedes_revision_id": null,
+          "type": "binance_usdm_price_source_ref"
+        },
+        "type": "binance_usdm_mark_price_kline"
+      },
+      {
+        "available_at": {
+          "instant": {
+            "epoch_nanoseconds": 1710000000000000000,
+            "type": "utc_instant"
+          },
+          "phase": {
+            "code": "market_data",
+            "rank": 0,
+            "type": "timeline_phase"
+          },
+          "source_sequence": {
+            "type": "source_sequence",
+            "value": 0
+          },
+          "type": "simulation_instant"
+        },
+        "close_price": "50200.00",
+        "close_time_milliseconds": 1709999999999,
+        "closed_at": {
+          "instant": {
+            "epoch_nanoseconds": 1710000000000000000,
+            "type": "utc_instant"
+          },
+          "phase": {
+            "code": "market_data",
+            "rank": 0,
+            "type": "timeline_phase"
+          },
+          "source_sequence": {
+            "type": "source_sequence",
+            "value": 0
+          },
+          "type": "simulation_instant"
+        },
+        "closed_final": true,
+        "event_id": "mark:2",
+        "high_price": "50300.00",
+        "instrument_id": {
+          "stable_key": "btc-usdt-perpetual",
+          "type": "instrument_id",
+          "venue": "binance_usdm"
+        },
+        "interval_key": "1m",
+        "low_price": "49700.00",
+        "open_price": "50000.00",
+        "open_time_milliseconds": 1709999940000,
+        "schema_version": 1,
+        "source_ref": {
+          "archive_key": "data/futures/um/daily/markPriceKlines/BTCUSDT/mark:2",
+          "revision_id": "archive-v1",
+          "schema_version": 1,
+          "source_hash": "sha256:0a6285d73dcb61bc2dbffbe246ccf9f2342a579d52cadc4148ca5796ffb0d4a4",
+          "source_key": "daily/markPriceKlines/BTCUSDT/mark:2",
+          "supersedes_revision_id": null,
+          "type": "binance_usdm_price_source_ref"
+        },
+        "type": "binance_usdm_mark_price_kline"
+      }
+    ],
+    "price_book_key": "binance-usdm-btcusdt-price-book-v1",
+    "price_book_version": 1,
+    "quote_currency_id": {
+      "type": "currency_id",
+      "value": "USDT"
+    },
+    "schema_version": 1,
+    "type": "binance_usdm_historical_price_book"
+  },
+  "provider": "binance_usdm",
+  "source_contract": "archived-aggregate-trades-and-closed-mark-price-klines"
+}

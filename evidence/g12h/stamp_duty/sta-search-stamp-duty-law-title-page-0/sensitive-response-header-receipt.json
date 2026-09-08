@@ -1,0 +1,29 @@
+{
+  "files": [
+    {
+      "exact_private_path": "/srv/bcache-8t/ygguo/backtest/g12h-authority-private/20260820-wave1-response-headers/stamp_duty/sta-search-stamp-duty-law-title-page-0/response.headers",
+      "exact_private_sha256": "sha256:4b3381b68cf2ff9a45c754c9c13c9cf70fb48ab3ce85bc46023d5b80fd6a5bcc",
+      "redaction": "Set-Cookie value replaced by its SHA-256; cookie name and attributes retained.",
+      "tracked_path": "stamp_duty/sta-search-stamp-duty-law-title-page-0/response.headers",
+      "tracked_redacted_sha256": "sha256:f1700f330a304e90daadd55588a2976591a3f99d9cdd41ac7811ba77cd6ceeea"
+    },
+    {
+      "exact_private_path": "/srv/bcache-8t/ygguo/backtest/g12h-authority-private/20260820-wave1-response-headers/stamp_duty/sta-search-stamp-duty-law-title-page-0/transport.log",
+      "exact_private_sha256": "sha256:16277bfc047c902be1a354efc20fffd005010238d5fd812822d57af90e1f76ea",
+      "redaction": "Set-Cookie value replaced by its SHA-256; cookie name and attributes retained.",
+      "tracked_path": "stamp_duty/sta-search-stamp-duty-law-title-page-0/transport.log",
+      "tracked_redacted_sha256": "sha256:a7f685e83297c1db29b4697800a2ec4240d2f0bff6e5400cc329ae9bed7a3c35"
+    },
+    {
+      "exact_private_path": "/srv/bcache-8t/ygguo/backtest/g12h-authority-private/20260820-wave1-response-headers/stamp_duty/sta-search-stamp-duty-law-title-page-0/redirects.json",
+      "exact_private_sha256": "sha256:dba2c56fa20e49a42e6ea7663ddc4b8f80597f83817323d7f3497efef7d61001",
+      "redaction": "Set-Cookie value replaced by its SHA-256; cookie name and attributes retained.",
+      "tracked_path": "stamp_duty/sta-search-stamp-duty-law-title-page-0/redirects.json",
+      "tracked_redacted_sha256": "sha256:c204e0f4dea66e2b7114b296853da4ef827f7f3022c9d35df248101fa1e5ee5c"
+    }
+  ],
+  "private_store_root": "/srv/bcache-8t/ygguo/backtest/g12h-authority-private/20260820-wave1-response-headers",
+  "schema_version": 1,
+  "source_id": "sta-search-stamp-duty-law-title-page-0",
+  "type": "g12h_sensitive_response_header_receipt_v1"
+}

@@ -1,0 +1,91 @@
+{
+  "responses": [
+    {
+      "headers": [
+        {
+          "name": "Date",
+          "value": "Thu, 20 Aug 2026 07:37:15 GMT"
+        },
+        {
+          "name": "Content-Type",
+          "value": "text/html"
+        },
+        {
+          "name": "Content-Length",
+          "value": "14309"
+        },
+        {
+          "name": "Connection",
+          "value": "keep-alive"
+        },
+        {
+          "name": "Set-Cookie",
+          "value": "http_waf_cookie=<redacted sha256:ebd1a6b03fa50156e3d1ed7db5fb9397b7ebb13ebc1a9eff0cfa950d0232d134>; Expires=1787218635; Path=/; HttpOnly"
+        },
+        {
+          "name": "ETag",
+          "value": "W/\"14309-1767491993000\""
+        },
+        {
+          "name": "Last-Modified",
+          "value": "Sun, 04 Jan 2026 01:59:53 GMT"
+        },
+        {
+          "name": "Vary",
+          "value": "Accept-Encoding"
+        },
+        {
+          "name": "SS",
+          "value": "s"
+        },
+        {
+          "name": "Set-Cookie",
+          "value": "SF_cookie_3=<redacted sha256:60a94c9b554141ab427cc9f589ee7caa933e00675466edb00287fb75a1ed87da>; path=/"
+        },
+        {
+          "name": "X-Cache",
+          "value": "BYPASS"
+        },
+        {
+          "name": "X-Request-Id",
+          "value": "9001f388d35da81a7f9a68a816ffdf4c"
+        },
+        {
+          "name": "Server",
+          "value": "WAF"
+        },
+        {
+          "name": "Accept-Ranges",
+          "value": "bytes"
+        },
+        {
+          "name": "X-Ser",
+          "value": "i34482_c26441, i2282311_c26763"
+        },
+        {
+          "name": "X-Cache",
+          "value": "MISS from i2282311_c26763(cloudsvr)"
+        },
+        {
+          "name": "Cache-Control",
+          "value": "no-store, no-cache"
+        },
+        {
+          "name": "Access-Control-Allow-Methods",
+          "value": "GET,POST"
+        },
+        {
+          "name": "Content-Security-Policy",
+          "value": "frame-ancestors 'self' https://fxsjcj.kaipuyun.cn"
+        },
+        {
+          "name": "Pragma",
+          "value": "no-cache"
+        }
+      ],
+      "status_line": "HTTP/1.1 200 OK"
+    }
+  ],
+  "schema_version": 1,
+  "type": "g12h_http_response_chain_v1"
+}

@@ -1,0 +1,16 @@
+HTTP/1.1 200 OK
+Server: nginx
+Date: Thu, 20 Aug 2026 09:41:39 GMT
+Content-Type: application/json
+Content-Length: 361
+Connection: keep-alive
+Last-Modified: Sat, 13 Jun 2026 01:27:41 GMT
+ETag: "6a2cb20d-169"
+X-UA-Compatible: IE=EDGE
+X-Varnish: 875642153
+Age: 0
+Via: 1.1 varnish-v4
+X-cache: MISS
+Accept-Ranges: bytes
+X-UA-Compatible: IE=EDGE
+

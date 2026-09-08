@@ -1,0 +1,40 @@
+{
+  "fixture_id": "bt-gap02-public-facade-v1",
+  "schema_version": 1,
+  "platform_contract": {
+    "public_root_symbol": "crypto_quant_backtest.BacktestRuntime",
+    "run_parameters": [
+      "request"
+    ],
+    "run_return_union": [
+      "BacktestCanonicalPublicationRef",
+      "ArtifactRef"
+    ]
+  },
+  "composition_only_dependencies": [
+    "registry",
+    "artifact_reader",
+    "artifact_publisher",
+    "market_reader",
+    "publication_root"
+  ],
+  "durable_outcomes": {
+    "COMPLETED": "BacktestCanonicalPublicationRef",
+    "BLOCKED": "ArtifactRef",
+    "FAILED": "ArtifactRef",
+    "CANCELLED": "ArtifactRef"
+  },
+  "outside_result_union": [
+    "malformed_input",
+    "pre_attempt_failure",
+    "provider_failure",
+    "storage_failure",
+    "publisher_failure"
+  ],
+  "preserved_fixture_sha256": {
+    "bt_gap02a_production_composition_v2": "bfa0ddff37bb6e1c813f50da14db4abcc2fab76fa8262c522fbf5facb1b5f764",
+    "bt_gap02b_execution_input_bundle_v1": "09578ac47f997bc4bf55119d31e97dbcad3eb71e90d93a5ef7c8e6669bd66be2",
+    "bt_gap02c_execution_closure_v2": "c082042640382dde2dad61f758058ab93c3ba741ed19df0256d7989a157eced1",
+    "bt_gap04_publication_ref_v1": "9cbe91becf64053fdb44cb884a8cfd621e020e8ce54e4f5f6f76411f275e3c79"
+  }
+}

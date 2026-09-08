@@ -1,0 +1,478 @@
+{
+  "expected_normalized_target": {
+    "active_target": {
+      "materialized_at": {
+        "epoch_nanoseconds": 100,
+        "type": "utc_instant"
+      },
+      "quantities": [
+        {
+          "instrument_id": {
+            "stable_key": "cash:btc-usd",
+            "type": "instrument_id",
+            "venue": "synthetic"
+          },
+          "quantity": {
+            "instrument_id": "synthetic:cash:btc-usd",
+            "scale": 3,
+            "type": "quantity",
+            "units": 10300
+          }
+        },
+        {
+          "instrument_id": {
+            "stable_key": "cash:eth-usd",
+            "type": "instrument_id",
+            "venue": "synthetic"
+          },
+          "quantity": {
+            "instrument_id": "synthetic:cash:eth-usd",
+            "scale": 3,
+            "type": "quantity",
+            "units": -15000
+          }
+        }
+      ],
+      "source_decision_batch_id": "decision-batch-v1:sha256:1111111111111111111111111111111111111111111111111111111111111111",
+      "type": "active_portfolio_target"
+    },
+    "materialized_at": {
+      "epoch_nanoseconds": 100,
+      "type": "utc_instant"
+    },
+    "normalized_target_id": "normalized-portfolio-target-v1:sha256:1ae1cbc64bb0b6533f07c459d3375c17cb1996945067448495c271fcb4fb4959",
+    "policy": {
+      "config_hash": "sha256:4a7170c22e2715a8b1bad63bec4e19a74827899ca4a9467361f2ef1bfea74e2b",
+      "policy_key": "position-sizing.toward-zero.v1",
+      "policy_version": 1,
+      "price_purpose": "valuation",
+      "residual_policy": "hold_dust",
+      "rounding": "toward_zero",
+      "schema_version": 1,
+      "type": "position_sizing_policy"
+    },
+    "schema_version": 1,
+    "source_approved_target_hash": "sha256:2e67f3309503838f86af27d4cdf9cd2b51f7800ad07cf770e0e3915bb424726d",
+    "source_approved_target_id": "approved-portfolio-target-v1:sha256:4a521ae4b5e14760a62b2216d62542db83c0b40cef64dde8293afed21ee86891",
+    "source_decision_batch_id": "decision-batch-v1:sha256:1111111111111111111111111111111111111111111111111111111111111111",
+    "targets": [
+      {
+        "decision": {
+          "actions": [
+            "rounded_toward_zero"
+          ],
+          "applied_lot_units": 100,
+          "approved_notional": {
+            "currency": "USD",
+            "scale": 14,
+            "type": "money",
+            "units": 30000000000000000
+          },
+          "current_quantity": {
+            "instrument_id": "synthetic:cash:btc-usd",
+            "scale": 3,
+            "type": "quantity",
+            "units": 0
+          },
+          "final_notional": {
+            "currency": "USD",
+            "scale": 14,
+            "type": "money",
+            "units": 29870000000000000
+          },
+          "final_quantity": {
+            "instrument_id": "synthetic:cash:btc-usd",
+            "scale": 3,
+            "type": "quantity",
+            "units": 10300
+          },
+          "instrument_id": {
+            "stable_key": "cash:btc-usd",
+            "type": "instrument_id",
+            "venue": "synthetic"
+          },
+          "lattice_hash": "sha256:a531cc8a826e3189aab038da912c7b2edf1e8b7d52364fc769a4e816fe2a1e5d",
+          "mark_id": "sha256:a7dec8f419bf20758a3ff01b190a973155923a197df332e3b0135c1323a6b868",
+          "policy_hash": "sha256:3a54d9cd8be56eba151fd5c7e53bf5b6e334cb9a9ce2763e2684a337799e1702",
+          "raw_quantity": {
+            "instrument_id": "synthetic:cash:btc-usd",
+            "scale": 3,
+            "type": "quantity",
+            "units": 10344
+          },
+          "reason_codes": [
+            "buy_lot",
+            "quantity_step"
+          ],
+          "residual_quantity": {
+            "instrument_id": "synthetic:cash:btc-usd",
+            "scale": 3,
+            "type": "quantity",
+            "units": 44
+          },
+          "type": "position_sizing_decision"
+        },
+        "sizing_input": {
+          "current_quantity": {
+            "instrument_id": "synthetic:cash:btc-usd",
+            "scale": 3,
+            "type": "quantity",
+            "units": 0
+          },
+          "instrument_id": {
+            "stable_key": "cash:btc-usd",
+            "type": "instrument_id",
+            "venue": "synthetic"
+          },
+          "lattice": {
+            "atomic_scale": 3,
+            "buy_lot_units": 100,
+            "config_hash": "sha256:9f515b62021861b70fd93641182a6550931ddca2f6f408399ac17157c6f7e994",
+            "instrument_id": {
+              "stable_key": "cash:btc-usd",
+              "type": "instrument_id",
+              "venue": "synthetic"
+            },
+            "lattice_key": "quantity-lattice:synthetic:cash:btc-usd:v1",
+            "lattice_version": 1,
+            "min_notional": {
+              "currency": "USD",
+              "scale": 14,
+              "type": "money",
+              "units": 1000000000000000
+            },
+            "min_quantity_units": 100,
+            "odd_lot_close_permitted": false,
+            "schema_version": 1,
+            "sell_lot_units": 100,
+            "step_units": 1,
+            "type": "quantity_lattice"
+          },
+          "mark": {
+            "age_nanoseconds": 0,
+            "available_at": {
+              "epoch_nanoseconds": 100,
+              "type": "utc_instant"
+            },
+            "instrument_id": {
+              "stable_key": "cash:btc-usd",
+              "type": "instrument_id",
+              "venue": "synthetic"
+            },
+            "mark_id": "sha256:a7dec8f419bf20758a3ff01b190a973155923a197df332e3b0135c1323a6b868",
+            "observed_at": {
+              "epoch_nanoseconds": 100,
+              "type": "utc_instant"
+            },
+            "price": {
+              "instrument_id": "synthetic:cash:btc-usd",
+              "quote_currency": "USD",
+              "scale": 2,
+              "type": "price",
+              "units": 2900
+            },
+            "price_purpose": "valuation",
+            "quote_currency_id": {
+              "type": "currency_id",
+              "value": "USD"
+            },
+            "resolved_at": {
+              "epoch_nanoseconds": 100,
+              "type": "utc_instant"
+            },
+            "revision_id": "v1",
+            "source_event_id": "event:synthetic:cash:btc-usd:100",
+            "stale_policy_hash": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+            "stale_policy_key": "stale.valuation.v1",
+            "stale_policy_version": 1,
+            "stream_id": "mark:synthetic:cash:btc-usd:valuation",
+            "type": "resolved_mark"
+          },
+          "type": "instrument_sizing_input"
+        },
+        "source_target": {
+          "approved_notional": {
+            "currency": "USD",
+            "scale": 14,
+            "type": "money",
+            "units": 30000000000000000
+          },
+          "source_target": {
+            "instrument_id": {
+              "stable_key": "cash:btc-usd",
+              "type": "instrument_id",
+              "venue": "synthetic"
+            },
+            "sleeve_attributions": [
+              {
+                "allocation_nav": {
+                  "currency": "USD",
+                  "scale": 2,
+                  "type": "money",
+                  "units": 60000
+                },
+                "instrument_id": {
+                  "stable_key": "cash:btc-usd",
+                  "type": "instrument_id",
+                  "venue": "synthetic"
+                },
+                "sleeve_id": {
+                  "type": "strategy_sleeve_id",
+                  "value": "trend.primary"
+                },
+                "strategy_id": "trend-v1",
+                "target_fraction": {
+                  "instrument_id": {
+                    "stable_key": "cash:btc-usd",
+                    "type": "instrument_id",
+                    "venue": "synthetic"
+                  },
+                  "scale": 12,
+                  "type": "target_exposure_fraction",
+                  "units": 500000000000
+                },
+                "target_notional": {
+                  "currency": "USD",
+                  "scale": 14,
+                  "type": "money",
+                  "units": 30000000000000000
+                },
+                "type": "sleeve_target_notional"
+              }
+            ],
+            "target_notional": {
+              "currency": "USD",
+              "scale": 14,
+              "type": "money",
+              "units": 30000000000000000
+            },
+            "type": "net_instrument_target",
+            "valuation_currency": {
+              "type": "currency_id",
+              "value": "USD"
+            }
+          },
+          "type": "approved_instrument_target"
+        },
+        "type": "normalized_instrument_target"
+      },
+      {
+        "decision": {
+          "actions": [
+            "exact"
+          ],
+          "applied_lot_units": 100,
+          "approved_notional": {
+            "currency": "USD",
+            "scale": 14,
+            "type": "money",
+            "units": -30000000000000000
+          },
+          "current_quantity": {
+            "instrument_id": "synthetic:cash:eth-usd",
+            "scale": 3,
+            "type": "quantity",
+            "units": 0
+          },
+          "final_notional": {
+            "currency": "USD",
+            "scale": 14,
+            "type": "money",
+            "units": -30000000000000000
+          },
+          "final_quantity": {
+            "instrument_id": "synthetic:cash:eth-usd",
+            "scale": 3,
+            "type": "quantity",
+            "units": -15000
+          },
+          "instrument_id": {
+            "stable_key": "cash:eth-usd",
+            "type": "instrument_id",
+            "venue": "synthetic"
+          },
+          "lattice_hash": "sha256:79a9e19083b4addb8f6824f282fb6b0554b7047798d358cc5105426e16b5b83c",
+          "mark_id": "sha256:dabe1b06a37991e65bc4d4fdc4761c8d96b05de35df43412a45353fa311684ca",
+          "policy_hash": "sha256:3a54d9cd8be56eba151fd5c7e53bf5b6e334cb9a9ce2763e2684a337799e1702",
+          "raw_quantity": {
+            "instrument_id": "synthetic:cash:eth-usd",
+            "scale": 3,
+            "type": "quantity",
+            "units": -15000
+          },
+          "reason_codes": [
+            "exact_lattice"
+          ],
+          "residual_quantity": {
+            "instrument_id": "synthetic:cash:eth-usd",
+            "scale": 3,
+            "type": "quantity",
+            "units": 0
+          },
+          "type": "position_sizing_decision"
+        },
+        "sizing_input": {
+          "current_quantity": {
+            "instrument_id": "synthetic:cash:eth-usd",
+            "scale": 3,
+            "type": "quantity",
+            "units": 0
+          },
+          "instrument_id": {
+            "stable_key": "cash:eth-usd",
+            "type": "instrument_id",
+            "venue": "synthetic"
+          },
+          "lattice": {
+            "atomic_scale": 3,
+            "buy_lot_units": 100,
+            "config_hash": "sha256:7174e21b0977c4e026aef8fd8da989b6c91e7c9803d649ce139c6277522c11ca",
+            "instrument_id": {
+              "stable_key": "cash:eth-usd",
+              "type": "instrument_id",
+              "venue": "synthetic"
+            },
+            "lattice_key": "quantity-lattice:synthetic:cash:eth-usd:v1",
+            "lattice_version": 1,
+            "min_notional": {
+              "currency": "USD",
+              "scale": 14,
+              "type": "money",
+              "units": 1000000000000000
+            },
+            "min_quantity_units": 100,
+            "odd_lot_close_permitted": false,
+            "schema_version": 1,
+            "sell_lot_units": 100,
+            "step_units": 1,
+            "type": "quantity_lattice"
+          },
+          "mark": {
+            "age_nanoseconds": 0,
+            "available_at": {
+              "epoch_nanoseconds": 100,
+              "type": "utc_instant"
+            },
+            "instrument_id": {
+              "stable_key": "cash:eth-usd",
+              "type": "instrument_id",
+              "venue": "synthetic"
+            },
+            "mark_id": "sha256:dabe1b06a37991e65bc4d4fdc4761c8d96b05de35df43412a45353fa311684ca",
+            "observed_at": {
+              "epoch_nanoseconds": 100,
+              "type": "utc_instant"
+            },
+            "price": {
+              "instrument_id": "synthetic:cash:eth-usd",
+              "quote_currency": "USD",
+              "scale": 2,
+              "type": "price",
+              "units": 2000
+            },
+            "price_purpose": "valuation",
+            "quote_currency_id": {
+              "type": "currency_id",
+              "value": "USD"
+            },
+            "resolved_at": {
+              "epoch_nanoseconds": 100,
+              "type": "utc_instant"
+            },
+            "revision_id": "v1",
+            "source_event_id": "event:synthetic:cash:eth-usd:100",
+            "stale_policy_hash": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+            "stale_policy_key": "stale.valuation.v1",
+            "stale_policy_version": 1,
+            "stream_id": "mark:synthetic:cash:eth-usd:valuation",
+            "type": "resolved_mark"
+          },
+          "type": "instrument_sizing_input"
+        },
+        "source_target": {
+          "approved_notional": {
+            "currency": "USD",
+            "scale": 14,
+            "type": "money",
+            "units": -30000000000000000
+          },
+          "source_target": {
+            "instrument_id": {
+              "stable_key": "cash:eth-usd",
+              "type": "instrument_id",
+              "venue": "synthetic"
+            },
+            "sleeve_attributions": [
+              {
+                "allocation_nav": {
+                  "currency": "USD",
+                  "scale": 2,
+                  "type": "money",
+                  "units": 40000
+                },
+                "instrument_id": {
+                  "stable_key": "cash:eth-usd",
+                  "type": "instrument_id",
+                  "venue": "synthetic"
+                },
+                "sleeve_id": {
+                  "type": "strategy_sleeve_id",
+                  "value": "carry.primary"
+                },
+                "strategy_id": "carry-v1",
+                "target_fraction": {
+                  "instrument_id": {
+                    "stable_key": "cash:eth-usd",
+                    "type": "instrument_id",
+                    "venue": "synthetic"
+                  },
+                  "scale": 12,
+                  "type": "target_exposure_fraction",
+                  "units": -750000000000
+                },
+                "target_notional": {
+                  "currency": "USD",
+                  "scale": 14,
+                  "type": "money",
+                  "units": -30000000000000000
+                },
+                "type": "sleeve_target_notional"
+              }
+            ],
+            "target_notional": {
+              "currency": "USD",
+              "scale": 14,
+              "type": "money",
+              "units": -30000000000000000
+            },
+            "type": "net_instrument_target",
+            "valuation_currency": {
+              "type": "currency_id",
+              "value": "USD"
+            }
+          },
+          "type": "approved_instrument_target"
+        },
+        "type": "normalized_instrument_target"
+      }
+    ],
+    "type": "normalized_portfolio_target"
+  },
+  "expected_normalized_target_sha256": "sha256:32c9e51a2e1db489b4fb45614ab7fa535b714bccc312d4bcf56bb5495ef3c6dd",
+  "expected_residual_failure": {
+    "code": "residual_not_permitted",
+    "evidence_hashes": [
+      "sha256:6f82c340a35b97b43cdff5aecd29aad4ba1ebe3a00d0a96cc816c7c5a7dcf9f0"
+    ],
+    "policy_hash": "sha256:6b3c04c3e98f52a919b0351312ebec4ee9d4bc2637b7c5e1d90a4baca4fa3488",
+    "source_approved_target_hash": "sha256:2e67f3309503838f86af27d4cdf9cd2b51f7800ad07cf770e0e3915bb424726d",
+    "source_approved_target_id": "approved-portfolio-target-v1:sha256:4a521ae4b5e14760a62b2216d62542db83c0b40cef64dde8293afed21ee86891",
+    "subject_keys": [
+      "synthetic:cash:btc-usd"
+    ],
+    "type": "position_sizing_failure"
+  },
+  "expected_residual_failure_sha256": "sha256:afbc096d44801ae5a975a7c405ff2828bf01a59b3249d5e5ea8759ceda13372a",
+  "fixture_id": "position-sizing-active-target-v1",
+  "schema_version": 1
+}

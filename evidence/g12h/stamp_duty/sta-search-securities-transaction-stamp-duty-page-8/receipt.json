@@ -1,0 +1,52 @@
+{
+  "authority_status": "CAPTURED_NOT_QUALIFIED",
+  "content_type": "application/json;charset=UTF-8",
+  "curl_exit_code": 0,
+  "curl_stderr": "",
+  "derivatives": {
+    "json_parse": {
+      "valid": true
+    }
+  },
+  "final_url": "https://www.chinatax.gov.cn/search5/search/s?siteCode=bm29000002&searchSiteName=GSFFK&searchWord=%E8%AF%81%E5%88%B8%E4%BA%A4%E6%98%93%E5%8D%B0%E8%8A%B1%E7%A8%8E&pageNum=8&pageSize=10",
+  "lineage": "stamp_duty",
+  "operator_harness_sha256": "sha256:85ccf78ce0d595ff9d372c85243d81c49c3bc1be19f868df5936cc2f6977d9ea",
+  "raw_byte_length": 84089,
+  "raw_file": "raw.json",
+  "raw_sha256": "sha256:aea64e7f73fc243bbf4a57e10f51f8e52a33413fe2350caf49cd0d77f5383a2a",
+  "redirect_count": 0,
+  "response_chain_count": 1,
+  "response_code": 200,
+  "retrieved_at": "2026-08-20T07:43:46.517610Z",
+  "schema_version": 1,
+  "sensitive_response_headers": {
+    "files": [
+      {
+        "exact_private_path": "/srv/bcache-8t/ygguo/backtest/g12h-authority-private/20260820-wave1-response-headers/stamp_duty/sta-search-securities-transaction-stamp-duty-page-8/response.headers",
+        "exact_private_sha256": "sha256:2e4a550ae91c73ad96f4f6b6c40408618f3a0928a0a1361004a9d33426f8a620",
+        "redaction": "Set-Cookie value replaced by its SHA-256; cookie name and attributes retained.",
+        "tracked_path": "stamp_duty/sta-search-securities-transaction-stamp-duty-page-8/response.headers",
+        "tracked_redacted_sha256": "sha256:87dccd900a92254b955a7c2d391d5eaa20e2f7031859ffe0df1393075b14ed99"
+      },
+      {
+        "exact_private_path": "/srv/bcache-8t/ygguo/backtest/g12h-authority-private/20260820-wave1-response-headers/stamp_duty/sta-search-securities-transaction-stamp-duty-page-8/transport.log",
+        "exact_private_sha256": "sha256:f622c9e692e9ee953574ff42a633ba3406463c9c4ccf8c995576effdf572a8f8",
+        "redaction": "Set-Cookie value replaced by its SHA-256; cookie name and attributes retained.",
+        "tracked_path": "stamp_duty/sta-search-securities-transaction-stamp-duty-page-8/transport.log",
+        "tracked_redacted_sha256": "sha256:6de34e2caa73c8bcd1655a3b63e5291e622cdda0b0b0829454582be0e2bb68f5"
+      },
+      {
+        "exact_private_path": "/srv/bcache-8t/ygguo/backtest/g12h-authority-private/20260820-wave1-response-headers/stamp_duty/sta-search-securities-transaction-stamp-duty-page-8/redirects.json",
+        "exact_private_sha256": "sha256:5a6673193b2c72d5f022b4c4947ef32bc950674588dddbe2897f76ae87e3cb77",
+        "redaction": "Set-Cookie value replaced by its SHA-256; cookie name and attributes retained.",
+        "tracked_path": "stamp_duty/sta-search-securities-transaction-stamp-duty-page-8/redirects.json",
+        "tracked_redacted_sha256": "sha256:6426c27624c3c7b2914b528a0db9ddd2b79b18a180ffdc51565c468dca95d6dc"
+      }
+    ],
+    "policy": "Exact server-issued cookie values are excluded from Git and retained in the mode-restricted private evidence store."
+  },
+  "source_id": "sta-search-securities-transaction-stamp-duty-page-8",
+  "started_at": "2026-08-20T07:43:42.412976Z",
+  "tool": "curl 8.14.1 (x86_64-pc-linux-gnu) libcurl/8.14.1 OpenSSL/3.5.6 zlib/1.3.1 brotli/1.1.0 zstd/1.5.7 libidn2/2.3.8 libpsl/0.21.2 libssh2/1.11.1 nghttp2/1.64.0 nghttp3/1.8.0 librtmp/2.3 OpenLDAP/2.6.10",
+  "type": "g12h_official_http_capture_receipt_v1"
+}

@@ -1,0 +1,25 @@
+{
+  "acquired_at_epoch_nanoseconds": 1787322796693720939,
+  "credentials_or_cookies_retained": false,
+  "network_path_limitation": "Configured fetch path reported a reserved 198.18.0.0/15 remote address; exact body bytes were returned over HTTPS, but direct-origin routing is not asserted.",
+  "request": {
+    "authentication": "none",
+    "method": "GET",
+    "request_headers_retained": false,
+    "url": "https://www.binance.com/bapi/composite/v1/public/cms/article/detail/query?articleCode=360033525031"
+  },
+  "response": {
+    "byte_count": 91413,
+    "effective_url": "https://www.binance.com/bapi/composite/v1/public/cms/article/detail/query?articleCode=360033525031",
+    "http_status": 200,
+    "remote_ip_observed": "198.18.0.94",
+    "selected_public_headers": {
+      "content-type": "application/json;charset=UTF-8",
+      "date": "Fri, 21 Aug 2026 14:27:21 GMT",
+      "etag": "W/\"08963ab6837e7508f9219771defb87543\""
+    },
+    "sha256": "sha256:94104929c6a1c381a5435bc235d9ac12f26645ad649583b05e1c1de8464ccc30"
+  },
+  "schema_version": 1,
+  "type": "g12m_official_http_receipt_v1"
+}

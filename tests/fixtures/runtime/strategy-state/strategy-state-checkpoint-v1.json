@@ -1,0 +1,142 @@
+{
+  "checkpoint": {
+    "captured_at": {
+      "instant": {
+        "epoch_nanoseconds": 100,
+        "type": "utc_instant"
+      },
+      "phase": {
+        "code": "strategy_decision",
+        "rank": 80,
+        "type": "timeline_phase"
+      },
+      "source_sequence": {
+        "type": "source_sequence",
+        "value": 1
+      },
+      "type": "simulation_instant"
+    },
+    "checkpoint_hash": "sha256:cf561e7c459bbc42797089662bef85ca8c47bb20888bf856caec07c65fee8145",
+    "checkpoint_key": "warmup-complete",
+    "schema_version": 1,
+    "state": {
+      "schema_version": 1,
+      "state_hash": "sha256:708f81d18d3a8dfb80a98457cddba05a671fc9a1649b74e862de47157c5a59f6",
+      "state_schema": {
+        "name": "strategy.portfolio-momentum.state",
+        "version": 1
+      },
+      "strategy_id": {
+        "type": "strategy_sleeve_id",
+        "value": "portfolio.momentum"
+      },
+      "type": "strategy_state",
+      "values": {
+        "count": 1,
+        "history": [
+          100
+        ]
+      }
+    },
+    "type": "strategy_checkpoint"
+  },
+  "failure_controls": {
+    "cross_strategy_transition": true,
+    "cyclic_value": true,
+    "schema_change_transition": true,
+    "unsupported_runtime_value": true,
+    "wrong_checkpoint_state": true
+  },
+  "final_state": {
+    "schema_version": 1,
+    "state_hash": "sha256:a14a6a45b9f6895251d1bb196303d417ec7aee14075f84428262b9f618fa31f4",
+    "state_schema": {
+      "name": "strategy.portfolio-momentum.state",
+      "version": 1
+    },
+    "strategy_id": {
+      "type": "strategy_sleeve_id",
+      "value": "portfolio.momentum"
+    },
+    "type": "strategy_state",
+    "values": {
+      "count": 2,
+      "history": [
+        100,
+        200
+      ]
+    }
+  },
+  "first_transition": {
+    "after_state_hash": "sha256:708f81d18d3a8dfb80a98457cddba05a671fc9a1649b74e862de47157c5a59f6",
+    "before_state_hash": "sha256:8c0545eeaef046ed69efa77f96a411efddea1cc587763748cf3d6655b6898ed9",
+    "occurred_at": {
+      "instant": {
+        "epoch_nanoseconds": 100,
+        "type": "utc_instant"
+      },
+      "phase": {
+        "code": "strategy_decision",
+        "rank": 80,
+        "type": "timeline_phase"
+      },
+      "source_sequence": {
+        "type": "source_sequence",
+        "value": 1
+      },
+      "type": "simulation_instant"
+    },
+    "schema_version": 1,
+    "state_schema": {
+      "name": "strategy.portfolio-momentum.state",
+      "version": 1
+    },
+    "strategy_id": {
+      "type": "strategy_sleeve_id",
+      "value": "portfolio.momentum"
+    },
+    "transition_hash": "sha256:1fb5d16bcba93c3c9baf3beb93c50c1e9e0dd9e0ddfffb4f3f66c494d52ae3c7",
+    "transition_key": "decision-1",
+    "type": "strategy_state_transition"
+  },
+  "fixture_id": "strategy-state-checkpoint-v1",
+  "full_instant_identity": {
+    "baseline_checkpoint_hash": "sha256:cf561e7c459bbc42797089662bef85ca8c47bb20888bf856caec07c65fee8145",
+    "differs": true,
+    "later_sequence_checkpoint_hash": "sha256:3cd34bc9be27b1a2621fec71ff915763f7d84175919656ddc89b59e86e0ae9f1"
+  },
+  "initial_state": {
+    "schema_version": 1,
+    "state_hash": "sha256:8c0545eeaef046ed69efa77f96a411efddea1cc587763748cf3d6655b6898ed9",
+    "state_schema": {
+      "name": "strategy.portfolio-momentum.state",
+      "version": 1
+    },
+    "strategy_id": {
+      "type": "strategy_sleeve_id",
+      "value": "portfolio.momentum"
+    },
+    "type": "strategy_state",
+    "values": {
+      "count": 0,
+      "history": []
+    }
+  },
+  "input_order_parity": {
+    "checkpoint_hash_matches": true,
+    "state_hash_matches": true
+  },
+  "limitations": [
+    "no_financial_account_state",
+    "no_random_stream_state",
+    "no_model_lookup",
+    "no_strategy_invocation",
+    "no_engine_checkpoint"
+  ],
+  "restore_continuation_parity": {
+    "restore_returns_exact_state": true,
+    "state_hash_matches": true,
+    "transition_hash_matches": true
+  },
+  "schema_version": 1
+}

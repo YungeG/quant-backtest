@@ -1,0 +1,102 @@
+{
+  "blocked": {
+    "issue": {
+      "code": "target_input_decode",
+      "evidence_hashes": [
+        "sha256:10481954914e964232987def86cc3d052dc4b5a5ba38ded181128512b72f84b3"
+      ],
+      "source": "engine_failure",
+      "source_evidence": {
+        "case_hash": "sha256:bdbcf92c176fedaf8fa89a056bc92fddeb9d70b75bcacb7cb6013b468374c87e",
+        "code": "target_input_decode",
+        "evidence_hashes": [
+          "sha256:10481954914e964232987def86cc3d052dc4b5a5ba38ded181128512b72f84b3"
+        ],
+        "subject_keys": [
+          "target_input_decode"
+        ],
+        "termination": null,
+        "trace_hash": "sha256:e309c17136bd3860126a639df4ef71b84ba600e8445ad7c4b335fecf83420d74",
+        "type": "engine_failure"
+      },
+      "source_hash": "sha256:1f85ad47996c09e3c36a35643bfa396965c5826ff98bcad8907f961b2c166b65",
+      "subject_keys": [
+        "target_input_decode"
+      ],
+      "type": "attempt_issue"
+    },
+    "record_hash": "sha256:c7d6dc5d1c7ec1e68d0abd8cc1cf43b90bfde14065c23b0e7145ed90cea0c798",
+    "report_hash": "sha256:bff402b21f202b4c5f67f4b317bcb3a027a50ea8dcbb26b6ba2549e16519d8bc",
+    "status": "BLOCKED",
+    "terminal_outcome": "BLOCKED"
+  },
+  "cancelled": {
+    "cancellation_hash": "sha256:9899cb9b3e2daa575bb1aec688e4d2ea1ff42a4be3fa857819c6d281d1014c05",
+    "record_hash": "sha256:e880759890c6b5b0b297f4f133f2946039763b7dfaeffade4414a81b82434d6a",
+    "report_hash": "sha256:f75e4a62d3ddc7f948ecd4b53d1fce03e3453371380baf6b6e536dc0940dd11c",
+    "status": "CANCELLED",
+    "terminal_outcome": "CANCELLED"
+  },
+  "engine_failure_mapping": {
+    "accounting_failure": "FAILED",
+    "allocation": "FAILED",
+    "capability_rejected": "BLOCKED",
+    "case_evidence_mismatch": "FAILED",
+    "decision_batch": "BLOCKED",
+    "execution_failure": "BLOCKED",
+    "fee_accounting_failure": "FAILED",
+    "fee_assessment_failure": "BLOCKED",
+    "fee_reservation": "BLOCKED",
+    "fill_construction": "FAILED",
+    "financial_dispatch_failure": "FAILED",
+    "market_rule_data_failure": "BLOCKED",
+    "market_rule_rejected": "BLOCKED",
+    "missing_scheduled_event": "BLOCKED",
+    "order_plan_mismatch": "FAILED",
+    "portfolio_risk": "FAILED",
+    "position_sizing": "BLOCKED",
+    "pretrade_contract_failure": "FAILED",
+    "pretrade_rejected": "BLOCKED",
+    "rebalance": "FAILED",
+    "run_end_terminated": "BLOCKED",
+    "slippage_failure": "BLOCKED",
+    "snapshot_projection_failure": "BLOCKED",
+    "target_input_decode": "BLOCKED",
+    "target_validation": "BLOCKED",
+    "timeline_failure": "BLOCKED",
+    "translation_rejected": "BLOCKED"
+  },
+  "engine_result_hash": "sha256:a43505a1bb566b05988115683918a01e5f99f7865c9ae648b417c0281fd1c53b",
+  "first": {
+    "attempt": {
+      "attempt_id": "attempt_3c478bbb5e7141603744fadfe484c4859fac39a56b525df8b5be0fb2a8e1cdfa",
+      "ordinal": 1,
+      "parent_attempt_id": null,
+      "schema_version": 1,
+      "semantic_run_id": "run_39ab44a26d7f719fe1648f3ccbf7cbdcb874a9bc43e8c15d3a51ab5aca421591",
+      "type": "attempt_identity"
+    },
+    "ready_hash": "sha256:56445b0cc516387d0cdb0feee69d1857cdf3d7d6a0ea5e711aef290d01f4449d",
+    "record_hash": "sha256:8d18b24cbed2f5eca45c78741a49c727d4ffbe5940ee5b98472973b900893f1f",
+    "status": "READY_TO_FINALIZE",
+    "terminal_outcome": null
+  },
+  "precomputed_target_failure_outcome": "BLOCKED",
+  "retry": {
+    "attempt": {
+      "attempt_id": "attempt_39000746f7552464b07d9a8e1b2035a6e9e0fbf341f34dc6bf02c4a87fe82d8c",
+      "ordinal": 2,
+      "parent_attempt_id": "attempt_3c478bbb5e7141603744fadfe484c4859fac39a56b525df8b5be0fb2a8e1cdfa",
+      "schema_version": 1,
+      "semantic_run_id": "run_39ab44a26d7f719fe1648f3ccbf7cbdcb874a9bc43e8c15d3a51ab5aca421591",
+      "type": "attempt_identity"
+    },
+    "ready_hash": "sha256:4f9e325770de8958a69a3cd850ffff291313a85bde7034fa01f9ebc1a6c31fb4",
+    "record_hash": "sha256:8f11a4e40118b62ffd8f1e2888fa3c3aa99900cce3e273f7914408e3efef9ee0",
+    "status": "READY_TO_FINALIZE",
+    "terminal_outcome": null
+  },
+  "runtime_strategy_target_failure_outcome": "FAILED",
+  "schema_version": 1,
+  "semantic_run_id": "run_39ab44a26d7f719fe1648f3ccbf7cbdcb874a9bc43e8c15d3a51ab5aca421591"
+}

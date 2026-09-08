@@ -1,0 +1,26 @@
+* Host szs.mof.gov.cn:80 was resolved.
+* IPv6: (none)
+* IPv4: 116.179.51.34, 113.200.41.31
+*   Trying 116.179.51.34:80...
+* Connected to szs.mof.gov.cn (116.179.51.34) port 80
+* using HTTP/1.x
+> GET /zhengcefabu/202308/t20230827_3904226.htm HTTP/1.1
+> Host: szs.mof.gov.cn
+> User-Agent: Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 Chrome/130.0 Safari/537.36 G12HAuthorityCapture/1.0
+> Accept: */*
+> Accept-Language: zh-CN,zh;q=0.9,en;q=0.5
+> Cache-Control: no-cache
+> Pragma: no-cache
+> 
+* Request completely sent off
+< HTTP/1.1 200 OK
+< Date: Thu, 20 Aug 2026 08:44:44 GMT
+< Content-Type: text/html
+< Transfer-Encoding: chunked
+< Connection: keep-alive
+< Server: nginx
+< x-via: 1.1 PS-HDG-01LCl33:20 (Cdn Cache Server V2.0), 1.1 PS-000-012jf27:11 (Cdn Cache Server V2.0)
+< x-ws-request-id: 6a86be7c_PS-000-012jf27_30580-1240
+< 
+{ [5317 bytes data]
+* Connection #0 to host szs.mof.gov.cn left intact

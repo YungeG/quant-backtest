@@ -1,0 +1,28 @@
+{
+  "files": [
+    {
+      "exact_private_path": "/srv/bcache-8t/ygguo/backtest/g12h-authority-private/20260820-register-discovery-response-headers/exchange_handling/szse-fee-management-measures/response.headers",
+      "exact_private_sha256": "sha256:ac04eb76c9675c8de9e0d37d0187c6bee9097cc443f063c843ef11a7afe955ab",
+      "redaction": "Set-Cookie value replaced by SHA-256; name and attributes retained.",
+      "tracked_path": "exchange_handling/szse-fee-management-measures/response.headers",
+      "tracked_redacted_sha256": "sha256:eb7eccf75ae9c330016d55055a12cdfd3e41a1503aaec8e12f28a47c481f0b63"
+    },
+    {
+      "exact_private_path": "/srv/bcache-8t/ygguo/backtest/g12h-authority-private/20260820-register-discovery-response-headers/exchange_handling/szse-fee-management-measures/transport.log",
+      "exact_private_sha256": "sha256:2f7ceee6af83b1e25a4cf2b955759d7453f4dc5e727ea7fdc6c12818eea1a9a3",
+      "redaction": "Set-Cookie value replaced by SHA-256; name and attributes retained.",
+      "tracked_path": "exchange_handling/szse-fee-management-measures/transport.log",
+      "tracked_redacted_sha256": "sha256:7a19dedd51eb548989e100a3005b2b08144b5a23c4bddcf54c4cc09966aaae2b"
+    },
+    {
+      "exact_private_path": "/srv/bcache-8t/ygguo/backtest/g12h-authority-private/20260820-register-discovery-response-headers/exchange_handling/szse-fee-management-measures/redirects.json",
+      "exact_private_sha256": "sha256:621efbdd58a9a1855d31c4c2e7decebaa567e85794cc100a0483d4aba874871f",
+      "redaction": "Set-Cookie value replaced by SHA-256; name and attributes retained.",
+      "tracked_path": "exchange_handling/szse-fee-management-measures/redirects.json",
+      "tracked_redacted_sha256": "sha256:d0ceab8d89a58dbd4c5d98ebdf0eee66b1367d598f5084e0c29ec0e16186d915"
+    }
+  ],
+  "schema_version": 1,
+  "source_id": "szse-fee-management-measures",
+  "type": "g12h_register_discovery_sensitive_response_header_receipt_v1"
+}

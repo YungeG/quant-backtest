@@ -1,0 +1,12 @@
+{
+  "fixture_id": "artifact-envelope-catalog-v1",
+  "artifact_type": "example.position-snapshot",
+  "schema_version": 1,
+  "payload": {
+    "identifier": "α",
+    "count": 7
+  },
+  "expected_content_hash": "sha256:12c8a42dd27c400065f7c3f5dd701f17c40076fbfdfe3c235f3fbf123b71e75c",
+  "expected_source_utf8": "{\"artifact_type\":\"example.position-snapshot\",\"content_hash\":\"sha256:12c8a42dd27c400065f7c3f5dd701f17c40076fbfdfe3c235f3fbf123b71e75c\",\"payload\":{\"count\":7,\"identifier\":\"α\"},\"schema_version\":1}",
+  "expected_source_hash": "sha256:d0f9495734ac9e43dcee5904bd6ce1cb1b45d74feaefe0862123244e3160d020"
+}

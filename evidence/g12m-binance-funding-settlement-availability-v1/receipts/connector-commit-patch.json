@@ -1,0 +1,26 @@
+{
+  "acquired_at_epoch_nanoseconds": 1787322817956479546,
+  "credentials_or_cookies_retained": false,
+  "network_path_limitation": "Configured fetch path reported a reserved 198.18.0.0/15 remote address; exact body bytes were returned over HTTPS, but direct-origin routing is not asserted.",
+  "request": {
+    "authentication": "none",
+    "method": "GET",
+    "request_headers_retained": false,
+    "url": "https://github.com/binance/binance-futures-connector-python/commit/d30576a6d8e6edb706c8b013eb11167b58e9c33a.patch"
+  },
+  "response": {
+    "byte_count": 6642,
+    "effective_url": "https://github.com/binance/binance-futures-connector-python/commit/d30576a6d8e6edb706c8b013eb11167b58e9c33a.patch",
+    "http_status": 200,
+    "remote_ip_observed": "198.18.0.37",
+    "selected_public_headers": {
+      "content-length": "6642",
+      "content-type": "text/plain; charset=utf-8",
+      "date": "Fri, 21 Aug 2026 14:33:38 GMT",
+      "etag": "W/\"49e23a8aefc09dcfa08a7efd788b9076\""
+    },
+    "sha256": "sha256:49e23a8aefc09dcfa08a7efd788b9076451d0527fa1eac44284656f7860dc689"
+  },
+  "schema_version": 1,
+  "type": "g12m_official_http_receipt_v1"
+}

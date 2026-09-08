@@ -1,0 +1,8 @@
+{
+  "private_manifest_sha256": "sha256:7a19a80f03ee5364a6487252a918a68829701d642a48c112a54f673bcf2d2bdc",
+  "private_store_root": "/srv/bcache-8t/ygguo/backtest/g12h-authority-private/20260820-live-status-api-probes-response-headers",
+  "schema_version": 1,
+  "source_count": 6,
+  "status": "EXACT_COOKIE_BEARING_HEADERS_PRIVATE_TRACKED_HEADERS_REDACTED",
+  "type": "g12h_live_status_probe_private_header_store_receipt_v1"
+}

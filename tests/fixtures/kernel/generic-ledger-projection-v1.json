@@ -1,0 +1,132 @@
+{
+  "final_state": {
+    "cash_balances": [
+      {
+        "amount": {
+          "currency": "USD",
+          "scale": 2,
+          "type": "money",
+          "units": 87850
+        },
+        "key": {
+          "account_id": "account:primary",
+          "currency_id": {
+            "type": "currency_id",
+            "value": "USD"
+          },
+          "type": "cash_balance_key",
+          "venue_id": {
+            "type": "venue_id",
+            "value": "synthetic"
+          }
+        },
+        "type": "cash_balance"
+      }
+    ],
+    "cursor": {
+      "position": 5,
+      "prefix_hash": "sha256:e3316985ebbd91b988687573ddc63c79a3f43673124875b5134d14023be457fd",
+      "type": "journal_replay_cursor"
+    },
+    "fees": [
+      {
+        "amount": {
+          "currency": "USD",
+          "scale": 2,
+          "type": "money",
+          "units": 100
+        },
+        "key": {
+          "account_id": "account:primary",
+          "currency_id": {
+            "type": "currency_id",
+            "value": "USD"
+          },
+          "type": "cash_balance_key",
+          "venue_id": {
+            "type": "venue_id",
+            "value": "synthetic"
+          }
+        },
+        "type": "cash_balance"
+      }
+    ],
+    "financing": [
+      {
+        "amount": {
+          "currency": "USD",
+          "scale": 2,
+          "type": "money",
+          "units": 50
+        },
+        "key": {
+          "account_id": "account:primary",
+          "currency_id": {
+            "type": "currency_id",
+            "value": "USD"
+          },
+          "type": "cash_balance_key",
+          "venue_id": {
+            "type": "venue_id",
+            "value": "synthetic"
+          }
+        },
+        "type": "cash_balance"
+      }
+    ],
+    "position_balances": [
+      {
+        "key": {
+          "account_id": "account:primary",
+          "instrument_id": {
+            "stable_key": "stock-1",
+            "type": "instrument_id",
+            "venue": "synthetic"
+          },
+          "type": "position_balance_key",
+          "venue_id": {
+            "type": "venue_id",
+            "value": "synthetic"
+          }
+        },
+        "lots": [],
+        "quantity": {
+          "instrument_id": "synthetic:stock-1",
+          "scale": 0,
+          "type": "quantity",
+          "units": 6
+        },
+        "type": "position_balance"
+      }
+    ],
+    "realized_pnl": [
+      {
+        "amount": {
+          "currency": "USD",
+          "scale": 2,
+          "type": "money",
+          "units": 6000
+        },
+        "key": {
+          "account_id": "account:primary",
+          "currency_id": {
+            "type": "currency_id",
+            "value": "USD"
+          },
+          "type": "cash_balance_key",
+          "venue_id": {
+            "type": "venue_id",
+            "value": "synthetic"
+          }
+        },
+        "type": "cash_balance"
+      }
+    ],
+    "schema_hash": "sha256:431c75c8e7040d17d875d9d7f386b5d529d3e89cff97bcf65393411da216a25a",
+    "type": "ledger_state"
+  },
+  "final_state_hash": "sha256:682712038ccf4681c832ac978facecc1bf5f429dadd72ece1d9996de4170b01e",
+  "fixture_id": "generic-ledger-projection-v1",
+  "prefix_state_hash": "sha256:5a0254001bee71800c055219c5ea0ed552069c0d0fb8e6a516501e64ea1dc25b",
+  "schema_hash": "sha256:431c75c8e7040d17d875d9d7f386b5d529d3e89cff97bcf65393411da216a25a"
+}

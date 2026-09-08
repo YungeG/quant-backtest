@@ -1,0 +1,100 @@
+{
+  "type": "g12k_july_2026_development_coverage_outcome",
+  "schema_version": 1,
+  "universe_report": {
+    "type": "universe_coverage_report",
+    "schema_version": 1,
+    "manifest_content_hash": "sha256:7c19ad6f100381a3333f4947d8149978ce861c94601dd98eb8d2530c995bbd68",
+    "instrument_catalog_hash": "sha256:954cac9b51cdfae55bcf0f5dd6fbcbda5c7c353baca43fd00fcddeb6c34104bb",
+    "closure_declaration_hash": "sha256:de91ada8599fccb50ee6ba72702c592ef777234495c24eae379e3d488004687f",
+    "target_start": {
+      "type": "utc_instant",
+      "epoch_nanoseconds": 1783267200000000000
+    },
+    "target_end_exclusive": {
+      "type": "utc_instant",
+      "epoch_nanoseconds": 1785427200000000000
+    },
+    "decision_instant": {
+      "type": "simulation_instant",
+      "instant": {
+        "type": "utc_instant",
+        "epoch_nanoseconds": 1783285200000000000
+      },
+      "phase": {
+        "type": "timeline_phase",
+        "rank": 10,
+        "code": "announcement"
+      },
+      "source_sequence": {
+        "type": "source_sequence",
+        "value": 99
+      }
+    },
+    "effective_at": {
+      "type": "utc_instant",
+      "epoch_nanoseconds": 1783267200000000000
+    },
+    "relevant_event_hashes": [
+      "sha256:ac3e5ce2765e60a0e971681804ff5f447461a7c7e0e2d4546e11d099f737cbb0"
+    ],
+    "terminal_event_hashes": [
+      "sha256:ac3e5ce2765e60a0e971681804ff5f447461a7c7e0e2d4546e11d099f737cbb0"
+    ],
+    "member_instrument_ids": [
+      {
+        "type": "instrument_id",
+        "venue": "xshe",
+        "stable_key": "xshe.corporate-action.stable"
+      }
+    ],
+    "declared_revision_closure_complete": true,
+    "provider_authority_qualified": false,
+    "provider_revision_completeness_qualified": false,
+    "historical_authority_qualified": false,
+    "survivorship_bias_safe": false,
+    "decision_grade_eligible": false,
+    "profile_qualified": false,
+    "live_eligible": false,
+    "deployment_authorized": false,
+    "report_hash": "sha256:61cc9c034aa0907a6ac24475f39078db0a13a2e72dc6a38af5c4cc7583259b63"
+  },
+  "corporate_action_report": {
+    "type": "corporate_action_coverage_report",
+    "schema_version": 1,
+    "manifest_content_hash": "sha256:7c19ad6f100381a3333f4947d8149978ce861c94601dd98eb8d2530c995bbd68",
+    "instrument_catalog_hash": "sha256:954cac9b51cdfae55bcf0f5dd6fbcbda5c7c353baca43fd00fcddeb6c34104bb",
+    "closure_declaration_hash": "sha256:ce97e630916de7b767ec7fa649dd93bd8eec251ba06deddb4cff01feb7329030",
+    "target_start": {
+      "type": "utc_instant",
+      "epoch_nanoseconds": 1783267200000000000
+    },
+    "target_end_exclusive": {
+      "type": "utc_instant",
+      "epoch_nanoseconds": 1785427200000000000
+    },
+    "relevant_event_hashes": [
+      "sha256:a51bca33f52ddb008055f0819f5dbaf5c1e2e95e37d670b4f27a8ff89248a188",
+      "sha256:ded5db955efaf208a2752f205aba7603f8a2fca7702a42149d6ee1cb27b9bc72"
+    ],
+    "terminal_event_hashes": [
+      "sha256:ded5db955efaf208a2752f205aba7603f8a2fca7702a42149d6ee1cb27b9bc72"
+    ],
+    "active_corporate_action_ids": [
+      "action-1"
+    ],
+    "cancelled_corporate_action_ids": [],
+    "declared_revision_closure_complete": true,
+    "provider_authority_qualified": false,
+    "provider_revision_completeness_qualified": false,
+    "historical_authority_qualified": false,
+    "survivorship_bias_safe": false,
+    "decision_grade_eligible": false,
+    "profile_qualified": false,
+    "live_eligible": false,
+    "deployment_authorized": false,
+    "report_hash": "sha256:c678b4bbe90654efeabc2307d5b8a77f1ea852cb813852943a7fdb8746caca46"
+  },
+  "failure": null,
+  "outcome_hash": "sha256:c78d15d6a3f4d73dcda2ce16cc05e337e551fa5e8dc44d066f4a7a517467fef4"
+}

@@ -1,0 +1,2627 @@
+{
+  "candidate_count": 127,
+  "candidates": [
+    {
+      "candidate_id": "sta-0000",
+      "column": "新闻发布",
+      "disposition": "unresolved",
+      "label": "媒体视点",
+      "published_at": "2024-04-16 11:50:54",
+      "query_provenance": [
+        "stamp-duty-law-title"
+      ],
+      "source_owner": "经济日报",
+      "source_refs": [
+        {
+          "raw_sha256": "sha256:f39194ff663542cea3753082151fef9c0318019f1ec0f9cdb6afc456d76eacd5",
+          "source_id": "sta-search-stamp-duty-law-title-page-0"
+        }
+      ],
+      "title": "[经济日报] 印花税优惠政策激发离岸贸易活力",
+      "url": "http://www.chinatax.gov.cn/chinatax/n810219/n810780/c5222948/content.html"
+    },
+    {
+      "candidate_id": "sta-0001",
+      "column": "新闻发布",
+      "disposition": "unresolved",
+      "label": "媒体视点",
+      "published_at": "2024-04-03 10:10:57",
+      "query_provenance": [
+        "stamp-duty-law-title"
+      ],
+      "source_owner": "新华社",
+      "source_refs": [
+        {
+          "raw_sha256": "sha256:f39194ff663542cea3753082151fef9c0318019f1ec0f9cdb6afc456d76eacd5",
+          "source_id": "sta-search-stamp-duty-law-title-page-0"
+        }
+      ],
+      "title": "[新华社] 首个离岸贸易税收优惠政策在上海试点 提升自贸试验区竞争力",
+      "url": "http://www.chinatax.gov.cn/chinatax/n810219/n810780/c5222346/content.html"
+    },
+    {
+      "candidate_id": "sta-0002",
+      "column": "新闻发布",
+      "disposition": "unresolved",
+      "label": "媒体视点",
+      "published_at": "2024-04-03 10:10:22",
+      "query_provenance": [
+        "stamp-duty-law-title"
+      ],
+      "source_owner": "人民日报海外版",
+      "source_refs": [
+        {
+          "raw_sha256": "sha256:f39194ff663542cea3753082151fef9c0318019f1ec0f9cdb6afc456d76eacd5",
+          "source_id": "sta-search-stamp-duty-law-title-page-0"
+        }
+      ],
+      "title": "[人民日报海外版] 首个离岸贸易税收优惠政策在沪试点",
+      "url": "http://www.chinatax.gov.cn/chinatax/n810219/n810780/c5222344/content.html"
+    },
+    {
+      "candidate_id": "sta-0003",
+      "column": "互动交流",
+      "disposition": "unresolved",
+      "label": "回应关切",
+      "published_at": "2023-05-10 15:03:00",
+      "query_provenance": [
+        "stamp-duty-law-title"
+      ],
+      "source_owner": "国家税务总局12366纳税服务中心",
+      "source_refs": [
+        {
+          "raw_sha256": "sha256:f39194ff663542cea3753082151fef9c0318019f1ec0f9cdb6afc456d76eacd5",
+          "source_id": "sta-search-stamp-duty-law-title-page-0"
+        }
+      ],
+      "title": "印花税的计税依据是什么？",
+      "url": "http://www.chinatax.gov.cn/chinatax/n810356/n3010387/c5196049/content.html"
+    },
+    {
+      "candidate_id": "sta-0004",
+      "column": "信息公开",
+      "disposition": "unresolved",
+      "label": "政策法规",
+      "published_at": "2022-06-29 19:28:34",
+      "query_provenance": [
+        "stamp-duty-law-title"
+      ],
+      "source_owner": "国家税务总局办公厅",
+      "source_refs": [
+        {
+          "raw_sha256": "sha256:f39194ff663542cea3753082151fef9c0318019f1ec0f9cdb6afc456d76eacd5",
+          "source_id": "sta-search-stamp-duty-law-title-page-0"
+        }
+      ],
+      "title": "关于《国家税务总局关于实施＜中华人民共和国印花税法＞等有关事项的公告》的解读",
+      "url": "http://www.chinatax.gov.cn/chinatax/n810341/n810760/c5176920/content.html"
+    },
+    {
+      "candidate_id": "sta-0005",
+      "column": "政策解读",
+      "disposition": "unresolved",
+      "label": "文字政策解读",
+      "published_at": "2022-06-29 00:00:00",
+      "query_provenance": [
+        "stamp-duty-law-title"
+      ],
+      "source_owner": "国家税务总局办公厅",
+      "source_refs": [
+        {
+          "raw_sha256": "sha256:f39194ff663542cea3753082151fef9c0318019f1ec0f9cdb6afc456d76eacd5",
+          "source_id": "sta-search-stamp-duty-law-title-page-0"
+        }
+      ],
+      "title": "关于《国家税务总局关于实施＜中华人民共和国印花税法＞等有关事项的公告》的解读",
+      "url": "https://fgk.chinatax.gov.cn/zcfgk/c100015/c5200988/content.html"
+    },
+    {
+      "candidate_id": "sta-0006",
+      "column": "政策法规",
+      "disposition": "unresolved",
+      "label": "税务规范性文件",
+      "published_at": "2022-06-28 00:00:00",
+      "query_provenance": [
+        "stamp-duty-law-title"
+      ],
+      "source_owner": "国家税务总局",
+      "source_refs": [
+        {
+          "raw_sha256": "sha256:f39194ff663542cea3753082151fef9c0318019f1ec0f9cdb6afc456d76eacd5",
+          "source_id": "sta-search-stamp-duty-law-title-page-0"
+        }
+      ],
+      "title": "国家税务总局关于实施《中华人民共和国印花税法》等有关事项的公告",
+      "url": "https://fgk.chinatax.gov.cn/zcfgk/c100012/c5196761/content.html"
+    },
+    {
+      "candidate_id": "sta-0007",
+      "column": "政策法规",
+      "disposition": "unresolved",
+      "label": "财税文件",
+      "published_at": "2022-06-27 00:00:00",
+      "query_provenance": [
+        "stamp-duty-law-title"
+      ],
+      "source_owner": "财政部,国家税务总局",
+      "source_refs": [
+        {
+          "raw_sha256": "sha256:f39194ff663542cea3753082151fef9c0318019f1ec0f9cdb6afc456d76eacd5",
+          "source_id": "sta-search-stamp-duty-law-title-page-0"
+        }
+      ],
+      "title": "财政部 税务总局关于印花税法实施后有关优惠政策衔接问题的公告",
+      "url": "https://fgk.chinatax.gov.cn/zcfgk/c102416/c5202008/content.html"
+    },
+    {
+      "candidate_id": "sta-0008",
+      "column": "政策法规",
+      "disposition": "unresolved",
+      "label": "财税文件",
+      "published_at": "2022-06-12 00:00:00",
+      "query_provenance": [
+        "stamp-duty-law-title"
+      ],
+      "source_owner": "财政部,国家税务总局",
+      "source_refs": [
+        {
+          "raw_sha256": "sha256:f39194ff663542cea3753082151fef9c0318019f1ec0f9cdb6afc456d76eacd5",
+          "source_id": "sta-search-stamp-duty-law-title-page-0"
+        }
+      ],
+      "title": "财政部 税务总局关于印花税若干事项政策执行口径的公告",
+      "url": "https://fgk.chinatax.gov.cn/zcfgk/c102416/c5202012/content.html"
+    },
+    {
+      "candidate_id": "sta-0009",
+      "column": "新闻发布",
+      "disposition": "unresolved",
+      "label": "第31个全国税收宣传月",
+      "published_at": "2022-04-26 09:05:21",
+      "query_provenance": [
+        "stamp-duty-law-title"
+      ],
+      "source_owner": "中国税务报",
+      "source_refs": [
+        {
+          "raw_sha256": "sha256:f39194ff663542cea3753082151fef9c0318019f1ec0f9cdb6afc456d76eacd5",
+          "source_id": "sta-search-stamp-duty-law-title-page-0"
+        }
+      ],
+      "title": "[中国税务报]用退税减税红利为企业创新发展添力",
+      "url": "http://www.chinatax.gov.cn/chinatax/c102109/c5174879/content.html"
+    },
+    {
+      "candidate_id": "sta-0010",
+      "column": "新闻发布",
+      "disposition": "unresolved",
+      "label": "税务新闻",
+      "published_at": "2022-04-19 09:38:33",
+      "query_provenance": [
+        "stamp-duty-law-title"
+      ],
+      "source_owner": "中国税务报",
+      "source_refs": [
+        {
+          "raw_sha256": "sha256:fb68bc27115e7fd27be0959ffd880e0b8e2823d104c1c172ab1fd1c5d21c0c6f",
+          "source_id": "sta-search-stamp-duty-law-title-page-1"
+        }
+      ],
+      "title": "进一步深化税收征管改革这一年",
+      "url": "http://www.chinatax.gov.cn/chinatax/n810219/n810724/c5174641/content.html"
+    },
+    {
+      "candidate_id": "sta-0011",
+      "column": "政策法规",
+      "disposition": "unresolved",
+      "label": "法律",
+      "published_at": "2021-06-10 00:00:00",
+      "query_provenance": [
+        "stamp-duty-law-title",
+        "securities-transaction-stamp-duty"
+      ],
+      "source_owner": "全国人民代表大会常务委员会",
+      "source_refs": [
+        {
+          "raw_sha256": "sha256:fb68bc27115e7fd27be0959ffd880e0b8e2823d104c1c172ab1fd1c5d21c0c6f",
+          "source_id": "sta-search-stamp-duty-law-title-page-1"
+        },
+        {
+          "raw_sha256": "sha256:0ea9693e1d402063193ec3acec750522d8bd1ed30f8cf4ed1ce0bc08e947a6cb",
+          "source_id": "sta-search-securities-transaction-stamp-duty-page-6"
+        }
+      ],
+      "title": "中华人民共和国印花税法",
+      "url": "https://fgk.chinatax.gov.cn/zcfgk/c100009/c5193058/content.html"
+    },
+    {
+      "candidate_id": "sta-0012",
+      "column": "新闻发布",
+      "disposition": "unresolved",
+      "label": "媒体视点",
+      "published_at": "2021-01-07 10:16:22",
+      "query_provenance": [
+        "stamp-duty-law-title",
+        "securities-transaction-stamp-duty"
+      ],
+      "source_owner": "经济日报",
+      "source_refs": [
+        {
+          "raw_sha256": "sha256:fb68bc27115e7fd27be0959ffd880e0b8e2823d104c1c172ab1fd1c5d21c0c6f",
+          "source_id": "sta-search-stamp-duty-law-title-page-1"
+        },
+        {
+          "raw_sha256": "sha256:d448c322bcdf7c98f3450ac4f1e97d1f39f498b547c314663a11c5563f024c86",
+          "source_id": "sta-search-securities-transaction-stamp-duty-page-7"
+        }
+      ],
+      "title": "[经济日报]推进印花税立法有利稳预期",
+      "url": "http://www.chinatax.gov.cn/chinatax/n810219/n810780/c5160564/content.html"
+    },
+    {
+      "candidate_id": "sta-0013",
+      "column": "新闻发布",
+      "disposition": "unresolved",
+      "label": "媒体视点",
+      "published_at": "2021-01-05 10:04:20",
+      "query_provenance": [
+        "stamp-duty-law-title",
+        "securities-transaction-stamp-duty"
+      ],
+      "source_owner": "新华社",
+      "source_refs": [
+        {
+          "raw_sha256": "sha256:fb68bc27115e7fd27be0959ffd880e0b8e2823d104c1c172ab1fd1c5d21c0c6f",
+          "source_id": "sta-search-stamp-duty-law-title-page-1"
+        },
+        {
+          "raw_sha256": "sha256:d448c322bcdf7c98f3450ac4f1e97d1f39f498b547c314663a11c5563f024c86",
+          "source_id": "sta-search-securities-transaction-stamp-duty-page-7"
+        }
+      ],
+      "title": "[新华社]印花税法立法进程加快",
+      "url": "http://www.chinatax.gov.cn/chinatax/n810219/n810780/c5160493/content.html"
+    },
+    {
+      "candidate_id": "sta-0014",
+      "column": "新闻发布",
+      "disposition": "unresolved",
+      "label": "媒体视点",
+      "published_at": "2025-10-15 15:24:38",
+      "query_provenance": [
+        "securities-transaction-stamp-duty"
+      ],
+      "source_owner": "经济日报",
+      "source_refs": [
+        {
+          "raw_sha256": "sha256:4747f3b44843de55a0f384a873371ea3eb762e5aee4097d73ae00ff2ee5669db",
+          "source_id": "sta-search-securities-transaction-stamp-duty-page-0"
+        }
+      ],
+      "title": "[经济日报] 最新税收数据显示：我国经济向好态势不断稳固",
+      "url": "http://www.chinatax.gov.cn/chinatax/n810219/n810780/c5243623/content.html"
+    },
+    {
+      "candidate_id": "sta-0015",
+      "column": "新闻发布",
+      "disposition": "unresolved",
+      "label": "媒体视点",
+      "published_at": "2025-10-15 15:24:01",
+      "query_provenance": [
+        "securities-transaction-stamp-duty"
+      ],
+      "source_owner": "新华财经",
+      "source_refs": [
+        {
+          "raw_sha256": "sha256:4747f3b44843de55a0f384a873371ea3eb762e5aee4097d73ae00ff2ee5669db",
+          "source_id": "sta-search-securities-transaction-stamp-duty-page-0"
+        }
+      ],
+      "title": "[新华财经] 税收数据显示：一揽子增量政策实施以来 增值税发票销售和税收收入增速双双稳步回升",
+      "url": "http://www.chinatax.gov.cn/chinatax/n810219/n810780/c5243622/content.html"
+    },
+    {
+      "candidate_id": "sta-0016",
+      "column": "新闻发布",
+      "disposition": "unresolved",
+      "label": "媒体视点",
+      "published_at": "2025-10-15 10:04:19",
+      "query_provenance": [
+        "securities-transaction-stamp-duty"
+      ],
+      "source_owner": "人民网",
+      "source_refs": [
+        {
+          "raw_sha256": "sha256:4747f3b44843de55a0f384a873371ea3eb762e5aee4097d73ae00ff2ee5669db",
+          "source_id": "sta-search-securities-transaction-stamp-duty-page-0"
+        }
+      ],
+      "title": "[人民网] 财经观察：一揽子增量政策实施超一年 经济向好态势不断稳固",
+      "url": "http://www.chinatax.gov.cn/chinatax/n810219/n810780/c5243606/content.html"
+    },
+    {
+      "candidate_id": "sta-0017",
+      "column": "新闻发布",
+      "disposition": "unresolved",
+      "label": "媒体视点",
+      "published_at": "2025-10-15 10:03:43",
+      "query_provenance": [
+        "securities-transaction-stamp-duty"
+      ],
+      "source_owner": "央广网",
+      "source_refs": [
+        {
+          "raw_sha256": "sha256:4747f3b44843de55a0f384a873371ea3eb762e5aee4097d73ae00ff2ee5669db",
+          "source_id": "sta-search-securities-transaction-stamp-duty-page-0"
+        }
+      ],
+      "title": "[央广网] 一揽子政策显效 税收数据勾勒经济向好曲线",
+      "url": "http://www.chinatax.gov.cn/chinatax/n810219/n810780/c5243605/content.html"
+    },
+    {
+      "candidate_id": "sta-0018",
+      "column": "新闻发布",
+      "disposition": "unresolved",
+      "label": "媒体视点",
+      "published_at": "2025-10-15 10:03:07",
+      "query_provenance": [
+        "securities-transaction-stamp-duty"
+      ],
+      "source_owner": "香港商报",
+      "source_refs": [
+        {
+          "raw_sha256": "sha256:4747f3b44843de55a0f384a873371ea3eb762e5aee4097d73ae00ff2ee5669db",
+          "source_id": "sta-search-securities-transaction-stamp-duty-page-0"
+        }
+      ],
+      "title": "[香港商报] 最新税收数据显示：我国经济持续向好态势稳固",
+      "url": "http://www.chinatax.gov.cn/chinatax/n810219/n810780/c5243604/content.html"
+    },
+    {
+      "candidate_id": "sta-0019",
+      "column": "新闻发布",
+      "disposition": "unresolved",
+      "label": "税务新闻",
+      "published_at": "2025-10-14 10:14:08",
+      "query_provenance": [
+        "securities-transaction-stamp-duty"
+      ],
+      "source_owner": "中国税务报",
+      "source_refs": [
+        {
+          "raw_sha256": "sha256:4747f3b44843de55a0f384a873371ea3eb762e5aee4097d73ae00ff2ee5669db",
+          "source_id": "sta-search-securities-transaction-stamp-duty-page-0"
+        }
+      ],
+      "title": "最新税收数据显示 去年一揽子增量政策实施一年来 我国经济向好态势不断稳固",
+      "url": "http://www.chinatax.gov.cn/chinatax/n810219/n810724/c5243597/content.html"
+    },
+    {
+      "candidate_id": "sta-0020",
+      "column": "政策法规",
+      "disposition": "unresolved",
+      "label": "财税文件",
+      "published_at": "2025-08-27 00:00:00",
+      "query_provenance": [
+        "securities-transaction-stamp-duty"
+      ],
+      "source_owner": "财政部,国家税务总局",
+      "source_refs": [
+        {
+          "raw_sha256": "sha256:4747f3b44843de55a0f384a873371ea3eb762e5aee4097d73ae00ff2ee5669db",
+          "source_id": "sta-search-securities-transaction-stamp-duty-page-0"
+        }
+      ],
+      "title": "财政部 税务总局关于划转充实社保基金国有股权及现金收益运作管理税收政策的通知",
+      "url": "https://fgk.chinatax.gov.cn/zcfgk/c102416/c5242860/content.html"
+    },
+    {
+      "candidate_id": "sta-0021",
+      "column": "互动交流",
+      "disposition": "unresolved",
+      "label": "回应关切",
+      "published_at": "2025-01-16 11:45:19",
+      "query_provenance": [
+        "securities-transaction-stamp-duty"
+      ],
+      "source_owner": "税务总局新媒体",
+      "source_refs": [
+        {
+          "raw_sha256": "sha256:4747f3b44843de55a0f384a873371ea3eb762e5aee4097d73ae00ff2ee5669db",
+          "source_id": "sta-search-securities-transaction-stamp-duty-page-0"
+        }
+      ],
+      "title": "申报享受“六税两费”减免优惠，这10个问答一定要看",
+      "url": "http://www.chinatax.gov.cn/chinatax/n810356/n3010387/c5237882/content.html"
+    },
+    {
+      "candidate_id": "sta-0022",
+      "column": "互动交流",
+      "disposition": "unresolved",
+      "label": "回应关切",
+      "published_at": "2025-01-14 10:54:29",
+      "query_provenance": [
+        "securities-transaction-stamp-duty"
+      ],
+      "source_owner": "税务总局新媒体",
+      "source_refs": [
+        {
+          "raw_sha256": "sha256:4747f3b44843de55a0f384a873371ea3eb762e5aee4097d73ae00ff2ee5669db",
+          "source_id": "sta-search-securities-transaction-stamp-duty-page-0"
+        }
+      ],
+      "title": "“六税两费”减征幅度是多少？哪些人可以享受？8个问答搞清楚",
+      "url": "http://www.chinatax.gov.cn/chinatax/n810356/n3010387/c5237837/content.html"
+    },
+    {
+      "candidate_id": "sta-0023",
+      "column": "新闻发布",
+      "disposition": "unresolved",
+      "label": "媒体视点",
+      "published_at": "2024-08-28 10:23:08",
+      "query_provenance": [
+        "securities-transaction-stamp-duty",
+        "half-securities-transaction-stamp-duty"
+      ],
+      "source_owner": "经济参考报",
+      "source_refs": [
+        {
+          "raw_sha256": "sha256:4747f3b44843de55a0f384a873371ea3eb762e5aee4097d73ae00ff2ee5669db",
+          "source_id": "sta-search-securities-transaction-stamp-duty-page-0"
+        },
+        {
+          "raw_sha256": "sha256:35482782acb146c8fe3b6db325538aebea619e4066128f3cdc54681166e02cb2",
+          "source_id": "sta-search-half-securities-transaction-stamp-duty-page-0"
+        }
+      ],
+      "title": "[经济参考报] 权威专家：前七个月税收收入与GDP增长大体匹配",
+      "url": "http://www.chinatax.gov.cn/chinatax/n810219/n810780/c5234124/content.html"
+    },
+    {
+      "candidate_id": "sta-0024",
+      "column": "政策问答",
+      "disposition": "unresolved",
+      "label": "政策问答",
+      "published_at": "2024-06-12 00:00:00",
+      "query_provenance": [
+        "securities-transaction-stamp-duty"
+      ],
+      "source_owner": "国家税务总局",
+      "source_refs": [
+        {
+          "raw_sha256": "sha256:be5470367507b8faa6b3956743644370d22ca94b6308c2eed20a3fa8987dc3f3",
+          "source_id": "sta-search-securities-transaction-stamp-duty-page-1"
+        }
+      ],
+      "title": "“六税两费”优惠政策的减征幅度是多少？",
+      "url": "https://fgk.chinatax.gov.cn/zcfgk/c100024/c5236938/content.html"
+    },
+    {
+      "candidate_id": "sta-0025",
+      "column": "政策问答",
+      "disposition": "unresolved",
+      "label": "政策问答",
+      "published_at": "2024-06-09 00:00:00",
+      "query_provenance": [
+        "securities-transaction-stamp-duty"
+      ],
+      "source_owner": "国家税务总局",
+      "source_refs": [
+        {
+          "raw_sha256": "sha256:be5470367507b8faa6b3956743644370d22ca94b6308c2eed20a3fa8987dc3f3",
+          "source_id": "sta-search-securities-transaction-stamp-duty-page-1"
+        }
+      ],
+      "title": "我公司申报缴纳的哪些税费种可以享受本次“六税两费”减免优惠？",
+      "url": "https://fgk.chinatax.gov.cn/zcfgk/c100024/c5236934/content.html"
+    },
+    {
+      "candidate_id": "sta-0026",
+      "column": "新闻发布",
+      "disposition": "unresolved",
+      "label": "税务部门在行动",
+      "published_at": "2024-01-03 14:30:49",
+      "query_provenance": [
+        "securities-transaction-stamp-duty"
+      ],
+      "source_owner": "经济日报",
+      "source_refs": [
+        {
+          "raw_sha256": "sha256:be5470367507b8faa6b3956743644370d22ca94b6308c2eed20a3fa8987dc3f3",
+          "source_id": "sta-search-securities-transaction-stamp-duty-page-1"
+        }
+      ],
+      "title": "经济日报：减税降费精准发力稳预期",
+      "url": "http://www.chinatax.gov.cn/chinatax/n810219/n810780/c5220070/content.html"
+    },
+    {
+      "candidate_id": "sta-0027",
+      "column": "新闻发布",
+      "disposition": "unresolved",
+      "label": "媒体视点",
+      "published_at": "2024-01-03 14:30:49",
+      "query_provenance": [
+        "securities-transaction-stamp-duty"
+      ],
+      "source_owner": "经济日报",
+      "source_refs": [
+        {
+          "raw_sha256": "sha256:be5470367507b8faa6b3956743644370d22ca94b6308c2eed20a3fa8987dc3f3",
+          "source_id": "sta-search-securities-transaction-stamp-duty-page-1"
+        }
+      ],
+      "title": "[经济日报]减税降费精准发力稳预期",
+      "url": "http://www.chinatax.gov.cn/chinatax/n810219/n810780/c5220070/content.html"
+    },
+    {
+      "candidate_id": "sta-0028",
+      "column": "政策法规",
+      "disposition": "unresolved",
+      "label": "工作通知",
+      "published_at": "2023-11-15 00:00:00",
+      "query_provenance": [
+        "securities-transaction-stamp-duty"
+      ],
+      "source_owner": "国家税务总局",
+      "source_refs": [
+        {
+          "raw_sha256": "sha256:be5470367507b8faa6b3956743644370d22ca94b6308c2eed20a3fa8987dc3f3",
+          "source_id": "sta-search-securities-transaction-stamp-duty-page-1"
+        }
+      ],
+      "title": "税务总局更新发布“非接触式”办税缴费事项清单",
+      "url": "https://fgk.chinatax.gov.cn/zcfgk/c102424/c5216392/content.html"
+    },
+    {
+      "candidate_id": "sta-0029",
+      "column": "互动交流",
+      "disposition": "unresolved",
+      "label": "回应关切",
+      "published_at": "2023-10-12 10:58:22",
+      "query_provenance": [
+        "securities-transaction-stamp-duty"
+      ],
+      "source_owner": "税务总局新媒体",
+      "source_refs": [
+        {
+          "raw_sha256": "sha256:be5470367507b8faa6b3956743644370d22ca94b6308c2eed20a3fa8987dc3f3",
+          "source_id": "sta-search-securities-transaction-stamp-duty-page-1"
+        }
+      ],
+      "title": "16个问答学习：纳税人如何享受“六税两费”减免政策",
+      "url": "http://www.chinatax.gov.cn/chinatax/n810356/n3010387/c5215113/content.html"
+    },
+    {
+      "candidate_id": "sta-0030",
+      "column": "信息公开",
+      "disposition": "unresolved",
+      "label": "税收统计",
+      "published_at": "2023-09-27 08:56:00",
+      "query_provenance": [
+        "securities-transaction-stamp-duty"
+      ],
+      "source_owner": "",
+      "source_refs": [
+        {
+          "raw_sha256": "sha256:be5470367507b8faa6b3956743644370d22ca94b6308c2eed20a3fa8987dc3f3",
+          "source_id": "sta-search-securities-transaction-stamp-duty-page-1"
+        }
+      ],
+      "title": "人民日报海外版：今年以来，中国已累计延续、优化、完善税费政策超40项——平均每周一项！税惠“礼包”分量足",
+      "url": "http://www.chinatax.gov.cn/chinatax/n810214/c102374/c102380/c101807e/c5214192/content.html"
+    },
+    {
+      "candidate_id": "sta-0031",
+      "column": "新闻发布",
+      "disposition": "unresolved",
+      "label": "媒体视点",
+      "published_at": "2023-09-26 15:31:48",
+      "query_provenance": [
+        "securities-transaction-stamp-duty"
+      ],
+      "source_owner": "人民日报海外版",
+      "source_refs": [
+        {
+          "raw_sha256": "sha256:be5470367507b8faa6b3956743644370d22ca94b6308c2eed20a3fa8987dc3f3",
+          "source_id": "sta-search-securities-transaction-stamp-duty-page-1"
+        }
+      ],
+      "title": "[人民日报海外版]今年以来，中国已累计延续、优化、完善税费政策超40项——平均每周一项！税惠“礼包”分量足",
+      "url": "http://www.chinatax.gov.cn/chinatax/n810219/n810780/c5214148/content.html"
+    },
+    {
+      "candidate_id": "sta-0032",
+      "column": "最新政策文件",
+      "disposition": "unresolved",
+      "label": "最新政策文件",
+      "published_at": "2023-09-24 01:00:00",
+      "query_provenance": [
+        "securities-transaction-stamp-duty"
+      ],
+      "source_owner": "",
+      "source_refs": [
+        {
+          "raw_sha256": "sha256:be5470367507b8faa6b3956743644370d22ca94b6308c2eed20a3fa8987dc3f3",
+          "source_id": "sta-search-securities-transaction-stamp-duty-page-1"
+        }
+      ],
+      "title": "国家税务总局 财政部 中国人民银行关于进一步加强代扣代收代征税款手续费管理的通知",
+      "url": "https://fgk.chinatax.gov.cn/zcfgk/c102424/c5214506/content.html"
+    },
+    {
+      "candidate_id": "sta-0033",
+      "column": "新闻发布",
+      "disposition": "unresolved",
+      "label": "税务部门在行动",
+      "published_at": "2023-09-11 14:31:45",
+      "query_provenance": [
+        "securities-transaction-stamp-duty"
+      ],
+      "source_owner": "经济日报",
+      "source_refs": [
+        {
+          "raw_sha256": "sha256:be5470367507b8faa6b3956743644370d22ca94b6308c2eed20a3fa8987dc3f3",
+          "source_id": "sta-search-securities-transaction-stamp-duty-page-1"
+        }
+      ],
+      "title": "经济日报：前7月新增减税降费及退税缓费1.05万亿元——税费政策组合拳支持企业纾困",
+      "url": "http://www.chinatax.gov.cn/chinatax/n810219/n810780/c5211761/content.html"
+    },
+    {
+      "candidate_id": "sta-0034",
+      "column": "新闻发布",
+      "disposition": "unresolved",
+      "label": "媒体视点",
+      "published_at": "2023-09-11 14:31:45",
+      "query_provenance": [
+        "securities-transaction-stamp-duty"
+      ],
+      "source_owner": "经济日报",
+      "source_refs": [
+        {
+          "raw_sha256": "sha256:70771a350de4b47872472df6bd18ce738c0ee6b45948e5edced53b78963e58ed",
+          "source_id": "sta-search-securities-transaction-stamp-duty-page-2"
+        }
+      ],
+      "title": "[经济日报]前7月新增减税降费及退税缓费1.05万亿元——税费政策组合拳支持企业纾困",
+      "url": "http://www.chinatax.gov.cn/chinatax/n810219/n810780/c5211761/content.html"
+    },
+    {
+      "candidate_id": "sta-0035",
+      "column": "新闻发布",
+      "disposition": "unresolved",
+      "label": "税务部门在行动",
+      "published_at": "2023-09-06 11:28:41",
+      "query_provenance": [
+        "securities-transaction-stamp-duty",
+        "half-securities-transaction-stamp-duty"
+      ],
+      "source_owner": "人民网",
+      "source_refs": [
+        {
+          "raw_sha256": "sha256:70771a350de4b47872472df6bd18ce738c0ee6b45948e5edced53b78963e58ed",
+          "source_id": "sta-search-securities-transaction-stamp-duty-page-2"
+        },
+        {
+          "raw_sha256": "sha256:35482782acb146c8fe3b6db325538aebea619e4066128f3cdc54681166e02cb2",
+          "source_id": "sta-search-half-securities-transaction-stamp-duty-page-0"
+        }
+      ],
+      "title": "人民网：稳经济促发展保民生 一系列税费优惠政策密集发布",
+      "url": "http://www.chinatax.gov.cn/chinatax/n810219/n810780/c5211641/content.html"
+    },
+    {
+      "candidate_id": "sta-0036",
+      "column": "新闻发布",
+      "disposition": "unresolved",
+      "label": "媒体视点",
+      "published_at": "2023-09-06 11:28:41",
+      "query_provenance": [
+        "securities-transaction-stamp-duty",
+        "half-securities-transaction-stamp-duty"
+      ],
+      "source_owner": "人民网",
+      "source_refs": [
+        {
+          "raw_sha256": "sha256:70771a350de4b47872472df6bd18ce738c0ee6b45948e5edced53b78963e58ed",
+          "source_id": "sta-search-securities-transaction-stamp-duty-page-2"
+        },
+        {
+          "raw_sha256": "sha256:35482782acb146c8fe3b6db325538aebea619e4066128f3cdc54681166e02cb2",
+          "source_id": "sta-search-half-securities-transaction-stamp-duty-page-0"
+        }
+      ],
+      "title": "[人民网]稳经济促发展保民生 一系列税费优惠政策密集发布",
+      "url": "http://www.chinatax.gov.cn/chinatax/n810219/n810780/c5211641/content.html"
+    },
+    {
+      "candidate_id": "sta-0037",
+      "column": "税务视频",
+      "disposition": "unresolved",
+      "label": "视频新闻",
+      "published_at": "2023-08-28 15:28:13",
+      "query_provenance": [
+        "securities-transaction-stamp-duty"
+      ],
+      "source_owner": "央视新闻联播",
+      "source_refs": [
+        {
+          "raw_sha256": "sha256:70771a350de4b47872472df6bd18ce738c0ee6b45948e5edced53b78963e58ed",
+          "source_id": "sta-search-securities-transaction-stamp-duty-page-2"
+        }
+      ],
+      "title": "央视新闻联播：证券交易印花税明起减半征收",
+      "url": "http://www.chinatax.gov.cn/chinatax/n810351/c102272/c5211225/content.html"
+    },
+    {
+      "candidate_id": "sta-0038",
+      "column": "新闻发布",
+      "disposition": "unresolved",
+      "label": "媒体视点",
+      "published_at": "2023-08-28 15:11:06",
+      "query_provenance": [
+        "securities-transaction-stamp-duty"
+      ],
+      "source_owner": "经济日报",
+      "source_refs": [
+        {
+          "raw_sha256": "sha256:70771a350de4b47872472df6bd18ce738c0ee6b45948e5edced53b78963e58ed",
+          "source_id": "sta-search-securities-transaction-stamp-duty-page-2"
+        }
+      ],
+      "title": "[经济日报]印花税下调释放政策暖意",
+      "url": "http://www.chinatax.gov.cn/chinatax/n810219/n810780/c5211220/content.html"
+    },
+    {
+      "candidate_id": "sta-0039",
+      "column": "税收政策",
+      "disposition": "unresolved",
+      "label": "2023",
+      "published_at": "2023-08-27 00:00:00",
+      "query_provenance": [
+        "securities-transaction-stamp-duty",
+        "half-securities-transaction-stamp-duty"
+      ],
+      "source_owner": "",
+      "source_refs": [
+        {
+          "raw_sha256": "sha256:70771a350de4b47872472df6bd18ce738c0ee6b45948e5edced53b78963e58ed",
+          "source_id": "sta-search-securities-transaction-stamp-duty-page-2"
+        },
+        {
+          "raw_sha256": "sha256:35482782acb146c8fe3b6db325538aebea619e4066128f3cdc54681166e02cb2",
+          "source_id": "sta-search-half-securities-transaction-stamp-duty-page-0"
+        }
+      ],
+      "title": "关于减半征收证券交易印花税的公告",
+      "url": "http://www.chinatax.gov.cn/zcfgk/c102416/c5211343/content.html"
+    },
+    {
+      "candidate_id": "sta-0040",
+      "column": "政策法规",
+      "disposition": "unresolved",
+      "label": "财税文件",
+      "published_at": "2023-08-27 00:00:00",
+      "query_provenance": [
+        "securities-transaction-stamp-duty",
+        "half-securities-transaction-stamp-duty"
+      ],
+      "source_owner": "国家税务总局,财政部",
+      "source_refs": [
+        {
+          "raw_sha256": "sha256:70771a350de4b47872472df6bd18ce738c0ee6b45948e5edced53b78963e58ed",
+          "source_id": "sta-search-securities-transaction-stamp-duty-page-2"
+        },
+        {
+          "raw_sha256": "sha256:35482782acb146c8fe3b6db325538aebea619e4066128f3cdc54681166e02cb2",
+          "source_id": "sta-search-half-securities-transaction-stamp-duty-page-0"
+        }
+      ],
+      "title": "财政部 税务总局关于减半征收证券交易印花税的公告",
+      "url": "https://fgk.chinatax.gov.cn/zcfgk/c102416/c5211343/content.html"
+    },
+    {
+      "candidate_id": "sta-0041",
+      "column": "互动交流",
+      "disposition": "unresolved",
+      "label": "回应关切",
+      "published_at": "2023-08-24 10:30:48",
+      "query_provenance": [
+        "securities-transaction-stamp-duty"
+      ],
+      "source_owner": "税务总局新媒体",
+      "source_refs": [
+        {
+          "raw_sha256": "sha256:70771a350de4b47872472df6bd18ce738c0ee6b45948e5edced53b78963e58ed",
+          "source_id": "sta-search-securities-transaction-stamp-duty-page-2"
+        }
+      ],
+      "title": "实用帖：小规模纳税人、小型微利企业和个体工商户减半征收“六税两费”政策",
+      "url": "http://www.chinatax.gov.cn/chinatax/n810356/n3010387/c5211123/content.html"
+    },
+    {
+      "candidate_id": "sta-0042",
+      "column": "新闻发布",
+      "disposition": "unresolved",
+      "label": "媒体视点",
+      "published_at": "2023-08-21 14:41:47",
+      "query_provenance": [
+        "securities-transaction-stamp-duty"
+      ],
+      "source_owner": "经济日报",
+      "source_refs": [
+        {
+          "raw_sha256": "sha256:70771a350de4b47872472df6bd18ce738c0ee6b45948e5edced53b78963e58ed",
+          "source_id": "sta-search-securities-transaction-stamp-duty-page-2"
+        }
+      ],
+      "title": "[经济日报]税费组合拳助小微企业焕发活力",
+      "url": "http://www.chinatax.gov.cn/chinatax/n810219/n810780/c5210976/content.html"
+    },
+    {
+      "candidate_id": "sta-0043",
+      "column": "税收政策",
+      "disposition": "unresolved",
+      "label": "2023",
+      "published_at": "2023-08-21 00:00:00",
+      "query_provenance": [
+        "securities-transaction-stamp-duty"
+      ],
+      "source_owner": "",
+      "source_refs": [
+        {
+          "raw_sha256": "sha256:70771a350de4b47872472df6bd18ce738c0ee6b45948e5edced53b78963e58ed",
+          "source_id": "sta-search-securities-transaction-stamp-duty-page-2"
+        }
+      ],
+      "title": "关于继续实施创新企业境内发行存托凭证试点阶段有关税收政策的公告",
+      "url": "http://www.chinatax.gov.cn/zcfgk/c102416/c5211074/content.html"
+    },
+    {
+      "candidate_id": "sta-0044",
+      "column": "政策法规",
+      "disposition": "unresolved",
+      "label": "财税文件",
+      "published_at": "2023-08-21 00:00:00",
+      "query_provenance": [
+        "securities-transaction-stamp-duty"
+      ],
+      "source_owner": "财政部,国家税务总局,证监会",
+      "source_refs": [
+        {
+          "raw_sha256": "sha256:e8f874abde54dafd2683a8972269f69ca34f06fb371582689c83fd4f097aec0a",
+          "source_id": "sta-search-securities-transaction-stamp-duty-page-3"
+        }
+      ],
+      "title": "财政部 税务总局 中国证监会关于继续实施创新企业境内发行存托凭证试点阶段有关税收政策的公告",
+      "url": "https://fgk.chinatax.gov.cn/zcfgk/c102416/c5211074/content.html"
+    },
+    {
+      "candidate_id": "sta-0045",
+      "column": "互动交流",
+      "disposition": "unresolved",
+      "label": "回应关切",
+      "published_at": "2023-08-14 10:52:58",
+      "query_provenance": [
+        "securities-transaction-stamp-duty"
+      ],
+      "source_owner": "税务总局新媒体",
+      "source_refs": [
+        {
+          "raw_sha256": "sha256:e8f874abde54dafd2683a8972269f69ca34f06fb371582689c83fd4f097aec0a",
+          "source_id": "sta-search-securities-transaction-stamp-duty-page-3"
+        }
+      ],
+      "title": "一系列税费优惠政策密集发布，帮你捋一捋都说了啥",
+      "url": "http://www.chinatax.gov.cn/chinatax/n810356/n3010387/c5210802/content.html"
+    },
+    {
+      "candidate_id": "sta-0046",
+      "column": "新闻发布",
+      "disposition": "unresolved",
+      "label": "税务部门在行动",
+      "published_at": "2023-08-03 15:39:58",
+      "query_provenance": [
+        "securities-transaction-stamp-duty"
+      ],
+      "source_owner": "新华社",
+      "source_refs": [
+        {
+          "raw_sha256": "sha256:e8f874abde54dafd2683a8972269f69ca34f06fb371582689c83fd4f097aec0a",
+          "source_id": "sta-search-securities-transaction-stamp-duty-page-3"
+        }
+      ],
+      "title": "新华社：多项税收优惠政策延续优化至2027年底",
+      "url": "http://www.chinatax.gov.cn/chinatax/n810219/n810780/c5210509/content.html"
+    },
+    {
+      "candidate_id": "sta-0047",
+      "column": "新闻发布",
+      "disposition": "unresolved",
+      "label": "媒体视点",
+      "published_at": "2023-08-03 15:39:58",
+      "query_provenance": [
+        "securities-transaction-stamp-duty"
+      ],
+      "source_owner": "新华社",
+      "source_refs": [
+        {
+          "raw_sha256": "sha256:e8f874abde54dafd2683a8972269f69ca34f06fb371582689c83fd4f097aec0a",
+          "source_id": "sta-search-securities-transaction-stamp-duty-page-3"
+        }
+      ],
+      "title": "[新华社]多项税收优惠政策延续优化至2027年底",
+      "url": "http://www.chinatax.gov.cn/chinatax/n810219/n810780/c5210509/content.html"
+    },
+    {
+      "candidate_id": "sta-0048",
+      "column": "新闻发布",
+      "disposition": "unresolved",
+      "label": "媒体视点",
+      "published_at": "2023-08-03 15:37:44",
+      "query_provenance": [
+        "securities-transaction-stamp-duty"
+      ],
+      "source_owner": "经济日报",
+      "source_refs": [
+        {
+          "raw_sha256": "sha256:e8f874abde54dafd2683a8972269f69ca34f06fb371582689c83fd4f097aec0a",
+          "source_id": "sta-search-securities-transaction-stamp-duty-page-3"
+        }
+      ],
+      "title": "[经济日报]优惠政策延期、个税征收减半——税费组合拳促进小微企业发展",
+      "url": "http://www.chinatax.gov.cn/chinatax/n810219/n810780/c5210507/content.html"
+    },
+    {
+      "candidate_id": "sta-0049",
+      "column": "新闻发布",
+      "disposition": "unresolved",
+      "label": "媒体视点",
+      "published_at": "2023-08-03 15:31:18",
+      "query_provenance": [
+        "securities-transaction-stamp-duty"
+      ],
+      "source_owner": "中新社",
+      "source_refs": [
+        {
+          "raw_sha256": "sha256:e8f874abde54dafd2683a8972269f69ca34f06fb371582689c83fd4f097aec0a",
+          "source_id": "sta-search-securities-transaction-stamp-duty-page-3"
+        }
+      ],
+      "title": "[中新社]两部门公布一批税费优惠政策",
+      "url": "http://www.chinatax.gov.cn/chinatax/n810219/n810780/c5210505/content.html"
+    },
+    {
+      "candidate_id": "sta-0050",
+      "column": "新闻发布",
+      "disposition": "unresolved",
+      "label": "税费优惠政策",
+      "published_at": "2023-08-02 00:00:00",
+      "query_provenance": [
+        "securities-transaction-stamp-duty"
+      ],
+      "source_owner": "",
+      "source_refs": [
+        {
+          "raw_sha256": "sha256:e8f874abde54dafd2683a8972269f69ca34f06fb371582689c83fd4f097aec0a",
+          "source_id": "sta-search-securities-transaction-stamp-duty-page-3"
+        }
+      ],
+      "title": "财政部 税务总局关于进一步支持小微企业和个体工商户发展有关税费政策的公告",
+      "url": "http://www.chinatax.gov.cn/zcfgk/c102416/c5210453/content.html"
+    },
+    {
+      "candidate_id": "sta-0051",
+      "column": "税收政策",
+      "disposition": "unresolved",
+      "label": "2023",
+      "published_at": "2023-08-02 00:00:00",
+      "query_provenance": [
+        "securities-transaction-stamp-duty"
+      ],
+      "source_owner": "",
+      "source_refs": [
+        {
+          "raw_sha256": "sha256:e8f874abde54dafd2683a8972269f69ca34f06fb371582689c83fd4f097aec0a",
+          "source_id": "sta-search-securities-transaction-stamp-duty-page-3"
+        }
+      ],
+      "title": "关于进一步支持小微企业和个体工商户发展有关税费政策的公告",
+      "url": "http://www.chinatax.gov.cn/zcfgk/c102416/c5210453/content.html"
+    },
+    {
+      "candidate_id": "sta-0052",
+      "column": "政策法规",
+      "disposition": "unresolved",
+      "label": "财税文件",
+      "published_at": "2023-08-02 00:00:00",
+      "query_provenance": [
+        "securities-transaction-stamp-duty"
+      ],
+      "source_owner": "财政部,国家税务总局",
+      "source_refs": [
+        {
+          "raw_sha256": "sha256:e8f874abde54dafd2683a8972269f69ca34f06fb371582689c83fd4f097aec0a",
+          "source_id": "sta-search-securities-transaction-stamp-duty-page-3"
+        }
+      ],
+      "title": "财政部 税务总局关于进一步支持小微企业和个体工商户发展有关税费政策的公告",
+      "url": "https://fgk.chinatax.gov.cn/zcfgk/c102416/c5210453/content.html"
+    },
+    {
+      "candidate_id": "sta-0053",
+      "column": "政策法规",
+      "disposition": "unresolved",
+      "label": "其他文件",
+      "published_at": "2022-08-29 00:00:00",
+      "query_provenance": [
+        "securities-transaction-stamp-duty"
+      ],
+      "source_owner": "国家税务总局,国家发展和改革委员会,教育部,科技部,民政部,财政部,人力资源和社会保障部,住房和城乡建设部,中国人民银行,国家卫生健康委,证监会,国务院国资委,市场监管总局",
+      "source_refs": [
+        {
+          "raw_sha256": "sha256:e8f874abde54dafd2683a8972269f69ca34f06fb371582689c83fd4f097aec0a",
+          "source_id": "sta-search-securities-transaction-stamp-duty-page-3"
+        }
+      ],
+      "title": "国家发展改革委等13部门印发《养老托育服务业纾困扶持若干政策措施》的通知",
+      "url": "https://fgk.chinatax.gov.cn/zcfgk/c100013/c5210691/content.html"
+    },
+    {
+      "candidate_id": "sta-0054",
+      "column": "新闻发布",
+      "disposition": "unresolved",
+      "label": "媒体视点",
+      "published_at": "2022-08-16 09:31:50",
+      "query_provenance": [
+        "securities-transaction-stamp-duty"
+      ],
+      "source_owner": "中国政府网",
+      "source_refs": [
+        {
+          "raw_sha256": "sha256:f41215278721cd208cfcdf68fa67a3fa25bad24e1569ebd124e25dd58aa0fc92",
+          "source_id": "sta-search-securities-transaction-stamp-duty-page-4"
+        }
+      ],
+      "title": "[中国政府网]退！减！免！缓！延！今年这些钱你省了吗？",
+      "url": "http://www.chinatax.gov.cn/chinatax/n810219/n810780/c5179072/content.html"
+    },
+    {
+      "candidate_id": "sta-0055",
+      "column": "新闻发布",
+      "disposition": "unresolved",
+      "label": "2022年新的组合式税费支持政策指引",
+      "published_at": "2022-08-11 16:35:18",
+      "query_provenance": [
+        "securities-transaction-stamp-duty"
+      ],
+      "source_owner": "",
+      "source_refs": [
+        {
+          "raw_sha256": "sha256:f41215278721cd208cfcdf68fa67a3fa25bad24e1569ebd124e25dd58aa0fc92",
+          "source_id": "sta-search-securities-transaction-stamp-duty-page-4"
+        }
+      ],
+      "title": "小微企业“六税两费”减免政策",
+      "url": "http://www.chinatax.gov.cn/chinatax/c102174/c5178910/content.html"
+    },
+    {
+      "candidate_id": "sta-0056",
+      "column": "新闻发布",
+      "disposition": "unresolved",
+      "label": "激发乡村创业就业活力",
+      "published_at": "2022-08-11 11:17:50",
+      "query_provenance": [
+        "securities-transaction-stamp-duty"
+      ],
+      "source_owner": "",
+      "source_refs": [
+        {
+          "raw_sha256": "sha256:f41215278721cd208cfcdf68fa67a3fa25bad24e1569ebd124e25dd58aa0fc92",
+          "source_id": "sta-search-securities-transaction-stamp-duty-page-4"
+        }
+      ],
+      "title": "增值税小规模纳税人、小微企业和个体工商户减免地方“六税两费”",
+      "url": "http://www.chinatax.gov.cn/chinatax/c102141/c5178831/content.html"
+    },
+    {
+      "candidate_id": "sta-0057",
+      "column": "新闻发布",
+      "disposition": "unresolved",
+      "label": "组合式税费支持政策",
+      "published_at": "2022-07-22 14:53:34",
+      "query_provenance": [
+        "securities-transaction-stamp-duty"
+      ],
+      "source_owner": "",
+      "source_refs": [
+        {
+          "raw_sha256": "sha256:f41215278721cd208cfcdf68fa67a3fa25bad24e1569ebd124e25dd58aa0fc92",
+          "source_id": "sta-search-securities-transaction-stamp-duty-page-4"
+        }
+      ],
+      "title": "小型微利企业可以享受哪些税费优惠政策？这篇文章告诉你",
+      "url": "http://www.chinatax.gov.cn/chinatax/c102089/c5178366/content.html"
+    },
+    {
+      "candidate_id": "sta-0058",
+      "column": "新闻发布",
+      "disposition": "unresolved",
+      "label": "媒体视点",
+      "published_at": "2022-06-28 18:32:54",
+      "query_provenance": [
+        "securities-transaction-stamp-duty"
+      ],
+      "source_owner": "中国财经报",
+      "source_refs": [
+        {
+          "raw_sha256": "sha256:f41215278721cd208cfcdf68fa67a3fa25bad24e1569ebd124e25dd58aa0fc92",
+          "source_id": "sta-search-securities-transaction-stamp-duty-page-4"
+        }
+      ],
+      "title": "[中国财经报]我国税制改革取得历史性突破",
+      "url": "http://www.chinatax.gov.cn/chinatax/n810219/n810780/c5176827/content.html"
+    },
+    {
+      "candidate_id": "sta-0059",
+      "column": "新闻发布",
+      "disposition": "unresolved",
+      "label": "减免税费负担",
+      "published_at": "2022-06-20 16:06:14",
+      "query_provenance": [
+        "securities-transaction-stamp-duty"
+      ],
+      "source_owner": "国家税务总局办公厅",
+      "source_refs": [
+        {
+          "raw_sha256": "sha256:f41215278721cd208cfcdf68fa67a3fa25bad24e1569ebd124e25dd58aa0fc92",
+          "source_id": "sta-search-securities-transaction-stamp-duty-page-4"
+        }
+      ],
+      "title": "个体工商户减征地方“六税两费”",
+      "url": "http://www.chinatax.gov.cn/chinatax/c102122/c5176449/content.html"
+    },
+    {
+      "candidate_id": "sta-0060",
+      "column": "新闻发布",
+      "disposition": "unresolved",
+      "label": "减免税费负担",
+      "published_at": "2022-06-20 16:03:56",
+      "query_provenance": [
+        "securities-transaction-stamp-duty"
+      ],
+      "source_owner": "国家税务总局办公厅",
+      "source_refs": [
+        {
+          "raw_sha256": "sha256:f41215278721cd208cfcdf68fa67a3fa25bad24e1569ebd124e25dd58aa0fc92",
+          "source_id": "sta-search-securities-transaction-stamp-duty-page-4"
+        }
+      ],
+      "title": "小型微利企业减征地方“六税两费”",
+      "url": "http://www.chinatax.gov.cn/chinatax/c102121/c5176447/content.html"
+    },
+    {
+      "candidate_id": "sta-0061",
+      "column": "新闻发布",
+      "disposition": "unresolved",
+      "label": "减免税费负担",
+      "published_at": "2022-06-20 14:56:50",
+      "query_provenance": [
+        "securities-transaction-stamp-duty"
+      ],
+      "source_owner": "国家税务总局办公厅",
+      "source_refs": [
+        {
+          "raw_sha256": "sha256:f41215278721cd208cfcdf68fa67a3fa25bad24e1569ebd124e25dd58aa0fc92",
+          "source_id": "sta-search-securities-transaction-stamp-duty-page-4"
+        }
+      ],
+      "title": "增值税小规模纳税人减征地方“六税两费”",
+      "url": "http://www.chinatax.gov.cn/chinatax/n810219/n810744/c101970/c101971/c101978/c5167778/content.html"
+    },
+    {
+      "candidate_id": "sta-0062",
+      "column": "政策法规",
+      "disposition": "unresolved",
+      "label": "工作通知",
+      "published_at": "2022-05-26 00:00:00",
+      "query_provenance": [
+        "securities-transaction-stamp-duty"
+      ],
+      "source_owner": "国家税务总局",
+      "source_refs": [
+        {
+          "raw_sha256": "sha256:f41215278721cd208cfcdf68fa67a3fa25bad24e1569ebd124e25dd58aa0fc92",
+          "source_id": "sta-search-securities-transaction-stamp-duty-page-4"
+        }
+      ],
+      "title": "“非接触式”办税缴费事项清单",
+      "url": "https://fgk.chinatax.gov.cn/zcfgk/c102424/c5216958/content.html"
+    },
+    {
+      "candidate_id": "sta-0063",
+      "column": "新闻发布",
+      "disposition": "unresolved",
+      "label": "媒体视点",
+      "published_at": "2022-05-07 09:45:48",
+      "query_provenance": [
+        "securities-transaction-stamp-duty"
+      ],
+      "source_owner": "人民网",
+      "source_refs": [
+        {
+          "raw_sha256": "sha256:f41215278721cd208cfcdf68fa67a3fa25bad24e1569ebd124e25dd58aa0fc92",
+          "source_id": "sta-search-securities-transaction-stamp-duty-page-4"
+        }
+      ],
+      "title": "[人民网]组合式税费支持政策见成效 稳增长稳市场主体保就业",
+      "url": "http://www.chinatax.gov.cn/chinatax/n810219/n810780/c5175120/content.html"
+    },
+    {
+      "candidate_id": "sta-0064",
+      "column": "新闻发布",
+      "disposition": "unresolved",
+      "label": "媒体视点",
+      "published_at": "2022-04-26 09:46:35",
+      "query_provenance": [
+        "securities-transaction-stamp-duty"
+      ],
+      "source_owner": "人民日报",
+      "source_refs": [
+        {
+          "raw_sha256": "sha256:95294d8bd702c781e505ebe684c081a10384a45598f60326588243da61afdb4c",
+          "source_id": "sta-search-securities-transaction-stamp-duty-page-5"
+        }
+      ],
+      "title": "[人民日报]财税部门发布公告 31个省（区、市）继续顶格减征“六税两费”",
+      "url": "http://www.chinatax.gov.cn/chinatax/n810219/n810780/c5174895/content.html"
+    },
+    {
+      "candidate_id": "sta-0065",
+      "column": "新闻发布",
+      "disposition": "unresolved",
+      "label": "税务新闻",
+      "published_at": "2022-04-25 16:59:53",
+      "query_provenance": [
+        "securities-transaction-stamp-duty"
+      ],
+      "source_owner": "国家税务总局办公厅",
+      "source_refs": [
+        {
+          "raw_sha256": "sha256:95294d8bd702c781e505ebe684c081a10384a45598f60326588243da61afdb4c",
+          "source_id": "sta-search-securities-transaction-stamp-duty-page-5"
+        }
+      ],
+      "title": "31个省区市继续顶格减征“六税两费”",
+      "url": "http://www.chinatax.gov.cn/chinatax/n810219/n810724/c5174865/content.html"
+    },
+    {
+      "candidate_id": "sta-0066",
+      "column": "新闻发布",
+      "disposition": "unresolved",
+      "label": "媒体视点",
+      "published_at": "2022-04-25 10:36:02",
+      "query_provenance": [
+        "securities-transaction-stamp-duty"
+      ],
+      "source_owner": "中国税务报",
+      "source_refs": [
+        {
+          "raw_sha256": "sha256:95294d8bd702c781e505ebe684c081a10384a45598f60326588243da61afdb4c",
+          "source_id": "sta-search-securities-transaction-stamp-duty-page-5"
+        }
+      ],
+      "title": "[中国税务报]31个省区市继续顶格减征“六税两费”",
+      "url": "http://www.chinatax.gov.cn/chinatax/n810219/n810780/c5174842/content.html"
+    },
+    {
+      "candidate_id": "sta-0067",
+      "column": "新闻发布",
+      "disposition": "unresolved",
+      "label": "各地动态",
+      "published_at": "2022-04-14 11:05:26",
+      "query_provenance": [
+        "securities-transaction-stamp-duty"
+      ],
+      "source_owner": "国家税务总局黑龙江省税务局",
+      "source_refs": [
+        {
+          "raw_sha256": "sha256:95294d8bd702c781e505ebe684c081a10384a45598f60326588243da61afdb4c",
+          "source_id": "sta-search-securities-transaction-stamp-duty-page-5"
+        }
+      ],
+      "title": "黑龙江：落实减免政策 助力小微企业发展",
+      "url": "http://www.chinatax.gov.cn/chinatax/n810219/n810739/c5174557/content.html"
+    },
+    {
+      "candidate_id": "sta-0068",
+      "column": "信息公开",
+      "disposition": "unresolved",
+      "label": "税收统计",
+      "published_at": "2022-04-01 10:06:56",
+      "query_provenance": [
+        "securities-transaction-stamp-duty"
+      ],
+      "source_owner": "中新社",
+      "source_refs": [
+        {
+          "raw_sha256": "sha256:95294d8bd702c781e505ebe684c081a10384a45598f60326588243da61afdb4c",
+          "source_id": "sta-search-securities-transaction-stamp-duty-page-5"
+        }
+      ],
+      "title": "中国6000多万户小规模纳税人免征增值税",
+      "url": "http://www.chinatax.gov.cn/chinatax/n810214/c102374/c102380/c101807e/c5190342/content.html"
+    },
+    {
+      "candidate_id": "sta-0069",
+      "column": "新闻发布",
+      "disposition": "unresolved",
+      "label": "媒体视点",
+      "published_at": "2022-04-01 10:06:56",
+      "query_provenance": [
+        "securities-transaction-stamp-duty"
+      ],
+      "source_owner": "中新社",
+      "source_refs": [
+        {
+          "raw_sha256": "sha256:95294d8bd702c781e505ebe684c081a10384a45598f60326588243da61afdb4c",
+          "source_id": "sta-search-securities-transaction-stamp-duty-page-5"
+        }
+      ],
+      "title": "[中新社]中国6000多万户小规模纳税人免征增值税",
+      "url": "http://www.chinatax.gov.cn/chinatax/n810219/n810780/c5174133/content.html"
+    },
+    {
+      "candidate_id": "sta-0070",
+      "column": "新闻发布",
+      "disposition": "unresolved",
+      "label": "税务讲堂",
+      "published_at": "2022-03-31 17:04:33",
+      "query_provenance": [
+        "securities-transaction-stamp-duty"
+      ],
+      "source_owner": "国家税务总局办公厅",
+      "source_refs": [
+        {
+          "raw_sha256": "sha256:95294d8bd702c781e505ebe684c081a10384a45598f60326588243da61afdb4c",
+          "source_id": "sta-search-securities-transaction-stamp-duty-page-5"
+        }
+      ],
+      "title": "今年首期“税务讲堂”开讲啦！解读“六税两费”减免政策促进及时足额享受",
+      "url": "http://www.chinatax.gov.cn/chinatax/n810219/n810724/c5174100/content.html"
+    },
+    {
+      "candidate_id": "sta-0071",
+      "column": "税务视频",
+      "disposition": "unresolved",
+      "label": "税务视频",
+      "published_at": "2022-03-30 18:08:20",
+      "query_provenance": [
+        "securities-transaction-stamp-duty"
+      ],
+      "source_owner": "国家税务总局财产和行为税司",
+      "source_refs": [
+        {
+          "raw_sha256": "sha256:95294d8bd702c781e505ebe684c081a10384a45598f60326588243da61afdb4c",
+          "source_id": "sta-search-securities-transaction-stamp-duty-page-5"
+        }
+      ],
+      "title": "小微企业“六税两费”减免政策解读",
+      "url": "http://www.chinatax.gov.cn/chinatax/n810351/n810906/c5174055/content.html"
+    },
+    {
+      "candidate_id": "sta-0072",
+      "column": "政策解读",
+      "disposition": "unresolved",
+      "label": "视频政策解读",
+      "published_at": "2022-03-30 00:00:00",
+      "query_provenance": [
+        "securities-transaction-stamp-duty"
+      ],
+      "source_owner": "国家税务总局办公厅",
+      "source_refs": [
+        {
+          "raw_sha256": "sha256:95294d8bd702c781e505ebe684c081a10384a45598f60326588243da61afdb4c",
+          "source_id": "sta-search-securities-transaction-stamp-duty-page-5"
+        }
+      ],
+      "title": "小微企业“六税两费”减免政策解读",
+      "url": "https://fgk.chinatax.gov.cn/zcfgk/c100018/c5213393/content.html"
+    },
+    {
+      "candidate_id": "sta-0073",
+      "column": "信息公开",
+      "disposition": "unresolved",
+      "label": "政策法规",
+      "published_at": "2022-03-04 21:00:37",
+      "query_provenance": [
+        "securities-transaction-stamp-duty"
+      ],
+      "source_owner": "国家税务总局办公厅",
+      "source_refs": [
+        {
+          "raw_sha256": "sha256:95294d8bd702c781e505ebe684c081a10384a45598f60326588243da61afdb4c",
+          "source_id": "sta-search-securities-transaction-stamp-duty-page-5"
+        }
+      ],
+      "title": "关于《国家税务总局关于进一步实施小微企业“六税两费”减免政策有关征管问题的公告》的解读",
+      "url": "http://www.chinatax.gov.cn/chinatax/n810341/n810760/c5173292/content.html"
+    },
+    {
+      "candidate_id": "sta-0074",
+      "column": "税收政策",
+      "disposition": "unresolved",
+      "label": "2022",
+      "published_at": "2022-03-04 20:53:32",
+      "query_provenance": [
+        "securities-transaction-stamp-duty"
+      ],
+      "source_owner": "",
+      "source_refs": [
+        {
+          "raw_sha256": "sha256:0ea9693e1d402063193ec3acec750522d8bd1ed30f8cf4ed1ce0bc08e947a6cb",
+          "source_id": "sta-search-securities-transaction-stamp-duty-page-6"
+        }
+      ],
+      "title": "关于进一步实施小微企业“六税两费”减免政策有关征管问题的公告",
+      "url": "http://www.chinatax.gov.cn/zcfgk/c100012/c5195005/content.html"
+    },
+    {
+      "candidate_id": "sta-0075",
+      "column": "政策法规",
+      "disposition": "unresolved",
+      "label": "税务规范性文件",
+      "published_at": "2022-03-04 00:00:00",
+      "query_provenance": [
+        "securities-transaction-stamp-duty"
+      ],
+      "source_owner": "国家税务总局",
+      "source_refs": [
+        {
+          "raw_sha256": "sha256:0ea9693e1d402063193ec3acec750522d8bd1ed30f8cf4ed1ce0bc08e947a6cb",
+          "source_id": "sta-search-securities-transaction-stamp-duty-page-6"
+        }
+      ],
+      "title": "国家税务总局关于进一步实施小微企业“六税两费”减免政策有关征管问题的公告",
+      "url": "https://fgk.chinatax.gov.cn/zcfgk/c100012/c5195005/content.html"
+    },
+    {
+      "candidate_id": "sta-0076",
+      "column": "政策解读",
+      "disposition": "unresolved",
+      "label": "文字政策解读",
+      "published_at": "2022-03-04 00:00:00",
+      "query_provenance": [
+        "securities-transaction-stamp-duty"
+      ],
+      "source_owner": "国家税务总局办公厅",
+      "source_refs": [
+        {
+          "raw_sha256": "sha256:0ea9693e1d402063193ec3acec750522d8bd1ed30f8cf4ed1ce0bc08e947a6cb",
+          "source_id": "sta-search-securities-transaction-stamp-duty-page-6"
+        }
+      ],
+      "title": "关于《国家税务总局关于进一步实施小微企业“六税两费”减免政策有关征管问题的公告》的解读",
+      "url": "https://fgk.chinatax.gov.cn/zcfgk/c100015/c5194123/content.html"
+    },
+    {
+      "candidate_id": "sta-0077",
+      "column": "新闻发布",
+      "disposition": "unresolved",
+      "label": "减税降费在行动",
+      "published_at": "2022-03-01 11:35:00",
+      "query_provenance": [
+        "securities-transaction-stamp-duty"
+      ],
+      "source_owner": "",
+      "source_refs": [
+        {
+          "raw_sha256": "sha256:0ea9693e1d402063193ec3acec750522d8bd1ed30f8cf4ed1ce0bc08e947a6cb",
+          "source_id": "sta-search-securities-transaction-stamp-duty-page-6"
+        }
+      ],
+      "title": "关于进一步实施小微企业“六税两费”减免政策的公告",
+      "url": "http://www.chinatax.gov.cn/chinatax/n364/c5173254/content.html"
+    },
+    {
+      "candidate_id": "sta-0078",
+      "column": "政策法规",
+      "disposition": "unresolved",
+      "label": "财税文件",
+      "published_at": "2022-03-01 00:00:00",
+      "query_provenance": [
+        "securities-transaction-stamp-duty"
+      ],
+      "source_owner": "国家税务总局,财政部",
+      "source_refs": [
+        {
+          "raw_sha256": "sha256:0ea9693e1d402063193ec3acec750522d8bd1ed30f8cf4ed1ce0bc08e947a6cb",
+          "source_id": "sta-search-securities-transaction-stamp-duty-page-6"
+        }
+      ],
+      "title": "财政部 税务总局关于进一步实施小微企业“六税两费”减免政策的公告",
+      "url": "https://fgk.chinatax.gov.cn/zcfgk/c102416/c5195004/content.html"
+    },
+    {
+      "candidate_id": "sta-0079",
+      "column": "新闻发布",
+      "disposition": "unresolved",
+      "label": "媒体视点",
+      "published_at": "2021-08-09 10:29:36",
+      "query_provenance": [
+        "securities-transaction-stamp-duty"
+      ],
+      "source_owner": "人民日报中央厨房",
+      "source_refs": [
+        {
+          "raw_sha256": "sha256:0ea9693e1d402063193ec3acec750522d8bd1ed30f8cf4ed1ce0bc08e947a6cb",
+          "source_id": "sta-search-securities-transaction-stamp-duty-page-6"
+        }
+      ],
+      "title": "[人民日报]让数据“说话”，上海打造现代化税收征管制度",
+      "url": "http://www.chinatax.gov.cn/chinatax/n810219/n810780/c5167585/content.html"
+    },
+    {
+      "candidate_id": "sta-0080",
+      "column": "新闻发布",
+      "disposition": "unresolved",
+      "label": "媒体视点",
+      "published_at": "2021-06-11 10:38:47",
+      "query_provenance": [
+        "securities-transaction-stamp-duty"
+      ],
+      "source_owner": "中新网",
+      "source_refs": [
+        {
+          "raw_sha256": "sha256:0ea9693e1d402063193ec3acec750522d8bd1ed30f8cf4ed1ce0bc08e947a6cb",
+          "source_id": "sta-search-securities-transaction-stamp-duty-page-6"
+        }
+      ],
+      "title": "[中新网]中国通过印花税法 总体维持现行税制框架不变",
+      "url": "http://www.chinatax.gov.cn/chinatax/n810219/n810780/c5165259/content.html"
+    },
+    {
+      "candidate_id": "sta-0081",
+      "column": "互动交流",
+      "disposition": "unresolved",
+      "label": "留言公开",
+      "published_at": "2021-02-08 09:47:00",
+      "query_provenance": [
+        "securities-transaction-stamp-duty"
+      ],
+      "source_owner": "国家税务总局12366纳税服务中心",
+      "source_refs": [
+        {
+          "raw_sha256": "sha256:0ea9693e1d402063193ec3acec750522d8bd1ed30f8cf4ed1ce0bc08e947a6cb",
+          "source_id": "sta-search-securities-transaction-stamp-duty-page-6"
+        }
+      ],
+      "title": "我公司因公司制改制而更名，更名后除名称变更外，出资人等都未变更，房产证、土地正更名是否需要缴纳印花税？",
+      "url": "http://www.chinatax.gov.cn/chinatax/n810356/n3255681/c5161560/content.html"
+    },
+    {
+      "candidate_id": "sta-0082",
+      "column": "新闻发布",
+      "disposition": "unresolved",
+      "label": "媒体视点",
+      "published_at": "2021-01-13 09:57:32",
+      "query_provenance": [
+        "securities-transaction-stamp-duty"
+      ],
+      "source_owner": "央广网",
+      "source_refs": [
+        {
+          "raw_sha256": "sha256:0ea9693e1d402063193ec3acec750522d8bd1ed30f8cf4ed1ce0bc08e947a6cb",
+          "source_id": "sta-search-securities-transaction-stamp-duty-page-6"
+        }
+      ],
+      "title": "[央广]从3加到11！税收立法按下“加速键” 进程已过半",
+      "url": "http://www.chinatax.gov.cn/chinatax/n810219/n810780/c5160718/content.html"
+    },
+    {
+      "candidate_id": "sta-0083",
+      "column": "新闻发布",
+      "disposition": "unresolved",
+      "label": "媒体聚焦",
+      "published_at": "2020-09-09 11:27:44",
+      "query_provenance": [
+        "securities-transaction-stamp-duty"
+      ],
+      "source_owner": "中国财经报",
+      "source_refs": [
+        {
+          "raw_sha256": "sha256:d448c322bcdf7c98f3450ac4f1e97d1f39f498b547c314663a11c5563f024c86",
+          "source_id": "sta-search-securities-transaction-stamp-duty-page-7"
+        }
+      ],
+      "title": "[中国财经报]税收助力精准扶贫行稳致远",
+      "url": "http://www.chinatax.gov.cn/chinatax/n810219/n810744/c101671/c101676/c101677/c5156425/content.html"
+    },
+    {
+      "candidate_id": "sta-0084",
+      "column": "新闻发布",
+      "disposition": "unresolved",
+      "label": "激发贫困地区创业就业活力",
+      "published_at": "2020-06-02 15:45:32",
+      "query_provenance": [
+        "securities-transaction-stamp-duty"
+      ],
+      "source_owner": "",
+      "source_refs": [
+        {
+          "raw_sha256": "sha256:d448c322bcdf7c98f3450ac4f1e97d1f39f498b547c314663a11c5563f024c86",
+          "source_id": "sta-search-securities-transaction-stamp-duty-page-7"
+        }
+      ],
+      "title": "增值税小规模纳税人减免地方“六税两费”",
+      "url": "http://www.chinatax.gov.cn/chinatax/n810219/n810744/n3439465/n3439480/n3439565/c5150731/content.html"
+    },
+    {
+      "candidate_id": "sta-0085",
+      "column": "新闻发布",
+      "disposition": "unresolved",
+      "label": "各地动态",
+      "published_at": "2019-09-17 11:07:52",
+      "query_provenance": [
+        "securities-transaction-stamp-duty"
+      ],
+      "source_owner": "国家税务总局重庆市税务局",
+      "source_refs": [
+        {
+          "raw_sha256": "sha256:d448c322bcdf7c98f3450ac4f1e97d1f39f498b547c314663a11c5563f024c86",
+          "source_id": "sta-search-securities-transaction-stamp-duty-page-7"
+        }
+      ],
+      "title": "重庆：办税加速度 发展添活力",
+      "url": "http://www.chinatax.gov.cn/chinatax/n810219/n810739/c5136853/content.html"
+    },
+    {
+      "candidate_id": "sta-0086",
+      "column": "新闻发布",
+      "disposition": "unresolved",
+      "label": "减税降费各地在行动",
+      "published_at": "2019-09-17 11:07:52",
+      "query_provenance": [
+        "securities-transaction-stamp-duty"
+      ],
+      "source_owner": "国家税务总局重庆市税务局",
+      "source_refs": [
+        {
+          "raw_sha256": "sha256:d448c322bcdf7c98f3450ac4f1e97d1f39f498b547c314663a11c5563f024c86",
+          "source_id": "sta-search-securities-transaction-stamp-duty-page-7"
+        }
+      ],
+      "title": "重庆税务：办税加速度 发展添活力",
+      "url": "http://www.chinatax.gov.cn/chinatax/n810219/n810744/n4016641/n4172765/n4172770/c5136879/content.html"
+    },
+    {
+      "candidate_id": "sta-0087",
+      "column": "政策法规",
+      "disposition": "unresolved",
+      "label": "财税文件",
+      "published_at": "2019-09-10 00:00:00",
+      "query_provenance": [
+        "securities-transaction-stamp-duty"
+      ],
+      "source_owner": "财政部,人力资源社会保障部,国资委,国家税务总局,证监会",
+      "source_refs": [
+        {
+          "raw_sha256": "sha256:d448c322bcdf7c98f3450ac4f1e97d1f39f498b547c314663a11c5563f024c86",
+          "source_id": "sta-search-securities-transaction-stamp-duty-page-7"
+        }
+      ],
+      "title": "财政部 人力资源社会保障部 国资委 税务总局 证监会关于全面推开划转部分国有资本充实社保基金工作的通知",
+      "url": "https://fgk.chinatax.gov.cn/zcfgk/c102416/c5202276/content.html"
+    },
+    {
+      "candidate_id": "sta-0088",
+      "column": "新闻发布",
+      "disposition": "unresolved",
+      "label": "各地动态",
+      "published_at": "2019-07-22 09:28:11",
+      "query_provenance": [
+        "securities-transaction-stamp-duty"
+      ],
+      "source_owner": "广西日报",
+      "source_refs": [
+        {
+          "raw_sha256": "sha256:d448c322bcdf7c98f3450ac4f1e97d1f39f498b547c314663a11c5563f024c86",
+          "source_id": "sta-search-securities-transaction-stamp-duty-page-7"
+        }
+      ],
+      "title": "广西：减税降费加力提效",
+      "url": "http://www.chinatax.gov.cn/chinatax/n810219/n810739/c4536756/content.html"
+    },
+    {
+      "candidate_id": "sta-0089",
+      "column": "新闻发布",
+      "disposition": "unresolved",
+      "label": "减税降费各地在行动",
+      "published_at": "2019-07-22 09:28:11",
+      "query_provenance": [
+        "securities-transaction-stamp-duty"
+      ],
+      "source_owner": "广西日报",
+      "source_refs": [
+        {
+          "raw_sha256": "sha256:d448c322bcdf7c98f3450ac4f1e97d1f39f498b547c314663a11c5563f024c86",
+          "source_id": "sta-search-securities-transaction-stamp-duty-page-7"
+        }
+      ],
+      "title": "广西税务：减税降费加力提效",
+      "url": "http://www.chinatax.gov.cn/chinatax/n810219/n810744/n4016641/n4172765/n4172770/c4537165/content.html"
+    },
+    {
+      "candidate_id": "sta-0090",
+      "column": "新闻发布",
+      "disposition": "unresolved",
+      "label": "各地动态",
+      "published_at": "2019-07-03 09:23:42",
+      "query_provenance": [
+        "securities-transaction-stamp-duty"
+      ],
+      "source_owner": "国家税务总局辽宁省税务局",
+      "source_refs": [
+        {
+          "raw_sha256": "sha256:d448c322bcdf7c98f3450ac4f1e97d1f39f498b547c314663a11c5563f024c86",
+          "source_id": "sta-search-securities-transaction-stamp-duty-page-7"
+        }
+      ],
+      "title": "辽宁：减税政策落实处 沈城发展添动力",
+      "url": "http://www.chinatax.gov.cn/chinatax/n810219/n810739/c4468982/content.html"
+    },
+    {
+      "candidate_id": "sta-0091",
+      "column": "新闻发布",
+      "disposition": "unresolved",
+      "label": "减税降费各地在行动",
+      "published_at": "2019-07-03 09:23:42",
+      "query_provenance": [
+        "securities-transaction-stamp-duty"
+      ],
+      "source_owner": "国家税务总局辽宁省税务局",
+      "source_refs": [
+        {
+          "raw_sha256": "sha256:aea64e7f73fc243bbf4a57e10f51f8e52a33413fe2350caf49cd0d77f5383a2a",
+          "source_id": "sta-search-securities-transaction-stamp-duty-page-8"
+        }
+      ],
+      "title": "辽宁沈阳税务：减税政策落实处 经济发展添动力",
+      "url": "http://www.chinatax.gov.cn/chinatax/n810219/n810744/n4016641/n4172765/n4172775/c4469959/content.html"
+    },
+    {
+      "candidate_id": "sta-0092",
+      "column": "新闻发布",
+      "disposition": "unresolved",
+      "label": "深化增值税改革",
+      "published_at": "2019-06-28 09:55:18",
+      "query_provenance": [
+        "securities-transaction-stamp-duty"
+      ],
+      "source_owner": "经济日报",
+      "source_refs": [
+        {
+          "raw_sha256": "sha256:aea64e7f73fc243bbf4a57e10f51f8e52a33413fe2350caf49cd0d77f5383a2a",
+          "source_id": "sta-search-securities-transaction-stamp-duty-page-8"
+        }
+      ],
+      "title": "[经济日报]行政事业性收费降费减负惠民生",
+      "url": "http://www.chinatax.gov.cn/chinatax/n810219/n810744/n3428471/n3428496/c4456949/content.html"
+    },
+    {
+      "candidate_id": "sta-0093",
+      "column": "新闻发布",
+      "disposition": "unresolved",
+      "label": "税务新闻",
+      "published_at": "2019-06-24 09:31:38",
+      "query_provenance": [
+        "securities-transaction-stamp-duty"
+      ],
+      "source_owner": "国家税务总局新媒体",
+      "source_refs": [
+        {
+          "raw_sha256": "sha256:aea64e7f73fc243bbf4a57e10f51f8e52a33413fe2350caf49cd0d77f5383a2a",
+          "source_id": "sta-search-securities-transaction-stamp-duty-page-8"
+        }
+      ],
+      "title": "减税降费助力企业“智造升级”",
+      "url": "http://www.chinatax.gov.cn/chinatax/n810219/n810724/c4442203/content.html"
+    },
+    {
+      "candidate_id": "sta-0094",
+      "column": "新闻发布",
+      "disposition": "unresolved",
+      "label": "各地动态",
+      "published_at": "2019-06-12 09:23:27",
+      "query_provenance": [
+        "securities-transaction-stamp-duty"
+      ],
+      "source_owner": "中国税务报",
+      "source_refs": [
+        {
+          "raw_sha256": "sha256:aea64e7f73fc243bbf4a57e10f51f8e52a33413fe2350caf49cd0d77f5383a2a",
+          "source_id": "sta-search-securities-transaction-stamp-duty-page-8"
+        }
+      ],
+      "title": "江西：减税红利落袋 企业动力更足",
+      "url": "http://www.chinatax.gov.cn/chinatax/n810219/n810739/c4414178/content.html"
+    },
+    {
+      "candidate_id": "sta-0095",
+      "column": "新闻发布",
+      "disposition": "unresolved",
+      "label": "减税降费各地在行动",
+      "published_at": "2019-06-12 09:23:27",
+      "query_provenance": [
+        "securities-transaction-stamp-duty"
+      ],
+      "source_owner": "中国税务报",
+      "source_refs": [
+        {
+          "raw_sha256": "sha256:aea64e7f73fc243bbf4a57e10f51f8e52a33413fe2350caf49cd0d77f5383a2a",
+          "source_id": "sta-search-securities-transaction-stamp-duty-page-8"
+        }
+      ],
+      "title": "江西税务：减税红利落袋 企业动力更足",
+      "url": "http://www.chinatax.gov.cn/chinatax/n810219/n810744/n4016641/n4172765/n4172770/c4415097/content.html"
+    },
+    {
+      "candidate_id": "sta-0096",
+      "column": "新闻发布",
+      "disposition": "unresolved",
+      "label": "总局问题答复",
+      "published_at": "2019-04-18 09:31:18",
+      "query_provenance": [
+        "securities-transaction-stamp-duty"
+      ],
+      "source_owner": "",
+      "source_refs": [
+        {
+          "raw_sha256": "sha256:aea64e7f73fc243bbf4a57e10f51f8e52a33413fe2350caf49cd0d77f5383a2a",
+          "source_id": "sta-search-securities-transaction-stamp-duty-page-8"
+        }
+      ],
+      "title": "由各省、自治区、直辖市确定的地方税种和相关附加减征优惠政策何时发布，如何执行？",
+      "url": "http://www.chinatax.gov.cn/chinatax/n810219/n810744/n4016641/n4171132/n4255818/c4262004/content.html"
+    },
+    {
+      "candidate_id": "sta-0097",
+      "column": "政策法规",
+      "disposition": "unresolved",
+      "label": "财税文件",
+      "published_at": "2019-04-03 00:00:00",
+      "query_provenance": [
+        "securities-transaction-stamp-duty"
+      ],
+      "source_owner": "财政部,国家税务总局,证监会",
+      "source_refs": [
+        {
+          "raw_sha256": "sha256:aea64e7f73fc243bbf4a57e10f51f8e52a33413fe2350caf49cd0d77f5383a2a",
+          "source_id": "sta-search-securities-transaction-stamp-duty-page-8"
+        }
+      ],
+      "title": "财政部 税务总局 证监会关于创新企业境内发行存托凭证试点阶段有关税收政策的公告",
+      "url": "https://fgk.chinatax.gov.cn/zcfgk/c102416/c5202322/content.html"
+    },
+    {
+      "candidate_id": "sta-0098",
+      "column": "新闻发布",
+      "disposition": "unresolved",
+      "label": "各地动态",
+      "published_at": "2019-03-20 09:03:39",
+      "query_provenance": [
+        "securities-transaction-stamp-duty"
+      ],
+      "source_owner": "西宁晚报",
+      "source_refs": [
+        {
+          "raw_sha256": "sha256:aea64e7f73fc243bbf4a57e10f51f8e52a33413fe2350caf49cd0d77f5383a2a",
+          "source_id": "sta-search-securities-transaction-stamp-duty-page-8"
+        }
+      ],
+      "title": "青海税务：纳税人受惠减税降费新政",
+      "url": "http://www.chinatax.gov.cn/chinatax/n810219/n810739/c4157016/content.html"
+    },
+    {
+      "candidate_id": "sta-0099",
+      "column": "新闻发布",
+      "disposition": "unresolved",
+      "label": "减税降费在行动",
+      "published_at": "2019-03-08 09:15:07",
+      "query_provenance": [
+        "securities-transaction-stamp-duty"
+      ],
+      "source_owner": "新华社",
+      "source_refs": [
+        {
+          "raw_sha256": "sha256:aea64e7f73fc243bbf4a57e10f51f8e52a33413fe2350caf49cd0d77f5383a2a",
+          "source_id": "sta-search-securities-transaction-stamp-duty-page-8"
+        }
+      ],
+      "title": "[新华社]普惠性减税落地 首个征期小微企业获利多",
+      "url": "http://www.chinatax.gov.cn/chinatax/n810219/n810744/n4016641/n4016676/c4105199/content.html"
+    },
+    {
+      "candidate_id": "sta-0100",
+      "column": "新闻发布",
+      "disposition": "unresolved",
+      "label": "媒体视点",
+      "published_at": "2019-03-01 09:05:31",
+      "query_provenance": [
+        "securities-transaction-stamp-duty"
+      ],
+      "source_owner": "证券日报",
+      "source_refs": [
+        {
+          "raw_sha256": "sha256:aea64e7f73fc243bbf4a57e10f51f8e52a33413fe2350caf49cd0d77f5383a2a",
+          "source_id": "sta-search-securities-transaction-stamp-duty-page-8"
+        }
+      ],
+      "title": "[证券日报]三部门明确代征证券交易印花税支付比例和限额",
+      "url": "http://www.chinatax.gov.cn/chinatax/n810219/n810780/c4092462/content.html"
+    },
+    {
+      "candidate_id": "sta-0101",
+      "column": "新闻发布",
+      "disposition": "unresolved",
+      "label": "减税降费在行动",
+      "published_at": "2019-02-28 09:10:57",
+      "query_provenance": [
+        "securities-transaction-stamp-duty"
+      ],
+      "source_owner": "中国江西网",
+      "source_refs": [
+        {
+          "raw_sha256": "sha256:d1259eaed70caa4cbf4089480c28fcc447892154da1f36b86a648a65b84548fe",
+          "source_id": "sta-search-securities-transaction-stamp-duty-page-9"
+        }
+      ],
+      "title": "江西税务：“六税两费”减征助纳税人获益",
+      "url": "http://www.chinatax.gov.cn/chinatax/n810219/n810744/n4016641/n4016703/c4090750/content.html"
+    },
+    {
+      "candidate_id": "sta-0102",
+      "column": "新闻发布",
+      "disposition": "unresolved",
+      "label": "媒体视点",
+      "published_at": "2019-02-27 09:42:08",
+      "query_provenance": [
+        "securities-transaction-stamp-duty"
+      ],
+      "source_owner": "香港商报网",
+      "source_refs": [
+        {
+          "raw_sha256": "sha256:d1259eaed70caa4cbf4089480c28fcc447892154da1f36b86a648a65b84548fe",
+          "source_id": "sta-search-securities-transaction-stamp-duty-page-9"
+        }
+      ],
+      "title": "[香港商报网]31个省区市全部顶格减征“六税两费”",
+      "url": "http://www.chinatax.gov.cn/chinatax/n810219/n810780/c4088250/content.html"
+    },
+    {
+      "candidate_id": "sta-0103",
+      "column": "新闻发布",
+      "disposition": "unresolved",
+      "label": "媒体视点",
+      "published_at": "2019-02-26 08:45:05",
+      "query_provenance": [
+        "securities-transaction-stamp-duty"
+      ],
+      "source_owner": "人民日报",
+      "source_refs": [
+        {
+          "raw_sha256": "sha256:d1259eaed70caa4cbf4089480c28fcc447892154da1f36b86a648a65b84548fe",
+          "source_id": "sta-search-securities-transaction-stamp-duty-page-9"
+        }
+      ],
+      "title": "[人民日报]31个省区市小微企业“六税两费”顶格减征",
+      "url": "http://www.chinatax.gov.cn/chinatax/n810219/n810780/c4085006/content.html"
+    },
+    {
+      "candidate_id": "sta-0104",
+      "column": "新闻发布",
+      "disposition": "unresolved",
+      "label": "减税降费在行动",
+      "published_at": "2019-02-26 08:43:37",
+      "query_provenance": [
+        "securities-transaction-stamp-duty"
+      ],
+      "source_owner": "新华社",
+      "source_refs": [
+        {
+          "raw_sha256": "sha256:d1259eaed70caa4cbf4089480c28fcc447892154da1f36b86a648a65b84548fe",
+          "source_id": "sta-search-securities-transaction-stamp-duty-page-9"
+        }
+      ],
+      "title": "[新华社]31个省区市全部顶格减征“六税两费”",
+      "url": "http://www.chinatax.gov.cn/chinatax/n810219/n810744/n4016641/n4016676/c4086610/content.html"
+    },
+    {
+      "candidate_id": "sta-0105",
+      "column": "新闻发布",
+      "disposition": "unresolved",
+      "label": "减税降费在行动",
+      "published_at": "2019-02-21 09:19:30",
+      "query_provenance": [
+        "securities-transaction-stamp-duty"
+      ],
+      "source_owner": "福建日报",
+      "source_refs": [
+        {
+          "raw_sha256": "sha256:d1259eaed70caa4cbf4089480c28fcc447892154da1f36b86a648a65b84548fe",
+          "source_id": "sta-search-securities-transaction-stamp-duty-page-9"
+        }
+      ],
+      "title": "福建税务：小微企业普惠性减税政策便利措施多",
+      "url": "http://www.chinatax.gov.cn/chinatax/n810219/n810744/n4016641/n4016703/c4074202/content.html"
+    },
+    {
+      "candidate_id": "sta-0106",
+      "column": "新闻发布",
+      "disposition": "unresolved",
+      "label": "减税降费在行动",
+      "published_at": "2019-02-20 10:19:12",
+      "query_provenance": [
+        "securities-transaction-stamp-duty"
+      ],
+      "source_owner": "河北日报",
+      "source_refs": [
+        {
+          "raw_sha256": "sha256:d1259eaed70caa4cbf4089480c28fcc447892154da1f36b86a648a65b84548fe",
+          "source_id": "sta-search-securities-transaction-stamp-duty-page-9"
+        }
+      ],
+      "title": "河北税务：小微企业迎来减税“大礼包”",
+      "url": "http://www.chinatax.gov.cn/chinatax/n810219/n810744/n4016641/n4016703/c4071040/content.html"
+    },
+    {
+      "candidate_id": "sta-0107",
+      "column": "新闻发布",
+      "disposition": "unresolved",
+      "label": "媒体视点",
+      "published_at": "2019-02-20 09:52:25",
+      "query_provenance": [
+        "securities-transaction-stamp-duty"
+      ],
+      "source_owner": "经济日报客户端",
+      "source_refs": [
+        {
+          "raw_sha256": "sha256:d1259eaed70caa4cbf4089480c28fcc447892154da1f36b86a648a65b84548fe",
+          "source_id": "sta-search-securities-transaction-stamp-duty-page-9"
+        }
+      ],
+      "title": "[经济日报]地方减税降费接力赛暖心开跑",
+      "url": "http://www.chinatax.gov.cn/chinatax/n810219/n810780/c4070839/content.html"
+    },
+    {
+      "candidate_id": "sta-0108",
+      "column": "新闻发布",
+      "disposition": "unresolved",
+      "label": "媒体视点",
+      "published_at": "2019-02-18 09:50:38",
+      "query_provenance": [
+        "securities-transaction-stamp-duty"
+      ],
+      "source_owner": "光明日报",
+      "source_refs": [
+        {
+          "raw_sha256": "sha256:d1259eaed70caa4cbf4089480c28fcc447892154da1f36b86a648a65b84548fe",
+          "source_id": "sta-search-securities-transaction-stamp-duty-page-9"
+        }
+      ],
+      "title": "[光明日报]小微企业迎来一系列减税降费“红包”",
+      "url": "http://www.chinatax.gov.cn/chinatax/n810219/n810780/c4066439/content.html"
+    },
+    {
+      "candidate_id": "sta-0109",
+      "column": "新闻发布",
+      "disposition": "unresolved",
+      "label": "媒体视点",
+      "published_at": "2019-02-18 09:35:05",
+      "query_provenance": [
+        "securities-transaction-stamp-duty"
+      ],
+      "source_owner": "经济日报",
+      "source_refs": [
+        {
+          "raw_sha256": "sha256:d1259eaed70caa4cbf4089480c28fcc447892154da1f36b86a648a65b84548fe",
+          "source_id": "sta-search-securities-transaction-stamp-duty-page-9"
+        }
+      ],
+      "title": "[经济日报]29地小微企业“六税两费”顶格减征",
+      "url": "http://www.chinatax.gov.cn/chinatax/n810219/n810780/c4066330/content.html"
+    },
+    {
+      "candidate_id": "sta-0110",
+      "column": "新闻发布",
+      "disposition": "unresolved",
+      "label": "减税降费在行动",
+      "published_at": "2019-02-15 10:09:01",
+      "query_provenance": [
+        "securities-transaction-stamp-duty"
+      ],
+      "source_owner": "中国税务报",
+      "source_refs": [
+        {
+          "raw_sha256": "sha256:d1259eaed70caa4cbf4089480c28fcc447892154da1f36b86a648a65b84548fe",
+          "source_id": "sta-search-securities-transaction-stamp-duty-page-9"
+        }
+      ],
+      "title": "[中国税务报]小微企业喜迎普惠性减税落地首个征期",
+      "url": "http://www.chinatax.gov.cn/chinatax/n810219/n810744/n4016641/n4016676/c4064171/content.html"
+    },
+    {
+      "candidate_id": "sta-0111",
+      "column": "新闻发布",
+      "disposition": "unresolved",
+      "label": "减税降费在行动",
+      "published_at": "2019-02-15 09:43:12",
+      "query_provenance": [
+        "securities-transaction-stamp-duty"
+      ],
+      "source_owner": "经济日报客户端",
+      "source_refs": [
+        {
+          "raw_sha256": "sha256:3f0329fd76eaf0f9eeb4a424aaf9ea3461a33c5f09685df103ff50729d108cab",
+          "source_id": "sta-search-securities-transaction-stamp-duty-page-10"
+        }
+      ],
+      "title": "湖南税务：“减税办”获纳税人点赞",
+      "url": "http://www.chinatax.gov.cn/chinatax/n810219/n810744/n4016641/n4016703/c4064421/content.html"
+    },
+    {
+      "candidate_id": "sta-0112",
+      "column": "新闻发布",
+      "disposition": "unresolved",
+      "label": "税务新闻",
+      "published_at": "2019-02-14 08:30:24",
+      "query_provenance": [
+        "securities-transaction-stamp-duty"
+      ],
+      "source_owner": "经济日报",
+      "source_refs": [
+        {
+          "raw_sha256": "sha256:3f0329fd76eaf0f9eeb4a424aaf9ea3461a33c5f09685df103ff50729d108cab",
+          "source_id": "sta-search-securities-transaction-stamp-duty-page-10"
+        }
+      ],
+      "title": "多省份政府工作报告明确激发市场活力：税要减费要降 企业上阵要轻装",
+      "url": "http://www.chinatax.gov.cn/chinatax/n810219/n810724/c4057073/content.html"
+    },
+    {
+      "candidate_id": "sta-0113",
+      "column": "新闻发布",
+      "disposition": "unresolved",
+      "label": "减税降费在行动",
+      "published_at": "2019-02-13 09:19:45",
+      "query_provenance": [
+        "securities-transaction-stamp-duty"
+      ],
+      "source_owner": "中国财经报",
+      "source_refs": [
+        {
+          "raw_sha256": "sha256:3f0329fd76eaf0f9eeb4a424aaf9ea3461a33c5f09685df103ff50729d108cab",
+          "source_id": "sta-search-securities-transaction-stamp-duty-page-10"
+        }
+      ],
+      "title": "[中国财经报]小微企业迎来“套餐式”减税降费新政",
+      "url": "http://www.chinatax.gov.cn/chinatax/n810219/n810744/n4016641/n4016676/c4055960/content.html"
+    },
+    {
+      "candidate_id": "sta-0114",
+      "column": "政策法规",
+      "disposition": "unresolved",
+      "label": "财税文件",
+      "published_at": "2019-02-02 00:00:00",
+      "query_provenance": [
+        "securities-transaction-stamp-duty"
+      ],
+      "source_owner": "财政部,国家税务总局,人民银行",
+      "source_refs": [
+        {
+          "raw_sha256": "sha256:3f0329fd76eaf0f9eeb4a424aaf9ea3461a33c5f09685df103ff50729d108cab",
+          "source_id": "sta-search-securities-transaction-stamp-duty-page-10"
+        }
+      ],
+      "title": "财政部 税务总局 人民银行关于进一步加强代扣代收代征税款手续费管理的通知",
+      "url": "https://fgk.chinatax.gov.cn/zcfgk/c102416/c5202350/content.html"
+    },
+    {
+      "candidate_id": "sta-0115",
+      "column": "新闻发布",
+      "disposition": "unresolved",
+      "label": "媒体视点",
+      "published_at": "2019-01-28 08:30:19",
+      "query_provenance": [
+        "securities-transaction-stamp-duty"
+      ],
+      "source_owner": "人民日报",
+      "source_refs": [
+        {
+          "raw_sha256": "sha256:3f0329fd76eaf0f9eeb4a424aaf9ea3461a33c5f09685df103ff50729d108cab",
+          "source_id": "sta-search-securities-transaction-stamp-duty-page-10"
+        }
+      ],
+      "title": "[人民日报]普惠性减税政策增强企业获得感",
+      "url": "http://www.chinatax.gov.cn/chinatax/n810219/n810780/c4038212/content.html"
+    },
+    {
+      "candidate_id": "sta-0116",
+      "column": "政策法规",
+      "disposition": "unresolved",
+      "label": "财税文件",
+      "published_at": "2019-01-17 00:00:00",
+      "query_provenance": [
+        "securities-transaction-stamp-duty"
+      ],
+      "source_owner": "财政部,国家税务总局",
+      "source_refs": [
+        {
+          "raw_sha256": "sha256:3f0329fd76eaf0f9eeb4a424aaf9ea3461a33c5f09685df103ff50729d108cab",
+          "source_id": "sta-search-securities-transaction-stamp-duty-page-10"
+        }
+      ],
+      "title": "财政部 税务总局关于实施小微企业普惠性税收减免政策的通知",
+      "url": "https://fgk.chinatax.gov.cn/zcfgk/c102416/c5194846/content.html"
+    },
+    {
+      "candidate_id": "sta-0117",
+      "column": "信息公开",
+      "disposition": "unresolved",
+      "label": "税收统计",
+      "published_at": "2018-04-19 11:08:47",
+      "query_provenance": [
+        "securities-transaction-stamp-duty"
+      ],
+      "source_owner": "",
+      "source_refs": [
+        {
+          "raw_sha256": "sha256:3f0329fd76eaf0f9eeb4a424aaf9ea3461a33c5f09685df103ff50729d108cab",
+          "source_id": "sta-search-securities-transaction-stamp-duty-page-10"
+        }
+      ],
+      "title": "2018年一季度全国税务部门组织税收收入情况",
+      "url": "http://www.chinatax.gov.cn/chinatax/n810214/n810641/n2985871/n2985918/c101807/c3569373/content.html"
+    },
+    {
+      "candidate_id": "sta-0118",
+      "column": "新闻发布",
+      "disposition": "unresolved",
+      "label": "时政要闻",
+      "published_at": "2018-04-19 11:08:47",
+      "query_provenance": [
+        "securities-transaction-stamp-duty"
+      ],
+      "source_owner": "http://www.chinatax.gov.cn/n810219/n810724/c3401881/content.html",
+      "source_refs": [
+        {
+          "raw_sha256": "sha256:3f0329fd76eaf0f9eeb4a424aaf9ea3461a33c5f09685df103ff50729d108cab",
+          "source_id": "sta-search-securities-transaction-stamp-duty-page-10"
+        }
+      ],
+      "title": "国家税务总局举行新闻发布会",
+      "url": "http://www.chinatax.gov.cn/n810219/n810724/c3401881/content.html"
+    },
+    {
+      "candidate_id": "sta-0119",
+      "column": "政策法规",
+      "disposition": "unresolved",
+      "label": "税务规范性文件",
+      "published_at": "2015-02-04 00:00:00",
+      "query_provenance": [
+        "securities-transaction-stamp-duty"
+      ],
+      "source_owner": "国家税务总局",
+      "source_refs": [
+        {
+          "raw_sha256": "sha256:3f0329fd76eaf0f9eeb4a424aaf9ea3461a33c5f09685df103ff50729d108cab",
+          "source_id": "sta-search-securities-transaction-stamp-duty-page-10"
+        }
+      ],
+      "title": "国家税务总局关于部分税务行政审批事项取消后有关管理问题的公告",
+      "url": "https://fgk.chinatax.gov.cn/zcfgk/c100012/c5194516/content.html"
+    },
+    {
+      "candidate_id": "sta-0120",
+      "column": "政策法规",
+      "disposition": "unresolved",
+      "label": "税务规范性文件",
+      "published_at": "2014-10-22 00:00:00",
+      "query_provenance": [
+        "securities-transaction-stamp-duty"
+      ],
+      "source_owner": "国家税务总局",
+      "source_refs": [
+        {
+          "raw_sha256": "sha256:3f0329fd76eaf0f9eeb4a424aaf9ea3461a33c5f09685df103ff50729d108cab",
+          "source_id": "sta-search-securities-transaction-stamp-duty-page-10"
+        }
+      ],
+      "title": "国家税务总局关于证券交易印花税完税凭证有关问题的公告",
+      "url": "https://fgk.chinatax.gov.cn/zcfgk/c100012/c5194493/content.html"
+    },
+    {
+      "candidate_id": "sta-0121",
+      "column": "政策解读",
+      "disposition": "unresolved",
+      "label": "文字政策解读",
+      "published_at": "2014-10-22 00:00:00",
+      "query_provenance": [
+        "securities-transaction-stamp-duty"
+      ],
+      "source_owner": "国家税务总局办公厅",
+      "source_refs": [
+        {
+          "raw_sha256": "sha256:3b753bcd76b4c32b946317aae7353ef034ffffeef3f5d6dc56a24fcbe4128dfc",
+          "source_id": "sta-search-securities-transaction-stamp-duty-page-11"
+        }
+      ],
+      "title": "关于《国家税务总局关于证券交易印花税完税凭证有关问题的公告》的解读",
+      "url": "https://fgk.chinatax.gov.cn/zcfgk/c100015/c5193367/content.html"
+    },
+    {
+      "candidate_id": "sta-0122",
+      "column": "政策法规",
+      "disposition": "unresolved",
+      "label": "税务规范性文件",
+      "published_at": "2008-12-01 00:00:00",
+      "query_provenance": [
+        "securities-transaction-stamp-duty"
+      ],
+      "source_owner": "国家税务总局",
+      "source_refs": [
+        {
+          "raw_sha256": "sha256:3b753bcd76b4c32b946317aae7353ef034ffffeef3f5d6dc56a24fcbe4128dfc",
+          "source_id": "sta-search-securities-transaction-stamp-duty-page-11"
+        }
+      ],
+      "title": "国家税务总局关于向纳税人提供证券交易印花税完税凭证有关问题的批复",
+      "url": "https://fgk.chinatax.gov.cn/zcfgk/c100012/c5193993/content.html"
+    },
+    {
+      "candidate_id": "sta-0123",
+      "column": "政策法规",
+      "disposition": "unresolved",
+      "label": "财税文件",
+      "published_at": "2006-03-30 00:00:00",
+      "query_provenance": [
+        "securities-transaction-stamp-duty"
+      ],
+      "source_owner": "财政部",
+      "source_refs": [
+        {
+          "raw_sha256": "sha256:3b753bcd76b4c32b946317aae7353ef034ffffeef3f5d6dc56a24fcbe4128dfc",
+          "source_id": "sta-search-securities-transaction-stamp-duty-page-11"
+        }
+      ],
+      "title": "财政部关于公布废止和失效的财政规章和规范性文件目录（第九批）的决定（节选）",
+      "url": "https://fgk.chinatax.gov.cn/zcfgk/c102416/c5207152/content.html"
+    },
+    {
+      "candidate_id": "sta-0124",
+      "column": "税收政策",
+      "disposition": "unresolved",
+      "label": "2002",
+      "published_at": "2004-02-17 17:13:02",
+      "query_provenance": [
+        "securities-transaction-stamp-duty"
+      ],
+      "source_owner": "国家税务总局",
+      "source_refs": [
+        {
+          "raw_sha256": "sha256:3b753bcd76b4c32b946317aae7353ef034ffffeef3f5d6dc56a24fcbe4128dfc",
+          "source_id": "sta-search-securities-transaction-stamp-duty-page-11"
+        }
+      ],
+      "title": "局长金人庆同志在全国增收节支工作电视电话会议上的发言",
+      "url": "https://www.chinatax.gov.cn/chinatax/n810341/n810765/n812203/200203/c1209295/content.html"
+    },
+    {
+      "candidate_id": "sta-0125",
+      "column": "政策法规",
+      "disposition": "unresolved",
+      "label": "财税文件",
+      "published_at": "2000-09-21 00:00:00",
+      "query_provenance": [
+        "securities-transaction-stamp-duty"
+      ],
+      "source_owner": "财政部,国家税务总局",
+      "source_refs": [
+        {
+          "raw_sha256": "sha256:3b753bcd76b4c32b946317aae7353ef034ffffeef3f5d6dc56a24fcbe4128dfc",
+          "source_id": "sta-search-securities-transaction-stamp-duty-page-11"
+        }
+      ],
+      "title": "财政部 国家税务总局关于调整证券交易印花税代征手续费提取比例的通知",
+      "url": "https://fgk.chinatax.gov.cn/zcfgk/c102416/c5202700/content.html"
+    },
+    {
+      "candidate_id": "sta-0126",
+      "column": "政策法规",
+      "disposition": "unresolved",
+      "label": "税务规范性文件",
+      "published_at": "1997-08-07 00:00:00",
+      "query_provenance": [
+        "securities-transaction-stamp-duty"
+      ],
+      "source_owner": "国家税务总局",
+      "source_refs": [
+        {
+          "raw_sha256": "sha256:3b753bcd76b4c32b946317aae7353ef034ffffeef3f5d6dc56a24fcbe4128dfc",
+          "source_id": "sta-search-securities-transaction-stamp-duty-page-11"
+        }
+      ],
+      "title": "国家税务总局关于加强证券交易印花税征收管理工作的通知",
+      "url": "https://fgk.chinatax.gov.cn/zcfgk/c100012/c5193225/content.html"
+    }
+  ],
+  "closure_limit": "Subject search results include news and policy records and are not a competent legislative amendment/repeal/correction register.",
+  "exact_2023_39_search": {
+    "actual_column_id": "5738",
+    "actual_columns": [
+      {
+        "channel": "全部",
+        "id": 5738,
+        "label": ""
+      },
+      {
+        "channel": "总局概况",
+        "id": 5739,
+        "label": ""
+      },
+      {
+        "channel": "信息公开",
+        "id": 5740,
+        "label": ""
+      },
+      {
+        "channel": "新闻发布",
+        "id": 5741,
+        "label": ""
+      },
+      {
+        "channel": "税收政策",
+        "id": 5742,
+        "label": ""
+      },
+      {
+        "channel": "纳税服务",
+        "id": 5743,
+        "label": ""
+      },
+      {
+        "channel": "税务视频",
+        "id": 5744,
+        "label": ""
+      },
+      {
+        "channel": "互动交流",
+        "id": 5745,
+        "label": ""
+      }
+    ],
+    "response_result": {
+      "code": 500,
+      "msg": "内容包含敏感信息."
+    },
+    "source_id": "sta-exact-search-schema-2023-39",
+    "total": 1
+  },
+  "latest_candidate_at": "2025-10-15 15:24:38",
+  "queries": [
+    {
+      "declared_total": 14,
+      "pages": [
+        {
+          "raw_sha256": "sha256:f39194ff663542cea3753082151fef9c0318019f1ec0f9cdb6afc456d76eacd5",
+          "result_count": 10,
+          "source_id": "sta-search-stamp-duty-law-title-page-0"
+        },
+        {
+          "raw_sha256": "sha256:fb68bc27115e7fd27be0959ffd880e0b8e2823d104c1c172ab1fd1c5d21c0c6f",
+          "result_count": 4,
+          "source_id": "sta-search-stamp-duty-law-title-page-1"
+        },
+        {
+          "raw_sha256": "sha256:d6f165074176e5d12e505cec487482800f17eb76c5277c6dd1c030764bd3ed25",
+          "result_count": 0,
+          "source_id": "sta-search-stamp-duty-law-title-terminal-page-2"
+        }
+      ],
+      "query": "中华人民共和国印花税法",
+      "query_id": "stamp-duty-law-title"
+    },
+    {
+      "declared_total": 116,
+      "pages": [
+        {
+          "raw_sha256": "sha256:4747f3b44843de55a0f384a873371ea3eb762e5aee4097d73ae00ff2ee5669db",
+          "result_count": 10,
+          "source_id": "sta-search-securities-transaction-stamp-duty-page-0"
+        },
+        {
+          "raw_sha256": "sha256:be5470367507b8faa6b3956743644370d22ca94b6308c2eed20a3fa8987dc3f3",
+          "result_count": 10,
+          "source_id": "sta-search-securities-transaction-stamp-duty-page-1"
+        },
+        {
+          "raw_sha256": "sha256:70771a350de4b47872472df6bd18ce738c0ee6b45948e5edced53b78963e58ed",
+          "result_count": 10,
+          "source_id": "sta-search-securities-transaction-stamp-duty-page-2"
+        },
+        {
+          "raw_sha256": "sha256:e8f874abde54dafd2683a8972269f69ca34f06fb371582689c83fd4f097aec0a",
+          "result_count": 10,
+          "source_id": "sta-search-securities-transaction-stamp-duty-page-3"
+        },
+        {
+          "raw_sha256": "sha256:f41215278721cd208cfcdf68fa67a3fa25bad24e1569ebd124e25dd58aa0fc92",
+          "result_count": 10,
+          "source_id": "sta-search-securities-transaction-stamp-duty-page-4"
+        },
+        {
+          "raw_sha256": "sha256:95294d8bd702c781e505ebe684c081a10384a45598f60326588243da61afdb4c",
+          "result_count": 10,
+          "source_id": "sta-search-securities-transaction-stamp-duty-page-5"
+        },
+        {
+          "raw_sha256": "sha256:0ea9693e1d402063193ec3acec750522d8bd1ed30f8cf4ed1ce0bc08e947a6cb",
+          "result_count": 10,
+          "source_id": "sta-search-securities-transaction-stamp-duty-page-6"
+        },
+        {
+          "raw_sha256": "sha256:d448c322bcdf7c98f3450ac4f1e97d1f39f498b547c314663a11c5563f024c86",
+          "result_count": 10,
+          "source_id": "sta-search-securities-transaction-stamp-duty-page-7"
+        },
+        {
+          "raw_sha256": "sha256:aea64e7f73fc243bbf4a57e10f51f8e52a33413fe2350caf49cd0d77f5383a2a",
+          "result_count": 10,
+          "source_id": "sta-search-securities-transaction-stamp-duty-page-8"
+        },
+        {
+          "raw_sha256": "sha256:d1259eaed70caa4cbf4089480c28fcc447892154da1f36b86a648a65b84548fe",
+          "result_count": 10,
+          "source_id": "sta-search-securities-transaction-stamp-duty-page-9"
+        },
+        {
+          "raw_sha256": "sha256:3f0329fd76eaf0f9eeb4a424aaf9ea3461a33c5f09685df103ff50729d108cab",
+          "result_count": 10,
+          "source_id": "sta-search-securities-transaction-stamp-duty-page-10"
+        },
+        {
+          "raw_sha256": "sha256:3b753bcd76b4c32b946317aae7353ef034ffffeef3f5d6dc56a24fcbe4128dfc",
+          "result_count": 6,
+          "source_id": "sta-search-securities-transaction-stamp-duty-page-11"
+        },
+        {
+          "raw_sha256": "sha256:fe69fa07dbbf6b60e72cb6f7792f9571ec0d6bfe6ef2d99d87be7240e00876b2",
+          "result_count": 0,
+          "source_id": "sta-search-securities-transaction-stamp-duty-terminal-page-12"
+        }
+      ],
+      "query": "证券交易印花税",
+      "query_id": "securities-transaction-stamp-duty"
+    },
+    {
+      "declared_total": 5,
+      "pages": [
+        {
+          "raw_sha256": "sha256:35482782acb146c8fe3b6db325538aebea619e4066128f3cdc54681166e02cb2",
+          "result_count": 5,
+          "source_id": "sta-search-half-securities-transaction-stamp-duty-page-0"
+        },
+        {
+          "raw_sha256": "sha256:914180b2ad6b8564f7070786442b3d61ab79ecf5d85a1de078a226a7cfef92a0",
+          "result_count": 0,
+          "source_id": "sta-search-half-securities-transaction-stamp-duty-terminal-page-1"
+        }
+      ],
+      "query": "减半征收证券交易印花税",
+      "query_id": "half-securities-transaction-stamp-duty"
+    }
+  ],
+  "schema_version": 1,
+  "status": "DISCOVERY_ONLY_INSUFFICIENT",
+  "type": "g12h_stamp_duty_candidate_inventory_discovery_v1"
+}

@@ -1,0 +1,298 @@
+{
+  "fixture_id": "portfolio-snapshot-projection-v1",
+  "outcome": {
+    "snapshot": {
+      "account_id": "account:primary",
+      "cash": [
+        {
+          "amount": {
+            "currency": "EUR",
+            "scale": 2,
+            "type": "money",
+            "units": 20000
+          },
+          "key": {
+            "account_id": "account:primary",
+            "currency_id": {
+              "type": "currency_id",
+              "value": "EUR"
+            },
+            "type": "cash_balance_key",
+            "venue_id": {
+              "type": "venue_id",
+              "value": "synthetic"
+            }
+          },
+          "type": "cash_balance"
+        },
+        {
+          "amount": {
+            "currency": "USD",
+            "scale": 2,
+            "type": "money",
+            "units": 100000
+          },
+          "key": {
+            "account_id": "account:primary",
+            "currency_id": {
+              "type": "currency_id",
+              "value": "USD"
+            },
+            "type": "cash_balance_key",
+            "venue_id": {
+              "type": "venue_id",
+              "value": "synthetic"
+            }
+          },
+          "type": "cash_balance"
+        }
+      ],
+      "currency_valuation_graph_hash": "sha256:1339e6d74218e7859c734f9cf28033111aa022f3f9e4b3812842221ac5d6801e",
+      "equity": {
+        "currency": "USD",
+        "scale": 2,
+        "type": "money",
+        "units": 138500
+      },
+      "fees": {
+        "currency": "USD",
+        "scale": 2,
+        "type": "money",
+        "units": 220
+      },
+      "financing": {
+        "currency": "USD",
+        "scale": 2,
+        "type": "money",
+        "units": -100
+      },
+      "journal_state_hash": "sha256:94227dc3ee6d8bb3877fe8cf3c4dbc080da1b4c83f59c83e89a385a3ef886e01",
+      "positions": [
+        {
+          "key": {
+            "account_id": "account:primary",
+            "instrument_id": {
+              "stable_key": "stock-eur-1",
+              "type": "instrument_id",
+              "venue": "synthetic"
+            },
+            "type": "position_balance_key",
+            "venue_id": {
+              "type": "venue_id",
+              "value": "synthetic"
+            }
+          },
+          "lots": [],
+          "quantity": {
+            "instrument_id": "synthetic:stock-eur-1",
+            "scale": 0,
+            "type": "quantity",
+            "units": 3
+          },
+          "type": "position_balance"
+        }
+      ],
+      "realized_pnl": {
+        "currency": "USD",
+        "scale": 2,
+        "type": "money",
+        "units": 1100
+      },
+      "reporting_currency": {
+        "type": "currency_id",
+        "value": "USD"
+      },
+      "timestamp": {
+        "epoch_nanoseconds": 100,
+        "type": "utc_instant"
+      },
+      "type": "portfolio_snapshot",
+      "unrealized_pnl": {
+        "currency": "USD",
+        "scale": 2,
+        "type": "money",
+        "units": 3300
+      },
+      "valuation_mark_set_hash": "sha256:2fab66662faab0d3d930ead9c19ab9c000e7d5e83f17bada65367bc6322b23ab",
+      "valuation_marks": [
+        {
+          "instrument_id": {
+            "stable_key": "eur-usd",
+            "type": "instrument_id",
+            "venue": "synthetic"
+          },
+          "mark_id": "sha256:809c2dba3b1fe3e7dc48e76bd2d0f6da3714008287cfac11c97af88ac0b9c80a",
+          "observed_at": {
+            "epoch_nanoseconds": 90,
+            "type": "utc_instant"
+          },
+          "price_purpose": "valuation",
+          "type": "valuation_mark_reference"
+        },
+        {
+          "instrument_id": {
+            "stable_key": "stock-eur-1",
+            "type": "instrument_id",
+            "venue": "synthetic"
+          },
+          "mark_id": "sha256:13db1135661e22e6d7a19b845e51cacbc5ab91c7e03b96d008cc30bdbf041277",
+          "observed_at": {
+            "epoch_nanoseconds": 90,
+            "type": "utc_instant"
+          },
+          "price_purpose": "valuation",
+          "type": "valuation_mark_reference"
+        }
+      ],
+      "valuation_staleness_report_hash": "sha256:c27d025356c0ff2ce1226d620211110d9088af3d309b38d3685f5d809b7f4fc6"
+    },
+    "status": "projected",
+    "type": "snapshot_projection_outcome"
+  },
+  "snapshot": {
+    "account_id": "account:primary",
+    "cash": [
+      {
+        "amount": {
+          "currency": "EUR",
+          "scale": 2,
+          "type": "money",
+          "units": 20000
+        },
+        "key": {
+          "account_id": "account:primary",
+          "currency_id": {
+            "type": "currency_id",
+            "value": "EUR"
+          },
+          "type": "cash_balance_key",
+          "venue_id": {
+            "type": "venue_id",
+            "value": "synthetic"
+          }
+        },
+        "type": "cash_balance"
+      },
+      {
+        "amount": {
+          "currency": "USD",
+          "scale": 2,
+          "type": "money",
+          "units": 100000
+        },
+        "key": {
+          "account_id": "account:primary",
+          "currency_id": {
+            "type": "currency_id",
+            "value": "USD"
+          },
+          "type": "cash_balance_key",
+          "venue_id": {
+            "type": "venue_id",
+            "value": "synthetic"
+          }
+        },
+        "type": "cash_balance"
+      }
+    ],
+    "currency_valuation_graph_hash": "sha256:1339e6d74218e7859c734f9cf28033111aa022f3f9e4b3812842221ac5d6801e",
+    "equity": {
+      "currency": "USD",
+      "scale": 2,
+      "type": "money",
+      "units": 138500
+    },
+    "fees": {
+      "currency": "USD",
+      "scale": 2,
+      "type": "money",
+      "units": 220
+    },
+    "financing": {
+      "currency": "USD",
+      "scale": 2,
+      "type": "money",
+      "units": -100
+    },
+    "journal_state_hash": "sha256:94227dc3ee6d8bb3877fe8cf3c4dbc080da1b4c83f59c83e89a385a3ef886e01",
+    "positions": [
+      {
+        "key": {
+          "account_id": "account:primary",
+          "instrument_id": {
+            "stable_key": "stock-eur-1",
+            "type": "instrument_id",
+            "venue": "synthetic"
+          },
+          "type": "position_balance_key",
+          "venue_id": {
+            "type": "venue_id",
+            "value": "synthetic"
+          }
+        },
+        "lots": [],
+        "quantity": {
+          "instrument_id": "synthetic:stock-eur-1",
+          "scale": 0,
+          "type": "quantity",
+          "units": 3
+        },
+        "type": "position_balance"
+      }
+    ],
+    "realized_pnl": {
+      "currency": "USD",
+      "scale": 2,
+      "type": "money",
+      "units": 1100
+    },
+    "reporting_currency": {
+      "type": "currency_id",
+      "value": "USD"
+    },
+    "timestamp": {
+      "epoch_nanoseconds": 100,
+      "type": "utc_instant"
+    },
+    "type": "portfolio_snapshot",
+    "unrealized_pnl": {
+      "currency": "USD",
+      "scale": 2,
+      "type": "money",
+      "units": 3300
+    },
+    "valuation_mark_set_hash": "sha256:2fab66662faab0d3d930ead9c19ab9c000e7d5e83f17bada65367bc6322b23ab",
+    "valuation_marks": [
+      {
+        "instrument_id": {
+          "stable_key": "eur-usd",
+          "type": "instrument_id",
+          "venue": "synthetic"
+        },
+        "mark_id": "sha256:809c2dba3b1fe3e7dc48e76bd2d0f6da3714008287cfac11c97af88ac0b9c80a",
+        "observed_at": {
+          "epoch_nanoseconds": 90,
+          "type": "utc_instant"
+        },
+        "price_purpose": "valuation",
+        "type": "valuation_mark_reference"
+      },
+      {
+        "instrument_id": {
+          "stable_key": "stock-eur-1",
+          "type": "instrument_id",
+          "venue": "synthetic"
+        },
+        "mark_id": "sha256:13db1135661e22e6d7a19b845e51cacbc5ab91c7e03b96d008cc30bdbf041277",
+        "observed_at": {
+          "epoch_nanoseconds": 90,
+          "type": "utc_instant"
+        },
+        "price_purpose": "valuation",
+        "type": "valuation_mark_reference"
+      }
+    ],
+    "valuation_staleness_report_hash": "sha256:c27d025356c0ff2ce1226d620211110d9088af3d309b38d3685f5d809b7f4fc6"
+  },
+  "snapshot_hash": "sha256:5f4251c7a5968695c64ff5c8dcac945a514a5b262ea8e8f0afd72f97d58e145d"
+}

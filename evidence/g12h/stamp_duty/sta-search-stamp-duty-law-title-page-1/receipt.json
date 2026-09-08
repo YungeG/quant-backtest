@@ -1,0 +1,52 @@
+{
+  "authority_status": "CAPTURED_NOT_QUALIFIED",
+  "content_type": "application/json;charset=UTF-8",
+  "curl_exit_code": 0,
+  "curl_stderr": "",
+  "derivatives": {
+    "json_parse": {
+      "valid": true
+    }
+  },
+  "final_url": "https://www.chinatax.gov.cn/search5/search/s?siteCode=bm29000002&searchSiteName=GSFFK&searchWord=%E4%B8%AD%E5%8D%8E%E4%BA%BA%E6%B0%91%E5%85%B1%E5%92%8C%E5%9B%BD%E5%8D%B0%E8%8A%B1%E7%A8%8E%E6%B3%95&pageNum=1&pageSize=10",
+  "lineage": "stamp_duty",
+  "operator_harness_sha256": "sha256:85ccf78ce0d595ff9d372c85243d81c49c3bc1be19f868df5936cc2f6977d9ea",
+  "raw_byte_length": 62744,
+  "raw_file": "raw.json",
+  "raw_sha256": "sha256:fb68bc27115e7fd27be0959ffd880e0b8e2823d104c1c172ab1fd1c5d21c0c6f",
+  "redirect_count": 0,
+  "response_chain_count": 1,
+  "response_code": 200,
+  "retrieved_at": "2026-08-20T07:43:42.312417Z",
+  "schema_version": 1,
+  "sensitive_response_headers": {
+    "files": [
+      {
+        "exact_private_path": "/srv/bcache-8t/ygguo/backtest/g12h-authority-private/20260820-wave1-response-headers/stamp_duty/sta-search-stamp-duty-law-title-page-1/response.headers",
+        "exact_private_sha256": "sha256:6b90872b383f5f1d6fe38805d25c85ca8d5648ce6181b056fb5a30f04c23150d",
+        "redaction": "Set-Cookie value replaced by its SHA-256; cookie name and attributes retained.",
+        "tracked_path": "stamp_duty/sta-search-stamp-duty-law-title-page-1/response.headers",
+        "tracked_redacted_sha256": "sha256:e73b543f3a3bebfe9ce773f714eb9b56628b8a0d0f27f70dd52987e79509d044"
+      },
+      {
+        "exact_private_path": "/srv/bcache-8t/ygguo/backtest/g12h-authority-private/20260820-wave1-response-headers/stamp_duty/sta-search-stamp-duty-law-title-page-1/transport.log",
+        "exact_private_sha256": "sha256:9d84f180096b5902b657632c4ec63aa646c1858026859b87b77f1319b946b422",
+        "redaction": "Set-Cookie value replaced by its SHA-256; cookie name and attributes retained.",
+        "tracked_path": "stamp_duty/sta-search-stamp-duty-law-title-page-1/transport.log",
+        "tracked_redacted_sha256": "sha256:4765df140e453eb3e1cacbc82f1599ffff53317eb23c314c085f0accca5dcb17"
+      },
+      {
+        "exact_private_path": "/srv/bcache-8t/ygguo/backtest/g12h-authority-private/20260820-wave1-response-headers/stamp_duty/sta-search-stamp-duty-law-title-page-1/redirects.json",
+        "exact_private_sha256": "sha256:c59bd0cbc2895011ba533787054b24d16df7575aa4a693253c7499f1bfe0edcd",
+        "redaction": "Set-Cookie value replaced by its SHA-256; cookie name and attributes retained.",
+        "tracked_path": "stamp_duty/sta-search-stamp-duty-law-title-page-1/redirects.json",
+        "tracked_redacted_sha256": "sha256:763d60d1d5ee235b9413ab6a62bf42bbbbb1ea5a95d20ec502475d600dd6447b"
+      }
+    ],
+    "policy": "Exact server-issued cookie values are excluded from Git and retained in the mode-restricted private evidence store."
+  },
+  "source_id": "sta-search-stamp-duty-law-title-page-1",
+  "started_at": "2026-08-20T07:43:38.775396Z",
+  "tool": "curl 8.14.1 (x86_64-pc-linux-gnu) libcurl/8.14.1 OpenSSL/3.5.6 zlib/1.3.1 brotli/1.1.0 zstd/1.5.7 libidn2/2.3.8 libpsl/0.21.2 libssh2/1.11.1 nghttp2/1.64.0 nghttp3/1.8.0 librtmp/2.3 OpenLDAP/2.6.10",
+  "type": "g12h_official_http_capture_receipt_v1"
+}

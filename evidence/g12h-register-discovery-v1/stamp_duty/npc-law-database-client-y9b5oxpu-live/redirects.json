@@ -1,0 +1,55 @@
+{
+  "responses": [
+    {
+      "headers": [
+        {
+          "name": "Date",
+          "value": "Thu, 20 Aug 2026 08:42:17 GMT"
+        },
+        {
+          "name": "Content-Type",
+          "value": "application/javascript; charset=utf-8"
+        },
+        {
+          "name": "Content-Length",
+          "value": "1348995"
+        },
+        {
+          "name": "Connection",
+          "value": "keep-alive"
+        },
+        {
+          "name": "Etag",
+          "value": "W/\"6a69b790-149583\""
+        },
+        {
+          "name": "Last-Modified",
+          "value": "Wed, 29 Jul 2026 08:19:28 GMT"
+        },
+        {
+          "name": "Vary",
+          "value": "Accept-Encoding"
+        },
+        {
+          "name": "Wzws-Ray",
+          "value": "1129-1787242969.775-s1bjbgp-cache02bjtp3-waf01bjtp3"
+        },
+        {
+          "name": "Cache-Control",
+          "value": "max-age=14400"
+        },
+        {
+          "name": "age",
+          "value": "0"
+        },
+        {
+          "name": "VAR-Cache",
+          "value": "hit"
+        }
+      ],
+      "status_line": "HTTP/1.1 200 OK"
+    }
+  ],
+  "schema_version": 1,
+  "type": "g12h_http_response_chain_v1"
+}

@@ -1,0 +1,8 @@
+{
+  "private_manifest_sha256": "sha256:a911cda6040039aa85b2630448d343da6d809f6a06779c34d4ca1f79975fb37e",
+  "private_store_root": "/srv/bcache-8t/ygguo/backtest/g12h-authority-private/20260820-wave1-scanner-sensitive-exact-bytes",
+  "schema_version": 1,
+  "source_count": 1,
+  "status": "EXACT_PUBLIC_BYTES_EXTERNAL_TRACKED_COPY_REDACTED",
+  "type": "g12h_scanner_sensitive_exact_byte_store_receipt_v1"
+}

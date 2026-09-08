@@ -1,0 +1,63 @@
+{
+  "archive_file": "cycle-rotation-platform-1fea4f5a4ec8ab12ddb25c6c5bb525f91f8bac9e887f3e5b382b641a948c91c3.tar.gz",
+  "archive_sha256": "1fea4f5a4ec8ab12ddb25c6c5bb525f91f8bac9e887f3e5b382b641a948c91c3",
+  "content_tree_sha256": "65f9812bd86241ac5fcfdfcca1cb8c28868edbdf007d747ecee8cc68ee20d089",
+  "files": [
+    {
+      "mode": "0644",
+      "path": "operations/platform-architecture.md",
+      "sha256": "d223ba7919605d1384df6b595be9302a9f79b43cd77b063b673c786ac3e78deb",
+      "size": 4841
+    },
+    {
+      "mode": "0644",
+      "path": "strategies/contracts.py",
+      "sha256": "64c0050ab054c443d87889c50e99b2a7c6de671c9a783f09b46849172ca6221b",
+      "size": 7079
+    },
+    {
+      "mode": "0644",
+      "path": "strategies/registry.py",
+      "sha256": "8c6c097b680afb01aede69e34228185470ee42188efb655ce93c0b66c48c6658",
+      "size": 2132
+    },
+    {
+      "mode": "0644",
+      "path": "strategies/template_adapter.py",
+      "sha256": "a8f37974617e6dcb402aec7a14f03386973a95af811034556af30444e779588b",
+      "size": 1239
+    },
+    {
+      "mode": "0644",
+      "path": "trading/engine/execution_engine.py",
+      "sha256": "d54cf3636a0c9b9b32c262a3951bc3c47f3f1fd8e8d4306b7b81368c3f9d5c81",
+      "size": 17112
+    },
+    {
+      "mode": "0644",
+      "path": "trading/engine/risk_gate.py",
+      "sha256": "81a48d43e8336838a76d6a20dd3b6728364cc51ea9103c23340ca895e1cc746a",
+      "size": 3667
+    },
+    {
+      "mode": "0644",
+      "path": "trading/orders.py",
+      "sha256": "543cfda49b658fec5f462abfc2f4c9a88726890b799d8bd43cd64f0452552082",
+      "size": 180
+    },
+    {
+      "mode": "0644",
+      "path": "trading/position_management.py",
+      "sha256": "48e0104242ba2df56b205fbb9e31b672614e83562af2aa7c0fc0a3b1197fe079",
+      "size": 11120
+    }
+  ],
+  "provenance": {
+    "base_commit": "91cd8e182b736a07319e0f504e64572b32ea7dea",
+    "remote": "git@github.com:YungeG/quaaant.git",
+    "worktree_state": "dirty"
+  },
+  "schema_version": 1,
+  "snapshot_id": "sha256:1fea4f5a4ec8ab12ddb25c6c5bb525f91f8bac9e887f3e5b382b641a948c91c3",
+  "source_id": "cycle-rotation-platform"
+}

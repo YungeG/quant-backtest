@@ -1,0 +1,161 @@
+{
+  "approval_checks": [
+    {
+      "approved": true,
+      "available_units": 1,
+      "reason_code": "account_permission",
+      "required_units": 1,
+      "scale": null,
+      "subject_key": "position_effect:auto",
+      "type": "pretrade_risk_check"
+    },
+    {
+      "approved": true,
+      "available_units": 1,
+      "reason_code": "account_permission",
+      "required_units": 1,
+      "scale": null,
+      "subject_key": "reduce_only:false",
+      "type": "pretrade_risk_check"
+    },
+    {
+      "approved": true,
+      "available_units": 1,
+      "reason_code": "account_permission",
+      "required_units": 1,
+      "scale": null,
+      "subject_key": "side:buy",
+      "type": "pretrade_risk_check"
+    },
+    {
+      "approved": true,
+      "available_units": 100000,
+      "reason_code": "exposure_capacity",
+      "required_units": 10000,
+      "scale": 2,
+      "subject_key": "exposure_capacity:EUR",
+      "type": "pretrade_risk_check"
+    },
+    {
+      "approved": true,
+      "available_units": 20000000,
+      "reason_code": "exposure_capacity",
+      "required_units": 6000000,
+      "scale": 2,
+      "subject_key": "exposure_capacity:USD",
+      "type": "pretrade_risk_check"
+    },
+    {
+      "approved": true,
+      "available_units": 5,
+      "reason_code": "order_capacity",
+      "required_units": 1,
+      "scale": null,
+      "subject_key": "order_capacity",
+      "type": "pretrade_risk_check"
+    },
+    {
+      "approved": true,
+      "available_units": 50000,
+      "reason_code": "tradable_cash",
+      "required_units": 10000,
+      "scale": 2,
+      "subject_key": "tradable_cash:EUR",
+      "type": "pretrade_risk_check"
+    },
+    {
+      "approved": true,
+      "available_units": 10000000,
+      "reason_code": "tradable_cash",
+      "required_units": 6007600,
+      "scale": 2,
+      "subject_key": "tradable_cash:USD",
+      "type": "pretrade_risk_check"
+    }
+  ],
+  "approval_decision_hash": "sha256:6cfd4895728ee1f891f554edbf6b4bc89a4d0e9c026a4096717d445219a71917",
+  "approval_decision_id": "pretrade-risk-decision-v1:sha256:19e8fe66e5f7468685987ffcd7a06e335510e8d994feb077cc16d5f1549bb622",
+  "approval_input_hash": "sha256:82b32772ced15741ba27e486b774826bc584c27111a11e510868dc3a74376eee",
+  "approval_outcome_hash": "sha256:2b199d8261efc3de619cf80ded33afc79c5afdedf2a3b4788558928ab1d241af",
+  "fixture_id": "exact-pretrade-risk-decision-v1",
+  "policy_hash": "sha256:b140efc6c4ab7f67fcf723779752a7c660bfd9c9e930c05d7d8b3e4f8a1b12f7",
+  "rejection_checks": [
+    {
+      "approved": true,
+      "available_units": 1,
+      "reason_code": "account_permission",
+      "required_units": 1,
+      "scale": null,
+      "subject_key": "position_effect:auto",
+      "type": "pretrade_risk_check"
+    },
+    {
+      "approved": true,
+      "available_units": 1,
+      "reason_code": "account_permission",
+      "required_units": 1,
+      "scale": null,
+      "subject_key": "reduce_only:false",
+      "type": "pretrade_risk_check"
+    },
+    {
+      "approved": true,
+      "available_units": 1,
+      "reason_code": "account_permission",
+      "required_units": 1,
+      "scale": null,
+      "subject_key": "side:buy",
+      "type": "pretrade_risk_check"
+    },
+    {
+      "approved": true,
+      "available_units": 100000,
+      "reason_code": "exposure_capacity",
+      "required_units": 10000,
+      "scale": 2,
+      "subject_key": "exposure_capacity:EUR",
+      "type": "pretrade_risk_check"
+    },
+    {
+      "approved": true,
+      "available_units": 20000000,
+      "reason_code": "exposure_capacity",
+      "required_units": 6000000,
+      "scale": 2,
+      "subject_key": "exposure_capacity:USD",
+      "type": "pretrade_risk_check"
+    },
+    {
+      "approved": true,
+      "available_units": 5,
+      "reason_code": "order_capacity",
+      "required_units": 1,
+      "scale": null,
+      "subject_key": "order_capacity",
+      "type": "pretrade_risk_check"
+    },
+    {
+      "approved": true,
+      "available_units": 50000,
+      "reason_code": "tradable_cash",
+      "required_units": 10000,
+      "scale": 2,
+      "subject_key": "tradable_cash:EUR",
+      "type": "pretrade_risk_check"
+    },
+    {
+      "approved": false,
+      "available_units": 6007599,
+      "reason_code": "tradable_cash",
+      "required_units": 6007600,
+      "scale": 2,
+      "subject_key": "tradable_cash:USD",
+      "type": "pretrade_risk_check"
+    }
+  ],
+  "rejection_decision_hash": "sha256:5833c55f1c32adaffbb59eb88b94437e53f6595d85e4f3acabb802167ed127c9",
+  "rejection_decision_id": "pretrade-risk-decision-v1:sha256:21e002a8936a80aba2c2f68a2d70cdb3e29375bbb1e4976b0c1504695e0b0ae8",
+  "rejection_input_hash": "sha256:f46db64fd5f667d117474d746bceda627d243d0917ed48565d72ca62f7460717",
+  "rejection_outcome_hash": "sha256:14289566742f733e8609faa866af34b0d195e40574849f3372d5e3810e097f9f",
+  "requirement_hash": "sha256:c6e3199ea383a5618c2561c0fbf2a0803bb20e3a7618cbecbab676ffeed0ba88"
+}

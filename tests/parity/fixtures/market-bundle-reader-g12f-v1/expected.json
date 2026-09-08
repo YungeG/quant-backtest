@@ -1,0 +1,197 @@
+{
+  "auditable_runs": [
+    {
+      "attempt_count": 2,
+      "distinct_attempt_ids": true,
+      "distinct_evidence_manifest_hashes": true,
+      "execution_case_hashes": [
+        "sha256:bdbcf92c176fedaf8fa89a056bc92fddeb9d70b75bcacb7cb6013b468374c87e",
+        "sha256:bdbcf92c176fedaf8fa89a056bc92fddeb9d70b75bcacb7cb6013b468374c87e"
+      ],
+      "execution_result_hashes": [
+        "sha256:97a39c3e4aafe92db6bfb70df9230c6cbda44e9e8c9cf00cca51b0d6a2bf005b",
+        "sha256:97a39c3e4aafe92db6bfb70df9230c6cbda44e9e8c9cf00cca51b0d6a2bf005b"
+      ],
+      "timeline_batch_sizes": [
+        1,
+        10
+      ]
+    }
+  ],
+  "bundle": {
+    "bundle_ref": {
+      "bundle_key": "fixture.engine.bundle.v1",
+      "manifest_hash": "sha256:893e925061def7b79e2082e33f20b750fbfbd7d33ea58d3bb1f530440ab7510d",
+      "type": "market_bundle_ref"
+    },
+    "manifest_hash": "sha256:893e925061def7b79e2082e33f20b750fbfbd7d33ea58d3bb1f530440ab7510d"
+  },
+  "executions": [
+    {
+      "case_hash": "sha256:bdbcf92c176fedaf8fa89a056bc92fddeb9d70b75bcacb7cb6013b468374c87e",
+      "engine_result_hash": "sha256:a43505a1bb566b05988115683918a01e5f99f7865c9ae648b417c0281fd1c53b",
+      "ledger_state_hash": "sha256:bec9bac85f9a89e188ef06e0e730a088c015b9c4d709eb47c7bd4785fef313f8",
+      "run_end_report_hash": "sha256:07c76f87e56223ed59b24df7e75fe2ff3fa43982939a999b01a791577cfe5439",
+      "snapshot_hash": "sha256:b8460e12ff51174f40180b9938fad588ca892cde1e718700f62a5f06dca9be68",
+      "timeline_batch_size": 1,
+      "trace_hash": "sha256:758a369a1777eb0d06ea1434412f36e382fb87de0fb3c4ca335b10613ed8dce7"
+    },
+    {
+      "case_hash": "sha256:bdbcf92c176fedaf8fa89a056bc92fddeb9d70b75bcacb7cb6013b468374c87e",
+      "engine_result_hash": "sha256:a43505a1bb566b05988115683918a01e5f99f7865c9ae648b417c0281fd1c53b",
+      "ledger_state_hash": "sha256:bec9bac85f9a89e188ef06e0e730a088c015b9c4d709eb47c7bd4785fef313f8",
+      "run_end_report_hash": "sha256:07c76f87e56223ed59b24df7e75fe2ff3fa43982939a999b01a791577cfe5439",
+      "snapshot_hash": "sha256:b8460e12ff51174f40180b9938fad588ca892cde1e718700f62a5f06dca9be68",
+      "timeline_batch_size": 2,
+      "trace_hash": "sha256:758a369a1777eb0d06ea1434412f36e382fb87de0fb3c4ca335b10613ed8dce7"
+    },
+    {
+      "case_hash": "sha256:bdbcf92c176fedaf8fa89a056bc92fddeb9d70b75bcacb7cb6013b468374c87e",
+      "engine_result_hash": "sha256:a43505a1bb566b05988115683918a01e5f99f7865c9ae648b417c0281fd1c53b",
+      "ledger_state_hash": "sha256:bec9bac85f9a89e188ef06e0e730a088c015b9c4d709eb47c7bd4785fef313f8",
+      "run_end_report_hash": "sha256:07c76f87e56223ed59b24df7e75fe2ff3fa43982939a999b01a791577cfe5439",
+      "snapshot_hash": "sha256:b8460e12ff51174f40180b9938fad588ca892cde1e718700f62a5f06dca9be68",
+      "timeline_batch_size": 10,
+      "trace_hash": "sha256:758a369a1777eb0d06ea1434412f36e382fb87de0fb3c4ca335b10613ed8dce7"
+    }
+  ],
+  "fixture_id": "market-bundle-reader-g12f-v1",
+  "qualification": {
+    "decision_grade_eligible": false,
+    "deployment_authorized": false
+  },
+  "schema_version": 1,
+  "streams": [
+    {
+      "batch_size": 1,
+      "content_hash": "sha256:990a2182273d776405014365572008074179fdd7e710833c16a02685e21d4196",
+      "event_count": 1,
+      "event_hashes": [
+        "sha256:f2b8b826ea288cade860431bb1468d05054a1839a94f7ba28e55fe898b740d18"
+      ],
+      "event_ids": [
+        "engine-bar-open-200"
+      ],
+      "stream_key": "bars.open",
+      "terminal_cursor_hash": "sha256:e8124f8c2fea9ee78685132d55574cb7a2b764346d993361b34dae4537b4b555"
+    },
+    {
+      "batch_size": 2,
+      "content_hash": "sha256:990a2182273d776405014365572008074179fdd7e710833c16a02685e21d4196",
+      "event_count": 1,
+      "event_hashes": [
+        "sha256:f2b8b826ea288cade860431bb1468d05054a1839a94f7ba28e55fe898b740d18"
+      ],
+      "event_ids": [
+        "engine-bar-open-200"
+      ],
+      "stream_key": "bars.open",
+      "terminal_cursor_hash": "sha256:3d4099e0c4f97ee38ba762cc4f120d808a9402059619016e4adfb62c94cee013"
+    },
+    {
+      "batch_size": 10,
+      "content_hash": "sha256:990a2182273d776405014365572008074179fdd7e710833c16a02685e21d4196",
+      "event_count": 1,
+      "event_hashes": [
+        "sha256:f2b8b826ea288cade860431bb1468d05054a1839a94f7ba28e55fe898b740d18"
+      ],
+      "event_ids": [
+        "engine-bar-open-200"
+      ],
+      "stream_key": "bars.open",
+      "terminal_cursor_hash": "sha256:540acb91866feafd82b8e163eb7c0e50ff716d8f40181ada9a9d7324b36a7dfa"
+    },
+    {
+      "batch_size": 1,
+      "content_hash": "sha256:4b52a248b2f53a9a9c951c47bdb26277b19240060d5d30672fb3bab26a48fd2b",
+      "event_count": 1,
+      "event_hashes": [
+        "sha256:d8ce3cd92509e2f0f4cfce2f4e77783e99de2e5e33ad97610c8fc259ba3dc3a0"
+      ],
+      "event_ids": [
+        "engine-target-100"
+      ],
+      "stream_key": "targets",
+      "terminal_cursor_hash": "sha256:297a52f9b43c500b2649ad79c54e8f47464251533ed230bb4ac4be5963da1269"
+    },
+    {
+      "batch_size": 2,
+      "content_hash": "sha256:4b52a248b2f53a9a9c951c47bdb26277b19240060d5d30672fb3bab26a48fd2b",
+      "event_count": 1,
+      "event_hashes": [
+        "sha256:d8ce3cd92509e2f0f4cfce2f4e77783e99de2e5e33ad97610c8fc259ba3dc3a0"
+      ],
+      "event_ids": [
+        "engine-target-100"
+      ],
+      "stream_key": "targets",
+      "terminal_cursor_hash": "sha256:c2b7f562155c0714332f0e1fc746a615d1ebd98ce7b4d7f16717deabe9c7cf28"
+    },
+    {
+      "batch_size": 10,
+      "content_hash": "sha256:4b52a248b2f53a9a9c951c47bdb26277b19240060d5d30672fb3bab26a48fd2b",
+      "event_count": 1,
+      "event_hashes": [
+        "sha256:d8ce3cd92509e2f0f4cfce2f4e77783e99de2e5e33ad97610c8fc259ba3dc3a0"
+      ],
+      "event_ids": [
+        "engine-target-100"
+      ],
+      "stream_key": "targets",
+      "terminal_cursor_hash": "sha256:384f457645c9eb2b94b36d007cec8d255de5ec717f1250a764c7d4755956c2e9"
+    }
+  ],
+  "timelines": [
+    {
+      "batch_size": 1,
+      "event_hashes": [
+        "sha256:d8ce3cd92509e2f0f4cfce2f4e77783e99de2e5e33ad97610c8fc259ba3dc3a0",
+        "sha256:f2b8b826ea288cade860431bb1468d05054a1839a94f7ba28e55fe898b740d18"
+      ],
+      "event_ids": [
+        "engine-target-100",
+        "engine-bar-open-200"
+      ],
+      "segments": [
+        "active_trading",
+        "active_trading"
+      ],
+      "terminal_cursor_hash": "sha256:dd23caf22b229d2b4d4208f7a6be0d005c7b5a9fdf187b0c08ba65c8af7b7257",
+      "timeline_id": "sha256:f18331ce7ba0978070d8336edd8bb103b5d43386a38e852122c561f1fc4d4017"
+    },
+    {
+      "batch_size": 2,
+      "event_hashes": [
+        "sha256:d8ce3cd92509e2f0f4cfce2f4e77783e99de2e5e33ad97610c8fc259ba3dc3a0",
+        "sha256:f2b8b826ea288cade860431bb1468d05054a1839a94f7ba28e55fe898b740d18"
+      ],
+      "event_ids": [
+        "engine-target-100",
+        "engine-bar-open-200"
+      ],
+      "segments": [
+        "active_trading",
+        "active_trading"
+      ],
+      "terminal_cursor_hash": "sha256:db6b28ff44cf1e0a111fd5244e3dea60bd3a3603b211c22f26ac106e622edce1",
+      "timeline_id": "sha256:f18331ce7ba0978070d8336edd8bb103b5d43386a38e852122c561f1fc4d4017"
+    },
+    {
+      "batch_size": 10,
+      "event_hashes": [
+        "sha256:d8ce3cd92509e2f0f4cfce2f4e77783e99de2e5e33ad97610c8fc259ba3dc3a0",
+        "sha256:f2b8b826ea288cade860431bb1468d05054a1839a94f7ba28e55fe898b740d18"
+      ],
+      "event_ids": [
+        "engine-target-100",
+        "engine-bar-open-200"
+      ],
+      "segments": [
+        "active_trading",
+        "active_trading"
+      ],
+      "terminal_cursor_hash": "sha256:615f6f1d7a5a1bd0c8545c410a12c464af34f23e6cfa40f13cc19ddb39826193",
+      "timeline_id": "sha256:f18331ce7ba0978070d8336edd8bb103b5d43386a38e852122c561f1fc4d4017"
+    }
+  ]
+}

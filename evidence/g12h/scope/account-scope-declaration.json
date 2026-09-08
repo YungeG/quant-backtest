@@ -1,0 +1,41 @@
+{
+  "account_id": "account-a",
+  "authorizes_available_margin_use": false,
+  "available_at": {
+    "instant": {
+      "epoch_nanoseconds": 1784196000000000000,
+      "type": "utc_instant"
+    },
+    "phase": {
+      "code": "corporate_action_register",
+      "rank": 100,
+      "type": "timeline_phase"
+    },
+    "source_sequence": {
+      "type": "source_sequence",
+      "value": 1
+    },
+    "type": "simulation_instant"
+  },
+  "coverage_from": {
+    "epoch_nanoseconds": 1783267200000000000,
+    "type": "utc_instant"
+  },
+  "coverage_to_exclusive": {
+    "epoch_nanoseconds": 1785427200000000000,
+    "type": "utc_instant"
+  },
+  "declaration_hash": "sha256:de8e0f3df68fd3436da37f463a2d2265e7371ee3e68c980e182e6cd987067595",
+  "has_margin_or_short_permission": false,
+  "has_stock_connect_permission": false,
+  "is_cash_account": true,
+  "is_domestic_access": true,
+  "schema_version": 1,
+  "source_manifest_hash": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+  "source_snapshot_hash": "sha256:9999999999999999999999999999999999999999999999999999999999999999",
+  "type": "cn_a_share_account_scope_declaration",
+  "venue_id": {
+    "type": "venue_id",
+    "value": "xshe"
+  }
+}

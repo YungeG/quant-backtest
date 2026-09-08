@@ -1,0 +1,1 @@
+{"request_id":"43699754-830b-489b-bd63-beadf673a333","code":0,"data":{"fields":["ts_code","trade_date","open","high","low","close","pre_close","change","pct_chg","vol","amount"],"items":[["000703.SZ","20241125",6.17,6.29,6.09,6.12,6.25,-0.13,-2.08,333206.66,204886.585]],"has_more":false,"count":0},"msg":"","detail":"..."}

@@ -1,0 +1,71 @@
+{
+  "fixture_id": "simulation-profile-ports-v1",
+  "schema_version": 1,
+  "port_types": [
+    "execution_model",
+    "slippage_model",
+    "latency_model",
+    "liquidity_model",
+    "liquidation_audit_model",
+    "closeout_policy"
+  ],
+  "port_spec": {
+    "type": "simulation_port_spec",
+    "component_ref": {
+      "type": "simulation_component_ref",
+      "port_type": "execution_model",
+      "component_key": "test.execution_model.v1",
+      "component_version": 1,
+      "component_digest": "sha256:cdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcd"
+    },
+    "required_capabilities": [
+      {
+        "type": "simulation_capability_requirement",
+        "capability_key": "bars.ohlcv",
+        "minimum_version": 2
+      },
+      {
+        "type": "simulation_capability_requirement",
+        "capability_key": "prices.execution_reference",
+        "minimum_version": 1
+      }
+    ],
+    "applicability": {
+      "type": "test_applicability_envelope",
+      "engine_kind": "bar",
+      "order_family": "portfolio_rebalance"
+    }
+  },
+  "success_outcome": {
+    "type": "simulation_port_outcome",
+    "component_ref": {
+      "type": "simulation_component_ref",
+      "port_type": "execution_model",
+      "component_key": "test.execution_model.v1",
+      "component_version": 1,
+      "component_digest": "sha256:cdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcd"
+    },
+    "input_hash": "sha256:2c9148096062d562d103d0adf03df4281b3b0478d74a671c955b955220345e26",
+    "result": {
+      "type": "simulation_decision",
+      "decision": "eligible"
+    },
+    "failure": null
+  },
+  "failure_outcome": {
+    "type": "simulation_port_outcome",
+    "component_ref": {
+      "type": "simulation_component_ref",
+      "port_type": "execution_model",
+      "component_key": "test.execution_model.v1",
+      "component_version": 1,
+      "component_digest": "sha256:cdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcd"
+    },
+    "input_hash": "sha256:2c9148096062d562d103d0adf03df4281b3b0478d74a671c955b955220345e26",
+    "result": null,
+    "failure": {
+      "type": "simulation_failure",
+      "failure_kind": "capability_missing"
+    }
+  }
+}

@@ -1,0 +1,2902 @@
+{
+  "fixture_id": "binance-usdm-historical-order-rule-source-v1",
+  "provider": "binance_usdm",
+  "rule_books": {
+    "closed_status_conflict": {
+      "bands": [
+        {
+          "admission_mode": "NORMAL",
+          "available_at": {
+            "epoch_nanoseconds": 1700000000000000001,
+            "type": "utc_instant"
+          },
+          "band_id": "rules-v1",
+          "deferred_rule_keys": [],
+          "effective_from": {
+            "epoch_nanoseconds": 1700000000000000000,
+            "type": "utc_instant"
+          },
+          "effective_to_exclusive": {
+            "epoch_nanoseconds": 1710000000000000000,
+            "type": "utc_instant"
+          },
+          "filter_keys": [
+            "LOT_SIZE",
+            "MARKET_LOT_SIZE",
+            "MIN_NOTIONAL",
+            "PRICE_FILTER"
+          ],
+          "instrument_id": {
+            "stable_key": "btc-usdt-perpetual",
+            "type": "instrument_id",
+            "venue": "binance_usdm"
+          },
+          "limit_max_qty": "100.000",
+          "limit_min_qty": "0.001",
+          "limit_step_size": "0.001",
+          "market_max_qty": "50.000",
+          "market_min_qty": "0.005",
+          "market_step_size": "0.005",
+          "max_price": "1000000.00",
+          "min_notional": "5.00",
+          "min_price": "0.00",
+          "order_types": [
+            "LIMIT",
+            "MARKET"
+          ],
+          "schema_version": 1,
+          "source_ref": {
+            "schema_version": 1,
+            "source_hash": "sha256:9e7877f7508704354f5c4be2e7e747b3a75447a3a3c5b5806869ff470e739a8b",
+            "source_key": "exchange-info/rules-v1.json",
+            "type": "binance_usdm_order_rule_source_ref"
+          },
+          "supports_reduce_only": true,
+          "tick_size": "0.10",
+          "time_in_forces": [
+            "FOK",
+            "GTC",
+            "GTX",
+            "IOC"
+          ],
+          "type": "binance_usdm_order_rule_band"
+        },
+        {
+          "admission_mode": "NORMAL",
+          "available_at": {
+            "epoch_nanoseconds": 1710000000000000001,
+            "type": "utc_instant"
+          },
+          "band_id": "rules-v2",
+          "deferred_rule_keys": [],
+          "effective_from": {
+            "epoch_nanoseconds": 1710000000000000000,
+            "type": "utc_instant"
+          },
+          "effective_to_exclusive": {
+            "epoch_nanoseconds": 1720000000000000000,
+            "type": "utc_instant"
+          },
+          "filter_keys": [
+            "LOT_SIZE",
+            "MARKET_LOT_SIZE",
+            "MIN_NOTIONAL",
+            "PRICE_FILTER"
+          ],
+          "instrument_id": {
+            "stable_key": "btc-usdt-perpetual",
+            "type": "instrument_id",
+            "venue": "binance_usdm"
+          },
+          "limit_max_qty": "100.000",
+          "limit_min_qty": "0.001",
+          "limit_step_size": "0.001",
+          "market_max_qty": "50.000",
+          "market_min_qty": "0.005",
+          "market_step_size": "0.005",
+          "max_price": "1000000.00",
+          "min_notional": "5.00",
+          "min_price": "0.00",
+          "order_types": [
+            "LIMIT",
+            "MARKET"
+          ],
+          "schema_version": 1,
+          "source_ref": {
+            "schema_version": 1,
+            "source_hash": "sha256:68d6f4cf348d478dad8083cb754fe4e01dc803c6087b63089c44364c5e0bdffd",
+            "source_key": "exchange-info/rules-v2.json",
+            "type": "binance_usdm_order_rule_source_ref"
+          },
+          "supports_reduce_only": true,
+          "tick_size": "0.01",
+          "time_in_forces": [
+            "FOK",
+            "GTC",
+            "GTX",
+            "IOC"
+          ],
+          "type": "binance_usdm_order_rule_band"
+        }
+      ],
+      "coverage_from": {
+        "epoch_nanoseconds": 1700000000000000000,
+        "type": "utc_instant"
+      },
+      "coverage_to_exclusive": {
+        "epoch_nanoseconds": 1720000000000000000,
+        "type": "utc_instant"
+      },
+      "instrument_id": {
+        "stable_key": "btc-usdt-perpetual",
+        "type": "instrument_id",
+        "venue": "binance_usdm"
+      },
+      "rule_book_key": "binance-usdm-btc-usdt-order-rules-v1",
+      "rule_book_version": 1,
+      "schema_version": 1,
+      "type": "binance_usdm_order_rule_book"
+    },
+    "closed_suspension": {
+      "bands": [
+        {
+          "admission_mode": "NORMAL",
+          "available_at": {
+            "epoch_nanoseconds": 1700000000000000001,
+            "type": "utc_instant"
+          },
+          "band_id": "rules-v1",
+          "deferred_rule_keys": [],
+          "effective_from": {
+            "epoch_nanoseconds": 1700000000000000000,
+            "type": "utc_instant"
+          },
+          "effective_to_exclusive": {
+            "epoch_nanoseconds": 1710000000000000000,
+            "type": "utc_instant"
+          },
+          "filter_keys": [
+            "LOT_SIZE",
+            "MARKET_LOT_SIZE",
+            "MIN_NOTIONAL",
+            "PRICE_FILTER"
+          ],
+          "instrument_id": {
+            "stable_key": "btc-usdt-perpetual",
+            "type": "instrument_id",
+            "venue": "binance_usdm"
+          },
+          "limit_max_qty": "100.000",
+          "limit_min_qty": "0.001",
+          "limit_step_size": "0.001",
+          "market_max_qty": "50.000",
+          "market_min_qty": "0.005",
+          "market_step_size": "0.005",
+          "max_price": "1000000.00",
+          "min_notional": "5.00",
+          "min_price": "0.00",
+          "order_types": [
+            "LIMIT",
+            "MARKET"
+          ],
+          "schema_version": 1,
+          "source_ref": {
+            "schema_version": 1,
+            "source_hash": "sha256:9e7877f7508704354f5c4be2e7e747b3a75447a3a3c5b5806869ff470e739a8b",
+            "source_key": "exchange-info/rules-v1.json",
+            "type": "binance_usdm_order_rule_source_ref"
+          },
+          "supports_reduce_only": true,
+          "tick_size": "0.10",
+          "time_in_forces": [
+            "FOK",
+            "GTC",
+            "GTX",
+            "IOC"
+          ],
+          "type": "binance_usdm_order_rule_band"
+        },
+        {
+          "admission_mode": "CLOSED",
+          "available_at": {
+            "epoch_nanoseconds": 1710000000000000001,
+            "type": "utc_instant"
+          },
+          "band_id": "rules-closed",
+          "deferred_rule_keys": [],
+          "effective_from": {
+            "epoch_nanoseconds": 1710000000000000000,
+            "type": "utc_instant"
+          },
+          "effective_to_exclusive": {
+            "epoch_nanoseconds": 1710000060000000000,
+            "type": "utc_instant"
+          },
+          "filter_keys": [
+            "LOT_SIZE",
+            "MARKET_LOT_SIZE",
+            "MIN_NOTIONAL",
+            "PRICE_FILTER"
+          ],
+          "instrument_id": {
+            "stable_key": "btc-usdt-perpetual",
+            "type": "instrument_id",
+            "venue": "binance_usdm"
+          },
+          "limit_max_qty": "100.000",
+          "limit_min_qty": "0.001",
+          "limit_step_size": "0.001",
+          "market_max_qty": "50.000",
+          "market_min_qty": "0.005",
+          "market_step_size": "0.005",
+          "max_price": "1000000.00",
+          "min_notional": "5.00",
+          "min_price": "0.00",
+          "order_types": [
+            "LIMIT",
+            "MARKET"
+          ],
+          "schema_version": 1,
+          "source_ref": {
+            "schema_version": 1,
+            "source_hash": "sha256:0bd5ddb6dac99735a849574424edcc8daedc83e38b3034b8a8a87f88322cdadc",
+            "source_key": "exchange-info/rules-closed.json",
+            "type": "binance_usdm_order_rule_source_ref"
+          },
+          "supports_reduce_only": true,
+          "tick_size": "0.01",
+          "time_in_forces": [
+            "FOK",
+            "GTC",
+            "GTX",
+            "IOC"
+          ],
+          "type": "binance_usdm_order_rule_band"
+        },
+        {
+          "admission_mode": "NORMAL",
+          "available_at": {
+            "epoch_nanoseconds": 1710000060000000001,
+            "type": "utc_instant"
+          },
+          "band_id": "rules-resumed",
+          "deferred_rule_keys": [],
+          "effective_from": {
+            "epoch_nanoseconds": 1710000060000000000,
+            "type": "utc_instant"
+          },
+          "effective_to_exclusive": {
+            "epoch_nanoseconds": 1720000000000000000,
+            "type": "utc_instant"
+          },
+          "filter_keys": [
+            "LOT_SIZE",
+            "MARKET_LOT_SIZE",
+            "MIN_NOTIONAL",
+            "PRICE_FILTER"
+          ],
+          "instrument_id": {
+            "stable_key": "btc-usdt-perpetual",
+            "type": "instrument_id",
+            "venue": "binance_usdm"
+          },
+          "limit_max_qty": "100.000",
+          "limit_min_qty": "0.001",
+          "limit_step_size": "0.001",
+          "market_max_qty": "50.000",
+          "market_min_qty": "0.005",
+          "market_step_size": "0.005",
+          "max_price": "1000000.00",
+          "min_notional": "5.00",
+          "min_price": "0.00",
+          "order_types": [
+            "LIMIT",
+            "MARKET"
+          ],
+          "schema_version": 1,
+          "source_ref": {
+            "schema_version": 1,
+            "source_hash": "sha256:3b3560f7efbf157f8b42e226e58f2960669ffb78788c9ae0f4097e1b6f41a981",
+            "source_key": "exchange-info/rules-resumed.json",
+            "type": "binance_usdm_order_rule_source_ref"
+          },
+          "supports_reduce_only": true,
+          "tick_size": "0.01",
+          "time_in_forces": [
+            "FOK",
+            "GTC",
+            "GTX",
+            "IOC"
+          ],
+          "type": "binance_usdm_order_rule_band"
+        }
+      ],
+      "coverage_from": {
+        "epoch_nanoseconds": 1700000000000000000,
+        "type": "utc_instant"
+      },
+      "coverage_to_exclusive": {
+        "epoch_nanoseconds": 1720000000000000000,
+        "type": "utc_instant"
+      },
+      "instrument_id": {
+        "stable_key": "btc-usdt-perpetual",
+        "type": "instrument_id",
+        "venue": "binance_usdm"
+      },
+      "rule_book_key": "binance-usdm-btc-usdt-order-rules-v1",
+      "rule_book_version": 1,
+      "schema_version": 1,
+      "type": "binance_usdm_order_rule_book"
+    },
+    "coverage_gap": {
+      "bands": [
+        {
+          "admission_mode": "NORMAL",
+          "available_at": {
+            "epoch_nanoseconds": 1700000000000000001,
+            "type": "utc_instant"
+          },
+          "band_id": "rules-v1",
+          "deferred_rule_keys": [],
+          "effective_from": {
+            "epoch_nanoseconds": 1700000000000000000,
+            "type": "utc_instant"
+          },
+          "effective_to_exclusive": {
+            "epoch_nanoseconds": 1709999999999999999,
+            "type": "utc_instant"
+          },
+          "filter_keys": [
+            "LOT_SIZE",
+            "MARKET_LOT_SIZE",
+            "MIN_NOTIONAL",
+            "PRICE_FILTER"
+          ],
+          "instrument_id": {
+            "stable_key": "btc-usdt-perpetual",
+            "type": "instrument_id",
+            "venue": "binance_usdm"
+          },
+          "limit_max_qty": "100.000",
+          "limit_min_qty": "0.001",
+          "limit_step_size": "0.001",
+          "market_max_qty": "50.000",
+          "market_min_qty": "0.005",
+          "market_step_size": "0.005",
+          "max_price": "1000000.00",
+          "min_notional": "5.00",
+          "min_price": "0.00",
+          "order_types": [
+            "LIMIT",
+            "MARKET"
+          ],
+          "schema_version": 1,
+          "source_ref": {
+            "schema_version": 1,
+            "source_hash": "sha256:9e7877f7508704354f5c4be2e7e747b3a75447a3a3c5b5806869ff470e739a8b",
+            "source_key": "exchange-info/rules-v1.json",
+            "type": "binance_usdm_order_rule_source_ref"
+          },
+          "supports_reduce_only": true,
+          "tick_size": "0.10",
+          "time_in_forces": [
+            "FOK",
+            "GTC",
+            "GTX",
+            "IOC"
+          ],
+          "type": "binance_usdm_order_rule_band"
+        },
+        {
+          "admission_mode": "NORMAL",
+          "available_at": {
+            "epoch_nanoseconds": 1710000000000000001,
+            "type": "utc_instant"
+          },
+          "band_id": "rules-v2",
+          "deferred_rule_keys": [],
+          "effective_from": {
+            "epoch_nanoseconds": 1710000000000000000,
+            "type": "utc_instant"
+          },
+          "effective_to_exclusive": {
+            "epoch_nanoseconds": 1720000000000000000,
+            "type": "utc_instant"
+          },
+          "filter_keys": [
+            "LOT_SIZE",
+            "MARKET_LOT_SIZE",
+            "MIN_NOTIONAL",
+            "PRICE_FILTER"
+          ],
+          "instrument_id": {
+            "stable_key": "btc-usdt-perpetual",
+            "type": "instrument_id",
+            "venue": "binance_usdm"
+          },
+          "limit_max_qty": "100.000",
+          "limit_min_qty": "0.001",
+          "limit_step_size": "0.001",
+          "market_max_qty": "50.000",
+          "market_min_qty": "0.005",
+          "market_step_size": "0.005",
+          "max_price": "1000000.00",
+          "min_notional": "5.00",
+          "min_price": "0.00",
+          "order_types": [
+            "LIMIT",
+            "MARKET"
+          ],
+          "schema_version": 1,
+          "source_ref": {
+            "schema_version": 1,
+            "source_hash": "sha256:68d6f4cf348d478dad8083cb754fe4e01dc803c6087b63089c44364c5e0bdffd",
+            "source_key": "exchange-info/rules-v2.json",
+            "type": "binance_usdm_order_rule_source_ref"
+          },
+          "supports_reduce_only": true,
+          "tick_size": "0.01",
+          "time_in_forces": [
+            "FOK",
+            "GTC",
+            "GTX",
+            "IOC"
+          ],
+          "type": "binance_usdm_order_rule_band"
+        }
+      ],
+      "coverage_from": {
+        "epoch_nanoseconds": 1700000000000000000,
+        "type": "utc_instant"
+      },
+      "coverage_to_exclusive": {
+        "epoch_nanoseconds": 1720000000000000000,
+        "type": "utc_instant"
+      },
+      "instrument_id": {
+        "stable_key": "btc-usdt-perpetual",
+        "type": "instrument_id",
+        "venue": "binance_usdm"
+      },
+      "rule_book_key": "binance-usdm-btc-usdt-order-rules-v1",
+      "rule_book_version": 1,
+      "schema_version": 1,
+      "type": "binance_usdm_order_rule_book"
+    },
+    "coverage_overlap": {
+      "bands": [
+        {
+          "admission_mode": "NORMAL",
+          "available_at": {
+            "epoch_nanoseconds": 1700000000000000001,
+            "type": "utc_instant"
+          },
+          "band_id": "rules-v1",
+          "deferred_rule_keys": [],
+          "effective_from": {
+            "epoch_nanoseconds": 1700000000000000000,
+            "type": "utc_instant"
+          },
+          "effective_to_exclusive": {
+            "epoch_nanoseconds": 1710000000000000001,
+            "type": "utc_instant"
+          },
+          "filter_keys": [
+            "LOT_SIZE",
+            "MARKET_LOT_SIZE",
+            "MIN_NOTIONAL",
+            "PRICE_FILTER"
+          ],
+          "instrument_id": {
+            "stable_key": "btc-usdt-perpetual",
+            "type": "instrument_id",
+            "venue": "binance_usdm"
+          },
+          "limit_max_qty": "100.000",
+          "limit_min_qty": "0.001",
+          "limit_step_size": "0.001",
+          "market_max_qty": "50.000",
+          "market_min_qty": "0.005",
+          "market_step_size": "0.005",
+          "max_price": "1000000.00",
+          "min_notional": "5.00",
+          "min_price": "0.00",
+          "order_types": [
+            "LIMIT",
+            "MARKET"
+          ],
+          "schema_version": 1,
+          "source_ref": {
+            "schema_version": 1,
+            "source_hash": "sha256:9e7877f7508704354f5c4be2e7e747b3a75447a3a3c5b5806869ff470e739a8b",
+            "source_key": "exchange-info/rules-v1.json",
+            "type": "binance_usdm_order_rule_source_ref"
+          },
+          "supports_reduce_only": true,
+          "tick_size": "0.10",
+          "time_in_forces": [
+            "FOK",
+            "GTC",
+            "GTX",
+            "IOC"
+          ],
+          "type": "binance_usdm_order_rule_band"
+        },
+        {
+          "admission_mode": "NORMAL",
+          "available_at": {
+            "epoch_nanoseconds": 1710000000000000001,
+            "type": "utc_instant"
+          },
+          "band_id": "rules-v2",
+          "deferred_rule_keys": [],
+          "effective_from": {
+            "epoch_nanoseconds": 1710000000000000000,
+            "type": "utc_instant"
+          },
+          "effective_to_exclusive": {
+            "epoch_nanoseconds": 1720000000000000000,
+            "type": "utc_instant"
+          },
+          "filter_keys": [
+            "LOT_SIZE",
+            "MARKET_LOT_SIZE",
+            "MIN_NOTIONAL",
+            "PRICE_FILTER"
+          ],
+          "instrument_id": {
+            "stable_key": "btc-usdt-perpetual",
+            "type": "instrument_id",
+            "venue": "binance_usdm"
+          },
+          "limit_max_qty": "100.000",
+          "limit_min_qty": "0.001",
+          "limit_step_size": "0.001",
+          "market_max_qty": "50.000",
+          "market_min_qty": "0.005",
+          "market_step_size": "0.005",
+          "max_price": "1000000.00",
+          "min_notional": "5.00",
+          "min_price": "0.00",
+          "order_types": [
+            "LIMIT",
+            "MARKET"
+          ],
+          "schema_version": 1,
+          "source_ref": {
+            "schema_version": 1,
+            "source_hash": "sha256:68d6f4cf348d478dad8083cb754fe4e01dc803c6087b63089c44364c5e0bdffd",
+            "source_key": "exchange-info/rules-v2.json",
+            "type": "binance_usdm_order_rule_source_ref"
+          },
+          "supports_reduce_only": true,
+          "tick_size": "0.01",
+          "time_in_forces": [
+            "FOK",
+            "GTC",
+            "GTX",
+            "IOC"
+          ],
+          "type": "binance_usdm_order_rule_band"
+        }
+      ],
+      "coverage_from": {
+        "epoch_nanoseconds": 1700000000000000000,
+        "type": "utc_instant"
+      },
+      "coverage_to_exclusive": {
+        "epoch_nanoseconds": 1720000000000000000,
+        "type": "utc_instant"
+      },
+      "instrument_id": {
+        "stable_key": "btc-usdt-perpetual",
+        "type": "instrument_id",
+        "venue": "binance_usdm"
+      },
+      "rule_book_key": "binance-usdm-btc-usdt-order-rules-v1",
+      "rule_book_version": 1,
+      "schema_version": 1,
+      "type": "binance_usdm_order_rule_book"
+    },
+    "input_order_reverse": {
+      "bands": [
+        {
+          "admission_mode": "NORMAL",
+          "available_at": {
+            "epoch_nanoseconds": 1700000000000000001,
+            "type": "utc_instant"
+          },
+          "band_id": "rules-v1",
+          "deferred_rule_keys": [],
+          "effective_from": {
+            "epoch_nanoseconds": 1700000000000000000,
+            "type": "utc_instant"
+          },
+          "effective_to_exclusive": {
+            "epoch_nanoseconds": 1710000000000000000,
+            "type": "utc_instant"
+          },
+          "filter_keys": [
+            "LOT_SIZE",
+            "MARKET_LOT_SIZE",
+            "MIN_NOTIONAL",
+            "PRICE_FILTER"
+          ],
+          "instrument_id": {
+            "stable_key": "btc-usdt-perpetual",
+            "type": "instrument_id",
+            "venue": "binance_usdm"
+          },
+          "limit_max_qty": "100.000",
+          "limit_min_qty": "0.001",
+          "limit_step_size": "0.001",
+          "market_max_qty": "50.000",
+          "market_min_qty": "0.005",
+          "market_step_size": "0.005",
+          "max_price": "1000000.00",
+          "min_notional": "5.00",
+          "min_price": "0.00",
+          "order_types": [
+            "LIMIT",
+            "MARKET"
+          ],
+          "schema_version": 1,
+          "source_ref": {
+            "schema_version": 1,
+            "source_hash": "sha256:9e7877f7508704354f5c4be2e7e747b3a75447a3a3c5b5806869ff470e739a8b",
+            "source_key": "exchange-info/rules-v1.json",
+            "type": "binance_usdm_order_rule_source_ref"
+          },
+          "supports_reduce_only": true,
+          "tick_size": "0.10",
+          "time_in_forces": [
+            "FOK",
+            "GTC",
+            "GTX",
+            "IOC"
+          ],
+          "type": "binance_usdm_order_rule_band"
+        },
+        {
+          "admission_mode": "NORMAL",
+          "available_at": {
+            "epoch_nanoseconds": 1710000000000000001,
+            "type": "utc_instant"
+          },
+          "band_id": "rules-v2",
+          "deferred_rule_keys": [],
+          "effective_from": {
+            "epoch_nanoseconds": 1710000000000000000,
+            "type": "utc_instant"
+          },
+          "effective_to_exclusive": {
+            "epoch_nanoseconds": 1720000000000000000,
+            "type": "utc_instant"
+          },
+          "filter_keys": [
+            "LOT_SIZE",
+            "MARKET_LOT_SIZE",
+            "MIN_NOTIONAL",
+            "PRICE_FILTER"
+          ],
+          "instrument_id": {
+            "stable_key": "btc-usdt-perpetual",
+            "type": "instrument_id",
+            "venue": "binance_usdm"
+          },
+          "limit_max_qty": "100.000",
+          "limit_min_qty": "0.001",
+          "limit_step_size": "0.001",
+          "market_max_qty": "50.000",
+          "market_min_qty": "0.005",
+          "market_step_size": "0.005",
+          "max_price": "1000000.00",
+          "min_notional": "5.00",
+          "min_price": "0.00",
+          "order_types": [
+            "LIMIT",
+            "MARKET"
+          ],
+          "schema_version": 1,
+          "source_ref": {
+            "schema_version": 1,
+            "source_hash": "sha256:68d6f4cf348d478dad8083cb754fe4e01dc803c6087b63089c44364c5e0bdffd",
+            "source_key": "exchange-info/rules-v2.json",
+            "type": "binance_usdm_order_rule_source_ref"
+          },
+          "supports_reduce_only": true,
+          "tick_size": "0.01",
+          "time_in_forces": [
+            "FOK",
+            "GTC",
+            "GTX",
+            "IOC"
+          ],
+          "type": "binance_usdm_order_rule_band"
+        }
+      ],
+      "coverage_from": {
+        "epoch_nanoseconds": 1700000000000000000,
+        "type": "utc_instant"
+      },
+      "coverage_to_exclusive": {
+        "epoch_nanoseconds": 1720000000000000000,
+        "type": "utc_instant"
+      },
+      "instrument_id": {
+        "stable_key": "btc-usdt-perpetual",
+        "type": "instrument_id",
+        "venue": "binance_usdm"
+      },
+      "rule_book_key": "binance-usdm-btc-usdt-order-rules-v1",
+      "rule_book_version": 1,
+      "schema_version": 1,
+      "type": "binance_usdm_order_rule_book"
+    },
+    "instrument_metadata_mismatch": {
+      "bands": [
+        {
+          "admission_mode": "NORMAL",
+          "available_at": {
+            "epoch_nanoseconds": 1700000000000000001,
+            "type": "utc_instant"
+          },
+          "band_id": "rules-v1",
+          "deferred_rule_keys": [],
+          "effective_from": {
+            "epoch_nanoseconds": 1700000000000000000,
+            "type": "utc_instant"
+          },
+          "effective_to_exclusive": {
+            "epoch_nanoseconds": 1710000000000000000,
+            "type": "utc_instant"
+          },
+          "filter_keys": [
+            "LOT_SIZE",
+            "MARKET_LOT_SIZE",
+            "MIN_NOTIONAL",
+            "PRICE_FILTER"
+          ],
+          "instrument_id": {
+            "stable_key": "btc-usdt-perpetual",
+            "type": "instrument_id",
+            "venue": "binance_usdm"
+          },
+          "limit_max_qty": "100.000",
+          "limit_min_qty": "0.001",
+          "limit_step_size": "0.001",
+          "market_max_qty": "50.000",
+          "market_min_qty": "0.005",
+          "market_step_size": "0.005",
+          "max_price": "1000000.00",
+          "min_notional": "5.00",
+          "min_price": "0.00",
+          "order_types": [
+            "LIMIT",
+            "MARKET"
+          ],
+          "schema_version": 1,
+          "source_ref": {
+            "schema_version": 1,
+            "source_hash": "sha256:9e7877f7508704354f5c4be2e7e747b3a75447a3a3c5b5806869ff470e739a8b",
+            "source_key": "exchange-info/rules-v1.json",
+            "type": "binance_usdm_order_rule_source_ref"
+          },
+          "supports_reduce_only": true,
+          "tick_size": "0.10",
+          "time_in_forces": [
+            "FOK",
+            "GTC",
+            "GTX",
+            "IOC"
+          ],
+          "type": "binance_usdm_order_rule_band"
+        },
+        {
+          "admission_mode": "NORMAL",
+          "available_at": {
+            "epoch_nanoseconds": 1710000000000000001,
+            "type": "utc_instant"
+          },
+          "band_id": "rules-v2",
+          "deferred_rule_keys": [],
+          "effective_from": {
+            "epoch_nanoseconds": 1710000000000000000,
+            "type": "utc_instant"
+          },
+          "effective_to_exclusive": {
+            "epoch_nanoseconds": 1720000000000000000,
+            "type": "utc_instant"
+          },
+          "filter_keys": [
+            "LOT_SIZE",
+            "MARKET_LOT_SIZE",
+            "MIN_NOTIONAL",
+            "PRICE_FILTER"
+          ],
+          "instrument_id": {
+            "stable_key": "btc-usdt-perpetual",
+            "type": "instrument_id",
+            "venue": "binance_usdm"
+          },
+          "limit_max_qty": "100.000",
+          "limit_min_qty": "0.001",
+          "limit_step_size": "0.001",
+          "market_max_qty": "50.000",
+          "market_min_qty": "0.005",
+          "market_step_size": "0.005",
+          "max_price": "1000000.00",
+          "min_notional": "5.00",
+          "min_price": "0.00",
+          "order_types": [
+            "LIMIT",
+            "MARKET"
+          ],
+          "schema_version": 1,
+          "source_ref": {
+            "schema_version": 1,
+            "source_hash": "sha256:68d6f4cf348d478dad8083cb754fe4e01dc803c6087b63089c44364c5e0bdffd",
+            "source_key": "exchange-info/rules-v2.json",
+            "type": "binance_usdm_order_rule_source_ref"
+          },
+          "supports_reduce_only": true,
+          "tick_size": "0.01",
+          "time_in_forces": [
+            "FOK",
+            "GTC",
+            "GTX",
+            "IOC"
+          ],
+          "type": "binance_usdm_order_rule_band"
+        }
+      ],
+      "coverage_from": {
+        "epoch_nanoseconds": 1700000000000000000,
+        "type": "utc_instant"
+      },
+      "coverage_to_exclusive": {
+        "epoch_nanoseconds": 1720000000000000000,
+        "type": "utc_instant"
+      },
+      "instrument_id": {
+        "stable_key": "btc-usdt-perpetual",
+        "type": "instrument_id",
+        "venue": "binance_usdm"
+      },
+      "rule_book_key": "binance-usdm-btc-usdt-order-rules-v1",
+      "rule_book_version": 1,
+      "schema_version": 1,
+      "type": "binance_usdm_order_rule_book"
+    },
+    "invalid_decimal": {
+      "bands": [
+        {
+          "admission_mode": "NORMAL",
+          "available_at": {
+            "epoch_nanoseconds": 1700000000000000001,
+            "type": "utc_instant"
+          },
+          "band_id": "rules-v1",
+          "deferred_rule_keys": [],
+          "effective_from": {
+            "epoch_nanoseconds": 1700000000000000000,
+            "type": "utc_instant"
+          },
+          "effective_to_exclusive": {
+            "epoch_nanoseconds": 1710000000000000000,
+            "type": "utc_instant"
+          },
+          "filter_keys": [
+            "LOT_SIZE",
+            "MARKET_LOT_SIZE",
+            "MIN_NOTIONAL",
+            "PRICE_FILTER"
+          ],
+          "instrument_id": {
+            "stable_key": "btc-usdt-perpetual",
+            "type": "instrument_id",
+            "venue": "binance_usdm"
+          },
+          "limit_max_qty": "100.000",
+          "limit_min_qty": "0.001",
+          "limit_step_size": "0.001",
+          "market_max_qty": "50.000",
+          "market_min_qty": "0.005",
+          "market_step_size": "0.005",
+          "max_price": "1000000.00",
+          "min_notional": "5.00",
+          "min_price": "0.00",
+          "order_types": [
+            "LIMIT",
+            "MARKET"
+          ],
+          "schema_version": 1,
+          "source_ref": {
+            "schema_version": 1,
+            "source_hash": "sha256:9e7877f7508704354f5c4be2e7e747b3a75447a3a3c5b5806869ff470e739a8b",
+            "source_key": "exchange-info/rules-v1.json",
+            "type": "binance_usdm_order_rule_source_ref"
+          },
+          "supports_reduce_only": true,
+          "tick_size": "0.10",
+          "time_in_forces": [
+            "FOK",
+            "GTC",
+            "GTX",
+            "IOC"
+          ],
+          "type": "binance_usdm_order_rule_band"
+        },
+        {
+          "admission_mode": "NORMAL",
+          "available_at": {
+            "epoch_nanoseconds": 1710000000000000001,
+            "type": "utc_instant"
+          },
+          "band_id": "rules-v2",
+          "deferred_rule_keys": [],
+          "effective_from": {
+            "epoch_nanoseconds": 1710000000000000000,
+            "type": "utc_instant"
+          },
+          "effective_to_exclusive": {
+            "epoch_nanoseconds": 1720000000000000000,
+            "type": "utc_instant"
+          },
+          "filter_keys": [
+            "LOT_SIZE",
+            "MARKET_LOT_SIZE",
+            "MIN_NOTIONAL",
+            "PRICE_FILTER"
+          ],
+          "instrument_id": {
+            "stable_key": "btc-usdt-perpetual",
+            "type": "instrument_id",
+            "venue": "binance_usdm"
+          },
+          "limit_max_qty": "100.000",
+          "limit_min_qty": "0.001",
+          "limit_step_size": "0.001",
+          "market_max_qty": "50.000",
+          "market_min_qty": "0.005",
+          "market_step_size": "0.005",
+          "max_price": "1000000.00",
+          "min_notional": "5.00",
+          "min_price": "0.00",
+          "order_types": [
+            "LIMIT",
+            "MARKET"
+          ],
+          "schema_version": 1,
+          "source_ref": {
+            "schema_version": 1,
+            "source_hash": "sha256:68d6f4cf348d478dad8083cb754fe4e01dc803c6087b63089c44364c5e0bdffd",
+            "source_key": "exchange-info/rules-v2.json",
+            "type": "binance_usdm_order_rule_source_ref"
+          },
+          "supports_reduce_only": true,
+          "tick_size": "1E-2",
+          "time_in_forces": [
+            "FOK",
+            "GTC",
+            "GTX",
+            "IOC"
+          ],
+          "type": "binance_usdm_order_rule_band"
+        }
+      ],
+      "coverage_from": {
+        "epoch_nanoseconds": 1700000000000000000,
+        "type": "utc_instant"
+      },
+      "coverage_to_exclusive": {
+        "epoch_nanoseconds": 1720000000000000000,
+        "type": "utc_instant"
+      },
+      "instrument_id": {
+        "stable_key": "btc-usdt-perpetual",
+        "type": "instrument_id",
+        "venue": "binance_usdm"
+      },
+      "rule_book_key": "binance-usdm-btc-usdt-order-rules-v1",
+      "rule_book_version": 1,
+      "schema_version": 1,
+      "type": "binance_usdm_order_rule_book"
+    },
+    "invalid_offset": {
+      "bands": [
+        {
+          "admission_mode": "NORMAL",
+          "available_at": {
+            "epoch_nanoseconds": 1700000000000000001,
+            "type": "utc_instant"
+          },
+          "band_id": "rules-v1",
+          "deferred_rule_keys": [],
+          "effective_from": {
+            "epoch_nanoseconds": 1700000000000000000,
+            "type": "utc_instant"
+          },
+          "effective_to_exclusive": {
+            "epoch_nanoseconds": 1710000000000000000,
+            "type": "utc_instant"
+          },
+          "filter_keys": [
+            "LOT_SIZE",
+            "MARKET_LOT_SIZE",
+            "MIN_NOTIONAL",
+            "PRICE_FILTER"
+          ],
+          "instrument_id": {
+            "stable_key": "btc-usdt-perpetual",
+            "type": "instrument_id",
+            "venue": "binance_usdm"
+          },
+          "limit_max_qty": "100.000",
+          "limit_min_qty": "0.001",
+          "limit_step_size": "0.001",
+          "market_max_qty": "50.000",
+          "market_min_qty": "0.005",
+          "market_step_size": "0.005",
+          "max_price": "1000000.00",
+          "min_notional": "5.00",
+          "min_price": "0.00",
+          "order_types": [
+            "LIMIT",
+            "MARKET"
+          ],
+          "schema_version": 1,
+          "source_ref": {
+            "schema_version": 1,
+            "source_hash": "sha256:9e7877f7508704354f5c4be2e7e747b3a75447a3a3c5b5806869ff470e739a8b",
+            "source_key": "exchange-info/rules-v1.json",
+            "type": "binance_usdm_order_rule_source_ref"
+          },
+          "supports_reduce_only": true,
+          "tick_size": "0.10",
+          "time_in_forces": [
+            "FOK",
+            "GTC",
+            "GTX",
+            "IOC"
+          ],
+          "type": "binance_usdm_order_rule_band"
+        },
+        {
+          "admission_mode": "NORMAL",
+          "available_at": {
+            "epoch_nanoseconds": 1710000000000000001,
+            "type": "utc_instant"
+          },
+          "band_id": "rules-v2",
+          "deferred_rule_keys": [],
+          "effective_from": {
+            "epoch_nanoseconds": 1710000000000000000,
+            "type": "utc_instant"
+          },
+          "effective_to_exclusive": {
+            "epoch_nanoseconds": 1720000000000000000,
+            "type": "utc_instant"
+          },
+          "filter_keys": [
+            "LOT_SIZE",
+            "MARKET_LOT_SIZE",
+            "MIN_NOTIONAL",
+            "PRICE_FILTER"
+          ],
+          "instrument_id": {
+            "stable_key": "btc-usdt-perpetual",
+            "type": "instrument_id",
+            "venue": "binance_usdm"
+          },
+          "limit_max_qty": "100.000",
+          "limit_min_qty": "0.001",
+          "limit_step_size": "0.001",
+          "market_max_qty": "50.000",
+          "market_min_qty": "0.005",
+          "market_step_size": "0.005",
+          "max_price": "1000000.00",
+          "min_notional": "5.00",
+          "min_price": "0.015",
+          "order_types": [
+            "LIMIT",
+            "MARKET"
+          ],
+          "schema_version": 1,
+          "source_ref": {
+            "schema_version": 1,
+            "source_hash": "sha256:68d6f4cf348d478dad8083cb754fe4e01dc803c6087b63089c44364c5e0bdffd",
+            "source_key": "exchange-info/rules-v2.json",
+            "type": "binance_usdm_order_rule_source_ref"
+          },
+          "supports_reduce_only": true,
+          "tick_size": "0.01",
+          "time_in_forces": [
+            "FOK",
+            "GTC",
+            "GTX",
+            "IOC"
+          ],
+          "type": "binance_usdm_order_rule_band"
+        }
+      ],
+      "coverage_from": {
+        "epoch_nanoseconds": 1700000000000000000,
+        "type": "utc_instant"
+      },
+      "coverage_to_exclusive": {
+        "epoch_nanoseconds": 1720000000000000000,
+        "type": "utc_instant"
+      },
+      "instrument_id": {
+        "stable_key": "btc-usdt-perpetual",
+        "type": "instrument_id",
+        "venue": "binance_usdm"
+      },
+      "rule_book_key": "binance-usdm-btc-usdt-order-rules-v1",
+      "rule_book_version": 1,
+      "schema_version": 1,
+      "type": "binance_usdm_order_rule_book"
+    },
+    "late_band_hidden": {
+      "bands": [
+        {
+          "admission_mode": "NORMAL",
+          "available_at": {
+            "epoch_nanoseconds": 1700000000000000001,
+            "type": "utc_instant"
+          },
+          "band_id": "rules-v1",
+          "deferred_rule_keys": [],
+          "effective_from": {
+            "epoch_nanoseconds": 1700000000000000000,
+            "type": "utc_instant"
+          },
+          "effective_to_exclusive": {
+            "epoch_nanoseconds": 1710000000000000000,
+            "type": "utc_instant"
+          },
+          "filter_keys": [
+            "LOT_SIZE",
+            "MARKET_LOT_SIZE",
+            "MIN_NOTIONAL",
+            "PRICE_FILTER"
+          ],
+          "instrument_id": {
+            "stable_key": "btc-usdt-perpetual",
+            "type": "instrument_id",
+            "venue": "binance_usdm"
+          },
+          "limit_max_qty": "100.000",
+          "limit_min_qty": "0.001",
+          "limit_step_size": "0.001",
+          "market_max_qty": "50.000",
+          "market_min_qty": "0.005",
+          "market_step_size": "0.005",
+          "max_price": "1000000.00",
+          "min_notional": "5.00",
+          "min_price": "0.00",
+          "order_types": [
+            "LIMIT",
+            "MARKET"
+          ],
+          "schema_version": 1,
+          "source_ref": {
+            "schema_version": 1,
+            "source_hash": "sha256:9e7877f7508704354f5c4be2e7e747b3a75447a3a3c5b5806869ff470e739a8b",
+            "source_key": "exchange-info/rules-v1.json",
+            "type": "binance_usdm_order_rule_source_ref"
+          },
+          "supports_reduce_only": true,
+          "tick_size": "0.10",
+          "time_in_forces": [
+            "FOK",
+            "GTC",
+            "GTX",
+            "IOC"
+          ],
+          "type": "binance_usdm_order_rule_band"
+        },
+        {
+          "admission_mode": "NORMAL",
+          "available_at": {
+            "epoch_nanoseconds": 1710000000000000100,
+            "type": "utc_instant"
+          },
+          "band_id": "rules-v2",
+          "deferred_rule_keys": [],
+          "effective_from": {
+            "epoch_nanoseconds": 1710000000000000000,
+            "type": "utc_instant"
+          },
+          "effective_to_exclusive": {
+            "epoch_nanoseconds": 1720000000000000000,
+            "type": "utc_instant"
+          },
+          "filter_keys": [
+            "LOT_SIZE",
+            "MARKET_LOT_SIZE",
+            "MIN_NOTIONAL",
+            "PRICE_FILTER"
+          ],
+          "instrument_id": {
+            "stable_key": "btc-usdt-perpetual",
+            "type": "instrument_id",
+            "venue": "binance_usdm"
+          },
+          "limit_max_qty": "100.000",
+          "limit_min_qty": "0.001",
+          "limit_step_size": "0.001",
+          "market_max_qty": "50.000",
+          "market_min_qty": "0.005",
+          "market_step_size": "0.005",
+          "max_price": "1000000.00",
+          "min_notional": "5.00",
+          "min_price": "0.00",
+          "order_types": [
+            "LIMIT",
+            "MARKET"
+          ],
+          "schema_version": 1,
+          "source_ref": {
+            "schema_version": 1,
+            "source_hash": "sha256:68d6f4cf348d478dad8083cb754fe4e01dc803c6087b63089c44364c5e0bdffd",
+            "source_key": "exchange-info/rules-v2.json",
+            "type": "binance_usdm_order_rule_source_ref"
+          },
+          "supports_reduce_only": true,
+          "tick_size": "0.01",
+          "time_in_forces": [
+            "FOK",
+            "GTC",
+            "GTX",
+            "IOC"
+          ],
+          "type": "binance_usdm_order_rule_band"
+        }
+      ],
+      "coverage_from": {
+        "epoch_nanoseconds": 1700000000000000000,
+        "type": "utc_instant"
+      },
+      "coverage_to_exclusive": {
+        "epoch_nanoseconds": 1720000000000000000,
+        "type": "utc_instant"
+      },
+      "instrument_id": {
+        "stable_key": "btc-usdt-perpetual",
+        "type": "instrument_id",
+        "venue": "binance_usdm"
+      },
+      "rule_book_key": "binance-usdm-btc-usdt-order-rules-v1",
+      "rule_book_version": 1,
+      "schema_version": 1,
+      "type": "binance_usdm_order_rule_book"
+    },
+    "late_band_visible": {
+      "bands": [
+        {
+          "admission_mode": "NORMAL",
+          "available_at": {
+            "epoch_nanoseconds": 1700000000000000001,
+            "type": "utc_instant"
+          },
+          "band_id": "rules-v1",
+          "deferred_rule_keys": [],
+          "effective_from": {
+            "epoch_nanoseconds": 1700000000000000000,
+            "type": "utc_instant"
+          },
+          "effective_to_exclusive": {
+            "epoch_nanoseconds": 1710000000000000000,
+            "type": "utc_instant"
+          },
+          "filter_keys": [
+            "LOT_SIZE",
+            "MARKET_LOT_SIZE",
+            "MIN_NOTIONAL",
+            "PRICE_FILTER"
+          ],
+          "instrument_id": {
+            "stable_key": "btc-usdt-perpetual",
+            "type": "instrument_id",
+            "venue": "binance_usdm"
+          },
+          "limit_max_qty": "100.000",
+          "limit_min_qty": "0.001",
+          "limit_step_size": "0.001",
+          "market_max_qty": "50.000",
+          "market_min_qty": "0.005",
+          "market_step_size": "0.005",
+          "max_price": "1000000.00",
+          "min_notional": "5.00",
+          "min_price": "0.00",
+          "order_types": [
+            "LIMIT",
+            "MARKET"
+          ],
+          "schema_version": 1,
+          "source_ref": {
+            "schema_version": 1,
+            "source_hash": "sha256:9e7877f7508704354f5c4be2e7e747b3a75447a3a3c5b5806869ff470e739a8b",
+            "source_key": "exchange-info/rules-v1.json",
+            "type": "binance_usdm_order_rule_source_ref"
+          },
+          "supports_reduce_only": true,
+          "tick_size": "0.10",
+          "time_in_forces": [
+            "FOK",
+            "GTC",
+            "GTX",
+            "IOC"
+          ],
+          "type": "binance_usdm_order_rule_band"
+        },
+        {
+          "admission_mode": "NORMAL",
+          "available_at": {
+            "epoch_nanoseconds": 1710000000000000100,
+            "type": "utc_instant"
+          },
+          "band_id": "rules-v2",
+          "deferred_rule_keys": [],
+          "effective_from": {
+            "epoch_nanoseconds": 1710000000000000000,
+            "type": "utc_instant"
+          },
+          "effective_to_exclusive": {
+            "epoch_nanoseconds": 1720000000000000000,
+            "type": "utc_instant"
+          },
+          "filter_keys": [
+            "LOT_SIZE",
+            "MARKET_LOT_SIZE",
+            "MIN_NOTIONAL",
+            "PRICE_FILTER"
+          ],
+          "instrument_id": {
+            "stable_key": "btc-usdt-perpetual",
+            "type": "instrument_id",
+            "venue": "binance_usdm"
+          },
+          "limit_max_qty": "100.000",
+          "limit_min_qty": "0.001",
+          "limit_step_size": "0.001",
+          "market_max_qty": "50.000",
+          "market_min_qty": "0.005",
+          "market_step_size": "0.005",
+          "max_price": "1000000.00",
+          "min_notional": "5.00",
+          "min_price": "0.00",
+          "order_types": [
+            "LIMIT",
+            "MARKET"
+          ],
+          "schema_version": 1,
+          "source_ref": {
+            "schema_version": 1,
+            "source_hash": "sha256:68d6f4cf348d478dad8083cb754fe4e01dc803c6087b63089c44364c5e0bdffd",
+            "source_key": "exchange-info/rules-v2.json",
+            "type": "binance_usdm_order_rule_source_ref"
+          },
+          "supports_reduce_only": true,
+          "tick_size": "0.01",
+          "time_in_forces": [
+            "FOK",
+            "GTC",
+            "GTX",
+            "IOC"
+          ],
+          "type": "binance_usdm_order_rule_band"
+        }
+      ],
+      "coverage_from": {
+        "epoch_nanoseconds": 1700000000000000000,
+        "type": "utc_instant"
+      },
+      "coverage_to_exclusive": {
+        "epoch_nanoseconds": 1720000000000000000,
+        "type": "utc_instant"
+      },
+      "instrument_id": {
+        "stable_key": "btc-usdt-perpetual",
+        "type": "instrument_id",
+        "venue": "binance_usdm"
+      },
+      "rule_book_key": "binance-usdm-btc-usdt-order-rules-v1",
+      "rule_book_version": 1,
+      "schema_version": 1,
+      "type": "binance_usdm_order_rule_book"
+    },
+    "missing_filter": {
+      "bands": [
+        {
+          "admission_mode": "NORMAL",
+          "available_at": {
+            "epoch_nanoseconds": 1700000000000000001,
+            "type": "utc_instant"
+          },
+          "band_id": "rules-v1",
+          "deferred_rule_keys": [],
+          "effective_from": {
+            "epoch_nanoseconds": 1700000000000000000,
+            "type": "utc_instant"
+          },
+          "effective_to_exclusive": {
+            "epoch_nanoseconds": 1710000000000000000,
+            "type": "utc_instant"
+          },
+          "filter_keys": [
+            "LOT_SIZE",
+            "MARKET_LOT_SIZE",
+            "MIN_NOTIONAL",
+            "PRICE_FILTER"
+          ],
+          "instrument_id": {
+            "stable_key": "btc-usdt-perpetual",
+            "type": "instrument_id",
+            "venue": "binance_usdm"
+          },
+          "limit_max_qty": "100.000",
+          "limit_min_qty": "0.001",
+          "limit_step_size": "0.001",
+          "market_max_qty": "50.000",
+          "market_min_qty": "0.005",
+          "market_step_size": "0.005",
+          "max_price": "1000000.00",
+          "min_notional": "5.00",
+          "min_price": "0.00",
+          "order_types": [
+            "LIMIT",
+            "MARKET"
+          ],
+          "schema_version": 1,
+          "source_ref": {
+            "schema_version": 1,
+            "source_hash": "sha256:9e7877f7508704354f5c4be2e7e747b3a75447a3a3c5b5806869ff470e739a8b",
+            "source_key": "exchange-info/rules-v1.json",
+            "type": "binance_usdm_order_rule_source_ref"
+          },
+          "supports_reduce_only": true,
+          "tick_size": "0.10",
+          "time_in_forces": [
+            "FOK",
+            "GTC",
+            "GTX",
+            "IOC"
+          ],
+          "type": "binance_usdm_order_rule_band"
+        },
+        {
+          "admission_mode": "NORMAL",
+          "available_at": {
+            "epoch_nanoseconds": 1710000000000000001,
+            "type": "utc_instant"
+          },
+          "band_id": "rules-v2",
+          "deferred_rule_keys": [],
+          "effective_from": {
+            "epoch_nanoseconds": 1710000000000000000,
+            "type": "utc_instant"
+          },
+          "effective_to_exclusive": {
+            "epoch_nanoseconds": 1720000000000000000,
+            "type": "utc_instant"
+          },
+          "filter_keys": [
+            "LOT_SIZE",
+            "MARKET_LOT_SIZE",
+            "PRICE_FILTER"
+          ],
+          "instrument_id": {
+            "stable_key": "btc-usdt-perpetual",
+            "type": "instrument_id",
+            "venue": "binance_usdm"
+          },
+          "limit_max_qty": "100.000",
+          "limit_min_qty": "0.001",
+          "limit_step_size": "0.001",
+          "market_max_qty": "50.000",
+          "market_min_qty": "0.005",
+          "market_step_size": "0.005",
+          "max_price": "1000000.00",
+          "min_notional": "5.00",
+          "min_price": "0.00",
+          "order_types": [
+            "LIMIT",
+            "MARKET"
+          ],
+          "schema_version": 1,
+          "source_ref": {
+            "schema_version": 1,
+            "source_hash": "sha256:68d6f4cf348d478dad8083cb754fe4e01dc803c6087b63089c44364c5e0bdffd",
+            "source_key": "exchange-info/rules-v2.json",
+            "type": "binance_usdm_order_rule_source_ref"
+          },
+          "supports_reduce_only": true,
+          "tick_size": "0.01",
+          "time_in_forces": [
+            "FOK",
+            "GTC",
+            "GTX",
+            "IOC"
+          ],
+          "type": "binance_usdm_order_rule_band"
+        }
+      ],
+      "coverage_from": {
+        "epoch_nanoseconds": 1700000000000000000,
+        "type": "utc_instant"
+      },
+      "coverage_to_exclusive": {
+        "epoch_nanoseconds": 1720000000000000000,
+        "type": "utc_instant"
+      },
+      "instrument_id": {
+        "stable_key": "btc-usdt-perpetual",
+        "type": "instrument_id",
+        "venue": "binance_usdm"
+      },
+      "rule_book_key": "binance-usdm-btc-usdt-order-rules-v1",
+      "rule_book_version": 1,
+      "schema_version": 1,
+      "type": "binance_usdm_order_rule_book"
+    },
+    "open_ended_source_boundary": {
+      "bands": [
+        {
+          "admission_mode": "NORMAL",
+          "available_at": {
+            "epoch_nanoseconds": 1700000000000000001,
+            "type": "utc_instant"
+          },
+          "band_id": "rules-v1",
+          "deferred_rule_keys": [],
+          "effective_from": {
+            "epoch_nanoseconds": 1700000000000000000,
+            "type": "utc_instant"
+          },
+          "effective_to_exclusive": {
+            "epoch_nanoseconds": 1710000000000000000,
+            "type": "utc_instant"
+          },
+          "filter_keys": [
+            "LOT_SIZE",
+            "MARKET_LOT_SIZE",
+            "MIN_NOTIONAL",
+            "PRICE_FILTER"
+          ],
+          "instrument_id": {
+            "stable_key": "btc-usdt-perpetual",
+            "type": "instrument_id",
+            "venue": "binance_usdm"
+          },
+          "limit_max_qty": "100.000",
+          "limit_min_qty": "0.001",
+          "limit_step_size": "0.001",
+          "market_max_qty": "50.000",
+          "market_min_qty": "0.005",
+          "market_step_size": "0.005",
+          "max_price": "1000000.00",
+          "min_notional": "5.00",
+          "min_price": "0.00",
+          "order_types": [
+            "LIMIT",
+            "MARKET"
+          ],
+          "schema_version": 1,
+          "source_ref": {
+            "schema_version": 1,
+            "source_hash": "sha256:9e7877f7508704354f5c4be2e7e747b3a75447a3a3c5b5806869ff470e739a8b",
+            "source_key": "exchange-info/rules-v1.json",
+            "type": "binance_usdm_order_rule_source_ref"
+          },
+          "supports_reduce_only": true,
+          "tick_size": "0.10",
+          "time_in_forces": [
+            "FOK",
+            "GTC",
+            "GTX",
+            "IOC"
+          ],
+          "type": "binance_usdm_order_rule_band"
+        },
+        {
+          "admission_mode": "NORMAL",
+          "available_at": {
+            "epoch_nanoseconds": 1710000000000000001,
+            "type": "utc_instant"
+          },
+          "band_id": "rules-v2",
+          "deferred_rule_keys": [],
+          "effective_from": {
+            "epoch_nanoseconds": 1710000000000000000,
+            "type": "utc_instant"
+          },
+          "effective_to_exclusive": {
+            "epoch_nanoseconds": 1720000000000000000,
+            "type": "utc_instant"
+          },
+          "filter_keys": [
+            "LOT_SIZE",
+            "MARKET_LOT_SIZE",
+            "MIN_NOTIONAL",
+            "PRICE_FILTER"
+          ],
+          "instrument_id": {
+            "stable_key": "btc-usdt-perpetual",
+            "type": "instrument_id",
+            "venue": "binance_usdm"
+          },
+          "limit_max_qty": "100.000",
+          "limit_min_qty": "0.001",
+          "limit_step_size": "0.001",
+          "market_max_qty": "50.000",
+          "market_min_qty": "0.005",
+          "market_step_size": "0.005",
+          "max_price": "1000000.00",
+          "min_notional": "5.00",
+          "min_price": "0.00",
+          "order_types": [
+            "LIMIT",
+            "MARKET"
+          ],
+          "schema_version": 1,
+          "source_ref": {
+            "schema_version": 1,
+            "source_hash": "sha256:68d6f4cf348d478dad8083cb754fe4e01dc803c6087b63089c44364c5e0bdffd",
+            "source_key": "exchange-info/rules-v2.json",
+            "type": "binance_usdm_order_rule_source_ref"
+          },
+          "supports_reduce_only": true,
+          "tick_size": "0.01",
+          "time_in_forces": [
+            "FOK",
+            "GTC",
+            "GTX",
+            "IOC"
+          ],
+          "type": "binance_usdm_order_rule_band"
+        }
+      ],
+      "coverage_from": {
+        "epoch_nanoseconds": 1700000000000000000,
+        "type": "utc_instant"
+      },
+      "coverage_to_exclusive": {
+        "epoch_nanoseconds": 1720000000000000000,
+        "type": "utc_instant"
+      },
+      "instrument_id": {
+        "stable_key": "btc-usdt-perpetual",
+        "type": "instrument_id",
+        "venue": "binance_usdm"
+      },
+      "rule_book_key": "binance-usdm-btc-usdt-order-rules-v1",
+      "rule_book_version": 1,
+      "schema_version": 1,
+      "type": "binance_usdm_order_rule_book"
+    },
+    "reduce_only_deferred": {
+      "bands": [
+        {
+          "admission_mode": "NORMAL",
+          "available_at": {
+            "epoch_nanoseconds": 1700000000000000001,
+            "type": "utc_instant"
+          },
+          "band_id": "rules-v1",
+          "deferred_rule_keys": [],
+          "effective_from": {
+            "epoch_nanoseconds": 1700000000000000000,
+            "type": "utc_instant"
+          },
+          "effective_to_exclusive": {
+            "epoch_nanoseconds": 1710000000000000000,
+            "type": "utc_instant"
+          },
+          "filter_keys": [
+            "LOT_SIZE",
+            "MARKET_LOT_SIZE",
+            "MIN_NOTIONAL",
+            "PRICE_FILTER"
+          ],
+          "instrument_id": {
+            "stable_key": "btc-usdt-perpetual",
+            "type": "instrument_id",
+            "venue": "binance_usdm"
+          },
+          "limit_max_qty": "100.000",
+          "limit_min_qty": "0.001",
+          "limit_step_size": "0.001",
+          "market_max_qty": "50.000",
+          "market_min_qty": "0.005",
+          "market_step_size": "0.005",
+          "max_price": "1000000.00",
+          "min_notional": "5.00",
+          "min_price": "0.00",
+          "order_types": [
+            "LIMIT",
+            "MARKET"
+          ],
+          "schema_version": 1,
+          "source_ref": {
+            "schema_version": 1,
+            "source_hash": "sha256:9e7877f7508704354f5c4be2e7e747b3a75447a3a3c5b5806869ff470e739a8b",
+            "source_key": "exchange-info/rules-v1.json",
+            "type": "binance_usdm_order_rule_source_ref"
+          },
+          "supports_reduce_only": true,
+          "tick_size": "0.10",
+          "time_in_forces": [
+            "FOK",
+            "GTC",
+            "GTX",
+            "IOC"
+          ],
+          "type": "binance_usdm_order_rule_band"
+        },
+        {
+          "admission_mode": "REDUCE_ONLY",
+          "available_at": {
+            "epoch_nanoseconds": 1710000000000000001,
+            "type": "utc_instant"
+          },
+          "band_id": "rules-v2",
+          "deferred_rule_keys": [
+            "PERCENT_PRICE"
+          ],
+          "effective_from": {
+            "epoch_nanoseconds": 1710000000000000000,
+            "type": "utc_instant"
+          },
+          "effective_to_exclusive": {
+            "epoch_nanoseconds": 1720000000000000000,
+            "type": "utc_instant"
+          },
+          "filter_keys": [
+            "LOT_SIZE",
+            "MARKET_LOT_SIZE",
+            "MIN_NOTIONAL",
+            "PRICE_FILTER"
+          ],
+          "instrument_id": {
+            "stable_key": "btc-usdt-perpetual",
+            "type": "instrument_id",
+            "venue": "binance_usdm"
+          },
+          "limit_max_qty": "100.000",
+          "limit_min_qty": "0.001",
+          "limit_step_size": "0.001",
+          "market_max_qty": "50.000",
+          "market_min_qty": "0.005",
+          "market_step_size": "0.005",
+          "max_price": "1000000.00",
+          "min_notional": "5.00",
+          "min_price": "0.00",
+          "order_types": [
+            "LIMIT",
+            "MARKET"
+          ],
+          "schema_version": 1,
+          "source_ref": {
+            "schema_version": 1,
+            "source_hash": "sha256:68d6f4cf348d478dad8083cb754fe4e01dc803c6087b63089c44364c5e0bdffd",
+            "source_key": "exchange-info/rules-v2.json",
+            "type": "binance_usdm_order_rule_source_ref"
+          },
+          "supports_reduce_only": true,
+          "tick_size": "0.01",
+          "time_in_forces": [
+            "FOK",
+            "GTC",
+            "GTX",
+            "IOC"
+          ],
+          "type": "binance_usdm_order_rule_band"
+        }
+      ],
+      "coverage_from": {
+        "epoch_nanoseconds": 1700000000000000000,
+        "type": "utc_instant"
+      },
+      "coverage_to_exclusive": {
+        "epoch_nanoseconds": 1720000000000000000,
+        "type": "utc_instant"
+      },
+      "instrument_id": {
+        "stable_key": "btc-usdt-perpetual",
+        "type": "instrument_id",
+        "venue": "binance_usdm"
+      },
+      "rule_book_key": "binance-usdm-btc-usdt-order-rules-v1",
+      "rule_book_version": 1,
+      "schema_version": 1,
+      "type": "binance_usdm_order_rule_book"
+    },
+    "source_conflict": {
+      "bands": [
+        {
+          "admission_mode": "NORMAL",
+          "available_at": {
+            "epoch_nanoseconds": 1700000000000000001,
+            "type": "utc_instant"
+          },
+          "band_id": "rules-v1",
+          "deferred_rule_keys": [],
+          "effective_from": {
+            "epoch_nanoseconds": 1700000000000000000,
+            "type": "utc_instant"
+          },
+          "effective_to_exclusive": {
+            "epoch_nanoseconds": 1710000000000000000,
+            "type": "utc_instant"
+          },
+          "filter_keys": [
+            "LOT_SIZE",
+            "MARKET_LOT_SIZE",
+            "MIN_NOTIONAL",
+            "PRICE_FILTER"
+          ],
+          "instrument_id": {
+            "stable_key": "btc-usdt-perpetual",
+            "type": "instrument_id",
+            "venue": "binance_usdm"
+          },
+          "limit_max_qty": "100.000",
+          "limit_min_qty": "0.001",
+          "limit_step_size": "0.001",
+          "market_max_qty": "50.000",
+          "market_min_qty": "0.005",
+          "market_step_size": "0.005",
+          "max_price": "1000000.00",
+          "min_notional": "5.00",
+          "min_price": "0.00",
+          "order_types": [
+            "LIMIT",
+            "MARKET"
+          ],
+          "schema_version": 1,
+          "source_ref": {
+            "schema_version": 1,
+            "source_hash": "sha256:9e7877f7508704354f5c4be2e7e747b3a75447a3a3c5b5806869ff470e739a8b",
+            "source_key": "exchange-info/rules-v1.json",
+            "type": "binance_usdm_order_rule_source_ref"
+          },
+          "supports_reduce_only": true,
+          "tick_size": "0.10",
+          "time_in_forces": [
+            "FOK",
+            "GTC",
+            "GTX",
+            "IOC"
+          ],
+          "type": "binance_usdm_order_rule_band"
+        },
+        {
+          "admission_mode": "NORMAL",
+          "available_at": {
+            "epoch_nanoseconds": 1710000000000000001,
+            "type": "utc_instant"
+          },
+          "band_id": "rules-v2",
+          "deferred_rule_keys": [],
+          "effective_from": {
+            "epoch_nanoseconds": 1710000000000000000,
+            "type": "utc_instant"
+          },
+          "effective_to_exclusive": {
+            "epoch_nanoseconds": 1720000000000000000,
+            "type": "utc_instant"
+          },
+          "filter_keys": [
+            "LOT_SIZE",
+            "MARKET_LOT_SIZE",
+            "MIN_NOTIONAL",
+            "PRICE_FILTER"
+          ],
+          "instrument_id": {
+            "stable_key": "btc-usdt-perpetual",
+            "type": "instrument_id",
+            "venue": "binance_usdm"
+          },
+          "limit_max_qty": "100.000",
+          "limit_min_qty": "0.001",
+          "limit_step_size": "0.001",
+          "market_max_qty": "50.000",
+          "market_min_qty": "0.005",
+          "market_step_size": "0.005",
+          "max_price": "1000000.00",
+          "min_notional": "5.00",
+          "min_price": "0.00",
+          "order_types": [
+            "LIMIT",
+            "MARKET"
+          ],
+          "schema_version": 1,
+          "source_ref": {
+            "schema_version": 1,
+            "source_hash": "sha256:ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff",
+            "source_key": "exchange-info/rules-v1.json",
+            "type": "binance_usdm_order_rule_source_ref"
+          },
+          "supports_reduce_only": true,
+          "tick_size": "0.01",
+          "time_in_forces": [
+            "FOK",
+            "GTC",
+            "GTX",
+            "IOC"
+          ],
+          "type": "binance_usdm_order_rule_band"
+        }
+      ],
+      "coverage_from": {
+        "epoch_nanoseconds": 1700000000000000000,
+        "type": "utc_instant"
+      },
+      "coverage_to_exclusive": {
+        "epoch_nanoseconds": 1720000000000000000,
+        "type": "utc_instant"
+      },
+      "instrument_id": {
+        "stable_key": "btc-usdt-perpetual",
+        "type": "instrument_id",
+        "venue": "binance_usdm"
+      },
+      "rule_book_key": "binance-usdm-btc-usdt-order-rules-v1",
+      "rule_book_version": 1,
+      "schema_version": 1,
+      "type": "binance_usdm_order_rule_book"
+    },
+    "tick_after": {
+      "bands": [
+        {
+          "admission_mode": "NORMAL",
+          "available_at": {
+            "epoch_nanoseconds": 1700000000000000001,
+            "type": "utc_instant"
+          },
+          "band_id": "rules-v1",
+          "deferred_rule_keys": [],
+          "effective_from": {
+            "epoch_nanoseconds": 1700000000000000000,
+            "type": "utc_instant"
+          },
+          "effective_to_exclusive": {
+            "epoch_nanoseconds": 1710000000000000000,
+            "type": "utc_instant"
+          },
+          "filter_keys": [
+            "LOT_SIZE",
+            "MARKET_LOT_SIZE",
+            "MIN_NOTIONAL",
+            "PRICE_FILTER"
+          ],
+          "instrument_id": {
+            "stable_key": "btc-usdt-perpetual",
+            "type": "instrument_id",
+            "venue": "binance_usdm"
+          },
+          "limit_max_qty": "100.000",
+          "limit_min_qty": "0.001",
+          "limit_step_size": "0.001",
+          "market_max_qty": "50.000",
+          "market_min_qty": "0.005",
+          "market_step_size": "0.005",
+          "max_price": "1000000.00",
+          "min_notional": "5.00",
+          "min_price": "0.00",
+          "order_types": [
+            "LIMIT",
+            "MARKET"
+          ],
+          "schema_version": 1,
+          "source_ref": {
+            "schema_version": 1,
+            "source_hash": "sha256:9e7877f7508704354f5c4be2e7e747b3a75447a3a3c5b5806869ff470e739a8b",
+            "source_key": "exchange-info/rules-v1.json",
+            "type": "binance_usdm_order_rule_source_ref"
+          },
+          "supports_reduce_only": true,
+          "tick_size": "0.10",
+          "time_in_forces": [
+            "FOK",
+            "GTC",
+            "GTX",
+            "IOC"
+          ],
+          "type": "binance_usdm_order_rule_band"
+        },
+        {
+          "admission_mode": "NORMAL",
+          "available_at": {
+            "epoch_nanoseconds": 1710000000000000001,
+            "type": "utc_instant"
+          },
+          "band_id": "rules-v2",
+          "deferred_rule_keys": [],
+          "effective_from": {
+            "epoch_nanoseconds": 1710000000000000000,
+            "type": "utc_instant"
+          },
+          "effective_to_exclusive": {
+            "epoch_nanoseconds": 1720000000000000000,
+            "type": "utc_instant"
+          },
+          "filter_keys": [
+            "LOT_SIZE",
+            "MARKET_LOT_SIZE",
+            "MIN_NOTIONAL",
+            "PRICE_FILTER"
+          ],
+          "instrument_id": {
+            "stable_key": "btc-usdt-perpetual",
+            "type": "instrument_id",
+            "venue": "binance_usdm"
+          },
+          "limit_max_qty": "100.000",
+          "limit_min_qty": "0.001",
+          "limit_step_size": "0.001",
+          "market_max_qty": "50.000",
+          "market_min_qty": "0.005",
+          "market_step_size": "0.005",
+          "max_price": "1000000.00",
+          "min_notional": "5.00",
+          "min_price": "0.00",
+          "order_types": [
+            "LIMIT",
+            "MARKET"
+          ],
+          "schema_version": 1,
+          "source_ref": {
+            "schema_version": 1,
+            "source_hash": "sha256:68d6f4cf348d478dad8083cb754fe4e01dc803c6087b63089c44364c5e0bdffd",
+            "source_key": "exchange-info/rules-v2.json",
+            "type": "binance_usdm_order_rule_source_ref"
+          },
+          "supports_reduce_only": true,
+          "tick_size": "0.01",
+          "time_in_forces": [
+            "FOK",
+            "GTC",
+            "GTX",
+            "IOC"
+          ],
+          "type": "binance_usdm_order_rule_band"
+        }
+      ],
+      "coverage_from": {
+        "epoch_nanoseconds": 1700000000000000000,
+        "type": "utc_instant"
+      },
+      "coverage_to_exclusive": {
+        "epoch_nanoseconds": 1720000000000000000,
+        "type": "utc_instant"
+      },
+      "instrument_id": {
+        "stable_key": "btc-usdt-perpetual",
+        "type": "instrument_id",
+        "venue": "binance_usdm"
+      },
+      "rule_book_key": "binance-usdm-btc-usdt-order-rules-v1",
+      "rule_book_version": 1,
+      "schema_version": 1,
+      "type": "binance_usdm_order_rule_book"
+    },
+    "tick_at": {
+      "bands": [
+        {
+          "admission_mode": "NORMAL",
+          "available_at": {
+            "epoch_nanoseconds": 1700000000000000001,
+            "type": "utc_instant"
+          },
+          "band_id": "rules-v1",
+          "deferred_rule_keys": [],
+          "effective_from": {
+            "epoch_nanoseconds": 1700000000000000000,
+            "type": "utc_instant"
+          },
+          "effective_to_exclusive": {
+            "epoch_nanoseconds": 1710000000000000000,
+            "type": "utc_instant"
+          },
+          "filter_keys": [
+            "LOT_SIZE",
+            "MARKET_LOT_SIZE",
+            "MIN_NOTIONAL",
+            "PRICE_FILTER"
+          ],
+          "instrument_id": {
+            "stable_key": "btc-usdt-perpetual",
+            "type": "instrument_id",
+            "venue": "binance_usdm"
+          },
+          "limit_max_qty": "100.000",
+          "limit_min_qty": "0.001",
+          "limit_step_size": "0.001",
+          "market_max_qty": "50.000",
+          "market_min_qty": "0.005",
+          "market_step_size": "0.005",
+          "max_price": "1000000.00",
+          "min_notional": "5.00",
+          "min_price": "0.00",
+          "order_types": [
+            "LIMIT",
+            "MARKET"
+          ],
+          "schema_version": 1,
+          "source_ref": {
+            "schema_version": 1,
+            "source_hash": "sha256:9e7877f7508704354f5c4be2e7e747b3a75447a3a3c5b5806869ff470e739a8b",
+            "source_key": "exchange-info/rules-v1.json",
+            "type": "binance_usdm_order_rule_source_ref"
+          },
+          "supports_reduce_only": true,
+          "tick_size": "0.10",
+          "time_in_forces": [
+            "FOK",
+            "GTC",
+            "GTX",
+            "IOC"
+          ],
+          "type": "binance_usdm_order_rule_band"
+        },
+        {
+          "admission_mode": "NORMAL",
+          "available_at": {
+            "epoch_nanoseconds": 1710000000000000001,
+            "type": "utc_instant"
+          },
+          "band_id": "rules-v2",
+          "deferred_rule_keys": [],
+          "effective_from": {
+            "epoch_nanoseconds": 1710000000000000000,
+            "type": "utc_instant"
+          },
+          "effective_to_exclusive": {
+            "epoch_nanoseconds": 1720000000000000000,
+            "type": "utc_instant"
+          },
+          "filter_keys": [
+            "LOT_SIZE",
+            "MARKET_LOT_SIZE",
+            "MIN_NOTIONAL",
+            "PRICE_FILTER"
+          ],
+          "instrument_id": {
+            "stable_key": "btc-usdt-perpetual",
+            "type": "instrument_id",
+            "venue": "binance_usdm"
+          },
+          "limit_max_qty": "100.000",
+          "limit_min_qty": "0.001",
+          "limit_step_size": "0.001",
+          "market_max_qty": "50.000",
+          "market_min_qty": "0.005",
+          "market_step_size": "0.005",
+          "max_price": "1000000.00",
+          "min_notional": "5.00",
+          "min_price": "0.00",
+          "order_types": [
+            "LIMIT",
+            "MARKET"
+          ],
+          "schema_version": 1,
+          "source_ref": {
+            "schema_version": 1,
+            "source_hash": "sha256:68d6f4cf348d478dad8083cb754fe4e01dc803c6087b63089c44364c5e0bdffd",
+            "source_key": "exchange-info/rules-v2.json",
+            "type": "binance_usdm_order_rule_source_ref"
+          },
+          "supports_reduce_only": true,
+          "tick_size": "0.01",
+          "time_in_forces": [
+            "FOK",
+            "GTC",
+            "GTX",
+            "IOC"
+          ],
+          "type": "binance_usdm_order_rule_band"
+        }
+      ],
+      "coverage_from": {
+        "epoch_nanoseconds": 1700000000000000000,
+        "type": "utc_instant"
+      },
+      "coverage_to_exclusive": {
+        "epoch_nanoseconds": 1720000000000000000,
+        "type": "utc_instant"
+      },
+      "instrument_id": {
+        "stable_key": "btc-usdt-perpetual",
+        "type": "instrument_id",
+        "venue": "binance_usdm"
+      },
+      "rule_book_key": "binance-usdm-btc-usdt-order-rules-v1",
+      "rule_book_version": 1,
+      "schema_version": 1,
+      "type": "binance_usdm_order_rule_book"
+    },
+    "tick_before": {
+      "bands": [
+        {
+          "admission_mode": "NORMAL",
+          "available_at": {
+            "epoch_nanoseconds": 1700000000000000001,
+            "type": "utc_instant"
+          },
+          "band_id": "rules-v1",
+          "deferred_rule_keys": [],
+          "effective_from": {
+            "epoch_nanoseconds": 1700000000000000000,
+            "type": "utc_instant"
+          },
+          "effective_to_exclusive": {
+            "epoch_nanoseconds": 1710000000000000000,
+            "type": "utc_instant"
+          },
+          "filter_keys": [
+            "LOT_SIZE",
+            "MARKET_LOT_SIZE",
+            "MIN_NOTIONAL",
+            "PRICE_FILTER"
+          ],
+          "instrument_id": {
+            "stable_key": "btc-usdt-perpetual",
+            "type": "instrument_id",
+            "venue": "binance_usdm"
+          },
+          "limit_max_qty": "100.000",
+          "limit_min_qty": "0.001",
+          "limit_step_size": "0.001",
+          "market_max_qty": "50.000",
+          "market_min_qty": "0.005",
+          "market_step_size": "0.005",
+          "max_price": "1000000.00",
+          "min_notional": "5.00",
+          "min_price": "0.00",
+          "order_types": [
+            "LIMIT",
+            "MARKET"
+          ],
+          "schema_version": 1,
+          "source_ref": {
+            "schema_version": 1,
+            "source_hash": "sha256:9e7877f7508704354f5c4be2e7e747b3a75447a3a3c5b5806869ff470e739a8b",
+            "source_key": "exchange-info/rules-v1.json",
+            "type": "binance_usdm_order_rule_source_ref"
+          },
+          "supports_reduce_only": true,
+          "tick_size": "0.10",
+          "time_in_forces": [
+            "FOK",
+            "GTC",
+            "GTX",
+            "IOC"
+          ],
+          "type": "binance_usdm_order_rule_band"
+        },
+        {
+          "admission_mode": "NORMAL",
+          "available_at": {
+            "epoch_nanoseconds": 1710000000000000001,
+            "type": "utc_instant"
+          },
+          "band_id": "rules-v2",
+          "deferred_rule_keys": [],
+          "effective_from": {
+            "epoch_nanoseconds": 1710000000000000000,
+            "type": "utc_instant"
+          },
+          "effective_to_exclusive": {
+            "epoch_nanoseconds": 1720000000000000000,
+            "type": "utc_instant"
+          },
+          "filter_keys": [
+            "LOT_SIZE",
+            "MARKET_LOT_SIZE",
+            "MIN_NOTIONAL",
+            "PRICE_FILTER"
+          ],
+          "instrument_id": {
+            "stable_key": "btc-usdt-perpetual",
+            "type": "instrument_id",
+            "venue": "binance_usdm"
+          },
+          "limit_max_qty": "100.000",
+          "limit_min_qty": "0.001",
+          "limit_step_size": "0.001",
+          "market_max_qty": "50.000",
+          "market_min_qty": "0.005",
+          "market_step_size": "0.005",
+          "max_price": "1000000.00",
+          "min_notional": "5.00",
+          "min_price": "0.00",
+          "order_types": [
+            "LIMIT",
+            "MARKET"
+          ],
+          "schema_version": 1,
+          "source_ref": {
+            "schema_version": 1,
+            "source_hash": "sha256:68d6f4cf348d478dad8083cb754fe4e01dc803c6087b63089c44364c5e0bdffd",
+            "source_key": "exchange-info/rules-v2.json",
+            "type": "binance_usdm_order_rule_source_ref"
+          },
+          "supports_reduce_only": true,
+          "tick_size": "0.01",
+          "time_in_forces": [
+            "FOK",
+            "GTC",
+            "GTX",
+            "IOC"
+          ],
+          "type": "binance_usdm_order_rule_band"
+        }
+      ],
+      "coverage_from": {
+        "epoch_nanoseconds": 1700000000000000000,
+        "type": "utc_instant"
+      },
+      "coverage_to_exclusive": {
+        "epoch_nanoseconds": 1720000000000000000,
+        "type": "utc_instant"
+      },
+      "instrument_id": {
+        "stable_key": "btc-usdt-perpetual",
+        "type": "instrument_id",
+        "venue": "binance_usdm"
+      },
+      "rule_book_key": "binance-usdm-btc-usdt-order-rules-v1",
+      "rule_book_version": 1,
+      "schema_version": 1,
+      "type": "binance_usdm_order_rule_book"
+    },
+    "unknown_capability": {
+      "bands": [
+        {
+          "admission_mode": "NORMAL",
+          "available_at": {
+            "epoch_nanoseconds": 1700000000000000001,
+            "type": "utc_instant"
+          },
+          "band_id": "rules-v1",
+          "deferred_rule_keys": [],
+          "effective_from": {
+            "epoch_nanoseconds": 1700000000000000000,
+            "type": "utc_instant"
+          },
+          "effective_to_exclusive": {
+            "epoch_nanoseconds": 1710000000000000000,
+            "type": "utc_instant"
+          },
+          "filter_keys": [
+            "LOT_SIZE",
+            "MARKET_LOT_SIZE",
+            "MIN_NOTIONAL",
+            "PRICE_FILTER"
+          ],
+          "instrument_id": {
+            "stable_key": "btc-usdt-perpetual",
+            "type": "instrument_id",
+            "venue": "binance_usdm"
+          },
+          "limit_max_qty": "100.000",
+          "limit_min_qty": "0.001",
+          "limit_step_size": "0.001",
+          "market_max_qty": "50.000",
+          "market_min_qty": "0.005",
+          "market_step_size": "0.005",
+          "max_price": "1000000.00",
+          "min_notional": "5.00",
+          "min_price": "0.00",
+          "order_types": [
+            "LIMIT",
+            "MARKET"
+          ],
+          "schema_version": 1,
+          "source_ref": {
+            "schema_version": 1,
+            "source_hash": "sha256:9e7877f7508704354f5c4be2e7e747b3a75447a3a3c5b5806869ff470e739a8b",
+            "source_key": "exchange-info/rules-v1.json",
+            "type": "binance_usdm_order_rule_source_ref"
+          },
+          "supports_reduce_only": true,
+          "tick_size": "0.10",
+          "time_in_forces": [
+            "FOK",
+            "GTC",
+            "GTX",
+            "IOC"
+          ],
+          "type": "binance_usdm_order_rule_band"
+        },
+        {
+          "admission_mode": "NORMAL",
+          "available_at": {
+            "epoch_nanoseconds": 1710000000000000001,
+            "type": "utc_instant"
+          },
+          "band_id": "rules-v2",
+          "deferred_rule_keys": [],
+          "effective_from": {
+            "epoch_nanoseconds": 1710000000000000000,
+            "type": "utc_instant"
+          },
+          "effective_to_exclusive": {
+            "epoch_nanoseconds": 1720000000000000000,
+            "type": "utc_instant"
+          },
+          "filter_keys": [
+            "LOT_SIZE",
+            "MARKET_LOT_SIZE",
+            "MIN_NOTIONAL",
+            "PRICE_FILTER"
+          ],
+          "instrument_id": {
+            "stable_key": "btc-usdt-perpetual",
+            "type": "instrument_id",
+            "venue": "binance_usdm"
+          },
+          "limit_max_qty": "100.000",
+          "limit_min_qty": "0.001",
+          "limit_step_size": "0.001",
+          "market_max_qty": "50.000",
+          "market_min_qty": "0.005",
+          "market_step_size": "0.005",
+          "max_price": "1000000.00",
+          "min_notional": "5.00",
+          "min_price": "0.00",
+          "order_types": [
+            "LIMIT",
+            "MARKET",
+            "PEGGED"
+          ],
+          "schema_version": 1,
+          "source_ref": {
+            "schema_version": 1,
+            "source_hash": "sha256:68d6f4cf348d478dad8083cb754fe4e01dc803c6087b63089c44364c5e0bdffd",
+            "source_key": "exchange-info/rules-v2.json",
+            "type": "binance_usdm_order_rule_source_ref"
+          },
+          "supports_reduce_only": true,
+          "tick_size": "0.01",
+          "time_in_forces": [
+            "FOK",
+            "GTC",
+            "GTX",
+            "IOC"
+          ],
+          "type": "binance_usdm_order_rule_band"
+        }
+      ],
+      "coverage_from": {
+        "epoch_nanoseconds": 1700000000000000000,
+        "type": "utc_instant"
+      },
+      "coverage_to_exclusive": {
+        "epoch_nanoseconds": 1720000000000000000,
+        "type": "utc_instant"
+      },
+      "instrument_id": {
+        "stable_key": "btc-usdt-perpetual",
+        "type": "instrument_id",
+        "venue": "binance_usdm"
+      },
+      "rule_book_key": "binance-usdm-btc-usdt-order-rules-v1",
+      "rule_book_version": 1,
+      "schema_version": 1,
+      "type": "binance_usdm_order_rule_book"
+    },
+    "unknown_deferred": {
+      "bands": [
+        {
+          "admission_mode": "NORMAL",
+          "available_at": {
+            "epoch_nanoseconds": 1700000000000000001,
+            "type": "utc_instant"
+          },
+          "band_id": "rules-v1",
+          "deferred_rule_keys": [],
+          "effective_from": {
+            "epoch_nanoseconds": 1700000000000000000,
+            "type": "utc_instant"
+          },
+          "effective_to_exclusive": {
+            "epoch_nanoseconds": 1710000000000000000,
+            "type": "utc_instant"
+          },
+          "filter_keys": [
+            "LOT_SIZE",
+            "MARKET_LOT_SIZE",
+            "MIN_NOTIONAL",
+            "PRICE_FILTER"
+          ],
+          "instrument_id": {
+            "stable_key": "btc-usdt-perpetual",
+            "type": "instrument_id",
+            "venue": "binance_usdm"
+          },
+          "limit_max_qty": "100.000",
+          "limit_min_qty": "0.001",
+          "limit_step_size": "0.001",
+          "market_max_qty": "50.000",
+          "market_min_qty": "0.005",
+          "market_step_size": "0.005",
+          "max_price": "1000000.00",
+          "min_notional": "5.00",
+          "min_price": "0.00",
+          "order_types": [
+            "LIMIT",
+            "MARKET"
+          ],
+          "schema_version": 1,
+          "source_ref": {
+            "schema_version": 1,
+            "source_hash": "sha256:9e7877f7508704354f5c4be2e7e747b3a75447a3a3c5b5806869ff470e739a8b",
+            "source_key": "exchange-info/rules-v1.json",
+            "type": "binance_usdm_order_rule_source_ref"
+          },
+          "supports_reduce_only": true,
+          "tick_size": "0.10",
+          "time_in_forces": [
+            "FOK",
+            "GTC",
+            "GTX",
+            "IOC"
+          ],
+          "type": "binance_usdm_order_rule_band"
+        },
+        {
+          "admission_mode": "NORMAL",
+          "available_at": {
+            "epoch_nanoseconds": 1710000000000000001,
+            "type": "utc_instant"
+          },
+          "band_id": "rules-v2",
+          "deferred_rule_keys": [
+            "UNKNOWN_DEFERRED"
+          ],
+          "effective_from": {
+            "epoch_nanoseconds": 1710000000000000000,
+            "type": "utc_instant"
+          },
+          "effective_to_exclusive": {
+            "epoch_nanoseconds": 1720000000000000000,
+            "type": "utc_instant"
+          },
+          "filter_keys": [
+            "LOT_SIZE",
+            "MARKET_LOT_SIZE",
+            "MIN_NOTIONAL",
+            "PRICE_FILTER"
+          ],
+          "instrument_id": {
+            "stable_key": "btc-usdt-perpetual",
+            "type": "instrument_id",
+            "venue": "binance_usdm"
+          },
+          "limit_max_qty": "100.000",
+          "limit_min_qty": "0.001",
+          "limit_step_size": "0.001",
+          "market_max_qty": "50.000",
+          "market_min_qty": "0.005",
+          "market_step_size": "0.005",
+          "max_price": "1000000.00",
+          "min_notional": "5.00",
+          "min_price": "0.00",
+          "order_types": [
+            "LIMIT",
+            "MARKET"
+          ],
+          "schema_version": 1,
+          "source_ref": {
+            "schema_version": 1,
+            "source_hash": "sha256:68d6f4cf348d478dad8083cb754fe4e01dc803c6087b63089c44364c5e0bdffd",
+            "source_key": "exchange-info/rules-v2.json",
+            "type": "binance_usdm_order_rule_source_ref"
+          },
+          "supports_reduce_only": true,
+          "tick_size": "0.01",
+          "time_in_forces": [
+            "FOK",
+            "GTC",
+            "GTX",
+            "IOC"
+          ],
+          "type": "binance_usdm_order_rule_band"
+        }
+      ],
+      "coverage_from": {
+        "epoch_nanoseconds": 1700000000000000000,
+        "type": "utc_instant"
+      },
+      "coverage_to_exclusive": {
+        "epoch_nanoseconds": 1720000000000000000,
+        "type": "utc_instant"
+      },
+      "instrument_id": {
+        "stable_key": "btc-usdt-perpetual",
+        "type": "instrument_id",
+        "venue": "binance_usdm"
+      },
+      "rule_book_key": "binance-usdm-btc-usdt-order-rules-v1",
+      "rule_book_version": 1,
+      "schema_version": 1,
+      "type": "binance_usdm_order_rule_book"
+    },
+    "unknown_filter": {
+      "bands": [
+        {
+          "admission_mode": "NORMAL",
+          "available_at": {
+            "epoch_nanoseconds": 1700000000000000001,
+            "type": "utc_instant"
+          },
+          "band_id": "rules-v1",
+          "deferred_rule_keys": [],
+          "effective_from": {
+            "epoch_nanoseconds": 1700000000000000000,
+            "type": "utc_instant"
+          },
+          "effective_to_exclusive": {
+            "epoch_nanoseconds": 1710000000000000000,
+            "type": "utc_instant"
+          },
+          "filter_keys": [
+            "LOT_SIZE",
+            "MARKET_LOT_SIZE",
+            "MIN_NOTIONAL",
+            "PRICE_FILTER"
+          ],
+          "instrument_id": {
+            "stable_key": "btc-usdt-perpetual",
+            "type": "instrument_id",
+            "venue": "binance_usdm"
+          },
+          "limit_max_qty": "100.000",
+          "limit_min_qty": "0.001",
+          "limit_step_size": "0.001",
+          "market_max_qty": "50.000",
+          "market_min_qty": "0.005",
+          "market_step_size": "0.005",
+          "max_price": "1000000.00",
+          "min_notional": "5.00",
+          "min_price": "0.00",
+          "order_types": [
+            "LIMIT",
+            "MARKET"
+          ],
+          "schema_version": 1,
+          "source_ref": {
+            "schema_version": 1,
+            "source_hash": "sha256:9e7877f7508704354f5c4be2e7e747b3a75447a3a3c5b5806869ff470e739a8b",
+            "source_key": "exchange-info/rules-v1.json",
+            "type": "binance_usdm_order_rule_source_ref"
+          },
+          "supports_reduce_only": true,
+          "tick_size": "0.10",
+          "time_in_forces": [
+            "FOK",
+            "GTC",
+            "GTX",
+            "IOC"
+          ],
+          "type": "binance_usdm_order_rule_band"
+        },
+        {
+          "admission_mode": "NORMAL",
+          "available_at": {
+            "epoch_nanoseconds": 1710000000000000001,
+            "type": "utc_instant"
+          },
+          "band_id": "rules-v2",
+          "deferred_rule_keys": [],
+          "effective_from": {
+            "epoch_nanoseconds": 1710000000000000000,
+            "type": "utc_instant"
+          },
+          "effective_to_exclusive": {
+            "epoch_nanoseconds": 1720000000000000000,
+            "type": "utc_instant"
+          },
+          "filter_keys": [
+            "LOT_SIZE",
+            "MARKET_LOT_SIZE",
+            "MIN_NOTIONAL",
+            "PRICE_FILTER",
+            "UNKNOWN"
+          ],
+          "instrument_id": {
+            "stable_key": "btc-usdt-perpetual",
+            "type": "instrument_id",
+            "venue": "binance_usdm"
+          },
+          "limit_max_qty": "100.000",
+          "limit_min_qty": "0.001",
+          "limit_step_size": "0.001",
+          "market_max_qty": "50.000",
+          "market_min_qty": "0.005",
+          "market_step_size": "0.005",
+          "max_price": "1000000.00",
+          "min_notional": "5.00",
+          "min_price": "0.00",
+          "order_types": [
+            "LIMIT",
+            "MARKET"
+          ],
+          "schema_version": 1,
+          "source_ref": {
+            "schema_version": 1,
+            "source_hash": "sha256:68d6f4cf348d478dad8083cb754fe4e01dc803c6087b63089c44364c5e0bdffd",
+            "source_key": "exchange-info/rules-v2.json",
+            "type": "binance_usdm_order_rule_source_ref"
+          },
+          "supports_reduce_only": true,
+          "tick_size": "0.01",
+          "time_in_forces": [
+            "FOK",
+            "GTC",
+            "GTX",
+            "IOC"
+          ],
+          "type": "binance_usdm_order_rule_band"
+        }
+      ],
+      "coverage_from": {
+        "epoch_nanoseconds": 1700000000000000000,
+        "type": "utc_instant"
+      },
+      "coverage_to_exclusive": {
+        "epoch_nanoseconds": 1720000000000000000,
+        "type": "utc_instant"
+      },
+      "instrument_id": {
+        "stable_key": "btc-usdt-perpetual",
+        "type": "instrument_id",
+        "venue": "binance_usdm"
+      },
+      "rule_book_key": "binance-usdm-btc-usdt-order-rules-v1",
+      "rule_book_version": 1,
+      "schema_version": 1,
+      "type": "binance_usdm_order_rule_book"
+    },
+    "unknown_tif": {
+      "bands": [
+        {
+          "admission_mode": "NORMAL",
+          "available_at": {
+            "epoch_nanoseconds": 1700000000000000001,
+            "type": "utc_instant"
+          },
+          "band_id": "rules-v1",
+          "deferred_rule_keys": [],
+          "effective_from": {
+            "epoch_nanoseconds": 1700000000000000000,
+            "type": "utc_instant"
+          },
+          "effective_to_exclusive": {
+            "epoch_nanoseconds": 1710000000000000000,
+            "type": "utc_instant"
+          },
+          "filter_keys": [
+            "LOT_SIZE",
+            "MARKET_LOT_SIZE",
+            "MIN_NOTIONAL",
+            "PRICE_FILTER"
+          ],
+          "instrument_id": {
+            "stable_key": "btc-usdt-perpetual",
+            "type": "instrument_id",
+            "venue": "binance_usdm"
+          },
+          "limit_max_qty": "100.000",
+          "limit_min_qty": "0.001",
+          "limit_step_size": "0.001",
+          "market_max_qty": "50.000",
+          "market_min_qty": "0.005",
+          "market_step_size": "0.005",
+          "max_price": "1000000.00",
+          "min_notional": "5.00",
+          "min_price": "0.00",
+          "order_types": [
+            "LIMIT",
+            "MARKET"
+          ],
+          "schema_version": 1,
+          "source_ref": {
+            "schema_version": 1,
+            "source_hash": "sha256:9e7877f7508704354f5c4be2e7e747b3a75447a3a3c5b5806869ff470e739a8b",
+            "source_key": "exchange-info/rules-v1.json",
+            "type": "binance_usdm_order_rule_source_ref"
+          },
+          "supports_reduce_only": true,
+          "tick_size": "0.10",
+          "time_in_forces": [
+            "FOK",
+            "GTC",
+            "GTX",
+            "IOC"
+          ],
+          "type": "binance_usdm_order_rule_band"
+        },
+        {
+          "admission_mode": "NORMAL",
+          "available_at": {
+            "epoch_nanoseconds": 1710000000000000001,
+            "type": "utc_instant"
+          },
+          "band_id": "rules-v2",
+          "deferred_rule_keys": [],
+          "effective_from": {
+            "epoch_nanoseconds": 1710000000000000000,
+            "type": "utc_instant"
+          },
+          "effective_to_exclusive": {
+            "epoch_nanoseconds": 1720000000000000000,
+            "type": "utc_instant"
+          },
+          "filter_keys": [
+            "LOT_SIZE",
+            "MARKET_LOT_SIZE",
+            "MIN_NOTIONAL",
+            "PRICE_FILTER"
+          ],
+          "instrument_id": {
+            "stable_key": "btc-usdt-perpetual",
+            "type": "instrument_id",
+            "venue": "binance_usdm"
+          },
+          "limit_max_qty": "100.000",
+          "limit_min_qty": "0.001",
+          "limit_step_size": "0.001",
+          "market_max_qty": "50.000",
+          "market_min_qty": "0.005",
+          "market_step_size": "0.005",
+          "max_price": "1000000.00",
+          "min_notional": "5.00",
+          "min_price": "0.00",
+          "order_types": [
+            "LIMIT",
+            "MARKET"
+          ],
+          "schema_version": 1,
+          "source_ref": {
+            "schema_version": 1,
+            "source_hash": "sha256:68d6f4cf348d478dad8083cb754fe4e01dc803c6087b63089c44364c5e0bdffd",
+            "source_key": "exchange-info/rules-v2.json",
+            "type": "binance_usdm_order_rule_source_ref"
+          },
+          "supports_reduce_only": true,
+          "tick_size": "0.01",
+          "time_in_forces": [
+            "GTC",
+            "RPI"
+          ],
+          "type": "binance_usdm_order_rule_band"
+        }
+      ],
+      "coverage_from": {
+        "epoch_nanoseconds": 1700000000000000000,
+        "type": "utc_instant"
+      },
+      "coverage_to_exclusive": {
+        "epoch_nanoseconds": 1720000000000000000,
+        "type": "utc_instant"
+      },
+      "instrument_id": {
+        "stable_key": "btc-usdt-perpetual",
+        "type": "instrument_id",
+        "venue": "binance_usdm"
+      },
+      "rule_book_key": "binance-usdm-btc-usdt-order-rules-v1",
+      "rule_book_version": 1,
+      "schema_version": 1,
+      "type": "binance_usdm_order_rule_book"
+    }
+  },
+  "source_contract": "frozen-normalized-exchange-info-rule-bands"
+}

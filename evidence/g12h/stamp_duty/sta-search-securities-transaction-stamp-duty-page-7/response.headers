@@ -1,0 +1,23 @@
+HTTP/1.1 200 
+Date: Thu, 20 Aug 2026 07:43:46 GMT
+Content-Type: application/json;charset=UTF-8
+Transfer-Encoding: chunked
+Connection: keep-alive
+Access-Control-Allow-Origin: *
+Access-Control-Allow-Methods: get, post
+Access-Control-Allow-Headers: origin, content-type, accept
+Access-Control-Allow-Credentials: true
+expries: Thu, 01 Jan 1970 00:14:24 GMT
+Cache-Control: no-cache
+Set-Cookie: bm29000002=<redacted sha256:d1ee6a8b4a772639a5736a06ef40a358c3fc46dd3c91aeb80ff79263631e6566>; Path=/; HttpOnly
+Set-Cookie: JSESSIONID=<redacted sha256:df149b70bb219cada36771de25d42966ca6a67c8522595265b800399b0998daa>; Path=/guestweb; HttpOnly
+X-Content-Type-Options: nosniff
+X-XSS-Protection: 1; mode=block
+Content-Security-Policy: object-src 'self'
+Referer-Policy: origin
+X-Permitted-Cross-Domain-Policies: master-only
+X-Download-Options: noopen
+X-Frame-Options: SAMEORIGIN
+x-via: 1.1 PSjsczsx2xc90:14 (Cdn Cache Server V2.0), 1.1 PS-000-012jf27:5 (Cdn Cache Server V2.0)
+x-ws-request-id: 6a86b02e_PS-000-012jf27_28446-17914
+

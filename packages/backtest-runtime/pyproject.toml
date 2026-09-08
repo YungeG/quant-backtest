@@ -1,0 +1,25 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "crypto-quant-backtest"
+version = "0.1.0"
+description = "Historical timeline, simulation, evidence, and analysis runtime"
+requires-python = ">=3.13,<3.14"
+dependencies = [
+  "crypto-quant-domain",
+  "crypto-quant-market-data",
+  "crypto-quant-trading",
+]
+
+[tool.uv.sources]
+crypto-quant-domain = { workspace = true }
+crypto-quant-market-data = { workspace = true }
+crypto-quant-trading = { workspace = true }
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.setuptools.package-data]
+crypto_quant_backtest = ["py.typed"]

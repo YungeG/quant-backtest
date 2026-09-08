@@ -1,0 +1,3164 @@
+{
+  "blocked": {
+    "evaluation_record": {
+      "deployment_authorized": false,
+      "evaluation_id": "evaluation_c40ec0972c2e551cd5a0fb4126e3ef7eb8d43d0535adce9b4c66f0193689b333",
+      "integrity_report_hash": "sha256:7636f01cf0b886f460371862809c795c821a12b2d14d6f768518edc6db6eaf55",
+      "outcome": "BLOCKED",
+      "schema_version": 1,
+      "semantic_run_id": "run_39ab44a26d7f719fe1648f3ccbf7cbdcb874a9bc43e8c15d3a51ab5aca421591",
+      "type": "integrity_evaluation_record"
+    },
+    "finalized": {
+      "deployment_authorized": false,
+      "evaluation_id": "evaluation_c40ec0972c2e551cd5a0fb4126e3ef7eb8d43d0535adce9b4c66f0193689b333",
+      "evaluation_record_hash": "sha256:8e652adfb7ea6e417cfabe06490a73f2ea32e07ced8f055fe147aae324a7476f",
+      "integrity_report_hash": "sha256:7636f01cf0b886f460371862809c795c821a12b2d14d6f768518edc6db6eaf55",
+      "outcome": "BLOCKED",
+      "publication_manifest_hash": "sha256:2d84b7d60815896b774fcf2117c0e7d7f400fc94228f5960ad9ada579cda1827",
+      "publication_manifest_source_hash": "sha256:74f27535a19539aec93ba5e5637386967873c03fcf4291c7c96937da1ce93377",
+      "relative_directory": "runs/run_39ab44a26d7f719fe1648f3ccbf7cbdcb874a9bc43e8c15d3a51ab5aca421591/integrity-evaluations/evaluation_c40ec0972c2e551cd5a0fb4126e3ef7eb8d43d0535adce9b4c66f0193689b333",
+      "schema_version": 1,
+      "semantic_run_id": "run_39ab44a26d7f719fe1648f3ccbf7cbdcb874a9bc43e8c15d3a51ab5aca421591",
+      "type": "finalized_integrity_evaluation"
+    },
+    "integrity_report": {
+      "canonical_attempt_ref_hash": null,
+      "context": {
+        "attempt_consistency_set": {
+          "attempts": [
+            {
+              "attempt_id": "attempt_3c478bbb5e7141603744fadfe484c4859fac39a56b525df8b5be0fb2a8e1cdfa",
+              "evidence_manifest_hash": "sha256:cf0f80282d5ab79165ff81b73f737ea84ec90e8aa0263ccd33492867f7ec103a",
+              "execution_result_hash": "sha256:97a39c3e4aafe92db6bfb70df9230c6cbda44e9e8c9cf00cca51b0d6a2bf005b",
+              "semantic_run_id": "run_39ab44a26d7f719fe1648f3ccbf7cbdcb874a9bc43e8c15d3a51ab5aca421591"
+            }
+          ],
+          "finalized_evidence_hashes": [
+            "sha256:cafe271e4a173f473ed30058a1fdb54a7e75c7a91f3aa53e0bdeb3226861bb19"
+          ],
+          "resolved_request_hash": "sha256:db9a92f1c3c12d040598598f7a7ceeb98a7d781f03e73eff30b89929dc9c3858",
+          "schema_version": 1,
+          "semantic_run_id": "run_39ab44a26d7f719fe1648f3ccbf7cbdcb874a9bc43e8c15d3a51ab5aca421591",
+          "type": "attempt_consistency_set"
+        },
+        "execution_hash_check": {
+          "consistency": {
+            "attempts": [
+              {
+                "attempt_id": "attempt_3c478bbb5e7141603744fadfe484c4859fac39a56b525df8b5be0fb2a8e1cdfa",
+                "evidence_manifest_hash": "sha256:cf0f80282d5ab79165ff81b73f737ea84ec90e8aa0263ccd33492867f7ec103a",
+                "execution_result_hash": "sha256:97a39c3e4aafe92db6bfb70df9230c6cbda44e9e8c9cf00cca51b0d6a2bf005b",
+                "semantic_run_id": "run_39ab44a26d7f719fe1648f3ccbf7cbdcb874a9bc43e8c15d3a51ab5aca421591"
+              }
+            ],
+            "execution_result_hash": "sha256:97a39c3e4aafe92db6bfb70df9230c6cbda44e9e8c9cf00cca51b0d6a2bf005b",
+            "schema_version": 1,
+            "semantic_run_id": "run_39ab44a26d7f719fe1648f3ccbf7cbdcb874a9bc43e8c15d3a51ab5aca421591",
+            "type": "execution_hash_consistency"
+          },
+          "mismatch": null,
+          "schema_version": 1,
+          "type": "execution_hash_check"
+        },
+        "rebuild_evidence": {
+          "build_artifact_manifest_hash": "sha256:454c178057ea340bffb6ac6a2d443da11b836471cb1c97c0b5501b0577b633d9",
+          "deterministic_rebuild_proof_hash": null,
+          "environment_hash": "sha256:a06e0ab577a809a73d6ba9acb130e6f108cf50f9400d862d280b81a161d06721",
+          "execution_case_hash": "sha256:bdbcf92c176fedaf8fa89a056bc92fddeb9d70b75bcacb7cb6013b468374c87e",
+          "execution_case_semantic_hash": "sha256:2592a4ee246b54632d3c63f3490ab68cdabb305406cc275eafabcc0fd5e8a690",
+          "execution_result_hash": "sha256:97a39c3e4aafe92db6bfb70df9230c6cbda44e9e8c9cf00cca51b0d6a2bf005b",
+          "market_bundle_manifest_hash": "sha256:893e925061def7b79e2082e33f20b750fbfbd7d33ea58d3bb1f530440ab7510d",
+          "market_bundle_retention_proof_hash": null,
+          "request_hash": "sha256:be4e37d6ef69b6ac01493ab8a62e311fa397fcc9e462add5d316c52a616c36c3",
+          "schema_version": 1,
+          "semantic_run_id": "run_39ab44a26d7f719fe1648f3ccbf7cbdcb874a9bc43e8c15d3a51ab5aca421591",
+          "target_stream_digest": "sha256:ead473aba908a5d2ace5745a648d357c16666c47a726743b86dbde42768a539f",
+          "trace_hash": "sha256:758a369a1777eb0d06ea1434412f36e382fb87de0fb3c4ca335b10613ed8dce7",
+          "trace_level": "summary",
+          "type": "deterministic_rebuild_evidence"
+        },
+        "resolved_request": {
+          "build_artifact_manifest_hash": "sha256:454c178057ea340bffb6ac6a2d443da11b836471cb1c97c0b5501b0577b633d9",
+          "environment": {
+            "compatibility_report": {
+              "allowed_grade": "development",
+              "checks": [
+                {
+                  "code": "build_artifact_identity",
+                  "passed": true,
+                  "subjects": [],
+                  "type": "environment_compatibility_check"
+                },
+                {
+                  "code": "market_bundle_capabilities",
+                  "passed": true,
+                  "subjects": [],
+                  "type": "environment_compatibility_check"
+                },
+                {
+                  "code": "market_bundle_coverage",
+                  "passed": true,
+                  "subjects": [],
+                  "type": "environment_compatibility_check"
+                },
+                {
+                  "code": "market_bundle_identity",
+                  "passed": true,
+                  "subjects": [],
+                  "type": "environment_compatibility_check"
+                },
+                {
+                  "code": "profile_build_identity",
+                  "passed": true,
+                  "subjects": [],
+                  "type": "environment_compatibility_check"
+                },
+                {
+                  "code": "profile_component_coverage",
+                  "passed": true,
+                  "subjects": [],
+                  "type": "environment_compatibility_check"
+                },
+                {
+                  "code": "profile_grade",
+                  "passed": true,
+                  "subjects": [],
+                  "type": "environment_compatibility_check"
+                },
+                {
+                  "code": "reporting_currency",
+                  "passed": true,
+                  "subjects": [],
+                  "type": "environment_compatibility_check"
+                },
+                {
+                  "code": "simulation_context",
+                  "passed": true,
+                  "subjects": [],
+                  "type": "environment_compatibility_check"
+                },
+                {
+                  "code": "venue_account_context",
+                  "passed": true,
+                  "subjects": [],
+                  "type": "environment_compatibility_check"
+                }
+              ],
+              "compatible": true,
+              "failed_codes": [],
+              "limitations": [
+                "development_profile",
+                "synthetic_market_profile"
+              ],
+              "market_bundle_manifest_hash": "sha256:893e925061def7b79e2082e33f20b750fbfbd7d33ea58d3bb1f530440ab7510d",
+              "profile_digests": [
+                "sha256:22a2310c4576f10967f5ba5ffc73ba4459f15a16a4e2e5041a6641ebc0c22035",
+                "sha256:3476a32b6367eabaed1ae4e2d5e2748ab236f333f03196335374948b14a6f02f",
+                "sha256:45915d737732c3d6b4a75f3b80049b0c8fd0abc0c64a415f69f5ddf33037974f"
+              ],
+              "request_hash": "sha256:be4e37d6ef69b6ac01493ab8a62e311fa397fcc9e462add5d316c52a616c36c3",
+              "type": "environment_compatibility_report"
+            },
+            "deployment_authorized": false,
+            "execution_account": {
+              "account_id": "account:primary",
+              "account_type": "cash",
+              "decision_grade_eligible": false,
+              "grade": "development",
+              "limitations": [
+                "synthetic_market_profile"
+              ],
+              "margin_mode": "not_applicable",
+              "profile_digest": "sha256:22a2310c4576f10967f5ba5ffc73ba4459f15a16a4e2e5041a6641ebc0c22035",
+              "profile_key": "synthetic.cash.development.v1.account",
+              "profile_version": 1,
+              "supported_reporting_currencies": [
+                {
+                  "type": "currency_id",
+                  "value": "USD"
+                }
+              ],
+              "type": "execution_account_profile_registration",
+              "venue_id": "synthetic"
+            },
+            "limitations": [
+              "development_profile",
+              "synthetic_market_profile"
+            ],
+            "market_bundle_ref": {
+              "bundle_key": "fixture.engine.bundle.v1",
+              "manifest_hash": "sha256:893e925061def7b79e2082e33f20b750fbfbd7d33ea58d3bb1f530440ab7510d",
+              "type": "market_bundle_ref"
+            },
+            "market_semantics": {
+              "component_manifest": [
+                {
+                  "component_digest": "sha256:0d061cf48ddece34564e21978387e4de42e22a249a84f3d58e607fa247808fd9",
+                  "component_key": "synthetic.cash.development.v1.corporate_action_model",
+                  "component_version": 1,
+                  "port_type": "corporate_action_model",
+                  "type": "profile_component_ref"
+                },
+                {
+                  "component_digest": "sha256:cc6971250b650a0f9e1831538125dfa7a250b152002e5a1cd824ab97b72a275b",
+                  "component_key": "synthetic.cash.development.v1.currency_valuation_policy",
+                  "component_version": 1,
+                  "port_type": "currency_valuation_policy",
+                  "type": "profile_component_ref"
+                },
+                {
+                  "component_digest": "sha256:ab4885f67ff81d1b49b8717918c1e19fad8c2abf4f3861e4dac1aa1e1900caa2",
+                  "component_key": "synthetic.cash.development.v1.fee_assessment_policy",
+                  "component_version": 1,
+                  "port_type": "fee_assessment_policy",
+                  "type": "profile_component_ref"
+                },
+                {
+                  "component_digest": "sha256:a093963b1c12b1a9743d48f60b4a5b97dfd444b56027ed277e67f8dec6c1fb2f",
+                  "component_key": "synthetic.cash.development.v1.financing_model",
+                  "component_version": 1,
+                  "port_type": "financing_model",
+                  "type": "profile_component_ref"
+                },
+                {
+                  "component_digest": "sha256:3327762150558dc02a61d6a27fc0b995288ee863a0305eb863fa5883f48aefa5",
+                  "component_key": "synthetic.cash.development.v1.instrument_model",
+                  "component_version": 1,
+                  "port_type": "instrument_model",
+                  "type": "profile_component_ref"
+                },
+                {
+                  "component_digest": "sha256:e8e36b7178fd9f65f9a6954b5c6f22ec85195eccea4355f6129557ff243ca728",
+                  "component_key": "synthetic.cash.development.v1.liquidation_rules",
+                  "component_version": 1,
+                  "port_type": "liquidation_rules",
+                  "type": "profile_component_ref"
+                },
+                {
+                  "component_digest": "sha256:85bce19b096e4a93667ed0f55e665bf74e520b300e6a0532d34a636ea13aa861",
+                  "component_key": "synthetic.cash.development.v1.margin_model",
+                  "component_version": 1,
+                  "port_type": "margin_model",
+                  "type": "profile_component_ref"
+                },
+                {
+                  "component_digest": "sha256:ea7465cb560a292eec8b1607c4af76ee6856597d806df32c9fbeddf40c08719d",
+                  "component_key": "synthetic.cash.development.v1.order_rule_model",
+                  "component_version": 1,
+                  "port_type": "order_rule_model",
+                  "type": "profile_component_ref"
+                },
+                {
+                  "component_digest": "sha256:01b85d41058a5360ba6149de59805051f84a43ced5512965cc6843010d542e4e",
+                  "component_key": "synthetic.cash.development.v1.position_accounting_model",
+                  "component_version": 1,
+                  "port_type": "position_accounting_model",
+                  "type": "profile_component_ref"
+                },
+                {
+                  "component_digest": "sha256:7e56701f22958d889de3d9ce15e3fb6a8b886253cfc9e3f55e178176969fb394",
+                  "component_key": "synthetic.cash.development.v1.session_model",
+                  "component_version": 1,
+                  "port_type": "session_model",
+                  "type": "profile_component_ref"
+                },
+                {
+                  "component_digest": "sha256:f994d8ae47454267fe4593c01570776f4c203bfa3c200e3f520b3faf5a49d138",
+                  "component_key": "synthetic.cash.development.v1.settlement_model",
+                  "component_version": 1,
+                  "port_type": "settlement_model",
+                  "type": "profile_component_ref"
+                },
+                {
+                  "component_digest": "sha256:90af179a371ba75eb31e90e737cc496caa8a442aad40721cf3b8385e75288998",
+                  "component_key": "synthetic.cash.development.v1.tax_policy",
+                  "component_version": 1,
+                  "port_type": "tax_policy",
+                  "type": "profile_component_ref"
+                }
+              ],
+              "decision_grade_eligible": false,
+              "grade": "development",
+              "limitations": [
+                "synthetic_market_profile"
+              ],
+              "profile_digest": "sha256:3476a32b6367eabaed1ae4e2d5e2748ab236f333f03196335374948b14a6f02f",
+              "profile_key": "synthetic.cash.development.v1.market",
+              "profile_version": 1,
+              "required_bundle_capabilities": [
+                {
+                  "key": "bar_open",
+                  "type": "market_bundle_capability",
+                  "version": 1
+                }
+              ],
+              "type": "market_semantics_profile_registration",
+              "venue_id": "synthetic"
+            },
+            "simulation": {
+              "component_manifest": [
+                {
+                  "component_digest": "sha256:d9be291bff3147a191296ec5b3d37cc79aecc9ee2bff4877d7bca86f9aeb0ea8",
+                  "component_key": "mark_to_market.v1",
+                  "component_version": 1,
+                  "port_type": "closeout_policy",
+                  "type": "simulation_component_ref"
+                },
+                {
+                  "component_digest": "sha256:d69d6d96c9081f730db6ff8cdd02431d4babdef2e3967f0094971e73aedf30fe",
+                  "component_key": "next_eligible_bar_open.v1",
+                  "component_version": 1,
+                  "port_type": "execution_model",
+                  "type": "simulation_component_ref"
+                },
+                {
+                  "component_digest": "sha256:08779758aa013806239e6017396c51a16983dfe7768aea821819fe6352eb824f",
+                  "component_key": "synthetic.cash.development.v1.latency_model",
+                  "component_version": 1,
+                  "port_type": "latency_model",
+                  "type": "simulation_component_ref"
+                },
+                {
+                  "component_digest": "sha256:aadd185215c0455ff0a2d4296738dbff98fd3dd9fc9ee9b4124eaf551d7b92c9",
+                  "component_key": "synthetic.cash.development.v1.liquidation_audit_model",
+                  "component_version": 1,
+                  "port_type": "liquidation_audit_model",
+                  "type": "simulation_component_ref"
+                },
+                {
+                  "component_digest": "sha256:0b385ce6e81a7e4281a93fb477547d291388db8bb9dd855f82e79a158f63c1e2",
+                  "component_key": "synthetic.cash.development.v1.liquidity_model",
+                  "component_version": 1,
+                  "port_type": "liquidity_model",
+                  "type": "simulation_component_ref"
+                },
+                {
+                  "component_digest": "sha256:4141414141414141414141414141414141414141414141414141414141414141",
+                  "component_key": "deterministic_bps.v1",
+                  "component_version": 1,
+                  "port_type": "slippage_model",
+                  "type": "simulation_component_ref"
+                }
+              ],
+              "decision_grade_eligible": false,
+              "engine_kind": "bar",
+              "grade": "development",
+              "limitations": [
+                "synthetic_market_profile"
+              ],
+              "profile_digest": "sha256:45915d737732c3d6b4a75f3b80049b0c8fd0abc0c64a415f69f5ddf33037974f",
+              "profile_key": "synthetic.cash.development.v1.simulation",
+              "profile_version": 1,
+              "required_bundle_capabilities": [
+                {
+                  "key": "bar_open",
+                  "type": "market_bundle_capability",
+                  "version": 1
+                }
+              ],
+              "supported_strategy_families": [
+                "precomputed_target"
+              ],
+              "type": "simulation_profile_registration"
+            },
+            "type": "resolved_backtest_environment"
+          },
+          "normalized_request": {
+            "request": {
+              "build_artifact_manifest_hash": "sha256:454c178057ea340bffb6ac6a2d443da11b836471cb1c97c0b5501b0577b633d9",
+              "engine_kind": "bar",
+              "execution_account_id": "account:primary",
+              "execution_account_profile_key": "synthetic.cash.development.v1.account",
+              "execution_case_semantic_hash": "sha256:2592a4ee246b54632d3c63f3490ab68cdabb305406cc275eafabcc0fd5e8a690",
+              "experiment_id": "synthetic-cash-resolution",
+              "market_bundle_ref": {
+                "bundle_key": "fixture.engine.bundle.v1",
+                "manifest_hash": "sha256:893e925061def7b79e2082e33f20b750fbfbd7d33ea58d3bb1f530440ab7510d",
+                "type": "market_bundle_ref"
+              },
+              "market_semantics_profile_key": "synthetic.cash.development.v1.market",
+              "master_random_seed": 7,
+              "reporting_currency": {
+                "type": "currency_id",
+                "value": "USD"
+              },
+              "result_grade_requested": "development",
+              "schema_version": 1,
+              "simulation_profile_key": "synthetic.cash.development.v1.simulation",
+              "strategy_family": "precomputed_target",
+              "target_stream_digest": "sha256:ead473aba908a5d2ace5745a648d357c16666c47a726743b86dbde42768a539f",
+              "timeline_window": {
+                "data_start": {
+                  "epoch_nanoseconds": 0,
+                  "type": "utc_instant"
+                },
+                "end_exclusive": {
+                  "epoch_nanoseconds": 300,
+                  "type": "utc_instant"
+                },
+                "trading_start": {
+                  "epoch_nanoseconds": 90,
+                  "type": "utc_instant"
+                },
+                "type": "timeline_window"
+              },
+              "type": "backtest_request"
+            },
+            "request_hash": "sha256:be4e37d6ef69b6ac01493ab8a62e311fa397fcc9e462add5d316c52a616c36c3",
+            "type": "normalized_backtest_request"
+          },
+          "request": {
+            "build_artifact_manifest_hash": "sha256:454c178057ea340bffb6ac6a2d443da11b836471cb1c97c0b5501b0577b633d9",
+            "engine_kind": "bar",
+            "execution_account_id": "account:primary",
+            "execution_account_profile_key": "synthetic.cash.development.v1.account",
+            "execution_case_semantic_hash": "sha256:2592a4ee246b54632d3c63f3490ab68cdabb305406cc275eafabcc0fd5e8a690",
+            "experiment_id": "synthetic-cash-resolution",
+            "market_bundle_ref": {
+              "bundle_key": "fixture.engine.bundle.v1",
+              "manifest_hash": "sha256:893e925061def7b79e2082e33f20b750fbfbd7d33ea58d3bb1f530440ab7510d",
+              "type": "market_bundle_ref"
+            },
+            "market_semantics_profile_key": "synthetic.cash.development.v1.market",
+            "master_random_seed": 7,
+            "reporting_currency": {
+              "type": "currency_id",
+              "value": "USD"
+            },
+            "result_grade_requested": "development",
+            "schema_version": 1,
+            "simulation_profile_key": "synthetic.cash.development.v1.simulation",
+            "strategy_family": "precomputed_target",
+            "target_stream_digest": "sha256:ead473aba908a5d2ace5745a648d357c16666c47a726743b86dbde42768a539f",
+            "timeline_window": {
+              "data_start": {
+                "epoch_nanoseconds": 0,
+                "type": "utc_instant"
+              },
+              "end_exclusive": {
+                "epoch_nanoseconds": 300,
+                "type": "utc_instant"
+              },
+              "trading_start": {
+                "epoch_nanoseconds": 90,
+                "type": "utc_instant"
+              },
+              "type": "timeline_window"
+            },
+            "type": "backtest_request"
+          },
+          "semantic_run_id": "run_39ab44a26d7f719fe1648f3ccbf7cbdcb874a9bc43e8c15d3a51ab5aca421591",
+          "type": "resolved_backtest_request"
+        },
+        "schema_version": 1,
+        "semantic_run_id": "run_39ab44a26d7f719fe1648f3ccbf7cbdcb874a9bc43e8c15d3a51ab5aca421591",
+        "type": "integrity_evaluation_context"
+      },
+      "context_hash": "sha256:7fe126e19e066cc7ed6ee13c3ff504b32d28ec333d57655380c6958c2f38cd57",
+      "deployment_authorized": false,
+      "issues": [
+        {
+          "code": "insufficient_attempts",
+          "evidence_hashes": [],
+          "severity": "blocking",
+          "subject_keys": [
+            "run_39ab44a26d7f719fe1648f3ccbf7cbdcb874a9bc43e8c15d3a51ab5aca421591"
+          ]
+        },
+        {
+          "code": "bundle_retention_unproven",
+          "evidence_hashes": [],
+          "severity": "limitation",
+          "subject_keys": [
+            "sha256:893e925061def7b79e2082e33f20b750fbfbd7d33ea58d3bb1f530440ab7510d"
+          ]
+        },
+        {
+          "code": "deterministic_rebuild_unproven",
+          "evidence_hashes": [],
+          "severity": "limitation",
+          "subject_keys": [
+            "sha256:8e39d7c32a6e266de243ad953b54d8168b333ba351d9543ec5c5f33fde823c85"
+          ]
+        },
+        {
+          "code": "development_profile",
+          "evidence_hashes": [
+            "sha256:22a2310c4576f10967f5ba5ffc73ba4459f15a16a4e2e5041a6641ebc0c22035",
+            "sha256:3476a32b6367eabaed1ae4e2d5e2748ab236f333f03196335374948b14a6f02f",
+            "sha256:45915d737732c3d6b4a75f3b80049b0c8fd0abc0c64a415f69f5ddf33037974f"
+          ],
+          "severity": "limitation",
+          "subject_keys": [
+            "synthetic.cash.development.v1.account",
+            "synthetic.cash.development.v1.market",
+            "synthetic.cash.development.v1.simulation"
+          ]
+        },
+        {
+          "code": "environment_limitation",
+          "evidence_hashes": [
+            "sha256:a06e0ab577a809a73d6ba9acb130e6f108cf50f9400d862d280b81a161d06721"
+          ],
+          "severity": "limitation",
+          "subject_keys": [
+            "development_profile",
+            "synthetic_market_profile"
+          ]
+        },
+        {
+          "code": "summary_trace",
+          "evidence_hashes": [
+            "sha256:758a369a1777eb0d06ea1434412f36e382fb87de0fb3c4ca335b10613ed8dce7"
+          ],
+          "severity": "limitation",
+          "subject_keys": [
+            "summary"
+          ]
+        }
+      ],
+      "requested_grade": "development",
+      "result_grade": null,
+      "schema_version": 1,
+      "semantic_run_id": "run_39ab44a26d7f719fe1648f3ccbf7cbdcb874a9bc43e8c15d3a51ab5aca421591",
+      "type": "integrity_report"
+    },
+    "publication_manifest": {
+      "artifacts": [
+        {
+          "artifact_type": "integrity_evaluation_record",
+          "byte_count": 554,
+          "content_hash": "sha256:f0fbac18e02eb24eefe536e13031be742ed16c73d390041708db749b5103625c",
+          "relative_path": "evaluation-outcome.json",
+          "schema_version": 1,
+          "source_hash": "sha256:4aaef71779da4086fda473b337d5ae15b68038e67d0a17bb5fed9c7febc89346"
+        },
+        {
+          "artifact_type": "integrity_report",
+          "byte_count": 15399,
+          "content_hash": "sha256:35d924b854e90e95255f344cf43259f0a8af7d51f8fbe93889929133244a30a4",
+          "relative_path": "integrity.json",
+          "schema_version": 1,
+          "source_hash": "sha256:e9b1dfd89d1a30c9a797e491137a98b40669256bbf3c911a2726b013272c7d47"
+        }
+      ],
+      "deployment_authorized": false,
+      "publication_id": "evaluation_c40ec0972c2e551cd5a0fb4126e3ef7eb8d43d0535adce9b4c66f0193689b333",
+      "publication_kind": "integrity_evaluation",
+      "schema_version": 1,
+      "semantic_run_id": "run_39ab44a26d7f719fe1648f3ccbf7cbdcb874a9bc43e8c15d3a51ab5aca421591",
+      "type": "canonical_publication_manifest"
+    },
+    "source_hashes": {
+      "evaluation-outcome.json": "sha256:4aaef71779da4086fda473b337d5ae15b68038e67d0a17bb5fed9c7febc89346",
+      "integrity.json": "sha256:e9b1dfd89d1a30c9a797e491137a98b40669256bbf3c911a2726b013272c7d47",
+      "publication-manifest.json": "sha256:74f27535a19539aec93ba5e5637386967873c03fcf4291c7c96937da1ce93377"
+    }
+  },
+  "decision_grade": {
+    "canonical_attempt_ref": {
+      "attempt": {
+        "attempt_id": "attempt_6b6e70f046c91b2bd889c1a8770f1f8a264911f9ce399ef4a595cafe722d3678",
+        "ordinal": 1,
+        "parent_attempt_id": null,
+        "schema_version": 1,
+        "semantic_run_id": "run_792ce800357b29fe0507a02c068c92f83d6f744463a274b64ae4aa285005329e",
+        "type": "attempt_identity"
+      },
+      "consistency_set_hash": "sha256:8f44ab4ac42d0817914d2ad9bf2f3bddba78d4b0225a522a26ef6503e8efa5ce",
+      "deployment_authorized": false,
+      "deterministic_rebuild_evidence_hash": "sha256:97cba5c38602da1420177f8d7cd38876bccf4a2ac6ec4865d886f739a3260daa",
+      "engine_result_artifact_content_hash": "sha256:971388e5bddd7ac534482bf83b6dd50e4608b04ffb388d558e9ddfc777f771fe",
+      "evidence_manifest_hash": "sha256:bf43d6ae2085d7856454e2dd5eea43ad376e0f1450b04cbb84839d3954e56e0b",
+      "evidence_manifest_source_hash": "sha256:6f9e8cd2ba84443ae0ee7e5e7111b434a3ffb037bb33abb77d58190f21d111c2",
+      "evidence_publication_hash": "sha256:2ae83931a7b558cf7b384ea743f9d7d003d31d5625ca10d173fd8355acb8d310",
+      "execution_case_hash": "sha256:a49e17c6b76e336161ce83def33f05ea8d06cf79a20791666222abb96e2f69d3",
+      "execution_case_semantic_hash": "sha256:2592a4ee246b54632d3c63f3490ab68cdabb305406cc275eafabcc0fd5e8a690",
+      "execution_result_hash": "sha256:d4ec9272fc628d45939470922c048615d67bc5cc143c890057f04fe2e636db68",
+      "market_bundle_manifest_hash": "sha256:893e925061def7b79e2082e33f20b750fbfbd7d33ea58d3bb1f530440ab7510d",
+      "market_bundle_retention_proof_hash": "sha256:29d81bbe1a27e1fff99e5f51057a87a1b6244b727a709a80248c04eb75f42a37",
+      "schema_version": 1,
+      "trace_hash": "sha256:c33a5601c553bff879425e374163a667ae471e341f69ce56c832d8e42dd00bdd",
+      "trace_level": "full_trace",
+      "type": "canonical_attempt_ref"
+    },
+    "finalized": {
+      "canonical_attempt_ref_hash": "sha256:4e9472406e867ba5ab9b334441fbf60816dab45c6cc5bbc500c5d1d1da5728d9",
+      "deployment_authorized": false,
+      "integrity_report_hash": "sha256:da4fb1dd6b383a129c37abcde89e5c252902d686aa6022bd7eb54f798a5a2f20",
+      "publication_manifest_hash": "sha256:844c89052d0c597c94c9998ecfa256654e526d93ea0598f1719448e719f3f14c",
+      "publication_manifest_source_hash": "sha256:3554a9736541612b732810c1835fbe79b9407236f2b5ecf2f1175d1f957bbd0b",
+      "relative_directory": "runs/run_792ce800357b29fe0507a02c068c92f83d6f744463a274b64ae4aa285005329e/canonical",
+      "result_hash": "sha256:11eb92f6d4bf3b85b6f7d2a2c305ec85ec81b907031bbd1ae9c5e4a4a325a8ef",
+      "schema_version": 1,
+      "semantic_run_id": "run_792ce800357b29fe0507a02c068c92f83d6f744463a274b64ae4aa285005329e",
+      "type": "finalized_canonical_result"
+    },
+    "integrity_report": {
+      "canonical_attempt_ref_hash": "sha256:4e9472406e867ba5ab9b334441fbf60816dab45c6cc5bbc500c5d1d1da5728d9",
+      "context": {
+        "attempt_consistency_set": {
+          "attempts": [
+            {
+              "attempt_id": "attempt_6b6e70f046c91b2bd889c1a8770f1f8a264911f9ce399ef4a595cafe722d3678",
+              "evidence_manifest_hash": "sha256:bf43d6ae2085d7856454e2dd5eea43ad376e0f1450b04cbb84839d3954e56e0b",
+              "execution_result_hash": "sha256:d4ec9272fc628d45939470922c048615d67bc5cc143c890057f04fe2e636db68",
+              "semantic_run_id": "run_792ce800357b29fe0507a02c068c92f83d6f744463a274b64ae4aa285005329e"
+            },
+            {
+              "attempt_id": "attempt_084423096e4c9bdc6654fbca0ab398ab48c0bb0d80a669b408cc75fca4556839",
+              "evidence_manifest_hash": "sha256:9b110dcb59d0afbdd18af22b531a5d26a11827718c31bb0ec57a3ef10259d23b",
+              "execution_result_hash": "sha256:d4ec9272fc628d45939470922c048615d67bc5cc143c890057f04fe2e636db68",
+              "semantic_run_id": "run_792ce800357b29fe0507a02c068c92f83d6f744463a274b64ae4aa285005329e"
+            }
+          ],
+          "finalized_evidence_hashes": [
+            "sha256:2ae83931a7b558cf7b384ea743f9d7d003d31d5625ca10d173fd8355acb8d310",
+            "sha256:ee201e3edd4938742176170d041efb513dd64a860649a87adff27efaa93795c2"
+          ],
+          "resolved_request_hash": "sha256:3481aa2dcfce6fbcb9951c59254c9cf9d726b72112ec53135343371e0108e4d4",
+          "schema_version": 1,
+          "semantic_run_id": "run_792ce800357b29fe0507a02c068c92f83d6f744463a274b64ae4aa285005329e",
+          "type": "attempt_consistency_set"
+        },
+        "execution_hash_check": {
+          "consistency": {
+            "attempts": [
+              {
+                "attempt_id": "attempt_084423096e4c9bdc6654fbca0ab398ab48c0bb0d80a669b408cc75fca4556839",
+                "evidence_manifest_hash": "sha256:9b110dcb59d0afbdd18af22b531a5d26a11827718c31bb0ec57a3ef10259d23b",
+                "execution_result_hash": "sha256:d4ec9272fc628d45939470922c048615d67bc5cc143c890057f04fe2e636db68",
+                "semantic_run_id": "run_792ce800357b29fe0507a02c068c92f83d6f744463a274b64ae4aa285005329e"
+              },
+              {
+                "attempt_id": "attempt_6b6e70f046c91b2bd889c1a8770f1f8a264911f9ce399ef4a595cafe722d3678",
+                "evidence_manifest_hash": "sha256:bf43d6ae2085d7856454e2dd5eea43ad376e0f1450b04cbb84839d3954e56e0b",
+                "execution_result_hash": "sha256:d4ec9272fc628d45939470922c048615d67bc5cc143c890057f04fe2e636db68",
+                "semantic_run_id": "run_792ce800357b29fe0507a02c068c92f83d6f744463a274b64ae4aa285005329e"
+              }
+            ],
+            "execution_result_hash": "sha256:d4ec9272fc628d45939470922c048615d67bc5cc143c890057f04fe2e636db68",
+            "schema_version": 1,
+            "semantic_run_id": "run_792ce800357b29fe0507a02c068c92f83d6f744463a274b64ae4aa285005329e",
+            "type": "execution_hash_consistency"
+          },
+          "mismatch": null,
+          "schema_version": 1,
+          "type": "execution_hash_check"
+        },
+        "rebuild_evidence": {
+          "build_artifact_manifest_hash": "sha256:454c178057ea340bffb6ac6a2d443da11b836471cb1c97c0b5501b0577b633d9",
+          "deterministic_rebuild_proof_hash": "sha256:761e14cda978875630b95dd4f55525830eef79e8e9bf19599af15d1a05d2c0cf",
+          "environment_hash": "sha256:4aa4fdc9ecdd0ae41462d301846136771292d848cb5f68d4180b9952139b4c93",
+          "execution_case_hash": "sha256:a49e17c6b76e336161ce83def33f05ea8d06cf79a20791666222abb96e2f69d3",
+          "execution_case_semantic_hash": "sha256:2592a4ee246b54632d3c63f3490ab68cdabb305406cc275eafabcc0fd5e8a690",
+          "execution_result_hash": "sha256:d4ec9272fc628d45939470922c048615d67bc5cc143c890057f04fe2e636db68",
+          "market_bundle_manifest_hash": "sha256:893e925061def7b79e2082e33f20b750fbfbd7d33ea58d3bb1f530440ab7510d",
+          "market_bundle_retention_proof_hash": "sha256:29d81bbe1a27e1fff99e5f51057a87a1b6244b727a709a80248c04eb75f42a37",
+          "request_hash": "sha256:820832a1e3b81eb4cf817145e69f2ab0a2b87d3d56e58bffb6be68bcaf186339",
+          "schema_version": 1,
+          "semantic_run_id": "run_792ce800357b29fe0507a02c068c92f83d6f744463a274b64ae4aa285005329e",
+          "target_stream_digest": "sha256:ead473aba908a5d2ace5745a648d357c16666c47a726743b86dbde42768a539f",
+          "trace_hash": "sha256:c33a5601c553bff879425e374163a667ae471e341f69ce56c832d8e42dd00bdd",
+          "trace_level": "full_trace",
+          "type": "deterministic_rebuild_evidence"
+        },
+        "resolved_request": {
+          "build_artifact_manifest_hash": "sha256:454c178057ea340bffb6ac6a2d443da11b836471cb1c97c0b5501b0577b633d9",
+          "environment": {
+            "compatibility_report": {
+              "allowed_grade": "decision_grade",
+              "checks": [
+                {
+                  "code": "build_artifact_identity",
+                  "passed": true,
+                  "subjects": [],
+                  "type": "environment_compatibility_check"
+                },
+                {
+                  "code": "market_bundle_capabilities",
+                  "passed": true,
+                  "subjects": [],
+                  "type": "environment_compatibility_check"
+                },
+                {
+                  "code": "market_bundle_coverage",
+                  "passed": true,
+                  "subjects": [],
+                  "type": "environment_compatibility_check"
+                },
+                {
+                  "code": "market_bundle_identity",
+                  "passed": true,
+                  "subjects": [],
+                  "type": "environment_compatibility_check"
+                },
+                {
+                  "code": "profile_build_identity",
+                  "passed": true,
+                  "subjects": [],
+                  "type": "environment_compatibility_check"
+                },
+                {
+                  "code": "profile_component_coverage",
+                  "passed": true,
+                  "subjects": [],
+                  "type": "environment_compatibility_check"
+                },
+                {
+                  "code": "profile_grade",
+                  "passed": true,
+                  "subjects": [],
+                  "type": "environment_compatibility_check"
+                },
+                {
+                  "code": "reporting_currency",
+                  "passed": true,
+                  "subjects": [],
+                  "type": "environment_compatibility_check"
+                },
+                {
+                  "code": "simulation_context",
+                  "passed": true,
+                  "subjects": [],
+                  "type": "environment_compatibility_check"
+                },
+                {
+                  "code": "venue_account_context",
+                  "passed": true,
+                  "subjects": [],
+                  "type": "environment_compatibility_check"
+                }
+              ],
+              "compatible": true,
+              "failed_codes": [],
+              "limitations": [],
+              "market_bundle_manifest_hash": "sha256:893e925061def7b79e2082e33f20b750fbfbd7d33ea58d3bb1f530440ab7510d",
+              "profile_digests": [
+                "sha256:22a2310c4576f10967f5ba5ffc73ba4459f15a16a4e2e5041a6641ebc0c22035",
+                "sha256:3476a32b6367eabaed1ae4e2d5e2748ab236f333f03196335374948b14a6f02f",
+                "sha256:45915d737732c3d6b4a75f3b80049b0c8fd0abc0c64a415f69f5ddf33037974f"
+              ],
+              "request_hash": "sha256:820832a1e3b81eb4cf817145e69f2ab0a2b87d3d56e58bffb6be68bcaf186339",
+              "type": "environment_compatibility_report"
+            },
+            "deployment_authorized": false,
+            "execution_account": {
+              "account_id": "account:primary",
+              "account_type": "cash",
+              "decision_grade_eligible": true,
+              "grade": "decision_grade",
+              "limitations": [],
+              "margin_mode": "not_applicable",
+              "profile_digest": "sha256:22a2310c4576f10967f5ba5ffc73ba4459f15a16a4e2e5041a6641ebc0c22035",
+              "profile_key": "synthetic.cash.development.v1.account",
+              "profile_version": 1,
+              "supported_reporting_currencies": [
+                {
+                  "type": "currency_id",
+                  "value": "USD"
+                }
+              ],
+              "type": "execution_account_profile_registration",
+              "venue_id": "synthetic"
+            },
+            "limitations": [],
+            "market_bundle_ref": {
+              "bundle_key": "fixture.engine.bundle.v1",
+              "manifest_hash": "sha256:893e925061def7b79e2082e33f20b750fbfbd7d33ea58d3bb1f530440ab7510d",
+              "type": "market_bundle_ref"
+            },
+            "market_semantics": {
+              "component_manifest": [
+                {
+                  "component_digest": "sha256:0d061cf48ddece34564e21978387e4de42e22a249a84f3d58e607fa247808fd9",
+                  "component_key": "synthetic.cash.development.v1.corporate_action_model",
+                  "component_version": 1,
+                  "port_type": "corporate_action_model",
+                  "type": "profile_component_ref"
+                },
+                {
+                  "component_digest": "sha256:cc6971250b650a0f9e1831538125dfa7a250b152002e5a1cd824ab97b72a275b",
+                  "component_key": "synthetic.cash.development.v1.currency_valuation_policy",
+                  "component_version": 1,
+                  "port_type": "currency_valuation_policy",
+                  "type": "profile_component_ref"
+                },
+                {
+                  "component_digest": "sha256:ab4885f67ff81d1b49b8717918c1e19fad8c2abf4f3861e4dac1aa1e1900caa2",
+                  "component_key": "synthetic.cash.development.v1.fee_assessment_policy",
+                  "component_version": 1,
+                  "port_type": "fee_assessment_policy",
+                  "type": "profile_component_ref"
+                },
+                {
+                  "component_digest": "sha256:a093963b1c12b1a9743d48f60b4a5b97dfd444b56027ed277e67f8dec6c1fb2f",
+                  "component_key": "synthetic.cash.development.v1.financing_model",
+                  "component_version": 1,
+                  "port_type": "financing_model",
+                  "type": "profile_component_ref"
+                },
+                {
+                  "component_digest": "sha256:3327762150558dc02a61d6a27fc0b995288ee863a0305eb863fa5883f48aefa5",
+                  "component_key": "synthetic.cash.development.v1.instrument_model",
+                  "component_version": 1,
+                  "port_type": "instrument_model",
+                  "type": "profile_component_ref"
+                },
+                {
+                  "component_digest": "sha256:e8e36b7178fd9f65f9a6954b5c6f22ec85195eccea4355f6129557ff243ca728",
+                  "component_key": "synthetic.cash.development.v1.liquidation_rules",
+                  "component_version": 1,
+                  "port_type": "liquidation_rules",
+                  "type": "profile_component_ref"
+                },
+                {
+                  "component_digest": "sha256:85bce19b096e4a93667ed0f55e665bf74e520b300e6a0532d34a636ea13aa861",
+                  "component_key": "synthetic.cash.development.v1.margin_model",
+                  "component_version": 1,
+                  "port_type": "margin_model",
+                  "type": "profile_component_ref"
+                },
+                {
+                  "component_digest": "sha256:ea7465cb560a292eec8b1607c4af76ee6856597d806df32c9fbeddf40c08719d",
+                  "component_key": "synthetic.cash.development.v1.order_rule_model",
+                  "component_version": 1,
+                  "port_type": "order_rule_model",
+                  "type": "profile_component_ref"
+                },
+                {
+                  "component_digest": "sha256:01b85d41058a5360ba6149de59805051f84a43ced5512965cc6843010d542e4e",
+                  "component_key": "synthetic.cash.development.v1.position_accounting_model",
+                  "component_version": 1,
+                  "port_type": "position_accounting_model",
+                  "type": "profile_component_ref"
+                },
+                {
+                  "component_digest": "sha256:7e56701f22958d889de3d9ce15e3fb6a8b886253cfc9e3f55e178176969fb394",
+                  "component_key": "synthetic.cash.development.v1.session_model",
+                  "component_version": 1,
+                  "port_type": "session_model",
+                  "type": "profile_component_ref"
+                },
+                {
+                  "component_digest": "sha256:f994d8ae47454267fe4593c01570776f4c203bfa3c200e3f520b3faf5a49d138",
+                  "component_key": "synthetic.cash.development.v1.settlement_model",
+                  "component_version": 1,
+                  "port_type": "settlement_model",
+                  "type": "profile_component_ref"
+                },
+                {
+                  "component_digest": "sha256:90af179a371ba75eb31e90e737cc496caa8a442aad40721cf3b8385e75288998",
+                  "component_key": "synthetic.cash.development.v1.tax_policy",
+                  "component_version": 1,
+                  "port_type": "tax_policy",
+                  "type": "profile_component_ref"
+                }
+              ],
+              "decision_grade_eligible": true,
+              "grade": "decision_grade",
+              "limitations": [],
+              "profile_digest": "sha256:3476a32b6367eabaed1ae4e2d5e2748ab236f333f03196335374948b14a6f02f",
+              "profile_key": "synthetic.cash.development.v1.market",
+              "profile_version": 1,
+              "required_bundle_capabilities": [
+                {
+                  "key": "bar_open",
+                  "type": "market_bundle_capability",
+                  "version": 1
+                }
+              ],
+              "type": "market_semantics_profile_registration",
+              "venue_id": "synthetic"
+            },
+            "simulation": {
+              "component_manifest": [
+                {
+                  "component_digest": "sha256:d9be291bff3147a191296ec5b3d37cc79aecc9ee2bff4877d7bca86f9aeb0ea8",
+                  "component_key": "mark_to_market.v1",
+                  "component_version": 1,
+                  "port_type": "closeout_policy",
+                  "type": "simulation_component_ref"
+                },
+                {
+                  "component_digest": "sha256:d69d6d96c9081f730db6ff8cdd02431d4babdef2e3967f0094971e73aedf30fe",
+                  "component_key": "next_eligible_bar_open.v1",
+                  "component_version": 1,
+                  "port_type": "execution_model",
+                  "type": "simulation_component_ref"
+                },
+                {
+                  "component_digest": "sha256:08779758aa013806239e6017396c51a16983dfe7768aea821819fe6352eb824f",
+                  "component_key": "synthetic.cash.development.v1.latency_model",
+                  "component_version": 1,
+                  "port_type": "latency_model",
+                  "type": "simulation_component_ref"
+                },
+                {
+                  "component_digest": "sha256:aadd185215c0455ff0a2d4296738dbff98fd3dd9fc9ee9b4124eaf551d7b92c9",
+                  "component_key": "synthetic.cash.development.v1.liquidation_audit_model",
+                  "component_version": 1,
+                  "port_type": "liquidation_audit_model",
+                  "type": "simulation_component_ref"
+                },
+                {
+                  "component_digest": "sha256:0b385ce6e81a7e4281a93fb477547d291388db8bb9dd855f82e79a158f63c1e2",
+                  "component_key": "synthetic.cash.development.v1.liquidity_model",
+                  "component_version": 1,
+                  "port_type": "liquidity_model",
+                  "type": "simulation_component_ref"
+                },
+                {
+                  "component_digest": "sha256:4141414141414141414141414141414141414141414141414141414141414141",
+                  "component_key": "deterministic_bps.v1",
+                  "component_version": 1,
+                  "port_type": "slippage_model",
+                  "type": "simulation_component_ref"
+                }
+              ],
+              "decision_grade_eligible": true,
+              "engine_kind": "bar",
+              "grade": "decision_grade",
+              "limitations": [],
+              "profile_digest": "sha256:45915d737732c3d6b4a75f3b80049b0c8fd0abc0c64a415f69f5ddf33037974f",
+              "profile_key": "synthetic.cash.development.v1.simulation",
+              "profile_version": 1,
+              "required_bundle_capabilities": [
+                {
+                  "key": "bar_open",
+                  "type": "market_bundle_capability",
+                  "version": 1
+                }
+              ],
+              "supported_strategy_families": [
+                "precomputed_target"
+              ],
+              "type": "simulation_profile_registration"
+            },
+            "type": "resolved_backtest_environment"
+          },
+          "normalized_request": {
+            "request": {
+              "build_artifact_manifest_hash": "sha256:454c178057ea340bffb6ac6a2d443da11b836471cb1c97c0b5501b0577b633d9",
+              "engine_kind": "bar",
+              "execution_account_id": "account:primary",
+              "execution_account_profile_key": "synthetic.cash.development.v1.account",
+              "execution_case_semantic_hash": "sha256:2592a4ee246b54632d3c63f3490ab68cdabb305406cc275eafabcc0fd5e8a690",
+              "experiment_id": "synthetic-cash-resolution",
+              "market_bundle_ref": {
+                "bundle_key": "fixture.engine.bundle.v1",
+                "manifest_hash": "sha256:893e925061def7b79e2082e33f20b750fbfbd7d33ea58d3bb1f530440ab7510d",
+                "type": "market_bundle_ref"
+              },
+              "market_semantics_profile_key": "synthetic.cash.development.v1.market",
+              "master_random_seed": 7,
+              "reporting_currency": {
+                "type": "currency_id",
+                "value": "USD"
+              },
+              "result_grade_requested": "decision_grade",
+              "schema_version": 1,
+              "simulation_profile_key": "synthetic.cash.development.v1.simulation",
+              "strategy_family": "precomputed_target",
+              "target_stream_digest": "sha256:ead473aba908a5d2ace5745a648d357c16666c47a726743b86dbde42768a539f",
+              "timeline_window": {
+                "data_start": {
+                  "epoch_nanoseconds": 0,
+                  "type": "utc_instant"
+                },
+                "end_exclusive": {
+                  "epoch_nanoseconds": 300,
+                  "type": "utc_instant"
+                },
+                "trading_start": {
+                  "epoch_nanoseconds": 90,
+                  "type": "utc_instant"
+                },
+                "type": "timeline_window"
+              },
+              "type": "backtest_request"
+            },
+            "request_hash": "sha256:820832a1e3b81eb4cf817145e69f2ab0a2b87d3d56e58bffb6be68bcaf186339",
+            "type": "normalized_backtest_request"
+          },
+          "request": {
+            "build_artifact_manifest_hash": "sha256:454c178057ea340bffb6ac6a2d443da11b836471cb1c97c0b5501b0577b633d9",
+            "engine_kind": "bar",
+            "execution_account_id": "account:primary",
+            "execution_account_profile_key": "synthetic.cash.development.v1.account",
+            "execution_case_semantic_hash": "sha256:2592a4ee246b54632d3c63f3490ab68cdabb305406cc275eafabcc0fd5e8a690",
+            "experiment_id": "synthetic-cash-resolution",
+            "market_bundle_ref": {
+              "bundle_key": "fixture.engine.bundle.v1",
+              "manifest_hash": "sha256:893e925061def7b79e2082e33f20b750fbfbd7d33ea58d3bb1f530440ab7510d",
+              "type": "market_bundle_ref"
+            },
+            "market_semantics_profile_key": "synthetic.cash.development.v1.market",
+            "master_random_seed": 7,
+            "reporting_currency": {
+              "type": "currency_id",
+              "value": "USD"
+            },
+            "result_grade_requested": "decision_grade",
+            "schema_version": 1,
+            "simulation_profile_key": "synthetic.cash.development.v1.simulation",
+            "strategy_family": "precomputed_target",
+            "target_stream_digest": "sha256:ead473aba908a5d2ace5745a648d357c16666c47a726743b86dbde42768a539f",
+            "timeline_window": {
+              "data_start": {
+                "epoch_nanoseconds": 0,
+                "type": "utc_instant"
+              },
+              "end_exclusive": {
+                "epoch_nanoseconds": 300,
+                "type": "utc_instant"
+              },
+              "trading_start": {
+                "epoch_nanoseconds": 90,
+                "type": "utc_instant"
+              },
+              "type": "timeline_window"
+            },
+            "type": "backtest_request"
+          },
+          "semantic_run_id": "run_792ce800357b29fe0507a02c068c92f83d6f744463a274b64ae4aa285005329e",
+          "type": "resolved_backtest_request"
+        },
+        "schema_version": 1,
+        "semantic_run_id": "run_792ce800357b29fe0507a02c068c92f83d6f744463a274b64ae4aa285005329e",
+        "type": "integrity_evaluation_context"
+      },
+      "context_hash": "sha256:e3d6aa3a2c2a2bd96fdafd5bf4c0e1cdeb2d9a21066b6ae1ea7fea202d7d6756",
+      "deployment_authorized": false,
+      "issues": [],
+      "requested_grade": "decision_grade",
+      "result_grade": "decision_grade",
+      "schema_version": 1,
+      "semantic_run_id": "run_792ce800357b29fe0507a02c068c92f83d6f744463a274b64ae4aa285005329e",
+      "type": "integrity_report"
+    },
+    "publication_manifest": {
+      "artifacts": [
+        {
+          "artifact_type": "canonical_attempt_ref",
+          "byte_count": 1768,
+          "content_hash": "sha256:32597b2a1266307d0b82f9320c2200ef24b6f9957cb519e5b11c3d2c40bd8586",
+          "relative_path": "canonical-attempt-ref.json",
+          "schema_version": 1,
+          "source_hash": "sha256:d73365b1a34d738123a3b79642acf86392ada3d400e3f59aa54e37510735d3b9"
+        },
+        {
+          "artifact_type": "integrity_report",
+          "byte_count": 14953,
+          "content_hash": "sha256:acd834737aeecdf56b9dba12e00c5dc8ab86048efd49d42d8e1aadb0d27e21fa",
+          "relative_path": "integrity.json",
+          "schema_version": 1,
+          "source_hash": "sha256:56c6b00057acab20ad92bfe34a6bd79fc63f43123c43244a7990f2369ce10be0"
+        },
+        {
+          "artifact_type": "completed_backtest_result",
+          "byte_count": 14023,
+          "content_hash": "sha256:582033fc307109afd10e223749db499b47e7bebd07d468976163eb715965326e",
+          "relative_path": "result.json",
+          "schema_version": 1,
+          "source_hash": "sha256:e6a4b23c3c75de3b165037cdd81794d4e4ebb64e5d1e61f3cc59e3474c9de29f"
+        }
+      ],
+      "deployment_authorized": false,
+      "publication_id": "canonical",
+      "publication_kind": "canonical",
+      "schema_version": 1,
+      "semantic_run_id": "run_792ce800357b29fe0507a02c068c92f83d6f744463a274b64ae4aa285005329e",
+      "type": "canonical_publication_manifest"
+    },
+    "result": {
+      "attempt_consistency_set": {
+        "attempts": [
+          {
+            "attempt_id": "attempt_6b6e70f046c91b2bd889c1a8770f1f8a264911f9ce399ef4a595cafe722d3678",
+            "evidence_manifest_hash": "sha256:bf43d6ae2085d7856454e2dd5eea43ad376e0f1450b04cbb84839d3954e56e0b",
+            "execution_result_hash": "sha256:d4ec9272fc628d45939470922c048615d67bc5cc143c890057f04fe2e636db68",
+            "semantic_run_id": "run_792ce800357b29fe0507a02c068c92f83d6f744463a274b64ae4aa285005329e"
+          },
+          {
+            "attempt_id": "attempt_084423096e4c9bdc6654fbca0ab398ab48c0bb0d80a669b408cc75fca4556839",
+            "evidence_manifest_hash": "sha256:9b110dcb59d0afbdd18af22b531a5d26a11827718c31bb0ec57a3ef10259d23b",
+            "execution_result_hash": "sha256:d4ec9272fc628d45939470922c048615d67bc5cc143c890057f04fe2e636db68",
+            "semantic_run_id": "run_792ce800357b29fe0507a02c068c92f83d6f744463a274b64ae4aa285005329e"
+          }
+        ],
+        "finalized_evidence_hashes": [
+          "sha256:2ae83931a7b558cf7b384ea743f9d7d003d31d5625ca10d173fd8355acb8d310",
+          "sha256:ee201e3edd4938742176170d041efb513dd64a860649a87adff27efaa93795c2"
+        ],
+        "resolved_request_hash": "sha256:3481aa2dcfce6fbcb9951c59254c9cf9d726b72112ec53135343371e0108e4d4",
+        "schema_version": 1,
+        "semantic_run_id": "run_792ce800357b29fe0507a02c068c92f83d6f744463a274b64ae4aa285005329e",
+        "type": "attempt_consistency_set"
+      },
+      "attempt_id": "attempt_6b6e70f046c91b2bd889c1a8770f1f8a264911f9ce399ef4a595cafe722d3678",
+      "canonical_attempt_ref_hash": "sha256:4e9472406e867ba5ab9b334441fbf60816dab45c6cc5bbc500c5d1d1da5728d9",
+      "consistency_set_hash": "sha256:8f44ab4ac42d0817914d2ad9bf2f3bddba78d4b0225a522a26ef6503e8efa5ce",
+      "deployment_authorized": false,
+      "evidence_manifest_hash": "sha256:bf43d6ae2085d7856454e2dd5eea43ad376e0f1450b04cbb84839d3954e56e0b",
+      "execution_hash_check": {
+        "consistency": {
+          "attempts": [
+            {
+              "attempt_id": "attempt_084423096e4c9bdc6654fbca0ab398ab48c0bb0d80a669b408cc75fca4556839",
+              "evidence_manifest_hash": "sha256:9b110dcb59d0afbdd18af22b531a5d26a11827718c31bb0ec57a3ef10259d23b",
+              "execution_result_hash": "sha256:d4ec9272fc628d45939470922c048615d67bc5cc143c890057f04fe2e636db68",
+              "semantic_run_id": "run_792ce800357b29fe0507a02c068c92f83d6f744463a274b64ae4aa285005329e"
+            },
+            {
+              "attempt_id": "attempt_6b6e70f046c91b2bd889c1a8770f1f8a264911f9ce399ef4a595cafe722d3678",
+              "evidence_manifest_hash": "sha256:bf43d6ae2085d7856454e2dd5eea43ad376e0f1450b04cbb84839d3954e56e0b",
+              "execution_result_hash": "sha256:d4ec9272fc628d45939470922c048615d67bc5cc143c890057f04fe2e636db68",
+              "semantic_run_id": "run_792ce800357b29fe0507a02c068c92f83d6f744463a274b64ae4aa285005329e"
+            }
+          ],
+          "execution_result_hash": "sha256:d4ec9272fc628d45939470922c048615d67bc5cc143c890057f04fe2e636db68",
+          "schema_version": 1,
+          "semantic_run_id": "run_792ce800357b29fe0507a02c068c92f83d6f744463a274b64ae4aa285005329e",
+          "type": "execution_hash_consistency"
+        },
+        "mismatch": null,
+        "schema_version": 1,
+        "type": "execution_hash_check"
+      },
+      "execution_result_hash": "sha256:d4ec9272fc628d45939470922c048615d67bc5cc143c890057f04fe2e636db68",
+      "integrity": {
+        "blocking": [],
+        "limitations": []
+      },
+      "integrity_report_hash": "sha256:da4fb1dd6b383a129c37abcde89e5c252902d686aa6022bd7eb54f798a5a2f20",
+      "outcome": "COMPLETED",
+      "request_hash": "sha256:820832a1e3b81eb4cf817145e69f2ab0a2b87d3d56e58bffb6be68bcaf186339",
+      "resolved_request": {
+        "build_artifact_manifest_hash": "sha256:454c178057ea340bffb6ac6a2d443da11b836471cb1c97c0b5501b0577b633d9",
+        "environment": {
+          "compatibility_report": {
+            "allowed_grade": "decision_grade",
+            "checks": [
+              {
+                "code": "build_artifact_identity",
+                "passed": true,
+                "subjects": [],
+                "type": "environment_compatibility_check"
+              },
+              {
+                "code": "market_bundle_capabilities",
+                "passed": true,
+                "subjects": [],
+                "type": "environment_compatibility_check"
+              },
+              {
+                "code": "market_bundle_coverage",
+                "passed": true,
+                "subjects": [],
+                "type": "environment_compatibility_check"
+              },
+              {
+                "code": "market_bundle_identity",
+                "passed": true,
+                "subjects": [],
+                "type": "environment_compatibility_check"
+              },
+              {
+                "code": "profile_build_identity",
+                "passed": true,
+                "subjects": [],
+                "type": "environment_compatibility_check"
+              },
+              {
+                "code": "profile_component_coverage",
+                "passed": true,
+                "subjects": [],
+                "type": "environment_compatibility_check"
+              },
+              {
+                "code": "profile_grade",
+                "passed": true,
+                "subjects": [],
+                "type": "environment_compatibility_check"
+              },
+              {
+                "code": "reporting_currency",
+                "passed": true,
+                "subjects": [],
+                "type": "environment_compatibility_check"
+              },
+              {
+                "code": "simulation_context",
+                "passed": true,
+                "subjects": [],
+                "type": "environment_compatibility_check"
+              },
+              {
+                "code": "venue_account_context",
+                "passed": true,
+                "subjects": [],
+                "type": "environment_compatibility_check"
+              }
+            ],
+            "compatible": true,
+            "failed_codes": [],
+            "limitations": [],
+            "market_bundle_manifest_hash": "sha256:893e925061def7b79e2082e33f20b750fbfbd7d33ea58d3bb1f530440ab7510d",
+            "profile_digests": [
+              "sha256:22a2310c4576f10967f5ba5ffc73ba4459f15a16a4e2e5041a6641ebc0c22035",
+              "sha256:3476a32b6367eabaed1ae4e2d5e2748ab236f333f03196335374948b14a6f02f",
+              "sha256:45915d737732c3d6b4a75f3b80049b0c8fd0abc0c64a415f69f5ddf33037974f"
+            ],
+            "request_hash": "sha256:820832a1e3b81eb4cf817145e69f2ab0a2b87d3d56e58bffb6be68bcaf186339",
+            "type": "environment_compatibility_report"
+          },
+          "deployment_authorized": false,
+          "execution_account": {
+            "account_id": "account:primary",
+            "account_type": "cash",
+            "decision_grade_eligible": true,
+            "grade": "decision_grade",
+            "limitations": [],
+            "margin_mode": "not_applicable",
+            "profile_digest": "sha256:22a2310c4576f10967f5ba5ffc73ba4459f15a16a4e2e5041a6641ebc0c22035",
+            "profile_key": "synthetic.cash.development.v1.account",
+            "profile_version": 1,
+            "supported_reporting_currencies": [
+              {
+                "type": "currency_id",
+                "value": "USD"
+              }
+            ],
+            "type": "execution_account_profile_registration",
+            "venue_id": "synthetic"
+          },
+          "limitations": [],
+          "market_bundle_ref": {
+            "bundle_key": "fixture.engine.bundle.v1",
+            "manifest_hash": "sha256:893e925061def7b79e2082e33f20b750fbfbd7d33ea58d3bb1f530440ab7510d",
+            "type": "market_bundle_ref"
+          },
+          "market_semantics": {
+            "component_manifest": [
+              {
+                "component_digest": "sha256:0d061cf48ddece34564e21978387e4de42e22a249a84f3d58e607fa247808fd9",
+                "component_key": "synthetic.cash.development.v1.corporate_action_model",
+                "component_version": 1,
+                "port_type": "corporate_action_model",
+                "type": "profile_component_ref"
+              },
+              {
+                "component_digest": "sha256:cc6971250b650a0f9e1831538125dfa7a250b152002e5a1cd824ab97b72a275b",
+                "component_key": "synthetic.cash.development.v1.currency_valuation_policy",
+                "component_version": 1,
+                "port_type": "currency_valuation_policy",
+                "type": "profile_component_ref"
+              },
+              {
+                "component_digest": "sha256:ab4885f67ff81d1b49b8717918c1e19fad8c2abf4f3861e4dac1aa1e1900caa2",
+                "component_key": "synthetic.cash.development.v1.fee_assessment_policy",
+                "component_version": 1,
+                "port_type": "fee_assessment_policy",
+                "type": "profile_component_ref"
+              },
+              {
+                "component_digest": "sha256:a093963b1c12b1a9743d48f60b4a5b97dfd444b56027ed277e67f8dec6c1fb2f",
+                "component_key": "synthetic.cash.development.v1.financing_model",
+                "component_version": 1,
+                "port_type": "financing_model",
+                "type": "profile_component_ref"
+              },
+              {
+                "component_digest": "sha256:3327762150558dc02a61d6a27fc0b995288ee863a0305eb863fa5883f48aefa5",
+                "component_key": "synthetic.cash.development.v1.instrument_model",
+                "component_version": 1,
+                "port_type": "instrument_model",
+                "type": "profile_component_ref"
+              },
+              {
+                "component_digest": "sha256:e8e36b7178fd9f65f9a6954b5c6f22ec85195eccea4355f6129557ff243ca728",
+                "component_key": "synthetic.cash.development.v1.liquidation_rules",
+                "component_version": 1,
+                "port_type": "liquidation_rules",
+                "type": "profile_component_ref"
+              },
+              {
+                "component_digest": "sha256:85bce19b096e4a93667ed0f55e665bf74e520b300e6a0532d34a636ea13aa861",
+                "component_key": "synthetic.cash.development.v1.margin_model",
+                "component_version": 1,
+                "port_type": "margin_model",
+                "type": "profile_component_ref"
+              },
+              {
+                "component_digest": "sha256:ea7465cb560a292eec8b1607c4af76ee6856597d806df32c9fbeddf40c08719d",
+                "component_key": "synthetic.cash.development.v1.order_rule_model",
+                "component_version": 1,
+                "port_type": "order_rule_model",
+                "type": "profile_component_ref"
+              },
+              {
+                "component_digest": "sha256:01b85d41058a5360ba6149de59805051f84a43ced5512965cc6843010d542e4e",
+                "component_key": "synthetic.cash.development.v1.position_accounting_model",
+                "component_version": 1,
+                "port_type": "position_accounting_model",
+                "type": "profile_component_ref"
+              },
+              {
+                "component_digest": "sha256:7e56701f22958d889de3d9ce15e3fb6a8b886253cfc9e3f55e178176969fb394",
+                "component_key": "synthetic.cash.development.v1.session_model",
+                "component_version": 1,
+                "port_type": "session_model",
+                "type": "profile_component_ref"
+              },
+              {
+                "component_digest": "sha256:f994d8ae47454267fe4593c01570776f4c203bfa3c200e3f520b3faf5a49d138",
+                "component_key": "synthetic.cash.development.v1.settlement_model",
+                "component_version": 1,
+                "port_type": "settlement_model",
+                "type": "profile_component_ref"
+              },
+              {
+                "component_digest": "sha256:90af179a371ba75eb31e90e737cc496caa8a442aad40721cf3b8385e75288998",
+                "component_key": "synthetic.cash.development.v1.tax_policy",
+                "component_version": 1,
+                "port_type": "tax_policy",
+                "type": "profile_component_ref"
+              }
+            ],
+            "decision_grade_eligible": true,
+            "grade": "decision_grade",
+            "limitations": [],
+            "profile_digest": "sha256:3476a32b6367eabaed1ae4e2d5e2748ab236f333f03196335374948b14a6f02f",
+            "profile_key": "synthetic.cash.development.v1.market",
+            "profile_version": 1,
+            "required_bundle_capabilities": [
+              {
+                "key": "bar_open",
+                "type": "market_bundle_capability",
+                "version": 1
+              }
+            ],
+            "type": "market_semantics_profile_registration",
+            "venue_id": "synthetic"
+          },
+          "simulation": {
+            "component_manifest": [
+              {
+                "component_digest": "sha256:d9be291bff3147a191296ec5b3d37cc79aecc9ee2bff4877d7bca86f9aeb0ea8",
+                "component_key": "mark_to_market.v1",
+                "component_version": 1,
+                "port_type": "closeout_policy",
+                "type": "simulation_component_ref"
+              },
+              {
+                "component_digest": "sha256:d69d6d96c9081f730db6ff8cdd02431d4babdef2e3967f0094971e73aedf30fe",
+                "component_key": "next_eligible_bar_open.v1",
+                "component_version": 1,
+                "port_type": "execution_model",
+                "type": "simulation_component_ref"
+              },
+              {
+                "component_digest": "sha256:08779758aa013806239e6017396c51a16983dfe7768aea821819fe6352eb824f",
+                "component_key": "synthetic.cash.development.v1.latency_model",
+                "component_version": 1,
+                "port_type": "latency_model",
+                "type": "simulation_component_ref"
+              },
+              {
+                "component_digest": "sha256:aadd185215c0455ff0a2d4296738dbff98fd3dd9fc9ee9b4124eaf551d7b92c9",
+                "component_key": "synthetic.cash.development.v1.liquidation_audit_model",
+                "component_version": 1,
+                "port_type": "liquidation_audit_model",
+                "type": "simulation_component_ref"
+              },
+              {
+                "component_digest": "sha256:0b385ce6e81a7e4281a93fb477547d291388db8bb9dd855f82e79a158f63c1e2",
+                "component_key": "synthetic.cash.development.v1.liquidity_model",
+                "component_version": 1,
+                "port_type": "liquidity_model",
+                "type": "simulation_component_ref"
+              },
+              {
+                "component_digest": "sha256:4141414141414141414141414141414141414141414141414141414141414141",
+                "component_key": "deterministic_bps.v1",
+                "component_version": 1,
+                "port_type": "slippage_model",
+                "type": "simulation_component_ref"
+              }
+            ],
+            "decision_grade_eligible": true,
+            "engine_kind": "bar",
+            "grade": "decision_grade",
+            "limitations": [],
+            "profile_digest": "sha256:45915d737732c3d6b4a75f3b80049b0c8fd0abc0c64a415f69f5ddf33037974f",
+            "profile_key": "synthetic.cash.development.v1.simulation",
+            "profile_version": 1,
+            "required_bundle_capabilities": [
+              {
+                "key": "bar_open",
+                "type": "market_bundle_capability",
+                "version": 1
+              }
+            ],
+            "supported_strategy_families": [
+              "precomputed_target"
+            ],
+            "type": "simulation_profile_registration"
+          },
+          "type": "resolved_backtest_environment"
+        },
+        "normalized_request": {
+          "request": {
+            "build_artifact_manifest_hash": "sha256:454c178057ea340bffb6ac6a2d443da11b836471cb1c97c0b5501b0577b633d9",
+            "engine_kind": "bar",
+            "execution_account_id": "account:primary",
+            "execution_account_profile_key": "synthetic.cash.development.v1.account",
+            "execution_case_semantic_hash": "sha256:2592a4ee246b54632d3c63f3490ab68cdabb305406cc275eafabcc0fd5e8a690",
+            "experiment_id": "synthetic-cash-resolution",
+            "market_bundle_ref": {
+              "bundle_key": "fixture.engine.bundle.v1",
+              "manifest_hash": "sha256:893e925061def7b79e2082e33f20b750fbfbd7d33ea58d3bb1f530440ab7510d",
+              "type": "market_bundle_ref"
+            },
+            "market_semantics_profile_key": "synthetic.cash.development.v1.market",
+            "master_random_seed": 7,
+            "reporting_currency": {
+              "type": "currency_id",
+              "value": "USD"
+            },
+            "result_grade_requested": "decision_grade",
+            "schema_version": 1,
+            "simulation_profile_key": "synthetic.cash.development.v1.simulation",
+            "strategy_family": "precomputed_target",
+            "target_stream_digest": "sha256:ead473aba908a5d2ace5745a648d357c16666c47a726743b86dbde42768a539f",
+            "timeline_window": {
+              "data_start": {
+                "epoch_nanoseconds": 0,
+                "type": "utc_instant"
+              },
+              "end_exclusive": {
+                "epoch_nanoseconds": 300,
+                "type": "utc_instant"
+              },
+              "trading_start": {
+                "epoch_nanoseconds": 90,
+                "type": "utc_instant"
+              },
+              "type": "timeline_window"
+            },
+            "type": "backtest_request"
+          },
+          "request_hash": "sha256:820832a1e3b81eb4cf817145e69f2ab0a2b87d3d56e58bffb6be68bcaf186339",
+          "type": "normalized_backtest_request"
+        },
+        "request": {
+          "build_artifact_manifest_hash": "sha256:454c178057ea340bffb6ac6a2d443da11b836471cb1c97c0b5501b0577b633d9",
+          "engine_kind": "bar",
+          "execution_account_id": "account:primary",
+          "execution_account_profile_key": "synthetic.cash.development.v1.account",
+          "execution_case_semantic_hash": "sha256:2592a4ee246b54632d3c63f3490ab68cdabb305406cc275eafabcc0fd5e8a690",
+          "experiment_id": "synthetic-cash-resolution",
+          "market_bundle_ref": {
+            "bundle_key": "fixture.engine.bundle.v1",
+            "manifest_hash": "sha256:893e925061def7b79e2082e33f20b750fbfbd7d33ea58d3bb1f530440ab7510d",
+            "type": "market_bundle_ref"
+          },
+          "market_semantics_profile_key": "synthetic.cash.development.v1.market",
+          "master_random_seed": 7,
+          "reporting_currency": {
+            "type": "currency_id",
+            "value": "USD"
+          },
+          "result_grade_requested": "decision_grade",
+          "schema_version": 1,
+          "simulation_profile_key": "synthetic.cash.development.v1.simulation",
+          "strategy_family": "precomputed_target",
+          "target_stream_digest": "sha256:ead473aba908a5d2ace5745a648d357c16666c47a726743b86dbde42768a539f",
+          "timeline_window": {
+            "data_start": {
+              "epoch_nanoseconds": 0,
+              "type": "utc_instant"
+            },
+            "end_exclusive": {
+              "epoch_nanoseconds": 300,
+              "type": "utc_instant"
+            },
+            "trading_start": {
+              "epoch_nanoseconds": 90,
+              "type": "utc_instant"
+            },
+            "type": "timeline_window"
+          },
+          "type": "backtest_request"
+        },
+        "semantic_run_id": "run_792ce800357b29fe0507a02c068c92f83d6f744463a274b64ae4aa285005329e",
+        "type": "resolved_backtest_request"
+      },
+      "result_grade": "decision_grade",
+      "schema_version": 1,
+      "semantic_run_id": "run_792ce800357b29fe0507a02c068c92f83d6f744463a274b64ae4aa285005329e",
+      "type": "completed_backtest_result"
+    },
+    "source_hashes": {
+      "canonical-attempt-ref.json": "sha256:d73365b1a34d738123a3b79642acf86392ada3d400e3f59aa54e37510735d3b9",
+      "integrity.json": "sha256:56c6b00057acab20ad92bfe34a6bd79fc63f43123c43244a7990f2369ce10be0",
+      "publication-manifest.json": "sha256:3554a9736541612b732810c1835fbe79b9407236f2b5ecf2f1175d1f957bbd0b",
+      "result.json": "sha256:e6a4b23c3c75de3b165037cdd81794d4e4ebb64e5d1e61f3cc59e3474c9de29f"
+    }
+  },
+  "development": {
+    "canonical_attempt_ref": {
+      "attempt": {
+        "attempt_id": "attempt_3c478bbb5e7141603744fadfe484c4859fac39a56b525df8b5be0fb2a8e1cdfa",
+        "ordinal": 1,
+        "parent_attempt_id": null,
+        "schema_version": 1,
+        "semantic_run_id": "run_39ab44a26d7f719fe1648f3ccbf7cbdcb874a9bc43e8c15d3a51ab5aca421591",
+        "type": "attempt_identity"
+      },
+      "consistency_set_hash": "sha256:47f04d1c2f19f15265dfa101b7c5dc25f9b54064adf831ab2d193788af4d7909",
+      "deployment_authorized": false,
+      "deterministic_rebuild_evidence_hash": "sha256:8e39d7c32a6e266de243ad953b54d8168b333ba351d9543ec5c5f33fde823c85",
+      "engine_result_artifact_content_hash": "sha256:97169f18a0bf514604afc67880f4fbd7c76df643cad168f47a1cd3828658e03e",
+      "evidence_manifest_hash": "sha256:cf0f80282d5ab79165ff81b73f737ea84ec90e8aa0263ccd33492867f7ec103a",
+      "evidence_manifest_source_hash": "sha256:3a2bded6eaed567bad95e0841c456b5c5465d347864abfbc9384192126a89f06",
+      "evidence_publication_hash": "sha256:cafe271e4a173f473ed30058a1fdb54a7e75c7a91f3aa53e0bdeb3226861bb19",
+      "execution_case_hash": "sha256:bdbcf92c176fedaf8fa89a056bc92fddeb9d70b75bcacb7cb6013b468374c87e",
+      "execution_case_semantic_hash": "sha256:2592a4ee246b54632d3c63f3490ab68cdabb305406cc275eafabcc0fd5e8a690",
+      "execution_result_hash": "sha256:97a39c3e4aafe92db6bfb70df9230c6cbda44e9e8c9cf00cca51b0d6a2bf005b",
+      "market_bundle_manifest_hash": "sha256:893e925061def7b79e2082e33f20b750fbfbd7d33ea58d3bb1f530440ab7510d",
+      "market_bundle_retention_proof_hash": null,
+      "schema_version": 1,
+      "trace_hash": "sha256:758a369a1777eb0d06ea1434412f36e382fb87de0fb3c4ca335b10613ed8dce7",
+      "trace_level": "summary",
+      "type": "canonical_attempt_ref"
+    },
+    "finalized": {
+      "canonical_attempt_ref_hash": "sha256:fa88beb42dabeddad4922ff899852e809878aa24e02275b25fd2dbf96d903f17",
+      "deployment_authorized": false,
+      "integrity_report_hash": "sha256:92333a62f6d348445d8a0993db13c90a71f45b22a64dd059f984c80540c22ecd",
+      "publication_manifest_hash": "sha256:b6e8aa5f926d5ef6ab61015e843ed8efc2d255c4b7775469ad8a1fc37b0ee2be",
+      "publication_manifest_source_hash": "sha256:99b16df5c0af7f0fc22483d2239c5886d748862b84e0f61f0ed8d8a67350c29f",
+      "relative_directory": "runs/run_39ab44a26d7f719fe1648f3ccbf7cbdcb874a9bc43e8c15d3a51ab5aca421591/canonical",
+      "result_hash": "sha256:fadb88d9fdac6335341f079035d3f17378d240519f5ded44496f52ccc327f38d",
+      "schema_version": 1,
+      "semantic_run_id": "run_39ab44a26d7f719fe1648f3ccbf7cbdcb874a9bc43e8c15d3a51ab5aca421591",
+      "type": "finalized_canonical_result"
+    },
+    "integrity_report": {
+      "canonical_attempt_ref_hash": "sha256:fa88beb42dabeddad4922ff899852e809878aa24e02275b25fd2dbf96d903f17",
+      "context": {
+        "attempt_consistency_set": {
+          "attempts": [
+            {
+              "attempt_id": "attempt_3c478bbb5e7141603744fadfe484c4859fac39a56b525df8b5be0fb2a8e1cdfa",
+              "evidence_manifest_hash": "sha256:cf0f80282d5ab79165ff81b73f737ea84ec90e8aa0263ccd33492867f7ec103a",
+              "execution_result_hash": "sha256:97a39c3e4aafe92db6bfb70df9230c6cbda44e9e8c9cf00cca51b0d6a2bf005b",
+              "semantic_run_id": "run_39ab44a26d7f719fe1648f3ccbf7cbdcb874a9bc43e8c15d3a51ab5aca421591"
+            },
+            {
+              "attempt_id": "attempt_39000746f7552464b07d9a8e1b2035a6e9e0fbf341f34dc6bf02c4a87fe82d8c",
+              "evidence_manifest_hash": "sha256:1787609e0c6751b7cc8e782405470f921aae3687de38ae0cf25a6cb5b4ca394b",
+              "execution_result_hash": "sha256:97a39c3e4aafe92db6bfb70df9230c6cbda44e9e8c9cf00cca51b0d6a2bf005b",
+              "semantic_run_id": "run_39ab44a26d7f719fe1648f3ccbf7cbdcb874a9bc43e8c15d3a51ab5aca421591"
+            }
+          ],
+          "finalized_evidence_hashes": [
+            "sha256:cafe271e4a173f473ed30058a1fdb54a7e75c7a91f3aa53e0bdeb3226861bb19",
+            "sha256:797235d1f7128e619b8a3986ad8f9a77bc429506418e117ae5ef500ac5c50e55"
+          ],
+          "resolved_request_hash": "sha256:db9a92f1c3c12d040598598f7a7ceeb98a7d781f03e73eff30b89929dc9c3858",
+          "schema_version": 1,
+          "semantic_run_id": "run_39ab44a26d7f719fe1648f3ccbf7cbdcb874a9bc43e8c15d3a51ab5aca421591",
+          "type": "attempt_consistency_set"
+        },
+        "execution_hash_check": {
+          "consistency": {
+            "attempts": [
+              {
+                "attempt_id": "attempt_39000746f7552464b07d9a8e1b2035a6e9e0fbf341f34dc6bf02c4a87fe82d8c",
+                "evidence_manifest_hash": "sha256:1787609e0c6751b7cc8e782405470f921aae3687de38ae0cf25a6cb5b4ca394b",
+                "execution_result_hash": "sha256:97a39c3e4aafe92db6bfb70df9230c6cbda44e9e8c9cf00cca51b0d6a2bf005b",
+                "semantic_run_id": "run_39ab44a26d7f719fe1648f3ccbf7cbdcb874a9bc43e8c15d3a51ab5aca421591"
+              },
+              {
+                "attempt_id": "attempt_3c478bbb5e7141603744fadfe484c4859fac39a56b525df8b5be0fb2a8e1cdfa",
+                "evidence_manifest_hash": "sha256:cf0f80282d5ab79165ff81b73f737ea84ec90e8aa0263ccd33492867f7ec103a",
+                "execution_result_hash": "sha256:97a39c3e4aafe92db6bfb70df9230c6cbda44e9e8c9cf00cca51b0d6a2bf005b",
+                "semantic_run_id": "run_39ab44a26d7f719fe1648f3ccbf7cbdcb874a9bc43e8c15d3a51ab5aca421591"
+              }
+            ],
+            "execution_result_hash": "sha256:97a39c3e4aafe92db6bfb70df9230c6cbda44e9e8c9cf00cca51b0d6a2bf005b",
+            "schema_version": 1,
+            "semantic_run_id": "run_39ab44a26d7f719fe1648f3ccbf7cbdcb874a9bc43e8c15d3a51ab5aca421591",
+            "type": "execution_hash_consistency"
+          },
+          "mismatch": null,
+          "schema_version": 1,
+          "type": "execution_hash_check"
+        },
+        "rebuild_evidence": {
+          "build_artifact_manifest_hash": "sha256:454c178057ea340bffb6ac6a2d443da11b836471cb1c97c0b5501b0577b633d9",
+          "deterministic_rebuild_proof_hash": null,
+          "environment_hash": "sha256:a06e0ab577a809a73d6ba9acb130e6f108cf50f9400d862d280b81a161d06721",
+          "execution_case_hash": "sha256:bdbcf92c176fedaf8fa89a056bc92fddeb9d70b75bcacb7cb6013b468374c87e",
+          "execution_case_semantic_hash": "sha256:2592a4ee246b54632d3c63f3490ab68cdabb305406cc275eafabcc0fd5e8a690",
+          "execution_result_hash": "sha256:97a39c3e4aafe92db6bfb70df9230c6cbda44e9e8c9cf00cca51b0d6a2bf005b",
+          "market_bundle_manifest_hash": "sha256:893e925061def7b79e2082e33f20b750fbfbd7d33ea58d3bb1f530440ab7510d",
+          "market_bundle_retention_proof_hash": null,
+          "request_hash": "sha256:be4e37d6ef69b6ac01493ab8a62e311fa397fcc9e462add5d316c52a616c36c3",
+          "schema_version": 1,
+          "semantic_run_id": "run_39ab44a26d7f719fe1648f3ccbf7cbdcb874a9bc43e8c15d3a51ab5aca421591",
+          "target_stream_digest": "sha256:ead473aba908a5d2ace5745a648d357c16666c47a726743b86dbde42768a539f",
+          "trace_hash": "sha256:758a369a1777eb0d06ea1434412f36e382fb87de0fb3c4ca335b10613ed8dce7",
+          "trace_level": "summary",
+          "type": "deterministic_rebuild_evidence"
+        },
+        "resolved_request": {
+          "build_artifact_manifest_hash": "sha256:454c178057ea340bffb6ac6a2d443da11b836471cb1c97c0b5501b0577b633d9",
+          "environment": {
+            "compatibility_report": {
+              "allowed_grade": "development",
+              "checks": [
+                {
+                  "code": "build_artifact_identity",
+                  "passed": true,
+                  "subjects": [],
+                  "type": "environment_compatibility_check"
+                },
+                {
+                  "code": "market_bundle_capabilities",
+                  "passed": true,
+                  "subjects": [],
+                  "type": "environment_compatibility_check"
+                },
+                {
+                  "code": "market_bundle_coverage",
+                  "passed": true,
+                  "subjects": [],
+                  "type": "environment_compatibility_check"
+                },
+                {
+                  "code": "market_bundle_identity",
+                  "passed": true,
+                  "subjects": [],
+                  "type": "environment_compatibility_check"
+                },
+                {
+                  "code": "profile_build_identity",
+                  "passed": true,
+                  "subjects": [],
+                  "type": "environment_compatibility_check"
+                },
+                {
+                  "code": "profile_component_coverage",
+                  "passed": true,
+                  "subjects": [],
+                  "type": "environment_compatibility_check"
+                },
+                {
+                  "code": "profile_grade",
+                  "passed": true,
+                  "subjects": [],
+                  "type": "environment_compatibility_check"
+                },
+                {
+                  "code": "reporting_currency",
+                  "passed": true,
+                  "subjects": [],
+                  "type": "environment_compatibility_check"
+                },
+                {
+                  "code": "simulation_context",
+                  "passed": true,
+                  "subjects": [],
+                  "type": "environment_compatibility_check"
+                },
+                {
+                  "code": "venue_account_context",
+                  "passed": true,
+                  "subjects": [],
+                  "type": "environment_compatibility_check"
+                }
+              ],
+              "compatible": true,
+              "failed_codes": [],
+              "limitations": [
+                "development_profile",
+                "synthetic_market_profile"
+              ],
+              "market_bundle_manifest_hash": "sha256:893e925061def7b79e2082e33f20b750fbfbd7d33ea58d3bb1f530440ab7510d",
+              "profile_digests": [
+                "sha256:22a2310c4576f10967f5ba5ffc73ba4459f15a16a4e2e5041a6641ebc0c22035",
+                "sha256:3476a32b6367eabaed1ae4e2d5e2748ab236f333f03196335374948b14a6f02f",
+                "sha256:45915d737732c3d6b4a75f3b80049b0c8fd0abc0c64a415f69f5ddf33037974f"
+              ],
+              "request_hash": "sha256:be4e37d6ef69b6ac01493ab8a62e311fa397fcc9e462add5d316c52a616c36c3",
+              "type": "environment_compatibility_report"
+            },
+            "deployment_authorized": false,
+            "execution_account": {
+              "account_id": "account:primary",
+              "account_type": "cash",
+              "decision_grade_eligible": false,
+              "grade": "development",
+              "limitations": [
+                "synthetic_market_profile"
+              ],
+              "margin_mode": "not_applicable",
+              "profile_digest": "sha256:22a2310c4576f10967f5ba5ffc73ba4459f15a16a4e2e5041a6641ebc0c22035",
+              "profile_key": "synthetic.cash.development.v1.account",
+              "profile_version": 1,
+              "supported_reporting_currencies": [
+                {
+                  "type": "currency_id",
+                  "value": "USD"
+                }
+              ],
+              "type": "execution_account_profile_registration",
+              "venue_id": "synthetic"
+            },
+            "limitations": [
+              "development_profile",
+              "synthetic_market_profile"
+            ],
+            "market_bundle_ref": {
+              "bundle_key": "fixture.engine.bundle.v1",
+              "manifest_hash": "sha256:893e925061def7b79e2082e33f20b750fbfbd7d33ea58d3bb1f530440ab7510d",
+              "type": "market_bundle_ref"
+            },
+            "market_semantics": {
+              "component_manifest": [
+                {
+                  "component_digest": "sha256:0d061cf48ddece34564e21978387e4de42e22a249a84f3d58e607fa247808fd9",
+                  "component_key": "synthetic.cash.development.v1.corporate_action_model",
+                  "component_version": 1,
+                  "port_type": "corporate_action_model",
+                  "type": "profile_component_ref"
+                },
+                {
+                  "component_digest": "sha256:cc6971250b650a0f9e1831538125dfa7a250b152002e5a1cd824ab97b72a275b",
+                  "component_key": "synthetic.cash.development.v1.currency_valuation_policy",
+                  "component_version": 1,
+                  "port_type": "currency_valuation_policy",
+                  "type": "profile_component_ref"
+                },
+                {
+                  "component_digest": "sha256:ab4885f67ff81d1b49b8717918c1e19fad8c2abf4f3861e4dac1aa1e1900caa2",
+                  "component_key": "synthetic.cash.development.v1.fee_assessment_policy",
+                  "component_version": 1,
+                  "port_type": "fee_assessment_policy",
+                  "type": "profile_component_ref"
+                },
+                {
+                  "component_digest": "sha256:a093963b1c12b1a9743d48f60b4a5b97dfd444b56027ed277e67f8dec6c1fb2f",
+                  "component_key": "synthetic.cash.development.v1.financing_model",
+                  "component_version": 1,
+                  "port_type": "financing_model",
+                  "type": "profile_component_ref"
+                },
+                {
+                  "component_digest": "sha256:3327762150558dc02a61d6a27fc0b995288ee863a0305eb863fa5883f48aefa5",
+                  "component_key": "synthetic.cash.development.v1.instrument_model",
+                  "component_version": 1,
+                  "port_type": "instrument_model",
+                  "type": "profile_component_ref"
+                },
+                {
+                  "component_digest": "sha256:e8e36b7178fd9f65f9a6954b5c6f22ec85195eccea4355f6129557ff243ca728",
+                  "component_key": "synthetic.cash.development.v1.liquidation_rules",
+                  "component_version": 1,
+                  "port_type": "liquidation_rules",
+                  "type": "profile_component_ref"
+                },
+                {
+                  "component_digest": "sha256:85bce19b096e4a93667ed0f55e665bf74e520b300e6a0532d34a636ea13aa861",
+                  "component_key": "synthetic.cash.development.v1.margin_model",
+                  "component_version": 1,
+                  "port_type": "margin_model",
+                  "type": "profile_component_ref"
+                },
+                {
+                  "component_digest": "sha256:ea7465cb560a292eec8b1607c4af76ee6856597d806df32c9fbeddf40c08719d",
+                  "component_key": "synthetic.cash.development.v1.order_rule_model",
+                  "component_version": 1,
+                  "port_type": "order_rule_model",
+                  "type": "profile_component_ref"
+                },
+                {
+                  "component_digest": "sha256:01b85d41058a5360ba6149de59805051f84a43ced5512965cc6843010d542e4e",
+                  "component_key": "synthetic.cash.development.v1.position_accounting_model",
+                  "component_version": 1,
+                  "port_type": "position_accounting_model",
+                  "type": "profile_component_ref"
+                },
+                {
+                  "component_digest": "sha256:7e56701f22958d889de3d9ce15e3fb6a8b886253cfc9e3f55e178176969fb394",
+                  "component_key": "synthetic.cash.development.v1.session_model",
+                  "component_version": 1,
+                  "port_type": "session_model",
+                  "type": "profile_component_ref"
+                },
+                {
+                  "component_digest": "sha256:f994d8ae47454267fe4593c01570776f4c203bfa3c200e3f520b3faf5a49d138",
+                  "component_key": "synthetic.cash.development.v1.settlement_model",
+                  "component_version": 1,
+                  "port_type": "settlement_model",
+                  "type": "profile_component_ref"
+                },
+                {
+                  "component_digest": "sha256:90af179a371ba75eb31e90e737cc496caa8a442aad40721cf3b8385e75288998",
+                  "component_key": "synthetic.cash.development.v1.tax_policy",
+                  "component_version": 1,
+                  "port_type": "tax_policy",
+                  "type": "profile_component_ref"
+                }
+              ],
+              "decision_grade_eligible": false,
+              "grade": "development",
+              "limitations": [
+                "synthetic_market_profile"
+              ],
+              "profile_digest": "sha256:3476a32b6367eabaed1ae4e2d5e2748ab236f333f03196335374948b14a6f02f",
+              "profile_key": "synthetic.cash.development.v1.market",
+              "profile_version": 1,
+              "required_bundle_capabilities": [
+                {
+                  "key": "bar_open",
+                  "type": "market_bundle_capability",
+                  "version": 1
+                }
+              ],
+              "type": "market_semantics_profile_registration",
+              "venue_id": "synthetic"
+            },
+            "simulation": {
+              "component_manifest": [
+                {
+                  "component_digest": "sha256:d9be291bff3147a191296ec5b3d37cc79aecc9ee2bff4877d7bca86f9aeb0ea8",
+                  "component_key": "mark_to_market.v1",
+                  "component_version": 1,
+                  "port_type": "closeout_policy",
+                  "type": "simulation_component_ref"
+                },
+                {
+                  "component_digest": "sha256:d69d6d96c9081f730db6ff8cdd02431d4babdef2e3967f0094971e73aedf30fe",
+                  "component_key": "next_eligible_bar_open.v1",
+                  "component_version": 1,
+                  "port_type": "execution_model",
+                  "type": "simulation_component_ref"
+                },
+                {
+                  "component_digest": "sha256:08779758aa013806239e6017396c51a16983dfe7768aea821819fe6352eb824f",
+                  "component_key": "synthetic.cash.development.v1.latency_model",
+                  "component_version": 1,
+                  "port_type": "latency_model",
+                  "type": "simulation_component_ref"
+                },
+                {
+                  "component_digest": "sha256:aadd185215c0455ff0a2d4296738dbff98fd3dd9fc9ee9b4124eaf551d7b92c9",
+                  "component_key": "synthetic.cash.development.v1.liquidation_audit_model",
+                  "component_version": 1,
+                  "port_type": "liquidation_audit_model",
+                  "type": "simulation_component_ref"
+                },
+                {
+                  "component_digest": "sha256:0b385ce6e81a7e4281a93fb477547d291388db8bb9dd855f82e79a158f63c1e2",
+                  "component_key": "synthetic.cash.development.v1.liquidity_model",
+                  "component_version": 1,
+                  "port_type": "liquidity_model",
+                  "type": "simulation_component_ref"
+                },
+                {
+                  "component_digest": "sha256:4141414141414141414141414141414141414141414141414141414141414141",
+                  "component_key": "deterministic_bps.v1",
+                  "component_version": 1,
+                  "port_type": "slippage_model",
+                  "type": "simulation_component_ref"
+                }
+              ],
+              "decision_grade_eligible": false,
+              "engine_kind": "bar",
+              "grade": "development",
+              "limitations": [
+                "synthetic_market_profile"
+              ],
+              "profile_digest": "sha256:45915d737732c3d6b4a75f3b80049b0c8fd0abc0c64a415f69f5ddf33037974f",
+              "profile_key": "synthetic.cash.development.v1.simulation",
+              "profile_version": 1,
+              "required_bundle_capabilities": [
+                {
+                  "key": "bar_open",
+                  "type": "market_bundle_capability",
+                  "version": 1
+                }
+              ],
+              "supported_strategy_families": [
+                "precomputed_target"
+              ],
+              "type": "simulation_profile_registration"
+            },
+            "type": "resolved_backtest_environment"
+          },
+          "normalized_request": {
+            "request": {
+              "build_artifact_manifest_hash": "sha256:454c178057ea340bffb6ac6a2d443da11b836471cb1c97c0b5501b0577b633d9",
+              "engine_kind": "bar",
+              "execution_account_id": "account:primary",
+              "execution_account_profile_key": "synthetic.cash.development.v1.account",
+              "execution_case_semantic_hash": "sha256:2592a4ee246b54632d3c63f3490ab68cdabb305406cc275eafabcc0fd5e8a690",
+              "experiment_id": "synthetic-cash-resolution",
+              "market_bundle_ref": {
+                "bundle_key": "fixture.engine.bundle.v1",
+                "manifest_hash": "sha256:893e925061def7b79e2082e33f20b750fbfbd7d33ea58d3bb1f530440ab7510d",
+                "type": "market_bundle_ref"
+              },
+              "market_semantics_profile_key": "synthetic.cash.development.v1.market",
+              "master_random_seed": 7,
+              "reporting_currency": {
+                "type": "currency_id",
+                "value": "USD"
+              },
+              "result_grade_requested": "development",
+              "schema_version": 1,
+              "simulation_profile_key": "synthetic.cash.development.v1.simulation",
+              "strategy_family": "precomputed_target",
+              "target_stream_digest": "sha256:ead473aba908a5d2ace5745a648d357c16666c47a726743b86dbde42768a539f",
+              "timeline_window": {
+                "data_start": {
+                  "epoch_nanoseconds": 0,
+                  "type": "utc_instant"
+                },
+                "end_exclusive": {
+                  "epoch_nanoseconds": 300,
+                  "type": "utc_instant"
+                },
+                "trading_start": {
+                  "epoch_nanoseconds": 90,
+                  "type": "utc_instant"
+                },
+                "type": "timeline_window"
+              },
+              "type": "backtest_request"
+            },
+            "request_hash": "sha256:be4e37d6ef69b6ac01493ab8a62e311fa397fcc9e462add5d316c52a616c36c3",
+            "type": "normalized_backtest_request"
+          },
+          "request": {
+            "build_artifact_manifest_hash": "sha256:454c178057ea340bffb6ac6a2d443da11b836471cb1c97c0b5501b0577b633d9",
+            "engine_kind": "bar",
+            "execution_account_id": "account:primary",
+            "execution_account_profile_key": "synthetic.cash.development.v1.account",
+            "execution_case_semantic_hash": "sha256:2592a4ee246b54632d3c63f3490ab68cdabb305406cc275eafabcc0fd5e8a690",
+            "experiment_id": "synthetic-cash-resolution",
+            "market_bundle_ref": {
+              "bundle_key": "fixture.engine.bundle.v1",
+              "manifest_hash": "sha256:893e925061def7b79e2082e33f20b750fbfbd7d33ea58d3bb1f530440ab7510d",
+              "type": "market_bundle_ref"
+            },
+            "market_semantics_profile_key": "synthetic.cash.development.v1.market",
+            "master_random_seed": 7,
+            "reporting_currency": {
+              "type": "currency_id",
+              "value": "USD"
+            },
+            "result_grade_requested": "development",
+            "schema_version": 1,
+            "simulation_profile_key": "synthetic.cash.development.v1.simulation",
+            "strategy_family": "precomputed_target",
+            "target_stream_digest": "sha256:ead473aba908a5d2ace5745a648d357c16666c47a726743b86dbde42768a539f",
+            "timeline_window": {
+              "data_start": {
+                "epoch_nanoseconds": 0,
+                "type": "utc_instant"
+              },
+              "end_exclusive": {
+                "epoch_nanoseconds": 300,
+                "type": "utc_instant"
+              },
+              "trading_start": {
+                "epoch_nanoseconds": 90,
+                "type": "utc_instant"
+              },
+              "type": "timeline_window"
+            },
+            "type": "backtest_request"
+          },
+          "semantic_run_id": "run_39ab44a26d7f719fe1648f3ccbf7cbdcb874a9bc43e8c15d3a51ab5aca421591",
+          "type": "resolved_backtest_request"
+        },
+        "schema_version": 1,
+        "semantic_run_id": "run_39ab44a26d7f719fe1648f3ccbf7cbdcb874a9bc43e8c15d3a51ab5aca421591",
+        "type": "integrity_evaluation_context"
+      },
+      "context_hash": "sha256:de6a26044c0a49df8cfbb41c4f2f4dfbec253b549544653f1c3d4227c7d8af9c",
+      "deployment_authorized": false,
+      "issues": [
+        {
+          "code": "bundle_retention_unproven",
+          "evidence_hashes": [],
+          "severity": "limitation",
+          "subject_keys": [
+            "sha256:893e925061def7b79e2082e33f20b750fbfbd7d33ea58d3bb1f530440ab7510d"
+          ]
+        },
+        {
+          "code": "deterministic_rebuild_unproven",
+          "evidence_hashes": [],
+          "severity": "limitation",
+          "subject_keys": [
+            "sha256:8e39d7c32a6e266de243ad953b54d8168b333ba351d9543ec5c5f33fde823c85"
+          ]
+        },
+        {
+          "code": "development_profile",
+          "evidence_hashes": [
+            "sha256:22a2310c4576f10967f5ba5ffc73ba4459f15a16a4e2e5041a6641ebc0c22035",
+            "sha256:3476a32b6367eabaed1ae4e2d5e2748ab236f333f03196335374948b14a6f02f",
+            "sha256:45915d737732c3d6b4a75f3b80049b0c8fd0abc0c64a415f69f5ddf33037974f"
+          ],
+          "severity": "limitation",
+          "subject_keys": [
+            "synthetic.cash.development.v1.account",
+            "synthetic.cash.development.v1.market",
+            "synthetic.cash.development.v1.simulation"
+          ]
+        },
+        {
+          "code": "environment_limitation",
+          "evidence_hashes": [
+            "sha256:a06e0ab577a809a73d6ba9acb130e6f108cf50f9400d862d280b81a161d06721"
+          ],
+          "severity": "limitation",
+          "subject_keys": [
+            "development_profile",
+            "synthetic_market_profile"
+          ]
+        },
+        {
+          "code": "summary_trace",
+          "evidence_hashes": [
+            "sha256:758a369a1777eb0d06ea1434412f36e382fb87de0fb3c4ca335b10613ed8dce7"
+          ],
+          "severity": "limitation",
+          "subject_keys": [
+            "summary"
+          ]
+        }
+      ],
+      "requested_grade": "development",
+      "result_grade": "development",
+      "schema_version": 1,
+      "semantic_run_id": "run_39ab44a26d7f719fe1648f3ccbf7cbdcb874a9bc43e8c15d3a51ab5aca421591",
+      "type": "integrity_report"
+    },
+    "publication_manifest": {
+      "artifacts": [
+        {
+          "artifact_type": "canonical_attempt_ref",
+          "byte_count": 1696,
+          "content_hash": "sha256:fcf45686e7327d68956878ed0291f000c7c19d7ef93cb2cbb971d3dfaa813f6e",
+          "relative_path": "canonical-attempt-ref.json",
+          "schema_version": 1,
+          "source_hash": "sha256:cd2f43a1e6184a57ad0a598720b5e2b3494ae0225f4e15b35788e636b9001410"
+        },
+        {
+          "artifact_type": "integrity_report",
+          "byte_count": 16139,
+          "content_hash": "sha256:f7c4dde6c08546537dc38021ed9b5a5fa70d894f916540bf0717ed4905f6f84e",
+          "relative_path": "integrity.json",
+          "schema_version": 1,
+          "source_hash": "sha256:58a69dd293bf616912bb87cd19acff8fe6d257c41aa24505f7d8989cef3acd3d"
+        },
+        {
+          "artifact_type": "completed_backtest_result",
+          "byte_count": 15353,
+          "content_hash": "sha256:33cf311225f22392fbb51afc2d300d841c2fef04c70d24dfedfe5b186d68b2d0",
+          "relative_path": "result.json",
+          "schema_version": 1,
+          "source_hash": "sha256:4d39dc65c3639c420eee7338665bbf4c6669ac8bd594734ef16493a47b130710"
+        }
+      ],
+      "deployment_authorized": false,
+      "publication_id": "canonical",
+      "publication_kind": "canonical",
+      "schema_version": 1,
+      "semantic_run_id": "run_39ab44a26d7f719fe1648f3ccbf7cbdcb874a9bc43e8c15d3a51ab5aca421591",
+      "type": "canonical_publication_manifest"
+    },
+    "result": {
+      "attempt_consistency_set": {
+        "attempts": [
+          {
+            "attempt_id": "attempt_3c478bbb5e7141603744fadfe484c4859fac39a56b525df8b5be0fb2a8e1cdfa",
+            "evidence_manifest_hash": "sha256:cf0f80282d5ab79165ff81b73f737ea84ec90e8aa0263ccd33492867f7ec103a",
+            "execution_result_hash": "sha256:97a39c3e4aafe92db6bfb70df9230c6cbda44e9e8c9cf00cca51b0d6a2bf005b",
+            "semantic_run_id": "run_39ab44a26d7f719fe1648f3ccbf7cbdcb874a9bc43e8c15d3a51ab5aca421591"
+          },
+          {
+            "attempt_id": "attempt_39000746f7552464b07d9a8e1b2035a6e9e0fbf341f34dc6bf02c4a87fe82d8c",
+            "evidence_manifest_hash": "sha256:1787609e0c6751b7cc8e782405470f921aae3687de38ae0cf25a6cb5b4ca394b",
+            "execution_result_hash": "sha256:97a39c3e4aafe92db6bfb70df9230c6cbda44e9e8c9cf00cca51b0d6a2bf005b",
+            "semantic_run_id": "run_39ab44a26d7f719fe1648f3ccbf7cbdcb874a9bc43e8c15d3a51ab5aca421591"
+          }
+        ],
+        "finalized_evidence_hashes": [
+          "sha256:cafe271e4a173f473ed30058a1fdb54a7e75c7a91f3aa53e0bdeb3226861bb19",
+          "sha256:797235d1f7128e619b8a3986ad8f9a77bc429506418e117ae5ef500ac5c50e55"
+        ],
+        "resolved_request_hash": "sha256:db9a92f1c3c12d040598598f7a7ceeb98a7d781f03e73eff30b89929dc9c3858",
+        "schema_version": 1,
+        "semantic_run_id": "run_39ab44a26d7f719fe1648f3ccbf7cbdcb874a9bc43e8c15d3a51ab5aca421591",
+        "type": "attempt_consistency_set"
+      },
+      "attempt_id": "attempt_3c478bbb5e7141603744fadfe484c4859fac39a56b525df8b5be0fb2a8e1cdfa",
+      "canonical_attempt_ref_hash": "sha256:fa88beb42dabeddad4922ff899852e809878aa24e02275b25fd2dbf96d903f17",
+      "consistency_set_hash": "sha256:47f04d1c2f19f15265dfa101b7c5dc25f9b54064adf831ab2d193788af4d7909",
+      "deployment_authorized": false,
+      "evidence_manifest_hash": "sha256:cf0f80282d5ab79165ff81b73f737ea84ec90e8aa0263ccd33492867f7ec103a",
+      "execution_hash_check": {
+        "consistency": {
+          "attempts": [
+            {
+              "attempt_id": "attempt_39000746f7552464b07d9a8e1b2035a6e9e0fbf341f34dc6bf02c4a87fe82d8c",
+              "evidence_manifest_hash": "sha256:1787609e0c6751b7cc8e782405470f921aae3687de38ae0cf25a6cb5b4ca394b",
+              "execution_result_hash": "sha256:97a39c3e4aafe92db6bfb70df9230c6cbda44e9e8c9cf00cca51b0d6a2bf005b",
+              "semantic_run_id": "run_39ab44a26d7f719fe1648f3ccbf7cbdcb874a9bc43e8c15d3a51ab5aca421591"
+            },
+            {
+              "attempt_id": "attempt_3c478bbb5e7141603744fadfe484c4859fac39a56b525df8b5be0fb2a8e1cdfa",
+              "evidence_manifest_hash": "sha256:cf0f80282d5ab79165ff81b73f737ea84ec90e8aa0263ccd33492867f7ec103a",
+              "execution_result_hash": "sha256:97a39c3e4aafe92db6bfb70df9230c6cbda44e9e8c9cf00cca51b0d6a2bf005b",
+              "semantic_run_id": "run_39ab44a26d7f719fe1648f3ccbf7cbdcb874a9bc43e8c15d3a51ab5aca421591"
+            }
+          ],
+          "execution_result_hash": "sha256:97a39c3e4aafe92db6bfb70df9230c6cbda44e9e8c9cf00cca51b0d6a2bf005b",
+          "schema_version": 1,
+          "semantic_run_id": "run_39ab44a26d7f719fe1648f3ccbf7cbdcb874a9bc43e8c15d3a51ab5aca421591",
+          "type": "execution_hash_consistency"
+        },
+        "mismatch": null,
+        "schema_version": 1,
+        "type": "execution_hash_check"
+      },
+      "execution_result_hash": "sha256:97a39c3e4aafe92db6bfb70df9230c6cbda44e9e8c9cf00cca51b0d6a2bf005b",
+      "integrity": {
+        "blocking": [],
+        "limitations": [
+          {
+            "code": "bundle_retention_unproven",
+            "evidence_hashes": [],
+            "severity": "limitation",
+            "subject_keys": [
+              "sha256:893e925061def7b79e2082e33f20b750fbfbd7d33ea58d3bb1f530440ab7510d"
+            ]
+          },
+          {
+            "code": "deterministic_rebuild_unproven",
+            "evidence_hashes": [],
+            "severity": "limitation",
+            "subject_keys": [
+              "sha256:8e39d7c32a6e266de243ad953b54d8168b333ba351d9543ec5c5f33fde823c85"
+            ]
+          },
+          {
+            "code": "development_profile",
+            "evidence_hashes": [
+              "sha256:22a2310c4576f10967f5ba5ffc73ba4459f15a16a4e2e5041a6641ebc0c22035",
+              "sha256:3476a32b6367eabaed1ae4e2d5e2748ab236f333f03196335374948b14a6f02f",
+              "sha256:45915d737732c3d6b4a75f3b80049b0c8fd0abc0c64a415f69f5ddf33037974f"
+            ],
+            "severity": "limitation",
+            "subject_keys": [
+              "synthetic.cash.development.v1.account",
+              "synthetic.cash.development.v1.market",
+              "synthetic.cash.development.v1.simulation"
+            ]
+          },
+          {
+            "code": "environment_limitation",
+            "evidence_hashes": [
+              "sha256:a06e0ab577a809a73d6ba9acb130e6f108cf50f9400d862d280b81a161d06721"
+            ],
+            "severity": "limitation",
+            "subject_keys": [
+              "development_profile",
+              "synthetic_market_profile"
+            ]
+          },
+          {
+            "code": "summary_trace",
+            "evidence_hashes": [
+              "sha256:758a369a1777eb0d06ea1434412f36e382fb87de0fb3c4ca335b10613ed8dce7"
+            ],
+            "severity": "limitation",
+            "subject_keys": [
+              "summary"
+            ]
+          }
+        ]
+      },
+      "integrity_report_hash": "sha256:92333a62f6d348445d8a0993db13c90a71f45b22a64dd059f984c80540c22ecd",
+      "outcome": "COMPLETED",
+      "request_hash": "sha256:be4e37d6ef69b6ac01493ab8a62e311fa397fcc9e462add5d316c52a616c36c3",
+      "resolved_request": {
+        "build_artifact_manifest_hash": "sha256:454c178057ea340bffb6ac6a2d443da11b836471cb1c97c0b5501b0577b633d9",
+        "environment": {
+          "compatibility_report": {
+            "allowed_grade": "development",
+            "checks": [
+              {
+                "code": "build_artifact_identity",
+                "passed": true,
+                "subjects": [],
+                "type": "environment_compatibility_check"
+              },
+              {
+                "code": "market_bundle_capabilities",
+                "passed": true,
+                "subjects": [],
+                "type": "environment_compatibility_check"
+              },
+              {
+                "code": "market_bundle_coverage",
+                "passed": true,
+                "subjects": [],
+                "type": "environment_compatibility_check"
+              },
+              {
+                "code": "market_bundle_identity",
+                "passed": true,
+                "subjects": [],
+                "type": "environment_compatibility_check"
+              },
+              {
+                "code": "profile_build_identity",
+                "passed": true,
+                "subjects": [],
+                "type": "environment_compatibility_check"
+              },
+              {
+                "code": "profile_component_coverage",
+                "passed": true,
+                "subjects": [],
+                "type": "environment_compatibility_check"
+              },
+              {
+                "code": "profile_grade",
+                "passed": true,
+                "subjects": [],
+                "type": "environment_compatibility_check"
+              },
+              {
+                "code": "reporting_currency",
+                "passed": true,
+                "subjects": [],
+                "type": "environment_compatibility_check"
+              },
+              {
+                "code": "simulation_context",
+                "passed": true,
+                "subjects": [],
+                "type": "environment_compatibility_check"
+              },
+              {
+                "code": "venue_account_context",
+                "passed": true,
+                "subjects": [],
+                "type": "environment_compatibility_check"
+              }
+            ],
+            "compatible": true,
+            "failed_codes": [],
+            "limitations": [
+              "development_profile",
+              "synthetic_market_profile"
+            ],
+            "market_bundle_manifest_hash": "sha256:893e925061def7b79e2082e33f20b750fbfbd7d33ea58d3bb1f530440ab7510d",
+            "profile_digests": [
+              "sha256:22a2310c4576f10967f5ba5ffc73ba4459f15a16a4e2e5041a6641ebc0c22035",
+              "sha256:3476a32b6367eabaed1ae4e2d5e2748ab236f333f03196335374948b14a6f02f",
+              "sha256:45915d737732c3d6b4a75f3b80049b0c8fd0abc0c64a415f69f5ddf33037974f"
+            ],
+            "request_hash": "sha256:be4e37d6ef69b6ac01493ab8a62e311fa397fcc9e462add5d316c52a616c36c3",
+            "type": "environment_compatibility_report"
+          },
+          "deployment_authorized": false,
+          "execution_account": {
+            "account_id": "account:primary",
+            "account_type": "cash",
+            "decision_grade_eligible": false,
+            "grade": "development",
+            "limitations": [
+              "synthetic_market_profile"
+            ],
+            "margin_mode": "not_applicable",
+            "profile_digest": "sha256:22a2310c4576f10967f5ba5ffc73ba4459f15a16a4e2e5041a6641ebc0c22035",
+            "profile_key": "synthetic.cash.development.v1.account",
+            "profile_version": 1,
+            "supported_reporting_currencies": [
+              {
+                "type": "currency_id",
+                "value": "USD"
+              }
+            ],
+            "type": "execution_account_profile_registration",
+            "venue_id": "synthetic"
+          },
+          "limitations": [
+            "development_profile",
+            "synthetic_market_profile"
+          ],
+          "market_bundle_ref": {
+            "bundle_key": "fixture.engine.bundle.v1",
+            "manifest_hash": "sha256:893e925061def7b79e2082e33f20b750fbfbd7d33ea58d3bb1f530440ab7510d",
+            "type": "market_bundle_ref"
+          },
+          "market_semantics": {
+            "component_manifest": [
+              {
+                "component_digest": "sha256:0d061cf48ddece34564e21978387e4de42e22a249a84f3d58e607fa247808fd9",
+                "component_key": "synthetic.cash.development.v1.corporate_action_model",
+                "component_version": 1,
+                "port_type": "corporate_action_model",
+                "type": "profile_component_ref"
+              },
+              {
+                "component_digest": "sha256:cc6971250b650a0f9e1831538125dfa7a250b152002e5a1cd824ab97b72a275b",
+                "component_key": "synthetic.cash.development.v1.currency_valuation_policy",
+                "component_version": 1,
+                "port_type": "currency_valuation_policy",
+                "type": "profile_component_ref"
+              },
+              {
+                "component_digest": "sha256:ab4885f67ff81d1b49b8717918c1e19fad8c2abf4f3861e4dac1aa1e1900caa2",
+                "component_key": "synthetic.cash.development.v1.fee_assessment_policy",
+                "component_version": 1,
+                "port_type": "fee_assessment_policy",
+                "type": "profile_component_ref"
+              },
+              {
+                "component_digest": "sha256:a093963b1c12b1a9743d48f60b4a5b97dfd444b56027ed277e67f8dec6c1fb2f",
+                "component_key": "synthetic.cash.development.v1.financing_model",
+                "component_version": 1,
+                "port_type": "financing_model",
+                "type": "profile_component_ref"
+              },
+              {
+                "component_digest": "sha256:3327762150558dc02a61d6a27fc0b995288ee863a0305eb863fa5883f48aefa5",
+                "component_key": "synthetic.cash.development.v1.instrument_model",
+                "component_version": 1,
+                "port_type": "instrument_model",
+                "type": "profile_component_ref"
+              },
+              {
+                "component_digest": "sha256:e8e36b7178fd9f65f9a6954b5c6f22ec85195eccea4355f6129557ff243ca728",
+                "component_key": "synthetic.cash.development.v1.liquidation_rules",
+                "component_version": 1,
+                "port_type": "liquidation_rules",
+                "type": "profile_component_ref"
+              },
+              {
+                "component_digest": "sha256:85bce19b096e4a93667ed0f55e665bf74e520b300e6a0532d34a636ea13aa861",
+                "component_key": "synthetic.cash.development.v1.margin_model",
+                "component_version": 1,
+                "port_type": "margin_model",
+                "type": "profile_component_ref"
+              },
+              {
+                "component_digest": "sha256:ea7465cb560a292eec8b1607c4af76ee6856597d806df32c9fbeddf40c08719d",
+                "component_key": "synthetic.cash.development.v1.order_rule_model",
+                "component_version": 1,
+                "port_type": "order_rule_model",
+                "type": "profile_component_ref"
+              },
+              {
+                "component_digest": "sha256:01b85d41058a5360ba6149de59805051f84a43ced5512965cc6843010d542e4e",
+                "component_key": "synthetic.cash.development.v1.position_accounting_model",
+                "component_version": 1,
+                "port_type": "position_accounting_model",
+                "type": "profile_component_ref"
+              },
+              {
+                "component_digest": "sha256:7e56701f22958d889de3d9ce15e3fb6a8b886253cfc9e3f55e178176969fb394",
+                "component_key": "synthetic.cash.development.v1.session_model",
+                "component_version": 1,
+                "port_type": "session_model",
+                "type": "profile_component_ref"
+              },
+              {
+                "component_digest": "sha256:f994d8ae47454267fe4593c01570776f4c203bfa3c200e3f520b3faf5a49d138",
+                "component_key": "synthetic.cash.development.v1.settlement_model",
+                "component_version": 1,
+                "port_type": "settlement_model",
+                "type": "profile_component_ref"
+              },
+              {
+                "component_digest": "sha256:90af179a371ba75eb31e90e737cc496caa8a442aad40721cf3b8385e75288998",
+                "component_key": "synthetic.cash.development.v1.tax_policy",
+                "component_version": 1,
+                "port_type": "tax_policy",
+                "type": "profile_component_ref"
+              }
+            ],
+            "decision_grade_eligible": false,
+            "grade": "development",
+            "limitations": [
+              "synthetic_market_profile"
+            ],
+            "profile_digest": "sha256:3476a32b6367eabaed1ae4e2d5e2748ab236f333f03196335374948b14a6f02f",
+            "profile_key": "synthetic.cash.development.v1.market",
+            "profile_version": 1,
+            "required_bundle_capabilities": [
+              {
+                "key": "bar_open",
+                "type": "market_bundle_capability",
+                "version": 1
+              }
+            ],
+            "type": "market_semantics_profile_registration",
+            "venue_id": "synthetic"
+          },
+          "simulation": {
+            "component_manifest": [
+              {
+                "component_digest": "sha256:d9be291bff3147a191296ec5b3d37cc79aecc9ee2bff4877d7bca86f9aeb0ea8",
+                "component_key": "mark_to_market.v1",
+                "component_version": 1,
+                "port_type": "closeout_policy",
+                "type": "simulation_component_ref"
+              },
+              {
+                "component_digest": "sha256:d69d6d96c9081f730db6ff8cdd02431d4babdef2e3967f0094971e73aedf30fe",
+                "component_key": "next_eligible_bar_open.v1",
+                "component_version": 1,
+                "port_type": "execution_model",
+                "type": "simulation_component_ref"
+              },
+              {
+                "component_digest": "sha256:08779758aa013806239e6017396c51a16983dfe7768aea821819fe6352eb824f",
+                "component_key": "synthetic.cash.development.v1.latency_model",
+                "component_version": 1,
+                "port_type": "latency_model",
+                "type": "simulation_component_ref"
+              },
+              {
+                "component_digest": "sha256:aadd185215c0455ff0a2d4296738dbff98fd3dd9fc9ee9b4124eaf551d7b92c9",
+                "component_key": "synthetic.cash.development.v1.liquidation_audit_model",
+                "component_version": 1,
+                "port_type": "liquidation_audit_model",
+                "type": "simulation_component_ref"
+              },
+              {
+                "component_digest": "sha256:0b385ce6e81a7e4281a93fb477547d291388db8bb9dd855f82e79a158f63c1e2",
+                "component_key": "synthetic.cash.development.v1.liquidity_model",
+                "component_version": 1,
+                "port_type": "liquidity_model",
+                "type": "simulation_component_ref"
+              },
+              {
+                "component_digest": "sha256:4141414141414141414141414141414141414141414141414141414141414141",
+                "component_key": "deterministic_bps.v1",
+                "component_version": 1,
+                "port_type": "slippage_model",
+                "type": "simulation_component_ref"
+              }
+            ],
+            "decision_grade_eligible": false,
+            "engine_kind": "bar",
+            "grade": "development",
+            "limitations": [
+              "synthetic_market_profile"
+            ],
+            "profile_digest": "sha256:45915d737732c3d6b4a75f3b80049b0c8fd0abc0c64a415f69f5ddf33037974f",
+            "profile_key": "synthetic.cash.development.v1.simulation",
+            "profile_version": 1,
+            "required_bundle_capabilities": [
+              {
+                "key": "bar_open",
+                "type": "market_bundle_capability",
+                "version": 1
+              }
+            ],
+            "supported_strategy_families": [
+              "precomputed_target"
+            ],
+            "type": "simulation_profile_registration"
+          },
+          "type": "resolved_backtest_environment"
+        },
+        "normalized_request": {
+          "request": {
+            "build_artifact_manifest_hash": "sha256:454c178057ea340bffb6ac6a2d443da11b836471cb1c97c0b5501b0577b633d9",
+            "engine_kind": "bar",
+            "execution_account_id": "account:primary",
+            "execution_account_profile_key": "synthetic.cash.development.v1.account",
+            "execution_case_semantic_hash": "sha256:2592a4ee246b54632d3c63f3490ab68cdabb305406cc275eafabcc0fd5e8a690",
+            "experiment_id": "synthetic-cash-resolution",
+            "market_bundle_ref": {
+              "bundle_key": "fixture.engine.bundle.v1",
+              "manifest_hash": "sha256:893e925061def7b79e2082e33f20b750fbfbd7d33ea58d3bb1f530440ab7510d",
+              "type": "market_bundle_ref"
+            },
+            "market_semantics_profile_key": "synthetic.cash.development.v1.market",
+            "master_random_seed": 7,
+            "reporting_currency": {
+              "type": "currency_id",
+              "value": "USD"
+            },
+            "result_grade_requested": "development",
+            "schema_version": 1,
+            "simulation_profile_key": "synthetic.cash.development.v1.simulation",
+            "strategy_family": "precomputed_target",
+            "target_stream_digest": "sha256:ead473aba908a5d2ace5745a648d357c16666c47a726743b86dbde42768a539f",
+            "timeline_window": {
+              "data_start": {
+                "epoch_nanoseconds": 0,
+                "type": "utc_instant"
+              },
+              "end_exclusive": {
+                "epoch_nanoseconds": 300,
+                "type": "utc_instant"
+              },
+              "trading_start": {
+                "epoch_nanoseconds": 90,
+                "type": "utc_instant"
+              },
+              "type": "timeline_window"
+            },
+            "type": "backtest_request"
+          },
+          "request_hash": "sha256:be4e37d6ef69b6ac01493ab8a62e311fa397fcc9e462add5d316c52a616c36c3",
+          "type": "normalized_backtest_request"
+        },
+        "request": {
+          "build_artifact_manifest_hash": "sha256:454c178057ea340bffb6ac6a2d443da11b836471cb1c97c0b5501b0577b633d9",
+          "engine_kind": "bar",
+          "execution_account_id": "account:primary",
+          "execution_account_profile_key": "synthetic.cash.development.v1.account",
+          "execution_case_semantic_hash": "sha256:2592a4ee246b54632d3c63f3490ab68cdabb305406cc275eafabcc0fd5e8a690",
+          "experiment_id": "synthetic-cash-resolution",
+          "market_bundle_ref": {
+            "bundle_key": "fixture.engine.bundle.v1",
+            "manifest_hash": "sha256:893e925061def7b79e2082e33f20b750fbfbd7d33ea58d3bb1f530440ab7510d",
+            "type": "market_bundle_ref"
+          },
+          "market_semantics_profile_key": "synthetic.cash.development.v1.market",
+          "master_random_seed": 7,
+          "reporting_currency": {
+            "type": "currency_id",
+            "value": "USD"
+          },
+          "result_grade_requested": "development",
+          "schema_version": 1,
+          "simulation_profile_key": "synthetic.cash.development.v1.simulation",
+          "strategy_family": "precomputed_target",
+          "target_stream_digest": "sha256:ead473aba908a5d2ace5745a648d357c16666c47a726743b86dbde42768a539f",
+          "timeline_window": {
+            "data_start": {
+              "epoch_nanoseconds": 0,
+              "type": "utc_instant"
+            },
+            "end_exclusive": {
+              "epoch_nanoseconds": 300,
+              "type": "utc_instant"
+            },
+            "trading_start": {
+              "epoch_nanoseconds": 90,
+              "type": "utc_instant"
+            },
+            "type": "timeline_window"
+          },
+          "type": "backtest_request"
+        },
+        "semantic_run_id": "run_39ab44a26d7f719fe1648f3ccbf7cbdcb874a9bc43e8c15d3a51ab5aca421591",
+        "type": "resolved_backtest_request"
+      },
+      "result_grade": "development",
+      "schema_version": 1,
+      "semantic_run_id": "run_39ab44a26d7f719fe1648f3ccbf7cbdcb874a9bc43e8c15d3a51ab5aca421591",
+      "type": "completed_backtest_result"
+    },
+    "source_hashes": {
+      "canonical-attempt-ref.json": "sha256:cd2f43a1e6184a57ad0a598720b5e2b3494ae0225f4e15b35788e636b9001410",
+      "integrity.json": "sha256:58a69dd293bf616912bb87cd19acff8fe6d257c41aa24505f7d8989cef3acd3d",
+      "publication-manifest.json": "sha256:99b16df5c0af7f0fc22483d2239c5886d748862b84e0f61f0ed8d8a67350c29f",
+      "result.json": "sha256:4d39dc65c3639c420eee7338665bbf4c6669ac8bd594734ef16493a47b130710"
+    }
+  },
+  "fixture_id": "integrity-canonical-result-publication-v1",
+  "mismatch": {
+    "evaluation_record": {
+      "deployment_authorized": false,
+      "evaluation_id": "evaluation_9c6f9210cd3a1bd0a82daeb169b4a9f6e0458169a356e9c11b4c1ed3d3966b36",
+      "integrity_report_hash": "sha256:ae70205e15fea01a10fe76994d1b2e8a4138318684db2ea682fb3e7f61926c39",
+      "outcome": "FAILED",
+      "schema_version": 1,
+      "semantic_run_id": "run_39ab44a26d7f719fe1648f3ccbf7cbdcb874a9bc43e8c15d3a51ab5aca421591",
+      "type": "integrity_evaluation_record"
+    },
+    "finalized": {
+      "deployment_authorized": false,
+      "evaluation_id": "evaluation_9c6f9210cd3a1bd0a82daeb169b4a9f6e0458169a356e9c11b4c1ed3d3966b36",
+      "evaluation_record_hash": "sha256:c0d5c8203294dd994961815f42600771b1fe9166bf88a9580980609abdb64447",
+      "integrity_report_hash": "sha256:ae70205e15fea01a10fe76994d1b2e8a4138318684db2ea682fb3e7f61926c39",
+      "outcome": "FAILED",
+      "publication_manifest_hash": "sha256:3544a5a94066db75d2c5335d32476be6a419c8b3dfc96896bf7339ecdf4b2128",
+      "publication_manifest_source_hash": "sha256:51b0b4c91a2b3237453508063b1eac69130252530c68a339126c8a63db302ca7",
+      "relative_directory": "runs/run_39ab44a26d7f719fe1648f3ccbf7cbdcb874a9bc43e8c15d3a51ab5aca421591/integrity-evaluations/evaluation_9c6f9210cd3a1bd0a82daeb169b4a9f6e0458169a356e9c11b4c1ed3d3966b36",
+      "schema_version": 1,
+      "semantic_run_id": "run_39ab44a26d7f719fe1648f3ccbf7cbdcb874a9bc43e8c15d3a51ab5aca421591",
+      "type": "finalized_integrity_evaluation"
+    },
+    "integrity_report": {
+      "canonical_attempt_ref_hash": null,
+      "context": {
+        "attempt_consistency_set": {
+          "attempts": [
+            {
+              "attempt_id": "attempt_3c478bbb5e7141603744fadfe484c4859fac39a56b525df8b5be0fb2a8e1cdfa",
+              "evidence_manifest_hash": "sha256:cf0f80282d5ab79165ff81b73f737ea84ec90e8aa0263ccd33492867f7ec103a",
+              "execution_result_hash": "sha256:97a39c3e4aafe92db6bfb70df9230c6cbda44e9e8c9cf00cca51b0d6a2bf005b",
+              "semantic_run_id": "run_39ab44a26d7f719fe1648f3ccbf7cbdcb874a9bc43e8c15d3a51ab5aca421591"
+            },
+            {
+              "attempt_id": "attempt_39000746f7552464b07d9a8e1b2035a6e9e0fbf341f34dc6bf02c4a87fe82d8c",
+              "evidence_manifest_hash": "sha256:336fc30b9a2b0635fe48c39c9a1249277d4c4520b59554a7ac956ca28d7faab3",
+              "execution_result_hash": "sha256:614c9a7edabe52107603269dd28de9867c3be926c0760c9155bf3b9a95d33090",
+              "semantic_run_id": "run_39ab44a26d7f719fe1648f3ccbf7cbdcb874a9bc43e8c15d3a51ab5aca421591"
+            }
+          ],
+          "finalized_evidence_hashes": [
+            "sha256:cafe271e4a173f473ed30058a1fdb54a7e75c7a91f3aa53e0bdeb3226861bb19",
+            "sha256:cd7d7d49e896d49aa87458f384e6b6e1bbd7919b3f1340b843ef395f724ac3a4"
+          ],
+          "resolved_request_hash": "sha256:db9a92f1c3c12d040598598f7a7ceeb98a7d781f03e73eff30b89929dc9c3858",
+          "schema_version": 1,
+          "semantic_run_id": "run_39ab44a26d7f719fe1648f3ccbf7cbdcb874a9bc43e8c15d3a51ab5aca421591",
+          "type": "attempt_consistency_set"
+        },
+        "execution_hash_check": {
+          "consistency": null,
+          "mismatch": {
+            "attempts": [
+              {
+                "attempt_id": "attempt_39000746f7552464b07d9a8e1b2035a6e9e0fbf341f34dc6bf02c4a87fe82d8c",
+                "evidence_manifest_hash": "sha256:336fc30b9a2b0635fe48c39c9a1249277d4c4520b59554a7ac956ca28d7faab3",
+                "execution_result_hash": "sha256:614c9a7edabe52107603269dd28de9867c3be926c0760c9155bf3b9a95d33090",
+                "semantic_run_id": "run_39ab44a26d7f719fe1648f3ccbf7cbdcb874a9bc43e8c15d3a51ab5aca421591"
+              },
+              {
+                "attempt_id": "attempt_3c478bbb5e7141603744fadfe484c4859fac39a56b525df8b5be0fb2a8e1cdfa",
+                "evidence_manifest_hash": "sha256:cf0f80282d5ab79165ff81b73f737ea84ec90e8aa0263ccd33492867f7ec103a",
+                "execution_result_hash": "sha256:97a39c3e4aafe92db6bfb70df9230c6cbda44e9e8c9cf00cca51b0d6a2bf005b",
+                "semantic_run_id": "run_39ab44a26d7f719fe1648f3ccbf7cbdcb874a9bc43e8c15d3a51ab5aca421591"
+              }
+            ],
+            "schema_version": 1,
+            "semantic_run_id": "run_39ab44a26d7f719fe1648f3ccbf7cbdcb874a9bc43e8c15d3a51ab5aca421591",
+            "type": "execution_hash_mismatch"
+          },
+          "schema_version": 1,
+          "type": "execution_hash_check"
+        },
+        "rebuild_evidence": {
+          "build_artifact_manifest_hash": "sha256:454c178057ea340bffb6ac6a2d443da11b836471cb1c97c0b5501b0577b633d9",
+          "deterministic_rebuild_proof_hash": null,
+          "environment_hash": "sha256:a06e0ab577a809a73d6ba9acb130e6f108cf50f9400d862d280b81a161d06721",
+          "execution_case_hash": "sha256:bdbcf92c176fedaf8fa89a056bc92fddeb9d70b75bcacb7cb6013b468374c87e",
+          "execution_case_semantic_hash": "sha256:2592a4ee246b54632d3c63f3490ab68cdabb305406cc275eafabcc0fd5e8a690",
+          "execution_result_hash": "sha256:97a39c3e4aafe92db6bfb70df9230c6cbda44e9e8c9cf00cca51b0d6a2bf005b",
+          "market_bundle_manifest_hash": "sha256:893e925061def7b79e2082e33f20b750fbfbd7d33ea58d3bb1f530440ab7510d",
+          "market_bundle_retention_proof_hash": null,
+          "request_hash": "sha256:be4e37d6ef69b6ac01493ab8a62e311fa397fcc9e462add5d316c52a616c36c3",
+          "schema_version": 1,
+          "semantic_run_id": "run_39ab44a26d7f719fe1648f3ccbf7cbdcb874a9bc43e8c15d3a51ab5aca421591",
+          "target_stream_digest": "sha256:ead473aba908a5d2ace5745a648d357c16666c47a726743b86dbde42768a539f",
+          "trace_hash": "sha256:758a369a1777eb0d06ea1434412f36e382fb87de0fb3c4ca335b10613ed8dce7",
+          "trace_level": "summary",
+          "type": "deterministic_rebuild_evidence"
+        },
+        "resolved_request": {
+          "build_artifact_manifest_hash": "sha256:454c178057ea340bffb6ac6a2d443da11b836471cb1c97c0b5501b0577b633d9",
+          "environment": {
+            "compatibility_report": {
+              "allowed_grade": "development",
+              "checks": [
+                {
+                  "code": "build_artifact_identity",
+                  "passed": true,
+                  "subjects": [],
+                  "type": "environment_compatibility_check"
+                },
+                {
+                  "code": "market_bundle_capabilities",
+                  "passed": true,
+                  "subjects": [],
+                  "type": "environment_compatibility_check"
+                },
+                {
+                  "code": "market_bundle_coverage",
+                  "passed": true,
+                  "subjects": [],
+                  "type": "environment_compatibility_check"
+                },
+                {
+                  "code": "market_bundle_identity",
+                  "passed": true,
+                  "subjects": [],
+                  "type": "environment_compatibility_check"
+                },
+                {
+                  "code": "profile_build_identity",
+                  "passed": true,
+                  "subjects": [],
+                  "type": "environment_compatibility_check"
+                },
+                {
+                  "code": "profile_component_coverage",
+                  "passed": true,
+                  "subjects": [],
+                  "type": "environment_compatibility_check"
+                },
+                {
+                  "code": "profile_grade",
+                  "passed": true,
+                  "subjects": [],
+                  "type": "environment_compatibility_check"
+                },
+                {
+                  "code": "reporting_currency",
+                  "passed": true,
+                  "subjects": [],
+                  "type": "environment_compatibility_check"
+                },
+                {
+                  "code": "simulation_context",
+                  "passed": true,
+                  "subjects": [],
+                  "type": "environment_compatibility_check"
+                },
+                {
+                  "code": "venue_account_context",
+                  "passed": true,
+                  "subjects": [],
+                  "type": "environment_compatibility_check"
+                }
+              ],
+              "compatible": true,
+              "failed_codes": [],
+              "limitations": [
+                "development_profile",
+                "synthetic_market_profile"
+              ],
+              "market_bundle_manifest_hash": "sha256:893e925061def7b79e2082e33f20b750fbfbd7d33ea58d3bb1f530440ab7510d",
+              "profile_digests": [
+                "sha256:22a2310c4576f10967f5ba5ffc73ba4459f15a16a4e2e5041a6641ebc0c22035",
+                "sha256:3476a32b6367eabaed1ae4e2d5e2748ab236f333f03196335374948b14a6f02f",
+                "sha256:45915d737732c3d6b4a75f3b80049b0c8fd0abc0c64a415f69f5ddf33037974f"
+              ],
+              "request_hash": "sha256:be4e37d6ef69b6ac01493ab8a62e311fa397fcc9e462add5d316c52a616c36c3",
+              "type": "environment_compatibility_report"
+            },
+            "deployment_authorized": false,
+            "execution_account": {
+              "account_id": "account:primary",
+              "account_type": "cash",
+              "decision_grade_eligible": false,
+              "grade": "development",
+              "limitations": [
+                "synthetic_market_profile"
+              ],
+              "margin_mode": "not_applicable",
+              "profile_digest": "sha256:22a2310c4576f10967f5ba5ffc73ba4459f15a16a4e2e5041a6641ebc0c22035",
+              "profile_key": "synthetic.cash.development.v1.account",
+              "profile_version": 1,
+              "supported_reporting_currencies": [
+                {
+                  "type": "currency_id",
+                  "value": "USD"
+                }
+              ],
+              "type": "execution_account_profile_registration",
+              "venue_id": "synthetic"
+            },
+            "limitations": [
+              "development_profile",
+              "synthetic_market_profile"
+            ],
+            "market_bundle_ref": {
+              "bundle_key": "fixture.engine.bundle.v1",
+              "manifest_hash": "sha256:893e925061def7b79e2082e33f20b750fbfbd7d33ea58d3bb1f530440ab7510d",
+              "type": "market_bundle_ref"
+            },
+            "market_semantics": {
+              "component_manifest": [
+                {
+                  "component_digest": "sha256:0d061cf48ddece34564e21978387e4de42e22a249a84f3d58e607fa247808fd9",
+                  "component_key": "synthetic.cash.development.v1.corporate_action_model",
+                  "component_version": 1,
+                  "port_type": "corporate_action_model",
+                  "type": "profile_component_ref"
+                },
+                {
+                  "component_digest": "sha256:cc6971250b650a0f9e1831538125dfa7a250b152002e5a1cd824ab97b72a275b",
+                  "component_key": "synthetic.cash.development.v1.currency_valuation_policy",
+                  "component_version": 1,
+                  "port_type": "currency_valuation_policy",
+                  "type": "profile_component_ref"
+                },
+                {
+                  "component_digest": "sha256:ab4885f67ff81d1b49b8717918c1e19fad8c2abf4f3861e4dac1aa1e1900caa2",
+                  "component_key": "synthetic.cash.development.v1.fee_assessment_policy",
+                  "component_version": 1,
+                  "port_type": "fee_assessment_policy",
+                  "type": "profile_component_ref"
+                },
+                {
+                  "component_digest": "sha256:a093963b1c12b1a9743d48f60b4a5b97dfd444b56027ed277e67f8dec6c1fb2f",
+                  "component_key": "synthetic.cash.development.v1.financing_model",
+                  "component_version": 1,
+                  "port_type": "financing_model",
+                  "type": "profile_component_ref"
+                },
+                {
+                  "component_digest": "sha256:3327762150558dc02a61d6a27fc0b995288ee863a0305eb863fa5883f48aefa5",
+                  "component_key": "synthetic.cash.development.v1.instrument_model",
+                  "component_version": 1,
+                  "port_type": "instrument_model",
+                  "type": "profile_component_ref"
+                },
+                {
+                  "component_digest": "sha256:e8e36b7178fd9f65f9a6954b5c6f22ec85195eccea4355f6129557ff243ca728",
+                  "component_key": "synthetic.cash.development.v1.liquidation_rules",
+                  "component_version": 1,
+                  "port_type": "liquidation_rules",
+                  "type": "profile_component_ref"
+                },
+                {
+                  "component_digest": "sha256:85bce19b096e4a93667ed0f55e665bf74e520b300e6a0532d34a636ea13aa861",
+                  "component_key": "synthetic.cash.development.v1.margin_model",
+                  "component_version": 1,
+                  "port_type": "margin_model",
+                  "type": "profile_component_ref"
+                },
+                {
+                  "component_digest": "sha256:ea7465cb560a292eec8b1607c4af76ee6856597d806df32c9fbeddf40c08719d",
+                  "component_key": "synthetic.cash.development.v1.order_rule_model",
+                  "component_version": 1,
+                  "port_type": "order_rule_model",
+                  "type": "profile_component_ref"
+                },
+                {
+                  "component_digest": "sha256:01b85d41058a5360ba6149de59805051f84a43ced5512965cc6843010d542e4e",
+                  "component_key": "synthetic.cash.development.v1.position_accounting_model",
+                  "component_version": 1,
+                  "port_type": "position_accounting_model",
+                  "type": "profile_component_ref"
+                },
+                {
+                  "component_digest": "sha256:7e56701f22958d889de3d9ce15e3fb6a8b886253cfc9e3f55e178176969fb394",
+                  "component_key": "synthetic.cash.development.v1.session_model",
+                  "component_version": 1,
+                  "port_type": "session_model",
+                  "type": "profile_component_ref"
+                },
+                {
+                  "component_digest": "sha256:f994d8ae47454267fe4593c01570776f4c203bfa3c200e3f520b3faf5a49d138",
+                  "component_key": "synthetic.cash.development.v1.settlement_model",
+                  "component_version": 1,
+                  "port_type": "settlement_model",
+                  "type": "profile_component_ref"
+                },
+                {
+                  "component_digest": "sha256:90af179a371ba75eb31e90e737cc496caa8a442aad40721cf3b8385e75288998",
+                  "component_key": "synthetic.cash.development.v1.tax_policy",
+                  "component_version": 1,
+                  "port_type": "tax_policy",
+                  "type": "profile_component_ref"
+                }
+              ],
+              "decision_grade_eligible": false,
+              "grade": "development",
+              "limitations": [
+                "synthetic_market_profile"
+              ],
+              "profile_digest": "sha256:3476a32b6367eabaed1ae4e2d5e2748ab236f333f03196335374948b14a6f02f",
+              "profile_key": "synthetic.cash.development.v1.market",
+              "profile_version": 1,
+              "required_bundle_capabilities": [
+                {
+                  "key": "bar_open",
+                  "type": "market_bundle_capability",
+                  "version": 1
+                }
+              ],
+              "type": "market_semantics_profile_registration",
+              "venue_id": "synthetic"
+            },
+            "simulation": {
+              "component_manifest": [
+                {
+                  "component_digest": "sha256:d9be291bff3147a191296ec5b3d37cc79aecc9ee2bff4877d7bca86f9aeb0ea8",
+                  "component_key": "mark_to_market.v1",
+                  "component_version": 1,
+                  "port_type": "closeout_policy",
+                  "type": "simulation_component_ref"
+                },
+                {
+                  "component_digest": "sha256:d69d6d96c9081f730db6ff8cdd02431d4babdef2e3967f0094971e73aedf30fe",
+                  "component_key": "next_eligible_bar_open.v1",
+                  "component_version": 1,
+                  "port_type": "execution_model",
+                  "type": "simulation_component_ref"
+                },
+                {
+                  "component_digest": "sha256:08779758aa013806239e6017396c51a16983dfe7768aea821819fe6352eb824f",
+                  "component_key": "synthetic.cash.development.v1.latency_model",
+                  "component_version": 1,
+                  "port_type": "latency_model",
+                  "type": "simulation_component_ref"
+                },
+                {
+                  "component_digest": "sha256:aadd185215c0455ff0a2d4296738dbff98fd3dd9fc9ee9b4124eaf551d7b92c9",
+                  "component_key": "synthetic.cash.development.v1.liquidation_audit_model",
+                  "component_version": 1,
+                  "port_type": "liquidation_audit_model",
+                  "type": "simulation_component_ref"
+                },
+                {
+                  "component_digest": "sha256:0b385ce6e81a7e4281a93fb477547d291388db8bb9dd855f82e79a158f63c1e2",
+                  "component_key": "synthetic.cash.development.v1.liquidity_model",
+                  "component_version": 1,
+                  "port_type": "liquidity_model",
+                  "type": "simulation_component_ref"
+                },
+                {
+                  "component_digest": "sha256:4141414141414141414141414141414141414141414141414141414141414141",
+                  "component_key": "deterministic_bps.v1",
+                  "component_version": 1,
+                  "port_type": "slippage_model",
+                  "type": "simulation_component_ref"
+                }
+              ],
+              "decision_grade_eligible": false,
+              "engine_kind": "bar",
+              "grade": "development",
+              "limitations": [
+                "synthetic_market_profile"
+              ],
+              "profile_digest": "sha256:45915d737732c3d6b4a75f3b80049b0c8fd0abc0c64a415f69f5ddf33037974f",
+              "profile_key": "synthetic.cash.development.v1.simulation",
+              "profile_version": 1,
+              "required_bundle_capabilities": [
+                {
+                  "key": "bar_open",
+                  "type": "market_bundle_capability",
+                  "version": 1
+                }
+              ],
+              "supported_strategy_families": [
+                "precomputed_target"
+              ],
+              "type": "simulation_profile_registration"
+            },
+            "type": "resolved_backtest_environment"
+          },
+          "normalized_request": {
+            "request": {
+              "build_artifact_manifest_hash": "sha256:454c178057ea340bffb6ac6a2d443da11b836471cb1c97c0b5501b0577b633d9",
+              "engine_kind": "bar",
+              "execution_account_id": "account:primary",
+              "execution_account_profile_key": "synthetic.cash.development.v1.account",
+              "execution_case_semantic_hash": "sha256:2592a4ee246b54632d3c63f3490ab68cdabb305406cc275eafabcc0fd5e8a690",
+              "experiment_id": "synthetic-cash-resolution",
+              "market_bundle_ref": {
+                "bundle_key": "fixture.engine.bundle.v1",
+                "manifest_hash": "sha256:893e925061def7b79e2082e33f20b750fbfbd7d33ea58d3bb1f530440ab7510d",
+                "type": "market_bundle_ref"
+              },
+              "market_semantics_profile_key": "synthetic.cash.development.v1.market",
+              "master_random_seed": 7,
+              "reporting_currency": {
+                "type": "currency_id",
+                "value": "USD"
+              },
+              "result_grade_requested": "development",
+              "schema_version": 1,
+              "simulation_profile_key": "synthetic.cash.development.v1.simulation",
+              "strategy_family": "precomputed_target",
+              "target_stream_digest": "sha256:ead473aba908a5d2ace5745a648d357c16666c47a726743b86dbde42768a539f",
+              "timeline_window": {
+                "data_start": {
+                  "epoch_nanoseconds": 0,
+                  "type": "utc_instant"
+                },
+                "end_exclusive": {
+                  "epoch_nanoseconds": 300,
+                  "type": "utc_instant"
+                },
+                "trading_start": {
+                  "epoch_nanoseconds": 90,
+                  "type": "utc_instant"
+                },
+                "type": "timeline_window"
+              },
+              "type": "backtest_request"
+            },
+            "request_hash": "sha256:be4e37d6ef69b6ac01493ab8a62e311fa397fcc9e462add5d316c52a616c36c3",
+            "type": "normalized_backtest_request"
+          },
+          "request": {
+            "build_artifact_manifest_hash": "sha256:454c178057ea340bffb6ac6a2d443da11b836471cb1c97c0b5501b0577b633d9",
+            "engine_kind": "bar",
+            "execution_account_id": "account:primary",
+            "execution_account_profile_key": "synthetic.cash.development.v1.account",
+            "execution_case_semantic_hash": "sha256:2592a4ee246b54632d3c63f3490ab68cdabb305406cc275eafabcc0fd5e8a690",
+            "experiment_id": "synthetic-cash-resolution",
+            "market_bundle_ref": {
+              "bundle_key": "fixture.engine.bundle.v1",
+              "manifest_hash": "sha256:893e925061def7b79e2082e33f20b750fbfbd7d33ea58d3bb1f530440ab7510d",
+              "type": "market_bundle_ref"
+            },
+            "market_semantics_profile_key": "synthetic.cash.development.v1.market",
+            "master_random_seed": 7,
+            "reporting_currency": {
+              "type": "currency_id",
+              "value": "USD"
+            },
+            "result_grade_requested": "development",
+            "schema_version": 1,
+            "simulation_profile_key": "synthetic.cash.development.v1.simulation",
+            "strategy_family": "precomputed_target",
+            "target_stream_digest": "sha256:ead473aba908a5d2ace5745a648d357c16666c47a726743b86dbde42768a539f",
+            "timeline_window": {
+              "data_start": {
+                "epoch_nanoseconds": 0,
+                "type": "utc_instant"
+              },
+              "end_exclusive": {
+                "epoch_nanoseconds": 300,
+                "type": "utc_instant"
+              },
+              "trading_start": {
+                "epoch_nanoseconds": 90,
+                "type": "utc_instant"
+              },
+              "type": "timeline_window"
+            },
+            "type": "backtest_request"
+          },
+          "semantic_run_id": "run_39ab44a26d7f719fe1648f3ccbf7cbdcb874a9bc43e8c15d3a51ab5aca421591",
+          "type": "resolved_backtest_request"
+        },
+        "schema_version": 1,
+        "semantic_run_id": "run_39ab44a26d7f719fe1648f3ccbf7cbdcb874a9bc43e8c15d3a51ab5aca421591",
+        "type": "integrity_evaluation_context"
+      },
+      "context_hash": "sha256:ebbfc991765b255bae654f0c2d9fdee6a88cc9f38d0b5b0e712fbc53a562ac07",
+      "deployment_authorized": false,
+      "issues": [
+        {
+          "code": "execution_hash_mismatch",
+          "evidence_hashes": [
+            "sha256:3edd87cd15377211ca32f8c516fd617b130a3109f0e5a5301bfbaca03cbb68f6"
+          ],
+          "severity": "blocking",
+          "subject_keys": [
+            "attempt_39000746f7552464b07d9a8e1b2035a6e9e0fbf341f34dc6bf02c4a87fe82d8c",
+            "attempt_3c478bbb5e7141603744fadfe484c4859fac39a56b525df8b5be0fb2a8e1cdfa"
+          ]
+        },
+        {
+          "code": "bundle_retention_unproven",
+          "evidence_hashes": [],
+          "severity": "limitation",
+          "subject_keys": [
+            "sha256:893e925061def7b79e2082e33f20b750fbfbd7d33ea58d3bb1f530440ab7510d"
+          ]
+        },
+        {
+          "code": "deterministic_rebuild_unproven",
+          "evidence_hashes": [],
+          "severity": "limitation",
+          "subject_keys": [
+            "sha256:8e39d7c32a6e266de243ad953b54d8168b333ba351d9543ec5c5f33fde823c85"
+          ]
+        },
+        {
+          "code": "development_profile",
+          "evidence_hashes": [
+            "sha256:22a2310c4576f10967f5ba5ffc73ba4459f15a16a4e2e5041a6641ebc0c22035",
+            "sha256:3476a32b6367eabaed1ae4e2d5e2748ab236f333f03196335374948b14a6f02f",
+            "sha256:45915d737732c3d6b4a75f3b80049b0c8fd0abc0c64a415f69f5ddf33037974f"
+          ],
+          "severity": "limitation",
+          "subject_keys": [
+            "synthetic.cash.development.v1.account",
+            "synthetic.cash.development.v1.market",
+            "synthetic.cash.development.v1.simulation"
+          ]
+        },
+        {
+          "code": "environment_limitation",
+          "evidence_hashes": [
+            "sha256:a06e0ab577a809a73d6ba9acb130e6f108cf50f9400d862d280b81a161d06721"
+          ],
+          "severity": "limitation",
+          "subject_keys": [
+            "development_profile",
+            "synthetic_market_profile"
+          ]
+        },
+        {
+          "code": "summary_trace",
+          "evidence_hashes": [
+            "sha256:758a369a1777eb0d06ea1434412f36e382fb87de0fb3c4ca335b10613ed8dce7"
+          ],
+          "severity": "limitation",
+          "subject_keys": [
+            "summary"
+          ]
+        }
+      ],
+      "requested_grade": "development",
+      "result_grade": null,
+      "schema_version": 1,
+      "semantic_run_id": "run_39ab44a26d7f719fe1648f3ccbf7cbdcb874a9bc43e8c15d3a51ab5aca421591",
+      "type": "integrity_report"
+    },
+    "publication_manifest": {
+      "artifacts": [
+        {
+          "artifact_type": "integrity_evaluation_record",
+          "byte_count": 553,
+          "content_hash": "sha256:6a304a65cb62d55e9d72d0a108348c1eeb4aaab6b3e5d2e0ab5b2a7165ed70b6",
+          "relative_path": "evaluation-outcome.json",
+          "schema_version": 1,
+          "source_hash": "sha256:767f9bf2e066920bed8b4c072c9391a1e460d6d58f231b9bc49a9cd65abd48d9"
+        },
+        {
+          "artifact_type": "integrity_report",
+          "byte_count": 16278,
+          "content_hash": "sha256:3ac4f9c096ae3078d6bc6866c1983110710f1b18c8630450954194eaaeeb46d7",
+          "relative_path": "integrity.json",
+          "schema_version": 1,
+          "source_hash": "sha256:4fa7a7df99843fbc4bd53a7069f9cfe3364c3f75180a17228311aaf3da1d74bf"
+        }
+      ],
+      "deployment_authorized": false,
+      "publication_id": "evaluation_9c6f9210cd3a1bd0a82daeb169b4a9f6e0458169a356e9c11b4c1ed3d3966b36",
+      "publication_kind": "integrity_evaluation",
+      "schema_version": 1,
+      "semantic_run_id": "run_39ab44a26d7f719fe1648f3ccbf7cbdcb874a9bc43e8c15d3a51ab5aca421591",
+      "type": "canonical_publication_manifest"
+    },
+    "source_hashes": {
+      "evaluation-outcome.json": "sha256:767f9bf2e066920bed8b4c072c9391a1e460d6d58f231b9bc49a9cd65abd48d9",
+      "integrity.json": "sha256:4fa7a7df99843fbc4bd53a7069f9cfe3364c3f75180a17228311aaf3da1d74bf",
+      "publication-manifest.json": "sha256:51b0b4c91a2b3237453508063b1eac69130252530c68a339126c8a63db302ca7"
+    }
+  }
+}

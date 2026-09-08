@@ -1,0 +1,37 @@
+{
+  "authentication": "none",
+  "headers": [
+    {
+      "name": "User-Agent",
+      "value": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 Chrome/130.0 Safari/537.36 G12HLiveStatusProbe/1.0"
+    },
+    {
+      "name": "Accept",
+      "value": "*/*"
+    },
+    {
+      "name": "Accept-Language",
+      "value": "zh-CN,zh;q=0.9,en;q=0.5"
+    },
+    {
+      "name": "Cache-Control",
+      "value": "no-cache"
+    },
+    {
+      "name": "Pragma",
+      "value": "no-cache"
+    }
+  ],
+  "method": "GET",
+  "redirect_policy": {
+    "follow": true,
+    "maximum": 10,
+    "redirect_protocols": [
+      "https"
+    ]
+  },
+  "request_body": null,
+  "schema_version": 1,
+  "type": "g12h_official_http_request_v1",
+  "url": "https://www.chinatax.gov.cn/search5/search/s?siteCode=bm29000002&column=%E6%94%BF%E7%AD%96%E6%B3%95%E8%A7%84&searchWord=%E8%B4%A2%E6%94%BF%E9%83%A8+%E7%A8%8E%E5%8A%A1%E6%80%BB%E5%B1%80%E5%85%AC%E5%91%8A2023%E5%B9%B4%E7%AC%AC39%E5%8F%B7&wordPlace=0&docType=%E8%B4%A2%E6%94%BF%E9%83%A8%E7%A8%8E%E5%8A%A1%E6%80%BB%E5%B1%80%E5%85%AC%E5%91%8A&docYear=2023&docNo=39&xxgkTaxPolicy=%E7%A8%8E%E6%94%B6%E6%94%BF%E7%AD%96&xxgkSonTaxPolicy=%E5%8D%B0%E8%8A%B1%E7%A8%8E&xxgkFormulatedYear=2023&orderBy=5&participleRule=5&searchSiteName=GSFFK&pageNum=0&xxgkAging="
+}

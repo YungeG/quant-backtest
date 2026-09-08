@@ -1,0 +1,54 @@
+{
+  "estimate_hash": "sha256:1369e161b279deac541241a6fcae64cfbf59c31cda98d4449fdfcaf5d21ee031",
+  "estimate_id": "fee-reservation-estimate-v1:sha256:9da30961e5a42c416427d38848bcb963c2dee5ef23ac403f6da6151323b3a2ec",
+  "fixture_id": "worst-case-fee-reservation-v1",
+  "lines": [
+    {
+      "amount": {
+        "currency": "USD",
+        "scale": 2,
+        "type": "money",
+        "units": 6000
+      },
+      "basis": "order_notional",
+      "rule_id": "market_taker_fee",
+      "source": "market_fee",
+      "type": "fee_reservation_line"
+    },
+    {
+      "amount": {
+        "currency": "USD",
+        "scale": 2,
+        "type": "money",
+        "units": 1500
+      },
+      "basis": "per_order_minimum",
+      "rule_id": "market_order_minimum",
+      "source": "market_fee",
+      "type": "fee_reservation_line"
+    },
+    {
+      "amount": {
+        "currency": "USD",
+        "scale": 2,
+        "type": "money",
+        "units": 100
+      },
+      "basis": "flat_per_order",
+      "rule_id": "account_order_charge",
+      "source": "account_schedule",
+      "type": "fee_reservation_line"
+    }
+  ],
+  "market_rule_decision_id": "market-rule-decision-v1:sha256:73c4d73451997a028c024018e3e2d61c96b42673a91c906ca903ea138f84c44f",
+  "outcome_hash": "sha256:59734a2b8cc90dbb99f00e6dbe2b87c34c097ff40867cee766f986d08ef5ea94",
+  "proposal_hash": "sha256:98f01c64dc75b10d35f1e28b7c4df70aba3355e91178ad502dfadae96befa2e6",
+  "proposal_id": "resource-reservation-proposal-v1:sha256:02b1b7f1e175403133f3269bb1db814c5025dc5e83fd21afface4e865fec583f",
+  "rule_set_hash": "sha256:e2ccfc95e549d087f79161a5d544187eb85d7cc394bb6d85d33f201b33968054",
+  "total_fee": {
+    "currency": "USD",
+    "scale": 2,
+    "type": "money",
+    "units": 7600
+  }
+}

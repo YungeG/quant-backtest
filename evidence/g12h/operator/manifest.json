@@ -1,0 +1,74 @@
+{
+  "files": [
+    {
+      "byte_length": 643,
+      "path": "README.md",
+      "provenance": "DERIVED_REPLAY_OR_DOCUMENTATION",
+      "sha256": "sha256:3fe5091972fc2097b206896d8b4ec3f0b40815c36988b9db0345c756e81a5226"
+    },
+    {
+      "byte_length": 255163,
+      "path": "executed-acquisition-schedule.json",
+      "provenance": "DERIVED_REPLAY_OR_DOCUMENTATION",
+      "sha256": "sha256:ed84ba4e2f0163125ab89e8668a24027211506e2c0bb181befe372ab31b2c5f1"
+    },
+    {
+      "byte_length": 25206,
+      "path": "g12h_build_wave1_manifests.py",
+      "provenance": "EXACT_EXECUTED_OPERATOR_SOURCE",
+      "sha256": "sha256:affbfaca1e1b8eca5b57afc3a85dabac977757895c27c9a0a9f667f8969c3e6e"
+    },
+    {
+      "byte_length": 7755,
+      "path": "g12h_hkscc_loadmore.py",
+      "provenance": "RECONSTRUCTED_FROM_EXECUTED_OPERATOR",
+      "sha256": "sha256:e1c0f84c7eba6a70ec689d7629e78ebd9be37b25117e2096c189050cd1b2d7a0"
+    },
+    {
+      "byte_length": 5432,
+      "path": "g12h_post_capture.py",
+      "provenance": "RECONSTRUCTED_FROM_EXECUTED_OPERATOR",
+      "sha256": "sha256:304ad43fadd3f3504de1aba9f0b8fc9a422de3d6c7bfed91d372b2f151fcd2bc"
+    },
+    {
+      "byte_length": 3570,
+      "path": "g12h_redact_public_api_key.py",
+      "provenance": "RECONSTRUCTED_FROM_EXECUTED_OPERATOR",
+      "sha256": "sha256:996e82d4705eeff39f5d46a8bce9f4535981d8445b56dbaa75965557d1d1bab5"
+    },
+    {
+      "byte_length": 4573,
+      "path": "g12h_redact_redirect_cookies.py",
+      "provenance": "EXACT_EXECUTED_OPERATOR_SOURCE",
+      "sha256": "sha256:30db4c6b1964db33ac13e6f82979ccab20acdff63d4c83af0d8fae1e27299aed"
+    },
+    {
+      "byte_length": 4893,
+      "path": "g12h_redact_response_cookies.py",
+      "provenance": "EXACT_EXECUTED_OPERATOR_SOURCE",
+      "sha256": "sha256:c87d9148436b0b263cd4127250939120a0f1ff7ab5f9e78c0628a10b07718c54"
+    },
+    {
+      "byte_length": 6226,
+      "path": "g12h_scope_export.py",
+      "provenance": "RECONSTRUCTED_FROM_EXECUTED_OPERATOR",
+      "sha256": "sha256:025ce57d2af9b5c919b63a93e8cd210a482383d5cfdc20144e860600f2d27ba7"
+    },
+    {
+      "byte_length": 12847,
+      "path": "g12h_wave1_capture.py",
+      "provenance": "EXACT_EXECUTED_OPERATOR_SOURCE",
+      "sha256": "sha256:85ccf78ce0d595ff9d372c85243d81c49c3bc1be19f868df5936cc2f6977d9ea"
+    },
+    {
+      "byte_length": 4070,
+      "path": "replay_captured_requests.py",
+      "provenance": "DERIVED_REPLAY_OR_DOCUMENTATION",
+      "sha256": "sha256:b0331298be592e033bce1378faf903a08e2b89c617bfd0558aff1ff24eeccd52"
+    }
+  ],
+  "note": "The executed schedule plus per-source request.json files are the replay authority. Reconstructed sources remove embedded scanner-sensitive literals, replace unretained inline callers with a generic schedule replay, or reconstruct an inline operator.",
+  "schema_version": 1,
+  "status": "PROVENANCE_ONLY_NOT_PUBLIC_API",
+  "type": "g12h_wave1_operator_source_manifest_v1"
+}

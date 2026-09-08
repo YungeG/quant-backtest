@@ -1,0 +1,29 @@
+{
+  "files": [
+    {
+      "exact_private_path": "/srv/bcache-8t/ygguo/backtest/g12h-authority-private/20260820-wave1-response-headers/stamp_duty/sta-search-half-securities-transaction-stamp-duty-page-0/response.headers",
+      "exact_private_sha256": "sha256:48ea8f9b48025abe302da71a230975a965930113cdb7e6ab5988b26c794e58b9",
+      "redaction": "Set-Cookie value replaced by its SHA-256; cookie name and attributes retained.",
+      "tracked_path": "stamp_duty/sta-search-half-securities-transaction-stamp-duty-page-0/response.headers",
+      "tracked_redacted_sha256": "sha256:a50c3dbf37d6149387b472215f335e9c4f47111f05dab80d49035ad363418377"
+    },
+    {
+      "exact_private_path": "/srv/bcache-8t/ygguo/backtest/g12h-authority-private/20260820-wave1-response-headers/stamp_duty/sta-search-half-securities-transaction-stamp-duty-page-0/transport.log",
+      "exact_private_sha256": "sha256:ac6483942edc393fb30cd55093b17b1c13c4b63fd68735bb20d8edfcf9236976",
+      "redaction": "Set-Cookie value replaced by its SHA-256; cookie name and attributes retained.",
+      "tracked_path": "stamp_duty/sta-search-half-securities-transaction-stamp-duty-page-0/transport.log",
+      "tracked_redacted_sha256": "sha256:577e028a37f6508a5edf7fff8c64b7ff66def0bc8f0e326251d098511aa07dae"
+    },
+    {
+      "exact_private_path": "/srv/bcache-8t/ygguo/backtest/g12h-authority-private/20260820-wave1-response-headers/stamp_duty/sta-search-half-securities-transaction-stamp-duty-page-0/redirects.json",
+      "exact_private_sha256": "sha256:985bfd0367ea7d27ea745b28a411bd11bee065bd77d09055ac1ceb1bf67cf060",
+      "redaction": "Set-Cookie value replaced by its SHA-256; cookie name and attributes retained.",
+      "tracked_path": "stamp_duty/sta-search-half-securities-transaction-stamp-duty-page-0/redirects.json",
+      "tracked_redacted_sha256": "sha256:8005daacbd4f8ab0e586e23f69ad2cb4b7880f6efa9e9a2a201b7df3142cf2d3"
+    }
+  ],
+  "private_store_root": "/srv/bcache-8t/ygguo/backtest/g12h-authority-private/20260820-wave1-response-headers",
+  "schema_version": 1,
+  "source_id": "sta-search-half-securities-transaction-stamp-duty-page-0",
+  "type": "g12h_sensitive_response_header_receipt_v1"
+}

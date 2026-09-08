@@ -1,0 +1,183 @@
+From d30576a6d8e6edb706c8b013eb11167b58e9c33a Mon Sep 17 00:00:00 2001
+From: chairz-2 <106545616+chairz-2@users.noreply.github.com>
+Date: Mon, 29 Aug 2022 12:29:28 +0800
+Subject: [PATCH] added and fixed endpoints (#53)
+
+* added and fixed endpoints
+
+* added release date
+---
+ CHANGELOG.md                                      | 14 +++++++++++++-
+ binance/__version__.py                            |  2 +-
+ binance/cm_futures/__init__.py                    |  3 +++
+ binance/cm_futures/portfolio_margin.py            | 15 +++++++++++++++
+ binance/um_futures/__init__.py                    |  3 +++
+ binance/um_futures/market.py                      |  3 +--
+ binance/um_futures/portfolio_margin.py            | 15 +++++++++++++++
+ .../portfolio_margin/pm_exchange_info.py          | 10 ++++++++++
+ examples/um_futures/market/mark_price.py          |  2 +-
+ .../portfolio_margin/pm_exchange_info.py          | 10 ++++++++++
+ 10 files changed, 72 insertions(+), 5 deletions(-)
+ create mode 100644 binance/cm_futures/portfolio_margin.py
+ create mode 100644 binance/um_futures/portfolio_margin.py
+ create mode 100644 examples/cm_futures/portfolio_margin/pm_exchange_info.py
+ create mode 100644 examples/um_futures/portfolio_margin/pm_exchange_info.py
+
+diff --git a/CHANGELOG.md b/CHANGELOG.md
+index 0cf7992..6470310 100644
+--- a/CHANGELOG.md
++++ b/CHANGELOG.md
+@@ -1,6 +1,18 @@
+ # Changelog
+ 
+-### 3.1.2 - 2022-08-23
++## 3.2.0 - 2022-08-29
++
++### Add
++#### UM Futures
++ - New endpoint `GET /fapi/v1/pmExchangeInfo` to get current Portfolio Margin exchange trading rules.
++#### CM Futures
++ - New endpoint `GET /dapi/v1/pmExchangeInfo` to get current Portfolio Margin exchange trading rules.
++
++### Update
++#### UM Futures
++ - `symbol` is no longer a required parameter in `GET /fapi/v1/premiumIndex`
++
++## 3.1.2 - 2022-08-23
+ 
+ ### Update
+ - Fix encoding issue of parameters in `DELETE /fapi/v1/batchOrders`
+diff --git a/binance/__version__.py b/binance/__version__.py
+index 911557b..1173108 100644
+--- a/binance/__version__.py
++++ b/binance/__version__.py
+@@ -1 +1 @@
+-__version__ = "3.1.2"
++__version__ = "3.2.0"
+diff --git a/binance/cm_futures/__init__.py b/binance/cm_futures/__init__.py
+index d059c01..3651413 100644
+--- a/binance/cm_futures/__init__.py
++++ b/binance/cm_futures/__init__.py
+@@ -66,3 +66,6 @@ def __init__(self, key=None, secret=None, **kwargs):
+     from binance.cm_futures.data_stream import new_listen_key
+     from binance.cm_futures.data_stream import renew_listen_key
+     from binance.cm_futures.data_stream import close_listen_key
++
++    # PORTFOLIO MARGIN
++    from binance.cm_futures.portfolio_margin import pm_exchange_info
+diff --git a/binance/cm_futures/portfolio_margin.py b/binance/cm_futures/portfolio_margin.py
+new file mode 100644
+index 0000000..3ed2d2e
+--- /dev/null
++++ b/binance/cm_futures/portfolio_margin.py
+@@ -0,0 +1,15 @@
++def pm_exchange_info(self, symbol: str = None):
++    """
++    |
++    | **Portfolio Margin Exchange Information**
++    | *Current Portfolio Margin exchange trading rules.*
++
++    :API endpoint: ``GET /dapi/v1/pmExchangeInfo``
++    :API doc: https://binance-docs.github.io/apidocs/delivery/en/#portfolio-margin-exchange-information
++
++    :parameter symbol: string; the trading pair.
++    |
++    """
++
++    params = {"symbol": symbol}
++    return self.query("/dapi/v1/pmExchangeInfo", params)
+diff --git a/binance/um_futures/__init__.py b/binance/um_futures/__init__.py
+index fba212b..a20a1ed 100644
+--- a/binance/um_futures/__init__.py
++++ b/binance/um_futures/__init__.py
+@@ -71,3 +71,6 @@ def __init__(self, key=None, secret=None, **kwargs):
+     from binance.um_futures.data_stream import new_listen_key
+     from binance.um_futures.data_stream import renew_listen_key
+     from binance.um_futures.data_stream import close_listen_key
++
++    # PORTFOLIO MARGIN
++    from binance.um_futures.portfolio_margin import pm_exchange_info
+diff --git a/binance/um_futures/market.py b/binance/um_futures/market.py
+index c0a2991..aa4d46f 100644
+--- a/binance/um_futures/market.py
++++ b/binance/um_futures/market.py
+@@ -221,7 +221,7 @@ def mark_price_klines(self, symbol: str, interval: str, **kwargs):
+     return self.query("/fapi/v1/markPriceKlines", params)
+ 
+ 
+-def mark_price(self, symbol: str):
++def mark_price(self, symbol: str = None):
+     """
+     |
+     | **Mark Price and Funding Rate**
+@@ -233,7 +233,6 @@ def mark_price(self, symbol: str):
+     |
+     """
+ 
+-    check_required_parameter(symbol, "symbol")
+     params = {
+         "symbol": symbol,
+     }
+diff --git a/binance/um_futures/portfolio_margin.py b/binance/um_futures/portfolio_margin.py
+new file mode 100644
+index 0000000..0596441
+--- /dev/null
++++ b/binance/um_futures/portfolio_margin.py
+@@ -0,0 +1,15 @@
++def pm_exchange_info(self, symbol: str = None):
++    """
++    |
++    | **Portfolio Margin Exchange Information**
++    | *Current Portfolio Margin exchange trading rules.*
++
++    :API endpoint: ``GET /fapi/v1/pmExchangeInfo``
++    :API doc: https://binance-docs.github.io/apidocs/futures/en/#portfolio-margin-endpoints
++
++    :parameter symbol: string; the trading pair.
++    |
++    """
++
++    params = {"symbol": symbol}
++    return self.query("/fapi/v1/pmExchangeInfo", params)
+diff --git a/examples/cm_futures/portfolio_margin/pm_exchange_info.py b/examples/cm_futures/portfolio_margin/pm_exchange_info.py
+new file mode 100644
+index 0000000..49a1052
+--- /dev/null
++++ b/examples/cm_futures/portfolio_margin/pm_exchange_info.py
+@@ -0,0 +1,10 @@
++#!/usr/bin/env python
++import logging
++from binance.cm_futures import CMFutures
++from binance.lib.utils import config_logging
++
++config_logging(logging, logging.DEBUG)
++
++cm_futures_client = CMFutures()
++
++logging.info(cm_futures_client.pm_exchange_info())
+diff --git a/examples/um_futures/market/mark_price.py b/examples/um_futures/market/mark_price.py
+index 473a908..f3da204 100644
+--- a/examples/um_futures/market/mark_price.py
++++ b/examples/um_futures/market/mark_price.py
+@@ -7,4 +7,4 @@
+ 
+ um_futures_client = UMFutures()
+ 
+-logging.info(um_futures_client.mark_price("BTCUSDT"))
++logging.info(um_futures_client.mark_price())
+diff --git a/examples/um_futures/portfolio_margin/pm_exchange_info.py b/examples/um_futures/portfolio_margin/pm_exchange_info.py
+new file mode 100644
+index 0000000..e0e43f0
+--- /dev/null
++++ b/examples/um_futures/portfolio_margin/pm_exchange_info.py
+@@ -0,0 +1,10 @@
++#!/usr/bin/env python
++import logging
++from binance.um_futures import UMFutures
++from binance.lib.utils import config_logging
++
++config_logging(logging, logging.DEBUG)
++
++um_futures_client = UMFutures()
++
++logging.info(um_futures_client.pm_exchange_info())

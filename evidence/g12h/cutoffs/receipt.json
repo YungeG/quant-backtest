@@ -1,0 +1,58 @@
+{
+  "closure_evidence_available_at": null,
+  "discovery_windows_not_qualified": {
+    "hkscc_date_from": "2025-09-01",
+    "hkscc_date_to_inclusive": "2026-08-31",
+    "ndrc_end_date": "2026-08-20",
+    "sta_subject_search": "unbounded",
+    "szse_keyword_time": "0"
+  },
+  "final_terminal_retrieved_at": null,
+  "final_terminal_source_ref": null,
+  "lineage_record_states": [
+    {
+      "candidate": "SZSE general-notice index latest dated notice 2026-08-14",
+      "failure": "Not a source-declared fee-table amendment/correction/successor record state; fee table label is 2026-01.",
+      "lineage": "exchange_handling",
+      "qualified": false
+    },
+    {
+      "candidate": "NDRC query latest result 2022-01-07",
+      "failure": "Pre-target and search corpus is discovery only.",
+      "lineage": "securities_regulatory.ndrc_mof",
+      "qualified": false
+    },
+    {
+      "candidate": "SZSE fee table label 2026-01",
+      "failure": "Pre-target mutable collection table; no post-target source-declared status.",
+      "lineage": "securities_regulatory.szse_collection",
+      "qualified": false
+    },
+    {
+      "candidate": "ChinaClear current notice index latest dated notice 2026-08-07",
+      "failure": "Notice corpus is not declared as the complete transfer-fee successor/correction register; fee table is updated 2026-01-01.",
+      "lineage": "chinaclear_transfer",
+      "qualified": false
+    },
+    {
+      "candidate": "HKSCC circular range latest visible date 2026-08-20",
+      "failure": "Circular corpus does not establish current §21 and Definitions record state; captured PDFs and formal rule-update index are pre-target.",
+      "lineage": "hkscc_transfer",
+      "qualified": false
+    },
+    {
+      "candidate": "STA subject-search latest result 2025-10-15 and undated current-page “全文有效” label",
+      "failure": "No post-target competent legislative/policy status record or declared complete history register.",
+      "lineage": "stamp_duty",
+      "qualified": false
+    }
+  ],
+  "official_record_as_of": null,
+  "query_end_local_dates": {},
+  "query_start_local_date": null,
+  "schema_version": 1,
+  "status": "INSUFFICIENT_NO_COMMON_OFFICIAL_RECORD_AS_OF",
+  "stop_reason": "At least one qualified source-declared post-target record state is missing for every economic lineage; inventory qualification and RuleBook production remain prohibited.",
+  "target_to_exclusive": "2026-07-30T16:00:00Z",
+  "type": "g12h_cutoff_selection_receipt_v1"
+}

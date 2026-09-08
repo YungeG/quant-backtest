@@ -1,0 +1,146 @@
+{
+  "case_hash": "sha256:bb8fc4be36bc3fdfc4236237deace870c50513f1d4f2c3457d2c5d7f4bac4eb6",
+  "decision_batch_id": "decision-batch-v1:sha256:c9126ea400897e9cd53d5bfa8640f6199db37db7a77435de15141d429d871d52",
+  "fee": {
+    "amount_scale": 2,
+    "amount_units": 53,
+    "assessment_id": "fee_4444444444444444444444444444444444444444444444444444444444444444",
+    "basis_ids": [
+      "fil_2222222222222222222222222222222222222222222222222222222222222222"
+    ],
+    "basis_type": "fill"
+  },
+  "fill": {
+    "execution_price_units": 10511,
+    "execution_time_ns": 200,
+    "fill_id": "fil_2222222222222222222222222222222222222222222222222222222222222222",
+    "order_id": "ord_1111111111111111111111111111111111111111111111111111111111111111",
+    "quantity_scale": 3,
+    "quantity_units": 5000,
+    "reference_price_units": 10500,
+    "slippage_decision_id": "sha256:4e3a71fdcf846ee9e2f2c9770109b0f69c5a143ee4ad02d899c6595f342dd076",
+    "slippage_units": 11
+  },
+  "journal": {
+    "entries": [
+      {
+        "entry_id": "jnl_0000000000000000000000000000000000000000000000000000000000000000",
+        "entry_type": "capital_deposited",
+        "source_ids": [
+          "capital:engine-fixture"
+        ]
+      },
+      {
+        "entry_id": "jnl_3333333333333333333333333333333333333333333333333333333333333333",
+        "entry_type": "fill_booked",
+        "source_ids": [
+          "fil_2222222222222222222222222222222222222222222222222222222222222222",
+          "ord_1111111111111111111111111111111111111111111111111111111111111111"
+        ]
+      },
+      {
+        "entry_id": "jnl_5555555555555555555555555555555555555555555555555555555555555555",
+        "entry_type": "fee_charged",
+        "source_ids": [
+          "account-fee:synthetic.cash.final-account-fee.v1:v1:sha256:ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff",
+          "account-fill",
+          "fee-basis:sha256:e98f5d994d2e7b840f70cf9467710ba08d9ebe9ae7865b06d6f145385bde01ee",
+          "fee_4444444444444444444444444444444444444444444444444444444444444444",
+          "fil_2222222222222222222222222222222222222222222222222222222222222222",
+          "final-fee-rule-set:sha256:36bb836172860857a5ab8237ecba75a733df670ca51f72f0bb2938abb2b425f9",
+          "market-fill",
+          "profile:synthetic.cash.final-market-fee.v1:v1:sha256:dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd",
+          "profile:synthetic.cash.final-tax.v1:v1:sha256:eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee",
+          "tax-fill"
+        ]
+      }
+    ],
+    "journal_hash": "sha256:d039d79d7102af83205be8f4a9ce853e05e8b633359888800edc1213f563cfa3"
+  },
+  "ledger": {
+    "cash_units": 47392,
+    "fee_units": 53,
+    "position_units": 5000,
+    "state_hash": "sha256:c26b0b2af14db37b1d2d6f93148a636c687dff9906ff1e675c72677b967fa5b4"
+  },
+  "normalized_target_id": "normalized-portfolio-target-v1:sha256:c0fc2dc76849ff8c2858d10e08d562c9a61b22d3d43334231e16c0cf6dc7a188",
+  "order_id": "ord_1111111111111111111111111111111111111111111111111111111111111111",
+  "profile": {
+    "decision_grade_eligible": false,
+    "deployment_authorized": false,
+    "execution_account_profile_digest": "sha256:22a2310c4576f10967f5ba5ffc73ba4459f15a16a4e2e5041a6641ebc0c22035",
+    "grade": "development",
+    "limitations": [
+      "synthetic_market_profile"
+    ],
+    "market_profile_digest": "sha256:3476a32b6367eabaed1ae4e2d5e2748ab236f333f03196335374948b14a6f02f",
+    "profile_digest": "sha256:b52e85e4d7f9ffd5a99bc84fa1c17cddb0da808b7aaedecae573d18585087ddc",
+    "profile_key": "synthetic.cash.development.v1",
+    "profile_version": 1,
+    "simulation_profile_digest": "sha256:45915d737732c3d6b4a75f3b80049b0c8fd0abc0c64a415f69f5ddf33037974f"
+  },
+  "result_hash": "sha256:13a553b1ddf80220a4aca29cf8ecc044e5f30409dc977ad15981cb2ffb67024c",
+  "run_end": {
+    "closeout_mode": "mark_to_market",
+    "closeout_status": "positions_preserved",
+    "last_valuation_mark_ids": [
+      "sha256:1b7e4749dc51652d5b18a6084b91fac7e16b58b4bdc0971618be6cbc403db170"
+    ],
+    "open_position_units": [
+      5000
+    ],
+    "pending_fee_count": 0,
+    "pending_settlement_count": 0,
+    "released_reservation_count": 0,
+    "report_hash": "sha256:f49636b7c22583ba478e29084223e6b379ac44d7ebd195573a69e8868296244c",
+    "terminated_order_count": 0
+  },
+  "slippage": {
+    "basis_points_units": 10,
+    "calibration_digest": "sha256:4242424242424242424242424242424242424242424242424242424242424242",
+    "calibration_key": "calibration.engine-fixture.v1",
+    "calibration_version": 1,
+    "component_key": "deterministic_bps.v1",
+    "decision_id": "sha256:4e3a71fdcf846ee9e2f2c9770109b0f69c5a143ee4ad02d899c6595f342dd076",
+    "execution_price_units": 10511
+  },
+  "snapshot": {
+    "currency_valuation_graph_hash": "sha256:7271c5e689282c390123c4253c8f7d143a134af08bc848d6c714f534034b5b76",
+    "equity_units": 102392,
+    "fee_units": 53,
+    "journal_state_hash": "sha256:c26b0b2af14db37b1d2d6f93148a636c687dff9906ff1e675c72677b967fa5b4",
+    "snapshot_hash": "sha256:17b397fdfd2c18dfa1ebd0c7a66cb43d06a7d3fabee7b81adb548b8da5b7472c",
+    "unrealized_pnl_units": 2445,
+    "valuation_mark_ids": [
+      "sha256:1b7e4749dc51652d5b18a6084b91fac7e16b58b4bdc0971618be6cbc403db170"
+    ]
+  },
+  "target_stream_digest": "sha256:ead473aba908a5d2ace5745a648d357c16666c47a726743b86dbde42768a539f",
+  "trace_hash": "sha256:d9bdf6b275c23bd2ebb95752dc8b68f577d7d38e026dba00cd4f2028b0488887",
+  "trace_stages": [
+    "timeline_event",
+    "decision_batch",
+    "capital_allocation",
+    "portfolio_risk",
+    "position_sizing",
+    "order_plan",
+    "order_capability",
+    "order_translation",
+    "market_rule",
+    "fee_reservation",
+    "pretrade_risk",
+    "order_accepted",
+    "timeline_event",
+    "execution_decision",
+    "slippage",
+    "fill",
+    "financial_event",
+    "fill_accounting",
+    "fee_assessment",
+    "fee_accounting",
+    "ledger_state",
+    "financial_event",
+    "portfolio_snapshot",
+    "run_end"
+  ]
+}

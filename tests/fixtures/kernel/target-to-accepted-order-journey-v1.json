@@ -1,0 +1,110 @@
+{
+  "accepted_order_state": {
+    "cumulative_filled_quantity": {
+      "instrument_id": "synthetic:cash:btc-usd",
+      "scale": 3,
+      "type": "quantity",
+      "units": 0
+    },
+    "last_event_id": "event:g05:8:order_accepted",
+    "order_id": {
+      "kind": "order",
+      "type": "domain_id",
+      "value": "ord_8888888888888888888888888888888888888888888888888888888888888888"
+    },
+    "ordered_quantity": {
+      "instrument_id": "synthetic:cash:btc-usd",
+      "scale": 3,
+      "type": "quantity",
+      "units": 10000
+    },
+    "remaining_quantity": {
+      "instrument_id": "synthetic:cash:btc-usd",
+      "scale": 3,
+      "type": "quantity",
+      "units": 10000
+    },
+    "status": "accepted",
+    "type": "order_state",
+    "updated_at": {
+      "instant": {
+        "epoch_nanoseconds": 208,
+        "type": "utc_instant"
+      },
+      "phase": {
+        "code": "g05_order_acceptance",
+        "rank": 80,
+        "type": "timeline_phase"
+      },
+      "source_sequence": {
+        "type": "source_sequence",
+        "value": 8
+      },
+      "type": "simulation_instant"
+    }
+  },
+  "accepted_stream_hash": "sha256:97bf2c08e81fb8d073c56de7ac6920b503c58af2cc5efc6d91bd5812d44fcd09",
+  "active_target_hash": "sha256:5be86cf3646d668d8d4dadaaacc863ad4b4445ad33ae8a757946d64d4f3cb67b",
+  "capability_hash": "sha256:bc586200421450046ddb84c755641ed0cbe65bc627eabdbada4ed61676a08037",
+  "capability_id": "order-capability-decision-v1:sha256:60b7517050547a1398b07242a75b59dc2f9561c4007148cd67443a6955c1e265",
+  "fee_assessment_hash": "sha256:173b44ffe8d936e2a55cc5ef968dc5425a68032c982d074ba40b54fb3137a4a4",
+  "fee_estimate_id": "fee-reservation-estimate-v1:sha256:d9ce9cfac6d9a285ad3de75a6cb65906353a77b324159454dc9efca6f4c992f5",
+  "fee_journal_hash": "sha256:735db9ed728d87869e5aea3bba8eb33dc7824667291a85349cacaf9c2fe859f8",
+  "fee_proposal_hash": "sha256:5ac685970b5224de583bde0bec3504a3453c515608059c990074bfb41aa5547c",
+  "fixture_id": "target-to-accepted-order-journey-v1",
+  "journal_hash": "sha256:c7a980ed6dd0f70f14fd129379430faa9de9753ae4d3a239626174129536aac7",
+  "market_rule_id": "market-rule-decision-v1:sha256:0fac00a974e98e0acbfbbcf98c5dcf723d960462943c4fefd110690d9edb6f5b",
+  "order": {
+    "account_id": "account:primary",
+    "created_at": {
+      "instant": {
+        "epoch_nanoseconds": 200,
+        "type": "utc_instant"
+      },
+      "phase": {
+        "code": "g05_order_acceptance",
+        "rank": 80,
+        "type": "timeline_phase"
+      },
+      "source_sequence": {
+        "type": "source_sequence",
+        "value": 1
+      },
+      "type": "simulation_instant"
+    },
+    "intent": {
+      "execution_style": "market",
+      "instrument_id": {
+        "stable_key": "cash:btc-usd",
+        "type": "instrument_id",
+        "venue": "synthetic"
+      },
+      "parent_id": "normalized-portfolio-target-v1:sha256:789811fe458e0c532f553bbc2936f73c80dd0ffdf1ed6b69cb9c423c1a0a44b7",
+      "position_effect": "open",
+      "price_constraint": null,
+      "quantity": {
+        "instrument_id": "synthetic:cash:btc-usd",
+        "scale": 3,
+        "type": "quantity",
+        "units": 10000
+      },
+      "reason": "rebalance:rebalance.market-day.v1",
+      "reduce_only": false,
+      "side": "buy",
+      "time_in_force": "day",
+      "type": "order_intent",
+      "urgency": "normal"
+    },
+    "order_id": {
+      "kind": "order",
+      "type": "domain_id",
+      "value": "ord_8888888888888888888888888888888888888888888888888888888888888888"
+    },
+    "type": "order"
+  },
+  "plan_hash": "sha256:3f28030d711556de285d385374af2f54419d5e9d95ccb3ac1af83060e85c24c7",
+  "plan_id": "order-plan-v1:sha256:db0e279cd316fcf899fb77fa56eda6da192ec404073293dbe9b012473d86eeda",
+  "pretrade_hash": "sha256:2a9baf1926bf273c7c92126b22d56abef17fbdef2c55d1001e72f016c550fa26",
+  "pretrade_id": "pretrade-risk-decision-v1:sha256:9ec560fc3cbfb02d3438a7bf1cb26a3751da4b9448b77d822c9a6b69564d3ad9",
+  "translation_hash": "sha256:7b892df496aa0758086ba3bacafd841246be9f13f07d2a03a1ec4ee329d019e5"
+}

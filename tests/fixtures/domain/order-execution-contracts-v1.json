@@ -1,0 +1,14 @@
+{
+  "fixture_id": "order-execution-contracts-v1",
+  "schema_version": 1,
+  "expected_sha256": {
+    "order": "sha256:21803e3ec18a19cdb05c8124cdbd0f5fd614b61bb29cbc107f20a98ce59794e1",
+    "fill_event": "sha256:47b342eabe4de9af8828d57f07334e4d73408a16bfbd005c9928d5596c5e0003",
+    "partial_order_state": "sha256:74dbae99348975292071fe0b515420a0f601fcb324155afef04a74887a117907",
+    "fill": "sha256:5716c197f45233243ad1919d015caeab1f9c6cc44cd9d5e3a6993e547787b01f",
+    "multi_fill_fee_assessment": "sha256:72126db70328988b7b3cf1cb4303dddbd4c1f7caa3a4fa0166efca6b6e724dd7",
+    "instrument_settlement": "sha256:3c09ab8f61fc21a788a5d3abd4672782afb6dce3ad1e64bddd3d47455749ca5f",
+    "translated_report": "sha256:2868c9df17ac4cc5de3efb2554586bdd6cb854369ce3e6935512861f85792a2a",
+    "rejected_report": "sha256:23578340cb76c321e7eb25bcd41515dcaba6e52ce2ce5a17bdd15181bdddfa6c"
+  }
+}

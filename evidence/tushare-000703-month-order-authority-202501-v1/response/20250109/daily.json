@@ -1,0 +1,1 @@
+{"request_id":"55d7ad14-cabb-4a71-b63b-745d16fd03f1","code":0,"data":{"fields":["ts_code","trade_date","open","high","low","close","pre_close","change","pct_chg","vol","amount"],"items":[["000703.SZ","20250109",6.06,6.1,6,6.05,6.09,-0.04,-0.6568,100249.48,60719.841]],"has_more":false,"count":0},"msg":"","detail":"..."}

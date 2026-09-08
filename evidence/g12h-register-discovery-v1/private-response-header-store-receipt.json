@@ -1,0 +1,8 @@
+{
+  "private_manifest_sha256": "sha256:890c417a4916aa9ada25188e7d3503490dc28162bc53937901e0bb67080eddcd",
+  "private_store_root": "/srv/bcache-8t/ygguo/backtest/g12h-authority-private/20260820-register-discovery-response-headers",
+  "schema_version": 1,
+  "source_count": 3,
+  "status": "EXACT_COOKIE_BEARING_HEADERS_PRIVATE_TRACKED_HEADERS_REDACTED",
+  "type": "g12h_register_discovery_private_header_store_receipt_v1"
+}

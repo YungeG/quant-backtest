@@ -1,0 +1,146 @@
+{
+  "deterministic_parity": {
+    "manifest_source_hash": "sha256:55cfd4b222e5c56798471d56a531e14f8142a361baf27638a3ac86dd9fe72857",
+    "publication_hash": "sha256:6fb2a4720a047bafba2e93d942a109f98dd1de02a0359b6fa70d22fe04be23de",
+    "publication_payload_hash": "sha256:6fb2a4720a047bafba2e93d942a109f98dd1de02a0359b6fa70d22fe04be23de",
+    "retention_payload_proof_hash": "sha256:995c718dabcd3902bd5fd4b0ba05ee0e9e36d703c69de75ac50dab56458e6907",
+    "retention_proof_hash": "sha256:995c718dabcd3902bd5fd4b0ba05ee0e9e36d703c69de75ac50dab56458e6907"
+  },
+  "first_publish": {
+    "already_published": false,
+    "manifest": {
+      "bundle_key": "synthetic-jsonl-bundle-validation-v1",
+      "capabilities": [
+        {
+          "key": "price_points",
+          "type": "market_bundle_capability",
+          "version": 1
+        }
+      ],
+      "content_hash": "sha256:c12911fe32e1388338c0c94abfe36df48f3c9fea2c7c73301b8f45939830bd62",
+      "coverage_end_exclusive": {
+        "epoch_nanoseconds": 1000,
+        "type": "utc_instant"
+      },
+      "coverage_start": {
+        "epoch_nanoseconds": 0,
+        "type": "utc_instant"
+      },
+      "instrument_catalog_hash": "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+      "schema_version": 1,
+      "streams": [
+        {
+          "capability": {
+            "key": "price_points",
+            "type": "market_bundle_capability",
+            "version": 1
+          },
+          "content_hash": "sha256:cbb9697caa7847efb0b3401e286bb9d804d36cca50f7d647e1f2221f3fc6375c",
+          "event_count": 3,
+          "event_type": "synthetic_price_point.v1",
+          "stream_key": "synthetic.prices",
+          "type": "market_stream_manifest"
+        }
+      ],
+      "type": "market_bundle_manifest"
+    },
+    "repository_path": {
+      "bundle_ref": {
+        "bundle_key": "synthetic-jsonl-bundle-validation-v1",
+        "manifest_hash": "sha256:55cfd4b222e5c56798471d56a531e14f8142a361baf27638a3ac86dd9fe72857",
+        "type": "market_bundle_ref"
+      },
+      "final_directory_relative_path": "bundles/synthetic-jsonl-bundle-validation-v1/55cfd4b222e5c56798471d56a531e14f8142a361baf27638a3ac86dd9fe72857",
+      "manifest_relative_path": "bundles/synthetic-jsonl-bundle-validation-v1/55cfd4b222e5c56798471d56a531e14f8142a361baf27638a3ac86dd9fe72857/manifest.json",
+      "publication_relative_path": "bundles/synthetic-jsonl-bundle-validation-v1/55cfd4b222e5c56798471d56a531e14f8142a361baf27638a3ac86dd9fe72857/publication.json",
+      "retention_proof_relative_path": "bundles/synthetic-jsonl-bundle-validation-v1/55cfd4b222e5c56798471d56a531e14f8142a361baf27638a3ac86dd9fe72857/retention-proof.json",
+      "stream_relative_paths": [
+        "bundles/synthetic-jsonl-bundle-validation-v1/55cfd4b222e5c56798471d56a531e14f8142a361baf27638a3ac86dd9fe72857/streams/000.payload"
+      ]
+    },
+    "retention_proof": {
+      "bundle_ref": {
+        "bundle_key": "synthetic-jsonl-bundle-validation-v1",
+        "manifest_hash": "sha256:55cfd4b222e5c56798471d56a531e14f8142a361baf27638a3ac86dd9fe72857",
+        "type": "market_bundle_ref"
+      },
+      "manifest_relative_path": "bundles/synthetic-jsonl-bundle-validation-v1/55cfd4b222e5c56798471d56a531e14f8142a361baf27638a3ac86dd9fe72857/manifest.json",
+      "manifest_source_hash": "sha256:55cfd4b222e5c56798471d56a531e14f8142a361baf27638a3ac86dd9fe72857",
+      "proof_hash": "sha256:995c718dabcd3902bd5fd4b0ba05ee0e9e36d703c69de75ac50dab56458e6907",
+      "publication_relative_path": "bundles/synthetic-jsonl-bundle-validation-v1/55cfd4b222e5c56798471d56a531e14f8142a361baf27638a3ac86dd9fe72857/publication.json",
+      "retention_policy_ref": "retention.local-market-bundle-repository-v1",
+      "schema_version": 1,
+      "stream_payload_hashes": [
+        "sha256:cbb9697caa7847efb0b3401e286bb9d804d36cca50f7d647e1f2221f3fc6375c"
+      ],
+      "stream_relative_paths": [
+        "bundles/synthetic-jsonl-bundle-validation-v1/55cfd4b222e5c56798471d56a531e14f8142a361baf27638a3ac86dd9fe72857/streams/000.payload"
+      ],
+      "type": "market_bundle_retention_proof"
+    }
+  },
+  "fixture_id": "local-market-bundle-repository-v1",
+  "paths": {
+    "final_directory_relative_path": "bundles/synthetic-jsonl-bundle-validation-v1/55cfd4b222e5c56798471d56a531e14f8142a361baf27638a3ac86dd9fe72857",
+    "manifest_relative_path": "bundles/synthetic-jsonl-bundle-validation-v1/55cfd4b222e5c56798471d56a531e14f8142a361baf27638a3ac86dd9fe72857/manifest.json",
+    "publication_relative_path": "bundles/synthetic-jsonl-bundle-validation-v1/55cfd4b222e5c56798471d56a531e14f8142a361baf27638a3ac86dd9fe72857/publication.json",
+    "retention_proof_relative_path": "bundles/synthetic-jsonl-bundle-validation-v1/55cfd4b222e5c56798471d56a531e14f8142a361baf27638a3ac86dd9fe72857/retention-proof.json",
+    "stream_relative_paths": [
+      "bundles/synthetic-jsonl-bundle-validation-v1/55cfd4b222e5c56798471d56a531e14f8142a361baf27638a3ac86dd9fe72857/streams/000.payload"
+    ]
+  },
+  "publication": {
+    "bundle_ref": {
+      "bundle_key": "synthetic-jsonl-bundle-validation-v1",
+      "manifest_hash": "sha256:55cfd4b222e5c56798471d56a531e14f8142a361baf27638a3ac86dd9fe72857",
+      "type": "market_bundle_ref"
+    },
+    "manifest_relative_path": "bundles/synthetic-jsonl-bundle-validation-v1/55cfd4b222e5c56798471d56a531e14f8142a361baf27638a3ac86dd9fe72857/manifest.json",
+    "publication_hash": "sha256:6fb2a4720a047bafba2e93d942a109f98dd1de02a0359b6fa70d22fe04be23de",
+    "retention_policy_ref": "retention.local-market-bundle-repository-v1",
+    "retention_proof_hash": "sha256:995c718dabcd3902bd5fd4b0ba05ee0e9e36d703c69de75ac50dab56458e6907",
+    "retention_proof_relative_path": "bundles/synthetic-jsonl-bundle-validation-v1/55cfd4b222e5c56798471d56a531e14f8142a361baf27638a3ac86dd9fe72857/retention-proof.json",
+    "schema_version": 1,
+    "stream_payload_hashes": [
+      "sha256:cbb9697caa7847efb0b3401e286bb9d804d36cca50f7d647e1f2221f3fc6375c"
+    ],
+    "stream_relative_paths": [
+      "bundles/synthetic-jsonl-bundle-validation-v1/55cfd4b222e5c56798471d56a531e14f8142a361baf27638a3ac86dd9fe72857/streams/000.payload"
+    ],
+    "type": "market_bundle_publication"
+  },
+  "relative_path_evidence": {
+    "manifest_relative_path": "bundles/synthetic-jsonl-bundle-validation-v1/55cfd4b222e5c56798471d56a531e14f8142a361baf27638a3ac86dd9fe72857/manifest.json",
+    "publication_relative_path": "bundles/synthetic-jsonl-bundle-validation-v1/55cfd4b222e5c56798471d56a531e14f8142a361baf27638a3ac86dd9fe72857/publication.json",
+    "retention_proof_relative_path": "bundles/synthetic-jsonl-bundle-validation-v1/55cfd4b222e5c56798471d56a531e14f8142a361baf27638a3ac86dd9fe72857/retention-proof.json"
+  },
+  "retention_proof_payload": {
+    "bundle_ref": {
+      "bundle_key": "synthetic-jsonl-bundle-validation-v1",
+      "manifest_hash": "sha256:55cfd4b222e5c56798471d56a531e14f8142a361baf27638a3ac86dd9fe72857",
+      "type": "market_bundle_ref"
+    },
+    "manifest_relative_path": "bundles/synthetic-jsonl-bundle-validation-v1/55cfd4b222e5c56798471d56a531e14f8142a361baf27638a3ac86dd9fe72857/manifest.json",
+    "manifest_source_hash": "sha256:55cfd4b222e5c56798471d56a531e14f8142a361baf27638a3ac86dd9fe72857",
+    "proof_hash": "sha256:995c718dabcd3902bd5fd4b0ba05ee0e9e36d703c69de75ac50dab56458e6907",
+    "publication_relative_path": "bundles/synthetic-jsonl-bundle-validation-v1/55cfd4b222e5c56798471d56a531e14f8142a361baf27638a3ac86dd9fe72857/publication.json",
+    "retention_policy_ref": "retention.local-market-bundle-repository-v1",
+    "schema_version": 1,
+    "stream_payload_hashes": [
+      "sha256:cbb9697caa7847efb0b3401e286bb9d804d36cca50f7d647e1f2221f3fc6375c"
+    ],
+    "stream_relative_paths": [
+      "bundles/synthetic-jsonl-bundle-validation-v1/55cfd4b222e5c56798471d56a531e14f8142a361baf27638a3ac86dd9fe72857/streams/000.payload"
+    ],
+    "type": "market_bundle_retention_proof"
+  },
+  "schema_version": 1,
+  "second_publish": {
+    "already_published": true,
+    "repository_path_eq": true,
+    "retention_proof_eq": true
+  },
+  "stream_payload_hashes": [
+    "sha256:cbb9697caa7847efb0b3401e286bb9d804d36cca50f7d647e1f2221f3fc6375c"
+  ]
+}

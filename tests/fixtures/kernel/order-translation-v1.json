@@ -1,0 +1,87 @@
+{
+  "fixture_id": "order-translation-v1",
+  "mapping": {
+    "config_hash": "sha256:4d0ac693fb60337a1fbb7af71dcef398123dbf634429cfa3a70ce12d38b6b4bb",
+    "mapping_hash": "sha256:63bb24b2ee854e52d54e720ec45da3fd215b865b8a10c3fbe4d9ae196e8c1b7d"
+  },
+  "report": {
+    "field_mappings": [
+      {
+        "canonical_field": "execution_style",
+        "canonical_value": "\"market\"",
+        "target_field": "order_style",
+        "target_value": "\"market\""
+      },
+      {
+        "canonical_field": "instrument_id",
+        "canonical_value": "{\"stable_key\":\"cash:btc-usd\",\"type\":\"instrument_id\",\"venue\":\"synthetic\"}",
+        "target_field": "instrument",
+        "target_value": "{\"stable_key\":\"cash:btc-usd\",\"type\":\"instrument_id\",\"venue\":\"synthetic\"}"
+      },
+      {
+        "canonical_field": "parent_id",
+        "canonical_value": "\"order-plan-v1:sha256:1111111111111111111111111111111111111111111111111111111111111111\"",
+        "target_field": "parent_reference",
+        "target_value": "\"order-plan-v1:sha256:1111111111111111111111111111111111111111111111111111111111111111\""
+      },
+      {
+        "canonical_field": "position_effect",
+        "canonical_value": "\"auto\"",
+        "target_field": "position_effect",
+        "target_value": "\"auto\""
+      },
+      {
+        "canonical_field": "price_constraint",
+        "canonical_value": "null",
+        "target_field": "price_terms",
+        "target_value": "null"
+      },
+      {
+        "canonical_field": "quantity",
+        "canonical_value": "{\"instrument_id\":\"synthetic:cash:btc-usd\",\"scale\":3,\"type\":\"quantity\",\"units\":2000}",
+        "target_field": "amount",
+        "target_value": "{\"instrument_id\":\"synthetic:cash:btc-usd\",\"scale\":3,\"type\":\"quantity\",\"units\":2000}"
+      },
+      {
+        "canonical_field": "reason",
+        "canonical_value": "\"rebalance\"",
+        "target_field": "reason",
+        "target_value": "\"rebalance\""
+      },
+      {
+        "canonical_field": "reduce_only",
+        "canonical_value": "false",
+        "target_field": "reduce_only",
+        "target_value": "false"
+      },
+      {
+        "canonical_field": "side",
+        "canonical_value": "\"buy\"",
+        "target_field": "direction",
+        "target_value": "\"buy\""
+      },
+      {
+        "canonical_field": "time_in_force",
+        "canonical_value": "\"day\"",
+        "target_field": "tif",
+        "target_value": "\"day\""
+      },
+      {
+        "canonical_field": "urgency",
+        "canonical_value": "\"normal\"",
+        "target_field": "urgency",
+        "target_value": "\"normal\""
+      }
+    ],
+    "report_id": "order-translation-report-v1:sha256:06fd8e28c7806a16dfe72d6aad01269d68488d7a56551a85800d3fabab020a03",
+    "status": "translated"
+  },
+  "result_hash": "sha256:8f188cc456e8cccf9ecda0fe69d4703a97b63c03219e6e5392167fa3db1c3341",
+  "spec": {
+    "capability_decision_hash": "sha256:e5c22a1e9db86d2c7ec721da519892d8daf5c2afae05a7a058c82392808e6241",
+    "capability_decision_id": "order-capability-decision-v1:sha256:fa55891204d111d0db91b295b68e76cd00a69503616b4b7243d5d63b17048e80",
+    "source_intent_hash": "sha256:7be0cf5ae88947677d1b1e432fdcb643d5d7c5a6256294c826294d6cf065f3e3",
+    "spec_hash": "sha256:7bb59dacc37b193ceb041767cc63c5353b922197f0c278c0e786d9d8cc911239",
+    "spec_id": "executable-order-spec-v1:sha256:2a51341591a098a0f3cfab15c0b45fe5aee5bbe60b102a62918e14c0a6ed58b5"
+  }
+}

@@ -1,0 +1,402 @@
+{
+  "captured_total_count": 1082,
+  "declared_total_count": 1082,
+  "declared_total_pages": 55,
+  "pages": [
+    {
+      "entry_count": 20,
+      "page": 1,
+      "raw_sha256": "sha256:c581d060e1dbd4da7aeb8609d84fea275c7b7fb9bc505ed5fd73a17c6e780ae3",
+      "response_code": 200,
+      "source_id": "chinaclear-notice-center-iframe-live"
+    },
+    {
+      "entry_count": 20,
+      "page": 2,
+      "raw_sha256": "sha256:0d4b0a6b8424b81fa93d87c9c234af3d926e4143811e6571314a4369ab142dd9",
+      "response_code": 200,
+      "source_id": "chinaclear-notice-center-page-02"
+    },
+    {
+      "entry_count": 20,
+      "page": 3,
+      "raw_sha256": "sha256:9f72c3007e2950e48e299360a7e756d81bc6289f73ffa316e156f23a3367c2b1",
+      "response_code": 200,
+      "source_id": "chinaclear-notice-center-page-03"
+    },
+    {
+      "entry_count": 20,
+      "page": 4,
+      "raw_sha256": "sha256:9ec710c8e3bd5a98b510fe0bd1183bcb4202100faf9e4b0f3907ba12124f7f25",
+      "response_code": 200,
+      "source_id": "chinaclear-notice-center-page-04"
+    },
+    {
+      "entry_count": 20,
+      "page": 5,
+      "raw_sha256": "sha256:ff0a7cf1899afad3382c84f961be05a5c285e748eb5d3af1f3ecd73303b617ef",
+      "response_code": 200,
+      "source_id": "chinaclear-notice-center-page-05"
+    },
+    {
+      "entry_count": 20,
+      "page": 6,
+      "raw_sha256": "sha256:2140d4396fb9293bb112ca5e569bf5f82c84cd42426e0dbc4a5ec8a2583e44fd",
+      "response_code": 200,
+      "source_id": "chinaclear-notice-center-page-06"
+    },
+    {
+      "entry_count": 20,
+      "page": 7,
+      "raw_sha256": "sha256:cc9405f58c9d37579ebed73b0296ebcfaf0ac5ae97259b55e52fab497df0e06c",
+      "response_code": 200,
+      "source_id": "chinaclear-notice-center-page-07"
+    },
+    {
+      "entry_count": 20,
+      "page": 8,
+      "raw_sha256": "sha256:9ea7a5e0a57e4d5ca65cc777f123782ae3dcda1079184d04e2d38e39f8daf1e1",
+      "response_code": 200,
+      "source_id": "chinaclear-notice-center-page-08"
+    },
+    {
+      "entry_count": 20,
+      "page": 9,
+      "raw_sha256": "sha256:51108d365298d6a887f7228ab35802a49044b665acd178a51be468b9fa7d2b4a",
+      "response_code": 200,
+      "source_id": "chinaclear-notice-center-page-09"
+    },
+    {
+      "entry_count": 20,
+      "page": 10,
+      "raw_sha256": "sha256:2eb89a9e4be77ca31451f6411fda43a9d1a264d98d77b6d197190a313fa4762a",
+      "response_code": 200,
+      "source_id": "chinaclear-notice-center-page-10"
+    },
+    {
+      "entry_count": 20,
+      "page": 11,
+      "raw_sha256": "sha256:433d12ca17eae3189cfad71dea63b87bb80bf077218465cde131f7083758e833",
+      "response_code": 200,
+      "source_id": "chinaclear-notice-center-page-11"
+    },
+    {
+      "entry_count": 20,
+      "page": 12,
+      "raw_sha256": "sha256:decf2eb4d3490c06a2e8b88494748d415107059cc4fb650da349264152462eeb",
+      "response_code": 200,
+      "source_id": "chinaclear-notice-center-page-12"
+    },
+    {
+      "entry_count": 20,
+      "page": 13,
+      "raw_sha256": "sha256:c44e19a72125bd235d2fafe1083c9da21e44b2f86112d54b148cb1230ffa472f",
+      "response_code": 200,
+      "source_id": "chinaclear-notice-center-page-13"
+    },
+    {
+      "entry_count": 20,
+      "page": 14,
+      "raw_sha256": "sha256:8cc4e06fb6955b1388b2d78bcc00b5de0d2a4a36ace89ad136ade81b8134206c",
+      "response_code": 200,
+      "source_id": "chinaclear-notice-center-page-14"
+    },
+    {
+      "entry_count": 20,
+      "page": 15,
+      "raw_sha256": "sha256:ce925ad0d8e51870270b952d455c2e8f181e6ff944150b9fdd836940a425a3e6",
+      "response_code": 200,
+      "source_id": "chinaclear-notice-center-page-15"
+    },
+    {
+      "entry_count": 20,
+      "page": 16,
+      "raw_sha256": "sha256:9e3bb4e24e2995e210448acfa9f9766124b0d3f86005e5905d7258f861b38a5b",
+      "response_code": 200,
+      "source_id": "chinaclear-notice-center-page-16"
+    },
+    {
+      "entry_count": 20,
+      "page": 17,
+      "raw_sha256": "sha256:e685383c22adbb8960f2da0b086bce964cb42e74ae3d49bd8b519c0209e632fc",
+      "response_code": 200,
+      "source_id": "chinaclear-notice-center-page-17"
+    },
+    {
+      "entry_count": 20,
+      "page": 18,
+      "raw_sha256": "sha256:55bc51b377bb2fb283dba024956c8361d5962aa92bb9fb1c5cfa0acefb64b40e",
+      "response_code": 200,
+      "source_id": "chinaclear-notice-center-page-18"
+    },
+    {
+      "entry_count": 20,
+      "page": 19,
+      "raw_sha256": "sha256:49c213d1901079ea7ae76b6f0d9a9e7ba842037d6aa4136a5aca1ce8877d161d",
+      "response_code": 200,
+      "source_id": "chinaclear-notice-center-page-19"
+    },
+    {
+      "entry_count": 20,
+      "page": 20,
+      "raw_sha256": "sha256:fd1c6f9f556146dcf2cc6aee6f1de7fdad512d1e8f0b621b6487d41608d83373",
+      "response_code": 200,
+      "source_id": "chinaclear-notice-center-page-20"
+    },
+    {
+      "entry_count": 20,
+      "page": 21,
+      "raw_sha256": "sha256:2bb67865e4294d3c68b594500c13707ec5217076e2ba99c011a3e32dc20a7959",
+      "response_code": 200,
+      "source_id": "chinaclear-notice-center-page-21"
+    },
+    {
+      "entry_count": 20,
+      "page": 22,
+      "raw_sha256": "sha256:10eb8db574e86bdfb8c678e10a5a02386c168a16278966e7ed6f6d688b9f562d",
+      "response_code": 200,
+      "source_id": "chinaclear-notice-center-page-22"
+    },
+    {
+      "entry_count": 20,
+      "page": 23,
+      "raw_sha256": "sha256:daa311e9a72d04da8d76fc3c07d72bae7df6a86bce27bc9ac0d35535639fea5c",
+      "response_code": 200,
+      "source_id": "chinaclear-notice-center-page-23"
+    },
+    {
+      "entry_count": 20,
+      "page": 24,
+      "raw_sha256": "sha256:8a238c6b93aace118039592b6699d90bb2429cc62d20faf0fdd12c616bbcb70d",
+      "response_code": 200,
+      "source_id": "chinaclear-notice-center-page-24"
+    },
+    {
+      "entry_count": 20,
+      "page": 25,
+      "raw_sha256": "sha256:095d63d336487399bb9c84b0d51a4ce55280b51e015abf24f4de88d8ad1f5ff1",
+      "response_code": 200,
+      "source_id": "chinaclear-notice-center-page-25"
+    },
+    {
+      "entry_count": 20,
+      "page": 26,
+      "raw_sha256": "sha256:f380e8224057f3b340c70fa246501ba29606173982c5e6e464eaf815c23a5712",
+      "response_code": 200,
+      "source_id": "chinaclear-notice-center-page-26"
+    },
+    {
+      "entry_count": 20,
+      "page": 27,
+      "raw_sha256": "sha256:3814d4374510e5414dd081cf33c061831fae33e62a9bbc6f245b75127e7d12df",
+      "response_code": 200,
+      "source_id": "chinaclear-notice-center-page-27"
+    },
+    {
+      "entry_count": 20,
+      "page": 28,
+      "raw_sha256": "sha256:ec87d91782ccdf1c66551c7b4bfa86e6e43b2f2c1bfb1768734ac6dc812ad51c",
+      "response_code": 200,
+      "source_id": "chinaclear-notice-center-page-28"
+    },
+    {
+      "entry_count": 20,
+      "page": 29,
+      "raw_sha256": "sha256:ba31aed1783e14a47e3cd3a8d95cd0252391be400146c9c6681b33cb63e9667b",
+      "response_code": 200,
+      "source_id": "chinaclear-notice-center-page-29"
+    },
+    {
+      "entry_count": 20,
+      "page": 30,
+      "raw_sha256": "sha256:9d0015a6772beb9fce15bf2b2cd75de2fee220279b74c1a838d145d288dfa8bd",
+      "response_code": 200,
+      "source_id": "chinaclear-notice-center-page-30"
+    },
+    {
+      "entry_count": 20,
+      "page": 31,
+      "raw_sha256": "sha256:971d170e7b931875140696d5dbe9ac955c66b780720e211a84bdb105afb853ca",
+      "response_code": 200,
+      "source_id": "chinaclear-notice-center-page-31"
+    },
+    {
+      "entry_count": 20,
+      "page": 32,
+      "raw_sha256": "sha256:d36a2a81f887e366b05fc5f76ec318125bcba9aaef98177c2a4693414ed76a3c",
+      "response_code": 200,
+      "source_id": "chinaclear-notice-center-page-32"
+    },
+    {
+      "entry_count": 20,
+      "page": 33,
+      "raw_sha256": "sha256:ba4fc2fc9fcb833467d2ff13831959c3e9a31e6f84940bf36007d2296bb05895",
+      "response_code": 200,
+      "source_id": "chinaclear-notice-center-page-33"
+    },
+    {
+      "entry_count": 20,
+      "page": 34,
+      "raw_sha256": "sha256:fd7774fd7773786a8cb2d98c8ff45a01d1cb6fe78960ddfa3fe5713fe007d4a3",
+      "response_code": 200,
+      "source_id": "chinaclear-notice-center-page-34"
+    },
+    {
+      "entry_count": 20,
+      "page": 35,
+      "raw_sha256": "sha256:51a7996e0cee92bde461232aea90a7b7880ae9a91d5cc5e3bbd930ce7d7a910e",
+      "response_code": 200,
+      "source_id": "chinaclear-notice-center-page-35"
+    },
+    {
+      "entry_count": 20,
+      "page": 36,
+      "raw_sha256": "sha256:297fd00302c8134014b67efae583d7901672c715832641b8b55025e493a38059",
+      "response_code": 200,
+      "source_id": "chinaclear-notice-center-page-36"
+    },
+    {
+      "entry_count": 20,
+      "page": 37,
+      "raw_sha256": "sha256:d50ab89d8cbc4904e2a9729f29ecf7eada8fb429fecfec15bf263cca8d85f74c",
+      "response_code": 200,
+      "source_id": "chinaclear-notice-center-page-37"
+    },
+    {
+      "entry_count": 20,
+      "page": 38,
+      "raw_sha256": "sha256:54b72cca8a947872bdf505e19cb48c6b0d0ade6ddc47f52c2e740fb2938a4d63",
+      "response_code": 200,
+      "source_id": "chinaclear-notice-center-page-38"
+    },
+    {
+      "entry_count": 20,
+      "page": 39,
+      "raw_sha256": "sha256:66dc8514fbe900b6e8292823dbfdc7c1f53313200e4049d5bcfc182f47849af3",
+      "response_code": 200,
+      "source_id": "chinaclear-notice-center-page-39"
+    },
+    {
+      "entry_count": 20,
+      "page": 40,
+      "raw_sha256": "sha256:9a14eaeeb19e1e8c4201ec87002947ab64e70e72f501f495cd641b04be793af8",
+      "response_code": 200,
+      "source_id": "chinaclear-notice-center-page-40"
+    },
+    {
+      "entry_count": 20,
+      "page": 41,
+      "raw_sha256": "sha256:d24e27837f9945d5f4fec683df2e2b853452979c1e637b77bbc8826c47448247",
+      "response_code": 200,
+      "source_id": "chinaclear-notice-center-page-41"
+    },
+    {
+      "entry_count": 20,
+      "page": 42,
+      "raw_sha256": "sha256:c3797795feeb0fe57b4d12bc436c2c8ea71b0ce599949729a39be077fe0a5b07",
+      "response_code": 200,
+      "source_id": "chinaclear-notice-center-page-42"
+    },
+    {
+      "entry_count": 20,
+      "page": 43,
+      "raw_sha256": "sha256:46aa8ab15b307becd127896eb1141b83ae44cfeab6353b51a402d27598e7d333",
+      "response_code": 200,
+      "source_id": "chinaclear-notice-center-page-43"
+    },
+    {
+      "entry_count": 20,
+      "page": 44,
+      "raw_sha256": "sha256:a56adb33fc704d1545a34e95851785400d29b1eac7d4bf09e69fdf6180ca52e1",
+      "response_code": 200,
+      "source_id": "chinaclear-notice-center-page-44"
+    },
+    {
+      "entry_count": 20,
+      "page": 45,
+      "raw_sha256": "sha256:37220a36c23062d33a5814e28b562d9dfce49415fe72c40576822b8c1aeb07c5",
+      "response_code": 200,
+      "source_id": "chinaclear-notice-center-page-45"
+    },
+    {
+      "entry_count": 20,
+      "page": 46,
+      "raw_sha256": "sha256:314d0f05024179ee474ef6cbee0d9beae81d6efa425ca5dfc9b2ce8599c4e3ae",
+      "response_code": 200,
+      "source_id": "chinaclear-notice-center-page-46"
+    },
+    {
+      "entry_count": 20,
+      "page": 47,
+      "raw_sha256": "sha256:e92b4de51243e87578a47b76970ca5afa77d8ea051b1c0a961241aba02f00e2e",
+      "response_code": 200,
+      "source_id": "chinaclear-notice-center-page-47"
+    },
+    {
+      "entry_count": 20,
+      "page": 48,
+      "raw_sha256": "sha256:17b327edacb2a5bdb7984e38ae52c4e9aaa3903d8ccabcdb152d15f1ac12d5a2",
+      "response_code": 200,
+      "source_id": "chinaclear-notice-center-page-48"
+    },
+    {
+      "entry_count": 20,
+      "page": 49,
+      "raw_sha256": "sha256:f9f4bc36ca9db3cbd5f6924e96f6ba902e0d1b0c43ab7ca94f8b2eb6683ca392",
+      "response_code": 200,
+      "source_id": "chinaclear-notice-center-page-49"
+    },
+    {
+      "entry_count": 20,
+      "page": 50,
+      "raw_sha256": "sha256:7d42a015f7f2f9651c5d03f2aed6ebd11dd61799fa2d47bbbbe55bca92a99772",
+      "response_code": 200,
+      "source_id": "chinaclear-notice-center-page-50"
+    },
+    {
+      "entry_count": 20,
+      "page": 51,
+      "raw_sha256": "sha256:250002836b41be50244ab00dfc083d2f1315def1ec2d22a535c32dc5b447e40f",
+      "response_code": 200,
+      "source_id": "chinaclear-notice-center-page-51"
+    },
+    {
+      "entry_count": 20,
+      "page": 52,
+      "raw_sha256": "sha256:5830859fb63a0815d6ebe842c709fd9eb092f68f1fe7c4e18457d99e8f89145d",
+      "response_code": 200,
+      "source_id": "chinaclear-notice-center-page-52"
+    },
+    {
+      "entry_count": 20,
+      "page": 53,
+      "raw_sha256": "sha256:3cfc047504a6e94275d34de762044152c93d1e261cc567e8ceb54c3a29bdffe1",
+      "response_code": 200,
+      "source_id": "chinaclear-notice-center-page-53"
+    },
+    {
+      "entry_count": 20,
+      "page": 54,
+      "raw_sha256": "sha256:3bde5cdaabaed5a8020c9ba01dccb481d3d2c60c665c05a3dcc448a7a068430f",
+      "response_code": 200,
+      "source_id": "chinaclear-notice-center-page-54"
+    },
+    {
+      "entry_count": 2,
+      "page": 55,
+      "raw_sha256": "sha256:4d0bc405ab84b5a725cc0da6042be175c8a645a318038c75f2d8429a34b3824a",
+      "response_code": 200,
+      "source_id": "chinaclear-notice-center-page-55"
+    }
+  ],
+  "qualification_limit": "The current notice corpus is not declared as a complete transfer-fee amendment/correction/successor register.",
+  "schema_version": 1,
+  "status": "RANGE_TERMINATED_DISCOVERY_ONLY",
+  "terminal_request": {
+    "location": "http://www.chinaclear.cn",
+    "meaning": "Out-of-range page redirects to the issuer homepage; page 55 is the issuer-script-declared final page.",
+    "response_code": 302,
+    "source_id": "chinaclear-notice-center-page-56-terminal"
+  },
+  "type": "g12h_chinaclear_notice_pagination_receipt_v1"
+}

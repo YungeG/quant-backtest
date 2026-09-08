@@ -1,0 +1,17 @@
+{
+  "fixture_id": "canonical-envelope-v1",
+  "schema_version": 1,
+  "schema_name": "portfolio_snapshot",
+  "envelope_schema_version": 1,
+  "payload": {
+    "run_id": "run-1",
+    "cash": {
+      "type": "money",
+      "units": 12345,
+      "scale": 2,
+      "currency": "USD"
+    }
+  },
+  "expected_utf8": "{\"payload\":{\"cash\":{\"currency\":\"USD\",\"scale\":2,\"type\":\"money\",\"units\":12345},\"run_id\":\"run-1\"},\"schema\":{\"name\":\"portfolio_snapshot\",\"version\":1}}",
+  "expected_sha256": "sha256:d0888ef07ed47f336508c6ab27d1149c3da101936c5bd35db873f99663b214ee"
+}

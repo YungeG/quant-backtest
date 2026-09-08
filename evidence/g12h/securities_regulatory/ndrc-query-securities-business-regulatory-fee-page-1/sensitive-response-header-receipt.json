@@ -1,0 +1,29 @@
+{
+  "files": [
+    {
+      "exact_private_path": "/srv/bcache-8t/ygguo/backtest/g12h-authority-private/20260820-wave1-response-headers/securities_regulatory/ndrc-query-securities-business-regulatory-fee-page-1/response.headers",
+      "exact_private_sha256": "sha256:3ded2abf9b0513a941a42c7b259b160ef400cf97dd9bb40985cd01496b74d7b2",
+      "redaction": "Set-Cookie value replaced by its SHA-256; cookie name and attributes retained.",
+      "tracked_path": "securities_regulatory/ndrc-query-securities-business-regulatory-fee-page-1/response.headers",
+      "tracked_redacted_sha256": "sha256:444038a5f8186e2c99a490b7a8260b9a575d13a9d4632807c991c6aa4eca2e87"
+    },
+    {
+      "exact_private_path": "/srv/bcache-8t/ygguo/backtest/g12h-authority-private/20260820-wave1-response-headers/securities_regulatory/ndrc-query-securities-business-regulatory-fee-page-1/transport.log",
+      "exact_private_sha256": "sha256:481746622ac650e4b73fdc7191c8715965a76ad792f3babd4b3aa225c924b73d",
+      "redaction": "Set-Cookie value replaced by its SHA-256; cookie name and attributes retained.",
+      "tracked_path": "securities_regulatory/ndrc-query-securities-business-regulatory-fee-page-1/transport.log",
+      "tracked_redacted_sha256": "sha256:941da534ee64c64f37f46415e1629e5065bf7f2e3d2f5c99a7547da09c035ff1"
+    },
+    {
+      "exact_private_path": "/srv/bcache-8t/ygguo/backtest/g12h-authority-private/20260820-wave1-response-headers/securities_regulatory/ndrc-query-securities-business-regulatory-fee-page-1/redirects.json",
+      "exact_private_sha256": "sha256:907e48955abe27e216fd966a5f5120fe289a341118437d0b6973f0d40cb7306b",
+      "redaction": "Set-Cookie value replaced by its SHA-256; cookie name and attributes retained.",
+      "tracked_path": "securities_regulatory/ndrc-query-securities-business-regulatory-fee-page-1/redirects.json",
+      "tracked_redacted_sha256": "sha256:09f2bca6dbb34407a88c61b9b483714e49ba0085b1cfa100b9dcda2a685609f2"
+    }
+  ],
+  "private_store_root": "/srv/bcache-8t/ygguo/backtest/g12h-authority-private/20260820-wave1-response-headers",
+  "schema_version": 1,
+  "source_id": "ndrc-query-securities-business-regulatory-fee-page-1",
+  "type": "g12h_sensitive_response_header_receipt_v1"
+}
