@@ -2,33 +2,43 @@
 
 from __future__ import annotations
 
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from enum import Enum
-from typing import Any, Protocol, runtime_checkable
+from typing import Any, ClassVar, Protocol, runtime_checkable
 import unicodedata
 
 from crypto_quant_domain import (
     AccountingJournalEntry,
     CashBalanceKey,
+    CurrencyId,
     DomainId,
     DomainIdKind,
+    FeeBasisType,
     Fill,
+    InstrumentCatalog,
+    Order,
     PortfolioSnapshot,
     PositionBalanceKey,
     PositionLot,
     Price,
+    PricePurpose,
     QuantizationPolicy,
+    Scale,
     SimulationInstant,
+    SourceSequence,
     UtcInstant,
     canonical_bytes,
     canonical_sha256,
 )
 from crypto_quant_trading import (
     AccountingJournal,
+    AccountSettlementObligation,
     CashInstrumentAccounting,
     CostBasisPolicy,
+    CurrencyValuationGraph,
     FinalFeeAssessmentResult,
     FinalFeeRuleSet,
+    FeeReservationRuleSet,
     LedgerBalanceRegistration,
     LedgerState,
     LinearFundingApplicationIdentity,
@@ -36,7 +46,11 @@ from crypto_quant_trading import (
     PortfolioSnapshotProjector,
     ProfileComponentRef,
     ProfilePortType,
+    ResolvedMark,
     ResourceReservationState,
+    SettlementBook,
+    SettlementEvent,
+    SettlementEventType,
 )
 
 from .ports import SimulationComponentRef, SimulationPortType
@@ -314,9 +328,101 @@ class CashFillAccountingPlan:
 
 
 @dataclass(frozen=True, slots=True)
+class ProfileFeeRuleBinding:
+    """V7 policy identity only; actual Order/Fill rule sets are runtime values."""
+
+    dispatcher_spec_hash: str
+    assessment_currency: CurrencyId
+    assessment_scale: Scale
+
+    def __post_init__(self) -> None:
+        _hash("dispatcher_spec_hash", self.dispatcher_spec_hash)
+        if type(self.assessment_currency) is not CurrencyId or type(self.assessment_scale) is not Scale:
+            raise TypeError("profile fee binding requires exact currency and scale")
+
+    def to_canonical_dict(self) -> dict[str, object]:
+        return {"type": "profile_fee_rule_binding", "schema_version": 1,
+                "dispatcher_spec_hash": self.dispatcher_spec_hash,
+                "assessment_currency": self.assessment_currency, "assessment_scale": self.assessment_scale.places}
+
+
+@dataclass(frozen=True, slots=True)
+class ProfileFeeRuleQuery:
+    binding: ProfileFeeRuleBinding
+    order: Order
+    evaluated_at: SimulationInstant
+    basis_type: FeeBasisType | None = None  # None = reservation, not a final assessment.
+    fill: Fill | None = None
+
+    def __post_init__(self) -> None:
+        if (type(self.binding) is not ProfileFeeRuleBinding or type(self.order) is not Order
+                or type(self.evaluated_at) is not SimulationInstant):
+            raise TypeError("profile fee query requires exact immutable inputs")
+        if self.order.created_at > self.evaluated_at:
+            raise ValueError("profile fee query precedes actual order receipt")
+        if self.basis_type is None:
+            if self.fill is not None:
+                raise ValueError("reservation query cannot carry a future fill")
+        elif (self.basis_type is not FeeBasisType.FILL and self.basis_type is not FeeBasisType.ORDER) or type(self.fill) is not Fill:
+            raise ValueError("final profile fee query requires actual FILL/ORDER basis")
+        elif (self.fill.order_id != self.order.order_id
+                or self.fill.account_id != self.order.account_id
+                or self.fill.instrument_id != self.order.intent.instrument_id
+                or self.fill.side is not self.order.intent.side
+                or not self.order.created_at.instant <= self.fill.execution_time <= self.evaluated_at.instant):
+            raise ValueError("profile fee query fill does not bind actual order")
+
+    def to_canonical_dict(self) -> dict[str, object]:
+        return {"type": "profile_fee_rule_query", "schema_version": 1,
+                "binding": self.binding, "order": self.order, "evaluated_at": self.evaluated_at,
+                "basis_type": self.basis_type.value if self.basis_type is not None else None, "fill": self.fill}
+
+
+@dataclass(frozen=True, slots=True)
+class ProfileFeeRuleResolution:
+    query: ProfileFeeRuleQuery
+    rule_set: FeeReservationRuleSet | FinalFeeRuleSet | None
+    evidence: tuple[object, ...]
+    failure_code: str | None = None
+
+    def __post_init__(self) -> None:
+        if type(self.query) is not ProfileFeeRuleQuery or type(self.evidence) is not tuple or not self.evidence:
+            raise TypeError("profile fee resolution requires exact query and nonempty evidence")
+        for value in self.evidence:
+            _canonical_payload("profile fee evidence", value)
+        if (self.rule_set is None) == (self.failure_code is None):
+            raise ValueError("profile fee resolution requires exactly one result or failure")
+        if self.failure_code is not None:
+            _text("failure_code", self.failure_code)
+            return
+        rules, binding = self.rule_set, self.query.binding
+        if self.query.basis_type is None:
+            if type(rules) is not FeeReservationRuleSet:
+                raise TypeError("reservation query requires exact FeeReservationRuleSet")
+            currency, scale = rules.reservation_currency, rules.reservation_scale
+        else:
+            if type(rules) is not FinalFeeRuleSet:
+                raise TypeError("final query requires exact FinalFeeRuleSet")
+            if any(rule.basis_type is not self.query.basis_type for rule in rules.charge_rules):
+                raise ValueError("profile final fee basis mismatch")
+            currency, scale = rules.assessment_currency, rules.assessment_scale
+        if (currency, scale) != (binding.assessment_currency, binding.assessment_scale):
+            raise ValueError("profile fee resolution currency/scale mismatch")
+
+    def to_canonical_dict(self) -> dict[str, object]:
+        return {"type": "profile_fee_rule_resolution", "schema_version": 1, "query": self.query,
+                "rule_set": self.rule_set, "evidence": self.evidence, "failure_code": self.failure_code}
+
+
+@runtime_checkable
+class ProfileFeeRuleResolver(Protocol):
+    def resolve_fee_rules(self, query: ProfileFeeRuleQuery, /) -> ProfileFeeRuleResolution: ...
+
+
+@dataclass(frozen=True, slots=True)
 class FeeAccountingDispatchPlan:
     cash_key: CashBalanceKey
-    final_fee_rule_set: FinalFeeRuleSet
+    final_fee_rule_set: FinalFeeRuleSet | ProfileFeeRuleBinding
     fee_assessment_id: DomainId
     fee_assessment_time: UtcInstant
     fee_journal_entry_id: DomainId
@@ -325,8 +431,8 @@ class FeeAccountingDispatchPlan:
     def __post_init__(self) -> None:
         if not isinstance(self.cash_key, CashBalanceKey):
             raise TypeError("cash_key must be CashBalanceKey")
-        if not isinstance(self.final_fee_rule_set, FinalFeeRuleSet):
-            raise TypeError("final_fee_rule_set must be FinalFeeRuleSet")
+        if not isinstance(self.final_fee_rule_set, FinalFeeRuleSet) and type(self.final_fee_rule_set) is not ProfileFeeRuleBinding:
+            raise TypeError("final_fee_rule_set must be FinalFeeRuleSet or exact ProfileFeeRuleBinding")
         if (
             not isinstance(self.fee_assessment_id, DomainId)
             or self.fee_assessment_id.kind is not DomainIdKind.FEE
@@ -344,6 +450,14 @@ class FeeAccountingDispatchPlan:
         if self.fee_assessment_time > self.fee_recorded_at.instant:
             raise ValueError("fee accounting times must be monotonic")
 
+    @property
+    def assessment_at(self) -> SimulationInstant:
+        return SimulationInstant(
+            self.fee_assessment_time,
+            self.fee_recorded_at.phase,
+            SourceSequence(max(0, self.fee_recorded_at.source_sequence.value - 1)),
+        )
+
     def to_canonical_dict(self) -> dict[str, object]:
         return {
             "type": "fee_accounting_dispatch_plan",
@@ -355,6 +469,44 @@ class FeeAccountingDispatchPlan:
             "fee_journal_entry_id": self.fee_journal_entry_id,
             "fee_recorded_at": self.fee_recorded_at,
         }
+
+
+@dataclass(frozen=True, slots=True)
+class FullFillOrderFeeAccountingPlan(FeeAccountingDispatchPlan):
+    """One terminal ORDER charge, optionally preceded by a distinct FILL charge."""
+
+    fill_fee_plan: FeeAccountingDispatchPlan | None = None
+
+    def __post_init__(self) -> None:
+        FeeAccountingDispatchPlan.__post_init__(self)
+        prior = self.fill_fee_plan
+        if prior is None:
+            return
+        if type(prior) is not FeeAccountingDispatchPlan:
+            raise TypeError("fill_fee_plan must be exact FILL FeeAccountingDispatchPlan")
+        if (
+            prior.cash_key != self.cash_key
+            or prior.final_fee_rule_set.assessment_currency != self.final_fee_rule_set.assessment_currency
+            or prior.final_fee_rule_set.assessment_scale != self.final_fee_rule_set.assessment_scale
+            or self.final_fee_rule_set.assessment_currency != self.cash_key.currency_id
+        ):
+            raise ValueError("combined fee cash context mismatch")
+        if (
+            prior.fee_assessment_id == self.fee_assessment_id
+            or prior.fee_journal_entry_id == self.fee_journal_entry_id
+        ):
+            raise ValueError("combined fee identities must be distinct")
+        if prior.fee_recorded_at >= self.assessment_at:
+            raise ValueError("FILL fee must be recorded before ORDER assessment")
+
+    def to_canonical_dict(self) -> dict[str, object]:
+        payload = {
+            **FeeAccountingDispatchPlan.to_canonical_dict(self),
+            "type": "full_fill_order_fee_accounting_plan",
+        }
+        if self.fill_fee_plan is not None:
+            payload["fill_fee_plan"] = self.fill_fee_plan
+        return payload
 
 
 @dataclass(frozen=True, slots=True)
@@ -394,6 +546,12 @@ class FillAccountingDispatchPlan:
             raise TypeError("fill_recorded_at must be SimulationInstant")
         if not isinstance(self.fee_plan, FeeAccountingDispatchPlan):
             raise TypeError("fee_plan must be FeeAccountingDispatchPlan")
+        if isinstance(self.fee_plan, FullFillOrderFeeAccountingPlan) and self.fee_plan.fill_fee_plan is not None:
+            prior = self.fee_plan.fill_fee_plan
+            if prior.assessment_at < self.fill_recorded_at or prior.fee_recorded_at <= self.fill_recorded_at:
+                raise ValueError("FILL fee must follow position accounting")
+            if self.fill_journal_entry_id in (prior.fee_journal_entry_id, self.fee_plan.fee_journal_entry_id):
+                raise ValueError("combined fee journals must differ from position journal")
         object.__setattr__(
             self,
             "expected_artifact_roles",
@@ -413,6 +571,166 @@ class FillAccountingDispatchPlan:
             "fill_recorded_at": self.fill_recorded_at,
             "fee_plan": self.fee_plan,
             "expected_artifact_roles": self.expected_artifact_roles,
+        }
+
+
+@dataclass(frozen=True, slots=True)
+class EventScopedFillAccountingDispatchPlan(FillAccountingDispatchPlan):
+    """Explicit opt-in to per-event artifacts; legacy role semantics stay fixed."""
+
+    def __post_init__(self) -> None:
+        FillAccountingDispatchPlan.__post_init__(self)
+        if f"position_accounting.{self.source_event_id}" not in self.expected_artifact_roles:
+            raise ValueError("event-scoped fill must declare its position accounting role")
+
+    def to_canonical_dict(self) -> dict[str, object]:
+        return {**FillAccountingDispatchPlan.to_canonical_dict(self),
+                "type": "event_scoped_fill_accounting_dispatch_plan"}
+
+
+@dataclass(frozen=True, slots=True)
+class SettlementIdentitySlot:
+    """Reserved identities for one possible fill leg; no amount or due time."""
+
+    balance_key: CashBalanceKey | PositionBalanceKey
+    obligation_id: DomainId
+    recorded_event_id: str
+    applied_event_id: str
+
+    def __post_init__(self) -> None:
+        if not isinstance(self.balance_key, (CashBalanceKey, PositionBalanceKey)):
+            raise TypeError("settlement slot requires a balance key")
+        if not isinstance(self.obligation_id, DomainId) or self.obligation_id.kind is not DomainIdKind.SETTLEMENT:
+            raise ValueError("settlement slot requires a SETTLEMENT identity")
+        _text("recorded_event_id", self.recorded_event_id)
+        _text("applied_event_id", self.applied_event_id)
+        if len({self.obligation_id.value, self.recorded_event_id, self.applied_event_id}) != 3:
+            raise ValueError("settlement slot identities must be distinct")
+
+    def to_canonical_dict(self) -> dict[str, object]:
+        return {"type": "settlement_identity_slot", "schema_version": 1,
+                "balance_key": self.balance_key, "obligation_id": self.obligation_id,
+                "recorded_event_id": self.recorded_event_id, "applied_event_id": self.applied_event_id}
+
+
+@dataclass(frozen=True, slots=True, kw_only=True)
+class SettlementFillAccountingDispatchPlan(EventScopedFillAccountingDispatchPlan):
+    settlement_slots: tuple[SettlementIdentitySlot, ...]
+    settlement_recorded_at: SimulationInstant
+
+    def __post_init__(self) -> None:
+        EventScopedFillAccountingDispatchPlan.__post_init__(self)
+        payload = self.position_payload
+        if type(payload) is not CashFillAccountingPlan:
+            raise TypeError("settlement fill requires CashFillAccountingPlan")
+        if (not isinstance(self.settlement_slots, tuple) or len(self.settlement_slots) != 2
+                or not all(type(slot) is SettlementIdentitySlot for slot in self.settlement_slots)
+                or tuple(slot.balance_key for slot in self.settlement_slots) != (payload.cash_key, payload.position_key)):
+            raise ValueError("settlement slots must cover exactly Cash then Position")
+        identities = tuple(value for slot in self.settlement_slots
+                           for value in (slot.obligation_id.value, slot.recorded_event_id, slot.applied_event_id))
+        if len(set(identities)) != len(identities):
+            raise ValueError("duplicate settlement slot identity")
+        if (not isinstance(self.settlement_recorded_at, SimulationInstant)
+                or self.settlement_recorded_at.instant != self.fill_recorded_at.instant
+                or self.settlement_recorded_at >= self.fill_recorded_at):
+            raise ValueError("settlement recording must precede accounting at the same fill UTC")
+        if f"settlement.{self.source_event_id}" not in self.expected_artifact_roles:
+            raise ValueError("settlement fill must declare its settlement artifact")
+
+    def to_canonical_dict(self) -> dict[str, object]:
+        return {**EventScopedFillAccountingDispatchPlan.to_canonical_dict(self),
+                "type": "settlement_fill_accounting_dispatch_plan",
+                "settlement_slots": self.settlement_slots, "settlement_recorded_at": self.settlement_recorded_at}
+
+
+@dataclass(frozen=True, slots=True)
+class SettlementApplicationPlan:
+    """Engine-derived request at an observed boundary, never a future event."""
+
+    boundary_event_id: str
+    boundary_evidence_hash: str
+    prior_settlement_book_hash: str
+    slots: tuple[SettlementIdentitySlot, ...]
+    include_boundary: bool = field(default=True, kw_only=True)
+    operation_key: ClassVar[str] = "generic.settlement.apply-due.v1"
+
+    def __post_init__(self) -> None:
+        _text("boundary_event_id", self.boundary_event_id)
+        _hash("boundary_evidence_hash", self.boundary_evidence_hash)
+        _hash("prior_settlement_book_hash", self.prior_settlement_book_hash)
+        if type(self.include_boundary) is not bool:
+            raise TypeError("include_boundary must be bool")
+        if not isinstance(self.slots, tuple) or not self.slots or not all(type(slot) is SettlementIdentitySlot for slot in self.slots):
+            raise ValueError("due application requires nonempty settlement slots")
+        ids = tuple(slot.obligation_id.value for slot in self.slots)
+        if len(set(ids)) != len(ids):
+            raise ValueError("duplicate due obligation")
+        object.__setattr__(self, "slots", tuple(sorted(self.slots, key=lambda slot: slot.obligation_id.value)))
+
+    def to_canonical_dict(self) -> dict[str, object]:
+        return {"type": "settlement_application_plan", "schema_version": 1,
+                "boundary_event_id": self.boundary_event_id, "boundary_evidence_hash": self.boundary_evidence_hash,
+                "prior_settlement_book_hash": self.prior_settlement_book_hash, "slots": self.slots,
+                **({"include_boundary": False} if not self.include_boundary else {})}
+
+
+@dataclass(frozen=True, slots=True)
+class LedgerCashSnapshotProjectionPlan:
+    """Resolved valuation authority, never precomputed holdings or amounts.
+
+    The identity-only currency graph and V2 cash-lot scope are deliberate. This
+    is not an FX/derivatives projector or a legacy execution-input codec upgrade.
+    """
+
+    operation_key: ClassVar[str] = "generic.cash.project-ledger-snapshot.v1"
+    resolved_marks: tuple[ResolvedMark, ...]
+    reporting_currency: CurrencyId
+    reporting_scale: Scale
+    projection_at: SimulationInstant
+    instrument_catalog: InstrumentCatalog
+    currency_valuation_graph: CurrencyValuationGraph
+    notional_quantization: QuantizationPolicy
+
+    def __post_init__(self) -> None:
+        if type(self.resolved_marks) is not tuple or not all(
+            isinstance(mark, ResolvedMark) for mark in self.resolved_marks
+        ):
+            raise TypeError("resolved_marks must contain ResolvedMark")
+        if not isinstance(self.reporting_currency, CurrencyId):
+            raise TypeError("reporting_currency must be CurrencyId")
+        if not isinstance(self.reporting_scale, Scale):
+            raise TypeError("reporting_scale must be Scale")
+        if not isinstance(self.projection_at, SimulationInstant):
+            raise TypeError("projection_at must be SimulationInstant")
+        if not isinstance(self.instrument_catalog, InstrumentCatalog):
+            raise TypeError("instrument_catalog must be InstrumentCatalog")
+        if not isinstance(self.currency_valuation_graph, CurrencyValuationGraph):
+            raise TypeError("currency_valuation_graph must be CurrencyValuationGraph")
+        if not isinstance(self.notional_quantization, QuantizationPolicy):
+            raise TypeError("notional_quantization must be QuantizationPolicy")
+        graph = self.currency_valuation_graph
+        if (
+            graph.valuation_at != self.projection_at.instant
+            or graph.price_purpose is not PricePurpose.VALUATION
+            or graph.edges
+        ):
+            raise ValueError("cash valuation requires a contemporaneous identity-only graph")
+        if self.notional_quantization.target_scale != self.reporting_scale:
+            raise ValueError("cash notional quantization must match reporting scale")
+        object.__setattr__(self, "resolved_marks", tuple(sorted(self.resolved_marks, key=canonical_bytes)))
+
+    def to_canonical_dict(self) -> dict[str, object]:
+        return {
+            "type": "ledger_cash_snapshot_projection_plan",
+            "schema_version": 1,
+            "resolved_marks": self.resolved_marks,
+            "reporting_currency": self.reporting_currency,
+            "reporting_scale": self.reporting_scale.places,
+            "projection_at": self.projection_at,
+            "instrument_catalog": self.instrument_catalog,
+            "currency_valuation_graph": self.currency_valuation_graph,
+            "notional_quantization": self.notional_quantization,
         }
 
 
@@ -586,8 +904,11 @@ class FinancialStateView:
     reservation_state: ResourceReservationState
     position_lot_books: PositionLotState
     artifacts: tuple[FinancialDispatchArtifact, ...]
+    settlement_book: SettlementBook | None = None
 
     def __post_init__(self) -> None:
+        if self.settlement_book is not None and not isinstance(self.settlement_book, SettlementBook):
+            raise TypeError("settlement_book must be SettlementBook or None")
         if not isinstance(self.journal, AccountingJournal):
             raise TypeError("journal must be AccountingJournal")
         if not isinstance(self.ledger_state, LedgerState):
@@ -633,6 +954,46 @@ class FinancialDispatchResult:
         }
 
 
+@dataclass(frozen=True, slots=True, kw_only=True)
+class SettlementFinancialDispatchResult(FinancialDispatchResult):
+    """Settlement delta without changing the legacy result encoding.
+
+    Event evidence hashes bind the actual Fill or ScheduledAccountEvent. Scheduled
+    applications use the exact dispatch instant, not a backdated settlement time.
+    """
+
+    settlement_obligations: tuple[AccountSettlementObligation, ...]
+    settlement_events: tuple[SettlementEvent, ...]
+    prior_settlement_book_hash: str
+    settlement_book_hash: str
+
+    def __post_init__(self) -> None:
+        FinancialDispatchResult.__post_init__(self)
+        if type(self.settlement_obligations) is not tuple or not all(
+            isinstance(value, AccountSettlementObligation)
+            for value in self.settlement_obligations
+        ):
+            raise TypeError("settlement_obligations must contain AccountSettlementObligation")
+        if type(self.settlement_events) is not tuple or not all(
+            isinstance(value, SettlementEvent) for value in self.settlement_events
+        ):
+            raise TypeError("settlement_events must contain SettlementEvent")
+        if not self.settlement_events:
+            raise ValueError("settlement delta requires events")
+        _hash("prior_settlement_book_hash", self.prior_settlement_book_hash)
+        _hash("settlement_book_hash", self.settlement_book_hash)
+
+    def to_canonical_dict(self) -> dict[str, object]:
+        return {
+            **FinancialDispatchResult.to_canonical_dict(self),
+            "type": "settlement_financial_dispatch_result",
+            "settlement_obligations": self.settlement_obligations,
+            "settlement_events": self.settlement_events,
+            "prior_settlement_book_hash": self.prior_settlement_book_hash,
+            "settlement_book_hash": self.settlement_book_hash,
+        }
+
+
 class FinancialDispatchFailureCode(str, Enum):
     DISPATCHER_SPEC_MISMATCH = "dispatcher_spec_mismatch"
     FILL_PLAN_MISMATCH = "fill_plan_mismatch"
@@ -641,6 +1002,8 @@ class FinancialDispatchFailureCode(str, Enum):
     JOURNAL_APPEND_FAILURE = "journal_append_failure"
     ARTIFACT_COVERAGE_MISMATCH = "artifact_coverage_mismatch"
     SNAPSHOT_PROJECTION_FAILURE = "snapshot_projection_failure"
+    SETTLEMENT_TRANSITION_FAILURE = "settlement_transition_failure"
+    RESOURCE_PROJECTION_FAILURE = "resource_projection_failure"
 
 
 @dataclass(frozen=True, slots=True)
@@ -933,7 +1296,9 @@ class DefaultCashFinancialDispatcher:
             lots_by_position.pop(payload.position_key, None)
 
         artifact = FinancialDispatchArtifact(
-            "position_accounting",
+            f"position_accounting.{plan.source_event_id}"
+            if isinstance(plan, EventScopedFillAccountingDispatchPlan)
+            else "position_accounting",
             plan.source_event_id,
             plan.fill_recorded_at,
             self.spec.position_accounting_component.component_key,
@@ -971,6 +1336,14 @@ class DefaultCashFinancialDispatcher:
             }
         )
         payload = plan.position_payload
+        order_fee = isinstance(plan.fee_plan, FullFillOrderFeeAccountingPlan)
+        order_streams = assessment.basis.order_streams
+        basis_fills = assessment.basis.fills
+        if order_fee and len(order_streams) == 1:
+            basis_fills = tuple(
+                record.fill for record in order_streams[0].records
+                if record.fill is not None
+            )
         if (
             type(payload) is not CashFillAccountingPlan
             or payload.cost_basis_policy.policy_version < 2
@@ -980,7 +1353,14 @@ class DefaultCashFinancialDispatcher:
             != plan.fee_plan.fee_assessment_id
             or assessment.assessment.assessment_time
             != plan.fee_plan.fee_assessment_time
-            or assessment.basis.fills != (fill,)
+            or basis_fills != (fill,)
+            or (
+                order_fee
+                and (
+                    assessment.basis.basis_type is not FeeBasisType.ORDER
+                    or len(order_streams) != 1
+                )
+            )
         ):
             return _failure(
                 self.spec,
@@ -1004,15 +1384,27 @@ class DefaultCashFinancialDispatcher:
                 str(payload.position_key),
             )
         fee = plan.fee_plan
-        charged = CashInstrumentAccounting().charge_fee(
-            assessment=assessment.assessment,
-            related_fill=fill,
-            cash_key=fee.cash_key,
-            open_lots=open_lots,
-            cost_basis_policy=payload.cost_basis_policy,
-            journal_entry_id=fee.fee_journal_entry_id,
-            recorded_at=fee.fee_recorded_at,
-        )
+        accounting = CashInstrumentAccounting()
+        if order_fee:
+            charged = accounting.charge_order_fee(
+                assessment=assessment.assessment,
+                order_stream=order_streams[0],
+                cash_key=fee.cash_key,
+                open_lots=open_lots,
+                cost_basis_policy=payload.cost_basis_policy,
+                journal_entry_id=fee.fee_journal_entry_id,
+                recorded_at=fee.fee_recorded_at,
+            )
+        else:
+            charged = accounting.charge_fee(
+                assessment=assessment.assessment,
+                related_fill=fill,
+                cash_key=fee.cash_key,
+                open_lots=open_lots,
+                cost_basis_policy=payload.cost_basis_policy,
+                journal_entry_id=fee.fee_journal_entry_id,
+                recorded_at=fee.fee_recorded_at,
+            )
         if charged.result is None:
             failure = charged.failure
             return _failure(
@@ -1048,12 +1440,114 @@ class DefaultCashFinancialDispatcher:
                 "journal_hash": state_view.journal.journal_hash,
             }
         )
+        payload = event.payload
+        if type(payload) is SettlementApplicationPlan:
+            return self._apply_due_settlement(event, payload, state_view, input_hash)
+        if type(payload) is LedgerCashSnapshotProjectionPlan:
+            role = f"snapshot.{event.event_id}"
+            if (
+                event.operation_key == payload.operation_key
+                and event.event_at == payload.projection_at
+                and event.component_keys == (self.spec.snapshot_projection_key,)
+                and not event.identity_bindings
+                and event.semantic_payload == payload
+                and event.expected_artifact_roles == (role,)
+            ):
+                return self._project_ledger_snapshot(
+                    payload, state_view, source_event_id=event.event_id,
+                    role=role, input_hash=canonical_sha256({
+                        "dispatch_input_hash": input_hash,
+                        "ledger_state_hash": state_view.ledger_state.state_hash,
+                    }),
+                )
         return _failure(
             self.spec,
             event.event_id,
             input_hash,
             FinancialDispatchFailureCode.EVENT_PLAN_MISMATCH,
             event.operation_key,
+        )
+
+    def _apply_due_settlement(
+        self, event: ScheduledAccountEvent, plan: SettlementApplicationPlan,
+        state_view: FinancialStateView, input_hash: str,
+    ) -> FinancialDispatchOutcome:
+        book = state_view.settlement_book
+        if (book is None or book.book_hash != plan.prior_settlement_book_hash
+                or event.event_id != f"settlement-due:{plan.boundary_event_id}"
+                or event.operation_key != plan.operation_key or event.component_keys != (plan.operation_key,)
+                or event.identity_bindings or event.semantic_payload != plan
+                or event.expected_artifact_roles != (f"settlement.{event.event_id}",)):
+            return _failure(self.spec, event.event_id, input_hash, FinancialDispatchFailureCode.EVENT_PLAN_MISMATCH, "settlement_application")
+        pending = {value.obligation.settlement_obligation_id: value for value in book.project().pending_obligations
+                   if value.obligation.settlement_time < event.event_at.instant
+                   or (plan.include_boundary and value.obligation.settlement_time == event.event_at.instant)}
+        recorded = {value.settlement_obligation_id: value for value in book.events
+                    if value.event_type is SettlementEventType.OBLIGATION_RECORDED}
+        if (set(pending) != {slot.obligation_id for slot in plan.slots} or any(
+                pending[slot.obligation_id].balance_key != slot.balance_key
+                or recorded[slot.obligation_id].event_id != slot.recorded_event_id
+                or recorded[slot.obligation_id].occurred_at >= event.event_at for slot in plan.slots)):
+            return _failure(self.spec, event.event_id, input_hash, FinancialDispatchFailureCode.SETTLEMENT_TRANSITION_FAILURE, "due_coverage")
+        events = tuple(SettlementEvent(slot.applied_event_id, slot.obligation_id, SettlementEventType.SETTLEMENT_APPLIED,
+            event.event_at, slot.recorded_event_id, canonical_sha256(event)) for slot in plan.slots)
+        after = book.append(events=events)
+        result = SettlementFinancialDispatchResult(self.spec, event.event_id, (), state_view.position_lot_books, (),
+            settlement_obligations=(), settlement_events=events,
+            prior_settlement_book_hash=book.book_hash, settlement_book_hash=after.book_hash)
+        return FinancialDispatchOutcome(self.spec, input_hash, result=result)
+
+    def _project_ledger_snapshot(
+        self,
+        plan: LedgerCashSnapshotProjectionPlan,
+        state_view: FinancialStateView,
+        *,
+        source_event_id: str,
+        role: str,
+        input_hash: str,
+    ) -> FinancialDispatchOutcome:
+        if any(entry.recorded_at > plan.projection_at for entry in state_view.journal.entries):
+            return _failure(
+                self.spec, source_event_id, input_hash,
+                FinancialDispatchFailureCode.SNAPSHOT_PROJECTION_FAILURE,
+                "journal_after_snapshot_receipt",
+            )
+        # The Engine owns monetary projection; this check requires its complete
+        # journal prefix without running a second ledger replay at every mark.
+        if state_view.ledger_state.cursor != state_view.journal.cursor_at(state_view.journal.entry_count):
+            return _failure(
+                self.spec, source_event_id, input_hash,
+                FinancialDispatchFailureCode.SNAPSHOT_PROJECTION_FAILURE,
+                "journal_ledger_cursor_mismatch",
+            )
+        projection = PortfolioSnapshotProjector().project_cash_ledger(
+            ledger_state=state_view.ledger_state,
+            resolved_marks=plan.resolved_marks,
+            reporting_currency=plan.reporting_currency,
+            reporting_scale=plan.reporting_scale,
+            projection_at=plan.projection_at,
+            instrument_catalog=plan.instrument_catalog,
+            currency_valuation_graph=plan.currency_valuation_graph,
+            notional_quantization=plan.notional_quantization,
+        )
+        if projection.snapshot is None:
+            return _failure(
+                self.spec, source_event_id, input_hash,
+                FinancialDispatchFailureCode.SNAPSHOT_PROJECTION_FAILURE,
+                getattr(getattr(projection.failure, "code", None), "value", "snapshot"),
+            )
+        artifact = FinancialDispatchArtifact(
+            role, source_event_id, plan.projection_at,
+            self.spec.snapshot_projection_key, self.spec.snapshot_projection_version,
+            self.spec.config_hash, input_hash, canonical_sha256(projection.snapshot),
+            projection.snapshot,
+        )
+        return FinancialDispatchOutcome(
+            self.spec, input_hash,
+            result=FinancialDispatchResult(
+                self.spec, source_event_id, (), state_view.position_lot_books,
+                (artifact,), projection.snapshot,
+            ),
         )
 
     def project_final_snapshot(
@@ -1078,6 +1572,11 @@ class DefaultCashFinancialDispatcher:
                 plan.dispatcher_spec.spec_hash,
             )
         payload = plan.final_snapshot_payload
+        if type(payload) is LedgerCashSnapshotProjectionPlan:
+            return self._project_ledger_snapshot(
+                payload, state_view, source_event_id="engine-finalize",
+                role="final_snapshot", input_hash=input_hash,
+            )
         required = (
             "resolved_marks",
             "valuations",
@@ -1146,6 +1645,7 @@ __all__ = [
     "DefaultCashFinancialDispatcher",
     "FeeAccountingDispatchPlan",
     "FillAccountingDispatchPlan",
+    "EventScopedFillAccountingDispatchPlan",
     "FinancialDispatchArtifact",
     "FinancialDispatchFailure",
     "FinancialDispatchFailureCode",
@@ -1155,6 +1655,15 @@ __all__ = [
     "FinancialDispatcherSpec",
     "FinancialEventDispatcher",
     "FinancialStateView",
+    "ProfileFeeRuleBinding",
+    "ProfileFeeRuleQuery",
+    "ProfileFeeRuleResolution",
+    "ProfileFeeRuleResolver",
+    "LedgerCashSnapshotProjectionPlan",
     "ScheduledAccountEvent",
+    "SettlementFinancialDispatchResult",
+    "SettlementIdentitySlot",
+    "SettlementFillAccountingDispatchPlan",
+    "SettlementApplicationPlan",
     "default_cash_financial_dispatcher_spec",
 ]

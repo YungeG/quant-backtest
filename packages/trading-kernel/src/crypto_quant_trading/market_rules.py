@@ -66,6 +66,7 @@ class MarketSessionState(str, Enum):
     OPEN = "open"
     CLOSED = "closed"
     SUSPENDED = "suspended"
+    EXECUTION_RECEIPT = "execution_receipt"
 
 
 class NotionalPriceBasis(str, Enum):
@@ -442,6 +443,11 @@ class OrderRuleInterval:
                 raise ValueError("effective interval must be nonempty")
         if not isinstance(self.snapshot, OrderRuleSnapshot):
             raise TypeError("snapshot must be OrderRuleSnapshot")
+        if self.snapshot.session_state is MarketSessionState.EXECUTION_RECEIPT and (
+            self.effective_to_exclusive is None
+            or self.effective_to_exclusive.epoch_nanoseconds != self.effective_from.epoch_nanoseconds + 1
+        ):
+            raise ValueError("execution receipt authority must cover exactly one nanosecond timestamp")
         if self.interval_id != _tagged_id("order-rule-interval-v1", self.identity_payload()):
             raise ValueError("interval_id mismatch")
 

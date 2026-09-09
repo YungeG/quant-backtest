@@ -9,6 +9,9 @@ import unicodedata
 from zoneinfo import ZoneInfo
 
 from crypto_quant_domain import (
+    InstrumentId,
+    Price,
+    SimulationInstant,
     SessionId,
     TradingDate,
     UtcInstant,
@@ -353,6 +356,72 @@ def _boundary(local_date: date, minute: int) -> UtcInstant:
 
 
 @dataclass(frozen=True, slots=True)
+class CnAShareBarCloseReceipt:
+    """One source-bound five-minute receipt, not an ordinary open session."""
+
+    instrument_id: InstrumentId
+    close_price: Price
+    interval_start: UtcInstant
+    interval_end_exclusive: UtcInstant
+    received_at: SimulationInstant
+    source_event_id: str
+    source_event_hash: str
+
+    def __post_init__(self) -> None:
+        for value, expected in ((self.instrument_id, InstrumentId), (self.close_price, Price),
+                (self.interval_start, UtcInstant), (self.interval_end_exclusive, UtcInstant),
+                (self.received_at, SimulationInstant)):
+            if type(value) is not expected:
+                raise TypeError(f"closed receipt requires exact {expected.__name__}")
+        _canonical_text("source_event_id", self.source_event_id)
+        text = _canonical_text("source_event_hash", self.source_event_hash)
+        if len(text) != 71 or not text.startswith("sha256:") or any(c not in "0123456789abcdef" for c in text[7:]):
+            raise ValueError("closed receipt requires canonical source hash")
+        if (self.close_price.instrument_id != str(self.instrument_id) or self.close_price.quote_currency != "CNY"
+                or self.close_price.units <= 0 or self.received_at.instant != self.interval_end_exclusive
+                or self.interval_end_exclusive.epoch_nanoseconds - self.interval_start.epoch_nanoseconds != 300_000_000_000):
+            raise ValueError("closed receipt price/interval/availability mismatch")
+        local = _local_datetime(self.interval_end_exclusive)
+        minute = local.hour * 60 + local.minute
+        if (minute not in (*range(575, 691, 5), *range(785, 901, 5))
+                or self.interval_end_exclusive != _boundary(local.date(), minute)):
+            raise ValueError("closed receipt must be one of the 48 session-valid five-minute labels")
+
+    @property
+    def receipt_hash(self) -> str:
+        return canonical_sha256(self)
+
+    def to_canonical_dict(self) -> dict[str, object]:
+        return {"type": "cn_a_share_bar_close_receipt", "schema_version": 1,
+                "instrument_id": self.instrument_id, "close_price": self.close_price,
+                "interval_start": self.interval_start, "interval_end_exclusive": self.interval_end_exclusive,
+                "received_at": self.received_at, "source_event_id": self.source_event_id,
+                "source_event_hash": self.source_event_hash}
+
+
+@dataclass(frozen=True, slots=True)
+class CnAShareBarCloseSessionResolution:
+    receipt: CnAShareBarCloseReceipt
+    physical_session: CnAShareSessionResolution
+
+    def __post_init__(self) -> None:
+        if type(self.receipt) is not CnAShareBarCloseReceipt or type(self.physical_session) is not CnAShareSessionResolution:
+            raise TypeError("closed session requires exact receipt and physical session")
+        if (self.receipt.instrument_id.venue != self.physical_session.venue_id
+                or self.receipt.interval_end_exclusive != self.physical_session.instant):
+            raise ValueError("closed receipt does not bind physical session")
+
+    @property
+    def is_eligible(self) -> bool:
+        return self.physical_session.day_kind is CnAShareCalendarDayKind.TRADING
+
+    def to_canonical_dict(self) -> dict[str, object]:
+        return {"type": "cn_a_share_bar_close_session_resolution", "schema_version": 1,
+                "receipt": self.receipt, "physical_session": self.physical_session,
+                "is_eligible": self.is_eligible, "receipt_hash": self.receipt.receipt_hash}
+
+
+@dataclass(frozen=True, slots=True)
 class CnAShareCashSessionModel:
     calendar: CnAShareFrozenCalendar
 
@@ -382,6 +451,27 @@ class CnAShareCashSessionModel:
             component_version=1,
             component_digest=digest,
         )
+
+    @property
+    def closed_bar_component_ref(self) -> ProfileComponentRef:
+        return ProfileComponentRef(ProfilePortType.SESSION_MODEL,
+            "equity.cn_a_share.cash.closed-bar-session.v1", 1, canonical_sha256({
+                "type": "cn_a_share_closed_bar_session_component", "schema_version": 1,
+                "physical_session_component": self.component_ref,
+                "close_minutes": (*range(575, 691, 5), *range(785, 901, 5)),
+                "interval_nanoseconds": 300_000_000_000, "availability": "exact_close_receipt",
+                "eligibility": "frozen_trading_day_receipt_not_physical_open"}))
+
+    def resolve_bar_close(self, receipt: CnAShareBarCloseReceipt, /) -> ProfilePortOutcome[CnAShareBarCloseSessionResolution, CnAShareSessionFailure]:
+        if type(receipt) is not CnAShareBarCloseReceipt:
+            raise TypeError("receipt must be exact CnAShareBarCloseReceipt")
+        physical = self.resolve_session(CnAShareSessionQuery(receipt.instrument_id.venue, receipt.interval_end_exclusive))
+        if physical.failure is not None:
+            return ProfilePortOutcome.for_failure(self.closed_bar_component_ref, receipt, physical.failure)
+        if physical.result is None:
+            raise ValueError("physical session outcome has no branch")
+        return ProfilePortOutcome.for_result(self.closed_bar_component_ref, receipt,
+            CnAShareBarCloseSessionResolution(receipt, physical.result))
 
     def resolve_session(
         self, query: CnAShareSessionQuery, /

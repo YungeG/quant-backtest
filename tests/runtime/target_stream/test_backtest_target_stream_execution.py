@@ -447,7 +447,7 @@ def test_bundle_v6_round_trip_embeds_value_and_keeps_v1_v5_catalog_entries(
         for registration in _EXECUTION_INPUT_CATALOG.registrations
         if registration.artifact_type == "backtest_execution_input_bundle"
     }
-    assert tuple(registrations) == (1, 2, 3, 4, 5, 6)
+    assert tuple(registrations) == (1, 2, 3, 4, 5, 6, 7)
     assert tuple(registrations[index] for index in range(1, 6)) == (
         "_read_execution_input_payload",
         "_read_execution_input_payload_v2",

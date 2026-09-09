@@ -1417,7 +1417,7 @@ class NextEligibleBarCloseModel:
                 NextBarCloseFailureCode.MARKET_RULE_INTERVAL_MISMATCH,
                 event.event_id,
             )
-        if market.resolved_interval.snapshot.session_state is not MarketSessionState.OPEN:
+        if market.resolved_interval.snapshot.session_state not in (MarketSessionState.OPEN, MarketSessionState.EXECUTION_RECEIPT):
             return _close_failure(
                 request,
                 self.component_ref,
@@ -1597,6 +1597,15 @@ class BarCloseObservation:
             raise TypeError("event must be MarketEvent")
         kind, price = _bar_close_payload(event)
         return cls(event=event, kind=kind, close_price=price)
+
+    @property
+    def interval_start(self) -> UtcInstant:
+        payload = cast(Mapping[str, object], self.event.payload["interval_start"])
+        return UtcInstant(_integer("interval_start.epoch_nanoseconds", payload["epoch_nanoseconds"]))
+
+    @property
+    def interval_end_exclusive(self) -> UtcInstant:
+        return self.event.event_time
 
     @property
     def observation_hash(self) -> str:

@@ -64,13 +64,20 @@ LOCKS = {
 def test_v2_exports_are_append_only_and_not_root_reexports() -> None:
     assert tuple(cn_a_share.__all__[: len(V1_PREFIX)]) == V1_PREFIX
     # The entire frozen V1+V2 sequence remains an unchanged prefix.
-    assert tuple(cn_a_share.__all__) == (*V1_PREFIX, *V2_EXPORTS, "january_2024_fee_rule_books")
+    assert tuple(cn_a_share.__all__) == (*V1_PREFIX, *V2_EXPORTS,
+        "january_2024_fee_rule_books", "CnAShareJanuary2024CommissionScenario",
+        "CnAShareBarCloseReceipt", "CnAShareBarCloseSessionResolution",
+        "CnAShareBarCloseOrderRuleQuery", "CnAShareBarCloseOrderRuleResolution",
+        "CnAShareBarCloseSettlementQuery", "CnAShareBarCloseSettlementResolution")
     assert all(not hasattr(crypto_quant_trading, name) for name in V2_EXPORTS)
     assert not hasattr(crypto_quant_trading, "january_2024_fee_rule_books")
+    assert not hasattr(crypto_quant_trading, "CnAShareJanuary2024CommissionScenario")
     from crypto_quant_trading.profiles.cn_a_share.january_2024_development_fee_authority import (
+        CnAShareJanuary2024CommissionScenario,
         january_2024_fee_rule_books,
     )
     assert cn_a_share.january_2024_fee_rule_books is january_2024_fee_rule_books
+    assert cn_a_share.CnAShareJanuary2024CommissionScenario is CnAShareJanuary2024CommissionScenario
 
 
 def test_v2_kernel_has_only_kernel_imports() -> None:

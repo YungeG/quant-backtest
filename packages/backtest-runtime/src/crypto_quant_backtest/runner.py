@@ -36,7 +36,9 @@ from .engine import (
     EngineExecutionResult,
     EngineFailure,
     EngineFailureCode,
+    ExecutionCase,
     ResolvedExecutionCase,
+    ResolvedExecutionCaseV2,
 )
 from .multi_resolution_preparation import MultiResolutionMarketDataPreparation
 from .publication_refs import BacktestCanonicalPublicationRefV2
@@ -635,7 +637,7 @@ def _read_canonical_cache_hit_v2(
     root: Path,
     resolved_request: ResolvedBacktestRequest,
     input_origin: InputOrigin,
-    execution_case: ResolvedExecutionCase,
+    execution_case: ExecutionCase,
 ) -> CanonicalResultCacheHit:
     identity_manifest = execution_case.identity_manifest
     if identity_manifest is None:
@@ -1119,7 +1121,7 @@ class _Engine(Protocol):
     @abstractmethod
     def run(
         self,
-        case: ResolvedExecutionCase | InputValidationFailure,
+        case: ExecutionCase | InputValidationFailure,
         *,
         cancellation: EngineCancellationRequest | None = None,
     ) -> EngineExecutionOutcome:
@@ -1188,9 +1190,10 @@ class AuditableBacktestRunner:
         self._canonical_publication_version = canonical_publication_version
 
     @classmethod
-    def for_v2(cls, *, publication_root: Path) -> AuditableBacktestRunner:
+    def for_v2(cls, *, publication_root: Path, engine: _Engine | None = None) -> AuditableBacktestRunner:
         return cls(
             publication_root=publication_root,
+            engine=engine,
             canonical_publication_version=2,
         )
 
@@ -1216,15 +1219,15 @@ class AuditableBacktestRunner:
         self,
         *,
         resolved_request: ResolvedBacktestRequest,
-        execution_case: ResolvedExecutionCase,
+        execution_case: ExecutionCase,
         attempt: AttemptIdentity,
         input_origin: InputOrigin,
         cancellation: EngineCancellationRequest | None = None,
     ) -> AttemptExecutionRecord:
         if not isinstance(resolved_request, ResolvedBacktestRequest):
             raise TypeError("resolved_request must be ResolvedBacktestRequest")
-        if not isinstance(execution_case, ResolvedExecutionCase):
-            raise TypeError("execution_case must be ResolvedExecutionCase")
+        if not isinstance(execution_case, ResolvedExecutionCase) and type(execution_case) is not ResolvedExecutionCaseV2:
+            raise TypeError("execution_case must be a supported resolved execution case")
         if not isinstance(attempt, AttemptIdentity):
             raise TypeError("attempt must be AttemptIdentity")
         if attempt.semantic_run_id != resolved_request.semantic_run_id:
@@ -1259,7 +1262,7 @@ class AuditableBacktestRunner:
         self,
         *,
         resolved_request: ResolvedBacktestRequest,
-        execution_case: ResolvedExecutionCase,
+        execution_case: ExecutionCase,
         attempt: AttemptIdentity,
         input_origin: InputOrigin,
         cancellation: EngineCancellationRequest | None,
@@ -1303,7 +1306,7 @@ class AuditableBacktestRunner:
         self,
         *,
         resolved_request: ResolvedBacktestRequest,
-        execution_case: ResolvedExecutionCase,
+        execution_case: ExecutionCase,
         attempt: AttemptIdentity,
         input_origin: InputOrigin,
         cancellation: EngineCancellationRequest | None,
@@ -1373,7 +1376,7 @@ class AuditableBacktestRunner:
     def _execute_engine(
         self,
         resolved_request: ResolvedBacktestRequest,
-        execution_case: ResolvedExecutionCase,
+        execution_case: ExecutionCase,
         attempt: AttemptIdentity,
         input_origin: InputOrigin,
         cancellation: EngineCancellationRequest | None,
@@ -1428,7 +1431,7 @@ class AuditableBacktestRunner:
         *,
         previous: AttemptExecutionRecord,
         resolved_request: ResolvedBacktestRequest,
-        execution_case: ResolvedExecutionCase,
+        execution_case: ExecutionCase,
         next_attempt_ordinal: int,
         input_origin: InputOrigin,
         cancellation: EngineCancellationRequest | None = None,
@@ -1503,7 +1506,7 @@ class AuditableBacktestRunner:
     def _map_outcome(
         self,
         resolved_request: ResolvedBacktestRequest,
-        execution_case: ResolvedExecutionCase,
+        execution_case: ExecutionCase,
         attempt: AttemptIdentity,
         input_origin: InputOrigin,
         cancellation_request: EngineCancellationRequest | None,
@@ -1707,7 +1710,7 @@ class AuditableBacktestRunner:
     @staticmethod
     def _contract_issue(
         resolved_request: ResolvedBacktestRequest,
-        execution_case: ResolvedExecutionCase,
+        execution_case: ExecutionCase,
         input_origin: InputOrigin,
     ) -> AttemptIssue | None:
         request = resolved_request.request

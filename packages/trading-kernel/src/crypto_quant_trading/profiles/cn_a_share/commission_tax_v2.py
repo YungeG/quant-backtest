@@ -799,6 +799,21 @@ class CnAShareFeeExecutionSelectionV2:
         ):
             raise TypeError("stamp_duty_component_ref must identify tax policy")
 
+    @classmethod
+    def create(
+        cls, *, selection_key: str, selection_version: int,
+        market_fee_rule_book: CnAShareMarketFeeRuleBookV2,
+        stamp_duty_rule_book: CnAShareStampDutyRuleBookV2,
+    ) -> CnAShareFeeExecutionSelectionV2:
+        """Select concrete books using the kernel-owned component identities."""
+        if not (_concrete_market_book(market_fee_rule_book) and _concrete_stamp_book(stamp_duty_rule_book)):
+            raise TypeError("selection rule books must be concrete v2")
+        return cls(selection_key, selection_version,
+            market_fee_rule_book.access_route, market_fee_rule_book.fee_product_class,
+            market_fee_rule_book, market_fee_rule_book.rule_book_hash,
+            stamp_duty_rule_book, stamp_duty_rule_book.rule_book_hash,
+            _market_component(market_fee_rule_book), _tax_component(stamp_duty_rule_book))
+
     @property
     def selection_hash(self) -> str:
         return canonical_sha256(self)

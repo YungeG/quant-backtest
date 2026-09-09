@@ -52,6 +52,10 @@ def _require_hash(name: str, value: str) -> None:
 
 
 def _require_identity(name: str, value: str) -> None:
+    # Only normalized-target references accept the existing exact-clock v2
+    # identity. OrderPlan/CancelIntent/Decision identities remain v1.
+    if name in {"normalized_target_id", "based_on_normalized_target_id"} and isinstance(value, str) and re.fullmatch(r"normalized-portfolio-target-v2:sha256:[0-9a-f]{64}", value):
+        return
     if not isinstance(value, str) or _ID_RE.fullmatch(value) is None:
         raise ValueError(f"{name} must be a deterministic v1 identity")
 

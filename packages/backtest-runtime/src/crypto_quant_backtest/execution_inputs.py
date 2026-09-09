@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from collections.abc import Callable, Mapping
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 from enum import Enum
 from typing import Any
 
@@ -48,6 +48,7 @@ from .composition import (
     _compose_execution_case_from_authority,
     _execution_case_semantic_spec_v3,
     _ExecutionCasePlan,
+    _ExecutionCasePlanV2,
     _HydratedExecutionCaseInputs,
 )
 from .decision_schedule import (
@@ -56,13 +57,19 @@ from .decision_schedule import (
     LookbackRequirement,
 )
 from .engine import (
+    ExecutionCase,
     ExecutionCaseIdentityRule,
     ExecutionCaseSemanticSpec,
     OrderEventPlan,
     PositionLotBook,
     ResolvedBarExecution,
+    ResolvedBarPlanV2,
+    ResolvedCashPreTradeAuthority,
     ResolvedDecisionCycle,
+    ResolvedDecisionCycleV2,
     ResolvedExecutionCase,
+    ResolvedExecutionCaseV2,
+    ResolvedOrderAdmissionSlot,
     ResolvedFinancialState,
     ResolvedOrderAdmission,
     ResolvedPreTradePlan,
@@ -79,6 +86,12 @@ from .execution import (
 from .financial_dispatch import (
     CashFillAccountingPlan,
     FeeAccountingDispatchPlan,
+    ProfileFeeRuleBinding,
+    EventScopedFillAccountingDispatchPlan,
+    LedgerCashSnapshotProjectionPlan,
+    SettlementIdentitySlot,
+    SettlementFillAccountingDispatchPlan,
+    FullFillOrderFeeAccountingPlan,
     FillAccountingDispatchPlan,
     FinancialDispatcherSpec,
     FinancialDispatchPlan,
@@ -170,6 +183,7 @@ _V3_SCHEMA_VERSION = 3
 _V4_SCHEMA_VERSION = 4
 _V5_SCHEMA_VERSION = 5
 _V6_SCHEMA_VERSION = 6
+_V7_SCHEMA_VERSION = 7
 _TEMPLATE_TYPE = "backtest_initial_financial_state_template"
 _V1_SCHEMA = CanonicalSchema(_ARTIFACT_TYPE, _SCHEMA_VERSION)
 _V2_SCHEMA = CanonicalSchema(_ARTIFACT_TYPE, _V2_SCHEMA_VERSION)
@@ -177,6 +191,7 @@ _V3_SCHEMA = CanonicalSchema(_ARTIFACT_TYPE, _V3_SCHEMA_VERSION)
 _V4_SCHEMA = CanonicalSchema(_ARTIFACT_TYPE, _V4_SCHEMA_VERSION)
 _V5_SCHEMA = CanonicalSchema(_ARTIFACT_TYPE, _V5_SCHEMA_VERSION)
 _V6_SCHEMA = CanonicalSchema(_ARTIFACT_TYPE, _V6_SCHEMA_VERSION)
+_V7_SCHEMA = CanonicalSchema(_ARTIFACT_TYPE, _V7_SCHEMA_VERSION)
 _PAYLOAD_FIELDS = frozenset(
     {
         "type",
@@ -419,6 +434,18 @@ class _DecodedExecutionInputBundleV6:
 
 
 @dataclass(frozen=True, slots=True)
+class _DecodedExecutionInputBundleV7:
+    request_hash: str
+    semantic_run_id: str
+    build_artifact_manifest: BuildArtifactManifest
+    execution_case_semantic_spec: ExecutionCaseSemanticSpec
+    timeline_stream_keys: tuple[str, ...]
+    target_stream: PrecomputedTargetStream
+    timeline_batch_size: int
+    execution_case_plan: _ExecutionCasePlanV2
+
+
+@dataclass(frozen=True, slots=True)
 class _ValidationInstrumentCatalogBindingV1:
     catalog_hash: str
     catalog: domain.InstrumentCatalog
@@ -454,9 +481,10 @@ class BacktestExecutionRequest:
             _V4_SCHEMA_VERSION,
             _V5_SCHEMA_VERSION,
             _V6_SCHEMA_VERSION,
+            _V7_SCHEMA_VERSION,
         ):
             raise ValueError(
-                "BacktestExecutionRequest schema_version must be 1, 2, 3, 4, 5, or 6"
+                "BacktestExecutionRequest schema_version must be 1, 2, 3, 4, 5, 6, or 7"
             )
         if type(self.request) is not BacktestRequest:
             raise TypeError("request must be exact BacktestRequest")
@@ -1914,18 +1942,28 @@ def _read_persisted_canonical_payload(value: object) -> _PersistedCanonicalPaylo
     return _PersistedCanonicalPayload(decoded)
 
 
-def _read_fee_accounting_plan(value: object) -> FeeAccountingDispatchPlan:
-    data = _tagged(
-        "fee_accounting_dispatch_plan", value, "fee_accounting_dispatch_plan"
-    )
-    return FeeAccountingDispatchPlan(
+def _read_fee_accounting_plan(value: object, *, profile_bindings: bool = False) -> FeeAccountingDispatchPlan:
+    data = _mapping("fee_accounting_dispatch_plan", value)
+    plan_type = {
+        "fee_accounting_dispatch_plan": FeeAccountingDispatchPlan,
+        "full_fill_order_fee_accounting_plan": FullFillOrderFeeAccountingPlan,
+    }.get(_text("fee_accounting_plan.type", data.get("type")))
+    if plan_type is None:
+        raise ValueError("unsupported fee accounting plan type")
+    args = (
         _read_cash_key(data["cash_key"]),
-        _read_final_fee_rules(data["final_fee_rule_set"]),
+        _read_profile_fee_binding_v7(data["final_fee_rule_set"])
+        if profile_bindings and _mapping("fee rules", data["final_fee_rule_set"]).get("type") == "profile_fee_rule_binding"
+        else _read_final_fee_rules(data["final_fee_rule_set"]),
         _read_domain_id(data["fee_assessment_id"]),
         _read_utc(data["fee_assessment_time"]),
         _read_domain_id(data["fee_journal_entry_id"]),
         _read_simulation_instant(data["fee_recorded_at"]),
     )
+    if plan_type is FullFillOrderFeeAccountingPlan and "fill_fee_plan" in data:
+        prior = _tagged("fill_fee_plan", data["fill_fee_plan"], "fee_accounting_dispatch_plan")
+        return FullFillOrderFeeAccountingPlan(*args, fill_fee_plan=_read_fee_accounting_plan(prior, profile_bindings=profile_bindings))
+    return plan_type(*args)
 
 
 def _read_fill_accounting_plan(value: object) -> FillAccountingDispatchPlan:
@@ -2988,6 +3026,155 @@ def _read_execution_input_payload_v6(value: object) -> _DecodedExecutionInputBun
     )
 
 
+def _read_ledger_cash_snapshot_plan_v7(value: object) -> LedgerCashSnapshotProjectionPlan:
+    data = _tagged("ledger snapshot", value, "ledger_cash_snapshot_projection_plan")
+    graph = _tagged("currency graph", data["currency_valuation_graph"], "currency_valuation_graph")
+    _empty_sequence("live cash currency edges", graph["edges"])
+    marks = []
+    for raw in data["resolved_marks"]:
+        mark = _read_resolved_mark(raw)
+        marks.append(replace(mark,
+            available_at_instant=_optional(raw.get("available_at_instant"), _read_simulation_instant),
+            resolved_at_instant=_optional(raw.get("resolved_at_instant"), _read_simulation_instant)))
+    result = LedgerCashSnapshotProjectionPlan(tuple(marks), _read_currency(data["reporting_currency"]),
+        Scale(data["reporting_scale"]), _read_simulation_instant(data["projection_at"]),
+        _read_instrument_catalog(data["instrument_catalog"]),
+        trading.CurrencyValuationGraph(_read_utc(graph["valuation_at"]), domain.PricePurpose(graph["price_purpose"]), ()),
+        _read_quantization(data["notional_quantization"]))
+    return _canonical_reconstruction("live snapshot", value, result)
+
+
+def _read_profile_fee_binding_v7(value: object) -> ProfileFeeRuleBinding:
+    data = _tagged("profile fee binding", value, "profile_fee_rule_binding")
+    return _canonical_reconstruction("profile fee binding", value, ProfileFeeRuleBinding(
+        data["dispatcher_spec_hash"], _read_currency(data["assessment_currency"]), Scale(data["assessment_scale"])))
+
+
+def _read_cash_pretrade_authority_v7(value: object) -> ResolvedCashPreTradeAuthority:
+    data = _tagged("cash pretrade authority", value, "resolved_cash_pretrade_authority")
+    return ResolvedCashPreTradeAuthority(_read_order_rule_timeline(data["order_rule_timeline"]),
+        _read_notional_evidence(data["notional_evidence"]), _read_utc(data["evaluated_at"]),
+        _read_profile_fee_binding_v7(data["fee_reservation_rule_set"])
+        if _mapping("fee rules", data["fee_reservation_rule_set"]).get("type") == "profile_fee_rule_binding"
+        else _read_fee_reservation_rules(data["fee_reservation_rule_set"]), data["requirement_source_key"],
+        data["requirement_source_version"], data["requirement_source_hash"], _read_account_risk_policy(data["account_risk_policy"]))
+
+
+def _read_admission_slot_v7(value: object) -> ResolvedOrderAdmissionSlot:
+    data = _tagged("admission slot", value, "resolved_order_admission_slot")
+    return ResolvedOrderAdmissionSlot(_read_domain_id(data["order_id"]), _read_capability_set(data["capability_set"]),
+        _read_translation_mapping(data["translation_mapping"]), _read_utc(data["translation_time"]),
+        _read_cash_pretrade_authority_v7(data["pretrade_authority"]),
+        _sequence("admission events", data["event_plan"], _read_order_event_plan), data["expiration_event_id"])
+
+
+def _read_decision_cycle_v7(value: object) -> ResolvedDecisionCycleV2:
+    data = _tagged("live decision", value, "resolved_decision_cycle")
+    snapshot = _read_ledger_cash_snapshot_plan_v7(data["snapshot_plan"])
+    schedule = _tagged("schedule", data["schedule"], "target_stream_decision_schedule")
+    entries = []
+    for raw in schedule["entries"]:
+        entry = _tagged("schedule entry", raw, "target_stream_schedule_entry")
+        expectation = _tagged("expectation", entry["expectation"], "decision_batch_expectation")
+        context = _mapping("validation context", entry["validation_context"])
+        if context["instrument_catalog_hash"] != canonical_sha256(snapshot.instrument_catalog):
+            raise ValueError("live validation catalog does not bind snapshot authority")
+        entries.append(TargetStreamScheduleEntry(entry["event_id"],
+            trading.DecisionBatchExpectation(expectation["strategy_id"], domain.StrategySleeveId(expectation["sleeve_id"]["value"])),
+            trading.StrategyOutputValidationContext(context["expected_strategy_id"],
+                domain.StrategySleeveId(context["expected_sleeve_id"]["value"]), _read_utc(context["decision_time"]),
+                snapshot.instrument_catalog, _sequence("universe", context["universe"], _read_instrument_id),
+                decision_instant=_read_simulation_instant(context["decision_instant"]))))
+    return ResolvedDecisionCycleV2(
+        TargetStreamDecisionSchedule(_read_utc(schedule["decision_time"]), TimelineSegment(schedule["segment"]), tuple(entries)),
+        snapshot, _read_capital_policy_ref(data["allocation_policy"]), Scale(data["target_notional_scale"]),
+        _read_portfolio_risk_policy(data["risk_policy"]), _read_sizing_policy(data["sizing_policy"]),
+        _read_quantity_lattice(data["quantity_lattice"]), _optional(data["target_valid_until"], _read_utc),
+        _read_rebalance_policy(data["rebalance_policy"]), _read_admission_slot_v7(data["admission_slot"]))
+
+
+def _read_settlement_slot_v7(value: object) -> SettlementIdentitySlot:
+    data = _tagged("settlement identity slot", value, "settlement_identity_slot")
+    return SettlementIdentitySlot(_read_balance_key(data["balance_key"]), _read_domain_id(data["obligation_id"]),
+        data["recorded_event_id"], data["applied_event_id"])
+
+
+def _read_fill_accounting_plan_v7(value: object) -> EventScopedFillAccountingDispatchPlan:
+    data = _mapping("live fill plan", value)
+    tag = data.get("type")
+    if tag not in ("event_scoped_fill_accounting_dispatch_plan", "settlement_fill_accounting_dispatch_plan"):
+        raise ValueError("live fill requires exact event-scoped or settlement plan")
+    args = (data["source_event_id"], _read_domain_id(data["expected_fill_id"]),
+        _read_profile_component_ref(data["position_accounting_component"]), _read_cash_fill_plan(data["position_payload"]),
+        _read_persisted_canonical_payload(data["semantic_payload"]), _read_domain_id(data["fill_journal_entry_id"]),
+        _read_simulation_instant(data["fill_recorded_at"]), _read_fee_accounting_plan(data["fee_plan"], profile_bindings=True),
+        tuple(data["expected_artifact_roles"]))
+    if tag == "settlement_fill_accounting_dispatch_plan":
+        return SettlementFillAccountingDispatchPlan(*args,
+            settlement_slots=_sequence("settlement slots", data["settlement_slots"], _read_settlement_slot_v7),
+            settlement_recorded_at=_read_simulation_instant(data["settlement_recorded_at"]))
+    return EventScopedFillAccountingDispatchPlan(*args)
+
+
+def _read_bar_plan_v7(value: object) -> ResolvedBarPlanV2:
+    data = _tagged("live bar plan", value, "resolved_bar_plan")
+    state = _tagged("market state", data["market_state"], "slippage_market_state")
+    return ResolvedBarPlanV2(data["event_id"], _read_instrument_id(data["instrument_id"]),
+        _read_cash_pretrade_authority_v7(data["pretrade_authority"]), _read_liquidity_evidence(data["liquidity_evidence"]),
+        SlippageMarketState(state["state_key"], _read_utc(state["observed_at"]), _read_utc(state["available_at"]),
+            state["source_event_id"], state["revision_id"], state["evidence_hash"]),
+        _read_slippage_model(data["slippage_model"]), _read_domain_id(data["fill_id"]), data["fill_event_id"],
+        _read_simulation_instant(data["fill_event_at"]), _read_fill_accounting_plan_v7(data["accounting_plan"]))
+
+
+def _read_execution_case_plan_v7(value: object) -> _ExecutionCasePlanV2:
+    plan = _mapping("live execution case plan", value)
+    _exact_fields("live execution case plan", plan, _PLAN_FIELDS)
+    if plan["type"] != "execution_case_plan" or type(plan["schema_version"]) is not int or plan["schema_version"] != 2:
+        raise ValueError("v7 requires execution_case_plan@2")
+    execution_spec = _read_simulation_port_spec(plan["execution_model_spec"])
+    if type(execution_spec.applicability) is not NextBarCloseApplicability:
+        raise ValueError("live case requires next eligible bar close execution")
+    execution_model = NextEligibleBarCloseModel.create(actions=execution_spec.applicability.tif_actions)
+    if execution_model.spec() != execution_spec:
+        raise ValueError("live execution model spec mismatch")
+    closeout_policy = MarkToMarketCloseoutPolicy()
+    if _read_simulation_port_spec(plan["closeout_policy_spec"]) != closeout_policy.spec():
+        raise ValueError("live closeout policy spec mismatch")
+    dispatch = _tagged("financial dispatch plan", plan["financial_dispatch_plan"], "financial_dispatch_plan")
+    financial_dispatch_plan = FinancialDispatchPlan(_read_financial_dispatcher_spec(dispatch["dispatcher_spec"]),
+        _sequence("scheduled events", dispatch["scheduled_account_events"], _read_scheduled_account_event),
+        _read_ledger_cash_snapshot_plan_v7(dispatch["final_snapshot_payload"]), tuple(dispatch["expected_artifact_roles"]))
+    result = _ExecutionCasePlanV2(
+        _sequence("live decisions", plan["decision_cycles"], _read_decision_cycle_v7),
+        _sequence("live bars", plan["bar_executions"], _read_bar_plan_v7), _read_financial_state(plan["financial_state"]),
+        financial_dispatch_plan, execution_model, _read_ledger_cash_snapshot_plan_v7(plan["snapshot_plan"]), closeout_policy)
+    rebuilt = {"type": "execution_case_plan", "schema_version": 2,
+        "decision_cycles": result.decision_cycles, "bar_executions": result.bar_executions,
+        "financial_state": result.financial_state, "financial_dispatch_plan": result.financial_dispatch_plan,
+        "execution_model_spec": result.execution_model.spec(), "snapshot_plan": result.snapshot_plan,
+        "closeout_policy_spec": result.closeout_policy.spec()}
+    _canonical_reconstruction("live execution plan", value, rebuilt)
+    return result
+
+
+def _read_execution_input_payload_v7(value: object) -> _DecodedExecutionInputBundleV7:
+    payload = _mapping("execution input v7", value)
+    _exact_fields("execution input v7", payload, _V6_PAYLOAD_FIELDS)
+    if (payload["type"] != _ARTIFACT_TYPE or type(payload["schema_version"]) is not int
+            or payload["schema_version"] != _V7_SCHEMA_VERSION):
+        raise ValueError("execution input payload must be backtest_execution_input_bundle@7")
+    stream_keys = _stream_keys(payload["timeline_stream_keys"])
+    target_stream = _read_precomputed_target_stream(payload["target_stream"])
+    if target_stream.stream_key in stream_keys:
+        raise ValueError("embedded targets must not be a market timeline stream")
+    return _DecodedExecutionInputBundleV7(
+        _text("request_hash", payload["request_hash"]), _text("semantic_run_id", payload["semantic_run_id"]),
+        _read_build_manifest(payload["build_artifact_manifest"]), _read_semantic_spec(payload["execution_case_semantic_spec"]),
+        stream_keys, target_stream, _positive_int("timeline_batch_size", payload["timeline_batch_size"]),
+        _read_execution_case_plan_v7(payload["execution_case_plan"]))
+
+
 _EXECUTION_INPUT_CATALOG = SchemaCatalog(
     (
         ArtifactSchemaRegistration(
@@ -3019,6 +3206,11 @@ _EXECUTION_INPUT_CATALOG = SchemaCatalog(
             artifact_type="backtest_execution_input_bundle",
             schema_version=6,
             payload_reader=_read_execution_input_payload_v6,
+        ),
+        ArtifactSchemaRegistration(
+            artifact_type="backtest_execution_input_bundle",
+            schema_version=7,
+            payload_reader=_read_execution_input_payload_v7,
         ),
     )
 )
@@ -3071,15 +3263,15 @@ def materialize_execution_input_bundle(
     return ArtifactEnvelope.create(_V1_SCHEMA.name, _V1_SCHEMA.version, payload)
 
 
-def materialize_execution_input_bundle_v2(
+def _execution_input_payload_from_case(
     *,
     resolved_request: ResolvedBacktestRequest,
-    execution_case: ResolvedExecutionCase,
-) -> ArtifactEnvelope:
+    execution_case: ExecutionCase,
+) -> dict[str, object]:
     if type(resolved_request) is not ResolvedBacktestRequest:
         raise TypeError("resolved_request must be exact ResolvedBacktestRequest")
-    if type(execution_case) is not ResolvedExecutionCase:
-        raise TypeError("execution_case must be exact ResolvedExecutionCase")
+    if type(execution_case) not in (ResolvedExecutionCase, ResolvedExecutionCaseV2):
+        raise TypeError("execution_case must be an exact supported resolved case")
 
     request = resolved_request.request
     spec = execution_case.semantic_spec
@@ -3164,6 +3356,19 @@ def materialize_execution_input_bundle_v2(
             "closeout_policy_spec": execution_case.closeout_policy.spec(),
         },
     }
+    return payload
+
+
+def materialize_execution_input_bundle_v2(
+    *,
+    resolved_request: ResolvedBacktestRequest,
+    execution_case: ResolvedExecutionCase,
+) -> ArtifactEnvelope:
+    if type(resolved_request) is not ResolvedBacktestRequest:
+        raise TypeError("resolved_request must be exact ResolvedBacktestRequest")
+    if type(execution_case) is not ResolvedExecutionCase:
+        raise TypeError("execution_case must be exact ResolvedExecutionCase")
+    payload = _execution_input_payload_from_case(resolved_request=resolved_request, execution_case=execution_case)
     return ArtifactEnvelope.create(_V2_SCHEMA.name, _V2_SCHEMA.version, payload)
 
 
@@ -3188,6 +3393,45 @@ def materialize_execution_input_bundle_v6(
     decoded = _EXECUTION_INPUT_CATALOG.read(canonical_bytes(envelope))
     if type(decoded.artifact) is not _DecodedExecutionInputBundleV6:
         raise ValueError("execution input bundle v6 did not round-trip")
+    return envelope
+
+
+def _verify_live_case_profile_bindings(resolved_request: ResolvedBacktestRequest, execution_case: ResolvedExecutionCaseV2) -> None:
+    """Validate resolved ownership only; no construction, projection, or I/O."""
+    request, environment = resolved_request.request, resolved_request.environment
+    spec = execution_case.financial_dispatch_plan.dispatcher_spec
+    if (request.result_grade_requested is not RequestedResultGrade.DEVELOPMENT
+            or execution_case.financial_state.initial_snapshot.account_id != request.execution_account_id
+            or execution_case.financial_state.initial_snapshot.reporting_currency != request.reporting_currency
+            or execution_case.snapshot_plan.reporting_currency != request.reporting_currency
+            or environment.market_semantics.financial_dispatcher_spec != spec):
+        raise ValueError("live case profile account/currency/grade/dispatcher binding mismatch")
+    components = {ref.port_type: ref for ref in environment.simulation.component_manifest}
+    required = (execution_case.execution_model.component_ref, execution_case.closeout_policy.spec().component_ref,
+        spec.liquidation_audit_component, *(bar.slippage_model.component_ref for bar in execution_case.bar_executions))
+    if any(components.get(ref.port_type) != ref for ref in required):
+        raise ValueError("live case profile simulation component binding mismatch")
+
+
+def materialize_execution_input_bundle_v7(
+    *,
+    resolved_request: ResolvedBacktestRequest,
+    execution_case: ResolvedExecutionCaseV2,
+) -> ArtifactEnvelope:
+    if type(execution_case) is not ResolvedExecutionCaseV2 or type(execution_case.timeline) is not DeterministicTimelineV2:
+        raise TypeError("v7 requires exact live case and embedded-target timeline")
+    payload = _execution_input_payload_from_case(resolved_request=resolved_request, execution_case=execution_case)
+    _verify_live_case_profile_bindings(resolved_request, execution_case)
+    payload["schema_version"] = _V7_SCHEMA_VERSION
+    payload.pop("target_stream_key")
+    payload["target_stream"] = execution_case.target_stream
+    plan = dict(_mapping("execution_case_plan", payload["execution_case_plan"]))
+    plan["schema_version"] = 2
+    payload["execution_case_plan"] = plan
+    envelope = ArtifactEnvelope.create(_V7_SCHEMA.name, _V7_SCHEMA.version, payload)
+    decoded = _EXECUTION_INPUT_CATALOG.read(canonical_bytes(envelope))
+    if type(decoded.artifact) is not _DecodedExecutionInputBundleV7:
+        raise ValueError("execution input bundle v7 did not round-trip")
     return envelope
 
 
@@ -3987,6 +4231,12 @@ def _snapshot_execution_request_v6_from_validated_schema(
     )
 
 
+def _snapshot_execution_request_v7_from_validated_schema(
+    request: BacktestExecutionRequest,
+) -> tuple[BacktestExecutionRequest | None, _ExecutionInputsHydrationFailureV3 | None]:
+    return _snapshot_execution_request_from_validated_schema(request, _V7_SCHEMA_VERSION)
+
+
 def _read_execution_inputs_exact(
     reader: ArtifactEnvelopeReader,
     request: BacktestExecutionRequest,
@@ -4060,11 +4310,12 @@ def _read_execution_inputs_v5_from_snapshot(
     )
 
 
-def _read_execution_inputs_v6_from_snapshot(
+def _read_execution_inputs_embedded_target_from_snapshot(
     reader: ArtifactEnvelopeReader,
     request: BacktestExecutionRequest,
-) -> tuple[_DecodedExecutionInputBundleV6 | None, _ExecutionInputsHydrationFailureV3 | None]:
-    if type(request) is not BacktestExecutionRequest or request.schema_version != 6:
+    schema_version: int,
+) -> tuple[_DecodedExecutionInputBundleV6 | _DecodedExecutionInputBundleV7 | None, _ExecutionInputsHydrationFailureV3 | None]:
+    if type(request) is not BacktestExecutionRequest or request.schema_version != schema_version:
         return None, _ExecutionInputsHydrationFailureV3(
             _ExecutionInputsHydrationFailureCodeV3.MALFORMED_EXECUTION_REQUEST
         )
@@ -4090,8 +4341,9 @@ def _read_execution_inputs_v6_from_snapshot(
             raise ArtifactIntegrityError("execution input source mismatch")
         decoded = _EXECUTION_INPUT_CATALOG.read(source.source_bytes)
         bundle = decoded.artifact
-        if decoded.envelope != source.envelope or type(bundle) is not _DecodedExecutionInputBundleV6:
-            raise ArtifactDecodeError("execution input v6 decoded wrong artifact")
+        expected_type = _DecodedExecutionInputBundleV7 if schema_version == 7 else _DecodedExecutionInputBundleV6
+        if decoded.envelope != source.envelope or type(bundle) is not expected_type:
+            raise ArtifactDecodeError("embedded-target execution input decoded wrong artifact")
     except (ArtifactIntegrityError, UnknownArtifactTypeError, UnsupportedSchemaVersionError):
         return None, _ExecutionInputsHydrationFailureV3(
             _ExecutionInputsHydrationFailureCodeV3.EXECUTION_INPUT_TAMPERED
@@ -4105,6 +4357,22 @@ def _read_execution_inputs_v6_from_snapshot(
             _ExecutionInputsHydrationFailureCodeV3.REQUEST_BINDING_MISMATCH
         )
     return bundle, None
+
+
+def _read_execution_inputs_v6_from_snapshot(
+    reader: ArtifactEnvelopeReader, request: BacktestExecutionRequest,
+) -> tuple[_DecodedExecutionInputBundleV6 | None, _ExecutionInputsHydrationFailureV3 | None]:
+    bundle, failure = _read_execution_inputs_embedded_target_from_snapshot(reader, request, 6)
+    assert bundle is None or type(bundle) is _DecodedExecutionInputBundleV6
+    return bundle, failure
+
+
+def _read_execution_inputs_v7_from_snapshot(
+    reader: ArtifactEnvelopeReader, request: BacktestExecutionRequest,
+) -> tuple[_DecodedExecutionInputBundleV7 | None, _ExecutionInputsHydrationFailureV3 | None]:
+    bundle, failure = _read_execution_inputs_embedded_target_from_snapshot(reader, request, 7)
+    assert bundle is None or type(bundle) is _DecodedExecutionInputBundleV7
+    return bundle, failure
 
 
 def _read_execution_inputs_from_snapshot_exact(

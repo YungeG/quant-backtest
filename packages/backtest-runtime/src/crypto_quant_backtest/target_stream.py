@@ -133,6 +133,8 @@ class TargetStreamScheduleEntry:
                     self.validation_context.instrument_catalog
                 ),
                 "universe": self.validation_context.universe,
+                **({"decision_instant": self.validation_context.decision_instant}
+                   if self.validation_context.decision_instant is not None else {}),
             },
         }
 
@@ -561,6 +563,7 @@ class PrecomputedTargetStreamAdapter:
 
         batch_result = self._collector.collect(
             decision_time=schedule.decision_time,
+            decision_instant=schedule.entries[0].validation_context.decision_instant,
             expected=tuple(entry.expectation for entry in schedule.entries),
             submissions=tuple(submissions),
             prior_state=prior_state,
@@ -622,8 +625,12 @@ class PrecomputedTargetStreamAdapter:
                         str(count),
                     )
                 )
+        contexts = {entry.event_id: entry.validation_context for entry in schedule.entries}
         for timeline_event in timeline_events:
             event = timeline_event.event
+            context = contexts.get(event.event_id)
+            if context is not None and context.decision_instant is not None and context.decision_instant != event.timeline_instant:
+                issues.append(InputDecodeIssue(InputDecodeIssueCode.EVENT_TIME_MISMATCH, event.event_id, "decision_instant", str(event.timeline_instant)))
             if event.event_id not in scheduled_ids:
                 issues.append(
                     InputDecodeIssue(

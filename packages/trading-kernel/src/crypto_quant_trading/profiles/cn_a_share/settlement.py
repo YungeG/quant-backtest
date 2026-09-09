@@ -45,6 +45,7 @@ from crypto_quant_trading.settlement import (
 )
 
 from .calendar import (
+    CnAShareBarCloseReceipt,
     CnAShareCalendarDayKind,
     CnAShareCashSessionModel,
     CnAShareFrozenCalendar,
@@ -141,6 +142,25 @@ class CnAShareSettlementQuery:
             "cash_obligation_id": self.cash_obligation_id,
             "position_obligation_id": self.position_obligation_id,
         }
+
+
+@dataclass(frozen=True, slots=True, kw_only=True)
+class CnAShareBarCloseSettlementQuery(CnAShareSettlementQuery):
+    bar_close_receipt: CnAShareBarCloseReceipt
+
+    def __post_init__(self) -> None:
+        CnAShareSettlementQuery.__post_init__(self)
+        receipt = self.bar_close_receipt
+        if type(receipt) is not CnAShareBarCloseReceipt:
+            raise TypeError("closed settlement requires exact receipt")
+        if (receipt.instrument_id != self.fill.instrument_id or not receipt.close_price == self.fill.reference_price == self.fill.price
+                or receipt.interval_end_exclusive != self.fill.execution_time
+                or receipt.received_at > self.fill_accounting_entry.recorded_at):
+            raise ValueError("closed settlement receipt does not bind actual Fill/accounting")
+
+    def to_canonical_dict(self) -> dict[str, object]:
+        return {**CnAShareSettlementQuery.to_canonical_dict(self), "type": "cn_a_share_bar_close_settlement_query",
+                "bar_close_receipt": self.bar_close_receipt}
 
 
 @dataclass(frozen=True, slots=True)
@@ -243,6 +263,19 @@ class CnAShareSettlementResolution:
             "fill_accounting_entry_hash": self.fill_accounting_entry_hash,
             "obligations": self.obligations,
         }
+
+
+@dataclass(frozen=True, slots=True, kw_only=True)
+class CnAShareBarCloseSettlementResolution(CnAShareSettlementResolution):
+    bar_close_receipt_hash: str
+
+    def __post_init__(self) -> None:
+        CnAShareSettlementResolution.__post_init__(self)
+        _hash("bar_close_receipt_hash", self.bar_close_receipt_hash)
+
+    def to_canonical_dict(self) -> dict[str, object]:
+        return {**CnAShareSettlementResolution.to_canonical_dict(self), "type": "cn_a_share_bar_close_settlement_resolution",
+                "bar_close_receipt_hash": self.bar_close_receipt_hash}
 
 
 @dataclass(frozen=True, slots=True)
@@ -385,6 +418,15 @@ class CnAShareCashSettlementModel:
             ),
         )
 
+    @property
+    def closed_bar_component_ref(self) -> ProfileComponentRef:
+        return ProfileComponentRef(ProfilePortType.SETTLEMENT_MODEL, "equity.cn_a_share.cash.closed-bar-settlement.v1", 1,
+            canonical_sha256({"type": "cn_a_share_closed_bar_settlement_component", "schema_version": 1,
+                "base_component": self.component_ref,
+                "receipt_session_component": CnAShareCashSessionModel(self.calendar).closed_bar_component_ref,
+                "trade_time": "actual_receipt_no_retiming",
+                "price": "actual_and_reference_equal_retained_close"}))
+
     def resolve_settlement(
         self, query: CnAShareSettlementQuery, /
     ) -> ProfilePortOutcome[
@@ -436,18 +478,25 @@ class CnAShareCashSettlementModel:
         if failure is not None:
             return self._failure(query, *failure)
 
-        session = CnAShareCashSessionModel(self.calendar).resolve_session(
-            CnAShareSessionQuery(fill.venue_id, fill.execution_time)
-        )
-        if session.failure is not None:
-            if session.failure.code is not CnAShareSessionFailureCode.CALENDAR_COVERAGE_MISSING:
+        session_model = CnAShareCashSessionModel(self.calendar)
+        receipt = query.bar_close_receipt if isinstance(query, CnAShareBarCloseSettlementQuery) else None
+        if receipt is not None:
+            closed_session = session_model.resolve_bar_close(receipt)
+            session_failure = closed_session.failure
+            session_result = closed_session.result.physical_session if closed_session.result is not None else None
+            trade_is_eligible = closed_session.result.is_eligible if closed_session.result is not None else False
+        else:
+            session = session_model.resolve_session(CnAShareSessionQuery(fill.venue_id, fill.execution_time))
+            session_failure, session_result = session.failure, session.result
+            trade_is_eligible = session_result.is_open if session_result is not None else False
+        if session_failure is not None:
+            if session_failure.code is not CnAShareSessionFailureCode.CALENDAR_COVERAGE_MISSING:
                 raise RuntimeError("validated settlement venue failed session lookup")
             return self._failure(
                 query,
                 CnAShareSettlementFailureCode.CALENDAR_COVERAGE_MISSING,
                 fill.fill_id.value,
             )
-        session_result = session.result
         if session_result is None:  # pragma: no cover - exactly-one port contract
             raise RuntimeError("session outcome has no branch")
         next_day = next(
@@ -465,7 +514,7 @@ class CnAShareCashSettlementModel:
                 CnAShareSettlementFailureCode.CALENDAR_COVERAGE_MISSING,
                 fill.fill_id.value,
             )
-        if not session_result.is_open or session_result.trading_date is None:
+        if not trade_is_eligible or session_result.trading_date is None:
             return self._failure(
                 query,
                 CnAShareSettlementFailureCode.TRADE_TIME_NOT_OPEN,
@@ -510,7 +559,8 @@ class CnAShareCashSettlementModel:
                 position_key,
             ),
         )
-        result = CnAShareSettlementResolution(
+        resolution_type = CnAShareBarCloseSettlementResolution if receipt is not None else CnAShareSettlementResolution
+        result = resolution_type(
             venue_id=fill.venue_id,
             fill_id=fill.fill_id,
             trade_date=session_result.trading_date,
@@ -524,8 +574,9 @@ class CnAShareCashSettlementModel:
                 query.fill_accounting_entry
             ),
             obligations=obligations,
+            **({"bar_close_receipt_hash": receipt.receipt_hash} if receipt is not None else {}),
         )
-        return ProfilePortOutcome.for_result(self.component_ref, query, result)
+        return ProfilePortOutcome.for_result(self.closed_bar_component_ref if receipt is not None else self.component_ref, query, result)
 
     def availability_rules(self, schema: LedgerSchema) -> MarketSettlementRules:
         if not isinstance(schema, LedgerSchema):
@@ -603,7 +654,7 @@ class CnAShareCashSettlementModel:
         CnAShareSettlementFailure,
     ]:
         return ProfilePortOutcome.for_failure(
-            self.component_ref,
+            self.closed_bar_component_ref if isinstance(query, CnAShareBarCloseSettlementQuery) else self.component_ref,
             query,
             CnAShareSettlementFailure(
                 code=code,

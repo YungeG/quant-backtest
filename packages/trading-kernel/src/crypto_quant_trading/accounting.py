@@ -20,6 +20,7 @@ from crypto_quant_domain import (
     Fill,
     Money,
     OrderSide,
+    OrderStatus,
     PositionBalanceKey,
     PositionLot,
     PositionLotChange,
@@ -32,6 +33,8 @@ from crypto_quant_domain import (
     canonical_bytes,
     canonical_sha256,
 )
+
+from .orders import OrderEventStream
 
 
 class CostBasisMethod(str, Enum):
@@ -841,6 +844,80 @@ class CashInstrumentAccounting:
         journal_entry_id: DomainId,
         recorded_at: SimulationInstant,
     ) -> FeeChargeAccountingOutcome:
+        return self._charge_fee(
+            assessment=assessment, related_fill=related_fill, cash_key=cash_key,
+            open_lots=open_lots, cost_basis_policy=cost_basis_policy,
+            journal_entry_id=journal_entry_id, recorded_at=recorded_at,
+            basis_type=FeeBasisType.FILL,
+            basis_id=(
+                related_fill.fill_id
+                if related_fill is not None and isinstance(related_fill, Fill)
+                else None
+            ),
+        )
+
+    def charge_order_fee(
+        self,
+        *,
+        assessment: FeeAssessment,
+        order_stream: OrderEventStream,
+        cash_key: CashBalanceKey,
+        open_lots: tuple[PositionLot, ...],
+        cost_basis_policy: CostBasisPolicy | None,
+        journal_entry_id: DomainId,
+        recorded_at: SimulationInstant,
+    ) -> FeeChargeAccountingOutcome:
+        """Post an ORDER assessment against exactly one terminal full Fill.
+
+        Partial, multiple and unfilled orders have no allocation in this lane.
+        The assessment and Journal retain ORDER provenance; it is not a Fill fee.
+        """
+        if not isinstance(assessment, FeeAssessment):
+            raise TypeError("assessment must be FeeAssessment")
+        if not isinstance(order_stream, OrderEventStream):
+            raise TypeError("order_stream must be OrderEventStream")
+        _require_journal_context(journal_entry_id, recorded_at)
+        fills = tuple(record.fill for record in order_stream.records if record.fill is not None)
+        if (
+            order_stream.state is None
+            or order_stream.state.status is not OrderStatus.FILLED
+            or len(fills) != 1
+            or fills[0].quantity != order_stream.order.intent.quantity
+        ):
+            return FeeChargeAccountingOutcome(
+                failure=_failure(
+                    CashAccountingFailureCode.UNSUPPORTED_FEE_BASIS,
+                    str(assessment.fee_assessment_id),
+                )
+            )
+        terminal = order_stream.records[-1].event.occurred_at
+        if assessment.assessment_time < terminal.instant or recorded_at < terminal:
+            return FeeChargeAccountingOutcome(
+                failure=_failure(
+                    CashAccountingFailureCode.CONTEXT_MISMATCH,
+                    str(assessment.fee_assessment_id),
+                )
+            )
+        return self._charge_fee(
+            assessment=assessment, related_fill=fills[0], cash_key=cash_key,
+            open_lots=open_lots, cost_basis_policy=cost_basis_policy,
+            journal_entry_id=journal_entry_id, recorded_at=recorded_at,
+            basis_type=FeeBasisType.ORDER, basis_id=order_stream.order.order_id,
+        )
+
+    def _charge_fee(
+        self,
+        *,
+        assessment: FeeAssessment,
+        related_fill: Fill | None,
+        cash_key: CashBalanceKey,
+        open_lots: tuple[PositionLot, ...],
+        cost_basis_policy: CostBasisPolicy | None,
+        journal_entry_id: DomainId,
+        recorded_at: SimulationInstant,
+        basis_type: FeeBasisType,
+        basis_id: DomainId | None,
+    ) -> FeeChargeAccountingOutcome:
         if not isinstance(assessment, FeeAssessment):
             raise TypeError("assessment must be FeeAssessment")
         policy_failure = _policy_failure(
@@ -852,9 +929,7 @@ class CashInstrumentAccounting:
         if not isinstance(cash_key, CashBalanceKey):
             raise TypeError("cash_key must be CashBalanceKey")
         _require_journal_context(journal_entry_id, recorded_at)
-        if assessment.basis_type is not FeeBasisType.FILL or len(
-            assessment.basis_ids
-        ) != 1:
+        if assessment.basis_type is not basis_type or len(assessment.basis_ids) != 1:
             return FeeChargeAccountingOutcome(
                 failure=_failure(
                     CashAccountingFailureCode.UNSUPPORTED_FEE_BASIS,
@@ -868,7 +943,7 @@ class CashInstrumentAccounting:
                     str(assessment.fee_assessment_id),
                 )
             )
-        if assessment.basis_ids[0] != related_fill.fill_id:
+        if assessment.basis_ids[0] != basis_id:
             return FeeChargeAccountingOutcome(
                 failure=_failure(
                     CashAccountingFailureCode.MISSING_RELATED_FILL,
@@ -982,6 +1057,8 @@ class CashInstrumentAccounting:
             str(assessment.fee_assessment_id),
             str(assessment.basis_ids[0]),
         }
+        if basis_type is FeeBasisType.ORDER:
+            source_ids.add(str(related_fill.fill_id))
         source_ids.update(
             value
             for value in (

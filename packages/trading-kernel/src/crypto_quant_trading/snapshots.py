@@ -1,19 +1,22 @@
 from __future__ import annotations
 
 import re
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 from enum import Enum
 from typing import Any, cast
 
 from crypto_quant_domain import (
     CashBalanceKey,
     CurrencyId,
+    InstrumentCatalog,
+    InstrumentType,
     Money,
     PortfolioSnapshot,
     PositionBalanceKey,
     PricePurpose,
     QuantizationPolicy,
     Scale,
+    SimulationInstant,
     UtcInstant,
     ValuationMarkReference,
     canonical_bytes,
@@ -22,7 +25,7 @@ from crypto_quant_domain import (
 
 from .ledger import LedgerState
 from .marks import ResolvedMark
-from .valuation import CurrencyValuationResolution
+from .valuation import CurrencyValuationGraph, CurrencyValuationResolution
 
 
 _SHA256_RE = re.compile(r"^sha256:[0-9a-f]{64}$")
@@ -151,6 +154,8 @@ class SnapshotProjectionFailureCode(str, Enum):
     MARK_COVERAGE_MISMATCH = "mark_coverage_mismatch"
     POSITION_MARK_MISMATCH = "position_mark_mismatch"
     POSITION_NOTIONAL_MISMATCH = "position_notional_mismatch"
+    CASH_LOT_EVIDENCE_MISMATCH = "cash_lot_evidence_mismatch"
+    CASH_INSTRUMENT_MISMATCH = "cash_instrument_mismatch"
 
 
 @dataclass(frozen=True, slots=True)
@@ -217,6 +222,161 @@ class SnapshotProjectionOutcome:
 
 @dataclass(frozen=True, slots=True)
 class PortfolioSnapshotProjector:
+    def project_cash_ledger(
+        self,
+        *,
+        ledger_state: LedgerState,
+        resolved_marks: tuple[ResolvedMark, ...],
+        reporting_currency: CurrencyId,
+        reporting_scale: Scale,
+        projection_at: SimulationInstant,
+        instrument_catalog: InstrumentCatalog,
+        currency_valuation_graph: CurrencyValuationGraph,
+        notional_quantization: QuantizationPolicy,
+    ) -> SnapshotProjectionOutcome:
+        """Value long cash positions from the current, lot-authoritative ledger.
+
+        This bounded route accepts one native reporting currency/scale, not FX
+        or derivative valuation. Supplied marks cover the registered instruments;
+        only marks for current positions enter the existing exact-cover projector.
+        V2 lot cost basis is gross: allocated fees remain the ledger's separate
+        fee attribution and are not deducted a second time from unrealized PnL.
+        """
+        if not isinstance(currency_valuation_graph, CurrencyValuationGraph):
+            raise TypeError("currency_valuation_graph must be CurrencyValuationGraph")
+        if not isinstance(notional_quantization, QuantizationPolicy):
+            raise TypeError("notional_quantization must be QuantizationPolicy")
+        if not isinstance(projection_at, SimulationInstant):
+            raise TypeError("projection_at must be SimulationInstant")
+        if not isinstance(instrument_catalog, InstrumentCatalog):
+            raise TypeError("instrument_catalog must be InstrumentCatalog")
+        timestamp = projection_at.instant
+        graph = currency_valuation_graph
+        self._validate_input_types(
+            ledger_state, resolved_marks, (), reporting_currency, reporting_scale,
+            timestamp, graph.graph_hash,
+        )
+        if (
+            graph.valuation_at != timestamp
+            or graph.price_purpose is not PricePurpose.VALUATION
+            or graph.edges
+        ):
+            return self._failure(
+                SnapshotProjectionFailureCode.CURRENCY_GRAPH_MISMATCH, ledger_state, graph,
+            )
+        if (
+            notional_quantization.target_scale != reporting_scale
+            or any(
+                balance.amount.currency != str(reporting_currency)
+                or balance.amount.scale != reporting_scale
+                for balance in ledger_state.cash_balances
+            )
+        ):
+            return self._failure(
+                SnapshotProjectionFailureCode.REPORTING_CONTEXT_MISMATCH,
+                ledger_state, reporting_currency, reporting_scale.places, notional_quantization,
+            )
+        instruments = {
+            registration.key.instrument_id
+            for registration in ledger_state.schema.registrations
+            if isinstance(registration.key, PositionBalanceKey)
+        }
+        definitions = {item.instrument_id: item for item in instrument_catalog.instruments}
+        if reporting_currency not in instrument_catalog.currencies or any(
+            instrument_id not in definitions
+            or definitions[instrument_id].instrument_type not in {InstrumentType.SPOT, InstrumentType.EQUITY}
+            or definitions[instrument_id].quote_currency != reporting_currency
+            or definitions[instrument_id].settlement_currency != reporting_currency
+            for instrument_id in instruments
+        ):
+            return self._failure(
+                SnapshotProjectionFailureCode.CASH_INSTRUMENT_MISMATCH,
+                ledger_state, instrument_catalog,
+            )
+        marks = {mark.instrument_id: mark for mark in resolved_marks}
+        if (
+            len(marks) != len(resolved_marks)
+            or set(marks) != instruments
+            or any(
+                mark.resolved_at != timestamp
+                or mark.resolved_at_instant != projection_at
+                or mark.available_at_instant is None
+                or mark.available_at_instant > projection_at
+                or mark.price_purpose is not PricePurpose.VALUATION
+                or mark.quote_currency_id != reporting_currency
+                or mark.observed_at > timestamp
+                or mark.available_at > timestamp
+                for mark in resolved_marks
+            )
+        ):
+            return self._failure(
+                SnapshotProjectionFailureCode.MARK_COVERAGE_MISMATCH,
+                ledger_state, *resolved_marks,
+            )
+        native_positions: dict[PortfolioValueRef, Money] = {}
+        for position in ledger_state.position_balances:
+            # PositionBalance already validates lot identities, scales and totals.
+            if position.quantity.units < 0 or not position.lots:
+                return self._failure(
+                    SnapshotProjectionFailureCode.CASH_LOT_EVIDENCE_MISMATCH,
+                    ledger_state, position,
+                )
+            gross_cost = 0
+            for lot in position.lots:
+                basis = lot.total_cost_basis
+                if (
+                    basis is None
+                    or lot.quantity.units <= 0
+                    or basis.currency != str(reporting_currency)
+                    or basis.scale != reporting_scale
+                    or lot.opened_at > timestamp
+                ):
+                    return self._failure(
+                        SnapshotProjectionFailureCode.CASH_LOT_EVIDENCE_MISMATCH,
+                        ledger_state, position, lot,
+                    )
+                gross_cost += basis.units
+            market = marks[position.key.instrument_id].price.notional(
+                position.quantity,
+                result_scale=reporting_scale,
+                rounding=notional_quantization.rounding,
+            )
+            native_positions[PortfolioValueRef(
+                PortfolioValueKind.POSITION_MARKET_VALUE, position.key,
+            )] = market
+            native_positions[PortfolioValueRef(
+                PortfolioValueKind.UNREALIZED_PNL, position.key,
+            )] = Money(market.units - gross_cost, reporting_scale, str(reporting_currency))
+        resolution = graph.resolve(reporting_currency, reporting_currency).resolution
+        if resolution is None:
+            return self._failure(
+                SnapshotProjectionFailureCode.VALUATION_PATH_MISMATCH, ledger_state, graph,
+            )
+        valuations: list[ReportingCurrencyValuation] = []
+        for ref in sorted(self._expected_refs(ledger_state), key=canonical_bytes):
+            native = self._ledger_native_value(ledger_state, ref)
+            if native is None:
+                native = native_positions[ref]
+            valuations.append(ReportingCurrencyValuation(
+                ref, native, native, resolution, graph.graph_hash,
+                notional_quantization if ref.kind is PortfolioValueKind.POSITION_MARKET_VALUE else None,
+            ))
+        held_instruments = {position.key.instrument_id for position in ledger_state.position_balances}
+        projection = self.project(
+            ledger_state=ledger_state,
+            resolved_marks=tuple(mark for mark in resolved_marks if mark.instrument_id in held_instruments),
+            valuations=tuple(valuations),
+            reporting_currency=reporting_currency,
+            reporting_scale=reporting_scale,
+            timestamp=timestamp,
+            currency_valuation_graph_hash=graph.graph_hash,
+        )
+        if projection.snapshot is None:
+            return projection
+        return SnapshotProjectionOutcome(
+            replace(projection.snapshot, timestamp_instant=projection_at), None,
+        )
+
     def project(
         self,
         *,
