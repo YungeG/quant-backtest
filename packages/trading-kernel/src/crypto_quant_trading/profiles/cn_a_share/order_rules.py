@@ -38,7 +38,7 @@ from crypto_quant_trading.ports import (
 )
 from crypto_quant_trading.sizing import QuantityLattice
 
-from .calendar import CnAShareSessionResolution
+from .calendar import CnAShareBarCloseSessionResolution, CnAShareSessionResolution
 from .quantity_lattice import (
     CnAShareCashQuantityLatticeModel,
     CnAShareQuantityLatticeQuery,
@@ -431,6 +431,36 @@ class CnAShareOrderRuleQuery:
 
 
 @dataclass(frozen=True, slots=True)
+class CnAShareBarCloseOrderRuleQuery:
+    instrument: InstrumentDefinition
+    session: CnAShareBarCloseSessionResolution
+    context: CnAShareInstrumentRuleContext
+    trade_status_evidence: CnAShareTradeStatusEvidence | None
+    previous_close_evidence: CnASharePreviousCloseEvidence | None
+
+    def __post_init__(self) -> None:
+        if (type(self.instrument) is not InstrumentDefinition or type(self.session) is not CnAShareBarCloseSessionResolution
+                or type(self.context) is not CnAShareInstrumentRuleContext):
+            raise TypeError("closed order rule query requires exact instrument/session/context")
+        if self.instrument.instrument_id != self.session.receipt.instrument_id:
+            raise ValueError("closed order receipt instrument mismatch")
+        if self.trade_status_evidence is not None and type(self.trade_status_evidence) is not CnAShareTradeStatusEvidence:
+            raise TypeError("closed order trade status must be exact evidence")
+        if self.previous_close_evidence is not None and type(self.previous_close_evidence) is not CnASharePreviousCloseEvidence:
+            raise TypeError("closed order previous close must be exact evidence")
+
+    @property
+    def evaluated_at(self) -> UtcInstant:
+        return self.session.receipt.interval_end_exclusive
+
+    def to_canonical_dict(self) -> dict[str, Any]:
+        return {"type": "cn_a_share_bar_close_order_rule_query", "schema_version": 1,
+                "instrument": self.instrument, "session": self.session, "context": self.context,
+                "evaluated_at": self.evaluated_at, "trade_status_evidence": self.trade_status_evidence,
+                "previous_close_evidence": self.previous_close_evidence}
+
+
+@dataclass(frozen=True, slots=True)
 class CnAShareOrderRuleResolution:
     kind: CnAShareOrderRuleResolutionKind
     venue_id: VenueId
@@ -488,6 +518,19 @@ class CnAShareOrderRuleResolution:
             "previous_close_evidence_hash": self.previous_close_evidence_hash,
             "timeline": self.timeline,
         }
+
+
+@dataclass(frozen=True, slots=True, kw_only=True)
+class CnAShareBarCloseOrderRuleResolution(CnAShareOrderRuleResolution):
+    bar_close_receipt_hash: str
+
+    def __post_init__(self) -> None:
+        CnAShareOrderRuleResolution.__post_init__(self)
+        _hash("bar_close_receipt_hash", self.bar_close_receipt_hash)
+
+    def to_canonical_dict(self) -> dict[str, Any]:
+        return {**CnAShareOrderRuleResolution.to_canonical_dict(self),
+                "type": "cn_a_share_bar_close_order_rule_resolution", "bar_close_receipt_hash": self.bar_close_receipt_hash}
 
 
 @dataclass(frozen=True, slots=True)
@@ -702,6 +745,23 @@ class CnAShareCashOrderRuleModel:
     ) -> ProfilePortOutcome[CnAShareOrderRuleResolution, CnAShareOrderRuleFailure]:
         if not isinstance(query, CnAShareOrderRuleQuery):
             raise TypeError("query must be CnAShareOrderRuleQuery")
+        return self._resolve_order_rules(query)
+
+    @property
+    def closed_bar_component_ref(self) -> ProfileComponentRef:
+        return ProfileComponentRef(ProfilePortType.ORDER_RULE_MODEL, "equity.cn_a_share.cash.closed-bar-order-rules.v1", 1,
+            canonical_sha256({"type": "cn_a_share_closed_bar_order_rule_component", "schema_version": 1,
+                "base_component": self.component_ref, "eligibility": "validated_five_minute_receipt",
+                "rule_interval": "receipt_timestamp_only_one_nanosecond", "status_coverage": "entire_bar_half_open"}))
+
+    def resolve_bar_close_rules(self, query: CnAShareBarCloseOrderRuleQuery, /) -> ProfilePortOutcome[CnAShareOrderRuleResolution, CnAShareOrderRuleFailure]:
+        if type(query) is not CnAShareBarCloseOrderRuleQuery:
+            raise TypeError("query must be exact CnAShareBarCloseOrderRuleQuery")
+        return self._resolve_order_rules(query)
+
+    def _resolve_order_rules(self, query: CnAShareOrderRuleQuery | CnAShareBarCloseOrderRuleQuery) -> ProfilePortOutcome[CnAShareOrderRuleResolution, CnAShareOrderRuleFailure]:
+        closed = isinstance(query, CnAShareBarCloseOrderRuleQuery)
+        component = self.closed_bar_component_ref if closed else self.component_ref
         instrument = query.instrument
         venue_id = instrument.instrument_id.venue
         if venue_id not in _SUPPORTED_VENUES:
@@ -723,15 +783,16 @@ class CnAShareCashOrderRuleModel:
             return self._failure(
                 query, CnAShareOrderRuleFailureCode.UNSUPPORTED_CLASSIFICATION
             )
-        session = query.session
+        receipt = query.session.receipt if isinstance(query, CnAShareBarCloseOrderRuleQuery) else None
+        session = query.session.physical_session if isinstance(query, CnAShareBarCloseOrderRuleQuery) else query.session
         if session.venue_id != venue_id or session.instant != query.evaluated_at:
             return self._failure(
                 query, CnAShareOrderRuleFailureCode.SESSION_EVIDENCE_MISMATCH
             )
-        session_hash = canonical_sha256(session)
+        session_hash = canonical_sha256(query.session)
         if session.session_id is None:
             return ProfilePortOutcome.for_result(
-                self.component_ref,
+                component,
                 query,
                 CnAShareOrderRuleResolution(
                     kind=CnAShareOrderRuleResolutionKind.NO_TRADE,
@@ -767,7 +828,9 @@ class CnAShareCashOrderRuleModel:
         if (
             status.instrument_id != instrument.instrument_id
             or status.session_id != session.session_id
-            or not status.contains(query.evaluated_at)
+            or (not status.contains(query.evaluated_at) if receipt is None else not (
+                status.effective_from <= receipt.interval_start
+                and receipt.interval_end_exclusive <= status.effective_to_exclusive))
         ):
             return self._failure(
                 query, CnAShareOrderRuleFailureCode.INVALID_TRADE_STATUS_EVIDENCE
@@ -783,7 +846,7 @@ class CnAShareCashOrderRuleModel:
             or previous.price.quote_currency != "CNY"
             or previous.price.scale != self.notional_scale
             or previous.price.units <= 0
-            or previous.available_at > query.evaluated_at
+            or previous.available_at > (receipt.interval_start if receipt is not None else query.evaluated_at)
             or previous.reference_trading_date.calendar_id
             != session.trading_date.calendar_id
             or previous.reference_trading_date.value >= session.trading_date.value
@@ -795,13 +858,13 @@ class CnAShareCashOrderRuleModel:
         lattice = self._lattice(instrument, band)
         state = (
             MarketSessionState.CLOSED
-            if not session.is_open
+            if not (query.session.is_eligible if isinstance(query, CnAShareBarCloseOrderRuleQuery) else session.is_open)
             else MarketSessionState.SUSPENDED
             if status.status is CnAShareTradeStatus.SUSPENDED
-            else MarketSessionState.OPEN
+            else MarketSessionState.EXECUTION_RECEIPT if closed else MarketSessionState.OPEN
         )
         snapshot = OrderRuleSnapshot.create(
-            component_ref=self.component_ref,
+            component_ref=component,
             instrument_id=instrument.instrument_id,
             session_id=session.session_id,
             session_state=state,
@@ -827,8 +890,8 @@ class CnAShareCashOrderRuleModel:
             max_market_order_quantity_units=band.max_market_order_quantity_units,
         )
         interval = OrderRuleInterval.create(
-            effective_from=max(session.phase_start, status.effective_from),
-            effective_to_exclusive=min(
+            effective_from=receipt.interval_end_exclusive if receipt is not None else max(session.phase_start, status.effective_from),
+            effective_to_exclusive=UtcInstant(receipt.interval_end_exclusive.epoch_nanoseconds + 1) if receipt is not None else min(
                 session.phase_end_exclusive, status.effective_to_exclusive
             ),
             snapshot=snapshot,
@@ -836,16 +899,17 @@ class CnAShareCashOrderRuleModel:
         timeline = OrderRuleTimeline.create(
             timeline_key=(
                 f"equity.cn_a_share.cash.{query.context.board.value}."
-                f"{instrument.instrument_id.stable_key}.order-rules.v1"
+                f"{instrument.instrument_id.stable_key}.{'closed-bar-' if closed else ''}order-rules.v1"
             ),
             timeline_version=1,
             instrument_id=instrument.instrument_id,
             intervals=(interval,),
         )
+        resolution_type = CnAShareBarCloseOrderRuleResolution if closed else CnAShareOrderRuleResolution
         return ProfilePortOutcome.for_result(
-            self.component_ref,
+            component,
             query,
-            CnAShareOrderRuleResolution(
+            resolution_type(
                 kind=CnAShareOrderRuleResolutionKind.RULES,
                 venue_id=venue_id,
                 instrument_id=instrument.instrument_id,
@@ -856,6 +920,7 @@ class CnAShareCashOrderRuleModel:
                 trade_status_evidence_hash=status.evidence_hash,
                 previous_close_evidence_hash=previous.evidence_hash,
                 timeline=timeline,
+                **({"bar_close_receipt_hash": receipt.receipt_hash} if receipt is not None else {}),
             ),
         )
 
@@ -887,11 +952,11 @@ class CnAShareCashOrderRuleModel:
 
     def _failure(
         self,
-        query: CnAShareOrderRuleQuery,
+        query: CnAShareOrderRuleQuery | CnAShareBarCloseOrderRuleQuery,
         code: CnAShareOrderRuleFailureCode,
     ) -> ProfilePortOutcome[CnAShareOrderRuleResolution, CnAShareOrderRuleFailure]:
         return ProfilePortOutcome.for_failure(
-            self.component_ref,
+            self.closed_bar_component_ref if isinstance(query, CnAShareBarCloseOrderRuleQuery) else self.component_ref,
             query,
             CnAShareOrderRuleFailure(
                 code=code,

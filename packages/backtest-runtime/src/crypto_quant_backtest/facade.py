@@ -35,8 +35,10 @@ from .composition import (
     _compose_execution_case_from_authority_v2,
     _compose_execution_case_v3,
     _HydratedExecutionCaseInputs,
+    _HydratedExecutionCaseInputsV2,
 )
-from .engine import EngineCancellationRequest, ResolvedExecutionCase
+from .engine import DeterministicBarEngine, EngineCancellationRequest, ExecutionCase, ResolvedExecutionCase, ResolvedExecutionCaseV2
+from .financial_dispatch import FinancialEventDispatcher
 from .evidence import AttemptEvidenceWriter, FinalizedAttemptEvidence
 from .evidence_repository import (
     BacktestEvidenceError,
@@ -46,6 +48,7 @@ from .evidence_repository import (
 from .execution_hash import AttemptExecutionHash, ExecutionResultHasher
 from .execution_inputs import (
     BacktestExecutionRequest,
+    _DecodedExecutionInputBundleV7,
     _ExecutionInputsHydrationFailureV3,
     _hydrate_execution_inputs,
     _hydrate_execution_inputs_v3_from_decoded,
@@ -54,11 +57,14 @@ from .execution_inputs import (
     _read_execution_inputs_v3_from_snapshot,
     _read_execution_inputs_v5_from_snapshot,
     _read_execution_inputs_v6_from_snapshot,
+    _read_execution_inputs_v7_from_snapshot,
     _snapshot_execution_request_v3_from_validated_schema,
     _snapshot_execution_request_v4_from_validated_schema,
     _snapshot_execution_request_v5_from_validated_schema,
     _snapshot_execution_request_v6_from_validated_schema,
+    _snapshot_execution_request_v7_from_validated_schema,
     _verify_execution_inputs_v3_after_resolution,
+    _verify_live_case_profile_bindings,
 )
 from .integrity import (
     AttemptConsistencySet,
@@ -83,6 +89,7 @@ from .resolution import (
     ProfileResolver,
     RequestedResultGrade,
     ResolvedBacktestRequest,
+    _FinancialDispatcherProvider,
 )
 from .runner import (
     AttemptExecutionRecord,
@@ -175,14 +182,14 @@ class BacktestRuntime:
             raise RuntimeError(
                 "execution input hydration failed: malformed_execution_request"
             ) from None
-        if type(schema_version) is not int or schema_version not in {1, 2, 3, 4, 5, 6}:
+        if type(schema_version) is not int or schema_version not in {1, 2, 3, 4, 5, 6, 7}:
             raise RuntimeError(
                 "execution input hydration failed: malformed_execution_request"
             )
-        if schema_version == 6:
-            snapshot, failure = _snapshot_execution_request_v6_from_validated_schema(
-                request
-            )
+        if schema_version in {6, 7}:
+            snapshotter = (_snapshot_execution_request_v7_from_validated_schema if schema_version == 7
+                           else _snapshot_execution_request_v6_from_validated_schema)
+            snapshot, failure = snapshotter(request)
             if failure is not None or snapshot is None:
                 self._raise_v3_hydration_failure(failure)
             return self._run_v6(snapshot, cancellation=cancellation)
@@ -239,12 +246,14 @@ class BacktestRuntime:
         *,
         cancellation: EngineCancellationRequest | None,
     ) -> BacktestCanonicalPublicationRef | ArtifactRef:
-        bundle, failure = _read_execution_inputs_v6_from_snapshot(
-            self._artifact_reader, request
-        )
+        reader = (_read_execution_inputs_v7_from_snapshot if request.schema_version == 7
+                  else _read_execution_inputs_v6_from_snapshot)
+        bundle, failure = reader(self._artifact_reader, request)
         if failure is not None or bundle is None:
             self._raise_v3_hydration_failure(failure)
         public_request = request.request
+        if request.schema_version == 7 and public_request.result_grade_requested is not RequestedResultGrade.DEVELOPMENT:
+            raise RuntimeError("execution input hydration failed: live_case_requires_development")
         if (
             bundle.build_artifact_manifest.manifest_hash
             != public_request.build_artifact_manifest_hash
@@ -283,17 +292,18 @@ class BacktestRuntime:
                 "execution input hydration failed: request_binding_mismatch"
             )
         try:
+            hydrated_inputs = (
+                _HydratedExecutionCaseInputsV2(bundle.execution_case_semantic_spec, bundle.timeline_stream_keys,
+                    bundle.target_stream, bundle.timeline_batch_size, bundle.execution_case_plan)
+                if isinstance(bundle, _DecodedExecutionInputBundleV7) else
+                _HydratedExecutionCaseInputs(bundle.execution_case_semantic_spec, bundle.timeline_stream_keys,
+                    bundle.target_stream, bundle.timeline_batch_size, bundle.execution_case_plan)
+            )
             case = _compose_execution_case_from_authority_v2(
                 request=public_request,
                 semantic_run_id=resolved.semantic_run_id,
                 market_reader=self._market_reader,
-                hydrated_inputs=_HydratedExecutionCaseInputs(
-                    bundle.execution_case_semantic_spec,
-                    bundle.timeline_stream_keys,
-                    bundle.target_stream,
-                    bundle.timeline_batch_size,
-                    bundle.execution_case_plan,
-                ),
+                hydrated_inputs=hydrated_inputs,
             )
         except Exception:
             raise RuntimeError(
@@ -866,14 +876,18 @@ class BacktestRuntime:
     def _execute_case(
         self,
         resolved: ResolvedBacktestRequest,
-        execution_case: ResolvedExecutionCase,
+        execution_case: ExecutionCase,
         *,
         cancellation: EngineCancellationRequest | None,
         market_data_preparation: MultiResolutionMarketDataPreparation | None,
     ) -> BacktestCanonicalPublicationRef | ArtifactRef:
         input_origin = self._input_origin(resolved)
-        runner = self._runner_v2()
+        runner = (AuditableBacktestRunner.for_v2(publication_root=self._publication_root,
+                  engine=self._live_case_engine(resolved, execution_case))
+                  if type(execution_case) is ResolvedExecutionCaseV2 else self._runner_v2())
         if market_data_preparation is not None:
+            if not isinstance(execution_case, ResolvedExecutionCase):
+                raise TypeError("live cases require the embedded-target preparation lane")
             runner._verify_v3_contract(
                 resolved_request=resolved,
                 execution_case=execution_case,
@@ -1446,7 +1460,7 @@ class BacktestRuntime:
     def _publish_canonical(
         self,
         resolved: ResolvedBacktestRequest,
-        execution_case: ResolvedExecutionCase,
+        execution_case: ExecutionCase,
         attempt_hashes: tuple[AttemptExecutionHash, AttemptExecutionHash],
         evidence: tuple[FinalizedAttemptEvidence, FinalizedAttemptEvidence],
         *,
@@ -1500,6 +1514,28 @@ class BacktestRuntime:
             return BacktestCanonicalPublicationRef.from_artifact_ref(ref)
         return ref
 
+    @staticmethod
+    def _live_case_engine(resolved: ResolvedBacktestRequest, execution_case: ResolvedExecutionCaseV2) -> DeterministicBarEngine:
+        try:
+            _verify_live_case_profile_bindings(resolved, execution_case)
+        except (TypeError, ValueError):
+            raise RuntimeError("execution input hydration failed: financial_dispatcher_binding_mismatch") from None
+        registration = resolved.environment.market_semantics
+        implementation = registration.implementation
+        spec = registration.financial_dispatcher_spec
+        if (spec is None or spec != execution_case.financial_dispatch_plan.dispatcher_spec
+                or not isinstance(implementation, _FinancialDispatcherProvider)
+                or implementation.profile_digest != registration.profile_digest
+                or implementation.financial_dispatcher_spec != spec):
+            raise RuntimeError("execution input hydration failed: financial_dispatcher_binding_mismatch")
+        try:
+            dispatcher = implementation.build_financial_dispatcher()
+            if not isinstance(dispatcher, FinancialEventDispatcher) or dispatcher.spec != spec:
+                raise ValueError("resolved profile returned a different dispatcher")
+        except Exception:
+            raise RuntimeError("execution input hydration failed: financial_dispatcher_binding_mismatch") from None
+        return DeterministicBarEngine(dispatcher)
+
     def _runner_v2(self) -> AuditableBacktestRunner:
         return AuditableBacktestRunner.for_v2(
             publication_root=self._publication_root
@@ -1514,7 +1550,7 @@ class BacktestRuntime:
     @staticmethod
     def _engine_context(
         resolved: ResolvedBacktestRequest,
-        execution_case: ResolvedExecutionCase,
+        execution_case: ExecutionCase,
     ) -> EngineExecutionContext:
         if execution_case.identity_manifest is None:
             raise RuntimeError("execution_case is missing identity_manifest")

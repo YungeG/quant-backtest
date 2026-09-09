@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass, replace
-from typing import Protocol
+from typing import Protocol, TypeVar
 
 from crypto_quant_domain import (
     AccountingJournalEntry,
@@ -16,18 +16,31 @@ from crypto_quant_market_data import InputValidationFailure, MarketBundleReader
 from crypto_quant_trading import StrategyAllocation
 
 from .engine import (
+    ExecutionCase,
     ExecutionCaseIdentityFactory,
     ExecutionCaseIdentityRule,
     ExecutionCaseSemanticSpec,
     ResolvedBarExecution,
+    ResolvedBarPlanV2,
     ResolvedDecisionCycle,
+    ResolvedDecisionCycleV2,
     ResolvedExecutionCase,
+    ResolvedExecutionCaseV2,
+    ResolvedOrderAdmissionSlot,
     ResolvedFinancialState,
     ResolvedOrderAdmission,
     SnapshotProjectionPlan,
 )
 from .execution import NextEligibleBarCloseModel, NextEligibleBarOpenModel
-from .financial_dispatch import FillAccountingDispatchPlan, FinancialDispatchPlan
+from .financial_dispatch import (
+    CashFillAccountingPlan,
+    EventScopedFillAccountingDispatchPlan,
+    FillAccountingDispatchPlan,
+    FinancialDispatchPlan,
+    FullFillOrderFeeAccountingPlan,
+    LedgerCashSnapshotProjectionPlan,
+    SettlementFillAccountingDispatchPlan,
+)
 from .multi_resolution_preparation import MultiResolutionMarketDataPreparation
 from .resolution import BacktestRequest, ResolvedBacktestRequest
 from .run_end import MarkToMarketCloseoutPolicy
@@ -36,14 +49,17 @@ from .target_stream import PrecomputedTargetStream
 from .timeline import DeterministicTimeline, DeterministicTimelineV2
 
 
-class _ExecutionCaseBuilder(Protocol):
+_CaseT = TypeVar("_CaseT", bound=ExecutionCase, covariant=True)
+
+
+class _ExecutionCaseBuilder(Protocol[_CaseT]):
     def semantic_spec(self) -> ExecutionCaseSemanticSpec: ...
 
     def build(
         self,
         identities: ExecutionCaseIdentityFactory,
         semantic_spec_hash: str,
-    ) -> ResolvedExecutionCase: ...
+    ) -> _CaseT: ...
 
 
 @dataclass(frozen=True, slots=True)
@@ -104,6 +120,50 @@ class _HydratedExecutionCaseInputs:
             raise TypeError("execution_case_plan must be exact _ExecutionCasePlan")
 
 
+@dataclass(frozen=True, slots=True)
+class _ExecutionCasePlanV2:
+    decision_cycles: tuple[ResolvedDecisionCycleV2, ...]
+    bar_executions: tuple[ResolvedBarPlanV2, ...]
+    financial_state: ResolvedFinancialState
+    financial_dispatch_plan: FinancialDispatchPlan
+    execution_model: NextEligibleBarCloseModel
+    snapshot_plan: LedgerCashSnapshotProjectionPlan
+    closeout_policy: MarkToMarketCloseoutPolicy
+
+    def __post_init__(self) -> None:
+        for values, expected in ((self.decision_cycles, ResolvedDecisionCycleV2), (self.bar_executions, ResolvedBarPlanV2)):
+            if type(values) is not tuple or not all(type(value) is expected for value in values):
+                raise TypeError(f"live plan requires exact {expected.__name__}")
+        for value, expected in ((self.financial_state, ResolvedFinancialState),
+                (self.financial_dispatch_plan, FinancialDispatchPlan), (self.execution_model, NextEligibleBarCloseModel),
+                (self.snapshot_plan, LedgerCashSnapshotProjectionPlan), (self.closeout_policy, MarkToMarketCloseoutPolicy)):
+            if type(value) is not expected:
+                raise TypeError(f"live plan requires exact {expected.__name__}")
+
+
+@dataclass(frozen=True, slots=True)
+class _HydratedExecutionCaseInputsV2:
+    execution_case_semantic_spec: ExecutionCaseSemanticSpec
+    timeline_stream_keys: tuple[str, ...]
+    target_stream: PrecomputedTargetStream
+    timeline_batch_size: int
+    execution_case_plan: _ExecutionCasePlanV2
+
+    def __post_init__(self) -> None:
+        if type(self.execution_case_semantic_spec) is not ExecutionCaseSemanticSpec:
+            raise TypeError("execution_case_semantic_spec must be exact ExecutionCaseSemanticSpec")
+        if (type(self.timeline_stream_keys) is not tuple
+                or not all(type(key) is str and key for key in self.timeline_stream_keys)
+                or tuple(sorted(set(self.timeline_stream_keys))) != self.timeline_stream_keys):
+            raise ValueError("timeline stream keys must be canonical sorted unique text")
+        if type(self.target_stream) is not PrecomputedTargetStream:
+            raise TypeError("target_stream must be exact PrecomputedTargetStream")
+        if type(self.timeline_batch_size) is not int or self.timeline_batch_size < 1:
+            raise ValueError("timeline_batch_size must be positive")
+        if type(self.execution_case_plan) is not _ExecutionCasePlanV2:
+            raise TypeError("execution_case_plan must be exact _ExecutionCasePlanV2")
+
+
 def _allocation_semantics(
     allocation: StrategyAllocation,
 ) -> dict[str, object]:
@@ -155,7 +215,20 @@ def _admission_semantics(
     }
 
 
-def _decision_semantics(case: ResolvedExecutionCase) -> tuple[dict[str, object], ...]:
+def _live_admission_semantics(slot: ResolvedOrderAdmissionSlot) -> dict[str, object]:
+    return {
+        "capability_set": slot.capability_set, "translation_mapping": slot.translation_mapping,
+        "translation_time": slot.translation_time, "pretrade_authority": slot.pretrade_authority,
+        "event_plan": tuple({"event_type": event.event_type.value, "occurred_at": event.occurred_at,
+                             "external_evidence_id": event.external_evidence_id} for event in slot.event_plan),
+        "expiration_identity_role": "reserved_order_expiration",
+    }
+
+
+def _decision_semantics(case: ResolvedExecutionCase | ResolvedExecutionCaseV2) -> tuple[dict[str, object], ...]:
+    if isinstance(case, ResolvedExecutionCaseV2):
+        return tuple({**cycle.to_canonical_dict(), "admission_slot": _live_admission_semantics(cycle.admission_slot)}
+                     for cycle in case.decision_cycles)
     return tuple(
         {
             "schedule": cycle.schedule,
@@ -181,7 +254,7 @@ def _accounting_plan_semantics(
     plan: FillAccountingDispatchPlan,
 ) -> dict[str, object]:
     fee = plan.fee_plan
-    return {
+    payload: dict[str, object] = {
         "source_event_id": plan.source_event_id,
         "position_accounting_component": plan.position_accounting_component,
         "semantic_payload": plan.semantic_payload,
@@ -192,6 +265,32 @@ def _accounting_plan_semantics(
         "fee_recorded_at": fee.fee_recorded_at,
         "expected_artifact_roles": plan.expected_artifact_roles,
     }
+    if isinstance(plan, EventScopedFillAccountingDispatchPlan):
+        payload["artifact_scope"] = "source_event"
+        actual = plan.position_payload
+        if type(actual) is not CashFillAccountingPlan:
+            raise TypeError("event-scoped cash semantics require CashFillAccountingPlan")
+        # Bind actual economic authority, not merely the caller's declaration.
+        payload["cash_position_authority"] = {
+            "cash_key": actual.cash_key, "position_key": actual.position_key,
+            "cost_basis_policy": actual.cost_basis_policy,
+            "notional_quantization": actual.notional_quantization,
+        }
+    if isinstance(plan, SettlementFillAccountingDispatchPlan):
+        payload["settlement_slots"] = tuple(slot.balance_key for slot in plan.settlement_slots)
+        payload["settlement_recorded_at"] = plan.settlement_recorded_at
+        payload["settlement_application_policy"] = "actual_boundary_due_before_operations_and_finalize.v1"
+    if isinstance(fee, FullFillOrderFeeAccountingPlan):
+        payload["fee_assessment_scope"] = "single_full_fill_order"
+        if fee.fill_fee_plan is not None:
+            prior = fee.fill_fee_plan
+            payload["fill_fee_plan"] = {
+                "cash_key": prior.cash_key,
+                "final_fee_rule_set": prior.final_fee_rule_set,
+                "fee_assessment_time": prior.fee_assessment_time,
+                "fee_recorded_at": prior.fee_recorded_at,
+            }
+    return payload
 
 
 def _slippage_model_semantics(
@@ -208,7 +307,22 @@ def _slippage_model_semantics(
     }
 
 
-def _execution_semantics(case: ResolvedExecutionCase) -> dict[str, object]:
+def _execution_semantics(case: ResolvedExecutionCase | ResolvedExecutionCaseV2) -> dict[str, object]:
+    if isinstance(case, ResolvedExecutionCaseV2):
+        return {
+            "type": "live_execution_semantics", "schema_version": 2,
+            "bar_plans": tuple({
+                "event_id": bar.event_id, "instrument_id": bar.instrument_id,
+                "pretrade_authority": bar.pretrade_authority,
+                "liquidity_evidence": bar.liquidity_evidence, "market_state": bar.market_state,
+                "slippage_model": _slippage_model_semantics(bar.slippage_model),
+                "fill_event_at": bar.fill_event_at, "accounting_plan": _accounting_plan_semantics(bar.accounting_plan),
+            } for bar in case.bar_executions),
+            "execution_model_spec": case.execution_model.spec(),
+            "identity_usage_policy": "exact_used_or_unused.v1",
+            "artifact_policy": "fixed_plus_actual_fill_due_and_deferral_slots.v1",
+            "pending_sell_policy": "full_quantity_zero_sellable_only_pending_position.v1",
+        }
     return {
         "admissions": tuple(
             _admission_semantics(admission)
@@ -295,7 +409,7 @@ def _financial_dispatch_semantics(
     }
 
 
-def _financial_semantics(case: ResolvedExecutionCase) -> dict[str, object]:
+def _financial_semantics(case: ResolvedExecutionCase | ResolvedExecutionCaseV2) -> dict[str, object]:
     financial = case.financial_state
     if (
         financial.settlement_book.obligations
@@ -515,14 +629,14 @@ def _compose_execution_case_from_authority_v2(
     request: BacktestRequest,
     semantic_run_id: str,
     market_reader: MarketBundleReader,
-    hydrated_inputs: _HydratedExecutionCaseInputs,
-) -> ResolvedExecutionCase:
+    hydrated_inputs: _HydratedExecutionCaseInputs | _HydratedExecutionCaseInputsV2,
+) -> ExecutionCase:
     if type(request) is not BacktestRequest:
         raise TypeError("request must be exact BacktestRequest")
     if type(semantic_run_id) is not str or not semantic_run_id:
         raise TypeError("semantic_run_id must be nonempty str")
-    if type(hydrated_inputs) is not _HydratedExecutionCaseInputs:
-        raise TypeError("hydrated_inputs must be exact _HydratedExecutionCaseInputs")
+    if type(hydrated_inputs) not in (_HydratedExecutionCaseInputs, _HydratedExecutionCaseInputsV2):
+        raise TypeError("hydrated_inputs must be exact supported embedded-target inputs")
     spec = hydrated_inputs.execution_case_semantic_spec
     if spec.semantic_spec_hash != request.execution_case_semantic_hash:
         raise ValueError("execution case semantic spec does not bind the request")
@@ -551,23 +665,33 @@ def _compose_execution_case_from_authority_v2(
         else:
             identities.domain_id(rule.binding_key)
     plan = hydrated_inputs.execution_case_plan
-    result = ResolvedExecutionCase(
-        case_key=spec.case_key,
-        case_version=spec.case_version,
-        semantic_spec_hash=spec.semantic_spec_hash,
-        timeline=timeline,
-        timeline_batch_size=hydrated_inputs.timeline_batch_size,
-        target_stream=hydrated_inputs.target_stream,
-        decision_cycles=plan.decision_cycles,
-        bar_executions=plan.bar_executions,
-        financial_state=plan.financial_state,
-        financial_dispatch_plan=plan.financial_dispatch_plan,
-        execution_model=plan.execution_model,
-        snapshot_plan=plan.snapshot_plan,
-        closeout_policy=plan.closeout_policy,
-        identity_manifest=identities.manifest(),
-        semantic_spec=spec,
-    )
+    result: ExecutionCase
+    if isinstance(plan, _ExecutionCasePlanV2):
+        result = ResolvedExecutionCaseV2(
+            spec.case_key, spec.case_version, spec.semantic_spec_hash, timeline,
+            hydrated_inputs.timeline_batch_size, hydrated_inputs.target_stream,
+            plan.decision_cycles, plan.bar_executions, plan.financial_state,
+            plan.financial_dispatch_plan, plan.execution_model, plan.snapshot_plan,
+            plan.closeout_policy, identities.manifest(), spec,
+        )
+    else:
+        result = ResolvedExecutionCase(
+            case_key=spec.case_key,
+            case_version=spec.case_version,
+            semantic_spec_hash=spec.semantic_spec_hash,
+            timeline=timeline,
+            timeline_batch_size=hydrated_inputs.timeline_batch_size,
+            target_stream=hydrated_inputs.target_stream,
+            decision_cycles=plan.decision_cycles,
+            bar_executions=plan.bar_executions,
+            financial_state=plan.financial_state,
+            financial_dispatch_plan=plan.financial_dispatch_plan,
+            execution_model=plan.execution_model,
+            snapshot_plan=plan.snapshot_plan,
+            closeout_policy=plan.closeout_policy,
+            identity_manifest=identities.manifest(),
+            semantic_spec=spec,
+        )
     recomputed_spec = ExecutionCaseComposer.semantic_spec_from_case(
         result,
         spec_key=spec.spec_key,
@@ -775,16 +899,16 @@ class ExecutionCaseComposer:
     @classmethod
     def semantic_spec_from_case(
         cls,
-        case: ResolvedExecutionCase,
+        case: ResolvedExecutionCase | ResolvedExecutionCaseV2,
         *,
         spec_key: str,
         spec_version: int,
         identity_namespace: IdentityNamespace,
         identity_plan: tuple[ExecutionCaseIdentityRule, ...],
     ) -> ExecutionCaseSemanticSpec:
-        if not isinstance(case, ResolvedExecutionCase):
-            raise TypeError("case must be ResolvedExecutionCase")
-        for cycle in case.decision_cycles:
+        if not isinstance(case, (ResolvedExecutionCase, ResolvedExecutionCaseV2)):
+            raise TypeError("case must be a supported resolved execution case")
+        for cycle in case.decision_cycles if isinstance(case, ResolvedExecutionCase) else ():
             for admission in cycle.admissions:
                 if (
                     admission.order.intent.parent_id
@@ -814,8 +938,8 @@ class ExecutionCaseComposer:
         self,
         *,
         resolved_request: ResolvedBacktestRequest,
-        builder: _ExecutionCaseBuilder,
-    ) -> ResolvedExecutionCase:
+        builder: _ExecutionCaseBuilder[_CaseT],
+    ) -> _CaseT:
         if not isinstance(resolved_request, ResolvedBacktestRequest):
             raise TypeError("resolved_request must be ResolvedBacktestRequest")
         if not callable(getattr(builder, "semantic_spec", None)) or not callable(
@@ -835,8 +959,8 @@ class ExecutionCaseComposer:
             identity_plan=spec.identity_plan,
         )
         case = builder.build(identities, spec.semantic_spec_hash)
-        if not isinstance(case, ResolvedExecutionCase):
-            raise TypeError("builder must return ResolvedExecutionCase")
+        if not isinstance(case, ResolvedExecutionCase) and type(case) is not ResolvedExecutionCaseV2:
+            raise TypeError("builder must return a supported resolved execution case")
         if case.identity_manifest is not None:
             raise ValueError("builder must not supply an identity manifest")
         recomputed = self.semantic_spec_from_case(

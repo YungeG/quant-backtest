@@ -18,6 +18,7 @@ from crypto_quant_market_data import (
 )
 from crypto_quant_trading import ProfileComponentRef, ProfilePortType
 
+from .financial_dispatch import FinancialDispatcherSpec, FinancialEventDispatcher
 from .ports import SimulationComponentRef, SimulationPortType
 from .timeline import TimelineWindow
 
@@ -442,6 +443,14 @@ def _required_capabilities(
     return ordered
 
 
+@runtime_checkable
+class _FinancialDispatcherProvider(Protocol):
+    @property
+    def financial_dispatcher_spec(self) -> FinancialDispatcherSpec: ...
+
+    def build_financial_dispatcher(self) -> FinancialEventDispatcher: ...
+
+
 @dataclass(frozen=True, slots=True)
 class MarketSemanticsProfileRegistration:
     profile_key: str
@@ -454,6 +463,7 @@ class MarketSemanticsProfileRegistration:
     grade: RequestedResultGrade
     limitations: tuple[str, ...]
     decision_grade_eligible: bool
+    financial_dispatcher_spec: FinancialDispatcherSpec | None = None
 
     def __post_init__(self) -> None:
         object.__setattr__(
@@ -481,10 +491,19 @@ class MarketSemanticsProfileRegistration:
         if tuple(self.implementation.component_manifest) != ordered:
             raise ValueError("market implementation component manifest mismatch")
         object.__setattr__(self, "component_manifest", ordered)
+        spec = self.financial_dispatcher_spec
+        if spec is not None:
+            if (type(spec) is not FinancialDispatcherSpec
+                    or not isinstance(self.implementation, _FinancialDispatcherProvider)
+                    or self.implementation.financial_dispatcher_spec != spec):
+                raise ValueError("market implementation must own the declared financial dispatcher")
+            if any(ref not in ordered for ref in (spec.position_accounting_component, spec.financing_component, spec.margin_component)):
+                raise ValueError("financial dispatcher components must bind the market profile")
 
     def to_canonical_dict(self) -> dict[str, object]:
         return {
             "type": "market_semantics_profile_registration",
+            **({"financial_dispatcher_spec": self.financial_dispatcher_spec} if self.financial_dispatcher_spec is not None else {}),
             "profile_key": self.profile_key,
             "profile_version": self.profile_version,
             "profile_digest": self.profile_digest,

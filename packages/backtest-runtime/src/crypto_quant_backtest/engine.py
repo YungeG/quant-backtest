@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from dataclasses import dataclass, field
+from dataclasses import dataclass, field, replace
 from enum import Enum
 from typing import Any, cast
 import unicodedata
@@ -10,9 +10,15 @@ import unicodedata
 from crypto_quant_domain import (
     CurrencyId,
     DecisionBatch,
+    InstrumentId,
+    OrderSide,
+    PositionEffect,
+    PricePurpose,
+    Quantity,
     DomainId,
     DomainIdKind,
     FeeAssessment,
+    FeeBasisType,
     IdentityNamespace,
     Fill,
     Order,
@@ -34,9 +40,13 @@ from crypto_quant_domain import (
 from crypto_quant_market_data import InputValidationFailure
 from crypto_quant_trading import (
     AccountingJournal,
+    AccountSettlementObligation,
     AccountRiskPolicy,
+    CapitalAllocationPolicyRef,
+    QuantityLattice,
     ApprovedPortfolioTarget,
     AvailabilityProjection,
+    AvailabilityProjectionError,
     AvailabilityState,
     ExecutableOrderSpec,
     FeeAssessmentBasisEvidence,
@@ -44,6 +54,7 @@ from crypto_quant_trading import (
     FeeChargedJournalTranslator,
     FeeReservationEstimator,
     FeeReservationRuleSet,
+    FinalFeeRuleSet,
     GenericLedger,
     InstrumentSizingInput,
     JournalError,
@@ -75,16 +86,20 @@ from crypto_quant_trading import (
     PreTradeResourceRequirement,
     PreTradeRiskEvaluationInput,
     PreTradeRiskEvaluator,
+    PreTradeRiskRejection,
+    PreTradeRiskReasonCode,
     ReportingCurrencyValuation,
     ReservationCommitment,
     RebalanceCoordinator,
     RebalancePolicy,
     ResolvedMark,
     ResourceReservationBook,
+    ResourceReservationError,
     ResourceReservationState,
     SettlementBook,
     SettlementBookError,
     SettlementBookState,
+    SettlementEventType,
     StrategyAllocation,
     TargetValidity,
 )
@@ -92,6 +107,8 @@ from crypto_quant_trading import (
 from .financial_dispatch import (
     CashFillAccountingPlan,
     DefaultCashFinancialDispatcher,
+    EventScopedFillAccountingDispatchPlan,
+    FullFillOrderFeeAccountingPlan,
     FillAccountingDispatchPlan,
     FinancialDispatchArtifact,
     FinancialDispatchFailureCode,
@@ -100,6 +117,16 @@ from .financial_dispatch import (
     FinancialDispatchResult,
     FinancialEventDispatcher,
     FinancialStateView,
+    ProfileFeeRuleBinding,
+    ProfileFeeRuleQuery,
+    ProfileFeeRuleResolution,
+    ProfileFeeRuleResolver,
+    LedgerCashSnapshotProjectionPlan,
+    ScheduledAccountEvent,
+    SettlementFinancialDispatchResult,
+    SettlementFillAccountingDispatchPlan,
+    SettlementIdentitySlot,
+    SettlementApplicationPlan,
 )
 from .execution import (
     BAR_CLOSE_CAPABILITY,
@@ -1184,6 +1211,10 @@ class ResolvedExecutionCase:
                 execution.fill_event_id,
                 None,
             )
+            fee = execution.accounting_plan.fee_plan
+            if isinstance(fee, FullFillOrderFeeAccountingPlan) and fee.fill_fee_plan is not None:
+                expected[f"fee.fill.{bar_index}"] = (fee.fill_fee_plan.fee_assessment_id.value, DomainIdKind.FEE)
+                expected[f"journal.fee.fill.{bar_index}"] = (fee.fill_fee_plan.fee_journal_entry_id.value, DomainIdKind.JOURNAL)
         for account_event in self.financial_dispatch_plan.scheduled_account_events:
             for binding_key, value in account_event.identity_bindings:
                 if binding_key in expected:
@@ -1217,6 +1248,486 @@ class ResolvedExecutionCase:
             payload["semantic_spec_hash"] = self.semantic_spec_hash
             payload["identity_manifest_hash"] = self.identity_manifest.manifest_hash
         return payload
+
+
+@dataclass(frozen=True, slots=True)
+class ResolvedCashPreTradeAuthority:
+    """Cash admission facts, without a future quantity or resource commitment."""
+
+    order_rule_timeline: OrderRuleTimeline
+    notional_evidence: OrderRuleNotionalEvidence
+    evaluated_at: UtcInstant
+    fee_reservation_rule_set: FeeReservationRuleSet | ProfileFeeRuleBinding
+    requirement_source_key: str
+    requirement_source_version: int
+    requirement_source_hash: str
+    account_risk_policy: AccountRiskPolicy
+
+    def __post_init__(self) -> None:
+        for value, expected in (
+            (self.order_rule_timeline, OrderRuleTimeline),
+            (self.notional_evidence, OrderRuleNotionalEvidence),
+            (self.evaluated_at, UtcInstant),
+            (self.account_risk_policy, AccountRiskPolicy),
+        ):
+            if not isinstance(value, expected):
+                raise TypeError(f"cash pretrade authority requires {expected.__name__}")
+        if not isinstance(self.fee_reservation_rule_set, FeeReservationRuleSet) and type(self.fee_reservation_rule_set) is not ProfileFeeRuleBinding:
+            raise TypeError("cash pretrade authority requires fee rules or exact profile binding")
+        _text("requirement_source_key", self.requirement_source_key)
+        _hash("requirement_source_hash", self.requirement_source_hash)
+        if type(self.requirement_source_version) is not int or self.requirement_source_version <= 0:
+            raise ValueError("requirement_source_version must be positive")
+
+    def materialize(self, commitment: ReservationCommitment,
+                    fee_rules: FeeReservationRuleSet | None = None) -> ResolvedPreTradePlan:
+        rules = self.fee_reservation_rule_set if fee_rules is None else fee_rules
+        if not isinstance(rules, FeeReservationRuleSet):
+            raise TypeError("profile fee authority must be resolved against the actual Order")
+        return ResolvedPreTradePlan(
+            self.order_rule_timeline, self.notional_evidence, self.evaluated_at,
+            rules, self.evaluated_at, commitment,
+            self.requirement_source_key, self.requirement_source_version,
+            self.requirement_source_hash, self.account_risk_policy, self.evaluated_at,
+        )
+
+    def to_canonical_dict(self) -> dict[str, object]:
+        return {
+            "type": "resolved_cash_pretrade_authority", "schema_version": 1,
+            "order_rule_timeline": self.order_rule_timeline,
+            "notional_evidence": self.notional_evidence, "evaluated_at": self.evaluated_at,
+            "fee_reservation_rule_set": self.fee_reservation_rule_set,
+            "requirement_source_key": self.requirement_source_key,
+            "requirement_source_version": self.requirement_source_version,
+            "requirement_source_hash": self.requirement_source_hash,
+            "account_risk_policy": self.account_risk_policy,
+        }
+
+
+@dataclass(frozen=True, slots=True)
+class ResolvedOrderAdmissionSlot:
+    """Reserved identities and authority; the Engine supplies the actual Order."""
+
+    order_id: DomainId
+    capability_set: OrderCapabilitySet
+    translation_mapping: OrderTranslationMapping
+    translation_time: UtcInstant
+    pretrade_authority: ResolvedCashPreTradeAuthority
+    event_plan: tuple[OrderEventPlan, ...]
+    expiration_event_id: str
+
+    def __post_init__(self) -> None:
+        _domain_id("order_id", self.order_id, DomainIdKind.ORDER)
+        _text("expiration_event_id", self.expiration_event_id)
+        for value, expected in (
+            (self.capability_set, OrderCapabilitySet),
+            (self.translation_mapping, OrderTranslationMapping),
+            (self.translation_time, UtcInstant),
+            (self.pretrade_authority, ResolvedCashPreTradeAuthority),
+        ):
+            if not isinstance(value, expected):
+                raise TypeError(f"admission slot requires {expected.__name__}")
+        if not isinstance(self.event_plan, tuple) or not all(isinstance(event, OrderEventPlan) for event in self.event_plan):
+            raise TypeError("event_plan must contain OrderEventPlan")
+        if tuple(event.event_type for event in self.event_plan) != _REQUIRED_ADMISSION_EVENTS:
+            raise ValueError("admission slot must contain the exact eight gate events")
+        clocks = tuple(event.occurred_at for event in self.event_plan)
+        if any(left >= right for left, right in zip(clocks, clocks[1:], strict=False)):
+            raise ValueError("admission slot clocks must be strictly ordered")
+        ids = (self.expiration_event_id, *(event.event_id for event in self.event_plan))
+        if len(set(ids)) != len(ids):
+            raise ValueError("admission slot identities must be unique")
+        if any(clock.instant != self.translation_time for clock in clocks) or self.pretrade_authority.evaluated_at != self.translation_time:
+            raise ValueError("live admission gates must share the receipt UTC instant")
+
+    def to_canonical_dict(self) -> dict[str, object]:
+        return {
+            "type": "resolved_order_admission_slot", "schema_version": 1,
+            "order_id": self.order_id, "capability_set": self.capability_set,
+            "translation_mapping": self.translation_mapping, "translation_time": self.translation_time,
+            "pretrade_authority": self.pretrade_authority, "event_plan": self.event_plan,
+            "expiration_event_id": self.expiration_event_id,
+        }
+
+
+@dataclass(frozen=True, slots=True)
+class ResolvedDecisionCycleV2:
+    """One full-equity sleeve, one cash instrument, and no caller-owned holdings."""
+
+    schedule: TargetStreamDecisionSchedule
+    snapshot_plan: LedgerCashSnapshotProjectionPlan
+    allocation_policy: CapitalAllocationPolicyRef
+    target_notional_scale: Scale
+    risk_policy: PortfolioRiskPolicy
+    sizing_policy: PositionSizingPolicy
+    quantity_lattice: QuantityLattice
+    target_valid_until: UtcInstant | None
+    rebalance_policy: RebalancePolicy
+    admission_slot: ResolvedOrderAdmissionSlot
+
+    def __post_init__(self) -> None:
+        for value, expected in (
+            (self.schedule, TargetStreamDecisionSchedule),
+            (self.snapshot_plan, LedgerCashSnapshotProjectionPlan),
+            (self.allocation_policy, CapitalAllocationPolicyRef),
+            (self.target_notional_scale, Scale), (self.risk_policy, PortfolioRiskPolicy),
+            (self.sizing_policy, PositionSizingPolicy), (self.quantity_lattice, QuantityLattice),
+            (self.rebalance_policy, RebalancePolicy), (self.admission_slot, ResolvedOrderAdmissionSlot),
+        ):
+            if not isinstance(value, expected):
+                raise TypeError(f"live decision requires {expected.__name__}")
+        if self.schedule.segment is not TimelineSegment.ACTIVE_TRADING or len(self.schedule.entries) != 1:
+            raise ValueError("live cash case supports one active sleeve per decision")
+        at = self.snapshot_plan.projection_at
+        context = self.schedule.entries[0].validation_context
+        if at.instant != self.schedule.decision_time or context.decision_instant != at:
+            raise ValueError("live decision requires the exact snapshot/decision receipt")
+        if context.universe != (self.quantity_lattice.instrument_id,) or context.instrument_catalog != self.snapshot_plan.instrument_catalog:
+            raise ValueError("live decision instrument authority mismatch")
+        if self.sizing_policy.price_purpose is not PricePurpose.VALUATION:
+            raise ValueError("live cash sizing requires explicit VALUATION authority")
+        if self.admission_slot.translation_time != at.instant or self.admission_slot.event_plan[0].occurred_at <= at:
+            raise ValueError("live admission must follow decision at the same UTC instant")
+        if self.target_valid_until is not None and (
+            not isinstance(self.target_valid_until, UtcInstant) or self.target_valid_until <= at.instant
+        ):
+            raise ValueError("target_valid_until must follow the decision")
+
+    @property
+    def cycle_hash(self) -> str:
+        return canonical_sha256(self)
+
+    @property
+    def planning_at(self) -> UtcInstant:
+        return self.schedule.decision_time
+
+    def to_canonical_dict(self) -> dict[str, object]:
+        return {
+            "type": "resolved_decision_cycle", "schema_version": 2,
+            "schedule": self.schedule, "snapshot_plan": self.snapshot_plan,
+            "allocation_policy": self.allocation_policy, "allocation_basis": "current_equity",
+            "target_notional_scale": self.target_notional_scale.places,
+            "risk_policy": self.risk_policy, "sizing_policy": self.sizing_policy,
+            "quantity_lattice": self.quantity_lattice, "target_valid_until": self.target_valid_until,
+            "rebalance_policy": self.rebalance_policy, "admission_slot": self.admission_slot,
+        }
+
+
+@dataclass(frozen=True, slots=True)
+class ResolvedBarPlanV2:
+    """One observed close with reserved fill identities, not a future Order ID."""
+
+    event_id: str
+    instrument_id: InstrumentId
+    pretrade_authority: ResolvedCashPreTradeAuthority
+    liquidity_evidence: BarLiquidityEvidence
+    market_state: SlippageMarketState
+    slippage_model: DeterministicBpsSlippageModel
+    fill_id: DomainId
+    fill_event_id: str
+    fill_event_at: SimulationInstant
+    accounting_plan: FillAccountingDispatchPlan
+
+    def __post_init__(self) -> None:
+        _text("event_id", self.event_id)
+        _text("fill_event_id", self.fill_event_id)
+        _domain_id("fill_id", self.fill_id, DomainIdKind.FILL)
+        for value, expected in (
+            (self.instrument_id, InstrumentId), (self.pretrade_authority, ResolvedCashPreTradeAuthority),
+            (self.liquidity_evidence, BarLiquidityEvidence), (self.market_state, SlippageMarketState),
+            (self.slippage_model, DeterministicBpsSlippageModel), (self.fill_event_at, SimulationInstant),
+            (self.accounting_plan, EventScopedFillAccountingDispatchPlan),
+        ):
+            if not isinstance(value, expected):
+                raise TypeError(f"live bar requires {expected.__name__}")
+        accounting = self.accounting_plan
+        if accounting.source_event_id != self.event_id or accounting.expected_fill_id != self.fill_id:
+            raise ValueError("live bar accounting identity mismatch")
+        payload = accounting.position_payload
+        if type(payload) is not CashFillAccountingPlan or payload.cost_basis_policy.policy_version < 2 or payload.position_key.instrument_id != self.instrument_id:
+            raise ValueError("live cash execution requires authoritative v2 cash lot accounting")
+        if self.pretrade_authority.evaluated_at != self.fill_event_at.instant:
+            raise ValueError("live bar authority must use the actual close receipt UTC")
+        if isinstance(accounting, SettlementFillAccountingDispatchPlan) and accounting.settlement_recorded_at < self.fill_event_at:
+            raise ValueError("settlement recording cannot precede its actual fill receipt")
+        fee = accounting.fee_plan
+        clocks = (self.fill_event_at, accounting.fill_recorded_at, fee.assessment_at, fee.fee_recorded_at)
+        if isinstance(fee, FullFillOrderFeeAccountingPlan) and fee.fill_fee_plan is not None:
+            prior = fee.fill_fee_plan
+            clocks = (*clocks[:2], prior.assessment_at, prior.fee_recorded_at, *clocks[2:])
+        if any(at.instant != self.fill_event_at.instant for at in clocks) or any(
+            left >= right for left, right in zip(clocks, clocks[1:], strict=False)
+        ):
+            raise ValueError("live fill/accounting/fee receipts must be strictly ordered at close UTC")
+        if f"position_accounting.{self.event_id}" not in accounting.expected_artifact_roles:
+            raise ValueError("live bar must declare event-scoped position accounting evidence")
+
+    @property
+    def execution_hash(self) -> str:
+        return canonical_sha256(self)
+
+    def to_canonical_dict(self) -> dict[str, object]:
+        return {
+            "type": "resolved_bar_plan", "schema_version": 2,
+            "event_id": self.event_id, "instrument_id": self.instrument_id,
+            "pretrade_authority": self.pretrade_authority,
+            "liquidity_evidence": self.liquidity_evidence, "market_state": self.market_state,
+            "slippage_model": {
+                "component_ref": self.slippage_model.component_ref, "calibration_ref": self.slippage_model.calibration_ref,
+                "applicability_envelope": self.slippage_model.applicability_envelope,
+                "basis_points_units": self.slippage_model.basis_points_units,
+                "basis_points_scale": self.slippage_model.basis_points_scale.places,
+                "rounding": self.slippage_model.rounding.value,
+                "limitations": tuple(value.value for value in self.slippage_model.limitations),
+            },
+            "fill_id": self.fill_id, "fill_event_id": self.fill_event_id,
+            "fill_event_at": self.fill_event_at, "accounting_plan": self.accounting_plan,
+        }
+
+
+@dataclass(frozen=True, slots=True)
+class ResolvedExecutionCaseV2:
+    """Additive live-state cash case. Legacy cases and codecs are unchanged."""
+
+    case_key: str
+    case_version: int
+    semantic_spec_hash: str
+    timeline: DeterministicTimeline
+    timeline_batch_size: int
+    target_stream: PrecomputedTargetStream
+    decision_cycles: tuple[ResolvedDecisionCycleV2, ...]
+    bar_executions: tuple[ResolvedBarPlanV2, ...]
+    financial_state: ResolvedFinancialState
+    financial_dispatch_plan: FinancialDispatchPlan
+    execution_model: NextEligibleBarCloseModel
+    snapshot_plan: LedgerCashSnapshotProjectionPlan
+    closeout_policy: CloseoutPolicy[RunEndCloseoutRequest, RunEndCloseoutDecision, RunEndCloseoutFailure]
+    identity_manifest: ExecutionCaseIdentityManifest | None = None
+    semantic_spec: ExecutionCaseSemanticSpec | None = None
+
+    def __post_init__(self) -> None:
+        _text("case_key", self.case_key)
+        _hash("semantic_spec_hash", self.semantic_spec_hash)
+        for name in ("case_version", "timeline_batch_size"):
+            if type(getattr(self, name)) is not int or getattr(self, name) <= 0:
+                raise ValueError(f"{name} must be positive integer")
+        for value, expected in (
+            (self.timeline, DeterministicTimeline), (self.target_stream, PrecomputedTargetStream),
+            (self.financial_state, ResolvedFinancialState), (self.financial_dispatch_plan, FinancialDispatchPlan),
+            (self.execution_model, NextEligibleBarCloseModel), (self.snapshot_plan, LedgerCashSnapshotProjectionPlan),
+        ):
+            if not isinstance(value, expected):
+                raise TypeError(f"live case requires {expected.__name__}")
+        for values, expected in ((self.decision_cycles, ResolvedDecisionCycleV2), (self.bar_executions, ResolvedBarPlanV2)):
+            if not isinstance(values, tuple) or not all(type(value) is expected for value in values):
+                raise TypeError(f"live case must contain exact {expected.__name__}")
+        if not callable(getattr(self.closeout_policy, "spec", None)) or not callable(getattr(self.closeout_policy, "resolve_closeout", None)):
+            raise TypeError("closeout_policy must satisfy CloseoutPolicy")
+        if self.identity_manifest is not None and not isinstance(self.identity_manifest, ExecutionCaseIdentityManifest):
+            raise TypeError("identity_manifest must be ExecutionCaseIdentityManifest")
+        if self.semantic_spec is not None and (
+            not isinstance(self.semantic_spec, ExecutionCaseSemanticSpec) or self.semantic_spec.semantic_spec_hash != self.semantic_spec_hash
+        ):
+            raise ValueError("live semantic spec mismatch")
+        if self.snapshot_plan.projection_at != SimulationInstant(self.timeline.window.end_exclusive, _FINALIZE_PHASE, SourceSequence(0)):
+            raise ValueError("live final snapshot requires the exact Engine finalization clock")
+        if self.financial_dispatch_plan.final_snapshot_payload != self.snapshot_plan:
+            raise ValueError("live financial dispatch snapshot mismatch")
+        financial = self.financial_state
+        if financial.order_streams or financial.order_admissions or financial.reservation_schedules or financial.settlement_book.events or financial.settlement_book.obligations:
+            raise ValueError("live cash case requires pristine initial order and settlement state")
+        if any(entry.recorded_at.instant >= self.timeline.window.trading_start for entry in financial.journal.entries):
+            raise ValueError("initial journal must precede live trading")
+        cycles = tuple(sorted(self.decision_cycles, key=lambda cycle: cycle.snapshot_plan.projection_at))
+        bars = tuple(sorted(self.bar_executions, key=lambda bar: (bar.fill_event_at, bar.event_id)))
+        clocks = tuple(cycle.snapshot_plan.projection_at for cycle in cycles)
+        if len(set(clocks)) != len(clocks) or len({bar.event_id for bar in bars}) != len(bars):
+            raise ValueError("live decision clocks and bar event IDs must be unique")
+        instruments = {cycle.quantity_lattice.instrument_id for cycle in cycles} | {bar.instrument_id for bar in bars}
+        if len(instruments) != 1:
+            raise ValueError("live cash case supports exactly one instrument")
+        contexts = {cycle.schedule.entries[0].expectation for cycle in cycles}
+        if len(contexts) != 1:
+            raise ValueError("live cash case supports exactly one full-equity sleeve")
+        scheduled_ids = tuple(cycle.schedule.entries[0].event_id for cycle in cycles)
+        if len(set(scheduled_ids)) != len(scheduled_ids) or set(scheduled_ids) != {event.event_id for event in self.target_stream.events}:
+            raise ValueError("live TargetStream schedules must exact-cover events")
+        targets = {event.event_id: event for event in self.target_stream.events}
+        for cycle in cycles:
+            if targets[cycle.schedule.entries[0].event_id].timeline_instant != cycle.snapshot_plan.projection_at:
+                raise ValueError("live decision receipt does not match its actual target event")
+        fixed_roles = {
+            "final_snapshot", "runtime.identity_closure", *(f"snapshot.{event_id}" for event_id in scheduled_ids),
+            *(role for event in self.financial_dispatch_plan.scheduled_account_events for role in event.expected_artifact_roles),
+        }
+        if tuple(sorted(fixed_roles)) != self.financial_dispatch_plan.expected_artifact_roles:
+            raise ValueError("live fixed artifact roles must exact-cover snapshots and scheduled events")
+        dynamic_roles = tuple(role for bar in bars for role in bar.accounting_plan.expected_artifact_roles)
+        if len(set(dynamic_roles)) != len(dynamic_roles) or set(dynamic_roles) & fixed_roles:
+            raise ValueError("live dynamic artifact roles must be unique and disjoint")
+        object.__setattr__(self, "decision_cycles", cycles)
+        object.__setattr__(self, "bar_executions", bars)
+        self._expected_identity_bindings()
+
+    @property
+    def case_hash(self) -> str:
+        return canonical_sha256(self)
+
+    def verify_identity_manifest(self, semantic_run_id: str) -> bool:
+        manifest, spec = self.identity_manifest, self.semantic_spec
+        if manifest is None or spec is None or manifest.semantic_run_id != semantic_run_id or manifest.namespace != spec.identity_namespace:
+            return False
+        actual_plan = tuple((b.binding_key, b.semantic_key, b.ordinal, b.domain_kind) for b in manifest.bindings)
+        expected_plan = tuple((b.binding_key, b.semantic_key, b.ordinal, b.domain_kind) for b in spec.identity_plan)
+        actual = {b.binding_key: (b.value, b.domain_kind) for b in manifest.bindings}
+        return actual_plan == expected_plan and actual == self._expected_identity_bindings()
+
+    def _expected_identity_bindings(self) -> dict[str, tuple[str, DomainIdKind | None]]:
+        expected: dict[str, tuple[str, DomainIdKind | None]] = {
+            f"journal.initial.{i}": (entry.journal_entry_id.value, DomainIdKind.JOURNAL)
+            for i, entry in enumerate(self.financial_state.journal.entries)
+        }
+        for i, cycle in enumerate(self.decision_cycles):
+            slot = cycle.admission_slot
+            expected[f"order.{i}.0"] = (slot.order_id.value, DomainIdKind.ORDER)
+            expected[f"order-event.expire.{i}"] = (slot.expiration_event_id, None)
+            for j, event in enumerate(slot.event_plan):
+                expected[f"order-event.{i}.0.{j}"] = (event.event_id, None)
+        for i, bar in enumerate(self.bar_executions):
+            plan, fee = bar.accounting_plan, bar.accounting_plan.fee_plan
+            for key, value, kind in (
+                ("fill", bar.fill_id.value, DomainIdKind.FILL),
+                ("order-event.fill", bar.fill_event_id, None),
+                ("journal.fill", plan.fill_journal_entry_id.value, DomainIdKind.JOURNAL),
+                ("fee", fee.fee_assessment_id.value, DomainIdKind.FEE),
+                ("journal.fee", fee.fee_journal_entry_id.value, DomainIdKind.JOURNAL),
+            ):
+                expected[f"{key}.{i}"] = (value, kind)
+            if isinstance(plan, SettlementFillAccountingDispatchPlan):
+                for j, slot in enumerate(plan.settlement_slots):
+                    expected[f"settlement.{i}.{j}"] = (slot.obligation_id.value, DomainIdKind.SETTLEMENT)
+                    expected[f"settlement-event.recorded.{i}.{j}"] = (slot.recorded_event_id, None)
+                    expected[f"settlement-event.applied.{i}.{j}"] = (slot.applied_event_id, None)
+            if isinstance(fee, FullFillOrderFeeAccountingPlan) and fee.fill_fee_plan is not None:
+                prior = fee.fill_fee_plan
+                expected[f"fee.fill.{i}"] = (prior.fee_assessment_id.value, DomainIdKind.FEE)
+                expected[f"journal.fee.fill.{i}"] = (prior.fee_journal_entry_id.value, DomainIdKind.JOURNAL)
+        for event in self.financial_dispatch_plan.scheduled_account_events:
+            for key, value in event.identity_bindings:
+                if key in expected:
+                    raise ValueError("duplicate live financial identity binding")
+                expected[key] = (value.value, value.kind)
+        if len({value for value, _ in expected.values()}) != len(expected):
+            raise ValueError("live identity slots must be globally unique")
+        return expected
+
+    def to_canonical_dict(self) -> dict[str, object]:
+        return {
+            "type": "resolved_execution_case", "schema_version": 2,
+            "case_key": self.case_key, "case_version": self.case_version,
+            "semantic_spec_hash": self.semantic_spec_hash,
+            "timeline": {"timeline_id": self.timeline.timeline_id, "bundle_ref": self.timeline.reader.bundle_ref,
+                         "stream_keys": self.timeline.stream_keys, "window": self.timeline.window},
+            "target_stream": self.target_stream, "decision_cycles": self.decision_cycles,
+            "bar_executions": self.bar_executions, "financial_state": self.financial_state,
+            "financial_dispatch_plan": self.financial_dispatch_plan,
+            "execution_model_spec": self.execution_model.spec(), "snapshot_plan": self.snapshot_plan,
+            "closeout_policy_spec": self.closeout_policy.spec(),
+            "identity_manifest_hash": self.identity_manifest.manifest_hash if self.identity_manifest else None,
+        }
+
+
+ExecutionCase = ResolvedExecutionCase | ResolvedExecutionCaseV2
+
+
+@dataclass(frozen=True, slots=True)
+class RuntimeIdentityDisposition:
+    binding_key: str
+    value: str
+    status: str
+    reason: str | None
+    evidence_hash: str | None
+
+    def __post_init__(self) -> None:
+        _text("binding_key", self.binding_key)
+        _text("value", self.value)
+        if self.status == "used":
+            if self.reason is not None:
+                raise ValueError("used identity cannot have an unused reason")
+            _hash("evidence_hash", cast(str, self.evidence_hash))
+        elif self.status == "unused":
+            _text("reason", cast(str, self.reason))
+            if self.evidence_hash is not None:
+                raise ValueError("unused identity cannot claim execution evidence")
+        else:
+            raise ValueError("identity disposition must be used or unused")
+
+    def to_canonical_dict(self) -> dict[str, object]:
+        return {"binding_key": self.binding_key, "value": self.value, "status": self.status,
+                "reason": self.reason, "evidence_hash": self.evidence_hash}
+
+
+@dataclass(frozen=True, slots=True)
+class RuntimeIdentityClosure:
+    identity_manifest_hash: str
+    dispositions: tuple[RuntimeIdentityDisposition, ...]
+
+    def __post_init__(self) -> None:
+        _hash("identity_manifest_hash", self.identity_manifest_hash)
+        if not isinstance(self.dispositions, tuple) or not all(type(item) is RuntimeIdentityDisposition for item in self.dispositions):
+            raise TypeError("dispositions must contain RuntimeIdentityDisposition")
+        if len({item.binding_key for item in self.dispositions}) != len(self.dispositions) or len({item.value for item in self.dispositions}) != len(self.dispositions):
+            raise ValueError("identity dispositions must be unique")
+        object.__setattr__(self, "dispositions", tuple(sorted(self.dispositions, key=lambda item: item.binding_key)))
+
+    def to_canonical_dict(self) -> dict[str, object]:
+        return {"type": "runtime_identity_closure", "schema_version": 1,
+                "identity_manifest_hash": self.identity_manifest_hash, "dispositions": self.dispositions}
+
+
+@dataclass(frozen=True, slots=True)
+class PendingPositionSellDeferral:
+    """A full planned SELL rejected only by not-yet-sellable positive receipts."""
+
+    rejection: PreTradeRiskRejection
+    pending_obligations: tuple[AccountSettlementObligation, ...]
+    settlement_book_hash: str
+    deferred_at: SimulationInstant
+
+    def __post_init__(self) -> None:
+        if type(self.rejection) is not PreTradeRiskRejection or not isinstance(self.deferred_at, SimulationInstant):
+            raise TypeError("deferral requires authoritative rejection and receipt")
+        _hash("settlement_book_hash", self.settlement_book_hash)
+        if (not isinstance(self.pending_obligations, tuple) or not self.pending_obligations
+                or not all(type(value) is AccountSettlementObligation for value in self.pending_obligations)):
+            raise TypeError("deferral requires actual pending obligations")
+        order = self.rejection.order
+        source = self.rejection.evaluation_input
+        failed = tuple(check for check in self.rejection.checks if not check.approved)
+        positions = tuple(value for value in source.availability_state.positions
+                          if value.key.instrument_id == order.intent.instrument_id)
+        if (order.intent.side is not OrderSide.SELL or self.deferred_at.instant != source.evaluated_at
+                or len(failed) != 1 or failed[0].reason_code is not PreTradeRiskReasonCode.SELLABLE_QUANTITY
+                or failed[0].available_units != 0 or failed[0].required_units != order.intent.quantity.units
+                or len(positions) != 1 or positions[0].sellable.units != 0
+                or positions[0].total.scale != order.intent.quantity.scale
+                or any(value.units for value in source.reservation_state.totals.sellable_quantities
+                       if value.instrument_id == order.intent.quantity.instrument_id)
+                or any(value.balance_key != positions[0].key or value.units <= 0
+                       or value.value.scale != order.intent.quantity.scale
+                       or value.obligation.settlement_time <= self.deferred_at.instant
+                       for value in self.pending_obligations)
+                or len({value.obligation.settlement_obligation_id for value in self.pending_obligations}) != len(self.pending_obligations)
+                or sum(value.units for value in self.pending_obligations) != positions[0].total.units
+                or positions[0].total.units < order.intent.quantity.units):
+            raise ValueError("not an exclusively pending-position full SELL deferral")
+        object.__setattr__(self, "pending_obligations", tuple(sorted(self.pending_obligations,
+            key=lambda value: value.obligation.settlement_obligation_id.value)))
+
+    def to_canonical_dict(self) -> dict[str, object]:
+        return {"type": "pending_position_sell_deferral", "schema_version": 1,
+                "rejection": self.rejection, "pending_obligations": self.pending_obligations,
+                "settlement_book_hash": self.settlement_book_hash, "deferred_at": self.deferred_at}
 
 
 class EngineStage(str, Enum):
@@ -1581,6 +2092,10 @@ class _EngineState:
     slippage_decisions: list[SlippageDecision] = field(default_factory=list)
     fee_assessments: list[FeeAssessment] = field(default_factory=list)
     financial_artifacts: list[FinancialDispatchArtifact] = field(default_factory=list)
+    live_clock: SimulationInstant | None = None
+    live_unused_reasons: dict[str, str] = field(default_factory=dict)
+    live_dynamic_roles: set[str] = field(default_factory=set)
+    live_settlement_slots: dict[DomainId, SettlementIdentitySlot] = field(default_factory=dict)
 
 
 class DeterministicBarEngine:
@@ -1598,14 +2113,14 @@ class DeterministicBarEngine:
 
     def run(
         self,
-        case: ResolvedExecutionCase | InputValidationFailure,
+        case: ExecutionCase | InputValidationFailure,
         *,
         cancellation: EngineCancellationRequest | None = None,
     ) -> EngineExecutionOutcome:
         if isinstance(case, InputValidationFailure):
             return EngineExecutionOutcome(input_validation_failure=case)
-        if not isinstance(case, ResolvedExecutionCase):
-            raise TypeError("case must be ResolvedExecutionCase or InputValidationFailure")
+        if not isinstance(case, ResolvedExecutionCase) and type(case) is not ResolvedExecutionCaseV2:
+            raise TypeError("case must be a supported resolved execution case or InputValidationFailure")
         if cancellation is not None and not isinstance(
             cancellation, EngineCancellationRequest
         ):
@@ -1626,10 +2141,29 @@ class DeterministicBarEngine:
 
     def _execute(
         self,
-        case: ResolvedExecutionCase,
+        case: ExecutionCase,
         cancellation: EngineCancellationRequest | None,
     ) -> EngineExecutionOutcome:
         state = self._initial_state(case)
+        live = isinstance(case, ResolvedExecutionCaseV2)
+        if live:
+            state.live_settlement_slots = {slot.obligation_id: slot for bar in case.bar_executions
+                if isinstance(bar.accounting_plan, SettlementFillAccountingDispatchPlan)
+                for slot in bar.accounting_plan.settlement_slots}
+        if live and (case.identity_manifest is None or not case.verify_identity_manifest(case.identity_manifest.semantic_run_id)):
+            return self._failed(case, state, EngineFailureCode.CASE_EVIDENCE_MISMATCH, ("live_identity_manifest",))
+        if live:
+            # Composition owns the ID-free preimage. Import only after module
+            # initialization, rather than duplicating its canonical rules here.
+            from .composition import ExecutionCaseComposer
+
+            spec = case.semantic_spec
+            assert spec is not None
+            if ExecutionCaseComposer.semantic_spec_from_case(
+                case, spec_key=spec.spec_key, spec_version=spec.spec_version,
+                identity_namespace=spec.identity_namespace, identity_plan=spec.identity_plan,
+            ) != spec:
+                return self._failed(case, state, EngineFailureCode.CASE_EVIDENCE_MISMATCH, ("live_semantic_spec",))
         if self._financial_dispatcher.spec != case.financial_dispatch_plan.dispatcher_spec:
             return self._failed(
                 case,
@@ -1645,7 +2179,7 @@ class DeterministicBarEngine:
                     ),
                 ),
             )
-        cycles_by_event: dict[str, ResolvedDecisionCycle] = {}
+        cycles_by_event: dict[str, ResolvedDecisionCycle | ResolvedDecisionCycleV2] = {}
         cycle_buffers: dict[str, list[TimelineEvent]] = {}
         for resolved_cycle in case.decision_cycles:
             cycle_buffers[resolved_cycle.cycle_hash] = []
@@ -1690,6 +2224,10 @@ class DeterministicBarEngine:
                             self._trace(state).trace_hash,
                         )
                     )
+                if live and state.live_clock is not None and event.timeline_instant <= state.live_clock:
+                    return self._failed(case, state, EngineFailureCode.CASE_EVIDENCE_MISMATCH, ("live_clock_overlap", event.event_id))
+                if live:
+                    state.live_clock = event.timeline_instant
                 self._trace_add(
                     state,
                     EngineStage.TIMELINE_EVENT,
@@ -1698,6 +2236,17 @@ class DeterministicBarEngine:
                     event.event_hash,
                 )
                 processed_events += 1
+                if live:
+                    failure = self._due_settlements(case, state, event.event_id, event.event_hash, event.timeline_instant)
+                    if failure is not None:
+                        return failure
+
+                account_event = account_events_by_event.get(event.event_id)
+                if live and account_event is not None:
+                    failure = self._scheduled_account_event(case, state, account_event, timeline_event)
+                    if failure is not None:
+                        return failure
+                    processed_account_events.add(account_event.event_id)
 
                 matched_cycle = cycles_by_event.get(event.event_id)
                 if matched_cycle is not None:
@@ -1712,32 +2261,20 @@ class DeterministicBarEngine:
                         processed_cycles.add(matched_cycle.cycle_hash)
 
                 bar = bars_by_event.get(event.event_id)
+                if live and event.capability == BAR_CLOSE_CAPABILITY and bar is None:
+                    return self._failed(case, state, EngineFailureCode.MISSING_SCHEDULED_EVENT, (event.event_id,))
                 if bar is not None:
-                    failure = self._bar_execution(case, state, bar, timeline_event)
+                    failure = (
+                        self._live_bar_execution(case, state, bar, timeline_event)
+                        if isinstance(bar, ResolvedBarPlanV2)
+                        else self._bar_execution(case, state, bar, timeline_event)
+                    )
                     if failure is not None:
                         return failure
                     processed_bars.add(bar.execution_hash)
 
-                account_event = account_events_by_event.get(event.event_id)
-                if account_event is not None:
-                    if account_event.event_at != event.timeline_instant:
-                        return self._failed(
-                            case,
-                            state,
-                            EngineFailureCode.FINANCIAL_DISPATCH_FAILURE,
-                            (FinancialDispatchFailureCode.EVENT_PLAN_MISMATCH.value,),
-                            (canonical_sha256(account_event), event.event_hash),
-                        )
-                    dispatch = self._financial_dispatcher.dispatch_scheduled_event(
-                        account_event,
-                        self._financial_state_view(state),
-                    )
-                    failure = self._apply_financial_dispatch(
-                        case,
-                        state,
-                        dispatch,
-                        expected_snapshot=None,
-                    )
+                if not live and account_event is not None:
+                    failure = self._scheduled_account_event(case, state, account_event, timeline_event)
                     if failure is not None:
                         return failure
                     processed_account_events.add(account_event.event_id)
@@ -1772,6 +2309,12 @@ class DeterministicBarEngine:
             if failure is not None:
                 return failure
 
+        if live:
+            # Finalization is an actual processing boundary, not an economic-time backdate.
+            failure = self._due_settlements(case, state, "engine-finalize", case.case_hash, case.snapshot_plan.projection_at,
+                include_boundary=False)
+            if failure is not None:
+                return failure
         # Cursor batch size is an operational read concern, not economic evidence.
         timeline_cursor = case.timeline.resume_cursor(timeline_cursor, batch_size=1)
         snapshot_dispatch = self._financial_dispatcher.project_final_snapshot(
@@ -1783,11 +2326,23 @@ class DeterministicBarEngine:
             state,
             snapshot_dispatch,
             expected_snapshot=True,
+            expected_source_event_id="engine-finalize" if isinstance(case, ResolvedExecutionCaseV2) else None,
+            dispatch_at=case.snapshot_plan.projection_at if isinstance(case, ResolvedExecutionCaseV2) else None,
         )
         if failure is not None:
             return failure
+        expected_roles = case.financial_dispatch_plan.expected_artifact_roles
+        if isinstance(case, ResolvedExecutionCaseV2):
+            failure = self._close_live_identities(case, state)
+            if failure is not None:
+                return failure
+            filled = {fill.fill_id for fill in state.fills}
+            expected_roles = tuple(sorted((*expected_roles, *state.live_dynamic_roles, *(
+                role for bar in case.bar_executions if bar.fill_id in filled
+                for role in bar.accounting_plan.expected_artifact_roles
+            ))))
         actual_roles = tuple(sorted(value.role for value in state.financial_artifacts))
-        if actual_roles != case.financial_dispatch_plan.expected_artifact_roles:
+        if actual_roles != expected_roles:
             return self._failed(
                 case,
                 state,
@@ -1795,9 +2350,7 @@ class DeterministicBarEngine:
                 (FinancialDispatchFailureCode.ARTIFACT_COVERAGE_MISMATCH.value,),
                 (
                     canonical_sha256(actual_roles),
-                    canonical_sha256(
-                        case.financial_dispatch_plan.expected_artifact_roles
-                    ),
+                    canonical_sha256(expected_roles),
                 ),
             )
         finalize_instant = SimulationInstant(
@@ -1863,7 +2416,271 @@ class DeterministicBarEngine:
         )
         return EngineExecutionOutcome(result=result)
 
-    def _initial_state(self, case: ResolvedExecutionCase) -> _EngineState:
+    def _due_settlements(
+        self, case: ExecutionCase, state: _EngineState, boundary_id: str,
+        boundary_hash: str, boundary_at: SimulationInstant, *, include_boundary: bool = True,
+    ) -> EngineExecutionOutcome | None:
+        due = tuple(value for value in state.settlement_state.pending_obligations
+                    if value.obligation.settlement_time < boundary_at.instant
+                    or (include_boundary and value.obligation.settlement_time == boundary_at.instant))
+        if not due:
+            return None
+        if any(value.obligation.settlement_obligation_id not in state.live_settlement_slots for value in due):
+            return self._failed(case, state, EngineFailureCode.CASE_EVIDENCE_MISMATCH, ("unmanifested_due_settlement",))
+        payload = SettlementApplicationPlan(boundary_id, boundary_hash, state.settlement_book.book_hash,
+            tuple(state.live_settlement_slots[value.obligation.settlement_obligation_id] for value in due),
+            include_boundary=include_boundary)
+        event_id = f"settlement-due:{boundary_id}"
+        event = ScheduledAccountEvent(event_id, boundary_at, payload.operation_key, (payload.operation_key,), (),
+            payload, payload, (f"settlement.{event_id}",))
+        outcome = self._financial_dispatcher.dispatch_scheduled_event(event, self._financial_state_view(state))
+        result = outcome.result
+        if outcome.failure is None and (not isinstance(result, SettlementFinancialDispatchResult)
+                or result.journal_entries or result.snapshot is not None or result.artifacts
+                or {(value.event_id, value.settlement_obligation_id, value.causation_id) for value in result.settlement_events}
+                   != {(slot.applied_event_id, slot.obligation_id, slot.recorded_event_id) for slot in payload.slots}
+                or len(result.settlement_events) != len(payload.slots)):
+            return self._failed(case, state, EngineFailureCode.FINANCIAL_DISPATCH_FAILURE, ("live_due_application_coverage",))
+        failure = self._apply_financial_dispatch(case, state, outcome, expected_snapshot=False,
+            expected_source_event_id=event_id, expected_source_evidence_hash=canonical_sha256(event), dispatch_at=boundary_at)
+        if failure is None:
+            state.live_dynamic_roles.add(f"settlement.{event_id}")
+        return failure
+
+    def _scheduled_account_event(
+        self, case: ExecutionCase, state: _EngineState,
+        account_event: ScheduledAccountEvent, timeline_event: TimelineEvent,
+    ) -> EngineExecutionOutcome | None:
+        event = timeline_event.event
+        if account_event.event_at != event.timeline_instant:
+            return self._failed(
+                case, state, EngineFailureCode.FINANCIAL_DISPATCH_FAILURE,
+                (FinancialDispatchFailureCode.EVENT_PLAN_MISMATCH.value,),
+                (canonical_sha256(account_event), event.event_hash),
+            )
+        return self._apply_financial_dispatch(
+            case, state, self._financial_dispatcher.dispatch_scheduled_event(account_event, self._financial_state_view(state)),
+            expected_snapshot=None, expected_source_event_id=account_event.event_id,
+            expected_source_evidence_hash=canonical_sha256(account_event), dispatch_at=account_event.event_at,
+        )
+
+    def _resolve_profile_fee_rules(
+        self, case: ExecutionCase, state: _EngineState, source_event_id: str,
+        query: ProfileFeeRuleQuery,
+    ) -> FeeReservationRuleSet | FinalFeeRuleSet | EngineExecutionOutcome:
+        code = EngineFailureCode.FEE_RESERVATION if query.basis_type is None else EngineFailureCode.FEE_ASSESSMENT_FAILURE
+        dispatcher = self._financial_dispatcher
+        if (type(case) is not ResolvedExecutionCaseV2 or not isinstance(dispatcher, ProfileFeeRuleResolver)
+                or query.binding.dispatcher_spec_hash != case.financial_dispatch_plan.dispatcher_spec.spec_hash
+                or query.binding.dispatcher_spec_hash != dispatcher.spec.spec_hash):
+            return self._failed(case, state, code, ("profile_fee_binding_mismatch", source_event_id))
+        try:
+            outcome = dispatcher.resolve_fee_rules(query)
+            if type(outcome) is not ProfileFeeRuleResolution or outcome.query != query:
+                raise ValueError("profile fee resolution query mismatch")
+            # Revalidate the immutable result at the dispatcher trust boundary.
+            outcome = ProfileFeeRuleResolution(outcome.query, outcome.rule_set, outcome.evidence, outcome.failure_code)
+        except Exception:
+            return self._failed(case, state, code, ("profile_fee_resolution_invalid", source_event_id))
+        if outcome.failure_code is not None:
+            return self._failed(case, state, code, (outcome.failure_code, source_event_id), (canonical_sha256(outcome),))
+        scope = query.basis_type.value if query.basis_type is not None else "reservation"
+        role = f"fee_rules.{scope}.{source_event_id}"
+        if role in state.live_dynamic_roles:
+            return self._failed(case, state, code, ("duplicate_profile_fee_resolution", source_event_id))
+        state.financial_artifacts.append(FinancialDispatchArtifact(role, source_event_id, query.evaluated_at,
+            dispatcher.spec.dispatcher_key, dispatcher.spec.dispatcher_version, dispatcher.spec.config_hash,
+            canonical_sha256(query), canonical_sha256(outcome), outcome))
+        state.live_dynamic_roles.add(role)
+        if outcome.rule_set is None:
+            raise ValueError("successful profile fee resolution has no rule set")
+        return outcome.rule_set
+
+    def _materialize_cash_pretrade(
+        self, case: ExecutionCase, state: _EngineState, order: Order,
+        capability_set: OrderCapabilitySet, mapping: OrderTranslationMapping,
+        translation_time: UtcInstant, authority: ResolvedCashPreTradeAuthority,
+        source_event_id: str, fee_resolved_at: SimulationInstant,
+    ) -> ResolvedPreTradePlan | EngineExecutionOutcome:
+        # Reuse the authoritative kernel decisions. This preparation supplies the
+        # exact commitment to the unchanged admission/execution gates below.
+        capability = OrderCapabilityValidator().validate(order.intent, capability_set)
+        if capability.approval is None:
+            return self._failed(case, state, EngineFailureCode.CAPABILITY_REJECTED, (order.order_id.value,), (capability.decision_hash,))
+        translation = OrderTranslator().translate(order, capability.approval, mapping, translation_time)
+        if translation.executable_spec is None:
+            return self._failed(case, state, EngineFailureCode.TRANSLATION_REJECTED, (order.order_id.value,), (translation.result_hash,))
+        market = MarketRuleEvaluator().evaluate(
+            OrderRuleEvaluationInput(translation.executable_spec, authority.evaluated_at, authority.notional_evidence),
+            authority.order_rule_timeline,
+        )
+        if market.data_integrity_failure is not None:
+            return self._failed(case, state, EngineFailureCode.MARKET_RULE_DATA_FAILURE,
+                                (market.data_integrity_failure.code.value,), (canonical_sha256(market.data_integrity_failure),))
+        if market.rejection is not None:
+            return self._failed(case, state, EngineFailureCode.MARKET_RULE_REJECTED,
+                                tuple(issue.subject_key for issue in market.rejection.issues), (canonical_sha256(market.rejection),))
+        approval = market.approval
+        if approval is None:
+            raise ValueError("Market Rule returned no cash authority")
+        rules = authority.fee_reservation_rule_set
+        if isinstance(rules, ProfileFeeRuleBinding):
+            resolved = self._resolve_profile_fee_rules(case, state, source_event_id,
+                ProfileFeeRuleQuery(rules, order, fee_resolved_at))
+            if isinstance(resolved, EngineExecutionOutcome):
+                return resolved
+            if type(resolved) is not FeeReservationRuleSet:
+                raise ValueError("reservation resolver returned final fee rules")
+            rules = resolved
+        fees = FeeReservationEstimator().estimate(approval, rules, authority.evaluated_at)
+        if fees.proposal is None:
+            return self._failed(case, state, EngineFailureCode.FEE_RESERVATION, (order.order_id.value,), (canonical_sha256(fees),))
+        intent = order.intent
+        if intent.side not in {OrderSide.BUY, OrderSide.SELL} or intent.position_effect not in {PositionEffect.AUTO, PositionEffect.OPEN, PositionEffect.CLOSE}:
+            return self._failed(case, state, EngineFailureCode.CASE_EVIDENCE_MISMATCH, ("live_cash_intent",))
+        notional = approval.calculated_notional
+        if notional is None:
+            return self._failed(case, state, EngineFailureCode.CASE_EVIDENCE_MISMATCH, ("live_cash_notional",))
+        commitment = ReservationCommitment(
+            cash=(notional,) if intent.side is OrderSide.BUY else (),
+            sellable_quantities=(intent.quantity,) if intent.side is OrderSide.SELL else (),
+            fee_reserve=fees.proposal.commitment.fee_reserve,
+            order_capacity_units=1, exposure_capacity=(notional,),
+        )
+        return authority.materialize(commitment, rules)
+
+    def _live_bar_execution(
+        self, case: ExecutionCase, state: _EngineState, plan: ResolvedBarPlanV2, timeline_event: TimelineEvent,
+    ) -> EngineExecutionOutcome | None:
+        event = timeline_event.event
+        if event.capability != BAR_CLOSE_CAPABILITY or event.instrument_id != plan.instrument_id or event.event_time != plan.fill_event_at.instant:
+            return self._failed(case, state, EngineFailureCode.CASE_EVIDENCE_MISMATCH, ("live_bar_receipt", event.event_id))
+        # Validate unused candidates too: unused identity is not permission to
+        # substitute another bar's market evidence or a pre-close fill receipt.
+        observation = BarCloseObservation.from_event(event)
+        BarCloseCandidate(observation, None, None, plan.liquidity_evidence, plan.market_state)
+        market_state = plan.market_state
+        if (
+            plan.liquidity_evidence.evaluated_at != event.available_time
+            or market_state.source_event_id != event.event_id
+            or market_state.evidence_hash != event.event_hash
+            or market_state.revision_id != event.revision_id
+            or market_state.observed_at != event.event_time
+            or market_state.available_at != event.available_time
+            or plan.fill_event_at <= event.timeline_instant
+        ):
+            return self._failed(case, state, EngineFailureCode.CASE_EVIDENCE_MISMATCH, ("live_bar_market_evidence", event.event_id))
+        active = tuple(stream for stream in state.order_streams.values()
+                       if stream.order.intent.instrument_id == plan.instrument_id and stream.state is not None
+                       and stream.state.status in {OrderStatus.ACCEPTED, OrderStatus.ACTIVE})
+        if not active:
+            state.live_unused_reasons[plan.fill_id.value] = "no_active_order"
+            return None
+        if len(active) != 1:
+            return self._failed(case, state, EngineFailureCode.ORDER_PLAN_MISMATCH, ("live_bar_order_capacity", event.event_id))
+        stream = active[0]
+        admission = state.admissions[stream.order.order_id.value]
+        pretrade = self._materialize_cash_pretrade(
+            case, state, stream.order, admission.capability_set, admission.translation_mapping,
+            admission.translation_time, plan.pretrade_authority, event.event_id, event.timeline_instant,
+        )
+        if isinstance(pretrade, EngineExecutionOutcome):
+            return pretrade
+        execution = ResolvedBarExecution(
+            plan.event_id, stream.order.order_id, pretrade, plan.liquidity_evidence, plan.market_state,
+            plan.slippage_model, plan.fill_id, plan.fill_event_id, plan.fill_event_at, plan.accounting_plan,
+        )
+        failure = self._bar_execution(case, state, execution, timeline_event)
+        if failure is None:
+            if any(fill.fill_id == plan.fill_id for fill in state.fills):
+                state.live_clock = plan.accounting_plan.fee_plan.fee_recorded_at
+            else:
+                state.live_unused_reasons[plan.fill_id.value] = "no_eligible_fill"
+        return failure
+
+    def _close_live_identities(
+        self, case: ResolvedExecutionCaseV2, state: _EngineState,
+    ) -> EngineExecutionOutcome | None:
+        manifest = case.identity_manifest
+        if manifest is None:
+            return self._failed(case, state, EngineFailureCode.CASE_EVIDENCE_MISMATCH, ("live_identity_manifest",))
+        observed: dict[str, tuple[DomainIdKind | None, str]] = {}
+        for entry in state.journal.entries:
+            observed[entry.journal_entry_id.value] = (DomainIdKind.JOURNAL, canonical_sha256(entry))
+        for stream in state.order_streams.values():
+            observed[stream.order.order_id.value] = (DomainIdKind.ORDER, canonical_sha256(stream.order))
+            for record in stream.records:
+                observed[record.event.event_id] = (None, canonical_sha256(record.event))
+        for fill in state.fills:
+            observed[fill.fill_id.value] = (DomainIdKind.FILL, canonical_sha256(fill))
+        for obligation in state.settlement_book.obligations:
+            identity = obligation.obligation.settlement_obligation_id
+            observed[identity.value] = (DomainIdKind.SETTLEMENT, canonical_sha256(obligation))
+        for event in state.settlement_book.events:
+            observed[event.event_id] = (None, canonical_sha256(event))
+        fees = {fee.fee_assessment_id: fee for fee in state.fee_assessments}
+        for fee in state.fee_assessments:
+            observed[fee.fee_assessment_id.value] = (DomainIdKind.FEE, canonical_sha256(fee))
+        unused: dict[str, str] = {}
+        for cycle in case.decision_cycles:
+            slot = cycle.admission_slot
+            if slot.order_id.value not in observed:
+                reason = state.live_unused_reasons.get(slot.order_id.value)
+                if reason is None:
+                    return self._failed(case, state, EngineFailureCode.CASE_EVIDENCE_MISMATCH, ("unclosed_order_slot", slot.order_id.value))
+                for value in (slot.order_id.value, *(event.event_id for event in slot.event_plan), slot.expiration_event_id):
+                    unused[value] = reason
+            elif slot.expiration_event_id not in observed:
+                unused[slot.expiration_event_id] = "order_not_expired"
+        pending = {value.obligation.settlement_obligation_id: value for value in state.settlement_state.pending_obligations}
+        for bar in case.bar_executions:
+            fee = bar.accounting_plan.fee_plan
+            settlement_slots = (bar.accounting_plan.settlement_slots
+                                if isinstance(bar.accounting_plan, SettlementFillAccountingDispatchPlan) else ())
+            fee_plans = (fee,)
+            if isinstance(fee, FullFillOrderFeeAccountingPlan) and fee.fill_fee_plan is not None:
+                fee_plans = (fee.fill_fee_plan, fee)
+            if bar.fill_id.value not in observed:
+                reason = state.live_unused_reasons.get(bar.fill_id.value)
+                if reason is None:
+                    return self._failed(case, state, EngineFailureCode.CASE_EVIDENCE_MISMATCH, ("unclosed_fill_slot", bar.fill_id.value))
+                ids = (bar.fill_id.value, bar.fill_event_id, bar.accounting_plan.fill_journal_entry_id.value,
+                       *(value for plan in fee_plans for value in (plan.fee_assessment_id.value, plan.fee_journal_entry_id.value)))
+                for value in (*ids, *(identity for slot in settlement_slots
+                        for identity in (slot.obligation_id.value, slot.recorded_event_id, slot.applied_event_id))):
+                    unused[value] = reason
+            else:
+                for slot in settlement_slots:
+                    if slot.applied_event_id not in observed:
+                        obligation = pending.get(slot.obligation_id)
+                        if obligation is None or obligation.obligation.settlement_time < case.timeline.window.end_exclusive:
+                            return self._failed(case, state, EngineFailureCode.CASE_EVIDENCE_MISMATCH, ("unclosed_due_settlement", slot.obligation_id.value))
+                        unused[slot.applied_event_id] = "pending_beyond_window"
+                for plan in fee_plans:
+                    assessment = fees.get(plan.fee_assessment_id)
+                    if assessment is not None and assessment.amount.units == 0:
+                        unused[plan.fee_journal_entry_id.value] = "zero_fee"
+        expected = {binding.value: binding.domain_kind for binding in manifest.bindings}
+        if set(observed) & set(unused) or set(observed) | set(unused) != set(expected) or any(
+            expected.get(value) != kind for value, (kind, _) in observed.items()
+        ):
+            return self._failed(case, state, EngineFailureCode.CASE_EVIDENCE_MISMATCH, ("live_identity_usage_coverage",))
+        dispositions = tuple(RuntimeIdentityDisposition(
+            binding.binding_key, binding.value, "used" if binding.value in observed else "unused",
+            None if binding.value in observed else unused[binding.value],
+            observed[binding.value][1] if binding.value in observed else None,
+        ) for binding in manifest.bindings)
+        payload = RuntimeIdentityClosure(manifest.manifest_hash, dispositions)
+        if any(artifact.role == "runtime.identity_closure" for artifact in state.financial_artifacts):
+            return self._failed(case, state, EngineFailureCode.CASE_EVIDENCE_MISMATCH, ("runtime_identity_role_impersonation",))
+        state.financial_artifacts.append(FinancialDispatchArtifact(
+            "runtime.identity_closure", "engine-finalize", case.snapshot_plan.projection_at,
+            "generic.live-case.identity-closure.v1", 1, case.semantic_spec_hash,
+            canonical_sha256({"manifest": manifest, "dispositions": dispositions}), canonical_sha256(payload), payload,
+        ))
+        return None
+
+    def _initial_state(self, case: ExecutionCase) -> _EngineState:
         financial = case.financial_state
         ledger = GenericLedger(financial.ledger_schema)
         ledger_state = ledger.project(financial.journal)
@@ -1913,7 +2730,7 @@ class DeterministicBarEngine:
 
     @staticmethod
     def _policy_v2_cash_position_key(
-        case: ResolvedExecutionCase, source_event_id: str
+        case: ExecutionCase, source_event_id: str
     ) -> PositionBalanceKey | None:
         for execution in case.bar_executions:
             plan = execution.accounting_plan
@@ -1937,15 +2754,105 @@ class DeterministicBarEngine:
             state.reservation_state,
             lot_books,
             tuple(state.financial_artifacts),
+            state.settlement_book,
         )
+
+    @staticmethod
+    def _stage_settlement_book(
+        book: SettlementBook,
+        result: SettlementFinancialDispatchResult,
+        *,
+        expected_source_event_id: str | None,
+        expected_source_evidence_hash: str | None,
+        dispatch_at: SimulationInstant | None,
+        source_fill_record: OrderEventRecord | None,
+    ) -> SettlementBook:
+        if dispatch_at is None or result.source_event_id != expected_source_event_id:
+            raise ValueError("settlement requires the actual fill or scheduled dispatch context")
+        if expected_source_evidence_hash is None or any(
+            event.source_evidence_hash != expected_source_evidence_hash
+            for event in result.settlement_events
+        ):
+            raise ValueError("settlement evidence does not match the actual dispatch receipt")
+        if result.prior_settlement_book_hash != book.book_hash:
+            raise ValueError("stale settlement book")
+        if any(event.occurred_at > dispatch_at for event in result.settlement_events):
+            raise ValueError("future settlement event")
+        if any(entry.recorded_at > dispatch_at for entry in result.journal_entries):
+            raise ValueError("future settlement accounting")
+        if any(artifact.occurred_at > dispatch_at for artifact in result.artifacts):
+            raise ValueError("future settlement artifact")
+        if result.snapshot is not None and result.snapshot.timestamp > dispatch_at.instant:
+            raise ValueError("future settlement snapshot")
+        if source_fill_record is None:
+            if result.settlement_obligations or any(
+                event.event_type is not SettlementEventType.SETTLEMENT_APPLIED
+                or event.occurred_at != dispatch_at
+                for event in result.settlement_events
+            ):
+                raise ValueError("scheduled settlement may only apply at the actual receipt")
+        else:
+            fill = source_fill_record.fill
+            if fill is None or any(
+                value.obligation.source_fill_id != fill.fill_id
+                or value.obligation.trade_time != fill.execution_time
+                for value in result.settlement_obligations
+            ):
+                raise ValueError("settlement obligation does not match the actual fill")
+            obligation_ids = {
+                value.obligation.settlement_obligation_id
+                for value in result.settlement_obligations
+            }
+            if any(
+                event.settlement_obligation_id not in obligation_ids
+                or event.occurred_at < source_fill_record.event.occurred_at
+                for event in result.settlement_events
+            ):
+                raise ValueError("settlement event does not follow the actual recorded fill")
+        staged = book.append(
+            obligations=result.settlement_obligations, events=result.settlement_events
+        )
+        if staged.book_hash != result.settlement_book_hash:
+            raise ValueError("settlement book hash mismatch")
+        return staged
+
+    @staticmethod
+    def _validate_live_fill_settlement(
+        plan: SettlementFillAccountingDispatchPlan, result: FinancialDispatchResult,
+    ) -> bool:
+        if not isinstance(result, SettlementFinancialDispatchResult) or len(result.journal_entries) != 1:
+            return False
+        changes = {value.key: value.value for value in result.journal_entries[0].balance_changes}
+        obligations = {value.obligation.settlement_obligation_id: value for value in result.settlement_obligations}
+        if (len(result.settlement_obligations) != len(plan.settlement_slots)
+                or set(obligations) != {slot.obligation_id for slot in plan.settlement_slots}
+                or set(changes) != {slot.balance_key for slot in plan.settlement_slots}):
+            return False
+        expected = set()
+        for slot in plan.settlement_slots:
+            obligation = obligations[slot.obligation_id]
+            if obligation.balance_key != slot.balance_key or obligation.value != changes[slot.balance_key]:
+                return False
+            expected.add((slot.recorded_event_id, slot.obligation_id, SettlementEventType.OBLIGATION_RECORDED,
+                          plan.settlement_recorded_at, obligation.obligation.source_fill_id.value))
+            if obligation.obligation.settlement_time <= plan.fill_recorded_at.instant:
+                expected.add((slot.applied_event_id, slot.obligation_id, SettlementEventType.SETTLEMENT_APPLIED,
+                              plan.fill_recorded_at, slot.recorded_event_id))
+        actual = {(value.event_id, value.settlement_obligation_id, value.event_type, value.occurred_at, value.causation_id)
+                  for value in result.settlement_events}
+        return actual == expected and len(result.settlement_events) == len(expected)
 
     def _apply_financial_dispatch(
         self,
-        case: ResolvedExecutionCase,
+        case: ExecutionCase,
         state: _EngineState,
         outcome: FinancialDispatchOutcome,
         *,
         expected_snapshot: bool | None,
+        expected_source_event_id: str | None = None,
+        expected_source_evidence_hash: str | None = None,
+        dispatch_at: SimulationInstant | None = None,
+        source_fill_record: OrderEventRecord | None = None,
     ) -> EngineExecutionOutcome | None:
         if (
             not isinstance(outcome, FinancialDispatchOutcome)
@@ -1977,6 +2884,11 @@ class DeterministicBarEngine:
                 (FinancialDispatchFailureCode.PROFILE_COMPONENT_FAILURE.value,),
                 (canonical_sha256(outcome),),
             )
+        if isinstance(case, ResolvedExecutionCaseV2) and source_fill_record is not None:
+            plans = tuple(bar.accounting_plan for bar in case.bar_executions if bar.event_id == expected_source_event_id)
+            if (len(plans) != 1 or (isinstance(plans[0], SettlementFillAccountingDispatchPlan)
+                    and not self._validate_live_fill_settlement(plans[0], result))):
+                return self._failed(case, state, EngineFailureCode.FINANCIAL_DISPATCH_FAILURE, ("live_fill_settlement_coverage",))
         if expected_snapshot and result.journal_entries:
             return self._failed(
                 case,
@@ -1985,6 +2897,14 @@ class DeterministicBarEngine:
                 (FinancialDispatchFailureCode.SNAPSHOT_PROJECTION_FAILURE.value,),
                 (canonical_sha256(result),),
             )
+        if isinstance(case, ResolvedExecutionCaseV2) and (
+            dispatch_at is None
+            or (expected_source_event_id is not None and result.source_event_id != expected_source_event_id)
+            or any(entry.recorded_at != dispatch_at for entry in result.journal_entries)
+            or any(artifact.occurred_at != dispatch_at or artifact.source_event_id != result.source_event_id for artifact in result.artifacts)
+            or (result.snapshot is not None and result.snapshot.timestamp_instant != dispatch_at)
+        ):
+            return self._failed(case, state, EngineFailureCode.FINANCIAL_DISPATCH_FAILURE, ("live_dispatch_receipt_mismatch",))
         staged_journal = state.journal
         if result.journal_entries:
             try:
@@ -2012,6 +2932,44 @@ class DeterministicBarEngine:
                     ),
                     (canonical_sha256(result),),
                 )
+        if isinstance(case, ResolvedExecutionCaseV2) and result.snapshot is not None and result.snapshot.journal_state_hash != staged_ledger.state_hash:
+            return self._failed(case, state, EngineFailureCode.FINANCIAL_DISPATCH_FAILURE, ("live_dispatch_receipt_mismatch",))
+        staged_book = state.settlement_book
+        artifacts = result.artifacts
+        if isinstance(result, SettlementFinancialDispatchResult):
+            try:
+                staged_book = self._stage_settlement_book(
+                    staged_book, result,
+                    expected_source_event_id=expected_source_event_id,
+                    expected_source_evidence_hash=expected_source_evidence_hash,
+                    dispatch_at=dispatch_at,
+                    source_fill_record=source_fill_record,
+                )
+            except (SettlementBookError, ValueError):
+                return self._failed(
+                    case, state, EngineFailureCode.FINANCIAL_DISPATCH_FAILURE,
+                    (FinancialDispatchFailureCode.SETTLEMENT_TRANSITION_FAILURE.value,),
+                    (canonical_sha256(result),),
+                )
+            assert dispatch_at is not None
+            artifacts += (FinancialDispatchArtifact(
+                f"settlement.{result.source_event_id}",
+                result.source_event_id,
+                dispatch_at,
+                result.dispatcher_spec.dispatcher_key,
+                result.dispatcher_spec.dispatcher_version,
+                result.dispatcher_spec.config_hash,
+                canonical_sha256({
+                    "dispatch_input_hash": outcome.input_hash,
+                    "prior_settlement_book_hash": state.settlement_book.book_hash,
+                    "source_event_id": expected_source_event_id,
+                    "source_evidence_hash": expected_source_evidence_hash,
+                    "dispatch_at": dispatch_at,
+                    "source_fill_record": source_fill_record,
+                }),
+                canonical_sha256(result),
+                result,
+            ),)
         v2_position_key = self._policy_v2_cash_position_key(
             case, result.source_event_id
         )
@@ -2052,28 +3010,42 @@ class DeterministicBarEngine:
                 (canonical_sha256(result),),
             )
         existing_roles = {value.role for value in state.financial_artifacts}
-        if existing_roles.intersection(value.role for value in result.artifacts):
+        roles = tuple(value.role for value in artifacts)
+        if existing_roles.intersection(roles) or len(set(roles)) != len(roles):
             return self._failed(
                 case,
                 state,
                 EngineFailureCode.FINANCIAL_DISPATCH_FAILURE,
                 (FinancialDispatchFailureCode.ARTIFACT_COVERAGE_MISMATCH.value,),
-                (canonical_sha256(result.artifacts),),
+                (canonical_sha256(artifacts),),
             )
+        staged_resources = None
+        if result.journal_entries or isinstance(result, SettlementFinancialDispatchResult):
+            try:
+                staged_resources = self._project_resources(
+                    case, state, staged_ledger, staged_book
+                )
+            except (AvailabilityProjectionError, ResourceReservationError, SettlementBookError):
+                return self._failed(
+                    case, state, EngineFailureCode.FINANCIAL_DISPATCH_FAILURE,
+                    (FinancialDispatchFailureCode.RESOURCE_PROJECTION_FAILURE.value,),
+                    (canonical_sha256(result),),
+                )
         state.journal = staged_journal
-        if result.journal_entries:
-            state.ledger_state = staged_ledger
-            self._refresh_resources(case, state)
+        state.ledger_state = staged_ledger
+        state.settlement_book = staged_book
+        if staged_resources is not None:
+            state.reservation_state, state.settlement_state, state.availability = staged_resources
 
         state.lot_books = (
             projected_lots
             if replay_authority
             else dict(result.position_lot_books)
         )
-        state.financial_artifacts.extend(result.artifacts)
+        state.financial_artifacts.extend(artifacts)
         if result.snapshot is not None:
             state.snapshot = result.snapshot
-        for artifact in result.artifacts:
+        for artifact in artifacts:
             self._trace_add(
                 state,
                 EngineStage.FINANCIAL_EVENT,
@@ -2085,9 +3057,9 @@ class DeterministicBarEngine:
 
     def _decision_cycle(
         self,
-        case: ResolvedExecutionCase,
+        case: ExecutionCase,
         state: _EngineState,
-        cycle: ResolvedDecisionCycle,
+        cycle: ResolvedDecisionCycle | ResolvedDecisionCycleV2,
         events: tuple[TimelineEvent, ...],
     ) -> EngineExecutionOutcome | None:
         injection_outcome = PrecomputedTargetStreamAdapter().inject(
@@ -2146,10 +3118,39 @@ class DeterministicBarEngine:
             canonical_sha256(injection.batch),
         )
 
+        if isinstance(cycle, ResolvedDecisionCycleV2):
+            event_id = cycle.schedule.entries[0].event_id
+            snapshot_event = ScheduledAccountEvent(
+                event_id, trace_instant, cycle.snapshot_plan.operation_key,
+                (case.financial_dispatch_plan.dispatcher_spec.snapshot_projection_key,), (),
+                cycle.snapshot_plan, cycle.snapshot_plan, (f"snapshot.{event_id}",),
+            )
+            failure = self._apply_financial_dispatch(
+                case, state, self._financial_dispatcher.dispatch_scheduled_event(snapshot_event, self._financial_state_view(state)),
+                expected_snapshot=True, expected_source_event_id=event_id,
+                expected_source_evidence_hash=canonical_sha256(snapshot_event), dispatch_at=trace_instant,
+            )
+            if failure is not None:
+                return failure
+            context = cycle.schedule.entries[0].expectation
+            allocations = (StrategyAllocation(
+                context.strategy_id, context.sleeve_id, state.snapshot.timestamp,
+                state.snapshot.reporting_currency, state.snapshot.equity, cycle.allocation_policy,
+                canonical_sha256(state.snapshot), valuation_instant=trace_instant,
+            ),)
+            instrument = cycle.quantity_lattice.instrument_id
+            position_key = PositionBalanceKey(state.snapshot.account_id, instrument.venue, instrument)
+            marks = tuple(mark for mark in cycle.snapshot_plan.resolved_marks if mark.instrument_id == instrument)
+            if len(marks) != 1:
+                return self._failed(case, state, EngineFailureCode.POSITION_SIZING, ("live_mark_coverage",))
+            sizing_inputs = (InstrumentSizingInput(instrument, marks[0], state.ledger_state.position_quantity(position_key), cycle.quantity_lattice),)
+        else:
+            allocations = cycle.allocations
+            sizing_inputs = cycle.sizing_inputs
         allocation_outcome = PortfolioAllocator().allocate(
             sleeve_state=injection.state,
             portfolio_snapshot=state.snapshot,
-            allocations=cycle.allocations,
+            allocations=allocations,
             target_notional_scale=cycle.target_notional_scale,
         )
         if allocation_outcome.allocation is None:
@@ -2198,7 +3199,7 @@ class DeterministicBarEngine:
             approved_target=approved,
             source_decision_batch_id=injection.batch.decision_batch_id,
             policy=cycle.sizing_policy,
-            inputs=cycle.sizing_inputs,
+            inputs=sizing_inputs,
         )
         if sizing_outcome.normalized_target is None:
             failure = cast(Any, sizing_outcome.failure)
@@ -2219,11 +3220,17 @@ class DeterministicBarEngine:
             normalized.normalized_target_hash,
         )
 
+        validity = (TargetValidity(normalized.normalized_target_id, normalized.normalized_target_hash,
+                                   normalized.materialized_at, cycle.target_valid_until)
+                    if isinstance(cycle, ResolvedDecisionCycleV2) else cycle.target_validity)
+        working = tuple(state.order_streams.values())
+        if isinstance(cycle, ResolvedDecisionCycleV2):
+            working = tuple(stream for stream in working if stream.state is not None and stream.state.status in {OrderStatus.ACCEPTED, OrderStatus.ACTIVE})
         planning_outcome = RebalanceCoordinator().coordinate(
             target=normalized,
-            target_validity=cycle.target_validity,
+            target_validity=validity,
             portfolio_snapshot=state.snapshot,
-            working_orders=tuple(state.order_streams.values()),
+            working_orders=working,
             reservations=state.reservation_state,
             availability=state.availability,
             policy=cycle.rebalance_policy,
@@ -2255,6 +3262,27 @@ class DeterministicBarEngine:
                 tuple(value.order_id.value for value in plan.cancel_intents),
                 tuple(value.cancel_intent_hash for value in plan.cancel_intents),
             )
+        if isinstance(cycle, ResolvedDecisionCycleV2):
+            slot = cycle.admission_slot
+            if len(plan.planned_orders) > 1:
+                return self._failed(case, state, EngineFailureCode.ORDER_PLAN_MISMATCH, ("live_order_slot_capacity",))
+            if not plan.planned_orders:
+                state.live_unused_reasons[slot.order_id.value] = "no_order_planned"
+                return None
+            order = Order(slot.order_id, state.snapshot.account_id, plan.planned_orders[0].intent, slot.event_plan[0].occurred_at)
+            pretrade = self._materialize_cash_pretrade(case, state, order, slot.capability_set,
+                slot.translation_mapping, slot.translation_time, slot.pretrade_authority,
+                cycle.schedule.entries[0].event_id, slot.event_plan[4].occurred_at)
+            if isinstance(pretrade, EngineExecutionOutcome):
+                return pretrade
+            admission = ResolvedOrderAdmission(order, slot.capability_set, slot.translation_mapping, slot.translation_time, pretrade, slot.event_plan)
+            failure = self._admit_order(case, state, admission, deferral_event_id=cycle.schedule.entries[0].event_id)
+            if failure is not None:
+                return failure
+            if slot.order_id.value not in state.live_unused_reasons:
+                state.live_clock = slot.event_plan[-1].occurred_at
+            self._refresh_resources(case, state)
+            return None
         admission_by_intent = {
             canonical_sha256(value.order.intent): value for value in cycle.admissions
         }
@@ -2276,9 +3304,10 @@ class DeterministicBarEngine:
 
     def _admit_order(
         self,
-        case: ResolvedExecutionCase,
+        case: ExecutionCase,
         state: _EngineState,
         admission: ResolvedOrderAdmission,
+        *, deferral_event_id: str | None = None,
     ) -> EngineExecutionOutcome | None:
         order = admission.order
         if order.order_id.value in state.order_streams:
@@ -2335,9 +3364,25 @@ class DeterministicBarEngine:
             translation.executable_spec,
             admission.pretrade_plan,
             exclude_order_id=None,
+            defer_pending_at=admission.event_plan[5].occurred_at if deferral_event_id is not None else None,
         )
         if isinstance(gate, EngineExecutionOutcome):
             return gate
+        if isinstance(gate, PendingPositionSellDeferral):
+            assert deferral_event_id is not None
+            role = f"deferral.{deferral_event_id}"
+            artifact = FinancialDispatchArtifact(role, deferral_event_id, gate.deferred_at,
+                "generic.cash.pending-position-deferral.v1", 1, case.semantic_spec_hash,
+                canonical_sha256({"admission": admission, "settlement_book_hash": state.settlement_book.book_hash}),
+                canonical_sha256(gate), gate)
+            if role in {value.role for value in state.financial_artifacts}:
+                return self._failed(case, state, EngineFailureCode.CASE_EVIDENCE_MISMATCH, ("live_deferral_role_impersonation",))
+            state.financial_artifacts.append(artifact)
+            state.live_dynamic_roles.add(role)
+            state.live_unused_reasons[order.order_id.value] = "pending_position_settlement"
+            state.live_clock = gate.deferred_at
+            self._trace_add(state, EngineStage.PRETRADE_RISK, gate.deferred_at, order.order_id.value, artifact.artifact_hash)
+            return None
         market_approval, fee_outcome, pretrade_approval = gate
         self._trace_add(
             state,
@@ -2418,14 +3463,15 @@ class DeterministicBarEngine:
 
     def _pretrade_gate(
         self,
-        case: ResolvedExecutionCase,
+        case: ExecutionCase,
         state: _EngineState,
         order: Order,
         executable_spec: ExecutableOrderSpec,
         plan: ResolvedPreTradePlan,
         *,
         exclude_order_id: str | None,
-    ) -> tuple[Any, Any, Any] | EngineExecutionOutcome:
+        defer_pending_at: SimulationInstant | None = None,
+    ) -> tuple[Any, Any, Any] | PendingPositionSellDeferral | EngineExecutionOutcome:
         market = MarketRuleEvaluator().evaluate(
             OrderRuleEvaluationInput(
                 executable_order_spec=executable_spec,
@@ -2509,6 +3555,14 @@ class DeterministicBarEngine:
                 (risk.contract_failure.failure_hash,),
             )
         if risk.rejection is not None:
+            if isinstance(case, ResolvedExecutionCaseV2) and defer_pending_at is not None and exclude_order_id is None:
+                pending = tuple(value for value in state.settlement_state.pending_obligations
+                    if isinstance(value.balance_key, PositionBalanceKey) and value.balance_key.instrument_id == order.intent.instrument_id)
+                if pending:
+                    try:
+                        return PendingPositionSellDeferral(risk.rejection, pending, state.settlement_book.book_hash, defer_pending_at)
+                    except ValueError:
+                        pass  # Other permissions/resources, reservations, or partial availability remain failures.
             return self._failed(
                 case,
                 state,
@@ -2521,7 +3575,7 @@ class DeterministicBarEngine:
         return approval, fees, risk.approval
 
     def _close_execution_window(
-        self, case: ResolvedExecutionCase, state: _EngineState
+        self, case: ExecutionCase, state: _EngineState
     ) -> EngineExecutionOutcome | None:
         model = cast(NextEligibleBarCloseModel, case.execution_model)
         # Order events must remain inside the half-open trading window.
@@ -2533,6 +3587,8 @@ class DeterministicBarEngine:
         for order_id, stream in tuple(state.order_streams.items()):
             if stream.state is None or stream.state.status not in {OrderStatus.ACCEPTED, OrderStatus.ACTIVE}:
                 continue
+            if isinstance(case, ResolvedExecutionCaseV2) and state.live_clock is not None and occurred_at <= state.live_clock:
+                return self._failed(case, state, EngineFailureCode.CASE_EVIDENCE_MISMATCH, ("live_close_window_overlap",))
             outcome = model.simulate_execution(NextBarCloseRequest(stream, None, True))
             if outcome.failure is not None:
                 return self._failed(case, state, EngineFailureCode.EXECUTION_FAILURE, (outcome.failure.code.value,), (canonical_sha256(outcome.failure),))
@@ -2541,7 +3597,8 @@ class DeterministicBarEngine:
             if decision.action is not NoEligibleBarAction.EXPIRE:
                 continue
             expiration = OrderEvent(
-                event_id=f"execution-window-expired:{order_id}",
+                event_id=(next(cycle.admission_slot.expiration_event_id for cycle in case.decision_cycles if cycle.admission_slot.order_id.value == order_id)
+                          if isinstance(case, ResolvedExecutionCaseV2) else f"execution-window-expired:{order_id}"),
                 order_id=stream.order.order_id,
                 causation_id=stream.records[-1].event.event_id,
                 event_type=OrderEventType.ORDER_EXPIRED,
@@ -2555,7 +3612,7 @@ class DeterministicBarEngine:
 
     def _bar_execution(
         self,
-        case: ResolvedExecutionCase,
+        case: ExecutionCase,
         state: _EngineState,
         plan: ResolvedBarExecution,
         timeline_event: TimelineEvent,
@@ -2603,6 +3660,8 @@ class DeterministicBarEngine:
         )
         if isinstance(gate, EngineExecutionOutcome):
             return gate
+        if isinstance(gate, PendingPositionSellDeferral):
+            raise ValueError("execution gates cannot defer already admitted orders")
         market_approval, _, pretrade_approval = gate
         event = timeline_event.event
         if isinstance(case.execution_model, NextEligibleBarOpenModel):
@@ -2696,6 +3755,14 @@ class DeterministicBarEngine:
                 (plan.fill_event_id,),
                 (fill_result.result_hash,),
             )
+        if isinstance(plan.accounting_plan.fee_plan, FullFillOrderFeeAccountingPlan) and (
+            fill.quantity != stream.order.intent.quantity
+            or any(record.fill is not None for record in stream.records)
+        ):
+            return self._failed(
+                case, state, EngineFailureCode.FEE_ASSESSMENT_FAILURE,
+                ("single_full_fill_order_fee_required",),
+            )
         cause = stream.records[-1].event.event_id
         fill_event = OrderEvent(
             event_id=plan.fill_event_id,
@@ -2729,6 +3796,10 @@ class DeterministicBarEngine:
             state,
             dispatch,
             expected_snapshot=False,
+            expected_source_event_id=accounting.source_event_id,
+            expected_source_evidence_hash=canonical_sha256(fill),
+            dispatch_at=accounting.fill_recorded_at,
+            source_fill_record=stream.records[-1],
         )
         if failure is not None:
             return failure
@@ -2743,9 +3814,42 @@ class DeterministicBarEngine:
         )
 
         fee = accounting.fee_plan
+        if isinstance(fee, FullFillOrderFeeAccountingPlan) and fee.fill_fee_plan is not None:
+            failure = self._assess_and_book_fee(
+                case, state, replace(accounting, fee_plan=fee.fill_fee_plan), stream, fill
+            )
+            if failure is not None:
+                return failure
+        return self._assess_and_book_fee(case, state, accounting, stream, fill)
+
+    def _assess_and_book_fee(
+        self,
+        case: ExecutionCase,
+        state: _EngineState,
+        accounting: FillAccountingDispatchPlan,
+        stream: OrderEventStream,
+        fill: Fill,
+    ) -> EngineExecutionOutcome | None:
+        fee = accounting.fee_plan
+        rules = fee.final_fee_rule_set
+        if isinstance(rules, ProfileFeeRuleBinding):
+            resolved = self._resolve_profile_fee_rules(case, state, accounting.source_event_id,
+                ProfileFeeRuleQuery(rules, stream.order, fee.assessment_at,
+                    FeeBasisType.ORDER if isinstance(fee, FullFillOrderFeeAccountingPlan) else FeeBasisType.FILL, fill))
+            if isinstance(resolved, EngineExecutionOutcome):
+                return resolved
+            if type(resolved) is not FinalFeeRuleSet:
+                raise ValueError("final resolver returned reservation rules")
+            rules = resolved
+            fee = replace(fee, final_fee_rule_set=rules)
+            accounting = replace(accounting, fee_plan=fee)
         fee_outcome = FeeAssessmentEngine().assess(
-            basis=FeeAssessmentBasisEvidence.for_fill(fill),
-            rule_set=fee.final_fee_rule_set,
+            basis=(
+                FeeAssessmentBasisEvidence.for_order(stream)
+                if isinstance(fee, FullFillOrderFeeAccountingPlan)
+                else FeeAssessmentBasisEvidence.for_fill(fill)
+            ),
+            rule_set=rules,
             fee_assessment_id=fee.fee_assessment_id,
             assessment_time=fee.fee_assessment_time,
         )
@@ -2762,11 +3866,7 @@ class DeterministicBarEngine:
         self._trace_add(
             state,
             EngineStage.FEE_ASSESSMENT,
-            SimulationInstant(
-                fee.fee_assessment_time,
-                fee.fee_recorded_at.phase,
-                SourceSequence(max(0, fee.fee_recorded_at.source_sequence.value - 1)),
-            ),
+            fee.assessment_at,
             fee.fee_assessment_id.value,
             fee_outcome.result.result_hash,
         )
@@ -2784,6 +3884,8 @@ class DeterministicBarEngine:
                     state,
                     fee_dispatch,
                     expected_snapshot=False,
+                    expected_source_event_id=accounting.source_event_id if isinstance(case, ResolvedExecutionCaseV2) else None,
+                    dispatch_at=fee.fee_recorded_at if isinstance(case, ResolvedExecutionCaseV2) else None,
                 )
                 if failure is not None:
                     return failure
@@ -2848,19 +3950,29 @@ class DeterministicBarEngine:
         )
         return state.reservation_book.project(streams, schedules)
 
-    def _refresh_resources(
-        self, case: ResolvedExecutionCase, state: _EngineState
-    ) -> None:
-        state.reservation_state = state.reservation_book.project(
+    @staticmethod
+    def _project_resources(
+        case: ExecutionCase,
+        state: _EngineState,
+        ledger_state: LedgerState,
+        settlement_book: SettlementBook,
+    ) -> tuple[ResourceReservationState, SettlementBookState, AvailabilityState]:
+        reservations = state.reservation_book.project(
             tuple(state.order_streams.values()),
             tuple(state.reservation_schedules.values()),
         )
-        state.settlement_state = state.settlement_book.project()
-        state.availability = AvailabilityProjection().project(
-            state.ledger_state,
-            state.settlement_state,
-            state.reservation_state,
+        settlement = settlement_book.project()
+        availability = AvailabilityProjection().project(
+            ledger_state, settlement, reservations,
             case.financial_state.settlement_rules,
+        )
+        return reservations, settlement, availability
+
+    def _refresh_resources(
+        self, case: ExecutionCase, state: _EngineState
+    ) -> None:
+        state.reservation_state, state.settlement_state, state.availability = (
+            self._project_resources(case, state, state.ledger_state, state.settlement_book)
         )
 
     @staticmethod
@@ -2887,7 +3999,7 @@ class DeterministicBarEngine:
 
     def _failed(
         self,
-        case: ResolvedExecutionCase,
+        case: ExecutionCase,
         state: _EngineState,
         code: EngineFailureCode,
         subjects: tuple[str, ...],
