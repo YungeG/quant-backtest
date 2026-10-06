@@ -34,6 +34,11 @@ from .cn_a_share_development_profile_v2 import (
     build_cn_a_share_development_source_manifest_v2,
 )
 from .cn_a_share_development_runtime_v2 import CnAShareDevelopmentFinancialDispatcherV2
+from .cn_a_share_portfolio_daily_nav_analysis_v1 import (
+    CnASharePortfolioDailyNavMetricProfileV1, CnASharePortfolioDailyNavPointV1,
+    CnASharePortfolioDailyNavAnalysisV1, CnASharePortfolioDailyNavAnalysisRefV1,
+    CnASharePortfolioDailyNavAnalysisRuntimeV1,
+)
 from .cn_a_share_development_provider import (
     CnAShareDailyOrderAuthority,
     CnAShareDevelopmentProviderInputs,
@@ -793,4 +798,9 @@ __all__ = [
     "TerminalStatus",
     "WarmupEligibility",
     "invoke_portfolio_strategies",
+    "CnASharePortfolioDailyNavMetricProfileV1",
+    "CnASharePortfolioDailyNavPointV1",
+    "CnASharePortfolioDailyNavAnalysisV1",
+    "CnASharePortfolioDailyNavAnalysisRefV1",
+    "CnASharePortfolioDailyNavAnalysisRuntimeV1",
 ]

@@ -44,7 +44,7 @@ from .integrity import (
     IntegrityIssueCode,
     ResultGrade,
 )
-from .ports import ArtifactEnvelopeReader
+from .artifact_envelope_reader import ArtifactEnvelopeReader
 from .publication_refs import (
     BacktestCanonicalPublicationRef,
     BacktestCanonicalPublicationRefV2,
@@ -63,6 +63,10 @@ from .verified_publications import (
 )
 
 if TYPE_CHECKING:
+    from .cn_a_share_portfolio_daily_nav_analysis_v1 import (
+        CnASharePortfolioDailyNavAnalysisRefV1, CnASharePortfolioDailyNavAnalysisV1,
+        CnASharePortfolioDailyNavMetricProfileV1,
+    )
     from .evidence import FinalizedAttemptEvidence
     from .execution_hash import AttemptExecutionHash
     from .runner import ReadyToFinalizeAttempt
@@ -1538,6 +1542,16 @@ def _read_durable_proof_manifest(value: object):
     return _read_proof_manifest(value)
 
 
+def _read_cn_nav_profile(value: object) -> CnASharePortfolioDailyNavMetricProfileV1:
+    from .cn_a_share_portfolio_daily_nav_analysis_v1 import _read_nav_profile
+    return _read_nav_profile(value)
+
+
+def _read_cn_nav_analysis(value: object) -> CnASharePortfolioDailyNavAnalysisV1:
+    from .cn_a_share_portfolio_daily_nav_analysis_v1 import _read_nav_analysis
+    return _read_nav_analysis(value)
+
+
 _CATALOG = SchemaCatalog(
     (
         ArtifactSchemaRegistration("canonical_publication_manifest", 1, _read_canonical_manifest),
@@ -1553,6 +1567,8 @@ _CATALOG = SchemaCatalog(
         ArtifactSchemaRegistration("backtest_analysis", 1, _read_analysis),
         ArtifactSchemaRegistration("backtest_analysis", 2, _read_analysis_v2),
         ArtifactSchemaRegistration("backtest_metric_profile", 1, _read_metric_profile),
+        ArtifactSchemaRegistration("cn_a_share_portfolio_daily_nav_metric_profile", 1, _read_cn_nav_profile),
+        ArtifactSchemaRegistration("cn_a_share_portfolio_daily_nav_analysis", 1, _read_cn_nav_analysis),
         ArtifactSchemaRegistration("integrity_report", 1, _read_integrity_report),
         ArtifactSchemaRegistration("integrity_report", 2, _read_integrity_report_v2),
         ArtifactSchemaRegistration(
@@ -2767,6 +2783,32 @@ class BacktestEvidenceRepository:
                 "evaluation v2 terminal link mismatch",
             )
         return VerifiedTerminalPublication(TerminalStatus(outcome.outcome), ref)
+
+    def load_cn_a_share_portfolio_daily_nav(
+        self, ref: CnASharePortfolioDailyNavAnalysisRefV1
+    ) -> CnASharePortfolioDailyNavAnalysisV1:
+        """Cold native close-series verification; no grade upgrade or Engine run."""
+        from .cn_a_share_portfolio_daily_nav_analysis_v1 import (
+            CnASharePortfolioDailyNavAnalysisRefV1, CnASharePortfolioDailyNavAnalysisV1,
+            _build_nav_analysis, _read_nav_profile,
+        )
+        if type(ref) is not CnASharePortfolioDailyNavAnalysisRefV1:
+            raise BacktestEvidenceError(BacktestEvidenceFailureCode.PORT_REF_TYPE_MISMATCH,
+                                        "exact CN portfolio daily NAV analysis ref required")
+        try:
+            value = self._read_expected(ref.artifact_ref, "cn_a_share_portfolio_daily_nav_analysis", 1, root=True).artifact
+            if type(value) is not CnASharePortfolioDailyNavAnalysisV1:
+                raise TypeError("NAV catalog returned wrong analysis value")
+            profile = self._read_expected(value.metric_profile_ref, "cn_a_share_portfolio_daily_nav_metric_profile", 1, root=False)
+            _read_nav_profile(profile.artifact)
+            rebuilt = _build_nav_analysis(self._reader, value.source_publication_ref, value.execution_input_ref)
+            if canonical_bytes(value) != canonical_bytes(rebuilt):
+                raise ValueError("NAV stored analysis differs from its independently verified native sources")
+            return rebuilt
+        except BacktestEvidenceError:
+            raise
+        except (KeyError, TypeError, ValueError, StopIteration) as error:
+            raise BacktestEvidenceError(BacktestEvidenceFailureCode.PORT_MANIFEST_INVALID, str(error)) from error
 
     def load_analysis(self, ref: AnalysisArtifactRef) -> VerifiedBacktestAnalysis:
         if type(ref) is not AnalysisArtifactRef:
