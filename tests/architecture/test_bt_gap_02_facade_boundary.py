@@ -62,7 +62,8 @@ def test_facade_reuses_existing_authorities_without_a_second_graph() -> None:
         "Protocol",
         "Builder",
         "Factory",
-        "Dispatcher",
+        "DefaultCashFinancialDispatcher(",
+        "CnAShareDevelopmentFinancialDispatcherV2(",
         "CnAShare",
         "BinanceUsdm",
         "tests.",
@@ -75,7 +76,12 @@ def test_facade_reuses_existing_authorities_without_a_second_graph() -> None:
     ):
         assert forbidden not in source
     assert source.count("ProfileResolver().resolve(") == 1
-    assert source.count("AuditableBacktestRunner.for_v2(") == 1
+    # V7 dispatcher and V8 portfolio add profile-bound runners beside generic V2.
+    assert source.count("AuditableBacktestRunner.for_v2(") == 3
+    assert source.count("self._portfolio_case_engine(resolved, execution_case)") == 1
+    assert source.count("build_portfolio_engine(case=case,") == 1
+    assert source.count("self._live_case_engine(resolved, execution_case)") == 1
+    assert source.count("build_financial_dispatcher()") == 1
     assert source.count("AttemptEvidenceWriter(") == 1
     assert source.count("CanonicalResultPublisher(") == 1
 

@@ -13,7 +13,10 @@ from crypto_quant_backtest import (
     TimelineEvent,
     TimelineSegment,
 )
-from crypto_quant_domain import StrategySleeveId, UtcInstant
+from crypto_quant_domain import (
+    CurrencyId, InstrumentCatalog, InstrumentDefinition, InstrumentId, InstrumentType,
+    StrategySleeveId, UtcInstant, VenueId,
+)
 from crypto_quant_market_data import MarketBundleCapability
 from crypto_quant_trading import DecisionBatchExpectation
 from tests.runtime.target_stream._fixtures import (
@@ -81,6 +84,88 @@ def test_stream_digest_and_active_batch_are_input_order_independent() -> None:
     assert first.injection.target_stream_digest == direct.target_stream_digest
     assert len(first.injection.batch.decisions) == 2
 
+
+def test_multi_instrument_target_snapshot_uses_existing_public_value_path() -> None:
+    """Input-only probe: does not grant CN multi-stock fills or fees."""
+    candidate = candidate_payload(TREND, instrument_id=BTC, value="0.4")
+    candidate["targets"] = [
+        {"instrument_id": {"venue": BTC.venue.value, "stable_key": BTC.stable_key}, "value": "0.4"},
+        {"instrument_id": {"venue": ETH.venue.value, "stable_key": ETH.stable_key}, "value": "0.6"},
+    ]
+    multi = event(
+        "target-trend", TREND, instrument_id=BTC, value="0.4", source_sequence=1,
+        payload_override={"schema_version": 1, "candidate": candidate},
+    )
+    carry = source_events()[1]
+    result = PrecomputedTargetStreamAdapter().inject(
+        stream=stream((multi, carry)),
+        timeline_events=(TimelineEvent(TimelineSegment.ACTIVE_TRADING, multi),
+                         TimelineEvent(TimelineSegment.ACTIVE_TRADING, carry)),
+        schedule=schedule(), prior_state=empty_state(),
+    )
+    assert result.injection is not None and result.validation_failures == ()
+    [decision] = [d for d in result.injection.batch.decisions if d.strategy_id == TREND.strategy_id]
+    assert {t.instrument_id: t.units for t in decision.target_snapshot.targets} == {
+        BTC: 400_000_000_000, ETH: 600_000_000_000,
+    }
+
+def test_empty_target_snapshot_is_cash_intent_not_a_fill() -> None:
+    """A target value cannot prove liquidation of an existing position."""
+    candidate = candidate_payload(TREND, instrument_id=BTC, value="0")
+    candidate["targets"] = []
+    empty = event(
+        "target-trend", TREND, instrument_id=BTC, value="0", source_sequence=1,
+        payload_override={"schema_version": 1, "candidate": candidate},
+    )
+    carry = source_events()[1]
+    result = PrecomputedTargetStreamAdapter().inject(
+        stream=stream((empty, carry)),
+        timeline_events=(TimelineEvent(TimelineSegment.ACTIVE_TRADING, empty),
+                         TimelineEvent(TimelineSegment.ACTIVE_TRADING, carry)),
+        schedule=schedule(), prior_state=empty_state(),
+    )
+    assert result.injection is not None and result.validation_failures == ()
+    [decision] = [d for d in result.injection.batch.decisions if d.strategy_id == TREND.strategy_id]
+    assert decision.target_snapshot.targets == ()
+
+def test_shsz_two_equity_targets_and_cash_target_are_input_only() -> None:
+    """No CN fee, account, fill or next-open authority is supplied by this test."""
+    sh = InstrumentId(VenueId("xshg"), "600272")
+    sz = InstrumentId(VenueId("xshe"), "000705")
+    cny = CurrencyId("CNY")
+    cn_catalog = InstrumentCatalog(
+        currencies=(cny,),
+        instruments=tuple(InstrumentDefinition(iid, InstrumentType.EQUITY, None, cny, cny) for iid in (sh, sz)),
+        symbol_timelines=(),
+    )
+    cn_schedule = replace(schedule(), entries=tuple(
+        replace(entry, validation_context=replace(
+            entry.validation_context, instrument_catalog=cn_catalog, universe=(sh, sz),
+        )) for entry in schedule().entries
+    ))
+    equity = candidate_payload(TREND, instrument_id=sh, value="0.5")
+    equity["targets"] = [
+        {"instrument_id": {"venue": iid.venue.value, "stable_key": iid.stable_key}, "value": "0.5"}
+        for iid in (sh, sz)
+    ]
+    cash = candidate_payload(CARRY, instrument_id=sh, value="0")
+    cash["targets"] = []
+    buys = event("target-trend", TREND, instrument_id=sh, value="0.5", source_sequence=1,
+                 payload_override={"schema_version": 1, "candidate": equity})
+    flat = event("target-carry", CARRY, instrument_id=sh, value="0", source_sequence=2,
+                 payload_override={"schema_version": 1, "candidate": cash})
+    result = PrecomputedTargetStreamAdapter().inject(
+        stream=stream((buys, flat)),
+        timeline_events=(TimelineEvent(TimelineSegment.ACTIVE_TRADING, buys),
+                         TimelineEvent(TimelineSegment.ACTIVE_TRADING, flat)),
+        schedule=cn_schedule, prior_state=empty_state(),
+    )
+    assert result.injection is not None and result.validation_failures == ()
+    decisions = {item.strategy_id: item for item in result.injection.batch.decisions}
+    assert {item.instrument_id: item.units for item in decisions[TREND.strategy_id].target_snapshot.targets} == {
+        sh: 500_000_000_000, sz: 500_000_000_000,
+    }
+    assert decisions[CARRY.strategy_id].target_snapshot.targets == ()
 
 def test_malformed_envelope_is_input_decode_failure_not_validation_failure() -> None:
     malformed = event(

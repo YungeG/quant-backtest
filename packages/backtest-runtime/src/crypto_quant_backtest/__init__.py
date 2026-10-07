@@ -39,6 +39,14 @@ from .cn_a_share_portfolio_daily_nav_analysis_v1 import (
     CnASharePortfolioDailyNavAnalysisV1, CnASharePortfolioDailyNavAnalysisRefV1,
     CnASharePortfolioDailyNavAnalysisRuntimeV1,
 )
+from .cn_a_share_portfolio_standard_definition_v1 import (
+    CnASharePortfolioMarkBatchDevelopmentV1,
+    CnASharePortfolioOpeningTermsDevelopmentV1,
+    CnASharePortfolioStandardDevelopmentInputsV1,
+)
+from .cn_a_share_portfolio_standard_prepare_v1 import (
+    prepare_cn_a_share_portfolio_standard_development_backtest,
+)
 from .cn_a_share_development_provider import (
     CnAShareDailyOrderAuthority,
     CnAShareDevelopmentProviderInputs,
@@ -803,4 +811,8 @@ __all__ = [
     "CnASharePortfolioDailyNavAnalysisV1",
     "CnASharePortfolioDailyNavAnalysisRefV1",
     "CnASharePortfolioDailyNavAnalysisRuntimeV1",
+    "CnASharePortfolioMarkBatchDevelopmentV1",
+    "CnASharePortfolioOpeningTermsDevelopmentV1",
+    "CnASharePortfolioStandardDevelopmentInputsV1",
+    "prepare_cn_a_share_portfolio_standard_development_backtest",
 ]

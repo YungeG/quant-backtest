@@ -36,9 +36,13 @@ from .engine import (
     EngineExecutionResult,
     EngineFailure,
     EngineFailureCode,
-    ExecutionCase,
+    ExecutionCase as _LegacyExecutionCase,
     ResolvedExecutionCase,
     ResolvedExecutionCaseV2,
+)
+from .profile_portfolio_execution import (
+    _RuntimeExecutionCase as ExecutionCase, _ResolvedProfilePortfolioCaseV1,
+    _ProfilePortfolioEngine,
 )
 from .multi_resolution_preparation import MultiResolutionMarketDataPreparation
 from .publication_refs import BacktestCanonicalPublicationRefV2
@@ -1121,7 +1125,7 @@ class _Engine(Protocol):
     @abstractmethod
     def run(
         self,
-        case: ExecutionCase | InputValidationFailure,
+        case: _LegacyExecutionCase | InputValidationFailure,
         *,
         cancellation: EngineCancellationRequest | None = None,
     ) -> EngineExecutionOutcome:
@@ -1177,7 +1181,7 @@ class AuditableBacktestRunner:
     def __init__(
         self,
         *,
-        engine: _Engine | None = None,
+        engine: _Engine | _ProfilePortfolioEngine | None = None,
         publication_root: Path | None = None,
         canonical_publication_version: int = 1,
     ) -> None:
@@ -1185,12 +1189,12 @@ class AuditableBacktestRunner:
             raise TypeError("publication_root must be Path or None")
         if canonical_publication_version not in {1, 2}:
             raise ValueError("canonical_publication_version must be 1 or 2")
-        self._engine: _Engine = engine or DeterministicBarEngine()
+        self._engine: _Engine | _ProfilePortfolioEngine = engine or DeterministicBarEngine()
         self._publication_root = publication_root
         self._canonical_publication_version = canonical_publication_version
 
     @classmethod
-    def for_v2(cls, *, publication_root: Path, engine: _Engine | None = None) -> AuditableBacktestRunner:
+    def for_v2(cls, *, publication_root: Path, engine: _Engine | _ProfilePortfolioEngine | None = None) -> AuditableBacktestRunner:
         return cls(
             publication_root=publication_root,
             engine=engine,
@@ -1226,7 +1230,7 @@ class AuditableBacktestRunner:
     ) -> AttemptExecutionRecord:
         if not isinstance(resolved_request, ResolvedBacktestRequest):
             raise TypeError("resolved_request must be ResolvedBacktestRequest")
-        if not isinstance(execution_case, ResolvedExecutionCase) and type(execution_case) is not ResolvedExecutionCaseV2:
+        if not isinstance(execution_case, ResolvedExecutionCase) and type(execution_case) not in (ResolvedExecutionCaseV2, _ResolvedProfilePortfolioCaseV1):
             raise TypeError("execution_case must be a supported resolved execution case")
         if not isinstance(attempt, AttemptIdentity):
             raise TypeError("attempt must be AttemptIdentity")
@@ -1382,7 +1386,14 @@ class AuditableBacktestRunner:
         cancellation: EngineCancellationRequest | None,
     ) -> AttemptExecutionRecord:
         try:
-            outcome = self._engine.run(execution_case, cancellation=cancellation)
+            if type(execution_case) is _ResolvedProfilePortfolioCaseV1:
+                if not isinstance(self._engine, _ProfilePortfolioEngine):
+                    raise TypeError("registered portfolio engine is required")
+                outcome = self._engine.run(execution_case, cancellation=cancellation)
+            elif isinstance(execution_case, (ResolvedExecutionCase, ResolvedExecutionCaseV2)):
+                outcome = self._engine.run(execution_case, cancellation=cancellation)
+            else:
+                raise TypeError("unsupported resolved execution case")
         except Exception as error:
             exception_type = f"{type(error).__module__}.{type(error).__qualname__}"
             source_hash = canonical_sha256(
@@ -1417,6 +1428,15 @@ class AuditableBacktestRunner:
                 execution_case.case_hash,
                 issue,
             )
+        if type(execution_case) is _ResolvedProfilePortfolioCaseV1 and outcome.result is not None:
+            try:
+                if not isinstance(self._engine, _ProfilePortfolioEngine):
+                    raise TypeError("portfolio engine has no native evidence verifier")
+                self._engine.verify_result(execution_case, outcome.result)
+            except Exception:
+                return self._failed_record(attempt, resolved_request, input_origin,
+                    execution_case.case_hash, self._runner_issue("portfolio_economic_evidence_invalid",
+                        (execution_case.case_hash,)))
         return self._map_outcome(
             resolved_request,
             execution_case,

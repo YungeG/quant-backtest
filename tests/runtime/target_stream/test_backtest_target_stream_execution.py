@@ -21,11 +21,18 @@ from crypto_quant_domain import (
     ArtifactReadResult,
     ArtifactRef,
     ArtifactRetentionUnavailableError,
+    CurrencyId,
+    InstrumentCatalog,
+    InstrumentDefinition,
+    InstrumentId,
+    InstrumentType,
+    SourceSequence,
     UtcInstant,
+    VenueId,
     canonical_bytes,
     canonical_sha256,
 )
-from crypto_quant_market_data import InMemoryMarketBundleReader
+from crypto_quant_market_data import InMemoryMarketBundleReader, MarketBundleIntegrityError
 
 from tests.runtime.providers.test_cash_development_provider import (
     _inputs,
@@ -34,6 +41,7 @@ from tests.runtime.providers.test_cash_development_provider import (
     catalog,
     target_event,
 )
+from tests.runtime.target_stream._fixtures import TREND, candidate_payload, event
 
 
 class _Cas:
@@ -104,6 +112,38 @@ def _market_reader() -> InMemoryMarketBundleReader:
     )
 
 
+def test_shsz_two_stock_open_bars_have_distinct_frozen_bundle_identity() -> None:
+    """CNY open facts are not evidence an order could fill at that open."""
+    cny = CurrencyId("CNY")
+    sh, sz = InstrumentId(VenueId("xshg"), "600272"), InstrumentId(VenueId("xshe"), "000705")
+    instruments = InstrumentCatalog((cny,), tuple(
+        InstrumentDefinition(iid, InstrumentType.EQUITY, None, cny, cny) for iid in (sh, sz)
+    ), ())
+    source = bar_event()
+    price = {"schema_version": 1, "bar_kind": "real",
+             "open_price": {"units": 1000, "scale": 2, "quote_currency": "CNY"}}
+    events = tuple(replace(source, event_id=f"synthetic-{iid.venue.value}-open",
+                           instrument_id=iid, source_sequence=SourceSequence(seq),
+                           source_key=f"synthetic.{iid.venue.value}.open",
+                           source_hash="sha256:" + str(seq) * 64,
+                           payload=price) for seq, iid in ((2, sh), (3, sz)))
+
+    def bundle(bars):
+        return InMemoryMarketBundleReader.build(
+            bundle_key="synthetic-cn-two-equity-open-input-only", schema_version=1,
+            coverage_start=UtcInstant(0), coverage_end_exclusive=UtcInstant(400),
+            instrument_catalog_hash=canonical_sha256(instruments),
+            capabilities=(backtest.BAR_OPEN_CAPABILITY,), streams={"bars.open": bars},
+        )
+
+    forward, reverse = bundle(events), bundle(tuple(reversed(events)))
+    assert forward.bundle_ref == reverse.bundle_ref
+    assert {bar.instrument_id for bar in forward.streams["bars.open"]} == {sh, sz}
+    assert forward.manifest.instrument_catalog_hash == canonical_sha256(instruments)
+    with pytest.raises(MarketBundleIntegrityError, match="ordering key"):
+        bundle((events[0], replace(events[1], source_sequence=SourceSequence(2))))
+
+
 def _published(store: _Cas, *, context: ArtifactRef | None = None):
     return backtest.BacktestTargetStreamRepository(
         reader=store,
@@ -134,6 +174,40 @@ def test_backtest_target_stream_repository_golden_and_context_identity() -> None
         "target_stream",
         "digest",
     )
+
+
+def test_two_shsz_a_b_target_refs_are_distinct_replayable_and_tamper_checked() -> None:
+    """Publish frozen targets, not CN orders, fees, fills or portfolio PnL."""
+    sh = InstrumentId(VenueId("xshg"), "600272")
+    sz = InstrumentId(VenueId("xshe"), "000705")
+    long = candidate_payload(TREND, instrument_id=sh, value="0.5")
+    long["targets"] = [
+        {"instrument_id": {"venue": iid.venue.value, "stable_key": iid.stable_key}, "value": "0.5"}
+        for iid in (sh, sz)
+    ]
+    cash = candidate_payload(TREND, instrument_id=sh, value="0")
+    cash["targets"] = []
+    arm_a = backtest.PrecomputedTargetStream("targets", (event(
+        "arm-a", TREND, instrument_id=sh, value="0.5", source_sequence=1,
+        payload_override={"schema_version": 1, "candidate": long},
+    ),))
+    arm_b = backtest.PrecomputedTargetStream("targets", (event(
+        "arm-b", TREND, instrument_id=sh, value="0", source_sequence=1,
+        payload_override={"schema_version": 1, "candidate": cash},
+    ),))
+    store = _Cas()
+    repo = backtest.BacktestTargetStreamRepository(reader=store, publisher=store)
+    a_ref = repo.publish(_context(), arm_a)
+    b_ref = repo.publish(_context(), arm_b)
+    assert a_ref != b_ref and repo.publish(_context(), arm_a) == a_ref
+    assert repo.load(a_ref).target_stream == arm_a
+    assert repo.load(b_ref).target_stream == arm_b
+    assert repo.load(a_ref).digest != repo.load(b_ref).digest
+
+    store.values[a_ref.artifact_ref] = store.values[b_ref.artifact_ref]
+    with pytest.raises(backtest.BacktestTargetStreamError) as raised:
+        repo.load(a_ref)
+    assert raised.value.code is backtest.BacktestTargetStreamFailureCode.TAMPERED
 
 
 @pytest.mark.parametrize(
@@ -447,7 +521,7 @@ def test_bundle_v6_round_trip_embeds_value_and_keeps_v1_v5_catalog_entries(
         for registration in _EXECUTION_INPUT_CATALOG.registrations
         if registration.artifact_type == "backtest_execution_input_bundle"
     }
-    assert tuple(registrations) == (1, 2, 3, 4, 5, 6, 7)
+    assert tuple(registrations) == (1, 2, 3, 4, 5, 6, 7, 8)
     assert tuple(registrations[index] for index in range(1, 6)) == (
         "_read_execution_input_payload",
         "_read_execution_input_payload_v2",

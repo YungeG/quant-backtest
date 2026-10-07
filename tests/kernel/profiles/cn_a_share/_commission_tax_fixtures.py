@@ -32,6 +32,7 @@ from crypto_quant_domain import (
     TimelinePhase,
     UtcInstant,
     VenueId,
+    TimeInForce,
     canonical_sha256,
 )
 from crypto_quant_trading import (
@@ -52,6 +53,7 @@ from crypto_quant_trading import (
     MarketRuleApproval,
     MarketRuleEvaluator,
     MarketSessionState,
+    OrderCapabilityValidator,
     NotionalPriceBasis,
     OrderEventRecord,
     OrderEventStream,
@@ -82,6 +84,9 @@ from crypto_quant_trading.profiles.cn_a_share import (
     CnAShareMarketFeeRuleBook,
     CnAShareStampDutyBand,
     CnAShareStampDutyRuleBook,
+)
+from crypto_quant_trading.profiles.cn_a_share.portfolio_order_capability_development_v1 import (
+    cn_a_share_portfolio_cash_capabilities_development_v1,
 )
 from tests.kernel.translation._fixtures import approval, mapping, order
 
@@ -230,9 +235,11 @@ def fee_query(
     *,
     venue: str = "xshg",
     mechanism: CnAShareFeeTradeMechanism = CnAShareFeeTradeMechanism.AUCTION,
+    instrument_definition: InstrumentDefinition | None = None,
 ) -> CnAShareCashFeeRuleQuery:
     return CnAShareCashFeeRuleQuery(
-        instrument(venue), side, effective_at, mechanism
+        instrument_definition if instrument_definition is not None else instrument(venue),
+        side, effective_at, mechanism
     )
 
 
@@ -241,13 +248,15 @@ def _sim_instant(value: UtcInstant, sequence: int) -> SimulationInstant:
 
 
 def source_order(
-    *, quantity_units: int, side: OrderSide, effective_at: UtcInstant
+    *, quantity_units: int, side: OrderSide, effective_at: UtcInstant,
+    venue: str = "xshg", account_id: str = ACCOUNT
 ) -> Order:
     base = order()
-    value = instrument()
+    value = instrument(venue)
     return replace(
         base,
-        account_id=ACCOUNT,
+        account_id=account_id,
+        order_id=(base.order_id if venue == "xshg" else domain_id(DomainIdKind.ORDER, "b")),
         intent=replace(
             base.intent,
             instrument_id=value.instrument_id,
@@ -261,9 +270,14 @@ def source_order(
 
 
 def executable_spec(subject: Order, effective_at: UtcInstant) -> ExecutableOrderSpec:
+    capability = (OrderCapabilityValidator().validate(
+        subject.intent, cn_a_share_portfolio_cash_capabilities_development_v1()).approval
+        if subject.intent.time_in_force is TimeInForce.GTC else approval(subject))
+    if capability is None:
+        raise ValueError("synthetic CN GTC capability rejected Order")
     outcome = OrderTranslator().translate(
         subject,
-        approval(subject),
+        capability,
         mapping(),
         UtcInstant(effective_at.epoch_nanoseconds - 90),
     )
@@ -272,12 +286,20 @@ def executable_spec(subject: Order, effective_at: UtcInstant) -> ExecutableOrder
 
 
 def market_rule_approval(
-    *, quantity_units: int, side: OrderSide, effective_at: UtcInstant
+    *, quantity_units: int, side: OrderSide, effective_at: UtcInstant, venue: str = "xshg",
+    account_id: str = ACCOUNT, subject: Order | None = None,
+    reference_price_units: int = 1_000, observed_at_open: bool = False,
+    session_day: int = 28, instrument_definition: InstrumentDefinition | None = None,
+    session_date: str | None = None,
 ) -> MarketRuleApproval:
-    value = instrument()
-    subject = source_order(
-        quantity_units=quantity_units, side=side, effective_at=effective_at
+    value = instrument_definition if instrument_definition is not None else instrument(venue)
+    subject = subject if subject is not None else source_order(
+        quantity_units=quantity_units, side=side, effective_at=effective_at, venue=venue,
+        account_id=account_id
     )
+    if (subject.account_id != account_id or subject.intent.instrument_id != value.instrument_id
+            or subject.intent.side is not side or subject.intent.quantity.units != quantity_units):
+        raise ValueError("fixture Market Rule source Order scope mismatch")
     spec = executable_spec(subject, effective_at)
     order_rule_ref = ProfileComponentRef(
         ProfilePortType.ORDER_RULE_MODEL,
@@ -301,7 +323,7 @@ def market_rule_approval(
     snapshot = OrderRuleSnapshot.create(
         component_ref=order_rule_ref,
         instrument_id=value.instrument_id,
-        session_id=SessionId("cn-a-share.fixture", "2023-08-28.auction"),
+        session_id=SessionId("cn-a-share.fixture", (session_date or f"2023-08-{session_day:02d}") + ".auction"),
         session_state=MarketSessionState.OPEN,
         quantity_lattice=lattice,
         price_scale=FEE_SCALE,
@@ -325,12 +347,12 @@ def market_rule_approval(
         instrument_id=value.instrument_id,
         intervals=(interval,),
     )
-    price = Price(1_000, FEE_SCALE, str(value.instrument_id), str(CNY))
+    price = Price(reference_price_units, FEE_SCALE, str(value.instrument_id), str(CNY))
     evidence = OrderRuleNotionalEvidence(
         NotionalPriceBasis.SUPPLIED_REFERENCE,
         price,
         canonical_sha256({"price": price, "available_at": effective_at}),
-        UtcInstant(effective_at.epoch_nanoseconds - 20),
+        effective_at if observed_at_open else UtcInstant(effective_at.epoch_nanoseconds - 20),
     )
     outcome = MarketRuleEvaluator().evaluate(
         OrderRuleEvaluationInput(spec, effective_at, evidence), timeline
@@ -394,11 +416,14 @@ def reservation_buffer(
 
 
 def reservation_rule_set(
-    *, side: OrderSide, effective_at: UtcInstant, maximum_fill_count: int = 2
+    *, side: OrderSide, effective_at: UtcInstant, maximum_fill_count: int = 2, venue: str = "xshg",
+    instrument_definition: InstrumentDefinition | None = None,
 ) -> FeeReservationRuleSet:
     market, tax = policies()
-    market_outcome = market.assess_fees(fee_query(side, effective_at))
-    tax_outcome = tax.assess_taxes(fee_query(side, effective_at))
+    market_outcome = market.assess_fees(fee_query(
+        side, effective_at, venue=venue, instrument_definition=instrument_definition))
+    tax_outcome = tax.assess_taxes(fee_query(
+        side, effective_at, venue=venue, instrument_definition=instrument_definition))
     assert market_outcome.result is not None and tax_outcome.result is not None
     buffer = CnAShareFeeReservationBuffer.create(
         market_resolution=market_outcome.result,
@@ -448,8 +473,13 @@ def reservation_rule_set(
 
 def final_fill_rule_set(fill: Fill) -> FinalFeeRuleSet:
     market, tax = policies()
-    market_outcome = market.assess_fees(fee_query(fill.side, fill.execution_time))
-    tax_outcome = tax.assess_taxes(fee_query(fill.side, fill.execution_time))
+    definition = InstrumentDefinition(fill.instrument_id, InstrumentType.EQUITY, None, CNY, CNY)
+    market_outcome = market.assess_fees(fee_query(
+        fill.side, fill.execution_time, venue=fill.venue_id.value,
+        instrument_definition=definition))
+    tax_outcome = tax.assess_taxes(fee_query(
+        fill.side, fill.execution_time, venue=fill.venue_id.value,
+        instrument_definition=definition))
     assert market_outcome.result is not None and tax_outcome.result is not None
     account_rule = FinalFeeChargeRule(
         FinalFeeRuleSource.ACCOUNT_SCHEDULE,
@@ -477,11 +507,14 @@ def final_fill_rule_set(fill: Fill) -> FinalFeeRuleSet:
 
 
 def final_order_rule_set(
-    *, side: OrderSide, effective_at: UtcInstant
+    *, side: OrderSide, effective_at: UtcInstant, venue: str = "xshg",
+    instrument_definition: InstrumentDefinition | None = None,
 ) -> FinalFeeRuleSet:
     market, tax = policies()
-    market_outcome = market.assess_fees(fee_query(side, effective_at))
-    tax_outcome = tax.assess_taxes(fee_query(side, effective_at))
+    market_outcome = market.assess_fees(fee_query(
+        side, effective_at, venue=venue, instrument_definition=instrument_definition))
+    tax_outcome = tax.assess_taxes(fee_query(
+        side, effective_at, venue=venue, instrument_definition=instrument_definition))
     assert market_outcome.result is not None and tax_outcome.result is not None
     account_rule_id = _account_rule_id("final_order", FeeBasisType.ORDER.value)
     account_rule = FinalFeeChargeRule(

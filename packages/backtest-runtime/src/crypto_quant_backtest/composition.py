@@ -49,7 +49,12 @@ from .target_stream import PrecomputedTargetStream
 from .timeline import DeterministicTimeline, DeterministicTimelineV2
 
 
-_CaseT = TypeVar("_CaseT", bound=ExecutionCase, covariant=True)
+from .profile_portfolio_execution import (
+    _ProfilePortfolioExecutionPlanV1, _ResolvedProfilePortfolioCaseV1,
+    _RuntimeExecutionCase, _profile_portfolio_semantic_spec_from_case,
+)
+
+_CaseT = TypeVar("_CaseT", bound=_RuntimeExecutionCase, covariant=True)
 
 
 class _ExecutionCaseBuilder(Protocol[_CaseT]):
@@ -870,6 +875,47 @@ def _compose_execution_case_v3(
     )
 
 
+def _compose_profile_portfolio_execution_case(
+    *, resolved_request: ResolvedBacktestRequest, market_reader: MarketBundleReader,
+    semantic_spec: ExecutionCaseSemanticSpec, target_stream: PrecomputedTargetStream,
+    timeline_stream_keys: tuple[str, ...], timeline_batch_size: int,
+    execution_case_plan: _ProfilePortfolioExecutionPlanV1,
+) -> _ResolvedProfilePortfolioCaseV1:
+    request = resolved_request.request
+    if (market_reader.bundle_ref != request.market_bundle_ref
+            or semantic_spec.semantic_spec_hash != request.execution_case_semantic_hash
+            or target_stream.target_stream_digest != request.target_stream_digest
+            or semantic_spec.target_stream_digest != request.target_stream_digest):
+        raise ValueError("portfolio request/source semantic binding mismatch")
+    timeline = DeterministicTimelineV2.open(reader=market_reader,
+        stream_keys=timeline_stream_keys, target_stream=target_stream,
+        window=request.timeline_window)
+    if type(timeline) is not DeterministicTimelineV2:
+        raise ValueError("portfolio timeline could not be constructed")
+    case = _ResolvedProfilePortfolioCaseV1(semantic_spec.case_key,
+        semantic_spec.case_version, timeline, target_stream, timeline_batch_size,
+        execution_case_plan, semantic_spec.semantic_spec_hash)
+    recomputed = _profile_portfolio_semantic_spec_from_case(case,
+        spec_key=semantic_spec.spec_key, spec_version=semantic_spec.spec_version,
+        identity_namespace=semantic_spec.identity_namespace,
+        identity_plan=semantic_spec.identity_plan)
+    if recomputed != semantic_spec:
+        raise ValueError("portfolio definition does not match the semantic spec")
+    identities = ExecutionCaseIdentityFactory(semantic_run_id=resolved_request.semantic_run_id,
+        namespace=semantic_spec.identity_namespace, identity_plan=semantic_spec.identity_plan)
+    # Reserve coordinates, not predicted economic quantities/fills. The profile
+    # verifies its finite slot plan before execution and records used slots.
+    for rule in semantic_spec.identity_plan:
+        if rule.domain_kind is None:
+            identities.event_id(rule.binding_key)
+        else:
+            identities.domain_id(rule.binding_key)
+    sealed = replace(case, semantic_spec=semantic_spec, identity_manifest=identities.manifest())
+    if not sealed.verify_identity_manifest(resolved_request.semantic_run_id):
+        raise ValueError("portfolio identity plan does not exact-cover the manifest")
+    return sealed
+
+
 class ExecutionCaseComposer:
     @staticmethod
     def timeline_semantic_hash(timeline: DeterministicTimeline) -> str:
@@ -899,13 +945,17 @@ class ExecutionCaseComposer:
     @classmethod
     def semantic_spec_from_case(
         cls,
-        case: ResolvedExecutionCase | ResolvedExecutionCaseV2,
+        case: _RuntimeExecutionCase,
         *,
         spec_key: str,
         spec_version: int,
         identity_namespace: IdentityNamespace,
         identity_plan: tuple[ExecutionCaseIdentityRule, ...],
     ) -> ExecutionCaseSemanticSpec:
+        if type(case) is _ResolvedProfilePortfolioCaseV1:
+            return _profile_portfolio_semantic_spec_from_case(
+                case, spec_key=spec_key, spec_version=spec_version,
+                identity_namespace=identity_namespace, identity_plan=identity_plan)
         if not isinstance(case, (ResolvedExecutionCase, ResolvedExecutionCaseV2)):
             raise TypeError("case must be a supported resolved execution case")
         for cycle in case.decision_cycles if isinstance(case, ResolvedExecutionCase) else ():
@@ -959,7 +1009,7 @@ class ExecutionCaseComposer:
             identity_plan=spec.identity_plan,
         )
         case = builder.build(identities, spec.semantic_spec_hash)
-        if not isinstance(case, ResolvedExecutionCase) and type(case) is not ResolvedExecutionCaseV2:
+        if not isinstance(case, ResolvedExecutionCase) and type(case) not in (ResolvedExecutionCaseV2, _ResolvedProfilePortfolioCaseV1):
             raise TypeError("builder must return a supported resolved execution case")
         if case.identity_manifest is not None:
             raise ValueError("builder must not supply an identity manifest")
