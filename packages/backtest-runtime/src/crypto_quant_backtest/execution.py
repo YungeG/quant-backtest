@@ -533,8 +533,8 @@ def _validate_execution_component(component_ref: SimulationComponentRef) -> None
 
 
 def _no_fill_action(
-    request: NextBarOpenRequest,
-    applicability: NextBarOpenApplicability,
+    request: NextBarOpenRequest | NextBarCloseRequest,
+    applicability: NextBarOpenApplicability | NextBarCloseApplicability,
 ) -> NoEligibleBarAction:
     if not request.eligibility_window_exhausted:
         return NoEligibleBarAction.KEEP_ACTIVE
@@ -1237,15 +1237,6 @@ def _validate_close_execution_component(component_ref: SimulationComponentRef) -
         raise ValueError("component_ref must target EXECUTION_MODEL")
     if component_ref.component_key != _CLOSE_COMPONENT_KEY or component_ref.component_version != 1:
         raise ValueError("component_ref must identify next_eligible_bar_close.v1")
-
-
-def _no_fill_action(
-    request: NextBarCloseRequest,
-    applicability: NextBarCloseApplicability,
-) -> NoEligibleBarAction:
-    if not request.eligibility_window_exhausted:
-        return NoEligibleBarAction.KEEP_ACTIVE
-    return applicability.action_for(request.order_stream.order.intent.time_in_force)
 
 
 def _close_failure(
