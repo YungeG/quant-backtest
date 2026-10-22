@@ -372,14 +372,39 @@ def map_tushare_000703_dividend_action_set_v2(
     if type(selection) is not dict:
         raise ValueError("dividend receipt action selection is invalid")
     source = _parse(raw_response)
+    if (
+        set(source) != {"request_id", "code", "data", "msg", "detail"}
+        or type(source.get("request_id")) is not str
+        or not source["request_id"]
+        or type(source.get("code")) is not int
+        or source["code"] != 0
+        or type(source.get("msg")) is not str
+        or type(source.get("detail")) is not str
+    ):
+        raise ValueError("dividend response has invalid success envelope")
     data = source.get("data")
     if (
         type(data) is not dict
+        or set(data) != {"fields", "items", "has_more", "count"}
         or data.get("fields") != list(_FIELDS)
         or type(data.get("items")) is not list
     ):
         raise ValueError("dividend response schema mismatch")
+    # The authority protocol's count is a terminal marker, not the row count.
+    if (
+        data["has_more"] is not False
+        or type(data["count"]) is not int
+        or data["count"] != 0
+    ):
+        raise ValueError("dividend response is not terminal")
     rows = data["items"]
+    provider = receipt["provider_request"]
+    assert type(provider) is dict
+    if (
+        type(provider["returned_row_count"]) is not int
+        or provider["returned_row_count"] != len(rows)
+    ):
+        raise ValueError("dividend receipt returned row count mismatch")
     expected_selection = []
     out_of_scope_implementation_row_count = 0
     actions = []

@@ -444,6 +444,14 @@ def verify_source_snapshot(snapshot: SourceSnapshot) -> SourceSnapshotOutcome:
                     or evidence.mode != f"{member.mode:04o}"
                 ):
                     return _failed(SourceSnapshotFailureCode.CONTENT_TREE_HASH_MISMATCH)
+                if (
+                    evidence.declared_sha256 is not None
+                    and evidence.declared_sha256 != _digest(value)
+                ):
+                    return _failed(
+                        SourceSnapshotFailureCode.DECLARED_SOURCE_HASH_MISMATCH,
+                        evidence.member_key,
+                    )
                 extracted.append((evidence, value))
     except (OSError, tarfile.TarError, ValueError):
         return _failed(SourceSnapshotFailureCode.ARCHIVE_INVALID)
