@@ -1,6 +1,8 @@
 """Two venue Feb-8/Feb-19 synthetic T+1 positions; no executable orders."""
 from __future__ import annotations
 
+from dataclasses import replace
+
 import pytest
 
 from crypto_quant_domain import (
@@ -98,3 +100,76 @@ def test_two_week_two_stock_t_plus_one_sellability_uses_both_venue_calendars():
     assert not w.trade_authorized and not w_plus_one.trade_authorized
     with pytest.raises(ValueError, match="missing unique"):
         w.sellable_for(InstrumentId(SH.venue_id, "other"))
+
+
+@pytest.mark.parametrize("scale,units", [(Scale(2), 100), (Scale(0), 100)])
+def test_pending_quantity_scale_cannot_release_unsettled_integer_shares(scale, units):
+    journal, schema, rules, book, keys, times = _two_week_sources()
+    obligations = tuple(replace(item, obligation=replace(
+        item.obligation, quantity=Quantity(units, scale, str(item.balance_key.instrument_id))))
+        for item in book.obligations)
+    book = SettlementBook.from_events(ACCOUNT, obligations, book.events)
+    kwargs = dict(journal=journal, ledger_schema=schema, settlement_book=book,
+                  order_streams=(), reservation_schedules=(), market_rules=rules,
+                  as_of=UtcInstant(times[0][0].epoch_nanoseconds + 1))
+    if scale == Scale(0):
+        assert all(p.sellable.units == 0 for p in project_cn_a_share_portfolio_sellability_v1(**kwargs).positions)
+    else:
+        with pytest.raises(ValueError):
+            project_cn_a_share_portfolio_sellability_v1(**kwargs)
+
+
+def test_non_integer_registered_position_rejected_even_with_zero_balance():
+    journal, schema, rules, book, keys, times = _two_week_sources()
+    schema = LedgerSchema(tuple(replace(r, scale=Scale(2)) if r.key in keys else r
+                                for r in schema.registrations))
+    opening = type(journal).from_entries(journal.entries[:-2])
+    with pytest.raises(ValueError):
+        project_cn_a_share_portfolio_sellability_v1(
+            journal=opening, ledger_schema=schema, settlement_book=book,
+            order_streams=(), reservation_schedules=(), market_rules=rules,
+            as_of=UtcInstant(times[0][0].epoch_nanoseconds - 1))
+
+
+def test_direct_snapshot_rejects_non_integer_position():
+    journal, schema, rules, book, keys, times = _two_week_sources()
+    valid = project_cn_a_share_portfolio_sellability_v1(
+        journal=journal, ledger_schema=schema, settlement_book=book,
+        order_streams=(), reservation_schedules=(), market_rules=rules, as_of=times[0][1])
+    positions = tuple(replace(p, total=Quantity(10000, Scale(2), str(p.key.instrument_id)),
+                             sellable=Quantity(10000, Scale(2), str(p.key.instrument_id)))
+                      for p in valid.positions)
+    with pytest.raises(ValueError):
+        replace(valid, positions=positions)
+
+
+
+def test_audit_scale_2_position_cannot_make_t_plus_one_sellable_shares():
+    journal, schema, rules, book, keys, times = _two_week_sources()
+    # Same economic 100 shares, but incompatible integer-unit dimensions.
+    schema = LedgerSchema(tuple(replace(r, scale=Scale(2)) if r.key in keys else r
+                                for r in schema.registrations))
+    journal = type(journal).from_entries(tuple(replace(entry, balance_changes=tuple(
+        replace(change, value=Quantity(10000, Scale(2), str(change.key.instrument_id)))
+        if isinstance(change.key, PositionBalanceKey) else change
+        for change in entry.balance_changes)) for entry in journal.entries))
+    with pytest.raises(ValueError):
+        project_cn_a_share_portfolio_sellability_v1(
+            journal=journal, ledger_schema=schema, settlement_book=book,
+            order_streams=(), reservation_schedules=(), market_rules=rules,
+            as_of=UtcInstant(times[0][0].epoch_nanoseconds + 1))
+
+
+def test_pending_and_direct_position_reject_matching_scale_wrong_instrument():
+    from crypto_quant_trading import PositionAvailability
+    from crypto_quant_trading.settlement import AvailabilityEvidenceError
+
+    journal, schema, rules, book, keys, times = _two_week_sources()
+    first = book.obligations[0]
+    wrong = next(key for key in keys if key != first.balance_key)
+    with pytest.raises(ValueError):
+        replace(first, obligation=replace(first.obligation, quantity=Quantity(
+            100, Scale(0), str(wrong.instrument_id))))
+    with pytest.raises(AvailabilityEvidenceError):
+        PositionAvailability(keys[0], Quantity(100, Scale(0), str(keys[1].instrument_id)),
+                             Quantity(0, Scale(0), str(keys[0].instrument_id)))

@@ -542,3 +542,27 @@ def test_analysis_link_and_retention_precedence(tmp_path: Path):
 def test_repository_fixture_is_frozen():
     fixture = Path(__file__).parents[2] / "fixtures/runtime/bt-gap03-repository-contract-v1.json"
     assert hashlib.sha256(fixture.read_bytes()).hexdigest() == "e72648ac1c33812f610f988295391b0d82932ecfc26f4db9a8f3cf98e07b42e5"
+
+
+@pytest.mark.parametrize("field,value", [("trade_count", 999999), ("simple_period_return", "999"),
+                                        ("simple_period_return", None)])
+def test_analysis_rejects_wrong_source_derived_metric_with_real_links(tmp_path, field, value):
+    root, _, publication_ref, _ = _setup_completed(tmp_path)
+    reader = LocalReader(root)
+    repository = BacktestEvidenceRepository(reader)
+    runtime = BacktestAnalysisRuntime(P(reader))
+    completed = repository.load_completed(publication_ref)
+    valid_ref = runtime.derive(completed, runtime.publish_metric_profile())
+    assert repository.load_analysis(valid_ref).trade_count == len(completed.execution_summary.fills)
+    payload = dict(reader.d[valid_ref.artifact_ref].envelope.payload)
+    payload[field] = value
+    wrong_ref = AnalysisArtifactRef(P(reader).put(envelope=ArtifactEnvelope.create("backtest_analysis", 1, payload)))
+    before = dict(reader.d)
+    with pytest.raises(BacktestEvidenceError) as caught:
+        repository.load_analysis(wrong_ref)
+    assert caught.value.code is BacktestEvidenceFailureCode.PORT_ANALYSIS_LINK_MISMATCH
+    assert reader.d == before
+    del reader.d[publication_ref.artifact_ref]
+    with pytest.raises(BacktestEvidenceError) as caught:
+        repository.load_analysis(wrong_ref)
+    assert caught.value.code is BacktestEvidenceFailureCode.PORT_RETENTION_UNAVAILABLE

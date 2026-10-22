@@ -919,6 +919,9 @@ def prepare_model_bound_cash_development_backtest(
         or selected.artifact_ref_hash != expected_artifact_ref_hash
     ):
         raise ModelPreparationFailure("MODEL_BINDING_MISMATCH")
+    values = _case_inputs(request_intent, provider_inputs, market_reader)
+    if selected.available_at > values.target_event.timeline_instant:
+        raise ModelPreparationFailure("MODEL_ARTIFACT_UNAVAILABLE")
     binding = ModelRequestBinding(
         strategy_id=provider_inputs.strategy_id,
         input_name="primary_model",

@@ -143,3 +143,28 @@ def test_new_target_cancels_blocked_gtc_sell_and_expired_day_buy_does_not_roll()
     cash_unbound, pos_unbound = _sources(journal, schema, rules, book, at)
     with pytest.raises(ValueError, match="reservation prefix"):
         _plan(TARGET_W1, at, cash_unbound, pos_unbound, streams=streams, schedules=schedules)
+
+
+@pytest.mark.parametrize("scale,wrong_instrument", [(Scale(2), False), (Scale(0), True)])
+def test_proposal_rejects_non_integer_or_wrong_instrument_quantity(scale, wrong_instrument):
+    _, _, _, _, keys, _ = _two_week_sources()
+    proposal = _proposal("3", keys[0], TARGET_W1, OrderSide.SELL)
+    with pytest.raises(ValueError):
+        replace(proposal, intent=replace(proposal.intent, quantity=Quantity(
+            100, scale, str(keys[1 if wrong_instrument else 0].instrument_id))))
+
+
+@pytest.mark.parametrize("scale,wrong_instrument", [(Scale(2), False), (Scale(0), True)])
+def test_sell_reservation_rejects_non_integer_or_wrong_position(scale, wrong_instrument):
+    journal, schema, rules, book, keys, times = _two_week_sources()
+    proposal = _proposal("6", keys[0], TARGET_W, OrderSide.SELL)
+    stream, schedule, _, _ = _accepted(proposal, "6")
+    update = schedule.updates[0]
+    bad = Quantity(100, scale, str(keys[1 if wrong_instrument else 0].instrument_id))
+    schedule = replace(schedule, updates=(replace(update, commitment=replace(
+        update.commitment, sellable_quantities=(bad,))),))
+    with pytest.raises(ValueError):
+        project_cn_a_share_portfolio_sellability_v1(
+            journal=journal, ledger_schema=schema, settlement_book=book,
+            order_streams=(stream,), reservation_schedules=(schedule,),
+            market_rules=rules, as_of=times[0][1])

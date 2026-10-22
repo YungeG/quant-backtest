@@ -2,6 +2,8 @@ from __future__ import annotations
 
 from pathlib import Path
 
+from crypto_quant_domain import ArtifactEnvelope
+
 import pytest
 from crypto_quant_backtest import (
     AnalysisArtifactRefV2,
@@ -50,3 +52,34 @@ def test_analysis_v2_exact_dispatch_and_repository_load(tmp_path: Path) -> None:
     with pytest.raises(BacktestEvidenceError) as error:
         repository.load_analysis(analysis_ref)
     assert error.value.code is BacktestEvidenceFailureCode.PORT_REF_TYPE_MISMATCH
+
+
+@pytest.mark.parametrize("field,value", [("trade_count", 999999), ("simple_period_return", "999"),
+                                        ("simple_period_return", None)])
+def test_analysis_v2_rejects_wrong_source_derived_metric_with_real_links(tmp_path, field, value):
+    values = _journey_values()
+    prepared, _, _, _, request, registry = values
+    store = _Store()
+    _seed_attempt_graph(store, tmp_path / "seed", values)
+    publication_ref = BacktestRuntime(
+        registry=registry, artifact_reader=store, artifact_publisher=store,
+        market_reader=_local_reader(tmp_path / "market", prepared.verified_reader),
+        publication_root=tmp_path / "publication",
+    ).run(request)
+    repository = BacktestEvidenceRepository(store)
+    completed = repository.load_completed_v3(publication_ref)
+    runtime = BacktestAnalysisRuntime(store)
+    valid_ref = runtime.derive(completed, runtime.publish_metric_profile())
+    assert repository.load_analysis_v2(valid_ref).trade_count == len(completed.execution_summary.fills)
+    payload = dict(store.values[valid_ref.artifact_ref].envelope.payload)
+    payload[field] = value
+    wrong_ref = AnalysisArtifactRefV2(store.put(envelope=ArtifactEnvelope.create("backtest_analysis", 2, payload)))
+    puts = store.puts
+    with pytest.raises(BacktestEvidenceError) as caught:
+        repository.load_analysis_v2(wrong_ref)
+    assert caught.value.code is BacktestEvidenceFailureCode.PORT_ANALYSIS_LINK_MISMATCH
+    assert store.puts == puts
+    del store.values[publication_ref.artifact_ref]
+    with pytest.raises(BacktestEvidenceError) as caught:
+        repository.load_analysis_v2(wrong_ref)
+    assert caught.value.code is BacktestEvidenceFailureCode.PORT_RETENTION_UNAVAILABLE

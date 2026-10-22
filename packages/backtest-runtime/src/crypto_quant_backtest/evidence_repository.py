@@ -31,6 +31,7 @@ from .analysis import (
     VerifiedBacktestAnalysis,
     VerifiedBacktestAnalysisV2,
 )
+from .analysis_derivation import _simple_period_return
 from .engine import ResolvedExecutionCase
 from .execution_inputs import (
     _read_fill,
@@ -2870,6 +2871,12 @@ class BacktestEvidenceRepository:
                 BacktestEvidenceFailureCode.PORT_ANALYSIS_LINK_MISMATCH,
                 "analysis source link disagreement",
             )
+        if (analysis.trade_count != len(completed.execution_summary.fills)
+                or analysis.simple_period_return != _simple_period_return(completed)):
+            raise BacktestEvidenceError(
+                BacktestEvidenceFailureCode.PORT_ANALYSIS_LINK_MISMATCH,
+                "analysis source-derived metric disagreement",
+            )
         return VerifiedBacktestAnalysis(ref, analysis)
 
     def load_analysis_v2(
@@ -2941,6 +2948,12 @@ class BacktestEvidenceRepository:
             raise BacktestEvidenceError(
                 BacktestEvidenceFailureCode.PORT_ANALYSIS_LINK_MISMATCH,
                 "analysis source link disagreement",
+            )
+        if (analysis.trade_count != len(completed.execution_summary.fills)
+                or analysis.simple_period_return != _simple_period_return(completed)):
+            raise BacktestEvidenceError(
+                BacktestEvidenceFailureCode.PORT_ANALYSIS_LINK_MISMATCH,
+                "analysis source-derived metric disagreement",
             )
         return VerifiedBacktestAnalysisV2(ref, analysis)
 

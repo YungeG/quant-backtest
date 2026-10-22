@@ -37,6 +37,9 @@ class CnASharePortfolioOrderProposalV1:
     def __post_init__(self) -> None:
         if type(self.intent) is not OrderIntent or self.intent.instrument_id.venue.value not in {"xshg", "xshe"}:
             raise ValueError("portfolio proposal needs exact SH/SZ OrderIntent")
+        if (self.intent.quantity.scale.places != 0
+                or self.intent.quantity.instrument_id != str(self.intent.instrument_id)):
+            raise ValueError("portfolio proposal requires integer shares for its Instrument")
         if (self.intent.execution_style is not ExecutionStyle.MARKET
                 or self.intent.price_constraint is not None
                 or (self.intent.side is OrderSide.SELL and (

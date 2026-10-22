@@ -20,6 +20,7 @@ from tests.runtime.providers.test_cash_development_provider import (
     _inputs,
     _intent,
     _reader,
+    target_event,
 )
 
 _MODEL_KEY = "alpha.primary"
@@ -70,7 +71,7 @@ def _timeline(
     )
 
 
-def _prepared(tmp_path, *, timeline=None, provider_inputs=None, store=None):
+def _prepared(tmp_path, *, timeline=None, provider_inputs=None, store=None, target=None):
     selected_timeline = _timeline() if timeline is None else timeline
     selected = selected_timeline.select()
     assert selected is not None
@@ -83,7 +84,7 @@ def _prepared(tmp_path, *, timeline=None, provider_inputs=None, store=None):
         expected_artifact_ref_hash=selected.artifact_ref_hash,
         artifact_reader=cas,
         artifact_publisher=cas,
-        market_reader=_reader(),
+        market_reader=_reader(target),
         publication_root=tmp_path,
     )
     return prepared, cas
@@ -229,8 +230,23 @@ def test_revision_identity_changes_runs_but_hidden_future_revision_does_not(tmp_
 
     prepared_before, _ = _prepared(tmp_path / "before", timeline=before)
     prepared_hidden, _ = _prepared(tmp_path / "hidden", timeline=before_with_future)
-    prepared_after, _ = _prepared(tmp_path / "after", timeline=after)
+    original_target = target_event()
+    later_target = replace(original_target, event_time=UtcInstant(175), available_time=UtcInstant(175),
+                           payload={**original_target.payload, "candidate": {
+                               **original_target.payload["candidate"], "decision_time": 175,
+                               "observed_through": 174, "effective_time": 175}})
+    inputs = _inputs()
+    later_inputs = replace(inputs, decision_mark=replace(
+        inputs.decision_mark, observed_at=UtcInstant(175), available_at=UtcInstant(175)))
+    prepared_after, _ = _prepared(tmp_path / "after", timeline=after,
+                                  provider_inputs=later_inputs, target=later_target)
 
+    prepared_first_later, _ = _prepared(
+        tmp_path / "first-later", timeline=_timeline(200, (first,)),
+        provider_inputs=later_inputs, target=later_target,
+    )
+    assert prepared_first_later.request_ref != prepared_after.request_ref
+    assert prepared_first_later.semantic_run_id != prepared_after.semantic_run_id
     assert before.timeline_hash == before_with_future.timeline_hash
     assert prepared_before.request_ref == prepared_hidden.request_ref
     assert prepared_before.semantic_run_id == prepared_hidden.semantic_run_id
@@ -287,3 +303,28 @@ def test_invalid_or_substituted_model_fails_before_request_or_attempt(
     assert caught.value.code == code
     assert store.by_ref == {}
     assert not (tmp_path / "runs").exists()
+
+
+@pytest.mark.parametrize("available_at,phase,sequence", [
+    (150, _MODEL_PHASE, 1),
+    (100, TimelinePhase(31, "later_phase"), 1),
+    (100, TimelinePhase(30, "strategy_decision"), 2),
+])
+def test_future_selected_model_rejected_at_actual_decision_before_any_writes(
+    tmp_path, available_at, phase, sequence,
+):
+    artifact = replace(_artifact("v1", available_at=available_at), available_at=SimulationInstant(
+        UtcInstant(available_at), phase, SourceSequence(sequence)))
+    store = _Cas()
+    with pytest.raises(backtest.ModelPreparationFailure) as caught:
+        _prepared(tmp_path, timeline=_timeline(200, (artifact,)), store=store)
+    assert caught.value.code == "MODEL_ARTIFACT_UNAVAILABLE"
+    assert store.by_ref == {}
+    assert list(tmp_path.iterdir()) == []
+
+
+def test_model_available_at_exact_actual_decision_is_accepted(tmp_path):
+    artifact = replace(_artifact("v1"), available_at=target_event().timeline_instant)
+    prepared, store = _prepared(tmp_path, timeline=_timeline(200, (artifact,)))
+    assert prepared.model_binding.artifact_ref_hash == artifact.artifact_ref_hash
+    assert store.by_ref

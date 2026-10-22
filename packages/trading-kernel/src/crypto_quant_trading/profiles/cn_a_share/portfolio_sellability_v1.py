@@ -22,6 +22,12 @@ from crypto_quant_trading.settlement import (
 _HASH = re.compile(r"sha256:[0-9a-f]{64}\Z")
 
 
+def _require_integer_shares(value: Quantity, key: PositionBalanceKey) -> None:
+    if (type(value) is not Quantity or value.scale.places != 0
+            or value.instrument_id != str(key.instrument_id)):
+        raise ValueError("portfolio position requires Scale(0) Quantity for its Instrument")
+
+
 @dataclass(frozen=True, slots=True)
 class CnASharePortfolioSellabilitySnapshotV1:
     account_id: str
@@ -43,6 +49,9 @@ class CnASharePortfolioSellabilitySnapshotV1:
                 or self.positions != tuple(sorted(self.positions, key=lambda p: canonical_bytes(p.key)))
                 or len({p.key for p in self.positions}) != len(self.positions)):
             raise ValueError("portfolio sellability scope/order mismatch")
+        for position in self.positions:
+            _require_integer_shares(position.total, position.key)
+            _require_integer_shares(position.sellable, position.key)
         for h in (self.journal_hash, self.settlement_state_hash,
                   self.reservation_state_hash, self.market_rules_hash):
             if type(h) is not str or _HASH.fullmatch(h) is None:
@@ -90,6 +99,20 @@ def project_cn_a_share_portfolio_sellability_v1(
             or any(r.pending_receivable_sellable for r in market_rules.position_rules)
             or settlement_book.account_id != account):
         raise ValueError("portfolio sellability needs complete two-venue account rules and T+1")
+    if any(r.scale.places != 0 for r in ledger_schema.registrations
+           if isinstance(r.key, PositionBalanceKey)):
+        raise ValueError("portfolio position registration requires Scale(0)")
+    orders = {stream.order.order_id: stream.order for stream in order_streams}
+    for schedule in reservation_schedules:
+        order = orders.get(schedule.order_id)
+        if order is None:
+            raise ValueError("reservation schedule has no Order stream")
+        key = PositionBalanceKey(account, order.intent.instrument_id.venue, order.intent.instrument_id)
+        for update in schedule.updates:
+            for value in update.commitment.sellable_quantities:
+                if key not in position_keys:
+                    raise ValueError("sell reservation for unknown position")
+                _require_integer_shares(value, key)
     if any(entry.recorded_at.instant > as_of for entry in journal.entries):
         raise ValueError("future Journal entry cannot make shares sellable")
     if any(stream.state is not None and stream.state.updated_at.instant > as_of for stream in order_streams):
@@ -103,8 +126,7 @@ def project_cn_a_share_portfolio_sellability_v1(
         if item.balance_key not in cash_keys | position_keys:
             raise ValueError("unregistered settlement key")
         if isinstance(item.balance_key, PositionBalanceKey):
-            if not isinstance(item.value, Quantity):
-                raise ValueError("pending position must be Quantity")
+            _require_integer_shares(item.value, item.balance_key)
             if item.value.units > 0:
                 pending[item.balance_key] = pending.get(item.balance_key, 0) + item.value.units
     reserved = {value.instrument_id: value for value in reservations.totals.sellable_quantities}
@@ -113,6 +135,7 @@ def project_cn_a_share_portfolio_sellability_v1(
     positions: list[PositionAvailability] = []
     for rule in market_rules.position_rules:
         total = ledger.position_quantity(rule.key)
+        _require_integer_shares(total, rule.key)
         held = reserved.get(total.instrument_id)
         if held is not None and held.scale != total.scale:
             raise ValueError("sell reservation Scale mismatch")
