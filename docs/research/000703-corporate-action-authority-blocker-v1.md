@@ -9,7 +9,7 @@ Ticket #27 needs finite coverage of the discovery and OOS windows, explicit acti
 ## Evidence
 
 - `tools/acquisition/cn_a_share_tushare_authority.py` can retain one candidate capture of `stock_basic`, `namechange`, adjacent `adj_factor`, and `dividend(ex_date=target)`. Its receipt fixes `provider_revision_id=null`, `revision_closure_complete=false`, and `corporate_action_lifecycle_qualified=false`.
-- `tools/acquisition/cn_a_share_tushare_000703_202401_month_smoke_v1.py` captures daily/status/limit evidence only and explicitly preserves `corporate_action_absence_claimed=false`.
+- The current capture/receipt-verification implementation is [`cn_a_share_tushare_000703_202401_month_smoke_v2.py`](../../tools/acquisition/cn_a_share_tushare_000703_202401_month_smoke_v2.py), which preserves `corporate_action_absence_claimed=false`. The former `cn_a_share_tushare_000703_202401_month_smoke_v1.py` reference is historical, not a current entry point. This identifies source-code scope only: retained capture bytes were not reverified for this correction, and historical v1 receipts must not be relabelled as v2.
 - `docs/research/g12l-tushare-listing-corporate-action-revision-authority-v1.md` and `docs/research/tushare-cn-a-share-listing-history-primary-sources.md` establish that `dividend` and `adj_factor` do not expose a revision/cancellation lineage, terminal completeness, or authoritative zero-row absence.
 
 ## Existing fail-closed route
