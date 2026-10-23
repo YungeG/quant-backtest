@@ -1233,6 +1233,12 @@ _ALLOWED_RELATIVE_IMPORTS = {
     "settlement",
 }
 _ALLOWED_IMPORTS_BY_FILE = {
+    "portfolio_open_risk_development_v1.py": {"__future__", "crypto_quant_domain", "crypto_quant_trading.fee_reservations", "crypto_quant_trading.market_rules", "crypto_quant_trading.reservations", "dataclasses", "re"},
+    "portfolio_order_capability_development_v1.py": {"__future__", "crypto_quant_domain", "crypto_quant_trading.capabilities"},
+    "portfolio_order_plan_v1.py": {"__future__", "crypto_quant_domain", "crypto_quant_trading.orders", "crypto_quant_trading.rebalance", "crypto_quant_trading.reservations", "dataclasses", "re"},
+    "portfolio_rebalance_policy_v1.py": {"__future__", "crypto_quant_domain", "dataclasses", "re"},
+    "portfolio_sellability_v1.py": {"__future__", "crypto_quant_domain", "crypto_quant_trading.journal", "crypto_quant_trading.ledger", "crypto_quant_trading.orders", "crypto_quant_trading.reservations", "crypto_quant_trading.settlement", "dataclasses", "re"},
+    "shared_cny_cash_v1.py": {"__future__", "crypto_quant_domain", "crypto_quant_trading.journal", "crypto_quant_trading.ledger", "crypto_quant_trading.orders", "crypto_quant_trading.reservations", "crypto_quant_trading.settlement", "dataclasses", "re"},
     "__init__.py": set(),
     "calendar.py": {
         "__future__",
@@ -1332,6 +1338,12 @@ _ALLOWED_IMPORTS_BY_FILE = {
     },
 }
 _ALLOWED_RELATIVE_IMPORTS_BY_FILE = {
+    "portfolio_open_risk_development_v1.py": {"portfolio_order_plan_v1", "portfolio_sellability_v1", "shared_cny_cash_v1"},
+    "portfolio_order_capability_development_v1.py": set(),
+    "portfolio_order_plan_v1.py": {"portfolio_rebalance_policy_v1", "portfolio_sellability_v1", "shared_cny_cash_v1"},
+    "portfolio_rebalance_policy_v1.py": set(),
+    "portfolio_sellability_v1.py": set(),
+    "shared_cny_cash_v1.py": set(),
     "__init__.py": {
         "calendar",
         "commission_tax",
@@ -1694,6 +1706,15 @@ def test_module_mutation_scanner_rejects_nested_and_indirect_state(
     source: str,
 ) -> None:
     assert _module_mutation_violations(source)
+
+
+@pytest.mark.parametrize("module_name", ("portfolio_open_risk_development_v1.py", "portfolio_order_capability_development_v1.py", "portfolio_order_plan_v1.py", "portfolio_rebalance_policy_v1.py", "portfolio_sellability_v1.py", "shared_cny_cash_v1.py"))
+def test_portfolio_profile_allowlists_still_reject_io_and_runtime_imports(module_name: str) -> None:
+    for source in ("import os", "import socket", "from pathlib import Path", "import crypto_quant_backtest"):
+        assert _purity_violations(
+            source, allowed_imports=_ALLOWED_IMPORTS_BY_FILE[module_name],
+            allowed_relative_imports=_ALLOWED_RELATIVE_IMPORTS_BY_FILE[module_name],
+        )
 
 
 def test_concrete_profile_source_is_pure_and_not_root_reexported() -> None:
