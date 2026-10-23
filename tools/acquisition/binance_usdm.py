@@ -6,6 +6,7 @@ import json
 import re
 import ssl
 import time
+from collections.abc import Callable
 from dataclasses import dataclass
 from datetime import datetime
 from pathlib import Path
@@ -167,26 +168,56 @@ def _checksum(body: bytes, filename: str) -> str:
     return parts[0]
 
 
+def _acquisition_clock(
+    acquired_at_epoch_nanoseconds: int | None,
+    clock: Callable[[], int] | None,
+) -> Callable[[], int]:
+    if (acquired_at_epoch_nanoseconds is None) == (clock is None):
+        raise AcquisitionError("supply exactly one of acquired_at_epoch_nanoseconds or clock")
+    if clock is None:
+        if type(acquired_at_epoch_nanoseconds) is not int or acquired_at_epoch_nanoseconds < 0:
+            raise AcquisitionError("acquired_at_epoch_nanoseconds must be nonnegative")
+        return lambda: acquired_at_epoch_nanoseconds
+    if not callable(clock):
+        raise AcquisitionError("clock must be callable")
+    previous: int | None = None
+
+    def received_at() -> int:
+        nonlocal previous
+        value = clock()
+        if type(value) is not int or value < 0:
+            raise AcquisitionError("clock must return a nonnegative exact int")
+        if previous is not None and value < previous:
+            raise AcquisitionError("acquisition clock moved backwards")
+        previous = value
+        return value
+
+    return received_at
+
+
 def acquire_archive(
     request: BinanceArchiveRequest,
     *,
     output_dir: str | Path,
-    acquired_at_epoch_nanoseconds: int,
+    acquired_at_epoch_nanoseconds: int | None = None,
+    clock: Callable[[], int] | None = None,
     get: Fetch,
     sleep: Any = real_sleep,
 ) -> dict[str, object]:
     if type(request) is not BinanceArchiveRequest:
         raise AcquisitionError("request must be exact BinanceArchiveRequest")
     require_new_output(output_dir)
-    if type(acquired_at_epoch_nanoseconds) is not int or acquired_at_epoch_nanoseconds < 0:
-        raise AcquisitionError("acquired_at_epoch_nanoseconds must be nonnegative")
+    received_at = _acquisition_clock(acquired_at_epoch_nanoseconds, clock)
     checksum_bytes, checksum_attempts = _get_with_retries(
         request.checksum_url, get, sleep
     )
+    checksum_acquired_at = received_at()
     expected_hash = _checksum(checksum_bytes, request.filename)
     archive_bytes, archive_attempts = _get_with_retries(
         request.archive_url, get, sleep
     )
+    archive_acquired_at = received_at()
+    acquired_at_epoch_nanoseconds = max(checksum_acquired_at, archive_acquired_at)
     archive_hash = sha256(archive_bytes)
     if archive_hash != "sha256:" + expected_hash:
         raise AcquisitionError("archive checksum mismatch")
@@ -197,14 +228,14 @@ def acquire_archive(
                 "archive/" + request.filename,
                 archive_bytes,
                 "0644",
-                acquired_at_epoch_nanoseconds,
+                archive_acquired_at,
                 archive_hash,
             ),
             RawSourceMember(
                 "archive/" + request.filename + ".CHECKSUM",
                 checksum_bytes,
                 "0644",
-                acquired_at_epoch_nanoseconds,
+                checksum_acquired_at,
                 None,
             ),
         ),
@@ -306,16 +337,17 @@ def acquire_funding_history(
     request: BinanceFundingHistoryRequest,
     *,
     output_dir: str | Path,
-    acquired_at_epoch_nanoseconds: int,
+    acquired_at_epoch_nanoseconds: int | None = None,
+    clock: Callable[[], int] | None = None,
     get: Fetch,
     sleep: Any = real_sleep,
 ) -> dict[str, object]:
     if type(request) is not BinanceFundingHistoryRequest:
         raise AcquisitionError("request must be exact BinanceFundingHistoryRequest")
     require_new_output(output_dir)
-    if type(acquired_at_epoch_nanoseconds) is not int or acquired_at_epoch_nanoseconds < 0:
-        raise AcquisitionError("acquired_at_epoch_nanoseconds must be nonnegative")
+    received_at = _acquisition_clock(acquired_at_epoch_nanoseconds, clock)
     response_bytes, attempts = _get_with_retries(request.url, get, sleep)
+    acquired_at_epoch_nanoseconds = received_at()
     records, missing_mark_prices = _funding_records(response_bytes, request)
     response_hash = sha256(response_bytes)
     snapshot = freeze_source_snapshot(
@@ -409,13 +441,12 @@ def _parser() -> argparse.ArgumentParser:
 
 def main(argv: list[str] | None = None) -> int:
     args = _parser().parse_args(argv)
-    acquired_at = time.time_ns()
     try:
         if args.command == "archive":
             receipt = acquire_archive(
                 BinanceArchiveRequest(args.symbol.upper(), args.kind, args.date),
                 output_dir=args.output_dir,
-                acquired_at_epoch_nanoseconds=acquired_at,
+                clock=time.time_ns,
                 get=_stdlib_get,
             )
         else:
@@ -424,7 +455,7 @@ def main(argv: list[str] | None = None) -> int:
                     args.symbol.upper(), args.start_ms, args.end_ms, args.limit
                 ),
                 output_dir=args.output_dir,
-                acquired_at_epoch_nanoseconds=acquired_at,
+                clock=time.time_ns,
                 get=_stdlib_get,
             )
     except (AcquisitionError, ValueError) as error:

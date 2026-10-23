@@ -174,3 +174,31 @@ def test_member_access_is_verified_and_non_revealing() -> None:
     tampered = replace(snapshot, archive_bytes=b"bad")
     with pytest.raises(ValueError, match="source snapshot member unavailable"):
         tampered.member_bytes("empty.dat")
+
+
+def test_verify_rejects_declared_hash_even_with_recomputed_provenance() -> None:
+    from crypto_quant_bundle_builder.source_snapshots import _provenance_hash
+
+    snapshot = freeze_source_snapshot(members=_members(), provenance=_provenance()).snapshot
+    assert snapshot is not None
+    members = (replace(snapshot.members[0], declared_sha256="sha256:" + "0" * 64), *snapshot.members[1:])
+    forged = replace(
+        snapshot,
+        members=members,
+        provenance_hash=_provenance_hash(snapshot.snapshot_id, snapshot.provenance, members),
+    )
+    outcome = verify_source_snapshot(forged)
+    assert outcome.snapshot is None
+    assert outcome.failure is not None
+    assert outcome.failure.code is SourceSnapshotFailureCode.DECLARED_SOURCE_HASH_MISMATCH
+    assert outcome.failure.member_key == members[0].member_key
+
+
+@pytest.mark.parametrize("declared", (None, "sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"))
+def test_freeze_and_verify_agree_on_valid_declared_hash(declared: str | None) -> None:
+    result = freeze_source_snapshot(
+        members=(replace(_members()[0], declared_sha256=declared),),
+        provenance=_provenance(),
+    )
+    assert result.failure is None and result.snapshot is not None
+    assert verify_source_snapshot(result.snapshot) == result

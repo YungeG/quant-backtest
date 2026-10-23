@@ -121,3 +121,66 @@ def test_constructor_rejects_forged_action_set() -> None:
         replace(action_set, source_acquired_at=UtcInstant(0))
     with pytest.raises(ValueError, match="action set identity mismatch"):
         replace(action_set, source_receipt_sha256="sha256:" + "0" * 64)
+
+
+def _bound_empty_inputs(target: str) -> tuple[bytes, bytes]:
+    from crypto_quant_bundle_builder.source_snapshots import (
+        RawSourceMember, SourceSnapshotProvenance, freeze_source_snapshot,
+    )
+
+    receipt_bytes, original_raw = _inputs()
+    receipt, source = json.loads(receipt_bytes), json.loads(original_raw)
+    source["data"]["items"] = []
+    receipt["action_selection"]["selected_implementation_rows"] = []
+    receipt["action_selection"]["out_of_scope_implementation_row_count"] = 0
+    receipt["provider_request"]["returned_row_count"] = 0
+    mutations = {
+        "has_more": (source["data"], "has_more", True),
+        "count": (source["data"], "count", 1),
+        "bool_count": (source["data"], "count", False),
+        "code": (source, "code", 1),
+        "bool_code": (source, "code", False),
+        "row_count": (receipt["provider_request"], "returned_row_count", 1),
+        "bool_row_count": (receipt["provider_request"], "returned_row_count", False),
+        "fields": (source["data"], "fields", []),
+        "envelope": (source, "request_id", ""),
+    }
+    if target in mutations:
+        container, key, value = mutations[target]
+        container[key] = value
+    elif target.startswith("missing_"):
+        key = target.removeprefix("missing_")
+        (source if key == "code" else source["data"]).pop(key)
+    raw = json.dumps(source, ensure_ascii=False, sort_keys=True, separators=(",", ":")).encode() + b"\n"
+    acquired = receipt["acquired_at_epoch_nanoseconds"]
+    snapshot = freeze_source_snapshot(
+        members=(RawSourceMember("response/dividend.json", raw, "0644", acquired, None),),
+        provenance=SourceSnapshotProvenance(
+            "tushare.pro",
+            "tushare.pro.via.xiaodefa.approved-proxy."
+            + receipt["transport_endpoint"].removeprefix("https://")
+            + ".000703.sz.dividend.authority.v1",
+            "tushare.pro.terms", "backtest.acquisition.candidate",
+        ),
+    ).snapshot
+    assert snapshot is not None
+    receipt["snapshot"] = snapshot.to_canonical_dict()
+    receipt["provider_request"]["response_sha256"] = "sha256:" + hashlib.sha256(raw).hexdigest()
+    receipt["provider_request"]["response_byte_count"] = len(raw)
+    return json.dumps(receipt, ensure_ascii=False, sort_keys=True, separators=(",", ":")).encode() + b"\n", raw
+
+
+@pytest.mark.parametrize("target", (
+    "has_more", "count", "bool_count", "code", "bool_code", "row_count",
+    "bool_row_count", "missing_code", "missing_has_more", "missing_count",
+    "fields", "envelope",
+))
+def test_public_mapper_rejects_consistently_bound_invalid_empty_page(target: str) -> None:
+    receipt, raw = _bound_empty_inputs(target)
+    with pytest.raises(ValueError):
+        map_tushare_000703_dividend_action_set_v2(receipt, raw, INSTRUMENT)
+
+
+def test_public_mapper_accepts_terminal_empty_page() -> None:
+    receipt, raw = _bound_empty_inputs("valid")
+    assert map_tushare_000703_dividend_action_set_v2(receipt, raw, INSTRUMENT).actions == ()
