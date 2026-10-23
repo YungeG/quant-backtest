@@ -63,11 +63,10 @@ def test_v2_uses_the_existing_catalog_and_no_second_selector() -> None:
         "BT-GAP-02C RED: v2 implementation is absent"
     )
     assert source.count("SchemaCatalog(") == 1
-    assert source.count("CanonicalSchema(") == 6, (
-        "bundle@6 must extend the existing v1-v5 catalog"
+    assert source.count("CanonicalSchema(") == 8, (
+        "bundles@7/@8 must extend the existing v1-v6 catalog"
     )
-    assert all(f"_V{version}_SCHEMA" in source for version in range(1, 6))
-    assert "_V6_SCHEMA" in source
+    assert all(f"_V{version}_SCHEMA" in source for version in range(1, 9))
     generic_source = "\n".join(
         path.read_text(encoding="utf-8") for path in _GENERIC_RUNTIME
     )

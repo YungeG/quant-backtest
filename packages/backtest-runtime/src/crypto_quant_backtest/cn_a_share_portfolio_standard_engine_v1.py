@@ -12,7 +12,7 @@ from zoneinfo import ZoneInfo
 import crypto_quant_domain as d
 import crypto_quant_trading as t
 from crypto_quant_market_data import InputValidationFailure, MarketEvent
-from crypto_quant_trading.profiles.cn_a_share.portfolio_order_plan_v1 import (
+from crypto_quant_trading.profiles.cn_a_share.portfolio_v1 import (
     CnASharePortfolioOrderPlanV1, CnASharePortfolioOrderProposalV1,
 )
 

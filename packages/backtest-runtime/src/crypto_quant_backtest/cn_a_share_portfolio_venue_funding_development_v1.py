@@ -17,7 +17,7 @@ from crypto_quant_trading import (
     AccountingJournal, GenericLedger, LedgerSchema, MarketSettlementRules,
     OrderEventStream, OrderReservationSchedule, ResourceReservationBook, SettlementBook,
 )
-from crypto_quant_trading.profiles.cn_a_share.shared_cny_cash_v1 import (
+from crypto_quant_trading.profiles.cn_a_share.portfolio_v1 import (
     project_cn_a_share_shared_cny_cash_v1,
 )
 

@@ -1239,6 +1239,13 @@ _ALLOWED_IMPORTS_BY_FILE = {
     "portfolio_rebalance_policy_v1.py": {"__future__", "crypto_quant_domain", "dataclasses", "re"},
     "portfolio_sellability_v1.py": {"__future__", "crypto_quant_domain", "crypto_quant_trading.journal", "crypto_quant_trading.ledger", "crypto_quant_trading.orders", "crypto_quant_trading.reservations", "crypto_quant_trading.settlement", "dataclasses", "re"},
     "shared_cny_cash_v1.py": {"__future__", "crypto_quant_domain", "crypto_quant_trading.journal", "crypto_quant_trading.ledger", "crypto_quant_trading.orders", "crypto_quant_trading.reservations", "crypto_quant_trading.settlement", "dataclasses", "re"},
+    "portfolio_v1/__init__.py": {
+        "crypto_quant_trading.profiles.cn_a_share.portfolio_order_plan_v1",
+        "crypto_quant_trading.profiles.cn_a_share.portfolio_open_risk_development_v1",
+        "crypto_quant_trading.profiles.cn_a_share.portfolio_rebalance_policy_v1",
+        "crypto_quant_trading.profiles.cn_a_share.portfolio_sellability_v1",
+        "crypto_quant_trading.profiles.cn_a_share.shared_cny_cash_v1",
+    },
     "__init__.py": set(),
     "calendar.py": {
         "__future__",
@@ -1344,6 +1351,7 @@ _ALLOWED_RELATIVE_IMPORTS_BY_FILE = {
     "portfolio_rebalance_policy_v1.py": set(),
     "portfolio_sellability_v1.py": set(),
     "shared_cny_cash_v1.py": set(),
+    "portfolio_v1/__init__.py": set(),
     "__init__.py": {
         "calendar",
         "commission_tax",
@@ -1708,7 +1716,7 @@ def test_module_mutation_scanner_rejects_nested_and_indirect_state(
     assert _module_mutation_violations(source)
 
 
-@pytest.mark.parametrize("module_name", ("portfolio_open_risk_development_v1.py", "portfolio_order_capability_development_v1.py", "portfolio_order_plan_v1.py", "portfolio_rebalance_policy_v1.py", "portfolio_sellability_v1.py", "shared_cny_cash_v1.py"))
+@pytest.mark.parametrize("module_name", ("portfolio_v1/__init__.py", "portfolio_open_risk_development_v1.py", "portfolio_order_capability_development_v1.py", "portfolio_order_plan_v1.py", "portfolio_rebalance_policy_v1.py", "portfolio_sellability_v1.py", "shared_cny_cash_v1.py"))
 def test_portfolio_profile_allowlists_still_reject_io_and_runtime_imports(module_name: str) -> None:
     for source in ("import os", "import socket", "from pathlib import Path", "import crypto_quant_backtest"):
         assert _purity_violations(
@@ -1724,8 +1732,9 @@ def test_concrete_profile_source_is_pure_and_not_root_reexported() -> None:
         / "packages/trading-kernel/src/crypto_quant_trading/profiles/cn_a_share"
     )
     for source_path in sorted(profile_root.rglob("*.py")):
-        allowed = _ALLOWED_IMPORTS_BY_FILE[source_path.name]
-        relative_allowed = _ALLOWED_RELATIVE_IMPORTS_BY_FILE[source_path.name]
+        relative_path = source_path.relative_to(profile_root).as_posix()
+        allowed = _ALLOWED_IMPORTS_BY_FILE[relative_path]
+        relative_allowed = _ALLOWED_RELATIVE_IMPORTS_BY_FILE[relative_path]
         source = _read_text(source_path)
         assert not _purity_violations(
             source,

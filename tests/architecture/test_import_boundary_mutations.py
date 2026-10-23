@@ -205,3 +205,33 @@ def test_boundary_report_is_byte_deterministic(tmp_path: Path) -> None:
     assert run_checker(tmp_path, POLICY, second).returncode == 1
 
     assert first.read_bytes() == second.read_bytes()
+
+
+@pytest.mark.parametrize(
+    "source_package,target,expected_rules",
+    (
+        ("backtest-runtime", "crypto_quant_trading.profiles.cn_a_share.portfolio_v1", []),
+        ("backtest-runtime", "crypto_quant_trading.profiles.cn_a_share.portfolio_v1.internal", ["cross-package-internal-import"]),
+        ("backtest-runtime", "crypto_quant_trading.profiles.cn_a_share.portfolio_order_plan_v1", ["cross-package-internal-import"]),
+        ("backtest-runtime", "crypto_quant_trading.profiles.cn_a_share.portfolio_open_risk_development_v1", ["cross-package-internal-import"]),
+        ("backtest-runtime", "crypto_quant_trading.profiles.cn_a_share.portfolio_rebalance_policy_v1", ["cross-package-internal-import"]),
+        ("backtest-runtime", "crypto_quant_trading.profiles.cn_a_share.portfolio_sellability_v1", ["cross-package-internal-import"]),
+        ("backtest-runtime", "crypto_quant_trading.profiles.cn_a_share.shared_cny_cash_v1", ["cross-package-internal-import"]),
+        ("backtest-runtime", "crypto_quant_trading.fees", ["cross-package-internal-import"]),
+        ("backtest-runtime", "crypto_quant_trading.orders", ["cross-package-internal-import"]),
+        ("backtest-runtime", "crypto_quant_trading.profiles.cn_a_share.commission_tax", ["cross-package-internal-import"]),
+        ("trading-kernel", "crypto_quant_trading.profiles.cn_a_share.portfolio_v1", ["generic-kernel-concrete-profile-import"]),
+    ),
+)
+def test_portfolio_public_root_is_exact_not_a_prefix_permission(
+    tmp_path: Path, source_package: str, target: str, expected_rules: list[str]
+) -> None:
+    module = "crypto_quant_backtest" if source_package == "backtest-runtime" else "crypto_quant_trading"
+    source_path = tmp_path / f"packages/{source_package}/src/{module}/portfolio_import.py"
+    source_path.parent.mkdir(parents=True)
+    source_path.write_text(f"from {target} import Symbol\n", encoding="utf-8")
+    report = tmp_path / "report.json"
+    completed = run_checker(tmp_path, POLICY, report)
+    assert completed.returncode == (1 if expected_rules else 0), completed.stdout + completed.stderr
+    payload = json.loads(report.read_text(encoding="utf-8"))
+    assert [item["rule"] for item in payload["violations"]] == expected_rules

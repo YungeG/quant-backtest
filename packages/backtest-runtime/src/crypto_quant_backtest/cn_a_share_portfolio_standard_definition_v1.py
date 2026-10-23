@@ -26,7 +26,7 @@ from crypto_quant_trading.profiles.cn_a_share import (
     CnAShareMarketFeeBand, CnAShareStampDutyBand, CnAShareFeeRuleSourceRef, CnAShareFeeReservationBuffer,
     CnAShareFrozenCalendarDay, CnAShareCalendarDayKind,
 )
-from crypto_quant_trading.profiles.cn_a_share.portfolio_rebalance_policy_v1 import (
+from crypto_quant_trading.profiles.cn_a_share.portfolio_v1 import (
     CnAShareRebalanceExecutionPolicyV1,
 )
 from .cn_a_share_portfolio_preparation_inputs_v1 import CnASharePortfolioPreparationInputsV1

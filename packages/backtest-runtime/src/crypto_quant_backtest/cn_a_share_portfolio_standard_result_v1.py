@@ -195,7 +195,7 @@ def _verify_standard_native_result_v1(*, case: _ResolvedProfilePortfolioCaseV1,
         ("normalized_targets", tuple(s.normalized_target for s in native_signals))):
         _equal(values, raw[name], "signal result collection mismatch: " + name)
 
-    from crypto_quant_trading.profiles.cn_a_share.portfolio_order_plan_v1 import (
+    from crypto_quant_trading.profiles.cn_a_share.portfolio_v1 import (
         CnASharePortfolioOrderPlanV1, CnASharePortfolioOrderProposalV1,
     )
     admissions: dict[d.DomainId, _Admission] = {}

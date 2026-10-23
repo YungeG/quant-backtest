@@ -1,10 +1,12 @@
 from __future__ import annotations
 
 import ast
+import sys
 from dataclasses import fields
 from pathlib import Path
 
 import crypto_quant_backtest
+import pytest
 
 ROOT = Path(__file__).resolve().parents[2]
 MODULE = ROOT / "packages/backtest-runtime/src/crypto_quant_backtest/execution_inputs.py"
@@ -89,6 +91,7 @@ def test_execution_input_module_preserves_one_way_repository_boundary() -> None:
         "materialize_execution_input_bundle",
         "materialize_execution_input_bundle_v2",
         "materialize_execution_input_bundle_v6",
+        "materialize_execution_input_bundle_v7",
     }
     assert not any(
         name.endswith(FORBIDDEN_PUBLIC_SUFFIXES)
@@ -153,7 +156,9 @@ def test_only_the_bundle_has_one_private_versioned_schema_catalog() -> None:
     ]
     assert registrations[:5] == preserved_registrations
     assert registrations == preserved_registrations + [
-        ("backtest_execution_input_bundle", 6)
+        ("backtest_execution_input_bundle", 6),
+        ("backtest_execution_input_bundle", 7),
+        ("backtest_execution_input_bundle", 8),
     ]
     assert len(catalogs) == 1
 
@@ -185,3 +190,36 @@ def test_transport_defines_no_artifact_identity_behavior() -> None:
             "canonical_sha256",
         }
     )
+
+
+@pytest.mark.parametrize("mutation", ("missing", "duplicate", "reordered", "version9"))
+def test_exact_catalog_guard_rejects_inventory_drift(monkeypatch, mutation: str) -> None:
+    module = _module()
+    catalog = next(
+        node for node in ast.walk(module)
+        if isinstance(node, ast.Call) and _call_name(node.func) == "SchemaCatalog"
+    )
+    registrations = catalog.args[0]
+    assert isinstance(registrations, ast.Tuple)
+    if mutation == "missing":
+        registrations.elts.pop()
+    elif mutation == "duplicate":
+        registrations.elts.append(registrations.elts[-1])
+    elif mutation == "reordered":
+        registrations.elts[-2:] = reversed(registrations.elts[-2:])
+    else:
+        registration = registrations.elts[-1]
+        assert isinstance(registration, ast.Call)
+        version = next(item for item in registration.keywords if item.arg == "schema_version")
+        version.value = ast.Constant(9)
+    monkeypatch.setattr(sys.modules[__name__], "_module", lambda: module)
+    with pytest.raises(AssertionError):
+        test_only_the_bundle_has_one_private_versioned_schema_catalog()
+
+
+def test_public_factory_guard_rejects_a_new_public_v8(monkeypatch) -> None:
+    module = _module()
+    module.body.extend(ast.parse("def materialize_execution_input_bundle_v8(): pass").body)
+    monkeypatch.setattr(sys.modules[__name__], "_module", lambda: module)
+    with pytest.raises(AssertionError):
+        test_execution_input_module_preserves_one_way_repository_boundary()

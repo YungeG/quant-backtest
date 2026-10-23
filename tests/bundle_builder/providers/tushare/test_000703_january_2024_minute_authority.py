@@ -1,6 +1,9 @@
 from __future__ import annotations
 
+import hashlib
 import json
+import shutil
+import stat
 from pathlib import Path
 
 import pytest
@@ -45,6 +48,51 @@ ROOT = Path(__file__).resolve().parents[4]
 RETAINED_CALENDAR = ROOT / "evidence/tushare-calendar-szse-development-month-202401-v3"
 RETAINED_MINUTES = ROOT / "evidence/tushare-minute-000703-development-month-202401-v2/sessions"
 RETAINED_AUTHORITY = ROOT / "evidence/tushare-000703-development-month-authority-202401-v1"
+
+
+def _retained_inventory() -> dict[str, tuple[int, str | None]]:
+    inventory = {}
+    for root in (RETAINED_CALENDAR, RETAINED_MINUTES, RETAINED_AUTHORITY):
+        for path in (root, *sorted(root.rglob("*"))):
+            assert not path.is_symlink(), path
+            inventory[str(path.relative_to(ROOT))] = (
+                stat.S_IMODE(path.stat().st_mode),
+                hashlib.sha256(path.read_bytes()).hexdigest() if path.is_file() else None,
+            )
+    return inventory
+
+
+@pytest.fixture
+def _protected_retained_tree():
+    before = _retained_inventory()
+    yield
+    assert _retained_inventory() == before
+
+
+def _retained_repository_fixture(
+    tmp_path: Path, final_directory_relative_path: str
+) -> Path:
+    relative = Path(final_directory_relative_path)
+    assert not relative.is_absolute() and ".." not in relative.parts
+    source = RETAINED_AUTHORITY / relative
+    assert source.is_dir() and not source.is_symlink()
+    for path in source.rglob("*"):
+        assert not path.is_symlink(), path
+        assert path.is_dir() or path.is_file(), path
+    repository_root = tmp_path / "retained-repository"
+    destination = repository_root / relative
+    assert destination.resolve().is_relative_to(tmp_path.resolve())
+    shutil.copytree(source, destination)
+    for path in destination.rglob("*"):
+        original = source / path.relative_to(destination)
+        if path.is_file():
+            assert path.read_bytes() == original.read_bytes()
+            path.chmod(0o444)
+    for path in sorted(destination.rglob("*"), key=lambda p: len(p.parts), reverse=True):
+        if path.is_dir():
+            path.chmod(0o555)
+    destination.chmod(0o555)
+    return repository_root
 
 
 def _result(day: str, index: int):
@@ -191,7 +239,7 @@ def test_month_authority_exact_covers_sessions_and_publishes_with_retention(
     )
 
 
-def test_retained_month_authority_replays_its_source_receipts_and_retention() -> None:
+def _retained_month_authority():
     calendar_bytes, calendar_snapshot = _retained_snapshot(
         RETAINED_CALENDAR, "response/trade-calendar.json"
     )
@@ -261,8 +309,17 @@ def test_retained_month_authority_replays_its_source_receipts_and_retention() ->
     assert receipt["decision_grade_eligible"] is False
     assert receipt["live_eligible"] is False
     assert receipt["deployment_authorized"] is False
+    return authority, receipt
+
+
+def test_retained_month_authority_replays_its_source_receipts_and_retention(
+    tmp_path: Path, _protected_retained_tree,
+) -> None:
+    authority, receipt = _retained_month_authority()
+    final_relative = str(Path(receipt["retention_proof"]["manifest_relative_path"]).parent)
+    repository_root = _retained_repository_fixture(tmp_path, final_relative)
     publication = LocalMarketBundleRepository(
-        config=LocalMarketBundleRepositoryConfig(root=RETAINED_AUTHORITY.resolve())
+        config=LocalMarketBundleRepositoryConfig(root=repository_root)
     ).publish_market_bundle_v1(
         manifest=authority.manifest,
         stream_payloads={authority.events[0].stream_key: canonical_bytes(authority.events)},
@@ -279,3 +336,34 @@ def test_retained_month_authority_replays_its_source_receipts_and_retention() ->
 def test_missing_or_unordered_open_session_fails_closed(results: tuple[object, ...]) -> None:
     with pytest.raises(ValueError, match="January worklist"):
         build_tushare_000703_january_2024_minute_authority_v1(results)
+
+
+@pytest.mark.parametrize(
+    "mutation",
+    ("streams/000.payload", "manifest.json", "publication.json", "retention-proof.json", "writable-entry"),
+)
+def test_retained_copy_rejects_corrupt_or_writable_publication(
+    tmp_path: Path, _protected_retained_tree, mutation: str,
+) -> None:
+    authority, receipt = _retained_month_authority()
+    final_relative = str(Path(receipt["retention_proof"]["manifest_relative_path"]).parent)
+    repository_root = _retained_repository_fixture(tmp_path, final_relative)
+    final = repository_root / final_relative
+    if mutation == "writable-entry":
+        (final / "streams").chmod(0o755)
+    else:
+        target = final / mutation
+        original = target.read_bytes()
+        target.chmod(0o644)
+        target.write_bytes(bytes((original[0] ^ 1,)) + original[1:])
+        target.chmod(0o444)
+    outcome = LocalMarketBundleRepository(
+        config=LocalMarketBundleRepositoryConfig(root=repository_root)
+    ).publish_market_bundle_v1(
+        manifest=authority.manifest,
+        stream_payloads={authority.events[0].stream_key: canonical_bytes(authority.events)},
+        retention_policy_ref=receipt["retention_policy_ref"],
+    )
+    assert outcome.result is None
+    assert outcome.failure is not None
+    assert outcome.failure.code is MarketBundlePublicationFailureCode.FINAL_DESTINATION_CONFLICT

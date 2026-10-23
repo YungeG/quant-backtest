@@ -14,16 +14,16 @@ from crypto_quant_domain import (
     OrderSide, OrderStatus, PositionBalanceKey, QuantizationPolicy, SimulationInstant,
     SourceSequence, TimelinePhase, canonical_sha256,
 )
-from crypto_quant_trading.profiles.cn_a_share.commission_tax import (
+from crypto_quant_trading.profiles.cn_a_share import (
     CnAShareMarketFeeRuleResolution, CnAShareStampDutyRuleResolution,
 )
-from crypto_quant_trading.fees import FinalFeeRuleSource
+from crypto_quant_trading import FinalFeeRuleSource
 from crypto_quant_trading import (
     AccountingJournal, CashInstrumentAccounting, CostBasisPolicy,
     FeeAssessmentBasisEvidence, FeeAssessmentEngine, FinalFeeRuleSet,
     GenericLedger, LedgerSchema, LedgerState, OrderEventStream,
 )
-from crypto_quant_trading.profiles.cn_a_share.portfolio_open_risk_development_v1 import (
+from crypto_quant_trading.profiles.cn_a_share.portfolio_v1 import (
     CnASharePortfolioOpenRiskApprovalDevelopmentV1,
 )
 from .cn_a_share_portfolio_financial_core_v1 import book_native_cn_portfolio_financial_core_v1

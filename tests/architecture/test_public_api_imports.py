@@ -111,3 +111,32 @@ def test_boundary_checker_writes_only_its_declared_ignored_report() -> None:
     assert completed.returncode == 0, completed.stdout + completed.stderr
     assert report_path.is_file()
     assert git_status() == before
+
+
+def test_portfolio_v1_public_root_preserves_exact_existing_identities() -> None:
+    prefix = "crypto_quant_trading.profiles.cn_a_share"
+    facade = importlib.import_module(f"{prefix}.portfolio_v1")
+    owners = (
+        ("portfolio_order_plan_v1", "CnASharePortfolioOrderPlanV1"),
+        ("portfolio_order_plan_v1", "CnASharePortfolioOrderProposalV1"),
+        ("portfolio_open_risk_development_v1", "CnASharePortfolioOpenRiskApprovalDevelopmentV1"),
+        ("portfolio_rebalance_policy_v1", "CnAShareRebalanceExecutionPolicyV1"),
+        ("portfolio_sellability_v1", "CnASharePortfolioSellabilitySnapshotV1"),
+        ("portfolio_sellability_v1", "project_cn_a_share_portfolio_sellability_v1"),
+        ("shared_cny_cash_v1", "CnAShareSharedCnyCashSnapshotV1"),
+        ("shared_cny_cash_v1", "project_cn_a_share_shared_cny_cash_v1"),
+    )
+    assert facade.__name__ == f"{prefix}.portfolio_v1"
+    assert facade.__package__ == facade.__name__
+    assert tuple(facade.__all__) == tuple(name for _, name in owners)
+    old_roots = (
+        ("crypto_quant_trading", "ac4064c96c719f6cd11d2361644b427ae58bbc902f3f1746f6e4cddbd2a7effb"),
+        (prefix, "12c6ca1cc6f3e19d866fc66cdeb8fee6f6b29e341d03541135f9d5237ec874f7"),
+    )
+    for module_name, digest in old_roots:
+        module = importlib.import_module(module_name)
+        assert hashlib.sha256(Path(module.__file__).read_bytes()).hexdigest() == digest
+        for leaf, name in owners:
+            assert getattr(facade, name) is getattr(importlib.import_module(f"{prefix}.{leaf}"), name)
+            assert name not in module.__all__
+            assert not hasattr(module, name)

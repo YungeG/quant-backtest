@@ -12,9 +12,9 @@ from crypto_quant_domain import (
     DomainId, DomainIdKind, Fill, Money, OrderStatus, PricePurpose,
     TimeInForce, canonical_sha256,
 )
-from crypto_quant_trading.orders import OrderEventStream
-from crypto_quant_trading.profiles.cn_a_share.portfolio_order_plan_v1 import CnASharePortfolioOrderPlanV1
-from crypto_quant_trading.profiles.cn_a_share.portfolio_open_risk_development_v1 import (
+from crypto_quant_trading import OrderEventStream
+from crypto_quant_trading.profiles.cn_a_share.portfolio_v1 import CnASharePortfolioOrderPlanV1
+from crypto_quant_trading.profiles.cn_a_share.portfolio_v1 import (
     CnASharePortfolioOpenRiskApprovalDevelopmentV1,
 )
 
