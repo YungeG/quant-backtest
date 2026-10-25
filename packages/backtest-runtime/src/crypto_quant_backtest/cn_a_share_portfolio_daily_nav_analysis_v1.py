@@ -95,22 +95,25 @@ class CnASharePortfolioDailyNavPointV1:
                 "mark_batch_hash": self.mark_batch_hash, "native_fact_hash": self.native_fact_hash}
 
 
-def _metrics(initial: d.Money, points: tuple[CnASharePortfolioDailyNavPointV1, ...]) -> tuple[str, str]:
-    returned = _calculate_simple_period_return(initial, points[-1].equity, ())
+def _calculate_close_nav_metrics_v1(initial: d.Money, equities: tuple[d.Money, ...]) -> tuple[str, str]:
+    returned = _calculate_simple_period_return(initial, equities[-1], ())
     if returned is None:
         raise ValueError("NAV source is incompatible with the accepted return policy")
     with localcontext() as context:
-        context.prec = max(len(str(initial.units)), *(len(str(p.equity.units)) for p in points)) + 50
+        context.prec = max(len(str(initial.units)), *(len(str(e.units)) for e in equities)) + 50
         context.rounding = ROUND_HALF_EVEN
         peak, maximum = Decimal(initial.units), Decimal(0)
-        for point in points:
-            value = Decimal(point.equity.units)
+        for equity in equities:
+            value = Decimal(equity.units)
             peak = max(peak, value)
             maximum = max(maximum, (peak - value) / peak)
         maximum = maximum.quantize(_QUANTUM, rounding=ROUND_HALF_EVEN)
     text = format(maximum, "f").rstrip("0").rstrip(".") if maximum else "0"
     return returned, text
 
+
+def _metrics(initial: d.Money, points: tuple[CnASharePortfolioDailyNavPointV1, ...]) -> tuple[str, str]:
+    return _calculate_close_nav_metrics_v1(initial, tuple(point.equity for point in points))
 
 @dataclass(frozen=True, slots=True)
 class CnASharePortfolioDailyNavAnalysisV1:

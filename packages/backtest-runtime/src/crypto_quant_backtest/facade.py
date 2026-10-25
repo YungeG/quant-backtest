@@ -41,7 +41,7 @@ from .composition import (
 from .engine import DeterministicBarEngine, EngineCancellationRequest, ResolvedExecutionCase, ResolvedExecutionCaseV2
 from .profile_portfolio_execution import (
     _RuntimeExecutionCase as ExecutionCase, _ResolvedProfilePortfolioCaseV1,
-    _PortfolioExecutionProvider, _ProfilePortfolioEngine,
+    _PortfolioExecutionProvider, _ProfilePortfolioEngine, _ResolvedProfilePortfolioCaseV2, _EconomicPortfolioEngine,
 )
 from .financial_dispatch import FinancialEventDispatcher
 from .evidence import AttemptEvidenceWriter, FinalizedAttemptEvidence
@@ -128,6 +128,11 @@ _MANIFEST_ENTRY_KEYS = frozenset(
 )
 
 
+from .composition import _compose_profile_portfolio_economic_execution_case
+from .execution_inputs import (_DecodedExecutionInputBundleV9, _read_execution_inputs_v9_from_snapshot,
+    _snapshot_execution_request_v9_from_validated_schema)
+
+
 class BacktestRuntime:
     """Resolve, execute, verify, and publish one public Backtest request."""
 
@@ -190,14 +195,15 @@ class BacktestRuntime:
             raise RuntimeError(
                 "execution input hydration failed: malformed_execution_request"
             ) from None
-        if type(schema_version) is not int or schema_version not in {1, 2, 3, 4, 5, 6, 7, 8}:
+        if type(schema_version) is not int or schema_version not in {1, 2, 3, 4, 5, 6, 7, 8, 9}:
             raise RuntimeError(
                 "execution input hydration failed: malformed_execution_request"
             )
-        if schema_version in {6, 7, 8}:
+        if schema_version in {6, 7, 8, 9}:
             snapshotter = {6: _snapshot_execution_request_v6_from_validated_schema,
                            7: _snapshot_execution_request_v7_from_validated_schema,
-                           8: _snapshot_execution_request_v8_from_validated_schema}[schema_version]
+                           8: _snapshot_execution_request_v8_from_validated_schema,
+                           9: _snapshot_execution_request_v9_from_validated_schema}[schema_version]
             snapshot, failure = snapshotter(request)
             if failure is not None or snapshot is None:
                 self._raise_v3_hydration_failure(failure)
@@ -257,12 +263,13 @@ class BacktestRuntime:
     ) -> BacktestCanonicalPublicationRef | ArtifactRef:
         reader = {6: _read_execution_inputs_v6_from_snapshot,
                   7: _read_execution_inputs_v7_from_snapshot,
-                  8: _read_execution_inputs_v8_from_snapshot}[request.schema_version]
+                  8: _read_execution_inputs_v8_from_snapshot,
+                  9: _read_execution_inputs_v9_from_snapshot}[request.schema_version]
         bundle, failure = reader(self._artifact_reader, request)
         if failure is not None or bundle is None:
             self._raise_v3_hydration_failure(failure)
         public_request = request.request
-        if request.schema_version in {7, 8} and public_request.result_grade_requested is not RequestedResultGrade.DEVELOPMENT:
+        if request.schema_version in {7, 8, 9} and public_request.result_grade_requested is not RequestedResultGrade.DEVELOPMENT:
             raise RuntimeError("execution input hydration failed: live_case_requires_development")
         if (
             bundle.build_artifact_manifest.manifest_hash
@@ -301,6 +308,12 @@ class BacktestRuntime:
             raise RuntimeError(
                 "execution input hydration failed: request_binding_mismatch"
             )
+        if type(bundle) is _DecodedExecutionInputBundleV9:
+            case = _compose_profile_portfolio_economic_execution_case(resolved_request=resolved,
+                market_reader=self._market_reader, semantic_spec=bundle.execution_case_semantic_spec,
+                target_stream=bundle.target_stream, timeline_stream_keys=bundle.timeline_stream_keys,
+                timeline_batch_size=bundle.timeline_batch_size, execution_case_plan=bundle.execution_case_plan)
+            return self._execute_case(resolved, case, cancellation=cancellation, market_data_preparation=None)
         try:
             if type(bundle) is _DecodedExecutionInputBundleV8:
                 case = _compose_profile_portfolio_execution_case(
@@ -901,7 +914,10 @@ class BacktestRuntime:
     ) -> BacktestCanonicalPublicationRef | ArtifactRef:
         input_origin = self._input_origin(resolved)
         portfolio_engine: _ProfilePortfolioEngine | None = None
-        if type(execution_case) is _ResolvedProfilePortfolioCaseV1:
+        if type(execution_case) is _ResolvedProfilePortfolioCaseV2:
+            portfolio_engine = self._economic_case_engine(resolved, execution_case)
+            runner = AuditableBacktestRunner.for_v2(publication_root=self._publication_root, engine=portfolio_engine)
+        elif type(execution_case) is _ResolvedProfilePortfolioCaseV1:
             portfolio_engine = self._portfolio_case_engine(resolved, execution_case)
             runner = AuditableBacktestRunner.for_v2(publication_root=self._publication_root,
                 engine=portfolio_engine)
@@ -940,7 +956,8 @@ class BacktestRuntime:
             finally:
                 lock.__exit__(None, None, None)
 
-        terminal_ref = self._existing_terminal_ref(resolved)
+        terminal_ref = (self._existing_terminal_ref(resolved, economic_case=execution_case)
+            if type(execution_case) is _ResolvedProfilePortfolioCaseV2 else self._existing_terminal_ref(resolved))
         if terminal_ref is not None:
             return terminal_ref
         if cancellation is not None:
@@ -978,7 +995,10 @@ class BacktestRuntime:
             )
         cached = self._cache_ref(first)
         if cached is not None:
-            if type(execution_case) is _ResolvedProfilePortfolioCaseV1:
+            if type(execution_case) is _ResolvedProfilePortfolioCaseV2:
+                assert portfolio_engine is not None
+                portfolio_engine.verify_cached(execution_case, cached.to_artifact_ref())
+            elif type(execution_case) is _ResolvedProfilePortfolioCaseV1:
                 assert portfolio_engine is not None
                 try:
                     portfolio_engine.verify_cached(execution_case, cached.to_artifact_ref())
@@ -1017,7 +1037,10 @@ class BacktestRuntime:
             )
         cached = self._cache_ref(second)
         if cached is not None:
-            if type(execution_case) is _ResolvedProfilePortfolioCaseV1:
+            if type(execution_case) is _ResolvedProfilePortfolioCaseV2:
+                assert portfolio_engine is not None
+                portfolio_engine.verify_cached(execution_case, cached.to_artifact_ref())
+            elif type(execution_case) is _ResolvedProfilePortfolioCaseV1:
                 assert portfolio_engine is not None
                 try:
                     portfolio_engine.verify_cached(execution_case, cached.to_artifact_ref())
@@ -1369,6 +1392,7 @@ class BacktestRuntime:
     def _existing_terminal_ref(
         self,
         resolved: ResolvedBacktestRequest,
+        *, economic_case: _ResolvedProfilePortfolioCaseV2 | None = None,
     ) -> ArtifactRef | None:
         attempt = AttemptIdentity.first(resolved.semantic_run_id)
         attempt_directory = (
@@ -1398,9 +1422,17 @@ class BacktestRuntime:
         if status not in {"BLOCKED", "FAILED", "CANCELLED"}:
             raise RuntimeError("Attempt evidence has unsupported terminal status")
         ref = ArtifactRef.from_envelope(envelope)
-        terminal = BacktestEvidenceRepository(
-            reader=self._artifact_reader
-        ).load_terminal(ref)
+        repository = BacktestEvidenceRepository(reader=self._artifact_reader)
+        if economic_case is not None:
+            if (type(economic_case) is not _ResolvedProfilePortfolioCaseV2
+                    or not economic_case.verify_identity_manifest(resolved.semantic_run_id)
+                    or economic_case.semantic_spec_hash != resolved.request.execution_case_semantic_hash
+                    or economic_case.timeline.reader.bundle_ref != self._market_reader.bundle_ref
+                    or economic_case.timeline.reader.bundle_ref != resolved.request.market_bundle_ref):
+                raise ValueError("economic existing terminal request/reader/seal mismatch")
+            terminal = repository.load_terminal(ref, economic_market_reader=economic_case.timeline.reader)
+        else:
+            terminal = repository.load_terminal(ref)
         if terminal.durable_evidence_ref != ref:
             raise RuntimeError("terminal evidence verification returned wrong ref")
         return ref
@@ -1549,6 +1581,23 @@ class BacktestRuntime:
         if publication.finalized_result_v2 is not None:
             return BacktestCanonicalPublicationRef.from_artifact_ref(ref)
         return ref
+
+    def _economic_case_engine(self, resolved, case):
+        if type(case) is not _ResolvedProfilePortfolioCaseV2:
+            raise TypeError("economic engine build requires exact CaseV2")
+        registration = resolved.environment.market_semantics
+        implementation = registration.implementation
+        initial = case.financial_state.initial_snapshot
+        if (resolved.request.result_grade_requested is not RequestedResultGrade.DEVELOPMENT
+                or initial.account_id != resolved.request.execution_account_id
+                or initial.reporting_currency != resolved.request.reporting_currency
+                or not isinstance(implementation, _PortfolioExecutionProvider)
+                or implementation.profile_digest != registration.profile_digest):
+            raise ValueError("economic profile/request account/currency/grade binding mismatch")
+        engine = implementation.build_portfolio_engine(case=case, artifact_reader=self._artifact_reader)
+        if not isinstance(engine, _EconomicPortfolioEngine):
+            raise TypeError("economic profile engine has no complete native verifiers")
+        return engine
 
     def _portfolio_case_engine(self, resolved: ResolvedBacktestRequest,
                                case: _ResolvedProfilePortfolioCaseV1) -> _ProfilePortfolioEngine:

@@ -1773,7 +1773,7 @@ class BacktestEvidenceRepository:
         return children
 
     def load_completed(
-        self, ref: BacktestCanonicalPublicationRef
+        self, ref: BacktestCanonicalPublicationRef, *, economic_market_reader=None
     ) -> VerifiedCompletedPublicationV2:
         if type(ref) is not BacktestCanonicalPublicationRef:
             raise BacktestEvidenceError(
@@ -1781,7 +1781,7 @@ class BacktestEvidenceRepository:
                 "exact BacktestCanonicalPublicationRef required",
             )
         try:
-            return self._load_completed(ref, root=True)
+            return self._load_completed(ref, root=True, economic_market_reader=economic_market_reader)
         except BacktestEvidenceError:
             raise
         except (KeyError, TypeError, ValueError) as error:
@@ -1789,8 +1789,13 @@ class BacktestEvidenceRepository:
                 BacktestEvidenceFailureCode.PORT_MANIFEST_INVALID, str(error)
             ) from error
 
+    def _load_completed_structural_v1(self, ref: BacktestCanonicalPublicationRef):
+        if type(ref) is not BacktestCanonicalPublicationRef:
+            raise TypeError("structural completion requires exact canonical ref")
+        return self._load_completed(ref, root=True, economic_structural=True)
+
     def _load_completed(
-        self, ref: BacktestCanonicalPublicationRef, *, root: bool
+        self, ref: BacktestCanonicalPublicationRef, *, root: bool, economic_market_reader=None, economic_structural=False
     ) -> VerifiedCompletedPublicationV2:
         loaded_manifest = self._read_expected(
             ref.artifact_ref,
@@ -2011,7 +2016,12 @@ class BacktestEvidenceRepository:
             raise ValueError("engine context did not reconstruct exactly")
 
         fills = tuple(_read_fill(item) for item in engine.fills)
-        final_journal = _read_journal(engine.final_journal)
+        economic = request["market_semantics_profile_key"] == "cn.portfolio.shared-cny.economic.development.v1.market"
+        if economic:
+            from .execution_inputs import _read_economic_journal_v1
+            final_journal = _read_economic_journal_v1(engine.final_journal)
+        else:
+            final_journal = _read_journal(engine.final_journal)
         final_snapshot = _read_portfolio_snapshot(engine.final_portfolio_snapshot)
         summary = VerifiedExecutionSummary(fills, final_journal, final_snapshot)
         request_currency = _exact(
@@ -2024,7 +2034,7 @@ class BacktestEvidenceRepository:
         reporting_currency = CurrencyId(request_currency["value"])
         if engine_context_value.target_stream_digest != rebuild["target_stream_digest"]:
             raise ValueError("engine context rebuild target mismatch")
-        return VerifiedCompletedPublicationV2(
+        verified = VerifiedCompletedPublicationV2(
             ref,
             result.semantic_run_id,
             result.execution_result_hash,
@@ -2033,6 +2043,11 @@ class BacktestEvidenceRepository:
             engine_context_value,
             summary,
         )
+        if economic and not economic_structural:
+            from .cn_a_share_portfolio_economic_result_v1 import _load_verified_economic_completed_v1
+            return _load_verified_economic_completed_v1(reader=self._reader, publication_ref=ref,
+                market_reader=economic_market_reader, structural=verified)[0]
+        return verified
 
     def load_completed_v3(
         self, ref: BacktestCanonicalPublicationRefV2
@@ -2549,7 +2564,7 @@ class BacktestEvidenceRepository:
                 str(error),
             ) from error
 
-    def load_terminal(self, ref: ArtifactRef) -> VerifiedTerminalPublication:
+    def load_terminal(self, ref: ArtifactRef, *, economic_market_reader=None) -> VerifiedTerminalPublication:
         if type(ref) is not ArtifactRef:
             raise BacktestEvidenceError(
                 BacktestEvidenceFailureCode.PORT_REF_TYPE_MISMATCH,
@@ -2567,7 +2582,7 @@ class BacktestEvidenceRepository:
                 "unsupported terminal ref type",
             )
         try:
-            return self._load_terminal(ref)
+            return self._load_terminal(ref, economic_market_reader=economic_market_reader)
         except BacktestEvidenceError:
             raise
         except (KeyError, TypeError, ValueError) as error:
@@ -2575,7 +2590,7 @@ class BacktestEvidenceRepository:
                 BacktestEvidenceFailureCode.PORT_MANIFEST_INVALID, str(error)
             ) from error
 
-    def _load_terminal(self, ref: ArtifactRef) -> VerifiedTerminalPublication:
+    def _load_terminal(self, ref: ArtifactRef, *, economic_market_reader=None) -> VerifiedTerminalPublication:
         if ref.artifact_type == "backtest_resolution_failure":
             loaded = self._read_expected(
                 ref, "backtest_resolution_failure", 1, root=True
@@ -2588,7 +2603,21 @@ class BacktestEvidenceRepository:
             evidence = loaded.artifact
             if type(evidence) is not _EvidenceManifest:
                 raise TypeError("wrong evidence manifest decoder result")
-            self._read_evidence_children(evidence)
+            children = self._read_evidence_children(evidence)
+            if evidence.status in {"FAILED", "BLOCKED"}:
+                role = "failure_report" if evidence.status == "FAILED" else "blocked_report"
+                report = children[role].artifact.raw
+                issue = report["issue"]
+                source = issue.get("source_evidence")
+                economic = report["resolved_request"]["request"]["market_semantics_profile_key"] == "cn.portfolio.shared-cny.economic.development.v1.market"
+                if issue["source"] == "engine_failure" and economic:
+                    from .cn_a_share_portfolio_economic_result_v1 import _load_verified_economic_terminal_v1
+                    return _load_verified_economic_terminal_v1(reader=self._reader, publication_ref=ref,
+                        market_reader=economic_market_reader, report=report,
+                        attempt_record=children["attempt_execution_record"].artifact.raw, status=evidence.status,
+                        build_artifact_manifest=children["build_artifact_manifest"].artifact.raw)
+                if not economic and isinstance(source, Mapping) and (source.get("schema_version") == 2 or "economic_failure_context" in source):
+                    raise ValueError("legacy profile cannot carry economic failure context")
             if evidence.status == "READY_FOR_INTEGRITY":
                 raise BacktestEvidenceError(
                     BacktestEvidenceFailureCode.PORT_TERMINAL_NOT_ANALYZABLE,
@@ -2784,6 +2813,23 @@ class BacktestEvidenceRepository:
                 "evaluation v2 terminal link mismatch",
             )
         return VerifiedTerminalPublication(TerminalStatus(outcome.outcome), ref)
+
+    def load_cn_a_share_portfolio_economic_daily_nav(self, ref, *, market_reader):
+        from .cn_a_share_portfolio_economic_daily_nav_analysis_v1 import (
+            CnASharePortfolioEconomicDailyNavAnalysisRefV1, _read_nav_analysis, _read_envelope,
+            _build_economic_nav_v1, _ANALYSIS_TYPE,
+        )
+        if type(ref) is not CnASharePortfolioEconomicDailyNavAnalysisRefV1:
+            raise TypeError("economic NAV requires its exact nominal ref")
+        envelope = _read_envelope(self._reader, ref.artifact_ref)
+        if envelope.artifact_type != _ANALYSIS_TYPE or envelope.schema_version != 1:
+            raise ValueError("economic NAV artifact type/version mismatch")
+        value = _read_nav_analysis(envelope.payload)
+        expected = _build_economic_nav_v1(reader=self._reader, publication_ref=value.source_publication_ref,
+            market_reader=market_reader)
+        if canonical_bytes(value) != canonical_bytes(expected):
+            raise ValueError("economic NAV retained values differ from complete verified sources")
+        return value
 
     def load_cn_a_share_portfolio_daily_nav(
         self, ref: CnASharePortfolioDailyNavAnalysisRefV1

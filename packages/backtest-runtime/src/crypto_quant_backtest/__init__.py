@@ -816,3 +816,12 @@ __all__ = [
     "CnASharePortfolioStandardDevelopmentInputsV1",
     "prepare_cn_a_share_portfolio_standard_development_backtest",
 ]
+
+from .cn_a_share_portfolio_economic_definition_v1 import (CnASharePortfolioEconomicDevelopmentInputsV1, CnASharePortfolioEconomicOpeningTermsV1)
+from .cn_a_share_portfolio_economic_prepare_v1 import prepare_cn_a_share_portfolio_economic_development_backtest
+from .cn_a_share_portfolio_economic_daily_nav_analysis_v1 import (
+    CnASharePortfolioEconomicDailyNavMetricProfileV1, CnASharePortfolioEconomicDailyNavPointV1,
+    CnASharePortfolioEconomicDailyNavAnalysisV1, CnASharePortfolioEconomicDailyNavAnalysisRefV1,
+    CnASharePortfolioEconomicDailyNavAnalysisRuntimeV1,
+)
+__all__ += ['CnASharePortfolioEconomicDevelopmentInputsV1', 'CnASharePortfolioEconomicOpeningTermsV1', 'prepare_cn_a_share_portfolio_economic_development_backtest', 'CnASharePortfolioEconomicDailyNavMetricProfileV1', 'CnASharePortfolioEconomicDailyNavPointV1', 'CnASharePortfolioEconomicDailyNavAnalysisV1', 'CnASharePortfolioEconomicDailyNavAnalysisRefV1', 'CnASharePortfolioEconomicDailyNavAnalysisRuntimeV1']

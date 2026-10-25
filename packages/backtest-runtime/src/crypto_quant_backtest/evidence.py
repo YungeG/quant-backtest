@@ -6,6 +6,7 @@ from contextlib import suppress
 from dataclasses import dataclass
 from enum import Enum
 import os
+import json
 from pathlib import Path, PurePosixPath
 import re
 from typing import Final
@@ -879,6 +880,22 @@ class AttemptEvidenceWriter:
                     record.cancelled_report,
                 )
             )
+        report = record.failed_report if record.failed_report is not None else record.blocked_report
+        if report is not None and report.issue.source.value == "engine_failure":
+            economic = resolved.request.market_semantics_profile_key == "cn.portfolio.shared-cny.economic.development.v1.market"
+            failure = report.issue.source_evidence
+            context = failure.economic_failure_context
+            if economic:
+                if context is None or context.artifact_type != "cn_a_share_portfolio_economic_failure_context" or context.schema_version != 1:
+                    raise ValueError("economic ENGINE_FAILURE publication requires complete Context@1")
+                if canonical_sha256(failure) != report.issue.source_hash or canonical_sha256(context) not in report.issue.evidence_hashes:
+                    raise ValueError("economic failure/context publication hash mismatch")
+                record_raw = json.loads(canonical_bytes(record))
+                key = "failed_report" if record.failed_report is not None else "blocked_report"
+                if canonical_bytes(record_raw[key]) != canonical_bytes(report):
+                    raise ValueError("economic failure context duplicate report mismatch")
+            elif context is not None:
+                raise ValueError("legacy publication cannot carry economic failure context")
         return tuple(sorted(plans, key=lambda value: value.relative_path))
 
     _write_file = staticmethod(write_file)

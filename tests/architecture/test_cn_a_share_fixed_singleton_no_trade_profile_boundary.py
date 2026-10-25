@@ -94,14 +94,10 @@ def test_component_applicability_exact_covers_both_port_enums() -> None:
 
 
 def test_authorized_candidate_does_not_widen_existing_shared_surfaces() -> None:
-    changed = {
-        line[3:]
-        for line in __import__("subprocess")
-        .check_output(
-            ["git", "status", "--short", "--untracked-files=all"], cwd=ROOT, text=True
-        )
-        .splitlines()
-    }
+    changed = set(__import__("subprocess").check_output(
+        ["git", "diff-tree", "--no-commit-id", "--name-only", "-r", "c52c8913ef680b34c1edecf46b1892b268e013e0"],
+        cwd=ROOT, text=True,
+    ).splitlines())
     allowed = {
         "packages/backtest-runtime/src/crypto_quant_backtest/cn_a_share_fixed_singleton_no_trade_profile_v1.py",
         "tests/runtime/profiles/cn_a_share/test_fixed_singleton_no_trade_profile_v1.py",
@@ -112,3 +108,4 @@ def test_authorized_candidate_does_not_widen_existing_shared_surfaces() -> None:
         "evidence/g12m-tushare-fixed-singleton-profile-build-authority-v1/manifest.sha256",
     }
     assert changed <= allowed
+    assert not (changed | {"packages/unapproved_extra_path.py"}) <= allowed

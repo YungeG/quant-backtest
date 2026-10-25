@@ -1,0 +1,48 @@
+"""Finite public contract for declared CN cash-dividend economics."""
+from crypto_quant_trading.profiles.cn_a_share.cash_dividend_projection_v1 import (
+    CnAShareCashDividendClaimV1,
+    CnAShareCashDividendStateV1,
+    CnASharePortfolioEconomicProjectionInputsV1,
+    CnAShareEconomicCashRowV1,
+    CnASharePortfolioEconomicProjectionV1,
+    CnAShareEconomicProjectionFailureCodeV1,
+    CnAShareEconomicProjectionFailureV1,
+    CnAShareEconomicProjectionOutcomeV1,
+    project_cn_a_share_portfolio_economic_state_v1,
+)
+from crypto_quant_trading.profiles.cn_a_share.cash_dividend_accounting_v1 import (
+    CnAShareCashDividendTaxPolicyV1,
+    CnAShareCashDividendActionV1,
+    CnAShareCashDividendActionSetV1,
+    CnAShareCashDividendHistoryInputsV1,
+    verify_cn_a_share_cash_dividend_history_v1,
+    CnAShareCashDividendTransitionInputsV1,
+    CnAShareCashDividendTransitionV1,
+    CnAShareCashDividendTransitionFailureCodeV1,
+    CnAShareCashDividendTransitionFailureV1,
+    CnAShareCashDividendTransitionOutcomeV1,
+    transition_cn_a_share_cash_dividend_v1,
+)
+
+__all__ = (
+    "CnAShareCashDividendClaimV1",
+    "CnAShareCashDividendStateV1",
+    "CnASharePortfolioEconomicProjectionInputsV1",
+    "CnAShareEconomicCashRowV1",
+    "CnASharePortfolioEconomicProjectionV1",
+    "CnAShareEconomicProjectionFailureCodeV1",
+    "CnAShareEconomicProjectionFailureV1",
+    "CnAShareEconomicProjectionOutcomeV1",
+    "project_cn_a_share_portfolio_economic_state_v1",
+    "CnAShareCashDividendTaxPolicyV1",
+    "CnAShareCashDividendActionV1",
+    "CnAShareCashDividendActionSetV1",
+    "CnAShareCashDividendHistoryInputsV1",
+    "verify_cn_a_share_cash_dividend_history_v1",
+    "CnAShareCashDividendTransitionInputsV1",
+    "CnAShareCashDividendTransitionV1",
+    "CnAShareCashDividendTransitionFailureCodeV1",
+    "CnAShareCashDividendTransitionFailureV1",
+    "CnAShareCashDividendTransitionOutcomeV1",
+    "transition_cn_a_share_cash_dividend_v1",
+)

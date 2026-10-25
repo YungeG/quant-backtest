@@ -8,6 +8,7 @@ from typing import Any, cast
 import unicodedata
 
 from crypto_quant_domain import (
+    ArtifactEnvelope,
     CurrencyId,
     DecisionBatch,
     InstrumentId,
@@ -1852,6 +1853,7 @@ class EngineFailure:
     subject_keys: tuple[str, ...]
     evidence_hashes: tuple[str, ...] = ()
     termination: EngineTermination | None = None
+    economic_failure_context: ArtifactEnvelope | None = field(default=None, kw_only=True)
 
     def __post_init__(self) -> None:
         if not isinstance(self.code, EngineFailureCode):
@@ -1866,13 +1868,43 @@ class EngineFailure:
             raise TypeError("termination must be EngineTermination or None")
         object.__setattr__(self, "subject_keys", subjects)
         object.__setattr__(self, "evidence_hashes", hashes)
+        context = self.economic_failure_context
+        if context is not None:
+            from crypto_quant_domain import ArtifactEnvelope
+            if (type(context) is not ArtifactEnvelope
+                    or context.artifact_type != "cn_a_share_portfolio_economic_failure_context"
+                    or context.schema_version != 1):
+                raise TypeError("economic failure requires exact Context@1 envelope")
+            payload = context.payload
+            expected = {"type", "schema_version", "case_hash", "definition_hash", "target_stream_digest",
+                "failed_event_id", "failed_at", "base_failure", "prefix_checkpoint", "journal", "order_streams",
+                "reservation_schedules", "financial_artifacts", "trace", "pending_intentions", "admissions",
+                "journal_entry_ids", "used_identity_keys", "ca_transition_inputs", "ca_failure", "semantic_spec",
+                "identity_manifest", "source_refs", "timeline_stream_keys"}
+            if (set(payload) != expected or payload["type"] != "cn_a_share_portfolio_economic_failure_context"
+                    or type(payload["schema_version"]) is not int or payload["schema_version"] != 1):
+                raise ValueError("economic context payload exact fields/version mismatch")
+            base = payload["base_failure"]
+            expected_hashes = set(base["evidence_hashes"]) | {canonical_sha256(context)}
+            if payload["ca_failure"] is not None:
+                expected_hashes.add(canonical_sha256(payload["ca_failure"]))
+            if self.evidence_hashes != tuple(sorted(expected_hashes)):
+                raise ValueError("economic failure evidence hash union mismatch")
+            if (base["type"] != "engine_failure" or "economic_failure_context" in base
+                    or base["code"] != self.code.value or base["case_hash"] != self.case_hash
+                    or base["trace_hash"] != self.trace_hash
+                    or canonical_bytes(base["subject_keys"]) != canonical_bytes(self.subject_keys)
+                    or canonical_bytes(base["termination"]) != canonical_bytes(self.termination)
+                    or payload["case_hash"] != self.case_hash
+                    or canonical_sha256(context) not in self.evidence_hashes):
+                raise ValueError("economic failure outer/base/context binding mismatch")
 
     @property
     def failure_hash(self) -> str:
         return canonical_sha256(self)
 
     def to_canonical_dict(self) -> dict[str, object]:
-        return {
+        value = {
             "type": "engine_failure",
             "code": self.code.value,
             "case_hash": self.case_hash,
@@ -1881,6 +1913,10 @@ class EngineFailure:
             "evidence_hashes": self.evidence_hashes,
             "termination": self.termination,
         }
+        if self.economic_failure_context is not None:
+            value["schema_version"] = 2
+            value["economic_failure_context"] = self.economic_failure_context
+        return value
 
 
 @dataclass(frozen=True, slots=True)

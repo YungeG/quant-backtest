@@ -119,14 +119,10 @@ def test_component_applicability_exact_covers_ports_and_six_replacements() -> No
 
 
 def test_authorized_candidate_write_set_is_not_widened() -> None:
-    changed = {
-        line[3:]
-        for line in subprocess.check_output(
-            ["git", "status", "--short", "--untracked-files=all"],
-            cwd=ROOT,
-            text=True,
-        ).splitlines()
-    }
+    changed = set(__import__("subprocess").check_output(
+        ["git", "diff-tree", "--no-commit-id", "--name-only", "-r", "4e2da5b4cee8addf1a5caf2b9be9f1d037a2af3b"],
+        cwd=ROOT, text=True,
+    ).splitlines())
     allowed = {
         "packages/backtest-runtime/src/crypto_quant_backtest/cn_a_share_fixed_singleton_no_trade_profile_v2.py",
         "tests/runtime/profiles/cn_a_share/test_fixed_singleton_no_trade_profile_v2.py",
@@ -137,3 +133,4 @@ def test_authorized_candidate_write_set_is_not_widened() -> None:
         "evidence/g12m-tushare-fixed-singleton-profile-build-authority-v2/manifest.sha256",
     }
     assert changed <= allowed
+    assert not (changed | {"packages/unapproved_extra_path.py"}) <= allowed

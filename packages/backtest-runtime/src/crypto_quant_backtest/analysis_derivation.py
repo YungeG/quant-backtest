@@ -140,6 +140,9 @@ class BacktestAnalysisRuntime:
                 "completed must be exact VerifiedCompletedPublication, "
                 "VerifiedCompletedPublicationV2, or VerifiedCompletedPublicationV3"
             )
+        if (type(completed) is VerifiedCompletedPublicationV2
+                and completed.engine_context.financial_state.settlement_rules.policy_key == "cn.portfolio.economic.settled-only.development"):
+            raise ValueError("economic input9 is not admitted to simple_period_return.fill_count.v1; use the economic NAV profile")
         if type(metric_profile_ref) is not ArtifactRef:
             raise TypeError("metric_profile_ref must be exact ArtifactRef")
         if metric_profile_ref != _PROFILE_REF:

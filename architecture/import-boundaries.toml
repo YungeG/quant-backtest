@@ -19,6 +19,7 @@ public_submodules = [
   "crypto_quant_trading.profiles.binance_usdm",
   "crypto_quant_trading.profiles.cn_a_share",
   "crypto_quant_trading.profiles.cn_a_share.portfolio_v1",
+  "crypto_quant_trading.profiles.cn_a_share.portfolio_economic_v1",
 ]
 
 [[packages]]

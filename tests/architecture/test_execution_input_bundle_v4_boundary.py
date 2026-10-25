@@ -48,45 +48,36 @@ def test_schema4_fanin_preserves_facade_and_provider_boundaries() -> None:
 
 
 def test_c4_02_write_set_is_exact() -> None:
-    status = subprocess.run(
-        ["git", "status", "--short", "--untracked-files=all"],
+    introduction = subprocess.run(
+        [
+            "git",
+            "log",
+            "-S",
+            "_snapshot_execution_request_v4_from_validated_schema",
+            "--format=%H",
+            "--",
+            FACADE.relative_to(ROOT).as_posix(),
+        ],
         cwd=ROOT,
         check=True,
         capture_output=True,
         text=True,
     ).stdout.splitlines()
-    changed = tuple(line[3:] for line in status)
-    if not changed:
-        introduction = subprocess.run(
+    assert introduction
+    changed = tuple(
+        subprocess.run(
             [
                 "git",
-                "log",
-                "-S",
-                "_snapshot_execution_request_v4_from_validated_schema",
-                "--format=%H",
-                "--",
-                FACADE.relative_to(ROOT).as_posix(),
+                "diff-tree",
+                "--no-commit-id",
+                "--name-only",
+                "-r",
+                introduction[0],
             ],
             cwd=ROOT,
             check=True,
             capture_output=True,
             text=True,
         ).stdout.splitlines()
-        assert introduction
-        changed = tuple(
-            subprocess.run(
-                [
-                    "git",
-                    "diff-tree",
-                    "--no-commit-id",
-                    "--name-only",
-                    "-r",
-                    introduction[0],
-                ],
-                cwd=ROOT,
-                check=True,
-                capture_output=True,
-                text=True,
-            ).stdout.splitlines()
-        )
+    )
     assert set(changed) == ALLOWED_FILES

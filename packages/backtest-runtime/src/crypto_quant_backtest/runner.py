@@ -42,6 +42,7 @@ from .engine import (
 )
 from .profile_portfolio_execution import (
     _RuntimeExecutionCase as ExecutionCase, _ResolvedProfilePortfolioCaseV1,
+    _ResolvedProfilePortfolioCaseV2, _EconomicPortfolioEngine,
     _ProfilePortfolioEngine,
 )
 from .multi_resolution_preparation import MultiResolutionMarketDataPreparation
@@ -1230,7 +1231,7 @@ class AuditableBacktestRunner:
     ) -> AttemptExecutionRecord:
         if not isinstance(resolved_request, ResolvedBacktestRequest):
             raise TypeError("resolved_request must be ResolvedBacktestRequest")
-        if not isinstance(execution_case, ResolvedExecutionCase) and type(execution_case) not in (ResolvedExecutionCaseV2, _ResolvedProfilePortfolioCaseV1):
+        if not isinstance(execution_case, ResolvedExecutionCase) and type(execution_case) not in (ResolvedExecutionCaseV2, _ResolvedProfilePortfolioCaseV1, _ResolvedProfilePortfolioCaseV2):
             raise TypeError("execution_case must be a supported resolved execution case")
         if not isinstance(attempt, AttemptIdentity):
             raise TypeError("attempt must be AttemptIdentity")
@@ -1282,6 +1283,10 @@ class AuditableBacktestRunner:
                     (resolved_request.semantic_run_id,),
                 ),
             )
+        if type(execution_case) is _ResolvedProfilePortfolioCaseV2:
+            with RunPublicationLock(root=self._publication_root, semantic_run_id=resolved_request.semantic_run_id):
+                return self._execute_verified_locked(resolved_request=resolved_request, execution_case=execution_case,
+                    attempt=attempt, input_origin=input_origin, cancellation=cancellation)
         try:
             with RunPublicationLock(
                 root=self._publication_root,
@@ -1338,6 +1343,10 @@ class AuditableBacktestRunner:
             / resolved_request.semantic_run_id
             / relative_canonical
         )
+        if type(execution_case) is _ResolvedProfilePortfolioCaseV2 and os.path.lexists(canonical):
+            cache_hit = _read_canonical_cache_hit_v2(root=root, resolved_request=resolved_request,
+                input_origin=input_origin, execution_case=execution_case)
+            return AttemptExecutionRecord(cache_hit=cache_hit)
         if os.path.lexists(canonical):
             try:
                 if self._canonical_publication_version == 2:
@@ -1385,6 +1394,17 @@ class AuditableBacktestRunner:
         input_origin: InputOrigin,
         cancellation: EngineCancellationRequest | None,
     ) -> AttemptExecutionRecord:
+        if type(execution_case) is _ResolvedProfilePortfolioCaseV2:
+            if not isinstance(self._engine, _EconomicPortfolioEngine):
+                raise TypeError("economic engine requires result/cache/failure verifiers")
+            outcome = self._engine.run(execution_case, cancellation=cancellation)
+            if type(outcome) is not EngineExecutionOutcome:
+                raise TypeError("economic engine returned wrong native outcome type")
+            if outcome.result is not None:
+                self._engine.verify_result(execution_case, outcome.result)
+            if outcome.engine_failure is not None:
+                self._engine.verify_failure(execution_case, outcome.engine_failure)
+            return self._map_outcome(resolved_request, execution_case, attempt, input_origin, cancellation, outcome)
         try:
             if type(execution_case) is _ResolvedProfilePortfolioCaseV1:
                 if not isinstance(self._engine, _ProfilePortfolioEngine):

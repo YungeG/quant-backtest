@@ -1339,6 +1339,22 @@ def _position_exception_issue(
 
 
 class MarketRuleEvaluator:
+    @staticmethod
+    def validate_execution_price(
+        approval: MarketRuleApproval, price: Price
+    ) -> tuple[MarketRuleIssue, ...]:
+        """Check the approved supplied-reference execution price without repricing."""
+        if type(approval) is not MarketRuleApproval:
+            raise TypeError("approval must be exact MarketRuleApproval")
+        if type(price) is not Price:
+            raise TypeError("price must be exact Price")
+        evidence = approval.evaluation_input.notional_evidence
+        if evidence.basis is not NotionalPriceBasis.SUPPLIED_REFERENCE:
+            raise ValueError("execution price requires SUPPLIED_REFERENCE evidence")
+        if price != evidence.price:
+            raise ValueError("execution price must equal approval notional evidence price")
+        return _price_issues(approval.resolved_interval.snapshot, price, "execution_price")
+
     def evaluate(
         self,
         evaluation_input: OrderRuleEvaluationInput,

@@ -140,3 +140,16 @@ def test_portfolio_v1_public_root_preserves_exact_existing_identities() -> None:
             assert getattr(facade, name) is getattr(importlib.import_module(f"{prefix}.{leaf}"), name)
             assert name not in module.__all__
             assert not hasattr(module, name)
+
+
+def test_economic_v1_additive_public_identities_are_owned_by_concrete_modules():
+    root = importlib.import_module("crypto_quant_backtest")
+    names = {
+        "cn_a_share_portfolio_economic_definition_v1": ("CnASharePortfolioEconomicDevelopmentInputsV1", "CnASharePortfolioEconomicOpeningTermsV1"),
+        "cn_a_share_portfolio_economic_prepare_v1": ("prepare_cn_a_share_portfolio_economic_development_backtest",),
+        "cn_a_share_portfolio_economic_daily_nav_analysis_v1": ("CnASharePortfolioEconomicDailyNavMetricProfileV1", "CnASharePortfolioEconomicDailyNavPointV1", "CnASharePortfolioEconomicDailyNavAnalysisV1", "CnASharePortfolioEconomicDailyNavAnalysisRefV1", "CnASharePortfolioEconomicDailyNavAnalysisRuntimeV1"),
+    }
+    for module, exports in names.items():
+        owner = importlib.import_module("crypto_quant_backtest." + module)
+        for name in exports:
+            assert getattr(root, name) is getattr(owner, name) and name in root.__all__

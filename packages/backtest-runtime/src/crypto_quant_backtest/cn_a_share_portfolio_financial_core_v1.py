@@ -20,6 +20,7 @@ from crypto_quant_trading import (
 if TYPE_CHECKING:
     from .cn_a_share_portfolio_financial_development_v1 import CnASharePortfolioFinancialStepDevelopmentV1
     from .cn_a_share_portfolio_standard_opening_v1 import _StandardFinancialStepV1
+    from .cn_a_share_portfolio_economic_opening_v1 import _EconomicFinancialStepV1
 
 
 def _id(kind: DomainIdKind, role: str, outcome_hash: str) -> DomainId:
@@ -33,16 +34,24 @@ def _at(fill: Fill, phase: int, key: str, sequence: int) -> SimulationInstant:
     return SimulationInstant(fill.execution_time, TimelinePhase(phase, key), SourceSequence(sequence))
 
 
-def _fill(step: CnASharePortfolioFinancialStepDevelopmentV1 | _StandardFinancialStepV1) -> Fill:
+def _fill(step: CnASharePortfolioFinancialStepDevelopmentV1 | _StandardFinancialStepV1 | _EconomicFinancialStepV1) -> Fill:
     value = step.opening.fill
     if type(value) is not Fill:
         raise ValueError("native portfolio financial step has no typed Fill")
     return value
 
+def _raise_economic_native_failure_v1(step, code_name: str, outcome: object, *, operation, native_inputs) -> None:
+    from .cn_a_share_portfolio_economic_opening_v1 import _EconomicFinancialStepV1
+    if type(step) is _EconomicFinancialStepV1:
+        from .cn_a_share_portfolio_economic_native_state_v1 import _EconomicNativeFailureV1
+        from .engine import EngineFailureCode
+        raise _EconomicNativeFailureV1(EngineFailureCode[code_name], outcome, operation=operation, native_inputs=native_inputs, original_claim={"step":step})
+
+
 def book_native_cn_portfolio_financial_core_v1(
     *, prior_journal: AccountingJournal, ledger_schema: LedgerSchema,
     cost_basis_policy: CostBasisPolicy, notional_quantization: QuantizationPolicy,
-    steps: tuple[CnASharePortfolioFinancialStepDevelopmentV1 | _StandardFinancialStepV1, ...],
+    steps: tuple[CnASharePortfolioFinancialStepDevelopmentV1 | _StandardFinancialStepV1 | _EconomicFinancialStepV1, ...],
     sell_first: bool = False,
 ) -> tuple[AccountingJournal, LedgerState, tuple[Fill, ...], tuple[FeeAssessment, ...]]:
     """Append all real Fills then Fill fees then Order fees atomically in one Journal."""
@@ -76,6 +85,7 @@ def book_native_cn_portfolio_financial_core_v1(
             journal_entry_id=_id(DomainIdKind.JOURNAL, "fill", step.opening.outcome_hash),
             recorded_at=_at(fill, 70, "accounting", sequence))
         if booked.result is None:
+            _raise_economic_native_failure_v1(step, "ACCOUNTING_FAILURE", booked, operation='fill_accounting', native_inputs={'fill': fill, 'cash_key': cash, 'position_key': position, 'open_lots': prior_position[0].lots if prior_position else (), 'cost_basis_policy': cost_basis_policy, 'notional_quantization': notional_quantization, 'journal_entry_id': _id(DomainIdKind.JOURNAL, 'fill', step.opening.outcome_hash), 'recorded_at': _at(fill, 70, 'accounting', sequence)})
             raise ValueError("native portfolio Fill accounting rejected")
         fill_entries.append(booked.result.journal_entry)
         fill_fee = engine.assess(
@@ -84,6 +94,7 @@ def book_native_cn_portfolio_financial_core_v1(
             fee_assessment_id=_id(DomainIdKind.FEE, "fill_fee", step.opening.outcome_hash),
             assessment_time=fill.execution_time)
         if fill_fee.result is None:
+            _raise_economic_native_failure_v1(step, "FEE_ASSESSMENT_FAILURE", fill_fee, operation='fill_fee_assessment', native_inputs={'basis': FeeAssessmentBasisEvidence.for_fill(fill), 'rule_set': step.final_fill_rules, 'fee_assessment_id': _id(DomainIdKind.FEE, 'fill_fee', step.opening.outcome_hash), 'assessment_time': fill.execution_time})
             raise ValueError("native portfolio Fill fee assessment rejected")
         assessments.append(fill_fee.result.assessment)
         charged_fill = accounting.charge_fee(
@@ -93,6 +104,7 @@ def book_native_cn_portfolio_financial_core_v1(
             journal_entry_id=_id(DomainIdKind.JOURNAL, "fill_fee", step.opening.outcome_hash),
             recorded_at=_at(fill, 90, "fees", sequence))
         if charged_fill.result is None:
+            _raise_economic_native_failure_v1(step, "FEE_ACCOUNTING_FAILURE", charged_fill, operation='fill_fee_accounting', native_inputs={'assessment': fill_fee.result.assessment, 'related_fill': fill, 'cash_key': cash, 'open_lots': booked.result.open_lots, 'cost_basis_policy': cost_basis_policy, 'journal_entry_id': _id(DomainIdKind.JOURNAL, 'fill_fee', step.opening.outcome_hash), 'recorded_at': _at(fill, 90, 'fees', sequence)})
             raise ValueError("native portfolio Fill fee Journal rejected")
         fill_fee_entries.append(charged_fill.result.journal_entry)
         order_fee = engine.assess(
@@ -101,6 +113,7 @@ def book_native_cn_portfolio_financial_core_v1(
             fee_assessment_id=_id(DomainIdKind.FEE, "order_fee", step.opening.outcome_hash),
             assessment_time=fill.execution_time)
         if order_fee.result is None:
+            _raise_economic_native_failure_v1(step, "FEE_ASSESSMENT_FAILURE", order_fee, operation='order_fee_assessment', native_inputs={'basis': FeeAssessmentBasisEvidence.for_order(step.terminal_order), 'rule_set': step.final_order_rules, 'fee_assessment_id': _id(DomainIdKind.FEE, 'order_fee', step.opening.outcome_hash), 'assessment_time': fill.execution_time})
             raise ValueError("native portfolio Order fee assessment rejected")
         assessments.append(order_fee.result.assessment)
         charged_order = accounting.charge_order_fee(
@@ -110,6 +123,7 @@ def book_native_cn_portfolio_financial_core_v1(
             journal_entry_id=_id(DomainIdKind.JOURNAL, "order_fee", step.opening.outcome_hash),
             recorded_at=_at(fill, 91, "order_fee", sequence))
         if charged_order.result is None:
+            _raise_economic_native_failure_v1(step, "FEE_ACCOUNTING_FAILURE", charged_order, operation='order_fee_accounting', native_inputs={'assessment': order_fee.result.assessment, 'order_stream': step.terminal_order, 'cash_key': cash, 'open_lots': charged_fill.result.open_lots, 'cost_basis_policy': cost_basis_policy, 'journal_entry_id': _id(DomainIdKind.JOURNAL, 'order_fee', step.opening.outcome_hash), 'recorded_at': _at(fill, 91, 'order_fee', sequence)})
             raise ValueError("native portfolio Order fee Journal rejected")
         order_fee_entries.append(charged_order.result.journal_entry)
     combined = prior_journal.append_many((*fill_entries, *fill_fee_entries, *order_fee_entries))

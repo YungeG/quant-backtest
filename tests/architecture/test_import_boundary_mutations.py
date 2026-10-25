@@ -211,6 +211,10 @@ def test_boundary_report_is_byte_deterministic(tmp_path: Path) -> None:
     "source_package,target,expected_rules",
     (
         ("backtest-runtime", "crypto_quant_trading.profiles.cn_a_share.portfolio_v1", []),
+        ("backtest-runtime", "crypto_quant_trading.profiles.cn_a_share.portfolio_economic_v1", []),
+        ("backtest-runtime", "crypto_quant_trading.profiles.cn_a_share.portfolio_economic_v1.internal", ["cross-package-internal-import"]),
+        ("backtest-runtime", "crypto_quant_trading.profiles.cn_a_share.cash_dividend_projection_v1", ["cross-package-internal-import"]),
+        ("backtest-runtime", "crypto_quant_trading.profiles.cn_a_share.cash_dividend_accounting_v1", ["cross-package-internal-import"]),
         ("backtest-runtime", "crypto_quant_trading.profiles.cn_a_share.portfolio_v1.internal", ["cross-package-internal-import"]),
         ("backtest-runtime", "crypto_quant_trading.profiles.cn_a_share.portfolio_order_plan_v1", ["cross-package-internal-import"]),
         ("backtest-runtime", "crypto_quant_trading.profiles.cn_a_share.portfolio_open_risk_development_v1", ["cross-package-internal-import"]),

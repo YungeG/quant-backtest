@@ -1233,6 +1233,9 @@ _ALLOWED_RELATIVE_IMPORTS = {
     "settlement",
 }
 _ALLOWED_IMPORTS_BY_FILE = {
+    'cash_dividend_projection_v1.py': {'__future__', 'crypto_quant_domain', 'crypto_quant_trading.journal', 'crypto_quant_trading.ledger', 'crypto_quant_trading.marks', 'crypto_quant_trading.orders', 'crypto_quant_trading.reservations', 'crypto_quant_trading.settlement', 'crypto_quant_trading.snapshots', 'crypto_quant_trading.valuation', 'dataclasses', 'enum', 're', 'unicodedata'},
+    'cash_dividend_accounting_v1.py': {'__future__', 'crypto_quant_domain', 'crypto_quant_trading.journal', 'crypto_quant_trading.ledger', 'crypto_quant_trading.orders', 'crypto_quant_trading.reservations', 'crypto_quant_trading.settlement', 'dataclasses', 'enum', 'math'},
+    'portfolio_economic_v1/__init__.py': {'crypto_quant_trading.profiles.cn_a_share.cash_dividend_accounting_v1', 'crypto_quant_trading.profiles.cn_a_share.cash_dividend_projection_v1'},
     "portfolio_open_risk_development_v1.py": {"__future__", "crypto_quant_domain", "crypto_quant_trading.fee_reservations", "crypto_quant_trading.market_rules", "crypto_quant_trading.reservations", "dataclasses", "re"},
     "portfolio_order_capability_development_v1.py": {"__future__", "crypto_quant_domain", "crypto_quant_trading.capabilities"},
     "portfolio_order_plan_v1.py": {"__future__", "crypto_quant_domain", "crypto_quant_trading.orders", "crypto_quant_trading.rebalance", "crypto_quant_trading.reservations", "dataclasses", "re"},
@@ -1345,6 +1348,9 @@ _ALLOWED_IMPORTS_BY_FILE = {
     },
 }
 _ALLOWED_RELATIVE_IMPORTS_BY_FILE = {
+    'cash_dividend_projection_v1.py': {'shared_cny_cash_v1'},
+    'cash_dividend_accounting_v1.py': {'cash_dividend_projection_v1'},
+    'portfolio_economic_v1/__init__.py': set(),
     "portfolio_open_risk_development_v1.py": {"portfolio_order_plan_v1", "portfolio_sellability_v1", "shared_cny_cash_v1"},
     "portfolio_order_capability_development_v1.py": set(),
     "portfolio_order_plan_v1.py": {"portfolio_rebalance_policy_v1", "portfolio_sellability_v1", "shared_cny_cash_v1"},
@@ -1716,7 +1722,7 @@ def test_module_mutation_scanner_rejects_nested_and_indirect_state(
     assert _module_mutation_violations(source)
 
 
-@pytest.mark.parametrize("module_name", ("portfolio_v1/__init__.py", "portfolio_open_risk_development_v1.py", "portfolio_order_capability_development_v1.py", "portfolio_order_plan_v1.py", "portfolio_rebalance_policy_v1.py", "portfolio_sellability_v1.py", "shared_cny_cash_v1.py"))
+@pytest.mark.parametrize("module_name", ("cash_dividend_projection_v1.py", "cash_dividend_accounting_v1.py", "portfolio_economic_v1/__init__.py", "portfolio_v1/__init__.py", "portfolio_open_risk_development_v1.py", "portfolio_order_capability_development_v1.py", "portfolio_order_plan_v1.py", "portfolio_rebalance_policy_v1.py", "portfolio_sellability_v1.py", "shared_cny_cash_v1.py"))
 def test_portfolio_profile_allowlists_still_reject_io_and_runtime_imports(module_name: str) -> None:
     for source in ("import os", "import socket", "from pathlib import Path", "import crypto_quant_backtest"):
         assert _purity_violations(

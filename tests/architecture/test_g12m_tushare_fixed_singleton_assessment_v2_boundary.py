@@ -73,46 +73,37 @@ def test_assessor_is_pure_runtime_local_and_not_root_exported() -> None:
 
 
 def test_v2_04_assessment_write_set_is_exact() -> None:
-    status = subprocess.run(
-        ["git", "status", "--short", "--untracked-files=all"],
+    introduction = subprocess.run(
+        [
+            "git",
+            "log",
+            "--diff-filter=A",
+            "--format=%H",
+            "--",
+            PRODUCTION.relative_to(ROOT).as_posix(),
+        ],
         cwd=ROOT,
         check=True,
         capture_output=True,
         text=True,
     ).stdout.splitlines()
-    changed = tuple(line[3:] for line in status)
-    if not changed:
-        introduction = subprocess.run(
+    assert len(introduction) == 1
+    changed = tuple(
+        subprocess.run(
             [
                 "git",
-                "log",
-                "--diff-filter=A",
-                "--format=%H",
-                "--",
-                PRODUCTION.relative_to(ROOT).as_posix(),
+                "diff-tree",
+                "--no-commit-id",
+                "--name-only",
+                "-r",
+                introduction[0],
             ],
             cwd=ROOT,
             check=True,
             capture_output=True,
             text=True,
         ).stdout.splitlines()
-        assert len(introduction) == 1
-        changed = tuple(
-            subprocess.run(
-                [
-                    "git",
-                    "diff-tree",
-                    "--no-commit-id",
-                    "--name-only",
-                    "-r",
-                    introduction[0],
-                ],
-                cwd=ROOT,
-                check=True,
-                capture_output=True,
-                text=True,
-            ).stdout.splitlines()
-        )
+    )
     assert changed
     assert all(
         path in ALLOWED_FILES or path.startswith(FIXTURE_PREFIX) for path in changed

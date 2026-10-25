@@ -159,6 +159,7 @@ def test_only_the_bundle_has_one_private_versioned_schema_catalog() -> None:
         ("backtest_execution_input_bundle", 6),
         ("backtest_execution_input_bundle", 7),
         ("backtest_execution_input_bundle", 8),
+        ("backtest_execution_input_bundle", 9),
     ]
     assert len(catalogs) == 1
 
@@ -192,7 +193,7 @@ def test_transport_defines_no_artifact_identity_behavior() -> None:
     )
 
 
-@pytest.mark.parametrize("mutation", ("missing", "duplicate", "reordered", "version9"))
+@pytest.mark.parametrize("mutation", ("missing", "duplicate", "reordered", "version10", "renamed"))
 def test_exact_catalog_guard_rejects_inventory_drift(monkeypatch, mutation: str) -> None:
     module = _module()
     catalog = next(
@@ -207,11 +208,15 @@ def test_exact_catalog_guard_rejects_inventory_drift(monkeypatch, mutation: str)
         registrations.elts.append(registrations.elts[-1])
     elif mutation == "reordered":
         registrations.elts[-2:] = reversed(registrations.elts[-2:])
-    else:
+    elif mutation == "version10":
         registration = registrations.elts[-1]
         assert isinstance(registration, ast.Call)
         version = next(item for item in registration.keywords if item.arg == "schema_version")
-        version.value = ast.Constant(9)
+        version.value = ast.Constant(10)
+    else:
+        registration = registrations.elts[-1]
+        artifact = next(item for item in registration.keywords if item.arg == "artifact_type")
+        artifact.value = ast.Constant("unapproved_execution_input_bundle")
     monkeypatch.setattr(sys.modules[__name__], "_module", lambda: module)
     with pytest.raises(AssertionError):
         test_only_the_bundle_has_one_private_versioned_schema_catalog()

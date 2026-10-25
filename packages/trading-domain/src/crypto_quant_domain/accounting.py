@@ -62,6 +62,7 @@ class AccountingEntryType(str, Enum):
     CORPORATE_ACTION_ENTITLEMENT_BOOKED = "corporate_action_entitlement_booked"
     CORPORATE_ACTION_POSITION_ADJUSTED = "corporate_action_position_adjusted"
     CORPORATE_ACTION_CASH_PAID = "corporate_action_cash_paid"
+    CORPORATE_ACTION_TAX_PAID = "corporate_action_tax_paid"
     LIQUIDATION_APPLIED = "liquidation_applied"
 
 

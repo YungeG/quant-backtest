@@ -178,9 +178,10 @@ from .timeline import DeterministicTimelineV2, TimelineSegment, TimelineWindow
 
 from .profile_portfolio_execution import (
     _ProfilePortfolioExecutionPlanV1, _ResolvedProfilePortfolioCaseV1,
+    _ProfilePortfolioExecutionPlanV2, _ResolvedProfilePortfolioCaseV2,
     _PortfolioExecutionProvider, _profile_portfolio_semantic_spec_from_case,
 )
-from .composition import _compose_profile_portfolio_execution_case
+from .composition import _compose_profile_portfolio_execution_case, _compose_profile_portfolio_economic_execution_case
 
 _ARTIFACT_TYPE = "backtest_execution_input_bundle"
 _SCHEMA_VERSION = 1
@@ -191,6 +192,7 @@ _V5_SCHEMA_VERSION = 5
 _V6_SCHEMA_VERSION = 6
 _V7_SCHEMA_VERSION = 7
 _V8_SCHEMA_VERSION = 8
+_V9_SCHEMA_VERSION = 9
 _TEMPLATE_TYPE = "backtest_initial_financial_state_template"
 _V1_SCHEMA = CanonicalSchema(_ARTIFACT_TYPE, _SCHEMA_VERSION)
 _V2_SCHEMA = CanonicalSchema(_ARTIFACT_TYPE, _V2_SCHEMA_VERSION)
@@ -200,6 +202,7 @@ _V5_SCHEMA = CanonicalSchema(_ARTIFACT_TYPE, _V5_SCHEMA_VERSION)
 _V6_SCHEMA = CanonicalSchema(_ARTIFACT_TYPE, _V6_SCHEMA_VERSION)
 _V7_SCHEMA = CanonicalSchema(_ARTIFACT_TYPE, _V7_SCHEMA_VERSION)
 _V8_SCHEMA = CanonicalSchema(_ARTIFACT_TYPE, _V8_SCHEMA_VERSION)
+_V9_SCHEMA = CanonicalSchema(_ARTIFACT_TYPE, _V9_SCHEMA_VERSION)
 _PAYLOAD_FIELDS = frozenset(
     {
         "type",
@@ -465,6 +468,23 @@ class _DecodedExecutionInputBundleV8:
     execution_case_plan: _ProfilePortfolioExecutionPlanV1
 
 @dataclass(frozen=True, slots=True)
+class _DecodedExecutionInputBundleV9:
+    request_hash: str
+    semantic_run_id: str
+    build_artifact_manifest: BuildArtifactManifest
+    execution_case_semantic_spec: ExecutionCaseSemanticSpec
+    timeline_stream_keys: tuple[str, ...]
+    target_stream: PrecomputedTargetStream
+    timeline_batch_size: int
+    execution_case_plan: _ProfilePortfolioExecutionPlanV2
+
+    def __post_init__(self) -> None:
+        if type(self.execution_case_plan) is not _ProfilePortfolioExecutionPlanV2:
+            raise TypeError("input9 decoded plan must be exact PlanV2")
+        if type(self.timeline_batch_size) is not int or self.timeline_batch_size != 64:
+            raise ValueError("input9 batch size must be64")
+
+@dataclass(frozen=True, slots=True)
 class _ValidationInstrumentCatalogBindingV1:
     catalog_hash: str
     catalog: domain.InstrumentCatalog
@@ -502,9 +522,10 @@ class BacktestExecutionRequest:
             _V6_SCHEMA_VERSION,
             _V7_SCHEMA_VERSION,
             _V8_SCHEMA_VERSION,
+            _V9_SCHEMA_VERSION,
         ):
             raise ValueError(
-                "BacktestExecutionRequest schema_version must be 1, 2, 3, 4, 5, 6, 7, or 8"
+                "BacktestExecutionRequest schema_version must be 1, 2, 3, 4, 5, 6, 7, 8, or 9"
             )
         if type(self.request) is not BacktestRequest:
             raise TypeError("request must be exact BacktestRequest")
@@ -2123,9 +2144,21 @@ def _read_position_lot_change(value: object) -> domain.PositionLotChange:
 
 def _read_journal_entry(value: object) -> domain.AccountingJournalEntry:
     data = _tagged("accounting_journal_entry", value, "accounting_journal_entry")
+    entry_type = domain.AccountingEntryType(data["entry_type"])
+    if entry_type.value not in (
+        "capital_deposited", "capital_withdrawn", "capital_transferred", "fill_booked",
+        "fee_charged", "funding_applied", "borrow_fee_charged", "settlement_applied",
+        "corporate_action_entitlement_booked", "corporate_action_position_adjusted",
+        "corporate_action_cash_paid", "liquidation_applied",
+    ):
+        raise ValueError("unsupported legacy accounting entry type")
+    return _read_journal_entry_fields_v1(data, entry_type)
+
+
+def _read_journal_entry_fields_v1(data, entry_type) -> domain.AccountingJournalEntry:
     return domain.AccountingJournalEntry(
         _read_domain_id(data["journal_entry_id"]),
-        domain.AccountingEntryType(data["entry_type"]),
+        entry_type,
         data["account_id"],
         _read_venue(data["venue_id"]),
         _read_utc(data["effective_time"]),
@@ -2151,6 +2184,26 @@ def _read_journal(value: object) -> trading.AccountingJournal:
     if journal.journal_hash != data["journal_hash"]:
         raise ValueError("accounting journal hash mismatch")
     return journal
+
+
+def _read_economic_journal_entry_v1(value: object) -> domain.AccountingJournalEntry:
+    data = _tagged("economic accounting entry", value, "accounting_journal_entry")
+    entry_type = domain.AccountingEntryType(data["entry_type"])
+    if entry_type is not domain.AccountingEntryType.CORPORATE_ACTION_TAX_PAID:
+        result = _read_journal_entry(value)
+    else:
+        result = _read_journal_entry_fields_v1(data, entry_type)
+    if canonical_bytes(result) != canonical_bytes(value):
+        raise ValueError("economic accounting entry did not reconstruct exactly")
+    return result
+
+
+def _read_economic_journal_v1(value: object) -> trading.AccountingJournal:
+    data = _tagged("economic accounting journal", value, "accounting_journal")
+    result = trading.AccountingJournal(_sequence("journal entries", data["entries"], _read_economic_journal_entry_v1))
+    if canonical_bytes(result) != canonical_bytes(value):
+        raise ValueError("economic accounting journal did not reconstruct exactly")
+    return result
 
 
 def _read_ledger_schema(value: object) -> trading.LedgerSchema:
@@ -3243,6 +3296,62 @@ def _read_execution_input_payload_v8(value: object) -> _DecodedExecutionInputBun
         _positive_int("timeline_batch_size", payload["timeline_batch_size"]),
         _read_execution_case_plan_v8(payload["execution_case_plan"]))
 
+_V9_PAYLOAD_FIELDS = _V6_PAYLOAD_FIELDS
+
+
+def _read_execution_case_plan_v9(value: object) -> _ProfilePortfolioExecutionPlanV2:
+    from .cn_a_share_portfolio_economic_values_v1 import (
+        _read_cn_a_share_cash_dividend_state_v1, _read_cn_a_share_portfolio_economic_projection_v1,
+    )
+    plan = _mapping("economic portfolio execution plan", value)
+    _exact_fields("portfolio execution plan", plan,
+                  frozenset({"type", "schema_version", "definition", "financial_state", "initial_dividend_state", "initial_economic_projection", "source_refs"}))
+    if (plan["type"] != "execution_case_plan" or type(plan["schema_version"]) is not int
+            or plan["schema_version"] != 4):
+        raise ValueError("portfolio execution requires exact plan4")
+    raw = _mapping("portfolio profile definition", plan["definition"])
+    _exact_fields("portfolio profile definition", raw,
+                  frozenset({"artifact_type", "schema_version", "payload", "content_hash"}))
+    definition = ArtifactEnvelope(raw["artifact_type"], raw["schema_version"],
+                                  _read_canonical_data(raw["payload"]), raw["content_hash"])
+    refs = []
+    for raw_ref in plan["source_refs"]:
+        if not isinstance(raw_ref, (list, tuple)) or len(raw_ref) != 2:
+            raise ValueError("portfolio source reference role tuple malformed")
+        role, reference_value = raw_ref
+        ref = _mapping("portfolio source reference", reference_value)
+        _exact_fields("portfolio source reference", ref,
+            frozenset({"type", "artifact_type", "schema_version", "content_hash"}))
+        if ref["type"] != "artifact_ref":
+            raise ValueError("portfolio source reference must be exact artifact_ref")
+        refs.append((role, ArtifactRef(ref["artifact_type"], ref["schema_version"], ref["content_hash"])))
+    result = _ProfilePortfolioExecutionPlanV2(definition, _read_financial_state(plan["financial_state"]),
+        _read_cn_a_share_cash_dividend_state_v1(plan["initial_dividend_state"]),
+        _read_cn_a_share_portfolio_economic_projection_v1(plan["initial_economic_projection"]), tuple(refs))
+    _canonical_reconstruction("portfolio execution plan", value, result)
+    return result
+
+
+def _read_execution_input_payload_v9(value: object) -> _DecodedExecutionInputBundleV9:
+    payload = _mapping("execution input v9", value)
+    _exact_fields("execution input v9", payload, _V9_PAYLOAD_FIELDS)
+    if (payload["type"] != _ARTIFACT_TYPE or type(payload["schema_version"]) is not int
+            or payload["schema_version"] != _V9_SCHEMA_VERSION):
+        raise ValueError("execution input must be backtest_execution_input_bundle@8")
+    keys = _stream_keys(payload["timeline_stream_keys"])
+    target = _read_precomputed_target_stream(payload["target_stream"])
+    if target.stream_key in keys:
+        raise ValueError("embedded portfolio targets must not be a market stream")
+    spec = _read_semantic_spec(payload["execution_case_semantic_spec"])
+    if spec.target_stream_digest != target.target_stream_digest:
+        raise ValueError("portfolio semantic spec/target digest mismatch")
+    return _DecodedExecutionInputBundleV9(
+        _text("request_hash", payload["request_hash"]),
+        _text("semantic_run_id", payload["semantic_run_id"]),
+        _read_build_manifest(payload["build_artifact_manifest"]), spec, keys, target,
+        _positive_int("timeline_batch_size", payload["timeline_batch_size"]),
+        _read_execution_case_plan_v9(payload["execution_case_plan"]))
+
 _EXECUTION_INPUT_CATALOG = SchemaCatalog(
     (
         ArtifactSchemaRegistration(
@@ -3284,6 +3393,11 @@ _EXECUTION_INPUT_CATALOG = SchemaCatalog(
             artifact_type="backtest_execution_input_bundle",
             schema_version=8,
             payload_reader=_read_execution_input_payload_v8,
+        ),
+        ArtifactSchemaRegistration(
+            artifact_type="backtest_execution_input_bundle",
+            schema_version=9,
+            payload_reader=_read_execution_input_payload_v9,
         ),
     )
 )
@@ -3547,6 +3661,47 @@ def _materialize_execution_input_bundle_v8(
     decoded = _EXECUTION_INPUT_CATALOG.read(canonical_bytes(envelope))
     if decoded.envelope != envelope or type(decoded.artifact) is not _DecodedExecutionInputBundleV8:
         raise ValueError("execution input8 did not round-trip the canonical catalog")
+    return envelope
+
+def _materialize_execution_input_bundle_v9(
+    *, resolved_request: ResolvedBacktestRequest,
+    execution_case: _ResolvedProfilePortfolioCaseV2,
+) -> ArtifactEnvelope:
+    if (type(resolved_request) is not ResolvedBacktestRequest
+            or type(execution_case) is not _ResolvedProfilePortfolioCaseV2):
+        raise TypeError("input9 requires exact resolved request and profile portfolio case")
+    request = resolved_request.request
+    initial = execution_case.financial_state.initial_snapshot
+    if (request.result_grade_requested is not RequestedResultGrade.DEVELOPMENT
+            or initial.account_id != request.execution_account_id
+            or initial.reporting_currency != request.reporting_currency):
+        raise ValueError("portfolio account/currency/development binding mismatch")
+    implementation = resolved_request.environment.market_semantics.implementation
+    if not isinstance(implementation, _PortfolioExecutionProvider):
+        raise ValueError("registered profile does not own portfolio execution")
+    spec = execution_case.semantic_spec
+    if spec is None or not execution_case.verify_identity_manifest(resolved_request.semantic_run_id):
+        raise ValueError("portfolio case has no valid semantic/identity seal")
+    rebuilt = _compose_profile_portfolio_economic_execution_case(
+        resolved_request=resolved_request, market_reader=execution_case.timeline.reader,
+        semantic_spec=spec, target_stream=execution_case.target_stream,
+        timeline_stream_keys=execution_case.timeline.stream_keys,
+        timeline_batch_size=execution_case.timeline_batch_size,
+        execution_case_plan=execution_case.execution_case_plan)
+    if rebuilt.case_hash != execution_case.case_hash:
+        raise ValueError("portfolio case does not reconstruct from its definition")
+    payload = {"type": _ARTIFACT_TYPE, "schema_version": _V9_SCHEMA_VERSION,
+        "request_hash": request.request_hash, "semantic_run_id": resolved_request.semantic_run_id,
+        "build_artifact_manifest": resolved_request.build_artifact_manifest,
+        "execution_case_semantic_spec": spec,
+        "timeline_stream_keys": execution_case.timeline.stream_keys,
+        "target_stream": execution_case.target_stream,
+        "timeline_batch_size": execution_case.timeline_batch_size,
+        "execution_case_plan": execution_case.execution_case_plan}
+    envelope = ArtifactEnvelope.create(_V9_SCHEMA.name, _V9_SCHEMA.version, payload)
+    decoded = _EXECUTION_INPUT_CATALOG.read(canonical_bytes(envelope))
+    if decoded.envelope != envelope or type(decoded.artifact) is not _DecodedExecutionInputBundleV9:
+        raise ValueError("execution input9 did not round-trip the canonical catalog")
     return envelope
 
 def _rebuild_backtest_request_v3(value: object) -> BacktestRequest:
@@ -5313,3 +5468,52 @@ def _hydrate_execution_inputs(
             execution_case=execution_case,
         )
     )
+
+
+def _snapshot_execution_request_v9_from_validated_schema(request):
+    if type(request) is not BacktestExecutionRequest or request.schema_version != _V9_SCHEMA_VERSION:
+        return None, _ExecutionInputsHydrationFailureV3(_ExecutionInputsHydrationFailureCodeV3.MALFORMED_EXECUTION_REQUEST)
+    ref = request.execution_input_bundle_ref
+    if (type(ref) is not ArtifactRef or ref.artifact_type != _ARTIFACT_TYPE or ref.schema_version != _V9_SCHEMA_VERSION):
+        return None, _ExecutionInputsHydrationFailureV3(_ExecutionInputsHydrationFailureCodeV3.WRONG_EXECUTION_INPUT_BUNDLE_REF)
+    try:
+        public_request = _rebuild_backtest_request_v3(request.request)
+        result = BacktestExecutionRequest(_V9_SCHEMA_VERSION, public_request,
+            ArtifactRef(ref.artifact_type, ref.schema_version, ref.content_hash))
+    except (TypeError, ValueError, KeyError):
+        return None, _ExecutionInputsHydrationFailureV3(_ExecutionInputsHydrationFailureCodeV3.MALFORMED_EXECUTION_REQUEST)
+    return result, None
+
+
+def _read_execution_inputs_v9_from_snapshot(reader, request):
+    codes = _ExecutionInputsHydrationFailureCodeV3
+    def fail(code):
+        return None, _ExecutionInputsHydrationFailureV3(code)
+    if type(request) is not BacktestExecutionRequest or request.schema_version != 9:
+        return fail(codes.MALFORMED_EXECUTION_REQUEST)
+    ref = request.execution_input_bundle_ref
+    try:
+        source = reader.read(ref=ref)
+    except (domain.ArtifactNotFoundError, domain.ArtifactRetentionUnavailableError):
+        return fail(codes.EXECUTION_INPUT_UNAVAILABLE)
+    except ArtifactIntegrityError:
+        return fail(codes.EXECUTION_INPUT_TAMPERED)
+    except ArtifactDecodeError:
+        return fail(codes.EXECUTION_INPUT_DECODE_FAILED)
+    if type(source) is not ArtifactReadResult:
+        return fail(codes.EXECUTION_INPUT_UNAVAILABLE)
+    if (source.source_bytes != canonical_bytes(source.envelope)
+            or source.source_hash != canonical_sha256(source.envelope)
+            or ArtifactRef.from_envelope(source.envelope) != ref):
+        return fail(codes.EXECUTION_INPUT_TAMPERED)
+    try:
+        decoded = _EXECUTION_INPUT_CATALOG.read(source.source_bytes)
+    except (ArtifactIntegrityError, UnknownArtifactTypeError, UnsupportedSchemaVersionError):
+        return fail(codes.EXECUTION_INPUT_TAMPERED)
+    except ArtifactDecodeError:
+        return fail(codes.EXECUTION_INPUT_DECODE_FAILED)
+    if decoded.envelope != source.envelope or type(decoded.artifact) is not _DecodedExecutionInputBundleV9:
+        return fail(codes.EXECUTION_INPUT_DECODE_FAILED)
+    if decoded.artifact.request_hash != request.request.request_hash:
+        return fail(codes.REQUEST_BINDING_MISMATCH)
+    return decoded.artifact, None

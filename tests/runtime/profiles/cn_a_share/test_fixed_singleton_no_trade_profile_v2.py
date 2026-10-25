@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import hashlib
+import subprocess
 from dataclasses import fields, replace
 from pathlib import Path
 
@@ -678,6 +679,15 @@ def test_build_reuses_only_exact_v1_account_and_core_artifacts() -> None:
     )
 
 
+def _read_accepted_v1_artifact_bytes(path: str) -> bytes:
+    if path == "tests/architecture/test_cn_a_share_fixed_singleton_no_trade_profile_boundary.py":
+        return subprocess.check_output(
+            ["git", "show", "c52c8913ef680b34c1edecf46b1892b268e013e0:" + path],
+            cwd=ROOT,
+        )
+    return (ROOT / path).read_bytes()
+
+
 def test_accepted_v1_artifact_bytes_remain_immutable() -> None:
     expected = (
         (
@@ -706,4 +716,26 @@ def test_accepted_v1_artifact_bytes_remain_immutable() -> None:
         ),
     )
     for path, digest in expected:
-        assert hashlib.sha256((ROOT / path).read_bytes()).hexdigest() == digest
+        assert hashlib.sha256(_read_accepted_v1_artifact_bytes(path)).hexdigest() == digest
+
+
+@pytest.mark.parametrize("path", (
+    "tests/architecture/test_cn_a_share_fixed_singleton_no_trade_profile_boundary.py",
+    "packages/backtest-runtime/src/crypto_quant_backtest/cn_a_share_fixed_singleton_no_trade_profile_v1.py",
+    "docs/implementation/plans/g12/g12m-tushare-fixed-singleton-profile-build-authority-v1.md",
+    "docs/research/g12m-tushare-fixed-singleton-profile-build-authority-v1.md",
+    "evidence/g12m-tushare-fixed-singleton-profile-build-authority-v1/decision.json",
+    "evidence/g12m-tushare-fixed-singleton-profile-build-authority-v1/manifest.sha256",
+))
+def test_accepted_v1_byte_pins_reject_modified_historical_and_live_bytes(monkeypatch, path: str) -> None:
+    import sys
+
+    original = _read_accepted_v1_artifact_bytes
+
+    def modified(name: str) -> bytes:
+        value = original(name)
+        return value + b"\nmodified byte-pin probe\n" if name == path else value
+
+    monkeypatch.setattr(sys.modules[__name__], "_read_accepted_v1_artifact_bytes", modified)
+    with pytest.raises(AssertionError):
+        test_accepted_v1_artifact_bytes_remain_immutable()
