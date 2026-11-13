@@ -2016,7 +2016,7 @@ class BacktestEvidenceRepository:
             raise ValueError("engine context did not reconstruct exactly")
 
         fills = tuple(_read_fill(item) for item in engine.fills)
-        economic = request["market_semantics_profile_key"] == "cn.portfolio.shared-cny.economic.development.v1.market"
+        economic = request["market_semantics_profile_key"] in {"cn.portfolio.shared-cny.economic.development.v1.market", "cn.portfolio.shared-cny.economic.development.v2.market"}
         if economic:
             from .execution_inputs import _read_economic_journal_v1
             final_journal = _read_economic_journal_v1(engine.final_journal)
@@ -2609,7 +2609,7 @@ class BacktestEvidenceRepository:
                 report = children[role].artifact.raw
                 issue = report["issue"]
                 source = issue.get("source_evidence")
-                economic = report["resolved_request"]["request"]["market_semantics_profile_key"] == "cn.portfolio.shared-cny.economic.development.v1.market"
+                economic = report["resolved_request"]["request"]["market_semantics_profile_key"] in {"cn.portfolio.shared-cny.economic.development.v1.market", "cn.portfolio.shared-cny.economic.development.v2.market"}
                 if issue["source"] == "engine_failure" and economic:
                     from .cn_a_share_portfolio_economic_result_v1 import _load_verified_economic_terminal_v1
                     return _load_verified_economic_terminal_v1(reader=self._reader, publication_ref=ref,

@@ -481,6 +481,12 @@ class _DecodedExecutionInputBundleV9:
     def __post_init__(self) -> None:
         if type(self.execution_case_plan) is not _ProfilePortfolioExecutionPlanV2:
             raise TypeError("input9 decoded plan must be exact PlanV2")
+        from .profile_portfolio_execution import _economic_profile_prefix_v1
+        spec = self.execution_case_semantic_spec
+        if (type(spec) is not ExecutionCaseSemanticSpec
+                or spec.case_key != _economic_profile_prefix_v1(self.execution_case_plan.definition)
+                or spec.case_version != 1):
+            raise ValueError("input9 spec/definition tuple mismatch")
         if type(self.timeline_batch_size) is not int or self.timeline_batch_size != 64:
             raise ValueError("input9 batch size must be64")
 

@@ -15,7 +15,11 @@ from .cn_a_share_portfolio_economic_native_state_v1 import (_EconomicOpenSources
     _advance_economic_settlement_v1, _EconomicFailureContextV1)
 from .cn_a_share_portfolio_economic_opening_v1 import (_EconomicOpeningOutcomeV1, _EconomicFinancialStepV1,
     _economic_evaluation_v1, _verify_economic_opening_inputs_v1, _economic_venue_funding_v1, _cent)
-from .cn_a_share_portfolio_economic_engine_v1 import _EconomicAdmissionV1, _used_identity_keys_v1
+from .cn_a_share_portfolio_economic_engine_v1 import _EconomicAdmissionV1, _used_identity_keys_v1, _economic_native_finance_identity_v1
+from .cn_a_share_portfolio_economic_definition_v2 import CnASharePortfolioEconomicDevelopmentInputsV2, _read_economic_definition_v2
+from .cn_a_share_portfolio_economic_activation_v2 import (
+    _economic_activation_at_v2, _economic_activation_signal_v2, _economic_activation_value_v2, _economic_native_failure_inputs_v2,
+)
 from .cn_a_share_portfolio_economic_values_v1 import (_read_cn_a_share_cash_dividend_state_v1,
     _read_cn_a_share_cash_dividend_transition_v1, _read_cn_a_share_cash_dividend_transition_inputs_v1,
     _read_cn_a_share_cash_dividend_transition_failure_v1)
@@ -254,15 +258,16 @@ def _verify_economic_facts_v1(*, case, reader, journal, final_streams, final_sch
     by_schedule = {s.order_id: s for s in final_schedules}
     if len(by_order) != len(final_streams) or len(by_schedule) != len(final_schedules):
         raise d.ArtifactIntegrityError("economic final order/schedule identities duplicated")
-    component = d.canonical_sha256({"type": "cn_a_share_portfolio_economic_native_component", "schema_version": 1,
-        "definition_hash": inputs._definition_source_hash, "policy_key": "economic_full_fill_known_tax_v1"})
+    v2 = type(inputs) is CnASharePortfolioEconomicDevelopmentInputsV2
+    prefix, component = _economic_native_finance_identity_v1(inputs)
     allowed = {"economic_signal", "economic_opening_batch", "economic_dividend_transition", "economic_daily_projection",
         "economic_pending_no_real_open", "economic_working_no_real_open", "economic_attempt_witness"}
     for artifact in artifacts:
-        if (artifact.role not in allowed or artifact.component_key != _PREFIX + ".native-finance" or artifact.component_version != 1
+        if (artifact.role not in allowed or artifact.component_key != prefix + ".native-finance" or artifact.component_version != 1
                 or artifact.component_digest != component or artifact.input_hash != inputs._definition_source_hash
                 or artifact.payload.artifact_type != "cn_a_share_portfolio_" + artifact.role
-                or artifact.payload.schema_version != (2 if artifact.role == "economic_attempt_witness" else 1)):
+                or artifact.payload.schema_version != (2 if artifact.role == "economic_attempt_witness" or (v2 and artifact.role == "economic_signal") else 1)
+                or (v2 and artifact.occurred_at < inputs.initial_marks.at)):
             raise d.ArtifactIntegrityError("economic role/component/source closure mismatch")
     ordered = sorted(artifacts, key=lambda row: (row.occurred_at, row.source_event_id, row.role))
     expected_no_real = {}
@@ -293,20 +298,31 @@ def _verify_economic_facts_v1(*, case, reader, journal, final_streams, final_sch
         admission_raw[identity] = row
     signal_count = opening_count = daily_count = dividend_count = 0
     seen_ca, seen_open, seen_daily, seen_no_real = set(), set(), set(), set()
+    seen_sources, seen_activations = set(), set()
     for artifact in ordered:
         role, fact = artifact.role, _raw(artifact.payload.payload)
         if role == "economic_attempt_witness":
             continue
         if role == "economic_signal":
-            _map(fact, {"signal", "projection", "cancel_plan", "cancel_sources", "coordinator_plan", "coordinator_sources"})
+            fields = {"signal", "projection", "cancel_plan", "cancel_sources", "coordinator_plan", "coordinator_sources"}
+            _map(fact, fields | {"activation"} if v2 else fields)
             index = signal_count
             if index >= len(case.target_stream.events):
                 raise d.ArtifactIntegrityError("extra economic signal")
             event = case.target_stream.events[index]
-            at = inputs.signal_marks[index].at
+            at = _economic_activation_at_v2(inputs) if v2 else inputs.signal_marks[index].at
+            if v2:
+                activation = _economic_activation_value_v2(inputs, event)
+                _equal(activation, fact["activation"], "source-derived complete activation")
+                coordinate = (event.event_id, activation.source_at, activation.activation_at)
+                if event.event_id in seen_sources or coordinate in seen_activations:
+                    raise d.ArtifactIntegrityError("economic V2 duplicate source/activation")
+                seen_sources.add(event.event_id)
+                seen_activations.add(coordinate)
             before = make(at, current_journal, book, streams, schedules, state)
             compare_source(before, fact["cancel_sources"])
-            signal, projection = _economic_signal_target_v1(sources=before, event=event)
+            signal, projection = (_economic_activation_signal_v2(sources=before, event=event) if v2
+                else _economic_signal_target_v1(sources=before, event=event))
             _equal(signal, fact["signal"], "native signal allocation/risk/sizing")
             _equal(projection, fact["projection"], "signal economic projection")
             cancel = CnASharePortfolioOrderPlanV1.create(account_id=inputs.scope.account_id,
@@ -374,6 +390,8 @@ def _verify_economic_facts_v1(*, case, reader, journal, final_streams, final_sch
             dividend_count += 1
             commit(post)
         elif role == "economic_opening_batch":
+            if v2 and not seen_activations:
+                raise d.ArtifactIntegrityError("economic V2 opening lacks prior activation")
             _map(fact, {"when", "prior", "funded", "current", "funding", "outcomes", "steps", "journal_count_after", "book_after", "dividend_state_after", "post_projection"})
             when = x._read_utc(fact["when"])
             bars = tuple((i, event) for i, event in enumerate(openings) if event.event_time == when)
@@ -557,6 +575,8 @@ def _verify_economic_facts_v1(*, case, reader, journal, final_streams, final_sch
             seen_open.add(when)
             opening_count += 1
         elif role == "economic_daily_projection":
+            if v2 and not seen_activations:
+                raise d.ArtifactIntegrityError("economic V2 daily finance lacks prior activation")
             _map(fact, {"marks", "checkpoint", "pending_intentions"})
             at = artifact.occurred_at
             expected = tuple(b for b in inputs.daily_marks if b.at == at)
@@ -586,6 +606,20 @@ def _verify_economic_facts_v1(*, case, reader, journal, final_streams, final_sch
                 raise d.ArtifactIntegrityError("economic no-real-open clock mismatch")
             _equal(expected_fact,fact,"complete no-real-open retained obligation")
             seen_no_real.add(key)
+    if v2:
+        source = case.target_stream.events[0]
+        activation = _economic_activation_value_v2(inputs, source)
+        expected_sources = {source.event_id}
+        expected_activations = {(source.event_id, activation.source_at, activation.activation_at)}
+        end = _at(case.timeline.window.end_exclusive, 200) if final_checkpoint is None else x._read_simulation_instant(final_checkpoint["at"])
+        required = final_checkpoint is None or end >= _at(activation.activation_at.instant, 45)
+        expected_open = {event.event_time for event in openings if _at(event.event_time, 97) <= end}
+        expected_daily = {batch.at for batch in inputs.daily_marks if batch.at <= end}
+        if seen_open != expected_open or seen_daily != expected_daily:
+            raise d.ArtifactIntegrityError("economic V2 committed active prefix omits required opening/daily facts")
+        if ((required and (seen_sources != expected_sources or seen_activations != expected_activations))
+                or (not required and (seen_sources or seen_activations))):
+            raise d.ArtifactIntegrityError("economic V2 source/activation exact cover mismatch")
     # A typed native batch failure may follow the committed67 admission checkpoint,
     # while its provisional Fill/fee/Book candidates have never committed at97.
     if final_checkpoint is not None:
@@ -868,13 +902,19 @@ def _prove_native_failure_v1(*,case,bound,ending,admissions,pending,diagnostic,f
     if operation in signal_ops:
         claim=_map(diagnostic["original_claim"],{"source","event"})
         event=next((event for event in case.target_stream.events if event.event_id==failed_id),None)
-        if (event is None or failed_at!=d.SimulationInstant(event.event_time,event.phase,event.source_sequence)
-                or ending.at!=failed_at):
+        v2 = type(bound.inputs) is CnASharePortfolioEconomicDevelopmentInputsV2
+        expected_at = _economic_activation_at_v2(bound.inputs) if v2 else (
+            None if event is None else d.SimulationInstant(event.event_time,event.phase,event.source_sequence))
+        if (event is None or failed_at != expected_at or ending.at != failed_at
+                or (v2 and operation in {"target_decode", "target_validation", "decision_batch_collection"})):
             raise d.ArtifactIntegrityError("native signal failure has no exact actual source event/clock")
         _equal(ending,claim["source"],"native signal original source")
         _equal(event,claim["event"],"native signal original event")
         try:
-            _economic_signal_target_v1(sources=ending,event=event)
+            if v2:
+                _economic_activation_signal_v2(sources=ending, event=event)
+            else:
+                _economic_signal_target_v1(sources=ending,event=event)
         except _EconomicNativeFailureV1 as rejected:
             actual=rejected
         else:
@@ -958,7 +998,9 @@ def _prove_native_failure_v1(*,case,bound,ending,admissions,pending,diagnostic,f
         raise d.ArtifactIntegrityError("unknown native failure operation: "+str(operation))
     if actual.operation!=operation or actual.code.value!=diagnostic["engine_failure_code"]:
         raise d.ArtifactIntegrityError("native failure operation/classification substitution")
-    _equal(actual.native_inputs,diagnostic["native_inputs"],"native original typed arguments")
+    wire_inputs = (_economic_native_failure_inputs_v2(operation, actual.native_inputs)
+        if type(bound.inputs) is CnASharePortfolioEconomicDevelopmentInputsV2 else actual.native_inputs)
+    _equal(wire_inputs,diagnostic["native_inputs"],"native original typed arguments")
     _equal(actual.evidence,diagnostic["native_outcome"],"native complete rejected outcome")
     return actual.evidence
 
@@ -1048,18 +1090,18 @@ def _verify_economic_failure_context_v1(*, case, reader, failure):
         native_cause=actual.failure
     else:
         diagnostic=diagnostics[0]
+        diagnostic_version = 2 if type(bound.inputs) is CnASharePortfolioEconomicDevelopmentInputsV2 else 1
         if (diagnostic.source_event_id!=raw["failed_event_id"] or diagnostic.occurred_at!=failed_at
-                or diagnostic.payload.artifact_type!="cn_a_share_portfolio_economic_native_failure" or diagnostic.payload.schema_version!=1
+                or diagnostic.payload.artifact_type!="cn_a_share_portfolio_economic_native_failure" or diagnostic.payload.schema_version!=diagnostic_version
                 or trace.entries[-2].evidence_hash!=diagnostic.artifact_hash):
             raise d.ArtifactIntegrityError("native failure terminal diagnostic source/trace/envelope mismatch")
-        component=d.canonical_sha256({"type":"cn_a_share_portfolio_economic_native_component","schema_version":1,
-            "definition_hash":bound.inputs._definition_source_hash,"policy_key":"economic_full_fill_known_tax_v1"})
-        if (diagnostic.component_key!=_PREFIX+".native-finance" or diagnostic.component_version!=1
+        prefix, component = _economic_native_finance_identity_v1(bound.inputs)
+        if (diagnostic.component_key!=prefix+".native-finance" or diagnostic.component_version!=1
                 or diagnostic.component_digest!=component or diagnostic.input_hash!=bound.inputs._definition_source_hash):
             raise d.ArtifactIntegrityError("native failure diagnostic component binding mismatch")
         value=_map(diagnostic.payload.payload,{"type","schema_version","operation","engine_failure_code","original_claim","native_inputs","native_outcome"})
         if (value["type"]!="cn_a_share_portfolio_economic_native_failure" or type(value["schema_version"]) is not int
-                or value["schema_version"]!=1 or value["engine_failure_code"]!=base.code.value):
+                or value["schema_version"]!=diagnostic_version or value["engine_failure_code"]!=base.code.value):
             raise d.ArtifactIntegrityError("native failure diagnostic type/code mismatch")
         native_cause=_prove_native_failure_v1(case=case,bound=bound,ending=ending,admissions=admissions,pending=pending,
             diagnostic=value,failed_id=raw["failed_event_id"],failed_at=failed_at)
@@ -1109,8 +1151,10 @@ def _request_v1(raw, market_reader):
         raw["target_stream_digest"], raw["execution_case_semantic_hash"], raw["master_random_seed"], raw["build_artifact_manifest_hash"],
         StrategyFamily(raw["strategy_family"]), raw["engine_kind"], RequestedResultGrade(raw["result_grade_requested"]))
     _equal(request, raw, "retained native request")
-    if (request.market_semantics_profile_key != _PREFIX + ".market" or request.simulation_profile_key != _PREFIX + ".simulation"
-            or request.execution_account_profile_key != _PREFIX + ".account" or request.result_grade_requested is not RequestedResultGrade.DEVELOPMENT):
+    keys = (request.market_semantics_profile_key, request.simulation_profile_key, request.execution_account_profile_key)
+    triples = tuple(tuple(prefix + suffix for suffix in (".market", ".simulation", ".account"))
+        for prefix in (_PREFIX, "cn.portfolio.shared-cny.economic.development.v2"))
+    if keys not in triples or request.result_grade_requested is not RequestedResultGrade.DEVELOPMENT:
         raise d.ArtifactIntegrityError("economic retained request profile/grade mismatch")
     return request
 
@@ -1122,9 +1166,10 @@ def _bootstrap_economic_case_v1(*, reader, market_reader, resolved_raw, binding,
     if binding["type"] != "cn_a_share_portfolio_economic_completed_sources" or type(binding["schema_version"]) is not int or binding["schema_version"] != 1:
         raise d.ArtifactIntegrityError("economic source binding version mismatch")
     refs = tuple((row[0], _artifact_ref(row[1])) for row in _seq(binding["source_refs"]))
+    definition_version = next((ref.schema_version for key, ref in refs if key == "definition"), None)
     expected = (("cash_dividend_action_set", "cn_a_share_cash_dividend_action_set", 1),
-        ("definition", "backtest_profile_portfolio_definition", 2), ("target_stream", "backtest_target_stream", 1))
-    if tuple((key, ref.artifact_type, ref.schema_version) for key, ref in refs) != expected:
+        ("definition", "backtest_profile_portfolio_definition", definition_version), ("target_stream", "backtest_target_stream", 1))
+    if definition_version not in (2, 3) or tuple((key, ref.artifact_type, ref.schema_version) for key, ref in refs) != expected:
         raise d.ArtifactIntegrityError("economic source binding role/type/version mismatch")
     by_role = dict(refs)
     action_envelope = _read_exact_economic_source_v1(reader, by_role["cash_dividend_action_set"])
@@ -1132,13 +1177,16 @@ def _bootstrap_economic_case_v1(*, reader, market_reader, resolved_raw, binding,
     definition = _read_exact_economic_source_v1(reader, by_role["definition"])
     target_ref = BacktestTargetStreamRef.from_artifact_ref(by_role["target_stream"])
     target = BacktestTargetStreamRepository(reader=reader).load(target_ref).target_stream
-    inputs = _read_economic_definition_v1(definition, target_ref, actions)
+    inputs = (_read_economic_definition_v2(definition, target_ref, actions, target) if definition.schema_version == 3
+        else _read_economic_definition_v1(definition, target_ref, actions))
     financial, state, projection = _native_initial_economic_financial_state_v1(inputs)
     plan = _ProfilePortfolioExecutionPlanV2(definition, financial, state, projection, refs)
     resolved_raw = _map(resolved_raw)
     request = _request_v1(resolved_raw["request"], market_reader)
     manifest = x._read_build_manifest(_raw(build_artifact_manifest))
-    resolved = ProfileResolver().resolve(request=request, registry=_registry(inputs), market_bundle_manifest=market_reader.manifest,
+    from .cn_a_share_portfolio_economic_prepare_v2 import _registry_v2
+    registry = _registry_v2(inputs) if type(inputs) is CnASharePortfolioEconomicDevelopmentInputsV2 else _registry(inputs)
+    resolved = ProfileResolver().resolve(request=request, registry=registry, market_bundle_manifest=market_reader.manifest,
         build_artifact_manifest=manifest).resolved
     if resolved is None:
         raise d.ArtifactIntegrityError("economic original retained request no longer resolves")
