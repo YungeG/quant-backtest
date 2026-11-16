@@ -26,6 +26,7 @@ from crypto_quant_domain import (
     TimelinePhase,
     UtcInstant,
     VenueId,
+    canonical_bytes,
 )
 from crypto_quant_trading import (
     AccountingJournal,
@@ -483,6 +484,89 @@ def test_ledger_rejects_position_lot_before_mismatch() -> None:
         GenericLedger(schema()).project(
             AccountingJournal.from_entries((open_position, mismatched_replace))
         )
+
+
+@pytest.mark.parametrize("resume", (False, True))
+@pytest.mark.parametrize("reduction", (-4, 0))
+def test_last_lot_close_must_match_position_quantity(resume: bool, reduction: int) -> None:
+    opened = entry(
+        "1", recorded_nanoseconds=10,
+        entry_type=AccountingEntryType.FILL_BOOKED,
+        changes=(BalanceChange(STOCK_KEY, Quantity(10, QUANTITY_SCALE, str(STOCK))),),
+        position_lot_changes=(PositionLotChange(None, lot("last-lot", 10)),),
+    )
+    wrong = entry(
+        "2", recorded_nanoseconds=20,
+        entry_type=AccountingEntryType.FILL_BOOKED,
+        changes=(BalanceChange(STOCK_KEY, Quantity(reduction, QUANTITY_SCALE, str(STOCK))),) if reduction else (),
+        position_lot_changes=(PositionLotChange(lot("last-lot", 10), None),),
+    )
+    journal = AccountingJournal.from_entries((opened, wrong))
+    projector = GenericLedger(schema())
+    with pytest.raises(LedgerFinancialInvariantError, match="lot total"):
+        if resume:
+            prefix = projector.project(journal, stop=journal.cursor_at(1))
+            projector.resume(journal, prefix)
+        else:
+            projector.project(journal)
+
+
+@pytest.mark.parametrize("operation", ("close", "partial", "transfer", "legacy_reopen"))
+def test_final_lot_validation_is_entry_atomic_and_prefix_resume_equivalent(operation: str) -> None:
+    original = lot("last-lot", 10)
+    opened = entry(
+        "1", recorded_nanoseconds=10, entry_type=AccountingEntryType.FILL_BOOKED,
+        changes=(BalanceChange(STOCK_KEY, Quantity(10, QUANTITY_SCALE, str(STOCK))),),
+        position_lot_changes=(PositionLotChange(None, original),),
+    )
+    if operation == "partial":
+        delta = -4
+        lot_changes = (PositionLotChange(original, lot("last-lot", 6)),)
+    elif operation == "transfer":
+        delta = 0
+        lot_changes = tuple(sorted((PositionLotChange(original, None),
+                                    PositionLotChange(None, lot("replacement-lot", 10))),
+                                   key=canonical_bytes))
+    else:
+        delta = -10
+        lot_changes = (PositionLotChange(original, None),)
+    adjusted = entry(
+        "2", recorded_nanoseconds=20, entry_type=AccountingEntryType.FILL_BOOKED,
+        changes=(BalanceChange(STOCK_KEY, Quantity(delta, QUANTITY_SCALE, str(STOCK))),) if delta else (),
+        position_lot_changes=lot_changes,
+    )
+    entries = (opened, adjusted)
+    if operation == "legacy_reopen":
+        entries += (entry(
+            "3", recorded_nanoseconds=30, entry_type=AccountingEntryType.FILL_BOOKED,
+            changes=(BalanceChange(STOCK_KEY, Quantity(6, QUANTITY_SCALE, str(STOCK))),),
+        ),)
+    journal = AccountingJournal.from_entries(entries)
+    projector = GenericLedger(schema())
+    full = projector.project(journal)
+    if operation == "close":
+        assert full.position_balances == ()
+    else:
+        balance, = full.position_balances
+        assert balance.quantity.units == (10 if operation == "transfer" else 6)
+        assert tuple(item.lot_id for item in balance.lots) == {
+            "partial": ("last-lot",), "transfer": ("replacement-lot",), "legacy_reopen": (),
+        }[operation]
+    # Includes the closed-position prefix before the permitted legacy no-lot reopen.
+    for size in range(len(entries) + 1):
+        prefix = projector.project(journal, stop=journal.cursor_at(size))
+        resumed = projector.resume(journal, prefix)
+        assert resumed == full
+        assert canonical_bytes(resumed) == canonical_bytes(full)
+
+
+def test_same_entry_duplicate_lot_identity_is_still_rejected_by_domain() -> None:
+    existing = lot("last-lot", 10)
+    changes = tuple(sorted((PositionLotChange(existing, None), PositionLotChange(None, existing)),
+                           key=canonical_bytes))
+    with pytest.raises(ValueError, match="duplicate lot identity"):
+        entry("1", recorded_nanoseconds=10, entry_type=AccountingEntryType.FILL_BOOKED,
+              changes=(), position_lot_changes=changes)
 
 
 def test_ledger_rejects_position_lot_close_quantity_mismatch() -> None:

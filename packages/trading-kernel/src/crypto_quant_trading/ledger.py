@@ -396,10 +396,11 @@ class GenericLedger:
         self,
         positions: dict[PositionBalanceKey, Quantity],
         lots: dict[PositionBalanceKey, dict[str, PositionLot]],
+        *,
+        checked_keys: set[PositionBalanceKey],
     ) -> None:
-        for key, bucket in lots.items():
-            if not bucket:
-                continue
+        for key in checked_keys | set(lots):
+            bucket = lots.get(key, {})
             registration = self.schema.registration_for(key)
             total_units = sum(lot.quantity.units for lot in bucket.values())
             position = positions.get(
@@ -462,6 +463,9 @@ class GenericLedger:
         financing = {balance.key: balance.amount for balance in state.financing}
 
         for entry in replay.entries:
+            # Remember this entry's tracked keys even if its final Lot is removed.
+            # Reset per entry so a later legacy no-Lot reopening remains valid.
+            checked_keys = set(position_lots)
             for change in entry.balance_changes:
                 self._validate_change(change)
                 if isinstance(change.key, CashBalanceKey):
@@ -489,8 +493,14 @@ class GenericLedger:
                         "unsupported Ledger balance key type"
                     )
             for lot_change in entry.position_lot_changes:
+                if lot_change.before is not None:
+                    checked_keys.add(lot_change.before.position_key)
+                if lot_change.after is not None:
+                    checked_keys.add(lot_change.after.position_key)
                 self._apply_position_lot_change(position_lots, lot_change)
-            self._validate_position_lot_quantities(positions, position_lots)
+            self._validate_position_lot_quantities(
+                positions, position_lots, checked_keys=checked_keys
+            )
             for value in entry.realized_pnl:
                 self._add_money(
                     realized_pnl, self._attribution_key(entry, value), value
