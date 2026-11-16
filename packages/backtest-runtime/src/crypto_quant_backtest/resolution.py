@@ -451,6 +451,44 @@ class _FinancialDispatcherProvider(Protocol):
     def build_financial_dispatcher(self) -> FinancialEventDispatcher: ...
 
 
+class _EvidenceProfileHeader:
+    """Marker for cold, non-executable profile metadata; never a live implementation."""
+
+    __slots__ = ()
+
+
+@dataclass(frozen=True, slots=True)
+class _MarketProfileEvidenceHeader(_EvidenceProfileHeader):
+    profile_digest: str
+    component_manifest: tuple[ProfileComponentRef, ...]
+    financial_dispatcher_spec: FinancialDispatcherSpec | None
+
+    def to_canonical_dict(self) -> dict[str, object]:
+        return {"type": "market_profile_evidence_header", "profile_digest": self.profile_digest,
+                "component_manifest": self.component_manifest, "financial_dispatcher_spec": self.financial_dispatcher_spec}
+
+    def build_financial_dispatcher(self) -> FinancialEventDispatcher:
+        raise TypeError("evidence-only profile cannot execute")
+
+
+@dataclass(frozen=True, slots=True)
+class _SimulationProfileEvidenceHeader(_EvidenceProfileHeader):
+    profile_digest: str
+    component_manifest: tuple[SimulationComponentRef, ...]
+
+    def to_canonical_dict(self) -> dict[str, object]:
+        return {"type": "simulation_profile_evidence_header", "profile_digest": self.profile_digest,
+                "component_manifest": self.component_manifest}
+
+
+@dataclass(frozen=True, slots=True)
+class _AccountProfileEvidenceHeader(_EvidenceProfileHeader):
+    profile_digest: str
+
+    def to_canonical_dict(self) -> dict[str, object]:
+        return {"type": "account_profile_evidence_header", "profile_digest": self.profile_digest}
+
+
 @dataclass(frozen=True, slots=True)
 class MarketSemanticsProfileRegistration:
     profile_key: str
@@ -694,6 +732,8 @@ class BacktestProfileRegistry:
             isinstance(value, expected_type) for value in values
         ):
             raise TypeError(f"{name} contains invalid registration")
+        if any(isinstance(getattr(value, "implementation"), _EvidenceProfileHeader) for value in values):
+            raise TypeError("evidence-only profile cannot enter a live registry")
         ordered = tuple(sorted(values, key=lambda value: value.profile_key))
         if len({value.profile_key for value in ordered}) != len(ordered):
             raise ValueError(duplicate_message)

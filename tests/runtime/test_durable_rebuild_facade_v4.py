@@ -31,8 +31,8 @@ from tests.runtime.test_durable_rebuild_facade import (
 )
 
 
-def _v4_values(model_binding: ModelRequestBinding | None = None):
-    values = _journey_values(model_binding=model_binding)
+def _v4_values(model_binding: ModelRequestBinding | None = None, *, with_unused_inputs: bool = False):
+    values = _journey_values(model_binding=model_binding, with_unused_inputs=with_unused_inputs)
     _, resolved, case, v3_envelope, _, registry = values
     decoded = _EXECUTION_INPUT_CATALOG.read(canonical_bytes(v3_envelope)).artifact
     assert type(decoded) is _DecodedExecutionInputBundleV3

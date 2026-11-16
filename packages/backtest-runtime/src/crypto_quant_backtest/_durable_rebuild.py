@@ -41,6 +41,10 @@ from ._publication import (
     write_file,
 )
 from .artifact_envelope_reader import ArtifactEnvelopeReader
+from ._durable_artifact_codec import (
+    _DurableDecodeContext, _context_from_verified_inputs,
+    _same_resolved_source_roots, decode_durable_artifact_source,
+)
 from .composition import _compose_execution_case_v3, _HydratedExecutionCaseInputs
 from .engine import DeterministicBarEngine, EngineExecutionResult, ResolvedExecutionCase
 from .evidence import (
@@ -599,10 +603,13 @@ class DurableRebuildVerifierV1:
                 reopened=reopened,
                 subject=subject,
             )
+            context = _context_from_verified_inputs(
+                execution_source, decoded_inputs, request,
+                resolved_request.build_artifact_manifest, resolved_request.semantic_run_id,
+            )
             entries, records = _build_attempt_entries(
-                attempts,
-                self._artifact_reader,
-                resolved_request.semantic_run_id,
+                attempts, self._artifact_reader, resolved_request.semantic_run_id,
+                context=context,
             )
             self._validate_recomputed_roots(
                 fresh_resolved,
@@ -645,7 +652,7 @@ class DurableRebuildVerifierV1:
                 attempts=entries,
                 fresh=fresh,
             )
-            _validate_verification_structure(verification, self._artifact_reader)
+            _validate_verification_structure(verification, self._artifact_reader, context=context)
             return verification
         except DurableRebuildError:
             raise
@@ -825,7 +832,7 @@ class DurableRebuildVerifierV1:
             or reopened.bundle_ref != resolved.request.market_bundle_ref
             or any(
                 record.ready_to_finalize is None
-                or record.ready_to_finalize.resolved_request != fresh_resolved
+                or not _same_resolved_source_roots(record.ready_to_finalize.resolved_request, fresh_resolved)
                 for record in records
             )
         ):
@@ -1529,6 +1536,7 @@ def _build_attempt_entries(
     attempts: AttemptConsistencySet,
     reader: ArtifactEnvelopeReader,
     semantic_run_id: str,
+    *, context: _DurableDecodeContext,
 ) -> tuple[
     tuple[_AttemptVerificationEntryV1, ...], tuple[AttemptExecutionRecord, ...]
 ]:
@@ -1539,7 +1547,7 @@ def _build_attempt_entries(
         _attempt_entry(
             attempt_hash,
             finalized_by_id[attempt_hash.attempt.attempt_id],
-            reader,
+            reader, context=context,
         )
         for attempt_hash in sorted(
             attempts.attempt_hashes,
@@ -1556,6 +1564,7 @@ def _attempt_entry(
     attempt_hash: AttemptExecutionHash,
     evidence: FinalizedAttemptEvidence,
     reader: ArtifactEnvelopeReader,
+    *, context: _DurableDecodeContext,
 ) -> tuple[_AttemptVerificationEntryV1, AttemptExecutionRecord]:
     if (
         type(attempt_hash) is not AttemptExecutionHash
@@ -1582,7 +1591,7 @@ def _attempt_entry(
         record_entry.schema_version,
         record_entry.content_hash,
     )
-    record_read = _read_ref(reader, record_ref, AttemptExecutionRecord)
+    record_read = _read_ref(reader, record_ref, AttemptExecutionRecord, context=context)
     record = record_read.artifact
     if (
         record.attempt != evidence.attempt
@@ -1600,7 +1609,7 @@ def _attempt_entry(
         engine_entry.schema_version,
         engine_entry.content_hash,
     )
-    engine_read = _read_ref(reader, engine_ref, EngineExecutionResult)
+    engine_read = _read_ref(reader, engine_ref, EngineExecutionResult, context=context)
     engine = engine_read.artifact
     if (
         engine != attempt_hash.engine_result
@@ -1629,11 +1638,53 @@ def _attempt_entry(
     )
 
 
+def _load_durable_decode_context(
+    verification: DeterministicRebuildVerificationV1,
+    reader: ArtifactEnvelopeReader,
+) -> _DurableDecodeContext:
+    """Bootstrap only flat manifest/request/build, then bind the original input."""
+    _validate_verification(verification)
+    entry = verification.attempts[0]
+    source = _read_ref(reader, entry.evidence_manifest_ref, EvidenceManifest)
+    manifest = source.artifact
+    if (source.source_hash != entry.evidence_manifest_source_hash
+            or manifest.manifest_hash != entry.evidence_manifest_hash
+            or manifest.semantic_run_id != verification.semantic_run_id
+            or manifest.attempt_id != entry.attempt.attempt_id):
+        raise ValueError("context manifest binding mismatch")
+    request_source = _read_evidence_role(reader, manifest, EvidenceArtifactRole.REQUEST, BacktestRequest)
+    build_source = _read_evidence_role(reader, manifest, EvidenceArtifactRole.BUILD_ARTIFACT_MANIFEST, BuildArtifactManifest)
+    request = request_source.artifact
+    build = build_source.artifact
+    if (request.request_hash != verification.request_hash
+            or build.manifest_hash != verification.build_artifact_manifest_hash):
+        raise ValueError("context request/build binding mismatch")
+    execution_request = BacktestExecutionRequest(
+        verification.execution_input_bundle_ref.schema_version, request, verification.execution_input_bundle_ref,
+    )
+    execution_source, decoded, failure = _read_execution_inputs_with_source(reader, execution_request)
+    if (failure is not None or execution_source is None or decoded is None
+            or execution_source.source_hash != verification.execution_input_source_hash):
+        raise ValueError("context original execution input unavailable or invalid")
+    return _context_from_verified_inputs(execution_source, decoded, execution_request,
+                                         build, verification.semantic_run_id)
+
+
 def _validate_verification_structure(
     verification: DeterministicRebuildVerificationV1,
     reader: ArtifactEnvelopeReader,
+    *, context: _DurableDecodeContext | None = None,
 ) -> None:
     _validate_verification(verification)
+    if context is None:
+        context = _load_durable_decode_context(verification, reader)
+    if (type(context) is not _DurableDecodeContext
+            or context.execution_input_ref != verification.execution_input_bundle_ref
+            or context.execution_input_source_hash != verification.execution_input_source_hash
+            or context.request_hash != verification.request_hash
+            or context.semantic_run_id != verification.semantic_run_id
+            or context.build_artifact_manifest.manifest_hash != verification.build_artifact_manifest_hash):
+        raise ValueError("verification decode context binding mismatch")
     first = AttemptIdentity.first(verification.semantic_run_id)
     second = AttemptIdentity.retry(first, next_ordinal=2)
     if tuple(entry.attempt for entry in verification.attempts) != (first, second):
@@ -1673,7 +1724,7 @@ def _validate_verification_structure(
         ):
             raise ValueError("verification evidence manifest mismatch")
         role_reads = {
-            role: _read_evidence_role(reader, manifest, role, expected_type)
+            role: _read_evidence_role(reader, manifest, role, expected_type, context=context)
             for role, expected_type in required_roles
         }
         record_read = role_reads[EvidenceArtifactRole.ATTEMPT_EXECUTION_RECORD]
@@ -1818,6 +1869,11 @@ def _validate_verification_structure(
     ):
         raise ValueError("verification execution input common roots mismatch")
 
+    bound_context = _context_from_verified_inputs(
+        execution_read, decoded, execution_request, common_build, verification.semantic_run_id,
+    )
+    if bound_context != context:
+        raise ValueError("verification input/schema/build/slippage context mismatch")
     expected = _build_comparisons(
         verification.attempts,
         verification.fresh_rebuild,
@@ -1890,10 +1946,11 @@ def _read_evidence_role(
     manifest: EvidenceManifest,
     role: EvidenceArtifactRole,
     expected_type: type[object],
+    *, context: _DurableDecodeContext | None = None,
 ) -> ArtifactReadResult:
     entry = _one_role(manifest, role)
     ref = ArtifactRef(entry.artifact_type, entry.schema_version, entry.content_hash)
-    result = _read_ref(reader, ref, expected_type)
+    result = _read_ref(reader, ref, expected_type, context=context)
     if (
         result.source_hash != entry.source_hash
         or len(result.source_bytes) != entry.byte_count
@@ -2229,21 +2286,9 @@ def _read_ref(
     reader: ArtifactEnvelopeReader,
     ref: ArtifactRef,
     expected_type: type[object],
+    *, context: _DurableDecodeContext | None = None,
 ) -> ArtifactReadResult:
-    result = reader.read(ref=ref)
-    if type(result) is not ArtifactReadResult or type(result.artifact) is not expected_type:
-        raise TypeError("artifact reader returned wrong exact type")
-    if (
-        ArtifactRef.from_envelope(result.envelope) != ref
-        or result.source_bytes != canonical_bytes(result.envelope)
-        or result.source_hash != _source_hash(result.source_bytes)
-        or ArtifactEnvelope.create(
-            ref.artifact_type, ref.schema_version, result.artifact
-        )
-        != result.envelope
-    ):
-        raise ValueError("artifact reader source binding mismatch")
-    return result
+    return decode_durable_artifact_source(reader.read(ref=ref), ref, expected_type, context=context)
 
 
 def _one_role(manifest: EvidenceManifest, role: EvidenceArtifactRole):

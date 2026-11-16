@@ -33,3 +33,26 @@ def test_no_new_public_facade_operation_or_runtime_recovery_api() -> None:
         if callable(value) and not name.startswith("_")
     } == {"run", "run_with_cancellation"}
     assert not any("recover" in name.lower() for name in crypto_quant_backtest.__all__)
+
+
+def test_durable_source_codec_stays_pure_private_and_finite():
+    import ast
+    from pathlib import Path
+    from crypto_quant_backtest import _durable_artifact_codec as codec
+    source = Path(codec.__file__).read_text()
+    tree = ast.parse(source)
+    imports = {node.module for node in ast.walk(tree) if isinstance(node, ast.ImportFrom)}
+    assert not imports & {"evidence_repository", "facade", "_durable_rebuild", "pickle", "importlib", "os", "pathlib"}
+    for node in ast.walk(tree):
+        if not isinstance(node, ast.Call):
+            continue
+        if isinstance(node.func, ast.Name):
+            assert node.func.id not in {"open", "eval", "exec", "getattr", "__import__"}
+        if isinstance(node.func, ast.Attribute):
+            assert node.func.attr not in {"run", "derive", "put", "append", "build_financial_dispatcher", "__new__"}
+            if node.func.attr == "read":
+                assert ast.unparse(node.func.value) == "inputs._EXECUTION_INPUT_CATALOG"
+    for name in ("_DurableDecodeContext", "decode_durable_artifact_source", "_MarketProfileEvidenceHeader",
+                 "_SimulationProfileEvidenceHeader", "_AccountProfileEvidenceHeader"):
+        assert name not in crypto_quant_backtest.__all__
+        assert not hasattr(crypto_quant_backtest, name)

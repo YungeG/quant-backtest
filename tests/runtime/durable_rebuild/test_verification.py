@@ -426,11 +426,15 @@ def test_structure_rejects_bare_id_and_transitive_engine_mismatch(tmp_path: Path
             ),
         ),
     )
+    # Provider .artifact is deliberately non-authoritative after B2. Preserve
+    # this transitive-tamper sentinel by altering actual canonical source bytes
+    # while the graph still requests its original Engine ref.
+    changed_envelope = ArtifactEnvelope.create("engine_execution_result", 1, changed)
     fixture["store"].values[first.engine_result_ref] = ArtifactReadResult(
-        envelope=result.envelope,
+        envelope=changed_envelope,
         artifact=changed,
-        source_bytes=result.source_bytes,
-        source_hash=result.source_hash,
+        source_bytes=canonical_bytes(changed_envelope),
+        source_hash=canonical_sha256(changed_envelope),
     )
     with pytest.raises(DurableRebuildError) as error:
         fixture["verifier"].verify(

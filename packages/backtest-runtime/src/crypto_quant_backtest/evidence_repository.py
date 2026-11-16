@@ -2165,6 +2165,7 @@ class BacktestEvidenceRepository:
             DeterministicRebuildVerificationPublicationManifestV1,
             DeterministicRebuildVerificationV1,
             RebuildComparisonOutcome,
+            _load_durable_decode_context,
             _read_evidence_role,
             _read_ref,
             _validate_manifest_binding,
@@ -2250,7 +2251,8 @@ class BacktestEvidenceRepository:
                 loaded["rebuild-verification.json"].source_hash,
                 proof_manifest,
             )
-            _validate_verification_structure(verification, self._reader)
+            context = _load_durable_decode_context(verification, self._reader)
+            _validate_verification_structure(verification, self._reader, context=context)
         except Exception as error:
             raise _StaticProofMismatch("durable proof static graph mismatch") from error
 
@@ -2308,7 +2310,7 @@ class BacktestEvidenceRepository:
                 self._reader,
                 evidence_manifest,
                 EvidenceArtifactRole.ATTEMPT_EXECUTION_RECORD,
-                AttemptExecutionRecord,
+                AttemptExecutionRecord, context=context,
             )
             record = record_read.artifact
             ready = record.ready_to_finalize

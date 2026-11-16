@@ -147,7 +147,37 @@ def _journey_values(
     *,
     limitations: tuple[str, ...] = (),
     model_binding: ModelRequestBinding | None = None,
+    with_unused_inputs: bool = False,
 ):
+    if with_unused_inputs:
+        import crypto_quant_domain as d
+        import crypto_quant_trading as t
+        from crypto_quant_backtest.slippage import SlippageApplicabilityEnvelope
+        from tests.runtime.engine import _fixtures as fixture
+        base_schema, base_rules, base_slippage = fixture.ledger_schema, fixture.empty_settlement_rules, fixture.slippage_model
+        position = next(reg.key for reg in base_schema().registrations if isinstance(reg.key, d.PositionBalanceKey))
+        unused = d.PositionBalanceKey(position.account_id, position.venue_id, d.InstrumentId(position.venue_id, "unused-durable-context"))
+        def schema():
+            return t.LedgerSchema(base_schema().registrations + (t.LedgerBalanceRegistration(unused, d.Scale(3)),))
+        def rules():
+            old = base_rules()
+            return t.MarketSettlementRules.create(policy_key=old.policy_key, policy_version=old.policy_version,
+                account_id=old.account_id, cash_rules=old.cash_rules,
+                position_rules=old.position_rules + (t.PositionAvailabilityRule(unused, False),))
+        def slippage():
+            model = base_slippage()
+            old = model.applicability_envelope
+            envelope = SlippageApplicabilityEnvelope.create(envelope_key=old.envelope_key, envelope_version=old.envelope_version,
+                instrument_id=old.instrument_id, valid_from=old.valid_from, valid_to_exclusive=old.valid_to_exclusive,
+                maximum_quantity=old.maximum_quantity, allowed_market_state_keys=old.allowed_market_state_keys + ("unused-cold-market-state",))
+            return replace(model, applicability_envelope=envelope)
+        # Override only test fixture inputs before every native producer builds its
+        # dependent snapshots/allocations; never patch the production Engine.
+        with pytest.MonkeyPatch.context() as declared:
+            declared.setattr(fixture, "ledger_schema", schema)
+            declared.setattr(fixture, "empty_settlement_rules", rules)
+            declared.setattr(fixture, "slippage_model", slippage)
+            return _journey_values(limitations=limitations, model_binding=model_binding)
     prepared, resolved, hydrated, _, _ = _contract()
     timeline = DeterministicTimeline.open(
         reader=prepared.verified_reader,

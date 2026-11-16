@@ -125,8 +125,19 @@ def test_load_completed_evidence_v3_projects_the_verified_graph(
 
     assert completed == rich.completed
     assert type(rich) is _VerifiedCompletedEvidenceV3
-    assert rich.resolved_request == resolved
-    assert rich.ready_attempts == tuple(value.ready_to_finalize for value in records)
+    from crypto_quant_backtest._durable_artifact_codec import _same_resolved_source_roots
+    from crypto_quant_backtest.resolution import _EvidenceProfileHeader
+    assert _same_resolved_source_roots(rich.resolved_request, resolved)
+    assert canonical_bytes(rich.resolved_request) == canonical_bytes(resolved)
+    assert canonical_bytes(rich.resolved_request.build_artifact_manifest) == canonical_bytes(resolved.build_artifact_manifest)
+    assert isinstance(rich.resolved_request.environment.market_semantics.implementation, _EvidenceProfileHeader)
+    for source_ready, live_record in zip(rich.ready_attempts, records, strict=True):
+        live_ready = live_record.ready_to_finalize
+        assert type(source_ready) is type(live_ready)
+        assert _same_resolved_source_roots(source_ready.resolved_request, live_ready.resolved_request)
+        assert canonical_bytes(source_ready) == canonical_bytes(live_ready)
+        assert source_ready.engine_result == live_ready.engine_result
+        assert source_ready.engine_result.final_ledger_state.schema == live_ready.engine_result.final_ledger_state.schema
     assert rich.finalized_attempts == finalized
     assert tuple(value.attempt for value in rich.attempt_hashes) == (
         rich.first_attempt,
