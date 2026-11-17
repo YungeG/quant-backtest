@@ -313,6 +313,76 @@ def test_v2_public_storage_exception_identity(tmp_path, monkeypatch, where):
         assert not tuple(tmp_path.glob("runs/*/attempts/*/attempt-execution-record.json"))
 
 
+def _assert_candidate_source_provenance(snapshot, manifest):
+    """Both pre-commit snapshots and clean committed candidates must be truthful."""
+    from pathlib import Path
+    assert manifest.provenance.source_root == snapshot["candidate"]
+    if snapshot["source_tree_state"] == "UNCOMMITTED":
+        assert manifest.provenance.git_commit == "uncommitted-source-snapshot:" + snapshot["snapshot_hash"]
+    else:
+        import subprocess
+        assert snapshot["source_tree_state"] == "CLEAN"
+        root = Path(snapshot["candidate"])
+        git = ["git", "--no-optional-locks", "-c", "diff.autoRefreshIndex=false", "-C", str(root)]
+        actual = subprocess.check_output([*git, "rev-parse", "HEAD"], text=True).strip()
+        assert actual == snapshot["base_commit"] == manifest.provenance.git_commit
+        assert subprocess.check_output([*git, "status", "--porcelain=v1", "--untracked-files=all"]) == b""
+
+
+@pytest.mark.parametrize("mutation", ("valid", "commit", "root", "unknown-state"))
+def test_v2_legacy_uncommitted_provenance_checks_remain_exact(tmp_path, mutation):
+    from types import SimpleNamespace
+    snapshot = {"source_tree_state": "UNCOMMITTED", "snapshot_hash": "sha256:" + "a" * 64,
+        "candidate": str(tmp_path), "base_commit": "0" * 40}
+    provenance = bt.BuildProvenance("uncommitted-source-snapshot:" + snapshot["snapshot_hash"],
+        "synthetic", str(tmp_path), d.UtcInstant(1))
+    if mutation == "commit":
+        provenance = replace(provenance, git_commit="0" * 40)
+    elif mutation == "root":
+        provenance = replace(provenance, source_root=str(tmp_path / "different"))
+    elif mutation == "unknown-state":
+        snapshot["source_tree_state"] = "UNRECOGNIZED"
+    manifest = SimpleNamespace(provenance=provenance)
+    if mutation == "valid":
+        _assert_candidate_source_provenance(snapshot, manifest)
+    else:
+        with pytest.raises(AssertionError):
+            _assert_candidate_source_provenance(snapshot, manifest)
+
+
+@pytest.mark.parametrize("mutation", ("valid", "dirty", "base", "provenance", "root"))
+def test_v2_committed_provenance_requires_actual_clean_Git_source(tmp_path, mutation):
+    import subprocess
+    from types import SimpleNamespace
+    root = tmp_path / "clean-source"
+    root.mkdir()
+    git = ["git", "--no-optional-locks", "-c", "diff.autoRefreshIndex=false", "-C", str(root)]
+    subprocess.run([*git, "init", "-q"], check=True)
+    source = root / "tracked.txt"
+    source.write_text("synthetic source\n")
+    subprocess.run([*git, "add", "tracked.txt"], check=True)
+    subprocess.run([*git, "-c", "user.name=SDK Test", "-c", "user.email=sdk-test@localhost",
+        "commit", "-q", "-m", "synthetic source"], check=True)
+    commit = subprocess.check_output([*git, "rev-parse", "HEAD"], text=True).strip()
+    snapshot = {"source_tree_state": "CLEAN", "snapshot_hash": "sha256:" + "a" * 64,
+        "candidate": str(root), "base_commit": commit}
+    provenance = bt.BuildProvenance(commit, "synthetic", str(root), d.UtcInstant(1))
+    if mutation == "dirty":
+        source.write_text("changed source\n")
+    elif mutation == "base":
+        snapshot["base_commit"] = "0" * 40
+    elif mutation == "provenance":
+        provenance = replace(provenance, git_commit="0" * 40)
+    elif mutation == "root":
+        provenance = replace(provenance, source_root=str(tmp_path / "wrong"))
+    manifest = SimpleNamespace(provenance=provenance)
+    if mutation == "valid":
+        _assert_candidate_source_provenance(snapshot, manifest)
+    else:
+        with pytest.raises(AssertionError):
+            _assert_candidate_source_provenance(snapshot, manifest)
+
+
 def test_v2_honest_candidate_build_binding(tmp_path, monkeypatch):
     import hashlib
     import importlib
@@ -327,10 +397,8 @@ def test_v2_honest_candidate_build_binding(tmp_path, monkeypatch):
     identity = {key: snapshot[key] for key in ("base_commit", "files")}
     compact = json.dumps(identity, sort_keys=True, separators=(",", ":"), ensure_ascii=False).encode()
     assert snapshot["snapshot_hash"] == "sha256:" + hashlib.sha256(compact).hexdigest()
-    assert snapshot["source_tree_state"] == "UNCOMMITTED"
     manifest = _read_build_manifest(proof["build_manifest"])
-    assert manifest.provenance.git_commit == "uncommitted-source-snapshot:" + snapshot["snapshot_hash"]
-    assert manifest.provenance.source_root == snapshot["candidate"]
+    _assert_candidate_source_provenance(snapshot, manifest)
     root = Path(snapshot["candidate"])
     for row in snapshot["files"]:
         source = root / row["path"]
