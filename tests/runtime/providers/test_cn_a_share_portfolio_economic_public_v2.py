@@ -313,6 +313,31 @@ def test_v2_public_storage_exception_identity(tmp_path, monkeypatch, where):
         assert not tuple(tmp_path.glob("runs/*/attempts/*/attempt-execution-record.json"))
 
 
+def _assert_candidate_snapshot_digest(proof, snapshot):
+    import hashlib
+    identity = {key: snapshot[key] for key in ("base_commit", "files")}
+    compact = json.dumps(identity, sort_keys=True, separators=(",", ":"), ensure_ascii=False).encode()
+    assert snapshot["snapshot_hash"] == "sha256:" + hashlib.sha256(compact).hexdigest()
+    if snapshot["source_tree_state"] == "CLEAN":
+        assert proof["source_snapshot_hash"] == snapshot["snapshot_hash"]
+
+
+@pytest.mark.parametrize("mutation", ("valid", "pruned-rehashed", "stale-hash"))
+def test_v2_clean_source_snapshot_cannot_be_pruned_under_unchanged_proof(mutation):
+    identity = {"base_commit": "a" * 40, "files": [{"path": "retained.py", "sha256": "b" * 64, "mode": 420}]}
+    snapshot = {**identity, "source_tree_state": "CLEAN", "snapshot_hash": d.canonical_sha256(identity)}
+    proof = {"source_snapshot_hash": snapshot["snapshot_hash"]}
+    if mutation != "valid":
+        snapshot["files"] = []
+    if mutation == "pruned-rehashed":
+        snapshot["snapshot_hash"] = d.canonical_sha256({k: snapshot[k] for k in ("base_commit", "files")})
+    if mutation == "valid":
+        _assert_candidate_snapshot_digest(proof, snapshot)
+    else:
+        with pytest.raises(AssertionError):
+            _assert_candidate_snapshot_digest(proof, snapshot)
+
+
 def _assert_candidate_source_provenance(snapshot, manifest):
     """Both pre-commit snapshots and clean committed candidates must be truthful."""
     from pathlib import Path
@@ -394,9 +419,7 @@ def test_v2_honest_candidate_build_binding(tmp_path, monkeypatch):
     assert path, "V2_CANDIDATE_PROVENANCE must identify actual fresh candidate proof; absence is failure"
     proof = json.loads(Path(path).read_text())
     snapshot = json.loads(Path(proof["source_manifest"]).read_text())
-    identity = {key: snapshot[key] for key in ("base_commit", "files")}
-    compact = json.dumps(identity, sort_keys=True, separators=(",", ":"), ensure_ascii=False).encode()
-    assert snapshot["snapshot_hash"] == "sha256:" + hashlib.sha256(compact).hexdigest()
+    _assert_candidate_snapshot_digest(proof, snapshot)
     manifest = _read_build_manifest(proof["build_manifest"])
     _assert_candidate_source_provenance(snapshot, manifest)
     root = Path(snapshot["candidate"])
