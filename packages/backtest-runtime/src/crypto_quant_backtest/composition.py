@@ -926,7 +926,15 @@ def _compose_profile_portfolio_economic_execution_case(
 ) -> _ResolvedProfilePortfolioCaseV2:
     if type(resolved_request) is not ResolvedBacktestRequest or type(execution_case_plan) is not _ProfilePortfolioExecutionPlanV2:
         raise TypeError("economic composer requires exact request and PlanV2")
+    from .profile_portfolio_execution import _economic_profile_prefix_v1
+    from .resolution import RequestedResultGrade
+    prefix = _economic_profile_prefix_v1(execution_case_plan.definition)
     request = resolved_request.request
+    if ((request.market_semantics_profile_key, request.simulation_profile_key, request.execution_account_profile_key)
+            != tuple(prefix + suffix for suffix in (".market", ".simulation", ".account"))
+            or semantic_spec.case_key != prefix or semantic_spec.case_version != 1
+            or request.result_grade_requested is not RequestedResultGrade.DEVELOPMENT):
+        raise ValueError("economic request/spec/profile tuple mismatch")
     if (market_reader.bundle_ref != request.market_bundle_ref
             or semantic_spec.semantic_spec_hash != request.execution_case_semantic_hash
             or target_stream.target_stream_digest != request.target_stream_digest

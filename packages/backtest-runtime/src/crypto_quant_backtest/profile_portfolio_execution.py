@@ -187,6 +187,20 @@ class _ResolvedProfilePortfolioCaseV1:
             "semantic_spec": self.semantic_spec}
 
 
+def _economic_profile_prefix_v1(definition: ArtifactEnvelope) -> str:
+    if (type(definition) is not ArtifactEnvelope or definition.artifact_type != _DEFINITION_TYPE
+            or type(definition.schema_version) is not int or definition.schema_version not in (2, 3)):
+        raise TypeError("economic plan requires exact definition@2")
+    payload = definition.payload
+    from collections.abc import Mapping
+    if (not isinstance(payload, Mapping) or payload.get("type") != "cn_a_share_portfolio_economic_development_definition"
+            or type(payload.get("schema_version")) is not int
+            or payload["schema_version"] != definition.schema_version - 1):
+        raise ValueError("economic definition/profile version tuple mismatch")
+    return ("cn.portfolio.shared-cny.economic.development.v1" if definition.schema_version == 2
+        else "cn.portfolio.shared-cny.economic.development.v2")
+
+
 @dataclass(frozen=True, slots=True)
 class _ProfilePortfolioExecutionPlanV2:
     definition: ArtifactEnvelope
@@ -196,9 +210,7 @@ class _ProfilePortfolioExecutionPlanV2:
     source_refs: tuple[tuple[str, ArtifactRef], ...]
 
     def __post_init__(self) -> None:
-        if (type(self.definition) is not ArtifactEnvelope or self.definition.artifact_type != _DEFINITION_TYPE
-                or self.definition.schema_version != 2):
-            raise TypeError("economic plan requires exact definition@2")
+        _economic_profile_prefix_v1(self.definition)
         if type(self.financial_state) is not ResolvedFinancialState:
             raise TypeError("economic plan requires exact native financial state")
         if (type(self.initial_dividend_state) is not CnAShareCashDividendStateV1
@@ -215,7 +227,7 @@ class _ProfilePortfolioExecutionPlanV2:
                 or type(row[0]) is not str or type(row[1]) is not ArtifactRef for row in refs)):
             raise TypeError("economic source refs must be exact role/ref tuples")
         expected = (("cash_dividend_action_set", "cn_a_share_cash_dividend_action_set", 1),
-            ("definition", _DEFINITION_TYPE, 2), ("target_stream", "backtest_target_stream", 1))
+            ("definition", _DEFINITION_TYPE, self.definition.schema_version), ("target_stream", "backtest_target_stream", 1))
         if tuple((role, ref.artifact_type, ref.schema_version) for role, ref in refs) != expected:
             raise ValueError("economic source refs require exact sorted three roles")
         if refs[1][1] != ArtifactRef.from_envelope(self.definition):
@@ -245,7 +257,7 @@ class _ResolvedProfilePortfolioCaseV2:
                 or self.case_key != self.case_key.strip()
                 or type(self.case_version) is not int or self.case_version < 1):
             raise ValueError("profile portfolio case needs canonical key/version")
-        if self.case_key != "cn.portfolio.shared-cny.economic.development.v1" or self.case_version != 1:
+        if self.case_key not in ("cn.portfolio.shared-cny.economic.development.v1", "cn.portfolio.shared-cny.economic.development.v2") or self.case_version != 1:
             raise ValueError("economic case key/version mismatch")
         if self.timeline_batch_size != 64:
             raise ValueError("economic case batch size must be64")
@@ -259,6 +271,8 @@ class _ResolvedProfilePortfolioCaseV2:
             raise ValueError("profile portfolio batch size must be positive")
         if type(self.execution_case_plan) is not _ProfilePortfolioExecutionPlanV2:
             raise TypeError("profile portfolio requires exact plan4")
+        if self.case_key != _economic_profile_prefix_v1(self.execution_case_plan.definition):
+            raise ValueError("economic case key/version mismatch")
         value = self.semantic_spec_hash
         if (type(value) is not str or len(value) != 71 or not value.startswith("sha256:")
                 or any(c not in "0123456789abcdef" for c in value[7:])):

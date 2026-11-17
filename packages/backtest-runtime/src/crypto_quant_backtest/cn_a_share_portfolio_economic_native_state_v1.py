@@ -10,10 +10,10 @@ from crypto_quant_domain import (
 )
 from crypto_quant_market_data import MarketEvent
 from crypto_quant_trading import (
-    AccountingJournal, ApprovedPortfolioTarget, AtomicDecisionBatchCollector,
+    AccountingJournal, ApprovedPortfolioTarget, AtomicDecisionBatchCollector, AtomicDecisionBatchResult,
     AvailabilityProjection, CapitalAllocationPolicyRef, CurrencyValuationGraph,
     DecisionBatchExpectation, DecisionBatchSubmission, GenericLedger,
-    InstrumentSizingInput, MarketSettlementRules, NormalizedPortfolioTarget,
+    InstrumentSizingInput, LatestSleeveDecisionState, MarketSettlementRules, NormalizedPortfolioTarget,
     OrderEventStream, OrderPlan, OrderReservationSchedule, PortfolioAllocation,
     PortfolioAllocator, PortfolioRiskAction, PortfolioRiskEvaluator, PortfolioRiskLimit,
     PortfolioRiskPolicy, PortfolioRiskScope, PortfolioSnapshotProjector, PositionSizer,
@@ -28,6 +28,7 @@ from crypto_quant_trading.profiles.cn_a_share import (
 from .cn_a_share_portfolio_economic_definition_v1 import (
     CnASharePortfolioEconomicDevelopmentInputsV1,
 )
+from .cn_a_share_portfolio_economic_definition_v2 import CnASharePortfolioEconomicDevelopmentInputsV2
 from .target_stream import PrecomputedTargetStreamAdapter
 
 from crypto_quant_domain import AccountingEntryType, CashBalanceKey, AccountingJournalEntry
@@ -60,7 +61,7 @@ def _advance_economic_settlement_v1(*, inputs, journal, book, consumer):
     """Expose complete native due batches at their own full clock, never at now."""
     from .cn_a_share_portfolio_settlement_development_v1 import CnASharePortfolioSettlementDevelopmentV1
     from crypto_quant_trading import SettlementEventType
-    if (type(inputs) is not CnASharePortfolioEconomicDevelopmentInputsV1 or type(journal) is not AccountingJournal
+    if (type(inputs) not in (CnASharePortfolioEconomicDevelopmentInputsV1, CnASharePortfolioEconomicDevelopmentInputsV2) or type(journal) is not AccountingJournal
             or type(book) is not SettlementBook or type(consumer) is not SimulationInstant):
         raise TypeError("economic settlement advance requires exact immutable source values")
     if book.account_id != inputs.scope.account_id or any(event.occurred_at > consumer for event in book.events):
@@ -93,7 +94,15 @@ def _advance_economic_settlement_v1(*, inputs, journal, book, consumer):
 
 
 def _economic_marks_at_v1(inputs, at):
-    rows = tuple(b for b in (inputs.initial_marks, *inputs.signal_marks, *inputs.daily_marks, *inputs.checkpoint_marks) if b.at == at)
+    if type(inputs) is CnASharePortfolioEconomicDevelopmentInputsV2:
+        from .cn_a_share_portfolio_economic_activation_v2 import (
+            _economic_activation_at_v2, _economic_financial_checkpoints_v2, _resolve_retained_economic_marks_v2,
+        )
+        batches = (inputs.initial_marks, _resolve_retained_economic_marks_v2(inputs, _economic_activation_at_v2(inputs)),
+            *inputs.daily_marks, *_economic_financial_checkpoints_v2(inputs))
+    else:
+        batches = (inputs.initial_marks, *inputs.signal_marks, *inputs.daily_marks, *inputs.checkpoint_marks)
+    rows = tuple(b for b in batches if b.at == at)
     if len(rows) != 1:
         raise d.ArtifactIntegrityError("economic consumer lacks one exact retained mark batch")
     return rows[0]
@@ -117,7 +126,7 @@ def _economic_projection_at_v1(*, inputs, journal, settlement_book, order_stream
 
 @dataclass(frozen=True, slots=True)
 class _EconomicOpenSourcesV1:
-    inputs: CnASharePortfolioEconomicDevelopmentInputsV1
+    inputs: CnASharePortfolioEconomicDevelopmentInputsV1 | CnASharePortfolioEconomicDevelopmentInputsV2
     journal: AccountingJournal
     settlement_book: SettlementBook
     order_streams: tuple[OrderEventStream, ...]
@@ -133,7 +142,7 @@ class _EconomicOpenSourcesV1:
     available_by_venue: tuple[tuple[CashBalanceKey, Money], ...] = field(init=False)
 
     def __post_init__(self) -> None:
-        if (type(self.inputs) is not CnASharePortfolioEconomicDevelopmentInputsV1
+        if (type(self.inputs) not in (CnASharePortfolioEconomicDevelopmentInputsV1, CnASharePortfolioEconomicDevelopmentInputsV2)
                 or type(self.journal) is not AccountingJournal
                 or type(self.settlement_book) is not SettlementBook
                 or type(self.market_rules) is not MarketSettlementRules
@@ -239,20 +248,32 @@ class _EconomicOpenSourcesV1:
 
 
 def _economic_signal_target_v1(*, sources: _EconomicOpenSourcesV1, event: MarketEvent):
-    inputs, journal = sources.inputs, sources.journal
+    inputs = sources.inputs
     if type(event) is not MarketEvent or event.event_time != event.available_time:
         raise d.ArtifactIntegrityError("economic target source is not currently available")
     at = SimulationInstant(event.event_time, event.phase, event.source_sequence)
     if sources.at != at:
         raise ValueError("economic signal must consume its exact source-clock projection")
-    marks = _economic_marks_at_v1(inputs, at)
+    # Preserve V1 mark/equity rejection precedence before decoding the source.
+    _economic_marks_at_v1(inputs, at)
+    _require_economic_equity_v1(sources, event)
+    collected = _collect_economic_decision_v1(inputs=inputs, event=event,
+        original_claim={"source": sources, "event": event})
+    return _economic_signal_from_batch_v1(sources=sources, event=event, collected=collected,
+        allocation_state=collected.state, valid_from=collected.batch.decisions[0].target_snapshot.effective_time)
+
+
+def _require_economic_equity_v1(sources: _EconomicOpenSourcesV1, event: MarketEvent) -> None:
     projection = sources.economic_projection
-    snapshot = projection.snapshot
-    if snapshot.equity.units <= 0:
+    if projection.snapshot.equity.units <= 0:
         raise _EconomicNativeFailureV1(EngineFailureCode.ALLOCATION, projection, operation='economic_equity_allocation', native_inputs={"projection":projection}, original_claim={"source":sources,"event":event})
+
+
+def _collect_economic_decision_v1(*, inputs, event, original_claim) -> AtomicDecisionBatchResult:
+    at = SimulationInstant(event.event_time, event.phase, event.source_sequence)
     candidate, issues = PrecomputedTargetStreamAdapter()._decode(event)
     if candidate is None or issues:
-        raise _EconomicNativeFailureV1(EngineFailureCode.TARGET_INPUT_DECODE, issues, operation='target_decode', native_inputs={"event":event}, original_claim={"source":sources,"event":event})
+        raise _EconomicNativeFailureV1(EngineFailureCode.TARGET_INPUT_DECODE, issues, operation='target_decode', native_inputs={"event":event}, original_claim=original_claim)
     payload = candidate.payload.fields
     from crypto_quant_domain import StrategySleeveId
     validated = StrategyOutputValidator().validate(candidate, StrategyOutputValidationContext(
@@ -261,7 +282,14 @@ def _economic_signal_target_v1(*, sources: _EconomicOpenSourcesV1, event: Market
         instrument_catalog=inputs.scope.instrument_catalog,
         universe=inputs.scope.instrument_ids, decision_instant=at))
     if validated.decision is None:
-        raise _EconomicNativeFailureV1(EngineFailureCode.TARGET_VALIDATION, validated, operation='target_validation', native_inputs={'candidate': candidate, 'context': StrategyOutputValidationContext(expected_strategy_id=payload['strategy_id'], expected_sleeve_id=StrategySleeveId(payload['sleeve_id']), decision_time=at.instant, instrument_catalog=inputs.scope.instrument_catalog, universe=inputs.scope.instrument_ids, decision_instant=at)}, original_claim={"source":sources,"event":event})
+        from .cn_a_share_portfolio_economic_definition_v2 import CnASharePortfolioEconomicDevelopmentInputsV2
+        from crypto_quant_trading import StrategyValidationFailure
+        evidence = validated
+        if type(inputs) is CnASharePortfolioEconomicDevelopmentInputsV2:
+            if type(validated.failure) is not StrategyValidationFailure:
+                raise TypeError("economic V2 validation rejection requires exact native failure")
+            evidence = validated.failure
+        raise _EconomicNativeFailureV1(EngineFailureCode.TARGET_VALIDATION, evidence, operation='target_validation', native_inputs={'candidate': candidate, 'context': StrategyOutputValidationContext(expected_strategy_id=payload['strategy_id'], expected_sleeve_id=StrategySleeveId(payload['sleeve_id']), decision_time=at.instant, instrument_catalog=inputs.scope.instrument_catalog, universe=inputs.scope.instrument_ids, decision_instant=at)}, original_claim=original_claim)
     decision = validated.decision
     weights = tuple(t for t in decision.target_snapshot.targets if t.units)
     if any(t.units < 0 or t.units * len(weights) != t.scale.factor for t in weights):
@@ -270,16 +298,35 @@ def _economic_signal_target_v1(*, sources: _EconomicOpenSourcesV1, event: Market
     collected = AtomicDecisionBatchCollector().collect(decision_time=at.instant, decision_instant=at,
         expected=(expectation,), submissions=(DecisionBatchSubmission(expectation, validated),))
     if collected.batch is None or collected.state is None:
-        raise _EconomicNativeFailureV1(EngineFailureCode.DECISION_BATCH, collected, operation='decision_batch_collection', native_inputs={'decision_time': at.instant, 'decision_instant': at, 'expected': (expectation,), 'submissions': (DecisionBatchSubmission(expectation, validated),)}, original_claim={"source":sources,"event":event})
+        from .cn_a_share_portfolio_economic_definition_v2 import CnASharePortfolioEconomicDevelopmentInputsV2
+        from crypto_quant_trading import DecisionBatchFailure
+        evidence = collected
+        if type(inputs) is CnASharePortfolioEconomicDevelopmentInputsV2:
+            if type(collected.failure) is not DecisionBatchFailure:
+                raise TypeError("economic V2 collection rejection requires exact native failure")
+            evidence = collected.failure
+        raise _EconomicNativeFailureV1(EngineFailureCode.DECISION_BATCH, evidence, operation='decision_batch_collection', native_inputs={'decision_time': at.instant, 'decision_instant': at, 'expected': (expectation,), 'submissions': (DecisionBatchSubmission(expectation, validated),)}, original_claim=original_claim)
+    return collected
+
+
+def _economic_signal_from_batch_v1(*, sources: _EconomicOpenSourcesV1, event: MarketEvent,
+    collected: AtomicDecisionBatchResult, allocation_state: LatestSleeveDecisionState,
+    valid_from: d.UtcInstant,
+) -> tuple[_NativeSignalTargetV1, e.CnASharePortfolioEconomicProjectionV1]:
+    inputs, journal, at = sources.inputs, sources.journal, sources.at
+    marks = _economic_marks_at_v1(inputs, at)
+    projection = sources.economic_projection
+    snapshot = projection.snapshot
+    decision = collected.batch.decisions[0]
     allocation_input = StrategyAllocation(
         decision.strategy_id, decision.target_snapshot.sleeve_id, at.instant, _CNY, snapshot.equity,
         CapitalAllocationPolicyRef("cn.portfolio.economic-equity.equal-weight.development", 1,
             canonical_sha256({"basis": "current_economic_projection", "projection_hash": projection.projection_hash, "exposure": "1"})),
         canonical_sha256(snapshot), valuation_instant=at)
-    allocated = PortfolioAllocator().allocate(sleeve_state=collected.state,
+    allocated = PortfolioAllocator().allocate(sleeve_state=allocation_state,
         portfolio_snapshot=snapshot, allocations=(allocation_input,), target_notional_scale=_NOTIONAL)
     if allocated.allocation is None:
-        raise _EconomicNativeFailureV1(EngineFailureCode.ALLOCATION, allocated, operation='portfolio_allocation', native_inputs={'sleeve_state': collected.state, 'portfolio_snapshot': snapshot, 'allocations': (allocation_input,), 'target_notional_scale': _NOTIONAL}, original_claim={"source":sources,"event":event})
+        raise _EconomicNativeFailureV1(EngineFailureCode.ALLOCATION, allocated, operation='portfolio_allocation', native_inputs={'sleeve_state': allocation_state, 'portfolio_snapshot': snapshot, 'allocations': (allocation_input,), 'target_notional_scale': _NOTIONAL}, original_claim={"source":sources,"event":event})
     maximum = Money(snapshot.equity.units * 10 ** (_NOTIONAL.places - _CENT.places), _NOTIONAL, "CNY")
     limits = tuple(PortfolioRiskLimit("stock." + str(i), PortfolioRiskScope.TARGET_ABSOLUTE_NOTIONAL,
         maximum, PortfolioRiskAction.REJECT, i)
@@ -312,7 +359,7 @@ def _economic_signal_target_v1(*, sources: _EconomicOpenSourcesV1, event: Market
         raise _EconomicNativeFailureV1(EngineFailureCode.POSITION_SIZING, sized, operation='position_sizing', native_inputs={'approved_target': risk.approved_target, 'source_decision_batch_id': collected.batch.decision_batch_id, 'policy': PositionSizingPolicy.create(policy_key='cn.portfolio.live-signal-close.development', policy_version=1, price_purpose=PricePurpose.VALUATION, rounding=RoundingPolicy.TOWARD_ZERO, residual_policy=ResidualPositionPolicy.CLOSE_IF_PERMITTED), 'inputs': tuple(sizing_inputs)}, original_claim={"source":sources,"event":event})
     normalized = sized.normalized_target
     validity = TargetValidity(normalized.normalized_target_id, normalized.normalized_target_hash,
-        decision.target_snapshot.effective_time, decision.target_snapshot.expires_at)
+        valid_from, decision.target_snapshot.expires_at)
     return _NativeSignalTargetV1(snapshot, collected.batch, allocated.allocation,
         risk.approved_target, normalized, validity), projection
 

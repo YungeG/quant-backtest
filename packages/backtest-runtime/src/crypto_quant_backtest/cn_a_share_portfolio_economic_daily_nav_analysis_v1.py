@@ -138,9 +138,13 @@ class CnASharePortfolioEconomicDailyNavAnalysisV1:
             raise ValueError("NAV metric profile is not the accepted exact version")
         if type(self.source_publication_ref) is not BacktestCanonicalPublicationRef:
             raise TypeError("NAV requires exact standard canonical publication ref")
-        for value, name, version in ((self.execution_input_ref, "backtest_execution_input_bundle", 9),
-                (self.definition_ref, "backtest_profile_portfolio_definition", 2),
-                (self.action_set_ref, "cn_a_share_cash_dividend_action_set", 1),
+        for value, name, version in ((self.execution_input_ref, "backtest_execution_input_bundle", 9),):
+            _ref(value, name, version)
+        definition_version = (3 if type(self.definition_ref) is d.ArtifactRef
+            and self.definition_ref.artifact_type == "backtest_profile_portfolio_definition"
+            and self.definition_ref.schema_version == 3 else 2)
+        _ref(self.definition_ref, "backtest_profile_portfolio_definition", definition_version)
+        for value, name, version in ((self.action_set_ref, "cn_a_share_cash_dividend_action_set", 1),
                 (self.engine_result_ref, "engine_execution_result", 1)):
             _ref(value, name, version)
         _hash(self.source_execution_result_hash)
@@ -258,6 +262,10 @@ def _build_economic_nav_v1(*, reader, publication_ref, market_reader):
     from .execution_inputs import _read_money, _read_simulation_instant
     completed, case, actual_input_ref, engine_ref, engine, definition_ref, action_ref = _load_verified_economic_completed_v1(
         reader=reader, publication_ref=publication_ref, market_reader=market_reader)
+    from .profile_portfolio_execution import _economic_profile_prefix_v1
+    if (definition_ref != d.ArtifactRef.from_envelope(case.execution_case_plan.definition)
+            or case.case_key != _economic_profile_prefix_v1(case.execution_case_plan.definition)):
+        raise ValueError("economic NAV source definition/profile tuple mismatch")
     points = []
     artifacts = sorted((a for a in engine.payload["financial_artifacts"] if a["role"] == "economic_daily_projection"),
         key=lambda a:_read_simulation_instant(a["occurred_at"]))

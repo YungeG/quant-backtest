@@ -252,16 +252,6 @@ def _map(value: object, tag: str) -> Mapping:
 def _read_economic_definition_v1(
     definition: ArtifactEnvelope, target_ref: BacktestTargetStreamRef, action_set: CnAShareCashDividendActionSetV1,
 ) -> CnASharePortfolioEconomicDevelopmentInputsV1:
-    # Reuse the sole transport's concrete native value readers. This is a
-    # profile source DTO reader, not a second execution-input schema catalog.
-    from .execution_inputs import (
-        _read_utc, _read_rate, _read_simulation_instant, _read_resolved_mark,
-        _read_capability_set, _read_translation_mapping, _read_order_rule_timeline,
-        _read_notional_evidence, _read_fee_reservation_rules, _read_final_fee_rules,
-        _read_fee_reservation_charge, _read_final_fee_charge, _read_liquidity_evidence,
-        _read_slippage_model, _read_journal, _read_cost_basis, _read_quantization,
-    )
-    from .cn_a_share_portfolio_case_inputs_v8 import _scope
     if (type(definition) is not ArtifactEnvelope
             or definition.artifact_type != "backtest_profile_portfolio_definition"
             or definition.schema_version != 2 or type(action_set) is not CnAShareCashDividendActionSetV1 or type(target_ref) is not BacktestTargetStreamRef):
@@ -276,6 +266,34 @@ def _read_economic_definition_v1(
         raise ValueError("standard portfolio definition exact fields/qualification mismatch")
     if p["cash_dividend_action_set_hash"] != canonical_sha256(action_set):
         raise ValueError("economic definition ActionSet value hash mismatch")
+    values = _read_economic_source_fields_v1(p, target_ref, signal_field="signal_marks")
+    result = CnASharePortfolioEconomicDevelopmentInputsV1(**values, dividend_actions=action_set)
+    if canonical_bytes(result.economic_payload()) != canonical_bytes(p):
+        raise ValueError("standard portfolio source definition did not reconstruct exactly")
+    return result
+
+
+def _read_economic_mark_batches_v1(raw) -> tuple[CnASharePortfolioMarkBatchDevelopmentV1, ...]:
+    from .execution_inputs import _read_simulation_instant
+    result = []
+    for value in raw:
+        b = _map(value, "cn_a_share_portfolio_mark_batch_development")
+        marks = tuple(_read_economic_resolved_mark_v1(v) for v in b["marks"])
+        result.append(CnASharePortfolioMarkBatchDevelopmentV1(_read_simulation_instant(b["at"]), marks))
+    return tuple(result)
+
+
+def _read_economic_source_fields_v1(p, target_ref, *, signal_field: str) -> dict[str, object]:
+    # Pure common parsing in V1's original failure order; no DTO/version decisions.
+    from .execution_inputs import (
+        _read_utc, _read_rate, _read_capability_set, _read_translation_mapping, _read_order_rule_timeline,
+        _read_notional_evidence, _read_fee_reservation_rules, _read_final_fee_rules,
+        _read_fee_reservation_charge, _read_final_fee_charge, _read_liquidity_evidence,
+        _read_slippage_model, _read_journal, _read_cost_basis, _read_quantization,
+    )
+    from .cn_a_share_portfolio_case_inputs_v8 import _scope
+    if signal_field not in ("signal_marks", "retained_signal_marks"):
+        raise ValueError("unknown economic source signal field")
     scope_raw = dict(_map(p["scope"], "cn_a_share_portfolio_preparation_inputs"))
     if "target_stream_ref" in scope_raw:
         raise ValueError("target transport reference cannot be part of the economic definition")
@@ -355,21 +373,14 @@ def _read_economic_definition_v1(
             date.fromisoformat(c["coverage_start"]), date.fromisoformat(c["coverage_end_exclusive"]), days,
             c["timezone_name"]))
 
-    def mark_batches(raw):
-        result = []
-        for value in raw:
-            b = _map(value, "cn_a_share_portfolio_mark_batch_development")
-            marks = tuple(_read_economic_resolved_mark_v1(v) for v in b["marks"])
-            result.append(CnASharePortfolioMarkBatchDevelopmentV1(_read_simulation_instant(b["at"]), marks))
-        return tuple(result)
-
     policy = CnAShareRebalanceExecutionPolicyV1.create(p["execution_policy"]["policy_key"])
     if len(calendars) != 2:
         raise ValueError("standard portfolio source calendar count mismatch")
-    result = CnASharePortfolioEconomicDevelopmentInputsV1(scope, _read_journal(p["initial_journal"]),
-        (calendars[0], calendars[1]), policy, tuple(terms), mark_batches((p["initial_marks"],))[0], mark_batches(p["signal_marks"]),
-        mark_batches(p["daily_marks"]), mark_batches(p["checkpoint_marks"]), _read_cost_basis(p["cost_basis_policy"]),
-        _read_quantization(p["notional_quantization"]), action_set)
-    if canonical_bytes(result.economic_payload()) != canonical_bytes(p):
-        raise ValueError("standard portfolio source definition did not reconstruct exactly")
-    return result
+    return {"scope": scope, "initial_journal": _read_journal(p["initial_journal"]),
+        "calendars": (calendars[0], calendars[1]), "execution_policy": policy, "opening_terms": tuple(terms),
+        "initial_marks": _read_economic_mark_batches_v1((p["initial_marks"],))[0],
+        signal_field: _read_economic_mark_batches_v1(p[signal_field]),
+        "daily_marks": _read_economic_mark_batches_v1(p["daily_marks"]),
+        "checkpoint_marks": _read_economic_mark_batches_v1(p["checkpoint_marks"]),
+        "cost_basis_policy": _read_cost_basis(p["cost_basis_policy"]),
+        "notional_quantization": _read_quantization(p["notional_quantization"])}

@@ -882,7 +882,7 @@ class AttemptEvidenceWriter:
             )
         report = record.failed_report if record.failed_report is not None else record.blocked_report
         if report is not None and report.issue.source.value == "engine_failure":
-            economic = resolved.request.market_semantics_profile_key == "cn.portfolio.shared-cny.economic.development.v1.market"
+            economic = resolved.request.market_semantics_profile_key in {"cn.portfolio.shared-cny.economic.development.v1.market", "cn.portfolio.shared-cny.economic.development.v2.market"}
             failure = report.issue.source_evidence
             context = failure.economic_failure_context
             if economic:

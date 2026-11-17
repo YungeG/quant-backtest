@@ -18,6 +18,7 @@ from .artifact_envelope_reader import ArtifactEnvelopeReader
 from .cn_a_share_portfolio_economic_definition_v1 import (
     CnASharePortfolioEconomicDevelopmentInputsV1, _read_economic_definition_v1,
 )
+from .cn_a_share_portfolio_economic_definition_v2 import CnASharePortfolioEconomicDevelopmentInputsV2, _read_economic_definition_v2
 from .cn_a_share_portfolio_economic_values_v1 import _read_cn_a_share_cash_dividend_action_set_v1
 from .engine import ExecutionCaseIdentityRule, PositionLotBook, ResolvedFinancialState
 from .execution import BAR_OPEN_CAPABILITY, BarOpenKind, BarOpenObservation
@@ -28,7 +29,7 @@ from .timeline import TimelineWindow
 
 
 def _native_initial_economic_financial_state_v1(inputs: CnASharePortfolioEconomicDevelopmentInputsV1):
-    if type(inputs) is not CnASharePortfolioEconomicDevelopmentInputsV1:
+    if type(inputs) not in (CnASharePortfolioEconomicDevelopmentInputsV1, CnASharePortfolioEconomicDevelopmentInputsV2):
         raise TypeError("economic initialization requires exact inputs")
     scope = inputs.scope
     cash = tuple(r.key for r in scope.ledger_schema.cash_registrations)
@@ -126,13 +127,53 @@ def _validate_economic_coordinates_v1(inputs, window, *, opening_times=None):
             raise ValueError("economic final marks differ from retained last daily source")
 
 
+def _validate_economic_coordinates_v2(inputs, window, *, opening_times=None):
+    from .cn_a_share_portfolio_economic_activation_v2 import _economic_activation_at_v2
+    if type(inputs) is not CnASharePortfolioEconomicDevelopmentInputsV2:
+        raise TypeError("economic V2 coordinates require exact inputs")
+    if (not _wall_clock_v1(window.trading_start, 0, 0) or not _wall_clock_v1(window.end_exclusive, 0, 0)
+            or inputs.initial_marks.at.instant != window.trading_start
+            or inputs.dividend_actions.coverage_start != window.trading_start
+            or inputs.dividend_actions.coverage_end_exclusive != window.end_exclusive):
+        raise ValueError("economic case requires exact complete-local-day initialized coverage")
+    event = inputs.source_target_stream.events[0]
+    if not window.data_start <= event.available_time == event.event_time < window.trading_start:
+        raise ValueError("economic V2 original source outside prestart data window")
+    if any(not _wall_clock_v1(b.at.instant, 15, 0) or b.at != _clock_v1(b.at.instant, 160)
+           or not window.trading_start <= b.at.instant < window.end_exclusive for b in inputs.daily_marks):
+        raise ValueError("economic daily marks require exact active close160 clock")
+    times = {t.opening_at for t in inputs.opening_terms} if opening_times is None else set(opening_times)
+    activation = _economic_activation_at_v2(inputs)
+    if not times or activation <= inputs.initial_marks.at or any(activation >= _clock_v1(t, 49) for t in times):
+        raise ValueError("economic V2 activation must precede every active opening")
+    final_at = _clock_v1(window.end_exclusive, 200)
+    expected = {_clock_v1(t, rank) for t in times for rank in (49, 55, 67, 97)} | {final_at}
+    actual = {b.at for b in inputs.checkpoint_marks}
+    if (opening_times is None and not expected <= actual) or (opening_times is not None and actual != expected):
+        raise ValueError("economic checkpoint marks do not exact-cover required coordinates")
+    final = next(b for b in inputs.checkpoint_marks if b.at == final_at)
+    for closing, mark in zip(inputs.daily_marks[-1].marks, final.marks, strict=True):
+        if any(getattr(mark, name) != getattr(closing, name) for name in
+                ("instrument_id", "price", "observed_at", "available_at", "available_at_instant",
+                 "stream_id", "source_event_id", "revision_id", "stale_policy_key", "stale_policy_version", "stale_policy_hash")):
+            raise ValueError("economic final marks differ from retained last daily source")
+
+
 def _read_economic_opening_sources_v1(
     inputs: CnASharePortfolioEconomicDevelopmentInputsV1,
     reader: MarketBundleReader, window: TimelineWindow,
 ) -> tuple[MarketEvent, ...]:
-    _validate_economic_coordinates_v1(inputs, window)
+    if type(inputs) is CnASharePortfolioEconomicDevelopmentInputsV2:
+        validate = _validate_economic_coordinates_v2
+        invalid_source = False  # V2's original prestart source is checked by its coordinate validator.
+    elif type(inputs) is CnASharePortfolioEconomicDevelopmentInputsV1:
+        validate = _validate_economic_coordinates_v1
+        invalid_source = window.trading_start > inputs.signal_marks[0].at.instant
+    else:
+        raise TypeError("economic openings require exact V1 or V2 inputs")
+    validate(inputs, window)
     if (reader.bundle_ref != inputs.scope.market_bundle_ref
-            or window.trading_start > inputs.signal_marks[0].at.instant
+            or invalid_source
             or inputs.daily_marks[-1].at.instant >= window.end_exclusive):
         raise ValueError("economic portfolio market/window source binding mismatch")
     streams = tuple(s for s in reader.manifest.streams if s.capability == BAR_OPEN_CAPABILITY)
@@ -207,7 +248,7 @@ def _read_economic_opening_sources_v1(
             raise ValueError("economic portfolio opening rule/fee/price source substitution")
     if any(not _wall_clock_v1(e.event_time, 9, 30) or e.phase.rank >= 30 for e in events):
         raise ValueError("economic raw openings require09:30 and source phase below30")
-    _validate_economic_coordinates_v1(inputs, window, opening_times=by_time)
+    validate(inputs, window, opening_times=by_time)
     return tuple(events)
 
 _ORDER_STAGES = ("intent", "capability", "translation", "market", "fee", "risk",
@@ -241,7 +282,7 @@ def _economic_identity_plan_v1(
 
 @dataclass(frozen=True, slots=True)
 class _BoundEconomicPortfolioSourcesV1:
-    inputs: CnASharePortfolioEconomicDevelopmentInputsV1
+    inputs: CnASharePortfolioEconomicDevelopmentInputsV1 | CnASharePortfolioEconomicDevelopmentInputsV2
     openings: tuple[MarketEvent, ...]
     journal_entry_ids: tuple[tuple[str, d.DomainId], ...]
 
@@ -288,11 +329,15 @@ def _bind_economic_portfolio_sources_v1(case, reader):
     verified = BacktestTargetStreamRepository(reader=reader).load(target_ref)
     if canonical_bytes(verified.target_stream) != canonical_bytes(case.target_stream):
         raise ValueError("economic retained target differs from case")
-    inputs = _read_economic_definition_v1(retained, target_ref, actions)
+    if retained.schema_version == 3:
+        inputs = _read_economic_definition_v2(retained, target_ref, actions, verified.target_stream)
+    else:
+        inputs = _read_economic_definition_v1(retained, target_ref, actions)
     if inputs.scope.market_bundle_ref != case.timeline.reader.bundle_ref:
         raise ValueError("economic market Bundle source binding mismatch")
     expected_signal = tuple(d.SimulationInstant(e.event_time, e.phase, e.source_sequence) for e in case.target_stream.events)
-    if tuple(b.at for b in inputs.signal_marks) != expected_signal or any(
+    signal_marks = inputs.retained_signal_marks if type(inputs) is CnASharePortfolioEconomicDevelopmentInputsV2 else inputs.signal_marks
+    if tuple(b.at for b in signal_marks) != expected_signal or any(
             not _wall_clock_v1(e.event_time, 15, 0) or e.phase.rank >= 30 or e.event_time != e.available_time
             for e in case.target_stream.events):
         raise ValueError("economic target/signal source full-clock mismatch")

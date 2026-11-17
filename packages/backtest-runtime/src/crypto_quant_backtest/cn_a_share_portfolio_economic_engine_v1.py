@@ -92,6 +92,19 @@ _PREFIX = "cn.portfolio.shared-cny.economic.development.v1"
 _WORKING = {d.OrderStatus.ACCEPTED, d.OrderStatus.ACTIVE}
 
 
+def _economic_native_finance_identity_v1(inputs):
+    from .cn_a_share_portfolio_economic_definition_v1 import CnASharePortfolioEconomicDevelopmentInputsV1
+    from .cn_a_share_portfolio_economic_definition_v2 import CnASharePortfolioEconomicDevelopmentInputsV2
+    from .profile_portfolio_execution import _economic_profile_prefix_v1
+    if type(inputs) not in (CnASharePortfolioEconomicDevelopmentInputsV1, CnASharePortfolioEconomicDevelopmentInputsV2):
+        raise TypeError("economic component requires exact V1 or V2 inputs")
+    v2 = type(inputs) is CnASharePortfolioEconomicDevelopmentInputsV2
+    prefix = _economic_profile_prefix_v1(inputs.definition())
+    return prefix, d.canonical_sha256({"type": "cn_a_share_portfolio_economic_native_component", "schema_version": 2 if v2 else 1,
+        "definition_hash": inputs._definition_source_hash,
+        "policy_key": "economic_single_prestart_activation_v2" if v2 else "economic_full_fill_known_tax_v1"})
+
+
 def _used_identity_keys_v1(case, journal, streams, pending, intention_ids=()):
     actual = {entry.journal_entry_id.value for entry in journal.entries}
     actual.update(identity.value for identity in intention_ids)
@@ -125,8 +138,13 @@ class _CnASharePortfolioEconomicEngineV1:
         signals, artifacts, trace, fills, fees, slips = [], [], [], [], [], []
         opening_count = daily_count = dividend_count = 0
         failed_id, failed_at = "economic.initial", inputs.initial_marks.at
-        component_hash = d.canonical_sha256({"type": "cn_a_share_portfolio_economic_native_component", "schema_version": 1,
-            "definition_hash": inputs._definition_source_hash, "policy_key": "economic_full_fill_known_tax_v1"})
+        from .cn_a_share_portfolio_economic_definition_v2 import CnASharePortfolioEconomicDevelopmentInputsV2
+        from .cn_a_share_portfolio_economic_activation_v2 import (
+            _economic_activation_at_v2, _retained_economic_decision_v2,
+            _economic_activation_signal_v2, _economic_activation_value_v2, _economic_native_failure_inputs_v2,
+        )
+        v2 = type(inputs) is CnASharePortfolioEconomicDevelopmentInputsV2
+        profile_prefix, component_hash = _economic_native_finance_identity_v1(inputs)
         def make(at, j, b, ss, sch, st):
             b = _advance_economic_settlement_v1(inputs=inputs, journal=j, book=b, consumer=at)
             return _EconomicOpenSourcesV1(inputs, j, b, tuple(sorted(ss.values(), key=lambda row: row.order.order_id.value)),
@@ -138,8 +156,9 @@ class _CnASharePortfolioEconomicEngineV1:
             streams = {s.order.order_id: s for s in source.order_streams}
             schedules = {s.order_id: s for s in source.reservation_schedules}
         def evidence(role, event_id, at, payload):
-            envelope = d.ArtifactEnvelope.create("cn_a_share_portfolio_" + role, 2 if role == "economic_attempt_witness" else 1, payload)
-            artifact = FinancialDispatchArtifact(role, event_id, at, _PREFIX + ".native-finance", 1,
+            envelope = d.ArtifactEnvelope.create("cn_a_share_portfolio_" + role,
+                2 if role == "economic_attempt_witness" or (v2 and role in {"economic_signal", "economic_native_failure"}) else 1, payload)
+            artifact = FinancialDispatchArtifact(role, event_id, at, profile_prefix + ".native-finance", 1,
                 component_hash, inputs._definition_source_hash, d.canonical_sha256(envelope), envelope)
             artifacts.append(artifact)
             trace.append(ExecutionTraceEntry(len(trace), EngineStage.FINANCIAL_EVENT, at, event_id, artifact.artifact_hash))
@@ -148,9 +167,11 @@ class _CnASharePortfolioEconomicEngineV1:
                 if native_rejection is None or native_rejection.operation is None or native_rejection.native_inputs is None:
                     raise d.ArtifactIntegrityError("native failure lacks explicit original typed diagnostic")
                 evidence("economic_native_failure",failed_id,failed_at,{
-                    "type":"cn_a_share_portfolio_economic_native_failure","schema_version":1,
+                    "type":"cn_a_share_portfolio_economic_native_failure","schema_version":2 if v2 else 1,
                     "operation":native_rejection.operation,"engine_failure_code":code.value,
-                    "original_claim":native_rejection.original_claim,"native_inputs":native_rejection.native_inputs,
+                    "original_claim":native_rejection.original_claim,
+                    "native_inputs":(_economic_native_failure_inputs_v2(native_rejection.operation, native_rejection.native_inputs)
+                        if v2 else native_rejection.native_inputs),
                     "native_outcome":native})
             cause_hash = d.canonical_sha256(native)
             trace.append(ExecutionTraceEntry(len(trace), EngineStage.FINANCIAL_EVENT, failed_at, failed_id, cause_hash))
@@ -189,13 +210,24 @@ class _CnASharePortfolioEconomicEngineV1:
                 raise d.ArtifactIntegrityError("economic timeline did not exact-cover native source events")
             if cancellation is not None and cancellation.cancel_before_event_id not in event_ids:
                 raise ValueError("economic cancellation is not a real market/target event")
-            actions = [(b.at, "signal", i) for i, b in enumerate(inputs.signal_marks)]
+            if v2:
+                actions = [(inputs.retained_signal_marks[0].at, "source", 0),
+                    (_economic_activation_at_v2(inputs), "signal", 0)]
+            else:
+                actions = [(b.at, "signal", i) for i, b in enumerate(inputs.signal_marks)]
             actions += [(_at(when, 49), "opening", when) for when in sorted({event.event_time for event in openings})]
             actions += [(at, "dividend", (kind, action, event_id)) for at, kind, action, event_id in _economic_events_v1(inputs)
                         if at.instant < case.timeline.window.end_exclusive]
             actions += [(b.at, "daily", i) for i, b in enumerate(inputs.daily_marks)]
             for at, kind, value in sorted(actions, key=lambda row: row[0]):
                 failed_at = at
+                if kind == "source":
+                    event = case.target_stream.events[0]
+                    if cancellation is not None and cancellation.cancel_before_event_id == event.event_id:
+                        return EngineExecutionOutcome(cancellation=EngineCancellation(case.case_hash, cancellation,
+                            event_ids.index(event.event_id), ExecutionTrace(tuple(trace)).trace_hash))
+                    _retained_economic_decision_v2(inputs)
+                    continue
                 if kind == "signal":
                     index = value
                     event = case.target_stream.events[index]
@@ -205,7 +237,8 @@ class _CnASharePortfolioEconomicEngineV1:
                             event_ids.index(event.event_id), ExecutionTrace(tuple(trace)).trace_hash))
                     before = make(at, journal, book, streams, schedules, state)
                     commit(before)
-                    signal, projection = _economic_signal_target_v1(sources=before, event=event)
+                    signal, projection = (_economic_activation_signal_v2(sources=before, event=event) if v2
+                        else _economic_signal_target_v1(sources=before, event=event))
                     cancel_plan = CnASharePortfolioOrderPlanV1.create(account_id=inputs.scope.account_id,
                         target_id=signal.normalized_target.normalized_target_id, target_hash=signal.normalized_target.normalized_target_hash,
                         as_of=at.instant, policy=inputs.execution_policy, cash=before.cash, sellability=before.sellability,
@@ -236,8 +269,11 @@ class _CnASharePortfolioEconomicEngineV1:
                     pending = candidate_pending
                     intention_ids.update(order.order_id for _, order in pending.values())
                     signals.append(signal)
-                    evidence("economic_signal", event.event_id, failed_at, {"signal": signal, "projection": projection,
-                        "cancel_plan": cancel_plan, "cancel_sources": before, "coordinator_plan": plan, "coordinator_sources": coordinated})
+                    fact = {"signal": signal, "projection": projection, "cancel_plan": cancel_plan,
+                        "cancel_sources": before, "coordinator_plan": plan, "coordinator_sources": coordinated}
+                    if v2:
+                        fact["activation"] = _economic_activation_value_v2(inputs, event)
+                    evidence("economic_signal", event.event_id, failed_at, fact)
                 elif kind == "dividend":
                     event_kind, action, failed_id = value
                     pre_at = d.SimulationInstant(at.instant, at.phase, d.SourceSequence(at.source_sequence.value - 1))
