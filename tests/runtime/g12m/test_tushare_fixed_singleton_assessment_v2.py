@@ -62,17 +62,16 @@ def _bypass(value: Any, **changes: object) -> Any:
 
 @pytest.fixture(scope="module")
 def route_result(tmp_path_factory: pytest.TempPathFactory):
-    monkeypatch = pytest.MonkeyPatch()
-    _install_exact_test_artifact_mirror(monkeypatch)
-    root = tmp_path_factory.mktemp("assessment-route")
-    store = _Store()
-    result = run_g12m_tushare_fixed_singleton_route_v2(
-        market_reader=_reader(root),
-        artifact_reader=store,
-        artifact_publisher=store,
-        publication_root=root / "publication",
-    )
-    monkeypatch.undo()
+    with pytest.MonkeyPatch.context() as monkeypatch:
+        _install_exact_test_artifact_mirror(monkeypatch)
+        root = tmp_path_factory.mktemp("assessment-route")
+        store = _Store()
+        result = run_g12m_tushare_fixed_singleton_route_v2(
+            market_reader=_reader(root),
+            artifact_reader=store,
+            artifact_publisher=store,
+            publication_root=root / "publication",
+        )
     return result
 
 
