@@ -409,7 +409,7 @@ def _verify_economic_facts_v1(*, case, reader, journal, final_streams, final_sch
                 raise d.ArtifactIntegrityError("economic V2 opening lacks prior activation")
             _map(fact, opening_source_keys | {"when", "funding", "outcomes", "steps", "journal_count_after", "book_after", "dividend_state_after", "post_projection"})
             when = x._read_utc(fact["when"])
-            bars = tuple((i, event) for i, event in enumerate(openings) if event.event_time == when)
+            bars = bound.opening_batches.get(when, ())
             if not bars or when in seen_open or artifact.source_event_id != bars[0][1].event_id or artifact.occurred_at != _at(when, 98):
                 raise d.ArtifactIntegrityError("economic opening source/clock/cover mismatch")
             prior = make(_at(when, 49), current_journal, book, streams, schedules, state)
@@ -419,12 +419,12 @@ def _verify_economic_facts_v1(*, case, reader, journal, final_streams, final_sch
             for _, order in pending.values():
                 _, event = by_instrument[order.intent.instrument_id]
                 if order.created_at.instant < when and BarOpenObservation.from_event(event).kind is BarOpenKind.REAL:
-                    term = next(v for v in inputs.opening_terms if v.bar_event_id == event.event_id and v.side is order.intent.side)
+                    term = bound.terms_by_side[event.event_id, order.intent.side]
                     candidates.append((order, BarOpenObservation.from_event(event), term))
             for stream in streams.values():
                 _, event = by_instrument[stream.order.intent.instrument_id]
                 if stream.state is not None and stream.state.status in {d.OrderStatus.ACCEPTED, d.OrderStatus.ACTIVE} and BarOpenObservation.from_event(event).kind is BarOpenKind.REAL:
-                    term = next(v for v in inputs.opening_terms if v.bar_event_id == event.event_id and v.side is stream.order.intent.side)
+                    term = bound.terms_by_side[event.event_id, stream.order.intent.side]
                     candidates.append((stream.order, BarOpenObservation.from_event(event), term))
             candidates.sort(key=lambda row: (row[0].intent.side is d.OrderSide.BUY, str(row[0].intent.instrument_id), row[0].order_id.value))
             funding = tuple(x._read_economic_journal_entry_v1(v) for v in _seq(fact["funding"]))
@@ -453,7 +453,7 @@ def _verify_economic_facts_v1(*, case, reader, journal, final_streams, final_sch
                     compare_source(funded, row["sources"])
                     order = stream.order
                     _, event = by_instrument[order.intent.instrument_id]
-                    term = next(v for v in inputs.opening_terms if v.bar_event_id == event.event_id and v.side is order.intent.side)
+                    term = bound.terms_by_side[event.event_id, order.intent.side]
                     quote, market, issues, fee, reason = _economic_evaluation_v1(order, BarOpenObservation.from_event(event), term)
                     admission = _EconomicAdmissionV1(row["signal_index"], plan, funded, fee, quote)
                     opening_index, _ = by_instrument[order.intent.instrument_id]
@@ -499,7 +499,7 @@ def _verify_economic_facts_v1(*, case, reader, journal, final_streams, final_sch
                 stream = changed[identity]
                 _, event = by_instrument[stream.order.intent.instrument_id]
                 observation = BarOpenObservation.from_event(event)
-                term = next(v for v in inputs.opening_terms if v.bar_event_id == event.event_id and v.side is stream.order.intent.side)
+                term = bound.terms_by_side[event.event_id, stream.order.intent.side]
                 admission = admissions[identity]
                 quote, market, issues, fee, reason, extra_p, extra_f = _verify_economic_opening_inputs_v1(sources=current,
                     stream=stream, observation=observation, terms=term, admission=admission, budget_prefix=tuple(selected))
@@ -540,11 +540,14 @@ def _verify_economic_facts_v1(*, case, reader, journal, final_streams, final_sch
             for opening, raw_step in zip(selected, raw_steps, strict=True):
                 raw_step = _map(raw_step, {"type", "schema_version", "opening", "terminal_order", "terms"})
                 terminal = x._read_order_event_stream(raw_step["terminal_order"])
-                term = next(v for v in inputs.opening_terms if d.canonical_sha256(v) == opening.terms_hash)
+                prior_stream = changed[opening.order_id]
+                prior_intent = prior_stream.order.intent
+                opening_index, event = by_instrument[prior_intent.instrument_id]
+                term = bound.terms_by_side[event.event_id, prior_intent.side]
+                if d.canonical_sha256(term) != opening.terms_hash:
+                    raise d.ArtifactIntegrityError("recorded financial step terms differ from source coordinate")
                 step = _EconomicFinancialStepV1(opening, terminal, term)
                 _equal(step, raw_step, "recorded financial step")
-                prior_stream = changed[opening.order_id]
-                opening_index,_=by_instrument[prior_stream.order.intent.instrument_id]
                 working_order=tuple(s.order.order_id for s in sorted((s for s in current.order_streams if s.state is not None and s.state.status in {d.OrderStatus.ACCEPTED,d.OrderStatus.ACTIVE}),
                     key=lambda s:(s.order.intent.side is d.OrderSide.BUY,str(s.order.intent.instrument_id),s.order.order_id.value)))
                 expected_terminal=_verify_recorded_terminal_v1(terminal=terminal,case=case,stream=prior_stream,opening=opening,
@@ -641,7 +644,7 @@ def _verify_economic_facts_v1(*, case, reader, journal, final_streams, final_sch
         end_at = x._read_simulation_instant(final_checkpoint["at"])
         if end_at.phase.rank == 67 and end_at.instant not in seen_open:
             when = end_at.instant
-            bars = tuple((i, event) for i, event in enumerate(openings) if event.event_time == when)
+            bars = bound.opening_batches.get(when, ())
             if not bars:
                 raise d.ArtifactIntegrityError("failed admission checkpoint has no raw opening")
             by_instrument = {event.instrument_id:(i,event) for i,event in bars}
@@ -650,12 +653,12 @@ def _verify_economic_facts_v1(*, case, reader, journal, final_streams, final_sch
             for _, order in pending.values():
                 _, event = by_instrument[order.intent.instrument_id]
                 if order.created_at.instant < when and BarOpenObservation.from_event(event).kind is BarOpenKind.REAL:
-                    terms = next(t for t in inputs.opening_terms if t.bar_event_id == event.event_id and t.side is order.intent.side)
+                    terms = bound.terms_by_side[event.event_id, order.intent.side]
                     candidates.append((order,BarOpenObservation.from_event(event),terms))
             for stream in streams.values():
                 _, event = by_instrument[stream.order.intent.instrument_id]
                 if stream.state is not None and stream.state.status in {d.OrderStatus.ACCEPTED,d.OrderStatus.ACTIVE} and BarOpenObservation.from_event(event).kind is BarOpenKind.REAL:
-                    terms = next(t for t in inputs.opening_terms if t.bar_event_id == event.event_id and t.side is stream.order.intent.side)
+                    terms = bound.terms_by_side[event.event_id, stream.order.intent.side]
                     candidates.append((stream.order,BarOpenObservation.from_event(event),terms))
             candidates.sort(key=lambda row:(row[0].intent.side is d.OrderSide.BUY,str(row[0].intent.instrument_id),row[0].order_id.value))
             funding = _economic_venue_funding_v1(sources=prior,candidates=tuple(candidates))

@@ -303,7 +303,7 @@ class _CnASharePortfolioEconomicEngineV1:
                     evidence("economic_dividend_transition", failed_id, at, {"transition": transition, "post_checkpoint": post})
                 elif kind == "opening":
                     when = value
-                    bars = tuple((i, event) for i, event in enumerate(openings) if event.event_time == when)
+                    bars = bound.opening_batches[when]
                     failed_id = bars[0][1].event_id
                     if cancellation is not None and any(event.event_id == cancellation.cancel_before_event_id for _, event in bars):
                         return EngineExecutionOutcome(cancellation=EngineCancellation(case.case_hash, cancellation,
@@ -320,7 +320,7 @@ class _CnASharePortfolioEconomicEngineV1:
                         if observation.kind is not BarOpenKind.REAL:
                             no_real.append(("economic_pending_no_real_open", order, None, None, event))
                             continue
-                        terms = next(v for v in inputs.opening_terms if v.bar_event_id == event.event_id and v.side is order.intent.side)
+                        terms = bound.terms_by_side[event.event_id, order.intent.side]
                         candidates.append((order, observation, terms))
                     for stream in streams.values():
                         if stream.state is None or stream.state.status not in _WORKING:
@@ -331,7 +331,7 @@ class _CnASharePortfolioEconomicEngineV1:
                             no_real.append(("economic_working_no_real_open", stream.order, stream.stream_hash,
                                 schedules[stream.order.order_id].schedule_hash, event))
                             continue
-                        terms = next(v for v in inputs.opening_terms if v.bar_event_id == event.event_id and v.side is stream.order.intent.side)
+                        terms = bound.terms_by_side[event.event_id, stream.order.intent.side]
                         candidates.append((stream.order, observation, terms))
                     candidates.sort(key=lambda row: (row[0].intent.side is d.OrderSide.BUY, str(row[0].intent.instrument_id), row[0].order_id.value))
                     funding = _economic_venue_funding_v1(sources=prior, candidates=tuple(candidates))
@@ -408,7 +408,7 @@ class _CnASharePortfolioEconomicEngineV1:
                         observation = BarOpenObservation.from_event(event)
                         if observation.kind is not BarOpenKind.REAL:
                             continue
-                        terms = next(v for v in inputs.opening_terms if v.bar_event_id == event.event_id and v.side is stream.order.intent.side)
+                        terms = bound.terms_by_side[event.event_id, stream.order.intent.side]
                         opening = _economic_opening_v1(sources=current, stream=stream, observation=observation,
                             terms=terms, admission=admissions[stream.order.order_id], budget_prefix=tuple(selected))
                         outcomes.append(opening)

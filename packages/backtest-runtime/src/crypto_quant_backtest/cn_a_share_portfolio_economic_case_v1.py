@@ -1,7 +1,9 @@
 """Retained source binding, exact coordinates and sealed identities for economic portfolios."""
 from __future__ import annotations
 
+from collections.abc import Mapping
 from dataclasses import dataclass
+from types import MappingProxyType
 from zoneinfo import ZoneInfo
 import crypto_quant_domain as d
 from crypto_quant_domain import (ArtifactReadResult, ArtifactRef, CashBalanceKey, DomainIdKind,
@@ -16,7 +18,8 @@ from crypto_quant_trading.profiles.cn_a_share.portfolio_economic_v1 import (
 )
 from .artifact_envelope_reader import ArtifactEnvelopeReader
 from .cn_a_share_portfolio_economic_definition_v1 import (
-    CnASharePortfolioEconomicDevelopmentInputsV1, _read_economic_definition_v1,
+    CnASharePortfolioEconomicDevelopmentInputsV1, CnASharePortfolioEconomicOpeningTermsV1,
+    _read_economic_definition_v1,
 )
 from .cn_a_share_portfolio_economic_definition_v2 import CnASharePortfolioEconomicDevelopmentInputsV2, _read_economic_definition_v2
 from .cn_a_share_portfolio_economic_values_v1 import _read_cn_a_share_cash_dividend_action_set_v1
@@ -205,9 +208,8 @@ def _read_economic_opening_sources_v1(
         raise ValueError("economic portfolio opening event scope/availability/window mismatch")
     if len({e.event_id for e in events}) != len(events):
         raise ValueError("economic portfolio opening event identity is duplicated")
-    by_time = {e.event_time for e in events}
-    if any(len(tuple(e for e in events if e.event_time == when)) != len(scope)
-           or {e.instrument_id for e in events if e.event_time == when} != scope for when in by_time):
+    by_time = _opening_batches_v1(events)
+    if any(len(batch) != len(scope) or {e.instrument_id for _, e in batch} != scope for batch in by_time.values()):
         raise ValueError("economic portfolio opening instants require exact instrument cover")
     zone = ZoneInfo("Asia/Shanghai")
     day_of = lambda instant: instant.to_datetime().astimezone(zone).date()
@@ -234,7 +236,7 @@ def _read_economic_opening_sources_v1(
             for side in (OrderSide.BUY, OrderSide.SELL):
                 expected[(event.event_id, side)] = event
     terms = {(t.bar_event_id, t.side): t for t in inputs.opening_terms}
-    if set(terms) != set(expected):
+    if len(terms) != len(inputs.opening_terms) or set(terms) != set(expected):
         raise ValueError("economic portfolio real openings need exact BUY/SELL source terms")
     for key, event in expected.items():
         term = terms[key]
@@ -260,14 +262,16 @@ def _economic_identity_plan_v1(
     targets: PrecomputedTargetStream, openings: tuple[MarketEvent, ...],
 ) -> tuple[ExecutionCaseIdentityRule, ...]:
     """Reserve source/branch coordinates even when a branch produces no Order."""
+    indices: dict[d.InstrumentId, list[int]] = {}
+    for ordinal, event in enumerate(openings):
+        indices.setdefault(event.instrument_id, []).append(ordinal)
     rows: list[tuple[str, DomainIdKind | None]] = []
     for signal_index, _ in enumerate(targets.events):
         for instrument in inputs.scope.instrument_ids:
             root = f"signal.{signal_index}.{instrument}"
             rows.append((root + ".order", DomainIdKind.ORDER))
-            for opening_index, event in enumerate(openings):
-                if event.instrument_id == instrument:
-                    rows.extend((f"{root}.open.{opening_index}.{stage}", None) for stage in _ORDER_STAGES)
+            for opening_index in indices.get(instrument, ()):
+                rows.extend((f"{root}.open.{opening_index}.{stage}", None) for stage in _ORDER_STAGES)
             for next_signal in range(signal_index + 1, len(targets.events)):
                 rows.extend((f"{root}.signal.{next_signal}.{stage}", None)
                     for stage in ("cancel_requested", "cancelled"))
@@ -280,19 +284,27 @@ def _economic_identity_plan_v1(
     return tuple(sorted(rules, key=lambda rule: rule.binding_key))
 
 
+def _opening_batches_v1(events):
+    groups = {}
+    for ordinal, event in enumerate(events):
+        groups.setdefault(event.event_time, []).append((ordinal, event))
+    return {when: tuple(group) for when, group in groups.items()}
+
+
 @dataclass(frozen=True, slots=True)
 class _BoundEconomicPortfolioSourcesV1:
     inputs: CnASharePortfolioEconomicDevelopmentInputsV1 | CnASharePortfolioEconomicDevelopmentInputsV2
     openings: tuple[MarketEvent, ...]
     journal_entry_ids: tuple[tuple[str, d.DomainId], ...]
+    opening_batches: Mapping[d.UtcInstant, tuple[tuple[int, MarketEvent], ...]]
+    terms_by_side: Mapping[tuple[str, OrderSide], CnASharePortfolioEconomicOpeningTermsV1]
 
 
-def _economic_journal_entry_ids_v1(case, inputs):
+def _economic_journal_entry_ids_v1(case, inputs, openings):
     if (type(case) is not _ResolvedProfilePortfolioCaseV2 or case.semantic_spec is None or case.identity_manifest is None
             or not case.verify_identity_manifest(case.identity_manifest.semantic_run_id)
             or case.execution_case_plan.definition != inputs.definition()):
         raise ValueError("economic journal mapping requires exact sealed source-bound case")
-    openings = _read_economic_opening_sources_v1(inputs, case.timeline.reader, case.timeline.window)
     if case.semantic_spec.identity_plan != _economic_identity_plan_v1(inputs, case.target_stream, openings):
         raise ValueError("economic identity plan differs from full source coordinate plan")
     events = _economic_events_v1(inputs)
@@ -359,5 +371,7 @@ def _bind_economic_portfolio_sources_v1(case, reader):
     if canonical_bytes(actual) != canonical_bytes(_native_initial_economic_financial_state_v1(inputs)):
         raise ValueError("economic initial native triple differs from retained source")
     openings = _read_economic_opening_sources_v1(inputs, case.timeline.reader, case.timeline.window)
-    mapping = _economic_journal_entry_ids_v1(case, inputs)
-    return _BoundEconomicPortfolioSourcesV1(inputs, openings, mapping)
+    mapping = _economic_journal_entry_ids_v1(case, inputs, openings)
+    return _BoundEconomicPortfolioSourcesV1(inputs, openings, mapping,
+        MappingProxyType(_opening_batches_v1(openings)),
+        MappingProxyType({(term.bar_event_id, term.side): term for term in inputs.opening_terms}))
