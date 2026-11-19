@@ -2874,6 +2874,55 @@ class BacktestEvidenceRepository:
                 BacktestEvidenceFailureCode.PORT_MANIFEST_INVALID, str(error)
             ) from error
 
+    def load_economic_target_request(self, ref):
+        """Read the original registered economic Target request, not its inputs."""
+        from .request_registration import BacktestRequestRef
+
+        if type(ref) is not BacktestRequestRef:
+            raise TypeError("exact BacktestRequestRef required")
+        source = self._read_expected(ref.artifact_ref, "backtest_request", 1, root=True)
+        raw = source.artifact.raw
+        prefix = "cn.portfolio.shared-cny.economic.development.v1"
+        if (type(raw["schema_version"]) is not int or "model_binding" in raw
+                or raw["market_semantics_profile_key"] != prefix + ".market"
+                or raw["simulation_profile_key"] != prefix + ".simulation"
+                or raw["execution_account_profile_key"] != prefix + ".account"
+                or raw["result_grade_requested"] != "development"):
+            raise ValueError("request is not the admitted economic Target profile")
+        return raw
+
+    def load_economic_target_terminal(self, ref, *, request_ref, target_ref, economic_market_reader):
+        """Require a native economic prefix that binds the original request and Target ref."""
+        from .cn_a_share_portfolio_economic_result_v1 import _artifact_ref, _envelope
+        from .target_repository import BacktestTargetStreamRef
+
+        if type(target_ref) is not BacktestTargetStreamRef:
+            raise TypeError("exact BacktestTargetStreamRef required")
+        request = self.load_economic_target_request(request_ref)
+        terminal = self.load_terminal(ref, economic_market_reader=economic_market_reader)
+        if ref.artifact_type == "evidence_manifest":
+            evidence = self._read_expected(ref, "evidence_manifest", 1, root=True).artifact
+            role = {"FAILED": "failure_report", "BLOCKED": "blocked_report",
+                    "CANCELLED": "cancellation_report"}[terminal.status.value]
+            report = self._read_evidence_children(evidence)[role].artifact.raw
+            resolved = report["resolved_request"]
+            normalized = resolved["normalized_request"]
+            if (canonical_bytes(resolved["request"]) != canonical_bytes(request)
+                    or canonical_bytes(normalized["request"]) != canonical_bytes(request)
+                    or normalized["request_hash"] != canonical_sha256(request)):
+                raise ValueError("attempt terminal does not bind its registered request")
+            issue = report.get("issue", {})
+            source = issue.get("source_evidence")
+            if issue.get("source") != "engine_failure" or not isinstance(source, Mapping) or "economic_failure_context" not in source:
+                raise ValueError("terminal has no admitted original economic Target source binding")
+            payload = _envelope(source["economic_failure_context"]).payload
+            targets = tuple(_artifact_ref(value) for role, value in payload["source_refs"] if role == "target_stream")
+            if targets != (target_ref.artifact_ref,):
+                raise ValueError("attempt terminal does not bind its original Target ref")
+        else:
+            raise ValueError("terminal has no admitted original economic Target source binding")
+        return terminal
+
     def load_economic_target_analysis_binding(self, ref: AnalysisArtifactRef, *, economic_market_reader):
         """Read the verified analysis and its original economic execution coordinates."""
         if type(ref) is not AnalysisArtifactRef:
