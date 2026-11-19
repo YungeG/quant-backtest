@@ -2874,7 +2874,19 @@ class BacktestEvidenceRepository:
                 BacktestEvidenceFailureCode.PORT_MANIFEST_INVALID, str(error)
             ) from error
 
-    def _load_analysis(self, ref: AnalysisArtifactRef, *, economic_market_reader=None) -> VerifiedBacktestAnalysis:
+    def load_economic_target_analysis_binding(self, ref: AnalysisArtifactRef, *, economic_market_reader):
+        """Read the verified analysis and its original economic execution coordinates."""
+        if type(ref) is not AnalysisArtifactRef:
+            raise BacktestEvidenceError(BacktestEvidenceFailureCode.PORT_REF_TYPE_MISMATCH,
+                "exact AnalysisArtifactRef required")
+        try:
+            return self._load_analysis(ref, economic_market_reader=economic_market_reader, economic_binding=True)
+        except BacktestEvidenceError:
+            raise
+        except (KeyError, TypeError, ValueError) as error:
+            raise BacktestEvidenceError(BacktestEvidenceFailureCode.PORT_MANIFEST_INVALID, str(error)) from error
+
+    def _load_analysis(self, ref: AnalysisArtifactRef, *, economic_market_reader=None, economic_binding=False):
         loaded = self._read_expected(
             ref.artifact_ref, "backtest_analysis", 1, root=True
         )
@@ -2893,16 +2905,37 @@ class BacktestEvidenceRepository:
             raise TypeError("wrong metric profile decoder result")
         from .analysis import _ECONOMIC_TARGET_PROFILE_KEY
         if profile.profile.profile_key == _ECONOMIC_TARGET_PROFILE_KEY:
-            from .cn_a_share_portfolio_economic_daily_nav_analysis_v1 import _build_economic_target_analysis_v1
+            from .cn_a_share_portfolio_economic_daily_nav_analysis_v1 import _recover_economic_target_analysis_v1
             if economic_market_reader is None:
                 raise BacktestEvidenceError(BacktestEvidenceFailureCode.PORT_ANALYSIS_LINK_MISMATCH,
                     "economic target analysis requires explicit matching MarketBundleReader")
-            expected = _build_economic_target_analysis_v1(reader=self._reader,
+            expected, nav, case, resolved = _recover_economic_target_analysis_v1(reader=self._reader,
                 publication_ref=analysis.source_publication_ref, market_reader=economic_market_reader)
             if expected != analysis:
                 raise BacktestEvidenceError(BacktestEvidenceFailureCode.PORT_ANALYSIS_LINK_MISMATCH,
                     "economic target analysis source-derived disagreement")
-            return VerifiedBacktestAnalysis(ref, analysis)
+            verified = VerifiedBacktestAnalysis(ref, analysis)
+            if not economic_binding:
+                return verified
+            from .cn_a_share_portfolio_economic_case_v1 import _read_exact_economic_source_v1
+            from .request_registration import BacktestRequestRef
+            from .target_repository import BacktestTargetStreamRef
+            request = resolved.request
+            envelope = ArtifactEnvelope.create("backtest_request", 1, request)
+            request_ref = ArtifactRef.from_envelope(envelope)
+            if _read_exact_economic_source_v1(self._reader, request_ref) != envelope:
+                raise ValueError("economic target analysis original request mismatch")
+            target = BacktestTargetStreamRef.from_artifact_ref(dict(case.execution_case_plan.source_refs)["target_stream"])
+            return {"analysis": verified, "request_ref": BacktestRequestRef.from_artifact_ref(request_ref),
+                "target_ref": target, "definition_ref": nav.definition_ref, "action_set_ref": nav.action_set_ref,
+                "semantic_run_id": resolved.semantic_run_id, "target_stream_digest": case.target_stream.target_stream_digest,
+                "consumer_id": request.experiment_id, "market_bundle_ref": request.market_bundle_ref,
+                "window": request.timeline_window, "seed": request.master_random_seed,
+                "spec_version": case.semantic_spec.spec_version, "build_manifest_hash": request.build_artifact_manifest_hash,
+                "initial_equity": nav.initial_equity, "close_times": tuple(point.occurred_at for point in nav.points)}
+        if economic_binding:
+            raise BacktestEvidenceError(BacktestEvidenceFailureCode.PORT_ANALYSIS_LINK_MISMATCH,
+                "ordinary analysis is not an economic target binding")
         accepted_profile = BacktestMetricProfile(
             "simple_period_return.fill_count.v1", 1
         )

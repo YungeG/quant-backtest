@@ -257,10 +257,10 @@ def _read_nav_analysis(value: object) -> CnASharePortfolioEconomicDailyNavAnalys
 
 
 
-def _build_economic_nav_v1(*, reader, publication_ref, market_reader, target_profile=False):
+def _recover_economic_nav_v1(*, reader, publication_ref, market_reader, target_profile=False):
     from .cn_a_share_portfolio_economic_result_v1 import _load_verified_economic_completed_v1
     from .execution_inputs import _read_money, _read_simulation_instant
-    completed, case, actual_input_ref, engine_ref, engine, definition_ref, action_ref = _load_verified_economic_completed_v1(
+    completed, case, actual_input_ref, engine_ref, engine, definition_ref, action_ref, resolved = _load_verified_economic_completed_v1(
         reader=reader, publication_ref=publication_ref, market_reader=market_reader)
     from .profile_portfolio_execution import (
         _ECONOMIC_BOUNDED_SIGNAL_SPEC_VERSION, _ECONOMIC_CHUNKED_SOURCE_SPEC_VERSION, _economic_profile_prefix_v1,
@@ -286,9 +286,14 @@ def _build_economic_nav_v1(*, reader, publication_ref, market_reader, target_pro
     initial = case.execution_case_plan.initial_economic_projection
     if not points or points[-1].equity != completed.execution_summary.final_portfolio_snapshot.equity:
         raise ValueError("economic NAV final close/economic final equity mismatch")
-    return CnASharePortfolioEconomicDailyNavAnalysisV1(_PROFILE_REF, publication_ref, actual_input_ref, definition_ref,
+    nav = CnASharePortfolioEconomicDailyNavAnalysisV1(_PROFILE_REF, publication_ref, actual_input_ref, definition_ref,
         action_ref, engine_ref, completed.source_execution_result_hash, d.canonical_sha256(initial.snapshot),
         initial.projection_hash, initial.snapshot.equity, tuple(points), len(completed.execution_summary.fills), completed.result_grade)
+    return nav, case, resolved
+
+
+def _build_economic_nav_v1(*, reader, publication_ref, market_reader):
+    return _recover_economic_nav_v1(reader=reader, publication_ref=publication_ref, market_reader=market_reader)[0]
 
 
 def _target_metric_profile_envelope_v1():
@@ -297,13 +302,18 @@ def _target_metric_profile_envelope_v1():
         BacktestMetricProfile(_ECONOMIC_TARGET_PROFILE_KEY, 1))
 
 
-def _build_economic_target_analysis_v1(*, reader, publication_ref, market_reader):
+def _recover_economic_target_analysis_v1(*, reader, publication_ref, market_reader):
     from .analysis import BacktestAnalysis
-    nav = _build_economic_nav_v1(reader=reader, publication_ref=publication_ref,
+    nav, case, resolved = _recover_economic_nav_v1(reader=reader, publication_ref=publication_ref,
         market_reader=market_reader, target_profile=True)
-    return BacktestAnalysis(d.ArtifactRef.from_envelope(_target_metric_profile_envelope_v1()),
+    analysis = BacktestAnalysis(d.ArtifactRef.from_envelope(_target_metric_profile_envelope_v1()),
         nav.source_publication_ref, nav.source_execution_result_hash, nav.simple_period_return,
         nav.trade_count, nav.result_grade)
+    return analysis, nav, case, resolved
+
+
+def _build_economic_target_analysis_v1(*, reader, publication_ref, market_reader):
+    return _recover_economic_target_analysis_v1(reader=reader, publication_ref=publication_ref, market_reader=market_reader)[0]
 
 
 class CnASharePortfolioEconomicDailyNavAnalysisRuntimeV1:

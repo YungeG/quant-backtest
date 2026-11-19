@@ -1267,7 +1267,7 @@ def _load_verified_economic_completed_v1(*, reader, publication_ref, market_read
         raise d.ArtifactIntegrityError("economic completed native context/seal mismatch")
     _equal(case.financial_state, context["financial_state"], "published original initial native state")
     _verify_economic_native_result_v1(case=case, reader=reader, result=engine.payload)
-    return structural, case, actual_ref, engine_ref, engine, refs["definition"], refs["cash_dividend_action_set"]
+    return structural, case, actual_ref, engine_ref, engine, refs["definition"], refs["cash_dividend_action_set"], resolved
 
 
 def _verify_economic_native_cached_v1(*, case, reader, publication_ref):
