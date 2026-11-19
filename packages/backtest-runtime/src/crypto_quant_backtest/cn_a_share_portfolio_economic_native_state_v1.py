@@ -43,7 +43,9 @@ from .cn_a_share_portfolio_standard_definition_v1 import CnASharePortfolioMarkBa
 from .cn_a_share_portfolio_standard_native_state_v1 import _NativeSignalTargetV1
 from .cn_a_share_portfolio_settlement_development_v1 import _build_cn_a_share_portfolio_settlement_facts_v1, _book_body
 from .engine import EngineFailureCode
-from .profile_portfolio_execution import _ECONOMIC_EXCLUSIVE_SETTLEMENT_SPEC_VERSION
+from .profile_portfolio_execution import (
+    _ECONOMIC_EXCLUSIVE_SETTLEMENT_SPEC_VERSION, _ECONOMIC_SEGMENTED_OPENINGS_SPEC_VERSION,
+)
 
 _CNY = CurrencyId("CNY")
 _CENT = Scale(2)
@@ -67,11 +69,12 @@ def _advance_economic_settlement_v1(*, case, inputs, journal, book, consumer):
         raise TypeError("economic settlement advance requires exact immutable source values")
     if book.account_id != inputs.scope.account_id or any(event.occurred_at > consumer for event in book.events):
         raise ValueError("economic settlement Book has foreign account or future committed facts")
-    # Only newly sealed V2 cases use the half-open boundary. Keep the retained
-    # v1 spec behavior so historical terminals still prove their original outcome.
-    end = (case.timeline.window.end_exclusive
-           if (type(inputs) is CnASharePortfolioEconomicDevelopmentInputsV2
-               and case.semantic_spec.spec_version == _ECONOMIC_EXCLUSIVE_SETTLEMENT_SPEC_VERSION) else None)
+    # Historical specs retain their original closing behavior.
+    version = case.semantic_spec.spec_version
+    exclusive = (version == _ECONOMIC_SEGMENTED_OPENINGS_SPEC_VERSION or
+        (type(inputs) is CnASharePortfolioEconomicDevelopmentInputsV2
+         and version == _ECONOMIC_EXCLUSIVE_SETTLEMENT_SPEC_VERSION))
+    end = case.timeline.window.end_exclusive if exclusive else None
     while True:
         pending = book.project().pending_obligations
         if not pending:

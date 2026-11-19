@@ -1204,10 +1204,10 @@ def _bootstrap_economic_case_v1(*, reader, market_reader, resolved_raw, binding,
     manifest = x._read_build_manifest(_raw(build_artifact_manifest))
     from .cn_a_share_portfolio_economic_prepare_v2 import _registry_v2
     spec = x._read_semantic_spec(binding["semantic_spec"])
-    proof_version = _economic_opening_proof_version_v1(definition=definition, spec=spec)
+    _economic_opening_proof_version_v1(definition=definition, spec=spec)
     registry = (_registry_v2(inputs, spec_version=spec.spec_version)
         if type(inputs) is CnASharePortfolioEconomicDevelopmentInputsV2
-        else _registry(inputs, opening_proof_version=proof_version))
+        else _registry(inputs, spec_version=spec.spec_version))
     resolved = ProfileResolver().resolve(request=request, registry=registry, market_bundle_manifest=market_reader.manifest,
         build_artifact_manifest=manifest).resolved
     if resolved is None:

@@ -29,6 +29,7 @@ from crypto_quant_trading.profiles.cn_a_share.portfolio_economic_v1 import (
 
 _DEFINITION_TYPE = "backtest_profile_portfolio_definition"
 _ECONOMIC_EXCLUSIVE_SETTLEMENT_SPEC_VERSION = 2
+_ECONOMIC_SEGMENTED_OPENINGS_SPEC_VERSION = 3
 
 
 @dataclass(frozen=True, slots=True)
@@ -355,7 +356,8 @@ def _profile_portfolio_economic_semantic_spec_from_case_v1(
     identity_namespace: IdentityNamespace,
     identity_plan: tuple[ExecutionCaseIdentityRule, ...],
 ) -> ExecutionCaseSemanticSpec:
-    if type(spec_version) is not int or spec_version not in (1, 2):
+    versions = (1, 2, _ECONOMIC_SEGMENTED_OPENINGS_SPEC_VERSION) if case.execution_case_plan.definition.schema_version == 2 else (1, 2)
+    if type(spec_version) is not int or spec_version not in versions:
         raise ValueError("unsupported economic execution spec version for definition")
     timeline = case.timeline
     timeline_hash = canonical_sha256({

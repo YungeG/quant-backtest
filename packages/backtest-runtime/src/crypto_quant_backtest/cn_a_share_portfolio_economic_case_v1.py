@@ -25,7 +25,7 @@ from .cn_a_share_portfolio_economic_definition_v2 import CnASharePortfolioEconom
 from .cn_a_share_portfolio_economic_values_v1 import _read_cn_a_share_cash_dividend_action_set_v1
 from .engine import ExecutionCaseIdentityRule, PositionLotBook, ResolvedFinancialState
 from .execution import BAR_OPEN_CAPABILITY, BarOpenKind, BarOpenObservation
-from .profile_portfolio_execution import _ResolvedProfilePortfolioCaseV2
+from .profile_portfolio_execution import _ECONOMIC_SEGMENTED_OPENINGS_SPEC_VERSION, _ResolvedProfilePortfolioCaseV2
 from .target_repository import BacktestTargetStreamRef, BacktestTargetStreamRepository
 from .target_stream import PrecomputedTargetStream
 from .timeline import TimelineWindow
@@ -164,9 +164,9 @@ def _validate_economic_coordinates_v2(inputs, window, *, opening_times=None):
 
 def _read_economic_opening_sources_v1(
     inputs: CnASharePortfolioEconomicDevelopmentInputsV1,
-    reader: MarketBundleReader, window: TimelineWindow,
+    reader: MarketBundleReader, window: TimelineWindow, *, segmented: bool = False,
 ) -> tuple[MarketEvent, ...]:
-    if type(inputs) is CnASharePortfolioEconomicDevelopmentInputsV2:
+    if type(inputs) is CnASharePortfolioEconomicDevelopmentInputsV2 and not segmented:
         validate = _validate_economic_coordinates_v2
         invalid_source = False  # V2's original prestart source is checked by its coordinate validator.
     elif type(inputs) is CnASharePortfolioEconomicDevelopmentInputsV1:
@@ -180,28 +180,25 @@ def _read_economic_opening_sources_v1(
             or inputs.daily_marks[-1].at.instant >= window.end_exclusive):
         raise ValueError("economic portfolio market/window source binding mismatch")
     streams = tuple(s for s in reader.manifest.streams if s.capability == BAR_OPEN_CAPABILITY)
-    # ponytail: one finite opening stream, max4096; a wider source contract needs
-    # a new profile version, not silent filtering of unrelated observations.
-    if len(streams) != 1 or not 0 < streams[0].event_count <= 4096:
+    # Keep the old single-stream limit. A segmented source is a different profile,
+    # bounded independently even before a cursor is opened.
+    if segmented:
+        if (not 1 <= len(streams) <= 32 or any(not 0 < s.event_count <= 4096 for s in streams)
+                or sum(s.event_count for s in streams) > 32768):
+            raise ValueError("economic segmented openings exceed the retained stream/count bounds")
+    elif len(streams) != 1 or not 0 < streams[0].event_count <= 4096:
         raise ValueError("economic portfolio needs one finite native opening stream")
-    source = streams[0]
-    cursor = reader.open_cursor(source.stream_key, batch_size=64)
-    if (type(cursor) is not EventCursor or cursor.bundle_ref != reader.bundle_ref
-            or cursor.stream_manifest != source or cursor.position != 0):
-        raise ValueError("economic portfolio opening cursor identity mismatch")
-    events = []
-    while not cursor.exhausted:
-        batch, advanced = reader.read_batch(cursor)
-        if (type(batch) is not tuple or not batch or any(type(e) is not MarketEvent for e in batch)
-                or type(advanced) is not EventCursor or advanced.bundle_ref != cursor.bundle_ref
-                or advanced.stream_manifest != source or advanced.position != cursor.position + len(batch)):
-            raise ValueError("economic portfolio opening cursor did not advance exactly")
-        events.extend(batch)
-        cursor = advanced
-    if len(events) != source.event_count or canonical_sha256(events) != source.content_hash:
-        raise ValueError("economic portfolio retained opening stream hash mismatch")
+    chunks = [_read_economic_opening_stream_v1(reader, stream) for stream in streams]
+    if segmented:
+        if any(any(left.ordering_key >= right.ordering_key or left.event_time > right.event_time
+                   for left, right in zip(chunk, chunk[1:])) for chunk in chunks):
+            raise ValueError("economic opening segment event coordinates must be strictly ordered")
+        chunks.sort(key=lambda events: events[0].event_time)
+        if any(left[-1].event_time >= right[0].event_time for left, right in zip(chunks, chunks[1:])):
+            raise ValueError("economic opening segments may not overlap or split a session")
+    events = tuple(event for chunk in chunks for event in chunk)
     scope = set(inputs.scope.instrument_ids)
-    if any(e.stream_key != source.stream_key or e.capability != BAR_OPEN_CAPABILITY
+    if any(e.capability != BAR_OPEN_CAPABILITY
            or e.event_type != "bar_open" or e.instrument_id not in scope
            or e.event_time != e.available_time
            or not window.trading_start <= e.event_time < window.end_exclusive for e in events):
@@ -251,7 +248,29 @@ def _read_economic_opening_sources_v1(
     if any(not _wall_clock_v1(e.event_time, 9, 30) or e.phase.rank >= 30 for e in events):
         raise ValueError("economic raw openings require09:30 and source phase below30")
     validate(inputs, window, opening_times=by_time)
+    return events
+
+
+def _read_economic_opening_stream_v1(reader, source):
+    cursor = reader.open_cursor(source.stream_key, batch_size=64)
+    if (type(cursor) is not EventCursor or cursor.bundle_ref != reader.bundle_ref
+            or cursor.stream_manifest != source or cursor.position != 0):
+        raise ValueError("economic portfolio opening cursor identity mismatch")
+    events = []
+    while not cursor.exhausted:
+        batch, advanced = reader.read_batch(cursor)
+        if (type(batch) is not tuple or not batch or any(type(e) is not MarketEvent for e in batch)
+                or type(advanced) is not EventCursor or advanced.bundle_ref != cursor.bundle_ref
+                or advanced.stream_manifest != source or advanced.position != cursor.position + len(batch)):
+            raise ValueError("economic portfolio opening cursor did not advance exactly")
+        events.extend(batch)
+        cursor = advanced
+    if len(events) != source.event_count or canonical_sha256(events) != source.content_hash:
+        raise ValueError("economic portfolio retained opening stream hash mismatch")
+    if any(event.stream_key != source.stream_key for event in events):
+        raise ValueError("economic portfolio opening event scope/availability/window mismatch")
     return tuple(events)
+
 
 _ORDER_STAGES = ("intent", "capability", "translation", "market", "fee", "risk",
                  "submitted", "accepted", "activated", "filled", "expired", "rejected")
@@ -330,8 +349,8 @@ def _economic_opening_proof_version_v1(*, definition, spec):
 
     if spec is None or spec.spec_key != _economic_profile_prefix_v1(definition):
         raise ValueError("economic opening proof requires the bound profile spec")
-    if definition.schema_version == 2 and spec.spec_version in (1, 2):
-        return spec.spec_version
+    if definition.schema_version == 2 and spec.spec_version in (1, 2, _ECONOMIC_SEGMENTED_OPENINGS_SPEC_VERSION):
+        return min(spec.spec_version, 2)
     if definition.schema_version == 3 and spec.spec_version in (1, 2):
         # V2 spec@2 versions its settlement, not its opening wire shape.
         return 1
@@ -370,7 +389,10 @@ def _bind_economic_portfolio_sources_v1(case, reader):
     actual = (case.financial_state, case.execution_case_plan.initial_dividend_state, case.execution_case_plan.initial_economic_projection)
     if canonical_bytes(actual) != canonical_bytes(_native_initial_economic_financial_state_v1(inputs)):
         raise ValueError("economic initial native triple differs from retained source")
-    openings = _read_economic_opening_sources_v1(inputs, case.timeline.reader, case.timeline.window)
+    segmented = case.semantic_spec.spec_version == _ECONOMIC_SEGMENTED_OPENINGS_SPEC_VERSION
+    openings = _read_economic_opening_sources_v1(inputs, case.timeline.reader, case.timeline.window, segmented=segmented)
+    if segmented and case.timeline.stream_keys != tuple(sorted({event.stream_key for event in openings})):
+        raise ValueError("economic timeline does not exact-cover opening segments")
     mapping = _economic_journal_entry_ids_v1(case, inputs, openings)
     return _BoundEconomicPortfolioSourcesV1(inputs, openings, mapping,
         MappingProxyType(_opening_batches_v1(openings)),
