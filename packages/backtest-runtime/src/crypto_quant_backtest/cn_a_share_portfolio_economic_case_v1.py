@@ -27,7 +27,8 @@ from .cn_a_share_portfolio_economic_values_v1 import _read_cn_a_share_cash_divid
 from .engine import ExecutionCaseIdentityRule, PositionLotBook, ResolvedFinancialState
 from .execution import BAR_OPEN_CAPABILITY, BarOpenKind, BarOpenObservation
 from .profile_portfolio_execution import (
-    _ECONOMIC_BOUNDED_SIGNAL_SPEC_VERSION, _ECONOMIC_SEGMENTED_SPECS, _ResolvedProfilePortfolioCaseV2,
+    _ECONOMIC_BOUNDED_SPECS, _ECONOMIC_SEGMENTED_SPECS, _ResolvedProfilePortfolioCaseV2,
+    _economic_profile_prefix_v1, _economic_spec_versions_v1,
 )
 from .target_repository import BacktestTargetStreamRef, BacktestTargetStreamRepository
 from .target_stream import PrecomputedTargetStream
@@ -339,7 +340,7 @@ def _economic_journal_entry_ids_v1(case, inputs, openings):
             or not case.verify_identity_manifest(case.identity_manifest.semantic_run_id)
             or case.execution_case_plan.definition != inputs.definition()):
         raise ValueError("economic journal mapping requires exact sealed source-bound case")
-    bounded = case.semantic_spec.spec_version == _ECONOMIC_BOUNDED_SIGNAL_SPEC_VERSION
+    bounded = case.semantic_spec.spec_version in _ECONOMIC_BOUNDED_SPECS
     if case.semantic_spec.identity_plan != _economic_identity_plan_v1(inputs, case.target_stream, openings, bounded_signals=bounded):
         raise ValueError("economic identity plan differs from full source coordinate plan")
     events = _economic_events_v1(inputs)
@@ -361,20 +362,16 @@ def _read_exact_economic_source_v1(reader, ref):
 
 
 def _economic_opening_proof_version_v1(*, definition, spec):
-    from .profile_portfolio_execution import _economic_profile_prefix_v1
-
     if spec is None or spec.spec_key != _economic_profile_prefix_v1(definition):
         raise ValueError("economic opening proof requires the bound profile spec")
-    if definition.schema_version == 2 and spec.spec_version in (1, 2, *_ECONOMIC_SEGMENTED_SPECS):
-        return min(spec.spec_version, 2)
-    if definition.schema_version == 3 and spec.spec_version in (1, 2):
-        # V2 spec@2 versions its settlement, not its opening wire shape.
-        return 1
-    raise ValueError("unsupported economic opening proof spec version")
+    if spec.spec_version not in _economic_spec_versions_v1(definition):
+        raise ValueError("unsupported economic opening proof spec version")
+    # V2 spec@2 versions its settlement, not its opening wire shape.
+    return 1 if definition.schema_version == 3 else min(spec.spec_version, 2)
 
 
 def _verify_bounded_signal_cancellation_v1(case, plan, admissions, signal_index):
-    if case.semantic_spec.spec_version != _ECONOMIC_BOUNDED_SIGNAL_SPEC_VERSION:
+    if case.semantic_spec.spec_version not in _ECONOMIC_BOUNDED_SPECS:
         return
     if plan.retained_working_order_ids or any(admissions[intent.order_id].signal_index != signal_index - 1
             for intent in plan.cancel_intents):
@@ -401,7 +398,7 @@ def _bind_economic_portfolio_sources_v1(case, reader):
     if retained.schema_version == 3:
         inputs = _read_economic_definition_v2(retained, target_ref, actions, verified.target_stream)
     else:
-        inputs = _read_economic_definition_v1(retained, target_ref, actions)
+        inputs = _read_economic_definition_v1(retained, target_ref, actions, source_reader=reader)
     if inputs.scope.market_bundle_ref != case.timeline.reader.bundle_ref:
         raise ValueError("economic market Bundle source binding mismatch")
     expected_signal = tuple(d.SimulationInstant(e.event_time, e.phase, e.source_sequence) for e in case.target_stream.events)

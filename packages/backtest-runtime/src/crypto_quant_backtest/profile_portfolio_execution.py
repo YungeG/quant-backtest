@@ -31,7 +31,9 @@ _DEFINITION_TYPE = "backtest_profile_portfolio_definition"
 _ECONOMIC_EXCLUSIVE_SETTLEMENT_SPEC_VERSION = 2
 _ECONOMIC_SEGMENTED_OPENINGS_SPEC_VERSION = 3
 _ECONOMIC_BOUNDED_SIGNAL_SPEC_VERSION = 4
-_ECONOMIC_SEGMENTED_SPECS = (_ECONOMIC_SEGMENTED_OPENINGS_SPEC_VERSION, _ECONOMIC_BOUNDED_SIGNAL_SPEC_VERSION)
+_ECONOMIC_CHUNKED_SOURCE_SPEC_VERSION = 5
+_ECONOMIC_BOUNDED_SPECS = (_ECONOMIC_BOUNDED_SIGNAL_SPEC_VERSION, _ECONOMIC_CHUNKED_SOURCE_SPEC_VERSION)
+_ECONOMIC_SEGMENTED_SPECS = (_ECONOMIC_SEGMENTED_OPENINGS_SPEC_VERSION, *_ECONOMIC_BOUNDED_SPECS)
 
 
 @dataclass(frozen=True, slots=True)
@@ -193,16 +195,22 @@ class _ResolvedProfilePortfolioCaseV1:
 
 def _economic_profile_prefix_v1(definition: ArtifactEnvelope) -> str:
     if (type(definition) is not ArtifactEnvelope or definition.artifact_type != _DEFINITION_TYPE
-            or type(definition.schema_version) is not int or definition.schema_version not in (2, 3)):
-        raise TypeError("economic plan requires exact definition@2")
+            or type(definition.schema_version) is not int or definition.schema_version not in (2, 3, 4)):
+        raise TypeError("economic plan requires exact versioned definition")
     payload = definition.payload
     from collections.abc import Mapping
     if (not isinstance(payload, Mapping) or payload.get("type") != "cn_a_share_portfolio_economic_development_definition"
             or type(payload.get("schema_version")) is not int
             or payload["schema_version"] != definition.schema_version - 1):
         raise ValueError("economic definition/profile version tuple mismatch")
-    return ("cn.portfolio.shared-cny.economic.development.v1" if definition.schema_version == 2
+    return ("cn.portfolio.shared-cny.economic.development.v1" if definition.schema_version != 3
         else "cn.portfolio.shared-cny.economic.development.v2")
+
+
+def _economic_spec_versions_v1(definition: ArtifactEnvelope) -> tuple[int, ...]:
+    _economic_profile_prefix_v1(definition)
+    return {2: (1, 2, _ECONOMIC_SEGMENTED_OPENINGS_SPEC_VERSION, _ECONOMIC_BOUNDED_SIGNAL_SPEC_VERSION),
+        3: (1, 2), 4: (_ECONOMIC_CHUNKED_SOURCE_SPEC_VERSION,)}[definition.schema_version]
 
 
 @dataclass(frozen=True, slots=True)
@@ -358,8 +366,8 @@ def _profile_portfolio_economic_semantic_spec_from_case_v1(
     identity_namespace: IdentityNamespace,
     identity_plan: tuple[ExecutionCaseIdentityRule, ...],
 ) -> ExecutionCaseSemanticSpec:
-    versions = (1, 2, *_ECONOMIC_SEGMENTED_SPECS) if case.execution_case_plan.definition.schema_version == 2 else (1, 2)
-    if type(spec_version) is not int or spec_version not in versions:
+    if (type(spec_version) is not int
+            or spec_version not in _economic_spec_versions_v1(case.execution_case_plan.definition)):
         raise ValueError("unsupported economic execution spec version for definition")
     timeline = case.timeline
     timeline_hash = canonical_sha256({

@@ -1189,7 +1189,7 @@ def _bootstrap_economic_case_v1(*, reader, market_reader, resolved_raw, binding,
     definition_version = next((ref.schema_version for key, ref in refs if key == "definition"), None)
     expected = (("cash_dividend_action_set", "cn_a_share_cash_dividend_action_set", 1),
         ("definition", "backtest_profile_portfolio_definition", definition_version), ("target_stream", "backtest_target_stream", 1))
-    if definition_version not in (2, 3) or tuple((key, ref.artifact_type, ref.schema_version) for key, ref in refs) != expected:
+    if definition_version not in (2, 3, 4) or tuple((key, ref.artifact_type, ref.schema_version) for key, ref in refs) != expected:
         raise d.ArtifactIntegrityError("economic source binding role/type/version mismatch")
     by_role = dict(refs)
     action_envelope = _read_exact_economic_source_v1(reader, by_role["cash_dividend_action_set"])
@@ -1198,7 +1198,7 @@ def _bootstrap_economic_case_v1(*, reader, market_reader, resolved_raw, binding,
     target_ref = BacktestTargetStreamRef.from_artifact_ref(by_role["target_stream"])
     target = BacktestTargetStreamRepository(reader=reader).load(target_ref).target_stream
     inputs = (_read_economic_definition_v2(definition, target_ref, actions, target) if definition.schema_version == 3
-        else _read_economic_definition_v1(definition, target_ref, actions))
+        else _read_economic_definition_v1(definition, target_ref, actions, source_reader=reader))
     financial, state, projection = _native_initial_economic_financial_state_v1(inputs)
     plan = _ProfilePortfolioExecutionPlanV2(definition, financial, state, projection, refs)
     resolved_raw = _map(resolved_raw)
@@ -1210,6 +1210,7 @@ def _bootstrap_economic_case_v1(*, reader, market_reader, resolved_raw, binding,
     registry = (_registry_v2(inputs, spec_version=spec.spec_version)
         if type(inputs) is CnASharePortfolioEconomicDevelopmentInputsV2
         else _registry(inputs, spec_version=spec.spec_version))
+    del inputs
     resolved = ProfileResolver().resolve(request=request, registry=registry, market_bundle_manifest=market_reader.manifest,
         build_artifact_manifest=manifest).resolved
     if resolved is None:

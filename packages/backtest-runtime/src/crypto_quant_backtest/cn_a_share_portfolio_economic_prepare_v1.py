@@ -33,7 +33,8 @@ from .execution_inputs import (
 from .facade import BacktestRuntime
 from .ports import SimulationComponentRef, SimulationPortType
 from .profile_portfolio_execution import (
-    _ECONOMIC_BOUNDED_SIGNAL_SPEC_VERSION, _ECONOMIC_SEGMENTED_OPENINGS_SPEC_VERSION, _ECONOMIC_SEGMENTED_SPECS,
+    _ECONOMIC_BOUNDED_SIGNAL_SPEC_VERSION, _ECONOMIC_CHUNKED_SOURCE_SPEC_VERSION,
+    _ECONOMIC_SEGMENTED_OPENINGS_SPEC_VERSION, _ECONOMIC_SEGMENTED_SPECS,
     _ProfilePortfolioExecutionPlanV2, _ResolvedProfilePortfolioCaseV2,
     _profile_portfolio_economic_semantic_spec_from_case_v1,
 )
@@ -141,6 +142,11 @@ def prepare_cn_a_share_portfolio_economic_development_backtest(
             or type(provider_inputs) is not CnASharePortfolioEconomicDevelopmentInputsV1
             or type(build_artifact_manifest) is not BuildArtifactManifest):
         raise TypeError("economic portfolio prepare needs exact immutable public inputs")
+    chunked = provider_inputs.definition().schema_version == 4
+    if chunked:
+        if not bounded_signal_identity:
+            raise ValueError("chunked economic sources require bounded signal identity")
+        spec_version = _ECONOMIC_CHUNKED_SOURCE_SPEC_VERSION
     if (not isinstance(market_reader, MarketBundleReader) or not isinstance(publication_root, Path)
             or request_intent.execution_account_id != provider_inputs.scope.account_id
             or request_intent.reporting_currency != d.CurrencyId("CNY")
@@ -187,7 +193,10 @@ def prepare_cn_a_share_portfolio_economic_development_backtest(
     case = _compose_profile_portfolio_economic_execution_case(resolved_request=outcome.resolved,
         market_reader=market_reader, semantic_spec=spec, target_stream=target,
         timeline_stream_keys=timeline.stream_keys, timeline_batch_size=64, execution_case_plan=plan)
-    _bind_economic_portfolio_sources_v1(case, artifact_reader)
+    bound = _bind_economic_portfolio_sources_v1(case, artifact_reader)
+    if chunked and bound.inputs != provider_inputs:
+        raise ValueError("chunked economic source values differ from retained definition")
+    del bound
     bundle = _materialize_execution_input_bundle_v9(resolved_request=outcome.resolved, execution_case=case)
     decoded = _EXECUTION_INPUT_CATALOG.read(d.canonical_bytes(bundle))
     if decoded.envelope != bundle or type(decoded.artifact) is not _DecodedExecutionInputBundleV9:

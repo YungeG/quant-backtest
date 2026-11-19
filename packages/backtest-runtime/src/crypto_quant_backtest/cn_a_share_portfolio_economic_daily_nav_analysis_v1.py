@@ -140,9 +140,9 @@ class CnASharePortfolioEconomicDailyNavAnalysisV1:
             raise TypeError("NAV requires exact standard canonical publication ref")
         for value, name, version in ((self.execution_input_ref, "backtest_execution_input_bundle", 9),):
             _ref(value, name, version)
-        definition_version = (3 if type(self.definition_ref) is d.ArtifactRef
+        definition_version = (self.definition_ref.schema_version if type(self.definition_ref) is d.ArtifactRef
             and self.definition_ref.artifact_type == "backtest_profile_portfolio_definition"
-            and self.definition_ref.schema_version == 3 else 2)
+            and self.definition_ref.schema_version in (3, 4) else 2)
         _ref(self.definition_ref, "backtest_profile_portfolio_definition", definition_version)
         for value, name, version in ((self.action_set_ref, "cn_a_share_cash_dividend_action_set", 1),
                 (self.engine_result_ref, "engine_execution_result", 1)):
@@ -262,9 +262,11 @@ def _build_economic_nav_v1(*, reader, publication_ref, market_reader, target_pro
     from .execution_inputs import _read_money, _read_simulation_instant
     completed, case, actual_input_ref, engine_ref, engine, definition_ref, action_ref = _load_verified_economic_completed_v1(
         reader=reader, publication_ref=publication_ref, market_reader=market_reader)
-    from .profile_portfolio_execution import _ECONOMIC_BOUNDED_SIGNAL_SPEC_VERSION, _economic_profile_prefix_v1
-    if target_profile and (definition_ref.schema_version != 2
-            or case.semantic_spec.spec_version != _ECONOMIC_BOUNDED_SIGNAL_SPEC_VERSION):
+    from .profile_portfolio_execution import (
+        _ECONOMIC_BOUNDED_SIGNAL_SPEC_VERSION, _ECONOMIC_CHUNKED_SOURCE_SPEC_VERSION, _economic_profile_prefix_v1,
+    )
+    if target_profile and (definition_ref.schema_version, case.semantic_spec.spec_version) not in (
+            (2, _ECONOMIC_BOUNDED_SIGNAL_SPEC_VERSION), (4, _ECONOMIC_CHUNKED_SOURCE_SPEC_VERSION)):
         raise ValueError("economic target analysis requires the bounded-signal economic profile")
     if (definition_ref != d.ArtifactRef.from_envelope(case.execution_case_plan.definition)
             or case.case_key != _economic_profile_prefix_v1(case.execution_case_plan.definition)):

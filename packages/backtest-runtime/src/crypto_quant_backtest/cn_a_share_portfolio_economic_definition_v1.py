@@ -1,7 +1,7 @@
-"""Exact source-only DEVELOPMENT economic DTOs and definition@2 codec."""
+"""Exact source-only DEVELOPMENT economic DTOs and definition @2/@4 codec."""
 from __future__ import annotations
 
-from dataclasses import dataclass, field, replace
+from dataclasses import InitVar, dataclass, field, replace
 from collections.abc import Mapping
 from datetime import date
 
@@ -153,13 +153,14 @@ class CnASharePortfolioEconomicDevelopmentInputsV1:
     cost_basis_policy: CostBasisPolicy
     notional_quantization: QuantizationPolicy
     dividend_actions: CnAShareCashDividendActionSetV1
+    _source_index: InitVar[Mapping | None] = None
     _retained_definition: ArtifactEnvelope = field(init=False, repr=False, compare=False)
     _definition_source_hash: str = field(init=False, repr=False, compare=False)
     source_qualification_verified: bool = field(default=False, init=False)
     broker_shared_pool_verified: bool = field(default=False, init=False)
     trade_authorized: bool = field(default=False, init=False)
 
-    def __post_init__(self) -> None:
+    def __post_init__(self, _source_index) -> None:
         for value, expected in ((self.scope, CnASharePortfolioPreparationInputsV1),
                 (self.initial_journal, AccountingJournal),
                 (self.execution_policy, CnAShareRebalanceExecutionPolicyV1),
@@ -215,10 +216,30 @@ class CnASharePortfolioEconomicDevelopmentInputsV1:
                 or self.dividend_actions.coverage_start != clock.instant
                 or any(a.instrument_id not in scope or a.registered_at <= clock for a in self.dividend_actions.actions)):
             raise ValueError("economic ActionSet scope/start/registration mismatch")
-        definition = ArtifactEnvelope.create("backtest_profile_portfolio_definition", 2, self.economic_payload())
+        payload = self.economic_payload()
+        version = 2
+        if _source_index is not None:
+            from .cn_a_share_portfolio_economic_source_chunks import _ROLES
+            for role in _ROLES:
+                del payload[role]
+            payload["schema_version"] = 3
+            payload["source_index"] = _source_index
+            version = 4
+        definition = ArtifactEnvelope.create("backtest_profile_portfolio_definition", version, payload)
         object.__setattr__(self, "_retained_definition", definition)
         object.__setattr__(self, "_definition_source_hash", canonical_sha256(definition))
-        canonical_bytes(self)
+        if _source_index is None:
+            canonical_bytes(self)
+
+    @classmethod
+    def from_chunked_sources(cls, *, artifact_reader, artifact_publisher, **sources):
+        """Retain bounded native source chunks; prepare with the bounded signal profile."""
+        from .cn_a_share_portfolio_economic_source_chunks import _ROLES, _publish_economic_source_chunks
+        scope_value = dict(sources["scope"].to_canonical_dict())
+        scope_value.pop("target_stream_ref")
+        index = _publish_economic_source_chunks(publisher=artifact_publisher, reader=artifact_reader,
+            scope=scope_value, sections={role: sources[role] for role in _ROLES})
+        return cls(**sources, _source_index=index)
 
     def economic_payload(self) -> dict[str, object]:
         scope = dict(self.scope.to_canonical_dict())
@@ -251,39 +272,57 @@ def _map(value: object, tag: str) -> Mapping:
 
 def _read_economic_definition_v1(
     definition: ArtifactEnvelope, target_ref: BacktestTargetStreamRef, action_set: CnAShareCashDividendActionSetV1,
+    *, source_reader=None,
 ) -> CnASharePortfolioEconomicDevelopmentInputsV1:
     if (type(definition) is not ArtifactEnvelope
             or definition.artifact_type != "backtest_profile_portfolio_definition"
-            or definition.schema_version != 2 or type(action_set) is not CnAShareCashDividendActionSetV1 or type(target_ref) is not BacktestTargetStreamRef):
+            or definition.schema_version not in (2, 4) or type(action_set) is not CnAShareCashDividendActionSetV1 or type(target_ref) is not BacktestTargetStreamRef):
         raise TypeError("standard portfolio requires exact definition and target source reference")
     p = _map(definition.payload, "cn_a_share_portfolio_economic_development_definition")
     fields = {"type", "schema_version", "scope", "initial_journal", "calendars", "execution_policy",
         "opening_terms", "initial_marks", "signal_marks", "daily_marks", "checkpoint_marks", "cost_basis_policy",
         "notional_quantization", "cash_dividend_action_set_hash", "source_qualification_verified",
         "broker_shared_pool_verified", "trade_authorized"}
-    if (set(p) != fields or type(p["schema_version"]) is not int or p["schema_version"] != 1
+    expected_version = 1
+    if definition.schema_version == 4:
+        from .cn_a_share_portfolio_economic_source_chunks import _ROLES
+        fields = (fields - set(_ROLES)) | {"source_index"}
+        expected_version = 3
+    if (set(p) != fields or type(p["schema_version"]) is not int or p["schema_version"] != expected_version
             or any(p[k] is not False for k in ("source_qualification_verified", "broker_shared_pool_verified", "trade_authorized"))):
         raise ValueError("standard portfolio definition exact fields/qualification mismatch")
     if p["cash_dividend_action_set_hash"] != canonical_sha256(action_set):
         raise ValueError("economic definition ActionSet value hash mismatch")
-    values = _read_economic_source_fields_v1(p, target_ref, signal_field="signal_marks")
-    result = CnASharePortfolioEconomicDevelopmentInputsV1(**values, dividend_actions=action_set)
-    if canonical_bytes(result.economic_payload()) != canonical_bytes(p):
+    index = None
+    decode = p
+    if definition.schema_version == 4:
+        from .cn_a_share_portfolio_economic_source_chunks import _open_economic_source_chunks
+        if source_reader is None:
+            raise ValueError("chunked economic sources require the original artifact reader")
+        index = p["source_index"]
+        decode = {**p, **_open_economic_source_chunks(reader=source_reader, scope=p["scope"], index=index)}
+    values = _read_economic_source_fields_v1(decode, target_ref, signal_field="signal_marks", exact_rows=index is not None)
+    result = CnASharePortfolioEconomicDevelopmentInputsV1(**values, dividend_actions=action_set, _source_index=index)
+    if (result.definition() != definition if index is not None
+            else canonical_bytes(result.economic_payload()) != canonical_bytes(p)):
         raise ValueError("standard portfolio source definition did not reconstruct exactly")
     return result
 
 
-def _read_economic_mark_batches_v1(raw) -> tuple[CnASharePortfolioMarkBatchDevelopmentV1, ...]:
+def _read_economic_mark_batches_v1(raw, *, exact=False) -> tuple[CnASharePortfolioMarkBatchDevelopmentV1, ...]:
     from .execution_inputs import _read_simulation_instant
     result = []
     for value in raw:
         b = _map(value, "cn_a_share_portfolio_mark_batch_development")
         marks = tuple(_read_economic_resolved_mark_v1(v) for v in b["marks"])
-        result.append(CnASharePortfolioMarkBatchDevelopmentV1(_read_simulation_instant(b["at"]), marks))
+        batch = CnASharePortfolioMarkBatchDevelopmentV1(_read_simulation_instant(b["at"]), marks)
+        if exact and canonical_bytes(batch) != canonical_bytes(value):
+            raise ValueError("economic chunk mark batch did not reconstruct exactly")
+        result.append(batch)
     return tuple(result)
 
 
-def _read_economic_source_fields_v1(p, target_ref, *, signal_field: str) -> dict[str, object]:
+def _read_economic_source_fields_v1(p, target_ref, *, signal_field: str, exact_rows: bool = False) -> dict[str, object]:
     # Pure common parsing in V1's original failure order; no DTO/version decisions.
     from .execution_inputs import (
         _read_utc, _read_rate, _read_capability_set, _read_translation_mapping, _read_order_rule_timeline,
@@ -357,13 +396,16 @@ def _read_economic_source_fields_v1(p, target_ref, *, signal_field: str) -> dict
         s = _map(t["market_state"], "slippage_market_state")
         state = SlippageMarketState(s["state_key"], _read_utc(s["observed_at"]), _read_utc(s["available_at"]),
             s["source_event_id"], s["revision_id"], s["evidence_hash"])
-        terms.append(CnASharePortfolioEconomicOpeningTermsV1(
+        term = CnASharePortfolioEconomicOpeningTermsV1(
             t["bar_event_id"], t["bar_event_hash"], market.instrument_id, OrderSide(t["side"]),
             _read_capability_set(t["capability_set"]), _read_translation_mapping(t["translation_mapping"]),
             _read_order_rule_timeline(t["rule_timeline"]), _read_notional_evidence(t["notional_evidence"]),
             _read_fee_reservation_rules(t["reservation_rules"]), _read_final_fee_rules(t["final_fill_rules"]),
             _read_final_fee_rules(t["final_order_rules"]), market, tax, _read_liquidity_evidence(t["liquidity"]),
-            state, _read_slippage_model(t["slippage_model"]), t["maximum_fill_count"]))
+            state, _read_slippage_model(t["slippage_model"]), t["maximum_fill_count"])
+        if exact_rows and canonical_bytes(term) != canonical_bytes(raw):
+            raise ValueError("economic chunk opening term did not reconstruct exactly")
+        terms.append(term)
     calendars = []
     for raw in p["calendars"]:
         c = _map(raw, "cn_a_share_frozen_calendar")
@@ -379,8 +421,8 @@ def _read_economic_source_fields_v1(p, target_ref, *, signal_field: str) -> dict
     return {"scope": scope, "initial_journal": _read_journal(p["initial_journal"]),
         "calendars": (calendars[0], calendars[1]), "execution_policy": policy, "opening_terms": tuple(terms),
         "initial_marks": _read_economic_mark_batches_v1((p["initial_marks"],))[0],
-        signal_field: _read_economic_mark_batches_v1(p[signal_field]),
-        "daily_marks": _read_economic_mark_batches_v1(p["daily_marks"]),
-        "checkpoint_marks": _read_economic_mark_batches_v1(p["checkpoint_marks"]),
+        signal_field: _read_economic_mark_batches_v1(p[signal_field], exact=exact_rows),
+        "daily_marks": _read_economic_mark_batches_v1(p["daily_marks"], exact=exact_rows),
+        "checkpoint_marks": _read_economic_mark_batches_v1(p["checkpoint_marks"], exact=exact_rows),
         "cost_basis_policy": _read_cost_basis(p["cost_basis_policy"]),
         "notional_quantization": _read_quantization(p["notional_quantization"])}
