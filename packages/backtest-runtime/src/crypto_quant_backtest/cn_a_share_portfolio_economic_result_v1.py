@@ -32,7 +32,7 @@ from .cn_a_share_portfolio_engine_result_source_v1 import _fee
 from .cn_a_share_portfolio_settlement_development_v1 import (
     _NativeSettlementResolutionMemo, _build_cn_a_share_portfolio_settlement_facts_v1, _book_body,
 )
-from .engine import EngineFailure, EngineFailureCode, ExecutionTrace, ExecutionTraceEntry, EngineStage
+from .engine import EngineExecutionResult, EngineFailure, EngineFailureCode, ExecutionTrace, ExecutionTraceEntry, EngineStage
 from .execution import BarOpenObservation, BarOpenKind, NoEligibleBarAction
 from .financial_dispatch import FinancialDispatchArtifact
 from .profile_portfolio_execution import _ResolvedProfilePortfolioCaseV2
@@ -251,8 +251,9 @@ def _expected_pending_admissions_v1(*, funded, candidates, target):
 
 
 def _verify_economic_facts_v1(*, case, reader, journal, final_streams, final_schedules, artifacts, trace,
-    admission_rows, final_pending, final_checkpoint=None, result=None):
-    bound = _bind_economic_portfolio_sources_v1(case, reader)
+    admission_rows, final_pending, final_checkpoint=None, result=None, bound=None):
+    if bound is None:
+        bound = _bind_economic_portfolio_sources_v1(case, reader)
     inputs, openings, mapping = bound.inputs, bound.openings, bound.journal_entry_ids
     initial = case.financial_state
     current_journal, book, state = initial.journal, initial.settlement_book, case.execution_case_plan.initial_dividend_state
@@ -720,13 +721,23 @@ def _verify_economic_facts_v1(*, case, reader, journal, final_streams, final_sch
 def _verify_economic_native_result_v1(*, case, reader, result):
     if type(case) is not _ResolvedProfilePortfolioCaseV2:
         raise TypeError("economic result requires exact CaseV2")
-    raw = _map(_raw(result), _RESULT_FIELDS)
+    native = type(result) is EngineExecutionResult and case.execution_case_plan.definition.schema_version == 4
+    raw = _map(result.to_canonical_dict() if native else _raw(result), _RESULT_FIELDS)
     if (raw["type"] != "engine_execution_result" or type(raw["schema_version"]) is not int or raw["schema_version"] != 1
             or raw["case_hash"] != case.case_hash or raw["target_stream_digest"] != case.target_stream.target_stream_digest or _seq(raw["order_plans"])):
         raise d.ArtifactIntegrityError("economic result case/schema/plan mismatch")
-    journal = x._read_economic_journal_v1(raw["final_journal"])
-    streams = tuple(x._read_order_event_stream(v) for v in _seq(raw["order_streams"]))
-    artifacts = tuple(_artifact(v) for v in _seq(raw["financial_artifacts"]))
+    journal = x._read_economic_journal_v1(_raw(raw["final_journal"]) if native else raw["final_journal"])
+    streams = tuple(x._read_order_event_stream(_raw(v) if native else v) for v in _seq(raw["order_streams"]))
+    if native:
+        # Prove each encoding against the value used below without retaining a
+        # second copy of every large financial proof. Never trust a subclass's
+        # in-memory component coordinates over its serialized evidence.
+        artifacts = result.financial_artifacts
+        for artifact in artifacts:
+            if type(artifact) is not FinancialDispatchArtifact or _artifact(_raw(artifact)) != artifact:
+                raise d.ArtifactIntegrityError("economic financial artifact component or wire mismatch")
+    else:
+        artifacts = tuple(_artifact(v) for v in _seq(raw["financial_artifacts"]))
     if any(a.role=="economic_native_failure" for a in artifacts):
         raise d.ArtifactIntegrityError("COMPLETED cannot contain a native failure diagnostic")
     witnesses = tuple(a for a in artifacts if a.role == "economic_attempt_witness")
@@ -756,11 +767,11 @@ def _verify_economic_native_result_v1(*, case, reader, result):
             or any(witness[key] is not False for key in ("source_qualification_verified", "broker_shared_pool_verified", "trade_authorized"))):
         raise d.ArtifactIntegrityError("economic witness source/initial/qualification mismatch")
     schedules = tuple(x._read_reservation_schedule(v) for v in _seq(witness["schedules"]))
-    trace = _trace(raw["trace"])
+    trace = _trace(_raw(raw["trace"]) if native else raw["trace"])
+    bound = _bind_economic_portfolio_sources_v1(case, reader)
     ending, signals, fills, fees, slips, counts, _admissions, _pending, _intentions = _verify_economic_facts_v1(case=case, reader=reader, journal=journal,
         final_streams=streams, final_schedules=schedules, artifacts=artifacts, trace=trace,
-        admission_rows=_seq(witness["admissions"]), final_pending=witness["pending_intentions"])
-    bound = _bind_economic_portfolio_sources_v1(case, reader)
+        admission_rows=_seq(witness["admissions"]), final_pending=witness["pending_intentions"], bound=bound)
     inputs = bound.inputs
     if counts != (len(case.target_stream.events), len({e.event_time for e in bound.openings}), len(inputs.daily_marks),
             len(tuple(row for row in _economic_events_v1(inputs) if row[0].instant < case.timeline.window.end_exclusive))):

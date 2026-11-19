@@ -507,7 +507,7 @@ class _CnASharePortfolioEconomicEngineV1:
 
     def verify_result(self, case, result):
         from .cn_a_share_portfolio_economic_result_v1 import _verify_economic_native_result_v1
-        _verify_economic_native_result_v1(case=case, reader=self._reader, result=result.to_canonical_dict())
+        _verify_economic_native_result_v1(case=case, reader=self._reader, result=result)
 
     def verify_cached(self, case, publication_ref):
         from .cn_a_share_portfolio_economic_result_v1 import _verify_economic_native_cached_v1
