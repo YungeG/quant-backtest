@@ -241,6 +241,13 @@ class CnASharePortfolioEconomicDevelopmentInputsV1:
             scope=scope_value, sections={role: sources[role] for role in _ROLES})
         return cls(**sources, _source_index=index)
 
+    def with_target_stream_ref(self, target_stream_ref: BacktestTargetStreamRef) -> CnASharePortfolioEconomicDevelopmentInputsV1:
+        """Bind the published target transport without changing immutable economic sources."""
+        if type(target_stream_ref) is not BacktestTargetStreamRef:
+            raise TypeError("economic target binding requires exact BacktestTargetStreamRef")
+        return replace(self, scope=replace(self.scope, target_stream_ref=target_stream_ref),
+            _source_index=self.definition().payload.get("source_index"))
+
     def economic_payload(self) -> dict[str, object]:
         scope = dict(self.scope.to_canonical_dict())
         scope.pop("target_stream_ref")
