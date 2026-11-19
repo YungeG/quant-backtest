@@ -20,7 +20,7 @@ from .cash_development_provider import (
 )
 from .cn_a_share_portfolio_economic_case_v1 import (
     _native_initial_economic_financial_state_v1, _read_economic_opening_sources_v1,
-    _economic_identity_plan_v1, _bind_economic_portfolio_sources_v1,
+    _economic_identity_plan_v1, _bind_economic_portfolio_sources_v1, _economic_opening_proof_version_v1,
     _validate_economic_coordinates_v1, _read_exact_economic_source_v1,
 )
 from .cn_a_share_portfolio_economic_definition_v1 import CnASharePortfolioEconomicDevelopmentInputsV1
@@ -59,10 +59,12 @@ class _NativeEconomicPortfolioProfileV1:
     kind: str
     definition_hash: str
     component_manifest: tuple
+    opening_proof_version: int = 1
 
     def __post_init__(self):
         if type(self.kind) is not str or self.kind not in {"market", "simulation", "account"}:
             raise ValueError("economic profile kind must be fixed market/simulation/account")
+        _require_opening_proof_version(self.opening_proof_version)
         if type(self.component_manifest) is not tuple:
             raise TypeError("economic component manifest must be exact tuple")
         if type(self.definition_hash) is not str or len(self.definition_hash) != 71 or not self.definition_hash.startswith("sha256:"):
@@ -73,7 +75,7 @@ class _NativeEconomicPortfolioProfileV1:
         return d.canonical_sha256(self)
 
     def to_canonical_dict(self) -> dict[str, object]:
-        return {"type": "cn_a_share_portfolio_economic_" + self.kind + "_profile", "schema_version": 1,
+        return {"type": "cn_a_share_portfolio_economic_" + self.kind + "_profile", "schema_version": self.opening_proof_version,
             "definition_hash": self.definition_hash, "component_manifest": self.component_manifest,
             "development_only": True, "trade_authorized": False}
 
@@ -83,13 +85,21 @@ class _NativeEconomicPortfolioProfileV1:
         from .cn_a_share_portfolio_economic_engine_v1 import _CnASharePortfolioEconomicEngineV1
         if type(case) is not _ResolvedProfilePortfolioCaseV2:
             raise TypeError("economic profile requires exact CaseV2")
-        if self.kind != "market" or d.canonical_sha256(case.execution_case_plan.definition) != self.definition_hash:
+        if (self.kind != "market" or d.canonical_sha256(case.execution_case_plan.definition) != self.definition_hash
+                or _economic_opening_proof_version_v1(definition=case.execution_case_plan.definition,
+                    spec=case.semantic_spec) != self.opening_proof_version):
             raise ValueError("native portfolio profile/whole-definition binding mismatch")
         _bind_economic_portfolio_sources_v1(case, artifact_reader)
         return _CnASharePortfolioEconomicEngineV1(artifact_reader=artifact_reader)
 
 
-def _registry(inputs: CnASharePortfolioEconomicDevelopmentInputsV1) -> BacktestProfileRegistry:
+def _require_opening_proof_version(version: int) -> None:
+    if type(version) is not int or version not in (1, 2):
+        raise ValueError("economic V1 opening_proof_version must be 1 or 2")
+
+
+def _registry(inputs: CnASharePortfolioEconomicDevelopmentInputsV1, *, opening_proof_version: int = 1) -> BacktestProfileRegistry:
+    _require_opening_proof_version(opening_proof_version)
     definition_hash = d.canonical_sha256(inputs.definition())
     market_refs = tuple(t.ProfileComponentRef(port, _PREFIX + ".native." + port.value, 1,
         d.canonical_sha256({"definition": definition_hash, "port": port.value, "native_version": 1}))
@@ -98,16 +108,16 @@ def _registry(inputs: CnASharePortfolioEconomicDevelopmentInputsV1) -> BacktestP
         d.canonical_sha256({"definition": definition_hash, "simulation_port": port.value,
             "policy": "economic_full_fill_known_tax_v1"}))
         for port in sorted(SimulationPortType, key=lambda port: port.value))
-    market = _NativeEconomicPortfolioProfileV1("market", definition_hash, market_refs)
-    simulation = _NativeEconomicPortfolioProfileV1("simulation", definition_hash, simulation_refs)
-    account = _NativeEconomicPortfolioProfileV1("account", definition_hash, ())
+    market = _NativeEconomicPortfolioProfileV1("market", definition_hash, market_refs, opening_proof_version)
+    simulation = _NativeEconomicPortfolioProfileV1("simulation", definition_hash, simulation_refs, opening_proof_version)
+    account = _NativeEconomicPortfolioProfileV1("account", definition_hash, (), opening_proof_version)
     venue, grade = "cn-a-share-shared-cny", RequestedResultGrade.DEVELOPMENT
-    return BacktestProfileRegistry((MarketSemanticsProfileRegistration(_PREFIX + ".market", 1,
+    return BacktestProfileRegistry((MarketSemanticsProfileRegistration(_PREFIX + ".market", opening_proof_version,
         market.profile_digest, market, venue, (BAR_OPEN_CAPABILITY,), market_refs, grade, _LIMITATIONS, False),),
-        (SimulationProfileRegistration(_PREFIX + ".simulation", 1, simulation.profile_digest, simulation,
+        (SimulationProfileRegistration(_PREFIX + ".simulation", opening_proof_version, simulation.profile_digest, simulation,
             "bar", (StrategyFamily.PRECOMPUTED_TARGET,), (BAR_OPEN_CAPABILITY,), simulation_refs,
             grade, _LIMITATIONS, False),),
-        (ExecutionAccountProfileRegistration(_PREFIX + ".account", 1, account.profile_digest, account,
+        (ExecutionAccountProfileRegistration(_PREFIX + ".account", opening_proof_version, account.profile_digest, account,
             inputs.scope.account_id, venue, "cash", "none", (d.CurrencyId("CNY"),), grade, _LIMITATIONS, False),))
 
 
@@ -116,9 +126,10 @@ def prepare_cn_a_share_portfolio_economic_development_backtest(
     provider_inputs: CnASharePortfolioEconomicDevelopmentInputsV1,
     build_artifact_manifest: BuildArtifactManifest,
     artifact_reader: ArtifactEnvelopeReader, artifact_publisher: ArtifactEnvelopePublisher,
-    market_reader: MarketBundleReader, publication_root: Path,
+    market_reader: MarketBundleReader, publication_root: Path, opening_proof_version: int = 1,
 ) -> PreparedBacktestExecution:
-    """Prepare source-only inputs; execute exclusively through returned Runtime."""
+    """Prepare source-only inputs; opt in to digest-backed opening evidence with version 2."""
+    _require_opening_proof_version(opening_proof_version)
     if (type(request_intent) is not CashDevelopmentRequestIntent
             or type(provider_inputs) is not CnASharePortfolioEconomicDevelopmentInputsV1
             or type(build_artifact_manifest) is not BuildArtifactManifest):
@@ -149,10 +160,10 @@ def prepare_cn_a_share_portfolio_economic_development_backtest(
     if type(timeline) is not DeterministicTimelineV2:
         raise ValueError("economic native embedded-target timeline rejected")
     template = _ResolvedProfilePortfolioCaseV2(_PREFIX, 1, timeline, target, 64, plan, d.canonical_sha256("unsealed"))
-    spec = _profile_portfolio_economic_semantic_spec_from_case_v1(template, spec_key=_PREFIX, spec_version=1,
+    spec = _profile_portfolio_economic_semantic_spec_from_case_v1(template, spec_key=_PREFIX, spec_version=opening_proof_version,
         identity_namespace=d.IdentityNamespace("backtest", "1"),
         identity_plan=_economic_identity_plan_v1(provider_inputs, target, openings))
-    registry = _registry(provider_inputs)
+    registry = _registry(provider_inputs, opening_proof_version=opening_proof_version)
     manifest = _provider_build_manifest(build_artifact_manifest, registry)
     request = BacktestRequest(1, request_intent.experiment_id, request_intent.timeline_window,
         _PREFIX + ".market", _PREFIX + ".simulation", _PREFIX + ".account",

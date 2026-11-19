@@ -10,7 +10,9 @@ import crypto_quant_trading as t
 import crypto_quant_trading.profiles.cn_a_share.portfolio_economic_v1 as e
 from crypto_quant_trading.profiles.cn_a_share.portfolio_v1 import CnASharePortfolioOrderPlanV1, CnASharePortfolioOrderProposalV1
 from . import execution_inputs as x
-from .cn_a_share_portfolio_economic_case_v1 import _bind_economic_portfolio_sources_v1, _clock_v1 as _at, _economic_events_v1
+from .cn_a_share_portfolio_economic_case_v1 import (
+    _bind_economic_portfolio_sources_v1, _clock_v1 as _at, _economic_events_v1, _economic_opening_proof_version_v1,
+)
 from .cn_a_share_portfolio_economic_native_state_v1 import (_EconomicOpenSourcesV1, _economic_signal_target_v1,
     _advance_economic_settlement_v1, _EconomicFailureContextV1)
 from .cn_a_share_portfolio_economic_opening_v1 import (_EconomicOpeningOutcomeV1, _EconomicFinancialStepV1,
@@ -260,13 +262,20 @@ def _verify_economic_facts_v1(*, case, reader, journal, final_streams, final_sch
         raise d.ArtifactIntegrityError("economic final order/schedule identities duplicated")
     v2 = type(inputs) is CnASharePortfolioEconomicDevelopmentInputsV2
     prefix, component = _economic_native_finance_identity_v1(inputs)
+    opening_proof_version = _economic_opening_proof_version_v1(
+        definition=case.execution_case_plan.definition, spec=case.semantic_spec)
+    opening_source_keys = {"prior", "funded", "current"}
+    if opening_proof_version == 2:
+        opening_source_keys = {key + "_hash" for key in opening_source_keys}
     allowed = {"economic_signal", "economic_opening_batch", "economic_dividend_transition", "economic_daily_projection",
         "economic_pending_no_real_open", "economic_working_no_real_open", "economic_attempt_witness"}
     for artifact in artifacts:
+        version = (opening_proof_version if artifact.role == "economic_opening_batch" else
+            2 if artifact.role == "economic_attempt_witness" or (v2 and artifact.role == "economic_signal") else 1)
         if (artifact.role not in allowed or artifact.component_key != prefix + ".native-finance" or artifact.component_version != 1
                 or artifact.component_digest != component or artifact.input_hash != inputs._definition_source_hash
                 or artifact.payload.artifact_type != "cn_a_share_portfolio_" + artifact.role
-                or artifact.payload.schema_version != (2 if artifact.role == "economic_attempt_witness" or (v2 and artifact.role == "economic_signal") else 1)
+                or artifact.payload.schema_version != version
                 or (v2 and artifact.occurred_at < inputs.initial_marks.at)):
             raise d.ArtifactIntegrityError("economic role/component/source closure mismatch")
     ordered = sorted(artifacts, key=lambda row: (row.occurred_at, row.source_event_id, row.role))
@@ -283,6 +292,12 @@ def _verify_economic_facts_v1(*, case, reader, journal, final_streams, final_sch
     def compare_source(source, raw):
         _map(raw, _SOURCE_FIELDS)
         _equal(source, raw, "full source checkpoint")
+    def compare_opening_source(source, fact, key):
+        if opening_proof_version == 2:
+            if d.canonical_sha256(source) != fact[key + "_hash"]:
+                raise d.ArtifactIntegrityError("economic opening source digest mismatch: " + key)
+        else:
+            compare_source(source, fact[key])
     def take(count):
         if type(count) is not int or not 0 <= count <= journal.entry_count:
             raise d.ArtifactIntegrityError("economic journal prefix count invalid")
@@ -392,13 +407,13 @@ def _verify_economic_facts_v1(*, case, reader, journal, final_streams, final_sch
         elif role == "economic_opening_batch":
             if v2 and not seen_activations:
                 raise d.ArtifactIntegrityError("economic V2 opening lacks prior activation")
-            _map(fact, {"when", "prior", "funded", "current", "funding", "outcomes", "steps", "journal_count_after", "book_after", "dividend_state_after", "post_projection"})
+            _map(fact, opening_source_keys | {"when", "funding", "outcomes", "steps", "journal_count_after", "book_after", "dividend_state_after", "post_projection"})
             when = x._read_utc(fact["when"])
             bars = tuple((i, event) for i, event in enumerate(openings) if event.event_time == when)
             if not bars or when in seen_open or artifact.source_event_id != bars[0][1].event_id or artifact.occurred_at != _at(when, 98):
                 raise d.ArtifactIntegrityError("economic opening source/clock/cover mismatch")
             prior = make(_at(when, 49), current_journal, book, streams, schedules, state)
-            compare_source(prior, fact["prior"])
+            compare_opening_source(prior, fact, "prior")
             by_instrument = {event.instrument_id: (i, event) for i, event in bars}
             candidates = []
             for _, order in pending.values():
@@ -417,7 +432,7 @@ def _verify_economic_facts_v1(*, case, reader, journal, final_streams, final_sch
             funded_journal = take(prior.journal.entry_count + len(funding))
             _equal(funded_journal.entries[prior.journal.entry_count:], funding, "whole native funding suffix")
             funded = make(_at(when, 55), funded_journal, prior.settlement_book, streams, schedules, prior.dividend_state)
-            compare_source(funded, fact["funded"])
+            compare_opening_source(funded, fact, "funded")
             changed, changed_schedules = dict(streams), dict(schedules)
             new_rows = [row for key, row in admission_raw.items() if key not in admissions
                 and x._read_simulation_instant(row["sources"]["at"]).instant == when]
@@ -449,7 +464,7 @@ def _verify_economic_facts_v1(*, case, reader, journal, final_streams, final_sch
                     changed_schedules[identity] = by_schedule[identity]
                     del pending[order.intent.instrument_id]
             current = make(_at(when, 67), funded_journal, funded.settlement_book, changed, changed_schedules, funded.dividend_state)
-            compare_source(current, fact["current"])
+            compare_opening_source(current, fact, "current")
             for _,order in pending.values():
                 _,event=by_instrument[order.intent.instrument_id]
                 if order.created_at.instant<when and BarOpenObservation.from_event(event).kind is not BarOpenKind.REAL:
@@ -1185,13 +1200,15 @@ def _bootstrap_economic_case_v1(*, reader, market_reader, resolved_raw, binding,
     request = _request_v1(resolved_raw["request"], market_reader)
     manifest = x._read_build_manifest(_raw(build_artifact_manifest))
     from .cn_a_share_portfolio_economic_prepare_v2 import _registry_v2
-    registry = _registry_v2(inputs) if type(inputs) is CnASharePortfolioEconomicDevelopmentInputsV2 else _registry(inputs)
+    spec = x._read_semantic_spec(binding["semantic_spec"])
+    proof_version = _economic_opening_proof_version_v1(definition=definition, spec=spec)
+    registry = (_registry_v2(inputs) if type(inputs) is CnASharePortfolioEconomicDevelopmentInputsV2
+        else _registry(inputs, opening_proof_version=proof_version))
     resolved = ProfileResolver().resolve(request=request, registry=registry, market_bundle_manifest=market_reader.manifest,
         build_artifact_manifest=manifest).resolved
     if resolved is None:
         raise d.ArtifactIntegrityError("economic original retained request no longer resolves")
     _equal(resolved, resolved_raw, "original fixed-registry resolved request/cohort")
-    spec = x._read_semantic_spec(binding["semantic_spec"])
     case = _compose_profile_portfolio_economic_execution_case(resolved_request=resolved, market_reader=market_reader,
         semantic_spec=spec, target_stream=target, timeline_stream_keys=tuple(_seq(binding["timeline_stream_keys"])),
         timeline_batch_size=64, execution_case_plan=plan)

@@ -313,9 +313,22 @@ def _read_exact_economic_source_v1(reader, ref):
     return retained.envelope
 
 
+def _economic_opening_proof_version_v1(*, definition, spec):
+    from .profile_portfolio_execution import _economic_profile_prefix_v1
+
+    if spec is None or spec.spec_key != _economic_profile_prefix_v1(definition):
+        raise ValueError("economic opening proof requires the bound profile spec")
+    if definition.schema_version == 2 and spec.spec_version in (1, 2):
+        return spec.spec_version
+    if definition.schema_version == 3 and spec.spec_version == 1:
+        return 1
+    raise ValueError("unsupported economic opening proof spec version")
+
+
 def _bind_economic_portfolio_sources_v1(case, reader):
     if type(case) is not _ResolvedProfilePortfolioCaseV2:
         raise TypeError("economic source binding requires exact CaseV2")
+    _economic_opening_proof_version_v1(definition=case.execution_case_plan.definition, spec=case.semantic_spec)
     refs = dict(case.execution_case_plan.source_refs)
     retained = _read_exact_economic_source_v1(reader, refs["definition"])
     if retained != case.execution_case_plan.definition:

@@ -70,7 +70,9 @@ from crypto_quant_market_data import InputValidationFailure
 import crypto_quant_trading.profiles.cn_a_share.portfolio_economic_v1 as e
 from crypto_quant_trading.profiles.cn_a_share.portfolio_v1 import CnASharePortfolioOrderProposalV1
 from .artifact_envelope_reader import ArtifactEnvelopeReader
-from .cn_a_share_portfolio_economic_case_v1 import _bind_economic_portfolio_sources_v1, _economic_events_v1
+from .cn_a_share_portfolio_economic_case_v1 import (
+    _bind_economic_portfolio_sources_v1, _economic_events_v1, _economic_opening_proof_version_v1,
+)
 from .cn_a_share_portfolio_economic_native_state_v1 import (
     _economic_signal_target_v1, _EconomicNativeFailureV1, _EconomicFailureContextV1, _advance_economic_settlement_v1,
 )
@@ -145,6 +147,8 @@ class _CnASharePortfolioEconomicEngineV1:
         )
         v2 = type(inputs) is CnASharePortfolioEconomicDevelopmentInputsV2
         profile_prefix, component_hash = _economic_native_finance_identity_v1(inputs)
+        opening_proof_version = _economic_opening_proof_version_v1(
+            definition=case.execution_case_plan.definition, spec=case.semantic_spec)
         def make(at, j, b, ss, sch, st):
             b = _advance_economic_settlement_v1(inputs=inputs, journal=j, book=b, consumer=at)
             return _EconomicOpenSourcesV1(inputs, j, b, tuple(sorted(ss.values(), key=lambda row: row.order.order_id.value)),
@@ -156,8 +160,9 @@ class _CnASharePortfolioEconomicEngineV1:
             streams = {s.order.order_id: s for s in source.order_streams}
             schedules = {s.order_id: s for s in source.reservation_schedules}
         def evidence(role, event_id, at, payload):
-            envelope = d.ArtifactEnvelope.create("cn_a_share_portfolio_" + role,
-                2 if role == "economic_attempt_witness" or (v2 and role in {"economic_signal", "economic_native_failure"}) else 1, payload)
+            version = (opening_proof_version if role == "economic_opening_batch" else
+                2 if role == "economic_attempt_witness" or (v2 and role in {"economic_signal", "economic_native_failure"}) else 1)
+            envelope = d.ArtifactEnvelope.create("cn_a_share_portfolio_" + role, version, payload)
             artifact = FinancialDispatchArtifact(role, event_id, at, profile_prefix + ".native-finance", 1,
                 component_hash, inputs._definition_source_hash, d.canonical_sha256(envelope), envelope)
             artifacts.append(artifact)
@@ -435,8 +440,11 @@ class _CnASharePortfolioEconomicEngineV1:
                     fees.extend(new_fees)
                     slips.extend(opening.slippage_outcome.result for opening in selected)
                     opening_count += 1
-                    evidence("economic_opening_batch", failed_id, _at(when, 98), {"when": when, "prior": prior,
-                        "funded": funded, "current": current, "funding": funding, "outcomes": tuple(outcomes), "steps": tuple(steps),
+                    opening_sources = {"prior": prior, "funded": funded, "current": current}
+                    opening_proof = ({key + "_hash": d.canonical_sha256(source) for key, source in opening_sources.items()}
+                        if opening_proof_version == 2 else opening_sources)
+                    evidence("economic_opening_batch", failed_id, _at(when, 98), {"when": when, **opening_proof,
+                        "funding": funding, "outcomes": tuple(outcomes), "steps": tuple(steps),
                         "journal_count_after": journal.entry_count, "book_after": _book_body(book),
                         "dividend_state_after": state, "post_projection": post.economic_projection})
                     for role, order, stream_hash, schedule_hash, event in no_real:
