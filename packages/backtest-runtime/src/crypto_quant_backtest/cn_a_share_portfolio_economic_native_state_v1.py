@@ -43,6 +43,7 @@ from .cn_a_share_portfolio_standard_definition_v1 import CnASharePortfolioMarkBa
 from .cn_a_share_portfolio_standard_native_state_v1 import _NativeSignalTargetV1
 from .cn_a_share_portfolio_settlement_development_v1 import _build_cn_a_share_portfolio_settlement_facts_v1, _book_body
 from .engine import EngineFailureCode
+from .profile_portfolio_execution import _ECONOMIC_EXCLUSIVE_SETTLEMENT_SPEC_VERSION
 
 _CNY = CurrencyId("CNY")
 _CENT = Scale(2)
@@ -57,7 +58,7 @@ class _EconomicNativeFailureV1(Exception):
         super().__init__(code.value)
 
 
-def _advance_economic_settlement_v1(*, inputs, journal, book, consumer):
+def _advance_economic_settlement_v1(*, case, inputs, journal, book, consumer):
     """Expose complete native due batches at their own full clock, never at now."""
     from .cn_a_share_portfolio_settlement_development_v1 import CnASharePortfolioSettlementDevelopmentV1
     from crypto_quant_trading import SettlementEventType
@@ -66,12 +67,17 @@ def _advance_economic_settlement_v1(*, inputs, journal, book, consumer):
         raise TypeError("economic settlement advance requires exact immutable source values")
     if book.account_id != inputs.scope.account_id or any(event.occurred_at > consumer for event in book.events):
         raise ValueError("economic settlement Book has foreign account or future committed facts")
+    # Only newly sealed V2 cases use the half-open boundary. Keep the retained
+    # v1 spec behavior so historical terminals still prove their original outcome.
+    end = (case.timeline.window.end_exclusive
+           if (type(inputs) is CnASharePortfolioEconomicDevelopmentInputsV2
+               and case.semantic_spec.spec_version == _ECONOMIC_EXCLUSIVE_SETTLEMENT_SPEC_VERSION) else None)
     while True:
         pending = book.project().pending_obligations
         if not pending:
             return book
         due = min(row.obligation.settlement_time for row in pending)
-        if due > consumer.instant:
+        if due > consumer.instant or (end is not None and due >= end):
             return book
         group = tuple(row for row in pending if row.obligation.settlement_time == due)
         clocks = tuple(SimulationInstant(due, d.TimelinePhase(20, "settlement_due"), d.SourceSequence(index))

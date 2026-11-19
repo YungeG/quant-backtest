@@ -320,7 +320,8 @@ def _economic_opening_proof_version_v1(*, definition, spec):
         raise ValueError("economic opening proof requires the bound profile spec")
     if definition.schema_version == 2 and spec.spec_version in (1, 2):
         return spec.spec_version
-    if definition.schema_version == 3 and spec.spec_version == 1:
+    if definition.schema_version == 3 and spec.spec_version in (1, 2):
+        # V2 spec@2 versions its settlement, not its opening wire shape.
         return 1
     raise ValueError("unsupported economic opening proof spec version")
 

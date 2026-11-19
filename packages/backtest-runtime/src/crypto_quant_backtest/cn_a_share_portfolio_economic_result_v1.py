@@ -281,7 +281,7 @@ def _verify_economic_facts_v1(*, case, reader, journal, final_streams, final_sch
     ordered = sorted(artifacts, key=lambda row: (row.occurred_at, row.source_event_id, row.role))
     expected_no_real = {}
     def make(at, j, b, ss, sch, st):
-        b = _advance_economic_settlement_v1(inputs=inputs, journal=j, book=b, consumer=at)
+        b = _advance_economic_settlement_v1(case=case, inputs=inputs, journal=j, book=b, consumer=at)
         return _EconomicOpenSourcesV1(inputs, j, b, tuple(sorted(ss.values(), key=lambda s: s.order.order_id.value)),
             tuple(sorted(sch.values(), key=lambda s: s.order_id.value)), initial.settlement_rules, st, mapping, at)
     def commit(source):
@@ -998,7 +998,7 @@ def _prove_native_failure_v1(*,case,bound,ending,admissions,pending,diagnostic,f
         from crypto_quant_trading import CurrencyValuationGraph
         marks=_economic_marks_at_v1(bound.inputs,failed_at)
         _equal({"marks":marks},diagnostic["original_claim"],"native failed projection retained marks")
-        book=_advance_economic_settlement_v1(inputs=bound.inputs,journal=ending.journal,book=ending.settlement_book,consumer=failed_at)
+        book=_advance_economic_settlement_v1(case=case,inputs=bound.inputs,journal=ending.journal,book=ending.settlement_book,consumer=failed_at)
         request=e.CnASharePortfolioEconomicProjectionInputsV1(ending.journal,bound.inputs.scope.ledger_schema,book,
             ending.order_streams,ending.reservation_schedules,ending.market_rules,bound.inputs.scope.instrument_catalog,marks.marks,
             CurrencyValuationGraph(failed_at.instant,d.PricePurpose.VALUATION,()),bound.inputs.notional_quantization,
@@ -1202,7 +1202,8 @@ def _bootstrap_economic_case_v1(*, reader, market_reader, resolved_raw, binding,
     from .cn_a_share_portfolio_economic_prepare_v2 import _registry_v2
     spec = x._read_semantic_spec(binding["semantic_spec"])
     proof_version = _economic_opening_proof_version_v1(definition=definition, spec=spec)
-    registry = (_registry_v2(inputs) if type(inputs) is CnASharePortfolioEconomicDevelopmentInputsV2
+    registry = (_registry_v2(inputs, spec_version=spec.spec_version)
+        if type(inputs) is CnASharePortfolioEconomicDevelopmentInputsV2
         else _registry(inputs, opening_proof_version=proof_version))
     resolved = ProfileResolver().resolve(request=request, registry=registry, market_bundle_manifest=market_reader.manifest,
         build_artifact_manifest=manifest).resolved

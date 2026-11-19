@@ -27,7 +27,7 @@ from .facade import BacktestRuntime
 from .ports import SimulationComponentRef, SimulationPortType
 from .profile_portfolio_execution import (
     _economic_profile_prefix_v1, _ProfilePortfolioExecutionPlanV2, _ResolvedProfilePortfolioCaseV2,
-    _profile_portfolio_economic_semantic_spec_from_case_v1,
+    _ECONOMIC_EXCLUSIVE_SETTLEMENT_SPEC_VERSION, _profile_portfolio_economic_semantic_spec_from_case_v1,
 )
 from .request_registration import BacktestRequestRef
 from .resolution import (
@@ -73,17 +73,28 @@ class _NativeEconomicPortfolioProfileV2:
         if (self.kind != "market" or _economic_profile_prefix_v1(case.execution_case_plan.definition) != _PREFIX
                 or d.canonical_sha256(case.execution_case_plan.definition) != self.definition_hash):
             raise ValueError("native portfolio profile/whole-definition binding mismatch")
+        settlement = next(ref for ref in self.component_manifest if ref.port_type is t.ProfilePortType.SETTLEMENT_MODEL)
+        if case.semantic_spec is None or case.semantic_spec.spec_version != settlement.component_version:
+            raise ValueError("economic V2 spec and settlement component versions differ")
         _bind_economic_portfolio_sources_v1(case, artifact_reader)
         return _CnASharePortfolioEconomicEngineV1(artifact_reader=artifact_reader)
 
 
-def _registry_v2(inputs: CnASharePortfolioEconomicDevelopmentInputsV2) -> BacktestProfileRegistry:
+def _registry_v2(inputs: CnASharePortfolioEconomicDevelopmentInputsV2, *,
+                 spec_version: int = _ECONOMIC_EXCLUSIVE_SETTLEMENT_SPEC_VERSION) -> BacktestProfileRegistry:
     if type(inputs) is not CnASharePortfolioEconomicDevelopmentInputsV2:
         raise TypeError("economic V2 registry requires exact inputs")
+    if type(spec_version) is not int or spec_version not in (1, _ECONOMIC_EXCLUSIVE_SETTLEMENT_SPEC_VERSION):
+        raise ValueError("unsupported economic V2 settlement spec version")
     definition_hash = d.canonical_sha256(inputs.definition())
-    market_refs = tuple(t.ProfileComponentRef(port, _PREFIX + ".native." + port.value, 1,
-        d.canonical_sha256({"definition": definition_hash, "port": port.value, "native_version": 2}))
-        for port in sorted(t.ProfilePortType, key=lambda port: port.value))
+    market_refs = []
+    for port in sorted(t.ProfilePortType, key=lambda port: port.value):
+        policy = {"definition": definition_hash, "port": port.value, "native_version": 2}
+        version = spec_version if port is t.ProfilePortType.SETTLEMENT_MODEL else 1
+        if version == _ECONOMIC_EXCLUSIVE_SETTLEMENT_SPEC_VERSION:
+            policy["settlement_window"] = "end_exclusive"
+        market_refs.append(t.ProfileComponentRef(port, _PREFIX + ".native." + port.value, version, d.canonical_sha256(policy)))
+    market_refs = tuple(market_refs)
     simulation_refs = tuple(SimulationComponentRef(port, _PREFIX + "." + port.value, 1,
         d.canonical_sha256({"definition": definition_hash, "simulation_port": port.value,
             "policy": "economic_single_prestart_activation_v2"}))
@@ -136,7 +147,8 @@ def prepare_cn_a_share_portfolio_economic_development_backtest_v2(
     if type(timeline) is not DeterministicTimelineV2:
         raise ValueError("economic native embedded-target timeline rejected")
     template = _ResolvedProfilePortfolioCaseV2(_PREFIX, 1, timeline, target, 64, plan, d.canonical_sha256("unsealed"))
-    spec = _profile_portfolio_economic_semantic_spec_from_case_v1(template, spec_key=_PREFIX, spec_version=1,
+    spec = _profile_portfolio_economic_semantic_spec_from_case_v1(template, spec_key=_PREFIX,
+        spec_version=_ECONOMIC_EXCLUSIVE_SETTLEMENT_SPEC_VERSION,
         identity_namespace=d.IdentityNamespace("backtest", "1"),
         identity_plan=_economic_identity_plan_v1(provider_inputs, target, openings))
     registry = _registry_v2(provider_inputs)

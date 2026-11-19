@@ -150,7 +150,7 @@ class _CnASharePortfolioEconomicEngineV1:
         opening_proof_version = _economic_opening_proof_version_v1(
             definition=case.execution_case_plan.definition, spec=case.semantic_spec)
         def make(at, j, b, ss, sch, st):
-            b = _advance_economic_settlement_v1(inputs=inputs, journal=j, book=b, consumer=at)
+            b = _advance_economic_settlement_v1(case=case, inputs=inputs, journal=j, book=b, consumer=at)
             return _EconomicOpenSourcesV1(inputs, j, b, tuple(sorted(ss.values(), key=lambda row: row.order.order_id.value)),
                 tuple(sorted(sch.values(), key=lambda row: row.order_id.value)), rules, st, mapping, at)
         last = make(inputs.initial_marks.at, journal, book, streams, schedules, state)
