@@ -24,6 +24,7 @@ __all__ = [
 _SHA256 = re.compile(r"sha256:[0-9a-f]{64}\Z")
 _DECIMAL = re.compile(r"-?(?:0|[1-9][0-9]*)(?:\.[0-9]*[1-9])?\Z")
 _PROFILE_KEY = "simple_period_return.fill_count.v1"
+_ECONOMIC_TARGET_PROFILE_KEY = "cn_a_share.economic_net_period_return.fill_count.v1"
 
 
 def _artifact_ref(
@@ -166,7 +167,7 @@ class BacktestMetricProfile:
     profile_version: int
 
     def __post_init__(self) -> None:
-        if type(self.profile_key) is not str or self.profile_key != _PROFILE_KEY:
+        if type(self.profile_key) is not str or self.profile_key not in (_PROFILE_KEY, _ECONOMIC_TARGET_PROFILE_KEY):
             raise ValueError(f"profile_key must be {_PROFILE_KEY}")
         if type(self.profile_version) is not int or self.profile_version != 1:
             raise ValueError("profile_version must be 1")
@@ -177,11 +178,13 @@ class BacktestMetricProfile:
             "schema_version": 1,
             "profile_key": self.profile_key,
             "profile_version": self.profile_version,
-            "valuation_schedule": "run_boundary_snapshots",
+            "valuation_schedule": ("economic_initial_and_final_daily_nav"
+                if self.profile_key == _ECONOMIC_TARGET_PROFILE_KEY else "run_boundary_snapshots"),
             "return_method": "simple_period_return",
             "annualization_basis": "not_applicable",
             "risk_free_source": "not_applicable",
-            "cash_flow_treatment": "subtract_net_external_cash_flow",
+            "cash_flow_treatment": ("no_external_flows_after_initialization"
+                if self.profile_key == _ECONOMIC_TARGET_PROFILE_KEY else "subtract_net_external_cash_flow"),
             "drawdown_sampling": "not_applicable",
             "reporting_currency_source": "source_execution_result",
             "benchmark": "not_applicable",

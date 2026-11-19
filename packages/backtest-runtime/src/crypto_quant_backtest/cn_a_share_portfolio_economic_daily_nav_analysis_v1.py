@@ -257,12 +257,15 @@ def _read_nav_analysis(value: object) -> CnASharePortfolioEconomicDailyNavAnalys
 
 
 
-def _build_economic_nav_v1(*, reader, publication_ref, market_reader):
+def _build_economic_nav_v1(*, reader, publication_ref, market_reader, target_profile=False):
     from .cn_a_share_portfolio_economic_result_v1 import _load_verified_economic_completed_v1
     from .execution_inputs import _read_money, _read_simulation_instant
     completed, case, actual_input_ref, engine_ref, engine, definition_ref, action_ref = _load_verified_economic_completed_v1(
         reader=reader, publication_ref=publication_ref, market_reader=market_reader)
-    from .profile_portfolio_execution import _economic_profile_prefix_v1
+    from .profile_portfolio_execution import _ECONOMIC_BOUNDED_SIGNAL_SPEC_VERSION, _economic_profile_prefix_v1
+    if target_profile and (definition_ref.schema_version != 2
+            or case.semantic_spec.spec_version != _ECONOMIC_BOUNDED_SIGNAL_SPEC_VERSION):
+        raise ValueError("economic target analysis requires the bounded-signal economic profile")
     if (definition_ref != d.ArtifactRef.from_envelope(case.execution_case_plan.definition)
             or case.case_key != _economic_profile_prefix_v1(case.execution_case_plan.definition)):
         raise ValueError("economic NAV source definition/profile tuple mismatch")
@@ -286,6 +289,21 @@ def _build_economic_nav_v1(*, reader, publication_ref, market_reader):
         initial.projection_hash, initial.snapshot.equity, tuple(points), len(completed.execution_summary.fills), completed.result_grade)
 
 
+def _target_metric_profile_envelope_v1():
+    from .analysis import BacktestMetricProfile, _ECONOMIC_TARGET_PROFILE_KEY
+    return d.ArtifactEnvelope.create("backtest_metric_profile", 1,
+        BacktestMetricProfile(_ECONOMIC_TARGET_PROFILE_KEY, 1))
+
+
+def _build_economic_target_analysis_v1(*, reader, publication_ref, market_reader):
+    from .analysis import BacktestAnalysis
+    nav = _build_economic_nav_v1(reader=reader, publication_ref=publication_ref,
+        market_reader=market_reader, target_profile=True)
+    return BacktestAnalysis(d.ArtifactRef.from_envelope(_target_metric_profile_envelope_v1()),
+        nav.source_publication_ref, nav.source_execution_result_hash, nav.simple_period_return,
+        nav.trade_count, nav.result_grade)
+
+
 class CnASharePortfolioEconomicDailyNavAnalysisRuntimeV1:
     def __init__(self, *, reader: ArtifactEnvelopeReader, publisher: ArtifactEnvelopePublisher, market_reader):
         from crypto_quant_market_data import MarketBundleReader
@@ -300,6 +318,29 @@ class CnASharePortfolioEconomicDailyNavAnalysisRuntimeV1:
             raise ValueError("economic NAV publisher returned wrong profile ref")
         _verify_published(self._reader, ref, _PROFILE_ENVELOPE)
         return ref
+
+    def publish_target_metric_profile(self) -> d.ArtifactRef:
+        from .cash_development_provider import _publish, _verify_published
+        envelope = _target_metric_profile_envelope_v1()
+        ref = _publish(self._publisher, envelope)
+        _verify_published(self._reader, ref, envelope)
+        return ref
+
+    def derive_target_analysis(self, *, publication_ref: BacktestCanonicalPublicationRef, metric_profile_ref: d.ArtifactRef):
+        from .analysis import AnalysisArtifactRef
+        from .cash_development_provider import _publish, _verify_published
+        if type(publication_ref) is not BacktestCanonicalPublicationRef:
+            raise TypeError("economic target analysis requires a completed canonical publication")
+        profile = _target_metric_profile_envelope_v1()
+        if type(metric_profile_ref) is not d.ArtifactRef or metric_profile_ref != d.ArtifactRef.from_envelope(profile):
+            raise ValueError("economic target metric profile identity mismatch")
+        _verify_published(self._reader, metric_profile_ref, profile)
+        value = _build_economic_target_analysis_v1(reader=self._reader, publication_ref=publication_ref,
+            market_reader=self._market_reader)
+        envelope = d.ArtifactEnvelope.create("backtest_analysis", 1, value)
+        ref = _publish(self._publisher, envelope)
+        _verify_published(self._reader, ref, envelope)
+        return AnalysisArtifactRef(ref)
 
     def derive(self, *, publication_ref: BacktestCanonicalPublicationRef, metric_profile_ref: d.ArtifactRef):
         from .cash_development_provider import _publish, _verify_published

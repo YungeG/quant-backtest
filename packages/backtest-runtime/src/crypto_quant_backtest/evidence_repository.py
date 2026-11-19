@@ -2859,14 +2859,14 @@ class BacktestEvidenceRepository:
         except (KeyError, TypeError, ValueError, StopIteration) as error:
             raise BacktestEvidenceError(BacktestEvidenceFailureCode.PORT_MANIFEST_INVALID, str(error)) from error
 
-    def load_analysis(self, ref: AnalysisArtifactRef) -> VerifiedBacktestAnalysis:
+    def load_analysis(self, ref: AnalysisArtifactRef, *, economic_market_reader=None) -> VerifiedBacktestAnalysis:
         if type(ref) is not AnalysisArtifactRef:
             raise BacktestEvidenceError(
                 BacktestEvidenceFailureCode.PORT_REF_TYPE_MISMATCH,
                 "exact AnalysisArtifactRef required",
             )
         try:
-            return self._load_analysis(ref)
+            return self._load_analysis(ref, economic_market_reader=economic_market_reader)
         except BacktestEvidenceError:
             raise
         except (KeyError, TypeError, ValueError) as error:
@@ -2874,7 +2874,7 @@ class BacktestEvidenceRepository:
                 BacktestEvidenceFailureCode.PORT_MANIFEST_INVALID, str(error)
             ) from error
 
-    def _load_analysis(self, ref: AnalysisArtifactRef) -> VerifiedBacktestAnalysis:
+    def _load_analysis(self, ref: AnalysisArtifactRef, *, economic_market_reader=None) -> VerifiedBacktestAnalysis:
         loaded = self._read_expected(
             ref.artifact_ref, "backtest_analysis", 1, root=True
         )
@@ -2891,6 +2891,18 @@ class BacktestEvidenceRepository:
         profile = profile_loaded.artifact
         if type(profile) is not _DecodedMetricProfile:
             raise TypeError("wrong metric profile decoder result")
+        from .analysis import _ECONOMIC_TARGET_PROFILE_KEY
+        if profile.profile.profile_key == _ECONOMIC_TARGET_PROFILE_KEY:
+            from .cn_a_share_portfolio_economic_daily_nav_analysis_v1 import _build_economic_target_analysis_v1
+            if economic_market_reader is None:
+                raise BacktestEvidenceError(BacktestEvidenceFailureCode.PORT_ANALYSIS_LINK_MISMATCH,
+                    "economic target analysis requires explicit matching MarketBundleReader")
+            expected = _build_economic_target_analysis_v1(reader=self._reader,
+                publication_ref=analysis.source_publication_ref, market_reader=economic_market_reader)
+            if expected != analysis:
+                raise BacktestEvidenceError(BacktestEvidenceFailureCode.PORT_ANALYSIS_LINK_MISMATCH,
+                    "economic target analysis source-derived disagreement")
+            return VerifiedBacktestAnalysis(ref, analysis)
         accepted_profile = BacktestMetricProfile(
             "simple_period_return.fill_count.v1", 1
         )
