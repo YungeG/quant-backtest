@@ -72,6 +72,7 @@ from crypto_quant_trading.profiles.cn_a_share.portfolio_v1 import CnASharePortfo
 from .artifact_envelope_reader import ArtifactEnvelopeReader
 from .cn_a_share_portfolio_economic_case_v1 import (
     _bind_economic_portfolio_sources_v1, _economic_events_v1, _economic_opening_proof_version_v1,
+    _verify_bounded_signal_cancellation_v1,
 )
 from .cn_a_share_portfolio_economic_native_state_v1 import (
     _economic_signal_target_v1, _EconomicNativeFailureV1, _EconomicFailureContextV1, _advance_economic_settlement_v1,
@@ -248,6 +249,7 @@ class _CnASharePortfolioEconomicEngineV1:
                         target_id=signal.normalized_target.normalized_target_id, target_hash=signal.normalized_target.normalized_target_hash,
                         as_of=at.instant, policy=inputs.execution_policy, cash=before.cash, sellability=before.sellability,
                         working_orders=before.order_streams, reservation_schedules=before.reservation_schedules, proposed=())
+                    _verify_bounded_signal_cancellation_v1(case, cancel_plan, admissions, index)
                     candidate_streams = dict(streams)
                     for cancel in cancel_plan.cancel_intents:
                         stream = candidate_streams[cancel.order_id]

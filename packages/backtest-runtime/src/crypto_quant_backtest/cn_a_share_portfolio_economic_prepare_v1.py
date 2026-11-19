@@ -33,7 +33,7 @@ from .execution_inputs import (
 from .facade import BacktestRuntime
 from .ports import SimulationComponentRef, SimulationPortType
 from .profile_portfolio_execution import (
-    _ECONOMIC_SEGMENTED_OPENINGS_SPEC_VERSION,
+    _ECONOMIC_BOUNDED_SIGNAL_SPEC_VERSION, _ECONOMIC_SEGMENTED_OPENINGS_SPEC_VERSION, _ECONOMIC_SEGMENTED_SPECS,
     _ProfilePortfolioExecutionPlanV2, _ResolvedProfilePortfolioCaseV2,
     _profile_portfolio_economic_semantic_spec_from_case_v1,
 )
@@ -65,7 +65,7 @@ class _NativeEconomicPortfolioProfileV1:
     def __post_init__(self):
         if type(self.kind) is not str or self.kind not in {"market", "simulation", "account"}:
             raise ValueError("economic profile kind must be fixed market/simulation/account")
-        if type(self.spec_version) is not int or self.spec_version not in (1, 2, _ECONOMIC_SEGMENTED_OPENINGS_SPEC_VERSION):
+        if type(self.spec_version) is not int or self.spec_version not in (1, 2, *_ECONOMIC_SEGMENTED_SPECS):
             raise ValueError("unsupported economic V1 profile spec version")
         if type(self.component_manifest) is not tuple:
             raise TypeError("economic component manifest must be exact tuple")
@@ -127,13 +127,16 @@ def prepare_cn_a_share_portfolio_economic_development_backtest(
     build_artifact_manifest: BuildArtifactManifest,
     artifact_reader: ArtifactEnvelopeReader, artifact_publisher: ArtifactEnvelopePublisher,
     market_reader: MarketBundleReader, publication_root: Path, opening_proof_version: int = 1,
-    segmented_openings: bool = False,
+    segmented_openings: bool = False, bounded_signal_identity: bool = False,
 ) -> PreparedBacktestExecution:
     """Prepare frozen V1 sources; segmented openings require compact proofs."""
     _require_opening_proof_version(opening_proof_version)
     if type(segmented_openings) is not bool or (segmented_openings and opening_proof_version != 2):
         raise ValueError("segmented economic openings require compact proof version 2")
-    spec_version = _ECONOMIC_SEGMENTED_OPENINGS_SPEC_VERSION if segmented_openings else opening_proof_version
+    if type(bounded_signal_identity) is not bool or (bounded_signal_identity and not segmented_openings):
+        raise ValueError("bounded economic identity requires segmented openings")
+    spec_version = (_ECONOMIC_BOUNDED_SIGNAL_SPEC_VERSION if bounded_signal_identity else
+        _ECONOMIC_SEGMENTED_OPENINGS_SPEC_VERSION if segmented_openings else opening_proof_version)
     if (type(request_intent) is not CashDevelopmentRequestIntent
             or type(provider_inputs) is not CnASharePortfolioEconomicDevelopmentInputsV1
             or type(build_artifact_manifest) is not BuildArtifactManifest):
@@ -168,7 +171,7 @@ def prepare_cn_a_share_portfolio_economic_development_backtest(
     template = _ResolvedProfilePortfolioCaseV2(_PREFIX, 1, timeline, target, 64, plan, d.canonical_sha256("unsealed"))
     spec = _profile_portfolio_economic_semantic_spec_from_case_v1(template, spec_key=_PREFIX, spec_version=spec_version,
         identity_namespace=d.IdentityNamespace("backtest", "1"),
-        identity_plan=_economic_identity_plan_v1(provider_inputs, target, openings))
+        identity_plan=_economic_identity_plan_v1(provider_inputs, target, openings, bounded_signals=bounded_signal_identity))
     registry = _registry(provider_inputs, spec_version=spec_version)
     manifest = _provider_build_manifest(build_artifact_manifest, registry)
     request = BacktestRequest(1, request_intent.experiment_id, request_intent.timeline_window,

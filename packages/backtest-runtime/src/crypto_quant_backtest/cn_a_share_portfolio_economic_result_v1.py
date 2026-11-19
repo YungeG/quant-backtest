@@ -12,6 +12,7 @@ from crypto_quant_trading.profiles.cn_a_share.portfolio_v1 import CnASharePortfo
 from . import execution_inputs as x
 from .cn_a_share_portfolio_economic_case_v1 import (
     _bind_economic_portfolio_sources_v1, _clock_v1 as _at, _economic_events_v1, _economic_opening_proof_version_v1,
+    _verify_bounded_signal_cancellation_v1,
 )
 from .cn_a_share_portfolio_economic_native_state_v1 import (_EconomicOpenSourcesV1, _economic_signal_target_v1,
     _advance_economic_settlement_v1, _EconomicFailureContextV1)
@@ -345,6 +346,7 @@ def _verify_economic_facts_v1(*, case, reader, journal, final_streams, final_sch
                 as_of=at.instant, policy=inputs.execution_policy, cash=before.cash, sellability=before.sellability,
                 working_orders=before.order_streams, reservation_schedules=before.reservation_schedules, proposed=())
             _equal(cancel, fact["cancel_plan"], "native cancel plan")
+            _verify_bounded_signal_cancellation_v1(case, cancel, admissions, index)
             changed = dict(streams)
             for cancellation in cancel.cancel_intents:
                 prior = changed[cancellation.order_id]

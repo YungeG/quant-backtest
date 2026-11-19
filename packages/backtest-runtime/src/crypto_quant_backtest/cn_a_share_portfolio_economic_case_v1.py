@@ -1,6 +1,7 @@
 """Retained source binding, exact coordinates and sealed identities for economic portfolios."""
 from __future__ import annotations
 
+from bisect import bisect_left, bisect_right
 from collections.abc import Mapping
 from dataclasses import dataclass
 from types import MappingProxyType
@@ -25,7 +26,9 @@ from .cn_a_share_portfolio_economic_definition_v2 import CnASharePortfolioEconom
 from .cn_a_share_portfolio_economic_values_v1 import _read_cn_a_share_cash_dividend_action_set_v1
 from .engine import ExecutionCaseIdentityRule, PositionLotBook, ResolvedFinancialState
 from .execution import BAR_OPEN_CAPABILITY, BarOpenKind, BarOpenObservation
-from .profile_portfolio_execution import _ECONOMIC_SEGMENTED_OPENINGS_SPEC_VERSION, _ResolvedProfilePortfolioCaseV2
+from .profile_portfolio_execution import (
+    _ECONOMIC_BOUNDED_SIGNAL_SPEC_VERSION, _ECONOMIC_SEGMENTED_SPECS, _ResolvedProfilePortfolioCaseV2,
+)
 from .target_repository import BacktestTargetStreamRef, BacktestTargetStreamRepository
 from .target_stream import PrecomputedTargetStream
 from .timeline import TimelineWindow
@@ -278,20 +281,32 @@ _ORDER_STAGES = ("intent", "capability", "translation", "market", "fee", "risk",
 
 def _economic_identity_plan_v1(
     inputs: CnASharePortfolioEconomicDevelopmentInputsV1,
-    targets: PrecomputedTargetStream, openings: tuple[MarketEvent, ...],
+    targets: PrecomputedTargetStream, openings: tuple[MarketEvent, ...], *, bounded_signals: bool = False,
 ) -> tuple[ExecutionCaseIdentityRule, ...]:
     """Reserve source/branch coordinates even when a branch produces no Order."""
     indices: dict[d.InstrumentId, list[int]] = {}
     for ordinal, event in enumerate(openings):
         indices.setdefault(event.instrument_id, []).append(ordinal)
     rows: list[tuple[str, DomainIdKind | None]] = []
-    for signal_index, _ in enumerate(targets.events):
+    clocks = tuple(event.event_time for event in targets.events)
+    opening_clocks = tuple(event.event_time for event in openings)
+    if bounded_signals and any(left >= right for left, right in zip(clocks, clocks[1:])):
+        raise ValueError("economic bounded identity requires distinct increasing signal instants")
+    for signal_index, clock in enumerate(clocks):
+        first, stop = 0, len(openings)
+        next_stop = len(clocks)
+        if bounded_signals:
+            first = bisect_right(opening_clocks, clock)
+            next_stop = min(next_stop, signal_index + 2)
+            if signal_index + 1 < len(clocks):
+                stop = bisect_left(opening_clocks, clocks[signal_index + 1])
         for instrument in inputs.scope.instrument_ids:
             root = f"signal.{signal_index}.{instrument}"
             rows.append((root + ".order", DomainIdKind.ORDER))
-            for opening_index in indices.get(instrument, ()):
+            owned = indices.get(instrument, ())
+            for opening_index in owned[bisect_left(owned, first):bisect_left(owned, stop)]:
                 rows.extend((f"{root}.open.{opening_index}.{stage}", None) for stage in _ORDER_STAGES)
-            for next_signal in range(signal_index + 1, len(targets.events)):
+            for next_signal in range(signal_index + 1, next_stop):
                 rows.extend((f"{root}.signal.{next_signal}.{stage}", None)
                     for stage in ("cancel_requested", "cancelled"))
     for index, action in enumerate(inputs.dividend_actions.actions):
@@ -324,7 +339,8 @@ def _economic_journal_entry_ids_v1(case, inputs, openings):
             or not case.verify_identity_manifest(case.identity_manifest.semantic_run_id)
             or case.execution_case_plan.definition != inputs.definition()):
         raise ValueError("economic journal mapping requires exact sealed source-bound case")
-    if case.semantic_spec.identity_plan != _economic_identity_plan_v1(inputs, case.target_stream, openings):
+    bounded = case.semantic_spec.spec_version == _ECONOMIC_BOUNDED_SIGNAL_SPEC_VERSION
+    if case.semantic_spec.identity_plan != _economic_identity_plan_v1(inputs, case.target_stream, openings, bounded_signals=bounded):
         raise ValueError("economic identity plan differs from full source coordinate plan")
     events = _economic_events_v1(inputs)
     result = []
@@ -349,12 +365,20 @@ def _economic_opening_proof_version_v1(*, definition, spec):
 
     if spec is None or spec.spec_key != _economic_profile_prefix_v1(definition):
         raise ValueError("economic opening proof requires the bound profile spec")
-    if definition.schema_version == 2 and spec.spec_version in (1, 2, _ECONOMIC_SEGMENTED_OPENINGS_SPEC_VERSION):
+    if definition.schema_version == 2 and spec.spec_version in (1, 2, *_ECONOMIC_SEGMENTED_SPECS):
         return min(spec.spec_version, 2)
     if definition.schema_version == 3 and spec.spec_version in (1, 2):
         # V2 spec@2 versions its settlement, not its opening wire shape.
         return 1
     raise ValueError("unsupported economic opening proof spec version")
+
+
+def _verify_bounded_signal_cancellation_v1(case, plan, admissions, signal_index):
+    if case.semantic_spec.spec_version != _ECONOMIC_BOUNDED_SIGNAL_SPEC_VERSION:
+        return
+    if plan.retained_working_order_ids or any(admissions[intent.order_id].signal_index != signal_index - 1
+            for intent in plan.cancel_intents):
+        raise d.ArtifactIntegrityError("economic bounded signal cannot retain or cancel outside the preceding signal")
 
 
 def _bind_economic_portfolio_sources_v1(case, reader):
@@ -389,7 +413,7 @@ def _bind_economic_portfolio_sources_v1(case, reader):
     actual = (case.financial_state, case.execution_case_plan.initial_dividend_state, case.execution_case_plan.initial_economic_projection)
     if canonical_bytes(actual) != canonical_bytes(_native_initial_economic_financial_state_v1(inputs)):
         raise ValueError("economic initial native triple differs from retained source")
-    segmented = case.semantic_spec.spec_version == _ECONOMIC_SEGMENTED_OPENINGS_SPEC_VERSION
+    segmented = case.semantic_spec.spec_version in _ECONOMIC_SEGMENTED_SPECS
     openings = _read_economic_opening_sources_v1(inputs, case.timeline.reader, case.timeline.window, segmented=segmented)
     if segmented and case.timeline.stream_keys != tuple(sorted({event.stream_key for event in openings})):
         raise ValueError("economic timeline does not exact-cover opening segments")

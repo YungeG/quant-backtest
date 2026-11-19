@@ -44,7 +44,7 @@ from .cn_a_share_portfolio_standard_native_state_v1 import _NativeSignalTargetV1
 from .cn_a_share_portfolio_settlement_development_v1 import _build_cn_a_share_portfolio_settlement_facts_v1, _book_body
 from .engine import EngineFailureCode
 from .profile_portfolio_execution import (
-    _ECONOMIC_EXCLUSIVE_SETTLEMENT_SPEC_VERSION, _ECONOMIC_SEGMENTED_OPENINGS_SPEC_VERSION,
+    _ECONOMIC_EXCLUSIVE_SETTLEMENT_SPEC_VERSION, _ECONOMIC_SEGMENTED_SPECS,
 )
 
 _CNY = CurrencyId("CNY")
@@ -71,7 +71,7 @@ def _advance_economic_settlement_v1(*, case, inputs, journal, book, consumer):
         raise ValueError("economic settlement Book has foreign account or future committed facts")
     # Historical specs retain their original closing behavior.
     version = case.semantic_spec.spec_version
-    exclusive = (version == _ECONOMIC_SEGMENTED_OPENINGS_SPEC_VERSION or
+    exclusive = (version in _ECONOMIC_SEGMENTED_SPECS or
         (type(inputs) is CnASharePortfolioEconomicDevelopmentInputsV2
          and version == _ECONOMIC_EXCLUSIVE_SETTLEMENT_SPEC_VERSION))
     end = case.timeline.window.end_exclusive if exclusive else None
