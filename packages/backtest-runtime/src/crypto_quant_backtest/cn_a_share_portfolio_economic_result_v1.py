@@ -29,7 +29,9 @@ from .cn_a_share_portfolio_economic_values_v1 import (_read_cn_a_share_cash_divi
 from .cn_a_share_portfolio_standard_native_state_v1 import _native_rebalance_plan_v1
 from .cn_a_share_portfolio_financial_core_v1 import _id
 from .cn_a_share_portfolio_engine_result_source_v1 import _fee
-from .cn_a_share_portfolio_settlement_development_v1 import _build_cn_a_share_portfolio_settlement_facts_v1, _book_body
+from .cn_a_share_portfolio_settlement_development_v1 import (
+    _NativeSettlementResolutionMemo, _build_cn_a_share_portfolio_settlement_facts_v1, _book_body,
+)
 from .engine import EngineFailure, EngineFailureCode, ExecutionTrace, ExecutionTraceEntry, EngineStage
 from .execution import BarOpenObservation, BarOpenKind, NoEligibleBarAction
 from .financial_dispatch import FinancialDispatchArtifact
@@ -281,10 +283,12 @@ def _verify_economic_facts_v1(*, case, reader, journal, final_streams, final_sch
             raise d.ArtifactIntegrityError("economic role/component/source closure mismatch")
     ordered = sorted(artifacts, key=lambda row: (row.occurred_at, row.source_event_id, row.role))
     expected_no_real = {}
+    settlement_memo = (_NativeSettlementResolutionMemo(inputs.calendars)
+        if inputs.definition().schema_version == 4 else None)
     def make(at, j, b, ss, sch, st):
         b = _advance_economic_settlement_v1(case=case, inputs=inputs, journal=j, book=b, consumer=at)
         return _EconomicOpenSourcesV1(inputs, j, b, tuple(sorted(ss.values(), key=lambda s: s.order.order_id.value)),
-            tuple(sorted(sch.values(), key=lambda s: s.order_id.value)), initial.settlement_rules, st, mapping, at)
+            tuple(sorted(sch.values(), key=lambda s: s.order_id.value)), initial.settlement_rules, st, mapping, at, settlement_memo=settlement_memo)
     def commit(source):
         nonlocal current_journal, book, state, streams, schedules
         current_journal, book, state = source.journal, source.settlement_book, source.dividend_state

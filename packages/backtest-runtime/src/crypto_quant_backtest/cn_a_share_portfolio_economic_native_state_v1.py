@@ -1,7 +1,7 @@
 """Pure native economic state, complete checkpoints and allocation consumers."""
 from __future__ import annotations
 
-from dataclasses import dataclass, field, replace
+from dataclasses import InitVar, dataclass, field, replace
 
 from crypto_quant_domain import (
     CurrencyId, DecisionBatch, ExecutionStyle, Money, PortfolioSnapshot, PositionBalanceKey,
@@ -41,7 +41,9 @@ import crypto_quant_domain as d
 import crypto_quant_trading.profiles.cn_a_share.portfolio_economic_v1 as e
 from .cn_a_share_portfolio_standard_definition_v1 import CnASharePortfolioMarkBatchDevelopmentV1
 from .cn_a_share_portfolio_standard_native_state_v1 import _NativeSignalTargetV1
-from .cn_a_share_portfolio_settlement_development_v1 import _build_cn_a_share_portfolio_settlement_facts_v1, _book_body
+from .cn_a_share_portfolio_settlement_development_v1 import (
+    _NativeSettlementResolutionMemo, _build_cn_a_share_portfolio_settlement_facts_v1, _book_body,
+)
 from .engine import EngineFailureCode
 from .profile_portfolio_execution import (
     _ECONOMIC_EXCLUSIVE_SETTLEMENT_SPEC_VERSION, _ECONOMIC_SEGMENTED_SPECS,
@@ -144,13 +146,14 @@ class _EconomicOpenSourcesV1:
     dividend_state: e.CnAShareCashDividendStateV1
     journal_entry_ids: tuple[tuple[str, d.DomainId], ...]
     at: SimulationInstant
+    settlement_memo: InitVar[_NativeSettlementResolutionMemo | None] = None
     economic_projection: e.CnASharePortfolioEconomicProjectionV1 = field(init=False)
     cash: CnAShareSharedCnyCashSnapshotV1 = field(init=False)
     sellability: CnASharePortfolioSellabilitySnapshotV1 = field(init=False)
     reservations: ResourceReservationState = field(init=False)
     available_by_venue: tuple[tuple[CashBalanceKey, Money], ...] = field(init=False)
 
-    def __post_init__(self) -> None:
+    def __post_init__(self, settlement_memo) -> None:
         if (type(self.inputs) not in (CnASharePortfolioEconomicDevelopmentInputsV1, CnASharePortfolioEconomicDevelopmentInputsV2)
                 or type(self.journal) is not AccountingJournal
                 or type(self.settlement_book) is not SettlementBook
@@ -208,7 +211,8 @@ class _EconomicOpenSourcesV1:
             raise ValueError("economic current Book contains foreign or missing Fill sources")
         if fills:
             expected = _build_cn_a_share_portfolio_settlement_facts_v1(fills=fills,
-                journal=self.journal, source_hash=canonical_sha256(fills), calendars=self.inputs.calendars).book
+                journal=self.journal, source_hash=canonical_sha256(fills), calendars=self.inputs.calendars,
+                memo=settlement_memo).book
             if self.settlement_book.obligations != expected.obligations:
                 raise ValueError("economic current Book differs from exact native T+1 amount/key/time resolution")
         if type(self.dividend_state) is not e.CnAShareCashDividendStateV1 or self.dividend_state.as_of > self.at:

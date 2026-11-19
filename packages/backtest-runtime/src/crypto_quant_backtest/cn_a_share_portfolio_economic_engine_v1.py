@@ -82,7 +82,9 @@ from .cn_a_share_portfolio_economic_opening_v1 import (
     _book_economic_full_fill_batch_v1, _economic_venue_funding_v1, _cent,
 )
 from .cn_a_share_portfolio_standard_native_state_v1 import _native_rebalance_plan_v1
-from .cn_a_share_portfolio_settlement_development_v1 import _build_cn_a_share_portfolio_settlement_facts_v1, _book_body
+from .cn_a_share_portfolio_settlement_development_v1 import (
+    _NativeSettlementResolutionMemo, _build_cn_a_share_portfolio_settlement_facts_v1, _book_body,
+)
 from .engine import (EngineExecutionOutcome, EngineExecutionResult, EngineFailure, EngineFailureCode,
     EngineStage, ExecutionTrace, ExecutionTraceEntry, EngineCancellation, EngineCancellationRequest)
 from .execution import BarOpenObservation, BarOpenKind, NoEligibleBarAction
@@ -150,10 +152,12 @@ class _CnASharePortfolioEconomicEngineV1:
         profile_prefix, component_hash = _economic_native_finance_identity_v1(inputs)
         opening_proof_version = _economic_opening_proof_version_v1(
             definition=case.execution_case_plan.definition, spec=case.semantic_spec)
+        settlement_memo = (_NativeSettlementResolutionMemo(inputs.calendars)
+            if inputs.definition().schema_version == 4 else None)
         def make(at, j, b, ss, sch, st):
             b = _advance_economic_settlement_v1(case=case, inputs=inputs, journal=j, book=b, consumer=at)
             return _EconomicOpenSourcesV1(inputs, j, b, tuple(sorted(ss.values(), key=lambda row: row.order.order_id.value)),
-                tuple(sorted(sch.values(), key=lambda row: row.order_id.value)), rules, st, mapping, at)
+                tuple(sorted(sch.values(), key=lambda row: row.order_id.value)), rules, st, mapping, at, settlement_memo=settlement_memo)
         last = make(inputs.initial_marks.at, journal, book, streams, schedules, state)
         def commit(source):
             nonlocal journal, book, streams, schedules, state, last

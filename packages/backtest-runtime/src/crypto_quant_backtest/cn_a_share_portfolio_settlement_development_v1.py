@@ -169,9 +169,41 @@ def _build_cn_a_share_portfolio_settlement_native(
         fills=batch.fills, journal=batch.journal, source_hash=batch.batch_hash, calendars=calendars)
 
 
+class _NativeSettlementResolutionMemo:
+    """Pass-local reuse over immutable accepted Fill/Journal/calendar operands."""
+
+    def __init__(self, calendars):
+        self.calendars = calendars
+        self._by_fill = {}
+
+    def resolve(self, *, calendars, model, fill, entry):
+        if calendars is not self.calendars:
+            raise ValueError("native settlement memo cannot change calendars")
+        previous = self._by_fill.get(fill.fill_id)
+        if previous is not None:
+            prior_fill, prior_entry, obligations = previous
+            if fill != prior_fill or entry != prior_entry:
+                raise ValueError("native settlement prefix changed an accepted Fill or Journal entry")
+            return obligations
+        obligations = _resolve_cn_a_share_portfolio_settlement_v1(model, fill, entry)
+        self._by_fill[fill.fill_id] = (fill, entry, obligations)
+        return obligations
+
+
+def _resolve_cn_a_share_portfolio_settlement_v1(model, fill, entry):
+    instrument = InstrumentDefinition(fill.instrument_id, InstrumentType.EQUITY,
+                                      None, CurrencyId("CNY"), CurrencyId("CNY"))
+    outcome = model.resolve_settlement(CnAShareSettlementQuery(fill, instrument, entry,
+        _settlement_id(fill.fill_id, "cash"), _settlement_id(fill.fill_id, "position")))
+    if outcome.result is None:
+        raise ValueError("native CN T+1 settlement rejected Fill or calendar")
+    return outcome.result.obligations
+
+
 def _build_cn_a_share_portfolio_settlement_facts_v1(
     *, fills: tuple[Fill, ...], journal: AccountingJournal, source_hash: str,
     calendars: tuple[CnAShareFrozenCalendar, CnAShareFrozenCalendar],
+    memo: _NativeSettlementResolutionMemo | None = None,
 ) -> CnASharePortfolioSettlementDevelopmentV1:
     """Shared native T+1 facts; no legacy/diagnostic Result conversion is needed."""
     if not fills or any(type(f) is not Fill for f in fills) or type(journal) is not AccountingJournal:
@@ -188,16 +220,10 @@ def _build_cn_a_share_portfolio_settlement_facts_v1(
                         and fill.fill_id.value in entry.source_ids)
         if len(entries) != 1 or entries[0].account_id != fill.account_id or entries[0].venue_id != fill.venue_id:
             raise ValueError("CN settlement Fill has no exact same-venue Journal evidence")
-        instrument = InstrumentDefinition(fill.instrument_id, InstrumentType.EQUITY,
-                                          None, CurrencyId("CNY"), CurrencyId("CNY"))
-        outcome = CnAShareCashSettlementModel(by_venue[fill.venue_id]).resolve_settlement(
-            CnAShareSettlementQuery(
-                fill, instrument, entries[0],
-                _settlement_id(fill.fill_id, "cash"),
-                _settlement_id(fill.fill_id, "position")))
-        if outcome.result is None:
-            raise ValueError("native CN T+1 settlement rejected Fill or calendar")
-        for leg, ob in enumerate(outcome.result.obligations, start=1):
+        model = CnAShareCashSettlementModel(by_venue[fill.venue_id])
+        resolved = (_resolve_cn_a_share_portfolio_settlement_v1(model, fill, entries[0]) if memo is None
+            else memo.resolve(calendars=calendars, model=model, fill=fill, entry=entries[0]))
+        for leg, ob in enumerate(resolved, start=1):
             obligations.append(ob)
             record = SettlementEvent(
                 event_id=_event_id(ob, "recorded"),
