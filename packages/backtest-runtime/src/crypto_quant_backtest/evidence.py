@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from contextlib import suppress
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from enum import Enum
 import os
 import json
@@ -330,6 +330,10 @@ class EvidenceWriteFailure:
 class EvidencePublicationOutcome:
     finalized: FinalizedAttemptEvidence | None = None
     failure: EvidenceWriteFailure | None = None
+    # Operational context only; not part of the failure or outcome wire.
+    _artifact_write_note: str | None = field(
+        default=None, kw_only=True, compare=False, repr=False
+    )
 
     def __post_init__(self) -> None:
         if (self.finalized is None) == (self.failure is None):
@@ -609,20 +613,37 @@ class AttemptEvidenceWriter:
         status = self._status(record)
         entries: list[EvidenceArtifactEntry] = []
         for plan in self._artifact_plans(record):
+            byte_count = None
             try:
                 result = _ARTIFACT_CATALOG.write_current(
                     plan.artifact_type, plan.payload
                 )
+                byte_count = len(result.source_bytes)
                 self._write_file(
                     paths.staging / plan.relative_path, result.source_bytes
                 )
             except (OSError, TypeError, ValueError) as error:
                 self._force_remove(paths.staging)
+                note = None
+                with suppress(Exception):  # Diagnostic failure must not mask the write failure.
+                    stage = "serialize" if byte_count is None else "file_write"
+                    errno = error.errno if type(error) is OSError else None
+                    if type(errno) is not int or not 0 <= errno < 2**31:
+                        errno = None
+                    kind = _exception_type(error)
+                    if not re.fullmatch(r"[A-Za-z0-9_.]{1,128}", kind):
+                        kind = "other"
+                    note = (
+                        f"Attempt artifact write: stage={stage} role={plan.role.value} "
+                        f"file={plan.relative_path} exception_type={kind} "
+                        f"errno={errno} byte_count={byte_count}"
+                    )
                 return self._failure(
                     attempt,
                     EvidenceWriteFailureCode.ARTIFACT_WRITE_FAILED,
                     plan.relative_path,
                     error,
+                    artifact_write_note=note,
                 )
             entries.append(
                 EvidenceArtifactEntry(
@@ -632,7 +653,7 @@ class AttemptEvidenceWriter:
                     schema_version=result.envelope.schema_version,
                     content_hash=result.envelope.content_hash,
                     source_hash=result.source_hash,
-                    byte_count=len(result.source_bytes),
+                    byte_count=byte_count,
                 )
             )
 
@@ -793,6 +814,8 @@ class AttemptEvidenceWriter:
         code: EvidenceWriteFailureCode,
         relative_subject: str,
         error: BaseException | None = None,
+        *,
+        artifact_write_note: str | None = None,
     ) -> EvidencePublicationOutcome:
         return EvidencePublicationOutcome(
             failure=EvidenceWriteFailure(
@@ -800,7 +823,8 @@ class AttemptEvidenceWriter:
                 code=code,
                 relative_subject=relative_subject,
                 exception_type=_exception_type(error) if error is not None else None,
-            )
+            ),
+            _artifact_write_note=artifact_write_note,
         )
 
     @staticmethod

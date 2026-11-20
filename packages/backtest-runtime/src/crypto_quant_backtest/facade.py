@@ -5,6 +5,7 @@ from __future__ import annotations
 import os
 import re
 from collections.abc import Mapping
+from contextlib import suppress
 from pathlib import Path, PurePosixPath
 from typing import NoReturn
 
@@ -1462,10 +1463,14 @@ class BacktestRuntime:
     ) -> FinalizedAttemptEvidence:
         outcome = writer.publish(record)
         if outcome.failure is not None:
-            raise RuntimeError(
+            error = RuntimeError(
                 "Attempt evidence publication failed: "
                 f"{outcome.failure.code.value}"
             )
+            if outcome._artifact_write_note is not None:
+                with suppress(Exception):
+                    error.add_note(outcome._artifact_write_note)
+            raise error
         if outcome.finalized is None:
             raise RuntimeError("Attempt evidence publication returned no result")
         self._mirror_evidence_graph(outcome.finalized)
