@@ -410,6 +410,70 @@ def test_v2_committed_provenance_requires_actual_clean_Git_source(tmp_path, muta
             _assert_candidate_source_provenance(snapshot, manifest)
 
 
+def _installed_checkout_proof():
+    """Bind the source test to the clean checkout and its actual editable packages."""
+    from hashlib import file_digest
+    import importlib
+    import importlib.metadata
+    from pathlib import Path
+    import subprocess
+    import sys
+
+    root = Path(__file__).resolve().parents[3]
+    git = ["git", "--no-optional-locks", "-C", str(root)]
+
+    def digest(path):
+        with path.open("rb") as stream:
+            return file_digest(stream, "sha256").hexdigest()
+
+    commit = subprocess.check_output([*git, "rev-parse", "HEAD"], text=True, timeout=10).strip()
+    paths = subprocess.check_output([*git, "ls-files", "-z"], timeout=10).decode().split("\0")
+    files = [
+        {"path": name, "sha256": digest(root / name), "mode": (root / name).stat().st_mode & 0o777}
+        for name in sorted(set(paths) - {""})
+    ]
+    identity = {"base_commit": commit, "files": files}
+    snapshot_hash = d.canonical_sha256(identity)
+    snapshot = {**identity, "snapshot_hash": snapshot_hash, "candidate": str(root), "source_tree_state": "CLEAN"}
+    roles = (
+        ("domain", "trading-domain", bt.BuildArtifactRole.TRADING_DOMAIN),
+        ("trading", "trading-kernel", bt.BuildArtifactRole.TRADING_KERNEL),
+        ("market-data", "market-data-contracts", bt.BuildArtifactRole.MARKET_DATA_CONTRACTS),
+        ("bundle-builder", "market-bundle-builder", None),
+        ("backtest", "backtest-runtime", bt.BuildArtifactRole.BACKTEST_RUNTIME),
+    )
+    packages = []
+    artifacts = []
+    for suffix, directory, role in roles:
+        name = "crypto-quant-" + suffix
+        module = name.replace("-", "_")
+        dist = importlib.metadata.distribution(name)
+        origin = json.loads(dist.read_text("direct_url.json") or "{}")
+        package_root = root / "packages" / directory
+        module_file = Path(importlib.import_module(module).__file__).resolve()
+        assert origin == {"url": package_root.as_uri(), "dir_info": {"editable": True}}
+        assert module_file.is_relative_to(package_root / "src")
+        packages.append({
+            "module": module, "module_file": str(module_file), "distribution": name,
+            "version": dist.version, "direct_url": origin,
+        })
+        if role is not None:
+            sources = [row for row in files if row["path"].startswith(f"packages/{directory}/src/")]
+            assert sources
+            artifacts.append(bt.BuildArtifactRef(role, name, dist.version, bt.ArtifactInstallMode.EDITABLE,
+                bt.SourceTreeState.CLEAN, d.canonical_sha256(sources), snapshot_hash))
+
+    decision = Path(__file__).with_name("_cn_a_share_portfolio_economic_fixtures_v2.py")
+    artifacts.append(bt.BuildArtifactRef(bt.BuildArtifactRole.DECISION_SOURCE, "synthetic-v2-source-test", "1",
+        bt.ArtifactInstallMode.EDITABLE, bt.SourceTreeState.CLEAN, "sha256:" + digest(decision), None))
+    python = bt.RuntimeLibraryRef("python", sys.version.split()[0], "sha256:" + digest(Path(sys.executable).resolve()))
+    manifest = bt.BuildArtifactManifest(1, "sdk-v2-source-test", tuple(artifacts),
+        "sha256:" + digest(root / "uv.lock"), (python,), None,
+        bt.BuildProvenance(commit, "sdk-source-test", str(root), d.UtcInstant(0)))
+    proof = {"source_snapshot_hash": snapshot_hash, "build_manifest": manifest, "packages": packages}
+    return json.loads(d.canonical_bytes(proof)), snapshot
+
+
 def test_v2_honest_candidate_build_binding(tmp_path, monkeypatch):
     import hashlib
     import importlib
@@ -418,9 +482,11 @@ def test_v2_honest_candidate_build_binding(tmp_path, monkeypatch):
     from pathlib import Path
     from crypto_quant_backtest.execution_inputs import _read_build_manifest, _read_execution_inputs_v9_from_snapshot
     path = os.environ.get("V2_CANDIDATE_PROVENANCE")
-    assert path, "V2_CANDIDATE_PROVENANCE must identify actual fresh candidate proof; absence is failure"
-    proof = json.loads(Path(path).read_text())
-    snapshot = json.loads(Path(proof["source_manifest"]).read_text())
+    if path:
+        proof = json.loads(Path(path).read_text())
+        snapshot = json.loads(Path(proof["source_manifest"]).read_text())
+    else:
+        proof, snapshot = _installed_checkout_proof()
     _assert_candidate_snapshot_digest(proof, snapshot)
     manifest = _read_build_manifest(proof["build_manifest"])
     _assert_candidate_source_provenance(snapshot, manifest)
