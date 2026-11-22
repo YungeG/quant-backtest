@@ -14,6 +14,7 @@ _SHA256 = re.compile(r"sha256:[0-9a-f]{64}\Z")
 _ENVELOPE_FIELDS = frozenset(
     {"artifact_type", "schema_version", "payload", "content_hash"}
 )
+_RAW_BLOB_REF_FIELDS = frozenset({"type", "content_hash", "byte_count"})
 
 
 @dataclass(frozen=True, slots=True)
@@ -49,6 +50,46 @@ class ArtifactRef:
             "artifact_type": self.artifact_type,
             "schema_version": self.schema_version,
             "content_hash": self.content_hash,
+        }
+
+
+@dataclass(frozen=True, slots=True)
+class RawBlobRef:
+    content_hash: str
+    byte_count: int
+
+    def __post_init__(self) -> None:
+        if type(self.content_hash) is not str or _SHA256.fullmatch(
+            self.content_hash
+        ) is None:
+            raise ValueError("content_hash must be sha256:<64 lowercase hex>")
+        if type(self.byte_count) is not int:
+            raise TypeError("byte_count must be an integer")
+        if self.byte_count < 0:
+            raise ValueError("byte_count must be nonnegative")
+
+    @classmethod
+    def from_bytes(cls, source: bytes) -> RawBlobRef:
+        if type(source) is not bytes:
+            raise TypeError("source must be bytes")
+        return cls(_source_hash(source), len(source))
+
+    @classmethod
+    def from_canonical_dict(cls, value: object) -> RawBlobRef:
+        if type(value) is not dict or set(value) != _RAW_BLOB_REF_FIELDS:
+            raise ValueError(
+                "canonical raw blob ref must contain exactly "
+                "type, content_hash, and byte_count"
+            )
+        if value["type"] != "raw_blob_ref":
+            raise ValueError("canonical raw blob ref type must be raw_blob_ref")
+        return cls(value["content_hash"], value["byte_count"])
+
+    def to_canonical_dict(self) -> dict[str, object]:
+        return {
+            "type": "raw_blob_ref",
+            "content_hash": self.content_hash,
+            "byte_count": self.byte_count,
         }
 
 
