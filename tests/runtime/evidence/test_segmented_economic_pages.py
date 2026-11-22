@@ -31,7 +31,7 @@ from crypto_quant_domain import (
     canonical_sha256,
 )
 from crypto_quant_backtest.financial_dispatch import FinancialDispatchArtifact
-from crypto_quant_foundation import LocalFoundation
+from tests.runtime.providers.test_cn_a_share_portfolio_preparation_inputs_v1 import _Cas
 
 
 class SegmentedEconomicPagesTest(unittest.TestCase):
@@ -101,8 +101,8 @@ class SegmentedEconomicPagesTest(unittest.TestCase):
         series = EconomicPageSeries("run_" + "7" * 64, "sha256:" + "8" * 64, "financial_fact")
         with TemporaryDirectory() as directory:
             root = Path(directory)
-            storage = LocalFoundation(root / "candidate")
-            reference = LocalFoundation(root / "reference")
+            storage = _Cas()
+            reference = _Cas()
             with _ReferencedRunLock(root=root / "native", semantic_run_id=series.semantic_run_id) as lock:
                 publisher = _ReferencedResultObjects(lock=lock, reader=storage, publisher=storage)
                 for offset, count in ((0, 1), (4096*64-64, 64)):
@@ -175,44 +175,40 @@ class SegmentedEconomicPagesTest(unittest.TestCase):
             self.assertIsNone(_retained_opening_term_v1(rows, when, instrument, side))
 
     def test_bound_cas_pages_have_exact_cover_and_order(self):
-        with TemporaryDirectory() as work:
-            store = LocalFoundation(Path(work) / "foundation")
-            series = EconomicPageSeries("run_" + "1" * 64, "sha256:" + "2" * 64, "financial_fact")
-            a = publish_economic_page(store, series, 0, ({"row": "first"}, {"row": "second"}))
-            b = publish_economic_page(store, series, 2, ({"row": "third"},))
-            pages = iter_economic_pages(store, series, (a, b), expected_count=3)
-            self.assertEqual(canonical_bytes(next(pages)), b'[{"row":"first"},{"row":"second"}]')
-            self.assertEqual(canonical_bytes(next(pages)), b'[{"row":"third"}]')
-            self.assertIsNone(next(pages, None))
-            with self.assertRaisesRegex(ArtifactIntegrityError, "offset"):
-                tuple(iter_economic_pages(store, series, (b, a), expected_count=3))
-            with self.assertRaisesRegex(ArtifactIntegrityError, "cover"):
-                tuple(iter_economic_pages(store, series, (a,), expected_count=3))
-            with self.assertRaisesRegex(ArtifactIntegrityError, "duplicate"):
-                tuple(iter_economic_pages(store, series, (a, a), expected_count=4))
+        store = _Cas()
+        series = EconomicPageSeries("run_" + "1" * 64, "sha256:" + "2" * 64, "financial_fact")
+        a = publish_economic_page(store, series, 0, ({"row": "first"}, {"row": "second"}))
+        b = publish_economic_page(store, series, 2, ({"row": "third"},))
+        pages = iter_economic_pages(store, series, (a, b), expected_count=3)
+        self.assertEqual(canonical_bytes(next(pages)), b'[{"row":"first"},{"row":"second"}]')
+        self.assertEqual(canonical_bytes(next(pages)), b'[{"row":"third"}]')
+        self.assertIsNone(next(pages, None))
+        with self.assertRaisesRegex(ArtifactIntegrityError, "offset"):
+            tuple(iter_economic_pages(store, series, (b, a), expected_count=3))
+        with self.assertRaisesRegex(ArtifactIntegrityError, "cover"):
+            tuple(iter_economic_pages(store, series, (a,), expected_count=3))
+        with self.assertRaisesRegex(ArtifactIntegrityError, "duplicate"):
+            tuple(iter_economic_pages(store, series, (a, a), expected_count=4))
 
     def test_wrong_owner_source_or_missing_child_never_yields_page(self):
-        with TemporaryDirectory() as work:
-            store = LocalFoundation(Path(work) / "foundation")
-            series = EconomicPageSeries("run_" + "1" * 64, "sha256:" + "2" * 64, "financial_fact")
-            target = publish_economic_page(store, series, 0, ({"row": "original"},))
-            altered_owner = replace(series, case_hash="sha256:" + "3" * 64)
-            with self.assertRaisesRegex(ArtifactIntegrityError, "owner"):
-                next(iter_economic_pages(store, altered_owner, (target,), expected_count=1))
-            forged = replace(target, source_hash="sha256:" + "0" * 64)
-            with self.assertRaisesRegex(ArtifactIntegrityError, "coordinates"):
-                next(iter_economic_pages(store, series, (forged,), expected_count=1))
-            missing = LocalFoundation(Path(work) / "other")
-            with self.assertRaises(ArtifactNotFoundError):
-                next(iter_economic_pages(missing, series, (target,), expected_count=1))
+        store = _Cas()
+        series = EconomicPageSeries("run_" + "1" * 64, "sha256:" + "2" * 64, "financial_fact")
+        target = publish_economic_page(store, series, 0, ({"row": "original"},))
+        altered_owner = replace(series, case_hash="sha256:" + "3" * 64)
+        with self.assertRaisesRegex(ArtifactIntegrityError, "owner"):
+            next(iter_economic_pages(store, altered_owner, (target,), expected_count=1))
+        forged = replace(target, source_hash="sha256:" + "0" * 64)
+        with self.assertRaisesRegex(ArtifactIntegrityError, "coordinates"):
+            next(iter_economic_pages(store, series, (forged,), expected_count=1))
+        with self.assertRaises(ArtifactNotFoundError):
+            next(iter_economic_pages(_Cas(), series, (target,), expected_count=1))
 
     def test_series_limits_rows_and_bytes_before_publishing(self):
-        with TemporaryDirectory() as work:
-            store = LocalFoundation(Path(work) / "foundation")
-            series = EconomicPageSeries("run_" + "1" * 64, "sha256:" + "2" * 64, "admission")
-            entries = publish_economic_series(store, series, ({"row": i} for i in range(65)))
-            self.assertEqual(tuple(e.row_count for e in entries), (64, 1))
-            self.assertEqual([r["row"] for p in iter_economic_pages(store, series, entries, expected_count=65) for r in p], list(range(65)))
+        store = _Cas()
+        series = EconomicPageSeries("run_" + "1" * 64, "sha256:" + "2" * 64, "admission")
+        entries = publish_economic_series(store, series, ({"row": i} for i in range(65)))
+        self.assertEqual(tuple(e.row_count for e in entries), (64, 1))
+        self.assertEqual([r["row"] for p in iter_economic_pages(store, series, entries, expected_count=65) for r in p], list(range(65)))
 
         class NoPut:
             def put(self, **kwargs):
