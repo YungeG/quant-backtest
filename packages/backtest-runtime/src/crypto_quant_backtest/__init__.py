@@ -3,8 +3,10 @@
 from .analysis import (
     AnalysisArtifactRef,
     AnalysisArtifactRefV2,
+    AnalysisArtifactRefV3,
     BacktestAnalysis,
     BacktestAnalysisV2,
+    BacktestAnalysisV3,
     BacktestMetricProfile,
     VerifiedBacktestAnalysis,
     VerifiedBacktestAnalysisV2,
@@ -295,6 +297,8 @@ from .ports import (
 from .publication_refs import (
     BacktestCanonicalPublicationRef,
     BacktestCanonicalPublicationRefV2,
+    BacktestCanonicalPublicationRefV3,
+    BacktestDeliveryIncomplete,
     RunPublicationRef,
 )
 from .verified_publications import (
@@ -302,6 +306,7 @@ from .verified_publications import (
     VerifiedCompletedPublication,
     VerifiedCompletedPublicationV2,
     VerifiedCompletedPublicationV3,
+    VerifiedCompletedPublicationV4,
     VerifiedExecutionSummary,
     VerifiedTerminalPublication,
 )
@@ -444,6 +449,7 @@ __version__ = "0.1.0"
 __all__ = [
     "AnalysisArtifactRef",
     "AnalysisArtifactRefV2",
+    "AnalysisArtifactRefV3",
     "BAR_CLOSE_CAPABILITY",
     "BAR_CLOSE_EVENT_TYPE",
     "BAR_OPEN_CAPABILITY",
@@ -471,6 +477,8 @@ __all__ = [
     "BacktestRunOutcome",
     "BacktestCanonicalPublicationRef",
     "BacktestCanonicalPublicationRefV2",
+    "BacktestCanonicalPublicationRefV3",
+    "BacktestDeliveryIncomplete",
     "BacktestRuntime",
     "BacktestTargetStreamError",
     "BacktestTargetStreamFailureCode",
@@ -478,6 +486,7 @@ __all__ = [
     "BacktestTargetStreamRepository",
     "BacktestAnalysis",
     "BacktestAnalysisV2",
+    "BacktestAnalysisV3",
     "BacktestAnalysisRuntime",
     "BacktestMetricProfile",
     "BinanceUsdmAccountCapacityEvidence",
@@ -801,6 +810,7 @@ __all__ = [
     "VerifiedCompletedPublication",
     "VerifiedCompletedPublicationV2",
     "VerifiedCompletedPublicationV3",
+    "VerifiedCompletedPublicationV4",
     "VerifiedExecutionSummary",
     "VerifiedTerminalPublication",
     "TerminalStatus",
@@ -825,6 +835,8 @@ from .cn_a_share_portfolio_economic_prepare_v1 import prepare_cn_a_share_portfol
 from .cn_a_share_portfolio_economic_daily_nav_analysis_v1 import (
     CnASharePortfolioEconomicDailyNavMetricProfileV1, CnASharePortfolioEconomicDailyNavPointV1,
     CnASharePortfolioEconomicDailyNavAnalysisV1, CnASharePortfolioEconomicDailyNavAnalysisRefV1,
+    CnASharePortfolioEconomicDailyNavAnalysisV2, CnASharePortfolioEconomicDailyNavAnalysisRefV2,
     CnASharePortfolioEconomicDailyNavAnalysisRuntimeV1,
 )
+__all__ += ['CnASharePortfolioEconomicDailyNavAnalysisV2', 'CnASharePortfolioEconomicDailyNavAnalysisRefV2']
 __all__ += ['CnASharePortfolioEconomicDevelopmentInputsV1', 'CnASharePortfolioEconomicOpeningTermsV1', 'prepare_cn_a_share_portfolio_economic_development_backtest', 'CnASharePortfolioEconomicDailyNavMetricProfileV1', 'CnASharePortfolioEconomicDailyNavPointV1', 'CnASharePortfolioEconomicDailyNavAnalysisV1', 'CnASharePortfolioEconomicDailyNavAnalysisRefV1', 'CnASharePortfolioEconomicDailyNavAnalysisRuntimeV1']

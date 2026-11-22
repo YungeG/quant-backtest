@@ -1,10 +1,12 @@
 from __future__ import annotations
 
 from dataclasses import replace
+from hashlib import sha256
 
 import pytest
 import crypto_quant_domain as d
 from crypto_quant_trading import AccountingJournal, CurrencyValuationGraph
+from crypto_quant_trading.profiles.cn_a_share import cash_dividend_projection_v1 as projection_module
 from crypto_quant_trading.profiles.cn_a_share.portfolio_economic_v1 import (
     CnAShareCashDividendClaimV1, CnAShareCashDividendStateV1,
     CnAShareEconomicProjectionFailureCodeV1 as Code,
@@ -114,8 +116,7 @@ def test_projection_failure_precedence_and_same_utc_future_phase():
     assert missing.failure.native_snapshot_failure is not None
 
 
-def test_negative_venue_native_cash_is_not_clipped_or_hidden_by_other_venue():
-    inputs = _inputs()
+def _overcommitted(inputs):
     from crypto_quant_trading import GenericLedger
     key = inputs.ledger_schema.cash_registrations[0].key
     cash = GenericLedger(inputs.ledger_schema).project(inputs.journal).cash_amount(key)
@@ -123,7 +124,11 @@ def test_negative_venue_native_cash_is_not_clipped_or_hidden_by_other_venue():
     debit = d.AccountingJournalEntry(d.DomainId(d.DomainIdKind.JOURNAL, "jnl_" + "e" * 64),
         d.AccountingEntryType.CAPITAL_WITHDRAWN, inputs.market_rules.account_id, key.venue_id,
         at.instant, at, ("test-overcommit",), (d.BalanceChange(key, d.Money(-cash.units - 1, d.Scale(2), "CNY")),), (), (), ())
-    result = project(replace(inputs, journal=inputs.journal.append(debit), marks=inputs.marks[:-1]))
+    return replace(inputs, journal=inputs.journal.append(debit), marks=inputs.marks[:-1])
+
+
+def test_negative_venue_native_cash_is_not_clipped_or_hidden_by_other_venue():
+    result = project(_overcommitted(_inputs()))
     assert result.failure.code is Code.NATIVE_CASH_OVERCOMMITTED
 
 
@@ -171,3 +176,114 @@ def test_native_exception_is_not_converted_to_projection_failure(monkeypatch):
     monkeypatch.setattr(GenericLedger, "project", broken)
     with pytest.raises(OSError, match="native ledger"):
         project(inputs)
+
+
+def test_scoped_projector_reuses_only_identical_stable_fields(monkeypatch):
+    inputs = _inputs()
+    scope = CnASharePortfolioEconomicProjectionInputsV1.scoped_projector()
+    chunks = []
+
+    class RecordingDigest:
+        def __init__(self, initial):
+            self.body = bytearray(initial)
+
+        def update(self, chunk):
+            self.body.extend(chunk)
+
+        def hexdigest(self):
+            chunks.append(bytes(self.body))
+            return sha256(self.body).hexdigest()
+
+    monkeypatch.setattr(projection_module, "sha256", RecordingDigest)
+    assert scope.__self__ is not CnASharePortfolioEconomicProjectionInputsV1.scoped_projector().__self__
+    assert d.canonical_bytes(scope(inputs)) == d.canonical_bytes(project(inputs))
+    entries = scope.__self__._encoded.copy()
+    rebuilt = replace(inputs, order_streams=tuple(list(inputs.order_streams)),
+                      reservation_schedules=tuple(list(inputs.reservation_schedules)))
+    assert rebuilt.order_streams is not inputs.order_streams
+    assert d.canonical_bytes(scope(rebuilt)) == d.canonical_bytes(project(rebuilt))
+    for field in ("order_streams", "reservation_schedules"):
+        assert scope.__self__._encoded[field][1] is entries[field][1]
+
+    equal_book = replace(rebuilt, settlement_book=replace(rebuilt.settlement_book))
+    assert d.canonical_bytes(scope(equal_book)) == d.canonical_bytes(project(equal_book))
+    assert scope.__self__._encoded["settlement_book"][0] is equal_book.settlement_book
+    assert scope.__self__._encoded["settlement_book"][1] is not entries["settlement_book"][1]
+
+    changed = replace(rebuilt, journal=AccountingJournal(rebuilt.journal.entries),
+                      settlement_book=replace(rebuilt.settlement_book, events=rebuilt.settlement_book.events[:-1]),
+                      order_streams=(replace(rebuilt.order_streams[0]), *rebuilt.order_streams[1:]),
+                      reservation_schedules=(replace(rebuilt.reservation_schedules[0]),
+                                             *rebuilt.reservation_schedules[1:]),
+                      dividend_state=replace(rebuilt.dividend_state, claims=(_claim(rebuilt),)))
+    assert d.canonical_bytes(scope(changed)) == d.canonical_bytes(project(changed))
+    assert chunks == [d.canonical_bytes(value) for value in (inputs, rebuilt, equal_book, changed)]
+    for field in ("journal", "settlement_book", "order_streams", "reservation_schedules"):
+        value, encoded = scope.__self__._encoded[field]
+        assert value is getattr(changed, field)
+        assert encoded is not entries[field][1]
+    assert not scope.__self__._same_source(rebuilt.order_streams, tuple(reversed(rebuilt.order_streams)))
+
+
+def test_scoped_projector_drops_bytes_over_budget(monkeypatch):
+    inputs = _inputs()
+    scope = CnASharePortfolioEconomicProjectionInputsV1.scoped_projector()
+    expected = d.canonical_bytes(project(inputs))
+    assert d.canonical_bytes(scope(inputs)) == expected
+    assert scope.__self__._encoded
+    monkeypatch.setattr(scope.__self__, "_byte_limit", 0)
+    assert d.canonical_bytes(scope(inputs)) == expected
+    assert not scope.__self__._encoded
+
+
+@pytest.mark.parametrize("error_type", (d.CanonicalizationError, TypeError))
+def test_scoped_projector_falls_back_to_authoritative_encoding_error(monkeypatch, error_type):
+    inputs = _inputs()
+    scope = CnASharePortfolioEconomicProjectionInputsV1.scoped_projector()
+    scope(inputs)
+    stable = projection_module.canonical_bytes
+    journal = AccountingJournal(inputs.journal.entries)
+    changed = replace(inputs, journal=journal)
+    direct = projection_module.canonical_sha256
+
+    def split(value):
+        if value is journal:
+            raise error_type("part-only error")
+        return stable(value)
+
+    def full(value):
+        if value is changed:
+            raise d.CanonicalizationError("authority error at $/journal")
+        return direct(value)
+
+    monkeypatch.setattr(projection_module, "canonical_bytes", split)
+    monkeypatch.setattr(projection_module, "canonical_sha256", full)
+    with pytest.raises(d.CanonicalizationError, match="authority error"):
+        scope(changed)
+    assert not scope.__self__._encoded
+
+
+def test_scoped_projector_uses_the_public_failure_path(monkeypatch):
+    inputs = _inputs()
+    scope = CnASharePortfolioEconomicProjectionInputsV1.scoped_projector()
+    scope(inputs)
+
+    def deny(*args):
+        raise AssertionError("typed failure requested the success memo")
+
+    monkeypatch.setattr(scope.__self__, "digest", deny)
+    old_clock = _at(d.UtcInstant(inputs.as_of.instant.epoch_nanoseconds - 1))
+    old_state = replace(inputs.dividend_state, as_of=old_clock)
+    future = replace(inputs.as_of, phase=d.TimelinePhase(inputs.as_of.phase.rank + 1, "future"))
+    marks = tuple(replace(m, resolved_at_instant=future) for m in inputs.marks)
+    cases = (
+        (replace(inputs, marks=marks, dividend_state=replace(old_state, account_id="foreign")), Code.CONTEXT_MISMATCH),
+        (replace(inputs, marks=marks, dividend_state=old_state), Code.FUTURE_NATIVE_FACT),
+        (replace(inputs, dividend_state=old_state), Code.DIVIDEND_STATE_MISMATCH),
+        (_overcommitted(inputs), Code.NATIVE_CASH_OVERCOMMITTED),
+        (replace(inputs, marks=inputs.marks[:-1]), Code.NATIVE_SNAPSHOT_REJECTED),
+    )
+    for failed, code in cases:
+        expected = project(failed)
+        assert expected.failure.code is code
+        assert d.canonical_bytes(scope(failed)) == d.canonical_bytes(expected)

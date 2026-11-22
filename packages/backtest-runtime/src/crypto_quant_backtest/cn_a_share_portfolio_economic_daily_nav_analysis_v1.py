@@ -22,7 +22,7 @@ from .analysis_derivation import _calculate_simple_period_return
 from .artifact_envelope_reader import ArtifactEnvelopeReader
 from .artifact_envelope_publisher import ArtifactEnvelopePublisher
 from .integrity import ResultGrade
-from .publication_refs import BacktestCanonicalPublicationRef
+from .publication_refs import BacktestCanonicalPublicationRef, BacktestCanonicalPublicationRefV3
 
 _PROFILE_TYPE = "cn_a_share_portfolio_economic_daily_nav_metric_profile"
 _ANALYSIS_TYPE = "cn_a_share_portfolio_economic_daily_nav_analysis"
@@ -133,11 +133,14 @@ class CnASharePortfolioEconomicDailyNavAnalysisV1:
     maximum_drawdown: str = field(init=False)
 
     def __post_init__(self) -> None:
+        self._validate(BacktestCanonicalPublicationRef, "engine_execution_result")
+
+    def _validate(self, ref_type, result_artifact_type) -> None:
         _ref(self.metric_profile_ref, _PROFILE_TYPE, 1)
         if self.metric_profile_ref != _PROFILE_REF:
             raise ValueError("NAV metric profile is not the accepted exact version")
-        if type(self.source_publication_ref) is not BacktestCanonicalPublicationRef:
-            raise TypeError("NAV requires exact standard canonical publication ref")
+        if type(self.source_publication_ref) is not ref_type:
+            raise TypeError("NAV requires exact versioned canonical publication ref")
         for value, name, version in ((self.execution_input_ref, "backtest_execution_input_bundle", 9),):
             _ref(value, name, version)
         definition_version = (self.definition_ref.schema_version if type(self.definition_ref) is d.ArtifactRef
@@ -145,7 +148,7 @@ class CnASharePortfolioEconomicDailyNavAnalysisV1:
             and self.definition_ref.schema_version in (3, 4) else 2)
         _ref(self.definition_ref, "backtest_profile_portfolio_definition", definition_version)
         for value, name, version in ((self.action_set_ref, "cn_a_share_cash_dividend_action_set", 1),
-                (self.engine_result_ref, "engine_execution_result", 1)):
+                (self.engine_result_ref, result_artifact_type, 1)):
             _ref(value, name, version)
         _hash(self.source_execution_result_hash)
         _hash(self.starting_snapshot_hash)
@@ -178,6 +181,32 @@ class CnASharePortfolioEconomicDailyNavAnalysisV1:
                 "source_qualification_verified": False, "formal_publication_eligible": False,
                 "validation_eligible": False, "deployment_authorized": False,
                 "provider_availability_verified": False, "account_fees_verified": False, "trade_authorized": False}
+
+
+@dataclass(frozen=True, slots=True)
+class CnASharePortfolioEconomicDailyNavAnalysisV2(CnASharePortfolioEconomicDailyNavAnalysisV1):
+    source_publication_ref: BacktestCanonicalPublicationRefV3
+
+    def __post_init__(self) -> None:
+        self._validate(BacktestCanonicalPublicationRefV3, "backtest_economic_paged_result")
+
+    def to_canonical_dict(self) -> dict[str, object]:
+        raw = CnASharePortfolioEconomicDailyNavAnalysisV1.to_canonical_dict(self)
+        raw["schema_version"] = 2
+        raw["paged_result_ref"] = raw.pop("engine_result_ref")
+        return raw
+
+
+@dataclass(frozen=True, slots=True)
+class CnASharePortfolioEconomicDailyNavAnalysisRefV2:
+    artifact_ref: d.ArtifactRef
+
+    def __post_init__(self) -> None:
+        _ref(self.artifact_ref, _ANALYSIS_TYPE, 2)
+
+    def to_canonical_dict(self) -> dict[str, object]:
+        return {"type": "cn_a_share_portfolio_economic_daily_nav_analysis_ref", "schema_version": 2,
+                "artifact_ref": self.artifact_ref}
 
 
 @dataclass(frozen=True, slots=True)
@@ -257,9 +286,59 @@ def _read_nav_analysis(value: object) -> CnASharePortfolioEconomicDailyNavAnalys
 
 
 
+def _close_point(artifact):
+    from .execution_inputs import _read_money, _read_simulation_instant
+    fact = artifact["payload"]["payload"]
+    checkpoint = fact["checkpoint"]
+    projection = checkpoint["economic_projection"]
+    at = _read_simulation_instant(artifact["occurred_at"])
+    return CnASharePortfolioEconomicDailyNavPointV1(at.instant.to_datetime().astimezone(_ZONE).date().isoformat(),
+        at, _read_money(projection["snapshot"]["equity"]), d.canonical_sha256(projection["snapshot"]), checkpoint["journal_hash"],
+        d.canonical_sha256(fact["marks"]), d.canonical_sha256(artifact), d.canonical_sha256(projection),
+        d.canonical_sha256(checkpoint["dividend_state"]), _read_money(projection["gross_receivable"]), _read_money(projection["tax_liability"]))
+
+
+def _recover_economic_nav_referenced(*, reader, publication_ref, market_reader, target_profile=False):
+    from .evidence_repository import BacktestEvidenceRepository
+    from .execution_inputs import _read_money
+    from .profile_portfolio_execution import _ECONOMIC_BOUNDED_SIGNAL_SPEC_VERSION, _ECONOMIC_CHUNKED_SOURCE_SPEC_VERSION
+
+    points = []
+    terminal_summary = []
+
+    def observe_fact(row):
+        if row["role"] == "economic_daily_projection":
+            if len(points) >= 4096:
+                raise ValueError("referenced daily NAV exceeds the bounded close series")
+            points.append(_close_point(row))
+
+    def observe_header(header):
+        terminal_summary.append((_read_money(header["final_portfolio_snapshot"]["equity"]), len(header["fills"])))
+
+    plan, resolved, case, closed = BacktestEvidenceRepository(reader)._load_referenced_graph(publication_ref.artifact_ref,
+        economic_market_reader=market_reader, observe_fact=observe_fact, observe_header=observe_header)
+    if plan.outcome != "COMPLETED":
+        raise ValueError("referenced terminal evidence cannot be analyzed")
+    refs = dict(case.execution_case_plan.source_refs)
+    definition_ref = refs["definition"]
+    if target_profile and (definition_ref.schema_version, case.semantic_spec.spec_version) not in (
+            (2, _ECONOMIC_BOUNDED_SIGNAL_SPEC_VERSION), (4, _ECONOMIC_CHUNKED_SOURCE_SPEC_VERSION)):
+        raise ValueError("economic target analysis requires the bounded-signal economic profile")
+    (final_equity, trade_count), = terminal_summary
+    if not points or points[-1].equity != final_equity:
+        raise ValueError("referenced final close/economic final equity mismatch")
+    initial = case.execution_case_plan.initial_economic_projection
+    first = closed.first
+    nav = CnASharePortfolioEconomicDailyNavAnalysisV2(_PROFILE_REF, publication_ref, first.claim.input_ref,
+        definition_ref, refs["cash_dividend_action_set"], first.result.ref, first.result.execution_result_hash,
+        d.canonical_sha256(initial.snapshot), initial.projection_hash, initial.snapshot.equity,
+        tuple(points), trade_count, ResultGrade.DEVELOPMENT)
+    return nav, case, resolved
+
+
 def _recover_economic_nav_v1(*, reader, publication_ref, market_reader, target_profile=False):
     from .cn_a_share_portfolio_economic_result_v1 import _load_verified_economic_completed_v1
-    from .execution_inputs import _read_money, _read_simulation_instant
+    from .execution_inputs import _read_simulation_instant
     completed, case, actual_input_ref, engine_ref, engine, definition_ref, action_ref, resolved = _load_verified_economic_completed_v1(
         reader=reader, publication_ref=publication_ref, market_reader=market_reader)
     from .profile_portfolio_execution import (
@@ -271,18 +350,9 @@ def _recover_economic_nav_v1(*, reader, publication_ref, market_reader, target_p
     if (definition_ref != d.ArtifactRef.from_envelope(case.execution_case_plan.definition)
             or case.case_key != _economic_profile_prefix_v1(case.execution_case_plan.definition)):
         raise ValueError("economic NAV source definition/profile tuple mismatch")
-    points = []
     artifacts = sorted((a for a in engine.payload["financial_artifacts"] if a["role"] == "economic_daily_projection"),
         key=lambda a:_read_simulation_instant(a["occurred_at"]))
-    for artifact in artifacts:
-        fact = artifact["payload"]["payload"]
-        checkpoint = fact["checkpoint"]
-        projection = checkpoint["economic_projection"]
-        at = _read_simulation_instant(artifact["occurred_at"])
-        points.append(CnASharePortfolioEconomicDailyNavPointV1(at.instant.to_datetime().astimezone(_ZONE).date().isoformat(),
-            at, _read_money(projection["snapshot"]["equity"]), d.canonical_sha256(projection["snapshot"]), checkpoint["journal_hash"],
-            d.canonical_sha256(fact["marks"]), d.canonical_sha256(artifact), d.canonical_sha256(projection),
-            d.canonical_sha256(checkpoint["dividend_state"]), _read_money(projection["gross_receivable"]), _read_money(projection["tax_liability"])))
+    points = tuple(_close_point(artifact) for artifact in artifacts)
     initial = case.execution_case_plan.initial_economic_projection
     if not points or points[-1].equity != completed.execution_summary.final_portfolio_snapshot.equity:
         raise ValueError("economic NAV final close/economic final equity mismatch")
@@ -316,6 +386,16 @@ def _build_economic_target_analysis_v1(*, reader, publication_ref, market_reader
     return _recover_economic_target_analysis_v1(reader=reader, publication_ref=publication_ref, market_reader=market_reader)[0]
 
 
+def _recover_economic_target_analysis_referenced(*, reader, publication_ref, market_reader):
+    from .analysis import BacktestAnalysisV3
+    nav, case, resolved = _recover_economic_nav_referenced(reader=reader, publication_ref=publication_ref,
+        market_reader=market_reader, target_profile=True)
+    analysis = BacktestAnalysisV3(d.ArtifactRef.from_envelope(_target_metric_profile_envelope_v1()),
+        nav.source_publication_ref, nav.source_execution_result_hash, nav.simple_period_return,
+        nav.trade_count, nav.result_grade)
+    return analysis, nav, case, resolved
+
+
 class CnASharePortfolioEconomicDailyNavAnalysisRuntimeV1:
     def __init__(self, *, reader: ArtifactEnvelopeReader, publisher: ArtifactEnvelopePublisher, market_reader):
         from crypto_quant_market_data import MarketBundleReader
@@ -338,32 +418,44 @@ class CnASharePortfolioEconomicDailyNavAnalysisRuntimeV1:
         _verify_published(self._reader, ref, envelope)
         return ref
 
-    def derive_target_analysis(self, *, publication_ref: BacktestCanonicalPublicationRef, metric_profile_ref: d.ArtifactRef):
-        from .analysis import AnalysisArtifactRef
+    def derive_target_analysis(self, *, publication_ref: BacktestCanonicalPublicationRef | BacktestCanonicalPublicationRefV3,
+                               metric_profile_ref: d.ArtifactRef):
+        from .analysis import AnalysisArtifactRef, AnalysisArtifactRefV3
         from .cash_development_provider import _publish, _verify_published
-        if type(publication_ref) is not BacktestCanonicalPublicationRef:
+        if type(publication_ref) not in (BacktestCanonicalPublicationRef, BacktestCanonicalPublicationRefV3):
             raise TypeError("economic target analysis requires a completed canonical publication")
         profile = _target_metric_profile_envelope_v1()
         if type(metric_profile_ref) is not d.ArtifactRef or metric_profile_ref != d.ArtifactRef.from_envelope(profile):
             raise ValueError("economic target metric profile identity mismatch")
         _verify_published(self._reader, metric_profile_ref, profile)
-        value = _build_economic_target_analysis_v1(reader=self._reader, publication_ref=publication_ref,
-            market_reader=self._market_reader)
-        envelope = d.ArtifactEnvelope.create("backtest_analysis", 1, value)
+        referenced = type(publication_ref) is BacktestCanonicalPublicationRefV3
+        if referenced:
+            value = _recover_economic_target_analysis_referenced(reader=self._reader, publication_ref=publication_ref,
+                market_reader=self._market_reader)[0]
+        else:
+            value = _build_economic_target_analysis_v1(reader=self._reader, publication_ref=publication_ref,
+                market_reader=self._market_reader)
+        envelope = d.ArtifactEnvelope.create("backtest_analysis", 3 if referenced else 1, value)
         ref = _publish(self._publisher, envelope)
         _verify_published(self._reader, ref, envelope)
-        return AnalysisArtifactRef(ref)
+        return AnalysisArtifactRefV3(ref) if referenced else AnalysisArtifactRef(ref)
 
-    def derive(self, *, publication_ref: BacktestCanonicalPublicationRef, metric_profile_ref: d.ArtifactRef):
+    def derive(self, *, publication_ref: BacktestCanonicalPublicationRef | BacktestCanonicalPublicationRefV3,
+               metric_profile_ref: d.ArtifactRef):
         from .cash_development_provider import _publish, _verify_published
-        if type(publication_ref) is not BacktestCanonicalPublicationRef:
+        if type(publication_ref) not in (BacktestCanonicalPublicationRef, BacktestCanonicalPublicationRefV3):
             raise TypeError("economic NAV requires a completed canonical publication")
         _ref(metric_profile_ref, _PROFILE_TYPE, 1)
         if metric_profile_ref != _PROFILE_REF:
             raise ValueError("economic NAV profile identity mismatch")
         _read_nav_profile(_read_envelope(self._reader, metric_profile_ref).payload)
-        value = _build_economic_nav_v1(reader=self._reader, publication_ref=publication_ref, market_reader=self._market_reader)
-        envelope = d.ArtifactEnvelope.create(_ANALYSIS_TYPE, 1, value)
+        referenced = type(publication_ref) is BacktestCanonicalPublicationRefV3
+        if referenced:
+            value = _recover_economic_nav_referenced(reader=self._reader, publication_ref=publication_ref,
+                market_reader=self._market_reader)[0]
+        else:
+            value = _build_economic_nav_v1(reader=self._reader, publication_ref=publication_ref, market_reader=self._market_reader)
+        envelope = d.ArtifactEnvelope.create(_ANALYSIS_TYPE, 2 if referenced else 1, value)
         ref = _publish(self._publisher, envelope)
         _verify_published(self._reader, ref, envelope)
-        return CnASharePortfolioEconomicDailyNavAnalysisRefV1(ref)
+        return CnASharePortfolioEconomicDailyNavAnalysisRefV2(ref) if referenced else CnASharePortfolioEconomicDailyNavAnalysisRefV1(ref)

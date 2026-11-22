@@ -25,6 +25,7 @@ from crypto_quant_market_data import MarketBundleRef
 from .analysis import (
     AnalysisArtifactRef,
     AnalysisArtifactRefV2,
+    AnalysisArtifactRefV3,
     BacktestAnalysis,
     BacktestAnalysisV2,
     BacktestMetricProfile,
@@ -49,6 +50,7 @@ from .artifact_envelope_reader import ArtifactEnvelopeReader
 from .publication_refs import (
     BacktestCanonicalPublicationRef,
     BacktestCanonicalPublicationRefV2,
+    BacktestCanonicalPublicationRefV3,
 )
 from .resolution import ModelRequestBinding, ResolvedBacktestRequest
 from .runner import AttemptIdentity, InputOrigin
@@ -56,6 +58,7 @@ from .verified_publications import (
     TerminalStatus,
     VerifiedCompletedPublicationV2,
     VerifiedCompletedPublicationV3,
+    VerifiedCompletedPublicationV4,
     VerifiedExecutionSummary,
     VerifiedTerminalPublication,
     _VerifiedArtifactIdentity,
@@ -117,6 +120,14 @@ _EVIDENCE_BRANCH_LAYOUT = {
         1,
     ),
 }
+
+
+def _referenced_source_publication(raw):
+    from .target_repository import _artifact_ref
+    nominal = BacktestCanonicalPublicationRefV3(_artifact_ref(raw["artifact_ref"]))
+    if canonical_bytes(raw) != canonical_bytes(nominal):
+        raise ValueError("nominal referenced publication identity mismatch")
+    return nominal
 
 
 class BacktestEvidenceFailureCode(str, Enum):
@@ -2049,6 +2060,43 @@ class BacktestEvidenceRepository:
                 market_reader=economic_market_reader, structural=verified)[0]
         return verified
 
+    def _load_referenced_graph(self, ref: ArtifactRef, *, economic_market_reader, observe_fact=None, observe_header=None):
+        from ._referenced_publication import _read_reference_metadata, _read_referenced_graph
+
+        try:
+            root = _read_reference_metadata(self._reader, ref, "canonical_publication_manifest", 3)
+        except ArtifactNotFoundError as error:
+            raise BacktestEvidenceError(BacktestEvidenceFailureCode.PORT_REF_NOT_FOUND, "referenced root not found") from error
+        except ArtifactIntegrityError as error:
+            raise BacktestEvidenceError(BacktestEvidenceFailureCode.PORT_EVIDENCE_TAMPERED, "referenced root source mismatch") from error
+        except ArtifactRetentionUnavailableError as error:
+            raise BacktestEvidenceError(BacktestEvidenceFailureCode.PORT_RETENTION_UNAVAILABLE, "referenced root unavailable") from error
+        return _read_referenced_graph(self._reader, root, market_reader=economic_market_reader,
+                                      observe_fact=observe_fact, observe_header=observe_header)
+
+    def load_completed_referenced(
+        self, ref: BacktestCanonicalPublicationRefV3, *, economic_market_reader,
+    ) -> VerifiedCompletedPublicationV4:
+        if type(ref) is not BacktestCanonicalPublicationRefV3:
+            raise BacktestEvidenceError(BacktestEvidenceFailureCode.PORT_REF_TYPE_MISMATCH,
+                                        "exact BacktestCanonicalPublicationRefV3 required")
+        try:
+            plan, resolved, _, closed = self._load_referenced_graph(ref.artifact_ref, economic_market_reader=economic_market_reader)
+            if plan.outcome != "COMPLETED":
+                raise BacktestEvidenceError(BacktestEvidenceFailureCode.PORT_TERMINAL_NOT_ANALYZABLE,
+                                            "referenced evaluation has no completed result")
+            first = closed.first
+            integrity = dict(plan.children)["integrity_report"]
+            return VerifiedCompletedPublicationV4(ref, resolved.semantic_run_id, first.claim.attempt,
+                first.result.execution_result_hash, first.result.ref, first.claim.request_ref,
+                first.claim.input_ref, ArtifactRef.from_envelope(integrity))
+        except (ArtifactNotFoundError, ArtifactRetentionUnavailableError) as error:
+            raise BacktestEvidenceError(BacktestEvidenceFailureCode.PORT_RETENTION_UNAVAILABLE, "referenced child unavailable") from error
+        except ArtifactIntegrityError as error:
+            raise BacktestEvidenceError(BacktestEvidenceFailureCode.PORT_EVIDENCE_TAMPERED, "referenced evidence binding mismatch") from error
+        except (ArtifactDecodeError, KeyError, TypeError, ValueError) as error:
+            raise BacktestEvidenceError(BacktestEvidenceFailureCode.PORT_MANIFEST_INVALID, "invalid referenced completion") from error
+
     def load_completed_v3(
         self, ref: BacktestCanonicalPublicationRefV2
     ) -> VerifiedCompletedPublicationV3:
@@ -2577,6 +2625,7 @@ class BacktestEvidenceRepository:
             ("evidence_manifest", 1),
             ("canonical_publication_manifest", 1),
             ("canonical_publication_manifest", 2),
+            ("canonical_publication_manifest", 3),
         }
         if (ref.artifact_type, ref.schema_version) not in allowed:
             raise BacktestEvidenceError(
@@ -2592,7 +2641,28 @@ class BacktestEvidenceRepository:
                 BacktestEvidenceFailureCode.PORT_MANIFEST_INVALID, str(error)
             ) from error
 
+    def _load_terminal_referenced(self, ref, *, economic_market_reader, target_binding=None):
+        try:
+            plan, resolved, case, closed = self._load_referenced_graph(ref, economic_market_reader=economic_market_reader)
+            if plan.outcome == "COMPLETED":
+                raise ValueError("referenced completion is not a terminal evaluation")
+            if target_binding is not None:
+                request_ref, request, target_ref = target_binding
+                if (closed.first.claim.request_ref != request_ref.artifact_ref
+                        or canonical_bytes(resolved.request) != canonical_bytes(request)
+                        or dict(case.execution_case_plan.source_refs)["target_stream"] != target_ref.artifact_ref):
+                    raise ValueError("referenced terminal does not bind original economic request and Target")
+            return VerifiedTerminalPublication(TerminalStatus(plan.outcome), ref)
+        except (ArtifactNotFoundError, ArtifactRetentionUnavailableError) as error:
+            raise BacktestEvidenceError(BacktestEvidenceFailureCode.PORT_RETENTION_UNAVAILABLE, "referenced child unavailable") from error
+        except ArtifactIntegrityError as error:
+            raise BacktestEvidenceError(BacktestEvidenceFailureCode.PORT_EVIDENCE_TAMPERED, "referenced evidence binding mismatch") from error
+        except (ArtifactDecodeError, KeyError, TypeError, ValueError) as error:
+            raise BacktestEvidenceError(BacktestEvidenceFailureCode.PORT_MANIFEST_INVALID, "invalid referenced evaluation") from error
+
     def _load_terminal(self, ref: ArtifactRef, *, economic_market_reader=None) -> VerifiedTerminalPublication:
+        if (ref.artifact_type, ref.schema_version) == ("canonical_publication_manifest", 3):
+            return self._load_terminal_referenced(ref, economic_market_reader=economic_market_reader)
         if ref.artifact_type == "backtest_resolution_failure":
             loaded = self._read_expected(
                 ref, "backtest_resolution_failure", 1, root=True
@@ -2819,8 +2889,17 @@ class BacktestEvidenceRepository:
     def load_cn_a_share_portfolio_economic_daily_nav(self, ref, *, market_reader):
         from .cn_a_share_portfolio_economic_daily_nav_analysis_v1 import (
             CnASharePortfolioEconomicDailyNavAnalysisRefV1, _read_nav_analysis, _read_envelope,
-            _build_economic_nav_v1, _ANALYSIS_TYPE,
+            _build_economic_nav_v1, _ANALYSIS_TYPE, CnASharePortfolioEconomicDailyNavAnalysisRefV2,
         )
+        if type(ref) is CnASharePortfolioEconomicDailyNavAnalysisRefV2:
+            from .cn_a_share_portfolio_economic_daily_nav_analysis_v1 import _recover_economic_nav_referenced
+            envelope = _read_envelope(self._reader, ref.artifact_ref)
+            nominal = _referenced_source_publication(envelope.payload["source_publication_ref"])
+            expected = _recover_economic_nav_referenced(reader=self._reader, publication_ref=nominal,
+                market_reader=market_reader)[0]
+            if canonical_bytes(envelope.payload) != canonical_bytes(expected):
+                raise ValueError("referenced NAV differs from the verified close series")
+            return expected
         if type(ref) is not CnASharePortfolioEconomicDailyNavAnalysisRefV1:
             raise TypeError("economic NAV requires its exact nominal ref")
         envelope = _read_envelope(self._reader, ref.artifact_ref)
@@ -2899,6 +2978,9 @@ class BacktestEvidenceRepository:
         if type(target_ref) is not BacktestTargetStreamRef:
             raise TypeError("exact BacktestTargetStreamRef required")
         request = self.load_economic_target_request(request_ref)
+        if type(ref) is ArtifactRef and (ref.artifact_type, ref.schema_version) == ("canonical_publication_manifest", 3):
+            return self._load_terminal_referenced(ref, economic_market_reader=economic_market_reader,
+                                                  target_binding=(request_ref, request, target_ref))
         terminal = self.load_terminal(ref, economic_market_reader=economic_market_reader)
         if ref.artifact_type == "evidence_manifest":
             evidence = self._read_expected(ref, "evidence_manifest", 1, root=True).artifact
@@ -2966,22 +3048,7 @@ class BacktestEvidenceRepository:
             verified = VerifiedBacktestAnalysis(ref, analysis)
             if not economic_binding:
                 return verified
-            from .cn_a_share_portfolio_economic_case_v1 import _read_exact_economic_source_v1
-            from .request_registration import BacktestRequestRef
-            from .target_repository import BacktestTargetStreamRef
-            request = resolved.request
-            envelope = ArtifactEnvelope.create("backtest_request", 1, request)
-            request_ref = ArtifactRef.from_envelope(envelope)
-            if _read_exact_economic_source_v1(self._reader, request_ref) != envelope:
-                raise ValueError("economic target analysis original request mismatch")
-            target = BacktestTargetStreamRef.from_artifact_ref(dict(case.execution_case_plan.source_refs)["target_stream"])
-            return {"analysis": verified, "request_ref": BacktestRequestRef.from_artifact_ref(request_ref),
-                "target_ref": target, "definition_ref": nav.definition_ref, "action_set_ref": nav.action_set_ref,
-                "semantic_run_id": resolved.semantic_run_id, "target_stream_digest": case.target_stream.target_stream_digest,
-                "consumer_id": request.experiment_id, "market_bundle_ref": request.market_bundle_ref,
-                "window": request.timeline_window, "seed": request.master_random_seed,
-                "spec_version": case.semantic_spec.spec_version, "build_manifest_hash": request.build_artifact_manifest_hash,
-                "initial_equity": nav.initial_equity, "close_times": tuple(point.occurred_at for point in nav.points)}
+            return self._economic_target_binding(analysis=verified, nav=nav, case=case, resolved=resolved)
         if economic_binding:
             raise BacktestEvidenceError(BacktestEvidenceFailureCode.PORT_ANALYSIS_LINK_MISMATCH,
                 "ordinary analysis is not an economic target binding")
@@ -3020,6 +3087,72 @@ class BacktestEvidenceRepository:
                 "analysis source-derived metric disagreement",
             )
         return VerifiedBacktestAnalysis(ref, analysis)
+
+    def _economic_target_binding(self, *, analysis, nav, case, resolved):
+        from .cn_a_share_portfolio_economic_case_v1 import _read_exact_economic_source_v1
+        from .request_registration import BacktestRequestRef
+        from .target_repository import BacktestTargetStreamRef
+
+        request = resolved.request
+        envelope = ArtifactEnvelope.create("backtest_request", 1, request)
+        request_ref = ArtifactRef.from_envelope(envelope)
+        if _read_exact_economic_source_v1(self._reader, request_ref) != envelope:
+            raise ValueError("economic target analysis original request mismatch")
+        target = BacktestTargetStreamRef.from_artifact_ref(dict(case.execution_case_plan.source_refs)["target_stream"])
+        return {"analysis": analysis, "request_ref": BacktestRequestRef.from_artifact_ref(request_ref),
+            "target_ref": target, "definition_ref": nav.definition_ref, "action_set_ref": nav.action_set_ref,
+            "semantic_run_id": resolved.semantic_run_id, "target_stream_digest": case.target_stream.target_stream_digest,
+            "consumer_id": request.experiment_id, "market_bundle_ref": request.market_bundle_ref,
+            "window": request.timeline_window, "seed": request.master_random_seed,
+            "spec_version": case.semantic_spec.spec_version, "build_manifest_hash": request.build_artifact_manifest_hash,
+            "initial_equity": nav.initial_equity, "close_times": tuple(point.occurred_at for point in nav.points)}
+
+    def load_analysis_referenced(self, ref: AnalysisArtifactRefV3, *, economic_market_reader):
+        return self._load_analysis_referenced(ref, economic_market_reader=economic_market_reader, economic_binding=False)
+
+    def load_economic_target_analysis_binding_referenced(self, ref: AnalysisArtifactRefV3, *, economic_market_reader):
+        """Read the strict V3 analysis and its original economic execution coordinates."""
+        return self._load_analysis_referenced(ref, economic_market_reader=economic_market_reader, economic_binding=True)
+
+    def _load_analysis_referenced(self, ref: AnalysisArtifactRefV3, *, economic_market_reader, economic_binding):
+        from .target_repository import _artifact_ref
+        from ._referenced_publication import _read_reference_metadata
+        from .cn_a_share_portfolio_economic_daily_nav_analysis_v1 import _recover_economic_target_analysis_referenced
+
+        if type(ref) is not AnalysisArtifactRefV3:
+            raise BacktestEvidenceError(BacktestEvidenceFailureCode.PORT_REF_TYPE_MISMATCH,
+                                        "exact AnalysisArtifactRefV3 required")
+        try:
+            try:
+                read = _read_reference_metadata(self._reader, ref.artifact_ref, "backtest_analysis", 3)
+            except ArtifactNotFoundError as error:
+                raise BacktestEvidenceError(BacktestEvidenceFailureCode.PORT_REF_NOT_FOUND, "referenced analysis not found") from error
+            raw = read.envelope.payload
+            nominal = _referenced_source_publication(raw["source_publication_ref"])
+            self._read_expected(_artifact_ref(raw["metric_profile_ref"]), "backtest_metric_profile", 1, root=False)
+            analysis, nav, case, resolved = _recover_economic_target_analysis_referenced(reader=self._reader, publication_ref=nominal,
+                market_reader=economic_market_reader)
+            if canonical_bytes(analysis) != canonical_bytes(raw):
+                raise BacktestEvidenceError(BacktestEvidenceFailureCode.PORT_ANALYSIS_LINK_MISMATCH,
+                                            "referenced analysis disagrees with verified computation")
+            if not economic_binding:
+                return analysis
+            projection = {
+                "analysis_ref": ref,
+                "metric_profile_ref": analysis.metric_profile_ref,
+                "source_publication_ref": analysis.source_publication_ref,
+                "source_execution_result_hash": analysis.source_execution_result_hash,
+                "simple_period_return": analysis.simple_period_return,
+                "trade_count": analysis.trade_count,
+                "result_grade": analysis.result_grade.value,
+            }
+            return self._economic_target_binding(analysis=projection, nav=nav, case=case, resolved=resolved)
+        except (ArtifactNotFoundError, ArtifactRetentionUnavailableError) as error:
+            raise BacktestEvidenceError(BacktestEvidenceFailureCode.PORT_RETENTION_UNAVAILABLE, "referenced analysis child unavailable") from error
+        except ArtifactIntegrityError as error:
+            raise BacktestEvidenceError(BacktestEvidenceFailureCode.PORT_EVIDENCE_TAMPERED, "referenced analysis binding mismatch") from error
+        except (ArtifactDecodeError, KeyError, TypeError, ValueError) as error:
+            raise BacktestEvidenceError(BacktestEvidenceFailureCode.PORT_MANIFEST_INVALID, "invalid referenced analysis") from error
 
     def load_analysis_v2(
         self, ref: AnalysisArtifactRefV2

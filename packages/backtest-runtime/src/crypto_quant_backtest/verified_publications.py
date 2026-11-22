@@ -40,6 +40,7 @@ from .integrity import (
 from .publication_refs import (
     BacktestCanonicalPublicationRef,
     BacktestCanonicalPublicationRefV2,
+    BacktestCanonicalPublicationRefV3,
 )
 from .resolution import ResolvedBacktestRequest
 from .runner import AttemptIdentity, ReadyToFinalizeAttempt
@@ -49,12 +50,29 @@ __all__ = [
     "VerifiedCompletedPublication",
     "VerifiedCompletedPublicationV2",
     "VerifiedCompletedPublicationV3",
+    "VerifiedCompletedPublicationV4",
     "VerifiedExecutionSummary",
     "VerifiedTerminalPublication",
 ]
 
 _RUN_PATTERN = re.compile(r"run_[0-9a-f]{64}")
 _HASH_PATTERN = re.compile(r"sha256:[0-9a-f]{64}")
+
+
+@dataclass(frozen=True, slots=True)
+class VerifiedCompletedPublicationV4:
+    """Cold-verified DEVELOPMENT completion, without an embedded legacy EngineResult."""
+
+    publication_ref: BacktestCanonicalPublicationRefV3
+    semantic_run_id: str
+    canonical_attempt: AttemptIdentity
+    execution_result_hash: str
+    result_ref: ArtifactRef
+    request_ref: ArtifactRef
+    execution_input_ref: ArtifactRef
+    integrity_ref: ArtifactRef
+    result_grade: ResultGrade = ResultGrade.DEVELOPMENT
+    deployment_authorized: bool = False
 
 
 class TerminalStatus(str, Enum):

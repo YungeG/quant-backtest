@@ -3,7 +3,10 @@ from __future__ import annotations
 
 from collections.abc import Mapping
 from dataclasses import replace
+from hashlib import sha256
+from itertools import chain
 import json
+from types import MappingProxyType
 
 import crypto_quant_domain as d
 import crypto_quant_trading as t
@@ -14,8 +17,8 @@ from .cn_a_share_portfolio_economic_case_v1 import (
     _bind_economic_portfolio_sources_v1, _clock_v1 as _at, _economic_events_v1, _economic_opening_proof_version_v1,
     _verify_bounded_signal_cancellation_v1,
 )
-from .cn_a_share_portfolio_economic_native_state_v1 import (_EconomicOpenSourcesV1, _economic_signal_target_v1,
-    _advance_economic_settlement_v1, _EconomicFailureContextV1)
+from .cn_a_share_portfolio_economic_native_state_v1 import (_EconomicSourceDigestMemoV1, _EconomicOpenSourcesV1, _economic_signal_target_v1,
+    _advance_economic_settlement_v1, _EconomicFailureContextV1, _economic_book_prefix_v1)
 from .cn_a_share_portfolio_economic_opening_v1 import (_EconomicOpeningOutcomeV1, _EconomicFinancialStepV1,
     _economic_evaluation_v1, _verify_economic_opening_inputs_v1, _economic_venue_funding_v1, _cent)
 from .cn_a_share_portfolio_economic_engine_v1 import _EconomicAdmissionV1, _used_identity_keys_v1, _economic_native_finance_identity_v1
@@ -34,8 +37,9 @@ from .cn_a_share_portfolio_settlement_development_v1 import (
 )
 from .engine import EngineExecutionResult, EngineFailure, EngineFailureCode, ExecutionTrace, ExecutionTraceEntry, EngineStage
 from .execution import BarOpenObservation, BarOpenKind, NoEligibleBarAction
+from ._economic_result_encoding import decode_frozen_economic_paged_fact
 from .financial_dispatch import FinancialDispatchArtifact
-from .profile_portfolio_execution import _ResolvedProfilePortfolioCaseV2
+from .profile_portfolio_execution import _ECONOMIC_CHUNKED_SOURCE_SPEC_VERSION, _ResolvedProfilePortfolioCaseV2
 from .run_end import RunEndCoordinator, RunEndEvidence, MarkToMarketCloseoutPolicy
 from .timeline import TimelineCursorV2
 from .target_repository import _artifact_ref
@@ -77,14 +81,27 @@ def _envelope(value):
 
 
 def _artifact(value):
+    result, _ = _artifact_and_bytes(value)
+    return result
+
+
+def _artifact_and_bytes(value, *, paged_row=False):
     raw = _map(value, {"type", "schema_version", "role", "source_event_id", "occurred_at", "component_key",
         "component_version", "component_digest", "input_hash", "result_hash", "payload"})
     if raw["type"] != "financial_dispatch_artifact" or type(raw["schema_version"]) is not int or raw["schema_version"] != 1:
         raise d.ArtifactIntegrityError("economic financial artifact version mismatch")
     result = FinancialDispatchArtifact(raw["role"], raw["source_event_id"], x._read_simulation_instant(raw["occurred_at"]),
         raw["component_key"], raw["component_version"], raw["component_digest"], raw["input_hash"], raw["result_hash"], _envelope(raw["payload"]))
-    _equal(result, raw, "financial artifact canonical reconstruction")
-    return result
+    if paged_row and type(raw) is MappingProxyType:
+        # Transport has already frozen the canonical row. The envelope
+        # constructor preserves the payload's canonical representation and
+        # verifies its hash. Only the clock is reconstructed from wire fields.
+        _equal(result.occurred_at, raw["occurred_at"], "financial artifact canonical reconstruction")
+        return result, d.canonical_bytes(raw)
+    source = d.canonical_bytes(result)
+    if source != d.canonical_bytes(raw):
+        raise d.ArtifactIntegrityError("economic evidence mismatch: financial artifact canonical reconstruction")
+    return result, source
 
 
 def _trace(value):
@@ -200,14 +217,15 @@ def _verify_recorded_terminal_v1(*,terminal,case,stream,opening,signal_index,ope
     return expected
 
 
-def _expected_pending_admissions_v1(*, funded, candidates, target):
+def _expected_pending_admissions_v1(*, funded, candidates, target, evaluations=None):
     """Derive the complete immutable native plan from source pending intentions, never witness rows."""
     inputs=funded.inputs
     accepted,blocked,proposals=[],{},[]
     for order,observation,terms in candidates:
         if any(s.order.order_id==order.order_id for s in funded.order_streams):
             continue
-        quote,market,issues,fee,reason=_economic_evaluation_v1(order,observation,terms)
+        quote, market, issues, fee, reason = (evaluations[order.order_id] if evaluations is not None
+            else _economic_evaluation_v1(order, observation, terms))
         if reason is None:
             proposal=CnASharePortfolioOrderProposalV1(order.intent,
                 market.approval.calculated_notional if order.intent.side is d.OrderSide.BUY else _cent(0),
@@ -251,7 +269,8 @@ def _expected_pending_admissions_v1(*, funded, candidates, target):
 
 
 def _verify_economic_facts_v1(*, case, reader, journal, final_streams, final_schedules, artifacts, trace,
-    admission_rows, final_pending, final_checkpoint=None, result=None, bound=None):
+    admission_rows, final_pending, final_checkpoint=None, result=None, bound=None, presorted=False,
+    admission_count=None, projector=None):
     if bound is None:
         bound = _bind_economic_portfolio_sources_v1(case, reader)
     inputs, openings, mapping = bound.inputs, bound.openings, bound.journal_entry_ids
@@ -273,23 +292,36 @@ def _verify_economic_facts_v1(*, case, reader, journal, final_streams, final_sch
         opening_source_keys = {key + "_hash" for key in opening_source_keys}
     allowed = {"economic_signal", "economic_opening_batch", "economic_dividend_transition", "economic_daily_projection",
         "economic_pending_no_real_open", "economic_working_no_real_open", "economic_attempt_witness"}
-    for artifact in artifacts:
+    def check_role(artifact):
         version = (opening_proof_version if artifact.role == "economic_opening_batch" else
             2 if artifact.role == "economic_attempt_witness" or (v2 and artifact.role == "economic_signal") else 1)
         if (artifact.role not in allowed or artifact.component_key != prefix + ".native-finance" or artifact.component_version != 1
                 or artifact.component_digest != component or artifact.input_hash != inputs._definition_source_hash
                 or artifact.payload.artifact_type != "cn_a_share_portfolio_" + artifact.role
-                or artifact.payload.schema_version != version
+                or artifact.payload.schema_version != version + int(presorted)
                 or (v2 and artifact.occurred_at < inputs.initial_marks.at)):
             raise d.ArtifactIntegrityError("economic role/component/source closure mismatch")
-    ordered = sorted(artifacts, key=lambda row: (row.occurred_at, row.source_event_id, row.role))
+    if presorted:
+        ordered = artifacts  # The page stream checks strict cross-page order and trace cover.
+    else:
+        for artifact in artifacts:
+            check_role(artifact)
+        ordered = sorted(artifacts, key=lambda row: (row.occurred_at, row.source_event_id, row.role))
     expected_no_real = {}
     settlement_memo = (_NativeSettlementResolutionMemo(inputs.calendars)
         if inputs.definition().schema_version == 4 else None)
+    source_digest_memo = _EconomicSourceDigestMemoV1() if projector is not None else None
+    previous_availability = None
     def make(at, j, b, ss, sch, st):
+        nonlocal previous_availability
         b = _advance_economic_settlement_v1(case=case, inputs=inputs, journal=j, book=b, consumer=at)
-        return _EconomicOpenSourcesV1(inputs, j, b, tuple(sorted(ss.values(), key=lambda s: s.order.order_id.value)),
-            tuple(sorted(sch.values(), key=lambda s: s.order_id.value)), initial.settlement_rules, st, mapping, at, settlement_memo=settlement_memo)
+        source = _EconomicOpenSourcesV1(inputs, j, b, tuple(sorted(ss.values(), key=lambda s: s.order.order_id.value)),
+            tuple(sorted(sch.values(), key=lambda s: s.order_id.value)), initial.settlement_rules, st, mapping, at,
+            settlement_memo=settlement_memo, projector=projector, previous_availability=previous_availability,
+            _source_digest_memo=source_digest_memo)
+        if projector is not None:
+            previous_availability = source
+        return source
     def commit(source):
         nonlocal current_journal, book, state, streams, schedules
         current_journal, book, state = source.journal, source.settlement_book, source.dividend_state
@@ -297,33 +329,82 @@ def _verify_economic_facts_v1(*, case, reader, journal, final_streams, final_sch
         schedules = {s.order_id: s for s in source.reservation_schedules}
     def compare_source(source, raw):
         _map(raw, _SOURCE_FIELDS)
-        _equal(source, raw, "full source checkpoint")
+        expected = source.to_paged_source() if presorted else source
+        _equal(expected, raw, "full source checkpoint")
     def compare_opening_source(source, fact, key):
         if opening_proof_version == 2:
-            if d.canonical_sha256(source) != fact[key + "_hash"]:
+            if source.source_hash != fact[key + "_hash"]:
                 raise d.ArtifactIntegrityError("economic opening source digest mismatch: " + key)
         else:
             compare_source(source, fact[key])
+    last_prefix = None
     def take(count):
+        nonlocal last_prefix
         if type(count) is not int or not 0 <= count <= journal.entry_count:
             raise d.ArtifactIntegrityError("economic journal prefix count invalid")
-        return t.AccountingJournal(journal.entries[:count])
+        if not presorted:
+            return t.AccountingJournal(journal.entries[:count])
+        # The final Journal is immutable and belongs to this strict replay only.
+        if last_prefix is None or last_prefix.entry_count != count:
+            last_prefix = t.AccountingJournal(journal.entries[:count])
+        return last_prefix
     def event_prefix(stream, records):
         return t.OrderEventStream(stream.order, records)
+    def admission_values(raw):
+        row = _map(raw, {"order_id", "signal_index", "plan", "sources", "fee", "quote"})
+        return x._read_domain_id(row["order_id"]), row
     admission_raw = {}
-    for row in admission_rows:
-        row = _map(row, {"order_id", "signal_index", "plan", "sources", "fee", "quote"})
-        identity = x._read_domain_id(row["order_id"])
-        if identity in admission_raw:
-            raise d.ArtifactIntegrityError("economic admission identity duplicated")
-        admission_raw[identity] = row
+    previous_admission = None
+    paged_count = 0
+    if presorted:
+        if final_checkpoint is not None or type(admission_count) is not int or admission_count < 0:
+            raise d.ArtifactIntegrityError("economic paged admission count/terminal mismatch")
+        def ordered_admissions():
+            nonlocal previous_admission, paged_count
+            for value in admission_rows:
+                identity, row = admission_values(value)
+                at = x._read_simulation_instant(row["sources"]["at"])
+                key = (at.instant, identity.value)
+                if previous_admission is not None and previous_admission >= key:
+                    raise d.ArtifactIntegrityError("economic paged admission order or duplicate coordinate")
+                previous_admission = key
+                paged_count += 1
+                if paged_count > admission_count:
+                    raise d.ArtifactIntegrityError("economic paged admission count exceeds witness")
+                yield at.instant, identity, row
+        remaining_admissions = iter(ordered_admissions())
+        upcoming = next(remaining_admissions, None)
+        def admissions_at(when):
+            nonlocal upcoming
+            rows = []
+            while upcoming is not None and upcoming[0] <= when:
+                at, identity, row = upcoming
+                if at != when or identity in admissions:
+                    raise d.ArtifactIntegrityError("economic paged admission has wrong opening or duplicated identity")
+                rows.append(row)
+                upcoming = next(remaining_admissions, None)
+            return rows
+    else:
+        for value in admission_rows:
+            identity, row = admission_values(value)
+            if identity in admission_raw:
+                raise d.ArtifactIntegrityError("economic admission identity duplicated")
+            admission_raw[identity] = row
+        def admissions_at(when):
+            return [row for key, row in admission_raw.items() if key not in admissions
+                    and x._read_simulation_instant(row["sources"]["at"]).instant == when]
     signal_count = opening_count = daily_count = dividend_count = 0
     seen_ca, seen_open, seen_daily, seen_no_real = set(), set(), set(), set()
     seen_sources, seen_activations = set(), set()
     for artifact in ordered:
-        role, fact = artifact.role, _raw(artifact.payload.payload)
+        if presorted:
+            check_role(artifact)
+        role = artifact.role
         if role == "economic_attempt_witness":
+            if not presorted:
+                _raw(artifact.payload.payload)  # Keep legacy validation order.
             continue
+        fact = _map(artifact.payload.payload) if presorted else _raw(artifact.payload.payload)
         if role == "economic_signal":
             fields = {"signal", "projection", "cancel_plan", "cancel_sources", "coordinator_plan", "coordinator_sources"}
             _map(fact, fields | {"activation"} if v2 else fields)
@@ -434,18 +515,23 @@ def _verify_economic_facts_v1(*, case, reader, journal, final_streams, final_sch
                     term = bound.terms_by_side[event.event_id, stream.order.intent.side]
                     candidates.append((stream.order, BarOpenObservation.from_event(event), term))
             candidates.sort(key=lambda row: (row[0].intent.side is d.OrderSide.BUY, str(row[0].intent.instrument_id), row[0].order_id.value))
+            candidates = tuple(candidates)
+            evaluations = {} if projector is not None else None
             funding = tuple(x._read_economic_journal_entry_v1(v) for v in _seq(fact["funding"]))
-            _equal(_economic_venue_funding_v1(sources=prior, candidates=tuple(candidates)), funding, "recorded native funding purpose/amount/tax bounds")
+            _equal(_economic_venue_funding_v1(sources=prior, candidates=candidates,
+                use_checkpoint_cash=projector is not None, evaluations=evaluations),
+                funding, "recorded native funding purpose/amount/tax bounds")
             funded_journal = take(prior.journal.entry_count + len(funding))
             _equal(funded_journal.entries[prior.journal.entry_count:], funding, "whole native funding suffix")
             funded = make(_at(when, 55), funded_journal, prior.settlement_book, streams, schedules, prior.dividend_state)
             compare_opening_source(funded, fact, "funded")
             changed, changed_schedules = dict(streams), dict(schedules)
-            new_rows = [row for key, row in admission_raw.items() if key not in admissions
-                and x._read_simulation_instant(row["sources"]["at"]).instant == when]
+            new_rows = admissions_at(when)
             new_rows.sort(key=lambda row: (by_order[x._read_domain_id(row["order_id"])].order.intent.side is d.OrderSide.BUY,
                 str(by_order[x._read_domain_id(row["order_id"])].order.intent.instrument_id), row["order_id"]["value"]))
-            accepted,blocked,plan=_expected_pending_admissions_v1(funded=funded,candidates=tuple(candidates),target=signals[-1].normalized_target if signals else None)
+            accepted, blocked, plan = _expected_pending_admissions_v1(funded=funded, candidates=candidates,
+                target=signals[-1].normalized_target if signals else None, evaluations=evaluations)
+            del evaluations
             if tuple(x._read_domain_id(row["order_id"]) for row in new_rows)!=tuple(row[0].order_id for row in accepted):
                 raise d.ArtifactIntegrityError("economic admission omits or invents source-eligible pending candidate")
             if new_rows:
@@ -454,7 +540,8 @@ def _verify_economic_facts_v1(*, case, reader, journal, final_streams, final_sch
                     stream = by_order[identity]
                     source_order=accepted[ordinal-1][0]
                     source_origin=pending[source_order.intent.instrument_id][0]
-                    if stream.order!=source_order or row["signal_index"]!=source_origin:
+                    if (stream.order != source_order or row["signal_index"] != source_origin
+                            or (presorted and type(row["signal_index"]) is not int)):
                         raise d.ArtifactIntegrityError("economic admission complete source Order or signal origin mismatch")
                     _equal(plan, row["plan"], "recorded admission plan")
                     compare_source(funded, row["sources"])
@@ -462,6 +549,9 @@ def _verify_economic_facts_v1(*, case, reader, journal, final_streams, final_sch
                     _, event = by_instrument[order.intent.instrument_id]
                     term = bound.terms_by_side[event.event_id, order.intent.side]
                     quote, market, issues, fee, reason = _economic_evaluation_v1(order, BarOpenObservation.from_event(event), term)
+                    if presorted:
+                        _equal(quote, row["quote"], "paged admission original quote")
+                        _equal(fee, row["fee"], "paged admission original fee")
                     admission = _EconomicAdmissionV1(row["signal_index"], plan, funded, fee, quote)
                     opening_index, _ = by_instrument[order.intent.instrument_id]
                     _verify_recorded_admission_v1(case, order, stream, admission, term, BarOpenObservation.from_event(event),
@@ -499,7 +589,7 @@ def _verify_economic_facts_v1(*, case, reader, journal, final_streams, final_sch
                         raise d.ArtifactIntegrityError("economic pending intention fabricates budget refusal")
                     order,observation,term,quote,market,issues,fee,reason=blocked[identity]
                     action=NoEligibleBarAction.EXPIRE if order.intent.time_in_force is d.TimeInForce.DAY else NoEligibleBarAction.KEEP_ACTIVE
-                    expected=_EconomicOpeningOutcomeV1(identity,observation.observation_hash,d.canonical_sha256(current),None,
+                    expected=_EconomicOpeningOutcomeV1(identity,observation.observation_hash,current.source_hash,None,
                         d.canonical_sha256(term),quote,market,issues,fee,action,reason,None,_cent(0),_cent(0),())
                     _equal(expected,value,"complete pending rejection/deferral")
                     continue
@@ -512,7 +602,7 @@ def _verify_economic_facts_v1(*, case, reader, journal, final_streams, final_sch
                     stream=stream, observation=observation, terms=term, admission=admission, budget_prefix=tuple(selected))
                 fill = None if value["fill"] is None else x._read_fill(value["fill"])
                 action = NoEligibleBarAction.FULL_FILL if reason is None else NoEligibleBarAction.EXPIRE if stream.order.intent.time_in_force is d.TimeInForce.DAY else NoEligibleBarAction.KEEP_ACTIVE
-                outcome = _EconomicOpeningOutcomeV1(identity, observation.observation_hash, d.canonical_sha256(current),
+                outcome = _EconomicOpeningOutcomeV1(identity, observation.observation_hash, current.source_hash,
                     d.canonical_sha256(admission), d.canonical_sha256(term), quote, market, issues, fee, action, reason, fill,
                     _cent(extra_p), _cent(extra_f), tuple(row.order_id for row in selected))
                 _equal(outcome, value, "recorded opening eligibility/budget/quote")
@@ -521,7 +611,7 @@ def _verify_economic_facts_v1(*, case, reader, journal, final_streams, final_sch
                     decision = quote.result
                     expected_id = d.DomainId(d.DomainIdKind.FILL, d.DomainIdKind.FILL.prefix + "_" + d.canonical_sha256({
                         "type": "cn_a_share_portfolio_economic_open_fill_identity", "order_id": identity,
-                        "open_event_hash": event.event_hash, "economic_proof_hash": d.canonical_sha256(current),
+                        "open_event_hash": event.event_hash, "economic_proof_hash": current.source_hash,
                         "slippage_decision_id": decision.decision_id})[7:])
                     if (fill.fill_id != expected_id or fill.order_id != identity or fill.quantity != stream.order.intent.quantity
                             or fill.instrument_id != stream.order.intent.instrument_id or fill.account_id != inputs.scope.account_id
@@ -593,7 +683,8 @@ def _verify_economic_facts_v1(*, case, reader, journal, final_streams, final_sch
                     changed[opening.order_id]=_verify_recorded_terminal_v1(terminal=supplied,case=case,stream=prior_stream,opening=opening,
                         signal_index=admissions[opening.order_id].signal_index,opening_index=opening_index,ordinal=opening_index+1,when=when)
             post = make(_at(when, 97), after, next_book, changed, changed_schedules, current.dividend_state)
-            _equal(_book_body(post.settlement_book), fact["book_after"], "post native Book")
+            post_book = (_economic_book_prefix_v1(post.settlement_book) if presorted else _book_body(post.settlement_book))
+            _equal(post_book, fact["book_after"], "post native Book")
             _equal(post.dividend_state, fact["dividend_state_after"], "post dividend state")
             _equal(post.economic_projection, fact["post_projection"], "post complete economic projection")
             commit(post)
@@ -629,6 +720,8 @@ def _verify_economic_facts_v1(*, case, reader, journal, final_streams, final_sch
             expected_at,expected_fact=expected_no_real[key]
             if artifact.occurred_at!=expected_at:
                 raise d.ArtifactIntegrityError("economic no-real-open clock mismatch")
+            if presorted:
+                expected_fact = dict(expected_fact, prefix=expected_fact["prefix"].to_paged_source())
             _equal(expected_fact,fact,"complete no-real-open retained obligation")
             seen_no_real.add(key)
     if v2:
@@ -705,7 +798,10 @@ def _verify_economic_facts_v1(*, case, reader, journal, final_streams, final_sch
             current_journal,book,state=funded_journal,funded.settlement_book,funded.dividend_state
     if set(expected_no_real)!=seen_no_real:
         raise d.ArtifactIntegrityError("economic no-real-open obligation exact cover mismatch")
-    if set(admissions) != set(admission_raw):
+    if presorted:
+        if upcoming is not None or paged_count != admission_count or len(admissions) != paged_count:
+            raise d.ArtifactIntegrityError("economic paged admission exact cover mismatch")
+    elif set(admissions) != set(admission_raw):
         raise d.ArtifactIntegrityError("economic recorded admission missing from native chronology")
     ending_at = _at(case.timeline.window.end_exclusive, 200) if final_checkpoint is None else x._read_simulation_instant(final_checkpoint["at"])
     ending = make(ending_at, current_journal, book, streams, schedules, state)
@@ -743,23 +839,97 @@ def _verify_economic_native_result_v1(*, case, reader, result):
     witnesses = tuple(a for a in artifacts if a.role == "economic_attempt_witness")
     if len(witnesses) != 1:
         raise d.ArtifactIntegrityError("economic result requires one completion witness")
-    outer = _map(_raw(witnesses[0].payload.payload), {"type", "schema_version", "economic_witness", "economic_witness_hash", "source_binding"})
-    if (outer["type"] != "cn_a_share_portfolio_economic_native_witness" or type(outer["schema_version"]) is not int or outer["schema_version"] != 2
+    _verify_economic_result_parts_v1(case=case, reader=reader, raw=raw, native=native,
+        journal=journal, streams=streams, witness_artifact=witnesses[0], artifacts=artifacts)
+
+
+def _ordered_economic_page_facts_v1(pages, witness, trace, checkpoint_head, *, scoped_decoding=False):
+    """Cross-check page order and trace bijection without keeping past payloads."""
+    trace_by_hash = {entry.evidence_hash: entry for entry in trace.entries}
+    if len(trace_by_hash) != len(trace.entries):
+        raise d.ArtifactIntegrityError("economic paged trace repeats an artifact")
+    previous = None
+    head = []
+
+    def checked(artifact, digest):
+        nonlocal previous
+        coordinate = (artifact.occurred_at, artifact.source_event_id, artifact.role)
+        if previous is not None and previous >= coordinate:
+            raise d.ArtifactIntegrityError("economic paged fact order or duplicate coordinate")
+        previous = coordinate
+        entry = trace_by_hash.pop(digest, None)
+        if (entry is None or entry.stage is not EngineStage.FINANCIAL_EVENT
+                or entry.instant != artifact.occurred_at or entry.subject_id != artifact.source_event_id):
+            raise d.ArtifactIntegrityError("economic paged trace source/hash mismatch")
+        return digest
+
+    for page in pages:
+        for row in page:
+            # The scoped caller streams original rows from a verified,
+            # recursively frozen page envelope. No callback sees the decoded view.
+            if scoped_decoding and type(row) is MappingProxyType:
+                artifact, source = decode_frozen_economic_paged_fact(row)
+            else:
+                artifact, source = _artifact_and_bytes(row, paged_row=True)
+            digest = "sha256:" + sha256(source).hexdigest()
+            del source
+            if artifact.role == "economic_attempt_witness":
+                raise d.ArtifactIntegrityError("economic witness in financial facts page")
+            head.append(checked(artifact, digest))
+            yield artifact
+        del page
+    checked(witness, witness.artifact_hash)
+    if trace_by_hash or d.canonical_sha256(tuple(head)) != checkpoint_head:
+        raise d.ArtifactIntegrityError("economic paged trace/head exact cover mismatch")
+    yield witness
+
+
+def _verify_economic_paged_result_v1(*, case, reader, header, witness, pages, admission_pages, bound_sources=None):
+    """Direct verifier for a bound economic page stream; no legacy result expansion."""
+    if type(case) is not _ResolvedProfilePortfolioCaseV2 or case.identity_manifest is None:
+        raise TypeError("paged economic evidence requires an exact sealed CaseV2")
+    raw = _map(header, _RESULT_FIELDS - {"financial_artifacts"})
+    if (raw["type"] != "backtest_economic_paged_result" or type(raw["schema_version"]) is not int or raw["schema_version"] != 1
+            or raw["case_hash"] != case.case_hash or raw["target_stream_digest"] != case.target_stream.target_stream_digest or _seq(raw["order_plans"])):
+        raise d.ArtifactIntegrityError("economic paged result case/schema/plan mismatch")
+    witness_artifact = _artifact(witness)
+    if witness_artifact.role != "economic_attempt_witness":
+        raise d.ArtifactIntegrityError("economic paged result needs exact witness role")
+    journal = x._read_economic_journal_v1(raw["final_journal"])
+    streams = tuple(x._read_order_event_stream(v) for v in _seq(raw["order_streams"]))
+    _verify_economic_result_parts_v1(case=case, reader=reader, raw=raw, native=False,
+        journal=journal, streams=streams, witness_artifact=witness_artifact, artifacts=pages,
+        paged=True, admission_pages=admission_pages, bound_sources=bound_sources)
+
+
+def _verify_economic_result_parts_v1(*, case, reader, raw, native, journal, streams, witness_artifact,
+    artifacts, paged=False, admission_pages=None, bound_sources=None):
+    witness_payload = witness_artifact.payload.payload
+    binding_field = "source_binding_hash" if paged else "source_binding"
+    outer = _map(witness_payload if paged else _raw(witness_payload),
+        {"type", "schema_version", "economic_witness", "economic_witness_hash", binding_field})
+    if (outer["type"] != "cn_a_share_portfolio_economic_native_witness" or type(outer["schema_version"]) is not int
+            or outer["schema_version"] != 2 + int(paged)
             or outer["economic_witness_hash"] != d.canonical_sha256(outer["economic_witness"])):
-        raise d.ArtifactIntegrityError("economic witness requires exact version2/inner hash")
-    binding = _map(outer["source_binding"], {"type", "schema_version", "source_refs", "semantic_spec", "identity_manifest", "timeline_stream_keys"})
+        raise d.ArtifactIntegrityError("economic witness version/inner hash mismatch" if paged else
+                                      "economic witness requires exact version2/inner hash")
     expected_binding = {"type": "cn_a_share_portfolio_economic_completed_sources", "schema_version": 1,
         "source_refs": case.execution_case_plan.source_refs, "semantic_spec": case.semantic_spec,
         "identity_manifest": case.identity_manifest, "timeline_stream_keys": case.timeline.stream_keys}
-    _equal(expected_binding, binding, "completed original retained source binding")
+    if paged:
+        _equal(d.canonical_sha256(expected_binding), outer[binding_field], "completed retained source binding hash")
+    else:
+        binding = _map(outer[binding_field], {"type", "schema_version", "source_refs", "semantic_spec", "identity_manifest", "timeline_stream_keys"})
+        _equal(expected_binding, binding, "completed original retained source binding")
     witness = _map(outer["economic_witness"])
     expected_fields = {"type", "schema_version", "case_hash", "definition_hash", "target_stream_digest", "initial_journal_hash",
-        "initial_economic_projection_hash", "schedules", "book", "admissions", "opening_count", "daily_count", "dividend_event_count",
+        "initial_economic_projection_hash", "schedules", "book", ("admission_count" if paged else "admissions"),
+        "opening_count", "daily_count", "dividend_event_count",
         "financial_schedule_hash", "journal_entry_ids", "used_identity_keys", "cursor", "final_journal_hash", "final_ledger_hash",
         "final_dividend_state", "final_economic_projection", "run_end_report_hash", "pending_intentions", "checkpoint_head",
         "source_qualification_verified", "broker_shared_pool_verified", "trade_authorized"}
     _map(witness, expected_fields)
-    if (witness["type"] != "cn_a_share_portfolio_economic_native_witness" or type(witness["schema_version"]) is not int or witness["schema_version"] != 1
+    if (witness["type"] != "cn_a_share_portfolio_economic_native_witness" or type(witness["schema_version"]) is not int or witness["schema_version"] != 1 + int(paged)
             or witness["case_hash"] != case.case_hash or witness["definition_hash"] != d.canonical_sha256(case.execution_case_plan.definition)
             or witness["target_stream_digest"] != case.target_stream.target_stream_digest
             or witness["initial_journal_hash"] != case.financial_state.journal.journal_hash
@@ -768,15 +938,31 @@ def _verify_economic_native_result_v1(*, case, reader, result):
         raise d.ArtifactIntegrityError("economic witness source/initial/qualification mismatch")
     schedules = tuple(x._read_reservation_schedule(v) for v in _seq(witness["schedules"]))
     trace = _trace(_raw(raw["trace"]) if native else raw["trace"])
-    bound = _bind_economic_portfolio_sources_v1(case, reader)
+    if bound_sources is None:
+        bound = _bind_economic_portfolio_sources_v1(case, reader)
+    else:
+        from .cn_a_share_portfolio_economic_case_v1 import _BoundEconomicPortfolioSourcesV1
+        bound = bound_sources()
+        if (not paged or type(bound) is not _BoundEconomicPortfolioSourcesV1
+                or bound.case is not case or bound.reader is not reader):
+            raise d.ArtifactIntegrityError("economic verified fixed sources do not belong to this cold operation")
+    scoped_decoding = (paged and type(bound.inputs) is CnASharePortfolioEconomicDevelopmentInputsV1
+                       and case.semantic_spec.spec_version == _ECONOMIC_CHUNKED_SOURCE_SPEC_VERSION)
+    facts = (_ordered_economic_page_facts_v1(artifacts, witness_artifact, trace, witness["checkpoint_head"],
+        scoped_decoding=scoped_decoding) if paged else artifacts)
+    admission_rows = chain.from_iterable(admission_pages) if paged else _seq(witness["admissions"])
+    projector = (e.CnASharePortfolioEconomicProjectionInputsV1.scoped_projector()
+        if paged and case.semantic_spec.spec_version == _ECONOMIC_CHUNKED_SOURCE_SPEC_VERSION else None)
     ending, signals, fills, fees, slips, counts, _admissions, _pending, _intentions = _verify_economic_facts_v1(case=case, reader=reader, journal=journal,
-        final_streams=streams, final_schedules=schedules, artifacts=artifacts, trace=trace,
-        admission_rows=_seq(witness["admissions"]), final_pending=witness["pending_intentions"], bound=bound)
+        final_streams=streams, final_schedules=schedules, artifacts=facts, trace=trace,
+        admission_rows=admission_rows, final_pending=witness["pending_intentions"], bound=bound, presorted=paged,
+        admission_count=witness["admission_count"] if paged else None, projector=projector)
     inputs = bound.inputs
     if counts != (len(case.target_stream.events), len({e.event_time for e in bound.openings}), len(inputs.daily_marks),
             len(tuple(row for row in _economic_events_v1(inputs) if row[0].instant < case.timeline.window.end_exclusive))):
         raise d.ArtifactIntegrityError("economic facts omit or duplicate a required source event")
-    if (witness["opening_count"], witness["daily_count"], witness["dividend_event_count"]) != counts[1:]:
+    stated_counts = (witness["opening_count"], witness["daily_count"], witness["dividend_event_count"])
+    if stated_counts != counts[1:] or (paged and any(type(count) is not int for count in stated_counts)):
         raise d.ArtifactIntegrityError("economic witness fact counts mismatch")
     _equal(bound.journal_entry_ids, witness["journal_entry_ids"], "sealed complete journal ID mapping")
     _equal(_used_identity_keys_v1(case, journal, {s.order.order_id:s for s in streams},
@@ -790,15 +976,19 @@ def _verify_economic_native_result_v1(*, case, reader, result):
     _equal(ending.economic_projection.snapshot, raw["final_portfolio_snapshot"], "economic final snapshot")
     _equal(ending.economic_projection, witness["final_economic_projection"], "final economic proof")
     _equal(ending.dividend_state, witness["final_dividend_state"], "final dividend state")
-    _equal(_book_body(ending.settlement_book), witness["book"], "final Book")
+    final_book = _economic_book_prefix_v1(ending.settlement_book) if paged else _book_body(ending.settlement_book)
+    _equal(final_book, witness["book"], "final Book")
     for name, values in (("fills", fills), ("fee_assessments", fees), ("slippage_decisions", slips),
             ("decision_batches", tuple(s.decision_batch for s in signals)), ("allocations", tuple(s.allocation for s in signals)),
             ("approved_targets", tuple(s.approved_target for s in signals)), ("normalized_targets", tuple(s.normalized_target for s in signals))):
         expected = tuple(sorted(values, key=d.canonical_bytes)) if name in {"fills", "fee_assessments", "slippage_decisions"} else values
         _equal(expected, raw[name], "final collection " + name)
-    head = d.canonical_sha256(tuple(a.artifact_hash for a in sorted((a for a in artifacts if a.role != "economic_attempt_witness"),
-        key=lambda a:(a.occurred_at,a.source_event_id,a.role))))
-    if (witness["checkpoint_head"] != head or witness["final_journal_hash"] != journal.journal_hash
+    if not paged:
+        head = d.canonical_sha256(tuple(a.artifact_hash for a in sorted((a for a in artifacts if a.role != "economic_attempt_witness"),
+            key=lambda a:(a.occurred_at,a.source_event_id,a.role))))
+        if witness["checkpoint_head"] != head:
+            raise d.ArtifactIntegrityError("economic final head/hash mismatch")
+    if (witness["final_journal_hash"] != journal.journal_hash
             or witness["final_ledger_hash"] != ledger.state_hash or witness["run_end_report_hash"] != d.canonical_sha256(raw["run_end_report"])):
         raise d.ArtifactIntegrityError("economic final head/hash mismatch")
     cursor = case.timeline.open_cursor(batch_size=64)
@@ -811,6 +1001,8 @@ def _verify_economic_native_result_v1(*, case, reader, result):
     run_end = RunEndCoordinator().coordinate(RunEndEvidence(case.timeline.window, cursor, ending.economic_projection.snapshot,
         ending.order_streams, ending.reservations, ending.settlement_book.project(), ()), MarkToMarketCloseoutPolicy())
     _equal(run_end.report, raw["run_end_report"], "native run-end report")
+    if paged:
+        return  # Trace exact cover and ordered head were verified while consuming pages.
     hashes = {a.artifact_hash:a for a in artifacts}
     if len(trace.entries) != len(artifacts) or len(hashes) != len(artifacts):
         raise d.ArtifactIntegrityError("economic trace/artifact exact cover mismatch")
@@ -1161,7 +1353,7 @@ def _read_economic_failure_v1(*, case, reader, value):
 
 
 from .cn_a_share_portfolio_economic_case_v1 import _read_exact_economic_source_v1, _native_initial_economic_financial_state_v1
-from .cn_a_share_portfolio_economic_definition_v1 import _read_economic_definition_v1
+from .cn_a_share_portfolio_economic_definition_v1 import CnASharePortfolioEconomicDevelopmentInputsV1, _read_economic_definition_v1
 from .cn_a_share_portfolio_economic_values_v1 import _read_cn_a_share_cash_dividend_action_set_v1
 from .cn_a_share_portfolio_economic_prepare_v1 import _registry
 from .composition import _compose_profile_portfolio_economic_execution_case

@@ -4,6 +4,7 @@ from __future__ import annotations
 from bisect import bisect_left, bisect_right
 from collections.abc import Mapping
 from dataclasses import dataclass
+from hashlib import sha256
 from types import MappingProxyType
 from zoneinfo import ZoneInfo
 import crypto_quant_domain as d
@@ -328,6 +329,8 @@ def _opening_batches_v1(events):
 
 @dataclass(frozen=True, slots=True)
 class _BoundEconomicPortfolioSourcesV1:
+    case: _ResolvedProfilePortfolioCaseV2
+    reader: ArtifactEnvelopeReader
     inputs: CnASharePortfolioEconomicDevelopmentInputsV1 | CnASharePortfolioEconomicDevelopmentInputsV2
     openings: tuple[MarketEvent, ...]
     journal_entry_ids: tuple[tuple[str, d.DomainId], ...]
@@ -356,7 +359,8 @@ def _read_exact_economic_source_v1(reader, ref):
     retained = reader.read(ref=ref)
     if (type(retained) is not ArtifactReadResult or ArtifactRef.from_envelope(retained.envelope) != ref
             or retained.source_bytes != canonical_bytes(retained.envelope)
-            or retained.source_hash != canonical_sha256(retained.envelope)):
+            or retained.source_hash != "sha256:" + sha256(retained.source_bytes).hexdigest()):
+        # The byte equality above already proves that these are the canonical envelope bytes.
         raise ValueError("economic retained ref/raw bytes/source hash mismatch")
     return retained.envelope
 
@@ -378,6 +382,17 @@ def _verify_bounded_signal_cancellation_v1(case, plan, admissions, signal_index)
         raise d.ArtifactIntegrityError("economic bounded signal cannot retain or cancel outside the preceding signal")
 
 
+def _verify_economic_action_and_target_sources_v1(reader, refs, actions, target_stream):
+    for action in actions.actions:
+        for ref in action.source_evidence_refs:
+            _read_exact_economic_source_v1(reader, ref)
+    target_ref = BacktestTargetStreamRef.from_artifact_ref(refs["target_stream"])
+    verified = BacktestTargetStreamRepository(reader=reader).load(target_ref)
+    if canonical_bytes(verified.target_stream) != canonical_bytes(target_stream):
+        raise ValueError("economic retained target differs from case")
+    return target_ref, verified.target_stream
+
+
 def _bind_economic_portfolio_sources_v1(case, reader):
     if type(case) is not _ResolvedProfilePortfolioCaseV2:
         raise TypeError("economic source binding requires exact CaseV2")
@@ -388,17 +403,16 @@ def _bind_economic_portfolio_sources_v1(case, reader):
         raise ValueError("economic retained definition differs from case")
     action_envelope = _read_exact_economic_source_v1(reader, refs["cash_dividend_action_set"])
     actions = _read_cn_a_share_cash_dividend_action_set_v1(action_envelope.payload)
-    for action in actions.actions:
-        for ref in action.source_evidence_refs:
-            _read_exact_economic_source_v1(reader, ref)
-    target_ref = BacktestTargetStreamRef.from_artifact_ref(refs["target_stream"])
-    verified = BacktestTargetStreamRepository(reader=reader).load(target_ref)
-    if canonical_bytes(verified.target_stream) != canonical_bytes(case.target_stream):
-        raise ValueError("economic retained target differs from case")
+    target_ref, retained_target = _verify_economic_action_and_target_sources_v1(reader, refs, actions, case.target_stream)
     if retained.schema_version == 3:
-        inputs = _read_economic_definition_v2(retained, target_ref, actions, verified.target_stream)
+        inputs = _read_economic_definition_v2(retained, target_ref, actions, retained_target)
     else:
         inputs = _read_economic_definition_v1(retained, target_ref, actions, source_reader=reader)
+    return _bind_economic_case_coordinates_v1(case, reader, inputs)
+
+
+def _bind_economic_case_coordinates_v1(case, reader, inputs):
+    """Bind a freshly decoded exact retained definition to its Case and market sources."""
     if inputs.scope.market_bundle_ref != case.timeline.reader.bundle_ref:
         raise ValueError("economic market Bundle source binding mismatch")
     expected_signal = tuple(d.SimulationInstant(e.event_time, e.phase, e.source_sequence) for e in case.target_stream.events)
@@ -415,6 +429,6 @@ def _bind_economic_portfolio_sources_v1(case, reader):
     if segmented and case.timeline.stream_keys != tuple(sorted({event.stream_key for event in openings})):
         raise ValueError("economic timeline does not exact-cover opening segments")
     mapping = _economic_journal_entry_ids_v1(case, inputs, openings)
-    return _BoundEconomicPortfolioSourcesV1(inputs, openings, mapping,
+    return _BoundEconomicPortfolioSourcesV1(case, reader, inputs, openings, mapping,
         MappingProxyType(_opening_batches_v1(openings)),
         MappingProxyType({(term.bar_event_id, term.side): term for term in inputs.opening_terms}))

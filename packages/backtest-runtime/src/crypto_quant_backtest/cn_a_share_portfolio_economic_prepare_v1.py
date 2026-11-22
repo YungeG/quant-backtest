@@ -83,7 +83,7 @@ class _NativeEconomicPortfolioProfileV1:
             "development_only": True, "trade_authorized": False}
 
     def build_portfolio_engine(self, *, case: _ResolvedProfilePortfolioCaseV2,
-        artifact_reader: ArtifactEnvelopeReader,
+        artifact_reader: ArtifactEnvelopeReader, retain_fixed_sources: bool = False,
     ):
         from .cn_a_share_portfolio_economic_engine_v1 import _CnASharePortfolioEconomicEngineV1
         if type(case) is not _ResolvedProfilePortfolioCaseV2:
@@ -91,8 +91,10 @@ class _NativeEconomicPortfolioProfileV1:
         if (self.kind != "market" or d.canonical_sha256(case.execution_case_plan.definition) != self.definition_hash
                 or case.semantic_spec is None or case.semantic_spec.spec_version != self.spec_version):
             raise ValueError("native portfolio profile/whole-definition binding mismatch")
-        _bind_economic_portfolio_sources_v1(case, artifact_reader)
-        return _CnASharePortfolioEconomicEngineV1(artifact_reader=artifact_reader)
+        bound = _bind_economic_portfolio_sources_v1(case, artifact_reader)
+        return _CnASharePortfolioEconomicEngineV1(
+            artifact_reader=artifact_reader, fixed_sources=bound if retain_fixed_sources else None,
+        )
 
 
 def _require_opening_proof_version(version: int) -> None:
@@ -129,8 +131,12 @@ def prepare_cn_a_share_portfolio_economic_development_backtest(
     artifact_reader: ArtifactEnvelopeReader, artifact_publisher: ArtifactEnvelopePublisher,
     market_reader: MarketBundleReader, publication_root: Path, opening_proof_version: int = 1,
     segmented_openings: bool = False, bounded_signal_identity: bool = False,
+    evidence_layout: str = "legacy",
 ) -> PreparedBacktestExecution:
     """Prepare frozen V1 sources; segmented openings require compact proofs."""
+    from ._referenced_evidence import _check_legacy_layout, _require_referenced_layout, _validate_evidence_layout
+
+    _validate_evidence_layout(evidence_layout)
     _require_opening_proof_version(opening_proof_version)
     if type(segmented_openings) is not bool or (segmented_openings and opening_proof_version != 2):
         raise ValueError("segmented economic openings require compact proof version 2")
@@ -153,6 +159,10 @@ def prepare_cn_a_share_portfolio_economic_development_backtest(
             or market_reader.bundle_ref != provider_inputs.scope.market_bundle_ref):
         raise ValueError("economic portfolio request/account/CNY/market mismatch")
     _validate_economic_coordinates_v1(provider_inputs, request_intent.timeline_window)
+    if evidence_layout == "referenced_v1":
+        _require_referenced_layout(publication_root, initialize=True)
+    else:
+        _check_legacy_layout(publication_root)
     target = BacktestTargetStreamRepository(reader=artifact_reader).load(provider_inputs.scope.target_stream_ref).target_stream
     for action in provider_inputs.dividend_actions.actions:
         for ref in action.source_evidence_refs:
@@ -207,7 +217,8 @@ def prepare_cn_a_share_portfolio_economic_development_backtest(
     _verify_published(artifact_reader, request_ref, request_envelope)
     _verify_published(artifact_reader, bundle_ref, bundle)
     runtime = BacktestRuntime(registry=registry, artifact_reader=artifact_reader,
-        artifact_publisher=artifact_publisher, market_reader=market_reader, publication_root=publication_root)
+        artifact_publisher=artifact_publisher, market_reader=market_reader, publication_root=publication_root,
+        evidence_layout=evidence_layout)
     return PreparedBacktestExecution(BacktestRequestRef.from_artifact_ref(request_ref),
         outcome.resolved.semantic_run_id, BacktestExecutionRequest(9, request, bundle_ref), runtime)
 

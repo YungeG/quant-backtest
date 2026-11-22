@@ -41,6 +41,7 @@ from .composition import (
 )
 from .engine import DeterministicBarEngine, EngineCancellationRequest, ResolvedExecutionCase, ResolvedExecutionCaseV2
 from .profile_portfolio_execution import (
+    _ECONOMIC_CHUNKED_SOURCE_SPEC_VERSION,
     _RuntimeExecutionCase as ExecutionCase, _ResolvedProfilePortfolioCaseV1,
     _PortfolioExecutionProvider, _ProfilePortfolioEngine, _ResolvedProfilePortfolioCaseV2, _EconomicPortfolioEngine,
 )
@@ -92,6 +93,8 @@ from .multi_resolution_preparation import (
 from .publication_refs import (
     BacktestCanonicalPublicationRef,
     BacktestCanonicalPublicationRefV2,
+    BacktestCanonicalPublicationRefV3,
+    BacktestDeliveryIncomplete,
 )
 from .resolution import (
     BacktestProfileRegistry,
@@ -145,7 +148,12 @@ class BacktestRuntime:
         artifact_publisher: ArtifactEnvelopePublisher,
         market_reader: MarketBundleReader,
         publication_root: Path,
+        evidence_layout: str = "legacy",
     ) -> None:
+        from ._referenced_evidence import _validate_evidence_layout
+
+        _validate_evidence_layout(evidence_layout)
+        self._evidence_layout = evidence_layout
         if type(registry) is not BacktestProfileRegistry:
             raise TypeError("registry must be exact BacktestProfileRegistry")
         if not callable(getattr(artifact_publisher, "put", None)):
@@ -163,15 +171,29 @@ class BacktestRuntime:
     ) -> (
         BacktestCanonicalPublicationRef
         | BacktestCanonicalPublicationRefV2
+        | BacktestCanonicalPublicationRefV3
         | ArtifactRef
     ):
         return self._run(request, cancellation=None)
+
+    def resume_delivery(self, request: BacktestExecutionRequest) -> (
+        BacktestCanonicalPublicationRefV3 | ArtifactRef | BacktestDeliveryIncomplete
+    ):
+        """Check original durable evidence; do not prepare or execute an Attempt."""
+        if self._evidence_layout != "referenced_v1":
+            raise ValueError("resume_delivery requires referenced_v1")
+        if type(request) is not BacktestExecutionRequest or request.schema_version != 9:
+            raise ValueError("resume_delivery requires exact Input9")
+        snapshot, failure = _snapshot_execution_request_v9_from_validated_schema(request)
+        if failure is not None or snapshot is None:
+            self._raise_v3_hydration_failure(failure)
+        return self._run_v6(snapshot, cancellation=None, resume=True)
 
     def run_with_cancellation(
         self,
         request: BacktestExecutionRequest,
         cancellation: EngineCancellationRequest,
-    ) -> BacktestCanonicalPublicationRef | ArtifactRef:
+    ) -> BacktestCanonicalPublicationRef | BacktestCanonicalPublicationRefV3 | ArtifactRef:
         if type(cancellation) is not EngineCancellationRequest:
             raise TypeError("cancellation must be exact EngineCancellationRequest")
         return self._run(request, cancellation=cancellation)
@@ -200,6 +222,12 @@ class BacktestRuntime:
             raise RuntimeError(
                 "execution input hydration failed: malformed_execution_request"
             )
+        from ._referenced_evidence import _check_legacy_layout
+
+        if self._evidence_layout == "legacy":
+            _check_legacy_layout(self._publication_root)
+        elif schema_version != 9:
+            raise ValueError("referenced_v1 requires economic DEVELOPMENT Input9")
         if schema_version in {6, 7, 8, 9}:
             snapshotter = {6: _snapshot_execution_request_v6_from_validated_schema,
                            7: _snapshot_execution_request_v7_from_validated_schema,
@@ -261,7 +289,8 @@ class BacktestRuntime:
         request: BacktestExecutionRequest,
         *,
         cancellation: EngineCancellationRequest | None,
-    ) -> BacktestCanonicalPublicationRef | ArtifactRef:
+        resume: bool = False,
+    ) -> BacktestCanonicalPublicationRef | BacktestCanonicalPublicationRefV3 | ArtifactRef | BacktestDeliveryIncomplete:
         reader = {6: _read_execution_inputs_v6_from_snapshot,
                   7: _read_execution_inputs_v7_from_snapshot,
                   8: _read_execution_inputs_v8_from_snapshot,
@@ -298,6 +327,8 @@ class BacktestRuntime:
             build_artifact_manifest=bundle.build_artifact_manifest,
         )
         if resolution.failure is not None:
+            if resume:
+                raise ValueError("referenced original request no longer resolves")
             return self._publish_resolution_failure(resolution.failure)
         resolved = resolution.resolved
         if resolved is None:
@@ -314,6 +345,9 @@ class BacktestRuntime:
                 market_reader=self._market_reader, semantic_spec=bundle.execution_case_semantic_spec,
                 target_stream=bundle.target_stream, timeline_stream_keys=bundle.timeline_stream_keys,
                 timeline_batch_size=bundle.timeline_batch_size, execution_case_plan=bundle.execution_case_plan)
+            if self._evidence_layout == "referenced_v1":
+                from ._referenced_delivery import _deliver
+                return _deliver(self, request, resolved, case, cancellation=cancellation, resume=resume)
             return self._execute_case(resolved, case, cancellation=cancellation, market_data_preparation=None)
         try:
             if type(bundle) is _DecodedExecutionInputBundleV8:
@@ -1599,7 +1633,17 @@ class BacktestRuntime:
                 or not isinstance(implementation, _PortfolioExecutionProvider)
                 or implementation.profile_digest != registration.profile_digest):
             raise ValueError("economic profile/request account/currency/grade binding mismatch")
-        engine = implementation.build_portfolio_engine(case=case, artifact_reader=self._artifact_reader)
+        from .cn_a_share_portfolio_economic_prepare_v1 import _NativeEconomicPortfolioProfileV1
+
+        if (self._evidence_layout == "referenced_v1"
+                and type(implementation) is _NativeEconomicPortfolioProfileV1
+                and implementation.spec_version == _ECONOMIC_CHUNKED_SOURCE_SPEC_VERSION
+                and case.execution_case_plan.definition.schema_version == 4):
+            engine = implementation.build_portfolio_engine(
+                case=case, artifact_reader=self._artifact_reader, retain_fixed_sources=True,
+            )
+        else:
+            engine = implementation.build_portfolio_engine(case=case, artifact_reader=self._artifact_reader)
         if not isinstance(engine, _EconomicPortfolioEngine):
             raise TypeError("economic profile engine has no complete native verifiers")
         return engine

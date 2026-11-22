@@ -4,6 +4,7 @@ No published settlement owner-log, full two-week executor or OOS run.
 """
 from __future__ import annotations
 
+from dataclasses import replace
 from datetime import date
 import json
 
@@ -21,7 +22,9 @@ from crypto_quant_trading.profiles.cn_a_share import (
     CnAShareFrozenCalendar, CnAShareFrozenCalendarDay, CnAShareSettlementQuery,
 )
 from crypto_quant_backtest.cn_a_share_portfolio_settlement_development_v1 import (
-    _book_body, build_cn_a_share_portfolio_settlement_development_v1,
+    _NativeSettlementResolutionMemo, _book_body,
+    _resolve_cn_a_share_portfolio_settlement_memo_obligations_v1,
+    build_cn_a_share_portfolio_settlement_development_v1,
     read_cn_a_share_portfolio_settlement_book_source_v1,
 )
 from crypto_quant_trading.profiles.cn_a_share.portfolio_sellability_v1 import (
@@ -59,6 +62,28 @@ def _week_calendar(venue):
         coverage_start=date(2023, 8, 25), coverage_end_exclusive=date(2023, 8, 30),
         days=tuple(CnAShareFrozenCalendarDay(date(2023, 8, day), kind)
                    for day, kind in kinds.items()))
+
+
+def test_memo_obligations_equal_whole_book_and_reject_changed_prefix():
+    batch = _financial_batch(25)
+    fills = batch.fills
+    calendars = tuple(_week_calendar(venue) for venue in sorted({fill.venue_id for fill in fills}))
+    actual = build_cn_a_share_portfolio_settlement_development_v1(batch=batch, calendars=calendars).book
+    pairs = []
+    for fill in fills:
+        entry, = (row for row in batch.journal.entries
+                  if row.entry_type is AccountingEntryType.FILL_BOOKED and fill.fill_id.value in row.source_ids)
+        pairs.append((fill, entry))
+    memo = _NativeSettlementResolutionMemo(calendars)
+    for order in (tuple(pairs), tuple(reversed(pairs))):
+        expected = _resolve_cn_a_share_portfolio_settlement_memo_obligations_v1(
+            fill_entries=order, calendars=calendars, memo=memo)
+        assert canonical_bytes(expected) == canonical_bytes(actual.obligations)
+    fill, old_entry = pairs[0]
+    changed = replace(old_entry, source_ids=(*old_entry.source_ids, "correctly-typed-different-source"))
+    with pytest.raises(ValueError, match="native settlement prefix changed"):
+        _resolve_cn_a_share_portfolio_settlement_memo_obligations_v1(
+            fill_entries=((fill, changed),), calendars=calendars, memo=memo)
 
 
 def test_local_book_prefix_holds_two_stock_friday_inventory_until_monday_due():

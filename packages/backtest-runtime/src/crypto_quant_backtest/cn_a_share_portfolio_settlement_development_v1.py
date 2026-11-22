@@ -10,7 +10,7 @@ from collections.abc import Mapping
 from dataclasses import dataclass, field
 
 from crypto_quant_domain import (
-    AccountingEntryType, CurrencyId, DomainId, DomainIdKind, Fill, SettlementObligation,
+    AccountingEntryType, AccountingJournalEntry, CurrencyId, DomainId, DomainIdKind, Fill, SettlementObligation,
     InstrumentDefinition, InstrumentType, SimulationInstant, SourceSequence,
     TimelinePhase, UtcInstant, VenueId, canonical_bytes, canonical_sha256,
 )
@@ -188,6 +188,31 @@ class _NativeSettlementResolutionMemo:
         obligations = _resolve_cn_a_share_portfolio_settlement_v1(model, fill, entry)
         self._by_fill[fill.fill_id] = (fill, entry, obligations)
         return obligations
+
+
+def _resolve_cn_a_share_portfolio_settlement_memo_obligations_v1(
+    *, fill_entries: tuple[tuple[Fill, AccountingJournalEntry], ...],
+    calendars: tuple[CnAShareFrozenCalendar, CnAShareFrozenCalendar],
+    memo: _NativeSettlementResolutionMemo,
+) -> tuple[AccountSettlementObligation, ...]:
+    """Resolve an accepted prefix without constructing a throwaway SettlementBook."""
+    by_venue = {calendar.venue_id: calendar for calendar in calendars}
+    if len(by_venue) != 2 or {venue.value for venue in by_venue} != {"xshg", "xshe"}:
+        raise ValueError("CN settlement needs one exact calendar per SH/SZ venue")
+    obligations = tuple(
+        obligation
+        for fill, entry in sorted(fill_entries, key=lambda pair: str(pair[0].instrument_id))
+        for obligation in memo.resolve(
+            calendars=calendars,
+            model=CnAShareCashSettlementModel(by_venue[fill.venue_id]),
+            fill=fill,
+            entry=entry,
+        )
+    )
+    return tuple(sorted(
+        obligations,
+        key=lambda value: value.obligation.settlement_obligation_id.value,
+    ))
 
 
 def _resolve_cn_a_share_portfolio_settlement_v1(model, fill, entry):

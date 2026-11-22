@@ -22,6 +22,209 @@ def native_steps(tmp_path_factory):
     return current, economic, prior, schema, legacy[0]
 
 
+def test_checkpoint_availability_reuses_only_identical_sources(native_steps):
+    current, *_ = native_steps
+    after = replace(current.at, phase=replace(current.at.phase, rank=97))
+    reference = replace(current, at=after)
+    reused = replace(current, at=after, previous_availability=current)
+    for field in ("cash", "sellability", "reservations"):
+        assert getattr(reused, field) is getattr(current, field)
+    assert reused.source_hash == reference.source_hash
+    assert reused.source_hash != current.source_hash
+    assert d.canonical_bytes(reused.to_paged_source()) == d.canonical_bytes(reference.to_paged_source())
+
+    separately_rebuilt = (
+        {"journal": t.AccountingJournal(current.journal.entries)},
+        {"settlement_book": replace(current.settlement_book)},
+        {"market_rules": replace(current.market_rules)},
+        {"order_streams": tuple(replace(stream) for stream in current.order_streams)},
+        {"reservation_schedules": tuple(replace(schedule) for schedule in current.reservation_schedules)},
+    )
+    for changed in separately_rebuilt:
+        refreshed = replace(current, at=after, previous_availability=current, **changed)
+        assert refreshed.cash is not current.cash
+        assert refreshed.source_hash == reference.source_hash
+
+    later = next(batch.at for batch in current.inputs.checkpoint_marks if batch.at.instant > current.at.instant)
+    refreshed = replace(current, at=later, previous_availability=current)
+    assert refreshed.cash.as_of == later.instant
+    assert refreshed.cash is not current.cash
+
+    earlier = replace(current.at, phase=replace(current.at.phase, rank=49))
+    with pytest.raises(ValueError, match="full-clock mismatch"):
+        replace(current, at=earlier, previous_availability=current)
+
+
+def test_scoped_native_history_reuse_preserves_full_clock_and_dividend_boundaries(native_steps, monkeypatch):
+    from crypto_quant_backtest import cn_a_share_portfolio_economic_native_state_v1 as native
+
+    current, *_ = native_steps
+    after = replace(current.at, phase=replace(current.at.phase, rank=97))
+    reference = replace(current, at=after)
+    prior = replace(current, _source_digest_memo=native._EconomicSourceDigestMemoV1())
+    replay = native._EconomicOpenSourcesV1._verify_native_source_history
+    verify_dividend = native.e.verify_cn_a_share_cash_dividend_history_v1
+    native_calls = []
+    dividend_calls = []
+
+    def count_native(source, initial, settlement_memo):
+        native_calls.append(source.at)
+        return replay(source, initial, settlement_memo)
+
+    def count_dividend(history):
+        dividend_calls.append(history.dividend_state.as_of)
+        return verify_dividend(history)
+
+    monkeypatch.setattr(native._EconomicOpenSourcesV1, "_verify_native_source_history", count_native)
+    monkeypatch.setattr(native.e, "verify_cn_a_share_cash_dividend_history_v1", count_dividend)
+    matching = replace(prior, at=after, previous_availability=prior)
+    assert d.canonical_bytes(matching) == d.canonical_bytes(reference)
+    assert native_calls == dividend_calls == []
+
+    new_book = replace(current.settlement_book)
+    different_book = replace(prior, at=after, settlement_book=new_book, previous_availability=prior)
+    assert different_book.source_hash == reference.source_hash
+    assert native_calls == [after] and dividend_calls == [prior.at]
+
+    new_scope = replace(prior, at=after, previous_availability=prior,
+                        _source_digest_memo=native._EconomicSourceDigestMemoV1())
+    assert new_scope.source_hash == reference.source_hash
+    assert native_calls == [after, after] and dividend_calls == [prior.at, prior.at]
+
+    event_at = prior.inputs.dividend_actions.actions[0].registered_at
+    assert prior.at < event_at
+    with pytest.raises(d.ArtifactIntegrityError, match="checkpoint crosses an unapplied model boundary"):
+        replace(prior, at=event_at, previous_availability=prior)
+    assert dividend_calls[-2:] == [prior.at, event_at]
+
+    earlier = replace(prior.at, phase=replace(prior.at.phase, rank=49))
+    with pytest.raises(ValueError, match="full-clock mismatch"):
+        replace(prior, at=earlier, previous_availability=prior)
+
+
+def test_scoped_availability_reuses_exact_sources_across_utc(native_steps, monkeypatch):
+    from crypto_quant_backtest import cn_a_share_portfolio_economic_native_state_v1 as native
+
+    current, *_ = native_steps
+    marks = current.inputs.checkpoint_marks + current.inputs.daily_marks
+    after = min(batch.at for batch in marks if batch.at.instant > current.at.instant)
+    reference = replace(current, at=after)
+    memo = native._EconomicSourceDigestMemoV1()
+    prior = replace(current, _source_digest_memo=memo)
+    real_cash = native.project_cn_a_share_shared_cny_cash_v1
+    real_sellability = native.project_cn_a_share_portfolio_sellability_v1
+    calls = []
+
+    def count_cash(**sources):
+        calls.append("cash")
+        return real_cash(**sources)
+
+    def count_sellability(**sources):
+        calls.append("sellability")
+        return real_sellability(**sources)
+
+    monkeypatch.setattr(native, "project_cn_a_share_shared_cny_cash_v1", count_cash)
+    monkeypatch.setattr(native, "project_cn_a_share_portfolio_sellability_v1", count_sellability)
+    matching = replace(prior, at=after, previous_availability=prior)
+    assert calls == []
+    assert matching.cash.snapshot_hash == reference.cash.snapshot_hash
+    assert matching.sellability.snapshot_hash == reference.sellability.snapshot_hash
+    assert matching.reservations is prior.reservations
+    assert matching.source_hash == reference.source_hash
+
+    different_book = replace(prior, at=after, settlement_book=replace(prior.settlement_book),
+                             previous_availability=prior)
+    assert different_book.source_hash == reference.source_hash
+    other_scope = replace(prior, at=after, _source_digest_memo=native._EconomicSourceDigestMemoV1(),
+                          previous_availability=prior)
+    assert other_scope.source_hash == reference.source_hash
+    assert calls == ["cash", "sellability", "cash", "sellability"]
+
+
+def test_phase_49_funding_skips_only_valid_no_deficit_plans(native_steps, monkeypatch):
+    import crypto_quant_backtest.cn_a_share_portfolio_economic_opening_v1 as opening
+
+    current, step, *_ = native_steps
+    before_open = replace(current.at, phase=replace(current.at.phase, rank=49))
+    prior = replace(current, at=before_open, order_streams=(), reservation_schedules=(),
+                    dividend_state=replace(current.dividend_state, as_of=before_open))
+    original = opening.plan_cn_portfolio_venue_funding_development_v1
+    calls = []
+
+    def observe(**kwargs):
+        calls.append(kwargs["at"])
+        return original(**kwargs)
+
+    monkeypatch.setattr(opening, "plan_cn_portfolio_venue_funding_development_v1", observe)
+    assert opening._economic_venue_funding_v1(sources=prior, candidates=()) == ()
+    assert opening._economic_venue_funding_v1(sources=prior, candidates=(), use_checkpoint_cash=True) == ()
+    assert len(calls) == 1
+    with pytest.raises(ValueError, match="future source facts or phases"):
+        opening._economic_venue_funding_v1(sources=current, candidates=(), use_checkpoint_cash=True)
+
+    # Supply one known requirement that fits pooled cash and needs a transfer.
+    venue = min(prior.economic_projection.cash_rows, key=lambda row: row.native_available.units)
+    instrument = next(item for item in prior.inputs.scope.instrument_ids if item.venue == venue.key.venue_id)
+    original_order = current.order_streams[0].order
+    intent = replace(original_order.intent, instrument_id=instrument,
+                     quantity=replace(original_order.intent.quantity, instrument_id=str(instrument)))
+    order = replace(original_order, intent=intent)
+    quote = step.opening.slippage_outcome
+    monkeypatch.setattr(opening, "_economic_evaluation_v1", lambda *_: (quote, None, (), None, None))
+    monkeypatch.setattr(opening, "_extras_v1", lambda *_: (venue.native_available.units + 1, 0, 0))
+    candidates = ((order, None, None),)
+    legacy = opening._economic_venue_funding_v1(sources=prior, candidates=candidates)
+    evaluations = {}
+    optimized = opening._economic_venue_funding_v1(sources=prior, candidates=candidates, use_checkpoint_cash=True,
+        evaluations=evaluations)
+    assert len(optimized) == 2
+    assert d.canonical_bytes(legacy) == d.canonical_bytes(optimized)
+    assert len(calls) == 4
+    assert evaluations == {order.order_id: (quote, None, (), None, None)}
+    duplicate_evaluations = {}
+    with pytest.raises(d.ArtifactIntegrityError, match="repeats an Order requirement"):
+        opening._economic_venue_funding_v1(sources=prior, candidates=candidates * 2, use_checkpoint_cash=True,
+            evaluations=duplicate_evaluations)
+    assert not duplicate_evaluations
+
+
+def test_ledger_digest_memo_reuses_exact_schema_and_journal(native_steps, monkeypatch):
+    from crypto_quant_backtest import cn_a_share_portfolio_economic_native_state_v1 as native
+
+    current, *_ = native_steps
+    memo = native._EconomicSourceDigestMemoV1()
+    first = replace(current, _source_digest_memo=memo)
+    repeated = replace(current, _source_digest_memo=memo)
+    recreated_journal = t.AccountingJournal(current.journal.entries)
+    recreated = replace(current, journal=recreated_journal, _source_digest_memo=memo)
+    expected = current.source_hash
+    schema = current.inputs.scope.ledger_schema
+    equal_schema = replace(schema)
+    original = t.GenericLedger.project
+    calls = []
+
+    def counted(ledger, journal, **kwargs):
+        calls.append((ledger.schema, journal))
+        return original(ledger, journal, **kwargs)
+
+    monkeypatch.setattr(t.GenericLedger, "project", counted)
+    assert first.source_hash == repeated.source_hash == recreated.source_hash == expected
+    assert len(calls) == 2 and calls[0][1] is current.journal and calls[1][1] is recreated_journal
+    assert memo.digest_for(equal_schema, recreated_journal) == recreated.ledger_hash
+    assert len(calls) == 3 and calls[-1][0] is equal_schema
+    new_book = replace(current.settlement_book)
+    new_schedules = tuple(replace(schedule) for schedule in current.reservation_schedules)
+    rebuilt = replace(current, settlement_book=new_book, reservation_schedules=new_schedules,
+                      _source_digest_memo=memo)
+    assert rebuilt.source_hash == expected == d.canonical_sha256(rebuilt)
+    assert memo.book is new_book
+    assert all(previous is current for previous, current in zip(memo.schedules, new_schedules, strict=True))
+    monkeypatch.setattr(native, "_MAX_BOOK_DIGEST_MEMO_BYTES", 1)
+    uncached = replace(current, _source_digest_memo=memo)
+    assert uncached.source_hash == expected
+    assert memo.book is None and memo.book_bytes is None
+
+
 def _failed_outcomes(step):
     accounting, engine = t.CashInstrumentAccounting(), t.FeeAssessmentEngine()
     fill = step.opening.fill

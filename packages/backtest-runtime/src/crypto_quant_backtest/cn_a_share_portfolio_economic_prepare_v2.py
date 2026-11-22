@@ -116,8 +116,11 @@ def prepare_cn_a_share_portfolio_economic_development_backtest_v2(
     provider_inputs: CnASharePortfolioEconomicDevelopmentInputsV2,
     build_artifact_manifest: BuildArtifactManifest,
     artifact_reader: ArtifactEnvelopeReader, artifact_publisher: ArtifactEnvelopePublisher,
-    market_reader: MarketBundleReader, publication_root: Path,
+    market_reader: MarketBundleReader, publication_root: Path, evidence_layout: str = "legacy",
 ) -> PreparedBacktestExecution:
+    from ._referenced_evidence import _check_legacy_layout, _require_referenced_layout, _validate_evidence_layout
+
+    _validate_evidence_layout(evidence_layout)
     if (type(request_intent) is not CashDevelopmentRequestIntent
             or type(provider_inputs) is not CnASharePortfolioEconomicDevelopmentInputsV2
             or type(build_artifact_manifest) is not BuildArtifactManifest):
@@ -128,6 +131,10 @@ def prepare_cn_a_share_portfolio_economic_development_backtest_v2(
             or market_reader.bundle_ref != provider_inputs.scope.market_bundle_ref):
         raise ValueError("economic portfolio request/account/CNY/market mismatch")
     _validate_economic_coordinates_v2(provider_inputs, request_intent.timeline_window)
+    if evidence_layout == "referenced_v1":
+        _require_referenced_layout(publication_root, initialize=True)
+    else:
+        _check_legacy_layout(publication_root)
     target = BacktestTargetStreamRepository(reader=artifact_reader).load(provider_inputs.scope.target_stream_ref).target_stream
     if d.canonical_bytes(target) != d.canonical_bytes(provider_inputs.source_target_stream):
         raise ValueError("economic V2 retained target differs from original source stream")
@@ -177,7 +184,8 @@ def prepare_cn_a_share_portfolio_economic_development_backtest_v2(
     _verify_published(artifact_reader, request_ref, request_envelope)
     _verify_published(artifact_reader, bundle_ref, bundle)
     runtime = BacktestRuntime(registry=registry, artifact_reader=artifact_reader,
-        artifact_publisher=artifact_publisher, market_reader=market_reader, publication_root=publication_root)
+        artifact_publisher=artifact_publisher, market_reader=market_reader, publication_root=publication_root,
+        evidence_layout=evidence_layout)
     return PreparedBacktestExecution(BacktestRequestRef.from_artifact_ref(request_ref), outcome.resolved.semantic_run_id,
         BacktestExecutionRequest(9, request, bundle_ref), runtime)
 

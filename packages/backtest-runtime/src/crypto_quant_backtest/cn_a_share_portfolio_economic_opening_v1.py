@@ -1,12 +1,15 @@
 """Native execution-price, own-reservation and conservative dividend-tax budgets."""
 from __future__ import annotations
 
+from bisect import bisect_left
 from dataclasses import dataclass
 
 import crypto_quant_domain as d
 import crypto_quant_trading as t
 from .cn_a_share_portfolio_economic_definition_v1 import CnASharePortfolioEconomicOpeningTermsV1
-from .cn_a_share_portfolio_economic_native_state_v1 import _EconomicOpenSourcesV1, _EconomicNativeFailureV1
+from .cn_a_share_portfolio_economic_native_state_v1 import (
+    _EconomicOpenSourcesV1, _EconomicNativeFailureV1, _economic_sources_hash_v1,
+)
 from .cn_a_share_portfolio_financial_core_v1 import book_native_cn_portfolio_financial_core_v1
 from .cn_a_share_portfolio_venue_funding_development_v1 import plan_cn_portfolio_venue_funding_development_v1
 from .engine import EngineFailureCode
@@ -184,13 +187,28 @@ class _EconomicOpeningOutcomeV1:
                 "extra_principal", "extra_fee", "budget_prefix_order_ids")}, "action": self.action.value}
 
 
+def _retained_opening_term_v1(terms, when, instrument, side):
+    """Find the unique coordinate in the definition's validated sorted terms."""
+    def coordinate(term):
+        return term.opening_at, term.instrument_id, term.side.value
+
+    key = when, instrument, side.value
+    index = bisect_left(terms, key, key=coordinate)
+    if index < len(terms) and coordinate(terms[index]) == key:
+        return terms[index]
+    return None
+
+
 def _verify_economic_opening_inputs_v1(*, sources, stream, observation, terms, admission, budget_prefix=()):
     if type(sources) is not _EconomicOpenSourcesV1 or type(stream) is not t.OrderEventStream:
         raise TypeError("economic opening requires exact native committed source and stream")
     order, state = stream.order, stream.state
     if (stream not in sources.order_streams or state is None or state.status not in {d.OrderStatus.ACCEPTED, d.OrderStatus.ACTIVE}
             or state.remaining_quantity != order.intent.quantity or state.updated_at > sources.at
-            or sources.at.instant != observation.event.event_time or terms not in sources.inputs.opening_terms):
+            or sources.at.instant != observation.event.event_time
+            or type(terms) is not CnASharePortfolioEconomicOpeningTermsV1
+            or terms != _retained_opening_term_v1(sources.inputs.opening_terms, terms.opening_at,
+                                                terms.instrument_id, terms.side)):
         raise d.ArtifactIntegrityError("economic current opening has wrong source clock/Order/terms")
     own = tuple(r for r in sources.reservations.active_reservations if r.order_id == order.order_id)
     if len(own) != 1 or own[0].source_proposal_hash != admission.fee.proposal_hash:
@@ -199,11 +217,11 @@ def _verify_economic_opening_inputs_v1(*, sources, stream, observation, terms, a
             or admission.plan.cash != admission.sources.cash or admission.plan.sellability != admission.sources.sellability
             or not any(p.intent == order.intent for p in admission.plan.proposed)):
         raise d.ArtifactIntegrityError("economic original admission is not source-bound")
-    originals = tuple(v for v in sources.inputs.opening_terms if v.instrument_id == order.intent.instrument_id
-        and v.side is order.intent.side and v.opening_at == admission.sources.at.instant)
-    if len(originals) != 1 or admission.quote.result is None:
+    original_terms = _retained_opening_term_v1(
+        sources.inputs.opening_terms, admission.sources.at.instant, order.intent.instrument_id, order.intent.side,
+    )
+    if original_terms is None or admission.quote.result is None:
         raise d.ArtifactIntegrityError("economic original quote lacks exact retained term cover")
-    original_terms = originals[0]
     reference = admission.quote.result.reference_price
     if reference.mark.price != original_terms.notional_evidence.price or reference.mark.source_event_id != original_terms.bar_event_id:
         raise d.ArtifactIntegrityError("economic original quote reference is substituted")
@@ -237,7 +255,7 @@ def _verify_economic_opening_inputs_v1(*, sources, stream, observation, terms, a
     extra_p = extra_f = 0
     if reason is None:
         extra_p, extra_f, own_shares = _extras_v1(sources, order, market, fee)
-        if any(type(p) is not _EconomicOpeningOutcomeV1 or p.fill is None or p.sources_hash != d.canonical_sha256(sources) for p in budget_prefix):
+        if any(type(p) is not _EconomicOpeningOutcomeV1 or p.fill is None or p.sources_hash != _economic_sources_hash_v1(sources) for p in budget_prefix):
             raise d.ArtifactIntegrityError("economic opening prefix must be the actual prior selected set")
         used = {}
         for prior in budget_prefix:
@@ -265,7 +283,7 @@ def _economic_opening_v1(*, sources, stream, observation, terms, admission, budg
         decision = quote.result
         fill_id = d.DomainId(d.DomainIdKind.FILL, d.DomainIdKind.FILL.prefix + "_" + d.canonical_sha256({
             "type": "cn_a_share_portfolio_economic_open_fill_identity", "order_id": order.order_id,
-            "open_event_hash": observation.event.event_hash, "economic_proof_hash": d.canonical_sha256(sources),
+            "open_event_hash": observation.event.event_hash, "economic_proof_hash": _economic_sources_hash_v1(sources),
             "slippage_decision_id": decision.decision_id})[7:])
         fill = d.Fill(fill_id=fill_id, order_id=order.order_id, account_id=order.account_id,
             venue_id=order.intent.instrument_id.venue, instrument_id=order.intent.instrument_id, side=order.intent.side,
@@ -275,7 +293,7 @@ def _economic_opening_v1(*, sources, stream, observation, terms, admission, budg
             slippage_decision_id=decision.decision_id, slippage_model_key=decision.component_ref.component_key,
             slippage_calibration_id=d.canonical_sha256(decision.calibration_ref), liquidity="full", execution_time=observation.event.event_time)
     action = NoEligibleBarAction.FULL_FILL if fill is not None else NoEligibleBarAction.EXPIRE if order.intent.time_in_force is d.TimeInForce.DAY else NoEligibleBarAction.KEEP_ACTIVE
-    return _EconomicOpeningOutcomeV1(order.order_id, observation.observation_hash, d.canonical_sha256(sources),
+    return _EconomicOpeningOutcomeV1(order.order_id, observation.observation_hash, _economic_sources_hash_v1(sources),
         d.canonical_sha256(admission), d.canonical_sha256(terms), quote, market, issues, fee, action, reason, fill,
         _cent(extra_p), _cent(extra_f), tuple(p.order_id for p in budget_prefix))
 
@@ -315,7 +333,7 @@ def _book_economic_full_fill_batch_v1(*, sources, steps):
     for index, step in enumerate(ordered):
         opening = step.opening
         original = next(s for s in sources.order_streams if s.order.order_id == opening.order_id)
-        if (opening.sources_hash != d.canonical_sha256(sources)
+        if (opening.sources_hash != _economic_sources_hash_v1(sources)
                 or opening.budget_prefix_order_ids != tuple(s.opening.order_id for s in ordered[:index])
                 or step.terminal_order.records[:len(original.records)] != original.records):
             raise d.ArtifactIntegrityError("economic booking lost exact common source/selection/Order prefix")
@@ -345,16 +363,22 @@ def _book_economic_full_fill_batch_v1(*, sources, steps):
     return journal, ledger, fills, fees
 
 
-def _economic_venue_funding_v1(*, sources, candidates):
+def _economic_venue_funding_v1(*, sources, candidates, use_checkpoint_cash=False, evaluations=None):
     if type(sources) is not _EconomicOpenSourcesV1 or type(candidates) is not tuple:
         raise TypeError("economic funding must derive from exact source and actual order candidates")
     if len({row[0].order_id for row in candidates}) != len(candidates):
         raise d.ArtifactIntegrityError("economic funding repeats an Order requirement")
-    required = {r.key: 0 for r in sources.economic_projection.cash_rows}
+    if evaluations is not None and (type(evaluations) is not dict or evaluations):
+        raise ValueError("economic funding evaluations require a fresh opening-local dict")
+    cash_rows = sources.economic_projection.cash_rows
+    required = {r.key: 0 for r in cash_rows}
     buy_extra = 0
     coordinates = []
     for order, observation, terms in candidates:
-        quote, market, issues, fee, reason = _economic_evaluation_v1(order, observation, terms)
+        evaluation = _economic_evaluation_v1(order, observation, terms)
+        if evaluations is not None:
+            evaluations[order.order_id] = evaluation
+        quote, market, issues, fee, reason = evaluation
         if reason is not None or (order.intent.side is d.OrderSide.BUY and sources.economic_projection.tax_shortfall.units):
             continue
         extra_p, extra_f, own_shares = _extras_v1(sources, order, market, fee)
@@ -365,8 +389,16 @@ def _economic_venue_funding_v1(*, sources, candidates):
         if order.intent.side is d.OrderSide.BUY:
             buy_extra += extra_p + extra_f
         coordinates.append((order.order_id, quote.result.decision_id, _cent(extra_p), _cent(extra_f)))
-    if (sum(required.values()) > sum(row.spendable.units for row in sources.economic_projection.cash_rows)
+    if (sum(required.values()) > sum(row.spendable.units for row in cash_rows)
             or buy_extra > sources.economic_projection.buy_budget.units):
+        return ()
+    # Phase 49 already proved the exact Journal, Book, and reservations
+    # through this UTC. With no deficit in pre-tax native cash, the funding
+    # planner reaches its empty result before using a transfer identity.
+    if (use_checkpoint_cash and sources.at.phase.rank == 49 and sources.at.phase.code == "cn_economic_native"
+            and sources.at.source_sequence.value == 0
+            and sum(row.native_available.units for row in cash_rows) == sources.cash.spendable.units
+            and all(0 <= required[row.key] <= row.native_available.units for row in cash_rows)):
         return ()
     at = d.SimulationInstant(sources.at.instant, d.TimelinePhase(50, "cn_economic_native"), d.SourceSequence(0))
     pair = plan_cn_portfolio_venue_funding_development_v1(journal=sources.journal,
@@ -374,8 +406,8 @@ def _economic_venue_funding_v1(*, sources, candidates):
         order_streams=sources.order_streams, reservation_schedules=sources.reservation_schedules,
         market_rules=sources.market_rules, required_by_venue=tuple(sorted(((k, _cent(v)) for k, v in required.items()), key=lambda row: row[0].venue_id.value)),
         at=at, target_hash=d.canonical_sha256({"type": "cn_a_share_economic_funding_requirements", "schema_version": 1,
-            "source_hash": d.canonical_sha256(sources), "order_requirements": tuple(coordinates)}))
-    spendable = {r.key: r.spendable.units for r in sources.economic_projection.cash_rows}
+            "source_hash": _economic_sources_hash_v1(sources), "order_requirements": tuple(coordinates)}))
+    spendable = {r.key: r.spendable.units for r in cash_rows}
     if any(-change.value.units > spendable[change.key] for entry in pair for change in entry.balance_changes if change.value.units < 0):
         return ()
     return pair

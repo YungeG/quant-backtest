@@ -1233,7 +1233,12 @@ _ALLOWED_RELATIVE_IMPORTS = {
     "settlement",
 }
 _ALLOWED_IMPORTS_BY_FILE = {
-    'cash_dividend_projection_v1.py': {'__future__', 'crypto_quant_domain', 'crypto_quant_trading.journal', 'crypto_quant_trading.ledger', 'crypto_quant_trading.marks', 'crypto_quant_trading.orders', 'crypto_quant_trading.reservations', 'crypto_quant_trading.settlement', 'crypto_quant_trading.snapshots', 'crypto_quant_trading.valuation', 'dataclasses', 'enum', 're', 'unicodedata'},
+    'cash_dividend_projection_v1.py': {
+        '__future__', 'collections.abc', 'crypto_quant_domain', 'crypto_quant_trading.journal',
+        'crypto_quant_trading.ledger', 'crypto_quant_trading.marks', 'crypto_quant_trading.orders',
+        'crypto_quant_trading.reservations', 'crypto_quant_trading.settlement', 'crypto_quant_trading.snapshots',
+        'crypto_quant_trading.valuation', 'dataclasses', 'enum', 'hashlib', 're', 'unicodedata',
+    },
     'cash_dividend_accounting_v1.py': {'__future__', 'crypto_quant_domain', 'crypto_quant_trading.journal', 'crypto_quant_trading.ledger', 'crypto_quant_trading.orders', 'crypto_quant_trading.reservations', 'crypto_quant_trading.settlement', 'dataclasses', 'enum', 'math'},
     'portfolio_economic_v1/__init__.py': {'crypto_quant_trading.profiles.cn_a_share.cash_dividend_accounting_v1', 'crypto_quant_trading.profiles.cn_a_share.cash_dividend_projection_v1'},
     "portfolio_open_risk_development_v1.py": {"__future__", "crypto_quant_domain", "crypto_quant_trading.fee_reservations", "crypto_quant_trading.market_rules", "crypto_quant_trading.reservations", "dataclasses", "re"},

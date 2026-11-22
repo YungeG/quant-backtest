@@ -1,7 +1,9 @@
 """Pure native economic state, complete checkpoints and allocation consumers."""
 from __future__ import annotations
 
+from collections.abc import Callable
 from dataclasses import InitVar, dataclass, field, replace
+from hashlib import sha256
 
 from crypto_quant_domain import (
     CurrencyId, DecisionBatch, ExecutionStyle, Money, PortfolioSnapshot, PositionBalanceKey,
@@ -13,7 +15,7 @@ from crypto_quant_trading import (
     AccountingJournal, ApprovedPortfolioTarget, AtomicDecisionBatchCollector, AtomicDecisionBatchResult,
     AvailabilityProjection, CapitalAllocationPolicyRef, CurrencyValuationGraph,
     DecisionBatchExpectation, DecisionBatchSubmission, GenericLedger,
-    InstrumentSizingInput, LatestSleeveDecisionState, MarketSettlementRules, NormalizedPortfolioTarget,
+    InstrumentSizingInput, LatestSleeveDecisionState, LedgerSchema, MarketSettlementRules, NormalizedPortfolioTarget,
     OrderEventStream, OrderPlan, OrderReservationSchedule, PortfolioAllocation,
     PortfolioAllocator, PortfolioRiskAction, PortfolioRiskEvaluator, PortfolioRiskLimit,
     PortfolioRiskPolicy, PortfolioRiskScope, PortfolioSnapshotProjector, PositionSizer,
@@ -43,6 +45,7 @@ from .cn_a_share_portfolio_standard_definition_v1 import CnASharePortfolioMarkBa
 from .cn_a_share_portfolio_standard_native_state_v1 import _NativeSignalTargetV1
 from .cn_a_share_portfolio_settlement_development_v1 import (
     _NativeSettlementResolutionMemo, _build_cn_a_share_portfolio_settlement_facts_v1, _book_body,
+    _resolve_cn_a_share_portfolio_settlement_memo_obligations_v1,
 )
 from .engine import EngineFailureCode
 from .profile_portfolio_execution import (
@@ -52,6 +55,10 @@ from .profile_portfolio_execution import (
 _CNY = CurrencyId("CNY")
 _CENT = Scale(2)
 _NOTIONAL = Scale(14)
+_MAX_BOOK_DIGEST_MEMO_BYTES = 1024 * 1024
+_EconomicProjector = Callable[
+    [e.CnASharePortfolioEconomicProjectionInputsV1], e.CnAShareEconomicProjectionOutcomeV1
+]
 
 
 class _EconomicNativeFailureV1(Exception):
@@ -120,19 +127,74 @@ def _economic_marks_at_v1(inputs, at):
 
 
 def _economic_projection_at_v1(*, inputs, journal, settlement_book, order_streams,
-    reservation_schedules, market_rules, dividend_state, marks):
-    outcome = e.project_cn_a_share_portfolio_economic_state_v1(e.CnASharePortfolioEconomicProjectionInputsV1(
+    reservation_schedules, market_rules, dividend_state, marks, projector: _EconomicProjector | None = None):
+    native_inputs = e.CnASharePortfolioEconomicProjectionInputsV1(
         journal, inputs.scope.ledger_schema, settlement_book, order_streams, reservation_schedules,
         market_rules, inputs.scope.instrument_catalog, marks.marks,
         CurrencyValuationGraph(marks.at.instant, PricePurpose.VALUATION, ()), inputs.notional_quantization,
-        dividend_state, marks.at))
+        dividend_state, marks.at)
+    project = e.project_cn_a_share_portfolio_economic_state_v1 if projector is None else projector
+    outcome = project(native_inputs)
     if outcome.projection is None:
         raise _EconomicNativeFailureV1(EngineFailureCode.SNAPSHOT_PROJECTION_FAILURE, outcome.failure,
-            operation="economic_projection",native_inputs={"inputs":e.CnASharePortfolioEconomicProjectionInputsV1(
-                journal,inputs.scope.ledger_schema,settlement_book,order_streams,reservation_schedules,market_rules,
-                inputs.scope.instrument_catalog,marks.marks,CurrencyValuationGraph(marks.at.instant,PricePurpose.VALUATION,()),
-                inputs.notional_quantization,dividend_state,marks.at)},original_claim={"marks":marks})
+            operation="economic_projection",native_inputs={"inputs":native_inputs},original_claim={"marks":marks})
     return outcome.projection
+
+
+def _economic_book_prefix_v1(book: SettlementBook) -> dict[str, object]:
+    """Commit the existing native book chain, not a claim from a decoded tape."""
+    if type(book) is not SettlementBook:
+        raise TypeError("economic book prefix requires exact native Book")
+    cursor = book.cursor_at(book.event_count)
+    return {"type": "backtest_economic_book_prefix", "schema_version": 1,
+            "account_id": book.account_id, "event_count": cursor.position, "book_hash": cursor.prefix_hash}
+
+
+@dataclass(slots=True)
+class _EconomicSourceDigestMemoV1:
+    """Reuse immutable source fields within one segmented execution or verification."""
+    journal: AccountingJournal | None = None
+    schema: LedgerSchema | None = None
+    digest: str | None = None
+    book: SettlementBook | None = None
+    book_bytes: bytes | None = field(default=None, repr=False)
+    schedules: tuple[OrderReservationSchedule, ...] = ()
+    schedule_hashes: tuple[str, ...] = ()
+
+    def digest_for(self, schema: LedgerSchema, journal: AccountingJournal) -> str:
+        if self.journal is journal and self.schema is schema and self.digest is not None:
+            return self.digest
+        digest = GenericLedger(schema).project(journal).state_hash
+        self.journal, self.schema, self.digest = journal, schema, digest
+        return digest
+
+    def hashes_for_schedules(self, schedules: tuple[OrderReservationSchedule, ...]) -> tuple[str, ...]:
+        if (len(schedules) != len(self.schedules)
+                or any(new is not old for new, old in zip(schedules, self.schedules, strict=True))):
+            self.schedule_hashes = tuple(schedule.schedule_hash for schedule in schedules)
+            self.schedules = schedules
+        return self.schedule_hashes
+
+    def source_hash_for(self, source: _EconomicOpenSourcesV1) -> str:
+        values = source.to_canonical_dict()
+        book_bytes = self.book_bytes
+        if self.book is not source.settlement_book or book_bytes is None:
+            book_bytes = d.canonical_bytes(values["book"])
+            if len(book_bytes) <= _MAX_BOOK_DIGEST_MEMO_BYTES:
+                self.book, self.book_bytes = source.settlement_book, book_bytes
+            else:
+                self.book, self.book_bytes = None, None
+        # The root keys are fixed ASCII text. Encode each value canonically,
+        # preserving the root order and separators of the Domain encoder.
+        digest = sha256(b"{")
+        for index, (key, value) in enumerate(sorted(values.items())):
+            if index:
+                digest.update(b",")
+            digest.update(d.canonical_bytes(key))
+            digest.update(b":")
+            digest.update(book_bytes if key == "book" else d.canonical_bytes(value))
+        digest.update(b"}")
+        return "sha256:" + digest.hexdigest()
 
 
 @dataclass(frozen=True, slots=True)
@@ -147,13 +209,18 @@ class _EconomicOpenSourcesV1:
     journal_entry_ids: tuple[tuple[str, d.DomainId], ...]
     at: SimulationInstant
     settlement_memo: InitVar[_NativeSettlementResolutionMemo | None] = None
+    projector: InitVar[_EconomicProjector | None] = None
+    previous_availability: InitVar[_EconomicOpenSourcesV1 | None] = None
     economic_projection: e.CnASharePortfolioEconomicProjectionV1 = field(init=False)
     cash: CnAShareSharedCnyCashSnapshotV1 = field(init=False)
     sellability: CnASharePortfolioSellabilitySnapshotV1 = field(init=False)
     reservations: ResourceReservationState = field(init=False)
     available_by_venue: tuple[tuple[CashBalanceKey, Money], ...] = field(init=False)
+    _source_hash: str | None = field(init=False, default=None, compare=False, repr=False)
+    _ledger_hash: str | None = field(init=False, default=None, compare=False, repr=False)
+    _source_digest_memo: _EconomicSourceDigestMemoV1 | None = field(default=None, compare=False, repr=False, kw_only=True)
 
-    def __post_init__(self, settlement_memo) -> None:
+    def __post_init__(self, settlement_memo, projector, previous_availability) -> None:
         if (type(self.inputs) not in (CnASharePortfolioEconomicDevelopmentInputsV1, CnASharePortfolioEconomicDevelopmentInputsV2)
                 or type(self.journal) is not AccountingJournal
                 or type(self.settlement_book) is not SettlementBook
@@ -175,6 +242,69 @@ class _EconomicOpenSourcesV1:
                        or s.order.intent.instrument_id not in scope.instrument_ids or s.order.created_at > self.at
                        or s.state is None or s.state.updated_at > self.at for s in self.order_streams)):
             raise ValueError("economic opening source account, Journal prefix or full-clock mismatch")
+        previous = previous_availability
+        scoped = self._source_digest_memo is not None
+        same_scope = scoped and previous is not None and previous._source_digest_memo is self._source_digest_memo
+        same_history = previous is not None and self._shares_native_history_inputs(previous)
+        if not (same_scope and same_history):
+            self._verify_native_source_history(initial, settlement_memo)
+        if type(self.dividend_state) is not e.CnAShareCashDividendStateV1 or self.dividend_state.as_of > self.at:
+            raise ValueError("economic source state is invalid or future")
+        history = e.CnAShareCashDividendHistoryInputsV1(self.journal, scope.ledger_schema,
+            self.settlement_book, self.order_streams, self.reservation_schedules, self.market_rules,
+            scope.instrument_catalog, self.dividend_state, self.inputs.dividend_actions, self.journal_entry_ids, self.at)
+        crosses_event = not scoped or self._crosses_dividend_clock(self.dividend_state.as_of)
+        same_inputs = previous is not None and same_history and self._shares_availability_inputs(previous)
+        reuse_history = (same_scope and not crosses_event and previous is not None and same_inputs
+            and previous.at <= self.at and previous.journal_entry_ids is self.journal_entry_ids
+            and previous.dividend_state.account_id == self.dividend_state.account_id
+            and previous.dividend_state.claims is self.dividend_state.claims
+            and not self._crosses_dividend_clock(previous.at))
+        if not reuse_history:
+            rejected = e.verify_cn_a_share_cash_dividend_history_v1(history)
+            if rejected is not None:
+                raise d.ArtifactIntegrityError("economic dividend history mismatch: " + d.canonical_sha256(rejected))
+        state = replace(self.dividend_state, as_of=self.at)
+        # Native verification uses the dividend state's clock to select its
+        # event prefix. Advancing that clock without adding a model event
+        # preserves the claims and journal evidence just checked above.
+        if crosses_event:
+            rejected = e.verify_cn_a_share_cash_dividend_history_v1(replace(history, dividend_state=state))
+            if rejected is not None:
+                raise d.ArtifactIntegrityError("economic checkpoint crosses an unapplied model boundary")
+        marks = _economic_marks_at_v1(self.inputs, self.at)
+        projection = _economic_projection_at_v1(inputs=self.inputs, journal=self.journal,
+            settlement_book=self.settlement_book, order_streams=self.order_streams,
+            reservation_schedules=self.reservation_schedules, market_rules=self.market_rules,
+            dividend_state=state, marks=marks, projector=projector)
+        if previous is not None and same_inputs and self.at.instant == previous.at.instant:
+            cash = previous.cash
+            sellability = previous.sellability
+            reservations = previous.reservations
+        elif previous is not None and same_inputs and same_scope and previous.at <= self.at:
+            # The full-clock guard already requires all Book events, Journal
+            # entries and Order updates to precede each checkpoint. Exact
+            # inputs therefore select the same settlement prefix at both UTCs.
+            cash = replace(previous.cash, as_of=self.at.instant)
+            sellability = replace(previous.sellability, as_of=self.at.instant)
+            reservations = previous.reservations
+        else:
+            cash = project_cn_a_share_shared_cny_cash_v1(journal=self.journal, ledger_schema=scope.ledger_schema,
+                settlement_book=self.settlement_book, order_streams=self.order_streams,
+                reservation_schedules=self.reservation_schedules, market_rules=self.market_rules, as_of=self.at.instant)
+            sellability = project_cn_a_share_portfolio_sellability_v1(journal=self.journal,
+                ledger_schema=scope.ledger_schema, settlement_book=self.settlement_book,
+                order_streams=self.order_streams, reservation_schedules=self.reservation_schedules,
+                market_rules=self.market_rules, as_of=self.at.instant)
+            reservations = ResourceReservationBook(scope.account_id).project(self.order_streams, self.reservation_schedules)
+        object.__setattr__(self, "dividend_state", state)
+        object.__setattr__(self, "economic_projection", projection)
+        object.__setattr__(self, "cash", cash)
+        object.__setattr__(self, "sellability", sellability)
+        object.__setattr__(self, "reservations", reservations)
+        object.__setattr__(self, "available_by_venue", tuple((r.key, r.spendable) for r in projection.cash_rows))
+
+    def _verify_native_source_history(self, initial, settlement_memo) -> None:
         suffix = self.journal.entries[len(initial):]
         if any(e.entry_type not in {AccountingEntryType.FILL_BOOKED, AccountingEntryType.FEE_CHARGED,
                                    AccountingEntryType.CAPITAL_TRANSFERRED, AccountingEntryType.CORPORATE_ACTION_CASH_PAID,
@@ -200,64 +330,106 @@ class _EconomicOpenSourcesV1:
         entries = tuple(e for e in suffix if e.entry_type is AccountingEntryType.FILL_BOOKED)
         if len(fills) != len(entries) or len({f.fill_id for f in fills}) != len(fills):
             raise ValueError("economic current sources lost historical native Fill/Journal facts")
+        entries_by_source_id: dict[str, list[AccountingJournalEntry]] = {}
+        for entry in entries:
+            for source_id in entry.source_ids:
+                entries_by_source_id.setdefault(source_id, []).append(entry)
+        obligations_by_fill_id = {}
+        for obligation in self.settlement_book.obligations:
+            obligations_by_fill_id.setdefault(obligation.obligation.source_fill_id, []).append(obligation)
+        fill_entries: list[tuple[d.Fill, AccountingJournalEntry]] = []
         for fill in fills:
-            linked = tuple(e for e in entries if fill.fill_id.value in e.source_ids)
-            obligations = tuple(ob for ob in self.settlement_book.obligations
-                                if ob.obligation.source_fill_id == fill.fill_id)
+            linked = tuple(entries_by_source_id.get(fill.fill_id.value, ()))
+            obligations = tuple(obligations_by_fill_id.get(fill.fill_id, ()))
             if (len(linked) != 1 or len(obligations) != 2
                     or linked[0].account_id != fill.account_id or linked[0].venue_id != fill.venue_id):
                 raise ValueError("economic current sources lost native Fill/Journal/T+1 obligation cover")
+            fill_entries.append((fill, linked[0]))
         if {ob.obligation.source_fill_id for ob in self.settlement_book.obligations} != {f.fill_id for f in fills}:
             raise ValueError("economic current Book contains foreign or missing Fill sources")
         if fills:
-            expected = _build_cn_a_share_portfolio_settlement_facts_v1(fills=fills,
-                journal=self.journal, source_hash=canonical_sha256(fills), calendars=self.inputs.calendars,
-                memo=settlement_memo).book
-            if self.settlement_book.obligations != expected.obligations:
+            if settlement_memo is None:
+                expected_obligations = _build_cn_a_share_portfolio_settlement_facts_v1(fills=fills,
+                    journal=self.journal, source_hash=canonical_sha256(fills),
+                    calendars=self.inputs.calendars).book.obligations
+            else:
+                expected_obligations = _resolve_cn_a_share_portfolio_settlement_memo_obligations_v1(
+                    fill_entries=tuple(fill_entries), calendars=self.inputs.calendars,
+                    memo=settlement_memo)
+            if self.settlement_book.obligations != expected_obligations:
                 raise ValueError("economic current Book differs from exact native T+1 amount/key/time resolution")
-        if type(self.dividend_state) is not e.CnAShareCashDividendStateV1 or self.dividend_state.as_of > self.at:
-            raise ValueError("economic source state is invalid or future")
-        history = e.CnAShareCashDividendHistoryInputsV1(self.journal, scope.ledger_schema,
-            self.settlement_book, self.order_streams, self.reservation_schedules, self.market_rules,
-            scope.instrument_catalog, self.dividend_state, self.inputs.dividend_actions, self.journal_entry_ids, self.at)
-        rejected = e.verify_cn_a_share_cash_dividend_history_v1(history)
-        if rejected is not None:
-            raise d.ArtifactIntegrityError("economic dividend history mismatch: " + d.canonical_sha256(rejected))
-        state = replace(self.dividend_state, as_of=self.at)
-        rejected = e.verify_cn_a_share_cash_dividend_history_v1(replace(history, dividend_state=state))
-        if rejected is not None:
-            raise d.ArtifactIntegrityError("economic checkpoint crosses an unapplied model boundary")
-        marks = _economic_marks_at_v1(self.inputs, self.at)
-        projection = _economic_projection_at_v1(inputs=self.inputs, journal=self.journal,
-            settlement_book=self.settlement_book, order_streams=self.order_streams,
-            reservation_schedules=self.reservation_schedules, market_rules=self.market_rules,
-            dividend_state=state, marks=marks)
-        cash = project_cn_a_share_shared_cny_cash_v1(journal=self.journal, ledger_schema=scope.ledger_schema,
-            settlement_book=self.settlement_book, order_streams=self.order_streams,
-            reservation_schedules=self.reservation_schedules, market_rules=self.market_rules, as_of=self.at.instant)
-        sellability = project_cn_a_share_portfolio_sellability_v1(journal=self.journal,
-            ledger_schema=scope.ledger_schema, settlement_book=self.settlement_book,
-            order_streams=self.order_streams, reservation_schedules=self.reservation_schedules,
-            market_rules=self.market_rules, as_of=self.at.instant)
-        reservations = ResourceReservationBook(scope.account_id).project(self.order_streams, self.reservation_schedules)
-        object.__setattr__(self, "dividend_state", state)
-        object.__setattr__(self, "economic_projection", projection)
-        object.__setattr__(self, "cash", cash)
-        object.__setattr__(self, "sellability", sellability)
-        object.__setattr__(self, "reservations", reservations)
-        object.__setattr__(self, "available_by_venue", tuple((r.key, r.spendable) for r in projection.cash_rows))
+
+    def _crosses_dividend_clock(self, start: SimulationInstant) -> bool:
+        for action in self.inputs.dividend_actions.actions:
+            clocks: tuple[SimulationInstant, ...] = (action.registered_at, action.entitlement_at, action.payment_due_at)
+            if action.tax_policy.mode == "FIXED_RATIO":
+                tax_at = action.tax_policy.due_at
+                if tax_at is None:
+                    return True
+                clocks += (tax_at,)
+            if any(start < clock <= self.at for clock in clocks):
+                return True
+        return False
+
+    def _shares_native_history_inputs(self, previous: _EconomicOpenSourcesV1) -> bool:
+        return (self.inputs is previous.inputs
+                and self.journal is previous.journal
+                and self.settlement_book is previous.settlement_book
+                and len(self.order_streams) == len(previous.order_streams)
+                and all(current is prior for current, prior in zip(self.order_streams, previous.order_streams, strict=True)))
+
+    def _shares_availability_inputs(self, previous: _EconomicOpenSourcesV1) -> bool:
+        return (self.market_rules is previous.market_rules
+                and len(self.reservation_schedules) == len(previous.reservation_schedules)
+                and all(current is prior for current, prior in zip(
+                    self.reservation_schedules, previous.reservation_schedules, strict=True)))
 
     def to_canonical_dict(self) -> dict[str, object]:
+        memo = self._source_digest_memo
         return {"type": "cn_a_share_portfolio_economic_sources", "schema_version": 1,
             "definition_hash": self.inputs._definition_source_hash, "at": self.at,
             "journal_count": self.journal.entry_count, "journal_hash": self.journal.journal_hash,
-            "ledger_hash": GenericLedger(self.inputs.scope.ledger_schema).project(self.journal).state_hash,
+            "ledger_hash": self.ledger_hash,
             "book": _book_body(self.settlement_book),
             "order_stream_hashes": tuple(s.stream_hash for s in self.order_streams),
-            "schedule_hashes": tuple(s.schedule_hash for s in self.reservation_schedules),
+            "schedule_hashes": (memo.hashes_for_schedules(self.reservation_schedules) if memo is not None
+                else tuple(s.schedule_hash for s in self.reservation_schedules)),
             "market_rules_hash": self.market_rules.rules_hash, "dividend_state": self.dividend_state,
             "journal_entry_ids": self.journal_entry_ids, "economic_projection": self.economic_projection,
             "sellability": self.sellability, "reservations": self.reservations}
+
+    @property
+    def ledger_hash(self) -> str:
+        value = self._ledger_hash
+        if value is None:
+            schema = self.inputs.scope.ledger_schema
+            memo = self._source_digest_memo
+            value = (memo.digest_for(schema, self.journal) if memo is not None
+                else GenericLedger(schema).project(self.journal).state_hash)
+            object.__setattr__(self, "_ledger_hash", value)
+        return value
+
+    @property
+    def source_hash(self) -> str:
+        value = self._source_hash
+        if value is None:
+            memo = self._source_digest_memo
+            value = (memo.source_hash_for(self)
+                if memo is not None and type(self) is _EconomicOpenSourcesV1 else d.canonical_sha256(self))
+            object.__setattr__(self, "_source_hash", value)
+        return value
+
+    def to_paged_source(self) -> dict[str, object]:
+        value = self.to_canonical_dict()
+        value["schema_version"] = 2
+        value["book"] = _economic_book_prefix_v1(self.settlement_book)
+        return value
+
+
+def _economic_sources_hash_v1(value) -> str:
+    if type(value) is _EconomicOpenSourcesV1:
+        return value.source_hash
+    return d.canonical_sha256(value)
 
 
 def _economic_signal_target_v1(*, sources: _EconomicOpenSourcesV1, event: MarketEvent):

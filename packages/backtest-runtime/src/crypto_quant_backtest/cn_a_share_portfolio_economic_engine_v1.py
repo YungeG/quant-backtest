@@ -6,7 +6,7 @@ import crypto_quant_domain as d
 import crypto_quant_trading as t
 from .cn_a_share_portfolio_economic_case_v1 import _clock_v1 as _at
 from .cn_a_share_portfolio_economic_opening_v1 import _economic_evaluation_v1
-from .cn_a_share_portfolio_economic_native_state_v1 import _EconomicOpenSourcesV1
+from .cn_a_share_portfolio_economic_native_state_v1 import _EconomicSourceDigestMemoV1, _EconomicOpenSourcesV1
 from crypto_quant_trading.profiles.cn_a_share.portfolio_v1 import CnASharePortfolioOrderPlanV1
 
 
@@ -71,11 +71,13 @@ import crypto_quant_trading.profiles.cn_a_share.portfolio_economic_v1 as e
 from crypto_quant_trading.profiles.cn_a_share.portfolio_v1 import CnASharePortfolioOrderProposalV1
 from .artifact_envelope_reader import ArtifactEnvelopeReader
 from .cn_a_share_portfolio_economic_case_v1 import (
-    _bind_economic_portfolio_sources_v1, _economic_events_v1, _economic_opening_proof_version_v1,
+    _BoundEconomicPortfolioSourcesV1, _bind_economic_portfolio_sources_v1, _economic_events_v1,
+    _economic_opening_proof_version_v1,
     _verify_bounded_signal_cancellation_v1,
 )
 from .cn_a_share_portfolio_economic_native_state_v1 import (
-    _economic_signal_target_v1, _EconomicNativeFailureV1, _EconomicFailureContextV1, _advance_economic_settlement_v1,
+    _economic_signal_target_v1, _EconomicNativeFailureV1, _EconomicFailureContextV1,
+    _advance_economic_settlement_v1, _economic_book_prefix_v1,
 )
 from .cn_a_share_portfolio_economic_opening_v1 import (
     _economic_opening_v1, _EconomicOpeningOutcomeV1, _EconomicFinancialStepV1,
@@ -88,8 +90,9 @@ from .cn_a_share_portfolio_settlement_development_v1 import (
 from .engine import (EngineExecutionOutcome, EngineExecutionResult, EngineFailure, EngineFailureCode,
     EngineStage, ExecutionTrace, ExecutionTraceEntry, EngineCancellation, EngineCancellationRequest)
 from .execution import BarOpenObservation, BarOpenKind, NoEligibleBarAction
+from ._economic_result_encoding import encode_economic_paged_fact
 from .financial_dispatch import FinancialDispatchArtifact
-from .profile_portfolio_execution import _ResolvedProfilePortfolioCaseV2
+from .profile_portfolio_execution import _ECONOMIC_CHUNKED_SOURCE_SPEC_VERSION, _ResolvedProfilePortfolioCaseV2
 from .run_end import RunEndCoordinator, RunEndEvidence, MarkToMarketCloseoutPolicy
 from .timeline import TimelineCursorV2
 
@@ -120,8 +123,21 @@ def _used_identity_keys_v1(case, journal, streams, pending, intention_ids=()):
 
 
 class _CnASharePortfolioEconomicEngineV1:
-    def __init__(self, *, artifact_reader: ArtifactEnvelopeReader):
+    def __init__(self, *, artifact_reader: ArtifactEnvelopeReader,
+                 fixed_sources: _BoundEconomicPortfolioSourcesV1 | None = None):
         self._reader = artifact_reader
+        self._fixed_sources = fixed_sources
+
+    def _referenced_fixed_sources(self, case, reader) -> _BoundEconomicPortfolioSourcesV1 | None:
+        bound = self._fixed_sources
+        if bound is not None and (
+            type(bound) is not _BoundEconomicPortfolioSourcesV1
+            or bound.case is not case
+            or bound.reader is not reader
+            or self._reader is not reader
+        ):
+            raise d.ArtifactIntegrityError("economic fixed inputs belong to another Case or reader")
+        return bound
 
     def run(self, case, *, cancellation=None):
         if type(case) is InputValidationFailure:
@@ -132,8 +148,21 @@ class _CnASharePortfolioEconomicEngineV1:
             raise TypeError("economic cancellation requires exact native request")
         return self._run(case, cancellation)
 
-    def _run(self, case, cancellation):
-        bound = _bind_economic_portfolio_sources_v1(case, self._reader)
+    def stage_segmented(self, case, *, publisher, cancellation=None) -> d.ArtifactRef | EngineExecutionOutcome:
+        """Run once and stage a success; a staging ref is not a verified result or an Attempt."""
+        if type(case) is not _ResolvedProfilePortfolioCaseV2 or case.identity_manifest is None:
+            raise TypeError("segmented economic engine requires an exact sealed CaseV2")
+        _economic_opening_proof_version_v1(definition=case.execution_case_plan.definition, spec=case.semantic_spec)
+        if cancellation is not None and type(cancellation) is not EngineCancellationRequest:
+            raise TypeError("economic cancellation requires exact native request")
+        if not callable(getattr(publisher, "put", None)):
+            raise TypeError("segmented economic engine requires a publisher")
+        return self._run(case, cancellation, page_publisher=publisher)
+
+    def _run(self, case, cancellation, *, page_publisher=None):
+        bound = self._referenced_fixed_sources(case, self._reader) if page_publisher is not None else None
+        if bound is None:
+            bound = _bind_economic_portfolio_sources_v1(case, self._reader)
         inputs, openings, mapping = bound.inputs, bound.openings, bound.journal_entry_ids
         initial = case.financial_state
         journal, book, state = initial.journal, initial.settlement_book, case.execution_case_plan.initial_dividend_state
@@ -141,6 +170,7 @@ class _CnASharePortfolioEconomicEngineV1:
         streams, schedules, admissions, pending = {}, {}, {}, {}
         intention_ids = set()
         signals, artifacts, trace, fills, fees, slips = [], [], [], [], [], []
+        deferred = []  # Native snapshots, never encoded as legacy success artifacts in segmented mode.
         opening_count = daily_count = dividend_count = 0
         failed_id, failed_at = "economic.initial", inputs.initial_marks.at
         from .cn_a_share_portfolio_economic_definition_v2 import CnASharePortfolioEconomicDevelopmentInputsV2
@@ -154,24 +184,66 @@ class _CnASharePortfolioEconomicEngineV1:
             definition=case.execution_case_plan.definition, spec=case.semantic_spec)
         settlement_memo = (_NativeSettlementResolutionMemo(inputs.calendars)
             if inputs.definition().schema_version == 4 else None)
+        projector = (e.CnASharePortfolioEconomicProjectionInputsV1.scoped_projector()
+            if page_publisher is not None and case.semantic_spec.spec_version == _ECONOMIC_CHUNKED_SOURCE_SPEC_VERSION
+            else None)
+        source_digest_memo = _EconomicSourceDigestMemoV1() if projector is not None else None
+        previous_availability = None
         def make(at, j, b, ss, sch, st):
+            nonlocal previous_availability
             b = _advance_economic_settlement_v1(case=case, inputs=inputs, journal=j, book=b, consumer=at)
-            return _EconomicOpenSourcesV1(inputs, j, b, tuple(sorted(ss.values(), key=lambda row: row.order.order_id.value)),
-                tuple(sorted(sch.values(), key=lambda row: row.order_id.value)), rules, st, mapping, at, settlement_memo=settlement_memo)
+            source = _EconomicOpenSourcesV1(inputs, j, b, tuple(sorted(ss.values(), key=lambda row: row.order.order_id.value)),
+                tuple(sorted(sch.values(), key=lambda row: row.order_id.value)), rules, st, mapping, at,
+                settlement_memo=settlement_memo, projector=projector, previous_availability=previous_availability,
+                _source_digest_memo=source_digest_memo)
+            if projector is not None:
+                previous_availability = source
+            return source
         last = make(inputs.initial_marks.at, journal, book, streams, schedules, state)
         def commit(source):
             nonlocal journal, book, streams, schedules, state, last
             journal, book, state, last = source.journal, source.settlement_book, source.dividend_state, source
             streams = {s.order.order_id: s for s in source.order_streams}
             schedules = {s.order_id: s for s in source.reservation_schedules}
-        def evidence(role, event_id, at, payload):
+        def encoded_payload(role, payload, *, segmented):
             version = (opening_proof_version if role == "economic_opening_batch" else
                 2 if role == "economic_attempt_witness" or (v2 and role in {"economic_signal", "economic_native_failure"}) else 1)
+            if segmented:
+                payload = {key: value.to_paged_source() if type(value) is _EconomicOpenSourcesV1 else value
+                           for key, value in payload.items()}
+            if role == "economic_opening_batch":
+                book_value = _economic_book_prefix_v1 if segmented else _book_body
+                payload = dict(payload, book_after=book_value(payload["book_after"]))
+            return version + int(segmented), payload
+
+        def encode(role, event_id, at, payload, *, segmented=False):
+            version, payload = encoded_payload(role, payload, segmented=segmented)
             envelope = d.ArtifactEnvelope.create("cn_a_share_portfolio_" + role, version, payload)
-            artifact = FinancialDispatchArtifact(role, event_id, at, profile_prefix + ".native-finance", 1,
+            return FinancialDispatchArtifact(role, event_id, at, profile_prefix + ".native-finance", 1,
                 component_hash, inputs._definition_source_hash, d.canonical_sha256(envelope), envelope)
-            artifacts.append(artifact)
-            trace.append(ExecutionTraceEntry(len(trace), EngineStage.FINANCIAL_EVENT, at, event_id, artifact.artifact_hash))
+
+        def append_legacy(*row, retain_artifact=True):
+            artifact = encode(*row)
+            if retain_artifact:
+                artifacts.append(artifact)
+            trace.append(ExecutionTraceEntry(len(trace), EngineStage.FINANCIAL_EVENT,
+                artifact.occurred_at, artifact.source_event_id, artifact.artifact_hash))
+
+        def evidence(role, event_id, at, payload):
+            if page_publisher is None:
+                append_legacy(role, event_id, at, payload)
+            else:
+                deferred.append((role, event_id, at, payload))
+
+        def finish_terminal_trace(*, retain_artifacts=True):
+            # Failure evidence includes the old artifacts. Cancellation only carries the trace digest.
+            for index, row in enumerate(deferred):
+                append_legacy(*row, retain_artifact=retain_artifacts)
+                if not retain_artifacts:
+                    deferred[index] = None
+            deferred.clear()
+            return ExecutionTrace(tuple(trace))
+
         def failure(code, native, ca_inputs=None, ca_failure=None, native_rejection=None):
             if ca_failure is None:
                 if native_rejection is None or native_rejection.operation is None or native_rejection.native_inputs is None:
@@ -183,6 +255,7 @@ class _CnASharePortfolioEconomicEngineV1:
                     "native_inputs":(_economic_native_failure_inputs_v2(native_rejection.operation, native_rejection.native_inputs)
                         if v2 else native_rejection.native_inputs),
                     "native_outcome":native})
+            finish_terminal_trace()
             cause_hash = d.canonical_sha256(native)
             trace.append(ExecutionTraceEntry(len(trace), EngineStage.FINANCIAL_EVENT, failed_at, failed_id, cause_hash))
             full_trace = ExecutionTrace(tuple(trace))
@@ -235,7 +308,8 @@ class _CnASharePortfolioEconomicEngineV1:
                     event = case.target_stream.events[0]
                     if cancellation is not None and cancellation.cancel_before_event_id == event.event_id:
                         return EngineExecutionOutcome(cancellation=EngineCancellation(case.case_hash, cancellation,
-                            event_ids.index(event.event_id), ExecutionTrace(tuple(trace)).trace_hash))
+                            event_ids.index(event.event_id),
+                            finish_terminal_trace(retain_artifacts=False).trace_hash))
                     _retained_economic_decision_v2(inputs)
                     continue
                 if kind == "signal":
@@ -244,7 +318,8 @@ class _CnASharePortfolioEconomicEngineV1:
                     failed_id = event.event_id
                     if cancellation is not None and cancellation.cancel_before_event_id == event.event_id:
                         return EngineExecutionOutcome(cancellation=EngineCancellation(case.case_hash, cancellation,
-                            event_ids.index(event.event_id), ExecutionTrace(tuple(trace)).trace_hash))
+                            event_ids.index(event.event_id),
+                            finish_terminal_trace(retain_artifacts=False).trace_hash))
                     before = make(at, journal, book, streams, schedules, state)
                     commit(before)
                     signal, projection = (_economic_activation_signal_v2(sources=before, event=event) if v2
@@ -313,7 +388,8 @@ class _CnASharePortfolioEconomicEngineV1:
                     failed_id = bars[0][1].event_id
                     if cancellation is not None and any(event.event_id == cancellation.cancel_before_event_id for _, event in bars):
                         return EngineExecutionOutcome(cancellation=EngineCancellation(case.case_hash, cancellation,
-                            event_ids.index(cancellation.cancel_before_event_id), ExecutionTrace(tuple(trace)).trace_hash))
+                            event_ids.index(cancellation.cancel_before_event_id),
+                            finish_terminal_trace(retain_artifacts=False).trace_hash))
                     prior = make(at, journal, book, streams, schedules, state)
                     commit(prior)
                     by_instrument = {event.instrument_id: (i, event) for i, event in bars}
@@ -340,14 +416,18 @@ class _CnASharePortfolioEconomicEngineV1:
                         terms = bound.terms_by_side[event.event_id, stream.order.intent.side]
                         candidates.append((stream.order, observation, terms))
                     candidates.sort(key=lambda row: (row[0].intent.side is d.OrderSide.BUY, str(row[0].intent.instrument_id), row[0].order_id.value))
-                    funding = _economic_venue_funding_v1(sources=prior, candidates=tuple(candidates))
+                    candidates = tuple(candidates)
+                    evaluations = {} if projector is not None else None
+                    funding = _economic_venue_funding_v1(sources=prior, candidates=candidates,
+                        use_checkpoint_cash=projector is not None, evaluations=evaluations)
                     proposed_journal = journal.append_many(funding)
                     funded = make(_at(when, 55), proposed_journal, book, streams, schedules, state)
                     accepted, blocked, proposals = [], [], []
                     for order, observation, terms in candidates:
                         if order.order_id in streams:
                             continue
-                        quote, market, issues, fee, reason = _economic_evaluation_v1(order, observation, terms)
+                        quote, market, issues, fee, reason = (evaluations[order.order_id] if evaluations is not None
+                            else _economic_evaluation_v1(order, observation, terms))
                         if reason is None:
                             proposal = CnASharePortfolioOrderProposalV1(order.intent,
                                 market.approval.calculated_notional if order.intent.side is d.OrderSide.BUY else _cent(0),
@@ -382,6 +462,7 @@ class _CnASharePortfolioEconomicEngineV1:
                                     accepted.append((order, observation, terms, quote, fee))
                         if reason is not None:
                             blocked.append((order, observation, terms, quote, market, issues, fee, reason))
+                    del evaluations
                     candidate_streams, candidate_schedules, candidate_admissions = dict(streams), dict(schedules), dict(admissions)
                     if accepted:
                         plan = CnASharePortfolioOrderPlanV1.create(account_id=inputs.scope.account_id,
@@ -405,7 +486,7 @@ class _CnASharePortfolioEconomicEngineV1:
                     for order, observation, terms, quote, market, issues, fee, reason in blocked:
                         action = NoEligibleBarAction.EXPIRE if order.intent.time_in_force is d.TimeInForce.DAY else NoEligibleBarAction.KEEP_ACTIVE
                         outcomes.append(_EconomicOpeningOutcomeV1(order.order_id, observation.observation_hash,
-                            d.canonical_sha256(current), None, d.canonical_sha256(terms), quote, market, issues, fee,
+                            current.source_hash, None, d.canonical_sha256(terms), quote, market, issues, fee,
                             action, reason, None, _cent(0), _cent(0), ()))
                     working = sorted((stream for stream in streams.values() if stream.state is not None and stream.state.status in _WORKING),
                         key=lambda stream: (stream.order.intent.side is d.OrderSide.BUY, str(stream.order.intent.instrument_id), stream.order.order_id.value))
@@ -447,11 +528,11 @@ class _CnASharePortfolioEconomicEngineV1:
                     slips.extend(opening.slippage_outcome.result for opening in selected)
                     opening_count += 1
                     opening_sources = {"prior": prior, "funded": funded, "current": current}
-                    opening_proof = ({key + "_hash": d.canonical_sha256(source) for key, source in opening_sources.items()}
+                    opening_proof = ({key + "_hash": source.source_hash for key, source in opening_sources.items()}
                         if opening_proof_version == 2 else opening_sources)
                     evidence("economic_opening_batch", failed_id, _at(when, 98), {"when": when, **opening_proof,
                         "funding": funding, "outcomes": tuple(outcomes), "steps": tuple(steps),
-                        "journal_count_after": journal.entry_count, "book_after": _book_body(book),
+                        "journal_count_after": journal.entry_count, "book_after": book,
                         "dividend_state_after": state, "post_projection": post.economic_projection})
                     for role, order, stream_hash, schedule_hash, event in no_real:
                         evidence(role, event.event_id, _at(when, 98), {"order": order, "stream_hash": stream_hash,
@@ -474,15 +555,51 @@ class _CnASharePortfolioEconomicEngineV1:
                 final.order_streams, final.reservations, book.project(), ()), MarkToMarketCloseoutPolicy())
             if run_end.report is None:
                 raise _EconomicNativeFailureV1(EngineFailureCode.RUN_END_TERMINATED, run_end.termination,operation="run_end",native_inputs={"evidence":RunEndEvidence(case.timeline.window,cursor,final.economic_projection.snapshot,final.order_streams,final.reservations,book.project(),()),"policy":MarkToMarketCloseoutPolicy().component_ref},original_claim={"source":final})
-            head = d.canonical_sha256(tuple(a.artifact_hash for a in sorted(artifacts, key=lambda row: (row.occurred_at, row.source_event_id, row.role))))
+            segmented = page_publisher is not None
+            if segmented:
+                from ._segmented_economic_pages import publish_economic_series
+                from ._segmented_economic_result import _series, _stage_index
+
+                fseries, aseries = _series(case.case_hash, case.identity_manifest.semantic_run_id)
+                head_hashes = []
+                trace = [None] * len(deferred)
+                def fact_rows():
+                    order = sorted(range(len(deferred)), key=lambda i: (deferred[i][2], deferred[i][1], deferred[i][0]))
+                    for i in order:
+                        role, event_id, at, payload = deferred[i]
+                        if not v2 and projector is not None:
+                            # The spec@5 row is detached and consumed by the page
+                            # packer, which freezes it before the publisher sees it.
+                            version, payload = encoded_payload(role, payload, segmented=True)
+                            row, digest = encode_economic_paged_fact(role=role, source_event_id=event_id,
+                                occurred_at=at, component_key=profile_prefix + ".native-finance",
+                                component_digest=component_hash, input_hash=inputs._definition_source_hash,
+                                schema_version=version, payload=payload)
+                        else:
+                            artifact = encode(role, event_id, at, payload, segmented=True)
+                            row, digest = artifact.to_canonical_dict(), artifact.artifact_hash
+                        deferred[i] = None
+                        head_hashes.append(digest)
+                        trace[i] = ExecutionTraceEntry(i, EngineStage.FINANCIAL_EVENT, at, event_id, digest)
+                        yield row
+                financial_pages = publish_economic_series(page_publisher, fseries, fact_rows())
+                deferred.clear()
+                def admission_rows():
+                    for identity in sorted(admissions, key=lambda key: (admissions[key].sources.at.instant, key.value)):
+                        admission = admissions[identity]
+                        yield dict(admission.to_canonical_dict(), sources=admission.sources.to_paged_source())
+                admission_pages = publish_economic_series(page_publisher, aseries, admission_rows())
+                head = d.canonical_sha256(tuple(head_hashes))
+            else:
+                head = d.canonical_sha256(tuple(a.artifact_hash for a in sorted(artifacts, key=lambda row: (row.occurred_at, row.source_event_id, row.role))))
             schedule_hash = d.canonical_sha256({"action_set": inputs.dividend_actions,
                 "events": tuple((event_id, kind, at) for at, kind, _, event_id in _economic_events_v1(inputs))})
-            witness = {"type": "cn_a_share_portfolio_economic_native_witness", "schema_version": 1,
+            witness = {"type": "cn_a_share_portfolio_economic_native_witness", "schema_version": 2 if segmented else 1,
                 "case_hash": case.case_hash, "definition_hash": inputs._definition_source_hash,
                 "target_stream_digest": case.target_stream.target_stream_digest, "initial_journal_hash": inputs.initial_journal.journal_hash,
                 "initial_economic_projection_hash": case.execution_case_plan.initial_economic_projection.projection_hash,
-                "schedules": final.reservation_schedules, "book": _book_body(book),
-                "admissions": tuple(value for _, value in sorted(admissions.items(), key=lambda row: row[0].value)),
+                "schedules": final.reservation_schedules,
+                "book": _economic_book_prefix_v1(book) if segmented else _book_body(book),
                 "opening_count": opening_count, "daily_count": daily_count, "dividend_event_count": dividend_count,
                 "financial_schedule_hash": schedule_hash, "journal_entry_ids": mapping,
                 "used_identity_keys": _used_identity_keys_v1(case, journal, streams, pending, intention_ids), "cursor": cursor,
@@ -491,17 +608,34 @@ class _CnASharePortfolioEconomicEngineV1:
                 "run_end_report_hash": run_end.report.report_hash,
                 "pending_intentions": tuple(order for _, order in sorted(pending.values(), key=lambda row: row[1].order_id.value)),
                 "checkpoint_head": head, "source_qualification_verified": False, "broker_shared_pool_verified": False, "trade_authorized": False}
-            witness_v2 = {"type": "cn_a_share_portfolio_economic_native_witness", "schema_version": 2,
-                "economic_witness": witness, "economic_witness_hash": d.canonical_sha256(witness),
-                "source_binding": {"type": "cn_a_share_portfolio_economic_completed_sources", "schema_version": 1,
-                    "source_refs": case.execution_case_plan.source_refs, "semantic_spec": case.semantic_spec,
-                    "identity_manifest": case.identity_manifest, "timeline_stream_keys": case.timeline.stream_keys}}
-            evidence("economic_attempt_witness", failed_id, failed_at, witness_v2)
-            return EngineExecutionOutcome(result=EngineExecutionResult(case.case_hash, case.target_stream.target_stream_digest,
+            binding = {"type": "cn_a_share_portfolio_economic_completed_sources", "schema_version": 1,
+                "source_refs": case.execution_case_plan.source_refs, "semantic_spec": case.semantic_spec,
+                "identity_manifest": case.identity_manifest, "timeline_stream_keys": case.timeline.stream_keys}
+            if segmented:
+                witness["admission_count"] = len(admissions)
+                witness_outer = {"source_binding_hash": d.canonical_sha256(binding)}
+            else:
+                witness["admissions"] = tuple(value for _, value in sorted(admissions.items(), key=lambda row: row[0].value))
+                witness_outer = {"source_binding": binding}
+            witness_outer.update(type="cn_a_share_portfolio_economic_native_witness",
+                schema_version=3 if segmented else 2, economic_witness=witness, economic_witness_hash=d.canonical_sha256(witness))
+            if segmented:
+                completed = encode("economic_attempt_witness", failed_id, failed_at, witness_outer, segmented=True)
+                trace.append(ExecutionTraceEntry(len(trace), EngineStage.FINANCIAL_EVENT,
+                    failed_at, failed_id, completed.artifact_hash))
+            else:
+                evidence("economic_attempt_witness", failed_id, failed_at, witness_outer)
+            result = EngineExecutionResult(case.case_hash, case.target_stream.target_stream_digest,
                 ExecutionTrace(tuple(trace)), tuple(s.decision_batch for s in signals), tuple(s.allocation for s in signals),
                 tuple(s.approved_target for s in signals), tuple(s.normalized_target for s in signals), (),
                 tuple(sorted(streams.values(), key=lambda row: row.order.order_id.value)), tuple(fills), tuple(slips), tuple(fees),
-                tuple(artifacts), journal, ledger, final.economic_projection.snapshot, run_end.report))
+                tuple(artifacts), journal, ledger, final.economic_projection.snapshot, run_end.report)
+            if segmented:
+                header = result.to_canonical_dict()
+                del header["financial_artifacts"]
+                header["type"] = "backtest_economic_paged_result"
+                return _stage_index(page_publisher, fseries, header, completed.to_canonical_dict(), financial_pages, admission_pages)
+            return EngineExecutionOutcome(result=result)
         except _EconomicNativeFailureV1 as rejected:
             return failure(rejected.code, rejected.evidence,native_rejection=rejected)
 

@@ -4,8 +4,10 @@ This proof is not source qualification, account authority or a journal commit.
 """
 from __future__ import annotations
 
+from collections.abc import Callable
 from dataclasses import dataclass, fields, replace
 from enum import Enum
+from hashlib import sha256
 import re
 import unicodedata
 
@@ -242,6 +244,77 @@ class CnASharePortfolioEconomicProjectionInputsV1:
         return {**_payload(self, "cn_a_share_portfolio_economic_projection_inputs"),
                 "settlement_book": _book_body_v1(self.settlement_book)}
 
+    @staticmethod
+    def scoped_projector() -> Callable[
+        [CnASharePortfolioEconomicProjectionInputsV1], CnAShareEconomicProjectionOutcomeV1
+    ]:
+        """Create a projector for one serial replay of immutable source values."""
+        return _ProjectionInputDigestMemoV1().project
+
+
+class _ProjectionInputDigestMemoV1:
+    """Reuse canonical fields within a replay without retaining full input encodings."""
+
+    _fields = frozenset({
+        "journal", "ledger_schema", "settlement_book", "order_streams", "reservation_schedules",
+        "market_rules", "instrument_catalog", "notional_quantization",
+    })
+    _byte_limit = 4 * 1024 * 1024
+
+    def __init__(self) -> None:
+        self._encoded: dict[str, tuple[object, bytes]] = {}
+
+    @staticmethod
+    def _same_source(current: object, previous: object) -> bool:
+        if current is previous:
+            return True
+        return (type(current) is tuple and type(previous) is tuple and len(current) == len(previous)
+                and all(left is right for left, right in zip(current, previous, strict=True)))
+
+    def digest(self, inputs: CnASharePortfolioEconomicProjectionInputsV1) -> str:
+        try:
+            result = self._memoized_digest(inputs)
+        except MemoryError:
+            self._encoded.clear()
+            raise
+        except Exception:
+            # Re-run the authoritative traversal for its original path and first error.
+            result = None
+        if result is not None:
+            return result
+        self._encoded.clear()
+        return canonical_sha256(inputs)
+
+    def _memoized_digest(self, inputs: CnASharePortfolioEconomicProjectionInputsV1) -> str | None:
+        updated: dict[str, tuple[object, bytes]] = {}
+        retained = 0
+        digest = sha256(b"{")
+        # The root has fixed ASCII keys. Each field uses the canonical encoder
+        # or its previously encoded bytes for the identical source.
+        for index, (name, value) in enumerate(sorted(inputs.to_canonical_dict().items())):
+            if index:
+                digest.update(b",")
+            digest.update(canonical_bytes(name))
+            digest.update(b":")
+            if name in self._fields:
+                source = getattr(inputs, name)
+                previous = self._encoded.get(name)
+                encoded = (previous[1] if previous is not None and self._same_source(source, previous[0])
+                           else canonical_bytes(value))
+                retained += len(encoded)
+                if retained > self._byte_limit:
+                    return None
+                updated[name] = source, encoded
+            else:
+                encoded = canonical_bytes(value)
+            digest.update(encoded)
+        digest.update(b"}")
+        self._encoded = updated
+        return "sha256:" + digest.hexdigest()
+
+    def project(self, inputs: CnASharePortfolioEconomicProjectionInputsV1) -> CnAShareEconomicProjectionOutcomeV1:
+        return _project_economic_state_v1(inputs, self)
+
 
 @dataclass(frozen=True, slots=True)
 class CnAShareEconomicCashRowV1:
@@ -443,6 +516,13 @@ def _cash_components(value):
 def project_cn_a_share_portfolio_economic_state_v1(
     inputs: CnASharePortfolioEconomicProjectionInputsV1,
 ) -> CnAShareEconomicProjectionOutcomeV1:
+    return _project_economic_state_v1(inputs, None)
+
+
+def _project_economic_state_v1(
+    inputs: CnASharePortfolioEconomicProjectionInputsV1,
+    memo: _ProjectionInputDigestMemoV1 | None,
+) -> CnAShareEconomicProjectionOutcomeV1:
     _exact("inputs", inputs, CnASharePortfolioEconomicProjectionInputsV1)
     codes = CnAShareEconomicProjectionFailureCodeV1
     def fail(code, native=None):
@@ -483,8 +563,9 @@ def project_cn_a_share_portfolio_economic_state_v1(
             (cash, pending, principal, fees, available, liability, hold, liability - hold, available - hold))))
     spendable = sum(r.spendable.units for r in rows)
     shortfall = sum(r.tax_shortfall.units for r in rows)
+    input_hash = canonical_sha256(inputs) if memo is None else memo.digest(inputs)
     projection = CnASharePortfolioEconomicProjectionV1(inputs.market_rules.account_id, inputs.as_of,
-        canonical_sha256(inputs), canonical_sha256(inputs.dividend_state), base.snapshot,
+        input_hash, canonical_sha256(inputs.dividend_state), base.snapshot,
         replace(base.snapshot, equity=_cny(base.snapshot.equity.units + gross - tax)),
         _cny(gross), _cny(tax), tuple(rows), _cny(spendable), _cny(shortfall), _cny(spendable if shortfall == 0 else 0))
     return CnAShareEconomicProjectionOutcomeV1(projection, None)

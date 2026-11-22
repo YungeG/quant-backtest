@@ -1263,6 +1263,99 @@ class AuditableBacktestRunner:
             cancellation=cancellation,
         )
 
+    def _execute_referenced_pair_locked(self, *, lock, claim, **execution):
+        """Fresh execution only. Interrupted pairs are recovered by a separate no-engine path."""
+        from ._referenced_evidence import (
+            _BoundReferencedAttempt, _ReferencedAttemptClaimV1, _bind_referenced_closed_set, _require_fresh_attempt_tree,
+        )
+
+        if type(claim) is not _ReferencedAttemptClaimV1:
+            raise TypeError("referenced run requires an exact starting claim")
+        _require_fresh_attempt_tree(lock, claim)
+        first = self._execute_referenced_locked(lock=lock, claim=claim, **execution)
+        if type(first) is not _BoundReferencedAttempt:
+            return first
+        second_claim = _ReferencedAttemptClaimV1(AttemptIdentity.retry(claim.attempt, next_ordinal=2),
+                                                 claim.request_ref, claim.input_ref, claim.case_hash)
+        second = self._execute_referenced_locked(lock=lock, claim=second_claim, previous=first, **execution)
+        if type(second) is not _BoundReferencedAttempt:
+            return second
+        return _bind_referenced_closed_set(lock, first, second)
+
+    def _execute_referenced_locked(self, *, lock, claim, resolved_request, execution_case,
+                                   source_reader, evidence_reader, publisher, cancellation=None, previous=None):
+        """Private segmented lane; caller hydrates input9 and owns the marked run lock."""
+        from ._referenced_evidence import (
+            _BoundReferencedAttempt, _ReferencedAttemptClaimV1, _ReferencedResultObjects, _ReferencedRunLock,
+            _bind_attempt_sources, _close_verified_attempt, _verify_attempt_claim, _write_attempt_claim,
+        )
+        from ._segmented_economic_result import verify_economic_paged_result
+        from .cn_a_share_portfolio_economic_engine_v1 import _CnASharePortfolioEconomicEngineV1
+        from .resolution import RequestedResultGrade
+
+        if (type(lock) is not _ReferencedRunLock or type(claim) is not _ReferencedAttemptClaimV1
+                or type(resolved_request) is not ResolvedBacktestRequest
+                or type(execution_case) is not _ResolvedProfilePortfolioCaseV2
+                or type(self._engine) is not _CnASharePortfolioEconomicEngineV1
+                or resolved_request.request.result_grade_requested is not RequestedResultGrade.DEVELOPMENT
+                or (cancellation is not None and type(cancellation) is not EngineCancellationRequest)):
+            raise TypeError("unsupported referenced economic execution contract")
+        attempt = claim.attempt
+        origin = InputOrigin.PRECOMPUTED_TARGET_STREAM
+        if (attempt.semantic_run_id != resolved_request.semantic_run_id
+                or execution_case.case_hash != claim.case_hash):
+            raise ValueError("referenced Attempt does not bind the resolved Case")
+        issue = self._contract_issue(resolved_request, execution_case, origin)
+        if issue is not None:
+            raise ValueError("referenced runner contract: " + issue.code)
+        from .execution_inputs import BacktestExecutionRequest, _read_execution_inputs_v9_from_snapshot
+
+        # Rebind the claim to original inputs before making it durable, never accept a bare Case hash.
+        declared_request = ArtifactEnvelope.create("backtest_request", 1, resolved_request.request)
+        if (ArtifactRef.from_envelope(declared_request) != claim.request_ref
+                or source_reader.read(ref=claim.request_ref).envelope != declared_request):
+            raise ValueError("referenced Attempt request ref mismatch")
+        wrapper = BacktestExecutionRequest(9, resolved_request.request, claim.input_ref)
+        bundle, failure = _read_execution_inputs_v9_from_snapshot(source_reader, wrapper)
+        if (failure is not None or bundle is None or bundle.semantic_run_id != attempt.semantic_run_id
+                or bundle.build_artifact_manifest != resolved_request.build_artifact_manifest
+                or bundle.execution_case_semantic_spec != execution_case.semantic_spec
+                or bundle.execution_case_plan != execution_case.execution_case_plan
+                or bundle.target_stream != execution_case.target_stream
+                or bundle.timeline_stream_keys != execution_case.timeline.stream_keys
+                or bundle.timeline_batch_size != execution_case.timeline_batch_size):
+            raise ValueError("referenced Attempt input9 provenance mismatch")
+        del bundle
+        if attempt.ordinal == 1:
+            if previous is not None:
+                raise ValueError("first referenced Attempt cannot have a prior record")
+        else:
+            if type(previous) is not _BoundReferencedAttempt:
+                raise ValueError("second referenced Attempt requires its bound prior record")
+            prior = previous.claim
+            if (attempt != AttemptIdentity.retry(prior.attempt, next_ordinal=2)
+                    or (claim.request_ref, claim.input_ref, claim.case_hash) != (prior.request_ref, prior.input_ref, prior.case_hash)):
+                raise ValueError("second referenced Attempt does not use its original Case and input")
+            _verify_attempt_claim(lock, prior)
+        sources = _bind_attempt_sources(claim, resolved_request, reader=source_reader, publisher=publisher)
+        if previous is not None and previous.sources != sources:
+            raise ValueError("second referenced Attempt sources differ from the first")
+        _write_attempt_claim(lock, claim)
+        objects = _ReferencedResultObjects(lock=lock, reader=evidence_reader, publisher=publisher)
+        outcome = self._engine.stage_segmented(execution_case, publisher=objects, cancellation=cancellation)
+        if type(outcome) is EngineExecutionOutcome:
+            if outcome.result is not None:
+                raise ValueError("referenced engine returned a legacy success")
+            if outcome.engine_failure is not None:
+                self._engine.verify_failure(execution_case, outcome.engine_failure)
+            return self._map_outcome(resolved_request, execution_case, attempt, origin, cancellation, outcome)
+        fixed_sources = self._engine._referenced_fixed_sources(execution_case, source_reader)
+        verified = verify_economic_paged_result(
+            reader=objects, source_reader=source_reader, result_ref=outcome, case=execution_case,
+            bound_sources=(lambda: fixed_sources) if fixed_sources is not None else None,
+        )
+        return _close_verified_attempt(lock, claim, verified, sources=sources, reader=evidence_reader, publisher=publisher)
+
     def _execute_verified(
         self,
         *,

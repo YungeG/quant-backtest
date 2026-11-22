@@ -9,13 +9,16 @@ from .integrity import ResultGrade
 from .publication_refs import (
     BacktestCanonicalPublicationRef,
     BacktestCanonicalPublicationRefV2,
+    BacktestCanonicalPublicationRefV3,
 )
 
 __all__ = [
     "AnalysisArtifactRef",
     "AnalysisArtifactRefV2",
+    "AnalysisArtifactRefV3",
     "BacktestAnalysis",
     "BacktestAnalysisV2",
+    "BacktestAnalysisV3",
     "BacktestMetricProfile",
     "VerifiedBacktestAnalysis",
     "VerifiedBacktestAnalysisV2",
@@ -294,6 +297,39 @@ class BacktestAnalysisV2:
             "trade_count": self.trade_count,
             "result_grade": self.result_grade.value,
         }
+
+
+@dataclass(frozen=True, slots=True)
+class AnalysisArtifactRefV3:
+    artifact_ref: ArtifactRef
+
+    def __post_init__(self) -> None:
+        if type(self.artifact_ref) is not ArtifactRef:
+            raise TypeError("exact analysis ArtifactRef required")
+        if (self.artifact_ref.artifact_type, self.artifact_ref.schema_version) != ("backtest_analysis", 3):
+            raise ValueError("analysis ref must target backtest_analysis@3")
+
+    def to_canonical_dict(self) -> dict[str, object]:
+        return {"type": "analysis_artifact_ref_v3", "artifact_ref": self.artifact_ref}
+
+
+@dataclass(frozen=True, slots=True)
+class BacktestAnalysisV3(BacktestAnalysis):
+    source_publication_ref: BacktestCanonicalPublicationRefV3
+
+    def __post_init__(self) -> None:
+        _artifact_ref(self.metric_profile_ref, artifact_type="backtest_metric_profile", name="metric_profile_ref")
+        if type(self.source_publication_ref) is not BacktestCanonicalPublicationRefV3:
+            raise TypeError("analysis requires exact referenced publication ref")
+        _execution_result_hash(self.source_execution_result_hash)
+        object.__setattr__(self, "simple_period_return", _period_return(self.simple_period_return))
+        if type(self.trade_count) is not int or self.trade_count < 0:
+            raise ValueError("trade_count must be a nonnegative integer")
+        if self.result_grade is not ResultGrade.DEVELOPMENT:
+            raise ValueError("referenced analysis accepts DEVELOPMENT only")
+
+    def to_canonical_dict(self) -> dict[str, object]:
+        return {**BacktestAnalysis.to_canonical_dict(self), "schema_version": 3}
 
 
 @dataclass(frozen=True, slots=True)

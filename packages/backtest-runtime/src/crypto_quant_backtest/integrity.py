@@ -566,6 +566,74 @@ class IntegrityReport:
         }
 
 
+def _rebuild_integrity_issues(request, rebuild, conditional_severity) -> tuple[IntegrityIssue, ...]:
+    issues: list[IntegrityIssue] = []
+    environment = request.environment
+    profiles = (
+        environment.market_semantics,
+        environment.simulation,
+        environment.execution_account,
+    )
+    if any(
+        value.grade is RequestedResultGrade.DEVELOPMENT
+        or not value.decision_grade_eligible
+        for value in profiles
+    ):
+        issues.append(
+            IntegrityIssue(
+                IntegrityIssueCode.DEVELOPMENT_PROFILE,
+                conditional_severity,
+                tuple(value.profile_key for value in profiles),
+                tuple(value.profile_digest for value in profiles),
+            )
+        )
+    if not request.build_artifact_manifest.decision_grade_eligible:
+        issues.append(
+            IntegrityIssue(
+                IntegrityIssueCode.DEVELOPMENT_BUILD,
+                conditional_severity,
+                request.build_artifact_manifest.limitations
+                or ("build_artifact_manifest",),
+                (request.build_artifact_manifest.manifest_hash,),
+            )
+        )
+    if environment.limitations:
+        issues.append(
+            IntegrityIssue(
+                IntegrityIssueCode.ENVIRONMENT_LIMITATION,
+                conditional_severity,
+                environment.limitations,
+                (environment.environment_hash,),
+            )
+        )
+    if rebuild.trace_level is IntegrityTraceLevel.SUMMARY:
+        issues.append(
+            IntegrityIssue(
+                IntegrityIssueCode.SUMMARY_TRACE,
+                conditional_severity,
+                (rebuild.trace_level.value,),
+                (rebuild.trace_hash,),
+            )
+        )
+    if rebuild.market_bundle_retention_proof_hash is None:
+        issues.append(
+            IntegrityIssue(
+                IntegrityIssueCode.BUNDLE_RETENTION_UNPROVEN,
+                conditional_severity,
+                (rebuild.market_bundle_manifest_hash,),
+            )
+        )
+    if rebuild.deterministic_rebuild_proof_hash is None:
+        issues.append(
+            IntegrityIssue(
+                IntegrityIssueCode.DETERMINISTIC_REBUILD_UNPROVEN,
+                conditional_severity,
+                (rebuild.evidence_hash,),
+            )
+        )
+    return tuple(issues)
+
+
 class IntegrityEvaluator:
     def evaluate(self, context: IntegrityEvaluationContext) -> IntegrityReport:
         if not isinstance(context, IntegrityEvaluationContext):
@@ -601,70 +669,7 @@ class IntegrityEvaluator:
                     (context.execution_hash_check.mismatch.mismatch_hash,),
                 )
             )
-        environment = request.environment
-        profiles = (
-            environment.market_semantics,
-            environment.simulation,
-            environment.execution_account,
-        )
-        if any(
-            value.grade is RequestedResultGrade.DEVELOPMENT
-            or not value.decision_grade_eligible
-            for value in profiles
-        ):
-            issues.append(
-                IntegrityIssue(
-                    IntegrityIssueCode.DEVELOPMENT_PROFILE,
-                    conditional_severity,
-                    tuple(value.profile_key for value in profiles),
-                    tuple(value.profile_digest for value in profiles),
-                )
-            )
-        if not request.build_artifact_manifest.decision_grade_eligible:
-            issues.append(
-                IntegrityIssue(
-                    IntegrityIssueCode.DEVELOPMENT_BUILD,
-                    conditional_severity,
-                    request.build_artifact_manifest.limitations
-                    or ("build_artifact_manifest",),
-                    (request.build_artifact_manifest.manifest_hash,),
-                )
-            )
-        if environment.limitations:
-            issues.append(
-                IntegrityIssue(
-                    IntegrityIssueCode.ENVIRONMENT_LIMITATION,
-                    conditional_severity,
-                    environment.limitations,
-                    (environment.environment_hash,),
-                )
-            )
-        rebuild = context.rebuild_evidence
-        if rebuild.trace_level is IntegrityTraceLevel.SUMMARY:
-            issues.append(
-                IntegrityIssue(
-                    IntegrityIssueCode.SUMMARY_TRACE,
-                    conditional_severity,
-                    (rebuild.trace_level.value,),
-                    (rebuild.trace_hash,),
-                )
-            )
-        if rebuild.market_bundle_retention_proof_hash is None:
-            issues.append(
-                IntegrityIssue(
-                    IntegrityIssueCode.BUNDLE_RETENTION_UNPROVEN,
-                    conditional_severity,
-                    (rebuild.market_bundle_manifest_hash,),
-                )
-            )
-        if rebuild.deterministic_rebuild_proof_hash is None:
-            issues.append(
-                IntegrityIssue(
-                    IntegrityIssueCode.DETERMINISTIC_REBUILD_UNPROVEN,
-                    conditional_severity,
-                    (rebuild.evidence_hash,),
-                )
-            )
+        issues.extend(_rebuild_integrity_issues(request, context.rebuild_evidence, conditional_severity))
         blocking = any(
             value.severity is IntegrityIssueSeverity.BLOCKING for value in issues
         )

@@ -66,6 +66,40 @@ class BacktestCanonicalPublicationRefV2:
         }
 
 
+@dataclass(frozen=True, slots=True)
+class BacktestCanonicalPublicationRefV3:
+    """Nominal reference to a referenced DEVELOPMENT completion (manifest@3)."""
+
+    artifact_ref: ArtifactRef
+
+    def __post_init__(self) -> None:
+        if type(self.artifact_ref) is not ArtifactRef:
+            raise TypeError("artifact_ref must be exact ArtifactRef")
+        if (self.artifact_ref.artifact_type, self.artifact_ref.schema_version) != ("canonical_publication_manifest", 3):
+            raise ValueError("artifact_ref must reference canonical_publication_manifest@3")
+
+    @classmethod
+    def from_artifact_ref(cls, artifact_ref: ArtifactRef) -> BacktestCanonicalPublicationRefV3:
+        return cls(artifact_ref)
+
+    def to_artifact_ref(self) -> ArtifactRef:
+        return self.artifact_ref
+
+    def to_canonical_dict(self) -> dict[str, object]:
+        return {"type": "backtest_canonical_publication_ref_v3", "artifact_ref": self.artifact_ref}
+
+
+@dataclass(frozen=True, slots=True)
+class BacktestDeliveryIncomplete:
+    """No complete publication; no authorization to execute another Attempt."""
+
+    semantic_run_id: str
+    state: str
+    finalized_attempt_refs: tuple[ArtifactRef, ...]
+    missing_attempt_ordinals: tuple[int, ...]
+    pending_publication_roles: tuple[str, ...]
+
+
 RunPublicationRef: TypeAlias = (  # noqa: UP040 - preserve runtime get_args
     BacktestCanonicalPublicationRef
     | BacktestCanonicalPublicationRefV2
