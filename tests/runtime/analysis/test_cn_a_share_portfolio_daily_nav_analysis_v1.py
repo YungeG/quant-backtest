@@ -10,6 +10,7 @@ from zoneinfo import ZoneInfo
 import pytest
 import crypto_quant_backtest as bt
 import crypto_quant_domain as d
+from tests.runtime.providers.test_cn_a_share_portfolio_preparation_inputs_v1 import _Cas
 from tests.runtime.providers.test_cn_a_share_portfolio_standard_case_v1 import _sources
 from tests.runtime.providers.test_cash_development_provider import build_manifest
 
@@ -72,9 +73,8 @@ def test_public_flat_cash_close_analysis_roundtrip_without_second_engine(flat_co
         execution_input_ref=prepared.execution_request.execution_input_bundle_ref, metric_profile_ref=profile) == ref
 
 
-def _value_analysis(tmp_path, units):
-    from crypto_quant_foundation import LocalFoundation
-    store = LocalFoundation(tmp_path / "passive-values-only")
+def _value_analysis(units):
+    store = _Cas()
     profile = bt.CnASharePortfolioDailyNavAnalysisRuntimeV1(reader=store, publisher=store).publish_metric_profile()
     ref = lambda name, version=1: d.ArtifactRef(name, version, "sha256:" + "1" * 64)
     points = tuple(bt.CnASharePortfolioDailyNavPointV1(f"2024-10-{14+n:02d}",
@@ -94,17 +94,17 @@ def _value_analysis(tmp_path, units):
     ((30_000, 20_000), "1", "0.333333333333333333"),
     ((10_000, 10_000), "0", "0"),
 ))
-def test_public_value_peak_initial_equity_and_rounding(tmp_path, units, returned, drawdown):
+def test_public_value_peak_initial_equity_and_rounding(units, returned, drawdown):
     # Passive worked examples, not completed source evidence or admissible refs.
-    value = _value_analysis(tmp_path, units)
+    value = _value_analysis(units)
     assert value.simple_period_return == returned
     assert value.maximum_drawdown == drawdown
     assert value.to_canonical_dict()["formal_publication_eligible"] is False
 
 
 @pytest.mark.parametrize("part", ("duplicate", "reverse", "zero", "currency", "scale", "clock", "grade", "count"))
-def test_public_value_rejects_invalid_series_and_grade(tmp_path, part):
-    value = _value_analysis(tmp_path, (11_000, 9_900))
+def test_public_value_rejects_invalid_series_and_grade(part):
+    value = _value_analysis((11_000, 9_900))
     with pytest.raises((ValueError, TypeError)):
         if part == "duplicate":
             replace(value, points=(value.points[0], value.points[0]))
