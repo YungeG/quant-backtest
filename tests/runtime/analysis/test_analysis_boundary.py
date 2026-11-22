@@ -12,8 +12,10 @@ _PUBLIC_INIT = _RUNTIME / "__init__.py"
 _PUBLIC_NAMES = {
     "AnalysisArtifactRef",
     "AnalysisArtifactRefV2",
+    "AnalysisArtifactRefV3",
     "BacktestAnalysis",
     "BacktestAnalysisV2",
+    "BacktestAnalysisV3",
     "BacktestMetricProfile",
     "VerifiedBacktestAnalysis",
     "VerifiedBacktestAnalysisV2",

@@ -1,5 +1,6 @@
 """Full-clock native due-prefix tests; no synthetic market event for settlement."""
 from dataclasses import replace
+from types import SimpleNamespace
 
 import pytest
 import crypto_quant_domain as d
@@ -27,7 +28,9 @@ def _book(source, dues):
 
 
 def _advance(source, book, at):
-    return _advance_economic_settlement_v1(inputs=source, journal=source.initial_journal, book=book, consumer=at)
+    case = SimpleNamespace(semantic_spec=SimpleNamespace(spec_version=1))
+    return _advance_economic_settlement_v1(
+        case=case, inputs=source, journal=source.initial_journal, book=book, consumer=at)
 
 
 def test_native_due_prefix_rank10_unchanged_then45_exact_native20(due_source):

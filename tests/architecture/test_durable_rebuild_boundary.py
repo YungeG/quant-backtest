@@ -26,12 +26,12 @@ def test_durable_rebuild_v2_adds_only_frozen_public_roots() -> None:
         assert private not in crypto_quant_backtest.__all__
 
 
-def test_no_new_public_facade_operation_or_runtime_recovery_api() -> None:
+def test_only_approved_referenced_delivery_extends_the_public_runtime() -> None:
     assert {
         name
         for name, value in vars(crypto_quant_backtest.BacktestRuntime).items()
         if callable(value) and not name.startswith("_")
-    } == {"run", "run_with_cancellation"}
+    } == {"run", "run_with_cancellation", "resume_delivery"}
     assert not any("recover" in name.lower() for name in crypto_quant_backtest.__all__)
 
 

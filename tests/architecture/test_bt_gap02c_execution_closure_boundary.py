@@ -3,6 +3,8 @@ from __future__ import annotations
 import ast
 from pathlib import Path
 
+from tests._referenced_architecture import generic_runtime_source
+
 
 _ROOT = Path(__file__).resolve().parents[2]
 _RUNTIME = _ROOT / "packages/backtest-runtime/src/crypto_quant_backtest"
@@ -68,7 +70,7 @@ def test_v2_uses_the_existing_catalog_and_no_second_selector() -> None:
     )
     assert all(f"_V{version}_SCHEMA" in source for version in range(1, 10))
     generic_source = "\n".join(
-        path.read_text(encoding="utf-8") for path in _GENERIC_RUNTIME
+        generic_runtime_source(path) for path in _GENERIC_RUNTIME
     )
     for forbidden in (
         "CnAShare",

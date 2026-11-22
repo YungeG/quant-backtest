@@ -3,6 +3,8 @@ from __future__ import annotations
 import ast
 from pathlib import Path
 
+from tests._referenced_architecture import generic_runtime_source
+
 _ROOT = Path(__file__).resolve().parents[2]
 _RUNTIME = _ROOT / "packages/backtest-runtime/src/crypto_quant_backtest"
 _COMPOSITION = _RUNTIME / "composition.py"
@@ -74,7 +76,7 @@ def test_execution_inputs_remains_the_only_canonical_decoder_and_catalog() -> No
 
 
 def test_generic_runtime_has_no_profile_branch_or_hidden_registration_builder() -> None:
-    source = "\n".join(path.read_text(encoding="utf-8") for path in _GENERIC_MODULES)
+    source = "\n".join(generic_runtime_source(path) for path in _GENERIC_MODULES)
     for forbidden in (
         "CnAShare",
         "BinanceUsdm",

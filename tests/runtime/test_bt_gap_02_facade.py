@@ -12,6 +12,7 @@ import pytest
 from crypto_quant_backtest import (
     BacktestCanonicalPublicationRef,
     BacktestCanonicalPublicationRefV2,
+    BacktestCanonicalPublicationRefV3,
     BacktestExecutionRequest,
     BacktestProfileRegistry,
     BacktestRuntime,
@@ -170,11 +171,13 @@ def test_public_facade_hides_orchestration_and_returns_only_direct_refs() -> Non
         "artifact_publisher",
         "market_reader",
         "publication_root",
+        "evidence_layout",
     ]
+    assert init_parameters[-1].default == "legacy"
     assert all(value.kind is Parameter.KEYWORD_ONLY for value in init_parameters)
     fixture = json.loads(_FIXTURE.read_text(encoding="utf-8"))
     assert fixture["composition_only_dependencies"] == [
-        value.name for value in init_parameters
+        value.name for value in init_parameters[:-1]
     ]
     assert "constructor_keyword_only" not in fixture
     run_parameters = tuple(signature(BacktestRuntime.run).parameters.values())
@@ -182,13 +185,14 @@ def test_public_facade_hides_orchestration_and_returns_only_direct_refs() -> Non
     assert get_args(get_type_hints(BacktestRuntime.run)["return"]) == (
         BacktestCanonicalPublicationRef,
         BacktestCanonicalPublicationRefV2,
+        BacktestCanonicalPublicationRefV3,
         ArtifactRef,
     )
     assert {
         name
         for name, value in vars(BacktestRuntime).items()
         if callable(value) and not name.startswith("_")
-    } == {"run", "run_with_cancellation"}
+    } == {"run", "run_with_cancellation", "resume_delivery"}
 
 
 def test_completed_run_is_durable_cache_stable_and_preserves_experiment_id(

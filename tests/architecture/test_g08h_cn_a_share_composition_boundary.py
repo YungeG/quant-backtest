@@ -3,6 +3,8 @@ from __future__ import annotations
 import ast
 from pathlib import Path
 
+from tests._referenced_architecture import generic_runtime_source
+
 import pytest
 
 
@@ -120,7 +122,7 @@ def test_generic_runtime_remains_cn_a_share_branchless() -> None:
         TRADING / "journal.py",
         TRADING / "ledger.py",
     ):
-        source = path.read_text(encoding="utf-8")
+        source = generic_runtime_source(path)
         _assert_generic_branchless(source, allow_failure_metadata=path == RUNTIME / "engine.py")
 
 

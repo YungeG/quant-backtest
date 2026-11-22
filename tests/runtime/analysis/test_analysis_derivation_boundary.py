@@ -10,6 +10,7 @@ from crypto_quant_backtest import (
     VerifiedCompletedPublication,
     VerifiedCompletedPublicationV2,
     VerifiedCompletedPublicationV3,
+    VerifiedCompletedPublicationV4,
 )
 
 _ROOT = Path(__file__).resolve().parents[3]
@@ -93,6 +94,7 @@ def test_verified_publication_module_owns_one_minimal_completed_view() -> None:
         "VerifiedCompletedPublication",
         "VerifiedCompletedPublicationV2",
         "VerifiedCompletedPublicationV3",
+        "VerifiedCompletedPublicationV4",
         "VerifiedExecutionSummary",
         "VerifiedTerminalPublication",
         "TerminalStatus",
@@ -122,6 +124,21 @@ def test_verified_publication_module_owns_one_minimal_completed_view() -> None:
         "rebuild_verification_ref",
         "proof_publication_manifest_ref",
     ]
+
+    assert list(signature(VerifiedCompletedPublicationV4).parameters) == [
+        "publication_ref",
+        "semantic_run_id",
+        "canonical_attempt",
+        "execution_result_hash",
+        "result_ref",
+        "request_ref",
+        "execution_input_ref",
+        "integrity_ref",
+        "result_grade",
+        "deployment_authorized",
+    ]
+    assert signature(VerifiedCompletedPublicationV4).parameters["result_grade"].default.value == "development"
+    assert signature(VerifiedCompletedPublicationV4).parameters["deployment_authorized"].default is False
 
     source = _VERIFIED.read_text(encoding="utf-8")
     terminal_neutral_source = source.replace(

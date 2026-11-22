@@ -208,7 +208,7 @@ def test_v2_existing_nav_runtime_source_tuple_and_replay(public_v2_result, monke
 
 
 def test_v2_nav_definition_reference_legacy_error_order_and_versions(public_v2_result):
-    # These declarations probe constructor compatibility only; synthetic schema-3
+    # These declarations probe constructor compatibility only; synthetic schema-3 and schema-4
     # refs are not evidence of a semantic publication/source tuple.
     _, _, inputs, store, market, ref, _ = public_v2_result
     nav = bt.CnASharePortfolioEconomicDailyNavAnalysisRuntimeV1(reader=store, publisher=store, market_reader=market)
@@ -228,7 +228,9 @@ def test_v2_nav_definition_reference_legacy_error_order_and_versions(public_v2_r
     definition3 = d.ArtifactRef("backtest_profile_portfolio_definition", 3, d.canonical_sha256("declaration-only definition3"))
     assert replace(value, definition_ref=definition2).definition_ref == definition2
     assert replace(value, definition_ref=definition3).definition_ref == definition3
-    for artifact_type, version in (("wrong_definition", 3), ("backtest_profile_portfolio_definition", 4)):
+    definition4 = d.ArtifactRef("backtest_profile_portfolio_definition", 4, d.canonical_sha256("declaration-only definition4"))
+    assert replace(value, definition_ref=definition4).definition_ref == definition4
+    for artifact_type, version in (("wrong_definition", 3), ("backtest_profile_portfolio_definition", 5)):
         wrong = d.ArtifactRef(artifact_type, version, d.canonical_sha256((artifact_type, version)))
         with pytest.raises(TypeError, match="^NAV source requires exact backtest_profile_portfolio_definition@2$"):
             replace(value, definition_ref=wrong)

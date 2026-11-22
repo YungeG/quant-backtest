@@ -33,7 +33,7 @@ def test_facade_is_one_public_root_run_boundary() -> None:
         if isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef))
         and not node.name.startswith("_")
     }
-    assert public_methods == {"run", "run_with_cancellation"}
+    assert public_methods == {"run", "run_with_cancellation", "resume_delivery"}
     run = next(
         node
         for node in facade.body
@@ -111,6 +111,7 @@ def test_facade_exposes_no_internal_orchestration_values() -> None:
         "_artifact_publisher",
         "_market_reader",
         "_publication_root",
+        "_evidence_layout",
     }
     assert not {
         "registry",
