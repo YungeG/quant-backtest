@@ -1,0 +1,195 @@
+{
+  "contract_id": "BT-PORT-01",
+  "schema_version": 1,
+  "status": "frozen",
+  "test_support_only": true,
+  "operations": [
+    "run",
+    "derive",
+    "load_completed",
+    "load_terminal",
+    "load_analysis"
+  ],
+  "terminal_statuses": [
+    "BLOCKED",
+    "FAILED",
+    "CANCELLED"
+  ],
+  "failure_precedence": [
+    "PORT_REF_TYPE_MISMATCH",
+    "PORT_REF_NOT_FOUND",
+    "PORT_EVIDENCE_TAMPERED",
+    "PORT_MANIFEST_INVALID",
+    "PORT_RETENTION_UNAVAILABLE",
+    "PORT_TERMINAL_NOT_ANALYZABLE",
+    "PORT_ANALYSIS_LINK_MISMATCH"
+  ],
+  "encodings": {
+    "decimal_string": "canonical ordinary decimal JSON string; no exponent, negative zero, or trailing fractional zero"
+  },
+  "cases": [
+    {
+      "case_id": "adverse_completed",
+      "request_spec": {
+        "fixture_case": "adverse_completed"
+      },
+      "run": {
+        "kind": "completed",
+        "ref": {
+          "type": "backtest_canonical_publication_ref",
+          "artifact_ref": {
+            "type": "artifact_ref",
+            "artifact_type": "canonical_publication_manifest",
+            "schema_version": 1,
+            "content_hash": "sha256:2f45ccefe4b9fa5541ef595f8279cdafe45a70f821a66aa9bbab41225a822a75"
+          }
+        }
+      },
+      "completed": {
+        "publication_ref": {
+          "type": "backtest_canonical_publication_ref",
+          "artifact_ref": {
+            "type": "artifact_ref",
+            "artifact_type": "canonical_publication_manifest",
+            "schema_version": 1,
+            "content_hash": "sha256:2f45ccefe4b9fa5541ef595f8279cdafe45a70f821a66aa9bbab41225a822a75"
+          }
+        },
+        "semantic_run_id": "opaque-backtest-run-fixture-001",
+        "execution_result_hash": "sha256:38051210e447e22bbcb435bd7410d0457cd0add28aea88ed1a19eda30b69ff26",
+        "result_grade": "development"
+      },
+      "derive": {
+        "metric_profile_ref": {
+          "type": "artifact_ref",
+          "artifact_type": "backtest_metric_profile",
+          "schema_version": 1,
+          "content_hash": "sha256:3f65ba3e85739e6a71298b13738afbf78dd5c5f98d17eb4e42c13b2d607bae2a"
+        },
+        "analysis_ref": {
+          "type": "analysis_artifact_ref",
+          "artifact_ref": {
+            "type": "artifact_ref",
+            "artifact_type": "backtest_analysis",
+            "schema_version": 1,
+            "content_hash": "sha256:b62fe3c411a440b6c24f7869d842e2d60be8fbee1b861883eb29afe1ab611396"
+          }
+        }
+      },
+      "analysis": {
+        "analysis_ref": {
+          "type": "analysis_artifact_ref",
+          "artifact_ref": {
+            "type": "artifact_ref",
+            "artifact_type": "backtest_analysis",
+            "schema_version": 1,
+            "content_hash": "sha256:b62fe3c411a440b6c24f7869d842e2d60be8fbee1b861883eb29afe1ab611396"
+          }
+        },
+        "metric_profile_ref": {
+          "type": "artifact_ref",
+          "artifact_type": "backtest_metric_profile",
+          "schema_version": 1,
+          "content_hash": "sha256:3f65ba3e85739e6a71298b13738afbf78dd5c5f98d17eb4e42c13b2d607bae2a"
+        },
+        "source_publication_ref": {
+          "type": "backtest_canonical_publication_ref",
+          "artifact_ref": {
+            "type": "artifact_ref",
+            "artifact_type": "canonical_publication_manifest",
+            "schema_version": 1,
+            "content_hash": "sha256:2f45ccefe4b9fa5541ef595f8279cdafe45a70f821a66aa9bbab41225a822a75"
+          }
+        },
+        "source_execution_result_hash": "sha256:38051210e447e22bbcb435bd7410d0457cd0add28aea88ed1a19eda30b69ff26",
+        "simple_period_return": "-0.1",
+        "trade_count": 1,
+        "result_grade": "development"
+      }
+    },
+    {
+      "case_id": "terminal_blocked",
+      "request_spec": {
+        "fixture_case": "terminal_blocked"
+      },
+      "run": {
+        "kind": "terminal",
+        "ref": {
+          "type": "artifact_ref",
+          "artifact_type": "backtest_resolution_failure",
+          "schema_version": 1,
+          "content_hash": "sha256:dda4812159a0e6576d00b3c5eaf9a230eb28789146c4f9f0e533b8ba64be2bdc"
+        }
+      },
+      "terminal": {
+        "status": "BLOCKED",
+        "durable_evidence_ref": {
+          "type": "artifact_ref",
+          "artifact_type": "backtest_resolution_failure",
+          "schema_version": 1,
+          "content_hash": "sha256:dda4812159a0e6576d00b3c5eaf9a230eb28789146c4f9f0e533b8ba64be2bdc"
+        }
+      }
+    },
+    {
+      "case_id": "terminal_failed",
+      "request_spec": {
+        "fixture_case": "terminal_failed"
+      },
+      "run": {
+        "kind": "terminal",
+        "ref": {
+          "type": "artifact_ref",
+          "artifact_type": "evidence_manifest",
+          "schema_version": 1,
+          "content_hash": "sha256:d31e7170ec9591276ee5baa1df69c458dce4236b008a9298a077f9891b7d4b5b"
+        }
+      },
+      "terminal": {
+        "status": "FAILED",
+        "durable_evidence_ref": {
+          "type": "artifact_ref",
+          "artifact_type": "evidence_manifest",
+          "schema_version": 1,
+          "content_hash": "sha256:d31e7170ec9591276ee5baa1df69c458dce4236b008a9298a077f9891b7d4b5b"
+        }
+      }
+    },
+    {
+      "case_id": "terminal_cancelled",
+      "request_spec": {
+        "fixture_case": "terminal_cancelled"
+      },
+      "run": {
+        "kind": "terminal",
+        "ref": {
+          "type": "artifact_ref",
+          "artifact_type": "evidence_manifest",
+          "schema_version": 1,
+          "content_hash": "sha256:29d9f80eb7d697e5c60674a10c05cc647d1aa422bf719624c3c82aaf874da8b5"
+        }
+      },
+      "terminal": {
+        "status": "CANCELLED",
+        "durable_evidence_ref": {
+          "type": "artifact_ref",
+          "artifact_type": "evidence_manifest",
+          "schema_version": 1,
+          "content_hash": "sha256:29d9f80eb7d697e5c60674a10c05cc647d1aa422bf719624c3c82aaf874da8b5"
+        }
+      }
+    },
+    {
+      "case_id": "provider_failure",
+      "request_spec": {
+        "fixture_case": "provider_failure"
+      },
+      "run": {
+        "kind": "failure",
+        "failure": {
+          "code": "PORT_RETENTION_UNAVAILABLE"
+        }
+      }
+    }
+  ]
+}

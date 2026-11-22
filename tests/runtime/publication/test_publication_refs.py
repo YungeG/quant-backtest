@@ -20,6 +20,8 @@ from tests.runtime.integration._fixtures import completed_journey, mismatch_jour
 ROOT = Path(__file__).resolve().parents[3]
 FIXTURE_PATH = ROOT / "tests/fixtures/runtime/bt-gap04-publication-ref-v1.json"
 CONSUMER_FIXTURE = ROOT.parent / "tests/contracts/backtest-consumer-port-v1.json"
+if not CONSUMER_FIXTURE.is_file():
+    CONSUMER_FIXTURE = ROOT / "tests/fixtures/runtime/backtest-consumer-port-v1.json"
 G07_FIXTURE = ROOT / "tests/fixtures/runtime/g07-auditable-synthetic-run-v1.json"
 
 

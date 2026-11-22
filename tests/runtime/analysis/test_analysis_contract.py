@@ -19,6 +19,8 @@ from crypto_quant_domain import (
 _ROOT = Path(__file__).resolve().parents[3]
 _FIXTURE = _ROOT / "tests/fixtures/runtime/bt-gap06-analysis-v1.json"
 _PLATFORM_FIXTURE = _ROOT.parent / "tests/contracts/backtest-consumer-port-v1.json"
+if not _PLATFORM_FIXTURE.is_file():
+    _PLATFORM_FIXTURE = _ROOT / "tests/fixtures/runtime/backtest-consumer-port-v1.json"
 _FIXTURE_SHA256 = "7764e978cc530d1e518f4c4b4a714627b49b09dc2fe594eacf1633a9d8ba5ef1"
 
 
